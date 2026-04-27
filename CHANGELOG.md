@@ -2,6 +2,22 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.2.3] — 2026-04-27
+
+### Fixes
+
+- **Cron still couldn't drain the queue on unlimited tiers** — 1.2.1
+  fixed `has_report_quota()` for the `-1`-means-unlimited case but
+  missed a second copy of the same logic inside
+  `process_report_queue()`. The pre-loop cap `min( $limit, $remaining )`
+  collapsed to `-1` for unlimited accounts and tripped the
+  `<= 0 → 'no_quota'` short-circuit before the loop could even start.
+  Cron returned skipped, items stayed pending, customer queue grew.
+  The cap now only applies when `$remaining >= 0`, matching the fix
+  shape in `has_report_quota()`. Verified live: a direct `report_ip()`
+  call already worked on the affected install — only the queue
+  processor was blocked.
+
 ## [1.2.2] — 2026-04-27
 
 ### Fixes
