@@ -122,6 +122,19 @@ class ReportedIP_Hive_Scan_Detector {
 		$path        = $this->get_request_path();
 		$is_scan_hit = $this->is_known_scan_path( $path );
 
+		/*
+		 * Authenticated users can legitimately rack up 404s — missing CSS source
+		 * maps, deprecated plugin asset URLs after an update, the WordPress
+		 * "page not found" admin search. Don't fire the burst trigger for them.
+		 *
+		 * Pattern hits (.env, wp-config.php.bak, /.git/config, /phpmyadmin/ …)
+		 * stay armed even for logged-in users — those paths have no legitimate
+		 * use anywhere, including from an admin's browser.
+		 */
+		if ( ! $is_scan_hit && is_user_logged_in() ) {
+			return;
+		}
+
 		$client  = ReportedIP_Hive::get_instance();
 		$monitor = $client->get_security_monitor();
 		if ( ! ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) ) {

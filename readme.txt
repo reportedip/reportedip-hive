@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -176,6 +176,10 @@ Use one of the ten recovery codes you printed during setup. Each is single-use. 
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 1.2.2 =
+
+Hotfix: the REST API rate-limit and the 404 burst-trigger could lock authenticated admins out of their own backend (the Block Editor alone fires 50+ REST calls per page-open). Both sensors now skip the threshold for logged-in users; pattern-hits on known scanner paths (`.env`, `.git/config`, `wp-config.php.bak`, …) stay armed for everyone. Default REST burst threshold raised from 60 to 240 in 5 min.
 
 = 1.2.1 =
 

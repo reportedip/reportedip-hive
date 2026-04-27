@@ -2,6 +2,36 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.2.2] — 2026-04-27
+
+### Fixes
+
+- **REST monitor locked admins out of their own backend** — the global
+  `rest_pre_dispatch` rate-limit fired against authenticated traffic too,
+  and the WordPress Block Editor alone makes 50+ REST calls when an
+  admin opens a single page (autosave, media library, taxonomy / user
+  lookups, block patterns, theme.json). With the default 60-in-5-min
+  threshold this tripped near-instantly. The gate now skips the count
+  entirely when `is_user_logged_in()` — authenticated REST traffic is
+  not the threat model this sensor exists for. Default global threshold
+  also bumped from 60 to 240 to give anonymous block-theme frontends and
+  WooCommerce storefronts more headroom; the lower per-route threshold
+  for sensitive endpoints (`/wp/v2/users`, `/wp/v2/comments`) is
+  unchanged at 20 / 5 min.
+
+- **404 / scanner detector burst-trigger covered legit admin 404s** —
+  missing CSS source maps, deprecated plugin asset URLs after an update
+  and admin-side searches that hit `template_redirect` could rack up
+  enough 404s in the 60-second burst window to fire the threshold.
+  The burst trigger is now skipped for logged-in users; **pattern
+  hits** on known-bad paths (`/.env`, `/wp-config.php.bak`,
+  `/.git/config`, `/phpmyadmin/`, `/.aws/credentials`, …) stay armed
+  for everyone, including admins — those paths have no legitimate use
+  in any browser.
+
+- A separate-process unit test (`RestMonitorExemptionTest`) locks down
+  the logged-in exemption so future changes can't silently regress it.
+
 ## [1.2.1] — 2026-04-27
 
 ### Fixes

@@ -73,6 +73,19 @@ class ReportedIP_Hive_REST_Monitor {
 			return $result;
 		}
 
+		/*
+		 * Skip the global rate-limit for authenticated users. The Block Editor
+		 * alone routinely fires 50+ REST calls when an admin opens a page (post
+		 * autosave, media library, taxonomy / user lookups, block patterns,
+		 * theme.json), which would otherwise trip the default 60/5min threshold
+		 * and lock the admin out of their own backend. Authenticated traffic is
+		 * not the threat model this sensor exists for — the per-route 2FA-REST
+		 * throttle and other auth-aware sensors cover that surface.
+		 */
+		if ( is_user_logged_in() ) {
+			return $result;
+		}
+
 		$route = (string) $request->get_route();
 
 		if ( $this->is_route_bypassed( $route ) ) {
