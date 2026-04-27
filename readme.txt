@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -176,6 +176,10 @@ Use one of the ten recovery codes you printed during setup. Each is single-use. 
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 1.2.3 =
+
+Hotfix: the cron queue processor still skipped on unlimited-tier accounts because `min( batch, remaining = -1 )` collapsed to `-1`. Same `-1`-as-unlimited issue as 1.2.1, second code path. Verified live before shipping.
 
 = 1.2.2 =
 

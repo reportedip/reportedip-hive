@@ -463,9 +463,17 @@ class ReportedIP_Hive_API {
 			);
 		}
 
+		/*
+		 * Cap the batch size by remaining quota — but only when the service
+		 * actually exposes a finite cap. `remaining` is `-1` on unlimited
+		 * tiers (Enterprise / Honeypot) and a `min( $limit, -1 )` would
+		 * silently turn the batch into "process minus-one items" and trip
+		 * the "no_quota" short-circuit below, leaving the queue stuck.
+		 * Same shape as the 1.2.1 fix in has_report_quota().
+		 */
 		$effective_limit = $limit;
-		if ( isset( $quota_status['remaining'] ) && $quota_status['remaining'] !== null ) {
-			$effective_limit = min( $limit, $quota_status['remaining'] );
+		if ( isset( $quota_status['remaining'] ) && $quota_status['remaining'] !== null && (int) $quota_status['remaining'] >= 0 ) {
+			$effective_limit = min( $limit, (int) $quota_status['remaining'] );
 		}
 
 		if ( $effective_limit <= 0 ) {
