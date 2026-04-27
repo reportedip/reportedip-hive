@@ -2042,7 +2042,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_rest_threshold"><?php esc_html_e( 'Global requests threshold', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_rest_threshold" name="reportedip_hive_rest_threshold" value="<?php echo esc_attr( get_option( 'reportedip_hive_rest_threshold', 60 ) ); ?>" min="1" max="1000" class="rip-input" />
+						<input type="number" id="reportedip_hive_rest_threshold" name="reportedip_hive_rest_threshold" value="<?php echo esc_attr( get_option( 'reportedip_hive_rest_threshold', 240 ) ); ?>" min="1" max="1000" class="rip-input" />
 					</div>
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_rest_timeframe"><?php esc_html_e( 'Within how many minutes?', 'reportedip-hive' ); ?></label>
