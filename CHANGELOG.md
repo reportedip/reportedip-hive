@@ -2,6 +2,22 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.2.1] — 2026-04-27
+
+### Fixes
+
+- **API queue stuck for unlimited-tier accounts** — `has_report_quota()`
+  rejected accounts whose service-side response carries
+  `daily_report_limit = -1` and `remaining_reports = -1` (Enterprise /
+  Honeypot tiers, no daily cap). The `<= 0` short-circuit fired before
+  the "is there even a limit" check, so the gate never opened and pending
+  reports piled up until 24 h cleanup. The check now mirrors the logic
+  in `get_quota_status()`: only treat the count as exhausted when the
+  account has a *positive* daily limit and zero remaining; `-1` means
+  unlimited. Locked down with a new `QuotaGateTest` suite covering all
+  four tier shapes (unlimited / exhausted-finite / remaining-finite /
+  zero-permission) plus the cold-start "no cached quota yet" case.
+
 ## [1.2.0] — 2026-04-27
 
 ### New

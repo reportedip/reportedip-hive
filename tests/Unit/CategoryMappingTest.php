@@ -99,24 +99,39 @@ namespace {
 		}
 	}
 	if ( ! class_exists( 'ReportedIP_Hive_API' ) ) {
-		class ReportedIP_Hive_API {
-			private static $instance = null;
-			public static function get_instance() {
-				if ( null === self::$instance ) {
-					self::$instance = new self();
-				}
-				return self::$instance;
-			}
-			public function is_configured() {
-				return false;
-			}
-			public function get_categories() {
-				return array();
-			}
-			public function can_use_api() {
-				return false;
+		if ( ! function_exists( 'wp_remote_request' ) ) {
+			function wp_remote_request( $url, $args = array() ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+				return new \WP_Error( 'no_network', 'Network calls disabled in unit tests' );
 			}
 		}
+		if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
+			function wp_remote_retrieve_body( $r ) { return is_array( $r ) ? ( $r['body'] ?? '' ) : ''; }
+		}
+		if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
+			function wp_remote_retrieve_response_code( $r ) { return is_array( $r ) ? ( $r['response']['code'] ?? 0 ) : 0; }
+		}
+		if ( ! function_exists( 'wp_remote_retrieve_header' ) ) {
+			function wp_remote_retrieve_header( $r, $h ) { return is_array( $r ) ? ( $r['headers'][ $h ] ?? '' ) : ''; }
+		}
+		if ( ! function_exists( 'is_wp_error' ) ) {
+			function is_wp_error( $thing ) { return $thing instanceof \WP_Error; }
+		}
+		if ( ! function_exists( 'esc_url_raw' ) ) {
+			function esc_url_raw( $url ) { return is_string( $url ) ? trim( $url ) : ''; }
+		}
+		if ( ! defined( 'REPORTEDIP_HIVE_VERSION' ) ) {
+			define( 'REPORTEDIP_HIVE_VERSION', '1.2.1-test' );
+		}
+		if ( ! class_exists( 'WP_Error' ) ) {
+			class WP_Error {
+				public $code;
+				public $message;
+				public function __construct( $code = '', $message = '' ) { $this->code = $code; $this->message = $message; }
+				public function get_error_code() { return $this->code; }
+				public function get_error_message() { return $this->message; }
+			}
+		}
+		require_once dirname( __DIR__, 2 ) . '/includes/class-api-client.php';
 	}
 	if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
 		class ReportedIP_Hive_Logger {
