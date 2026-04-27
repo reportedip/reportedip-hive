@@ -1040,27 +1040,60 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		try {
-			$result = $this->database->reset_report_for_retry( $report_id );
+			$this->database->reset_report_for_retry( $report_id );
 
-			if ( $result ) {
-				$this->logger->log_security_event(
-					'api_report_retry',
-					'system',
-					array(
-						'report_id' => $report_id,
-						'user_id'   => get_current_user_id(),
-					),
-					'low'
-				);
+			global $wpdb;
+			$tbl = $wpdb->prefix . 'reportedip_hive_api_queue';
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tbl WHERE id = %d", $report_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->prefix and a hardcoded suffix.
+			if ( ! $row ) {
+				wp_send_json_error( __( 'Queue row not found.', 'reportedip-hive' ) );
+			}
 
+			$api = ReportedIP_Hive_API::get_instance();
+			if ( $row->report_type === 'positive' ) {
+				$send    = $api->report_positive_feedback( $row->ip_address, (string) ( $row->comment ?? '' ) );
+				$success = $send !== false;
+				$message = $success ? 'sent' : 'failed';
+			} else {
+				$cats    = explode( ',', (string) $row->category_ids );
+				$send    = $api->report_ip( $row->ip_address, $cats, (string) ( $row->comment ?? '' ) );
+				$success = ! empty( $send['success'] );
+				$message = is_array( $send ) ? (string) ( $send['message'] ?? '' ) : '';
+			}
+
+			if ( $success ) {
+				$this->database->update_api_report_status( $report_id, 'completed' );
+			} else {
+				$this->database->update_api_report_status( $report_id, 'failed', $message ?: 'Unknown error' );
+			}
+
+			$this->logger->log_security_event(
+				'api_report_retry',
+				'system',
+				array(
+					'report_id' => $report_id,
+					'user_id'   => get_current_user_id(),
+					'success'   => $success,
+					'message'   => $message,
+				),
+				'low'
+			);
+
+			if ( $success ) {
 				wp_send_json_success(
 					array(
-						'message'   => __( 'Report queued for retry.', 'reportedip-hive' ),
+						'message'   => __( 'Report sent.', 'reportedip-hive' ),
 						'report_id' => $report_id,
 					)
 				);
 			} else {
-				wp_send_json_error( __( 'Failed to reset report for retry.', 'reportedip-hive' ) );
+				wp_send_json_error(
+					sprintf(
+					/* translators: %s: API error message */
+						__( 'Send failed: %s', 'reportedip-hive' ),
+						$message ?: __( 'unknown error', 'reportedip-hive' )
+					)
+				);
 			}
 		} catch ( Exception $e ) {
 			wp_send_json_error( $e->getMessage() );
@@ -1078,26 +1111,47 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		try {
-			$count = $this->database->reset_all_failed_reports();
+			$reset_count = $this->database->reset_all_failed_reports();
+
+			$api    = ReportedIP_Hive_API::get_instance();
+			$result = $api->process_report_queue( 50 );
+
+			$processed = is_array( $result ) ? (int) ( $result['processed'] ?? 0 ) : 0;
+			$errors    = is_array( $result ) ? (int) ( $result['errors'] ?? 0 ) : 0;
+			$skipped   = is_array( $result ) && ! empty( $result['skipped'] );
+			$reason    = is_array( $result ) ? (string) ( $result['reason'] ?? '' ) : '';
 
 			$this->logger->log_security_event(
 				'api_reports_bulk_retry',
 				'system',
 				array(
-					'count'   => $count,
-					'user_id' => get_current_user_id(),
+					'reset'     => $reset_count,
+					'processed' => $processed,
+					'errors'    => $errors,
+					'skipped'   => $skipped,
+					'reason'    => $reason,
+					'user_id'   => get_current_user_id(),
 				),
 				'low'
 			);
 
+			$msg = sprintf(
+				/* translators: 1: reset count, 2: processed count, 3: errors count */
+				__( '%1$d failed reset · %2$d sent · %3$d errors', 'reportedip-hive' ),
+				$reset_count,
+				$processed,
+				$errors
+			);
+			if ( $skipped ) {
+				$msg .= ' (' . ( $reason ?: 'skipped' ) . ')';
+			}
+
 			wp_send_json_success(
 				array(
-					'message' => sprintf(
-						/* translators: %d: number of reports queued for retry */
-						__( '%d reports queued for retry.', 'reportedip-hive' ),
-						$count
-					),
-					'count'   => $count,
+					'message'   => $msg,
+					'reset'     => $reset_count,
+					'processed' => $processed,
+					'errors'    => $errors,
 				)
 			);
 

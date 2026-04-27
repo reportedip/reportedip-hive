@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -176,6 +176,10 @@ Use one of the ten recovery codes you printed during setup. Each is single-use. 
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 1.2.4 =
+
+UX fix: the per-row "Retry" button on the API queue admin only reset the row to `pending` without actually sending — pending items appeared to do nothing on click. Retry now performs the API call synchronously and reports the actual outcome (sent / failed with the API error message). "Retry All Failed" likewise now drains the queue inline so the admin sees the result immediately instead of waiting for the next 15-min cron tick.
 
 = 1.2.3 =
 
