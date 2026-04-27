@@ -2,7 +2,6 @@
  * ReportedIP Hive — Two-Factor Login Page Script.
  *
  * Progressive-enhancement logic for wp-login.php:
- *   – auto-redirects the WP_Error page into the real challenge page
  *   – drives the WAI-ARIA tablist (arrow keys, Home/End, roving tabindex)
  *   – intercepts "Code senden / erneut senden" and routes it through the
  *     admin-ajax resend endpoint so the user never loses the challenge
@@ -23,9 +22,6 @@
 	var config = ( typeof reportedip2fa !== 'undefined' ) ? reportedip2fa : {};
 
 	document.addEventListener( 'DOMContentLoaded', function () {
-		initAutoRedirect();
-
-		// Only wire challenge-specific logic when the challenge form exists.
 		var form = document.getElementById( 'rip-2fa-form' );
 		if ( form ) {
 			initMethodTabs();
@@ -34,21 +30,6 @@
 			initWebAuthnLogin();
 		}
 	} );
-
-	/* ------------------------------------------------------------------ *
-	 * Auto-redirect from the WP_Error page into the 2FA challenge.
-	 * ------------------------------------------------------------------ */
-	function initAutoRedirect() {
-		if ( config.challengeRedirect ) {
-			window.location.href = config.challengeRedirect;
-			return;
-		}
-		var marker = document.getElementById( 'reportedip-2fa-redirect' );
-		if ( marker ) {
-			window.location.href = marker.getAttribute( 'data-url' )
-				|| ( window.location.pathname + '?action=reportedip_2fa' );
-		}
-	}
 
 	/* ------------------------------------------------------------------ *
 	 * Tablist — ARIA Authoring Practices. Roving tabindex, arrow keys,

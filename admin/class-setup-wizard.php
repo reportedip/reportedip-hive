@@ -3,7 +3,7 @@
  * Setup Wizard Class for ReportedIP Hive.
  *
  * Handles the initial plugin setup wizard for new users — light CI with
- * 6 steps: Welcome → Mode/API → Protection → 2FA → Privacy → Complete.
+ * 7 steps: Welcome → Mode/API → Protection → 2FA → Privacy → Login URL → Complete.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <ps@cms-admins.de>
@@ -47,7 +47,8 @@ class ReportedIP_Hive_Setup_Wizard {
 			3 => __( 'Protection', 'reportedip-hive' ),
 			4 => __( '2FA', 'reportedip-hive' ),
 			5 => __( 'Privacy', 'reportedip-hive' ),
-			6 => __( 'Done', 'reportedip-hive' ),
+			6 => __( 'Login URL', 'reportedip-hive' ),
+			7 => __( 'Done', 'reportedip-hive' ),
 		);
 	}
 
@@ -76,6 +77,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		add_action( 'wp_ajax_reportedip_wizard_complete', array( $this, 'ajax_complete_wizard' ) );
 		add_action( 'wp_ajax_reportedip_wizard_skip', array( $this, 'ajax_skip_wizard' ) );
 		add_action( 'wp_ajax_reportedip_wizard_import_settings', array( $this, 'ajax_import_settings' ) );
+		add_action( 'wp_ajax_reportedip_wizard_validate_login_slug', array( $this, 'ajax_validate_login_slug' ) );
 	}
 
 	/**
@@ -364,6 +366,9 @@ class ReportedIP_Hive_Setup_Wizard {
 					$this->render_step_privacy();
 					break;
 				case 6:
+					$this->render_step_hide_login();
+					break;
+				case 7:
 					$this->render_step_complete();
 					break;
 			}
@@ -667,6 +672,35 @@ class ReportedIP_Hive_Setup_Wizard {
 						<input type="checkbox" name="monitor_xmlrpc" id="rip-monitor-xmlrpc" checked>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'XMLRPC access (most common attack vector)', 'reportedip-hive' ); ?></span>
+					</label>
+
+					<hr class="rip-helper-divider">
+					<p class="rip-help-block"><?php esc_html_e( 'Advanced sensors — close common bypass paths around the basic protection above. Recommended on for most sites.', 'reportedip-hive' ); ?></p>
+
+					<label class="rip-toggle">
+						<input type="checkbox" name="monitor_app_passwords" id="rip-monitor-app-passwords" checked>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Application-password abuse (REST/XMLRPC Basic-Auth bypass for 2FA)', 'reportedip-hive' ); ?></span>
+					</label>
+					<label class="rip-toggle">
+						<input type="checkbox" name="monitor_rest_api" id="rip-monitor-rest-api" checked>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'REST API rate-limit (scrapers, scanners)', 'reportedip-hive' ); ?></span>
+					</label>
+					<label class="rip-toggle">
+						<input type="checkbox" name="block_user_enumeration" id="rip-block-user-enumeration" checked>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'User-enumeration defence (?author=, /wp-json/wp/v2/users, login-error masking)', 'reportedip-hive' ); ?></span>
+					</label>
+					<label class="rip-toggle">
+						<input type="checkbox" name="monitor_404_scans" id="rip-monitor-404-scans" checked>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( '404 / scanner detection (.env, wp-config.php.bak, /.git/, …)', 'reportedip-hive' ); ?></span>
+					</label>
+					<label class="rip-toggle">
+						<input type="checkbox" name="monitor_geo_anomaly" id="rip-monitor-geo-anomaly" checked>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Geographic-anomaly detection on successful logins (forces 2FA from new countries)', 'reportedip-hive' ); ?></span>
 					</label>
 
 					<div class="rip-inline-warning" id="rip-monitoring-warning">
@@ -1009,6 +1043,95 @@ class ReportedIP_Hive_Setup_Wizard {
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
+				<a href="<?php echo esc_url( add_query_arg( 'step', 6, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--primary" id="rip-step5-next">
+					<?php esc_html_e( 'Next: Login URL', 'reportedip-hive' ); ?>
+					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+				</a>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Step 6: Hide Login (optional).
+	 *
+	 * Lets the user pick a custom slug that replaces wp-login.php. The user
+	 * can skip this step entirely — the toggle stays off and the feature is
+	 * never enabled.
+	 *
+	 * @since 1.2.0
+	 */
+	private function render_step_hide_login() {
+		$existing_slug = (string) get_option( 'reportedip_hive_hide_login_slug', '' );
+		$existing_mode = (string) get_option( 'reportedip_hive_hide_login_response_mode', ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE );
+		$home_url      = trailingslashit( home_url() );
+		$suggested     = '' !== $existing_slug
+			? $existing_slug
+			: ( class_exists( 'ReportedIP_Hive_Hide_Login' )
+				? ReportedIP_Hive_Hide_Login::suggest_default_slug()
+				: 'wp-secure' );
+		?>
+		<div class="rip-wizard__configuration">
+			<h1 class="rip-wizard__title"><?php esc_html_e( 'Hide your WordPress login', 'reportedip-hive' ); ?></h1>
+			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Optional: move wp-login.php behind a custom slug so automated scanners cannot find a login form. You can skip this step and configure it later from Settings.', 'reportedip-hive' ); ?></p>
+
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+					<h3><?php esc_html_e( 'Activate Hide Login', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<div class="rip-gdpr-notice">
+						<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+						<span><?php esc_html_e( 'Hiding the URL stops automated scanners — it does not replace strong passwords or 2FA. Use it as one extra layer.', 'reportedip-hive' ); ?></span>
+					</div>
+
+					<label class="rip-toggle">
+						<input type="checkbox" name="hide_login_enabled" id="rip-hide-login-enabled" <?php checked( '' !== $existing_slug ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Enable Hide Login', 'reportedip-hive' ); ?></span>
+					</label>
+
+					<div class="rip-form-group rip-mt-3" id="rip-hide-login-fields">
+						<label class="rip-label" for="rip-hide-login-slug"><?php esc_html_e( 'Custom slug', 'reportedip-hive' ); ?></label>
+						<div style="display:flex; align-items:center; gap:.5rem;">
+							<span class="rip-help-text" style="white-space:nowrap;"><?php echo esc_html( $home_url ); ?></span>
+							<input type="text" id="rip-hide-login-slug" name="hide_login_slug" value="<?php echo esc_attr( '' !== $existing_slug ? $existing_slug : $suggested ); ?>" class="rip-input" placeholder="welcome" autocomplete="off" spellcheck="false">
+						</div>
+						<p class="rip-help-text"><?php esc_html_e( '3–50 characters: lowercase letters, digits, dashes or underscores. We will reject reserved WordPress paths and existing post/page slugs when you save.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text" id="rip-hide-login-validation" aria-live="polite" style="min-height:1.4em;"></p>
+					</div>
+
+					<hr class="rip-helper-divider">
+
+					<label class="rip-label"><?php esc_html_e( 'When someone hits the old wp-login.php directly:', 'reportedip-hive' ); ?></label>
+					<label class="rip-radio">
+						<input type="radio" name="hide_login_response_mode" value="block_page" <?php checked( $existing_mode, 'block_page' ); ?>>
+						<span><?php esc_html_e( 'Show the Hive block page (recommended).', 'reportedip-hive' ); ?></span>
+					</label>
+					<label class="rip-radio">
+						<input type="radio" name="hide_login_response_mode" value="404" <?php checked( $existing_mode, '404' ); ?>>
+						<span><?php esc_html_e( 'Show the theme’s 404 page (no plugin fingerprint).', 'reportedip-hive' ); ?></span>
+					</label>
+				</div>
+			</div>
+
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+					<h3><?php esc_html_e( 'Recovery if you ever lose the slug', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Add this constant to wp-config.php to temporarily disable Hide Login and reach the original wp-login.php again:', 'reportedip-hive' ); ?></p>
+					<pre style="margin:0; white-space:pre-wrap; word-break:break-all; background:var(--rip-gray-50); padding:.75rem; border-radius:6px;"><code>define( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN', true );</code></pre>
+				</div>
+			</div>
+
+			<div class="rip-wizard__actions">
+				<a href="<?php echo esc_url( add_query_arg( 'step', 5, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
+					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
+				</a>
 				<button type="button" id="rip-save-config" class="rip-button rip-button--primary rip-button--large">
 					<?php esc_html_e( 'Finish setup', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
@@ -1019,7 +1142,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Step 6: Complete / Summary
+	 * Step 7: Complete / Summary
 	 */
 	private function render_step_complete() {
 		$mode      = $this->mode_manager->get_mode();
@@ -1274,6 +1397,11 @@ class ReportedIP_Hive_Setup_Wizard {
 		update_option( 'reportedip_hive_monitor_failed_logins', isset( $_POST['monitor_failed_logins'] ) && (bool) $_POST['monitor_failed_logins'] );
 		update_option( 'reportedip_hive_monitor_comments', isset( $_POST['monitor_comments'] ) && (bool) $_POST['monitor_comments'] );
 		update_option( 'reportedip_hive_monitor_xmlrpc', isset( $_POST['monitor_xmlrpc'] ) && (bool) $_POST['monitor_xmlrpc'] );
+		update_option( 'reportedip_hive_monitor_app_passwords', isset( $_POST['monitor_app_passwords'] ) && (bool) $_POST['monitor_app_passwords'] );
+		update_option( 'reportedip_hive_monitor_rest_api', isset( $_POST['monitor_rest_api'] ) && (bool) $_POST['monitor_rest_api'] );
+		update_option( 'reportedip_hive_block_user_enumeration', isset( $_POST['block_user_enumeration'] ) && (bool) $_POST['block_user_enumeration'] );
+		update_option( 'reportedip_hive_monitor_404_scans', isset( $_POST['monitor_404_scans'] ) && (bool) $_POST['monitor_404_scans'] );
+		update_option( 'reportedip_hive_monitor_geo_anomaly', isset( $_POST['monitor_geo_anomaly'] ) && (bool) $_POST['monitor_geo_anomaly'] );
 		update_option( 'reportedip_hive_auto_block', isset( $_POST['auto_block'] ) && (bool) $_POST['auto_block'] );
 		update_option( 'reportedip_hive_report_only_mode', isset( $_POST['report_only_mode'] ) && (bool) $_POST['report_only_mode'] );
 
@@ -1323,6 +1451,8 @@ class ReportedIP_Hive_Setup_Wizard {
 		update_option( 'reportedip_hive_notify_admin', isset( $_POST['notify_admin'] ) && (bool) $_POST['notify_admin'] );
 		update_option( 'reportedip_hive_delete_data_on_uninstall', isset( $_POST['delete_data_on_uninstall'] ) && (bool) $_POST['delete_data_on_uninstall'] );
 
+		$this->save_hide_login_step();
+
 		$this->apply_safe_defaults();
 
 		$this->mode_manager->mark_wizard_completed();
@@ -1349,7 +1479,102 @@ class ReportedIP_Hive_Setup_Wizard {
 		wp_send_json_success(
 			array(
 				'message'      => __( 'Setup completed successfully!', 'reportedip-hive' ),
-				'redirect_url' => admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=6' ),
+				'redirect_url' => admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=7' ),
+			)
+		);
+	}
+
+	/**
+	 * Persist the wizard's Hide-Login step into the regular options.
+	 *
+	 * Validates and stores slug, response mode and the enable toggle. If the
+	 * submitted slug fails validation we do not enable the feature — silently
+	 * skipping protects the user from a broken state on completion. The
+	 * wizard's live AJAX validator is the place to surface error messages.
+	 *
+	 * @since 1.2.0
+	 */
+	private function save_hide_login_step(): void {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce is verified by ajax_complete_wizard() before this private helper is reached.
+		$wants_enabled = isset( $_POST['hide_login_enabled'] ) && (bool) $_POST['hide_login_enabled'];
+
+		if ( isset( $_POST['hide_login_response_mode'] ) ) {
+			$mode        = sanitize_key( wp_unslash( (string) $_POST['hide_login_response_mode'] ) );
+			$valid_modes = array(
+				ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE,
+				ReportedIP_Hive_Hide_Login::RESPONSE_MODE_404,
+			);
+			if ( in_array( $mode, $valid_modes, true ) ) {
+				update_option( 'reportedip_hive_hide_login_response_mode', $mode );
+			}
+		}
+
+		if ( ! $wants_enabled ) {
+			update_option( 'reportedip_hive_hide_login_enabled', false );
+			return;
+		}
+
+		$raw_slug = isset( $_POST['hide_login_slug'] )
+			? sanitize_title( wp_unslash( (string) $_POST['hide_login_slug'] ) )
+			: '';
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+
+		if ( '' === $raw_slug || ! class_exists( 'ReportedIP_Hive_Hide_Login' ) ) {
+			update_option( 'reportedip_hive_hide_login_enabled', false );
+			return;
+		}
+
+		$validated = ReportedIP_Hive_Hide_Login::get_instance()->sanitize_slug( $raw_slug );
+		if ( '' === $validated || $validated !== $raw_slug ) {
+			update_option( 'reportedip_hive_hide_login_enabled', false );
+			return;
+		}
+
+		update_option( 'reportedip_hive_hide_login_slug', $validated );
+		update_option( 'reportedip_hive_hide_login_enabled', true );
+		flush_rewrite_rules( false );
+	}
+
+	/**
+	 * AJAX: validate a candidate login slug live in the wizard.
+	 *
+	 * Reuses Hide_Login::sanitize_slug which surfaces all error reasons via
+	 * add_settings_error. We pull the queue, return the first error to the
+	 * client, and otherwise echo the canonicalised slug + final URL.
+	 *
+	 * @since 1.2.0
+	 */
+	public function ajax_validate_login_slug() {
+		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
+		}
+
+		if ( ! class_exists( 'ReportedIP_Hive_Hide_Login' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Hide Login is unavailable.', 'reportedip-hive' ) ), 500 );
+		}
+
+		$raw  = isset( $_POST['slug'] ) ? sanitize_title( wp_unslash( (string) $_POST['slug'] ) ) : '';
+		$hide = ReportedIP_Hive_Hide_Login::get_instance();
+
+		$errors_before = count( get_settings_errors( 'reportedip_hive_hide_login_slug' ) );
+		$validated     = $hide->sanitize_slug( $raw );
+		$all_errors    = get_settings_errors( 'reportedip_hive_hide_login_slug' );
+		$new_errors    = array_slice( $all_errors, $errors_before );
+
+		if ( ! empty( $new_errors ) ) {
+			wp_send_json_error( array( 'message' => $new_errors[0]['message'] ), 400 );
+		}
+
+		if ( '' === $validated || $validated !== $raw ) {
+			wp_send_json_error( array( 'message' => __( 'That slug cannot be used.', 'reportedip-hive' ) ), 400 );
+		}
+
+		wp_send_json_success(
+			array(
+				'slug'     => $validated,
+				'full_url' => trailingslashit( home_url() ) . $validated,
 			)
 		);
 	}

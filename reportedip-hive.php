@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 1.1.4
+ * Version: 1.2.0
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL v2 or later
@@ -53,7 +53,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '1.1.4' );
+define( 'REPORTEDIP_HIVE_VERSION', '1.2.0' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -203,6 +203,14 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ip-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cron-handler.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-hide-login.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-app-password-monitor.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rest-monitor.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-enumeration.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-scan-detector.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/interface-mail-provider.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/mail-providers/class-mail-provider-wordpress.php';
@@ -256,10 +264,19 @@ class ReportedIP_Hive {
 
 		ReportedIP_Hive_Database::get_instance();
 		$this->api_client       = ReportedIP_Hive_API::get_instance();
+		ReportedIP_Hive_Hide_Login::get_instance();
 		$this->security_monitor = new ReportedIP_Hive_Security_Monitor();
 		$this->ip_manager       = ReportedIP_Hive_IP_Manager::get_instance();
 		$this->logger           = ReportedIP_Hive_Logger::get_instance();
 		$this->cron_handler     = new ReportedIP_Hive_Cron_Handler( $this->security_monitor );
+
+		ReportedIP_Hive_App_Password_Monitor::get_instance();
+		ReportedIP_Hive_REST_Monitor::get_instance();
+		ReportedIP_Hive_User_Enumeration::get_instance();
+		ReportedIP_Hive_Scan_Detector::get_instance();
+		ReportedIP_Hive_WooCommerce_Monitor::get_instance();
+		ReportedIP_Hive_Geo_Anomaly::get_instance();
+		ReportedIP_Hive_Password_Strength::get_instance();
 		new ReportedIP_Hive_Two_Factor();
 
 		new ReportedIP_Hive_Two_Factor_Onboarding();
@@ -1198,6 +1215,10 @@ class ReportedIP_Hive {
 			'reportedip_hive_queue_critical_threshold'     => 200,
 			'reportedip_hive_blocked_page_contact_url'     => '',
 			'reportedip_hive_disable_xmlrpc_multicall'     => true,
+			'reportedip_hive_hide_login_enabled'           => false,
+			'reportedip_hive_hide_login_slug'              => '',
+			'reportedip_hive_hide_login_response_mode'     => 'block_page',
+			'reportedip_hive_hide_login_token_in_urls'     => false,
 			'reportedip_hive_notification_cooldown_minutes' => 60,
 			'reportedip_hive_2fa_enabled_global'           => false,
 			'reportedip_hive_2fa_enforce_roles'            => '[]',
@@ -1215,6 +1236,41 @@ class ReportedIP_Hive {
 			'reportedip_hive_2fa_branded_login'            => false,
 			'reportedip_hive_2fa_email_subject_code'       => '',
 			'reportedip_hive_2fa_email_body_code'          => '',
+
+			'reportedip_hive_password_spray_threshold'     => 5,
+			'reportedip_hive_password_spray_timeframe'     => 10,
+
+			'reportedip_hive_monitor_app_passwords'        => true,
+			'reportedip_hive_app_password_threshold'       => 5,
+			'reportedip_hive_app_password_timeframe'       => 15,
+			'reportedip_hive_app_password_require_2fa'     => true,
+
+			'reportedip_hive_monitor_rest_api'             => true,
+			'reportedip_hive_rest_threshold'               => 60,
+			'reportedip_hive_rest_timeframe'               => 5,
+			'reportedip_hive_rest_sensitive_threshold'     => 20,
+			'reportedip_hive_rest_sensitive_timeframe'     => 5,
+
+			'reportedip_hive_block_user_enumeration'       => true,
+			'reportedip_hive_user_enum_threshold'          => 5,
+			'reportedip_hive_user_enum_timeframe'          => 5,
+
+			'reportedip_hive_monitor_404_scans'            => true,
+			'reportedip_hive_scan_404_threshold'           => 8,
+			'reportedip_hive_scan_404_timeframe'           => 1,
+
+			'reportedip_hive_monitor_woocommerce'          => true,
+
+			'reportedip_hive_monitor_geo_anomaly'          => true,
+			'reportedip_hive_geo_window_days'              => 90,
+			'reportedip_hive_geo_revoke_trusted_devices'   => true,
+			'reportedip_hive_geo_report_to_api'            => false,
+
+			'reportedip_hive_password_policy_enabled'      => true,
+			'reportedip_hive_password_min_length'          => 12,
+			'reportedip_hive_password_min_classes'         => 3,
+			'reportedip_hive_password_check_hibp'          => true,
+			'reportedip_hive_password_policy_all_users'    => false,
 		);
 	}
 

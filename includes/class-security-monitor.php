@@ -24,12 +24,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class ReportedIP_Hive_Security_Monitor {
 
+	/**
+	 * Default category-id mapping per security event type.
+	 *
+	 * The service-side taxonomy in `wp_reportedip_threat_categories` covers
+	 * both AbuseIPDB-style legacy categories (1–30: 4 DDoS, 12 Blog Spam,
+	 * 15 Hacking, 18 Brute-Force, 21 Web App Attack, 22 SSH, …) and a
+	 * WordPress-specific extension range (31+: 31 WP Login Brute Force,
+	 * 33 WP XML-RPC Brute Force, 34 WP REST API Abuse, 39 WP Comment Spam,
+	 * 55 WP User Enumeration, 56 WP Version Scanning, 57 WP Plugin Scanning,
+	 * 58 WP Config Exposure, …). The mapping below favours the WP-specific
+	 * IDs for the new 1.2.0 sensors so confidence scoring on the service
+	 * side aggregates them correctly; legacy event types keep their original
+	 * IDs to preserve behaviour for existing 1.x deployments.
+	 *
+	 * Per-site overrides via the `reportedip_hive_event_category_map`
+	 * filter; unknown IDs (not present in the cached service category
+	 * list) are filtered out by `get_validated_category_mapping()`.
+	 */
 	private static $default_category_mapping = array(
-		'failed_login'      => array( 18 ),
-		'comment_spam'      => array( 12 ),
-		'xmlrpc_abuse'      => array( 21 ),
-		'admin_scanning'    => array( 21, 15 ),
-		'reputation_threat' => array( 15, 4 ),
+		'failed_login'       => array( 18 ),
+		'comment_spam'       => array( 12 ),
+		'xmlrpc_abuse'       => array( 21 ),
+		'admin_scanning'     => array( 21, 15 ),
+		'reputation_threat'  => array( 15, 4 ),
+		'user_enumeration'   => array( 55 ),
+		'rest_abuse'         => array( 34 ),
+		'app_password_abuse' => array( 31, 18 ),
+		'password_spray'     => array( 31, 18 ),
+		'scan_404'           => array( 57, 56, 58 ),
+		'wc_login_failed'    => array( 31 ),
+		'geo_anomaly'        => array( 15 ),
 	);
 
 	private $database;
@@ -54,7 +79,13 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
-	 * Check failed login threshold
+	 * Check failed login threshold.
+	 *
+	 * Runs two layered checks:
+	 *  1. Per-IP failed-login count vs. configured threshold.
+	 *  2. Distinct-username password-spray check — fires before the per-IP
+	 *     count threshold when an IP probes many different usernames in a
+	 *     short window, which is a stronger credential-stuffing indicator.
 	 */
 	public function check_failed_login_threshold( $ip_address, $username = '' ) {
 		$threshold = get_option( 'reportedip_hive_failed_login_threshold', 5 );
@@ -72,7 +103,13 @@ class ReportedIP_Hive_Security_Monitor {
 			$track_user_agent = ! empty( $user_agent ) ? substr( (string) $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ) : '';
 		}
 
+		$this->record_username_for_spray_detection( $ip_address, $username );
+
 		$this->database->track_attempt( $ip_address, 'login', $track_username, $track_user_agent );
+
+		if ( $this->check_password_spray_threshold( $ip_address ) ) {
+			return true;
+		}
 
 		$attempt_count = $this->database->get_attempt_count( $ip_address, 'login', $timeframe );
 
@@ -97,6 +134,150 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Record a hashed username sample for the password-spray detector.
+	 *
+	 * We never persist plaintext usernames here — only a salted hash, just
+	 * enough to count distinct values without leaking PII. The transient is
+	 * IP-scoped and TTL-bound, so no cleanup pass is needed.
+	 */
+	private function record_username_for_spray_detection( $ip_address, $username ) {
+		if ( '' === (string) $username ) {
+			return;
+		}
+
+		$timeframe = (int) get_option( 'reportedip_hive_password_spray_timeframe', 10 );
+		$timeframe = max( 1, $timeframe );
+
+		$key = 'rip_spray_' . md5( $ip_address );
+		/** @var array<string,int>|false $bucket */
+		$bucket = get_transient( $key );
+		if ( ! is_array( $bucket ) ) {
+			$bucket = array();
+		}
+
+		$hash            = substr( hash( 'sha256', strtolower( $username ) . wp_salt() ), 0, 16 );
+		$bucket[ $hash ] = time();
+
+		$cutoff = time() - ( $timeframe * MINUTE_IN_SECONDS );
+		foreach ( $bucket as $h => $t ) {
+			if ( $t < $cutoff ) {
+				unset( $bucket[ $h ] );
+			}
+		}
+
+		set_transient( $key, $bucket, $timeframe * MINUTE_IN_SECONDS );
+	}
+
+	/**
+	 * Distinct-username threshold check — fires when the IP has tried a
+	 * configurable number of unique usernames within the spray timeframe.
+	 *
+	 * @return bool True if the threshold fired.
+	 */
+	private function check_password_spray_threshold( $ip_address ) {
+		$threshold = (int) get_option( 'reportedip_hive_password_spray_threshold', 5 );
+		$timeframe = (int) get_option( 'reportedip_hive_password_spray_timeframe', 10 );
+		$threshold = max( 2, $threshold );
+		$timeframe = max( 1, $timeframe );
+
+		$key    = 'rip_spray_' . md5( $ip_address );
+		$bucket = get_transient( $key );
+		if ( ! is_array( $bucket ) ) {
+			return false;
+		}
+
+		$cutoff = time() - ( $timeframe * MINUTE_IN_SECONDS );
+		$count  = 0;
+		foreach ( $bucket as $t ) {
+			if ( $t >= $cutoff ) {
+				++$count;
+			}
+		}
+
+		if ( $count < $threshold ) {
+			return false;
+		}
+
+		if ( $this->database->is_blocked( $ip_address ) ) {
+			return true;
+		}
+
+		$this->handle_threshold_exceeded(
+			$ip_address,
+			'password_spray',
+			array(
+				'attempts'  => $count,
+				'threshold' => $threshold,
+				'timeframe' => $timeframe,
+			)
+		);
+
+		delete_transient( $key );
+
+		return true;
+	}
+
+	/**
+	 * Generic threshold tracker for the auxiliary sensors (user-enumeration,
+	 * REST abuse, 404-scanning, app-password abuse, WooCommerce-login).
+	 *
+	 * Records an attempt of $attempt_type, runs the windowed counter, and
+	 * fires {@see handle_threshold_exceeded()} once the threshold is hit.
+	 * Every sensor uses the same shape so they all look identical in the
+	 * logs and queue, which simplifies dashboarding.
+	 *
+	 * @param string $ip_address   Client IP.
+	 * @param string $attempt_type Attempt-type slug stored in the attempts table.
+	 * @param string $event_type   Event-type slug used by category mapping / comments.
+	 * @param int    $threshold    Min attempts to fire (must be ≥ 1).
+	 * @param int    $timeframe    Counting window in minutes.
+	 * @param array  $extra        Optional extra payload merged into the threshold details.
+	 * @return bool                True if the threshold fired.
+	 */
+	public function track_generic_attempt( $ip_address, $attempt_type, $event_type, $threshold, $timeframe, array $extra = array() ) {
+		if ( '' === (string) $ip_address || 'unknown' === $ip_address ) {
+			return false;
+		}
+
+		if ( $this->database->is_whitelisted( $ip_address ) ) {
+			return false;
+		}
+
+		$track_user_agent = null;
+		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+			$user_agent       = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+			$track_user_agent = ! empty( $user_agent ) ? substr( (string) $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ) : '';
+		}
+
+		$this->database->track_attempt( $ip_address, $attempt_type, null, $track_user_agent );
+
+		$threshold = max( 1, (int) $threshold );
+		$timeframe = max( 1, (int) $timeframe );
+		$count     = $this->database->get_attempt_count( $ip_address, $attempt_type, $timeframe );
+
+		if ( $count < $threshold ) {
+			return false;
+		}
+
+		if ( $this->database->is_blocked( $ip_address ) ) {
+			return true;
+		}
+
+		$details = array_merge(
+			array(
+				'attempts'  => $count,
+				'threshold' => $threshold,
+				'timeframe' => $timeframe,
+			),
+			$extra
+		);
+
+		$this->handle_threshold_exceeded( $ip_address, $event_type, $details );
+
+		return true;
 	}
 
 	/**
@@ -362,17 +543,22 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
-	 * Get category IDs for event type
+	 * Get category IDs for event type.
 	 *
-	 * Category mappings based on ReportedIP service threat categories:
-	 * - 4: Malicious Host
-	 * - 12: Blog Spam
-	 * - 15: Hacking
-	 * - 18: Brute-Force
-	 * - 21: Web App Attack
+	 * Default seed mapping in self::$default_category_mapping; per-site overrides
+	 * via the `reportedip_hive_event_category_map` filter; IDs not found in the
+	 * cached service-side category list are filtered out via
+	 * get_validated_category_mapping(). Falls back to category 15 (Hacking) when
+	 * the event type is unknown — keeps reports flowing for new sensors that
+	 * forgot to add a mapping.
+	 *
+	 * @param string $event_type Event-type slug (e.g. failed_login).
+	 * @return int[]             Category-id list to send to the service API.
 	 */
-	private function get_category_ids_for_event( $event_type ) {
+	public function get_category_ids_for_event( $event_type ) {
 		$category_mapping = self::$default_category_mapping;
+
+		$category_mapping = (array) apply_filters( 'reportedip_hive_event_category_map', $category_mapping );
 
 		$validated_mapping = $this->get_validated_category_mapping();
 		if ( ! empty( $validated_mapping ) ) {
@@ -495,6 +681,60 @@ class ReportedIP_Hive_Security_Monitor {
 					$details['timeframe']
 				);
 
+			case 'user_enumeration':
+				return sprintf(
+					'WordPress user enumeration detected on %s (%s): %d probes in %d minutes',
+					$site_name,
+					$site_url,
+					$details['attempts'],
+					$details['timeframe']
+				);
+
+			case 'rest_abuse':
+				return sprintf(
+					'WordPress REST API abuse detected on %s (%s): %d requests in %d minutes',
+					$site_name,
+					$site_url,
+					$details['attempts'],
+					$details['timeframe']
+				);
+
+			case 'app_password_abuse':
+				return sprintf(
+					'WordPress application-password abuse detected on %s (%s): %d failed authentications in %d minutes',
+					$site_name,
+					$site_url,
+					$details['attempts'],
+					$details['timeframe']
+				);
+
+			case 'password_spray':
+				return sprintf(
+					'WordPress password-spray attack detected on %s (%s): %d distinct usernames probed in %d minutes',
+					$site_name,
+					$site_url,
+					$details['attempts'],
+					$details['timeframe']
+				);
+
+			case 'scan_404':
+				return sprintf(
+					'WordPress 404-scanning detected on %s (%s): %d requests on suspicious paths in %d minutes',
+					$site_name,
+					$site_url,
+					$details['attempts'],
+					$details['timeframe']
+				);
+
+			case 'wc_login_failed':
+				return sprintf(
+					'WooCommerce login brute-force detected on %s (%s): %d failed attempts in %d minutes',
+					$site_name,
+					$site_url,
+					$details['attempts'],
+					$details['timeframe']
+				);
+
 			default:
 				return sprintf(
 					'Suspicious activity detected on %s (%s): %s',
@@ -522,20 +762,51 @@ class ReportedIP_Hive_Security_Monitor {
 			case 'admin_scanning':
 				return sprintf( 'Admin scanning: %d requests in %d minutes', $details['attempts'], $details['timeframe'] );
 
+			case 'user_enumeration':
+				return sprintf( 'User enumeration: %d probes in %d minutes', $details['attempts'], $details['timeframe'] );
+
+			case 'rest_abuse':
+				return sprintf( 'REST API abuse: %d requests in %d minutes', $details['attempts'], $details['timeframe'] );
+
+			case 'app_password_abuse':
+				return sprintf( 'Application-password abuse: %d failed auths in %d minutes', $details['attempts'], $details['timeframe'] );
+
+			case 'password_spray':
+				return sprintf( 'Password spray: %d usernames in %d minutes', $details['attempts'], $details['timeframe'] );
+
+			case 'scan_404':
+				return sprintf( '404 scanner: %d requests in %d minutes', $details['attempts'], $details['timeframe'] );
+
+			case 'wc_login_failed':
+				return sprintf( 'WooCommerce login attempts: %d in %d minutes', $details['attempts'], $details['timeframe'] );
+
 			default:
 				return 'Suspicious activity detected';
 		}
 	}
 
 	/**
-	 * Get stat type for event
+	 * Get stat type for event.
+	 *
+	 * The stats table has a fixed set of counters (see
+	 * ReportedIP_Hive_Database::update_daily_stats whitelist), so new sensors
+	 * roll up into the closest existing counter:
+	 *   - login-shaped attacks → failed_logins
+	 *   - reconnaissance / scan attacks → blocked_ips
+	 *   - everything else → failed_logins (safe default)
 	 */
 	private function get_stat_type_for_event( $event_type ) {
 		$stat_mapping = array(
-			'failed_login'   => 'failed_logins',
-			'comment_spam'   => 'comment_spam',
-			'xmlrpc_abuse'   => 'xmlrpc_calls',
-			'admin_scanning' => 'failed_logins',
+			'failed_login'       => 'failed_logins',
+			'comment_spam'       => 'comment_spam',
+			'xmlrpc_abuse'       => 'xmlrpc_calls',
+			'admin_scanning'     => 'failed_logins',
+			'password_spray'     => 'failed_logins',
+			'app_password_abuse' => 'failed_logins',
+			'wc_login_failed'    => 'failed_logins',
+			'user_enumeration'   => 'blocked_ips',
+			'rest_abuse'         => 'blocked_ips',
+			'scan_404'           => 'blocked_ips',
 		);
 
 		return isset( $stat_mapping[ $event_type ] ) ? $stat_mapping[ $event_type ] : 'failed_logins';

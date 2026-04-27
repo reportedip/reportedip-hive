@@ -55,6 +55,13 @@ grumphp:
             # Only check PHP files
             triggered_by: [php]
 
+            # Analyse the configured paths in phpstan.neon (not just the staged
+            # diff). GrumPHP's default passes changed files via --paths which
+            # overrides phpstan.neon and breaks method-resolution against
+            # classes that live outside the diff (e.g. Mode_Manager methods
+            # called from Setup_Wizard).
+            use_grumphp_paths: false
+
             metadata:
                 priority: 90
 

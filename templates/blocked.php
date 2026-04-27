@@ -13,13 +13,31 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+$reportedip_hive_block_context = isset( $reportedip_hive_block_context ) && is_string( $reportedip_hive_block_context )
+	? $reportedip_hive_block_context
+	: 'ip_block';
+
+$reportedip_hive_block_strings = 'hide_login' === $reportedip_hive_block_context
+	? array(
+		'doc_title' => __( 'Page not available', 'reportedip-hive' ),
+		'title'     => __( 'Page not available', 'reportedip-hive' ),
+		'message'   => __( 'This endpoint has been disabled by the site administrator.', 'reportedip-hive' ),
+		'reason'    => __( 'Login endpoint protected', 'reportedip-hive' ),
+	)
+	: array(
+		'doc_title' => __( 'Access Denied - IP Blocked', 'reportedip-hive' ),
+		'title'     => __( 'Access Denied', 'reportedip-hive' ),
+		'message'   => __( 'Your IP address has been temporarily blocked due to suspicious activity detected on this website.', 'reportedip-hive' ),
+		'reason'    => __( 'Security policy violation', 'reportedip-hive' ),
+	);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Access Denied - IP Blocked</title>
+	<title><?php echo esc_html( $reportedip_hive_block_strings['doc_title'] ); ?></title>
 	<style>
 		body {
 			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -147,17 +165,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="blocked-container">
 		<div class="blocked-icon">🚫</div>
 		
-		<h1 class="blocked-title">Access Denied</h1>
-		
+		<h1 class="blocked-title"><?php echo esc_html( $reportedip_hive_block_strings['title'] ); ?></h1>
+
 		<p class="blocked-message">
-			Your IP address has been temporarily blocked due to suspicious activity detected on this website.
+			<?php echo esc_html( $reportedip_hive_block_strings['message'] ); ?>
 		</p>
-		
+
 		<div class="blocked-details">
-			<h4>Block Information:</h4>
-			<p><strong>Your IP:</strong> <?php echo esc_html( ReportedIP_Hive::get_client_ip() ); ?></p>
-			<p><strong>Time:</strong> <?php echo esc_html( gmdate( 'Y-m-d H:i:s T' ) ); ?></p>
-			<p><strong>Reason:</strong> Security policy violation</p>
+			<h4><?php esc_html_e( 'Block Information:', 'reportedip-hive' ); ?></h4>
+			<p><strong><?php esc_html_e( 'Your IP:', 'reportedip-hive' ); ?></strong> <?php echo esc_html( ReportedIP_Hive::get_client_ip() ); ?></p>
+			<p><strong><?php esc_html_e( 'Time:', 'reportedip-hive' ); ?></strong> <?php echo esc_html( gmdate( 'Y-m-d H:i:s T' ) ); ?></p>
+			<p><strong><?php esc_html_e( 'Reason:', 'reportedip-hive' ); ?></strong> <?php echo esc_html( $reportedip_hive_block_strings['reason'] ); ?></p>
 		</div>
 
 		<div class="blocked-actions">
