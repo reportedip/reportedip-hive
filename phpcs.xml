@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<ruleset name="ReportedIP Hive WordPress Coding Standards">
+    <description>WordPress Coding Standards for ReportedIP Hive Plugin</description>
+
+    <!-- ============================================ -->
+    <!-- Configuration -->
+    <!-- ============================================ -->
+
+    <!-- Show progress and sniff codes -->
+    <arg value="ps"/>
+
+    <!-- Check PHP files only -->
+    <arg name="extensions" value="php"/>
+
+    <!-- Use colors in output -->
+    <arg name="colors"/>
+
+    <!-- Enable caching for performance -->
+    <arg name="cache" value=".phpcs.cache"/>
+
+    <!-- Parallel processing -->
+    <arg name="parallel" value="8"/>
+
+    <!-- ============================================ -->
+    <!-- Files to scan -->
+    <!-- ============================================ -->
+
+    <file>.</file>
+
+    <!-- Exclude directories -->
+    <exclude-pattern>/vendor/*</exclude-pattern>
+    <exclude-pattern>/node_modules/*</exclude-pattern>
+    <exclude-pattern>/tests/*</exclude-pattern>
+    <exclude-pattern>/bin/*</exclude-pattern>
+    <exclude-pattern>/.github/*</exclude-pattern>
+    <exclude-pattern>/.phpstan-cache/*</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+    <exclude-pattern>*.min.css</exclude-pattern>
+
+    <!-- PHPStan stub file: type stubs for static analysis only, never executed at runtime. -->
+    <exclude-pattern>/phpstan-bootstrap.php</exclude-pattern>
+
+    <!-- ============================================ -->
+    <!-- Base Rulesets -->
+    <!-- ============================================ -->
+
+    <!-- WordPress Extra Coding Standards -->
+    <rule ref="WordPress-Extra">
+        <!-- Exclude Yoda conditions - matter of preference -->
+        <exclude name="WordPress.PHP.YodaConditions"/>
+    </rule>
+
+    <!-- WordPress Core Standards -->
+    <rule ref="WordPress-Core"/>
+
+    <!-- PHP Compatibility (8.1+) -->
+    <rule ref="PHPCompatibilityWP"/>
+    <config name="testVersion" value="8.1-"/>
+
+    <!-- ============================================ -->
+    <!-- WordPress Configuration -->
+    <!-- ============================================ -->
+
+    <config name="minimum_wp_version" value="5.0"/>
+
+    <!-- Text domain for i18n -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="reportedip-hive"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Allowed prefixes -->
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="reportedip"/>
+                <element value="ReportedIP"/>
+                <element value="REPORTEDIP"/>
+            </property>
+        </properties>
+        <!-- Template files receive variables via extract() from the calling
+             controller (WordPress pattern); their locals are not truly
+             "global" and never leak outside the template scope. -->
+        <exclude-pattern>/templates/*</exclude-pattern>
+    </rule>
+
+    <!-- ============================================ -->
+    <!-- TEMPORARILY DISABLED - Fix gradually -->
+    <!-- These rules are valid but require time to fix -->
+    <!-- Remove exclusions as issues are addressed -->
+    <!-- ============================================ -->
+
+    <!-- Inline comment formatting - cosmetic, low priority -->
+    <rule ref="Squiz.Commenting.InlineComment.InvalidEndChar">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Line length - cosmetic, low priority -->
+    <rule ref="Generic.Files.LineLength">
+        <severity>0</severity>
+    </rule>
+
+    <!-- File naming conventions - would require renaming files -->
+    <rule ref="WordPress.Files.FileName.InvalidClassFileName">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Documentation: WordPress.org-Standard, PFLICHT für public Plugins -->
+    <!-- ClassComment + FunctionComment + FileComment + VariableComment sind aktiv. -->
+    <rule ref="WordPress.WP.I18n.MissingTranslatorsComment">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Short ternary - PHP 7+ feature, OK to use -->
+    <rule ref="Universal.Operators.DisallowShortTernary.Found">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Strict array search - valid but needs review -->
+    <rule ref="WordPress.PHP.StrictInArray.MissingTrueStrict">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Alternative functions - some are OK to use -->
+    <rule ref="WordPress.WP.AlternativeFunctions.json_encode_json_encode">
+        <severity>0</severity>
+    </rule>
+    <rule ref="WordPress.WP.AlternativeFunctions.parse_url_parse_url">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Date functions - sometimes wp_ alternatives aren't needed -->
+    <rule ref="WordPress.DateTime.RestrictedFunctions.date_date">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Development functions - OK in security plugin for logging -->
+    <rule ref="WordPress.PHP.DevelopmentFunctions.error_log_error_log">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Line endings - environment specific (Windows CRLF vs Unix LF) -->
+    <rule ref="Internal.LineEndings.Mixed">
+        <severity>0</severity>
+    </rule>
+    <rule ref="Generic.Files.LineEndings.InvalidEOLChar">
+        <severity>0</severity>
+    </rule>
+
+    <!-- ============================================ -->
+    <!-- SECURITY RULES - KEEP ACTIVE (as warnings) -->
+    <!-- These will generate warnings for visibility -->
+    <!-- but won't block commits until fixed -->
+    <!-- ============================================ -->
+
+    <!-- Output escaping - SECURITY -->
+    <rule ref="WordPress.Security.EscapeOutput">
+        <type>warning</type>
+    </rule>
+
+    <!-- Input sanitization - SECURITY -->
+    <rule ref="WordPress.Security.ValidatedSanitizedInput">
+        <type>warning</type>
+    </rule>
+
+    <!-- Nonce verification - SECURITY -->
+    <rule ref="WordPress.Security.NonceVerification">
+        <type>warning</type>
+    </rule>
+
+    <!-- SQL preparation - SECURITY -->
+    <rule ref="WordPress.DB.PreparedSQL">
+        <type>warning</type>
+    </rule>
+
+    <!-- Direct DB queries - performance/security -->
+    <rule ref="WordPress.DB.DirectDatabaseQuery">
+        <type>warning</type>
+    </rule>
+
+    <!-- ============================================ -->
+    <!-- Strict comparison - converted to warning -->
+    <!-- ============================================ -->
+    <rule ref="Universal.Operators.StrictComparisons">
+        <type>warning</type>
+    </rule>
+
+</ruleset>

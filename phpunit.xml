@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+    bootstrap="tests/bootstrap.php"
+    backupGlobals="false"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    verbose="true"
+    beStrictAboutTestsThatDoNotTestAnything="true"
+    failOnRisky="true"
+    failOnWarning="true"
+>
+    <!-- Test Suites -->
+    <testsuites>
+        <!-- Unit tests - fast, no WordPress dependency -->
+        <testsuite name="unit">
+            <directory suffix="Test.php">tests/Unit</directory>
+        </testsuite>
+
+        <!-- Integration tests - require WordPress test framework -->
+        <testsuite name="integration">
+            <directory suffix="Test.php">tests/Integration</directory>
+        </testsuite>
+
+        <!-- All tests -->
+        <testsuite name="all">
+            <directory suffix="Test.php">tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <!-- Code Coverage Configuration -->
+    <coverage processUncoveredFiles="false">
+        <include>
+            <directory suffix=".php">includes</directory>
+            <directory suffix=".php">admin</directory>
+            <file>reportedip-hive.php</file>
+        </include>
+        <exclude>
+            <directory suffix=".php">vendor</directory>
+            <directory suffix=".php">tests</directory>
+        </exclude>
+        <report>
+            <clover outputFile="coverage/clover.xml"/>
+            <html outputDirectory="coverage/html"/>
+            <text outputFile="php://stdout"/>
+        </report>
+    </coverage>
+
+    <!-- PHP Configuration -->
+    <php>
+        <!-- WordPress test configuration -->
+        <const name="WP_TESTS_PHPUNIT_POLYFILLS_PATH" value="vendor/yoast/phpunit-polyfills"/>
+
+        <!-- Test database configuration (override in phpunit-local.xml) -->
+        <env name="WP_TESTS_DB_NAME" value="wordpress_test"/>
+        <env name="WP_TESTS_DB_USER" value="root"/>
+        <env name="WP_TESTS_DB_PASSWORD" value=""/>
+        <env name="WP_TESTS_DB_HOST" value="localhost"/>
+        <env name="WP_TESTS_TABLE_PREFIX" value="wptests_"/>
+        <env name="WP_TESTS_DOMAIN" value="example.org"/>
+        <env name="WP_TESTS_EMAIL" value="admin@example.org"/>
+        <env name="WP_TESTS_TITLE" value="ReportedIP Hive Tests"/>
+
+        <!-- Plugin configuration -->
+        <const name="REPORTEDIP_HIVE_TESTING" value="true"/>
+
+        <!-- Disable external HTTP requests in tests -->
+        <const name="WP_HTTP_BLOCK_EXTERNAL" value="true"/>
+
+        <!-- Memory limit for tests -->
+        <ini name="memory_limit" value="512M"/>
+
+        <!-- Error reporting -->
+        <ini name="error_reporting" value="E_ALL"/>
+        <ini name="display_errors" value="On"/>
+    </php>
+
+    <!-- Logging -->
+    <logging>
+        <junit outputFile="coverage/junit.xml"/>
+    </logging>
+
+    <!-- Groups -->
+    <groups>
+        <exclude>
+            <!-- Exclude slow tests by default -->
+            <group>slow</group>
+            <!-- Exclude tests requiring external API -->
+            <group>external-api</group>
+        </exclude>
+    </groups>
+</phpunit>

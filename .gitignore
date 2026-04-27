@@ -1,0 +1,139 @@
+# =============================================================================
+# ReportedIP Hive - Git Ignore Configuration
+# =============================================================================
+
+# =============================================================================
+# Dependencies
+# =============================================================================
+# Composer dependencies (installed via composer install)
+# Includes plugin-update-checker — installed as composer require, not vendored.
+/vendor/
+
+# Node.js dependencies (if using for asset compilation)
+/node_modules/
+
+# =============================================================================
+# IDE & Editor Files
+# =============================================================================
+# JetBrains IDEs (PhpStorm, IntelliJ, etc.)
+.idea/
+*.iml
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+
+# =============================================================================
+# Operating System Files
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+
+# =============================================================================
+# Testing & Quality Assurance
+# =============================================================================
+# PHPUnit
+/coverage/
+.phpunit.result.cache
+phpunit-local.xml
+
+# PHP CodeSniffer
+.phpcs.cache
+
+# PHPStan
+phpstan.neon.local
+.phpstan-cache/
+
+# GrumPHP
+.grumphp.lock
+
+# =============================================================================
+# Build & Distribution
+# =============================================================================
+# Build artifacts
+/build/
+/dist/
+*.zip
+*.tar.gz
+
+# Compiled assets (if using build tools)
+/assets/dist/
+
+# =============================================================================
+# Logs & Debug Files
+# =============================================================================
+*.log
+/logs/
+debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =============================================================================
+# Environment & Configuration
+# =============================================================================
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.testing
+
+# Local configuration overrides
+*.local.php
+*.local.json
+
+# =============================================================================
+# Temporary Files
+# =============================================================================
+/tmp/
+/temp/
+*.tmp
+*.temp
+*.cache
+
+# =============================================================================
+# Composer
+# =============================================================================
+# Lock file - not needed for plugins distributed via WordPress.org
+# Include it if you're developing with a team
+# composer.lock
+
+# Auth configuration
+auth.json
+
+# =============================================================================
+# WordPress Testing Environment
+# =============================================================================
+# WordPress test installation
+/wordpress-tests-lib/
+/wordpress/
+
+# Test database configuration
+wp-tests-config.php

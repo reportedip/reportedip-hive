@@ -1,0 +1,4884 @@
+# Copyright (C) 2026 Patrick Schlesinger, CMS ADMINS
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: ReportedIP Hive 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-04-24T19:07:05+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: reportedip-hive\n"
+
+#. Plugin Name of the plugin
+#: reportedip-hive.php:3
+#: admin/class-admin-settings.php:198
+#: admin/class-admin-settings.php:199
+#: admin/class-admin-settings.php:884
+msgid "ReportedIP Hive"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: reportedip-hive.php:4
+msgid "https://reportedip.de"
+msgstr ""
+
+#. Description of the plugin
+#: reportedip-hive.php:5
+msgid "WordPress security client for the ReportedIP.de service — automatic monitoring and reporting of security events."
+msgstr ""
+
+#. Author of the plugin
+#: reportedip-hive.php:7
+msgid "Patrick Schlesinger, CMS ADMINS"
+msgstr ""
+
+#. Author URI of the plugin
+#: reportedip-hive.php:8
+msgid "https://cms-admins.de"
+msgstr ""
+
+#: admin/class-admin-settings.php:77
+#: admin/class-setup-wizard.php:1069
+#: includes/class-two-factor-dashboard.php:150
+#: templates/two-factor-onboarding.php:545
+msgid "Security Focused"
+msgstr ""
+
+#: admin/class-admin-settings.php:81
+#: admin/class-setup-wizard.php:1073
+#: includes/class-two-factor-dashboard.php:154
+#: templates/two-factor-onboarding.php:549
+msgid "GDPR Compliant"
+msgstr ""
+
+#: admin/class-admin-settings.php:85
+#: admin/class-setup-wizard.php:1077
+#: includes/class-two-factor-dashboard.php:158
+#: templates/two-factor-onboarding.php:553
+msgid "Made in Germany"
+msgstr ""
+
+#: admin/class-admin-settings.php:120
+#: admin/class-admin-settings.php:179
+#: reportedip-hive.php:1029
+#: reportedip-hive.php:1084
+#: reportedip-hive.php:1100
+msgid "ReportedIP Hive:"
+msgstr ""
+
+#. translators: %1$d: number of failed reports, %2$s: link to queue page
+#: admin/class-admin-settings.php:124
+#: reportedip-hive.php:1032
+#, php-format
+msgid "%1$d API reports failed. %2$s"
+msgstr ""
+
+#: admin/class-admin-settings.php:126
+#: reportedip-hive.php:1034
+msgid "View queue"
+msgstr ""
+
+#: admin/class-admin-settings.php:130
+#: admin/class-admin-settings.php:146
+#: reportedip-hive.php:1037
+#: reportedip-hive.php:1054
+msgid "Retry all"
+msgstr ""
+
+#: admin/class-admin-settings.php:138
+#: reportedip-hive.php:1045
+msgid "Retrying…"
+msgstr ""
+
+#: admin/class-admin-settings.php:163
+msgid "Queue Critical:"
+msgstr ""
+
+#. translators: 1: pending count, 2: upgrade link, 3: queue link
+#: admin/class-admin-settings.php:167
+#, php-format
+msgid "%1$d reports pending processing. %2$s or %3$s."
+msgstr ""
+
+#: admin/class-admin-settings.php:169
+#: admin/class-admin-settings.php:185
+#: reportedip-hive.php:1077
+#: reportedip-hive.php:1089
+msgid "Upgrade API tier"
+msgstr ""
+
+#: admin/class-admin-settings.php:170
+#: reportedip-hive.php:1078
+msgid "Manage queue"
+msgstr ""
+
+#. translators: 1: pending count, 2: upgrade link
+#. translators: %1$d: number of pending reports, %2$s: link to community page
+#: admin/class-admin-settings.php:183
+#: reportedip-hive.php:1087
+#, php-format
+msgid "%1$d reports pending processing. %2$s for higher limits."
+msgstr ""
+
+#: admin/class-admin-settings.php:209
+#: admin/class-admin-settings.php:210
+msgid "Dashboard"
+msgstr ""
+
+#: admin/class-admin-settings.php:218
+#: admin/class-admin-settings.php:219
+#: admin/class-admin-settings.php:1134
+msgid "Security"
+msgstr ""
+
+#: admin/class-admin-settings.php:227
+#: admin/class-admin-settings.php:228
+#: admin/class-admin-settings.php:1064
+#: admin/class-admin-settings.php:1576
+msgid "Settings"
+msgstr ""
+
+#: admin/class-admin-settings.php:236
+#: admin/class-admin-settings.php:237
+#: admin/class-admin-settings.php:2344
+msgid "System Status"
+msgstr ""
+
+#: admin/class-admin-settings.php:245
+#: admin/class-admin-settings.php:2826
+msgid "Community & Quota"
+msgstr ""
+
+#: admin/class-admin-settings.php:246
+#: includes/class-mode-manager.php:472
+msgid "Community"
+msgstr ""
+
+#: admin/class-admin-settings.php:606
+msgid "API key must be between 32 and 64 characters."
+msgstr ""
+
+#: admin/class-admin-settings.php:616
+msgid "API key must contain only alphanumeric characters."
+msgstr ""
+
+#: admin/class-admin-settings.php:642
+msgid "API endpoint must be a valid URL."
+msgstr ""
+
+#: admin/class-admin-settings.php:653
+msgid "API endpoint must use HTTPS for security."
+msgstr ""
+
+#: admin/class-admin-settings.php:684
+#, php-format
+msgid "Failed login threshold was adjusted to %1$d (must be between %2$d and %3$d)."
+msgstr ""
+
+#: admin/class-admin-settings.php:709
+#, php-format
+msgid "Time window was adjusted to %1$d minutes (must be between %2$d and %3$d)."
+msgstr ""
+
+#: admin/class-admin-settings.php:734
+#, php-format
+msgid "Comment spam threshold was adjusted to %1$d (must be between %2$d and %3$d)."
+msgstr ""
+
+#: admin/class-admin-settings.php:759
+#, php-format
+msgid "XMLRPC threshold was adjusted to %1$d (must be between %2$d and %3$d)."
+msgstr ""
+
+#: admin/class-admin-settings.php:792
+#, php-format
+msgid "Block threshold was adjusted to %1$d%% (must be between %2$d and %3$d)."
+msgstr ""
+
+#: admin/class-admin-settings.php:884
+msgid "Security Dashboard"
+msgstr ""
+
+#: admin/class-admin-settings.php:902
+msgid "Events (24h)"
+msgstr ""
+
+#: admin/class-admin-settings.php:913
+#: admin/class-admin-settings.php:1071
+#: admin/class-blocked-ips-table.php:30
+#: reportedip-hive.php:677
+msgid "Blocked IPs"
+msgstr ""
+
+#: admin/class-admin-settings.php:924
+#: admin/class-whitelist-table.php:30
+msgid "Whitelisted IPs"
+msgstr ""
+
+#: admin/class-admin-settings.php:936
+msgid "API Queue"
+msgstr ""
+
+#: admin/class-admin-settings.php:945
+#: includes/class-mode-manager.php:462
+msgid "Local"
+msgstr ""
+
+#: admin/class-admin-settings.php:946
+msgid "Protection Active"
+msgstr ""
+
+#: admin/class-admin-settings.php:957
+msgid "Security Events"
+msgstr ""
+
+#: admin/class-admin-settings.php:959
+msgid "7 Days"
+msgstr ""
+
+#: admin/class-admin-settings.php:960
+#: admin/class-admin-settings.php:1413
+#: admin/class-admin-settings.php:1439
+msgid "30 Days"
+msgstr ""
+
+#: admin/class-admin-settings.php:971
+msgid "Threat Distribution"
+msgstr ""
+
+#: admin/class-admin-settings.php:984
+msgid "Recent Activity"
+msgstr ""
+
+#: admin/class-admin-settings.php:987
+msgid "View All"
+msgstr ""
+
+#: admin/class-admin-settings.php:997
+msgid "No critical events in the last 24 hours. Your site is secure!"
+msgstr ""
+
+#: admin/class-admin-settings.php:1042
+#: admin/class-api-queue-table.php:252
+msgid "ago"
+msgstr ""
+
+#: admin/class-admin-settings.php:1055
+#: admin/class-admin-settings.php:2442
+msgid "Quick Actions"
+msgstr ""
+
+#: admin/class-admin-settings.php:1078
+#: admin/class-admin-settings.php:1200
+msgid "Whitelist"
+msgstr ""
+
+#: admin/class-admin-settings.php:1085
+msgid "View Logs"
+msgstr ""
+
+#: admin/class-admin-settings.php:1093
+#: admin/class-admin-settings.php:1231
+msgid "IP Lookup"
+msgstr ""
+
+#: admin/class-admin-settings.php:1134
+msgid "Manage blocked IPs, whitelist, and security logs"
+msgstr ""
+
+#: admin/class-admin-settings.php:1141
+msgid "IP Lists"
+msgstr ""
+
+#: admin/class-admin-settings.php:1145
+msgid "Activity"
+msgstr ""
+
+#: admin/class-admin-settings.php:1150
+#: admin/class-admin-settings.php:1591
+msgid "Advanced"
+msgstr ""
+
+#: admin/class-admin-settings.php:1195
+#: admin/class-admin-settings.php:2416
+msgid "Blocked"
+msgstr ""
+
+#: admin/class-admin-settings.php:1226
+msgid "Event Log"
+msgstr ""
+
+#: admin/class-admin-settings.php:1264
+#: admin/class-admin-settings.php:1453
+#: admin/class-admin-settings.php:1514
+msgid "Search"
+msgstr ""
+
+#: admin/class-admin-settings.php:1271
+msgid "Export CSV"
+msgstr ""
+
+#: admin/class-admin-settings.php:1274
+msgid "Export JSON"
+msgstr ""
+
+#: admin/class-admin-settings.php:1291
+msgid "This page shows all pending API reports that will be sent to the ReportedIP service. Reports are processed automatically via cron (hourly). Failed reports will be retried up to 3 times."
+msgstr ""
+
+#: admin/class-admin-settings.php:1300
+msgid "Search IP"
+msgstr ""
+
+#: admin/class-admin-settings.php:1313
+#: admin/class-admin-settings.php:1364
+msgid "Retrying..."
+msgstr ""
+
+#: admin/class-admin-settings.php:1323
+msgid "Error retrying report"
+msgstr ""
+
+#: admin/class-admin-settings.php:1324
+#: admin/class-api-queue-table.php:75
+#: admin/class-api-queue-table.php:269
+msgid "Retry"
+msgstr ""
+
+#: admin/class-admin-settings.php:1335
+msgid "Are you sure you want to delete this queue item?"
+msgstr ""
+
+#: admin/class-admin-settings.php:1339
+msgid "Deleting..."
+msgstr ""
+
+#: admin/class-admin-settings.php:1349
+msgid "Error deleting report"
+msgstr ""
+
+#: admin/class-admin-settings.php:1350
+#: admin/class-api-queue-table.php:76
+#: admin/class-api-queue-table.php:277
+#: admin/class-logs-table.php:72
+msgid "Delete"
+msgstr ""
+
+#: admin/class-admin-settings.php:1360
+msgid "Are you sure you want to retry all failed reports?"
+msgstr ""
+
+#: admin/class-admin-settings.php:1373
+msgid "Error retrying reports"
+msgstr ""
+
+#: admin/class-admin-settings.php:1374
+msgid "Retry All Failed"
+msgstr ""
+
+#: admin/class-admin-settings.php:1397
+msgid "Block an IP Address"
+msgstr ""
+
+#: admin/class-admin-settings.php:1403
+#: admin/class-api-queue-table.php:44
+#: admin/class-blocked-ips-table.php:44
+#: admin/class-logs-table.php:48
+#: admin/class-whitelist-table.php:44
+msgid "IP Address"
+msgstr ""
+
+#: admin/class-admin-settings.php:1406
+#: admin/class-admin-settings.php:1482
+#: admin/class-blocked-ips-table.php:45
+#: admin/class-whitelist-table.php:46
+msgid "Reason"
+msgstr ""
+
+#: admin/class-admin-settings.php:1410
+#: admin/class-admin-settings.php:1436
+msgid "24 Hours"
+msgstr ""
+
+#: admin/class-admin-settings.php:1411
+#: admin/class-admin-settings.php:1437
+msgid "3 Days"
+msgstr ""
+
+#: admin/class-admin-settings.php:1412
+#: admin/class-admin-settings.php:1438
+msgid "1 Week"
+msgstr ""
+
+#: admin/class-admin-settings.php:1414
+#: admin/class-admin-settings.php:1440
+#: admin/class-blocked-ips-table.php:112
+msgid "Permanent"
+msgstr ""
+
+#: admin/class-admin-settings.php:1417
+#: admin/class-logs-table.php:73
+#: admin/class-logs-table.php:139
+msgid "Block IP"
+msgstr ""
+
+#: admin/class-admin-settings.php:1426
+msgid "Import Blocked IPs from CSV"
+msgstr ""
+
+#: admin/class-admin-settings.php:1443
+#: admin/class-admin-settings.php:1504
+msgid "Import CSV"
+msgstr ""
+
+#: admin/class-admin-settings.php:1445
+#: admin/class-admin-settings.php:1506
+msgid "CSV format: One IP address per line, or columns: ip_address, reason (optional)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1473
+#: admin/class-admin-settings.php:1487
+msgid "Add to Whitelist"
+msgstr ""
+
+#: admin/class-admin-settings.php:1479
+msgid "IP Address or CIDR"
+msgstr ""
+
+#: admin/class-admin-settings.php:1485
+msgid "Expires (optional)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1496
+msgid "Import Whitelist from CSV"
+msgstr ""
+
+#: admin/class-admin-settings.php:1533
+msgid "IP Address Lookup"
+msgstr ""
+
+#: admin/class-admin-settings.php:1537
+msgid "Check the reputation of any IP address using the ReportedIP.de service."
+msgstr ""
+
+#: admin/class-admin-settings.php:1541
+msgid "Enter IP address..."
+msgstr ""
+
+#: admin/class-admin-settings.php:1545
+msgid "Lookup"
+msgstr ""
+
+#: admin/class-admin-settings.php:1550
+msgid "Lookup Results"
+msgstr ""
+
+#: admin/class-admin-settings.php:1576
+msgid "Configure protection settings and preferences"
+msgstr ""
+
+#: admin/class-admin-settings.php:1583
+msgid "General"
+msgstr ""
+
+#: admin/class-admin-settings.php:1587
+#: admin/class-setup-wizard.php:43
+msgid "Protection"
+msgstr ""
+
+#: admin/class-admin-settings.php:1595
+msgid "Two-Factor Auth"
+msgstr ""
+
+#: admin/class-admin-settings.php:1634
+msgid "Operation Mode"
+msgstr ""
+
+#: admin/class-admin-settings.php:1636
+msgid "Choose how ReportedIP Hive should operate. You can switch modes at any time."
+msgstr ""
+
+#: admin/class-admin-settings.php:1645
+msgid "Local Protection"
+msgstr ""
+
+#: admin/class-admin-settings.php:1646
+msgid "Standalone protection without API connection. Perfect for privacy-focused sites."
+msgstr ""
+
+#: admin/class-admin-settings.php:1648
+#: admin/class-setup-wizard.php:426
+msgid "Works offline"
+msgstr ""
+
+#: admin/class-admin-settings.php:1649
+msgid "No account required"
+msgstr ""
+
+#: admin/class-admin-settings.php:1650
+msgid "Local blocking only"
+msgstr ""
+
+#: admin/class-admin-settings.php:1664
+#: admin/class-setup-wizard.php:446
+#: includes/class-mode-manager.php:471
+msgid "Community Network"
+msgstr ""
+
+#: admin/class-admin-settings.php:1665
+msgid "Join thousands of sites sharing threat intelligence. Collective protection powered by community."
+msgstr ""
+
+#: admin/class-admin-settings.php:1667
+msgid "Real-time threat data"
+msgstr ""
+
+#: admin/class-admin-settings.php:1668
+msgid "Community blocklists"
+msgstr ""
+
+#: admin/class-admin-settings.php:1669
+#: admin/class-setup-wizard.php:1017
+msgid "GDPR compliant"
+msgstr ""
+
+#: admin/class-admin-settings.php:1677
+msgid "Mode changes take effect immediately."
+msgstr ""
+
+#: admin/class-admin-settings.php:1684
+msgid "API Configuration"
+msgstr ""
+
+#: admin/class-admin-settings.php:1686
+msgid "Connect to the ReportedIP community network for enhanced protection."
+msgstr ""
+
+#: admin/class-admin-settings.php:1692
+msgid "API Key"
+msgstr ""
+
+#: admin/class-admin-settings.php:1695
+msgid "Your ReportedIP.de API key."
+msgstr ""
+
+#: admin/class-admin-settings.php:1696
+msgid "Get API Key"
+msgstr ""
+
+#: admin/class-admin-settings.php:1701
+msgid "API Endpoint"
+msgstr ""
+
+#: admin/class-admin-settings.php:1703
+msgid "The ReportedIP.de API endpoint URL."
+msgstr ""
+
+#: admin/class-admin-settings.php:1708
+msgid "Trusted IP Header"
+msgstr ""
+
+#: admin/class-admin-settings.php:1712
+msgid "None (REMOTE_ADDR only)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1715
+msgid "Cloudflare (CF-Connecting-IP)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1718
+msgid "Nginx (X-Real-IP)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1721
+msgid "Generic Proxy (X-Forwarded-For)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1724
+msgid "Client-IP Header"
+msgstr ""
+
+#: admin/class-admin-settings.php:1728
+msgid "Select which HTTP header to trust for determining the client IP. Use \"None\" unless your site is behind a reverse proxy."
+msgstr ""
+
+#: admin/class-admin-settings.php:1735
+msgid "Test Connection"
+msgstr ""
+
+#: admin/class-admin-settings.php:1737
+msgid "Save Changes"
+msgstr ""
+
+#: admin/class-admin-settings.php:1757
+msgid "Failed Login Protection"
+msgstr ""
+
+#: admin/class-admin-settings.php:1765
+msgid "Automatic Actions"
+msgstr ""
+
+#: admin/class-admin-settings.php:1771
+msgid "Save Protection Settings"
+msgstr ""
+
+#: admin/class-admin-settings.php:1788
+msgid "Logging Settings"
+msgstr ""
+
+#: admin/class-admin-settings.php:1796
+msgid "Performance & Caching"
+msgstr ""
+
+#: admin/class-admin-settings.php:1802
+msgid "Save Advanced Settings"
+msgstr ""
+
+#: admin/class-admin-settings.php:1818
+msgid "Enable Failed Login Monitoring"
+msgstr ""
+
+#: admin/class-admin-settings.php:1824
+msgid "Failed Login Threshold"
+msgstr ""
+
+#: admin/class-admin-settings.php:1826
+msgid "Number of failed login attempts before taking action."
+msgstr ""
+
+#: admin/class-admin-settings.php:1829
+#: admin/class-admin-settings.php:1852
+#: admin/class-admin-settings.php:1875
+msgid "Time Window (Minutes)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1831
+msgid "Time window in minutes for counting failed attempts."
+msgstr ""
+
+#: admin/class-admin-settings.php:1836
+msgid "Comment Spam Protection"
+msgstr ""
+
+#: admin/class-admin-settings.php:1841
+msgid "Enable Comment Monitoring"
+msgstr ""
+
+#: admin/class-admin-settings.php:1847
+msgid "Spam Comment Threshold"
+msgstr ""
+
+#: admin/class-admin-settings.php:1849
+msgid "Number of spam comments before taking action."
+msgstr ""
+
+#: admin/class-admin-settings.php:1854
+msgid "Time window in minutes for counting spam comments."
+msgstr ""
+
+#: admin/class-admin-settings.php:1859
+msgid "XMLRPC Protection"
+msgstr ""
+
+#: admin/class-admin-settings.php:1864
+msgid "Enable XMLRPC Monitoring"
+msgstr ""
+
+#: admin/class-admin-settings.php:1870
+msgid "XMLRPC Request Threshold"
+msgstr ""
+
+#: admin/class-admin-settings.php:1872
+msgid "Number of XMLRPC requests before taking action."
+msgstr ""
+
+#: admin/class-admin-settings.php:1877
+msgid "Time window in minutes for counting XMLRPC requests."
+msgstr ""
+
+#: admin/class-admin-settings.php:1894
+msgid "Enable Auto-Block"
+msgstr ""
+
+#: admin/class-admin-settings.php:1896
+msgid "Automatically block IPs when thresholds are exceeded"
+msgstr ""
+
+#: admin/class-admin-settings.php:1901
+msgid "Block Duration (Hours)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1903
+msgid "How long to block IPs (in hours). Set to 0 for permanent blocks."
+msgstr ""
+
+#: admin/class-admin-settings.php:1906
+msgid "Reputation Block Threshold"
+msgstr ""
+
+#: admin/class-admin-settings.php:1908
+msgid "Block IPs with reputation score above this percentage."
+msgstr ""
+
+#: admin/class-admin-settings.php:1913
+#: admin/class-setup-wizard.php:895
+msgid "Notifications"
+msgstr ""
+
+#: admin/class-admin-settings.php:1918
+msgid "Send email notifications to admin when security events occur"
+msgstr ""
+
+#: admin/class-admin-settings.php:1923
+msgid "Whitelist Management"
+msgstr ""
+
+#: admin/class-admin-settings.php:1928
+msgid "Auto-Whitelist Admin IPs"
+msgstr ""
+
+#: admin/class-admin-settings.php:1930
+msgid "Automatically whitelist IP addresses of logged-in administrators. Helps prevent accidental lockouts."
+msgstr ""
+
+#: admin/class-admin-settings.php:1934
+msgid "Report Only Mode"
+msgstr ""
+
+#: admin/class-admin-settings.php:1939
+msgid "Enable Report Only Mode"
+msgstr ""
+
+#: admin/class-admin-settings.php:1942
+msgid "Only report security events to API, do not block users. When enabled, the plugin will continue monitoring and reporting security events to the API, but will not block any IP addresses."
+msgstr ""
+
+#: admin/class-admin-settings.php:1945
+msgid "Warning:"
+msgstr ""
+
+#: admin/class-admin-settings.php:1945
+msgid "This mode disables all IP blocking functionality. Use only if you want to monitor without blocking."
+msgstr ""
+
+#: admin/class-admin-settings.php:1959
+msgid "Logging Level"
+msgstr ""
+
+#: admin/class-admin-settings.php:1961
+msgid "Debug (All Events)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1962
+msgid "Info (Normal Events)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1963
+msgid "Warning (Important Events)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1964
+msgid "Error (Critical Events Only)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1966
+msgid "Choose what level of events to log."
+msgstr ""
+
+#: admin/class-admin-settings.php:1969
+msgid "File Logging"
+msgstr ""
+
+#: admin/class-admin-settings.php:1973
+msgid "Also write logs to files"
+msgstr ""
+
+#: admin/class-admin-settings.php:1975
+msgid "Logs will be written to /wp-content/uploads/reportedip-hive-logs/"
+msgstr ""
+
+#: admin/class-admin-settings.php:1980
+msgid "Privacy & GDPR Settings"
+msgstr ""
+
+#: admin/class-admin-settings.php:1982
+msgid "GDPR Compliance:"
+msgstr ""
+
+#: admin/class-admin-settings.php:1982
+msgid "These settings help ensure compliance with data protection regulations by minimizing personal data collection."
+msgstr ""
+
+#: admin/class-admin-settings.php:1990
+msgid "Minimal Logging Mode"
+msgstr ""
+
+#: admin/class-admin-settings.php:1992
+msgid "Reduces data collection to essential security information only. Recommended for GDPR compliance."
+msgstr ""
+
+#: admin/class-admin-settings.php:1998
+msgid "Log hashed usernames"
+msgstr ""
+
+#: admin/class-admin-settings.php:2000
+msgid "Usernames are hashed for security analysis. Disable for maximum privacy."
+msgstr ""
+
+#: admin/class-admin-settings.php:2006
+msgid "Log user agent strings"
+msgstr ""
+
+#: admin/class-admin-settings.php:2008
+msgid "User agents are truncated to 50 characters to reduce fingerprinting."
+msgstr ""
+
+#: admin/class-admin-settings.php:2014
+msgid "Log referer domains"
+msgstr ""
+
+#: admin/class-admin-settings.php:2016
+msgid "Only domain names are logged, not complete URLs."
+msgstr ""
+
+#: admin/class-admin-settings.php:2021
+msgid "Data Retention & Cleanup"
+msgstr ""
+
+#: admin/class-admin-settings.php:2024
+msgid "Data Retention Period (Days)"
+msgstr ""
+
+#: admin/class-admin-settings.php:2026
+msgid "How long to keep log data before automatic deletion."
+msgstr ""
+
+#: admin/class-admin-settings.php:2029
+msgid "Auto-Anonymization Period (Days)"
+msgstr ""
+
+#: admin/class-admin-settings.php:2031
+msgid "Automatically remove personal data from logs after this many days."
+msgstr ""
+
+#: admin/class-admin-settings.php:2039
+msgid "Delete Data on Uninstall"
+msgstr ""
+
+#: admin/class-admin-settings.php:2041
+msgid "Warning: This will permanently delete all logs, settings, and IP lists when uninstalling."
+msgstr ""
+
+#: admin/class-admin-settings.php:2045
+msgid "Maintenance"
+msgstr ""
+
+#: admin/class-admin-settings.php:2050
+msgid "Database Cleanup"
+msgstr ""
+
+#: admin/class-admin-settings.php:2053
+msgid "Clean Up Logs"
+msgstr ""
+
+#: admin/class-admin-settings.php:2055
+#, php-format
+msgid "Remove logs older than %d days."
+msgstr ""
+
+#: admin/class-admin-settings.php:2058
+msgid "Anonymize Data"
+msgstr ""
+
+#: admin/class-admin-settings.php:2061
+msgid "Anonymize"
+msgstr ""
+
+#: admin/class-admin-settings.php:2063
+#, php-format
+msgid "Remove personal data older than %d days."
+msgstr ""
+
+#: admin/class-admin-settings.php:2066
+msgid "Export Data"
+msgstr ""
+
+#: admin/class-admin-settings.php:2071
+msgid "Export logs for analysis."
+msgstr ""
+
+#: admin/class-admin-settings.php:2078
+msgid "GDPR Notice:"
+msgstr ""
+
+#: admin/class-admin-settings.php:2078
+msgid "This plugin processes IP addresses for legitimate security purposes. Ensure your privacy policy mentions security monitoring and IP-based blocking."
+msgstr ""
+
+#: admin/class-admin-settings.php:2105
+msgid "API Credit Information"
+msgstr ""
+
+#: admin/class-admin-settings.php:2108
+msgid "Important:"
+msgstr ""
+
+#: admin/class-admin-settings.php:2108
+msgid "Every API call to check IP reputation consumes credits from your ReportedIP.de account."
+msgstr ""
+
+#: admin/class-admin-settings.php:2110
+msgid "IP reputation checks cost credits"
+msgstr ""
+
+#: admin/class-admin-settings.php:2111
+msgid "Caching reduces API calls and saves credits"
+msgstr ""
+
+#: admin/class-admin-settings.php:2112
+msgid "Higher cache duration = fewer API calls = lower costs"
+msgstr ""
+
+#: admin/class-admin-settings.php:2113
+msgid "Monitor your usage to avoid unexpected charges"
+msgstr ""
+
+#: admin/class-admin-settings.php:2125
+msgid "Current Usage Statistics"
+msgstr ""
+
+#: admin/class-admin-settings.php:2131
+msgid "Estimated Monthly API Calls"
+msgstr ""
+
+#: admin/class-admin-settings.php:2140
+msgid "Cache Efficiency"
+msgstr ""
+
+#: admin/class-admin-settings.php:2148
+msgid "Monthly Credits Saved"
+msgstr ""
+
+#: admin/class-admin-settings.php:2156
+msgid "API Health Score"
+msgstr ""
+
+#: admin/class-admin-settings.php:2176
+msgid "Caching Configuration"
+msgstr ""
+
+#: admin/class-admin-settings.php:2185
+msgid "Enable API Caching"
+msgstr ""
+
+#: admin/class-admin-settings.php:2188
+msgid "Recommended:"
+msgstr ""
+
+#: admin/class-admin-settings.php:2189
+msgid "Caching can reduce API calls by 70-90% and significantly lower your costs."
+msgstr ""
+
+#: admin/class-admin-settings.php:2195
+msgid "Cache Duration (Hours)"
+msgstr ""
+
+#: admin/class-admin-settings.php:2198
+msgid "How long to cache IP reputation data."
+msgstr ""
+
+#: admin/class-admin-settings.php:2199
+#: admin/class-admin-settings.php:3154
+msgid "Recommendation:"
+msgstr ""
+
+#: admin/class-admin-settings.php:2199
+msgid "24-48 hours."
+msgstr ""
+
+#: admin/class-admin-settings.php:2204
+msgid "Negative Cache Duration (Hours)"
+msgstr ""
+
+#: admin/class-admin-settings.php:2206
+msgid "How long to cache \"IP not found\" results."
+msgstr ""
+
+#: admin/class-admin-settings.php:2219
+msgid "Rate Limiting"
+msgstr ""
+
+#: admin/class-admin-settings.php:2225
+msgid "Max API Calls per Hour"
+msgstr ""
+
+#: admin/class-admin-settings.php:2228
+msgid "Limit API calls to prevent excessive credit usage during attacks."
+msgstr ""
+
+#: admin/class-admin-settings.php:2229
+msgid "Note:"
+msgstr ""
+
+#: admin/class-admin-settings.php:2230
+msgid "When limit is reached, cached data will be used or checks will be skipped."
+msgstr ""
+
+#: admin/class-admin-settings.php:2243
+msgid "Cache Management"
+msgstr ""
+
+#: admin/class-admin-settings.php:2249
+msgid "Cache Information"
+msgstr ""
+
+#: admin/class-admin-settings.php:2252
+msgid "Cache Entries"
+msgstr ""
+
+#: admin/class-admin-settings.php:2256
+msgid "Cache Size"
+msgstr ""
+
+#: admin/class-admin-settings.php:2260
+msgid "Hit Rate"
+msgstr ""
+
+#: admin/class-admin-settings.php:2267
+msgid "Cache Actions"
+msgstr ""
+
+#: admin/class-admin-settings.php:2274
+msgid "Clear All Cache"
+msgstr ""
+
+#: admin/class-admin-settings.php:2283
+msgid "Clean Expired Entries"
+msgstr ""
+
+#: admin/class-admin-settings.php:2286
+msgid "Clear cache to force fresh API calls or clean up expired entries to save space."
+msgstr ""
+
+#: admin/class-admin-settings.php:2298
+msgid "Cost Optimization Tips"
+msgstr ""
+
+#: admin/class-admin-settings.php:2304
+msgid "Increase Cache Duration"
+msgstr ""
+
+#: admin/class-admin-settings.php:2305
+msgid "Set cache to 48-72 hours for maximum savings. IP reputations don't change frequently."
+msgstr ""
+
+#: admin/class-admin-settings.php:2309
+msgid "Enable Auto-Whitelist"
+msgstr ""
+
+#: admin/class-admin-settings.php:2310
+msgid "Whitelist admin IPs to avoid unnecessary API calls for trusted users."
+msgstr ""
+
+#: admin/class-admin-settings.php:2314
+msgid "Use Report-Only Mode"
+msgstr ""
+
+#: admin/class-admin-settings.php:2315
+msgid "During testing, use report-only mode to monitor without blocking and reduce API calls."
+msgstr ""
+
+#: admin/class-admin-settings.php:2319
+msgid "Monitor Usage Regularly"
+msgstr ""
+
+#: admin/class-admin-settings.php:2320
+msgid "Check this page weekly to monitor your API usage and adjust settings if needed."
+msgstr ""
+
+#: admin/class-admin-settings.php:2344
+msgid "Health check and diagnostics"
+msgstr ""
+
+#: admin/class-admin-settings.php:2353
+msgid "Logging"
+msgstr ""
+
+#: admin/class-admin-settings.php:2357
+msgid "Database"
+msgstr ""
+
+#: admin/class-admin-settings.php:2361
+msgid "API"
+msgstr ""
+
+#: admin/class-admin-settings.php:2392
+msgid "System Information"
+msgstr ""
+
+#: admin/class-admin-settings.php:2397
+msgid "Plugin Version"
+msgstr ""
+
+#: admin/class-admin-settings.php:2401
+msgid "PHP Version"
+msgstr ""
+
+#: admin/class-admin-settings.php:2405
+msgid "WordPress Version"
+msgstr ""
+
+#: admin/class-admin-settings.php:2409
+msgid "Your IP Address"
+msgstr ""
+
+#: admin/class-admin-settings.php:2414
+msgid "Whitelisted"
+msgstr ""
+
+#: admin/class-admin-settings.php:2422
+msgid "Protection Mode"
+msgstr ""
+
+#: admin/class-admin-settings.php:2425
+msgid "Report Only"
+msgstr ""
+
+#: admin/class-admin-settings.php:2427
+msgid "Full Protection"
+msgstr ""
+
+#: admin/class-admin-settings.php:2432
+msgid "Log Level"
+msgstr ""
+
+#: admin/class-admin-settings.php:2447
+msgid "Connection Tests"
+msgstr ""
+
+#: admin/class-admin-settings.php:2452
+msgid "Test Database"
+msgstr ""
+
+#: admin/class-admin-settings.php:2457
+msgid "Test API"
+msgstr ""
+
+#: admin/class-admin-settings.php:2461
+msgid "Enable WP_DEBUG for additional diagnostic tests."
+msgstr ""
+
+#: admin/class-admin-settings.php:2467
+msgid "Reset Plugin"
+msgstr ""
+
+#: admin/class-admin-settings.php:2468
+msgid "Reset all plugin settings to defaults. This will not delete your blocked IPs or logs."
+msgstr ""
+
+#: admin/class-admin-settings.php:2472
+msgid "Reset Settings"
+msgstr ""
+
+#: admin/class-admin-settings.php:2476
+msgid "Reset All Data"
+msgstr ""
+
+#: admin/class-admin-settings.php:2523
+msgid "No recent logs found"
+msgstr ""
+
+#: admin/class-admin-settings.php:2524
+msgid "No logs in the last 24 hours. This might indicate a logging problem."
+msgstr ""
+
+#: admin/class-admin-settings.php:2526
+msgid "Logging system operational"
+msgstr ""
+
+#: admin/class-admin-settings.php:2527
+#, php-format
+msgid "Last log entry: %s"
+msgstr ""
+
+#: admin/class-admin-settings.php:2534
+msgid "Log level is set to \"error\" - many events may not be logged."
+msgstr ""
+
+#: admin/class-admin-settings.php:2538
+msgid "Logging system error"
+msgstr ""
+
+#: admin/class-admin-settings.php:2551
+msgid "Database tables missing"
+msgstr ""
+
+#: admin/class-admin-settings.php:2552
+msgid "Plugin tables not found. Try deactivating and reactivating the plugin."
+msgstr ""
+
+#: admin/class-admin-settings.php:2554
+msgid "Database operational"
+msgstr ""
+
+#: admin/class-admin-settings.php:2559
+#, php-format
+msgid "Total log entries: %d"
+msgstr ""
+
+#: admin/class-admin-settings.php:2563
+msgid "Database error"
+msgstr ""
+
+#: admin/class-admin-settings.php:2571
+#: includes/class-api-client.php:309
+#: includes/class-api-client.php:440
+msgid "API not configured"
+msgstr ""
+
+#: admin/class-admin-settings.php:2572
+msgid "API key not set. Some features will not work."
+msgstr ""
+
+#: admin/class-admin-settings.php:2580
+msgid "API connection operational"
+msgstr ""
+
+#: admin/class-admin-settings.php:2581
+msgid "API connection test successful."
+msgstr ""
+
+#: admin/class-admin-settings.php:2584
+msgid "API connection failed"
+msgstr ""
+
+#: admin/class-admin-settings.php:2585
+msgid "Unknown API error"
+msgstr ""
+
+#: admin/class-admin-settings.php:2590
+msgid "API system error"
+msgstr ""
+
+#: admin/class-admin-settings.php:2641
+msgid "Local protection included"
+msgstr ""
+
+#: admin/class-admin-settings.php:2642
+msgid "Community threat checks"
+msgstr ""
+
+#: admin/class-admin-settings.php:2643
+msgid "Limited reports"
+msgstr ""
+
+#: admin/class-admin-settings.php:2653
+msgid "Full report permission"
+msgstr ""
+
+#: admin/class-admin-settings.php:2654
+#: admin/class-admin-settings.php:3110
+msgid "Community recognition"
+msgstr ""
+
+#: admin/class-admin-settings.php:2655
+msgid "Email support"
+msgstr ""
+
+#: admin/class-admin-settings.php:2665
+msgid "Bulk operations"
+msgstr ""
+
+#: admin/class-admin-settings.php:2666
+msgid "Analytics & trends"
+msgstr ""
+
+#: admin/class-admin-settings.php:2667
+#: admin/class-admin-settings.php:2680
+msgid "Priority support"
+msgstr ""
+
+#: admin/class-admin-settings.php:2677
+msgid "Unlimited API calls"
+msgstr ""
+
+#: admin/class-admin-settings.php:2678
+msgid "Bulk import/export"
+msgstr ""
+
+#: admin/class-admin-settings.php:2679
+msgid "White-label & SLA"
+msgstr ""
+
+#: admin/class-admin-settings.php:2786
+#: admin/class-admin-settings.php:2787
+msgid "Unbegrenzt"
+msgstr ""
+
+#: admin/class-admin-settings.php:2826
+msgid "Manage your API quota and community participation"
+msgstr ""
+
+#: admin/class-admin-settings.php:2833
+msgid "Status has been refreshed."
+msgstr ""
+
+#: admin/class-admin-settings.php:2839
+msgid "Local Shield mode active"
+msgstr ""
+
+#: admin/class-admin-settings.php:2840
+msgid "The plugin is currently running in local mode. Community features like shared reports, quota management and tier upgrades are disabled. Switch to community mode to benefit from the community threat intelligence."
+msgstr ""
+
+#: admin/class-admin-settings.php:2843
+msgid "Switch to Community"
+msgstr ""
+
+#: admin/class-admin-settings.php:2848
+msgid "API key is missing"
+msgstr ""
+
+#: admin/class-admin-settings.php:2849
+msgid "Community mode is active, but no API key is configured. Without a key, neither reports can be sent nor quota/tier can be queried."
+msgstr ""
+
+#: admin/class-admin-settings.php:2852
+msgid "Add API key"
+msgstr ""
+
+#: admin/class-admin-settings.php:2855
+msgid "Create account"
+msgstr ""
+
+#: admin/class-admin-settings.php:2869
+msgid "Your current status"
+msgstr ""
+
+#: admin/class-admin-settings.php:2872
+msgid "Refresh status now"
+msgstr ""
+
+#: admin/class-admin-settings.php:2878
+msgid "Refresh"
+msgstr ""
+
+#: admin/class-admin-settings.php:2885
+msgid "The status could not be fetched from the service right now. Please check your API key and internet connection, then try again."
+msgstr ""
+
+#: admin/class-admin-settings.php:2903
+msgid "Honeypot-Tier (unbegrenzt)"
+msgstr ""
+
+#: admin/class-admin-settings.php:2905
+msgid "API Tier"
+msgstr ""
+
+#: admin/class-admin-settings.php:2924
+msgid "∞"
+msgstr ""
+
+#: admin/class-admin-settings.php:2930
+msgid "Reports available today"
+msgstr ""
+
+#: admin/class-admin-settings.php:2948
+msgid "Reports in queue"
+msgstr ""
+
+#. translators: %d: number of days
+#: admin/class-admin-settings.php:2964
+#: admin/class-setup-wizard.php:1006
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin/class-admin-settings.php:2970
+msgid "Oldest report"
+msgstr ""
+
+#: admin/class-admin-settings.php:2977
+msgid "Notice:"
+msgstr ""
+
+#. translators: %s: reset date/time
+#: admin/class-admin-settings.php:2986
+#, php-format
+msgid "Reset: %s"
+msgstr ""
+
+#. translators: %d: days to clear queue
+#: admin/class-admin-settings.php:3002
+#, php-format
+msgid "At current quota, the queue will clear in about %d days."
+msgstr ""
+
+#: admin/class-admin-settings.php:3020
+msgid "Tier overview"
+msgstr ""
+
+#: admin/class-admin-settings.php:3032
+msgid "Unlimited"
+msgstr ""
+
+#: admin/class-admin-settings.php:3043
+msgid "Current tier"
+msgstr ""
+
+#: admin/class-admin-settings.php:3048
+msgid "Reports/day"
+msgstr ""
+
+#. translators: %s: number of API checks
+#: admin/class-admin-settings.php:3055
+#, php-format
+msgid "%s API checks/day"
+msgstr ""
+
+#: admin/class-admin-settings.php:3068
+msgid "Current plan"
+msgstr ""
+
+#: admin/class-admin-settings.php:3072
+msgid "Kontakt aufnehmen"
+msgstr ""
+
+#: admin/class-admin-settings.php:3076
+msgid "Upgrade"
+msgstr ""
+
+#: admin/class-admin-settings.php:3085
+msgid "Honeypot status detected"
+msgstr ""
+
+#: admin/class-admin-settings.php:3086
+msgid "Your key has honeypot privileges: unlimited reports, unlimited API checks, higher weighting."
+msgstr ""
+
+#: admin/class-admin-settings.php:3099
+msgid "Honeypot program (free!)"
+msgstr ""
+
+#: admin/class-admin-settings.php:3103
+msgid "Running a honeypot server? Join our honeypot network and enjoy special benefits:"
+msgstr ""
+
+#: admin/class-admin-settings.php:3107
+msgid "Unlimited reports"
+msgstr ""
+
+#: admin/class-admin-settings.php:3107
+msgid "No daily limits"
+msgstr ""
+
+#: admin/class-admin-settings.php:3108
+msgid "Higher weighting"
+msgstr ""
+
+#: admin/class-admin-settings.php:3108
+msgid "Your reports count more"
+msgstr ""
+
+#: admin/class-admin-settings.php:3109
+msgid "Special API keys"
+msgstr ""
+
+#: admin/class-admin-settings.php:3109
+msgid "Optimised for automated systems"
+msgstr ""
+
+#: admin/class-admin-settings.php:3110
+msgid "Visible as an active contributor"
+msgstr ""
+
+#: admin/class-admin-settings.php:3114
+msgid "Learn more about the honeypot program"
+msgstr ""
+
+#: admin/class-admin-settings.php:3125
+msgid "Your activity (last 30 days)"
+msgstr ""
+
+#: admin/class-admin-settings.php:3140
+msgid "Security events"
+msgstr ""
+
+#: admin/class-admin-settings.php:3144
+msgid "IPs blocked"
+msgstr ""
+
+#: admin/class-admin-settings.php:3148
+msgid "Reported to community"
+msgstr ""
+
+#. translators: %d: number of events
+#: admin/class-admin-settings.php:3159
+#, php-format
+msgid "You have detected %d security events but have not reported anything to the community yet. A Contributor upgrade lets you share up to 200 reports per day and strengthens threat intelligence for everyone."
+msgstr ""
+
+#: admin/class-admin-settings.php:3166
+msgid "Upgrade now"
+msgstr ""
+
+#: admin/class-api-queue-table.php:29
+msgid "Queue Item"
+msgstr ""
+
+#: admin/class-api-queue-table.php:30
+msgid "Queue Items"
+msgstr ""
+
+#: admin/class-api-queue-table.php:45
+msgid "Categories"
+msgstr ""
+
+#: admin/class-api-queue-table.php:46
+#: admin/class-two-factor-admin.php:1080
+#: includes/class-two-factor-dashboard.php:115
+msgid "Status"
+msgstr ""
+
+#: admin/class-api-queue-table.php:47
+msgid "Priority"
+msgstr ""
+
+#: admin/class-api-queue-table.php:48
+msgid "Attempts"
+msgstr ""
+
+#: admin/class-api-queue-table.php:49
+#: admin/class-setup-wizard.php:235
+#: admin/class-two-factor-admin.php:1060
+#: includes/class-two-factor-onboarding.php:317
+#: includes/class-two-factor.php:1353
+#: reportedip-hive.php:528
+msgid "Error"
+msgstr ""
+
+#: admin/class-api-queue-table.php:50
+msgid "Created"
+msgstr ""
+
+#: admin/class-api-queue-table.php:51
+msgid "Last Attempt"
+msgstr ""
+
+#: admin/class-api-queue-table.php:52
+#: admin/class-blocked-ips-table.php:49
+#: admin/class-logs-table.php:51
+#: admin/class-whitelist-table.php:49
+msgid "Actions"
+msgstr ""
+
+#: admin/class-api-queue-table.php:77
+msgid "Delete All Failed"
+msgstr ""
+
+#: admin/class-api-queue-table.php:130
+#: admin/class-whitelist-table.php:116
+msgid "Never"
+msgstr ""
+
+#: admin/class-api-queue-table.php:175
+msgid "Malicious Host"
+msgstr ""
+
+#: admin/class-api-queue-table.php:176
+msgid "Blog Spam"
+msgstr ""
+
+#: admin/class-api-queue-table.php:177
+msgid "Hacking"
+msgstr ""
+
+#: admin/class-api-queue-table.php:178
+msgid "Brute-Force"
+msgstr ""
+
+#: admin/class-api-queue-table.php:179
+msgid "Web App Attack"
+msgstr ""
+
+#: admin/class-api-queue-table.php:200
+msgid "Permanently Failed"
+msgstr ""
+
+#: admin/class-api-queue-table.php:246
+#: admin/class-api-queue-table.php:250
+msgid "just now"
+msgstr ""
+
+#: admin/class-api-queue-table.php:344
+#, php-format
+msgid "%d permanently failed reports deleted."
+msgstr ""
+
+#: admin/class-api-queue-table.php:373
+#: includes/class-ajax-handler.php:1024
+#, php-format
+msgid "%d reports queued for retry."
+msgstr ""
+
+#: admin/class-api-queue-table.php:388
+#, php-format
+msgid "%d queue items deleted."
+msgstr ""
+
+#: admin/class-api-queue-table.php:408
+#, php-format
+msgid "All Statuses (%d)"
+msgstr ""
+
+#: admin/class-api-queue-table.php:409
+#, php-format
+msgid "Pending (%d)"
+msgstr ""
+
+#: admin/class-api-queue-table.php:410
+#, php-format
+msgid "Processing (%d)"
+msgstr ""
+
+#: admin/class-api-queue-table.php:411
+#, php-format
+msgid "Completed (%d)"
+msgstr ""
+
+#: admin/class-api-queue-table.php:412
+#, php-format
+msgid "Failed (%d)"
+msgstr ""
+
+#: admin/class-api-queue-table.php:415
+#: admin/class-blocked-ips-table.php:260
+#: admin/class-logs-table.php:320
+#: admin/class-whitelist-table.php:250
+msgid "Filter"
+msgstr ""
+
+#. translators: %d: number of retryable items
+#: admin/class-api-queue-table.php:424
+#, php-format
+msgid "Retry All Failed (%d)"
+msgstr ""
+
+#: admin/class-api-queue-table.php:442
+msgid "Pending"
+msgstr ""
+
+#: admin/class-api-queue-table.php:446
+msgid "Processing"
+msgstr ""
+
+#: admin/class-api-queue-table.php:450
+msgid "Completed"
+msgstr ""
+
+#: admin/class-api-queue-table.php:454
+msgid "Failed"
+msgstr ""
+
+#: admin/class-api-queue-table.php:459
+msgid "Last Success"
+msgstr ""
+
+#: admin/class-api-queue-table.php:538
+msgid "No queue items found."
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:29
+msgid "Blocked IP"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:46
+msgid "Block Type"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:47
+msgid "Blocked Until"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:48
+msgid "Blocked On"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:70
+#: admin/class-blocked-ips-table.php:125
+msgid "Unblock"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:71
+msgid "Move to Whitelist"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:98
+#: admin/class-logs-table.php:115
+#: admin/class-whitelist-table.php:97
+msgid "Copy IP"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:106
+#: admin/class-blocked-ips-table.php:256
+msgid "Manually Blocked"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:106
+#: admin/class-blocked-ips-table.php:257
+msgid "Auto-Blocked"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:124
+msgid "Unblock this IP"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:130
+msgid "Whitelist this IP"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:238
+msgid "Moved from blocked list via bulk action"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:255
+msgid "All Block Types"
+msgstr ""
+
+#: admin/class-blocked-ips-table.php:269
+msgid "No blocked IPs found."
+msgstr ""
+
+#: admin/class-logs-table.php:30
+msgid "Log Entry"
+msgstr ""
+
+#: admin/class-logs-table.php:31
+msgid "Log Entries"
+msgstr ""
+
+#: admin/class-logs-table.php:46
+msgid "Time"
+msgstr ""
+
+#: admin/class-logs-table.php:47
+msgid "Event Type"
+msgstr ""
+
+#: admin/class-logs-table.php:49
+msgid "Severity"
+msgstr ""
+
+#: admin/class-logs-table.php:50
+msgid "Details"
+msgstr ""
+
+#: admin/class-logs-table.php:74
+#: admin/class-logs-table.php:144
+msgid "Whitelist IP"
+msgstr ""
+
+#: admin/class-logs-table.php:112
+msgid "Click to copy"
+msgstr ""
+
+#: admin/class-logs-table.php:134
+msgid "Lookup IP"
+msgstr ""
+
+#: admin/class-logs-table.php:284
+msgid "Blocked from bulk action"
+msgstr ""
+
+#: admin/class-logs-table.php:286
+msgid "Added from bulk action"
+msgstr ""
+
+#: admin/class-logs-table.php:305
+msgid "All Event Types"
+msgstr ""
+
+#: admin/class-logs-table.php:306
+msgid "Failed Login"
+msgstr ""
+
+#: admin/class-logs-table.php:307
+#: reportedip-hive.php:663
+#: reportedip-hive.php:678
+msgid "Comment Spam"
+msgstr ""
+
+#: admin/class-logs-table.php:308
+#: reportedip-hive.php:664
+#: reportedip-hive.php:679
+msgid "XMLRPC Abuse"
+msgstr ""
+
+#: admin/class-logs-table.php:309
+msgid "IP Blocked"
+msgstr ""
+
+#: admin/class-logs-table.php:313
+msgid "All Severities"
+msgstr ""
+
+#: admin/class-logs-table.php:314
+#: admin/class-setup-wizard.php:538
+msgid "Low"
+msgstr ""
+
+#: admin/class-logs-table.php:315
+#: admin/class-setup-wizard.php:545
+msgid "Medium"
+msgstr ""
+
+#: admin/class-logs-table.php:316
+#: admin/class-setup-wizard.php:552
+msgid "High"
+msgstr ""
+
+#: admin/class-logs-table.php:317
+msgid "Critical"
+msgstr ""
+
+#: admin/class-logs-table.php:329
+msgid "No log entries found."
+msgstr ""
+
+#: admin/class-setup-wizard.php:41
+#: templates/two-factor-onboarding.php:98
+msgid "Welcome"
+msgstr ""
+
+#: admin/class-setup-wizard.php:42
+msgid "Mode & API"
+msgstr ""
+
+#: admin/class-setup-wizard.php:44
+#: admin/class-setup-wizard.php:989
+msgid "2FA"
+msgstr ""
+
+#: admin/class-setup-wizard.php:45
+#: admin/class-setup-wizard.php:1011
+msgid "Privacy"
+msgstr ""
+
+#: admin/class-setup-wizard.php:46
+#: templates/two-factor-onboarding.php:102
+msgid "Done"
+msgstr ""
+
+#: admin/class-setup-wizard.php:82
+#: admin/class-setup-wizard.php:83
+msgid "Setup Wizard"
+msgstr ""
+
+#: admin/class-setup-wizard.php:170
+msgid "ReportedIP Hive Setup"
+msgstr ""
+
+#: admin/class-setup-wizard.php:231
+msgid "Checking…"
+msgstr ""
+
+#: admin/class-setup-wizard.php:232
+msgid "API key is valid!"
+msgstr ""
+
+#: admin/class-setup-wizard.php:233
+#: admin/class-setup-wizard.php:1160
+msgid "Invalid API key."
+msgstr ""
+
+#: admin/class-setup-wizard.php:234
+msgid "Validation failed."
+msgstr ""
+
+#: admin/class-setup-wizard.php:236
+msgid "Error. Please try again."
+msgstr ""
+
+#: admin/class-setup-wizard.php:237
+msgid "Please enter an API key."
+msgstr ""
+
+#: admin/class-setup-wizard.php:238
+msgid "Saving…"
+msgstr ""
+
+#: admin/class-setup-wizard.php:239
+msgid "Saved!"
+msgstr ""
+
+#: admin/class-setup-wizard.php:240
+msgid "Finishing setup…"
+msgstr ""
+
+#: admin/class-setup-wizard.php:241
+msgid "Redirecting to dashboard…"
+msgstr ""
+
+#: admin/class-setup-wizard.php:242
+#: admin/class-setup-wizard.php:592
+msgid "No monitoring active — the plugin is effectively disabled."
+msgstr ""
+
+#: admin/class-setup-wizard.php:243
+msgid "Please choose at least one method when 2FA is active."
+msgstr ""
+
+#: admin/class-setup-wizard.php:244
+msgid "Really skip setup? You can configure the plugin anytime in Settings."
+msgstr ""
+
+#: admin/class-setup-wizard.php:271
+msgid "Skip setup"
+msgstr ""
+
+#: admin/class-setup-wizard.php:350
+msgid "Welcome to ReportedIP Hive"
+msgstr ""
+
+#: admin/class-setup-wizard.php:351
+msgid "In a few steps you configure brute-force protection, community reputation, two-factor authentication and GDPR-compliant logs."
+msgstr ""
+
+#: admin/class-setup-wizard.php:359
+msgid "Brute-force protection"
+msgstr ""
+
+#: admin/class-setup-wizard.php:360
+msgid "Detect and block login, comment and XMLRPC attacks automatically."
+msgstr ""
+
+#: admin/class-setup-wizard.php:368
+msgid "Community reputation"
+msgstr ""
+
+#: admin/class-setup-wizard.php:369
+msgid "Optional: share and use threat data from thousands of sites in real time."
+msgstr ""
+
+#: admin/class-setup-wizard.php:377
+msgid "2FA for admins"
+msgstr ""
+
+#: admin/class-setup-wizard.php:378
+msgid "TOTP, email, passkeys and SMS — phishing-resistant and user-friendly."
+msgstr ""
+
+#: admin/class-setup-wizard.php:386
+msgid "GDPR-compliant"
+msgstr ""
+
+#: admin/class-setup-wizard.php:387
+msgid "Made in Germany, privacy-first defaults, adjustable data retention."
+msgstr ""
+
+#: admin/class-setup-wizard.php:394
+msgid "Start setup"
+msgstr ""
+
+#: admin/class-setup-wizard.php:410
+msgid "Choose your protection mode"
+msgstr ""
+
+#: admin/class-setup-wizard.php:411
+msgid "Community mode gives you real-time threat intelligence. Local Shield runs without any external connection."
+msgstr ""
+
+#: admin/class-setup-wizard.php:423
+#: includes/class-mode-manager.php:461
+msgid "Local Shield"
+msgstr ""
+
+#: admin/class-setup-wizard.php:424
+msgid "Standalone protection without an external connection. Minimal data use."
+msgstr ""
+
+#: admin/class-setup-wizard.php:427
+msgid "No account needed"
+msgstr ""
+
+#: admin/class-setup-wizard.php:428
+msgid "Full privacy"
+msgstr ""
+
+#: admin/class-setup-wizard.php:429
+msgid "Baseline protection"
+msgstr ""
+
+#: admin/class-setup-wizard.php:431
+msgid "Privacy First"
+msgstr ""
+
+#: admin/class-setup-wizard.php:437
+#: admin/class-setup-wizard.php:545
+#: templates/two-factor-onboarding.php:185
+msgid "Recommended"
+msgstr ""
+
+#: admin/class-setup-wizard.php:447
+msgid "Thousands of sites share threat intelligence in real time. Maximum strength."
+msgstr ""
+
+#: admin/class-setup-wizard.php:449
+msgid "Everything in Local +"
+msgstr ""
+
+#: admin/class-setup-wizard.php:450
+msgid "Reputation-based blocking"
+msgstr ""
+
+#: admin/class-setup-wizard.php:451
+msgid "Global threat blacklist"
+msgstr ""
+
+#: admin/class-setup-wizard.php:452
+msgid "GDPR-compliant (Made in Germany)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:454
+msgid "Free API-Key"
+msgstr ""
+
+#: admin/class-setup-wizard.php:464
+msgid "Community Access Key"
+msgstr ""
+
+#: admin/class-setup-wizard.php:468
+msgid "Paste API key…"
+msgstr ""
+
+#: admin/class-setup-wizard.php:470
+msgid "Validate"
+msgstr ""
+
+#: admin/class-setup-wizard.php:475
+msgid "Don't have a key yet?"
+msgstr ""
+
+#: admin/class-setup-wizard.php:477
+msgid "Create a free account"
+msgstr ""
+
+#: admin/class-setup-wizard.php:484
+msgid "Key name"
+msgstr ""
+
+#: admin/class-setup-wizard.php:488
+msgid "Account tier"
+msgstr ""
+
+#: admin/class-setup-wizard.php:492
+msgid "Daily limit"
+msgstr ""
+
+#: admin/class-setup-wizard.php:496
+msgid "Remaining today"
+msgstr ""
+
+#: admin/class-setup-wizard.php:507
+#: admin/class-setup-wizard.php:630
+#: admin/class-setup-wizard.php:804
+#: admin/class-setup-wizard.php:934
+#: templates/two-factor-onboarding.php:276
+#: templates/two-factor-onboarding.php:407
+#: templates/two-factor-onboarding.php:451
+msgid "Back"
+msgstr ""
+
+#: admin/class-setup-wizard.php:510
+#: templates/two-factor-onboarding.php:278
+msgid "Next"
+msgstr ""
+
+#: admin/class-setup-wizard.php:524
+msgid "Enable protection features"
+msgstr ""
+
+#: admin/class-setup-wizard.php:525
+msgid "Pick a protection level and decide which attack vectors to monitor. The defaults are a good fit for most sites."
+msgstr ""
+
+#: admin/class-setup-wizard.php:531
+msgid "Protection level"
+msgstr ""
+
+#: admin/class-setup-wizard.php:539
+msgid "10 login failures, 1 hour block"
+msgstr ""
+
+#: admin/class-setup-wizard.php:546
+msgid "5 login failures, 24 hour block"
+msgstr ""
+
+#: admin/class-setup-wizard.php:553
+msgid "3 login failures, 48 hour block"
+msgstr ""
+
+#: admin/class-setup-wizard.php:559
+msgid "Paranoid"
+msgstr ""
+
+#: admin/class-setup-wizard.php:560
+msgid "2 login failures, 7 day block"
+msgstr ""
+
+#: admin/class-setup-wizard.php:571
+msgid "What should be monitored?"
+msgstr ""
+
+#: admin/class-setup-wizard.php:577
+msgid "Failed logins"
+msgstr ""
+
+#: admin/class-setup-wizard.php:582
+msgid "Spam comments"
+msgstr ""
+
+#: admin/class-setup-wizard.php:587
+msgid "XMLRPC access (most common attack vector)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:601
+msgid "Automation & special rules"
+msgstr ""
+
+#: admin/class-setup-wizard.php:607
+msgid "Automatically block suspicious IPs"
+msgstr ""
+
+#: admin/class-setup-wizard.php:612
+msgid "Automatically whitelist admin IPs"
+msgstr ""
+
+#: admin/class-setup-wizard.php:614
+msgid "Whitelisting prevents admin lockouts but reduces protection against account takeover. Recommendation: off."
+msgstr ""
+
+#: admin/class-setup-wizard.php:621
+msgid "Report-only mode (observe, do not block)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:623
+msgid "Great for testing: the plugin collects events but does not block. Turn off in production."
+msgstr ""
+
+#: admin/class-setup-wizard.php:633
+msgid "Next: 2FA"
+msgstr ""
+
+#: admin/class-setup-wizard.php:647
+#: admin/class-two-factor-admin.php:230
+#: admin/class-two-factor-admin.php:1076
+#: templates/two-factor-onboarding.php:52
+msgid "Two-Factor Authentication"
+msgstr ""
+
+#: admin/class-setup-wizard.php:648
+msgid "2FA prevents account takeover — even if a password is stolen. We recommend enforcing 2FA for administrator roles."
+msgstr ""
+
+#: admin/class-setup-wizard.php:654
+msgid "2FA system"
+msgstr ""
+
+#: admin/class-setup-wizard.php:660
+msgid "Enable 2FA (recommended)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:662
+msgid "When active, users can configure 2FA in their profile. Admins are guided through onboarding."
+msgstr ""
+
+#: admin/class-setup-wizard.php:670
+msgid "Allowed methods"
+msgstr ""
+
+#: admin/class-setup-wizard.php:679
+msgid "TOTP app"
+msgstr ""
+
+#: admin/class-setup-wizard.php:680
+msgid "Google Authenticator, Authy, 1Password — standard, offline."
+msgstr ""
+
+#: admin/class-setup-wizard.php:688
+#: templates/two-factor-challenge.php:106
+msgid "Email"
+msgstr ""
+
+#: admin/class-setup-wizard.php:689
+msgid "Code via email — useful as a backup method."
+msgstr ""
+
+#: admin/class-setup-wizard.php:697
+msgid "Passkey / WebAuthn"
+msgstr ""
+
+#: admin/class-setup-wizard.php:698
+msgid "Face ID, Touch ID, Windows Hello, YubiKey — phishing-resistant."
+msgstr ""
+
+#: admin/class-setup-wizard.php:706
+#: admin/class-two-factor-admin.php:1088
+#: includes/class-two-factor-onboarding.php:393
+#: templates/two-factor-challenge.php:114
+msgid "SMS"
+msgstr ""
+
+#: admin/class-setup-wizard.php:707
+msgid "EU provider with DPA. Configuration happens in settings after the wizard."
+msgstr ""
+
+#: admin/class-setup-wizard.php:708
+msgid "Provider + DPA confirmation required"
+msgstr ""
+
+#: admin/class-setup-wizard.php:720
+msgid "Enforce 2FA for which roles?"
+msgstr ""
+
+#: admin/class-setup-wizard.php:726
+msgid "Administrators"
+msgstr ""
+
+#: admin/class-setup-wizard.php:730
+msgid "Editors"
+msgstr ""
+
+#: admin/class-setup-wizard.php:734
+msgid "Authors"
+msgstr ""
+
+#: admin/class-setup-wizard.php:738
+msgid "Shop managers"
+msgstr ""
+
+#: admin/class-setup-wizard.php:741
+msgid "Required users go through onboarding on first sign-in, with a grace period and skip counter."
+msgstr ""
+
+#: admin/class-setup-wizard.php:747
+#: admin/class-two-factor-admin.php:365
+msgid "Grace period (days)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:751
+msgid "Days before enforcement kicks in"
+msgstr ""
+
+#: admin/class-setup-wizard.php:757
+#: admin/class-two-factor-admin.php:378
+msgid "Max. skips after the grace period"
+msgstr ""
+
+#: admin/class-setup-wizard.php:761
+msgid "How many times users may skip 2FA (0 = never)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:771
+msgid "Convenience"
+msgstr ""
+
+#: admin/class-setup-wizard.php:777
+msgid "Trusted devices (remember for 30 days)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:782
+msgid "Onboarding on the frontend too (e.g. WooCommerce account)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:787
+msgid "Email on sign-in from an unknown device"
+msgstr ""
+
+#: admin/class-setup-wizard.php:795
+#: admin/class-two-factor-admin.php:467
+msgid "Allow XMLRPC only with application passwords"
+msgstr ""
+
+#: admin/class-setup-wizard.php:797
+msgid "Classic XMLRPC body auth is blocked — prevents XMLRPC brute-force attacks against 2FA users."
+msgstr ""
+
+#: admin/class-setup-wizard.php:807
+msgid "Next: Privacy"
+msgstr ""
+
+#: admin/class-setup-wizard.php:821
+msgid "Privacy & GDPR"
+msgstr ""
+
+#: admin/class-setup-wizard.php:822
+msgid "The defaults are GDPR-compliant. You can adjust retention and logging depth any time."
+msgstr ""
+
+#: admin/class-setup-wizard.php:828
+msgid "Data retention"
+msgstr ""
+
+#: admin/class-setup-wizard.php:829
+msgid "EU GDPR"
+msgstr ""
+
+#: admin/class-setup-wizard.php:835
+msgid "Minimal logging — only security-relevant data"
+msgstr ""
+
+#: admin/class-setup-wizard.php:841
+msgid "Delete logs after"
+msgstr ""
+
+#: admin/class-setup-wizard.php:844
+#: admin/class-setup-wizard.php:857
+msgid "7 days"
+msgstr ""
+
+#: admin/class-setup-wizard.php:845
+#: admin/class-setup-wizard.php:858
+msgid "14 days"
+msgstr ""
+
+#: admin/class-setup-wizard.php:846
+msgid "30 days"
+msgstr ""
+
+#: admin/class-setup-wizard.php:847
+msgid "90 days"
+msgstr ""
+
+#: admin/class-setup-wizard.php:852
+msgid "Anonymise personal data after"
+msgstr ""
+
+#: admin/class-setup-wizard.php:855
+msgid "1 day"
+msgstr ""
+
+#: admin/class-setup-wizard.php:856
+msgid "3 days"
+msgstr ""
+
+#: admin/class-setup-wizard.php:865
+msgid "Defaults are GDPR-compliant. IP addresses are processed under Art. 6(1)(f) GDPR (legitimate interest)."
+msgstr ""
+
+#: admin/class-setup-wizard.php:874
+msgid "Extended logging"
+msgstr ""
+
+#: admin/class-setup-wizard.php:880
+msgid "Log user agents (for forensic analysis)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:885
+msgid "Log referrer domains"
+msgstr ""
+
+#: admin/class-setup-wizard.php:887
+msgid "Both options are off by default for privacy. Enable them only when deeper threat analysis is required."
+msgstr ""
+
+#: admin/class-setup-wizard.php:901
+msgid "Send email on new blocks"
+msgstr ""
+
+#. translators: %s: admin email address
+#: admin/class-setup-wizard.php:907
+#, php-format
+msgid "Notifications go to: %s"
+msgstr ""
+
+#: admin/class-setup-wizard.php:919
+msgid "Uninstall"
+msgstr ""
+
+#: admin/class-setup-wizard.php:925
+msgid "Delete all data on uninstall"
+msgstr ""
+
+#: admin/class-setup-wizard.php:927
+msgid "Only enable this if there is no retention obligation for security logs. Default: off (conservative)."
+msgstr ""
+
+#: admin/class-setup-wizard.php:937
+msgid "Finish setup"
+msgstr ""
+
+#: admin/class-setup-wizard.php:972
+msgid "Setup complete!"
+msgstr ""
+
+#: admin/class-setup-wizard.php:973
+msgid "Your WordPress site is now protected. You can fine-tune all settings any time from the admin menu."
+msgstr ""
+
+#: admin/class-setup-wizard.php:977
+msgid "Mode"
+msgstr ""
+
+#: admin/class-setup-wizard.php:983
+msgid "Auto-blocking"
+msgstr ""
+
+#: admin/class-setup-wizard.php:985
+#: admin/class-two-factor-admin.php:1629
+msgid "Active"
+msgstr ""
+
+#: admin/class-setup-wizard.php:985
+msgid "Inactive"
+msgstr ""
+
+#. translators: %d: number of enforced roles
+#: admin/class-setup-wizard.php:994
+#, php-format
+msgid "Active (%d roles enforced)"
+msgstr ""
+
+#: admin/class-setup-wizard.php:996
+#: admin/class-setup-wizard.php:1025
+msgid "Off"
+msgstr ""
+
+#: admin/class-setup-wizard.php:1002
+msgid "Retention"
+msgstr ""
+
+#: admin/class-setup-wizard.php:1015
+msgid "GDPR Minimal"
+msgstr ""
+
+#: admin/class-setup-wizard.php:1023
+msgid "Email alerts"
+msgstr ""
+
+#: admin/class-setup-wizard.php:1025
+msgid "On"
+msgstr ""
+
+#: admin/class-setup-wizard.php:1031
+msgid "Quick Tips"
+msgstr ""
+
+#: admin/class-setup-wizard.php:1033
+msgid "Check the dashboard regularly to review security events."
+msgstr ""
+
+#: admin/class-setup-wizard.php:1034
+msgid "Whitelist your own IP to avoid lockouts."
+msgstr ""
+
+#: admin/class-setup-wizard.php:1036
+msgid "Your reports help other sites in the community."
+msgstr ""
+
+#: admin/class-setup-wizard.php:1039
+msgid "2FA will be configured through onboarding on the next sign-in of users with an enforced role."
+msgstr ""
+
+#: admin/class-setup-wizard.php:1048
+msgid "Set up 2FA for my account now"
+msgstr ""
+
+#: admin/class-setup-wizard.php:1052
+#: templates/two-factor-onboarding.php:521
+msgid "Go to dashboard"
+msgstr ""
+
+#: admin/class-setup-wizard.php:1094
+#: admin/class-setup-wizard.php:1130
+#: admin/class-setup-wizard.php:1172
+#: admin/class-setup-wizard.php:1301
+#: includes/class-ajax-handler.php:141
+#: includes/class-ajax-handler.php:294
+#: includes/class-ajax-handler.php:318
+#: includes/class-ajax-handler.php:355
+#: includes/class-ajax-handler.php:396
+#: includes/class-ajax-handler.php:425
+#: includes/class-ajax-handler.php:456
+#: includes/class-ajax-handler.php:487
+#: includes/class-ajax-handler.php:567
+#: includes/class-ajax-handler.php:606
+#: includes/class-ajax-handler.php:645
+#: includes/class-ajax-handler.php:718
+#: includes/class-ajax-handler.php:754
+#: includes/class-ajax-handler.php:820
+#: includes/class-ajax-handler.php:903
+#: includes/class-ajax-handler.php:932
+#: includes/class-ajax-handler.php:961
+#: includes/class-ajax-handler.php:1005
+#: includes/class-ajax-handler.php:1043
+#: includes/class-ajax-handler.php:1087
+#: includes/class-ajax-handler.php:1134
+#: includes/class-ajax-handler.php:1179
+#: includes/class-ajax-handler.php:1200
+msgid "Insufficient permissions."
+msgstr ""
+
+#: admin/class-setup-wizard.php:1100
+msgid "Invalid mode selected."
+msgstr ""
+
+#: admin/class-setup-wizard.php:1120
+msgid "Failed to save mode."
+msgstr ""
+
+#: admin/class-setup-wizard.php:1136
+msgid "Bitte einen API-Key eingeben."
+msgstr ""
+
+#: admin/class-setup-wizard.php:1288
+msgid "Setup erfolgreich abgeschlossen!"
+msgstr ""
+
+#: admin/class-setup-wizard.php:1312
+msgid "Setup skipped."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:77
+msgid "Really reset 2FA for this user? The user will be able to sign in without 2FA and will be sent back to onboarding on the next login (if their role requires 2FA)."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:84
+msgid "Reset 2FA"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:128
+msgid "Invalid user ID."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:135
+#: admin/class-two-factor-admin.php:1248
+#: admin/class-two-factor-admin.php:1487
+#: includes/class-two-factor-dashboard.php:39
+#: includes/class-two-factor-dashboard.php:167
+#: includes/class-two-factor-webauthn.php:48
+#: includes/class-two-factor-webauthn.php:112
+msgid "You do not have permission."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:140
+msgid "User not found."
+msgstr ""
+
+#. translators: %s: site name
+#: admin/class-two-factor-admin.php:161
+#, php-format
+msgid "[%s] Your two-factor authentication was reset"
+msgstr ""
+
+#. translators: %s: user display name
+#: admin/class-two-factor-admin.php:166
+#, php-format
+msgid ""
+"Hello %s,\n"
+"\n"
+"an administrator has just reset your two-factor authentication. You can now sign in without 2FA.\n"
+"\n"
+"Please set up 2FA again as soon as possible to protect your account.\n"
+"\n"
+"If you did not request this reset, contact your administrator immediately."
+msgstr ""
+
+#. translators: %s: user display name
+#: admin/class-two-factor-admin.php:193
+#, php-format
+msgid "2FA for %s has been reset. The user has been notified by email."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:233
+msgid "Protect WordPress accounts with an additional verification step at sign-in."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:238
+msgid "Encryption is not available. Make sure libsodium or OpenSSL is installed and AUTH_KEY is set in wp-config.php."
+msgstr ""
+
+#. translators: %s: encryption method name
+#: admin/class-two-factor-admin.php:245
+#, php-format
+msgid "Encryption active: %s"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:263
+msgid "Enable 2FA feature"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:266
+msgid "Activates the 2FA feature. Users must set up 2FA individually in their profile."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:274
+msgid "Verification methods"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:286
+msgid "Authenticator App (TOTP)"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:289
+msgid "Google Authenticator, Microsoft Authenticator, Authy, etc."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:301
+#: admin/class-two-factor-admin.php:1086
+#: includes/class-two-factor-onboarding.php:391
+#: templates/two-factor-challenge.php:231
+#: templates/two-factor-onboarding.php:235
+#: templates/two-factor-onboarding.php:355
+msgid "Email code"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:304
+msgid "Sends a 6-digit code to the user's email address."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:316
+msgid "Passkey / WebAuthn / FIDO2"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:319
+msgid "Phishing-resistant sign-in via Face ID, Touch ID, Windows Hello or a hardware key (YubiKey)."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:331
+msgid "SMS (GDPR — EU providers only)"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:335
+msgid "Only available with a configured EU SMS provider (seven.io, sipgate, MessageBird) and a confirmed DPA. Less secure than TOTP/Passkey — recommended only as a fallback."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:344
+msgid "Enforcement"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:348
+msgid "2FA required for roles"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:361
+msgid "Users with these roles must set up 2FA, otherwise sign-in is blocked."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:374
+msgid "Required users see the onboarding after sign-in. During the grace period the \"Later\" button is unlimited. Afterwards the skip cap applies. 0 = immediate."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:387
+msgid "How many times required users may skip the onboarding after the grace period ends. 0 = enforced immediately."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:399
+msgid "Enforce onboarding on the frontend too"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:402
+msgid "Also redirects required users to onboarding when they land on frontend pages after sign-in (e.g. WooCommerce account)."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:410
+msgid "IP allowlist (2FA bypass)"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:413
+msgid "Trusted IPs / CIDR ranges"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:422
+msgid "Users from these IPs sign in without 2FA. Enable only on trusted networks (office VPN, corporate network), NOT on co-working spaces or open Wi-Fi. Lines starting with # are treated as comments."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:431
+msgid "Sign-in notifications"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:442
+msgid "Email on sign-in from a new device"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:445
+msgid "Sends a notification email to the user when a sign-in comes from a previously unseen browser/IP combination."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:456
+msgid "XMLRPC protection"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:470
+msgid "Blocks basic auth over XMLRPC (commonly used by bot attacks) but still allows application passwords. No 2FA prompt on XMLRPC — the API client must use a separate application password."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:478
+#: admin/class-two-factor-admin.php:1181
+msgid "Trusted devices"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:490
+msgid "Enable \"remember device\""
+msgstr ""
+
+#: admin/class-two-factor-admin.php:493
+msgid "Users can skip 2FA on trusted devices."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:497
+msgid "Trust duration (days)"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:517
+msgid "Extended session duration (30 days) when \"Remember me\" is used with verified 2FA"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:520
+msgid "Extends the auth cookie from 14 to 30 days when a user signs in with 2FA + \"Remember me\". Stronger authentication justifies the longer session."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:532
+msgid "Branded login screen (show the plugin logo on the 2FA challenge)"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:538
+msgid "Save settings"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:715
+msgid "SMS provider (GDPR — EU only)"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:718
+msgid "An EU SMS provider is used to send SMS OTPs. The plugin operator must sign a DPA with the selected provider. Phone numbers are stored encrypted; the SMS body contains only the code and a minimal note (no site, no user data, no IP)."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:722
+msgid "SMS provider"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:724
+msgid "— not configured —"
+msgstr ""
+
+#. translators: %s: provider name
+#: admin/class-two-factor-admin.php:758
+#, php-format
+msgid "Credentials: %s"
+msgstr ""
+
+#. translators: %s: URL
+#: admin/class-two-factor-admin.php:767
+#, php-format
+msgid "Provider DPA: <a href=\"%s\" target=\"_blank\" rel=\"noopener\">Open terms</a>"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:809
+msgid "I confirm that a DPA with the selected SMS provider is in place."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:812
+msgid "Without this confirmation no SMS is ever sent — privacy hard gate."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:816
+msgid "Test SMS to (E.164):"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:818
+msgid "Send test SMS"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:838
+#: includes/class-two-factor-sms.php:185
+msgid "Please enter a phone number."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:839
+msgid "Sende…"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1051
+msgid "Are you sure? This removes all 2FA settings for this account."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1052
+msgid "Existing recovery codes will be invalidated. Continue?"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1053
+msgid "Revoke all trusted devices?"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1054
+msgid "Enable email-based 2FA? We will send a test code to your registered email address."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1055
+#: includes/class-two-factor-onboarding.php:387
+msgid "Copied!"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1056
+msgid "Scan this QR code with your authenticator app:"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1057
+msgid "Enter the 6-digit code to confirm setup:"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1058
+msgid "2FA has been set up successfully!"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1059
+msgid "Save these recovery codes in a secure place:"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1061
+#: templates/two-factor-onboarding.php:329
+#: templates/two-factor-onboarding.php:356
+#: templates/two-factor-onboarding.php:401
+msgid "Confirm"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1062
+msgid "Cancel"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1063
+msgid "QR code library not loaded."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1064
+msgid "We will send you a code. Check your inbox…"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1065
+msgid "000000"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1085
+#: includes/class-two-factor-onboarding.php:390
+msgid "Authenticator app"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1087
+#: includes/class-two-factor-onboarding.php:392
+#: includes/class-two-factor-webauthn.php:168
+#: templates/two-factor-challenge.php:98
+msgid "Passkey"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1096
+msgid "primary"
+msgstr ""
+
+#. translators: %d: method count
+#: admin/class-two-factor-admin.php:1109
+#, php-format
+msgid "Active — %d method"
+msgid_plural "Active — %d methods"
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin/class-two-factor-admin.php:1119
+msgid "Not set up"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1127
+#: includes/class-two-factor-dashboard.php:117
+msgid "Set up"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1132
+#: templates/two-factor-onboarding.php:303
+msgid "Set up authenticator app"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1136
+#: templates/two-factor-onboarding.php:338
+msgid "Set up email code"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1147
+msgid "Recovery Codes"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1152
+msgid "All recovery codes are used up! Generate new codes."
+msgstr ""
+
+#. translators: %d: remaining codes
+#: admin/class-two-factor-admin.php:1161
+#, php-format
+msgid "Only %d recovery codes left."
+msgstr ""
+
+#. translators: %d: remaining codes
+#: admin/class-two-factor-admin.php:1168
+#, php-format
+msgid "%d codes remaining"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1172
+msgid "Generate new recovery codes"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1187
+msgid "Unknown device"
+msgstr ""
+
+#. translators: %s: date
+#: admin/class-two-factor-admin.php:1193
+#, php-format
+msgid "Added: %s"
+msgstr ""
+
+#. translators: %s: date
+#: admin/class-two-factor-admin.php:1202
+#, php-format
+msgid "Last used: %s"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1210
+msgid "Revoke"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1216
+msgid "Revoke all devices"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1224
+msgid "Disable"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1227
+msgid "Disable 2FA"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1262
+#: includes/class-two-factor-email.php:86
+#: includes/class-two-factor-webauthn.php:53
+msgid "Invalid user."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1271
+msgid "Encryption failed."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1295
+msgid "No TOTP setup found. Please start again."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1300
+msgid "Decryption failed."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1304
+msgid "Invalid code. Please check your device clock."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1314
+msgid "2FA with authenticator app enabled!"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1331
+msgid "User has no email address."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1343
+msgid "Code sent. Please check your inbox."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1352
+#: admin/class-two-factor-admin.php:1430
+msgid "Invalid or expired code."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1367
+msgid "Email code enabled!"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1374
+msgid "Invalid setup step. Email 2FA requires code verification."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1390
+msgid "SMS module is not loaded."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1393
+#: includes/class-two-factor-sms.php:257
+msgid "SMS sending is not configured. Please contact an administrator."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1401
+msgid "Please confirm processing of your phone number by the EU SMS provider."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1411
+msgid "Could not store phone number securely."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1421
+msgid "SMS sent. Please enter the code."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1445
+msgid "SMS 2FA enabled!"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1452
+msgid "Invalid setup step."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1465
+msgid "Invalid method."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1468
+msgid "Could not disable method."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1473
+msgid "Method disabled."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1490
+msgid "SMS sending is not configured (provider/DPA/keys)."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1501
+msgid "ReportedIP Hive: Test SMS. Setup was successful."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1506
+msgid "Test SMS sent."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1519
+msgid "2FA has been disabled."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1534
+msgid "New recovery codes generated."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1550
+msgid "Device revoked."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1552
+msgid "Device not found."
+msgstr ""
+
+#. translators: %d: number of revoked devices
+#: admin/class-two-factor-admin.php:1568
+#, php-format
+msgid "%d device revoked."
+msgid_plural "%d devices revoked."
+msgstr[0] ""
+msgstr[1] ""
+
+#: admin/class-two-factor-admin.php:1583
+#: admin/class-two-factor-admin.php:1597
+msgid "ReportedIP Hive 2FA-Daten"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1624
+msgid "ReportedIP 2FA"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1628
+#: includes/class-two-factor-dashboard.php:29
+#: includes/class-two-factor-dashboard.php:30
+#: includes/class-two-factor-dashboard.php:61
+msgid "2FA Status"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1632
+#: templates/two-factor-onboarding.php:99
+msgid "Method"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1636
+msgid "Recovery codes remaining"
+msgstr ""
+
+#: admin/class-whitelist-table.php:29
+msgid "Whitelisted IP"
+msgstr ""
+
+#: admin/class-whitelist-table.php:45
+msgid "Type"
+msgstr ""
+
+#: admin/class-whitelist-table.php:47
+msgid "Added"
+msgstr ""
+
+#: admin/class-whitelist-table.php:48
+msgid "Expires"
+msgstr ""
+
+#: admin/class-whitelist-table.php:70
+#: admin/class-whitelist-table.php:125
+msgid "Remove"
+msgstr ""
+
+#: admin/class-whitelist-table.php:124
+msgid "Remove from whitelist"
+msgstr ""
+
+#: admin/class-whitelist-table.php:245
+msgid "All Types"
+msgstr ""
+
+#: admin/class-whitelist-table.php:246
+msgid "Single IP"
+msgstr ""
+
+#: admin/class-whitelist-table.php:247
+msgid "CIDR Range"
+msgstr ""
+
+#: admin/class-whitelist-table.php:259
+msgid "No whitelisted IPs found."
+msgstr ""
+
+#: includes/class-ajax-handler.php:151
+msgid "Invalid mode specified."
+msgstr ""
+
+#. translators: %s: mode label
+#: includes/class-ajax-handler.php:165
+#, php-format
+msgid "Mode changed to %s"
+msgstr ""
+
+#: includes/class-ajax-handler.php:175
+msgid "Failed to change mode. Please try again."
+msgstr ""
+
+#: includes/class-ajax-handler.php:188
+#: includes/class-ajax-handler.php:203
+#: includes/class-ajax-handler.php:231
+msgid "Unauthorized."
+msgstr ""
+
+#: includes/class-ajax-handler.php:300
+#: includes/class-ajax-handler.php:326
+msgid "Invalid IP address."
+msgstr ""
+
+#: includes/class-ajax-handler.php:330
+msgid "Reason is required."
+msgstr ""
+
+#: includes/class-ajax-handler.php:363
+#: includes/class-ajax-handler.php:402
+msgid "IP address is required."
+msgstr ""
+
+#: includes/class-ajax-handler.php:368
+msgid "Invalid IP address or CIDR format."
+msgstr ""
+
+#: includes/class-ajax-handler.php:373
+msgid "Invalid expiration date."
+msgstr ""
+
+#: includes/class-ajax-handler.php:436
+#, php-format
+msgid "Cleanup completed. Removed %1$d old log entries and %2$d expired IP entries."
+msgstr ""
+
+#: includes/class-ajax-handler.php:466
+#, php-format
+msgid "Anonymization completed. Anonymized %1$d entries older than %2$d days."
+msgstr ""
+
+#: includes/class-ajax-handler.php:508
+msgid "Imported from CSV"
+msgstr ""
+
+#: includes/class-ajax-handler.php:512
+#, php-format
+msgid "Line %1$d: Invalid IP \"%2$s\""
+msgstr ""
+
+#: includes/class-ajax-handler.php:527
+#, php-format
+msgid "Line %1$d: Failed to block \"%2$s\" - %3$s"
+msgstr ""
+
+#: includes/class-ajax-handler.php:550
+#, php-format
+msgid "%1$d IPs imported, %2$d skipped (already blocked), %3$d errors."
+msgstr ""
+
+#: includes/class-ajax-handler.php:591
+#, php-format
+msgid "%1$d IPs imported to whitelist, %2$d errors."
+msgstr ""
+
+#: includes/class-ajax-handler.php:626
+#, php-format
+msgid "Successfully logged %s severity test event."
+msgstr ""
+
+#: includes/class-ajax-handler.php:631
+msgid "Failed to log test event. Check database connection."
+msgstr ""
+
+#: includes/class-ajax-handler.php:656
+msgid "Basic database connection failed."
+msgstr ""
+
+#: includes/class-ajax-handler.php:665
+msgid "Plugin database tables are missing. Try deactivating and reactivating the plugin."
+msgstr ""
+
+#: includes/class-ajax-handler.php:687
+msgid "Database insert test failed: "
+msgstr ""
+
+#: includes/class-ajax-handler.php:696
+msgid "Database connection and functionality test successful."
+msgstr ""
+
+#: includes/class-ajax-handler.php:737
+msgid "Cron jobs triggered successfully. Check logs for results."
+msgstr ""
+
+#: includes/class-ajax-handler.php:777
+msgid "Auto-block function test successful! Test IP was blocked."
+msgstr ""
+
+#: includes/class-ajax-handler.php:799
+#, php-format
+msgid "Auto-block function test completed. IP was not blocked. Reason: %s"
+msgstr ""
+
+#: includes/class-ajax-handler.php:869
+#, php-format
+msgid "Failed login threshold simulation completed. %1$d attempts recorded, threshold is %2$d. Threshold exceeded: %3$s"
+msgstr ""
+
+#: includes/class-ajax-handler.php:885
+#, php-format
+msgid "Simulation failed. Only %1$d attempts recorded, but %2$d were expected."
+msgstr ""
+
+#: includes/class-ajax-handler.php:913
+#, php-format
+msgid "Cache cleared successfully. Removed %d cache entries."
+msgstr ""
+
+#: includes/class-ajax-handler.php:942
+#, php-format
+msgid "Expired cache entries cleaned up. Removed %d expired entries."
+msgstr ""
+
+#: includes/class-ajax-handler.php:967
+#: includes/class-ajax-handler.php:1049
+msgid "Invalid report ID."
+msgstr ""
+
+#: includes/class-ajax-handler.php:986
+msgid "Report queued for retry."
+msgstr ""
+
+#: includes/class-ajax-handler.php:991
+msgid "Failed to reset report for retry."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1068
+msgid "Queue item deleted."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1073
+msgid "Failed to delete queue item."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1121
+msgid "All settings have been reset to defaults. The page will reload."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1166
+msgid "All plugin data has been deleted. The page will reload."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1184
+msgid "Invalid notice ID."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1222
+msgid "No file uploaded."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1229
+msgid "File exceeds upload_max_filesize."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1230
+msgid "File exceeds MAX_FILE_SIZE."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1231
+msgid "File was only partially uploaded."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1232
+msgid "No file was uploaded."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1233
+msgid "Missing temporary folder."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1234
+msgid "Failed to write file to disk."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1235
+msgid "File upload stopped by extension."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1237
+msgid "Unknown upload error."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1242
+msgid "File too large. Maximum size is 1 MB."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1247
+msgid "Invalid file type. Only CSV and TXT files are allowed."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1253
+msgid "Failed to read uploaded file."
+msgstr ""
+
+#: includes/class-api-client.php:72
+msgid "API key or endpoint not configured."
+msgstr ""
+
+#: includes/class-api-client.php:100
+msgid "API key verified successfully!"
+msgstr ""
+
+#: includes/class-api-client.php:114
+msgid "Your API key currently has no report permission. Security events will be logged locally but not reported to the service. Upgrade to Contributor or higher to enable full reporting."
+msgstr ""
+
+#: includes/class-api-client.php:122
+msgid "API key is invalid or expired."
+msgstr ""
+
+#: includes/class-api-client.php:128
+msgid "API key authentication failed. Please check your API key."
+msgstr ""
+
+#: includes/class-api-client.php:133
+msgid "API rate limit exceeded. Please try again later."
+msgstr ""
+
+#: includes/class-api-client.php:139
+msgid "Invalid API response or server error."
+msgstr ""
+
+#: includes/class-api-client.php:303
+msgid "API reports disabled in Local Mode"
+msgstr ""
+
+#: includes/class-api-client.php:448
+msgid "No IP addresses provided"
+msgstr ""
+
+#: includes/class-api-client.php:457
+msgid "Rate limit active"
+msgstr ""
+
+#: includes/class-api-client.php:486
+msgid "Rate limit exceeded"
+msgstr ""
+
+#: includes/class-api-client.php:504
+msgid "Bulk check requires Professional subscription or higher"
+msgstr ""
+
+#: includes/class-api-client.php:511
+msgid "Unknown error"
+msgstr ""
+
+#: includes/class-api-client.php:950
+msgid "Quota status unknown - will attempt API calls"
+msgstr ""
+
+#: includes/class-api-client.php:966
+msgid "Your API key currently has no report permission. Please check your account status or upgrade to Contributor."
+msgstr ""
+
+#. translators: 1: current usage, 2: daily limit, 3: reset time
+#: includes/class-api-client.php:988
+#, php-format
+msgid "Daily report limit reached (%1$d/%2$d). Resets at %3$s UTC."
+msgstr ""
+
+#. translators: %d: remaining reports
+#: includes/class-api-client.php:1006
+#, php-format
+msgid "%d reports remaining today."
+msgstr ""
+
+#: includes/class-cache.php:403
+msgid "Low Cache Hit Rate"
+msgstr ""
+
+#: includes/class-cache.php:405
+#, php-format
+msgid "Your cache hit rate is only %.1f%%. Consider increasing cache duration."
+msgstr ""
+
+#: includes/class-cache.php:413
+msgid "Excellent Cache Performance"
+msgstr ""
+
+#: includes/class-cache.php:415
+#, php-format
+msgid "Your cache hit rate is %.1f%%. Great job saving API credits!"
+msgstr ""
+
+#: includes/class-cache.php:426
+msgid "Large Cache Size"
+msgstr ""
+
+#: includes/class-cache.php:428
+#, php-format
+msgid "Your cache is using %.2f MB. Consider cleaning up expired entries."
+msgstr ""
+
+#: includes/class-cache.php:439
+msgid "Many Expired Cache Entries"
+msgstr ""
+
+#: includes/class-cache.php:441
+#, php-format
+msgid "You have %d expired cache entries. Clean them up to improve performance."
+msgstr ""
+
+#: includes/class-cron-handler.php:124
+msgid "Every 15 Minutes"
+msgstr ""
+
+#: includes/class-cron-handler.php:128
+msgid "Every 6 Hours"
+msgstr ""
+
+#: includes/class-ip-manager.php:78
+#: includes/class-ip-manager.php:161
+msgid "Invalid IP address format."
+msgstr ""
+
+#: includes/class-ip-manager.php:86
+msgid "IP address is already whitelisted."
+msgstr ""
+
+#: includes/class-ip-manager.php:115
+msgid "IP address has been whitelisted successfully."
+msgstr ""
+
+#: includes/class-ip-manager.php:121
+msgid "Failed to whitelist IP address."
+msgstr ""
+
+#: includes/class-ip-manager.php:143
+msgid "IP address has been removed from whitelist."
+msgstr ""
+
+#: includes/class-ip-manager.php:149
+msgid "Failed to remove IP address from whitelist."
+msgstr ""
+
+#: includes/class-ip-manager.php:169
+msgid "Cannot block whitelisted IP address."
+msgstr ""
+
+#: includes/class-ip-manager.php:197
+#, php-format
+msgid "Report-only mode: Would have blocked IP address for %d hours. Event logged for reporting."
+msgstr ""
+
+#: includes/class-ip-manager.php:225
+#, php-format
+msgid "IP address has been blocked for %d hours."
+msgstr ""
+
+#: includes/class-ip-manager.php:233
+msgid "Failed to block IP address."
+msgstr ""
+
+#: includes/class-ip-manager.php:257
+msgid "IP address has been unblocked."
+msgstr ""
+
+#: includes/class-ip-manager.php:263
+msgid "Failed to unblock IP address."
+msgstr ""
+
+#: includes/class-ip-manager.php:297
+#, php-format
+msgid "Line %d: Invalid format"
+msgstr ""
+
+#: includes/class-ip-manager.php:306
+#, php-format
+msgid "Line %1$d: Invalid IP address \"%2$s\""
+msgstr ""
+
+#: includes/class-ip-manager.php:312
+#, php-format
+msgid "Line %1$d: Invalid expiration date \"%2$s\""
+msgstr ""
+
+#: includes/class-ip-manager.php:321
+#, php-format
+msgid "Line %1$d: Failed to import IP \"%2$s\""
+msgstr ""
+
+#: includes/class-mode-manager.php:95
+msgid "Login Monitoring"
+msgstr ""
+
+#: includes/class-mode-manager.php:96
+msgid "Monitor and log failed login attempts"
+msgstr ""
+
+#: includes/class-mode-manager.php:101
+msgid "Comment Spam Monitoring"
+msgstr ""
+
+#: includes/class-mode-manager.php:102
+msgid "Detect and block spam comments"
+msgstr ""
+
+#: includes/class-mode-manager.php:107
+msgid "XMLRPC Monitoring"
+msgstr ""
+
+#: includes/class-mode-manager.php:108
+msgid "Monitor XMLRPC endpoint for abuse"
+msgstr ""
+
+#: includes/class-mode-manager.php:113
+msgid "Automatic IP Blocking"
+msgstr ""
+
+#: includes/class-mode-manager.php:114
+msgid "Automatically block IPs that exceed thresholds"
+msgstr ""
+
+#: includes/class-mode-manager.php:119
+msgid "Local Block/Whitelist"
+msgstr ""
+
+#: includes/class-mode-manager.php:120
+msgid "Manage local IP block and whitelist"
+msgstr ""
+
+#: includes/class-mode-manager.php:125
+msgid "Local Statistics"
+msgstr ""
+
+#: includes/class-mode-manager.php:126
+msgid "View local security statistics"
+msgstr ""
+
+#: includes/class-mode-manager.php:133
+msgid "Community Reputation Check"
+msgstr ""
+
+#: includes/class-mode-manager.php:134
+msgid "Check IP reputation against community database"
+msgstr ""
+
+#: includes/class-mode-manager.php:139
+msgid "Share Threats with Community"
+msgstr ""
+
+#: includes/class-mode-manager.php:140
+msgid "Report detected threats to the community network"
+msgstr ""
+
+#: includes/class-mode-manager.php:145
+msgid "Global Blacklist"
+msgstr ""
+
+#: includes/class-mode-manager.php:146
+msgid "Access and download the global threat blacklist"
+msgstr ""
+
+#: includes/class-mode-manager.php:151
+msgid "Reputation-based Blocking"
+msgstr ""
+
+#: includes/class-mode-manager.php:152
+msgid "Block IPs based on community reputation scores"
+msgstr ""
+
+#: includes/class-mode-manager.php:157
+msgid "Advanced Analytics"
+msgstr ""
+
+#: includes/class-mode-manager.php:158
+msgid "Access advanced threat analytics and trends"
+msgstr ""
+
+#: includes/class-mode-manager.php:163
+msgid "Threat Intelligence"
+msgstr ""
+
+#: includes/class-mode-manager.php:164
+msgid "Receive threat intelligence from the community"
+msgstr ""
+
+#: includes/class-mode-manager.php:169
+msgid "Coordinated Attack Detection"
+msgstr ""
+
+#: includes/class-mode-manager.php:170
+msgid "Detect coordinated attacks across the network"
+msgstr ""
+
+#: includes/class-mode-manager.php:463
+msgid "Standalone protection without external connectivity"
+msgstr ""
+
+#: includes/class-mode-manager.php:473
+msgid "Connected to the community threat intelligence network"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:62
+msgid "Overview of two-factor authentication for all users"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:81
+msgid "Total users"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:82
+msgid "With 2FA"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:83
+msgid "Without 2FA"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:84
+msgid "In grace period"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:85
+msgid "Skip exhausted"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:86
+msgid "Low recovery codes"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:94
+#: includes/class-two-factor-dashboard.php:111
+msgid "Users"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:99
+msgid "User status CSV"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:103
+msgid "Audit log CSV"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:112
+msgid "Role(s)"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:113
+msgid "Methods"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:114
+#: templates/two-factor-challenge.php:122
+#: templates/two-factor-onboarding.php:101
+msgid "Recovery"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:116
+msgid "Skips"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:129
+msgid "active"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:131
+msgid "Required, not set up"
+msgstr ""
+
+#: includes/class-two-factor-dashboard.php:133
+msgid "optional"
+msgstr ""
+
+#. translators: %d: seconds to wait
+#: includes/class-two-factor-email.php:96
+#: includes/class-two-factor-sms.php:397
+#, php-format
+msgid "Please wait %d seconds before requesting a new code."
+msgstr ""
+
+#. translators: %s: site name
+#: includes/class-two-factor-email.php:122
+#, php-format
+msgid "[%s] Your verification code"
+msgstr ""
+
+#: includes/class-two-factor-email.php:142
+msgid "Could not send email."
+msgstr ""
+
+#. translators: %s: user display name
+#: includes/class-two-factor-email.php:335
+#: includes/class-two-factor-notifications.php:204
+#, php-format
+msgid "Hello %s,"
+msgstr ""
+
+#: includes/class-two-factor-email.php:341
+msgid "A verification code is required to sign in to your account."
+msgstr ""
+
+#: includes/class-two-factor-email.php:346
+msgid "Your verification code"
+msgstr ""
+
+#. translators: %d: minutes
+#: includes/class-two-factor-email.php:355
+#, php-format
+msgid "Valid for %d minutes"
+msgstr ""
+
+#: includes/class-two-factor-email.php:365
+msgid "Security notice"
+msgstr ""
+
+#. translators: 1: IP address, 2: timestamp
+#: includes/class-two-factor-email.php:371
+#, php-format
+msgid "Sign-in attempt from IP %1$s at %2$s. If you did not initiate this login, change your password immediately."
+msgstr ""
+
+#: includes/class-two-factor-email.php:380
+msgid "Never share this code with anyone. Our team will never ask you for it."
+msgstr ""
+
+#. translators: 1: site name, 2: site URL
+#: includes/class-two-factor-email.php:389
+#, php-format
+msgid "Protected by ReportedIP Hive on %1$s"
+msgstr ""
+
+#. translators: 1: site name
+#: includes/class-two-factor-notifications.php:197
+#, php-format
+msgid "[%1$s] New sign-in from an unknown device"
+msgstr ""
+
+#. translators: %s: site name
+#: includes/class-two-factor-notifications.php:210
+#, php-format
+msgid "we just detected a sign-in to your account at %s from a device we have never seen before."
+msgstr ""
+
+#: includes/class-two-factor-notifications.php:214
+msgid "Details:"
+msgstr ""
+
+#. translators: %s: date and time
+#: includes/class-two-factor-notifications.php:216
+#, php-format
+msgid "  Time:          %s"
+msgstr ""
+
+#. translators: %s: IP address
+#: includes/class-two-factor-notifications.php:218
+#, php-format
+msgid "  IP address:    %s"
+msgstr ""
+
+#. translators: %s: user agent / browser
+#: includes/class-two-factor-notifications.php:220
+#, php-format
+msgid "  Device/Browser: %s"
+msgstr ""
+
+#: includes/class-two-factor-notifications.php:222
+msgid "Was this you?"
+msgstr ""
+
+#: includes/class-two-factor-notifications.php:223
+msgid "  Yes — you can ignore this email."
+msgstr ""
+
+#: includes/class-two-factor-notifications.php:224
+msgid "  No — change your password immediately and review your security settings:"
+msgstr ""
+
+#: includes/class-two-factor-notifications.php:227
+msgid "This notification is sent by the ReportedIP Hive security monitor and can be disabled in the plugin settings."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:259
+#: includes/class-two-factor-onboarding.php:260
+msgid "Set up two-factor"
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:316
+msgid "Onboarding template is missing."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:382
+msgid "Sending…"
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:383
+msgid "Code sent!"
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:384
+msgid "Verifying…"
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:385
+msgid "Invalid code"
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:386
+msgid "Really set up later?"
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:388
+msgid "Your browser does not support passkeys. Please choose another method."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:389
+msgid "Network error. Please try again."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:394
+msgid "QR code library is missing. Please reload the page."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:395
+msgid "Creating passkey…"
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:396
+msgid "This passkey is already registered on your account. You can continue with the next method."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:397
+msgid "Passkey creation was cancelled. You can try again or choose another method."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:398
+msgid "Downloaded"
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:421
+msgid "Not signed in."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:428
+msgid "Onboarding is no longer required."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:443
+msgid "Skip quota exhausted. Please set up 2FA now or contact an administrator."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:475
+msgid "Onboarding postponed."
+msgstr ""
+
+#: includes/class-two-factor-rest.php:91
+msgid "Username and password are required."
+msgstr ""
+
+#: includes/class-two-factor-rest.php:101
+msgid "Could not create challenge token."
+msgstr ""
+
+#: includes/class-two-factor-rest.php:110
+msgid "Challenge context missing."
+msgstr ""
+
+#: includes/class-two-factor-rest.php:129
+msgid "Sign-in failed."
+msgstr ""
+
+#: includes/class-two-factor-rest.php:154
+msgid "Challenge token is invalid or expired."
+msgstr ""
+
+#: includes/class-two-factor-rest.php:159
+msgid "This method is not allowed for this user."
+msgstr ""
+
+#: includes/class-two-factor-rest.php:164
+msgid "Invalid code."
+msgstr ""
+
+#: includes/class-two-factor-sms.php:188
+msgid "Phone number must start with the international format (e.g. +49...)."
+msgstr ""
+
+#: includes/class-two-factor-sms.php:192
+msgid "Phone number has an invalid length."
+msgstr ""
+
+#: includes/class-two-factor-sms.php:265
+#: templates/two-factor-challenge.php:279
+msgid "No phone number is stored for this user."
+msgstr ""
+
+#. translators: %d: 6-digit code
+#: includes/class-two-factor-sms.php:292
+#, php-format
+msgid "Your code: %d. Valid for 5 minutes only."
+msgstr ""
+
+#: includes/class-two-factor-sms.php:412
+msgid "Too many SMS sends in a short time. Please try again later."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:118
+msgid "Invalid credential data."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:123
+msgid "Challenge expired, please start again."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:131
+#: includes/class-two-factor-webauthn.php:340
+msgid "Invalid clientDataJSON."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:134
+#: includes/class-two-factor-webauthn.php:343
+msgid "clientDataJSON.type is wrong."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:137
+#: includes/class-two-factor-webauthn.php:353
+msgid "Challenge mismatch."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:140
+#: includes/class-two-factor-webauthn.php:356
+msgid "Origin mismatch."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:156
+#: includes/class-two-factor-webauthn.php:367
+msgid "RP-ID hash mismatch."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:159
+msgid "Credential data incomplete."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:183
+msgid "Passkey registriert."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:194
+#: includes/class-two-factor-webauthn.php:227
+msgid "Invalid challenge token."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:233
+msgid "Invalid assertion data."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:244
+msgid "Passkey verifiziert."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:323
+msgid "Missing credential ID."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:334
+msgid "Unbekannter Passkey."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:348
+msgid "Challenge expired."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:381
+msgid "Signature could not be verified."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:386
+msgid "Signature counter anomaly."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:406
+msgid "Attestation object is missing authData."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:413
+msgid "authenticatorData is too short."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:436
+msgid "Attested credential data is missing."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:454
+msgid "COSE key is not parseable."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:464
+msgid "Invalid EC2 key."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:474
+msgid "Invalid RSA key."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:479
+msgid "Unsupported COSE algorithm."
+msgstr ""
+
+#: includes/class-two-factor.php:150
+#: includes/class-two-factor.php:1304
+msgid "Your session has expired. Please sign in again."
+msgstr ""
+
+#: includes/class-two-factor.php:161
+msgid "This method does not support resending."
+msgstr ""
+
+#: includes/class-two-factor.php:169
+msgid "This method is not active on your account."
+msgstr ""
+
+#: includes/class-two-factor.php:184
+msgid "SMS is not available."
+msgstr ""
+
+#: includes/class-two-factor.php:208
+msgid "We have sent you a new code by email."
+msgstr ""
+
+#: includes/class-two-factor.php:209
+msgid "We have sent you a new code by SMS."
+msgstr ""
+
+#. translators: 1: opening link tag, 2: closing link tag
+#: includes/class-two-factor.php:272
+#, php-format
+msgid "Abgesichert durch %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
+msgstr ""
+
+#: includes/class-two-factor.php:601
+msgid "XMLRPC on this site only allows application passwords. Please create an application password in your profile."
+msgstr ""
+
+#: includes/class-two-factor.php:651
+msgid "<strong>Two-factor authentication required.</strong> Your skip quota is exhausted. Please contact an administrator to reset 2FA."
+msgstr ""
+
+#: includes/class-two-factor.php:714
+msgid "Two-factor verification required. Redirecting…"
+msgstr ""
+
+#: includes/class-two-factor.php:757
+msgid "Security check failed. Please try again."
+msgstr ""
+
+#. translators: %d: seconds remaining
+#: includes/class-two-factor.php:769
+#, php-format
+msgid "Too many failed attempts. Please wait %d seconds."
+msgstr ""
+
+#: includes/class-two-factor.php:826
+msgid "No valid code is active — you likely used an older code. Please click \"Resend code\" and use only the most recent code from your inbox."
+msgstr ""
+
+#: includes/class-two-factor.php:828
+msgid "No valid SMS code is active. Please request a new code and use only the most recent SMS."
+msgstr ""
+
+#: includes/class-two-factor.php:830
+msgid "Invalid verification code. Please make sure you are using the most recent code."
+msgstr ""
+
+#: includes/class-two-factor.php:1302
+msgid "New code sent."
+msgstr ""
+
+#: includes/class-two-factor.php:1303
+msgid "Sending failed."
+msgstr ""
+
+#: includes/class-two-factor.php:1305
+msgid "Passkey request in progress…"
+msgstr ""
+
+#: includes/class-two-factor.php:1306
+msgid "Failed to fetch passkey options."
+msgstr ""
+
+#: includes/class-two-factor.php:1307
+msgid "Verification failed."
+msgstr ""
+
+#: includes/class-two-factor.php:1308
+msgid "Passkey login cancelled."
+msgstr ""
+
+#: includes/class-two-factor.php:1352
+msgid "2FA template not found."
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-messagebird.php:29
+msgid "Netherlands (Amsterdam) — EU data centre"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-messagebird.php:39
+msgid "Live Access Key"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-messagebird.php:42
+msgid "From the MessageBird dashboard under Developers → API access."
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-messagebird.php:45
+msgid "Sender (originator, max. 11 alphanumeric characters or E.164 number)"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-messagebird.php:56
+msgid "MessageBird: Access Key or sender is missing."
+msgstr ""
+
+#. translators: 1: HTTP status, 2: error reason
+#: includes/sms-providers/class-sms-provider-messagebird.php:98
+#, php-format
+msgid "MessageBird error (HTTP %1$d): %2$s"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sevenio.php:29
+msgid "Germany (Cologne)"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sevenio.php:39
+msgid "API key"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sevenio.php:42
+msgid "From the seven.io dashboard under Settings → API."
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sevenio.php:45
+msgid "Sender (max. 11 alphanumeric characters, or E.164 number)"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sevenio.php:48
+msgid "Example: \"MySite\" or \"+491510000000\"."
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sevenio.php:57
+msgid "seven.io: API key or sender is missing."
+msgstr ""
+
+#. translators: %d: HTTP status
+#: includes/sms-providers/class-sms-provider-sevenio.php:91
+#, php-format
+msgid "seven.io error (HTTP %d)."
+msgstr ""
+
+#. translators: %s: provider status code
+#: includes/sms-providers/class-sms-provider-sevenio.php:100
+#, php-format
+msgid "seven.io API rejected the send (code %s)."
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sipgate.php:29
+msgid "Germany (Düsseldorf)"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sipgate.php:39
+msgid "Personal Access Token ID (token-xxxxx)"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sipgate.php:44
+msgid "Personal Access Token"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sipgate.php:49
+msgid "SMS extension (e.g. s0)"
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sipgate.php:52
+msgid "The ID of your SMS extension from the sipgate team."
+msgstr ""
+
+#: includes/sms-providers/class-sms-provider-sipgate.php:62
+msgid "sipgate: Token ID, token or SMS extension is missing."
+msgstr ""
+
+#. translators: 1: HTTP status, 2: response body
+#: includes/sms-providers/class-sms-provider-sipgate.php:99
+#, php-format
+msgid "sipgate error (HTTP %1$d): %2$s"
+msgstr ""
+
+#: reportedip-hive.php:514
+msgid "Testing connection..."
+msgstr ""
+
+#: reportedip-hive.php:515
+msgid "Connection successful!"
+msgstr ""
+
+#: reportedip-hive.php:516
+msgid "Connection failed!"
+msgstr ""
+
+#: reportedip-hive.php:517
+msgid "Are you sure you want to unblock this IP?"
+msgstr ""
+
+#: reportedip-hive.php:518
+msgid "Are you sure you want to whitelist this IP?"
+msgstr ""
+
+#: reportedip-hive.php:519
+msgid "Are you sure you want to reset all settings to defaults?"
+msgstr ""
+
+#: reportedip-hive.php:520
+msgid "WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!"
+msgstr ""
+
+#: reportedip-hive.php:521
+msgid "Are you absolutely sure?"
+msgstr ""
+
+#: reportedip-hive.php:522
+msgid "Enter reason for whitelisting (optional):"
+msgstr ""
+
+#: reportedip-hive.php:523
+msgid "Enter reason for blocking this IP:"
+msgstr ""
+
+#: reportedip-hive.php:524
+msgid "Blocked from security logs"
+msgstr ""
+
+#: reportedip-hive.php:525
+msgid "Export logs from how many days? (default: 30)"
+msgstr ""
+
+#: reportedip-hive.php:526
+msgid "Database connection successful!"
+msgstr ""
+
+#: reportedip-hive.php:527
+msgid "Request failed. Check server logs."
+msgstr ""
+
+#: reportedip-hive.php:662
+#: reportedip-hive.php:676
+msgid "Failed Logins"
+msgstr ""
+
+#: reportedip-hive.php:665
+#: reportedip-hive.php:680
+msgid "Admin Scanning"
+msgstr ""
+
+#: reportedip-hive.php:681
+msgid "API Calls"
+msgstr ""
+
+#: reportedip-hive.php:682
+msgid "Cache Hits"
+msgstr ""
+
+#: reportedip-hive.php:798
+msgid "Your IP address has been blocked due to suspicious activity."
+msgstr ""
+
+#: reportedip-hive.php:826
+msgid "Access denied due to IP reputation."
+msgstr ""
+
+#: reportedip-hive.php:957
+msgid "Access denied. Your IP address has been blocked due to suspicious activity."
+msgstr ""
+
+#: reportedip-hive.php:1053
+msgid "Retry failed."
+msgstr ""
+
+#: reportedip-hive.php:1072
+msgid "ReportedIP Hive - Queue Critical:"
+msgstr ""
+
+#. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
+#: reportedip-hive.php:1075
+#, php-format
+msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
+msgstr ""
+
+#. translators: %s: link to settings page
+#: reportedip-hive.php:1103
+#, php-format
+msgid "No API key configured. %s"
+msgstr ""
+
+#: reportedip-hive.php:1104
+msgid "Configure now"
+msgstr ""
+
+#: templates/two-factor-challenge.php:39
+msgid "Two-Factor Verification"
+msgstr ""
+
+#: templates/two-factor-challenge.php:70
+msgid "Verification required"
+msgstr ""
+
+#. translators: %s: user display name
+#: templates/two-factor-challenge.php:76
+#, php-format
+msgid "Hello %s, please confirm your identity."
+msgstr ""
+
+#: templates/two-factor-challenge.php:84
+msgid "Choose verification method"
+msgstr ""
+
+#: templates/two-factor-challenge.php:90
+msgid "Authenticator"
+msgstr ""
+
+#: templates/two-factor-challenge.php:91
+msgid "6-digit code from your authenticator app"
+msgstr ""
+
+#: templates/two-factor-challenge.php:99
+msgid "Sign in with passkey, Touch ID, Face ID or a hardware key"
+msgstr ""
+
+#: templates/two-factor-challenge.php:107
+msgid "One-time code by email"
+msgstr ""
+
+#: templates/two-factor-challenge.php:115
+msgid "One-time code by SMS"
+msgstr ""
+
+#: templates/two-factor-challenge.php:123
+msgid "Use recovery code"
+msgstr ""
+
+#: templates/two-factor-challenge.php:166
+msgid "Enter the 6-digit code from your authenticator app."
+msgstr ""
+
+#: templates/two-factor-challenge.php:169
+msgid "Authenticator code"
+msgstr ""
+
+#: templates/two-factor-challenge.php:183
+msgid "The code changes every 30 seconds."
+msgstr ""
+
+#. translators: %s: masked email
+#: templates/two-factor-challenge.php:207
+#, php-format
+msgid "We will send a one-time code to %s."
+msgstr ""
+
+#: templates/two-factor-challenge.php:216
+msgid "Send code by email"
+msgstr ""
+
+#. translators: %s: masked email
+#: templates/two-factor-challenge.php:225
+#, php-format
+msgid "We sent a 6-digit code to %s."
+msgstr ""
+
+#: templates/two-factor-challenge.php:249
+msgid "Didn't get the email?"
+msgstr ""
+
+#: templates/two-factor-challenge.php:255
+msgid "Resend code"
+msgstr ""
+
+#. translators: %s: masked phone
+#: templates/two-factor-challenge.php:287
+#, php-format
+msgid "We will send a one-time code by SMS to %s."
+msgstr ""
+
+#: templates/two-factor-challenge.php:296
+msgid "Send code by SMS"
+msgstr ""
+
+#. translators: %s: masked phone
+#: templates/two-factor-challenge.php:305
+#, php-format
+msgid "We sent a 6-digit SMS code to %s."
+msgstr ""
+
+#: templates/two-factor-challenge.php:311
+msgid "SMS code"
+msgstr ""
+
+#: templates/two-factor-challenge.php:330
+msgid "Didn't get the SMS?"
+msgstr ""
+
+#: templates/two-factor-challenge.php:335
+msgid "Resend SMS"
+msgstr ""
+
+#: templates/two-factor-challenge.php:357
+msgid "Sign in with your passkey — Face ID, Touch ID, Windows Hello or hardware key."
+msgstr ""
+
+#: templates/two-factor-challenge.php:362
+msgid "Sign in with passkey"
+msgstr ""
+
+#. translators: %d: remaining codes
+#: templates/two-factor-challenge.php:381
+#, php-format
+msgid "Enter one of your recovery codes. (%d remaining)"
+msgstr ""
+
+#: templates/two-factor-challenge.php:387
+msgid "Recovery code"
+msgstr ""
+
+#: templates/two-factor-challenge.php:398
+msgid "Each recovery code can be used only once."
+msgstr ""
+
+#. translators: %d: number of days
+#: templates/two-factor-challenge.php:414
+#, php-format
+msgid "Trust this device for %d days"
+msgstr ""
+
+#: templates/two-factor-challenge.php:425
+msgid "Verify"
+msgstr ""
+
+#: templates/two-factor-challenge.php:431
+msgid "← Back to sign-in"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:39
+msgid "Set Up Two-Factor Authentication"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:56
+msgid "This is your final skip. You must set up 2FA on your next sign-in. Continue?"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:56
+msgid "Set up later?"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:57
+msgid "Set up later"
+msgstr ""
+
+#. translators: %d: remaining skips
+#: templates/two-factor-onboarding.php:63
+#, php-format
+msgid "(%d skip remaining)"
+msgid_plural "(%d skips remaining)"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/two-factor-onboarding.php:78
+msgid "Grace period active."
+msgstr ""
+
+#. translators: %s: grace period end date
+#: templates/two-factor-onboarding.php:82
+#, php-format
+msgid "You can skip unlimited times until %s. After that you must set up 2FA."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:89
+msgid "Final skip."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:90
+msgid "You must set up 2FA on your next sign-in, otherwise login will be blocked."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:100
+msgid "Setup"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:118
+msgid "Welcome to Two-Factor Authentication"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:120
+msgid "Let's make your WordPress account even more secure — in just 2 minutes."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:130
+msgid "What is 2FA?"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:131
+msgid "In addition to your password, you confirm who you are with a second factor — for example a code on your smartphone. Even if someone knows your password, they can't get into your account without that second factor."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:140
+msgid "How long does it take?"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:141
+msgid "About 2 minutes. You can resume this process anytime if you get interrupted."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:150
+msgid "What do you need?"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:151
+msgid "Depending on the method you choose: a smartphone with an authenticator app, a passkey-capable browser (Face ID / Windows Hello / Touch ID), or just access to your email inbox."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:160
+msgid "Why am I seeing this now?"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:161
+msgid "Your administrator has made 2FA mandatory for your role. You can enable multiple methods at the same time so you won't be locked out if you lose a device."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:169
+msgid "Let's start"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:176
+msgid "Choose your method"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:178
+msgid "Which second factor would you like to use when you sign in?"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:181
+msgid "Multi-select — click one or more cards"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:199
+msgid "Passkey / biometrics"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:201
+msgid "Face ID, Touch ID, Windows Hello or a hardware key. Phishing-resistant, no app needed."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:204
+msgid "Most secure method"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:205
+msgid "Biometric, no code entry"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:206
+msgid "Phishing-resistant"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:217
+msgid "Authenticator app (TOTP)"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:219
+msgid "Google Authenticator, Microsoft Authenticator, Authy, 1Password, Bitwarden. Works offline."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:222
+msgid "Usable offline"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:223
+msgid "Very secure"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:224
+msgid "No dependency on SMS or email"
+msgstr ""
+
+#. translators: %s: masked email
+#: templates/two-factor-onboarding.php:240
+#, php-format
+msgid "We will send a 6-digit code to %s."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:246
+msgid "No app needed"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:247
+msgid "Easy to get started"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:248
+msgid "Only as secure as your email account"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:259
+msgid "SMS (GDPR-compliant)"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:261
+msgid "Code by SMS to your mobile number. Processed only by EU providers. Less secure than the other methods (SIM-swapping risk)."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:264
+msgid "Less secure than TOTP/passkey"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:265
+msgid "EU provider, DPA"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:272
+msgid "Tip: alongside your main method, pick a fallback method (e.g. passkey + email) to avoid being locked out if you lose a device."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:285
+#: templates/two-factor-onboarding.php:286
+msgid "Set up methods"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:285
+msgid "All methods set up successfully!"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:288
+#: templates/two-factor-onboarding.php:289
+msgid "Follow the instructions for each selected method. After successful verification, the next method is set up."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:288
+msgid "Well done! In the next step you save your recovery codes."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:296
+msgid "Setup complete"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:298
+msgid "Click \"Next: recovery codes\" to save your one-time codes."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:305
+msgid "Install an authenticator app on your smartphone if you don't have one yet."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:314
+msgid "Scan the QR code with the app (or enter the secret key manually)."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:316
+msgid "QR code to scan"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:318
+msgid "Or enter manually:"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:321
+#: templates/two-factor-onboarding.php:433
+msgid "Copy"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:326
+msgid "Enter the 6-digit code from your app to finish setup."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:328
+msgid "TOTP code"
+msgstr ""
+
+#. translators: %s: email address
+#: templates/two-factor-onboarding.php:343
+#, php-format
+msgid "We will send a confirmation code to %s."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:350
+msgid "Send confirmation code to my email"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:353
+msgid "Enter the 6-digit code from the email:"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:362
+msgid "Security note: email-based 2FA is only as secure as your email account. Protect it with 2FA as well if possible."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:368
+msgid "Set up passkey"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:370
+msgid "Use Face ID, Touch ID, Windows Hello or a hardware key (e.g. YubiKey). A passkey stays on your device — we do not store any biometric data."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:374
+msgid "Create passkey with this device"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:377
+msgid "Note: if your browser doesn't support passkeys, please pick another method (go back)."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:383
+msgid "Set up SMS"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:385
+msgid "Privacy notice."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:386
+msgid "Your phone number is stored encrypted and only shared with our EU SMS provider for delivery. SIM-swapping can compromise SMS 2FA; prefer passkey or TOTP as your main method."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:389
+msgid "Mobile number (international, e.g. +49…)"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:394
+msgid "I consent to processing of my phone number by the configured EU SMS provider for authentication."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:397
+msgid "Send confirmation code by SMS"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:409
+msgid "Next: recovery codes"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:416
+msgid "Save recovery codes"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:418
+msgid "If you lose your device or can't access your chosen methods, you can sign in with one of these one-time codes."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:422
+msgid "Important!"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:423
+msgid "Each code can be used only once. Store them safely — e.g. in a password manager, a safe, or printed. Do NOT store them in the same password manager as your WordPress password."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:426
+#: templates/two-factor-onboarding.php:493
+msgid "Recovery codes"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:437
+msgid "Download as .txt"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:441
+msgid "Print"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:447
+msgid "I have stored my recovery codes safely."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:453
+msgid "Finish"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:481
+msgid "Done — your account is now doubly secure!"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:483
+msgid "From now on you'll need your second factor in addition to your password on sign-in. Thanks for taking the time!"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:489
+msgid "Enabled methods"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:497
+msgid "fewer sleepless nights"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:502
+msgid "What else to know"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:506
+msgid "You will be asked for your second factor on your next sign-in."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:510
+msgid "You can remember trusted devices so you don't need to enter a code on every sign-in."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:514
+msgid "Under Profile → Security you can add or remove methods any time."
+msgstr ""
+
+#. translators: 1: opening link tag, 2: closing link tag
+#: templates/two-factor-onboarding.php:530
+#, php-format
+msgid "This page is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
+msgstr ""

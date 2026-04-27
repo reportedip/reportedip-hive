@@ -1,0 +1,891 @@
+/**
+ * ReportedIP Hive Admin Styles.
+ *
+ * NOTE: This file contains legacy styles for backwards compatibility.
+ * New components should use the design-system.css with `rip-*` prefix classes.
+ * Colors use CSS variables from design-system.css with fallbacks for safety.
+ *
+ * @package   ReportedIP_Hive
+ * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @copyright 2025-2026 Patrick Schlesinger
+ * @license   GPL-2.0-or-later
+ * @since     1.0.0
+ */
+
+/* ==========================================================================
+   Statistics Display (used by api-queue-table.php)
+   ========================================================================== */
+
+.stat-label {
+    color: var(--rip-gray-500, #666);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   Severity Indicators (use rip-badge--* for new code)
+   ========================================================================== */
+
+.severity-low {
+    color: var(--rip-success, #10B981);
+    font-weight: 600;
+}
+
+.severity-medium {
+    color: var(--rip-warning, #F59E0B);
+    font-weight: 600;
+}
+
+.severity-high {
+    color: var(--rip-warning-dark, #D97706);
+    font-weight: 600;
+}
+
+.severity-critical {
+    color: var(--rip-danger, #EF4444);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   API Test Section
+   ========================================================================== */
+
+.api-test-section {
+    margin-top: var(--rip-space-8, 30px);
+    padding: var(--rip-space-5, 20px);
+    background: var(--rip-gray-50, #f9f9f9);
+    border-radius: var(--rip-radius, 4px);
+}
+
+#api-test-result {
+    margin-top: var(--rip-space-4, 15px);
+    padding: var(--rip-space-2, 10px);
+    border-radius: var(--rip-radius, 4px);
+    display: none;
+}
+
+#api-test-result.success {
+    background: var(--rip-success-bg, rgba(16, 185, 129, 0.1));
+    color: var(--rip-success-dark, #059669);
+    border: 1px solid var(--rip-success-light, #34D399);
+}
+
+#api-test-result.error {
+    background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
+    color: var(--rip-danger-dark, #DC2626);
+    border: 1px solid var(--rip-danger-light, #F87171);
+}
+
+/* Enhanced API Key Information Styles */
+.api-key-info {
+    padding: var(--rip-space-5);
+    background: linear-gradient(135deg, var(--rip-gray-50, #f8f9fa) 0%, var(--rip-gray-200, #e9ecef) 100%);
+    border-radius: var(--rip-radius-lg);
+    border: 1px solid #c3e6cb;
+}
+
+.api-key-info h4 {
+    margin: 0 0 var(--rip-space-5) 0;
+    font-size: var(--rip-text-lg);
+    font-weight: 600;
+    color: #155724;
+}
+
+.key-detail {
+    margin: var(--rip-space-3) 0;
+    padding: var(--rip-space-2) 0;
+    border-bottom: 1px solid var(--rip-gray-200, #dee2e6);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.key-detail:last-of-type {
+    border-bottom: none;
+}
+
+.key-detail strong {
+    color: var(--rip-gray-600, #495057);
+    font-weight: 600;
+}
+
+.api-usage-bar {
+    margin: var(--rip-space-5) 0;
+    padding: var(--rip-space-4);
+    background: #ffffff;
+    border-radius: var(--rip-radius);
+    border: 1px solid var(--rip-gray-200, #dee2e6);
+    box-shadow: var(--rip-shadow);
+}
+
+.usage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--rip-space-3);
+}
+
+.usage-header span {
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-600, #495057);
+}
+
+.usage-percent {
+    font-weight: 700;
+    font-size: var(--rip-text-base);
+}
+
+.usage-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: var(--rip-gray-200, #e9ecef);
+    border-radius: var(--rip-radius-sm);
+    overflow: hidden;
+    margin: var(--rip-space-2) 0;
+}
+
+.usage-bar-fill {
+    height: 100%;
+    border-radius: var(--rip-radius-sm);
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.usage-remaining {
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-500, #6c757d);
+    text-align: right;
+    margin-top: var(--rip-space-2);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--rip-space-3);
+    margin-top: var(--rip-space-4);
+    padding: var(--rip-space-4);
+    background: #ffffff;
+    border-radius: var(--rip-radius);
+    border: 1px solid var(--rip-gray-200, #dee2e6);
+}
+
+.feature-item {
+    padding: var(--rip-space-2) var(--rip-space-3);
+    background: var(--rip-gray-50, #f8f9fa);
+    border-radius: var(--rip-radius-sm);
+    font-size: var(--rip-text-sm);
+    font-weight: 500;
+    text-align: center;
+    border: 1px solid var(--rip-gray-200, #e9ecef);
+    transition: var(--rip-transition);
+}
+
+.feature-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--rip-shadow);
+}
+
+/* API Error Styles */
+.api-error {
+    padding: var(--rip-space-5);
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-radius: var(--rip-radius-lg);
+    border: 1px solid #f5c6cb;
+}
+
+.api-error h4 {
+    margin: 0 0 var(--rip-space-4) 0;
+    font-size: var(--rip-text-lg);
+    font-weight: 600;
+    color: #721c24;
+}
+
+.error-message {
+    margin: var(--rip-space-3) 0;
+    padding: var(--rip-space-3);
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: var(--rip-radius-sm);
+    font-size: var(--rip-text-sm);
+    color: #721c24;
+}
+
+.error-code {
+    margin: var(--rip-space-2) 0 0 0;
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-500, #6c757d);
+    font-family: monospace;
+    background: rgba(255, 255, 255, 0.3);
+    padding: var(--rip-space-1) var(--rip-space-2);
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* Tables */
+.wp-list-table th {
+    font-weight: 600;
+}
+
+.wp-list-table .button-small {
+    padding: 2px 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    margin-right: var(--rip-space-2);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0073aa;
+    border-radius: 50%;
+    animation: rip-spin 1s linear infinite;
+}
+
+/* @keyframes rip-spin is defined in design-system.css */
+
+/* ==========================================================================
+   Legacy Notifications (use rip-notification for new code)
+   ========================================================================== */
+
+.reportedip-notification {
+    padding: var(--rip-space-2, 10px) var(--rip-space-4, 15px);
+    margin: var(--rip-space-2, 10px) 0;
+    border-radius: var(--rip-radius, 4px);
+    font-weight: 500;
+}
+
+.reportedip-notification.success {
+    background: var(--rip-success-bg, rgba(16, 185, 129, 0.1));
+    color: var(--rip-success-dark, #059669);
+    border: 1px solid var(--rip-success-light, #34D399);
+}
+
+.reportedip-notification.error {
+    background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
+    color: var(--rip-danger-dark, #DC2626);
+    border: 1px solid var(--rip-danger-light, #F87171);
+}
+
+.reportedip-notification.warning {
+    background: var(--rip-warning-bg, rgba(245, 158, 11, 0.1));
+    color: var(--rip-warning-dark, #D97706);
+    border: 1px solid var(--rip-warning-light, #FBBF24);
+}
+
+.reportedip-notification.info {
+    background: var(--rip-info-bg, rgba(59, 130, 246, 0.1));
+    color: var(--rip-info-dark, #2563EB);
+    border: 1px solid var(--rip-info-light, #60A5FA);
+}
+
+.ip-info-card {
+    background: #fff;
+    border: 1px solid var(--rip-gray-300, #ddd);
+    border-radius: var(--rip-radius-sm);
+    padding: var(--rip-space-5);
+    margin-bottom: var(--rip-space-5);
+}
+
+.ip-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--rip-space-4);
+    padding-bottom: var(--rip-space-4);
+    border-bottom: 1px solid var(--rip-gray-200, #eee);
+}
+
+.ip-info-header h4 {
+    margin: 0;
+    color: #0073aa;
+}
+
+.ip-status {
+    display: flex;
+    gap: var(--rip-space-3);
+}
+
+.status-badge {
+    padding: var(--rip-space-1, 4px) var(--rip-space-2, 8px);
+    border-radius: var(--rip-radius-sm, 3px);
+    font-size: var(--rip-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.whitelisted {
+    background: var(--rip-success-bg, rgba(16, 185, 129, 0.1));
+    color: var(--rip-success-dark, #059669);
+}
+
+.status-badge.blocked {
+    background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
+    color: var(--rip-danger-dark, #DC2626);
+}
+
+.status-badge.clean {
+    background: var(--rip-info-bg, rgba(59, 130, 246, 0.1));
+    color: var(--rip-info-dark, #2563EB);
+}
+
+.ip-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--rip-space-4);
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--rip-space-2) 0;
+    border-bottom: 1px solid var(--rip-gray-100, #f0f0f0);
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--rip-gray-500, #666);
+}
+
+.detail-value {
+    color: var(--rip-gray-700, #333);
+}
+
+/* Responsive design */
+@media (max-width: 782px) {
+    .ip-info-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--rip-space-3);
+    }
+
+    .ip-details {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .ip-info-card {
+        background: #1e1e1e;
+        border-color: #444;
+        color: #fff;
+    }
+
+    .api-test-section {
+        background: #2a2a2a;
+        color: #fff;
+    }
+
+    .detail-item {
+        border-bottom-color: #444;
+    }
+
+    .detail-label {
+        color: #ccc;
+    }
+
+    .detail-value {
+        color: #fff;
+    }
+}
+
+/* Print styles */
+@media print {
+    .nav-tab-wrapper {
+        display: none;
+    }
+
+    .wp-list-table {
+        font-size: var(--rip-text-xs);
+    }
+
+    .wp-list-table th,
+    .wp-list-table td {
+        padding: var(--rip-space-2);
+    }
+}
+
+/* Accessibility improvements */
+.button:focus,
+.nav-tab:focus {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+}
+
+/* Severity badges with Dashicons */
+.severity-low,
+.severity-medium,
+.severity-high,
+.severity-critical {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: var(--rip-text-xs);
+}
+
+.severity-low::before {
+    content: "\f147";
+    font-family: "dashicons";
+    font-size: var(--rip-text-sm);
+}
+
+.severity-medium::before {
+    content: "\f534";
+    font-family: "dashicons";
+    font-size: var(--rip-text-sm);
+}
+
+.severity-high::before {
+    content: "\f534";
+    font-family: "dashicons";
+    font-size: var(--rip-text-sm);
+}
+
+.severity-critical::before {
+    content: "\f335";
+    font-family: "dashicons";
+    font-size: var(--rip-text-sm);
+}
+
+.severity-low {
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.severity-medium {
+    background: rgba(255, 193, 7, 0.15);
+}
+
+.severity-high {
+    background: rgba(253, 126, 20, 0.15);
+}
+
+.severity-critical {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+/* Tooltip styles */
+.tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--rip-gray-700, #333);
+    color: #fff;
+    padding: var(--rip-space-2) var(--rip-space-3);
+    border-radius: var(--rip-radius-sm);
+    font-size: var(--rip-text-xs);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 1000;
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+}
+
+/* Unified Status Indicators with Dashicons */
+.status-good,
+.status-warning,
+.status-error,
+.status-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
+.status-good::before {
+    content: "\f147";
+    font-family: "dashicons";
+    font-size: var(--rip-text-base);
+    color: var(--rip-success, #28a745);
+}
+
+.status-warning::before {
+    content: "\f534";
+    font-family: "dashicons";
+    font-size: var(--rip-text-base);
+    color: var(--rip-warning, #ffc107);
+}
+
+.status-error::before {
+    content: "\f335";
+    font-family: "dashicons";
+    font-size: var(--rip-text-base);
+    color: var(--rip-danger, #dc3545);
+}
+
+.status-info::before {
+    content: "\f348";
+    font-family: "dashicons";
+    font-size: var(--rip-text-base);
+    color: var(--rip-info, #17a2b8);
+}
+
+/* Block type badges */
+.block-type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.block-type-badge.manual {
+    background: rgba(0, 115, 170, 0.1);
+    color: #0073aa;
+}
+
+.block-type-badge.auto {
+    background: rgba(253, 126, 20, 0.1);
+    color: #fd7e14;
+}
+
+/* Dashicon heading styles */
+h3 .dashicons {
+    vertical-align: middle;
+    margin-top: -2px;
+}
+
+/* WP List Table enhancements */
+.wp-list-table .column-cb {
+    width: 2.2em;
+}
+
+.wp-list-table .column-actions {
+    width: 150px;
+}
+
+.wp-list-table .column-severity {
+    width: 100px;
+}
+
+.wp-list-table .column-block_type {
+    width: 120px;
+}
+
+/* Logs table: ensure the details column actually has room.
+   wp-list-table.fixed plus the sibling columns' explicit widths leaves
+   the details column with single-digit pixels, so its content (and even
+   its header label) breaks into vertical character stacks. Switch to
+   auto layout so the column expands with its content, and pin a sane
+   minimum so very-short rows can't trigger the same collapse again. */
+.wp-list-table.fixed {
+    table-layout: auto;
+}
+
+.wp-list-table .column-details {
+    width: auto;
+    min-width: 220px;
+    word-wrap: break-word;
+}
+
+.wp-list-table .column-details strong {
+    margin-right: 4px;
+}
+
+/* Without table-layout: fixed the timestamp column shrinks until each
+   datetime breaks across three lines; pin a sensible minimum. */
+.wp-list-table .column-created_at {
+    min-width: 140px;
+    white-space: nowrap;
+}
+
+/* Tablenav improvements */
+.tablenav .actions select {
+    margin-right: 6px;
+}
+
+/* Search box styling */
+.search-box {
+    margin-bottom: var(--rip-space-3);
+}
+
+/* ========================================
+   Enhanced Action Buttons & IP Display
+   ======================================== */
+
+/* IP Address styling */
+code.ip-address {
+    background: var(--rip-gray-100, #f0f0f1);
+    padding: 3px var(--rip-space-2);
+    border-radius: 3px;
+    font-family: var(--rip-font-mono, 'SF Mono', Monaco, 'Courier New', monospace);
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-800, #1d2327);
+    border: 1px solid var(--rip-gray-300, #dcdcde);
+    user-select: all;
+}
+
+/* Copy button */
+.copy-ip {
+    cursor: pointer;
+    vertical-align: middle;
+    margin-left: 5px;
+    color: #787c82 !important;
+    transition: color 0.2s ease;
+}
+
+.copy-ip:hover {
+    color: #2271b1 !important;
+}
+
+.copy-ip .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.copy-ip.copied {
+    color: #00a32a !important;
+}
+
+/* Inline action buttons container */
+.action-buttons-inline {
+    display: flex;
+    gap: var(--rip-space-2);
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+/* Button variants */
+.button.button-danger {
+    background: #d63638;
+    border-color: #d63638;
+    color: #fff;
+}
+
+.button.button-danger:hover,
+.button.button-danger:focus {
+    background: #b32d2e;
+    border-color: #b32d2e;
+    color: #fff;
+}
+
+.button.button-success {
+    background: #00a32a;
+    border-color: #00a32a;
+    color: #fff;
+}
+
+.button.button-success:hover,
+.button.button-success:focus {
+    background: #008a20;
+    border-color: #008a20;
+    color: #fff;
+}
+
+/* Icon-only buttons */
+.button-small .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: text-bottom;
+    line-height: 1;
+}
+
+.button-small .dashicons:only-child {
+    margin: 0;
+}
+
+/* Improved table column widths */
+.wp-list-table .column-ip_address {
+    width: 180px;
+}
+
+.wp-list-table .column-created_at,
+.wp-list-table .column-blocked_until,
+.wp-list-table .column-expires_at {
+    width: 150px;
+}
+
+.wp-list-table .column-event_type {
+    width: 130px;
+}
+
+/* Event type badges */
+.event-type-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.event-type-badge.failed-login {
+    background: rgba(220, 53, 69, 0.1);
+    color: #d63638;
+}
+
+.event-type-badge.comment-spam {
+    background: rgba(255, 193, 7, 0.15);
+    color: #996800;
+}
+
+.event-type-badge.xmlrpc-abuse {
+    background: rgba(253, 126, 20, 0.15);
+    color: #bd5c00;
+}
+
+.event-type-badge.ip-blocked {
+    background: rgba(0, 115, 170, 0.1);
+    color: #0073aa;
+}
+
+/* IP Type badges */
+.ip-type-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ip-type-badge.ipv4 {
+    background: #e7f3ff;
+    color: #0073aa;
+}
+
+.ip-type-badge.ipv6 {
+    background: #f0e6ff;
+    color: #6b21a8;
+}
+
+.ip-type-badge.cidr {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* Row hover effect */
+.wp-list-table tbody tr:hover {
+    background-color: #f6f7f7;
+}
+
+/* Empty state styling */
+.wp-list-table .no-items td {
+    padding: var(--rip-space-8) var(--rip-space-5);
+    text-align: center;
+    color: var(--rip-gray-500, #646970);
+}
+
+/* Copy success animation */
+@keyframes copySuccess {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.copy-ip.copied .dashicons {
+    animation: copySuccess 0.3s ease;
+}
+
+/* Spin animation for loading states */
+@keyframes dashiconsSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.dashicons.spin {
+    animation: dashiconsSpin 1s linear infinite;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+    .action-buttons-inline {
+        flex-wrap: wrap;
+    }
+
+    .wp-list-table .column-ip_address,
+    .wp-list-table .column-created_at,
+    .wp-list-table .column-event_type {
+        width: auto;
+    }
+
+    code.ip-address {
+        font-size: var(--rip-text-xs);
+        padding: 2px var(--rip-space-2);
+    }
+}
+
+/* ==========================================================================
+   1.0.2 — Settings refactor: radio profile, section picks, helpers
+   ========================================================================== */
+
+.rip-radio {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--rip-space-2);
+    padding: var(--rip-space-2);
+    border: 1px solid var(--rip-gray-200, #E5E7EB);
+    border-radius: var(--rip-radius);
+    cursor: pointer;
+    background: #fff;
+    transition: var(--rip-transition);
+}
+.rip-radio:hover { border-color: var(--rip-primary-light, #818CF8); }
+.rip-radio input[type="radio"] { margin-top: 0.25em; }
+.rip-radio__label { flex: 1; font-size: var(--rip-text-sm); }
+
+.rip-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rip-space-2);
+}
+.rip-section-pick {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--rip-space-2);
+    padding: var(--rip-space-2);
+    border: 1px solid var(--rip-gray-200, #E5E7EB);
+    border-radius: var(--rip-radius);
+    cursor: pointer;
+}
+.rip-section-pick:hover { border-color: var(--rip-primary-light, #818CF8); background: var(--rip-gray-50, #F9FAFB); }
+.rip-section-pick--inline {
+    display: inline-flex;
+    border: 0;
+    padding: 0;
+}
+.rip-section-pick--secret {
+    border-color: var(--rip-warning, #F59E0B);
+    background: rgba(245, 158, 11, 0.05);
+}
+.rip-section-pick input[type="checkbox"] { margin-top: 0.2em; }
+.rip-section-pick > span { display: flex; flex-direction: column; gap: 2px; }
+
+.rip-ml-3 { margin-left: var(--rip-space-3); }
+
+#rip-import-preview .rip-table {
+    margin-top: var(--rip-space-3);
+    font-size: var(--rip-text-sm);
+}
+#rip-import-preview .rip-table code {
+    font-size: var(--rip-text-xs);
+    word-break: break-all;
+}

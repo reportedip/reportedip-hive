@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-prod-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-prod-
+
+      - name: Resolve version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify plugin header version matches tag
+        run: |
+          HEADER_VERSION=$(grep -m1 "Version:" reportedip-hive.php | sed 's/.*Version:[[:space:]]*//' | tr -d '[:space:]')
+          CONST_VERSION=$(grep -m1 "REPORTEDIP_HIVE_VERSION" reportedip-hive.php | sed "s/.*'\([0-9.]*\)'.*/\1/")
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          echo "Header: ${HEADER_VERSION}"
+          echo "Const:  ${CONST_VERSION}"
+          echo "Tag:    ${TAG_VERSION}"
+          if [ "${HEADER_VERSION}" != "${TAG_VERSION}" ]; then
+            echo "::error::Plugin header version (${HEADER_VERSION}) does not match tag (${TAG_VERSION})"
+            exit 1
+          fi
+          if [ "${CONST_VERSION}" != "${TAG_VERSION}" ]; then
+            echo "::error::REPORTEDIP_HIVE_VERSION constant (${CONST_VERSION}) does not match tag (${TAG_VERSION})"
+            exit 1
+          fi
+
+      - name: Build production ZIP
+        run: |
+          STAGE="dist/reportedip-hive"
+          rm -rf dist
+          mkdir -p "${STAGE}"
+
+          # Plugin root files (composer.lock is mandatory — fail hard if missing).
+          cp reportedip-hive.php readme.txt LICENSE composer.json composer.lock "${STAGE}/"
+
+          # Plugin code directories
+          cp -r includes admin assets templates "${STAGE}/"
+          [ -d languages ] && cp -r languages "${STAGE}/"
+
+          # Install production-only vendor (PUC + autoloader)
+          (cd "${STAGE}" && composer install --no-dev --optimize-autoloader --no-interaction --quiet)
+
+          # Build the ZIP — top-level directory name is the plugin slug,
+          # which is what WordPress uses when extracting an upload.
+          (cd dist && zip -rq reportedip-hive.zip reportedip-hive/)
+          rm -rf "${STAGE}"
+
+          ls -lh dist/
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          NOTES_FILE="dist/release-notes.md"
+          # Extract the section for this version: lines between "## [VERSION]" and the next "## ["
+          awk -v v="${VERSION}" '
+            $0 ~ "^## \\[" v "\\]" { capture = 1; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' CHANGELOG.md > "${NOTES_FILE}"
+          if [ ! -s "${NOTES_FILE}" ]; then
+            echo "Release ${VERSION}" > "${NOTES_FILE}"
+            echo "" >> "${NOTES_FILE}"
+            echo "Siehe [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)." >> "${NOTES_FILE}"
+          fi
+          echo "notes_file=${NOTES_FILE}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            "dist/reportedip-hive.zip" \
+            --title "ReportedIP Hive ${{ steps.version.outputs.version }}" \
+            --notes-file "${{ steps.notes.outputs.notes_file }}" \
+            --verify-tag

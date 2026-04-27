@@ -1,0 +1,279 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ===========================================================================
+  # PHP Syntax Check
+  # ===========================================================================
+  phplint:
+    name: PHP Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: parallel-lint
+      - name: Check syntax
+        run: parallel-lint --exclude vendor .
+
+  # ===========================================================================
+  # PHPCS — WordPress Coding Standards
+  # ===========================================================================
+  phpcs:
+    name: PHPCS (WordPress)
+    runs-on: ubuntu-latest
+    needs: phplint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: cs2pr
+          coverage: none
+      - id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - uses: actions/cache@v4
+        with:
+          path: .phpcs.cache
+          key: ${{ runner.os }}-phpcs-${{ hashFiles('phpcs.xml', 'composer.lock') }}
+          restore-keys: ${{ runner.os }}-phpcs-
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: Run PHPCS
+        run: vendor/bin/phpcs -q --runtime-set ignore_warnings_on_exit 1 --report=checkstyle | cs2pr --graceful-warnings
+
+  # ===========================================================================
+  # PHPStan — Static Analysis (Level 5)
+  # ===========================================================================
+  phpstan:
+    name: PHPStan (Level 5)
+    runs-on: ubuntu-latest
+    needs: phplint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - uses: actions/cache@v4
+        with:
+          path: ../.phpstan-cache
+          key: ${{ runner.os }}-phpstan-${{ hashFiles('phpstan.neon', 'composer.lock') }}-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-phpstan-${{ hashFiles('phpstan.neon', 'composer.lock') }}-
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --error-format=github
+
+  # ===========================================================================
+  # PHPUnit — Unit Tests across supported PHP versions
+  # ===========================================================================
+  phpunit:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    needs: phplint
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.2', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-php${{ matrix.php }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-php${{ matrix.php }}-
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: Run unit tests
+        run: vendor/bin/phpunit --testsuite unit --no-coverage
+        env:
+          WP_TESTS_SUITE: unit
+
+  # ===========================================================================
+  # Coverage — single PHP version, uploaded to Codecov
+  # ===========================================================================
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    needs: phpunit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: xdebug
+      - id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-coverage-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-coverage-
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: Run tests with coverage
+        run: vendor/bin/phpunit --testsuite unit --coverage-clover=coverage.xml
+        env:
+          WP_TESTS_SUITE: unit
+      - uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # ===========================================================================
+  # WordPress Integration Tests (matrix on main branch + PRs only)
+  # ===========================================================================
+  integration:
+    name: WP Integration (WP ${{ matrix.wp }}, PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    needs: phpunit
+    # Disabled until tests/Integration/ exists. Flip to `true` (or remove
+    # the line) once the first integration test lands. The full job is
+    # wired up below so it works as soon as it's re-enabled.
+    if: ${{ false }}
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { php: '8.1', wp: '6.5' }
+          - { php: '8.2', wp: 'latest' }
+          - { php: '8.3', wp: 'trunk' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli
+      - id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-wp-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-wp-
+      - name: Install Subversion (required by install-wp-tests.sh)
+        run: sudo apt-get update && sudo apt-get install -y subversion
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: Install WordPress test suite
+        run: |
+          chmod +x .github/scripts/install-wp-tests.sh
+          bash .github/scripts/install-wp-tests.sh wordpress_test root root 127.0.0.1 ${{ matrix.wp }}
+      - name: Run integration tests
+        run: vendor/bin/phpunit --testsuite integration --no-coverage
+        env:
+          WP_TESTS_SUITE: integration
+          WP_TESTS_DB_NAME: wordpress_test
+          WP_TESTS_DB_USER: root
+          WP_TESTS_DB_PASSWORD: root
+          WP_TESTS_DB_HOST: 127.0.0.1
+
+  # ===========================================================================
+  # WP Plugin Check (compliance scan, non-blocking)
+  # ===========================================================================
+  plugin-check:
+    name: WP Plugin Check
+    runs-on: ubuntu-latest
+    needs: [phpcs, phpstan]
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli
+      - name: Setup WP-CLI
+        run: |
+          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x wp-cli.phar
+          sudo mv wp-cli.phar /usr/local/bin/wp
+      - name: Setup WordPress
+        run: |
+          wp core download --path=/tmp/wordpress
+          wp config create --path=/tmp/wordpress \
+            --dbname=wordpress --dbuser=root --dbpass=root \
+            --dbhost=127.0.0.1 --skip-check
+          wp core install --path=/tmp/wordpress \
+            --url=http://localhost --title="Test Site" \
+            --admin_user=admin --admin_password=admin \
+            --admin_email=admin@example.org --skip-email
+          cp -r . /tmp/wordpress/wp-content/plugins/reportedip-hive
+      - name: Install Plugin Check
+        run: wp plugin install plugin-check --path=/tmp/wordpress --activate
+      - name: Run Plugin Check (errors are blocking)
+        run: |
+          cd /tmp/wordpress
+          wp plugin check reportedip-hive --format=table --severity=error
+
+  # ===========================================================================
+  # Security Audit
+  # ===========================================================================
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: phplint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: Run security audit
+        run: composer audit --format=plain || true

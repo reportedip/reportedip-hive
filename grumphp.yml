@@ -1,0 +1,114 @@
+grumphp:
+    # Stop on first failure for faster feedback
+    stop_on_failure: true
+
+    # Don't hide circumvention information
+    hide_circumvention_tip: false
+
+    # Process timeout (seconds)
+    process_timeout: 300
+
+    # Parallel processing for speed
+    parallel:
+        enabled: true
+        max_workers: 4
+
+    # Fixer support - allow auto-fixing of issues
+    fixer:
+        enabled: true
+        fix_by_default: false
+
+    tasks:
+        # ============================================
+        # PHP CodeSniffer - WordPress Standards
+        # ============================================
+        phpcs:
+            # Use project's phpcs.xml configuration
+            standard: phpcs.xml
+
+            # Only check PHP files
+            triggered_by: [php]
+
+            # Show sniff codes for easier identification
+            show_sniffs_error_path: true
+
+            # File/path exclusions are configured in phpcs.xml
+            # (<exclude-pattern>); GrumPHP's "exclude:" only accepts sniff codes.
+
+            # Warning severity: 0 = only errors block commit
+            # Security warnings are visible but don't block
+            warning_severity: 0
+
+            metadata:
+                priority: 100
+
+        # ============================================
+        # PHPStan - Static Analysis
+        # ============================================
+        phpstan:
+            # Use project's phpstan.neon configuration
+            configuration: phpstan.neon
+
+            # Use memory limit (2G — complex codebase with WP stubs)
+            memory_limit: 2G
+
+            # Only check PHP files
+            triggered_by: [php]
+
+            metadata:
+                priority: 90
+
+        # ============================================
+        # Composer validation
+        # ============================================
+        composer:
+            # Check composer.json validity
+            file: composer.json
+
+            # Don't check lock file
+            no_check_lock: true
+
+            # Not strict
+            strict: false
+
+            metadata:
+                priority: 80
+
+        # ============================================
+        # PHP syntax check (fast, catches fatal errors)
+        # ============================================
+        phplint:
+            # Check all PHP files for syntax errors
+            triggered_by: [php]
+
+            # Exclude vendor directory
+            exclude:
+                - vendor/
+
+            # Parallel processing for speed
+            jobs: 4
+
+            metadata:
+                priority: 200
+
+        # ============================================
+        # Git commit message format
+        # ============================================
+        git_commit_message:
+            # Enforce meaningful commit messages
+            allow_empty_message: false
+
+            # Reasonable length limits
+            max_subject_width: 120
+            max_body_width: 0
+
+            # Don't require specific format
+            enforce_capitalized_subject: false
+            enforce_no_subject_punctuations: false
+            enforce_no_subject_trailing_period: true
+            enforce_single_lined_subject: true
+
+            type_scope_conventions: []
+
+            metadata:
+                priority: 50

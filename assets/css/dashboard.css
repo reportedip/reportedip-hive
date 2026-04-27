@@ -1,0 +1,650 @@
+/**
+ * ReportedIP Hive — Dashboard Styles.
+ *
+ * @package   ReportedIP_Hive
+ * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @copyright 2025-2026 Patrick Schlesinger
+ * @license   GPL-2.0-or-later
+ * @since     1.1.0
+ */
+
+/* ==========================================================================
+   Dashboard Layout
+   ========================================================================== */
+
+.rip-dashboard {
+    padding: var(--rip-space-5) 0;
+}
+
+.rip-dashboard__section {
+    margin-bottom: var(--rip-space-6);
+}
+
+.rip-dashboard__section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--rip-space-4);
+}
+
+.rip-dashboard__section-title h2 {
+    margin: 0;
+    font-size: var(--rip-text-lg);
+    font-weight: 600;
+    color: var(--rip-gray-900);
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-2);
+}
+
+.rip-dashboard__section-title h2 svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--rip-primary);
+}
+
+/* ==========================================================================
+   Charts Grid
+   ========================================================================== */
+
+.rip-charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--rip-space-5);
+    margin-bottom: var(--rip-space-6);
+}
+
+@media (max-width: 1200px) {
+    .rip-charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.rip-chart-card {
+    background: white;
+    border: 1px solid var(--rip-gray-200);
+    border-radius: var(--rip-radius-lg);
+    overflow: hidden;
+}
+
+.rip-chart-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--rip-space-4) var(--rip-space-5);
+    border-bottom: 1px solid var(--rip-gray-100);
+}
+
+.rip-chart-card__title {
+    margin: 0;
+    font-size: var(--rip-text-base);
+    font-weight: 600;
+    color: var(--rip-gray-900);
+}
+
+.rip-chart-card__actions {
+    display: flex;
+    gap: var(--rip-space-2);
+}
+
+.rip-chart-card__body {
+    padding: var(--rip-space-5);
+    position: relative;
+    min-height: 250px;
+}
+
+.rip-chart-card__canvas {
+    width: 100%;
+    height: 250px;
+}
+
+/* Time Period Selector */
+.rip-time-selector {
+    display: flex;
+    gap: 0;
+    background: var(--rip-gray-100);
+    border-radius: var(--rip-radius);
+    padding: 2px;
+}
+
+.rip-time-selector__btn {
+    padding: var(--rip-space-1) var(--rip-space-3);
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: var(--rip-text-xs);
+    font-weight: 500;
+    color: var(--rip-gray-600);
+    cursor: pointer;
+    border-radius: var(--rip-radius-sm);
+    transition: var(--rip-transition);
+}
+
+.rip-time-selector__btn:hover {
+    color: var(--rip-gray-900);
+}
+
+.rip-time-selector__btn--active {
+    background: white;
+    color: var(--rip-primary);
+    box-shadow: var(--rip-shadow-sm);
+}
+
+/* ==========================================================================
+   Recent Activity
+   ========================================================================== */
+
+.rip-activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.rip-activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--rip-space-3);
+    padding: var(--rip-space-3) var(--rip-space-3);
+    border-bottom: 1px solid var(--rip-gray-200);
+    border-radius: var(--rip-radius-sm);
+    transition: var(--rip-transition);
+}
+
+.rip-activity-item:last-child {
+    border-bottom: none;
+}
+
+.rip-activity-item:hover {
+    background-color: var(--rip-gray-50);
+}
+
+.rip-activity-item__icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--rip-radius);
+    flex-shrink: 0;
+}
+
+.rip-activity-item__icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.rip-activity-item__icon--danger {
+    background: var(--rip-danger-bg);
+    color: var(--rip-danger);
+}
+
+.rip-activity-item__icon--warning {
+    background: var(--rip-warning-bg);
+    color: var(--rip-warning);
+}
+
+.rip-activity-item__icon--success {
+    background: var(--rip-success-bg);
+    color: var(--rip-success);
+}
+
+.rip-activity-item__icon--info {
+    background: var(--rip-info-bg);
+    color: var(--rip-info);
+}
+
+.rip-activity-item__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.rip-activity-item__title {
+    font-weight: 500;
+    color: var(--rip-gray-900);
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-2);
+}
+
+.rip-activity-item__ip {
+    font-family: var(--rip-font-mono);
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-700);
+    background: var(--rip-gray-100);
+    padding: 1px 6px;
+    border-radius: var(--rip-radius-sm);
+}
+
+.rip-activity-item__desc {
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-500);
+}
+
+.rip-activity-item__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-3);
+    margin-top: var(--rip-space-1);
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-400);
+}
+
+.rip-activity-item__time {
+    white-space: nowrap;
+    color: var(--rip-gray-400);
+    font-size: var(--rip-text-sm);
+}
+
+/* Severity Badges */
+.rip-activity-item__severity {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    font-size: var(--rip-text-xs);
+    font-weight: 600;
+    border-radius: var(--rip-radius-full);
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.rip-activity-item__severity--high {
+    background: var(--rip-danger-bg);
+    color: var(--rip-danger);
+}
+
+.rip-activity-item__severity--medium {
+    background: var(--rip-warning-bg);
+    color: var(--rip-warning);
+}
+
+.rip-activity-item__severity--low {
+    background: var(--rip-info-bg);
+    color: var(--rip-info);
+}
+
+.rip-activity-item__severity--safe {
+    background: var(--rip-success-bg);
+    color: var(--rip-success);
+}
+
+/* ==========================================================================
+   Quick Actions
+   ========================================================================== */
+
+.rip-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--rip-space-3);
+}
+
+.rip-quick-action {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-3);
+    padding: var(--rip-space-4);
+    background: white;
+    border: 1px solid var(--rip-gray-200);
+    border-radius: var(--rip-radius-lg);
+    text-decoration: none;
+    color: var(--rip-gray-700);
+    transition: var(--rip-transition);
+}
+
+.rip-quick-action:hover {
+    border-color: var(--rip-primary);
+    background: var(--rip-primary-50);
+    color: var(--rip-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--rip-shadow);
+}
+
+.rip-quick-action__icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--rip-gray-100);
+    border-radius: var(--rip-radius);
+    transition: var(--rip-transition);
+}
+
+.rip-quick-action:hover .rip-quick-action__icon {
+    background: var(--rip-primary-100);
+}
+
+.rip-quick-action__icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.rip-quick-action__label {
+    font-weight: 500;
+    font-size: var(--rip-text-sm);
+}
+
+/* ==========================================================================
+   Community Widget (Community Mode)
+   ========================================================================== */
+
+.rip-community-widget {
+    background: linear-gradient(135deg, #10B981 0%, #14B8A6 100%);
+    border-radius: var(--rip-radius-lg);
+    padding: var(--rip-space-5);
+    color: white;
+    margin-bottom: var(--rip-space-6);
+}
+
+.rip-community-widget__header {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-3);
+    margin-bottom: var(--rip-space-4);
+}
+
+.rip-community-widget__icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--rip-radius-lg);
+}
+
+.rip-community-widget__icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.rip-community-widget__title {
+    font-size: var(--rip-text-lg);
+    font-weight: 600;
+    margin: 0;
+}
+
+.rip-community-widget__subtitle {
+    font-size: var(--rip-text-sm);
+    opacity: 0.9;
+    margin: 0;
+}
+
+.rip-community-widget__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--rip-space-4);
+}
+
+.rip-community-stat {
+    text-align: center;
+}
+
+.rip-community-stat__value {
+    font-size: var(--rip-text-2xl);
+    font-weight: 700;
+}
+
+.rip-community-stat__label {
+    font-size: var(--rip-text-xs);
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   API Status Widget
+   ========================================================================== */
+
+.rip-api-status {
+    background: white;
+    border: 1px solid var(--rip-gray-200);
+    border-radius: var(--rip-radius-lg);
+    padding: var(--rip-space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-4);
+}
+
+.rip-api-status__indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.rip-api-status__indicator--online {
+    background: var(--rip-success);
+    box-shadow: 0 0 0 4px var(--rip-success-bg);
+    animation: pulse-green 2s infinite;
+}
+
+.rip-api-status__indicator--offline {
+    background: var(--rip-danger);
+    box-shadow: 0 0 0 4px var(--rip-danger-bg);
+}
+
+.rip-api-status__indicator--warning {
+    background: var(--rip-warning);
+    box-shadow: 0 0 0 4px var(--rip-warning-bg);
+}
+
+@keyframes pulse-green {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.05);
+    }
+}
+
+.rip-api-status__content {
+    flex: 1;
+}
+
+.rip-api-status__title {
+    font-weight: 600;
+    color: var(--rip-gray-900);
+    margin-bottom: 2px;
+}
+
+.rip-api-status__desc {
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-500);
+}
+
+.rip-api-status__usage {
+    text-align: right;
+}
+
+.rip-api-status__usage-value {
+    font-size: var(--rip-text-xl);
+    font-weight: 700;
+    color: var(--rip-gray-900);
+}
+
+.rip-api-status__usage-label {
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-500);
+}
+
+/* ==========================================================================
+   Progress Bar
+   ========================================================================== */
+
+.rip-progress {
+    height: 8px;
+    background: var(--rip-gray-200);
+    border-radius: var(--rip-radius-full);
+    overflow: hidden;
+}
+
+.rip-progress__bar {
+    height: 100%;
+    border-radius: var(--rip-radius-full);
+    transition: width 0.3s ease;
+}
+
+.rip-progress__bar--primary {
+    background: var(--rip-gradient-primary);
+}
+
+.rip-progress__bar--success {
+    background: var(--rip-gradient-success);
+}
+
+.rip-progress__bar--danger {
+    background: var(--rip-danger);
+}
+
+.rip-progress__bar--warning {
+    background: var(--rip-warning);
+}
+
+/* ==========================================================================
+   Trust Badges
+   ========================================================================== */
+
+.rip-trust-badges {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-4);
+    padding: var(--rip-space-4);
+    background: var(--rip-gray-50);
+    border-radius: var(--rip-radius-lg);
+    margin-top: var(--rip-space-6);
+}
+
+.rip-trust-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-2);
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-600);
+}
+
+.rip-trust-badge svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--rip-success);
+}
+
+/* ==========================================================================
+   Dashboard Header Enhancement
+   ========================================================================== */
+
+.rip-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--rip-space-4);
+    margin-bottom: var(--rip-space-6);
+}
+
+.rip-dashboard-header__info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rip-space-2);
+}
+
+.rip-dashboard-header__status {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-3);
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+
+/* ==========================================================================
+   Empty States
+   ========================================================================== */
+
+.rip-empty-state {
+    text-align: center;
+    padding: var(--rip-space-8) var(--rip-space-6);
+}
+
+.rip-empty-state--compact {
+    padding: var(--rip-space-6) var(--rip-space-4);
+}
+
+.rip-empty-state__icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--rip-space-4);
+    color: var(--rip-gray-300);
+}
+
+.rip-empty-state--compact .rip-empty-state__icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: var(--rip-space-3);
+}
+
+.rip-empty-state__title {
+    font-size: var(--rip-text-lg);
+    font-weight: 600;
+    color: var(--rip-gray-900);
+    margin-bottom: var(--rip-space-2);
+}
+
+.rip-empty-state__text {
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-500);
+    margin: 0;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.rip-empty-state__actions {
+    margin-top: var(--rip-space-5);
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+
+@media (max-width: 782px) {
+    .rip-community-widget__stats {
+        grid-template-columns: 1fr;
+        gap: var(--rip-space-3);
+    }
+
+    .rip-community-stat {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+    }
+
+    .rip-quick-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .rip-trust-badges {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .rip-api-status {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .rip-api-status__usage {
+        text-align: center;
+    }
+
+    .rip-empty-state {
+        padding: var(--rip-space-6) var(--rip-space-4);
+    }
+
+    .rip-empty-state__icon {
+        width: 48px;
+        height: 48px;
+    }
+}

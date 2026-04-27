@@ -1,0 +1,63 @@
+includes:
+    # WordPress stubs for proper type recognition
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    # Analysis level (0-9, higher = stricter)
+    # Start with 5 for a good balance, increase over time
+    level: 5
+
+    # Result cache directory: outside the plugin folder so Plugin Check / WP-CLI
+    # do not flag the cache files as production code. CI caches this path via
+    # actions/cache (key on composer.lock + phpstan.neon).
+    tmpDir: ../.phpstan-cache
+
+    # Paths to analyse
+    paths:
+        - reportedip-hive.php
+        - includes/
+        - admin/
+        - templates/
+
+    # Paths to exclude
+    excludePaths:
+        - vendor/
+        - node_modules/
+        - tests/
+        - bin/
+
+    # Scan also files not listed in paths (for dependencies)
+    scanFiles:
+        - reportedip-hive.php
+
+    # Bootstrap defines plugin constants for static analysis. Lives under tests/
+    # which is excluded from the production ZIP and from WordPress.org Plugin
+    # Check, so it never reaches end users.
+    bootstrapFiles:
+        - tests/phpstan-bootstrap.php
+
+    # Ignore missing array typehints (common in WordPress)
+    # checkMissingIterableValueType is deprecated, use ignoreErrors instead
+
+    # Allow dynamic properties (used extensively in WordPress)
+    checkDynamicProperties: false
+
+    # Treat phpDoc types as native types
+    treatPhpDocTypesAsCertain: false
+
+    # Ignore errors patterns (use sparingly!)
+    ignoreErrors:
+        # WordPress global $wpdb is always available
+        - '#Variable \$wpdb might not be defined#'
+
+        # Allow array access on mixed types (common in WP)
+        - '#Cannot access offset .+ on mixed#'
+
+        # Common WordPress patterns with dynamic function calls
+        - '#Parameter \#1 .+ of function call_user_func#'
+
+        # Ignore missing array type hints (deprecated option replacement)
+        - identifier: missingType.iterableValue
+
+    # Report unmatched ignored errors (keeps ignoreErrors list clean)
+    reportUnmatchedIgnoredErrors: false
