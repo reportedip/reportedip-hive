@@ -1220,6 +1220,22 @@
     margin-bottom: var(--rip-space-5);
 }
 
+.rip-radio {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--rip-space-2);
+    padding: var(--rip-space-2);
+    border: 1px solid var(--rip-gray-200, #E5E7EB);
+    border-radius: var(--rip-radius);
+    cursor: pointer;
+    background: #fff;
+    transition: var(--rip-transition);
+    margin-bottom: var(--rip-space-2);
+}
+.rip-radio:hover { border-color: var(--rip-primary-light, #818CF8); }
+.rip-radio input[type="radio"] { margin-top: 0.25em; }
+.rip-radio__label { flex: 1; font-size: var(--rip-text-sm); }
+
 .rip-form-actions {
     display: flex;
     align-items: center;

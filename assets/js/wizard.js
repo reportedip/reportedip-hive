@@ -40,6 +40,7 @@
 			this.initModeSelection();
 			this.initStep3();
 			this.initStep4();
+			this.initStep6();
 			this.restoreFromSession();
 		},
 
@@ -65,7 +66,14 @@
 			// Step 4 → 5: Werte zwischenspeichern
 			$(document).on('click', '#rip-step4-next', this.persistStep4.bind(this));
 
-			// Step 5: Final-Submit
+			// Step 5 → 6: Privacy-Werte zwischenspeichern, bevor Hide-Login-Step rendert
+			$(document).on('click', '#rip-step5-next', this.persistStep5.bind(this));
+
+			// Step 6: Live-Slug-Validierung + Toggle-Sichtbarkeit
+			$(document).on('input', '#rip-hide-login-slug', this.debounceValidateSlug.bind(this));
+			$(document).on('change', '#rip-hide-login-enabled', this.toggleHideLoginFields.bind(this));
+
+			// Step 6: Final-Submit
 			$(document).on('click', '#rip-save-config', this.handleSaveConfig.bind(this));
 
 			// Skip wizard
@@ -297,15 +305,11 @@
 		},
 
 		// ========================================================================
-		// Step 5: Privacy & Submit
+		// Step 5: Privacy → Step 6: Hide Login
 		// ========================================================================
 
-		handleSaveConfig: function (e) {
-			e.preventDefault();
-			var $button = $(e.currentTarget);
-
-			// Step 5 Werte
-			var step5 = {
+		persistStep5: function () {
+			this.setSession({
 				minimal_logging: $('#rip-minimal-logging').is(':checked') ? 1 : 0,
 				data_retention_days: $('#rip-data-retention').val() || DEFAULTS.retention_days,
 				auto_anonymize_days: $('#rip-auto-anonymize').val() || DEFAULTS.anonymize_days,
@@ -313,11 +317,75 @@
 				log_referer_domains: $('#rip-log-referer').is(':checked') ? 1 : 0,
 				notify_admin: $('#rip-notify-admin').is(':checked') ? 1 : 0,
 				delete_data_on_uninstall: $('#rip-delete-on-uninstall').is(':checked') ? 1 : 0
+			});
+		},
+
+		// ========================================================================
+		// Step 6: Hide Login (Slug-Validierung + Final-Submit)
+		// ========================================================================
+
+		initStep6: function () {
+			if (!$('#rip-hide-login-enabled').length) { return; }
+			this.toggleHideLoginFields();
+		},
+
+		toggleHideLoginFields: function () {
+			var enabled = $('#rip-hide-login-enabled').is(':checked');
+			$('#rip-hide-login-fields').toggle(enabled);
+			if (!enabled) {
+				$('#rip-hide-login-validation').text('').css('color', '');
+			}
+		},
+
+		debounceValidateSlug: function () {
+			var self = this;
+			if (this._slugTimer) { clearTimeout(this._slugTimer); }
+			this._slugTimer = setTimeout(function () { self.validateSlug(); }, 350);
+		},
+
+		validateSlug: function () {
+			var $slug = $('#rip-hide-login-slug');
+			var $msg  = $('#rip-hide-login-validation');
+			var slug  = ($slug.val() || '').toLowerCase().trim();
+			if (!slug) {
+				$msg.text('').css('color', '');
+				return;
+			}
+			$msg.text(reportedipWizard.strings.validating || 'Checking…').css('color', '');
+
+			$.ajax({
+				url: reportedipWizard.ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'reportedip_wizard_validate_login_slug',
+					nonce: reportedipWizard.nonce,
+					slug: slug
+				},
+				success: function (response) {
+					if (response.success && response.data && response.data.full_url) {
+						$msg.text('✓ ' + response.data.full_url).css('color', 'var(--rip-success)');
+					} else {
+						$msg.text((response.data && response.data.message) || (reportedipWizard.strings.errorGeneric || 'Error')).css('color', 'var(--rip-danger)');
+					}
+				},
+				error: function () {
+					$msg.text(reportedipWizard.strings.errorRetry || 'Error.').css('color', 'var(--rip-danger)');
+				}
+			});
+		},
+
+		handleSaveConfig: function (e) {
+			e.preventDefault();
+			var $button = $(e.currentTarget);
+
+			var step6 = {
+				hide_login_enabled: $('#rip-hide-login-enabled').is(':checked') ? 1 : 0,
+				hide_login_slug: ($('#rip-hide-login-slug').val() || '').toLowerCase().trim(),
+				hide_login_response_mode: $('input[name="hide_login_response_mode"]:checked').val() || 'block_page'
 			};
 
-			// Mit zwischengespeicherten Werten aus Steps 2-4 mergen
 			var session = this.getSession();
-			var payload = $.extend({}, session, step5, {
+			var payload = $.extend({}, session, step6, {
 				action: 'reportedip_wizard_complete',
 				nonce: reportedipWizard.nonce
 			});

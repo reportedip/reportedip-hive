@@ -32,7 +32,7 @@ class ReportedIP_Hive_Database {
 	 * Current database schema version.
 	 * Increment this when adding migrations.
 	 */
-	const DB_VERSION = 2;
+	const DB_VERSION = 3;
 
 	/**
 	 * Option key for stored DB version
@@ -120,11 +120,26 @@ class ReportedIP_Hive_Database {
 	/**
 	 * Run incremental migrations between schema versions.
 	 *
-	 * Currently a no-op — schema changes happen via dbDelta in create_tables(),
-	 * which runs immediately before this. Re-add a $from_version parameter when
-	 * the first data-only migration lands.
+	 * dbDelta does not change ENUM definitions on existing tables, so the
+	 * VARCHAR(32) widening on `attempts.attempt_type` introduced in v3
+	 * needs an explicit ALTER. Idempotent: re-running is a no-op.
 	 */
 	private function run_migrations() {
+		global $wpdb;
+
+		$table_attempts = $wpdb->prefix . 'reportedip_hive_attempts';
+
+		$column = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT DATA_TYPE AS data_type, COLUMN_TYPE AS column_type FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = %s',
+				$table_attempts,
+				'attempt_type'
+			)
+		);
+
+		if ( $column && strtolower( (string) $column->data_type ) === 'enum' ) {
+			$wpdb->query( "ALTER TABLE $table_attempts MODIFY attempt_type VARCHAR(32) NOT NULL DEFAULT 'login'" );
+		}
 	}
 
 	/**
@@ -192,7 +207,7 @@ class ReportedIP_Hive_Database {
 		$sql_attempts   = "CREATE TABLE $table_attempts (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             ip_address varchar(45) NOT NULL,
-            attempt_type enum('login','comment','xmlrpc','admin') DEFAULT 'login',
+            attempt_type varchar(32) NOT NULL DEFAULT 'login',
             username varchar(60) DEFAULT NULL,
             user_agent text DEFAULT NULL,
             attempt_count int(11) DEFAULT 1,

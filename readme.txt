@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.1.4
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -176,6 +176,10 @@ Use one of the ten recovery codes you printed during setup. Each is single-use. 
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 1.2.0 =
+
+Major coverage expansion: seven new attack sensors close the WordPress surface that 1.x left exposed — Application Password Abuse (REST/XMLRPC Basic Auth bypass for 2FA), global REST API rate-limit, User Enumeration defence (`?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking), 404 / Scanner pattern matching for known vulnerability paths, Password Spray cross-username detection, WooCommerce login hooks, Geographic Anomaly detection. Plus Hide Login (custom wp-login slug), Password Strength enforcement with optional HaveIBeenPwned k-anonymity check, and a centralised category-id mapping that surfaces these sensors in the service taxonomy. Database schema bumps to v3 (auto-migration).
 
 = 1.1.0 =
 

@@ -92,6 +92,13 @@ class ReportedIP_Hive_Two_Factor {
 	const METHOD_RECOVERY = 'recovery';
 
 	/**
+	 * wp-login.php action slug for the 2FA challenge page.
+	 *
+	 * @var string
+	 */
+	const ACTION_CHALLENGE = 'reportedip_2fa';
+
+	/**
 	 * Failed attempts before session is invalidated (forces re-auth).
 	 */
 	const SESSION_INVALIDATION_THRESHOLD = 10;
@@ -122,7 +129,7 @@ class ReportedIP_Hive_Two_Factor {
 		}
 
 		add_filter( 'authenticate', array( $this, 'filter_authenticate' ), 99, 3 );
-		add_action( 'login_form_reportedip_2fa', array( $this, 'handle_2fa_challenge' ) );
+		add_action( 'login_form_' . self::ACTION_CHALLENGE, array( $this, 'handle_2fa_challenge' ) );
 		add_action( 'login_enqueue_scripts', array( $this, 'enqueue_login_scripts' ) );
 		add_action( 'login_footer', array( $this, 'render_login_attribution' ) );
 
@@ -665,16 +672,57 @@ class ReportedIP_Hive_Two_Factor {
 			}
 		}
 
-		$challenge_url = wp_login_url() . '?action=reportedip_2fa';
+		$challenge_url = wp_login_url() . '?action=' . self::ACTION_CHALLENGE;
+
+		$is_api_context = ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST )
+			|| ( defined( 'REST_REQUEST' ) && REST_REQUEST )
+			|| wp_doing_ajax();
+
+		if ( ! $is_api_context ) {
+			$this->dispatch_browser_challenge_redirect( $challenge_url );
+		}
+
 		return new \WP_Error(
 			'reportedip_2fa_required',
-			__( 'Two-factor verification required. Redirecting…', 'reportedip-hive' )
-				. '<span id="reportedip-2fa-redirect" data-url="' . esc_attr( $challenge_url ) . '" style="display:none;"></span>',
+			__( 'Two-factor verification required.', 'reportedip-hive' ),
 			array(
 				'token'    => $token,
 				'redirect' => $challenge_url,
 			)
 		);
+	}
+
+	/**
+	 * Send the browser straight to the 2FA challenge page and terminate.
+	 *
+	 * Why this exists: returning a WP_Error from filter_authenticate routes the
+	 * message through wp-login.php's login_errors filter, which third-party
+	 * security/hardening plugins commonly override to mask all login errors with
+	 * a generic string. That stripping removes any redirect hint (JS marker,
+	 * <span data-url>, etc.), stranding the user on a generic error page.
+	 *
+	 * Doing the redirect server-side and exiting before wp-login.php enters its
+	 * error-rendering pipeline bypasses that pipeline entirely, so reportedip-hive
+	 * stays in control of the login flow regardless of what other plugins inject.
+	 *
+	 * @param string $challenge_url Absolute URL of the 2FA challenge page.
+	 * @return void
+	 * @since  1.1.5
+	 */
+	private function dispatch_browser_challenge_redirect( $challenge_url ) {
+		if ( ! headers_sent() ) {
+			nocache_headers();
+			wp_safe_redirect( $challenge_url );
+			exit;
+		}
+
+		$safe_url = esc_url_raw( $challenge_url );
+		printf(
+			'<!doctype html><meta http-equiv="refresh" content="0;url=%s"><script>window.location.replace(%s);</script>',
+			esc_attr( $safe_url ),
+			wp_json_encode( $safe_url )
+		);
+		exit;
 	}
 
 	/**
@@ -1191,7 +1239,7 @@ class ReportedIP_Hive_Two_Factor {
 	 */
 	public function enqueue_login_scripts() {
 		$action      = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$is_2fa_page = ( 'reportedip_2fa' === $action );
+		$is_2fa_page = ( self::ACTION_CHALLENGE === $action );
 
 		wp_enqueue_script(
 			'reportedip-hive-two-factor-login',
@@ -1205,10 +1253,9 @@ class ReportedIP_Hive_Two_Factor {
 			'reportedip-hive-two-factor-login',
 			'reportedip2fa',
 			array(
-				'resendUrl'         => wp_login_url() . '?action=reportedip_2fa&resend_email=1',
-				'challengeRedirect' => '',
-				'ajaxUrl'           => admin_url( 'admin-ajax.php' ),
-				'strings'           => array(
+				'resendUrl' => wp_login_url() . '?action=' . self::ACTION_CHALLENGE . '&resend_email=1',
+				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+				'strings'   => array(
 					'newCodeSent'          => __( 'New code sent.', 'reportedip-hive' ),
 					'sendingFailed'        => __( 'Sending failed.', 'reportedip-hive' ),
 					'sessionExpired'       => __( 'Your session has expired. Please sign in again.', 'reportedip-hive' ),

@@ -2,6 +2,107 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.2.0] — 2026-04-27
+
+### New
+
+- **Seven new attack sensors** that extend the threat coverage from the
+  existing failed-login / comment-spam / XMLRPC trio to the WordPress
+  surface that iThemes Security Pro covers via its modular architecture:
+  - **Application Password Abuse** — rate-limits failed application-password
+    Basic-Auth attempts on REST and XMLRPC, blocks app-password creation
+    for users in 2FA-enforced roles until they have completed enrolment,
+    and audit-logs every successful app-password authentication.
+    Hooks: `application_password_failed_authentication`,
+    `application_password_did_authenticate`,
+    `wp_is_application_passwords_available_for_user`.
+  - **REST API Abuse** — global rate-limit on `rest_pre_dispatch` with a
+    separate, lower threshold for sensitive routes (`/wp/v2/users`,
+    `/wp/v2/comments`). Whitelist for the plugin's own 2FA endpoints and
+    the oEmbed discovery endpoint; remaining bypasses configurable via the
+    `reportedip_hive_rest_bypass_routes` filter.
+  - **User Enumeration Defence** — closes the four classic username-leak
+    vectors: `?author=<n>` redirects (now answered with 404), the
+    `/wp-json/wp/v2/users` endpoint family for unauthenticated callers,
+    `author_name` / `author_url` in oEmbed responses, and the verbose
+    `invalid_username` / `incorrect_password` login error codes (unified
+    to a single generic `invalid_credentials`). Repeated probes accumulate
+    in a counter and trip the standard auto-block.
+  - **404 Scanner Detection** — pattern-based instant trigger for known
+    vulnerability paths (`/.env`, `/wp-config.php.bak`,
+    `/wp-content/debug.log`, `/.git/config`, `phpmyadmin`, …) plus a rate
+    threshold for high 404 burst rates. Path lists are filterable via
+    `reportedip_hive_scan_paths` / `reportedip_hive_scan_prefixes` so
+    operators can add their own honeypot URLs.
+  - **Password Spray Detection** — distinct-username variant of the
+    failed-login counter. Fires when a single IP probes ≥ N different
+    usernames within a short window, which is a stronger
+    credential-stuffing signal than the classic per-IP attempt count.
+    Usernames are stored hashed (SHA-256 + `wp_salt()`) in a transient,
+    never in plaintext.
+  - **WooCommerce Login Hook** — feeds WC's dedicated
+    `woocommerce_login_failed` and `woocommerce_checkout_login_form_failed_login`
+    hooks into the same lockout / threshold pipeline, covering checkout
+    AJAX login attempts that bypass the standard `wp_login_failed` hook.
+  - **Geographic Anomaly Detection** — passive observation: when a
+    successful login arrives from a country / ASN never seen before for
+    that user (90-day rolling window, 12-entry per-user history capped),
+    the event is logged and the user's trusted-device cookies are revoked
+    so the next login forces a fresh 2FA challenge. Country/ASN come from
+    the cached reputation lookup the plugin already does — no extra
+    external call.
+- **Centralised category mapping** — the legacy ad-hoc category IDs
+  scattered across the codebase are now consolidated in
+  `ReportedIP_Hive_Security_Monitor::get_category_ids_for_event()`,
+  publicly accessible and overridable via the
+  `reportedip_hive_event_category_map` filter. The new sensors map onto
+  the WordPress-specific service taxonomy (`WP User Enumeration`,
+  `WP REST API Abuse`, `WP Login Brute Force`, `WP Plugin Scanning`,
+  `WP Version Scanning`, `WP Config Exposure`); legacy events keep their
+  original IDs so existing 1.x deployments see no behavioural change.
+- **Password Strength enforcement** — minimum length / character-class
+  diversity check plus an optional HaveIBeenPwned k-anonymity range
+  lookup (only the first 5 SHA-1 hex characters leave the server). Runs
+  on `user_profile_update_errors` and `validate_password_reset` for users
+  in the `reportedip_hive_2fa_enforce_roles` list.
+
+- **Hide Login** — optional feature that moves `wp-login.php` behind a
+  custom slug (e.g. `/welcome`) so automated scanners can no longer find a
+  login form to brute-force. Direct hits on the original URL are answered
+  with the existing Hive block page (HTTP 403, same look as the IP-block
+  page) or, optionally, with the theme's 404 template for deeper recon
+  hardening. The feature is available as:
+  - a new **Settings → Hide Login** tab, with live slug validation,
+    reserved-slug rejection (`wp-admin`, `login`, `wp-json`, etc.) and
+    permalink-collision detection against existing pages, posts, terms and
+    author archives;
+  - a new optional step in the setup wizard ("Login URL"), which only
+    enables the feature if the user explicitly opts in;
+  - a `wp-config.php` recovery constant
+    `define( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN', true );` that disables
+    the feature in case the slug is ever lost.
+
+  REST, cron, AJAX (logged-in), CLI, XMLRPC, password-reset links and the
+  re-auth interim-login dialog are bypassed automatically so existing
+  workflows (Block Editor, Application Passwords, Jetpack SSO, password
+  recovery emails) keep working. All login-URL generators (`login_url`,
+  `site_url`, `network_site_url`, `admin_url`, `lostpassword_url`,
+  `register_url`, `logout_url`, `wp_redirect`) are filtered to point at
+  the new slug. The bundled block page is now context-aware so the same
+  template renders both IP-block and login-block screens.
+
+  This is security through obscurity, not a substitute for strong
+  passwords or 2FA — the UI surfaces that explicitly.
+
+### Changed
+
+- **Database schema v3** — `reportedip_hive_attempts.attempt_type` widened
+  from a fixed `ENUM('login','comment','xmlrpc','admin')` to
+  `VARCHAR(32)` so new sensor-types (`app_password`, `rest_abuse`,
+  `user_enumeration`, `scan_404`, `wc_login`) share the same counter
+  table. Migration is automatic and idempotent — runs once on the next
+  admin page load via `maybe_update_schema()`.
+
 ## [1.1.4] — 2026-04-27
 
 ### Fixes
