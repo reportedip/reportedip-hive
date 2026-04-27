@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -176,6 +176,10 @@ Use one of the ten recovery codes you printed during setup. Each is single-use. 
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 1.2.1 =
+
+Hotfix: API report queue was stuck for accounts on tiers without a daily report limit (`remaining_reports = -1`). The quota gate now correctly treats `-1` as unlimited instead of zero. Locked down by a new test suite.
 
 = 1.2.0 =
 

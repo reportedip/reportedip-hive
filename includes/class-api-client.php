@@ -790,11 +790,13 @@ class ReportedIP_Hive_API {
 			return true;
 		}
 
-		if ( isset( $quota['daily_report_limit'] ) && $quota['daily_report_limit'] === 0 ) {
+		$limit = isset( $quota['daily_report_limit'] ) ? (int) $quota['daily_report_limit'] : null;
+
+		if ( 0 === $limit ) {
 			return false;
 		}
 
-		if ( isset( $quota['remaining_reports'] ) && $quota['remaining_reports'] <= 0 ) {
+		if ( null !== $limit && $limit > 0 && isset( $quota['remaining_reports'] ) && (int) $quota['remaining_reports'] <= 0 ) {
 			return false;
 		}
 
