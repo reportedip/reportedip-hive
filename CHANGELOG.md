@@ -2,6 +2,25 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.2.4] — 2026-04-27
+
+### Fixes
+
+- **"Retry" button on the API queue admin appeared to do nothing for
+  pending items** — the AJAX handler called `reset_report_for_retry()`
+  (sets `status=pending, attempts=0`) and reported success without
+  actually sending anything. For items that were already pending this
+  was a no-op; the page reloaded, the row stayed pending, and the
+  admin had to wait up to 15 minutes for the cron tick. The handler
+  now performs the API call synchronously after the reset and reports
+  the actual outcome — `Report sent.` on success, or
+  `Send failed: <api message>` on a real error.
+
+- **"Retry All Failed" likewise didn't drain inline** — same shape:
+  reset the rows, return success, wait for cron. Now the handler
+  calls `process_report_queue( 50 )` synchronously and the success
+  toast carries the real numbers (`X failed reset · Y sent · Z errors`).
+
 ## [1.2.3] — 2026-04-27
 
 ### Fixes
