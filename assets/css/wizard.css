@@ -983,6 +983,14 @@ body.rip-wizard-page [hidden] {
     font-weight: 500;
 }
 
+/* Required-field marker — sits next to a heading to flag a must-pick group. */
+.rip-required {
+    display: inline-block;
+    margin-left: 0.25rem;
+    color: var(--rip-warning);
+    font-weight: 700;
+}
+
 /* Inline tag — small status pill inside cards (e.g. "Provider setup required"). */
 .rip-tag {
     display: inline-flex;

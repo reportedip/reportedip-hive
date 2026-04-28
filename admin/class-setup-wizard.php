@@ -43,11 +43,11 @@ class ReportedIP_Hive_Setup_Wizard {
 	private function get_step_labels() {
 		return array(
 			1 => __( 'Welcome', 'reportedip-hive' ),
-			2 => __( 'Mode & API', 'reportedip-hive' ),
+			2 => __( 'Connect', 'reportedip-hive' ),
 			3 => __( 'Protection', 'reportedip-hive' ),
 			4 => __( '2FA', 'reportedip-hive' ),
 			5 => __( 'Privacy', 'reportedip-hive' ),
-			6 => __( 'Login URL', 'reportedip-hive' ),
+			6 => __( 'Login', 'reportedip-hive' ),
 			7 => __( 'Promote', 'reportedip-hive' ),
 			8 => __( 'Done', 'reportedip-hive' ),
 		);
@@ -334,6 +334,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					'redirecting'  => __( 'Redirecting to dashboard…', 'reportedip-hive' ),
 					'noMonitoring' => __( 'No monitoring active — the plugin is effectively disabled.', 'reportedip-hive' ),
 					'no2faMethod'  => __( 'Please choose at least one method when 2FA is active.', 'reportedip-hive' ),
+					'no2faRole'    => __( 'Please pick at least one role to enforce 2FA for. Administrator was re-selected as a safe default.', 'reportedip-hive' ),
 					'confirmSkip'  => __( 'Really skip setup? You can configure the plugin anytime in Settings.', 'reportedip-hive' ),
 				),
 			)
@@ -835,7 +836,7 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		$saved_roles_raw = get_option( 'reportedip_hive_2fa_enforce_roles', '' );
 		$saved_roles     = is_string( $saved_roles_raw ) ? json_decode( $saved_roles_raw, true ) : array();
-		if ( ! is_array( $saved_roles ) ) {
+		if ( ! is_array( $saved_roles ) || empty( $saved_roles ) ) {
 			$saved_roles = array( 'administrator' );
 		}
 
@@ -926,13 +927,16 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<!-- Enforce Roles -->
-			<div class="rip-config-card">
+			<div class="rip-config-card" id="rip-2fa-roles-card">
 				<div class="rip-config-card__header">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-					<h3><?php esc_html_e( 'Enforce 2FA for which roles?', 'reportedip-hive' ); ?></h3>
+					<h3>
+						<?php esc_html_e( 'Enforce 2FA for which roles?', 'reportedip-hive' ); ?>
+						<span class="rip-required" aria-hidden="true">*</span>
+					</h3>
 				</div>
 				<div class="rip-config-card__body">
-					<p class="rip-help-block"><?php esc_html_e( 'Selected roles must set up 2FA on next sign-in. The grace period and skip counter below cushion the rollout — nobody is locked out on day one.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-block"><?php esc_html_e( 'Pick at least one role. Selected roles must set up 2FA on next sign-in. The grace period and skip counter below cushion the rollout — nobody is locked out on day one.', 'reportedip-hive' ); ?></p>
 					<div class="rip-checkbox-row">
 						<label class="rip-checkbox-pill">
 							<input type="checkbox" name="2fa_enforce_role[]" value="administrator" <?php checked( in_array( 'administrator', $saved_roles, true ) ); ?>>
@@ -1235,7 +1239,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
 				<button type="button" id="rip-save-config" class="rip-button rip-button--primary rip-button--large">
-					<?php esc_html_e( 'Save & finish', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Save & continue', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
 				</button>
 			</div>
@@ -1339,7 +1343,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<?php esc_html_e( 'Skip this step', 'reportedip-hive' ); ?>
 				</a>
 				<button type="button" id="rip-promote-continue" class="rip-button rip-button--primary rip-button--large">
-					<?php esc_html_e( 'Continue', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Save & finish', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
 				</button>
 			</div>
@@ -1710,6 +1714,9 @@ class ReportedIP_Hive_Setup_Wizard {
 			? array_map( 'sanitize_key', wp_unslash( $_POST['2fa_enforce_role'] ) )
 			: array();
 		$enforce_roles = array_values( array_intersect( $posted_roles, $valid_roles ) );
+		if ( $twofa_enabled && empty( $enforce_roles ) ) {
+			$enforce_roles = array( 'administrator' );
+		}
 		update_option( 'reportedip_hive_2fa_enforce_roles', wp_json_encode( $enforce_roles ) );
 
 		update_option( 'reportedip_hive_2fa_trusted_devices', isset( $_POST['2fa_trusted_devices'] ) && (bool) $_POST['2fa_trusted_devices'] );
@@ -1768,7 +1775,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		wp_send_json_success(
 			array(
 				'message'      => __( 'Setup completed successfully!', 'reportedip-hive' ),
-				'redirect_url' => admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=8' ),
+				'redirect_url' => admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=7' ),
 			)
 		);
 	}

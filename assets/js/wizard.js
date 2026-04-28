@@ -287,7 +287,7 @@
 
 		update2faEnabledState: function () {
 			var enabled = $('#rip-2fa-enabled').is(':checked');
-			$('#rip-2fa-methods-card').toggleClass('rip-config-card--disabled', !enabled);
+			$('#rip-2fa-methods-card, #rip-2fa-roles-card').toggleClass('rip-config-card--disabled', !enabled);
 		},
 
 		persistStep4: function (e) {
@@ -304,6 +304,13 @@
 			$('input[name="2fa_enforce_role[]"]:checked').each(function () {
 				roles.push($(this).val());
 			});
+
+			if (twofaEnabled && roles.length === 0) {
+				if (e) { e.preventDefault(); }
+				alert(reportedipWizard.strings.no2faRole || 'Please pick at least one role to enforce 2FA for.');
+				$('input[name="2fa_enforce_role[]"][value="administrator"]').prop('checked', true).trigger('change');
+				return false;
+			}
 
 			this.setSession({
 				'2fa_enabled_global': twofaEnabled ? 1 : 0,
