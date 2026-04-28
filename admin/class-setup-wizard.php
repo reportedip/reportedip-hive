@@ -786,7 +786,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 			</div>
 
-			<!-- Auto-Block + Admin-Whitelist + Report-Only -->
+			<!-- Auto-Block + Progressive ladder + Report-Only -->
 			<div class="rip-config-card">
 				<div class="rip-config-card__header">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
@@ -798,6 +798,13 @@ class ReportedIP_Hive_Setup_Wizard {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Automatically block suspicious IPs', 'reportedip-hive' ); ?></span>
 					</label>
+
+					<label class="rip-toggle">
+						<input type="checkbox" name="block_escalation_enabled" id="rip-block-escalation" <?php checked( (bool) get_option( 'reportedip_hive_block_escalation_enabled', true ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Progressive blocking (5 min → 15 min → 30 min → 24 h → 48 h → 7 d)', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-block"><?php esc_html_e( 'Each repeat offence inside the reset window (default 30 days) bumps the offender to the next ladder step. First-time tripping legitimate IPs recover in minutes; the ladder can be edited later under Settings → Blocking.', 'reportedip-hive' ); ?></p>
 
 					<hr class="rip-helper-divider">
 
@@ -1697,6 +1704,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		update_option( 'reportedip_hive_monitor_geo_anomaly', isset( $_POST['monitor_geo_anomaly'] ) && (bool) $_POST['monitor_geo_anomaly'] );
 		update_option( 'reportedip_hive_auto_block', isset( $_POST['auto_block'] ) && (bool) $_POST['auto_block'] );
 		update_option( 'reportedip_hive_report_only_mode', isset( $_POST['report_only_mode'] ) && (bool) $_POST['report_only_mode'] );
+		update_option( 'reportedip_hive_block_escalation_enabled', isset( $_POST['block_escalation_enabled'] ) && (bool) $_POST['block_escalation_enabled'] );
 
 		$twofa_enabled = isset( $_POST['2fa_enabled_global'] ) && (bool) $_POST['2fa_enabled_global'];
 		update_option( 'reportedip_hive_2fa_enabled_global', $twofa_enabled );

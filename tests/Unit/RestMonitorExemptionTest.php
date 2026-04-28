@@ -137,5 +137,31 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$result = $this->dispatch( '/wp/v2/users' );
 			$this->assertNull( $result, 'Disabled monitor must return early for anonymous users too.' );
 		}
+
+		/**
+		 * @dataProvider bypassedRoutes
+		 */
+		public function test_default_bypassed_routes_skip_the_monitor( string $route ) {
+			$GLOBALS['rip_test_logged_in'] = false;
+			$result                        = $this->dispatch( $route, 'POST' );
+			$this->assertNull(
+				$result,
+				sprintf(
+					'Anonymous POST to %s must bypass the REST monitor — these routes are listed in the default bypass set in is_route_bypassed().',
+					$route
+				)
+			);
+		}
+
+		public function bypassedRoutes(): array {
+			return array(
+				'plugin own 2fa endpoint'    => array( '/reportedip-hive/v1/challenge' ),
+				'oembed discovery'           => array( '/oembed/1.0/embed' ),
+				'real cookie banner consent' => array( '/real-cookie-banner/v1/consent' ),
+				'complianz consent'          => array( '/complianz/v1/consent' ),
+				'borlabs cookie consent'     => array( '/borlabs-cookie/v1/consent' ),
+				'cookie law info consent'    => array( '/cookie-law-info/v1/consent' ),
+			);
+		}
 	}
 }

@@ -163,6 +163,17 @@ class ReportedIP_Hive_REST_Monitor {
 		$bypass = array(
 			'/reportedip-hive/v1',
 			'/oembed/1.0/embed',
+			/*
+			 * Cookie/consent banners post visitor preferences anonymously on
+			 * every page load until consent is recorded. They have their own
+			 * nonce + per-IP rate limiting; counting them against the global
+			 * REST budget locks visitors out of the consent banner itself.
+			 * Plugin-author namespaces, alphabetised:
+			 */
+			'/borlabs-cookie/v1',
+			'/complianz/v1',
+			'/cookie-law-info/v1',
+			'/real-cookie-banner/v1',
 		);
 		$bypass = (array) apply_filters( 'reportedip_hive_rest_bypass_routes', $bypass );
 

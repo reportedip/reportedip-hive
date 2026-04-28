@@ -61,8 +61,10 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_max_api_calls_per_hour'        => 100,
 		'reportedip_hive_report_cooldown_hours'         => 24,
 		'reportedip_hive_notification_cooldown_minutes' => 60,
-		'reportedip_hive_comment_spam_threshold'        => 3,
+		'reportedip_hive_comment_spam_threshold'        => 5,
 		'reportedip_hive_comment_spam_timeframe'        => 60,
+		'reportedip_hive_scan_404_threshold'            => 12,
+		'reportedip_hive_scan_404_timeframe'            => 2,
 		'reportedip_hive_xmlrpc_threshold'              => 10,
 		'reportedip_hive_xmlrpc_timeframe'              => 60,
 		'reportedip_hive_disable_xmlrpc_multicall'      => true,
@@ -78,6 +80,9 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_branded_login'             => false,
 		'reportedip_hive_2fa_extended_remember'         => false,
 		'reportedip_hive_2fa_ip_allowlist'              => '',
+		'reportedip_hive_block_escalation_enabled'      => true,
+		'reportedip_hive_block_ladder_minutes'          => '5,15,30,1440,2880,10080',
+		'reportedip_hive_block_ladder_reset_days'       => 30,
 	);
 
 	/**

@@ -451,6 +451,30 @@ class ReportedIP_Hive_Admin_Settings {
 				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
 			)
 		);
+		register_setting(
+			'reportedip_hive_protection_blocking',
+			'reportedip_hive_block_escalation_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_blocking',
+			'reportedip_hive_block_ladder_minutes',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_block_ladder' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_blocking',
+			'reportedip_hive_block_ladder_reset_days',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => array( $this, 'sanitize_ladder_reset_days' ),
+			)
+		);
 
 		register_setting(
 			'reportedip_hive_hide_login',
@@ -865,6 +889,49 @@ class ReportedIP_Hive_Admin_Settings {
 	public function sanitize_block_duration( $value ) {
 		$value = absint( $value );
 		return min( 8760, $value );
+	}
+
+	/**
+	 * Sanitize the progressive-block ladder.
+	 *
+	 * Accepts a comma-separated list of minute values. Drops blanks, clamps
+	 * negatives to 1, caps each step at one year (525 600 min), preserves
+	 * order. Empty input falls back to the documented default ladder.
+	 *
+	 * @param mixed $value Raw value from the settings form.
+	 * @return string Cleaned CSV ready for storage.
+	 * @since  1.5.0
+	 */
+	public function sanitize_block_ladder( $value ) {
+		$value = is_string( $value ) ? $value : '';
+		$parts = array_filter(
+			array_map( 'trim', explode( ',', $value ) ),
+			static fn( string $part ): bool => '' !== $part
+		);
+
+		$ladder = array();
+		foreach ( $parts as $part ) {
+			$minutes  = max( 1, min( 525600, (int) $part ) );
+			$ladder[] = $minutes;
+		}
+
+		if ( empty( $ladder ) && class_exists( 'ReportedIP_Hive_Block_Escalation' ) ) {
+			$ladder = ReportedIP_Hive_Block_Escalation::DEFAULT_LADDER_MINUTES;
+		}
+
+		return implode( ',', $ladder );
+	}
+
+	/**
+	 * Sanitize the ladder reset window in days (1-365).
+	 *
+	 * @param mixed $value Raw value.
+	 * @return int Clamped days.
+	 * @since  1.5.0
+	 */
+	public function sanitize_ladder_reset_days( $value ) {
+		$value = absint( $value );
+		return max( 1, min( 365, $value ) );
 	}
 
 	/**
@@ -2006,7 +2073,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_comment_spam_threshold"><?php esc_html_e( 'How many spam comments?', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_comment_spam_threshold" name="reportedip_hive_comment_spam_threshold" value="<?php echo esc_attr( get_option( 'reportedip_hive_comment_spam_threshold', 3 ) ); ?>" min="1" max="50" class="rip-input" />
+						<input type="number" id="reportedip_hive_comment_spam_threshold" name="reportedip_hive_comment_spam_threshold" value="<?php echo esc_attr( get_option( 'reportedip_hive_comment_spam_threshold', 5 ) ); ?>" min="1" max="50" class="rip-input" />
 						<p class="rip-help-text"><?php esc_html_e( 'Counts comments WordPress already marked as spam. 3 catches most bots.', 'reportedip-hive' ); ?></p>
 					</div>
 					<div class="rip-form-group">
@@ -2161,11 +2228,11 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_scan_404_threshold"><?php esc_html_e( '404 burst threshold', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_scan_404_threshold" name="reportedip_hive_scan_404_threshold" value="<?php echo esc_attr( get_option( 'reportedip_hive_scan_404_threshold', 8 ) ); ?>" min="1" max="100" class="rip-input" />
+						<input type="number" id="reportedip_hive_scan_404_threshold" name="reportedip_hive_scan_404_threshold" value="<?php echo esc_attr( get_option( 'reportedip_hive_scan_404_threshold', 12 ) ); ?>" min="1" max="100" class="rip-input" />
 					</div>
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_scan_404_timeframe"><?php esc_html_e( 'Within how many minutes?', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_scan_404_timeframe" name="reportedip_hive_scan_404_timeframe" value="<?php echo esc_attr( get_option( 'reportedip_hive_scan_404_timeframe', 1 ) ); ?>" min="1" max="1440" class="rip-input" />
+						<input type="number" id="reportedip_hive_scan_404_timeframe" name="reportedip_hive_scan_404_timeframe" value="<?php echo esc_attr( get_option( 'reportedip_hive_scan_404_timeframe', 2 ) ); ?>" min="1" max="1440" class="rip-input" />
 					</div>
 				</div>
 			</div>
@@ -2285,6 +2352,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php /* Checkbox-off fallbacks. */ ?>
 			<input type="hidden" name="reportedip_hive_auto_block" value="0" />
 			<input type="hidden" name="reportedip_hive_report_only_mode" value="0" />
+			<input type="hidden" name="reportedip_hive_block_escalation_enabled" value="0" />
 
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
@@ -2305,12 +2373,48 @@ class ReportedIP_Hive_Admin_Settings {
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_block_duration"><?php esc_html_e( 'Block length (hours)', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_block_duration" name="reportedip_hive_block_duration" value="<?php echo esc_attr( get_option( 'reportedip_hive_block_duration', 24 ) ); ?>" min="0" max="8760" class="rip-input" />
-						<p class="rip-help-text"><?php esc_html_e( 'How long an IP stays blocked after a trigger. 0 = permanent. 24 hours is a good default.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text"><?php esc_html_e( 'Used when progressive blocking below is OFF. How long an IP stays blocked after a trigger. 0 = permanent.', 'reportedip-hive' ); ?></p>
 					</div>
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_block_threshold"><?php esc_html_e( 'Community confidence to block', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_block_threshold" name="reportedip_hive_block_threshold" value="<?php echo esc_attr( get_option( 'reportedip_hive_block_threshold', 75 ) ); ?>" min="0" max="100" class="rip-input" />
 						<p class="rip-help-text"><?php esc_html_e( 'When community-mode is on, only block IPs the network is at least this confident about (0–100). Lower = more aggressive but more false positives.', 'reportedip-hive' ); ?></p>
+					</div>
+				</div>
+			</div>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+					<?php esc_html_e( 'Progressive blocking', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Instead of slamming every offender with one fixed duration, escalate the block length each time the same IP trips a sensor inside the reset window. First-time tripping legitimate users recover in minutes; repeat offenders pay the full price.', 'reportedip-hive' ); ?></p>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_block_escalation_enabled" value="1" class="rip-toggle__input" <?php checked( get_option( 'reportedip_hive_block_escalation_enabled', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Use a progressive ladder for block durations', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'When off, the fixed "Block length" above is used for every trigger.', 'reportedip-hive' ); ?></p>
+				</div>
+
+				<div class="rip-grid rip-grid-cols-2 rip-gap-4">
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_block_ladder_minutes"><?php esc_html_e( 'Ladder (minutes, comma-separated)', 'reportedip-hive' ); ?></label>
+						<?php
+						$ladder_value = (string) get_option( 'reportedip_hive_block_ladder_minutes', '' );
+						if ( '' === trim( $ladder_value ) ) {
+							$ladder_value = implode( ',', ReportedIP_Hive_Block_Escalation::DEFAULT_LADDER_MINUTES );
+						}
+						?>
+						<input type="text" id="reportedip_hive_block_ladder_minutes" name="reportedip_hive_block_ladder_minutes" value="<?php echo esc_attr( $ladder_value ); ?>" class="rip-input" placeholder="5,15,30,1440,2880,10080" />
+						<p class="rip-help-text"><?php esc_html_e( 'Default: 5,15,30,1440,2880,10080 — 5 min, 15 min, 30 min, 24 h, 48 h, 7 d. The last entry caps the ladder; further offences keep getting that duration.', 'reportedip-hive' ); ?></p>
+					</div>
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_block_ladder_reset_days"><?php esc_html_e( 'Reset window (days)', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_block_ladder_reset_days" name="reportedip_hive_block_ladder_reset_days" value="<?php echo esc_attr( (string) get_option( 'reportedip_hive_block_ladder_reset_days', ReportedIP_Hive_Block_Escalation::DEFAULT_RESET_DAYS ) ); ?>" min="1" max="365" class="rip-input" style="max-width: 200px;" />
+						<p class="rip-help-text"><?php esc_html_e( 'After this many days without a new block, the IP starts again at ladder step 1.', 'reportedip-hive' ); ?></p>
 					</div>
 				</div>
 			</div>

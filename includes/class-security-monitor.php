@@ -420,22 +420,36 @@ class ReportedIP_Hive_Security_Monitor {
 			return false;
 		}
 
-		$block_duration = get_option( 'reportedip_hive_block_duration', 24 );
-		$reason         = $this->get_block_reason( $event_type, $details );
+		$reason = $this->get_block_reason( $event_type, $details );
+
+		$use_ladder = class_exists( 'ReportedIP_Hive_Block_Escalation' )
+			&& ReportedIP_Hive_Block_Escalation::is_enabled();
+
+		if ( $use_ladder ) {
+			$duration_minutes = ReportedIP_Hive_Block_Escalation::next_block_minutes( $ip_address );
+			$duration_hours   = (int) ceil( $duration_minutes / 60 );
+		} else {
+			$duration_hours   = (int) get_option( 'reportedip_hive_block_duration', 24 );
+			$duration_minutes = $duration_hours * 60;
+		}
 
 		$this->logger->log_security_event(
 			'attempting_auto_block',
 			$ip_address,
 			array(
-				'event_type'        => $event_type,
-				'reason'            => $reason,
-				'duration_hours'    => $block_duration,
-				'threshold_details' => $details,
+				'event_type'         => $event_type,
+				'reason'             => $reason,
+				'duration_minutes'   => $duration_minutes,
+				'duration_hours'     => $duration_hours,
+				'escalation_enabled' => $use_ladder,
+				'threshold_details'  => $details,
 			),
 			'high'
 		);
 
-		$result = $this->database->block_ip( $ip_address, $reason, 'automatic', $block_duration );
+		$result = $use_ladder
+			? $this->database->block_ip_for_minutes( $ip_address, $reason, 'automatic', $duration_minutes )
+			: $this->database->block_ip( $ip_address, $reason, 'automatic', $duration_hours );
 
 		if ( $result ) {
 			$client = ReportedIP_Hive::get_instance();
@@ -448,10 +462,11 @@ class ReportedIP_Hive_Security_Monitor {
 				'ip_blocked',
 				$ip_address,
 				array(
-					'reason'         => $reason,
-					'duration_hours' => $block_duration,
-					'trigger_event'  => $event_type,
-					'block_type'     => 'automatic',
+					'reason'           => $reason,
+					'duration_minutes' => $duration_minutes,
+					'duration_hours'   => $duration_hours,
+					'trigger_event'    => $event_type,
+					'block_type'       => 'automatic',
 				),
 				'high'
 			);

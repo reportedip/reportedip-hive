@@ -106,12 +106,11 @@ class ReportedIP_Hive_Database {
 	public function maybe_update_schema() {
 		$installed_version = get_option( self::DB_VERSION_OPTION, 0 );
 
-		if ( (int) $installed_version >= self::DB_VERSION && $this->tables_exist() ) {
+		if ( (int) $installed_version >= self::DB_VERSION ) {
 			return;
 		}
 
 		$this->create_tables();
-
 		$this->run_migrations();
 
 		update_option( self::DB_VERSION_OPTION, self::DB_VERSION );
@@ -531,6 +530,43 @@ class ReportedIP_Hive_Database {
 		$blocked_until = null;
 		if ( $duration_hours > 0 ) {
 			$blocked_until = gmdate( 'Y-m-d H:i:s', time() + ( $duration_hours * 3600 ) );
+		}
+
+		return $wpdb->replace(
+			$table_name,
+			array(
+				'ip_address'    => $ip_address,
+				'reason'        => $reason,
+				'block_type'    => $block_type,
+				'blocked_until' => $blocked_until,
+				'is_active'     => 1,
+			),
+			array( '%s', '%s', '%s', '%s', '%d' )
+		);
+	}
+
+	/**
+	 * Block an IP for a sub-hour duration. Used by the progressive-escalation
+	 * ladder where the first ladder step is typically 5 minutes — too short
+	 * to express via `block_ip( …, $duration_hours )` without losing precision.
+	 *
+	 * @param string $ip_address      IP to block.
+	 * @param string $reason          Human-readable reason.
+	 * @param string $block_type      Block source: 'automatic' | 'manual' | 'reputation'.
+	 * @param int    $duration_minutes Block duration in minutes (>=1; 0 = permanent).
+	 * @return int|false Number of rows affected, or false on error.
+	 * @since  1.5.0
+	 */
+	public function block_ip_for_minutes( $ip_address, $reason, $block_type = 'automatic', $duration_minutes = 1440 ) {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'reportedip_hive_blocked';
+
+		$duration_minutes = absint( $duration_minutes );
+
+		$blocked_until = null;
+		if ( $duration_minutes > 0 ) {
+			$blocked_until = gmdate( 'Y-m-d H:i:s', time() + ( $duration_minutes * 60 ) );
 		}
 
 		return $wpdb->replace(

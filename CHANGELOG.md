@@ -2,6 +2,54 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.5.0] — 2026-04-28
+
+### Fixes
+
+- **Cookie-banner endpoints no longer get visitors blocked.** The
+  REST monitor counted every anonymous request to consent endpoints
+  toward the global rate-limit; high-traffic sites tripped the
+  threshold and started returning the "Access Denied" page for the
+  consent POST itself, locking visitors into a banner loop. The
+  default bypass list now ships with the four common consent
+  namespaces — `/real-cookie-banner/v1`, `/complianz/v1`,
+  `/borlabs-cookie/v1`, `/cookie-law-info/v1`. Custom consent stacks
+  can extend the list via the existing
+  `reportedip_hive_rest_bypass_routes` filter.
+- **404 + comment-spam defaults relaxed.** `scan_404_threshold` was
+  8 in 1 minute — too tight for sites with broken theme links or
+  chatty bots. Bumped to 12 in 2 minutes. `comment_spam_threshold`
+  was 3 in 60 minutes — bumped to 5. Existing installs are not
+  touched (`add_option` only seeds when missing); new sites get the
+  saner defaults out of the box.
+
+### New
+
+- **Progressive block escalation.** A new
+  `ReportedIP_Hive_Block_Escalation` class derives the next block
+  duration from how many times the IP has been blocked inside the
+  configurable reset window. Default ladder: **5 min → 15 min →
+  30 min → 24 h → 48 h → 7 d** (cap). After 30 days clean the IP
+  starts at step 1 again. First-time tripping legitimate visitors
+  (CGNAT, fat-fingered admins, HSDPA carriers) recover in minutes;
+  repeat offenders pay the full 7-day price. The fixed
+  `block_duration` setting still applies when the ladder is toggled
+  off.
+- **Settings UI** for the new ladder under **Settings → Blocking →
+  Progressive blocking**: enable toggle, comma-separated minute
+  ladder editor, reset-window in days. The wizard's Protection step
+  also exposes the master toggle so fresh installs are escalation-
+  aware from the first save.
+- **`block_ip_for_minutes()`** on the database class — sub-hour
+  block granularity required by the new ladder. The original
+  `block_ip( …, $duration_hours )` API is unchanged.
+
+### Changed
+
+- **`is_route_bypassed()`** on the REST monitor now ships four
+  additional consent-banner namespaces in its default bypass set
+  (see Fixes above).
+
 ## [1.4.0] — 2026-04-28
 
 ### Fixes

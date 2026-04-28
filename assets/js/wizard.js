@@ -256,6 +256,7 @@
 				monitor_404_scans: $('#rip-monitor-404-scans').is(':checked') ? 1 : 0,
 				monitor_geo_anomaly: $('#rip-monitor-geo-anomaly').is(':checked') ? 1 : 0,
 				auto_block: $('#rip-auto-block').is(':checked') ? 1 : 0,
+				block_escalation_enabled: $('#rip-block-escalation').is(':checked') ? 1 : 0,
 				report_only_mode: $('#rip-report-only').is(':checked') ? 1 : 0
 			});
 		},
@@ -559,6 +560,9 @@
 				}
 				if (typeof session.auto_block !== 'undefined') {
 					$('#rip-auto-block').prop('checked', !!parseInt(session.auto_block, 10));
+				}
+				if (typeof session.block_escalation_enabled !== 'undefined') {
+					$('#rip-block-escalation').prop('checked', !!parseInt(session.block_escalation_enabled, 10));
 				}
 				if (typeof session.report_only_mode !== 'undefined') {
 					$('#rip-report-only').prop('checked', !!parseInt(session.report_only_mode, 10));
