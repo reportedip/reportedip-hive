@@ -2,6 +2,63 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.3.0] — 2026-04-28
+
+### New
+
+- **Frontend banner shortcodes** — four new public shortcodes
+  (`[reportedip_badge]`, `[reportedip_stat]`, `[reportedip_banner]`,
+  `[reportedip_shield]`) render community-trust banners on any post,
+  page, widget or theme template, each linking back to reportedip.de
+  with UTM tracking. The banners ship as a `<rip-hive-banner>` Web
+  Component with a Shadow Root, so themes cannot override their styling
+  — but the underlying `<a href>` stays in the light DOM, keeping the
+  link crawlable for search engines and visible without JavaScript.
+- **Lifetime stat types** — `attacks_total` and `reports_total` source
+  their numbers from the daily `stats` table (which is never pruned),
+  giving sites a stable, ever-growing community-impact number to show.
+  Other supported types: `attacks_30d`, `api_reports_30d`,
+  `blocked_active`, `whitelist_active`, `logins_30d`, `spam_30d`.
+- **Marketing-tone presets** — `tone="protect|trust|community|contributor"`
+  swap the banner headline between "Protected by ReportedIP Hive",
+  "Secured by ReportedIP Hive", "Part of the ReportedIP Hive" and
+  "ReportedIP Contributor". All wording is fully translatable through
+  the standard WordPress text domain pipeline.
+- **Custom-theme attributes** — `bg=`, `color=`, `border=`, `intro=`,
+  `label=` and `live=` let site owners match the banner to their brand
+  without breaking the Shadow-DOM isolation. Hex colours and gradients
+  are strictly regex-validated; free-text overrides are tag-stripped
+  and length-clamped to prevent injection.
+- **Count-up animation + live indicator** — when a banner enters the
+  viewport the headline number animates up from zero with an ease-out
+  cubic curve, and a subtle pulsing dot signals "live protection".
+  Both effects honour the user's `prefers-reduced-motion` preference.
+- **"Promote" sub-tab** in **Community & Quota** — new tab with an
+  opt-in **auto-footer badge** (variant and position picker — left,
+  center, right), showcase cards for every variant, an attribute
+  reference, and a full **interactive banner builder** that updates
+  the preview and generated shortcode live as you change controls.
+- **Setup-wizard step** — new penultimate step that explains the
+  auto-footer badge, shows a live preview and lets the admin enable
+  it with a single click during onboarding.
+
+### Changed
+
+- Default plugin options gained `reportedip_hive_auto_footer_enabled`,
+  `reportedip_hive_auto_footer_variant` and
+  `reportedip_hive_auto_footer_align`. All ship `false` / `badge` /
+  `center` — existing installs see no behavioural change until an
+  admin opts in via the new Promote tab.
+
+### Notes
+
+- All public-facing strings are in English and translatable; banner
+  copy is privacy-safe (only aggregated counts — no IPs, usernames or
+  timestamps).
+- The frontend script is only enqueued when a shortcode is detected in
+  the current post or the auto-footer is enabled, keeping pages that
+  don't use the feature free of any extra JS.
+
 ## [1.2.4] — 2026-04-27
 
 ### Fixes

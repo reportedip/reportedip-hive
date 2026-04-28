@@ -3,7 +3,7 @@
  * Setup Wizard Class for ReportedIP Hive.
  *
  * Handles the initial plugin setup wizard for new users — light CI with
- * 7 steps: Welcome → Mode/API → Protection → 2FA → Privacy → Login URL → Complete.
+ * 8 steps: Welcome → Mode/API → Protection → 2FA → Privacy → Login URL → Promote → Complete.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <ps@cms-admins.de>
@@ -48,7 +48,8 @@ class ReportedIP_Hive_Setup_Wizard {
 			4 => __( '2FA', 'reportedip-hive' ),
 			5 => __( 'Privacy', 'reportedip-hive' ),
 			6 => __( 'Login URL', 'reportedip-hive' ),
-			7 => __( 'Done', 'reportedip-hive' ),
+			7 => __( 'Promote', 'reportedip-hive' ),
+			8 => __( 'Done', 'reportedip-hive' ),
 		);
 	}
 
@@ -78,6 +79,46 @@ class ReportedIP_Hive_Setup_Wizard {
 		add_action( 'wp_ajax_reportedip_wizard_skip', array( $this, 'ajax_skip_wizard' ) );
 		add_action( 'wp_ajax_reportedip_wizard_import_settings', array( $this, 'ajax_import_settings' ) );
 		add_action( 'wp_ajax_reportedip_wizard_validate_login_slug', array( $this, 'ajax_validate_login_slug' ) );
+		add_action( 'wp_ajax_reportedip_wizard_save_promote', array( $this, 'ajax_save_promote' ) );
+	}
+
+	/**
+	 * AJAX: persist the promote-step choices (auto-footer toggle + variant).
+	 *
+	 * Reuses the existing wizard nonce. Skipping the step is signalled by
+	 * `enabled=0` — the client posts that when the user picks "Skip", and we
+	 * simply leave the saved option untouched (it stays at its current value
+	 * which defaults to false).
+	 *
+	 * @since 1.3.0
+	 */
+	public function ajax_save_promote() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
+		}
+		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
+
+		$action      = isset( $_POST['promote_action'] ) ? sanitize_key( wp_unslash( (string) $_POST['promote_action'] ) ) : 'save';
+		$enabled     = isset( $_POST['enabled'] ) && '1' === sanitize_key( wp_unslash( (string) $_POST['enabled'] ) );
+		$variant_raw = isset( $_POST['variant'] ) ? sanitize_key( wp_unslash( (string) $_POST['variant'] ) ) : 'badge';
+		$variant     = ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( $variant_raw );
+
+		if ( 'skip' === $action ) {
+			wp_send_json_success(
+				array(
+					'redirect_url' => admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=8' ),
+				)
+			);
+		}
+
+		update_option( 'reportedip_hive_auto_footer_enabled', $enabled );
+		update_option( 'reportedip_hive_auto_footer_variant', $variant );
+
+		wp_send_json_success(
+			array(
+				'redirect_url' => admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=8' ),
+			)
+		);
 	}
 
 	/**
@@ -260,6 +301,12 @@ class ReportedIP_Hive_Setup_Wizard {
 			true
 		);
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- $_GET['step'] only switches which read-only step is rendered.
+		$step_param = isset( $_GET['step'] ) ? absint( $_GET['step'] ) : 1;
+		if ( 7 === $step_param && class_exists( 'ReportedIP_Hive_Frontend_Shortcodes' ) ) {
+			ReportedIP_Hive_Frontend_Shortcodes::get_instance()->enqueue_frontend_script();
+		}
+
 		wp_localize_script(
 			'reportedip-hive-wizard',
 			'reportedipWizard',
@@ -369,6 +416,9 @@ class ReportedIP_Hive_Setup_Wizard {
 					$this->render_step_hide_login();
 					break;
 				case 7:
+					$this->render_step_promote();
+					break;
+				case 8:
 					$this->render_step_complete();
 					break;
 			}
@@ -1142,7 +1192,133 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Step 7: Complete / Summary
+	 * Step 7: Promote — opt-in auto-footer banner with live preview.
+	 *
+	 * @since 1.3.0
+	 */
+	private function render_step_promote() {
+		$shortcodes      = ReportedIP_Hive_Frontend_Shortcodes::get_instance();
+		$current_enabled = (bool) get_option( 'reportedip_hive_auto_footer_enabled', false );
+		$current_variant = ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( get_option( 'reportedip_hive_auto_footer_variant', 'badge' ) );
+		$skip_url        = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=8' );
+		?>
+		<div class="rip-wizard__configuration">
+			<h1 class="rip-wizard__title"><?php esc_html_e( 'You\'re protected. Help others stay protected too.', 'reportedip-hive' ); ?></h1>
+			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Your site can show a small badge that links back to ReportedIP. Every link strengthens the community network and helps more sites find this protection. Optional, GDPR-friendly, and you can change it any time.', 'reportedip-hive' ); ?></p>
+
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+					<h3><?php esc_html_e( 'Live preview', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<div id="rip-promote-preview" style="background:#F9FAFB;border:1px dashed var(--rip-gray-300);border-radius:var(--rip-radius-md);padding:1.5em;display:flex;align-items:center;justify-content:center;min-height:96px;">
+						<?php
+						echo $shortcodes->build_element( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes attribute values; the custom-element wrapper would be stripped by wp_kses.
+							$current_variant,
+							array(
+								'utm_medium' => 'wizard-preview',
+								'theme'      => 'dark',
+								'align'      => 'center',
+							)
+						);
+						?>
+					</div>
+
+					<fieldset style="margin-top:1.5em;">
+						<legend style="font-weight:600;margin-bottom:.5em;"><?php esc_html_e( 'Variant', 'reportedip-hive' ); ?></legend>
+						<label class="rip-radio">
+							<input type="radio" name="promote_variant" value="badge" <?php checked( $current_variant, 'badge' ); ?>>
+							<span><?php esc_html_e( 'Footer badge — compact pill with logo and label.', 'reportedip-hive' ); ?></span>
+						</label>
+						<label class="rip-radio">
+							<input type="radio" name="promote_variant" value="shield" <?php checked( $current_variant, 'shield' ); ?>>
+							<span><?php esc_html_e( 'Shield icon — discreet circle with the shield logo only.', 'reportedip-hive' ); ?></span>
+						</label>
+					</fieldset>
+
+					<label class="rip-toggle" style="margin-top:1.5em;">
+						<input type="checkbox" id="rip-promote-enabled" <?php checked( $current_enabled ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Show this badge automatically in my site footer', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text" style="margin-top:.5em;">
+						<?php esc_html_e( 'Renders inside Shadow DOM — your theme cannot break the layout. The link itself is regular HTML, so search engines pick it up.', 'reportedip-hive' ); ?>
+					</p>
+				</div>
+			</div>
+
+			<div class="rip-wizard__actions">
+				<a href="<?php echo esc_url( $skip_url ); ?>" id="rip-promote-skip" class="rip-button rip-button--secondary">
+					<?php esc_html_e( 'Skip this step', 'reportedip-hive' ); ?>
+				</a>
+				<button type="button" id="rip-promote-continue" class="rip-button rip-button--primary rip-button--large">
+					<?php esc_html_e( 'Continue', 'reportedip-hive' ); ?>
+					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+				</button>
+			</div>
+		</div>
+
+		<script>
+		(function(){
+			var preview = document.getElementById('rip-promote-preview');
+			var continueBtn = document.getElementById('rip-promote-continue');
+			var skipBtn = document.getElementById('rip-promote-skip');
+			var enabledChk = document.getElementById('rip-promote-enabled');
+			var variantRadios = document.querySelectorAll('input[name="promote_variant"]');
+
+			var renderPreview = function(){
+				var variant = 'badge';
+				variantRadios.forEach(function(r){ if (r.checked) { variant = r.value; } });
+				preview.innerHTML = '';
+				var el = document.createElement('rip-hive-banner');
+				el.setAttribute('data-variant', variant);
+				el.setAttribute('data-stat', 'attacks_30d');
+				el.setAttribute('data-value', '');
+				el.setAttribute('data-label', '<?php echo esc_js( __( 'Active threat protection', 'reportedip-hive' ) ); ?>');
+				el.setAttribute('data-mode', 'local');
+				el.setAttribute('data-theme', 'dark');
+				el.setAttribute('data-href', 'https://reportedip.de/?utm_source=hive&utm_medium=wizard-preview&utm_campaign=protected&utm_content=' + variant);
+				preview.appendChild(el);
+			};
+
+			variantRadios.forEach(function(r){ r.addEventListener('change', renderPreview); });
+
+			var post = function(action){
+				continueBtn.disabled = true;
+				skipBtn.classList.add('disabled');
+				var variant = 'badge';
+				variantRadios.forEach(function(r){ if (r.checked) { variant = r.value; } });
+				var data = new FormData();
+				data.append('action', 'reportedip_wizard_save_promote');
+				data.append('nonce', (window.reportedipWizard && window.reportedipWizard.nonce) || '');
+				data.append('promote_action', action);
+				data.append('enabled', (enabledChk && enabledChk.checked) ? '1' : '0');
+				data.append('variant', variant);
+				fetch((window.reportedipWizard && window.reportedipWizard.ajaxUrl) || '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>', {
+					method: 'POST',
+					credentials: 'same-origin',
+					body: data
+				}).then(function(r){ return r.json(); }).then(function(json){
+					if (json && json.success && json.data && json.data.redirect_url) {
+						window.location.href = json.data.redirect_url;
+					} else {
+						window.location.href = '<?php echo esc_js( $skip_url ); ?>';
+					}
+				}).catch(function(){
+					window.location.href = '<?php echo esc_js( $skip_url ); ?>';
+				});
+			};
+
+			continueBtn.addEventListener('click', function(e){ e.preventDefault(); post('save'); });
+			skipBtn.addEventListener('click', function(e){ e.preventDefault(); post('skip'); });
+		})();
+		</script>
+		<?php
+	}
+
+	/**
+	 * Step 8: Complete / Summary
 	 */
 	private function render_step_complete() {
 		$mode      = $this->mode_manager->get_mode();

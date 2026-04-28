@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 1.2.4
+ * Version: 1.3.0
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL v2 or later
@@ -53,7 +53,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '1.2.4' );
+define( 'REPORTEDIP_HIVE_VERSION', '1.3.0' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -247,6 +247,9 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-settings-import-export.php';
 		}
 
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-frontend-shortcodes.php';
+		ReportedIP_Hive_Frontend_Shortcodes::get_instance();
+
 		$db = ReportedIP_Hive_Database::get_instance();
 		$db->maybe_update_schema();
 
@@ -263,7 +266,7 @@ class ReportedIP_Hive {
 		}
 
 		ReportedIP_Hive_Database::get_instance();
-		$this->api_client       = ReportedIP_Hive_API::get_instance();
+		$this->api_client = ReportedIP_Hive_API::get_instance();
 		ReportedIP_Hive_Hide_Login::get_instance();
 		$this->security_monitor = new ReportedIP_Hive_Security_Monitor();
 		$this->ip_manager       = ReportedIP_Hive_IP_Manager::get_instance();
@@ -304,6 +307,10 @@ class ReportedIP_Hive {
 		$database = new ReportedIP_Hive_Database();
 		$database->create_tables();
 		update_option( ReportedIP_Hive_Database::DB_VERSION_OPTION, ReportedIP_Hive_Database::DB_VERSION );
+
+		if ( ! get_option( 'reportedip_hive_activated_at' ) ) {
+			update_option( 'reportedip_hive_activated_at', time(), false );
+		}
 
 		self::set_default_options_static();
 
@@ -1271,6 +1278,10 @@ class ReportedIP_Hive {
 			'reportedip_hive_password_min_classes'         => 3,
 			'reportedip_hive_password_check_hibp'          => true,
 			'reportedip_hive_password_policy_all_users'    => false,
+
+			'reportedip_hive_auto_footer_enabled'          => false,
+			'reportedip_hive_auto_footer_variant'          => 'badge',
+			'reportedip_hive_auto_footer_align'            => 'center',
 		);
 	}
 
