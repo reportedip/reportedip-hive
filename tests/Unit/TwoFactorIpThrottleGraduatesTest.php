@@ -53,12 +53,17 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_graduation_calls_auto_block_ip_with_brute_force_event(): void {
+		public function test_graduation_calls_canonical_threshold_handler_with_brute_force_event(): void {
 			$source = $this->source();
 			$this->assertStringContainsString(
-				"auto_block_ip(",
+				'handle_threshold_exceeded(',
 				$source,
-				'increment_ip_failed_attempts() must escalate to auto_block_ip() when the top threshold is reached.'
+				'increment_ip_failed_attempts() must escalate via the canonical handle_threshold_exceeded() entry point — auto_block_ip() alone bypasses community-mode API reporting and admin notification.'
+			);
+			$this->assertStringNotContainsString(
+				'$monitor->auto_block_ip(',
+				$source,
+				'2FA graduation must NOT call auto_block_ip() directly: that path skips report_security_event() and would silently drop community-mode reports for 2FA brute force.'
 			);
 			$this->assertStringContainsString(
 				"'2fa_brute_force'",

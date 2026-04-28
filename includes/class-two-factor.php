@@ -1238,15 +1238,17 @@ class ReportedIP_Hive_Two_Factor {
 		 * its top step. 15 wrong codes in a one-hour window is unambiguous
 		 * brute force — the transient lockout was capping the response at
 		 * one hour and forgetting; promoting to wp_reportedip_hive_blocked
-		 * lets the progressive escalation (5m → … → 7d) and community-mode
-		 * reporting pipeline take over.
+		 * via handle_threshold_exceeded() runs the canonical post-trip
+		 * pipeline (auto-block with progressive escalation, community-mode
+		 * API report, admin notification, daily-stats bump) so the 2FA
+		 * brute-forcer is treated identically to any other sensor trip.
 		 */
 		$top_threshold = (int) max( array_keys( self::LOCKOUT_THRESHOLDS ) );
 		if ( $count >= $top_threshold && class_exists( 'ReportedIP_Hive' ) ) {
 			$client  = ReportedIP_Hive::get_instance();
 			$monitor = $client->get_security_monitor();
 			if ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) {
-				$monitor->auto_block_ip(
+				$monitor->handle_threshold_exceeded(
 					$ip,
 					'2fa_brute_force',
 					array(

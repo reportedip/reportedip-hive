@@ -355,9 +355,23 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
-	 * Handle threshold exceeded
+	 * Run the full "an IP just tripped a threshold" pipeline.
+	 *
+	 * Logs the event, updates daily stats, fires the auto-block (which in
+	 * turn consults the progressive-escalation ladder), queues a community-
+	 * mode API report, and sends the admin notification. Intentionally
+	 * public: this is the canonical entry point sensors call when they
+	 * already have their own counter (e.g. the 2FA per-IP transient
+	 * throttle in `class-two-factor.php`) and just need the consequences
+	 * dispatched coherently.
+	 *
+	 * @param string $ip_address Client IP.
+	 * @param string $event_type Event slug (e.g. 'failed_login', '2fa_brute_force').
+	 * @param array  $details    Event metadata, included verbatim in logs and in the report comment.
+	 * @return void
+	 * @since  1.0.0
 	 */
-	private function handle_threshold_exceeded( $ip_address, $event_type, $details ) {
+	public function handle_threshold_exceeded( $ip_address, $event_type, $details ) {
 		$this->logger->log_security_event( $event_type . '_threshold_exceeded', $ip_address, $details, 'high' );
 
 		$this->database->update_daily_stats( $this->get_stat_type_for_event( $event_type ) );
