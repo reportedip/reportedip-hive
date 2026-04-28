@@ -319,6 +319,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				'dashboardUrl'  => admin_url( 'admin.php?page=reportedip-hive' ),
 				'registerUrl'   => 'https://reportedip.de/register/',
 				'wizardBaseUrl' => admin_url( 'admin.php?page=' . self::PAGE_SLUG ),
+				'defaults'      => ReportedIP_Hive_Defaults::wizard(),
 				'strings'       => array(
 					'validating'   => __( 'Checking…', 'reportedip-hive' ),
 					'valid'        => __( 'API key is valid!', 'reportedip-hive' ),
@@ -1897,38 +1898,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * without overwriting existing user values.
 	 */
 	private function apply_safe_defaults() {
-		$defaults = array(
-			'reportedip_hive_api_endpoint'             => 'https://reportedip.de/wp-json/reportedip/v2/',
-			'reportedip_hive_trusted_ip_header'        => '',
-			'reportedip_hive_blocked_page_contact_url' => '',
-			'reportedip_hive_max_api_calls_per_hour'   => 100,
-			'reportedip_hive_report_cooldown_hours'    => 24,
-			'reportedip_hive_notification_cooldown_minutes' => 60,
-
-			'reportedip_hive_comment_spam_threshold'   => 3,
-			'reportedip_hive_comment_spam_timeframe'   => 60,
-			'reportedip_hive_xmlrpc_threshold'         => 10,
-			'reportedip_hive_xmlrpc_timeframe'         => 60,
-			'reportedip_hive_disable_xmlrpc_multicall' => true,
-
-			'reportedip_hive_log_level'                => 'info',
-			'reportedip_hive_detailed_logging'         => false,
-
-			'reportedip_hive_enable_caching'           => true,
-			'reportedip_hive_cache_duration'           => 24,
-			'reportedip_hive_negative_cache_duration'  => 2,
-
-			'reportedip_hive_queue_max_age_days'       => 7,
-			'reportedip_hive_queue_warning_threshold'  => 50,
-			'reportedip_hive_queue_critical_threshold' => 200,
-
-			'reportedip_hive_2fa_trusted_device_days'  => 30,
-			'reportedip_hive_2fa_branded_login'        => false,
-			'reportedip_hive_2fa_extended_remember'    => false,
-			'reportedip_hive_2fa_ip_allowlist'         => '',
-		);
-
-		foreach ( $defaults as $option_key => $default_value ) {
+		foreach ( ReportedIP_Hive_Defaults::safe_options() as $option_key => $default_value ) {
 			add_option( $option_key, $default_value );
 		}
 	}

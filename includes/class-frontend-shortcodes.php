@@ -721,16 +721,28 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 		$align_raw = sanitize_key( (string) get_option( 'reportedip_hive_auto_footer_align', 'center' ) );
 		$align     = in_array( $align_raw, array( 'left', 'center', 'right', 'below' ), true ) ? $align_raw : 'center';
 
-		echo '<div class="rip-hive-auto-footer" style="text-align:' . esc_attr( $align ) . ';margin:1.5em 0;">';
+		$is_below      = 'below' === $align;
+		$element_align = $is_below ? 'center' : $align;
+		$wrapper_class = $is_below ? 'rip-hive-auto-footer rip-hive-auto-footer--below' : 'rip-hive-auto-footer';
+		$wrapper_style = $is_below
+			? 'visibility:hidden;display:block;width:100%;clear:both;margin:1.5em 0 0;padding:1em 0;text-align:center;'
+			: 'text-align:' . $align . ';margin:1.5em 0;';
+		$wrapper_id    = $is_below ? ' id="rip-hive-auto-footer-below"' : '';
+
+		echo '<div class="' . esc_attr( $wrapper_class ) . '"' . $wrapper_id . ' style="' . esc_attr( $wrapper_style ) . '">'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $wrapper_id is a literal-or-empty string, both safe; remaining attrs go through esc_attr.
 		echo $this->build_element( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes its own attributes and text nodes; a custom-element wrapper cannot pass through wp_kses without losing the tag.
 			$variant,
 			array(
 				'utm_medium' => 'footer',
 				'theme'      => 'dark',
-				'align'      => $align,
+				'align'      => esc_attr( $element_align ),
 			)
 		);
 		echo '</div>';
+
+		if ( $is_below ) {
+			echo "<script>(function(){var n=document.getElementById('rip-hive-auto-footer-below');if(!n)return;function r(){if(document.body&&n.parentNode!==document.body){document.body.appendChild(n);}n.style.visibility='visible';}if(document.readyState==='complete'||document.readyState==='interactive'){r();}else{document.addEventListener('DOMContentLoaded',r);}})();</script>";
+		}
 	}
 
 	/**

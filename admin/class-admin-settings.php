@@ -3828,6 +3828,16 @@ class ReportedIP_Hive_Admin_Settings {
 				'shortcode' => '[reportedip_shield]',
 				'args'      => array(),
 			),
+			array(
+				'variant'   => 'stat',
+				'title'     => __( 'Login Activity', 'reportedip-hive' ),
+				'desc'      => __( 'Live successful-login counter (30 days) — a quiet confidence signal in a customer dashboard or "About" footer.', 'reportedip-hive' ),
+				'shortcode' => '[reportedip_stat type="logins_30d" tone="trust"]',
+				'args'      => array(
+					'type' => 'logins_30d',
+					'tone' => 'trust',
+				),
+			),
 		);
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- WordPress sets `settings-updated` on its own redirect after the Settings API form save; not user-mutable.
@@ -3901,10 +3911,17 @@ class ReportedIP_Hive_Admin_Settings {
 							<input type="radio" name="reportedip_hive_auto_footer_align" value="center" <?php checked( $auto_align, 'center' ); ?>>
 							<?php esc_html_e( 'Center', 'reportedip-hive' ); ?>
 						</label>
-						<label style="display:inline-flex;align-items:center;gap:.4em;">
+						<label style="display:inline-flex;align-items:center;gap:.4em;margin-right:1.5em;">
 							<input type="radio" name="reportedip_hive_auto_footer_align" value="right" <?php checked( $auto_align, 'right' ); ?>>
 							<?php esc_html_e( 'Right', 'reportedip-hive' ); ?>
 						</label>
+						<label style="display:inline-flex;align-items:center;gap:.4em;">
+							<input type="radio" name="reportedip_hive_auto_footer_align" value="below" <?php checked( $auto_align, 'below' ); ?>>
+							<?php esc_html_e( 'Below content', 'reportedip-hive' ); ?>
+						</label>
+						<span style="display:block;margin-top:.5em;color:var(--rip-gray-600);font-size:.9em;">
+							<?php esc_html_e( 'Below content renders the badge as a full-width row directly below your theme footer — works across classic and block themes.', 'reportedip-hive' ); ?>
+						</span>
 					</fieldset>
 
 					<p style="margin-top:1.5em;">
@@ -3925,6 +3942,14 @@ class ReportedIP_Hive_Admin_Settings {
 				<p style="margin-top:0;">
 					<?php esc_html_e( 'Drop any of these shortcodes into a post, page, widget, or theme template. Each one renders a self-contained banner that links back to reportedip.de with UTM tracking.', 'reportedip-hive' ); ?>
 				</p>
+
+				<div style="margin:1em 0 1.5em;padding:1em 1.25em;background:linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.08));border:1px solid rgba(79, 70, 229, 0.18);border-radius:var(--rip-radius-lg);">
+					<strong style="display:block;margin-bottom:.25em;color:var(--rip-gray-900);"><?php esc_html_e( 'Featured: show your contribution to the community', 'reportedip-hive' ); ?></strong>
+					<p style="margin:0 0 .5em;color:var(--rip-gray-700);font-size:.9em;">
+						<?php esc_html_e( 'A "contributor" tone reads as "ReportedIP Contributor" with a count of API reports your site has shared with the community in the last 30 days.', 'reportedip-hive' ); ?>
+					</p>
+					<code style="display:inline-block;background:#fff;padding:.4em .75em;border-radius:var(--rip-radius-sm);font-size:.85em;border:1px solid var(--rip-gray-200);">[reportedip_stat type="api_reports_30d" tone="contributor"]</code>
+				</div>
 
 				<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1.25em;margin-top:1.25em;">
 					<?php foreach ( $showcase as $info ) : ?>

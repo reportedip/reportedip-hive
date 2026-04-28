@@ -194,6 +194,7 @@ class ReportedIP_Hive {
 	 * Load plugin dependencies
 	 */
 	private function load_dependencies() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-defaults.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-logger.php';

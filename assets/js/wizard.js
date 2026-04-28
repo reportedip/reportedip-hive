@@ -17,16 +17,23 @@
 
 	var STORAGE_KEY = 'reportedipWizardState';
 
-	// Defaults werden sowohl beim Persistieren (parseInt-Fallback) als auch beim
-	// Wiederherstellen aus sessionStorage genutzt — Single Source of Truth.
-	var DEFAULTS = {
-		grace_days: 7,
-		max_skips: 3,
-		retention_days: 30,
-		anonymize_days: 7,
-		mode: 'local',
-		protection_level: 'medium'
-	};
+	// Defaults are sourced from PHP via wp_localize_script (single source of
+	// truth: ReportedIP_Hive_Defaults::wizard()). The hardcoded fallback
+	// shim only fires if the script is loaded without the localized payload —
+	// e.g. when a third-party loader bypasses our enqueue helper.
+	var LOCALIZED = (typeof window.reportedipWizard === 'object' && window.reportedipWizard) || {};
+	var DEFAULTS = $.extend(
+		{
+			grace_days: 7,
+			max_skips: 3,
+			retention_days: 30,
+			anonymize_days: 7,
+			mode: 'local',
+			protection_level: 'medium',
+			auto_footer_align: 'center'
+		},
+		LOCALIZED.defaults || {}
+	);
 
 	var ReportedIPWizard = {
 
