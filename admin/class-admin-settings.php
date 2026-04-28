@@ -663,7 +663,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	public function sanitize_auto_footer_align( $value ) {
 		$value = sanitize_key( (string) $value );
-		return in_array( $value, array( 'left', 'center', 'right' ), true ) ? $value : 'center';
+		return in_array( $value, array( 'left', 'center', 'right', 'below' ), true ) ? $value : 'center';
 	}
 
 	/**

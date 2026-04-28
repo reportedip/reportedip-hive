@@ -719,7 +719,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 
 		$variant   = self::sanitize_footer_variant( get_option( 'reportedip_hive_auto_footer_variant', 'badge' ) );
 		$align_raw = sanitize_key( (string) get_option( 'reportedip_hive_auto_footer_align', 'center' ) );
-		$align     = in_array( $align_raw, array( 'left', 'center', 'right' ), true ) ? $align_raw : 'center';
+		$align     = in_array( $align_raw, array( 'left', 'center', 'right', 'below' ), true ) ? $align_raw : 'center';
 
 		echo '<div class="rip-hive-auto-footer" style="text-align:' . esc_attr( $align ) . ';margin:1.5em 0;">';
 		echo $this->build_element( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes its own attributes and text nodes; a custom-element wrapper cannot pass through wp_kses without losing the tag.

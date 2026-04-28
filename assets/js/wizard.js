@@ -31,9 +31,9 @@
 	var ReportedIPWizard = {
 
 		init: function () {
-			// Wizard-JS wird per Plugin-Convention nur auf der Wizard-Seite enqueued,
-			// aber falls Drittcode es lädt: Body-Class-Guard verhindert DOM-Queries
-			// auf irrelevanten Admin-Pages.
+			// Wizard JS is enqueued only on the wizard page by convention; this
+			// body-class guard protects against third-party loaders pulling it
+			// into unrelated admin pages.
 			if (!document.body || !document.body.classList.contains('rip-wizard-page')) {
 				return;
 			}
@@ -42,39 +42,40 @@
 			this.initStep3();
 			this.initStep4();
 			this.initStep6();
+			this.initStep8();
 			this.restoreFromSession();
 		},
 
 		bindEvents: function () {
-			// Step 2: Mode-Selection
+			// Step 2: mode selection
 			$(document).on('click', '.rip-mode-card', this.handleModeCardClick.bind(this));
 			$(document).on('click', '#rip-continue-mode', this.handleContinueMode.bind(this));
 
-			// Step 2: API-Key
+			// Step 2: API key
 			$(document).on('click', '#rip-validate-key', this.handleValidateApiKey.bind(this));
 			$(document).on('keypress', '#rip-api-key', this.handleApiKeyEnter.bind(this));
 
-			// Step 3: Monitoring-Toggles → Warn-Banner
+			// Step 3: monitoring toggles → warning banner
 			$(document).on('change', '#rip-monitor-logins, #rip-monitor-comments, #rip-monitor-xmlrpc', this.updateMonitoringWarning.bind(this));
 
-			// Step 3 → 4: Werte zwischenspeichern
+			// Step 3 → 4: cache values to sessionStorage
 			$(document).on('click', '#rip-step3-next', this.persistStep3.bind(this));
 
-			// Step 4: 2FA-Method-Cards Multi-Select
+			// Step 4: 2FA method-card multi-select
 			$(document).on('click', '.rip-method-card', this.handleMethodCardClick.bind(this));
 			$(document).on('change', '#rip-2fa-enabled', this.update2faEnabledState.bind(this));
 
-			// Step 4 → 5: Werte zwischenspeichern
+			// Step 4 → 5: cache values to sessionStorage
 			$(document).on('click', '#rip-step4-next', this.persistStep4.bind(this));
 
-			// Step 5 → 6: Privacy-Werte zwischenspeichern, bevor Hide-Login-Step rendert
+			// Step 5 → 6: cache privacy values before the Hide-Login step renders
 			$(document).on('click', '#rip-step5-next', this.persistStep5.bind(this));
 
-			// Step 6: Live-Slug-Validierung + Toggle-Sichtbarkeit
+			// Step 6: live slug validation + toggle-driven enable state
 			$(document).on('input', '#rip-hide-login-slug', this.debounceValidateSlug.bind(this));
 			$(document).on('change', '#rip-hide-login-enabled', this.toggleHideLoginFields.bind(this));
 
-			// Step 6: Final-Submit
+			// Step 6: final submit
 			$(document).on('click', '#rip-save-config', this.handleSaveConfig.bind(this));
 
 			// Skip wizard
@@ -327,7 +328,7 @@
 		},
 
 		// ========================================================================
-		// Step 6: Hide Login (Slug-Validierung + Final-Submit)
+		// Step 6: Hide Login (slug validation + final submit)
 		// ========================================================================
 
 		initStep6: function () {
@@ -335,9 +336,22 @@
 			this.toggleHideLoginFields();
 		},
 
+		// ========================================================================
+		// Step 8: Setup-complete celebration trigger
+		// ========================================================================
+
+		initStep8: function () {
+			var $complete = $('.rip-wizard__complete');
+			if (!$complete.length) { return; }
+			// Defer to next paint so CSS animations start cleanly on load.
+			window.requestAnimationFrame(function () {
+				$complete.addClass('rip-wizard__complete--play');
+			});
+		},
+
 		toggleHideLoginFields: function () {
 			var enabled = $('#rip-hide-login-enabled').is(':checked');
-			$('#rip-hide-login-fields').toggle(enabled);
+			$('#rip-hide-login-fields').toggleClass('rip-is-disabled', !enabled);
 			if (!enabled) {
 				$('#rip-hide-login-validation').text('').css('color', '');
 			}

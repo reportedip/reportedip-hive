@@ -102,6 +102,8 @@ class ReportedIP_Hive_Setup_Wizard {
 		$enabled     = isset( $_POST['enabled'] ) && '1' === sanitize_key( wp_unslash( (string) $_POST['enabled'] ) );
 		$variant_raw = isset( $_POST['variant'] ) ? sanitize_key( wp_unslash( (string) $_POST['variant'] ) ) : 'badge';
 		$variant     = ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( $variant_raw );
+		$align_raw   = isset( $_POST['align'] ) ? sanitize_key( wp_unslash( (string) $_POST['align'] ) ) : 'center';
+		$align       = in_array( $align_raw, array( 'left', 'center', 'right', 'below' ), true ) ? $align_raw : 'center';
 
 		if ( 'skip' === $action ) {
 			wp_send_json_success(
@@ -113,6 +115,7 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		update_option( 'reportedip_hive_auto_footer_enabled', $enabled );
 		update_option( 'reportedip_hive_auto_footer_variant', $variant );
+		update_option( 'reportedip_hive_auto_footer_align', $align );
 
 		wp_send_json_success(
 			array(
@@ -701,18 +704,42 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 			</div>
 
-			<!-- Monitoring Toggles -->
+			<p class="rip-help-block rip-mb-3"><?php esc_html_e( 'The protection level above sets the basic thresholds. The toggles below decide which attack vectors are watched at all — leave them on unless you know you don\'t need a sensor.', 'reportedip-hive' ); ?></p>
+
+			<!-- Authentication monitoring -->
 			<div class="rip-config-card">
 				<div class="rip-config-card__header">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-					<h3><?php esc_html_e( 'What should be monitored?', 'reportedip-hive' ); ?></h3>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+					<h3><?php esc_html_e( 'Authentication', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Stop attackers from guessing passwords or probing usernames.', 'reportedip-hive' ); ?></p>
 					<label class="rip-toggle">
 						<input type="checkbox" name="monitor_failed_logins" id="rip-monitor-logins" checked>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Failed logins', 'reportedip-hive' ); ?></span>
 					</label>
+					<label class="rip-toggle">
+						<input type="checkbox" name="monitor_app_passwords" id="rip-monitor-app-passwords" checked>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Application-password abuse (REST/XMLRPC Basic-Auth bypass for 2FA)', 'reportedip-hive' ); ?></span>
+					</label>
+					<label class="rip-toggle">
+						<input type="checkbox" name="block_user_enumeration" id="rip-block-user-enumeration" checked>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'User-enumeration defence (?author=, /wp-json/wp/v2/users, login-error masking)', 'reportedip-hive' ); ?></span>
+					</label>
+				</div>
+			</div>
+
+			<!-- Content & API abuse -->
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+					<h3><?php esc_html_e( 'Content & API abuse', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Throttle bots that hammer comment forms or APIs.', 'reportedip-hive' ); ?></p>
 					<label class="rip-toggle">
 						<input type="checkbox" name="monitor_comments" id="rip-monitor-comments" checked>
 						<span class="rip-toggle__slider"></span>
@@ -723,25 +750,22 @@ class ReportedIP_Hive_Setup_Wizard {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'XMLRPC access (most common attack vector)', 'reportedip-hive' ); ?></span>
 					</label>
-
-					<hr class="rip-helper-divider">
-					<p class="rip-help-block"><?php esc_html_e( 'Advanced sensors — close common bypass paths around the basic protection above. Recommended on for most sites.', 'reportedip-hive' ); ?></p>
-
-					<label class="rip-toggle">
-						<input type="checkbox" name="monitor_app_passwords" id="rip-monitor-app-passwords" checked>
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Application-password abuse (REST/XMLRPC Basic-Auth bypass for 2FA)', 'reportedip-hive' ); ?></span>
-					</label>
 					<label class="rip-toggle">
 						<input type="checkbox" name="monitor_rest_api" id="rip-monitor-rest-api" checked>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'REST API rate-limit (scrapers, scanners)', 'reportedip-hive' ); ?></span>
 					</label>
-					<label class="rip-toggle">
-						<input type="checkbox" name="block_user_enumeration" id="rip-block-user-enumeration" checked>
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'User-enumeration defence (?author=, /wp-json/wp/v2/users, login-error masking)', 'reportedip-hive' ); ?></span>
-					</label>
+				</div>
+			</div>
+
+			<!-- Behaviour & scanning -->
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+					<h3><?php esc_html_e( 'Behaviour & scanning', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Detect scanners and impossible-travel sign-ins.', 'reportedip-hive' ); ?></p>
 					<label class="rip-toggle">
 						<input type="checkbox" name="monitor_404_scans" id="rip-monitor-404-scans" checked>
 						<span class="rip-toggle__slider"></span>
@@ -802,6 +826,29 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * Step 4: 2FA Setup
 	 */
 	private function render_step_two_factor() {
+		$saved_methods_raw = get_option( 'reportedip_hive_2fa_allowed_methods', '' );
+		$saved_methods     = is_string( $saved_methods_raw ) ? json_decode( $saved_methods_raw, true ) : array();
+		if ( ! is_array( $saved_methods ) || empty( $saved_methods ) ) {
+			$saved_methods = array( 'totp', 'email', 'webauthn' );
+		}
+
+		$saved_roles_raw = get_option( 'reportedip_hive_2fa_enforce_roles', '' );
+		$saved_roles     = is_string( $saved_roles_raw ) ? json_decode( $saved_roles_raw, true ) : array();
+		if ( ! is_array( $saved_roles ) ) {
+			$saved_roles = array( 'administrator' );
+		}
+
+		$saved_2fa_enabled              = (bool) get_option( 'reportedip_hive_2fa_enabled_global', true );
+		$saved_grace_days               = (int) get_option( 'reportedip_hive_2fa_enforce_grace_days', 7 );
+		$saved_max_skips                = (int) get_option( 'reportedip_hive_2fa_max_skips', 3 );
+		$saved_trusted_devices          = (bool) get_option( 'reportedip_hive_2fa_trusted_devices', true );
+		$saved_frontend_onboarding      = (bool) get_option( 'reportedip_hive_2fa_frontend_onboarding', true );
+		$saved_notify_new_device        = (bool) get_option( 'reportedip_hive_2fa_notify_new_device', true );
+		$saved_xmlrpc_app_password_only = (bool) get_option( 'reportedip_hive_2fa_xmlrpc_app_password_only', false );
+
+		$method_classes = function ( string $method ) use ( $saved_methods ) {
+			return in_array( $method, $saved_methods, true ) ? ' rip-method-card--selected' : '';
+		};
 		?>
 		<div class="rip-wizard__configuration">
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'Two-Factor Authentication', 'reportedip-hive' ); ?></h1>
@@ -815,7 +862,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 				<div class="rip-config-card__body">
 					<label class="rip-toggle">
-						<input type="checkbox" name="2fa_enabled_global" id="rip-2fa-enabled" checked>
+						<input type="checkbox" name="2fa_enabled_global" id="rip-2fa-enabled" <?php checked( $saved_2fa_enabled ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Enable 2FA (recommended)', 'reportedip-hive' ); ?></span>
 					</label>
@@ -830,8 +877,9 @@ class ReportedIP_Hive_Setup_Wizard {
 					<h3><?php esc_html_e( 'Allowed methods', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Pick which factors users may set up. TOTP plus a passkey is a strong default; email is a useful fallback.', 'reportedip-hive' ); ?></p>
 					<div class="rip-method-grid" id="rip-2fa-methods">
-						<div class="rip-method-card rip-method-card--selected" data-method="totp">
+						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'totp' ) ); ?>" data-method="totp">
 							<span class="rip-method-card__check"></span>
 							<div class="rip-method-card__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
@@ -840,7 +888,7 @@ class ReportedIP_Hive_Setup_Wizard {
 							<p class="rip-method-card__desc"><?php esc_html_e( 'Google Authenticator, Authy, 1Password — standard, offline.', 'reportedip-hive' ); ?></p>
 						</div>
 
-						<div class="rip-method-card rip-method-card--selected" data-method="email">
+						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'email' ) ); ?>" data-method="email">
 							<span class="rip-method-card__check"></span>
 							<div class="rip-method-card__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -849,7 +897,7 @@ class ReportedIP_Hive_Setup_Wizard {
 							<p class="rip-method-card__desc"><?php esc_html_e( 'Code via email — useful as a backup method.', 'reportedip-hive' ); ?></p>
 						</div>
 
-						<div class="rip-method-card rip-method-card--selected" data-method="webauthn">
+						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'webauthn' ) ); ?>" data-method="webauthn">
 							<span class="rip-method-card__check"></span>
 							<div class="rip-method-card__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h11"/><circle cx="17" cy="17" r="4"/><path d="M19 19l2 2"/></svg>
@@ -858,18 +906,21 @@ class ReportedIP_Hive_Setup_Wizard {
 							<p class="rip-method-card__desc"><?php esc_html_e( 'Face ID, Touch ID, Windows Hello, YubiKey — phishing-resistant.', 'reportedip-hive' ); ?></p>
 						</div>
 
-						<div class="rip-method-card" data-method="sms">
+						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'sms' ) ); ?>" data-method="sms">
 							<span class="rip-method-card__check"></span>
 							<div class="rip-method-card__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
 							</div>
 							<h4 class="rip-method-card__title"><?php esc_html_e( 'SMS', 'reportedip-hive' ); ?></h4>
 							<p class="rip-method-card__desc"><?php esc_html_e( 'EU provider with DPA. Configuration happens in settings after the wizard.', 'reportedip-hive' ); ?></p>
-							<div class="rip-method-card__hint"><?php esc_html_e( 'Provider + DPA confirmation required', 'reportedip-hive' ); ?></div>
+							<span class="rip-tag rip-tag--warning rip-method-card__needs-config">
+								<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+								<?php esc_html_e( 'Provider setup required after the wizard', 'reportedip-hive' ); ?>
+							</span>
 						</div>
 					</div>
 
-					<input type="hidden" id="rip-2fa-methods-input" name="2fa_methods" value="totp,email,webauthn">
+					<input type="hidden" id="rip-2fa-methods-input" name="2fa_methods" value="<?php echo esc_attr( implode( ',', array_filter( $saved_methods, 'is_string' ) ) ); ?>">
 				</div>
 			</div>
 
@@ -880,25 +931,25 @@ class ReportedIP_Hive_Setup_Wizard {
 					<h3><?php esc_html_e( 'Enforce 2FA for which roles?', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Selected roles must set up 2FA on next sign-in. The grace period and skip counter below cushion the rollout — nobody is locked out on day one.', 'reportedip-hive' ); ?></p>
 					<div class="rip-checkbox-row">
 						<label class="rip-checkbox-pill">
-							<input type="checkbox" name="2fa_enforce_role[]" value="administrator" checked>
+							<input type="checkbox" name="2fa_enforce_role[]" value="administrator" <?php checked( in_array( 'administrator', $saved_roles, true ) ); ?>>
 							<?php esc_html_e( 'Administrators', 'reportedip-hive' ); ?>
 						</label>
 						<label class="rip-checkbox-pill">
-							<input type="checkbox" name="2fa_enforce_role[]" value="editor">
+							<input type="checkbox" name="2fa_enforce_role[]" value="editor" <?php checked( in_array( 'editor', $saved_roles, true ) ); ?>>
 							<?php esc_html_e( 'Editors', 'reportedip-hive' ); ?>
 						</label>
 						<label class="rip-checkbox-pill">
-							<input type="checkbox" name="2fa_enforce_role[]" value="author">
+							<input type="checkbox" name="2fa_enforce_role[]" value="author" <?php checked( in_array( 'author', $saved_roles, true ) ); ?>>
 							<?php esc_html_e( 'Authors', 'reportedip-hive' ); ?>
 						</label>
 						<label class="rip-checkbox-pill">
-							<input type="checkbox" name="2fa_enforce_role[]" value="shop_manager">
+							<input type="checkbox" name="2fa_enforce_role[]" value="shop_manager" <?php checked( in_array( 'shop_manager', $saved_roles, true ) ); ?>>
 							<?php esc_html_e( 'Shop managers', 'reportedip-hive' ); ?>
 						</label>
 					</div>
-					<p class="rip-help-block"><?php esc_html_e( 'Required users go through onboarding on first sign-in, with a grace period and skip counter.', 'reportedip-hive' ); ?></p>
 
 					<hr class="rip-helper-divider">
 
@@ -907,7 +958,7 @@ class ReportedIP_Hive_Setup_Wizard {
 							<?php esc_html_e( 'Grace period (days)', 'reportedip-hive' ); ?>
 						</label>
 						<div class="rip-number-row">
-							<input type="number" id="rip-2fa-grace-days" name="2fa_enforce_grace_days" class="rip-input rip-input--small" value="7" min="0" max="60" step="1">
+							<input type="number" id="rip-2fa-grace-days" name="2fa_enforce_grace_days" class="rip-input rip-input--small" value="<?php echo esc_attr( (string) $saved_grace_days ); ?>" min="0" max="60" step="1">
 							<span class="rip-number-row__suffix"><?php esc_html_e( 'Days before enforcement kicks in', 'reportedip-hive' ); ?></span>
 						</div>
 					</div>
@@ -917,14 +968,14 @@ class ReportedIP_Hive_Setup_Wizard {
 							<?php esc_html_e( 'Max. skips after the grace period', 'reportedip-hive' ); ?>
 						</label>
 						<div class="rip-number-row">
-							<input type="number" id="rip-2fa-max-skips" name="2fa_max_skips" class="rip-input rip-input--small" value="3" min="0" max="20" step="1">
+							<input type="number" id="rip-2fa-max-skips" name="2fa_max_skips" class="rip-input rip-input--small" value="<?php echo esc_attr( (string) $saved_max_skips ); ?>" min="0" max="20" step="1">
 							<span class="rip-number-row__suffix"><?php esc_html_e( 'How many times users may skip 2FA (0 = never)', 'reportedip-hive' ); ?></span>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- Komfort -->
+			<!-- Convenience -->
 			<div class="rip-config-card">
 				<div class="rip-config-card__header">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
@@ -932,17 +983,17 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 				<div class="rip-config-card__body">
 					<label class="rip-toggle">
-						<input type="checkbox" name="2fa_trusted_devices" id="rip-2fa-trusted-devices" checked>
+						<input type="checkbox" name="2fa_trusted_devices" id="rip-2fa-trusted-devices" <?php checked( $saved_trusted_devices ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Trusted devices (remember for 30 days)', 'reportedip-hive' ); ?></span>
 					</label>
 					<label class="rip-toggle">
-						<input type="checkbox" name="2fa_frontend_onboarding" id="rip-2fa-frontend-onboarding" checked>
+						<input type="checkbox" name="2fa_frontend_onboarding" id="rip-2fa-frontend-onboarding" <?php checked( $saved_frontend_onboarding ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Onboarding on the frontend too (e.g. WooCommerce account)', 'reportedip-hive' ); ?></span>
 					</label>
 					<label class="rip-toggle">
-						<input type="checkbox" name="2fa_notify_new_device" id="rip-2fa-notify-new-device" checked>
+						<input type="checkbox" name="2fa_notify_new_device" id="rip-2fa-notify-new-device" <?php checked( $saved_notify_new_device ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Email on sign-in from an unknown device', 'reportedip-hive' ); ?></span>
 					</label>
@@ -950,7 +1001,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<hr class="rip-helper-divider">
 
 					<label class="rip-toggle">
-						<input type="checkbox" name="2fa_xmlrpc_app_password_only" id="rip-2fa-xmlrpc-app-password-only">
+						<input type="checkbox" name="2fa_xmlrpc_app_password_only" id="rip-2fa-xmlrpc-app-password-only" <?php checked( $saved_xmlrpc_app_password_only ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Allow XMLRPC only with application passwords', 'reportedip-hive' ); ?></span>
 					</label>
@@ -1144,12 +1195,12 @@ class ReportedIP_Hive_Setup_Wizard {
 
 					<div class="rip-form-group rip-mt-3" id="rip-hide-login-fields">
 						<label class="rip-label" for="rip-hide-login-slug"><?php esc_html_e( 'Custom slug', 'reportedip-hive' ); ?></label>
-						<div style="display:flex; align-items:center; gap:.5rem;">
-							<span class="rip-help-text" style="white-space:nowrap;"><?php echo esc_html( $home_url ); ?></span>
-							<input type="text" id="rip-hide-login-slug" name="hide_login_slug" value="<?php echo esc_attr( '' !== $existing_slug ? $existing_slug : $suggested ); ?>" class="rip-input" placeholder="welcome" autocomplete="off" spellcheck="false">
+						<div class="rip-input-group">
+							<span class="rip-input-group__prefix"><?php echo esc_html( $home_url ); ?></span>
+							<input type="text" id="rip-hide-login-slug" name="hide_login_slug" value="<?php echo esc_attr( '' !== $existing_slug ? $existing_slug : $suggested ); ?>" class="rip-input rip-input-group__field" placeholder="welcome" autocomplete="off" spellcheck="false">
 						</div>
 						<p class="rip-help-text"><?php esc_html_e( '3–50 characters: lowercase letters, digits, dashes or underscores. We will reject reserved WordPress paths and existing post/page slugs when you save.', 'reportedip-hive' ); ?></p>
-						<p class="rip-help-text" id="rip-hide-login-validation" aria-live="polite" style="min-height:1.4em;"></p>
+						<p class="rip-help-text rip-validation-line" id="rip-hide-login-validation" aria-live="polite"></p>
 					</div>
 
 					<hr class="rip-helper-divider">
@@ -1173,7 +1224,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 				<div class="rip-config-card__body">
 					<p class="rip-help-block"><?php esc_html_e( 'Add this constant to wp-config.php to temporarily disable Hide Login and reach the original wp-login.php again:', 'reportedip-hive' ); ?></p>
-					<pre style="margin:0; white-space:pre-wrap; word-break:break-all; background:var(--rip-gray-50); padding:.75rem; border-radius:6px;"><code>define( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN', true );</code></pre>
+					<pre class="rip-codeblock"><code>define( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN', true );</code></pre>
 				</div>
 			</div>
 
@@ -1200,7 +1251,12 @@ class ReportedIP_Hive_Setup_Wizard {
 		$shortcodes      = ReportedIP_Hive_Frontend_Shortcodes::get_instance();
 		$current_enabled = (bool) get_option( 'reportedip_hive_auto_footer_enabled', false );
 		$current_variant = ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( get_option( 'reportedip_hive_auto_footer_variant', 'badge' ) );
-		$skip_url        = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=8' );
+		$current_align   = sanitize_key( (string) get_option( 'reportedip_hive_auto_footer_align', 'center' ) );
+		if ( ! in_array( $current_align, array( 'left', 'center', 'right', 'below' ), true ) ) {
+			$current_align = 'center';
+		}
+		$skip_url      = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=8' );
+		$preview_align = 'below' === $current_align ? 'center' : $current_align;
 		?>
 		<div class="rip-wizard__configuration">
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'You\'re protected. Help others stay protected too.', 'reportedip-hive' ); ?></h1>
@@ -1212,21 +1268,21 @@ class ReportedIP_Hive_Setup_Wizard {
 					<h3><?php esc_html_e( 'Live preview', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
-					<div id="rip-promote-preview" style="background:#F9FAFB;border:1px dashed var(--rip-gray-300);border-radius:var(--rip-radius-md);padding:1.5em;display:flex;align-items:center;justify-content:center;min-height:96px;">
+					<div id="rip-promote-preview" class="rip-promote-preview">
 						<?php
 						echo $shortcodes->build_element( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes attribute values; the custom-element wrapper would be stripped by wp_kses.
 							$current_variant,
 							array(
 								'utm_medium' => 'wizard-preview',
 								'theme'      => 'dark',
-								'align'      => 'center',
+								'align'      => esc_attr( $preview_align ),
 							)
 						);
 						?>
 					</div>
 
-					<fieldset style="margin-top:1.5em;">
-						<legend style="font-weight:600;margin-bottom:.5em;"><?php esc_html_e( 'Variant', 'reportedip-hive' ); ?></legend>
+					<fieldset class="rip-promote-fieldset">
+						<legend class="rip-promote-legend"><?php esc_html_e( 'Variant', 'reportedip-hive' ); ?></legend>
 						<label class="rip-radio">
 							<input type="radio" name="promote_variant" value="badge" <?php checked( $current_variant, 'badge' ); ?>>
 							<span><?php esc_html_e( 'Footer badge — compact pill with logo and label.', 'reportedip-hive' ); ?></span>
@@ -1237,13 +1293,42 @@ class ReportedIP_Hive_Setup_Wizard {
 						</label>
 					</fieldset>
 
-					<label class="rip-toggle" style="margin-top:1.5em;">
-						<input type="checkbox" id="rip-promote-enabled" <?php checked( $current_enabled ); ?>>
+					<fieldset class="rip-promote-fieldset">
+						<legend class="rip-promote-legend"><?php esc_html_e( 'Position', 'reportedip-hive' ); ?></legend>
+						<label class="rip-radio">
+							<input type="radio" name="promote_align" value="left" <?php checked( $current_align, 'left' ); ?>>
+							<span><?php esc_html_e( 'Left edge of the footer', 'reportedip-hive' ); ?></span>
+						</label>
+						<label class="rip-radio">
+							<input type="radio" name="promote_align" value="center" <?php checked( $current_align, 'center' ); ?>>
+							<span><?php esc_html_e( 'Centered in the footer', 'reportedip-hive' ); ?></span>
+						</label>
+						<label class="rip-radio">
+							<input type="radio" name="promote_align" value="right" <?php checked( $current_align, 'right' ); ?>>
+							<span><?php esc_html_e( 'Right edge of the footer', 'reportedip-hive' ); ?></span>
+						</label>
+						<label class="rip-radio">
+							<input type="radio" name="promote_align" value="below" <?php checked( $current_align, 'below' ); ?>>
+							<span><?php esc_html_e( 'Below the theme footer (own row, full width)', 'reportedip-hive' ); ?></span>
+						</label>
+					</fieldset>
+
+					<label class="rip-toggle rip-promote-toggle">
+						<input type="checkbox" id="rip-promote-enabled" name="promote_enabled" <?php checked( $current_enabled ); ?>>
 						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Show this badge automatically in my site footer', 'reportedip-hive' ); ?></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Show this badge automatically on my site', 'reportedip-hive' ); ?></span>
 					</label>
-					<p class="rip-help-text" style="margin-top:.5em;">
+					<p class="rip-help-text rip-promote-hint">
 						<?php esc_html_e( 'Renders inside Shadow DOM — your theme cannot break the layout. The link itself is regular HTML, so search engines pick it up.', 'reportedip-hive' ); ?>
+					</p>
+					<p class="rip-help-text rip-promote-hint">
+						<?php
+						printf(
+							/* translators: %s: link to the Promote settings tab */
+							esc_html__( 'Want to drop a banner inline? %s for ready-to-paste shortcodes.', 'reportedip-hive' ),
+							'<a href="' . esc_url( admin_url( 'admin.php?page=reportedip-hive-community&subtab=promote' ) ) . '">' . esc_html__( 'See the Promote tab in Settings', 'reportedip-hive' ) . '</a>'
+						);
+						?>
 					</p>
 				</div>
 			</div>
@@ -1266,10 +1351,21 @@ class ReportedIP_Hive_Setup_Wizard {
 			var skipBtn = document.getElementById('rip-promote-skip');
 			var enabledChk = document.getElementById('rip-promote-enabled');
 			var variantRadios = document.querySelectorAll('input[name="promote_variant"]');
+			var alignRadios = document.querySelectorAll('input[name="promote_align"]');
+
+			var currentAlign = function(){
+				var align = 'center';
+				alignRadios.forEach(function(r){ if (r.checked) { align = r.value; } });
+				return align;
+			};
 
 			var renderPreview = function(){
 				var variant = 'badge';
 				variantRadios.forEach(function(r){ if (r.checked) { variant = r.value; } });
+				var align = currentAlign();
+				var elementAlign = align === 'below' ? 'center' : align;
+				preview.classList.remove('rip-promote-preview--left', 'rip-promote-preview--center', 'rip-promote-preview--right', 'rip-promote-preview--below');
+				preview.classList.add('rip-promote-preview--' + align);
 				preview.innerHTML = '';
 				var el = document.createElement('rip-hive-banner');
 				el.setAttribute('data-variant', variant);
@@ -1278,11 +1374,13 @@ class ReportedIP_Hive_Setup_Wizard {
 				el.setAttribute('data-label', '<?php echo esc_js( __( 'Active threat protection', 'reportedip-hive' ) ); ?>');
 				el.setAttribute('data-mode', 'local');
 				el.setAttribute('data-theme', 'dark');
+				el.setAttribute('data-align', elementAlign);
 				el.setAttribute('data-href', 'https://reportedip.de/?utm_source=hive&utm_medium=wizard-preview&utm_campaign=protected&utm_content=' + variant);
 				preview.appendChild(el);
 			};
 
 			variantRadios.forEach(function(r){ r.addEventListener('change', renderPreview); });
+			alignRadios.forEach(function(r){ r.addEventListener('change', renderPreview); });
 
 			var post = function(action){
 				continueBtn.disabled = true;
@@ -1295,6 +1393,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				data.append('promote_action', action);
 				data.append('enabled', (enabledChk && enabledChk.checked) ? '1' : '0');
 				data.append('variant', variant);
+				data.append('align', currentAlign());
 				fetch((window.reportedipWizard && window.reportedipWizard.ajaxUrl) || '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>', {
 					method: 'POST',
 					credentials: 'same-origin',
@@ -1348,19 +1447,19 @@ class ReportedIP_Hive_Setup_Wizard {
 			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Your WordPress site is now protected. You can fine-tune all settings any time from the admin menu.', 'reportedip-hive' ); ?></p>
 
 			<div class="rip-wizard__summary">
-				<div class="rip-wizard__summary-item">
+				<div class="rip-wizard__summary-item" style="--n:1;">
 					<span class="rip-wizard__summary-label"><?php esc_html_e( 'Mode', 'reportedip-hive' ); ?></span>
 					<span class="rip-mode-badge <?php echo esc_attr( $mode_info['badge_class'] ); ?>">
 						<?php echo esc_html( $mode_info['label'] ); ?>
 					</span>
 				</div>
-				<div class="rip-wizard__summary-item">
+				<div class="rip-wizard__summary-item" style="--n:2;">
 					<span class="rip-wizard__summary-label"><?php esc_html_e( 'Auto-blocking', 'reportedip-hive' ); ?></span>
 					<span class="rip-wizard__summary-value">
 						<?php echo $auto_block ? esc_html__( 'Active', 'reportedip-hive' ) : esc_html__( 'Inactive', 'reportedip-hive' ); ?>
 					</span>
 				</div>
-				<div class="rip-wizard__summary-item">
+				<div class="rip-wizard__summary-item" style="--n:3;">
 					<span class="rip-wizard__summary-label"><?php esc_html_e( '2FA', 'reportedip-hive' ); ?></span>
 					<span class="rip-wizard__summary-value">
 						<?php
@@ -1373,7 +1472,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						?>
 					</span>
 				</div>
-				<div class="rip-wizard__summary-item">
+				<div class="rip-wizard__summary-item" style="--n:4;">
 					<span class="rip-wizard__summary-label"><?php esc_html_e( 'Retention', 'reportedip-hive' ); ?></span>
 					<span class="rip-wizard__summary-value">
 						<?php
@@ -1382,7 +1481,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						?>
 					</span>
 				</div>
-				<div class="rip-wizard__summary-item">
+				<div class="rip-wizard__summary-item" style="--n:5;">
 					<span class="rip-wizard__summary-label"><?php esc_html_e( 'Privacy', 'reportedip-hive' ); ?></span>
 					<span class="rip-mode-badge rip-mode-badge--gdpr">
 						<?php
@@ -1394,11 +1493,24 @@ class ReportedIP_Hive_Setup_Wizard {
 						?>
 					</span>
 				</div>
-				<div class="rip-wizard__summary-item">
+				<div class="rip-wizard__summary-item" style="--n:6;">
 					<span class="rip-wizard__summary-label"><?php esc_html_e( 'Email alerts', 'reportedip-hive' ); ?></span>
 					<span class="rip-wizard__summary-value">
 						<?php echo $notify_admin ? esc_html__( 'On', 'reportedip-hive' ) : esc_html__( 'Off', 'reportedip-hive' ); ?>
 					</span>
+				</div>
+			</div>
+
+			<div class="rip-wizard__promote-cta">
+				<svg class="rip-wizard__promote-cta__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+				<div class="rip-wizard__promote-cta__body">
+					<h3><?php esc_html_e( 'Help others stay protected too', 'reportedip-hive' ); ?></h3>
+					<p><?php esc_html_e( 'A tiny footer badge linking back to ReportedIP strengthens the community network — no impact on your design or speed.', 'reportedip-hive' ); ?></p>
+				</div>
+				<div class="rip-wizard__promote-cta__action">
+					<a href="<?php echo esc_url( add_query_arg( 'step', 7, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
+						<?php esc_html_e( 'Pick a badge →', 'reportedip-hive' ); ?>
+					</a>
 				</div>
 			</div>
 

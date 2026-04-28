@@ -982,7 +982,41 @@ body.rip-wizard-page [hidden] {
     font-weight: 500;
 }
 
-/* Komma-getrennte Rollen-Checkboxen */
+/* Inline tag — small status pill inside cards (e.g. "Provider setup required"). */
+.rip-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+}
+
+.rip-tag svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+.rip-tag--warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--rip-warning);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Show "Provider setup required" only when the SMS card is selected. */
+.rip-method-card__needs-config {
+    display: none;
+}
+
+.rip-method-card--selected .rip-method-card__needs-config {
+    display: inline-flex;
+}
+
+/* Comma-separated role checkboxes */
 .rip-checkbox-row {
     display: flex;
     flex-wrap: wrap;
@@ -1022,10 +1056,57 @@ body.rip-wizard-page [hidden] {
 }
 
 .rip-wizard__success-icon {
+    position: relative;
     width: 100px;
     height: 100px;
     margin: 0 auto 2rem;
     color: var(--rip-success);
+    border-radius: 50%;
+}
+
+.rip-wizard__success-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .rip-wizard__complete--play .rip-wizard__success-icon::before {
+        animation: haloPulse 1.6s ease-out 0.3s 2 both;
+    }
+
+    .rip-wizard__complete--play .rip-success-check {
+        animation: checkIn 0.3s ease 0.5s forwards, checkBounce 0.32s ease-out 0.85s 1;
+    }
+}
+
+@keyframes haloPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 28px rgba(16, 185, 129, 0);
+    }
+}
+
+@keyframes checkBounce {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .rip-success-circle {
@@ -1079,6 +1160,55 @@ body.rip-wizard-page [hidden] {
     border-radius: var(--rip-radius);
     border: 1px solid var(--rip-gray-100);
     text-align: left;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .rip-wizard__complete--play .rip-wizard__summary-item {
+        opacity: 0;
+        animation: fadeUp 0.4s ease forwards;
+        animation-delay: calc(0.85s + var(--n, 0) * 0.08s);
+    }
+}
+
+/* "Help others" callout below the summary on the complete step. */
+.rip-wizard__promote-cta {
+    max-width: 720px;
+    margin: 1.5rem auto 0;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.08));
+    border: 1px solid rgba(79, 70, 229, 0.18);
+    border-radius: var(--rip-radius-lg);
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.rip-wizard__promote-cta__icon {
+    flex: 0 0 auto;
+    color: var(--rip-primary, #4F46E5);
+    width: 32px;
+    height: 32px;
+}
+
+.rip-wizard__promote-cta__body {
+    flex: 1;
+}
+
+.rip-wizard__promote-cta__body h3 {
+    margin: 0 0 0.25rem;
+    font-size: 0.95rem;
+    color: var(--rip-gray-900, #111827);
+}
+
+.rip-wizard__promote-cta__body p {
+    margin: 0;
+    color: var(--rip-gray-600, #4B5563);
+    font-size: 0.85rem;
+}
+
+.rip-wizard__promote-cta__action {
+    flex: 0 0 auto;
 }
 
 .rip-wizard__summary-label {
@@ -1505,4 +1635,104 @@ body.rip-wizard-page select.rip-select option {
     display: block;
     margin: var(--rip-space-3) 0;
     width: 100%;
+}
+
+/* Prefixed input group — e.g. "https://example.com/" + slug field. */
+.rip-input-group {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: var(--rip-space-2);
+    border: 1px solid var(--rip-gray-300, #D1D5DB);
+    border-radius: var(--rip-radius);
+    background: #fff;
+    overflow: hidden;
+}
+
+.rip-input-group__prefix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--rip-space-3);
+    background: var(--rip-gray-50, #F9FAFB);
+    color: var(--rip-gray-600, #4B5563);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    border-right: 1px solid var(--rip-gray-200, #E5E7EB);
+}
+
+.rip-input-group__field {
+    flex: 1;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent;
+    padding: var(--rip-space-2) var(--rip-space-3);
+    min-width: 0;
+}
+
+.rip-input-group__field:focus {
+    outline: 2px solid var(--rip-primary, #4F46E5);
+    outline-offset: -2px;
+}
+
+/* Reserved-height validation line — prevents layout jump when message appears. */
+.rip-validation-line {
+    min-height: 1.4em;
+    margin-top: var(--rip-space-1);
+}
+
+/* Disabled-by-toggle group — visually muted but still in flow. */
+.rip-is-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Promote step (live preview, fieldsets, position swatches). */
+.rip-promote-preview {
+    background: var(--rip-gray-50, #F9FAFB);
+    border: 1px dashed var(--rip-gray-300, #D1D5DB);
+    border-radius: var(--rip-radius-md, 0.5rem);
+    padding: var(--rip-space-5, 1.5rem);
+    display: flex;
+    align-items: center;
+    min-height: 96px;
+}
+
+.rip-promote-preview--left { justify-content: flex-start; }
+.rip-promote-preview--center { justify-content: center; }
+.rip-promote-preview--right { justify-content: flex-end; }
+.rip-promote-preview--below { justify-content: center; flex-direction: column; }
+
+.rip-promote-fieldset {
+    margin-top: var(--rip-space-5, 1.5rem);
+    border: 0;
+    padding: 0;
+}
+
+.rip-promote-legend {
+    font-weight: 600;
+    margin-bottom: var(--rip-space-2, 0.5rem);
+    color: var(--rip-gray-800, #1F2937);
+}
+
+.rip-promote-toggle {
+    margin-top: var(--rip-space-5, 1.5rem);
+}
+
+.rip-promote-hint {
+    margin-top: var(--rip-space-2, 0.5rem);
+}
+
+/* Inline code block — shipped recovery snippets, etc. */
+.rip-codeblock {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    background: var(--rip-gray-50, #F9FAFB);
+    color: var(--rip-gray-800, #1F2937);
+    padding: var(--rip-space-3);
+    border-radius: var(--rip-radius);
+    border: 1px solid var(--rip-gray-200, #E5E7EB);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.85rem;
 }
