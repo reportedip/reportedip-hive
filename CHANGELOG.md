@@ -2,6 +2,74 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.4.0] — 2026-04-28
+
+### Fixes
+
+- **Setup wizard now saves every protection toggle.** Step 3 silently
+  dropped five advanced sensors (`monitor_app_passwords`,
+  `monitor_rest_api`, `block_user_enumeration`, `monitor_404_scans`,
+  `monitor_geo_anomaly`) — they appeared on by default but persisted
+  as `0` on every wizard run because the JS step persistence only
+  covered five of nine keys. All nine toggles now round-trip correctly
+  through sessionStorage and the final AJAX save.
+
+### New
+
+- **Calmer protection step.** Step 3 of the setup wizard splits its
+  monitoring toggles into three themed cards — **Authentication**,
+  **Content & API abuse**, **Behaviour & scanning** — each with a
+  one-line intro. Same options, much lighter cognitive load.
+- **Pre-filled 2FA step.** The wizard now reads existing
+  `reportedip_hive_2fa_allowed_methods`, `reportedip_hive_2fa_enforce_roles`
+  and the convenience toggles, so returning users see their previous
+  picks instead of the hard-coded defaults. Picking at least one role
+  is required — Administrator stays the safe default and the AJAX
+  handler refuses to persist an empty enforce-roles list when 2FA is
+  on.
+- **Provider-setup-required tag** on the SMS 2FA card. As soon as a
+  user picks SMS, an amber tag inside the card spells out that the
+  provider still has to be configured in **Settings → Two-Factor**
+  after the wizard finishes.
+- **"Below content" auto-footer placement.** The Promote tab and the
+  wizard's Promote step now offer a fourth alignment option that
+  renders the badge as a full-width row directly below the theme
+  footer. Implementation hooks `wp_footer` priority 99999 with
+  `visibility:hidden`, then relocates the wrapper to `document.body`
+  via a tiny inline script — deterministic across classic and block
+  themes, escapes any `overflow:hidden` or flex parent.
+- **Featured shortcode discoverability.** The Promote tab gains a
+  highlighted callout for `[reportedip_stat type="api_reports_30d"
+  tone="contributor"]` and a fifth showcase entry for the new
+  `[reportedip_stat type="logins_30d" tone="trust"]` login-activity
+  counter. The wizard's Promote step links back to the same gallery.
+- **Tasteful Setup-complete celebration.** The final wizard step now
+  pulses a soft halo behind the success check, scale-bounces the
+  checkmark once and fades the summary cards in with a stagger. All
+  animations are gated behind a JS-applied `.rip-wizard__complete--play`
+  class and wrapped in `prefers-reduced-motion`.
+- **Centralised wizard defaults.** New `ReportedIP_Hive_Defaults` class
+  exposes `wizard()` (form fallbacks) and `safe_options()` (post-
+  wizard option seed). The wizard JS reads its defaults via
+  `wp_localize_script`; `apply_safe_defaults()` consumes the same
+  values. Single source of truth, no behavioural change.
+
+### Changed
+
+- **Hide-Login step layout.** Replaced inline `display:flex`/`<pre>`
+  styles with a new `.rip-input-group` (label → URL prefix → slug
+  field) and `.rip-codeblock` BEM classes. Toggling Hide-Login off
+  now visibly disables the slug field (opacity + pointer-events)
+  instead of vanishing it.
+- **Promote step alignment radios** match the settings-page parity:
+  Left, Center, Right and "Below content" with a live preview.
+- **Step indicator labels shortened** to `Connect` (was "Mode & API")
+  and `Login` (was "Login URL") so they stay on a single line at every
+  breakpoint, with `white-space: nowrap` as a safety net.
+- **Wizard navigation buttons clarified.** Step 6 ("Login") now reads
+  *Save & continue* and routes to the Promote step; step 7 ("Promote")
+  reads *Save & finish* and lands on the Done celebration.
+
 ## [1.3.0] — 2026-04-28
 
 ### New

@@ -8,7 +8,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     1.3.2
+ * @since     1.4.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *  - `safe_options()` returns the larger map of WordPress option keys used
  *    by the post-wizard `add_option()` seed in the setup wizard.
  *
- * @since 1.3.2
+ * @since 1.4.0
  */
 final class ReportedIP_Hive_Defaults {
 
@@ -90,7 +90,7 @@ final class ReportedIP_Hive_Defaults {
 	 * @param string $key Wizard default key.
 	 * @return scalar
 	 * @throws \InvalidArgumentException When the key is unknown.
-	 * @since  1.3.2
+	 * @since  1.4.0
 	 */
 	public static function get( string $key ) {
 		if ( ! array_key_exists( $key, self::WIZARD ) ) {
@@ -106,7 +106,7 @@ final class ReportedIP_Hive_Defaults {
 	 * JS can read them without bundling a duplicated copy.
 	 *
 	 * @return array<string, scalar>
-	 * @since  1.3.2
+	 * @since  1.4.0
 	 */
 	public static function wizard(): array {
 		return self::WIZARD;
@@ -116,7 +116,7 @@ final class ReportedIP_Hive_Defaults {
 	 * Return the post-wizard safe-options seed map.
 	 *
 	 * @return array<string, scalar>
-	 * @since  1.3.2
+	 * @since  1.4.0
 	 */
 	public static function safe_options(): array {
 		return self::SAFE_OPTIONS;
