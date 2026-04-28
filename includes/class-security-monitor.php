@@ -55,6 +55,7 @@ class ReportedIP_Hive_Security_Monitor {
 		'scan_404'           => array( 57, 56, 58 ),
 		'wc_login_failed'    => array( 31 ),
 		'geo_anomaly'        => array( 15 ),
+		'2fa_brute_force'    => array( 31, 18 ),
 	);
 
 	private $database;
@@ -355,19 +356,15 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
-	 * Run the full "an IP just tripped a threshold" pipeline.
+	 * Dispatch the post-trip pipeline: log, stats, auto-block, API report, admin email.
 	 *
-	 * Logs the event, updates daily stats, fires the auto-block (which in
-	 * turn consults the progressive-escalation ladder), queues a community-
-	 * mode API report, and sends the admin notification. Intentionally
-	 * public: this is the canonical entry point sensors call when they
-	 * already have their own counter (e.g. the 2FA per-IP transient
-	 * throttle in `class-two-factor.php`) and just need the consequences
-	 * dispatched coherently.
+	 * Public so sensors that maintain their own counter (e.g. the 2FA per-IP
+	 * transient throttle) can invoke the same consequences as sensors that
+	 * funnel through `track_generic_attempt()`.
 	 *
 	 * @param string $ip_address Client IP.
-	 * @param string $event_type Event slug (e.g. 'failed_login', '2fa_brute_force').
-	 * @param array  $details    Event metadata, included verbatim in logs and in the report comment.
+	 * @param string $event_type Event slug — must exist in the category and stat mapping tables, otherwise the report rolls up to fallback buckets.
+	 * @param array  $details    Event metadata, written to logs and the report comment verbatim.
 	 * @return void
 	 * @since  1.0.0
 	 */
@@ -836,6 +833,7 @@ class ReportedIP_Hive_Security_Monitor {
 			'user_enumeration'   => 'blocked_ips',
 			'rest_abuse'         => 'blocked_ips',
 			'scan_404'           => 'blocked_ips',
+			'2fa_brute_force'    => 'failed_logins',
 		);
 
 		return isset( $stat_mapping[ $event_type ] ) ? $stat_mapping[ $event_type ] : 'failed_logins';

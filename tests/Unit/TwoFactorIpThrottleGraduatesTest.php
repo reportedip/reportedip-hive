@@ -60,8 +60,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$source,
 				'increment_ip_failed_attempts() must escalate via the canonical handle_threshold_exceeded() entry point — auto_block_ip() alone bypasses community-mode API reporting and admin notification.'
 			);
-			$this->assertStringNotContainsString(
-				'$monitor->auto_block_ip(',
+			$this->assertDoesNotMatchRegularExpression(
+				'/->\s*auto_block_ip\s*\(/',
 				$source,
 				'2FA graduation must NOT call auto_block_ip() directly: that path skips report_security_event() and would silently drop community-mode reports for 2FA brute force.'
 			);
