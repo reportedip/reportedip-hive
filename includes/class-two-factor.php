@@ -1232,6 +1232,32 @@ class ReportedIP_Hive_Two_Factor {
 			),
 			HOUR_IN_SECONDS
 		);
+
+		/*
+		 * Graduate to a real DB block when the per-IP 2FA throttle reaches
+		 * its top step. 15 wrong codes in a one-hour window is unambiguous
+		 * brute force — the transient lockout was capping the response at
+		 * one hour and forgetting; promoting to wp_reportedip_hive_blocked
+		 * lets the progressive escalation (5m → … → 7d) and community-mode
+		 * reporting pipeline take over.
+		 */
+		$top_threshold = (int) max( array_keys( self::LOCKOUT_THRESHOLDS ) );
+		if ( $count >= $top_threshold && class_exists( 'ReportedIP_Hive' ) ) {
+			$client  = ReportedIP_Hive::get_instance();
+			$monitor = $client->get_security_monitor();
+			if ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) {
+				$monitor->auto_block_ip(
+					$ip,
+					'2fa_brute_force',
+					array(
+						'attempts'  => $count,
+						'threshold' => $top_threshold,
+						'window'    => 'transient',
+					)
+				);
+				delete_transient( $key );
+			}
+		}
 	}
 
 	/**

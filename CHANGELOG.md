@@ -2,6 +2,41 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.5.2] — 2026-04-28
+
+### Fixes
+
+- **Cache plugins no longer cache the "Access Denied" 403 page.** The
+  blocked-page response now defines `DONOTCACHEPAGE`, `DONOTCACHEDB`
+  and `DONOTCACHEOBJECT` (respected by WP Rocket, W3 Total Cache,
+  WP Super Cache and LiteSpeed Cache) and emits explicit
+  `Cache-Control: no-store, no-cache, must-revalidate, max-age=0`,
+  `Pragma: no-cache` plus the WordPress core `nocache_headers()`
+  set. Previously a single blocked attacker could pollute the page
+  cache with a 403 that legitimate visitors then received until the
+  cache expired.
+- **Front-end IP-block runs at `init` priority 1** instead of the
+  default priority 10. Earlier hook position so plugins that
+  themselves hook `init` at default priority do not run for blocked
+  IPs.
+- **2FA per-IP throttle graduates to a real escalation block.** The
+  in-class `LOCKOUT_THRESHOLDS` ladder (3 → 30 s, 5 → 300 s,
+  10 → 1800 s, 15 → 3600 s) was capping at one hour and the
+  `HOUR_IN_SECONDS` transient simply forgot, so a brute-forcer who
+  paced themselves around the hour was never promoted to the
+  `wp_reportedip_hive_blocked` table. When the count reaches the
+  top step, the IP is now graduated via the central
+  `auto_block_ip()` path with event type `2fa_brute_force` — that
+  trips progressive escalation (5 m → 15 m → 30 m → 24 h → 48 h →
+  7 d) and community-mode reporting just like every other sensor.
+
+### Changed
+
+- New static helper `ReportedIP_Hive::emit_block_response_headers()`
+  centralises the cache-prevention contract so it can be exercised
+  by tests without invoking the page-rendering path that ends in
+  `exit`.
+
 ## [1.5.1] — 2026-04-28
 
 ### Changed

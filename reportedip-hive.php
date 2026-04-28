@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 1.5.1
+ * Version: 1.5.2
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL v2 or later
@@ -53,7 +53,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '1.5.1' );
+define( 'REPORTEDIP_HIVE_VERSION', '1.5.2' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -165,7 +165,7 @@ class ReportedIP_Hive {
 	 * to ensure they work properly before plugins_loaded
 	 */
 	private function init_hooks() {
-		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'init', array( $this, 'init' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 
 		if ( get_option( 'reportedip_hive_disable_xmlrpc_multicall', true ) ) {
@@ -1111,12 +1111,63 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Show blocked page
+	 * Render the 403 "Access Denied" page and terminate.
+	 *
+	 * The response MUST never be cached: WP Rocket / W3 Total Cache /
+	 * WP Super Cache / LiteSpeed Cache / Cloudflare all default to caching
+	 * 403 responses unless told otherwise. A cached 403 would lock every
+	 * subsequent visitor on the same URL out of the site, even ones with
+	 * a perfectly clean IP.
+	 *
+	 * Mitigation matches the pattern used by `class-hide-login.php`:
+	 *  - `nocache_headers()` for the standard WordPress cache-prevention set
+	 *  - explicit `Cache-Control: no-store` because some CDNs only honour it
+	 *    in that exact form
+	 *  - the `DONOTCACHEPAGE` family of constants so plugin-level caches
+	 *    refuse to store the response object
+	 *
+	 * @since 1.0.0
 	 */
 	private function show_blocked_page() {
+		self::emit_block_response_headers();
 		status_header( 403 );
 		include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/blocked.php';
 		exit;
+	}
+
+	/**
+	 * Emit the cache-prevention header set used by every blocked-page response.
+	 *
+	 * Defines the four "DONOTCACHE*" constants the major plugin caches respect
+	 * (WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed) and emits explicit
+	 * `Cache-Control: no-store` + `Pragma: no-cache` for CDNs that only honour
+	 * those exact forms. Extracted as a public static helper so the unit tests
+	 * can assert the contract without invoking the page-rendering path that
+	 * ends in `exit`.
+	 *
+	 * @since 1.5.2
+	 * @return void
+	 */
+	public static function emit_block_response_headers() {
+		// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- DONOTCACHE* constants are documented WP-Rocket / W3 Total Cache / WP Super Cache / LiteSpeed integration points; their names cannot be prefixed.
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		if ( ! defined( 'DONOTCACHEDB' ) ) {
+			define( 'DONOTCACHEDB', true );
+		}
+		if ( ! defined( 'DONOTCACHEOBJECT' ) ) {
+			define( 'DONOTCACHEOBJECT', true );
+		}
+		// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound
+
+		if ( function_exists( 'nocache_headers' ) ) {
+			nocache_headers();
+		}
+		if ( ! headers_sent() ) {
+			header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+			header( 'Pragma: no-cache' );
+		}
 	}
 
 	/**

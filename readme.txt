@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -161,6 +161,14 @@ Use one of the ten recovery codes you printed during setup. Each is single-use. 
 * Documentation: [reportedip.de/docs](https://reportedip.de/docs)
 * Bug reports: [GitHub Issues](https://github.com/reportedip/reportedip-hive/issues)
 * Security disclosures: [ps@cms-admins.de](mailto:ps@cms-admins.de)
+
+== Cache compatibility ==
+
+ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed Cache) and CDNs.
+
+* **Blocked-page responses are never cached.** When a blocked IP receives the 403 "Access Denied" page, the plugin defines `DONOTCACHEPAGE`, `DONOTCACHEDB` and `DONOTCACHEOBJECT`, calls `nocache_headers()` and emits explicit `Cache-Control: no-store, no-cache, must-revalidate` plus `Pragma: no-cache`. No cache layer will store the 403 and serve it back to legitimate visitors.
+* **Sensor-protected paths are never cached by cache plugins.** Login (`wp-login.php`), admin (`/wp-admin/`), REST (`/wp-json/`), XMLRPC (`xmlrpc.php`), POST requests and logged-in users are all excluded from page caching by every reputable cache plugin out of the box — those are exactly the paths attackers target, and the IP block runs before the request reaches the protected handler.
+* **Known limitation.** A blocked attacker visiting a *publicly cached* GET URL (e.g. a cached blog post) will still receive the cached HTML. The cache layer short-circuits the request before any plugin runs. Their attempt to actually do anything (login, comment, REST, XMLRPC) is blocked normally. If you need to deny blocked IPs even for public cached pages, install a server-level firewall (Cloudflare WAF rule, Nginx `deny`, fail2ban) — that is outside the scope of a regular WordPress plugin.
 
 == Screenshots ==
 
