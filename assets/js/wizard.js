@@ -1,8 +1,9 @@
 /**
  * ReportedIP Hive — Setup Wizard JavaScript.
  *
- * Step-übergreifende Persistenz via sessionStorage. Alle Settings werden
- * beim Final-Submit auf Step 5 zentral gespeichert (ajax_complete_wizard).
+ * Cross-step persistence via sessionStorage. All settings are saved
+ * centrally when the final-submit fires from Step 6 (#rip-save-config),
+ * which calls the ajax_complete_wizard endpoint.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <ps@cms-admins.de>
@@ -241,6 +242,11 @@
 				monitor_failed_logins: $('#rip-monitor-logins').is(':checked') ? 1 : 0,
 				monitor_comments: $('#rip-monitor-comments').is(':checked') ? 1 : 0,
 				monitor_xmlrpc: $('#rip-monitor-xmlrpc').is(':checked') ? 1 : 0,
+				monitor_app_passwords: $('#rip-monitor-app-passwords').is(':checked') ? 1 : 0,
+				monitor_rest_api: $('#rip-monitor-rest-api').is(':checked') ? 1 : 0,
+				block_user_enumeration: $('#rip-block-user-enumeration').is(':checked') ? 1 : 0,
+				monitor_404_scans: $('#rip-monitor-404-scans').is(':checked') ? 1 : 0,
+				monitor_geo_anomaly: $('#rip-monitor-geo-anomaly').is(':checked') ? 1 : 0,
 				auto_block: $('#rip-auto-block').is(':checked') ? 1 : 0,
 				report_only_mode: $('#rip-report-only').is(':checked') ? 1 : 0
 			});
@@ -458,7 +464,7 @@
 		},
 
 		// ========================================================================
-		// Session-Cache
+		// Session cache
 		// ========================================================================
 
 		getSession: function () {
@@ -476,7 +482,7 @@
 				var merged = $.extend({}, current, partial);
 				window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
 			} catch (e) {
-				// Ignoriere Quota-Fehler etc.
+				/* swallow quota errors */
 			}
 		},
 
@@ -484,11 +490,11 @@
 			try {
 				window.sessionStorage.removeItem(STORAGE_KEY);
 			} catch (e) {
-				// noop
+				/* noop */
 			}
 		},
 
-		// Beim Re-Mount einer Step-Page: gespeicherte Werte vorausfüllen
+		// On step re-mount: restore saved values into the form fields
 		restoreFromSession: function () {
 			var session = this.getSession();
 
@@ -497,7 +503,7 @@
 				$('#rip-api-key').val(session.apiKey);
 			}
 
-			// Step 3: Monitoring-Toggles
+			// Step 3: Monitoring toggles
 			if ($('#rip-monitor-logins').length) {
 				if (typeof session.monitor_failed_logins !== 'undefined') {
 					$('#rip-monitor-logins').prop('checked', !!parseInt(session.monitor_failed_logins, 10));
@@ -507,6 +513,21 @@
 				}
 				if (typeof session.monitor_xmlrpc !== 'undefined') {
 					$('#rip-monitor-xmlrpc').prop('checked', !!parseInt(session.monitor_xmlrpc, 10));
+				}
+				if (typeof session.monitor_app_passwords !== 'undefined') {
+					$('#rip-monitor-app-passwords').prop('checked', !!parseInt(session.monitor_app_passwords, 10));
+				}
+				if (typeof session.monitor_rest_api !== 'undefined') {
+					$('#rip-monitor-rest-api').prop('checked', !!parseInt(session.monitor_rest_api, 10));
+				}
+				if (typeof session.block_user_enumeration !== 'undefined') {
+					$('#rip-block-user-enumeration').prop('checked', !!parseInt(session.block_user_enumeration, 10));
+				}
+				if (typeof session.monitor_404_scans !== 'undefined') {
+					$('#rip-monitor-404-scans').prop('checked', !!parseInt(session.monitor_404_scans, 10));
+				}
+				if (typeof session.monitor_geo_anomaly !== 'undefined') {
+					$('#rip-monitor-geo-anomaly').prop('checked', !!parseInt(session.monitor_geo_anomaly, 10));
 				}
 				if (typeof session.auto_block !== 'undefined') {
 					$('#rip-auto-block').prop('checked', !!parseInt(session.auto_block, 10));
