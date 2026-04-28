@@ -793,18 +793,26 @@ class ReportedIP_Hive_Setup_Wizard {
 					<h3><?php esc_html_e( 'Automation & special rules', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Two-step decision: Auto-blocking decides IF an offender gets blocked at all; the duration strategy decides HOW long. Report-only at the bottom overrides everything — when on, the plugin only watches.', 'reportedip-hive' ); ?></p>
+
 					<label class="rip-toggle">
 						<input type="checkbox" name="auto_block" id="rip-auto-block" checked>
 						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Automatically block suspicious IPs', 'reportedip-hive' ); ?></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Auto-blocking — block suspicious IPs automatically', 'reportedip-hive' ); ?></span>
 					</label>
 
-					<label class="rip-toggle">
-						<input type="checkbox" name="block_escalation_enabled" id="rip-block-escalation" <?php checked( (bool) get_option( 'reportedip_hive_block_escalation_enabled', true ) ); ?>>
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Progressive blocking (5 min → 15 min → 30 min → 24 h → 48 h → 7 d)', 'reportedip-hive' ); ?></span>
-					</label>
-					<p class="rip-help-block"><?php esc_html_e( 'Each repeat offence inside the reset window (default 30 days) bumps the offender to the next ladder step. First-time tripping legitimate IPs recover in minutes; the ladder can be edited later under Settings → Blocking.', 'reportedip-hive' ); ?></p>
+					<div id="rip-block-duration-strategy">
+						<h4 class="rip-config-card__subhead">
+							<?php esc_html_e( 'Block duration strategy', 'reportedip-hive' ); ?>
+							<span class="rip-required" aria-hidden="true">*</span>
+						</h4>
+						<label class="rip-toggle">
+							<input type="checkbox" name="block_escalation_enabled" id="rip-block-escalation" <?php checked( (bool) get_option( 'reportedip_hive_block_escalation_enabled', true ) ); ?>>
+							<span class="rip-toggle__slider"></span>
+							<span class="rip-toggle__label"><?php esc_html_e( 'Progressive ladder (5 min → 15 min → 30 min → 24 h → 48 h → 7 d) — recommended', 'reportedip-hive' ); ?></span>
+						</label>
+						<p class="rip-help-block"><?php esc_html_e( 'Each repeat offence inside the reset window (default 30 days) bumps the offender to the next ladder step. First-time tripping legitimate IPs recover in minutes; the ladder can be edited later under Settings → Blocking. Off = a fixed 24 h block for every trigger.', 'reportedip-hive' ); ?></p>
+					</div>
 
 					<hr class="rip-helper-divider">
 

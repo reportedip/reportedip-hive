@@ -65,6 +65,9 @@
 			// Step 3: monitoring toggles → warning banner
 			$(document).on('change', '#rip-monitor-logins, #rip-monitor-comments, #rip-monitor-xmlrpc', this.updateMonitoringWarning.bind(this));
 
+			// Step 3: auto-block toggle drives the duration-strategy enabled state
+			$(document).on('change', '#rip-auto-block', this.updateBlockStrategyState.bind(this));
+
 			// Step 3 → 4: cache values to sessionStorage
 			$(document).on('click', '#rip-step3-next', this.persistStep3.bind(this));
 
@@ -235,6 +238,14 @@
 
 		initStep3: function () {
 			this.updateMonitoringWarning();
+			this.updateBlockStrategyState();
+		},
+
+		updateBlockStrategyState: function () {
+			var $autoBlock = $('#rip-auto-block');
+			var $strategy  = $('#rip-block-duration-strategy');
+			if (!$autoBlock.length || !$strategy.length) { return; }
+			$strategy.toggleClass('rip-is-disabled', !$autoBlock.is(':checked'));
 		},
 
 		updateMonitoringWarning: function () {

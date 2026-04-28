@@ -983,6 +983,15 @@ body.rip-wizard-page [hidden] {
     font-weight: 500;
 }
 
+/* Subheading inside a config card — used to delimit "block duration strategy"
+   etc. without bumping to a full second card. */
+.rip-config-card__subhead {
+    margin: var(--rip-space-3, 0.75rem) 0 var(--rip-space-1, 0.25rem);
+    font-size: var(--rip-text-base, 1rem);
+    font-weight: 600;
+    color: var(--rip-gray-900, #111827);
+}
+
 /* Required-field marker — sits next to a heading to flag a must-pick group. */
 .rip-required {
     display: inline-block;

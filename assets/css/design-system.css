@@ -1066,6 +1066,19 @@
     color: var(--rip-primary);
 }
 
+.rip-settings-subsection__title {
+    margin: var(--rip-space-4) 0 var(--rip-space-1);
+    font-size: var(--rip-text-base);
+    font-weight: 600;
+    color: var(--rip-gray-900);
+}
+
+.rip-settings-subsection__title .rip-required {
+    margin-left: var(--rip-space-1);
+    color: var(--rip-warning);
+    font-weight: 700;
+}
+
 .rip-settings-section__desc {
     font-size: var(--rip-text-sm);
     color: var(--rip-gray-500);

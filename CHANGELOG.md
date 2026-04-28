@@ -2,6 +2,22 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.5.1] — 2026-04-28
+
+### Changed
+
+- **Blocking-tab clarity.** The Blocking settings page and the
+  wizard's Protection step now spell out the three-level chain:
+  Report-only mode wins over everything; Auto-blocking is the
+  master switch that decides *whether* a block happens; the
+  duration strategy (fixed length vs. progressive ladder) is the
+  follow-up choice that decides *how long*. The duration strategy
+  is now a labelled subsection with a required marker and is
+  visually disabled while Auto-blocking is off, so users cannot
+  configure a duration that will never apply. The fixed-length and
+  ladder editors swap inline depending on the toggle, removing the
+  earlier ambiguity of seeing both sets of inputs at once.
+
 ## [1.5.0] — 2026-04-28
 
 ### Fixes
