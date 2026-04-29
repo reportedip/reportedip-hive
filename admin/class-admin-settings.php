@@ -314,6 +314,159 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Render the dashboard "Relay Quota" section for PRO+ Community sites.
+	 *
+	 * Shows mail and SMS monthly usage, optional bundle balance for Business+,
+	 * and a stale-data hint when the snapshot is older than 24h.
+	 *
+	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Singleton.
+	 * @return void
+	 * @since 1.5.3
+	 */
+	private function render_relay_quota_section( $mode_manager ) {
+		$snapshot = $mode_manager->get_relay_quota_snapshot();
+		$tier     = $mode_manager->get_tier_info( $snapshot['tier'] );
+
+		$mail_used   = (int) $snapshot['mail']['used'];
+		$mail_limit  = $snapshot['mail']['limit'];
+		$sms_used    = (int) $snapshot['sms']['used'];
+		$sms_limit   = $snapshot['sms']['limit'];
+		$bundle      = (int) $snapshot['sms_bundle_balance'];
+		$reset_label = $snapshot['period_end']
+			? date_i18n( get_option( 'date_format' ), (int) $snapshot['period_end'] )
+			: __( 'next billing cycle', 'reportedip-hive' );
+		?>
+		<div class="rip-settings-section rip-relay-quota">
+			<h2 class="rip-settings-section__title">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/></svg>
+				<?php esc_html_e( 'Relay Quota', 'reportedip-hive' ); ?>
+				<?php self::render_tier_badge( $snapshot['tier'] ); ?>
+			</h2>
+			<p class="rip-settings-section__desc">
+				<?php
+				printf(
+					/* translators: 1: tier short label (e.g. PRO), 2: human-readable reset date */
+					esc_html__( 'Your %1$s plan includes managed mail and SMS delivery via reportedip.de. Counters reset on %2$s.', 'reportedip-hive' ),
+					esc_html( $tier['short_label'] ),
+					esc_html( $reset_label )
+				);
+				?>
+			</p>
+
+			<div class="rip-stat-cards">
+				<?php $this->render_quota_card( 'mail', $mail_used, $mail_limit, $reset_label, $snapshot['is_stale'] ); ?>
+				<?php $this->render_quota_card( 'sms', $sms_used, $sms_limit, $reset_label, $snapshot['is_stale'], $bundle ); ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render a single relay quota stat card with progress bar.
+	 *
+	 * @param string   $type        'mail' or 'sms'.
+	 * @param int      $used        Number consumed in current period.
+	 * @param int|null $limit       Period limit (null = unlimited).
+	 * @param string   $reset_label Human-readable reset date.
+	 * @param bool     $is_stale    Whether the snapshot is older than 24h.
+	 * @param int      $bundle      SMS bundle balance (only relevant for type=sms).
+	 * @return void
+	 * @since 1.5.3
+	 */
+	private function render_quota_card( $type, $used, $limit, $reset_label, $is_stale, $bundle = 0 ) {
+		$is_mail   = ( 'mail' === $type );
+		$label     = $is_mail ? __( 'Mail relay', 'reportedip-hive' ) : __( 'SMS relay', 'reportedip-hive' );
+		$icon      = $is_mail
+			? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>'
+			: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
+		$icon_kind = $is_mail ? 'rip-stat-card__icon--info' : 'rip-stat-card__icon--primary';
+
+		$pct = 0;
+		if ( null !== $limit && $limit > 0 ) {
+			$pct = (int) min( 100, round( $used / $limit * 100 ) );
+		}
+
+		$progress_class = '';
+		if ( $pct >= 90 ) {
+			$progress_class = 'rip-stat-card__progress--crit';
+		} elseif ( $pct >= 70 ) {
+			$progress_class = 'rip-stat-card__progress--warn';
+		}
+
+		$value_text = (string) $used;
+		$limit_text = ( null === $limit )
+			? __( 'unlimited', 'reportedip-hive' )
+			: sprintf( '/ %s', number_format_i18n( (int) $limit ) );
+		?>
+		<div class="rip-stat-card rip-stat-card--quota">
+			<div class="rip-stat-card__head">
+				<div class="rip-stat-card__icon <?php echo esc_attr( $icon_kind ); ?>">
+					<?php
+					echo wp_kses(
+						$icon,
+						array(
+							'svg'      => array(
+								'viewbox'      => true,
+								'fill'         => true,
+								'stroke'       => true,
+								'stroke-width' => true,
+							),
+							'path'     => array(
+								'd'         => true,
+								'fill-rule' => true,
+								'clip-rule' => true,
+							),
+							'polyline' => array( 'points' => true ),
+						)
+					);
+					?>
+				</div>
+				<div class="rip-stat-card__content">
+					<div class="rip-stat-card__value">
+						<?php echo esc_html( $value_text ); ?>
+						<span class="rip-stat-card__value-limit"><?php echo esc_html( $limit_text ); ?></span>
+					</div>
+					<div class="rip-stat-card__label"><?php echo esc_html( $label ); ?></div>
+				</div>
+			</div>
+
+			<?php if ( null !== $limit && $limit > 0 ) : ?>
+				<div class="rip-stat-card__progress <?php echo esc_attr( $progress_class ); ?>" style="--quota-pct: <?php echo (int) $pct; ?>;">
+					<div class="rip-stat-card__progress-bar"></div>
+				</div>
+			<?php endif; ?>
+
+			<div class="rip-stat-card__hint">
+				<?php if ( ! $is_mail && $bundle > 0 ) : ?>
+					<?php
+					printf(
+						/* translators: %s = SMS bundle balance count */
+						esc_html__( 'Bundle balance: %s SMS', 'reportedip-hive' ),
+						esc_html( number_format_i18n( $bundle ) )
+					);
+					?>
+					&nbsp;·&nbsp;
+				<?php endif; ?>
+				<?php
+				printf(
+					/* translators: %s = next reset date */
+					esc_html__( 'Resets on %s', 'reportedip-hive' ),
+					esc_html( $reset_label )
+				);
+				?>
+			</div>
+
+			<?php if ( $is_stale ) : ?>
+				<div class="rip-stat-card__hint rip-stat-card__hint--stale">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+					<?php esc_html_e( 'Awaiting fresh quota data — refreshes every 6 hours.', 'reportedip-hive' ); ?>
+				</div>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Render unified page footer with trust badges
 	 */
 	private function render_page_footer() {
@@ -1401,6 +1554,12 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 					<?php endif; ?>
 				</div>
+
+				<?php
+				if ( $mode_manager->is_community_mode() && $mode_manager->tier_at_least( 'professional' ) ) {
+					$this->render_relay_quota_section( $mode_manager );
+				}
+				?>
 
 				<!-- Charts Section -->
 				<div class="rip-charts-grid">
