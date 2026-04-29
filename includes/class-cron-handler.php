@@ -25,6 +25,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ReportedIP_Hive_Cron_Handler {
 
 	/**
+	 * Transient key used to serialise queue-cron runs. WP-Cron, an external
+	 * cron, and a manual admin trigger can all fire the same hook within
+	 * milliseconds; the lock keeps the recovery sweep + per-row claim from
+	 * racing with a parallel worker.
+	 */
+	const QUEUE_LOCK_TRANSIENT = 'reportedip_hive_queue_lock';
+
+	/**
 	 * Logger instance
 	 *
 	 * @var ReportedIP_Hive_Logger
@@ -196,13 +204,35 @@ class ReportedIP_Hive_Cron_Handler {
 	}
 
 	/**
-	 * Cron job: Process API report queue (runs every 15 minutes)
+	 * Cron job: Process API report queue (runs every 15 minutes).
+	 *
+	 * Acquires a 5-minute transient lock to prevent two workers (e.g. WP-Cron
+	 * + system cron + concurrent admin trigger) from running the queue at the
+	 * same time. The recovery sweep inside `process_report_queue()` would
+	 * otherwise race with a parallel run on the same row.
 	 */
 	public function cron_process_queue() {
+		if ( get_transient( self::QUEUE_LOCK_TRANSIENT ) ) {
+			$this->logger->info(
+				'Queue processing skipped: another worker holds the lock',
+				'system',
+				array( 'lock_key' => self::QUEUE_LOCK_TRANSIENT )
+			);
+			return;
+		}
+
+		set_transient( self::QUEUE_LOCK_TRANSIENT, 1, 5 * MINUTE_IN_SECONDS );
+
 		try {
 			$queue_result = $this->api_client->process_report_queue( REPORTEDIP_QUEUE_BATCH_SIZE );
 
-			if ( $queue_result && ! isset( $queue_result['skipped'] ) ) {
+			if ( false === $queue_result ) {
+				$this->logger->info(
+					'Queue processing skipped: api not usable (mode or configuration)',
+					'system',
+					array()
+				);
+			} elseif ( $queue_result && ! isset( $queue_result['skipped'] ) ) {
 				$this->logger->info(
 					'Queue processed (15min cron)',
 					'system',
@@ -210,6 +240,10 @@ class ReportedIP_Hive_Cron_Handler {
 						'processed' => $queue_result['processed'],
 						'errors'    => $queue_result['errors'],
 						'total'     => $queue_result['total'],
+						'recovered' => $queue_result['recovered'] ?? array(
+							'reset'  => 0,
+							'failed' => 0,
+						),
 					)
 				);
 			} elseif ( isset( $queue_result['skipped'] ) && $queue_result['skipped'] ) {
@@ -224,8 +258,10 @@ class ReportedIP_Hive_Cron_Handler {
 					);
 				}
 			}
-		} catch ( Exception $e ) {
+		} catch ( \Throwable $e ) {
 			$this->logger->error( 'Queue processing failed: ' . $e->getMessage(), 'system' );
+		} finally {
+			delete_transient( self::QUEUE_LOCK_TRANSIENT );
 		}
 	}
 

@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.5.2
+Stable tag: 1.5.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -246,6 +246,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 1.5.3 =
+
+API queue reliability hotfix. A worker that crashed mid-HTTP (PHP fatal, OOM, timeout) used to leave its queue row stuck in `processing` forever — invisible to every later cron run, never cleaned up, and the cooldown check then silently suppressed all further reports for that IP for 24 h. The queue cron now recovers stuck rows on every run, protects in-flight rows via a new `submitted_at` timestamp, runs each row in its own try/catch so one failure can't abort the batch, and serialises concurrent invocations with a transient lock. Schema bumps to v4 (auto-migrated). Strongly recommended for every Community-mode site.
+
 = 1.5.2 =
 
 Cache plugins (WP Rocket / W3TC / WP Super Cache / LiteSpeed) no longer cache the 403 "Access Denied" page back to legitimate visitors — the response now defines `DONOTCACHEPAGE` + sends `Cache-Control: no-store` and `Pragma: no-cache`. Front-end IP-block hook moved to `init` priority 1. The 2FA per-IP throttle now graduates a brute-forcer to a real progressive block at the 15th wrong code via the canonical `handle_threshold_exceeded()` pipeline — community-mode reporting and admin notification fire correctly. New `2fa_brute_force` event slug registered in both category and stat mappings.
@@ -283,6 +287,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 1.5.3 =
+API queue reliability hotfix. Recovers rows stuck in `processing` after a crashed worker, protects in-flight rows, isolates per-row failures, and serialises concurrent cron runs. Schema bumps to v4 (auto-migrated). Strongly recommended for every Community-mode site.
 
 = 1.5.2 =
 Cache-plugin-safe 403 page + 2FA brute-force graduation to progressive escalation. Strongly recommended if you run any page-cache plugin or have public-facing 2FA endpoints.

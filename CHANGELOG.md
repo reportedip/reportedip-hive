@@ -2,6 +2,46 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.5.3] — 2026-04-29
+
+### Fixes
+
+- **API queue rows no longer get stuck "pending" for 24+ hours.** A worker
+  that crashed during the HTTP call (PHP fatal, OOM, request timeout) used
+  to leave its row in `processing` forever — invisible to every later cron
+  run, never cleaned up, and counted by the cooldown check, which silently
+  suppressed every further report for that IP for 24 h. The queue cron
+  now runs a recovery sweep on every invocation that resets stuck rows
+  back to `pending` (or graduates them to `failed` once retries are
+  exhausted), and the cooldown check no longer treats `pending` or
+  `processing` rows as "recently reported".
+- **In-flight rows are protected from the recovery sweep** by a new
+  `submitted_at` timestamp set immediately before the HTTP call. Only
+  rows whose `submitted_at` is older than the configured timeout
+  (`reportedip_hive_processing_timeout_minutes`, default 10 minutes) are
+  considered crashed and reset.
+- **A failure on one queue row no longer aborts the entire batch.** Every
+  per-row send is now wrapped in `try { … } catch ( \Throwable )`; on
+  exception the offending row is marked `failed` and processing
+  continues with the next row.
+- **Concurrent queue runs are serialised.** A 5-minute transient lock
+  (`reportedip_hive_queue_lock`) prevents WP-Cron, an external cron and
+  manual admin triggers from racing the recovery sweep against each
+  other on the same row.
+- **Failed rows are deduplicated for 15 minutes** at insert time, so a
+  transient API failure no longer immediately re-queues a duplicate
+  report when the IP triggers again seconds later.
+
+### Changed
+
+- New `submitted_at datetime` column on `wp_reportedip_hive_api_queue`
+  (schema v4, migrated automatically via `dbDelta`).
+- Queue cron now logs structured "skipped: api not usable" when
+  `process_report_queue()` exits because Community mode is off or the
+  API key is unset, instead of returning silently.
+- New option `reportedip_hive_processing_timeout_minutes` (default 10)
+  controls the recovery-sweep window.
+
 ## [1.5.2] — 2026-04-28
 
 ### Fixes

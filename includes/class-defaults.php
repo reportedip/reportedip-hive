@@ -76,6 +76,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_queue_max_age_days'            => 7,
 		'reportedip_hive_queue_warning_threshold'       => 50,
 		'reportedip_hive_queue_critical_threshold'      => 200,
+		'reportedip_hive_processing_timeout_minutes'    => 10,
 		'reportedip_hive_2fa_trusted_device_days'       => 30,
 		'reportedip_hive_2fa_branded_login'             => false,
 		'reportedip_hive_2fa_extended_remember'         => false,

@@ -32,7 +32,7 @@ class ReportedIP_Hive_Database {
 	 * Current database schema version.
 	 * Increment this when adding migrations.
 	 */
-	const DB_VERSION = 3;
+	const DB_VERSION = 4;
 
 	/**
 	 * Option key for stored DB version
@@ -230,6 +230,7 @@ class ReportedIP_Hive_Database {
             attempts int(11) DEFAULT 0,
             max_attempts int(11) DEFAULT 3,
             last_attempt datetime DEFAULT NULL,
+            submitted_at datetime DEFAULT NULL,
             status enum('pending','processing','completed','failed') DEFAULT 'pending',
             error_message text DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
@@ -237,7 +238,8 @@ class ReportedIP_Hive_Database {
             KEY idx_status (status),
             KEY idx_priority (priority),
             KEY idx_report_type (report_type),
-            KEY idx_created_at (created_at)
+            KEY idx_created_at (created_at),
+            KEY idx_submitted_at (submitted_at)
         ) $charset_collate;";
 
 		$table_stats = $wpdb->prefix . 'reportedip_hive_stats';
@@ -793,10 +795,10 @@ class ReportedIP_Hive_Database {
 
 		$recently_reported = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $queue_table 
-                 WHERE ip_address = %s 
+				"SELECT COUNT(*) FROM $queue_table
+                 WHERE ip_address = %s
                  AND report_type = 'negative'
-                 AND status IN ('completed', 'pending', 'processing')
+                 AND status = 'completed'
                  AND created_at > DATE_SUB(NOW(), INTERVAL %d HOUR)",
 				$ip_address,
 				$hours
@@ -807,7 +809,7 @@ class ReportedIP_Hive_Database {
 			return array(
 				'processed' => true,
 				'reason'    => 'recently_reported',
-				'details'   => 'IP was reported to API within the last ' . $hours . ' hours',
+				'details'   => 'IP was successfully reported to API within the last ' . $hours . ' hours',
 			);
 		}
 
@@ -835,11 +837,14 @@ class ReportedIP_Hive_Database {
 
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $table_name 
-                 WHERE ip_address = %s 
-                 AND report_type = %s 
-                 AND status IN ('pending', 'processing') 
-                 AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)",
+				"SELECT COUNT(*) FROM $table_name
+                 WHERE ip_address = %s
+                 AND report_type = %s
+                 AND (
+                     ( status IN ('pending', 'processing') AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR) )
+                     OR
+                     ( status = 'failed' AND last_attempt IS NOT NULL AND last_attempt > DATE_SUB(NOW(), INTERVAL 15 MINUTE) )
+                 )",
 				$ip_address,
 				$report_type
 			)
@@ -908,8 +913,8 @@ class ReportedIP_Hive_Database {
 		if ( $status === 'processing' ) {
 			return $wpdb->query(
 				$wpdb->prepare(
-					"UPDATE $table_name 
-                     SET status = %s, attempts = attempts + 1, last_attempt = %s, error_message = %s 
+					"UPDATE $table_name
+                     SET status = %s, attempts = attempts + 1, last_attempt = %s, error_message = %s
                      WHERE id = %d",
 					$status,
 					$data['last_attempt'],
@@ -926,6 +931,100 @@ class ReportedIP_Hive_Database {
 				array( '%d' )
 			);
 		}
+	}
+
+	/**
+	 * Stamp `submitted_at` immediately before the HTTP call so the recovery
+	 * sweep can tell rows that are legitimately in flight from rows whose
+	 * worker crashed mid-request.
+	 *
+	 * @param int $report_id Queue row id.
+	 * @return int|false Number of rows updated, or false on error.
+	 * @since 1.5.3
+	 */
+	public function mark_report_submitted( $report_id ) {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+
+		return $wpdb->update(
+			$table_name,
+			array( 'submitted_at' => current_time( 'mysql' ) ),
+			array( 'id' => (int) $report_id ),
+			array( '%s' ),
+			array( '%d' )
+		);
+	}
+
+	/**
+	 * Recover queue rows that transitioned to `processing` but never finished.
+	 *
+	 * A worker that crashes between `update_api_report_status('processing')`
+	 * and the terminal `completed`/`failed` update leaves its row stranded:
+	 * `get_pending_api_reports()` filters on `IN ('pending','failed')` so the
+	 * stuck row is invisible to every subsequent cron run, and the cleanup
+	 * cron only deletes `pending|failed`. Combined with `is_recently_processed()`
+	 * counting `processing` toward the cooldown, a single crashed row can
+	 * silently suppress all reports for that IP for 24 h+.
+	 *
+	 * Rows whose `submitted_at` is recent are assumed to still be in flight
+	 * and are skipped — only rows older than `processing_timeout_minutes`
+	 * (or with NULL `submitted_at` and a similarly aged `last_attempt`) are
+	 * recovered.
+	 *
+	 * `attempts` is NOT incremented here: the counter was already bumped at
+	 * the original transition into `processing` (see `update_api_report_status`).
+	 * Re-incrementing would double-charge a single legitimate crash.
+	 *
+	 * @param int $timeout_minutes Minutes after which a `processing` row is
+	 *                             treated as crashed. Default 10.
+	 * @return array{reset:int, failed:int} Counts of rows reset to `pending`
+	 *                                      and rows marked `failed` (retries
+	 *                                      exhausted).
+	 * @since 1.5.3
+	 */
+	public function recover_stuck_processing( $timeout_minutes = 10 ) {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$timeout    = max( 1, (int) $timeout_minutes );
+
+		$reset = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE $table_name
+                 SET status = 'pending', error_message = 'recovered: stuck processing'
+                 WHERE status = 'processing'
+                   AND attempts < max_attempts
+                   AND (
+                     ( submitted_at IS NOT NULL AND submitted_at < DATE_SUB(NOW(), INTERVAL %d MINUTE) )
+                     OR
+                     ( submitted_at IS NULL AND ( last_attempt IS NULL OR last_attempt < DATE_SUB(NOW(), INTERVAL %d MINUTE) ) )
+                   )",
+				$timeout,
+				$timeout
+			)
+		);
+
+		$failed = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE $table_name
+                 SET status = 'failed', error_message = 'recovered: stuck processing, retries exhausted'
+                 WHERE status = 'processing'
+                   AND attempts >= max_attempts
+                   AND (
+                     ( submitted_at IS NOT NULL AND submitted_at < DATE_SUB(NOW(), INTERVAL %d MINUTE) )
+                     OR
+                     ( submitted_at IS NULL AND ( last_attempt IS NULL OR last_attempt < DATE_SUB(NOW(), INTERVAL %d MINUTE) ) )
+                   )",
+				$timeout,
+				$timeout
+			)
+		);
+
+		return array(
+			'reset'  => false === $reset ? 0 : (int) $reset,
+			'failed' => false === $failed ? 0 : (int) $failed,
+		);
 	}
 
 	/**

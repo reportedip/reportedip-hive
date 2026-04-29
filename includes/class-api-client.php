@@ -421,6 +421,11 @@ class ReportedIP_Hive_API {
 	 * @return array|false Processing result or false if unavailable
 	 */
 	public function process_report_queue( $limit = 10 ) {
+		$database = ReportedIP_Hive_Database::get_instance();
+
+		$timeout_minutes = (int) get_option( 'reportedip_hive_processing_timeout_minutes', 10 );
+		$recovery        = $database->recover_stuck_processing( $timeout_minutes );
+
 		if ( ! $this->can_use_api() ) {
 			return false;
 		}
@@ -486,54 +491,64 @@ class ReportedIP_Hive_API {
 			);
 		}
 
-		$database        = ReportedIP_Hive_Database::get_instance();
 		$pending_reports = $database->get_pending_api_reports( $effective_limit );
 
 		$processed = 0;
 		$errors    = 0;
 
 		foreach ( $pending_reports as $report ) {
-			$database->update_api_report_status( $report->id, 'processing' );
+			try {
+				$database->update_api_report_status( $report->id, 'processing' );
+				$database->mark_report_submitted( $report->id );
 
-			if ( $report->report_type === 'positive' ) {
-				$result  = $this->report_positive_feedback( $report->ip_address, $report->comment ?? '' );
-				$success = $result !== false;
-			} else {
-				$category_ids = explode( ',', $report->category_ids ?? '' );
-				$result       = $this->report_ip( $report->ip_address, $category_ids, $report->comment ?? '' );
-				$success      = $result['success'];
-			}
-
-			if ( $success ) {
-				$database->update_api_report_status( $report->id, 'completed' );
-				$database->update_daily_stats( 'api_reports_sent' );
-				++$processed;
-			} else {
-				$error_message   = is_array( $result ) ? ( $result['message'] ?? 'Unknown error' ) : 'Unknown error';
-				$is_rate_limited = is_array( $result ) && isset( $result['message'] ) &&
-					( strpos( strtolower( $result['message'] ), 'rate limit' ) !== false ||
-					strpos( strtolower( $result['message'] ), 'too many requests' ) !== false );
-
-				if ( $is_rate_limited ) {
-					$wpdb       = $GLOBALS['wpdb'];
-					$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
-					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Rate limit status update.
-					$wpdb->update(
-						$table_name,
-						array(
-							'status'        => 'pending',
-							'error_message' => $error_message,
-							'last_attempt'  => current_time( 'mysql' ),
-						),
-						array( 'id' => $report->id ),
-						array( '%s', '%s', '%s' ),
-						array( '%d' )
-					);
-					continue;
+				if ( $report->report_type === 'positive' ) {
+					$result  = $this->report_positive_feedback( $report->ip_address, $report->comment ?? '' );
+					$success = $result !== false;
 				} else {
-					$database->update_api_report_status( $report->id, 'failed', $error_message );
-					++$errors;
+					$category_ids = explode( ',', $report->category_ids ?? '' );
+					$result       = $this->report_ip( $report->ip_address, $category_ids, $report->comment ?? '' );
+					$success      = isset( $result['success'] ) ? (bool) $result['success'] : false;
 				}
+
+				if ( $success ) {
+					$database->update_api_report_status( $report->id, 'completed' );
+					$database->update_daily_stats( 'api_reports_sent' );
+					++$processed;
+				} else {
+					$error_message   = is_array( $result ) ? ( $result['message'] ?? 'Unknown error' ) : 'Unknown error';
+					$is_rate_limited = is_array( $result ) && isset( $result['message'] ) &&
+						( strpos( strtolower( $result['message'] ), 'rate limit' ) !== false ||
+						strpos( strtolower( $result['message'] ), 'too many requests' ) !== false );
+
+					if ( $is_rate_limited ) {
+						$wpdb       = $GLOBALS['wpdb'];
+						$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Rate limit status update.
+						$wpdb->update(
+							$table_name,
+							array(
+								'status'        => 'pending',
+								'error_message' => $error_message,
+								'last_attempt'  => current_time( 'mysql' ),
+							),
+							array( 'id' => $report->id ),
+							array( '%s', '%s', '%s' ),
+							array( '%d' )
+						);
+						continue;
+					} else {
+						$database->update_api_report_status( $report->id, 'failed', $error_message );
+						++$errors;
+					}
+				}
+			} catch ( \Throwable $e ) {
+				$database->update_api_report_status(
+					$report->id,
+					'failed',
+					'Exception: ' . get_class( $e ) . ' — ' . $e->getMessage()
+				);
+				++$errors;
+				continue;
 			}
 
 			usleep( 100000 );
@@ -543,6 +558,10 @@ class ReportedIP_Hive_API {
 			'processed' => $processed,
 			'errors'    => $errors,
 			'total'     => count( $pending_reports ),
+			'recovered' => array(
+				'reset'  => (int) ( $recovery['reset'] ?? 0 ),
+				'failed' => (int) ( $recovery['failed'] ?? 0 ),
+			),
 		);
 	}
 

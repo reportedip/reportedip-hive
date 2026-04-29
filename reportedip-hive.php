@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 1.5.2
+ * Version: 1.5.3
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL v2 or later
@@ -53,7 +53,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '1.5.2' );
+define( 'REPORTEDIP_HIVE_VERSION', '1.5.3' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -1273,6 +1273,7 @@ class ReportedIP_Hive {
 			'reportedip_hive_max_api_calls_per_hour'       => 100,
 			'reportedip_hive_queue_warning_threshold'      => 50,
 			'reportedip_hive_queue_critical_threshold'     => 200,
+			'reportedip_hive_processing_timeout_minutes'   => 10,
 			'reportedip_hive_blocked_page_contact_url'     => '',
 			'reportedip_hive_disable_xmlrpc_multicall'     => true,
 			'reportedip_hive_hide_login_enabled'           => false,
