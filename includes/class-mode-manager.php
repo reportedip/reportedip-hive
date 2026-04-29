@@ -169,7 +169,112 @@ class ReportedIP_Hive_Mode_Manager {
 				'label'       => __( 'Coordinated Attack Detection', 'reportedip-hive' ),
 				'description' => __( 'Detect coordinated attacks across the network', 'reportedip-hive' ),
 			),
+			'mail_relay_via_api'           => array(
+				'local'         => false,
+				'community'     => true,
+				'requires_tier' => 'professional',
+				'label'         => __( 'Mail Relay via reportedip.de', 'reportedip-hive' ),
+				'description'   => __( 'Send 2FA mails through our SMTP for guaranteed deliverability — no own SMTP setup needed.', 'reportedip-hive' ),
+			),
+			'sms_relay_via_api'            => array(
+				'local'         => false,
+				'community'     => true,
+				'requires_tier' => 'professional',
+				'label'         => __( 'SMS Relay via reportedip.de', 'reportedip-hive' ),
+				'description'   => __( 'Send 2FA SMS via our managed EU gateway — included with Professional and Business.', 'reportedip-hive' ),
+			),
 		);
+	}
+
+	/**
+	 * Tiers ordered by privilege level (lowest → highest).
+	 *
+	 * @var string[]
+	 */
+	const TIER_ORDER = array( 'free', 'contributor', 'professional', 'business', 'enterprise' );
+
+	/**
+	 * Map a WordPress role slug to a marketing-friendly tier label.
+	 *
+	 * @param string $role
+	 * @return string
+	 */
+	public static function tier_from_role( $role ) {
+		$map = array(
+			'reportedip_free'         => 'free',
+			'reportedip_contributor'  => 'contributor',
+			'reportedip_professional' => 'professional',
+			'reportedip_business'     => 'business',
+			'reportedip_enterprise'   => 'enterprise',
+			'reportedip_honeypot'     => 'honeypot',
+			'administrator'           => 'enterprise',
+		);
+		return $map[ (string) $role ] ?? 'free';
+	}
+
+	/**
+	 * Whether the cached tier (from /verify-key or /relay-quota) is at least $minimum.
+	 *
+	 * @param string $minimum One of TIER_ORDER values.
+	 * @return bool
+	 */
+	public function tier_at_least( $minimum ) {
+		$tier     = $this->get_current_tier();
+		$ord      = self::TIER_ORDER;
+		$idx_have = array_search( $tier, $ord, true );
+		$idx_need = array_search( $minimum, $ord, true );
+		if ( false === $idx_have || false === $idx_need ) {
+			return false;
+		}
+		return $idx_have >= $idx_need;
+	}
+
+	/**
+	 * Determine the current tier from cached API state (verify-key or relay-quota).
+	 *
+	 * @return string
+	 */
+	public function get_current_tier() {
+		$status = get_transient( 'reportedip_hive_api_status' );
+		if ( is_array( $status ) ) {
+			$role = $status['userRole'] ?? ( $status['user_role'] ?? '' );
+			if ( ! empty( $role ) ) {
+				return self::tier_from_role( (string) $role );
+			}
+		}
+		$quota = get_transient( 'reportedip_hive_relay_quota' );
+		if ( is_array( $quota ) && ! empty( $quota['tier'] ) ) {
+			return (string) $quota['tier'];
+		}
+		// Last resort: ask the relay-quota endpoint directly (it returns the role
+		// authoritatively and caches it in a 1h transient on success).
+		if ( class_exists( 'ReportedIP_Hive_API' ) ) {
+			$api = ReportedIP_Hive_API::get_instance();
+			if ( method_exists( $api, 'get_relay_quota' ) ) {
+				$fresh = $api->get_relay_quota();
+				if ( is_array( $fresh ) && ! empty( $fresh['tier'] ) ) {
+					return (string) $fresh['tier'];
+				}
+			}
+		}
+		return 'free';
+	}
+
+	/**
+	 * Whether the relay (mail or sms) is currently usable.
+	 * Requires Community mode + a tier that includes the feature.
+	 *
+	 * @param string $type 'mail' or 'sms'.
+	 * @return bool
+	 */
+	public function is_relay_available( $type = 'mail' ) {
+		$type    = ( 'sms' === $type ) ? 'sms' : 'mail';
+		$feature = $type . '_relay_via_api';
+
+		if ( ! $this->is_feature_available( $feature ) ) {
+			return false;
+		}
+		return $this->tier_at_least( 'professional' );
 	}
 
 	/**
@@ -448,5 +553,250 @@ class ReportedIP_Hive_Mode_Manager {
 		);
 
 		return isset( $modes[ $mode ] ) ? $modes[ $mode ] : $modes[ self::MODE_LOCAL ];
+	}
+
+	/**
+	 * Determine the gating status for a feature against the current mode and tier.
+	 *
+	 * Reason codes:
+	 *  - 'ok'      — feature is available
+	 *  - 'mode'    — current operation mode does not include the feature
+	 *  - 'tier'    — current tier is below the required minimum tier
+	 *  - 'unknown' — feature key is not present in the matrix
+	 *
+	 * @param string $feature Feature key from the feature matrix.
+	 * @return array{available:bool,reason:string,min_tier:?string,mode_required:?string,label:string,description:string}
+	 * @since 1.5.3
+	 */
+	public function feature_status( $feature ) {
+		$this->ensure_feature_matrix_loaded();
+
+		if ( ! isset( $this->feature_matrix[ $feature ] ) ) {
+			return array(
+				'available'     => false,
+				'reason'        => 'unknown',
+				'min_tier'      => null,
+				'mode_required' => null,
+				'label'         => '',
+				'description'   => '',
+			);
+		}
+
+		$row      = $this->feature_matrix[ $feature ];
+		$mode     = $this->get_mode();
+		$min_tier = isset( $row['requires_tier'] ) ? (string) $row['requires_tier'] : null;
+
+		$mode_required = null;
+		if ( empty( $row[ $mode ] ) ) {
+			if ( ! empty( $row['community'] ) && ! empty( $row['local'] ) ) {
+				$mode_required = null;
+			} elseif ( ! empty( $row['community'] ) ) {
+				$mode_required = self::MODE_COMMUNITY;
+			} elseif ( ! empty( $row['local'] ) ) {
+				$mode_required = self::MODE_LOCAL;
+			}
+
+			return array(
+				'available'     => false,
+				'reason'        => 'mode',
+				'min_tier'      => $min_tier,
+				'mode_required' => $mode_required,
+				'label'         => (string) ( $row['label'] ?? '' ),
+				'description'   => (string) ( $row['description'] ?? '' ),
+			);
+		}
+
+		if ( null !== $min_tier && ! $this->tier_at_least( $min_tier ) ) {
+			return array(
+				'available'     => false,
+				'reason'        => 'tier',
+				'min_tier'      => $min_tier,
+				'mode_required' => null,
+				'label'         => (string) ( $row['label'] ?? '' ),
+				'description'   => (string) ( $row['description'] ?? '' ),
+			);
+		}
+
+		return array(
+			'available'     => true,
+			'reason'        => 'ok',
+			'min_tier'      => $min_tier,
+			'mode_required' => null,
+			'label'         => (string) ( $row['label'] ?? '' ),
+			'description'   => (string) ( $row['description'] ?? '' ),
+		);
+	}
+
+	/**
+	 * Get tier display information (label, badge class, icon, color).
+	 *
+	 * @param string|null $tier Tier key (null = current tier).
+	 * @return array{key:string,label:string,short_label:string,description:string,icon:string,badge_class:string,color:string}
+	 * @since 1.5.3
+	 */
+	public function get_tier_info( $tier = null ) {
+		if ( null === $tier ) {
+			$tier = $this->get_current_tier();
+		}
+		$tier = (string) $tier;
+
+		$tiers = array(
+			'free'         => array(
+				'key'         => 'free',
+				'label'       => __( 'Free', 'reportedip-hive' ),
+				'short_label' => __( 'Free', 'reportedip-hive' ),
+				'description' => __( 'Local protection, free forever.', 'reportedip-hive' ),
+				'icon'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+				'badge_class' => 'rip-tier-badge--free',
+				'color'       => '#9CA3AF',
+			),
+			'contributor'  => array(
+				'key'         => 'contributor',
+				'label'       => __( 'Contributor', 'reportedip-hive' ),
+				'short_label' => __( 'Contrib.', 'reportedip-hive' ),
+				'description' => __( 'Honeypot operator — community contributor.', 'reportedip-hive' ),
+				'icon'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-5"/></svg>',
+				'badge_class' => 'rip-tier-badge--contributor',
+				'color'       => '#818CF8',
+			),
+			'professional' => array(
+				'key'         => 'professional',
+				'label'       => __( 'Professional', 'reportedip-hive' ),
+				'short_label' => __( 'PRO', 'reportedip-hive' ),
+				'description' => __( 'Up to 3 domains, managed mail and SMS relay, priority sync.', 'reportedip-hive' ),
+				'icon'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.3 7.2 16.9l.9-5.4L4.2 7.7l5.4-.8L12 2z"/></svg>',
+				'badge_class' => 'rip-tier-badge--professional',
+				'color'       => '#4F46E5',
+			),
+			'business'     => array(
+				'key'         => 'business',
+				'label'       => __( 'Business', 'reportedip-hive' ),
+				'short_label' => __( 'Business', 'reportedip-hive' ),
+				'description' => __( 'Agency-grade: 15 domains, whitelabel, WooCommerce, full WP-CLI.', 'reportedip-hive' ),
+				'icon'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>',
+				'badge_class' => 'rip-tier-badge--business',
+				'color'       => '#7C3AED',
+			),
+			'enterprise'   => array(
+				'key'         => 'enterprise',
+				'label'       => __( 'Enterprise', 'reportedip-hive' ),
+				'short_label' => __( 'Enterprise', 'reportedip-hive' ),
+				'description' => __( 'Unlimited domains, AVV, dedicated onboarding, priority phone support.', 'reportedip-hive' ),
+				'icon'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>',
+				'badge_class' => 'rip-tier-badge--enterprise',
+				'color'       => '#B45309',
+			),
+			'honeypot'     => array(
+				'key'         => 'honeypot',
+				'label'       => __( 'Honeypot Operator', 'reportedip-hive' ),
+				'short_label' => __( 'Honeypot', 'reportedip-hive' ),
+				'description' => __( 'Operating a honeypot node for the network.', 'reportedip-hive' ),
+				'icon'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9h12l-1 11H7L6 9zM9 9V6a3 3 0 1 1 6 0v3"/></svg>',
+				'badge_class' => 'rip-tier-badge--honeypot',
+				'color'       => '#7C2D92',
+			),
+		);
+
+		return isset( $tiers[ $tier ] ) ? $tiers[ $tier ] : $tiers['free'];
+	}
+
+	/**
+	 * Default monthly relay limits by tier (mail, sms) per pricing plan.
+	 *
+	 * @param string $tier Tier key.
+	 * @return array{mail:?int,sms:?int}
+	 * @since 1.5.3
+	 */
+	private function default_relay_limits_for_tier( $tier ) {
+		switch ( (string) $tier ) {
+			case 'professional':
+				return array(
+					'mail' => 500,
+					'sms'  => 25,
+				);
+			case 'business':
+				return array(
+					'mail' => 2500,
+					'sms'  => 75,
+				);
+			case 'enterprise':
+				return array(
+					'mail' => null,
+					'sms'  => null,
+				);
+			default:
+				return array(
+					'mail' => 0,
+					'sms'  => 0,
+				);
+		}
+	}
+
+	/**
+	 * Normalized snapshot of the current relay quota, suitable for the dashboard widget.
+	 *
+	 * Reads transient `reportedip_hive_relay_quota` (populated by API client / cron) and
+	 * fills missing fields with defaults derived from the current tier so the UI always
+	 * has something sensible to render.
+	 *
+	 * @return array{tier:string,period_start:?int,period_end:?int,mail:array{used:int,limit:?int},sms:array{used:int,limit:?int},sms_bundle_balance:int,fetched_at:?int,is_stale:bool}
+	 * @since 1.5.3
+	 */
+	public function get_relay_quota_snapshot() {
+		$tier     = $this->get_current_tier();
+		$defaults = $this->default_relay_limits_for_tier( $tier );
+
+		$snapshot = array(
+			'tier'               => $tier,
+			'period_start'       => null,
+			'period_end'         => null,
+			'mail'               => array(
+				'used'  => 0,
+				'limit' => $defaults['mail'],
+			),
+			'sms'                => array(
+				'used'  => 0,
+				'limit' => $defaults['sms'],
+			),
+			'sms_bundle_balance' => 0,
+			'fetched_at'         => null,
+			'is_stale'           => true,
+		);
+
+		$cached = get_transient( 'reportedip_hive_relay_quota' );
+		if ( ! is_array( $cached ) ) {
+			return $snapshot;
+		}
+
+		if ( ! empty( $cached['tier'] ) ) {
+			$snapshot['tier'] = (string) $cached['tier'];
+		}
+		if ( isset( $cached['period_start'] ) ) {
+			$snapshot['period_start'] = (int) $cached['period_start'];
+		}
+		if ( isset( $cached['period_end'] ) ) {
+			$snapshot['period_end'] = (int) $cached['period_end'];
+		}
+		if ( isset( $cached['mail'] ) && is_array( $cached['mail'] ) ) {
+			$snapshot['mail']['used']  = (int) ( $cached['mail']['used'] ?? 0 );
+			$snapshot['mail']['limit'] = array_key_exists( 'limit', $cached['mail'] ) ? ( null === $cached['mail']['limit'] ? null : (int) $cached['mail']['limit'] ) : $defaults['mail'];
+		}
+		if ( isset( $cached['sms'] ) && is_array( $cached['sms'] ) ) {
+			$snapshot['sms']['used']  = (int) ( $cached['sms']['used'] ?? 0 );
+			$snapshot['sms']['limit'] = array_key_exists( 'limit', $cached['sms'] ) ? ( null === $cached['sms']['limit'] ? null : (int) $cached['sms']['limit'] ) : $defaults['sms'];
+		}
+		if ( isset( $cached['sms_bundle_balance'] ) ) {
+			$snapshot['sms_bundle_balance'] = (int) $cached['sms_bundle_balance'];
+		}
+		if ( isset( $cached['fetched_at'] ) ) {
+			$snapshot['fetched_at'] = (int) $cached['fetched_at'];
+		}
+
+		$age_threshold = 24 * HOUR_IN_SECONDS;
+		if ( null !== $snapshot['fetched_at'] && ( time() - $snapshot['fetched_at'] ) < $age_threshold ) {
+			$snapshot['is_stale'] = false;
+		}
+
+		return $snapshot;
 	}
 }
