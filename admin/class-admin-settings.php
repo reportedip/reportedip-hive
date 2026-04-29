@@ -37,8 +37,6 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @param string $subtitle Page subtitle/description
 	 */
 	private function render_page_header( $title, $subtitle ) {
-		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
-		$mode_info    = $mode_manager->get_mode_info();
 		?>
 		<div class="wrap rip-wrap">
 			<div class="rip-header">
@@ -55,19 +53,263 @@ class ReportedIP_Hive_Admin_Settings {
 						<p class="rip-header__subtitle"><?php echo esc_html( $subtitle ); ?></p>
 					</div>
 				</div>
-				<div class="rip-header__actions">
-					<span class="rip-mode-badge <?php echo esc_attr( $mode_info['badge_class'] ); ?>">
-						<?php if ( $mode_info['key'] === 'local' ) : ?>
-							<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-						<?php else : ?>
-							<svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2 10h16M10 2c2.8 2.8 4.4 6.5 4.4 8s-1.6 5.2-4.4 8c-2.8-2.8-4.4-6.5-4.4-8s1.6-5.2 4.4-8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-						<?php endif; ?>
-						<?php echo esc_html( $mode_info['label'] ); ?>
-					</span>
-				</div>
+				<?php self::render_header_actions(); ?>
 			</div>
 
 			<?php $this->render_inline_notices(); ?>
+		<?php
+	}
+
+	/**
+	 * Render the header actions cluster: mode badge + tier badge.
+	 *
+	 * @param array $opts Optional flags: 'show_mode' (bool), 'show_tier' (bool).
+	 * @return void
+	 * @since 1.5.3
+	 */
+	public static function render_header_actions( $opts = array() ) {
+		$opts = wp_parse_args(
+			$opts,
+			array(
+				'show_mode' => true,
+				'show_tier' => true,
+			)
+		);
+		?>
+		<div class="rip-header__actions">
+			<?php if ( ! empty( $opts['show_mode'] ) ) : ?>
+				<?php self::render_mode_badge(); ?>
+			<?php endif; ?>
+			<?php if ( ! empty( $opts['show_tier'] ) ) : ?>
+				<?php self::render_tier_badge(); ?>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the operation-mode badge (Local Shield / Community Network).
+	 *
+	 * @param string|null $mode Optional explicit mode (defaults to current mode).
+	 * @return void
+	 * @since 1.5.3
+	 */
+	public static function render_mode_badge( $mode = null ) {
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$info         = $mode_manager->get_mode_info( $mode );
+		?>
+		<span class="rip-mode-badge <?php echo esc_attr( $info['badge_class'] ); ?>">
+			<?php if ( $info['key'] === 'local' ) : ?>
+				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+			<?php else : ?>
+				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2 10h16M10 2c2.8 2.8 4.4 6.5 4.4 8s-1.6 5.2-4.4 8c-2.8-2.8-4.4-6.5-4.4-8s1.6-5.2 4.4-8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+			<?php endif; ?>
+			<?php echo esc_html( $info['label'] ); ?>
+		</span>
+		<?php
+	}
+
+	/**
+	 * Render the tier badge.
+	 *
+	 * @param string|null $tier Optional explicit tier (defaults to current tier).
+	 * @return void
+	 * @since 1.5.3
+	 */
+	public static function render_tier_badge( $tier = null ) {
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$info         = $mode_manager->get_tier_info( $tier );
+		?>
+		<span
+			class="rip-tier-badge <?php echo esc_attr( $info['badge_class'] ); ?>"
+			title="<?php echo esc_attr( $info['description'] ); ?>"
+		>
+			<?php
+			echo wp_kses(
+				$info['icon'],
+				array(
+					'svg'    => array(
+						'viewbox'      => true,
+						'fill'         => true,
+						'stroke'       => true,
+						'stroke-width' => true,
+						'aria-hidden'  => true,
+					),
+					'path'   => array(
+						'd'            => true,
+						'fill'         => true,
+						'fill-rule'    => true,
+						'clip-rule'    => true,
+						'stroke'       => true,
+						'stroke-width' => true,
+					),
+					'circle' => array(
+						'cx'           => true,
+						'cy'           => true,
+						'r'            => true,
+						'fill'         => true,
+						'stroke'       => true,
+						'stroke-width' => true,
+					),
+					'rect'   => array(
+						'x'      => true,
+						'y'      => true,
+						'width'  => true,
+						'height' => true,
+						'rx'     => true,
+						'ry'     => true,
+					),
+				)
+			);
+			?>
+			<?php echo esc_html( $info['short_label'] ); ?>
+		</span>
+		<?php
+	}
+
+	/**
+	 * Render an upgrade-affordance chip for tier-gated controls.
+	 *
+	 * @param array $status Output of Mode_Manager::feature_status().
+	 * @param array $opts   Optional: 'href' (override URL), 'label' (override text).
+	 * @return void
+	 * @since 1.5.3
+	 */
+	public static function render_tier_lock( $status, $opts = array() ) {
+		if ( empty( $status ) || ! is_array( $status ) ) {
+			return;
+		}
+		if ( ! empty( $status['available'] ) ) {
+			return;
+		}
+
+		$reason = $status['reason'] ?? 'unknown';
+
+		if ( 'mode' === $reason ) {
+			$mode_required = (string) ( $status['mode_required'] ?? '' );
+			$label_default = ( 'community' === $mode_required )
+				? __( 'Community only', 'reportedip-hive' )
+				: __( 'Mode required', 'reportedip-hive' );
+			$label         = $opts['label'] ?? $label_default;
+			$href          = $opts['href'] ?? admin_url( 'admin.php?page=reportedip-hive-settings&tab=general' );
+			?>
+			<a href="<?php echo esc_url( $href ); ?>" class="rip-tier-lock rip-tier-lock--mode">
+				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h.5A1.5 1.5 0 0117 10.5v6A1.5 1.5 0 0115.5 18h-11A1.5 1.5 0 013 16.5v-6A1.5 1.5 0 014.5 9H5zm2 0V7a3 3 0 116 0v2H7z" clip-rule="evenodd"/></svg>
+				<?php echo esc_html( $label ); ?>
+			</a>
+			<?php
+			return;
+		}
+
+		if ( 'tier' === $reason ) {
+			$min_tier   = (string) ( $status['min_tier'] ?? 'professional' );
+			$mm         = ReportedIP_Hive_Mode_Manager::get_instance();
+			$tier_label = $mm->get_tier_info( $min_tier )['short_label'];
+			$variant    = ( 'business' === $min_tier || 'enterprise' === $min_tier )
+				? 'rip-tier-lock--business'
+				: '';
+			$href       = $opts['href'] ?? ( defined( 'REPORTEDIP_UPGRADE_URL' ) ? REPORTEDIP_UPGRADE_URL : 'https://reportedip.de/pricing/' );
+			$label      = $opts['label'] ?? sprintf(
+				/* translators: %s = tier name (e.g. "PRO", "Business") */
+				__( '%s+', 'reportedip-hive' ),
+				$tier_label
+			);
+			?>
+			<a
+				href="<?php echo esc_url( $href ); ?>"
+				class="rip-tier-lock <?php echo esc_attr( $variant ); ?>"
+				target="_blank"
+				rel="noopener noreferrer"
+			>
+				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h.5A1.5 1.5 0 0117 10.5v6A1.5 1.5 0 0115.5 18h-11A1.5 1.5 0 013 16.5v-6A1.5 1.5 0 014.5 9H5zm2 0V7a3 3 0 116 0v2H7z" clip-rule="evenodd"/></svg>
+				<?php echo esc_html( $label ); ?>
+			</a>
+			<?php
+		}
+	}
+
+	/**
+	 * Render the Local-vs-Community comparison cards.
+	 *
+	 * Reused by the Settings General tab (interactive radio cards) and the
+	 * setup wizard step 1 (read-only value-proposition view).
+	 *
+	 * @param array $opts {
+	 *     Optional. Render flags.
+	 *     @type bool        $interactive Whether to render radio inputs (default true).
+	 *     @type string|null $selected    Pre-selected mode key (default current mode).
+	 *     @type string|null $highlight   Optional mode key to visually highlight even when not selected.
+	 * }
+	 * @return void
+	 * @since 1.5.3
+	 */
+	public static function render_mode_comparison( $opts = array() ) {
+		$opts = wp_parse_args(
+			$opts,
+			array(
+				'interactive' => true,
+				'selected'    => null,
+				'highlight'   => null,
+			)
+		);
+
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$selected     = $opts['selected'] ?? $mode_manager->get_mode();
+		$interactive  = ! empty( $opts['interactive'] );
+		$highlight    = $opts['highlight'];
+		$wrapper_tag  = $interactive ? 'label' : 'div';
+		?>
+		<div class="rip-mode-cards">
+			<<?php echo esc_html( $wrapper_tag ); ?>
+				class="rip-mode-card <?php echo $selected === 'local' ? 'rip-mode-card--selected' : ''; ?> <?php echo $highlight === 'local' ? 'rip-mode-card--highlight' : ''; ?>"
+			>
+				<?php if ( $interactive ) : ?>
+					<input type="radio" name="reportedip_hive_operation_mode" value="local" <?php checked( $selected, 'local' ); ?> class="rip-mode-card__input" />
+				<?php endif; ?>
+				<div class="rip-mode-card__icon">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+				</div>
+				<div class="rip-mode-card__content">
+					<h3 class="rip-mode-card__title"><?php esc_html_e( 'Local Protection', 'reportedip-hive' ); ?></h3>
+					<p class="rip-mode-card__desc"><?php esc_html_e( 'Standalone protection without API connection. Perfect for privacy-focused sites.', 'reportedip-hive' ); ?></p>
+					<ul class="rip-mode-card__features">
+						<li><?php esc_html_e( 'Works offline', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'No account required', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'Local blocking only', 'reportedip-hive' ); ?></li>
+					</ul>
+				</div>
+				<?php if ( $interactive ) : ?>
+					<span class="rip-mode-card__check">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+					</span>
+				<?php endif; ?>
+			</<?php echo esc_html( $wrapper_tag ); ?>>
+
+			<<?php echo esc_html( $wrapper_tag ); ?>
+				class="rip-mode-card <?php echo $selected === 'community' ? 'rip-mode-card--selected' : ''; ?> <?php echo $highlight === 'community' ? 'rip-mode-card--highlight' : ''; ?>"
+			>
+				<?php if ( $interactive ) : ?>
+					<input type="radio" name="reportedip_hive_operation_mode" value="community" <?php checked( $selected, 'community' ); ?> class="rip-mode-card__input" />
+				<?php endif; ?>
+				<div class="rip-mode-card__icon rip-mode-card__icon--community">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2c3 3.6 4.7 7.4 4.7 10s-1.7 6.4-4.7 10c-3-3.6-4.7-7.4-4.7-10s1.7-6.4 4.7-10z"/></svg>
+				</div>
+				<div class="rip-mode-card__content">
+					<h3 class="rip-mode-card__title"><?php esc_html_e( 'Community Network', 'reportedip-hive' ); ?></h3>
+					<p class="rip-mode-card__desc"><?php esc_html_e( 'Join thousands of sites sharing threat intelligence. Collective protection powered by community.', 'reportedip-hive' ); ?></p>
+					<ul class="rip-mode-card__features">
+						<li><?php esc_html_e( 'Real-time threat data', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'Community blocklists', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'GDPR compliant', 'reportedip-hive' ); ?></li>
+					</ul>
+				</div>
+				<?php if ( $interactive ) : ?>
+					<span class="rip-mode-card__check">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+				</span>
+				<?php endif; ?>
+			</<?php echo esc_html( $wrapper_tag ); ?>>
+		</div>
 		<?php
 	}
 
@@ -1866,7 +2108,6 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	private function render_general_settings_tab() {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
-		$current_mode = $mode_manager->get_mode();
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
@@ -1875,45 +2116,7 @@ class ReportedIP_Hive_Admin_Settings {
 			</h2>
 			<p class="rip-settings-section__desc"><?php esc_html_e( 'Choose how ReportedIP Hive should operate. You can switch modes at any time.', 'reportedip-hive' ); ?></p>
 
-			<div class="rip-mode-cards">
-				<label class="rip-mode-card <?php echo $current_mode === 'local' ? 'rip-mode-card--selected' : ''; ?>">
-					<input type="radio" name="reportedip_hive_operation_mode" value="local" <?php checked( $current_mode, 'local' ); ?> class="rip-mode-card__input" />
-					<div class="rip-mode-card__icon">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-					</div>
-					<div class="rip-mode-card__content">
-						<h3 class="rip-mode-card__title"><?php esc_html_e( 'Local Protection', 'reportedip-hive' ); ?></h3>
-						<p class="rip-mode-card__desc"><?php esc_html_e( 'Standalone protection without API connection. Perfect for privacy-focused sites.', 'reportedip-hive' ); ?></p>
-						<ul class="rip-mode-card__features">
-							<li><?php esc_html_e( 'Works offline', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'No account required', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Local blocking only', 'reportedip-hive' ); ?></li>
-						</ul>
-					</div>
-					<span class="rip-mode-card__check">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-					</span>
-				</label>
-
-				<label class="rip-mode-card <?php echo $current_mode === 'community' ? 'rip-mode-card--selected' : ''; ?>">
-					<input type="radio" name="reportedip_hive_operation_mode" value="community" <?php checked( $current_mode, 'community' ); ?> class="rip-mode-card__input" />
-					<div class="rip-mode-card__icon rip-mode-card__icon--community">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2c3 3.6 4.7 7.4 4.7 10s-1.7 6.4-4.7 10c-3-3.6-4.7-7.4-4.7-10s1.7-6.4 4.7-10z"/></svg>
-					</div>
-					<div class="rip-mode-card__content">
-						<h3 class="rip-mode-card__title"><?php esc_html_e( 'Community Network', 'reportedip-hive' ); ?></h3>
-						<p class="rip-mode-card__desc"><?php esc_html_e( 'Join thousands of sites sharing threat intelligence. Collective protection powered by community.', 'reportedip-hive' ); ?></p>
-						<ul class="rip-mode-card__features">
-							<li><?php esc_html_e( 'Real-time threat data', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Community blocklists', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'GDPR compliant', 'reportedip-hive' ); ?></li>
-						</ul>
-					</div>
-					<span class="rip-mode-card__check">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-					</span>
-				</label>
-			</div>
+			<?php self::render_mode_comparison( array( 'interactive' => true ) ); ?>
 			<p class="rip-help-text"><?php esc_html_e( 'Mode changes take effect immediately.', 'reportedip-hive' ); ?></p>
 		</div>
 
@@ -3379,11 +3582,41 @@ class ReportedIP_Hive_Admin_Settings {
 			),
 			'professional' => array(
 				'label'       => 'Professional',
+				'price'       => '€14.90 / mo · €149 / yr',
 				'reports_day' => 1000,
 				'checks_day'  => 25000,
+				'mail_per_mo' => 500,
+				'sms_per_mo'  => 25,
+				'domains'     => 3,
 				'features'    => array(
-					__( 'Bulk operations', 'reportedip-hive' ),
-					__( 'Analytics & trends', 'reportedip-hive' ),
+					__( '500 2FA mails / month via reportedip.de SMTP', 'reportedip-hive' ),
+					__( '25 2FA SMS / month — no Twilio account needed', 'reportedip-hive' ),
+					__( 'Multi-site licence (3 domains)', 'reportedip-hive' ),
+					__( 'Priority sync (daily blacklist download)', 'reportedip-hive' ),
+					__( '2FA usage reports & per-role policies', 'reportedip-hive' ),
+					__( 'Bulk operations & analytics', 'reportedip-hive' ),
+					__( 'Email support', 'reportedip-hive' ),
+				),
+				'cta_type'    => 'upgrade',
+				'in_pricing'  => true,
+			),
+			'business'     => array(
+				'label'       => 'Business',
+				'price'       => '€39 / mo · €389 / yr',
+				'reports_day' => 5000,
+				'checks_day'  => 100000,
+				'mail_per_mo' => 2500,
+				'sms_per_mo'  => 75,
+				'domains'     => 15,
+				'features'    => array(
+					__( '2,500 2FA mails / month', 'reportedip-hive' ),
+					__( '75 2FA SMS / month + prepaid bundles', 'reportedip-hive' ),
+					__( 'Multi-site licence (15 domains)', 'reportedip-hive' ),
+					__( 'Whitelabel (wizards, 2FA page, all texts & email templates)', 'reportedip-hive' ),
+					__( 'WooCommerce integration', 'reportedip-hive' ),
+					__( 'Full WP-CLI automation', 'reportedip-hive' ),
+					__( 'Restrict user login times', 'reportedip-hive' ),
+					__( 'GDPR export tool', 'reportedip-hive' ),
 					__( 'Priority support', 'reportedip-hive' ),
 				),
 				'cta_type'    => 'upgrade',
@@ -3391,13 +3624,18 @@ class ReportedIP_Hive_Admin_Settings {
 			),
 			'enterprise'   => array(
 				'label'       => 'Enterprise',
+				'price'       => 'On request',
 				'reports_day' => -1,
 				'checks_day'  => -1,
+				'mail_per_mo' => -1,
+				'sms_per_mo'  => -1,
+				'domains'     => -1,
 				'features'    => array(
-					__( 'Unlimited API calls', 'reportedip-hive' ),
-					__( 'Bulk import/export', 'reportedip-hive' ),
-					__( 'White-label & SLA', 'reportedip-hive' ),
-					__( 'Priority support', 'reportedip-hive' ),
+					__( 'Unlimited API calls and reports', 'reportedip-hive' ),
+					__( 'Custom SMS volume + dedicated sender', 'reportedip-hive' ),
+					__( 'Phone support with 4 h SLA', 'reportedip-hive' ),
+					__( 'Tailored DPA / AVV adjustments', 'reportedip-hive' ),
+					__( 'Dedicated onboarding', 'reportedip-hive' ),
 				),
 				'cta_type'    => 'contact',
 				'in_pricing'  => true,
@@ -3425,6 +3663,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_free'         => 'free',
 			'reportedip_contributor'  => 'contributor',
 			'reportedip_professional' => 'professional',
+			'reportedip_business'     => 'business',
 			'reportedip_enterprise'   => 'enterprise',
 			'reportedip_honeypot'     => 'honeypot',
 			'subscriber'              => 'free',
@@ -3763,18 +4002,58 @@ class ReportedIP_Hive_Admin_Settings {
 						);
 						$unlimited   = __( 'Unlimited', 'reportedip-hive' );
 						?>
+						<div class="rip-relay-highlights" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+							<div class="rip-card" style="padding:16px;border-left:4px solid var(--rip-primary,#4F46E5);">
+								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;">
+									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+									<?php esc_html_e( '100% mail delivery via reportedip.de', 'reportedip-hive' ); ?>
+								</h3>
+								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
+									<li><?php esc_html_e( 'Clean SPF / DKIM / DMARC reputation — no more spam folders', 'reportedip-hive' ); ?></li>
+									<li><?php esc_html_e( 'No SMTP setup on your server, no own credentials to rotate', 'reportedip-hive' ); ?></li>
+									<li><?php esc_html_e( 'Branded sender, optional reply-to override', 'reportedip-hive' ); ?></li>
+								</ul>
+								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">
+									<?php esc_html_e( 'Available from Professional (500/mo) and Business (2,500/mo).', 'reportedip-hive' ); ?>
+								</p>
+							</div>
+							<div class="rip-card" style="padding:16px;border-left:4px solid var(--rip-success,#10B981);">
+								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;">
+									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+									<?php esc_html_e( 'SMS-2FA without a Twilio account', 'reportedip-hive' ); ?>
+								</h3>
+								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
+									<li><?php esc_html_e( 'No third-party SMS contract, no top-up management', 'reportedip-hive' ); ?></li>
+									<li><?php esc_html_e( 'EU-only routing — Toll-Fraud blocked, GDPR-friendly', 'reportedip-hive' ); ?></li>
+									<li><?php esc_html_e( 'Server-side anti-spam: per-recipient backoff (2/5/15/30/60 min)', 'reportedip-hive' ); ?></li>
+								</ul>
+								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">
+									<?php esc_html_e( 'Available from Professional (25/mo) and Business (75/mo + bundles).', 'reportedip-hive' ); ?>
+								</p>
+							</div>
+						</div>
+
 						<div class="rip-pricing-grid">
 							<?php foreach ( $plans as $slug => $plan ) : ?>
 								<?php
 								$is_active   = ( $active_slug === $slug );
 								$reports_txt = $plan['reports_day'] < 0 ? $unlimited : number_format_i18n( $plan['reports_day'] );
 								$checks_txt  = $plan['checks_day'] < 0 ? $unlimited : number_format_i18n( $plan['checks_day'] );
+								$mail_txt    = isset( $plan['mail_per_mo'] ) ? ( $plan['mail_per_mo'] < 0 ? $unlimited : ( $plan['mail_per_mo'] > 0 ? number_format_i18n( $plan['mail_per_mo'] ) . '/mo' : '—' ) ) : '—';
+								$sms_txt     = isset( $plan['sms_per_mo'] ) ? ( $plan['sms_per_mo'] < 0 ? $unlimited : ( $plan['sms_per_mo'] > 0 ? number_format_i18n( $plan['sms_per_mo'] ) . '/mo' : '—' ) ) : '—';
+								$domains_txt = isset( $plan['domains'] ) ? ( $plan['domains'] < 0 ? $unlimited : (string) $plan['domains'] ) : '1';
+								$price_txt   = isset( $plan['price'] ) ? (string) $plan['price'] : '';
 								?>
 								<div class="rip-pricing-card <?php echo $is_active ? 'rip-pricing-card--active' : ''; ?>">
 									<?php if ( $is_active ) : ?>
 										<span class="rip-pricing-card__badge"><?php esc_html_e( 'Current tier', 'reportedip-hive' ); ?></span>
 									<?php endif; ?>
 									<h3 class="rip-pricing-card__title"><?php echo esc_html( $plan['label'] ); ?></h3>
+									<?php if ( '' !== $price_txt ) : ?>
+										<p class="rip-pricing-card__price-tag" style="font-weight:600;color:var(--rip-primary,#4F46E5);margin:4px 0;">
+											<?php echo esc_html( $price_txt ); ?>
+										</p>
+									<?php endif; ?>
 									<p class="rip-pricing-card__price">
 										<?php echo esc_html( $reports_txt ); ?>
 										<small><?php esc_html_e( 'Reports/day', 'reportedip-hive' ); ?></small>
@@ -3789,6 +4068,13 @@ class ReportedIP_Hive_Admin_Settings {
 											)
 										);
 										?>
+									</p>
+									<p class="rip-pricing-card__subprice" style="font-size:0.8125rem;color:var(--rip-gray-600,#4B5563);">
+										<?php echo esc_html( sprintf( __( 'Mail relay: %s', 'reportedip-hive' ), $mail_txt ) ); ?>
+										&nbsp;·&nbsp;
+										<?php echo esc_html( sprintf( __( 'SMS relay: %s', 'reportedip-hive' ), $sms_txt ) ); ?>
+										&nbsp;·&nbsp;
+										<?php echo esc_html( sprintf( __( 'Domains: %s', 'reportedip-hive' ), $domains_txt ) ); ?>
 									</p>
 									<ul class="rip-pricing-card__features">
 										<?php foreach ( $plan['features'] as $feature ) : ?>
@@ -4003,6 +4289,15 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 		</div>
 
+		<?php
+		$preview_align_map = array(
+			'left'   => 'flex-start',
+			'center' => 'center',
+			'right'  => 'flex-end',
+			'below'  => 'center',
+		);
+		$preview_justify   = $preview_align_map[ $auto_align ] ?? 'center';
+		?>
 		<div class="rip-card rip-mb-6">
 			<div class="rip-card__header">
 				<h2 class="rip-card__title">
@@ -4011,6 +4306,21 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 			</div>
 			<div class="rip-card__body">
+				<div id="rip-auto-footer-preview" style="background:var(--rip-gray-50);border:1px dashed var(--rip-gray-300);border-radius:var(--rip-radius-lg);padding:1.5em;min-height:90px;display:flex;align-items:center;justify-content:<?php echo esc_attr( $preview_justify ); ?>;margin-bottom:.6em;">
+					<?php
+					echo $shortcodes->build_element( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes its own attributes; the custom-element wrapper would be stripped by wp_kses.
+						$auto_variant,
+						array(
+							'utm_medium' => 'admin-preview',
+							'theme'      => 'dark',
+							'align'      => 'center',
+						)
+					);
+					?>
+				</div>
+				<p style="margin:0 0 1.25em;font-size:.85em;color:var(--rip-gray-600);">
+					<?php esc_html_e( 'Live preview — updates as you change the variant and position below.', 'reportedip-hive' ); ?>
+				</p>
 				<form method="post" action="options.php">
 					<?php settings_fields( 'reportedip_hive_promote' ); ?>
 					<input type="hidden" name="_wp_http_referer" value="<?php echo esc_attr( admin_url( 'admin.php?page=reportedip-hive-community&subtab=promote' ) ); ?>">
@@ -4064,6 +4374,31 @@ class ReportedIP_Hive_Admin_Settings {
 						<button type="submit" class="rip-button rip-button--primary"><?php esc_html_e( 'Save', 'reportedip-hive' ); ?></button>
 					</p>
 				</form>
+				<script>
+				(function(){
+					var wrap = document.getElementById('rip-auto-footer-preview');
+					if (!wrap) return;
+					var initial = wrap.querySelector('rip-hive-banner');
+					if (!initial) return;
+					var blueprint = initial.cloneNode(true);
+					var alignMap = {left:'flex-start', center:'center', right:'flex-end', below:'center'};
+					function getRadio(name){
+						var el = document.querySelector('input[name="' + name + '"]:checked');
+						return el ? el.value : '';
+					}
+					function rerender(){
+						var variant = getRadio('reportedip_hive_auto_footer_variant') || 'badge';
+						var align   = getRadio('reportedip_hive_auto_footer_align') || 'center';
+						var fresh   = blueprint.cloneNode(true);
+						fresh.setAttribute('data-variant', variant);
+						wrap.replaceChildren(fresh);
+						wrap.style.justifyContent = alignMap[align] || 'center';
+					}
+					document.querySelectorAll('input[name="reportedip_hive_auto_footer_variant"], input[name="reportedip_hive_auto_footer_align"]').forEach(function(r){
+						r.addEventListener('change', rerender);
+					});
+				})();
+				</script>
 			</div>
 		</div>
 
