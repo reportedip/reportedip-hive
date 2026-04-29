@@ -361,9 +361,12 @@ class ReportedIP_Hive_Setup_Wizard {
 				</svg>
 				<span class="rip-wizard__logo-text">ReportedIP Hive</span>
 			</div>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive' ) ); ?>" class="rip-wizard__skip-link" id="rip-skip-wizard">
-				<?php esc_html_e( 'Skip setup', 'reportedip-hive' ); ?> →
-			</a>
+			<div class="rip-wizard__header-actions">
+				<?php ReportedIP_Hive_Admin_Settings::render_tier_badge(); ?>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive' ) ); ?>" class="rip-wizard__skip-link" id="rip-skip-wizard">
+					<?php esc_html_e( 'Skip setup', 'reportedip-hive' ); ?> →
+				</a>
+			</div>
 		</header>
 		<?php
 	}

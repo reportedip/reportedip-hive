@@ -132,6 +132,12 @@ body.rip-wizard-page [hidden] {
     color: var(--rip-primary);
 }
 
+.rip-wizard__header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-3);
+}
+
 .rip-wizard__skip-link {
     color: var(--rip-gray-600);
     text-decoration: none;

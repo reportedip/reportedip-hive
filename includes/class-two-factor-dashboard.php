@@ -47,9 +47,6 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 		$users            = self::list_users( 200 );
 		$export_users_url = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=users' ), 'reportedip_hive_2fa_export' );
 		$export_audit_url = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=audit' ), 'reportedip_hive_2fa_export' );
-
-		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
-		$mode_info    = $mode_manager->get_mode_info();
 		?>
 		<div class="wrap rip-wrap">
 			<div class="rip-header">
@@ -66,16 +63,7 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 						<p class="rip-header__subtitle"><?php esc_html_e( 'Overview of two-factor authentication for all users', 'reportedip-hive' ); ?></p>
 					</div>
 				</div>
-				<div class="rip-header__actions">
-					<span class="rip-mode-badge <?php echo esc_attr( $mode_info['badge_class'] ); ?>">
-						<?php if ( 'local' === $mode_info['key'] ) : ?>
-							<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-						<?php else : ?>
-							<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2 10h16M10 2c2.8 2.8 4.4 6.5 4.4 8s-1.6 5.2-4.4 8c-2.8-2.8-4.4-6.5-4.4-8s1.6-5.2 4.4-8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-						<?php endif; ?>
-						<?php echo esc_html( $mode_info['label'] ); ?>
-					</span>
-				</div>
+				<?php ReportedIP_Hive_Admin_Settings::render_header_actions(); ?>
 			</div>
 
 			<div class="rip-content">
