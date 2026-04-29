@@ -257,6 +257,149 @@
 }
 
 /* ==========================================================================
+   Tier Badge
+   ========================================================================== */
+
+.rip-tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rip-space-2);
+    padding: var(--rip-space-2) var(--rip-space-4);
+    border-radius: var(--rip-radius-full);
+    font-size: var(--rip-text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: var(--rip-transition);
+    border: 1px solid transparent;
+    line-height: 1;
+}
+
+.rip-tier-badge svg {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.rip-tier-badge--free {
+    background: var(--rip-gray-200);
+    color: var(--rip-gray-700);
+    border-color: var(--rip-gray-300);
+}
+
+.rip-tier-badge--contributor {
+    background: rgba(129, 140, 248, 0.15);
+    color: var(--rip-primary);
+    border-color: rgba(129, 140, 248, 0.4);
+}
+
+.rip-tier-badge--professional {
+    background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    color: #FFFFFF;
+    border-color: rgba(124, 58, 237, 0.4);
+    box-shadow: 0 1px 4px rgba(79, 70, 229, 0.35);
+}
+
+.rip-tier-badge--business {
+    background: linear-gradient(135deg, #7C3AED, #DB2777);
+    color: #FFFFFF;
+    border-color: rgba(219, 39, 119, 0.4);
+    box-shadow: 0 1px 4px rgba(124, 58, 237, 0.35);
+}
+
+.rip-tier-badge--enterprise {
+    background: linear-gradient(135deg, #B45309, #D97706);
+    color: #FFFFFF;
+    border-color: rgba(180, 83, 9, 0.4);
+    box-shadow: 0 1px 4px rgba(180, 83, 9, 0.35);
+}
+
+.rip-tier-badge--honeypot {
+    background: linear-gradient(135deg, #5B21B6, #7C2D92);
+    color: #FCD34D;
+    border-color: rgba(124, 45, 146, 0.4);
+}
+
+.rip-header .rip-tier-badge--free {
+    background: rgba(255, 255, 255, 0.12);
+    color: #E5E7EB;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.rip-header .rip-tier-badge--contributor {
+    background: rgba(129, 140, 248, 0.25);
+    color: #C7D2FE;
+    border-color: rgba(165, 180, 252, 0.4);
+}
+
+/* ==========================================================================
+   Tier Lock (chip next to tier-gated controls)
+   ========================================================================== */
+
+.rip-tier-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rip-space-1);
+    padding: 0.15rem var(--rip-space-2);
+    border-radius: var(--rip-radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    background: rgba(180, 83, 9, 0.1);
+    color: #B45309;
+    border: 1px solid rgba(180, 83, 9, 0.3);
+    text-decoration: none;
+    cursor: help;
+    vertical-align: middle;
+    transition: var(--rip-transition);
+}
+
+a.rip-tier-lock,
+button.rip-tier-lock {
+    cursor: pointer;
+}
+
+a.rip-tier-lock:hover,
+button.rip-tier-lock:hover {
+    background: rgba(180, 83, 9, 0.18);
+    color: #92400E;
+    text-decoration: none;
+    border-color: rgba(180, 83, 9, 0.5);
+}
+
+.rip-tier-lock svg {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.rip-tier-lock--business {
+    background: rgba(124, 58, 237, 0.1);
+    color: #6D28D9;
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+a.rip-tier-lock--business:hover,
+button.rip-tier-lock--business:hover {
+    background: rgba(124, 58, 237, 0.18);
+    color: #5B21B6;
+    border-color: rgba(124, 58, 237, 0.5);
+}
+
+.rip-tier-lock--mode {
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+a.rip-tier-lock--mode:hover,
+button.rip-tier-lock--mode:hover {
+    background: rgba(16, 185, 129, 0.18);
+    color: #065F46;
+    border-color: rgba(16, 185, 129, 0.5);
+}
+
+/* ==========================================================================
    Cards
    ========================================================================== */
 
@@ -411,6 +554,78 @@
     font-size: var(--rip-text-sm);
     color: var(--rip-gray-500);
     margin-top: var(--rip-space-1);
+}
+
+/* ==========================================================================
+   Stat Card — Quota variant
+   ========================================================================== */
+
+.rip-stat-card--quota {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--rip-space-3);
+}
+
+.rip-stat-card--quota .rip-stat-card__head {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-3);
+}
+
+.rip-stat-card--quota .rip-stat-card__value {
+    font-size: var(--rip-text-xl);
+    line-height: 1.1;
+}
+
+.rip-stat-card--quota .rip-stat-card__value-limit {
+    font-size: var(--rip-text-base);
+    font-weight: 500;
+    color: var(--rip-gray-500);
+}
+
+.rip-stat-card__progress {
+    --quota-pct: 0;
+    --quota-color: var(--rip-success);
+    width: 100%;
+    height: 8px;
+    background: var(--rip-gray-100);
+    border-radius: var(--rip-radius-full);
+    overflow: hidden;
+    position: relative;
+}
+
+.rip-stat-card__progress-bar {
+    height: 100%;
+    width: calc(var(--quota-pct, 0) * 1%);
+    background: var(--quota-color, var(--rip-success));
+    border-radius: var(--rip-radius-full);
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.rip-stat-card__progress--warn {
+    --quota-color: var(--rip-warning);
+}
+
+.rip-stat-card__progress--crit {
+    --quota-color: var(--rip-danger);
+}
+
+.rip-stat-card__hint {
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-500);
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-2);
+}
+
+.rip-stat-card__hint--stale {
+    color: var(--rip-warning);
+}
+
+.rip-stat-card__hint svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
 }
 
 /* ==========================================================================
