@@ -55,6 +55,13 @@ class ReportedIP_Hive_Mode_Manager {
 	private $cached_mode = null;
 
 	/**
+	 * Cached tier value for the current request lifecycle.
+	 *
+	 * @var string|null
+	 */
+	private $cached_tier = null;
+
+	/**
 	 * Feature definitions for each mode
 	 *
 	 * @var array
@@ -77,6 +84,17 @@ class ReportedIP_Hive_Mode_Manager {
 	 * Constructor
 	 */
 	private function __construct() {
+		add_action( 'reportedip_hive_tier_changed', array( $this, 'flush_cached_tier' ) );
+	}
+
+	/**
+	 * Reset the per-request tier memo. Listens on `reportedip_hive_tier_changed`.
+	 *
+	 * @return void
+	 * @since 1.5.3
+	 */
+	public function flush_cached_tier() {
+		$this->cached_tier = null;
 	}
 
 	/**
@@ -235,29 +253,39 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @return string
 	 */
 	public function get_current_tier() {
+		if ( null !== $this->cached_tier ) {
+			return $this->cached_tier;
+		}
+
+		$tier   = 'free';
 		$status = get_transient( 'reportedip_hive_api_status' );
 		if ( is_array( $status ) ) {
 			$role = $status['userRole'] ?? ( $status['user_role'] ?? '' );
 			if ( ! empty( $role ) ) {
-				return self::tier_from_role( (string) $role );
+				$tier              = self::tier_from_role( (string) $role );
+				$this->cached_tier = $tier;
+				return $tier;
 			}
 		}
 		$quota = get_transient( 'reportedip_hive_relay_quota' );
 		if ( is_array( $quota ) && ! empty( $quota['tier'] ) ) {
-			return (string) $quota['tier'];
+			$tier              = (string) $quota['tier'];
+			$this->cached_tier = $tier;
+			return $tier;
 		}
-		// Last resort: ask the relay-quota endpoint directly (it returns the role
-		// authoritatively and caches it in a 1h transient on success).
 		if ( class_exists( 'ReportedIP_Hive_API' ) ) {
 			$api = ReportedIP_Hive_API::get_instance();
 			if ( method_exists( $api, 'get_relay_quota' ) ) {
 				$fresh = $api->get_relay_quota();
 				if ( is_array( $fresh ) && ! empty( $fresh['tier'] ) ) {
-					return (string) $fresh['tier'];
+					$tier              = (string) $fresh['tier'];
+					$this->cached_tier = $tier;
+					return $tier;
 				}
 			}
 		}
-		return 'free';
+		$this->cached_tier = $tier;
+		return $tier;
 	}
 
 	/**

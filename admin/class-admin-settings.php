@@ -124,47 +124,66 @@ class ReportedIP_Hive_Admin_Settings {
 			class="rip-tier-badge <?php echo esc_attr( $info['badge_class'] ); ?>"
 			title="<?php echo esc_attr( $info['description'] ); ?>"
 		>
-			<?php
-			echo wp_kses(
-				$info['icon'],
-				array(
-					'svg'    => array(
-						'viewbox'      => true,
-						'fill'         => true,
-						'stroke'       => true,
-						'stroke-width' => true,
-						'aria-hidden'  => true,
-					),
-					'path'   => array(
-						'd'            => true,
-						'fill'         => true,
-						'fill-rule'    => true,
-						'clip-rule'    => true,
-						'stroke'       => true,
-						'stroke-width' => true,
-					),
-					'circle' => array(
-						'cx'           => true,
-						'cy'           => true,
-						'r'            => true,
-						'fill'         => true,
-						'stroke'       => true,
-						'stroke-width' => true,
-					),
-					'rect'   => array(
-						'x'      => true,
-						'y'      => true,
-						'width'  => true,
-						'height' => true,
-						'rx'     => true,
-						'ry'     => true,
-					),
-				)
-			);
-			?>
+			<?php echo self::kses_inline_svg( $info['icon'] ); ?>
 			<?php echo esc_html( $info['short_label'] ); ?>
 		</span>
 		<?php
+	}
+
+	/**
+	 * Sanitize inline SVG markup against a permissive allowlist suitable for
+	 * decorative icons. Returns escaped HTML — safe to echo directly.
+	 *
+	 * @param string $svg_html Raw SVG markup (typically from a constants table).
+	 * @return string
+	 * @since 1.5.3
+	 */
+	public static function kses_inline_svg( $svg_html ) {
+		static $allowed = null;
+		if ( null === $allowed ) {
+			$shape_attrs = array(
+				'd'            => true,
+				'cx'           => true,
+				'cy'           => true,
+				'r'            => true,
+				'x'            => true,
+				'y'            => true,
+				'x1'           => true,
+				'x2'           => true,
+				'y1'           => true,
+				'y2'           => true,
+				'width'        => true,
+				'height'       => true,
+				'rx'           => true,
+				'ry'           => true,
+				'points'       => true,
+				'fill'         => true,
+				'fill-rule'    => true,
+				'clip-rule'    => true,
+				'stroke'       => true,
+				'stroke-width' => true,
+				'opacity'      => true,
+			);
+			$allowed     = array(
+				'svg'      => array(
+					'viewbox'      => true,
+					'fill'         => true,
+					'stroke'       => true,
+					'stroke-width' => true,
+					'xmlns'        => true,
+					'aria-hidden'  => true,
+					'width'        => true,
+					'height'       => true,
+				),
+				'path'     => $shape_attrs,
+				'circle'   => $shape_attrs,
+				'rect'     => $shape_attrs,
+				'line'     => $shape_attrs,
+				'polyline' => $shape_attrs,
+				'polygon'  => $shape_attrs,
+			);
+		}
+		return wp_kses( (string) $svg_html, $allowed );
 	}
 
 	/**
@@ -401,25 +420,7 @@ class ReportedIP_Hive_Admin_Settings {
 		<div class="rip-stat-card rip-stat-card--quota">
 			<div class="rip-stat-card__head">
 				<div class="rip-stat-card__icon <?php echo esc_attr( $icon_kind ); ?>">
-					<?php
-					echo wp_kses(
-						$icon,
-						array(
-							'svg'      => array(
-								'viewbox'      => true,
-								'fill'         => true,
-								'stroke'       => true,
-								'stroke-width' => true,
-							),
-							'path'     => array(
-								'd'         => true,
-								'fill-rule' => true,
-								'clip-rule' => true,
-							),
-							'polyline' => array( 'points' => true ),
-						)
-					);
-					?>
+					<?php echo self::kses_inline_svg( $icon ); ?>
 				</div>
 				<div class="rip-stat-card__content">
 					<div class="rip-stat-card__value">
