@@ -785,6 +785,9 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		$active_id     = (string) get_option( ReportedIP_Hive_Two_Factor_SMS::OPT_PROVIDER, '' );
 		$avv_confirmed = (bool) get_option( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
 		$active_config = ReportedIP_Hive_Two_Factor_SMS::get_provider_config();
+
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$relay_status = $mode_manager->feature_status( 'sms_relay_via_api' );
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
@@ -795,6 +798,18 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				<?php esc_html_e( 'An EU SMS provider is used to send SMS OTPs. The plugin operator must sign a DPA with the selected provider. Phone numbers are stored encrypted; the SMS body contains only the code and a minimal note (no site, no user data, no IP).', 'reportedip-hive' ); ?>
 			</p>
 
+			<?php if ( $relay_status['available'] ) : ?>
+				<div class="rip-alert rip-alert--success">
+					<strong><?php esc_html_e( 'Managed SMS relay active', 'reportedip-hive' ); ?>:</strong>
+					<?php esc_html_e( 'SMS-2FA flows through reportedip.de — included with your plan, no third-party SMS contract needed.', 'reportedip-hive' ); ?>
+				</div>
+			<?php elseif ( 'tier' === ( $relay_status['reason'] ?? '' ) ) : ?>
+				<p class="rip-help-text">
+					<?php esc_html_e( 'Tip: Professional and Business plans include SMS-2FA via our managed EU gateway — no separate provider contract required.', 'reportedip-hive' ); ?>
+					<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $relay_status ); ?>
+				</p>
+			<?php endif; ?>
+
 			<div class="rip-form-group">
 				<label class="rip-label" for="reportedip_2fa_sms_provider"><?php esc_html_e( 'SMS provider', 'reportedip-hive' ); ?></label>
 				<select id="reportedip_2fa_sms_provider" name="reportedip_hive_2fa_sms_provider" class="rip-select">
@@ -804,14 +819,32 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						if ( ! class_exists( $class ) ) {
 							continue;
 						}
+						$is_relay     = ( 'reportedip_relay' === $pid );
+						$relay_locked = ( $is_relay && ! $relay_status['available'] );
 						?>
-						<option value="<?php echo esc_attr( $pid ); ?>" <?php selected( $active_id, $pid ); ?>>
+						<option
+							value="<?php echo esc_attr( $pid ); ?>"
+							<?php selected( $active_id, $pid ); ?>
+							<?php disabled( $relay_locked ); ?>
+						>
 							<?php
-							printf(
-								'%s — %s',
-								esc_html( call_user_func( array( $class, 'display_name' ) ) ),
-								esc_html( call_user_func( array( $class, 'region' ) ) )
-							);
+							$display_name = call_user_func( array( $class, 'display_name' ) );
+							$region       = call_user_func( array( $class, 'region' ) );
+
+							if ( $is_relay ) {
+								$min_tier   = $relay_status['min_tier'] ?? 'professional';
+								$tier_short = $mode_manager->get_tier_info( (string) $min_tier )['short_label'];
+								$suffix     = $relay_status['available']
+									? __( '(managed, included)', 'reportedip-hive' )
+									: sprintf(
+										/* translators: %s = required tier short label, e.g. PRO */
+										__( '(requires %s+)', 'reportedip-hive' ),
+										$tier_short
+									);
+								printf( '%s — %s %s', esc_html( $display_name ), esc_html( $region ), esc_html( $suffix ) );
+							} else {
+								printf( '%s — %s', esc_html( $display_name ), esc_html( $region ) );
+							}
 							?>
 						</option>
 					<?php endforeach; ?>

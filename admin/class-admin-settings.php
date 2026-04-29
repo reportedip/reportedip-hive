@@ -3749,7 +3749,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'domains'     => 3,
 				'features'    => array(
 					__( '500 2FA mails / month via reportedip.de SMTP', 'reportedip-hive' ),
-					__( '25 2FA SMS / month — no Twilio account needed', 'reportedip-hive' ),
+					__( '25 included 2FA SMS per month — managed via reportedip.de', 'reportedip-hive' ),
 					__( 'Multi-site licence (3 domains)', 'reportedip-hive' ),
 					__( 'Priority sync (daily blacklist download)', 'reportedip-hive' ),
 					__( '2FA usage reports & per-role policies', 'reportedip-hive' ),
@@ -4161,11 +4161,17 @@ class ReportedIP_Hive_Admin_Settings {
 						);
 						$unlimited   = __( 'Unlimited', 'reportedip-hive' );
 						?>
+						<?php
+						$mode_manager_for_relay = ReportedIP_Hive_Mode_Manager::get_instance();
+						$mail_relay_status      = $mode_manager_for_relay->feature_status( 'mail_relay_via_api' );
+						$sms_relay_status       = $mode_manager_for_relay->feature_status( 'sms_relay_via_api' );
+						?>
 						<div class="rip-relay-highlights" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
 							<div class="rip-card" style="padding:16px;border-left:4px solid var(--rip-primary,#4F46E5);">
-								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;">
+								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
 									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 									<?php esc_html_e( '100% mail delivery via reportedip.de', 'reportedip-hive' ); ?>
+									<?php self::render_tier_badge( 'professional' ); ?>
 								</h3>
 								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
 									<li><?php esc_html_e( 'Clean SPF / DKIM / DMARC reputation — no more spam folders', 'reportedip-hive' ); ?></li>
@@ -4173,13 +4179,17 @@ class ReportedIP_Hive_Admin_Settings {
 									<li><?php esc_html_e( 'Branded sender, optional reply-to override', 'reportedip-hive' ); ?></li>
 								</ul>
 								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">
-									<?php esc_html_e( 'Available from Professional (500/mo) and Business (2,500/mo).', 'reportedip-hive' ); ?>
+									<?php esc_html_e( 'Included with Professional (500/mo) and Business (2,500/mo).', 'reportedip-hive' ); ?>
+									<?php if ( ! $mail_relay_status['available'] ) : ?>
+										&nbsp;<?php self::render_tier_lock( $mail_relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+									<?php endif; ?>
 								</p>
 							</div>
 							<div class="rip-card" style="padding:16px;border-left:4px solid var(--rip-success,#10B981);">
-								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;">
+								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
 									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-									<?php esc_html_e( 'SMS-2FA without a Twilio account', 'reportedip-hive' ); ?>
+									<?php esc_html_e( 'Managed SMS-2FA delivery (Professional and above)', 'reportedip-hive' ); ?>
+									<?php self::render_tier_badge( 'professional' ); ?>
 								</h3>
 								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
 									<li><?php esc_html_e( 'No third-party SMS contract, no top-up management', 'reportedip-hive' ); ?></li>
@@ -4187,7 +4197,10 @@ class ReportedIP_Hive_Admin_Settings {
 									<li><?php esc_html_e( 'Server-side anti-spam: per-recipient backoff (2/5/15/30/60 min)', 'reportedip-hive' ); ?></li>
 								</ul>
 								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">
-									<?php esc_html_e( 'Available from Professional (25/mo) and Business (75/mo + bundles).', 'reportedip-hive' ); ?>
+									<?php esc_html_e( 'Included with Professional (25/mo) and Business (75/mo + bundles).', 'reportedip-hive' ); ?>
+									<?php if ( ! $sms_relay_status['available'] ) : ?>
+										&nbsp;<?php self::render_tier_lock( $sms_relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+									<?php endif; ?>
 								</p>
 							</div>
 						</div>
