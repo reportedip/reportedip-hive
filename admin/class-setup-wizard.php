@@ -1586,16 +1586,16 @@ class ReportedIP_Hive_Setup_Wizard {
 	private function render_wizard_footer() {
 		?>
 		<footer class="rip-wizard__footer">
-			<div class="rip-wizard__footer-badges">
-				<span class="rip-wizard__badge">
+			<div class="rip-wizard__footer-badges rip-trust-badges">
+				<span class="rip-wizard__badge rip-trust-badge">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Security Focused', 'reportedip-hive' ); ?>
 				</span>
-				<span class="rip-wizard__badge">
+				<span class="rip-wizard__badge rip-trust-badge">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'GDPR Compliant', 'reportedip-hive' ); ?>
 				</span>
-				<span class="rip-wizard__badge">
+				<span class="rip-wizard__badge rip-trust-badge">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Made in Germany', 'reportedip-hive' ); ?>
 				</span>

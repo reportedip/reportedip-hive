@@ -339,7 +339,26 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							<?php esc_html_e( 'Email code', 'reportedip-hive' ); ?>
 						</span>
 					</label>
-					<p class="rip-help-text"><?php esc_html_e( 'Sends a 6-digit code to the user\'s email address.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-text">
+						<?php esc_html_e( 'Sends a 6-digit code to the user\'s email address.', 'reportedip-hive' ); ?>
+						<?php
+						$mail_relay_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'mail_relay_via_api' );
+						if ( $mail_relay_status['available'] ) {
+							echo ' ';
+							esc_html_e( 'Delivered via the managed reportedip.de relay (clean SPF / DKIM / DMARC).', 'reportedip-hive' );
+						} else {
+							echo ' ';
+							esc_html_e( 'Delivered via wp_mail() on this server.', 'reportedip-hive' );
+							if ( 'tier' === ( $mail_relay_status['reason'] ?? '' ) ) {
+								echo ' ';
+								ReportedIP_Hive_Admin_Settings::render_tier_lock(
+									$mail_relay_status,
+									array( 'label' => __( 'Upgrade for managed delivery', 'reportedip-hive' ) )
+								);
+							}
+						}
+						?>
+					</p>
 				</div>
 
 				<div class="rip-form-group">
