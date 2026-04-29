@@ -735,6 +735,22 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @return array{mail:?int,sms:?int}
 	 * @since 1.5.3
 	 */
+	/**
+	 * Normalize a relay limit value to either a positive integer or null (unlimited).
+	 * The service returns -1 as a legacy sentinel for unlimited tiers.
+	 *
+	 * @param mixed $limit Raw limit from the cached payload.
+	 * @return int|null
+	 * @since 1.5.3
+	 */
+	private static function normalize_unlimited_limit( $limit ) {
+		if ( null === $limit ) {
+			return null;
+		}
+		$int = (int) $limit;
+		return $int < 0 ? null : $int;
+	}
+
 	private function default_relay_limits_for_tier( $tier ) {
 		switch ( (string) $tier ) {
 			case 'professional':
@@ -807,11 +823,11 @@ class ReportedIP_Hive_Mode_Manager {
 		}
 		if ( isset( $cached['mail'] ) && is_array( $cached['mail'] ) ) {
 			$snapshot['mail']['used']  = (int) ( $cached['mail']['used'] ?? 0 );
-			$snapshot['mail']['limit'] = array_key_exists( 'limit', $cached['mail'] ) ? ( null === $cached['mail']['limit'] ? null : (int) $cached['mail']['limit'] ) : $defaults['mail'];
+			$snapshot['mail']['limit'] = array_key_exists( 'limit', $cached['mail'] ) ? self::normalize_unlimited_limit( $cached['mail']['limit'] ) : $defaults['mail'];
 		}
 		if ( isset( $cached['sms'] ) && is_array( $cached['sms'] ) ) {
 			$snapshot['sms']['used']  = (int) ( $cached['sms']['used'] ?? 0 );
-			$snapshot['sms']['limit'] = array_key_exists( 'limit', $cached['sms'] ) ? ( null === $cached['sms']['limit'] ? null : (int) $cached['sms']['limit'] ) : $defaults['sms'];
+			$snapshot['sms']['limit'] = array_key_exists( 'limit', $cached['sms'] ) ? self::normalize_unlimited_limit( $cached['sms']['limit'] ) : $defaults['sms'];
 		}
 		if ( isset( $cached['sms_bundle_balance'] ) ) {
 			$snapshot['sms_bundle_balance'] = (int) $cached['sms_bundle_balance'];
