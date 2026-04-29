@@ -453,6 +453,19 @@ class ReportedIP_Hive_Setup_Wizard {
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'Welcome to ReportedIP Hive', 'reportedip-hive' ); ?></h1>
 			<p class="rip-wizard__subtitle"><?php esc_html_e( 'In a few steps you configure brute-force protection, community reputation, two-factor authentication and GDPR-compliant logs.', 'reportedip-hive' ); ?></p>
 
+			<div class="rip-wizard__mode-comparison">
+				<h2 class="rip-wizard__section-title"><?php esc_html_e( 'Choose your protection style', 'reportedip-hive' ); ?></h2>
+				<p class="rip-wizard__section-desc"><?php esc_html_e( 'Hive runs offline by default. Connect to the community network for shared threat intelligence — you can switch any time in Settings.', 'reportedip-hive' ); ?></p>
+				<?php
+				ReportedIP_Hive_Admin_Settings::render_mode_comparison(
+					array(
+						'interactive' => false,
+						'highlight'   => 'community',
+					)
+				);
+				?>
+			</div>
+
 			<div class="rip-wizard__features">
 				<div class="rip-wizard__feature">
 					<div class="rip-wizard__feature-icon">
