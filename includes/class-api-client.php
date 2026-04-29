@@ -566,6 +566,156 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
+	 * Send a 2FA mail via the reportedip.de relay endpoint.
+	 *
+	 * @param array $args {
+	 *     Required: recipient. Optional: subject, body_text, body_html, headers, site_url.
+	 * }
+	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, remaining_quota?: array}
+	 */
+	public function relay_mail( array $args ) {
+		$payload = array(
+			'recipient' => (string) ( $args['recipient'] ?? '' ),
+			'subject'   => (string) ( $args['subject'] ?? '' ),
+			'body_text' => (string) ( $args['body_text'] ?? '' ),
+			'body_html' => (string) ( $args['body_html'] ?? '' ),
+			'headers'   => isset( $args['headers'] ) ? (array) $args['headers'] : array(),
+			'site_url'  => (string) ( $args['site_url'] ?? home_url() ),
+		);
+		if ( ! empty( $args['reply_to'] ) && is_string( $args['reply_to'] ) ) {
+			$payload['reply_to'] = $args['reply_to'];
+		}
+		return $this->relay_request( 'relay-mail', $payload );
+	}
+
+	/**
+	 * Send a 2FA SMS via the reportedip.de relay endpoint.
+	 *
+	 * @param array $args {
+	 *     Required: recipient_phone (E.164), message. Optional: site_url.
+	 * }
+	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, remaining_quota?: array}
+	 */
+	public function relay_sms( array $args ) {
+		$payload = array(
+			'recipient_phone' => (string) ( $args['recipient_phone'] ?? '' ),
+			'site_url'        => (string) ( $args['site_url'] ?? home_url() ),
+		);
+		// Prefer client-only code transport (template + vars) so the actual verification
+		// code never sits in a freshly-rendered string on the customer side.
+		if ( ! empty( $args['template_code'] ) ) {
+			$payload['template_code'] = (string) $args['template_code'];
+			$payload['template_vars'] = isset( $args['template_vars'] ) ? (array) $args['template_vars'] : array();
+		} else {
+			$payload['message'] = (string) ( $args['message'] ?? '' );
+		}
+		return $this->relay_request( 'relay-sms', $payload );
+	}
+
+	/**
+	 * Fetch the current monthly relay-usage and limits from the service.
+	 *
+	 * @param bool $force_refresh If true, bypass the 1-hour transient cache.
+	 * @return array{tier?: string, role?: string, mail?: array, sms?: array, error?: string}
+	 */
+	public function get_relay_quota( $force_refresh = false ) {
+		$cache_key = 'reportedip_hive_relay_quota';
+
+		if ( ! $force_refresh ) {
+			$cached = get_transient( $cache_key );
+			if ( is_array( $cached ) ) {
+				return $cached;
+			}
+		}
+
+		$response = $this->make_request( 'GET', 'relay-quota', array(), null, $this->timeout );
+
+		if ( is_wp_error( $response ) ) {
+			return array( 'error' => $response->get_error_message() );
+		}
+
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+
+		if ( $code >= 200 && $code < 300 && is_array( $body ) ) {
+			set_transient( $cache_key, $body, HOUR_IN_SECONDS );
+			return $body;
+		}
+
+		return array(
+			'error'        => 'http_' . $code,
+			'status_code'  => $code,
+			'response_raw' => is_array( $body ) ? $body : null,
+		);
+	}
+
+	/**
+	 * Internal helper for the two relay endpoints — POSTs JSON, parses the response,
+	 * and translates HTTP 402/429 into structured results so callers can fall back gracefully.
+	 *
+	 * @param string $endpoint Slug under reportedip/v2/.
+	 * @param array  $payload  Body to send.
+	 * @return array
+	 */
+	private function relay_request( $endpoint, array $payload ) {
+		$url = rtrim( $this->api_endpoint, '/' ) . '/' . ltrim( $endpoint, '/' );
+
+		$args = array(
+			'method'    => 'POST',
+			'headers'   => array(
+				'X-Key'        => $this->api_key,
+				'Content-Type' => 'application/json',
+				'Accept'       => 'application/json',
+				'User-Agent'   => 'ReportedIP-Hive/' . REPORTEDIP_HIVE_VERSION,
+			),
+			'timeout'   => $this->timeout,
+			'body'      => wp_json_encode( $payload ),
+			'sslverify' => true,
+		);
+
+		$response = wp_remote_request( $url, $args );
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'ok'        => false,
+				'error'     => 'network: ' . $response->get_error_message(),
+				'retryable' => true,
+			);
+		}
+
+		$code  = (int) wp_remote_retrieve_response_code( $response );
+		$json  = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+		$retry = (int) wp_remote_retrieve_header( $response, 'retry-after' );
+
+		if ( $code >= 200 && $code < 300 ) {
+			delete_transient( 'reportedip_hive_relay_quota' );
+			return array(
+				'ok'              => true,
+				'status_code'     => $code,
+				'queue_id'        => is_array( $json ) ? (int) ( $json['queue_id'] ?? 0 ) : 0,
+				'remaining_quota' => is_array( $json ) ? ( $json['remaining_quota'] ?? null ) : null,
+			);
+		}
+
+		if ( 402 === $code || 429 === $code ) {
+			return array(
+				'ok'           => false,
+				'status_code'  => $code,
+				'error'        => is_array( $json ) ? (string) ( $json['code'] ?? 'cap_or_backoff' ) : 'cap_or_backoff',
+				'retry_after'  => $retry > 0 ? $retry : ( is_array( $json ) && isset( $json['data']['retry_after'] ) ? (int) $json['data']['retry_after'] : 0 ),
+				'retryable'    => true,
+				'soft_failure' => true,
+			);
+		}
+
+		return array(
+			'ok'          => false,
+			'status_code' => $code,
+			'error'       => is_array( $json ) ? (string) ( $json['code'] ?? 'http_' . $code ) : 'http_' . $code,
+			'retryable'   => $code >= 500,
+		);
+	}
+
+	/**
 	 * Make HTTP request to API
 	 */
 	private function make_request( $method, $endpoint, $params = array(), $body = null, $timeout = null ) {
@@ -743,12 +893,37 @@ class ReportedIP_Hive_API {
 				'userRole'          => $result['userRole'] ?? '',
 			);
 
-			set_transient( 'reportedip_hive_api_status', $status, 5 * MINUTE_IN_SECONDS );
+			$this->persist_api_status( $status );
 
 			return $status;
 		}
 
 		return false;
+	}
+
+	/**
+	 * Persist the verified API status and emit the tier-changed action when the role flipped.
+	 *
+	 * @param array $status Validated status payload to cache.
+	 * @return void
+	 * @since 1.5.3
+	 */
+	private function persist_api_status( $status ) {
+		$previous  = get_transient( 'reportedip_hive_api_status' );
+		$prev_tier = 'free';
+		if ( is_array( $previous ) && ! empty( $previous['userRole'] ) ) {
+			$prev_tier = ReportedIP_Hive_Mode_Manager::tier_from_role( (string) $previous['userRole'] );
+		}
+
+		set_transient( 'reportedip_hive_api_status', $status, 5 * MINUTE_IN_SECONDS );
+
+		$new_role = (string) ( $status['userRole'] ?? '' );
+		$new_tier = $new_role !== '' ? ReportedIP_Hive_Mode_Manager::tier_from_role( $new_role ) : 'free';
+
+		if ( $prev_tier !== $new_tier ) {
+			delete_transient( 'reportedip_hive_relay_quota' );
+			do_action( 'reportedip_hive_tier_changed', $prev_tier, $new_tier );
+		}
 	}
 
 	/**
@@ -778,6 +953,16 @@ class ReportedIP_Hive_API {
 			);
 
 			set_transient( 'reportedip_hive_api_quota', $quota_data, 6 * HOUR_IN_SECONDS );
+
+			$this->persist_api_status(
+				array(
+					'valid'             => true,
+					'remainingApiCalls' => $result['remainingApiCalls'] ?? 0,
+					'dailyApiLimit'     => $result['dailyApiLimit'] ?? 0,
+					'keyName'           => $result['keyName'] ?? '',
+					'userRole'          => $result['userRole'] ?? '',
+				)
+			);
 
 			$this->logger->log_security_event(
 				'api_quota_refreshed',
