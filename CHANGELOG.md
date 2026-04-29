@@ -4,6 +4,48 @@ All changes to ReportedIP Hive are documented here.
 
 ## [1.5.3] — 2026-04-29
 
+### New
+
+- **Tier-aware UI foundation across admin pages.** Every plugin page
+  now renders a tier badge next to the existing operation-mode badge
+  in the branded header (Free / Contributor / Professional / Business /
+  Enterprise), and PRO+ tiers gain a managed-relay quota panel on the
+  Security Dashboard with mail and SMS counters, progress bars and
+  reset hints. The setup wizard's first step now reuses the same
+  Local-vs-Community comparison cards as the Settings page, so the
+  value proposition is consistent end-to-end. The SMS-provider
+  selector marks the "ReportedIP SMS Relay" entry as PRO+ when the
+  current tier is too low, with a deep link to the pricing page.
+  Marketing copy that mentioned third-party SMS providers by name has
+  been replaced with neutral "managed via reportedip.de" wording.
+
+### Changed
+
+- New `Mode_Manager::feature_status( string $feature ): array` helper
+  returns a structured `{available, reason, min_tier, mode_required,
+  label, description}` payload — the canonical way to check whether a
+  feature is gated by mode or tier and the only contract any future
+  tier-gated control needs to hook into.
+- New `Mode_Manager::get_tier_info()` and `get_relay_quota_snapshot()`
+  expose tier display tokens (label, badge class, icon, color) and a
+  normalized monthly relay quota snapshot (mail/sms used/limit, SMS
+  bundle balance, period bounds, stale flag) for dashboard rendering.
+- API key validation now fires the new
+  `do_action( 'reportedip_hive_tier_changed', $old, $new )` hook when
+  the upstream `userRole` flips between tiers, and clears the cached
+  relay quota so consumers (mailer, SMS, dashboard) re-fetch.
+- New reusable static helpers on `Admin_Settings`:
+  `render_header_actions()`, `render_mode_badge()`,
+  `render_tier_badge()`, `render_tier_lock()`,
+  `render_mode_comparison()`. The Settings General tab and the wizard
+  both render the mode comparison through the same helper, so layout
+  drift between the two surfaces can no longer happen.
+- New CSS components in the design system: `.rip-tier-badge` with five
+  tier variants plus `--honeypot`, `.rip-tier-lock` chip for upgrade
+  affordances and `.rip-stat-card--quota` with progress-bar and stale
+  hint slots. All new visuals respect the existing `--rip-*` tokens —
+  no hardcoded colors.
+
 ### Fixes
 
 - **API queue rows no longer get stuck "pending" for 24+ hours.** A worker
