@@ -70,10 +70,19 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	const TRANSIENT_RATE_PREFIX = 'reportedip_2fa_sms_rate_';
 	const CODE_TTL              = 600;
 	const RATE_WINDOW           = 900;
-	const MAX_SENDS_PER_WINDOW  = 3;
+	const MAX_SENDS_PER_WINDOW  = 6;
 	const COOLDOWN_SECONDS      = 60;
 	const MAX_ATTEMPTS          = 5;
 	const CODE_LENGTH           = 6;
+
+	/**
+	 * Progressive backoff ladder (seconds) per recipient/user within RATE_WINDOW.
+	 * Index 0 = 1st send, index N = (N+1)-th send.
+	 * Mirrors the server-side {@see ReportedIP_Constants::RELAY_BACKOFF_LADDER}.
+	 *
+	 * @var int[]
+	 */
+	const BACKOFF_LADDER = array( 0, 120, 300, 900, 1800, 3600 );
 
 	/**
 	 * Option names (global admin settings).
@@ -90,9 +99,10 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	 */
 	public static function providers() {
 		$registry = array(
-			'sevenio'     => 'ReportedIP_Hive_SMS_Provider_Sevenio',
-			'sipgate'     => 'ReportedIP_Hive_SMS_Provider_Sipgate',
-			'messagebird' => 'ReportedIP_Hive_SMS_Provider_MessageBird',
+			'reportedip_relay' => 'ReportedIP_Hive_SMS_Provider_Relay',
+			'sevenio'          => 'ReportedIP_Hive_SMS_Provider_Sevenio',
+			'sipgate'          => 'ReportedIP_Hive_SMS_Provider_Sipgate',
+			'messagebird'      => 'ReportedIP_Hive_SMS_Provider_MessageBird',
 		);
 
 		/**
@@ -127,6 +137,15 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	 * @return bool
 	 */
 	public static function is_ready() {
+		// PRO+ customers using the reportedip.de relay don't need a local provider/AVV setup —
+		// the relay AVV with reportedip.de is the relevant agreement.
+		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
+			if ( $mgr && method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'sms' ) ) {
+				return true;
+			}
+		}
+
 		if ( ! self::get_active_provider_class() ) {
 			return false;
 		}
@@ -195,6 +214,19 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		if ( strlen( $digits ) < 6 || strlen( $digits ) > 15 ) {
 			return new WP_Error( 'reportedip_sms_phone_length', __( 'Phone number has an invalid length.', 'reportedip-hive' ) );
 		}
+
+		if ( class_exists( 'ReportedIP_Hive_Phone_Validator' ) ) {
+			if ( ! ReportedIP_Hive_Phone_Validator::is_valid_e164( $raw ) ) {
+				return new WP_Error( 'reportedip_sms_phone_format', __( 'Phone number is not in valid international format.', 'reportedip-hive' ) );
+			}
+			if ( ! ReportedIP_Hive_Phone_Validator::is_eu( $raw ) ) {
+				return new WP_Error(
+					'reportedip_sms_phone_not_eu',
+					__( 'Only EU phone numbers are supported for SMS-2FA.', 'reportedip-hive' )
+				);
+			}
+		}
+
 		return $raw;
 	}
 
@@ -291,14 +323,35 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		$config         = self::get_provider_config();
 		$expiry_minutes = (int) ( self::CODE_TTL / 60 );
 
-		$body = sprintf(
-			/* translators: 1: 6-digit code, 2: validity in minutes */
-			__( 'Your verification code: %1$d (valid for %2$d minutes). Never share this code.', 'reportedip-hive' ),
-			$code,
-			$expiry_minutes
-		);
+		// Tier- and mode-aware switch: PRO+ Community-mode customers route through reportedip.de.
+		// In that case we transmit ONLY the code + expiry as template vars — the Service renders
+		// the final SMS body server-side. The verification code never enters a freshly composed
+		// string on the customer site, only the API payload.
+		$use_relay = false;
+		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' )
+			&& class_exists( 'ReportedIP_Hive_SMS_Provider_Relay' ) ) {
+			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
+			if ( $mgr && method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'sms' ) ) {
+				$use_relay = true;
+			}
+		}
 
-		$result = call_user_func( array( $provider_class, 'send' ), $phone, $body, $config );
+		if ( $use_relay ) {
+			$result = ReportedIP_Hive_SMS_Provider_Relay::send_code(
+				$phone,
+				(string) $code,
+				$expiry_minutes,
+				substr( (string) get_locale(), 0, 2 )
+			);
+		} else {
+			$body = sprintf(
+				/* translators: 1: 6-digit code, 2: validity in minutes */
+				__( 'Your verification code: %1$d (valid for %2$d minutes). Never share this code.', 'reportedip-hive' ),
+				$code,
+				$expiry_minutes
+			);
+			$result = call_user_func( array( $provider_class, 'send' ), $phone, $body, $config );
+		}
 
 		if ( is_wp_error( $result ) ) {
 			$logger = ReportedIP_Hive_Logger::get_instance();
@@ -373,12 +426,27 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		if ( ! is_array( $rate ) ) {
 			return 0;
 		}
-		$last = (int) ( $rate['last_sent'] ?? 0 );
-		return max( 0, ( $last + self::COOLDOWN_SECONDS ) - time() );
+		$next = (int) ( $rate['next_allowed_at'] ?? 0 );
+		return max( 0, $next - time() );
 	}
 
 	/**
-	 * Rate-limit check (window + cooldown). Returns true or WP_Error.
+	 * Look up the backoff delay (seconds) for an attempt count (1-based).
+	 *
+	 * @param int $attempt Attempt number (1 = first send in window).
+	 * @return int
+	 */
+	private static function delay_for_attempt( $attempt ) {
+		$ladder = self::BACKOFF_LADDER;
+		$index  = max( 0, min( count( $ladder ) - 1, $attempt - 1 ) );
+		return (int) $ladder[ $index ];
+	}
+
+	/**
+	 * Rate-limit check using the progressive backoff ladder.
+	 *
+	 * The window resets after RATE_WINDOW seconds of inactivity. Beyond
+	 * MAX_SENDS_PER_WINDOW sends the request is rejected outright.
 	 *
 	 * @param int $user_id
 	 * @return true|WP_Error
@@ -392,21 +460,9 @@ class ReportedIP_Hive_Two_Factor_SMS {
 			return true;
 		}
 
-		$last = (int) ( $data['last_sent'] ?? 0 );
-		if ( $now - $last < self::COOLDOWN_SECONDS ) {
-			$wait = self::COOLDOWN_SECONDS - ( $now - $last );
-			return new WP_Error(
-				'reportedip_sms_cooldown',
-				sprintf(
-					/* translators: %d: seconds to wait */
-					__( 'Please wait %d seconds before requesting a new code.', 'reportedip-hive' ),
-					$wait
-				)
-			);
-		}
-
 		$window_start = (int) ( $data['window_start'] ?? $now );
 		if ( $now - $window_start > self::RATE_WINDOW ) {
+			// Window expired — caller will start a fresh count via record_send().
 			return true;
 		}
 
@@ -418,11 +474,24 @@ class ReportedIP_Hive_Two_Factor_SMS {
 			);
 		}
 
+		$next = (int) ( $data['next_allowed_at'] ?? 0 );
+		if ( $now < $next ) {
+			$wait = $next - $now;
+			return new WP_Error(
+				'reportedip_sms_cooldown',
+				sprintf(
+					/* translators: %d: seconds to wait */
+					__( 'Please wait %d seconds before requesting a new code.', 'reportedip-hive' ),
+					$wait
+				)
+			);
+		}
+
 		return true;
 	}
 
 	/**
-	 * Record a successful send in the rate-limit window.
+	 * Record a successful send in the rate-limit window using the backoff ladder.
 	 *
 	 * @param int $user_id
 	 */
@@ -437,8 +506,9 @@ class ReportedIP_Hive_Two_Factor_SMS {
 				'window_start' => $now,
 			);
 		}
-		$data['count']     = (int) ( $data['count'] ?? 0 ) + 1;
-		$data['last_sent'] = $now;
+		$data['count']           = (int) ( $data['count'] ?? 0 ) + 1;
+		$data['last_sent']       = $now;
+		$data['next_allowed_at'] = $now + self::delay_for_attempt( (int) $data['count'] + 1 );
 
 		set_transient( $key, $data, self::RATE_WINDOW );
 	}
@@ -451,5 +521,6 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		require_once $base . 'class-sms-provider-sevenio.php';
 		require_once $base . 'class-sms-provider-sipgate.php';
 		require_once $base . 'class-sms-provider-messagebird.php';
+		require_once $base . 'class-sms-provider-relay.php';
 	}
 }

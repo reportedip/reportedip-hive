@@ -2,6 +2,68 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.6.3] — 2026-04-30
+
+### New
+
+- **Managed mail relay (Hive ↔ reportedip.de).** New
+  `ReportedIP_Hive_Mail_Provider_Relay` routes 2FA mails through the
+  service-side `POST /reportedip/v2/relay-mail` endpoint when the
+  current site is in Community mode and the API key belongs to a
+  Professional / Business / Enterprise tier. The mailer wraps the
+  WordPress provider as a transparent fallback — HTTP 402 (cap),
+  HTTP 429 (backoff) and any network error fall back to local
+  `wp_mail()` so the 2FA flow never breaks. Reply-To is hoisted out
+  of the headers list into a dedicated payload field, with a
+  `reportedip_hive_mail_reply_to` option / filter for site-wide
+  defaults.
+- **Managed SMS relay (Hive ↔ reportedip.de).** New
+  `ReportedIP_Hive_SMS_Provider_Relay` registers as the highest-
+  priority SMS provider on PRO+ tiers and uses the template-based
+  `POST /reportedip/v2/relay-sms` route — only the template code
+  (`2fa_login`) and the verification digits leave the site, never
+  the rendered SMS body. HTTP 402 / 429 / generic errors are
+  surfaced as typed `WP_Error`s so the 2FA layer can encourage the
+  user to pick another method instead of silently switching to a
+  third-party SMS contract.
+- **EU phone validator.** New `ReportedIP_Hive_Phone_Validator`
+  normalises numbers to E.164, looks up the country code against a
+  29-country EU whitelist (DE, AT, CH, BeNeLux, FR, IT, ES, PL,
+  Nordics, Baltics, Balkans, Malta, Cyprus, …) and exposes a
+  `reportedip_hive_phone_eu_whitelist` filter so site operators
+  can extend or override the list.
+- **Progressive SMS backoff ladder.** `class-two-factor-sms.php`
+  now stores a `next_allowed_at` timestamp per recipient and walks
+  the backoff ladder (0s → 2m → 5m → 15m → 30m → 60m) before
+  resetting, mirroring the service-side relay rate-limiter.
+- **Two new unit-test suites.** `MailProviderRelayTest` (10 tests)
+  and `SmsProviderRelayTest` (9 tests) lock down the relay → fall
+  back contract, the EU-only validation, the template-route payload
+  shape and the HTTP 402 / 429 → typed-error mapping.
+
+### Changed
+
+- **Setup wizard slimmed from 8 to 7 steps.** The standalone
+  "Promote" footer-preview step was retired; its function moved
+  into the Welcome step's tier teaser cards. The wizard's docblock
+  and the `get_step_labels()` map are now the single source of
+  truth for the step list.
+- **`class-two-factor-sms.php` is_ready()** now treats
+  `reportedip_relay` as configured-by-default when the relay is
+  available for the current tier — no separate provider config is
+  required because the existing API key authenticates the call.
+- **IP-lookup form in the security tab** redirects via plain URL
+  arguments instead of building the link in JavaScript, which keeps
+  the hash state when the user lands back on the lookup tab.
+
+### Fixes
+
+- **Scan detector path lookup runs once per request.** The
+  honeypot-pattern matcher used to walk the path twice on the same
+  request (once for the 404 counter, once for the bypass list).
+  Refactored to a single pass; no behaviour change, slightly less
+  CPU on high-404 sites.
+
 ## [1.6.1] — 2026-04-30
 
 ### New

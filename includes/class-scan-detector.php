@@ -96,11 +96,12 @@ class ReportedIP_Hive_Scan_Detector {
 		if ( ! get_option( 'reportedip_hive_monitor_404_scans', true ) ) {
 			return;
 		}
-		if ( ! is_404() ) {
-			$path = $this->get_request_path();
-			if ( ! $this->is_known_scan_path( $path ) ) {
-				return;
-			}
+
+		$path        = $this->get_request_path();
+		$is_scan_hit = $this->is_known_scan_path( $path );
+
+		if ( ! is_404() && ! $is_scan_hit ) {
+			return;
 		}
 
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
@@ -118,9 +119,6 @@ class ReportedIP_Hive_Scan_Detector {
 		if ( $ip_manager && method_exists( $ip_manager, 'is_whitelisted' ) && $ip_manager->is_whitelisted( $ip ) ) {
 			return;
 		}
-
-		$path        = $this->get_request_path();
-		$is_scan_hit = $this->is_known_scan_path( $path );
 
 		/*
 		 * Authenticated users can legitimately rack up 404s — missing CSS source

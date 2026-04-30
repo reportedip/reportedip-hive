@@ -980,15 +980,6 @@ body.rip-wizard-page [hidden] {
     margin: 0;
 }
 
-.rip-method-card__hint {
-    margin-top: 0.75rem;
-    padding-top: 0.5rem;
-    border-top: 1px dashed var(--rip-gray-200);
-    font-size: 0.75rem;
-    color: var(--rip-warning);
-    font-weight: 500;
-}
-
 /* Subheading inside a config card — used to delimit "block duration strategy"
    etc. without bumping to a full second card. */
 .rip-config-card__subhead {
@@ -1004,40 +995,6 @@ body.rip-wizard-page [hidden] {
     margin-left: 0.25rem;
     color: var(--rip-warning);
     font-weight: 700;
-}
-
-/* Inline tag — small status pill inside cards (e.g. "Provider setup required"). */
-.rip-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-top: 0.75rem;
-    padding: 0.25rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    line-height: 1.2;
-    letter-spacing: 0.01em;
-}
-
-.rip-tag svg {
-    width: 0.85rem;
-    height: 0.85rem;
-}
-
-.rip-tag--warning {
-    background: rgba(245, 158, 11, 0.12);
-    color: var(--rip-warning);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-/* Show "Provider setup required" only when the SMS card is selected. */
-.rip-method-card__needs-config {
-    display: none;
-}
-
-.rip-method-card--selected .rip-method-card__needs-config {
-    display: inline-flex;
 }
 
 /* Comma-separated role checkboxes */
@@ -1711,40 +1668,65 @@ body.rip-wizard-page select.rip-select option {
     cursor: not-allowed;
 }
 
-/* Promote step (live preview, fieldsets, position swatches). */
-.rip-promote-preview {
-    background: var(--rip-gray-50, #F9FAFB);
-    border: 1px dashed var(--rip-gray-300, #D1D5DB);
-    border-radius: var(--rip-radius-md, 0.5rem);
+/* Tier teaser on the Welcome step — two PRO/Business cards side by side. */
+.rip-wizard__tier-teaser {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--rip-space-4, 1rem);
+    margin: var(--rip-space-6, 1.75rem) 0;
+}
+
+.rip-tier-card {
+    background: #fff;
+    border: 1px solid var(--rip-gray-200, #E5E7EB);
+    border-radius: var(--rip-radius-lg, 0.75rem);
     padding: var(--rip-space-5, 1.5rem);
+    box-shadow: var(--rip-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--rip-space-3, 0.75rem);
+}
+
+.rip-tier-card__header {
     display: flex;
     align-items: center;
-    min-height: 96px;
+    gap: var(--rip-space-2, 0.5rem);
+    flex-wrap: wrap;
 }
 
-.rip-promote-preview--left { justify-content: flex-start; }
-.rip-promote-preview--center { justify-content: center; }
-.rip-promote-preview--right { justify-content: flex-end; }
-.rip-promote-preview--below { justify-content: center; flex-direction: column; }
-
-.rip-promote-fieldset {
-    margin-top: var(--rip-space-5, 1.5rem);
-    border: 0;
-    padding: 0;
-}
-
-.rip-promote-legend {
+.rip-tier-card__title {
+    margin: 0;
+    font-size: 1rem;
     font-weight: 600;
+    color: var(--rip-gray-900, #111827);
+}
+
+.rip-tier-card__list {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.875rem;
+    color: var(--rip-gray-700, #374151);
+    line-height: 1.55;
+}
+
+.rip-tier-card__list li + li {
+    margin-top: 0.25rem;
+}
+
+.rip-tier-card .rip-button {
+    align-self: flex-start;
+}
+
+.rip-wizard__feature--woocommerce .rip-wizard__feature-icon {
+    color: var(--rip-woocommerce);
+}
+
+/* Badge row on a method card (e.g. SMS: PRO + "Particularly secure"). */
+.rip-method-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
     margin-bottom: var(--rip-space-2, 0.5rem);
-    color: var(--rip-gray-800, #1F2937);
-}
-
-.rip-promote-toggle {
-    margin-top: var(--rip-space-5, 1.5rem);
-}
-
-.rip-promote-hint {
-    margin-top: var(--rip-space-2, 0.5rem);
 }
 
 /* Inline code block — shipped recovery snippets, etc. */

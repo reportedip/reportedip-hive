@@ -621,12 +621,13 @@
             e.preventDefault();
 
             const ipAddress = $(this).data('ip');
-
-            // Switch to lookup tab with IP as URL parameter
-            const $lookupTab = $('a[href*="tab=lookup"]');
-            if ($lookupTab.length) {
-                window.location.href = $lookupTab.attr('href') + '&lookup_ip=' + encodeURIComponent(ipAddress);
+            if (!ipAddress) {
+                return;
             }
+
+            window.location.href = window.location.pathname +
+                '?page=reportedip-hive-security&tab=activity&sub=lookup' +
+                '&lookup_ip=' + encodeURIComponent(ipAddress);
         },
 
         performLookupTabSearch: function(e) {
@@ -642,8 +643,8 @@
                 return;
             }
 
-            $button.prop('disabled', true).text('Looking up...');
-            $results.hide();
+            $button.prop('disabled', true);
+            $results.addClass('rip-hidden');
             $content.empty();
 
             $.ajax({
@@ -657,7 +658,7 @@
                 success: function(response) {
                     if (response.success) {
                         ReportedIPAdmin.displayIPInfo(response.data, $content);
-                        $results.show();
+                        $results.removeClass('rip-hidden').show();
                     } else {
                         ReportedIPAdmin.showNotification(response.data || 'Failed to lookup IP address', 'error');
                     }
@@ -666,7 +667,7 @@
                     ReportedIPAdmin.showNotification('Network error occurred', 'error');
                 },
                 complete: function() {
-                    $button.prop('disabled', false).text('Lookup');
+                    $button.prop('disabled', false);
                 }
             });
         },
