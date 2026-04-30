@@ -158,7 +158,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$mon        = new \ReportedIP_Hive_Security_Monitor();
 			$reflection = new ReflectionClass( $mon );
 			$method     = $reflection->getMethod( 'record_username_for_spray_detection' );
-			$method->setAccessible( true );
 			$method->invoke( $mon, $ip, $username );
 		}
 

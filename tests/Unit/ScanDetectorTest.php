@@ -45,7 +45,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$instance = \ReportedIP_Hive_Scan_Detector::get_instance();
 			$reflection = new ReflectionClass( $instance );
 			$method     = $reflection->getMethod( 'is_known_scan_path' );
-			$method->setAccessible( true );
 			return (bool) $method->invoke( $instance, $path );
 		}
 

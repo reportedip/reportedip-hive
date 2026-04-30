@@ -68,7 +68,6 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$GLOBALS['wp_options']['reportedip_hive_operation_mode'] = $mode;
 		$mm                                                      = \ReportedIP_Hive_Mode_Manager::get_instance();
 		$ref                                                     = new \ReflectionProperty( $mm, 'cached_mode' );
-		$ref->setAccessible( true );
 		$ref->setValue( $mm, null );
 	}
 

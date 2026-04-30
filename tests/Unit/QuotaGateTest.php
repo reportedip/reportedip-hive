@@ -145,7 +145,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 
 			$prop = new \ReflectionProperty( '\ReportedIP_Hive_API', 'instance' );
-			$prop->setAccessible( true );
 			$prop->setValue( null, null );
 		}
 

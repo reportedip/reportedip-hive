@@ -54,7 +54,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$instance   = \ReportedIP_Hive_Password_Strength::get_instance();
 			$reflection = new ReflectionClass( $instance );
 			$method     = $reflection->getMethod( 'validate_password' );
-			$method->setAccessible( true );
 			return $method->invoke( $instance, $password, null );
 		}
 
