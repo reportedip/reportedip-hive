@@ -253,6 +253,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_enabled_global" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_allowed_methods" value="" />
 			<input type="hidden" name="reportedip_hive_2fa_enforce_roles" value="" />
+			<input type="hidden" name="reportedip_hive_2fa_reminder_enabled" value="0" />
+			<input type="hidden" name="reportedip_hive_2fa_reminder_hard_roles" value="" />
 			<input type="hidden" name="reportedip_hive_2fa_frontend_onboarding" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_notify_new_device" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_xmlrpc_app_password_only" value="0" />
@@ -457,6 +459,73 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						</span>
 					</label>
 					<p class="rip-help-text"><?php esc_html_e( 'Also redirects required users to onboarding when they land on frontend pages after sign-in (e.g. WooCommerce account).', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<!-- Login reminder for users without 2FA -->
+			<?php
+			$reminder_enabled   = (bool) get_option( ReportedIP_Hive_Two_Factor_Recommend::OPT_ENABLED, true );
+			$reminder_threshold = (int) get_option( ReportedIP_Hive_Two_Factor_Recommend::OPT_HARD_THRESHOLD, ReportedIP_Hive_Two_Factor_Recommend::DEFAULT_THRESHOLD );
+			$reminder_hard_raw  = get_option( ReportedIP_Hive_Two_Factor_Recommend::OPT_HARD_ROLES, ReportedIP_Hive_Two_Factor_Recommend::DEFAULT_HARD_ROLES );
+			if ( is_string( $reminder_hard_raw ) ) {
+				$decoded           = json_decode( $reminder_hard_raw, true );
+				$reminder_hard_raw = is_array( $decoded ) ? $decoded : ReportedIP_Hive_Two_Factor_Recommend::DEFAULT_HARD_ROLES;
+			}
+			if ( ! is_array( $reminder_hard_raw ) ) {
+				$reminder_hard_raw = ReportedIP_Hive_Two_Factor_Recommend::DEFAULT_HARD_ROLES;
+			}
+			?>
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+					<?php esc_html_e( 'Login reminder for users without 2FA', 'reportedip-hive' ); ?>
+				</h2>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox"
+							class="rip-toggle__input"
+							name="reportedip_hive_2fa_reminder_enabled"
+							value="1"
+							<?php checked( $reminder_enabled ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label">
+							<?php esc_html_e( 'Show a reminder banner at login until 2FA is set up', 'reportedip-hive' ); ?>
+						</span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'On every login of a user without any 2FA method, a banner appears across all admin pages. The banner is dismissable per session but reappears on the next login.', 'reportedip-hive' ); ?></p>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_2fa_reminder_threshold">
+						<?php esc_html_e( 'Hard-block threshold', 'reportedip-hive' ); ?>
+					</label>
+					<input type="number"
+						id="reportedip_2fa_reminder_threshold"
+						class="rip-input"
+						name="reportedip_hive_2fa_reminder_hard_threshold"
+						value="<?php echo esc_attr( (string) $reminder_threshold ); ?>"
+						min="1"
+						max="10"
+						style="width: 80px;" />
+					<p class="rip-help-text"><?php esc_html_e( 'After this many login reminders, users in the roles selected below are forced into the 2FA onboarding wizard before they can continue. Recommended: 5.', 'reportedip-hive' ); ?></p>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-label"><?php esc_html_e( 'Hard-block roles', 'reportedip-hive' ); ?></label>
+					<?php
+					$all_roles_for_reminder = wp_roles()->get_names();
+					foreach ( $all_roles_for_reminder as $role_slug => $role_name ) :
+						?>
+						<label style="display: block; margin-bottom: 4px;">
+							<input type="checkbox"
+								name="reportedip_hive_2fa_reminder_hard_roles[]"
+								value="<?php echo esc_attr( $role_slug ); ?>"
+								<?php checked( in_array( $role_slug, $reminder_hard_raw, true ) ); ?> />
+							<?php echo esc_html( translate_user_role( $role_name ) ); ?>
+						</label>
+					<?php endforeach; ?>
+					<p class="rip-help-text"><?php esc_html_e( 'Users in these roles get hard-blocked once the threshold is reached. All other roles only see the reminder banner — no lock-out (recommended for Customer / Subscriber / Author so a missing phone never breaks WooCommerce).', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
@@ -790,6 +859,73 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				'sanitize_callback' => array( __CLASS__, 'sanitize_enforce_roles' ),
 			)
 		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_reminder_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_reminder_hard_threshold',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_reminder_threshold' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_reminder_hard_roles',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_reminder_hard_roles' ),
+			)
+		);
+	}
+
+	/**
+	 * Clamp the reminder threshold to a sane range.
+	 *
+	 * @param mixed $input
+	 * @return int 1..10
+	 */
+	public static function sanitize_reminder_threshold( $input ) {
+		$value = (int) $input;
+		if ( $value < 1 ) {
+			$value = 1;
+		}
+		if ( $value > 10 ) {
+			$value = 10;
+		}
+		return $value;
+	}
+
+	/**
+	 * Sanitize the hard-block role list and persist it as a JSON array string,
+	 * mirroring the storage pattern used for `reportedip_hive_2fa_enforce_roles`.
+	 *
+	 * @param mixed $input Either an array of role slugs (POST) or a string.
+	 * @return string JSON-encoded list of sanitised role slugs.
+	 */
+	public static function sanitize_reminder_hard_roles( $input ) {
+		if ( is_string( $input ) ) {
+			$decoded = json_decode( $input, true );
+			$input   = is_array( $decoded ) ? $decoded : array();
+		}
+		if ( ! is_array( $input ) ) {
+			$input = array();
+		}
+		$valid = array_keys( wp_roles()->get_names() );
+		$clean = array();
+		foreach ( $input as $role ) {
+			$role = sanitize_key( (string) $role );
+			if ( '' !== $role && in_array( $role, $valid, true ) ) {
+				$clean[] = $role;
+			}
+		}
+		return wp_json_encode( array_values( array_unique( $clean ) ) );
 	}
 
 	/**
@@ -821,6 +957,15 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				<div class="rip-alert rip-alert--success">
 					<strong><?php esc_html_e( 'Managed SMS relay active', 'reportedip-hive' ); ?>:</strong>
 					<?php esc_html_e( 'SMS-2FA flows through reportedip.de — included with your plan, no third-party SMS contract needed.', 'reportedip-hive' ); ?>
+					<?php
+					$allowed_methods_for_hint = class_exists( 'ReportedIP_Hive_Two_Factor' )
+						? ReportedIP_Hive_Two_Factor::get_allowed_methods()
+						: array();
+					if ( ! in_array( 'sms', $allowed_methods_for_hint, true ) ) :
+						?>
+						<br>
+						<em><?php esc_html_e( 'Final step: enable “SMS code” in the methods list above to roll it out to your users.', 'reportedip-hive' ); ?></em>
+					<?php endif; ?>
 				</div>
 			<?php elseif ( 'tier' === ( $relay_status['reason'] ?? '' ) ) : ?>
 				<p class="rip-help-text">
@@ -926,19 +1071,28 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				</fieldset>
 			<?php endforeach; ?>
 
+			<?php
+			$is_relay_active = ( 'reportedip_relay' === $active_id && ! empty( $relay_status['available'] ) );
+			$avv_label       = $is_relay_active
+				? __( 'I have accepted the ReportedIP AVV (signed with my plan subscription).', 'reportedip-hive' )
+				: __( 'I confirm that a DPA with the selected SMS provider is in place.', 'reportedip-hive' );
+			$avv_help        = $is_relay_active
+				? __( 'The AVV is part of your active plan and is automatically in force — no separate provider contract needed.', 'reportedip-hive' )
+				: __( 'Without this confirmation no SMS is ever sent — privacy hard gate.', 'reportedip-hive' );
+			?>
 			<div class="rip-form-group">
 				<label class="rip-toggle">
 					<input type="checkbox"
 						class="rip-toggle__input"
 						name="reportedip_hive_2fa_sms_avv_confirmed"
 						value="1"
-						<?php checked( $avv_confirmed ); ?> />
+						<?php checked( $avv_confirmed || $is_relay_active ); ?> />
 					<span class="rip-toggle__slider"></span>
 					<span class="rip-toggle__label">
-						<?php esc_html_e( 'I confirm that a DPA with the selected SMS provider is in place.', 'reportedip-hive' ); ?>
+						<?php echo esc_html( $avv_label ); ?>
 					</span>
 				</label>
-				<p class="rip-help-text"><?php esc_html_e( 'Without this confirmation no SMS is ever sent — privacy hard gate.', 'reportedip-hive' ); ?></p>
+				<p class="rip-help-text"><?php echo esc_html( $avv_help ); ?></p>
 			</div>
 
 			<div class="rip-form-group">
@@ -1007,7 +1161,16 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		}
 		$input    = sanitize_key( (string) $input );
 		$registry = ReportedIP_Hive_Two_Factor_SMS::providers();
-		return isset( $registry[ $input ] ) ? $input : '';
+		$value    = isset( $registry[ $input ] ) ? $input : '';
+
+		if ( 'reportedip_relay' === $value && class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+			$relay_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
+			if ( ! empty( $relay_status['available'] ) ) {
+				update_option( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, true );
+			}
+		}
+
+		return $value;
 	}
 
 	/**

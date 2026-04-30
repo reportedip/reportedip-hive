@@ -1452,6 +1452,19 @@ class ReportedIP_Hive_Two_Factor {
 		if ( class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) {
 			delete_transient( ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_PREFIX . $user_id );
 		}
+
+		/**
+		 * Fires after a 2FA method has been activated for a user.
+		 *
+		 * Used by ReportedIP_Hive_Two_Factor_Recommend to clear the login-reminder
+		 * counter; available for any third-party listener that needs to react to
+		 * a method going live (audit log, welcome mail, …).
+		 *
+		 * @since 1.6.1
+		 * @param int    $user_id The user whose method became active.
+		 * @param string $method  Method id: totp | email | sms | webauthn.
+		 */
+		do_action( 'reportedip_hive_2fa_method_enabled', (int) $user_id, (string) $method );
 	}
 
 	/**

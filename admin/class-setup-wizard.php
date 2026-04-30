@@ -1045,6 +1045,18 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 			</div>
 
+			<div class="rip-config-card rip-config-card--note">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+					<h3><?php esc_html_e( 'Login reminder for users without 2FA', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block">
+						<?php esc_html_e( 'After this wizard, every user who signs in without an active 2FA method sees a reminder banner. Privileged roles (administrator, editor, shop manager) are forced into 2FA setup after 5 reminders; other roles only see the soft banner so a missing phone never locks anyone out of their account. You can fine-tune the threshold and the role list any time under 2FA settings → Login reminder.', 'reportedip-hive' ); ?>
+					</p>
+				</div>
+			</div>
+
 			<div class="rip-wizard__actions">
 				<a href="<?php echo esc_url( add_query_arg( 'step', 3, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>

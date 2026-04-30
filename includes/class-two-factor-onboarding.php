@@ -92,7 +92,16 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			return false;
 		}
 
-		return ReportedIP_Hive_Two_Factor::is_enforced_for_user( $user_obj );
+		if ( ReportedIP_Hive_Two_Factor::is_enforced_for_user( $user_obj ) ) {
+			return true;
+		}
+
+		if ( class_exists( 'ReportedIP_Hive_Two_Factor_Recommend' )
+			&& ReportedIP_Hive_Two_Factor_Recommend::should_hard_block( $user_obj ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**

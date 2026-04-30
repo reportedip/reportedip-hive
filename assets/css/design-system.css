@@ -51,6 +51,8 @@
     --rip-info-dark: #2563EB;
     --rip-info-bg: rgba(59, 130, 246, 0.1);
 
+    --rip-woocommerce: #7F54B3;
+
     /* Neutral Colors */
     --rip-white: #FFFFFF;
     --rip-black: #000000;
@@ -2378,4 +2380,58 @@ button.rip-tier-lock--mode:hover {
     .rip-activity-stats {
         grid-template-columns: 1fr;
     }
+}
+
+/* =============================================================
+ * Tier-upgrade banner — checklist component
+ * Used by Admin_Settings::render_tier_upgrade_banner() to show the
+ * three remaining 2FA setup steps after a Free → PRO+ upgrade.
+ * ========================================================== */
+
+.rip-tier-upgrade-banner {
+    border-left-width: 4px;
+}
+
+.rip-banner-checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.rip-banner-checklist__item {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-2);
+    padding: var(--rip-space-1) 0;
+    font-size: var(--rip-text-sm);
+    line-height: 1.4;
+}
+
+.rip-banner-checklist__indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: 0 0 1.25rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.rip-banner-checklist__item--done .rip-banner-checklist__indicator {
+    color: var(--rip-success);
+}
+
+.rip-banner-checklist__item--done .rip-banner-checklist__label {
+    text-decoration: line-through;
+    color: var(--rip-gray-500);
+}
+
+.rip-banner-checklist__item--open .rip-banner-checklist__indicator {
+    color: var(--rip-gray-500);
+}
+
+.rip-banner-checklist__item--open .rip-banner-checklist__label {
+    color: var(--rip-gray-900);
+    font-weight: 500;
 }

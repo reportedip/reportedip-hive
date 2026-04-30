@@ -2,6 +2,59 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.6.1] — 2026-04-30
+
+### New
+
+- **Post-upgrade 2FA setup banner.** When a customer's plan crosses
+  from Free / Contributor into Professional / Business / Enterprise,
+  a dismissable welcome banner with a three-step checklist now
+  appears on every Hive admin page until the customer either
+  finishes 2FA setup or dismisses it. The plugin auto-prefills the
+  Managed SMS Relay as the SMS provider (only when no provider is
+  configured yet) and adds the email method to the site-wide allow
+  list — the SMS method toggle and the AVV confirmation remain
+  untouched so the consent gesture stays explicit.
+- **Login-time 2FA reminder for end users.** New
+  `ReportedIP_Hive_Two_Factor_Recommend` listener counts how often
+  each user signs in without a configured 2FA method and renders a
+  soft reminder banner across the WordPress admin. After the
+  configurable threshold (default 5) administrators, editors and
+  shop managers are forced into the existing onboarding wizard
+  before they can continue; customers, subscribers and other
+  non-privileged roles only ever see the soft banner so a missing
+  phone never locks anyone out of WooCommerce. A new
+  `reportedip_hive_2fa_method_enabled` action fires whenever any
+  method goes live and resets the counter; full unit coverage in
+  `tests/Unit/TwoFactorRecommendTest.php`.
+- New `ReportedIP_Hive_Tier_Upgrade` listener wires the existing
+  `reportedip_hive_tier_changed` action to the soft-activation /
+  notice lifecycle, with full unit-test coverage.
+
+### Changed
+
+- **AVV / DPA checkbox on the 2FA tab adapts to the active SMS
+  provider.** When `reportedip_relay` is selected, the label reads
+  *"I have accepted the ReportedIP AVV (signed with my plan
+  subscription)"* and is auto-checked because the AVV is part of
+  the plan subscription. For self-hosted providers (Sipgate,
+  MessageBird, sevenio) the original *"I confirm that a DPA …"*
+  wording is preserved. The privacy hard gate behaviour is
+  unchanged: no SMS is dispatched until the flag is true.
+- The "Managed SMS relay active" info box on the 2FA tab gains a
+  final-step hint when the SMS method is not yet in the site's
+  allow list, pointing the operator to the methods list above.
+- Saving `reportedip_relay` as the active SMS provider now
+  automatically sets `OPT_AVV_CONFIRMED` (when the relay is
+  available for the current tier), so the click-through path
+  works without the banner.
+- 2FA settings tab gains a "Login reminder" section to toggle the
+  end-user reminder, set the hard-block threshold (1–10) and pick
+  which roles get hard-blocked at the threshold.
+- Setup wizard's 2FA step now mentions the login-reminder
+  behaviour so the site operator knows what end users will see
+  after activation.
+
 ## [1.6.0] — 2026-04-30
 
 ### New

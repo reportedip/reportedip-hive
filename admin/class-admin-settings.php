@@ -28,6 +28,7 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( 'ReportedIP_Hive_Two_Factor_Admin', 'register_settings' ) );
+		add_action( 'admin_notices', array( $this, 'render_tier_upgrade_banner' ) );
 	}
 
 	/**
@@ -487,6 +488,74 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 			</div>
 		</div><!-- /.wrap.rip-wrap -->
+		<?php
+	}
+
+	/**
+	 * Render the post-tier-upgrade welcome banner on every Hive admin page.
+	 *
+	 * Hooked on `admin_notices`. Visible only on screens whose id contains
+	 * `reportedip-hive` and only while {@see ReportedIP_Hive_Tier_Upgrade::should_show_notice()}
+	 * returns true. Shows a three-step checklist plus a dismiss button.
+	 */
+	public function render_tier_upgrade_banner() {
+		if ( ! class_exists( 'ReportedIP_Hive_Tier_Upgrade' ) ) {
+			return;
+		}
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || strpos( (string) $screen->id, 'reportedip-hive' ) === false ) {
+			return;
+		}
+		if ( ! ReportedIP_Hive_Tier_Upgrade::should_show_notice() ) {
+			return;
+		}
+		$notice = ReportedIP_Hive_Tier_Upgrade::get_notice();
+		if ( ! $notice ) {
+			return;
+		}
+
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$tier_info    = $mode_manager->get_tier_info( (string) ( $notice['to'] ?? 'professional' ) );
+		$tier_label   = isset( $tier_info['label'] ) && '' !== (string) $tier_info['label']
+			? (string) $tier_info['label']
+			: __( 'paid', 'reportedip-hive' );
+
+		$two_factor_url = admin_url( 'admin.php?page=reportedip-hive-settings&tab=two_factor' );
+		$dismiss_url    = admin_url( 'admin-post.php' );
+		$checklist      = ReportedIP_Hive_Tier_Upgrade::get_setup_checklist();
+		?>
+		<div class="notice rip-alert rip-alert--info rip-tier-upgrade-banner">
+			<p style="font-size: var(--rip-text-base); font-weight: 600; margin: 0 0 var(--rip-space-2);">
+				<?php
+				printf(
+					/* translators: %s = tier label, e.g. Professional */
+					esc_html__( 'Your %s plan is active — finish 2FA setup', 'reportedip-hive' ),
+					esc_html( $tier_label )
+				);
+				?>
+			</p>
+			<p style="margin: 0 0 var(--rip-space-2);">
+				<?php esc_html_e( 'Two-factor authentication via the managed reportedip.de relay is now included with your plan. The SMS provider has been prefilled for you — these small steps remain:', 'reportedip-hive' ); ?>
+			</p>
+			<ul class="rip-banner-checklist">
+				<?php foreach ( $checklist as $item ) : ?>
+					<li class="rip-banner-checklist__item rip-banner-checklist__item--<?php echo esc_attr( $item['done'] ? 'done' : 'open' ); ?>">
+						<span class="rip-banner-checklist__indicator" aria-hidden="true"><?php echo $item['done'] ? '&#10003;' : '&#9744;'; ?></span>
+						<span class="rip-banner-checklist__label"><?php echo esc_html( $item['label'] ); ?></span>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+			<p style="margin: var(--rip-space-3) 0 0;">
+				<a class="rip-button rip-button--primary" href="<?php echo esc_url( $two_factor_url ); ?>">
+					<?php esc_html_e( 'Open 2FA settings', 'reportedip-hive' ); ?>
+				</a>
+				<form method="post" action="<?php echo esc_url( $dismiss_url ); ?>" style="display: inline-block; margin-left: var(--rip-space-2);">
+					<input type="hidden" name="action" value="reportedip_hive_dismiss_tier_notice" />
+					<?php wp_nonce_field( 'reportedip_hive_dismiss_tier_notice' ); ?>
+					<button type="submit" class="rip-button rip-button--ghost"><?php esc_html_e( 'Dismiss', 'reportedip-hive' ); ?></button>
+				</form>
+			</p>
+		</div>
 		<?php
 	}
 
