@@ -389,6 +389,11 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 					'passkeyDuplicate' => __( 'This passkey is already registered on your account. You can continue with the next method.', 'reportedip-hive' ),
 					'passkeyCancelled' => __( 'Passkey creation was cancelled. You can try again or choose another method.', 'reportedip-hive' ),
 					'downloaded'       => __( 'Downloaded', 'reportedip-hive' ),
+					/* translators: %d: seconds remaining */
+					'resendIn'         => __( 'Resend in %d s', 'reportedip-hive' ),
+					/* translators: %d: seconds remaining */
+					'smsDeliveryWait'  => __( 'SMS sent — delivery can take up to 60 s (%d)', 'reportedip-hive' ),
+					'phoneInvalid'     => __( 'Please enter the number with country code, e.g. +49 151 12345678.', 'reportedip-hive' ),
 				),
 			)
 		);

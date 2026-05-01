@@ -83,6 +83,22 @@ if ( $grace_deadline > 0 ) {
 		<?php endif; ?>
 	</header>
 
+	<div class="rip-wizard__site-context">
+		<span class="rip-wizard__site-name">
+			<?php
+			printf(
+				/* translators: %s: blog name */
+				wp_kses_post( __( 'for %s', 'reportedip-hive' ) ),
+				'<strong>' . esc_html( get_bloginfo( 'name' ) ) . '</strong>'
+			);
+			?>
+		</span>
+		<span class="rip-wizard__site-domain">
+			<?php esc_html_e( 'Domain:', 'reportedip-hive' ); ?>
+			<code><?php echo esc_html( (string) wp_parse_url( home_url(), PHP_URL_HOST ) ); ?></code>
+		</span>
+	</div>
+
 	<div class="rip-wizard__content">
 
 		<?php if ( $unlimited_skip && $grace_deadline_str ) : ?>
@@ -127,7 +143,15 @@ if ( $grace_deadline > 0 ) {
 
 		<!-- ==================== STEP 1 – Welcome ==================== -->
 		<section class="rip-wizard__step-content rip-2fa-step" data-step="1" aria-labelledby="rip-2fa-step1-title">
-			<h1 id="rip-2fa-step1-title" class="rip-wizard__title"><?php esc_html_e( 'Welcome to Two-Factor Authentication', 'reportedip-hive' ); ?></h1>
+			<h1 id="rip-2fa-step1-title" class="rip-wizard__title">
+				<?php
+				printf(
+					/* translators: %s: blog name */
+					esc_html__( 'Welcome to Two-Factor Authentication for %s', 'reportedip-hive' ),
+					esc_html( get_bloginfo( 'name' ) )
+				);
+				?>
+			</h1>
 			<p class="rip-wizard__subtitle">
 				<?php esc_html_e( 'Let\'s make your WordPress account even more secure — in just 2 minutes.', 'reportedip-hive' ); ?>
 			</p>
@@ -357,19 +381,25 @@ if ( $grace_deadline > 0 ) {
 					);
 					?>
 				</p>
-				<ol class="rip-2fa-steps">
-					<li>
-						<button type="button" class="rip-button rip-button--primary" id="rip-2fa-email-send"><?php esc_html_e( 'Send confirmation code to my email', 'reportedip-hive' ); ?></button>
-						<span class="rip-2fa-inline-status" id="rip-2fa-email-send-status" role="status"></span>
-					</li>
-					<li><?php esc_html_e( 'Enter the 6-digit code from the email:', 'reportedip-hive' ); ?>
+				<div class="rip-2fa-substep">
+					<span class="rip-2fa-substep__num" aria-hidden="true">1</span>
+					<div class="rip-2fa-substep__body">
+						<h3 class="rip-2fa-substep__title"><?php esc_html_e( 'Send confirmation code to my email', 'reportedip-hive' ); ?></h3>
+						<button type="button" class="rip-button rip-button--primary" id="rip-2fa-email-send" data-default-label="<?php esc_attr_e( 'Send confirmation code to my email', 'reportedip-hive' ); ?>"><?php esc_html_e( 'Send confirmation code to my email', 'reportedip-hive' ); ?></button>
+						<p class="rip-2fa-inline-status" id="rip-2fa-email-send-status" role="status"></p>
+					</div>
+				</div>
+				<div class="rip-2fa-substep">
+					<span class="rip-2fa-substep__num" aria-hidden="true">2</span>
+					<div class="rip-2fa-substep__body">
+						<h3 class="rip-2fa-substep__title"><?php esc_html_e( 'Enter the 6-digit code from the email', 'reportedip-hive' ); ?></h3>
 						<div class="rip-2fa-code-confirm">
 							<input type="text" id="rip-2fa-email-verify" class="rip-input rip-2fa-code-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-label="<?php esc_attr_e( 'Email code', 'reportedip-hive' ); ?>">
 							<button type="button" class="rip-button rip-button--primary" id="rip-2fa-email-confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
 						</div>
 						<p class="rip-2fa-inline-status" id="rip-2fa-email-verify-status" role="status"></p>
-					</li>
-				</ol>
+					</div>
+				</div>
 				<p class="rip-help-text">
 					<?php esc_html_e( 'Security note: email-based 2FA is only as secure as your email account. Protect it with 2FA as well if possible.', 'reportedip-hive' ); ?>
 				</p>
@@ -393,26 +423,58 @@ if ( $grace_deadline > 0 ) {
 			<!-- SMS-Setup-Panel -->
 			<div class="rip-2fa-setup-panel" data-method-panel="sms" hidden>
 				<h2><?php esc_html_e( 'Set up SMS', 'reportedip-hive' ); ?></h2>
-				<div class="rip-alert rip-alert--warning">
-					<strong><?php esc_html_e( 'Privacy notice.', 'reportedip-hive' ); ?></strong>
-					<?php esc_html_e( 'Your phone number is stored encrypted and only shared with our EU SMS provider for delivery. SIM-swapping can compromise SMS 2FA; prefer passkey or TOTP as your main method.', 'reportedip-hive' ); ?>
+
+				<div class="rip-privacy-notice" role="note">
+					<svg class="rip-privacy-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<rect x="3" y="11" width="18" height="11" rx="2"/>
+						<path d="M7 11V7a5 5 0 0110 0v4"/>
+					</svg>
+					<div>
+						<strong><?php esc_html_e( 'Privacy notice', 'reportedip-hive' ); ?></strong>
+						<p><?php esc_html_e( 'Your phone number is stored encrypted and only shared with our EU SMS provider for delivery. SIM-swapping can compromise SMS 2FA — prefer passkey or TOTP as your main method.', 'reportedip-hive' ); ?></p>
+					</div>
 				</div>
-				<div class="rip-form-group">
-					<label for="rip-2fa-sms-number" class="rip-label"><?php esc_html_e( 'Mobile number (international, e.g. +49…)', 'reportedip-hive' ); ?></label>
-					<input type="tel" id="rip-2fa-sms-number" class="rip-input" autocomplete="tel" placeholder="+49 151 12345678">
+
+				<div class="rip-2fa-substep">
+					<span class="rip-2fa-substep__num" aria-hidden="true">1</span>
+					<div class="rip-2fa-substep__body">
+						<h3 class="rip-2fa-substep__title"><?php esc_html_e( 'Enter your mobile number', 'reportedip-hive' ); ?></h3>
+
+						<div class="rip-form-group">
+							<label for="rip-2fa-sms-number" class="rip-label"><?php esc_html_e( 'Mobile number (international, e.g. +49 151 12345678)', 'reportedip-hive' ); ?></label>
+							<div class="rip-input-wrap">
+								<input type="tel" id="rip-2fa-sms-number" class="rip-input" autocomplete="tel" placeholder="+49 151 12345678" aria-describedby="rip-2fa-sms-number-hint" inputmode="tel">
+								<span class="rip-input-validity" aria-hidden="true"></span>
+							</div>
+							<p id="rip-2fa-sms-number-hint" class="rip-help-text">
+								<?php esc_html_e( 'Country code is mandatory — for example +49 151 12345678. Numbers starting with 0 (like 0176…) are not accepted.', 'reportedip-hive' ); ?>
+							</p>
+						</div>
+
+						<label class="rip-checkbox">
+							<input type="checkbox" id="rip-2fa-sms-consent">
+							<?php esc_html_e( 'I consent to processing of my phone number by the configured EU SMS provider for authentication.', 'reportedip-hive' ); ?>
+						</label>
+
+						<button type="button" class="rip-button rip-button--primary" id="rip-2fa-sms-send" disabled data-default-label="<?php esc_attr_e( 'Send confirmation code by SMS', 'reportedip-hive' ); ?>">
+							<?php esc_html_e( 'Send confirmation code by SMS', 'reportedip-hive' ); ?>
+						</button>
+						<p class="rip-2fa-inline-status" id="rip-2fa-sms-send-status" role="status"></p>
+						<p class="rip-2fa-challenge__timer" id="rip-2fa-sms-delivery-timer" role="status" hidden></p>
+					</div>
 				</div>
-				<label class="rip-checkbox">
-					<input type="checkbox" id="rip-2fa-sms-consent">
-					<?php esc_html_e( 'I consent to processing of my phone number by the configured EU SMS provider for authentication.', 'reportedip-hive' ); ?>
-				</label>
-				<div class="rip-wizard__actions">
-					<button type="button" class="rip-button rip-button--primary" id="rip-2fa-sms-send" disabled><?php esc_html_e( 'Send confirmation code by SMS', 'reportedip-hive' ); ?></button>
+
+				<div class="rip-2fa-substep">
+					<span class="rip-2fa-substep__num" aria-hidden="true">2</span>
+					<div class="rip-2fa-substep__body">
+						<h3 class="rip-2fa-substep__title"><?php esc_html_e( 'Enter the 6-digit code from the SMS', 'reportedip-hive' ); ?></h3>
+						<div class="rip-2fa-code-confirm">
+							<input type="text" id="rip-2fa-sms-verify" class="rip-input rip-2fa-code-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-label="<?php esc_attr_e( 'SMS code', 'reportedip-hive' ); ?>">
+							<button type="button" class="rip-button rip-button--primary" id="rip-2fa-sms-confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
+						</div>
+						<p class="rip-2fa-inline-status" id="rip-2fa-sms-status" role="status"></p>
+					</div>
 				</div>
-				<div class="rip-2fa-code-confirm" style="margin-top: var(--rip-space-4);">
-					<input type="text" id="rip-2fa-sms-verify" class="rip-input rip-2fa-code-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="000000">
-					<button type="button" class="rip-button rip-button--primary" id="rip-2fa-sms-confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
-				</div>
-				<p class="rip-2fa-inline-status" id="rip-2fa-sms-status" role="status"></p>
 			</div>
 
 			<div class="rip-wizard__actions">
@@ -430,9 +492,16 @@ if ( $grace_deadline > 0 ) {
 				<?php esc_html_e( 'If you lose your device or can\'t access your chosen methods, you can sign in with one of these one-time codes.', 'reportedip-hive' ); ?>
 			</p>
 
-			<div class="rip-alert rip-alert--warning">
-				<strong><?php esc_html_e( 'Important!', 'reportedip-hive' ); ?></strong>
-				<?php esc_html_e( 'Each code can be used only once. Store them safely — e.g. in a password manager, a safe, or printed. Do NOT store them in the same password manager as your WordPress password.', 'reportedip-hive' ); ?>
+			<div class="rip-privacy-notice rip-privacy-notice--warning" role="note">
+				<svg class="rip-privacy-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+					<line x1="12" y1="9" x2="12" y2="13"/>
+					<line x1="12" y1="17" x2="12.01" y2="17"/>
+				</svg>
+				<div>
+					<strong><?php esc_html_e( 'Important — these codes are your fallback.', 'reportedip-hive' ); ?></strong>
+					<p><?php esc_html_e( 'Each code can be used only once. Store them safely — password manager, safe, or printed. Do NOT store them in the same password manager as your WordPress password.', 'reportedip-hive' ); ?></p>
+				</div>
 			</div>
 
 			<div class="rip-2fa-recovery-grid" id="rip-2fa-recovery-codes" aria-label="<?php esc_attr_e( 'Recovery codes', 'reportedip-hive' ); ?>">
@@ -454,16 +523,18 @@ if ( $grace_deadline > 0 ) {
 				</button>
 			</div>
 
-			<label class="rip-checkbox" style="margin-top: var(--rip-space-6);">
-				<input type="checkbox" id="rip-2fa-recovery-acknowledged">
-				<?php esc_html_e( 'I have stored my recovery codes safely.', 'reportedip-hive' ); ?>
-			</label>
-
-			<div class="rip-wizard__actions">
-				<button type="button" class="rip-button rip-button--ghost" data-goto-step="3">← <?php esc_html_e( 'Back', 'reportedip-hive' ); ?></button>
+			<div class="rip-2fa-recovery-ack">
+				<label class="rip-checkbox">
+					<input type="checkbox" id="rip-2fa-recovery-acknowledged">
+					<?php esc_html_e( 'I have stored my recovery codes safely.', 'reportedip-hive' ); ?>
+				</label>
 				<button type="button" class="rip-button rip-button--primary rip-button--lg" id="rip-2fa-recovery-continue" disabled>
 					<?php esc_html_e( 'Finish', 'reportedip-hive' ); ?>
 				</button>
+			</div>
+
+			<div class="rip-wizard__actions rip-wizard__actions--secondary">
+				<button type="button" class="rip-button rip-button--ghost" data-goto-step="3">← <?php esc_html_e( 'Back', 'reportedip-hive' ); ?></button>
 			</div>
 		</section>
 

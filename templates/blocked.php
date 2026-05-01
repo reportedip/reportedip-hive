@@ -180,10 +180,10 @@ $reportedip_hive_block_strings = 'hide_login' === $reportedip_hive_block_context
 
 		<div class="blocked-actions">
 			<?php
-			$contact_url = get_option( 'reportedip_hive_blocked_page_contact_url', '' );
-			if ( ! empty( $contact_url ) ) :
+			$reportedip_hive_contact_url = get_option( 'reportedip_hive_blocked_page_contact_url', '' );
+			if ( ! empty( $reportedip_hive_contact_url ) ) :
 				?>
-			<a href="<?php echo esc_url( $contact_url ); ?>" class="btn btn-primary">
+			<a href="<?php echo esc_url( $reportedip_hive_contact_url ); ?>" class="btn btn-primary">
 				Contact Administrator
 			</a>
 			<?php else : ?>

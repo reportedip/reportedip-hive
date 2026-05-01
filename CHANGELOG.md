@@ -2,6 +2,106 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.6.4] — 2026-05-01
+
+### Fixes
+
+- **2FA onboarding "Go to dashboard" had unreadable contrast.** A scoped
+  `body.rip-2fa-onboarding a { color: var(--rip-primary); }` rule outranked
+  `.rip-button--primary { color: white; }` on specificity, so the success-step
+  CTA rendered indigo-on-indigo. The anchor selector now excludes
+  `.rip-button` and an explicit override pins primary-button anchors to
+  `#fff`.
+- **Operation mode now persists from the General settings tab.** Previously the
+  Local/Community radio cards on `Settings → General` lived outside any form
+  and the option had no `register_setting()` entry, so clicking save did
+  nothing. The cards are now wrapped in a real `options.php` form, the option
+  is registered with a `sanitize_operation_mode()` callback, and the cache /
+  audit-log side effects (`reportedip_hive_mode_changed`) fire from
+  `update_option_<OPTION_MODE>` so AJAX (wizard) and Settings-API paths run
+  identical post-save code.
+- **Wizard no longer disables detection sensors when Step 3 is skipped.**
+  Missing POST fields used to coerce to `false`, leaving every monitor toggle
+  off after the wizard. The handler now falls back to a centrally-defined
+  "default everything on" profile (new
+  `Defaults::wizard_protection_defaults()`).
+- **Skipping the wizard now seeds safe defaults too**, not only completing it.
+- **Test-SMS button on the 2FA tab.** Replaced the bare `r.json()` call with a
+  text-then-parse pattern so PHP notices or non-JSON responses surface as a
+  readable error (HTTP status code, server message) instead of always saying
+  "Network error". The button now also disables itself when the SMS provider
+  isn't configured yet, with an inline hint about what's missing.
+- **"Set up now" reminder banner** for 2FA users now actually scrolls to the
+  setup section: the user-profile heading carries the missing
+  `id="reportedip-hive-2fa"` anchor.
+- **Reply-To header.** The mailer now adds an explicit `Reply-To` header
+  derived from `Defaults::notify_from()` whenever a caller doesn't supply one,
+  so PRO+ relay sends preserve replies to the configured site contact.
+
+### Changed
+
+- **2FA onboarding wizard polish.** Trust signal added to the header (a
+  site-name + domain strip rendered on every step, plus the Welcome title now
+  reads "Welcome to Two-Factor Authentication for *&lt;site name&gt;*"). Email
+  and SMS setup panels now use numbered substeps instead of a bare `<ol>`.
+  The email "Send code" button starts a 60-second client-side resend
+  countdown; the SMS "Send code" button does the same and additionally shows
+  a "SMS sent — delivery can take up to 60 s" countdown next to the status
+  line. The SMS privacy notice has been promoted from a generic warning
+  alert to a dedicated `.rip-privacy-notice` component (lock icon, soft
+  background); the recovery-codes warning now uses the same component in its
+  amber `--warning` variant. The "I have stored my recovery codes safely"
+  acknowledgement + Finish button now sit centred in a card, and the Back
+  button moved into a separate secondary actions row so the gate is
+  visually obvious.
+- **Strict client-side phone validation in the SMS onboarding step.** The
+  number input now runs the same E.164 regex as the server
+  (`/^\+[1-9]\d{6,14}$/`) on every keystroke, rendering inline ✓ / ✕
+  feedback and gating the "Send" button until a valid international number
+  is entered together with the consent checkbox. Numbers without country
+  code (e.g. `0176…`) are refused before they ever reach the AJAX endpoint,
+  reducing accidental SMS spend.
+- **Settings → Privacy & Logs** loses the "Delete plugin data on uninstall"
+  toggle (moved to Performance & Tools) and the "Maintenance & exports" panel
+  (moved to System Status). The `reportedip_hive_delete_data_on_uninstall`
+  option moved from the `reportedip_hive_advanced_privacy` settings group to
+  `reportedip_hive_advanced_performance` accordingly.
+- **Settings → Performance & Tools** loses the Cache management buttons,
+  Setup-wizard restart link, and Settings import/export panel — all moved to
+  System Status. An info card on the tab points users to the new location.
+- **Settings → 2FA** loses the "Sign-in notifications" section. The
+  `reportedip_hive_2fa_notify_new_device` option now belongs to the
+  Notifications settings group and is rendered inside the Notifications tab.
+- **Settings → Notifications** gains a tier-aware banner explaining the PRO
+  mail-relay flow, plus the migrated Sign-in notifications section.
+- **Settings → Blocking** "How blocking decides" box is now a numbered
+  decision-flow card. The blocked-page contact field accepts `mailto:` links
+  too, with a one-click "Use site admin email" suggestion.
+- **System Status** (formerly "Debug") now hosts cache management, the
+  setup-wizard restart entry point, settings import/export, and maintenance
+  buttons. Health badges grew an inline status pill with a checkmark / warning
+  / error icon next to the operational text.
+- **Settings → 2FA** master toggle now disables every dependent section
+  (methods, enforcement, reminders, IP allowlist, SMS provider, XML-RPC
+  protection, trusted devices, branded login) via a single
+  `rip-2fa-dependent-fields` wrapper.
+- **Community page activity stats** broadened from 3 cards to 6+: failed
+  logins, comment spam, reputation blocks and lifetime API call counters
+  (the latter shown only once the API has been used).
+- **Dashboard.** Day-1 "Security Events" card now shows an inviting empty
+  state instead of a bare empty chart. New API-usage card surfaces total
+  calls / success rate / current-hour usage / average response time pulled
+  from `reportedip_hive_api_stats`. Free-tier Community sites see a
+  Mail/SMS upgrade card mirroring the relay quota layout.
+
+### Defaults
+
+- `Defaults::SAFE_OPTIONS` now seeds an explicit baseline for
+  `operation_mode`, every `monitor_*` and `block_*` toggle (default ON),
+  `2fa_trusted_devices`, `2fa_frontend_onboarding`, and
+  `2fa_enforce_roles` (`["administrator"]`). `add_option()`-based — never
+  overwrites an existing user value.
+
 ## [1.6.3] — 2026-04-30
 
 ### New

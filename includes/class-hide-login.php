@@ -283,6 +283,7 @@ class ReportedIP_Hive_Hide_Login {
 			if ( $this->is_action_whitelisted() ) {
 				return;
 			}
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check; the value is never trusted, just used to skip our block on the WP "interim-login" iframe flow.
 			if ( isset( $_GET['interim-login'] ) ) {
 				return;
 			}
@@ -313,6 +314,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * Whether the current request carries a wp-login action we always allow.
 	 */
 	private function is_action_whitelisted(): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only allow-listing; the action value is sanitised and only compared to a hardcoded bypass list.
 		$action = isset( $_REQUEST['action'] )
 			? sanitize_key( wp_unslash( (string) $_REQUEST['action'] ) )
 			: '';
@@ -369,14 +371,16 @@ class ReportedIP_Hive_Hide_Login {
 		$this->serving_login = true;
 		$this->request_path  = '/wp-login.php';
 
+		// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- QUERY_STRING is forwarded verbatim into REQUEST_URI so wp-login.php sees the original request; sanitize_text_field() above strips control chars, no SQL/HTML context here.
 		$query                  = isset( $_SERVER['QUERY_STRING'] ) && '' !== (string) $_SERVER['QUERY_STRING']
 			? '?' . sanitize_text_field( wp_unslash( (string) $_SERVER['QUERY_STRING'] ) )
 			: '';
+		// phpcs:enable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$_SERVER['REQUEST_URI'] = '/wp-login.php' . $query;
 		$_SERVER['SCRIPT_NAME'] = '/wp-login.php';
 		$_SERVER['PHP_SELF']    = '/wp-login.php';
 
-		// phpcs:disable VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable -- Consumed by wp-login.php after the require.
+		// phpcs:disable VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable, WordPress.Security.NonceVerification.Recommended -- Pre-declared so wp-login.php (loaded via require) sees defined variables under WP_DEBUG; the interim-login flag is consumed by core.
 		$user_login    = '';
 		$error         = '';
 		$interim_login = isset( $_REQUEST['interim-login'] );

@@ -29,6 +29,48 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( 'ReportedIP_Hive_Two_Factor_Admin', 'register_settings' ) );
 		add_action( 'admin_notices', array( $this, 'render_tier_upgrade_banner' ) );
+		add_action( 'updated_option', array( $this, 'maybe_sync_notifications_to_api' ), 10, 1 );
+	}
+
+	/**
+	 * Trigger an opportunistic API sync when any notification setting changes.
+	 *
+	 * Listens on the four notification keys and fires once per request via a
+	 * static flag, so saving the whole tab still produces a single POST. Skips
+	 * silently when the sync toggle is off or the API client cannot be used.
+	 *
+	 * @param string $option Option name being updated.
+	 * @since 1.5.3
+	 */
+	public function maybe_sync_notifications_to_api( $option ) {
+		static $already_synced = false;
+
+		$watched = array(
+			'reportedip_hive_notify_recipients',
+			'reportedip_hive_notify_from_name',
+			'reportedip_hive_notify_from_email',
+			'reportedip_hive_notify_sync_to_api',
+		);
+		if ( $already_synced || ! in_array( $option, $watched, true ) ) {
+			return;
+		}
+		if ( ! get_option( 'reportedip_hive_notify_sync_to_api', false ) ) {
+			return;
+		}
+
+		$already_synced = true;
+
+		if ( ! method_exists( $this->api_client, 'sync_notification_config' ) ) {
+			return;
+		}
+
+		$this->api_client->sync_notification_config(
+			array(
+				'recipients' => ReportedIP_Hive_Defaults::notify_recipients(),
+				'from_name'  => (string) get_option( 'reportedip_hive_notify_from_name', '' ),
+				'from_email' => (string) get_option( 'reportedip_hive_notify_from_email', '' ),
+			)
+		);
 	}
 
 	/**
@@ -125,7 +167,7 @@ class ReportedIP_Hive_Admin_Settings {
 			class="rip-tier-badge <?php echo esc_attr( $info['badge_class'] ); ?>"
 			title="<?php echo esc_attr( $info['description'] ); ?>"
 		>
-			<?php echo self::kses_inline_svg( $info['icon'] ); ?>
+			<?php echo self::kses_inline_svg( $info['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally; the SVG is whitelisted by the helper. ?>
 			<?php echo esc_html( $info['short_label'] ); ?>
 		</span>
 		<?php
@@ -343,6 +385,108 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @return void
 	 * @since 1.5.3
 	 */
+	/**
+	 * Render the Mail/SMS upgrade CTA card for Free-tier Community sites.
+	 *
+	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Singleton.
+	 * @return void
+	 * @since 1.6.0
+	 */
+	private function render_mail_sms_promo_card( $mode_manager ) {
+		$mail_status = $mode_manager->feature_status( 'mail_relay_via_api' );
+		$sms_status  = $mode_manager->feature_status( 'sms_relay_via_api' );
+		?>
+		<div class="rip-card rip-mb-6 rip-promo-card">
+			<div class="rip-card__header">
+				<h2 class="rip-card__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+					<?php esc_html_e( 'Reliable mail & SMS delivery', 'reportedip-hive' ); ?>
+				</h2>
+			</div>
+			<div class="rip-card__body">
+				<p><?php esc_html_e( 'Upgrade to Professional to route 2FA codes and security alerts through the reportedip.de relay — verified SPF/DKIM/DMARC, EU-only routing, no spam folder.', 'reportedip-hive' ); ?></p>
+				<ul class="rip-promo-card__benefits">
+					<li><?php esc_html_e( '500 mails / month included (Business: 2,500)', 'reportedip-hive' ); ?></li>
+					<li><?php esc_html_e( '25 SMS / month included (Business: 75 + add-on bundles)', 'reportedip-hive' ); ?></li>
+					<li><?php esc_html_e( 'No SMTP/SMS provider contract needed — managed by reportedip.de', 'reportedip-hive' ); ?></li>
+				</ul>
+				<div class="rip-flex rip-gap-2 rip-mt-3">
+					<?php self::render_tier_lock( $mail_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the API call usage card on the dashboard. Renders nothing
+	 * when the plugin has never made an API call.
+	 *
+	 * @return void
+	 * @since 1.6.0
+	 */
+	private function render_api_usage_card() {
+		$stats_raw = get_option( 'reportedip_hive_api_stats', array() );
+		if ( ! is_array( $stats_raw ) || empty( $stats_raw['total_calls'] ) ) {
+			return;
+		}
+		$total      = (int) ( $stats_raw['total_calls'] ?? 0 );
+		$success    = (float) ( $stats_raw['success_rate'] ?? 0 );
+		$avg_ms     = (float) ( $stats_raw['avg_response_time'] ?? 0 );
+		$hourly_raw = (int) get_transient( 'reportedip_hive_hourly_api_calls' );
+		$hourly_max = (int) get_option( 'reportedip_hive_max_api_calls_per_hour', 100 );
+		?>
+		<div class="rip-card rip-mb-6">
+			<div class="rip-card__header">
+				<h2 class="rip-card__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+					<?php esc_html_e( 'API call usage', 'reportedip-hive' ); ?>
+				</h2>
+			</div>
+			<div class="rip-card__body">
+				<div class="rip-stat-cards">
+					<div class="rip-stat-card">
+						<div class="rip-stat-card__icon rip-stat-card__icon--info">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+						</div>
+						<div class="rip-stat-card__content">
+							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $total ) ); ?></div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'Total API calls', 'reportedip-hive' ); ?></div>
+						</div>
+					</div>
+					<div class="rip-stat-card">
+						<div class="rip-stat-card__icon rip-stat-card__icon--success">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+						</div>
+						<div class="rip-stat-card__content">
+							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $success ) ); ?>%</div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'Success rate', 'reportedip-hive' ); ?></div>
+						</div>
+					</div>
+					<div class="rip-stat-card">
+						<div class="rip-stat-card__icon rip-stat-card__icon--warning">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+						</div>
+						<div class="rip-stat-card__content">
+							<div class="rip-stat-card__value"><?php echo esc_html( $hourly_raw . ' / ' . $hourly_max ); ?></div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'This hour / limit', 'reportedip-hive' ); ?></div>
+						</div>
+					</div>
+					<div class="rip-stat-card">
+						<div class="rip-stat-card__icon rip-stat-card__icon--info">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+						</div>
+						<div class="rip-stat-card__content">
+							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $avg_ms ) ); ?> ms</div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'Avg response', 'reportedip-hive' ); ?></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
 	private function render_relay_quota_section( $mode_manager ) {
 		$snapshot = $mode_manager->get_relay_quota_snapshot();
 		$tier     = $mode_manager->get_tier_info( $snapshot['tier'] );
@@ -421,7 +565,7 @@ class ReportedIP_Hive_Admin_Settings {
 		<div class="rip-stat-card rip-stat-card--quota">
 			<div class="rip-stat-card__head">
 				<div class="rip-stat-card__icon <?php echo esc_attr( $icon_kind ); ?>">
-					<?php echo self::kses_inline_svg( $icon ); ?>
+					<?php echo self::kses_inline_svg( $icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally; the SVG is whitelisted by the helper. ?>
 				</div>
 				<div class="rip-stat-card__content">
 					<div class="rip-stat-card__value">
@@ -726,6 +870,16 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	public function register_settings() {
 		register_setting(
+			'reportedip_hive_general',
+			'reportedip_hive_operation_mode',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_operation_mode' ),
+				'default'           => 'local',
+			)
+		);
+
+		register_setting(
 			'reportedip_hive_api',
 			'reportedip_hive_api_key',
 			array(
@@ -909,6 +1063,46 @@ class ReportedIP_Hive_Admin_Settings {
 			)
 		);
 		register_setting(
+			'reportedip_hive_protection_notifications',
+			'reportedip_hive_2fa_notify_new_device',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_notifications',
+			'reportedip_hive_notify_recipients',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_notify_recipients' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_notifications',
+			'reportedip_hive_notify_from_name',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_notifications',
+			'reportedip_hive_notify_from_email',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_notify_from_email' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_notifications',
+			'reportedip_hive_notify_sync_to_api',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+			)
+		);
+		register_setting(
 			'reportedip_hive_protection_blocking',
 			'reportedip_hive_report_only_mode',
 			array(
@@ -984,14 +1178,6 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 		register_setting(
 			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_delete_data_on_uninstall',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
 			'reportedip_hive_detailed_logging',
 			array(
 				'type'              => 'boolean',
@@ -1042,6 +1228,14 @@ class ReportedIP_Hive_Admin_Settings {
 		register_setting(
 			'reportedip_hive_advanced_performance',
 			'reportedip_hive_enable_caching',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_advanced_performance',
+			'reportedip_hive_delete_data_on_uninstall',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
@@ -1242,6 +1436,58 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	public function sanitize_boolean( $value ) {
 		return (bool) $value;
+	}
+
+	/**
+	 * Sanitize the operation-mode option. Anything that isn't `local` or
+	 * `community` falls back to the previously stored value (or `local` on
+	 * first install). Side effects (cache invalidation, action hook, audit
+	 * log) are handled by `Mode_Manager::on_mode_option_updated()` listening
+	 * on `update_option_<OPTION_MODE>`.
+	 *
+	 * @param mixed $value Raw POST value.
+	 * @return string Either `local` or `community`.
+	 * @since 1.6.0
+	 */
+	public function sanitize_operation_mode( $value ) {
+		$value = is_string( $value ) ? trim( $value ) : '';
+		if ( ReportedIP_Hive_Mode_Manager::is_valid_mode( $value ) ) {
+			return $value;
+		}
+		$current = (string) get_option( ReportedIP_Hive_Mode_Manager::OPTION_MODE, ReportedIP_Hive_Mode_Manager::MODE_LOCAL );
+		return ReportedIP_Hive_Mode_Manager::is_valid_mode( $current ) ? $current : ReportedIP_Hive_Mode_Manager::MODE_LOCAL;
+	}
+
+	/**
+	 * Sanitize the comma/whitespace-separated notification recipient list.
+	 *
+	 * Drops invalid addresses, dedupes, and re-emits a comma+space joined
+	 * string so the saved option round-trips cleanly.
+	 *
+	 * @param string $value Raw textarea content.
+	 * @return string
+	 */
+	public function sanitize_notify_recipients( $value ) {
+		$candidates = array_filter( array_map( 'trim', preg_split( '/[\s,;]+/', (string) $value ) ) );
+		$valid      = array();
+		foreach ( $candidates as $candidate ) {
+			$clean = sanitize_email( $candidate );
+			if ( '' !== $clean && is_email( $clean ) ) {
+				$valid[] = $clean;
+			}
+		}
+		return implode( ', ', array_values( array_unique( $valid ) ) );
+	}
+
+	/**
+	 * Sanitize the configurable From-email; empty when invalid.
+	 *
+	 * @param string $value Raw input.
+	 * @return string
+	 */
+	public function sanitize_notify_from_email( $value ) {
+		$clean = sanitize_email( (string) $value );
+		return ( '' !== $clean && is_email( $clean ) ) ? $clean : '';
 	}
 
 	/**
@@ -1451,10 +1697,11 @@ class ReportedIP_Hive_Admin_Settings {
 			return false;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified by Settings API options.php handler before sanitize callbacks fire.
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified by Settings API options.php handler before sanitize callbacks fire.
 		$slug_option = isset( $_POST['reportedip_hive_hide_login_slug'] )
 			? sanitize_text_field( wp_unslash( (string) $_POST['reportedip_hive_hide_login_slug'] ) )
 			: (string) get_option( 'reportedip_hive_hide_login_slug', '' );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		if ( '' === trim( $slug_option ) ) {
 			add_settings_error(
@@ -1628,8 +1875,12 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php
 				if ( $mode_manager->is_community_mode() && $mode_manager->tier_at_least( 'professional' ) ) {
 					$this->render_relay_quota_section( $mode_manager );
+				} elseif ( $mode_manager->is_community_mode() ) {
+					$this->render_mail_sms_promo_card( $mode_manager );
 				}
 				?>
+
+				<?php $this->render_api_usage_card(); ?>
 
 				<!-- Charts Section -->
 				<div class="rip-charts-grid">
@@ -1644,6 +1895,21 @@ class ReportedIP_Hive_Admin_Settings {
 						</div>
 						<div class="rip-chart-card__body">
 							<canvas id="rip-security-events-chart" class="rip-chart-card__canvas"></canvas>
+							<?php if ( (int) $stats['events_24h'] === 0 && (int) $stats['blocked_ips'] === 0 ) : ?>
+								<div id="rip-security-events-empty" class="rip-chart-card__empty">
+									<svg class="rip-chart-card__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+										<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+										<polyline points="9 12 11 14 15 10"/>
+									</svg>
+									<h4><?php esc_html_e( 'No threats detected yet — protection is active.', 'reportedip-hive' ); ?></h4>
+									<p><?php esc_html_e( 'Your dashboard will fill up automatically as ReportedIP Hive blocks attempts. We watch:', 'reportedip-hive' ); ?></p>
+									<ul>
+										<li><?php esc_html_e( 'Failed logins and password-spray patterns', 'reportedip-hive' ); ?></li>
+										<li><?php esc_html_e( 'Comment spam and XML-RPC abuse', 'reportedip-hive' ); ?></li>
+										<li><?php esc_html_e( '404 honeypot scans (.env, .git, wp-config.php.bak)', 'reportedip-hive' ); ?></li>
+									</ul>
+								</div>
+							<?php endif; ?>
 						</div>
 					</div>
 
@@ -2345,8 +2611,14 @@ class ReportedIP_Hive_Admin_Settings {
 			</h2>
 			<p class="rip-settings-section__desc"><?php esc_html_e( 'Choose how ReportedIP Hive should operate. You can switch modes at any time.', 'reportedip-hive' ); ?></p>
 
-			<?php self::render_mode_comparison( array( 'interactive' => true ) ); ?>
-			<p class="rip-help-text"><?php esc_html_e( 'Mode changes take effect immediately.', 'reportedip-hive' ); ?></p>
+			<form method="post" action="options.php" class="rip-form rip-form--mode">
+				<?php settings_fields( 'reportedip_hive_general' ); ?>
+				<?php self::render_mode_comparison( array( 'interactive' => true ) ); ?>
+				<p class="rip-help-text"><?php esc_html_e( 'Mode changes take effect immediately after saving.', 'reportedip-hive' ); ?></p>
+				<div class="rip-form-actions">
+					<?php submit_button( __( 'Save Mode', 'reportedip-hive' ), 'rip-button rip-button--primary', 'submit', false ); ?>
+				</div>
+			</form>
 		</div>
 
 		<?php if ( $mode_manager->is_community_mode() ) : ?>
@@ -2786,12 +3058,30 @@ class ReportedIP_Hive_Admin_Settings {
 			<input type="hidden" name="reportedip_hive_report_only_mode" value="0" />
 			<input type="hidden" name="reportedip_hive_block_escalation_enabled" value="0" />
 
-			<div class="rip-alert rip-alert--info rip-mb-4">
-				<strong><?php esc_html_e( 'How blocking decides:', 'reportedip-hive' ); ?></strong>
-				<ol style="margin:.5em 0 0 1.25em;padding:0;line-height:1.6;">
-					<li><strong><?php esc_html_e( 'Report-only mode', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'wins above everything. If on, the plugin only logs and never blocks.', 'reportedip-hive' ); ?></li>
-					<li><strong><?php esc_html_e( 'Auto-blocking', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'must be on for any block to happen. Off = the plugin watches but never inserts an IP into the block list.', 'reportedip-hive' ); ?></li>
-					<li><strong><?php esc_html_e( 'Progressive blocking', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'controls the duration. On = ladder (5 min → … → 7 d). Off = the fixed "Block length" below.', 'reportedip-hive' ); ?></li>
+			<div class="rip-card rip-decision-flow rip-mb-4">
+				<h3 class="rip-decision-flow__title"><?php esc_html_e( 'How blocking decides', 'reportedip-hive' ); ?></h3>
+				<ol class="rip-decision-flow__steps">
+					<li>
+						<span class="rip-decision-flow__num">1</span>
+						<div>
+							<strong><?php esc_html_e( 'Report-only mode wins above everything.', 'reportedip-hive' ); ?></strong>
+							<p><?php esc_html_e( 'If on, the plugin only logs and never blocks. Step 2 and 3 are bypassed.', 'reportedip-hive' ); ?></p>
+						</div>
+					</li>
+					<li>
+						<span class="rip-decision-flow__num">2</span>
+						<div>
+							<strong><?php esc_html_e( 'Auto-blocking must be on for any block to happen.', 'reportedip-hive' ); ?></strong>
+							<p><?php esc_html_e( 'Off = the plugin watches but never inserts an IP into the block list.', 'reportedip-hive' ); ?></p>
+						</div>
+					</li>
+					<li>
+						<span class="rip-decision-flow__num">3</span>
+						<div>
+							<strong><?php esc_html_e( 'Progressive blocking controls the duration.', 'reportedip-hive' ); ?></strong>
+							<p><?php esc_html_e( 'On = ladder (5 min → … → 7 d). Off = the fixed "Block length" below. Whitelist entries always win.', 'reportedip-hive' ); ?></p>
+						</div>
+					</li>
 				</ol>
 			</div>
 
@@ -2891,11 +3181,31 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
 					<?php esc_html_e( 'Blocked-page contact link', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Optional URL shown to blocked visitors if they think the block is a mistake (your contact form, support page, etc.). Leave empty to hide the link.', 'reportedip-hive' ); ?></p>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Optional URL shown to blocked visitors if they think the block is a mistake. Accepts a full https:// URL (e.g. your contact form) or a "mailto:" link. Leave empty to hide the link.', 'reportedip-hive' ); ?></p>
 
 				<div class="rip-form-group">
 					<label class="rip-label rip-sr-only" for="reportedip_hive_blocked_page_contact_url"><?php esc_html_e( 'Contact URL', 'reportedip-hive' ); ?></label>
-					<input type="url" id="reportedip_hive_blocked_page_contact_url" name="reportedip_hive_blocked_page_contact_url" value="<?php echo esc_attr( (string) get_option( 'reportedip_hive_blocked_page_contact_url', '' ) ); ?>" class="rip-input" placeholder="https://example.com/contact" />
+					<input type="text" id="reportedip_hive_blocked_page_contact_url" name="reportedip_hive_blocked_page_contact_url" value="<?php echo esc_attr( (string) get_option( 'reportedip_hive_blocked_page_contact_url', '' ) ); ?>" class="rip-input" placeholder="<?php echo esc_attr( 'mailto:' . get_option( 'admin_email', '' ) ); ?>" inputmode="url" />
+					<p class="rip-help-text">
+						<?php esc_html_e( 'Quick option:', 'reportedip-hive' ); ?>
+						<button type="button" class="rip-button rip-button--ghost rip-button--sm" id="rip-use-admin-email" data-value="<?php echo esc_attr( 'mailto:' . get_option( 'admin_email', '' ) ); ?>">
+							<?php
+							/* translators: %s: site admin email address */
+							echo esc_html( sprintf( __( 'Use site admin email (%s)', 'reportedip-hive' ), (string) get_option( 'admin_email', '' ) ) );
+							?>
+						</button>
+					</p>
+					<script>
+					(function () {
+						var btn = document.getElementById('rip-use-admin-email');
+						var inp = document.getElementById('reportedip_hive_blocked_page_contact_url');
+						if (!btn || !inp) { return; }
+						btn.addEventListener('click', function () {
+							inp.value = btn.getAttribute('data-value') || '';
+							inp.focus();
+						});
+					})();
+					</script>
 				</div>
 			</div>
 
@@ -3051,19 +3361,65 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 1.2.0
 	 */
 	private function render_notifications_tab() {
+		$default_from_name = ReportedIP_Hive_Defaults::NOTIFY_FROM_NAME_DEFAULT;
+		$default_from_mail = (string) get_option( 'admin_email', '' );
+
+		$tier_pro_or_higher = false;
+		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
+			if ( $mgr && method_exists( $mgr, 'tier_at_least' ) ) {
+				$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
+			}
+		}
+
+		$recipients_value = (string) get_option( 'reportedip_hive_notify_recipients', '' );
+		if ( '' === trim( $recipients_value ) ) {
+			$recipients_value = $default_from_mail;
+		}
+
+		$from_name_value = (string) get_option( 'reportedip_hive_notify_from_name', '' );
+		if ( '' === $from_name_value ) {
+			$from_name_value = $default_from_name;
+		}
+
+		$from_email_value = (string) get_option( 'reportedip_hive_notify_from_email', '' );
+		if ( '' === $from_email_value ) {
+			$from_email_value = $default_from_mail;
+		}
+
+		$sync_option       = get_option( 'reportedip_hive_notify_sync_to_api', null );
+		$sync_to_api_value = null === $sync_option ? $tier_pro_or_higher : (bool) $sync_option;
+
+		$is_community_mode = class_exists( 'ReportedIP_Hive_Mode_Manager' )
+			&& 'community' === ReportedIP_Hive_Mode_Manager::get_instance()->get_mode();
 		?>
+		<?php if ( $tier_pro_or_higher ) : ?>
+		<div class="rip-alert rip-alert--success">
+			<strong><?php esc_html_e( 'PRO mail relay active.', 'reportedip-hive' ); ?></strong>
+			<?php esc_html_e( 'All plugin mails are delivered through the reportedip.de relay (verified SPF/DKIM/DMARC) for 100% deliverability. Your "From email" below is sent as Reply-To so replies still reach your inbox.', 'reportedip-hive' ); ?>
+		</div>
+		<?php else : ?>
+		<div class="rip-alert rip-alert--info">
+			<strong><?php esc_html_e( 'Free tier — mails leave your server directly.', 'reportedip-hive' ); ?></strong>
+			<?php esc_html_e( 'Upgrade to PRO to route mails through the reportedip.de relay: verified SPF/DKIM/DMARC, EU-based, no hard bounces.', 'reportedip-hive' ); ?>
+			<a href="<?php echo esc_url( REPORTEDIP_HIVE_UPGRADE_URL ); ?>" target="_blank" rel="noopener noreferrer" class="rip-alert__cta"><?php esc_html_e( 'Learn more', 'reportedip-hive' ); ?> &rarr;</a>
+		</div>
+		<?php endif; ?>
+
 		<form method="post" action="options.php" class="rip-form">
 			<?php settings_fields( 'reportedip_hive_protection_notifications' ); ?>
 
 			<?php /* Checkbox-off fallbacks. */ ?>
 			<input type="hidden" name="reportedip_hive_notify_admin" value="0" />
+			<input type="hidden" name="reportedip_hive_notify_sync_to_api" value="0" />
+			<input type="hidden" name="reportedip_hive_2fa_notify_new_device" value="0" />
 
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-					<?php esc_html_e( 'Email the admin', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Alert recipients', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Send an email when something significant happens — repeated brute-force attempts, new blocks, etc. Goes to the WordPress admin email by default.', 'reportedip-hive' ); ?></p>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Send an email when something significant happens — repeated brute-force attempts, new blocks, etc. The recipient list also receives 2FA-related operational mails.', 'reportedip-hive' ); ?></p>
 
 				<div class="rip-form-group">
 					<label class="rip-toggle">
@@ -3071,6 +3427,88 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Send admin notifications when security events occur', 'reportedip-hive' ); ?></span>
 					</label>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_notify_recipients"><?php esc_html_e( 'Recipients', 'reportedip-hive' ); ?></label>
+					<textarea
+						id="reportedip_hive_notify_recipients"
+						name="reportedip_hive_notify_recipients"
+						class="rip-input rip-input--textarea"
+						rows="3"
+						placeholder="security@example.com, ops@example.com"
+					><?php echo esc_textarea( $recipients_value ); ?></textarea>
+					<p class="rip-help-text"><?php esc_html_e( 'One or more email addresses, separated by commas, spaces or new lines. Invalid entries are dropped on save.', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M22 6 12 13 2 6"/></svg>
+					<?php esc_html_e( 'Sender (used for all plugin mails)', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Applies to every plugin mail — security alerts AND 2FA login codes — so both arrive from the same address. Defaults: brand name "ReportedIP" + the WordPress admin email.', 'reportedip-hive' ); ?></p>
+
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_notify_from_name"><?php esc_html_e( 'From name', 'reportedip-hive' ); ?></label>
+					<input
+						type="text"
+						id="reportedip_hive_notify_from_name"
+						name="reportedip_hive_notify_from_name"
+						class="rip-input"
+						value="<?php echo esc_attr( $from_name_value ); ?>"
+						maxlength="120"
+					/>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_notify_from_email"><?php esc_html_e( 'From email', 'reportedip-hive' ); ?></label>
+					<input
+						type="email"
+						id="reportedip_hive_notify_from_email"
+						name="reportedip_hive_notify_from_email"
+						class="rip-input"
+						value="<?php echo esc_attr( $from_email_value ); ?>"
+					/>
+					<p class="rip-help-text"><?php esc_html_e( 'Should match a domain you own to avoid SPF/DKIM rejections. The mail relay (PRO+) verifies SPF/DKIM/DMARC on your behalf.', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<?php if ( $is_community_mode ) : ?>
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+					<?php esc_html_e( 'Sync with reportedip.de', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc">
+					<?php esc_html_e( 'Mirrors the contact set above to your reportedip.de account dashboard so the relay sees the same configuration.', 'reportedip-hive' ); ?>
+					<?php if ( $tier_pro_or_higher ) : ?>
+						<strong><?php esc_html_e( 'Recommended on for PRO accounts.', 'reportedip-hive' ); ?></strong>
+					<?php endif; ?>
+				</p>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_notify_sync_to_api" value="1" class="rip-toggle__input" <?php checked( $sync_to_api_value ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Mirror this contact set to my reportedip.de account', 'reportedip-hive' ); ?></span>
+					</label>
+				</div>
+			</div>
+			<?php endif; ?>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3z"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+					<?php esc_html_e( 'Sign-in notifications', 'reportedip-hive' ); ?>
+				</h2>
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_2fa_notify_new_device" value="1" class="rip-toggle__input" <?php checked( (bool) get_option( 'reportedip_hive_2fa_notify_new_device', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Email on sign-in from a new device', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'Notifies the user when a sign-in comes from a previously unseen browser/IP combination. Uses the unified mail provider configured above.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
@@ -3144,7 +3582,6 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php /* Checkbox-off fallbacks. (minimal_/detailed_logging are JS-driven hidden fields, see below.) */ ?>
 			<input type="hidden" name="reportedip_hive_log_user_agents" value="0" />
 			<input type="hidden" name="reportedip_hive_log_referer_domains" value="0" />
-			<input type="hidden" name="reportedip_hive_delete_data_on_uninstall" value="0" />
 
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
@@ -3223,7 +3660,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 				<p class="rip-settings-section__desc"><?php esc_html_e( 'Old log entries are removed automatically. Anonymisation strips personal data even earlier without losing the security signal.', 'reportedip-hive' ); ?></p>
 
-				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-4">
+				<div class="rip-grid rip-grid-cols-2 rip-gap-4">
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_data_retention_days"><?php esc_html_e( 'Delete logs after (days)', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_data_retention_days" name="reportedip_hive_data_retention_days" value="<?php echo esc_attr( get_option( 'reportedip_hive_data_retention_days', 30 ) ); ?>" min="7" max="365" class="rip-input" />
@@ -3235,15 +3672,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<p class="rip-help-text"><?php esc_html_e( 'Removes IP last-octet, user-agent strings, etc. while keeping aggregate counts.', 'reportedip-hive' ); ?></p>
 					</div>
 				</div>
-
-				<div class="rip-form-group">
-					<label class="rip-toggle">
-						<input type="checkbox" name="reportedip_hive_delete_data_on_uninstall" value="1" class="rip-toggle__input" <?php checked( get_option( 'reportedip_hive_delete_data_on_uninstall', false ) ); ?> />
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Delete all plugin data on uninstall (logs, settings, IP lists)', 'reportedip-hive' ); ?></span>
-					</label>
-					<p class="rip-help-text"><?php esc_html_e( 'Off by default — uninstalling normally keeps your configuration so reinstalling restores it.', 'reportedip-hive' ); ?></p>
-				</div>
+				<p class="rip-help-text"><?php esc_html_e( 'The "Delete plugin data on uninstall" toggle moved to Performance & Tools. Maintenance buttons (cleanup / anonymise / export) live on the System Status page.', 'reportedip-hive' ); ?></p>
 			</div>
 
 			<div class="rip-alert rip-alert--info">
@@ -3255,13 +3684,22 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php submit_button( __( 'Save privacy & logs settings', 'reportedip-hive' ), 'rip-button rip-button--primary', 'submit', false ); ?>
 			</div>
 		</form>
+		<?php
+	}
 
+	/**
+	 * Render the maintenance / exports panel (cleanup, anonymise, export).
+	 *
+	 * @since 1.6.0
+	 */
+	private function render_maintenance_panel() {
+		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
 				<?php esc_html_e( 'Maintenance & exports', 'reportedip-hive' ); ?>
 			</h2>
-			<p class="rip-settings-section__desc"><?php esc_html_e( 'These actions run immediately and are not part of the form above.', 'reportedip-hive' ); ?></p>
+			<p class="rip-settings-section__desc"><?php esc_html_e( 'These actions run immediately. Retention and anonymisation thresholds are configured on the Privacy & Logs tab.', 'reportedip-hive' ); ?></p>
 
 			<div class="rip-card">
 				<div class="rip-card__body">
@@ -3325,6 +3763,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 			<?php /* Checkbox-off fallbacks. */ ?>
 			<input type="hidden" name="reportedip_hive_enable_caching" value="0" />
+			<input type="hidden" name="reportedip_hive_delete_data_on_uninstall" value="0" />
 
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
@@ -3365,6 +3804,21 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-form-group">
 					<label class="rip-label" for="reportedip_hive_max_api_calls_per_hour"><?php esc_html_e( 'Max API calls per hour', 'reportedip-hive' ); ?></label>
 					<input type="number" id="reportedip_hive_max_api_calls_per_hour" name="reportedip_hive_max_api_calls_per_hour" value="<?php echo esc_attr( get_option( 'reportedip_hive_max_api_calls_per_hour', 100 ) ); ?>" min="10" max="10000" class="rip-input" style="max-width: 180px;" />
+				</div>
+			</div>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+					<?php esc_html_e( 'Uninstall behaviour', 'reportedip-hive' ); ?>
+				</h2>
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_delete_data_on_uninstall" value="1" class="rip-toggle__input" <?php checked( get_option( 'reportedip_hive_delete_data_on_uninstall', false ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Delete all plugin data on uninstall (logs, settings, IP lists)', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'Off by default — uninstalling normally keeps your configuration so reinstalling restores it.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
@@ -3418,64 +3872,17 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 		</div>
 
-		<div class="rip-settings-section">
-			<h2 class="rip-settings-section__title">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-				<?php esc_html_e( 'Cache management', 'reportedip-hive' ); ?>
-			</h2>
-			<div class="rip-card">
-				<div class="rip-card__body">
-					<div class="rip-cache-info rip-mb-3">
-						<div class="rip-cache-info__item">
-							<span class="rip-cache-info__label"><?php esc_html_e( 'Entries', 'reportedip-hive' ); ?></span>
-							<span class="rip-cache-info__value">
-							<?php
-								/* translators: %1$s: active entries, %2$s: expired entries */
-								echo esc_html( sprintf( __( '%1$s active, %2$s expired', 'reportedip-hive' ), (string) $cache_info['active_count'], (string) $cache_info['expired_count'] ) );
-							?>
-							</span>
-						</div>
-						<div class="rip-cache-info__item">
-							<span class="rip-cache-info__label"><?php esc_html_e( 'Size', 'reportedip-hive' ); ?></span>
-							<span class="rip-cache-info__value"><?php echo esc_html( $cache_info['total_size_mb'] ); ?> MB</span>
-						</div>
-					</div>
-					<div class="rip-flex rip-gap-2">
-						<button type="button" class="rip-button rip-button--secondary" id="clear-cache">
-							<?php esc_html_e( 'Clear all cache', 'reportedip-hive' ); ?>
-						</button>
-						<button type="button" class="rip-button rip-button--ghost" id="cleanup-expired-cache">
-							<?php esc_html_e( 'Clean expired entries', 'reportedip-hive' ); ?>
-						</button>
-					</div>
-				</div>
-			</div>
+		<div class="rip-alert rip-alert--info">
+			<strong><?php esc_html_e( 'Cache management, setup wizard restart, settings import/export and maintenance/exports', 'reportedip-hive' ); ?></strong>
+			—
+			<?php
+			printf(
+				/* translators: %s: link to the System Status page */
+				esc_html__( 'are now on the %s page.', 'reportedip-hive' ),
+				'<a href="' . esc_url( admin_url( 'admin.php?page=reportedip-hive-debug' ) ) . '">' . esc_html__( 'System Status', 'reportedip-hive' ) . '</a>'
+			);
+			?>
 		</div>
-
-		<div class="rip-settings-section">
-			<h2 class="rip-settings-section__title">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-				<?php esc_html_e( 'Setup wizard', 'reportedip-hive' ); ?>
-			</h2>
-			<p class="rip-settings-section__desc"><?php esc_html_e( 'Re-run the guided setup to reconfigure mode, API access, detection thresholds and notifications. Existing settings are pre-filled — you can review and confirm each step.', 'reportedip-hive' ); ?></p>
-
-			<div class="rip-flex rip-gap-2">
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-wizard&step=1' ) ); ?>" class="rip-button rip-button--secondary">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-					<?php esc_html_e( 'Restart setup wizard', 'reportedip-hive' ); ?>
-				</a>
-			</div>
-		</div>
-
-		<?php
-		/**
-		 * Render the Settings Import/Export panel inside this tab.
-		 * Lives in admin/class-settings-import-export.php for separation of concerns.
-		 */
-		if ( class_exists( 'ReportedIP_Hive_Settings_Import_Export' ) ) {
-			ReportedIP_Hive_Settings_Import_Export::get_instance()->render_panel();
-		}
-		?>
 		<?php
 	}
 
@@ -3489,7 +3896,10 @@ class ReportedIP_Hive_Admin_Settings {
 		$plugin_data    = get_plugin_data( REPORTEDIP_HIVE_PLUGIN_FILE );
 		$plugin_version = $plugin_data['Version'] ?? '1.0.0';
 
-		$this->render_page_header( __( 'System Status', 'reportedip-hive' ), __( 'Health check and diagnostics', 'reportedip-hive' ) );
+		$cache      = ReportedIP_Hive_Cache::get_instance();
+		$cache_info = $cache->get_cache_info();
+
+		$this->render_page_header( __( 'System Status', 'reportedip-hive' ), __( 'Health, maintenance and tools', 'reportedip-hive' ) );
 		?>
 
 			<!-- Health Status Cards -->
@@ -3509,6 +3919,11 @@ class ReportedIP_Hive_Admin_Settings {
 						'title' => __( 'API', 'reportedip-hive' ),
 					),
 				);
+				$pill_icons   = array(
+					'success' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="14" height="14" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
+					'warning' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+					'danger'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+				);
 				foreach ( $health_items as $key => $item ) :
 					$status       = $plugin_health[ $key ]['status'];
 					$status_class = $status === 'healthy' ? 'success' : ( $status === 'warning' ? 'warning' : 'danger' );
@@ -3519,16 +3934,10 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 					<div class="rip-health-card-content">
 						<h3><?php echo esc_html( $item['title'] ); ?></h3>
-						<span class="rip-health-status"><?php echo esc_html( $plugin_health[ $key ]['message'] ); ?></span>
-					</div>
-					<div class="rip-health-indicator rip-health-indicator--<?php echo esc_attr( $status_class ); ?>">
-						<?php if ( $status === 'healthy' ) : ?>
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-						<?php elseif ( $status === 'warning' ) : ?>
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-						<?php else : ?>
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-						<?php endif; ?>
+						<span class="rip-status-pill rip-status-pill--<?php echo esc_attr( $status_class ); ?>">
+							<?php echo wp_kses_post( $pill_icons[ $status_class ] ); ?>
+							<?php echo esc_html( $plugin_health[ $key ]['message'] ); ?>
+						</span>
 					</div>
 				</div>
 				<?php endforeach; ?>
@@ -3583,6 +3992,64 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 				</div>
 			</div>
+
+			<!-- Cache Management -->
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+					<?php esc_html_e( 'Cache management', 'reportedip-hive' ); ?>
+				</h2>
+				<div class="rip-card">
+					<div class="rip-card__body">
+						<div class="rip-cache-info rip-mb-3">
+							<div class="rip-cache-info__item">
+								<span class="rip-cache-info__label"><?php esc_html_e( 'Entries', 'reportedip-hive' ); ?></span>
+								<span class="rip-cache-info__value">
+								<?php
+									/* translators: %1$s: active entries, %2$s: expired entries */
+									echo esc_html( sprintf( __( '%1$s active, %2$s expired', 'reportedip-hive' ), (string) $cache_info['active_count'], (string) $cache_info['expired_count'] ) );
+								?>
+								</span>
+							</div>
+							<div class="rip-cache-info__item">
+								<span class="rip-cache-info__label"><?php esc_html_e( 'Size', 'reportedip-hive' ); ?></span>
+								<span class="rip-cache-info__value"><?php echo esc_html( $cache_info['total_size_mb'] ); ?> MB</span>
+							</div>
+						</div>
+						<div class="rip-flex rip-gap-2">
+							<button type="button" class="rip-button rip-button--secondary" id="clear-cache">
+								<?php esc_html_e( 'Clear all cache', 'reportedip-hive' ); ?>
+							</button>
+							<button type="button" class="rip-button rip-button--ghost" id="cleanup-expired-cache">
+								<?php esc_html_e( 'Clean expired entries', 'reportedip-hive' ); ?>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Setup wizard restart -->
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+					<?php esc_html_e( 'Setup wizard', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Re-run the guided setup to reconfigure mode, API access, detection thresholds and notifications. Existing settings are pre-filled — you can review and confirm each step.', 'reportedip-hive' ); ?></p>
+				<div class="rip-flex rip-gap-2">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-wizard&step=1' ) ); ?>" class="rip-button rip-button--secondary">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+						<?php esc_html_e( 'Restart setup wizard', 'reportedip-hive' ); ?>
+					</a>
+				</div>
+			</div>
+
+			<?php $this->render_maintenance_panel(); ?>
+
+			<?php
+			if ( class_exists( 'ReportedIP_Hive_Settings_Import_Export' ) ) {
+				ReportedIP_Hive_Settings_Import_Export::get_instance()->render_panel();
+			}
+			?>
 
 			<!-- Quick Actions -->
 			<div class="rip-card">
@@ -3750,7 +4217,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
 		$events_24h = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM $logs_table
@@ -3758,14 +4225,14 @@ class ReportedIP_Hive_Admin_Settings {
 				$cutoff_utc
 			)
 		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		$queue_table = $wpdb->prefix . 'reportedip_hive_api_queue';
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
 		$queue_count = (int) $wpdb->get_var(
 			"SELECT COUNT(*) FROM $queue_table WHERE status IN ('pending', 'failed')"
 		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		return array(
 			'events_24h'      => $events_24h,
@@ -4312,11 +4779,20 @@ class ReportedIP_Hive_Admin_Settings {
 										?>
 									</p>
 									<p class="rip-pricing-card__subprice" style="font-size:0.8125rem;color:var(--rip-gray-600,#4B5563);">
-										<?php echo esc_html( sprintf( __( 'Mail relay: %s', 'reportedip-hive' ), $mail_txt ) ); ?>
+										<?php
+										/* translators: %s: monthly mail relay allowance, e.g. "500 / month" or "unlimited". */
+										echo esc_html( sprintf( __( 'Mail relay: %s', 'reportedip-hive' ), $mail_txt ) );
+										?>
 										&nbsp;·&nbsp;
-										<?php echo esc_html( sprintf( __( 'SMS relay: %s', 'reportedip-hive' ), $sms_txt ) ); ?>
+										<?php
+										/* translators: %s: monthly SMS relay allowance, e.g. "25 / month" or "unlimited". */
+										echo esc_html( sprintf( __( 'SMS relay: %s', 'reportedip-hive' ), $sms_txt ) );
+										?>
 										&nbsp;·&nbsp;
-										<?php echo esc_html( sprintf( __( 'Domains: %s', 'reportedip-hive' ), $domains_txt ) ); ?>
+										<?php
+										/* translators: %s: number of domains the plan covers, e.g. "3" or "unlimited". */
+										echo esc_html( sprintf( __( 'Domains: %s', 'reportedip-hive' ), $domains_txt ) );
+										?>
 									</p>
 									<ul class="rip-pricing-card__features">
 										<?php foreach ( $plan['features'] as $feature ) : ?>
@@ -4387,11 +4863,18 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 					<div class="rip-card__body">
 						<?php
-						$total_events      = (int) ( $security_summary['summary']->total_failed_logins ?? 0 );
-						$total_events     += (int) ( $security_summary['summary']->total_comment_spam ?? 0 );
-						$total_events     += (int) ( $security_summary['summary']->total_xmlrpc_calls ?? 0 );
+						$failed_logins     = (int) ( $security_summary['summary']->total_failed_logins ?? 0 );
+						$comment_spam      = (int) ( $security_summary['summary']->total_comment_spam ?? 0 );
+						$xmlrpc_calls      = (int) ( $security_summary['summary']->total_xmlrpc_calls ?? 0 );
+						$reputation_blocks = (int) ( $security_summary['summary']->total_reputation_blocks ?? 0 );
+						$total_events      = $failed_logins + $comment_spam + $xmlrpc_calls;
 						$total_blocked     = (int) ( $security_summary['summary']->total_blocked_ips ?? 0 );
 						$total_api_reports = (int) ( $security_summary['summary']->total_api_reports ?? 0 );
+
+						$api_stats_raw = get_option( 'reportedip_hive_api_stats', array() );
+						$api_stats     = is_array( $api_stats_raw ) ? $api_stats_raw : array();
+						$api_total     = (int) ( $api_stats['total_calls'] ?? 0 );
+						$api_success   = (float) ( $api_stats['success_rate'] ?? 0 );
 						?>
 
 						<div class="rip-activity-stats">
@@ -4407,6 +4890,28 @@ class ReportedIP_Hive_Admin_Settings {
 								<div class="rip-activity-stat__value rip-activity-stat__value--success"><?php echo esc_html( number_format_i18n( $total_api_reports ) ); ?></div>
 								<div class="rip-activity-stat__label"><?php esc_html_e( 'Reported to community', 'reportedip-hive' ); ?></div>
 							</div>
+							<div class="rip-activity-stat">
+								<div class="rip-activity-stat__value rip-activity-stat__value--danger"><?php echo esc_html( number_format_i18n( $failed_logins ) ); ?></div>
+								<div class="rip-activity-stat__label"><?php esc_html_e( 'Failed logins', 'reportedip-hive' ); ?></div>
+							</div>
+							<div class="rip-activity-stat">
+								<div class="rip-activity-stat__value rip-activity-stat__value--warning"><?php echo esc_html( number_format_i18n( $comment_spam ) ); ?></div>
+								<div class="rip-activity-stat__label"><?php esc_html_e( 'Comment spam', 'reportedip-hive' ); ?></div>
+							</div>
+							<div class="rip-activity-stat">
+								<div class="rip-activity-stat__value rip-activity-stat__value--info"><?php echo esc_html( number_format_i18n( $reputation_blocks ) ); ?></div>
+								<div class="rip-activity-stat__label"><?php esc_html_e( 'Reputation blocks', 'reportedip-hive' ); ?></div>
+							</div>
+							<?php if ( $api_total > 0 ) : ?>
+							<div class="rip-activity-stat">
+								<div class="rip-activity-stat__value rip-activity-stat__value--info"><?php echo esc_html( number_format_i18n( $api_total ) ); ?></div>
+								<div class="rip-activity-stat__label"><?php esc_html_e( 'API calls (lifetime)', 'reportedip-hive' ); ?></div>
+							</div>
+							<div class="rip-activity-stat">
+								<div class="rip-activity-stat__value rip-activity-stat__value--success"><?php echo esc_html( number_format_i18n( $api_success ) ); ?>%</div>
+								<div class="rip-activity-stat__label"><?php esc_html_e( 'API success rate', 'reportedip-hive' ); ?></div>
+							</div>
+							<?php endif; ?>
 						</div>
 
 						<?php if ( $total_events > 0 && $total_api_reports === 0 && 'free' === $tier['slug'] ) : ?>
@@ -4671,7 +5176,8 @@ class ReportedIP_Hive_Admin_Settings {
 							<p style="color:var(--rip-gray-600);font-size:.9em;margin-top:0;margin-bottom:1em;"><?php echo esc_html( $info['desc'] ); ?></p>
 							<div style="background:#fff;border:1px dashed var(--rip-gray-300);border-radius:var(--rip-radius-md);padding:1em;margin-bottom:1em;min-height:80px;display:flex;align-items:center;justify-content:center;">
 								<?php
-								echo $shortcodes->build_element( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes its own attributes; the custom-element wrapper would be stripped by wp_kses.
+								// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes its own attributes; the custom-element wrapper would be stripped by wp_kses.
+								echo $shortcodes->build_element(
 									$info['variant'],
 									array_merge(
 										array(
@@ -4682,6 +5188,7 @@ class ReportedIP_Hive_Admin_Settings {
 										$info['args']
 									)
 								);
+								// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
 								?>
 							</div>
 							<div style="display:flex;gap:.5em;align-items:center;">

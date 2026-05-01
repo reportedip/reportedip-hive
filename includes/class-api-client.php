@@ -613,6 +613,92 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
+	 * Mirror the local notification-contact configuration to reportedip.de.
+	 *
+	 * Pushes the recipient list, From-name and From-email so the relay/account
+	 * dashboard on the service side reflects the same setup the plugin uses.
+	 * The endpoint is opt-in on the server side: a 404 from the service is
+	 * treated as a soft failure rather than an error so older deployments keep
+	 * working without log spam.
+	 *
+	 * @param array{recipients?: array<int,string>, from_name?: string, from_email?: string} $args Contact set.
+	 * @return array{ok: bool, status_code?: int, error?: string, soft_failure?: bool}
+	 * @since  1.5.3
+	 */
+	public function sync_notification_config( array $args ) {
+		if ( ! $this->can_use_api() ) {
+			return array(
+				'ok'    => false,
+				'error' => 'api_unavailable',
+			);
+		}
+
+		$recipients = array();
+		foreach ( (array) ( $args['recipients'] ?? array() ) as $candidate ) {
+			$candidate = sanitize_email( (string) $candidate );
+			if ( '' !== $candidate && is_email( $candidate ) ) {
+				$recipients[] = $candidate;
+			}
+		}
+
+		$payload = array(
+			'site_url'   => home_url(),
+			'recipients' => array_values( array_unique( $recipients ) ),
+			'from_name'  => isset( $args['from_name'] ) ? (string) $args['from_name'] : '',
+			'from_email' => isset( $args['from_email'] ) ? sanitize_email( (string) $args['from_email'] ) : '',
+		);
+
+		$url = rtrim( $this->api_endpoint, '/' ) . '/notification-config';
+
+		$response = wp_remote_request(
+			$url,
+			array(
+				'method'    => 'POST',
+				'headers'   => array(
+					'X-Key'        => $this->api_key,
+					'Content-Type' => 'application/json',
+					'Accept'       => 'application/json',
+					'User-Agent'   => 'ReportedIP-Hive/' . REPORTEDIP_HIVE_VERSION,
+				),
+				'timeout'   => $this->timeout,
+				'body'      => wp_json_encode( $payload ),
+				'sslverify' => true,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'ok'    => false,
+				'error' => 'network: ' . $response->get_error_message(),
+			);
+		}
+
+		$code = (int) wp_remote_retrieve_response_code( $response );
+
+		if ( $code >= 200 && $code < 300 ) {
+			return array(
+				'ok'          => true,
+				'status_code' => $code,
+			);
+		}
+
+		if ( 404 === $code ) {
+			return array(
+				'ok'           => false,
+				'status_code'  => $code,
+				'error'        => 'endpoint_not_available',
+				'soft_failure' => true,
+			);
+		}
+
+		return array(
+			'ok'          => false,
+			'status_code' => $code,
+			'error'       => 'http_' . $code,
+		);
+	}
+
+	/**
 	 * Fetch the current monthly relay-usage and limits from the service.
 	 *
 	 * @param bool $force_refresh If true, bypass the 1-hour transient cache.

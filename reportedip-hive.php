@@ -3,10 +3,10 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 1.6.3
+ * Version: 1.6.4
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
- * License: GPL v2 or later
+ * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: reportedip-hive
  * Domain Path: /languages
@@ -53,7 +53,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '1.6.3' );
+define( 'REPORTEDIP_HIVE_VERSION', '1.6.4' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -1265,6 +1265,10 @@ class ReportedIP_Hive {
 			'reportedip_hive_monitor_xmlrpc'               => true,
 			'reportedip_hive_monitor_failed_logins'        => true,
 			'reportedip_hive_notify_admin'                 => true,
+			'reportedip_hive_notify_recipients'            => '',
+			'reportedip_hive_notify_from_name'             => '',
+			'reportedip_hive_notify_from_email'            => '',
+			'reportedip_hive_notify_sync_to_api'           => false,
 			'reportedip_hive_log_level'                    => 'info',
 			'reportedip_hive_delete_data_on_uninstall'     => false,
 			'reportedip_hive_report_only_mode'             => false,

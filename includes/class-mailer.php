@@ -308,17 +308,28 @@ class ReportedIP_Hive_Mailer {
 			$args['headers'][] = 'Content-Type: text/html; charset=UTF-8';
 		}
 
-		$has_from = false;
+		$has_from     = false;
+		$has_reply_to = false;
 		foreach ( $args['headers'] as $header ) {
-			if ( is_string( $header ) && stripos( $header, 'from:' ) === 0 ) {
+			if ( ! is_string( $header ) ) {
+				continue;
+			}
+			if ( stripos( $header, 'from:' ) === 0 ) {
 				$has_from = true;
-				break;
+			} elseif ( stripos( $header, 'reply-to:' ) === 0 ) {
+				$has_reply_to = true;
 			}
 		}
-		if ( ! $has_from ) {
-			$admin_email = (string) get_option( 'admin_email', '' );
-			if ( '' !== $admin_email ) {
-				$args['headers'][] = 'From: ' . $args['site_name'] . ' <' . $admin_email . '>';
+		if ( ! $has_from || ! $has_reply_to ) {
+			$from = ReportedIP_Hive_Defaults::notify_from();
+			if ( '' !== $from['email'] ) {
+				$line = $from['name'] . ' <' . $from['email'] . '>';
+				if ( ! $has_from ) {
+					$args['headers'][] = 'From: ' . $line;
+				}
+				if ( ! $has_reply_to ) {
+					$args['headers'][] = 'Reply-To: ' . $line;
+				}
 			}
 		}
 

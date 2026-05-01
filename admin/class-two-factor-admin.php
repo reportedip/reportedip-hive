@@ -256,7 +256,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_reminder_enabled" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_reminder_hard_roles" value="" />
 			<input type="hidden" name="reportedip_hive_2fa_frontend_onboarding" value="0" />
-			<input type="hidden" name="reportedip_hive_2fa_notify_new_device" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_xmlrpc_app_password_only" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_trusted_devices" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_extended_remember" value="0" />
@@ -293,6 +292,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				<div class="rip-form-group">
 					<label class="rip-toggle">
 						<input type="checkbox"
+							id="rip-2fa-enabled-global"
 							class="rip-toggle__input"
 							name="reportedip_hive_2fa_enabled_global"
 							value="1"
@@ -303,9 +303,11 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							<?php esc_html_e( 'Enable 2FA feature', 'reportedip-hive' ); ?>
 						</span>
 					</label>
-					<p class="rip-help-text"><?php esc_html_e( 'Activates the 2FA feature. Users must set up 2FA individually in their profile.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-text"><?php esc_html_e( 'Activates the 2FA feature. Users must set up 2FA individually in their profile. When off, all 2FA configuration below is disabled.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
+
+			<div id="rip-2fa-dependent-fields"<?php echo $enabled ? '' : ' class="rip-is-disabled"'; ?>>
 
 			<!-- Methods -->
 			<div class="rip-settings-section">
@@ -596,28 +598,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				</div>
 			</div>
 
-			<!-- New-device notification -->
-			<div class="rip-settings-section">
-				<h2 class="rip-settings-section__title">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3z"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-					<?php esc_html_e( 'Sign-in notifications', 'reportedip-hive' ); ?>
-				</h2>
-				<div class="rip-form-group">
-					<label class="rip-toggle">
-						<input type="checkbox"
-							class="rip-toggle__input"
-							name="reportedip_hive_2fa_notify_new_device"
-							value="1"
-							<?php checked( (bool) get_option( 'reportedip_hive_2fa_notify_new_device', true ) ); ?> />
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label">
-							<?php esc_html_e( 'Email on sign-in from a new device', 'reportedip-hive' ); ?>
-						</span>
-					</label>
-					<p class="rip-help-text"><?php esc_html_e( 'Sends a notification email to the user when a sign-in comes from a previously unseen browser/IP combination.', 'reportedip-hive' ); ?></p>
-				</div>
-			</div>
-
 			<!-- SMS provider (GDPR-compliant, EU providers) -->
 			<?php self::render_sms_provider_section(); ?>
 
@@ -707,6 +687,19 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				</div>
 			</div>
 
+			</div>
+
+			<script>
+			(function () {
+				var toggle = document.getElementById('rip-2fa-enabled-global');
+				var deps   = document.getElementById('rip-2fa-dependent-fields');
+				if (!toggle || !deps) { return; }
+				toggle.addEventListener('change', function () {
+					deps.classList.toggle('rip-is-disabled', !toggle.checked);
+				});
+			})();
+			</script>
+
 			<?php submit_button( __( 'Save settings', 'reportedip-hive' ) ); ?>
 		</form>
 		<?php
@@ -772,14 +765,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		register_setting(
 			'reportedip_hive_2fa_settings',
 			'reportedip_hive_2fa_frontend_onboarding',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-			)
-		);
-		register_setting(
-			'reportedip_hive_2fa_settings',
-			'reportedip_hive_2fa_notify_new_device',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => 'rest_sanitize_boolean',
@@ -1095,11 +1080,16 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				<p class="rip-help-text"><?php echo esc_html( $avv_help ); ?></p>
 			</div>
 
-			<div class="rip-form-group">
+			<?php $sms_ready = ReportedIP_Hive_Two_Factor_SMS::is_ready(); ?>
+			<div class="rip-form-group" data-ready="<?php echo $sms_ready ? '1' : '0'; ?>">
 				<label class="rip-label" for="rip-sms-test-number"><?php esc_html_e( 'Test SMS to (E.164):', 'reportedip-hive' ); ?></label>
-				<input type="tel" id="rip-sms-test-number" class="rip-input" placeholder="+491511234567" style="width: 220px;" />
-				<button type="button" class="rip-button rip-button--secondary" id="rip-sms-test-btn"><?php esc_html_e( 'Send test SMS', 'reportedip-hive' ); ?></button>
-				<p class="rip-help-text" id="rip-sms-test-status" role="status"></p>
+				<input type="tel" id="rip-sms-test-number" class="rip-input" placeholder="+491511234567" style="width: 220px;" <?php disabled( ! $sms_ready ); ?> />
+				<button type="button" class="rip-button rip-button--secondary" id="rip-sms-test-btn" <?php disabled( ! $sms_ready ); ?>><?php esc_html_e( 'Send test SMS', 'reportedip-hive' ); ?></button>
+				<p class="rip-help-text" id="rip-sms-test-status" role="status">
+					<?php if ( ! $sms_ready ) : ?>
+						<?php esc_html_e( 'Pick a provider, save the AVV checkbox and store your provider credentials before testing.', 'reportedip-hive' ); ?>
+					<?php endif; ?>
+				</p>
 			</div>
 
 			<script>
@@ -1114,22 +1104,45 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					});
 				}
 				var btn = document.getElementById('rip-sms-test-btn');
-				if (btn) {
+				if (btn && !btn.disabled) {
 					btn.addEventListener('click', function(){
 						var phone = (document.getElementById('rip-sms-test-number') || {}).value || '';
 						var status = document.getElementById('rip-sms-test-status');
-						if (!phone) { if (status) status.textContent = '<?php echo esc_js( __( 'Please enter a phone number.', 'reportedip-hive' ) ); ?>'; return; }
+						if (!phone) {
+							if (status) status.textContent = '<?php echo esc_js( __( 'Please enter a phone number.', 'reportedip-hive' ) ); ?>';
+							return;
+						}
+						btn.disabled = true;
 						if (status) status.textContent = '<?php echo esc_js( __( 'Sende…', 'reportedip-hive' ) ); ?>';
 						var data = new FormData();
 						data.append('action', 'reportedip_hive_2fa_test_sms');
 						data.append('nonce', '<?php echo esc_js( wp_create_nonce( 'reportedip_hive_nonce' ) ); ?>');
 						data.append('phone', phone);
 						fetch('<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>', { method: 'POST', body: data, credentials: 'same-origin' })
-							.then(function(r){ return r.json(); })
-							.then(function(res){
-								if (status) status.textContent = (res && res.data && res.data.message) || (res.success ? 'OK' : 'Error');
+							.then(function(r){
+								return r.text().then(function(t){
+									try {
+										return { ok: r.ok, status: r.status, body: JSON.parse(t) };
+									} catch (e) {
+										return { ok: r.ok, status: r.status, body: null, raw: t };
+									}
+								});
 							})
-							.catch(function(){ if (status) status.textContent = 'Network error.'; });
+							.then(function(res){
+								btn.disabled = false;
+								if (!status) return;
+								if (res.body && res.body.success) {
+									status.textContent = (res.body.data && res.body.data.message) || '<?php echo esc_js( __( 'Test SMS sent.', 'reportedip-hive' ) ); ?>';
+								} else if (res.body && res.body.data && res.body.data.message) {
+									status.textContent = res.body.data.message;
+								} else {
+									status.textContent = '<?php echo esc_js( __( 'Request failed (HTTP', 'reportedip-hive' ) ); ?> ' + res.status + ').';
+								}
+							})
+							.catch(function(){
+								btn.disabled = false;
+								if (status) status.textContent = '<?php echo esc_js( __( 'Network error — could not reach admin-ajax.php.', 'reportedip-hive' ) ); ?>';
+							});
 					});
 				}
 			})();
@@ -1368,7 +1381,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			REPORTEDIP_HIVE_LANGUAGES_DIR
 		);
 		?>
-		<h2><?php esc_html_e( 'Two-Factor Authentication', 'reportedip-hive' ); ?></h2>
+		<h2 id="reportedip-hive-2fa"><?php esc_html_e( 'Two-Factor Authentication', 'reportedip-hive' ); ?></h2>
 
 		<table class="form-table" role="presentation">
 			<tr>

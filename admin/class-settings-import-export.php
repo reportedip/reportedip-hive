@@ -120,9 +120,13 @@ class ReportedIP_Hive_Settings_Import_Export {
 			),
 			'notifications'    => array(
 				'label'       => __( 'Notifications', 'reportedip-hive' ),
-				'description' => __( 'Admin emails and cool-downs.', 'reportedip-hive' ),
+				'description' => __( 'Admin emails, recipients, sender and cool-downs.', 'reportedip-hive' ),
 				'options'     => array(
 					'reportedip_hive_notify_admin',
+					'reportedip_hive_notify_recipients',
+					'reportedip_hive_notify_from_name',
+					'reportedip_hive_notify_from_email',
+					'reportedip_hive_notify_sync_to_api',
 					'reportedip_hive_notification_cooldown_minutes',
 				),
 			),
@@ -308,11 +312,13 @@ class ReportedIP_Hive_Settings_Import_Export {
 	public function ajax_export(): void {
 		$this->require_authorised_admin();
 
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified by require_authorised_admin() above.
 		$requested_sections = isset( $_POST['sections'] ) && is_array( $_POST['sections'] )
 			? array_map( 'sanitize_key', wp_unslash( $_POST['sections'] ) )
 			: array_keys( self::sections() );
 
 		$include_secrets = ! empty( $_POST['include_secrets'] );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		$payload = $this->build_export_payload( $requested_sections, $include_secrets );
 
@@ -428,6 +434,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 			wp_send_json_error( array( 'message' => $payload->get_error_message() ), 400 );
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified by require_authorised_admin() above.
 		$selected_sections = isset( $_POST['sections'] ) && is_array( $_POST['sections'] )
 			? array_map( 'sanitize_key', wp_unslash( $_POST['sections'] ) )
 			: array_keys( self::sections() );
@@ -448,6 +455,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 	 * @since  1.2.0
 	 */
 	public function read_uploaded_payload( string $field_name = 'settings_file' ) {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Caller (ajax_preview/ajax_apply) verifies nonce upstream via require_authorised_admin(); $_FILES tmp_name path is validated through is_uploaded_file() before any filesystem read.
 		if ( empty( $_FILES[ $field_name ]['tmp_name'] ) || ! is_uploaded_file( (string) $_FILES[ $field_name ]['tmp_name'] ) ) {
 			return new WP_Error( 'no_file', __( 'No file uploaded.', 'reportedip-hive' ) );
 		}
@@ -457,6 +465,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 		}
 
 		$raw = file_get_contents( (string) $_FILES[ $field_name ]['tmp_name'] );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotValidated
 		if ( false === $raw || '' === $raw ) {
 			return new WP_Error( 'empty_file', __( 'Settings file is empty or unreadable.', 'reportedip-hive' ) );
 		}

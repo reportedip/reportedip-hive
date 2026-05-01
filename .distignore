@@ -1,0 +1,20 @@
+# WordPress.org distribution exclusions
+# Mirrors what release.yml stages and what `./run.sh build` excludes.
+# Used by `wp dist-archive` and any external CI runner that respects this file.
+
+/.git
+/.github
+/.gitignore
+/.distignore
+/.editorconfig
+/.phpcs.cache
+/.phpunit.result.cache
+/tests
+/phpunit.xml
+/phpcs.xml
+/phpstan.neon
+/phpstan-bootstrap.php
+/grumphp.yml
+/composer.lock
+/README.md
+/node_modules

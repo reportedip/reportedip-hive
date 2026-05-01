@@ -85,6 +85,52 @@ class ReportedIP_Hive_Mode_Manager {
 	 */
 	private function __construct() {
 		add_action( 'reportedip_hive_tier_changed', array( $this, 'flush_cached_tier' ) );
+		add_action( 'update_option_' . self::OPTION_MODE, array( $this, 'on_mode_option_updated' ), 10, 2 );
+	}
+
+	/**
+	 * Whether the given string is a valid operation-mode identifier.
+	 *
+	 * @param string $mode Candidate mode.
+	 * @return bool
+	 * @since 1.6.0
+	 */
+	public static function is_valid_mode( $mode ) {
+		return in_array( (string) $mode, array( self::MODE_LOCAL, self::MODE_COMMUNITY ), true );
+	}
+
+	/**
+	 * Mirror the `set_mode()` side effects when the option is updated through
+	 * the WordPress Settings API or any other `update_option()` caller — cache
+	 * reset, `reportedip_hive_mode_changed` action, audit-log entry. Listens
+	 * on `update_option_<OPTION_MODE>`.
+	 *
+	 * @param mixed $old_value Previous option value.
+	 * @param mixed $value     New option value.
+	 * @return void
+	 * @since 1.6.0
+	 */
+	public function on_mode_option_updated( $old_value, $value ) {
+		$mode = (string) $value;
+		if ( $old_value === $value || ! self::is_valid_mode( $mode ) ) {
+			return;
+		}
+		$this->cached_mode = $mode;
+
+		do_action( 'reportedip_hive_mode_changed', $mode );
+
+		if ( class_exists( 'ReportedIP_Hive_Logger' ) ) {
+			$logger = ReportedIP_Hive_Logger::get_instance();
+			$logger->log_security_event(
+				'mode_changed',
+				'system',
+				array(
+					'new_mode' => $mode,
+					'user_id'  => get_current_user_id(),
+				),
+				'low'
+			);
+		}
 	}
 
 	/**
@@ -332,34 +378,13 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @return bool Success status
 	 */
 	public function set_mode( $mode ) {
-		if ( ! in_array( $mode, array( self::MODE_LOCAL, self::MODE_COMMUNITY ), true ) ) {
+		if ( ! self::is_valid_mode( $mode ) ) {
 			return false;
 		}
 
 		$result = update_option( self::OPTION_MODE, $mode );
 
-		if ( $result || get_option( self::OPTION_MODE ) === $mode ) {
-			$this->cached_mode = $mode;
-
-			do_action( 'reportedip_hive_mode_changed', $mode );
-
-			if ( class_exists( 'ReportedIP_Hive_Logger' ) ) {
-				$logger = ReportedIP_Hive_Logger::get_instance();
-				$logger->log_security_event(
-					'mode_changed',
-					'system',
-					array(
-						'new_mode' => $mode,
-						'user_id'  => get_current_user_id(),
-					),
-					'low'
-				);
-			}
-
-			return true;
-		}
-
-		return false;
+		return $result || get_option( self::OPTION_MODE ) === $mode;
 	}
 
 	/**

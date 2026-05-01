@@ -55,6 +55,7 @@ final class ReportedIP_Hive_Defaults {
 	 * @var array<string, scalar>
 	 */
 	private const SAFE_OPTIONS = array(
+		'reportedip_hive_operation_mode'                => 'local',
 		'reportedip_hive_api_endpoint'                  => 'https://reportedip.de/wp-json/reportedip/v2/',
 		'reportedip_hive_trusted_ip_header'             => '',
 		'reportedip_hive_blocked_page_contact_url'      => '',
@@ -68,6 +69,16 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_xmlrpc_threshold'              => 10,
 		'reportedip_hive_xmlrpc_timeframe'              => 60,
 		'reportedip_hive_disable_xmlrpc_multicall'      => true,
+		'reportedip_hive_monitor_failed_logins'         => true,
+		'reportedip_hive_monitor_comments'              => true,
+		'reportedip_hive_monitor_xmlrpc'                => true,
+		'reportedip_hive_monitor_app_passwords'         => true,
+		'reportedip_hive_monitor_rest_api'              => true,
+		'reportedip_hive_monitor_404_scans'             => true,
+		'reportedip_hive_monitor_geo_anomaly'           => true,
+		'reportedip_hive_block_user_enumeration'        => true,
+		'reportedip_hive_auto_block'                    => true,
+		'reportedip_hive_report_only_mode'              => false,
 		'reportedip_hive_log_level'                     => 'info',
 		'reportedip_hive_detailed_logging'              => false,
 		'reportedip_hive_enable_caching'                => true,
@@ -77,14 +88,106 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_queue_warning_threshold'       => 50,
 		'reportedip_hive_queue_critical_threshold'      => 200,
 		'reportedip_hive_processing_timeout_minutes'    => 10,
+		'reportedip_hive_2fa_trusted_devices'           => true,
 		'reportedip_hive_2fa_trusted_device_days'       => 30,
 		'reportedip_hive_2fa_branded_login'             => false,
 		'reportedip_hive_2fa_extended_remember'         => false,
 		'reportedip_hive_2fa_ip_allowlist'              => '',
+		'reportedip_hive_2fa_frontend_onboarding'       => true,
+		'reportedip_hive_2fa_enforce_roles'             => '["administrator"]',
 		'reportedip_hive_block_escalation_enabled'      => true,
 		'reportedip_hive_block_ladder_minutes'          => '5,15,30,1440,2880,10080',
 		'reportedip_hive_block_ladder_reset_days'       => 30,
+		'reportedip_hive_notify_recipients'             => '',
+		'reportedip_hive_notify_from_name'              => '',
+		'reportedip_hive_notify_from_email'             => '',
+		'reportedip_hive_notify_sync_to_api'            => false,
 	);
+
+	/**
+	 * Wizard Step-3 detection-toggle keys (without the option prefix).
+	 *
+	 * The default ON/OFF value lives in `SAFE_OPTIONS` — the wizard reads it
+	 * back through `wizard_protection_defaults()` so the two never drift.
+	 *
+	 * @var array<int, string>
+	 */
+	private const WIZARD_PROTECTION_KEYS = array(
+		'monitor_failed_logins',
+		'monitor_comments',
+		'monitor_xmlrpc',
+		'monitor_app_passwords',
+		'monitor_rest_api',
+		'block_user_enumeration',
+		'monitor_404_scans',
+		'monitor_geo_anomaly',
+		'auto_block',
+		'block_escalation_enabled',
+		'report_only_mode',
+	);
+
+	/**
+	 * Resolve the active notification recipient list.
+	 *
+	 * Reads the comma-separated `reportedip_hive_notify_recipients` option and
+	 * filters every entry through `is_email()`. Falls back to the WordPress
+	 * `admin_email` when the option is empty or fully invalid so existing call
+	 * sites keep working.
+	 *
+	 * @return string[] Validated recipient addresses, never empty.
+	 * @since  1.5.3
+	 */
+	public static function notify_recipients(): array {
+		$raw   = (string) get_option( 'reportedip_hive_notify_recipients', '' );
+		$parts = array_filter( array_map( 'trim', explode( ',', $raw ) ) );
+		$valid = array();
+		foreach ( $parts as $candidate ) {
+			$clean = sanitize_email( $candidate );
+			if ( '' !== $clean && is_email( $clean ) ) {
+				$valid[] = $clean;
+			}
+		}
+		if ( empty( $valid ) ) {
+			$fallback = (string) get_option( 'admin_email', '' );
+			if ( '' !== $fallback && is_email( $fallback ) ) {
+				$valid[] = $fallback;
+			}
+		}
+		return array_values( array_unique( $valid ) );
+	}
+
+	/**
+	 * Brand default for the From-Name when no custom value is configured.
+	 */
+	public const NOTIFY_FROM_NAME_DEFAULT = 'ReportedIP';
+
+	/**
+	 * Resolve the active From: header components for outgoing mails.
+	 *
+	 * Reads `reportedip_hive_notify_from_name` and
+	 * `reportedip_hive_notify_from_email` and falls back to the brand default
+	 * "ReportedIP" and the WordPress `admin_email` respectively. Always
+	 * returns usable values so the mailer can construct a valid header.
+	 *
+	 * @return array{name:string,email:string}
+	 * @since  1.5.3
+	 */
+	public static function notify_from(): array {
+		$name = trim( (string) get_option( 'reportedip_hive_notify_from_name', '' ) );
+		if ( '' === $name ) {
+			$name = self::NOTIFY_FROM_NAME_DEFAULT;
+		}
+
+		$email = sanitize_email( (string) get_option( 'reportedip_hive_notify_from_email', '' ) );
+		if ( '' === $email || ! is_email( $email ) ) {
+			$email = (string) get_option( 'admin_email', '' );
+		}
+
+		return array(
+			'name'  => $name,
+			'email' => $email,
+		);
+	}
 
 	/**
 	 * Look up a single wizard-form default.
@@ -126,5 +229,21 @@ final class ReportedIP_Hive_Defaults {
 	 */
 	public static function safe_options(): array {
 		return self::SAFE_OPTIONS;
+	}
+
+	/**
+	 * Wizard Step-3 fallback profile, derived from `SAFE_OPTIONS` so detection
+	 * defaults stay in lockstep regardless of which surface a user reaches
+	 * first (wizard, settings, fresh install).
+	 *
+	 * @return array<string, bool>
+	 * @since  1.6.0
+	 */
+	public static function wizard_protection_defaults(): array {
+		$defaults = array();
+		foreach ( self::WIZARD_PROTECTION_KEYS as $key ) {
+			$defaults[ $key ] = (bool) self::SAFE_OPTIONS[ 'reportedip_hive_' . $key ];
+		}
+		return $defaults;
 	}
 }

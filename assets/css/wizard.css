@@ -1229,48 +1229,6 @@ body.rip-wizard-page [hidden] {
     color: var(--rip-success-dark);
 }
 
-.rip-wizard__tips {
-    max-width: 540px;
-    margin: 0 auto 2rem;
-    text-align: left;
-    padding: 1.25rem 1.5rem;
-    background: #fff;
-    border-radius: var(--rip-radius-lg);
-    border: 1px solid var(--rip-gray-200);
-    box-shadow: var(--rip-shadow-sm);
-}
-
-.rip-wizard__tips h3 {
-    color: var(--rip-gray-900);
-    font-size: 1rem;
-    margin: 0 0 0.75rem;
-}
-
-.rip-wizard__tips ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.rip-wizard__tips li {
-    padding: 0.5rem 0;
-    padding-left: 1.5rem;
-    position: relative;
-    color: var(--rip-gray-700);
-    font-size: 0.875rem;
-}
-
-.rip-wizard__tips li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.875rem;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--rip-primary);
-}
-
 /* Actions */
 .rip-wizard__actions {
     display: flex;
@@ -1513,6 +1471,16 @@ body.rip-wizard-page select.rip-select option {
     line-height: 1.5;
 }
 
+/*
+ * Hide-Login step: the GDPR-style notice introduces the slug toggle, so it
+ * needs more breathing room before the toggle row sits underneath. The other
+ * call sites (privacy step, etc.) keep the original tighter spacing.
+ */
+.rip-wizard__step-content[data-step="7"] .rip-gdpr-notice {
+    margin-bottom: var(--rip-space-6, 1.75rem);
+    padding-bottom: 0.95rem;
+}
+
 /* GDPR Badge */
 .rip-mode-badge--gdpr {
     background: rgba(16, 185, 129, 0.15);
@@ -1703,14 +1671,34 @@ body.rip-wizard-page select.rip-select option {
 
 .rip-tier-card__list {
     margin: 0;
-    padding-left: 1.1rem;
-    font-size: 0.875rem;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9rem;
     color: var(--rip-gray-700, #374151);
-    line-height: 1.55;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
 }
 
-.rip-tier-card__list li + li {
-    margin-top: 0.25rem;
+.rip-tier-card__list li {
+    position: relative;
+    padding-left: 1.65rem;
+}
+
+.rip-tier-card__list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.15rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 999px;
+    background-color: var(--rip-success-soft, rgba(16, 185, 129, 0.12));
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2310B981'><path fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 0.85rem 0.85rem;
 }
 
 .rip-tier-card .rip-button {
@@ -1727,6 +1715,60 @@ body.rip-wizard-page select.rip-select option {
     flex-wrap: wrap;
     gap: 0.35rem;
     margin-bottom: var(--rip-space-2, 0.5rem);
+}
+
+/* Promote step: preview frame + variant/position fieldsets. */
+.rip-promote-preview {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border: 1px dashed var(--rip-gray-300, #D1D5DB);
+    border-radius: var(--rip-radius-lg, 0.75rem);
+    padding: var(--rip-space-5, 1.5rem);
+    min-height: 110px;
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--rip-space-4, 1rem);
+}
+
+.rip-promote-preview--left { justify-content: flex-start; }
+.rip-promote-preview--center,
+.rip-promote-preview--below { justify-content: center; }
+.rip-promote-preview--right { justify-content: flex-end; }
+
+.rip-promote-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0 0 var(--rip-space-4, 1rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rip-promote-legend {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--rip-gray-900, #111827);
+    margin-bottom: 0.35rem;
+    padding: 0;
+}
+
+.rip-promote-toggle {
+    margin-top: var(--rip-space-3, 0.75rem);
+}
+
+.rip-promote-hint {
+    margin-top: 0.5rem !important;
+    color: var(--rip-gray-600, #4B5563);
+    font-size: 0.8125rem;
+}
+
+/*
+ * Notifications step: the recipient textarea wraps multi-line lists. Keep
+ * the size predictable; resize is allowed vertically only.
+ */
+.rip-input--textarea {
+    min-height: 4.5rem;
+    line-height: 1.45;
+    resize: vertical;
 }
 
 /* Inline code block — shipped recovery snippets, etc. */

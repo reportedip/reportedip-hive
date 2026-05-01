@@ -39,6 +39,102 @@
 		el.className = 'rip-2fa-inline-status' + (type ? ' rip-2fa-inline-status--' + type : '');
 	}
 
+	var cooldownIntervals = {};
+
+	function startCooldown(btn, seconds, labelTemplate) {
+		if (!btn || !labelTemplate) { return; }
+		var key = btn.id || ('btn-' + Math.random());
+		if (cooldownIntervals[key]) { clearInterval(cooldownIntervals[key]); }
+		var defaultLabel = btn.getAttribute('data-default-label') || btn.textContent;
+		var remaining = seconds;
+		btn.disabled = true;
+		btn.dataset.cooldown = '1';
+		btn.textContent = labelTemplate.replace('%d', remaining);
+		cooldownIntervals[key] = setInterval(function () {
+			remaining -= 1;
+			if (remaining <= 0) {
+				clearInterval(cooldownIntervals[key]);
+				delete cooldownIntervals[key];
+				delete btn.dataset.cooldown;
+				btn.textContent = defaultLabel;
+				if (btn.id === 'rip-2fa-sms-send') {
+					validatePhoneInput();
+				} else {
+					btn.disabled = false;
+				}
+				return;
+			}
+			btn.textContent = labelTemplate.replace('%d', remaining);
+		}, 1000);
+	}
+
+	function clearCooldown(btn) {
+		if (!btn) { return; }
+		var key = btn.id;
+		if (cooldownIntervals[key]) {
+			clearInterval(cooldownIntervals[key]);
+			delete cooldownIntervals[key];
+		}
+		delete btn.dataset.cooldown;
+		var defaultLabel = btn.getAttribute('data-default-label');
+		if (defaultLabel) { btn.textContent = defaultLabel; }
+	}
+
+	var deliveryIntervals = {};
+
+	function startDeliveryTimer(el, seconds, template) {
+		if (!el || !template) { return; }
+		var key = el.id || ('el-' + Math.random());
+		if (deliveryIntervals[key]) { clearInterval(deliveryIntervals[key]); }
+		el.hidden = false;
+		var remaining = seconds;
+		el.textContent = template.replace('%d', remaining);
+		deliveryIntervals[key] = setInterval(function () {
+			remaining -= 1;
+			if (remaining <= 0) {
+				clearInterval(deliveryIntervals[key]);
+				delete deliveryIntervals[key];
+				el.hidden = true;
+				el.textContent = '';
+				return;
+			}
+			el.textContent = template.replace('%d', remaining);
+		}, 1000);
+	}
+
+	function clearDeliveryTimer(el) {
+		if (!el) { return; }
+		var key = el.id;
+		if (deliveryIntervals[key]) {
+			clearInterval(deliveryIntervals[key]);
+			delete deliveryIntervals[key];
+		}
+		el.hidden = true;
+		el.textContent = '';
+	}
+
+	var PHONE_E164 = /^\+[1-9]\d{6,14}$/;
+
+	function validatePhoneInput() {
+		var input   = $qs('#rip-2fa-sms-number');
+		var btn     = $qs('#rip-2fa-sms-send');
+		var consent = !!($qs('#rip-2fa-sms-consent') || {}).checked;
+		if (!input) { return false; }
+		var wrap = (input.parentNode && input.parentNode.classList && input.parentNode.classList.contains('rip-input-wrap'))
+			? input.parentNode : null;
+		var indic = wrap ? wrap.querySelector('.rip-input-validity') : null;
+		var raw   = (input.value || '').replace(/[\s().\-\/]/g, '');
+		var hasInput = raw.length > 0;
+		var valid    = PHONE_E164.test(raw);
+		if (wrap) {
+			wrap.classList.toggle('rip-input-wrap--valid',   valid && hasInput);
+			wrap.classList.toggle('rip-input-wrap--invalid', !valid && hasInput);
+		}
+		if (indic) { indic.textContent = !hasInput ? '' : (valid ? '\u2713' : '\u2715'); }
+		if (btn && !btn.dataset.cooldown) { btn.disabled = !(valid && consent); }
+		return valid;
+	}
+
 	function goToStep(n) {
 		state.currentStep = n;
 		$qsa('.rip-2fa-step').forEach(function (el) {
@@ -224,9 +320,12 @@
 		setStatus($qs('#rip-2fa-email-verify-status'), '');
 		var inp = $qs('#rip-2fa-email-verify');
 		if (inp) { inp.value = ''; }
+		clearCooldown($qs('#rip-2fa-email-send'));
 	}
 
 	$(document).on('click', '#rip-2fa-email-send', function () {
+		var btn = this;
+		if (btn.dataset.cooldown) { return; }
 		setStatus($qs('#rip-2fa-email-send-status'), I18N.strings.sending);
 		$.post(I18N.ajaxUrl, {
 			action: 'reportedip_hive_2fa_setup_email',
@@ -236,6 +335,7 @@
 		}).done(function (res) {
 			if (res && res.success) {
 				setStatus($qs('#rip-2fa-email-send-status'), res.data && res.data.message || I18N.strings.sent, 'success');
+				startCooldown(btn, 60, I18N.strings.resendIn);
 			} else {
 				setStatus($qs('#rip-2fa-email-send-status'), (res && res.data && res.data.message) || I18N.strings.networkError, 'error');
 			}
@@ -376,22 +476,35 @@
 	// SMS setup — two-step (register phone + dispatch code → verify submitted code).
 	function resetSmsPanel() {
 		setStatus($qs('#rip-2fa-sms-status'), '');
+		setStatus($qs('#rip-2fa-sms-send-status'), '');
 		var n = $qs('#rip-2fa-sms-number'); if (n) { n.value = ''; }
 		var c = $qs('#rip-2fa-sms-consent'); if (c) { c.checked = false; }
 		var v = $qs('#rip-2fa-sms-verify'); if (v) { v.value = ''; }
+		var wrap = n && n.parentNode && n.parentNode.classList && n.parentNode.classList.contains('rip-input-wrap')
+			? n.parentNode : null;
+		if (wrap) {
+			wrap.classList.remove('rip-input-wrap--valid', 'rip-input-wrap--invalid');
+			var indic = wrap.querySelector('.rip-input-validity');
+			if (indic) { indic.textContent = ''; }
+		}
+		clearCooldown($qs('#rip-2fa-sms-send'));
+		clearDeliveryTimer($qs('#rip-2fa-sms-delivery-timer'));
+		var btn = $qs('#rip-2fa-sms-send');
+		if (btn) { btn.disabled = true; }
 	}
 
-	$(document).on('change', '#rip-2fa-sms-consent', function () {
-		var btn = $qs('#rip-2fa-sms-send');
-		if (btn) { btn.disabled = !this.checked; }
-	});
+	$(document).on('input',  '#rip-2fa-sms-number',  validatePhoneInput);
+	$(document).on('change', '#rip-2fa-sms-consent', validatePhoneInput);
 
 	$(document).on('click', '#rip-2fa-sms-send', function () {
-		var phone   = (($qs('#rip-2fa-sms-number') || {}).value || '').trim();
+		var btn = this;
+		if (btn.dataset.cooldown) { return; }
+		if (!validatePhoneInput()) { return; }
 		var consent = !!($qs('#rip-2fa-sms-consent') || {}).checked;
-		if (!phone || !consent) { return; }
+		if (!consent) { return; }
+		var phone = (($qs('#rip-2fa-sms-number') || {}).value || '').replace(/[\s().\-\/]/g, '');
 
-		setStatus($qs('#rip-2fa-sms-status'), I18N.strings.sending);
+		setStatus($qs('#rip-2fa-sms-send-status'), I18N.strings.sending);
 		$.post(I18N.ajaxUrl, {
 			action: 'reportedip_hive_2fa_setup_sms',
 			nonce: I18N.nonce,
@@ -401,12 +514,14 @@
 			consent: '1',
 		}).done(function (res) {
 			if (res && res.success) {
-				setStatus($qs('#rip-2fa-sms-status'), (res.data && res.data.message) || I18N.strings.sent, 'success');
+				setStatus($qs('#rip-2fa-sms-send-status'), (res.data && res.data.message) || I18N.strings.sent, 'success');
+				startCooldown(btn, 60, I18N.strings.resendIn);
+				startDeliveryTimer($qs('#rip-2fa-sms-delivery-timer'), 60, I18N.strings.smsDeliveryWait);
 			} else {
-				setStatus($qs('#rip-2fa-sms-status'), (res && res.data && res.data.message) || I18N.strings.networkError, 'error');
+				setStatus($qs('#rip-2fa-sms-send-status'), (res && res.data && res.data.message) || I18N.strings.networkError, 'error');
 			}
 		}).fail(function () {
-			setStatus($qs('#rip-2fa-sms-status'), I18N.strings.networkError, 'error');
+			setStatus($qs('#rip-2fa-sms-send-status'), I18N.strings.networkError, 'error');
 		});
 	});
 

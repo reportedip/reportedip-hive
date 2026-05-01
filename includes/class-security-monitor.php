@@ -877,8 +877,8 @@ class ReportedIP_Hive_Security_Monitor {
 
 		set_transient( $transient_key, true, $cooldown_minutes * MINUTE_IN_SECONDS );
 
-		$admin_email = (string) get_option( 'admin_email', '' );
-		if ( '' === $admin_email ) {
+		$recipients = ReportedIP_Hive_Defaults::notify_recipients();
+		if ( empty( $recipients ) ) {
 			return;
 		}
 
@@ -893,7 +893,7 @@ class ReportedIP_Hive_Security_Monitor {
 
 		ReportedIP_Hive_Mailer::get_instance()->send(
 			array(
-				'to'              => $admin_email,
+				'to'              => implode( ', ', $recipients ),
 				'subject'         => $subject,
 				'intro_text'      => __( 'Heads-up: a security threshold was reached on your site. ReportedIP Hive has already handled it according to your settings — details below for your records.', 'reportedip-hive' ),
 				'main_block_html' => $blocks['html'],

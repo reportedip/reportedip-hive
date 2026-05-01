@@ -304,6 +304,7 @@ if ( ! function_exists( 'sanitize_text_field' ) ) {
 	 * @return string
 	 */
 	function sanitize_text_field( $str ) {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- Stub mirrors WordPress core sanitize_text_field() in unit-test runs without WP loaded.
 		return htmlspecialchars( strip_tags( trim( $str ) ), ENT_QUOTES, 'UTF-8' );
 	}
 }
@@ -317,6 +318,31 @@ if ( ! function_exists( 'wp_kses_post' ) ) {
 	 */
 	function wp_kses_post( $data ) {
 		return strip_tags( $data, '<a><b><strong><i><em><ul><ol><li><p><br><span><div>' );
+	}
+}
+
+if ( ! function_exists( 'sanitize_email' ) ) {
+	/**
+	 * Stub: trim + filter against a permissive email pattern.
+	 *
+	 * @param string $email Address.
+	 * @return string Empty when invalid, sanitized otherwise.
+	 */
+	function sanitize_email( $email ) {
+		$email = trim( (string) $email );
+		return preg_match( '/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/', $email ) ? $email : '';
+	}
+}
+
+if ( ! function_exists( 'is_email' ) ) {
+	/**
+	 * Stub: same permissive check as sanitize_email().
+	 *
+	 * @param string $email Candidate.
+	 * @return bool
+	 */
+	function is_email( $email ) {
+		return (bool) preg_match( '/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/', (string) $email );
 	}
 }
 
@@ -412,7 +438,7 @@ if ( ! function_exists( '_e' ) ) {
 	 * @param string $domain Optional. Text domain.
 	 */
 	function _e( $text, $domain = 'default' ) {
-		echo $text;
+		echo $text; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Stub mirrors WordPress core _e(); escaping is the caller's responsibility.
 	}
 }
 
@@ -558,6 +584,7 @@ if ( ! function_exists( 'wp_strip_all_tags' ) ) {
 	function wp_strip_all_tags( $string, $remove_breaks = false ) { // phpcs:ignore
 		$string = preg_replace( '/<script[^>]*?>.*?<\/script>/si', '', (string) $string );
 		$string = preg_replace( '/<style[^>]*?>.*?<\/style>/si', '', (string) $string );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.strip_tags_strip_tags -- This stub IS wp_strip_all_tags() for unit-test runs; it has to call PHP's strip_tags().
 		$string = strip_tags( (string) $string );
 		return $remove_breaks ? preg_replace( '/[\r\n\t ]+/', ' ', $string ) : trim( $string );
 	}

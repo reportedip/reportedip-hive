@@ -48,8 +48,8 @@
 			this.initModeSelection();
 			this.initStep3();
 			this.initStep4();
-			this.initStep6();
-			this.initStep8();
+			this.initStep7();
+			this.initStep9();
 			this.restoreFromSession();
 		},
 
@@ -96,12 +96,23 @@
 		// Step 2: Mode + API-Key
 		// ========================================================================
 
+		_validatedApiKey: null,
+
 		initModeSelection: function () {
+			if (reportedipWizard && reportedipWizard.savedApiKey) {
+				this._validatedApiKey = reportedipWizard.savedApiKey;
+				this.tier = (reportedipWizard.tier || '').toLowerCase();
+			}
+
 			var $selectedCard = $('.rip-mode-card--selected');
 			if ($selectedCard.length) {
-				this.updateContinueButton(true);
 				this.toggleApiKeyCard($selectedCard.data('mode'));
+				this.refreshContinueButton();
+			} else {
+				this.updateContinueButton(false);
 			}
+
+			$(document).on('input', '#rip-api-key', this.refreshContinueButton.bind(this));
 		},
 
 		handleModeCardClick: function (e) {
@@ -113,7 +124,7 @@
 
 			$('#rip-selected-mode').val(mode);
 			this.toggleApiKeyCard(mode);
-			this.updateContinueButton(true);
+			this.refreshContinueButton();
 		},
 
 		toggleApiKeyCard: function (mode) {
@@ -122,6 +133,28 @@
 
 		updateContinueButton: function (enabled) {
 			$('#rip-continue-mode').prop('disabled', !enabled);
+		},
+
+		/**
+		 * Step 2 Next-button gate: Local mode → always allow once a card is
+		 * picked. Community mode → require a successful key-validation that
+		 * still matches the current input value (we invalidate on edit).
+		 */
+		refreshContinueButton: function () {
+			var $selectedCard = $('.rip-mode-card--selected');
+			if (!$selectedCard.length) {
+				this.updateContinueButton(false);
+				return;
+			}
+			var mode = $selectedCard.data('mode');
+			if (mode !== 'community') {
+				this.updateContinueButton(true);
+				return;
+			}
+			var apiKey = ($('#rip-api-key').val() || '').trim();
+			var ok = apiKey.length > 0 && apiKey === this._validatedApiKey;
+			this.updateContinueButton(ok);
+			$('#rip-api-key-gate-hint').toggleClass('rip-is-hidden', ok);
 		},
 
 		handleContinueMode: function (e) {
@@ -215,12 +248,17 @@
 						$('#rip-remaining-calls').text(ReportedIPWizard.formatNumber(response.data.remaining_calls));
 						$apiInfo.removeClass('rip-is-hidden');
 
-						ReportedIPWizard.setSession({ apiKey: apiKey });
+						ReportedIPWizard._validatedApiKey = apiKey;
+						ReportedIPWizard.tier = (response.data.tier || response.data.user_role || '').toLowerCase();
+						ReportedIPWizard.setSession({ apiKey: apiKey, tier: ReportedIPWizard.tier });
+						ReportedIPWizard.refreshContinueButton();
 					} else {
 						$input.addClass('rip-input--invalid').removeClass('rip-input--valid');
 						var message = (response.data && response.data.message) ? response.data.message : (reportedipWizard.strings.invalid || 'Invalid API key.');
 						$status.html('<span class="rip-input-status--error"><svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg> ' + message + '</span>');
 						$apiInfo.addClass('rip-is-hidden');
+						ReportedIPWizard._validatedApiKey = null;
+						ReportedIPWizard.refreshContinueButton();
 					}
 				},
 				error: function () {
@@ -348,25 +386,24 @@
 				auto_anonymize_days: $('#rip-auto-anonymize').val() || DEFAULTS.anonymize_days,
 				log_user_agents: $('#rip-log-user-agents').is(':checked') ? 1 : 0,
 				log_referer_domains: $('#rip-log-referer').is(':checked') ? 1 : 0,
-				notify_admin: $('#rip-notify-admin').is(':checked') ? 1 : 0,
 				delete_data_on_uninstall: $('#rip-delete-on-uninstall').is(':checked') ? 1 : 0
 			});
 		},
 
 		// ========================================================================
-		// Step 6: Hide Login (slug validation + final submit)
+		// Step 7: Hide Login (slug validation + final submit)
 		// ========================================================================
 
-		initStep6: function () {
+		initStep7: function () {
 			if (!$('#rip-hide-login-enabled').length) { return; }
 			this.toggleHideLoginFields();
 		},
 
 		// ========================================================================
-		// Step 8: Setup-complete celebration trigger
+		// Step 9: Setup-complete celebration trigger
 		// ========================================================================
 
-		initStep8: function () {
+		initStep9: function () {
 			var $complete = $('.rip-wizard__complete');
 			if (!$complete.length) { return; }
 			// Defer to next paint so CSS animations start cleanly on load.

@@ -5,12 +5,12 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.6.3
-License: GPLv2 or later
+Stable tag: 1.6.4
+License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
 
-Community-powered WordPress security: 12 attack sensors, 4 progressive 2FA methods, herd-immunity threat sharing. GDPR-first. Made in Germany.
+Community-powered WordPress security: 12 attack sensors, 4 2FA methods, threat sharing. GDPR-first. Made in Germany.
 
 == Description ==
 
@@ -246,6 +246,18 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 1.6.3 =
+
+Managed mail and SMS relay — Professional / Business / Enterprise plans now route 2FA mails and OTP-SMS through reportedip.de instead of needing their own SMTP / Twilio / Sipgate contract. Mail relay falls back transparently to local `wp_mail()` on cap (HTTP 402) or backoff (HTTP 429) so 2FA flows never break. SMS relay surfaces typed `WP_Error`s so the 2FA UI can encourage another method instead of silently switching. New `ReportedIP_Hive_Phone_Validator` enforces an EU-only country-code whitelist (29 countries, filterable). Progressive SMS backoff ladder (0s → 2m → 5m → 15m → 30m → 60m) mirrors the service-side rate-limiter. Setup wizard slimmed from 8 to 7 steps. Scan-detector path matcher refactored to a single pass.
+
+= 1.6.1 =
+
+Post-upgrade 2FA setup banner appears on every Hive admin page when a customer's plan crosses from Free / Contributor into Professional / Business / Enterprise, with a three-step checklist (provider chosen, AVV confirmed, SMS method enabled). Login-time 2FA reminder for end users — counts logins without a configured method and renders a soft banner across wp-admin; after the configurable threshold (default 5) administrators, editors and shop managers are forced into the existing onboarding wizard, while customers, subscribers and other non-privileged roles only ever see the soft banner so a missing phone never locks anyone out of WooCommerce. AVV / DPA checkbox on the 2FA tab now adapts to the active SMS provider — selecting `reportedip_relay` flips the label to "I have accepted the ReportedIP AVV (signed with my plan subscription)" and auto-checks. New `Login reminder` settings section to toggle the reminder, set the hard-block threshold (1–10), and pick which roles get hard-blocked at threshold.
+
+= 1.6.0 =
+
+Tier-aware UI foundation across admin pages — every page now renders a tier badge next to the operation-mode badge (Free / Contributor / Professional / Business / Enterprise), and PRO+ tiers gain a managed-relay quota panel on the security dashboard with mail and SMS counters, progress bars and reset hints. Setup wizard's first step reuses the same Local-vs-Community comparison cards as the Settings page. SMS-provider selector marks "ReportedIP SMS Relay" as PRO+ when the current tier is too low, with a deep link to the pricing page. New `Mode_Manager::feature_status()`, `get_tier_info()` and `get_relay_quota_snapshot()` are the canonical contracts every future tier-gated control hooks into. New `reportedip_hive_tier_changed` action fires when the upstream `userRole` flips between tiers.
+
 = 1.5.3 =
 
 API queue reliability hotfix. A worker that crashed mid-HTTP (PHP fatal, OOM, timeout) used to leave its queue row stuck in `processing` forever — invisible to every later cron run, never cleaned up, and the cooldown check then silently suppressed all further reports for that IP for 24 h. The queue cron now recovers stuck rows on every run, protects in-flight rows via a new `submitted_at` timestamp, runs each row in its own try/catch so one failure can't abort the batch, and serialises concurrent invocations with a transient lock. Schema bumps to v4 (auto-migrated). Strongly recommended for every Community-mode site.
@@ -287,6 +299,15 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 1.6.3 =
+Managed Mail/SMS relay for Professional+. 2FA mail falls back to local `wp_mail()` on cap; SMS surfaces typed errors to the user. EU-only phone validator. Free / Contributor sites are unaffected. Recommended for everyone — no breaking change.
+
+= 1.6.1 =
+Post-upgrade welcome banner with a 3-step 2FA-setup checklist, plus a login-time reminder for users without 2FA (hard-block after 5 reminders for administrator/editor/shop_manager only). Recommended.
+
+= 1.6.0 =
+Tier-aware UI foundation: every admin page now renders the active tier and (on PRO+) a managed-relay quota card on the security dashboard. Recommended.
 
 = 1.5.3 =
 API queue reliability hotfix. Recovers rows stuck in `processing` after a crashed worker, protects in-flight rows, isolates per-row failures, and serialises concurrent cron runs. Schema bumps to v4 (auto-migrated). Strongly recommended for every Community-mode site.
@@ -335,19 +356,64 @@ Full privacy information: [reportedip.de/privacy](https://reportedip.de/privacy)
 
 == External Services ==
 
-This plugin connects to the following external service when *Community Network* mode is active:
+This plugin connects to external services only when explicitly configured. *Local Shield* mode works completely offline — none of the endpoints below are contacted unless the corresponding feature is enabled.
 
-**ReportedIP.de API**
+= ReportedIP Community Network API =
 
-* Service URL: `https://reportedip.de/wp-json/reportedip/v2/`
-* Purpose: IP reputation lookups and anonymised threat sharing
-* Data transmitted: IP addresses, event types, timestamps
+* Service URL: `https://reportedip.de/wp-json/reportedip/v2/` (endpoints `verify-key`, `check`, `report`, `whitelist`, `categories`)
+* Purpose: IP reputation lookups, anonymised threat reporting, whitelist sync, threat-category catalogue
+* Default: off — only active in Community Network mode AND with a configured API key
+* Data transmitted: IP addresses, optional event categories and timestamps, the API key, the site domain
 * Terms: [reportedip.de/terms](https://reportedip.de/terms)
-* Privacy: [reportedip.de/privacy](https://reportedip.de/privacy)
+* Privacy / DPA: [reportedip.de/privacy](https://reportedip.de/privacy)
 
-This connection is **optional** and only active in Community Network mode. Local Shield mode works entirely without external connections.
+= ReportedIP Managed Mail Relay =
 
-When SMS 2FA is configured (also optional), the plugin connects to the SMS provider you select (Sipgate, MessageBird, or seven.io) under their published terms and DPA. No SMS traffic occurs unless a user actively enrols an SMS factor.
+* Service URL: `https://reportedip.de/wp-json/reportedip/v2/relay-mail`
+* Purpose: route 2FA verification mails through the reportedip.de transactional mail infrastructure (clean SPF / DKIM / DMARC)
+* Default: off — only available for Professional, Business and Enterprise plans, only when the user enabled the email 2FA factor; on any error (cap reached HTTP 402, recipient backoff HTTP 429, network error) the plugin falls back to the local `wp_mail()` transport so the 2FA flow never breaks
+* Data transmitted: recipient email, subject, HTML and plain-text body, headers, optional Reply-To, the site domain
+* Privacy / DPA: [reportedip.de/legal/avv](https://reportedip.de/legal/avv)
+
+= ReportedIP Managed SMS Relay =
+
+* Service URL: `https://reportedip.de/wp-json/reportedip/v2/relay-sms` (and `relay-quota` for monthly usage display)
+* Purpose: deliver 2FA OTP messages without requiring the site operator to maintain their own SMS-provider contract
+* Default: off — only available for Professional, Business and Enterprise plans, only when a user actively enrolled SMS as a 2FA factor and the site selected `ReportedIP SMS Relay` as the active provider; phone numbers are validated as EU-only (29-country whitelist) before any send
+* Data transmitted: recipient phone number (E.164), the verification code, expiry minutes, language code, the site domain
+* Privacy / DPA: [reportedip.de/legal/avv](https://reportedip.de/legal/avv)
+
+= GitHub Releases API (Plugin Update Checker) =
+
+* Service URL: `https://api.github.com/repos/reportedip/reportedip-hive/releases` (via the [plugin-update-checker](https://github.com/YahnisElsts/plugin-update-checker) library)
+* Purpose: notifies the WordPress plugin updater about new tagged releases (release ZIP is downloaded from GitHub when the admin clicks "Update")
+* Default: on — runs once every 12 hours via the `wp_update_plugins` cron, the same cadence WordPress core uses for its own update checks
+* Data transmitted: only plugin metadata (current version, slug); no site identifiers, no user data
+* Terms: [GitHub Terms of Service](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service)
+* Privacy: [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
+
+= HaveIBeenPwned (HIBP) Range API =
+
+* Service URL: `https://api.pwnedpasswords.com/range/{first-5-sha1-hex-chars}`
+* Purpose: optional k-anonymity password-strength check at user password change — flags credentials known from public breach corpora
+* Default: off — opt-in via the option `reportedip_hive_password_check_hibp`, only triggers for users in the configured enforce-roles
+* Data transmitted: only the first 5 hex characters of the SHA-1 hash of the proposed password (the password itself is never sent and cannot be reconstructed)
+* Privacy: [haveibeenpwned.com/Privacy](https://haveibeenpwned.com/Privacy)
+* Soft-fail behaviour: a network error never blocks a password change
+
+= Third-party SMS providers (only when configured by the site operator) =
+
+When the site operator selects a non-relay SMS provider, the plugin contacts that provider directly with the recipient's E.164 phone number, the OTP message body and the configured sender ID:
+
+* **Sipgate (Germany)** — `https://api.sipgate.com/v2/sessions/sms` — Terms: [sipgate.de/agb](https://www.sipgate.de/agb) — DPA: [sipgate.de/agb#auftragsverarbeitung](https://www.sipgate.de/agb#auftragsverarbeitung)
+* **MessageBird / Bird (Netherlands)** — `https://rest.messagebird.com/messages` — Terms: [messagebird.com/legal/terms](https://messagebird.com/legal/terms) — DPA: [messagebird.com/legal/dpa](https://messagebird.com/legal/dpa)
+* **seven.io (Germany)** — `https://gateway.seven.io/api/sms` — Terms: [seven.io/agb](https://www.seven.io/agb) — DPA: included in [seven.io/agb](https://www.seven.io/agb)
+
+No SMS traffic occurs unless a user actively enrols an SMS factor and a site operator has both configured a provider AND ticked the corresponding DPA confirmation in 2FA settings — that confirmation is a hard gate.
+
+= No CDN, no third-party assets =
+
+All JavaScript, CSS, fonts and images shipped with the plugin are loaded from the plugin directory itself. The plugin does not embed Google Fonts, Google Analytics, jQuery from a CDN or any other remote asset.
 
 == Credits ==
 
