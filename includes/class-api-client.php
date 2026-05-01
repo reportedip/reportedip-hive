@@ -724,6 +724,7 @@ class ReportedIP_Hive_API {
 		$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 
 		if ( $code >= 200 && $code < 300 && is_array( $body ) ) {
+			$body['fetched_at'] = time();
 			set_transient( $cache_key, $body, HOUR_IN_SECONDS );
 			return $body;
 		}

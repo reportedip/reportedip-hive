@@ -300,6 +300,31 @@ class ReportedIP_Hive_Cron_Handler {
 		} catch ( Exception $e ) {
 			$this->logger->error( 'Quota refresh failed: ' . $e->getMessage(), 'system' );
 		}
+
+		try {
+			$relay = $this->api_client->get_relay_quota( true );
+			if ( is_array( $relay ) && empty( $relay['error'] ) ) {
+				$this->logger->info(
+					'Relay quota refreshed',
+					'system',
+					array(
+						'tier'       => $relay['tier'] ?? null,
+						'mail_used'  => $relay['mail']['queued_total'] ?? $relay['mail']['used'] ?? null,
+						'mail_limit' => $relay['mail']['limit'] ?? null,
+						'sms_used'   => $relay['sms']['queued_total'] ?? $relay['sms']['used'] ?? null,
+						'sms_limit'  => $relay['sms']['limit'] ?? null,
+					)
+				);
+			} elseif ( is_array( $relay ) && ! empty( $relay['error'] ) ) {
+				$this->logger->warning(
+					'Relay quota refresh failed',
+					'system',
+					array( 'error' => (string) $relay['error'] )
+				);
+			}
+		} catch ( Exception $e ) {
+			$this->logger->error( 'Relay quota refresh failed: ' . $e->getMessage(), 'system' );
+		}
 	}
 
 	/**

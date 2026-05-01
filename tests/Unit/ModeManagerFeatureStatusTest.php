@@ -194,6 +194,47 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$this->assertSame( 50, $snapshot['sms_bundle_balance'] );
 	}
 
+	public function test_relay_quota_snapshot_parses_actual_service_shape() {
+		$this->pretend_tier( 'professional' );
+		$now = time();
+		$GLOBALS['wp_transients']['reportedip_hive_relay_quota'] = array(
+			'value'   => array(
+				'tier'       => 'professional',
+				'role'       => 'reportedip_professional',
+				'mail'       => array(
+					'sent'         => 14,
+					'queued'       => 0,
+					'queued_total' => 14,
+					'failed'       => 0,
+					'limit'        => 500,
+					'period_start' => '2026-05-01T00:00:00Z',
+					'period_end'   => '2026-05-31T23:59:59Z',
+				),
+				'sms'        => array(
+					'sent'         => 3,
+					'queued'       => 0,
+					'queued_total' => 3,
+					'failed'       => 0,
+					'limit'        => 25,
+					'period_start' => '2026-05-01T00:00:00Z',
+					'period_end'   => '2026-05-31T23:59:59Z',
+				),
+				'fetched_at' => $now,
+			),
+			'expires' => $now + 3600,
+		);
+
+		$snapshot = \ReportedIP_Hive_Mode_Manager::get_instance()->get_relay_quota_snapshot();
+
+		$this->assertFalse( $snapshot['is_stale'] );
+		$this->assertSame( 14, $snapshot['mail']['used'] );
+		$this->assertSame( 500, $snapshot['mail']['limit'] );
+		$this->assertSame( 3, $snapshot['sms']['used'] );
+		$this->assertSame( 25, $snapshot['sms']['limit'] );
+		$this->assertSame( strtotime( '2026-05-01T00:00:00Z' ), $snapshot['period_start'] );
+		$this->assertSame( strtotime( '2026-05-31T23:59:59Z' ), $snapshot['period_end'] );
+	}
+
 	public function test_tier_changed_action_flushes_memo() {
 		$this->pretend_mode( 'community' );
 		$this->pretend_tier( 'free' );

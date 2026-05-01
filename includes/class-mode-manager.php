@@ -776,6 +776,48 @@ class ReportedIP_Hive_Mode_Manager {
 		return $int < 0 ? null : $int;
 	}
 
+	/**
+	 * Extract the count consumed in the current period from a relay subdocument.
+	 *
+	 * The reportedip.de service emits `sent`, `queued`, `queued_total`, `failed`
+	 * (`queued_total` is what counts toward the monthly limit). Older / future
+	 * shapes may also expose a flat `used` field. We accept all variants so the
+	 * dashboard never silently shows zero just because of a contract drift.
+	 *
+	 * @param array $segment Decoded `mail` or `sms` subdocument from the service body.
+	 * @return int
+	 */
+	private static function extract_used_count( array $segment ) {
+		foreach ( array( 'used', 'queued_total', 'sent' ) as $key ) {
+			if ( isset( $segment[ $key ] ) && is_numeric( $segment[ $key ] ) ) {
+				return (int) $segment[ $key ];
+			}
+		}
+		return 0;
+	}
+
+	/**
+	 * Convert a period boundary (Unix timestamp or ISO 8601 string) to int.
+	 *
+	 * The service currently emits ISO strings (`2026-05-01T00:00:00Z`); the
+	 * dashboard expects a timestamp it can hand to `date_i18n()`. Returns null
+	 * when the input is missing or unparseable so the caller can fall back to
+	 * the "next billing cycle" copy.
+	 *
+	 * @param mixed $value Raw period value from the cached body.
+	 * @return int|null
+	 */
+	private static function normalize_period_value( $value ) {
+		if ( null === $value || '' === $value ) {
+			return null;
+		}
+		if ( is_numeric( $value ) ) {
+			return (int) $value;
+		}
+		$ts = strtotime( (string) $value );
+		return $ts ? (int) $ts : null;
+	}
+
 	private function default_relay_limits_for_tier( $tier ) {
 		switch ( (string) $tier ) {
 			case 'professional':
@@ -840,19 +882,27 @@ class ReportedIP_Hive_Mode_Manager {
 		if ( ! empty( $cached['tier'] ) ) {
 			$snapshot['tier'] = (string) $cached['tier'];
 		}
-		if ( isset( $cached['period_start'] ) ) {
-			$snapshot['period_start'] = (int) $cached['period_start'];
-		}
-		if ( isset( $cached['period_end'] ) ) {
-			$snapshot['period_end'] = (int) $cached['period_end'];
-		}
+		$snapshot['period_start'] = self::normalize_period_value( $cached['period_start'] ?? null );
+		$snapshot['period_end']   = self::normalize_period_value( $cached['period_end'] ?? null );
 		if ( isset( $cached['mail'] ) && is_array( $cached['mail'] ) ) {
-			$snapshot['mail']['used']  = (int) ( $cached['mail']['used'] ?? 0 );
+			$snapshot['mail']['used']  = self::extract_used_count( $cached['mail'] );
 			$snapshot['mail']['limit'] = array_key_exists( 'limit', $cached['mail'] ) ? self::normalize_unlimited_limit( $cached['mail']['limit'] ) : $defaults['mail'];
+			if ( null === $snapshot['period_start'] ) {
+				$snapshot['period_start'] = self::normalize_period_value( $cached['mail']['period_start'] ?? null );
+			}
+			if ( null === $snapshot['period_end'] ) {
+				$snapshot['period_end'] = self::normalize_period_value( $cached['mail']['period_end'] ?? null );
+			}
 		}
 		if ( isset( $cached['sms'] ) && is_array( $cached['sms'] ) ) {
-			$snapshot['sms']['used']  = (int) ( $cached['sms']['used'] ?? 0 );
+			$snapshot['sms']['used']  = self::extract_used_count( $cached['sms'] );
 			$snapshot['sms']['limit'] = array_key_exists( 'limit', $cached['sms'] ) ? self::normalize_unlimited_limit( $cached['sms']['limit'] ) : $defaults['sms'];
+			if ( null === $snapshot['period_start'] ) {
+				$snapshot['period_start'] = self::normalize_period_value( $cached['sms']['period_start'] ?? null );
+			}
+			if ( null === $snapshot['period_end'] ) {
+				$snapshot['period_end'] = self::normalize_period_value( $cached['sms']['period_end'] ?? null );
+			}
 		}
 		if ( isset( $cached['sms_bundle_balance'] ) ) {
 			$snapshot['sms_bundle_balance'] = (int) $cached['sms_bundle_balance'];
