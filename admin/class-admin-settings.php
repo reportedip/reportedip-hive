@@ -493,9 +493,10 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$mail_used   = (int) $snapshot['mail']['used'];
 		$mail_limit  = $snapshot['mail']['limit'];
+		$mail_bundle = (int) $snapshot['mail_bundle_balance'];
 		$sms_used    = (int) $snapshot['sms']['used'];
 		$sms_limit   = $snapshot['sms']['limit'];
-		$bundle      = (int) $snapshot['sms_bundle_balance'];
+		$sms_bundle  = (int) $snapshot['sms_bundle_balance'];
 		$reset_label = $snapshot['period_end']
 			? date_i18n( get_option( 'date_format' ), (int) $snapshot['period_end'] )
 			: __( 'next billing cycle', 'reportedip-hive' );
@@ -518,8 +519,8 @@ class ReportedIP_Hive_Admin_Settings {
 			</p>
 
 			<div class="rip-stat-cards">
-				<?php $this->render_quota_card( 'mail', $mail_used, $mail_limit, $reset_label, $snapshot['is_stale'] ); ?>
-				<?php $this->render_quota_card( 'sms', $sms_used, $sms_limit, $reset_label, $snapshot['is_stale'], $bundle ); ?>
+				<?php $this->render_quota_card( 'mail', $mail_used, $mail_limit, $reset_label, $snapshot['is_stale'], $mail_bundle ); ?>
+				<?php $this->render_quota_card( 'sms', $sms_used, $sms_limit, $reset_label, $snapshot['is_stale'], $sms_bundle ); ?>
 			</div>
 		</div>
 		<?php
@@ -533,7 +534,10 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @param int|null $limit       Period limit (null = unlimited).
 	 * @param string   $reset_label Human-readable reset date.
 	 * @param bool     $is_stale    Whether the snapshot is older than 24h.
-	 * @param int      $bundle      SMS bundle balance (only relevant for type=sms).
+	 * @param int      $bundle      Prepaid bundle balance for this type. Signed: a
+	 *                              negative value means a Stripe refund clawed credits
+	 *                              back below zero — sending stays blocked until a new
+	 *                              bundle is purchased (PRICING-PLAN.md §3d).
 	 * @return void
 	 * @since 1.5.3
 	 */
@@ -561,6 +565,14 @@ class ReportedIP_Hive_Admin_Settings {
 		$limit_text = ( null === $limit )
 			? __( 'unlimited', 'reportedip-hive' )
 			: sprintf( '/ %s', number_format_i18n( (int) $limit ) );
+
+		$bundle_unit_singular = $is_mail
+			? __( 'Mail credit', 'reportedip-hive' )
+			: __( 'SMS credit', 'reportedip-hive' );
+		$bundle_unit_plural   = $is_mail
+			? __( 'Mail credits', 'reportedip-hive' )
+			: __( 'SMS credits', 'reportedip-hive' );
+		$bundle_unit          = ( 1 === abs( (int) $bundle ) ) ? $bundle_unit_singular : $bundle_unit_plural;
 		?>
 		<div class="rip-stat-card rip-stat-card--quota">
 			<div class="rip-stat-card__head">
@@ -582,17 +594,32 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 			<?php endif; ?>
 
-			<div class="rip-stat-card__hint">
-				<?php if ( ! $is_mail && $bundle > 0 ) : ?>
+			<?php if ( $bundle > 0 ) : ?>
+				<div class="rip-stat-card__hint rip-stat-card__hint--bundle">
 					<?php
 					printf(
-						/* translators: %s = SMS bundle balance count */
-						esc_html__( 'Bundle balance: %s SMS', 'reportedip-hive' ),
-						esc_html( number_format_i18n( $bundle ) )
+						/* translators: 1: bundle balance count, 2: unit (Mail credits / SMS credits) */
+						esc_html__( '+ %1$s %2$s in your bundle balance', 'reportedip-hive' ),
+						esc_html( number_format_i18n( (int) $bundle ) ),
+						esc_html( $bundle_unit )
 					);
 					?>
-					&nbsp;·&nbsp;
-				<?php endif; ?>
+				</div>
+			<?php elseif ( $bundle < 0 ) : ?>
+				<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+					<?php
+					printf(
+						/* translators: 1: negative balance (already includes the minus sign), 2: unit (Mail credits / SMS credits) */
+						esc_html__( 'Bundle balance is %1$s %2$s after refund — purchase a new bundle to resume sending once the inclusive quota is exhausted.', 'reportedip-hive' ),
+						esc_html( number_format_i18n( (int) $bundle ) ),
+						esc_html( $bundle_unit )
+					);
+					?>
+				</div>
+			<?php endif; ?>
+
+			<div class="rip-stat-card__hint">
 				<?php
 				printf(
 					/* translators: %s = next reset date */

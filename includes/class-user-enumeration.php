@@ -165,6 +165,12 @@ class ReportedIP_Hive_User_Enumeration {
 	/**
 	 * Replace the verbose default login error (which leaks whether the
 	 * username exists) with a single generic message.
+	 *
+	 * Recognises the plugin's own 2FA-flow query flags
+	 * (`?reportedip_2fa_locked=1`, `?reportedip_2fa_expired=1`) and lets
+	 * those messages through unmasked — they reveal nothing about user
+	 * existence and would otherwise be replaced with the misleading
+	 * "Invalid credentials." text.
 	 */
 	public function normalize_login_errors( $error ) {
 		if ( ! get_option( 'reportedip_hive_block_user_enumeration', true ) ) {
@@ -173,6 +179,17 @@ class ReportedIP_Hive_User_Enumeration {
 		if ( '' === (string) $error ) {
 			return $error;
 		}
+
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only flag inspection; no state change.
+		$is_2fa_flow_message = ( isset( $_GET['reportedip_2fa_locked'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_locked'] ) ) )
+			|| ( isset( $_GET['reportedip_2fa_expired'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_expired'] ) ) )
+			|| ( isset( $_GET['action'] ) && 'reportedip_2fa' === sanitize_key( wp_unslash( $_GET['action'] ) ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		if ( $is_2fa_flow_message ) {
+			return $error;
+		}
+
 		return __( 'Invalid credentials.', 'reportedip-hive' );
 	}
 

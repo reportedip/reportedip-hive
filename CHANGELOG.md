@@ -2,6 +2,63 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.6.5] — 2026-05-03
+
+### Security
+
+- **2FA gate on the WordPress password reset flow.** A user with a 2FA method
+  configured now has to verify a non-email second factor (Authenticator, SMS,
+  passkey, or recovery code) before the password is set through the
+  `lostpassword` flow. Email is excluded by design — it is the channel the
+  reset link itself was delivered on, so allowing it as the second factor
+  would collapse to single-factor security if the mailbox is compromised.
+  Hooks `validate_password_reset` (priority 5, gates the form render) and
+  `password_reset` (priority 5, last-mile guard before `wp_set_password`).
+  Failures share the IP-block ladder with login-flow failures via the
+  canonical `2fa_brute_force` event.
+- **Email-only lockout.** Accounts whose only enrolled second factor is
+  email and which have no recovery codes are blocked from the reset flow
+  entirely. All site administrators get an alert mail; unblock manually
+  with `wp user reset-password <id> --skip-email` or by enrolling an
+  additional 2FA method on the user's behalf.
+- **Two new options under *Settings → Two-Factor → Password reset gate*:**
+  `reportedip_hive_2fa_require_on_password_reset` (master toggle, default
+  `true`) and `reportedip_hive_2fa_password_reset_block_email_only`
+  (default `true`). The list of methods that may not be used as the
+  second factor is filterable via
+  `reportedip_hive_2fa_password_reset_excluded_methods` and defaults to
+  `["email"]`.
+
+### Fixes
+
+- **2FA challenge: silent redirect on expired session replaced with explicit
+  feedback.** When the 15-minute login nonce had timed out, or when the
+  `SameSite=Strict` nonce cookie was dropped (routine when wp-login.php is
+  loaded inside an iframe), `handle_2fa_challenge()` used to
+  `wp_safe_redirect( wp_login_url() )` with no message — users saw a clean
+  login form and assumed their submitted SMS / TOTP code had been silently
+  rejected. The handler now renders an inline "Two-Factor session expired"
+  page through `login_header()`/`login_footer()` with a clear explanation
+  (15-minute timeout / iframe cookie loss) and a `target="_top"` "Back to
+  login" link that escapes a broken iframe context.
+- **Lockout redirect actually shows a message now.** The
+  `?reportedip_2fa_locked=1` query flag emitted after
+  `SESSION_INVALIDATION_THRESHOLD` failed verification attempts was set but
+  read nowhere — users hit the brute-force lockout and landed on a
+  message-free login form. New `wp_login_errors` filter
+  (`Two_Factor::filter_login_errors()`) translates both
+  `?reportedip_2fa_locked=1` and `?reportedip_2fa_expired=1` into visible
+  WP_Error messages.
+- **User-enumeration normalizer no longer masks 2FA-flow messages.**
+  `User_Enumeration::normalize_login_errors()` runs at priority 99 on
+  `login_errors` and rewrites every login error to the generic
+  "Invalid credentials." string to defeat username probing. It now
+  recognises the plugin's own 2FA-flow context
+  (`?reportedip_2fa_locked=1`, `?reportedip_2fa_expired=1`,
+  `?action=reportedip_2fa`) and lets those messages through unmasked —
+  they reveal nothing about user existence and would otherwise be replaced
+  with the misleading "Invalid credentials." text.
+
 ## [1.6.4] — 2026-05-01
 
 ### Fixes

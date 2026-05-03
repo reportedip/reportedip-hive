@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.6.4
+Stable tag: 1.6.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -57,6 +57,7 @@ Plus:
 
 * **10 single-use recovery codes**, hashed at rest, low-codes warning at 3 remaining
 * **Trusted devices** with configurable expiry (default 30 days), IP + device-name + last-used tracking, auto-revoked on geo anomaly
+* **Password-reset gate** — the WordPress "lost password" flow demands a second factor before the new password is accepted. Email is excluded by design (it is the channel that delivered the reset link), so a stolen mailbox cannot bypass 2FA. Email-only accounts without recovery codes are hard-locked with an admin alert.
 * **Multi-stage 2FA rate-limit** — 3/5/10/15 fails trigger 30 s/5 m/30 m/1 h delays; the 15th IP-level fail graduates the IP to a real progressive block (so the brute-forcer no longer just times out and tries again hourly)
 * **Role-based enforcement** with grace period (default 7 days) and skip counter
 * **Frontend onboarding** — branded 5-step setup wizard for users on the front-end (e.g. WooCommerce account)
@@ -245,6 +246,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 1.7.0 =
+
+Mail bundle balance now visible alongside SMS in the relay-quota panel. The Hive dashboard now reads the prepaid bundle saldo for both Mail and SMS from `/relay-quota` and renders a "+ X credits in your bundle balance" hint under each usage card. A negative bundle balance (after a Stripe refund) surfaces a red warning that explains why sending stays blocked even though the inclusive monthly cap may not be reached yet. Snapshot schema gains per-type `bundle_balance` plus the top-level `mail_bundle_balance` mirror; the existing `sms_bundle_balance` field is now actually populated by the service. Cron quota refresh logs both bundle balances for easier diagnostics. Setup wizard tier teasers mention prepaid Mail bundles next to the existing SMS bundle copy.
 
 = 1.6.3 =
 

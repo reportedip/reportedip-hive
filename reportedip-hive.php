@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 1.6.4
+ * Version: 1.6.5
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -53,7 +53,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '1.6.4' );
+define( 'REPORTEDIP_HIVE_VERSION', '1.6.5' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -225,6 +225,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-email.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-recovery.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-reset-gate.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-onboarding.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-notifications.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-sms.php';
@@ -291,6 +292,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Geo_Anomaly::get_instance();
 		ReportedIP_Hive_Password_Strength::get_instance();
 		new ReportedIP_Hive_Two_Factor();
+		new ReportedIP_Hive_Two_Factor_Reset_Gate();
 
 		new ReportedIP_Hive_Two_Factor_Onboarding();
 
@@ -1309,6 +1311,9 @@ class ReportedIP_Hive {
 			'reportedip_hive_2fa_branded_login'            => false,
 			'reportedip_hive_2fa_email_subject_code'       => '',
 			'reportedip_hive_2fa_email_body_code'          => '',
+			'reportedip_hive_2fa_require_on_password_reset' => true,
+			'reportedip_hive_2fa_password_reset_excluded_methods' => '["email"]',
+			'reportedip_hive_2fa_password_reset_block_email_only' => true,
 
 			'reportedip_hive_password_spray_threshold'     => 5,
 			'reportedip_hive_password_spray_timeframe'     => 10,

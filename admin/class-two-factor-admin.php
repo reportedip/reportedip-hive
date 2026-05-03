@@ -261,6 +261,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_extended_remember" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_branded_login" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_sms_avv_confirmed" value="0" />
+			<input type="hidden" name="reportedip_hive_2fa_require_on_password_reset" value="0" />
+			<input type="hidden" name="reportedip_hive_2fa_password_reset_block_email_only" value="0" />
 
 			<!-- Status Banner -->
 			<div class="rip-settings-section">
@@ -687,6 +689,47 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				</div>
 			</div>
 
+			<!-- Password reset gate -->
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+					<?php esc_html_e( 'Password reset gate', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc">
+					<?php esc_html_e( 'Require a second factor before a user can set a new password through the WordPress "lost password" flow. This closes the bypass where someone with access to a mailbox could reset the password and receive the email-based 2FA code in the same inbox.', 'reportedip-hive' ); ?>
+				</p>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox"
+							class="rip-toggle__input"
+							name="reportedip_hive_2fa_require_on_password_reset"
+							value="1"
+							<?php checked( (bool) get_option( 'reportedip_hive_2fa_require_on_password_reset', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label">
+							<?php esc_html_e( 'Require 2FA verification before password reset', 'reportedip-hive' ); ?>
+						</span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'Users who have any 2FA method configured must verify a non-email factor (Authenticator, SMS, security key, or recovery code) before the new password is accepted. The email channel is excluded by design — it is the channel that delivered the reset link in the first place.', 'reportedip-hive' ); ?></p>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox"
+							class="rip-toggle__input"
+							name="reportedip_hive_2fa_password_reset_block_email_only"
+							value="1"
+							<?php checked( (bool) get_option( 'reportedip_hive_2fa_password_reset_block_email_only', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label">
+							<?php esc_html_e( 'Block resets for accounts that only have email 2FA and no recovery codes', 'reportedip-hive' ); ?>
+						</span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'When the only configured factor is email and no recovery codes exist, the password reset is rejected and an alert is sent to all administrators. Unblock manually via WP-CLI: wp user reset-password &lt;id&gt; --skip-email.', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
 			</div>
 
 			<script>
@@ -866,6 +909,23 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => array( __CLASS__, 'sanitize_reminder_hard_roles' ),
+			)
+		);
+
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_require_on_password_reset',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_password_reset_block_email_only',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
 			)
 		);
 	}

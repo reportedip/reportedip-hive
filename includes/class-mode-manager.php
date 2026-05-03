@@ -843,6 +843,18 @@ class ReportedIP_Hive_Mode_Manager {
 		}
 	}
 
+	/** @var array|null Per-request snapshot cache; invalidated on transient deletion via {@see invalidate_relay_quota_snapshot()}. */
+	private $relay_quota_snapshot_cache = null;
+
+	/**
+	 * Drop the per-request snapshot cache (call after writing the transient).
+	 *
+	 * @since 1.7.0
+	 */
+	public function invalidate_relay_quota_snapshot() {
+		$this->relay_quota_snapshot_cache = null;
+	}
+
 	/**
 	 * Normalized snapshot of the current relay quota, suitable for the dashboard widget.
 	 *
@@ -850,32 +862,40 @@ class ReportedIP_Hive_Mode_Manager {
 	 * fills missing fields with defaults derived from the current tier so the UI always
 	 * has something sensible to render.
 	 *
-	 * @return array{tier:string,period_start:?int,period_end:?int,mail:array{used:int,limit:?int},sms:array{used:int,limit:?int},sms_bundle_balance:int,fetched_at:?int,is_stale:bool}
+	 * @return array{tier:string,period_start:?int,period_end:?int,mail:array{used:int,limit:?int,bundle_balance:int},sms:array{used:int,limit:?int,bundle_balance:int},mail_bundle_balance:int,sms_bundle_balance:int,fetched_at:?int,is_stale:bool}
 	 * @since 1.5.3
 	 */
 	public function get_relay_quota_snapshot() {
+		if ( null !== $this->relay_quota_snapshot_cache ) {
+			return $this->relay_quota_snapshot_cache;
+		}
+
 		$tier     = $this->get_current_tier();
 		$defaults = $this->default_relay_limits_for_tier( $tier );
 
 		$snapshot = array(
-			'tier'               => $tier,
-			'period_start'       => null,
-			'period_end'         => null,
-			'mail'               => array(
-				'used'  => 0,
-				'limit' => $defaults['mail'],
+			'tier'                => $tier,
+			'period_start'        => null,
+			'period_end'          => null,
+			'mail'                => array(
+				'used'           => 0,
+				'limit'          => $defaults['mail'],
+				'bundle_balance' => 0,
 			),
-			'sms'                => array(
-				'used'  => 0,
-				'limit' => $defaults['sms'],
+			'sms'                 => array(
+				'used'           => 0,
+				'limit'          => $defaults['sms'],
+				'bundle_balance' => 0,
 			),
-			'sms_bundle_balance' => 0,
-			'fetched_at'         => null,
-			'is_stale'           => true,
+			'mail_bundle_balance' => 0,
+			'sms_bundle_balance'  => 0,
+			'fetched_at'          => null,
+			'is_stale'            => true,
 		);
 
 		$cached = get_transient( 'reportedip_hive_relay_quota' );
 		if ( ! is_array( $cached ) ) {
+			$this->relay_quota_snapshot_cache = $snapshot;
 			return $snapshot;
 		}
 
@@ -884,29 +904,38 @@ class ReportedIP_Hive_Mode_Manager {
 		}
 		$snapshot['period_start'] = self::normalize_period_value( $cached['period_start'] ?? null );
 		$snapshot['period_end']   = self::normalize_period_value( $cached['period_end'] ?? null );
-		if ( isset( $cached['mail'] ) && is_array( $cached['mail'] ) ) {
-			$snapshot['mail']['used']  = self::extract_used_count( $cached['mail'] );
-			$snapshot['mail']['limit'] = array_key_exists( 'limit', $cached['mail'] ) ? self::normalize_unlimited_limit( $cached['mail']['limit'] ) : $defaults['mail'];
+
+		foreach ( array( 'mail', 'sms' ) as $type ) {
+			if ( ! isset( $cached[ $type ] ) || ! is_array( $cached[ $type ] ) ) {
+				continue;
+			}
+			$snapshot[ $type ]['used']  = self::extract_used_count( $cached[ $type ] );
+			$snapshot[ $type ]['limit'] = array_key_exists( 'limit', $cached[ $type ] )
+				? self::normalize_unlimited_limit( $cached[ $type ]['limit'] )
+				: $defaults[ $type ];
+			if ( array_key_exists( 'bundle_balance', $cached[ $type ] ) ) {
+				$snapshot[ $type ]['bundle_balance'] = (int) $cached[ $type ]['bundle_balance'];
+			}
 			if ( null === $snapshot['period_start'] ) {
-				$snapshot['period_start'] = self::normalize_period_value( $cached['mail']['period_start'] ?? null );
+				$snapshot['period_start'] = self::normalize_period_value( $cached[ $type ]['period_start'] ?? null );
 			}
 			if ( null === $snapshot['period_end'] ) {
-				$snapshot['period_end'] = self::normalize_period_value( $cached['mail']['period_end'] ?? null );
+				$snapshot['period_end'] = self::normalize_period_value( $cached[ $type ]['period_end'] ?? null );
 			}
 		}
-		if ( isset( $cached['sms'] ) && is_array( $cached['sms'] ) ) {
-			$snapshot['sms']['used']  = self::extract_used_count( $cached['sms'] );
-			$snapshot['sms']['limit'] = array_key_exists( 'limit', $cached['sms'] ) ? self::normalize_unlimited_limit( $cached['sms']['limit'] ) : $defaults['sms'];
-			if ( null === $snapshot['period_start'] ) {
-				$snapshot['period_start'] = self::normalize_period_value( $cached['sms']['period_start'] ?? null );
-			}
-			if ( null === $snapshot['period_end'] ) {
-				$snapshot['period_end'] = self::normalize_period_value( $cached['sms']['period_end'] ?? null );
-			}
+
+		// Per-type is the source of truth. Older service builds (< 1.14.0) only emit
+		// the top-level `sms_bundle_balance` mirror, so we pick that up as a fallback
+		// before deriving the canonical top-level mirrors from the per-type values.
+		if ( 0 === $snapshot['mail']['bundle_balance'] && isset( $cached['mail_bundle_balance'] ) ) {
+			$snapshot['mail']['bundle_balance'] = (int) $cached['mail_bundle_balance'];
 		}
-		if ( isset( $cached['sms_bundle_balance'] ) ) {
-			$snapshot['sms_bundle_balance'] = (int) $cached['sms_bundle_balance'];
+		if ( 0 === $snapshot['sms']['bundle_balance'] && isset( $cached['sms_bundle_balance'] ) ) {
+			$snapshot['sms']['bundle_balance'] = (int) $cached['sms_bundle_balance'];
 		}
+		$snapshot['mail_bundle_balance'] = $snapshot['mail']['bundle_balance'];
+		$snapshot['sms_bundle_balance']  = $snapshot['sms']['bundle_balance'];
+
 		if ( isset( $cached['fetched_at'] ) ) {
 			$snapshot['fetched_at'] = (int) $cached['fetched_at'];
 		}
@@ -916,6 +945,7 @@ class ReportedIP_Hive_Mode_Manager {
 			$snapshot['is_stale'] = false;
 		}
 
+		$this->relay_quota_snapshot_cache = $snapshot;
 		return $snapshot;
 	}
 }

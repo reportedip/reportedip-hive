@@ -308,11 +308,13 @@ class ReportedIP_Hive_Cron_Handler {
 					'Relay quota refreshed',
 					'system',
 					array(
-						'tier'       => $relay['tier'] ?? null,
-						'mail_used'  => $relay['mail']['queued_total'] ?? $relay['mail']['used'] ?? null,
-						'mail_limit' => $relay['mail']['limit'] ?? null,
-						'sms_used'   => $relay['sms']['queued_total'] ?? $relay['sms']['used'] ?? null,
-						'sms_limit'  => $relay['sms']['limit'] ?? null,
+						'tier'                => $relay['tier'] ?? null,
+						'mail_used'           => $relay['mail']['queued_total'] ?? $relay['mail']['used'] ?? null,
+						'mail_limit'          => $relay['mail']['limit'] ?? null,
+						'mail_bundle_balance' => $relay['mail']['bundle_balance'] ?? $relay['mail_bundle_balance'] ?? null,
+						'sms_used'            => $relay['sms']['queued_total'] ?? $relay['sms']['used'] ?? null,
+						'sms_limit'           => $relay['sms']['limit'] ?? null,
+						'sms_bundle_balance'  => $relay['sms']['bundle_balance'] ?? $relay['sms_bundle_balance'] ?? null,
 					)
 				);
 			} elseif ( is_array( $relay ) && ! empty( $relay['error'] ) ) {

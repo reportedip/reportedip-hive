@@ -605,7 +605,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<ul class="rip-tier-card__list">
 						<li><?php esc_html_e( '15 domains · whitelabel · WooCommerce integration', 'reportedip-hive' ); ?></li>
 						<li><?php esc_html_e( 'SMS-2FA: 75/month + prepaid bundles', 'reportedip-hive' ); ?></li>
-						<li><?php esc_html_e( 'Mail-2FA: 2,500/month · GDPR export tool', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'Mail-2FA: 2,500/month + prepaid bundles · GDPR export tool', 'reportedip-hive' ); ?></li>
 					</ul>
 					<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="rip-button rip-button--secondary rip-button--sm">
 						<?php esc_html_e( 'See plans →', 'reportedip-hive' ); ?>
@@ -1057,7 +1057,7 @@ class ReportedIP_Hive_Setup_Wizard {
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
 							</div>
 							<h4 class="rip-method-card__title"><?php esc_html_e( 'SMS', 'reportedip-hive' ); ?></h4>
-							<p class="rip-method-card__desc"><?php esc_html_e( 'Codes delivered via EU-only relay with anti-fraud caps. PRO includes 25 SMS/month, Business 75 + prepaid bundles. Available with PRO plan.', 'reportedip-hive' ); ?></p>
+							<p class="rip-method-card__desc"><?php esc_html_e( 'Codes delivered via EU-only relay with anti-fraud caps. PRO includes 25 SMS/month, Business 75. Both tiers can top up with prepaid SMS bundles (50 / 200 / 500). Available with PRO plan.', 'reportedip-hive' ); ?></p>
 						</div>
 
 						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'totp' ) ); ?>" data-method="totp">

@@ -624,6 +624,16 @@ button.rip-tier-lock--mode:hover {
     color: var(--rip-warning);
 }
 
+.rip-stat-card__hint--bundle {
+    color: var(--rip-success);
+    font-weight: 600;
+}
+
+.rip-stat-card__hint--bundle-negative {
+    color: var(--rip-danger);
+    font-weight: 600;
+}
+
 .rip-stat-card__hint svg {
     width: 0.875rem;
     height: 0.875rem;

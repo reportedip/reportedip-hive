@@ -132,6 +132,7 @@ class ReportedIP_Hive_Two_Factor {
 		add_action( 'login_form_' . self::ACTION_CHALLENGE, array( $this, 'handle_2fa_challenge' ) );
 		add_action( 'login_enqueue_scripts', array( $this, 'enqueue_login_scripts' ) );
 		add_action( 'login_footer', array( $this, 'render_login_attribution' ) );
+		add_filter( 'wp_login_errors', array( $this, 'filter_login_errors' ), 10, 2 );
 
 		add_action( 'wp_ajax_nopriv_reportedip_2fa_resend', array( $this, 'ajax_resend_code' ) );
 		add_action( 'wp_ajax_reportedip_2fa_resend', array( $this, 'ajax_resend_code' ) );
@@ -734,14 +735,15 @@ class ReportedIP_Hive_Two_Factor {
 	public function handle_2fa_challenge() {
 		$nonce_data = $this->validate_login_nonce();
 		if ( false === $nonce_data ) {
-			wp_safe_redirect( wp_login_url() );
+			$this->render_session_expired_page( 'expired' );
 			exit;
 		}
 
 		$user_id = $nonce_data['user_id'];
 		$user    = get_userdata( $user_id );
 		if ( ! $user ) {
-			wp_safe_redirect( wp_login_url() );
+			$this->cleanup_login_nonce();
+			$this->render_session_expired_page( 'unknown_user' );
 			exit;
 		}
 
@@ -991,6 +993,106 @@ class ReportedIP_Hive_Two_Factor {
 				'samesite' => 'Strict',
 			)
 		);
+	}
+
+	/**
+	 * Render a stand-alone "two-factor session expired" page.
+	 *
+	 * Replaces the previous silent `wp_safe_redirect( wp_login_url() )` that
+	 * left users staring at a clean login form after the 2FA nonce had timed
+	 * out (NONCE_TTL = 15 min) or after the SameSite=Strict nonce cookie was
+	 * dropped — the latter happens routinely when wp-login.php is loaded
+	 * inside an iframe, which is what triggered the original bug report.
+	 *
+	 * Mirrors the bypass-the-login_errors-pipeline approach used by
+	 * {@see dispatch_browser_challenge_redirect()}: we render directly so
+	 * third-party hardening plugins that override `login_errors` cannot strip
+	 * the explanation.
+	 *
+	 * @param string $reason One of 'expired', 'unknown_user'.
+	 * @return void
+	 * @since  1.6.5
+	 */
+	private function render_session_expired_page( $reason = 'expired' ) {
+		$messages = array(
+			'expired'      => __( 'Your two-factor session has expired. This happens after 15 minutes of inactivity, or when the security cookie is missing — for example when the login form is loaded inside an iframe. Please sign in again.', 'reportedip-hive' ),
+			'unknown_user' => __( 'The user account from your two-factor session is no longer available. Please sign in again.', 'reportedip-hive' ),
+		);
+		$message  = isset( $messages[ $reason ] ) ? $messages[ $reason ] : $messages['expired'];
+
+		nocache_headers();
+
+		wp_enqueue_style(
+			'reportedip-hive-design-system',
+			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/design-system.css',
+			array(),
+			REPORTEDIP_HIVE_VERSION
+		);
+		wp_enqueue_style(
+			'reportedip-hive-two-factor',
+			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/two-factor.css',
+			array( 'reportedip-hive-design-system' ),
+			REPORTEDIP_HIVE_VERSION
+		);
+
+		login_header(
+			__( 'Two-Factor Verification', 'reportedip-hive' ),
+			'',
+			new \WP_Error( 'reportedip_2fa_session_expired', $message )
+		);
+		?>
+		<p class="rip-2fa-session-expired-actions" style="text-align:center;margin-top:1.5em;">
+			<a class="rip-button rip-button--primary" href="<?php echo esc_url( wp_login_url() ); ?>" target="_top" rel="noopener">
+				<?php esc_html_e( 'Back to login', 'reportedip-hive' ); ?>
+			</a>
+		</p>
+		<?php
+		login_footer();
+	}
+
+	/**
+	 * Translate ReportedIP-Hive 2FA query flags into wp-login error messages.
+	 *
+	 * Two flags are recognised:
+	 *   - `?reportedip_2fa_locked=1`  — set by {@see handle_2fa_challenge()}
+	 *     when the brute-force counter trips SESSION_INVALIDATION_THRESHOLD;
+	 *     before this filter the flag was set but never read, so the user
+	 *     landed on a clean login form with zero feedback.
+	 *   - `?reportedip_2fa_expired=1` — reserved for callers that prefer a
+	 *     redirect over the inline `render_session_expired_page()` shell
+	 *     (e.g. integrations that redirect from outside the challenge handler).
+	 *
+	 * @param \WP_Error $errors      Existing login errors.
+	 * @param string    $redirect_to Login redirect target (unused).
+	 * @return \WP_Error
+	 * @since  1.6.5
+	 */
+	public function filter_login_errors( $errors, $redirect_to ) {
+		unset( $redirect_to );
+
+		if ( ! ( $errors instanceof \WP_Error ) ) {
+			$errors = new \WP_Error();
+		}
+
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only flag check; no state change is performed.
+		$locked  = isset( $_GET['reportedip_2fa_locked'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_locked'] ) );
+		$expired = isset( $_GET['reportedip_2fa_expired'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_expired'] ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		if ( $locked ) {
+			$errors->add(
+				'reportedip_2fa_locked',
+				__( 'Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again.', 'reportedip-hive' )
+			);
+		}
+		if ( $expired ) {
+			$errors->add(
+				'reportedip_2fa_session_expired',
+				__( 'Your two-factor session expired. Please sign in again.', 'reportedip-hive' )
+			);
+		}
+
+		return $errors;
 	}
 
 	/**

@@ -726,6 +726,7 @@ class ReportedIP_Hive_API {
 		if ( $code >= 200 && $code < 300 && is_array( $body ) ) {
 			$body['fetched_at'] = time();
 			set_transient( $cache_key, $body, HOUR_IN_SECONDS );
+			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
 			return $body;
 		}
 
@@ -775,6 +776,7 @@ class ReportedIP_Hive_API {
 
 		if ( $code >= 200 && $code < 300 ) {
 			delete_transient( 'reportedip_hive_relay_quota' );
+			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
 			return array(
 				'ok'              => true,
 				'status_code'     => $code,
@@ -1009,6 +1011,7 @@ class ReportedIP_Hive_API {
 
 		if ( $prev_tier !== $new_tier ) {
 			delete_transient( 'reportedip_hive_relay_quota' );
+			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
 			do_action( 'reportedip_hive_tier_changed', $prev_tier, $new_tier );
 		}
 	}
