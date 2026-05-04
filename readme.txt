@@ -25,11 +25,11 @@ Two ways to run, no feature held hostage behind a paywall:
 
 = Why agencies and serious site owners pick it =
 
-* **One plugin instead of three.** Brute-force protection, full 2FA suite and threat intelligence in a single drop-in. No upsell tiers, no "Pro" gate.
+* **One plugin instead of three.** Brute-force protection, full 2FA suite and threat intelligence in a single drop-in. The plugin itself stays free and Open Source — paid plans only buy optional server-side comfort (managed mail/SMS relay, multi-site, higher API quotas), never the protection itself.
 * **Progressive blocks that don't burn legitimate users.** A first-time tripping CGNAT visitor or a fat-fingered admin gets a 5-minute timeout — repeat offenders climb the ladder up to 7 days. Nobody pays a 24h block for a typo.
 * **Privacy-first by default.** GDPR-minimal logging mode, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
-* **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan-clean, WPCS-clean, 288 unit tests with 439 assertions on every commit.
+* **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan-clean, WPCS-clean, 398 unit tests with 655 assertions on every commit.
 
 = 12 detection sensors (every one tunable) =
 
@@ -100,7 +100,7 @@ Show the world that your site is part of the hive — and earn community-network
 
 = Admin UX =
 
-* **8-step setup wizard** with privacy-first defaults: Welcome → Connect → Protection → 2FA → Privacy → Login → Promote → Done. Skippable (3 skips, 7-day grace).
+* **9-step setup wizard** with privacy-first defaults: Welcome → Connect → Protection → 2FA → Privacy → Notifications → Login → Promote → Done. Skippable (3 skips, 7-day grace).
 * **Real-time dashboard** with 7- and 30-day Chart.js trend lines.
 * **Five list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, plus the 2FA admin grid.
 * **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup.
@@ -128,7 +128,7 @@ Show the world that your site is part of the hive — and earn community-network
   * `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` — temporarily disable hide-login from `wp-config.php`
 * **6 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats, plus trusted_devices for 2FA.
 * **Internationalisation-ready.** Text domain `reportedip-hive`, English source with German translation included.
-* **Test suite.** 288 PHPUnit tests, 439 assertions; PHPStan level 5; WPCS-compliant.
+* **Test suite.** 398 PHPUnit tests, 655 assertions; PHPStan level 5; WPCS-compliant.
 
 = What this plugin does NOT include =
 
@@ -142,13 +142,88 @@ Honest scope so you can plan around it:
 
 Pair it with a malware scanner if you need that surface — Hive deliberately stays focused on identity, brute force and threat intelligence.
 
+== Plans (optional, comfort only) ==
+
+The plugin itself is **free, GPL-2.0 and complete** in every operating mode — every sensor, every 2FA method, every alert, every dashboard, the password-reset gate. Nothing is held back behind a paywall.
+
+Paid plans only buy the **server-side comfort** at reportedip.de — useful for sites that don't want to maintain their own SMTP / SMS / multi-site stack:
+
+= Free / Contributor (0 €) =
+
+* Full plugin functionality, including all sensors and the 2FA suite
+* 1 domain per licence, 1,000 IP-reputation checks/day, 50 reports/day
+* Local-mode `wp_mail()` for 2FA emails, bring-your-own SMS provider (Sipgate / MessageBird / seven.io with explicit DPA)
+* 30-day log retention, community support
+* **Contributor tier** is identical to Free but earns curated-feed access for sites that operate a public honeypot
+
+= Professional (14.90 €/month, 149 €/year — covers up to 3 domains) =
+
+* 25,000 reputation checks/day, 1,000 reports/day
+* **Managed mail relay** — 500 transactional 2FA mails/month routed through reportedip.de's clean SPF/DKIM/DMARC infrastructure (auto-fallback to `wp_mail()` on cap)
+* **Managed SMS relay** — 25 EU-only OTP SMS/month with no third-party Twilio account required
+* Multi-site dashboard, priority sync (daily blacklist download), 90-day log retention, e-mail support (48 h SLA)
+* Prepaid top-up bundles (SMS and mail) available for heavy months
+
+= Business (39 €/month, 389 €/year — up to 15 domains) =
+
+* 100,000 checks/day, 5,000 reports/day
+* **2,500 mail/month + 75 SMS/month included**
+* White-label (logo, copy, mail templates), WooCommerce-specific 2FA hooks, full WP-CLI surface, role-based login-time restrictions
+* 1-year log retention, weekly security PDF report, GDPR data-export tool, priority support (12 h SLA)
+
+= Enterprise (custom, from ~99 €/month) =
+
+* Unlimited checks and reports, custom mail/SMS quotas, custom domain limit
+* Custom AVV / DPA terms, dedicated onboarding, phone support (4 h response)
+
+**Bundles (PRO+ only, refundable until first use):** 50/200/500-SMS bundles (14.90 / 49.90 / 99.90 €), 1k/5k/25k-mail bundles (4.90 / 14.90 / 49.90 €). All prices VAT-inclusive (Stripe `tax_behavior = inclusive`).
+
+What stays Free regardless of plan: every sensor, all four 2FA methods, the password-reset gate, the recovery-code system, every dashboard, every export, the entire plugin source. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
+
+== How Hive actually works ==
+
+A short architectural map for evaluators:
+
+= Two operating modes =
+
+* **Local Shield** — fully offline. Every sensor decision is local; no outbound HTTP. The 2FA-mail-relay and reputation-check endpoints are never touched.
+* **Community Network** — Local Shield plus opt-in IP-reputation lookups against `reportedip.de/wp-json/reportedip/v2/check` and queued threat reports against `/report`. Lookups are cached (24 h positive, 2 h negative); reports are batched by cron.
+
+= Request lifecycle =
+
+1. **`init` priority 1.** The very first thing Hive does on every front-end request is check the IP against the local block table. Blocked IPs receive a 403 with `DONOTCACHEPAGE` + `Cache-Control: no-store` headers and exit before any other plugin's `init` handler runs.
+2. **`wp_authenticate_user` priority 10.** Reputation check (Community-mode only) and IP-block check before the password is verified — failed-but-cheap, blocked attackers never trigger a `wp_login_failed` action.
+3. **`authenticate` priority 99.** After WordPress core verifies the password, the 2FA orchestrator decides whether a second factor is required, sends an OTP if needed, and intercepts with a session-bound nonce + `wp-login.php?action=reportedip_2fa` redirect.
+4. **`validate_password_reset` priority 5 + `password_reset` priority 5.** Since 1.6.5: a non-email second factor is required before any new password is persisted via the WordPress "lost password" flow. Email is excluded from the eligible methods because it is the channel that delivered the reset link itself.
+
+= Storage =
+
+* **7 dedicated tables** under the `wp_reportedip_hive_` prefix: `logs`, `blocked`, `whitelist`, `attempts`, `api_queue`, `stats`, `trusted_devices`.
+* **Schema v4**, auto-migrated on plugin update; opt-in delete on uninstall.
+* All secrets at rest (TOTP seeds, SMS provider credentials, phone numbers) sealed with libsodium (OpenSSL fallback). Plain user-meta storage is never used for credentials.
+
+= Throttle ladder =
+
+A single failure-counter ladder is shared by every brute-force-style sensor (failed logins, 2FA wrong codes, password-reset wrong codes, application-password failures). 3 fails → 30 s, 5 → 5 min, 10 → 30 min, 15 → 1 h. After the 15th failure the IP is graduated to a real `blocked`-table entry via the canonical `handle_threshold_exceeded()` pipeline, which fires the progressive escalation ladder (5 m → 15 m → 30 m → 24 h → 48 h → 7 d) and, in Community mode, queues an anonymised report.
+
+= Performance budget =
+
+* **`init` priority-1 IP check**: ~1 indexed SELECT, request-level memoised — under 1 ms for blocked IPs, ~0.2 ms for clean ones.
+* **REST API monitor**: skips authenticated users entirely so the Block Editor (50+ REST calls per page-open) never trips the rate-limiter.
+* **Reputation cache**: ETag-based, 24 h positive / 2 h negative. Daily API usage stays low even on busy sites.
+* **Reports**: queued, sent in batches of 20 by a 15-minute cron with a 5-minute transient lock against concurrent runs.
+
+= Settings persistence =
+
+Every option lives under the `reportedip_hive_` prefix in `wp_options` (tracked by an explicit snapshot test that fails CI on a silent rename). User-level data uses the `reportedip_hive_2fa_*` user-meta family. Admin actions write structured audit lines to the `logs` table.
+
 == Installation ==
 
 = Manual (recommended) =
 
 1. Download the latest release ZIP from [github.com/reportedip/reportedip-hive/releases/latest](https://github.com/reportedip/reportedip-hive/releases/latest).
 2. WP Admin → *Plugins → Add New → Upload Plugin* → pick `reportedip-hive.zip`.
-3. Activate and follow the 8-step setup wizard.
+3. Activate and follow the 9-step setup wizard.
 
 = Composer (for developers) =
 
@@ -239,13 +314,17 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 4. **Security Event Logs** — Searchable, severity-filterable, JSON / CSV export, bulk delete + bulk block + bulk whitelist actions.
 5. **Settings → Blocking** — How-blocking-decides info card, auto-block toggle, progressive ladder editor with reset window, report-only mode toggle, blocked-page contact link.
 6. **Settings → Two-Factor** — Method enable/disable, role enforcement, grace period, IP allowlist, recovery-code management, trusted-device list.
-7. **Setup Wizard** — 8-step guided configuration with privacy-first defaults and a celebration on the final step.
+7. **Setup Wizard** — 9-step guided configuration with privacy-first defaults and a celebration on the final step.
 8. **API Queue** — Pending and failed report queue with retry, quota status, queue-health indicators.
 9. **Promote** — Auto-footer badge configurator and shortcode showcase with live previews.
 
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 1.6.5 =
+
+**Password-reset 2FA gate.** The WordPress "lost password" flow now demands a non-email second factor (Authenticator app, SMS, passkey, or recovery code) before a new password is accepted. Email is excluded from the eligible methods by design — it is the channel that delivered the reset link itself, so accepting an email OTP as the second factor would collapse to single-factor security if the mailbox is compromised. Hooks `validate_password_reset` (priority 5, gates the form render) and `password_reset` (priority 5, last-mile guard before `wp_set_password`). Failures share the IP-block ladder with login-flow failures via the canonical `2fa_brute_force` event. Accounts whose only enrolled second factor is email and which hold no recovery codes are hard-locked from the reset flow with an admin-mail alert; unblock manually via `wp user reset-password <id> --skip-email`. Two new options under *Settings → Two-Factor → Password reset gate*: `reportedip_hive_2fa_require_on_password_reset` (master toggle, default on) and `reportedip_hive_2fa_password_reset_block_email_only` (default on). The list of methods rejected as second factor in this flow is filterable via `reportedip_hive_2fa_password_reset_excluded_methods` and defaults to `["email"]`. Aligns with NIST SP 800-63B §6.1.2.3 and OWASP ASVS V6.3.
 
 = 1.7.0 =
 
@@ -304,6 +383,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 1.6.5 =
+Closes a long-standing 2FA bypass: the WordPress "lost password" flow used to let anyone with mailbox access through email-2FA, because the reset link and the email OTP arrived on the same channel. Hive now requires a non-email second factor (Authenticator, SMS, passkey, recovery code) before a new password is accepted. Strongly recommended for every site using email 2FA. No breaking change: users without 2FA configured are unaffected.
 
 = 1.6.3 =
 Managed Mail/SMS relay for Professional+. 2FA mail falls back to local `wp_mail()` on cap; SMS surfaces typed errors to the user. EU-only phone validator. Free / Contributor sites are unaffected. Recommended for everyone — no breaking change.
@@ -420,6 +502,16 @@ No SMS traffic occurs unless a user actively enrols an SMS factor and a site ope
 
 All JavaScript, CSS, fonts and images shipped with the plugin are loaded from the plugin directory itself. The plugin does not embed Google Fonts, Google Analytics, jQuery from a CDN or any other remote asset.
 
+== Related projects ==
+
+ReportedIP Hive is one piece of an Open-Source ecosystem around community-driven WordPress security. All projects are GPL or compatible licences and live on GitHub:
+
+* **Hive** (this plugin) — [github.com/reportedip/reportedip-hive](https://github.com/reportedip/reportedip-hive). Community-powered WordPress security: IP threat intelligence, brute-force protection and the complete 2FA suite. Be part of the hive.
+* **Honeypot Server** — [github.com/reportedip/honeypot-server](https://github.com/reportedip/honeypot-server). PHP honeypot that emulates WordPress, Drupal and Joomla to detect malicious traffic. 36 threat analyzers, automatic reporting to the reportedip.de API, admin dashboard, AI content generation, bot detection. Zero Composer dependencies, SQLite, Docker-ready. Run one yourself to feed the network and earn the Contributor tier.
+* **Blacklist** — [github.com/reportedip/reportedip-blacklist](https://github.com/reportedip/reportedip-blacklist). Community-driven IP threat-intelligence feed with curated and dynamic blacklists, updated daily. Free to consume, no account required.
+
+Project home, documentation and the optional managed-relay service: [reportedip.de](https://reportedip.de).
+
 == Credits ==
 
 * Developed by [ReportedIP](https://reportedip.de)
@@ -434,3 +526,47 @@ All JavaScript, CSS, fonts and images shipped with the plugin are loaded from th
 * German (Deutsch) — included
 
 Want to help translate into more languages? Open an issue on [GitHub](https://github.com/reportedip/reportedip-hive/issues) or contact [ps@cms-admins.de](mailto:ps@cms-admins.de).
+
+== Disclaimer ==
+
+ReportedIP Hive is provided **"as is"** and **"as available"** under the terms of the GNU General Public License version 2 or later (GPL-2.0-or-later). The licence in full: [gnu.org/licenses/gpl-2.0.html](https://www.gnu.org/licenses/gpl-2.0.html).
+
+= No warranty =
+
+There is **no warranty** for the program, to the extent permitted by applicable law. Except when otherwise stated in writing, the copyright holder and other parties provide the program "as is" without warranty of any kind, either expressed or implied, including but not limited to the implied warranties of merchantability and fitness for a particular purpose. The entire risk as to the quality and performance of the program is with you. Should the program prove defective, you assume the cost of all necessary servicing, repair or correction.
+
+This includes — explicitly and without limitation — no warranty of:
+
+* uninterrupted or error-free operation;
+* fitness for any specific security objective;
+* prevention of any specific class of attack;
+* compatibility with any specific WordPress version, theme, plugin or hosting environment;
+* completeness or accuracy of the threat-intelligence data shared via the optional Community Network;
+* timely or reliable delivery of email or SMS one-time passwords through any mail or SMS provider, whether self-configured or routed through the optional managed relays;
+* compliance with any specific legal, regulatory or contractual obligation that applies to the operator of the protected site.
+
+= No liability =
+
+In no event will the copyright holder, or any other party who modifies and/or conveys the program as permitted under the GPL, be liable to you for damages, including any general, special, incidental or consequential damages arising out of the use or inability to use the program (including but not limited to loss of data, data being rendered inaccurate, losses sustained by you or third parties, lost revenue, business interruption, lockout from your own administrative interface, or a failure of the program to operate with any other programs).
+
+Operating ReportedIP Hive is solely the responsibility of the site operator. The operator is responsible for:
+
+* maintaining backups of WordPress, the database and the plugin configuration before installation, upgrades and configuration changes;
+* understanding the consequences of enabling 2FA enforcement, hide-login, password-reset gating and IP blocking — in particular the documented edge case where an account with only email-2FA and no recovery codes is intentionally locked out of the password-reset flow until an administrator intervenes;
+* maintaining recovery procedures (recovery codes, alternative second factors, WP-CLI access, server-level access) so that a misconfiguration or an upstream service outage does not cause permanent loss of access to the site;
+* obtaining and maintaining any data-processing agreements, terms of service or end-user disclosures required by applicable law for the SMS, email or threat-intelligence services they choose to use.
+
+= Security disclosures =
+
+If you believe you have discovered a security issue in ReportedIP Hive, **please do not open a public GitHub issue**. Send the details to [ps@cms-admins.de](mailto:ps@cms-admins.de). We will acknowledge receipt within five business days.
+
+= Recommended posture =
+
+Treat ReportedIP Hive as one layer in a defence-in-depth setup. Pair it with:
+
+* offsite, versioned backups (database + uploads + plugin configuration);
+* a malware scanner of your choice — Hive deliberately does not include one;
+* a server-level firewall (Cloudflare WAF, Nginx `deny`, fail2ban) for blocking on cached public pages, which the plugin cannot reach by design;
+* a reasonable patch cadence — install updates as they are released, run `./run.sh check-all` (or your CI equivalent) before upgrading on production-critical sites.
+
+By installing or activating this plugin you confirm that you have read and accepted the terms above and the GPL-2.0-or-later licence under which the plugin is distributed.
