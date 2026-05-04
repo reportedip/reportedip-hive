@@ -2,6 +2,32 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.6.6] — 2026-05-04
+
+### Security (E2E hardening of the 1.6.5 password-reset gate)
+
+- **Reset key resolver now reads the WordPress reset cookie.** The 1.6.5
+  implementation only looked at `$_REQUEST['key']`, but in step 2 of the
+  WordPress reset flow (`?action=rp` after the cookie-set redirect) the key
+  lives in `$_COOKIE['wp-resetpass-COOKIEHASH']` as `login:key` — and in
+  step 3 (resetpass POST) it lives in `$_POST['rp_key']`. The
+  `validate_password_reset` hook fired but bailed out without effect on
+  every standard reset, so the gate was bypassable end-to-end. Resolver now
+  inspects URL → POST → cookie in that order; same fix applied to
+  `get_query_login()`. Discovered while running the full Docker-stack E2E.
+- **Email-only lockout no longer relies on `WP_Error`.** The
+  `User_Enumeration::normalize_login_errors()` filter rewrites every
+  non-2FA-flow login error to a generic `"Invalid credentials."` string to
+  defeat username probing; the reset-gate lockout text was caught by that
+  filter and the affected user never saw the real reason. The gate now
+  renders a dedicated 403 page via `wp_die()` plus
+  `emit_block_response_headers()`, which no `login_errors` filter can
+  rewrite. Same path used for the no-eligible-method lockout.
+- **`User_Enumeration::normalize_login_errors()` whitelist extended.**
+  The filter now lets `?action=reportedip_2fa_reset` pages and any error
+  text containing "reset blocked" or, on `rp` / `resetpass`, "two-factor"
+  through unmasked, so future reset-gate messages reach the user verbatim.
+
 ## [1.6.5] — 2026-05-03
 
 ### Security

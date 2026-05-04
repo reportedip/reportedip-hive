@@ -181,9 +181,15 @@ class ReportedIP_Hive_User_Enumeration {
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only flag inspection; no state change.
+		$action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : '';
 		$is_2fa_flow_message = ( isset( $_GET['reportedip_2fa_locked'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_locked'] ) ) )
 			|| ( isset( $_GET['reportedip_2fa_expired'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_expired'] ) ) )
-			|| ( isset( $_GET['action'] ) && 'reportedip_2fa' === sanitize_key( wp_unslash( $_GET['action'] ) ) );
+			|| 'reportedip_2fa' === $action
+			|| 'reportedip_2fa_reset' === $action
+			|| ( in_array( $action, array( 'rp', 'resetpass' ), true )
+				&& is_string( $error )
+				&& false !== stripos( $error, 'two-factor' ) )
+			|| ( is_string( $error ) && false !== stripos( $error, 'reset blocked' ) );
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		if ( $is_2fa_flow_message ) {

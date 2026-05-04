@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.6.5
+Stable tag: 1.6.6
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -322,6 +322,16 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 1.6.6 =
+
+**Password-reset gate hardening (E2E coverage).** Three real bugs in the 1.6.5 implementation that were caught while driving the full reset flow against a Docker stack and would have shipped silently otherwise:
+
+* The reset-key resolver only looked at the URL — the WordPress reset cookie (`wp-resetpass-COOKIEHASH`, set during step 2 of the reset flow) and `$_POST['rp_key']` were ignored. The `validate_password_reset` hook fired but bailed out without effect on every standard reset, so the gate was end-to-end bypassable. Resolver now reads URL → POST → cookie.
+* Email-only lockout used `$errors->add()`, but `User_Enumeration::normalize_login_errors()` rewrites every non-2FA login error to "Invalid credentials." for username-probing defence — affected users never saw the real reason. The gate now renders a dedicated 403 page via `wp_die()`, which no `login_errors` filter can rewrite.
+* `User_Enumeration::normalize_login_errors()` whitelist extended: `?action=reportedip_2fa_reset` pages and any error text containing "reset blocked" or "two-factor" on the `rp` / `resetpass` actions now pass through unmasked.
+
+**Strongly recommended for everyone running 1.6.5** — without this update the reset gate is wired but inactive on the standard reset flow.
+
 = 1.6.5 =
 
 **Password-reset 2FA gate.** The WordPress "lost password" flow now demands a non-email second factor (Authenticator app, SMS, passkey, or recovery code) before a new password is accepted. Email is excluded from the eligible methods by design — it is the channel that delivered the reset link itself, so accepting an email OTP as the second factor would collapse to single-factor security if the mailbox is compromised. Hooks `validate_password_reset` (priority 5, gates the form render) and `password_reset` (priority 5, last-mile guard before `wp_set_password`). Failures share the IP-block ladder with login-flow failures via the canonical `2fa_brute_force` event. Accounts whose only enrolled second factor is email and which hold no recovery codes are hard-locked from the reset flow with an admin-mail alert; unblock manually via `wp user reset-password <id> --skip-email`. Two new options under *Settings → Two-Factor → Password reset gate*: `reportedip_hive_2fa_require_on_password_reset` (master toggle, default on) and `reportedip_hive_2fa_password_reset_block_email_only` (default on). The list of methods rejected as second factor in this flow is filterable via `reportedip_hive_2fa_password_reset_excluded_methods` and defaults to `["email"]`. Aligns with NIST SP 800-63B §6.1.2.3 and OWASP ASVS V6.3.
@@ -383,6 +393,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 1.6.6 =
+Critical hardening for the 1.6.5 password-reset gate. The reset-key resolver missed the WordPress reset cookie, so the gate was wired but inactive on the standard reset flow — making 1.6.5 effectively unprotected. Strongly recommended for every site running 1.6.5. No breaking change.
 
 = 1.6.5 =
 Closes a long-standing 2FA bypass: the WordPress "lost password" flow used to let anyone with mailbox access through email-2FA, because the reset link and the email OTP arrived on the same channel. Hive now requires a non-email second factor (Authenticator, SMS, passkey, recovery code) before a new password is accepted. Strongly recommended for every site using email 2FA. No breaking change: users without 2FA configured are unaffected.

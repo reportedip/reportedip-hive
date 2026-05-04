@@ -245,29 +245,23 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		}
 
 		if ( self::is_email_only_locked( $user->ID ) ) {
-			$errors->add(
-				'reportedip_2fa_reset_email_only_locked',
-				wp_kses(
-					__( '<strong>Password reset blocked.</strong> For security, this account requires a second factor other than email (Authenticator app, SMS, security key or recovery code) before passwords can be reset. Please contact your administrator.', 'reportedip-hive' ),
-					array( 'strong' => array() )
-				)
-			);
 			$this->log_event( self::EVENT_EMAIL_ONLY_BLOCKED, $user->ID, 'high' );
 			$this->notify_admins_email_only_block( $user );
+			$this->die_with_lockout(
+				__( 'Password reset blocked', 'reportedip-hive' ),
+				__( 'For security, this account requires a second factor other than email (Authenticator app, SMS, security key or recovery code) before passwords can be reset. Please contact your administrator.', 'reportedip-hive' )
+			);
 			return;
 		}
 
 		$eligible = self::get_eligible_methods( $user->ID );
 		if ( empty( $eligible ) ) {
-			$errors->add(
-				'reportedip_2fa_reset_no_method',
-				wp_kses(
-					__( '<strong>Password reset blocked.</strong> No second factor is available for password reset on this account. Please contact your administrator.', 'reportedip-hive' ),
-					array( 'strong' => array() )
-				)
-			);
 			$this->log_event( self::EVENT_NO_ELIGIBLE_METHOD, $user->ID, 'high' );
 			$this->notify_admins_email_only_block( $user );
+			$this->die_with_lockout(
+				__( 'Password reset blocked', 'reportedip-hive' ),
+				__( 'No second factor is available for password reset on this account. Please contact your administrator.', 'reportedip-hive' )
+			);
 			return;
 		}
 
@@ -663,32 +657,95 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	}
 
 	/**
-	 * Read the reset key from either the GET or POST surface, depending on
-	 * which leg of the reset flow we're in.
+	 * Read the reset key from whatever surface holds it for the current leg
+	 * of the WordPress reset flow:
+	 *
+	 *   Step 1 — first GET on the reset link: key in $_GET['key'].
+	 *   Step 2 — second GET after WP set the rp cookie: key in
+	 *            $_COOKIE['wp-resetpass-COOKIEHASH'] as "login:key".
+	 *   Step 3 — POST of the new password: key in $_POST['rp_key'].
+	 *   Our challenge page: key passed back through the URL, so $_GET['key'].
+	 *
+	 * Reading the cookie is necessary because validate_password_reset fires
+	 * during step 2, where the URL no longer carries key + login.
 	 *
 	 * @return string
 	 */
 	private function get_reset_key(): string {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only access; the key itself is the credential.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing -- Read-only access; the reset key itself is the credential and is verified by check_password_reset_key().
 		if ( isset( $_REQUEST['key'] ) ) {
-			$raw = sanitize_text_field( wp_unslash( $_REQUEST['key'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			return is_string( $raw ) ? $raw : '';
+			$raw = sanitize_text_field( wp_unslash( $_REQUEST['key'] ) );
+			if ( '' !== $raw ) {
+				return $raw;
+			}
 		}
+
+		if ( isset( $_REQUEST['rp_key'] ) ) {
+			$raw = sanitize_text_field( wp_unslash( $_REQUEST['rp_key'] ) );
+			if ( '' !== $raw ) {
+				return $raw;
+			}
+		}
+
+		$cookie_value = $this->read_rp_cookie();
+		if ( '' !== $cookie_value && false !== strpos( $cookie_value, ':' ) ) {
+			$parts = explode( ':', $cookie_value, 2 );
+			if ( isset( $parts[1] ) ) {
+				return sanitize_text_field( $parts[1] );
+			}
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing
 		return '';
 	}
 
 	/**
-	 * Read the user_login from the GET / POST surface.
+	 * Read the user_login the reset is being attempted for. Mirrors
+	 * get_reset_key() — the rp cookie is the canonical source during
+	 * step 2 of the WordPress reset flow.
 	 *
 	 * @return string
 	 */
 	private function get_query_login(): string {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing -- Read-only; identity is re-verified by check_password_reset_key() before any state is mutated.
 		if ( isset( $_REQUEST['login'] ) ) {
-			$raw = sanitize_user( wp_unslash( $_REQUEST['login'] ), true ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			return is_string( $raw ) ? $raw : '';
+			$raw = sanitize_user( wp_unslash( $_REQUEST['login'] ), true );
+			if ( '' !== $raw ) {
+				return $raw;
+			}
 		}
+
+		if ( isset( $_REQUEST['user_login'] ) ) {
+			$raw = sanitize_user( wp_unslash( $_REQUEST['user_login'] ), true );
+			if ( '' !== $raw ) {
+				return $raw;
+			}
+		}
+
+		$cookie_value = $this->read_rp_cookie();
+		if ( '' !== $cookie_value && false !== strpos( $cookie_value, ':' ) ) {
+			$parts = explode( ':', $cookie_value, 2 );
+			if ( isset( $parts[0] ) ) {
+				return sanitize_user( $parts[0], true );
+			}
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing
 		return '';
+	}
+
+	/**
+	 * Raw "login:key" payload from the WordPress reset cookie, or empty.
+	 *
+	 * @return string
+	 */
+	private function read_rp_cookie(): string {
+		if ( ! defined( 'COOKIEHASH' ) ) {
+			return '';
+		}
+		$cookie_name = 'wp-resetpass-' . COOKIEHASH;
+		if ( ! isset( $_COOKIE[ $cookie_name ] ) ) {
+			return '';
+		}
+		return (string) wp_unslash( $_COOKIE[ $cookie_name ] );
 	}
 
 	/**
@@ -729,6 +786,26 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 				'login'  => rawurlencode( $login ),
 			),
 			wp_login_url()
+		);
+	}
+
+	/**
+	 * Render a 403 lockout page and terminate. Used when no eligible second
+	 * factor exists for the reset flow — the standard `$errors->add()` path
+	 * is unreliable here because security plugins (including this one's
+	 * own `User_Enumeration::normalize_login_errors()`) rewrite the
+	 * `login_errors` channel to a generic "Invalid credentials." string,
+	 * which would mask the real reason and confuse the affected user.
+	 *
+	 * @param string $title Short heading shown to the user.
+	 * @param string $body  Longer explanation of why the reset was blocked.
+	 */
+	private function die_with_lockout( string $title, string $body ): void {
+		ReportedIP_Hive::emit_block_response_headers();
+		wp_die(
+			esc_html( $body ),
+			esc_html( $title ),
+			array( 'response' => 403 )
 		);
 	}
 
