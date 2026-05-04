@@ -4731,7 +4731,7 @@ class ReportedIP_Hive_Admin_Settings {
 						$sms_relay_status       = $mode_manager_for_relay->feature_status( 'sms_relay_via_api' );
 						?>
 						<div class="rip-relay-highlights" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
-							<div class="rip-card" style="padding:16px;border-left:4px solid var(--rip-primary,#4F46E5);">
+							<div class="rip-card rip-relay-highlight rip-relay-highlight--mail">
 								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
 									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 									<?php esc_html_e( '100% mail delivery via reportedip.de', 'reportedip-hive' ); ?>
@@ -4749,7 +4749,7 @@ class ReportedIP_Hive_Admin_Settings {
 									<?php endif; ?>
 								</p>
 							</div>
-							<div class="rip-card" style="padding:16px;border-left:4px solid var(--rip-success,#10B981);">
+							<div class="rip-card rip-relay-highlight rip-relay-highlight--sms">
 								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
 									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
 									<?php esc_html_e( 'Managed SMS-2FA delivery (Professional and above)', 'reportedip-hive' ); ?>

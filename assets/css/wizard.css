@@ -1784,3 +1784,23 @@ body.rip-wizard-page select.rip-select option {
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     font-size: 0.85rem;
 }
+
+/* Feature-list bullets in the onboarding wizard — render an inline SVG
+ * checkmark via ::before instead of the Unicode "✓" character that was
+ * previously hard-coded in the template. */
+.rip-onboarding-check {
+    list-style: none;
+    position: relative;
+    padding-left: 1.5em;
+}
+.rip-onboarding-check::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.2em;
+    width: 1em;
+    height: 1em;
+    background-color: var(--rip-success, #10B981);
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") no-repeat center / contain;
+    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") no-repeat center / contain;
+}

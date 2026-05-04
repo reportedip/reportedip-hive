@@ -889,3 +889,20 @@ code.ip-address {
     font-size: var(--rip-text-xs);
     word-break: break-all;
 }
+
+/* ==========================================================================
+   Relay-highlight cards (Settings → Community plans)
+   Flat cards with a subtle tinted background — no left-accent bar.
+   ========================================================================== */
+
+.rip-relay-highlight {
+    padding: var(--rip-space-4);
+}
+
+.rip-relay-highlight--mail {
+    background: var(--rip-primary-soft, #EEF2FF);
+}
+
+.rip-relay-highlight--sms {
+    background: var(--rip-success-soft, #ECFDF5);
+}

@@ -237,9 +237,9 @@ if ( $grace_deadline > 0 ) {
 							<?php esc_html_e( 'Face ID, Touch ID, Windows Hello or a hardware key. Phishing-resistant, no app needed.', 'reportedip-hive' ); ?>
 						</p>
 						<ul class="rip-mode-card__features">
-							<li>✓ <?php esc_html_e( 'Most secure method', 'reportedip-hive' ); ?></li>
-							<li>✓ <?php esc_html_e( 'Biometric, no code entry', 'reportedip-hive' ); ?></li>
-							<li>✓ <?php esc_html_e( 'Phishing-resistant', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'Most secure method', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'Biometric, no code entry', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'Phishing-resistant', 'reportedip-hive' ); ?></li>
 						</ul>
 					</label>
 				<?php endif; ?>
@@ -255,9 +255,9 @@ if ( $grace_deadline > 0 ) {
 							<?php esc_html_e( 'Google Authenticator, Microsoft Authenticator, Authy, 1Password, Bitwarden. Works offline.', 'reportedip-hive' ); ?>
 						</p>
 						<ul class="rip-mode-card__features">
-							<li>✓ <?php esc_html_e( 'Usable offline', 'reportedip-hive' ); ?></li>
-							<li>✓ <?php esc_html_e( 'Very secure', 'reportedip-hive' ); ?></li>
-							<li>✓ <?php esc_html_e( 'No dependency on SMS or email', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'Usable offline', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'Very secure', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'No dependency on SMS or email', 'reportedip-hive' ); ?></li>
 						</ul>
 					</label>
 				<?php endif; ?>
@@ -279,8 +279,8 @@ if ( $grace_deadline > 0 ) {
 							?>
 						</p>
 						<ul class="rip-mode-card__features">
-							<li>✓ <?php esc_html_e( 'No app needed', 'reportedip-hive' ); ?></li>
-							<li>✓ <?php esc_html_e( 'Easy to get started', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'No app needed', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'Easy to get started', 'reportedip-hive' ); ?></li>
 							<li>⚠ <?php esc_html_e( 'Only as secure as your email account', 'reportedip-hive' ); ?></li>
 						</ul>
 					</label>
@@ -298,7 +298,7 @@ if ( $grace_deadline > 0 ) {
 						</p>
 						<ul class="rip-mode-card__features">
 							<li>⚠ <?php esc_html_e( 'Less secure than TOTP/passkey', 'reportedip-hive' ); ?></li>
-							<li>✓ <?php esc_html_e( 'EU provider, DPA', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'EU provider, DPA', 'reportedip-hive' ); ?></li>
 						</ul>
 					</label>
 				<?php endif; ?>
