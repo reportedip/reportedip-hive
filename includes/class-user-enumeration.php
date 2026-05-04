@@ -29,6 +29,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ReportedIP_Hive_User_Enumeration {
 
 	/**
+	 * `?action=` slugs that bypass the "Invalid credentials." mask. Adding
+	 * an action here lets its login-error text reach the user verbatim
+	 * (used by the 2FA login challenge and the password-reset gate).
+	 *
+	 * @var string[]
+	 */
+	private const PASSTHROUGH_ACTIONS = array( 'reportedip_2fa', 'reportedip_2fa_reset' );
+
+	/**
+	 * Substrings that — when an error message contains one of them on the
+	 * `rp` / `resetpass` actions — let the message pass through unmasked.
+	 * The reset-gate phrasing is stable English; translations should keep
+	 * one of these tokens in place. (The gate itself prefers wp_die() for
+	 * unmask-able lockouts, but the WP_Error path still needs a
+	 * pass-through for the "verification required" case.)
+	 *
+	 * @var string[]
+	 */
+	private const PASSTHROUGH_NEEDLES_RESET = array( 'two-factor', 'reset blocked' );
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_User_Enumeration|null
@@ -181,22 +202,39 @@ class ReportedIP_Hive_User_Enumeration {
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only flag inspection; no state change.
-		$action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : '';
-		$is_2fa_flow_message = ( isset( $_GET['reportedip_2fa_locked'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_locked'] ) ) )
-			|| ( isset( $_GET['reportedip_2fa_expired'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_expired'] ) ) )
-			|| 'reportedip_2fa' === $action
-			|| 'reportedip_2fa_reset' === $action
-			|| ( in_array( $action, array( 'rp', 'resetpass' ), true )
-				&& is_string( $error )
-				&& false !== stripos( $error, 'two-factor' ) )
-			|| ( is_string( $error ) && false !== stripos( $error, 'reset blocked' ) );
+		$action       = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : '';
+		$flag_locked  = isset( $_GET['reportedip_2fa_locked'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_locked'] ) );
+		$flag_expired = isset( $_GET['reportedip_2fa_expired'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_expired'] ) );
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		if ( $is_2fa_flow_message ) {
+		$is_reset_passthrough = is_string( $error )
+			&& in_array( $action, array( 'rp', 'resetpass' ), true )
+			&& self::contains_any( $error, self::PASSTHROUGH_NEEDLES_RESET );
+
+		if ( $flag_locked
+			|| $flag_expired
+			|| in_array( $action, self::PASSTHROUGH_ACTIONS, true )
+			|| $is_reset_passthrough ) {
 			return $error;
 		}
 
 		return __( 'Invalid credentials.', 'reportedip-hive' );
+	}
+
+	/**
+	 * Case-insensitive haystack-contains-any-needle check.
+	 *
+	 * @param string   $haystack
+	 * @param string[] $needles
+	 * @return bool
+	 */
+	private static function contains_any( string $haystack, array $needles ): bool {
+		foreach ( $needles as $needle ) {
+			if ( '' !== $needle && false !== stripos( $haystack, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

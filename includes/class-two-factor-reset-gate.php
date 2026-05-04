@@ -98,6 +98,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	public const EVENT_EMAIL_ONLY_BLOCKED = '2fa_reset_email_only_blocked';
 	public const EVENT_NO_ELIGIBLE_METHOD = '2fa_reset_no_eligible_method';
 	public const EVENT_BYPASS_ATTEMPT     = '2fa_reset_bypass_attempt';
+	public const EVENT_VERIFY_INTERNAL    = '2fa_reset_verify_internal_error';
 
 	/**
 	 * Constructor — registers the password-reset hooks if the feature is on.
@@ -557,10 +558,28 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 			case ReportedIP_Hive_Two_Factor::METHOD_TOTP:
 				$encrypted = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true );
 				if ( empty( $encrypted ) ) {
+					$this->log_event(
+						self::EVENT_VERIFY_INTERNAL,
+						$user_id,
+						'high',
+						array(
+							'method' => $method,
+							'reason' => 'missing_secret',
+						)
+					);
 					return false;
 				}
 				$secret = ReportedIP_Hive_Two_Factor_Crypto::decrypt( $encrypted );
 				if ( false === $secret ) {
+					$this->log_event(
+						self::EVENT_VERIFY_INTERNAL,
+						$user_id,
+						'critical',
+						array(
+							'method' => $method,
+							'reason' => 'decrypt_failed',
+						)
+					);
 					return false;
 				}
 				$window = (int) apply_filters( 'reportedip_2fa_totp_window', 1, $user_id );
@@ -570,17 +589,48 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 				return (bool) $result;
 
 			case ReportedIP_Hive_Two_Factor::METHOD_SMS:
-				return class_exists( 'ReportedIP_Hive_Two_Factor_SMS' )
-					&& ReportedIP_Hive_Two_Factor_SMS::verify_code( $user_id, $code );
+				if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
+					$this->log_event(
+						self::EVENT_VERIFY_INTERNAL,
+						$user_id,
+						'high',
+						array(
+							'method' => $method,
+							'reason' => 'class_missing',
+						)
+					);
+					return false;
+				}
+				return (bool) ReportedIP_Hive_Two_Factor_SMS::verify_code( $user_id, $code );
 
 			case ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN:
-				return class_exists( 'ReportedIP_Hive_Two_Factor_WebAuthn' )
-					&& ReportedIP_Hive_Two_Factor_WebAuthn::verify( $user_id, $code );
+				if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_WebAuthn' ) ) {
+					$this->log_event(
+						self::EVENT_VERIFY_INTERNAL,
+						$user_id,
+						'high',
+						array(
+							'method' => $method,
+							'reason' => 'class_missing',
+						)
+					);
+					return false;
+				}
+				return (bool) ReportedIP_Hive_Two_Factor_WebAuthn::verify( $user_id, $code );
 
 			case ReportedIP_Hive_Two_Factor::METHOD_RECOVERY:
 				return ReportedIP_Hive_Two_Factor_Recovery::verify_code( $user_id, $code );
 
 			default:
+				$this->log_event(
+					self::EVENT_VERIFY_INTERNAL,
+					$user_id,
+					'high',
+					array(
+						'method' => $method,
+						'reason' => 'unknown_method',
+					)
+				);
 				return false;
 		}
 	}
@@ -672,30 +722,11 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * @return string
 	 */
 	private function get_reset_key(): string {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing -- Read-only access; the reset key itself is the credential and is verified by check_password_reset_key().
-		if ( isset( $_REQUEST['key'] ) ) {
-			$raw = sanitize_text_field( wp_unslash( $_REQUEST['key'] ) );
-			if ( '' !== $raw ) {
-				return $raw;
-			}
-		}
-
-		if ( isset( $_REQUEST['rp_key'] ) ) {
-			$raw = sanitize_text_field( wp_unslash( $_REQUEST['rp_key'] ) );
-			if ( '' !== $raw ) {
-				return $raw;
-			}
-		}
-
-		$cookie_value = $this->read_rp_cookie();
-		if ( '' !== $cookie_value && false !== strpos( $cookie_value, ':' ) ) {
-			$parts = explode( ':', $cookie_value, 2 );
-			if ( isset( $parts[1] ) ) {
-				return sanitize_text_field( $parts[1] );
-			}
-		}
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing
-		return '';
+		return $this->read_reset_surface(
+			array( 'key', 'rp_key' ),
+			'sanitize_text_field',
+			1
+		);
 	}
 
 	/**
@@ -706,29 +737,50 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * @return string
 	 */
 	private function get_query_login(): string {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing -- Read-only; identity is re-verified by check_password_reset_key() before any state is mutated.
-		if ( isset( $_REQUEST['login'] ) ) {
-			$raw = sanitize_user( wp_unslash( $_REQUEST['login'] ), true );
-			if ( '' !== $raw ) {
-				return $raw;
-			}
-		}
+		return $this->read_reset_surface(
+			array( 'login', 'user_login' ),
+			static fn( $value ) => sanitize_user( $value, true ),
+			0
+		);
+	}
 
-		if ( isset( $_REQUEST['user_login'] ) ) {
-			$raw = sanitize_user( wp_unslash( $_REQUEST['user_login'] ), true );
-			if ( '' !== $raw ) {
-				return $raw;
+	/**
+	 * Generic resolver for fields that travel through the WordPress reset
+	 * flow on three surfaces: $_REQUEST keys (URL or POST), then the
+	 * `wp-resetpass-COOKIEHASH` cookie ("login:key"). The reset cookie is
+	 * a WordPress-core internal — its name and "login:key" payload format
+	 * mirror what wp-login.php sets in `case 'rp'`. If the WordPress
+	 * version ever changes that contract, this helper is the only spot to
+	 * adjust.
+	 *
+	 * @param string[] $request_keys Keys to scan in $_REQUEST, in priority order.
+	 * @param callable $sanitizer    Sanitiser applied to each candidate value.
+	 * @param int      $cookie_part  Index in the cookie's "login:key" pair (0 or 1).
+	 * @return string
+	 */
+	private function read_reset_surface( array $request_keys, callable $sanitizer, int $cookie_part ): string {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing -- The reset key is itself the credential and is later verified by check_password_reset_key() before any state mutation.
+		foreach ( $request_keys as $request_key ) {
+			if ( ! isset( $_REQUEST[ $request_key ] ) ) {
+				continue;
+			}
+			$value = $sanitizer( wp_unslash( $_REQUEST[ $request_key ] ) );
+			if ( is_string( $value ) && '' !== $value ) {
+				return $value;
 			}
 		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing
 
 		$cookie_value = $this->read_rp_cookie();
 		if ( '' !== $cookie_value && false !== strpos( $cookie_value, ':' ) ) {
 			$parts = explode( ':', $cookie_value, 2 );
-			if ( isset( $parts[0] ) ) {
-				return sanitize_user( $parts[0], true );
+			if ( isset( $parts[ $cookie_part ] ) ) {
+				$value = $sanitizer( $parts[ $cookie_part ] );
+				if ( is_string( $value ) && '' !== $value ) {
+					return $value;
+				}
 			}
 		}
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing
 		return '';
 	}
 
@@ -790,12 +842,14 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	}
 
 	/**
-	 * Render a 403 lockout page and terminate. Used when no eligible second
-	 * factor exists for the reset flow — the standard `$errors->add()` path
-	 * is unreliable here because security plugins (including this one's
-	 * own `User_Enumeration::normalize_login_errors()`) rewrite the
-	 * `login_errors` channel to a generic "Invalid credentials." string,
-	 * which would mask the real reason and confuse the affected user.
+	 * Render a 403 lockout page and terminate.
+	 *
+	 * Uses wp_die() instead of WP_Error->add() so the lockout reason
+	 * survives the `login_errors` channel: third-party security plugins
+	 * (and the bundled User_Enumeration sensor in its anti-probing default)
+	 * routinely rewrite that channel to a generic "Invalid credentials."
+	 * string, which would mask the real reason and lock users out without
+	 * any actionable information.
 	 *
 	 * @param string $title Short heading shown to the user.
 	 * @param string $body  Longer explanation of why the reset was blocked.
