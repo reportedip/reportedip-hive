@@ -725,7 +725,12 @@ class ReportedIP_Hive_API {
 
 		if ( $code >= 200 && $code < 300 && is_array( $body ) ) {
 			$body['fetched_at'] = time();
-			set_transient( $cache_key, $body, HOUR_IN_SECONDS );
+			/*
+			 * TTL must be longer than the refresh-quota cron interval (6 h);
+			 * otherwise the dashboard renders an empty snapshot for 5 of every
+			 * 6 hours. 12 h gives the cron one extra window before staleness.
+			 */
+			set_transient( $cache_key, $body, 12 * HOUR_IN_SECONDS );
 			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
 			return $body;
 		}
