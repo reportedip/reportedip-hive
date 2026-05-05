@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.6.6
+Stable tag: 1.6.7
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive

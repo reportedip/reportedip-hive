@@ -2,6 +2,17 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.6.7] — 2026-05-05
+
+### Fixes
+
+- **Relay quota dashboard no longer shows "Awaiting fresh quota data" most of the time.** The `reportedip_hive_relay_quota` transient was written with a 1 h TTL, but `cron_refresh_quota` only runs every 6 h — so for 5 of every 6 hours the dashboard rendered an empty snapshot with `is_stale = true`. TTL is now 12 h, longer than the cron interval plus one buffer window.
+- **API queue cron now logs every skip reason, including `no_quota`.** The previous code suppressed the `no_quota` skip silently, which made it hard to tell whether a stuck queue was caused by an exhausted daily report limit, a stale local quota cache, or WP-Cron not firing at all. All four reasons (`unknown`, `no_quota`, `no_permission`, `daily_limit`, `rate_limited`) now produce an info-level log entry.
+
+### New
+
+- **Cron status panel on the System Status page.** Shows the next scheduled run for each plugin cron (`process_queue`, `refresh_quota`, `sync_reputation`, `cleanup`), highlights overdue hooks, and exposes the queue lock state. Two new admin-only AJAX actions — `reportedip_hive_run_queue_now` and `reportedip_hive_clear_queue_lock` — provide an escape hatch when WP-Cron is being blocked by a CDN or cache plugin and the queue stops draining.
+
 ## [1.6.6] — 2026-05-04
 
 ### Security (E2E hardening of the 1.6.5 password-reset gate)
