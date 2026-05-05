@@ -3791,10 +3791,18 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_cleanup'         => __( 'Daily cleanup', 'reportedip-hive' ),
 		);
 
-		$now           = time();
-		$lock_held     = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
-		$nonce         = wp_create_nonce( 'reportedip_hive_nonce' );
-		$datetime_fmt  = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+		$now             = time();
+		$lock_held       = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
+		$nonce           = wp_create_nonce( 'reportedip_hive_nonce' );
+		$datetime_fmt    = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+		$all_overdue_24h = true;
+		foreach ( array_keys( $hooks ) as $hook ) {
+			$next = wp_next_scheduled( $hook );
+			if ( false === $next || ( $now - $next ) < DAY_IN_SECONDS ) {
+				$all_overdue_24h = false;
+				break;
+			}
+		}
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
@@ -3804,6 +3812,13 @@ class ReportedIP_Hive_Admin_Settings {
 			<p class="rip-settings-section__desc">
 				<?php esc_html_e( 'WP-Cron is responsible for processing the API report queue and refreshing quota counters. If the next-run timestamps below stay in the past, your hosting environment is blocking the loopback to wp-cron.php — configure a system cron or check the CDN/cache plugin.', 'reportedip-hive' ); ?>
 			</p>
+
+			<?php if ( $all_overdue_24h ) : ?>
+				<div class="rip-alert rip-alert--error" style="margin-bottom: var(--rip-space-3);">
+					<strong><?php esc_html_e( 'WP-Cron has not fired any ReportedIP Hive hook in the last 24 h.', 'reportedip-hive' ); ?></strong>
+					<?php esc_html_e( 'Likely cause: another plugin\'s heavy cron workers consume the per-spawn time budget (WP_CRON_LOCK_TIMEOUT) before our hooks are reached. Configure a dedicated server cron — see the snippet below.', 'reportedip-hive' ); ?>
+				</div>
+			<?php endif; ?>
 
 			<div class="rip-card">
 				<div class="rip-card__body">
@@ -3873,6 +3888,8 @@ class ReportedIP_Hive_Admin_Settings {
 					<div id="rip-cron-status-result" class="rip-test-results"></div>
 				</div>
 			</div>
+
+			<?php $this->render_cron_setup_snippet(); ?>
 		</div>
 
 		<script>
@@ -3917,6 +3934,64 @@ class ReportedIP_Hive_Admin_Settings {
 				});
 			});
 		</script>
+		<?php
+	}
+
+	/**
+	 * Render the dedicated server-cron setup snippet card.
+	 *
+	 * Shows a copy-pasteable crontab line that runs ReportedIP Hive's hooks
+	 * via WP-CLI on a fixed schedule, bypassing the per-spawn time budget of
+	 * wp-cron.php (`WP_CRON_LOCK_TIMEOUT`). Needed when another plugin's
+	 * heavy cron workers consume the budget before our hooks fire.
+	 *
+	 * @return void
+	 * @since 1.6.8
+	 */
+	private function render_cron_setup_snippet() {
+		$hooks_arg = 'reportedip_hive_process_queue reportedip_hive_refresh_quota reportedip_hive_sync_reputation reportedip_hive_cleanup';
+		$abspath   = defined( 'ABSPATH' ) ? rtrim( ABSPATH, '/\\' ) : '/path/to/wordpress';
+		$wp_cli    = file_exists( $abspath . '/wp-cli.phar' ) ? $abspath . '/wp-cli.phar' : '/usr/local/bin/wp';
+		$snippet   = sprintf(
+			'*/5 * * * * php %s cron event run --due-now %s --path=%s --quiet',
+			esc_html( $wp_cli ),
+			esc_html( $hooks_arg ),
+			esc_html( $abspath )
+		);
+		$ispconfig = sprintf(
+			'*/5 * * * * {SITE_PHP} %s cron event run --due-now %s --path={DOCROOT_CLIENT} --quiet',
+			esc_html( basename( $wp_cli ) ),
+			esc_html( $hooks_arg )
+		);
+		?>
+		<div class="rip-card rip-mt-4">
+			<div class="rip-card__header">
+				<h3 class="rip-card__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+					<?php esc_html_e( 'Recommended: dedicated server cron', 'reportedip-hive' ); ?>
+				</h3>
+			</div>
+			<div class="rip-card__body">
+				<p>
+					<?php esc_html_e( 'wp-cron.php has a per-spawn time budget (WP_CRON_LOCK_TIMEOUT, 60–90 s on most setups). When other plugins schedule heavy workers, the budget can be consumed before ReportedIP Hive\'s hooks are reached. A dedicated cron line that targets only our hooks via WP-CLI bypasses the shared budget completely.', 'reportedip-hive' ); ?>
+				</p>
+
+				<p class="rip-label rip-mt-3"><?php esc_html_e( 'Standard crontab', 'reportedip-hive' ); ?></p>
+				<pre class="rip-code-block" style="overflow-x:auto;padding:var(--rip-space-3);background:var(--rip-gray-50);font-size:var(--rip-text-xs);line-height:1.4;"><?php echo esc_html( $snippet ); ?></pre>
+
+				<p class="rip-label rip-mt-3"><?php esc_html_e( 'ISPConfig template (uses {SITE_PHP} and {DOCROOT_CLIENT} variables)', 'reportedip-hive' ); ?></p>
+				<pre class="rip-code-block" style="overflow-x:auto;padding:var(--rip-space-3);background:var(--rip-gray-50);font-size:var(--rip-text-xs);line-height:1.4;"><?php echo esc_html( $ispconfig ); ?></pre>
+
+				<p class="rip-help-text rip-mt-3">
+					<strong><?php esc_html_e( 'Optional:', 'reportedip-hive' ); ?></strong>
+					<?php esc_html_e( 'after the dedicated cron is in place and verified, you can disable WordPress\' built-in cron loopback to avoid duplicate runs by adding to wp-config.php:', 'reportedip-hive' ); ?>
+					<code>define('DISABLE_WP_CRON', true);</code>
+				</p>
+				<p class="rip-help-text">
+					<?php esc_html_e( 'Adjust the WP-CLI path if it differs on your host. The plugin auto-detected the path shown above.', 'reportedip-hive' ); ?>
+				</p>
+			</div>
+		</div>
 		<?php
 	}
 

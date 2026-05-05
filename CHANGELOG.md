@@ -2,6 +2,12 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.6.8] — 2026-05-05
+
+### New
+
+- **Cron Status panel: setup hint for shared-WP-Cron environments.** When all four plugin hooks have been overdue for more than 24 h, the panel now flags it with a danger banner and shows a copy-pasteable crontab snippet that runs only ReportedIP Hive's hooks via WP-CLI on a 5-minute schedule. This bypasses `WP_CRON_LOCK_TIMEOUT` (the per-spawn time budget that other plugins' heavy cron workers can exhaust before our hooks are reached). Both a standard crontab line and an ISPConfig-template variant (`{SITE_PHP}` / `{DOCROOT_CLIENT}`) are rendered; the WP-CLI path is auto-detected from the WordPress install directory.
+
 ## [1.6.7] — 2026-05-05
 
 ### Fixes
