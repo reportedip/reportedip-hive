@@ -122,6 +122,9 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_dismiss_notice', array( $this, 'ajax_dismiss_notice' ) );
 
 		add_action( 'wp_ajax_reportedip_hive_dashboard_stats', array( $this, 'ajax_dashboard_stats' ) );
+
+		add_action( 'wp_ajax_reportedip_hive_run_queue_now', array( $this, 'ajax_run_queue_now' ) );
+		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
 
 	/**
@@ -1373,5 +1376,71 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		return $content;
+	}
+
+	/**
+	 * AJAX: Manually drain the API report queue and refresh quota.
+	 *
+	 * Runs the same path as the 15-minute WP-Cron job. Used when WP-Cron is
+	 * not firing reliably (loopback blocked by CDN/cache plugin) or for
+	 * one-shot draining after a tier upgrade. Capability- and nonce-gated.
+	 *
+	 * @return void
+	 * @since 1.6.7
+	 */
+	public function ajax_run_queue_now() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		try {
+			$cron_handler = $this->plugin->get_cron_handler();
+			$cron_handler->cron_process_queue();
+			$cron_handler->cron_refresh_quota();
+
+			$queue_size = $this->database->get_queue_size();
+
+			wp_send_json_success(
+				array(
+					'message'   => __( 'Queue processed and quota refreshed. Check Activity log for details.', 'reportedip-hive' ),
+					'remaining' => (int) $queue_size,
+				)
+			);
+		} catch ( \Throwable $e ) {
+			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+		}
+	}
+
+	/**
+	 * AJAX: Clear the queue-processing lock transient.
+	 *
+	 * Safety net for the rare case that the lock survives a crashed worker
+	 * (e.g. PHP timeout combined with a flaky object-cache backend) and
+	 * blocks every subsequent cron run for 5 minutes longer than expected.
+	 * Capability- and nonce-gated.
+	 *
+	 * @return void
+	 * @since 1.6.7
+	 */
+	public function ajax_clear_queue_lock() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$held = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
+		delete_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
+
+		wp_send_json_success(
+			array(
+				'message'      => $held
+					? __( 'Queue lock cleared.', 'reportedip-hive' )
+					: __( 'No queue lock was held.', 'reportedip-hive' ),
+				'was_locked'   => $held,
+			)
+		);
 	}
 }

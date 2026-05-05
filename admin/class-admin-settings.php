@@ -3773,6 +3773,154 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Render the Cron status panel on the System Status page.
+	 *
+	 * Surfaces the next scheduled run for each plugin cron hook plus the
+	 * current queue-lock state, and exposes manual escape hatches for
+	 * environments where WP-Cron is not firing reliably (CDN/cache plugin
+	 * blocking the loopback to wp-cron.php).
+	 *
+	 * @return void
+	 * @since 1.6.7
+	 */
+	private function render_cron_status_panel() {
+		$hooks = array(
+			'reportedip_hive_process_queue'   => __( 'Process API queue', 'reportedip-hive' ),
+			'reportedip_hive_refresh_quota'   => __( 'Refresh API & relay quota', 'reportedip-hive' ),
+			'reportedip_hive_sync_reputation' => __( 'Reputation sync', 'reportedip-hive' ),
+			'reportedip_hive_cleanup'         => __( 'Daily cleanup', 'reportedip-hive' ),
+		);
+
+		$now           = time();
+		$lock_held     = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
+		$nonce         = wp_create_nonce( 'reportedip_hive_nonce' );
+		$datetime_fmt  = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+		?>
+		<div class="rip-settings-section">
+			<h2 class="rip-settings-section__title">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+				<?php esc_html_e( 'Cron status', 'reportedip-hive' ); ?>
+			</h2>
+			<p class="rip-settings-section__desc">
+				<?php esc_html_e( 'WP-Cron is responsible for processing the API report queue and refreshing quota counters. If the next-run timestamps below stay in the past, your hosting environment is blocking the loopback to wp-cron.php — configure a system cron or check the CDN/cache plugin.', 'reportedip-hive' ); ?>
+			</p>
+
+			<div class="rip-card">
+				<div class="rip-card__body">
+					<table class="rip-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Hook', 'reportedip-hive' ); ?></th>
+								<th><?php esc_html_e( 'Next run', 'reportedip-hive' ); ?></th>
+								<th><?php esc_html_e( 'Status', 'reportedip-hive' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php
+							foreach ( $hooks as $hook => $label ) :
+								$next = wp_next_scheduled( $hook );
+								if ( false === $next ) {
+									$status_class = 'danger';
+									$status_text  = __( 'Not scheduled', 'reportedip-hive' );
+									$next_label   = __( '—', 'reportedip-hive' );
+								} else {
+									$delta = $next - $now;
+									if ( $delta < -300 ) {
+										$status_class = 'danger';
+										$status_text  = __( 'Overdue', 'reportedip-hive' );
+									} elseif ( $delta < 0 ) {
+										$status_class = 'warning';
+										$status_text  = __( 'Pending', 'reportedip-hive' );
+									} else {
+										$status_class = 'success';
+										$status_text  = __( 'Scheduled', 'reportedip-hive' );
+									}
+									$next_label = sprintf(
+										'%s (%s)',
+										esc_html( wp_date( $datetime_fmt, $next ) ),
+										esc_html( human_time_diff( $now, $next ) )
+									);
+								}
+								?>
+								<tr>
+									<td><code><?php echo esc_html( $hook ); ?></code><br><span class="rip-help-text"><?php echo esc_html( $label ); ?></span></td>
+									<td><?php echo wp_kses_post( $next_label ); ?></td>
+									<td><span class="rip-badge rip-badge--<?php echo esc_attr( $status_class ); ?>"><?php echo esc_html( $status_text ); ?></span></td>
+								</tr>
+							<?php endforeach; ?>
+							<tr>
+								<td><?php esc_html_e( 'Queue lock', 'reportedip-hive' ); ?><br><span class="rip-help-text"><?php esc_html_e( 'Prevents two queue workers from colliding (5 min TTL).', 'reportedip-hive' ); ?></span></td>
+								<td><code><?php echo esc_html( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT ); ?></code></td>
+								<td>
+									<?php if ( $lock_held ) : ?>
+										<span class="rip-badge rip-badge--warning"><?php esc_html_e( 'Held', 'reportedip-hive' ); ?></span>
+									<?php else : ?>
+										<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'Free', 'reportedip-hive' ); ?></span>
+									<?php endif; ?>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<div class="rip-flex rip-gap-2 rip-mt-3">
+						<button type="button" class="rip-button rip-button--primary" id="rip-run-queue-now">
+							<?php esc_html_e( 'Run queue now', 'reportedip-hive' ); ?>
+						</button>
+						<button type="button" class="rip-button rip-button--secondary" id="rip-clear-queue-lock">
+							<?php esc_html_e( 'Clear queue lock', 'reportedip-hive' ); ?>
+						</button>
+					</div>
+					<div id="rip-cron-status-result" class="rip-test-results"></div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			jQuery(function ($) {
+				const nonce = <?php echo wp_json_encode( $nonce ); ?>;
+				const $out  = $('#rip-cron-status-result');
+
+				function renderResult(html, kind) {
+					$out.html('<div class="rip-alert rip-alert--' + kind + '">' + html + '</div>');
+				}
+
+				$('#rip-run-queue-now').on('click', function () {
+					const $btn = $(this);
+					$btn.prop('disabled', true);
+					$out.html('<p>' + <?php echo wp_json_encode( __( 'Processing queue…', 'reportedip-hive' ) ); ?> + '</p>');
+					$.post(ajaxurl, { action: 'reportedip_hive_run_queue_now', nonce: nonce })
+						.done(function (resp) {
+							if (resp.success) {
+								renderResult(resp.data.message + ' <strong>(' + resp.data.remaining + ' pending)</strong>', 'success');
+							} else {
+								renderResult((resp.data && resp.data.message) || 'Error', 'error');
+							}
+						})
+						.fail(function () { renderResult('Request failed', 'error'); })
+						.always(function () { $btn.prop('disabled', false); });
+				});
+
+				$('#rip-clear-queue-lock').on('click', function () {
+					const $btn = $(this);
+					$btn.prop('disabled', true);
+					$.post(ajaxurl, { action: 'reportedip_hive_clear_queue_lock', nonce: nonce })
+						.done(function (resp) {
+							if (resp.success) {
+								renderResult(resp.data.message, resp.data.was_locked ? 'success' : 'info');
+								setTimeout(function () { location.reload(); }, 800);
+							} else {
+								renderResult((resp.data && resp.data.message) || 'Error', 'error');
+							}
+						})
+						.fail(function () { renderResult('Request failed', 'error'); })
+						.always(function () { $btn.prop('disabled', false); });
+				});
+			});
+		</script>
+		<?php
+	}
+
+	/**
 	 * Tab: Performance & Tools — caching, rate-limiting, settings import/export.
 	 *
 	 * @since 1.2.0
@@ -4069,6 +4217,8 @@ class ReportedIP_Hive_Admin_Settings {
 					</a>
 				</div>
 			</div>
+
+			<?php $this->render_cron_status_panel(); ?>
 
 			<?php $this->render_maintenance_panel(); ?>
 

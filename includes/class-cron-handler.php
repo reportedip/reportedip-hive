@@ -247,16 +247,14 @@ class ReportedIP_Hive_Cron_Handler {
 					)
 				);
 			} elseif ( isset( $queue_result['skipped'] ) && $queue_result['skipped'] ) {
-				if ( isset( $queue_result['reason'] ) && $queue_result['reason'] !== 'no_quota' ) {
-					$this->logger->info(
-						'Queue processing skipped',
-						'system',
-						array(
-							'reason'     => $queue_result['reason'],
-							'reset_time' => $queue_result['reset_time'] ?? null,
-						)
-					);
-				}
+				$this->logger->info(
+					'Queue processing skipped',
+					'system',
+					array(
+						'reason'     => $queue_result['reason'] ?? null,
+						'reset_time' => $queue_result['reset_time'] ?? null,
+					)
+				);
 			}
 		} catch ( \Throwable $e ) {
 			$this->logger->error( 'Queue processing failed: ' . $e->getMessage(), 'system' );
