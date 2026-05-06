@@ -2,6 +2,12 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [1.7.1] — 2026-05-06
+
+### Fixes
+
+- **Setup wizard 2FA enforce-roles list now reflects every WP role.** The wizard previously rendered only four hardcoded checkboxes (`administrator`, `editor`, `author`, `shop_manager`) and the AJAX save handler intersected the posted roles against the same hardcoded list — every other role (`subscriber`, `contributor`, `customer`, custom roles like `seo_editor`, `shop_accountant` etc.) was silently dropped on save. The wizard now iterates over `wp_roles()->get_names()` like the 2FA settings tab and the save handler accepts every registered role, so a `subscriber` selection made in settings survives a wizard re-run instead of being reset to `["administrator"]`.
+
 ## [1.7.0] — 2026-05-06
 
 ### New
