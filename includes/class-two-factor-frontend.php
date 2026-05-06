@@ -137,6 +137,45 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 		add_action( 'template_redirect', array( __CLASS__, 'route_request' ), 5 );
 		add_action( 'reportedip_hive_tier_changed', array( __CLASS__, 'on_tier_changed' ), 30, 2 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'maybe_enqueue_blocks_redirect' ) );
+		add_filter( 'pre_get_document_title', array( __CLASS__, 'filter_document_title' ) );
+		add_filter( 'wp_robots', array( __CLASS__, 'filter_robots' ) );
+	}
+
+	/**
+	 * Override the document title on our themed slugs so the storefront
+	 * tab/window shows "Verification required" / "Set up Two-Factor"
+	 * instead of the generic theme default. Yields when the request is
+	 * not on one of our slugs.
+	 *
+	 * @param string $title Theme-provided title.
+	 * @return string
+	 */
+	public static function filter_document_title( $title ) {
+		$mode = get_query_var( self::QUERY_VAR );
+		if ( 'challenge' === $mode ) {
+			return __( 'Verification required', 'reportedip-hive' );
+		}
+		if ( 'setup' === $mode ) {
+			return __( 'Set up Two-Factor', 'reportedip-hive' );
+		}
+		return $title;
+	}
+
+	/**
+	 * Mark our themed slugs as `noindex,nofollow,noarchive` so search
+	 * engines never crawl the challenge/setup pages.
+	 *
+	 * @param array<string,bool|string> $rules
+	 * @return array<string,bool|string>
+	 */
+	public static function filter_robots( $rules ) {
+		$mode = get_query_var( self::QUERY_VAR );
+		if ( 'challenge' === $mode || 'setup' === $mode ) {
+			$rules['noindex']   = true;
+			$rules['nofollow']  = true;
+			$rules['noarchive'] = true;
+		}
+		return $rules;
 	}
 
 	/**

@@ -568,7 +568,7 @@ if ( $grace_deadline > 0 ) {
 
 				<div class="rip-wizard__actions">
 					<a href="<?php echo esc_url( $dashboard_url ); ?>" class="rip-button rip-button--primary rip-button--lg">
-						<?php esc_html_e( 'Go to dashboard', 'reportedip-hive' ); ?> →
+						<?php echo esc_html( isset( $dashboard_label ) ? $dashboard_label : __( 'Go to dashboard', 'reportedip-hive' ) ); ?>
 					</a>
 				</div>
 

@@ -328,9 +328,12 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			);
 		}
 
-		$dashboard_url = ( $is_frontend && function_exists( 'wc_get_page_permalink' ) )
-			? (string) wc_get_page_permalink( 'myaccount' )
-			: admin_url();
+		$dashboard_url   = admin_url();
+		$dashboard_label = __( 'Go to dashboard', 'reportedip-hive' );
+		if ( $is_frontend && function_exists( 'wc_get_page_permalink' ) ) {
+			$dashboard_url   = (string) wc_get_page_permalink( 'myaccount' );
+			$dashboard_label = __( 'Back to My Account', 'reportedip-hive' );
+		}
 
 		$data = array(
 			'user'            => $user,
@@ -339,6 +342,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			'grace_deadline'  => $grace_deadline,
 			'in_grace'        => $in_grace,
 			'dashboard_url'   => $dashboard_url,
+			'dashboard_label' => $dashboard_label,
 		);
 
 		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract
@@ -443,7 +447,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			wp_send_json_success(
 				array(
 					'message'  => __( 'Onboarding is no longer required.', 'reportedip-hive' ),
-					'redirect' => admin_url(),
+					'redirect' => self::default_post_skip_url( $user_id ),
 				)
 			);
 		}
@@ -479,7 +483,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			)
 		);
 
-		$redirect = admin_url();
+		$redirect = self::default_post_skip_url( $user_id );
 		$req      = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : '';
 		if ( $req ) {
 			$redirect = wp_validate_redirect( $req, $redirect );
@@ -496,15 +500,83 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	/**
 	 * Get the canonical onboarding URL.
 	 *
+	 * Routing matrix:
+	 *  - Frontend module unavailable        -> classic wp-admin onboarding page.
+	 *  - Frontend request (template_redirect, WC-account redirect, …)
+	 *    AND Frontend module available      -> themed setup slug, regardless of
+	 *                                          the user's role. Keeps an admin
+	 *                                          who signed in via My Account on
+	 *                                          the storefront instead of dumping
+	 *                                          them into wp-admin.
+	 *  - Admin request                      -> classic wp-admin onboarding page.
+	 *  - Frontend module available + low-cap user (no manage_options / edit_posts)
+	 *                                       -> themed setup slug.
+	 *
 	 * @return string
 	 */
 	public static function get_onboarding_url() {
-		if ( class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' )
-			&& ReportedIP_Hive_Two_Factor_Frontend::is_available()
+		$frontend_available = class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' )
+			&& ReportedIP_Hive_Two_Factor_Frontend::is_available();
+
+		if ( $frontend_available && self::is_frontend_request() ) {
+			return ReportedIP_Hive_Two_Factor_Frontend::setup_url();
+		}
+
+		if ( $frontend_available
 			&& ! current_user_can( 'manage_options' )
 			&& ! current_user_can( 'edit_posts' ) ) {
 			return ReportedIP_Hive_Two_Factor_Frontend::setup_url();
 		}
 		return admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+	}
+
+	/**
+	 * Pick a sensible "no longer here" target for the skip handler.
+	 *
+	 * Customers and Subscribers cannot reach `wp-admin/`, so a hard
+	 * `admin_url()` lands them on a 403/redirect loop. WooCommerce sites
+	 * route them back to My Account; everyone else (administrators,
+	 * editors, …) keeps the wp-admin dashboard.
+	 *
+	 * @param int $user_id
+	 * @return string
+	 * @since  1.7.0
+	 */
+	private static function default_post_skip_url( $user_id ) {
+		$user_id = (int) $user_id;
+		if ( $user_id > 0
+			&& ! user_can( $user_id, 'manage_options' )
+			&& ! user_can( $user_id, 'edit_posts' )
+			&& function_exists( 'wc_get_page_permalink' ) ) {
+			$account_url = (string) wc_get_page_permalink( 'myaccount' );
+			if ( '' !== $account_url ) {
+				return $account_url;
+			}
+		}
+		return admin_url();
+	}
+
+	/**
+	 * Whether the current request is a frontend (theme) request, as
+	 * opposed to wp-admin, REST, AJAX, cron or CLI. Used by
+	 * {@see self::get_onboarding_url()} to keep customers on the
+	 * storefront after sign-in regardless of their role.
+	 *
+	 * @return bool
+	 */
+	private static function is_frontend_request() {
+		if ( wp_doing_ajax() || wp_doing_cron() ) {
+			return false;
+		}
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			return false;
+		}
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			return false;
+		}
+		if ( function_exists( 'is_admin' ) && is_admin() ) {
+			return false;
+		}
+		return true;
 	}
 }
