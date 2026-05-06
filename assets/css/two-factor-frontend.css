@@ -1,0 +1,98 @@
+/**
+ * Two-Factor Authentication — Theme-frame styles.
+ *
+ * Layered on top of `two-factor.css` so the frontend challenge page
+ * inherits the full wp-login styling but adds the constraints needed
+ * to behave inside an arbitrary theme: a centred panel container that
+ * never spills past the theme's content width, sharp content edges
+ * (no ad-hoc border-radius on the panel itself), and tighter spacing
+ * defaults so the form does not look adrift in a vertical hero.
+ *
+ * @package   ReportedIP_Hive
+ * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @copyright 2025-2026 Patrick Schlesinger
+ * @license   GPL-2.0-or-later
+ * @since     1.7.0
+ */
+
+.rip-frontend-2fa {
+	display: flex;
+	justify-content: center;
+	padding: var(--rip-space-8, 2rem) var(--rip-space-4, 1rem);
+	background: transparent;
+}
+
+.rip-frontend-2fa__panel {
+	width: 100%;
+	max-width: 480px;
+	margin: 0 auto;
+	padding: var(--rip-space-6, 1.5rem);
+	background: var(--rip-gray-50, #f9fafb);
+	border: 1px solid var(--rip-gray-200, #e5e7eb);
+	border-radius: 0;
+	box-shadow: var(--rip-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.08));
+	color: var(--rip-gray-900, #111827);
+}
+
+.rip-frontend-2fa__title {
+	font-size: var(--rip-text-2xl, 1.5rem);
+	font-weight: 700;
+	margin: 0 0 var(--rip-space-2, 0.5rem);
+	color: var(--rip-gray-900, #111827);
+	text-align: center;
+}
+
+.rip-frontend-2fa__lede {
+	margin: 0 0 var(--rip-space-4, 1rem);
+	color: var(--rip-gray-700, #374151);
+	text-align: center;
+}
+
+.rip-frontend-2fa .rip-2fa-challenge {
+	background: transparent;
+	box-shadow: none;
+	border: none;
+	padding: 0;
+	max-width: none;
+}
+
+.rip-frontend-2fa .rip-2fa-challenge__form {
+	margin-top: var(--rip-space-4, 1rem);
+}
+
+.rip-frontend-2fa .rip-2fa-challenge__input {
+	font-family: var(--rip-font-mono, ui-monospace, "SFMono-Regular", "Menlo", monospace);
+	font-size: var(--rip-text-xl, 1.25rem);
+	letter-spacing: 0.4em;
+	text-align: center;
+}
+
+.rip-frontend-2fa .rip-2fa-challenge__back {
+	text-align: center;
+	margin-top: var(--rip-space-4, 1rem);
+}
+
+.rip-frontend-2fa .rip-2fa-challenge__back a {
+	color: var(--rip-primary, #4f46e5);
+	text-decoration: none;
+}
+
+.rip-frontend-2fa .rip-2fa-challenge__back a:hover,
+.rip-frontend-2fa .rip-2fa-challenge__back a:focus {
+	color: var(--rip-primary-dark, #3730a3);
+	text-decoration: underline;
+}
+
+.rip-frontend-2fa--session-expired .rip-frontend-2fa__panel {
+	text-align: center;
+}
+
+@media (max-width: 600px) {
+	.rip-frontend-2fa {
+		padding: var(--rip-space-4, 1rem) var(--rip-space-2, 0.5rem);
+	}
+
+	.rip-frontend-2fa__panel {
+		padding: var(--rip-space-4, 1rem);
+	}
+}

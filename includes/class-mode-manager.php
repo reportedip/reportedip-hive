@@ -247,6 +247,13 @@ class ReportedIP_Hive_Mode_Manager {
 				'label'         => __( 'SMS Relay via reportedip.de', 'reportedip-hive' ),
 				'description'   => __( 'Send 2FA SMS via our managed EU gateway — included with Professional and Business.', 'reportedip-hive' ),
 			),
+			'frontend_2fa'                 => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'professional',
+				'label'         => __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ),
+				'description'   => __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login — kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ),
+			),
 		);
 	}
 

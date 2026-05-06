@@ -480,6 +480,12 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	 * @return string
 	 */
 	public static function get_onboarding_url() {
+		if ( class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' )
+			&& ReportedIP_Hive_Two_Factor_Frontend::is_available()
+			&& ! current_user_can( 'manage_options' )
+			&& ! current_user_can( 'edit_posts' ) ) {
+			return ReportedIP_Hive_Two_Factor_Frontend::setup_url();
+		}
 		return admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 	}
 }

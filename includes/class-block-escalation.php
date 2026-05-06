@@ -73,7 +73,7 @@ class ReportedIP_Hive_Block_Escalation {
 			return self::DEFAULT_LADDER_MINUTES;
 		}
 
-		$parts = array_filter(
+		$parts  = array_filter(
 			array_map( 'trim', explode( ',', $raw ) ),
 			static fn( string $part ): bool => '' !== $part
 		);

@@ -263,6 +263,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_sms_avv_confirmed" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_require_on_password_reset" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_password_reset_block_email_only" value="0" />
+			<input type="hidden" name="reportedip_hive_2fa_frontend_enabled" value="0" />
+			<input type="hidden" name="reportedip_hive_2fa_frontend_customer_optional" value="0" />
 
 			<!-- Status Banner -->
 			<div class="rip-settings-section">
@@ -463,6 +465,113 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						</span>
 					</label>
 					<p class="rip-help-text"><?php esc_html_e( 'Also redirects required users to onboarding when they land on frontend pages after sign-in (e.g. WooCommerce account).', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<?php
+			$rip_wc_active           = class_exists( 'WooCommerce' );
+			$rip_frontend_enabled    = (bool) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
+			$rip_customer_optional   = (bool) get_option( 'reportedip_hive_2fa_frontend_customer_optional', true );
+			$rip_frontend_status     = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+			$rip_frontend_locked     = ! $rip_frontend_status['available'];
+			$rip_frontend_soft_off   = (int) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_SOFT_DISABLED, 0 ) > 0;
+			$rip_frontend_disabled   = $rip_frontend_locked ? ' disabled' : '';
+			$rip_challenge_url_label = ReportedIP_Hive_Two_Factor_Frontend::challenge_url();
+			$rip_setup_url_label     = ReportedIP_Hive_Two_Factor_Frontend::setup_url();
+			?>
+			<div class="rip-settings-section" id="rip-2fa-frontend-section" data-rip-2fa-frontend>
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+					<?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?>
+					<?php if ( $rip_frontend_locked && 'tier' === $rip_frontend_status['reason'] ) : ?>
+						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $rip_frontend_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+					<?php endif; ?>
+				</h2>
+				<p class="rip-settings-section__desc">
+					<?php esc_html_e( 'Render the second factor inside the active theme when a customer signs in via My Account, classic checkout, or the WooCommerce blocks. Without this, customers get bounced to wp-login.php for the challenge.', 'reportedip-hive' ); ?>
+				</p>
+
+				<?php if ( ! $rip_wc_active ) : ?>
+					<div class="rip-alert rip-alert--info">
+						<?php esc_html_e( 'WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA.', 'reportedip-hive' ); ?>
+					</div>
+				<?php elseif ( $rip_frontend_soft_off ) : ?>
+					<div class="rip-alert rip-alert--warning">
+						<?php esc_html_e( 'Frontend 2FA is paused because the current ReportedIP plan no longer includes it. Existing customer secrets stay valid; new onboardings are blocked until the plan is restored.', 'reportedip-hive' ); ?>
+					</div>
+				<?php endif; ?>
+
+				<?php
+				$rip_2fa_conflicts = ReportedIP_Hive_Two_Factor_Frontend::detect_conflicts();
+				if ( ! empty( $rip_2fa_conflicts ) ) :
+					?>
+					<div class="rip-alert rip-alert--warning rip-2fa-conflicts">
+						<p style="margin:0 0 var(--rip-space-2);font-weight:600;">
+							<?php esc_html_e( 'Other 2FA / login plugins detected', 'reportedip-hive' ); ?>
+						</p>
+						<ul style="margin:0;padding-left:1.25em;">
+							<?php foreach ( $rip_2fa_conflicts as $rip_conflict ) : ?>
+								<li>
+									<strong><?php echo esc_html( $rip_conflict['label'] ); ?></strong>
+									— <?php echo esc_html( $rip_conflict['message'] ); ?>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+				<?php endif; ?>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox"
+							class="rip-toggle__input"
+							name="reportedip_hive_2fa_frontend_enabled"
+							value="1"
+							<?php checked( $rip_frontend_enabled ); ?>
+							<?php echo esc_attr( $rip_frontend_disabled ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label">
+							<?php esc_html_e( 'Render the 2FA challenge inside the storefront theme', 'reportedip-hive' ); ?>
+						</span>
+					</label>
+					<p class="rip-help-text">
+						<?php
+						printf(
+							/* translators: %s: absolute URL of the challenge slug */
+							esc_html__( 'Routes WooCommerce frontend logins through %s instead of wp-login.php.', 'reportedip-hive' ),
+							'<code>' . esc_html( $rip_challenge_url_label ) . '</code>'
+						);
+						?>
+					</p>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox"
+							class="rip-toggle__input"
+							name="reportedip_hive_2fa_frontend_customer_optional"
+							value="1"
+							<?php checked( $rip_customer_optional ); ?>
+							<?php echo esc_attr( $rip_frontend_disabled ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label">
+							<?php esc_html_e( 'Let customers opt in to 2FA from My Account', 'reportedip-hive' ); ?>
+						</span>
+					</label>
+					<p class="rip-help-text">
+						<?php esc_html_e( 'When enabled, Customer / Subscriber roles see the same self-service setup wizard as administrators. Role-based enforcement above still applies on top.', 'reportedip-hive' ); ?>
+					</p>
+				</div>
+
+				<div class="rip-form-group">
+					<p class="rip-help-text">
+						<?php
+						printf(
+							/* translators: %s: absolute URL of the setup slug */
+							esc_html__( 'Customer onboarding wizard: %s', 'reportedip-hive' ),
+							'<code>' . esc_html( $rip_setup_url_label ) . '</code>'
+						);
+						?>
+					</p>
 				</div>
 			</div>
 
@@ -808,6 +917,22 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		register_setting(
 			'reportedip_hive_2fa_settings',
 			'reportedip_hive_2fa_frontend_onboarding',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_frontend_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_frontend_enabled' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_frontend_customer_optional',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => 'rest_sanitize_boolean',
@@ -1306,6 +1431,48 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 * @param mixed $input Raw textarea input.
 	 * @return string Cleaned, newline-joined allowlist.
 	 */
+	/**
+	 * Sanitize the frontend-2FA master toggle.
+	 *
+	 * Refuses to flip the toggle on when the current ReportedIP plan does
+	 * not include `frontend_2fa`, and surfaces a settings error so the
+	 * admin sees why the box snapped back to off. When the toggle changes
+	 * value, flush the rewrite rules so the configured slugs become
+	 * routable / un-routable on the very next page load.
+	 *
+	 * @param mixed $input Raw form value.
+	 * @return string '1' or ''.
+	 * @since  1.7.0
+	 */
+	public static function sanitize_frontend_enabled( $input ) {
+		$desired = (bool) rest_sanitize_boolean( $input );
+		$current = (bool) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
+
+		if ( $desired ) {
+			$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+			if ( empty( $status['available'] ) ) {
+				if ( function_exists( 'add_settings_error' ) ) {
+					add_settings_error(
+						'reportedip_hive_2fa_settings',
+						'reportedip_hive_2fa_frontend_tier_locked',
+						__( 'Frontend 2FA requires the Professional plan or higher. Toggle reverted.', 'reportedip-hive' ),
+						'error'
+					);
+				}
+				$desired = false;
+			}
+		}
+
+		if ( $desired !== $current ) {
+			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
+			if ( function_exists( 'flush_rewrite_rules' ) ) {
+				flush_rewrite_rules( false );
+			}
+		}
+
+		return $desired ? '1' : '';
+	}
+
 	public static function sanitize_ip_allowlist( $input ) {
 		if ( ! is_string( $input ) ) {
 			return '';

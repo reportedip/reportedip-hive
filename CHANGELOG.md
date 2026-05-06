@@ -2,6 +2,24 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### New
+
+- **WooCommerce frontend login 2FA (Professional plan).** The second factor is now rendered inside the active storefront theme when a customer signs in via My Account, the classic checkout, or the WooCommerce blocks — no more bouncing them to wp-login.php. A new feature flag `frontend_2fa` in `Mode_Manager` gates the module to the Professional / Business / Enterprise tiers; existing customer 2FA secrets keep working after a downgrade, only new onboardings are blocked while the plan is below Professional.
+- **Themed challenge slug + onboarding slug.** Two configurable slugs (`reportedip-hive-2fa` and `reportedip-hive-2fa-setup`, both customisable) are routed via `add_rewrite_rule()` and rendered with `get_header()` / `get_footer()`. Cache-Control, LiteSpeed and DONOTCACHE* headers are emitted up front so WP Rocket / W3TC / LiteSpeed never serve a stale challenge. Hide-Login bypass is automatic.
+- **WC origin tracking on the authenticate filter.** `Two_Factor::filter_authenticate()` now persists the login origin (`wc`, `wc-block`, or empty), the referrer URL and the WooCommerce session customer-id alongside the challenge nonce. After a successful verify the customer lands back on `wc_get_checkout_url()` / `wc_get_page_permalink('myaccount')` instead of the WordPress dashboard their role cannot reach.
+- **WC blocks-checkout error redirect.** A small listener on `wp.hooks` converts a `reportedip_2fa_required` REST error from the Cart / Checkout block into a `window.location` redirect to the themed challenge slug.
+- **Setup wizard sub-section for the new feature.** Step 4 of the onboarding wizard now exposes the frontend toggle whenever WooCommerce is active, with a tier-lock chip on Free / Contributor.
+- **Frontend-2FA settings section.** New section in the 2FA settings tab with the master toggle, the customer-opt-in flag and a descriptive help block. Sanitiser refuses to flip the toggle on when the plan does not include the feature.
+- **14-day "promote to Professional" admin notice.** Free / Contributor admins on WooCommerce stores see a single `rip-alert--info` banner pitching the frontend feature, dismissable for 14 days per user. Survives a tier change cleanly: the banner falls silent the moment `feature_status('frontend_2fa')` flips to available.
+- **Conflict detection.** Surfaces a warning banner inside the new settings section when Solid Security, the WordPress.org "Two Factor" plugin or Wordfence is active alongside Hive. Adds an informational note for WooCommerce Subscriptions / Memberships about the intentional magic-login bypass.
+
+### Changed
+
+- `Two_Factor::handle_2fa_challenge()` now accepts an optional render-context parameter so the wp-login interstitial and the new theme-frame variant share the same verify pipeline.
+- `Two_Factor_Onboarding::get_onboarding_url()` returns the frontend setup slug for users without `manage_options` / `edit_posts` when the frontend module is available, so customers no longer hit a wp-admin redirect.
+
 ## [1.6.8] — 2026-05-05
 
 ### New

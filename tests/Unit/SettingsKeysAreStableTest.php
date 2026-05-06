@@ -106,6 +106,8 @@ class SettingsKeysAreStableTest extends TestCase {
 			'reportedip_hive_2fa_enforce_grace_days',
 			'reportedip_hive_2fa_enforce_roles',
 			'reportedip_hive_2fa_extended_remember',
+			'reportedip_hive_2fa_frontend_customer_optional',
+			'reportedip_hive_2fa_frontend_enabled',
 			'reportedip_hive_2fa_frontend_onboarding',
 			'reportedip_hive_2fa_ip_allowlist',
 			'reportedip_hive_2fa_max_skips',

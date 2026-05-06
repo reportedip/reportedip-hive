@@ -1183,6 +1183,45 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 			</div>
 
+			<?php
+			$has_woocommerce        = class_exists( 'WooCommerce' );
+			$frontend_status        = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+			$frontend_locked        = ! $frontend_status['available'];
+			$saved_frontend_enabled = (bool) get_option( 'reportedip_hive_2fa_frontend_enabled', false );
+			?>
+			<?php if ( $has_woocommerce ) : ?>
+				<div class="rip-config-card" id="rip-step4-frontend">
+					<div class="rip-config-card__header">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+						<h3><?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?></h3>
+						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
+							&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $frontend_status, array( 'label' => __( 'PRO', 'reportedip-hive' ) ) ); ?>
+						<?php endif; ?>
+					</div>
+					<div class="rip-config-card__body">
+						<p class="rip-help-block">
+							<?php esc_html_e( 'Render the second factor inside the storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks. Without this, customers get bounced to wp-login.php for the challenge — a clear AI-watermarked break in the storefront experience.', 'reportedip-hive' ); ?>
+						</p>
+						<label class="rip-toggle">
+							<input type="checkbox"
+								name="2fa_frontend_enabled"
+								id="rip-2fa-frontend-enabled"
+								<?php checked( $saved_frontend_enabled ); ?>
+								<?php echo $frontend_locked ? 'disabled' : ''; ?>>
+							<span class="rip-toggle__slider"></span>
+							<span class="rip-toggle__label">
+								<?php esc_html_e( 'Render the 2FA challenge in the storefront theme frame', 'reportedip-hive' ); ?>
+							</span>
+						</label>
+						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
+							<p class="rip-help-block">
+								<?php esc_html_e( 'Available with the Professional plan or higher. You can finish the wizard now and unlock this later from the 2FA settings tab.', 'reportedip-hive' ); ?>
+							</p>
+						<?php endif; ?>
+					</div>
+				</div>
+			<?php endif; ?>
+
 			<div class="rip-config-card rip-config-card--note">
 				<div class="rip-config-card__header">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -2065,6 +2104,22 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		update_option( 'reportedip_hive_2fa_trusted_devices', isset( $_POST['2fa_trusted_devices'] ) && (bool) $_POST['2fa_trusted_devices'] );
 		update_option( 'reportedip_hive_2fa_frontend_onboarding', isset( $_POST['2fa_frontend_onboarding'] ) && (bool) $_POST['2fa_frontend_onboarding'] );
+
+		$frontend_enabled_desired = isset( $_POST['2fa_frontend_enabled'] ) && (bool) $_POST['2fa_frontend_enabled'];
+		if ( $frontend_enabled_desired ) {
+			$frontend_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+			if ( empty( $frontend_status['available'] ) ) {
+				$frontend_enabled_desired = false;
+			}
+		}
+		$frontend_was_on = (bool) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
+		update_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, $frontend_enabled_desired ? '1' : '' );
+		if ( $frontend_was_on !== $frontend_enabled_desired ) {
+			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
+			if ( function_exists( 'flush_rewrite_rules' ) ) {
+				flush_rewrite_rules( false );
+			}
+		}
 		update_option( 'reportedip_hive_2fa_notify_new_device', isset( $_POST['2fa_notify_new_device'] ) && (bool) $_POST['2fa_notify_new_device'] );
 		update_option( 'reportedip_hive_2fa_xmlrpc_app_password_only', isset( $_POST['2fa_xmlrpc_app_password_only'] ) && (bool) $_POST['2fa_xmlrpc_app_password_only'] );
 

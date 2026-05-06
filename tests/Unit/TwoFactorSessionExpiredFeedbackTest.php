@@ -52,14 +52,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'render_session_expired_page() must exist as the explicit feedback path for an invalid 2FA nonce.'
 			);
 			$this->assertStringContainsString(
-				"render_session_expired_page( 'expired' )",
+				"render_session_expired_page( 'expired', \$context )",
 				$source,
-				"The 'expired' branch must be wired up for the nonce-missing path."
+				"The 'expired' branch must be wired up for the nonce-missing path and forward the render context so the frontend slug stays in the theme frame."
 			);
 			$this->assertStringContainsString(
-				"render_session_expired_page( 'unknown_user' )",
+				"render_session_expired_page( 'unknown_user', \$context )",
 				$source,
-				"The 'unknown_user' branch must be wired up for the get_userdata() failure path."
+				"The 'unknown_user' branch must be wired up for the get_userdata() failure path and forward the render context."
 			);
 		}
 

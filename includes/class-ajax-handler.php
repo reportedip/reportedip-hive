@@ -1436,10 +1436,10 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		wp_send_json_success(
 			array(
-				'message'      => $held
+				'message'    => $held
 					? __( 'Queue lock cleared.', 'reportedip-hive' )
 					: __( 'No queue lock was held.', 'reportedip-hive' ),
-				'was_locked'   => $held,
+				'was_locked' => $held,
 			)
 		);
 	}

@@ -235,6 +235,60 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$this->assertSame( strtotime( '2026-05-31T23:59:59Z' ), $snapshot['period_end'] );
 	}
 
+	public function test_frontend_2fa_blocked_for_free_tier() {
+		$this->pretend_mode( 'community' );
+		$this->pretend_tier( 'free' );
+
+		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+
+		$this->assertFalse( $status['available'] );
+		$this->assertSame( 'tier', $status['reason'] );
+		$this->assertSame( 'professional', $status['min_tier'] );
+	}
+
+	public function test_frontend_2fa_blocked_for_contributor_tier() {
+		$this->pretend_mode( 'community' );
+		$this->pretend_tier( 'contributor' );
+
+		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+
+		$this->assertFalse( $status['available'] );
+		$this->assertSame( 'tier', $status['reason'] );
+	}
+
+	public function test_frontend_2fa_unlocked_for_professional_tier() {
+		$this->pretend_mode( 'community' );
+		$this->pretend_tier( 'professional' );
+
+		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+
+		$this->assertTrue( $status['available'] );
+		$this->assertSame( 'ok', $status['reason'] );
+	}
+
+	public function test_frontend_2fa_works_in_local_mode_with_pro_tier() {
+		$this->pretend_mode( 'local' );
+		$this->pretend_tier( 'professional' );
+
+		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+
+		$this->assertTrue( $status['available'] );
+		$this->assertSame( 'ok', $status['reason'] );
+	}
+
+	public function test_frontend_2fa_unlocked_for_business_and_enterprise() {
+		$this->pretend_mode( 'community' );
+
+		foreach ( array( 'business', 'enterprise' ) as $tier ) {
+			$this->pretend_tier( $tier );
+
+			$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+
+			$this->assertTrue( $status['available'], "Tier $tier should unlock frontend_2fa" );
+			$this->assertSame( 'ok', $status['reason'] );
+		}
+	}
+
 	public function test_tier_changed_action_flushes_memo() {
 		$this->pretend_mode( 'community' );
 		$this->pretend_tier( 'free' );
