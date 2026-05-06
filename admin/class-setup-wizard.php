@@ -1109,23 +1109,14 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 				<div class="rip-config-card__body">
 					<p class="rip-help-block"><?php esc_html_e( 'Selected roles must set up 2FA on next sign-in. Use grace period and skip counter to ease rollout.', 'reportedip-hive' ); ?></p>
+					<?php $all_roles = function_exists( 'wp_roles' ) ? wp_roles()->get_names() : array(); ?>
 					<div class="rip-checkbox-row">
-						<label class="rip-checkbox-pill">
-							<input type="checkbox" name="2fa_enforce_role[]" value="administrator" <?php checked( in_array( 'administrator', $saved_roles, true ) ); ?>>
-							<?php esc_html_e( 'Administrators', 'reportedip-hive' ); ?>
-						</label>
-						<label class="rip-checkbox-pill">
-							<input type="checkbox" name="2fa_enforce_role[]" value="editor" <?php checked( in_array( 'editor', $saved_roles, true ) ); ?>>
-							<?php esc_html_e( 'Editors', 'reportedip-hive' ); ?>
-						</label>
-						<label class="rip-checkbox-pill">
-							<input type="checkbox" name="2fa_enforce_role[]" value="author" <?php checked( in_array( 'author', $saved_roles, true ) ); ?>>
-							<?php esc_html_e( 'Authors', 'reportedip-hive' ); ?>
-						</label>
-						<label class="rip-checkbox-pill">
-							<input type="checkbox" name="2fa_enforce_role[]" value="shop_manager" <?php checked( in_array( 'shop_manager', $saved_roles, true ) ); ?>>
-							<?php esc_html_e( 'Shop managers', 'reportedip-hive' ); ?>
-						</label>
+						<?php foreach ( $all_roles as $role_slug => $role_name ) : ?>
+							<label class="rip-checkbox-pill">
+								<input type="checkbox" name="2fa_enforce_role[]" value="<?php echo esc_attr( $role_slug ); ?>" <?php checked( in_array( $role_slug, $saved_roles, true ) ); ?>>
+								<?php echo esc_html( translate_user_role( $role_name ) ); ?>
+							</label>
+						<?php endforeach; ?>
 					</div>
 
 					<hr class="rip-helper-divider">
@@ -2103,7 +2094,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		}
 		update_option( 'reportedip_hive_2fa_allowed_methods', wp_json_encode( $methods ) );
 
-		$valid_roles   = array( 'administrator', 'editor', 'author', 'shop_manager' );
+		$valid_roles   = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
 		$posted_roles  = isset( $_POST['2fa_enforce_role'] ) && is_array( $_POST['2fa_enforce_role'] )
 			? array_map( 'sanitize_key', wp_unslash( $_POST['2fa_enforce_role'] ) )
 			: array();
