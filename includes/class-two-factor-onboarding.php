@@ -280,13 +280,28 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	/**
 	 * Render the onboarding page (standalone style, no admin chrome).
 	 */
-	public function render_page() {
+	public function render_page( $context = 'admin' ) {
 		$user_id = get_current_user_id();
 		$user    = wp_get_current_user();
 
-		if ( ! self::user_needs_onboarding( $user_id ) ) {
+		$is_frontend           = ( 'frontend' === $context );
+		$frontend_self_service = false;
+		if ( $is_frontend && class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {
+			$customer_optional = (bool) get_option( 'reportedip_hive_2fa_frontend_customer_optional', true );
+			$has_2fa_already   = ReportedIP_Hive_Two_Factor::is_user_enabled( $user_id );
+			$frontend_self_service = (
+				ReportedIP_Hive_Two_Factor_Frontend::is_available()
+				&& $customer_optional
+				&& ! $has_2fa_already
+			);
+		}
+
+		if ( ! self::user_needs_onboarding( $user_id ) && ! $frontend_self_service ) {
 			delete_transient( self::TRANSIENT_PREFIX . $user_id );
-			wp_safe_redirect( admin_url() );
+			$fallback = $is_frontend && function_exists( 'wc_get_page_permalink' )
+				? (string) wc_get_page_permalink( 'myaccount' )
+				: admin_url();
+			wp_safe_redirect( $fallback );
 			exit;
 		}
 
@@ -313,13 +328,17 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			);
 		}
 
+		$dashboard_url = ( $is_frontend && function_exists( 'wc_get_page_permalink' ) )
+			? (string) wc_get_page_permalink( 'myaccount' )
+			: admin_url();
+
 		$data = array(
 			'user'            => $user,
 			'allowed_methods' => $allowed_methods,
 			'skips_left'      => $skips_left,
 			'grace_deadline'  => $grace_deadline,
 			'in_grace'        => $in_grace,
-			'dashboard_url'   => admin_url(),
+			'dashboard_url'   => $dashboard_url,
 		);
 
 		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract

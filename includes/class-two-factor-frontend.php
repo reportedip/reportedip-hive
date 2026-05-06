@@ -399,7 +399,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 
 		if ( class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) {
 			$onboarding = new ReportedIP_Hive_Two_Factor_Onboarding();
-			$onboarding->render_page();
+			$onboarding->render_page( 'frontend' );
 			return;
 		}
 

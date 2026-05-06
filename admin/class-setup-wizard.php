@@ -1023,7 +1023,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		?>
 		<div class="rip-wizard__configuration">
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'Two-Factor Authentication', 'reportedip-hive' ); ?></h1>
-			<p class="rip-wizard__subtitle"><?php esc_html_e( '2FA prevents account takeover — even if a password is stolen. We recommend enforcing 2FA for administrator roles.', 'reportedip-hive' ); ?></p>
+			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Prevent account takeover even with stolen passwords.', 'reportedip-hive' ); ?></p>
 
 			<!-- Global Enable -->
 			<div class="rip-config-card">
@@ -1037,7 +1037,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Enable 2FA (recommended)', 'reportedip-hive' ); ?></span>
 					</label>
-					<p class="rip-help-block"><?php esc_html_e( 'When active, users can configure 2FA in their profile. Admins are guided through onboarding.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-block"><?php esc_html_e( 'Enrolment runs in the user profile; admins go through onboarding.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
@@ -1048,7 +1048,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<h3><?php esc_html_e( 'Allowed methods', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
-					<p class="rip-help-block"><?php esc_html_e( 'Pick which factors users may set up. TOTP plus a passkey is a strong default; email is a useful fallback.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-block"><?php esc_html_e( 'Choose which methods users can set up.', 'reportedip-hive' ); ?></p>
 					<div class="rip-method-grid" id="rip-2fa-methods">
 						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'sms' ) ); ?>" data-method="sms">
 							<span class="rip-method-card__check"></span>
@@ -1060,7 +1060,7 @@ class ReportedIP_Hive_Setup_Wizard {
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
 							</div>
 							<h4 class="rip-method-card__title"><?php esc_html_e( 'SMS', 'reportedip-hive' ); ?></h4>
-							<p class="rip-method-card__desc"><?php esc_html_e( 'Codes delivered via EU-only relay with anti-fraud caps. PRO includes 25 SMS/month, Business 75. Both tiers can top up with prepaid SMS bundles (50 / 200 / 500). Available with PRO plan.', 'reportedip-hive' ); ?></p>
+							<p class="rip-method-card__desc"><?php esc_html_e( 'EU-only delivery, anti-fraud capped. Professional plan and higher.', 'reportedip-hive' ); ?></p>
 						</div>
 
 						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'totp' ) ); ?>" data-method="totp">
@@ -1108,7 +1108,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					</h3>
 				</div>
 				<div class="rip-config-card__body">
-					<p class="rip-help-block"><?php esc_html_e( 'Pick at least one role. Selected roles must set up 2FA on next sign-in. The grace period and skip counter below cushion the rollout — nobody is locked out on day one.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-block"><?php esc_html_e( 'Selected roles must set up 2FA on next sign-in. Use grace period and skip counter to ease rollout.', 'reportedip-hive' ); ?></p>
 					<div class="rip-checkbox-row">
 						<label class="rip-checkbox-pill">
 							<input type="checkbox" name="2fa_enforce_role[]" value="administrator" <?php checked( in_array( 'administrator', $saved_roles, true ) ); ?>>

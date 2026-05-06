@@ -163,8 +163,8 @@ if ( $grace_deadline > 0 ) {
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
 						</div>
 						<div class="rip-wizard__feature-text">
-							<h3><?php esc_html_e( 'What is 2FA?', 'reportedip-hive' ); ?></h3>
-							<p><?php esc_html_e( 'In addition to your password, you confirm who you are with a second factor — for example a code on your smartphone. Even if someone knows your password, they can\'t get into your account without that second factor.', 'reportedip-hive' ); ?></p>
+							<h3><?php esc_html_e( 'A second factor on top of your password', 'reportedip-hive' ); ?></h3>
+							<p><?php esc_html_e( 'Even if your password leaks, no one signs in without the second factor.', 'reportedip-hive' ); ?></p>
 						</div>
 					</div>
 
@@ -173,28 +173,8 @@ if ( $grace_deadline > 0 ) {
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 						</div>
 						<div class="rip-wizard__feature-text">
-							<h3><?php esc_html_e( 'How long does it take?', 'reportedip-hive' ); ?></h3>
-							<p><?php esc_html_e( 'About 2 minutes. You can resume this process anytime if you get interrupted.', 'reportedip-hive' ); ?></p>
-						</div>
-					</div>
-
-					<div class="rip-wizard__feature">
-						<div class="rip-wizard__feature-icon" aria-hidden="true">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-						</div>
-						<div class="rip-wizard__feature-text">
-							<h3><?php esc_html_e( 'What do you need?', 'reportedip-hive' ); ?></h3>
-							<p><?php esc_html_e( 'Depending on the method you choose: a smartphone with an authenticator app, a passkey-capable browser (Face ID / Windows Hello / Touch ID), or just access to your email inbox.', 'reportedip-hive' ); ?></p>
-						</div>
-					</div>
-
-					<div class="rip-wizard__feature">
-						<div class="rip-wizard__feature-icon" aria-hidden="true">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-						</div>
-						<div class="rip-wizard__feature-text">
-							<h3><?php esc_html_e( 'Why am I seeing this now?', 'reportedip-hive' ); ?></h3>
-							<p><?php esc_html_e( 'Your administrator has made 2FA mandatory for your role. You can enable multiple methods at the same time so you won\'t be locked out if you lose a device.', 'reportedip-hive' ); ?></p>
+							<h3><?php esc_html_e( 'About 2 minutes', 'reportedip-hive' ); ?></h3>
+							<p><?php esc_html_e( 'Pick a method, save the recovery codes, done. Add a backup method to avoid lockouts.', 'reportedip-hive' ); ?></p>
 						</div>
 					</div>
 				</div>
@@ -234,12 +214,11 @@ if ( $grace_deadline > 0 ) {
 						</div>
 						<h3 class="rip-mode-card__title"><?php esc_html_e( 'Passkey / biometrics', 'reportedip-hive' ); ?></h3>
 						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Face ID, Touch ID, Windows Hello or a hardware key. Phishing-resistant, no app needed.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Face ID, Touch ID, Windows Hello or hardware key.', 'reportedip-hive' ); ?>
 						</p>
 						<ul class="rip-mode-card__features">
-							<li class="rip-onboarding-check"><?php esc_html_e( 'Most secure method', 'reportedip-hive' ); ?></li>
-							<li class="rip-onboarding-check"><?php esc_html_e( 'Biometric, no code entry', 'reportedip-hive' ); ?></li>
 							<li class="rip-onboarding-check"><?php esc_html_e( 'Phishing-resistant', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'No app needed', 'reportedip-hive' ); ?></li>
 						</ul>
 					</label>
 				<?php endif; ?>
@@ -252,12 +231,11 @@ if ( $grace_deadline > 0 ) {
 						</div>
 						<h3 class="rip-mode-card__title"><?php esc_html_e( 'Authenticator app (TOTP)', 'reportedip-hive' ); ?></h3>
 						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Google Authenticator, Microsoft Authenticator, Authy, 1Password, Bitwarden. Works offline.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Google Authenticator, Authy, 1Password, Bitwarden.', 'reportedip-hive' ); ?>
 						</p>
 						<ul class="rip-mode-card__features">
-							<li class="rip-onboarding-check"><?php esc_html_e( 'Usable offline', 'reportedip-hive' ); ?></li>
-							<li class="rip-onboarding-check"><?php esc_html_e( 'Very secure', 'reportedip-hive' ); ?></li>
-							<li class="rip-onboarding-check"><?php esc_html_e( 'No dependency on SMS or email', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'Works offline', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'No SMS or email needed', 'reportedip-hive' ); ?></li>
 						</ul>
 					</label>
 				<?php endif; ?>
@@ -280,8 +258,7 @@ if ( $grace_deadline > 0 ) {
 						</p>
 						<ul class="rip-mode-card__features">
 							<li class="rip-onboarding-check"><?php esc_html_e( 'No app needed', 'reportedip-hive' ); ?></li>
-							<li class="rip-onboarding-check"><?php esc_html_e( 'Easy to get started', 'reportedip-hive' ); ?></li>
-							<li>⚠ <?php esc_html_e( 'Only as secure as your email account', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-warning"><?php esc_html_e( 'Only as safe as your email account', 'reportedip-hive' ); ?></li>
 						</ul>
 					</label>
 				<?php endif; ?>
@@ -292,12 +269,12 @@ if ( $grace_deadline > 0 ) {
 						<div class="rip-mode-card__icon" aria-hidden="true">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 						</div>
-						<h3 class="rip-mode-card__title"><?php esc_html_e( 'SMS (GDPR-compliant)', 'reportedip-hive' ); ?></h3>
+						<h3 class="rip-mode-card__title"><?php esc_html_e( 'SMS (EU only)', 'reportedip-hive' ); ?></h3>
 						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Code by SMS to your mobile number. Processed only by EU providers. Less secure than the other methods (SIM-swapping risk).', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Code by SMS via an EU provider with DPA.', 'reportedip-hive' ); ?>
 						</p>
 						<ul class="rip-mode-card__features">
-							<li>⚠ <?php esc_html_e( 'Less secure than TOTP/passkey', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-warning"><?php esc_html_e( 'SIM-swapping risk — use as backup', 'reportedip-hive' ); ?></li>
 							<li class="rip-onboarding-check"><?php esc_html_e( 'EU provider, DPA', 'reportedip-hive' ); ?></li>
 						</ul>
 					</label>
@@ -305,7 +282,7 @@ if ( $grace_deadline > 0 ) {
 			</div>
 
 			<p class="rip-help-text" style="margin-top: var(--rip-space-6); text-align: center;">
-				<?php esc_html_e( 'Tip: alongside your main method, pick a fallback method (e.g. passkey + email) to avoid being locked out if you lose a device.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'Add a backup method (e.g. passkey plus email) to avoid lockouts.', 'reportedip-hive' ); ?>
 			</p>
 
 			<div class="rip-wizard__actions">
@@ -318,11 +295,11 @@ if ( $grace_deadline > 0 ) {
 
 		<!-- ==================== STEP 3 – Setup per Method ==================== -->
 		<section class="rip-wizard__step-content rip-2fa-step" data-step="3" hidden aria-labelledby="rip-2fa-step3-title">
-			<h1 id="rip-2fa-step3-title" class="rip-wizard__title" data-default-title="<?php esc_attr_e( 'Set up methods', 'reportedip-hive' ); ?>" data-done-title="<?php esc_attr_e( 'All methods set up successfully!', 'reportedip-hive' ); ?>">
+			<h1 id="rip-2fa-step3-title" class="rip-wizard__title" data-default-title="<?php esc_attr_e( 'Set up methods', 'reportedip-hive' ); ?>" data-done-title="<?php esc_attr_e( 'All methods active', 'reportedip-hive' ); ?>">
 				<?php esc_html_e( 'Set up methods', 'reportedip-hive' ); ?>
 			</h1>
-			<p class="rip-wizard__subtitle" data-default-subtitle="<?php esc_attr_e( 'Follow the instructions for each selected method. After successful verification, the next method is set up.', 'reportedip-hive' ); ?>" data-done-subtitle="<?php esc_attr_e( 'Well done! In the next step you save your recovery codes.', 'reportedip-hive' ); ?>">
-				<?php esc_html_e( 'Follow the instructions for each selected method. After successful verification, the next method is set up.', 'reportedip-hive' ); ?>
+			<p class="rip-wizard__subtitle" data-default-subtitle="<?php esc_attr_e( 'Verify each selected method to activate it.', 'reportedip-hive' ); ?>" data-done-subtitle="<?php esc_attr_e( 'Ready for recovery codes.', 'reportedip-hive' ); ?>">
+				<?php esc_html_e( 'Verify each selected method to activate it.', 'reportedip-hive' ); ?>
 			</p>
 
 			<div class="rip-2fa-setup-done" id="rip-2fa-setup-done" hidden>
@@ -331,7 +308,6 @@ if ( $grace_deadline > 0 ) {
 				</div>
 				<h2 class="rip-2fa-setup-done__title"><?php esc_html_e( 'Setup complete', 'reportedip-hive' ); ?></h2>
 				<p class="rip-2fa-setup-done__methods" id="rip-2fa-setup-done-methods"></p>
-				<p class="rip-2fa-setup-done__hint"><?php esc_html_e( 'Click "Next: recovery codes" to save your one-time codes.', 'reportedip-hive' ); ?></p>
 			</div>
 
 			<!-- TOTP-Setup-Panel -->
@@ -401,7 +377,7 @@ if ( $grace_deadline > 0 ) {
 					</div>
 				</div>
 				<p class="rip-help-text">
-					<?php esc_html_e( 'Security note: email-based 2FA is only as secure as your email account. Protect it with 2FA as well if possible.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Protect your email account with 2FA too.', 'reportedip-hive' ); ?>
 				</p>
 			</div>
 
@@ -409,14 +385,14 @@ if ( $grace_deadline > 0 ) {
 			<div class="rip-2fa-setup-panel" data-method-panel="webauthn" hidden>
 				<h2><?php esc_html_e( 'Set up passkey', 'reportedip-hive' ); ?></h2>
 				<p>
-					<?php esc_html_e( 'Use Face ID, Touch ID, Windows Hello or a hardware key (e.g. YubiKey). A passkey stays on your device — we do not store any biometric data.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Face ID, Touch ID, Windows Hello, YubiKey — biometric data stays on your device.', 'reportedip-hive' ); ?>
 				</p>
 				<div class="rip-2fa-webauthn-status" id="rip-2fa-webauthn-status" role="status"></div>
 				<button type="button" class="rip-button rip-button--primary rip-button--lg" id="rip-2fa-webauthn-register">
 					<?php esc_html_e( 'Create passkey with this device', 'reportedip-hive' ); ?>
 				</button>
 				<p class="rip-help-text">
-					<?php esc_html_e( 'Note: if your browser doesn\'t support passkeys, please pick another method (go back).', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Browser without passkey support? Pick another method.', 'reportedip-hive' ); ?>
 				</p>
 			</div>
 
@@ -431,7 +407,7 @@ if ( $grace_deadline > 0 ) {
 					</svg>
 					<div>
 						<strong><?php esc_html_e( 'Privacy notice', 'reportedip-hive' ); ?></strong>
-						<p><?php esc_html_e( 'Your phone number is stored encrypted and only shared with our EU SMS provider for delivery. SIM-swapping can compromise SMS 2FA — prefer passkey or TOTP as your main method.', 'reportedip-hive' ); ?></p>
+						<p><?php esc_html_e( 'Phone number stored encrypted, EU-only delivery. Use SMS as a backup — SIM-swapping risk.', 'reportedip-hive' ); ?></p>
 					</div>
 				</div>
 
@@ -447,13 +423,13 @@ if ( $grace_deadline > 0 ) {
 								<span class="rip-input-validity" aria-hidden="true"></span>
 							</div>
 							<p id="rip-2fa-sms-number-hint" class="rip-help-text">
-								<?php esc_html_e( 'Country code is mandatory — for example +49 151 12345678. Numbers starting with 0 (like 0176…) are not accepted.', 'reportedip-hive' ); ?>
+								<?php esc_html_e( 'Format: +49 151 12345678 (country code required).', 'reportedip-hive' ); ?>
 							</p>
 						</div>
 
 						<label class="rip-checkbox">
 							<input type="checkbox" id="rip-2fa-sms-consent">
-							<?php esc_html_e( 'I consent to processing of my phone number by the configured EU SMS provider for authentication.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'I consent to my phone number being shared with the EU SMS provider for authentication.', 'reportedip-hive' ); ?>
 						</label>
 
 						<button type="button" class="rip-button rip-button--primary" id="rip-2fa-sms-send" disabled data-default-label="<?php esc_attr_e( 'Send confirmation code by SMS', 'reportedip-hive' ); ?>">
@@ -489,7 +465,7 @@ if ( $grace_deadline > 0 ) {
 		<section class="rip-wizard__step-content rip-2fa-step" data-step="4" hidden aria-labelledby="rip-2fa-step4-title">
 			<h1 id="rip-2fa-step4-title" class="rip-wizard__title"><?php esc_html_e( 'Save recovery codes', 'reportedip-hive' ); ?></h1>
 			<p class="rip-wizard__subtitle">
-				<?php esc_html_e( 'If you lose your device or can\'t access your chosen methods, you can sign in with one of these one-time codes.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'Backup codes for sign-in if you lose access to your methods.', 'reportedip-hive' ); ?>
 			</p>
 
 			<div class="rip-privacy-notice rip-privacy-notice--warning" role="note">
@@ -499,8 +475,8 @@ if ( $grace_deadline > 0 ) {
 					<line x1="12" y1="17" x2="12.01" y2="17"/>
 				</svg>
 				<div>
-					<strong><?php esc_html_e( 'Important — these codes are your fallback.', 'reportedip-hive' ); ?></strong>
-					<p><?php esc_html_e( 'Each code can be used only once. Store them safely — password manager, safe, or printed. Do NOT store them in the same password manager as your WordPress password.', 'reportedip-hive' ); ?></p>
+					<strong><?php esc_html_e( 'These codes are your fallback.', 'reportedip-hive' ); ?></strong>
+					<p><?php esc_html_e( 'Each code is one-time use. Store them safely — separate from your WordPress password.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
@@ -561,40 +537,31 @@ if ( $grace_deadline > 0 ) {
 					</svg>
 				</div>
 
-				<h1 id="rip-2fa-step5-title" class="rip-wizard__title"><?php esc_html_e( 'Done — your account is now doubly secure!', 'reportedip-hive' ); ?></h1>
+				<h1 id="rip-2fa-step5-title" class="rip-wizard__title"><?php esc_html_e( 'Done — your account is now doubly secure', 'reportedip-hive' ); ?></h1>
 				<p class="rip-wizard__subtitle">
-					<?php esc_html_e( 'From now on you\'ll need your second factor in addition to your password on sign-in. Thanks for taking the time!', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'You will be asked for the second factor on your next sign-in.', 'reportedip-hive' ); ?>
 				</p>
 
 				<div class="rip-2fa-celebrate__stats">
 					<div class="rip-2fa-celebrate__stat">
 						<div class="rip-2fa-celebrate__stat-value" id="rip-2fa-summary-methods">—</div>
-						<div class="rip-2fa-celebrate__stat-label"><?php esc_html_e( 'Enabled methods', 'reportedip-hive' ); ?></div>
+						<div class="rip-2fa-celebrate__stat-label"><?php esc_html_e( 'Methods', 'reportedip-hive' ); ?></div>
 					</div>
 					<div class="rip-2fa-celebrate__stat">
 						<div class="rip-2fa-celebrate__stat-value" id="rip-2fa-summary-recovery">—</div>
 						<div class="rip-2fa-celebrate__stat-label"><?php esc_html_e( 'Recovery codes', 'reportedip-hive' ); ?></div>
 					</div>
-					<div class="rip-2fa-celebrate__stat">
-						<div class="rip-2fa-celebrate__stat-value">∞</div>
-						<div class="rip-2fa-celebrate__stat-label"><?php esc_html_e( 'fewer sleepless nights', 'reportedip-hive' ); ?></div>
-					</div>
 				</div>
 
 				<div class="rip-2fa-celebrate__tips">
-					<h3><?php esc_html_e( 'What else to know', 'reportedip-hive' ); ?></h3>
 					<ul>
 						<li>
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-							<?php esc_html_e( 'You will be asked for your second factor on your next sign-in.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Trust a device to skip the code on the same browser.', 'reportedip-hive' ); ?>
 						</li>
 						<li>
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-							<?php esc_html_e( 'You can remember trusted devices so you don\'t need to enter a code on every sign-in.', 'reportedip-hive' ); ?>
-						</li>
-						<li>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-							<?php esc_html_e( 'Under Profile → Security you can add or remove methods any time.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Add or remove methods any time under Profile → Security.', 'reportedip-hive' ); ?>
 						</li>
 					</ul>
 				</div>

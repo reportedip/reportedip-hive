@@ -1837,25 +1837,27 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					<th scope="row"><?php esc_html_e( 'Recovery Codes', 'reportedip-hive' ); ?></th>
 					<td>
 						<?php if ( ReportedIP_Hive_Two_Factor_Recovery::is_exhausted( $user->ID ) ) : ?>
-							<div class="rip-2fa-warning rip-2fa-warning--critical">
-								<svg class="rip-2fa-warning__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-								<span><?php esc_html_e( 'All recovery codes are used up! Generate new codes.', 'reportedip-hive' ); ?></span>
-							</div>
+							<span class="rip-badge rip-badge--danger"><?php esc_html_e( 'All codes used — generate new', 'reportedip-hive' ); ?></span>
 						<?php elseif ( ReportedIP_Hive_Two_Factor_Recovery::is_low( $user->ID ) ) : ?>
-							<div class="rip-2fa-warning rip-2fa-warning--low">
-								<svg class="rip-2fa-warning__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-								<span>
-									<?php
-									printf(
-										/* translators: %d: remaining codes */
-										esc_html__( 'Only %d recovery codes left.', 'reportedip-hive' ),
-										(int) $recovery_count
-									);
-									?>
-								</span>
-							</div>
+							<span class="rip-badge rip-badge--warning">
+								<?php
+								printf(
+									/* translators: %d: remaining codes */
+									esc_html__( '%d left — generate new', 'reportedip-hive' ),
+									(int) $recovery_count
+								);
+								?>
+							</span>
 						<?php else : ?>
-							<span><?php printf( /* translators: %d: remaining codes */ esc_html__( '%d codes remaining', 'reportedip-hive' ), (int) $recovery_count ); ?></span>
+							<span class="rip-badge rip-badge--neutral">
+								<?php
+								printf(
+									/* translators: %d: remaining codes */
+									esc_html__( '%d available', 'reportedip-hive' ),
+									(int) $recovery_count
+								);
+								?>
+							</span>
 						<?php endif; ?>
 						<br>
 						<button type="button" class="button" id="rip-2fa-regenerate-recovery" style="margin-top: 8px;">
