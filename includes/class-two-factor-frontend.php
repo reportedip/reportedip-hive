@@ -118,6 +118,15 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	private static $available_memo = null;
 
 	/**
+	 * Per-request memo for the resolved slugs. Read on every Hide-Login
+	 * bypass check, so caching them once spares two `get_option()` round-
+	 * trips per request on the frontend hot path.
+	 *
+	 * @var array{challenge:string,setup:string}|null
+	 */
+	private static $slug_memo = null;
+
+	/**
 	 * Wire the WordPress hooks. Idempotent — calling twice is safe.
 	 *
 	 * @return void
@@ -141,6 +150,9 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 */
 	public static function maybe_enqueue_blocks_redirect() {
 		if ( ! self::is_available() ) {
+			return;
+		}
+		if ( ! is_singular() ) {
 			return;
 		}
 		if ( ! function_exists( 'has_block' ) ) {
@@ -202,6 +214,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 */
 	public static function flush_memo() {
 		self::$available_memo = null;
+		self::$slug_memo      = null;
 	}
 
 	/**
@@ -211,7 +224,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * @return string
 	 */
 	public static function get_challenge_slug() {
-		return self::sanitize_slug( get_option( self::OPT_CHALLENGE_SLUG, self::DEFAULT_CHALLENGE_SLUG ), self::DEFAULT_CHALLENGE_SLUG );
+		return self::resolve_slugs()['challenge'];
 	}
 
 	/**
@@ -220,7 +233,26 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * @return string
 	 */
 	public static function get_setup_slug() {
-		return self::sanitize_slug( get_option( self::OPT_SETUP_SLUG, self::DEFAULT_SETUP_SLUG ), self::DEFAULT_SETUP_SLUG );
+		return self::resolve_slugs()['setup'];
+	}
+
+	/**
+	 * Resolve and memoise both slugs in one go. Hide-Login bypass and
+	 * URL helpers hit this on every frontend request, so the round-trip
+	 * to `get_option()` × 2 plus two `sanitize_slug()` calls is folded
+	 * into a single per-request lookup.
+	 *
+	 * @return array{challenge:string,setup:string}
+	 */
+	private static function resolve_slugs() {
+		if ( null !== self::$slug_memo ) {
+			return self::$slug_memo;
+		}
+		self::$slug_memo = array(
+			'challenge' => self::sanitize_slug( get_option( self::OPT_CHALLENGE_SLUG, self::DEFAULT_CHALLENGE_SLUG ), self::DEFAULT_CHALLENGE_SLUG ),
+			'setup'     => self::sanitize_slug( get_option( self::OPT_SETUP_SLUG, self::DEFAULT_SETUP_SLUG ), self::DEFAULT_SETUP_SLUG ),
+		);
+		return self::$slug_memo;
 	}
 
 	/**
