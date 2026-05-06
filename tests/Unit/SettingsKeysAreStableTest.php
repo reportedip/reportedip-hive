@@ -109,6 +109,8 @@ class SettingsKeysAreStableTest extends TestCase {
 			'reportedip_hive_2fa_frontend_customer_optional',
 			'reportedip_hive_2fa_frontend_enabled',
 			'reportedip_hive_2fa_frontend_onboarding',
+			'reportedip_hive_2fa_frontend_setup_slug',
+			'reportedip_hive_2fa_frontend_slug',
 			'reportedip_hive_2fa_ip_allowlist',
 			'reportedip_hive_2fa_max_skips',
 			'reportedip_hive_2fa_notify_new_device',

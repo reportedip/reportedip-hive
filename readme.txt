@@ -61,6 +61,7 @@ Plus:
 * **Multi-stage 2FA rate-limit** — 3/5/10/15 fails trigger 30 s/5 m/30 m/1 h delays; the 15th IP-level fail graduates the IP to a real progressive block (so the brute-forcer no longer just times out and tries again hourly)
 * **Role-based enforcement** with grace period (default 7 days) and skip counter
 * **Frontend onboarding** — branded 5-step setup wizard for users on the front-end (e.g. WooCommerce account)
+* **WooCommerce frontend 2FA (Professional plan)** — second factor renders inside the active storefront theme on My Account, classic checkout and the WooCommerce blocks, with a themed onboarding page for Customer / Subscriber roles. Cart and checkout state survive the redirect roundtrip; the trusted-device cookie is shared with the wp-login flow so a checkout-side "Trust this device" silences the next backend login as well. Soft-disables on a tier downgrade — existing customer secrets stay valid, only new onboardings are blocked.
 * **Branded login page** option, custom email subject + body, IP allowlist for 2FA bypass
 
 = Progressive block escalation =

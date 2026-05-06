@@ -38,7 +38,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | 404 / scanner | 12 / 2 min, plus instant block on known-bad paths | `.env`, `wp-config.bak`, `/.git/` |
 | Geographic anomaly | first occurrence triggers fresh 2FA | Optionally revokes trusted-device cookies |
 | Password policy | min length, character classes, optional HIBP k-anonymity | |
-| WooCommerce login | checkout + my-account forms tracked separately | |
+| WooCommerce login | checkout + my-account forms tracked separately | Optional themed frontend 2FA on Professional plan |
 | Cookie-banner consent endpoints | always-bypassed | Real Cookie Banner, Complianz, Borlabs, CookieYes baked in |
 
 ### Two-Factor Authentication — full suite, all included
@@ -49,6 +49,8 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 - **SMS OTP** — EU-only providers (Sipgate, MessageBird, seven.io) with explicit DPA confirmation.
 
 Plus 10 single-use recovery codes, trusted-device tokens (default 30 days), multi-stage 2FA rate-limit (3/5/10/15 fails → 30 s/5 m/30 m/1 h delays, 15th fail graduates to a real progressive block), role-based enforcement with grace period, frontend onboarding wizard, branded login page option, IP allowlist for 2FA bypass.
+
+**WooCommerce frontend 2FA — Professional plan and higher.** When enabled, customers signing in through `[woocommerce_my_account]`, the classic checkout, or the WooCommerce Cart / Checkout blocks see the second factor inside the active storefront theme instead of bouncing to wp-login.php. Customer / Subscriber roles get a themed onboarding wizard on a dedicated slug. Cart and checkout state survive the redirect roundtrip; the trusted-device cookie is shared with the wp-login flow. A tier downgrade soft-disables the module — existing customer secrets stay valid, only new onboardings are blocked.
 
 ### Progressive block escalation
 

@@ -1229,7 +1229,7 @@ class ReportedIP_Hive_Two_Factor {
 				? (string) wc_get_page_permalink( 'myaccount' )
 				: home_url( '/' );
 
-			get_header();
+			self::open_theme_frame();
 			?>
 			<main class="rip-frontend-2fa rip-frontend-2fa--session-expired" id="rip-frontend-2fa">
 				<div class="rip-frontend-2fa__panel">
@@ -1243,7 +1243,7 @@ class ReportedIP_Hive_Two_Factor {
 				</div>
 			</main>
 			<?php
-			get_footer();
+			self::close_theme_frame();
 			return;
 		}
 
@@ -1333,9 +1333,63 @@ class ReportedIP_Hive_Two_Factor {
 		}
 
 		$rip_2fa = $template_data;
-		get_header();
+		self::open_theme_frame();
 		include $template;
-		get_footer();
+		self::close_theme_frame();
+	}
+
+	/**
+	 * Open a minimal HTML frame that loads the active theme's stylesheet
+	 * and emits `wp_head()` so design tokens, fonts and analytics keep
+	 * working — without calling `get_header()`.
+	 *
+	 * Using `get_header()` triggers a deprecation notice on Block Themes
+	 * (twentytwentyfive, twentytwentyfour, …) because they ship template
+	 * parts under `templates/` instead of a classic `header.php`. Block
+	 * themes also render their full chrome through `block_template_part`
+	 * which is not appropriate for a self-contained interstitial like
+	 * the 2FA challenge. The custom frame keeps the visual identity of
+	 * the storefront (body class, theme styles) without dragging in the
+	 * navigation, breadcrumbs and footer widgets the customer does not
+	 * need at this step.
+	 *
+	 * @return void
+	 * @since 1.7.0
+	 */
+	public static function open_theme_frame() {
+		$body_classes = array( 'rip-frontend-2fa-page' );
+		if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
+			$body_classes[] = 'wp-block-theme';
+		}
+		?>
+<!doctype html>
+<html <?php language_attributes(); ?>>
+<head>
+<meta charset="<?php bloginfo( 'charset' ); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title><?php echo esc_html( wp_get_document_title() ); ?></title>
+		<?php wp_head(); ?>
+</head>
+<body <?php body_class( $body_classes ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+		<?php wp_body_open(); ?>
+<div class="rip-frontend-2fa-frame">
+		<?php
+	}
+
+	/**
+	 * Close the minimal theme-frame opened by {@see self::open_theme_frame()}.
+	 *
+	 * @return void
+	 * @since 1.7.0
+	 */
+	public static function close_theme_frame() {
+		?>
+</div>
+		<?php wp_footer(); ?>
+</body>
+</html>
+		<?php
 	}
 
 	/**

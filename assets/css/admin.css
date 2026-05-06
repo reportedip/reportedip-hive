@@ -906,3 +906,81 @@ code.ip-address {
 .rip-relay-highlight--sms {
     background: var(--rip-success-soft, #ECFDF5);
 }
+
+/* Frontend-2FA settings: locked-state, slug input + Pro-feature card. */
+.rip-settings-section--locked .rip-fieldset {
+    opacity: 0.55;
+}
+
+.rip-settings-section--locked .rip-fieldset .rip-toggle,
+.rip-settings-section--locked .rip-fieldset .rip-input,
+.rip-settings-section--locked .rip-fieldset .rip-input-prefix {
+    cursor: not-allowed;
+}
+
+.rip-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+.rip-fieldset[disabled] .rip-input,
+.rip-fieldset[disabled] .rip-input-prefix__prefix,
+.rip-fieldset[disabled] .rip-input-prefix__suffix {
+    color: var(--rip-gray-400, #9ca3af);
+    background: var(--rip-gray-50, #f9fafb);
+}
+
+.rip-input-prefix {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid var(--rip-gray-300, #d1d5db);
+    background: #fff;
+    overflow: hidden;
+    max-width: 480px;
+    width: 100%;
+}
+
+.rip-input-prefix .rip-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0.5rem 0.75rem;
+    font-family: var(--rip-font-mono, ui-monospace, monospace);
+    font-size: 0.9375rem;
+    min-width: 0;
+}
+
+.rip-input-prefix .rip-input:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--rip-primary, #4f46e5);
+}
+
+.rip-input-prefix__prefix,
+.rip-input-prefix__suffix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    background: var(--rip-gray-50, #f9fafb);
+    border-left: 1px solid var(--rip-gray-200, #e5e7eb);
+    color: var(--rip-gray-500, #6b7280);
+    font-family: var(--rip-font-mono, ui-monospace, monospace);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.rip-input-prefix__prefix {
+    border-left: none;
+    border-right: 1px solid var(--rip-gray-200, #e5e7eb);
+}
+
+.rip-2fa-frontend-pro-card ul {
+    list-style: disc;
+    padding-left: 1.25em;
+}
+
+.rip-2fa-frontend-pro-card li {
+    margin: 0.25rem 0;
+    color: var(--rip-gray-800, #1f2937);
+}

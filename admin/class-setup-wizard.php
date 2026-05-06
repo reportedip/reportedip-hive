@@ -569,14 +569,17 @@ class ReportedIP_Hive_Setup_Wizard {
 					</div>
 				</div>
 				<?php if ( $has_woocommerce ) : ?>
-				<div class="rip-wizard__feature rip-wizard__feature--woocommerce">
+				<div class="rip-wizard__feature rip-wizard__feature--woocommerce rip-wizard__feature--full">
 					<div class="rip-wizard__feature-icon">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 002 1.6h9.7a2 2 0 002-1.6L23 6H6"/></svg>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
 					</div>
 					<div class="rip-wizard__feature-text">
-						<strong><?php esc_html_e( 'WooCommerce login & checkout protection', 'reportedip-hive' ); ?></strong>
-						<span><?php esc_html_e( 'Hardens shop login, account pages and checkout against credential stuffing and bot attacks.', 'reportedip-hive' ); ?></span>
-						<span class="rip-tier-badge rip-tier-badge--business"><?php esc_html_e( 'Business', 'reportedip-hive' ); ?></span>
+						<strong><?php esc_html_e( 'WooCommerce login, checkout & frontend 2FA', 'reportedip-hive' ); ?></strong>
+						<span><?php esc_html_e( 'Hardens shop login, My Account and checkout against credential stuffing — plus optional second-factor inside the storefront theme so customers never get bounced to wp-login.php.', 'reportedip-hive' ); ?></span>
+						<span class="rip-method-card__badges">
+							<span class="rip-tier-badge rip-tier-badge--free"><?php esc_html_e( 'Login monitoring: included', 'reportedip-hive' ); ?></span>
+							<span class="rip-tier-badge rip-tier-badge--professional"><?php esc_html_e( 'Frontend 2FA: PRO', 'reportedip-hive' ); ?></span>
+						</span>
 					</div>
 				</div>
 				<?php endif; ?>
@@ -1190,9 +1193,9 @@ class ReportedIP_Hive_Setup_Wizard {
 			$saved_frontend_enabled = (bool) get_option( 'reportedip_hive_2fa_frontend_enabled', false );
 			?>
 			<?php if ( $has_woocommerce ) : ?>
-				<div class="rip-config-card" id="rip-step4-frontend">
+				<div class="rip-config-card<?php echo $frontend_locked ? ' rip-config-card--disabled' : ''; ?>" id="rip-step4-frontend">
 					<div class="rip-config-card__header">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 						<h3><?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?></h3>
 						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
 							&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $frontend_status, array( 'label' => __( 'PRO', 'reportedip-hive' ) ) ); ?>
@@ -1200,8 +1203,16 @@ class ReportedIP_Hive_Setup_Wizard {
 					</div>
 					<div class="rip-config-card__body">
 						<p class="rip-help-block">
-							<?php esc_html_e( 'Render the second factor inside the storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks. Without this, customers get bounced to wp-login.php for the challenge — a clear AI-watermarked break in the storefront experience.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Renders the second factor inside the active storefront theme when a customer signs in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
 						</p>
+						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
+							<ul class="rip-tier-card__list">
+								<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
+								<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
+								<li><?php esc_html_e( 'Cart and checkout state survive the redirect roundtrip', 'reportedip-hive' ); ?></li>
+								<li><?php esc_html_e( 'WC Blocks Cart / Checkout error redirect listener', 'reportedip-hive' ); ?></li>
+							</ul>
+						<?php endif; ?>
 						<label class="rip-toggle">
 							<input type="checkbox"
 								name="2fa_frontend_enabled"
@@ -1215,7 +1226,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						</label>
 						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
 							<p class="rip-help-block">
-								<?php esc_html_e( 'Available with the Professional plan or higher. You can finish the wizard now and unlock this later from the 2FA settings tab.', 'reportedip-hive' ); ?>
+								<?php esc_html_e( 'Available with the Professional plan or higher. Finish the wizard now and unlock this later from 2FA settings → Frontend login.', 'reportedip-hive' ); ?>
 							</p>
 						<?php endif; ?>
 					</div>

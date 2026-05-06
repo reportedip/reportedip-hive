@@ -265,6 +265,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_password_reset_block_email_only" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_frontend_enabled" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_frontend_customer_optional" value="0" />
+			<input type="hidden" name="reportedip_hive_2fa_frontend_slug" value="" />
+			<input type="hidden" name="reportedip_hive_2fa_frontend_setup_slug" value="" />
 
 			<!-- Status Banner -->
 			<div class="rip-settings-section">
@@ -476,10 +478,13 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			$rip_frontend_locked     = ! $rip_frontend_status['available'];
 			$rip_frontend_soft_off   = (int) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_SOFT_DISABLED, 0 ) > 0;
 			$rip_frontend_disabled   = $rip_frontend_locked ? ' disabled' : '';
+			$rip_challenge_slug      = ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug();
+			$rip_setup_slug          = ReportedIP_Hive_Two_Factor_Frontend::get_setup_slug();
 			$rip_challenge_url_label = ReportedIP_Hive_Two_Factor_Frontend::challenge_url();
 			$rip_setup_url_label     = ReportedIP_Hive_Two_Factor_Frontend::setup_url();
+			$rip_home_prefix         = trailingslashit( home_url( '/' ) );
 			?>
-			<div class="rip-settings-section" id="rip-2fa-frontend-section" data-rip-2fa-frontend>
+			<div class="rip-settings-section <?php echo $rip_frontend_locked ? 'rip-settings-section--locked' : ''; ?>" id="rip-2fa-frontend-section" data-rip-2fa-frontend>
 				<h2 class="rip-settings-section__title">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 					<?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?>
@@ -488,8 +493,29 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					<?php endif; ?>
 				</h2>
 				<p class="rip-settings-section__desc">
-					<?php esc_html_e( 'Render the second factor inside the active theme when a customer signs in via My Account, classic checkout, or the WooCommerce blocks. Without this, customers get bounced to wp-login.php for the challenge.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
 				</p>
+
+				<?php if ( $rip_frontend_locked && 'tier' === $rip_frontend_status['reason'] ) : ?>
+					<div class="rip-alert rip-alert--info rip-2fa-frontend-pro-card">
+						<p style="margin:0 0 var(--rip-space-2);font-weight:600;">
+							<?php esc_html_e( 'Available with the Professional plan and higher', 'reportedip-hive' ); ?>
+						</p>
+						<ul style="margin:0 0 var(--rip-space-3);padding-left:1.25em;">
+							<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
+							<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
+							<li><?php esc_html_e( 'Cart and checkout state survive the redirect roundtrip', 'reportedip-hive' ); ?></li>
+							<li><?php esc_html_e( 'WC Blocks Cart / Checkout error redirect listener', 'reportedip-hive' ); ?></li>
+							<li><?php esc_html_e( 'Trusted-device cookie shared with the wp-login flow', 'reportedip-hive' ); ?></li>
+							<li><?php esc_html_e( 'Hide-Login bypass + cache-plugin-safe headers', 'reportedip-hive' ); ?></li>
+						</ul>
+						<p style="margin:0;">
+							<a class="rip-button rip-button--primary" href="<?php echo esc_url( defined( 'REPORTEDIP_UPGRADE_URL' ) ? REPORTEDIP_UPGRADE_URL : 'https://reportedip.de/pricing/' ); ?>" target="_blank" rel="noopener noreferrer">
+								<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
+							</a>
+						</p>
+					</div>
+				<?php endif; ?>
 
 				<?php if ( ! $rip_wc_active ) : ?>
 					<div class="rip-alert rip-alert--info">
@@ -520,59 +546,95 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					</div>
 				<?php endif; ?>
 
-				<div class="rip-form-group">
-					<label class="rip-toggle">
-						<input type="checkbox"
-							class="rip-toggle__input"
-							name="reportedip_hive_2fa_frontend_enabled"
-							value="1"
-							<?php checked( $rip_frontend_enabled ); ?>
-							<?php echo esc_attr( $rip_frontend_disabled ); ?> />
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label">
-							<?php esc_html_e( 'Render the 2FA challenge inside the storefront theme', 'reportedip-hive' ); ?>
-						</span>
-					</label>
-					<p class="rip-help-text">
-						<?php
-						printf(
-							/* translators: %s: absolute URL of the challenge slug */
-							esc_html__( 'Routes WooCommerce frontend logins through %s instead of wp-login.php.', 'reportedip-hive' ),
-							'<code>' . esc_html( $rip_challenge_url_label ) . '</code>'
-						);
-						?>
-					</p>
-				</div>
+				<fieldset class="rip-fieldset" <?php echo $rip_frontend_locked ? 'disabled' : ''; ?>>
+					<legend class="screen-reader-text"><?php esc_html_e( 'Frontend 2FA configuration', 'reportedip-hive' ); ?></legend>
 
-				<div class="rip-form-group">
-					<label class="rip-toggle">
-						<input type="checkbox"
-							class="rip-toggle__input"
-							name="reportedip_hive_2fa_frontend_customer_optional"
-							value="1"
-							<?php checked( $rip_customer_optional ); ?>
-							<?php echo esc_attr( $rip_frontend_disabled ); ?> />
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label">
-							<?php esc_html_e( 'Let customers opt in to 2FA from My Account', 'reportedip-hive' ); ?>
-						</span>
-					</label>
-					<p class="rip-help-text">
-						<?php esc_html_e( 'When enabled, Customer / Subscriber roles see the same self-service setup wizard as administrators. Role-based enforcement above still applies on top.', 'reportedip-hive' ); ?>
-					</p>
-				</div>
+					<div class="rip-form-group">
+						<label class="rip-toggle">
+							<input type="checkbox"
+								class="rip-toggle__input"
+								name="reportedip_hive_2fa_frontend_enabled"
+								value="1"
+								<?php checked( $rip_frontend_enabled ); ?> />
+							<span class="rip-toggle__slider"></span>
+							<span class="rip-toggle__label">
+								<?php esc_html_e( 'Render the 2FA challenge inside the storefront theme', 'reportedip-hive' ); ?>
+							</span>
+						</label>
+						<p class="rip-help-text">
+							<?php esc_html_e( 'When off, WooCommerce frontend logins still get challenged — but the challenge falls back to wp-login.php.', 'reportedip-hive' ); ?>
+						</p>
+					</div>
 
-				<div class="rip-form-group">
-					<p class="rip-help-text">
-						<?php
-						printf(
-							/* translators: %s: absolute URL of the setup slug */
-							esc_html__( 'Customer onboarding wizard: %s', 'reportedip-hive' ),
-							'<code>' . esc_html( $rip_setup_url_label ) . '</code>'
-						);
-						?>
-					</p>
-				</div>
+					<div class="rip-form-group">
+						<label class="rip-toggle">
+							<input type="checkbox"
+								class="rip-toggle__input"
+								name="reportedip_hive_2fa_frontend_customer_optional"
+								value="1"
+								<?php checked( $rip_customer_optional ); ?> />
+							<span class="rip-toggle__slider"></span>
+							<span class="rip-toggle__label">
+								<?php esc_html_e( 'Let customers opt in to 2FA from My Account', 'reportedip-hive' ); ?>
+							</span>
+						</label>
+						<p class="rip-help-text">
+							<?php esc_html_e( 'When enabled, Customer / Subscriber roles see the same self-service setup wizard as administrators. Role-based enforcement above still applies on top.', 'reportedip-hive' ); ?>
+						</p>
+					</div>
+
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_2fa_frontend_slug"><?php esc_html_e( 'Challenge page slug', 'reportedip-hive' ); ?></label>
+						<div class="rip-input-prefix">
+							<span class="rip-input-prefix__prefix"><?php echo esc_html( $rip_home_prefix ); ?></span>
+							<input type="text"
+								id="reportedip_hive_2fa_frontend_slug"
+								name="reportedip_hive_2fa_frontend_slug"
+								class="rip-input"
+								value="<?php echo esc_attr( $rip_challenge_slug ); ?>"
+								pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
+								maxlength="50"
+								spellcheck="false"
+								autocomplete="off" />
+							<span class="rip-input-prefix__suffix">/</span>
+						</div>
+						<p class="rip-help-text">
+							<?php
+							printf(
+								/* translators: %s: absolute URL of the configured challenge slug */
+								esc_html__( 'Where logged-in customers land for the second factor. Current URL: %s', 'reportedip-hive' ),
+								'<code>' . esc_html( $rip_challenge_url_label ) . '</code>'
+							);
+							?>
+						</p>
+					</div>
+
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_2fa_frontend_setup_slug"><?php esc_html_e( 'Setup page slug (onboarding)', 'reportedip-hive' ); ?></label>
+						<div class="rip-input-prefix">
+							<span class="rip-input-prefix__prefix"><?php echo esc_html( $rip_home_prefix ); ?></span>
+							<input type="text"
+								id="reportedip_hive_2fa_frontend_setup_slug"
+								name="reportedip_hive_2fa_frontend_setup_slug"
+								class="rip-input"
+								value="<?php echo esc_attr( $rip_setup_slug ); ?>"
+								pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
+								maxlength="50"
+								spellcheck="false"
+								autocomplete="off" />
+							<span class="rip-input-prefix__suffix">/</span>
+						</div>
+						<p class="rip-help-text">
+							<?php
+							printf(
+								/* translators: %s: absolute URL of the setup slug */
+								esc_html__( 'Customer onboarding wizard. Current URL: %s', 'reportedip-hive' ),
+								'<code>' . esc_html( $rip_setup_url_label ) . '</code>'
+							);
+							?>
+						</p>
+					</div>
+				</fieldset>
 			</div>
 
 			<!-- Login reminder for users without 2FA -->
@@ -936,6 +998,22 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_frontend_slug',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_frontend_challenge_slug' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_frontend_setup_slug',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_frontend_setup_slug' ),
 			)
 		);
 		register_setting(
@@ -1471,6 +1549,83 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		}
 
 		return $desired ? '1' : '';
+	}
+
+	/**
+	 * Sanitize the configurable challenge slug.
+	 *
+	 * Reuses {@see ReportedIP_Hive_Two_Factor_Frontend::sanitize_slug()}
+	 * so the same reserved-list / shape rules that protect the rewrite
+	 * layer also protect the settings save. Empty / invalid input falls
+	 * back to the existing value rather than the hardcoded default — a
+	 * site that already personalised the slug should not silently revert
+	 * to `reportedip-hive-2fa` when the admin saves something invalid.
+	 *
+	 * Flushes the rewrite rules and the slug memo when the value
+	 * changes so the new URL becomes routable on the next request.
+	 *
+	 * @param mixed $input Raw form value.
+	 * @return string
+	 * @since  1.7.0
+	 */
+	public static function sanitize_frontend_challenge_slug( $input ) {
+		$current = ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug();
+		$clean   = ReportedIP_Hive_Two_Factor_Frontend::sanitize_slug( $input, $current );
+
+		$other = ReportedIP_Hive_Two_Factor_Frontend::get_setup_slug();
+		if ( $clean === $other ) {
+			if ( function_exists( 'add_settings_error' ) ) {
+				add_settings_error(
+					'reportedip_hive_2fa_settings',
+					'reportedip_hive_2fa_frontend_slug_clash',
+					__( 'The challenge and setup slugs must differ. Reverted to the previous value.', 'reportedip-hive' ),
+					'error'
+				);
+			}
+			$clean = $current;
+		}
+
+		if ( $clean !== $current ) {
+			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
+			if ( function_exists( 'flush_rewrite_rules' ) ) {
+				flush_rewrite_rules( false );
+			}
+		}
+		return $clean;
+	}
+
+	/**
+	 * Sanitize the configurable setup / onboarding slug. Mirror of
+	 * {@see self::sanitize_frontend_challenge_slug()}.
+	 *
+	 * @param mixed $input Raw form value.
+	 * @return string
+	 * @since  1.7.0
+	 */
+	public static function sanitize_frontend_setup_slug( $input ) {
+		$current = ReportedIP_Hive_Two_Factor_Frontend::get_setup_slug();
+		$clean   = ReportedIP_Hive_Two_Factor_Frontend::sanitize_slug( $input, $current );
+
+		$other = ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug();
+		if ( $clean === $other ) {
+			if ( function_exists( 'add_settings_error' ) ) {
+				add_settings_error(
+					'reportedip_hive_2fa_settings',
+					'reportedip_hive_2fa_frontend_setup_slug_clash',
+					__( 'The setup and challenge slugs must differ. Reverted to the previous value.', 'reportedip-hive' ),
+					'error'
+				);
+			}
+			$clean = $current;
+		}
+
+		if ( $clean !== $current ) {
+			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
+			if ( function_exists( 'flush_rewrite_rules' ) ) {
+				flush_rewrite_rules( false );
+			}
+		}
+		return $clean;
 	}
 
 	public static function sanitize_ip_allowlist( $input ) {

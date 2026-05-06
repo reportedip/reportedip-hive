@@ -1706,7 +1706,18 @@ body.rip-wizard-page select.rip-select option {
 }
 
 .rip-wizard__feature--woocommerce .rip-wizard__feature-icon {
-    color: var(--rip-woocommerce);
+    background: var(--rip-woocommerce, #7f54b3);
+    color: #fff;
+}
+
+.rip-wizard__feature--full {
+    grid-column: 1 / -1;
+}
+
+.rip-tier-badge--free {
+    background: var(--rip-gray-100, #f3f4f6);
+    color: var(--rip-gray-700, #374151);
+    border: 1px solid var(--rip-gray-200, #e5e7eb);
 }
 
 /* Badge row on a method card (e.g. SMS: PRO + "Particularly secure"). */
