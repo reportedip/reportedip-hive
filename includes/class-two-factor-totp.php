@@ -116,7 +116,7 @@ class ReportedIP_Hive_Two_Factor_TOTP {
 	 * @return bool True if the code is valid.
 	 */
 	public static function verify_code( $secret, $code, $window = 1 ) {
-		if ( ! is_string( $code ) || ! preg_match( '/^\d{' . self::CODE_LENGTH . '}$/', $code ) ) {
+		if ( ! preg_match( '/^\d{' . self::CODE_LENGTH . '}$/', $code ) ) {
 			return false;
 		}
 
@@ -215,7 +215,7 @@ class ReportedIP_Hive_Two_Factor_TOTP {
 	 * @return string|false Binary data or false on invalid input.
 	 */
 	public static function base32_decode( $input ) {
-		if ( ! is_string( $input ) || $input === '' ) {
+		if ( $input === '' ) {
 			return false;
 		}
 

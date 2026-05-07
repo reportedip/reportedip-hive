@@ -975,12 +975,22 @@ code.ip-address {
     border-right: 1px solid var(--rip-gray-200, #e5e7eb);
 }
 
-.rip-2fa-frontend-pro-card ul {
+.rip-pro-upsell__title {
+    margin: 0 0 var(--rip-space-2, 0.5rem);
+    font-weight: 600;
+}
+
+.rip-pro-upsell__features {
     list-style: disc;
+    margin: 0 0 var(--rip-space-3, 0.75rem);
     padding-left: 1.25em;
 }
 
-.rip-2fa-frontend-pro-card li {
+.rip-pro-upsell__features li {
     margin: 0.25rem 0;
     color: var(--rip-gray-800, #1f2937);
+}
+
+.rip-pro-upsell__cta {
+    margin: 0;
 }

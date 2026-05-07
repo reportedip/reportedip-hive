@@ -84,7 +84,7 @@ class ReportedIP_Hive_Two_Factor_WC_Notice {
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return false;
 		}
-		if ( ! get_option( self::OPT_ENABLED, true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true ) ) {
 			return false;
 		}
 		if ( 0 === (int) $user_id ) {

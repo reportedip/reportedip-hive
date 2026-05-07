@@ -58,10 +58,7 @@ class ReportedIP_Hive_Geo_Anomaly {
 	public function on_login( $user_login, $user ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		unset( $user_login );
 
-		if ( ! get_option( 'reportedip_hive_monitor_geo_anomaly', true ) ) {
-			return;
-		}
-		if ( ! ( $user instanceof WP_User ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_geo_anomaly', true ) ) {
 			return;
 		}
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
@@ -86,12 +83,12 @@ class ReportedIP_Hive_Geo_Anomaly {
 
 		$history = $this->get_history( $user->ID );
 		$now     = time();
-		$cutoff  = $now - max( 1, (int) get_option( 'reportedip_hive_geo_window_days', 90 ) ) * DAY_IN_SECONDS;
+		$cutoff  = $now - max( 1, (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_geo_window_days', 90 ) ) * DAY_IN_SECONDS;
 
 		$history = array_filter(
 			$history,
 			static function ( $entry ) use ( $cutoff ) {
-				return is_array( $entry ) && (int) ( $entry['t'] ?? 0 ) >= $cutoff;
+				return (int) ( $entry['t'] ?? 0 ) >= $cutoff;
 			}
 		);
 
@@ -187,7 +184,7 @@ class ReportedIP_Hive_Geo_Anomaly {
 
 		$client  = ReportedIP_Hive::get_instance();
 		$monitor = $client->get_security_monitor();
-		if ( $monitor instanceof ReportedIP_Hive_Security_Monitor && get_option( 'reportedip_hive_geo_report_to_api', false ) ) {
+		if ( $monitor instanceof ReportedIP_Hive_Security_Monitor && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_geo_report_to_api', false ) ) {
 			$monitor->report_security_event(
 				$ip,
 				'geo_anomaly',
@@ -206,7 +203,7 @@ class ReportedIP_Hive_Geo_Anomaly {
 	 * surface tiny. Skipped when 2FA isn't enabled at all.
 	 */
 	private function revoke_trusted_devices( int $user_id ): void {
-		if ( ! get_option( 'reportedip_hive_geo_revoke_trusted_devices', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_geo_revoke_trusted_devices', true ) ) {
 			return;
 		}
 		global $wpdb;

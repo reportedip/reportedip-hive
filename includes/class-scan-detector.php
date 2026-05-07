@@ -93,7 +93,7 @@ class ReportedIP_Hive_Scan_Detector {
 	 * serve a 404.
 	 */
 	public function on_template_redirect(): void {
-		if ( ! get_option( 'reportedip_hive_monitor_404_scans', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_404_scans', true ) ) {
 			return;
 		}
 
@@ -141,8 +141,8 @@ class ReportedIP_Hive_Scan_Detector {
 
 		$threshold = $is_scan_hit
 			? 1
-			: (int) get_option( 'reportedip_hive_scan_404_threshold', 8 );
-		$timeframe = (int) get_option( 'reportedip_hive_scan_404_timeframe', 1 );
+			: (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_threshold', 8 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_timeframe', 1 );
 
 		$monitor->track_generic_attempt(
 			$ip,

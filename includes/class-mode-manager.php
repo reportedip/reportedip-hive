@@ -86,6 +86,26 @@ class ReportedIP_Hive_Mode_Manager {
 	private function __construct() {
 		add_action( 'reportedip_hive_tier_changed', array( $this, 'flush_cached_tier' ) );
 		add_action( 'update_option_' . self::OPTION_MODE, array( $this, 'on_mode_option_updated' ), 10, 2 );
+		add_action( 'update_site_option_' . self::OPTION_MODE, array( $this, 'on_mode_site_option_updated' ), 10, 3 );
+	}
+
+	/**
+	 * Mirror {@see on_mode_option_updated()} for the sitemeta storage path.
+	 *
+	 * On Multisite the canonical storage for the operation mode is sitemeta,
+	 * so the regular `update_option_*` hook does not fire. We adapt the
+	 * site-option signature ($option, $value, $old_value) to the same
+	 * downstream handler.
+	 *
+	 * @param string $option    Option name.
+	 * @param mixed  $value     New value.
+	 * @param mixed  $old_value Previous value.
+	 * @return void
+	 * @since 2.0.0
+	 */
+	public function on_mode_site_option_updated( $option, $value, $old_value ) {
+		unset( $option );
+		$this->on_mode_option_updated( $old_value, $value );
 	}
 
 	/**
@@ -327,14 +347,12 @@ class ReportedIP_Hive_Mode_Manager {
 			return $tier;
 		}
 		if ( class_exists( 'ReportedIP_Hive_API' ) ) {
-			$api = ReportedIP_Hive_API::get_instance();
-			if ( method_exists( $api, 'get_relay_quota' ) ) {
-				$fresh = $api->get_relay_quota();
-				if ( is_array( $fresh ) && ! empty( $fresh['tier'] ) ) {
-					$tier              = (string) $fresh['tier'];
-					$this->cached_tier = $tier;
-					return $tier;
-				}
+			$api   = ReportedIP_Hive_API::get_instance();
+			$fresh = $api->get_relay_quota();
+			if ( ! empty( $fresh['tier'] ) ) {
+				$tier              = (string) $fresh['tier'];
+				$this->cached_tier = $tier;
+				return $tier;
 			}
 		}
 		$this->cached_tier = $tier;
@@ -368,7 +386,7 @@ class ReportedIP_Hive_Mode_Manager {
 			return $this->cached_mode;
 		}
 
-		$mode = get_option( self::OPTION_MODE, self::MODE_LOCAL );
+		$mode = ReportedIP_Hive_Option_Routing::get( self::OPTION_MODE, self::MODE_LOCAL );
 
 		if ( ! in_array( $mode, array( self::MODE_LOCAL, self::MODE_COMMUNITY ), true ) ) {
 			$mode = self::MODE_LOCAL;
@@ -389,9 +407,9 @@ class ReportedIP_Hive_Mode_Manager {
 			return false;
 		}
 
-		$result = update_option( self::OPTION_MODE, $mode );
+		$result = ReportedIP_Hive_Option_Routing::set( self::OPTION_MODE, $mode );
 
-		return $result || get_option( self::OPTION_MODE ) === $mode;
+		return $result || ReportedIP_Hive_Option_Routing::get( self::OPTION_MODE ) === $mode;
 	}
 
 	/**
@@ -425,7 +443,7 @@ class ReportedIP_Hive_Mode_Manager {
 			return false;
 		}
 
-		$api_key = get_option( 'reportedip_hive_api_key', '' );
+		$api_key = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		return ! empty( $api_key );
 	}
 
@@ -521,7 +539,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @return bool
 	 */
 	public function is_wizard_completed() {
-		return (bool) get_option( self::OPTION_WIZARD_COMPLETED, false );
+		return (bool) ReportedIP_Hive_Option_Routing::get( self::OPTION_WIZARD_COMPLETED, false );
 	}
 
 	/**
@@ -530,10 +548,10 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @return bool
 	 */
 	public function mark_wizard_completed() {
-		update_option( self::OPTION_WIZARD_COMPLETED, true );
-		update_option( self::OPTION_WIZARD_COMPLETED_AT, current_time( 'mysql' ) );
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_WIZARD_COMPLETED, true );
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_WIZARD_COMPLETED_AT, current_time( 'mysql' ) );
 
-		delete_option( self::OPTION_WIZARD_SKIPPED );
+		ReportedIP_Hive_Option_Routing::delete( self::OPTION_WIZARD_SKIPPED );
 
 		return true;
 	}
@@ -544,7 +562,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @return bool
 	 */
 	public function is_wizard_skipped() {
-		return (bool) get_option( self::OPTION_WIZARD_SKIPPED, false );
+		return (bool) ReportedIP_Hive_Option_Routing::get( self::OPTION_WIZARD_SKIPPED, false );
 	}
 
 	/**
@@ -553,7 +571,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @return bool
 	 */
 	public function skip_wizard() {
-		update_option( self::OPTION_WIZARD_SKIPPED, true );
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_WIZARD_SKIPPED, true );
 		return true;
 	}
 

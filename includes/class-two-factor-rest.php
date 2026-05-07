@@ -62,6 +62,11 @@ class ReportedIP_Hive_Two_Factor_REST {
 	/**
 	 * Returns true if the IP is still under the per-window request limit.
 	 *
+	 * Uses site-transients (network-scoped) on Multisite so an attacker
+	 * hitting multiple sub-sites cannot reset their counter by switching
+	 * the host. On single-site `*_site_transient` falls through to the
+	 * regular transient functions, so behaviour is unchanged from v1.x.
+	 *
 	 * @param string $ip      Client IP.
 	 * @param string $bucket  Bucket name (e.g. 'verify', 'challenge').
 	 * @param int    $limit   Maximum requests in the window.
@@ -72,7 +77,7 @@ class ReportedIP_Hive_Two_Factor_REST {
 			return true;
 		}
 		$key     = self::IP_THROTTLE_PREFIX . $bucket . '_' . md5( $ip );
-		$current = (int) get_transient( $key );
+		$current = (int) get_site_transient( $key );
 		return $current < $limit;
 	}
 
@@ -87,8 +92,8 @@ class ReportedIP_Hive_Two_Factor_REST {
 			return;
 		}
 		$key     = self::IP_THROTTLE_PREFIX . $bucket . '_' . md5( $ip );
-		$current = (int) get_transient( $key );
-		set_transient( $key, $current + 1, self::IP_THROTTLE_WINDOW );
+		$current = (int) get_site_transient( $key );
+		set_site_transient( $key, $current + 1, self::IP_THROTTLE_WINDOW );
 	}
 
 	public function register_routes() {
@@ -183,10 +188,6 @@ class ReportedIP_Hive_Two_Factor_REST {
 
 		if ( is_wp_error( $user ) ) {
 			return new WP_Error( $user->get_error_code(), $user->get_error_message(), array( 'status' => 401 ) );
-		}
-
-		if ( ! ( $user instanceof WP_User ) ) {
-			return new WP_Error( 'reportedip_rest_auth_failed', __( 'Sign-in failed.', 'reportedip-hive' ), array( 'status' => 401 ) );
 		}
 
 		wp_set_auth_cookie( $user->ID, false );

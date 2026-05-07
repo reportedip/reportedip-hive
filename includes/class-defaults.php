@@ -101,6 +101,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_frontend_soft_disabled'     => 0,
 		'reportedip_hive_wc2fa_promo_enabled'            => true,
 		'reportedip_hive_2fa_enforce_roles'              => '["administrator"]',
+		'reportedip_hive_2fa_enforce_super_admins'       => true,
 		'reportedip_hive_block_escalation_enabled'       => true,
 		'reportedip_hive_block_ladder_minutes'           => '5,15,30,1440,2880,10080',
 		'reportedip_hive_block_ladder_reset_days'        => 30,
@@ -144,7 +145,7 @@ final class ReportedIP_Hive_Defaults {
 	 * @since  1.5.3
 	 */
 	public static function notify_recipients(): array {
-		$raw   = (string) get_option( 'reportedip_hive_notify_recipients', '' );
+		$raw   = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_recipients', '' );
 		$parts = array_filter( array_map( 'trim', explode( ',', $raw ) ) );
 		$valid = array();
 		foreach ( $parts as $candidate ) {
@@ -179,12 +180,12 @@ final class ReportedIP_Hive_Defaults {
 	 * @since  1.5.3
 	 */
 	public static function notify_from(): array {
-		$name = trim( (string) get_option( 'reportedip_hive_notify_from_name', '' ) );
+		$name = trim( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_name', '' ) );
 		if ( '' === $name ) {
 			$name = self::NOTIFY_FROM_NAME_DEFAULT;
 		}
 
-		$email = sanitize_email( (string) get_option( 'reportedip_hive_notify_from_email', '' ) );
+		$email = sanitize_email( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_email', '' ) );
 		if ( '' === $email || ! is_email( $email ) ) {
 			$email = (string) get_option( 'admin_email', '' );
 		}
@@ -203,7 +204,7 @@ final class ReportedIP_Hive_Defaults {
 	 * solve.
 	 *
 	 * @param string $key Wizard default key.
-	 * @return scalar
+	 * @return int|string
 	 * @throws \InvalidArgumentException When the key is unknown.
 	 * @since  1.4.0
 	 */

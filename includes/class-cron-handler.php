@@ -88,40 +88,67 @@ class ReportedIP_Hive_Cron_Handler {
 	}
 
 	/**
-	 * Schedule cron jobs (static version for activation hook).
+	 * Plugin cron jobs: hook → recurrence slug. Single source of truth for
+	 * schedule, unschedule and self-heal. Custom intervals
+	 * (`fifteen_minutes`, `six_hours`) are registered via
+	 * {@see add_cron_intervals()}.
+	 *
+	 * @var array<string,string>
+	 */
+	private const JOBS = array(
+		'reportedip_hive_cleanup'         => 'daily',
+		'reportedip_hive_sync_reputation' => 'hourly',
+		'reportedip_hive_process_queue'   => 'fifteen_minutes',
+		'reportedip_hive_refresh_quota'   => 'six_hours',
+	);
+
+	/**
+	 * Schedule cron jobs (static version for activation hook + self-heal).
 	 *
 	 * The Cron_Handler instance is not constructed during activation, so the
 	 * cron_schedules filter from the constructor is not yet attached. Register
 	 * the static handler here so wp_schedule_event() finds the custom intervals.
+	 *
+	 * On Multisite the schedule is registered only on the main site so a
+	 * 100-site network does not run 100 parallel queue workers.
 	 */
 	public static function schedule_cron_jobs_static() {
+		if ( is_multisite() && ! is_main_site() ) {
+			return;
+		}
 		add_filter( 'cron_schedules', array( __CLASS__, 'add_cron_intervals' ) );
-
-		if ( ! wp_next_scheduled( 'reportedip_hive_cleanup' ) ) {
-			wp_schedule_event( time(), 'daily', 'reportedip_hive_cleanup' );
-		}
-
-		if ( ! wp_next_scheduled( 'reportedip_hive_sync_reputation' ) ) {
-			wp_schedule_event( time(), 'hourly', 'reportedip_hive_sync_reputation' );
-		}
-
-		if ( ! wp_next_scheduled( 'reportedip_hive_process_queue' ) ) {
-			wp_schedule_event( time(), 'fifteen_minutes', 'reportedip_hive_process_queue' );
-		}
-
-		if ( ! wp_next_scheduled( 'reportedip_hive_refresh_quota' ) ) {
-			wp_schedule_event( time(), 'six_hours', 'reportedip_hive_refresh_quota' );
+		foreach ( self::JOBS as $hook => $recurrence ) {
+			if ( ! wp_next_scheduled( $hook ) ) {
+				wp_schedule_event( time(), $recurrence, $hook );
+			}
 		}
 	}
 
 	/**
-	 * Clear cron jobs (static version for deactivation hook)
+	 * Clear cron jobs (static version for deactivation hook).
 	 */
 	public static function clear_cron_jobs_static() {
-		wp_clear_scheduled_hook( 'reportedip_hive_cleanup' );
-		wp_clear_scheduled_hook( 'reportedip_hive_sync_reputation' );
-		wp_clear_scheduled_hook( 'reportedip_hive_process_queue' );
-		wp_clear_scheduled_hook( 'reportedip_hive_refresh_quota' );
+		foreach ( self::JOBS as $hook => $_ ) {
+			wp_clear_scheduled_hook( $hook );
+		}
+	}
+
+	/**
+	 * Self-heal: re-register any missing cron job. Wired from
+	 * `admin_init` on the main site so a main-site change in a Multisite
+	 * network does not leave the network without crons.
+	 */
+	public static function ensure_scheduled() {
+		self::schedule_cron_jobs_static();
+	}
+
+	/**
+	 * Returns the list of registered cron hook names. Used by tests.
+	 *
+	 * @return string[]
+	 */
+	public static function get_hook_names() {
+		return array_keys( self::JOBS );
 	}
 
 	/**
@@ -152,8 +179,8 @@ class ReportedIP_Hive_Cron_Handler {
 	 */
 	public function cron_cleanup() {
 		try {
-			$retention_days = get_option( 'reportedip_hive_data_retention_days', 30 );
-			$anonymize_days = get_option( 'reportedip_hive_auto_anonymize_days', 7 );
+			$retention_days = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 );
+			$anonymize_days = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_anonymize_days', 7 );
 
 			$anonymized = $this->database->anonymize_old_data( $anonymize_days );
 
@@ -301,7 +328,7 @@ class ReportedIP_Hive_Cron_Handler {
 
 		try {
 			$relay = $this->api_client->get_relay_quota( true );
-			if ( is_array( $relay ) && empty( $relay['error'] ) ) {
+			if ( empty( $relay['error'] ) ) {
 				$this->logger->info(
 					'Relay quota refreshed',
 					'system',
@@ -315,7 +342,7 @@ class ReportedIP_Hive_Cron_Handler {
 						'sms_bundle_balance'  => $relay['sms']['bundle_balance'] ?? $relay['sms_bundle_balance'] ?? null,
 					)
 				);
-			} elseif ( is_array( $relay ) && ! empty( $relay['error'] ) ) {
+			} else {
 				$this->logger->warning(
 					'Relay quota refresh failed',
 					'system',

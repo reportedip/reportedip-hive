@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 1.7.1
+ * Version: 2.0.0
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -13,6 +13,7 @@
  * Requires at least: 5.0
  * Tested up to: 6.9
  * Requires PHP: 8.1
+ * Network: true
  * Update URI: https://github.com/reportedip/reportedip-hive
  *
  * @package   ReportedIP_Hive
@@ -53,7 +54,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '1.7.1' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.0.0' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -168,7 +169,7 @@ class ReportedIP_Hive {
 		add_action( 'init', array( $this, 'init' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 
-		if ( get_option( 'reportedip_hive_disable_xmlrpc_multicall', true ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_disable_xmlrpc_multicall', true ) ) {
 			add_filter( 'xmlrpc_methods', array( $this, 'disable_xmlrpc_multicall' ) );
 		}
 
@@ -185,15 +186,100 @@ class ReportedIP_Hive {
 
 		add_action( 'wp_ajax_reportedip_get_chart_data', array( $this, 'ajax_get_chart_data' ) );
 
+		add_action( 'wp_initialize_site', array( __CLASS__, 'on_site_initialized' ), 10, 2 );
+		add_action( 'wp_delete_site', array( __CLASS__, 'on_site_deleted' ), 10, 1 );
+		add_action( 'wpmu_delete_user', array( __CLASS__, 'on_user_deleted' ) );
+		add_action( 'delete_user', array( __CLASS__, 'on_user_deleted' ) );
+		if ( ! is_multisite() || is_main_site() ) {
+			add_action( 'admin_init', array( 'ReportedIP_Hive_Cron_Handler', 'ensure_scheduled' ) );
+		}
+
+		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
+		$flush_frontend_memo = array( 'ReportedIP_Hive_Two_Factor_Frontend', 'flush_slug_memo' );
+		foreach (
+			array(
+				'reportedip_hive_2fa_frontend_slug',
+				'reportedip_hive_2fa_frontend_slug_site_override',
+				'reportedip_hive_2fa_frontend_setup_slug',
+				'reportedip_hive_2fa_frontend_setup_slug_site_override',
+			) as $slug_opt
+		) {
+			add_action( 'update_option_' . $slug_opt, $flush_routing_cache );
+			add_action( 'update_option_' . $slug_opt, $flush_frontend_memo );
+			add_action( 'update_site_option_' . $slug_opt, $flush_routing_cache );
+			add_action( 'update_site_option_' . $slug_opt, $flush_frontend_memo );
+		}
+		add_action( 'update_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
+		add_action( 'update_option_reportedip_hive_2fa_enforce_roles_extra', $flush_routing_cache );
+		add_action( 'update_site_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
+
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Ajax_Handler( $this );
 		}
 	}
 
 	/**
+	 * Run schema migrations on freshly-created network sites.
+	 *
+	 * Because the plugin tables are network-wide there is nothing per-site
+	 * to set up — `Migration_Manager::maybe_run()` is a no-op when the
+	 * stored version already matches `CURRENT_VERSION`. The hook is wired
+	 * defensively so future migrations that DO need per-site work have a
+	 * trigger point.
+	 *
+	 * @param WP_Site $site WordPress site object.
+	 * @param array   $args Initialisation arguments.
+	 */
+	public static function on_site_initialized( $site, $args = array() ) {
+		unset( $site, $args );
+		ReportedIP_Hive_Migration_Manager::maybe_run();
+	}
+
+	/**
+	 * Clean up `blog_id`-scoped plugin data when a site is deleted.
+	 *
+	 * @param WP_Site $site WordPress site object being deleted.
+	 */
+	public static function on_site_deleted( $site ) {
+		$blog_id = (int) $site->blog_id;
+		if ( $blog_id <= 0 ) {
+			return;
+		}
+		ReportedIP_Hive_Schema::cleanup_blog_data( $blog_id );
+		delete_blog_option( $blog_id, 'reportedip_hive_2fa_frontend_slug_site_override' );
+		delete_blog_option( $blog_id, 'reportedip_hive_2fa_enforce_roles_extra' );
+	}
+
+	/**
+	 * Remove trusted-device rows for a deleted user.
+	 *
+	 * User meta is cleaned up automatically by WordPress; the plugin's own
+	 * trusted_devices table needs an explicit DELETE because it is not
+	 * tied to user_meta.
+	 *
+	 * @param int $user_id User being deleted.
+	 */
+	public static function on_user_deleted( $user_id ) {
+		global $wpdb;
+		$user_id = (int) $user_id;
+		if ( $user_id <= 0 ) {
+			return;
+		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Single-row DELETE on a plugin-owned table during user-deletion lifecycle hook; no caching layer applies.
+		$wpdb->delete(
+			ReportedIP_Hive_Schema::table( 'reportedip_hive_trusted_devices' ),
+			array( 'user_id' => $user_id ),
+			array( '%d' )
+		);
+	}
+
+	/**
 	 * Load plugin dependencies
 	 */
 	private function load_dependencies() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-option-routing.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-schema.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-migration-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-defaults.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
@@ -215,6 +301,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-phone-validator.php';
 
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-relay-usage-tracker.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/interface-mail-provider.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/mail-providers/class-mail-provider-wordpress.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/mail-providers/class-mail-provider-relay.php';
@@ -315,40 +402,46 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Static plugin activation (called from register_activation_hook)
+	 * Static plugin activation (called from register_activation_hook).
+	 *
+	 * On Multisite the activation hook fires once when the Network Admin
+	 * activates the plugin network-wide (the only allowed activation mode
+	 * thanks to `Network: true` in the plugin header). All plugin tables
+	 * live under `$wpdb->base_prefix`, so a single Schema::ensure_tables()
+	 * call sets up storage for every site in the network.
+	 *
+	 * @param bool $network_wide True when activated from the network admin.
+	 *                           Currently informational — Schema/Migration
+	 *                           handle both cases identically.
 	 */
-	public static function activate_plugin() {
-		if ( ! class_exists( 'ReportedIP_Hive_Database' ) ) {
-			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
+	public static function activate_plugin( $network_wide = false ) {
+		unset( $network_wide );
+		foreach ( array(
+			'includes/class-option-routing.php',
+			'includes/class-schema.php',
+			'includes/class-migration-manager.php',
+			'includes/class-cron-handler.php',
+			'includes/class-database.php',
+		) as $relative ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
 		}
 
-		$database = new ReportedIP_Hive_Database();
-		$database->create_tables();
-		update_option( ReportedIP_Hive_Database::DB_VERSION_OPTION, ReportedIP_Hive_Database::DB_VERSION );
+		ReportedIP_Hive_Schema::ensure_tables();
+		ReportedIP_Hive_Migration_Manager::maybe_run();
 
-		if ( ! get_option( 'reportedip_hive_activated_at' ) ) {
-			update_option( 'reportedip_hive_activated_at', time(), false );
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_activated_at' ) ) {
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_activated_at', time() );
 		}
 
 		self::set_default_options_static();
 
-		if ( ! class_exists( 'ReportedIP_Hive_Cron_Handler' ) ) {
-			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cron-handler.php';
-		}
 		ReportedIP_Hive_Cron_Handler::schedule_cron_jobs_static();
 
-		/*
-		 * Fresh install only (no completed wizard, no API key): mark for the
-		 * post-activation redirect. 5-minute window so the admin still gets
-		 * the wizard if they click around the dashboard before opening the
-		 * plugin. The transient is consumed on the first admin_init that
-		 * hits the redirect handler.
-		 */
-		$wizard_completed = get_option( 'reportedip_hive_wizard_completed', false );
-		$api_key          = get_option( 'reportedip_hive_api_key', '' );
+		$wizard_completed = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_wizard_completed', false );
+		$api_key          = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 
 		if ( ! $wizard_completed && empty( $api_key ) ) {
-			set_transient( 'reportedip_hive_activation_redirect', true, 5 * MINUTE_IN_SECONDS );
+			set_site_transient( 'reportedip_hive_activation_redirect', true, 5 * MINUTE_IN_SECONDS );
 		}
 
 		flush_rewrite_rules();
@@ -376,7 +469,11 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Static plugin deactivation (called from register_deactivation_hook)
+	 * Static plugin deactivation (called from register_deactivation_hook).
+	 *
+	 * Clears scheduled cron jobs but leaves data intact — uninstall.php is
+	 * the only path that touches user data, and only when the corresponding
+	 * opt-in is set.
 	 */
 	public static function deactivate_plugin() {
 		if ( ! class_exists( 'ReportedIP_Hive_Cron_Handler' ) ) {
@@ -387,27 +484,38 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Plugin uninstall
+	 * Plugin uninstall.
+	 *
+	 * Honours the `reportedip_hive_delete_data_on_uninstall` opt-in. On
+	 * Multisite the option is checked from network storage so a Network
+	 * Admin's choice applies across the whole network; on single-site it
+	 * falls back to per-site `wp_options` automatically.
 	 */
 	public static function uninstall() {
-		if ( get_option( 'reportedip_hive_delete_data_on_uninstall', false ) ) {
-			$database = new ReportedIP_Hive_Database();
-			$database->drop_tables();
-
-			self::delete_plugin_options();
-
-			/*
-			 * Clean up 2FA user meta for all users — single source of truth is
-			 * ReportedIP_Hive_Two_Factor::get_all_meta_keys(). Load the class
-			 * if it isn't already, because uninstall runs in a stripped context.
-			 */
-			if ( ! class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
-				require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-recovery.php';
-				require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor.php';
+		foreach ( array(
+			'includes/class-option-routing.php',
+			'includes/class-schema.php',
+		) as $relative ) {
+			$path = REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
+			if ( file_exists( $path ) ) {
+				require_once $path;
 			}
-			foreach ( ReportedIP_Hive_Two_Factor::get_all_meta_keys() as $key ) {
-				delete_metadata( 'user', 0, $key, '', true );
-			}
+		}
+
+		$delete_requested = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', false );
+		if ( ! $delete_requested ) {
+			return;
+		}
+
+		ReportedIP_Hive_Schema::drop_all_tables();
+		ReportedIP_Hive_Option_Routing::delete_all_plugin_options();
+
+		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-recovery.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor.php';
+		}
+		foreach ( ReportedIP_Hive_Two_Factor::get_all_meta_keys() as $key ) {
+			delete_metadata( 'user', 0, $key, '', true );
 		}
 	}
 
@@ -692,7 +800,7 @@ class ReportedIP_Hive {
 	 * Handle failed login attempts
 	 */
 	public function handle_failed_login( $username ) {
-		if ( ! get_option( 'reportedip_hive_monitor_failed_logins', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_failed_logins', true ) ) {
 			return;
 		}
 
@@ -710,11 +818,11 @@ class ReportedIP_Hive {
 			'timestamp' => current_time( 'mysql' ),
 		);
 
-		if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 			$log_data['username_hash'] = hash( 'sha256', $username . wp_salt() );
 		}
 
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent             = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$log_data['user_agent'] = substr( $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH );
 		}
@@ -733,7 +841,7 @@ class ReportedIP_Hive {
 	public function pre_auth_check( $user, $password ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 		$ip_address        = $this->get_client_ip();
 		$report_only       = $this->is_report_only_mode();
-		$threshold         = (int) get_option( 'reportedip_hive_block_threshold', 75 );
+		$threshold         = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', 75 );
 		$is_blocked        = $this->ip_manager->is_blocked( $ip_address );
 		$reputation        = null;
 		$exceeds_threshold = false;
@@ -827,7 +935,7 @@ class ReportedIP_Hive {
 	 * Handle comment posts
 	 */
 	public function handle_comment_post( $comment_id, $approved, $commentdata ) {
-		if ( ! get_option( 'reportedip_hive_monitor_comments', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_comments', true ) ) {
 			return;
 		}
 
@@ -847,7 +955,7 @@ class ReportedIP_Hive {
 				'timestamp'  => current_time( 'mysql' ),
 			);
 
-			if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+			if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 				$log_data['author_hash'] = hash( 'sha256', $commentdata['comment_author'] . wp_salt() );
 			}
 
@@ -863,7 +971,7 @@ class ReportedIP_Hive {
 	 * Handle XMLRPC calls
 	 */
 	public function handle_xmlrpc_call( $method ) {
-		if ( ! get_option( 'reportedip_hive_monitor_xmlrpc', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_xmlrpc', true ) ) {
 			return;
 		}
 
@@ -882,7 +990,7 @@ class ReportedIP_Hive {
 			'timestamp' => current_time( 'mysql' ),
 		);
 
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent             = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$log_data['user_agent'] = substr( $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH );
 		}
@@ -904,12 +1012,12 @@ class ReportedIP_Hive {
 			'timestamp' => current_time( 'mysql' ),
 		);
 
-		if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 			$log_data['username_hash'] = hash( 'sha256', $user_login . wp_salt() );
 			$log_data['user_id']       = $user->ID;
 		}
 
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent             = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$log_data['user_agent'] = substr( $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH );
 		}
@@ -1033,8 +1141,8 @@ class ReportedIP_Hive {
                 </script>';
 			}
 
-			$warning_threshold  = get_option( 'reportedip_hive_queue_warning_threshold', 50 );
-			$critical_threshold = get_option( 'reportedip_hive_queue_critical_threshold', 200 );
+			$warning_threshold  = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 );
+			$critical_threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 );
 			$queue_url          = admin_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
 			$community_url      = admin_url( 'admin.php?page=reportedip-hive-community' );
 			$queue_dismissed    = get_user_meta( $user_id, 'reportedip_dismissed_queue_warning_' . gmdate( 'Y-m-d' ), true );
@@ -1063,7 +1171,7 @@ class ReportedIP_Hive {
 			}
 		}
 
-		$api_key = get_option( 'reportedip_hive_api_key', '' );
+		$api_key = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		if ( empty( $api_key ) && $is_plugin_page ) {
 			$settings_url = admin_url( 'admin.php?page=reportedip-hive' );
 			echo '<div class="notice notice-warning is-dismissible"><p>';
@@ -1190,7 +1298,7 @@ class ReportedIP_Hive {
 	 * Check if plugin is in report-only mode
 	 */
 	private function is_report_only_mode() {
-		return get_option( 'reportedip_hive_report_only_mode', false );
+		return ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false );
 	}
 
 	/**
@@ -1222,7 +1330,7 @@ class ReportedIP_Hive {
 	public static function get_client_ip() {
 		static $trusted_header = null;
 		if ( null === $trusted_header ) {
-			$trusted_header = get_option( 'reportedip_hive_trusted_ip_header', '' );
+			$trusted_header = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' );
 		}
 
 		if ( ! empty( $trusted_header ) && isset( $_SERVER[ $trusted_header ] ) ) {
@@ -1238,16 +1346,6 @@ class ReportedIP_Hive {
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via filter_var
 		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? wp_unslash( $_SERVER['REMOTE_ADDR'] ) : 'unknown';
 		return filter_var( $remote_addr, FILTER_VALIDATE_IP ) ? $remote_addr : 'unknown';
-	}
-
-	/**
-	 * Delete all plugin options
-	 */
-	private static function delete_plugin_options() {
-		global $wpdb;
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall cleanup
-		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'reportedip_hive_%'" );
 	}
 
 	/**
@@ -1303,6 +1401,7 @@ class ReportedIP_Hive {
 			'reportedip_hive_notification_cooldown_minutes' => 60,
 			'reportedip_hive_2fa_enabled_global'           => false,
 			'reportedip_hive_2fa_enforce_roles'            => '[]',
+			'reportedip_hive_2fa_enforce_super_admins'     => true,
 			'reportedip_hive_2fa_enforce_grace_days'       => 7,
 			'reportedip_hive_2fa_max_skips'                => 3,
 			'reportedip_hive_2fa_allowed_methods'          => '["totp","email"]',

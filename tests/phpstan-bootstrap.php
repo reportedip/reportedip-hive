@@ -15,11 +15,11 @@
 
 namespace {
 	defined( 'REPORTEDIP_HIVE_VERSION' ) || define( 'REPORTEDIP_HIVE_VERSION', '0.0.0-dev' );
-	defined( 'REPORTEDIP_HIVE_PLUGIN_DIR' ) || define( 'REPORTEDIP_HIVE_PLUGIN_DIR', __DIR__ . '/' );
+	defined( 'REPORTEDIP_HIVE_PLUGIN_DIR' ) || define( 'REPORTEDIP_HIVE_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
 	defined( 'REPORTEDIP_HIVE_PLUGIN_URL' ) || define( 'REPORTEDIP_HIVE_PLUGIN_URL', 'https://example.test/wp-content/plugins/reportedip-hive/' );
-	defined( 'REPORTEDIP_HIVE_PLUGIN_FILE' ) || define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __DIR__ . '/reportedip-hive.php' );
+	defined( 'REPORTEDIP_HIVE_PLUGIN_FILE' ) || define( 'REPORTEDIP_HIVE_PLUGIN_FILE', dirname( __DIR__ ) . '/reportedip-hive.php' );
 	defined( 'REPORTEDIP_HIVE_PLUGIN_BASENAME' ) || define( 'REPORTEDIP_HIVE_PLUGIN_BASENAME', 'reportedip-hive/reportedip-hive.php' );
-	defined( 'REPORTEDIP_HIVE_LANGUAGES_DIR' ) || define( 'REPORTEDIP_HIVE_LANGUAGES_DIR', __DIR__ . '/languages' );
+	defined( 'REPORTEDIP_HIVE_LANGUAGES_DIR' ) || define( 'REPORTEDIP_HIVE_LANGUAGES_DIR', dirname( __DIR__ ) . '/languages' );
 	defined( 'REPORTEDIP_USER_AGENT_MAX_LENGTH' ) || define( 'REPORTEDIP_USER_AGENT_MAX_LENGTH', 50 );
 	defined( 'REPORTEDIP_QUEUE_BATCH_SIZE' ) || define( 'REPORTEDIP_QUEUE_BATCH_SIZE', 20 );
 	defined( 'REPORTEDIP_MAX_CSV_UPLOAD_SIZE' ) || define( 'REPORTEDIP_MAX_CSV_UPLOAD_SIZE', 1048576 );

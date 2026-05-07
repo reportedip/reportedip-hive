@@ -49,17 +49,12 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 		}
 
 		$api = ReportedIP_Hive_API::get_instance();
-		if ( ! method_exists( $api, 'relay_mail' ) ) {
-			return $this->send_via_fallback( $to, $subject, $html_body, $plain_body, $headers );
-		}
 
 		$header_map = $this->headers_array_to_map( $headers );
 
-		// Pull Reply-To (case-insensitive) out of the header map and pass it as a
-		// dedicated payload field so the Service can prefer it over its own default.
 		$reply_to = '';
 		foreach ( $header_map as $hk => $hv ) {
-			if ( is_string( $hk ) && strcasecmp( $hk, 'Reply-To' ) === 0 ) {
+			if ( strcasecmp( $hk, 'Reply-To' ) === 0 ) {
 				$reply_to = (string) $hv;
 				unset( $header_map[ $hk ] );
 				break;
@@ -67,7 +62,7 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 		}
 		// Allow sites to set a global Reply-To via filter/option without touching every send.
 		if ( '' === $reply_to ) {
-			$default_reply_to = (string) get_option( 'reportedip_hive_mail_reply_to', '' );
+			$default_reply_to = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_mail_reply_to', '' );
 			$default_reply_to = (string) apply_filters( 'reportedip_hive_mail_reply_to', $default_reply_to, $to, $subject );
 			if ( '' !== $default_reply_to ) {
 				$reply_to = $default_reply_to;
@@ -89,6 +84,9 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 		$result = $api->relay_mail( $payload );
 
 		if ( ! empty( $result['ok'] ) ) {
+			if ( class_exists( 'ReportedIP_Hive_Relay_Usage_Tracker' ) ) {
+				ReportedIP_Hive_Relay_Usage_Tracker::record( ReportedIP_Hive_Relay_Usage_Tracker::TYPE_MAIL, 1 );
+			}
 			return true;
 		}
 
@@ -119,11 +117,8 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 		if ( is_string( $headers ) ) {
 			$headers = explode( "\n", $headers );
 		}
-		if ( ! is_array( $headers ) ) {
-			return $map;
-		}
 		foreach ( $headers as $line ) {
-			if ( ! is_string( $line ) || false === strpos( $line, ':' ) ) {
+			if ( false === strpos( $line, ':' ) ) {
 				continue;
 			}
 			list( $name, $value ) = array_map( 'trim', explode( ':', $line, 2 ) );
@@ -140,12 +135,7 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 			return;
 		}
 		$logger = ReportedIP_Hive_Logger::get_instance();
-		if ( ! $logger || ! method_exists( $logger, 'log' ) ) {
-			return;
-		}
-		$ip = class_exists( 'ReportedIP_Hive' ) && method_exists( 'ReportedIP_Hive', 'get_client_ip' )
-			? (string) ReportedIP_Hive::get_client_ip()
-			: '';
+		$ip     = (string) ReportedIP_Hive::get_client_ip();
 		$logger->log(
 			'mail_relay_fallback',
 			$ip,

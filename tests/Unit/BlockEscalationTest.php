@@ -34,6 +34,7 @@ namespace {
 		 */
 		class Test_WPDB_Stub {
 			public string $prefix = 'wp_';
+			public string $base_prefix = 'wp_';
 
 			public function prepare( string $sql, ...$args ): string {
 				$GLOBALS['rip_test_last_prepare_args'] = $args;

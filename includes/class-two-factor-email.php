@@ -115,7 +115,7 @@ class ReportedIP_Hive_Two_Factor_Email {
 		self::increment_rate_limit( $user_id );
 
 		$site_name = wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES );
-		$subject   = (string) get_option( 'reportedip_hive_2fa_email_subject', '' );
+		$subject   = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_email_subject', '' );
 		if ( '' === $subject ) {
 			/* translators: %s: site name */
 			$subject = sprintf( __( '[%s] Your verification code', 'reportedip-hive' ), $site_name );
@@ -172,7 +172,7 @@ class ReportedIP_Hive_Two_Factor_Email {
 	 * @return bool True if valid, false otherwise.
 	 */
 	public static function verify_code( $user_id, $code ) {
-		if ( ! is_string( $code ) || ! preg_match( '/^\d{' . self::CODE_LENGTH . '}$/', $code ) ) {
+		if ( ! preg_match( '/^\d{' . self::CODE_LENGTH . '}$/', $code ) ) {
 			return false;
 		}
 

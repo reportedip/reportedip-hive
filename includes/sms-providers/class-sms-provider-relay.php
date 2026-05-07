@@ -98,9 +98,6 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 		}
 
 		$api = ReportedIP_Hive_API::get_instance();
-		if ( ! method_exists( $api, 'relay_sms' ) ) {
-			return new WP_Error( 'reportedip_relay_unavailable', __( 'API client missing relay support.', 'reportedip-hive' ) );
-		}
 
 		$result = $api->relay_sms(
 			array(
@@ -111,6 +108,9 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 		);
 
 		if ( ! empty( $result['ok'] ) ) {
+			if ( class_exists( 'ReportedIP_Hive_Relay_Usage_Tracker' ) ) {
+				ReportedIP_Hive_Relay_Usage_Tracker::record( ReportedIP_Hive_Relay_Usage_Tracker::TYPE_SMS, 1 );
+			}
 			return true;
 		}
 

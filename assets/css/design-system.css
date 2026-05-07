@@ -951,6 +951,35 @@ button.rip-tier-lock--mode:hover {
     color: var(--rip-info-dark);
 }
 
+.rip-alert--banner {
+    margin: var(--rip-space-3) 0;
+}
+
+.rip-network-state {
+    list-style: none;
+    margin: var(--rip-space-2) 0 0;
+    padding: var(--rip-space-3);
+    background: var(--rip-gray-50);
+    border-radius: var(--rip-radius);
+    display: flex;
+    flex-direction: column;
+    gap: var(--rip-space-2);
+}
+
+.rip-network-state li {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-2);
+    font-size: var(--rip-text-sm);
+}
+
+.rip-form-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rip-space-2);
+}
+
 /* ==========================================================================
    Tabs
    ========================================================================== */
@@ -1990,6 +2019,10 @@ button.rip-tier-lock--mode:hover {
 .rip-badge--info {
     background: var(--rip-info-bg);
     color: var(--rip-info-dark);
+}
+
+.rip-badge--inline {
+    margin-left: var(--rip-space-2);
 }
 
 /* Actions Grid */

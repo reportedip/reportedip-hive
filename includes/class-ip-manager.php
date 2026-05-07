@@ -159,10 +159,10 @@ class ReportedIP_Hive_IP_Manager {
 		}
 
 		if ( $duration_hours === null ) {
-			$duration_hours = get_option( 'reportedip_hive_block_duration', 24 );
+			$duration_hours = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_duration', 24 );
 		}
 
-		if ( get_option( 'reportedip_hive_report_only_mode', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
 			$this->logger->log_security_event(
 				'would_block_ip',
 				$ip_address,
@@ -275,14 +275,8 @@ class ReportedIP_Hive_IP_Manager {
 				continue;
 			}
 
-			$parts = str_getcsv( $line );
-			if ( count( $parts ) < 1 ) {
-				/* translators: %d: line number in CSV file */
-				$errors[] = sprintf( __( 'Line %d: Invalid format', 'reportedip-hive' ), $line_num + 1 );
-				continue;
-			}
-
-			$ip_address = trim( $parts[0] );
+			$parts      = str_getcsv( $line );
+			$ip_address = trim( (string) $parts[0] );
 			$reason     = isset( $parts[1] ) ? trim( $parts[1] ) : 'Imported from CSV';
 			$expires_at = isset( $parts[2] ) && ! empty( trim( $parts[2] ) ) ? trim( $parts[2] ) : null;
 

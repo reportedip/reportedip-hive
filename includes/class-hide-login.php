@@ -131,7 +131,7 @@ class ReportedIP_Hive_Hide_Login {
 		if ( defined( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN' ) && REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN ) {
 			return false;
 		}
-		if ( ! get_option( 'reportedip_hive_hide_login_enabled', false ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false ) ) {
 			return false;
 		}
 		$slug = $this->get_slug();
@@ -142,7 +142,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * Sanitised, lower-case slug from settings (or empty string).
 	 */
 	public function get_slug(): string {
-		$slug = (string) get_option( 'reportedip_hive_hide_login_slug', '' );
+		$slug = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', '' );
 		return strtolower( trim( $slug, "/ \t\n\r\0\x0B" ) );
 	}
 
@@ -171,7 +171,7 @@ class ReportedIP_Hive_Hide_Login {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			return true;
 		}
-		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		if ( wp_doing_cron() ) {
 			return true;
 		}
 		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
@@ -329,10 +329,11 @@ class ReportedIP_Hive_Hide_Login {
 	 * Whether the current request carries a wp-login action we always allow.
 	 */
 	private function is_action_whitelisted(): bool {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only allow-listing; the action value is sanitised and only compared to a hardcoded bypass list.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only allow-listing; the action value is sanitised and only compared to a hardcoded bypass list.
 		$action = isset( $_REQUEST['action'] )
 			? sanitize_key( wp_unslash( (string) $_REQUEST['action'] ) )
 			: '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		if ( '' === $action ) {
 			return false;
 		}
@@ -346,7 +347,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * Optional 404 mode: theme's 404 template — gives no plugin fingerprint.
 	 */
 	private function render_block_response(): void {
-		$mode = (string) get_option( 'reportedip_hive_hide_login_response_mode', self::RESPONSE_MODE_BLOCK_PAGE );
+		$mode = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', self::RESPONSE_MODE_BLOCK_PAGE );
 
 		if ( self::RESPONSE_MODE_404 === $mode ) {
 			global $wp_query;
@@ -463,7 +464,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * disturb (login_url generates with redirect_to=… which is fine to keep).
 	 */
 	private function maybe_add_token( string $url, string $slug ): string {
-		if ( ! get_option( 'reportedip_hive_hide_login_token_in_urls', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_token_in_urls', true ) ) {
 			return $url;
 		}
 		if ( '' === $slug ) {
@@ -611,15 +612,13 @@ class ReportedIP_Hive_Hide_Login {
 		set_transient( $throttle_key, 1, self::RECON_LOG_THROTTLE_SECONDS );
 
 		$logger = ReportedIP_Hive_Logger::get_instance();
-		if ( method_exists( $logger, 'log' ) ) {
-			$logger->log(
-				'hide_login_block',
-				$ip,
-				'low',
-				array(
-					'path' => $this->get_request_path(),
-				)
-			);
-		}
+		$logger->log(
+			'hide_login_block',
+			$ip,
+			'low',
+			array(
+				'path' => $this->get_request_path(),
+			)
+		);
 	}
 }

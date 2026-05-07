@@ -89,17 +89,17 @@ class ReportedIP_Hive_Security_Monitor {
 	 *     short window, which is a stronger credential-stuffing indicator.
 	 */
 	public function check_failed_login_threshold( $ip_address, $username = '' ) {
-		$threshold = get_option( 'reportedip_hive_failed_login_threshold', 5 );
-		$timeframe = get_option( 'reportedip_hive_failed_login_timeframe', 15 );
+		$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', 5 );
+		$timeframe = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_timeframe', 15 );
 
 		$track_username   = null;
 		$track_user_agent = null;
 
-		if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 			$track_username = $username;
 		}
 
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent       = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$track_user_agent = ! empty( $user_agent ) ? substr( (string) $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ) : '';
 		}
@@ -125,7 +125,7 @@ class ReportedIP_Hive_Security_Monitor {
 				'timeframe' => $timeframe,
 			);
 
-			if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+			if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 				$details['username_provided'] = ! empty( $username );
 			}
 
@@ -149,7 +149,7 @@ class ReportedIP_Hive_Security_Monitor {
 			return;
 		}
 
-		$timeframe = (int) get_option( 'reportedip_hive_password_spray_timeframe', 10 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_spray_timeframe', 10 );
 		$timeframe = max( 1, $timeframe );
 
 		$key = 'rip_spray_' . md5( $ip_address );
@@ -179,8 +179,8 @@ class ReportedIP_Hive_Security_Monitor {
 	 * @return bool True if the threshold fired.
 	 */
 	private function check_password_spray_threshold( $ip_address ) {
-		$threshold = (int) get_option( 'reportedip_hive_password_spray_threshold', 5 );
-		$timeframe = (int) get_option( 'reportedip_hive_password_spray_timeframe', 10 );
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_spray_threshold', 5 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_spray_timeframe', 10 );
 		$threshold = max( 2, $threshold );
 		$timeframe = max( 1, $timeframe );
 
@@ -248,7 +248,7 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 
 		$track_user_agent = null;
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent       = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$track_user_agent = ! empty( $user_agent ) ? substr( (string) $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ) : '';
 		}
@@ -285,11 +285,11 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Check comment spam threshold
 	 */
 	public function check_comment_spam_threshold( $ip_address ) {
-		$threshold = get_option( 'reportedip_hive_comment_spam_threshold', 3 );
-		$timeframe = get_option( 'reportedip_hive_comment_spam_timeframe', 60 );
+		$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 3 );
+		$timeframe = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 60 );
 
 		$track_user_agent = null;
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent       = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$track_user_agent = ! empty( $user_agent ) ? substr( (string) $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ) : '';
 		}
@@ -322,11 +322,11 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Check XMLRPC threshold
 	 */
 	public function check_xmlrpc_threshold( $ip_address ) {
-		$threshold = get_option( 'reportedip_hive_xmlrpc_threshold', 10 );
-		$timeframe = get_option( 'reportedip_hive_xmlrpc_timeframe', 60 );
+		$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_xmlrpc_threshold', 10 );
+		$timeframe = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_xmlrpc_timeframe', 60 );
 
 		$track_user_agent = null;
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent       = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$track_user_agent = ! empty( $user_agent ) ? substr( (string) $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ) : '';
 		}
@@ -373,13 +373,13 @@ class ReportedIP_Hive_Security_Monitor {
 
 		$this->database->update_daily_stats( $this->get_stat_type_for_event( $event_type ) );
 
-		if ( get_option( 'reportedip_hive_auto_block', true ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', true ) ) {
 			$this->auto_block_ip( $ip_address, $event_type, $details );
 		}
 
 		$this->report_security_event( $ip_address, $event_type, $details );
 
-		if ( get_option( 'reportedip_hive_notify_admin', true ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_admin', true ) ) {
 			$this->send_admin_notification( $ip_address, $event_type, $details );
 		}
 	}
@@ -388,7 +388,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Auto-block IP address
 	 */
 	public function auto_block_ip( $ip_address, $event_type, $details ) {
-		if ( get_option( 'reportedip_hive_report_only_mode', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
 			$this->logger->log_security_event(
 				'would_block_ip',
 				$ip_address,
@@ -440,7 +440,7 @@ class ReportedIP_Hive_Security_Monitor {
 			$duration_minutes = ReportedIP_Hive_Block_Escalation::next_block_minutes( $ip_address );
 			$duration_hours   = (int) ceil( $duration_minutes / 60 );
 		} else {
-			$duration_hours   = (int) get_option( 'reportedip_hive_block_duration', 24 );
+			$duration_hours   = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_duration', 24 );
 			$duration_minutes = $duration_hours * 60;
 		}
 
@@ -532,9 +532,9 @@ class ReportedIP_Hive_Security_Monitor {
 		$comment      = $this->generate_report_comment( $event_type, $details );
 
 		$report_details = $details;
-		if ( get_option( 'reportedip_hive_report_only_mode', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
 			$report_details['report_only_mode']   = true;
-			$report_details['would_have_blocked'] = get_option( 'reportedip_hive_auto_block', true );
+			$report_details['would_have_blocked'] = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', true );
 		}
 
 		$result = $this->database->queue_api_report( $ip_address, $category_ids, $comment, 'negative', 'high' );
@@ -547,7 +547,7 @@ class ReportedIP_Hive_Security_Monitor {
 					'event_type'       => $event_type,
 					'category_ids'     => $category_ids,
 					'mode'             => 'community',
-					'report_only_mode' => get_option( 'reportedip_hive_report_only_mode', false ),
+					'report_only_mode' => ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ),
 				),
 				'low'
 			);
@@ -559,7 +559,7 @@ class ReportedIP_Hive_Security_Monitor {
 					'event_type'       => $event_type,
 					'reason'           => 'Cooldown period or duplicate prevention',
 					'mode'             => 'community',
-					'report_only_mode' => get_option( 'reportedip_hive_report_only_mode', false ),
+					'report_only_mode' => ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ),
 				),
 				'low'
 			);
@@ -843,7 +843,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Send admin notification (rate-limited per IP + event type)
 	 */
 	private function send_admin_notification( $ip_address, $event_type, $details ) {
-		if ( get_option( 'reportedip_hive_report_only_mode', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
 			$this->logger->log_security_event(
 				'would_send_notification',
 				$ip_address,
@@ -858,7 +858,7 @@ class ReportedIP_Hive_Security_Monitor {
 			return;
 		}
 
-		$cooldown_minutes = (int) get_option( 'reportedip_hive_notification_cooldown_minutes', 60 );
+		$cooldown_minutes = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notification_cooldown_minutes', 60 );
 		$transient_key    = 'rip_notif_' . md5( $ip_address . '_' . $event_type );
 
 		if ( get_transient( $transient_key ) ) {
@@ -953,8 +953,8 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 		$html .= '</table>';
 
-		if ( get_option( 'reportedip_hive_auto_block', true ) ) {
-			$duration = (int) get_option( 'reportedip_hive_block_duration', 24 );
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', true ) ) {
+			$duration = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_duration', 24 );
 			$html    .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FEF3C7;border-radius:8px;margin:0 0 24px;">';
 			$html    .= '<tr><td style="padding:16px;">';
 			$html    .= '<p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#92400E;">' . esc_html__( 'Action taken', 'reportedip-hive' ) . '</p>';
@@ -979,8 +979,8 @@ class ReportedIP_Hive_Security_Monitor {
 		foreach ( $rows as $row ) {
 			$text_lines[] = $row[0] . ': ' . $row[1];
 		}
-		if ( get_option( 'reportedip_hive_auto_block', true ) ) {
-			$duration     = (int) get_option( 'reportedip_hive_block_duration', 24 );
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', true ) ) {
+			$duration     = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_duration', 24 );
 			$text_lines[] = '';
 			$text_lines[] = sprintf(
 				/* translators: %d: hours */

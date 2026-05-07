@@ -51,7 +51,7 @@ class ReportedIP_Hive_Mail_Provider_WordPress implements ReportedIP_Hive_Mail_Pr
 	 * @param object $phpmailer PHPMailer instance passed by reference by WP.
 	 */
 	public function attach_plain_alt_body( $phpmailer ) {
-		if ( '' !== $this->current_plain && is_object( $phpmailer ) ) {
+		if ( '' !== $this->current_plain ) {
 			$phpmailer->AltBody = $this->current_plain; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property.
 		}
 	}

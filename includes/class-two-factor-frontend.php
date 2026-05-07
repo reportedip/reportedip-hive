@@ -225,12 +225,12 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 			return self::$available_memo;
 		}
 
-		if ( ! get_option( self::OPT_ENABLED, false ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, false ) ) {
 			self::$available_memo = false;
 			return false;
 		}
 
-		if ( (int) get_option( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
+		if ( (int) ReportedIP_Hive_Option_Routing::get( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
 			self::$available_memo = false;
 			return false;
 		}
@@ -288,10 +288,22 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 			return self::$slug_memo;
 		}
 		self::$slug_memo = array(
-			'challenge' => self::sanitize_slug( get_option( self::OPT_CHALLENGE_SLUG, self::DEFAULT_CHALLENGE_SLUG ), self::DEFAULT_CHALLENGE_SLUG ),
-			'setup'     => self::sanitize_slug( get_option( self::OPT_SETUP_SLUG, self::DEFAULT_SETUP_SLUG ), self::DEFAULT_SETUP_SLUG ),
+			'challenge' => self::sanitize_slug( ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_slug(), self::DEFAULT_CHALLENGE_SLUG ),
+			'setup'     => self::sanitize_slug( ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_setup_slug(), self::DEFAULT_SETUP_SLUG ),
 		);
 		return self::$slug_memo;
+	}
+
+	/**
+	 * Drop the per-request slug memo. Called from the Site-2FA save
+	 * handler so a freshly saved override is reflected immediately on
+	 * the same request.
+	 *
+	 * @return void
+	 * @since  2.0.0
+	 */
+	public static function flush_slug_memo() {
+		self::$slug_memo = null;
 	}
 
 	/**
@@ -398,10 +410,8 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 			exit;
 		}
 
-		if ( 'setup' === $mode ) {
-			self::render_setup();
-			exit;
-		}
+		self::render_setup();
+		exit;
 	}
 
 	/**
@@ -455,11 +465,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * @return void
 	 */
 	public static function emit_no_cache_headers() {
-		if ( class_exists( 'ReportedIP_Hive' ) && method_exists( 'ReportedIP_Hive', 'emit_block_response_headers' ) ) {
-			ReportedIP_Hive::emit_block_response_headers();
-		} elseif ( function_exists( 'nocache_headers' ) ) {
-			nocache_headers();
-		}
+		ReportedIP_Hive::emit_block_response_headers();
 
 		if ( ! headers_sent() ) {
 			header( 'Cache-Control: private, no-store, no-cache, max-age=0' );
@@ -477,22 +483,22 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * the next request.
 	 *
 	 * @param string $prev Previous tier slug.
-	 * @param string $new  New tier slug.
+	 * @param string $next New tier slug.
 	 * @return void
 	 */
-	public static function on_tier_changed( $prev, $new ) {
+	public static function on_tier_changed( $prev, $next ) {
 		self::flush_memo();
 
 		$prev_was_paid = self::tier_was_paid( (string) $prev );
-		$new_is_paid   = self::tier_was_paid( (string) $new );
+		$next_is_paid  = self::tier_was_paid( (string) $next );
 
-		if ( $prev_was_paid && ! $new_is_paid ) {
-			update_option( self::OPT_SOFT_DISABLED, time() );
+		if ( $prev_was_paid && ! $next_is_paid ) {
+			ReportedIP_Hive_Option_Routing::set( self::OPT_SOFT_DISABLED, time() );
 			return;
 		}
 
-		if ( $new_is_paid && (int) get_option( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
-			delete_option( self::OPT_SOFT_DISABLED );
+		if ( $next_is_paid && (int) ReportedIP_Hive_Option_Routing::get( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
+			ReportedIP_Hive_Option_Routing::delete( self::OPT_SOFT_DISABLED );
 		}
 	}
 

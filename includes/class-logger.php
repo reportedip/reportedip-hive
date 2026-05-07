@@ -46,7 +46,7 @@ class ReportedIP_Hive_Logger {
 	 * Constructor - private for singleton
 	 */
 	private function __construct() {
-		$this->log_level = get_option( 'reportedip_hive_log_level', 'info' );
+		$this->log_level = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_level', 'info' );
 		$this->database  = ReportedIP_Hive_Database::get_instance();
 	}
 
@@ -74,7 +74,7 @@ class ReportedIP_Hive_Logger {
 			'timestamp' => current_time( 'mysql' ),
 		);
 
-		if ( ! get_option( 'reportedip_hive_minimal_logging', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_minimal_logging', true ) ) {
 			$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 			if ( ! empty( $request_uri ) ) {
 				$uri = wp_parse_url( $request_uri, PHP_URL_PATH );
@@ -89,7 +89,7 @@ class ReportedIP_Hive_Logger {
 			}
 
 			$http_referer = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
-			if ( ! empty( $http_referer ) && get_option( 'reportedip_hive_log_referer_domains', false ) ) {
+			if ( ! empty( $http_referer ) && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_referer_domains', false ) ) {
 				$referer_domain = wp_parse_url( $http_referer, PHP_URL_HOST );
 				if ( $referer_domain !== false && $referer_domain !== null ) {
 					$log_details['referer_domain'] = $referer_domain;
@@ -123,7 +123,7 @@ class ReportedIP_Hive_Logger {
 			return '-';
 		}
 
-		if ( is_string( $details ) && $details !== '' && ( strpos( $details, '{' ) === 0 || strpos( $details, '[' ) === 0 ) ) {
+		if ( is_string( $details ) && ( strpos( $details, '{' ) === 0 || strpos( $details, '[' ) === 0 ) ) {
 			$decoded = json_decode( $details, true );
 			if ( json_last_error() === JSON_ERROR_NONE ) {
 				$formatted = array();

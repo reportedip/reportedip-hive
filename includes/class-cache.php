@@ -56,8 +56,8 @@ class ReportedIP_Hive_Cache {
 	 */
 	private function __construct() {
 		$this->logger             = ReportedIP_Hive_Logger::get_instance();
-		$this->default_ttl        = get_option( 'reportedip_hive_cache_duration', 24 ) * 3600;
-		$this->negative_cache_ttl = get_option( 'reportedip_hive_negative_cache_duration', 2 ) * 3600;
+		$this->default_ttl        = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_cache_duration', 24 ) * 3600;
+		$this->negative_cache_ttl = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_negative_cache_duration', 2 ) * 3600;
 
 		if ( ! self::$shutdown_registered ) {
 			register_shutdown_function( array( __CLASS__, 'flush_pending_stats' ) );
@@ -75,7 +75,7 @@ class ReportedIP_Hive_Cache {
 			return;
 		}
 
-		$stats = get_option(
+		$stats = ReportedIP_Hive_Option_Routing::get(
 			'reportedip_hive_cache_stats',
 			array(
 				'hits'       => 0,
@@ -90,7 +90,7 @@ class ReportedIP_Hive_Cache {
 		$stats['misses'] += self::$pending_misses;
 		$stats['sets']   += self::$pending_sets;
 
-		update_option( 'reportedip_hive_cache_stats', $stats );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_cache_stats', $stats );
 
 		self::$pending_hits   = 0;
 		self::$pending_misses = 0;
@@ -111,7 +111,7 @@ class ReportedIP_Hive_Cache {
 		if ( $cached_data !== false ) {
 			$this->increment_cache_hits();
 
-			if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+			if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 				$this->logger->log_security_event(
 					'cache_hit',
 					$ip_address,
@@ -153,7 +153,7 @@ class ReportedIP_Hive_Cache {
 		$result = set_transient( $cache_key, $cache_data, $ttl );
 
 		if ( $result ) {
-			if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+			if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 				$this->logger->log_security_event(
 					'cache_set',
 					$ip_address,
@@ -231,7 +231,7 @@ class ReportedIP_Hive_Cache {
 	 * Get cache statistics
 	 */
 	public function get_cache_statistics() {
-		$stats = get_option(
+		$stats = ReportedIP_Hive_Option_Routing::get(
 			'reportedip_hive_cache_stats',
 			array(
 				'hits'       => 0,
@@ -244,7 +244,7 @@ class ReportedIP_Hive_Cache {
 
 		if ( ! isset( $stats['last_reset'] ) || empty( $stats['last_reset'] ) ) {
 			$stats['last_reset'] = current_time( 'mysql' );
-			update_option( 'reportedip_hive_cache_stats', $stats );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_cache_stats', $stats );
 		}
 
 		$hits           = (int) ( $stats['hits'] ?? 0 );
@@ -390,7 +390,7 @@ class ReportedIP_Hive_Cache {
 	 * Check if caching is enabled
 	 */
 	private function is_caching_enabled() {
-		return get_option( 'reportedip_hive_enable_caching', true );
+		return ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_enable_caching', true );
 	}
 
 	/**
@@ -454,7 +454,7 @@ class ReportedIP_Hive_Cache {
 				break;
 			case 'clears':
 			case 'clear':
-				$stats = get_option(
+				$stats = ReportedIP_Hive_Option_Routing::get(
 					'reportedip_hive_cache_stats',
 					array(
 						'hits'       => 0,
@@ -465,7 +465,7 @@ class ReportedIP_Hive_Cache {
 					)
 				);
 				++$stats['clears'];
-				update_option( 'reportedip_hive_cache_stats', $stats );
+				ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_cache_stats', $stats );
 				break;
 		}
 	}
@@ -482,6 +482,6 @@ class ReportedIP_Hive_Cache {
 			'last_reset' => current_time( 'mysql' ),
 		);
 
-		update_option( 'reportedip_hive_cache_stats', $stats );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_cache_stats', $stats );
 	}
 }

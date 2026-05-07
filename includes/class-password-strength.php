@@ -104,9 +104,6 @@ class ReportedIP_Hive_Password_Strength {
 	public function on_profile_update( $errors, $update, $user ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		unset( $update );
 
-		if ( ! $errors instanceof WP_Error ) {
-			return;
-		}
 		if ( empty( $user->user_pass ) ) {
 			return;
 		}
@@ -132,9 +129,6 @@ class ReportedIP_Hive_Password_Strength {
 	 * @param WP_User|WP_Error $user   Target user.
 	 */
 	public function on_password_reset( $errors, $user ): void {
-		if ( ! ( $errors instanceof WP_Error ) ) {
-			return;
-		}
 		if ( ! ( $user instanceof WP_User ) ) {
 			return;
 		}
@@ -158,14 +152,14 @@ class ReportedIP_Hive_Password_Strength {
 	 * @return string|null Violation message or null if the password passes.
 	 */
 	private function validate_password( string $password, ?WP_User $user ): ?string {
-		if ( ! get_option( 'reportedip_hive_password_policy_enabled', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_policy_enabled', true ) ) {
 			return null;
 		}
 		if ( ! $this->user_subject_to_policy( $user ) ) {
 			return null;
 		}
 
-		$min_length = max( 8, (int) get_option( 'reportedip_hive_password_min_length', 12 ) );
+		$min_length = max( 8, (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_min_length', 12 ) );
 		if ( strlen( $password ) < $min_length ) {
 			return sprintf(
 				/* translators: %d: minimum required length */
@@ -188,7 +182,7 @@ class ReportedIP_Hive_Password_Strength {
 			++$classes;
 		}
 
-		$min_classes = max( 1, min( 4, (int) get_option( 'reportedip_hive_password_min_classes', 3 ) ) );
+		$min_classes = max( 1, min( 4, (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_min_classes', 3 ) ) );
 		if ( $classes < $min_classes ) {
 			return sprintf(
 				/* translators: %d: required character classes */
@@ -201,7 +195,7 @@ class ReportedIP_Hive_Password_Strength {
 			return __( 'Password is too common and is on a public breach list.', 'reportedip-hive' );
 		}
 
-		if ( get_option( 'reportedip_hive_password_check_hibp', true ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_check_hibp', true ) ) {
 			$hibp = $this->is_password_pwned( $password );
 			if ( true === $hibp ) {
 				return __( 'Password appears in a public data breach. Choose a different password.', 'reportedip-hive' );
@@ -221,9 +215,9 @@ class ReportedIP_Hive_Password_Strength {
 			return true;
 		}
 
-		$enforce_roles = json_decode( (string) get_option( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
-		if ( ! is_array( $enforce_roles ) || empty( $enforce_roles ) ) {
-			return (bool) get_option( 'reportedip_hive_password_policy_all_users', false );
+		$enforce_roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();
+		if ( empty( $enforce_roles ) ) {
+			return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_policy_all_users', false );
 		}
 
 		foreach ( (array) $user->roles as $role ) {

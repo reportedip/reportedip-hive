@@ -94,7 +94,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 	 * @return bool
 	 */
 	public static function is_enabled() {
-		return (bool) get_option( self::OPT_ENABLED, true );
+		return (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true );
 	}
 
 	/**
@@ -214,7 +214,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 			return false;
 		}
 
-		$threshold = (int) get_option( self::OPT_HARD_THRESHOLD, self::DEFAULT_THRESHOLD );
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_HARD_THRESHOLD, self::DEFAULT_THRESHOLD );
 		if ( $threshold <= 0 ) {
 			return false;
 		}
@@ -273,7 +273,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 
 		$user         = get_userdata( $user_id );
 		$count        = (int) get_user_meta( $user_id, self::META_COUNT, true );
-		$threshold    = (int) get_option( self::OPT_HARD_THRESHOLD, self::DEFAULT_THRESHOLD );
+		$threshold    = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_HARD_THRESHOLD, self::DEFAULT_THRESHOLD );
 		$is_hard_role = self::user_in_hard_roles( $user );
 
 		$profile_url = admin_url( 'profile.php#reportedip-hive-2fa' );
@@ -342,7 +342,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 	 * @return string[]
 	 */
 	private static function get_hard_roles() {
-		$raw = get_option( self::OPT_HARD_ROLES, self::DEFAULT_HARD_ROLES );
+		$raw = ReportedIP_Hive_Option_Routing::get( self::OPT_HARD_ROLES, self::DEFAULT_HARD_ROLES );
 		if ( is_string( $raw ) ) {
 			$decoded = json_decode( $raw, true );
 			$raw     = is_array( $decoded ) ? $decoded : self::DEFAULT_HARD_ROLES;
@@ -371,7 +371,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		if ( ! ( $user instanceof \WP_User ) ) {
 			return false;
 		}
-		$user_roles = is_array( $user->roles ) ? $user->roles : array();
+		$user_roles = $user->roles;
 		$hard_roles = self::get_hard_roles();
 		return ! empty( array_intersect( $user_roles, $hard_roles ) );
 	}

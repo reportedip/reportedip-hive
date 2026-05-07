@@ -2,6 +2,255 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.0] — 2026-05-08
+
+Promotes `2.0.0-beta.1` to GA after a week of dual-stack hardening on the
+WPMU+single-site Docker setup. All beta-1 functionality is unchanged;
+this section lists the additions and fixes that landed on top.
+
+### New
+
+- **Per-blog resolve-cache isolation**: `Option_Routing::cache_key()` now
+  suffixes the bucket with `get_current_blog_id()` so a `switch_to_blog()`
+  in the same request no longer leaks resolved overrides across sub-sites.
+- **`Option_Routing::get_network_enforce_roles()` / `get_site_enforce_roles_extra()`** —
+  pure-list helpers consumed by the Site-2FA UI to draw the
+  "enforced by network" badge without merging the two lists.
+- **Network-admin Settings-API save handler**: forms now post to a custom
+  `network_admin_edit_reportedip_hive_save_settings` route. WordPress'
+  `options.php` is wp_options-only on multisite, so saves silently
+  vanished into the main site's wp_options instead of landing in
+  sitemeta. The new handler hands the value to `update_site_option`,
+  which routes through `sanitize_option` exactly once — fixes complex
+  array sanitizers (`enforce_roles`, `allowed_methods`,
+  `reminder_hard_roles`) collapsing to `'[]'`.
+- **`Two_Factor_Frontend::flush_slug_memo()`** plus the matching
+  `update_*_option_*`-hook chain so a Site-2FA save is reflected on the
+  same render.
+- **Mode_Manager site-option adapter** (`on_mode_site_option_updated`)
+  mirrors the single-site `update_option_*` listener for the sitemeta
+  storage path so the cached mode and `reportedip_hive_mode_changed`
+  action stay accurate on Multisite.
+- **Site-2FA UI redesign** in `rip-settings-section` style matching the
+  Network 2FA tab: Network configuration block lists every relevant
+  network-default with a status badge, Frontend-2FA section gates with
+  the standard tier-lock card, additional-roles checklist marks
+  network-required roles as `checked + disabled` with an "enforced by
+  network" badge.
+- **Extended multisite test suite** (`tests/Multisite/OptionRoutingExtendedTest.php`,
+  +10 tests) lock in: per-blog cache isolation, setup-slug override,
+  pure-network/pure-site role helpers, slug-memo invalidation,
+  Mode_Manager sitemeta-hook adapter, network-admin save handler,
+  default-slug constant.
+- **Round-trip diagnostic** (`scripts/option-roundtrip-test.php`)
+  exercises 105 representative option keys via WP-CLI on demand;
+  100 % pass on both stacks confirms storage routing is correct.
+
+### Changed
+
+- Direct `get_option`/`update_option`/`delete_option` calls for plugin
+  options removed from `Mode_Manager`, `Two_Factor_Frontend`,
+  `Two_Factor_Recommend`, `Two_Factor_SMS`, `Two_Factor_Reset_Gate`,
+  `Two_Factor_WC_Notice`, `Tier_Upgrade`, `API_Client`, `Cache`,
+  `Setup_Wizard`, `Admin_Settings::sanitize_operation_mode()`, plus
+  the activation hook in `reportedip-hive.php`. Every read/write of a
+  `reportedip_hive_*` key now goes through `Option_Routing` —
+  consistent with the beta-1 sweep that missed these later additions.
+- `DEFAULT_FRONTEND_SLUG` changed from `2fa-login` (introduced in beta-1)
+  back to `reportedip-hive-2fa` so installs that already exposed
+  `/reportedip-hive-2fa/` keep their public URL across the upgrade.
+- `Site-2FA-Settings` save handler `array_diff()`s network-required
+  roles out of the persisted extras so a future network-admin removal
+  does not leave stale per-site overrides behind.
+- Network admin save no longer pre-sanitises before
+  `update_site_option`; relies on `sanitize_option_*` running once
+  inside `update_network_option`. Avoids the double-callback regression
+  that collapsed array values to `'[]'`.
+
+### Fixed
+
+- 2FA reminder *Hard-block roles* and the WooCommerce *Frontend login*
+  toggles silently bounced back to their previous value on every save
+  in Network Admin — the Settings API form posted to `options.php`
+  which on Multisite writes to wp_options of the main site, while the
+  rest of the codebase reads from sitemeta. Fixed via the new
+  network-admin save handler.
+- API-Key *Test Connection* button on the Network Admin reported "no
+  API key configured" right after a successful save because the API
+  client read the key from sitemeta but the save had landed in
+  wp_options. Same root cause, same fix.
+- "Settings saved." admin notice now appears after a successful
+  network-admin save (was silently missing).
+- Frontend-2FA `Available with Professional plan` upsell card extracted
+  into the shared `render_frontend_2fa_pro_upsell()` helper and styled
+  with `.rip-pro-upsell__title/__features/__cta` BEM classes —
+  removes inline `style=""` and unifies the bullet list across the
+  Network and Site-Admin views (the Site variant was missing the WC
+  Blocks bullet).
+- Inline `margin-left: var(--rip-space-2)` on the "enforced by network"
+  badge replaced with a `.rip-badge--inline` modifier (anti-AI-watermark
+  rule from `CLAUDE.md`).
+
+### Tooling
+
+- PHPStan bumped from 1.12 to **2.1** and `szepeviktor/phpstan-wordpress`
+  from 1.3 to **2.0**. Twelve newly-flagged errors fixed at the source
+  (no `@phpstan-ignore` baseline): redundant `!== null` / `!== ''`
+  guards after type narrowing, dead `class_exists()` /
+  `method_exists()` defensive shims, `defined('DOING_CRON')` swapped
+  for `wp_doing_cron()`, `Defaults::get()` return type tightened to
+  `int|string`, the IP-export `array_filter` replaced with a foreach
+  PHPStan can resolve.
+- `phpstan.neon` excludePaths now mark optional dirs with the `(?)`
+  suffix that PHPStan 2.x requires; `tests/phpstan-bootstrap.php`
+  defines `REPORTEDIP_HIVE_PLUGIN_DIR` as `dirname(__DIR__)` so
+  `require_once` paths inside the analysed code resolve to real files.
+- `dealerdirect/phpcodesniffer-composer-installer` patch bump to 1.2.1.
+
+### Verified
+
+- 0 PHPCS errors, PHPStan 2.1.54 *No errors*, 435/435 single-site
+  PHPUnit assertions, 19/19 multisite PHPUnit assertions, 105/105
+  option round-trip pass on both Docker stacks.
+
+## [2.0.0-beta.1] — 2026-05-07
+
+This is a **breaking change** that turns ReportedIP Hive into a fully
+network-aware Multisite plugin. Single-site installs auto-migrate on the
+first admin visit and behave identically to v1.x.
+
+### New
+
+- **Network-only activation** (`Network: true` in plugin header). On
+  Multisite the plugin can only be network-activated; per-site activation
+  is hidden by WordPress.
+- **Service layer**: three new classes mediate all Multisite-relevant
+  access — `Schema`, `Migration_Manager`, `Option_Routing`. Existing
+  classes call these services rather than WordPress functions so routing
+  changes are one-place work.
+- **Hybrid table layout** — all seven plugin tables live under
+  `$wpdb->base_prefix` (network-wide). `logs`, `api_queue`, `stats` carry
+  a `blog_id` column so the Network Admin can filter and Site Admins are
+  auto-scoped. `whitelist`, `blocked`, `attempts`, `trusted_devices` are
+  IP-centric or user-global and intentionally have no `blog_id` so a
+  single decision applies network-wide.
+- **Cross-site brute-force detection** — failed logins on Site A and
+  Site B aggregate into the same central `attempts` row, so a streamed
+  attack across sub-sites trips the threshold faster, and one
+  `blocked`-table entry blocks the IP on every site of the network.
+- **Versioned migration system** with atomic site-option lock and
+  automatic v4→v5 upgrade on first admin visit. Future schema bumps add
+  one method (`migrate_to_v6`, `migrate_to_v7`, …) — no existing-method
+  changes required.
+- **Site lifecycle handling** — `wp_initialize_site` and `wp_delete_site`
+  hooks keep the central tables consistent; `wpmu_delete_user` /
+  `delete_user` clean up trusted-device rows for deleted users.
+- **Cron scheduling on the main site only** with `is_main_site()` guard
+  + `admin_init` self-heal (single source of truth in
+  `Cron_Handler::schedule_cron_jobs_static()`). Avoids the N-fold
+  execution problem on large networks.
+- **Network-Admin UI** registered via `network_admin_menu` with the
+  `manage_network_options` cap; Setup-Wizard available in the network
+  admin too.
+- **Read-only Site-Admin UI on Multisite** — sub-site admins see Status,
+  own-site Logs (auto-scoped via `blog_id`), plus a single 2FA Site
+  Settings page that exposes exactly two writable overrides:
+  Frontend-2FA slug (per-site) and 2FA enforcement roles (additive only —
+  cannot drop network-required roles).
+- **2FA Super-Admin enforce toggle** (`reportedip_hive_2fa_enforce_super_admins`,
+  default on) — Multisite Super Admins are required to set up 2FA
+  unconditionally, decoupled from per-site role rules.
+- **Trust cookie network-wide** — `TRUSTED_COOKIE` is set with
+  `SITECOOKIEPATH` so a single trust decision carries across all sites
+  of a Multisite network; matches the new `trusted_devices` central
+  table layout.
+- **Cross-site REST throttle** — `Two_Factor_REST` IP throttle counters
+  use `set_site_transient` so an attacker hitting multiple sub-sites
+  cannot reset their counter by switching the host.
+- **Per-site relay usage tracker** — `Relay_Usage_Tracker` keeps a
+  rolling 6-month, per-blog-id counter for mail/SMS sends through the
+  Hive relay, so a Network Admin can answer "which site is consuming
+  the shared pool?" without round-tripping to the service.
+- **Multisite PHPUnit suite** in `tests/Multisite/` driven by
+  `phpunit-multisite.xml` with `WP_TESTS_MULTISITE=1`.
+- **Playwright E2E suite** in `tests/e2e/` with separate projects for
+  the single-site and multisite Docker stacks.
+- **CI**: new `phpunit-multisite` matrix job (PHP 8.1–8.5),
+  `e2e-single-site` and `e2e-multisite` job stubs.
+
+### Changed
+
+- `ReportedIP_Hive_Database` is now a thin shim around `Schema` for
+  table creation/teardown and around `Migration_Manager` for schema
+  upgrades. All other read/write methods are unchanged but operate on
+  the central (`base_prefix`) tables.
+- `register_activation_hook` / `register_deactivation_hook` /
+  `register_uninstall_hook` route through the service layer.
+- 353 plugin option calls (`get_option` / `update_option` / `delete_option`
+  on any `reportedip_hive_*` key) now go through
+  `Option_Routing::get/set/delete` so the network-vs-site scope is
+  decided in one place. On single-site nothing changes — `get_site_option`
+  falls through to `get_option`, behaviour is byte-identical to v1.x.
+- `Two_Factor` cookie handling consolidated into a single
+  `set_secure_cookie()` helper across the four call sites; trust-cookie
+  path widens to `SITECOOKIEPATH` on Multisite.
+- Single source of truth for the schema version is
+  `Migration_Manager::CURRENT_VERSION = 5`. The legacy
+  `Database::DB_VERSION` and `DB_VERSION_OPTION` constants were removed.
+- `version` bumped to `2.0.0-beta.1`.
+
+### Fixed
+
+- `Two_Factor::get_trusted_table()` was still using `$wpdb->prefix` after
+  the table moved to `base_prefix` in 2.0.0 — silently broken on
+  Multisite. Fixed via `Schema::table()`.
+- Setup wizard registers on `network_admin_menu` so a Super Admin can
+  reach `/wp-admin/network/admin.php?page=reportedip-hive-wizard`
+  instead of getting a "Sorry, you are not allowed" page.
+- Site-2FA-Settings POST: role slugs are now intersected against
+  `wp_roles()->get_names()` before persist, so a crafted POST cannot
+  smuggle non-existent role slugs into the enforcement list. Nonce
+  failures now `wp_die()` instead of falling through silently.
+- Inline `style="margin: 12px 0"` on the read-only banner replaced with
+  the new design-system class `.rip-alert--banner` (anti-AI-watermark
+  rule from `CLAUDE.md`).
+
+### Performance
+
+- `Schema::tables_exist()` folds 7 separate `SHOW TABLES` probes into a
+  single `information_schema.TABLES` query.
+- `Option_Routing::is_site_option()` switched from O(N) `in_array()` to
+  an O(1) flipped `isset()` lookup map (350+ call sites per request).
+- Per-request resolve cache for `resolve_2fa_frontend_slug()` and
+  `resolve_2fa_enforce_roles()` (both are called in the login filter
+  hot path); cache is invalidated via `update_option_*` /
+  `update_site_option_*` action hooks for the four relevant keys.
+- `admin_init` cron self-heal is gated by `!is_multisite() ||
+  is_main_site()`.
+
+### Migration notes
+
+- Existing single-site installs migrate transparently — no data movement
+  required, only `ALTER TABLE … ADD COLUMN blog_id` (default 1).
+- Existing Multisite installs that ran Hive on individual sites without
+  `Network: true` get a one-time option-promotion pass: per-site
+  network-class options are copied into sitemeta (first site to provide
+  a value wins, no overwrites).
+- Existing `trusted_devices` rows have their `expires_at` capped at
+  NOW()+24h so users get a smooth re-trust window after the trust cookie
+  path widens to `SITECOOKIEPATH`.
+
+### Verified
+
+- PHPCS clean, PHPStan level 5 clean, PHPUnit 435/435 green.
+- Live-tested on a 4-site subdir Multisite stack: Network Admin (5 plugin
+  pages render fault-free), Site-Admin Read-Only-UI (Status, Logs,
+  2FA Site Settings with working save + per-site override isolation),
+  Setup-Wizard 9 steps reachable, Super-Admin 2FA enforcement triggers
+  the onboarding redirect, cross-site brute-force aggregates into one
+  attempts row and the resulting block applies to a sub-site that was
+  never attacked, per-site relay-usage tracker increments correctly.
+
 ## [1.7.1] — 2026-05-06
 
 ### Fixes

@@ -108,6 +108,10 @@ if ( 'integration' === $suite ) {
 	if ( ! defined( 'REPORTEDIP_HIVE_PLUGIN_BASENAME' ) ) {
 		define( 'REPORTEDIP_HIVE_PLUGIN_BASENAME', 'reportedip-hive/reportedip-hive.php' );
 	}
+
+	require_once $plugin_dir . '/includes/class-option-routing.php';
+	require_once $plugin_dir . '/includes/class-schema.php';
+	require_once $plugin_dir . '/includes/class-migration-manager.php';
 }
 
 /**

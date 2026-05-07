@@ -75,9 +75,6 @@ class ReportedIP_Hive_Phone_Validator {
 	 * @return string|null  Candidate '+'-prefixed digits string, or null on garbage.
 	 */
 	public static function normalise( $input ) {
-		if ( ! is_string( $input ) ) {
-			return null;
-		}
 		$stripped = preg_replace( '/[\s\(\)\-\.\/]/', '', $input );
 		if ( null === $stripped || $stripped === '' ) {
 			return null;
@@ -102,7 +99,7 @@ class ReportedIP_Hive_Phone_Validator {
 	 * @return bool
 	 */
 	public static function is_valid_e164( $phone ) {
-		if ( ! is_string( $phone ) || $phone === '' ) {
+		if ( $phone === '' ) {
 			return false;
 		}
 		return (bool) preg_match( '/^\+[1-9]\d{6,14}$/', $phone );
@@ -185,7 +182,7 @@ class ReportedIP_Hive_Phone_Validator {
 	 */
 	public static function get_whitelist() {
 		$list     = self::DEFAULT_EU_CODES;
-		$override = get_option( 'reportedip_hive_eu_phone_country_codes', null );
+		$override = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_eu_phone_country_codes', null );
 		if ( is_array( $override ) && ! empty( $override ) ) {
 			$list = $override;
 		}

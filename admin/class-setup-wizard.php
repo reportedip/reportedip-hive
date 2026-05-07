@@ -71,6 +71,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		$this->mode_manager = $mode_manager;
 
 		add_action( 'admin_menu', array( $this, 'add_wizard_page' ) );
+		add_action( 'network_admin_menu', array( $this, 'add_wizard_page' ) );
 
 		add_action( 'admin_init', array( $this, 'maybe_redirect_to_wizard' ) );
 		add_action( 'admin_init', array( $this, 'maybe_render_standalone_wizard' ) );
@@ -125,23 +126,21 @@ class ReportedIP_Hive_Setup_Wizard {
 		$notify_admin = isset( $_POST['notify_admin'] ) && '1' === sanitize_key( wp_unslash( (string) $_POST['notify_admin'] ) );
 		$sync_to_api  = isset( $_POST['sync_to_api'] ) && '1' === sanitize_key( wp_unslash( (string) $_POST['sync_to_api'] ) );
 
-		update_option( 'reportedip_hive_notify_recipients', implode( ', ', $valid ) );
-		update_option( 'reportedip_hive_notify_from_name', $from_name );
-		update_option( 'reportedip_hive_notify_from_email', $from_email );
-		update_option( 'reportedip_hive_notify_admin', $notify_admin );
-		update_option( 'reportedip_hive_notify_sync_to_api', $sync_to_api );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_recipients', implode( ', ', $valid ) );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_from_name', $from_name );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_from_email', $from_email );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_admin', $notify_admin );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_sync_to_api', $sync_to_api );
 
 		if ( $sync_to_api && class_exists( 'ReportedIP_Hive_API' ) ) {
 			$api = ReportedIP_Hive_API::get_instance();
-			if ( method_exists( $api, 'sync_notification_config' ) ) {
-				$api->sync_notification_config(
-					array(
-						'recipients' => $valid,
-						'from_name'  => $from_name,
-						'from_email' => $from_email,
-					)
-				);
-			}
+			$api->sync_notification_config(
+				array(
+					'recipients' => $valid,
+					'from_name'  => $from_name,
+					'from_email' => $from_email,
+				)
+			);
 		}
 
 		wp_send_json_success(
@@ -181,13 +180,13 @@ class ReportedIP_Hive_Setup_Wizard {
 		$done_url = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=9' );
 
 		if ( 'skip' === $action ) {
-			update_option( 'reportedip_hive_auto_footer_enabled', false );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_footer_enabled', false );
 			wp_send_json_success( array( 'redirect_url' => $done_url ) );
 		}
 
-		update_option( 'reportedip_hive_auto_footer_enabled', $enabled );
-		update_option( 'reportedip_hive_auto_footer_variant', $variant );
-		update_option( 'reportedip_hive_auto_footer_align', $align );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_footer_enabled', $enabled );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_footer_variant', $variant );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_footer_align', $align );
 
 		wp_send_json_success( array( 'redirect_url' => $done_url ) );
 	}
@@ -230,14 +229,21 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Add hidden wizard page to admin menu (needed for URL routing)
+	 * Add hidden wizard page to admin menu (needed for URL routing).
+	 *
+	 * Wired to both `admin_menu` (single-site) and `network_admin_menu`
+	 * (multisite super admin) so the wizard URL resolves in either
+	 * context. The capability raises to `manage_network_options` when
+	 * registering inside the network admin so a non-super-admin sneaking
+	 * onto the URL still hits a 403.
 	 */
 	public function add_wizard_page() {
+		$cap = is_network_admin() ? 'manage_network_options' : 'manage_options';
 		add_submenu_page(
 			'',
 			__( 'Setup Wizard', 'reportedip-hive' ),
 			__( 'Setup Wizard', 'reportedip-hive' ),
-			'manage_options',
+			$cap,
 			self::PAGE_SLUG,
 			'__return_null'
 		);
@@ -252,7 +258,9 @@ class ReportedIP_Hive_Setup_Wizard {
 			return;
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		$allowed = current_user_can( 'manage_options' )
+			|| ( is_multisite() && current_user_can( 'manage_network_options' ) );
+		if ( ! $allowed ) {
 			return;
 		}
 
@@ -376,7 +384,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			ReportedIP_Hive_Frontend_Shortcodes::get_instance()->enqueue_frontend_script();
 		}
 
-		$saved_key  = (string) get_option( 'reportedip_hive_api_key', '' );
+		$saved_key  = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		$saved_tier = class_exists( 'ReportedIP_Hive_Mode_Manager' )
 			? ReportedIP_Hive_Mode_Manager::get_instance()->get_current_tier()
 			: 'free';
@@ -680,7 +688,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 */
 	private function render_step_mode_and_key() {
 		$current_mode = $this->mode_manager->get_mode();
-		$api_key      = get_option( 'reportedip_hive_api_key', '' );
+		$api_key      = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		?>
 		<div class="rip-wizard__mode-select">
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'Choose your protection mode', 'reportedip-hive' ); ?></h1>
@@ -944,7 +952,7 @@ class ReportedIP_Hive_Setup_Wizard {
 							<span class="rip-required" aria-hidden="true">*</span>
 						</h4>
 						<label class="rip-toggle">
-							<input type="checkbox" name="block_escalation_enabled" id="rip-block-escalation" <?php checked( (bool) get_option( 'reportedip_hive_block_escalation_enabled', true ) ); ?>>
+							<input type="checkbox" name="block_escalation_enabled" id="rip-block-escalation" <?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_escalation_enabled', true ) ); ?>>
 							<span class="rip-toggle__slider"></span>
 							<span class="rip-toggle__label"><?php esc_html_e( 'Progressive ladder (5 min → 15 min → 30 min → 24 h → 48 h → 7 d) — recommended', 'reportedip-hive' ); ?></span>
 						</label>
@@ -987,35 +995,33 @@ class ReportedIP_Hive_Setup_Wizard {
 	private function render_step_two_factor() {
 		$tier_pro_or_higher = false;
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'tier_at_least' ) ) {
-				$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
-			}
+			$mgr                = ReportedIP_Hive_Mode_Manager::get_instance();
+			$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
 		}
 
 		$default_methods = $tier_pro_or_higher
 			? array( 'totp', 'email', 'sms' )
 			: array( 'totp', 'email', 'webauthn' );
 
-		$saved_methods_raw = get_option( 'reportedip_hive_2fa_allowed_methods', '' );
+		$saved_methods_raw = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '' );
 		$saved_methods     = is_string( $saved_methods_raw ) ? json_decode( $saved_methods_raw, true ) : array();
 		if ( ! is_array( $saved_methods ) || empty( $saved_methods ) ) {
 			$saved_methods = $default_methods;
 		}
 
-		$saved_roles_raw = get_option( 'reportedip_hive_2fa_enforce_roles', '' );
+		$saved_roles_raw = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '' );
 		$saved_roles     = is_string( $saved_roles_raw ) ? json_decode( $saved_roles_raw, true ) : array();
 		if ( ! is_array( $saved_roles ) || empty( $saved_roles ) ) {
 			$saved_roles = array( 'administrator' );
 		}
 
-		$saved_2fa_enabled              = (bool) get_option( 'reportedip_hive_2fa_enabled_global', $tier_pro_or_higher );
-		$saved_grace_days               = (int) get_option( 'reportedip_hive_2fa_enforce_grace_days', 7 );
-		$saved_max_skips                = (int) get_option( 'reportedip_hive_2fa_max_skips', 3 );
-		$saved_trusted_devices          = (bool) get_option( 'reportedip_hive_2fa_trusted_devices', true );
-		$saved_frontend_onboarding      = (bool) get_option( 'reportedip_hive_2fa_frontend_onboarding', true );
-		$saved_notify_new_device        = (bool) get_option( 'reportedip_hive_2fa_notify_new_device', true );
-		$saved_xmlrpc_app_password_only = (bool) get_option( 'reportedip_hive_2fa_xmlrpc_app_password_only', false );
+		$saved_2fa_enabled              = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enabled_global', $tier_pro_or_higher );
+		$saved_grace_days               = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_grace_days', 7 );
+		$saved_max_skips                = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );
+		$saved_trusted_devices          = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true );
+		$saved_frontend_onboarding      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_onboarding', true );
+		$saved_notify_new_device        = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_notify_new_device', true );
+		$saved_xmlrpc_app_password_only = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_xmlrpc_app_password_only', false );
 
 		$method_classes = function ( string $method ) use ( $saved_methods ) {
 			return in_array( $method, $saved_methods, true ) ? ' rip-method-card--selected' : '';
@@ -1181,7 +1187,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			$has_woocommerce        = class_exists( 'WooCommerce' );
 			$frontend_status        = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
 			$frontend_locked        = ! $frontend_status['available'];
-			$saved_frontend_enabled = (bool) get_option( 'reportedip_hive_2fa_frontend_enabled', false );
+			$saved_frontend_enabled = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_enabled', false );
 			?>
 			<?php if ( $has_woocommerce ) : ?>
 				<div class="rip-config-card<?php echo $frontend_locked ? ' rip-config-card--disabled' : ''; ?>" id="rip-step4-frontend">
@@ -1372,30 +1378,28 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		$tier_pro_or_higher = false;
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'tier_at_least' ) ) {
-				$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
-			}
+			$mgr                = ReportedIP_Hive_Mode_Manager::get_instance();
+			$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
 		}
 
-		$recipients_raw = (string) get_option( 'reportedip_hive_notify_recipients', '' );
+		$recipients_raw = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_recipients', '' );
 		if ( '' === trim( $recipients_raw ) ) {
 			$recipients_raw = $default_from_mail;
 		}
 
-		$from_name = (string) get_option( 'reportedip_hive_notify_from_name', '' );
+		$from_name = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_name', '' );
 		if ( '' === $from_name ) {
 			$from_name = $default_from_name;
 		}
 
-		$from_email = (string) get_option( 'reportedip_hive_notify_from_email', '' );
+		$from_email = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_email', '' );
 		if ( '' === $from_email ) {
 			$from_email = $default_from_mail;
 		}
 
-		$notify_admin = (bool) get_option( 'reportedip_hive_notify_admin', true );
+		$notify_admin = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_admin', true );
 
-		$sync_option = get_option( 'reportedip_hive_notify_sync_to_api', null );
+		$sync_option = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_sync_to_api', null );
 		$sync_to_api = null === $sync_option ? $tier_pro_or_higher : (bool) $sync_option;
 
 		$mode = $this->mode_manager->get_mode();
@@ -1555,8 +1559,8 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * @since 1.2.0
 	 */
 	private function render_step_hide_login() {
-		$existing_slug = (string) get_option( 'reportedip_hive_hide_login_slug', '' );
-		$existing_mode = (string) get_option( 'reportedip_hive_hide_login_response_mode', ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE );
+		$existing_slug = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', '' );
+		$existing_mode = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE );
 		$home_url      = trailingslashit( home_url() );
 		$suggested     = '' !== $existing_slug
 			? $existing_slug
@@ -1645,11 +1649,11 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * @since 1.5.3
 	 */
 	private function render_step_promote() {
-		$current_enabled = (bool) get_option( 'reportedip_hive_auto_footer_enabled', false );
+		$current_enabled = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false );
 		$current_variant = class_exists( 'ReportedIP_Hive_Frontend_Shortcodes' )
-			? ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( get_option( 'reportedip_hive_auto_footer_variant', 'badge' ) )
+			? ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_variant', 'badge' ) )
 			: 'badge';
-		$current_align   = sanitize_key( (string) get_option( 'reportedip_hive_auto_footer_align', 'center' ) );
+		$current_align   = sanitize_key( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_align', 'center' ) );
 		if ( ! in_array( $current_align, array( 'left', 'center', 'right', 'below' ), true ) ) {
 			$current_align = 'center';
 		}
@@ -1815,15 +1819,15 @@ class ReportedIP_Hive_Setup_Wizard {
 		$mode      = $this->mode_manager->get_mode();
 		$mode_info = $this->mode_manager->get_mode_info( $mode );
 
-		$retention       = (int) get_option( 'reportedip_hive_data_retention_days', 30 );
-		$twofa_enabled   = (bool) get_option( 'reportedip_hive_2fa_enabled_global', false );
-		$auto_block      = (bool) get_option( 'reportedip_hive_auto_block', true );
-		$minimal_logging = (bool) get_option( 'reportedip_hive_minimal_logging', true );
-		$notify_admin    = (bool) get_option( 'reportedip_hive_notify_admin', true );
+		$retention       = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 );
+		$twofa_enabled   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enabled_global', false );
+		$auto_block      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', true );
+		$minimal_logging = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_minimal_logging', true );
+		$notify_admin    = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_admin', true );
 		$recipients      = ReportedIP_Hive_Defaults::notify_recipients();
-		$promote_enabled = (bool) get_option( 'reportedip_hive_auto_footer_enabled', false );
-		$promote_variant = (string) get_option( 'reportedip_hive_auto_footer_variant', 'badge' );
-		$enforced_roles  = json_decode( get_option( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
+		$promote_enabled = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false );
+		$promote_variant = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_variant', 'badge' );
+		$enforced_roles  = json_decode( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
 		$enforced_roles  = is_array( $enforced_roles ) ? $enforced_roles : array();
 
 		$twofa_setup_pending = $twofa_enabled && class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' )
@@ -2021,7 +2025,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		$result = $api_client->verify_api_key( $api_key );
 
 		if ( $result && ! empty( $result['valid'] ) ) {
-			update_option( 'reportedip_hive_api_key', $api_key );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_key', $api_key );
 
 			wp_send_json_success(
 				array(
@@ -2062,7 +2066,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		if ( isset( $_POST['api_key'] ) ) {
 			$api_key = sanitize_text_field( wp_unslash( $_POST['api_key'] ) );
 			if ( ! empty( $api_key ) ) {
-				update_option( 'reportedip_hive_api_key', $api_key );
+				ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_key', $api_key );
 			}
 		}
 
@@ -2070,21 +2074,21 @@ class ReportedIP_Hive_Setup_Wizard {
 		$presets          = $this->get_protection_presets();
 		$preset           = isset( $presets[ $protection_level ] ) ? $presets[ $protection_level ] : $presets['medium'];
 
-		update_option( 'reportedip_hive_failed_login_threshold', $preset['failed_login_threshold'] );
-		update_option( 'reportedip_hive_failed_login_timeframe', $preset['failed_login_timeframe'] );
-		update_option( 'reportedip_hive_block_duration', $preset['block_duration'] );
-		update_option( 'reportedip_hive_block_threshold', $preset['block_threshold'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_failed_login_threshold', $preset['failed_login_threshold'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_failed_login_timeframe', $preset['failed_login_timeframe'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_block_duration', $preset['block_duration'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_block_threshold', $preset['block_threshold'] );
 
 		$protection_defaults = ReportedIP_Hive_Defaults::wizard_protection_defaults();
 		foreach ( $protection_defaults as $field => $default_on ) {
 			$value = array_key_exists( $field, $_POST )
 				? (bool) $_POST[ $field ]
 				: (bool) $default_on;
-			update_option( 'reportedip_hive_' . $field, $value );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_' . $field, $value );
 		}
 
 		$twofa_enabled = isset( $_POST['2fa_enabled_global'] ) && (bool) $_POST['2fa_enabled_global'];
-		update_option( 'reportedip_hive_2fa_enabled_global', $twofa_enabled );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enabled_global', $twofa_enabled );
 
 		$valid_methods = array( 'totp', 'email', 'webauthn', 'sms' );
 		$raw_methods   = isset( $_POST['2fa_methods'] ) ? sanitize_text_field( wp_unslash( $_POST['2fa_methods'] ) ) : 'totp,email';
@@ -2092,7 +2096,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		if ( empty( $methods ) ) {
 			$methods = array( 'totp', 'email' );
 		}
-		update_option( 'reportedip_hive_2fa_allowed_methods', wp_json_encode( $methods ) );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_allowed_methods', wp_json_encode( $methods ) );
 
 		$valid_roles   = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
 		$posted_roles  = isset( $_POST['2fa_enforce_role'] ) && is_array( $_POST['2fa_enforce_role'] )
@@ -2102,10 +2106,10 @@ class ReportedIP_Hive_Setup_Wizard {
 		if ( $twofa_enabled && empty( $enforce_roles ) ) {
 			$enforce_roles = array( 'administrator' );
 		}
-		update_option( 'reportedip_hive_2fa_enforce_roles', wp_json_encode( $enforce_roles ) );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_roles', wp_json_encode( $enforce_roles ) );
 
-		update_option( 'reportedip_hive_2fa_trusted_devices', isset( $_POST['2fa_trusted_devices'] ) && (bool) $_POST['2fa_trusted_devices'] );
-		update_option( 'reportedip_hive_2fa_frontend_onboarding', isset( $_POST['2fa_frontend_onboarding'] ) && (bool) $_POST['2fa_frontend_onboarding'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_trusted_devices', isset( $_POST['2fa_trusted_devices'] ) && (bool) $_POST['2fa_trusted_devices'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_frontend_onboarding', isset( $_POST['2fa_frontend_onboarding'] ) && (bool) $_POST['2fa_frontend_onboarding'] );
 
 		$frontend_enabled_desired = isset( $_POST['2fa_frontend_enabled'] ) && (bool) $_POST['2fa_frontend_enabled'];
 		if ( $frontend_enabled_desired ) {
@@ -2114,38 +2118,38 @@ class ReportedIP_Hive_Setup_Wizard {
 				$frontend_enabled_desired = false;
 			}
 		}
-		$frontend_was_on = (bool) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
-		update_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, $frontend_enabled_desired ? '1' : '' );
+		$frontend_was_on = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, $frontend_enabled_desired ? '1' : '' );
 		if ( $frontend_was_on !== $frontend_enabled_desired ) {
 			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
 			if ( function_exists( 'flush_rewrite_rules' ) ) {
 				flush_rewrite_rules( false );
 			}
 		}
-		update_option( 'reportedip_hive_2fa_notify_new_device', isset( $_POST['2fa_notify_new_device'] ) && (bool) $_POST['2fa_notify_new_device'] );
-		update_option( 'reportedip_hive_2fa_xmlrpc_app_password_only', isset( $_POST['2fa_xmlrpc_app_password_only'] ) && (bool) $_POST['2fa_xmlrpc_app_password_only'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_notify_new_device', isset( $_POST['2fa_notify_new_device'] ) && (bool) $_POST['2fa_notify_new_device'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_xmlrpc_app_password_only', isset( $_POST['2fa_xmlrpc_app_password_only'] ) && (bool) $_POST['2fa_xmlrpc_app_password_only'] );
 
 		$grace_days = isset( $_POST['2fa_enforce_grace_days'] ) ? absint( $_POST['2fa_enforce_grace_days'] ) : 7;
 		$grace_days = max( 0, min( 60, $grace_days ) );
-		update_option( 'reportedip_hive_2fa_enforce_grace_days', $grace_days );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_grace_days', $grace_days );
 
 		$max_skips = isset( $_POST['2fa_max_skips'] ) ? absint( $_POST['2fa_max_skips'] ) : 3;
 		$max_skips = max( 0, min( 20, $max_skips ) );
-		update_option( 'reportedip_hive_2fa_max_skips', $max_skips );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_max_skips', $max_skips );
 
-		update_option( 'reportedip_hive_minimal_logging', isset( $_POST['minimal_logging'] ) && (bool) $_POST['minimal_logging'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_minimal_logging', isset( $_POST['minimal_logging'] ) && (bool) $_POST['minimal_logging'] );
 
 		$retention_days = isset( $_POST['data_retention_days'] ) ? absint( $_POST['data_retention_days'] ) : 30;
 		$retention_days = max( 7, min( 365, $retention_days ) );
-		update_option( 'reportedip_hive_data_retention_days', $retention_days );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_data_retention_days', $retention_days );
 
 		$anonymize_days = isset( $_POST['auto_anonymize_days'] ) ? absint( $_POST['auto_anonymize_days'] ) : 7;
 		$anonymize_days = max( 1, min( 90, $anonymize_days ) );
-		update_option( 'reportedip_hive_auto_anonymize_days', $anonymize_days );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_anonymize_days', $anonymize_days );
 
-		update_option( 'reportedip_hive_log_user_agents', isset( $_POST['log_user_agents'] ) && (bool) $_POST['log_user_agents'] );
-		update_option( 'reportedip_hive_log_referer_domains', isset( $_POST['log_referer_domains'] ) && (bool) $_POST['log_referer_domains'] );
-		update_option( 'reportedip_hive_delete_data_on_uninstall', isset( $_POST['delete_data_on_uninstall'] ) && (bool) $_POST['delete_data_on_uninstall'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_log_user_agents', isset( $_POST['log_user_agents'] ) && (bool) $_POST['log_user_agents'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_log_referer_domains', isset( $_POST['log_referer_domains'] ) && (bool) $_POST['log_referer_domains'] );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_delete_data_on_uninstall', isset( $_POST['delete_data_on_uninstall'] ) && (bool) $_POST['delete_data_on_uninstall'] );
 
 		$this->save_hide_login_step();
 
@@ -2158,9 +2162,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			&& class_exists( 'ReportedIP_Hive_Two_Factor' )
 		) {
 			$current_user = wp_get_current_user();
-			if ( $current_user instanceof WP_User
-				&& ReportedIP_Hive_Two_Factor::is_enforced_for_user( $current_user )
-			) {
+			if ( ReportedIP_Hive_Two_Factor::is_enforced_for_user( $current_user ) ) {
 				$enabled_methods = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $current_user->ID );
 				if ( empty( $enabled_methods ) ) {
 					set_transient(
@@ -2201,12 +2203,12 @@ class ReportedIP_Hive_Setup_Wizard {
 				ReportedIP_Hive_Hide_Login::RESPONSE_MODE_404,
 			);
 			if ( in_array( $mode, $valid_modes, true ) ) {
-				update_option( 'reportedip_hive_hide_login_response_mode', $mode );
+				ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_response_mode', $mode );
 			}
 		}
 
 		if ( ! $wants_enabled ) {
-			update_option( 'reportedip_hive_hide_login_enabled', false );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', false );
 			return;
 		}
 
@@ -2216,18 +2218,18 @@ class ReportedIP_Hive_Setup_Wizard {
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		if ( '' === $raw_slug || ! class_exists( 'ReportedIP_Hive_Hide_Login' ) ) {
-			update_option( 'reportedip_hive_hide_login_enabled', false );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', false );
 			return;
 		}
 
 		$validated = ReportedIP_Hive_Hide_Login::get_instance()->sanitize_slug( $raw_slug );
 		if ( '' === $validated || $validated !== $raw_slug ) {
-			update_option( 'reportedip_hive_hide_login_enabled', false );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', false );
 			return;
 		}
 
-		update_option( 'reportedip_hive_hide_login_slug', $validated );
-		update_option( 'reportedip_hive_hide_login_enabled', true );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_slug', $validated );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', true );
 		flush_rewrite_rules( false );
 	}
 
@@ -2287,7 +2289,7 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		$this->mode_manager->skip_wizard();
 
-		if ( ! get_option( 'reportedip_hive_operation_mode' ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_operation_mode' ) ) {
 			$this->mode_manager->set_mode( 'local' );
 		}
 

@@ -119,7 +119,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	 * @return string
 	 */
 	public static function get_active_provider_class() {
-		$selected = (string) get_option( self::OPT_PROVIDER, '' );
+		$selected = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_PROVIDER, '' );
 		$registry = self::providers();
 		if ( '' === $selected || empty( $registry[ $selected ] ) ) {
 			return '';
@@ -141,7 +141,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		// the relay AVV with reportedip.de is the relevant agreement.
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
 			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'sms' ) ) {
+			if ( method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'sms' ) ) {
 				return true;
 			}
 		}
@@ -149,7 +149,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		if ( ! self::get_active_provider_class() ) {
 			return false;
 		}
-		if ( ! (bool) get_option( self::OPT_AVV_CONFIRMED, false ) ) {
+		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_AVV_CONFIRMED, false ) ) {
 			return false;
 		}
 		$config = self::get_provider_config();
@@ -165,7 +165,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	 * @return array
 	 */
 	public static function get_provider_config() {
-		$raw = get_option( self::OPT_PROVIDER_CONF, '' );
+		$raw = ReportedIP_Hive_Option_Routing::get( self::OPT_PROVIDER_CONF, '' );
 		if ( empty( $raw ) ) {
 			return array();
 		}
@@ -184,15 +184,15 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	 * @return bool
 	 */
 	public static function save_provider_config( $config ) {
-		if ( ! is_array( $config ) || empty( $config ) ) {
-			delete_option( self::OPT_PROVIDER_CONF );
+		if ( empty( $config ) ) {
+			ReportedIP_Hive_Option_Routing::delete( self::OPT_PROVIDER_CONF );
 			return true;
 		}
 		$encrypted = ReportedIP_Hive_Two_Factor_Crypto::encrypt( wp_json_encode( $config ) );
 		if ( false === $encrypted ) {
 			return false;
 		}
-		update_option( self::OPT_PROVIDER_CONF, $encrypted, false );
+		ReportedIP_Hive_Option_Routing::set( self::OPT_PROVIDER_CONF, $encrypted );
 		return true;
 	}
 
@@ -331,7 +331,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' )
 			&& class_exists( 'ReportedIP_Hive_SMS_Provider_Relay' ) ) {
 			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'sms' ) ) {
+			if ( $mgr->is_relay_available( 'sms' ) ) {
 				$use_relay = true;
 			}
 		}

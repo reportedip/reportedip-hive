@@ -4,7 +4,7 @@
  *
  * This class provides database abstraction for the ReportedIP Hive plugin.
  * Direct database queries are intentional as this is the database layer.
- * Table names are constructed safely using $wpdb->prefix and cannot use placeholders.
+ * Table names are constructed safely using $wpdb->base_prefix and cannot use placeholders.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <ps@cms-admins.de>
@@ -24,20 +24,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter -- Database layer: all table names are composed from $wpdb->prefix with hardcoded suffixes and cannot be parameterised. Dynamic SQL fragments are built with $wpdb->prepare(), validated allowlists, or cast integers.
+// phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter -- Database layer: all table names are composed from $wpdb->base_prefix with hardcoded suffixes and cannot be parameterised. Dynamic SQL fragments are built with $wpdb->prepare(), validated allowlists, or cast integers.
 
 class ReportedIP_Hive_Database {
-
-	/**
-	 * Current database schema version.
-	 * Increment this when adding migrations.
-	 */
-	const DB_VERSION = 4;
-
-	/**
-	 * Option key for stored DB version
-	 */
-	const DB_VERSION_OPTION = 'reportedip_hive_db_version';
 
 	/**
 	 * Single instance of the class
@@ -69,12 +58,12 @@ class ReportedIP_Hive_Database {
 		global $wpdb;
 
 		$required_tables = array(
-			$wpdb->prefix . 'reportedip_hive_logs',
-			$wpdb->prefix . 'reportedip_hive_whitelist',
-			$wpdb->prefix . 'reportedip_hive_blocked',
-			$wpdb->prefix . 'reportedip_hive_attempts',
-			$wpdb->prefix . 'reportedip_hive_api_queue',
-			$wpdb->prefix . 'reportedip_hive_stats',
+			$wpdb->base_prefix . 'reportedip_hive_logs',
+			$wpdb->base_prefix . 'reportedip_hive_whitelist',
+			$wpdb->base_prefix . 'reportedip_hive_blocked',
+			$wpdb->base_prefix . 'reportedip_hive_attempts',
+			$wpdb->base_prefix . 'reportedip_hive_api_queue',
+			$wpdb->base_prefix . 'reportedip_hive_stats',
 		);
 
 		foreach ( $required_tables as $table ) {
@@ -101,250 +90,34 @@ class ReportedIP_Hive_Database {
 
 	/**
 	 * Ensure tables exist and schema is up to date.
-	 * Called on every admin page load to catch missed activations and updates.
+	 *
+	 * Delegated to the dedicated {@see ReportedIP_Hive_Migration_Manager}.
+	 * The manager owns the lock, version tracking and step-by-step migration
+	 * methods so this entry point stays a thin compatibility shim for code
+	 * paths that still call into the database layer directly.
 	 */
 	public function maybe_update_schema() {
-		$installed_version = get_option( self::DB_VERSION_OPTION, 0 );
-
-		if ( (int) $installed_version >= self::DB_VERSION ) {
-			return;
-		}
-
-		$this->create_tables();
-		$this->run_migrations();
-
-		update_option( self::DB_VERSION_OPTION, self::DB_VERSION );
+		ReportedIP_Hive_Migration_Manager::maybe_run();
 	}
 
 	/**
-	 * Run incremental migrations between schema versions.
+	 * Create all database tables.
 	 *
-	 * dbDelta does not change ENUM definitions on existing tables, so the
-	 * VARCHAR(32) widening on `attempts.attempt_type` introduced in v3
-	 * needs an explicit ALTER. Idempotent: re-running is a no-op.
-	 */
-	private function run_migrations() {
-		global $wpdb;
-
-		$table_attempts = $wpdb->prefix . 'reportedip_hive_attempts';
-
-		$column = $wpdb->get_row(
-			$wpdb->prepare(
-				'SELECT DATA_TYPE AS data_type, COLUMN_TYPE AS column_type FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = %s',
-				$table_attempts,
-				'attempt_type'
-			)
-		);
-
-		if ( $column && strtolower( (string) $column->data_type ) === 'enum' ) {
-			$wpdb->query( "ALTER TABLE $table_attempts MODIFY attempt_type VARCHAR(32) NOT NULL DEFAULT 'login'" );
-		}
-	}
-
-	/**
-	 * Create all database tables
+	 * Thin shim around {@see ReportedIP_Hive_Schema::ensure_tables()}. Kept
+	 * for compatibility with the activation hook and any external caller
+	 * that still reaches into this class.
 	 */
 	public function create_tables() {
-		global $wpdb;
-
-		$charset_collate = $wpdb->get_charset_collate();
-
-		$table_logs = $wpdb->prefix . 'reportedip_hive_logs';
-		$sql_logs   = "CREATE TABLE $table_logs (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            event_type varchar(50) NOT NULL,
-            ip_address varchar(45) NOT NULL,
-            details longtext DEFAULT NULL,
-            severity enum('low','medium','high','critical') DEFAULT 'medium',
-            reported_to_api tinyint(1) DEFAULT 0,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            KEY idx_event_type (event_type),
-            KEY idx_ip_address (ip_address),
-            KEY idx_created_at (created_at),
-            KEY idx_severity (severity),
-            KEY idx_reported_to_api (reported_to_api)
-        ) $charset_collate;";
-
-		$table_whitelist = $wpdb->prefix . 'reportedip_hive_whitelist';
-		$sql_whitelist   = "CREATE TABLE $table_whitelist (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            ip_address varchar(45) NOT NULL,
-            ip_type enum('ipv4','ipv6','cidr') DEFAULT 'ipv4',
-            reason text DEFAULT NULL,
-            added_by bigint(20) unsigned NOT NULL,
-            expires_at datetime DEFAULT NULL,
-            is_active tinyint(1) DEFAULT 1,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY unique_ip (ip_address),
-            KEY idx_ip_type (ip_type),
-            KEY idx_is_active (is_active),
-            KEY idx_expires_at (expires_at)
-        ) $charset_collate;";
-
-		$table_blocked = $wpdb->prefix . 'reportedip_hive_blocked';
-		$sql_blocked   = "CREATE TABLE $table_blocked (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            ip_address varchar(45) NOT NULL,
-            reason varchar(255) NOT NULL,
-            block_type enum('manual','automatic','reputation') DEFAULT 'automatic',
-            blocked_until datetime DEFAULT NULL,
-            failed_attempts int(11) DEFAULT 0,
-            last_attempt datetime DEFAULT NULL,
-            is_active tinyint(1) DEFAULT 1,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY unique_ip (ip_address),
-            KEY idx_block_type (block_type),
-            KEY idx_blocked_until (blocked_until),
-            KEY idx_is_active (is_active),
-            KEY idx_last_attempt (last_attempt)
-        ) $charset_collate;";
-
-		$table_attempts = $wpdb->prefix . 'reportedip_hive_attempts';
-		$sql_attempts   = "CREATE TABLE $table_attempts (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            ip_address varchar(45) NOT NULL,
-            attempt_type varchar(32) NOT NULL DEFAULT 'login',
-            username varchar(60) DEFAULT NULL,
-            user_agent text DEFAULT NULL,
-            attempt_count int(11) DEFAULT 1,
-            first_attempt datetime DEFAULT CURRENT_TIMESTAMP,
-            last_attempt datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            KEY idx_ip_address (ip_address),
-            KEY idx_attempt_type (attempt_type),
-            KEY idx_last_attempt (last_attempt),
-            KEY composite_ip_type (ip_address, attempt_type)
-        ) $charset_collate;";
-
-		$table_queue = $wpdb->prefix . 'reportedip_hive_api_queue';
-		$sql_queue   = "CREATE TABLE $table_queue (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            ip_address varchar(45) NOT NULL,
-            category_ids text NOT NULL,
-            comment text DEFAULT NULL,
-            report_type enum('negative','positive') DEFAULT 'negative',
-            priority enum('low','normal','high') DEFAULT 'normal',
-            attempts int(11) DEFAULT 0,
-            max_attempts int(11) DEFAULT 3,
-            last_attempt datetime DEFAULT NULL,
-            submitted_at datetime DEFAULT NULL,
-            status enum('pending','processing','completed','failed') DEFAULT 'pending',
-            error_message text DEFAULT NULL,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            KEY idx_status (status),
-            KEY idx_priority (priority),
-            KEY idx_report_type (report_type),
-            KEY idx_created_at (created_at),
-            KEY idx_submitted_at (submitted_at)
-        ) $charset_collate;";
-
-		$table_stats = $wpdb->prefix . 'reportedip_hive_stats';
-		$sql_stats   = "CREATE TABLE $table_stats (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            stat_date date NOT NULL,
-            failed_logins int(11) DEFAULT 0,
-            blocked_ips int(11) DEFAULT 0,
-            comment_spam int(11) DEFAULT 0,
-            xmlrpc_calls int(11) DEFAULT 0,
-            api_reports_sent int(11) DEFAULT 0,
-            reputation_blocks int(11) DEFAULT 0,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY unique_date (stat_date),
-            KEY idx_stat_date (stat_date)
-        ) $charset_collate;";
-
-		$table_trusted = $wpdb->prefix . 'reportedip_hive_trusted_devices';
-		$sql_trusted   = "CREATE TABLE $table_trusted (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            user_id bigint(20) unsigned NOT NULL,
-            token_hash varchar(64) NOT NULL,
-            device_name varchar(255) DEFAULT '',
-            ip_address varchar(45) DEFAULT '',
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            expires_at datetime NOT NULL,
-            last_used_at datetime DEFAULT NULL,
-            PRIMARY KEY (id),
-            UNIQUE KEY unique_token (token_hash),
-            KEY idx_user_id (user_id),
-            KEY idx_expires_at (expires_at)
-        ) $charset_collate;";
-
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
-		dbDelta( $sql_logs );
-		dbDelta( $sql_whitelist );
-		dbDelta( $sql_blocked );
-		dbDelta( $sql_attempts );
-		dbDelta( $sql_queue );
-		dbDelta( $sql_stats );
-		dbDelta( $sql_trusted );
-
-		$this->create_additional_indexes();
+		ReportedIP_Hive_Schema::ensure_tables();
 	}
 
 	/**
-	 * Create additional indexes for performance (idempotent)
-	 */
-	private function create_additional_indexes() {
-		global $wpdb;
-
-		$indexes = array(
-			array(
-				'table' => $wpdb->prefix . 'reportedip_hive_logs',
-				'name'  => 'idx_logs_composite',
-				'sql'   => "CREATE INDEX idx_logs_composite ON {$wpdb->prefix}reportedip_hive_logs (ip_address, event_type, created_at DESC)",
-			),
-			array(
-				'table' => $wpdb->prefix . 'reportedip_hive_attempts',
-				'name'  => 'idx_attempts_timeframe',
-				'sql'   => "CREATE INDEX idx_attempts_timeframe ON {$wpdb->prefix}reportedip_hive_attempts (ip_address, last_attempt DESC)",
-			),
-			array(
-				'table' => $wpdb->prefix . 'reportedip_hive_api_queue',
-				'name'  => 'idx_queue_processing',
-				'sql'   => "CREATE INDEX idx_queue_processing ON {$wpdb->prefix}reportedip_hive_api_queue (status, priority, created_at ASC)",
-			),
-		);
-
-		foreach ( $indexes as $index ) {
-			$existing = $wpdb->get_var(
-				$wpdb->prepare(
-					'SELECT COUNT(*) FROM information_schema.STATISTICS WHERE table_schema = DATABASE() AND table_name = %s AND index_name = %s',
-					$index['table'],
-					$index['name']
-				)
-			);
-			if ( ! $existing ) {
-				$wpdb->query( $index['sql'] );
-			}
-		}
-	}
-
-	/**
-	 * Drop all tables
+	 * Drop all plugin tables.
+	 *
+	 * Thin shim around {@see ReportedIP_Hive_Schema::drop_all_tables()}.
 	 */
 	public function drop_tables() {
-		global $wpdb;
-
-		$tables = array(
-			$wpdb->prefix . 'reportedip_hive_trusted_devices',
-			$wpdb->prefix . 'reportedip_hive_stats',
-			$wpdb->prefix . 'reportedip_hive_api_queue',
-			$wpdb->prefix . 'reportedip_hive_attempts',
-			$wpdb->prefix . 'reportedip_hive_blocked',
-			$wpdb->prefix . 'reportedip_hive_whitelist',
-			$wpdb->prefix . 'reportedip_hive_logs',
-		);
-
-		foreach ( $tables as $table ) {
-			$wpdb->query( "DROP TABLE IF EXISTS $table" );
-		}
+		ReportedIP_Hive_Schema::drop_all_tables();
 	}
 
 	/**
@@ -353,17 +126,18 @@ class ReportedIP_Hive_Database {
 	public function log_security_event( $event_type, $ip_address, $details = array(), $severity = 'medium' ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_logs';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
 
 		return $wpdb->insert(
 			$table_name,
 			array(
+				'blog_id'    => (int) get_current_blog_id(),
 				'event_type' => $event_type,
 				'ip_address' => $ip_address,
 				'details'    => wp_json_encode( $details ),
 				'severity'   => $severity,
 			),
-			array( '%s', '%s', '%s', '%s' )
+			array( '%d', '%s', '%s', '%s', '%s' )
 		);
 	}
 
@@ -373,7 +147,7 @@ class ReportedIP_Hive_Database {
 	public function get_logs( $days = 30, $limit = 1000, $event_type = null ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_logs';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
 
 		$where_clause = 'WHERE created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)';
 		$params       = array( $days );
@@ -399,7 +173,7 @@ class ReportedIP_Hive_Database {
 			return false;
 		}
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_whitelist';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_whitelist';
 
 		if ( ! $added_by ) {
 			$added_by = get_current_user_id();
@@ -435,7 +209,7 @@ class ReportedIP_Hive_Database {
 	public function is_whitelisted( $ip_address ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_whitelist';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_whitelist';
 
 		$exact_match = $wpdb->get_var(
 			$wpdb->prepare(
@@ -477,7 +251,7 @@ class ReportedIP_Hive_Database {
 	public function get_whitelist( $active_only = true ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_whitelist';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_whitelist';
 
 		$where_clause = '';
 		if ( $active_only ) {
@@ -493,7 +267,7 @@ class ReportedIP_Hive_Database {
 	public function remove_from_whitelist( $ip_address ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_whitelist';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_whitelist';
 
 		$exists = $wpdb->get_var(
 			$wpdb->prepare(
@@ -525,7 +299,7 @@ class ReportedIP_Hive_Database {
 	public function block_ip( $ip_address, $reason, $block_type = 'automatic', $duration_hours = 24 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_blocked';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
 
 		$duration_hours = absint( $duration_hours );
 
@@ -562,7 +336,7 @@ class ReportedIP_Hive_Database {
 	public function block_ip_for_minutes( $ip_address, $reason, $block_type = 'automatic', $duration_minutes = 1440 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_blocked';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
 
 		$duration_minutes = absint( $duration_minutes );
 
@@ -590,7 +364,7 @@ class ReportedIP_Hive_Database {
 	public function is_blocked( $ip_address ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_blocked';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
 
 		$count = $wpdb->get_var(
 			$wpdb->prepare(
@@ -611,7 +385,7 @@ class ReportedIP_Hive_Database {
 	public function get_blocked_ips( $active_only = true ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_blocked';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
 
 		$where_clause = '';
 		if ( $active_only ) {
@@ -630,7 +404,7 @@ class ReportedIP_Hive_Database {
 	public function count_blocked_ips( $active_only = true ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_blocked';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
 
 		$where_clause = '';
 		if ( $active_only ) {
@@ -649,7 +423,7 @@ class ReportedIP_Hive_Database {
 	public function count_whitelisted_ips( $active_only = true ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_whitelist';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_whitelist';
 
 		$where_clause = '';
 		if ( $active_only ) {
@@ -665,7 +439,7 @@ class ReportedIP_Hive_Database {
 	public function unblock_ip( $ip_address ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_blocked';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
 
 		return $wpdb->update(
 			$table_name,
@@ -682,7 +456,7 @@ class ReportedIP_Hive_Database {
 	public function track_attempt( $ip_address, $attempt_type, $username = null, $user_agent = null ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_attempts';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
 
 		$existing = $wpdb->get_row(
 			$wpdb->prepare(
@@ -729,7 +503,7 @@ class ReportedIP_Hive_Database {
 	public function get_attempt_count( $ip_address, $attempt_type, $minutes = 15 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_attempts';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
 
 		$result = $wpdb->get_var(
 			$wpdb->prepare(
@@ -752,7 +526,7 @@ class ReportedIP_Hive_Database {
 	public function reset_attempt_counter( $ip_address, $attempt_type = null ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_attempts';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
 
 		$where        = array( 'ip_address' => $ip_address );
 		$where_format = array( '%s' );
@@ -771,9 +545,9 @@ class ReportedIP_Hive_Database {
 	public function is_recently_processed( $ip_address, $hours = 24 ) {
 		global $wpdb;
 
-		$blocked_table = $wpdb->prefix . 'reportedip_hive_blocked';
-		$queue_table   = $wpdb->prefix . 'reportedip_hive_api_queue';
-		$logs_table    = $wpdb->prefix . 'reportedip_hive_logs';
+		$blocked_table = $wpdb->base_prefix . 'reportedip_hive_blocked';
+		$queue_table   = $wpdb->base_prefix . 'reportedip_hive_api_queue';
+		$logs_table    = $wpdb->base_prefix . 'reportedip_hive_logs';
 
 		$recently_blocked = $wpdb->get_var(
 			$wpdb->prepare(
@@ -826,9 +600,9 @@ class ReportedIP_Hive_Database {
 	public function queue_api_report( $ip_address, $category_ids, $comment, $report_type = 'negative', $priority = 'normal' ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
-		$cooldown_hours = get_option( 'reportedip_hive_report_cooldown_hours', 24 );
+		$cooldown_hours = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_cooldown_hours', 24 );
 
 		$recent_check = $this->is_recently_processed( $ip_address, $cooldown_hours );
 		if ( $recent_check['processed'] ) {
@@ -857,13 +631,14 @@ class ReportedIP_Hive_Database {
 		return $wpdb->insert(
 			$table_name,
 			array(
+				'blog_id'      => (int) get_current_blog_id(),
 				'ip_address'   => $ip_address,
 				'category_ids' => is_array( $category_ids ) ? implode( ',', $category_ids ) : $category_ids,
 				'comment'      => $comment,
 				'report_type'  => $report_type,
 				'priority'     => $priority,
 			),
-			array( '%s', '%s', '%s', '%s', '%s' )
+			array( '%d', '%s', '%s', '%s', '%s', '%s' )
 		);
 	}
 
@@ -873,7 +648,7 @@ class ReportedIP_Hive_Database {
 	public function get_pending_api_reports( $limit = 10 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
@@ -899,7 +674,7 @@ class ReportedIP_Hive_Database {
 	public function update_api_report_status( $report_id, $status, $error_message = null ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		$data = array(
 			'status'       => $status,
@@ -945,7 +720,7 @@ class ReportedIP_Hive_Database {
 	public function mark_report_submitted( $report_id ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		return $wpdb->update(
 			$table_name,
@@ -986,7 +761,7 @@ class ReportedIP_Hive_Database {
 	public function recover_stuck_processing( $timeout_minutes = 10 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 		$timeout    = max( 1, (int) $timeout_minutes );
 
 		$reset = $wpdb->query(
@@ -1033,7 +808,7 @@ class ReportedIP_Hive_Database {
 	public function update_daily_stats( $stat_type, $increment = 1 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_stats';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_stats';
 		$today      = gmdate( 'Y-m-d' );
 
 		$valid_stats = array( 'failed_logins', 'blocked_ips', 'comment_spam', 'xmlrpc_calls', 'api_reports_sent', 'reputation_blocks' );
@@ -1042,10 +817,13 @@ class ReportedIP_Hive_Database {
 			return false;
 		}
 
+		$blog_id = (int) get_current_blog_id();
+
 		return $wpdb->query(
 			$wpdb->prepare(
-				"INSERT INTO $table_name (stat_date, $stat_type) VALUES (%s, %d) 
+				"INSERT INTO $table_name (blog_id, stat_date, $stat_type) VALUES (%d, %s, %d)
                  ON DUPLICATE KEY UPDATE $stat_type = $stat_type + %d",
+				$blog_id,
 				$today,
 				$increment,
 				$increment
@@ -1059,7 +837,7 @@ class ReportedIP_Hive_Database {
 	public function get_statistics( $days = 30 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_stats';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_stats';
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
@@ -1079,7 +857,7 @@ class ReportedIP_Hive_Database {
 
 		$anonymized = 0;
 
-		$logs_table = $wpdb->prefix . 'reportedip_hive_logs';
+		$logs_table = $wpdb->base_prefix . 'reportedip_hive_logs';
 
 		$old_logs = $wpdb->get_results(
 			$wpdb->prepare(
@@ -1087,7 +865,7 @@ class ReportedIP_Hive_Database {
                  WHERE created_at < DATE_SUB(NOW(), INTERVAL %d DAY)
                  AND created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)",
 				$days,
-				get_option( 'reportedip_hive_data_retention_days', 30 )
+				ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 )
 			)
 		);
 
@@ -1112,7 +890,7 @@ class ReportedIP_Hive_Database {
 			}
 		}
 
-		$attempts_table      = $wpdb->prefix . 'reportedip_hive_attempts';
+		$attempts_table      = $wpdb->base_prefix . 'reportedip_hive_attempts';
 		$anonymized_attempts = $wpdb->query(
 			$wpdb->prepare(
 				"UPDATE $attempts_table 
@@ -1139,9 +917,9 @@ class ReportedIP_Hive_Database {
 		$deleted = 0;
 
 		$tables_to_clean = array(
-			$wpdb->prefix . 'reportedip_hive_logs'      => 'created_at',
-			$wpdb->prefix . 'reportedip_hive_attempts'  => 'last_attempt',
-			$wpdb->prefix . 'reportedip_hive_api_queue' => 'created_at',
+			$wpdb->base_prefix . 'reportedip_hive_logs' => 'created_at',
+			$wpdb->base_prefix . 'reportedip_hive_attempts' => 'last_attempt',
+			$wpdb->base_prefix . 'reportedip_hive_api_queue' => 'created_at',
 		);
 
 		foreach ( $tables_to_clean as $table => $date_column ) {
@@ -1157,7 +935,7 @@ class ReportedIP_Hive_Database {
 		}
 
 		$completed_reports = $wpdb->query(
-			"DELETE FROM {$wpdb->prefix}reportedip_hive_api_queue
+			"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
              WHERE status = 'completed'
              AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)"
 		);
@@ -1167,7 +945,7 @@ class ReportedIP_Hive_Database {
 		}
 
 		$failed_reports = $wpdb->query(
-			"DELETE FROM {$wpdb->prefix}reportedip_hive_api_queue
+			"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
              WHERE status = 'failed'
              AND attempts >= max_attempts
              AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)"
@@ -1177,10 +955,10 @@ class ReportedIP_Hive_Database {
 			$deleted += $failed_reports;
 		}
 
-		$queue_max_age = get_option( 'reportedip_hive_queue_max_age_days', 7 );
+		$queue_max_age = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_max_age_days', 7 );
 		$old_pending   = $wpdb->query(
 			$wpdb->prepare(
-				"DELETE FROM {$wpdb->prefix}reportedip_hive_api_queue
+				"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
 				 WHERE status IN ('pending', 'failed')
 				 AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
 				$queue_max_age
@@ -1203,7 +981,7 @@ class ReportedIP_Hive_Database {
 	public function get_failed_api_reports( $limit = 50 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
@@ -1224,7 +1002,7 @@ class ReportedIP_Hive_Database {
 	public function get_queue_statistics() {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		$results = $wpdb->get_results(
 			"SELECT status, COUNT(*) as count
@@ -1278,7 +1056,7 @@ class ReportedIP_Hive_Database {
 	public function get_queue_size() {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		return (int) $wpdb->get_var(
 			"SELECT COUNT(*) FROM $table_name
@@ -1295,7 +1073,7 @@ class ReportedIP_Hive_Database {
 	public function get_oldest_queue_item_date() {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		return $wpdb->get_var(
 			"SELECT MIN(created_at) FROM $table_name
@@ -1361,7 +1139,7 @@ class ReportedIP_Hive_Database {
 		);
 
 		$args       = wp_parse_args( $args, $defaults );
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		$where = array( '1=1' );
 
@@ -1402,7 +1180,7 @@ class ReportedIP_Hive_Database {
 	public function count_api_queue_items( $status = '', $search = '' ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		$where = array( '1=1' );
 
@@ -1429,7 +1207,7 @@ class ReportedIP_Hive_Database {
 	public function reset_report_for_retry( $report_id ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		return $wpdb->update(
 			$table_name,
@@ -1453,7 +1231,7 @@ class ReportedIP_Hive_Database {
 	public function reset_all_failed_reports() {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		$result = $wpdb->query(
 			"UPDATE $table_name
@@ -1474,7 +1252,7 @@ class ReportedIP_Hive_Database {
 	public function delete_api_queue_item( $report_id ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		return $wpdb->delete(
 			$table_name,
@@ -1491,7 +1269,7 @@ class ReportedIP_Hive_Database {
 	public function delete_permanently_failed_reports() {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		$result = $wpdb->query(
 			"DELETE FROM $table_name
@@ -1557,7 +1335,7 @@ class ReportedIP_Hive_Database {
 	public function get_log_statistics( $days = 7 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_logs';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
@@ -1584,7 +1362,7 @@ class ReportedIP_Hive_Database {
 	public function get_recent_critical_events( $hours = 24, $limit = 10 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_logs';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
 		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $hours ) * HOUR_IN_SECONDS );
 
 		$events = $wpdb->get_results(
@@ -1625,7 +1403,7 @@ class ReportedIP_Hive_Database {
 	public function get_recent_events( $hours = 24, $limit = 10 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_logs';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
 		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $hours ) * HOUR_IN_SECONDS );
 
 		$events = $wpdb->get_results(
@@ -1655,8 +1433,8 @@ class ReportedIP_Hive_Database {
 	public function get_ip_management_stats() {
 		global $wpdb;
 
-		$blocked_table   = $wpdb->prefix . 'reportedip_hive_blocked';
-		$whitelist_table = $wpdb->prefix . 'reportedip_hive_whitelist';
+		$blocked_table   = $wpdb->base_prefix . 'reportedip_hive_blocked';
+		$whitelist_table = $wpdb->base_prefix . 'reportedip_hive_whitelist';
 
 		$stats = array();
 
@@ -1697,8 +1475,8 @@ class ReportedIP_Hive_Database {
 	public function get_security_summary( $days = 30 ) {
 		global $wpdb;
 
-		$logs_table  = $wpdb->prefix . 'reportedip_hive_logs';
-		$stats_table = $wpdb->prefix . 'reportedip_hive_stats';
+		$logs_table  = $wpdb->base_prefix . 'reportedip_hive_logs';
+		$stats_table = $wpdb->base_prefix . 'reportedip_hive_stats';
 
 		$event_counts = $wpdb->get_results(
 			$wpdb->prepare(

@@ -266,7 +266,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	 * @since 1.3.0
 	 */
 	public function maybe_enqueue_admin_preview( $hook ) {
-		if ( ! is_string( $hook ) || strpos( $hook, 'reportedip-hive-community' ) === false ) {
+		if ( strpos( $hook, 'reportedip-hive-community' ) === false ) {
 			return;
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- $_GET['subtab'] only switches which read-only view is rendered.
@@ -328,7 +328,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 			'spam_30d'         => $comment_spam_30d,
 			'api_reports_30d'  => $api_reports_30d,
 			'reports_total'    => (int) ( $totals_all->total_api_reports ?? 0 ),
-			'activated_at'     => (int) get_option( 'reportedip_hive_activated_at', 0 ),
+			'activated_at'     => (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_activated_at', 0 ),
 		);
 
 		set_transient( self::STATS_TRANSIENT_KEY, $stats, self::STATS_TTL );
@@ -652,7 +652,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	 * @since  1.3.0
 	 */
 	public function auto_footer_enabled() {
-		return (bool) get_option( 'reportedip_hive_auto_footer_enabled', false );
+		return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false );
 	}
 
 	/**
@@ -717,8 +717,8 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 			return;
 		}
 
-		$variant   = self::sanitize_footer_variant( get_option( 'reportedip_hive_auto_footer_variant', 'badge' ) );
-		$align_raw = sanitize_key( (string) get_option( 'reportedip_hive_auto_footer_align', 'center' ) );
+		$variant   = self::sanitize_footer_variant( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_variant', 'badge' ) );
+		$align_raw = sanitize_key( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_align', 'center' ) );
 		$align     = in_array( $align_raw, array( 'left', 'center', 'right', 'below' ), true ) ? $align_raw : 'center';
 
 		$is_below      = 'below' === $align;

@@ -59,7 +59,7 @@ class ReportedIP_Hive_WooCommerce_Monitor {
 	 * @param string|null     $username          Optional second argument.
 	 */
 	public function on_login_failed( $username_or_error, $username = null ): void {
-		if ( ! get_option( 'reportedip_hive_monitor_woocommerce', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_woocommerce', true ) ) {
 			return;
 		}
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
@@ -91,8 +91,8 @@ class ReportedIP_Hive_WooCommerce_Monitor {
 			return;
 		}
 
-		$threshold = (int) get_option( 'reportedip_hive_failed_login_threshold', 5 );
-		$timeframe = (int) get_option( 'reportedip_hive_failed_login_timeframe', 15 );
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', 5 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_timeframe', 15 );
 
 		$monitor->track_generic_attempt(
 			$ip,

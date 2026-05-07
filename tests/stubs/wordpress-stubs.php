@@ -73,6 +73,106 @@ if ( ! function_exists( 'delete_option' ) ) {
 	}
 }
 
+if ( ! function_exists( 'get_site_option' ) ) {
+	/**
+	 * Retrieves a network option. On single-site WordPress this falls
+	 * through to {@see get_option()}; the unit-test stubs mirror that
+	 * behaviour by writing into the same in-memory bucket.
+	 *
+	 * @param string $option  Name of the option to retrieve.
+	 * @param mixed  $default Default value to return if the option does not exist.
+	 * @return mixed
+	 */
+	function get_site_option( $option, $default = false ) {
+		return get_option( $option, $default );
+	}
+}
+
+if ( ! function_exists( 'update_site_option' ) ) {
+	/**
+	 * Updates a network option. Stub falls through to update_option().
+	 *
+	 * @param string $option Name of the option to update.
+	 * @param mixed  $value  Option value.
+	 * @return bool
+	 */
+	function update_site_option( $option, $value ) {
+		return update_option( $option, $value );
+	}
+}
+
+if ( ! function_exists( 'delete_site_option' ) ) {
+	/**
+	 * Deletes a network option. Stub falls through to delete_option().
+	 *
+	 * @param string $option Name of the option to delete.
+	 * @return bool
+	 */
+	function delete_site_option( $option ) {
+		return delete_option( $option );
+	}
+}
+
+if ( ! function_exists( 'add_site_option' ) ) {
+	/**
+	 * Adds a network option only if it does not already exist. Stub uses
+	 * the same in-memory bucket as get_option/update_option so atomicity
+	 * (used by Migration_Manager's lock acquisition) can be exercised.
+	 *
+	 * @param string $option Name of the option to add.
+	 * @param mixed  $value  Option value.
+	 * @return bool True if the option was added, false if it already existed.
+	 */
+	function add_site_option( $option, $value ) {
+		global $wp_options;
+		if ( isset( $wp_options[ $option ] ) ) {
+			return false;
+		}
+		$wp_options[ $option ] = $value;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'is_multisite' ) ) {
+	/**
+	 * Whether WordPress is running in Multisite mode. Stub default: false.
+	 *
+	 * Tests that need to flip this should override via a higher-priority
+	 * declaration in their own bootstrap or use runkit/uopz in CI.
+	 *
+	 * @return bool
+	 */
+	function is_multisite() {
+		return false;
+	}
+}
+
+if ( ! function_exists( 'get_current_blog_id' ) ) {
+	/**
+	 * Returns the current site ID. On single-site this is always 1.
+	 * Used by INSERTs that carry a `blog_id` column on Multisite — the
+	 * stub returns the same canonical value the production code defaults
+	 * to so no asserted SQL parameter changes between environments.
+	 *
+	 * @return int
+	 */
+	function get_current_blog_id() {
+		return 1;
+	}
+}
+
+if ( ! function_exists( 'is_main_site' ) ) {
+	/**
+	 * Whether the current site is the main site of its network. Stub
+	 * default: true (single-site behaviour).
+	 *
+	 * @return bool
+	 */
+	function is_main_site() {
+		return true;
+	}
+}
+
 // =============================================================================
 // Transient Functions
 // =============================================================================
@@ -131,6 +231,44 @@ if ( ! function_exists( 'delete_transient' ) ) {
 			return true;
 		}
 		return false;
+	}
+}
+
+if ( ! function_exists( 'get_site_transient' ) ) {
+	/**
+	 * Network transient. Stub falls through to the per-site bucket.
+	 *
+	 * @param string $transient Transient name.
+	 * @return mixed
+	 */
+	function get_site_transient( $transient ) {
+		return get_transient( $transient );
+	}
+}
+
+if ( ! function_exists( 'set_site_transient' ) ) {
+	/**
+	 * Set a network transient. Stub falls through to set_transient().
+	 *
+	 * @param string $transient  Transient name.
+	 * @param mixed  $value      Transient value.
+	 * @param int    $expiration TTL in seconds.
+	 * @return bool
+	 */
+	function set_site_transient( $transient, $value, $expiration = 0 ) {
+		return set_transient( $transient, $value, $expiration );
+	}
+}
+
+if ( ! function_exists( 'delete_site_transient' ) ) {
+	/**
+	 * Delete a network transient. Stub falls through to delete_transient().
+	 *
+	 * @param string $transient Transient name.
+	 * @return bool
+	 */
+	function delete_site_transient( $transient ) {
+		return delete_transient( $transient );
 	}
 }
 

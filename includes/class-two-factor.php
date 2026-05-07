@@ -217,9 +217,7 @@ class ReportedIP_Hive_Two_Factor {
 				wp_send_json_error( array( 'message' => __( 'SMS is not available.', 'reportedip-hive' ) ), 400 );
 			}
 			$result      = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id );
-			$cooldown    = method_exists( 'ReportedIP_Hive_Two_Factor_SMS', 'get_resend_wait_seconds' )
-				? ReportedIP_Hive_Two_Factor_SMS::get_resend_wait_seconds( $user_id )
-				: 60;
+			$cooldown    = ReportedIP_Hive_Two_Factor_SMS::get_resend_wait_seconds( $user_id );
 			$phone       = ReportedIP_Hive_Two_Factor_SMS::get_user_phone( $user_id );
 			$destination = $phone ? ReportedIP_Hive_Two_Factor_SMS::mask_phone( $phone ) : '';
 		}
@@ -260,19 +258,7 @@ class ReportedIP_Hive_Two_Factor {
 		$token_hash = hash( 'sha256', $token );
 		set_transient( self::NONCE_PREFIX . $token_hash, $nonce_data, self::NONCE_TTL );
 
-		$secure = is_ssl();
-		setcookie(
-			self::NONCE_COOKIE,
-			$token,
-			array(
-				'expires'  => time() + self::NONCE_TTL,
-				'path'     => COOKIEPATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $secure,
-				'httponly' => true,
-				'samesite' => 'Strict',
-			)
-		);
+		self::set_secure_cookie( self::NONCE_COOKIE, $token, time() + self::NONCE_TTL );
 	}
 
 	/**
@@ -341,7 +327,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool
 	 */
 	public static function is_globally_enabled() {
-		return (bool) get_option( 'reportedip_hive_2fa_enabled_global', false );
+		return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enabled_global', false );
 	}
 
 	/**
@@ -385,16 +371,32 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Check if 2FA is enforced for a user's role.
 	 *
+	 * Multisite-aware (since 2.0.0): Super Admins are required to use 2FA
+	 * unconditionally when `reportedip_hive_2fa_enforce_super_admins` is on
+	 * (default). Normal roles are checked against the resolved enforcement
+	 * list (`network ∪ site_extra`), so a Site Admin can extend the list
+	 * for the local site but cannot drop a role the Super Admin requires.
+	 *
 	 * @param \WP_User $user WordPress user object.
 	 * @return bool True if the user's role requires 2FA.
 	 */
 	public static function is_enforced_for_user( $user ) {
-		$enforce_roles = json_decode( get_option( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
-		if ( ! is_array( $enforce_roles ) || empty( $enforce_roles ) ) {
+		if ( is_multisite() && function_exists( 'is_super_admin' ) && is_super_admin( $user->ID ) ) {
+			$super_required = (bool) ReportedIP_Hive_Option_Routing::get(
+				'reportedip_hive_2fa_enforce_super_admins',
+				true
+			);
+			if ( $super_required ) {
+				return true;
+			}
+		}
+
+		$enforce_roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();
+		if ( empty( $enforce_roles ) ) {
 			return false;
 		}
 
-		foreach ( $user->roles as $role ) {
+		foreach ( (array) $user->roles as $role ) {
 			if ( in_array( $role, $enforce_roles, true ) ) {
 				return true;
 			}
@@ -410,7 +412,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool True if still within grace period.
 	 */
 	public static function is_in_grace_period( $user_id ) {
-		$grace_days = (int) get_option( 'reportedip_hive_2fa_enforce_grace_days', 7 );
+		$grace_days = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_grace_days', 7 );
 		if ( $grace_days <= 0 ) {
 			return false;
 		}
@@ -476,7 +478,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return string[] Method identifiers.
 	 */
 	public static function get_allowed_methods() {
-		$raw     = get_option( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
+		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
 		$decoded = json_decode( $raw, true );
 		if ( ! is_array( $decoded ) || empty( $decoded ) ) {
 			return array( self::METHOD_TOTP, self::METHOD_EMAIL );
@@ -508,7 +510,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool True if current IP is allowlisted.
 	 */
 	public static function is_ip_allowlisted() {
-		$raw = (string) get_option( 'reportedip_hive_2fa_ip_allowlist', '' );
+		$raw = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_ip_allowlist', '' );
 		if ( '' === $raw ) {
 			return false;
 		}
@@ -600,7 +602,7 @@ class ReportedIP_Hive_Two_Factor {
 		}
 
 		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST
-			&& get_option( 'reportedip_hive_2fa_xmlrpc_app_password_only', false )
+			&& ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_xmlrpc_app_password_only', false )
 			&& empty( $_SERVER['PHP_AUTH_USER'] ) ) {
 			$logger = ReportedIP_Hive_Logger::get_instance();
 			$logger->warning(
@@ -641,10 +643,10 @@ class ReportedIP_Hive_Two_Factor {
 			return $user;
 		}
 
-		if ( ! $has_any_method && $is_enforced ) {
+		if ( ! $has_any_method ) {
 			$in_grace   = self::is_in_grace_period( $user->ID );
 			$skip_count = (int) get_user_meta( $user->ID, self::META_SKIP_COUNT, true );
-			$max_skips  = (int) get_option( 'reportedip_hive_2fa_max_skips', 3 );
+			$max_skips  = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );
 
 			if ( ! $in_grace && $skip_count >= $max_skips && $max_skips > 0 ) {
 				return new \WP_Error(
@@ -687,19 +689,7 @@ class ReportedIP_Hive_Two_Factor {
 		);
 		set_transient( self::NONCE_PREFIX . $token_hash, $nonce_data, self::NONCE_TTL );
 
-		$secure = is_ssl();
-		setcookie(
-			self::NONCE_COOKIE,
-			$token,
-			array(
-				'expires'  => time() + self::NONCE_TTL,
-				'path'     => COOKIEPATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $secure,
-				'httponly' => true,
-				'samesite' => 'Strict',
-			)
-		);
+		self::set_secure_cookie( self::NONCE_COOKIE, $token, time() + self::NONCE_TTL );
 
 		$primary_method = self::get_user_method( $user->ID );
 		if ( in_array( $primary_method, $enabled_methods, true ) ) {
@@ -923,16 +913,16 @@ class ReportedIP_Hive_Two_Factor {
 						$this->cleanup_login_nonce();
 
 						$remember = ! empty( $nonce_data['remember'] );
-						if ( $remember && get_option( 'reportedip_hive_2fa_extended_remember', false ) ) {
+						if ( $remember && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_extended_remember', false ) ) {
 							add_filter( 'auth_cookie_expiration', array( __CLASS__, 'filter_extended_cookie_expiration' ), 20, 3 );
 						}
 						wp_set_auth_cookie( $user_id, $remember );
-						if ( $remember && get_option( 'reportedip_hive_2fa_extended_remember', false ) ) {
+						if ( $remember && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_extended_remember', false ) ) {
 							remove_filter( 'auth_cookie_expiration', array( __CLASS__, 'filter_extended_cookie_expiration' ), 20 );
 						}
 						wp_set_current_user( $user_id );
 
-						if ( $trust_device && get_option( 'reportedip_hive_2fa_trusted_devices', true ) ) {
+						if ( $trust_device && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) ) {
 							$this->create_trusted_device( $user_id );
 						}
 
@@ -1024,7 +1014,7 @@ class ReportedIP_Hive_Two_Factor {
 			'error'           => $error,
 			'form_nonce'      => $form_nonce,
 			'allowed_methods' => $allowed_methods,
-			'trust_enabled'   => (bool) get_option( 'reportedip_hive_2fa_trusted_devices', true ),
+			'trust_enabled'   => (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ),
 			'resend_wait'     => ReportedIP_Hive_Two_Factor_Email::get_resend_wait_seconds( $user_id ),
 			'recovery_count'  => ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ),
 			'email_code_sent' => in_array( self::METHOD_EMAIL, $allowed_methods, true )
@@ -1170,18 +1160,7 @@ class ReportedIP_Hive_Two_Factor {
 			delete_transient( self::NONCE_PREFIX . $token_hash );
 		}
 
-		setcookie(
-			self::NONCE_COOKIE,
-			'',
-			array(
-				'expires'  => time() - YEAR_IN_SECONDS,
-				'path'     => COOKIEPATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => is_ssl(),
-				'httponly' => true,
-				'samesite' => 'Strict',
-			)
-		);
+		self::set_secure_cookie( self::NONCE_COOKIE, '', time() - YEAR_IN_SECONDS );
 	}
 
 	/**
@@ -1476,7 +1455,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool True if trusted device is valid.
 	 */
 	private function verify_trusted_device( $user_id ) {
-		if ( ! get_option( 'reportedip_hive_2fa_trusted_devices', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) ) {
 			return false;
 		}
 
@@ -1524,7 +1503,7 @@ class ReportedIP_Hive_Two_Factor {
 	private function create_trusted_device( $user_id ) {
 		$token      = bin2hex( random_bytes( 64 ) );
 		$token_hash = hash( 'sha256', $token );
-		$days       = (int) get_option( 'reportedip_hive_2fa_trusted_device_days', 30 );
+		$days       = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_device_days', 30 );
 		$expiry     = time() + ( $days * DAY_IN_SECONDS );
 
 		$user_agent  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
@@ -1547,19 +1526,8 @@ class ReportedIP_Hive_Two_Factor {
 			array( '%d', '%s', '%s', '%s', '%s', '%s' )
 		);
 
-		$secure = is_ssl();
-		setcookie(
-			self::TRUSTED_COOKIE,
-			$token,
-			array(
-				'expires'  => $expiry,
-				'path'     => COOKIEPATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $secure,
-				'httponly' => true,
-				'samesite' => 'Strict',
-			)
-		);
+		$path = is_multisite() && defined( 'SITECOOKIEPATH' ) ? SITECOOKIEPATH : COOKIEPATH;
+		self::set_secure_cookie( self::TRUSTED_COOKIE, $token, $expiry, $path );
 	}
 
 	/**
@@ -1783,11 +1751,46 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Get the full trusted devices table name.
 	 *
+	 * Lives under `$wpdb->base_prefix` so a single trust decision applies to
+	 * the whole Multisite network (matches the network-wide expires_at /
+	 * SITECOOKIEPATH semantics added in 2.0.0). On single-site
+	 * `base_prefix === prefix`, behaviour is unchanged.
+	 *
 	 * @return string Table name with prefix.
 	 */
 	private static function get_trusted_table() {
-		global $wpdb;
-		return $wpdb->prefix . self::TABLE_TRUSTED_DEVICES;
+		return ReportedIP_Hive_Schema::table( self::TABLE_TRUSTED_DEVICES );
+	}
+
+	/**
+	 * Set a 2FA cookie using the canonical secure flags.
+	 *
+	 * Centralises the four `setcookie()` call sites so the cookie attributes
+	 * (Secure, HttpOnly, SameSite=Strict) cannot drift apart. The trust
+	 * cookie is the only one that opts into `SITECOOKIEPATH` so the trust
+	 * carries across all sites of a Multisite network.
+	 *
+	 * @param string $name    Cookie name.
+	 * @param string $value   Cookie value (empty string clears).
+	 * @param int    $expires Expiry timestamp.
+	 * @param string $path    Cookie path. Defaults to COOKIEPATH; pass
+	 *                        SITECOOKIEPATH for network-scoped cookies.
+	 * @return void
+	 * @since  2.0.0
+	 */
+	private static function set_secure_cookie( $name, $value, $expires, $path = COOKIEPATH ) {
+		setcookie(
+			$name,
+			$value,
+			array(
+				'expires'  => $expires,
+				'path'     => $path,
+				'domain'   => COOKIE_DOMAIN,
+				'secure'   => is_ssl(),
+				'httponly' => true,
+				'samesite' => 'Strict',
+			)
+		);
 	}
 
 	/**

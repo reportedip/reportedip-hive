@@ -244,7 +244,7 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 		$in_grace       = 0;
 		$skip_exhausted = 0;
 		$recovery_low   = 0;
-		$max_skips      = (int) get_option( 'reportedip_hive_2fa_max_skips', 3 );
+		$max_skips      = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );
 
 		$ids = $wpdb->get_col( "SELECT ID FROM {$wpdb->users} LIMIT 2000" ); // phpcs:ignore WordPress.DB
 		foreach ( $ids as $id ) {

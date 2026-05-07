@@ -76,30 +76,30 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * Hook callback: react to a tier transition.
 	 *
 	 * @param string $prev Previous tier slug (free / contributor / professional / …).
-	 * @param string $new  New tier slug.
+	 * @param string $next New tier slug.
 	 * @return void
 	 */
-	public static function on_tier_changed( $prev, $new ) {
-		if ( ! self::is_upgrade_to_pro( (string) $prev, (string) $new ) ) {
+	public static function on_tier_changed( $prev, $next ) {
+		if ( ! self::is_upgrade_to_pro( (string) $prev, (string) $next ) ) {
 			return;
 		}
 
-		if ( '' === (string) get_option( 'reportedip_hive_2fa_sms_provider', '' ) ) {
-			update_option( 'reportedip_hive_2fa_sms_provider', self::PROVIDER_RELAY );
+		if ( '' === (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_provider', '' ) ) {
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_sms_provider', self::PROVIDER_RELAY );
 		}
 
 		self::ensure_email_in_allowed_methods();
 
-		update_option(
+		ReportedIP_Hive_Option_Routing::set(
 			self::NOTICE_OPT,
 			array(
 				'from'   => (string) $prev,
-				'to'     => (string) $new,
+				'to'     => (string) $next,
 				'set_at' => time(),
 			)
 		);
 
-		delete_option( self::NOTICE_DISMISSED );
+		ReportedIP_Hive_Option_Routing::delete( self::NOTICE_DISMISSED );
 	}
 
 	/**
@@ -108,12 +108,12 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * Pure function — also used by the unit tests.
 	 *
 	 * @param string $prev Previous tier slug.
-	 * @param string $new  New tier slug.
+	 * @param string $next New tier slug.
 	 * @return bool
 	 */
-	public static function is_upgrade_to_pro( $prev, $new ) {
+	public static function is_upgrade_to_pro( $prev, $next ) {
 		return in_array( $prev, self::FREE_TIERS, true )
-			&& in_array( $new, self::PAID_TIERS, true );
+			&& in_array( $next, self::PAID_TIERS, true );
 	}
 
 	/**
@@ -130,7 +130,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 		if ( ! self::get_notice() ) {
 			return false;
 		}
-		if ( (bool) get_option( self::NOTICE_DISMISSED, false ) ) {
+		if ( (bool) ReportedIP_Hive_Option_Routing::get( self::NOTICE_DISMISSED, false ) ) {
 			return false;
 		}
 
@@ -148,7 +148,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return array{from:string,to:string,set_at:int}|null
 	 */
 	public static function get_notice() {
-		$raw = get_option( self::NOTICE_OPT, null );
+		$raw = ReportedIP_Hive_Option_Routing::get( self::NOTICE_OPT, null );
 		return is_array( $raw ) ? $raw : null;
 	}
 
@@ -161,12 +161,12 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return array<int,array{key:string,label:string,done:bool}>
 	 */
 	public static function get_setup_checklist() {
-		$provider = (string) get_option( 'reportedip_hive_2fa_sms_provider', '' );
+		$provider = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_provider', '' );
 		$avv      = false;
 		if ( class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-			$avv = (bool) get_option( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
+			$avv = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
 		} else {
-			$avv = (bool) get_option( 'reportedip_hive_2fa_sms_avv_confirmed', false );
+			$avv = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_avv_confirmed', false );
 		}
 		$method_active = self::is_method_in_allowed_list( 'sms' );
 
@@ -200,8 +200,8 @@ class ReportedIP_Hive_Tier_Upgrade {
 		}
 		check_admin_referer( 'reportedip_hive_dismiss_tier_notice' );
 
-		update_option( self::NOTICE_DISMISSED, true );
-		delete_option( self::NOTICE_OPT );
+		ReportedIP_Hive_Option_Routing::set( self::NOTICE_DISMISSED, true );
+		ReportedIP_Hive_Option_Routing::delete( self::NOTICE_OPT );
 
 		$redirect = wp_get_referer();
 		if ( ! $redirect ) {
@@ -218,7 +218,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return void
 	 */
 	private static function ensure_email_in_allowed_methods() {
-		$raw     = get_option( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
+		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
 		$decoded = json_decode( (string) $raw, true );
 		if ( ! is_array( $decoded ) ) {
 			$decoded = array( 'totp', 'email' );
@@ -227,7 +227,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 			return;
 		}
 		$decoded[] = 'email';
-		update_option( 'reportedip_hive_2fa_allowed_methods', wp_json_encode( array_values( $decoded ) ) );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_allowed_methods', wp_json_encode( array_values( $decoded ) ) );
 	}
 
 	/**
@@ -237,7 +237,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return bool
 	 */
 	private static function is_method_in_allowed_list( $method_id ) {
-		$raw     = get_option( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
+		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
 		$decoded = json_decode( (string) $raw, true );
 		if ( ! is_array( $decoded ) ) {
 			return false;

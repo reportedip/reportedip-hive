@@ -116,7 +116,7 @@ class ReportedIP_Hive_Two_Factor_Recovery {
 	 * @return bool True if valid (and now consumed), false otherwise.
 	 */
 	public static function verify_code( $user_id, $code ) {
-		if ( ! is_string( $code ) || strlen( str_replace( '-', '', $code ) ) !== self::CODE_LENGTH ) {
+		if ( strlen( str_replace( '-', '', $code ) ) !== self::CODE_LENGTH ) {
 			return false;
 		}
 
