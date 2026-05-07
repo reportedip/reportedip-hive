@@ -26,6 +26,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$this->logger     = ReportedIP_Hive_Logger::get_instance();
 
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+		add_action( 'network_admin_menu', array( $this, 'add_network_admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( 'ReportedIP_Hive_Two_Factor_Admin', 'register_settings' ) );
 		add_action( 'admin_notices', array( $this, 'render_tier_upgrade_banner' ) );
@@ -833,13 +834,48 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Add admin menu
+	 * Per-site admin menu entry point.
+	 *
+	 * Multisite: registers a read-only menu (Status, own-site Logs, 2FA Site
+	 * Settings — the only writable section).
+	 * Single-site: registers the full admin menu, identical to v1.x.
+	 *
+	 * @since 1.0.0
 	 */
 	public function add_admin_menu() {
+		if ( is_multisite() ) {
+			$this->register_site_readonly_menu();
+			return;
+		}
+		$this->register_full_menu( 'manage_options' );
+	}
+
+	/**
+	 * Network admin menu entry point.
+	 *
+	 * Mounts the full settings UI under the network admin with the
+	 * `manage_network_options` capability — Multisite Super Admins manage
+	 * the whole network's protection in one place.
+	 *
+	 * @since 2.0.0
+	 */
+	public function add_network_admin_menu() {
+		$this->register_full_menu( 'manage_network_options' );
+	}
+
+	/**
+	 * Registers the full admin menu (dashboard, security, settings,
+	 * system status, community) under the given capability. Shared
+	 * between single-site `admin_menu` and multisite `network_admin_menu`.
+	 *
+	 * @param string $cap Capability gating every menu item.
+	 * @since 1.0.0
+	 */
+	private function register_full_menu( $cap ) {
 		add_menu_page(
 			__( 'ReportedIP Hive', 'reportedip-hive' ),
 			__( 'ReportedIP Hive', 'reportedip-hive' ),
-			'manage_options',
+			$cap,
 			'reportedip-hive',
 			array( $this, 'dashboard_page' ),
 			'dashicons-shield-alt',
@@ -850,7 +886,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip-hive',
 			__( 'Dashboard', 'reportedip-hive' ),
 			__( 'Dashboard', 'reportedip-hive' ),
-			'manage_options',
+			$cap,
 			'reportedip-hive',
 			array( $this, 'dashboard_page' )
 		);
@@ -859,7 +895,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip-hive',
 			__( 'Security', 'reportedip-hive' ),
 			__( 'Security', 'reportedip-hive' ),
-			'manage_options',
+			$cap,
 			'reportedip-hive-security',
 			array( $this, 'security_page' )
 		);
@@ -868,7 +904,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip-hive',
 			__( 'Settings', 'reportedip-hive' ),
 			__( 'Settings', 'reportedip-hive' ),
-			'manage_options',
+			$cap,
 			'reportedip-hive-settings',
 			array( $this, 'settings_page' )
 		);
@@ -877,7 +913,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip-hive',
 			__( 'System Status', 'reportedip-hive' ),
 			__( 'System Status', 'reportedip-hive' ),
-			'manage_options',
+			$cap,
 			'reportedip-hive-debug',
 			array( $this, 'debug_page' )
 		);
@@ -886,9 +922,218 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip-hive',
 			__( 'Community & Quota', 'reportedip-hive' ),
 			__( 'Community', 'reportedip-hive' ),
-			'manage_options',
+			$cap,
 			'reportedip-hive-community',
 			array( $this, 'community_page' )
+		);
+	}
+
+	/**
+	 * Site Admin menu on Multisite — read-only with two writable overrides.
+	 *
+	 * The Site Admin gets a status page (read-only summary), a logs view
+	 * automatically scoped to the current `blog_id`, and a "Site Settings"
+	 * page where they can override the WooCommerce Frontend-2FA slug and
+	 * extend the 2FA enforcement role list (additive only — they cannot
+	 * remove network-required roles).
+	 *
+	 * @since 2.0.0
+	 */
+	private function register_site_readonly_menu() {
+		add_menu_page(
+			__( 'ReportedIP Hive', 'reportedip-hive' ),
+			__( 'ReportedIP Hive', 'reportedip-hive' ),
+			'manage_options',
+			'reportedip-hive-site',
+			array( $this, 'render_site_status_page' ),
+			'dashicons-shield-alt',
+			30
+		);
+
+		add_submenu_page(
+			'reportedip-hive-site',
+			__( 'Status', 'reportedip-hive' ),
+			__( 'Status', 'reportedip-hive' ),
+			'manage_options',
+			'reportedip-hive-site',
+			array( $this, 'render_site_status_page' )
+		);
+
+		add_submenu_page(
+			'reportedip-hive-site',
+			__( 'Logs (this site)', 'reportedip-hive' ),
+			__( 'Logs', 'reportedip-hive' ),
+			'manage_options',
+			'reportedip-hive-site-logs',
+			array( $this, 'render_site_logs_page' )
+		);
+
+		add_submenu_page(
+			'reportedip-hive-site',
+			__( '2FA Site Settings', 'reportedip-hive' ),
+			__( '2FA Site Settings', 'reportedip-hive' ),
+			'manage_options',
+			'reportedip-hive-site-2fa',
+			array( $this, 'render_site_2fa_settings_page' )
+		);
+	}
+
+	/**
+	 * Site-Admin Status page — read-only.
+	 *
+	 * @since 2.0.0
+	 */
+	public function render_site_status_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to view this page.', 'reportedip-hive' ) );
+		}
+		echo '<div class="wrap rip-wrap">';
+		$this->render_site_readonly_banner();
+		echo '<h1>' . esc_html__( 'ReportedIP Hive — Site Status', 'reportedip-hive' ) . '</h1>';
+		echo '<p>' . esc_html__( 'This site is part of a centrally-managed ReportedIP Hive network. Security configuration is controlled by the Network Admin.', 'reportedip-hive' ) . '</p>';
+		echo '<p><a class="rip-button rip-button--secondary" href="' . esc_url( network_admin_url( 'admin.php?page=reportedip-hive' ) ) . '">' . esc_html__( 'Open Network Admin', 'reportedip-hive' ) . '</a></p>';
+		echo '</div>';
+	}
+
+	/**
+	 * Site-Admin Logs page — auto-scoped to the current blog_id.
+	 *
+	 * @since 2.0.0
+	 */
+	public function render_site_logs_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to view this page.', 'reportedip-hive' ) );
+		}
+		echo '<div class="wrap rip-wrap">';
+		$this->render_site_readonly_banner();
+		echo '<h1>' . esc_html__( 'Security Logs', 'reportedip-hive' ) . '</h1>';
+		echo '<p>' . esc_html__( 'Showing security events recorded for this site only.', 'reportedip-hive' ) . '</p>';
+
+		global $wpdb;
+		$table   = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
+		$blog_id = (int) get_current_blog_id();
+		$rows    = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, event_type, ip_address, severity, created_at
+				 FROM $table
+				 WHERE blog_id = %d
+				 ORDER BY created_at DESC
+				 LIMIT 100",
+				$blog_id
+			)
+		);
+		echo '<table class="rip-table widefat striped"><thead><tr>';
+		echo '<th>' . esc_html__( 'When', 'reportedip-hive' ) . '</th>';
+		echo '<th>' . esc_html__( 'Event', 'reportedip-hive' ) . '</th>';
+		echo '<th>' . esc_html__( 'IP', 'reportedip-hive' ) . '</th>';
+		echo '<th>' . esc_html__( 'Severity', 'reportedip-hive' ) . '</th>';
+		echo '</tr></thead><tbody>';
+		if ( empty( $rows ) ) {
+			echo '<tr><td colspan="4">' . esc_html__( 'No events recorded yet.', 'reportedip-hive' ) . '</td></tr>';
+		} else {
+			foreach ( $rows as $row ) {
+				echo '<tr>';
+				echo '<td>' . esc_html( (string) $row->created_at ) . '</td>';
+				echo '<td>' . esc_html( (string) $row->event_type ) . '</td>';
+				echo '<td>' . esc_html( (string) $row->ip_address ) . '</td>';
+				echo '<td>' . esc_html( (string) $row->severity ) . '</td>';
+				echo '</tr>';
+			}
+		}
+		echo '</tbody></table></div>';
+	}
+
+	/**
+	 * Site-Admin 2FA Site Settings page — the only writable section.
+	 *
+	 * Two fields:
+	 *   - reportedip_hive_2fa_frontend_slug_site_override (URL-safe slug)
+	 *   - reportedip_hive_2fa_enforce_roles_extra (additive role list)
+	 *
+	 * @since 2.0.0
+	 */
+	public function render_site_2fa_settings_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to view this page.', 'reportedip-hive' ) );
+		}
+
+		$nonce_action = 'reportedip_hive_site_2fa_save';
+		if ( isset( $_POST['_rip_site_2fa_nonce'] )
+			&& wp_verify_nonce( wp_unslash( $_POST['_rip_site_2fa_nonce'] ), $nonce_action )
+		) {
+			$slug_raw = isset( $_POST['rip_2fa_frontend_slug_site_override'] )
+				? sanitize_text_field( wp_unslash( $_POST['rip_2fa_frontend_slug_site_override'] ) )
+				: '';
+			$slug = sanitize_title( $slug_raw );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_frontend_slug_site_override', $slug );
+
+			$roles_raw = isset( $_POST['rip_2fa_enforce_roles_extra'] )
+				? (array) $_POST['rip_2fa_enforce_roles_extra']
+				: array();
+			$roles = array();
+			foreach ( $roles_raw as $role ) {
+				$roles[] = sanitize_key( wp_unslash( (string) $role ) );
+			}
+			$roles = array_values( array_filter( array_unique( $roles ) ) );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_roles_extra', $roles );
+
+			echo '<div class="notice notice-success"><p>' . esc_html__( 'Site overrides saved.', 'reportedip-hive' ) . '</p></div>';
+		}
+
+		$slug_default  = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', ReportedIP_Hive_Option_Routing::DEFAULT_FRONTEND_SLUG );
+		$slug_override = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_slug_site_override', '' );
+
+		$network_roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();
+		$site_extra    = (array) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles_extra', array() );
+		$all_roles     = function_exists( 'wp_roles' ) ? wp_roles()->get_names() : array();
+
+		echo '<div class="wrap rip-wrap">';
+		$this->render_site_readonly_banner();
+		echo '<h1>' . esc_html__( '2FA Site Settings', 'reportedip-hive' ) . '</h1>';
+		echo '<form method="post">';
+		wp_nonce_field( $nonce_action, '_rip_site_2fa_nonce' );
+
+		echo '<h2>' . esc_html__( 'Frontend 2FA Slug Override', 'reportedip-hive' ) . '</h2>';
+		echo '<p>' . sprintf(
+			/* translators: %s = network-default slug */
+			esc_html__( 'Network default: %s. Leave empty to inherit.', 'reportedip-hive' ),
+			'<code>' . esc_html( $slug_default ) . '</code>'
+		) . '</p>';
+		echo '<input type="text" name="rip_2fa_frontend_slug_site_override" value="' . esc_attr( $slug_override ) . '" class="regular-text">';
+
+		echo '<h2>' . esc_html__( '2FA Enforcement — additional roles for this site', 'reportedip-hive' ) . '</h2>';
+		echo '<p>' . esc_html__( 'You can add roles on top of the network list. Network-required roles cannot be removed here.', 'reportedip-hive' ) . '</p>';
+		echo '<ul>';
+		foreach ( $all_roles as $slug => $label ) {
+			$checked  = in_array( $slug, $site_extra, true );
+			$disabled = in_array( $slug, $network_roles, true ) && ! $checked;
+			echo '<li><label>';
+			echo '<input type="checkbox" name="rip_2fa_enforce_roles_extra[]" value="' . esc_attr( $slug ) . '"';
+			checked( $checked );
+			disabled( $disabled );
+			echo '> ' . esc_html( $label );
+			if ( in_array( $slug, $network_roles, true ) ) {
+				echo ' <em>(' . esc_html__( 'network', 'reportedip-hive' ) . ')</em>';
+			}
+			echo '</label></li>';
+		}
+		echo '</ul>';
+
+		submit_button( __( 'Save site overrides', 'reportedip-hive' ) );
+		echo '</form>';
+		echo '</div>';
+	}
+
+	/**
+	 * Renders the read-only banner shown atop every Site Admin page on Multisite.
+	 *
+	 * @since 2.0.0
+	 */
+	private function render_site_readonly_banner() {
+		printf(
+			'<div class="rip-alert rip-alert--info" style="margin: 12px 0;"><strong>%s</strong> %s</div>',
+			esc_html__( 'Centrally managed:', 'reportedip-hive' ),
+			esc_html__( 'this site is part of a managed ReportedIP Hive network. For Whitelist or mode changes, contact your Network Admin.', 'reportedip-hive' )
 		);
 	}
 
