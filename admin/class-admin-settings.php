@@ -98,8 +98,10 @@ class ReportedIP_Hive_Admin_Settings {
 				continue;
 			}
 
+			// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Per-option sanitization is delegated to the registered sanitize_callback that update_site_option runs via the sanitize_option_<key> filter; pre-sanitizing here would double-apply the callback and collapse complex array values.
 			$raw   = $_POST[ $option_name ] ?? null;
 			$value = is_string( $raw ) ? wp_unslash( $raw ) : $raw;
+			// phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 
 			ReportedIP_Hive_Option_Routing::set( $option_name, $value );
 		}
@@ -362,7 +364,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 1.5.3
 	 */
 	public static function render_tier_lock( $status, $opts = array() ) {
-		if ( empty( $status ) || ! is_array( $status ) ) {
+		if ( empty( $status ) ) {
 			return;
 		}
 		if ( ! empty( $status['available'] ) ) {
@@ -427,7 +429,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 2.0.0
 	 */
 	public static function render_frontend_2fa_pro_upsell( $status ) {
-		if ( empty( $status ) || ! is_array( $status ) ) {
+		if ( empty( $status ) ) {
 			return;
 		}
 		if ( ! empty( $status['available'] ) ) {
@@ -602,7 +604,7 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( ! is_array( $stats_raw ) || empty( $stats_raw['total_calls'] ) ) {
 			return;
 		}
-		$total      = (int) ( $stats_raw['total_calls'] ?? 0 );
+		$total      = (int) $stats_raw['total_calls'];
 		$success    = (float) ( $stats_raw['success_rate'] ?? 0 );
 		$avg_ms     = (float) ( $stats_raw['avg_response_time'] ?? 0 );
 		$hourly_raw = (int) get_transient( 'reportedip_hive_hourly_api_calls' );
@@ -858,8 +860,8 @@ class ReportedIP_Hive_Admin_Settings {
 		}
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
-		$tier_info    = $mode_manager->get_tier_info( (string) ( $notice['to'] ?? 'professional' ) );
-		$tier_label   = isset( $tier_info['label'] ) && '' !== (string) $tier_info['label']
+		$tier_info    = $mode_manager->get_tier_info( (string) $notice['to'] );
+		$tier_label   = '' !== (string) $tier_info['label']
 			? (string) $tier_info['label']
 			: __( 'paid', 'reportedip-hive' );
 
@@ -1255,7 +1257,8 @@ class ReportedIP_Hive_Admin_Settings {
 		global $wpdb;
 		$table   = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_LOGS );
 		$blog_id = (int) get_current_blog_id();
-		$rows    = $wpdb->get_results(
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is a constant table name from Schema::table(); admin-only paginated read with no caching value.
+		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT id, event_type, ip_address, severity, created_at
 				 FROM $table
@@ -1265,6 +1268,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$blog_id
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		$this->render_site_admin_header(
 			__( 'Security Logs', 'reportedip-hive' ),
@@ -1334,11 +1338,11 @@ class ReportedIP_Hive_Admin_Settings {
 		$challenge_url = $home_prefix . sanitize_title( '' !== $slug_override ? $slug_override : $slug_default ) . '/';
 		$setup_url     = $home_prefix . sanitize_title( '' !== $setup_slug_override ? $setup_slug_override : $setup_slug_default ) . '/';
 
-		$frontend_status        = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
-		$frontend_locked        = empty( $frontend_status['available'] );
-		$frontend_locked_by_tier = $frontend_locked && 'tier' === ( $frontend_status['reason'] ?? '' );
-		$frontend_enabled       = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_enabled', false );
-		$customer_optional      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_customer_optional', true );
+		$frontend_status         = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+		$frontend_locked         = empty( $frontend_status['available'] );
+		$frontend_locked_by_tier = $frontend_locked && 'tier' === $frontend_status['reason'];
+		$frontend_enabled        = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_enabled', false );
+		$customer_optional       = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_customer_optional', true );
 
 		$this->render_site_admin_header(
 			__( '2FA Site Settings', 'reportedip-hive' ),
@@ -1594,7 +1598,8 @@ class ReportedIP_Hive_Admin_Settings {
 		$logs    = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_LOGS );
 		$blog_id = (int) get_current_blog_id();
 
-		$events_24h = (int) $wpdb->get_var(
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $logs is a constant table name from Schema::table(); per-site admin dashboard widget with naturally fresh data, caching would only delay incident visibility.
+		$events_24h        = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM $logs WHERE blog_id = %d AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)",
 				$blog_id
@@ -1607,12 +1612,13 @@ class ReportedIP_Hive_Admin_Settings {
 				'%failed_login%'
 			)
 		);
-		$recent_events = (array) $wpdb->get_results(
+		$recent_events     = (array) $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT event_type, ip_address, severity, created_at FROM $logs WHERE blog_id = %d ORDER BY created_at DESC LIMIT 10",
 				$blog_id
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return array(
 			'events_24h'        => $events_24h,
@@ -1692,8 +1698,8 @@ class ReportedIP_Hive_Admin_Settings {
 			sanitize_title( $setup_slug_raw )
 		);
 
-		$roles_raw     = isset( $_POST['rip_2fa_enforce_roles_extra'] )
-			? (array) wp_unslash( $_POST['rip_2fa_enforce_roles_extra'] )
+		$roles_raw     = isset( $_POST['rip_2fa_enforce_roles_extra'] ) && is_array( $_POST['rip_2fa_enforce_roles_extra'] )
+			? array_map( 'sanitize_text_field', wp_unslash( $_POST['rip_2fa_enforce_roles_extra'] ) )
 			: array();
 		$valid_roles   = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
 		$network_roles = ReportedIP_Hive_Option_Routing::get_network_enforce_roles();
@@ -2264,7 +2270,7 @@ class ReportedIP_Hive_Admin_Settings {
 			return ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.de/wp-json/reportedip/v2/' );
 		}
 
-		if ( ! is_string( $value ) || strpos( $value, 'https://' ) !== 0 ) {
+		if ( strpos( $value, 'https://' ) !== 0 ) {
 			add_settings_error(
 				'reportedip_hive_api_endpoint',
 				'insecure_api_endpoint',
@@ -4212,10 +4218,8 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$tier_pro_or_higher = false;
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'tier_at_least' ) ) {
-				$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
-			}
+			$mgr                = ReportedIP_Hive_Mode_Manager::get_instance();
+			$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
 		}
 
 		$recipients_value = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_recipients', '' );
@@ -4963,7 +4967,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$plugin_health   = $this->get_plugin_health_status();
 
 		$plugin_data    = get_plugin_data( REPORTEDIP_HIVE_PLUGIN_FILE );
-		$plugin_version = $plugin_data['Version'] ?? '1.0.0';
+		$plugin_version = $plugin_data['Version'];
 
 		$cache      = ReportedIP_Hive_Cache::get_instance();
 		$cache_info = $cache->get_cache_info();
@@ -5319,7 +5323,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Mirrors the constants in reportedip-service/includes/class-constants.php.
 	 * Update only this table when the service side changes.
 	 *
-	 * @return array<string, array{label:string,reports_day:int,checks_day:int,features:array<int,string>,cta_type:string,in_pricing:bool}>
+	 * @return array<string, array{label:string,reports_day:int,checks_day:int,features:array<int,string>,cta_type:string,in_pricing:bool,price?:string,mail_per_mo?:int,sms_per_mo?:int,domains?:int}>
 	 */
 	private function get_tier_definitions() {
 		return array(

@@ -374,9 +374,9 @@ class ReportedIP_Hive_Settings_Import_Export {
 				),
 				(array) $ip_manager->get_blocked_ips( true )
 			);
-			$blocked_manual = array();
+			$blocked_manual        = array();
 			foreach ( $ip_lists['blocked'] as $row ) {
-				if ( 'manual' === ( $row['block_type'] ?? '' ) ) {
+				if ( 'manual' === $row['block_type'] ) {
 					$blocked_manual[] = $row;
 				}
 			}
@@ -435,10 +435,11 @@ class ReportedIP_Hive_Settings_Import_Export {
 			wp_send_json_error( array( 'message' => $payload->get_error_message() ), 400 );
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified by require_authorised_admin() above.
+		// phpcs:disable WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended -- Nonce verified by require_authorised_admin() above.
 		$selected_sections = isset( $_POST['sections'] ) && is_array( $_POST['sections'] )
 			? array_map( 'sanitize_key', wp_unslash( $_POST['sections'] ) )
 			: array_keys( self::sections() );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing,WordPress.Security.NonceVerification.Recommended
 
 		$result = $this->apply_payload( $payload, $selected_sections );
 
@@ -465,6 +466,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 			return new WP_Error( 'too_large', __( 'Settings file is larger than the allowed limit.', 'reportedip-hive' ) );
 		}
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a freshly-uploaded local PHP-tmp file (size and type already validated above); wp_remote_get is for remote URLs and would be wrong here.
 		$raw = file_get_contents( (string) $_FILES[ $field_name ]['tmp_name'] );
 		// phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotValidated
 		if ( false === $raw || '' === $raw ) {

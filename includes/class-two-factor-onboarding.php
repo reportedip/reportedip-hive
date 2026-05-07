@@ -149,9 +149,6 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	 */
 	public function maybe_flag_for_onboarding( $user_login, $user ) {
 		unset( $user_login );
-		if ( ! ( $user instanceof \WP_User ) ) {
-			return;
-		}
 		if ( ! self::user_needs_onboarding( $user ) ) {
 			return;
 		}

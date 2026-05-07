@@ -483,21 +483,21 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * the next request.
 	 *
 	 * @param string $prev Previous tier slug.
-	 * @param string $new  New tier slug.
+	 * @param string $next New tier slug.
 	 * @return void
 	 */
-	public static function on_tier_changed( $prev, $new ) {
+	public static function on_tier_changed( $prev, $next ) {
 		self::flush_memo();
 
 		$prev_was_paid = self::tier_was_paid( (string) $prev );
-		$new_is_paid   = self::tier_was_paid( (string) $new );
+		$next_is_paid  = self::tier_was_paid( (string) $next );
 
-		if ( $prev_was_paid && ! $new_is_paid ) {
+		if ( $prev_was_paid && ! $next_is_paid ) {
 			ReportedIP_Hive_Option_Routing::set( self::OPT_SOFT_DISABLED, time() );
 			return;
 		}
 
-		if ( $new_is_paid && (int) ReportedIP_Hive_Option_Routing::get( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
+		if ( $next_is_paid && (int) ReportedIP_Hive_Option_Routing::get( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
 			ReportedIP_Hive_Option_Routing::delete( self::OPT_SOFT_DISABLED );
 		}
 	}

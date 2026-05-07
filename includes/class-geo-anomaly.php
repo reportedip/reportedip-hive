@@ -61,9 +61,6 @@ class ReportedIP_Hive_Geo_Anomaly {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_geo_anomaly', true ) ) {
 			return;
 		}
-		if ( ! ( $user instanceof WP_User ) ) {
-			return;
-		}
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
 			return;
 		}

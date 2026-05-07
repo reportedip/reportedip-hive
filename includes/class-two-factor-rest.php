@@ -190,10 +190,6 @@ class ReportedIP_Hive_Two_Factor_REST {
 			return new WP_Error( $user->get_error_code(), $user->get_error_message(), array( 'status' => 401 ) );
 		}
 
-		if ( ! ( $user instanceof WP_User ) ) {
-			return new WP_Error( 'reportedip_rest_auth_failed', __( 'Sign-in failed.', 'reportedip-hive' ), array( 'status' => 401 ) );
-		}
-
 		wp_set_auth_cookie( $user->ID, false );
 		wp_set_current_user( $user->ID );
 		return rest_ensure_response(

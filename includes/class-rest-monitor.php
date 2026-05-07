@@ -69,10 +69,6 @@ class ReportedIP_Hive_REST_Monitor {
 			return $result;
 		}
 
-		if ( ! ( $request instanceof WP_REST_Request ) ) {
-			return $result;
-		}
-
 		/*
 		 * Skip the global rate-limit for authenticated users. The Block Editor
 		 * alone routinely fires 50+ REST calls when an admin opens a page (post

@@ -98,9 +98,6 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 		}
 
 		$api = ReportedIP_Hive_API::get_instance();
-		if ( ! method_exists( $api, 'relay_sms' ) ) {
-			return new WP_Error( 'reportedip_relay_unavailable', __( 'API client missing relay support.', 'reportedip-hive' ) );
-		}
 
 		$result = $api->relay_sms(
 			array(

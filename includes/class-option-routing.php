@@ -42,9 +42,9 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @var array<string, true>
 	 */
 	private const SITE_OPTION_LOOKUP = array(
-		'reportedip_hive_2fa_frontend_slug_site_override'       => true,
+		'reportedip_hive_2fa_frontend_slug_site_override' => true,
 		'reportedip_hive_2fa_frontend_setup_slug_site_override' => true,
-		'reportedip_hive_2fa_enforce_roles_extra'               => true,
+		'reportedip_hive_2fa_enforce_roles_extra'         => true,
 	);
 
 	/**
@@ -65,17 +65,17 @@ final class ReportedIP_Hive_Option_Routing {
 	/**
 	 * Get an option, routed to the correct storage.
 	 *
-	 * @param string $key     Option name (must include `reportedip_hive_` prefix).
-	 * @param mixed  $default Default value if the option is not set.
-	 * @return mixed Option value or $default.
+	 * @param string $key      Option name (must include `reportedip_hive_` prefix).
+	 * @param mixed  $fallback Default value if the option is not set.
+	 * @return mixed Option value or $fallback.
 	 * @since  2.0.0
 	 */
-	public static function get( $key, $default = false ) {
+	public static function get( $key, $fallback = false ) {
 		$key = (string) $key;
 		if ( self::is_site_option( $key ) ) {
-			return get_option( $key, $default );
+			return get_option( $key, $fallback );
 		}
-		return get_site_option( $key, $default );
+		return get_site_option( $key, $fallback );
 	}
 
 	/**
@@ -153,8 +153,8 @@ final class ReportedIP_Hive_Option_Routing {
 			self::$resolve_cache[ $key ] = $override;
 			return $override;
 		}
-		$network = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', self::DEFAULT_FRONTEND_SLUG );
-		$slug    = '' !== trim( $network ) ? $network : self::DEFAULT_FRONTEND_SLUG;
+		$network                     = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', self::DEFAULT_FRONTEND_SLUG );
+		$slug                        = '' !== trim( $network ) ? $network : self::DEFAULT_FRONTEND_SLUG;
 		self::$resolve_cache[ $key ] = $slug;
 		return $slug;
 	}
@@ -193,8 +193,8 @@ final class ReportedIP_Hive_Option_Routing {
 			self::$resolve_cache[ $key ] = $override;
 			return $override;
 		}
-		$network = (string) get_site_option( 'reportedip_hive_2fa_frontend_setup_slug', 'reportedip-hive-2fa-setup' );
-		$slug    = '' !== trim( $network ) ? $network : 'reportedip-hive-2fa-setup';
+		$network                     = (string) get_site_option( 'reportedip_hive_2fa_frontend_setup_slug', 'reportedip-hive-2fa-setup' );
+		$slug                        = '' !== trim( $network ) ? $network : 'reportedip-hive-2fa-setup';
 		self::$resolve_cache[ $key ] = $slug;
 		return $slug;
 	}
@@ -285,6 +285,7 @@ final class ReportedIP_Hive_Option_Routing {
 	 */
 	public static function discover_network_keys_for_promotion() {
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- One-shot migration discovery query; caching would defeat the purpose.
 		$keys = (array) $wpdb->get_col(
 			"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'reportedip\\_hive\\_%'"
 		);
@@ -317,6 +318,7 @@ final class ReportedIP_Hive_Option_Routing {
 				restore_current_blog();
 			}
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Uninstall path: enumerate every plugin-prefixed sitemeta key for explicit deletion.
 			$network_keys = (array) $wpdb->get_col(
 				"SELECT meta_key FROM {$wpdb->sitemeta} WHERE meta_key LIKE 'reportedip\\_hive\\_%'"
 			);
@@ -337,6 +339,7 @@ final class ReportedIP_Hive_Option_Routing {
 	 */
 	private static function delete_all_options_on_current_site() {
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Uninstall path: enumerate every plugin-prefixed wp_options key for explicit deletion.
 		$keys = (array) $wpdb->get_col(
 			"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'reportedip\\_hive\\_%'"
 		);

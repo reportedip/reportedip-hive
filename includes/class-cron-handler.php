@@ -328,7 +328,7 @@ class ReportedIP_Hive_Cron_Handler {
 
 		try {
 			$relay = $this->api_client->get_relay_quota( true );
-			if ( is_array( $relay ) && empty( $relay['error'] ) ) {
+			if ( empty( $relay['error'] ) ) {
 				$this->logger->info(
 					'Relay quota refreshed',
 					'system',
@@ -342,7 +342,7 @@ class ReportedIP_Hive_Cron_Handler {
 						'sms_bundle_balance'  => $relay['sms']['bundle_balance'] ?? $relay['sms_bundle_balance'] ?? null,
 					)
 				);
-			} elseif ( is_array( $relay ) && ! empty( $relay['error'] ) ) {
+			} else {
 				$this->logger->warning(
 					'Relay quota refresh failed',
 					'system',

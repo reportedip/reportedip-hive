@@ -77,7 +77,7 @@ class ReportedIP_Hive_Two_Factor_Crypto {
 	 * @return string|false Encrypted string or false on failure.
 	 */
 	public static function encrypt( $plaintext ) {
-		if ( ! is_string( $plaintext ) || $plaintext === '' ) {
+		if ( $plaintext === '' ) {
 			return false;
 		}
 
@@ -108,7 +108,7 @@ class ReportedIP_Hive_Two_Factor_Crypto {
 	 * @return string|false Decrypted plaintext or false on failure.
 	 */
 	public static function decrypt( $encrypted ) {
-		if ( ! is_string( $encrypted ) || $encrypted === '' ) {
+		if ( $encrypted === '' ) {
 			return false;
 		}
 
@@ -194,9 +194,6 @@ class ReportedIP_Hive_Two_Factor_Crypto {
 	 */
 	private static function encrypt_openssl( $plaintext, $key ) {
 		$iv_len = openssl_cipher_iv_length( self::OPENSSL_CIPHER );
-		if ( false === $iv_len ) {
-			return false;
-		}
 
 		try {
 			$iv  = random_bytes( $iv_len );
@@ -235,7 +232,7 @@ class ReportedIP_Hive_Two_Factor_Crypto {
 		$iv_len  = openssl_cipher_iv_length( self::OPENSSL_CIPHER );
 		$tag_len = self::OPENSSL_GCM_TAG_LENGTH;
 
-		if ( false === $iv_len || strlen( $payload ) < $iv_len + $tag_len + 1 ) {
+		if ( strlen( $payload ) < $iv_len + $tag_len + 1 ) {
 			return false;
 		}
 

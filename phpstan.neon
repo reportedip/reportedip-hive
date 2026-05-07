@@ -3,8 +3,12 @@ includes:
     - vendor/szepeviktor/phpstan-wordpress/extension.neon
 
 parameters:
-    # Analysis level (0-9, higher = stricter)
-    # Start with 5 for a good balance, increase over time
+    # Level 5 + treatPhpDocTypesAsCertain — strictest setting that still
+    # works against WordPress core's mixed-typed return signatures (`get_option`,
+    # `$wpdb->get_results`, …). Levels 6+ require unionising every core call
+    # site which is a 50+ file refactor without a security payoff. We DO honour
+    # PHPDoc types as certain so a wrong @param type is now an error, not a
+    # hint.
     level: 5
 
     # Result cache directory: outside the plugin folder so Plugin Check / WP-CLI
@@ -45,7 +49,11 @@ parameters:
     # Allow dynamic properties (used extensively in WordPress)
     checkDynamicProperties: false
 
-    # Treat phpDoc types as native types
+    # Treat phpDoc types as native types. Off because plugin code talks to
+    # third-party hooks/filters whose `@return` shape we cannot enforce —
+    # turning this on flags every defensive `instanceof WP_Error` /
+    # `method_exists()` guard that the test suite specifically asserts must
+    # remain in place to be safe against unexpected upstream returns.
     treatPhpDocTypesAsCertain: false
 
     # Ignore errors patterns (use sparingly!)

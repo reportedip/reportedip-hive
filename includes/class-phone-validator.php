@@ -75,9 +75,6 @@ class ReportedIP_Hive_Phone_Validator {
 	 * @return string|null  Candidate '+'-prefixed digits string, or null on garbage.
 	 */
 	public static function normalise( $input ) {
-		if ( ! is_string( $input ) ) {
-			return null;
-		}
 		$stripped = preg_replace( '/[\s\(\)\-\.\/]/', '', $input );
 		if ( null === $stripped || $stripped === '' ) {
 			return null;
@@ -102,7 +99,7 @@ class ReportedIP_Hive_Phone_Validator {
 	 * @return bool
 	 */
 	public static function is_valid_e164( $phone ) {
-		if ( ! is_string( $phone ) || $phone === '' ) {
+		if ( $phone === '' ) {
 			return false;
 		}
 		return (bool) preg_match( '/^\+[1-9]\d{6,14}$/', $phone );

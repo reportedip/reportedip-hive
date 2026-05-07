@@ -104,9 +104,6 @@ class ReportedIP_Hive_Password_Strength {
 	public function on_profile_update( $errors, $update, $user ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		unset( $update );
 
-		if ( ! $errors instanceof WP_Error ) {
-			return;
-		}
 		if ( empty( $user->user_pass ) ) {
 			return;
 		}
@@ -132,9 +129,6 @@ class ReportedIP_Hive_Password_Strength {
 	 * @param WP_User|WP_Error $user   Target user.
 	 */
 	public function on_password_reset( $errors, $user ): void {
-		if ( ! ( $errors instanceof WP_Error ) ) {
-			return;
-		}
 		if ( ! ( $user instanceof WP_User ) ) {
 			return;
 		}

@@ -76,11 +76,11 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * Hook callback: react to a tier transition.
 	 *
 	 * @param string $prev Previous tier slug (free / contributor / professional / …).
-	 * @param string $new  New tier slug.
+	 * @param string $next New tier slug.
 	 * @return void
 	 */
-	public static function on_tier_changed( $prev, $new ) {
-		if ( ! self::is_upgrade_to_pro( (string) $prev, (string) $new ) ) {
+	public static function on_tier_changed( $prev, $next ) {
+		if ( ! self::is_upgrade_to_pro( (string) $prev, (string) $next ) ) {
 			return;
 		}
 
@@ -94,7 +94,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 			self::NOTICE_OPT,
 			array(
 				'from'   => (string) $prev,
-				'to'     => (string) $new,
+				'to'     => (string) $next,
 				'set_at' => time(),
 			)
 		);
@@ -108,12 +108,12 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * Pure function — also used by the unit tests.
 	 *
 	 * @param string $prev Previous tier slug.
-	 * @param string $new  New tier slug.
+	 * @param string $next New tier slug.
 	 * @return bool
 	 */
-	public static function is_upgrade_to_pro( $prev, $new ) {
+	public static function is_upgrade_to_pro( $prev, $next ) {
 		return in_array( $prev, self::FREE_TIERS, true )
-			&& in_array( $new, self::PAID_TIERS, true );
+			&& in_array( $next, self::PAID_TIERS, true );
 	}
 
 	/**

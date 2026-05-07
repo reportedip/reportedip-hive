@@ -359,7 +359,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						} else {
 							echo ' ';
 							esc_html_e( 'Delivered via wp_mail() on this server.', 'reportedip-hive' );
-							if ( 'tier' === ( $mail_relay_status['reason'] ?? '' ) ) {
+							if ( 'tier' === $mail_relay_status['reason'] ) {
 								echo ' ';
 								ReportedIP_Hive_Admin_Settings::render_tier_lock(
 									$mail_relay_status,
@@ -1196,7 +1196,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						<em><?php esc_html_e( 'Final step: enable “SMS code” in the methods list above to roll it out to your users.', 'reportedip-hive' ); ?></em>
 					<?php endif; ?>
 				</div>
-			<?php elseif ( 'tier' === ( $relay_status['reason'] ?? '' ) ) : ?>
+			<?php elseif ( 'tier' === $relay_status['reason'] ) : ?>
 				<p class="rip-help-text">
 					<?php esc_html_e( 'Tip: Professional and Business plans include SMS-2FA via our managed EU gateway — no separate provider contract required.', 'reportedip-hive' ); ?>
 					<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $relay_status ); ?>

@@ -2,6 +2,117 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.0] — 2026-05-08
+
+Promotes `2.0.0-beta.1` to GA after a week of dual-stack hardening on the
+WPMU+single-site Docker setup. All beta-1 functionality is unchanged;
+this section lists the additions and fixes that landed on top.
+
+### New
+
+- **Per-blog resolve-cache isolation**: `Option_Routing::cache_key()` now
+  suffixes the bucket with `get_current_blog_id()` so a `switch_to_blog()`
+  in the same request no longer leaks resolved overrides across sub-sites.
+- **`Option_Routing::get_network_enforce_roles()` / `get_site_enforce_roles_extra()`** —
+  pure-list helpers consumed by the Site-2FA UI to draw the
+  "enforced by network" badge without merging the two lists.
+- **Network-admin Settings-API save handler**: forms now post to a custom
+  `network_admin_edit_reportedip_hive_save_settings` route. WordPress'
+  `options.php` is wp_options-only on multisite, so saves silently
+  vanished into the main site's wp_options instead of landing in
+  sitemeta. The new handler hands the value to `update_site_option`,
+  which routes through `sanitize_option` exactly once — fixes complex
+  array sanitizers (`enforce_roles`, `allowed_methods`,
+  `reminder_hard_roles`) collapsing to `'[]'`.
+- **`Two_Factor_Frontend::flush_slug_memo()`** plus the matching
+  `update_*_option_*`-hook chain so a Site-2FA save is reflected on the
+  same render.
+- **Mode_Manager site-option adapter** (`on_mode_site_option_updated`)
+  mirrors the single-site `update_option_*` listener for the sitemeta
+  storage path so the cached mode and `reportedip_hive_mode_changed`
+  action stay accurate on Multisite.
+- **Site-2FA UI redesign** in `rip-settings-section` style matching the
+  Network 2FA tab: Network configuration block lists every relevant
+  network-default with a status badge, Frontend-2FA section gates with
+  the standard tier-lock card, additional-roles checklist marks
+  network-required roles as `checked + disabled` with an "enforced by
+  network" badge.
+- **Extended multisite test suite** (`tests/Multisite/OptionRoutingExtendedTest.php`,
+  +10 tests) lock in: per-blog cache isolation, setup-slug override,
+  pure-network/pure-site role helpers, slug-memo invalidation,
+  Mode_Manager sitemeta-hook adapter, network-admin save handler,
+  default-slug constant.
+- **Round-trip diagnostic** (`scripts/option-roundtrip-test.php`)
+  exercises 105 representative option keys via WP-CLI on demand;
+  100 % pass on both stacks confirms storage routing is correct.
+
+### Changed
+
+- Direct `get_option`/`update_option`/`delete_option` calls for plugin
+  options removed from `Mode_Manager`, `Two_Factor_Frontend`,
+  `Two_Factor_Recommend`, `Two_Factor_SMS`, `Two_Factor_Reset_Gate`,
+  `Two_Factor_WC_Notice`, `Tier_Upgrade`, `API_Client`, `Cache`,
+  `Setup_Wizard`, `Admin_Settings::sanitize_operation_mode()`, plus
+  the activation hook in `reportedip-hive.php`. Every read/write of a
+  `reportedip_hive_*` key now goes through `Option_Routing` —
+  consistent with the beta-1 sweep that missed these later additions.
+- `DEFAULT_FRONTEND_SLUG` changed from `2fa-login` (introduced in beta-1)
+  back to `reportedip-hive-2fa` so installs that already exposed
+  `/reportedip-hive-2fa/` keep their public URL across the upgrade.
+- `Site-2FA-Settings` save handler `array_diff()`s network-required
+  roles out of the persisted extras so a future network-admin removal
+  does not leave stale per-site overrides behind.
+- Network admin save no longer pre-sanitises before
+  `update_site_option`; relies on `sanitize_option_*` running once
+  inside `update_network_option`. Avoids the double-callback regression
+  that collapsed array values to `'[]'`.
+
+### Fixed
+
+- 2FA reminder *Hard-block roles* and the WooCommerce *Frontend login*
+  toggles silently bounced back to their previous value on every save
+  in Network Admin — the Settings API form posted to `options.php`
+  which on Multisite writes to wp_options of the main site, while the
+  rest of the codebase reads from sitemeta. Fixed via the new
+  network-admin save handler.
+- API-Key *Test Connection* button on the Network Admin reported "no
+  API key configured" right after a successful save because the API
+  client read the key from sitemeta but the save had landed in
+  wp_options. Same root cause, same fix.
+- "Settings saved." admin notice now appears after a successful
+  network-admin save (was silently missing).
+- Frontend-2FA `Available with Professional plan` upsell card extracted
+  into the shared `render_frontend_2fa_pro_upsell()` helper and styled
+  with `.rip-pro-upsell__title/__features/__cta` BEM classes —
+  removes inline `style=""` and unifies the bullet list across the
+  Network and Site-Admin views (the Site variant was missing the WC
+  Blocks bullet).
+- Inline `margin-left: var(--rip-space-2)` on the "enforced by network"
+  badge replaced with a `.rip-badge--inline` modifier (anti-AI-watermark
+  rule from `CLAUDE.md`).
+
+### Tooling
+
+- PHPStan bumped from 1.12 to **2.1** and `szepeviktor/phpstan-wordpress`
+  from 1.3 to **2.0**. Twelve newly-flagged errors fixed at the source
+  (no `@phpstan-ignore` baseline): redundant `!== null` / `!== ''`
+  guards after type narrowing, dead `class_exists()` /
+  `method_exists()` defensive shims, `defined('DOING_CRON')` swapped
+  for `wp_doing_cron()`, `Defaults::get()` return type tightened to
+  `int|string`, the IP-export `array_filter` replaced with a foreach
+  PHPStan can resolve.
+- `phpstan.neon` excludePaths now mark optional dirs with the `(?)`
+  suffix that PHPStan 2.x requires; `tests/phpstan-bootstrap.php`
+  defines `REPORTEDIP_HIVE_PLUGIN_DIR` as `dirname(__DIR__)` so
+  `require_once` paths inside the analysed code resolve to real files.
+- `dealerdirect/phpcodesniffer-composer-installer` patch bump to 1.2.1.
+
+### Verified
+
+- 0 PHPCS errors, PHPStan 2.1.54 *No errors*, 435/435 single-site
+  PHPUnit assertions, 19/19 multisite PHPUnit assertions, 105/105
+  option round-trip pass on both Docker stacks.
+
 ## [2.0.0-beta.1] — 2026-05-07
 
 This is a **breaking change** that turns ReportedIP Hive into a fully

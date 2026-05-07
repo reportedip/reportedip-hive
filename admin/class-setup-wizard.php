@@ -134,15 +134,13 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		if ( $sync_to_api && class_exists( 'ReportedIP_Hive_API' ) ) {
 			$api = ReportedIP_Hive_API::get_instance();
-			if ( method_exists( $api, 'sync_notification_config' ) ) {
-				$api->sync_notification_config(
-					array(
-						'recipients' => $valid,
-						'from_name'  => $from_name,
-						'from_email' => $from_email,
-					)
-				);
-			}
+			$api->sync_notification_config(
+				array(
+					'recipients' => $valid,
+					'from_name'  => $from_name,
+					'from_email' => $from_email,
+				)
+			);
 		}
 
 		wp_send_json_success(
@@ -997,10 +995,8 @@ class ReportedIP_Hive_Setup_Wizard {
 	private function render_step_two_factor() {
 		$tier_pro_or_higher = false;
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'tier_at_least' ) ) {
-				$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
-			}
+			$mgr                = ReportedIP_Hive_Mode_Manager::get_instance();
+			$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
 		}
 
 		$default_methods = $tier_pro_or_higher
@@ -1382,10 +1378,8 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		$tier_pro_or_higher = false;
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'tier_at_least' ) ) {
-				$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
-			}
+			$mgr                = ReportedIP_Hive_Mode_Manager::get_instance();
+			$tier_pro_or_higher = (bool) $mgr->tier_at_least( 'professional' );
 		}
 
 		$recipients_raw = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_recipients', '' );
@@ -2168,9 +2162,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			&& class_exists( 'ReportedIP_Hive_Two_Factor' )
 		) {
 			$current_user = wp_get_current_user();
-			if ( $current_user instanceof WP_User
-				&& ReportedIP_Hive_Two_Factor::is_enforced_for_user( $current_user )
-			) {
+			if ( ReportedIP_Hive_Two_Factor::is_enforced_for_user( $current_user ) ) {
 				$enabled_methods = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $current_user->ID );
 				if ( empty( $enabled_methods ) ) {
 					set_transient(

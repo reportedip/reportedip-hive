@@ -170,7 +170,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		 * @since 1.7.0
 		 */
 		$filtered = apply_filters( 'reportedip_hive_2fa_password_reset_excluded_methods', $normalised, $user_id );
-		return is_array( $filtered ) ? array_values( array_unique( $filtered ) ) : $normalised;
+		return array_values( array_unique( $filtered ) );
 	}
 
 	/**
@@ -231,9 +231,6 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 */
 	public function on_validate_reset( $errors, $user ) {
 		if ( ! ( $user instanceof \WP_User ) ) {
-			return;
-		}
-		if ( ! ( $errors instanceof \WP_Error ) ) {
 			return;
 		}
 		if ( $errors->has_errors() ) {
@@ -305,9 +302,6 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 */
 	public function on_password_reset( $user, $new_pass = '' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 		unset( $new_pass );
-		if ( ! ( $user instanceof \WP_User ) ) {
-			return;
-		}
 
 		$enabled = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID );
 		if ( empty( $enabled ) ) {
@@ -353,7 +347,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		}
 
 		$key_user = check_password_reset_key( $reset_key, $login );
-		if ( is_wp_error( $key_user ) || ! ( $key_user instanceof \WP_User ) || (int) $key_user->ID !== (int) $user->ID ) {
+		if ( is_wp_error( $key_user ) || (int) $key_user->ID !== (int) $user->ID ) {
 			wp_safe_redirect( wp_lostpassword_url() );
 			exit;
 		}
@@ -759,7 +753,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * @return string
 	 */
 	private function read_reset_surface( array $request_keys, callable $sanitizer, int $cookie_part ): string {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing -- The reset key is itself the credential and is later verified by check_password_reset_key() before any state mutation.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The reset key is itself the credential and is later verified by check_password_reset_key() before any state mutation; sanitiser is the caller-provided callable.
 		foreach ( $request_keys as $request_key ) {
 			if ( ! isset( $_REQUEST[ $request_key ] ) ) {
 				continue;
@@ -769,7 +763,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 				return $value;
 			}
 		}
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		$cookie_value = $this->read_rp_cookie();
 		if ( '' !== $cookie_value && false !== strpos( $cookie_value, ':' ) ) {
@@ -797,6 +791,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		if ( ! isset( $_COOKIE[ $cookie_name ] ) ) {
 			return '';
 		}
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- WordPress core's reset cookie payload is "login:key"; both halves go through check_password_reset_key() before any state mutation.
 		return (string) wp_unslash( $_COOKIE[ $cookie_name ] );
 	}
 
@@ -1090,14 +1085,9 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
 			return;
 		}
-		$logger = ReportedIP_Hive_Logger::get_instance();
-		if ( ! $logger ) {
-			return;
-		}
+		$logger  = ReportedIP_Hive_Logger::get_instance();
 		$ip      = class_exists( 'ReportedIP_Hive' ) ? ReportedIP_Hive::get_client_ip() : 'unknown';
 		$payload = array_merge( array( 'user_id' => $user_id ), $extra );
-		if ( method_exists( $logger, 'log' ) ) {
-			$logger->log( $event_type, $ip, $severity, $payload );
-		}
+		$logger->log( $event_type, $ip, $severity, $payload );
 	}
 }

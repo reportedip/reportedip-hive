@@ -85,8 +85,8 @@ class ReportedIP_Hive_App_Password_Monitor {
 			'app_password_failed',
 			$ip,
 			array(
-				'has_error'  => $error instanceof WP_Error,
-				'error_code' => $error instanceof WP_Error ? $error->get_error_code() : null,
+				'has_error'  => true,
+				'error_code' => $error->get_error_code(),
 			),
 			'medium'
 		);
@@ -113,9 +113,6 @@ class ReportedIP_Hive_App_Password_Monitor {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_app_passwords', true ) ) {
 			return;
 		}
-		if ( ! ( $user instanceof WP_User ) ) {
-			return;
-		}
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
 			return;
 		}
@@ -126,7 +123,7 @@ class ReportedIP_Hive_App_Password_Monitor {
 			ReportedIP_Hive::get_client_ip(),
 			array(
 				'user_id'  => $user->ID,
-				'app_name' => is_array( $item ) && isset( $item['name'] ) ? sanitize_text_field( (string) $item['name'] ) : '',
+				'app_name' => isset( $item['name'] ) ? sanitize_text_field( (string) $item['name'] ) : '',
 			),
 			'low'
 		);
@@ -143,9 +140,6 @@ class ReportedIP_Hive_App_Password_Monitor {
 	 */
 	public function block_creation_for_unenrolled( $available, $user ) {
 		if ( ! $available ) {
-			return $available;
-		}
-		if ( ! ( $user instanceof WP_User ) ) {
 			return $available;
 		}
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_require_2fa', true ) ) {

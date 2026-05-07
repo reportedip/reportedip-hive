@@ -88,9 +88,6 @@ class ReportedIP_Hive_User_Enumeration {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
 			return $result;
 		}
-		if ( ! ( $request instanceof WP_REST_Request ) ) {
-			return $result;
-		}
 		if ( is_user_logged_in() ) {
 			return $result;
 		}
@@ -174,9 +171,6 @@ class ReportedIP_Hive_User_Enumeration {
 	 */
 	public function strip_author_from_oembed( $data ) {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
-			return $data;
-		}
-		if ( ! is_array( $data ) ) {
 			return $data;
 		}
 		unset( $data['author_name'], $data['author_url'] );

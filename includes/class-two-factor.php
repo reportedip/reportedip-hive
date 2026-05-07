@@ -381,10 +381,6 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool True if the user's role requires 2FA.
 	 */
 	public static function is_enforced_for_user( $user ) {
-		if ( ! is_object( $user ) ) {
-			return false;
-		}
-
 		if ( is_multisite() && function_exists( 'is_super_admin' ) && is_super_admin( $user->ID ) ) {
 			$super_required = (bool) ReportedIP_Hive_Option_Routing::get(
 				'reportedip_hive_2fa_enforce_super_admins',
@@ -647,7 +643,7 @@ class ReportedIP_Hive_Two_Factor {
 			return $user;
 		}
 
-		if ( ! $has_any_method && $is_enforced ) {
+		if ( ! $has_any_method ) {
 			$in_grace   = self::is_in_grace_period( $user->ID );
 			$skip_count = (int) get_user_meta( $user->ID, self::META_SKIP_COUNT, true );
 			$max_skips  = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );

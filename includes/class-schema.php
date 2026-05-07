@@ -103,12 +103,14 @@ final class ReportedIP_Hive_Schema {
 		global $wpdb;
 		$expected     = array_map( array( __CLASS__, 'table' ), self::TABLE_SUFFIXES );
 		$placeholders = implode( ',', array_fill( 0, count( $expected ), '%s' ) );
-		$found        = (int) $wpdb->get_var(
+		// phpcs:disable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- $placeholders is a comma-joined "%s,%s,…" string built from a hardcoded const array, then bound via $expected; PHPCS cannot see the inner placeholders.
+		$found = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ($placeholders)",
 				$expected
 			)
 		);
+		// phpcs:enable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		return $found === count( $expected );
 	}
 

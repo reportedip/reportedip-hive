@@ -50,7 +50,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_notify_new_device', true ) ) {
 			return;
 		}
-		if ( ! ( $user instanceof \WP_User ) || ! $user->ID ) {
+		if ( ! $user->ID ) {
 			return;
 		}
 

@@ -329,10 +329,11 @@ class ReportedIP_Hive_Hide_Login {
 	 * Whether the current request carries a wp-login action we always allow.
 	 */
 	private function is_action_whitelisted(): bool {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only allow-listing; the action value is sanitised and only compared to a hardcoded bypass list.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only allow-listing; the action value is sanitised and only compared to a hardcoded bypass list.
 		$action = isset( $_REQUEST['action'] )
 			? sanitize_key( wp_unslash( (string) $_REQUEST['action'] ) )
 			: '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		if ( '' === $action ) {
 			return false;
 		}
@@ -611,15 +612,13 @@ class ReportedIP_Hive_Hide_Login {
 		set_transient( $throttle_key, 1, self::RECON_LOG_THROTTLE_SECONDS );
 
 		$logger = ReportedIP_Hive_Logger::get_instance();
-		if ( method_exists( $logger, 'log' ) ) {
-			$logger->log(
-				'hide_login_block',
-				$ip,
-				'low',
-				array(
-					'path' => $this->get_request_path(),
-				)
-			);
-		}
+		$logger->log(
+			'hide_login_block',
+			$ip,
+			'low',
+			array(
+				'path' => $this->get_request_path(),
+			)
+		);
 	}
 }

@@ -371,7 +371,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		if ( ! ( $user instanceof \WP_User ) ) {
 			return false;
 		}
-		$user_roles = is_array( $user->roles ) ? $user->roles : array();
+		$user_roles = $user->roles;
 		$hard_roles = self::get_hard_roles();
 		return ! empty( array_intersect( $user_roles, $hard_roles ) );
 	}

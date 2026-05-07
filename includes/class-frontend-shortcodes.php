@@ -266,7 +266,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	 * @since 1.3.0
 	 */
 	public function maybe_enqueue_admin_preview( $hook ) {
-		if ( ! is_string( $hook ) || strpos( $hook, 'reportedip-hive-community' ) === false ) {
+		if ( strpos( $hook, 'reportedip-hive-community' ) === false ) {
 			return;
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- $_GET['subtab'] only switches which read-only view is rendered.

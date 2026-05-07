@@ -275,14 +275,8 @@ class ReportedIP_Hive_IP_Manager {
 				continue;
 			}
 
-			$parts = str_getcsv( $line );
-			if ( count( $parts ) < 1 ) {
-				/* translators: %d: line number in CSV file */
-				$errors[] = sprintf( __( 'Line %d: Invalid format', 'reportedip-hive' ), $line_num + 1 );
-				continue;
-			}
-
-			$ip_address = trim( $parts[0] );
+			$parts      = str_getcsv( $line );
+			$ip_address = trim( (string) $parts[0] );
 			$reason     = isset( $parts[1] ) ? trim( $parts[1] ) : 'Imported from CSV';
 			$expires_at = isset( $parts[2] ) && ! empty( trim( $parts[2] ) ) ? trim( $parts[2] ) : null;
 

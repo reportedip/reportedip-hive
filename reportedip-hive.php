@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.0.0-beta.1
+ * Version: 2.0.0
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -54,7 +54,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.0.0-beta.1' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.0.0' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -231,6 +231,7 @@ class ReportedIP_Hive {
 	 * @param array   $args Initialisation arguments.
 	 */
 	public static function on_site_initialized( $site, $args = array() ) {
+		unset( $site, $args );
 		ReportedIP_Hive_Migration_Manager::maybe_run();
 	}
 
@@ -240,9 +241,6 @@ class ReportedIP_Hive {
 	 * @param WP_Site $site WordPress site object being deleted.
 	 */
 	public static function on_site_deleted( $site ) {
-		if ( ! is_object( $site ) ) {
-			return;
-		}
 		$blog_id = (int) $site->blog_id;
 		if ( $blog_id <= 0 ) {
 			return;
@@ -267,6 +265,7 @@ class ReportedIP_Hive {
 		if ( $user_id <= 0 ) {
 			return;
 		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Single-row DELETE on a plugin-owned table during user-deletion lifecycle hook; no caching layer applies.
 		$wpdb->delete(
 			ReportedIP_Hive_Schema::table( 'reportedip_hive_trusted_devices' ),
 			array( 'user_id' => $user_id ),
@@ -416,6 +415,7 @@ class ReportedIP_Hive {
 	 *                           handle both cases identically.
 	 */
 	public static function activate_plugin( $network_wide = false ) {
+		unset( $network_wide );
 		foreach ( array(
 			'includes/class-option-routing.php',
 			'includes/class-schema.php',

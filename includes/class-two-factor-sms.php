@@ -141,7 +141,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		// the relay AVV with reportedip.de is the relevant agreement.
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
 			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'sms' ) ) {
+			if ( method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'sms' ) ) {
 				return true;
 			}
 		}
@@ -184,7 +184,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	 * @return bool
 	 */
 	public static function save_provider_config( $config ) {
-		if ( ! is_array( $config ) || empty( $config ) ) {
+		if ( empty( $config ) ) {
 			ReportedIP_Hive_Option_Routing::delete( self::OPT_PROVIDER_CONF );
 			return true;
 		}
@@ -331,7 +331,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' )
 			&& class_exists( 'ReportedIP_Hive_SMS_Provider_Relay' ) ) {
 			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'sms' ) ) {
+			if ( $mgr->is_relay_available( 'sms' ) ) {
 				$use_relay = true;
 			}
 		}

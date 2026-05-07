@@ -205,7 +205,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		$current_user = wp_get_current_user();
-		$default_to   = $current_user instanceof WP_User && ! empty( $current_user->user_email )
+		$default_to   = ! empty( $current_user->user_email )
 			? $current_user->user_email
 			: (string) get_option( 'admin_email', '' );
 
@@ -1061,7 +1061,7 @@ class ReportedIP_Hive_Ajax_Handler {
 				$cats    = explode( ',', (string) $row->category_ids );
 				$send    = $api->report_ip( $row->ip_address, $cats, (string) ( $row->comment ?? '' ) );
 				$success = ! empty( $send['success'] );
-				$message = is_array( $send ) ? (string) ( $send['message'] ?? '' ) : '';
+				$message = (string) ( $send['message'] ?? '' );
 			}
 
 			if ( $success ) {

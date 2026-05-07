@@ -234,7 +234,7 @@ class ReportedIP_Hive_Mailer {
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' )
 			&& class_exists( 'ReportedIP_Hive_Mail_Provider_Relay' ) ) {
 			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr && method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'mail' ) ) {
+			if ( method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'mail' ) ) {
 				$default = new ReportedIP_Hive_Mail_Provider_Relay( $wp_provider );
 			}
 		}
@@ -242,7 +242,9 @@ class ReportedIP_Hive_Mailer {
 		/**
 		 * Replace the default mail provider with a custom transport.
 		 *
-		 * @param ReportedIP_Hive_Mail_Provider_Interface $provider Default provider.
+		 * Callbacks may return any value; the result is validated below before use.
+		 *
+		 * @param mixed $provider Default provider (a ReportedIP_Hive_Mail_Provider_Interface instance).
 		 */
 		$provider = apply_filters( 'reportedip_hive_mail_provider', $default );
 
@@ -349,25 +351,22 @@ class ReportedIP_Hive_Mailer {
 		}
 
 		$logger = ReportedIP_Hive_Logger::get_instance();
-		if ( ! $logger || ! method_exists( $logger, 'info' ) ) {
-			return;
-		}
 
 		$mail_type = isset( $args['context']['type'] ) ? (string) $args['context']['type'] : 'generic';
 		$ip        = isset( $args['security_notice']['ip'] ) ? (string) $args['security_notice']['ip'] : 'system';
 		$payload   = array(
 			'type'      => $mail_type,
-			'provider'  => method_exists( $provider, 'get_name' ) ? $provider->get_name() : 'unknown',
+			'provider'  => $provider->get_name(),
 			'recipient' => $this->mask_email( (string) $args['to'] ),
 			'success'   => (bool) $result,
 		);
 
 		if ( $result ) {
-			$logger->info( 'mail_sent', $ip, $payload );
+			if ( method_exists( $logger, 'info' ) ) {
+				$logger->info( 'mail_sent', $ip, $payload );
+			}
 		} elseif ( method_exists( $logger, 'warning' ) ) {
 			$logger->warning( 'mail_failed', $ip, $payload );
-		} else {
-			$logger->info( 'mail_failed', $ip, $payload );
 		}
 	}
 

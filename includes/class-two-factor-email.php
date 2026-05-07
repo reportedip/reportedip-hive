@@ -172,7 +172,7 @@ class ReportedIP_Hive_Two_Factor_Email {
 	 * @return bool True if valid, false otherwise.
 	 */
 	public static function verify_code( $user_id, $code ) {
-		if ( ! is_string( $code ) || ! preg_match( '/^\d{' . self::CODE_LENGTH . '}$/', $code ) ) {
+		if ( ! preg_match( '/^\d{' . self::CODE_LENGTH . '}$/', $code ) ) {
 			return false;
 		}
 

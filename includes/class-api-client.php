@@ -571,7 +571,7 @@ class ReportedIP_Hive_API {
 	 * @param array $args {
 	 *     Required: recipient. Optional: subject, body_text, body_html, headers, site_url.
 	 * }
-	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, remaining_quota?: array}
+	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, retryable?: bool, soft_failure?: bool, remaining_quota?: array<string,mixed>|null}
 	 */
 	public function relay_mail( array $args ) {
 		$payload = array(
@@ -594,7 +594,7 @@ class ReportedIP_Hive_API {
 	 * @param array $args {
 	 *     Required: recipient_phone (E.164), message. Optional: site_url.
 	 * }
-	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, remaining_quota?: array}
+	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, retryable?: bool, soft_failure?: bool, remaining_quota?: array<string,mixed>|null}
 	 */
 	public function relay_sms( array $args ) {
 		$payload = array(
@@ -702,7 +702,7 @@ class ReportedIP_Hive_API {
 	 * Fetch the current monthly relay-usage and limits from the service.
 	 *
 	 * @param bool $force_refresh If true, bypass the 1-hour transient cache.
-	 * @return array{tier?: string, role?: string, mail?: array, sms?: array, error?: string}
+	 * @return array{tier?: string, role?: string, mail?: array<string,mixed>, sms?: array<string,mixed>, mail_bundle_balance?: int, sms_bundle_balance?: int, fetched_at?: int, error?: string, status_code?: int, response_raw?: array<string,mixed>|null}
 	 */
 	public function get_relay_quota( $force_refresh = false ) {
 		$cache_key = 'reportedip_hive_relay_quota';
@@ -748,7 +748,7 @@ class ReportedIP_Hive_API {
 	 *
 	 * @param string $endpoint Slug under reportedip/v2/.
 	 * @param array  $payload  Body to send.
-	 * @return array
+	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, retryable?: bool, soft_failure?: bool, remaining_quota?: array<string,mixed>|null}
 	 */
 	private function relay_request( $endpoint, array $payload ) {
 		$url = rtrim( $this->api_endpoint, '/' ) . '/' . ltrim( $endpoint, '/' );
@@ -867,7 +867,7 @@ class ReportedIP_Hive_API {
 
 		if ( defined( 'REPORTEDIP_DEBUG' ) && REPORTEDIP_DEBUG && ! is_wp_error( $response ) ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Plugin diagnostic logging gated behind REPORTEDIP_DEBUG; debug.log only.
-			error_log( 'ReportedIP Hive API Response: ' . wp_remote_retrieve_response_code( $response ) . ' ' . (string) ( wp_remote_retrieve_body( $response ) ?? '' ) );
+			error_log( 'ReportedIP Hive API Response: ' . wp_remote_retrieve_response_code( $response ) . ' ' . (string) wp_remote_retrieve_body( $response ) );
 		}
 
 		if ( ! is_wp_error( $response ) && strtoupper( $method ) === 'GET' ) {
@@ -1156,14 +1156,14 @@ class ReportedIP_Hive_API {
 				'reason'     => 'daily_limit',
 				'reset_time' => $quota['reset_time'] ?? null,
 				'remaining'  => 0,
-				'limit'      => $quota['daily_report_limit'] ?? 0,
+				'limit'      => $quota['daily_report_limit'],
 				'usage'      => $quota['daily_report_usage'] ?? 0,
 				'user_role'  => $quota['user_role'] ?? '',
 				'message'    => sprintf(
 					/* translators: 1: current usage, 2: daily limit, 3: reset time */
 					__( 'Daily report limit reached (%1$d/%2$d). Resets at %3$s UTC.', 'reportedip-hive' ),
 					$quota['daily_report_usage'] ?? 0,
-					$quota['daily_report_limit'] ?? 0,
+					$quota['daily_report_limit'],
 					$reset_time_formatted
 				),
 			);

@@ -347,14 +347,12 @@ class ReportedIP_Hive_Mode_Manager {
 			return $tier;
 		}
 		if ( class_exists( 'ReportedIP_Hive_API' ) ) {
-			$api = ReportedIP_Hive_API::get_instance();
-			if ( method_exists( $api, 'get_relay_quota' ) ) {
-				$fresh = $api->get_relay_quota();
-				if ( is_array( $fresh ) && ! empty( $fresh['tier'] ) ) {
-					$tier              = (string) $fresh['tier'];
-					$this->cached_tier = $tier;
-					return $tier;
-				}
+			$api   = ReportedIP_Hive_API::get_instance();
+			$fresh = $api->get_relay_quota();
+			if ( ! empty( $fresh['tier'] ) ) {
+				$tier              = (string) $fresh['tier'];
+				$this->cached_tier = $tier;
+				return $tier;
 			}
 		}
 		$this->cached_tier = $tier;
