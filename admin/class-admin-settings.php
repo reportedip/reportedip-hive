@@ -979,7 +979,7 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Site-Admin Status page — read-only.
+	 * Site-Admin Status page — read-only with per-site stat cards.
 	 *
 	 * @since 2.0.0
 	 */
@@ -987,12 +987,88 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You do not have permission to view this page.', 'reportedip-hive' ) );
 		}
-		echo '<div class="wrap rip-wrap">';
+
+		$stats = $this->get_site_admin_stats();
+
+		$this->render_site_admin_header(
+			__( 'ReportedIP Hive', 'reportedip-hive' ),
+			__( 'Site security overview', 'reportedip-hive' )
+		);
 		$this->render_site_readonly_banner();
-		echo '<h1>' . esc_html__( 'ReportedIP Hive — Site Status', 'reportedip-hive' ) . '</h1>';
-		echo '<p>' . esc_html__( 'This site is part of a centrally-managed ReportedIP Hive network. Security configuration is controlled by the Network Admin.', 'reportedip-hive' ) . '</p>';
-		echo '<p><a class="rip-button rip-button--secondary" href="' . esc_url( network_admin_url( 'admin.php?page=reportedip-hive' ) ) . '">' . esc_html__( 'Open Network Admin', 'reportedip-hive' ) . '</a></p>';
-		echo '</div>';
+		?>
+		<div class="rip-content">
+			<div class="rip-stat-cards">
+				<div class="rip-stat-card">
+					<div class="rip-stat-card__icon rip-stat-card__icon--info">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+					</div>
+					<div class="rip-stat-card__content">
+						<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $stats['events_24h'] ) ); ?></div>
+						<div class="rip-stat-card__label"><?php esc_html_e( 'Events (24h)', 'reportedip-hive' ); ?></div>
+					</div>
+				</div>
+				<div class="rip-stat-card">
+					<div class="rip-stat-card__icon rip-stat-card__icon--warning">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4M12 16h.01"/></svg>
+					</div>
+					<div class="rip-stat-card__content">
+						<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $stats['failed_logins_24h'] ) ); ?></div>
+						<div class="rip-stat-card__label"><?php esc_html_e( 'Failed logins (24h)', 'reportedip-hive' ); ?></div>
+					</div>
+				</div>
+				<div class="rip-stat-card">
+					<div class="rip-stat-card__icon rip-stat-card__icon--danger">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>
+					</div>
+					<div class="rip-stat-card__content">
+						<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $stats['blocked_active'] ) ); ?></div>
+						<div class="rip-stat-card__label"><?php esc_html_e( 'Active IP blocks (network-wide)', 'reportedip-hive' ); ?></div>
+					</div>
+				</div>
+				<div class="rip-stat-card">
+					<div class="rip-stat-card__icon rip-stat-card__icon--success">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+					</div>
+					<div class="rip-stat-card__content">
+						<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $stats['whitelisted'] ) ); ?></div>
+						<div class="rip-stat-card__label"><?php esc_html_e( 'Whitelisted IPs (network-wide)', 'reportedip-hive' ); ?></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="rip-card">
+				<h2 class="rip-card__title"><?php esc_html_e( 'Recent activity on this site', 'reportedip-hive' ); ?></h2>
+				<?php if ( empty( $stats['recent_events'] ) ) : ?>
+					<div class="rip-empty-state">
+						<p><?php esc_html_e( 'No events recorded yet.', 'reportedip-hive' ); ?></p>
+					</div>
+				<?php else : ?>
+					<table class="rip-table widefat striped">
+						<thead><tr>
+							<th><?php esc_html_e( 'When', 'reportedip-hive' ); ?></th>
+							<th><?php esc_html_e( 'Event', 'reportedip-hive' ); ?></th>
+							<th><?php esc_html_e( 'IP', 'reportedip-hive' ); ?></th>
+							<th><?php esc_html_e( 'Severity', 'reportedip-hive' ); ?></th>
+						</tr></thead>
+						<tbody>
+						<?php foreach ( $stats['recent_events'] as $row ) : ?>
+							<tr>
+								<td><?php echo esc_html( (string) $row->created_at ); ?></td>
+								<td><?php echo esc_html( (string) $row->event_type ); ?></td>
+								<td><code><?php echo esc_html( (string) $row->ip_address ); ?></code></td>
+								<td><span class="rip-badge rip-badge--<?php echo esc_attr( $this->severity_badge_class( (string) $row->severity ) ); ?>"><?php echo esc_html( (string) $row->severity ); ?></span></td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+				<p>
+					<a class="rip-button rip-button--secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-site-logs' ) ); ?>"><?php esc_html_e( 'View all logs for this site', 'reportedip-hive' ); ?></a>
+				</p>
+			</div>
+		</div>
+		<?php
+		$this->render_site_admin_footer();
 	}
 
 	/**
@@ -1004,13 +1080,9 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You do not have permission to view this page.', 'reportedip-hive' ) );
 		}
-		echo '<div class="wrap rip-wrap">';
-		$this->render_site_readonly_banner();
-		echo '<h1>' . esc_html__( 'Security Logs', 'reportedip-hive' ) . '</h1>';
-		echo '<p>' . esc_html__( 'Showing security events recorded for this site only.', 'reportedip-hive' ) . '</p>';
 
 		global $wpdb;
-		$table   = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
+		$table   = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_LOGS );
 		$blog_id = (int) get_current_blog_id();
 		$rows    = $wpdb->get_results(
 			$wpdb->prepare(
@@ -1022,25 +1094,43 @@ class ReportedIP_Hive_Admin_Settings {
 				$blog_id
 			)
 		);
-		echo '<table class="rip-table widefat striped"><thead><tr>';
-		echo '<th>' . esc_html__( 'When', 'reportedip-hive' ) . '</th>';
-		echo '<th>' . esc_html__( 'Event', 'reportedip-hive' ) . '</th>';
-		echo '<th>' . esc_html__( 'IP', 'reportedip-hive' ) . '</th>';
-		echo '<th>' . esc_html__( 'Severity', 'reportedip-hive' ) . '</th>';
-		echo '</tr></thead><tbody>';
-		if ( empty( $rows ) ) {
-			echo '<tr><td colspan="4">' . esc_html__( 'No events recorded yet.', 'reportedip-hive' ) . '</td></tr>';
-		} else {
-			foreach ( $rows as $row ) {
-				echo '<tr>';
-				echo '<td>' . esc_html( (string) $row->created_at ) . '</td>';
-				echo '<td>' . esc_html( (string) $row->event_type ) . '</td>';
-				echo '<td>' . esc_html( (string) $row->ip_address ) . '</td>';
-				echo '<td>' . esc_html( (string) $row->severity ) . '</td>';
-				echo '</tr>';
-			}
-		}
-		echo '</tbody></table></div>';
+
+		$this->render_site_admin_header(
+			__( 'Security Logs', 'reportedip-hive' ),
+			__( 'Showing security events recorded for this site only', 'reportedip-hive' )
+		);
+		$this->render_site_readonly_banner();
+		?>
+		<div class="rip-content">
+			<div class="rip-card">
+				<?php if ( empty( $rows ) ) : ?>
+					<div class="rip-empty-state">
+						<p><?php esc_html_e( 'No events recorded yet.', 'reportedip-hive' ); ?></p>
+					</div>
+				<?php else : ?>
+					<table class="rip-table widefat striped">
+						<thead><tr>
+							<th><?php esc_html_e( 'When', 'reportedip-hive' ); ?></th>
+							<th><?php esc_html_e( 'Event', 'reportedip-hive' ); ?></th>
+							<th><?php esc_html_e( 'IP', 'reportedip-hive' ); ?></th>
+							<th><?php esc_html_e( 'Severity', 'reportedip-hive' ); ?></th>
+						</tr></thead>
+						<tbody>
+						<?php foreach ( $rows as $row ) : ?>
+							<tr>
+								<td><?php echo esc_html( (string) $row->created_at ); ?></td>
+								<td><?php echo esc_html( (string) $row->event_type ); ?></td>
+								<td><code><?php echo esc_html( (string) $row->ip_address ); ?></code></td>
+								<td><span class="rip-badge rip-badge--<?php echo esc_attr( $this->severity_badge_class( (string) $row->severity ) ); ?>"><?php echo esc_html( (string) $row->severity ); ?></span></td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+		$this->render_site_admin_footer();
 	}
 
 	/**
@@ -1066,44 +1156,210 @@ class ReportedIP_Hive_Admin_Settings {
 		$site_extra    = (array) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles_extra', array() );
 		$all_roles     = function_exists( 'wp_roles' ) ? wp_roles()->get_names() : array();
 
-		echo '<div class="wrap rip-wrap">';
+		$has_woocommerce = class_exists( 'WooCommerce' );
+		$site_url        = home_url( '/' );
+		$effective_slug  = '' !== $slug_override ? $slug_override : $slug_default;
+		$frontend_url    = trailingslashit( $site_url ) . sanitize_title( $effective_slug ) . '/';
+
+		$this->render_site_admin_header(
+			__( '2FA Site Settings', 'reportedip-hive' ),
+			__( 'Per-site overrides for the WooCommerce-style frontend 2FA flow', 'reportedip-hive' )
+		);
 		$this->render_site_readonly_banner();
-		echo '<h1>' . esc_html__( '2FA Site Settings', 'reportedip-hive' ) . '</h1>';
-		if ( $saved ) {
-			echo '<div class="notice notice-success"><p>' . esc_html__( 'Site overrides saved.', 'reportedip-hive' ) . '</p></div>';
+		?>
+		<div class="rip-content">
+			<?php if ( $saved ) : ?>
+				<div class="rip-alert rip-alert--success rip-alert--banner"><strong><?php esc_html_e( 'Saved.', 'reportedip-hive' ); ?></strong> <?php esc_html_e( 'Site overrides updated.', 'reportedip-hive' ); ?></div>
+			<?php endif; ?>
+
+			<form method="post">
+				<?php wp_nonce_field( 'reportedip_hive_site_2fa_save', '_rip_site_2fa_nonce' ); ?>
+
+				<div class="rip-card">
+					<h2 class="rip-card__title"><?php esc_html_e( 'Frontend 2FA URL slug (WooCommerce login)', 'reportedip-hive' ); ?></h2>
+					<p>
+						<?php esc_html_e( 'On Professional and higher tiers, ReportedIP Hive renders the second factor inside the WooCommerce storefront theme so customers stay on your site instead of bouncing to wp-login.php. The slug controls the URL where that themed 2FA challenge appears.', 'reportedip-hive' ); ?>
+					</p>
+					<p>
+						<?php
+						printf(
+							/* translators: %s = current effective frontend 2FA URL */
+							esc_html__( 'Current URL on this site: %s', 'reportedip-hive' ),
+							'<code>' . esc_html( $frontend_url ) . '</code>'
+						);
+						?>
+					</p>
+					<?php if ( ! $has_woocommerce ) : ?>
+						<div class="rip-alert rip-alert--info">
+							<?php esc_html_e( 'WooCommerce is not active on this site, so the frontend slug only takes effect if you install WooCommerce later.', 'reportedip-hive' ); ?>
+						</div>
+					<?php endif; ?>
+					<p>
+						<label>
+							<strong><?php esc_html_e( 'Override slug for this site', 'reportedip-hive' ); ?></strong><br>
+							<input type="text" name="rip_2fa_frontend_slug_site_override" value="<?php echo esc_attr( $slug_override ); ?>" class="regular-text" placeholder="<?php echo esc_attr( $slug_default ); ?>">
+						</label>
+					</p>
+					<p class="description">
+						<?php
+						printf(
+							/* translators: %s = network-default slug */
+							esc_html__( 'Network default: %s. Leave empty to inherit. Use this only if the network slug collides with a path that already exists on this site.', 'reportedip-hive' ),
+							'<code>' . esc_html( $slug_default ) . '</code>'
+						);
+						?>
+					</p>
+				</div>
+
+				<div class="rip-card">
+					<h2 class="rip-card__title"><?php esc_html_e( '2FA enforcement — additional roles', 'reportedip-hive' ); ?></h2>
+					<p>
+						<?php esc_html_e( 'Network-required roles always need 2FA on this site. You can add roles on top of that list, but you cannot remove network-required roles here.', 'reportedip-hive' ); ?>
+					</p>
+					<ul class="rip-checklist">
+						<?php foreach ( $all_roles as $slug => $label ) : ?>
+							<?php
+							$is_network  = in_array( $slug, $network_roles, true );
+							$is_extra    = in_array( $slug, $site_extra, true );
+							$is_disabled = $is_network && ! $is_extra;
+							?>
+							<li>
+								<label>
+									<input type="checkbox" name="rip_2fa_enforce_roles_extra[]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( $is_extra ); ?> <?php disabled( $is_disabled ); ?>>
+									<?php echo esc_html( $label ); ?>
+									<?php if ( $is_network ) : ?>
+										<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'network', 'reportedip-hive' ); ?></span>
+									<?php endif; ?>
+								</label>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+
+				<p>
+					<?php submit_button( __( 'Save site overrides', 'reportedip-hive' ), 'primary rip-button rip-button--primary', 'submit', false ); ?>
+				</p>
+			</form>
+		</div>
+		<?php
+		$this->render_site_admin_footer();
+	}
+
+	/**
+	 * Render the standard rip-header for sub-site admin pages.
+	 *
+	 * Mirrors {@see render_page_header()} but replaces the network-only
+	 * Mode + Tier badge cluster with a "Centrally managed" badge plus a
+	 * deep link into the Network Admin so site admins always have a way
+	 * back to the controlling super admin.
+	 *
+	 * @param string $title    Page title.
+	 * @param string $subtitle Page subtitle.
+	 * @return void
+	 * @since  2.0.0
+	 */
+	private function render_site_admin_header( $title, $subtitle ) {
+		?>
+		<div class="wrap rip-wrap">
+			<div class="rip-header">
+				<div class="rip-header__brand">
+					<div class="rip-header__logo">
+						<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M24 4L8 12v12c0 11 7.7 21.3 16 24 8.3-2.7 16-13 16-24V12L24 4z" fill="currentColor" opacity="0.15"/>
+							<path d="M24 4L8 12v12c0 11 7.7 21.3 16 24 8.3-2.7 16-13 16-24V12L24 4zm0 4.2l12 6v10c0 8.4-6 16.3-12 18.5-6-2.2-12-10.1-12-18.5v-10l12-6z" fill="currentColor"/>
+							<path d="M21 28l-5-5 1.8-1.8 3.2 3.2 7.2-7.2L30 19l-9 9z" fill="currentColor"/>
+						</svg>
+					</div>
+					<div>
+						<h1 class="rip-header__title"><?php echo esc_html( $title ); ?></h1>
+						<p class="rip-header__subtitle"><?php echo esc_html( $subtitle ); ?></p>
+					</div>
+				</div>
+				<div class="rip-header__actions">
+					<span class="rip-mode-badge rip-mode-badge--neutral"><?php esc_html_e( 'Site view', 'reportedip-hive' ); ?></span>
+					<a class="rip-button rip-button--secondary" href="<?php echo esc_url( network_admin_url( 'admin.php?page=reportedip-hive' ) ); ?>"><?php esc_html_e( 'Open Network Admin', 'reportedip-hive' ); ?></a>
+				</div>
+			</div>
+		<?php
+	}
+
+	/**
+	 * Render the trust-badges footer + close the rip-wrap div on
+	 * sub-site admin pages. Counterpart to
+	 * {@see render_site_admin_header()}.
+	 *
+	 * @return void
+	 * @since  2.0.0
+	 */
+	private function render_site_admin_footer() {
+		$this->render_page_footer();
+	}
+
+	/**
+	 * Aggregate the per-site stat counters for the Site Status page.
+	 *
+	 * - events_24h: number of events recorded for this `blog_id` in the last 24 h.
+	 * - failed_logins_24h: subset filtered to login-related event types.
+	 * - blocked_active: total active blocks in the network-wide blocked table.
+	 * - whitelisted: total active whitelist entries (network-wide).
+	 * - recent_events: 10 most recent events for this site.
+	 *
+	 * @return array<string, mixed>
+	 * @since  2.0.0
+	 */
+	private function get_site_admin_stats() {
+		global $wpdb;
+		$logs    = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_LOGS );
+		$blog_id = (int) get_current_blog_id();
+
+		$events_24h = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM $logs WHERE blog_id = %d AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+				$blog_id
+			)
+		);
+		$failed_logins_24h = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM $logs WHERE blog_id = %d AND event_type LIKE %s AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+				$blog_id,
+				'%failed_login%'
+			)
+		);
+		$recent_events = (array) $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT event_type, ip_address, severity, created_at FROM $logs WHERE blog_id = %d ORDER BY created_at DESC LIMIT 10",
+				$blog_id
+			)
+		);
+
+		return array(
+			'events_24h'        => $events_24h,
+			'failed_logins_24h' => $failed_logins_24h,
+			'blocked_active'    => $this->database->count_blocked_ips(),
+			'whitelisted'       => $this->database->count_whitelisted_ips(),
+			'recent_events'     => $recent_events,
+		);
+	}
+
+	/**
+	 * Map a log severity to the matching `rip-badge--*` modifier class.
+	 *
+	 * @param string $severity Severity slug from the logs table.
+	 * @return string Badge variant slug.
+	 * @since  2.0.0
+	 */
+	private function severity_badge_class( $severity ) {
+		switch ( $severity ) {
+			case 'critical':
+			case 'high':
+				return 'danger';
+			case 'medium':
+				return 'warning';
+			case 'low':
+				return 'info';
+			default:
+				return 'neutral';
 		}
-		echo '<form method="post">';
-		wp_nonce_field( 'reportedip_hive_site_2fa_save', '_rip_site_2fa_nonce' );
-
-		echo '<h2>' . esc_html__( 'Frontend 2FA Slug Override', 'reportedip-hive' ) . '</h2>';
-		echo '<p>' . sprintf(
-			/* translators: %s = network-default slug */
-			esc_html__( 'Network default: %s. Leave empty to inherit.', 'reportedip-hive' ),
-			'<code>' . esc_html( $slug_default ) . '</code>'
-		) . '</p>';
-		echo '<input type="text" name="rip_2fa_frontend_slug_site_override" value="' . esc_attr( $slug_override ) . '" class="regular-text">';
-
-		echo '<h2>' . esc_html__( '2FA Enforcement — additional roles for this site', 'reportedip-hive' ) . '</h2>';
-		echo '<p>' . esc_html__( 'You can add roles on top of the network list. Network-required roles cannot be removed here.', 'reportedip-hive' ) . '</p>';
-		echo '<ul>';
-		foreach ( $all_roles as $slug => $label ) {
-			$checked  = in_array( $slug, $site_extra, true );
-			$disabled = in_array( $slug, $network_roles, true ) && ! $checked;
-			echo '<li><label>';
-			echo '<input type="checkbox" name="rip_2fa_enforce_roles_extra[]" value="' . esc_attr( $slug ) . '"';
-			checked( $checked );
-			disabled( $disabled );
-			echo '> ' . esc_html( $label );
-			if ( in_array( $slug, $network_roles, true ) ) {
-				echo ' <em>(' . esc_html__( 'network', 'reportedip-hive' ) . ')</em>';
-			}
-			echo '</label></li>';
-		}
-		echo '</ul>';
-
-		submit_button( __( 'Save site overrides', 'reportedip-hive' ) );
-		echo '</form>';
-		echo '</div>';
 	}
 
 	/**
