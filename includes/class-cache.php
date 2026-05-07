@@ -75,7 +75,7 @@ class ReportedIP_Hive_Cache {
 			return;
 		}
 
-		$stats = get_option(
+		$stats = ReportedIP_Hive_Option_Routing::get(
 			'reportedip_hive_cache_stats',
 			array(
 				'hits'       => 0,
@@ -231,7 +231,7 @@ class ReportedIP_Hive_Cache {
 	 * Get cache statistics
 	 */
 	public function get_cache_statistics() {
-		$stats = get_option(
+		$stats = ReportedIP_Hive_Option_Routing::get(
 			'reportedip_hive_cache_stats',
 			array(
 				'hits'       => 0,
@@ -454,7 +454,7 @@ class ReportedIP_Hive_Cache {
 				break;
 			case 'clears':
 			case 'clear':
-				$stats = get_option(
+				$stats = ReportedIP_Hive_Option_Routing::get(
 					'reportedip_hive_cache_stats',
 					array(
 						'hits'       => 0,

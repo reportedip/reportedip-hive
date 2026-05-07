@@ -1257,7 +1257,7 @@ class ReportedIP_Hive_API {
 	private function track_api_call( $success, $response_time, $error_type = null ) {
 		$this->increment_hourly_api_calls();
 
-		$stats = get_option(
+		$stats = ReportedIP_Hive_Option_Routing::get(
 			'reportedip_hive_api_stats',
 			array(
 				'total_calls'         => 0,
@@ -1329,7 +1329,7 @@ class ReportedIP_Hive_API {
 	 * Get comprehensive API health status
 	 */
 	public function get_api_health_status() {
-		$api_stats = get_option(
+		$api_stats = ReportedIP_Hive_Option_Routing::get(
 			'reportedip_hive_api_stats',
 			array(
 				'total_calls'       => 0,

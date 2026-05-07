@@ -2021,6 +2021,10 @@ button.rip-tier-lock--mode:hover {
     color: var(--rip-info-dark);
 }
 
+.rip-badge--inline {
+    margin-left: var(--rip-space-2);
+}
+
 /* Actions Grid */
 .rip-actions-grid {
     display: grid;

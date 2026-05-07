@@ -225,12 +225,12 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 			return self::$available_memo;
 		}
 
-		if ( ! get_option( self::OPT_ENABLED, false ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, false ) ) {
 			self::$available_memo = false;
 			return false;
 		}
 
-		if ( (int) get_option( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
+		if ( (int) ReportedIP_Hive_Option_Routing::get( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
 			self::$available_memo = false;
 			return false;
 		}
@@ -288,10 +288,22 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 			return self::$slug_memo;
 		}
 		self::$slug_memo = array(
-			'challenge' => self::sanitize_slug( get_option( self::OPT_CHALLENGE_SLUG, self::DEFAULT_CHALLENGE_SLUG ), self::DEFAULT_CHALLENGE_SLUG ),
-			'setup'     => self::sanitize_slug( get_option( self::OPT_SETUP_SLUG, self::DEFAULT_SETUP_SLUG ), self::DEFAULT_SETUP_SLUG ),
+			'challenge' => self::sanitize_slug( ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_slug(), self::DEFAULT_CHALLENGE_SLUG ),
+			'setup'     => self::sanitize_slug( ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_setup_slug(), self::DEFAULT_SETUP_SLUG ),
 		);
 		return self::$slug_memo;
+	}
+
+	/**
+	 * Drop the per-request slug memo. Called from the Site-2FA save
+	 * handler so a freshly saved override is reflected immediately on
+	 * the same request.
+	 *
+	 * @return void
+	 * @since  2.0.0
+	 */
+	public static function flush_slug_memo() {
+		self::$slug_memo = null;
 	}
 
 	/**
@@ -487,12 +499,12 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 		$new_is_paid   = self::tier_was_paid( (string) $new );
 
 		if ( $prev_was_paid && ! $new_is_paid ) {
-			update_option( self::OPT_SOFT_DISABLED, time() );
+			ReportedIP_Hive_Option_Routing::set( self::OPT_SOFT_DISABLED, time() );
 			return;
 		}
 
-		if ( $new_is_paid && (int) get_option( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
-			delete_option( self::OPT_SOFT_DISABLED );
+		if ( $new_is_paid && (int) ReportedIP_Hive_Option_Routing::get( self::OPT_SOFT_DISABLED, 0 ) > 0 ) {
+			ReportedIP_Hive_Option_Routing::delete( self::OPT_SOFT_DISABLED );
 		}
 	}
 

@@ -90,7 +90,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 
 		self::ensure_email_in_allowed_methods();
 
-		update_option(
+		ReportedIP_Hive_Option_Routing::set(
 			self::NOTICE_OPT,
 			array(
 				'from'   => (string) $prev,
@@ -99,7 +99,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 			)
 		);
 
-		delete_option( self::NOTICE_DISMISSED );
+		ReportedIP_Hive_Option_Routing::delete( self::NOTICE_DISMISSED );
 	}
 
 	/**
@@ -130,7 +130,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 		if ( ! self::get_notice() ) {
 			return false;
 		}
-		if ( (bool) get_option( self::NOTICE_DISMISSED, false ) ) {
+		if ( (bool) ReportedIP_Hive_Option_Routing::get( self::NOTICE_DISMISSED, false ) ) {
 			return false;
 		}
 
@@ -148,7 +148,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return array{from:string,to:string,set_at:int}|null
 	 */
 	public static function get_notice() {
-		$raw = get_option( self::NOTICE_OPT, null );
+		$raw = ReportedIP_Hive_Option_Routing::get( self::NOTICE_OPT, null );
 		return is_array( $raw ) ? $raw : null;
 	}
 
@@ -164,7 +164,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 		$provider = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_provider', '' );
 		$avv      = false;
 		if ( class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-			$avv = (bool) get_option( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
+			$avv = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
 		} else {
 			$avv = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_avv_confirmed', false );
 		}
@@ -200,8 +200,8 @@ class ReportedIP_Hive_Tier_Upgrade {
 		}
 		check_admin_referer( 'reportedip_hive_dismiss_tier_notice' );
 
-		update_option( self::NOTICE_DISMISSED, true );
-		delete_option( self::NOTICE_OPT );
+		ReportedIP_Hive_Option_Routing::set( self::NOTICE_DISMISSED, true );
+		ReportedIP_Hive_Option_Routing::delete( self::NOTICE_OPT );
 
 		$redirect = wp_get_referer();
 		if ( ! $redirect ) {

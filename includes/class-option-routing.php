@@ -50,7 +50,7 @@ final class ReportedIP_Hive_Option_Routing {
 	/**
 	 * Default for `2fa_frontend_slug` when neither network nor site value is set.
 	 */
-	public const DEFAULT_FRONTEND_SLUG = '2fa-login';
+	public const DEFAULT_FRONTEND_SLUG = 'reportedip-hive-2fa';
 
 	/**
 	 * Per-request cache for the resolve_* helpers. Cleared by `flush()`
@@ -214,14 +214,43 @@ final class ReportedIP_Hive_Option_Routing {
 		if ( isset( self::$resolve_cache[ $key ] ) ) {
 			return self::$resolve_cache[ $key ];
 		}
-		$network = self::coerce_role_list( get_site_option( 'reportedip_hive_2fa_enforce_roles', array() ) );
-		$extra   = self::coerce_role_list( get_option( 'reportedip_hive_2fa_enforce_roles_extra', array() ) );
+		$network = self::get_network_enforce_roles();
+		$extra   = self::get_site_enforce_roles_extra();
 
 		$merged = array_unique( array_merge( $network, $extra ) );
 		$merged = array_values( array_filter( $merged, 'is_string' ) );
 		sort( $merged );
 		self::$resolve_cache[ $key ] = $merged;
 		return $merged;
+	}
+
+	/**
+	 * Network-only 2FA enforce-roles list (no site-extra merge).
+	 *
+	 * Use this when you need to know which roles are *network-required*
+	 * — e.g. in the Site Admin UI to render the read-only "always
+	 * enforced by network" markers. {@see resolve_2fa_enforce_roles()}
+	 * is the right call when you need the *effective* enforced list for
+	 * the current site.
+	 *
+	 * @return string[]
+	 * @since  2.0.0
+	 */
+	public static function get_network_enforce_roles() {
+		return self::coerce_role_list( get_site_option( 'reportedip_hive_2fa_enforce_roles', array() ) );
+	}
+
+	/**
+	 * Per-site additive 2FA enforce-roles list.
+	 *
+	 * Returns only the roles the Site Admin marked extra on top of the
+	 * network list. Network roles are NOT in here.
+	 *
+	 * @return string[]
+	 * @since  2.0.0
+	 */
+	public static function get_site_enforce_roles_extra() {
+		return self::coerce_role_list( get_option( 'reportedip_hive_2fa_enforce_roles_extra', array() ) );
 	}
 
 	/**

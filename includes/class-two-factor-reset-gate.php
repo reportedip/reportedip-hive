@@ -132,7 +132,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		if ( ! ReportedIP_Hive_Two_Factor::is_globally_enabled() ) {
 			return false;
 		}
-		return (bool) get_option( self::OPT_REQUIRE, true );
+		return (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_REQUIRE, true );
 	}
 
 	/**
@@ -145,7 +145,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * @return string[] Method identifiers (lower-case).
 	 */
 	public static function get_excluded_methods( int $user_id ): array {
-		$stored = get_option( self::OPT_EXCLUDED_METHODS, '["email"]' );
+		$stored = ReportedIP_Hive_Option_Routing::get( self::OPT_EXCLUDED_METHODS, '["email"]' );
 		if ( is_array( $stored ) ) {
 			$list = $stored;
 		} else {
@@ -205,7 +205,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * @return bool
 	 */
 	public static function is_email_only_locked( int $user_id ): bool {
-		if ( ! get_option( self::OPT_BLOCK_EMAIL_ONLY, true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_BLOCK_EMAIL_ONLY, true ) ) {
 			return false;
 		}
 

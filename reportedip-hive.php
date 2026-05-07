@@ -195,14 +195,22 @@ class ReportedIP_Hive {
 		}
 
 		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
-		add_action( 'update_option_reportedip_hive_2fa_frontend_slug', $flush_routing_cache );
-		add_action( 'update_option_reportedip_hive_2fa_frontend_slug_site_override', $flush_routing_cache );
-		add_action( 'update_option_reportedip_hive_2fa_frontend_setup_slug', $flush_routing_cache );
-		add_action( 'update_option_reportedip_hive_2fa_frontend_setup_slug_site_override', $flush_routing_cache );
+		$flush_frontend_memo = array( 'ReportedIP_Hive_Two_Factor_Frontend', 'flush_slug_memo' );
+		foreach (
+			array(
+				'reportedip_hive_2fa_frontend_slug',
+				'reportedip_hive_2fa_frontend_slug_site_override',
+				'reportedip_hive_2fa_frontend_setup_slug',
+				'reportedip_hive_2fa_frontend_setup_slug_site_override',
+			) as $slug_opt
+		) {
+			add_action( 'update_option_' . $slug_opt, $flush_routing_cache );
+			add_action( 'update_option_' . $slug_opt, $flush_frontend_memo );
+			add_action( 'update_site_option_' . $slug_opt, $flush_routing_cache );
+			add_action( 'update_site_option_' . $slug_opt, $flush_frontend_memo );
+		}
 		add_action( 'update_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
 		add_action( 'update_option_reportedip_hive_2fa_enforce_roles_extra', $flush_routing_cache );
-		add_action( 'update_site_option_reportedip_hive_2fa_frontend_slug', $flush_routing_cache );
-		add_action( 'update_site_option_reportedip_hive_2fa_frontend_setup_slug', $flush_routing_cache );
 		add_action( 'update_site_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
 
 		if ( is_admin() ) {
@@ -421,8 +429,8 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Schema::ensure_tables();
 		ReportedIP_Hive_Migration_Manager::maybe_run();
 
-		if ( ! get_site_option( 'reportedip_hive_activated_at' ) ) {
-			update_site_option( 'reportedip_hive_activated_at', time() );
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_activated_at' ) ) {
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_activated_at', time() );
 		}
 
 		self::set_default_options_static();

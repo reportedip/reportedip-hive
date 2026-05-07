@@ -31,6 +31,94 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'admin_init', array( 'ReportedIP_Hive_Two_Factor_Admin', 'register_settings' ) );
 		add_action( 'admin_notices', array( $this, 'render_tier_upgrade_banner' ) );
 		add_action( 'updated_option', array( $this, 'maybe_sync_notifications_to_api' ), 10, 1 );
+		add_action( 'network_admin_edit_reportedip_hive_save_settings', array( $this, 'handle_network_admin_save' ) );
+	}
+
+	/**
+	 * Form action URL for Settings-API forms.
+	 *
+	 * On the network admin context, options.php cannot persist sitemeta —
+	 * we route through edit.php?action=reportedip_hive_save_settings instead,
+	 * which is dispatched to {@see handle_network_admin_save()}. Outside
+	 * network admin we keep the WordPress core options.php endpoint.
+	 *
+	 * @return string Absolute URL for use in `<form action="">`.
+	 * @since  2.0.0
+	 */
+	public static function settings_form_action() {
+		if ( is_network_admin() ) {
+			return network_admin_url( 'edit.php?action=reportedip_hive_save_settings' );
+		}
+		return admin_url( 'options.php' );
+	}
+
+	/**
+	 * Handle Settings-API submissions on the network admin.
+	 *
+	 * Mirrors WordPress core's options.php whitelist + sanitize-callback
+	 * loop, but persists via {@see ReportedIP_Hive_Option_Routing::set()}
+	 * so network-scoped values land in sitemeta. Per-site overrides
+	 * (the three keys in `Option_Routing::SITE_OPTION_LOOKUP`) are not
+	 * editable from network admin tabs and are filtered out here as a
+	 * defence in depth.
+	 *
+	 * Posted via `<form action="<?php echo self::settings_form_action(); ?>">`.
+	 * The form keeps `settings_fields( $option_group )` so the standard
+	 * `<option_group>-options` nonce action is still used here.
+	 *
+	 * @return void
+	 * @since  2.0.0
+	 */
+	public function handle_network_admin_save() {
+		if ( ! current_user_can( 'manage_network_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'reportedip-hive' ) );
+		}
+
+		$option_page = isset( $_POST['option_page'] )
+			? sanitize_key( wp_unslash( $_POST['option_page'] ) )
+			: '';
+
+		if ( '' === $option_page ) {
+			wp_die( esc_html__( 'Missing option group.', 'reportedip-hive' ) );
+		}
+
+		check_admin_referer( $option_page . '-options' );
+
+		global $new_whitelist_options;
+
+		$whitelisted = isset( $new_whitelist_options[ $option_page ] )
+			? (array) $new_whitelist_options[ $option_page ]
+			: array();
+
+		foreach ( $whitelisted as $option_name ) {
+			if ( 0 !== strpos( $option_name, 'reportedip_hive_' ) ) {
+				continue;
+			}
+			if ( ReportedIP_Hive_Option_Routing::is_site_option( $option_name ) ) {
+				continue;
+			}
+
+			$raw   = $_POST[ $option_name ] ?? null;
+			$value = is_string( $raw ) ? wp_unslash( $raw ) : $raw;
+
+			ReportedIP_Hive_Option_Routing::set( $option_name, $value );
+		}
+
+		add_settings_error(
+			$option_page,
+			'settings_updated',
+			__( 'Settings saved.', 'reportedip-hive' ),
+			'success'
+		);
+		set_transient( 'settings_errors', get_settings_errors(), 30 );
+
+		$referer = wp_get_referer();
+		if ( ! $referer ) {
+			$referer = network_admin_url( 'admin.php?page=reportedip-hive-settings' );
+		}
+		$referer = add_query_arg( 'settings-updated', 'true', $referer );
+		wp_safe_redirect( $referer );
+		exit;
 	}
 
 	/**
@@ -101,7 +189,42 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 
 			<?php $this->render_inline_notices(); ?>
+			<?php $this->render_settings_saved_notice(); ?>
 		<?php
+	}
+
+	/**
+	 * Render the "Settings saved." notice after a Network-admin save.
+	 *
+	 * The Settings API normally renders this notice automatically on
+	 * `wp-admin/options-*.php` screens via core, but custom admin pages
+	 * (and our network-admin save handler) need to opt in. We read the
+	 * `settings_errors` transient that {@see handle_network_admin_save()}
+	 * stores right before its redirect, then delegate rendering to
+	 * `settings_errors()` which honours the standard `notice-success`
+	 * styling expected by WordPress admins.
+	 *
+	 * @return void
+	 * @since  2.0.0
+	 */
+	private function render_settings_saved_notice() {
+		$transient = get_transient( 'settings_errors' );
+		if ( is_array( $transient ) ) {
+			foreach ( $transient as $error ) {
+				if ( ! is_array( $error ) ) {
+					continue;
+				}
+				add_settings_error(
+					(string) ( $error['setting'] ?? 'general' ),
+					(string) ( $error['code'] ?? 'settings_updated' ),
+					(string) ( $error['message'] ?? '' ),
+					(string) ( $error['type'] ?? 'success' )
+				);
+			}
+			delete_transient( 'settings_errors' );
+		}
+
+		settings_errors();
 	}
 
 	/**
@@ -289,6 +412,54 @@ class ReportedIP_Hive_Admin_Settings {
 			</a>
 			<?php
 		}
+	}
+
+	/**
+	 * Render the "Available with Professional plan" upsell card for the
+	 * Frontend-2FA section. Shared between the network-admin 2FA tab and
+	 * the per-site 2FA settings page so feature copy stays in one place.
+	 *
+	 * Renders nothing when the feature is available or when the gate is not
+	 * a tier gate (e.g. mode mismatch — handled by the inline tier-lock chip).
+	 *
+	 * @param array $status Output of Mode_Manager::feature_status('frontend_2fa').
+	 * @return void
+	 * @since 2.0.0
+	 */
+	public static function render_frontend_2fa_pro_upsell( $status ) {
+		if ( empty( $status ) || ! is_array( $status ) ) {
+			return;
+		}
+		if ( ! empty( $status['available'] ) ) {
+			return;
+		}
+		if ( 'tier' !== ( $status['reason'] ?? '' ) ) {
+			return;
+		}
+
+		$upgrade_url = defined( 'REPORTEDIP_HIVE_UPGRADE_URL' )
+			? REPORTEDIP_HIVE_UPGRADE_URL
+			: 'https://reportedip.de/pricing/';
+		?>
+		<div class="rip-alert rip-alert--info rip-pro-upsell">
+			<p class="rip-pro-upsell__title">
+				<?php esc_html_e( 'Available with the Professional plan and higher', 'reportedip-hive' ); ?>
+			</p>
+			<ul class="rip-pro-upsell__features">
+				<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
+				<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
+				<li><?php esc_html_e( 'Cart and checkout state survive the redirect roundtrip', 'reportedip-hive' ); ?></li>
+				<li><?php esc_html_e( 'WC Blocks Cart / Checkout error redirect listener', 'reportedip-hive' ); ?></li>
+				<li><?php esc_html_e( 'Trusted-device cookie shared with the wp-login flow', 'reportedip-hive' ); ?></li>
+				<li><?php esc_html_e( 'Hide-Login bypass + cache-plugin-safe headers', 'reportedip-hive' ); ?></li>
+			</ul>
+			<p class="rip-pro-upsell__cta">
+				<a class="rip-button rip-button--primary" href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer">
+					<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
+				</a>
+			</p>
+		</div>
+		<?php
 	}
 
 	/**
@@ -1154,8 +1325,8 @@ class ReportedIP_Hive_Admin_Settings {
 		$setup_slug_default  = (string) get_site_option( 'reportedip_hive_2fa_frontend_setup_slug', 'reportedip-hive-2fa-setup' );
 		$setup_slug_override = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_setup_slug_site_override', '' );
 
-		$network_roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();
-		$site_extra    = (array) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles_extra', array() );
+		$network_roles = ReportedIP_Hive_Option_Routing::get_network_enforce_roles();
+		$site_extra    = ReportedIP_Hive_Option_Routing::get_site_enforce_roles_extra();
 		$all_roles     = function_exists( 'wp_roles' ) ? wp_roles()->get_names() : array();
 
 		$has_wc        = class_exists( 'WooCommerce' );
@@ -1195,25 +1366,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
 					</p>
 
-					<?php if ( $frontend_locked_by_tier ) : ?>
-						<div class="rip-alert rip-alert--info">
-							<p style="margin:0 0 var(--rip-space-2);font-weight:600;">
-								<?php esc_html_e( 'Available with the Professional plan and higher', 'reportedip-hive' ); ?>
-							</p>
-							<ul style="margin:0 0 var(--rip-space-3);padding-left:1.25em;">
-								<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
-								<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
-								<li><?php esc_html_e( 'Cart and checkout state survive the redirect roundtrip', 'reportedip-hive' ); ?></li>
-								<li><?php esc_html_e( 'Trusted-device cookie shared with the wp-login flow', 'reportedip-hive' ); ?></li>
-								<li><?php esc_html_e( 'Hide-Login bypass + cache-plugin-safe headers', 'reportedip-hive' ); ?></li>
-							</ul>
-							<p style="margin:0;">
-								<a class="rip-button rip-button--primary" href="<?php echo esc_url( defined( 'REPORTEDIP_HIVE_UPGRADE_URL' ) ? REPORTEDIP_HIVE_UPGRADE_URL : 'https://reportedip.de/pricing/' ); ?>" target="_blank" rel="noopener noreferrer">
-									<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
-								</a>
-							</p>
-						</div>
-					<?php endif; ?>
+					<?php self::render_frontend_2fa_pro_upsell( $frontend_status ); ?>
 
 					<?php if ( ! $has_wc ) : ?>
 						<div class="rip-alert rip-alert--info">
@@ -1350,13 +1503,13 @@ class ReportedIP_Hive_Admin_Settings {
 										class="rip-toggle__input"
 										name="rip_2fa_enforce_roles_extra[]"
 										value="<?php echo esc_attr( $slug ); ?>"
-										<?php checked( $is_extra ); ?>
+										<?php checked( $is_extra || $is_network ); ?>
 										<?php disabled( $is_network ); ?> />
 									<span class="rip-toggle__slider"></span>
 									<span class="rip-toggle__label">
 										<?php echo esc_html( $label ); ?>
 										<?php if ( $is_network ) : ?>
-											<span class="rip-badge rip-badge--info" style="margin-left:var(--rip-space-2);"><?php esc_html_e( 'enforced by network', 'reportedip-hive' ); ?></span>
+											<span class="rip-badge rip-badge--info rip-badge--inline"><?php esc_html_e( 'enforced by network', 'reportedip-hive' ); ?></span>
 										<?php endif; ?>
 									</span>
 								</label>
@@ -1539,14 +1692,18 @@ class ReportedIP_Hive_Admin_Settings {
 			sanitize_title( $setup_slug_raw )
 		);
 
-		$roles_raw   = isset( $_POST['rip_2fa_enforce_roles_extra'] )
+		$roles_raw     = isset( $_POST['rip_2fa_enforce_roles_extra'] )
 			? (array) wp_unslash( $_POST['rip_2fa_enforce_roles_extra'] )
 			: array();
-		$valid_roles = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
-		$roles       = array_values(
-			array_intersect(
-				array_unique( array_map( 'sanitize_key', array_map( 'strval', $roles_raw ) ) ),
-				$valid_roles
+		$valid_roles   = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
+		$network_roles = ReportedIP_Hive_Option_Routing::get_network_enforce_roles();
+		$roles         = array_values(
+			array_diff(
+				array_intersect(
+					array_unique( array_map( 'sanitize_key', array_map( 'strval', $roles_raw ) ) ),
+					$valid_roles
+				),
+				$network_roles
 			)
 		);
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_roles_extra', $roles );
@@ -2143,7 +2300,7 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( ReportedIP_Hive_Mode_Manager::is_valid_mode( $value ) ) {
 			return $value;
 		}
-		$current = (string) get_option( ReportedIP_Hive_Mode_Manager::OPTION_MODE, ReportedIP_Hive_Mode_Manager::MODE_LOCAL );
+		$current = (string) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Mode_Manager::OPTION_MODE, ReportedIP_Hive_Mode_Manager::MODE_LOCAL );
 		return ReportedIP_Hive_Mode_Manager::is_valid_mode( $current ) ? $current : ReportedIP_Hive_Mode_Manager::MODE_LOCAL;
 	}
 
@@ -3300,7 +3457,7 @@ class ReportedIP_Hive_Admin_Settings {
 			</h2>
 			<p class="rip-settings-section__desc"><?php esc_html_e( 'Choose how ReportedIP Hive should operate. You can switch modes at any time.', 'reportedip-hive' ); ?></p>
 
-			<form method="post" action="options.php" class="rip-form rip-form--mode">
+			<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form rip-form--mode">
 				<?php settings_fields( 'reportedip_hive_general' ); ?>
 				<?php self::render_mode_comparison( array( 'interactive' => true ) ); ?>
 				<p class="rip-help-text"><?php esc_html_e( 'Mode changes take effect immediately after saving.', 'reportedip-hive' ); ?></p>
@@ -3318,7 +3475,7 @@ class ReportedIP_Hive_Admin_Settings {
 			</h2>
 			<p class="rip-settings-section__desc"><?php esc_html_e( 'Connect to the ReportedIP community network for enhanced protection.', 'reportedip-hive' ); ?></p>
 
-			<form method="post" action="options.php" class="rip-form">
+			<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
 				<?php settings_fields( 'reportedip_hive_api' ); ?>
 
 				<div class="rip-form-group">
@@ -3386,7 +3543,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	private function render_detection_tab() {
 		?>
-		<form method="post" action="options.php" class="rip-form">
+		<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
 			<?php settings_fields( 'reportedip_hive_protection_detection' ); ?>
 
 			<?php /* Checkbox-off fallbacks — see render_global_settings() in class-two-factor-admin.php for context. */ ?>
@@ -3739,7 +3896,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	private function render_blocking_tab() {
 		?>
-		<form method="post" action="options.php" class="rip-form">
+		<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
 			<?php settings_fields( 'reportedip_hive_protection_blocking' ); ?>
 
 			<?php /* Checkbox-off fallbacks. */ ?>
@@ -3945,7 +4102,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$preview_url   = $hide_login && $hide_login->is_active() ? $hide_login->get_login_url() : '';
 		$kill_switch   = defined( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN' ) && REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN;
 		?>
-		<form method="post" action="options.php" class="rip-form">
+		<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
 			<?php settings_fields( 'reportedip_hive_hide_login' ); ?>
 
 			<?php /* Checkbox-off fallbacks. */ ?>
@@ -4095,7 +4252,7 @@ class ReportedIP_Hive_Admin_Settings {
 		</div>
 		<?php endif; ?>
 
-		<form method="post" action="options.php" class="rip-form">
+		<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
 			<?php settings_fields( 'reportedip_hive_protection_notifications' ); ?>
 
 			<?php /* Checkbox-off fallbacks. */ ?>
@@ -4265,7 +4422,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$detailed = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false );
 		$profile  = $minimal ? 'minimal' : ( $detailed ? 'detailed' : 'standard' );
 		?>
-		<form method="post" action="options.php" class="rip-form" id="rip-privacy-logs-form">
+		<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form" id="rip-privacy-logs-form">
 			<?php settings_fields( 'reportedip_hive_advanced_privacy' ); ?>
 
 			<?php /* Checkbox-off fallbacks. (minimal_/detailed_logging are JS-driven hidden fields, see below.) */ ?>
@@ -4670,7 +4827,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$api_health    = $this->api_client->get_api_health_status();
 		$api_usage     = $this->api_client->estimate_monthly_usage();
 		?>
-		<form method="post" action="options.php" class="rip-form">
+		<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
 			<?php settings_fields( 'reportedip_hive_advanced_performance' ); ?>
 
 			<?php /* Checkbox-off fallbacks. */ ?>
@@ -5982,7 +6139,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<p style="margin:0 0 1.25em;font-size:.85em;color:var(--rip-gray-600);">
 					<?php esc_html_e( 'Live preview — updates as you change the variant and position below.', 'reportedip-hive' ); ?>
 				</p>
-				<form method="post" action="options.php">
+				<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>">
 					<?php settings_fields( 'reportedip_hive_promote' ); ?>
 					<input type="hidden" name="_wp_http_referer" value="<?php echo esc_attr( admin_url( 'admin.php?page=reportedip-hive-community&subtab=promote' ) ); ?>">
 

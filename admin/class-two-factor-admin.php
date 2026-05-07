@@ -233,7 +233,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		$crypto_available = ReportedIP_Hive_Two_Factor_Crypto::is_available();
 		$crypto_method    = ReportedIP_Hive_Two_Factor_Crypto::get_active_method();
 		?>
-		<form method="post" action="options.php">
+		<form method="post" action="<?php echo esc_url( ReportedIP_Hive_Admin_Settings::settings_form_action() ); ?>">
 			<?php settings_fields( 'reportedip_hive_2fa_settings' ); ?>
 
 			<?php
@@ -472,11 +472,11 @@ class ReportedIP_Hive_Two_Factor_Admin {
 
 			<?php
 			$rip_wc_active           = class_exists( 'WooCommerce' );
-			$rip_frontend_enabled    = (bool) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
+			$rip_frontend_enabled    = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
 			$rip_customer_optional   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_customer_optional', true );
 			$rip_frontend_status     = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
 			$rip_frontend_locked     = ! $rip_frontend_status['available'];
-			$rip_frontend_soft_off   = (int) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_SOFT_DISABLED, 0 ) > 0;
+			$rip_frontend_soft_off   = (int) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Frontend::OPT_SOFT_DISABLED, 0 ) > 0;
 			$rip_frontend_disabled   = $rip_frontend_locked ? ' disabled' : '';
 			$rip_challenge_slug      = ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug();
 			$rip_setup_slug          = ReportedIP_Hive_Two_Factor_Frontend::get_setup_slug();
@@ -496,26 +496,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
 				</p>
 
-				<?php if ( $rip_frontend_locked && 'tier' === $rip_frontend_status['reason'] ) : ?>
-					<div class="rip-alert rip-alert--info rip-2fa-frontend-pro-card">
-						<p style="margin:0 0 var(--rip-space-2);font-weight:600;">
-							<?php esc_html_e( 'Available with the Professional plan and higher', 'reportedip-hive' ); ?>
-						</p>
-						<ul style="margin:0 0 var(--rip-space-3);padding-left:1.25em;">
-							<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Cart and checkout state survive the redirect roundtrip', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'WC Blocks Cart / Checkout error redirect listener', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Trusted-device cookie shared with the wp-login flow', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Hide-Login bypass + cache-plugin-safe headers', 'reportedip-hive' ); ?></li>
-						</ul>
-						<p style="margin:0;">
-							<a class="rip-button rip-button--primary" href="<?php echo esc_url( defined( 'REPORTEDIP_UPGRADE_URL' ) ? REPORTEDIP_UPGRADE_URL : 'https://reportedip.de/pricing/' ); ?>" target="_blank" rel="noopener noreferrer">
-								<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
-							</a>
-						</p>
-					</div>
-				<?php endif; ?>
+				<?php ReportedIP_Hive_Admin_Settings::render_frontend_2fa_pro_upsell( $rip_frontend_status ); ?>
 
 				<?php if ( ! $rip_wc_active ) : ?>
 					<div class="rip-alert rip-alert--info">
@@ -639,9 +620,9 @@ class ReportedIP_Hive_Two_Factor_Admin {
 
 			<!-- Login reminder for users without 2FA -->
 			<?php
-			$reminder_enabled   = (bool) get_option( ReportedIP_Hive_Two_Factor_Recommend::OPT_ENABLED, true );
-			$reminder_threshold = (int) get_option( ReportedIP_Hive_Two_Factor_Recommend::OPT_HARD_THRESHOLD, ReportedIP_Hive_Two_Factor_Recommend::DEFAULT_THRESHOLD );
-			$reminder_hard_raw  = get_option( ReportedIP_Hive_Two_Factor_Recommend::OPT_HARD_ROLES, ReportedIP_Hive_Two_Factor_Recommend::DEFAULT_HARD_ROLES );
+			$reminder_enabled   = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Recommend::OPT_ENABLED, true );
+			$reminder_threshold = (int) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Recommend::OPT_HARD_THRESHOLD, ReportedIP_Hive_Two_Factor_Recommend::DEFAULT_THRESHOLD );
+			$reminder_hard_raw  = ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Recommend::OPT_HARD_ROLES, ReportedIP_Hive_Two_Factor_Recommend::DEFAULT_HARD_ROLES );
 			if ( is_string( $reminder_hard_raw ) ) {
 				$decoded           = json_decode( $reminder_hard_raw, true );
 				$reminder_hard_raw = is_array( $decoded ) ? $decoded : ReportedIP_Hive_Two_Factor_Recommend::DEFAULT_HARD_ROLES;
@@ -1185,8 +1166,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			return;
 		}
 		$providers     = ReportedIP_Hive_Two_Factor_SMS::providers();
-		$active_id     = (string) get_option( ReportedIP_Hive_Two_Factor_SMS::OPT_PROVIDER, '' );
-		$avv_confirmed = (bool) get_option( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
+		$active_id     = (string) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_SMS::OPT_PROVIDER, '' );
+		$avv_confirmed = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
 		$active_config = ReportedIP_Hive_Two_Factor_SMS::get_provider_config();
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
@@ -1442,7 +1423,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		if ( 'reportedip_relay' === $value && class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
 			$relay_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
 			if ( ! empty( $relay_status['available'] ) ) {
-				update_option( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, true );
+				ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, true );
 			}
 		}
 
@@ -1524,7 +1505,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 */
 	public static function sanitize_frontend_enabled( $input ) {
 		$desired = (bool) rest_sanitize_boolean( $input );
-		$current = (bool) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
+		$current = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
 
 		if ( $desired ) {
 			$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );

@@ -2124,8 +2124,8 @@ class ReportedIP_Hive_Setup_Wizard {
 				$frontend_enabled_desired = false;
 			}
 		}
-		$frontend_was_on = (bool) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
-		update_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, $frontend_enabled_desired ? '1' : '' );
+		$frontend_was_on = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, $frontend_enabled_desired ? '1' : '' );
 		if ( $frontend_was_on !== $frontend_enabled_desired ) {
 			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
 			if ( function_exists( 'flush_rewrite_rules' ) ) {
