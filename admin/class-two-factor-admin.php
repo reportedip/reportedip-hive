@@ -216,12 +216,12 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 * Called from class-admin-settings.php when the 'two_factor' tab is active.
 	 */
 	public static function render_global_settings() {
-		$enabled         = get_option( 'reportedip_hive_2fa_enabled_global', false );
-		$allowed_methods = json_decode( get_option( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' ), true );
-		$enforce_roles   = json_decode( get_option( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
-		$grace_days      = get_option( 'reportedip_hive_2fa_enforce_grace_days', 7 );
-		$trust_enabled   = get_option( 'reportedip_hive_2fa_trusted_devices', true );
-		$trust_days      = get_option( 'reportedip_hive_2fa_trusted_device_days', 30 );
+		$enabled         = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enabled_global', false );
+		$allowed_methods = json_decode( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' ), true );
+		$enforce_roles   = json_decode( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
+		$grace_days      = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_grace_days', 7 );
+		$trust_enabled   = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true );
+		$trust_days      = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_device_days', 30 );
 
 		if ( ! is_array( $allowed_methods ) ) {
 			$allowed_methods = array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, ReportedIP_Hive_Two_Factor::METHOD_EMAIL );
@@ -447,7 +447,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						id="reportedip_2fa_max_skips"
 						class="rip-input"
 						name="reportedip_hive_2fa_max_skips"
-						value="<?php echo esc_attr( (string) (int) get_option( 'reportedip_hive_2fa_max_skips', 3 ) ); ?>"
+						value="<?php echo esc_attr( (string) (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 ) ); ?>"
 						min="0"
 						max="20"
 						style="width: 80px;" />
@@ -460,7 +460,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							class="rip-toggle__input"
 							name="reportedip_hive_2fa_frontend_onboarding"
 							value="1"
-							<?php checked( (bool) get_option( 'reportedip_hive_2fa_frontend_onboarding', true ) ); ?> />
+							<?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_onboarding', true ) ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
 							<?php esc_html_e( 'Enforce onboarding on the frontend too', 'reportedip-hive' ); ?>
@@ -473,7 +473,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<?php
 			$rip_wc_active           = class_exists( 'WooCommerce' );
 			$rip_frontend_enabled    = (bool) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
-			$rip_customer_optional   = (bool) get_option( 'reportedip_hive_2fa_frontend_customer_optional', true );
+			$rip_customer_optional   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_customer_optional', true );
 			$rip_frontend_status     = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
 			$rip_frontend_locked     = ! $rip_frontend_status['available'];
 			$rip_frontend_soft_off   = (int) get_option( ReportedIP_Hive_Two_Factor_Frontend::OPT_SOFT_DISABLED, 0 ) > 0;
@@ -718,7 +718,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						class="rip-input"
 						rows="5"
 						style="width: 100%; font-family: var(--rip-font-mono); font-size: var(--rip-text-sm);"
-						placeholder="# One IP or CIDR per line&#10;192.168.1.0/24&#10;203.0.113.42&#10;2001:db8::/32"><?php echo esc_textarea( (string) get_option( 'reportedip_hive_2fa_ip_allowlist', '' ) ); ?></textarea>
+						placeholder="# One IP or CIDR per line&#10;192.168.1.0/24&#10;203.0.113.42&#10;2001:db8::/32"><?php echo esc_textarea( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_ip_allowlist', '' ) ); ?></textarea>
 					<?php
 					$current_ip = class_exists( 'ReportedIP_Hive' ) ? (string) ReportedIP_Hive::get_client_ip() : '';
 					if ( '' !== $current_ip ) :
@@ -786,7 +786,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							class="rip-toggle__input"
 							name="reportedip_hive_2fa_xmlrpc_app_password_only"
 							value="1"
-							<?php checked( (bool) get_option( 'reportedip_hive_2fa_xmlrpc_app_password_only', false ) ); ?> />
+							<?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_xmlrpc_app_password_only', false ) ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
 							<?php esc_html_e( 'Allow XMLRPC only with application passwords', 'reportedip-hive' ); ?>
@@ -836,7 +836,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							class="rip-toggle__input"
 							name="reportedip_hive_2fa_extended_remember"
 							value="1"
-							<?php checked( (bool) get_option( 'reportedip_hive_2fa_extended_remember', false ) ); ?> />
+							<?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_extended_remember', false ) ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
 							<?php esc_html_e( 'Extended session duration (30 days) when "Remember me" is used with verified 2FA', 'reportedip-hive' ); ?>
@@ -851,7 +851,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							class="rip-toggle__input"
 							name="reportedip_hive_2fa_branded_login"
 							value="1"
-							<?php checked( (bool) get_option( 'reportedip_hive_2fa_branded_login', false ) ); ?> />
+							<?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_branded_login', false ) ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
 							<?php esc_html_e( 'Branded login screen (show the plugin logo on the 2FA challenge)', 'reportedip-hive' ); ?>
@@ -876,7 +876,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							class="rip-toggle__input"
 							name="reportedip_hive_2fa_require_on_password_reset"
 							value="1"
-							<?php checked( (bool) get_option( 'reportedip_hive_2fa_require_on_password_reset', true ) ); ?> />
+							<?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_require_on_password_reset', true ) ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
 							<?php esc_html_e( 'Require 2FA verification before password reset', 'reportedip-hive' ); ?>
@@ -891,7 +891,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							class="rip-toggle__input"
 							name="reportedip_hive_2fa_password_reset_block_email_only"
 							value="1"
-							<?php checked( (bool) get_option( 'reportedip_hive_2fa_password_reset_block_email_only', true ) ); ?> />
+							<?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_password_reset_block_email_only', true ) ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
 							<?php esc_html_e( 'Block resets for accounts that only have email 2FA and no recovery codes', 'reportedip-hive' ); ?>
@@ -1868,7 +1868,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				</tr>
 
 				<!-- Trusted Devices -->
-				<?php if ( get_option( 'reportedip_hive_2fa_trusted_devices', true ) && ! empty( $devices ) ) : ?>
+				<?php if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) && ! empty( $devices ) ) : ?>
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Trusted devices', 'reportedip-hive' ); ?></th>
 						<td>

@@ -84,8 +84,8 @@ class ReportedIP_Hive_Tier_Upgrade {
 			return;
 		}
 
-		if ( '' === (string) get_option( 'reportedip_hive_2fa_sms_provider', '' ) ) {
-			update_option( 'reportedip_hive_2fa_sms_provider', self::PROVIDER_RELAY );
+		if ( '' === (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_provider', '' ) ) {
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_sms_provider', self::PROVIDER_RELAY );
 		}
 
 		self::ensure_email_in_allowed_methods();
@@ -161,12 +161,12 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return array<int,array{key:string,label:string,done:bool}>
 	 */
 	public static function get_setup_checklist() {
-		$provider = (string) get_option( 'reportedip_hive_2fa_sms_provider', '' );
+		$provider = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_provider', '' );
 		$avv      = false;
 		if ( class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 			$avv = (bool) get_option( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
 		} else {
-			$avv = (bool) get_option( 'reportedip_hive_2fa_sms_avv_confirmed', false );
+			$avv = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_avv_confirmed', false );
 		}
 		$method_active = self::is_method_in_allowed_list( 'sms' );
 
@@ -218,7 +218,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return void
 	 */
 	private static function ensure_email_in_allowed_methods() {
-		$raw     = get_option( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
+		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
 		$decoded = json_decode( (string) $raw, true );
 		if ( ! is_array( $decoded ) ) {
 			$decoded = array( 'totp', 'email' );
@@ -227,7 +227,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 			return;
 		}
 		$decoded[] = 'email';
-		update_option( 'reportedip_hive_2fa_allowed_methods', wp_json_encode( array_values( $decoded ) ) );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_allowed_methods', wp_json_encode( array_values( $decoded ) ) );
 	}
 
 	/**
@@ -237,7 +237,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return bool
 	 */
 	private static function is_method_in_allowed_list( $method_id ) {
-		$raw     = get_option( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
+		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
 		$decoded = json_decode( (string) $raw, true );
 		if ( ! is_array( $decoded ) ) {
 			return false;

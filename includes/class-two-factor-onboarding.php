@@ -118,7 +118,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			return INF;
 		}
 
-		$max_skips  = (int) get_option( 'reportedip_hive_2fa_max_skips', 3 );
+		$max_skips  = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );
 		$skip_count = (int) get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SKIP_COUNT, true );
 		return max( 0, $max_skips - $skip_count );
 	}
@@ -130,7 +130,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	 * @return int Unix timestamp.
 	 */
 	public static function get_grace_deadline( $user_id ) {
-		$grace_days = (int) get_option( 'reportedip_hive_2fa_enforce_grace_days', 7 );
+		$grace_days = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_grace_days', 7 );
 		if ( $grace_days <= 0 ) {
 			return 0;
 		}
@@ -222,7 +222,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 		if ( is_admin() ) {
 			return;
 		}
-		if ( ! get_option( 'reportedip_hive_2fa_frontend_onboarding', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_onboarding', true ) ) {
 			return;
 		}
 
@@ -287,8 +287,8 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 		$is_frontend           = ( 'frontend' === $context );
 		$frontend_self_service = false;
 		if ( $is_frontend && class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {
-			$customer_optional = (bool) get_option( 'reportedip_hive_2fa_frontend_customer_optional', true );
-			$has_2fa_already   = ReportedIP_Hive_Two_Factor::is_user_enabled( $user_id );
+			$customer_optional     = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_customer_optional', true );
+			$has_2fa_already       = ReportedIP_Hive_Two_Factor::is_user_enabled( $user_id );
 			$frontend_self_service = (
 				ReportedIP_Hive_Two_Factor_Frontend::is_available()
 				&& $customer_optional
@@ -455,7 +455,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 		$in_grace = ReportedIP_Hive_Two_Factor::is_in_grace_period( $user_id );
 
 		if ( ! $in_grace ) {
-			$max_skips  = (int) get_option( 'reportedip_hive_2fa_max_skips', 3 );
+			$max_skips  = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );
 			$skip_count = (int) get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SKIP_COUNT, true );
 
 			if ( $skip_count >= $max_skips && $max_skips > 0 ) {

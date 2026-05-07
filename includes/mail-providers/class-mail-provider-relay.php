@@ -67,7 +67,7 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 		}
 		// Allow sites to set a global Reply-To via filter/option without touching every send.
 		if ( '' === $reply_to ) {
-			$default_reply_to = (string) get_option( 'reportedip_hive_mail_reply_to', '' );
+			$default_reply_to = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_mail_reply_to', '' );
 			$default_reply_to = (string) apply_filters( 'reportedip_hive_mail_reply_to', $default_reply_to, $to, $subject );
 			if ( '' !== $default_reply_to ) {
 				$reply_to = $default_reply_to;

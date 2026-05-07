@@ -159,10 +159,10 @@ class ReportedIP_Hive_IP_Manager {
 		}
 
 		if ( $duration_hours === null ) {
-			$duration_hours = get_option( 'reportedip_hive_block_duration', 24 );
+			$duration_hours = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_duration', 24 );
 		}
 
-		if ( get_option( 'reportedip_hive_report_only_mode', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
 			$this->logger->log_security_event(
 				'would_block_ip',
 				$ip_address,

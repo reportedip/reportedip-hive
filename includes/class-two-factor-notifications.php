@@ -47,7 +47,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	public function on_login( $user_login, $user ) {
 		unset( $user_login );
 
-		if ( ! get_option( 'reportedip_hive_2fa_notify_new_device', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_notify_new_device', true ) ) {
 			return;
 		}
 		if ( ! ( $user instanceof \WP_User ) || ! $user->ID ) {

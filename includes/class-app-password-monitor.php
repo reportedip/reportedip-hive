@@ -60,7 +60,7 @@ class ReportedIP_Hive_App_Password_Monitor {
 	 *                        attempted via `data.username` if WP populated it.
 	 */
 	public function on_failed_authentication( $error ): void {
-		if ( ! get_option( 'reportedip_hive_monitor_app_passwords', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_app_passwords', true ) ) {
 			return;
 		}
 
@@ -91,8 +91,8 @@ class ReportedIP_Hive_App_Password_Monitor {
 			'medium'
 		);
 
-		$threshold = (int) get_option( 'reportedip_hive_app_password_threshold', 5 );
-		$timeframe = (int) get_option( 'reportedip_hive_app_password_timeframe', 15 );
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_threshold', 5 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_timeframe', 15 );
 
 		$client  = ReportedIP_Hive::get_instance();
 		$monitor = $client->get_security_monitor();
@@ -110,7 +110,7 @@ class ReportedIP_Hive_App_Password_Monitor {
 	 * @param array   $item The application-password row (item) from user meta.
 	 */
 	public function on_successful_authentication( $user, $item = array() ): void {
-		if ( ! get_option( 'reportedip_hive_monitor_app_passwords', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_app_passwords', true ) ) {
 			return;
 		}
 		if ( ! ( $user instanceof WP_User ) ) {
@@ -148,7 +148,7 @@ class ReportedIP_Hive_App_Password_Monitor {
 		if ( ! ( $user instanceof WP_User ) ) {
 			return $available;
 		}
-		if ( ! get_option( 'reportedip_hive_app_password_require_2fa', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_require_2fa', true ) ) {
 			return $available;
 		}
 		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {

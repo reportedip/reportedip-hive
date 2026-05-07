@@ -39,8 +39,8 @@ class ReportedIP_Hive_API {
 	}
 
 	public function __construct() {
-		$this->api_key      = get_option( 'reportedip_hive_api_key', '' );
-		$this->api_endpoint = get_option( 'reportedip_hive_api_endpoint', 'https://reportedip.de/wp-json/reportedip/v2/' );
+		$this->api_key      = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
+		$this->api_endpoint = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.de/wp-json/reportedip/v2/' );
 		$this->timeout      = 30;
 		$this->cache        = ReportedIP_Hive_Cache::get_instance();
 		$this->logger       = ReportedIP_Hive_Logger::get_instance();
@@ -240,7 +240,7 @@ class ReportedIP_Hive_API {
 
 			$this->cache->set_reputation( $ip_address, $data['data'] );
 
-			if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+			if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 				$this->logger->log_security_event(
 					'api_success',
 					$ip_address,
@@ -423,7 +423,7 @@ class ReportedIP_Hive_API {
 	public function process_report_queue( $limit = 10 ) {
 		$database = ReportedIP_Hive_Database::get_instance();
 
-		$timeout_minutes = (int) get_option( 'reportedip_hive_processing_timeout_minutes', 10 );
+		$timeout_minutes = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_processing_timeout_minutes', 10 );
 		$recovery        = $database->recover_stuck_processing( $timeout_minutes );
 
 		if ( ! $this->can_use_api() ) {
@@ -1219,7 +1219,7 @@ class ReportedIP_Hive_API {
 	 * Check if we've exceeded local rate limit
 	 */
 	private function is_local_rate_limited() {
-		$max_calls     = get_option( 'reportedip_hive_max_api_calls_per_hour', 100 );
+		$max_calls     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_max_api_calls_per_hour', 100 );
 		$current_calls = $this->get_hourly_api_call_count();
 
 		return $current_calls >= $max_calls;
@@ -1290,7 +1290,7 @@ class ReportedIP_Hive_API {
 		$stats['avg_response_time'] = $stats['total_calls'] > 0 ?
 			round( $stats['total_response_time'] / $stats['total_calls'], 2 ) : 0;
 
-		update_option( 'reportedip_hive_api_stats', $stats );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_stats', $stats );
 
 		if ( ! $success && $error_type !== 'rate_limited' ) {
 			$this->logger->log_security_event(
@@ -1368,7 +1368,7 @@ class ReportedIP_Hive_API {
 			$score += 15;
 		}
 
-		if ( get_option( 'reportedip_hive_enable_caching', true ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_enable_caching', true ) ) {
 			if ( isset( $cache_stats['hit_rate'] ) && $cache_stats['total_requests'] > 0 ) {
 				$score += ( $cache_stats['hit_rate'] / 100 ) * 25;
 			} else {
@@ -1393,7 +1393,7 @@ class ReportedIP_Hive_API {
 	 * Get estimated monthly API usage
 	 */
 	public function estimate_monthly_usage() {
-		$api_stats = get_option( 'reportedip_hive_api_stats', array() );
+		$api_stats = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_stats', array() );
 
 		if ( empty( $api_stats ) || ! isset( $api_stats['last_reset'] ) ) {
 			return array(

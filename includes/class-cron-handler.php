@@ -152,8 +152,8 @@ class ReportedIP_Hive_Cron_Handler {
 	 */
 	public function cron_cleanup() {
 		try {
-			$retention_days = get_option( 'reportedip_hive_data_retention_days', 30 );
-			$anonymize_days = get_option( 'reportedip_hive_auto_anonymize_days', 7 );
+			$retention_days = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 );
+			$anonymize_days = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_anonymize_days', 7 );
 
 			$anonymized = $this->database->anonymize_old_data( $anonymize_days );
 

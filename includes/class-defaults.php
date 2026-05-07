@@ -144,7 +144,7 @@ final class ReportedIP_Hive_Defaults {
 	 * @since  1.5.3
 	 */
 	public static function notify_recipients(): array {
-		$raw   = (string) get_option( 'reportedip_hive_notify_recipients', '' );
+		$raw   = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_recipients', '' );
 		$parts = array_filter( array_map( 'trim', explode( ',', $raw ) ) );
 		$valid = array();
 		foreach ( $parts as $candidate ) {
@@ -179,12 +179,12 @@ final class ReportedIP_Hive_Defaults {
 	 * @since  1.5.3
 	 */
 	public static function notify_from(): array {
-		$name = trim( (string) get_option( 'reportedip_hive_notify_from_name', '' ) );
+		$name = trim( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_name', '' ) );
 		if ( '' === $name ) {
 			$name = self::NOTIFY_FROM_NAME_DEFAULT;
 		}
 
-		$email = sanitize_email( (string) get_option( 'reportedip_hive_notify_from_email', '' ) );
+		$email = sanitize_email( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_email', '' ) );
 		if ( '' === $email || ! is_email( $email ) ) {
 			$email = (string) get_option( 'admin_email', '' );
 		}

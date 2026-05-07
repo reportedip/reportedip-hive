@@ -44,6 +44,7 @@ namespace {
 		 */
 		class Test_Queue_WPDB_Stub {
 			public string $prefix = 'wp_';
+			public string $base_prefix = 'wp_';
 			/** @var array<int, array{sql:string, args:array}> */
 			public array $prepares = array();
 			/** @var array<int, string> */

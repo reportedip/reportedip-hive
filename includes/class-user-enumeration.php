@@ -85,7 +85,7 @@ class ReportedIP_Hive_User_Enumeration {
 	 */
 	public function detect_rest_users_probe( $result, $server, $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		unset( $server );
-		if ( ! get_option( 'reportedip_hive_block_user_enumeration', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
 			return $result;
 		}
 		if ( ! ( $request instanceof WP_REST_Request ) ) {
@@ -108,7 +108,7 @@ class ReportedIP_Hive_User_Enumeration {
 	 * `user_enumeration` attempts and eventually trip the threshold.
 	 */
 	public function block_author_param(): void {
-		if ( ! get_option( 'reportedip_hive_block_user_enumeration', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
 			return;
 		}
 
@@ -149,7 +149,7 @@ class ReportedIP_Hive_User_Enumeration {
 	 * @return array
 	 */
 	public function restrict_users_endpoint( $endpoints ) {
-		if ( ! get_option( 'reportedip_hive_block_user_enumeration', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
 			return $endpoints;
 		}
 		if ( is_user_logged_in() ) {
@@ -173,7 +173,7 @@ class ReportedIP_Hive_User_Enumeration {
 	 * @return array
 	 */
 	public function strip_author_from_oembed( $data ) {
-		if ( ! get_option( 'reportedip_hive_block_user_enumeration', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
 			return $data;
 		}
 		if ( ! is_array( $data ) ) {
@@ -194,7 +194,7 @@ class ReportedIP_Hive_User_Enumeration {
 	 * "Invalid credentials." text.
 	 */
 	public function normalize_login_errors( $error ) {
-		if ( ! get_option( 'reportedip_hive_block_user_enumeration', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
 			return $error;
 		}
 		if ( '' === (string) $error ) {
@@ -248,7 +248,7 @@ class ReportedIP_Hive_User_Enumeration {
 	public function unify_login_error_codes( $user, $username, $password ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		unset( $password );
 
-		if ( ! get_option( 'reportedip_hive_block_user_enumeration', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
 			return $user;
 		}
 		if ( ! ( $user instanceof WP_Error ) ) {
@@ -291,8 +291,8 @@ class ReportedIP_Hive_User_Enumeration {
 			return;
 		}
 
-		$threshold = (int) get_option( 'reportedip_hive_user_enum_threshold', 5 );
-		$timeframe = (int) get_option( 'reportedip_hive_user_enum_timeframe', 5 );
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_user_enum_threshold', 5 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_user_enum_timeframe', 5 );
 
 		$monitor->track_generic_attempt(
 			$ip,

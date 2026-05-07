@@ -341,7 +341,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool
 	 */
 	public static function is_globally_enabled() {
-		return (bool) get_option( 'reportedip_hive_2fa_enabled_global', false );
+		return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enabled_global', false );
 	}
 
 	/**
@@ -389,7 +389,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool True if the user's role requires 2FA.
 	 */
 	public static function is_enforced_for_user( $user ) {
-		$enforce_roles = json_decode( get_option( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
+		$enforce_roles = json_decode( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
 		if ( ! is_array( $enforce_roles ) || empty( $enforce_roles ) ) {
 			return false;
 		}
@@ -410,7 +410,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool True if still within grace period.
 	 */
 	public static function is_in_grace_period( $user_id ) {
-		$grace_days = (int) get_option( 'reportedip_hive_2fa_enforce_grace_days', 7 );
+		$grace_days = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_grace_days', 7 );
 		if ( $grace_days <= 0 ) {
 			return false;
 		}
@@ -476,7 +476,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return string[] Method identifiers.
 	 */
 	public static function get_allowed_methods() {
-		$raw     = get_option( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
+		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
 		$decoded = json_decode( $raw, true );
 		if ( ! is_array( $decoded ) || empty( $decoded ) ) {
 			return array( self::METHOD_TOTP, self::METHOD_EMAIL );
@@ -508,7 +508,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool True if current IP is allowlisted.
 	 */
 	public static function is_ip_allowlisted() {
-		$raw = (string) get_option( 'reportedip_hive_2fa_ip_allowlist', '' );
+		$raw = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_ip_allowlist', '' );
 		if ( '' === $raw ) {
 			return false;
 		}
@@ -600,7 +600,7 @@ class ReportedIP_Hive_Two_Factor {
 		}
 
 		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST
-			&& get_option( 'reportedip_hive_2fa_xmlrpc_app_password_only', false )
+			&& ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_xmlrpc_app_password_only', false )
 			&& empty( $_SERVER['PHP_AUTH_USER'] ) ) {
 			$logger = ReportedIP_Hive_Logger::get_instance();
 			$logger->warning(
@@ -644,7 +644,7 @@ class ReportedIP_Hive_Two_Factor {
 		if ( ! $has_any_method && $is_enforced ) {
 			$in_grace   = self::is_in_grace_period( $user->ID );
 			$skip_count = (int) get_user_meta( $user->ID, self::META_SKIP_COUNT, true );
-			$max_skips  = (int) get_option( 'reportedip_hive_2fa_max_skips', 3 );
+			$max_skips  = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );
 
 			if ( ! $in_grace && $skip_count >= $max_skips && $max_skips > 0 ) {
 				return new \WP_Error(
@@ -923,16 +923,16 @@ class ReportedIP_Hive_Two_Factor {
 						$this->cleanup_login_nonce();
 
 						$remember = ! empty( $nonce_data['remember'] );
-						if ( $remember && get_option( 'reportedip_hive_2fa_extended_remember', false ) ) {
+						if ( $remember && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_extended_remember', false ) ) {
 							add_filter( 'auth_cookie_expiration', array( __CLASS__, 'filter_extended_cookie_expiration' ), 20, 3 );
 						}
 						wp_set_auth_cookie( $user_id, $remember );
-						if ( $remember && get_option( 'reportedip_hive_2fa_extended_remember', false ) ) {
+						if ( $remember && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_extended_remember', false ) ) {
 							remove_filter( 'auth_cookie_expiration', array( __CLASS__, 'filter_extended_cookie_expiration' ), 20 );
 						}
 						wp_set_current_user( $user_id );
 
-						if ( $trust_device && get_option( 'reportedip_hive_2fa_trusted_devices', true ) ) {
+						if ( $trust_device && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) ) {
 							$this->create_trusted_device( $user_id );
 						}
 
@@ -1024,7 +1024,7 @@ class ReportedIP_Hive_Two_Factor {
 			'error'           => $error,
 			'form_nonce'      => $form_nonce,
 			'allowed_methods' => $allowed_methods,
-			'trust_enabled'   => (bool) get_option( 'reportedip_hive_2fa_trusted_devices', true ),
+			'trust_enabled'   => (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ),
 			'resend_wait'     => ReportedIP_Hive_Two_Factor_Email::get_resend_wait_seconds( $user_id ),
 			'recovery_count'  => ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ),
 			'email_code_sent' => in_array( self::METHOD_EMAIL, $allowed_methods, true )
@@ -1476,7 +1476,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool True if trusted device is valid.
 	 */
 	private function verify_trusted_device( $user_id ) {
-		if ( ! get_option( 'reportedip_hive_2fa_trusted_devices', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) ) {
 			return false;
 		}
 
@@ -1524,7 +1524,7 @@ class ReportedIP_Hive_Two_Factor {
 	private function create_trusted_device( $user_id ) {
 		$token      = bin2hex( random_bytes( 64 ) );
 		$token_hash = hash( 'sha256', $token );
-		$days       = (int) get_option( 'reportedip_hive_2fa_trusted_device_days', 30 );
+		$days       = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_device_days', 30 );
 		$expiry     = time() + ( $days * DAY_IN_SECONDS );
 
 		$user_agent  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';

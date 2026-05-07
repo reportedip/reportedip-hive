@@ -131,7 +131,7 @@ class ReportedIP_Hive_Hide_Login {
 		if ( defined( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN' ) && REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN ) {
 			return false;
 		}
-		if ( ! get_option( 'reportedip_hive_hide_login_enabled', false ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false ) ) {
 			return false;
 		}
 		$slug = $this->get_slug();
@@ -142,7 +142,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * Sanitised, lower-case slug from settings (or empty string).
 	 */
 	public function get_slug(): string {
-		$slug = (string) get_option( 'reportedip_hive_hide_login_slug', '' );
+		$slug = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', '' );
 		return strtolower( trim( $slug, "/ \t\n\r\0\x0B" ) );
 	}
 
@@ -346,7 +346,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * Optional 404 mode: theme's 404 template — gives no plugin fingerprint.
 	 */
 	private function render_block_response(): void {
-		$mode = (string) get_option( 'reportedip_hive_hide_login_response_mode', self::RESPONSE_MODE_BLOCK_PAGE );
+		$mode = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', self::RESPONSE_MODE_BLOCK_PAGE );
 
 		if ( self::RESPONSE_MODE_404 === $mode ) {
 			global $wp_query;
@@ -463,7 +463,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * disturb (login_url generates with redirect_to=… which is fine to keep).
 	 */
 	private function maybe_add_token( string $url, string $slug ): string {
-		if ( ! get_option( 'reportedip_hive_hide_login_token_in_urls', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_token_in_urls', true ) ) {
 			return $url;
 		}
 		if ( '' === $slug ) {

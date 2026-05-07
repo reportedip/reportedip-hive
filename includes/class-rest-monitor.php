@@ -61,7 +61,7 @@ class ReportedIP_Hive_REST_Monitor {
 	 * @return mixed                   Original $result, or a WP_Error if blocked.
 	 */
 	public function pre_dispatch( $result, $server, $request ) {
-		if ( ! get_option( 'reportedip_hive_monitor_rest_api', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_rest_api', true ) ) {
 			return $result;
 		}
 
@@ -123,12 +123,12 @@ class ReportedIP_Hive_REST_Monitor {
 			return $result;
 		}
 
-		$threshold = (int) get_option( 'reportedip_hive_rest_threshold', 60 );
-		$timeframe = (int) get_option( 'reportedip_hive_rest_timeframe', 5 );
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rest_threshold', 60 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rest_timeframe', 5 );
 
 		if ( $this->is_sensitive_route( $route ) ) {
-			$threshold = (int) get_option( 'reportedip_hive_rest_sensitive_threshold', 20 );
-			$timeframe = (int) get_option( 'reportedip_hive_rest_sensitive_timeframe', 5 );
+			$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rest_sensitive_threshold', 20 );
+			$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rest_sensitive_timeframe', 5 );
 		}
 
 		$blocked = $monitor->track_generic_attempt(

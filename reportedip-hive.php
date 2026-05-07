@@ -169,7 +169,7 @@ class ReportedIP_Hive {
 		add_action( 'init', array( $this, 'init' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 
-		if ( get_option( 'reportedip_hive_disable_xmlrpc_multicall', true ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_disable_xmlrpc_multicall', true ) ) {
 			add_filter( 'xmlrpc_methods', array( $this, 'disable_xmlrpc_multicall' ) );
 		}
 
@@ -782,7 +782,7 @@ class ReportedIP_Hive {
 	 * Handle failed login attempts
 	 */
 	public function handle_failed_login( $username ) {
-		if ( ! get_option( 'reportedip_hive_monitor_failed_logins', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_failed_logins', true ) ) {
 			return;
 		}
 
@@ -800,11 +800,11 @@ class ReportedIP_Hive {
 			'timestamp' => current_time( 'mysql' ),
 		);
 
-		if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 			$log_data['username_hash'] = hash( 'sha256', $username . wp_salt() );
 		}
 
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent             = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$log_data['user_agent'] = substr( $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH );
 		}
@@ -823,7 +823,7 @@ class ReportedIP_Hive {
 	public function pre_auth_check( $user, $password ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 		$ip_address        = $this->get_client_ip();
 		$report_only       = $this->is_report_only_mode();
-		$threshold         = (int) get_option( 'reportedip_hive_block_threshold', 75 );
+		$threshold         = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', 75 );
 		$is_blocked        = $this->ip_manager->is_blocked( $ip_address );
 		$reputation        = null;
 		$exceeds_threshold = false;
@@ -917,7 +917,7 @@ class ReportedIP_Hive {
 	 * Handle comment posts
 	 */
 	public function handle_comment_post( $comment_id, $approved, $commentdata ) {
-		if ( ! get_option( 'reportedip_hive_monitor_comments', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_comments', true ) ) {
 			return;
 		}
 
@@ -937,7 +937,7 @@ class ReportedIP_Hive {
 				'timestamp'  => current_time( 'mysql' ),
 			);
 
-			if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+			if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 				$log_data['author_hash'] = hash( 'sha256', $commentdata['comment_author'] . wp_salt() );
 			}
 
@@ -953,7 +953,7 @@ class ReportedIP_Hive {
 	 * Handle XMLRPC calls
 	 */
 	public function handle_xmlrpc_call( $method ) {
-		if ( ! get_option( 'reportedip_hive_monitor_xmlrpc', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_xmlrpc', true ) ) {
 			return;
 		}
 
@@ -972,7 +972,7 @@ class ReportedIP_Hive {
 			'timestamp' => current_time( 'mysql' ),
 		);
 
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent             = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$log_data['user_agent'] = substr( $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH );
 		}
@@ -994,12 +994,12 @@ class ReportedIP_Hive {
 			'timestamp' => current_time( 'mysql' ),
 		);
 
-		if ( get_option( 'reportedip_hive_detailed_logging', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 			$log_data['username_hash'] = hash( 'sha256', $user_login . wp_salt() );
 			$log_data['user_id']       = $user->ID;
 		}
 
-		if ( get_option( 'reportedip_hive_log_user_agents', false ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
 			$user_agent             = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$log_data['user_agent'] = substr( $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH );
 		}
@@ -1123,8 +1123,8 @@ class ReportedIP_Hive {
                 </script>';
 			}
 
-			$warning_threshold  = get_option( 'reportedip_hive_queue_warning_threshold', 50 );
-			$critical_threshold = get_option( 'reportedip_hive_queue_critical_threshold', 200 );
+			$warning_threshold  = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 );
+			$critical_threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 );
 			$queue_url          = admin_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
 			$community_url      = admin_url( 'admin.php?page=reportedip-hive-community' );
 			$queue_dismissed    = get_user_meta( $user_id, 'reportedip_dismissed_queue_warning_' . gmdate( 'Y-m-d' ), true );
@@ -1153,7 +1153,7 @@ class ReportedIP_Hive {
 			}
 		}
 
-		$api_key = get_option( 'reportedip_hive_api_key', '' );
+		$api_key = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		if ( empty( $api_key ) && $is_plugin_page ) {
 			$settings_url = admin_url( 'admin.php?page=reportedip-hive' );
 			echo '<div class="notice notice-warning is-dismissible"><p>';
@@ -1280,7 +1280,7 @@ class ReportedIP_Hive {
 	 * Check if plugin is in report-only mode
 	 */
 	private function is_report_only_mode() {
-		return get_option( 'reportedip_hive_report_only_mode', false );
+		return ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false );
 	}
 
 	/**
@@ -1312,7 +1312,7 @@ class ReportedIP_Hive {
 	public static function get_client_ip() {
 		static $trusted_header = null;
 		if ( null === $trusted_header ) {
-			$trusted_header = get_option( 'reportedip_hive_trusted_ip_header', '' );
+			$trusted_header = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' );
 		}
 
 		if ( ! empty( $trusted_header ) && isset( $_SERVER[ $trusted_header ] ) ) {

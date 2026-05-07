@@ -185,7 +185,7 @@ class ReportedIP_Hive_Phone_Validator {
 	 */
 	public static function get_whitelist() {
 		$list     = self::DEFAULT_EU_CODES;
-		$override = get_option( 'reportedip_hive_eu_phone_country_codes', null );
+		$override = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_eu_phone_country_codes', null );
 		if ( is_array( $override ) && ! empty( $override ) ) {
 			$list = $override;
 		}

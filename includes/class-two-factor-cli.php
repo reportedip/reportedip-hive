@@ -185,7 +185,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 			WP_CLI::error( 'Unknown role: ' . $role );
 		}
 
-		$current = json_decode( (string) get_option( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
+		$current = json_decode( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
 		$current = is_array( $current ) ? $current : array();
 		if ( $remove ) {
 			$current = array_values( array_diff( $current, array( $role ) ) );
@@ -193,7 +193,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 			$current[] = $role;
 			$current   = array_values( array_unique( $current ) );
 		}
-		update_option( 'reportedip_hive_2fa_enforce_roles', wp_json_encode( $current ) );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_roles', wp_json_encode( $current ) );
 
 		WP_CLI::success( sprintf( 'Enforced roles: %s', implode( ', ', $current ) ?: '(none)' ) );
 	}

@@ -510,7 +510,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		try {
-			$retention_days = get_option( 'reportedip_hive_data_retention_days', 30 );
+			$retention_days = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 );
 			$cleaned        = $this->database->cleanup_old_data( $retention_days );
 			$expired        = $this->ip_manager->cleanup_expired_entries();
 
@@ -542,7 +542,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		try {
-			$anonymize_days = get_option( 'reportedip_hive_auto_anonymize_days', 7 );
+			$anonymize_days = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_anonymize_days', 7 );
 			$anonymized     = $this->database->anonymize_old_data( $anonymize_days );
 
 			wp_send_json_success(
@@ -857,8 +857,8 @@ class ReportedIP_Hive_Ajax_Handler {
 					)
 				);
 			} else {
-				$is_report_only     = get_option( 'reportedip_hive_report_only_mode', false );
-				$auto_block_enabled = get_option( 'reportedip_hive_auto_block', true );
+				$is_report_only     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false );
+				$auto_block_enabled = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', true );
 
 				$failure_reason = '';
 				if ( $is_report_only ) {
@@ -898,8 +898,8 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		try {
 			$test_ip   = '192.0.2.2';
-			$threshold = get_option( 'reportedip_hive_failed_login_threshold', 5 );
-			$timeframe = get_option( 'reportedip_hive_failed_login_timeframe', 15 );
+			$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', 5 );
+			$timeframe = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_timeframe', 15 );
 
 			$this->logger->log_security_event(
 				'failed_login_simulation_started',
@@ -947,8 +947,8 @@ class ReportedIP_Hive_Ajax_Handler {
 						'attempts'           => $attempt_count,
 						'threshold'          => $threshold,
 						'threshold_exceeded' => $threshold_exceeded,
-						'auto_block_enabled' => get_option( 'reportedip_hive_auto_block', true ),
-						'report_only_mode'   => get_option( 'reportedip_hive_report_only_mode', false ),
+						'auto_block_enabled' => ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', true ),
+						'report_only_mode'   => ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ),
 					)
 				);
 			} else {
@@ -1224,10 +1224,10 @@ class ReportedIP_Hive_Ajax_Handler {
 				delete_option( $option );
 			}
 
-			delete_option( 'reportedip_hive_operation_mode' );
-			delete_option( 'reportedip_hive_wizard_completed' );
-			delete_option( 'reportedip_hive_wizard_completed_at' );
-			delete_option( 'reportedip_hive_wizard_skipped' );
+			ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_operation_mode' );
+			ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_wizard_completed' );
+			ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_wizard_completed_at' );
+			ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_wizard_skipped' );
 
 			delete_transient( 'reportedip_hive_health_warning_logged' );
 			delete_transient( 'reportedip_hive_wizard_redirect' );
@@ -1281,7 +1281,7 @@ class ReportedIP_Hive_Ajax_Handler {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk deletion for plugin reset.
 			$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_reportedip_hive_%' OR option_name LIKE '_transient_timeout_reportedip_hive_%'" );
 
-			delete_option( 'reportedip_hive_wizard_completed' );
+			ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_wizard_completed' );
 
 			wp_send_json_success( __( 'All plugin data has been deleted. The page will reload.', 'reportedip-hive' ) );
 		} catch ( Exception $e ) {

@@ -425,7 +425,7 @@ class ReportedIP_Hive_Mode_Manager {
 			return false;
 		}
 
-		$api_key = get_option( 'reportedip_hive_api_key', '' );
+		$api_key = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		return ! empty( $api_key );
 	}
 

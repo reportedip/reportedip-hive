@@ -57,7 +57,7 @@ class ReportedIP_Hive_Block_Escalation {
 	 * @return bool
 	 */
 	public static function is_enabled(): bool {
-		return (bool) get_option( 'reportedip_hive_block_escalation_enabled', true );
+		return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_escalation_enabled', true );
 	}
 
 	/**
@@ -68,7 +68,7 @@ class ReportedIP_Hive_Block_Escalation {
 	 * @return int[]
 	 */
 	public static function get_ladder(): array {
-		$raw = (string) get_option( 'reportedip_hive_block_ladder_minutes', '' );
+		$raw = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_ladder_minutes', '' );
 		if ( '' === trim( $raw ) ) {
 			return self::DEFAULT_LADDER_MINUTES;
 		}
@@ -94,7 +94,7 @@ class ReportedIP_Hive_Block_Escalation {
 	 * @return int
 	 */
 	public static function get_reset_days(): int {
-		$days = (int) get_option( 'reportedip_hive_block_ladder_reset_days', self::DEFAULT_RESET_DAYS );
+		$days = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_ladder_reset_days', self::DEFAULT_RESET_DAYS );
 		return max( 1, min( 365, $days ) );
 	}
 

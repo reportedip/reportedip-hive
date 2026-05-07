@@ -618,7 +618,7 @@ class ReportedIP_Hive_Database {
 
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
-		$cooldown_hours = get_option( 'reportedip_hive_report_cooldown_hours', 24 );
+		$cooldown_hours = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_cooldown_hours', 24 );
 
 		$recent_check = $this->is_recently_processed( $ip_address, $cooldown_hours );
 		if ( $recent_check['processed'] ) {
@@ -881,7 +881,7 @@ class ReportedIP_Hive_Database {
                  WHERE created_at < DATE_SUB(NOW(), INTERVAL %d DAY)
                  AND created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)",
 				$days,
-				get_option( 'reportedip_hive_data_retention_days', 30 )
+				ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 )
 			)
 		);
 
@@ -933,8 +933,8 @@ class ReportedIP_Hive_Database {
 		$deleted = 0;
 
 		$tables_to_clean = array(
-			$wpdb->base_prefix . 'reportedip_hive_logs'      => 'created_at',
-			$wpdb->base_prefix . 'reportedip_hive_attempts'  => 'last_attempt',
+			$wpdb->base_prefix . 'reportedip_hive_logs' => 'created_at',
+			$wpdb->base_prefix . 'reportedip_hive_attempts' => 'last_attempt',
 			$wpdb->base_prefix . 'reportedip_hive_api_queue' => 'created_at',
 		);
 
@@ -971,7 +971,7 @@ class ReportedIP_Hive_Database {
 			$deleted += $failed_reports;
 		}
 
-		$queue_max_age = get_option( 'reportedip_hive_queue_max_age_days', 7 );
+		$queue_max_age = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_max_age_days', 7 );
 		$old_pending   = $wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
