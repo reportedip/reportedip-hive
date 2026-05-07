@@ -19,12 +19,15 @@ parameters:
         - admin/
         - templates/
 
-    # Paths to exclude
+    # Paths to exclude. The `(?)` suffix marks the path as optional — required
+    # by PHPStan 2.x for directories that may not exist locally (node_modules/
+    # and bin/ are CI-time-only; scripts/ contains dev-only diagnostic tools).
     excludePaths:
         - vendor/
-        - node_modules/
+        - node_modules/ (?)
         - tests/
-        - bin/
+        - bin/ (?)
+        - scripts/ (?)
 
     # Scan also files not listed in paths (for dependencies)
     scanFiles:

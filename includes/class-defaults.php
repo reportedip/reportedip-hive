@@ -204,7 +204,7 @@ final class ReportedIP_Hive_Defaults {
 	 * solve.
 	 *
 	 * @param string $key Wizard default key.
-	 * @return scalar
+	 * @return int|string
 	 * @throws \InvalidArgumentException When the key is unknown.
 	 * @since  1.4.0
 	 */

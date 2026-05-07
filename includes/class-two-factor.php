@@ -217,9 +217,7 @@ class ReportedIP_Hive_Two_Factor {
 				wp_send_json_error( array( 'message' => __( 'SMS is not available.', 'reportedip-hive' ) ), 400 );
 			}
 			$result      = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id );
-			$cooldown    = method_exists( 'ReportedIP_Hive_Two_Factor_SMS', 'get_resend_wait_seconds' )
-				? ReportedIP_Hive_Two_Factor_SMS::get_resend_wait_seconds( $user_id )
-				: 60;
+			$cooldown    = ReportedIP_Hive_Two_Factor_SMS::get_resend_wait_seconds( $user_id );
 			$phone       = ReportedIP_Hive_Two_Factor_SMS::get_user_phone( $user_id );
 			$destination = $phone ? ReportedIP_Hive_Two_Factor_SMS::mask_phone( $phone ) : '';
 		}

@@ -123,7 +123,7 @@ class ReportedIP_Hive_Logger {
 			return '-';
 		}
 
-		if ( is_string( $details ) && $details !== '' && ( strpos( $details, '{' ) === 0 || strpos( $details, '[' ) === 0 ) ) {
+		if ( is_string( $details ) && ( strpos( $details, '{' ) === 0 || strpos( $details, '[' ) === 0 ) ) {
 			$decoded = json_decode( $details, true );
 			if ( json_last_error() === JSON_ERROR_NONE ) {
 				$formatted = array();

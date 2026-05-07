@@ -477,7 +477,7 @@ class ReportedIP_Hive_API {
 		 * Same shape as the 1.2.1 fix in has_report_quota().
 		 */
 		$effective_limit = $limit;
-		if ( isset( $quota_status['remaining'] ) && $quota_status['remaining'] !== null && (int) $quota_status['remaining'] >= 0 ) {
+		if ( isset( $quota_status['remaining'] ) && (int) $quota_status['remaining'] >= 0 ) {
 			$effective_limit = min( $limit, (int) $quota_status['remaining'] );
 		}
 

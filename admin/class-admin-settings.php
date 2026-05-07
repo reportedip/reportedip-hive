@@ -5698,7 +5698,7 @@ class ReportedIP_Hive_Admin_Settings {
 									<div class="rip-stat-card__content">
 										<div class="rip-stat-card__value">
 											<?php
-											if ( isset( $queue_summary['age_days'] ) && $queue_summary['age_days'] !== null ) {
+											if ( isset( $queue_summary['age_days'] ) ) {
 												echo esc_html( sprintf( /* translators: %d: number of days */ _n( '%d day', '%d days', (int) $queue_summary['age_days'], 'reportedip-hive' ), (int) $queue_summary['age_days'] ) );
 											} else {
 												echo '—';

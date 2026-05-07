@@ -146,9 +146,7 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 		if ( ! $logger || ! method_exists( $logger, 'log' ) ) {
 			return;
 		}
-		$ip = class_exists( 'ReportedIP_Hive' ) && method_exists( 'ReportedIP_Hive', 'get_client_ip' )
-			? (string) ReportedIP_Hive::get_client_ip()
-			: '';
+		$ip = (string) ReportedIP_Hive::get_client_ip();
 		$logger->log(
 			'mail_relay_fallback',
 			$ip,

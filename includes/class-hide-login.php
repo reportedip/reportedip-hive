@@ -171,7 +171,7 @@ class ReportedIP_Hive_Hide_Login {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			return true;
 		}
-		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		if ( wp_doing_cron() ) {
 			return true;
 		}
 		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {

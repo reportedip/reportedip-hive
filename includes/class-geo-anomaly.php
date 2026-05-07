@@ -91,7 +91,7 @@ class ReportedIP_Hive_Geo_Anomaly {
 		$history = array_filter(
 			$history,
 			static function ( $entry ) use ( $cutoff ) {
-				return is_array( $entry ) && (int) ( $entry['t'] ?? 0 ) >= $cutoff;
+				return (int) ( $entry['t'] ?? 0 ) >= $cutoff;
 			}
 		);
 

@@ -374,12 +374,13 @@ class ReportedIP_Hive_Settings_Import_Export {
 				),
 				(array) $ip_manager->get_blocked_ips( true )
 			);
-			$ip_lists['blocked']   = array_values(
-				array_filter(
-					$ip_lists['blocked'],
-					static fn( array $row ): bool => 'manual' === $row['block_type']
-				)
-			);
+			$blocked_manual = array();
+			foreach ( $ip_lists['blocked'] as $row ) {
+				if ( 'manual' === ( $row['block_type'] ?? '' ) ) {
+					$blocked_manual[] = $row;
+				}
+			}
+			$ip_lists['blocked'] = $blocked_manual;
 		}
 
 		return array(

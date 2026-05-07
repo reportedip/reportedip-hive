@@ -410,10 +410,8 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 			exit;
 		}
 
-		if ( 'setup' === $mode ) {
-			self::render_setup();
-			exit;
-		}
+		self::render_setup();
+		exit;
 	}
 
 	/**
@@ -467,11 +465,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * @return void
 	 */
 	public static function emit_no_cache_headers() {
-		if ( class_exists( 'ReportedIP_Hive' ) && method_exists( 'ReportedIP_Hive', 'emit_block_response_headers' ) ) {
-			ReportedIP_Hive::emit_block_response_headers();
-		} elseif ( function_exists( 'nocache_headers' ) ) {
-			nocache_headers();
-		}
+		ReportedIP_Hive::emit_block_response_headers();
 
 		if ( ! headers_sent() ) {
 			header( 'Cache-Control: private, no-store, no-cache, max-age=0' );

@@ -277,20 +277,30 @@ class ReportedIP_Hive_Two_Factor_Crypto {
 	/**
 	 * Securely zero memory containing sensitive data.
 	 *
-	 * @param string $data Data to zero out (passed by reference).
+	 * On systems with libsodium we hand the buffer to sodium_memzero so the
+	 * underlying allocation is wiped before PHP releases it. The trailing
+	 * str_repeat is a belt-and-braces overwrite that also pins the @param-out
+	 * type to a non-null string for static analysis.
+	 *
+	 * @param string|null $data Data to zero out (passed by reference).
 	 */
 	public static function zero_memory( &$data ) {
-		if ( self::has_sodium() && is_string( $data ) ) {
-			$length = strlen( $data );
+		if ( ! is_string( $data ) ) {
+			$data = '';
+			return;
+		}
+		$length    = strlen( $data );
+		$zero_fill = str_repeat( "\0", $length );
+
+		if ( self::has_sodium() ) {
 			try {
 				sodium_memzero( $data );
 			} catch ( \Exception $e ) {
-				$data = str_repeat( "\0", $length );
+				unset( $e );
 			}
-		} else {
-			$length = is_string( $data ) ? strlen( $data ) : 0;
-			$data   = str_repeat( "\0", $length );
 		}
+
+		$data = $zero_fill;
 	}
 
 	/**
