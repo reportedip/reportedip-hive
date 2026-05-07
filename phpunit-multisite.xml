@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    PHPUnit configuration for the Multisite test suite.
+
+    Loaded by `./run.sh test-ms` (and the GH Actions `phpunit-multisite` job).
+    Sets `WP_TESTS_MULTISITE=1` so the WordPress test bootstrap runs the
+    network-conversion path; uses a separate test database (`_ms` suffix)
+    so it can run side-by-side with the single-site suite.
+-->
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+    bootstrap="tests/Multisite/bootstrap-multisite.php"
+    backupGlobals="false"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    verbose="true"
+    beStrictAboutTestsThatDoNotTestAnything="true"
+    failOnRisky="true"
+    failOnWarning="true"
+>
+    <testsuites>
+        <testsuite name="multisite">
+            <directory suffix="Test.php">tests/Multisite</directory>
+        </testsuite>
+    </testsuites>
+
+    <coverage processUncoveredFiles="false">
+        <include>
+            <directory suffix=".php">includes</directory>
+            <directory suffix=".php">admin</directory>
+            <file>reportedip-hive.php</file>
+        </include>
+        <exclude>
+            <directory suffix=".php">vendor</directory>
+            <directory suffix=".php">tests</directory>
+        </exclude>
+        <report>
+            <clover outputFile="coverage/clover-multisite.xml"/>
+        </report>
+    </coverage>
+
+    <php>
+        <const name="WP_TESTS_PHPUNIT_POLYFILLS_PATH" value="vendor/yoast/phpunit-polyfills"/>
+        <const name="WP_TESTS_MULTISITE" value="1"/>
+        <const name="REPORTEDIP_HIVE_TESTING" value="true"/>
+        <const name="WP_HTTP_BLOCK_EXTERNAL" value="true"/>
+
+        <env name="WP_TESTS_DB_NAME" value="wordpress_test_ms"/>
+        <env name="WP_TESTS_DB_USER" value="root"/>
+        <env name="WP_TESTS_DB_PASSWORD" value=""/>
+        <env name="WP_TESTS_DB_HOST" value="localhost"/>
+        <env name="WP_TESTS_TABLE_PREFIX" value="wptests_"/>
+        <env name="WP_TESTS_DOMAIN" value="example.org"/>
+        <env name="WP_TESTS_EMAIL" value="admin@example.org"/>
+        <env name="WP_TESTS_TITLE" value="ReportedIP Hive Multisite Tests"/>
+        <env name="WP_TESTS_MULTISITE" value="1"/>
+
+        <ini name="memory_limit" value="512M"/>
+        <ini name="error_reporting" value="E_ALL"/>
+        <ini name="display_errors" value="On"/>
+    </php>
+
+    <logging>
+        <junit outputFile="coverage/junit-multisite.xml"/>
+    </logging>
+
+    <groups>
+        <exclude>
+            <group>slow</group>
+            <group>external-api</group>
+        </exclude>
+    </groups>
+</phpunit>

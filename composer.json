@@ -31,7 +31,8 @@
     "autoload-dev": {
         "psr-4": {
             "ReportedIP\\Hive\\Tests\\Unit\\": "tests/Unit/",
-            "ReportedIP\\Hive\\Tests\\Integration\\": "tests/Integration/"
+            "ReportedIP\\Hive\\Tests\\Integration\\": "tests/Integration/",
+            "ReportedIP\\Hive\\Tests\\Multisite\\": "tests/Multisite/"
         },
         "classmap": [
             "tests/TestCase.php"
@@ -51,6 +52,7 @@
     "scripts": {
         "test": "phpunit",
         "test:unit": "phpunit --testsuite unit",
+        "test:multisite": "phpunit -c phpunit-multisite.xml",
         "test:integration": "phpunit --testsuite integration",
         "test:coverage": "phpunit --coverage-html coverage",
         "lint": "phpcs",
