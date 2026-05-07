@@ -71,6 +71,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		$this->mode_manager = $mode_manager;
 
 		add_action( 'admin_menu', array( $this, 'add_wizard_page' ) );
+		add_action( 'network_admin_menu', array( $this, 'add_wizard_page' ) );
 
 		add_action( 'admin_init', array( $this, 'maybe_redirect_to_wizard' ) );
 		add_action( 'admin_init', array( $this, 'maybe_render_standalone_wizard' ) );
@@ -230,14 +231,21 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Add hidden wizard page to admin menu (needed for URL routing)
+	 * Add hidden wizard page to admin menu (needed for URL routing).
+	 *
+	 * Wired to both `admin_menu` (single-site) and `network_admin_menu`
+	 * (multisite super admin) so the wizard URL resolves in either
+	 * context. The capability raises to `manage_network_options` when
+	 * registering inside the network admin so a non-super-admin sneaking
+	 * onto the URL still hits a 403.
 	 */
 	public function add_wizard_page() {
+		$cap = is_network_admin() ? 'manage_network_options' : 'manage_options';
 		add_submenu_page(
 			'',
 			__( 'Setup Wizard', 'reportedip-hive' ),
 			__( 'Setup Wizard', 'reportedip-hive' ),
-			'manage_options',
+			$cap,
 			self::PAGE_SLUG,
 			'__return_null'
 		);
@@ -252,7 +260,9 @@ class ReportedIP_Hive_Setup_Wizard {
 			return;
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		$allowed = current_user_can( 'manage_options' )
+			|| ( is_multisite() && current_user_can( 'manage_network_options' ) );
+		if ( ! $allowed ) {
 			return;
 		}
 
