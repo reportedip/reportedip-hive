@@ -111,6 +111,9 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 		);
 
 		if ( ! empty( $result['ok'] ) ) {
+			if ( class_exists( 'ReportedIP_Hive_Relay_Usage_Tracker' ) ) {
+				ReportedIP_Hive_Relay_Usage_Tracker::record( 'sms', 1 );
+			}
 			return true;
 		}
 

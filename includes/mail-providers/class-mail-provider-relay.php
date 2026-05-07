@@ -89,6 +89,9 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 		$result = $api->relay_mail( $payload );
 
 		if ( ! empty( $result['ok'] ) ) {
+			if ( class_exists( 'ReportedIP_Hive_Relay_Usage_Tracker' ) ) {
+				ReportedIP_Hive_Relay_Usage_Tracker::record( 'mail', 1 );
+			}
 			return true;
 		}
 
