@@ -1180,141 +1180,192 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-alert rip-alert--success rip-alert--banner"><strong><?php esc_html_e( 'Saved.', 'reportedip-hive' ); ?></strong> <?php esc_html_e( 'Site overrides updated.', 'reportedip-hive' ); ?></div>
 			<?php endif; ?>
 
-			<div class="rip-card <?php echo $frontend_locked ? 'rip-settings-section--locked' : ''; ?>">
-				<h2 class="rip-card__title">
-					<?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?>
-					<?php if ( $frontend_locked_by_tier ) : ?>
-						&nbsp;<?php self::render_tier_lock( $frontend_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-					<?php endif; ?>
-				</h2>
-				<p>
-					<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
-				</p>
-
-				<?php if ( $frontend_locked_by_tier ) : ?>
-					<div class="rip-alert rip-alert--info">
-						<p style="margin:0 0 var(--rip-space-2);font-weight:600;">
-							<?php esc_html_e( 'Available with the Professional plan and higher', 'reportedip-hive' ); ?>
-						</p>
-						<ul style="margin:0 0 var(--rip-space-3);padding-left:1.25em;">
-							<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Cart and checkout state survive the redirect roundtrip', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Trusted-device cookie shared with the wp-login flow', 'reportedip-hive' ); ?></li>
-							<li><?php esc_html_e( 'Hide-Login bypass + cache-plugin-safe headers', 'reportedip-hive' ); ?></li>
-						</ul>
-						<p style="margin:0;">
-							<a class="rip-button rip-button--primary" href="<?php echo esc_url( defined( 'REPORTEDIP_HIVE_UPGRADE_URL' ) ? REPORTEDIP_HIVE_UPGRADE_URL : 'https://reportedip.de/pricing/' ); ?>" target="_blank" rel="noopener noreferrer">
-								<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
-							</a>
-						</p>
-					</div>
-				<?php endif; ?>
-
-				<?php if ( ! $has_wc ) : ?>
-					<div class="rip-alert rip-alert--info">
-						<?php esc_html_e( 'WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA — these slug overrides take effect once it is.', 'reportedip-hive' ); ?>
-					</div>
-				<?php endif; ?>
-
-				<div class="rip-card__readonly-state">
-					<p style="margin:0 0 var(--rip-space-2);"><strong><?php esc_html_e( 'Network configuration (read-only here):', 'reportedip-hive' ); ?></strong></p>
-					<ul style="margin:0;padding-left:1.25em;">
-						<li><?php esc_html_e( 'Frontend 2FA challenge inside theme:', 'reportedip-hive' ); ?>
-							<?php if ( $frontend_enabled && ! $frontend_locked ) : ?>
-								<span class="rip-badge rip-badge--success"><?php esc_html_e( 'enabled', 'reportedip-hive' ); ?></span>
-							<?php elseif ( $frontend_locked_by_tier ) : ?>
-								<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'locked by tier', 'reportedip-hive' ); ?></span>
-							<?php else : ?>
-								<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'disabled', 'reportedip-hive' ); ?></span>
-							<?php endif; ?>
-						</li>
-						<li><?php esc_html_e( 'Customer self-service opt-in:', 'reportedip-hive' ); ?>
-							<span class="rip-badge rip-badge--<?php echo $customer_optional ? 'success' : 'neutral'; ?>"><?php echo $customer_optional ? esc_html__( 'allowed', 'reportedip-hive' ) : esc_html__( 'not allowed', 'reportedip-hive' ); ?></span>
-						</li>
-					</ul>
-				</div>
-			</div>
-
 			<form method="post">
 				<?php wp_nonce_field( 'reportedip_hive_site_2fa_save', '_rip_site_2fa_nonce' ); ?>
 
-				<div class="rip-card">
-					<h2 class="rip-card__title"><?php esc_html_e( 'Frontend 2FA challenge slug (per-site)', 'reportedip-hive' ); ?></h2>
-					<p>
-						<?php esc_html_e( 'URL where the themed 2FA challenge appears. Use a per-site override only if the network default collides with a path that already exists on this site.', 'reportedip-hive' ); ?>
+				<div class="rip-settings-section <?php echo $frontend_locked ? 'rip-settings-section--locked' : ''; ?>">
+					<h2 class="rip-settings-section__title">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+						<?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?>
+						<?php if ( $frontend_locked_by_tier ) : ?>
+							&nbsp;<?php self::render_tier_lock( $frontend_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+						<?php endif; ?>
+					</h2>
+					<p class="rip-settings-section__desc">
+						<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
 					</p>
-					<p>
-						<?php
-						printf(
-							/* translators: %s = current effective challenge URL */
-							esc_html__( 'Current URL on this site: %s', 'reportedip-hive' ),
-							'<code>' . esc_html( $challenge_url ) . '</code>'
-						);
-						?>
-					</p>
-					<p>
-						<label>
-							<strong><?php esc_html_e( 'Override challenge slug', 'reportedip-hive' ); ?></strong><br>
-							<input type="text" name="rip_2fa_frontend_slug_site_override" value="<?php echo esc_attr( $slug_override ); ?>" class="regular-text" placeholder="<?php echo esc_attr( $slug_default ); ?>">
-						</label>
-					</p>
-					<p class="description">
-						<?php printf( /* translators: %s = network-default slug */ esc_html__( 'Network default: %s. Leave empty to inherit.', 'reportedip-hive' ), '<code>' . esc_html( $slug_default ) . '</code>' ); ?>
-					</p>
-				</div>
 
-				<div class="rip-card">
-					<h2 class="rip-card__title"><?php esc_html_e( 'Frontend 2FA setup slug (onboarding, per-site)', 'reportedip-hive' ); ?></h2>
-					<p>
-						<?php esc_html_e( 'URL of the customer-self-service onboarding wizard. Same override logic — only set if the network default collides on this site.', 'reportedip-hive' ); ?>
-					</p>
-					<p>
-						<?php
-						printf(
-							/* translators: %s = current effective setup URL */
-							esc_html__( 'Current URL on this site: %s', 'reportedip-hive' ),
-							'<code>' . esc_html( $setup_url ) . '</code>'
-						);
-						?>
-					</p>
-					<p>
-						<label>
-							<strong><?php esc_html_e( 'Override setup slug', 'reportedip-hive' ); ?></strong><br>
-							<input type="text" name="rip_2fa_frontend_setup_slug_site_override" value="<?php echo esc_attr( $setup_slug_override ); ?>" class="regular-text" placeholder="<?php echo esc_attr( $setup_slug_default ); ?>">
-						</label>
-					</p>
-					<p class="description">
-						<?php printf( /* translators: %s = network-default setup slug */ esc_html__( 'Network default: %s. Leave empty to inherit.', 'reportedip-hive' ), '<code>' . esc_html( $setup_slug_default ) . '</code>' ); ?>
-					</p>
-				</div>
+					<?php if ( $frontend_locked_by_tier ) : ?>
+						<div class="rip-alert rip-alert--info">
+							<p style="margin:0 0 var(--rip-space-2);font-weight:600;">
+								<?php esc_html_e( 'Available with the Professional plan and higher', 'reportedip-hive' ); ?>
+							</p>
+							<ul style="margin:0 0 var(--rip-space-3);padding-left:1.25em;">
+								<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
+								<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
+								<li><?php esc_html_e( 'Cart and checkout state survive the redirect roundtrip', 'reportedip-hive' ); ?></li>
+								<li><?php esc_html_e( 'Trusted-device cookie shared with the wp-login flow', 'reportedip-hive' ); ?></li>
+								<li><?php esc_html_e( 'Hide-Login bypass + cache-plugin-safe headers', 'reportedip-hive' ); ?></li>
+							</ul>
+							<p style="margin:0;">
+								<a class="rip-button rip-button--primary" href="<?php echo esc_url( defined( 'REPORTEDIP_HIVE_UPGRADE_URL' ) ? REPORTEDIP_HIVE_UPGRADE_URL : 'https://reportedip.de/pricing/' ); ?>" target="_blank" rel="noopener noreferrer">
+									<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
+								</a>
+							</p>
+						</div>
+					<?php endif; ?>
 
-				<div class="rip-card">
-					<h2 class="rip-card__title"><?php esc_html_e( '2FA enforcement — additional roles', 'reportedip-hive' ); ?></h2>
-					<p>
-						<?php esc_html_e( 'Network-required roles always need 2FA on this site. You can add roles on top of that list, but you cannot remove network-required roles here.', 'reportedip-hive' ); ?>
-					</p>
-					<ul class="rip-checklist">
-						<?php foreach ( $all_roles as $slug => $label ) : ?>
-							<?php
-							$is_network  = in_array( $slug, $network_roles, true );
-							$is_extra    = in_array( $slug, $site_extra, true );
-							$is_disabled = $is_network && ! $is_extra;
-							?>
+					<?php if ( ! $has_wc ) : ?>
+						<div class="rip-alert rip-alert--info">
+							<?php esc_html_e( 'WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA — these slug overrides take effect once it is.', 'reportedip-hive' ); ?>
+						</div>
+					<?php endif; ?>
+
+					<div class="rip-form-group">
+						<span class="rip-label"><?php esc_html_e( 'Network configuration (managed by Super Admin)', 'reportedip-hive' ); ?></span>
+						<ul class="rip-network-state">
 							<li>
-								<label>
-									<input type="checkbox" name="rip_2fa_enforce_roles_extra[]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( $is_extra ); ?> <?php disabled( $is_disabled ); ?>>
-									<?php echo esc_html( $label ); ?>
-									<?php if ( $is_network ) : ?>
-										<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'network', 'reportedip-hive' ); ?></span>
-									<?php endif; ?>
-								</label>
+								<?php esc_html_e( 'Themed challenge page', 'reportedip-hive' ); ?>:
+								<?php if ( $frontend_enabled && ! $frontend_locked ) : ?>
+									<span class="rip-badge rip-badge--success"><?php esc_html_e( 'enabled', 'reportedip-hive' ); ?></span>
+								<?php elseif ( $frontend_locked_by_tier ) : ?>
+									<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'locked by tier', 'reportedip-hive' ); ?></span>
+								<?php else : ?>
+									<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'disabled', 'reportedip-hive' ); ?></span>
+								<?php endif; ?>
 							</li>
-						<?php endforeach; ?>
-					</ul>
+							<li>
+								<?php esc_html_e( 'Customer self-service opt-in', 'reportedip-hive' ); ?>:
+								<span class="rip-badge rip-badge--<?php echo $customer_optional ? 'success' : 'neutral'; ?>"><?php echo $customer_optional ? esc_html__( 'allowed', 'reportedip-hive' ) : esc_html__( 'not allowed', 'reportedip-hive' ); ?></span>
+							</li>
+						</ul>
+					</div>
+
+					<fieldset class="rip-fieldset" <?php echo $frontend_locked ? 'disabled' : ''; ?>>
+						<legend class="screen-reader-text"><?php esc_html_e( 'Per-site slug overrides', 'reportedip-hive' ); ?></legend>
+
+						<div class="rip-form-group">
+							<label class="rip-label" for="rip_2fa_frontend_slug_site_override">
+								<?php esc_html_e( 'Challenge page slug — site override', 'reportedip-hive' ); ?>
+							</label>
+							<div class="rip-input-prefix">
+								<span class="rip-input-prefix__prefix"><?php echo esc_html( $home_prefix ); ?></span>
+								<input type="text"
+									id="rip_2fa_frontend_slug_site_override"
+									name="rip_2fa_frontend_slug_site_override"
+									class="rip-input"
+									value="<?php echo esc_attr( $slug_override ); ?>"
+									placeholder="<?php echo esc_attr( $slug_default ); ?>"
+									pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
+									maxlength="50"
+									spellcheck="false"
+									autocomplete="off" />
+								<span class="rip-input-prefix__suffix">/</span>
+							</div>
+							<p class="rip-help-text">
+								<?php
+								printf(
+									/* translators: 1: network-default slug, 2: effective URL on this site */
+									esc_html__( 'Network default: %1$s. Leave empty to inherit. Effective URL on this site: %2$s', 'reportedip-hive' ),
+									'<code>' . esc_html( $slug_default ) . '</code>',
+									'<code>' . esc_html( $challenge_url ) . '</code>'
+								);
+								?>
+							</p>
+						</div>
+
+						<div class="rip-form-group">
+							<label class="rip-label" for="rip_2fa_frontend_setup_slug_site_override">
+								<?php esc_html_e( 'Setup page slug (onboarding) — site override', 'reportedip-hive' ); ?>
+							</label>
+							<div class="rip-input-prefix">
+								<span class="rip-input-prefix__prefix"><?php echo esc_html( $home_prefix ); ?></span>
+								<input type="text"
+									id="rip_2fa_frontend_setup_slug_site_override"
+									name="rip_2fa_frontend_setup_slug_site_override"
+									class="rip-input"
+									value="<?php echo esc_attr( $setup_slug_override ); ?>"
+									placeholder="<?php echo esc_attr( $setup_slug_default ); ?>"
+									pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
+									maxlength="50"
+									spellcheck="false"
+									autocomplete="off" />
+								<span class="rip-input-prefix__suffix">/</span>
+							</div>
+							<p class="rip-help-text">
+								<?php
+								printf(
+									/* translators: 1: network-default setup slug, 2: effective URL on this site */
+									esc_html__( 'Network default: %1$s. Leave empty to inherit. Effective URL on this site: %2$s', 'reportedip-hive' ),
+									'<code>' . esc_html( $setup_slug_default ) . '</code>',
+									'<code>' . esc_html( $setup_url ) . '</code>'
+								);
+								?>
+							</p>
+						</div>
+					</fieldset>
 				</div>
 
-				<p>
+				<div class="rip-settings-section">
+					<h2 class="rip-settings-section__title">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg>
+						<?php esc_html_e( '2FA enforcement — role overrides for this site', 'reportedip-hive' ); ?>
+					</h2>
+					<p class="rip-settings-section__desc">
+						<?php esc_html_e( 'The Super Admin enforces 2FA on certain roles network-wide. You can add roles on top of that list for this site only — but you cannot remove network-required roles here.', 'reportedip-hive' ); ?>
+					</p>
+
+					<div class="rip-form-group">
+						<span class="rip-label"><?php esc_html_e( 'Network-required roles (always enforced on this site)', 'reportedip-hive' ); ?></span>
+						<?php if ( empty( $network_roles ) ) : ?>
+							<p class="rip-help-text"><em><?php esc_html_e( 'The Super Admin has not enforced 2FA on any role network-wide.', 'reportedip-hive' ); ?></em></p>
+						<?php else : ?>
+							<ul class="rip-network-state">
+								<?php foreach ( $network_roles as $role_slug ) : ?>
+									<li>
+										<span class="rip-badge rip-badge--info"><?php esc_html_e( 'network', 'reportedip-hive' ); ?></span>
+										<?php echo esc_html( $all_roles[ $role_slug ] ?? $role_slug ); ?>
+										<code><?php echo esc_html( $role_slug ); ?></code>
+									</li>
+								<?php endforeach; ?>
+							</ul>
+						<?php endif; ?>
+					</div>
+
+					<fieldset class="rip-fieldset">
+						<legend class="rip-label">
+							<?php esc_html_e( 'Additional roles to enforce on THIS site', 'reportedip-hive' ); ?>
+						</legend>
+						<p class="rip-help-text">
+							<?php esc_html_e( 'Pick roles that should require 2FA on this sub-site in addition to the network-required ones above. Network-required roles stay enforced regardless of the boxes here.', 'reportedip-hive' ); ?>
+						</p>
+						<div class="rip-form-group rip-form-checklist">
+							<?php foreach ( $all_roles as $slug => $label ) : ?>
+								<?php
+								$is_network = in_array( $slug, $network_roles, true );
+								$is_extra   = in_array( $slug, $site_extra, true );
+								?>
+								<label class="rip-toggle">
+									<input type="checkbox"
+										class="rip-toggle__input"
+										name="rip_2fa_enforce_roles_extra[]"
+										value="<?php echo esc_attr( $slug ); ?>"
+										<?php checked( $is_extra ); ?>
+										<?php disabled( $is_network ); ?> />
+									<span class="rip-toggle__slider"></span>
+									<span class="rip-toggle__label">
+										<?php echo esc_html( $label ); ?>
+										<?php if ( $is_network ) : ?>
+											<span class="rip-badge rip-badge--info" style="margin-left:var(--rip-space-2);"><?php esc_html_e( 'enforced by network', 'reportedip-hive' ); ?></span>
+										<?php endif; ?>
+									</span>
+								</label>
+							<?php endforeach; ?>
+						</div>
+					</fieldset>
+				</div>
+
+				<p class="rip-actions">
 					<?php submit_button( __( 'Save site overrides', 'reportedip-hive' ), 'primary rip-button rip-button--primary', 'submit', false ); ?>
 				</p>
 			</form>

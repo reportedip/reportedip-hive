@@ -144,18 +144,32 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @since  2.0.0
 	 */
 	public static function resolve_2fa_frontend_slug() {
-		if ( isset( self::$resolve_cache['frontend_slug'] ) ) {
-			return self::$resolve_cache['frontend_slug'];
+		$key = self::cache_key( 'frontend_slug' );
+		if ( isset( self::$resolve_cache[ $key ] ) ) {
+			return self::$resolve_cache[ $key ];
 		}
 		$override = (string) get_option( 'reportedip_hive_2fa_frontend_slug_site_override', '' );
 		if ( '' !== trim( $override ) ) {
-			self::$resolve_cache['frontend_slug'] = $override;
+			self::$resolve_cache[ $key ] = $override;
 			return $override;
 		}
 		$network = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', self::DEFAULT_FRONTEND_SLUG );
 		$slug    = '' !== trim( $network ) ? $network : self::DEFAULT_FRONTEND_SLUG;
-		self::$resolve_cache['frontend_slug'] = $slug;
+		self::$resolve_cache[ $key ] = $slug;
 		return $slug;
+	}
+
+	/**
+	 * Build a per-blog cache key for the resolve_* helpers so cached
+	 * values do not leak across `switch_to_blog()` boundaries.
+	 *
+	 * @param string $bucket Logical bucket (e.g. 'frontend_slug').
+	 * @return string
+	 * @since  2.0.0
+	 */
+	private static function cache_key( $bucket ) {
+		$blog_id = function_exists( 'get_current_blog_id' ) ? (int) get_current_blog_id() : 0;
+		return $bucket . ':' . $blog_id;
 	}
 
 	/**
@@ -170,17 +184,18 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @since  2.0.0
 	 */
 	public static function resolve_2fa_frontend_setup_slug() {
-		if ( isset( self::$resolve_cache['frontend_setup_slug'] ) ) {
-			return self::$resolve_cache['frontend_setup_slug'];
+		$key = self::cache_key( 'frontend_setup_slug' );
+		if ( isset( self::$resolve_cache[ $key ] ) ) {
+			return self::$resolve_cache[ $key ];
 		}
 		$override = (string) get_option( 'reportedip_hive_2fa_frontend_setup_slug_site_override', '' );
 		if ( '' !== trim( $override ) ) {
-			self::$resolve_cache['frontend_setup_slug'] = $override;
+			self::$resolve_cache[ $key ] = $override;
 			return $override;
 		}
 		$network = (string) get_site_option( 'reportedip_hive_2fa_frontend_setup_slug', 'reportedip-hive-2fa-setup' );
 		$slug    = '' !== trim( $network ) ? $network : 'reportedip-hive-2fa-setup';
-		self::$resolve_cache['frontend_setup_slug'] = $slug;
+		self::$resolve_cache[ $key ] = $slug;
 		return $slug;
 	}
 
@@ -195,8 +210,9 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @since  2.0.0
 	 */
 	public static function resolve_2fa_enforce_roles() {
-		if ( isset( self::$resolve_cache['enforce_roles'] ) ) {
-			return self::$resolve_cache['enforce_roles'];
+		$key = self::cache_key( 'enforce_roles' );
+		if ( isset( self::$resolve_cache[ $key ] ) ) {
+			return self::$resolve_cache[ $key ];
 		}
 		$network = self::coerce_role_list( get_site_option( 'reportedip_hive_2fa_enforce_roles', array() ) );
 		$extra   = self::coerce_role_list( get_option( 'reportedip_hive_2fa_enforce_roles_extra', array() ) );
@@ -204,7 +220,7 @@ final class ReportedIP_Hive_Option_Routing {
 		$merged = array_unique( array_merge( $network, $extra ) );
 		$merged = array_values( array_filter( $merged, 'is_string' ) );
 		sort( $merged );
-		self::$resolve_cache['enforce_roles'] = $merged;
+		self::$resolve_cache[ $key ] = $merged;
 		return $merged;
 	}
 
