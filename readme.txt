@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, threat-intelligence
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.7.1
+Stable tag: 2.0.0-beta.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -323,6 +323,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.0-beta.1 =
+
+**WordPress Multisite support — breaking change.** ReportedIP Hive is now fully network-aware. The plugin can only be network-activated on Multisite (`Network: true`); per-site activation is hidden by WordPress. All seven plugin tables move to `$wpdb->base_prefix` so a single threat decision applies network-wide: cross-site brute-force attempts aggregate into one central `attempts` row, and one `blocked` entry locks the IP out of every sub-site. Site Admins on a sub-site see a read-only Status / Logs UI plus a single 2FA Site Settings page with two writable overrides (Frontend-2FA slug per-site, plus additive 2FA enforcement roles — site admins cannot drop a role the network requires). Super Admins are forced into 2FA setup unconditionally via a new `reportedip_hive_2fa_enforce_super_admins` toggle (default on), and the trust cookie now widens to `SITECOOKIEPATH` so a single trust decision carries across the whole network. Cron is scheduled only on the main site (`is_main_site()`-guarded). New `Schema`, `Migration_Manager` and `Option_Routing` service classes mediate every Multisite-relevant access; 353 plugin option calls were rewired through the routing layer in one sweep. Versioned migration system with atomic site-option lock auto-upgrades single-site v1.x → v5 transparently on the first admin visit (only `ALTER TABLE … ADD COLUMN blog_id` with default 1 — no data movement). Existing Multisite installs that ran Hive on individual sites without `Network: true` get a one-time option-promotion pass into sitemeta. Existing trusted_devices rows have `expires_at` capped at NOW()+24h so users get a smooth re-trust window after the cookie path widens. PHPUnit Multisite suite (`tests/Multisite/` + `phpunit-multisite.xml`) and Playwright E2E projects (`tests/e2e/`, single-site + multisite) plus dedicated CI matrix jobs gate every change against both topologies. Live-tested on a 4-site subdir Multisite stack: Network Admin, Site-Admin Read-Only-UI, Setup-Wizard, 2FA enforcement, cross-site brute-force aggregation and per-site relay-usage tracker all verified.
+
 = 1.6.6 =
 
 **Password-reset gate hardening (E2E coverage).** Three real bugs in the 1.6.5 implementation that were caught while driving the full reset flow against a Docker stack and would have shipped silently otherwise:
@@ -394,6 +398,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 2.0.0-beta.1 =
+**Breaking change — Multisite support.** Single-site installs auto-migrate transparently on the first admin visit (only adds a `blog_id` column with default 1, no data movement). On Multisite the plugin is now network-only: per-site activation is no longer possible, and protection state (whitelist, blocked IPs, attempts, trusted devices) is shared across the network so cross-site brute-force is detected and blocked everywhere at once. Site Admins on sub-sites see a read-only UI with two narrow override fields (Frontend-2FA slug + additive enforcement roles). Super Admins are forced into 2FA. Existing Multisite installs that ran Hive per-site without `Network: true` get a one-time option-promotion pass into sitemeta. Beta — production Multisite users should pilot on staging first.
 
 = 1.6.6 =
 Critical hardening for the 1.6.5 password-reset gate. The reset-key resolver missed the WordPress reset cookie, so the gate was wired but inactive on the standard reset flow — making 1.6.5 effectively unprotected. Strongly recommended for every site running 1.6.5. No breaking change.
