@@ -197,9 +197,12 @@ class ReportedIP_Hive {
 		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
 		add_action( 'update_option_reportedip_hive_2fa_frontend_slug', $flush_routing_cache );
 		add_action( 'update_option_reportedip_hive_2fa_frontend_slug_site_override', $flush_routing_cache );
+		add_action( 'update_option_reportedip_hive_2fa_frontend_setup_slug', $flush_routing_cache );
+		add_action( 'update_option_reportedip_hive_2fa_frontend_setup_slug_site_override', $flush_routing_cache );
 		add_action( 'update_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
 		add_action( 'update_option_reportedip_hive_2fa_enforce_roles_extra', $flush_routing_cache );
 		add_action( 'update_site_option_reportedip_hive_2fa_frontend_slug', $flush_routing_cache );
+		add_action( 'update_site_option_reportedip_hive_2fa_frontend_setup_slug', $flush_routing_cache );
 		add_action( 'update_site_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
 
 		if ( is_admin() ) {

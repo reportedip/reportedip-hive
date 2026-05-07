@@ -42,8 +42,9 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @var array<string, true>
 	 */
 	private const SITE_OPTION_LOOKUP = array(
-		'reportedip_hive_2fa_frontend_slug_site_override' => true,
-		'reportedip_hive_2fa_enforce_roles_extra'         => true,
+		'reportedip_hive_2fa_frontend_slug_site_override'       => true,
+		'reportedip_hive_2fa_frontend_setup_slug_site_override' => true,
+		'reportedip_hive_2fa_enforce_roles_extra'               => true,
 	);
 
 	/**
@@ -154,6 +155,32 @@ final class ReportedIP_Hive_Option_Routing {
 		$network = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', self::DEFAULT_FRONTEND_SLUG );
 		$slug    = '' !== trim( $network ) ? $network : self::DEFAULT_FRONTEND_SLUG;
 		self::$resolve_cache['frontend_slug'] = $slug;
+		return $slug;
+	}
+
+	/**
+	 * Resolve the WooCommerce Frontend-2FA setup (onboarding) slug.
+	 *
+	 * Per-site override wins over the network default. Used by
+	 * {@see ReportedIP_Hive_Two_Factor_Frontend::get_setup_slug()} so the
+	 * customer-self-service onboarding URL can be tuned per sub-site if
+	 * the network default collides with an existing path.
+	 *
+	 * @return string
+	 * @since  2.0.0
+	 */
+	public static function resolve_2fa_frontend_setup_slug() {
+		if ( isset( self::$resolve_cache['frontend_setup_slug'] ) ) {
+			return self::$resolve_cache['frontend_setup_slug'];
+		}
+		$override = (string) get_option( 'reportedip_hive_2fa_frontend_setup_slug_site_override', '' );
+		if ( '' !== trim( $override ) ) {
+			self::$resolve_cache['frontend_setup_slug'] = $override;
+			return $override;
+		}
+		$network = (string) get_site_option( 'reportedip_hive_2fa_frontend_setup_slug', 'reportedip-hive-2fa-setup' );
+		$slug    = '' !== trim( $network ) ? $network : 'reportedip-hive-2fa-setup';
+		self::$resolve_cache['frontend_setup_slug'] = $slug;
 		return $slug;
 	}
 

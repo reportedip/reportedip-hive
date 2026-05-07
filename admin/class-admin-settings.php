@@ -1149,17 +1149,25 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$saved = $this->maybe_handle_site_2fa_save();
 
-		$slug_default  = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', ReportedIP_Hive_Option_Routing::DEFAULT_FRONTEND_SLUG );
-		$slug_override = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_slug_site_override', '' );
+		$slug_default        = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', ReportedIP_Hive_Option_Routing::DEFAULT_FRONTEND_SLUG );
+		$slug_override       = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_slug_site_override', '' );
+		$setup_slug_default  = (string) get_site_option( 'reportedip_hive_2fa_frontend_setup_slug', 'reportedip-hive-2fa-setup' );
+		$setup_slug_override = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_setup_slug_site_override', '' );
 
 		$network_roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();
 		$site_extra    = (array) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles_extra', array() );
 		$all_roles     = function_exists( 'wp_roles' ) ? wp_roles()->get_names() : array();
 
-		$has_woocommerce = class_exists( 'WooCommerce' );
-		$site_url        = home_url( '/' );
-		$effective_slug  = '' !== $slug_override ? $slug_override : $slug_default;
-		$frontend_url    = trailingslashit( $site_url ) . sanitize_title( $effective_slug ) . '/';
+		$has_wc        = class_exists( 'WooCommerce' );
+		$home_prefix   = trailingslashit( home_url( '/' ) );
+		$challenge_url = $home_prefix . sanitize_title( '' !== $slug_override ? $slug_override : $slug_default ) . '/';
+		$setup_url     = $home_prefix . sanitize_title( '' !== $setup_slug_override ? $setup_slug_override : $setup_slug_default ) . '/';
+
+		$frontend_status        = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
+		$frontend_locked        = empty( $frontend_status['available'] );
+		$frontend_locked_by_tier = $frontend_locked && 'tier' === ( $frontend_status['reason'] ?? '' );
+		$frontend_enabled       = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_enabled', false );
+		$customer_optional      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_customer_optional', true );
 
 		$this->render_site_admin_header(
 			__( '2FA Site Settings', 'reportedip-hive' ),
@@ -1172,42 +1180,112 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-alert rip-alert--success rip-alert--banner"><strong><?php esc_html_e( 'Saved.', 'reportedip-hive' ); ?></strong> <?php esc_html_e( 'Site overrides updated.', 'reportedip-hive' ); ?></div>
 			<?php endif; ?>
 
+			<div class="rip-card <?php echo $frontend_locked ? 'rip-settings-section--locked' : ''; ?>">
+				<h2 class="rip-card__title">
+					<?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?>
+					<?php if ( $frontend_locked_by_tier ) : ?>
+						&nbsp;<?php self::render_tier_lock( $frontend_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+					<?php endif; ?>
+				</h2>
+				<p>
+					<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
+				</p>
+
+				<?php if ( $frontend_locked_by_tier ) : ?>
+					<div class="rip-alert rip-alert--info">
+						<p style="margin:0 0 var(--rip-space-2);font-weight:600;">
+							<?php esc_html_e( 'Available with the Professional plan and higher', 'reportedip-hive' ); ?>
+						</p>
+						<ul style="margin:0 0 var(--rip-space-3);padding-left:1.25em;">
+							<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
+							<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
+							<li><?php esc_html_e( 'Cart and checkout state survive the redirect roundtrip', 'reportedip-hive' ); ?></li>
+							<li><?php esc_html_e( 'Trusted-device cookie shared with the wp-login flow', 'reportedip-hive' ); ?></li>
+							<li><?php esc_html_e( 'Hide-Login bypass + cache-plugin-safe headers', 'reportedip-hive' ); ?></li>
+						</ul>
+						<p style="margin:0;">
+							<a class="rip-button rip-button--primary" href="<?php echo esc_url( defined( 'REPORTEDIP_HIVE_UPGRADE_URL' ) ? REPORTEDIP_HIVE_UPGRADE_URL : 'https://reportedip.de/pricing/' ); ?>" target="_blank" rel="noopener noreferrer">
+								<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
+							</a>
+						</p>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( ! $has_wc ) : ?>
+					<div class="rip-alert rip-alert--info">
+						<?php esc_html_e( 'WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA — these slug overrides take effect once it is.', 'reportedip-hive' ); ?>
+					</div>
+				<?php endif; ?>
+
+				<div class="rip-card__readonly-state">
+					<p style="margin:0 0 var(--rip-space-2);"><strong><?php esc_html_e( 'Network configuration (read-only here):', 'reportedip-hive' ); ?></strong></p>
+					<ul style="margin:0;padding-left:1.25em;">
+						<li><?php esc_html_e( 'Frontend 2FA challenge inside theme:', 'reportedip-hive' ); ?>
+							<?php if ( $frontend_enabled && ! $frontend_locked ) : ?>
+								<span class="rip-badge rip-badge--success"><?php esc_html_e( 'enabled', 'reportedip-hive' ); ?></span>
+							<?php elseif ( $frontend_locked_by_tier ) : ?>
+								<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'locked by tier', 'reportedip-hive' ); ?></span>
+							<?php else : ?>
+								<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'disabled', 'reportedip-hive' ); ?></span>
+							<?php endif; ?>
+						</li>
+						<li><?php esc_html_e( 'Customer self-service opt-in:', 'reportedip-hive' ); ?>
+							<span class="rip-badge rip-badge--<?php echo $customer_optional ? 'success' : 'neutral'; ?>"><?php echo $customer_optional ? esc_html__( 'allowed', 'reportedip-hive' ) : esc_html__( 'not allowed', 'reportedip-hive' ); ?></span>
+						</li>
+					</ul>
+				</div>
+			</div>
+
 			<form method="post">
 				<?php wp_nonce_field( 'reportedip_hive_site_2fa_save', '_rip_site_2fa_nonce' ); ?>
 
 				<div class="rip-card">
-					<h2 class="rip-card__title"><?php esc_html_e( 'Frontend 2FA URL slug (WooCommerce login)', 'reportedip-hive' ); ?></h2>
+					<h2 class="rip-card__title"><?php esc_html_e( 'Frontend 2FA challenge slug (per-site)', 'reportedip-hive' ); ?></h2>
 					<p>
-						<?php esc_html_e( 'On Professional and higher tiers, ReportedIP Hive renders the second factor inside the WooCommerce storefront theme so customers stay on your site instead of bouncing to wp-login.php. The slug controls the URL where that themed 2FA challenge appears.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'URL where the themed 2FA challenge appears. Use a per-site override only if the network default collides with a path that already exists on this site.', 'reportedip-hive' ); ?>
 					</p>
 					<p>
 						<?php
 						printf(
-							/* translators: %s = current effective frontend 2FA URL */
+							/* translators: %s = current effective challenge URL */
 							esc_html__( 'Current URL on this site: %s', 'reportedip-hive' ),
-							'<code>' . esc_html( $frontend_url ) . '</code>'
+							'<code>' . esc_html( $challenge_url ) . '</code>'
 						);
 						?>
 					</p>
-					<?php if ( ! $has_woocommerce ) : ?>
-						<div class="rip-alert rip-alert--info">
-							<?php esc_html_e( 'WooCommerce is not active on this site, so the frontend slug only takes effect if you install WooCommerce later.', 'reportedip-hive' ); ?>
-						</div>
-					<?php endif; ?>
 					<p>
 						<label>
-							<strong><?php esc_html_e( 'Override slug for this site', 'reportedip-hive' ); ?></strong><br>
+							<strong><?php esc_html_e( 'Override challenge slug', 'reportedip-hive' ); ?></strong><br>
 							<input type="text" name="rip_2fa_frontend_slug_site_override" value="<?php echo esc_attr( $slug_override ); ?>" class="regular-text" placeholder="<?php echo esc_attr( $slug_default ); ?>">
 						</label>
 					</p>
 					<p class="description">
+						<?php printf( /* translators: %s = network-default slug */ esc_html__( 'Network default: %s. Leave empty to inherit.', 'reportedip-hive' ), '<code>' . esc_html( $slug_default ) . '</code>' ); ?>
+					</p>
+				</div>
+
+				<div class="rip-card">
+					<h2 class="rip-card__title"><?php esc_html_e( 'Frontend 2FA setup slug (onboarding, per-site)', 'reportedip-hive' ); ?></h2>
+					<p>
+						<?php esc_html_e( 'URL of the customer-self-service onboarding wizard. Same override logic — only set if the network default collides on this site.', 'reportedip-hive' ); ?>
+					</p>
+					<p>
 						<?php
 						printf(
-							/* translators: %s = network-default slug */
-							esc_html__( 'Network default: %s. Leave empty to inherit. Use this only if the network slug collides with a path that already exists on this site.', 'reportedip-hive' ),
-							'<code>' . esc_html( $slug_default ) . '</code>'
+							/* translators: %s = current effective setup URL */
+							esc_html__( 'Current URL on this site: %s', 'reportedip-hive' ),
+							'<code>' . esc_html( $setup_url ) . '</code>'
 						);
 						?>
+					</p>
+					<p>
+						<label>
+							<strong><?php esc_html_e( 'Override setup slug', 'reportedip-hive' ); ?></strong><br>
+							<input type="text" name="rip_2fa_frontend_setup_slug_site_override" value="<?php echo esc_attr( $setup_slug_override ); ?>" class="regular-text" placeholder="<?php echo esc_attr( $setup_slug_default ); ?>">
+						</label>
+					</p>
+					<p class="description">
+						<?php printf( /* translators: %s = network-default setup slug */ esc_html__( 'Network default: %s. Leave empty to inherit.', 'reportedip-hive' ), '<code>' . esc_html( $setup_slug_default ) . '</code>' ); ?>
 					</p>
 				</div>
 
@@ -1400,6 +1478,14 @@ class ReportedIP_Hive_Admin_Settings {
 		ReportedIP_Hive_Option_Routing::set(
 			'reportedip_hive_2fa_frontend_slug_site_override',
 			sanitize_title( $slug_raw )
+		);
+
+		$setup_slug_raw = isset( $_POST['rip_2fa_frontend_setup_slug_site_override'] )
+			? sanitize_text_field( wp_unslash( $_POST['rip_2fa_frontend_setup_slug_site_override'] ) )
+			: '';
+		ReportedIP_Hive_Option_Routing::set(
+			'reportedip_hive_2fa_frontend_setup_slug_site_override',
+			sanitize_title( $setup_slug_raw )
 		);
 
 		$roles_raw   = isset( $_POST['rip_2fa_enforce_roles_extra'] )
