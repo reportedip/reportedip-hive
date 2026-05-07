@@ -385,16 +385,36 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Check if 2FA is enforced for a user's role.
 	 *
+	 * Multisite-aware (since 2.0.0): Super Admins are required to use 2FA
+	 * unconditionally when `reportedip_hive_2fa_enforce_super_admins` is on
+	 * (default). Normal roles are checked against the resolved enforcement
+	 * list (`network ∪ site_extra`), so a Site Admin can extend the list
+	 * for the local site but cannot drop a role the Super Admin requires.
+	 *
 	 * @param \WP_User $user WordPress user object.
 	 * @return bool True if the user's role requires 2FA.
 	 */
 	public static function is_enforced_for_user( $user ) {
-		$enforce_roles = json_decode( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
-		if ( ! is_array( $enforce_roles ) || empty( $enforce_roles ) ) {
+		if ( ! is_object( $user ) ) {
 			return false;
 		}
 
-		foreach ( $user->roles as $role ) {
+		if ( is_multisite() && function_exists( 'is_super_admin' ) && is_super_admin( $user->ID ) ) {
+			$super_required = (bool) ReportedIP_Hive_Option_Routing::get(
+				'reportedip_hive_2fa_enforce_super_admins',
+				true
+			);
+			if ( $super_required ) {
+				return true;
+			}
+		}
+
+		$enforce_roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();
+		if ( empty( $enforce_roles ) ) {
+			return false;
+		}
+
+		foreach ( (array) $user->roles as $role ) {
 			if ( in_array( $role, $enforce_roles, true ) ) {
 				return true;
 			}
@@ -1548,12 +1568,22 @@ class ReportedIP_Hive_Two_Factor {
 		);
 
 		$secure = is_ssl();
+
+		/*
+		 * Multisite trust scope: the trusted_devices table is network-wide
+		 * (no blog_id column), so the cookie must also be readable on every
+		 * site of the network. SITECOOKIEPATH is the network root path on
+		 * Multisite and falls through to COOKIEPATH on single-site, where
+		 * the two are identical anyway.
+		 */
+		$trust_cookie_path = is_multisite() && defined( 'SITECOOKIEPATH' ) ? SITECOOKIEPATH : COOKIEPATH;
+
 		setcookie(
 			self::TRUSTED_COOKIE,
 			$token,
 			array(
 				'expires'  => $expiry,
-				'path'     => COOKIEPATH,
+				'path'     => $trust_cookie_path,
 				'domain'   => COOKIE_DOMAIN,
 				'secure'   => $secure,
 				'httponly' => true,

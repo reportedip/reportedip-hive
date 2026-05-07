@@ -1383,6 +1383,7 @@ class ReportedIP_Hive {
 			'reportedip_hive_notification_cooldown_minutes' => 60,
 			'reportedip_hive_2fa_enabled_global'           => false,
 			'reportedip_hive_2fa_enforce_roles'            => '[]',
+			'reportedip_hive_2fa_enforce_super_admins'     => true,
 			'reportedip_hive_2fa_enforce_grace_days'       => 7,
 			'reportedip_hive_2fa_max_skips'                => 3,
 			'reportedip_hive_2fa_allowed_methods'          => '["totp","email"]',

@@ -136,12 +136,35 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @since  2.0.0
 	 */
 	public static function resolve_2fa_enforce_roles() {
-		$network = (array) get_site_option( 'reportedip_hive_2fa_enforce_roles', array() );
-		$extra   = (array) get_option( 'reportedip_hive_2fa_enforce_roles_extra', array() );
-		$merged  = array_unique( array_merge( $network, $extra ) );
-		$merged  = array_values( array_filter( $merged, 'is_string' ) );
+		$network_raw = get_site_option( 'reportedip_hive_2fa_enforce_roles', array() );
+		$extra_raw   = get_option( 'reportedip_hive_2fa_enforce_roles_extra', array() );
+
+		$network = self::coerce_role_list( $network_raw );
+		$extra   = self::coerce_role_list( $extra_raw );
+
+		$merged = array_unique( array_merge( $network, $extra ) );
+		$merged = array_values( array_filter( $merged, 'is_string' ) );
 		sort( $merged );
 		return $merged;
+	}
+
+	/**
+	 * Normalises a stored 2FA-enforce-roles value to a flat array.
+	 *
+	 * Accepts both the legacy JSON-string representation (`'["administrator"]'`)
+	 * and the modern array form (`['administrator']`) so call sites can read
+	 * the value either way without ad-hoc decoding.
+	 *
+	 * @param mixed $raw Stored option value.
+	 * @return array<int, string>
+	 * @since  2.0.0
+	 */
+	private static function coerce_role_list( $raw ) {
+		if ( is_string( $raw ) ) {
+			$decoded = json_decode( $raw, true );
+			$raw     = is_array( $decoded ) ? $decoded : array();
+		}
+		return is_array( $raw ) ? array_values( $raw ) : array();
 	}
 
 	/**

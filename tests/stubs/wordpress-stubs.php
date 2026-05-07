@@ -234,6 +234,44 @@ if ( ! function_exists( 'delete_transient' ) ) {
 	}
 }
 
+if ( ! function_exists( 'get_site_transient' ) ) {
+	/**
+	 * Network transient. Stub falls through to the per-site bucket.
+	 *
+	 * @param string $transient Transient name.
+	 * @return mixed
+	 */
+	function get_site_transient( $transient ) {
+		return get_transient( $transient );
+	}
+}
+
+if ( ! function_exists( 'set_site_transient' ) ) {
+	/**
+	 * Set a network transient. Stub falls through to set_transient().
+	 *
+	 * @param string $transient  Transient name.
+	 * @param mixed  $value      Transient value.
+	 * @param int    $expiration TTL in seconds.
+	 * @return bool
+	 */
+	function set_site_transient( $transient, $value, $expiration = 0 ) {
+		return set_transient( $transient, $value, $expiration );
+	}
+}
+
+if ( ! function_exists( 'delete_site_transient' ) ) {
+	/**
+	 * Delete a network transient. Stub falls through to delete_transient().
+	 *
+	 * @param string $transient Transient name.
+	 * @return bool
+	 */
+	function delete_site_transient( $transient ) {
+		return delete_transient( $transient );
+	}
+}
+
 // =============================================================================
 // Hook Functions
 // =============================================================================

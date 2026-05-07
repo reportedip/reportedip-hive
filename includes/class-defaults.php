@@ -101,6 +101,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_frontend_soft_disabled'     => 0,
 		'reportedip_hive_wc2fa_promo_enabled'            => true,
 		'reportedip_hive_2fa_enforce_roles'              => '["administrator"]',
+		'reportedip_hive_2fa_enforce_super_admins'       => true,
 		'reportedip_hive_block_escalation_enabled'       => true,
 		'reportedip_hive_block_ladder_minutes'           => '5,15,30,1440,2880,10080',
 		'reportedip_hive_block_ladder_reset_days'        => 30,

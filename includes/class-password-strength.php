@@ -221,8 +221,8 @@ class ReportedIP_Hive_Password_Strength {
 			return true;
 		}
 
-		$enforce_roles = json_decode( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
-		if ( ! is_array( $enforce_roles ) || empty( $enforce_roles ) ) {
+		$enforce_roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();
+		if ( empty( $enforce_roles ) ) {
 			return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_policy_all_users', false );
 		}
 
