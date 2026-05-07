@@ -2,6 +2,70 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.0-beta.1] — 2026-05-07 (in progress on `feature/multisite-v2`)
+
+This is a **breaking change** that turns ReportedIP Hive into a fully
+network-aware Multisite plugin. Single-site installs auto-migrate on the
+first admin visit and behave identically to v1.x.
+
+### New
+
+- **Network-only activation** (`Network: true` in plugin header). On
+  Multisite the plugin can only be network-activated; per-site activation
+  is hidden by WordPress.
+- **Service layer**: four new classes mediate all Multisite-relevant
+  access: `Schema`, `Migration_Manager`, `Option_Routing`, `Cron_Scheduler`.
+  Existing classes call these services rather than WordPress functions so
+  routing changes are one-place work.
+- **Hybrid table layout** — all seven plugin tables live under
+  `$wpdb->base_prefix` (network-wide). `logs`, `api_queue`, `stats` carry
+  a `blog_id` column so the Network Admin can filter and Site Admins are
+  auto-scoped. `whitelist`, `blocked`, `attempts`, `trusted_devices` are
+  IP-centric or user-global and intentionally have no `blog_id` so a
+  single decision applies network-wide.
+- **Versioned migration system** with atomic site-option lock and
+  automatic v4→v5 upgrade on first admin visit. Future schema bumps add
+  one method (`migrate_to_v6`, `migrate_to_v7`, …) — no existing-method
+  changes required.
+- **Site lifecycle handling** — `wp_initialize_site` and `wp_delete_site`
+  hooks keep the central tables consistent; `wpmu_delete_user` /
+  `delete_user` clean up trusted-device rows for deleted users.
+- **Cron scheduling on the main site only** with `is_main_site()` guard
+  + `admin_init` self-heal. Avoids the N-fold execution problem on large
+  networks.
+- **Multisite PHPUnit suite** in `tests/Multisite/` driven by
+  `phpunit-multisite.xml` with `WP_TESTS_MULTISITE=1`. Bootstrap loads
+  the plugin via `tests_add_filter('muplugins_loaded', …)`.
+- **Playwright E2E suite** in `tests/e2e/` with separate projects for
+  the single-site (port 8080) and multisite (port 8090) Docker stacks.
+- **CI**: new `phpunit-multisite` matrix job (PHP 8.1–8.5),
+  `e2e-single-site`, `e2e-multisite` job stubs alongside the existing
+  pipeline.
+
+### Changed
+
+- `ReportedIP_Hive_Database` is now a thin shim around `Schema` for
+  table creation/teardown and around `Migration_Manager` for schema
+  upgrades. All other read/write methods are unchanged but operate on
+  the central (`base_prefix`) tables.
+- `register_activation_hook` / `register_deactivation_hook` /
+  `register_uninstall_hook` route through the service layer.
+- `version` bumped to `2.0.0-beta.1`. Single source of truth for the
+  schema version is now `Migration_Manager::CURRENT_VERSION = 5`;
+  `ReportedIP_Hive_Database::DB_VERSION` mirrors it for back-compat.
+
+### Migration notes
+
+- Existing single-site installs migrate transparently — no data movement
+  required, only `ALTER TABLE … ADD COLUMN blog_id` (default 1).
+- Existing Multisite installs that ran Hive on individual sites without
+  `Network: true` get a one-time option-promotion pass: per-site
+  network-class options are copied into sitemeta (first site to provide
+  a value wins, no overwrites).
+- Existing `trusted_devices` rows have their `expires_at` capped at
+  NOW()+24h so users get a smooth re-trust window after the trust cookie
+  path widens to `SITECOOKIEPATH`.
+
 ## [1.7.1] — 2026-05-06
 
 ### Fixes
