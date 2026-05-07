@@ -34,19 +34,32 @@ final class ReportedIP_Hive_Option_Routing {
 	/**
 	 * Options that live in per-site storage (`wp_options` per blog).
 	 *
-	 * Every key NOT in this list is treated as a network option.
+	 * Every key NOT in this map is treated as a network option. Stored as
+	 * a flipped lookup map (key => true) so {@see is_site_option()} is an
+	 * O(1) `isset()` rather than an O(N) `in_array()` — at 350+ call
+	 * sites per request the difference is measurable.
 	 *
-	 * @var string[]
+	 * @var array<string, true>
 	 */
-	private const SITE_OPTIONS = array(
-		'reportedip_hive_2fa_frontend_slug_site_override',
-		'reportedip_hive_2fa_enforce_roles_extra',
+	private const SITE_OPTION_LOOKUP = array(
+		'reportedip_hive_2fa_frontend_slug_site_override' => true,
+		'reportedip_hive_2fa_enforce_roles_extra'         => true,
 	);
 
 	/**
 	 * Default for `2fa_frontend_slug` when neither network nor site value is set.
 	 */
 	public const DEFAULT_FRONTEND_SLUG = '2fa-login';
+
+	/**
+	 * Per-request cache for the resolve_* helpers. Cleared by `flush()`
+	 * (called from the `update_option_*` / `update_site_option_*` action
+	 * hooks). Hot-path callers (Two_Factor login filter, Password_Strength)
+	 * read these values multiple times per request.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private static $resolve_cache = array();
 
 	/**
 	 * Get an option, routed to the correct storage.
@@ -103,7 +116,20 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @since  2.0.0
 	 */
 	public static function is_site_option( $key ) {
-		return in_array( (string) $key, self::SITE_OPTIONS, true );
+		return isset( self::SITE_OPTION_LOOKUP[ (string) $key ] );
+	}
+
+	/**
+	 * Drop the per-request resolve cache.
+	 *
+	 * Called from `update_option_*` / `update_site_option_*` hooks so a
+	 * settings save in the same request is reflected immediately.
+	 *
+	 * @return void
+	 * @since  2.0.0
+	 */
+	public static function flush_resolve_cache() {
+		self::$resolve_cache = array();
 	}
 
 	/**
@@ -117,12 +143,18 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @since  2.0.0
 	 */
 	public static function resolve_2fa_frontend_slug() {
+		if ( isset( self::$resolve_cache['frontend_slug'] ) ) {
+			return self::$resolve_cache['frontend_slug'];
+		}
 		$override = (string) get_option( 'reportedip_hive_2fa_frontend_slug_site_override', '' );
 		if ( '' !== trim( $override ) ) {
+			self::$resolve_cache['frontend_slug'] = $override;
 			return $override;
 		}
 		$network = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', self::DEFAULT_FRONTEND_SLUG );
-		return '' !== trim( $network ) ? $network : self::DEFAULT_FRONTEND_SLUG;
+		$slug    = '' !== trim( $network ) ? $network : self::DEFAULT_FRONTEND_SLUG;
+		self::$resolve_cache['frontend_slug'] = $slug;
+		return $slug;
 	}
 
 	/**
@@ -136,15 +168,16 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @since  2.0.0
 	 */
 	public static function resolve_2fa_enforce_roles() {
-		$network_raw = get_site_option( 'reportedip_hive_2fa_enforce_roles', array() );
-		$extra_raw   = get_option( 'reportedip_hive_2fa_enforce_roles_extra', array() );
-
-		$network = self::coerce_role_list( $network_raw );
-		$extra   = self::coerce_role_list( $extra_raw );
+		if ( isset( self::$resolve_cache['enforce_roles'] ) ) {
+			return self::$resolve_cache['enforce_roles'];
+		}
+		$network = self::coerce_role_list( get_site_option( 'reportedip_hive_2fa_enforce_roles', array() ) );
+		$extra   = self::coerce_role_list( get_option( 'reportedip_hive_2fa_enforce_roles_extra', array() ) );
 
 		$merged = array_unique( array_merge( $network, $extra ) );
 		$merged = array_values( array_filter( $merged, 'is_string' ) );
 		sort( $merged );
+		self::$resolve_cache['enforce_roles'] = $merged;
 		return $merged;
 	}
 

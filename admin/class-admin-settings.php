@@ -1057,28 +1057,7 @@ class ReportedIP_Hive_Admin_Settings {
 			wp_die( esc_html__( 'You do not have permission to view this page.', 'reportedip-hive' ) );
 		}
 
-		$nonce_action = 'reportedip_hive_site_2fa_save';
-		if ( isset( $_POST['_rip_site_2fa_nonce'] )
-			&& wp_verify_nonce( wp_unslash( $_POST['_rip_site_2fa_nonce'] ), $nonce_action )
-		) {
-			$slug_raw = isset( $_POST['rip_2fa_frontend_slug_site_override'] )
-				? sanitize_text_field( wp_unslash( $_POST['rip_2fa_frontend_slug_site_override'] ) )
-				: '';
-			$slug = sanitize_title( $slug_raw );
-			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_frontend_slug_site_override', $slug );
-
-			$roles_raw = isset( $_POST['rip_2fa_enforce_roles_extra'] )
-				? (array) $_POST['rip_2fa_enforce_roles_extra']
-				: array();
-			$roles = array();
-			foreach ( $roles_raw as $role ) {
-				$roles[] = sanitize_key( wp_unslash( (string) $role ) );
-			}
-			$roles = array_values( array_filter( array_unique( $roles ) ) );
-			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_roles_extra', $roles );
-
-			echo '<div class="notice notice-success"><p>' . esc_html__( 'Site overrides saved.', 'reportedip-hive' ) . '</p></div>';
-		}
+		$saved = $this->maybe_handle_site_2fa_save();
 
 		$slug_default  = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', ReportedIP_Hive_Option_Routing::DEFAULT_FRONTEND_SLUG );
 		$slug_override = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_slug_site_override', '' );
@@ -1090,8 +1069,11 @@ class ReportedIP_Hive_Admin_Settings {
 		echo '<div class="wrap rip-wrap">';
 		$this->render_site_readonly_banner();
 		echo '<h1>' . esc_html__( '2FA Site Settings', 'reportedip-hive' ) . '</h1>';
+		if ( $saved ) {
+			echo '<div class="notice notice-success"><p>' . esc_html__( 'Site overrides saved.', 'reportedip-hive' ) . '</p></div>';
+		}
 		echo '<form method="post">';
-		wp_nonce_field( $nonce_action, '_rip_site_2fa_nonce' );
+		wp_nonce_field( 'reportedip_hive_site_2fa_save', '_rip_site_2fa_nonce' );
 
 		echo '<h2>' . esc_html__( 'Frontend 2FA Slug Override', 'reportedip-hive' ) . '</h2>';
 		echo '<p>' . sprintf(
@@ -1131,10 +1113,52 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	private function render_site_readonly_banner() {
 		printf(
-			'<div class="rip-alert rip-alert--info" style="margin: 12px 0;"><strong>%s</strong> %s</div>',
+			'<div class="rip-alert rip-alert--info rip-alert--banner"><strong>%s</strong> %s</div>',
 			esc_html__( 'Centrally managed:', 'reportedip-hive' ),
 			esc_html__( 'this site is part of a managed ReportedIP Hive network. For Whitelist or mode changes, contact your Network Admin.', 'reportedip-hive' )
 		);
+	}
+
+	/**
+	 * Handle the Site-2FA-Settings POST. Validates nonce, sanitises input,
+	 * intersects roles against the actual `wp_roles()` whitelist (so a
+	 * crafted POST cannot smuggle non-existent role slugs into the
+	 * enforcement list), persists both override keys.
+	 *
+	 * @return bool True when a save happened on this request.
+	 * @since  2.0.0
+	 */
+	private function maybe_handle_site_2fa_save() {
+		if ( ! isset( $_POST['_rip_site_2fa_nonce'] ) ) {
+			return false;
+		}
+
+		$nonce = sanitize_text_field( wp_unslash( $_POST['_rip_site_2fa_nonce'] ) );
+		if ( ! wp_verify_nonce( $nonce, 'reportedip_hive_site_2fa_save' ) ) {
+			wp_die( esc_html__( 'Security check failed. Please reload and try again.', 'reportedip-hive' ) );
+		}
+
+		$slug_raw = isset( $_POST['rip_2fa_frontend_slug_site_override'] )
+			? sanitize_text_field( wp_unslash( $_POST['rip_2fa_frontend_slug_site_override'] ) )
+			: '';
+		ReportedIP_Hive_Option_Routing::set(
+			'reportedip_hive_2fa_frontend_slug_site_override',
+			sanitize_title( $slug_raw )
+		);
+
+		$roles_raw   = isset( $_POST['rip_2fa_enforce_roles_extra'] )
+			? (array) wp_unslash( $_POST['rip_2fa_enforce_roles_extra'] )
+			: array();
+		$valid_roles = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
+		$roles       = array_values(
+			array_intersect(
+				array_unique( array_map( 'sanitize_key', array_map( 'strval', $roles_raw ) ) ),
+				$valid_roles
+			)
+		);
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_roles_extra', $roles );
+
+		return true;
 	}
 
 	/**

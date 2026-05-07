@@ -39,6 +39,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class ReportedIP_Hive_Relay_Usage_Tracker {
 
+	public const TYPE_MAIL = 'mail';
+	public const TYPE_SMS  = 'sms';
+
 	/**
 	 * Network option name for the rolling per-site usage map.
 	 */
@@ -48,6 +51,13 @@ final class ReportedIP_Hive_Relay_Usage_Tracker {
 	 * Number of months kept in the rolling history before pruning.
 	 */
 	private const HISTORY_MONTHS = 6;
+
+	/**
+	 * Allowed type values for {@see record()}.
+	 *
+	 * @var string[]
+	 */
+	private const VALID_TYPES = array( self::TYPE_MAIL, self::TYPE_SMS );
 
 	/**
 	 * Record a successful relay send.
@@ -60,7 +70,7 @@ final class ReportedIP_Hive_Relay_Usage_Tracker {
 	public static function record( $type, $count = 1 ) {
 		$type  = (string) $type;
 		$count = max( 0, (int) $count );
-		if ( 0 === $count || ! in_array( $type, array( 'mail', 'sms' ), true ) ) {
+		if ( 0 === $count || ! in_array( $type, self::VALID_TYPES, true ) ) {
 			return;
 		}
 
@@ -69,28 +79,38 @@ final class ReportedIP_Hive_Relay_Usage_Tracker {
 		$site    = 'site_' . $blog_id;
 
 		$snapshot = self::load();
+		self::ensure_period_buckets( $snapshot, $period, $site );
 
-		if ( ! isset( $snapshot[ $period ] ) || ! is_array( $snapshot[ $period ] ) ) {
-			$snapshot[ $period ] = array();
-		}
-		if ( ! isset( $snapshot[ $period ][ $site ] ) || ! is_array( $snapshot[ $period ][ $site ] ) ) {
-			$snapshot[ $period ][ $site ] = array(
-				'mail' => 0,
-				'sms'  => 0,
-			);
-		}
-		if ( ! isset( $snapshot[ $period ]['totals'] ) || ! is_array( $snapshot[ $period ]['totals'] ) ) {
-			$snapshot[ $period ]['totals'] = array(
-				'mail' => 0,
-				'sms'  => 0,
-			);
-		}
-
-		$snapshot[ $period ][ $site ][ $type ]   = (int) $snapshot[ $period ][ $site ][ $type ] + $count;
+		$snapshot[ $period ][ $site ][ $type ]  = (int) $snapshot[ $period ][ $site ][ $type ] + $count;
 		$snapshot[ $period ]['totals'][ $type ] = (int) $snapshot[ $period ]['totals'][ $type ] + $count;
 
 		self::prune( $snapshot );
 		self::save( $snapshot );
+	}
+
+	/**
+	 * Initialise period/site/totals buckets if they don't exist yet.
+	 *
+	 * @param array  $snapshot Modified by reference.
+	 * @param string $period   YYYY-MM key.
+	 * @param string $site     `site_<blog_id>` key.
+	 * @return void
+	 * @since  2.0.0
+	 */
+	private static function ensure_period_buckets( array &$snapshot, $period, $site ) {
+		if ( ! isset( $snapshot[ $period ] ) || ! is_array( $snapshot[ $period ] ) ) {
+			$snapshot[ $period ] = array();
+		}
+		$zero = array(
+			self::TYPE_MAIL => 0,
+			self::TYPE_SMS  => 0,
+		);
+		if ( ! isset( $snapshot[ $period ][ $site ] ) || ! is_array( $snapshot[ $period ][ $site ] ) ) {
+			$snapshot[ $period ][ $site ] = $zero;
+		}
+		if ( ! isset( $snapshot[ $period ]['totals'] ) || ! is_array( $snapshot[ $period ]['totals'] ) ) {
+			$snapshot[ $period ]['totals'] = $zero;
+		}
 	}
 
 	/**

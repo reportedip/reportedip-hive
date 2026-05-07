@@ -90,7 +90,7 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 
 		if ( ! empty( $result['ok'] ) ) {
 			if ( class_exists( 'ReportedIP_Hive_Relay_Usage_Tracker' ) ) {
-				ReportedIP_Hive_Relay_Usage_Tracker::record( 'mail', 1 );
+				ReportedIP_Hive_Relay_Usage_Tracker::record( ReportedIP_Hive_Relay_Usage_Tracker::TYPE_MAIL, 1 );
 			}
 			return true;
 		}

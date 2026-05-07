@@ -260,19 +260,7 @@ class ReportedIP_Hive_Two_Factor {
 		$token_hash = hash( 'sha256', $token );
 		set_transient( self::NONCE_PREFIX . $token_hash, $nonce_data, self::NONCE_TTL );
 
-		$secure = is_ssl();
-		setcookie(
-			self::NONCE_COOKIE,
-			$token,
-			array(
-				'expires'  => time() + self::NONCE_TTL,
-				'path'     => COOKIEPATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $secure,
-				'httponly' => true,
-				'samesite' => 'Strict',
-			)
-		);
+		self::set_secure_cookie( self::NONCE_COOKIE, $token, time() + self::NONCE_TTL );
 	}
 
 	/**
@@ -707,19 +695,7 @@ class ReportedIP_Hive_Two_Factor {
 		);
 		set_transient( self::NONCE_PREFIX . $token_hash, $nonce_data, self::NONCE_TTL );
 
-		$secure = is_ssl();
-		setcookie(
-			self::NONCE_COOKIE,
-			$token,
-			array(
-				'expires'  => time() + self::NONCE_TTL,
-				'path'     => COOKIEPATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $secure,
-				'httponly' => true,
-				'samesite' => 'Strict',
-			)
-		);
+		self::set_secure_cookie( self::NONCE_COOKIE, $token, time() + self::NONCE_TTL );
 
 		$primary_method = self::get_user_method( $user->ID );
 		if ( in_array( $primary_method, $enabled_methods, true ) ) {
@@ -1190,18 +1166,7 @@ class ReportedIP_Hive_Two_Factor {
 			delete_transient( self::NONCE_PREFIX . $token_hash );
 		}
 
-		setcookie(
-			self::NONCE_COOKIE,
-			'',
-			array(
-				'expires'  => time() - YEAR_IN_SECONDS,
-				'path'     => COOKIEPATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => is_ssl(),
-				'httponly' => true,
-				'samesite' => 'Strict',
-			)
-		);
+		self::set_secure_cookie( self::NONCE_COOKIE, '', time() - YEAR_IN_SECONDS );
 	}
 
 	/**
@@ -1567,29 +1532,8 @@ class ReportedIP_Hive_Two_Factor {
 			array( '%d', '%s', '%s', '%s', '%s', '%s' )
 		);
 
-		$secure = is_ssl();
-
-		/*
-		 * Multisite trust scope: the trusted_devices table is network-wide
-		 * (no blog_id column), so the cookie must also be readable on every
-		 * site of the network. SITECOOKIEPATH is the network root path on
-		 * Multisite and falls through to COOKIEPATH on single-site, where
-		 * the two are identical anyway.
-		 */
-		$trust_cookie_path = is_multisite() && defined( 'SITECOOKIEPATH' ) ? SITECOOKIEPATH : COOKIEPATH;
-
-		setcookie(
-			self::TRUSTED_COOKIE,
-			$token,
-			array(
-				'expires'  => $expiry,
-				'path'     => $trust_cookie_path,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $secure,
-				'httponly' => true,
-				'samesite' => 'Strict',
-			)
-		);
+		$path = is_multisite() && defined( 'SITECOOKIEPATH' ) ? SITECOOKIEPATH : COOKIEPATH;
+		self::set_secure_cookie( self::TRUSTED_COOKIE, $token, $expiry, $path );
 	}
 
 	/**
@@ -1813,11 +1757,46 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Get the full trusted devices table name.
 	 *
+	 * Lives under `$wpdb->base_prefix` so a single trust decision applies to
+	 * the whole Multisite network (matches the network-wide expires_at /
+	 * SITECOOKIEPATH semantics added in 2.0.0). On single-site
+	 * `base_prefix === prefix`, behaviour is unchanged.
+	 *
 	 * @return string Table name with prefix.
 	 */
 	private static function get_trusted_table() {
-		global $wpdb;
-		return $wpdb->prefix . self::TABLE_TRUSTED_DEVICES;
+		return ReportedIP_Hive_Schema::table( self::TABLE_TRUSTED_DEVICES );
+	}
+
+	/**
+	 * Set a 2FA cookie using the canonical secure flags.
+	 *
+	 * Centralises the four `setcookie()` call sites so the cookie attributes
+	 * (Secure, HttpOnly, SameSite=Strict) cannot drift apart. The trust
+	 * cookie is the only one that opts into `SITECOOKIEPATH` so the trust
+	 * carries across all sites of a Multisite network.
+	 *
+	 * @param string $name    Cookie name.
+	 * @param string $value   Cookie value (empty string clears).
+	 * @param int    $expires Expiry timestamp.
+	 * @param string $path    Cookie path. Defaults to COOKIEPATH; pass
+	 *                        SITECOOKIEPATH for network-scoped cookies.
+	 * @return void
+	 * @since  2.0.0
+	 */
+	private static function set_secure_cookie( $name, $value, $expires, $path = COOKIEPATH ) {
+		setcookie(
+			$name,
+			$value,
+			array(
+				'expires'  => $expires,
+				'path'     => $path,
+				'domain'   => COOKIE_DOMAIN,
+				'secure'   => is_ssl(),
+				'httponly' => true,
+				'samesite' => 'Strict',
+			)
+		);
 	}
 
 	/**

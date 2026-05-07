@@ -29,22 +29,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ReportedIP_Hive_Database {
 
 	/**
-	 * Current database schema version.
-	 *
-	 * Mirrors {@see ReportedIP_Hive_Migration_Manager::CURRENT_VERSION}. Kept
-	 * here for backwards-compatible callers that referenced the legacy const
-	 * before the schema layer was extracted.
-	 */
-	const DB_VERSION = 5;
-
-	/**
-	 * Network option key for the stored DB version.
-	 *
-	 * Mirrors {@see ReportedIP_Hive_Migration_Manager::VERSION_OPTION}.
-	 */
-	const DB_VERSION_OPTION = 'reportedip_hive_db_version';
-
-	/**
 	 * Single instance of the class
 	 */
 	private static $instance = null;

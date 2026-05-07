@@ -190,7 +190,17 @@ class ReportedIP_Hive {
 		add_action( 'wp_delete_site', array( __CLASS__, 'on_site_deleted' ), 10, 1 );
 		add_action( 'wpmu_delete_user', array( __CLASS__, 'on_user_deleted' ) );
 		add_action( 'delete_user', array( __CLASS__, 'on_user_deleted' ) );
-		add_action( 'admin_init', array( 'ReportedIP_Hive_Cron_Scheduler', 'ensure_scheduled' ) );
+		if ( ! is_multisite() || is_main_site() ) {
+			add_action( 'admin_init', array( 'ReportedIP_Hive_Cron_Handler', 'ensure_scheduled' ) );
+		}
+
+		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
+		add_action( 'update_option_reportedip_hive_2fa_frontend_slug', $flush_routing_cache );
+		add_action( 'update_option_reportedip_hive_2fa_frontend_slug_site_override', $flush_routing_cache );
+		add_action( 'update_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
+		add_action( 'update_option_reportedip_hive_2fa_enforce_roles_extra', $flush_routing_cache );
+		add_action( 'update_site_option_reportedip_hive_2fa_frontend_slug', $flush_routing_cache );
+		add_action( 'update_site_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
 
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Ajax_Handler( $this );
@@ -260,7 +270,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-option-routing.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-schema.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-migration-manager.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cron-scheduler.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-defaults.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
@@ -400,13 +409,10 @@ class ReportedIP_Hive {
 			'includes/class-option-routing.php',
 			'includes/class-schema.php',
 			'includes/class-migration-manager.php',
-			'includes/class-cron-scheduler.php',
+			'includes/class-cron-handler.php',
 			'includes/class-database.php',
 		) as $relative ) {
-			$path = REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
-			if ( file_exists( $path ) ) {
-				require_once $path;
-			}
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
 		}
 
 		ReportedIP_Hive_Schema::ensure_tables();
@@ -418,7 +424,7 @@ class ReportedIP_Hive {
 
 		self::set_default_options_static();
 
-		ReportedIP_Hive_Cron_Scheduler::schedule_all();
+		ReportedIP_Hive_Cron_Handler::schedule_cron_jobs_static();
 
 		$wizard_completed = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_wizard_completed', false );
 		$api_key          = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
@@ -459,10 +465,10 @@ class ReportedIP_Hive {
 	 * opt-in is set.
 	 */
 	public static function deactivate_plugin() {
-		if ( ! class_exists( 'ReportedIP_Hive_Cron_Scheduler' ) ) {
-			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cron-scheduler.php';
+		if ( ! class_exists( 'ReportedIP_Hive_Cron_Handler' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cron-handler.php';
 		}
-		ReportedIP_Hive_Cron_Scheduler::unschedule_all();
+		ReportedIP_Hive_Cron_Handler::clear_cron_jobs_static();
 		flush_rewrite_rules();
 	}
 

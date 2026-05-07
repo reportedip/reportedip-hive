@@ -39,6 +39,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class ReportedIP_Hive_Schema {
 
+	public const TABLE_LOGS            = 'reportedip_hive_logs';
+	public const TABLE_WHITELIST       = 'reportedip_hive_whitelist';
+	public const TABLE_BLOCKED         = 'reportedip_hive_blocked';
+	public const TABLE_ATTEMPTS        = 'reportedip_hive_attempts';
+	public const TABLE_API_QUEUE       = 'reportedip_hive_api_queue';
+	public const TABLE_STATS           = 'reportedip_hive_stats';
+	public const TABLE_TRUSTED_DEVICES = 'reportedip_hive_trusted_devices';
+
 	/**
 	 * Plugin table suffixes (without prefix).
 	 *
@@ -49,13 +57,24 @@ final class ReportedIP_Hive_Schema {
 	 * @var string[]
 	 */
 	private const TABLE_SUFFIXES = array(
-		'reportedip_hive_logs',
-		'reportedip_hive_whitelist',
-		'reportedip_hive_blocked',
-		'reportedip_hive_attempts',
-		'reportedip_hive_api_queue',
-		'reportedip_hive_stats',
-		'reportedip_hive_trusted_devices',
+		self::TABLE_LOGS,
+		self::TABLE_WHITELIST,
+		self::TABLE_BLOCKED,
+		self::TABLE_ATTEMPTS,
+		self::TABLE_API_QUEUE,
+		self::TABLE_STATS,
+		self::TABLE_TRUSTED_DEVICES,
+	);
+
+	/**
+	 * Tables that carry a `blog_id` column. Used by `cleanup_blog_data()`.
+	 *
+	 * @var string[]
+	 */
+	private const BLOG_SCOPED_SUFFIXES = array(
+		self::TABLE_LOGS,
+		self::TABLE_API_QUEUE,
+		self::TABLE_STATS,
 	);
 
 	/**
@@ -73,19 +92,24 @@ final class ReportedIP_Hive_Schema {
 	/**
 	 * Whether all required plugin tables exist.
 	 *
+	 * Single information_schema query rather than seven SHOW TABLES probes
+	 * — saves six round-trips on activation, lifecycle hooks and the
+	 * trusted-devices update path.
+	 *
 	 * @return bool
 	 * @since  2.0.0
 	 */
 	public static function tables_exist() {
 		global $wpdb;
-		foreach ( self::TABLE_SUFFIXES as $suffix ) {
-			$table  = self::table( $suffix );
-			$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
-			if ( ! $exists ) {
-				return false;
-			}
-		}
-		return true;
+		$expected     = array_map( array( __CLASS__, 'table' ), self::TABLE_SUFFIXES );
+		$placeholders = implode( ',', array_fill( 0, count( $expected ), '%s' ) );
+		$found        = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ($placeholders)",
+				$expected
+			)
+		);
+		return $found === count( $expected );
 	}
 
 	/**
@@ -321,13 +345,8 @@ final class ReportedIP_Hive_Schema {
 			return;
 		}
 
-		$tables = array(
-			self::table( 'reportedip_hive_logs' ),
-			self::table( 'reportedip_hive_api_queue' ),
-			self::table( 'reportedip_hive_stats' ),
-		);
-
-		foreach ( $tables as $table ) {
+		foreach ( self::BLOG_SCOPED_SUFFIXES as $suffix ) {
+			$table = self::table( $suffix );
 			$wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM $table WHERE blog_id = %d",
