@@ -89,7 +89,6 @@ elif [[ $WP_VERSION == 'trunk' ]]; then
 else
 	# Assume latest if not specified
 	download http://api.wordpress.org/core/version-check/1.7/ /tmp/wp-latest.json
-	grep '[0-9]+\.[0-9]+(\.[0-9]+)?' /tmp/wp-latest.json
 	LATEST_VERSION=$(grep -o '"version":"[^"]*' /tmp/wp-latest.json | sed 's/"version":"//' | head -1)
 
 	if [[ -z "$LATEST_VERSION" ]]; then
