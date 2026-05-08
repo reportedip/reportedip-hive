@@ -532,11 +532,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 
 		ReportedIP_Hive::emit_block_response_headers();
 
-		login_header(
-			__( 'Two-Factor Verification', 'reportedip-hive' ),
-			'',
-			'' !== $error ? new \WP_Error( 'reportedip_2fa_reset_error', $error ) : null
-		);
+		login_header( __( 'Two-Factor Verification', 'reportedip-hive' ), '', null );
 
 		$nonce       = wp_create_nonce( 'reportedip_2fa_reset_' . $user->ID );
 		$action_url  = $this->build_challenge_url( $login, $reset_key, $method );
@@ -586,9 +582,12 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 						$candidate_label = $this->method_label( $candidate );
 						$is_active       = ( $candidate === $method );
 						?>
-						<a class="rip-button <?php echo $is_active ? 'rip-button--primary' : 'rip-button--secondary'; ?>"
+						<a class="rip-2fa-challenge__method-tab"
+							aria-selected="<?php echo $is_active ? 'true' : 'false'; ?>"
 							href="<?php echo esc_url( $candidate_url ); ?>">
-							<?php echo esc_html( $candidate_label ); ?>
+							<span class="rip-2fa-challenge__method-tab-label">
+								<?php echo esc_html( $candidate_label ); ?>
+							</span>
 						</a>
 					<?php endforeach; ?>
 				</nav>
@@ -613,7 +612,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 						required />
 				</div>
 
-				<button type="submit" class="rip-button rip-button--primary rip-button--block">
+				<button type="submit" class="rip-button rip-button--primary rip-button--full-width">
 					<?php esc_html_e( 'Verify and continue', 'reportedip-hive' ); ?>
 				</button>
 			</form>
@@ -851,12 +850,24 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	}
 
 	/**
-	 * URL of the reset-flow 2FA challenge page, prefilled with the reset key
-	 * and login slug so the user lands back on the resetpass form after a
-	 * successful verification.
+	 * URL of the reset-flow 2FA challenge page.
 	 *
-	 * @param string $login      User login slug.
-	 * @param string $reset_key  Reset key.
+	 * **Critical:** the URL must NOT carry `key=` or `login=` query args.
+	 * `wp-login.php:485` unconditionally rewrites `$action` to `'resetpass'`
+	 * whenever `$_GET['key']` is present, which sends the request through
+	 * core's `case 'rp':` block (cookie-set + 302 redirect that strips the
+	 * POST body). The reset-key and login both travel through the
+	 * `wp-resetpass-COOKIEHASH` cookie set during the first hop of the
+	 * reset flow, so `get_reset_key()` / `get_query_login()` find them on
+	 * every subsequent request without needing them in the URL.
+	 *
+	 * The `$login` and `$reset_key` parameters are kept on the signature
+	 * so the call sites read self-documenting; they're consumed only for
+	 * the `is_email_only_locked()`-style guards inside the gate, never
+	 * baked into the returned URL.
+	 *
+	 * @param string $login      User login slug (carried via cookie).
+	 * @param string $reset_key  Reset key (carried via cookie).
 	 * @param string $method     Optional preselected method.
 	 * @param string $send_state Optional `sent`/`failed` flag carried back from
 	 *                           the initial dispatch in on_validate_reset() so
@@ -865,11 +876,8 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * @return string
 	 */
 	private function build_challenge_url( string $login, string $reset_key, string $method = '', string $send_state = '' ): string {
-		$args = array(
-			'action' => self::ACTION_CHALLENGE,
-			'key'    => $reset_key,
-			'login'  => rawurlencode( $login ),
-		);
+		unset( $login, $reset_key );
+		$args = array( 'action' => self::ACTION_CHALLENGE );
 		if ( '' !== $method ) {
 			$args['method'] = $method;
 		}
@@ -884,16 +892,19 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * flow's `?resend_sms=1` / `?resend_email=1` pattern so users have a
 	 * server-side fallback when JS is disabled or the AJAX path is blocked.
 	 *
-	 * @param string $login     User login slug.
-	 * @param string $reset_key Reset key.
+	 * Like `build_challenge_url()`, this URL omits `key=` / `login=` —
+	 * including them would trigger wp-login.php's `case 'rp':` cookie
+	 * redirect and lose the resend trigger.
+	 *
+	 * @param string $login     User login slug (carried via cookie).
+	 * @param string $reset_key Reset key (carried via cookie).
 	 * @param string $method    Method to resend (sms / email).
 	 * @return string
 	 */
 	private function build_resend_url( string $login, string $reset_key, string $method ): string {
+		unset( $login, $reset_key );
 		$args = array(
 			'action' => self::ACTION_CHALLENGE,
-			'key'    => $reset_key,
-			'login'  => rawurlencode( $login ),
 			'method' => $method,
 		);
 		if ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $method ) {

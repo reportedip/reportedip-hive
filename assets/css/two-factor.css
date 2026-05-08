@@ -93,10 +93,10 @@ body.login-action-reportedip_2fa_reset #login {
 	padding: 5vh 16px 32px;
 }
 
-body.login-action-reportedip_2fa #login h1,
+body.login-action-reportedip_2fa #login > h1,
 body.login-action-reportedip_2fa #login #nav,
 body.login-action-reportedip_2fa #login #backtoblog,
-body.login-action-reportedip_2fa_reset #login h1,
+body.login-action-reportedip_2fa_reset #login > h1,
 body.login-action-reportedip_2fa_reset #login #nav,
 body.login-action-reportedip_2fa_reset #login #backtoblog {
 	display: none;
@@ -199,9 +199,15 @@ body.login-action-reportedip_2fa_reset #login #login_error {
 	font-size: var(--rip-text-sm, 0.875rem);
 	font-weight: 500;
 	line-height: 1.1;
+	text-decoration: none;
 	cursor: pointer;
 	transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 	white-space: nowrap;
+}
+
+a.rip-2fa-challenge__method-tab:hover,
+a.rip-2fa-challenge__method-tab:focus {
+	text-decoration: none;
 }
 
 .rip-2fa-challenge__method-tab:hover {
