@@ -1084,44 +1084,11 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return bool True if verified.
 	 */
 	private function verify_2fa_code( $user_id, $code, $method ) {
-		switch ( $method ) {
-			case 'totp':
-				$encrypted_secret = get_user_meta( $user_id, self::META_TOTP_SECRET, true );
-				if ( empty( $encrypted_secret ) ) {
-					return false;
-				}
-				$secret = ReportedIP_Hive_Two_Factor_Crypto::decrypt( $encrypted_secret );
-				if ( false === $secret ) {
-					return false;
-				}
-				/**
-				 * Configurable TOTP clock-skew tolerance in 30-second windows.
-				 * Default 1 (±30 s). Admins can relax to 2 (±60 s) if users complain
-				 * about clock drift, but larger windows reduce brute-force resistance.
-				 */
-				$window = (int) apply_filters( 'reportedip_2fa_totp_window', 1, $user_id );
-				$window = max( 0, min( 3, $window ) );
-				$result = ReportedIP_Hive_Two_Factor_TOTP::verify_code( $secret, $code, $window );
-				ReportedIP_Hive_Two_Factor_Crypto::zero_memory( $secret );
-				return $result;
-
-			case 'email':
-				return ReportedIP_Hive_Two_Factor_Email::verify_code( $user_id, $code );
-
-			case 'sms':
-				return class_exists( 'ReportedIP_Hive_Two_Factor_SMS' )
-					&& ReportedIP_Hive_Two_Factor_SMS::verify_code( $user_id, $code );
-
-			case 'webauthn':
-				return class_exists( 'ReportedIP_Hive_Two_Factor_WebAuthn' )
-					&& ReportedIP_Hive_Two_Factor_WebAuthn::verify( $user_id, $code );
-
-			case 'recovery':
-				return ReportedIP_Hive_Two_Factor_Recovery::verify_code( $user_id, $code );
-
-			default:
-				return false;
-		}
+		return ReportedIP_Hive_Two_Factor_Verifier::verify_method(
+			(int) $user_id,
+			(string) $method,
+			(string) $code
+		);
 	}
 
 	/**

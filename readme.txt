@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -322,6 +322,17 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.0.1 =
+
+**Password-reset 2FA challenge: visible errors, automatic dispatch, shared verifier.** Three real bugs on the reset-flow challenge page (`wp-login.php?action=reportedip_2fa_reset`) and one drift-prevention refactor:
+
+* **Wrong code now shows an error.** The challenge used to render verification failures only via `login_header()`. Plugins that filter `wp_login_errors` would strip the message, and the WP-default `#login_error` block sat outside the card. Errors now render inline as a `rip-alert--danger` banner inside the `.rip-2fa-challenge` card and survive any `wp_login_errors` filter.
+* **Initial SMS / email is dispatched on first land.** The send used to run only when `?method=sms` was already in the URL — which never happened on the first redirect. Users with SMS-only 2FA saw an empty form. Initial dispatch now happens in `on_validate_reset()` before the redirect, mirroring the login flow.
+* **Send-failures surface to the user.** `WP_Error` returned by `Two_Factor_SMS::send_code()` / `Two_Factor_Email::send_code()` is no longer discarded — it lands in the inline error banner with the provider's reason string and is logged under the new `2fa_reset_send_failed` event.
+* **Server-side resend.** `?resend_sms=1` / `?resend_email=1` URL parameters trigger a fresh OTP without losing the challenge session. The template renders a "Resend the SMS / email code" link with the provider-side cooldown.
+* **Method-health assessment.** `assess_methods_health()` checks each eligible method for usability before render: TOTP secret presence + decryptability, SMS provider readiness + stored phone number, WebAuthn provider class. Methods that fail are removed from the picker. When **none** of the methods is usable the gate hard-stops with a new `2fa_reset_no_usable_method` event, an admin-mail listing what is broken, and a dedicated "contact your administrator" page — instead of dropping the user into an "Invalid code" loop.
+* **Shared verifier.** The per-method verification switch (TOTP / SMS / Email / WebAuthn / Recovery) is extracted into `ReportedIP_Hive_Two_Factor_Verifier::verify_method()`. Both the login and reset surfaces delegate to it so a fix to one cannot silently miss the other. Verified: PHPCS clean, PHPStan level 5 *No errors*, 453/453 single-site PHPUnit.
 
 = 2.0.0 =
 

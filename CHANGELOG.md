@@ -2,6 +2,71 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.1] — 2026-05-08
+
+Fixes silent failures and invisible errors on the password-reset 2FA
+challenge page (`wp-login.php?action=reportedip_2fa_reset`), and lifts
+the verify switch into a shared helper so the login + reset surfaces
+can no longer drift apart.
+
+### Fixed
+
+- **Wrong recovery / TOTP / SMS code now shows an error.** The challenge
+  page used to render the failure only via `login_header()` — third-party
+  plugins that filter `wp_login_errors` would strip it, and the WP-default
+  `#login_error` block was outside our card. Errors are now rendered
+  inline as a `rip-alert--danger` block inside the `.rip-2fa-challenge`
+  card and remain visible regardless of `wp_login_errors` filters.
+- **Initial SMS / email is dispatched on first land.** Previously the
+  challenge page only sent an SMS when `?method=sms` was already in the
+  URL — which never happened on the first redirect from
+  `validate_password_reset`. Users with SMS-only 2FA saw an empty form
+  and no message. The dispatch now happens in `on_validate_reset()`
+  before the redirect, mirroring the login flow.
+- **Send-failures are surfaced.** The `WP_Error` returned by
+  `Two_Factor_SMS::send_code()` / `Two_Factor_Email::send_code()` is no
+  longer discarded — it lands in the inline error alert with the
+  provider's reason (`SMS sending is not configured.`,
+  `No phone number is stored for this user.`, …) and is logged under the
+  new `2fa_reset_send_failed` event.
+- **CSS scope covers the reset action.** `assets/css/two-factor.css`
+  selectors now include `body.login-action-reportedip_2fa_reset` so the
+  page chrome, font, and `#login_error` styling match the login flow.
+
+### New
+
+- **Server-side resend.** `?resend_sms=1` / `?resend_email=1` URL
+  parameters trigger a fresh OTP without losing the challenge session,
+  matching the login flow's resend pattern. The challenge template
+  renders a "Resend the SMS / email code" link with the cooldown from
+  `Two_Factor_SMS::get_resend_wait_seconds()` /
+  `Two_Factor_Email::get_resend_wait_seconds()`.
+- **Method-health assessment.** `assess_methods_health()` checks each
+  eligible method for usability before render: TOTP secrets are checked
+  for presence and decryptability, SMS for provider readiness and a
+  stored phone number, WebAuthn for the provider class. Methods that
+  fail the check are removed from the picker. When **none** of the
+  eligible methods is usable the gate hard-stops with a new
+  `2fa_reset_no_usable_method` event and a "contact your administrator"
+  page — instead of dropping the user into an "Invalid code" loop.
+- **Admin alert covers all lockout reasons.** The previous
+  `notify_admins_email_only_block()` is now `notify_admins_user_locked_out()`
+  and accepts a reason key (`email_only`, `no_eligible_method`,
+  `no_usable_method`). For the new `no_usable_method` case the email
+  body lists which methods are broken and why, so the admin can fix the
+  account directly without a back-and-forth.
+
+### Changed
+
+- **Shared verify helper.** The per-method verification switch (TOTP /
+  SMS / Email / WebAuthn / Recovery) is extracted into
+  `ReportedIP_Hive_Two_Factor_Verifier::verify_method()`. Both
+  `Two_Factor::verify_2fa_code()` and `Two_Factor_Reset_Gate::verify_method_code()`
+  delegate to it. The reset path passes a callback so its surface-specific
+  `2fa_reset_verify_internal_error` events still fire on
+  `missing_secret` / `decrypt_failed`. No behaviour change for the login
+  flow.
+
 ## [2.0.0] — 2026-05-08
 
 Promotes `2.0.0-beta.1` to GA after a week of dual-stack hardening on the

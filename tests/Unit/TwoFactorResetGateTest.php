@@ -320,5 +320,91 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['wp_options']['reportedip_hive_2fa_require_on_password_reset'] = true;
 			$this->assertTrue( \ReportedIP_Hive_Two_Factor_Reset_Gate::is_feature_enabled() );
 		}
+
+		public function test_verify_path_delegates_to_shared_verifier(): void {
+			$source = $this->source();
+			$this->assertStringContainsString(
+				'ReportedIP_Hive_Two_Factor_Verifier::verify_method',
+				$source,
+				'Reset_Gate must route per-method verification through the shared Verifier so login + reset cannot drift apart.'
+			);
+		}
+
+		public function test_inline_error_alert_is_rendered_inside_card(): void {
+			$source = $this->source();
+			$this->assertStringContainsString(
+				'rip-alert--danger',
+				$source,
+				'Failed verifications must surface inline as rip-alert--danger inside the .rip-2fa-challenge card — relying on login_header() alone hides the error when third-party plugins filter wp_login_errors.'
+			);
+		}
+
+		public function test_inline_info_alert_is_rendered_for_code_sent_state(): void {
+			$source = $this->source();
+			$this->assertStringContainsString(
+				'rip-alert--info',
+				$source,
+				'A successful initial / resend dispatch must render an inline rip-alert--info notice so the user knows a code is on the way.'
+			);
+		}
+
+		public function test_send_failures_are_logged_under_dedicated_event(): void {
+			$source = $this->source();
+			$this->assertStringContainsString(
+				"EVENT_SEND_FAILED        = '2fa_reset_send_failed'",
+				$source,
+				'Initial / resend send failures must use the EVENT_SEND_FAILED constant so log dashboards can distinguish them from challenge-failed events.'
+			);
+		}
+
+		public function test_no_usable_method_lockout_event_exists(): void {
+			$source = $this->source();
+			$this->assertStringContainsString(
+				"EVENT_NO_USABLE_METHOD   = '2fa_reset_no_usable_method'",
+				$source,
+				'When health-assessment finds zero usable methods the gate must log under EVENT_NO_USABLE_METHOD so the all-broken case is grep-able separately from the no-eligible-method case.'
+			);
+		}
+
+		public function test_url_resend_path_exists(): void {
+			$source = $this->source();
+			$this->assertStringContainsString(
+				"isset( \$_GET['resend_sms'] )",
+				$source,
+				'A server-side ?resend_sms=1 path must exist so users without JS can still re-trigger the SMS code from the challenge page.'
+			);
+			$this->assertStringContainsString(
+				"isset( \$_GET['resend_email'] )",
+				$source,
+				'A server-side ?resend_email=1 path must exist so users without JS can still re-trigger the email code from the challenge page.'
+			);
+		}
+
+		public function test_initial_code_dispatch_runs_before_redirect(): void {
+			$source = $this->source();
+			$this->assertStringContainsString(
+				'dispatch_initial_code',
+				$source,
+				'on_validate_reset() must call dispatch_initial_code() before redirecting to the challenge page so SMS/email users see "we sent a code" on first land, not an empty form.'
+			);
+		}
+
+		public function test_health_assessment_is_invoked_in_validate_reset(): void {
+			$source = $this->source();
+			$this->assertStringContainsString(
+				'assess_methods_health',
+				$source,
+				'on_validate_reset() must health-assess the eligible methods so users with broken TOTP secrets / SMS providers get a helpful lockout message instead of an "Invalid code" loop.'
+			);
+		}
+
+		public function test_lockout_admin_notification_carries_reason(): void {
+			$source = $this->source();
+			$this->assertStringContainsString(
+				'notify_admins_user_locked_out',
+				$source,
+				'Admin alert mailer must accept a reason parameter so the email subject and body change with the lockout cause (email_only / no_eligible_method / no_usable_method).'
+			);
+		}
 	}
 }

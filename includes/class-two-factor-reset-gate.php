@@ -97,8 +97,10 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	public const EVENT_CHALLENGE_FAILED   = '2fa_reset_challenge_failed';
 	public const EVENT_EMAIL_ONLY_BLOCKED = '2fa_reset_email_only_blocked';
 	public const EVENT_NO_ELIGIBLE_METHOD = '2fa_reset_no_eligible_method';
+	public const EVENT_NO_USABLE_METHOD   = '2fa_reset_no_usable_method';
 	public const EVENT_BYPASS_ATTEMPT     = '2fa_reset_bypass_attempt';
 	public const EVENT_VERIFY_INTERNAL    = '2fa_reset_verify_internal_error';
+	public const EVENT_SEND_FAILED        = '2fa_reset_send_failed';
 
 	/**
 	 * Constructor — registers the password-reset hooks if the feature is on.
@@ -244,7 +246,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 
 		if ( self::is_email_only_locked( $user->ID ) ) {
 			$this->log_event( self::EVENT_EMAIL_ONLY_BLOCKED, $user->ID, 'high' );
-			$this->notify_admins_email_only_block( $user );
+			$this->notify_admins_user_locked_out( $user, 'email_only', array() );
 			$this->die_with_lockout(
 				__( 'Password reset blocked', 'reportedip-hive' ),
 				__( 'For security, this account requires a second factor other than email (Authenticator app, SMS, security key or recovery code) before passwords can be reset. Please contact your administrator.', 'reportedip-hive' )
@@ -255,10 +257,28 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		$eligible = self::get_eligible_methods( $user->ID );
 		if ( empty( $eligible ) ) {
 			$this->log_event( self::EVENT_NO_ELIGIBLE_METHOD, $user->ID, 'high' );
-			$this->notify_admins_email_only_block( $user );
+			$this->notify_admins_user_locked_out( $user, 'no_eligible_method', array() );
 			$this->die_with_lockout(
 				__( 'Password reset blocked', 'reportedip-hive' ),
 				__( 'No second factor is available for password reset on this account. Please contact your administrator.', 'reportedip-hive' )
+			);
+			return;
+		}
+
+		$health   = $this->assess_methods_health( $user->ID, $eligible );
+		$eligible = $health['ok'];
+
+		if ( empty( $eligible ) ) {
+			$this->log_event(
+				self::EVENT_NO_USABLE_METHOD,
+				$user->ID,
+				'high',
+				array( 'broken' => $health['broken'] )
+			);
+			$this->notify_admins_user_locked_out( $user, 'no_usable_method', $health['broken'] );
+			$this->die_with_lockout(
+				__( 'Password reset blocked', 'reportedip-hive' ),
+				__( 'None of the second-factor methods configured on your account is currently usable for password reset (the secret may be missing, the SMS provider unavailable, or recovery codes exhausted). Please contact your administrator.', 'reportedip-hive' )
 			);
 			return;
 		}
@@ -277,7 +297,17 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 			: 'GET';
 
 		if ( 'GET' === $request_method ) {
-			$this->dispatch_redirect( $this->build_challenge_url( $user->user_login, $reset_key ) );
+			$initial_method = $eligible[0];
+			$send_state     = '';
+			if ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $initial_method
+				|| ReportedIP_Hive_Two_Factor::METHOD_EMAIL === $initial_method ) {
+				$send_result = $this->dispatch_initial_code( $user->ID, $initial_method );
+				$send_state  = is_wp_error( $send_result ) ? 'failed' : 'sent';
+			}
+
+			$this->dispatch_redirect(
+				$this->build_challenge_url( $user->user_login, $reset_key, $initial_method, $send_state )
+			);
 			return;
 		}
 
@@ -358,7 +388,15 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 			return;
 		}
 
+		$health   = $this->assess_methods_health( $user->ID, $eligible );
+		$eligible = $health['ok'];
+		if ( empty( $eligible ) ) {
+			$this->dispatch_redirect( $this->build_reset_url( $login, $reset_key ) );
+			return;
+		}
+
 		$error  = '';
+		$notice = '';
 		$method = isset( $_GET['method'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			? sanitize_key( wp_unslash( $_GET['method'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			: $eligible[0];
@@ -369,6 +407,38 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		$request_method = isset( $_SERVER['REQUEST_METHOD'] )
 			? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) )
 			: 'GET';
+
+		if ( 'GET' === $request_method ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$send_state = isset( $_GET['code_sent'] )
+				? sanitize_key( wp_unslash( $_GET['code_sent'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				: '';
+			if ( 'sent' === $send_state ) {
+				$notice = $this->code_sent_notice( $user->ID, $method );
+			} elseif ( 'failed' === $send_state ) {
+				$error = __( 'We could not send a verification code. Please try the resend link below or pick another method.', 'reportedip-hive' );
+			}
+
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$resend_param = '';
+			if ( isset( $_GET['resend_sms'] ) && '1' === $_GET['resend_sms']
+				&& in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $eligible, true ) ) {
+				$resend_param = ReportedIP_Hive_Two_Factor::METHOD_SMS;
+			} elseif ( isset( $_GET['resend_email'] ) && '1' === $_GET['resend_email']
+				&& in_array( ReportedIP_Hive_Two_Factor::METHOD_EMAIL, $eligible, true ) ) {
+				$resend_param = ReportedIP_Hive_Two_Factor::METHOD_EMAIL;
+			}
+
+			if ( '' !== $resend_param ) {
+				$resend_result = $this->dispatch_initial_code( $user->ID, $resend_param );
+				if ( is_wp_error( $resend_result ) ) {
+					$error = $resend_result->get_error_message();
+				} else {
+					$notice = $this->code_sent_notice( $user->ID, $resend_param );
+				}
+				$method = $resend_param;
+			}
+		}
 
 		if ( 'POST' === $request_method ) {
 			$nonce = isset( $_POST['_reportedip_2fa_reset_nonce'] ) // phpcs:ignore WordPress.Security.NonceVerification.Missing -- The submitted nonce is verified on the next line.
@@ -419,15 +489,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 			}
 		}
 
-		if ( 'GET' === $request_method
-			&& isset( $_GET['method'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			&& ReportedIP_Hive_Two_Factor::METHOD_SMS === $method
-			&& class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-			ReportedIP_Hive_Two_Factor_SMS::send_code( $user->ID );
-			$this->log_event( self::EVENT_CHALLENGE_SENT, $user->ID, 'low', array( 'method' => 'sms' ) );
-		}
-
-		$this->render_challenge_page( $user, $login, $reset_key, $eligible, $method, $error );
+		$this->render_challenge_page( $user, $login, $reset_key, $eligible, $method, $error, $notice );
 		exit;
 	}
 
@@ -435,14 +497,22 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * Render the challenge page HTML using login_header() so the page picks
 	 * up the same WP login chrome that the standard 2FA challenge uses.
 	 *
+	 * Errors and notices are rendered both via login_header() (for screen
+	 * readers and core fallback rendering) AND inline as rip-alert blocks
+	 * inside the .rip-2fa-challenge card — the inline copy is the canonical
+	 * surface, since the WP-default #login_error block lives outside our
+	 * card and can be hidden by CSS layout or stripped by hardening plugins
+	 * that filter wp_login_errors.
+	 *
 	 * @param \WP_User $user      Reset target user.
 	 * @param string   $login     User login slug from the reset URL.
 	 * @param string   $reset_key Reset key from the URL.
 	 * @param string[] $eligible  Eligible method identifiers.
 	 * @param string   $method    Currently selected method.
 	 * @param string   $error     Error message to surface (may be empty).
+	 * @param string   $notice    Info message to surface (may be empty).
 	 */
-	private function render_challenge_page( \WP_User $user, string $login, string $reset_key, array $eligible, string $method, string $error ): void {
+	private function render_challenge_page( \WP_User $user, string $login, string $reset_key, array $eligible, string $method, string $error, string $notice = '' ): void {
 		if ( ! function_exists( 'login_header' ) ) {
 			require_once ABSPATH . 'wp-login.php'; // @codeCoverageIgnore
 		}
@@ -468,8 +538,12 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 			'' !== $error ? new \WP_Error( 'reportedip_2fa_reset_error', $error ) : null
 		);
 
-		$nonce      = wp_create_nonce( 'reportedip_2fa_reset_' . $user->ID );
-		$action_url = $this->build_challenge_url( $login, $reset_key, $method );
+		$nonce       = wp_create_nonce( 'reportedip_2fa_reset_' . $user->ID );
+		$action_url  = $this->build_challenge_url( $login, $reset_key, $method );
+		$resendable  = ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $method
+			|| ReportedIP_Hive_Two_Factor::METHOD_EMAIL === $method );
+		$resend_wait = $this->get_resend_wait_seconds( $user->ID, $method );
+		$resend_url  = $this->build_resend_url( $login, $reset_key, $method );
 
 		?>
 		<main class="rip-2fa-challenge" role="main" aria-labelledby="rip-2fa-reset-title">
@@ -487,6 +561,22 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 					?>
 				</p>
 			</header>
+
+			<?php if ( '' !== $error ) : ?>
+				<div class="rip-alert rip-alert--danger" role="alert">
+					<div class="rip-alert__content">
+						<p class="rip-alert__message"><?php echo esc_html( $error ); ?></p>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( '' === $error && '' !== $notice ) : ?>
+				<div class="rip-alert rip-alert--info" role="status">
+					<div class="rip-alert__content">
+						<p class="rip-alert__message"><?php echo esc_html( $notice ); ?></p>
+					</div>
+				</div>
+			<?php endif; ?>
 
 			<?php if ( count( $eligible ) > 1 ) : ?>
 				<nav class="rip-2fa-challenge__methods" aria-label="<?php esc_attr_e( 'Choose verification method', 'reportedip-hive' ); ?>">
@@ -528,6 +618,30 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 				</button>
 			</form>
 
+			<?php if ( $resendable ) : ?>
+				<p class="rip-2fa-challenge__footnote">
+					<?php if ( $resend_wait > 0 ) : ?>
+						<?php
+						printf(
+							/* translators: %d: seconds remaining */
+							esc_html__( 'You can request a new code in %d seconds.', 'reportedip-hive' ),
+							(int) $resend_wait
+						);
+						?>
+					<?php else : ?>
+						<a href="<?php echo esc_url( $resend_url ); ?>">
+							<?php
+							if ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $method ) {
+								esc_html_e( 'Resend the SMS code', 'reportedip-hive' );
+							} else {
+								esc_html_e( 'Resend the email code', 'reportedip-hive' );
+							}
+							?>
+						</a>
+					<?php endif; ?>
+				</p>
+			<?php endif; ?>
+
 			<p class="rip-2fa-challenge__footnote">
 				<a href="<?php echo esc_url( wp_lostpassword_url() ); ?>">
 					<?php esc_html_e( 'Cancel and request a new reset link', 'reportedip-hive' ); ?>
@@ -540,7 +654,10 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	}
 
 	/**
-	 * Verify a code (or assertion) for a given method.
+	 * Verify a code (or assertion) for a given method. Delegates to the
+	 * shared `Two_Factor_Verifier`; the on-internal-error callback logs into
+	 * this surface's `EVENT_VERIFY_INTERNAL` namespace so reset-flow events
+	 * stay grep-able by their `2fa_reset_*` prefix.
 	 *
 	 * @param int    $user_id User to verify against.
 	 * @param string $method  Method identifier (totp / sms / webauthn / recovery).
@@ -548,85 +665,23 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * @return bool True on a successful verification.
 	 */
 	private function verify_method_code( int $user_id, string $method, string $code ): bool {
-		switch ( $method ) {
-			case ReportedIP_Hive_Two_Factor::METHOD_TOTP:
-				$encrypted = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true );
-				if ( empty( $encrypted ) ) {
-					$this->log_event(
-						self::EVENT_VERIFY_INTERNAL,
-						$user_id,
-						'high',
-						array(
-							'method' => $method,
-							'reason' => 'missing_secret',
-						)
-					);
-					return false;
-				}
-				$secret = ReportedIP_Hive_Two_Factor_Crypto::decrypt( $encrypted );
-				if ( false === $secret ) {
-					$this->log_event(
-						self::EVENT_VERIFY_INTERNAL,
-						$user_id,
-						'critical',
-						array(
-							'method' => $method,
-							'reason' => 'decrypt_failed',
-						)
-					);
-					return false;
-				}
-				$window = (int) apply_filters( 'reportedip_2fa_totp_window', 1, $user_id );
-				$window = max( 0, min( 3, $window ) );
-				$result = ReportedIP_Hive_Two_Factor_TOTP::verify_code( $secret, $code, $window );
-				ReportedIP_Hive_Two_Factor_Crypto::zero_memory( $secret );
-				return (bool) $result;
-
-			case ReportedIP_Hive_Two_Factor::METHOD_SMS:
-				if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-					$this->log_event(
-						self::EVENT_VERIFY_INTERNAL,
-						$user_id,
-						'high',
-						array(
-							'method' => $method,
-							'reason' => 'class_missing',
-						)
-					);
-					return false;
-				}
-				return (bool) ReportedIP_Hive_Two_Factor_SMS::verify_code( $user_id, $code );
-
-			case ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN:
-				if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_WebAuthn' ) ) {
-					$this->log_event(
-						self::EVENT_VERIFY_INTERNAL,
-						$user_id,
-						'high',
-						array(
-							'method' => $method,
-							'reason' => 'class_missing',
-						)
-					);
-					return false;
-				}
-				return (bool) ReportedIP_Hive_Two_Factor_WebAuthn::verify( $user_id, $code );
-
-			case ReportedIP_Hive_Two_Factor::METHOD_RECOVERY:
-				return ReportedIP_Hive_Two_Factor_Recovery::verify_code( $user_id, $code );
-
-			default:
+		return ReportedIP_Hive_Two_Factor_Verifier::verify_method(
+			$user_id,
+			$method,
+			$code,
+			function ( string $reason, string $verified_method ) use ( $user_id ): void {
+				$severity = ( 'decrypt_failed' === $reason ) ? 'critical' : 'high';
 				$this->log_event(
 					self::EVENT_VERIFY_INTERNAL,
 					$user_id,
-					'high',
+					$severity,
 					array(
-						'method' => $method,
-						'reason' => 'unknown_method',
+						'method' => $verified_method,
+						'reason' => $reason,
 					)
 				);
-				return false;
-		}
+			}
+		);
 	}
 
 	/**
@@ -800,12 +855,16 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * and login slug so the user lands back on the resetpass form after a
 	 * successful verification.
 	 *
-	 * @param string $login     User login slug.
-	 * @param string $reset_key Reset key.
-	 * @param string $method    Optional preselected method.
+	 * @param string $login      User login slug.
+	 * @param string $reset_key  Reset key.
+	 * @param string $method     Optional preselected method.
+	 * @param string $send_state Optional `sent`/`failed` flag carried back from
+	 *                           the initial dispatch in on_validate_reset() so
+	 *                           the challenge page can render the matching
+	 *                           inline notice.
 	 * @return string
 	 */
-	private function build_challenge_url( string $login, string $reset_key, string $method = '' ): string {
+	private function build_challenge_url( string $login, string $reset_key, string $method = '', string $send_state = '' ): string {
 		$args = array(
 			'action' => self::ACTION_CHALLENGE,
 			'key'    => $reset_key,
@@ -813,6 +872,34 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		);
 		if ( '' !== $method ) {
 			$args['method'] = $method;
+		}
+		if ( 'sent' === $send_state || 'failed' === $send_state ) {
+			$args['code_sent'] = $send_state;
+		}
+		return add_query_arg( $args, wp_login_url() );
+	}
+
+	/**
+	 * URL that triggers a resend of the SMS / email OTP. Mirrors the login
+	 * flow's `?resend_sms=1` / `?resend_email=1` pattern so users have a
+	 * server-side fallback when JS is disabled or the AJAX path is blocked.
+	 *
+	 * @param string $login     User login slug.
+	 * @param string $reset_key Reset key.
+	 * @param string $method    Method to resend (sms / email).
+	 * @return string
+	 */
+	private function build_resend_url( string $login, string $reset_key, string $method ): string {
+		$args = array(
+			'action' => self::ACTION_CHALLENGE,
+			'key'    => $reset_key,
+			'login'  => rawurlencode( $login ),
+			'method' => $method,
+		);
+		if ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $method ) {
+			$args['resend_sms'] = '1';
+		} elseif ( ReportedIP_Hive_Two_Factor::METHOD_EMAIL === $method ) {
+			$args['resend_email'] = '1';
 		}
 		return add_query_arg( $args, wp_login_url() );
 	}
@@ -971,12 +1058,22 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	}
 
 	/**
-	 * Send a security alert to all admins when a user is hard-locked from
-	 * the reset flow because they only have email-2FA and no recovery codes.
+	 * Send a security alert to all administrators when a user is hard-locked
+	 * from the reset flow. Covers two reasons:
 	 *
-	 * @param \WP_User $user Affected user.
+	 *   - `email_only`: only email-2FA configured + no recovery codes (the
+	 *     historical case — preserves the existing subject for log-grep parity).
+	 *   - `no_eligible_method`: get_eligible_methods() returned empty after
+	 *     applying the excluded-methods filter.
+	 *   - `no_usable_method`: every eligible method failed the health check
+	 *     (TOTP secret missing/decrypt-fail, SMS provider not ready, …).
+	 *
+	 * @param \WP_User              $user   Affected user.
+	 * @param string                $reason Lockout reason key.
+	 * @param array<string, string> $broken Method-id => broken-reason map (only
+	 *                                       set for the `no_usable_method` case).
 	 */
-	private function notify_admins_email_only_block( \WP_User $user ): void {
+	private function notify_admins_user_locked_out( \WP_User $user, string $reason, array $broken ): void {
 		if ( ! class_exists( 'ReportedIP_Hive_Mailer' ) ) {
 			return;
 		}
@@ -988,6 +1085,54 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 			? get_users( array( 'role__in' => array( 'administrator' ) ) )
 			: array();
 
+		switch ( $reason ) {
+			case 'no_usable_method':
+				/* translators: %s: site name */
+				$subject_tpl = __( '[%s] Password reset blocked: no usable 2FA method', 'reportedip-hive' );
+				/* translators: %s: affected user login */
+				$intro_tpl  = __( 'A password reset was attempted for the user "%s". None of the second-factor methods configured on the account is currently usable (the secret may be missing or unreadable, the SMS provider unavailable, or recovery codes exhausted) — the reset has been blocked.', 'reportedip-hive' );
+				$context_id = '2fa_reset_no_usable_method';
+				break;
+			case 'no_eligible_method':
+				/* translators: %s: site name */
+				$subject_tpl = __( '[%s] Password reset blocked: no eligible 2FA method', 'reportedip-hive' );
+				/* translators: %s: affected user login */
+				$intro_tpl  = __( 'A password reset was attempted for the user "%s". After excluding the email channel (the channel that delivered the reset link itself), no eligible second factor remains — the reset has been blocked.', 'reportedip-hive' );
+				$context_id = '2fa_reset_no_eligible_method';
+				break;
+			case 'email_only':
+			default:
+				/* translators: %s: site name */
+				$subject_tpl = __( '[%s] Password reset blocked for an account with email-only 2FA', 'reportedip-hive' );
+				/* translators: %s: affected user login */
+				$intro_tpl  = __( 'A password reset was attempted for the user "%s". The account currently has only email-based 2FA configured and no recovery codes — for security, the reset has been blocked.', 'reportedip-hive' );
+				$context_id = '2fa_reset_email_only_blocked';
+				break;
+		}
+
+		$broken_html = '';
+		$broken_text = '';
+		if ( ! empty( $broken ) ) {
+			$lines = array();
+			foreach ( $broken as $method_id => $broken_reason ) {
+				$lines[] = $this->method_label( (string) $method_id ) . ': ' . $this->describe_broken_reason( (string) $broken_reason );
+			}
+			$broken_text = "\n" . __( 'Method status:', 'reportedip-hive' ) . "\n- " . implode( "\n- ", $lines );
+			$broken_html = '<p style="margin:0 0 8px;font-size:14px;color:#374151;line-height:1.6;font-weight:600;">'
+				. esc_html__( 'Method status:', 'reportedip-hive' )
+				. '</p><ul style="margin:0 0 16px 20px;padding:0;font-size:14px;color:#374151;line-height:1.6;">';
+			foreach ( $broken as $method_id => $broken_reason ) {
+				$broken_html .= '<li>'
+					. esc_html( $this->method_label( (string) $method_id ) )
+					. ': '
+					. esc_html( $this->describe_broken_reason( (string) $broken_reason ) )
+					. '</li>';
+			}
+			$broken_html .= '</ul>';
+		}
+
+		$remediation = __( 'To unblock the user, either reset their password manually via WP-CLI (`wp user reset-password <id> --skip-email`) or enrol an additional 2FA method (Authenticator app, SMS, security key, or recovery codes) on their behalf.', 'reportedip-hive' );
+
 		foreach ( $users as $admin ) {
 			if ( ! ( $admin instanceof \WP_User ) ) {
 				continue;
@@ -998,36 +1143,257 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 			$mailer->send(
 				array(
 					'to'              => $admin->user_email,
-					'subject'         => sprintf(
-						/* translators: %s: site name */
-						__( '[%s] Password reset blocked for an account with email-only 2FA', 'reportedip-hive' ),
-						$site_name
-					),
+					'subject'         => sprintf( $subject_tpl, $site_name ),
 					'greeting'        => sprintf(
 						/* translators: %s: admin display name */
 						__( 'Hello %s,', 'reportedip-hive' ),
 						$admin->display_name
 					),
-					'intro_text'      => sprintf(
-						/* translators: %s: affected user login */
-						__( 'A password reset was attempted for the user "%s". The account currently has only email-based 2FA configured and no recovery codes — for security, the reset has been blocked.', 'reportedip-hive' ),
-						$user->user_login
-					),
-					'main_block_html' => '<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6;">'
-						. esc_html__( 'To unblock the user, either reset their password manually via WP-CLI (`wp user reset-password <id> --skip-email`) or enrol an additional 2FA method (Authenticator app, SMS, security key, or recovery codes) on their behalf.', 'reportedip-hive' )
+					'intro_text'      => sprintf( $intro_tpl, $user->user_login ),
+					'main_block_html' => $broken_html
+						. '<p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6;">'
+						. esc_html( $remediation )
 						. '</p>',
-					'main_block_text' => __( 'To unblock the user, either reset their password manually via WP-CLI (wp user reset-password <id> --skip-email) or enrol an additional 2FA method (Authenticator app, SMS, security key, or recovery codes) on their behalf.', 'reportedip-hive' ),
+					'main_block_text' => $broken_text . "\n\n" . $remediation,
 					'security_notice' => array(
 						'ip'        => ReportedIP_Hive::get_client_ip(),
 						'timestamp' => $timestamp,
 					),
 					'disclaimer'      => __( 'This alert was generated automatically by ReportedIP Hive.', 'reportedip-hive' ),
 					'context'         => array(
-						'type'    => '2fa_reset_email_only_blocked',
+						'type'    => $context_id,
 						'user_id' => $user->ID,
 					),
 				)
 			);
+		}
+	}
+
+	/**
+	 * Inspect every eligible method and report which ones are usable right now
+	 * versus which ones would silently fail at verify-time. Used by
+	 * `on_validate_reset()` to fail loudly with a useful message instead of
+	 * dropping the user into an "Invalid code" loop they cannot escape.
+	 *
+	 * Recovery codes are not health-checked here — `get_eligible_methods()`
+	 * already gates on `get_remaining_count() > 0`, so a recovery entry in the
+	 * eligible list is by construction ready.
+	 *
+	 * @param int      $user_id  User to inspect.
+	 * @param string[] $eligible Method ids previously returned by
+	 *                            `get_eligible_methods()`.
+	 * @return array{ok: string[], broken: array<string,string>}
+	 */
+	private function assess_methods_health( int $user_id, array $eligible ): array {
+		$ok     = array();
+		$broken = array();
+
+		foreach ( $eligible as $candidate ) {
+			switch ( $candidate ) {
+				case ReportedIP_Hive_Two_Factor::METHOD_TOTP:
+					$encrypted = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true );
+					if ( empty( $encrypted ) ) {
+						$broken[ $candidate ] = 'totp_secret_missing';
+						break;
+					}
+					$secret = ReportedIP_Hive_Two_Factor_Crypto::decrypt( $encrypted );
+					if ( false === $secret ) {
+						$broken[ $candidate ] = 'totp_secret_unreadable';
+						break;
+					}
+					ReportedIP_Hive_Two_Factor_Crypto::zero_memory( $secret );
+					$ok[] = $candidate;
+					break;
+
+				case ReportedIP_Hive_Two_Factor::METHOD_SMS:
+					if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
+						$broken[ $candidate ] = 'sms_class_missing';
+						break;
+					}
+					if ( ! ReportedIP_Hive_Two_Factor_SMS::is_ready() ) {
+						$broken[ $candidate ] = 'sms_not_ready';
+						break;
+					}
+					$phone = ReportedIP_Hive_Two_Factor_SMS::get_user_phone( $user_id );
+					if ( empty( $phone ) ) {
+						$broken[ $candidate ] = 'sms_no_number';
+						break;
+					}
+					$ok[] = $candidate;
+					break;
+
+				case ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN:
+					if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_WebAuthn' ) ) {
+						$broken[ $candidate ] = 'webauthn_class_missing';
+						break;
+					}
+					$ok[] = $candidate;
+					break;
+
+				case ReportedIP_Hive_Two_Factor::METHOD_RECOVERY:
+				default:
+					$ok[] = $candidate;
+					break;
+			}
+		}
+
+		return array(
+			'ok'     => array_values( array_unique( $ok ) ),
+			'broken' => $broken,
+		);
+	}
+
+	/**
+	 * Localised description for a `broken_reason` token returned by
+	 * `assess_methods_health()`.
+	 *
+	 * @param string $reason Broken-reason token.
+	 * @return string
+	 */
+	private function describe_broken_reason( string $reason ): string {
+		switch ( $reason ) {
+			case 'totp_secret_missing':
+				return __( 'authenticator-app secret is missing', 'reportedip-hive' );
+			case 'totp_secret_unreadable':
+				return __( 'authenticator-app secret cannot be decrypted', 'reportedip-hive' );
+			case 'sms_class_missing':
+				return __( 'SMS module is not loaded', 'reportedip-hive' );
+			case 'sms_not_ready':
+				return __( 'SMS provider is not configured', 'reportedip-hive' );
+			case 'sms_no_number':
+				return __( 'no phone number is stored for this user', 'reportedip-hive' );
+			case 'webauthn_class_missing':
+				return __( 'WebAuthn module is not loaded', 'reportedip-hive' );
+			default:
+				return $reason;
+		}
+	}
+
+	/**
+	 * Send the initial / resend OTP for the selected method. Wraps the
+	 * provider classes so the caller can simply check `is_wp_error()` and
+	 * surface the message — the caller never has to know which provider was
+	 * involved or which transient flag tracks delivery.
+	 *
+	 * Returns `true` for stateless methods that cannot be "sent" (TOTP,
+	 * WebAuthn, recovery) — in that case there is nothing to dispatch and the
+	 * caller should not surface a "code sent" notice.
+	 *
+	 * @param int    $user_id User to send the code to.
+	 * @param string $method  Method identifier.
+	 * @return true|\WP_Error True on success / no-op, WP_Error with the
+	 *                       provider's user-visible message on failure.
+	 */
+	private function dispatch_initial_code( int $user_id, string $method ) {
+		switch ( $method ) {
+			case ReportedIP_Hive_Two_Factor::METHOD_SMS:
+				if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
+					return new \WP_Error(
+						'reportedip_2fa_reset_sms_unavailable',
+						__( 'SMS verification is not available on this site.', 'reportedip-hive' )
+					);
+				}
+				$result = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id );
+				break;
+
+			case ReportedIP_Hive_Two_Factor::METHOD_EMAIL:
+				$result = ReportedIP_Hive_Two_Factor_Email::send_code( $user_id );
+				break;
+
+			default:
+				return true;
+		}
+
+		if ( is_wp_error( $result ) ) {
+			$this->log_event(
+				self::EVENT_SEND_FAILED,
+				$user_id,
+				'medium',
+				array(
+					'method' => $method,
+					'reason' => $result->get_error_code(),
+				)
+			);
+			return $result;
+		}
+
+		$this->log_event(
+			self::EVENT_CHALLENGE_SENT,
+			$user_id,
+			'low',
+			array( 'method' => $method )
+		);
+		return true;
+	}
+
+	/**
+	 * User-facing "code sent" notice for the inline rip-alert--info banner
+	 * shown after an initial / resend dispatch. Includes the masked
+	 * destination so the user can confirm which channel was used.
+	 *
+	 * @param int    $user_id User the code was sent to.
+	 * @param string $method  Method identifier.
+	 * @return string Empty string for stateless methods (no notice rendered).
+	 */
+	private function code_sent_notice( int $user_id, string $method ): string {
+		switch ( $method ) {
+			case ReportedIP_Hive_Two_Factor::METHOD_SMS:
+				$phone  = class_exists( 'ReportedIP_Hive_Two_Factor_SMS' )
+					? ReportedIP_Hive_Two_Factor_SMS::get_user_phone( $user_id )
+					: '';
+				$masked = $phone && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' )
+					? ReportedIP_Hive_Two_Factor_SMS::mask_phone( $phone )
+					: '';
+				if ( '' === $masked ) {
+					return __( 'We have sent a verification code by SMS.', 'reportedip-hive' );
+				}
+				return sprintf(
+					/* translators: %s: masked phone number */
+					__( 'We have sent a verification code by SMS to %s.', 'reportedip-hive' ),
+					$masked
+				);
+
+			case ReportedIP_Hive_Two_Factor::METHOD_EMAIL:
+				$user   = get_userdata( $user_id );
+				$masked = ( $user instanceof \WP_User )
+					? ReportedIP_Hive_Two_Factor::mask_email( $user->user_email )
+					: '';
+				if ( '' === $masked ) {
+					return __( 'We have sent a verification code by email.', 'reportedip-hive' );
+				}
+				return sprintf(
+					/* translators: %s: masked email address */
+					__( 'We have sent a verification code by email to %s.', 'reportedip-hive' ),
+					$masked
+				);
+
+			default:
+				return '';
+		}
+	}
+
+	/**
+	 * Wrapper around the provider-side cooldown helpers so the template only
+	 * has to ask one question. Returns 0 for stateless methods or when the
+	 * provider class is unavailable.
+	 *
+	 * @param int    $user_id User to check cooldown for.
+	 * @param string $method  Method identifier.
+	 * @return int Seconds until the next send is allowed (0 = ready now).
+	 */
+	private function get_resend_wait_seconds( int $user_id, string $method ): int {
+		switch ( $method ) {
+			case ReportedIP_Hive_Two_Factor::METHOD_SMS:
+				if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
+					return 0;
+				}
+				return (int) ReportedIP_Hive_Two_Factor_SMS::get_resend_wait_seconds( $user_id );
+
+			case ReportedIP_Hive_Two_Factor::METHOD_EMAIL:
+				return (int) ReportedIP_Hive_Two_Factor_Email::get_resend_wait_seconds( $user_id );
+
+			default:
+				return 0;
 		}
 	}
 
