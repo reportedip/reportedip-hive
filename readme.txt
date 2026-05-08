@@ -1,7 +1,7 @@
 === ReportedIP Hive ===
 Contributors: reportedip, patrickschlesinger
 Donate link: https://reportedip.de
-Tags: security, firewall, brute-force, two-factor, threat-intelligence
+Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
@@ -10,7 +10,7 @@ License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
 
-Community-powered WordPress security: 12 attack sensors, 4 2FA methods, threat sharing. GDPR-first. Made in Germany.
+Community-powered WordPress security: 12 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
 
 == Description ==
 

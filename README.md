@@ -3,10 +3,11 @@
 [![License: GPL v2+](https://img.shields.io/badge/License-GPLv2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 [![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-777BB4.svg)](https://www.php.net/)
 [![WordPress 5.0+](https://img.shields.io/badge/WordPress-5.0%2B-21759B.svg)](https://wordpress.org/)
-[![Tests](https://img.shields.io/badge/PHPUnit-288%20tests-brightgreen.svg)](https://github.com/reportedip/reportedip-hive/actions)
+[![Multisite](https://img.shields.io/badge/Multisite-network--aware-21759B.svg)](#multisite-support)
+[![Tests](https://img.shields.io/badge/PHPUnit-454%20tests-brightgreen.svg)](https://github.com/reportedip/reportedip-hive/actions)
 [![Made in Germany](https://img.shields.io/badge/Made%20in-Germany-black.svg)](https://reportedip.de)
 
-> **Community-powered WordPress security: 12 attack sensors, 4 progressive 2FA methods, herd-immunity threat sharing. GDPR-first. Made in Germany.**
+> **Community-powered WordPress security: 12 attack sensors, 4 progressive 2FA methods, herd-immunity threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.**
 
 Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker — before the password is even checked. One drop-in replaces brute-force protection, full 2FA suite and threat intelligence; no upsell tiers, no "Pro" gate.
 
@@ -20,7 +21,8 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 - **Progressive blocks that don't burn legitimate users.** First-time tripping gets a 5-minute timeout; repeat offenders climb 5 m → 15 m → 30 m → 24 h → 48 h → 7 d. CGNAT visitors and fat-fingered admins recover in minutes; brute-forcers pay the full price.
 - **Privacy-first by default.** GDPR-minimal logging, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium. Lawful basis (Art. 6(1)(f) GDPR) documented in-product.
 - **Cache-plugin-safe.** WP Rocket / W3TC / WP Super Cache / LiteSpeed cannot store the 403 page or serve cached HTML to blocked IPs on protected paths.
-- **Code you can read.** PHPStan-clean, WPCS-clean, 288 unit tests with 439 assertions on every commit. No bundled minified bytes you can't audit.
+- **Multisite-native.** Network-only activation, single threat decision applies network-wide, Site Admins get a read-only UI with two narrow override fields. Cross-site brute-force aggregates into one central counter so an attacker pivoting between sub-sites trips the threshold faster, not slower.
+- **Code you can read.** PHPStan level 5 clean, WPCS clean with zero warnings, 435 unit + 19 Multisite PHPUnit tests with 757 assertions on every commit. No bundled minified bytes you can't audit.
 
 ## Feature overview
 
@@ -157,13 +159,32 @@ For instant updates: WP Admin → *Plugins → Check for updates*.
 
 ---
 
+## Multisite support
+
+Hive 2.0+ is fully network-aware. The plugin header sets `Network: true`, so on Multisite the only activation path is **Network Activate** — per-site activation is hidden by WordPress.
+
+| Topic | Behaviour |
+|---|---|
+| Activation | Network-only (`Network: true` in plugin header). Single-site installs auto-migrate v1.x → v5 transparently. |
+| Tables | All seven plugin tables live under `$wpdb->base_prefix`. `logs`, `api_queue`, `stats` carry a `blog_id` column so the Network Admin can filter and Site Admins are auto-scoped. |
+| Cross-site brute-force | Failed logins on Site A and Site B aggregate into the same central `attempts` row, so a streamed attack across sub-sites trips the threshold *faster*, and one `blocked` entry locks the IP out of every sub-site. |
+| Site Admin UI | Read-only Status / Logs (auto-scoped via `blog_id`) plus a 2FA Site Settings page with exactly two writable overrides: per-site Frontend-2FA slug and additive 2FA enforcement roles. Site Admins cannot drop a role the Network requires. |
+| Super Admins | Forced into 2FA setup unconditionally via `reportedip_hive_2fa_enforce_super_admins` (default on). |
+| Trust cookie | Set with `SITECOOKIEPATH` so a single trust decision carries across the whole network. |
+| REST throttle | Counters use `set_site_transient` so an attacker hitting multiple sub-sites cannot reset by switching host. |
+| Cron | Scheduled only on `is_main_site()` with an `admin_init` self-heal — avoids N-fold execution on large networks. |
+
+The codebase ships a dedicated PHPUnit-Multisite suite (`tests/Multisite/`, `phpunit-multisite.xml` with `WP_TESTS_MULTISITE=1`) plus Playwright projects for both topologies, gated by separate CI matrix jobs (`phpunit-multisite`, `e2e-multisite`).
+
+---
+
 ## Development
 
 ```bash
 git clone https://github.com/reportedip/reportedip-hive.git
 cd reportedip-hive
 composer install
-composer test           # PHPUnit unit suite (288 tests)
+composer test           # PHPUnit unit suite (435 tests)
 composer lint           # PHPCS against WordPress Coding Standards
 composer analyse        # PHPStan level 5
 composer check-all      # all three
