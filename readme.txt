@@ -29,7 +29,7 @@ Two ways to run, no feature held hostage behind a paywall:
 * **Progressive blocks that don't burn legitimate users.** A first-time tripping CGNAT visitor or a fat-fingered admin gets a 5-minute timeout — repeat offenders climb the ladder up to 7 days. Nobody pays a 24h block for a typo.
 * **Privacy-first by default.** GDPR-minimal logging mode, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
-* **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan-clean, WPCS-clean, 398 unit tests with 655 assertions on every commit.
+* **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan-clean, WPCS-clean (zero warnings), 435 unit + 19 Multisite PHPUnit tests with 757 assertions on every commit.
 
 = 12 detection sensors (every one tunable) =
 
@@ -129,7 +129,7 @@ Show the world that your site is part of the hive — and earn community-network
   * `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` — temporarily disable hide-login from `wp-config.php`
 * **6 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats, plus trusted_devices for 2FA.
 * **Internationalisation-ready.** Text domain `reportedip-hive`, English source with German translation included.
-* **Test suite.** 398 PHPUnit tests, 655 assertions; PHPStan level 5; WPCS-compliant.
+* **Test suite.** 435 unit PHPUnit tests + 19 Multisite tests, 757 assertions total; PHPStan level 5 (No errors); WPCS-compliant with zero warnings.
 
 = What this plugin does NOT include =
 
