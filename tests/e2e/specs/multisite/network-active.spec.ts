@@ -12,7 +12,8 @@ test('reportedip-hive is network-active on WPMU stack', async ({ page }) => {
     await page.goto('/wp-admin/network/plugins.php');
     const row = page.locator('tr[data-slug="reportedip-hive"]');
     await expect(row).toBeVisible();
-    await expect(row.locator('span.network-active, td.column-active')).not.toContainText('Activate');
+    await expect(row).toHaveClass(/\bactive\b/);
+    await expect(row.locator('span.deactivate a')).toContainText(/Network Deactivate/i);
 });
 
 test('site admin sees read-only banner on subsite plugin page', async ({ page }) => {

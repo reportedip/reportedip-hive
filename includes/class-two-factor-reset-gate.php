@@ -138,6 +138,33 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	}
 
 	/**
+	 * Whether the reset gate should fire for this user.
+	 *
+	 * The gate exists to stop an attacker with mailbox access from chaining the
+	 * reset link into a new password without also clearing a non-email factor.
+	 * It only adds security when the user has enrolled at least one method
+	 * that survives the excluded-methods filter (TOTP, SMS, WebAuthn). Users
+	 * with no second factor at all — or with only the email channel enrolled
+	 * — are not made safer by gating: the reset link itself already travels
+	 * through the email channel, so adding an email-2FA prompt is the same
+	 * channel twice, and falling back to a recovery-code prompt locks out
+	 * legitimate users who never stored their codes.
+	 *
+	 * Recovery codes are a backup for a primary factor that became
+	 * inaccessible, not a primary factor in their own right, so a user with
+	 * only recovery codes is also treated as having no gateable factor.
+	 *
+	 * @param int $user_id Reset target user ID.
+	 * @return bool True when at least one non-excluded method is enrolled.
+	 * @since 2.0.2
+	 */
+	public static function should_gate_user( int $user_id ): bool {
+		$enabled  = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user_id );
+		$excluded = self::get_excluded_methods( $user_id );
+		return ! empty( array_diff( $enabled, $excluded ) );
+	}
+
+	/**
 	 * Methods that must NOT be offered as a second factor during password
 	 * reset. The default list excludes the email channel because the reset
 	 * link itself was delivered via that channel — using the same channel
@@ -239,8 +266,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 			return;
 		}
 
-		$enabled = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID );
-		if ( empty( $enabled ) ) {
+		if ( ! self::should_gate_user( $user->ID ) ) {
 			return;
 		}
 
@@ -333,8 +359,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	public function on_password_reset( $user, $new_pass = '' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 		unset( $new_pass );
 
-		$enabled = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID );
-		if ( empty( $enabled ) ) {
+		if ( ! self::should_gate_user( $user->ID ) ) {
 			return;
 		}
 
@@ -380,6 +405,11 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		if ( is_wp_error( $key_user ) || (int) $key_user->ID !== (int) $user->ID ) {
 			wp_safe_redirect( wp_lostpassword_url() );
 			exit;
+		}
+
+		if ( ! self::should_gate_user( $user->ID ) ) {
+			$this->dispatch_redirect( $this->build_reset_url( $login, $reset_key ) );
+			return;
 		}
 
 		$eligible = self::get_eligible_methods( $user->ID );

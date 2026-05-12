@@ -275,6 +275,78 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_should_gate_user_returns_false_for_no_factor(): void {
+			$GLOBALS['rip_test_user_methods'][7]  = array();
+			$GLOBALS['rip_test_user_recovery'][7] = 0;
+			$this->assertFalse(
+				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 ),
+				'A user with no second factor enrolled must not be gated — they would otherwise drop into a recovery-code prompt for codes they never had.'
+			);
+		}
+
+		public function test_should_gate_user_returns_false_for_email_only(): void {
+			$GLOBALS['rip_test_user_methods'][7]  = array( 'email' );
+			$GLOBALS['rip_test_user_recovery'][7] = 5;
+			$this->assertFalse(
+				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 ),
+				'Email-only-2FA is the same channel as the reset link, so it adds no security to gate on it — a user enrolled in nothing but email must skip the gate even when recovery codes exist.'
+			);
+		}
+
+		public function test_should_gate_user_returns_false_for_recovery_only(): void {
+			$GLOBALS['rip_test_user_methods'][7]  = array();
+			$GLOBALS['rip_test_user_recovery'][7] = 8;
+			$this->assertFalse(
+				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 ),
+				'Recovery codes are a fallback for an inaccessible primary factor — they are not themselves a primary factor that should trigger the gate.'
+			);
+		}
+
+		public function test_should_gate_user_returns_true_for_totp_enrolled(): void {
+			$GLOBALS['rip_test_user_methods'][7]  = array( 'totp' );
+			$GLOBALS['rip_test_user_recovery'][7] = 0;
+			$this->assertTrue(
+				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 ),
+				'A TOTP-enrolled user is precisely the case the reset gate exists to protect: an attacker with mailbox access must still clear the TOTP factor.'
+			);
+		}
+
+		public function test_should_gate_user_returns_true_for_email_plus_totp(): void {
+			$GLOBALS['rip_test_user_methods'][7]  = array( 'email', 'totp' );
+			$GLOBALS['rip_test_user_recovery'][7] = 0;
+			$this->assertTrue(
+				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 )
+			);
+		}
+
+		public function test_should_gate_user_returns_false_when_admin_excludes_all_enrolled_methods(): void {
+			$GLOBALS['wp_options']['reportedip_hive_2fa_password_reset_excluded_methods'] = '["email","totp"]';
+			$GLOBALS['rip_test_user_methods'][7]  = array( 'totp' );
+			$GLOBALS['rip_test_user_recovery'][7] = 0;
+			$this->assertFalse(
+				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 ),
+				'If the admin excludes every method the user has enrolled, the gate has nothing to challenge on and must not lock the user out of password reset.'
+			);
+		}
+
+		public function test_validate_reset_uses_should_gate_user_guard(): void {
+			$source = $this->source();
+			$this->assertMatchesRegularExpression(
+				'/on_validate_reset.*should_gate_user/s',
+				$source,
+				'on_validate_reset() must bail out via should_gate_user() — using empty($enabled) alone is incorrect because email-only-2FA users with stale recovery codes would still be dragged into the challenge.'
+			);
+		}
+
+		public function test_password_reset_uses_should_gate_user_guard(): void {
+			$source = $this->source();
+			$this->assertMatchesRegularExpression(
+				'/on_password_reset.*should_gate_user/s',
+				$source,
+				'on_password_reset() must use the same should_gate_user() guard as on_validate_reset() so the last-mile token check stays consistent with the validation-time decision.'
+			);
+		}
+
 		public function test_is_email_only_locked_blocks_email_only_user(): void {
 			$GLOBALS['rip_test_user_methods'][7]  = array( 'email' );
 			$GLOBALS['rip_test_user_recovery'][7] = 0;

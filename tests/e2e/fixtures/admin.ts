@@ -20,6 +20,12 @@ export async function loginAsAdmin(page: Page, loginPath = '/wp-login.php'): Pro
     await page.fill('#user_pass', ADMIN_PASS);
     await page.click('#wp-submit');
     await page.waitForURL((url) => url.pathname.includes('/wp-admin/'));
+
+    const skipOnboarding = page.locator('a:has-text("Set up later"), a:has-text("Skip"):not([href="#"])').first();
+    if ((await skipOnboarding.count()) > 0 && (await skipOnboarding.isVisible().catch(() => false))) {
+        await skipOnboarding.click().catch(() => undefined);
+        await page.waitForLoadState('networkidle').catch(() => undefined);
+    }
 }
 
 /**

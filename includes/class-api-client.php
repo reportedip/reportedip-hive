@@ -1257,17 +1257,17 @@ class ReportedIP_Hive_API {
 	private function track_api_call( $success, $response_time, $error_type = null ) {
 		$this->increment_hourly_api_calls();
 
-		$stats = ReportedIP_Hive_Option_Routing::get(
-			'reportedip_hive_api_stats',
-			array(
-				'total_calls'         => 0,
-				'successful_calls'    => 0,
-				'failed_calls'        => 0,
-				'total_response_time' => 0,
-				'last_reset'          => current_time( 'mysql' ),
-				'error_types'         => array(),
-			)
+		$stats_defaults = array(
+			'total_calls'         => 0,
+			'successful_calls'    => 0,
+			'failed_calls'        => 0,
+			'total_response_time' => 0,
+			'last_reset'          => current_time( 'mysql' ),
+			'error_types'         => array(),
 		);
+
+		$stored = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_stats', array() );
+		$stats  = is_array( $stored ) ? array_merge( $stats_defaults, $stored ) : $stats_defaults;
 
 		++$stats['total_calls'];
 		$stats['total_response_time'] += $response_time;

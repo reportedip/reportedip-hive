@@ -2,6 +2,38 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.3] — 2026-05-12
+
+### Fixed
+
+- **Password reset is no longer gated for users without a real second
+  factor.** The reset challenge used to fire as soon as any 2FA method was
+  set on the account — including email, which the gate then excluded from
+  the picker. Users who had only email-2FA enrolled (plus stale recovery
+  codes from an earlier setup) were forced onto a recovery-code prompt
+  for codes they may never have stored, with no way out except contacting
+  an admin. The gate now uses `should_gate_user()`, which fires only when
+  at least one non-excluded factor (TOTP, SMS, WebAuthn) is enrolled.
+  Email-only or recovery-codes-only users get the standard WordPress
+  password reset flow.
+- **API-stats counter no longer warns on partial state.** `track_api_call()`
+  read the stored `reportedip_hive_api_stats` array and accessed
+  `successful_calls` / `failed_calls` directly. If the option was missing
+  one of those keys (e.g. after a partial migration), PHP emitted an
+  `Undefined array key` warning that surfaced as visible output ahead of
+  cookie / redirect headers on the very next request. The helper now
+  merges the stored array on top of the full defaults before incrementing.
+
+### Tests
+
+- New unit coverage for `Two_Factor_Reset_Gate::should_gate_user()` plus a
+  source-pattern lock so the gate is forced to route both
+  `on_validate_reset()` and `on_password_reset()` through the helper.
+- Multisite E2E `network-active` smoke test now asserts the row's `active`
+  class and the "Network Deactivate" action, matching what current
+  WordPress core actually renders. The previous `span.network-active` /
+  `td.column-active` selectors targeted markup that is no longer emitted.
+
 ## [2.0.1] — 2026-05-08
 
 Fixes silent failures and invisible errors on the password-reset 2FA
