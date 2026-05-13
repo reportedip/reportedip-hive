@@ -219,12 +219,6 @@ class ReportedIP_Hive_Two_Factor_SMS {
 			if ( ! ReportedIP_Hive_Phone_Validator::is_valid_e164( $raw ) ) {
 				return new WP_Error( 'reportedip_sms_phone_format', __( 'Phone number is not in valid international format.', 'reportedip-hive' ) );
 			}
-			if ( ! ReportedIP_Hive_Phone_Validator::is_eu( $raw ) ) {
-				return new WP_Error(
-					'reportedip_sms_phone_not_eu',
-					__( 'Only EU phone numbers are supported for SMS-2FA.', 'reportedip-hive' )
-				);
-			}
 		}
 
 		return $raw;

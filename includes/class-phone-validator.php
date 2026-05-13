@@ -2,14 +2,16 @@
 /**
  * Phone-Number Validator for ReportedIP Hive.
  *
- * Mirrors the server-side validator (defence in depth): Hive validates phone
- * numbers BEFORE handing them to the SMS provider, regardless of whether the
- * actual send goes through a local provider (Sevenio/Sipgate/MessageBird) or
- * the reportedip.de relay endpoint.
+ * Pure-function helpers for E.164 normalisation and display formatting.
  *
- * EU country-code whitelist defaults match the service-side constant; can be
- * overridden via WP option `reportedip_hive_eu_phone_country_codes`
- * or filter `reportedip_hive_eu_phone_country_codes`.
+ * Routing policy lives on the server (the reportedip.de relay enforces an
+ * internal country blacklist). Hive only validates that the input is a
+ * well-formed E.164 number and forwards it to the relay; the relay returns
+ * HTTP 422 with code "country_not_supported" when a number is rejected.
+ *
+ * Locally configured SMS providers (seven.io, sipgate, MessageBird) bypass
+ * the relay entirely — the site operator pays directly and decides which
+ * destinations to allow.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <ps@cms-admins.de>
@@ -25,48 +27,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Class ReportedIP_Hive_Phone_Validator
- *
- * Pure-function helpers for E.164 normalisation and EU restriction.
  */
 class ReportedIP_Hive_Phone_Validator {
-
-	/**
-	 * Default EU country codes (E.164 prefixes).
-	 *
-	 * @var string[]
-	 */
-	const DEFAULT_EU_CODES = array(
-		'+49',
-		'+43',
-		'+41',
-		'+31',
-		'+32',
-		'+352',
-		'+33',
-		'+39',
-		'+34',
-		'+351',
-		'+48',
-		'+420',
-		'+421',
-		'+36',
-		'+45',
-		'+46',
-		'+47',
-		'+358',
-		'+353',
-		'+354',
-		'+30',
-		'+386',
-		'+385',
-		'+359',
-		'+40',
-		'+371',
-		'+370',
-		'+372',
-		'+356',
-		'+357',
-	);
 
 	/**
 	 * Normalise an arbitrary phone-number input to a candidate E.164 string.
@@ -106,54 +68,34 @@ class ReportedIP_Hive_Phone_Validator {
 	}
 
 	/**
-	 * Get the country-code prefix matching the active whitelist (longest match).
+	 * Return the country-code prefix as a best-guess (1–3 digits after '+').
 	 *
-	 * @param string        $phone     Valid E.164 phone number.
-	 * @param string[]|null $whitelist Optional explicit whitelist.
+	 * The Hive plugin no longer maintains a country list; the server is the
+	 * authority. This helper exists only to format display strings.
+	 *
+	 * @param string $phone Valid E.164 phone number.
 	 * @return string|null
 	 */
-	public static function get_country_code( $phone, $whitelist = null ) {
+	public static function get_country_code( $phone ) {
 		if ( ! self::is_valid_e164( $phone ) ) {
 			return null;
-		}
-		if ( null === $whitelist ) {
-			$whitelist = self::get_whitelist();
-		}
-		$sorted = $whitelist;
-		usort(
-			$sorted,
-			static function ( $a, $b ) {
-				return strlen( $b ) - strlen( $a );
-			}
-		);
-		foreach ( $sorted as $cc ) {
-			if ( 0 === strpos( $phone, $cc ) ) {
-				return $cc;
-			}
 		}
 		return '+' . substr( $phone, 1, 3 );
 	}
 
 	/**
-	 * Whether the given phone number's country code is on the EU whitelist.
+	 * Backwards-compatibility shim — was the EU whitelist gate, now a no-op
+	 * pass-through that just re-checks E.164 validity.
 	 *
-	 * @param string        $phone     Phone number.
-	 * @param string[]|null $whitelist Optional explicit whitelist.
+	 * @deprecated 1.7.0 Routing decisions moved to the server. Use
+	 *             {@see is_valid_e164()} instead. Kept so that older callers
+	 *             do not break.
+	 *
+	 * @param string $phone Phone number.
 	 * @return bool
 	 */
-	public static function is_eu( $phone, $whitelist = null ) {
-		if ( ! self::is_valid_e164( $phone ) ) {
-			return false;
-		}
-		if ( null === $whitelist ) {
-			$whitelist = self::get_whitelist();
-		}
-		foreach ( $whitelist as $cc ) {
-			if ( 0 === strpos( $phone, $cc ) ) {
-				return true;
-			}
-		}
-		return false;
+	public static function is_eu( $phone ) {
+		return self::is_valid_e164( $phone );
 	}
 
 	/**
@@ -172,21 +114,5 @@ class ReportedIP_Hive_Phone_Validator {
 		$tail = substr( $rest, 3 );
 		$tail = trim( chunk_split( $tail, 4, ' ' ) );
 		return trim( $cc . ' ' . $head . ' ' . $tail );
-	}
-
-	/**
-	 * Return the active EU country-code whitelist.
-	 * Default constant + WP option override + filter.
-	 *
-	 * @return string[]
-	 */
-	public static function get_whitelist() {
-		$list     = self::DEFAULT_EU_CODES;
-		$override = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_eu_phone_country_codes', null );
-		if ( is_array( $override ) && ! empty( $override ) ) {
-			$list = $override;
-		}
-		$filtered = apply_filters( 'reportedip_hive_eu_phone_country_codes', $list );
-		return is_array( $filtered ) ? array_values( array_unique( $filtered ) ) : $list;
 	}
 }

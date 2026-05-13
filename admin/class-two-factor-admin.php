@@ -395,11 +395,11 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							<?php checked( in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $allowed_methods, true ) ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
-							<?php esc_html_e( 'SMS (GDPR — EU providers only)', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'SMS (GDPR-compliant, worldwide delivery)', 'reportedip-hive' ); ?>
 						</span>
 					</label>
 					<p class="rip-help-text">
-						<?php esc_html_e( 'Only available with a configured EU SMS provider (seven.io, sipgate, MessageBird) and a confirmed DPA. Less secure than TOTP/Passkey — recommended only as a fallback.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'Available with a configured GDPR-compliant SMS provider (seven.io, sipgate, MessageBird) and a confirmed DPA. Less secure than TOTP/Passkey — recommended only as a fallback. A small number of high-cost destinations may be unavailable when using the managed relay; configure a local provider for full coverage.', 'reportedip-hive' ); ?>
 					</p>
 				</div>
 			</div>
@@ -752,7 +752,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				</div>
 			</div>
 
-			<!-- SMS provider (GDPR-compliant, EU providers) -->
+			<!-- SMS provider (GDPR-compliant, worldwide delivery) -->
 			<?php self::render_sms_provider_section(); ?>
 
 			<!-- XMLRPC protection -->
@@ -1176,10 +1176,10 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-				<?php esc_html_e( 'SMS provider (GDPR — EU only)', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'SMS provider (GDPR-compliant)', 'reportedip-hive' ); ?>
 			</h2>
 			<p class="rip-settings-section__desc">
-				<?php esc_html_e( 'An EU SMS provider is used to send SMS OTPs. The plugin operator must sign a DPA with the selected provider. Phone numbers are stored encrypted; the SMS body contains only the code and a minimal note (no site, no user data, no IP).', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'A GDPR-compliant SMS provider is used to send SMS OTPs. The plugin operator must sign a DPA with the selected provider. Phone numbers are stored encrypted; the SMS body contains only the code and a minimal note (no site, no user data, no IP).', 'reportedip-hive' ); ?>
 			</p>
 
 			<?php if ( $relay_status['available'] ) : ?>

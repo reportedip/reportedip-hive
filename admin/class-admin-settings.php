@@ -578,7 +578,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 			</div>
 			<div class="rip-card__body">
-				<p><?php esc_html_e( 'Upgrade to Professional to route 2FA codes and security alerts through the reportedip.de relay — verified SPF/DKIM/DMARC, EU-only routing, no spam folder.', 'reportedip-hive' ); ?></p>
+				<p><?php esc_html_e( 'Upgrade to Professional to route 2FA codes and security alerts through the reportedip.de relay — verified SPF/DKIM/DMARC, anti-fraud routing, no spam folder.', 'reportedip-hive' ); ?></p>
 				<ul class="rip-promo-card__benefits">
 					<li><?php esc_html_e( '500 mails / month included (Business: 2,500)', 'reportedip-hive' ); ?></li>
 					<li><?php esc_html_e( '25 SMS / month included (Business: 75 + add-on bundles)', 'reportedip-hive' ); ?></li>
@@ -5805,7 +5805,7 @@ class ReportedIP_Hive_Admin_Settings {
 								</h3>
 								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
 									<li><?php esc_html_e( 'No third-party SMS contract, no top-up management', 'reportedip-hive' ); ?></li>
-									<li><?php esc_html_e( 'EU-only routing — Toll-Fraud blocked, GDPR-friendly', 'reportedip-hive' ); ?></li>
+									<li><?php esc_html_e( 'Anti-fraud routing — high-risk destinations blocked, GDPR-friendly', 'reportedip-hive' ); ?></li>
 									<li><?php esc_html_e( 'Server-side anti-spam: per-recipient backoff (2/5/15/30/60 min)', 'reportedip-hive' ); ?></li>
 								</ul>
 								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">

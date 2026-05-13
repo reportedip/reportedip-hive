@@ -35,7 +35,7 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 	}
 
 	public static function region() {
-		return 'EU (via reportedip.de)';
+		return 'Worldwide (via reportedip.de)';
 	}
 
 	public static function avv_url() {
@@ -52,15 +52,15 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 	/**
 	 * Send a 2FA code via template (client never renders the body).
 	 *
-	 * @param string $phone        E.164 phone number (must be EU).
+	 * @param string $phone        E.164 phone number.
 	 * @param string $code         The verification code (digits only, 4–10 chars).
 	 * @param int    $expiry_min   Minutes the code is valid for.
 	 * @param string $lang         2-letter language code, defaults to site locale.
 	 * @return true|WP_Error
 	 */
 	public static function send_code( $phone, $code, $expiry_min = 10, $lang = '' ) {
-		if ( class_exists( 'ReportedIP_Hive_Phone_Validator' ) && ! ReportedIP_Hive_Phone_Validator::is_eu( $phone ) ) {
-			return new WP_Error( 'reportedip_relay_not_eu', __( 'Only EU phone numbers are supported.', 'reportedip-hive' ) );
+		if ( class_exists( 'ReportedIP_Hive_Phone_Validator' ) && ! ReportedIP_Hive_Phone_Validator::is_valid_e164( $phone ) ) {
+			return new WP_Error( 'reportedip_relay_invalid_phone', __( 'Phone number is not in valid international format.', 'reportedip-hive' ) );
 		}
 		if ( ! class_exists( 'ReportedIP_Hive_API' ) ) {
 			return new WP_Error( 'reportedip_relay_unavailable', __( 'API client not available.', 'reportedip-hive' ) );
@@ -84,22 +84,14 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 	}
 
 	public static function send( $phone, $message, $config ) {
-		if ( class_exists( 'ReportedIP_Hive_Phone_Validator' ) ) {
-			if ( ! ReportedIP_Hive_Phone_Validator::is_valid_e164( $phone ) ) {
-				return new WP_Error( 'reportedip_relay_invalid_phone', __( 'Phone number is not in valid international format.', 'reportedip-hive' ) );
-			}
-			if ( ! ReportedIP_Hive_Phone_Validator::is_eu( $phone ) ) {
-				return new WP_Error( 'reportedip_relay_not_eu', __( 'Only EU phone numbers are supported.', 'reportedip-hive' ) );
-			}
+		if ( class_exists( 'ReportedIP_Hive_Phone_Validator' ) && ! ReportedIP_Hive_Phone_Validator::is_valid_e164( $phone ) ) {
+			return new WP_Error( 'reportedip_relay_invalid_phone', __( 'Phone number is not in valid international format.', 'reportedip-hive' ) );
 		}
-
 		if ( ! class_exists( 'ReportedIP_Hive_API' ) ) {
 			return new WP_Error( 'reportedip_relay_unavailable', __( 'API client not available.', 'reportedip-hive' ) );
 		}
 
-		$api = ReportedIP_Hive_API::get_instance();
-
-		$result = $api->relay_sms(
+		$result = ReportedIP_Hive_API::get_instance()->relay_sms(
 			array(
 				'recipient_phone' => (string) $phone,
 				'message'         => (string) $message,
@@ -107,46 +99,11 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 			)
 		);
 
-		if ( ! empty( $result['ok'] ) ) {
-			if ( class_exists( 'ReportedIP_Hive_Relay_Usage_Tracker' ) ) {
-				ReportedIP_Hive_Relay_Usage_Tracker::record( ReportedIP_Hive_Relay_Usage_Tracker::TYPE_SMS, 1 );
-			}
-			return true;
+		$interpreted = self::interpret_result( $result );
+		if ( true === $interpreted && class_exists( 'ReportedIP_Hive_Relay_Usage_Tracker' ) ) {
+			ReportedIP_Hive_Relay_Usage_Tracker::record( ReportedIP_Hive_Relay_Usage_Tracker::TYPE_SMS, 1 );
 		}
-
-		$status = (int) ( $result['status_code'] ?? 0 );
-
-		if ( 402 === $status ) {
-			return new WP_Error(
-				'reportedip_relay_cap_reached',
-				__( 'Your monthly SMS allowance is used up. Please upgrade your plan or choose another 2FA method.', 'reportedip-hive' ),
-				array(
-					'status_code' => 402,
-					'retry_after' => (int) ( $result['retry_after'] ?? 0 ),
-				)
-			);
-		}
-
-		if ( 429 === $status ) {
-			return new WP_Error(
-				'reportedip_relay_backoff',
-				__( 'Too many SMS sends to this recipient. Please wait before retrying.', 'reportedip-hive' ),
-				array(
-					'status_code' => 429,
-					'retry_after' => (int) ( $result['retry_after'] ?? 0 ),
-				)
-			);
-		}
-
-		return new WP_Error(
-			'reportedip_relay_failed',
-			sprintf(
-				/* translators: %s: error code from server */
-				__( 'SMS relay failed (%s).', 'reportedip-hive' ),
-				(string) ( $result['error'] ?? 'unknown' )
-			),
-			array( 'status_code' => $status )
-		);
+		return $interpreted;
 	}
 
 	/**
@@ -160,10 +117,19 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 			return true;
 		}
 		$status = (int) ( $result['status_code'] ?? 0 );
+		$code   = (string) ( $result['error'] ?? '' );
+
+		if ( 422 === $status && 'country_not_supported' === $code ) {
+			return new WP_Error(
+				'reportedip_sms_country_not_supported',
+				__( 'SMS delivery is not available for this number. Please use TOTP, Email, or a Passkey instead.', 'reportedip-hive' ),
+				array( 'status_code' => 422 )
+			);
+		}
 		if ( 402 === $status ) {
 			return new WP_Error(
 				'reportedip_relay_cap_reached',
-				__( 'Your monthly SMS allowance is used up.', 'reportedip-hive' ),
+				__( 'Your monthly SMS allowance is used up. Please upgrade your plan or choose another 2FA method.', 'reportedip-hive' ),
 				array(
 					'status_code' => 402,
 					'retry_after' => (int) ( $result['retry_after'] ?? 0 ),
@@ -173,7 +139,7 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 		if ( 429 === $status ) {
 			return new WP_Error(
 				'reportedip_relay_backoff',
-				__( 'Too many SMS sends to this recipient.', 'reportedip-hive' ),
+				__( 'Too many SMS sends to this recipient. Please wait before retrying.', 'reportedip-hive' ),
 				array(
 					'status_code' => 429,
 					'retry_after' => (int) ( $result['retry_after'] ?? 0 ),
@@ -182,7 +148,11 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 		}
 		return new WP_Error(
 			'reportedip_relay_failed',
-			(string) ( $result['error'] ?? 'unknown' ),
+			sprintf(
+				/* translators: %s: error code from server */
+				__( 'SMS relay failed (%s).', 'reportedip-hive' ),
+				(string) ( $result['error'] ?? 'unknown' )
+			),
 			array( 'status_code' => $status )
 		);
 	}

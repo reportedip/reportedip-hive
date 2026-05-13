@@ -269,13 +269,13 @@ if ( $grace_deadline > 0 ) {
 						<div class="rip-mode-card__icon" aria-hidden="true">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 						</div>
-						<h3 class="rip-mode-card__title"><?php esc_html_e( 'SMS (EU only)', 'reportedip-hive' ); ?></h3>
+						<h3 class="rip-mode-card__title"><?php esc_html_e( 'SMS (worldwide)', 'reportedip-hive' ); ?></h3>
 						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Code by SMS via an EU provider with DPA.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Code by SMS via a GDPR-compliant provider with DPA.', 'reportedip-hive' ); ?>
 						</p>
 						<ul class="rip-mode-card__features">
 							<li class="rip-onboarding-warning"><?php esc_html_e( 'SIM-swapping risk — use as backup', 'reportedip-hive' ); ?></li>
-							<li class="rip-onboarding-check"><?php esc_html_e( 'EU provider, DPA', 'reportedip-hive' ); ?></li>
+							<li class="rip-onboarding-check"><?php esc_html_e( 'GDPR-compliant provider, DPA', 'reportedip-hive' ); ?></li>
 						</ul>
 					</label>
 				<?php endif; ?>
@@ -407,7 +407,7 @@ if ( $grace_deadline > 0 ) {
 					</svg>
 					<div>
 						<strong><?php esc_html_e( 'Privacy notice', 'reportedip-hive' ); ?></strong>
-						<p><?php esc_html_e( 'Phone number stored encrypted, EU-only delivery. Use SMS as a backup — SIM-swapping risk.', 'reportedip-hive' ); ?></p>
+						<p><?php esc_html_e( 'Phone number stored encrypted, delivered worldwide via our managed relay. Use SMS as a backup — SIM-swapping risk.', 'reportedip-hive' ); ?></p>
 					</div>
 				</div>
 

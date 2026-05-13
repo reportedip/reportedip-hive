@@ -2,9 +2,9 @@
 /**
  * Unit tests for ReportedIP_Hive_SMS_Provider_Relay.
  *
- * Locks down: EU-only validation, payload shape for the template-based
- * `send_code()` path, the freeform `send()` path, and HTTP 402 / 429 /
- * generic-error → WP_Error mapping.
+ * Locks down: E.164 validation, payload shape for the template-based
+ * `send_code()` path, the freeform `send()` path, and HTTP 402 / 422
+ * (country_not_supported) / 429 / generic-error → WP_Error mapping.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -114,16 +114,40 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_static_metadata() {
 			$this->assertSame( 'reportedip_relay', \ReportedIP_Hive_SMS_Provider_Relay::id() );
 			$this->assertNotEmpty( \ReportedIP_Hive_SMS_Provider_Relay::display_name() );
-			$this->assertSame( 'EU (via reportedip.de)', \ReportedIP_Hive_SMS_Provider_Relay::region() );
+			$this->assertSame( 'Worldwide (via reportedip.de)', \ReportedIP_Hive_SMS_Provider_Relay::region() );
 			$this->assertSame( array(), \ReportedIP_Hive_SMS_Provider_Relay::config_fields() );
 			$this->assertStringStartsWith( 'https://', \ReportedIP_Hive_SMS_Provider_Relay::avv_url() );
 		}
 
-		public function test_send_code_rejects_non_eu_number_before_api_call() {
+		public function test_send_code_forwards_non_eu_number_to_api() {
+			// US numbers are no longer rejected client-side — routing decisions
+			// belong to the server (which applies the SMS country blacklist).
 			$result = \ReportedIP_Hive_SMS_Provider_Relay::send_code( '+15551234567', '123456' );
+			$this->assertTrue( $result );
+			$this->assertCount( 1, \ReportedIP_Hive_API::get_instance()->relay_sms_calls );
+			$this->assertSame( '+15551234567', \ReportedIP_Hive_API::get_instance()->relay_sms_calls[0]['recipient_phone'] );
+		}
+
+		public function test_send_code_rejects_invalid_e164_before_api_call() {
+			$result = \ReportedIP_Hive_SMS_Provider_Relay::send_code( '0151garbage', '123456' );
 			$this->assertInstanceOf( \WP_Error::class, $result );
-			$this->assertSame( 'reportedip_relay_not_eu', $result->get_error_code() );
+			$this->assertSame( 'reportedip_relay_invalid_phone', $result->get_error_code() );
 			$this->assertCount( 0, \ReportedIP_Hive_API::get_instance()->relay_sms_calls );
+		}
+
+		public function test_send_code_422_country_not_supported_maps_to_user_error() {
+			$api = \ReportedIP_Hive_API::get_instance();
+			$api->next_response = array(
+				'ok'          => false,
+				'status_code' => 422,
+				'error'       => 'country_not_supported',
+			);
+
+			$result = \ReportedIP_Hive_SMS_Provider_Relay::send_code( '+9893123456', '111111' );
+
+			$this->assertInstanceOf( \WP_Error::class, $result );
+			$this->assertSame( 'reportedip_sms_country_not_supported', $result->get_error_code() );
+			$this->assertSame( 422, $result->get_error_data()['status_code'] );
 		}
 
 		public function test_send_code_happy_path_returns_true_and_uses_template_route() {

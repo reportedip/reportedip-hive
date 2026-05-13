@@ -48,7 +48,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 - **TOTP** (RFC 6238) — Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest.
 - **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello, YubiKey. In-house implementation, phishing-resistant, no Composer dependency.
 - **Email OTP** — 6-digit, 10 min validity, rate-limited (3 sends / 15 min).
-- **SMS OTP** — EU-only providers (Sipgate, MessageBird, seven.io) with explicit DPA confirmation.
+- **SMS OTP** — GDPR-compliant providers (Sipgate, MessageBird, seven.io) with explicit DPA confirmation.
 
 Plus 10 single-use recovery codes, trusted-device tokens (default 30 days), multi-stage 2FA rate-limit (3/5/10/15 fails → 30 s/5 m/30 m/1 h delays, 15th fail graduates to a real progressive block), role-based enforcement with grace period, frontend onboarding wizard, branded login page option, IP allowlist for 2FA bypass.
 

@@ -600,7 +600,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<h3 class="rip-tier-card__title"><?php esc_html_e( 'Reliable 2FA delivery', 'reportedip-hive' ); ?></h3>
 					</header>
 					<ul class="rip-tier-card__list">
-						<li><?php esc_html_e( 'SMS-2FA: 25/month included (EU-only, anti-fraud capped)', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'SMS-2FA: 25/month included (worldwide, anti-fraud capped)', 'reportedip-hive' ); ?></li>
 						<li><?php esc_html_e( 'Mail-2FA: 500/month via SPF/DKIM/DMARC-verified relay', 'reportedip-hive' ); ?></li>
 						<li><?php esc_html_e( '3 domains per license · 90 days log retention', 'reportedip-hive' ); ?></li>
 					</ul>
@@ -1066,7 +1066,7 @@ class ReportedIP_Hive_Setup_Wizard {
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
 							</div>
 							<h4 class="rip-method-card__title"><?php esc_html_e( 'SMS', 'reportedip-hive' ); ?></h4>
-							<p class="rip-method-card__desc"><?php esc_html_e( 'EU-only delivery, anti-fraud capped. Professional plan and higher.', 'reportedip-hive' ); ?></p>
+							<p class="rip-method-card__desc"><?php esc_html_e( 'Worldwide delivery via our managed relay, anti-fraud capped. Professional plan and higher.', 'reportedip-hive' ); ?></p>
 						</div>
 
 						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'totp' ) ); ?>" data-method="totp">

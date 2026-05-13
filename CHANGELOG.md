@@ -2,6 +2,61 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.4] — 2026-05-13
+
+### Changed
+
+- **SMS routing decisions move from the client to the relay server.** The
+  29-country EU country-code whitelist that `ReportedIP_Hive_Phone_Validator`
+  enforced on the plugin side is gone. The plugin now validates only that
+  the input is a well-formed E.164 number and forwards it to the relay;
+  the relay returns HTTP 422 with code `country_not_supported` for any
+  destination it does not serve, mapped to a typed `WP_Error`
+  (`reportedip_sms_country_not_supported`) so the 2FA UI can encourage
+  TOTP, Email or a passkey instead. Locally configured providers
+  (seven.io, sipgate, MessageBird) bypass the relay entirely — the site
+  operator pays directly and decides which destinations to allow. This
+  removes the situation where a fully valid US/UK/AU number was rejected
+  client-side even though the operator's chosen provider would have
+  delivered the SMS without complaint.
+- **`Two_Factor_SMS::sanitize_phone()` no longer hard-rejects non-EU
+  numbers.** The blanket "Only EU phone numbers are supported for
+  SMS-2FA." error is removed; format validation stays.
+- **`SMS_Provider_Relay::send()` is consolidated.** Inline duplicates of
+  the HTTP 402 / 429 handling are replaced with a single call into
+  `interpret_result()`, which now also maps the new 422
+  `country_not_supported` response.
+- **UI / docs / wizard copy reworded.** Setup wizard, admin settings,
+  user 2FA admin, frontend onboarding template, README and readme.txt
+  no longer claim "EU-only" delivery; they describe worldwide routing
+  with anti-fraud capping and the unsupported-destination behaviour.
+
+### Deprecated
+
+- `ReportedIP_Hive_Phone_Validator::is_eu()` and `::get_country_code()`
+  retained as no-op compatibility shims for any out-of-tree caller —
+  `is_eu()` now returns true for every valid E.164 input,
+  `get_country_code()` returns a best-effort 1–3-digit prefix without
+  consulting any whitelist. Callers inside this plugin no longer use
+  either; both will go away in a future major.
+
+### Removed
+
+- `ReportedIP_Hive_Phone_Validator::DEFAULT_EU_CODES` constant,
+  `::get_whitelist()` helper, the option
+  `reportedip_hive_eu_phone_country_codes` and the filter
+  `reportedip_hive_eu_phone_country_codes`.
+
+### Tests
+
+- `SmsProviderRelayTest` rewritten around the new contract: US numbers
+  pass through to the relay, garbage strings are rejected client-side,
+  HTTP 422 `country_not_supported` maps to
+  `reportedip_sms_country_not_supported`. Locked-down `region()` text
+  flipped from `EU (via reportedip.de)` to
+  `Worldwide (via reportedip.de)`. Full unit suite stays at 463/463;
+  multisite suite at 19/19.
+
 ## [2.0.3] — 2026-05-12
 
 ### Fixed

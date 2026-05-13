@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.3
+Stable tag: 2.0.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -51,7 +51,7 @@ Two ways to run, no feature held hostage behind a paywall:
 * **TOTP** — RFC 6238, works with Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest.
 * **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello, YubiKey. In-house implementation, no Composer dependency. Phishing-resistant.
 * **Email OTP** — 6-digit code, 10-minute validity, rate-limited (3 sends / 15 min, 60 s cooldown), 5 verify attempts per code.
-* **SMS OTP** — EU-only providers (Sipgate, MessageBird, seven.io) with explicit DPA confirmation. Phone numbers and provider credentials encrypted at rest.
+* **SMS OTP** — GDPR-compliant providers (Sipgate, MessageBird, seven.io) with explicit DPA confirmation. Phone numbers and provider credentials encrypted at rest.
 
 Plus:
 
@@ -161,7 +161,7 @@ Paid plans only buy the **server-side comfort** at reportedip.de — useful for 
 
 * 25,000 reputation checks/day, 1,000 reports/day
 * **Managed mail relay** — 500 transactional 2FA mails/month routed through reportedip.de's clean SPF/DKIM/DMARC infrastructure (auto-fallback to `wp_mail()` on cap)
-* **Managed SMS relay** — 25 EU-only OTP SMS/month with no third-party Twilio account required
+* **Managed SMS relay** — 25 worldwide OTP SMS/month with no third-party Twilio account required
 * Multi-site dashboard, priority sync (daily blacklist download), 90-day log retention, e-mail support (48 h SLA)
 * Prepaid top-up bundles (SMS and mail) available for heavy months
 
@@ -323,6 +323,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.4 =
+
+SMS-2FA delivery is no longer gated by a client-side EU country-code whitelist. The plugin validates E.164 format and forwards every number to the managed relay, which returns HTTP 422 `country_not_supported` for the few destinations it does not serve — surfaced to the 2FA UI as a typed error so users can pick TOTP, Email or a passkey instead. Locally configured providers (seven.io, sipgate, MessageBird) are unchanged and bypass the relay entirely. UI, wizard and docs copy reworded from "EU-only" to "worldwide via managed relay". `Phone_Validator::is_eu()` / `::get_country_code()` kept as no-op shims for any out-of-tree caller; the `DEFAULT_EU_CODES` constant, `get_whitelist()` helper and the `reportedip_hive_eu_phone_country_codes` option/filter are removed.
+
 = 2.0.1 =
 
 **Password-reset 2FA challenge: visible errors, automatic dispatch, shared verifier.** Three real bugs on the reset-flow challenge page (`wp-login.php?action=reportedip_2fa_reset`) and one drift-prevention refactor:
@@ -360,7 +364,7 @@ Mail bundle balance now visible alongside SMS in the relay-quota panel. The Hive
 
 = 1.6.3 =
 
-Managed mail and SMS relay — Professional / Business / Enterprise plans now route 2FA mails and OTP-SMS through reportedip.de instead of needing their own SMTP / Twilio / Sipgate contract. Mail relay falls back transparently to local `wp_mail()` on cap (HTTP 402) or backoff (HTTP 429) so 2FA flows never break. SMS relay surfaces typed `WP_Error`s so the 2FA UI can encourage another method instead of silently switching. New `ReportedIP_Hive_Phone_Validator` enforces an EU-only country-code whitelist (29 countries, filterable). Progressive SMS backoff ladder (0s → 2m → 5m → 15m → 30m → 60m) mirrors the service-side rate-limiter. Setup wizard slimmed from 8 to 7 steps. Scan-detector path matcher refactored to a single pass.
+Managed mail and SMS relay — Professional / Business / Enterprise plans now route 2FA mails and OTP-SMS through reportedip.de instead of needing their own SMTP / Twilio / Sipgate contract. Mail relay falls back transparently to local `wp_mail()` on cap (HTTP 402) or backoff (HTTP 429) so 2FA flows never break. SMS relay surfaces typed `WP_Error`s so the 2FA UI can encourage another method instead of silently switching. New `ReportedIP_Hive_Phone_Validator` validates E.164 format on the client; routing decisions live on the server. Progressive SMS backoff ladder (0s → 2m → 5m → 15m → 30m → 60m) mirrors the service-side rate-limiter. Setup wizard slimmed from 8 to 7 steps. Scan-detector path matcher refactored to a single pass.
 
 = 1.6.1 =
 
@@ -412,6 +416,9 @@ Initial public release as ReportedIP Hive. Three threshold channels, two operati
 
 == Upgrade Notice ==
 
+= 2.0.4 =
+SMS-2FA via the managed relay now reaches all destinations the relay is allowed to serve (worldwide minus a small list of high-cost countries); the unsupported ones surface as a clear in-UI error instead of being silently blocked on the plugin side. Local providers (seven.io, sipgate, MessageBird) are unaffected. No breaking change for sites that never enabled SMS-2FA.
+
 = 2.0.0 =
 **Breaking change — Multisite support.** Single-site installs auto-migrate transparently on the first admin visit (only adds a `blog_id` column with default 1, no data movement). On Multisite the plugin is now network-only: per-site activation is no longer possible, and protection state (whitelist, blocked IPs, attempts, trusted devices) is shared across the network so cross-site brute-force is detected and blocked everywhere at once. Site Admins on sub-sites see a read-only UI with two narrow override fields (Frontend-2FA slug + additive enforcement roles). Super Admins are forced into 2FA. Existing Multisite installs that ran Hive per-site without `Network: true` get a one-time option-promotion pass into sitemeta. Network Admin Settings page uses a custom save handler — Settings-API form posts that previously vanished into the main site's wp_options now persist to sitemeta correctly. Hardened on a 4-site Multisite Docker stack across one week post-beta. **Strongly recommended for everyone running 2.0.0-beta.1.**
 
@@ -422,7 +429,7 @@ Critical hardening for the 1.6.5 password-reset gate. The reset-key resolver mis
 Closes a long-standing 2FA bypass: the WordPress "lost password" flow used to let anyone with mailbox access through email-2FA, because the reset link and the email OTP arrived on the same channel. Hive now requires a non-email second factor (Authenticator, SMS, passkey, recovery code) before a new password is accepted. Strongly recommended for every site using email 2FA. No breaking change: users without 2FA configured are unaffected.
 
 = 1.6.3 =
-Managed Mail/SMS relay for Professional+. 2FA mail falls back to local `wp_mail()` on cap; SMS surfaces typed errors to the user. EU-only phone validator. Free / Contributor sites are unaffected. Recommended for everyone — no breaking change.
+Managed Mail/SMS relay for Professional+. 2FA mail falls back to local `wp_mail()` on cap; SMS surfaces typed errors to the user. Free / Contributor sites are unaffected. Recommended for everyone — no breaking change.
 
 = 1.6.1 =
 Post-upgrade welcome banner with a 3-step 2FA-setup checklist, plus a login-time reminder for users without 2FA (hard-block after 5 reminders for administrator/editor/shop_manager only). Recommended.
@@ -500,7 +507,7 @@ This plugin connects to external services only when explicitly configured. *Loca
 
 * Service URL: `https://reportedip.de/wp-json/reportedip/v2/relay-sms` (and `relay-quota` for monthly usage display)
 * Purpose: deliver 2FA OTP messages without requiring the site operator to maintain their own SMS-provider contract
-* Default: off — only available for Professional, Business and Enterprise plans, only when a user actively enrolled SMS as a 2FA factor and the site selected `ReportedIP SMS Relay` as the active provider; phone numbers are validated as EU-only (29-country whitelist) before any send
+* Default: off — only available for Professional, Business and Enterprise plans, only when a user actively enrolled SMS as a 2FA factor and the site selected `ReportedIP SMS Relay` as the active provider; routing is worldwide except for a small number of high-cost destinations that are unsupported by the managed relay (HTTP 422 with code `country_not_supported` is returned to the plugin in that case)
 * Data transmitted: recipient phone number (E.164), the verification code, expiry minutes, language code, the site domain
 * Privacy / DPA: [reportedip.de/legal/avv](https://reportedip.de/legal/avv)
 
