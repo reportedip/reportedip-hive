@@ -124,9 +124,13 @@ Pair it with a malware scanner if your stack needs that surface. Hive deliberate
 
 ### Option 1: WP Admin (recommended)
 
-1. Download the latest release ZIP: <https://github.com/reportedip/reportedip-hive/releases/latest>
-2. WP Admin → *Plugins → Add New → Upload Plugin* → pick `reportedip-hive.zip`
-3. Activate → run through the 8-step setup wizard
+1. Download the production ZIP — **always pick `reportedip-hive.zip`**:
+   - Direct link (always latest): <https://github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip>
+   - Or open the [latest release page](https://github.com/reportedip/reportedip-hive/releases/latest) and grab `reportedip-hive.zip` from the *Assets* section.
+2. WP Admin → *Plugins → Add New → Upload Plugin* → pick `reportedip-hive.zip`.
+3. Activate → run through the 9-step setup wizard.
+
+> **Do not use the auto-generated "Source code (zip)" link** or the *Code → Download ZIP* button on the repository page. Those archives have a top-level folder named `reportedip-hive-X.Y.Z` (with the version) instead of `reportedip-hive/`. WordPress installs the plugin under that versioned slug, which breaks in-place updates and creates a duplicate plugin folder on every release. Only the asset `reportedip-hive.zip` is built for installation.
 
 ### Option 2: Composer (for developers)
 

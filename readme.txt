@@ -222,9 +222,13 @@ Every option lives under the `reportedip_hive_` prefix in `wp_options` (tracked 
 
 = Manual (recommended) =
 
-1. Download the latest release ZIP from [github.com/reportedip/reportedip-hive/releases/latest](https://github.com/reportedip/reportedip-hive/releases/latest).
+1. Download the production ZIP — **always pick the `reportedip-hive.zip` asset**:
+   * Direct link (always latest): [github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip](https://github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip)
+   * Or open the [latest release page](https://github.com/reportedip/reportedip-hive/releases/latest) and grab `reportedip-hive.zip` from the *Assets* section.
 2. WP Admin → *Plugins → Add New → Upload Plugin* → pick `reportedip-hive.zip`.
 3. Activate and follow the 9-step setup wizard.
+
+**Do not** use the auto-generated "Source code (zip)" link, nor the *Code → Download ZIP* button on the repository page. Those archives have a top-level folder named `reportedip-hive-X.Y.Z` (with the version) instead of `reportedip-hive/`. WordPress would install the plugin under that versioned slug, breaking in-place updates and producing a duplicate plugin folder on every release. Only the asset `reportedip-hive.zip` is built for installation.
 
 = Composer (for developers) =
 
