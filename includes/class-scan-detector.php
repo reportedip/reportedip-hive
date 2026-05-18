@@ -133,6 +133,25 @@ class ReportedIP_Hive_Scan_Detector {
 			return;
 		}
 
+		/*
+		 * Verified search engine and AI crawlers (Googlebot, Bingbot, GPTBot,
+		 * ClaudeBot, …) are exempt from the rate-based 404 burst trigger so
+		 * legit crawls over stale URLs cannot lock them into the block ladder.
+		 *
+		 * Pattern hits stay scharf: a "Googlebot" UA that goes to /.env is by
+		 * definition a spoofed UA — the honeypot path is the attack indicator.
+		 */
+		if ( ! $is_scan_hit
+			&& class_exists( 'ReportedIP_Hive_Bot_Allowlist' )
+			&& ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_allowlist_enabled', true ) ) {
+			$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
+				? sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_USER_AGENT'] ) )
+				: '';
+			if ( ReportedIP_Hive_Bot_Allowlist::is_verified_search_or_ai_bot( $ua ) ) {
+				return;
+			}
+		}
+
 		$client  = ReportedIP_Hive::get_instance();
 		$monitor = $client->get_security_monitor();
 		if ( ! ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) ) {

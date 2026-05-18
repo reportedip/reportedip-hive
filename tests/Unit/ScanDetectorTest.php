@@ -112,5 +112,70 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'image'             => array( '/wp-content/uploads/2024/06/photo.jpg' ),
 			);
 		}
+
+		/**
+		 * Architecture invariant: the burst-trigger early-return for verified
+		 * crawlers MUST be gated on `!$is_scan_hit`, otherwise a spoofed
+		 * "Googlebot" UA hitting /.env would bypass the honeypot trigger.
+		 * Verified by source-code inspection so a future refactor cannot
+		 * silently drop the guard.
+		 */
+		public function test_bot_allowlist_check_is_gated_on_pattern_hit() {
+			$source = file_get_contents(
+				dirname( __DIR__, 2 ) . '/includes/class-scan-detector.php'
+			);
+			$this->assertNotFalse( $source );
+			$this->assertStringContainsString(
+				'! $is_scan_hit',
+				$source,
+				'Scan-Detector must gate the bot-allowlist bypass on !$is_scan_hit'
+			);
+			$this->assertStringContainsString(
+				'ReportedIP_Hive_Bot_Allowlist::is_verified_search_or_ai_bot',
+				$source,
+				'Scan-Detector must consult the bot allowlist for the burst trigger'
+			);
+
+			$pattern_check_pos = strpos( $source, 'is_known_scan_path' );
+			$bot_check_pos     = strpos( $source, 'is_verified_search_or_ai_bot' );
+			$track_call_pos    = strpos( $source, 'track_generic_attempt' );
+
+			$this->assertLessThan(
+				$bot_check_pos,
+				$pattern_check_pos,
+				'Pattern detection must run before the bot allowlist check'
+			);
+			$this->assertLessThan(
+				$track_call_pos,
+				$bot_check_pos,
+				'Bot allowlist check must run before the security-monitor handoff'
+			);
+		}
+
+		/**
+		 * Pattern-hit honeypot paths must keep firing regardless of the UA —
+		 * a fake Googlebot crawling /.env IS the attack indicator.
+		 *
+		 * @dataProvider honeypot_paths_for_spoofing_test
+		 */
+		public function test_pattern_hit_paths_remain_armed_even_for_bot_uas( string $path ) {
+			$this->assertTrue(
+				$this->call_is_known_scan_path( $path ),
+				"Honeypot path '$path' must stay matched — bot allowlist does not apply"
+			);
+		}
+
+		public function honeypot_paths_for_spoofing_test(): array {
+			return array(
+				'/.env'                      => array( '/.env' ),
+				'/wp-config.php.bak'         => array( '/wp-config.php.bak' ),
+				'/wp-config.php~'            => array( '/wp-config.php~' ),
+				'/.git/config'               => array( '/.git/config' ),
+				'/phpmyadmin/'               => array( '/phpmyadmin/' ),
+				'/.aws/credentials'          => array( '/.aws/credentials' ),
+				'/.ssh/id_rsa'               => array( '/.ssh/id_rsa' ),
+				'/wp-content/debug.log'      => array( '/wp-content/debug.log' ),
+			);
+		}
 	}
 }

@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.4
+Stable tag: 2.0.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -326,6 +326,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.0.5 =
+
+Search engine and AI crawler User-Agents (Googlebot, Bingbot, DuckDuckBot, Applebot, YandexBot, GPTBot, ChatGPT-User, ClaudeBot, PerplexityBot, Amazonbot, CCBot, MetaExternalAgent, …) are now excluded from the 404 burst trigger and the REST burst trigger so legit crawls over stale URLs cannot push the bot into the progressive block ladder. Honeypot-path detection (`.env`, `wp-config.php.bak`, `.git/config`, `/phpmyadmin/`, …) stays active for **all** visitors — a "Googlebot" request to `/.env` IS the attack indicator and still triggers immediately. New `ReportedIP_Hive_Bot_Allowlist` class (extensible via `reportedip_hive_bot_allowlist_patterns` filter), master toggle `reportedip_hive_bot_allowlist_enabled` (default on) in Settings → Protection → 404 / Scanner detection.
 
 = 2.0.4 =
 

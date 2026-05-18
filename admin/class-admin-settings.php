@@ -1864,6 +1864,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_monitor_rest_api',
 			'reportedip_hive_block_user_enumeration',
 			'reportedip_hive_monitor_404_scans',
+			'reportedip_hive_bot_allowlist_enabled',
 			'reportedip_hive_monitor_woocommerce',
 			'reportedip_hive_monitor_geo_anomaly',
 			'reportedip_hive_geo_revoke_trusted_devices',
@@ -3561,6 +3562,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<input type="hidden" name="reportedip_hive_monitor_rest_api" value="0" />
 			<input type="hidden" name="reportedip_hive_block_user_enumeration" value="0" />
 			<input type="hidden" name="reportedip_hive_monitor_404_scans" value="0" />
+			<input type="hidden" name="reportedip_hive_bot_allowlist_enabled" value="0" />
 			<input type="hidden" name="reportedip_hive_monitor_woocommerce" value="0" />
 			<input type="hidden" name="reportedip_hive_monitor_geo_anomaly" value="0" />
 			<input type="hidden" name="reportedip_hive_geo_revoke_trusted_devices" value="0" />
@@ -3790,6 +3792,15 @@ class ReportedIP_Hive_Admin_Settings {
 						<label class="rip-label" for="reportedip_hive_scan_404_timeframe"><?php esc_html_e( 'Within how many minutes?', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_scan_404_timeframe" name="reportedip_hive_scan_404_timeframe" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_timeframe', 2 ) ); ?>" min="1" max="1440" class="rip-input" />
 					</div>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_bot_allowlist_enabled" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_allowlist_enabled', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Skip burst triggers for verified search engines and AI crawlers (User-Agent based)', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot and similar crawlers are exempt from the 404 burst trigger and the REST burst trigger. Pattern-based detection (.env, wp-config.php.bak, /phpmyadmin/, …) stays active for all visitors, including spoofed bot User-Agents.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
@@ -4213,7 +4224,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 1.2.0
 	 */
 	private function render_notifications_tab() {
-		$default_from_name = ReportedIP_Hive_Defaults::NOTIFY_FROM_NAME_DEFAULT;
+		$default_from_name = ReportedIP_Hive_Defaults::notify_from_name_default();
 		$default_from_mail = (string) get_option( 'admin_email', '' );
 
 		$tier_pro_or_higher = false;
@@ -4227,15 +4238,12 @@ class ReportedIP_Hive_Admin_Settings {
 			$recipients_value = $default_from_mail;
 		}
 
-		$from_name_value = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_name', '' );
-		if ( '' === $from_name_value ) {
-			$from_name_value = $default_from_name;
-		}
-
+		// Keep the stored value empty when the user hasn't overridden — that way
+		// notify_from() resolves the default dynamically (e.g. follows
+		// bloginfo('name') if the site is renamed later). The placeholder on
+		// the input still shows the active fallback so the UI isn't blank.
+		$from_name_value  = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_name', '' );
 		$from_email_value = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_email', '' );
-		if ( '' === $from_email_value ) {
-			$from_email_value = $default_from_mail;
-		}
 
 		$sync_option       = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_sync_to_api', null );
 		$sync_to_api_value = null === $sync_option ? $tier_pro_or_higher : (bool) $sync_option;
@@ -4297,7 +4305,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M22 6 12 13 2 6"/></svg>
 					<?php esc_html_e( 'Sender (used for all plugin mails)', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Applies to every plugin mail — security alerts AND 2FA login codes — so both arrive from the same address. Defaults: brand name "ReportedIP" + the WordPress admin email.', 'reportedip-hive' ); ?></p>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Applies to every plugin mail — security alerts AND 2FA login codes — so both arrive from the same address. Leave both fields empty to use the recommended defaults: your site name and the WordPress admin email.', 'reportedip-hive' ); ?></p>
 
 				<div class="rip-form-group">
 					<label class="rip-label" for="reportedip_hive_notify_from_name"><?php esc_html_e( 'From name', 'reportedip-hive' ); ?></label>
@@ -4307,8 +4315,23 @@ class ReportedIP_Hive_Admin_Settings {
 						name="reportedip_hive_notify_from_name"
 						class="rip-input"
 						value="<?php echo esc_attr( $from_name_value ); ?>"
+						placeholder="<?php echo esc_attr( $default_from_name ); ?>"
 						maxlength="120"
 					/>
+					<p class="rip-help-text">
+						<?php
+						printf(
+							/* translators: 1: site name wrapped in <code>, 2: same site name in plain text */
+							wp_kses(
+								/* translators: 1: HTML-wrapped site name, 2: plain site name (Tip example) */
+								__( 'Display name shown in the recipient\'s inbox. Leave empty to use your site name (currently: %1$s). Tip: include "Security" or "Alerts" to make it instantly recognizable, e.g. "%2$s Security".', 'reportedip-hive' ),
+								array( 'code' => array() )
+							),
+							'<code>' . esc_html( $default_from_name ) . '</code>',
+							esc_html( $default_from_name )
+						);
+						?>
+					</p>
 				</div>
 
 				<div class="rip-form-group">
@@ -4319,8 +4342,17 @@ class ReportedIP_Hive_Admin_Settings {
 						name="reportedip_hive_notify_from_email"
 						class="rip-input"
 						value="<?php echo esc_attr( $from_email_value ); ?>"
+						placeholder="<?php echo esc_attr( $default_from_mail ); ?>"
 					/>
-					<p class="rip-help-text"><?php esc_html_e( 'Should match a domain you own to avoid SPF/DKIM rejections. The mail relay (PRO+) verifies SPF/DKIM/DMARC on your behalf.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-text">
+						<?php
+						if ( $tier_pro_or_higher ) {
+							esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, all mails are sent from noreply@reportedip.de (SPF/DKIM/DMARC aligned) — your address is never used as envelope-from, which avoids SPF rejections regardless of what domain you enter here.', 'reportedip-hive' );
+						} else {
+							esc_html_e( 'Should match a domain you own to avoid SPF/DKIM rejections. Upgrade to PRO and the relay verifies SPF/DKIM/DMARC on your behalf.', 'reportedip-hive' );
+						}
+						?>
+					</p>
 				</div>
 			</div>
 

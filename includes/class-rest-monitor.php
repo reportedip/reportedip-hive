@@ -113,6 +113,24 @@ class ReportedIP_Hive_REST_Monitor {
 			);
 		}
 
+		/*
+		 * Verified search engine and AI crawlers (Googlebot, Bingbot, GPTBot,
+		 * ClaudeBot, …) are exempt from the global REST burst trigger so legit
+		 * bots that walk /wp-json/* (e.g. sitemap indexers, AI scrapers) do not
+		 * trip the per-IP threshold. Honeypot-style routes — user enumeration
+		 * via /wp/v2/users — are guarded by a dedicated sensor that
+		 * intentionally does not consult this allowlist.
+		 */
+		if ( class_exists( 'ReportedIP_Hive_Bot_Allowlist' )
+			&& ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_allowlist_enabled', true ) ) {
+			$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
+				? sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_USER_AGENT'] ) )
+				: '';
+			if ( ReportedIP_Hive_Bot_Allowlist::is_verified_search_or_ai_bot( $ua ) ) {
+				return $result;
+			}
+		}
+
 		$client  = ReportedIP_Hive::get_instance();
 		$monitor = $client->get_security_monitor();
 		if ( ! ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) ) {

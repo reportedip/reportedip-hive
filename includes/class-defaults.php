@@ -66,6 +66,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_comment_spam_timeframe'         => 60,
 		'reportedip_hive_scan_404_threshold'             => 12,
 		'reportedip_hive_scan_404_timeframe'             => 2,
+		'reportedip_hive_bot_allowlist_enabled'          => true,
 		'reportedip_hive_xmlrpc_threshold'               => 10,
 		'reportedip_hive_xmlrpc_timeframe'               => 60,
 		'reportedip_hive_disable_xmlrpc_multicall'       => true,
@@ -165,16 +166,41 @@ final class ReportedIP_Hive_Defaults {
 
 	/**
 	 * Brand default for the From-Name when no custom value is configured.
+	 *
+	 * Used as a last-resort fallback only — the regular default is the site's
+	 * own bloginfo('name'), which makes the From line read like the user's
+	 * site (e.g. "alre.de" instead of a generic "ReportedIP").
 	 */
 	public const NOTIFY_FROM_NAME_DEFAULT = 'ReportedIP';
+
+	/**
+	 * Computed default for the From-Name field — what the placeholder /
+	 * settings UI should suggest when the user hasn't overridden the option.
+	 *
+	 * Uses the site's bloginfo('name') so plugin mails read like they came
+	 * from the user's own site (e.g. "alre.de"). Falls back to the brand
+	 * default ("ReportedIP") only when the site has no name set.
+	 *
+	 * @return string
+	 */
+	public static function notify_from_name_default(): string {
+		$site_name = wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES );
+		$site_name = trim( $site_name );
+		return '' !== $site_name ? $site_name : self::NOTIFY_FROM_NAME_DEFAULT;
+	}
 
 	/**
 	 * Resolve the active From: header components for outgoing mails.
 	 *
 	 * Reads `reportedip_hive_notify_from_name` and
-	 * `reportedip_hive_notify_from_email` and falls back to the brand default
-	 * "ReportedIP" and the WordPress `admin_email` respectively. Always
-	 * returns usable values so the mailer can construct a valid header.
+	 * `reportedip_hive_notify_from_email`. Defaults are picked to make the
+	 * mail look like it originated from the user's own site:
+	 *   - name  → `get_bloginfo('name')` (e.g. "alre.de"), falls back to the
+	 *             brand default if the site has no bloginfo name.
+	 *   - email → WordPress `admin_email`. Note: when the relay is active,
+	 *             the service overrides the envelope-from to noreply@reportedip.de
+	 *             for SPF/DKIM alignment and only adopts the display name from
+	 *             this header.
 	 *
 	 * @return array{name:string,email:string}
 	 * @since  1.5.3
@@ -182,7 +208,7 @@ final class ReportedIP_Hive_Defaults {
 	public static function notify_from(): array {
 		$name = trim( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_name', '' ) );
 		if ( '' === $name ) {
-			$name = self::NOTIFY_FROM_NAME_DEFAULT;
+			$name = self::notify_from_name_default();
 		}
 
 		$email = sanitize_email( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_email', '' ) );

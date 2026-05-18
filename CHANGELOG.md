@@ -2,6 +2,33 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.5] — 2026-05-18
+
+### Security
+
+- Search engine and AI crawler User-Agents (Googlebot, Bingbot, DuckDuckBot,
+  Applebot, YandexBot, GPTBot, ChatGPT-User, ClaudeBot, PerplexityBot,
+  Amazonbot, CCBot, MetaExternalAgent and others) are now excluded from the
+  404 burst trigger (`ReportedIP_Hive_Scan_Detector`) and the REST burst
+  trigger (`ReportedIP_Hive_REST_Monitor`). Sites no longer fall out of
+  Google or AI-crawler indexes because a legitimate sweep over stale URLs
+  pushed the source IP into the progressive block ladder.
+- Honeypot-path detection (`/.env`, `/wp-config.php.bak`, `/.git/config`,
+  `/phpmyadmin/`, `/.aws/credentials`, `/.ssh/id_rsa`, …) stays active for
+  **all** visitors, including requests that present a spoofed bot
+  User-Agent — a "Googlebot" request to `/.env` IS the attack indicator
+  and continues to trigger immediately.
+
+### New
+
+- `ReportedIP_Hive_Bot_Allowlist` class — stateless, request-cached
+  User-Agent pattern matcher. Default list covers the major search
+  engines, social-preview crawlers and AI/LLM crawlers; extensible via
+  the `reportedip_hive_bot_allowlist_patterns` filter.
+- New option `reportedip_hive_bot_allowlist_enabled` (default `true`) with
+  a toggle in **Settings → Protection → 404 / Scanner detection** so
+  operators can disable the bypass site-wide if needed.
+
 ## [2.0.4] — 2026-05-13
 
 ### Changed
