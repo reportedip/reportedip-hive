@@ -56,6 +56,40 @@ body.rip-2fa-onboarding a.rip-button--primary:focus-visible {
 	text-decoration: none;
 }
 
+/*
+ * Force white button text on filled variants even when a theme stylesheet
+ * gets loaded into the onboarding page (some themes hook `button { color: … }`
+ * via global content selectors that beat our `body.rip-2fa-onboarding` scope
+ * on specificity). `!important` is justified here because the contract for
+ * these variants — coloured background + white label — is set in the
+ * design-system and the alternative is unreadable buttons.
+ */
+body.rip-2fa-onboarding .rip-button--primary,
+body.rip-2fa-onboarding .rip-button--primary:hover,
+body.rip-2fa-onboarding .rip-button--primary:focus,
+body.rip-2fa-onboarding .rip-button--primary:focus-visible,
+body.rip-2fa-onboarding .rip-button--primary:visited,
+body.rip-2fa-onboarding .rip-button--success,
+body.rip-2fa-onboarding .rip-button--success:hover,
+body.rip-2fa-onboarding .rip-button--success:focus,
+body.rip-2fa-onboarding .rip-button--success:focus-visible,
+body.rip-2fa-onboarding .rip-button--success:visited,
+body.rip-2fa-onboarding .rip-button--danger,
+body.rip-2fa-onboarding .rip-button--danger:hover,
+body.rip-2fa-onboarding .rip-button--danger:focus,
+body.rip-2fa-onboarding .rip-button--danger:focus-visible,
+body.rip-2fa-onboarding .rip-button--danger:visited {
+	color: #fff !important;
+	text-decoration: none !important;
+}
+
+body.rip-2fa-onboarding .rip-button--primary *,
+body.rip-2fa-onboarding .rip-button--success *,
+body.rip-2fa-onboarding .rip-button--danger * {
+	color: inherit !important;
+	fill: currentColor !important;
+}
+
 body.rip-2fa-onboarding img,
 body.rip-2fa-onboarding svg {
 	max-width: 100%;

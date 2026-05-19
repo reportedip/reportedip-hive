@@ -6,6 +6,13 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixed
 
+- **2FA onboarding buttons stay readable under hostile themes.** The
+  filled button variants (`rip-button--primary/success/danger`) on the
+  `/wp-admin/admin.php?page=reportedip-hive-2fa-onboarding` page now
+  pin their text to white via `!important`. Some themes ship a global
+  `body button { color: … }` rule that, despite the design-system's
+  scoped selector, won on specificity and produced unreadable buttons
+  (white text on white background) on those installs.
 - **Setup wizard now actually opens after a fresh activation.** The
   activation hook wrote `set_site_transient(…activation_redirect…)`, but
   the redirect guard in `admin_init` consumed it with `get_transient()`
