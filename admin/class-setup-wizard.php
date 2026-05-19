@@ -278,11 +278,11 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * flag stays persistent, the transient is consumed once.
 	 */
 	public function maybe_redirect_to_wizard() {
-		if ( ! get_transient( 'reportedip_hive_activation_redirect' ) ) {
+		if ( ! get_site_transient( 'reportedip_hive_activation_redirect' ) ) {
 			return;
 		}
 
-		delete_transient( 'reportedip_hive_activation_redirect' );
+		delete_site_transient( 'reportedip_hive_activation_redirect' );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( is_network_admin() || isset( $_GET['activate-multi'] ) ) {
@@ -1373,7 +1373,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * @since 1.5.3
 	 */
 	private function render_step_notifications() {
-		$default_from_name = ReportedIP_Hive_Defaults::NOTIFY_FROM_NAME_DEFAULT;
+		$default_from_name = ReportedIP_Hive_Defaults::notify_from_name_default();
 		$default_from_mail = (string) get_option( 'admin_email', '' );
 
 		$tier_pro_or_higher = false;
@@ -1387,15 +1387,12 @@ class ReportedIP_Hive_Setup_Wizard {
 			$recipients_raw = $default_from_mail;
 		}
 
-		$from_name = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_name', '' );
-		if ( '' === $from_name ) {
-			$from_name = $default_from_name;
-		}
-
+		// Leave the stored values empty when the user hasn't overridden — the
+		// mailer resolves the defaults dynamically at send-time so the From
+		// name follows bloginfo('name') if the site is renamed later. The
+		// placeholders below still show the resolved default in the input.
+		$from_name  = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_name', '' );
 		$from_email = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_email', '' );
-		if ( '' === $from_email ) {
-			$from_email = $default_from_mail;
-		}
 
 		$notify_admin = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_admin', true );
 
@@ -1441,7 +1438,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<h3><?php esc_html_e( 'Sender (used for all plugin mails)', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
-					<p class="rip-help-block"><?php esc_html_e( 'Applies to every plugin mail — security alerts AND 2FA login codes — so both arrive from the same address. Defaults: brand name "ReportedIP" + the WordPress admin email.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-block"><?php esc_html_e( 'Applies to every plugin mail — security alerts AND 2FA login codes — so both arrive from the same address. Leave both fields empty to use the recommended defaults: your site name and the WordPress admin email.', 'reportedip-hive' ); ?></p>
 
 					<div class="rip-form-group">
 						<label class="rip-label" for="rip-notify-from-name"><?php esc_html_e( 'From name', 'reportedip-hive' ); ?></label>
@@ -1454,6 +1451,19 @@ class ReportedIP_Hive_Setup_Wizard {
 							placeholder="<?php echo esc_attr( $default_from_name ); ?>"
 							maxlength="120"
 						>
+						<p class="rip-help-text">
+							<?php
+							printf(
+								/* translators: 1: HTML-wrapped site name, 2: plain site name (Tip example) */
+								wp_kses(
+									__( 'Display name shown in the recipient\'s inbox. Leave empty to use your site name (currently: %1$s). Tip: add "Security" or "Alerts", e.g. "%2$s Security".', 'reportedip-hive' ),
+									array( 'code' => array() )
+								),
+								'<code>' . esc_html( $default_from_name ) . '</code>',
+								esc_html( $default_from_name )
+							);
+							?>
+						</p>
 					</div>
 
 					<div class="rip-form-group rip-mt-3">
@@ -1466,7 +1476,15 @@ class ReportedIP_Hive_Setup_Wizard {
 							value="<?php echo esc_attr( $from_email ); ?>"
 							placeholder="<?php echo esc_attr( $default_from_mail ); ?>"
 						>
-						<p class="rip-help-text"><?php esc_html_e( 'Should match a domain you own to avoid SPF/DKIM rejections. The mail relay (PRO+) verifies SPF/DKIM/DMARC on your behalf.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text">
+							<?php
+							if ( $tier_pro_or_higher ) {
+								esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, all mails are sent from noreply@reportedip.de (SPF/DKIM/DMARC aligned) — your address is never used as envelope-from, which avoids SPF rejections regardless of what domain you enter here.', 'reportedip-hive' );
+							} else {
+								esc_html_e( 'Should match a domain you own to avoid SPF/DKIM rejections. Upgrade to PRO and the relay verifies SPF/DKIM/DMARC on your behalf.', 'reportedip-hive' );
+							}
+							?>
+						</p>
 					</div>
 				</div>
 			</div>

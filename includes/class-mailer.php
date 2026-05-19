@@ -325,12 +325,20 @@ class ReportedIP_Hive_Mailer {
 		if ( ! $has_from || ! $has_reply_to ) {
 			$from = ReportedIP_Hive_Defaults::notify_from();
 			if ( '' !== $from['email'] ) {
-				$line = $from['name'] . ' <' . $from['email'] . '>';
 				if ( ! $has_from ) {
-					$args['headers'][] = 'From: ' . $line;
+					$args['headers'][] = 'From: ' . $from['name'] . ' <' . $from['email'] . '>';
 				}
 				if ( ! $has_reply_to ) {
-					$args['headers'][] = 'Reply-To: ' . $line;
+					// Reply-To routes the human reply back to the site's admin
+					// inbox. Use a bare email (no display name) so the mail
+					// client shows the admin address cleanly when the operator
+					// hits "Reply", and so the service-side relay doesn't have
+					// to re-parse a phrase + addr-spec.
+					$reply_to_email = (string) get_option( 'admin_email', '' );
+					if ( '' === $reply_to_email || ! is_email( $reply_to_email ) ) {
+						$reply_to_email = $from['email'];
+					}
+					$args['headers'][] = 'Reply-To: ' . $reply_to_email;
 				}
 			}
 		}
