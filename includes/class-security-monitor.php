@@ -875,6 +875,13 @@ class ReportedIP_Hive_Security_Monitor {
 			return;
 		}
 
+		$event_type_safe = $event_type ?? 'unknown';
+
+		$burst_summary = $this->reserve_event_burst_slot( $event_type_safe, $ip_address, $details );
+		if ( null === $burst_summary ) {
+			return;
+		}
+
 		set_transient( $transient_key, true, $cooldown_minutes * MINUTE_IN_SECONDS );
 
 		$recipients = ReportedIP_Hive_Defaults::notify_recipients();
@@ -884,12 +891,14 @@ class ReportedIP_Hive_Security_Monitor {
 
 		$site_name = wp_specialchars_decode( (string) ( get_bloginfo( 'name' ) ?: 'WordPress Site' ), ENT_QUOTES );
 
-		$event_type_safe = $event_type ?? 'unknown';
-		$event_label     = ucwords( str_replace( '_', ' ', $event_type_safe ) );
-		$subject         = sprintf( '[%s] Security Alert: %s', $site_name, $event_label );
-		$timestamp       = current_time( 'Y-m-d H:i:s' );
+		$event_label = ucwords( str_replace( '_', ' ', $event_type_safe ) );
+		$subject     = sprintf( '[%s] Security Alert: %s', $site_name, $event_label );
+		if ( $burst_summary['suppressed_count'] > 0 ) {
+			$subject .= sprintf( ' (+%d)', (int) $burst_summary['suppressed_count'] );
+		}
+		$timestamp = current_time( 'Y-m-d H:i:s' );
 
-		$blocks = $this->build_alert_blocks( $event_label, $ip_address, $details, $timestamp );
+		$blocks = $this->build_alert_blocks( $event_label, $ip_address, $details, $timestamp, $burst_summary );
 
 		ReportedIP_Hive_Mailer::get_instance()->send(
 			array(
@@ -912,15 +921,115 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
+	 * Per-event-type burst-cap with suppression accounting.
+	 *
+	 * The legacy `rip_notif_<ip+event>`-cooldown is per-IP, so a distributed
+	 * attack (different IPs trigger the same event type within seconds) used
+	 * to send one mail per IP — the relay throttles them, the fallback drops
+	 * them into wp_mail(), the admin still drowns. This second gate caps the
+	 * total mail volume per event_type and remembers how many alerts were
+	 * suppressed so the next outgoing mail can carry a digest line.
+	 *
+	 * Returns null when the slot is closed (callers must NOT send a mail);
+	 * otherwise an array describing the suppression window since the last
+	 * delivery, suitable for embedding in the alert body.
+	 *
+	 * @param string $event_type Event slug.
+	 * @param string $ip_address Triggering IP (recorded in the suppression bucket).
+	 * @param array  $details    Threshold details (for the bucket).
+	 * @return array{suppressed_count:int,unique_ips:int,since:string,sample_ips:string[]}|null
+	 * @since  2.0.6
+	 */
+	private function reserve_event_burst_slot( string $event_type, string $ip_address, array $details ) {
+		$cap_minutes = (int) ReportedIP_Hive_Option_Routing::get(
+			'reportedip_hive_notify_event_cap_minutes',
+			15
+		);
+		$cap_minutes = max( 0, $cap_minutes );
+
+		if ( 0 === $cap_minutes ) {
+			return array(
+				'suppressed_count' => 0,
+				'unique_ips'       => 0,
+				'since'            => '',
+				'sample_ips'       => array(),
+			);
+		}
+
+		$bucket_key = 'rip_notif_event_' . md5( $event_type );
+		$bucket     = get_transient( $bucket_key );
+		$now        = time();
+
+		if ( is_array( $bucket ) && isset( $bucket['next_allowed_at'] ) && $bucket['next_allowed_at'] > $now ) {
+			$bucket['suppressed_count']              = (int) ( $bucket['suppressed_count'] ?? 0 ) + 1;
+			$bucket['unique_ips_map']                = isset( $bucket['unique_ips_map'] ) && is_array( $bucket['unique_ips_map'] )
+				? $bucket['unique_ips_map']
+				: array();
+			$bucket['unique_ips_map'][ $ip_address ] = ( $bucket['unique_ips_map'][ $ip_address ] ?? 0 ) + 1;
+			if ( count( $bucket['unique_ips_map'] ) > 50 ) {
+				$bucket['unique_ips_map'] = array_slice( $bucket['unique_ips_map'], -50, null, true );
+			}
+			if ( empty( $bucket['first_suppressed_at'] ) ) {
+				$bucket['first_suppressed_at'] = $now;
+			}
+
+			set_transient( $bucket_key, $bucket, max( 60, $bucket['next_allowed_at'] - $now ) );
+
+			$this->logger->log_security_event(
+				'notification_event_cap_suppressed',
+				$ip_address,
+				array(
+					'event_type'       => $event_type,
+					'cap_minutes'      => $cap_minutes,
+					'suppressed_count' => (int) $bucket['suppressed_count'],
+					'unique_ips'       => count( $bucket['unique_ips_map'] ),
+					'details'          => $details,
+					'reason'           => 'Per-event-type burst cap active; mail suppressed',
+				),
+				'low'
+			);
+			return null;
+		}
+
+		$suppressed_count = is_array( $bucket ) ? (int) ( $bucket['suppressed_count'] ?? 0 ) : 0;
+		$unique_ips_map   = is_array( $bucket ) && isset( $bucket['unique_ips_map'] ) && is_array( $bucket['unique_ips_map'] )
+			? $bucket['unique_ips_map']
+			: array();
+		$first_suppressed = is_array( $bucket ) ? (int) ( $bucket['first_suppressed_at'] ?? 0 ) : 0;
+
+		set_transient(
+			$bucket_key,
+			array(
+				'next_allowed_at'     => $now + ( $cap_minutes * MINUTE_IN_SECONDS ),
+				'suppressed_count'    => 0,
+				'unique_ips_map'      => array(),
+				'first_suppressed_at' => 0,
+			),
+			$cap_minutes * MINUTE_IN_SECONDS
+		);
+
+		arsort( $unique_ips_map );
+		$sample = array_slice( array_keys( $unique_ips_map ), 0, 5 );
+
+		return array(
+			'suppressed_count' => $suppressed_count,
+			'unique_ips'       => count( $unique_ips_map ),
+			'since'            => $first_suppressed > 0 ? gmdate( 'Y-m-d H:i:s', $first_suppressed ) . ' UTC' : '',
+			'sample_ips'       => $sample,
+		);
+	}
+
+	/**
 	 * Build the HTML + plain-text blocks for an admin security alert.
 	 *
-	 * @param string $event_label Human-readable event label.
-	 * @param string $ip_address  Triggering IP.
-	 * @param array  $details     Threshold details.
-	 * @param string $timestamp   Formatted timestamp.
+	 * @param string $event_label   Human-readable event label.
+	 * @param string $ip_address    Triggering IP.
+	 * @param array  $details       Threshold details.
+	 * @param string $timestamp     Formatted timestamp.
+	 * @param array  $burst_summary Suppression summary from reserve_event_burst_slot().
 	 * @return array{html:string,text:string}
 	 */
-	private function build_alert_blocks( $event_label, $ip_address, $details, $timestamp ) {
+	private function build_alert_blocks( $event_label, $ip_address, $details, $timestamp, array $burst_summary = array() ) {
 		$rows = array(
 			array( __( 'Event', 'reportedip-hive' ), $event_label ),
 			array( __( 'IP address', 'reportedip-hive' ), $ip_address ),
@@ -968,6 +1077,39 @@ class ReportedIP_Hive_Security_Monitor {
 			$html .= '</td></tr></table>';
 		}
 
+		$suppressed = isset( $burst_summary['suppressed_count'] ) ? (int) $burst_summary['suppressed_count'] : 0;
+		if ( $suppressed > 0 ) {
+			$unique_ips = (int) ( $burst_summary['unique_ips'] ?? 0 );
+			$sample_ips = is_array( $burst_summary['sample_ips'] ?? null ) ? $burst_summary['sample_ips'] : array();
+			$since      = (string) ( $burst_summary['since'] ?? '' );
+
+			$html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF2FF;border-radius:8px;margin:0 0 24px;">';
+			$html .= '<tr><td style="padding:16px;">';
+			$html .= '<p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#3730A3;">' . esc_html__( 'Burst suppression', 'reportedip-hive' ) . '</p>';
+			$html .= '<p style="margin:0 0 8px;font-size:12px;color:#3730A3;line-height:1.5;">';
+			$html .= esc_html(
+				sprintf(
+					/* translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp */
+					_n(
+						'%1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP).',
+						'%1$d additional alerts of this type were suppressed since %3$s (from %2$d distinct IPs).',
+						$suppressed,
+						'reportedip-hive'
+					),
+					$suppressed,
+					$unique_ips,
+					$since
+				)
+			);
+			$html .= '</p>';
+			if ( ! empty( $sample_ips ) ) {
+				$html .= '<p style="margin:0;font-size:12px;color:#3730A3;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;">';
+				$html .= esc_html__( 'Top offenders:', 'reportedip-hive' ) . ' ' . esc_html( implode( ', ', $sample_ips ) );
+				$html .= '</p>';
+			}
+			$html .= '</td></tr></table>';
+		}
+
 		$html .= '<p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#111827;">' . esc_html__( 'Optional next steps', 'reportedip-hive' ) . '</p>';
 		$html .= '<ul style="margin:0 0 24px;padding-left:20px;font-size:13px;color:#374151;line-height:1.6;">';
 		$html .= '<li>' . esc_html__( 'Open the ReportedIP Hive dashboard if you want a full timeline of recent events.', 'reportedip-hive' ) . '</li>';
@@ -987,6 +1129,25 @@ class ReportedIP_Hive_Security_Monitor {
 				__( 'Action: IP has been automatically blocked for %d hours.', 'reportedip-hive' ),
 				$duration
 			);
+		}
+
+		if ( $suppressed > 0 ) {
+			$text_lines[] = '';
+			$text_lines[] = sprintf(
+				/* translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp */
+				_n(
+					'Burst suppression: %1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP).',
+					'Burst suppression: %1$d additional alerts of this type were suppressed since %3$s (from %2$d distinct IPs).',
+					$suppressed,
+					'reportedip-hive'
+				),
+				$suppressed,
+				(int) ( $burst_summary['unique_ips'] ?? 0 ),
+				(string) ( $burst_summary['since'] ?? '' )
+			);
+			if ( ! empty( $sample_ips ) ) {
+				$text_lines[] = __( 'Top offenders:', 'reportedip-hive' ) . ' ' . implode( ', ', $sample_ips );
+			}
 		}
 
 		return array(

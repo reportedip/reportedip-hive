@@ -2,6 +2,34 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.6] — 2026-05-19
+
+### Fixed
+
+- **Setup wizard now actually opens after a fresh activation.** The
+  activation hook wrote `set_site_transient(…activation_redirect…)`, but
+  the redirect guard in `admin_init` consumed it with `get_transient()`
+  — read and write hit different storage keys (`_site_transient_…` vs.
+  `_transient_…`) on single-site as well as multisite, so the wizard
+  redirect never fired. Both halves now use the `_site_transient_`
+  family.
+
+### Changed
+
+- **Admin email burst protection.** `send_admin_notification()` keeps
+  the existing per-(IP × event_type) 60-minute cooldown but adds a
+  second, global per-event_type cap (`reportedip_hive_notify_event_cap_minutes`,
+  default 15 min). During a distributed brute-force the first alert
+  still goes out immediately; further alerts of the same `event_type`
+  from any IP are folded into a suppression counter and surfaced as a
+  "Burst suppression: N additional alerts (M distinct IPs) since …"
+  block — both in the HTML and the plain-text body — on the next
+  outgoing mail. Suppressed alerts continue to land in the logs as
+  `notification_event_cap_suppressed` events. Solves the situation
+  where the relay server's per-recipient progressive backoff was
+  rejecting (HTTP 429) tens of identical alerts and the wp_mail()
+  fallback was flooding the operator's mailbox.
+
 ## [2.0.5] — 2026-05-18
 
 ### Security

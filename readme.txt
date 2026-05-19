@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.5
+Stable tag: 2.0.6
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -326,6 +326,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.0.6 =
+
+Setup wizard now opens on a fresh activation again — the activation hook wrote a `set_site_transient()`, the redirect guard consumed it with `get_transient()`, so the read never matched the write on single-site or multisite. Both halves now use `_site_transient_`. Admin-email burst protection: the existing per-(IP × event_type) 60-minute cooldown stays, plus a new global per-event_type cap (default 15 min, option `reportedip_hive_notify_event_cap_minutes`). Distributed brute-force from many IPs no longer floods the operator's inbox — additional alerts of the same type are folded into a "Burst suppression: N additional alerts (M distinct IPs) since …" digest line on the next outgoing mail. Suppressed alerts continue to land in the logs as `notification_event_cap_suppressed`.
 
 = 2.0.5 =
 

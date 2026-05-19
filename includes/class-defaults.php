@@ -62,6 +62,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_max_api_calls_per_hour'         => 100,
 		'reportedip_hive_report_cooldown_hours'          => 24,
 		'reportedip_hive_notification_cooldown_minutes'  => 60,
+		'reportedip_hive_notify_event_cap_minutes'       => 15,
 		'reportedip_hive_comment_spam_threshold'         => 5,
 		'reportedip_hive_comment_spam_timeframe'         => 60,
 		'reportedip_hive_scan_404_threshold'             => 12,
