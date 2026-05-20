@@ -2273,27 +2273,6 @@ class ReportedIP_Hive_Admin_Settings {
 				'default'           => true,
 			)
 		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_decoy_block_hours',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_decoy_block_hours' ),
-				'default'           => 24,
-			)
-		);
-	}
-
-	/**
-	 * Sanitiser: decoy block duration in hours (1–168).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.9
-	 */
-	public function sanitize_decoy_block_hours( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 168, $value > 0 ? $value : 24 ) );
 	}
 
 	/**
@@ -4088,25 +4067,41 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z"/></svg>
 					<?php esc_html_e( 'Decoy Path Block', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, db-dump-master.sql.php …). Legitimate visitors never request these paths — the first hit is the attack indicator. Distinct from the N-of-Y scan-detector above; no physical decoy files are dropped on disk.', 'reportedip-hive' ); ?></p>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Detects requests to known bait paths (.env.backup, wp-config.old.php, db-dump-master.sql.php …) — paths legitimate visitors never request. Each hit is logged and reported to the community-reputation feed; the visitor gets a 403 for that one request. The source IP is NOT added to the local block list (false-positives from backup plugins would otherwise lock you out). Apache requests are rewritten to WordPress via an auto-managed .htaccess block so real bait files left on disk are never served directly.', 'reportedip-hive' ); ?></p>
 
 				<input type="hidden" name="reportedip_hive_decoy_pathblock_enabled" value="0" />
 				<div class="rip-form-group">
 					<label class="rip-toggle">
 						<input type="checkbox" name="reportedip_hive_decoy_pathblock_enabled" value="1" class="rip-toggle__input" <?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_pathblock_enabled', true ) ); ?> />
 						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Enable instant ban on decoy-path hits', 'reportedip-hive' ); ?></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Detect and report decoy-path hits', 'reportedip-hive' ); ?></span>
 					</label>
 				</div>
 
+				<?php
+				$writer            = ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance();
+				$writer_writable   = $writer->is_writable_target();
+				$writer_block_seen = $writer->is_block_present();
+				?>
 				<div class="rip-form-group">
-					<label class="rip-label" for="reportedip_hive_decoy_block_hours"><?php esc_html_e( 'Block duration (hours)', 'reportedip-hive' ); ?></label>
-					<input type="number" id="reportedip_hive_decoy_block_hours" name="reportedip_hive_decoy_block_hours" value="<?php echo esc_attr( (string) (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_block_hours', 24 ) ); ?>" min="1" max="168" class="rip-input" style="max-width: 180px;" />
+					<?php if ( $writer_writable && $writer_block_seen ) : ?>
+						<div class="rip-alert rip-alert--success">
+							<?php esc_html_e( 'Auto-managed — Hive wrote the rewrite block to .htaccess. Real bait files on disk will no longer be served directly.', 'reportedip-hive' ); ?>
+						</div>
+					<?php elseif ( $writer_writable ) : ?>
+						<div class="rip-alert rip-alert--info">
+							<?php esc_html_e( '.htaccess is writable but the block is not in place yet. Toggle the switch above to trigger a sync.', 'reportedip-hive' ); ?>
+						</div>
+					<?php else : ?>
+						<div class="rip-alert rip-alert--warning">
+							<?php esc_html_e( '.htaccess is not writable (or this server does not use one). Paste the snippet below into your server config manually.', 'reportedip-hive' ); ?>
+						</div>
+					<?php endif; ?>
 				</div>
 
 				<details class="rip-form-group">
-					<summary><strong><?php esc_html_e( 'Optional: paste into your server config for pre-PHP blocking', 'reportedip-hive' ); ?></strong></summary>
-					<p class="rip-help-text"><?php esc_html_e( 'The PHP hook above is always-on and sufficient. These server-level snippets block earlier (the request never reaches PHP). The plugin does not write to your server config — copy them in manually.', 'reportedip-hive' ); ?></p>
+					<summary><strong><?php esc_html_e( 'Server-config snippets (live preview / nginx copy-paste)', 'reportedip-hive' ); ?></strong></summary>
+					<p class="rip-help-text"><?php esc_html_e( 'On Apache, the .htaccess block is auto-managed — the snippet below shows what Hive wrote (or would write) verbatim. On nginx, copy the second snippet into your server { … } block. Both snippets rewrite to /index.php so the Hive sensor still loads, logs the hit and reports it; using [F,L] / return 403 directly would skip detection entirely.', 'reportedip-hive' ); ?></p>
 
 					<p><strong><?php esc_html_e( 'Apache (.htaccess)', 'reportedip-hive' ); ?></strong></p>
 					<pre class="rip-code-snippet"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet() ); ?></code></pre>

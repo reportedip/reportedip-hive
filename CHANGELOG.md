@@ -2,6 +2,61 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.11] — 2026-05-20
+
+### Changed
+
+- **Decoy Path Block is now detect-and-report, not detect-and-block.** The
+  sensor in `includes/class-decoy-path-block.php` no longer calls
+  `IP_Manager::block_ip()` — a single false-positive (backup plugin writing
+  `wp-config.old.php`, admin testing the bait URL, an old crawler probing
+  stale paths) would otherwise have locked the site out of its own traffic
+  for 24 hours. The hit is still logged at severity `high` and forwarded to
+  the community-reputation queue by the existing `Logger` → `api_queue`
+  pipeline; the visitor still sees a per-request 403.
+- **Server-config snippets now rewrite to WordPress, not `[F,L]` / `return
+  403`.** An Apache `[F,L]` would skip PHP entirely and silence both the
+  local log and the community report — defeating the sensor. The new
+  Apache snippet is `RewriteRule ^ /index.php [L,QSA]`; nginx equivalent
+  is `rewrite ^ /index.php last;`. Both cover Multisite subdir prefixes
+  (`/site-a/.env.backup`) via the same regex group the PHP basename
+  fallback uses.
+
+### New
+
+- **`includes/class-decoy-htaccess-writer.php`** — Hive now auto-manages
+  the Apache rewrite block inside the site's root `.htaccess` (markers
+  `# BEGIN ReportedIP Hive Decoy` / `# END ReportedIP Hive Decoy`). The
+  block is placed ABOVE `# BEGIN WordPress` so it wins over WP's
+  `RewriteCond %{REQUEST_FILENAME} -f` short-circuit — that is the only
+  position where a real bait file on disk (`.env.backup` left by
+  Composer, etc.) is reliably routed through WordPress instead of being
+  served directly by Apache. The writer uses WP-Core
+  `insert_with_markers()` (no roll-your-own parser), self-heals once per
+  hour on `admin_init`, hooks activation / deactivation to write / remove
+  the block, and exposes `is_writable_target()` / `is_block_present()`
+  for the Settings status box.
+- **Settings UI** (`admin/class-admin-settings.php`) — status box shows
+  "Auto-managed" (success) when the writer holds the block, "Read-only"
+  (warning) when `.htaccess` is not writable or this server does not
+  use one (nginx). The Apache + nginx snippets remain visible below as
+  live preview and copy-paste fallback.
+
+### Removed
+
+- Option `reportedip_hive_decoy_block_hours` is gone (no local block, no
+  duration knob). `Defaults::SAFE_OPTIONS` and the settings form lose
+  the key.
+
+### Migrations
+
+- `Migration_Manager::migrate_to_v7()` runs once and
+  - deletes all rows in `wp_reportedip_hive_blocked` with `reason LIKE
+    'decoy_pathblock:%'` — cleanup of stale entries written by 2.0.9 /
+    2.0.10,
+  - deletes the now-defunct `reportedip_hive_decoy_block_hours` option
+    site-wide on Multisite and locally on single-site.
+
 ## [2.0.10] — 2026-05-20
 
 ### Fixed

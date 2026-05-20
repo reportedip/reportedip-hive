@@ -1,14 +1,19 @@
 <?php
 /**
- * Decoy-Path-Block — instant ban on single-request hits to known bait paths.
+ * Decoy-Path-Block — single-request detection of hits to known bait paths.
  *
  * Distinct from {@see ReportedIP_Hive_Scan_Detector} which counts honeypath
- * 404s in an N-of-Y window: this sensor blocks on the **first** hit to a path
+ * 404s in an N-of-Y window: this sensor reacts on the **first** hit to a path
  * that legitimate visitors never request (e.g. `/.env.backup`,
- * `/wp-config.old.php`). No physical decoy files are dropped on disk — the
- * detection lives entirely in the request pipeline, plus optional
- * `.htaccess` / nginx snippets the admin can copy into their server config
- * for earlier (pre-PHP) blocking.
+ * `/wp-config.old.php`). The hit is logged at severity `high` and forwarded
+ * to the Hive community-reputation queue. The visitor itself sees a 403, but
+ * the source IP is NOT added to the local block table — false-positives from
+ * legitimate backup plugins / admin tests would otherwise lock the site out
+ * of its own traffic for 24 h. The companion class
+ * {@see ReportedIP_Hive_Decoy_Htaccess_Writer} keeps an Apache rewrite block
+ * in the site's `.htaccess` so that real bait files on disk (`.env.backup`
+ * left behind by a developer, etc.) are routed through WordPress instead of
+ * being served directly — security and detection in one move.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <ps@cms-admins.de>
@@ -151,7 +156,9 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 
 	/**
 	 * `init` priority-1 handler — checks the current request URI against the
-	 * decoy list, blocks the source IP and emits a 403 response.
+	 * decoy list, logs the hit (which forwards to the community queue) and
+	 * emits a per-request 403 response. The source IP is NOT added to the
+	 * local block table.
 	 *
 	 * @return void
 	 */
@@ -182,26 +189,24 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 			return;
 		}
 
-		$duration_hours = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_block_hours', 24 );
-		$duration_hours = max( 1, min( 168, $duration_hours ) );
-
 		$path_only = wp_parse_url( $uri, PHP_URL_PATH );
 		$path_only = is_string( $path_only ) ? strtolower( rtrim( $path_only, '/' ) ) : '';
+
+		$htaccess_handled = class_exists( 'ReportedIP_Hive_Decoy_Htaccess_Writer' )
+			&& ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->is_block_present();
 
 		ReportedIP_Hive_Logger::get_instance()->log_security_event(
 			'decoy_pathblock_hit',
 			$ip,
 			array(
-				'path'           => $path_only,
-				'duration_hours' => $duration_hours,
-				'user_agent'     => isset( $_SERVER['HTTP_USER_AGENT'] )
+				'path'             => $path_only,
+				'htaccess_handled' => $htaccess_handled,
+				'user_agent'       => isset( $_SERVER['HTTP_USER_AGENT'] )
 					? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, REPORTEDIP_USER_AGENT_MAX_LENGTH )
 					: '',
 			),
 			'high'
 		);
-
-		$ip_manager->block_ip( $ip, 'decoy_pathblock: ' . $path_only, $duration_hours, 'automatic' );
 
 		if ( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
 			return;
@@ -218,22 +223,35 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	}
 
 	/**
-	 * Apache/.htaccess snippet for paste into the site's `.htaccess`. Returns
-	 * literal text; the admin UI escapes it for `<pre>` display.
+	 * Build the inner directive lines for the Apache rewrite block (without
+	 * `# BEGIN` / `# END` markers — `insert_with_markers()` supplies those).
+	 *
+	 * The rewrite routes matching requests to `index.php` so WordPress and the
+	 * Hive sensor are loaded — direct `[F,L]` would skip PHP and silence both
+	 * the local log and the community report.
+	 *
+	 * @return string[] Apache directive lines.
+	 */
+	public static function htaccess_block_lines() {
+		$alternation = self::path_alternation();
+		$lines       = array();
+		$lines[]     = '<IfModule mod_rewrite.c>';
+		$lines[]     = '    RewriteEngine On';
+		$lines[]     = '    RewriteCond %{REQUEST_URI} ^(/[_0-9a-zA-Z-]+)?/(' . $alternation . ')$ [NC]';
+		$lines[]     = '    RewriteRule ^ /index.php [L,QSA]';
+		$lines[]     = '</IfModule>';
+		return $lines;
+	}
+
+	/**
+	 * Apache/.htaccess snippet as plain text for the Settings UI preview and
+	 * as Copy-Paste fallback when the file is not writable.
 	 *
 	 * @return string
 	 */
 	public static function htaccess_snippet() {
-		$lines   = array();
-		$lines[] = '# ReportedIP Hive — Decoy path block (Apache, copy into .htaccess)';
-		$lines[] = '<IfModule mod_rewrite.c>';
-		$lines[] = '    RewriteEngine On';
-		foreach ( self::decoy_paths() as $path ) {
-			$pattern = ltrim( $path, '/' );
-			$pattern = str_replace( '.', '\\.', $pattern );
-			$lines[] = '    RewriteRule ^' . $pattern . '$ - [F,L]';
-		}
-		$lines[] = '</IfModule>';
+		$lines = array( '# ReportedIP Hive — Decoy path detection (Apache)' );
+		$lines = array_merge( $lines, self::htaccess_block_lines() );
 		return implode( "\n", $lines ) . "\n";
 	}
 
@@ -243,16 +261,26 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	 * @return string
 	 */
 	public static function nginx_snippet() {
-		$paths = array();
-		foreach ( self::decoy_paths() as $path ) {
-			$paths[] = str_replace( '.', '\\.', ltrim( $path, '/' ) );
-		}
-		$alternation = implode( '|', $paths );
+		$alternation = self::path_alternation();
 		$lines       = array();
-		$lines[]     = '# ReportedIP Hive — Decoy path block (nginx, paste into your server { ... } block)';
-		$lines[]     = 'location ~* ^/(' . $alternation . ')$ {';
-		$lines[]     = '    return 403;';
+		$lines[]     = '# ReportedIP Hive — Decoy path detection (nginx, paste into your server { ... } block)';
+		$lines[]     = 'location ~* ^(/[_0-9a-zA-Z-]+)?/(' . $alternation . ')$ {';
+		$lines[]     = '    rewrite ^ /index.php last;';
 		$lines[]     = '}';
 		return implode( "\n", $lines ) . "\n";
+	}
+
+	/**
+	 * Build the regex alternation `(\.env\.backup|wp-config\.old\.php|…)` used
+	 * by both server snippets.
+	 *
+	 * @return string
+	 */
+	private static function path_alternation() {
+		$escaped = array();
+		foreach ( self::decoy_paths() as $path ) {
+			$escaped[] = str_replace( '.', '\\.', ltrim( $path, '/' ) );
+		}
+		return implode( '|', $escaped );
 	}
 }

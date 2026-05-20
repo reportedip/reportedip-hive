@@ -83,17 +83,28 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertGreaterThanOrEqual( 10, count( $paths ) );
 		}
 
-		public function test_htaccess_snippet_contains_all_default_paths() {
+		public function test_htaccess_snippet_rewrites_to_index_not_forbidden() {
 			$snippet = \ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet();
 			$this->assertStringContainsString( 'RewriteEngine On', $snippet );
 			$this->assertStringContainsString( '\.env\.backup', $snippet );
 			$this->assertStringContainsString( 'wp-config\.old\.php', $snippet );
+			$this->assertStringContainsString( '/index.php', $snippet );
+			$this->assertStringNotContainsString( '[F,L]', $snippet );
 		}
 
-		public function test_nginx_snippet_contains_alternation() {
+		public function test_htaccess_block_lines_cover_subdir_prefix() {
+			$lines    = \ReportedIP_Hive_Decoy_Path_Block::htaccess_block_lines();
+			$combined = implode( "\n", $lines );
+			$this->assertStringContainsString( '<IfModule mod_rewrite.c>', $combined );
+			$this->assertStringContainsString( '(/[_0-9a-zA-Z-]+)?', $combined );
+			$this->assertStringContainsString( '/index.php [L,QSA]', $combined );
+		}
+
+		public function test_nginx_snippet_rewrites_to_index_not_403() {
 			$snippet = \ReportedIP_Hive_Decoy_Path_Block::nginx_snippet();
-			$this->assertStringContainsString( 'location ~* ^/(', $snippet );
-			$this->assertStringContainsString( 'return 403;', $snippet );
+			$this->assertStringContainsString( 'location ~*', $snippet );
+			$this->assertStringContainsString( 'rewrite ^ /index.php last;', $snippet );
+			$this->assertStringNotContainsString( 'return 403', $snippet );
 			$this->assertStringContainsString( '\.env\.backup', $snippet );
 		}
 	}

@@ -118,7 +118,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_hardening_block_threshold'      => 60,
 		'reportedip_hive_hardening_realtime_detection'   => true,
 		'reportedip_hive_decoy_pathblock_enabled'        => true,
-		'reportedip_hive_decoy_block_hours'              => 24,
 	);
 
 	/**

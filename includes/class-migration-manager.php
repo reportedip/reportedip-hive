@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 6;
+	public const CURRENT_VERSION = 7;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -200,6 +200,37 @@ final class ReportedIP_Hive_Migration_Manager {
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_max_api_calls_per_hour', 0 );
 		delete_site_transient( 'reportedip_hive_hourly_api_calls' );
 		delete_transient( 'reportedip_hive_hourly_api_calls' );
+	}
+
+	/**
+	 * v7 — remove the 2.0.9-era local IP blocks set by the decoy-path sensor,
+	 * and drop the now-defunct `reportedip_hive_decoy_block_hours` option.
+	 *
+	 * From 2.0.11 onwards the sensor only logs + community-reports; it no
+	 * longer touches the local block table. Stale entries left behind by
+	 * earlier versions would still expire on their own clock, but cleaning
+	 * them up here keeps the admin UI honest after the upgrade.
+	 *
+	 * @return void
+	 * @since  2.0.11
+	 */
+	private static function migrate_to_v7() {
+		global $wpdb;
+		$table = $wpdb->base_prefix . 'reportedip_hive_blocked';
+		$wpdb->query( $wpdb->prepare( "DELETE FROM `{$table}` WHERE reason LIKE %s", $wpdb->esc_like( 'decoy_pathblock:' ) . '%' ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name built from $wpdb->base_prefix, LIKE pattern is parameterised.
+
+		delete_site_option( 'reportedip_hive_decoy_block_hours' );
+
+		if ( is_multisite() ) {
+			$site_ids = (array) get_sites( array( 'fields' => 'ids' ) );
+			foreach ( $site_ids as $site_id ) {
+				switch_to_blog( (int) $site_id );
+				delete_option( 'reportedip_hive_decoy_block_hours' );
+				restore_current_blog();
+			}
+		} else {
+			delete_option( 'reportedip_hive_decoy_block_hours' );
+		}
 	}
 
 	/**
