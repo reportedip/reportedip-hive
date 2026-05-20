@@ -71,6 +71,8 @@ class SettingsKeysAreStableTest extends TestCase {
 			'reportedip_hive_comment_spam_threshold',
 			'reportedip_hive_comment_spam_timeframe',
 			'reportedip_hive_data_retention_days',
+			'reportedip_hive_decoy_block_hours',
+			'reportedip_hive_decoy_pathblock_enabled',
 			'reportedip_hive_delete_data_on_uninstall',
 			'reportedip_hive_detailed_logging',
 			'reportedip_hive_enable_caching',

@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.8
+Stable tag: 2.0.9
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -328,6 +328,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.9 =
+
+Decoy Path Block — new free-tier sensor that bans the source IP on the very first request to a known bait path (`.env.backup`, `wp-config.old.php`, `db-dump-master.sql.php`, `admin-shell-console.php`, `debug-logs-temp.php` and more). Distinct from the existing scan-detector: legitimate visitors never request these paths, so the first hit IS the attack indicator — no N-of-Y window, no waiting. No physical decoy files are dropped on disk; detection lives entirely in the request pipeline. The Settings tab additionally exposes ready-to-paste `.htaccess` and nginx snippets so admins can move the block to the server level (pre-PHP) for extra hardening; the plugin never writes to server configs itself. Extend the bait list via the `reportedip_hive_decoy_paths` filter. New options `reportedip_hive_decoy_pathblock_enabled` (default on) and `reportedip_hive_decoy_block_hours` (1–168, default 24). New event type `decoy_pathblock_hit` (severity `high`); the 2.0.8 Hardening-Mode log decoration applies automatically when an attack hits during an active hardening window.
+
 = 2.0.8 =
 
 Hardening Mode (Professional plan and higher). When the coordinated-attack sensor spots ≥ 3 IPs / ≥ 20 failed logins in the same minute the plugin scharfschaltet a network-wide hardening window: failed-login threshold tightens from 5 / 15 min to 2 / 5 min, reputation block threshold from 75 % to 60 %. Default duration 60 minutes, configurable 5–360. Realtime trigger now hooks directly into `wp_login_failed` (60-second debounce) so reaction time drops from up to an hour to under a minute; the hourly cron sweep stays as a safety net. New dedicated Settings tab "Hardening Mode" with master toggle, sub-fields are visually disabled while the master is off; tab is gated on the Professional tier with an explicit upsell card on Free / Contributor. Active hardening surfaces as a red node in the WordPress admin bar (countdown + manage link) and visually marks every log row captured during the window with a "Hardening" badge. New events `hardening_mode_activated` (severity high) and `hardening_mode_deactivated` (severity low) record activations and the actor (admin / cli / expired). WP-CLI: `wp reportedip hardening status|activate|deactivate`.
@@ -436,6 +440,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 2.0.9 =
+New free-tier Decoy Path Block — bans IPs on the first request to known bait paths (`.env.backup`, `wp-config.old.php`, etc.). No disk changes, no false positives on legitimate traffic. Default-on, configurable under Settings → Detection.
 
 = 2.0.8 =
 Adds Hardening Mode (Professional plan) — automatic, time-limited tightening of failed-login and reputation thresholds when a coordinated attack is detected. Off by default; opt in via the new Settings → Hardening Mode tab. Existing settings are preserved.

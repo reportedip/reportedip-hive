@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.0.8
+ * Version: 2.0.9
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -54,7 +54,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.0.8' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.0.9' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -218,6 +218,7 @@ class ReportedIP_Hive {
 		}
 
 		ReportedIP_Hive_Admin_Bar::get_instance()->register_hooks();
+		ReportedIP_Hive_Decoy_Path_Block::get_instance()->register_hooks();
 	}
 
 	/**
@@ -293,6 +294,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-api-client.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-bar.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ip-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cron-handler.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-hide-login.php';
@@ -1474,6 +1476,9 @@ class ReportedIP_Hive {
 			'reportedip_hive_hardening_login_timeframe'    => 5,
 			'reportedip_hive_hardening_block_threshold'    => 60,
 			'reportedip_hive_hardening_realtime_detection' => true,
+
+			'reportedip_hive_decoy_pathblock_enabled'      => true,
+			'reportedip_hive_decoy_block_hours'            => 24,
 		);
 	}
 

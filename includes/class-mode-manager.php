@@ -276,6 +276,12 @@ class ReportedIP_Hive_Mode_Manager {
 				'label'         => __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ),
 				'description'   => __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login — kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ),
 			),
+			'decoy_pathblock'              => array(
+				'local'       => true,
+				'community'   => true,
+				'label'       => __( 'Decoy Path Block', 'reportedip-hive' ),
+				'description' => __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...) — distinct from the N-of-Y scan-detector.', 'reportedip-hive' ),
+			),
 			'hardening_mode'               => array(
 				'local'         => true,
 				'community'     => true,

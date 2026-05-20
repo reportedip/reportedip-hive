@@ -2,6 +2,35 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.9] — 2026-05-21
+
+### Security
+
+- **Decoy Path Block (Free).** New sensor in `includes/class-decoy-path-block.php`
+  bans the source IP on the **first** request to a known bait path
+  (`.env.backup`, `wp-config.old.php`, `db-dump-master.sql.php`,
+  `admin-shell-console.php`, `debug-logs-temp.php`, …). Distinct from the
+  existing `Scan_Detector` which counts honeypath-404s in an N-of-Y window —
+  legitimate visitors never request these paths, the first hit IS the attack.
+  Default 24-hour block, configurable in Settings → Detection. Default-on,
+  available on every tier.
+- **No physical decoy files.** Detection lives entirely in the request
+  pipeline; nothing is dropped on disk. Compatible with every backup /
+  migration workflow.
+- **Optional server-level snippets.** The Settings tab exposes ready-to-paste
+  `.htaccess` and nginx snippets so admins can block these paths at the
+  server level (pre-PHP) if they want extra hardening. The plugin does NOT
+  write to server configs.
+
+### New
+
+- Filter `reportedip_hive_decoy_paths` to extend the built-in bait list.
+- `Mode_Manager::FEATURE_MATRIX` entry `decoy_pathblock`.
+- Options `reportedip_hive_decoy_pathblock_enabled` (bool, default true) +
+  `reportedip_hive_decoy_block_hours` (int 1–168, default 24).
+- Log event `decoy_pathblock_hit` (severity high). Hardening-Mode log
+  decoration from 2.0.8 applies automatically.
+
 ## [2.0.8] — 2026-05-20
 
 ### Security

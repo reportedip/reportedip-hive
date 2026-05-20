@@ -2263,6 +2263,37 @@ class ReportedIP_Hive_Admin_Settings {
 				'default'           => 60,
 			)
 		);
+
+		register_setting(
+			'reportedip_hive_protection_detection',
+			'reportedip_hive_decoy_pathblock_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'default'           => true,
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_detection',
+			'reportedip_hive_decoy_block_hours',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => array( $this, 'sanitize_decoy_block_hours' ),
+				'default'           => 24,
+			)
+		);
+	}
+
+	/**
+	 * Sanitiser: decoy block duration in hours (1–168).
+	 *
+	 * @param mixed $value
+	 * @return int
+	 * @since  2.0.9
+	 */
+	public function sanitize_decoy_block_hours( $value ) {
+		$value = absint( $value );
+		return max( 1, min( 168, $value > 0 ? $value : 24 ) );
 	}
 
 	/**
@@ -4050,6 +4081,39 @@ class ReportedIP_Hive_Admin_Settings {
 						<input type="number" id="reportedip_hive_password_min_classes" name="reportedip_hive_password_min_classes" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_min_classes', 3 ) ); ?>" min="1" max="4" class="rip-input" />
 					</div>
 				</div>
+			</div>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z"/></svg>
+					<?php esc_html_e( 'Decoy Path Block', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, db-dump-master.sql.php …). Legitimate visitors never request these paths — the first hit is the attack indicator. Distinct from the N-of-Y scan-detector above; no physical decoy files are dropped on disk.', 'reportedip-hive' ); ?></p>
+
+				<input type="hidden" name="reportedip_hive_decoy_pathblock_enabled" value="0" />
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_decoy_pathblock_enabled" value="1" class="rip-toggle__input" <?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_pathblock_enabled', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Enable instant ban on decoy-path hits', 'reportedip-hive' ); ?></span>
+					</label>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_decoy_block_hours"><?php esc_html_e( 'Block duration (hours)', 'reportedip-hive' ); ?></label>
+					<input type="number" id="reportedip_hive_decoy_block_hours" name="reportedip_hive_decoy_block_hours" value="<?php echo esc_attr( (string) (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_block_hours', 24 ) ); ?>" min="1" max="168" class="rip-input" style="max-width: 180px;" />
+				</div>
+
+				<details class="rip-form-group">
+					<summary><strong><?php esc_html_e( 'Optional: paste into your server config for pre-PHP blocking', 'reportedip-hive' ); ?></strong></summary>
+					<p class="rip-help-text"><?php esc_html_e( 'The PHP hook above is always-on and sufficient. These server-level snippets block earlier (the request never reaches PHP). The plugin does not write to your server config — copy them in manually.', 'reportedip-hive' ); ?></p>
+
+					<p><strong><?php esc_html_e( 'Apache (.htaccess)', 'reportedip-hive' ); ?></strong></p>
+					<pre style="background:#f6f7f7;padding:12px;overflow:auto;font-size:12px;border:1px solid #c3c4c7;"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet() ); ?></code></pre>
+
+					<p><strong><?php esc_html_e( 'nginx', 'reportedip-hive' ); ?></strong></p>
+					<pre style="background:#f6f7f7;padding:12px;overflow:auto;font-size:12px;border:1px solid #c3c4c7;"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::nginx_snippet() ); ?></code></pre>
+				</details>
 			</div>
 
 			<div class="rip-form-actions">
