@@ -44,18 +44,42 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		'/.env.old',
 		'/.env.bak',
 		'/.env.save',
-		'/wp-config.old.php',
+		'/.env.orig',
+		'/.env.production.bak',
+		'/.env.local.bak',
+		'/wp-config.php.bak',
+		'/wp-config.php.old',
+		'/wp-config.php.save',
+		'/wp-config.php.orig',
+		'/wp-config.php.swp',
+		'/wp-config.php~',
+		'/wp-config.bak',
 		'/wp-config.bak.php',
+		'/wp-config.old.php',
 		'/wp-config.save.php',
 		'/wp-config.backup.php',
+		'/configuration.php.bak',
 		'/db-dump-master.sql.php',
 		'/database-dump.sql',
 		'/backup-db.sql.php',
+		'/dump.sql',
+		'/database.sql',
+		'/backup.sql',
+		'/db.sql',
 		'/admin-shell-console.php',
 		'/debug-logs-temp.php',
 		'/admin-ajax.php.bak',
 		'/sftp-config.json',
 		'/web.config.bak',
+		'/.htpasswd',
+		'/.htaccess.bak',
+		'/.aws/credentials',
+		'/.aws/config',
+		'/.ssh/id_rsa',
+		'/.ssh/authorized_keys',
+		'/id_rsa',
+		'/private.key',
+		'/server.key',
 	);
 
 	/**
@@ -129,7 +153,13 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	 * Whether the given path matches a configured decoy entry.
 	 *
 	 * Matches case-insensitively on the URL path component only (query string
-	 * and fragment are stripped). Trailing slashes are ignored.
+	 * and fragment are stripped). Trailing slashes are ignored. On Multisite
+	 * subdir installs a request to `/site-a/.env.backup` must match the same
+	 * bait as `/.env.backup`, so any decoy entry is also accepted as a
+	 * suffix as long as the leading remainder is a single subdir segment
+	 * (`[_0-9a-zA-Z-]+`). That mirrors the optional capture group in the
+	 * `.htaccess` / nginx snippets and keeps PHP detection and server-level
+	 * rewrites consistent.
 	 *
 	 * @param string $path Request path (e.g. `/wp-config.old.php?foo=bar`).
 	 * @return bool
@@ -150,8 +180,21 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		if ( in_array( $only_path, $paths, true ) ) {
 			return true;
 		}
-		$basename = '/' . basename( $only_path );
-		return in_array( $basename, $paths, true );
+		foreach ( $paths as $entry ) {
+			$needle  = '/' . ltrim( $entry, '/' );
+			$end_pos = strlen( $only_path ) - strlen( $needle );
+			if ( $end_pos <= 0 ) {
+				continue;
+			}
+			if ( substr( $only_path, $end_pos ) !== $needle ) {
+				continue;
+			}
+			$prefix = substr( $only_path, 0, $end_pos );
+			if ( '' === $prefix || preg_match( '#^/[_0-9a-zA-Z-]+$#', $prefix ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -261,7 +304,14 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	}
 
 	/**
-	 * nginx snippet for paste into the site's `server { ... }` block.
+	 * nginx regex snippet for paste into the site's `server { ... }` block.
+	 *
+	 * Works on plain nginx and on managed stacks that put the
+	 * `{custom_directives}` placeholder BEFORE the default `location ~ /\.
+	 * { deny all; }` deny rule. On stacks that emit custom directives AFTER
+	 * the dot-file deny (most ISPConfig templates do), the deny rule wins on
+	 * regex-priority and this snippet is silently shadowed — use
+	 * {@see self::nginx_snippet_exact_match()} there instead.
 	 *
 	 * @return string
 	 */
@@ -276,8 +326,29 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	}
 
 	/**
+	 * nginx exact-match snippet — one `location = /<bait>` line per default
+	 * path. Exact-match locations have higher priority than any regex
+	 * location, so this variant survives even when a `location ~ /\. { deny
+	 * all; }` is configured first by the host template (the typical
+	 * ISPConfig setup). Paste into the "nginx Directives" field of the
+	 * site; ISPConfig will reload nginx automatically.
+	 *
+	 * @return string
+	 */
+	public static function nginx_snippet_exact_match() {
+		$lines   = array();
+		$lines[] = '# ReportedIP Hive — Decoy path detection (nginx, exact-match form for ISPConfig/managed stacks)';
+		foreach ( self::decoy_paths() as $path ) {
+			$lines[] = 'location = ' . $path . ' { rewrite ^ /index.php last; }';
+		}
+		return implode( "\n", $lines ) . "\n";
+	}
+
+	/**
 	 * Build the regex alternation `(\.env\.backup|wp-config\.old\.php|…)` used
-	 * by both server snippets.
+	 * by the rewrite-block + nginx regex snippets. Forward slashes inside
+	 * nested entries (`.aws/credentials`) are left as-is — they are not
+	 * regex metacharacters and apache/nginx parse them literally.
 	 *
 	 * @return string
 	 */

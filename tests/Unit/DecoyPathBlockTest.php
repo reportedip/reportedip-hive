@@ -71,16 +71,33 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/Wp-Config.Old.PHP' ) );
 		}
 
-		public function test_basename_match_for_multisite_subdirs() {
+		public function test_subdir_prefix_match_for_multisite_subdirs() {
 			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/site-a/.env.backup' ) );
 			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/site-b/wp-config.old.php' ) );
-			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/deep/nested/sub/admin-shell-console.php' ) );
 			$this->assertFalse( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/site-a/wp-login.php' ) );
+			$this->assertFalse(
+				\ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/deep/nested/sub/admin-shell-console.php' ),
+				'Deep nested paths must NOT match — only one subdir segment is allowed (consistent with the .htaccess/nginx regex).'
+			);
+		}
+
+		public function test_nested_decoy_paths_match_with_and_without_subdir_prefix() {
+			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/.aws/credentials' ) );
+			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/site-a/.aws/credentials' ) );
+			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/.ssh/id_rsa' ) );
+			$this->assertTrue(
+				\ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/wp-content/.aws/credentials' ),
+				'One-segment prefixes count — `wp-content` is itself a valid subdir name.'
+			);
+			$this->assertFalse(
+				\ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/wp-content/uploads/.ssh/id_rsa' ),
+				'Two-or-more-segment prefixes must not match — the rewrite regex only allows one optional subdir.'
+			);
 		}
 
 		public function test_default_paths_count_matches_constant() {
 			$paths = \ReportedIP_Hive_Decoy_Path_Block::decoy_paths();
-			$this->assertGreaterThanOrEqual( 10, count( $paths ) );
+			$this->assertGreaterThanOrEqual( 30, count( $paths ) );
 		}
 
 		public function test_htaccess_snippet_rewrites_to_index_not_forbidden() {
@@ -106,6 +123,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'rewrite ^ /index.php last;', $snippet );
 			$this->assertStringNotContainsString( 'return 403', $snippet );
 			$this->assertStringContainsString( '\.env\.backup', $snippet );
+		}
+
+		public function test_nginx_exact_match_snippet_emits_one_location_per_path() {
+			$snippet = \ReportedIP_Hive_Decoy_Path_Block::nginx_snippet_exact_match();
+			$this->assertStringContainsString( 'location = /.env.backup { rewrite ^ /index.php last; }', $snippet );
+			$this->assertStringContainsString( 'location = /wp-config.old.php { rewrite ^ /index.php last; }', $snippet );
+			$this->assertStringContainsString( 'location = /.aws/credentials { rewrite ^ /index.php last; }', $snippet );
+			$this->assertStringNotContainsString( 'location ~', $snippet );
+			$this->assertStringNotContainsString( 'return 403', $snippet );
 		}
 	}
 }

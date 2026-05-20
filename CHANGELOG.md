@@ -2,6 +2,41 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.14] — 2026-05-20
+
+### New
+
+- **Decoy bait-path list expanded from 16 to 40 entries.** New additions:
+  - Full `wp-config.php.*` Backup family — `.bak`, `.old`, `.save`,
+    `.orig`, `.swp`, `.txt`, trailing `~`.
+  - More `.env*` Backups — `.production.bak`, `.local.bak`, `.orig`.
+  - Joomla `configuration.php.bak`.
+  - Common SQL dumps at the webroot — `dump.sql`, `database.sql`,
+    `backup.sql`, `db.sql`.
+  - Apache `.htpasswd`, `.htaccess.bak`.
+  - Cloud credentials — `.aws/credentials`, `.aws/config`.
+  - SSH keys — `.ssh/id_rsa`, `.ssh/authorized_keys`.
+  - Private-key files at the webroot — `id_rsa`, `private.key`,
+    `server.key`.
+- **`nginx_snippet_exact_match()`** — new alternative server snippet
+  that emits one `location = /<bait>` line per default path. Exact-match
+  locations have higher nginx priority than any regex location, so the
+  snippet still works when the host template ships a
+  `location ~ /\.  { deny all; }` dot-file deny rule before the site's
+  custom directives (typical on ISPConfig). The Settings tab shows both
+  variants — regex form (plain nginx) and exact-match form (ISPConfig
+  & managed stacks) — with a short hint when to pick which.
+
+### Changed
+
+- **`is_decoy_path()` accepts nested decoy paths with the same
+  one-optional-subdir prefix rule the rewrite regex uses.** Detection
+  matches `/.aws/credentials`, `/site-a/.aws/credentials` and
+  `/wp-content/.aws/credentials`, but stops at two or more subdir
+  segments (`/wp-content/uploads/.ssh/id_rsa` does NOT match). Keeps
+  PHP detection consistent with the auto-managed `.htaccess` block and
+  both nginx snippets.
+
 ## [2.0.13] — 2026-05-20
 
 ### Fixed

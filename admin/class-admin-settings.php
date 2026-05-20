@@ -4106,8 +4106,12 @@ class ReportedIP_Hive_Admin_Settings {
 					<p><strong><?php esc_html_e( 'Apache (.htaccess)', 'reportedip-hive' ); ?></strong></p>
 					<pre class="rip-code-snippet"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet() ); ?></code></pre>
 
-					<p><strong><?php esc_html_e( 'nginx', 'reportedip-hive' ); ?></strong></p>
+					<p><strong><?php esc_html_e( 'nginx (regex form — plain nginx)', 'reportedip-hive' ); ?></strong></p>
 					<pre class="rip-code-snippet"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::nginx_snippet() ); ?></code></pre>
+
+					<p><strong><?php esc_html_e( 'nginx (exact-match form — ISPConfig & managed stacks)', 'reportedip-hive' ); ?></strong></p>
+					<p class="rip-help-text"><?php esc_html_e( 'Use this variant when your host template ships a "location ~ /\\." dot-file deny rule before your custom directives — exact-match locations have higher priority than any regex location and survive that ordering.', 'reportedip-hive' ); ?></p>
+					<pre class="rip-code-snippet"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::nginx_snippet_exact_match() ); ?></code></pre>
 				</details>
 			</div>
 
