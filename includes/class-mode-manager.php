@@ -160,7 +160,9 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @since 1.5.3
 	 */
 	public function flush_cached_tier() {
-		$this->cached_tier = null;
+		$this->cached_tier                    = null;
+		$this->api_rate_limit_snapshot_cache  = null;
+		$this->community_layer_degraded_cache = null;
 	}
 
 	/**
@@ -871,6 +873,12 @@ class ReportedIP_Hive_Mode_Manager {
 	/** @var array|null Per-request snapshot cache; invalidated on transient deletion via {@see invalidate_relay_quota_snapshot()}. */
 	private $relay_quota_snapshot_cache = null;
 
+	/** @var array|null Per-request memo for {@see get_api_rate_limit_snapshot()}. */
+	private $api_rate_limit_snapshot_cache = null;
+
+	/** @var bool|null Per-request memo for {@see is_community_layer_degraded()}. */
+	private $community_layer_degraded_cache = null;
+
 	/**
 	 * Drop the per-request snapshot cache (call after writing the transient).
 	 *
@@ -972,5 +980,187 @@ class ReportedIP_Hive_Mode_Manager {
 
 		$this->relay_quota_snapshot_cache = $snapshot;
 		return $snapshot;
+	}
+
+	/**
+	 * Tier-bound hourly rate-limit caps for outgoing API calls, split into three buckets.
+	 *
+	 * Derived from the daily quotas in PRICING-PLAN.md (`Tagesquote / 24 × 3` spike factor)
+	 * so a bot storm cannot burn the whole daily quota in two hours. `null` means
+	 * "no cap" (Enterprise / Honeypot).
+	 *
+	 * @param string $tier Tier slug.
+	 * @return array{reputation:?int,submission:?int,meta:?int}
+	 * @since  2.0.5
+	 */
+	public function default_api_rate_limits_for_tier( $tier ) {
+		switch ( (string) $tier ) {
+			case 'contributor':
+				return array(
+					'reputation' => 600,
+					'submission' => 30,
+					'meta'       => 60,
+				);
+			case 'professional':
+				return array(
+					'reputation' => 3000,
+					'submission' => 150,
+					'meta'       => 100,
+				);
+			case 'business':
+				return array(
+					'reputation' => 12000,
+					'submission' => 600,
+					'meta'       => 100,
+				);
+			case 'enterprise':
+			case 'honeypot':
+				return array(
+					'reputation' => null,
+					'submission' => null,
+					'meta'       => null,
+				);
+			case 'free':
+			default:
+				return array(
+					'reputation' => 150,
+					'submission' => 10,
+					'meta'       => 30,
+				);
+		}
+	}
+
+	/**
+	 * Soft tier lookup that never triggers a live `/relay-quota` API call.
+	 *
+	 * Used by per-request paths (admin notices, the API-usage card) that may
+	 * render on every wp-admin page load: a 30-second timeout on a missing
+	 * cache would block the whole admin UI.
+	 *
+	 * Falls back to {@see TIER_DEFAULT} if neither the api-status nor the
+	 * relay-quota transient is populated yet.
+	 *
+	 * @return string
+	 * @since  2.0.7
+	 */
+	private function get_cached_tier_or_default() {
+		if ( null !== $this->cached_tier ) {
+			return $this->cached_tier;
+		}
+
+		$status = get_transient( 'reportedip_hive_api_status' );
+		if ( is_array( $status ) ) {
+			$role = $status['userRole'] ?? ( $status['user_role'] ?? '' );
+			if ( ! empty( $role ) ) {
+				return self::tier_from_role( (string) $role );
+			}
+		}
+		$quota = get_transient( 'reportedip_hive_relay_quota' );
+		if ( is_array( $quota ) && ! empty( $quota['tier'] ) ) {
+			return (string) $quota['tier'];
+		}
+		return 'free';
+	}
+
+	/**
+	 * Snapshot of the current API rate-limit state across all three buckets.
+	 *
+	 * Used by the admin "API call usage" card and the degraded-banner helper.
+	 *
+	 * @return array{tier:string,source:string,limits:array{reputation:?int,submission:?int,meta:?int},used:array{reputation:int,submission:int,meta:int}}
+	 * @since  2.0.5
+	 */
+	public function get_api_rate_limit_snapshot() {
+		if ( null !== $this->api_rate_limit_snapshot_cache ) {
+			return $this->api_rate_limit_snapshot_cache;
+		}
+
+		$tier     = $this->get_cached_tier_or_default();
+		$defaults = $this->default_api_rate_limits_for_tier( $tier );
+
+		$manual = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_max_api_calls_per_hour', 0 );
+		$source = 'auto';
+		$limits = $defaults;
+
+		if ( $manual > 0 ) {
+			$source = 'manual';
+			$limits = array(
+				'reputation' => $manual,
+				'submission' => $manual,
+				'meta'       => $manual,
+			);
+		}
+
+		$this->api_rate_limit_snapshot_cache = array(
+			'tier'   => $tier,
+			'source' => $source,
+			'limits' => $limits,
+			'used'   => array(
+				'reputation' => (int) get_transient( 'reportedip_hive_hourly_api_calls_reputation' ),
+				'submission' => (int) get_transient( 'reportedip_hive_hourly_api_calls_submission' ),
+				'meta'       => (int) get_transient( 'reportedip_hive_hourly_api_calls_meta' ),
+			),
+		);
+		return $this->api_rate_limit_snapshot_cache;
+	}
+
+	/**
+	 * Whether the community threat-check layer is currently degraded.
+	 *
+	 * True when (a) Community-mode is active AND (b) any bucket is at or above 80%
+	 * of its effective limit OR a server-side 429 has set the global rate-limit reset
+	 * transient. In that state the local firewall (sensors, blocks, logs, queue)
+	 * remains fully active; only the API-backed reputation lookups + report
+	 * submissions are temporarily silent.
+	 *
+	 * Short-circuits before consulting the tier-cap helper when none of the
+	 * bucket counters has ticked this hour — the snapshot would otherwise
+	 * trigger a `get_current_tier()` lookup that can fall through to a live
+	 * `/relay-quota` call on installs without a cached tier (30 s timeout
+	 * per admin page load).
+	 *
+	 * @return bool
+	 * @since  2.0.5
+	 */
+	public function is_community_layer_degraded() {
+		if ( null !== $this->community_layer_degraded_cache ) {
+			return $this->community_layer_degraded_cache;
+		}
+
+		if ( ! $this->is_community_mode() ) {
+			$this->community_layer_degraded_cache = false;
+			return false;
+		}
+
+		$server_reset = get_transient( 'reportedip_hive_rate_limit_reset' );
+		if ( $server_reset && (int) $server_reset > time() ) {
+			$this->community_layer_degraded_cache = true;
+			return true;
+		}
+
+		$used = array(
+			'reputation' => (int) get_transient( 'reportedip_hive_hourly_api_calls_reputation' ),
+			'submission' => (int) get_transient( 'reportedip_hive_hourly_api_calls_submission' ),
+			'meta'       => (int) get_transient( 'reportedip_hive_hourly_api_calls_meta' ),
+		);
+		if ( 0 === $used['reputation'] && 0 === $used['submission'] && 0 === $used['meta'] ) {
+			$this->community_layer_degraded_cache = false;
+			return false;
+		}
+
+		$snapshot = $this->get_api_rate_limit_snapshot();
+		foreach ( array( 'reputation', 'submission', 'meta' ) as $bucket ) {
+			$limit = $snapshot['limits'][ $bucket ] ?? null;
+			if ( null === $limit || $limit <= 0 ) {
+				continue;
+			}
+			if ( $used[ $bucket ] >= (int) ceil( $limit * 0.8 ) ) {
+				$this->community_layer_degraded_cache = true;
+				return true;
+			}
+		}
+
+		$this->community_layer_degraded_cache = false;
+		return false;
 	}
 }

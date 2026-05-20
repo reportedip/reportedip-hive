@@ -59,7 +59,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_api_endpoint'                   => 'https://reportedip.de/wp-json/reportedip/v2/',
 		'reportedip_hive_trusted_ip_header'              => '',
 		'reportedip_hive_blocked_page_contact_url'       => '',
-		'reportedip_hive_max_api_calls_per_hour'         => 100,
+		'reportedip_hive_max_api_calls_per_hour'         => 0,
 		'reportedip_hive_report_cooldown_hours'          => 24,
 		'reportedip_hive_notification_cooldown_minutes'  => 60,
 		'reportedip_hive_notify_event_cap_minutes'       => 15,

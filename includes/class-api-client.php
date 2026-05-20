@@ -78,9 +78,12 @@ class ReportedIP_Hive_API {
 			);
 		}
 
-		$response = $this->make_request( 'GET', 'verify-key' );
+		$start_time    = microtime( true );
+		$response      = $this->make_request( 'GET', 'verify-key' );
+		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		if ( is_wp_error( $response ) ) {
+			$this->track_api_call( false, $response_time, 'wp_error', 'meta' );
 			return array(
 				'success' => false,
 				'message' => $response->get_error_message(),
@@ -90,6 +93,8 @@ class ReportedIP_Hive_API {
 		$body          = wp_remote_retrieve_body( $response );
 		$data          = json_decode( $body, true );
 		$response_code = wp_remote_retrieve_response_code( $response );
+
+		$this->track_api_call( $response_code === 200, $response_time, $response_code === 200 ? null : 'http_' . $response_code, 'meta' );
 
 		if ( $response_code === 200 && isset( $data['data'] ) && isset( $data['data']['valid'] ) ) {
 			$key_data = $data['data'];
@@ -158,7 +163,7 @@ class ReportedIP_Hive_API {
 			if ( $this->mode_manager->is_local_mode() ) {
 				return false;
 			}
-			$this->track_api_call( false, 0, 'not_configured' );
+			$this->track_api_call( false, 0, 'not_configured', 'reputation' );
 			return false;
 		}
 
@@ -167,13 +172,14 @@ class ReportedIP_Hive_API {
 			return isset( $cached_result['data'] ) ? $cached_result['data'] : $cached_result;
 		}
 
-		if ( $this->is_rate_limited() ) {
-			$this->track_api_call( false, 0, 'rate_limited' );
+		if ( $this->is_rate_limited( 'reputation' ) ) {
+			$this->track_api_call( false, 0, 'rate_limited', 'reputation' );
 			$this->logger->log_security_event(
 				'api_rate_limited',
 				$ip_address,
 				array(
 					'reason' => 'Rate limit active, skipping API call',
+					'bucket' => 'reputation',
 				),
 				'medium'
 			);
@@ -192,7 +198,7 @@ class ReportedIP_Hive_API {
 
 		if ( is_wp_error( $response ) ) {
 			$error_message = $response->get_error_message();
-			$this->track_api_call( false, $response_time, 'wp_error' );
+			$this->track_api_call( false, $response_time, 'wp_error', 'reputation' );
 
 			$this->logger->log_security_event(
 				'api_error',
@@ -221,7 +227,7 @@ class ReportedIP_Hive_API {
 			$reset_time  = time() + ( $retry_after ? intval( $retry_after ) : 3600 );
 			$this->set_rate_limited( $reset_time );
 
-			$this->track_api_call( false, $response_time, 'rate_limit_429' );
+			$this->track_api_call( false, $response_time, 'rate_limit_429', 'reputation' );
 			$this->logger->log_security_event(
 				'api_rate_limit_hit',
 				$ip_address,
@@ -236,7 +242,7 @@ class ReportedIP_Hive_API {
 		}
 
 		if ( $response_code === 200 && isset( $data['data'] ) ) {
-			$this->track_api_call( true, $response_time, null );
+			$this->track_api_call( true, $response_time, null, 'reputation' );
 
 			$this->cache->set_reputation( $ip_address, $data['data'] );
 
@@ -256,7 +262,7 @@ class ReportedIP_Hive_API {
 			return $data['data'];
 		}
 
-		$this->track_api_call( false, $response_time, 'invalid_response' );
+		$this->track_api_call( false, $response_time, 'invalid_response', 'reputation' );
 		$this->logger->log_security_event(
 			'api_invalid_response',
 			$ip_address,
@@ -315,9 +321,12 @@ class ReportedIP_Hive_API {
 			'comment'    => $comment,
 		);
 
-		$response = $this->make_request( 'POST', 'report', array(), $data );
+		$start_time    = microtime( true );
+		$response      = $this->make_request( 'POST', 'report', array(), $data );
+		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		if ( is_wp_error( $response ) ) {
+			$this->track_api_call( false, $response_time, 'wp_error', 'submission' );
 			return array(
 				'success' => false,
 				'message' => $response->get_error_message(),
@@ -329,6 +338,7 @@ class ReportedIP_Hive_API {
 		$response_data = json_decode( $body, true );
 
 		if ( $response_code === 200 && isset( $response_data['data'] ) ) {
+			$this->track_api_call( true, $response_time, null, 'submission' );
 			$this->decrement_quota_counter();
 
 			return array(
@@ -336,12 +346,14 @@ class ReportedIP_Hive_API {
 				'data'    => $response_data['data'],
 			);
 		} elseif ( $response_code === 429 ) {
+			$this->track_api_call( false, $response_time, 'rate_limit_429', 'submission' );
 			return array(
 				'success'     => false,
 				'message'     => 'Rate limit exceeded',
 				'retry_after' => wp_remote_retrieve_header( $response, 'retry-after' ),
 			);
 		} else {
+			$this->track_api_call( false, $response_time, 'http_' . $response_code, 'submission' );
 			$error_message = 'Unknown error';
 			if ( isset( $response_data['message'] ) ) {
 				$error_message = $response_data['message'];
@@ -370,9 +382,12 @@ class ReportedIP_Hive_API {
 			'reason'    => $reason,
 		);
 
-		$response = $this->make_request( 'POST', 'whitelist', array(), $data );
+		$start_time    = microtime( true );
+		$response      = $this->make_request( 'POST', 'whitelist', array(), $data );
+		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		if ( is_wp_error( $response ) ) {
+			$this->track_api_call( false, $response_time, 'wp_error', 'submission' );
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Plugin diagnostic logging; debug.log only.
 			error_log( "ReportedIP Hive: Positive feedback for $ip_address - $reason" );
 			return false;
@@ -381,9 +396,11 @@ class ReportedIP_Hive_API {
 		$response_code = wp_remote_retrieve_response_code( $response );
 
 		if ( $response_code === 403 ) {
+			$this->track_api_call( false, $response_time, 'http_403', 'submission' );
 			return array( 'success' => false );
 		}
 
+		$this->track_api_call( $response_code === 200, $response_time, $response_code === 200 ? null : 'http_' . $response_code, 'submission' );
 		return $response_code === 200;
 	}
 
@@ -395,16 +412,22 @@ class ReportedIP_Hive_API {
 			return false;
 		}
 
-		$response = $this->make_request( 'GET', 'categories' );
+		$start_time    = microtime( true );
+		$response      = $this->make_request( 'GET', 'categories' );
+		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		if ( is_wp_error( $response ) ) {
+			$this->track_api_call( false, $response_time, 'wp_error', 'meta' );
 			return false;
 		}
 
-		$body = wp_remote_retrieve_body( $response );
-		$data = json_decode( $body, true );
+		$body          = wp_remote_retrieve_body( $response );
+		$data          = json_decode( $body, true );
+		$response_code = wp_remote_retrieve_response_code( $response );
 
-		if ( wp_remote_retrieve_response_code( $response ) === 200 && isset( $data['data'] ) ) {
+		$this->track_api_call( $response_code === 200, $response_time, $response_code === 200 ? null : 'http_' . $response_code, 'meta' );
+
+		if ( $response_code === 200 && isset( $data['data'] ) ) {
 			return $data['data'];
 		}
 
@@ -430,11 +453,14 @@ class ReportedIP_Hive_API {
 			return false;
 		}
 
-		if ( $this->is_rate_limited() ) {
+		if ( $this->is_rate_limited( 'submission' ) ) {
 			$this->logger->log_security_event(
 				'queue_processing_skipped',
 				'system',
-				array( 'reason' => 'rate_limited' ),
+				array(
+					'reason' => 'rate_limited',
+					'bucket' => 'submission',
+				),
 				'low'
 			);
 			return array(
@@ -650,7 +676,8 @@ class ReportedIP_Hive_API {
 
 		$url = rtrim( $this->api_endpoint, '/' ) . '/notification-config';
 
-		$response = wp_remote_request(
+		$start_time    = microtime( true );
+		$response      = wp_remote_request(
 			$url,
 			array(
 				'method'    => 'POST',
@@ -665,8 +692,10 @@ class ReportedIP_Hive_API {
 				'sslverify' => true,
 			)
 		);
+		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		if ( is_wp_error( $response ) ) {
+			$this->track_api_call( false, $response_time, 'wp_error', 'meta' );
 			return array(
 				'ok'    => false,
 				'error' => 'network: ' . $response->get_error_message(),
@@ -674,6 +703,8 @@ class ReportedIP_Hive_API {
 		}
 
 		$code = (int) wp_remote_retrieve_response_code( $response );
+
+		$this->track_api_call( $code >= 200 && $code < 300, $response_time, ( $code >= 200 && $code < 300 ) ? null : 'http_' . $code, 'meta' );
 
 		if ( $code >= 200 && $code < 300 ) {
 			return array(
@@ -714,14 +745,19 @@ class ReportedIP_Hive_API {
 			}
 		}
 
-		$response = $this->make_request( 'GET', 'relay-quota', array(), null, $this->timeout );
+		$start_time    = microtime( true );
+		$response      = $this->make_request( 'GET', 'relay-quota', array(), null, $this->timeout );
+		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		if ( is_wp_error( $response ) ) {
+			$this->track_api_call( false, $response_time, 'wp_error', 'meta' );
 			return array( 'error' => $response->get_error_message() );
 		}
 
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+
+		$this->track_api_call( $code >= 200 && $code < 300, $response_time, ( $code >= 200 && $code < 300 ) ? null : 'http_' . $code, 'meta' );
 
 		if ( $code >= 200 && $code < 300 && is_array( $body ) ) {
 			$body['fetched_at'] = time();
@@ -914,11 +950,14 @@ class ReportedIP_Hive_API {
 			);
 		}
 
-		$response = $this->make_request( 'GET', 'verify-key' );
+		$start_time    = microtime( true );
+		$response      = $this->make_request( 'GET', 'verify-key' );
+		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		$this->api_key = $original_key;
 
 		if ( is_wp_error( $response ) ) {
+			$this->track_api_call( false, $response_time, 'wp_error', 'meta' );
 			return array(
 				'valid'   => false,
 				'message' => $response->get_error_message(),
@@ -928,6 +967,8 @@ class ReportedIP_Hive_API {
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$body          = wp_remote_retrieve_body( $response );
 		$data          = json_decode( $body, true );
+
+		$this->track_api_call( $response_code === 200, $response_time, $response_code === 200 ? null : 'http_' . $response_code, 'meta' );
 
 		if ( $response_code === 200 && isset( $data['data']['valid'] ) ) {
 			$limits = $data['data']['limits'] ?? array();
@@ -1087,7 +1128,7 @@ class ReportedIP_Hive_API {
 	 * @return bool True if reports can be sent
 	 */
 	public function has_report_quota() {
-		if ( $this->is_rate_limited() ) {
+		if ( $this->is_rate_limited( 'submission' ) ) {
 			return false;
 		}
 
@@ -1200,48 +1241,105 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Check if we're currently rate limited (server-side or client-side)
+	 * Buckets used for the per-purpose hourly rate-limit counters.
+	 *
+	 * @since 2.0.5
 	 */
-	public function is_rate_limited() {
+	private const RATE_LIMIT_BUCKETS = array( 'reputation', 'submission', 'meta' );
+
+	/**
+	 * Check if we're currently rate limited.
+	 *
+	 * @param string|null $bucket One of 'reputation', 'submission', 'meta'. Pass null to
+	 *                            check whether *any* bucket (or the server-side reset)
+	 *                            is currently limited.
+	 * @return bool
+	 */
+	public function is_rate_limited( $bucket = null ) {
 		$rate_limit_reset = get_transient( 'reportedip_hive_rate_limit_reset' );
 		if ( $rate_limit_reset && $rate_limit_reset > time() ) {
 			return true;
 		}
 
-		if ( $this->is_local_rate_limited() ) {
-			return true;
+		if ( null === $bucket ) {
+			foreach ( self::RATE_LIMIT_BUCKETS as $candidate ) {
+				if ( $this->is_local_rate_limited( $candidate ) ) {
+					return true;
+				}
+			}
+			return false;
 		}
 
-		return false;
+		return $this->is_local_rate_limited( $bucket );
 	}
 
 	/**
-	 * Check if we've exceeded local rate limit
+	 * Check if we've exceeded the local rate limit for a given bucket.
+	 *
+	 * @param string $bucket One of 'reputation', 'submission', 'meta'.
+	 * @return bool
 	 */
-	private function is_local_rate_limited() {
-		$max_calls     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_max_api_calls_per_hour', 100 );
-		$current_calls = $this->get_hourly_api_call_count();
-
-		return $current_calls >= $max_calls;
+	private function is_local_rate_limited( $bucket ) {
+		$limit = $this->resolve_effective_limit( $bucket );
+		if ( null === $limit ) {
+			return false;
+		}
+		return $this->get_hourly_api_call_count( $bucket ) >= $limit;
 	}
 
 	/**
-	 * Get current hourly API call count
+	 * Resolve the effective hourly cap for the given bucket.
+	 *
+	 * `null` means unlimited (Enterprise / Honeypot). Manual option > 0 acts as a
+	 * uniform override for all three buckets; option = 0 falls back to the tier
+	 * defaults in {@see ReportedIP_Hive_Mode_Manager::default_api_rate_limits_for_tier()}.
+	 *
+	 * @param string $bucket One of 'reputation', 'submission', 'meta'.
+	 * @return int|null
+	 * @since 2.0.5
 	 */
-	public function get_hourly_api_call_count() {
-		return (int) get_transient( 'reportedip_hive_hourly_api_calls' ) ?: 0;
+	public function resolve_effective_limit( $bucket ) {
+		if ( ! in_array( $bucket, self::RATE_LIMIT_BUCKETS, true ) ) {
+			return null;
+		}
+
+		$manual = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_max_api_calls_per_hour', 0 );
+		if ( $manual > 0 ) {
+			return $manual;
+		}
+
+		$tier   = $this->mode_manager->get_current_tier();
+		$limits = $this->mode_manager->default_api_rate_limits_for_tier( $tier );
+		return $limits[ $bucket ] ?? null;
 	}
 
 	/**
-	 * Increment hourly API call count
+	 * Get current hourly API call count for the given bucket.
+	 *
+	 * @param string $bucket One of 'reputation', 'submission', 'meta'.
+	 * @return int
 	 */
-	private function increment_hourly_api_calls() {
-		$current_calls = $this->get_hourly_api_call_count();
-		++$current_calls;
+	public function get_hourly_api_call_count( $bucket = 'reputation' ) {
+		if ( ! in_array( $bucket, self::RATE_LIMIT_BUCKETS, true ) ) {
+			return 0;
+		}
+		return (int) get_transient( 'reportedip_hive_hourly_api_calls_' . $bucket );
+	}
 
-		set_transient( 'reportedip_hive_hourly_api_calls', $current_calls, HOUR_IN_SECONDS );
-
-		return $current_calls;
+	/**
+	 * Increment the hourly API-call counter for the given bucket.
+	 *
+	 * @param string $bucket One of 'reputation', 'submission', 'meta'.
+	 * @return int
+	 */
+	private function increment_hourly_api_calls( $bucket ) {
+		if ( ! in_array( $bucket, self::RATE_LIMIT_BUCKETS, true ) ) {
+			$bucket = 'meta';
+		}
+		$current = $this->get_hourly_api_call_count( $bucket );
+		++$current;
+		set_transient( 'reportedip_hive_hourly_api_calls_' . $bucket, $current, HOUR_IN_SECONDS );
+		return $current;
 	}
 
 	/**
@@ -1252,10 +1350,17 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Track API call for monitoring
+	 * Track API call for monitoring.
+	 *
+	 * @param bool        $success       Whether the call succeeded.
+	 * @param float       $response_time Round-trip in ms.
+	 * @param string|null $error_type    Failure category (or null on success).
+	 * @param string      $bucket        One of 'reputation', 'submission', 'meta'.
+	 *                                   Defaults to 'meta' so callers that forget the
+	 *                                   bucket cannot accidentally drain reputation.
 	 */
-	private function track_api_call( $success, $response_time, $error_type = null ) {
-		$this->increment_hourly_api_calls();
+	private function track_api_call( $success, $response_time, $error_type = null, $bucket = 'meta' ) {
+		$this->increment_hourly_api_calls( $bucket );
 
 		$stats_defaults = array(
 			'total_calls'         => 0,

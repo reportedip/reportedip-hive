@@ -2,6 +2,73 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.7] — 2026-05-20
+
+### Changed
+
+- **Hourly API rate-limit is now split into three independent buckets.**
+  `reputation` (IP lookups), `submission` (report queue / positive
+  feedback) and `meta` (verify-key, quota sync, notification config)
+  each have their own counter. A bot-driven reputation scan storm can
+  no longer freeze the report queue or starve quota sync — the buckets
+  are isolated, and each one tracks its own `set_transient(
+  reportedip_hive_hourly_api_calls_<bucket>, … )`.
+- **Caps now scale with the active tier.** New
+  `ReportedIP_Hive_Mode_Manager::default_api_rate_limits_for_tier()`
+  resolves the per-bucket caps from the current tier
+  (Free 150/h reputation · Professional 3 000/h · Business 12 000/h ·
+  Enterprise unlimited), derived from the daily quotas with a 3× spike
+  factor so a single hour cannot burn the whole daily allowance.
+- **`Max API calls per hour` setting accepts 0 = auto.** Migration v6
+  resets the value to `0` on every install (including manual
+  overrides) so tier-bound caps kick in automatically. A positive
+  number remains a uniform override across all three buckets. Min is
+  now 0 (was 10), max raised to 100 000 (was 10 000).
+- **Counter telemetry now tracks all outgoing endpoints.** Previously
+  only `check_ip_reputation()` incremented the counter, so the report
+  queue and meta calls were invisible. `report_ip()`,
+  `report_positive_feedback()`, `verify_api_key()`, `get_relay_quota()`,
+  `sync_notification_config()`, `get_categories()` and
+  `test_connection()` now call `track_api_call()` with the correct
+  bucket so the admin "API call usage" card and the new bucket counters
+  reflect reality.
+
+### New
+
+- **`Mode_Manager::get_api_rate_limit_snapshot()`** returns `{tier,
+  source:'auto'|'manual', limits:{reputation,submission,meta},
+  used:{reputation,submission,meta}}` — single contract for the admin
+  card, the degraded-banner helper and future dashboards.
+- **`Mode_Manager::is_community_layer_degraded()`** is true when
+  Community mode is active and either the server-side 429 reset is
+  pending or any bucket sits at ≥ 80 % of its effective limit.
+- **`render_api_usage_card()` shows three separate "This hour"
+  buckets** (reputation / submission / meta) with the tier source
+  label ("auto · Free tier" or "manual override"). Unlimited buckets
+  render as ∞.
+- **Inline admin banner.** When `is_community_layer_degraded()` flips
+  to true the Hive admin pages show a `rip-alert--warning` banner
+  explaining that the local firewall remains active and the community
+  threat-check pauses until the hourly counter resets. Links to the
+  Community / pricing page for a tier upgrade.
+
+### Fixed
+
+- **`process_report_queue()` now consults the right bucket.** The
+  pre-flight `is_rate_limited()` check inside the queue cron now asks
+  the `submission` bucket only, so a saturated reputation bucket
+  cannot block report drains.
+- **`has_report_quota()` mirrors that** so the in-line `report_ip()`
+  guard agrees with the queue-cron guard.
+
+### Migration
+
+- Schema version bumps to **6**. `Migration_Manager::migrate_to_v6()`
+  resets `reportedip_hive_max_api_calls_per_hour` to `0` (auto /
+  tier-bound) for every installation, idempotent on re-run, and drops
+  the legacy single-counter transient so the new per-bucket counters
+  start clean.
+
 ## [2.0.6] — 2026-05-19
 
 ### Fixed

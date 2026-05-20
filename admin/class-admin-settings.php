@@ -604,11 +604,24 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( ! is_array( $stats_raw ) || empty( $stats_raw['total_calls'] ) ) {
 			return;
 		}
-		$total      = (int) $stats_raw['total_calls'];
-		$success    = (float) ( $stats_raw['success_rate'] ?? 0 );
-		$avg_ms     = (float) ( $stats_raw['avg_response_time'] ?? 0 );
-		$hourly_raw = (int) get_transient( 'reportedip_hive_hourly_api_calls' );
-		$hourly_max = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_max_api_calls_per_hour', 100 );
+		$total   = (int) $stats_raw['total_calls'];
+		$success = (float) ( $stats_raw['success_rate'] ?? 0 );
+		$avg_ms  = (float) ( $stats_raw['avg_response_time'] ?? 0 );
+
+		$snapshot     = ReportedIP_Hive_Mode_Manager::get_instance()->get_api_rate_limit_snapshot();
+		$source_label = 'manual' === $snapshot['source']
+			? esc_html__( 'manual override', 'reportedip-hive' )
+			: sprintf(
+				/* translators: %s: tier slug. */
+				esc_html__( 'auto · %s tier', 'reportedip-hive' ),
+				esc_html( $snapshot['tier'] )
+			);
+
+		$bucket_labels = array(
+			'reputation' => esc_html__( 'This hour — reputation', 'reportedip-hive' ),
+			'submission' => esc_html__( 'This hour — submission', 'reportedip-hive' ),
+			'meta'       => esc_html__( 'This hour — meta', 'reportedip-hive' ),
+		);
 		?>
 		<div class="rip-card rip-mb-6">
 			<div class="rip-card__header">
@@ -616,6 +629,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
 					<?php esc_html_e( 'API call usage', 'reportedip-hive' ); ?>
 				</h2>
+				<span class="rip-badge rip-badge--neutral"><?php echo $source_label; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pre-escaped above. ?></span>
 			</div>
 			<div class="rip-card__body">
 				<div class="rip-stat-cards">
@@ -638,15 +652,6 @@ class ReportedIP_Hive_Admin_Settings {
 						</div>
 					</div>
 					<div class="rip-stat-card">
-						<div class="rip-stat-card__icon rip-stat-card__icon--warning">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-						</div>
-						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value"><?php echo esc_html( $hourly_raw . ' / ' . $hourly_max ); ?></div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'This hour / limit', 'reportedip-hive' ); ?></div>
-						</div>
-					</div>
-					<div class="rip-stat-card">
 						<div class="rip-stat-card__icon rip-stat-card__icon--info">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
 						</div>
@@ -655,6 +660,23 @@ class ReportedIP_Hive_Admin_Settings {
 							<div class="rip-stat-card__label"><?php esc_html_e( 'Avg response', 'reportedip-hive' ); ?></div>
 						</div>
 					</div>
+					<?php
+					foreach ( array( 'reputation', 'submission', 'meta' ) as $bucket ) :
+						$used      = (int) ( $snapshot['used'][ $bucket ] ?? 0 );
+						$limit     = $snapshot['limits'][ $bucket ] ?? null;
+						$limit_lbl = null === $limit ? '∞' : number_format_i18n( (int) $limit );
+						$icon      = ( null !== $limit && $limit > 0 && $used >= (int) ceil( $limit * 0.8 ) ) ? 'warning' : 'info';
+						?>
+						<div class="rip-stat-card">
+							<div class="rip-stat-card__icon rip-stat-card__icon--<?php echo esc_attr( $icon ); ?>">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+							</div>
+							<div class="rip-stat-card__content">
+								<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $used ) . ' / ' . $limit_lbl ); ?></div>
+								<div class="rip-stat-card__label"><?php echo esc_html( $bucket_labels[ $bucket ] ); ?></div>
+							</div>
+						</div>
+					<?php endforeach; ?>
 				</div>
 			</div>
 		</div>
@@ -909,6 +931,18 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	public function render_inline_notices() {
 		global $wpdb;
+
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		if ( $mode_manager->is_community_layer_degraded() ) {
+			$upgrade_url = admin_url( 'admin.php?page=reportedip-hive-community' );
+			?>
+			<div class="rip-alert rip-alert--warning" style="margin-bottom: var(--rip-space-4);">
+				<strong><?php esc_html_e( 'Community threat-check rate-limited.', 'reportedip-hive' ); ?></strong>
+				<?php esc_html_e( 'The local firewall (sensors, blocks, logs, queue) remains fully active. Reputation lookups for new IPs and outgoing report submissions are paused until the hourly counter resets.', 'reportedip-hive' ); ?>
+				<a href="<?php echo esc_url( $upgrade_url ); ?>"><?php esc_html_e( 'Upgrade tier for higher caps.', 'reportedip-hive' ); ?></a>
+			</div>
+			<?php
+		}
 
 		$table = $wpdb->prefix . 'reportedip_hive_api_queue';
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe table name composed from $wpdb->prefix and a hardcoded suffix.
@@ -2632,11 +2666,17 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Sanitize max API calls per hour (1-10000)
+	 * Sanitize max API calls per hour (0 = auto/tier-bound, otherwise 10–100000).
+	 *
+	 * @param mixed $value Raw input.
+	 * @return int
 	 */
 	public function sanitize_max_api_calls( $value ) {
 		$value = absint( $value );
-		return max( 1, min( 10000, $value ) );
+		if ( 0 === $value ) {
+			return 0;
+		}
+		return max( 10, min( 100000, $value ) );
 	}
 
 	/**
@@ -4904,11 +4944,12 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 					<?php esc_html_e( 'API rate limit', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Hard ceiling on API calls per hour. Once reached, cached data is used; new IPs are skipped. Protects you from runaway costs during a flood attack.', 'reportedip-hive' ); ?></p>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Hourly ceiling on outgoing API calls. Counted in three independent buckets — reputation lookups, report submissions, and meta/quota sync — so a bot scan can no longer freeze the report queue.', 'reportedip-hive' ); ?></p>
 
 				<div class="rip-form-group">
 					<label class="rip-label" for="reportedip_hive_max_api_calls_per_hour"><?php esc_html_e( 'Max API calls per hour', 'reportedip-hive' ); ?></label>
-					<input type="number" id="reportedip_hive_max_api_calls_per_hour" name="reportedip_hive_max_api_calls_per_hour" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_max_api_calls_per_hour', 100 ) ); ?>" min="10" max="10000" class="rip-input" style="max-width: 180px;" />
+					<input type="number" id="reportedip_hive_max_api_calls_per_hour" name="reportedip_hive_max_api_calls_per_hour" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_max_api_calls_per_hour', 0 ) ); ?>" min="0" max="100000" class="rip-input" style="max-width: 180px;" />
+					<p class="rip-help-text"><?php esc_html_e( '0 = auto (tier-bound caps scale with your subscription — Free 150/h reputation, Professional 3 000/h, Business 12 000/h, Enterprise unlimited). A positive number overrides all three buckets uniformly.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 

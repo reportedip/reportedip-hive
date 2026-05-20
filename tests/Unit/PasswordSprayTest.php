@@ -132,6 +132,12 @@ namespace {
 			public function can_use_api() {
 				return false;
 			}
+			public function get_current_tier() {
+				return 'free';
+			}
+			public function default_api_rate_limits_for_tier( $tier ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+				return array( 'reputation' => null, 'submission' => null, 'meta' => null );
+			}
 		}
 	}
 

@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.6
+Stable tag: 2.0.7
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -327,6 +327,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.7 =
+
+Hourly API rate-limit is now split into three independent buckets — reputation lookups, report submissions and meta/quota sync — so a bot-driven reputation scan can no longer freeze the report queue or starve quota sync. Caps scale with the active tier (Free 150/h reputation, Professional 3 000/h, Business 12 000/h, Enterprise unlimited) and follow the daily quota in the PRICING-PLAN with a 3× spike factor. The "Max API calls per hour" setting accepts `0` as "auto (tier-bound)" and is reset to `0` on every install via migration v6. When the community layer is rate-limited, an inline banner makes the fallback explicit — local firewall (sensors, blocks, logs, queue) stays fully active, only outgoing community calls pause until the hourly counter resets. New `Mode_Manager::default_api_rate_limits_for_tier()`, `get_api_rate_limit_snapshot()` and `is_community_layer_degraded()` helpers are the canonical contracts for tier-gated rate-limit behaviour.
+
 = 2.0.6 =
 
 Setup wizard now opens on a fresh activation again — the activation hook wrote a `set_site_transient()`, the redirect guard consumed it with `get_transient()`, so the read never matched the write on single-site or multisite. Both halves now use `_site_transient_`. Admin-email burst protection: the existing per-(IP × event_type) 60-minute cooldown stays, plus a new global per-event_type cap (default 15 min, option `reportedip_hive_notify_event_cap_minutes`). Distributed brute-force from many IPs no longer floods the operator's inbox — additional alerts of the same type are folded into a "Burst suppression: N additional alerts (M distinct IPs) since …" digest line on the next outgoing mail. Suppressed alerts continue to land in the logs as `notification_event_cap_suppressed`.
@@ -427,6 +431,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 2.0.7 =
+The hourly API call cap is split into three independent buckets and now scales with your tier — a reputation-check storm can no longer freeze the report queue. Your "Max API calls per hour" setting is automatically reset to `0` (auto / tier-bound). Local firewall behaviour is unchanged; community calls pause cleanly when the bucket cap is reached and a banner surfaces the state.
 
 = 2.0.4 =
 SMS-2FA via the managed relay now reaches all destinations the relay is allowed to serve (worldwide minus a small list of high-cost countries); the unsupported ones surface as a clear in-UI error instead of being silently blocked on the plugin side. Local providers (seven.io, sipgate, MessageBird) are unaffected. No breaking change for sites that never enabled SMS-2FA.

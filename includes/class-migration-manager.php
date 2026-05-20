@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 5;
+	public const CURRENT_VERSION = 6;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -178,6 +178,28 @@ final class ReportedIP_Hive_Migration_Manager {
 				"UPDATE $trusted_table SET expires_at = LEAST( expires_at, DATE_ADD( NOW(), INTERVAL 1 DAY ) )"
 			);
 		}
+	}
+
+	/**
+	 * v5 → v6: switch hourly-API-call limit to "auto / tier-bound".
+	 *
+	 * Before 2.0.7 the option `reportedip_hive_max_api_calls_per_hour` carried
+	 * a hard default of 100/h that gated *all* outgoing API calls — reputation
+	 * lookups, report submissions, quota sync. From 2.0.7 the value `0` means
+	 * "auto: derive caps per bucket from the current tier", which is the
+	 * intended behaviour for every install. Per the upgrade brief this resets
+	 * the option for every installation, including manual overrides.
+	 *
+	 * Also drops the legacy single-counter transient so the new per-bucket
+	 * counters start from a clean slate.
+	 *
+	 * @return void
+	 * @since  2.0.7
+	 */
+	private static function migrate_to_v6() {
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_max_api_calls_per_hour', 0 );
+		delete_site_transient( 'reportedip_hive_hourly_api_calls' );
+		delete_transient( 'reportedip_hive_hourly_api_calls' );
 	}
 
 	/**

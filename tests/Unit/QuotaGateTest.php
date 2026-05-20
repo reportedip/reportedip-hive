@@ -120,6 +120,10 @@ namespace {
 			public function can_use_api() { return true; }
 			public function is_local_mode() { return false; }
 			public function is_community_mode() { return true; }
+			public function get_current_tier() { return 'enterprise'; }
+			public function default_api_rate_limits_for_tier( $tier ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+				return array( 'reputation' => null, 'submission' => null, 'meta' => null );
+			}
 		}
 	}
 
