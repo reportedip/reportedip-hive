@@ -71,6 +71,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/Wp-Config.Old.PHP' ) );
 		}
 
+		public function test_basename_match_for_multisite_subdirs() {
+			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/site-a/.env.backup' ) );
+			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/site-b/wp-config.old.php' ) );
+			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/deep/nested/sub/admin-shell-console.php' ) );
+			$this->assertFalse( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/site-a/wp-login.php' ) );
+		}
+
 		public function test_default_paths_count_matches_constant() {
 			$paths = \ReportedIP_Hive_Decoy_Path_Block::decoy_paths();
 			$this->assertGreaterThanOrEqual( 10, count( $paths ) );

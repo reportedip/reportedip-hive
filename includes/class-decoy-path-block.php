@@ -141,7 +141,12 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		if ( '' === $only_path ) {
 			return false;
 		}
-		return in_array( $only_path, self::decoy_paths(), true );
+		$paths = self::decoy_paths();
+		if ( in_array( $only_path, $paths, true ) ) {
+			return true;
+		}
+		$basename = '/' . basename( $only_path );
+		return in_array( $basename, $paths, true );
 	}
 
 	/**
@@ -197,6 +202,10 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		);
 
 		$ip_manager->block_ip( $ip, 'decoy_pathblock: ' . $path_only, $duration_hours, 'automatic' );
+
+		if ( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
+			return;
+		}
 
 		if ( class_exists( 'ReportedIP_Hive' ) ) {
 			ReportedIP_Hive::emit_block_response_headers();
