@@ -4109,10 +4109,10 @@ class ReportedIP_Hive_Admin_Settings {
 					<p class="rip-help-text"><?php esc_html_e( 'The PHP hook above is always-on and sufficient. These server-level snippets block earlier (the request never reaches PHP). The plugin does not write to your server config — copy them in manually.', 'reportedip-hive' ); ?></p>
 
 					<p><strong><?php esc_html_e( 'Apache (.htaccess)', 'reportedip-hive' ); ?></strong></p>
-					<pre style="background:#f6f7f7;padding:12px;overflow:auto;font-size:12px;border:1px solid #c3c4c7;"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet() ); ?></code></pre>
+					<pre class="rip-code-snippet"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet() ); ?></code></pre>
 
 					<p><strong><?php esc_html_e( 'nginx', 'reportedip-hive' ); ?></strong></p>
-					<pre style="background:#f6f7f7;padding:12px;overflow:auto;font-size:12px;border:1px solid #c3c4c7;"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::nginx_snippet() ); ?></code></pre>
+					<pre class="rip-code-snippet"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::nginx_snippet() ); ?></code></pre>
 				</details>
 			</div>
 

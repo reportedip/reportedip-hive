@@ -994,3 +994,12 @@ code.ip-address {
 .rip-pro-upsell__cta {
     margin: 0;
 }
+
+.rip-code-snippet {
+    background: var(--rip-gray-50, #f6f7f7);
+    border: 1px solid var(--rip-gray-200, #c3c4c7);
+    padding: var(--rip-space-3, 12px);
+    font-size: 12px;
+    overflow: auto;
+    white-space: pre;
+}

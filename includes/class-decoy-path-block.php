@@ -84,9 +84,18 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	/**
 	 * Merged bait-path list (defaults + filter additions).
 	 *
+	 * Filter additions are normalized to lowercase with a leading slash so
+	 * `/My-App/config.php` and `my-app/config.php` both match the same canonical
+	 * `/my-app/config.php`. Result is memoized per request because both the
+	 * hot-path matcher and both snippet renderers consult it.
+	 *
 	 * @return string[]
 	 */
 	public static function decoy_paths() {
+		static $memo = null;
+		if ( null !== $memo ) {
+			return $memo;
+		}
 		$extra = apply_filters( 'reportedip_hive_decoy_paths', array() );
 		if ( ! is_array( $extra ) ) {
 			$extra = array();
@@ -107,7 +116,8 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 				$paths
 			)
 		);
-		return array_values( array_unique( $paths ) );
+		$memo  = array_values( array_unique( $paths ) );
+		return $memo;
 	}
 
 	/**
@@ -157,7 +167,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 			return;
 		}
 
-		$ip = $this->resolve_client_ip();
+		$ip = (string) ReportedIP_Hive::get_instance()->get_client_ip();
 		if ( '' === $ip ) {
 			return;
 		}
@@ -199,24 +209,6 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	}
 
 	/**
-	 * Resolve the current client IP, honouring the configured trusted-header
-	 * (Cloudflare / proxy) option.
-	 *
-	 * @return string
-	 */
-	private function resolve_client_ip() {
-		if ( class_exists( 'ReportedIP_Hive' ) ) {
-			$rip = ReportedIP_Hive::get_instance();
-			if ( method_exists( $rip, 'get_client_ip' ) ) {
-				return (string) $rip->get_client_ip();
-			}
-		}
-		return isset( $_SERVER['REMOTE_ADDR'] )
-			? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
-			: '';
-	}
-
-	/**
 	 * Apache/.htaccess snippet for paste into the site's `.htaccess`. Returns
 	 * literal text; the admin UI escapes it for `<pre>` display.
 	 *
@@ -242,7 +234,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	 * @return string
 	 */
 	public static function nginx_snippet() {
-		$paths    = array();
+		$paths = array();
 		foreach ( self::decoy_paths() as $path ) {
 			$paths[] = str_replace( '.', '\\.', ltrim( $path, '/' ) );
 		}
