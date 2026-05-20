@@ -89,8 +89,12 @@ class ReportedIP_Hive_Security_Monitor {
 	 *     short window, which is a stronger credential-stuffing indicator.
 	 */
 	public function check_failed_login_threshold( $ip_address, $username = '' ) {
-		$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', 5 );
-		$timeframe = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_timeframe', 15 );
+		$threshold = ReportedIP_Hive_Hardening_Mode::effective_failed_login_threshold(
+			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', 5 )
+		);
+		$timeframe = ReportedIP_Hive_Hardening_Mode::effective_failed_login_timeframe(
+			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_timeframe', 15 )
+		);
 
 		$track_username   = null;
 		$track_user_agent = null;
@@ -107,6 +111,8 @@ class ReportedIP_Hive_Security_Monitor {
 		$this->record_username_for_spray_detection( $ip_address, $username );
 
 		$this->database->track_attempt( $ip_address, 'login', $track_username, $track_user_agent );
+
+		$this->maybe_check_coordinated_realtime();
 
 		if ( $this->check_password_spray_threshold( $ip_address ) ) {
 			return true;
@@ -1201,5 +1207,78 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 
 		return $coordinated_attacks;
+	}
+
+	/**
+	 * Pick the strongest reason out of `check_coordinated_attacks()` rows.
+	 *
+	 * Used by both the realtime hook and the cron sweep so the same
+	 * Hardening_Mode::activate() call site can hand over the row with the
+	 * highest unique-IP / total-attempts count.
+	 *
+	 * @param array $rows Result of {@see check_coordinated_attacks()}.
+	 * @return array|null `{unique_ips, total_attempts, time_window}` or null.
+	 * @since  2.0.8
+	 */
+	public function strongest_coordinated_reason( array $rows ) {
+		if ( empty( $rows ) ) {
+			return null;
+		}
+		$strongest = $rows[0];
+		foreach ( $rows as $attack ) {
+			if ( (int) $attack->unique_ips > (int) $strongest->unique_ips
+				|| ( (int) $attack->unique_ips === (int) $strongest->unique_ips
+					&& (int) $attack->total_attempts > (int) $strongest->total_attempts )
+			) {
+				$strongest = $attack;
+			}
+		}
+		return array(
+			'unique_ips'     => (int) $strongest->unique_ips,
+			'total_attempts' => (int) $strongest->total_attempts,
+			'time_window'    => (string) $strongest->time_window,
+		);
+	}
+
+	/**
+	 * Realtime coordinated-attack probe.
+	 *
+	 * Called from `check_failed_login_threshold()` after every `track_attempt()`.
+	 * Debounced via a 60-second site-transient so we run the (cheap) aggregate
+	 * query at most once per minute regardless of incoming login volume.
+	 *
+	 * Short-circuits when the hardening feature is unavailable (Free tier or
+	 * master toggle off), the realtime detection toggle is off, or hardening
+	 * is already active.
+	 *
+	 * @return void
+	 * @since 2.0.8
+	 */
+	private function maybe_check_coordinated_realtime() {
+		if ( ! ReportedIP_Hive_Hardening_Mode::is_available() ) {
+			return;
+		}
+		if ( ! ReportedIP_Hive_Hardening_Mode::is_realtime_detection_enabled() ) {
+			return;
+		}
+		if ( ReportedIP_Hive_Hardening_Mode::is_active() ) {
+			return;
+		}
+		if ( get_site_transient( ReportedIP_Hive_Hardening_Mode::TRANSIENT_DEBOUNCE ) ) {
+			return;
+		}
+		set_site_transient(
+			ReportedIP_Hive_Hardening_Mode::TRANSIENT_DEBOUNCE,
+			1,
+			ReportedIP_Hive_Hardening_Mode::DEBOUNCE_SECONDS
+		);
+
+		$attacks = $this->check_coordinated_attacks();
+		$reason  = $this->strongest_coordinated_reason( $attacks );
+		if ( null === $reason ) {
+			return;
+		}
+
+		ReportedIP_Hive_Hardening_Mode::activate( $reason, 'realtime' );
 	}
 }

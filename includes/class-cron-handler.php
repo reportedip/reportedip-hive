@@ -224,6 +224,13 @@ class ReportedIP_Hive_Cron_Handler {
 						'attacks' => count( $coordinated_attacks ),
 					)
 				);
+
+				if ( class_exists( 'ReportedIP_Hive_Hardening_Mode' ) ) {
+					$reason = $this->security_monitor->strongest_coordinated_reason( $coordinated_attacks );
+					if ( null !== $reason ) {
+						ReportedIP_Hive_Hardening_Mode::activate( $reason, 'cron' );
+					}
+				}
 			}
 		} catch ( Exception $e ) {
 			$this->logger->critical( 'Reputation sync failed: ' . $e->getMessage(), 'system' );

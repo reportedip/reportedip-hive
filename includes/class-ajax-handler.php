@@ -124,6 +124,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_dashboard_stats', array( $this, 'ajax_dashboard_stats' ) );
 
 		add_action( 'wp_ajax_reportedip_hive_run_queue_now', array( $this, 'ajax_run_queue_now' ) );
+		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
 
@@ -1440,6 +1441,37 @@ class ReportedIP_Hive_Ajax_Handler {
 					? __( 'Queue lock cleared.', 'reportedip-hive' )
 					: __( 'No queue lock was held.', 'reportedip-hive' ),
 				'was_locked' => $held,
+			)
+		);
+	}
+
+	/**
+	 * AJAX: manually clear the active Hardening Mode window.
+	 *
+	 * Linked from the Settings-tab banner and the admin-bar dropdown.
+	 *
+	 * @return void
+	 * @since  2.0.8
+	 */
+	public function ajax_hardening_deactivate() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		$can = is_multisite()
+			? ( current_user_can( 'manage_network_options' ) || is_super_admin() )
+			: current_user_can( 'manage_options' );
+		if ( ! $can ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$was_active = ReportedIP_Hive_Hardening_Mode::is_active();
+		ReportedIP_Hive_Hardening_Mode::deactivate( 'admin' );
+
+		wp_send_json_success(
+			array(
+				'was_active' => $was_active,
+				'message'    => $was_active
+					? __( 'Hardening Mode deactivated.', 'reportedip-hive' )
+					: __( 'Hardening Mode was not active.', 'reportedip-hive' ),
 			)
 		);
 	}

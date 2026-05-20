@@ -276,6 +276,13 @@ class ReportedIP_Hive_Mode_Manager {
 				'label'         => __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ),
 				'description'   => __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login — kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ),
 			),
+			'hardening_mode'               => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'professional',
+				'label'         => __( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ),
+				'description'   => __( 'Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected.', 'reportedip-hive' ),
+			),
 		);
 	}
 

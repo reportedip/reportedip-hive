@@ -2,6 +2,61 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.8] — 2026-05-20
+
+### Security
+
+- **Hardening Mode on coordinated attacks (Professional plan and higher).**
+  When `Security_Monitor::check_coordinated_attacks()` detects ≥ 3 IPs /
+  ≥ 20 failed logins in the same minute, the plugin activates a
+  network-wide hardening window (default 60 min, configurable 5–360).
+  During the window:
+    - failed-login threshold tightens from 5 / 15 min → 2 / 5 min
+    - reputation block threshold from 75 % → 60 %
+  Effective thresholds are always `min( admin-configured, hardening
+  default )` — stricter manual values are never softened.
+- **Realtime detection.** The coordinated-attack probe now also runs
+  inside `wp_login_failed` (debounced to once per 60 s via a site-wide
+  transient). Reaction time drops from up to one hour (cron-only) to
+  under a minute. Toggle in the new Settings tab; the hourly cron stays
+  as a fallback.
+
+### New
+
+- **`ReportedIP_Hive_Hardening_Mode`** helper class
+  (`includes/class-hardening-mode.php`) exposes `is_active()`,
+  `expires_at()`, `current_reason()`, `is_available()`, `activate()`,
+  `deactivate()` and the three `effective_*` clamps used by
+  `pre_auth_check()` and `check_failed_login_threshold()`.
+- **PRO-tier feature flag** `hardening_mode` added to
+  `Mode_Manager::FEATURE_MATRIX` with `requires_tier = 'professional'`.
+  Free / Contributor see the Settings tab with a PRO-upsell card; the
+  master toggle and sub-fields are disabled.
+- **Dedicated Settings tab "Hardening Mode"** with master toggle and
+  five sub-settings (duration, realtime detection, failed-login
+  threshold, failed-login timeframe, reputation threshold). Sub-fields
+  visually grey out while the master is off (`assets/js/admin.js`).
+- **Admin-bar indicator.** While hardening is active the WordPress admin
+  bar shows a red node with countdown + dropdown (trigger reason,
+  manage link). Implemented in `ReportedIP_Hive_Admin_Bar`
+  (`includes/class-admin-bar.php`); inline-styles attached to
+  `admin-bar` so the indicator is visible on every wp-admin page, not
+  just plugin pages.
+- **WP-CLI commands** `wp reportedip hardening status|activate
+  [--minutes=<int>]|deactivate`.
+- **AJAX action** `reportedip_hive_hardening_deactivate` for the
+  Settings-tab banner button (nonce + `manage_options` /
+  `manage_network_options`).
+- **Log markers during hardening.** `Logger::log_security_event()` now
+  decorates every event written while
+  `Hardening_Mode::is_active()` with `details.hardening_active = true`
+  and `details.hardening_expires_at`. The Logs admin table renders a
+  `Hardening` badge next to the event type and offers a "During
+  Hardening only" filter checkbox. Dedicated events
+  `hardening_mode_activated` (severity `high`) and
+  `hardening_mode_deactivated` (severity `low`) record activations and
+  the actor (`admin` / `cli` / `expired`).
+
 ## [2.0.7] — 2026-05-20
 
 ### Changed

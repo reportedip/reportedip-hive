@@ -99,6 +99,14 @@ class ReportedIP_Hive_Logger {
 
 		$log_details = array_merge( $log_details, $details );
 
+		if ( class_exists( 'ReportedIP_Hive_Hardening_Mode' )
+			&& ! isset( $log_details['hardening_active'] )
+			&& ReportedIP_Hive_Hardening_Mode::is_active()
+		) {
+			$log_details['hardening_active']     = true;
+			$log_details['hardening_expires_at'] = ReportedIP_Hive_Hardening_Mode::expires_at();
+		}
+
 		$result = $this->database->log_security_event( $event_type, $ip_address, $log_details, $severity );
 
 		if ( defined( 'REPORTEDIP_DEBUG' ) && REPORTEDIP_DEBUG ) {

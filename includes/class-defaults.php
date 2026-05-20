@@ -111,6 +111,12 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_notify_from_name'               => '',
 		'reportedip_hive_notify_from_email'              => '',
 		'reportedip_hive_notify_sync_to_api'             => false,
+		'reportedip_hive_hardening_enabled'              => false,
+		'reportedip_hive_hardening_duration_minutes'     => 60,
+		'reportedip_hive_hardening_login_threshold'      => 2,
+		'reportedip_hive_hardening_login_timeframe'      => 5,
+		'reportedip_hive_hardening_block_threshold'      => 60,
+		'reportedip_hive_hardening_realtime_detection'   => true,
 	);
 
 	/**

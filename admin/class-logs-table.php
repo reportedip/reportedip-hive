@@ -109,11 +109,17 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 				$event_type  = $item->event_type ?? '';
 				$event_class = str_replace( '_', '-', $event_type );
 				$event_label = ucwords( str_replace( '_', ' ', $event_type ) );
-				return sprintf(
+				$output      = sprintf(
 					'<span class="event-type-badge %s">%s</span>',
 					esc_attr( $event_class ),
 					esc_html( $event_label )
 				);
+				if ( self::row_was_during_hardening( $item ) ) {
+					$output .= ' <span class="rip-badge rip-badge--warning" title="'
+						. esc_attr__( 'Captured while Hardening Mode was active.', 'reportedip-hive' )
+						. '">' . esc_html__( 'Hardening', 'reportedip-hive' ) . '</span>';
+				}
+				return $output;
 
 			case 'ip_address':
 				return sprintf(
@@ -164,6 +170,29 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 	}
 
 	/**
+	 * Whether the given log row was captured while Hardening Mode was active.
+	 *
+	 * Reads `details.hardening_active` — the decoration is set by
+	 * {@see ReportedIP_Hive_Logger::log_security_event()} on every event during
+	 * an active hardening window.
+	 *
+	 * @param object $item Log row.
+	 * @return bool
+	 * @since  2.0.8
+	 */
+	private static function row_was_during_hardening( $item ) {
+		$raw = isset( $item->details ) ? $item->details : '';
+		if ( ! is_string( $raw ) || '' === $raw ) {
+			return false;
+		}
+		$decoded = json_decode( $raw, true );
+		if ( ! is_array( $decoded ) ) {
+			return false;
+		}
+		return ! empty( $decoded['hardening_active'] );
+	}
+
+	/**
 	 * Get logs data
 	 */
 	private function get_logs_data( $per_page, $current_page ) {
@@ -194,6 +223,10 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 		if ( ! empty( $_REQUEST['s'] ) ) {
 			$search  = '%' . $wpdb->esc_like( sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) ) . '%';
 			$where[] = $wpdb->prepare( '(ip_address LIKE %s OR details LIKE %s)', $search, $search );
+		}
+
+		if ( ! empty( $_REQUEST['hardening_only'] ) ) {
+			$where[] = "details LIKE '%\"hardening_active\":true%'";
 		}
 
 		$where_clause = implode( ' AND ', $where );
@@ -302,8 +335,9 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 			return;
 		}
 
-		$event_type = isset( $_REQUEST['event_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['event_type'] ) ) : '';
-		$severity   = isset( $_REQUEST['severity'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['severity'] ) ) : '';
+		$event_type     = isset( $_REQUEST['event_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['event_type'] ) ) : '';
+		$severity       = isset( $_REQUEST['severity'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['severity'] ) ) : '';
+		$hardening_only = ! empty( $_REQUEST['hardening_only'] );
 		?>
 		<div class="alignleft actions">
 			<select name="event_type">
@@ -312,6 +346,8 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 				<option value="comment_spam" <?php selected( $event_type, 'comment_spam' ); ?>><?php esc_html_e( 'Comment Spam', 'reportedip-hive' ); ?></option>
 				<option value="xmlrpc_abuse" <?php selected( $event_type, 'xmlrpc_abuse' ); ?>><?php esc_html_e( 'XMLRPC Abuse', 'reportedip-hive' ); ?></option>
 				<option value="ip_blocked" <?php selected( $event_type, 'ip_blocked' ); ?>><?php esc_html_e( 'IP Blocked', 'reportedip-hive' ); ?></option>
+				<option value="hardening_mode_activated" <?php selected( $event_type, 'hardening_mode_activated' ); ?>><?php esc_html_e( 'Hardening Mode Activated', 'reportedip-hive' ); ?></option>
+				<option value="hardening_mode_deactivated" <?php selected( $event_type, 'hardening_mode_deactivated' ); ?>><?php esc_html_e( 'Hardening Mode Deactivated', 'reportedip-hive' ); ?></option>
 			</select>
 
 			<select name="severity">
@@ -321,6 +357,11 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 				<option value="high" <?php selected( $severity, 'high' ); ?>><?php esc_html_e( 'High', 'reportedip-hive' ); ?></option>
 				<option value="critical" <?php selected( $severity, 'critical' ); ?>><?php esc_html_e( 'Critical', 'reportedip-hive' ); ?></option>
 			</select>
+
+			<label class="rip-inline-toggle">
+				<input type="checkbox" name="hardening_only" value="1" <?php checked( $hardening_only ); ?> />
+				<?php esc_html_e( 'During Hardening only', 'reportedip-hive' ); ?>
+			</label>
 
 			<?php submit_button( __( 'Filter', 'reportedip-hive' ), '', 'filter_action', false ); ?>
 		</div>

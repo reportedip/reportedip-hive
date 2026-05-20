@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.7
+Stable tag: 2.0.8
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -28,6 +28,7 @@ Two ways to run, no feature held hostage behind a paywall:
 * **One plugin instead of three.** Brute-force protection, full 2FA suite and threat intelligence in a single drop-in. The plugin itself stays free and Open Source — paid plans only buy optional server-side comfort (managed mail/SMS relay, multi-site, higher API quotas), never the protection itself.
 * **Progressive blocks that don't burn legitimate users.** A first-time tripping CGNAT visitor or a fat-fingered admin gets a 5-minute timeout — repeat offenders climb the ladder up to 7 days. Nobody pays a 24h block for a typo.
 * **Privacy-first by default.** GDPR-minimal logging mode, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium.
+* **Hardening Mode on coordinated attacks (PRO).** When the plugin spots ≥ 3 IPs / ≥ 20 failed logins in the same minute it tightens the failed-login and reputation thresholds network-wide for one hour. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
 * **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan-clean, WPCS-clean (zero warnings), 435 unit + 19 Multisite PHPUnit tests with 757 assertions on every commit.
 
@@ -327,6 +328,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.8 =
+
+Hardening Mode (Professional plan and higher). When the coordinated-attack sensor spots ≥ 3 IPs / ≥ 20 failed logins in the same minute the plugin scharfschaltet a network-wide hardening window: failed-login threshold tightens from 5 / 15 min to 2 / 5 min, reputation block threshold from 75 % to 60 %. Default duration 60 minutes, configurable 5–360. Realtime trigger now hooks directly into `wp_login_failed` (60-second debounce) so reaction time drops from up to an hour to under a minute; the hourly cron sweep stays as a safety net. New dedicated Settings tab "Hardening Mode" with master toggle, sub-fields are visually disabled while the master is off; tab is gated on the Professional tier with an explicit upsell card on Free / Contributor. Active hardening surfaces as a red node in the WordPress admin bar (countdown + manage link) and visually marks every log row captured during the window with a "Hardening" badge. New events `hardening_mode_activated` (severity high) and `hardening_mode_deactivated` (severity low) record activations and the actor (admin / cli / expired). WP-CLI: `wp reportedip hardening status|activate|deactivate`.
+
 = 2.0.7 =
 
 Hourly API rate-limit is now split into three independent buckets — reputation lookups, report submissions and meta/quota sync — so a bot-driven reputation scan can no longer freeze the report queue or starve quota sync. Caps scale with the active tier (Free 150/h reputation, Professional 3 000/h, Business 12 000/h, Enterprise unlimited) and follow the daily quota in the PRICING-PLAN with a 3× spike factor. The "Max API calls per hour" setting accepts `0` as "auto (tier-bound)" and is reset to `0` on every install via migration v6. When the community layer is rate-limited, an inline banner makes the fallback explicit — local firewall (sensors, blocks, logs, queue) stays fully active, only outgoing community calls pause until the hourly counter resets. New `Mode_Manager::default_api_rate_limits_for_tier()`, `get_api_rate_limit_snapshot()` and `is_community_layer_degraded()` helpers are the canonical contracts for tier-gated rate-limit behaviour.
@@ -431,6 +436,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 2.0.8 =
+Adds Hardening Mode (Professional plan) — automatic, time-limited tightening of failed-login and reputation thresholds when a coordinated attack is detected. Off by default; opt in via the new Settings → Hardening Mode tab. Existing settings are preserved.
 
 = 2.0.7 =
 The hourly API call cap is split into three independent buckets and now scales with your tier — a reputation-check storm can no longer freeze the report queue. Your "Max API calls per hour" setting is automatically reset to `0` (auto / tier-bound). Local firewall behaviour is unchanged; community calls pause cleanly when the bucket cap is reached and a banner surfaces the state.
