@@ -195,18 +195,23 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		$htaccess_handled = class_exists( 'ReportedIP_Hive_Decoy_Htaccess_Writer' )
 			&& ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->is_block_present();
 
-		ReportedIP_Hive_Logger::get_instance()->log_security_event(
-			'decoy_pathblock_hit',
-			$ip,
-			array(
-				'path'             => $path_only,
-				'htaccess_handled' => $htaccess_handled,
-				'user_agent'       => isset( $_SERVER['HTTP_USER_AGENT'] )
-					? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, REPORTEDIP_USER_AGENT_MAX_LENGTH )
-					: '',
-			),
-			'high'
+		$details = array(
+			'path'             => $path_only,
+			'htaccess_handled' => $htaccess_handled,
+			'user_agent'       => isset( $_SERVER['HTTP_USER_AGENT'] )
+				? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, REPORTEDIP_USER_AGENT_MAX_LENGTH )
+				: '',
 		);
+
+		ReportedIP_Hive_Logger::get_instance()->log_security_event( 'decoy_pathblock_hit', $ip, $details, 'high' );
+
+		$hive = ReportedIP_Hive::get_instance();
+		if ( method_exists( $hive, 'get_security_monitor' ) ) {
+			$monitor = $hive->get_security_monitor();
+			if ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) {
+				$monitor->report_security_event( $ip, 'decoy_pathblock_hit', $details );
+			}
+		}
 
 		if ( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
 			return;

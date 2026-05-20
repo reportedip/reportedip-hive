@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.11
+Stable tag: 2.0.12
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -328,6 +328,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.12 =
+
+Hotfix for the 2.0.11 Decoy Path Block: the sensor logged each hit locally but did not actually push it onto the community-report queue. `Logger::log_security_event()` only writes to the local `logs` table — queueing for the Hive API has to go through `Security_Monitor::report_security_event()` explicitly. The decoy hook now calls both, and the event-to-category mapping in `Security_Monitor::$default_category_mapping` has a new entry `decoy_pathblock_hit => [21, 15]` (admin-scanning + reputation). Sites running 2.0.11 will start populating the API queue immediately after the upgrade; older `decoy_pathblock_hit` rows in `logs` cannot be retro-reported (the API queue dedup window would suppress them anyway).
+
 = 2.0.11 =
 
 Decoy Path Block architecture correction. The sensor no longer adds the source IP to the local block table — a single false-positive (legitimate backup plugin, admin testing on the live site, an old crawler probing stale URLs) would otherwise have locked the site out of its own traffic for 24 hours. Each hit is still logged at severity `high` and forwarded to the community-reputation queue, and the visitor still receives a 403 for that one request. Companion change: the plugin now auto-manages an Apache rewrite block inside `.htaccess` (between `# BEGIN ReportedIP Hive Decoy` / `# END ReportedIP Hive Decoy` markers, placed before WordPress's own block). The rewrite routes hits to `index.php` instead of issuing `[F,L]` — that preserves the detection, while still protecting the site against any real bait file that might sit on disk (`.env.backup` left behind by Composer, etc.). nginx users get an equivalent `rewrite ^ /index.php last;` snippet in the Settings tab. The block-duration option `reportedip_hive_decoy_block_hours` is removed; migration v7 cleans up legacy entries from the 2.0.9-era `blocked` table.
@@ -448,6 +452,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 2.0.12 =
+Hotfix: Decoy Path Block in 2.0.11 logged hits locally but never queued them for the community-report API. Fixed in this release — no setting changes required.
 
 = 2.0.11 =
 Decoy Path Block stops touching the local IP-block table — hits are logged + reported to the community only. New auto-managed `.htaccess` rewrite ensures real bait files on disk (`.env.backup` etc.) are routed through WordPress for detection rather than served directly by Apache. Legacy `reportedip_hive_decoy_block_hours` option is removed and migrated automatically.

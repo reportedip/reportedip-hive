@@ -2,6 +2,34 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.12] — 2026-05-20
+
+### Fixed
+
+- **Decoy Path Block now actually reaches the community-report queue.** The
+  2.0.11 rewrite assumed `Logger::log_security_event()` would forward
+  `severity=high` events to the API automatically — it does not. The logger
+  only writes to the local `logs` table; queueing to `api_queue` always
+  goes through `Security_Monitor::report_security_event()` explicitly
+  (see `class-security-monitor.php:521`). `Decoy_Path_Block::maybe_block()`
+  now calls both: local log first (so the event is visible on the
+  dashboard even if the community layer is throttled / disabled / local
+  mode), then `report_security_event()` so Hive picks the right category
+  IDs, runs the cooldown / dedup checks and inserts the row in
+  `api_queue`.
+- **`Security_Monitor::$default_category_mapping`** gets a new entry
+  `decoy_pathblock_hit => [21, 15]` (admin-scanning + reputation),
+  consistent with the existing `admin_scanning` mapping. Without this
+  entry the call would have fallen through to the generic `[15]`
+  fallback.
+
+### Notes
+
+- Historical `decoy_pathblock_hit` rows in `logs` from 2.0.9 → 2.0.11
+  cannot be retro-reported: the `queue_api_report()` dedup window
+  (1 h pending / 15 min failed / 24 h cooldown) would suppress them
+  anyway. Fresh hits after the upgrade start queueing as expected.
+
 ## [2.0.11] — 2026-05-20
 
 ### Changed

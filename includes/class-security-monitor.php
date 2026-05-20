@@ -43,19 +43,20 @@ class ReportedIP_Hive_Security_Monitor {
 	 * list) are filtered out by `get_validated_category_mapping()`.
 	 */
 	private static $default_category_mapping = array(
-		'failed_login'       => array( 18 ),
-		'comment_spam'       => array( 12 ),
-		'xmlrpc_abuse'       => array( 21 ),
-		'admin_scanning'     => array( 21, 15 ),
-		'reputation_threat'  => array( 15, 4 ),
-		'user_enumeration'   => array( 55 ),
-		'rest_abuse'         => array( 34 ),
-		'app_password_abuse' => array( 31, 18 ),
-		'password_spray'     => array( 31, 18 ),
-		'scan_404'           => array( 57, 56, 58 ),
-		'wc_login_failed'    => array( 31 ),
-		'geo_anomaly'        => array( 15 ),
-		'2fa_brute_force'    => array( 31, 18 ),
+		'failed_login'        => array( 18 ),
+		'comment_spam'        => array( 12 ),
+		'xmlrpc_abuse'        => array( 21 ),
+		'admin_scanning'      => array( 21, 15 ),
+		'reputation_threat'   => array( 15, 4 ),
+		'user_enumeration'    => array( 55 ),
+		'rest_abuse'          => array( 34 ),
+		'app_password_abuse'  => array( 31, 18 ),
+		'password_spray'      => array( 31, 18 ),
+		'scan_404'            => array( 57, 56, 58 ),
+		'wc_login_failed'     => array( 31 ),
+		'geo_anomaly'         => array( 15 ),
+		'2fa_brute_force'     => array( 31, 18 ),
+		'decoy_pathblock_hit' => array( 21, 15 ),
 	);
 
 	private $database;
