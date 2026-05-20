@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.9
+Stable tag: 2.0.10
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -328,6 +328,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.10 =
+
+Two fixes to the 2.0.9 Decoy Path Block. Report-only mode is now respected end-to-end: the 403 + `exit` are skipped when the mode is active, so audits keep getting the `decoy_pathblock_hit` log entry without any user-visible block. The path matcher now also recognises bait filenames behind a subdirectory prefix (e.g. `/site-a/.env.backup` on a Multisite subdir install) — the canonical match keeps working unchanged; the basename fallback only triggers when the full path does not already match. New unit-test case covers the Multisite subdir scenario.
+
 = 2.0.9 =
 
 Decoy Path Block — new free-tier sensor that bans the source IP on the very first request to a known bait path (`.env.backup`, `wp-config.old.php`, `db-dump-master.sql.php`, `admin-shell-console.php`, `debug-logs-temp.php` and more). Distinct from the existing scan-detector: legitimate visitors never request these paths, so the first hit IS the attack indicator — no N-of-Y window, no waiting. No physical decoy files are dropped on disk; detection lives entirely in the request pipeline. The Settings tab additionally exposes ready-to-paste `.htaccess` and nginx snippets so admins can move the block to the server level (pre-PHP) for extra hardening; the plugin never writes to server configs itself. Extend the bait list via the `reportedip_hive_decoy_paths` filter. New options `reportedip_hive_decoy_pathblock_enabled` (default on) and `reportedip_hive_decoy_block_hours` (1–168, default 24). New event type `decoy_pathblock_hit` (severity `high`); the 2.0.8 Hardening-Mode log decoration applies automatically when an attack hits during an active hardening window.
@@ -440,6 +444,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 2.0.10 =
+Fix release for the 2.0.9 Decoy Path Block. Report-only mode is now honoured (log without block), and bait filenames behind a subdirectory prefix (e.g. `/site-a/.env.backup` on Multisite subdir) match correctly. No setting changes required.
 
 = 2.0.9 =
 New free-tier Decoy Path Block — bans IPs on the first request to known bait paths (`.env.backup`, `wp-config.old.php`, etc.). No disk changes, no false positives on legitimate traffic. Default-on, configurable under Settings → Detection.

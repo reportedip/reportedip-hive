@@ -2,6 +2,30 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.10] — 2026-05-20
+
+### Fixed
+
+- **Decoy Path Block respects report-only mode.** `maybe_block()` was sending
+  the 403 + `exit` even when `reportedip_hive_report_only_mode` was active.
+  The event was still logged (correct) but the user-visible block surfaced
+  during audits. The report-only guard now runs before the 403/exit branch.
+- **Decoy Path matcher recognises subdirectory-prefixed bait names.** On
+  Multisite subdir installs the request URI for a subsite is
+  `/site-a/.env.backup`. The matcher previously compared the full path only
+  and missed the bait. Added a basename fallback: the canonical full-path
+  match keeps running first; only if it misses does the matcher also check
+  the basename against the bait list. New unit-test case
+  `test_basename_match_for_multisite_subdirs` covers the scenario.
+
+### Notes
+
+- Behaviour on `.php`-suffixed bait paths inside a Multisite subdir (e.g.
+  `/site-a/wp-config.old.php`) is unchanged — the default WordPress `.htaccess`
+  rewrites strip the leading subsite segment and Apache returns 404 before
+  PHP loads. That is exactly what the optional server-level `.htaccess` /
+  nginx snippets in Settings → Detection are for.
+
 ## [2.0.9] — 2026-05-21
 
 ### Security
