@@ -545,27 +545,7 @@ class ReportedIP_Hive_Database {
 	public function is_recently_processed( $ip_address, $hours = 24 ) {
 		global $wpdb;
 
-		$blocked_table = $wpdb->base_prefix . 'reportedip_hive_blocked';
-		$queue_table   = $wpdb->base_prefix . 'reportedip_hive_api_queue';
-		$logs_table    = $wpdb->base_prefix . 'reportedip_hive_logs';
-
-		$recently_blocked = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $blocked_table 
-                 WHERE ip_address = %s 
-                 AND created_at > DATE_SUB(NOW(), INTERVAL %d HOUR)",
-				$ip_address,
-				$hours
-			)
-		);
-
-		if ( $recently_blocked > 0 ) {
-			return array(
-				'processed' => true,
-				'reason'    => 'recently_blocked',
-				'details'   => 'IP was blocked within the last ' . $hours . ' hours',
-			);
-		}
+		$queue_table = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		$recently_reported = $wpdb->get_var(
 			$wpdb->prepare(

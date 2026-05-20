@@ -121,29 +121,54 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * `is_recently_processed()` must only flag the IP as "recently
 		 * reported" when a `completed` row exists. Pending/processing rows
-		 * (which can be stuck) must NOT count.
+		 * (which can be stuck) must NOT count, and — fixed in 2.0.13 — a
+		 * recent local auto-block on the same IP must NOT count either
+		 * (otherwise every freshly-blocked IP would be silently excluded
+		 * from the community report, which is exactly what we just blocked
+		 * it for).
 		 */
 		public function test_is_recently_processed_filters_to_completed_only(): void {
 			$db = new \ReportedIP_Hive_Database();
 			$db->is_recently_processed( '1.2.3.4', 24 );
 
-			$this->assertGreaterThanOrEqual(
-				2,
-				count( $GLOBALS['wpdb']->prepares ),
-				'Expected blocked-table query + queue-table query.'
+			$this->assertCount(
+				1,
+				$GLOBALS['wpdb']->prepares,
+				'Only the queue-table cooldown query should run; the legacy blocked-table check is gone.'
 			);
 
-			$queue_query = $GLOBALS['wpdb']->prepares[1]['sql'];
+			$queue_query = $GLOBALS['wpdb']->prepares[0]['sql'];
+			$this->assertStringContainsString(
+				'reportedip_hive_api_queue',
+				$queue_query,
+				'The single remaining query must target the api_queue table.'
+			);
 			$this->assertStringContainsString(
 				"status = 'completed'",
 				$queue_query,
 				'Cooldown query must filter to completed rows only.'
 			);
 			$this->assertStringNotContainsString(
-				"IN ('completed', 'pending', 'processing')",
+				'reportedip_hive_blocked',
 				$queue_query,
-				'Pending/processing rows must NOT count toward the cooldown.'
+				'The blocked-table check must not be part of the cooldown logic anymore.'
 			);
+		}
+
+		/**
+		 * Regression guard for the 2.0.13 fix: a freshly-blocked IP MUST NOT
+		 * be classified as `recently_processed`. Before 2.0.13 the helper
+		 * counted rows from `reportedip_hive_blocked`, so every auto-blocked
+		 * offender was silently excluded from the community report.
+		 */
+		public function test_recently_blocked_ip_is_no_longer_excluded(): void {
+			$db = new \ReportedIP_Hive_Database();
+			$GLOBALS['wpdb']->get_var_returns = array( 0 => 0 );
+
+			$result = $db->is_recently_processed( '5.6.7.8', 24 );
+
+			$this->assertFalse( $result['processed'], 'IP must report even if it was just blocked locally.' );
+			$this->assertNull( $result['reason'] );
 		}
 
 		/**

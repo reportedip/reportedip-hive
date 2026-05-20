@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.12
+Stable tag: 2.0.13
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -328,6 +328,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.13 =
+
+Hotfix: every locally auto-blocked offender was silently excluded from the community report. `Database::is_recently_processed()` counted the very block that triggered the report — once the IP landed in `wp_reportedip_hive_blocked`, the helper returned `recently_blocked=true` for the next 24 hours and `queue_api_report()` dropped the row before it ever reached the API. The check is removed: only successful past reports (`api_queue.status=completed`) gate the cooldown now, which is the dedup behaviour the helper is supposed to enforce. Combined with the 2.0.12 Decoy fix, `decoy_pathblock_hit`, `user_enumeration`, `failed_login`, `scan_404` and every other sensor now actually reach the Hive API after an auto-block.
+
 = 2.0.12 =
 
 Hotfix for the 2.0.11 Decoy Path Block: the sensor logged each hit locally but did not actually push it onto the community-report queue. `Logger::log_security_event()` only writes to the local `logs` table — queueing for the Hive API has to go through `Security_Monitor::report_security_event()` explicitly. The decoy hook now calls both, and the event-to-category mapping in `Security_Monitor::$default_category_mapping` has a new entry `decoy_pathblock_hit => [21, 15]` (admin-scanning + reputation). Sites running 2.0.11 will start populating the API queue immediately after the upgrade; older `decoy_pathblock_hit` rows in `logs` cannot be retro-reported (the API queue dedup window would suppress them anyway).
@@ -452,6 +456,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 2.0.13 =
+Critical hotfix: every auto-blocked IP was being silently excluded from the community report by an over-eager cooldown check. With this release every sensor (user enumeration, failed login, scan-404, decoy path …) actually queues for the Hive API after the local block. No setting changes required.
 
 = 2.0.12 =
 Hotfix: Decoy Path Block in 2.0.11 logged hits locally but never queued them for the community-report API. Fixed in this release — no setting changes required.

@@ -2,6 +2,36 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.13] — 2026-05-20
+
+### Fixed
+
+- **Every locally auto-blocked offender is now actually reported to the
+  community.** `Database::is_recently_processed()`
+  (`class-database.php:545`) used to count rows in
+  `wp_reportedip_hive_blocked` and short-circuit with
+  `reason=recently_blocked` whenever a block existed for that IP in the
+  last 24 hours. But the auto-block is the **direct consequence** of the
+  detection that is calling `queue_api_report()` — so every fresh hit
+  was guaranteed to find its own block in the table and skip the queue
+  insert. End result: `Total API calls > 0`, `Submission counter = 0`
+  forever, `api_queue` permanently empty.
+- The blocked-table check is removed. Only the existing `api_queue`
+  check (rows with `status=completed` in the last 24 h) gates the
+  cooldown now, which is the dedup behaviour the helper is supposed to
+  enforce. Combined with the 2.0.12 Decoy fix, every sensor
+  (`decoy_pathblock_hit`, `user_enumeration`, `failed_login`,
+  `scan_404`, `wc_login_failed`, `2fa_brute_force`, …) now reaches the
+  Hive API after the local block.
+
+### Tests
+
+- `ApiQueueRecoveryTest::test_is_recently_processed_filters_to_completed_only`
+  updated — the helper now executes a single prepared query against
+  `api_queue` (no more redundant `blocked`-table count).
+- New `ApiQueueRecoveryTest::test_recently_blocked_ip_is_no_longer_excluded`
+  regression-guards the fix.
+
 ## [2.0.12] — 2026-05-20
 
 ### Fixed
