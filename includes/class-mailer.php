@@ -83,6 +83,66 @@ class ReportedIP_Hive_Mailer {
 			return false;
 		}
 
+		$recipients = $this->split_recipients( (string) $args['to'] );
+		if ( count( $recipients ) > 1 ) {
+			$overall = false;
+			foreach ( $recipients as $single ) {
+				$single_args       = $args;
+				$single_args['to'] = $single;
+				if ( $this->dispatch_one( $single_args ) ) {
+					$overall = true;
+				}
+			}
+			return $overall;
+		}
+
+		if ( 1 === count( $recipients ) ) {
+			$args['to'] = $recipients[0];
+		}
+
+		return $this->dispatch_one( $args );
+	}
+
+	/**
+	 * Split a recipient string into one or more single addresses.
+	 *
+	 * The relay endpoint (`POST /relay-mail`) accepts only one recipient per
+	 * request — `sanitize_email()` + `is_email()` strictly validate a single
+	 * address, so passing a comma-separated list fails 422 and the whole
+	 * mail is dropped. Callers like {@see ReportedIP_Hive_Security_Monitor::send_admin_alert()}
+	 * still pass `implode(', ', $recipients)` because that is the WP_Mail
+	 * convention; we split it back out so each recipient gets their own
+	 * outbound request (the local wp_mail fallback handles comma-lists
+	 * natively, but splitting keeps logging consistent across providers).
+	 *
+	 * @param string $raw Comma-separated recipient string.
+	 * @return string[]  Trimmed, non-empty single recipients.
+	 */
+	private function split_recipients( $raw ) {
+		if ( '' === $raw ) {
+			return array();
+		}
+		if ( false === strpos( $raw, ',' ) ) {
+			return array( trim( $raw ) );
+		}
+		$parts  = array_map( 'trim', explode( ',', $raw ) );
+		$filter = static function ( $candidate ) {
+			return '' !== $candidate;
+		};
+		return array_values( array_filter( $parts, $filter ) );
+	}
+
+	/**
+	 * Render + dispatch a single normalized mail.
+	 *
+	 * Shared body for the single- and multi-recipient paths in
+	 * {@see self::send()} so the render / provider / logging hooks fire
+	 * exactly once per recipient.
+	 *
+	 * @param array $args Normalized mail args with a single recipient.
+	 * @return bool
+	 */
+	private function dispatch_one( array $args ) {
 		$html_body  = $this->render_html( $args );
 		$plain_body = $this->render_plain( $args );
 

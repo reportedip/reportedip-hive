@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.14
+Stable tag: 2.0.15
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -328,6 +328,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.15 =
+
+Hotfix for multi-recipient admin notifications. `Security_Monitor::send_admin_alert()` builds the recipient field as `implode(', ', $recipients)` — the standard WP_Mail convention. The Hive Relay endpoint (`POST /relay-mail`) on reportedip.de, however, validates a single address per request via `sanitize_email` + `is_email` and HTTP-422s anything that looks like a list — silently dropping every alert when more than one admin is configured. The mailer now splits comma-lists itself, fan-outs one outbound request per recipient, and logs each delivery separately. The local `wp_mail` fallback keeps working unchanged.
+
 = 2.0.14 =
 
 Decoy bait-path list expanded from 16 to 40 entries — adds the full `wp-config.php.*` variant family (`.bak`, `.old`, `.save`, `.orig`, `.swp`, `.txt`, `~`), more `.env*` Backups (`.production.bak`, `.local.bak`), Joomla `configuration.php.bak`, common SQL dumps (`dump.sql`, `database.sql`, `backup.sql`, `db.sql`), `.htpasswd` / `.htaccess.bak`, AWS credentials (`.aws/credentials`, `.aws/config`), SSH keys (`.ssh/id_rsa`, `.ssh/authorized_keys`), private-key files (`id_rsa`, `private.key`, `server.key`). The `.htaccess` rewrite block and both nginx snippets are regenerated from the same list. `is_decoy_path()` learns nested paths (`.aws/credentials`) with the same one-optional-subdir prefix rule the server snippets use, so PHP detection stays consistent with the Apache/nginx rewrite. New nginx exact-match snippet variant added for ISPConfig and managed stacks where the host template emits `location ~ /\.  { deny all; }` before the site's custom directives — exact-match locations have higher nginx priority and survive that ordering.
@@ -460,6 +464,9 @@ Mail unification: every plugin email runs through a central mailer with branded 
 Initial public release as ReportedIP Hive. Three threshold channels, two operating modes (Local Shield / Community Network), four 2FA methods, ten recovery codes, six-step setup wizard, REST API namespace `reportedip-hive/v1`, WP-CLI tree.
 
 == Upgrade Notice ==
+
+= 2.0.15 =
+Hotfix: admin notifications with more than one recipient were silently dropped by the managed mail relay (422 — only one address per request). The mailer now fan-outs comma-lists into one request per recipient.
 
 = 2.0.14 =
 Decoy bait-path list grows from 16 to 40 entries (wp-config Backups, SQL dumps, AWS/SSH credentials, htpasswd, …). Auto-managed `.htaccess` and the nginx snippets pick the new list up automatically. ISPConfig/nginx admins get an additional exact-match snippet variant in Settings that survives template `dot-file deny` rules.

@@ -2,6 +2,37 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.15] — 2026-05-21
+
+### Fixed
+
+- **Multi-recipient admin notifications now actually go out via the
+  managed mail relay.** `Security_Monitor::send_admin_alert()`
+  (`class-security-monitor.php:912`) builds the recipient field as
+  `implode(', ', $recipients)` — the standard WP_Mail convention. The
+  Hive Relay REST endpoint (`POST /relay-mail` in `reportedip-service`)
+  validates a single address per request via
+  `sanitize_email` + `is_email`, so `"a@x, b@y"` 422s and the whole
+  alert is dropped. The site logs `mail_failed` and the admin never
+  sees the notification.
+- `ReportedIP_Hive_Mailer::send()` now detects a comma-separated `to`
+  field, splits it into individual recipients and dispatches one mail
+  per address through the same provider stack. `split_recipients()`
+  trims/filters empty fragments; `dispatch_one()` houses the existing
+  render → provider → log path so the per-recipient bookkeeping stays
+  identical to the previous single-recipient flow. Local `wp_mail`
+  fallback is unaffected (it accepts comma-lists natively, but the
+  split path is consistent across providers).
+
+### Notes
+
+- The 14-day per-event cooldown and the burst-suppression cap in
+  `send_admin_alert()` still apply to the **first** recipient — once
+  the cooldown fires for that combination, the remaining recipients in
+  the same call all benefit from the same `set_transient()` slot.
+  That matches the legacy behaviour and avoids N× the cooldown
+  bookkeeping per delivery.
+
 ## [2.0.14] — 2026-05-20
 
 ### New
