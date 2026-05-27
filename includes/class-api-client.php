@@ -787,6 +787,22 @@ class ReportedIP_Hive_API {
 	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, retryable?: bool, soft_failure?: bool, remaining_quota?: array<string,mixed>|null}
 	 */
 	private function relay_request( $endpoint, array $payload ) {
+		$cooldown_key = $this->relay_backoff_key( $endpoint, $payload );
+
+		if ( '' !== $cooldown_key ) {
+			$cooldown_until = (int) get_transient( $cooldown_key );
+			if ( $cooldown_until > time() ) {
+				return array(
+					'ok'           => false,
+					'status_code'  => 429,
+					'error'        => 'client_backoff',
+					'retry_after'  => max( 1, $cooldown_until - time() ),
+					'retryable'    => true,
+					'soft_failure' => true,
+				);
+			}
+		}
+
 		$url = rtrim( $this->api_endpoint, '/' ) . '/' . ltrim( $endpoint, '/' );
 
 		$args = array(
@@ -816,6 +832,9 @@ class ReportedIP_Hive_API {
 		$retry = (int) wp_remote_retrieve_header( $response, 'retry-after' );
 
 		if ( $code >= 200 && $code < 300 ) {
+			if ( '' !== $cooldown_key ) {
+				delete_transient( $cooldown_key );
+			}
 			delete_transient( 'reportedip_hive_relay_quota' );
 			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
 			return array(
@@ -827,11 +846,20 @@ class ReportedIP_Hive_API {
 		}
 
 		if ( 402 === $code || 429 === $code ) {
+			$retry_after = $retry > 0
+				? $retry
+				: ( is_array( $json ) && isset( $json['data']['retry_after'] ) ? (int) $json['data']['retry_after'] : 0 );
+
+			if ( '' !== $cooldown_key ) {
+				$cooldown_seconds = max( 60, min( HOUR_IN_SECONDS, $retry_after > 0 ? $retry_after : 5 * MINUTE_IN_SECONDS ) );
+				set_transient( $cooldown_key, time() + $cooldown_seconds, $cooldown_seconds + MINUTE_IN_SECONDS );
+			}
+
 			return array(
 				'ok'           => false,
 				'status_code'  => $code,
 				'error'        => is_array( $json ) ? (string) ( $json['code'] ?? 'cap_or_backoff' ) : 'cap_or_backoff',
-				'retry_after'  => $retry > 0 ? $retry : ( is_array( $json ) && isset( $json['data']['retry_after'] ) ? (int) $json['data']['retry_after'] : 0 ),
+				'retry_after'  => $retry_after,
 				'retryable'    => true,
 				'soft_failure' => true,
 			);
@@ -843,6 +871,38 @@ class ReportedIP_Hive_API {
 			'error'       => is_array( $json ) ? (string) ( $json['code'] ?? 'http_' . $code ) : 'http_' . $code,
 			'retryable'   => $code >= 500,
 		);
+	}
+
+	/**
+	 * Build a per-(endpoint, recipient) transient key used to remember a recent
+	 * 402/429 backoff response and skip the next outbound call until it expires.
+	 *
+	 * The server-side relay applies a progressive backoff per (site, recipient),
+	 * so the client cache key follows the same shape. Falls back to a global
+	 * per-endpoint key when no recipient information is in the payload.
+	 *
+	 * @param string $endpoint Relay slug (e.g. 'relay-mail' / 'relay-sms').
+	 * @param array  $payload  Outgoing payload — inspected for recipient identifiers.
+	 * @return string Transient key, or empty string to skip caching.
+	 * @since 2.0.16
+	 */
+	private function relay_backoff_key( $endpoint, array $payload ) {
+		$endpoint = trim( (string) $endpoint, '/ ' );
+		if ( '' === $endpoint ) {
+			return '';
+		}
+
+		$recipient = '';
+		if ( isset( $payload['recipient'] ) && is_string( $payload['recipient'] ) ) {
+			$recipient = strtolower( trim( $payload['recipient'] ) );
+		} elseif ( isset( $payload['recipient_phone'] ) && is_string( $payload['recipient_phone'] ) ) {
+			$recipient = preg_replace( '/[^0-9+]/', '', $payload['recipient_phone'] );
+		}
+
+		$slug = preg_replace( '/[^a-z0-9_-]+/i', '_', $endpoint );
+		$hash = '' !== $recipient ? md5( $recipient ) : 'global';
+
+		return 'reportedip_hive_relay_bo_' . strtolower( (string) $slug ) . '_' . $hash;
 	}
 
 	/**
@@ -1172,6 +1232,16 @@ class ReportedIP_Hive_API {
 		}
 
 		$report_limit = isset( $quota['daily_report_limit'] ) ? (int) $quota['daily_report_limit'] : null;
+		/*
+		 * Unlimited tiers (Enterprise / Honeypot) signal a negative or missing
+		 * `daily_report_limit`. The downstream call site in `process_report_queue()`
+		 * uses `remaining >= 0` to decide whether to cap the batch — so unlimited
+		 * MUST be reported back as `remaining = -1`, regardless of what the
+		 * server stamped into `remaining_reports`. A misbehaving server that
+		 * sends `remaining_reports = 0` for an unlimited tier would otherwise
+		 * trip the `no_quota` short-circuit and freeze the queue forever.
+		 */
+		$is_unlimited = ( null === $report_limit ) || ( $report_limit < 0 );
 
 		if ( $report_limit === 0 ) {
 			return array(
@@ -1185,7 +1255,7 @@ class ReportedIP_Hive_API {
 			);
 		}
 
-		if ( $report_limit !== null && $report_limit > 0 && isset( $quota['remaining_reports'] ) && (int) $quota['remaining_reports'] <= 0 ) {
+		if ( ! $is_unlimited && $report_limit > 0 && isset( $quota['remaining_reports'] ) && (int) $quota['remaining_reports'] <= 0 ) {
 			$reset_time_formatted = '00:00';
 			if ( ! empty( $quota['reset_time'] ) ) {
 				$reset_timestamp      = strtotime( $quota['reset_time'] );
@@ -1210,19 +1280,23 @@ class ReportedIP_Hive_API {
 			);
 		}
 
+		$remaining_out = $is_unlimited ? -1 : (int) ( $quota['remaining_reports'] ?? 0 );
+
 		return array(
 			'exhausted'  => false,
 			'reason'     => null,
 			'reset_time' => $quota['reset_time'] ?? null,
-			'remaining'  => $quota['remaining_reports'] ?? 0,
+			'remaining'  => $remaining_out,
 			'limit'      => $quota['daily_report_limit'] ?? 0,
 			'usage'      => $quota['daily_report_usage'] ?? 0,
 			'user_role'  => $quota['user_role'] ?? '',
-			'message'    => sprintf(
-				/* translators: %d: remaining reports */
-				__( '%d reports remaining today.', 'reportedip-hive' ),
-				$quota['remaining_reports'] ?? 0
-			),
+			'message'    => $is_unlimited
+				? __( 'Unlimited reports on this tier.', 'reportedip-hive' )
+				: sprintf(
+					/* translators: %d: remaining reports */
+					__( '%d reports remaining today.', 'reportedip-hive' ),
+					(int) ( $quota['remaining_reports'] ?? 0 )
+				),
 		);
 	}
 

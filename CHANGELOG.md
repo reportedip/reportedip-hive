@@ -2,6 +2,55 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- **Hardening Mode no longer re-emits `hardening_mode_activated` every
+  hour for the same coordinated-attack row.** `check_coordinated_attacks()`
+  runs against a rolling 2 h lookback in `wp_reportedip_hive_attempts`,
+  so a single attack pattern (e.g. 10 IPs / 20 failed logins inside one
+  minute) used to trigger a full re-activation on every hourly cron
+  sweep until the row aged out. `Hardening_Mode::activate()`
+  (`class-hardening-mode.php`) now writes a per-time-window suppression
+  marker (`reportedip_hive_hardening_seen_<md5>`) at activation and
+  short-circuits later calls that present the same window unless the
+  candidate reason is strictly more severe. The retention TTL of the
+  marker tracks the configured Hardening duration plus 24 h.
+- **TTL-low extension no longer overwrites a stronger trigger payload
+  with a weaker follow-up.** Before, a 10 IPs / 20 attempts sweep
+  arriving 13 s before the window expired replaced a 35 IPs / 200
+  attempts trigger in `TRANSIENT_REASON`; the Hardening Mode tab then
+  showed the milder reason. The activation path now branches: when the
+  remaining TTL is under 50 % of the configured duration **and** the
+  candidate reason is not stronger, it extends `TRANSIENT_UNTIL` only
+  and emits `hardening_mode_extended` (severity low). The stronger
+  original reason stays in `TRANSIENT_REASON` and on the UI.
+- **`cron_sync_reputation()` no longer logs a duplicate critical
+  `Coordinated attacks detected` entry on every sweep.**
+  `Security_Monitor::check_coordinated_attacks()` already emits
+  structured `coordinated_attack_detected` events (severity critical)
+  per pattern; the generic wrapper log in `class-cron-handler.php` was
+  redundant and inflated the Activity log.
+- **Enterprise / Honeypot tier no longer hits the queue `no_quota`
+  short-circuit when the upstream stamps `remaining_reports = 0` on
+  an unlimited account.** `get_quota_status()`
+  (`class-api-client.php:1159`) now detects unlimited tiers via
+  `daily_report_limit < 0 || === null` and forces `remaining = -1`,
+  matching the `>= 0` guard in `process_report_queue()`. Without this,
+  a server-side glitch in the quota refresh would silently freeze the
+  API report queue for an Enterprise site.
+- **Relay-mail / relay-sms 429 backoff is now respected client-side.**
+  Previously, a 429 response from `POST /reportedip/v2/relay-mail`
+  (server-side progressive backoff per recipient) only triggered the
+  per-call wp_mail fallback — the *next* security alert immediately
+  attempted another HTTP call, so the same recipient could see dozens
+  of 429s per day. `relay_request()` (`class-api-client.php`) now stores
+  `time() + retry_after` in a per-(endpoint, recipient) transient,
+  short-circuits subsequent calls inside the cooldown to a `client_backoff`
+  soft-failure (so the mail/SMS provider still falls back transparently),
+  and clears the cooldown on the first successful response.
+
 ## [2.0.15] — 2026-05-21
 
 ### Fixed

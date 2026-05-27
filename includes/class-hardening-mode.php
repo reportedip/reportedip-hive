@@ -39,10 +39,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class ReportedIP_Hive_Hardening_Mode {
 
-	const TRANSIENT_UNTIL    = 'reportedip_hive_hardening_until';
-	const TRANSIENT_REASON   = 'reportedip_hive_hardening_reason';
-	const TRANSIENT_LOGGED   = 'reportedip_hive_hardening_logged';
-	const TRANSIENT_DEBOUNCE = 'reportedip_hive_coordinated_check_debounce';
+	const TRANSIENT_UNTIL         = 'reportedip_hive_hardening_until';
+	const TRANSIENT_REASON        = 'reportedip_hive_hardening_reason';
+	const TRANSIENT_LOGGED        = 'reportedip_hive_hardening_logged';
+	const TRANSIENT_DEBOUNCE      = 'reportedip_hive_coordinated_check_debounce';
+	const TRANSIENT_WINDOW_PREFIX = 'reportedip_hive_hardening_seen_';
 
 	const DEBOUNCE_SECONDS = 60;
 
@@ -123,13 +124,28 @@ final class ReportedIP_Hive_Hardening_Mode {
 	}
 
 	/**
-	 * Activate the hardening window. Idempotent — only extends the window when
-	 * the new reason is more severe (more unique IPs / total attempts) or when
-	 * the remaining TTL has dropped below 50 % of the configured duration.
+	 * Activate the hardening window.
+	 *
+	 * Idempotency rules:
+	 *  - When the candidate `time_window` has already activated hardening in
+	 *    the current retention window (`TRANSIENT_WINDOW_PREFIX.<hash>`) AND
+	 *    the new reason is not strictly more severe, return false. This is
+	 *    what stops the hourly cron sweep from re-emitting `hardening_mode_activated`
+	 *    every 60 minutes for the same row in `wp_reportedip_hive_attempts`.
+	 *  - When the candidate reason is strictly more severe than the stored one,
+	 *    re-arm the window: replace both `TRANSIENT_UNTIL` and `TRANSIENT_REASON`
+	 *    and emit `hardening_mode_activated` (severity high).
+	 *  - When the remaining TTL drops below 50 % of the configured duration
+	 *    and the reason is not more severe, only extend `TRANSIENT_UNTIL` and
+	 *    keep the original `TRANSIENT_REASON` intact — emit
+	 *    `hardening_mode_extended` (severity low). This prevents a weaker
+	 *    follow-up sweep from overwriting a more interesting trigger payload
+	 *    in the UI.
+	 *  - Otherwise (already active, not more severe, TTL not low), no-op.
 	 *
 	 * @param array  $reason  {unique_ips, total_attempts, time_window}
 	 * @param string $trigger 'realtime'|'cron'|'manual'
-	 * @return bool True when (re-)activated, false when gated out or skipped.
+	 * @return bool True when (re-)activated or TTL extended, false when gated out or skipped.
 	 */
 	public static function activate( array $reason, $trigger = 'realtime' ) {
 		if ( ! self::is_available() ) {
@@ -139,6 +155,7 @@ final class ReportedIP_Hive_Hardening_Mode {
 		$duration_minutes = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_duration_minutes', self::DEFAULT_DURATION_MINUTES );
 		$duration_minutes = max( 1, min( 360, $duration_minutes ) );
 		$duration_seconds = $duration_minutes * MINUTE_IN_SECONDS;
+		$retain_ttl       = $duration_seconds + DAY_IN_SECONDS;
 
 		$existing           = (int) get_site_transient( self::TRANSIENT_UNTIL );
 		$now                = time();
@@ -148,13 +165,35 @@ final class ReportedIP_Hive_Hardening_Mode {
 		$is_more_severe  = self::reason_is_more_severe( $reason, $existing_reason );
 		$ttl_low         = $existing_remaining > 0 && $existing_remaining < ( $duration_seconds / 2 );
 
-		if ( $existing_remaining > 0 && ! $is_more_severe && ! $ttl_low ) {
+		$window_key  = self::window_marker_key( (string) ( $reason['time_window'] ?? '' ) );
+		$window_seen = '' !== $window_key && (bool) get_site_transient( $window_key );
+
+		if ( $window_seen && ! $is_more_severe ) {
 			return false;
 		}
 
-		$until = $now + $duration_seconds;
+		if ( $existing_remaining > 0 && ! $is_more_severe ) {
+			if ( ! $ttl_low ) {
+				return false;
+			}
 
-		$retain_ttl = $duration_seconds + DAY_IN_SECONDS;
+			$until = $now + $duration_seconds;
+			set_site_transient( self::TRANSIENT_UNTIL, $until, $retain_ttl );
+
+			self::log_event(
+				'hardening_mode_extended',
+				array(
+					'duration_seconds' => $duration_seconds,
+					'trigger'          => (string) $trigger,
+					'preserved_reason' => is_array( $existing_reason ) ? $existing_reason : array(),
+				),
+				'low'
+			);
+
+			return true;
+		}
+
+		$until = $now + $duration_seconds;
 		set_site_transient( self::TRANSIENT_UNTIL, $until, $retain_ttl );
 		set_site_transient(
 			self::TRANSIENT_REASON,
@@ -167,6 +206,9 @@ final class ReportedIP_Hive_Hardening_Mode {
 			),
 			$retain_ttl
 		);
+		if ( '' !== $window_key ) {
+			set_site_transient( $window_key, 1, $retain_ttl );
+		}
 		delete_site_transient( self::TRANSIENT_LOGGED );
 
 		self::log_event(
@@ -182,6 +224,21 @@ final class ReportedIP_Hive_Hardening_Mode {
 		);
 
 		return true;
+	}
+
+	/**
+	 * Build the per-time-window suppression transient key.
+	 *
+	 * @param string $time_window Server-formatted DATE_FORMAT(last_attempt, '%Y-%m-%d %H:%i') value.
+	 * @return string Empty string when no usable window — caller must skip the marker write/read.
+	 * @since 2.0.16
+	 */
+	private static function window_marker_key( $time_window ) {
+		$time_window = trim( (string) $time_window );
+		if ( '' === $time_window ) {
+			return '';
+		}
+		return self::TRANSIENT_WINDOW_PREFIX . md5( $time_window );
 	}
 
 	/**

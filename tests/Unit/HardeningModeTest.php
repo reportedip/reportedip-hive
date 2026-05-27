@@ -246,5 +246,111 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( $second, 'weaker reason must not extend the window' );
 			$this->assertTrue( $third, 'stronger reason must re-arm the window' );
 		}
+
+		public function test_ttl_low_extends_window_without_overwriting_reason() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$available = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_enabled']  = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_duration_minutes'] = 60;
+
+			\ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 35, 'total_attempts' => 200, 'time_window' => '2026-05-27 10:43' ),
+				'cron'
+			);
+
+			$ttl_low = ( 60 * MINUTE_IN_SECONDS / 2 ) - 5;
+			$GLOBALS['wp_transients']['reportedip_hive_hardening_until'] = array(
+				'value'   => time() + $ttl_low,
+				'expires' => time() + 90 * MINUTE_IN_SECONDS,
+			);
+
+			\ReportedIP_Hive_Logger_Stub_For_Hardening::$events = array();
+
+			$re_arm = \ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 10, 'total_attempts' => 20, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+
+			$this->assertTrue( $re_arm, 'TTL-low triggers extension' );
+
+			$reason = \ReportedIP_Hive_Hardening_Mode::current_reason();
+			$this->assertSame( 35, $reason['unique_ips'], 'reason must keep the stronger 35-IP trigger' );
+			$this->assertSame( 200, $reason['total_attempts'] );
+			$this->assertSame( '2026-05-27 10:43', $reason['time_window'] );
+
+			$extended = array_values(
+				array_filter(
+					\ReportedIP_Hive_Logger_Stub_For_Hardening::$events,
+					static fn( $e ) => 'hardening_mode_extended' === $e['event']
+				)
+			);
+			$this->assertCount( 1, $extended, 'extension path emits hardening_mode_extended' );
+			$this->assertSame( 'low', $extended[0]['severity'] );
+			$this->assertSame( 35, $extended[0]['details']['preserved_reason']['unique_ips'] );
+
+			$reactivated = array_values(
+				array_filter(
+					\ReportedIP_Hive_Logger_Stub_For_Hardening::$events,
+					static fn( $e ) => 'hardening_mode_activated' === $e['event']
+				)
+			);
+			$this->assertCount( 0, $reactivated, 'no high-severity activation log on plain extension' );
+		}
+
+		public function test_same_time_window_not_reactivated_within_retention() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$available = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_enabled']  = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_duration_minutes'] = 60;
+
+			$first = \ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 10, 'total_attempts' => 20, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+			$this->assertTrue( $first );
+
+			\ReportedIP_Hive_Logger_Stub_For_Hardening::$events = array();
+
+			$now = time();
+			$GLOBALS['wp_transients']['reportedip_hive_hardening_until'] = array(
+				'value'   => $now + 5,
+				'expires' => $now + 90 * MINUTE_IN_SECONDS,
+			);
+
+			$replay = \ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 10, 'total_attempts' => 20, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+
+			$this->assertFalse( $replay, 'same time-window must not re-emit even with TTL low' );
+			$this->assertCount(
+				0,
+				array_filter(
+					\ReportedIP_Hive_Logger_Stub_For_Hardening::$events,
+					static fn( $e ) => in_array( $e['event'], array( 'hardening_mode_activated', 'hardening_mode_extended' ), true )
+				),
+				'no log events on suppressed replay of the same window'
+			);
+		}
+
+		public function test_same_time_window_reactivates_when_more_severe() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$available = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_enabled']  = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_duration_minutes'] = 60;
+
+			\ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 5, 'total_attempts' => 20, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+
+			\ReportedIP_Hive_Logger_Stub_For_Hardening::$events = array();
+
+			$escalated = \ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 25, 'total_attempts' => 80, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+
+			$this->assertTrue( $escalated, 'stronger reason for the same window must re-arm' );
+			$reason = \ReportedIP_Hive_Hardening_Mode::current_reason();
+			$this->assertSame( 25, $reason['unique_ips'] );
+		}
 	}
 }

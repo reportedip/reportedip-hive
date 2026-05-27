@@ -216,20 +216,10 @@ class ReportedIP_Hive_Cron_Handler {
 	public function cron_sync_reputation() {
 		try {
 			$coordinated_attacks = $this->security_monitor->check_coordinated_attacks();
-			if ( ! empty( $coordinated_attacks ) ) {
-				$this->logger->critical(
-					'Coordinated attacks detected',
-					'system',
-					array(
-						'attacks' => count( $coordinated_attacks ),
-					)
-				);
-
-				if ( class_exists( 'ReportedIP_Hive_Hardening_Mode' ) ) {
-					$reason = $this->security_monitor->strongest_coordinated_reason( $coordinated_attacks );
-					if ( null !== $reason ) {
-						ReportedIP_Hive_Hardening_Mode::activate( $reason, 'cron' );
-					}
+			if ( ! empty( $coordinated_attacks ) && class_exists( 'ReportedIP_Hive_Hardening_Mode' ) ) {
+				$reason = $this->security_monitor->strongest_coordinated_reason( $coordinated_attacks );
+				if ( null !== $reason ) {
+					ReportedIP_Hive_Hardening_Mode::activate( $reason, 'cron' );
 				}
 			}
 		} catch ( Exception $e ) {
