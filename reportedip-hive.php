@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.0.15
+ * Version: 2.0.16
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -54,7 +54,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.0.15' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.0.16' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -291,6 +291,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-logger.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cache.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mode-manager.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-promo-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-hardening-mode.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-api-client.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
@@ -332,6 +333,9 @@ class ReportedIP_Hive {
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-tier-upgrade.php';
 		ReportedIP_Hive_Tier_Upgrade::init();
+
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-quota-notifier.php';
+		ReportedIP_Hive_Quota_Notifier::init();
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-recommend.php';
 		ReportedIP_Hive_Two_Factor_Recommend::init();

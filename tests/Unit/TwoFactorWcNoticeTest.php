@@ -2,9 +2,9 @@
 /**
  * Unit tests for {@see ReportedIP_Hive_Two_Factor_WC_Notice}.
  *
- * Locks down the per-user 14-day cooldown contract: a dismiss writes
- * the timestamp, a fresh dismiss bumps the counter, the gate stays
- * shut for 14 days and re-opens on day 15.
+ * Locks down the contract that frequency/dismiss state is delegated to
+ * {@see ReportedIP_Hive_Promo_Manager} and that the gate-conditions
+ * (WooCommerce active, tier-locked, manage_options) stay in place.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -23,15 +23,6 @@ class TwoFactorWcNoticeTest extends TestCase {
 
 	private function source(): string {
 		return (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-two-factor-wc-notice.php' );
-	}
-
-	public function test_cooldown_constant_is_fourteen_days(): void {
-		$source = $this->source();
-		$this->assertStringContainsString(
-			'const COOLDOWN_SECS = 1209600;',
-			$source,
-			'14 days = 1 209 600 seconds. Encoded as a literal so the constant survives DAY_IN_SECONDS not being defined yet on test bootstrap.'
-		);
 	}
 
 	public function test_gate_requires_woocommerce_active(): void {
@@ -61,17 +52,35 @@ class TwoFactorWcNoticeTest extends TestCase {
 		);
 	}
 
-	public function test_dismiss_handler_writes_meta_and_increments_counter(): void {
+	public function test_gate_consults_promo_manager_can_show(): void {
 		$source = $this->source();
 		$this->assertStringContainsString(
-			'update_user_meta( $user_id, self::META_DISMISSED_AT, time() )',
+			'ReportedIP_Hive_Promo_Manager::can_show(',
 			$source,
-			'The dismiss handler MUST persist the current timestamp so the cooldown can be measured.'
+			'Frequency cap and killswitch must be delegated to Promo_Manager — every promo surface stays in lockstep through that single chokepoint.'
 		);
 		$this->assertStringContainsString(
-			'update_user_meta( $user_id, self::META_DISMISS_COUNT, $count + 1 )',
+			'ReportedIP_Hive_Promo_Manager::KEY_WC_FRONTEND_2FA',
 			$source,
-			'The dismiss counter must be bumped — it powers per-user telemetry on banner fatigue.'
+			'The WC-Frontend-2FA promo key must be the constant from Promo_Manager so a rename is one-shot.'
+		);
+	}
+
+	public function test_render_marks_promo_shown(): void {
+		$source = $this->source();
+		$this->assertStringContainsString(
+			'ReportedIP_Hive_Promo_Manager::mark_shown(',
+			$source,
+			'maybe_render() must call mark_shown() after rendering so the global frequency cap is honoured.'
+		);
+	}
+
+	public function test_dismiss_handler_calls_promo_manager(): void {
+		$source = $this->source();
+		$this->assertStringContainsString(
+			'ReportedIP_Hive_Promo_Manager::mark_dismissed(',
+			$source,
+			'The dismiss handler must route through Promo_Manager::mark_dismissed so the per-feature cooldown is set centrally.'
 		);
 	}
 

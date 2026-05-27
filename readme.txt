@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.15
+Stable tag: 2.0.16
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -327,6 +327,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.0.16 =
+
+Promo-frequency rework: a new central `Promo_Manager` caps Pro upgrade hints at ~4 per admin per year and adds a "hide all upgrade hints" kill-switch in Settings → Notifications. The 2FA reminder banner gets a 14-day cooldown (was 30 minutes) and a permanent per-user opt-out. Operational visibility added: a dismissible cap-status notice appears whenever the managed mail/SMS relay hits its monthly cap, and a new quota notifier mails admins once when usage crosses 80 % and once when the cap is reached (per channel, per billing period). Welcome / goodbye mails on plan changes. Local protection, sensors and 2FA suite are untouched.
 
 = 2.0.15 =
 

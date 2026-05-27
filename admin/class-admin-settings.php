@@ -30,6 +30,8 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( 'ReportedIP_Hive_Two_Factor_Admin', 'register_settings' ) );
 		add_action( 'admin_notices', array( $this, 'render_tier_upgrade_banner' ) );
+		add_action( 'admin_notices', array( $this, 'render_cap_status_notice' ), 5 );
+		add_action( 'admin_post_reportedip_hive_cap_notice_dismiss', array( $this, 'handle_cap_notice_dismiss' ) );
 		add_action( 'updated_option', array( $this, 'maybe_sync_notifications_to_api' ), 10, 1 );
 		add_action( 'network_admin_edit_reportedip_hive_save_settings', array( $this, 'handle_network_admin_save' ) );
 	}
@@ -438,6 +440,11 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( 'tier' !== ( $status['reason'] ?? '' ) ) {
 			return;
 		}
+		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' )
+			&& ! ReportedIP_Hive_Promo_Manager::can_show( ReportedIP_Hive_Promo_Manager::KEY_FRONTEND_2FA_INLINE )
+		) {
+			return;
+		}
 
 		$upgrade_url = defined( 'REPORTEDIP_HIVE_UPGRADE_URL' )
 			? REPORTEDIP_HIVE_UPGRADE_URL
@@ -462,6 +469,10 @@ class ReportedIP_Hive_Admin_Settings {
 			</p>
 		</div>
 		<?php
+
+		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' ) ) {
+			ReportedIP_Hive_Promo_Manager::mark_shown( ReportedIP_Hive_Promo_Manager::KEY_FRONTEND_2FA_INLINE );
+		}
 	}
 
 	/**
@@ -567,8 +578,15 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 1.6.0
 	 */
 	private function render_mail_sms_promo_card( $mode_manager ) {
+		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' )
+			&& ! ReportedIP_Hive_Promo_Manager::can_show( ReportedIP_Hive_Promo_Manager::KEY_MAIL_SMS_RELAY )
+		) {
+			return;
+		}
+
 		$mail_status = $mode_manager->feature_status( 'mail_relay_via_api' );
 		$sms_status  = $mode_manager->feature_status( 'sms_relay_via_api' );
+		unset( $sms_status );
 		?>
 		<div class="rip-card rip-mb-6 rip-promo-card">
 			<div class="rip-card__header">
@@ -590,6 +608,10 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 		</div>
 		<?php
+
+		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' ) ) {
+			ReportedIP_Hive_Promo_Manager::mark_shown( ReportedIP_Hive_Promo_Manager::KEY_MAIL_SMS_RELAY );
+		}
 	}
 
 	/**
@@ -924,6 +946,158 @@ class ReportedIP_Hive_Admin_Settings {
 			</p>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Render a status notice when the Mail or SMS relay has hit its cap and
+	 * is silently in fallback (mail → wp_mail) or paused (SMS → other 2FA
+	 * method).
+	 *
+	 * This is operational information, not a promo — it does NOT participate
+	 * in {@see ReportedIP_Hive_Promo_Manager}'s frequency cap. The notice
+	 * stays visible until either the underlying transient expires (relay
+	 * accepts again) or the operator dismisses it for the configured cooldown.
+	 *
+	 * Hook: `admin_notices` priority 5 so it sits at the top of the page,
+	 * above the standard-priority Hive banners.
+	 *
+	 * @return void
+	 * @since  2.0.16
+	 */
+	public function render_cap_status_notice() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+			return;
+		}
+
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen ) {
+			return;
+		}
+		$screen_id = (string) $screen->id;
+		if ( false === strpos( $screen_id, 'reportedip-hive' ) && 'dashboard' !== $screen_id ) {
+			return;
+		}
+
+		$mail_state = ReportedIP_Hive_Mode_Manager::get_cap_state( 'mail' );
+		$sms_state  = ReportedIP_Hive_Mode_Manager::get_cap_state( 'sms' );
+		if ( ! $mail_state && ! $sms_state ) {
+			return;
+		}
+
+		$user_id         = (int) get_current_user_id();
+		$dismissed_until = (int) get_user_meta( $user_id, 'reportedip_hive_cap_notice_dismissed_until', true );
+		if ( $dismissed_until > 0 && $dismissed_until > time() ) {
+			return;
+		}
+
+		$lines = array();
+		if ( $mail_state ) {
+			$lines[] = self::format_cap_state_line(
+				__( 'Mail relay', 'reportedip-hive' ),
+				$mail_state,
+				__( 'Mails are temporarily routed through your local wp_mail() until the relay accepts again.', 'reportedip-hive' )
+			);
+		}
+		if ( $sms_state ) {
+			$lines[] = self::format_cap_state_line(
+				__( 'SMS relay', 'reportedip-hive' ),
+				$sms_state,
+				__( 'SMS-based 2FA codes are paused until the relay accepts again — users can still choose TOTP, Email or Passkey.', 'reportedip-hive' )
+			);
+		}
+
+		$dashboard_url   = admin_url( 'admin.php?page=reportedip-hive-community' );
+		$cap_dismiss_url = wp_nonce_url(
+			admin_url( 'admin-post.php?action=reportedip_hive_cap_notice_dismiss' ),
+			'reportedip_hive_cap_notice_dismiss'
+		);
+		?>
+		<div class="notice rip-alert rip-alert--warning rip-cap-status-notice">
+			<p style="margin: 0 0 var(--rip-space-2); font-weight: 600;">
+				<?php esc_html_e( 'Managed relay capacity reached', 'reportedip-hive' ); ?>
+			</p>
+			<ul style="margin: 0 0 var(--rip-space-2); padding-left: 1.25rem;">
+				<?php foreach ( $lines as $line ) : ?>
+					<li><?php echo wp_kses_post( $line ); ?></li>
+				<?php endforeach; ?>
+			</ul>
+			<p style="margin: 0;">
+				<a class="rip-button rip-button--secondary" href="<?php echo esc_url( $dashboard_url ); ?>">
+					<?php esc_html_e( 'View quota details', 'reportedip-hive' ); ?>
+				</a>
+				<a class="rip-button rip-button--ghost" href="<?php echo esc_url( $cap_dismiss_url ); ?>" style="margin-left: var(--rip-space-2);">
+					<?php esc_html_e( 'Hide for 24 hours', 'reportedip-hive' ); ?>
+				</a>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Format one line of the cap-status notice for a single channel.
+	 *
+	 * @param string $channel_label Localised channel label.
+	 * @param array  $state         Output of {@see ReportedIP_Hive_Mode_Manager::get_cap_state()}.
+	 * @param string $fallback_hint Localised hint about the fallback behaviour.
+	 * @return string Sentence ready for {@see wp_kses_post()}.
+	 */
+	private static function format_cap_state_line( $channel_label, array $state, $fallback_hint ) {
+		$hit_at  = (int) ( $state['hit_at'] ?? 0 );
+		$retry   = (int) ( $state['retry_after'] ?? 0 );
+		$resumes = $retry > 0 ? ( $hit_at > 0 ? $hit_at + $retry : time() + $retry ) : 0;
+
+		$when = '';
+		if ( $resumes > 0 ) {
+			$when = ' ' . sprintf(
+				/* translators: %s = human-readable time difference (e.g. "in 4 hours"). */
+				esc_html__( 'Relay accepts again %s.', 'reportedip-hive' ),
+				esc_html( human_time_diff( time(), $resumes ) )
+			);
+		}
+
+		return sprintf(
+			'<strong>%s:</strong> %s%s',
+			esc_html( $channel_label ),
+			esc_html( $fallback_hint ),
+			$when
+		);
+	}
+
+	/**
+	 * `admin-post.php?action=reportedip_hive_cap_notice_dismiss` handler.
+	 *
+	 * Hides the cap-status notice for 24 hours on the current user. The
+	 * underlying transient is untouched — when it expires naturally the
+	 * notice can return, which is intentional (it is operational information
+	 * that the relay is still in fallback).
+	 *
+	 * @return void
+	 * @since  2.0.16
+	 */
+	public function handle_cap_notice_dismiss() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( 'reportedip_hive_cap_notice_dismiss' );
+
+		$user_id = (int) get_current_user_id();
+		if ( $user_id > 0 ) {
+			update_user_meta(
+				$user_id,
+				'reportedip_hive_cap_notice_dismissed_until',
+				time() + DAY_IN_SECONDS
+			);
+		}
+
+		$redirect = wp_get_referer();
+		if ( ! $redirect ) {
+			$redirect = admin_url();
+		}
+		wp_safe_redirect( $redirect );
+		exit;
 	}
 
 	/**
@@ -1963,6 +2137,30 @@ class ReportedIP_Hive_Admin_Settings {
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => array( $this, 'sanitize_notify_recipients' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_notifications',
+			'reportedip_hive_promo_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_notifications',
+			'reportedip_hive_quota_notif_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_notifications',
+			'reportedip_hive_tier_change_mail_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
 			)
 		);
 		register_setting(
@@ -4490,6 +4688,9 @@ class ReportedIP_Hive_Admin_Settings {
 			<input type="hidden" name="reportedip_hive_notify_admin" value="0" />
 			<input type="hidden" name="reportedip_hive_notify_sync_to_api" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_notify_new_device" value="0" />
+			<input type="hidden" name="reportedip_hive_promo_enabled" value="0" />
+			<input type="hidden" name="reportedip_hive_quota_notif_enabled" value="0" />
+			<input type="hidden" name="reportedip_hive_tier_change_mail_enabled" value="0" />
 
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
@@ -4610,6 +4811,43 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-toggle__label"><?php esc_html_e( 'Email on sign-in from a new device', 'reportedip-hive' ); ?></span>
 					</label>
 					<p class="rip-help-text"><?php esc_html_e( 'Notifies the user when a sign-in comes from a previously unseen browser/IP combination. Uses the unified mail provider configured above.', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+					<?php esc_html_e( 'Service notices & upgrade hints', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc">
+					<?php esc_html_e( 'Controls the operational mails (quota warnings, plan changes) and the in-admin upgrade hints. Security recommendations (the 2FA reminder) and operational status notices (relay cap reached) are always shown — these toggles only affect promotional surfaces.', 'reportedip-hive' ); ?>
+				</p>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_promo_enabled" value="1" class="rip-toggle__input" <?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_promo_enabled', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Show upgrade hints in the admin', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'When off, all PRO-feature promotion (dashboard cards, inline upsells, WooCommerce 2FA banner) is hidden site-wide. Status notices and security recommendations remain unaffected.', 'reportedip-hive' ); ?></p>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_quota_notif_enabled" value="1" class="rip-toggle__input" <?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_quota_notif_enabled', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Email when the managed-relay quota reaches 80% or 100%', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'Sent at most once per month per channel and stage. Recipients are the alert list configured above.', 'reportedip-hive' ); ?></p>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_tier_change_mail_enabled" value="1" class="rip-toggle__input" <?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_tier_change_mail_enabled', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Email when the plan changes (upgrade or downgrade)', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'One factual mail per tier change with a short summary of what becomes available or pauses. No marketing copy.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
@@ -6983,11 +7221,18 @@ class ReportedIP_Hive_Admin_Settings {
 				</script>
 			<?php endif; ?>
 
-			<?php if ( $tier_gated ) : ?>
-				<?php self::render_frontend_2fa_pro_upsell( $status ); ?>
+			<?php
+			$show_hardening_promo = $tier_gated
+				&& class_exists( 'ReportedIP_Hive_Promo_Manager' )
+				&& ReportedIP_Hive_Promo_Manager::can_show( ReportedIP_Hive_Promo_Manager::KEY_HARDENING_MODE );
+			if ( $show_hardening_promo ) :
+				?>
 				<div class="rip-alert rip-alert--info" style="margin-bottom: var(--rip-space-4);">
 					<?php esc_html_e( 'Hardening Mode is part of the Professional plan and above. Upgrade to switch automatic hardening on for coordinated-attack patterns.', 'reportedip-hive' ); ?>
 				</div>
+				<?php
+				ReportedIP_Hive_Promo_Manager::mark_shown( ReportedIP_Hive_Promo_Manager::KEY_HARDENING_MODE );
+				?>
 			<?php endif; ?>
 
 			<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">

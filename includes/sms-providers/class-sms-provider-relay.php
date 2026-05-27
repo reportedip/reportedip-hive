@@ -127,6 +127,14 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 			);
 		}
 		if ( 402 === $status ) {
+			if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+				ReportedIP_Hive_Mode_Manager::record_cap_state(
+					'sms',
+					402,
+					(int) ( $result['retry_after'] ?? 0 ),
+					$code
+				);
+			}
 			return new WP_Error(
 				'reportedip_relay_cap_reached',
 				__( 'Your monthly SMS allowance is used up. Please upgrade your plan or choose another 2FA method.', 'reportedip-hive' ),
@@ -137,6 +145,14 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 			);
 		}
 		if ( 429 === $status ) {
+			if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+				ReportedIP_Hive_Mode_Manager::record_cap_state(
+					'sms',
+					429,
+					(int) ( $result['retry_after'] ?? 0 ),
+					$code
+				);
+			}
 			return new WP_Error(
 				'reportedip_relay_backoff',
 				__( 'Too many SMS sends to this recipient. Please wait before retrying.', 'reportedip-hive' ),

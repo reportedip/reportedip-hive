@@ -1,14 +1,17 @@
 <?php
 /**
- * Promo banner that nudges Free / Contributor admins of WooCommerce
- * stores to consider the Frontend-2FA feature included with the
- * Professional tier.
+ * Promo banner that nudges Free / Contributor admins of WooCommerce stores
+ * to consider the Frontend-2FA feature included with the Professional tier.
  *
- * Modelled on {@see ReportedIP_Hive_Two_Factor_Recommend} but with two
- * key differences: the dismiss is a 14-day cooldown (per user), and the
- * gating condition is `Mode_Manager::feature_status('frontend_2fa')`
- * returning `reason=tier`. When the operator upgrades, the gate flips
- * to `available` and the banner stays silent without manual cleanup.
+ * Frequency, killswitch and dismiss persistence are delegated to
+ * {@see ReportedIP_Hive_Promo_Manager} so this banner stays in lockstep with
+ * every other Pro-promo surface (max one promo touch per ~90 days per admin
+ * across all surfaces; 60-day cooldown after a dismiss).
+ *
+ * The render itself only fires when {@see ReportedIP_Hive_Mode_Manager}'s
+ * `feature_status('frontend_2fa')` returns `reason=tier`. As soon as the
+ * operator upgrades, the gate flips to `available` and the banner stays
+ * silent without manual cleanup.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <ps@cms-admins.de>
@@ -23,38 +26,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Static-only class. The dismiss state lives in user-meta so each
- * admin gets their own 14-day window — a single dismiss does not
- * silence the promo for the whole team.
+ * Static-only class. Dismiss / cap state lives in {@see ReportedIP_Hive_Promo_Manager}.
  *
  * @since 1.7.0
  */
 class ReportedIP_Hive_Two_Factor_WC_Notice {
 
 	/**
-	 * User-meta key that stores the Unix timestamp of the most recent
-	 * dismissal. Zero / missing means "never dismissed".
-	 */
-	const META_DISMISSED_AT = 'reportedip_hive_wc2fa_promo_dismissed_at';
-
-	/**
-	 * User-meta key holding the cumulative dismiss count for telemetry.
-	 */
-	const META_DISMISS_COUNT = 'reportedip_hive_wc2fa_promo_dismiss_count';
-
-	/**
-	 * Site-wide killswitch. Default true; flipping it to false hides
-	 * the banner for every admin without touching their dismiss state.
-	 */
-	const OPT_ENABLED = 'reportedip_hive_wc2fa_promo_enabled';
-
-	/**
-	 * Cooldown between two banner renderings for the same user.
-	 */
-	const COOLDOWN_SECS = 1209600;
-
-	/**
-	 * Bind hooks. Idempotent.
+	 * Wire the WordPress hooks. Idempotent.
 	 *
 	 * @return void
 	 */
@@ -66,39 +45,25 @@ class ReportedIP_Hive_Two_Factor_WC_Notice {
 	/**
 	 * Whether the banner should show on the current request.
 	 *
-	 * Six conditions, all must hold:
-	 *  - WooCommerce active (otherwise the pitch is irrelevant);
-	 *  - frontend_2fa feature locked specifically by tier (not by mode
-	 *    — a local-mode site is gated for a different reason and gets
-	 *    a different message in the operation-mode card);
-	 *  - the killswitch option is on;
-	 *  - the user has manage_options;
-	 *  - last dismiss is older than 14 days;
-	 *  - we are on a Hive page or the dashboard, not on every random
-	 *    admin screen.
-	 *
-	 * @param int $user_id User ID to evaluate. 0 = current user.
+	 * @param int $user_id User id to evaluate. 0 = current user.
 	 * @return bool
+	 * @since  1.7.0
 	 */
 	public static function should_show( $user_id = 0 ) {
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return false;
 		}
-		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true ) ) {
-			return false;
-		}
-		if ( 0 === (int) $user_id ) {
+		$user_id = (int) $user_id;
+		if ( 0 === $user_id ) {
 			$user_id = (int) get_current_user_id();
 		}
-		if ( $user_id <= 0 ) {
+		if ( $user_id <= 0 || ! user_can( $user_id, 'manage_options' ) ) {
 			return false;
 		}
-		if ( ! user_can( $user_id, 'manage_options' ) ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) || ! class_exists( 'ReportedIP_Hive_Promo_Manager' ) ) {
 			return false;
 		}
-		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			return false;
-		}
+
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
 		if ( ! empty( $status['available'] ) ) {
 			return false;
@@ -106,17 +71,16 @@ class ReportedIP_Hive_Two_Factor_WC_Notice {
 		if ( 'tier' !== ( $status['reason'] ?? '' ) ) {
 			return false;
 		}
-		$last = (int) get_user_meta( $user_id, self::META_DISMISSED_AT, true );
-		if ( $last > 0 && ( time() - $last ) < self::COOLDOWN_SECS ) {
+
+		if ( ! ReportedIP_Hive_Promo_Manager::can_show( ReportedIP_Hive_Promo_Manager::KEY_WC_FRONTEND_2FA, $user_id ) ) {
 			return false;
 		}
 		return self::is_eligible_screen();
 	}
 
 	/**
-	 * Limit the banner to admin screens that admins genuinely visit
-	 * with intent (Hive admin pages and the dashboard). Keeps
-	 * customize.php / profile.php / network screens free of friction.
+	 * Limit the banner to admin screens admins genuinely visit with intent
+	 * (Hive admin pages, the dashboard, the plugins list).
 	 *
 	 * @return bool
 	 */
@@ -142,9 +106,7 @@ class ReportedIP_Hive_Two_Factor_WC_Notice {
 	}
 
 	/**
-	 * `admin_notices` callback. Renders the promo with the standard
-	 * `rip-alert--info` design-system class so the look is consistent
-	 * with every other Hive notice.
+	 * `admin_notices` callback.
 	 *
 	 * @return void
 	 */
@@ -158,8 +120,8 @@ class ReportedIP_Hive_Two_Factor_WC_Notice {
 			admin_url( 'admin-post.php?action=reportedip_hive_wc2fa_promo_dismiss' ),
 			'reportedip_hive_wc2fa_promo_dismiss'
 		);
-		$pricing_url    = defined( 'REPORTEDIP_UPGRADE_URL' )
-			? REPORTEDIP_UPGRADE_URL
+		$pricing_url    = defined( 'REPORTEDIP_HIVE_UPGRADE_URL' )
+			? REPORTEDIP_HIVE_UPGRADE_URL
 			: 'https://reportedip.de/pricing/';
 
 		?>
@@ -175,27 +137,31 @@ class ReportedIP_Hive_Two_Factor_WC_Notice {
 					<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
 				</a>
 				<a class="rip-button rip-button--ghost" href="<?php echo esc_url( $dismiss_action ); ?>" style="margin-left:0.5rem;">
-					<?php esc_html_e( 'Remind me in 14 days', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Remind me later', 'reportedip-hive' ); ?>
 				</a>
 			</p>
 		</div>
 		<?php
+
+		ReportedIP_Hive_Promo_Manager::mark_shown(
+			ReportedIP_Hive_Promo_Manager::KEY_WC_FRONTEND_2FA,
+			$user_id
+		);
 	}
 
 	/**
-	 * `admin_post` handler — record the dismiss timestamp on the
-	 * current user, bump the counter for telemetry, redirect back.
+	 * `admin_post` handler — record the dismiss in the central Promo_Manager
+	 * (which also bumps the global cap), redirect back.
 	 *
 	 * @return void
 	 */
 	public static function handle_dismiss() {
 		check_admin_referer( 'reportedip_hive_wc2fa_promo_dismiss' );
 
-		$user_id = (int) get_current_user_id();
-		if ( $user_id > 0 ) {
-			update_user_meta( $user_id, self::META_DISMISSED_AT, time() );
-			$count = (int) get_user_meta( $user_id, self::META_DISMISS_COUNT, true );
-			update_user_meta( $user_id, self::META_DISMISS_COUNT, $count + 1 );
+		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' ) ) {
+			ReportedIP_Hive_Promo_Manager::mark_dismissed(
+				ReportedIP_Hive_Promo_Manager::KEY_WC_FRONTEND_2FA
+			);
 		}
 
 		$redirect = wp_get_referer();

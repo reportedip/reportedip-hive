@@ -93,6 +93,14 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 		$status = (int) ( $result['status_code'] ?? 0 );
 		if ( in_array( $status, array( 402, 429 ), true ) || ! empty( $result['retryable'] ) ) {
 			$this->log_fallback( $status, (string) ( $result['error'] ?? '' ) );
+			if ( in_array( $status, array( 402, 429 ), true ) && class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+				ReportedIP_Hive_Mode_Manager::record_cap_state(
+					'mail',
+					$status,
+					(int) ( $result['retry_after'] ?? 0 ),
+					(string) ( $result['error'] ?? '' )
+				);
+			}
 			return $this->send_via_fallback( $to, $subject, $html_body, $plain_body, $headers );
 		}
 

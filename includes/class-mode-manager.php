@@ -996,6 +996,116 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
+	 * Site-transient prefix that stores the last cap-hit for a relay channel
+	 * ('mail' or 'sms'). Site-transient (network-wide on Multisite) because the
+	 * cap is account-wide at reportedip.de — every sub-site needs to see the
+	 * same state, not just whichever site happened to trigger the 402.
+	 */
+	const CAP_STATE_TRANSIENT_PREFIX = 'reportedip_hive_relay_cap_state_';
+
+	/**
+	 * Fallback TTL for the cap-state transient when the relay response did not
+	 * include a `retry_after` value. One day matches the monthly-cap reset
+	 * granularity well enough for the status notice to expire on its own.
+	 */
+	const CAP_STATE_DEFAULT_TTL = 86400;
+
+	/**
+	 * Minimum cap-state TTL: an hour. Stops a misbehaving server from
+	 * driving the cap-state transient to a zero/negative TTL that
+	 * effectively never expires.
+	 */
+	const CAP_STATE_MIN_TTL = 3600;
+
+	/**
+	 * Maximum cap-state TTL: one week. A monthly cap will normally release
+	 * before that; anything longer is almost certainly a stale state.
+	 */
+	const CAP_STATE_MAX_TTL = 604800;
+
+	/**
+	 * Record that the relay returned a cap-hit (HTTP 402) or a recipient/site
+	 * backoff (HTTP 429) for one channel. Called by the Mail and SMS relay
+	 * providers immediately before they hand off to their fallback path.
+	 *
+	 * The Admin-Settings status notice ({@see ReportedIP_Hive_Admin_Settings::render_cap_status_notice()})
+	 * reads this transient and renders a non-promotional banner so the operator
+	 * knows the relay is silently in fallback / paused.
+	 *
+	 * @param string $channel     'mail' | 'sms' (case-insensitive).
+	 * @param int    $status      HTTP status code (typically 402 or 429).
+	 * @param int    $retry_after Seconds until the relay accepts again. 0 = unknown.
+	 * @param string $error       Optional short error code from the server (for diagnostics).
+	 * @return void
+	 * @since  2.0.16
+	 */
+	public static function record_cap_state( $channel, $status, $retry_after = 0, $error = '' ) {
+		$channel = self::normalize_cap_channel( $channel );
+		if ( '' === $channel ) {
+			return;
+		}
+		$ttl = (int) $retry_after;
+		if ( $ttl <= 0 ) {
+			$ttl = self::CAP_STATE_DEFAULT_TTL;
+		}
+		$ttl = max( self::CAP_STATE_MIN_TTL, min( self::CAP_STATE_MAX_TTL, $ttl ) );
+
+		$state = array(
+			'channel'     => $channel,
+			'hit_at'      => time(),
+			'status'      => (int) $status,
+			'retry_after' => (int) $retry_after,
+			'reason'      => ( 429 === (int) $status ) ? 'backoff' : 'cap_reached',
+			'error'       => (string) $error,
+		);
+		set_site_transient( self::CAP_STATE_TRANSIENT_PREFIX . $channel, $state, $ttl );
+	}
+
+	/**
+	 * Read the most recent cap-state for a channel, or null when none is active.
+	 *
+	 * @param string $channel 'mail' | 'sms'.
+	 * @return array{channel:string,hit_at:int,status:int,retry_after:int,reason:string,error:string}|null
+	 * @since  2.0.16
+	 */
+	public static function get_cap_state( $channel ) {
+		$channel = self::normalize_cap_channel( $channel );
+		if ( '' === $channel ) {
+			return null;
+		}
+		$raw = get_site_transient( self::CAP_STATE_TRANSIENT_PREFIX . $channel );
+		return is_array( $raw ) ? $raw : null;
+	}
+
+	/**
+	 * Clear the cap-state for a channel. Called by the cron quota-refresh path
+	 * after a successful /relay-quota response so the notice disappears before
+	 * the natural transient TTL when the customer e.g. bought a bundle.
+	 *
+	 * @param string $channel 'mail' | 'sms'.
+	 * @return void
+	 * @since  2.0.16
+	 */
+	public static function clear_cap_state( $channel ) {
+		$channel = self::normalize_cap_channel( $channel );
+		if ( '' === $channel ) {
+			return;
+		}
+		delete_site_transient( self::CAP_STATE_TRANSIENT_PREFIX . $channel );
+	}
+
+	/**
+	 * Normalise the channel argument for the cap-state methods.
+	 *
+	 * @param mixed $channel
+	 * @return string Either 'mail', 'sms' or '' (unknown channel).
+	 */
+	private static function normalize_cap_channel( $channel ) {
+		$channel = strtolower( (string) $channel );
+		return in_array( $channel, array( 'mail', 'sms' ), true ) ? $channel : '';
+	}
+
+	/**
 	 * Tier-bound hourly rate-limit caps for outgoing API calls, split into three buckets.
 	 *
 	 * Derived from the daily quotas in PRICING-PLAN.md (`Tagesquote / 24 × 3` spike factor)

@@ -53,15 +53,23 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 
 	/**
 	 * Transient prefix used by the "Remind me later" button to suppress the
-	 * banner inside the current admin session.
+	 * banner for the configured cooldown window.
 	 */
 	const DISMISS_TRANSIENT_PREFIX = 'rip_hive_2fa_dismiss_';
 
 	/**
-	 * TTL for the dismiss transient — long enough for one work session,
-	 * short enough that a fresh login re-shows the banner.
+	 * TTL for the dismiss transient. 14 days — enough that the reminder does
+	 * not become daily friction, short enough that a user who lost interest
+	 * in 2FA still gets nudged on a slow cadence.
 	 */
-	const DISMISS_TTL = 1800;
+	const DISMISS_TTL = 1209600;
+
+	/**
+	 * User-meta flag for the permanent opt-out link ("Don't show this again").
+	 * Hard-block for privileged roles still kicks in once the counter reaches
+	 * the threshold — the opt-out only silences the SOFT banner.
+	 */
+	const META_OPTOUT = 'reportedip_hive_2fa_reminder_optout';
 
 	/**
 	 * Site-wide options.
@@ -86,6 +94,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		add_action( 'reportedip_hive_2fa_method_enabled', array( __CLASS__, 'reset' ), 10, 2 );
 		add_action( 'admin_notices', array( __CLASS__, 'maybe_render_soft_banner' ) );
 		add_action( 'admin_post_reportedip_hive_2fa_remind_later', array( __CLASS__, 'handle_remind_later' ) );
+		add_action( 'admin_post_reportedip_hive_2fa_remind_never', array( __CLASS__, 'handle_remind_never' ) );
 	}
 
 	/**
@@ -161,6 +170,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		}
 		delete_user_meta( $user_id, self::META_COUNT );
 		delete_user_meta( $user_id, self::META_LAST_SEEN );
+		delete_user_meta( $user_id, self::META_OPTOUT );
 	}
 
 	/**
@@ -240,6 +250,9 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		if ( ! self::is_enabled() ) {
 			return false;
 		}
+		if ( (bool) get_user_meta( $user_id, self::META_OPTOUT, true ) ) {
+			return false;
+		}
 		if ( self::has_any_2fa( $user_id ) ) {
 			return false;
 		}
@@ -276,8 +289,12 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		$threshold    = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_HARD_THRESHOLD, self::DEFAULT_THRESHOLD );
 		$is_hard_role = self::user_in_hard_roles( $user );
 
-		$profile_url = admin_url( 'profile.php#reportedip-hive-2fa' );
-		$dismiss_url = admin_url( 'admin-post.php' );
+		$profile_url      = admin_url( 'profile.php#reportedip-hive-2fa' );
+		$dismiss_url      = admin_url( 'admin-post.php' );
+		$remind_never_url = wp_nonce_url(
+			admin_url( 'admin-post.php?action=reportedip_hive_2fa_remind_never' ),
+			'reportedip_hive_2fa_remind_never'
+		);
 		?>
 		<div class="notice rip-alert rip-alert--warning rip-2fa-recommend">
 			<p style="font-size: var(--rip-text-base); font-weight: 600; margin: 0 0 var(--rip-space-2);">
@@ -308,6 +325,9 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 						<?php esc_html_e( 'Remind me later', 'reportedip-hive' ); ?>
 					</button>
 				</form>
+				<a class="rip-link-muted" href="<?php echo esc_url( $remind_never_url ); ?>" style="margin-left: var(--rip-space-3); font-size: var(--rip-text-sm);">
+					<?php esc_html_e( "Don't show this again", 'reportedip-hive' ); ?>
+				</a>
 			</p>
 		</div>
 		<?php
@@ -326,6 +346,33 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		check_admin_referer( 'reportedip_hive_2fa_remind_later' );
 
 		set_transient( self::DISMISS_TRANSIENT_PREFIX . $user_id, 1, self::DISMISS_TTL );
+
+		$redirect = wp_get_referer();
+		if ( ! $redirect ) {
+			$redirect = admin_url();
+		}
+		wp_safe_redirect( $redirect );
+		exit;
+	}
+
+	/**
+	 * `admin-post.php?action=reportedip_hive_2fa_remind_never` handler.
+	 *
+	 * Sets the permanent per-user opt-out. The hard-block onboarding path
+	 * for privileged roles is not affected — that path is driven by the
+	 * login-counter transient set in {@see on_login()}, not by this banner.
+	 *
+	 * @return void
+	 * @since  2.0.16
+	 */
+	public static function handle_remind_never() {
+		$user_id = get_current_user_id();
+		if ( ! $user_id ) {
+			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( 'reportedip_hive_2fa_remind_never' );
+
+		update_user_meta( $user_id, self::META_OPTOUT, 1 );
 
 		$redirect = wp_get_referer();
 		if ( ! $redirect ) {

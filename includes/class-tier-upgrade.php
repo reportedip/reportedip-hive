@@ -80,10 +80,30 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return void
 	 */
 	public static function on_tier_changed( $prev, $next ) {
-		if ( ! self::is_upgrade_to_pro( (string) $prev, (string) $next ) ) {
+		$prev = (string) $prev;
+		$next = (string) $next;
+
+		if ( self::is_upgrade_to_pro( $prev, $next ) ) {
+			self::handle_upgrade_to_pro( $prev, $next );
 			return;
 		}
+		if ( self::is_downgrade_from_pro( $prev, $next ) ) {
+			self::handle_downgrade_from_pro( $prev, $next );
+		}
+	}
 
+	/**
+	 * Upgrade path: pre-fill the managed relay defaults, store the post-upgrade
+	 * setup-banner payload, reset every administrator's promo state (so the
+	 * upgrade banner is not blocked by a stale global cap) and send a factual
+	 * welcome mail to the admin recipient list.
+	 *
+	 * @param string $prev
+	 * @param string $next
+	 * @return void
+	 * @since  2.0.16
+	 */
+	private static function handle_upgrade_to_pro( $prev, $next ) {
 		if ( '' === (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_provider', '' ) ) {
 			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_sms_provider', self::PROVIDER_RELAY );
 		}
@@ -93,13 +113,39 @@ class ReportedIP_Hive_Tier_Upgrade {
 		ReportedIP_Hive_Option_Routing::set(
 			self::NOTICE_OPT,
 			array(
-				'from'   => (string) $prev,
-				'to'     => (string) $next,
+				'from'   => $prev,
+				'to'     => $next,
 				'set_at' => time(),
 			)
 		);
 
 		ReportedIP_Hive_Option_Routing::delete( self::NOTICE_DISMISSED );
+
+		self::reset_promo_state_for_admins();
+		self::send_tier_change_mail( $prev, $next, true );
+	}
+
+	/**
+	 * Downgrade path: clear the stale post-upgrade banner state, soft-disable
+	 * the WooCommerce Frontend-2FA toggle (the option is preserved so a future
+	 * re-upgrade is seamless — the gate in {@see ReportedIP_Hive_Two_Factor_Frontend}
+	 * blocks the UI anyway via `feature_status('frontend_2fa')`), and send a
+	 * factual goodbye mail.
+	 *
+	 * Local protection (12 sensors, full 2FA suite, blocked-IP enforcement) is
+	 * deliberately not touched — the Marketing-Story §7 promise holds.
+	 *
+	 * @param string $prev
+	 * @param string $next
+	 * @return void
+	 * @since  2.0.16
+	 */
+	private static function handle_downgrade_from_pro( $prev, $next ) {
+		ReportedIP_Hive_Option_Routing::delete( self::NOTICE_OPT );
+		ReportedIP_Hive_Option_Routing::delete( self::NOTICE_DISMISSED );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_frontend_enabled', 0 );
+
+		self::send_tier_change_mail( $prev, $next, false );
 	}
 
 	/**
@@ -114,6 +160,116 @@ class ReportedIP_Hive_Tier_Upgrade {
 	public static function is_upgrade_to_pro( $prev, $next ) {
 		return in_array( $prev, self::FREE_TIERS, true )
 			&& in_array( $next, self::PAID_TIERS, true );
+	}
+
+	/**
+	 * Whether the transition is a PRO/Business/Enterprise → Free/Contributor downgrade.
+	 *
+	 * @param string $prev Previous tier slug.
+	 * @param string $next New tier slug.
+	 * @return bool
+	 * @since  2.0.16
+	 */
+	public static function is_downgrade_from_pro( $prev, $next ) {
+		return in_array( $prev, self::PAID_TIERS, true )
+			&& in_array( $next, self::FREE_TIERS, true );
+	}
+
+	/**
+	 * Reset {@see ReportedIP_Hive_Promo_Manager} state for every administrator
+	 * — bounded to 200 admins so a large network never trips a timeout. The
+	 * permanent opt-out map is preserved (explicit user choice).
+	 *
+	 * @return void
+	 */
+	private static function reset_promo_state_for_admins() {
+		if ( ! class_exists( 'ReportedIP_Hive_Promo_Manager' ) ) {
+			return;
+		}
+		$admin_ids = get_users(
+			array(
+				'role'   => 'administrator',
+				'fields' => 'ID',
+				'number' => 200,
+			)
+		);
+		foreach ( (array) $admin_ids as $user_id ) {
+			ReportedIP_Hive_Promo_Manager::reset_for_user( (int) $user_id );
+		}
+	}
+
+	/**
+	 * Send the factual tier-change mail (welcome on upgrade, goodbye on
+	 * downgrade). Suppressible via the `reportedip_hive_tier_change_mail_enabled`
+	 * option from Settings → Notifications.
+	 *
+	 * @param string $prev
+	 * @param string $next
+	 * @param bool   $is_upgrade
+	 * @return void
+	 */
+	private static function send_tier_change_mail( $prev, $next, $is_upgrade ) {
+		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_tier_change_mail_enabled', true ) ) {
+			return;
+		}
+		if ( ! class_exists( 'ReportedIP_Hive_Mailer' ) || ! class_exists( 'ReportedIP_Hive_Defaults' ) ) {
+			return;
+		}
+		$recipients = ReportedIP_Hive_Defaults::notify_recipients();
+		if ( empty( $recipients ) ) {
+			return;
+		}
+
+		$site_name  = wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES );
+		$tier_label = ucfirst( $is_upgrade ? $next : $prev );
+
+		if ( $is_upgrade ) {
+			$subject = sprintf(
+				/* translators: 1: site name, 2: new tier label */
+				__( '[%1$s] %2$s plan is active', 'reportedip-hive' ),
+				$site_name,
+				$tier_label
+			);
+			$intro = sprintf(
+				/* translators: %s = tier label */
+				__( 'Your %s plan is now active. The managed mail and SMS relay is included; the SMS provider has been prefilled for you.', 'reportedip-hive' ),
+				$tier_label
+			);
+			$body = __( 'Open the Hive dashboard to finish the small remaining setup steps (AVV confirmation, enable SMS as a 2FA method).', 'reportedip-hive' );
+		} else {
+			$subject = sprintf(
+				/* translators: %s = site name */
+				__( '[%s] Plan switched back to Free', 'reportedip-hive' ),
+				$site_name
+			);
+			$intro = __( 'Your subscription was switched back to the Free tier.', 'reportedip-hive' );
+			$body  = __( 'What stays active: all 12 sensors, the full 2FA suite and your local IP/block list. What pauses: managed mail/SMS relay over reportedip.de and cloud backup. You can re-activate any time from the customer portal — your data and settings remain in place.', 'reportedip-hive' );
+		}
+
+		$portal_url = defined( 'REPORTEDIP_HIVE_UPGRADE_URL' )
+			? REPORTEDIP_HIVE_UPGRADE_URL
+			: 'https://reportedip.de/dashboard/';
+
+		ReportedIP_Hive_Mailer::get_instance()->send(
+			array(
+				'to'              => implode( ', ', $recipients ),
+				'subject'         => $subject,
+				'intro'           => $intro,
+				'main_block_html' => '<p>' . esc_html( $body ) . '</p>',
+				'main_block_text' => $body,
+				'cta'             => array(
+					'label' => $is_upgrade
+						? __( 'Open Hive dashboard', 'reportedip-hive' )
+						: __( 'Open customer portal', 'reportedip-hive' ),
+					'url'   => $is_upgrade ? admin_url( 'admin.php?page=reportedip-hive' ) : $portal_url,
+				),
+				'context'         => array(
+					'kind' => $is_upgrade ? 'tier_welcome' : 'tier_goodbye',
+					'from' => $prev,
+					'to'   => $next,
+				),
+			)
+		);
 	}
 
 	/**

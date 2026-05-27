@@ -402,6 +402,101 @@ if ( ! function_exists( 'get_user_by' ) ) {
 	}
 }
 
+// User-meta in-memory bucket, nested as `$wp_user_meta[$user_id][$key] = $value`.
+// Matches the format the per-test inline stubs (e.g. TwoFactorRecommendTest) use,
+// so the same `$GLOBALS['wp_user_meta'] = array()` reset works for every suite.
+global $wp_user_meta;
+if ( ! isset( $wp_user_meta ) ) {
+	$wp_user_meta = array();
+}
+
+if ( ! function_exists( 'get_user_meta' ) ) {
+	/**
+	 * Single-value flavour (the third arg defaults to true here for unit-test
+	 * ergonomics — production code in this plugin always calls with `true`).
+	 *
+	 * @param int    $user_id User id.
+	 * @param string $key     Meta key.
+	 * @param bool   $single  Whether to return a single value.
+	 * @return mixed
+	 */
+	function get_user_meta( $user_id, $key = '', $single = true ) {
+		global $wp_user_meta;
+		$user_id = (int) $user_id;
+		if ( ! isset( $wp_user_meta[ $user_id ][ $key ] ) ) {
+			return $single ? '' : array();
+		}
+		$value = $wp_user_meta[ $user_id ][ $key ];
+		return $single ? $value : array( $value );
+	}
+}
+
+if ( ! function_exists( 'update_user_meta' ) ) {
+	/**
+	 * @param int    $user_id
+	 * @param string $key
+	 * @param mixed  $value
+	 * @return bool
+	 */
+	function update_user_meta( $user_id, $key, $value ) {
+		global $wp_user_meta;
+		$wp_user_meta[ (int) $user_id ][ $key ] = $value;
+		return true;
+	}
+}
+
+if ( ! function_exists( 'delete_user_meta' ) ) {
+	/**
+	 * @param int    $user_id
+	 * @param string $key
+	 * @return bool
+	 */
+	function delete_user_meta( $user_id, $key ) {
+		global $wp_user_meta;
+		$user_id = (int) $user_id;
+		if ( isset( $wp_user_meta[ $user_id ][ $key ] ) ) {
+			unset( $wp_user_meta[ $user_id ][ $key ] );
+			return true;
+		}
+		return false;
+	}
+}
+
+if ( ! function_exists( 'get_users' ) ) {
+	/**
+	 * Minimal stub: returns an empty list. Tests that need a populated user
+	 * list should set `$GLOBALS['wp_users']` and override with a more
+	 * specific stub via class redefinition.
+	 *
+	 * @param array $args
+	 * @return array
+	 */
+	function get_users( $args = array() ) {
+		global $wp_users;
+		return is_array( $wp_users ?? null ) ? $wp_users : array();
+	}
+}
+
+if ( ! function_exists( 'user_can' ) ) {
+	/**
+	 * Minimal stub: every user has every capability unless `$GLOBALS['wp_user_caps']`
+	 * provides a specific override (keyed `user_id|capability`).
+	 *
+	 * @param int|object $user
+	 * @param string     $capability
+	 * @return bool
+	 */
+	function user_can( $user, $capability ) {
+		global $wp_user_caps;
+		$user_id = is_object( $user ) ? (int) ( $user->ID ?? 0 ) : (int) $user;
+		$bucket  = $user_id . '|' . (string) $capability;
+		if ( is_array( $wp_user_caps ?? null ) && array_key_exists( $bucket, $wp_user_caps ) ) {
+			return (bool) $wp_user_caps[ $bucket ];
+		}
+		return true;
+	}
+}
+
 // =============================================================================
 // Date/Time Functions
 // =============================================================================

@@ -2,7 +2,58 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.0.16] — 2026-05-27
+
+### Changed
+
+- **Unified Pro-promo frequency cap.** New
+  `ReportedIP_Hive_Promo_Manager` is the single source of truth for
+  "may this upgrade hint show now?" — kill-switch (Settings →
+  Notifications), 90-day global cap per admin across all promo
+  surfaces, 60-day cooldown after a dismiss per feature, and a
+  permanent per-user opt-out. WooCommerce 2FA banner, Frontend-2FA
+  inline upsell card, Mail/SMS-Relay dashboard card and the
+  Hardening Mode info block now all route through it instead of
+  carrying their own ad-hoc cooldowns. A free-tier admin will see
+  at most ~4 dezente promo touches per year.
+- **Removed a duplicate Frontend-2FA upsell card from the Hardening
+  Mode tab.** The card belonged to the WC-Frontend-2FA feature and
+  had no business advertising itself on the Hardening tab.
+- **`Two_Factor_Recommend` soft banner.** Dismiss cooldown raised
+  from 30 minutes to 14 days and a new "Don't show this again" link
+  records a per-user permanent opt-out. The hard-block onboarding
+  path for privileged roles is untouched — security recommendation
+  still wins over comfort.
+
+### Added
+
+- **Cap-status notice.** When the mail or SMS relay returns HTTP 402
+  (monthly cap) or 429 (recipient/site backoff) the provider stamps
+  a network-wide `reportedip_hive_relay_cap_state_*` site-transient.
+  Admin pages render a non-promotional warning notice (priority 5,
+  dismissible for 24 h) explaining that mails currently fall back to
+  `wp_mail()` and SMS-2FA is paused, with a link to the quota
+  details. The cap state is auto-cleared by the next successful
+  `/relay-quota` refresh whose snapshot shows usage below the limit.
+- **Quota-warning mails (PRICING-PLAN.md §8).** New
+  `ReportedIP_Hive_Quota_Notifier` evaluates the relay-quota
+  snapshot after every six-hour cron refresh and sends one factual
+  mail to the alert-recipient list when a channel crosses 80 % or
+  100 % of its monthly allowance. Per channel + stage there is a
+  30-day cooldown, and the cooldown automatically resets at every
+  new billing period (`period_start` flip).
+- **Welcome / goodbye mail on tier change.** `Tier_Upgrade::on_tier_changed`
+  now also handles the downgrade path: clears the stale post-upgrade
+  banner state, soft-disables the WooCommerce Frontend-2FA toggle
+  (data preserved for seamless re-upgrade) and sends a short,
+  factual mail. Upgrades trigger a similarly factual welcome mail
+  pointing at the remaining setup steps. Both mails can be
+  suppressed via the new Settings → Notifications toggle.
+- **Settings → Notifications.** Three new toggles: hide all upgrade
+  hints (default off — hints stay on), email when the relay quota
+  reaches 80 % / 100 %, email when the plan changes. Security
+  recommendations and operational status notices are deliberately
+  not gated by these toggles.
 
 ### Fixed
 
