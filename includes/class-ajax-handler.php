@@ -229,6 +229,17 @@ class ReportedIP_Hive_Ajax_Handler {
 		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html( $timestamp ) . '</td></tr>';
 		$main_html .= '</table>';
 
+		$relay_in_backoff = false;
+		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) && class_exists( 'ReportedIP_Hive_API' ) ) {
+			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
+			if ( method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'mail' ) ) {
+				$relay_in_backoff = ReportedIP_Hive_API::get_instance()->is_relay_in_backoff(
+					'relay-mail',
+					array( 'recipient' => $to )
+				);
+			}
+		}
+
 		$result = ReportedIP_Hive_Mailer::get_instance()->send(
 			array(
 				'to'              => $to,
@@ -262,14 +273,19 @@ class ReportedIP_Hive_Ajax_Handler {
 		);
 
 		if ( $result ) {
+			$message = sprintf(
+				/* translators: %s: masked recipient */
+				__( 'Test email sent to %s.', 'reportedip-hive' ),
+				$to
+			);
+			if ( $relay_in_backoff ) {
+				$message .= ' ' . __( 'Note: the managed relay is currently in cooldown for this recipient — the mail was delivered through the local wp_mail() fallback. Check the Activity log for the most recent 402/429 entry to see why.', 'reportedip-hive' );
+			}
 			wp_send_json_success(
 				array(
-					'message'   => sprintf(
-						/* translators: %s: masked recipient */
-						__( 'Test email sent to %s.', 'reportedip-hive' ),
-						$to
-					),
-					'recipient' => $to,
+					'message'        => $message,
+					'recipient'      => $to,
+					'relay_fallback' => (bool) $relay_in_backoff,
 				)
 			);
 		}

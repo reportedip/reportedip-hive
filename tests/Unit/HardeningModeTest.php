@@ -352,5 +352,104 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$reason = \ReportedIP_Hive_Hardening_Mode::current_reason();
 			$this->assertSame( 25, $reason['unique_ips'] );
 		}
+
+		public function test_post_natural_expiry_same_window_suppressed_unless_more_severe() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$available = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_enabled']  = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_duration_minutes'] = 60;
+
+			\ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 10, 'total_attempts' => 20, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+
+			$GLOBALS['wp_transients']['reportedip_hive_hardening_until'] = array(
+				'value'   => time() - 10,
+				'expires' => time() + 86400,
+			);
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_active(), 'window naturally expired' );
+
+			\ReportedIP_Hive_Logger_Stub_For_Hardening::$events = array();
+
+			$replay = \ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 10, 'total_attempts' => 20, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+
+			$this->assertFalse( $replay, 'same time_window after natural expiry must not re-arm (marker still suppresses)' );
+			$this->assertCount(
+				0,
+				array_filter(
+					\ReportedIP_Hive_Logger_Stub_For_Hardening::$events,
+					static fn( $e ) => 'hardening_mode_activated' === $e['event']
+				)
+			);
+		}
+
+		public function test_post_natural_expiry_stronger_same_window_re_arms() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$available = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_enabled']  = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_duration_minutes'] = 60;
+
+			\ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 5, 'total_attempts' => 20, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+
+			$GLOBALS['wp_transients']['reportedip_hive_hardening_until'] = array(
+				'value'   => time() - 10,
+				'expires' => time() + 86400,
+			);
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_active() );
+
+			\ReportedIP_Hive_Logger_Stub_For_Hardening::$events = array();
+
+			$re_armed = \ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 25, 'total_attempts' => 90, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+
+			$this->assertTrue( $re_armed, 'stronger same-window candidate after expiry must re-arm' );
+			$this->assertGreaterThan( time(), \ReportedIP_Hive_Hardening_Mode::expires_at() );
+			$reason = \ReportedIP_Hive_Hardening_Mode::current_reason();
+			$this->assertSame( 25, $reason['unique_ips'] );
+		}
+
+		public function test_deactivate_clears_marker_so_admin_override_sticks() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$available = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_enabled']  = true;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_duration_minutes'] = 60;
+
+			\ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 10, 'total_attempts' => 20, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+
+			\ReportedIP_Hive_Hardening_Mode::deactivate( 'admin' );
+
+			$marker_key = \ReportedIP_Hive_Hardening_Mode::window_marker_key( '2026-05-27 12:44' );
+			$this->assertArrayNotHasKey( $marker_key, $GLOBALS['wp_transients'], 'deactivate() must clear the per-window marker' );
+
+			\ReportedIP_Hive_Logger_Stub_For_Hardening::$events = array();
+
+			$post = \ReportedIP_Hive_Hardening_Mode::activate(
+				array( 'unique_ips' => 10, 'total_attempts' => 20, 'time_window' => '2026-05-27 12:44' ),
+				'cron'
+			);
+			$this->assertTrue( $post, 'after admin deactivate, the marker is gone so a new sweep re-arms cleanly' );
+		}
+
+		public function test_window_marker_key_helper_returns_empty_on_blank() {
+			$this->assertSame( '', \ReportedIP_Hive_Hardening_Mode::window_marker_key( '' ) );
+			$this->assertSame( '', \ReportedIP_Hive_Hardening_Mode::window_marker_key( '   ' ) );
+			$this->assertStringStartsWith( 'reportedip_hive_hardening_seen_', \ReportedIP_Hive_Hardening_Mode::window_marker_key( '2026-05-27 12:44' ) );
+		}
+
+		public function test_log_marker_key_helper_is_distinct_from_state_marker() {
+			$wm = \ReportedIP_Hive_Hardening_Mode::window_marker_key( '2026-05-27 12:44' );
+			$lm = \ReportedIP_Hive_Hardening_Mode::log_marker_key( '2026-05-27 12:44' );
+			$this->assertNotSame( $wm, $lm, 'state marker and log-noise marker must live in separate transient namespaces' );
+			$this->assertStringStartsWith( 'reportedip_hive_hardening_logged_window_', $lm );
+		}
 	}
 }

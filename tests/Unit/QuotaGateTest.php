@@ -236,5 +236,32 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$status = $this->api()->get_quota_status();
 			$this->assertFalse( $status['exhausted'], 'Unlimited tier is never exhausted.' );
 		}
+
+		public function test_get_quota_status_unlimited_forces_remaining_minus_one() {
+			$this->set_quota(
+				array(
+					'daily_report_limit' => -1,
+					'remaining_reports'  => 0,
+					'reset_time'         => '2099-01-01T00:00:00+00:00',
+					'user_role'          => 'reportedip_enterprise',
+				)
+			);
+			$status = $this->api()->get_quota_status();
+			$this->assertFalse( $status['exhausted'], 'Unlimited tier with bogus remaining_reports=0 stays not-exhausted.' );
+			$this->assertSame( -1, (int) $status['remaining'], 'Unlimited tier must surface remaining=-1 so the queue cap is bypassed.' );
+		}
+
+		public function test_get_quota_status_unlimited_when_daily_report_limit_missing() {
+			$this->set_quota(
+				array(
+					'remaining_reports' => 0,
+					'reset_time'        => '2099-01-01T00:00:00+00:00',
+					'user_role'         => 'reportedip_enterprise',
+				)
+			);
+			$status = $this->api()->get_quota_status();
+			$this->assertFalse( $status['exhausted'] );
+			$this->assertSame( -1, (int) $status['remaining'] );
+		}
 	}
 }

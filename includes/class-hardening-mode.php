@@ -44,6 +44,7 @@ final class ReportedIP_Hive_Hardening_Mode {
 	const TRANSIENT_LOGGED        = 'reportedip_hive_hardening_logged';
 	const TRANSIENT_DEBOUNCE      = 'reportedip_hive_coordinated_check_debounce';
 	const TRANSIENT_WINDOW_PREFIX = 'reportedip_hive_hardening_seen_';
+	const TRANSIENT_LOG_PREFIX    = 'reportedip_hive_hardening_logged_window_';
 
 	const DEBOUNCE_SECONDS = 60;
 
@@ -126,22 +127,28 @@ final class ReportedIP_Hive_Hardening_Mode {
 	/**
 	 * Activate the hardening window.
 	 *
-	 * Idempotency rules:
-	 *  - When the candidate `time_window` has already activated hardening in
-	 *    the current retention window (`TRANSIENT_WINDOW_PREFIX.<hash>`) AND
-	 *    the new reason is not strictly more severe, return false. This is
-	 *    what stops the hourly cron sweep from re-emitting `hardening_mode_activated`
-	 *    every 60 minutes for the same row in `wp_reportedip_hive_attempts`.
-	 *  - When the candidate reason is strictly more severe than the stored one,
-	 *    re-arm the window: replace both `TRANSIENT_UNTIL` and `TRANSIENT_REASON`
-	 *    and emit `hardening_mode_activated` (severity high).
+	 * Idempotency rules (the marker stores the canonical strongest reason
+	 * for its time_window, so suppression survives the lazy expiry of
+	 * `TRANSIENT_REASON` and the natural-expiry wipe in {@see is_active()}):
+	 *
+	 *  - When the candidate `time_window` has a live marker AND the candidate
+	 *    is not strictly more severe than what the marker remembers, return
+	 *    false. This is what stops the hourly cron sweep from re-emitting
+	 *    `hardening_mode_activated` for the same row in
+	 *    `wp_reportedip_hive_attempts` — even after the hardening window
+	 *    expired naturally and `TRANSIENT_REASON` was deleted.
+	 *  - When the candidate is strictly more severe than the comparison
+	 *    reason (live REASON if present, otherwise the marker payload), the
+	 *    window re-arms: replace `TRANSIENT_UNTIL`, `TRANSIENT_REASON` AND
+	 *    the marker payload; emit `hardening_mode_activated` (severity high).
 	 *  - When the remaining TTL drops below 50 % of the configured duration
-	 *    and the reason is not more severe, only extend `TRANSIENT_UNTIL` and
-	 *    keep the original `TRANSIENT_REASON` intact — emit
-	 *    `hardening_mode_extended` (severity low). This prevents a weaker
-	 *    follow-up sweep from overwriting a more interesting trigger payload
-	 *    in the UI.
-	 *  - Otherwise (already active, not more severe, TTL not low), no-op.
+	 *    and the candidate is not more severe, only extend `TRANSIENT_UNTIL`
+	 *    AND refresh the marker TTL (preserving the canonical payload), then
+	 *    emit `hardening_mode_extended` (severity low). The stronger original
+	 *    reason stays visible in `TRANSIENT_REASON` / on the UI.
+	 *  - {@see deactivate()} clears the marker for the live reason's time
+	 *    window so an admin override is not silently undone by the next
+	 *    cron sweep.
 	 *
 	 * @param array  $reason  {unique_ips, total_attempts, time_window}
 	 * @param string $trigger 'realtime'|'cron'|'manual'
@@ -162,11 +169,28 @@ final class ReportedIP_Hive_Hardening_Mode {
 		$existing_remaining = $existing > $now ? ( $existing - $now ) : 0;
 
 		$existing_reason = self::current_reason();
-		$is_more_severe  = self::reason_is_more_severe( $reason, $existing_reason );
-		$ttl_low         = $existing_remaining > 0 && $existing_remaining < ( $duration_seconds / 2 );
 
-		$window_key  = self::window_marker_key( (string) ( $reason['time_window'] ?? '' ) );
-		$window_seen = '' !== $window_key && (bool) get_site_transient( $window_key );
+		$window_key   = self::window_marker_key( (string) ( $reason['time_window'] ?? '' ) );
+		$marker_value = '' !== $window_key ? get_site_transient( $window_key ) : false;
+		$window_seen  = is_array( $marker_value );
+
+		/*
+		 * Pick the reference reason to compare the candidate against. The
+		 * marker is the source of truth that survives REASON expiry; the
+		 * live REASON wins only while it's actually present, so a stronger
+		 * candidate during the active window can still upgrade the trigger
+		 * payload.
+		 */
+		if ( is_array( $existing_reason ) ) {
+			$reference_reason = $existing_reason;
+		} elseif ( $window_seen ) {
+			$reference_reason = $marker_value;
+		} else {
+			$reference_reason = null;
+		}
+
+		$is_more_severe = self::reason_is_more_severe( $reason, $reference_reason );
+		$ttl_low        = $existing_remaining > 0 && $existing_remaining < ( $duration_seconds / 2 );
 
 		if ( $window_seen && ! $is_more_severe ) {
 			return false;
@@ -180,12 +204,23 @@ final class ReportedIP_Hive_Hardening_Mode {
 			$until = $now + $duration_seconds;
 			set_site_transient( self::TRANSIENT_UNTIL, $until, $retain_ttl );
 
+			if ( '' !== $window_key ) {
+				$marker_payload = is_array( $marker_value ) ? $marker_value : array(
+					'unique_ips'     => isset( $reason['unique_ips'] ) ? (int) $reason['unique_ips'] : 0,
+					'total_attempts' => isset( $reason['total_attempts'] ) ? (int) $reason['total_attempts'] : 0,
+					'time_window'    => isset( $reason['time_window'] ) ? (string) $reason['time_window'] : '',
+					'trigger'        => (string) $trigger,
+					'activated_at'   => $now,
+				);
+				set_site_transient( $window_key, $marker_payload, $retain_ttl );
+			}
+
 			self::log_event(
 				'hardening_mode_extended',
 				array(
 					'duration_seconds' => $duration_seconds,
 					'trigger'          => (string) $trigger,
-					'preserved_reason' => is_array( $existing_reason ) ? $existing_reason : array(),
+					'preserved_reason' => is_array( $existing_reason ) ? $existing_reason : ( is_array( $marker_value ) ? $marker_value : array() ),
 				),
 				'low'
 			);
@@ -193,21 +228,19 @@ final class ReportedIP_Hive_Hardening_Mode {
 			return true;
 		}
 
+		$reason_payload = array(
+			'unique_ips'     => isset( $reason['unique_ips'] ) ? (int) $reason['unique_ips'] : 0,
+			'total_attempts' => isset( $reason['total_attempts'] ) ? (int) $reason['total_attempts'] : 0,
+			'time_window'    => isset( $reason['time_window'] ) ? (string) $reason['time_window'] : '',
+			'trigger'        => (string) $trigger,
+			'activated_at'   => $now,
+		);
+
 		$until = $now + $duration_seconds;
 		set_site_transient( self::TRANSIENT_UNTIL, $until, $retain_ttl );
-		set_site_transient(
-			self::TRANSIENT_REASON,
-			array(
-				'unique_ips'     => isset( $reason['unique_ips'] ) ? (int) $reason['unique_ips'] : 0,
-				'total_attempts' => isset( $reason['total_attempts'] ) ? (int) $reason['total_attempts'] : 0,
-				'time_window'    => isset( $reason['time_window'] ) ? (string) $reason['time_window'] : '',
-				'trigger'        => (string) $trigger,
-				'activated_at'   => $now,
-			),
-			$retain_ttl
-		);
+		set_site_transient( self::TRANSIENT_REASON, $reason_payload, $retain_ttl );
 		if ( '' !== $window_key ) {
-			set_site_transient( $window_key, 1, $retain_ttl );
+			set_site_transient( $window_key, $reason_payload, $retain_ttl );
 		}
 		delete_site_transient( self::TRANSIENT_LOGGED );
 
@@ -227,13 +260,13 @@ final class ReportedIP_Hive_Hardening_Mode {
 	}
 
 	/**
-	 * Build the per-time-window suppression transient key.
+	 * Build the per-time-window suppression transient key (state marker).
 	 *
 	 * @param string $time_window Server-formatted DATE_FORMAT(last_attempt, '%Y-%m-%d %H:%i') value.
 	 * @return string Empty string when no usable window — caller must skip the marker write/read.
 	 * @since 2.0.16
 	 */
-	private static function window_marker_key( $time_window ) {
+	public static function window_marker_key( $time_window ) {
 		$time_window = trim( (string) $time_window );
 		if ( '' === $time_window ) {
 			return '';
@@ -242,13 +275,51 @@ final class ReportedIP_Hive_Hardening_Mode {
 	}
 
 	/**
+	 * Build the per-time-window log-suppression transient key (cron-noise control).
+	 *
+	 * Used by {@see ReportedIP_Hive_Security_Monitor::check_coordinated_attacks()}
+	 * to log each pattern at most once per retention window, so the hourly cron
+	 * sweep does not re-emit critical `coordinated_attack_detected` events for
+	 * the same minute-bucket every hour while the row remains in the 2 h SQL
+	 * lookback.
+	 *
+	 * @param string $time_window Server-formatted DATE_FORMAT(last_attempt, '%Y-%m-%d %H:%i') value.
+	 * @return string Empty string when no usable window — caller must skip the marker write/read.
+	 * @since 2.0.16
+	 */
+	public static function log_marker_key( $time_window ) {
+		$time_window = trim( (string) $time_window );
+		if ( '' === $time_window ) {
+			return '';
+		}
+		return self::TRANSIENT_LOG_PREFIX . md5( $time_window );
+	}
+
+	/**
 	 * Manually clear the hardening window (UI / WP-CLI / AJAX).
+	 *
+	 * Also clears the per-window marker for the live reason so an admin
+	 * override is not silently undone by the next cron sweep that finds
+	 * the same time_window still in the 2 h SQL lookback.
 	 *
 	 * @param string $actor 'admin'|'cli'|'expired'
 	 * @return void
 	 */
 	public static function deactivate( $actor = 'admin' ) {
-		$was_active = (int) get_site_transient( self::TRANSIENT_UNTIL ) > time();
+		$was_active     = (int) get_site_transient( self::TRANSIENT_UNTIL ) > time();
+		$current_reason = self::current_reason();
+
+		if ( is_array( $current_reason ) && ! empty( $current_reason['time_window'] ) ) {
+			$window_key = self::window_marker_key( (string) $current_reason['time_window'] );
+			if ( '' !== $window_key ) {
+				delete_site_transient( $window_key );
+			}
+			$log_key = self::log_marker_key( (string) $current_reason['time_window'] );
+			if ( '' !== $log_key ) {
+				delete_site_transient( $log_key );
+			}
+		}
+
 		delete_site_transient( self::TRANSIENT_UNTIL );
 		delete_site_transient( self::TRANSIENT_REASON );
 		delete_site_transient( self::TRANSIENT_LOGGED );

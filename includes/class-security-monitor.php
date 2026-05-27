@@ -1193,7 +1193,15 @@ class ReportedIP_Hive_Security_Monitor {
 		);
 
 		if ( ! empty( $coordinated_attacks ) ) {
+			$marker_class_exists = class_exists( 'ReportedIP_Hive_Hardening_Mode' );
 			foreach ( $coordinated_attacks as $attack ) {
+				$log_key = $marker_class_exists
+					? ReportedIP_Hive_Hardening_Mode::log_marker_key( (string) $attack->time_window )
+					: '';
+				if ( '' !== $log_key && get_site_transient( $log_key ) ) {
+					continue;
+				}
+
 				$this->logger->log_security_event(
 					'coordinated_attack_detected',
 					'multiple',
@@ -1204,6 +1212,10 @@ class ReportedIP_Hive_Security_Monitor {
 					),
 					'critical'
 				);
+
+				if ( '' !== $log_key ) {
+					set_site_transient( $log_key, 1, 2 * HOUR_IN_SECONDS );
+				}
 			}
 		}
 

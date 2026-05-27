@@ -300,19 +300,8 @@ class ReportedIP_Hive_Two_Factor_SMS {
 			return $rate_check;
 		}
 
-		$code = wp_rand( 100000, 999999 );
-
-		$code_hash = wp_hash_password( (string) $code );
-		set_transient(
-			self::TRANSIENT_CODE_PREFIX . $user_id,
-			array(
-				'code_hash'  => $code_hash,
-				'created_at' => time(),
-				'attempts'   => 0,
-			),
-			self::CODE_TTL
-		);
-
+		$code           = wp_rand( 100000, 999999 );
+		$code_hash      = wp_hash_password( (string) $code );
 		$provider_class = self::get_active_provider_class();
 		$config         = self::get_provider_config();
 		$expiry_minutes = (int) ( self::CODE_TTL / 60 );
@@ -361,6 +350,23 @@ class ReportedIP_Hive_Two_Factor_SMS {
 			);
 			return $result;
 		}
+
+		/*
+		 * Provider accepted the send — only NOW do we persist the code hash
+		 * and advance the local backoff ladder. A pre-dispatch write left
+		 * stale code hashes in the transient when the relay short-circuited
+		 * (e.g. client-side cooldown returning a synthetic 429) and let the
+		 * local ladder drift out of sync with the server-side ladder.
+		 */
+		set_transient(
+			self::TRANSIENT_CODE_PREFIX . $user_id,
+			array(
+				'code_hash'  => $code_hash,
+				'created_at' => time(),
+				'attempts'   => 0,
+			),
+			self::CODE_TTL
+		);
 
 		self::record_send( $user_id );
 

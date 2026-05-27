@@ -790,11 +790,19 @@ class ReportedIP_Hive_API {
 		$cooldown_key = $this->relay_backoff_key( $endpoint, $payload );
 
 		if ( '' !== $cooldown_key ) {
-			$cooldown_until = (int) get_transient( $cooldown_key );
+			$cached         = get_site_transient( $cooldown_key );
+			$cooldown_until = 0;
+			$cooldown_code  = 429;
+			if ( is_array( $cached ) ) {
+				$cooldown_until = isset( $cached['until'] ) ? (int) $cached['until'] : 0;
+				$cooldown_code  = isset( $cached['code'] ) ? (int) $cached['code'] : 429;
+			} else {
+				$cooldown_until = (int) $cached;
+			}
 			if ( $cooldown_until > time() ) {
 				return array(
 					'ok'           => false,
-					'status_code'  => 429,
+					'status_code'  => $cooldown_code,
 					'error'        => 'client_backoff',
 					'retry_after'  => max( 1, $cooldown_until - time() ),
 					'retryable'    => true,
@@ -827,13 +835,13 @@ class ReportedIP_Hive_API {
 			);
 		}
 
-		$code  = (int) wp_remote_retrieve_response_code( $response );
-		$json  = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-		$retry = (int) wp_remote_retrieve_header( $response, 'retry-after' );
+		$code        = (int) wp_remote_retrieve_response_code( $response );
+		$json        = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+		$retry_after = $this->parse_retry_after( wp_remote_retrieve_header( $response, 'retry-after' ) );
 
 		if ( $code >= 200 && $code < 300 ) {
 			if ( '' !== $cooldown_key ) {
-				delete_transient( $cooldown_key );
+				delete_site_transient( $cooldown_key );
 			}
 			delete_transient( 'reportedip_hive_relay_quota' );
 			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
@@ -846,13 +854,21 @@ class ReportedIP_Hive_API {
 		}
 
 		if ( 402 === $code || 429 === $code ) {
-			$retry_after = $retry > 0
-				? $retry
-				: ( is_array( $json ) && isset( $json['data']['retry_after'] ) ? (int) $json['data']['retry_after'] : 0 );
+			if ( $retry_after <= 0 && is_array( $json ) && isset( $json['data']['retry_after'] ) ) {
+				$retry_after = (int) $json['data']['retry_after'];
+			}
 
 			if ( '' !== $cooldown_key ) {
-				$cooldown_seconds = max( 60, min( HOUR_IN_SECONDS, $retry_after > 0 ? $retry_after : 5 * MINUTE_IN_SECONDS ) );
-				set_transient( $cooldown_key, time() + $cooldown_seconds, $cooldown_seconds + MINUTE_IN_SECONDS );
+				$cooldown_seconds = $retry_after > 0 ? $retry_after : 5 * MINUTE_IN_SECONDS;
+				$cooldown_seconds = max( 60, min( DAY_IN_SECONDS, $cooldown_seconds ) );
+				set_site_transient(
+					$cooldown_key,
+					array(
+						'until' => time() + $cooldown_seconds,
+						'code'  => $code,
+					),
+					$cooldown_seconds + MINUTE_IN_SECONDS
+				);
 			}
 
 			return array(
@@ -871,6 +887,59 @@ class ReportedIP_Hive_API {
 			'error'       => is_array( $json ) ? (string) ( $json['code'] ?? 'http_' . $code ) : 'http_' . $code,
 			'retryable'   => $code >= 500,
 		);
+	}
+
+	/**
+	 * Parse an HTTP Retry-After header into delta-seconds.
+	 *
+	 * RFC 7231 §7.1.3 allows either a non-negative integer (delta-seconds) or
+	 * an HTTP-date. `(int) "Wed, 27 May 2026 14:00:00 GMT"` casts to 0, so a
+	 * naive integer cast would silently collapse a real wait hint to the
+	 * default short cooldown. {@see strtotime()} handles the HTTP-date form.
+	 *
+	 * @param mixed $header Raw header value from {@see wp_remote_retrieve_header()}.
+	 * @return int Delta-seconds (0 when the header is missing/unparseable).
+	 * @since 2.0.16
+	 */
+	private function parse_retry_after( $header ) {
+		if ( is_array( $header ) ) {
+			$header = reset( $header );
+		}
+		$header = trim( (string) $header );
+		if ( '' === $header ) {
+			return 0;
+		}
+		if ( ctype_digit( $header ) ) {
+			return (int) $header;
+		}
+		$timestamp = strtotime( $header );
+		if ( false === $timestamp ) {
+			return 0;
+		}
+		$delta = $timestamp - time();
+		return $delta > 0 ? $delta : 0;
+	}
+
+	/**
+	 * Whether the per-(endpoint, recipient) backoff transient is currently hot.
+	 *
+	 * Used by the admin "Send test mail" UI so that a fallback dispatch via
+	 * `wp_mail()` does not silently masquerade as a successful relay send.
+	 *
+	 * @param string $endpoint Relay slug (e.g. 'relay-mail' / 'relay-sms').
+	 * @param array  $payload  Same payload shape the production call would use
+	 *                         (`recipient` for mail, `recipient_phone` for SMS).
+	 * @return bool
+	 * @since 2.0.16
+	 */
+	public function is_relay_in_backoff( $endpoint, array $payload ) {
+		$key = $this->relay_backoff_key( $endpoint, $payload );
+		if ( '' === $key ) {
+			return false;
+		}
+		$cached = get_site_transient( $key );
+		$until  = is_array( $cached ) ? (int) ( $cached['until'] ?? 0 ) : (int) $cached;
+		return $until > time();
 	}
 
 	/**
@@ -894,15 +963,23 @@ class ReportedIP_Hive_API {
 
 		$recipient = '';
 		if ( isset( $payload['recipient'] ) && is_string( $payload['recipient'] ) ) {
-			$recipient = strtolower( trim( $payload['recipient'] ) );
+			$raw = trim( $payload['recipient'] );
+			if ( preg_match( '/<([^>]+)>/', $raw, $m ) ) {
+				$raw = $m[1];
+			}
+			$recipient = strtolower( $raw );
 		} elseif ( isset( $payload['recipient_phone'] ) && is_string( $payload['recipient_phone'] ) ) {
-			$recipient = preg_replace( '/[^0-9+]/', '', $payload['recipient_phone'] );
+			$normalized = preg_replace( '/[^0-9+]/', '', $payload['recipient_phone'] );
+			$recipient  = (string) $normalized;
+			if ( '' !== $recipient && '0' === substr( $recipient, 0, 2 ) ) {
+				$recipient = '+' . ltrim( $recipient, '0' );
+			}
 		}
 
-		$slug = preg_replace( '/[^a-z0-9_-]+/i', '_', $endpoint );
+		$slug = (string) preg_replace( '/[^a-z0-9_-]+/i', '_', $endpoint );
 		$hash = '' !== $recipient ? md5( $recipient ) : 'global';
 
-		return 'reportedip_hive_relay_bo_' . strtolower( (string) $slug ) . '_' . $hash;
+		return 'reportedip_hive_relay_bo_' . strtolower( $slug ) . '_' . $hash;
 	}
 
 	/**
@@ -1204,11 +1281,30 @@ class ReportedIP_Hive_API {
 			return false;
 		}
 
-		if ( null !== $limit && $limit > 0 && isset( $quota['remaining_reports'] ) && (int) $quota['remaining_reports'] <= 0 ) {
+		if ( self::quota_is_unlimited( $limit ) ) {
+			return true;
+		}
+
+		if ( $limit > 0 && isset( $quota['remaining_reports'] ) && (int) $quota['remaining_reports'] <= 0 ) {
 			return false;
 		}
 
 		return true;
+	}
+
+	/**
+	 * Whether the given `daily_report_limit` value designates an unlimited tier.
+	 *
+	 * Mirrored by {@see get_quota_status()} so neither helper can drift away
+	 * from the other; a future PR can tighten one and not the other without
+	 * silently freezing Enterprise queues.
+	 *
+	 * @param int|null $report_limit Cached `daily_report_limit`.
+	 * @return bool
+	 * @since 2.0.16
+	 */
+	private static function quota_is_unlimited( $report_limit ) {
+		return ( null === $report_limit ) || ( (int) $report_limit < 0 );
 	}
 
 	/**
@@ -1241,7 +1337,7 @@ class ReportedIP_Hive_API {
 		 * sends `remaining_reports = 0` for an unlimited tier would otherwise
 		 * trip the `no_quota` short-circuit and freeze the queue forever.
 		 */
-		$is_unlimited = ( null === $report_limit ) || ( $report_limit < 0 );
+		$is_unlimited = self::quota_is_unlimited( $report_limit );
 
 		if ( $report_limit === 0 ) {
 			return array(

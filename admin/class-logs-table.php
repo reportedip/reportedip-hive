@@ -347,7 +347,9 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 				<option value="xmlrpc_abuse" <?php selected( $event_type, 'xmlrpc_abuse' ); ?>><?php esc_html_e( 'XMLRPC Abuse', 'reportedip-hive' ); ?></option>
 				<option value="ip_blocked" <?php selected( $event_type, 'ip_blocked' ); ?>><?php esc_html_e( 'IP Blocked', 'reportedip-hive' ); ?></option>
 				<option value="hardening_mode_activated" <?php selected( $event_type, 'hardening_mode_activated' ); ?>><?php esc_html_e( 'Hardening Mode Activated', 'reportedip-hive' ); ?></option>
+				<option value="hardening_mode_extended" <?php selected( $event_type, 'hardening_mode_extended' ); ?>><?php esc_html_e( 'Hardening Mode Extended', 'reportedip-hive' ); ?></option>
 				<option value="hardening_mode_deactivated" <?php selected( $event_type, 'hardening_mode_deactivated' ); ?>><?php esc_html_e( 'Hardening Mode Deactivated', 'reportedip-hive' ); ?></option>
+				<option value="coordinated_attack_detected" <?php selected( $event_type, 'coordinated_attack_detected' ); ?>><?php esc_html_e( 'Coordinated Attack Detected', 'reportedip-hive' ); ?></option>
 			</select>
 
 			<select name="severity">

@@ -320,10 +320,21 @@ final class ReportedIP_Hive_Option_Routing {
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Uninstall path: enumerate every plugin-prefixed sitemeta key for explicit deletion.
 			$network_keys = (array) $wpdb->get_col(
-				"SELECT meta_key FROM {$wpdb->sitemeta} WHERE meta_key LIKE 'reportedip\\_hive\\_%'"
+				"SELECT meta_key FROM {$wpdb->sitemeta}
+				 WHERE meta_key LIKE 'reportedip\\_hive\\_%'
+				    OR meta_key LIKE '\\_site\\_transient\\_reportedip\\_hive\\_%'
+				    OR meta_key LIKE '\\_site\\_transient\\_timeout\\_reportedip\\_hive\\_%'"
 			);
 			foreach ( $network_keys as $key ) {
-				delete_site_option( $key );
+				if ( 0 === strpos( $key, '_site_transient_timeout_' ) ) {
+					$transient_name = substr( $key, strlen( '_site_transient_timeout_' ) );
+					delete_site_transient( $transient_name );
+				} elseif ( 0 === strpos( $key, '_site_transient_' ) ) {
+					$transient_name = substr( $key, strlen( '_site_transient_' ) );
+					delete_site_transient( $transient_name );
+				} else {
+					delete_site_option( $key );
+				}
 			}
 			return;
 		}
@@ -332,7 +343,14 @@ final class ReportedIP_Hive_Option_Routing {
 	}
 
 	/**
-	 * Delete all plugin options from the current site's `wp_options` table.
+	 * Delete all plugin options and transients from the current site's `wp_options` table.
+	 *
+	 * The base `LIKE 'reportedip\_hive\_%'` does NOT match transient rows
+	 * (`_transient_…` / `_transient_timeout_…`) — they need their own
+	 * predicates. Without this every Hive transient — including the new
+	 * `reportedip_hive_hardening_seen_*` and `reportedip_hive_relay_bo_*`
+	 * payloads — survived deactivate/uninstall and could come back to
+	 * haunt a fresh re-install.
 	 *
 	 * @return void
 	 * @since  2.0.0
@@ -341,10 +359,21 @@ final class ReportedIP_Hive_Option_Routing {
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Uninstall path: enumerate every plugin-prefixed wp_options key for explicit deletion.
 		$keys = (array) $wpdb->get_col(
-			"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'reportedip\\_hive\\_%'"
+			"SELECT option_name FROM {$wpdb->options}
+			 WHERE option_name LIKE 'reportedip\\_hive\\_%'
+			    OR option_name LIKE '\\_transient\\_reportedip\\_hive\\_%'
+			    OR option_name LIKE '\\_transient\\_timeout\\_reportedip\\_hive\\_%'"
 		);
 		foreach ( $keys as $key ) {
-			delete_option( $key );
+			if ( 0 === strpos( $key, '_transient_timeout_' ) ) {
+				$transient_name = substr( $key, strlen( '_transient_timeout_' ) );
+				delete_transient( $transient_name );
+			} elseif ( 0 === strpos( $key, '_transient_' ) ) {
+				$transient_name = substr( $key, strlen( '_transient_' ) );
+				delete_transient( $transient_name );
+			} else {
+				delete_option( $key );
+			}
 		}
 	}
 }

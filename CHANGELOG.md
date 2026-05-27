@@ -6,50 +6,75 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixed
 
-- **Hardening Mode no longer re-emits `hardening_mode_activated` every
-  hour for the same coordinated-attack row.** `check_coordinated_attacks()`
-  runs against a rolling 2 h lookback in `wp_reportedip_hive_attempts`,
-  so a single attack pattern (e.g. 10 IPs / 20 failed logins inside one
-  minute) used to trigger a full re-activation on every hourly cron
-  sweep until the row aged out. `Hardening_Mode::activate()`
-  (`class-hardening-mode.php`) now writes a per-time-window suppression
-  marker (`reportedip_hive_hardening_seen_<md5>`) at activation and
-  short-circuits later calls that present the same window unless the
-  candidate reason is strictly more severe. The retention TTL of the
-  marker tracks the configured Hardening duration plus 24 h.
-- **TTL-low extension no longer overwrites a stronger trigger payload
-  with a weaker follow-up.** Before, a 10 IPs / 20 attempts sweep
-  arriving 13 s before the window expired replaced a 35 IPs / 200
-  attempts trigger in `TRANSIENT_REASON`; the Hardening Mode tab then
-  showed the milder reason. The activation path now branches: when the
-  remaining TTL is under 50 % of the configured duration **and** the
-  candidate reason is not stronger, it extends `TRANSIENT_UNTIL` only
-  and emits `hardening_mode_extended` (severity low). The stronger
-  original reason stays in `TRANSIENT_REASON` and on the UI.
+- **Hardening Mode no longer re-arms itself after natural expiry or
+  admin deactivate when the same minute-bucket is still in the 2 h SQL
+  lookback.** The per-`time_window` marker now stores the canonical
+  strongest reason payload (not just a presence flag), so suppression
+  survives the lazy wipe of `TRANSIENT_REASON` in {@see is_active()}
+  and the explicit clear in {@see deactivate()}. The activate path
+  compares the candidate against the marker payload when the live
+  reason transient is gone, instead of treating "no live reason" as
+  "fresh trigger". `deactivate('admin')` now also clears the marker
+  for the live reason's `time_window` so an admin override sticks.
+- **TTL-low extension keeps the strongest reason and the suppression
+  marker alive past 25 h.** Previously `TRANSIENT_REASON` (TTL =
+  duration + 1 d) expired while `TRANSIENT_UNTIL` kept getting bumped
+  by hourly extensions; once the reason was gone the next weak sweep
+  fell into the full-activate path and clobbered the original
+  strongest trigger payload with a high-severity event. The extension
+  branch now refreshes the marker TTL alongside `TRANSIENT_UNTIL` and
+  records a marker for the candidate's `time_window` so a follow-up
+  sweep cannot trigger another `hardening_mode_extended` log for the
+  same bucket.
+- **Per-row `coordinated_attack_detected` critical events are now
+  suppressed across cron sweeps for the same minute-bucket.**
+  `Security_Monitor::check_coordinated_attacks()` writes a 2 h log
+  marker per `time_window` so the structured critical event fires once
+  per pattern instead of once per cron tick — the hourly Activity-log
+  noise the previous changelog blamed on the cron wrapper entry was in
+  fact this inner stream.
 - **`cron_sync_reputation()` no longer logs a duplicate critical
-  `Coordinated attacks detected` entry on every sweep.**
-  `Security_Monitor::check_coordinated_attacks()` already emits
-  structured `coordinated_attack_detected` events (severity critical)
-  per pattern; the generic wrapper log in `class-cron-handler.php` was
-  redundant and inflated the Activity log.
+  `Coordinated attacks detected` aggregate.** Subsumed by the inner
+  per-pattern `coordinated_attack_detected` events above.
 - **Enterprise / Honeypot tier no longer hits the queue `no_quota`
   short-circuit when the upstream stamps `remaining_reports = 0` on
-  an unlimited account.** `get_quota_status()`
-  (`class-api-client.php:1159`) now detects unlimited tiers via
-  `daily_report_limit < 0 || === null` and forces `remaining = -1`,
-  matching the `>= 0` guard in `process_report_queue()`. Without this,
-  a server-side glitch in the quota refresh would silently freeze the
-  API report queue for an Enterprise site.
-- **Relay-mail / relay-sms 429 backoff is now respected client-side.**
-  Previously, a 429 response from `POST /reportedip/v2/relay-mail`
-  (server-side progressive backoff per recipient) only triggered the
-  per-call wp_mail fallback — the *next* security alert immediately
-  attempted another HTTP call, so the same recipient could see dozens
-  of 429s per day. `relay_request()` (`class-api-client.php`) now stores
-  `time() + retry_after` in a per-(endpoint, recipient) transient,
-  short-circuits subsequent calls inside the cooldown to a `client_backoff`
-  soft-failure (so the mail/SMS provider still falls back transparently),
-  and clears the cooldown on the first successful response.
+  an unlimited account.** A shared helper `quota_is_unlimited()`
+  drives both `has_report_quota()` and `get_quota_status()`, so the
+  unlimited-detection cannot drift between the two helpers; unlimited
+  tiers are reported back as `remaining = -1`, matching the `>= 0`
+  guard in `process_report_queue()`.
+- **Relay-mail / relay-sms 429 backoff now uses `set_site_transient`
+  (network-wide on multisite), preserves the original HTTP status
+  code in the cooldown payload, parses HTTP-date `Retry-After`
+  headers correctly, and caps the cooldown at `DAY_IN_SECONDS` (not
+  one hour).** Each fix corrects a real observable behaviour on
+  alre.de's relay-mail history: per-blog transients let three
+  subsites independently flood the per-recipient server cap; the
+  prior synthetic 429 masked a 402 monthly-cap as a "too many sends"
+  message and hid the upgrade prompt; HTTP-date Retry-After cast to
+  `(int)` collapsed to 0 → 5-minute default; the 1 h clamp generated
+  hourly probes against a 24 h server cap.
+- **2FA SMS code transient is now written AFTER the provider accepts
+  the send, not before.** A pre-dispatch write left stale code hashes
+  in `_transient_rip_2fa_sms_code_<user>` for 10 minutes when the
+  relay short-circuited (e.g. via the new client_backoff cooldown),
+  and the local backoff ladder never advanced because
+  `record_send()` ran on the success branch.
+- **Admin "Send test mail" now surfaces a banner when the relay
+  fallback to `wp_mail()` was used.** A new
+  `ReportedIP_Hive_API::is_relay_in_backoff()` probe runs before the
+  mailer call so the AJAX response can warn the admin that they did
+  not just validate the managed-relay path.
+- **Plugin uninstall now also flushes plugin transients.**
+  `delete_all_plugin_options` enumerated `option_name LIKE
+  'reportedip_hive_%'`, which does not match the `_transient_…` /
+  `_site_transient_…` rows WordPress stores transients under. The new
+  `reportedip_hive_hardening_seen_*`, `reportedip_hive_hardening_logged_window_*`
+  and `reportedip_hive_relay_bo_*` keys would otherwise survive
+  uninstall and confuse a fresh re-install.
+- **Logs UI dropdown lists the new event types.** Operators can now
+  filter for `hardening_mode_extended` and the structured
+  `coordinated_attack_detected` events directly.
 
 ## [2.0.15] — 2026-05-21
 
