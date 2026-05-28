@@ -50,6 +50,20 @@ class ReportedIP_Hive_User_Enumeration {
 	private const PASSTHROUGH_NEEDLES_RESET = array( 'two-factor', 'reset blocked' );
 
 	/**
+	 * Substrings that let a login-flow error message pass through the
+	 * "Invalid credentials." mask on the default login action. The 2FA
+	 * enforcement block (skip-quota exhausted) and the 2FA challenge both
+	 * fire only *after* the password has validated, so the username is
+	 * already confirmed — surfacing the real reason leaks nothing about
+	 * user existence and spares the locked-out admin a pointless password
+	 * reset. The phrasing is stable English; translations should keep the
+	 * "two-factor" token in place.
+	 *
+	 * @var string[]
+	 */
+	private const PASSTHROUGH_NEEDLES_LOGIN = array( 'two-factor' );
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_User_Enumeration|null
@@ -186,6 +200,11 @@ class ReportedIP_Hive_User_Enumeration {
 	 * those messages through unmasked — they reveal nothing about user
 	 * existence and would otherwise be replaced with the misleading
 	 * "Invalid credentials." text.
+	 *
+	 * Also passes through the login-flow 2FA-enforcement message ("two-factor"
+	 * needle on the default login action): that block fires only after the
+	 * password has validated, so masking it would leave a locked-out admin
+	 * chasing a non-existent password problem.
 	 */
 	public function normalize_login_errors( $error ) {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
@@ -205,10 +224,15 @@ class ReportedIP_Hive_User_Enumeration {
 			&& in_array( $action, array( 'rp', 'resetpass' ), true )
 			&& self::contains_any( $error, self::PASSTHROUGH_NEEDLES_RESET );
 
+		$is_login_passthrough = is_string( $error )
+			&& in_array( $action, array( '', 'login' ), true )
+			&& self::contains_any( $error, self::PASSTHROUGH_NEEDLES_LOGIN );
+
 		if ( $flag_locked
 			|| $flag_expired
 			|| in_array( $action, self::PASSTHROUGH_ACTIONS, true )
-			|| $is_reset_passthrough ) {
+			|| $is_reset_passthrough
+			|| $is_login_passthrough ) {
 			return $error;
 		}
 

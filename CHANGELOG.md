@@ -2,6 +2,22 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.17] — 2026-05-29
+
+### Fixed
+
+- **2FA-enforcement lockout no longer masked as "Invalid
+  credentials".** When an enforced user exhausted the 2FA
+  onboarding skip quota, the user-enumeration login-error mask
+  rewrote the real reason ("Two-factor authentication required —
+  skip quota exhausted, contact an administrator") down to the
+  generic "Invalid credentials.", sending locked-out admins on a
+  pointless password reset. The mask now passes 2FA messages
+  through on the login action: that block fires only *after* the
+  password has validated, so the username is already confirmed and
+  surfacing the reason leaks nothing about user existence. Genuine
+  credential errors stay masked.
+
 ## [2.0.16] — 2026-05-27
 
 ### Changed

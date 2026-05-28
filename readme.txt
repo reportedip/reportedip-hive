@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 2.0.16
+Stable tag: 2.0.17
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -327,6 +327,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.0.17 =
+
+Fix: the 2FA-enforcement lockout (onboarding skip quota exhausted) was shown as the generic "Invalid credentials." login error, misleading locked-out admins into resetting a password that was actually fine. The real reason now reaches the login screen, so admins know to use a recovery code, run wp reportedip 2fa reset, or ask an administrator to reset 2FA. The block fires only after the password has already validated, so surfacing it leaks nothing about user existence; genuine credential errors stay masked.
 
 = 2.0.16 =
 

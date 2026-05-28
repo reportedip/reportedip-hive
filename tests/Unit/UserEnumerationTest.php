@@ -38,6 +38,11 @@ namespace {
 			return is_string( $str ) ? trim( $str ) : '';
 		}
 	}
+	if ( ! function_exists( 'sanitize_key' ) ) {
+		function sanitize_key( $key ) {
+			return is_string( $key ) ? strtolower( preg_replace( '/[^a-z0-9_\-]/', '', $key ) ) : '';
+		}
+	}
 	if ( ! function_exists( '__' ) ) {
 		function __( $text, $domain = '' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 			return $text;
@@ -121,6 +126,27 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'Invalid credentials.', $result );
 		}
 
+		public function test_two_factor_setup_required_message_passes_through() {
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$msg      = '<strong>Two-factor authentication required.</strong> Your skip quota is exhausted. Please contact an administrator to reset 2FA.';
+			$result   = $instance->normalize_login_errors( $msg );
+			$this->assertSame( $msg, $result, 'The 2FA-enforcement message must reach the locked-out admin verbatim, not be masked as "Invalid credentials."' );
+		}
+
+		public function test_two_factor_message_passes_through_on_explicit_login_action() {
+			$_GET['action'] = 'login';
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$msg      = 'Two-factor verification required.';
+			$result   = $instance->normalize_login_errors( $msg );
+			$this->assertSame( $msg, $result );
+			unset( $_GET['action'] );
+		}
+
+		public function test_username_error_still_masked_when_no_two_factor_token() {
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$result   = $instance->normalize_login_errors( '<strong>ERROR</strong>: The password you entered is incorrect.' );
+			$this->assertSame( 'Invalid credentials.', $result, 'Genuine credential errors stay masked — only 2FA messages pass through.' );
+		}
 		public function test_normalize_login_errors_passes_empty_through() {
 			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
 			$this->assertSame( '', $instance->normalize_login_errors( '' ) );
