@@ -1454,8 +1454,8 @@ class ReportedIP_Hive_Setup_Wizard {
 						<p class="rip-help-text">
 							<?php
 							printf(
-								/* translators: 1: HTML-wrapped site name, 2: plain site name (Tip example) */
 								wp_kses(
+									/* translators: 1: HTML-wrapped site name, 2: plain site name (Tip example) */
 									__( 'Display name shown in the recipient\'s inbox. Leave empty to use your site name (currently: %1$s). Tip: add "Security" or "Alerts", e.g. "%2$s Security".', 'reportedip-hive' ),
 									array( 'code' => array() )
 								),
@@ -1845,8 +1845,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		$recipients      = ReportedIP_Hive_Defaults::notify_recipients();
 		$promote_enabled = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false );
 		$promote_variant = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_variant', 'badge' );
-		$enforced_roles  = json_decode( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
-		$enforced_roles  = is_array( $enforced_roles ) ? $enforced_roles : array();
+		$enforced_roles  = ReportedIP_Hive_Option_Routing::get_network_enforce_roles();
 
 		$twofa_setup_pending = $twofa_enabled && class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' )
 			&& ReportedIP_Hive_Two_Factor_Onboarding::user_needs_onboarding( get_current_user_id() );

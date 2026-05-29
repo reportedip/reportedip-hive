@@ -3,7 +3,7 @@ Contributors: reportedip, patrickschlesinger
 Donate link: https://reportedip.de
 Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 8.1
 Stable tag: 2.0.18
 License: GPL-2.0-or-later
@@ -330,7 +330,7 @@ The full structured changelog lives in [CHANGELOG.md](https://github.com/reporte
 
 = 2.0.18 =
 
-New: complete German translation (formal address, "Sie"), shipped as de_DE — the plugin now displays in German automatically on German-language sites. Source strings stay English, so other locales are unaffected. A translation-freshness gate was added to the build and CI: it fails when source strings change without the German translation being updated, keeping both in sync on every change. Protection, sensors and the 2FA suite are unchanged.
+Fix: a fatal error (PHP 8 TypeError) crashed the 2FA settings tab and the 2FA setup-wizard step when the enforce-roles / allowed-methods options were stored as arrays — reads are now format-tolerant. New: complete German translation (formal address, "Sie"), shipped as de_DE — the plugin now displays in German automatically on German-language sites. Source strings stay English, so other locales are unaffected. A translation-freshness gate was added to the build and CI so the German strings stay in sync with the source on every change.
 
 = 2.0.17 =
 
@@ -477,71 +477,8 @@ Initial public release as ReportedIP Hive. Three threshold channels, two operati
 
 == Upgrade Notice ==
 
-= 2.0.15 =
-Hotfix: admin notifications with more than one recipient were silently dropped by the managed mail relay (422 — only one address per request). The mailer now fan-outs comma-lists into one request per recipient.
-
-= 2.0.14 =
-Decoy bait-path list grows from 16 to 40 entries (wp-config Backups, SQL dumps, AWS/SSH credentials, htpasswd, …). Auto-managed `.htaccess` and the nginx snippets pick the new list up automatically. ISPConfig/nginx admins get an additional exact-match snippet variant in Settings that survives template `dot-file deny` rules.
-
-= 2.0.13 =
-Critical hotfix: every auto-blocked IP was being silently excluded from the community report by an over-eager cooldown check. With this release every sensor (user enumeration, failed login, scan-404, decoy path …) actually queues for the Hive API after the local block. No setting changes required.
-
-= 2.0.12 =
-Hotfix: Decoy Path Block in 2.0.11 logged hits locally but never queued them for the community-report API. Fixed in this release — no setting changes required.
-
-= 2.0.11 =
-Decoy Path Block stops touching the local IP-block table — hits are logged + reported to the community only. New auto-managed `.htaccess` rewrite ensures real bait files on disk (`.env.backup` etc.) are routed through WordPress for detection rather than served directly by Apache. Legacy `reportedip_hive_decoy_block_hours` option is removed and migrated automatically.
-
-= 2.0.10 =
-Fix release for the 2.0.9 Decoy Path Block. Report-only mode is now honoured (log without block), and bait filenames behind a subdirectory prefix (e.g. `/site-a/.env.backup` on Multisite subdir) match correctly. No setting changes required.
-
-= 2.0.9 =
-New free-tier Decoy Path Block — bans IPs on the first request to known bait paths (`.env.backup`, `wp-config.old.php`, etc.). No disk changes, no false positives on legitimate traffic. Default-on, configurable under Settings → Detection.
-
-= 2.0.8 =
-Adds Hardening Mode (Professional plan) — automatic, time-limited tightening of failed-login and reputation thresholds when a coordinated attack is detected. Off by default; opt in via the new Settings → Hardening Mode tab. Existing settings are preserved.
-
-= 2.0.7 =
-The hourly API call cap is split into three independent buckets and now scales with your tier — a reputation-check storm can no longer freeze the report queue. Your "Max API calls per hour" setting is automatically reset to `0` (auto / tier-bound). Local firewall behaviour is unchanged; community calls pause cleanly when the bucket cap is reached and a banner surfaces the state.
-
-= 2.0.4 =
-SMS-2FA via the managed relay now reaches all destinations the relay is allowed to serve (worldwide minus a small list of high-cost countries); the unsupported ones surface as a clear in-UI error instead of being silently blocked on the plugin side. Local providers (seven.io, sipgate, MessageBird) are unaffected. No breaking change for sites that never enabled SMS-2FA.
-
-= 2.0.0 =
-**Breaking change — Multisite support.** Single-site installs auto-migrate transparently on the first admin visit (only adds a `blog_id` column with default 1, no data movement). On Multisite the plugin is now network-only: per-site activation is no longer possible, and protection state (whitelist, blocked IPs, attempts, trusted devices) is shared across the network so cross-site brute-force is detected and blocked everywhere at once. Site Admins on sub-sites see a read-only UI with two narrow override fields (Frontend-2FA slug + additive enforcement roles). Super Admins are forced into 2FA. Existing Multisite installs that ran Hive per-site without `Network: true` get a one-time option-promotion pass into sitemeta. Network Admin Settings page uses a custom save handler — Settings-API form posts that previously vanished into the main site's wp_options now persist to sitemeta correctly. Hardened on a 4-site Multisite Docker stack across one week post-beta. **Strongly recommended for everyone running 2.0.0-beta.1.**
-
-= 1.6.6 =
-Critical hardening for the 1.6.5 password-reset gate. The reset-key resolver missed the WordPress reset cookie, so the gate was wired but inactive on the standard reset flow — making 1.6.5 effectively unprotected. Strongly recommended for every site running 1.6.5. No breaking change.
-
-= 1.6.5 =
-Closes a long-standing 2FA bypass: the WordPress "lost password" flow used to let anyone with mailbox access through email-2FA, because the reset link and the email OTP arrived on the same channel. Hive now requires a non-email second factor (Authenticator, SMS, passkey, recovery code) before a new password is accepted. Strongly recommended for every site using email 2FA. No breaking change: users without 2FA configured are unaffected.
-
-= 1.6.3 =
-Managed Mail/SMS relay for Professional+. 2FA mail falls back to local `wp_mail()` on cap; SMS surfaces typed errors to the user. Free / Contributor sites are unaffected. Recommended for everyone — no breaking change.
-
-= 1.6.1 =
-Post-upgrade welcome banner with a 3-step 2FA-setup checklist, plus a login-time reminder for users without 2FA (hard-block after 5 reminders for administrator/editor/shop_manager only). Recommended.
-
-= 1.6.0 =
-Tier-aware UI foundation: every admin page now renders the active tier and (on PRO+) a managed-relay quota card on the security dashboard. Recommended.
-
-= 1.5.3 =
-API queue reliability hotfix. Recovers rows stuck in `processing` after a crashed worker, protects in-flight rows, isolates per-row failures, and serialises concurrent cron runs. Schema bumps to v4 (auto-migrated). Strongly recommended for every Community-mode site.
-
-= 1.5.2 =
-Cache-plugin-safe 403 page + 2FA brute-force graduation to progressive escalation. Strongly recommended if you run any page-cache plugin or have public-facing 2FA endpoints.
-
-= 1.5.0 =
-Progressive block escalation + cookie-banner consent endpoints whitelisted. Update to fix Real Cookie Banner / Complianz visitor-block loops.
-
-= 1.4.0 =
-Wizard saving regression for advanced sensors. Update if you re-ran the wizard on 1.3.x — your advanced sensor toggles may have been silently saved as off.
-
-= 1.2.0 =
-Major sensor expansion + auto-migration to schema v3. No manual steps required.
-
-= 1.0.0 =
-Initial release.
+= 2.0.18 =
+German translation (de_DE, formal) added — the admin UI now displays in German on German-language sites. Also fixes a fatal error on the 2FA settings tab. No breaking changes.
 
 == Privacy Policy ==
 

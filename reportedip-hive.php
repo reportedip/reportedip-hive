@@ -11,7 +11,7 @@
  * Text Domain: reportedip-hive
  * Domain Path: /languages
  * Requires at least: 5.0
- * Tested up to: 6.9
+ * Tested up to: 7.0
  * Requires PHP: 8.1
  * Network: true
  * Update URI: https://github.com/reportedip/reportedip-hive

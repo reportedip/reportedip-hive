@@ -201,6 +201,18 @@ function entry_key(?string $context, string $msgid): string
 }
 
 /**
+ * Normalises a match key so that no-context entries compare equal whether or
+ * not the producing agent kept the leading U+0004 context separator.
+ *
+ * @param string $key Raw key.
+ * @return string
+ */
+function normalize_key(string $key): string
+{
+    return ("\x04" === substr($key, 0, 1)) ? substr($key, 1) : $key;
+}
+
+/**
  * Runs export mode.
  *
  * @param string $po        PO path.
@@ -243,13 +255,78 @@ function run_export(string $po, string $outdir, int $chunkSize): int
 }
 
 /**
+ * Runs export-review mode: dumps EVERY entry (translated or not) with its
+ * current German translation so a reviewer can critique and improve it in
+ * context, rather than translating from scratch.
+ *
+ * @param string $po        PO path.
+ * @param string $outdir    Output directory for chunk files.
+ * @param int    $chunkSize Entries per chunk.
+ * @return int
+ */
+function run_export_review(string $po, string $outdir, int $chunkSize): int
+{
+    $content = str_replace("\r\n", "\n", (string) file_get_contents($po));
+    $items   = array();
+
+    foreach (po_blocks($content) as $block) {
+        $entry = parse_entry($block);
+        if (null === $entry) {
+            continue;
+        }
+        $msgstrs = parse_msgstrs($block);
+        $items[] = array(
+            'key'         => entry_key($entry['context'], $entry['singular']),
+            'context'     => $entry['context'],
+            'en_singular' => $entry['singular'],
+            'en_plural'   => $entry['plural'],
+            'de_singular' => $msgstrs[0] ?? '',
+            'de_plural'   => null !== $entry['plural'] ? ($msgstrs[1] ?? '') : null,
+            'reference'   => $entry['refs'][0] ?? '',
+        );
+    }
+
+    if (!is_dir($outdir)) {
+        mkdir($outdir, 0777, true);
+    }
+    array_map('unlink', glob($outdir . '/chunk-*.json') ?: array());
+
+    $chunks = array_chunk($items, max(1, $chunkSize));
+    foreach ($chunks as $i => $chunk) {
+        $name = sprintf('%s/chunk-%02d.json', $outdir, $i);
+        file_put_contents($name, json_encode($chunk, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    fwrite(STDOUT, sprintf("Exported %d entries for review into %d chunks.\n", count($items), count($chunks)));
+    return 0;
+}
+
+/**
+ * Extracts the unescaped msgstr / msgstr[n] values from a block, in order.
+ *
+ * @param string $block Entry block.
+ * @return array<int, string>
+ */
+function parse_msgstrs(string $block): array
+{
+    $lines = explode("\n", $block);
+    $out   = array();
+    for ($i = 0; $i < count($lines); $i++) {
+        if (preg_match('/^msgstr(?:\[\d+\])?\s+"(.*)"$/s', $lines[$i], $m)) {
+            $out[] = collect_string($lines, $i, $m[1]);
+        }
+    }
+    return $out;
+}
+
+/**
  * Runs import mode: fills translations from chunk-NN.out.json back into the PO.
  *
  * @param string $po     PO path.
  * @param string $outdir Directory holding chunk-NN.out.json files.
  * @return int
  */
-function run_import(string $po, string $outdir): int
+function run_import(string $po, string $outdir, bool $overwrite = false): int
 {
     $map = array();
     foreach (glob($outdir . '/chunk-*.out.json') ?: array() as $file) {
@@ -262,7 +339,7 @@ function run_import(string $po, string $outdir): int
             if (!isset($row['key'])) {
                 continue;
             }
-            $map[$row['key']] = $row;
+            $map[normalize_key((string) $row['key'])] = $row;
         }
     }
 
@@ -277,14 +354,18 @@ function run_import(string $po, string $outdir): int
 
     foreach ($blocks as $idx => $block) {
         $entry = parse_entry($block);
-        if (null === $entry || !$entry['untranslated']) {
+        if (null === $entry || ('' === $entry['singular'])) {
             continue;
         }
-        $key = entry_key($entry['context'], $entry['singular']);
+        if (!$overwrite && !$entry['untranslated']) {
+            continue;
+        }
+        $key = normalize_key(entry_key($entry['context'], $entry['singular']));
         if (!isset($map[$key])) {
             continue;
         }
-        $row = $map[$key];
+        $row     = $map[$key];
+        $pattern = $overwrite ? '"[^"]*(?:\\\\"[^"]*)*"' : '""';
 
         if (null !== $entry['plural']) {
             $singular = po_escape((string) ($row['singular'] ?? ''));
@@ -292,14 +373,14 @@ function run_import(string $po, string $outdir): int
             if ('' === $singular || '' === $plural) {
                 continue;
             }
-            $block = preg_replace('/^msgstr\[0\] ""$/m', 'msgstr[0] "' . $singular . '"', $block, 1);
-            $block = preg_replace('/^msgstr\[1\] ""$/m', 'msgstr[1] "' . $plural . '"', $block, 1);
+            $block = preg_replace('/^msgstr\[0\] ' . $pattern . '$/m', 'msgstr[0] "' . $singular . '"', $block, 1);
+            $block = preg_replace('/^msgstr\[1\] ' . $pattern . '$/m', 'msgstr[1] "' . $plural . '"', $block, 1);
         } else {
             $translation = po_escape((string) ($row['singular'] ?? ''));
             if ('' === $translation) {
                 continue;
             }
-            $block = preg_replace('/^msgstr ""$/m', 'msgstr "' . $translation . '"', $block, 1);
+            $block = preg_replace('/^msgstr ' . $pattern . '$/m', 'msgstr "' . $translation . '"', $block, 1);
         }
 
         $blocks[$idx] = $block;
@@ -307,7 +388,7 @@ function run_import(string $po, string $outdir): int
     }
 
     file_put_contents($po, implode("\n\n", $blocks) . "\n");
-    fwrite(STDOUT, sprintf("Filled %d translations into %s.\n", $filled, $po));
+    fwrite(STDOUT, sprintf("%s %d translations in %s.\n", $overwrite ? 'Applied' : 'Filled', $filled, $po));
     return 0;
 }
 
@@ -353,11 +434,15 @@ function run_validate(string $workdir): int
         if (false !== strpos($file, '.out.json')) {
             continue;
         }
-        $rows = json_decode((string) file_get_contents($file), true);
+        $rows = read_json_tolerant($file);
         foreach ((array) $rows as $row) {
-            if (isset($row['key'])) {
-                $source[$row['key']] = $row;
+            if (!isset($row['key'])) {
+                continue;
             }
+            $source[normalize_key($row['key'])] = array(
+                'singular' => $row['singular'] ?? $row['en_singular'] ?? '',
+                'plural'   => $row['plural'] ?? $row['en_plural'] ?? null,
+            );
         }
     }
 
@@ -371,9 +456,9 @@ function run_validate(string $workdir): int
             continue;
         }
         foreach ($rows as $row) {
-            $key = $row['key'] ?? null;
+            $key = isset($row['key']) ? normalize_key((string) $row['key']) : null;
             if (null === $key || !isset($source[$key])) {
-                fwrite(STDERR, 'UNKNOWN KEY in ' . basename($file) . ': ' . json_encode($key) . "\n");
+                fwrite(STDERR, 'UNKNOWN KEY in ' . basename($file) . ': ' . json_encode($row['key'] ?? null) . "\n");
                 ++$problems;
                 continue;
             }
@@ -406,12 +491,18 @@ $mode = $argv[1] ?? '';
 if ('export' === $mode && isset($argv[2], $argv[3])) {
     exit(run_export($argv[2], $argv[3], (int) ($argv[4] ?? 65)));
 }
+if ('export-review' === $mode && isset($argv[2], $argv[3])) {
+    exit(run_export_review($argv[2], $argv[3], (int) ($argv[4] ?? 65)));
+}
 if ('import' === $mode && isset($argv[2], $argv[3])) {
-    exit(run_import($argv[2], $argv[3]));
+    exit(run_import($argv[2], $argv[3], false));
+}
+if ('apply' === $mode && isset($argv[2], $argv[3])) {
+    exit(run_import($argv[2], $argv[3], true));
 }
 if ('validate' === $mode && isset($argv[2])) {
     exit(run_validate($argv[2]));
 }
 
-fwrite(STDERR, "Usage:\n  po-translate-io.php export <po> <outdir> [chunkSize]\n  po-translate-io.php import <po> <outdir>\n  po-translate-io.php validate <outdir>\n");
+fwrite(STDERR, "Usage:\n  po-translate-io.php export <po> <outdir> [chunkSize]\n  po-translate-io.php export-review <po> <outdir> [chunkSize]\n  po-translate-io.php import <po> <outdir>\n  po-translate-io.php apply <po> <outdir>\n  po-translate-io.php validate <outdir>\n");
 exit(2);

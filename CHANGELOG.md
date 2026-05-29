@@ -4,6 +4,16 @@ All changes to ReportedIP Hive are documented here.
 
 ## [2.0.18] — 2026-05-29
 
+### Security
+
+- **Fatal error on the 2FA settings tab and 2FA setup-wizard step.**
+  When `2fa_enforce_roles` or `2fa_allowed_methods` were stored as an
+  array (the network-default form), `render_global_settings()` and the
+  wizard called `json_decode()` on a value that was already an array —
+  a `TypeError` on PHP 8 that took the whole page down. Reads now go
+  through the format-tolerant `Option_Routing::to_array()` and the
+  canonical `Option_Routing::get_network_enforce_roles()`.
+
 ### New
 
 - **German translation (de_DE, formal "Sie").** All user-facing
@@ -21,8 +31,15 @@ All changes to ReportedIP Hive are documented here.
 
 ### Changed
 
-- Regenerated `languages/reportedip-hive.pot` from the current
-  source (the committed template had drifted out of date).
+- Bumped the tested-up-to header to WordPress 7.0.
+- Regenerated `languages/reportedip-hive.pot` from the current source
+  (the committed template had drifted out of date).
+- Quieted the WordPress.org Plugin Check on shipped code only:
+  documented `phpcs:ignore` annotations for the legitimate `.htaccess`
+  writability probes and the plugin-table admin queries, a correctly
+  placed translators comment in the setup wizard, and a trimmed Upgrade
+  Notice section. Dev-only tooling (`bin/`, `tests/`, CI config, dotfiles)
+  is excluded from the check so it validates only what ships.
 
 ## [2.0.17] — 2026-05-29
 
