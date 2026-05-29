@@ -113,7 +113,7 @@ final class ReportedIP_Hive_Decoy_Htaccess_Writer {
 			return false;
 		}
 
-		if ( ! is_writable( $file ) ) {
+		if ( ! is_writable( $file ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess; WP_Filesystem is unavailable here and unnecessary.
 			return false;
 		}
 
@@ -144,7 +144,7 @@ final class ReportedIP_Hive_Decoy_Htaccess_Writer {
 			return false;
 		}
 		$file = $this->get_target_path();
-		if ( '' === $file || ! file_exists( $file ) || ! is_writable( $file ) ) {
+		if ( '' === $file || ! file_exists( $file ) || ! is_writable( $file ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess; WP_Filesystem is unavailable here and unnecessary.
 			return false;
 		}
 
@@ -187,10 +187,10 @@ final class ReportedIP_Hive_Decoy_Htaccess_Writer {
 			return false;
 		}
 		if ( file_exists( $file ) ) {
-			return is_writable( $file );
+			return is_writable( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess; WP_Filesystem is unavailable here and unnecessary.
 		}
 		$dir = dirname( $file );
-		return is_writable( $dir );
+		return is_writable( $dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess directory; WP_Filesystem is unavailable here and unnecessary.
 	}
 
 	/**
@@ -243,7 +243,7 @@ final class ReportedIP_Hive_Decoy_Htaccess_Writer {
 			return true;
 		}
 		$dir = dirname( $file );
-		if ( ! is_writable( $dir ) ) {
+		if ( ! is_writable( $dir ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess directory; WP_Filesystem is unavailable here and unnecessary.
 			return false;
 		}
 		return false !== file_put_contents( $file, '' );

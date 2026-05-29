@@ -1126,14 +1126,14 @@ class ReportedIP_Hive_Admin_Settings {
 			return;
 		}
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
 		$counts = $wpdb->get_row(
 			"SELECT
 				SUM( CASE WHEN status = 'failed' THEN 1 ELSE 0 END ) AS failed_count,
 				SUM( CASE WHEN status = 'pending' THEN 1 ELSE 0 END ) AS pending_count
 			FROM $table"
 		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$failed_count  = (int) ( $counts->failed_count ?? 0 );
 		$pending_count = (int) ( $counts->pending_count ?? 0 );
 
@@ -1465,7 +1465,7 @@ class ReportedIP_Hive_Admin_Settings {
 		global $wpdb;
 		$table   = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_LOGS );
 		$blog_id = (int) get_current_blog_id();
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is a constant table name from Schema::table(); admin-only paginated read with no caching value.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- $table is a constant table name from Schema::table(); admin-only paginated read with no caching value.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT id, event_type, ip_address, severity, created_at
@@ -1806,7 +1806,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$logs    = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_LOGS );
 		$blog_id = (int) get_current_blog_id();
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $logs is a constant table name from Schema::table(); per-site admin dashboard widget with naturally fresh data, caching would only delay incident visibility.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- $logs is a constant table name from Schema::table(); per-site admin dashboard widget with naturally fresh data, caching would only delay incident visibility.
 		$events_24h        = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM $logs WHERE blog_id = %d AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)",
@@ -5721,8 +5721,9 @@ class ReportedIP_Hive_Admin_Settings {
 		try {
 			global $wpdb;
 			$table_name = $wpdb->prefix . 'reportedip_hive_logs';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time health check
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery -- One-time health probe on a plugin table; name from $wpdb->prefix plus a hardcoded suffix.
 			$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
+			// phpcs:enable WordPress.DB.DirectDatabaseQuery
 
 			if ( ! $table_exists ) {
 				$health['database']['status']    = 'error';
@@ -5731,8 +5732,9 @@ class ReportedIP_Hive_Admin_Settings {
 			} else {
 				$health['database']['message'] = __( 'Database operational', 'reportedip-hive' );
 
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe table name composed from $wpdb->prefix and a hardcoded suffix.
+				// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe table name composed from $wpdb->prefix and a hardcoded suffix.
 				$log_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_name" );
+				// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 				/* translators: %d: total number of log entries in the database */
 				$health['database']['details'][] = sprintf( __( 'Total log entries: %d', 'reportedip-hive' ), $log_count );
 			}
@@ -5782,7 +5784,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
 		$events_24h = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM $logs_table
@@ -5790,14 +5792,14 @@ class ReportedIP_Hive_Admin_Settings {
 				$cutoff_utc
 			)
 		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		$queue_table = $wpdb->prefix . 'reportedip_hive_api_queue';
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
 		$queue_count = (int) $wpdb->get_var(
 			"SELECT COUNT(*) FROM $queue_table WHERE status IN ('pending', 'failed')"
 		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		return array(
 			'events_24h'      => $events_24h,

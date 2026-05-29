@@ -1,0 +1,6 @@
+# Translation files use LF so POT/PO regeneration is byte-stable across
+# platforms (Windows dev host and Linux CI). MO files are binary.
+languages/*.pot  text eol=lf
+languages/*.po   text eol=lf
+languages/*.json text eol=lf
+languages/*.mo   binary

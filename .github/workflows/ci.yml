@@ -88,6 +88,34 @@ jobs:
         run: vendor/bin/phpstan analyse --error-format=github
 
   # ===========================================================================
+  # i18n — Translation freshness gate
+  # ===========================================================================
+  # Fails if the POT is stale, the German PO has untranslated/fuzzy entries, or
+  # the compiled MO/JSON artifacts are out of sync. Keeps the German translation
+  # current with the source on every push and PR.
+  i18n:
+    name: i18n (German translation)
+    runs-on: ubuntu-latest
+    needs: phplint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: Run translation gate
+        run: composer i18n:check
+
+  # ===========================================================================
   # PHPUnit — Unit Tests across supported PHP versions
   # ===========================================================================
   phpunit:
@@ -259,7 +287,10 @@ jobs:
       - name: Run Plugin Check (errors are blocking)
         run: |
           cd /tmp/wordpress
-          wp plugin check reportedip-hive --format=table --severity=error
+          wp plugin check reportedip-hive \
+            --exclude-directories=bin,scripts,tests,node_modules,build,vendor,.github \
+            --exclude-files=.gitattributes,.gitignore,.distignore,.editorconfig,phpcs.xml,phpstan.neon,phpstan-baseline.neon,phpunit.xml,phpunit-multisite.xml,grumphp.yml,phpstan-bootstrap.php,.phpcs.cache,.phpunit.result.cache \
+            --format=table --severity=error
 
   # ===========================================================================
   # PHPUnit — Multisite suite (separate bootstrap with WP_TESTS_MULTISITE=1)

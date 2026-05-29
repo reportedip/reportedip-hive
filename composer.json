@@ -60,9 +60,24 @@
         "analyse": "phpstan analyse",
         "analyse:baseline": "phpstan analyse --generate-baseline",
         "make-pot": "wp i18n make-pot . languages/reportedip-hive.pot --slug=reportedip-hive --domain=reportedip-hive --exclude=vendor,tests,bin,build,node_modules",
+        "i18n:pot": "@make-pot",
+        "i18n:update": [
+            "@i18n:pot",
+            "wp i18n update-po languages/reportedip-hive.pot languages/reportedip-hive-de_DE.po"
+        ],
+        "i18n:build": [
+            "wp i18n make-mo languages/ languages/",
+            "wp i18n make-json languages/ languages/"
+        ],
+        "i18n": [
+            "@i18n:update",
+            "@i18n:build"
+        ],
+        "i18n:check": "@php bin/i18n-check.php",
         "check-all": [
             "@lint",
             "@analyse",
+            "@i18n:check",
             "@test:unit"
         ],
         "grumphp": "grumphp run",
@@ -83,7 +98,12 @@
         "analyse": "Run PHPStan static analysis",
         "analyse:baseline": "Generate PHPStan baseline for existing issues",
         "make-pot": "Extract translatable strings into languages/reportedip-hive.pot",
-        "check-all": "Run all quality checks (lint, analyse, test)",
+        "i18n:pot": "Regenerate the POT template (alias of make-pot)",
+        "i18n:update": "Regenerate POT and merge new/changed strings into the German PO (msgmerge)",
+        "i18n:build": "Compile every PO into MO plus per-handle JS JSON files",
+        "i18n": "Full translation refresh: update PO from source, then compile MO/JSON",
+        "i18n:check": "Fail if the POT is stale, the German PO has untranslated/fuzzy entries, or MO/JSON are out of sync",
+        "check-all": "Run all quality checks (lint, analyse, i18n:check, test)",
         "grumphp": "Run GrumPHP checks manually"
     }
 }

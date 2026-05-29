@@ -2,6 +2,51 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.19] — 2026-05-29
+
+### Security
+
+- **Fatal error on the 2FA settings tab and 2FA setup-wizard step.**
+  When `2fa_enforce_roles` or `2fa_allowed_methods` were stored as an
+  array (the network-default form), `render_global_settings()` and the
+  wizard called `json_decode()` on a value that was already an array —
+  a `TypeError` on PHP 8 that took the whole page down. Reads now go
+  through the format-tolerant `Option_Routing::to_array()` and the
+  canonical `Option_Routing::get_network_enforce_roles()`.
+- **`wp reportedip 2fa enforce` silently dropped stored roles.** The
+  CLI cast the option to string before `json_decode()`, so an
+  array-stored enforce-roles list decoded to empty and the command
+  overwrote it. It now reads through `Option_Routing::to_array()` too.
+
+### New
+
+- **German translation (de_DE, formal "Sie").** All user-facing
+  strings (~1845) are now translated into German and shipped as
+  `languages/reportedip-hive-de_DE.po` / `.mo`. Source strings stay
+  English; WordPress loads the German translation automatically when
+  the site language is German, so other locales are unaffected.
+- **Translation-freshness gate.** `composer i18n:check` (also
+  `./run.sh i18n-check`) fails when the POT is stale, the German PO
+  has untranslated or fuzzy entries, or the compiled MO is out of
+  sync with the PO. It runs as a step in `check-all` and as a
+  blocking CI job, so the translation stays current with the source
+  on every change. `composer i18n` refreshes POT → PO → MO in one
+  step.
+
+### Changed
+
+- Bumped the tested-up-to header to WordPress 7.0.
+- Regenerated `languages/reportedip-hive.pot` from the current source
+  (the committed template had drifted out of date).
+- Quieted the WordPress.org Plugin Check on shipped code only:
+  documented `phpcs:ignore` annotations for the legitimate `.htaccess`
+  writability probes and the plugin-table admin queries, a correctly
+  placed translators comment in the setup wizard, and a trimmed Upgrade
+  Notice section. Dev-only tooling (`bin/`, `tests/`, CI config, dotfiles)
+  is excluded from the check so it validates only what ships.
+- Removed an obsolete manual option-routing debug script
+  (`scripts/option-roundtrip-test.php`).
+
 ## [2.0.17] — 2026-05-29
 
 ### Fixed

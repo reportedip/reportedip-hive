@@ -217,8 +217,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 */
 	public static function render_global_settings() {
 		$enabled         = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enabled_global', false );
-		$allowed_methods = json_decode( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' ), true );
-		$enforce_roles   = json_decode( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
+		$allowed_methods = ReportedIP_Hive_Option_Routing::to_array( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', array( 'totp', 'email' ) ) );
+		$enforce_roles   = ReportedIP_Hive_Option_Routing::get_network_enforce_roles();
 		$grace_days      = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_grace_days', 7 );
 		$trust_enabled   = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true );
 		$trust_days      = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_device_days', 30 );

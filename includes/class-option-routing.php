@@ -254,22 +254,37 @@ final class ReportedIP_Hive_Option_Routing {
 	}
 
 	/**
+	 * Normalises a stored option value to a flat array.
+	 *
+	 * Accepts both the legacy JSON-string representation (`'["totp","email"]'`)
+	 * and the modern array form (`['totp','email']`) so call sites can read the
+	 * value either way without ad-hoc decoding — calling `json_decode()` on a
+	 * value that is already an array is a fatal `TypeError` on PHP 8.
+	 *
+	 * @param mixed              $raw     Stored option value (array or JSON string).
+	 * @param array<int, string> $default Returned when $raw is neither a usable array nor decodable JSON.
+	 * @return array<int, string>
+	 * @since  2.0.18
+	 */
+	public static function to_array( $raw, array $default = array() ) {
+		if ( is_string( $raw ) ) {
+			$decoded = json_decode( $raw, true );
+			return is_array( $decoded ) ? array_values( $decoded ) : $default;
+		}
+		return is_array( $raw ) ? array_values( $raw ) : $default;
+	}
+
+	/**
 	 * Normalises a stored 2FA-enforce-roles value to a flat array.
 	 *
-	 * Accepts both the legacy JSON-string representation (`'["administrator"]'`)
-	 * and the modern array form (`['administrator']`) so call sites can read
-	 * the value either way without ad-hoc decoding.
+	 * Thin wrapper over {@see to_array()} kept for call-site readability.
 	 *
 	 * @param mixed $raw Stored option value.
 	 * @return array<int, string>
 	 * @since  2.0.0
 	 */
 	private static function coerce_role_list( $raw ) {
-		if ( is_string( $raw ) ) {
-			$decoded = json_decode( $raw, true );
-			$raw     = is_array( $decoded ) ? $decoded : array();
-		}
-		return is_array( $raw ) ? array_values( $raw ) : array();
+		return self::to_array( $raw );
 	}
 
 	/**

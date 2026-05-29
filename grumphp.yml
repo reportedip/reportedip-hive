@@ -66,6 +66,20 @@ grumphp:
                 priority: 90
 
         # ============================================
+        # i18n freshness — non-blocking pre-commit hint
+        # ============================================
+        # Runs the full translation gate (POT fresh, German PO complete, MO/JSON
+        # synced) as fast feedback. Non-blocking on purpose: the authoritative,
+        # blocking gate lives in `./run.sh check-all` and CI so mid-development
+        # commits are never stuck waiting on a fresh translation.
+        composer_script:
+            script: 'i18n:check'
+            triggered_by: [php]
+            metadata:
+                priority: 85
+                blocking: false
+
+        # ============================================
         # Composer validation
         # ============================================
         composer:
