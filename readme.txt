@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.0.18
+Stable tag: 2.0.19
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -328,7 +328,7 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
-= 2.0.18 =
+= 2.0.19 =
 
 Fix: a fatal error (PHP 8 TypeError) crashed the 2FA settings tab and the 2FA setup-wizard step when the enforce-roles / allowed-methods options were stored as arrays — reads are now format-tolerant. New: complete German translation (formal address, "Sie"), shipped as de_DE — the plugin now displays in German automatically on German-language sites. Source strings stay English, so other locales are unaffected. A translation-freshness gate was added to the build and CI so the German strings stay in sync with the source on every change.
 
@@ -477,7 +477,7 @@ Initial public release as ReportedIP Hive. Three threshold channels, two operati
 
 == Upgrade Notice ==
 
-= 2.0.18 =
+= 2.0.19 =
 German translation (de_DE, formal) added — the admin UI now displays in German on German-language sites. Also fixes a fatal error on the 2FA settings tab. No breaking changes.
 
 == Privacy Policy ==

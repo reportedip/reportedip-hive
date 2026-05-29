@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [2.0.18] — 2026-05-29
+## [2.0.19] — 2026-05-29
 
 ### Security
 
@@ -13,6 +13,10 @@ All changes to ReportedIP Hive are documented here.
   a `TypeError` on PHP 8 that took the whole page down. Reads now go
   through the format-tolerant `Option_Routing::to_array()` and the
   canonical `Option_Routing::get_network_enforce_roles()`.
+- **`wp reportedip 2fa enforce` silently dropped stored roles.** The
+  CLI cast the option to string before `json_decode()`, so an
+  array-stored enforce-roles list decoded to empty and the command
+  overwrote it. It now reads through `Option_Routing::to_array()` too.
 
 ### New
 
@@ -40,6 +44,8 @@ All changes to ReportedIP Hive are documented here.
   placed translators comment in the setup wizard, and a trimmed Upgrade
   Notice section. Dev-only tooling (`bin/`, `tests/`, CI config, dotfiles)
   is excluded from the check so it validates only what ships.
+- Removed an obsolete manual option-routing debug script
+  (`scripts/option-roundtrip-test.php`).
 
 ## [2.0.17] — 2026-05-29
 
