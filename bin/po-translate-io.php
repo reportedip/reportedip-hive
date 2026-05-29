@@ -112,8 +112,9 @@ function po_blocks(string $content): array
  */
 function collect_string(array $lines, int $start, string $remainder): string
 {
-    $raw = $remainder;
-    for ($i = $start + 1; $i < count($lines); $i++) {
+    $raw   = $remainder;
+    $total = count($lines);
+    for ($i = $start + 1; $i < $total; $i++) {
         if (preg_match('/^"(.*)"$/s', $lines[$i], $m)) {
             $raw .= $m[1];
             continue;
@@ -137,8 +138,9 @@ function parse_entry(string $block): ?array
     $plural   = null;
     $refs     = array();
     $msgstrs  = array();
+    $total    = count($lines);
 
-    for ($i = 0; $i < count($lines); $i++) {
+    for ($i = 0; $i < $total; $i++) {
         $line = $lines[$i];
         if ('' === $line) {
             continue;
@@ -239,6 +241,20 @@ function run_export(string $po, string $outdir, int $chunkSize): int
         );
     }
 
+    return write_chunks($items, $outdir, $chunkSize, 'untranslated entries');
+}
+
+/**
+ * Writes a list of entries to chunk-NN.json files, clearing stale chunks first.
+ *
+ * @param array<int, array<string, mixed>> $items     Entries to chunk.
+ * @param string                           $outdir    Output directory.
+ * @param int                              $chunkSize Entries per chunk.
+ * @param string                           $label     Noun used in the summary line.
+ * @return int
+ */
+function write_chunks(array $items, string $outdir, int $chunkSize, string $label): int
+{
     if (!is_dir($outdir)) {
         mkdir($outdir, 0777, true);
     }
@@ -246,11 +262,13 @@ function run_export(string $po, string $outdir, int $chunkSize): int
 
     $chunks = array_chunk($items, max(1, $chunkSize));
     foreach ($chunks as $i => $chunk) {
-        $name = sprintf('%s/chunk-%02d.json', $outdir, $i);
-        file_put_contents($name, json_encode($chunk, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        file_put_contents(
+            sprintf('%s/chunk-%02d.json', $outdir, $i),
+            json_encode($chunk, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        );
     }
 
-    fwrite(STDOUT, sprintf("Exported %d untranslated entries into %d chunks.\n", count($items), count($chunks)));
+    fwrite(STDOUT, sprintf("Exported %d %s into %d chunks.\n", count($items), $label, count($chunks)));
     return 0;
 }
 
@@ -286,19 +304,7 @@ function run_export_review(string $po, string $outdir, int $chunkSize): int
         );
     }
 
-    if (!is_dir($outdir)) {
-        mkdir($outdir, 0777, true);
-    }
-    array_map('unlink', glob($outdir . '/chunk-*.json') ?: array());
-
-    $chunks = array_chunk($items, max(1, $chunkSize));
-    foreach ($chunks as $i => $chunk) {
-        $name = sprintf('%s/chunk-%02d.json', $outdir, $i);
-        file_put_contents($name, json_encode($chunk, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-    }
-
-    fwrite(STDOUT, sprintf("Exported %d entries for review into %d chunks.\n", count($items), count($chunks)));
-    return 0;
+    return write_chunks($items, $outdir, $chunkSize, 'entries for review');
 }
 
 /**
@@ -403,13 +409,13 @@ function run_import(string $po, string $outdir, bool $overwrite = false): int
  */
 function tokens(string $value): array
 {
-    $tokens = array();
-    $patterns = array(
+    static $patterns = array(
         '/%(?:\d+\$)?[-+0]?\d*(?:\.\d+)?[bcdeEfFgGosuxX%]/',
         '/<\/?[a-zA-Z][^>]*>/',
         '/\[[a-zA-Z_][^\]]*\]/',
         '/&[a-zA-Z]+;|&#\d+;/',
     );
+    $tokens = array();
     foreach ($patterns as $pattern) {
         if (preg_match_all($pattern, $value, $m)) {
             foreach ($m[0] as $tok) {
