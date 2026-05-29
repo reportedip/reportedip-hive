@@ -102,10 +102,20 @@ final class I18nCheck {
 			return;
 		}
 
-		if ( $this->normalize_pot( $pot ) !== $this->normalize_pot( $tmp ) ) {
-			$this->failures[] = self::POT . " is stale — source strings changed without 'composer i18n:pot'.";
-		}
+		$committed = $this->pot_entry_keys( $pot );
+		$fresh     = $this->pot_entry_keys( $tmp );
 		@unlink( $tmp );
+
+		$added   = array_diff( $fresh, $committed );
+		$removed = array_diff( $committed, $fresh );
+		if ( ! empty( $added ) || ! empty( $removed ) ) {
+			$this->failures[] = sprintf(
+				'%s is stale — %d new and %d removed source string(s). Run "composer i18n:pot".',
+				self::POT,
+				count( $added ),
+				count( $removed )
+			);
+		}
 	}
 
 	/**
@@ -249,23 +259,62 @@ final class I18nCheck {
 	}
 
 	/**
-	 * Returns the POT content with volatile header lines stripped and CR removed.
+	 * Returns the sorted set of translatable entry keys (context + msgid +
+	 * msgid_plural) in a POT, ignoring order, references, headers and dates.
+	 *
+	 * Comparing this set — rather than the raw file — makes the freshness
+	 * check independent of make-pot's file-scan order (which differs between
+	 * Windows and Linux) and of cosmetic reference-line drift. It flags only
+	 * genuine additions or removals of source strings.
 	 *
 	 * @param string $file POT file path.
-	 * @return string
+	 * @return string[] Sorted, de-duplicated entry keys.
 	 */
-	private function normalize_pot( string $file ): string {
-		$content = (string) file_get_contents( $file );
-		$content = str_replace( "\r\n", "\n", $content );
-		$lines   = explode( "\n", $content );
-		$kept    = array();
-		foreach ( $lines as $line ) {
-			if ( preg_match( '/^"(POT-Creation-Date|PO-Revision-Date):/', $line ) ) {
+	private function pot_entry_keys( string $file ): array {
+		$content = str_replace( "\r\n", "\n", (string) file_get_contents( $file ) );
+		$blocks  = preg_split( "/\n\n+/", trim( $content ) );
+		$keys    = array();
+
+		foreach ( (array) $blocks as $block ) {
+			$ctxt    = '';
+			$id      = '';
+			$plural  = '';
+			$current = null;
+			foreach ( explode( "\n", $block ) as $line ) {
+				if ( '' === $line || '#' === $line[0] ) {
+					$current = null;
+					continue;
+				}
+				if ( preg_match( '/^msgctxt\s+"(.*)"$/s', $line, $m ) ) {
+					$ctxt    = $m[1];
+					$current = 'c';
+				} elseif ( preg_match( '/^msgid_plural\s+"(.*)"$/s', $line, $m ) ) {
+					$plural  = $m[1];
+					$current = 'p';
+				} elseif ( preg_match( '/^msgid\s+"(.*)"$/s', $line, $m ) ) {
+					$id      = $m[1];
+					$current = 'i';
+				} elseif ( preg_match( '/^msgstr/', $line ) ) {
+					$current = null;
+				} elseif ( preg_match( '/^"(.*)"$/s', $line, $m ) ) {
+					if ( 'i' === $current ) {
+						$id .= $m[1];
+					} elseif ( 'p' === $current ) {
+						$plural .= $m[1];
+					} elseif ( 'c' === $current ) {
+						$ctxt .= $m[1];
+					}
+				}
+			}
+			if ( '' === $id ) {
 				continue;
 			}
-			$kept[] = $line;
+			$keys[] = $ctxt . "\x01" . $id . "\x01" . $plural;
 		}
-		return implode( "\n", $kept );
+
+		$keys = array_values( array_unique( $keys ) );
+		sort( $keys );
+		return $keys;
 	}
 
 	/**
