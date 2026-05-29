@@ -185,8 +185,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 			WP_CLI::error( 'Unknown role: ' . $role );
 		}
 
-		$current = json_decode( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', '[]' ), true );
-		$current = is_array( $current ) ? $current : array();
+		$current = ReportedIP_Hive_Option_Routing::to_array( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', array() ) );
 		if ( $remove ) {
 			$current = array_values( array_diff( $current, array( $role ) ) );
 		} else {
