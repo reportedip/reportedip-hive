@@ -137,3 +137,8 @@ auth.json
 
 # Test database configuration
 wp-tests-config.php
+
+# =============================================================================
+# Translation working directory (po-translate-io.php export/import scratch)
+# =============================================================================
+/languages/.work/

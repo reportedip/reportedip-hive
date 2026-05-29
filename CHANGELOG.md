@@ -2,6 +2,28 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.18] — 2026-05-29
+
+### New
+
+- **German translation (de_DE, formal "Sie").** All user-facing
+  strings (~1845) are now translated into German and shipped as
+  `languages/reportedip-hive-de_DE.po` / `.mo`. Source strings stay
+  English; WordPress loads the German translation automatically when
+  the site language is German, so other locales are unaffected.
+- **Translation-freshness gate.** `composer i18n:check` (also
+  `./run.sh i18n-check`) fails when the POT is stale, the German PO
+  has untranslated or fuzzy entries, or the compiled MO is out of
+  sync with the PO. It runs as a step in `check-all` and as a
+  blocking CI job, so the translation stays current with the source
+  on every change. `composer i18n` refreshes POT → PO → MO in one
+  step.
+
+### Changed
+
+- Regenerated `languages/reportedip-hive.pot` from the current
+  source (the committed template had drifted out of date).
+
 ## [2.0.17] — 2026-05-29
 
 ### Fixed
