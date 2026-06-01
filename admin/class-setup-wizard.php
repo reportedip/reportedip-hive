@@ -2117,7 +2117,7 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		$valid_roles   = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
 		$posted_roles  = isset( $_POST['2fa_enforce_role'] ) && is_array( $_POST['2fa_enforce_role'] )
-			? array_map( 'sanitize_key', wp_unslash( $_POST['2fa_enforce_role'] ) )
+			? array_map( 'sanitize_text_field', wp_unslash( $_POST['2fa_enforce_role'] ) )
 			: array();
 		$enforce_roles = array_values( array_intersect( $posted_roles, $valid_roles ) );
 		if ( $twofa_enabled && empty( $enforce_roles ) ) {
