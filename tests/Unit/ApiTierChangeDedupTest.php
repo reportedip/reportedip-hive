@@ -51,7 +51,6 @@ class ApiTierChangeDedupTest extends TestCase {
 		unset( $GLOBALS['wp_transients']['reportedip_hive_api_status'] );
 		$api    = ( new \ReflectionClass( \ReportedIP_Hive_API::class ) )->newInstanceWithoutConstructor();
 		$method = new \ReflectionMethod( $api, 'persist_api_status' );
-		$method->setAccessible( true );
 		$method->invoke( $api, array( 'valid' => true, 'userRole' => $role ) );
 	}
 
