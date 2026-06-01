@@ -289,7 +289,9 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		$threshold    = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_HARD_THRESHOLD, self::DEFAULT_THRESHOLD );
 		$is_hard_role = self::user_in_hard_roles( $user );
 
-		$profile_url      = admin_url( 'profile.php#reportedip-hive-2fa' );
+		$setup_url        = class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' )
+			? ReportedIP_Hive_Two_Factor_Onboarding::get_onboarding_url()
+			: admin_url( 'profile.php#reportedip-hive-2fa' );
 		$remind_never_url = wp_nonce_url(
 			admin_url( 'admin-post.php?action=reportedip_hive_2fa_remind_never' ),
 			'reportedip_hive_2fa_remind_never'
@@ -314,7 +316,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 				'body'              => $body,
 				'primary_action'    => array(
 					'label' => __( 'Set up now', 'reportedip-hive' ),
-					'url'   => $profile_url,
+					'url'   => $setup_url,
 				),
 				'secondary_actions' => array(
 					array(

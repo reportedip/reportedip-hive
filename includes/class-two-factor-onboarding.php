@@ -293,7 +293,10 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			);
 		}
 
-		if ( ! self::user_needs_onboarding( $user_id ) && ! $frontend_self_service ) {
+		$has_2fa                    = ! empty( ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user_id ) );
+		$voluntary_admin_onboarding = ! $is_frontend && ! $has_2fa;
+
+		if ( ! self::user_needs_onboarding( $user_id ) && ! $frontend_self_service && ! $voluntary_admin_onboarding ) {
 			delete_transient( self::TRANSIENT_PREFIX . $user_id );
 			$fallback = $is_frontend && function_exists( 'wc_get_page_permalink' )
 				? (string) wc_get_page_permalink( 'myaccount' )
