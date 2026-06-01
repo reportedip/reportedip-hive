@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-01T14:13:26+00:00\n"
+"POT-Creation-Date: 2026-06-01T14:38:50+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -4742,7 +4742,7 @@ msgid "Mode"
 msgstr ""
 
 #: admin/class-setup-wizard.php:1875
-#: admin/class-two-factor-admin.php:2312
+#: admin/class-two-factor-admin.php:2324
 msgid "Active"
 msgstr ""
 
@@ -4847,8 +4847,8 @@ msgid "Invalid user ID."
 msgstr ""
 
 #: admin/class-two-factor-admin.php:128
-#: admin/class-two-factor-admin.php:1922
-#: admin/class-two-factor-admin.php:2168
+#: admin/class-two-factor-admin.php:1934
+#: admin/class-two-factor-admin.php:2180
 #: includes/class-two-factor-dashboard.php:43
 #: includes/class-two-factor-dashboard.php:159
 #: includes/class-two-factor-webauthn.php:55
@@ -5111,7 +5111,7 @@ msgid "Blocks basic auth over XMLRPC (commonly used by bot attacks) but still al
 msgstr ""
 
 #: admin/class-two-factor-admin.php:785
-#: admin/class-two-factor-admin.php:1855
+#: admin/class-two-factor-admin.php:1867
 msgid "Trusted devices"
 msgstr ""
 
@@ -5259,7 +5259,7 @@ msgid "Sende…"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:1380
-#: admin/class-two-factor-admin.php:2188
+#: admin/class-two-factor-admin.php:2200
 msgid "Test SMS sent."
 msgstr ""
 
@@ -5395,204 +5395,210 @@ msgstr ""
 msgid "Set up email code"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1819
+#. translators: 1: opening link tag, 2: closing link tag
+#: admin/class-two-factor-admin.php:1817
+#, php-format
+msgid "Prefer a step-by-step walkthrough? %1$sSet up 2FA in the guided wizard%2$s."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1831
 msgid "Recovery Codes"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1822
+#: admin/class-two-factor-admin.php:1834
 msgid "All codes used — generate new"
 msgstr ""
 
 #. translators: %d: remaining codes
-#: admin/class-two-factor-admin.php:1828
+#: admin/class-two-factor-admin.php:1840
 #, php-format
 msgid "%d left — generate new"
 msgstr ""
 
 #. translators: %d: remaining codes
-#: admin/class-two-factor-admin.php:1838
+#: admin/class-two-factor-admin.php:1850
 #, php-format
 msgid "%d available"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1846
+#: admin/class-two-factor-admin.php:1858
 msgid "Generate new recovery codes"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1861
+#: admin/class-two-factor-admin.php:1873
 msgid "Unknown device"
 msgstr ""
 
 #. translators: %s: date
-#: admin/class-two-factor-admin.php:1867
+#: admin/class-two-factor-admin.php:1879
 #, php-format
 msgid "Added: %s"
 msgstr ""
 
 #. translators: %s: date
-#: admin/class-two-factor-admin.php:1876
+#: admin/class-two-factor-admin.php:1888
 #, php-format
 msgid "Last used: %s"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1884
+#: admin/class-two-factor-admin.php:1896
 msgid "Revoke"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1890
+#: admin/class-two-factor-admin.php:1902
 msgid "Revoke all devices"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1898
+#: admin/class-two-factor-admin.php:1910
 msgid "Disable"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1901
+#: admin/class-two-factor-admin.php:1913
 msgid "Disable 2FA"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1936
+#: admin/class-two-factor-admin.php:1948
 #: includes/class-two-factor-email.php:90
 #: includes/class-two-factor-webauthn.php:60
 msgid "Invalid user."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1944
+#: admin/class-two-factor-admin.php:1956
 msgid "Encryption failed."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1969
+#: admin/class-two-factor-admin.php:1981
 msgid "No TOTP setup found. Please start again."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1974
+#: admin/class-two-factor-admin.php:1986
 msgid "Decryption failed."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1978
+#: admin/class-two-factor-admin.php:1990
 msgid "Invalid code. Please check your device clock."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1988
+#: admin/class-two-factor-admin.php:2000
 msgid "2FA with authenticator app enabled!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2005
+#: admin/class-two-factor-admin.php:2017
 msgid "User has no email address."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2018
+#: admin/class-two-factor-admin.php:2030
 msgid "Code sent. Please check your inbox."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2028
-#: admin/class-two-factor-admin.php:2110
+#: admin/class-two-factor-admin.php:2040
+#: admin/class-two-factor-admin.php:2122
 msgid "Invalid or expired code."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2043
+#: admin/class-two-factor-admin.php:2055
 msgid "Email code enabled!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2050
+#: admin/class-two-factor-admin.php:2062
 msgid "Invalid setup step. Email 2FA requires code verification."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2066
+#: admin/class-two-factor-admin.php:2078
 msgid "SMS module is not loaded."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2069
+#: admin/class-two-factor-admin.php:2081
 #: includes/class-two-factor-sms.php:286
 msgid "SMS sending is not configured. Please contact an administrator."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2079
+#: admin/class-two-factor-admin.php:2091
 msgid "Please confirm processing of your phone number by the EU SMS provider."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2090
+#: admin/class-two-factor-admin.php:2102
 msgid "Could not store phone number securely."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2100
+#: admin/class-two-factor-admin.php:2112
 msgid "SMS sent. Please enter the code."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2125
+#: admin/class-two-factor-admin.php:2137
 msgid "SMS 2FA enabled!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2132
+#: admin/class-two-factor-admin.php:2144
 msgid "Invalid setup step."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2146
+#: admin/class-two-factor-admin.php:2158
 msgid "Invalid method."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2149
+#: admin/class-two-factor-admin.php:2161
 msgid "Could not disable method."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2154
+#: admin/class-two-factor-admin.php:2166
 msgid "Method disabled."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2171
+#: admin/class-two-factor-admin.php:2183
 msgid "SMS sending is not configured (provider/DPA/keys)."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2183
+#: admin/class-two-factor-admin.php:2195
 msgid "ReportedIP Hive: Test SMS. Setup was successful."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2201
+#: admin/class-two-factor-admin.php:2213
 msgid "2FA has been disabled."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2216
+#: admin/class-two-factor-admin.php:2228
 msgid "New recovery codes generated."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2233
+#: admin/class-two-factor-admin.php:2245
 msgid "Device revoked."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2235
+#: admin/class-two-factor-admin.php:2247
 msgid "Device not found."
 msgstr ""
 
 #. translators: %d: number of revoked devices
-#: admin/class-two-factor-admin.php:2251
+#: admin/class-two-factor-admin.php:2263
 #, php-format
 msgid "%d device revoked."
 msgid_plural "%d devices revoked."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-two-factor-admin.php:2266
-#: admin/class-two-factor-admin.php:2280
+#: admin/class-two-factor-admin.php:2278
+#: admin/class-two-factor-admin.php:2292
 msgid "ReportedIP Hive 2FA-Daten"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2307
+#: admin/class-two-factor-admin.php:2319
 msgid "ReportedIP 2FA"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2311
+#: admin/class-two-factor-admin.php:2323
 #: includes/class-two-factor-dashboard.php:33
 #: includes/class-two-factor-dashboard.php:34
 #: includes/class-two-factor-dashboard.php:62
 msgid "2FA Status"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2315
+#: admin/class-two-factor-admin.php:2327
 #: templates/two-factor-onboarding.php:127
 msgid "Method"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2319
+#: admin/class-two-factor-admin.php:2331
 msgid "Recovery codes remaining"
 msgstr ""
 

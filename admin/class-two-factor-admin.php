@@ -1809,6 +1809,18 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							</button>
 						</div>
 						<div id="rip-2fa-setup-flow" style="display: none;"></div>
+						<?php if ( class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) : ?>
+							<p class="description" style="margin-top: 10px;">
+								<?php
+								printf(
+									/* translators: 1: opening link tag, 2: closing link tag */
+									esc_html__( 'Prefer a step-by-step walkthrough? %1$sSet up 2FA in the guided wizard%2$s.', 'reportedip-hive' ),
+									'<a href="' . esc_url( ReportedIP_Hive_Two_Factor_Onboarding::get_onboarding_url() ) . '">',
+									'</a>'
+								);
+								?>
+							</p>
+						<?php endif; ?>
 					</td>
 				</tr>
 			<?php endif; ?>
