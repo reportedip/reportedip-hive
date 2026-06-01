@@ -153,32 +153,8 @@ if ( $grace_deadline > 0 ) {
 				?>
 			</h1>
 			<p class="rip-wizard__subtitle">
-				<?php esc_html_e( 'Let\'s make your WordPress account even more secure — in just 2 minutes.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'A second factor protects your sign-in even if your password leaks. Takes about 2 minutes.', 'reportedip-hive' ); ?>
 			</p>
-
-			<div class="rip-wizard__welcome">
-				<div class="rip-wizard__features">
-					<div class="rip-wizard__feature">
-						<div class="rip-wizard__feature-icon" aria-hidden="true">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-						</div>
-						<div class="rip-wizard__feature-text">
-							<h3><?php esc_html_e( 'A second factor on top of your password', 'reportedip-hive' ); ?></h3>
-							<p><?php esc_html_e( 'Even if your password leaks, no one signs in without the second factor.', 'reportedip-hive' ); ?></p>
-						</div>
-					</div>
-
-					<div class="rip-wizard__feature">
-						<div class="rip-wizard__feature-icon" aria-hidden="true">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-						</div>
-						<div class="rip-wizard__feature-text">
-							<h3><?php esc_html_e( 'About 2 minutes', 'reportedip-hive' ); ?></h3>
-							<p><?php esc_html_e( 'Pick a method, save the recovery codes, done. Add a backup method to avoid lockouts.', 'reportedip-hive' ); ?></p>
-						</div>
-					</div>
-				</div>
-			</div>
 
 			<div class="rip-wizard__actions">
 				<button type="button" class="rip-button rip-button--primary rip-button--lg" data-goto-step="2">
@@ -214,12 +190,8 @@ if ( $grace_deadline > 0 ) {
 						</div>
 						<h3 class="rip-mode-card__title"><?php esc_html_e( 'Passkey / biometrics', 'reportedip-hive' ); ?></h3>
 						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Face ID, Touch ID, Windows Hello or hardware key.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Face ID, Touch ID, Windows Hello or hardware key. Phishing-resistant, no app needed.', 'reportedip-hive' ); ?>
 						</p>
-						<ul class="rip-mode-card__features">
-							<li class="rip-onboarding-check"><?php esc_html_e( 'Phishing-resistant', 'reportedip-hive' ); ?></li>
-							<li class="rip-onboarding-check"><?php esc_html_e( 'No app needed', 'reportedip-hive' ); ?></li>
-						</ul>
 					</label>
 				<?php endif; ?>
 
@@ -231,12 +203,8 @@ if ( $grace_deadline > 0 ) {
 						</div>
 						<h3 class="rip-mode-card__title"><?php esc_html_e( 'Authenticator app (TOTP)', 'reportedip-hive' ); ?></h3>
 						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Google Authenticator, Authy, 1Password, Bitwarden.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Google Authenticator, Authy, 1Password. Works offline, no SMS or email needed.', 'reportedip-hive' ); ?>
 						</p>
-						<ul class="rip-mode-card__features">
-							<li class="rip-onboarding-check"><?php esc_html_e( 'Works offline', 'reportedip-hive' ); ?></li>
-							<li class="rip-onboarding-check"><?php esc_html_e( 'No SMS or email needed', 'reportedip-hive' ); ?></li>
-						</ul>
 					</label>
 				<?php endif; ?>
 
@@ -256,10 +224,6 @@ if ( $grace_deadline > 0 ) {
 							);
 							?>
 						</p>
-						<ul class="rip-mode-card__features">
-							<li class="rip-onboarding-check"><?php esc_html_e( 'No app needed', 'reportedip-hive' ); ?></li>
-							<li class="rip-onboarding-warning"><?php esc_html_e( 'Only as safe as your email account', 'reportedip-hive' ); ?></li>
-						</ul>
 					</label>
 				<?php endif; ?>
 
@@ -271,12 +235,8 @@ if ( $grace_deadline > 0 ) {
 						</div>
 						<h3 class="rip-mode-card__title"><?php esc_html_e( 'SMS (worldwide)', 'reportedip-hive' ); ?></h3>
 						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Code by SMS via a GDPR-compliant provider with DPA.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Code by SMS via a GDPR-compliant provider. Best as a backup — SIM-swapping risk.', 'reportedip-hive' ); ?>
 						</p>
-						<ul class="rip-mode-card__features">
-							<li class="rip-onboarding-warning"><?php esc_html_e( 'SIM-swapping risk — use as backup', 'reportedip-hive' ); ?></li>
-							<li class="rip-onboarding-check"><?php esc_html_e( 'GDPR-compliant provider, DPA', 'reportedip-hive' ); ?></li>
-						</ul>
 					</label>
 				<?php endif; ?>
 			</div>
@@ -316,11 +276,9 @@ if ( $grace_deadline > 0 ) {
 				<ol class="rip-2fa-steps">
 					<li><?php esc_html_e( 'Install an authenticator app on your smartphone if you don\'t have one yet.', 'reportedip-hive' ); ?>
 						<div class="rip-2fa-apps">
-							<a href="https://www.microsoft.com/security/mobile-authenticator-app" target="_blank" rel="noopener">Microsoft Authenticator</a> ·
 							<a href="https://apps.apple.com/us/app/google-authenticator/id388497605" target="_blank" rel="noopener">Google Authenticator</a> ·
-							<a href="https://authy.com/download/" target="_blank" rel="noopener">Authy</a> ·
-							<a href="https://1password.com/downloads/" target="_blank" rel="noopener">1Password</a> ·
-							<a href="https://bitwarden.com/download/" target="_blank" rel="noopener">Bitwarden</a>
+							<a href="https://www.microsoft.com/security/mobile-authenticator-app" target="_blank" rel="noopener">Microsoft Authenticator</a> ·
+							<a href="https://authy.com/download/" target="_blank" rel="noopener">Authy</a>
 						</div>
 					</li>
 					<li><?php esc_html_e( 'Scan the QR code with the app (or enter the secret key manually).', 'reportedip-hive' ); ?>
@@ -517,12 +475,6 @@ if ( $grace_deadline > 0 ) {
 		<!-- ==================== STEP 5 – Done ==================== -->
 		<section class="rip-wizard__step-content rip-2fa-step" data-step="5" hidden aria-labelledby="rip-2fa-step5-title">
 			<div class="rip-wizard__complete rip-2fa-celebrate">
-				<div class="rip-2fa-confetti" aria-hidden="true">
-					<span></span><span></span><span></span><span></span><span></span>
-					<span></span><span></span><span></span><span></span><span></span>
-					<span></span><span></span>
-				</div>
-
 				<div class="rip-2fa-celebrate__badge" aria-hidden="true">
 					<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<circle cx="40" cy="40" r="38" fill="url(#rip-celebrate-grad)" opacity="0.12"/>
@@ -541,30 +493,6 @@ if ( $grace_deadline > 0 ) {
 				<p class="rip-wizard__subtitle">
 					<?php esc_html_e( 'You will be asked for the second factor on your next sign-in.', 'reportedip-hive' ); ?>
 				</p>
-
-				<div class="rip-2fa-celebrate__stats">
-					<div class="rip-2fa-celebrate__stat">
-						<div class="rip-2fa-celebrate__stat-value" id="rip-2fa-summary-methods">—</div>
-						<div class="rip-2fa-celebrate__stat-label"><?php esc_html_e( 'Methods', 'reportedip-hive' ); ?></div>
-					</div>
-					<div class="rip-2fa-celebrate__stat">
-						<div class="rip-2fa-celebrate__stat-value" id="rip-2fa-summary-recovery">—</div>
-						<div class="rip-2fa-celebrate__stat-label"><?php esc_html_e( 'Recovery codes', 'reportedip-hive' ); ?></div>
-					</div>
-				</div>
-
-				<div class="rip-2fa-celebrate__tips">
-					<ul>
-						<li>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-							<?php esc_html_e( 'Trust a device to skip the code on the same browser.', 'reportedip-hive' ); ?>
-						</li>
-						<li>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-							<?php esc_html_e( 'Add or remove methods any time under Profile → Security.', 'reportedip-hive' ); ?>
-						</li>
-					</ul>
-				</div>
 
 				<div class="rip-wizard__actions">
 					<a href="<?php echo esc_url( $dashboard_url ); ?>" class="rip-button rip-button--primary rip-button--lg">
