@@ -290,47 +290,46 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		$is_hard_role = self::user_in_hard_roles( $user );
 
 		$profile_url      = admin_url( 'profile.php#reportedip-hive-2fa' );
-		$dismiss_url      = admin_url( 'admin-post.php' );
 		$remind_never_url = wp_nonce_url(
 			admin_url( 'admin-post.php?action=reportedip_hive_2fa_remind_never' ),
 			'reportedip_hive_2fa_remind_never'
 		);
-		?>
-		<div class="notice rip-alert rip-alert--warning rip-2fa-recommend">
-			<p style="font-size: var(--rip-text-base); font-weight: 600; margin: 0 0 var(--rip-space-2);">
-				<?php esc_html_e( 'Two-factor authentication is recommended for your account', 'reportedip-hive' ); ?>
-			</p>
-			<p style="margin: 0 0 var(--rip-space-2);">
-				<?php
-				if ( $is_hard_role && $threshold > 0 ) {
-					printf(
-						/* translators: 1: current reminder count, 2: hard-block threshold */
-						esc_html__( 'A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks. Reminder %1$d of %2$d — after that you will need to set 2FA up before continuing.', 'reportedip-hive' ),
-						(int) $count,
-						(int) $threshold
-					);
-				} else {
-					esc_html_e( 'A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks.', 'reportedip-hive' );
-				}
-				?>
-			</p>
-			<p style="margin: 0;">
-				<a class="rip-button rip-button--primary" href="<?php echo esc_url( $profile_url ); ?>">
-					<?php esc_html_e( 'Set up now', 'reportedip-hive' ); ?>
-				</a>
-				<form method="post" action="<?php echo esc_url( $dismiss_url ); ?>" style="display: inline-block; margin-left: var(--rip-space-2);">
-					<input type="hidden" name="action" value="reportedip_hive_2fa_remind_later" />
-					<?php wp_nonce_field( 'reportedip_hive_2fa_remind_later' ); ?>
-					<button type="submit" class="rip-button rip-button--ghost">
-						<?php esc_html_e( 'Remind me later', 'reportedip-hive' ); ?>
-					</button>
-				</form>
-				<a class="rip-link-muted" href="<?php echo esc_url( $remind_never_url ); ?>" style="margin-left: var(--rip-space-3); font-size: var(--rip-text-sm);">
-					<?php esc_html_e( "Don't show this again", 'reportedip-hive' ); ?>
-				</a>
-			</p>
-		</div>
-		<?php
+
+		if ( $is_hard_role && $threshold > 0 ) {
+			$body = sprintf(
+				/* translators: 1: current reminder count, 2: hard-block threshold */
+				__( 'A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks. Reminder %1$d of %2$d — after that you will need to set 2FA up before continuing.', 'reportedip-hive' ),
+				(int) $count,
+				(int) $threshold
+			);
+		} else {
+			$body = __( 'A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks.', 'reportedip-hive' );
+		}
+
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'           => 'warning',
+				'extra_classes'     => 'rip-2fa-recommend',
+				'title'             => __( 'Two-factor authentication is recommended for your account', 'reportedip-hive' ),
+				'body'              => $body,
+				'primary_action'    => array(
+					'label' => __( 'Set up now', 'reportedip-hive' ),
+					'url'   => $profile_url,
+				),
+				'secondary_actions' => array(
+					array(
+						'type'        => 'form',
+						'label'       => __( 'Remind me later', 'reportedip-hive' ),
+						'form_action' => 'reportedip_hive_2fa_remind_later',
+						'nonce'       => 'reportedip_hive_2fa_remind_later',
+					),
+				),
+				'muted_link'        => array(
+					'label' => __( "Don't show this again", 'reportedip-hive' ),
+					'url'   => $remind_never_url,
+				),
+			)
+		);
 	}
 
 	/**

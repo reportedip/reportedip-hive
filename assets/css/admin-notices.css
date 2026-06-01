@@ -1,0 +1,254 @@
+/**
+ * Self-contained styling for the shared admin-notice primitive.
+ *
+ * Loaded on every wp-admin page (see ReportedIP_Hive_Admin_Notice) so notices
+ * render identically wherever `admin_notices` fires, even where the heavy
+ * design-system stylesheet is absent. Design tokens are referenced with literal
+ * fallbacks for exactly that reason. The button colour/decoration locks are
+ * scoped under `#wpbody-content` so they out-specify WordPress core's
+ * `#wpbody-content a` link styling without resorting to `!important`.
+ *
+ * @package   ReportedIP_Hive
+ * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @copyright 2025-2026 Patrick Schlesinger
+ * @license   GPL-2.0-or-later
+ * @since     2.0.1
+ */
+
+.rip-notice.rip-notice {
+    border: 1px solid var(--rip-gray-200, #E5E7EB);
+    border-left-width: 1px;
+    border-radius: var(--rip-radius-lg, 0.75rem);
+    padding: var(--rip-space-4, 1rem);
+    margin: var(--rip-space-3, 0.75rem) 0 var(--rip-space-4, 1rem);
+    box-shadow: none;
+    font-family: var(--rip-font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+}
+
+.rip-notice.rip-notice--info {
+    background: var(--rip-info-bg, rgba(59, 130, 246, 0.1));
+    border-color: rgba(59, 130, 246, 0.2);
+    color: var(--rip-info-dark, #2563EB);
+}
+
+.rip-notice.rip-notice--warning {
+    background: var(--rip-warning-bg, rgba(245, 158, 11, 0.1));
+    border-color: rgba(245, 158, 11, 0.2);
+    color: var(--rip-warning-dark, #D97706);
+}
+
+.rip-notice.rip-notice--error {
+    background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
+    border-color: rgba(239, 68, 68, 0.2);
+    color: var(--rip-danger-dark, #DC2626);
+}
+
+.rip-notice.rip-notice--success {
+    background: var(--rip-success-bg, rgba(16, 185, 129, 0.1));
+    border-color: rgba(16, 185, 129, 0.2);
+    color: var(--rip-success-dark, #059669);
+}
+
+.rip-notice .rip-notice__title {
+    margin: 0 0 var(--rip-space-2, 0.5rem);
+    padding: 0;
+    font-size: var(--rip-text-base, 1rem);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--rip-gray-900, #111827);
+}
+
+.rip-notice .rip-notice__body {
+    margin: 0 0 var(--rip-space-2, 0.5rem);
+    color: var(--rip-gray-700, #374151);
+    line-height: 1.5;
+}
+
+.rip-notice .rip-notice__body p {
+    margin: 0 0 var(--rip-space-2, 0.5rem);
+    padding: 0;
+}
+
+.rip-notice .rip-notice__body p:last-child {
+    margin-bottom: 0;
+}
+
+.rip-notice .rip-notice__list {
+    margin: 0 0 var(--rip-space-2, 0.5rem);
+    padding-left: 1.25rem;
+    list-style: disc;
+    color: var(--rip-gray-700, #374151);
+}
+
+.rip-notice .rip-notice__list li {
+    margin: 0 0 var(--rip-space-1, 0.25rem);
+}
+
+.rip-notice .rip-notice__checklist {
+    margin: 0 0 var(--rip-space-3, 0.75rem);
+    padding: 0;
+    list-style: none;
+}
+
+.rip-notice .rip-notice__checklist-item {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-2, 0.5rem);
+    margin: 0 0 var(--rip-space-1, 0.25rem);
+    color: var(--rip-gray-700, #374151);
+}
+
+.rip-notice .rip-notice__checklist-marker {
+    position: relative;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid var(--rip-gray-400, #9CA3AF);
+    border-radius: var(--rip-radius-sm, 0.25rem);
+    background: transparent;
+}
+
+.rip-notice .rip-notice__checklist-item--done .rip-notice__checklist-marker {
+    border-color: var(--rip-success, #10B981);
+    background: var(--rip-success, #10B981);
+}
+
+.rip-notice .rip-notice__checklist-item--done .rip-notice__checklist-marker::after {
+    content: "";
+    position: absolute;
+    left: 0.3125rem;
+    top: 0.0625rem;
+    width: 0.25rem;
+    height: 0.5rem;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.rip-notice .rip-notice__checklist-item--done .rip-notice__checklist-label {
+    color: var(--rip-gray-500, #6B7280);
+    text-decoration: line-through;
+}
+
+.rip-notice .rip-notice__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--rip-space-2, 0.5rem);
+    margin: 0;
+}
+
+.rip-notice .rip-notice__form {
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+}
+
+.rip-notice .rip-notice__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--rip-space-2, 0.5rem);
+    padding: var(--rip-space-2, 0.5rem) var(--rip-space-4, 1rem);
+    border: none;
+    border-radius: var(--rip-radius, 0.375rem);
+    font-family: inherit;
+    font-size: var(--rip-text-sm, 0.875rem);
+    font-weight: 500;
+    line-height: 1.5;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: var(--rip-transition, 200ms ease);
+}
+
+.rip-notice .rip-notice__btn--primary {
+    background: var(--rip-gradient-primary, linear-gradient(135deg, #4F46E5, #7C3AED));
+    color: #ffffff;
+    box-shadow: var(--rip-shadow-sm, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1));
+}
+
+.rip-notice .rip-notice__btn--secondary {
+    background: #ffffff;
+    color: var(--rip-gray-700, #374151);
+    border: 1px solid var(--rip-gray-300, #D1D5DB);
+}
+
+.rip-notice .rip-notice__btn--secondary:hover {
+    background: var(--rip-gray-50, #F9FAFB);
+    border-color: var(--rip-gray-400, #9CA3AF);
+}
+
+.rip-notice .rip-notice__btn--ghost {
+    background: transparent;
+    color: var(--rip-gray-600, #4B5563);
+}
+
+.rip-notice .rip-notice__btn--ghost:hover {
+    background: var(--rip-gray-100, #F3F4F6);
+    color: var(--rip-gray-900, #111827);
+}
+
+.rip-notice .rip-notice__link-muted {
+    font-size: var(--rip-text-sm, 0.875rem);
+    color: var(--rip-gray-500, #6B7280);
+}
+
+/*
+ * Contrast locks. WordPress core styles in-content links via the ID selector
+ * `#wpbody-content a` (specificity 0,1,0,1), which otherwise repaints the
+ * button text link-blue and underlined. Scoping the locks under the same ID
+ * (specificity 0,1,2,1) wins cleanly, no `!important` needed. Network admin is
+ * also rendered inside `#wpbody-content`, so this covers it too.
+ */
+#wpbody-content .rip-notice .rip-notice__btn,
+#wpbody-content .rip-notice .rip-notice__btn:hover,
+#wpbody-content .rip-notice .rip-notice__btn:focus,
+#wpbody-content .rip-notice .rip-notice__link-muted {
+    text-decoration: none;
+}
+
+#wpbody-content .rip-notice .rip-notice__link-muted:hover {
+    text-decoration: underline;
+}
+
+#wpbody-content .rip-notice .rip-notice__btn--primary,
+#wpbody-content .rip-notice .rip-notice__btn--primary:hover,
+#wpbody-content .rip-notice .rip-notice__btn--primary:focus {
+    color: #ffffff;
+}
+
+#wpbody-content .rip-notice .rip-notice__btn--secondary,
+#wpbody-content .rip-notice .rip-notice__btn--secondary:hover,
+#wpbody-content .rip-notice .rip-notice__btn--secondary:focus {
+    color: var(--rip-gray-700, #374151);
+}
+
+#wpbody-content .rip-notice .rip-notice__btn--ghost,
+#wpbody-content .rip-notice .rip-notice__btn--ghost:hover,
+#wpbody-content .rip-notice .rip-notice__btn--ghost:focus {
+    color: var(--rip-gray-600, #4B5563);
+}
+
+#wpbody-content .rip-notice .rip-notice__link-muted,
+#wpbody-content .rip-notice .rip-notice__link-muted:hover,
+#wpbody-content .rip-notice .rip-notice__link-muted:focus {
+    color: var(--rip-gray-500, #6B7280);
+}
+
+.rip-notice .rip-notice__btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+@media screen and (max-width: 782px) {
+    .rip-notice .rip-notice__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .rip-notice .rip-notice__form,
+    .rip-notice .rip-notice__btn {
+        width: 100%;
+    }
+}

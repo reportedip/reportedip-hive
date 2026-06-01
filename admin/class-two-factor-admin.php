@@ -198,14 +198,15 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		if ( ! $user ) {
 			return;
 		}
-		printf(
-			'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
-			esc_html(
-				sprintf(
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'     => 'success',
+				'dismissible' => true,
+				'body'        => sprintf(
 					/* translators: %s: user display name */
 					__( '2FA for %s has been reset. The user has been notified by email.', 'reportedip-hive' ),
-					$user->display_name
-				)
+					esc_html( $user->display_name )
+				),
 			)
 		);
 	}

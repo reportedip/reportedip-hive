@@ -218,6 +218,7 @@ class ReportedIP_Hive {
 		}
 
 		ReportedIP_Hive_Admin_Bar::get_instance()->register_hooks();
+		ReportedIP_Hive_Admin_Notice::register_hooks();
 		ReportedIP_Hive_Decoy_Path_Block::get_instance()->register_hooks();
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->register_hooks();
 	}
@@ -296,6 +297,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-api-client.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-bar.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-notice.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-htaccess-writer.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ip-manager.php';
@@ -1141,18 +1143,31 @@ class ReportedIP_Hive {
 
 			if ( $failed_count > 0 ) {
 				$queue_url = admin_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
-				echo '<div class="notice notice-error is-dismissible"><p>';
-				echo '<strong>' . esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ) . '</strong> ';
-				printf(
-					/* translators: %1$d: number of failed reports, %2$s: link to queue page */
-					esc_html__( '%1$d API reports failed. %2$s', 'reportedip-hive' ),
-					intval( $failed_count ),
-					'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'View queue', 'reportedip-hive' ) . '</a>'
+				$body      = sprintf(
+					'<strong>%1$s</strong> %2$s',
+					esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
+					sprintf(
+						/* translators: %1$d: number of failed reports, %2$s: link to queue page */
+						esc_html__( '%1$d API reports failed. %2$s', 'reportedip-hive' ),
+						intval( $failed_count ),
+						'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'View queue', 'reportedip-hive' ) . '</a>'
+					)
 				);
-				echo ' <button type="button" class="button button-small" id="retry-failed-reports-notice" style="margin-left: 10px;">';
-				echo esc_html__( 'Retry all', 'reportedip-hive' );
-				echo '</button>';
-				echo '</p></div>';
+				ReportedIP_Hive_Admin_Notice::render(
+					array(
+						'variant'           => 'error',
+						'dismissible'       => true,
+						'body'              => $body,
+						'secondary_actions' => array(
+							array(
+								'type'    => 'button',
+								'label'   => __( 'Retry all', 'reportedip-hive' ),
+								'id'      => 'retry-failed-reports-notice',
+								'variant' => 'secondary',
+							),
+						),
+					)
+				);
 				echo '<script>
                 jQuery(document).ready(function($) {
                     $("#retry-failed-reports-notice").on("click", function(e) {
@@ -1182,40 +1197,66 @@ class ReportedIP_Hive {
 			$queue_dismissed    = get_user_meta( $user_id, 'reportedip_dismissed_queue_warning_' . gmdate( 'Y-m-d' ), true );
 
 			if ( $pending_count >= $critical_threshold ) {
-				echo '<div class="notice notice-error is-dismissible reportedip-dismissible" data-notice-id="queue_critical_' . esc_attr( gmdate( 'Y-m-d' ) ) . '"><p>';
-				echo '<strong>' . esc_html__( 'ReportedIP Hive - Queue Critical:', 'reportedip-hive' ) . '</strong> ';
-				printf(
-					/* translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page */
-					esc_html__( '%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s.', 'reportedip-hive' ),
-					intval( $pending_count ),
-					'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>',
-					'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'Manage queue', 'reportedip-hive' ) . '</a>'
+				$body = sprintf(
+					'<strong>%1$s</strong> %2$s',
+					esc_html__( 'ReportedIP Hive - Queue Critical:', 'reportedip-hive' ),
+					sprintf(
+						/* translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page */
+						esc_html__( '%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s.', 'reportedip-hive' ),
+						intval( $pending_count ),
+						'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>',
+						'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'Manage queue', 'reportedip-hive' ) . '</a>'
+					)
 				);
-				echo '</p></div>';
+				ReportedIP_Hive_Admin_Notice::render(
+					array(
+						'variant'        => 'error',
+						'dismissible'    => true,
+						'data_notice_id' => 'queue_critical_' . gmdate( 'Y-m-d' ),
+						'body'           => $body,
+					)
+				);
 			} elseif ( $pending_count >= $warning_threshold && ! $queue_dismissed ) {
-				echo '<div class="notice notice-warning is-dismissible reportedip-dismissible" data-notice-id="queue_warning_' . esc_attr( gmdate( 'Y-m-d' ) ) . '"><p>';
-				echo '<strong>' . esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ) . '</strong> ';
-				printf(
-					/* translators: %1$d: number of pending reports, %2$s: link to community page */
-					esc_html__( '%1$d reports pending processing. %2$s for higher limits.', 'reportedip-hive' ),
-					intval( $pending_count ),
-					'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>'
+				$body = sprintf(
+					'<strong>%1$s</strong> %2$s',
+					esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
+					sprintf(
+						/* translators: %1$d: number of pending reports, %2$s: link to community page */
+						esc_html__( '%1$d reports pending processing. %2$s for higher limits.', 'reportedip-hive' ),
+						intval( $pending_count ),
+						'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>'
+					)
 				);
-				echo '</p></div>';
+				ReportedIP_Hive_Admin_Notice::render(
+					array(
+						'variant'        => 'warning',
+						'dismissible'    => true,
+						'data_notice_id' => 'queue_warning_' . gmdate( 'Y-m-d' ),
+						'body'           => $body,
+					)
+				);
 			}
 		}
 
 		$api_key = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		if ( empty( $api_key ) && $is_plugin_page ) {
 			$settings_url = admin_url( 'admin.php?page=reportedip-hive' );
-			echo '<div class="notice notice-warning is-dismissible"><p>';
-			echo '<strong>' . esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ) . '</strong> ';
-			printf(
-				/* translators: %s: link to settings page */
-				esc_html__( 'No API key configured. %s', 'reportedip-hive' ),
-				'<a href="' . esc_url( $settings_url ) . '">' . esc_html__( 'Configure now', 'reportedip-hive' ) . '</a>'
+			$body         = sprintf(
+				'<strong>%1$s</strong> %2$s',
+				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
+				sprintf(
+					/* translators: %s: link to settings page */
+					esc_html__( 'No API key configured. %s', 'reportedip-hive' ),
+					'<a href="' . esc_url( $settings_url ) . '">' . esc_html__( 'Configure now', 'reportedip-hive' ) . '</a>'
+				)
 			);
-			echo '</p></div>';
+			ReportedIP_Hive_Admin_Notice::render(
+				array(
+					'variant'     => 'warning',
+					'dismissible' => true,
+					'body'        => $body,
+				)
+			);
 		}
 	}
 

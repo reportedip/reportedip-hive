@@ -124,24 +124,27 @@ class ReportedIP_Hive_Two_Factor_WC_Notice {
 			? REPORTEDIP_HIVE_UPGRADE_URL
 			: 'https://reportedip.de/pricing/';
 
-		?>
-		<div class="notice rip-alert rip-alert--info rip-wc2fa-promo">
-			<h3 class="rip-alert__title" style="margin:0 0 0.5rem;">
-				<?php esc_html_e( 'Protect your WooCommerce customers with 2FA', 'reportedip-hive' ); ?>
-			</h3>
-			<p style="margin:0 0 0.75rem;">
-				<?php esc_html_e( 'Hive Professional extends the second factor to My Account and Checkout — the only WordPress security plugin that keeps customers inside the storefront theme during sign-in. Solid Security and the WordPress Two-Factor plugin only cover the wp-admin login.', 'reportedip-hive' ); ?>
-			</p>
-			<p style="margin:0;">
-				<a class="rip-button rip-button--primary" href="<?php echo esc_url( $pricing_url ); ?>" target="_blank" rel="noopener">
-					<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
-				</a>
-				<a class="rip-button rip-button--ghost" href="<?php echo esc_url( $dismiss_action ); ?>" style="margin-left:0.5rem;">
-					<?php esc_html_e( 'Remind me later', 'reportedip-hive' ); ?>
-				</a>
-			</p>
-		</div>
-		<?php
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'           => 'info',
+				'extra_classes'     => 'rip-wc2fa-promo',
+				'title'             => __( 'Protect your WooCommerce customers with 2FA', 'reportedip-hive' ),
+				'body'              => __( 'Hive Professional extends the second factor to My Account and Checkout — the only WordPress security plugin that keeps customers inside the storefront theme during sign-in. Solid Security and the WordPress Two-Factor plugin only cover the wp-admin login.', 'reportedip-hive' ),
+				'primary_action'    => array(
+					'label'  => __( 'Compare plans', 'reportedip-hive' ),
+					'url'    => $pricing_url,
+					'target' => '_blank',
+					'rel'    => 'noopener',
+				),
+				'secondary_actions' => array(
+					array(
+						'type'  => 'link',
+						'label' => __( 'Remind me later', 'reportedip-hive' ),
+						'url'   => $dismiss_action,
+					),
+				),
+			)
+		);
 
 		ReportedIP_Hive_Promo_Manager::mark_shown(
 			ReportedIP_Hive_Promo_Manager::KEY_WC_FRONTEND_2FA,

@@ -910,42 +910,35 @@ class ReportedIP_Hive_Admin_Settings {
 			: __( 'paid', 'reportedip-hive' );
 
 		$two_factor_url = admin_url( 'admin.php?page=reportedip-hive-settings&tab=two_factor' );
-		$dismiss_url    = admin_url( 'admin-post.php' );
 		$checklist      = ReportedIP_Hive_Tier_Upgrade::get_setup_checklist();
-		?>
-		<div class="notice rip-alert rip-alert--info rip-tier-upgrade-banner">
-			<p style="font-size: var(--rip-text-base); font-weight: 600; margin: 0 0 var(--rip-space-2);">
-				<?php
-				printf(
-					/* translators: %s = tier label, e.g. Professional */
-					esc_html__( 'Your %s plan is active — finish 2FA setup', 'reportedip-hive' ),
-					esc_html( $tier_label )
-				);
-				?>
-			</p>
-			<p style="margin: 0 0 var(--rip-space-2);">
-				<?php esc_html_e( 'Two-factor authentication via the managed reportedip.de relay is now included with your plan. The SMS provider has been prefilled for you — these small steps remain:', 'reportedip-hive' ); ?>
-			</p>
-			<ul class="rip-banner-checklist">
-				<?php foreach ( $checklist as $item ) : ?>
-					<li class="rip-banner-checklist__item rip-banner-checklist__item--<?php echo esc_attr( $item['done'] ? 'done' : 'open' ); ?>">
-						<span class="rip-banner-checklist__indicator" aria-hidden="true"><?php echo $item['done'] ? '&#10003;' : '&#9744;'; ?></span>
-						<span class="rip-banner-checklist__label"><?php echo esc_html( $item['label'] ); ?></span>
-					</li>
-				<?php endforeach; ?>
-			</ul>
-			<p style="margin: var(--rip-space-3) 0 0;">
-				<a class="rip-button rip-button--primary" href="<?php echo esc_url( $two_factor_url ); ?>">
-					<?php esc_html_e( 'Open 2FA settings', 'reportedip-hive' ); ?>
-				</a>
-				<form method="post" action="<?php echo esc_url( $dismiss_url ); ?>" style="display: inline-block; margin-left: var(--rip-space-2);">
-					<input type="hidden" name="action" value="reportedip_hive_dismiss_tier_notice" />
-					<?php wp_nonce_field( 'reportedip_hive_dismiss_tier_notice' ); ?>
-					<button type="submit" class="rip-button rip-button--ghost"><?php esc_html_e( 'Dismiss', 'reportedip-hive' ); ?></button>
-				</form>
-			</p>
-		</div>
-		<?php
+
+		$title = sprintf(
+			/* translators: %s = tier label, e.g. Professional */
+			__( 'Your %s plan is active — finish 2FA setup', 'reportedip-hive' ),
+			$tier_label
+		);
+
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'           => 'info',
+				'extra_classes'     => 'rip-tier-upgrade-banner',
+				'title'             => $title,
+				'body'              => __( 'Two-factor authentication via the managed reportedip.de relay is now included with your plan. The SMS provider has been prefilled for you — these small steps remain:', 'reportedip-hive' ),
+				'checklist'         => $checklist,
+				'primary_action'    => array(
+					'label' => __( 'Open 2FA settings', 'reportedip-hive' ),
+					'url'   => $two_factor_url,
+				),
+				'secondary_actions' => array(
+					array(
+						'type'        => 'form',
+						'label'       => __( 'Dismiss', 'reportedip-hive' ),
+						'form_action' => 'reportedip_hive_dismiss_tier_notice',
+						'nonce'       => 'reportedip_hive_dismiss_tier_notice',
+					),
+				),
+			)
+		);
 	}
 
 	/**
@@ -1014,26 +1007,26 @@ class ReportedIP_Hive_Admin_Settings {
 			admin_url( 'admin-post.php?action=reportedip_hive_cap_notice_dismiss' ),
 			'reportedip_hive_cap_notice_dismiss'
 		);
-		?>
-		<div class="notice rip-alert rip-alert--warning rip-cap-status-notice">
-			<p style="margin: 0 0 var(--rip-space-2); font-weight: 600;">
-				<?php esc_html_e( 'Managed relay capacity reached', 'reportedip-hive' ); ?>
-			</p>
-			<ul style="margin: 0 0 var(--rip-space-2); padding-left: 1.25rem;">
-				<?php foreach ( $lines as $line ) : ?>
-					<li><?php echo wp_kses_post( $line ); ?></li>
-				<?php endforeach; ?>
-			</ul>
-			<p style="margin: 0;">
-				<a class="rip-button rip-button--secondary" href="<?php echo esc_url( $dashboard_url ); ?>">
-					<?php esc_html_e( 'View quota details', 'reportedip-hive' ); ?>
-				</a>
-				<a class="rip-button rip-button--ghost" href="<?php echo esc_url( $cap_dismiss_url ); ?>" style="margin-left: var(--rip-space-2);">
-					<?php esc_html_e( 'Hide for 24 hours', 'reportedip-hive' ); ?>
-				</a>
-			</p>
-		</div>
-		<?php
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'           => 'warning',
+				'extra_classes'     => 'rip-cap-status-notice',
+				'title'             => __( 'Managed relay capacity reached', 'reportedip-hive' ),
+				'list_items'        => $lines,
+				'primary_action'    => array(
+					'label'   => __( 'View quota details', 'reportedip-hive' ),
+					'url'     => $dashboard_url,
+					'variant' => 'secondary',
+				),
+				'secondary_actions' => array(
+					array(
+						'type'  => 'link',
+						'label' => __( 'Hide for 24 hours', 'reportedip-hive' ),
+						'url'   => $cap_dismiss_url,
+					),
+				),
+			)
+		);
 	}
 
 	/**
@@ -1109,13 +1102,19 @@ class ReportedIP_Hive_Admin_Settings {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		if ( $mode_manager->is_community_layer_degraded() ) {
 			$upgrade_url = admin_url( 'admin.php?page=reportedip-hive-community' );
-			?>
-			<div class="rip-alert rip-alert--warning" style="margin-bottom: var(--rip-space-4);">
-				<strong><?php esc_html_e( 'Community threat-check rate-limited.', 'reportedip-hive' ); ?></strong>
-				<?php esc_html_e( 'The local firewall (sensors, blocks, logs, queue) remains fully active. Reputation lookups for new IPs and outgoing report submissions are paused until the hourly counter resets.', 'reportedip-hive' ); ?>
-				<a href="<?php echo esc_url( $upgrade_url ); ?>"><?php esc_html_e( 'Upgrade tier for higher caps.', 'reportedip-hive' ); ?></a>
-			</div>
-			<?php
+			$body        = sprintf(
+				'<strong>%1$s</strong> %2$s <a href="%3$s">%4$s</a>',
+				esc_html__( 'Community threat-check rate-limited.', 'reportedip-hive' ),
+				esc_html__( 'The local firewall (sensors, blocks, logs, queue) remains fully active. Reputation lookups for new IPs and outgoing report submissions are paused until the hourly counter resets.', 'reportedip-hive' ),
+				esc_url( $upgrade_url ),
+				esc_html__( 'Upgrade tier for higher caps.', 'reportedip-hive' )
+			);
+			ReportedIP_Hive_Admin_Notice::render(
+				array(
+					'variant' => 'warning',
+					'body'    => $body,
+				)
+			);
 		}
 
 		$table = $wpdb->prefix . 'reportedip_hive_api_queue';
@@ -1139,21 +1138,31 @@ class ReportedIP_Hive_Admin_Settings {
 
 		if ( $failed_count > 0 ) {
 			$queue_url = admin_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
-			?>
-			<div class="rip-alert rip-alert--error" style="margin-bottom: var(--rip-space-4);">
-				<strong><?php esc_html_e( 'ReportedIP Hive:', 'reportedip-hive' ); ?></strong>
-				<?php
-				printf(
+			$body      = sprintf(
+				'<strong>%1$s</strong> %2$s',
+				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
+				sprintf(
 					/* translators: %1$d: number of failed reports, %2$s: link to queue page */
 					esc_html__( '%1$d API reports failed. %2$s', 'reportedip-hive' ),
 					intval( $failed_count ),
 					'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'View queue', 'reportedip-hive' ) . '</a>'
-				);
-				?>
-				<button type="button" class="button button-small" id="retry-failed-reports-notice" style="margin-left: 10px;">
-					<?php esc_html_e( 'Retry all', 'reportedip-hive' ); ?>
-				</button>
-			</div>
+				)
+			);
+			ReportedIP_Hive_Admin_Notice::render(
+				array(
+					'variant'           => 'error',
+					'body'              => $body,
+					'secondary_actions' => array(
+						array(
+							'type'    => 'button',
+							'label'   => __( 'Retry all', 'reportedip-hive' ),
+							'id'      => 'retry-failed-reports-notice',
+							'variant' => 'secondary',
+						),
+					),
+				)
+			);
+			?>
 			<script>
 			jQuery(document).ready(function($) {
 				$('#retry-failed-reports-notice').on('click', function(e) {
@@ -1182,35 +1191,41 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( $pending_count >= $critical_threshold ) {
 			$queue_url     = admin_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
 			$community_url = admin_url( 'admin.php?page=reportedip-hive-community' );
-			?>
-			<div class="rip-alert rip-alert--error" style="margin-bottom: var(--rip-space-4);">
-				<strong><?php esc_html_e( 'Queue Critical:', 'reportedip-hive' ); ?></strong>
-				<?php
-				printf(
+			$body          = sprintf(
+				'<strong>%1$s</strong> %2$s',
+				esc_html__( 'Queue Critical:', 'reportedip-hive' ),
+				sprintf(
 					/* translators: 1: pending count, 2: upgrade link, 3: queue link */
 					esc_html__( '%1$d reports pending processing. %2$s or %3$s.', 'reportedip-hive' ),
 					intval( $pending_count ),
 					'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>',
 					'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'Manage queue', 'reportedip-hive' ) . '</a>'
-				);
-				?>
-			</div>
-			<?php
+				)
+			);
+			ReportedIP_Hive_Admin_Notice::render(
+				array(
+					'variant' => 'error',
+					'body'    => $body,
+				)
+			);
 		} elseif ( $pending_count >= $warning_threshold ) {
 			$community_url = admin_url( 'admin.php?page=reportedip-hive-community' );
-			?>
-			<div class="rip-alert rip-alert--warning" style="margin-bottom: var(--rip-space-4);">
-				<strong><?php esc_html_e( 'ReportedIP Hive:', 'reportedip-hive' ); ?></strong>
-				<?php
-				printf(
+			$body          = sprintf(
+				'<strong>%1$s</strong> %2$s',
+				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
+				sprintf(
 					/* translators: 1: pending count, 2: upgrade link */
 					esc_html__( '%1$d reports pending processing. %2$s for higher limits.', 'reportedip-hive' ),
 					intval( $pending_count ),
 					'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>'
-				);
-				?>
-			</div>
-			<?php
+				)
+			);
+			ReportedIP_Hive_Admin_Notice::render(
+				array(
+					'variant' => 'warning',
+					'body'    => $body,
+				)
+			);
 		}
 	}
 
