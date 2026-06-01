@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.0.19
+Stable tag: 2.0.20
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -327,6 +327,20 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.0.20 =
+
+Fixed: tier-change emails ("[Site] <Plan> plan is active") were re-sent on every API refresh of a paid key. The previous tier was read from a 5-minute transient that collapsed to "free" once it lapsed, so each refresh looked like a fresh upgrade. The change baseline is now a durable option, so the mail fires only on a genuine tier change.
+
+Changed: the 2FA login screen no longer auto-sends the email or SMS one-time code. Both delivery methods now start with a "Send code" button, so the user picks a method first — no unsolicited mail/SMS, and no rate limit or relay quota spent on a method the user did not choose. Authenticator app, passkey and recovery codes are unaffected.
+
+Fixed: the setup wizard silently dropped enforced-2FA roles whose slug was not all-lowercase (e.g. membership-plugin roles like "um_Premium-Member"); every selected role is now kept.
+
+Fixed: admin notices rendered unstyled on non-plugin admin pages and the primary button text lost its contrast; a self-contained stylesheet now styles every notice on every admin screen.
+
+Changed: all backend admin notices share one consistent renderer, and the 2FA onboarding wizard was streamlined to show less at each step.
+
+New: the guided 2FA wizard is now reachable directly — both the "2FA recommended" reminder banner and the profile 2FA section link straight into it.
 
 = 2.0.19 =
 

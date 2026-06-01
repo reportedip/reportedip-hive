@@ -2,6 +2,59 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.20] — 2026-06-01
+
+### Fixed
+
+- **Repeated "plan is active" tier-change emails.** The welcome/goodbye
+  mail (and the `reportedip_hive_tier_changed` action) derived the previous
+  tier from the five-minute `reportedip_hive_api_status` transient. Once
+  that transient lapsed, the previous tier collapsed to `free`, so every
+  subsequent refresh of a paid key re-detected a phantom free→paid
+  transition and re-sent the "[Site] <Plan> plan is active" mail — over and
+  over. The change baseline now lives in the durable `reportedip_hive_known_tier`
+  option; the first observation seeds it silently and the action fires only
+  on a genuine tier flip. Verified live: 0 firings across repeated refreshes
+  of an already-active tier, exactly 1 firing on a real upgrade.
+- **Setup wizard silently dropped enforced-2FA roles with non-lowercase
+  slugs.** The wizard ran posted roles through `sanitize_key()`, which
+  lowercases and strips the slug, so roles whose slug is not already
+  `[a-z0-9_-]` (e.g. membership-plugin roles like `um_Premium-Member`)
+  no longer matched the registered roles and were discarded. The wizard
+  now preserves the slug, matching the settings-tab behaviour, so every
+  selected role is enforced.
+- **Admin notices were unstyled on non-plugin admin pages and the primary
+  button lost its contrast.** The notice CSS only loaded on the plugin's
+  own screens, yet the banners fire on every admin page; and inside a WP
+  `.notice` the core link styling overrode the button colour, leaving
+  washed-out, underlined text. A self-contained stylesheet now ships on
+  every admin screen and the button contrast is locked in.
+
+### Changed
+
+- **2FA login no longer auto-sends the email or SMS one-time code.**
+  Previously, when a user's primary method was email (or SMS), the code
+  was dispatched the moment the challenge screen loaded — before the user
+  could pick a method. Both delivery methods now start in their request
+  phase: the user selects the method and clicks "Send code" before
+  anything goes out. This stops unsolicited mail/SMS and avoids burning
+  the rate limit or relay quota for a method the user did not choose.
+  Stateless methods (authenticator app, passkey, recovery codes) are
+  unaffected and show their input directly. The "Send code" button and
+  the no-JavaScript `resend_email` / `resend_sms` fallback already drove
+  the on-demand send path; only the eager dispatch was removed.
+- **All backend admin notices now share one renderer** with a consistent,
+  design-system look (no more mixed WordPress-core and custom styles).
+- **The 2FA onboarding wizard is leaner.** Trimmed the welcome explainer
+  cards, per-method bullet lists, the authenticator-app link list and the
+  celebration overhead so each step shows less at once.
+
+### New
+
+- **The guided 2FA wizard is now reachable directly.** The "Two-factor
+  authentication is recommended" reminder banner and the profile 2FA
+  section both link straight into the step-by-step onboarding wizard.
+
 ## [2.0.19] — 2026-05-29
 
 ### Security
