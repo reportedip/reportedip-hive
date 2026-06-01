@@ -181,19 +181,6 @@ final class ReportedIP_Hive_Admin_Notice {
 	}
 
 	/**
-	 * Return a notice as a string (buffered {@see self::render()}).
-	 *
-	 * @param array $args See {@see self::render()}.
-	 * @return string Fully escaped notice markup.
-	 * @since  2.0.1
-	 */
-	public static function get( array $args ) {
-		ob_start();
-		self::render( $args );
-		return (string) ob_get_clean();
-	}
-
-	/**
 	 * Echo an anchor styled as a notice button.
 	 *
 	 * @param array  $action          { label, url, target?, rel?, variant? }.
@@ -202,20 +189,27 @@ final class ReportedIP_Hive_Admin_Notice {
 	 * @since  2.0.1
 	 */
 	private static function render_link_action( array $action, $default_variant ) {
-		$variant = isset( $action['variant'] ) ? (string) $action['variant'] : $default_variant;
-		$target  = isset( $action['target'] ) ? (string) $action['target'] : '';
-		$rel     = isset( $action['rel'] ) ? (string) $action['rel'] : '';
+		$action = wp_parse_args(
+			$action,
+			array(
+				'label'   => '',
+				'url'     => '',
+				'target'  => '',
+				'rel'     => '',
+				'variant' => $default_variant,
+			)
+		);
 		?>
-		<a class="rip-notice__btn rip-notice__btn--<?php echo esc_attr( $variant ); ?>"
-			href="<?php echo esc_url( isset( $action['url'] ) ? (string) $action['url'] : '' ); ?>"
-			<?php if ( '' !== $target ) : ?>
-				target="<?php echo esc_attr( $target ); ?>"
+		<a class="rip-notice__btn rip-notice__btn--<?php echo esc_attr( $action['variant'] ); ?>"
+			href="<?php echo esc_url( $action['url'] ); ?>"
+			<?php if ( '' !== $action['target'] ) : ?>
+				target="<?php echo esc_attr( $action['target'] ); ?>"
 			<?php endif; ?>
-			<?php if ( '' !== $rel ) : ?>
-				rel="<?php echo esc_attr( $rel ); ?>"
+			<?php if ( '' !== $action['rel'] ) : ?>
+				rel="<?php echo esc_attr( $action['rel'] ); ?>"
 			<?php endif; ?>
 		>
-			<?php echo esc_html( isset( $action['label'] ) ? (string) $action['label'] : '' ); ?>
+			<?php echo esc_html( $action['label'] ); ?>
 		</a>
 		<?php
 	}
@@ -231,13 +225,21 @@ final class ReportedIP_Hive_Admin_Notice {
 		$type = isset( $action['type'] ) ? (string) $action['type'] : 'link';
 
 		if ( 'form' === $type ) {
-			$variant = isset( $action['variant'] ) ? (string) $action['variant'] : 'ghost';
+			$action = wp_parse_args(
+				$action,
+				array(
+					'label'       => '',
+					'form_action' => '',
+					'nonce'       => '',
+					'variant'     => 'ghost',
+				)
+			);
 			?>
 			<form class="rip-notice__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-				<input type="hidden" name="action" value="<?php echo esc_attr( isset( $action['form_action'] ) ? (string) $action['form_action'] : '' ); ?>" />
-				<?php wp_nonce_field( isset( $action['nonce'] ) ? (string) $action['nonce'] : '' ); ?>
-				<button type="submit" class="rip-notice__btn rip-notice__btn--<?php echo esc_attr( $variant ); ?>">
-					<?php echo esc_html( isset( $action['label'] ) ? (string) $action['label'] : '' ); ?>
+				<input type="hidden" name="action" value="<?php echo esc_attr( $action['form_action'] ); ?>" />
+				<?php wp_nonce_field( $action['nonce'] ); ?>
+				<button type="submit" class="rip-notice__btn rip-notice__btn--<?php echo esc_attr( $action['variant'] ); ?>">
+					<?php echo esc_html( $action['label'] ); ?>
 				</button>
 			</form>
 			<?php
@@ -245,15 +247,21 @@ final class ReportedIP_Hive_Admin_Notice {
 		}
 
 		if ( 'button' === $type ) {
-			$variant = isset( $action['variant'] ) ? (string) $action['variant'] : 'secondary';
-			$id      = isset( $action['id'] ) ? (string) $action['id'] : '';
+			$action = wp_parse_args(
+				$action,
+				array(
+					'label'   => '',
+					'id'      => '',
+					'variant' => 'secondary',
+				)
+			);
 			?>
-			<button type="button" class="rip-notice__btn rip-notice__btn--<?php echo esc_attr( $variant ); ?>"
-				<?php if ( '' !== $id ) : ?>
-					id="<?php echo esc_attr( $id ); ?>"
+			<button type="button" class="rip-notice__btn rip-notice__btn--<?php echo esc_attr( $action['variant'] ); ?>"
+				<?php if ( '' !== $action['id'] ) : ?>
+					id="<?php echo esc_attr( $action['id'] ); ?>"
 				<?php endif; ?>
 			>
-				<?php echo esc_html( isset( $action['label'] ) ? (string) $action['label'] : '' ); ?>
+				<?php echo esc_html( $action['label'] ); ?>
 			</button>
 			<?php
 			return;
@@ -270,9 +278,16 @@ final class ReportedIP_Hive_Admin_Notice {
 	 * @since  2.0.1
 	 */
 	private static function render_muted_link( array $link ) {
+		$link = wp_parse_args(
+			$link,
+			array(
+				'label' => '',
+				'url'   => '',
+			)
+		);
 		?>
-		<a class="rip-notice__link-muted" href="<?php echo esc_url( isset( $link['url'] ) ? (string) $link['url'] : '' ); ?>">
-			<?php echo esc_html( isset( $link['label'] ) ? (string) $link['label'] : '' ); ?>
+		<a class="rip-notice__link-muted" href="<?php echo esc_url( $link['url'] ); ?>">
+			<?php echo esc_html( $link['label'] ); ?>
 		</a>
 		<?php
 	}
