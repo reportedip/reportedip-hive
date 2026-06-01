@@ -1174,29 +1174,42 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Persist the verified API status and emit the tier-changed action when the role flipped.
+	 * Persist the verified API status and emit the tier-changed action when the
+	 * tier actually flipped.
+	 *
+	 * The change baseline is the durable `reportedip_hive_known_tier` option, not
+	 * the short-lived status transient. Deriving the previous tier from the
+	 * five-minute transient is unsafe: once it lapses, `get_transient()` returns
+	 * false, the previous tier collapses to `free`, and every subsequent refresh
+	 * of a paid key re-fires a phantom free→paid transition (welcome mail spam).
+	 * The first observation seeds the baseline silently so no notification fires
+	 * for a tier that was already active.
 	 *
 	 * @param array $status Validated status payload to cache.
 	 * @return void
 	 * @since 1.5.3
 	 */
 	private function persist_api_status( $status ) {
-		$previous  = get_transient( 'reportedip_hive_api_status' );
-		$prev_tier = 'free';
-		if ( is_array( $previous ) && ! empty( $previous['userRole'] ) ) {
-			$prev_tier = ReportedIP_Hive_Mode_Manager::tier_from_role( (string) $previous['userRole'] );
-		}
-
 		set_transient( 'reportedip_hive_api_status', $status, 5 * MINUTE_IN_SECONDS );
 
 		$new_role = (string) ( $status['userRole'] ?? '' );
-		$new_tier = $new_role !== '' ? ReportedIP_Hive_Mode_Manager::tier_from_role( $new_role ) : 'free';
+		$new_tier = '' !== $new_role ? ReportedIP_Hive_Mode_Manager::tier_from_role( $new_role ) : 'free';
 
-		if ( $prev_tier !== $new_tier ) {
-			delete_transient( 'reportedip_hive_relay_quota' );
-			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
-			do_action( 'reportedip_hive_tier_changed', $prev_tier, $new_tier );
+		$known_tier = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_known_tier', '' );
+
+		if ( '' === $known_tier ) {
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_known_tier', $new_tier );
+			return;
 		}
+
+		if ( $known_tier === $new_tier ) {
+			return;
+		}
+
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_known_tier', $new_tier );
+		delete_transient( 'reportedip_hive_relay_quota' );
+		ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
+		do_action( 'reportedip_hive_tier_changed', $known_tier, $new_tier );
 	}
 
 	/**

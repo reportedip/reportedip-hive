@@ -691,15 +691,6 @@ class ReportedIP_Hive_Two_Factor {
 
 		self::set_secure_cookie( self::NONCE_COOKIE, $token, time() + self::NONCE_TTL );
 
-		$primary_method = self::get_user_method( $user->ID );
-		if ( in_array( $primary_method, $enabled_methods, true ) ) {
-			if ( self::METHOD_EMAIL === $primary_method ) {
-				ReportedIP_Hive_Two_Factor_Email::send_code( $user->ID );
-			} elseif ( self::METHOD_SMS === $primary_method && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-				ReportedIP_Hive_Two_Factor_SMS::send_code( $user->ID );
-			}
-		}
-
 		$challenge_url = self::resolve_challenge_url( $origin );
 
 		$is_api_context = ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST )
