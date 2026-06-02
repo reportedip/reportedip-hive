@@ -158,6 +158,8 @@ body.login-action-reportedip_2fa_reset #login #login_error {
 	font-family: var(--rip-font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
 	color: var(--rip-gray-800, #1F2937);
 	box-sizing: border-box;
+	container-type: inline-size;
+	container-name: rip2fa;
 }
 
 .rip-2fa-challenge *,
@@ -659,22 +661,51 @@ a.rip-2fa-challenge__method-tab:focus {
 	}
 }
 
-/* Icon-only tabs on very narrow widths so 5 methods still fit one row. */
-@media (max-width: 480px) {
-	.rip-2fa-challenge--multi .rip-2fa-challenge__method-tab {
-		padding: 10px 6px;
+/*
+ * Narrow card: stack the method selector as a vertical, full-label list so the
+ * labels never truncate inside a narrow themed login column. Driven by a
+ * container query so it responds to the card width, not the viewport — a narrow
+ * login column on a wide desktop collapses too (the bug a viewport media query
+ * could not catch). The @media block is the fallback for browsers without
+ * container-query support on small viewports; both produce the same layout.
+ */
+@container rip2fa (max-width: 480px) {
+	.rip-2fa-challenge__methods {
+		flex-direction: column;
+		gap: 4px;
 	}
 
-	.rip-2fa-challenge--multi .rip-2fa-challenge__method-tab-label {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		white-space: nowrap;
-		border: 0;
+	.rip-2fa-challenge__method-tab {
+		flex: 0 0 auto;
+		width: 100%;
+		justify-content: flex-start;
+		padding: 10px 12px;
+	}
+
+	.rip-2fa-challenge__method-tab-label {
+		overflow: visible;
+		text-overflow: clip;
+		white-space: normal;
+	}
+}
+
+@media (max-width: 480px) {
+	.rip-2fa-challenge__methods {
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.rip-2fa-challenge__method-tab {
+		flex: 0 0 auto;
+		width: 100%;
+		justify-content: flex-start;
+		padding: 10px 12px;
+	}
+
+	.rip-2fa-challenge__method-tab-label {
+		overflow: visible;
+		text-overflow: clip;
+		white-space: normal;
 	}
 }
 
