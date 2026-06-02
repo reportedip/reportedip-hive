@@ -2,6 +2,42 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- **Setup wizard silently dropped settings — the 2FA step saved nothing on a
+  fresh install.** The wizard staged values in `sessionStorage` and committed
+  them only from one late step, so any step not re-collected was lost and the
+  PHP handler quietly fell back to hard-coded defaults. The wizard now saves
+  each step server-side on every navigation (Back included) through a single
+  `reportedip_wizard_save_step` endpoint and a shared field schema, so render,
+  collection and persistence can never drift again. The 2FA frontend toggle and
+  enforce-role list, previously never collected, now persist.
+- **Boolean options stored as PHP `false` could read back as their truthy
+  default.** WordPress' `get_option($key, true)` returns the default for a
+  stored `false`, so a toggle switched off re-appeared on. Booleans are now
+  persisted as `1`/`0` everywhere (wizard schema, default seeding,
+  `sanitize_boolean`), eliminating the round-trip footgun.
+- **Multisite default seeding wrote to a single blog instead of the network.**
+  Activation, the wizard-skip seed and the settings reset now route through
+  `ReportedIP_Hive_Option_Routing`, so network-wide defaults land in sitemeta.
+
+### Changed
+
+- **Hardening Mode is on by default on Professional and higher.** A tier-aware
+  master default plus a retroactive enable on the `reportedip_hive_tier_changed`
+  upgrade hook; an explicit opt-out is preserved. The settings tab now shows the
+  PRO lock chip consistently with the other PRO features.
+- Option defaults are now a single canonical map in `ReportedIP_Hive_Defaults`
+  (`all_option_defaults()`); the former duplicated `get_default_options()` and
+  `SAFE_OPTIONS` maps and their conflicting `2fa_enforce_roles` default are gone.
+
+### New
+
+- `ReportedIP_Hive_Wizard_Schema` — the per-step field map + typed save routine
+  that backs the wizard's per-step persistence.
+
 ## [2.0.22] — 2026-06-02
 
 ### Fixed
