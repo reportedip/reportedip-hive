@@ -2326,9 +2326,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * without overwriting existing user values.
 	 */
 	private function apply_safe_defaults() {
-		foreach ( ReportedIP_Hive_Defaults::safe_options() as $option_key => $default_value ) {
-			add_option( $option_key, $default_value );
-		}
+		ReportedIP_Hive_Defaults::seed_missing();
 	}
 
 	/**

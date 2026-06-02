@@ -1238,7 +1238,7 @@ class ReportedIP_Hive_Ajax_Handler {
 			$defaults = ReportedIP_Hive::get_default_options();
 
 			foreach ( array_keys( $defaults ) as $option ) {
-				delete_option( $option );
+				ReportedIP_Hive_Option_Routing::delete( $option );
 			}
 
 			ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_operation_mode' );
