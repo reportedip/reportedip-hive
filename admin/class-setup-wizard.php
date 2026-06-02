@@ -491,7 +491,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'Welcome to ReportedIP Hive', 'reportedip-hive' ); ?></h1>
-			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Set up brute-force protection, community reputation, and 2FA — free forever. With PRO, SMS- and Mail-2FA codes deliver reliably via our managed EU relay (no Twilio account, no SPF/DKIM headaches).', 'reportedip-hive' ); ?></p>
+			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Set up brute-force protection, community reputation and 2FA. Free forever; no account required to start.', 'reportedip-hive' ); ?></p>
 
 			<div class="rip-wizard__features">
 				<div class="rip-wizard__feature">
@@ -537,7 +537,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					</div>
 					<div class="rip-wizard__feature-text">
 						<strong><?php esc_html_e( 'WooCommerce login, checkout & frontend 2FA', 'reportedip-hive' ); ?></strong>
-						<span><?php esc_html_e( 'Hardens shop login, My Account and checkout against credential stuffing — plus optional second-factor inside the storefront theme so customers never get bounced to wp-login.php.', 'reportedip-hive' ); ?></span>
+						<span><?php esc_html_e( 'Protects shop login, My Account and checkout, with an optional second factor that runs inside your storefront theme.', 'reportedip-hive' ); ?></span>
 						<span class="rip-method-card__badges">
 							<span class="rip-tier-badge rip-tier-badge--free"><?php esc_html_e( 'Login monitoring: included', 'reportedip-hive' ); ?></span>
 							<span class="rip-tier-badge rip-tier-badge--professional"><?php esc_html_e( 'Frontend 2FA: PRO', 'reportedip-hive' ); ?></span>
@@ -819,7 +819,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 			</div>
 
-			<p class="rip-help-block rip-mb-3"><?php esc_html_e( 'The protection level above sets the basic thresholds. The toggles below decide which attack vectors are watched at all — leave them on unless you know you don\'t need a sensor.', 'reportedip-hive' ); ?></p>
+			<p class="rip-help-block rip-mb-3"><?php esc_html_e( 'The toggles below decide which attack vectors are watched. Leave them on unless you know you don\'t need a sensor.', 'reportedip-hive' ); ?></p>
 
 			<!-- Authentication monitoring -->
 			<div class="rip-config-card">
@@ -906,7 +906,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<h3><?php esc_html_e( 'Automation & special rules', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
-					<p class="rip-help-block"><?php esc_html_e( 'Two-step decision: Auto-blocking decides IF an offender gets blocked at all; the duration strategy decides HOW long. Report-only at the bottom overrides everything — when on, the plugin only watches.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-block"><?php esc_html_e( 'Auto-blocking decides whether an offender is blocked; the duration strategy decides how long. Report-only below overrides both: when on, the plugin only watches.', 'reportedip-hive' ); ?></p>
 
 					<label class="rip-toggle">
 						<input type="checkbox" name="auto_block" id="rip-auto-block" <?php checked( $opt( 'auto_block' ) ); ?>>
@@ -924,7 +924,7 @@ class ReportedIP_Hive_Setup_Wizard {
 							<span class="rip-toggle__slider"></span>
 							<span class="rip-toggle__label"><?php esc_html_e( 'Progressive ladder (5 min → 15 min → 30 min → 24 h → 48 h → 7 d) — recommended', 'reportedip-hive' ); ?></span>
 						</label>
-						<p class="rip-help-block"><?php esc_html_e( 'Each repeat offence inside the reset window (default 30 days) bumps the offender to the next ladder step. First-time tripping legitimate IPs recover in minutes; the ladder can be edited later under Settings → Blocking. Off = a fixed 24 h block for every trigger.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-block"><?php esc_html_e( 'Repeat offenders within the reset window (default 30 days) move up a ladder step, so first-time trips recover in minutes. Off means a fixed 24 h block for every trigger; edit the ladder later under Settings → Blocking.', 'reportedip-hive' ); ?></p>
 					</div>
 
 					<hr class="rip-helper-divider">
@@ -1028,13 +1028,12 @@ class ReportedIP_Hive_Setup_Wizard {
 							<span class="rip-method-card__check"></span>
 							<div class="rip-method-card__badges">
 								<span class="rip-tier-badge rip-tier-badge--professional"><?php esc_html_e( 'PRO', 'reportedip-hive' ); ?></span>
-								<span class="rip-badge rip-badge--success"><?php esc_html_e( 'Particularly secure', 'reportedip-hive' ); ?></span>
 							</div>
 							<div class="rip-method-card__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
 							</div>
 							<h4 class="rip-method-card__title"><?php esc_html_e( 'SMS', 'reportedip-hive' ); ?></h4>
-							<p class="rip-method-card__desc"><?php esc_html_e( 'Worldwide delivery via our managed relay, anti-fraud capped. Professional plan and higher.', 'reportedip-hive' ); ?></p>
+							<p class="rip-method-card__desc"><?php esc_html_e( 'Code via SMS through our managed relay. Professional plan and higher.', 'reportedip-hive' ); ?></p>
 						</div>
 
 						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'totp' ) ); ?>" data-method="totp">
@@ -1064,7 +1063,7 @@ class ReportedIP_Hive_Setup_Wizard {
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 							</div>
 							<h4 class="rip-method-card__title"><?php esc_html_e( 'Email', 'reportedip-hive' ); ?></h4>
-							<p class="rip-method-card__desc"><?php esc_html_e( 'Code via email — useful as a backup. With PRO mail relay, codes deliver reliably via SPF/DKIM/DMARC.', 'reportedip-hive' ); ?></p>
+							<p class="rip-method-card__desc"><?php esc_html_e( 'Code via email, useful as a backup. The PRO mail relay improves delivery.', 'reportedip-hive' ); ?></p>
 						</div>
 					</div>
 
@@ -1168,7 +1167,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					</div>
 					<div class="rip-config-card__body">
 						<p class="rip-help-block">
-							<?php esc_html_e( 'Renders the second factor inside the active storefront theme when a customer signs in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Shows the second factor inside your storefront theme when a customer signs in via My Account or checkout, instead of redirecting them to wp-login.php.', 'reportedip-hive' ); ?>
 						</p>
 						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
 							<ul class="rip-tier-card__list">
@@ -1205,7 +1204,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 				<div class="rip-config-card__body">
 					<p class="rip-help-block">
-						<?php esc_html_e( 'After this wizard, every user who signs in without an active 2FA method sees a reminder banner. Privileged roles (administrator, editor, shop manager) are forced into 2FA setup after 5 reminders; other roles only see the soft banner so a missing phone never locks anyone out of their account. You can fine-tune the threshold and the role list any time under 2FA settings → Login reminder.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'Users without 2FA see a reminder banner when they sign in. Privileged roles (administrator, editor, shop manager) are sent to 2FA setup after 5 reminders; other roles only see the banner. Adjust this under 2FA settings → Login reminder.', 'reportedip-hive' ); ?>
 					</p>
 				</div>
 			</div>
@@ -1452,9 +1451,9 @@ class ReportedIP_Hive_Setup_Wizard {
 						<p class="rip-help-text">
 							<?php
 							if ( $tier_pro_or_higher ) {
-								esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, all mails are sent from noreply@reportedip.de (SPF/DKIM/DMARC aligned) — your address is never used as envelope-from, which avoids SPF rejections regardless of what domain you enter here.', 'reportedip-hive' );
+								esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.de, so any address you enter here is safe to use.', 'reportedip-hive' );
 							} else {
-								esc_html_e( 'Should match a domain you own to avoid SPF/DKIM rejections. Upgrade to PRO and the relay verifies SPF/DKIM/DMARC on your behalf.', 'reportedip-hive' );
+								esc_html_e( 'Should match a domain you own, so mail-server checks (SPF/DKIM) do not reject the message.', 'reportedip-hive' );
 							}
 							?>
 						</p>
@@ -1606,7 +1605,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		?>
 		<div class="rip-wizard__configuration">
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'You\'re protected. Help others stay protected too.', 'reportedip-hive' ); ?></h1>
-			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Your site can show a small badge that links back to ReportedIP. Every link strengthens the community network and helps more sites find this protection. Optional, GDPR-friendly, and you can change it any time.', 'reportedip-hive' ); ?></p>
+			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Your site can show a small badge that links back to ReportedIP and strengthens the community network. Optional, GDPR-friendly, and you can change it any time.', 'reportedip-hive' ); ?></p>
 
 			<div class="rip-config-card">
 				<div class="rip-config-card__header">
@@ -1664,7 +1663,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Show this badge automatically on my site', 'reportedip-hive' ); ?></span>
 					</label>
-					<p class="rip-help-text rip-promote-hint"><?php esc_html_e( 'Renders inside Shadow DOM — your theme cannot break the layout. The link itself is regular HTML, so search engines pick it up.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-text rip-promote-hint"><?php esc_html_e( 'Renders in an isolated container (Shadow DOM), so your theme cannot break its layout. The link itself is regular HTML, so search engines pick it up.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 

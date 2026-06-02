@@ -4079,7 +4079,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v6m0 6v6"/><path d="m4.22 4.22 4.24 4.24m6.36 6.36 4.24 4.24"/><path d="M1 12h6m6 0h6"/><path d="m4.22 19.78 4.24-4.24m6.36-6.36 4.24-4.24"/></svg>
 					<?php esc_html_e( 'Application password abuse', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Application passwords authenticate over Basic Auth on REST and XML-RPC and bypass the wp-login 2FA prompt. We rate-limit failed app-password authentications and (optionally) block app-password creation for users in 2FA-enforced roles until they have completed enrolment.', 'reportedip-hive' ); ?></p>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Application passwords authenticate over REST and XML-RPC and skip the normal login 2FA prompt. We rate-limit failed app-password sign-ins and can optionally block new app passwords for 2FA-enforced roles until enrolment is finished.', 'reportedip-hive' ); ?></p>
 
 				<div class="rip-form-group">
 					<label class="rip-toggle">
@@ -4228,7 +4228,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
 					<?php esc_html_e( 'Geographic anomaly', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Watches successful logins. When the country / ASN seen for a user differs from anything observed in the rolling window, the event is logged and (optionally) the user\'s trusted-device cookies are revoked so the next login forces a fresh 2FA challenge. Country/ASN data comes from the cached community-mode reputation lookup — no extra external call.', 'reportedip-hive' ); ?></p>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Watches successful logins. When a user signs in from a country or network (ASN) not seen in the recent look-back window, the event is logged and trusted-device cookies can be revoked to force a fresh 2FA challenge. Location data reuses the cached community lookup, so no extra request is made.', 'reportedip-hive' ); ?></p>
 
 				<div class="rip-form-group">
 					<label class="rip-toggle">
@@ -4304,7 +4304,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z"/></svg>
 					<?php esc_html_e( 'Decoy Path Block', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Detects requests to known bait paths (.env.backup, wp-config.old.php, db-dump-master.sql.php …) — paths legitimate visitors never request. Each hit is logged and reported to the community-reputation feed; the visitor gets a 403 for that one request. The source IP is NOT added to the local block list (false-positives from backup plugins would otherwise lock you out). Apache requests are rewritten to WordPress via an auto-managed .htaccess block so real bait files left on disk are never served directly.', 'reportedip-hive' ); ?></p>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Detects requests to known bait paths (.env.backup, wp-config.old.php, db-dump-master.sql.php …) that legitimate visitors never request. Each hit is logged, shared with the community network, and answered with a 403, but the IP is not added to your local block list, so a misbehaving backup plugin cannot lock you out.', 'reportedip-hive' ); ?></p>
 
 				<input type="hidden" name="reportedip_hive_decoy_pathblock_enabled" value="0" />
 				<div class="rip-form-group">
@@ -4432,7 +4432,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<?php esc_html_e( 'Block duration strategy', 'reportedip-hive' ); ?>
 						<span class="rip-required" aria-hidden="true">*</span>
 					</h3>
-					<p class="rip-help-text rip-mb-3"><?php esc_html_e( 'Pick one — either the fixed length below, or the progressive ladder. The ladder is recommended because first-time tripping legitimate visitors recover in minutes, while repeat offenders still pay the full price.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-text rip-mb-3"><?php esc_html_e( 'Pick one: a fixed length, or the progressive ladder. The ladder is recommended — legitimate visitors who trip once recover in minutes, repeat offenders still pay full price.', 'reportedip-hive' ); ?></p>
 
 					<div class="rip-form-group">
 						<label class="rip-toggle">
@@ -4484,7 +4484,7 @@ class ReportedIP_Hive_Admin_Settings {
 					</label>
 					<div class="rip-alert rip-alert--warning rip-mt-2">
 						<strong><?php esc_html_e( 'Heads up:', 'reportedip-hive' ); ?></strong>
-						<?php esc_html_e( 'When this is on, no IP will be blocked, even if Auto-blocking above is enabled. The plugin keeps watching and logging.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'When this is on, no IP is blocked even if Auto-blocking is enabled.', 'reportedip-hive' ); ?>
 					</div>
 				</div>
 
@@ -4743,12 +4743,12 @@ class ReportedIP_Hive_Admin_Settings {
 		<?php if ( $tier_pro_or_higher ) : ?>
 		<div class="rip-alert rip-alert--success">
 			<strong><?php esc_html_e( 'PRO mail relay active.', 'reportedip-hive' ); ?></strong>
-			<?php esc_html_e( 'All plugin mails are delivered through the reportedip.de relay (verified SPF/DKIM/DMARC) for 100% deliverability. Your "From email" below is sent as Reply-To so replies still reach your inbox.', 'reportedip-hive' ); ?>
+			<?php esc_html_e( 'All plugin mails go through the reportedip.de relay so they pass authentication checks and stay out of spam folders. Your "From email" below is used as Reply-To, so replies still reach your inbox.', 'reportedip-hive' ); ?>
 		</div>
 		<?php else : ?>
 		<div class="rip-alert rip-alert--info">
 			<strong><?php esc_html_e( 'Free tier — mails leave your server directly.', 'reportedip-hive' ); ?></strong>
-			<?php esc_html_e( 'Upgrade to PRO to route mails through the reportedip.de relay: verified SPF/DKIM/DMARC, EU-based, no hard bounces.', 'reportedip-hive' ); ?>
+			<?php esc_html_e( 'Upgrade to PRO to route mails through the EU-based reportedip.de relay, which handles SPF/DKIM/DMARC so mails are less likely to land in spam.', 'reportedip-hive' ); ?>
 			<a href="<?php echo esc_url( REPORTEDIP_HIVE_UPGRADE_URL ); ?>" target="_blank" rel="noopener noreferrer" class="rip-alert__cta"><?php esc_html_e( 'Learn more', 'reportedip-hive' ); ?> &rarr;</a>
 		</div>
 		<?php endif; ?>
@@ -4839,9 +4839,9 @@ class ReportedIP_Hive_Admin_Settings {
 					<p class="rip-help-text">
 						<?php
 						if ( $tier_pro_or_higher ) {
-							esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, all mails are sent from noreply@reportedip.de (SPF/DKIM/DMARC aligned) — your address is never used as envelope-from, which avoids SPF rejections regardless of what domain you enter here.', 'reportedip-hive' );
+							esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.de, so any address you enter here is safe to use.', 'reportedip-hive' );
 						} else {
-							esc_html_e( 'Should match a domain you own to avoid SPF/DKIM rejections. Upgrade to PRO and the relay verifies SPF/DKIM/DMARC on your behalf.', 'reportedip-hive' );
+							esc_html_e( 'Should match a domain you own, so mail-server checks (SPF/DKIM) do not reject the message.', 'reportedip-hive' );
 						}
 						?>
 					</p>
@@ -4892,7 +4892,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php esc_html_e( 'Service notices & upgrade hints', 'reportedip-hive' ); ?>
 				</h2>
 				<p class="rip-settings-section__desc">
-					<?php esc_html_e( 'Controls the operational mails (quota warnings, plan changes) and the in-admin upgrade hints. Security recommendations (the 2FA reminder) and operational status notices (relay cap reached) are always shown — these toggles only affect promotional surfaces.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Controls operational mails (quota warnings, plan changes) and in-admin upgrade hints. Security recommendations and status notices are always shown; these toggles only affect promotional content.', 'reportedip-hive' ); ?>
 				</p>
 
 				<div class="rip-form-group">
@@ -5194,13 +5194,13 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php esc_html_e( 'Cron status', 'reportedip-hive' ); ?>
 			</h2>
 			<p class="rip-settings-section__desc">
-				<?php esc_html_e( 'WP-Cron is responsible for processing the API report queue and refreshing quota counters. If the next-run timestamps below stay in the past, your hosting environment is blocking the loopback to wp-cron.php — configure a system cron or check the CDN/cache plugin.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'WP-Cron processes the report queue and refreshes quota counters. If the next-run times below stay in the past, WP-Cron is not firing — set up a server cron (snippet below) or check your CDN/cache plugin.', 'reportedip-hive' ); ?>
 			</p>
 
 			<?php if ( $all_overdue_24h ) : ?>
 				<div class="rip-alert rip-alert--error" style="margin-bottom: var(--rip-space-3);">
 					<strong><?php esc_html_e( 'WP-Cron has not fired any ReportedIP Hive hook in the last 24 h.', 'reportedip-hive' ); ?></strong>
-					<?php esc_html_e( 'Likely cause: another plugin\'s heavy cron workers consume the per-spawn time budget (WP_CRON_LOCK_TIMEOUT) before our hooks are reached. Configure a dedicated server cron — see the snippet below.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Likely cause: another plugin\'s cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below.', 'reportedip-hive' ); ?>
 				</div>
 			<?php endif; ?>
 
@@ -7331,7 +7331,7 @@ class ReportedIP_Hive_Admin_Settings {
 					</label>
 					<?php self::render_tier_lock( $status, array( 'label' => __( 'PRO', 'reportedip-hive' ) ) ); ?>
 					<?php if ( ! $is_available ) : ?>
-						<p class="rip-help-text"><?php esc_html_e( 'Available on Professional, Business and Enterprise plans. On Professional and above it is on by default — switch it off here if you prefer manual control.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text"><?php esc_html_e( 'Available on Professional, Business and Enterprise plans. On by default; switch it off here if you prefer manual control.', 'reportedip-hive' ); ?></p>
 					<?php else : ?>
 						<p class="rip-help-text"><?php esc_html_e( 'On by default for your plan. Switch it off if you prefer to rely only on the per-IP thresholds.', 'reportedip-hive' ); ?></p>
 					<?php endif; ?>
@@ -7352,7 +7352,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_hardening_duration_minutes"><?php esc_html_e( 'Hardening duration (minutes)', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_hardening_duration_minutes" name="reportedip_hive_hardening_duration_minutes" value="<?php echo esc_attr( (string) $duration ); ?>" min="5" max="360" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'How long the hardening window stays scharf after a detection. Default 60 minutes.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text"><?php esc_html_e( 'How long the hardening window stays in effect after a detection. Default 60 minutes.', 'reportedip-hive' ); ?></p>
 					</div>
 
 					<div class="rip-form-group">

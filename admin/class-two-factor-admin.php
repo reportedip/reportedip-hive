@@ -356,7 +356,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						$mail_relay_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'mail_relay_via_api' );
 						if ( $mail_relay_status['available'] ) {
 							echo ' ';
-							esc_html_e( 'Delivered via the managed reportedip.de relay (clean SPF / DKIM / DMARC).', 'reportedip-hive' );
+							esc_html_e( 'Delivered via the managed reportedip.de relay.', 'reportedip-hive' );
 						} else {
 							echo ' ';
 							esc_html_e( 'Delivered via wp_mail() on this server.', 'reportedip-hive' );
@@ -396,11 +396,11 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							<?php checked( in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $allowed_methods, true ) ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
-							<?php esc_html_e( 'SMS (GDPR-compliant, worldwide delivery)', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'SMS code', 'reportedip-hive' ); ?>
 						</span>
 					</label>
 					<p class="rip-help-text">
-						<?php esc_html_e( 'Available with a configured GDPR-compliant SMS provider (seven.io, sipgate, MessageBird) and a confirmed DPA. Less secure than TOTP/Passkey — recommended only as a fallback. A small number of high-cost destinations may be unavailable when using the managed relay; configure a local provider for full coverage.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'Needs a configured SMS provider (seven.io, sipgate, MessageBird) and a confirmed DPA. Less secure than Authenticator or Passkey, so use it only as a fallback.', 'reportedip-hive' ); ?>
 					</p>
 				</div>
 			</div>
@@ -864,7 +864,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							<?php esc_html_e( 'Require 2FA verification before password reset', 'reportedip-hive' ); ?>
 						</span>
 					</label>
-					<p class="rip-help-text"><?php esc_html_e( 'Users who have any 2FA method configured must verify a non-email factor (Authenticator, SMS, security key, or recovery code) before the new password is accepted. The email channel is excluded by design — it is the channel that delivered the reset link in the first place.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-text"><?php esc_html_e( 'Users with any 2FA method must verify a non-email factor (Authenticator, SMS, security key, or recovery code) before the new password is accepted.', 'reportedip-hive' ); ?></p>
 				</div>
 
 				<div class="rip-form-group">
@@ -1180,7 +1180,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				<?php esc_html_e( 'SMS provider (GDPR-compliant)', 'reportedip-hive' ); ?>
 			</h2>
 			<p class="rip-settings-section__desc">
-				<?php esc_html_e( 'A GDPR-compliant SMS provider is used to send SMS OTPs. The plugin operator must sign a DPA with the selected provider. Phone numbers are stored encrypted; the SMS body contains only the code and a minimal note (no site, no user data, no IP).', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'Sends SMS codes through your chosen provider; you must sign a DPA with it. Phone numbers are stored encrypted and the SMS contains only the code, no site or user data.', 'reportedip-hive' ); ?>
 			</p>
 
 			<?php if ( $relay_status['available'] ) : ?>
