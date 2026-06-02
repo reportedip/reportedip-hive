@@ -1,9 +1,11 @@
 /**
  * ReportedIP Hive — Setup Wizard JavaScript.
  *
- * Cross-step persistence via sessionStorage. All settings are saved
- * centrally when the final-submit fires from Step 6 (#rip-save-config),
- * which calls the ajax_complete_wizard endpoint.
+ * Each step's form is collected generically from the active step container and
+ * persisted server-side before navigating, via the `reportedip_wizard_save_step`
+ * AJAX endpoint. There is no sessionStorage staging: the database is the single
+ * source of truth, so Back/forward/reload always reflect what was saved. Field
+ * sanitisation + mapping lives in ReportedIP_Hive_Wizard_Schema (PHP).
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <ps@cms-admins.de>
@@ -15,42 +17,23 @@
 (function ($) {
 	'use strict';
 
-	var STORAGE_KEY = 'reportedipWizardState';
-
-	// Defaults are sourced from PHP via wp_localize_script (single source of
-	// truth: ReportedIP_Hive_Defaults::wizard()). The hardcoded fallback
-	// shim only fires if the script is loaded without the localized payload —
-	// e.g. when a third-party loader bypasses our enqueue helper.
-	var LOCALIZED = (typeof window.reportedipWizard === 'object' && window.reportedipWizard) || {};
-	var DEFAULTS = $.extend(
-		{
-			grace_days: 7,
-			max_skips: 3,
-			retention_days: 30,
-			anonymize_days: 7,
-			mode: 'local',
-			protection_level: 'medium',
-			auto_footer_align: 'center'
-		},
-		LOCALIZED.defaults || {}
-	);
+	var FIELD_STEPS = [ 3, 4, 5, 6, 7, 8 ];
 
 	var ReportedIPWizard = {
 
 		init: function () {
-			// Wizard JS is enqueued only on the wizard page by convention; this
-			// body-class guard protects against third-party loaders pulling it
-			// into unrelated admin pages.
 			if (!document.body || !document.body.classList.contains('rip-wizard-page')) {
 				return;
 			}
 			this.bindEvents();
 			this.initModeSelection();
-			this.initStep3();
-			this.initStep4();
+			this.updateMonitoringWarning();
+			this.updateBlockStrategyState();
+			this.update2faEnabledState();
+			this.update2faMethodsHidden();
 			this.initStep7();
+			this.initPromotePreview();
 			this.initStep9();
-			this.restoreFromSession();
 		},
 
 		bindEvents: function () {
@@ -62,34 +45,135 @@
 			$(document).on('click', '#rip-validate-key', this.handleValidateApiKey.bind(this));
 			$(document).on('keypress', '#rip-api-key', this.handleApiKeyEnter.bind(this));
 
-			// Step 3: monitoring toggles → warning banner
+			// Step 3: monitoring toggles → warning banner + block-strategy state
 			$(document).on('change', '#rip-monitor-logins, #rip-monitor-comments, #rip-monitor-xmlrpc', this.updateMonitoringWarning.bind(this));
-
-			// Step 3: auto-block toggle drives the duration-strategy enabled state
 			$(document).on('change', '#rip-auto-block', this.updateBlockStrategyState.bind(this));
 
-			// Step 3 → 4: cache values to sessionStorage
-			$(document).on('click', '#rip-step3-next', this.persistStep3.bind(this));
-
-			// Step 4: 2FA method-card multi-select
+			// Step 4: 2FA method-card multi-select + enabled state
 			$(document).on('click', '.rip-method-card', this.handleMethodCardClick.bind(this));
 			$(document).on('change', '#rip-2fa-enabled', this.update2faEnabledState.bind(this));
 
-			// Step 4 → 5: cache values to sessionStorage
-			$(document).on('click', '#rip-step4-next', this.persistStep4.bind(this));
-
-			// Step 5 → 6: cache privacy values before the Hide-Login step renders
-			$(document).on('click', '#rip-step5-next', this.persistStep5.bind(this));
-
-			// Step 6: live slug validation + toggle-driven enable state
+			// Step 7: live slug validation + toggle-driven enable state
 			$(document).on('input', '#rip-hide-login-slug', this.debounceValidateSlug.bind(this));
 			$(document).on('change', '#rip-hide-login-enabled', this.toggleHideLoginFields.bind(this));
 
-			// Step 6: final submit
-			$(document).on('click', '#rip-save-config', this.handleSaveConfig.bind(this));
-
 			// Skip wizard
 			$(document).on('click', '#rip-skip-wizard', this.handleSkipWizard.bind(this));
+
+			// Generic save-then-navigate for every step nav control. Back/forward
+			// links carry the target in href; the standalone Save buttons advance
+			// to the next step. The promote "Skip" link navigates without saving.
+			$(document).on('click', '.rip-wizard__actions a[href*="step="]', function (e) {
+				if (this.id === 'rip-promote-skip') {
+					return;
+				}
+				e.preventDefault();
+				ReportedIPWizard.saveAndGo(this.getAttribute('href'));
+			});
+			$(document).on('click', '#rip-notify-continue, #rip-save-config, #rip-promote-continue', function (e) {
+				e.preventDefault();
+				ReportedIPWizard.saveAndGo(ReportedIPWizard.stepUrl(ReportedIPWizard.currentStep() + 1));
+			});
+		},
+
+		// ========================================================================
+		// Per-step server-side persistence
+		// ========================================================================
+
+		currentStep: function () {
+			var el = document.querySelector('.rip-wizard__step-content');
+			return el ? (parseInt(el.getAttribute('data-step'), 10) || 0) : 0;
+		},
+
+		stepUrl: function (n) {
+			var base = reportedipWizard.wizardBaseUrl || '';
+			return base + (base.indexOf('?') === -1 ? '?' : '&') + 'step=' + n;
+		},
+
+		stepFromUrl: function (url) {
+			var m = /[?&]step=(\d+)/.exec(url || '');
+			return m ? parseInt(m[1], 10) : 0;
+		},
+
+		collectStep: function ($container) {
+			var data = {};
+			$container.find(':input').each(function () {
+				var $el = $(this);
+				var name = $el.attr('name');
+				if (!name) {
+					return;
+				}
+				if ($el.is(':checkbox')) {
+					if (name.slice(-2) === '[]') {
+						if ($el.is(':checked')) {
+							if (!data[name]) { data[name] = []; }
+							data[name].push($el.val());
+						}
+					} else {
+						data[name] = $el.is(':checked') ? 1 : 0;
+					}
+				} else if ($el.is(':radio')) {
+					if ($el.is(':checked')) { data[name] = $el.val(); }
+				} else {
+					data[name] = $el.val();
+				}
+			});
+			return data;
+		},
+
+		/**
+		 * Step-4 guard: when 2FA is on the user must keep at least one method;
+		 * an empty role list silently falls back to administrator. Only enforced
+		 * when moving forward so Back never traps the user.
+		 */
+		validateStep4: function (data, forward) {
+			if (!forward || !data['2fa_enabled_global']) {
+				return true;
+			}
+			var methods = (data['2fa_methods'] || '').split(',').filter(function (m) { return m.length; });
+			if (!methods.length) {
+				alert((reportedipWizard.strings && reportedipWizard.strings.no2faMethod) || 'Please choose at least one method.');
+				return false;
+			}
+			if (!data['2fa_enforce_role'] || !data['2fa_enforce_role'].length) {
+				$('input[name="2fa_enforce_role[]"][value="administrator"]').prop('checked', true);
+				data['2fa_enforce_role'] = ['administrator'];
+			}
+			return true;
+		},
+
+		saveAndGo: function (target) {
+			var step = this.currentStep();
+			if (FIELD_STEPS.indexOf(step) === -1) {
+				window.location.href = target;
+				return;
+			}
+
+			var data = this.collectStep($('.rip-wizard__step-content'));
+			var forward = this.stepFromUrl(target) > step;
+			if (step === 4 && !this.validateStep4(data, forward)) {
+				return;
+			}
+
+			data.action = 'reportedip_wizard_save_step';
+			data.nonce = reportedipWizard.nonce;
+			data.step = step;
+
+			$.ajax({
+				url: reportedipWizard.ajaxUrl,
+				type: 'POST',
+				data: data,
+				success: function (response) {
+					if (response && response.success) {
+						window.location.href = target;
+					} else {
+						alert((response && response.data && response.data.message) || (reportedipWizard.strings && reportedipWizard.strings.errorGeneric) || 'Error');
+					}
+				},
+				error: function () {
+					alert((reportedipWizard.strings && reportedipWizard.strings.errorRetry) || 'Error. Please try again.');
+				}
+			});
 		},
 
 		// ========================================================================
@@ -164,14 +248,6 @@
 
 			if (!mode) { return; }
 
-			// Im Community-Modus: API-Key vor Weiter speichern (ohne Validation-Zwang)
-			if (mode === 'community') {
-				var apiKey = ($('#rip-api-key').val() || '').trim();
-				if (apiKey) {
-					this.setSession({ apiKey: apiKey });
-				}
-			}
-
 			$button.prop('disabled', true);
 			var originalText = $button.html();
 			$button.html('<span class="rip-spinner"></span> ' + (reportedipWizard.strings.saving || 'Saving…'));
@@ -182,12 +258,11 @@
 				data: {
 					action: 'reportedip_wizard_save_mode',
 					nonce: reportedipWizard.nonce,
-					mode: mode
+					mode: mode,
+					api_key: 'community' === mode ? ($('#rip-api-key').val() || '').trim() : ''
 				},
 				success: function (response) {
 					if (response.success && response.data.redirect_url) {
-						// Mode in sessionStorage cachen für Final-Submit
-						ReportedIPWizard.setSession({ mode: mode });
 						window.location.href = response.data.redirect_url;
 					} else {
 						$button.html(originalText).prop('disabled', false);
@@ -250,7 +325,6 @@
 
 						ReportedIPWizard._validatedApiKey = apiKey;
 						ReportedIPWizard.tier = (response.data.tier || response.data.user_role || '').toLowerCase();
-						ReportedIPWizard.setSession({ apiKey: apiKey, tier: ReportedIPWizard.tier });
 						ReportedIPWizard.refreshContinueButton();
 					} else {
 						$input.addClass('rip-input--invalid').removeClass('rip-input--valid');
@@ -274,50 +348,24 @@
 		// Step 3: Protection
 		// ========================================================================
 
-		initStep3: function () {
-			this.updateMonitoringWarning();
-			this.updateBlockStrategyState();
-		},
-
 		updateBlockStrategyState: function () {
 			var $autoBlock = $('#rip-auto-block');
-			var $strategy  = $('#rip-block-duration-strategy');
+			var $strategy = $('#rip-block-duration-strategy');
 			if (!$autoBlock.length || !$strategy.length) { return; }
 			$strategy.toggleClass('rip-is-disabled', !$autoBlock.is(':checked'));
 		},
 
 		updateMonitoringWarning: function () {
+			if (!$('#rip-monitor-logins').length) { return; }
 			var anyActive = $('#rip-monitor-logins').is(':checked')
 				|| $('#rip-monitor-comments').is(':checked')
 				|| $('#rip-monitor-xmlrpc').is(':checked');
 			$('#rip-monitoring-warning').toggleClass('is-visible', !anyActive);
 		},
 
-		persistStep3: function () {
-			this.setSession({
-				protection_level: $('input[name="protection_level"]:checked').val() || 'medium',
-				monitor_failed_logins: $('#rip-monitor-logins').is(':checked') ? 1 : 0,
-				monitor_comments: $('#rip-monitor-comments').is(':checked') ? 1 : 0,
-				monitor_xmlrpc: $('#rip-monitor-xmlrpc').is(':checked') ? 1 : 0,
-				monitor_app_passwords: $('#rip-monitor-app-passwords').is(':checked') ? 1 : 0,
-				monitor_rest_api: $('#rip-monitor-rest-api').is(':checked') ? 1 : 0,
-				block_user_enumeration: $('#rip-block-user-enumeration').is(':checked') ? 1 : 0,
-				monitor_404_scans: $('#rip-monitor-404-scans').is(':checked') ? 1 : 0,
-				monitor_geo_anomaly: $('#rip-monitor-geo-anomaly').is(':checked') ? 1 : 0,
-				auto_block: $('#rip-auto-block').is(':checked') ? 1 : 0,
-				block_escalation_enabled: $('#rip-block-escalation').is(':checked') ? 1 : 0,
-				report_only_mode: $('#rip-report-only').is(':checked') ? 1 : 0
-			});
-		},
-
 		// ========================================================================
 		// Step 4: 2FA
 		// ========================================================================
-
-		initStep4: function () {
-			this.update2faEnabledState();
-			this.update2faMethodsHidden();
-		},
 
 		handleMethodCardClick: function (e) {
 			var $card = $(e.currentTarget);
@@ -340,76 +388,13 @@
 			$('#rip-2fa-methods-card, #rip-2fa-roles-card').toggleClass('rip-config-card--disabled', !enabled);
 		},
 
-		persistStep4: function (e) {
-			var twofaEnabled = $('#rip-2fa-enabled').is(':checked');
-			var methods = $('#rip-2fa-methods-input').val() || '';
-
-			if (twofaEnabled && methods.split(',').filter(function (m) { return m.length; }).length === 0) {
-				if (e) { e.preventDefault(); }
-				alert(reportedipWizard.strings.no2faMethod || 'Please choose at least one method.');
-				return false;
-			}
-
-			var roles = [];
-			$('input[name="2fa_enforce_role[]"]:checked').each(function () {
-				roles.push($(this).val());
-			});
-
-			if (twofaEnabled && roles.length === 0) {
-				if (e) { e.preventDefault(); }
-				alert(reportedipWizard.strings.no2faRole || 'Please pick at least one role to enforce 2FA for.');
-				$('input[name="2fa_enforce_role[]"][value="administrator"]').prop('checked', true).trigger('change');
-				return false;
-			}
-
-			this.setSession({
-				'2fa_enabled_global': twofaEnabled ? 1 : 0,
-				'2fa_methods': methods,
-				'2fa_enforce_role': roles,
-				'2fa_enforce_grace_days': parseInt($('#rip-2fa-grace-days').val(), 10) || DEFAULTS.grace_days,
-				'2fa_max_skips': parseInt($('#rip-2fa-max-skips').val(), 10) || DEFAULTS.max_skips,
-				'2fa_trusted_devices': $('#rip-2fa-trusted-devices').is(':checked') ? 1 : 0,
-				'2fa_frontend_onboarding': $('#rip-2fa-frontend-onboarding').is(':checked') ? 1 : 0,
-				'2fa_notify_new_device': $('#rip-2fa-notify-new-device').is(':checked') ? 1 : 0,
-				'2fa_xmlrpc_app_password_only': $('#rip-2fa-xmlrpc-app-password-only').is(':checked') ? 1 : 0
-			});
-		},
-
 		// ========================================================================
-		// Step 5: Privacy → Step 6: Hide Login
-		// ========================================================================
-
-		persistStep5: function () {
-			this.setSession({
-				minimal_logging: $('#rip-minimal-logging').is(':checked') ? 1 : 0,
-				data_retention_days: $('#rip-data-retention').val() || DEFAULTS.retention_days,
-				auto_anonymize_days: $('#rip-auto-anonymize').val() || DEFAULTS.anonymize_days,
-				log_user_agents: $('#rip-log-user-agents').is(':checked') ? 1 : 0,
-				log_referer_domains: $('#rip-log-referer').is(':checked') ? 1 : 0,
-				delete_data_on_uninstall: $('#rip-delete-on-uninstall').is(':checked') ? 1 : 0
-			});
-		},
-
-		// ========================================================================
-		// Step 7: Hide Login (slug validation + final submit)
+		// Step 7: Hide Login (slug validation)
 		// ========================================================================
 
 		initStep7: function () {
 			if (!$('#rip-hide-login-enabled').length) { return; }
 			this.toggleHideLoginFields();
-		},
-
-		// ========================================================================
-		// Step 9: Setup-complete celebration trigger
-		// ========================================================================
-
-		initStep9: function () {
-			var $complete = $('.rip-wizard__complete');
-			if (!$complete.length) { return; }
-			// Defer to next paint so CSS animations start cleanly on load.
-			window.requestAnimationFrame(function () {
-				$complete.addClass('rip-wizard__complete--play');
-			});
 		},
 
 		toggleHideLoginFields: function () {
@@ -428,8 +413,8 @@
 
 		validateSlug: function () {
 			var $slug = $('#rip-hide-login-slug');
-			var $msg  = $('#rip-hide-login-validation');
-			var slug  = ($slug.val() || '').toLowerCase().trim();
+			var $msg = $('#rip-hide-login-validation');
+			var slug = ($slug.val() || '').toLowerCase().trim();
 			if (!slug) {
 				$msg.text('').css('color', '');
 				return;
@@ -457,56 +442,61 @@
 			});
 		},
 
-		handleSaveConfig: function (e) {
-			e.preventDefault();
-			var $button = $(e.currentTarget);
+		// ========================================================================
+		// Step 8: Promote — live preview of the footer badge
+		// ========================================================================
 
-			var step6 = {
-				hide_login_enabled: $('#rip-hide-login-enabled').is(':checked') ? 1 : 0,
-				hide_login_slug: ($('#rip-hide-login-slug').val() || '').toLowerCase().trim(),
-				hide_login_response_mode: $('input[name="hide_login_response_mode"]:checked').val() || 'block_page'
-			};
+		initPromotePreview: function () {
+			var preview = document.getElementById('rip-promote-preview');
+			if (!preview) { return; }
 
-			var session = this.getSession();
-			var payload = $.extend({}, session, step6, {
-				action: 'reportedip_wizard_complete',
-				nonce: reportedipWizard.nonce
+			var initial = preview.querySelector('rip-hive-banner');
+			var label = initial ? (initial.getAttribute('data-label') || '') : '';
+
+			function currentAlign() {
+				var align = 'center';
+				document.querySelectorAll('input[name="promote_align"]').forEach(function (r) {
+					if (r.checked) { align = r.value; }
+				});
+				return align;
+			}
+
+			function render() {
+				var variant = 'badge';
+				document.querySelectorAll('input[name="promote_variant"]').forEach(function (r) {
+					if (r.checked) { variant = r.value; }
+				});
+				var align = currentAlign();
+				var elementAlign = align === 'below' ? 'center' : align;
+				preview.classList.remove('rip-promote-preview--left', 'rip-promote-preview--center', 'rip-promote-preview--right', 'rip-promote-preview--below');
+				preview.classList.add('rip-promote-preview--' + align);
+				preview.innerHTML = '';
+				var el = document.createElement('rip-hive-banner');
+				el.setAttribute('data-variant', variant);
+				el.setAttribute('data-stat', 'attacks_30d');
+				el.setAttribute('data-value', '');
+				el.setAttribute('data-label', label);
+				el.setAttribute('data-mode', 'local');
+				el.setAttribute('data-theme', 'dark');
+				el.setAttribute('data-align', elementAlign);
+				el.setAttribute('data-href', 'https://reportedip.de/?utm_source=hive&utm_medium=wizard-preview&utm_campaign=protected&utm_content=' + variant);
+				preview.appendChild(el);
+			}
+
+			document.querySelectorAll('input[name="promote_variant"], input[name="promote_align"]').forEach(function (r) {
+				r.addEventListener('change', render);
 			});
+		},
 
-			// Defaults für den Fall dass Nutzer Steps übersprungen hat
-			if (!payload.mode) { payload.mode = DEFAULTS.mode; }
-			if (!payload.protection_level) { payload.protection_level = DEFAULTS.protection_level; }
+		// ========================================================================
+		// Step 9: Setup-complete celebration trigger
+		// ========================================================================
 
-			var originalText = $button.html();
-			$button.prop('disabled', true);
-			$button.html('<span class="rip-spinner"></span> ' + (reportedipWizard.strings.completing || 'Wird gespeichert…'));
-
-			$.ajax({
-				url: reportedipWizard.ajaxUrl,
-				type: 'POST',
-				data: payload,
-				// traditional: false (default) — sendet Arrays mit "[]"-Suffix (key[]=v1&key[]=v2),
-				// das PHP $_POST korrekt zu einem Array zusammenführt.
-				success: function (response) {
-					if (response.success && response.data.redirect_url) {
-						$button.html('<svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> ' + (reportedipWizard.strings.saved || 'Gespeichert!'));
-
-						// Session aufräumen
-						ReportedIPWizard.clearSession();
-
-						setTimeout(function () {
-							$button.html(reportedipWizard.strings.redirecting || 'Redirecting…');
-							window.location.href = response.data.redirect_url;
-						}, 500);
-					} else {
-						$button.html(originalText).prop('disabled', false);
-						alert(response.data || (reportedipWizard.strings.errorGeneric || 'Error'));
-					}
-				},
-				error: function () {
-					$button.html(originalText).prop('disabled', false);
-					alert(reportedipWizard.strings.errorRetry || 'Error. Please try again.');
-				}
+		initStep9: function () {
+			var $complete = $('.rip-wizard__complete');
+			if (!$complete.length) { return; }
+			window.requestAnimationFrame(function () {
+				$complete.addClass('rip-wizard__complete--play');
 			});
 		},
 
@@ -527,7 +517,6 @@
 					nonce: reportedipWizard.nonce
 				},
 				success: function (response) {
-					ReportedIPWizard.clearSession();
 					if (response.success && response.data.redirect_url) {
 						window.location.href = response.data.redirect_url;
 					} else {
@@ -541,129 +530,6 @@
 		},
 
 		// ========================================================================
-		// Session cache
-		// ========================================================================
-
-		getSession: function () {
-			try {
-				var raw = window.sessionStorage.getItem(STORAGE_KEY);
-				return raw ? JSON.parse(raw) : {};
-			} catch (e) {
-				return {};
-			}
-		},
-
-		setSession: function (partial) {
-			try {
-				var current = this.getSession();
-				var merged = $.extend({}, current, partial);
-				window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-			} catch (e) {
-				/* swallow quota errors */
-			}
-		},
-
-		clearSession: function () {
-			try {
-				window.sessionStorage.removeItem(STORAGE_KEY);
-			} catch (e) {
-				/* noop */
-			}
-		},
-
-		// On step re-mount: restore saved values into the form fields
-		restoreFromSession: function () {
-			var session = this.getSession();
-
-			// Step 2: API-Key wiederherstellen (falls in Session)
-			if (session.apiKey && $('#rip-api-key').length && !$('#rip-api-key').val()) {
-				$('#rip-api-key').val(session.apiKey);
-			}
-
-			// Step 3: Monitoring toggles
-			if ($('#rip-monitor-logins').length) {
-				if (typeof session.monitor_failed_logins !== 'undefined') {
-					$('#rip-monitor-logins').prop('checked', !!parseInt(session.monitor_failed_logins, 10));
-				}
-				if (typeof session.monitor_comments !== 'undefined') {
-					$('#rip-monitor-comments').prop('checked', !!parseInt(session.monitor_comments, 10));
-				}
-				if (typeof session.monitor_xmlrpc !== 'undefined') {
-					$('#rip-monitor-xmlrpc').prop('checked', !!parseInt(session.monitor_xmlrpc, 10));
-				}
-				if (typeof session.monitor_app_passwords !== 'undefined') {
-					$('#rip-monitor-app-passwords').prop('checked', !!parseInt(session.monitor_app_passwords, 10));
-				}
-				if (typeof session.monitor_rest_api !== 'undefined') {
-					$('#rip-monitor-rest-api').prop('checked', !!parseInt(session.monitor_rest_api, 10));
-				}
-				if (typeof session.block_user_enumeration !== 'undefined') {
-					$('#rip-block-user-enumeration').prop('checked', !!parseInt(session.block_user_enumeration, 10));
-				}
-				if (typeof session.monitor_404_scans !== 'undefined') {
-					$('#rip-monitor-404-scans').prop('checked', !!parseInt(session.monitor_404_scans, 10));
-				}
-				if (typeof session.monitor_geo_anomaly !== 'undefined') {
-					$('#rip-monitor-geo-anomaly').prop('checked', !!parseInt(session.monitor_geo_anomaly, 10));
-				}
-				if (typeof session.auto_block !== 'undefined') {
-					$('#rip-auto-block').prop('checked', !!parseInt(session.auto_block, 10));
-				}
-				if (typeof session.block_escalation_enabled !== 'undefined') {
-					$('#rip-block-escalation').prop('checked', !!parseInt(session.block_escalation_enabled, 10));
-				}
-				if (typeof session.report_only_mode !== 'undefined') {
-					$('#rip-report-only').prop('checked', !!parseInt(session.report_only_mode, 10));
-				}
-				if (session.protection_level) {
-					$('input[name="protection_level"][value="' + session.protection_level + '"]').prop('checked', true);
-				}
-				this.updateMonitoringWarning();
-			}
-
-			// Step 4: 2FA
-			if ($('#rip-2fa-enabled').length) {
-				if (typeof session['2fa_enabled_global'] !== 'undefined') {
-					$('#rip-2fa-enabled').prop('checked', !!parseInt(session['2fa_enabled_global'], 10));
-				}
-				if (session['2fa_methods']) {
-					var methods = session['2fa_methods'].split(',').filter(function (m) { return m.length; });
-					$('.rip-method-card').removeClass('rip-method-card--selected');
-					methods.forEach(function (m) {
-						$('.rip-method-card[data-method="' + m + '"]').addClass('rip-method-card--selected');
-					});
-					$('#rip-2fa-methods-input').val(methods.join(','));
-				}
-				if (session['2fa_enforce_role']) {
-					$('input[name="2fa_enforce_role[]"]').prop('checked', false);
-					var roles = Array.isArray(session['2fa_enforce_role']) ? session['2fa_enforce_role'] : [session['2fa_enforce_role']];
-					roles.forEach(function (r) {
-						$('input[name="2fa_enforce_role[]"][value="' + r + '"]').prop('checked', true);
-					});
-				}
-				if (typeof session['2fa_trusted_devices'] !== 'undefined') {
-					$('#rip-2fa-trusted-devices').prop('checked', !!parseInt(session['2fa_trusted_devices'], 10));
-				}
-				if (typeof session['2fa_frontend_onboarding'] !== 'undefined') {
-					$('#rip-2fa-frontend-onboarding').prop('checked', !!parseInt(session['2fa_frontend_onboarding'], 10));
-				}
-				if (typeof session['2fa_notify_new_device'] !== 'undefined') {
-					$('#rip-2fa-notify-new-device').prop('checked', !!parseInt(session['2fa_notify_new_device'], 10));
-				}
-				if (typeof session['2fa_xmlrpc_app_password_only'] !== 'undefined') {
-					$('#rip-2fa-xmlrpc-app-password-only').prop('checked', !!parseInt(session['2fa_xmlrpc_app_password_only'], 10));
-				}
-				if (typeof session['2fa_enforce_grace_days'] !== 'undefined') {
-					$('#rip-2fa-grace-days').val(parseInt(session['2fa_enforce_grace_days'], 10) || DEFAULTS.grace_days);
-				}
-				if (typeof session['2fa_max_skips'] !== 'undefined') {
-					$('#rip-2fa-max-skips').val(parseInt(session['2fa_max_skips'], 10) || DEFAULTS.max_skips);
-				}
-				this.update2faEnabledState();
-			}
-		},
-
-		// ========================================================================
 		// Helpers
 		// ========================================================================
 
@@ -673,6 +539,7 @@
 				'reportedip_free': 'Free',
 				'reportedip_contributor': 'Contributor',
 				'reportedip_professional': 'Professional',
+				'reportedip_business': 'Business',
 				'reportedip_enterprise': 'Enterprise',
 				'reportedip_honeypot': 'Honeypot'
 			};

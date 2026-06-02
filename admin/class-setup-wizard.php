@@ -78,117 +78,71 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		add_action( 'wp_ajax_reportedip_wizard_save_mode', array( $this, 'ajax_save_mode' ) );
 		add_action( 'wp_ajax_reportedip_wizard_validate_api_key', array( $this, 'ajax_validate_api_key' ) );
-		add_action( 'wp_ajax_reportedip_wizard_complete', array( $this, 'ajax_complete_wizard' ) );
+		add_action( 'wp_ajax_reportedip_wizard_save_step', array( $this, 'ajax_save_step' ) );
 		add_action( 'wp_ajax_reportedip_wizard_skip', array( $this, 'ajax_skip_wizard' ) );
 		add_action( 'wp_ajax_reportedip_wizard_import_settings', array( $this, 'ajax_import_settings' ) );
 		add_action( 'wp_ajax_reportedip_wizard_validate_login_slug', array( $this, 'ajax_validate_login_slug' ) );
-		add_action( 'wp_ajax_reportedip_wizard_save_notifications', array( $this, 'ajax_save_notifications' ) );
-		add_action( 'wp_ajax_reportedip_wizard_save_promote', array( $this, 'ajax_save_promote' ) );
 	}
 
 	/**
-	 * AJAX: persist the notifications-step choices (recipients + From sender).
+	 * AJAX: persist a single wizard step's fields.
 	 *
-	 * Validates every recipient via `is_email()`, drops invalids and persists
-	 * the cleaned, comma-separated list. The From-Name and From-Email pair is
-	 * sanitised the same way the mailer reads it back. When the optional API
-	 * sync flag is on we forward the same payload to reportedip.de so the
-	 * service plugin can mirror the contact configuration.
+	 * The browser collects every input inside the active step container and
+	 * POSTs it here with the step index. Sanitisation + persistence is owned by
+	 * {@see ReportedIP_Hive_Wizard_Schema} so render, collection and save can
+	 * never drift — the root cause of the 1.x bug where the 2FA step silently
+	 * saved nothing. Step 7 (Hide Login) is delegated to the slug-validating
+	 * helper; the optional notification-sync side-effect runs for step 6.
 	 *
-	 * @since 1.5.3
+	 * @since 2.0.2
 	 */
-	public function ajax_save_notifications() {
+	public function ajax_save_step() {
+		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
+
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
 		}
-		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		$raw_recipients = isset( $_POST['recipients'] ) ? sanitize_textarea_field( wp_unslash( (string) $_POST['recipients'] ) ) : '';
-		$candidates     = array_filter( array_map( 'trim', preg_split( '/[\s,;]+/', $raw_recipients ) ) );
-		$valid          = array();
-		$rejected       = array();
-		foreach ( $candidates as $candidate ) {
-			$clean = sanitize_email( $candidate );
-			if ( '' !== $clean && is_email( $clean ) ) {
-				$valid[] = $clean;
-			} else {
-				$rejected[] = $candidate;
-			}
-		}
-		$valid = array_values( array_unique( $valid ) );
-
-		$from_name  = isset( $_POST['from_name'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['from_name'] ) ) : '';
-		$from_email = isset( $_POST['from_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['from_email'] ) ) : '';
-		if ( '' !== $from_email && ! is_email( $from_email ) ) {
-			$from_email = '';
+		$step = isset( $_POST['step'] ) ? absint( $_POST['step'] ) : 0;
+		if ( ! ReportedIP_Hive_Wizard_Schema::is_field_step( $step ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown wizard step.', 'reportedip-hive' ) ), 400 );
 		}
 
-		$notify_admin = isset( $_POST['notify_admin'] ) && '1' === sanitize_key( wp_unslash( (string) $_POST['notify_admin'] ) );
-		$sync_to_api  = isset( $_POST['sync_to_api'] ) && '1' === sanitize_key( wp_unslash( (string) $_POST['sync_to_api'] ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above; the schema sanitises every field per its declared type.
+		$post = wp_unslash( $_POST );
 
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_recipients', implode( ', ', $valid ) );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_from_name', $from_name );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_from_email', $from_email );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_admin', $notify_admin );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_notify_sync_to_api', $sync_to_api );
-
-		if ( $sync_to_api && class_exists( 'ReportedIP_Hive_API' ) ) {
-			$api = ReportedIP_Hive_API::get_instance();
-			$api->sync_notification_config(
-				array(
-					'recipients' => $valid,
-					'from_name'  => $from_name,
-					'from_email' => $from_email,
-				)
-			);
+		if ( 7 === $step ) {
+			$this->save_hide_login_step();
+		} else {
+			ReportedIP_Hive_Wizard_Schema::save_step( $step, $post );
 		}
 
-		wp_send_json_success(
+		if ( 6 === $step ) {
+			$this->maybe_sync_notifications( $post );
+		}
+
+		wp_send_json_success( array( 'saved' => true ) );
+	}
+
+	/**
+	 * Mirror the just-saved notification contact set to reportedip.de when the
+	 * user opted into the sync. No-op otherwise.
+	 *
+	 * @param array<string, mixed> $post Unslashed POST payload.
+	 * @return void
+	 * @since  2.0.2
+	 */
+	private function maybe_sync_notifications( array $post ) {
+		if ( empty( $post['sync_to_api'] ) || ! class_exists( 'ReportedIP_Hive_API' ) ) {
+			return;
+		}
+		ReportedIP_Hive_API::get_instance()->sync_notification_config(
 			array(
-				'redirect_url' => admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=7' ),
-				'recipients'   => $valid,
-				'rejected'     => $rejected,
+				'recipients' => ReportedIP_Hive_Defaults::notify_recipients(),
+				'from_name'  => (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_name', '' ),
+				'from_email' => (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_from_email', '' ),
 			)
 		);
-	}
-
-	/**
-	 * AJAX: persist the promote-step choices (auto-footer toggle + variant +
-	 * alignment).
-	 *
-	 * Reuses the existing wizard nonce. Skipping the step is signalled by
-	 * `promote_action=skip`, which sends `enabled=false` so the auto-footer
-	 * stays off — the user can still flip it on later from the Community tab.
-	 *
-	 * @since 1.5.3
-	 */
-	public function ajax_save_promote() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
-		}
-		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
-
-		$action      = isset( $_POST['promote_action'] ) ? sanitize_key( wp_unslash( (string) $_POST['promote_action'] ) ) : 'save';
-		$enabled     = isset( $_POST['enabled'] ) && '1' === sanitize_key( wp_unslash( (string) $_POST['enabled'] ) );
-		$variant_raw = isset( $_POST['variant'] ) ? sanitize_key( wp_unslash( (string) $_POST['variant'] ) ) : 'badge';
-		$variant     = class_exists( 'ReportedIP_Hive_Frontend_Shortcodes' )
-			? ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( $variant_raw )
-			: ( 'shield' === $variant_raw ? 'shield' : 'badge' );
-		$align_raw   = isset( $_POST['align'] ) ? sanitize_key( wp_unslash( (string) $_POST['align'] ) ) : 'center';
-		$align       = in_array( $align_raw, array( 'left', 'center', 'right', 'below' ), true ) ? $align_raw : 'center';
-
-		$done_url = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=9' );
-
-		if ( 'skip' === $action ) {
-			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_footer_enabled', false );
-			wp_send_json_success( array( 'redirect_url' => $done_url ) );
-		}
-
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_footer_enabled', $enabled );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_footer_variant', $variant );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_footer_align', $align );
-
-		wp_send_json_success( array( 'redirect_url' => $done_url ) );
 	}
 
 	/**
@@ -806,6 +760,20 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * Step 3: Protection Features
 	 */
 	private function render_step_protection() {
+		$opt = static function ( $key, $fallback = true ) {
+			return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_' . $key, $fallback );
+		};
+
+		$presets = ReportedIP_Hive_Wizard_Schema::protection_presets();
+		$cur_thr = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', 5 );
+		$cur_dur = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_duration', 24 );
+		$level   = 'medium';
+		foreach ( $presets as $preset_name => $preset_values ) {
+			if ( $preset_values['failed_login_threshold'] === $cur_thr && $preset_values['block_duration'] === $cur_dur ) {
+				$level = $preset_name;
+				break;
+			}
+		}
 		?>
 		<div class="rip-wizard__configuration">
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'Enable protection features', 'reportedip-hive' ); ?></h1>
@@ -820,28 +788,28 @@ class ReportedIP_Hive_Setup_Wizard {
 				<div class="rip-config-card__body">
 					<div class="rip-protection-levels">
 						<label class="rip-protection-level">
-							<input type="radio" name="protection_level" value="low">
+							<input type="radio" name="protection_level" value="low" <?php checked( 'low' === $level ); ?>>
 							<span class="rip-protection-level__content">
 								<span class="rip-protection-level__name"><?php esc_html_e( 'Low', 'reportedip-hive' ); ?></span>
 								<span class="rip-protection-level__desc"><?php esc_html_e( '10 login failures, 1 hour block', 'reportedip-hive' ); ?></span>
 							</span>
 						</label>
 						<label class="rip-protection-level rip-protection-level--recommended">
-							<input type="radio" name="protection_level" value="medium" checked>
+							<input type="radio" name="protection_level" value="medium" <?php checked( 'medium' === $level ); ?>>
 							<span class="rip-protection-level__content">
 								<span class="rip-protection-level__name"><?php esc_html_e( 'Medium', 'reportedip-hive' ); ?> <small>(<?php esc_html_e( 'Recommended', 'reportedip-hive' ); ?>)</small></span>
 								<span class="rip-protection-level__desc"><?php esc_html_e( '5 login failures, 24 hour block', 'reportedip-hive' ); ?></span>
 							</span>
 						</label>
 						<label class="rip-protection-level">
-							<input type="radio" name="protection_level" value="high">
+							<input type="radio" name="protection_level" value="high" <?php checked( 'high' === $level ); ?>>
 							<span class="rip-protection-level__content">
 								<span class="rip-protection-level__name"><?php esc_html_e( 'High', 'reportedip-hive' ); ?></span>
 								<span class="rip-protection-level__desc"><?php esc_html_e( '3 login failures, 48 hour block', 'reportedip-hive' ); ?></span>
 							</span>
 						</label>
 						<label class="rip-protection-level">
-							<input type="radio" name="protection_level" value="paranoid">
+							<input type="radio" name="protection_level" value="paranoid" <?php checked( 'paranoid' === $level ); ?>>
 							<span class="rip-protection-level__content">
 								<span class="rip-protection-level__name"><?php esc_html_e( 'Paranoid', 'reportedip-hive' ); ?></span>
 								<span class="rip-protection-level__desc"><?php esc_html_e( '2 login failures, 7 day block', 'reportedip-hive' ); ?></span>
@@ -862,17 +830,17 @@ class ReportedIP_Hive_Setup_Wizard {
 				<div class="rip-config-card__body">
 					<p class="rip-help-block"><?php esc_html_e( 'Stop attackers from guessing passwords or probing usernames.', 'reportedip-hive' ); ?></p>
 					<label class="rip-toggle">
-						<input type="checkbox" name="monitor_failed_logins" id="rip-monitor-logins" checked>
+						<input type="checkbox" name="monitor_failed_logins" id="rip-monitor-logins" <?php checked( $opt( 'monitor_failed_logins' ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Failed logins', 'reportedip-hive' ); ?></span>
 					</label>
 					<label class="rip-toggle">
-						<input type="checkbox" name="monitor_app_passwords" id="rip-monitor-app-passwords" checked>
+						<input type="checkbox" name="monitor_app_passwords" id="rip-monitor-app-passwords" <?php checked( $opt( 'monitor_app_passwords' ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Application-password abuse (REST/XMLRPC Basic-Auth bypass for 2FA)', 'reportedip-hive' ); ?></span>
 					</label>
 					<label class="rip-toggle">
-						<input type="checkbox" name="block_user_enumeration" id="rip-block-user-enumeration" checked>
+						<input type="checkbox" name="block_user_enumeration" id="rip-block-user-enumeration" <?php checked( $opt( 'block_user_enumeration' ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'User-enumeration defence (?author=, /wp-json/wp/v2/users, login-error masking)', 'reportedip-hive' ); ?></span>
 					</label>
@@ -888,17 +856,17 @@ class ReportedIP_Hive_Setup_Wizard {
 				<div class="rip-config-card__body">
 					<p class="rip-help-block"><?php esc_html_e( 'Throttle bots that hammer comment forms or APIs.', 'reportedip-hive' ); ?></p>
 					<label class="rip-toggle">
-						<input type="checkbox" name="monitor_comments" id="rip-monitor-comments" checked>
+						<input type="checkbox" name="monitor_comments" id="rip-monitor-comments" <?php checked( $opt( 'monitor_comments' ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Spam comments', 'reportedip-hive' ); ?></span>
 					</label>
 					<label class="rip-toggle">
-						<input type="checkbox" name="monitor_xmlrpc" id="rip-monitor-xmlrpc" checked>
+						<input type="checkbox" name="monitor_xmlrpc" id="rip-monitor-xmlrpc" <?php checked( $opt( 'monitor_xmlrpc' ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'XMLRPC access (most common attack vector)', 'reportedip-hive' ); ?></span>
 					</label>
 					<label class="rip-toggle">
-						<input type="checkbox" name="monitor_rest_api" id="rip-monitor-rest-api" checked>
+						<input type="checkbox" name="monitor_rest_api" id="rip-monitor-rest-api" <?php checked( $opt( 'monitor_rest_api' ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'REST API rate-limit (scrapers, scanners)', 'reportedip-hive' ); ?></span>
 					</label>
@@ -914,12 +882,12 @@ class ReportedIP_Hive_Setup_Wizard {
 				<div class="rip-config-card__body">
 					<p class="rip-help-block"><?php esc_html_e( 'Detect scanners and impossible-travel sign-ins.', 'reportedip-hive' ); ?></p>
 					<label class="rip-toggle">
-						<input type="checkbox" name="monitor_404_scans" id="rip-monitor-404-scans" checked>
+						<input type="checkbox" name="monitor_404_scans" id="rip-monitor-404-scans" <?php checked( $opt( 'monitor_404_scans' ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( '404 / scanner detection (.env, wp-config.php.bak, /.git/, …)', 'reportedip-hive' ); ?></span>
 					</label>
 					<label class="rip-toggle">
-						<input type="checkbox" name="monitor_geo_anomaly" id="rip-monitor-geo-anomaly" checked>
+						<input type="checkbox" name="monitor_geo_anomaly" id="rip-monitor-geo-anomaly" <?php checked( $opt( 'monitor_geo_anomaly' ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Geographic-anomaly detection on successful logins (forces 2FA from new countries)', 'reportedip-hive' ); ?></span>
 					</label>
@@ -941,7 +909,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<p class="rip-help-block"><?php esc_html_e( 'Two-step decision: Auto-blocking decides IF an offender gets blocked at all; the duration strategy decides HOW long. Report-only at the bottom overrides everything — when on, the plugin only watches.', 'reportedip-hive' ); ?></p>
 
 					<label class="rip-toggle">
-						<input type="checkbox" name="auto_block" id="rip-auto-block" checked>
+						<input type="checkbox" name="auto_block" id="rip-auto-block" <?php checked( $opt( 'auto_block' ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Auto-blocking — block suspicious IPs automatically', 'reportedip-hive' ); ?></span>
 					</label>
@@ -962,7 +930,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<hr class="rip-helper-divider">
 
 					<label class="rip-toggle">
-						<input type="checkbox" name="report_only_mode" id="rip-report-only">
+						<input type="checkbox" name="report_only_mode" id="rip-report-only" <?php checked( $opt( 'report_only_mode', false ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Report-only mode (observe, do not block)', 'reportedip-hive' ); ?></span>
 					</label>
@@ -1260,6 +1228,11 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * Step 5: Privacy & GDPR
 	 */
 	private function render_step_privacy() {
+		$opt       = static function ( $key, $fallback = false ) {
+			return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_' . $key, $fallback );
+		};
+		$retention = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 );
+		$anonymize = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_anonymize_days', 7 );
 		?>
 		<div class="rip-wizard__configuration">
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'Privacy & GDPR', 'reportedip-hive' ); ?></h1>
@@ -1274,7 +1247,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 				<div class="rip-config-card__body">
 					<label class="rip-toggle">
-						<input type="checkbox" name="minimal_logging" id="rip-minimal-logging" checked>
+						<input type="checkbox" name="minimal_logging" id="rip-minimal-logging" <?php checked( $opt( 'minimal_logging', true ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Minimal logging — only security-relevant data', 'reportedip-hive' ); ?></span>
 					</label>
@@ -1285,10 +1258,10 @@ class ReportedIP_Hive_Setup_Wizard {
 								<?php esc_html_e( 'Delete logs after', 'reportedip-hive' ); ?>
 							</label>
 							<select id="rip-data-retention" name="data_retention_days" class="rip-select">
-								<option value="7"><?php esc_html_e( '7 days', 'reportedip-hive' ); ?></option>
-								<option value="14"><?php esc_html_e( '14 days', 'reportedip-hive' ); ?></option>
-								<option value="30" selected><?php esc_html_e( '30 days', 'reportedip-hive' ); ?></option>
-								<option value="90"><?php esc_html_e( '90 days', 'reportedip-hive' ); ?></option>
+								<option value="7" <?php selected( $retention, 7 ); ?>><?php esc_html_e( '7 days', 'reportedip-hive' ); ?></option>
+								<option value="14" <?php selected( $retention, 14 ); ?>><?php esc_html_e( '14 days', 'reportedip-hive' ); ?></option>
+								<option value="30" <?php selected( $retention, 30 ); ?>><?php esc_html_e( '30 days', 'reportedip-hive' ); ?></option>
+								<option value="90" <?php selected( $retention, 90 ); ?>><?php esc_html_e( '90 days', 'reportedip-hive' ); ?></option>
 							</select>
 						</div>
 						<div class="rip-gdpr-select-group">
@@ -1296,10 +1269,10 @@ class ReportedIP_Hive_Setup_Wizard {
 								<?php esc_html_e( 'Anonymise personal data after', 'reportedip-hive' ); ?>
 							</label>
 							<select id="rip-auto-anonymize" name="auto_anonymize_days" class="rip-select">
-								<option value="1"><?php esc_html_e( '1 day', 'reportedip-hive' ); ?></option>
-								<option value="3"><?php esc_html_e( '3 days', 'reportedip-hive' ); ?></option>
-								<option value="7" selected><?php esc_html_e( '7 days', 'reportedip-hive' ); ?></option>
-								<option value="14"><?php esc_html_e( '14 days', 'reportedip-hive' ); ?></option>
+								<option value="1" <?php selected( $anonymize, 1 ); ?>><?php esc_html_e( '1 day', 'reportedip-hive' ); ?></option>
+								<option value="3" <?php selected( $anonymize, 3 ); ?>><?php esc_html_e( '3 days', 'reportedip-hive' ); ?></option>
+								<option value="7" <?php selected( $anonymize, 7 ); ?>><?php esc_html_e( '7 days', 'reportedip-hive' ); ?></option>
+								<option value="14" <?php selected( $anonymize, 14 ); ?>><?php esc_html_e( '14 days', 'reportedip-hive' ); ?></option>
 							</select>
 						</div>
 					</div>
@@ -1319,12 +1292,12 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 				<div class="rip-config-card__body">
 					<label class="rip-toggle">
-						<input type="checkbox" name="log_user_agents" id="rip-log-user-agents">
+						<input type="checkbox" name="log_user_agents" id="rip-log-user-agents" <?php checked( $opt( 'log_user_agents', false ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Log user agents (for forensic analysis)', 'reportedip-hive' ); ?></span>
 					</label>
 					<label class="rip-toggle">
-						<input type="checkbox" name="log_referer_domains" id="rip-log-referer">
+						<input type="checkbox" name="log_referer_domains" id="rip-log-referer" <?php checked( $opt( 'log_referer_domains', false ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Log referrer domains', 'reportedip-hive' ); ?></span>
 					</label>
@@ -1340,7 +1313,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				</div>
 				<div class="rip-config-card__body">
 					<label class="rip-toggle">
-						<input type="checkbox" name="delete_data_on_uninstall" id="rip-delete-on-uninstall">
+						<input type="checkbox" name="delete_data_on_uninstall" id="rip-delete-on-uninstall" <?php checked( $opt( 'delete_data_on_uninstall', false ) ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Delete all data on uninstall', 'reportedip-hive' ); ?></span>
 					</label>
@@ -1517,53 +1490,6 @@ class ReportedIP_Hive_Setup_Wizard {
 				</button>
 			</div>
 		</div>
-
-		<script>
-		(function(){
-			var btn        = document.getElementById('rip-notify-continue');
-			var recipients = document.getElementById('rip-notify-recipients');
-			var fromName   = document.getElementById('rip-notify-from-name');
-			var fromEmail  = document.getElementById('rip-notify-from-email');
-			var notifyChk  = document.getElementById('rip-notify-admin');
-			var syncChk    = document.getElementById('rip-notify-sync-api');
-			var validation = document.getElementById('rip-notify-validation');
-			if (!btn) return;
-
-			btn.addEventListener('click', function(e){
-				e.preventDefault();
-				if (!window.reportedipWizard || !window.reportedipWizard.ajaxUrl) return;
-				btn.disabled = true;
-				validation.textContent = <?php echo wp_json_encode( __( 'Saving…', 'reportedip-hive' ) ); ?>;
-				var data = new FormData();
-				data.append('action', 'reportedip_wizard_save_notifications');
-				data.append('nonce', window.reportedipWizard.nonce || '');
-				data.append('recipients', recipients ? recipients.value : '');
-				data.append('from_name', fromName ? fromName.value : '');
-				data.append('from_email', fromEmail ? fromEmail.value : '');
-				data.append('notify_admin', (notifyChk && notifyChk.checked) ? '1' : '0');
-				data.append('sync_to_api', (syncChk && syncChk.checked) ? '1' : '0');
-				fetch(window.reportedipWizard.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: data })
-					.then(function(r){ return r.json(); })
-					.then(function(json){
-						if (json && json.success && json.data && json.data.redirect_url) {
-							if (json.data.rejected && json.data.rejected.length) {
-								validation.textContent = <?php echo wp_json_encode( __( 'Some addresses were dropped: ', 'reportedip-hive' ) ); ?> + json.data.rejected.join(', ');
-								btn.disabled = false;
-								return;
-							}
-							window.location.href = json.data.redirect_url;
-						} else {
-							validation.textContent = (json && json.data && json.data.message) || <?php echo wp_json_encode( __( 'Save failed.', 'reportedip-hive' ) ); ?>;
-							btn.disabled = false;
-						}
-					})
-					.catch(function(){
-						validation.textContent = <?php echo wp_json_encode( __( 'Network error.', 'reportedip-hive' ) ); ?>;
-						btn.disabled = false;
-					});
-			});
-		})();
-		</script>
 		<?php
 	}
 
@@ -1756,77 +1682,6 @@ class ReportedIP_Hive_Setup_Wizard {
 				</button>
 			</div>
 		</div>
-
-		<script>
-		(function(){
-			var preview = document.getElementById('rip-promote-preview');
-			var continueBtn = document.getElementById('rip-promote-continue');
-			var skipBtn = document.getElementById('rip-promote-skip');
-			var enabledChk = document.getElementById('rip-promote-enabled');
-			var variantRadios = document.querySelectorAll('input[name="promote_variant"]');
-			var alignRadios = document.querySelectorAll('input[name="promote_align"]');
-
-			var currentAlign = function(){
-				var align = 'center';
-				alignRadios.forEach(function(r){ if (r.checked) { align = r.value; } });
-				return align;
-			};
-
-			var renderPreview = function(){
-				if (!preview) return;
-				var variant = 'badge';
-				variantRadios.forEach(function(r){ if (r.checked) { variant = r.value; } });
-				var align = currentAlign();
-				var elementAlign = align === 'below' ? 'center' : align;
-				preview.classList.remove('rip-promote-preview--left', 'rip-promote-preview--center', 'rip-promote-preview--right', 'rip-promote-preview--below');
-				preview.classList.add('rip-promote-preview--' + align);
-				preview.innerHTML = '';
-				var el = document.createElement('rip-hive-banner');
-				el.setAttribute('data-variant', variant);
-				el.setAttribute('data-stat', 'attacks_30d');
-				el.setAttribute('data-value', '');
-				el.setAttribute('data-label', <?php echo wp_json_encode( __( 'Active threat protection', 'reportedip-hive' ) ); ?>);
-				el.setAttribute('data-mode', 'local');
-				el.setAttribute('data-theme', 'dark');
-				el.setAttribute('data-align', elementAlign);
-				el.setAttribute('data-href', 'https://reportedip.de/?utm_source=hive&utm_medium=wizard-preview&utm_campaign=protected&utm_content=' + variant);
-				preview.appendChild(el);
-			};
-
-			variantRadios.forEach(function(r){ r.addEventListener('change', renderPreview); });
-			alignRadios.forEach(function(r){ r.addEventListener('change', renderPreview); });
-
-			var post = function(action){
-				if (continueBtn) continueBtn.disabled = true;
-				if (skipBtn) skipBtn.classList.add('disabled');
-				var variant = 'badge';
-				variantRadios.forEach(function(r){ if (r.checked) { variant = r.value; } });
-				var data = new FormData();
-				data.append('action', 'reportedip_wizard_save_promote');
-				data.append('nonce', (window.reportedipWizard && window.reportedipWizard.nonce) || '');
-				data.append('promote_action', action);
-				data.append('enabled', (enabledChk && enabledChk.checked) ? '1' : '0');
-				data.append('variant', variant);
-				data.append('align', currentAlign());
-				fetch((window.reportedipWizard && window.reportedipWizard.ajaxUrl) || <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>, {
-					method: 'POST',
-					credentials: 'same-origin',
-					body: data
-				}).then(function(r){ return r.json(); }).then(function(json){
-					if (json && json.success && json.data && json.data.redirect_url) {
-						window.location.href = json.data.redirect_url;
-					} else {
-						window.location.href = <?php echo wp_json_encode( $skip_url ); ?>;
-					}
-				}).catch(function(){
-					window.location.href = <?php echo wp_json_encode( $skip_url ); ?>;
-				});
-			};
-
-			if (continueBtn) continueBtn.addEventListener('click', function(e){ e.preventDefault(); post('save'); });
-			if (skipBtn) skipBtn.addEventListener('click', function(e){ e.preventDefault(); post('skip'); });
-		})();
-		</script>
 		<?php
 	}
 
@@ -1834,6 +1689,8 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * Step 9: Complete / Summary
 	 */
 	private function render_step_complete() {
+		$this->finalize_wizard();
+
 		$mode      = $this->mode_manager->get_mode();
 		$mode_info = $this->mode_manager->get_mode_info( $mode );
 
@@ -2064,138 +1921,43 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * AJAX: complete wizard — saves ALL settings and marks the wizard as completed.
+	 * Finalise the wizard when the Done step (9) is reached.
+	 *
+	 * Per-step saving already persisted every field, so this only seeds any
+	 * still-missing defaults, marks the wizard completed and arms the 2FA
+	 * onboarding transient when the current admin is enforced but has no active
+	 * method yet. Idempotent — it short-circuits once the wizard is marked
+	 * completed, so reloading the Done step does no extra work.
+	 *
+	 * @return void
+	 * @since  2.0.2
 	 */
-	public function ajax_complete_wizard() {
-		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
-
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
+	private function finalize_wizard() {
+		if ( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_wizard_completed', false ) ) {
+			return;
 		}
 
-		if ( isset( $_POST['mode'] ) ) {
-			$mode = sanitize_text_field( wp_unslash( $_POST['mode'] ) );
-			if ( in_array( $mode, array( 'local', 'community' ), true ) ) {
-				$this->mode_manager->set_mode( $mode );
-			}
-		}
-
-		if ( isset( $_POST['api_key'] ) ) {
-			$api_key = sanitize_text_field( wp_unslash( $_POST['api_key'] ) );
-			if ( ! empty( $api_key ) ) {
-				ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_key', $api_key );
-			}
-		}
-
-		$protection_level = isset( $_POST['protection_level'] ) ? sanitize_text_field( wp_unslash( $_POST['protection_level'] ) ) : 'medium';
-		$presets          = $this->get_protection_presets();
-		$preset           = isset( $presets[ $protection_level ] ) ? $presets[ $protection_level ] : $presets['medium'];
-
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_failed_login_threshold', $preset['failed_login_threshold'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_failed_login_timeframe', $preset['failed_login_timeframe'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_block_duration', $preset['block_duration'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_block_threshold', $preset['block_threshold'] );
-
-		$protection_defaults = ReportedIP_Hive_Defaults::wizard_protection_defaults();
-		foreach ( $protection_defaults as $field => $default_on ) {
-			$value = array_key_exists( $field, $_POST )
-				? (bool) $_POST[ $field ]
-				: (bool) $default_on;
-			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_' . $field, $value );
-		}
-
-		$twofa_enabled = isset( $_POST['2fa_enabled_global'] ) && (bool) $_POST['2fa_enabled_global'];
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enabled_global', $twofa_enabled );
-
-		$valid_methods = array( 'totp', 'email', 'webauthn', 'sms' );
-		$raw_methods   = isset( $_POST['2fa_methods'] ) ? sanitize_text_field( wp_unslash( $_POST['2fa_methods'] ) ) : 'totp,email';
-		$methods       = array_values( array_intersect( array_map( 'trim', explode( ',', $raw_methods ) ), $valid_methods ) );
-		if ( empty( $methods ) ) {
-			$methods = array( 'totp', 'email' );
-		}
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_allowed_methods', wp_json_encode( $methods ) );
-
-		$valid_roles   = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
-		$posted_roles  = isset( $_POST['2fa_enforce_role'] ) && is_array( $_POST['2fa_enforce_role'] )
-			? array_map( 'sanitize_text_field', wp_unslash( $_POST['2fa_enforce_role'] ) )
-			: array();
-		$enforce_roles = array_values( array_intersect( $posted_roles, $valid_roles ) );
-		if ( $twofa_enabled && empty( $enforce_roles ) ) {
-			$enforce_roles = array( 'administrator' );
-		}
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_roles', wp_json_encode( $enforce_roles ) );
-
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_trusted_devices', isset( $_POST['2fa_trusted_devices'] ) && (bool) $_POST['2fa_trusted_devices'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_frontend_onboarding', isset( $_POST['2fa_frontend_onboarding'] ) && (bool) $_POST['2fa_frontend_onboarding'] );
-
-		$frontend_enabled_desired = isset( $_POST['2fa_frontend_enabled'] ) && (bool) $_POST['2fa_frontend_enabled'];
-		if ( $frontend_enabled_desired ) {
-			$frontend_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
-			if ( empty( $frontend_status['available'] ) ) {
-				$frontend_enabled_desired = false;
-			}
-		}
-		$frontend_was_on = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
-		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, $frontend_enabled_desired ? '1' : '' );
-		if ( $frontend_was_on !== $frontend_enabled_desired ) {
-			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
-			if ( function_exists( 'flush_rewrite_rules' ) ) {
-				flush_rewrite_rules( false );
-			}
-		}
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_notify_new_device', isset( $_POST['2fa_notify_new_device'] ) && (bool) $_POST['2fa_notify_new_device'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_xmlrpc_app_password_only', isset( $_POST['2fa_xmlrpc_app_password_only'] ) && (bool) $_POST['2fa_xmlrpc_app_password_only'] );
-
-		$grace_days = isset( $_POST['2fa_enforce_grace_days'] ) ? absint( $_POST['2fa_enforce_grace_days'] ) : 7;
-		$grace_days = max( 0, min( 60, $grace_days ) );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_grace_days', $grace_days );
-
-		$max_skips = isset( $_POST['2fa_max_skips'] ) ? absint( $_POST['2fa_max_skips'] ) : 3;
-		$max_skips = max( 0, min( 20, $max_skips ) );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_max_skips', $max_skips );
-
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_minimal_logging', isset( $_POST['minimal_logging'] ) && (bool) $_POST['minimal_logging'] );
-
-		$retention_days = isset( $_POST['data_retention_days'] ) ? absint( $_POST['data_retention_days'] ) : 30;
-		$retention_days = max( 7, min( 365, $retention_days ) );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_data_retention_days', $retention_days );
-
-		$anonymize_days = isset( $_POST['auto_anonymize_days'] ) ? absint( $_POST['auto_anonymize_days'] ) : 7;
-		$anonymize_days = max( 1, min( 90, $anonymize_days ) );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_auto_anonymize_days', $anonymize_days );
-
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_log_user_agents', isset( $_POST['log_user_agents'] ) && (bool) $_POST['log_user_agents'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_log_referer_domains', isset( $_POST['log_referer_domains'] ) && (bool) $_POST['log_referer_domains'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_delete_data_on_uninstall', isset( $_POST['delete_data_on_uninstall'] ) && (bool) $_POST['delete_data_on_uninstall'] );
-
-		$this->save_hide_login_step();
-
-		$this->apply_safe_defaults();
-
+		ReportedIP_Hive_Defaults::seed_missing();
 		$this->mode_manager->mark_wizard_completed();
 
-		if ( $twofa_enabled
-			&& class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' )
-			&& class_exists( 'ReportedIP_Hive_Two_Factor' )
-		) {
-			$current_user = wp_get_current_user();
-			if ( ReportedIP_Hive_Two_Factor::is_enforced_for_user( $current_user ) ) {
-				$enabled_methods = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $current_user->ID );
-				if ( empty( $enabled_methods ) ) {
-					set_transient(
-						ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_PREFIX . $current_user->ID,
-						1,
-						ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_TTL
-					);
-				}
-			}
+		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enabled_global', false ) ) {
+			return;
+		}
+		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) || ! class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
+			return;
 		}
 
-		wp_send_json_success(
-			array(
-				'message'      => __( 'Setup completed successfully!', 'reportedip-hive' ),
-				'redirect_url' => admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=8' ),
-			)
+		$current_user = wp_get_current_user();
+		if ( ! ReportedIP_Hive_Two_Factor::is_enforced_for_user( $current_user ) ) {
+			return;
+		}
+		if ( ! empty( ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $current_user->ID ) ) ) {
+			return;
+		}
+		set_transient(
+			ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_PREFIX . $current_user->ID,
+			1,
+			ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_TTL
 		);
 	}
 
@@ -2210,7 +1972,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * @since 1.2.0
 	 */
 	private function save_hide_login_step(): void {
-		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce is verified by ajax_complete_wizard() before this private helper is reached.
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce is verified by ajax_save_step() before this private helper is reached.
 		$wants_enabled = isset( $_POST['hide_login_enabled'] ) && (bool) $_POST['hide_login_enabled'];
 
 		if ( isset( $_POST['hide_login_response_mode'] ) ) {
@@ -2327,40 +2089,6 @@ class ReportedIP_Hive_Setup_Wizard {
 	 */
 	private function apply_safe_defaults() {
 		ReportedIP_Hive_Defaults::seed_missing();
-	}
-
-	/**
-	 * Protection level presets (shared between UI and AJAX handler)
-	 *
-	 * @return array
-	 */
-	private function get_protection_presets() {
-		return array(
-			'low'      => array(
-				'failed_login_threshold' => 10,
-				'failed_login_timeframe' => 30,
-				'block_duration'         => 1,
-				'block_threshold'        => 90,
-			),
-			'medium'   => array(
-				'failed_login_threshold' => 5,
-				'failed_login_timeframe' => 15,
-				'block_duration'         => 24,
-				'block_threshold'        => 75,
-			),
-			'high'     => array(
-				'failed_login_threshold' => 3,
-				'failed_login_timeframe' => 15,
-				'block_duration'         => 48,
-				'block_threshold'        => 50,
-			),
-			'paranoid' => array(
-				'failed_login_threshold' => 2,
-				'failed_login_timeframe' => 10,
-				'block_duration'         => 168,
-				'block_threshold'        => 25,
-			),
-		);
 	}
 
 	/**
