@@ -2672,7 +2672,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Sanitize boolean values
 	 */
 	public function sanitize_boolean( $value ) {
-		return (bool) $value;
+		return $value ? 1 : 0;
 	}
 
 	/**
@@ -7313,7 +7313,8 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php settings_fields( 'reportedip_hive_hardening_mode' ); ?>
 
 				<div class="rip-form-group">
-					<label class="rip-toggle">
+					<input type="hidden" name="reportedip_hive_hardening_enabled" value="0" />
+						<label class="rip-toggle">
 						<input
 							type="checkbox"
 							name="reportedip_hive_hardening_enabled"

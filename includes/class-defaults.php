@@ -124,7 +124,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_block_ladder_reset_days'        => 30,
 		'reportedip_hive_blocked_page_contact_url'       => '',
 
-		'reportedip_hive_hardening_enabled'              => false,
 		'reportedip_hive_hardening_duration_minutes'     => 60,
 		'reportedip_hive_hardening_login_threshold'      => 2,
 		'reportedip_hive_hardening_login_timeframe'      => 5,
@@ -187,7 +186,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_detailed_logging'               => false,
 		'reportedip_hive_log_user_agents'                => false,
 		'reportedip_hive_log_referer_domains'            => false,
-		'reportedip_hive_minimal_logging'                => false,
+		'reportedip_hive_minimal_logging'                => true,
 		'reportedip_hive_data_retention_days'            => 30,
 		'reportedip_hive_auto_anonymize_days'            => 7,
 		'reportedip_hive_delete_data_on_uninstall'       => false,
@@ -380,9 +379,13 @@ final class ReportedIP_Hive_Defaults {
 	public static function seed_missing(): void {
 		$sentinel = '__rip_hive_default_unset__';
 		foreach ( self::SAFE_OPTIONS as $option_key => $default_value ) {
-			if ( $sentinel === ReportedIP_Hive_Option_Routing::get( $option_key, $sentinel ) ) {
-				ReportedIP_Hive_Option_Routing::set( $option_key, $default_value );
+			if ( $sentinel !== ReportedIP_Hive_Option_Routing::get( $option_key, $sentinel ) ) {
+				continue;
 			}
+			if ( is_bool( $default_value ) ) {
+				$default_value = $default_value ? 1 : 0;
+			}
+			ReportedIP_Hive_Option_Routing::set( $option_key, $default_value );
 		}
 	}
 

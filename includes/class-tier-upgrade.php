@@ -402,7 +402,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 		if ( ReportedIP_Hive_Hardening_Mode::master_toggle_is_explicit() ) {
 			return;
 		}
-		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Hardening_Mode::OPT_MASTER_ENABLED, true );
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Hardening_Mode::OPT_MASTER_ENABLED, 1 );
 	}
 
 	/**

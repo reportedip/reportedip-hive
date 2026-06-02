@@ -358,7 +358,7 @@ final class ReportedIP_Hive_Wizard_Schema {
 
 		switch ( $field['kind'] ) {
 			case 'bool':
-				ReportedIP_Hive_Option_Routing::set( $option, ! empty( $post[ $name ] ) );
+				ReportedIP_Hive_Option_Routing::set( $option, empty( $post[ $name ] ) ? 0 : 1 );
 				break;
 
 			case 'int':

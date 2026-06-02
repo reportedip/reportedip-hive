@@ -72,12 +72,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 				)
 			);
 
-			$this->assertFalse( \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_minimal_logging', null ) );
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_minimal_logging', null ) );
 			$this->assertSame( 7, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', null ), 'clamped to min' );
 			$this->assertSame( 90, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_anonymize_days', null ), 'clamped to max' );
-			$this->assertTrue( \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', null ) );
-			$this->assertFalse( \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_referer_domains', null ), 'absent checkbox = false' );
-			$this->assertFalse( \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', null ), 'absent checkbox = false' );
+			$this->assertSame( 1, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', null ) );
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_referer_domains', null ), 'absent checkbox = false' );
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', null ), 'absent checkbox = false' );
 		}
 
 		public function test_save_step_3_expands_protection_preset_and_respects_absent_toggles() {
@@ -95,9 +95,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 48, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_duration', null ) );
 			$this->assertSame( 50, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', null ) );
 
-			$this->assertTrue( \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_failed_logins', null ) );
-			$this->assertFalse( \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', null ) );
-			$this->assertFalse( \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_comments', null ), 'absent toggle = false' );
+			$this->assertSame( 1, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_failed_logins', null ) );
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', null ) );
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_comments', null ), 'absent toggle = false' );
 		}
 
 		public function test_unknown_protection_level_falls_back_to_medium() {

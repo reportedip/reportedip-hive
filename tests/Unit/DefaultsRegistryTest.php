@@ -83,10 +83,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
 			foreach ( $defaults as $key => $value ) {
+				$expected = is_bool( $value ) ? ( $value ? 1 : 0 ) : $value;
 				$this->assertSame(
-					$value,
+					$expected,
 					\ReportedIP_Hive_Option_Routing::get( $key, '__missing__' ),
-					"seed_missing() did not persist {$key}."
+					"seed_missing() did not persist {$key} (booleans are stored as 1/0 to avoid the get_option false-default footgun)."
 				);
 			}
 		}
@@ -99,7 +100,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertSame( 99, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', null ) );
 			$this->assertSame( '["editor"]', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', null ) );
-			$this->assertSame( false, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', '__missing__' ) );
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', '__missing__' ) );
 		}
 	}
 }
