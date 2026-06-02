@@ -4568,12 +4568,15 @@ class ReportedIP_Hive_Admin_Settings {
 			? ReportedIP_Hive_Hide_Login::get_instance()
 			: null;
 
-		$enabled       = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false );
-		$slug          = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', '' );
-		$response_mode = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE );
-		$token_in_urls = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_token_in_urls', true );
-		$preview_url   = $hide_login && $hide_login->is_active() ? $hide_login->get_login_url() : '';
-		$kill_switch   = defined( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN' ) && REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN;
+		$enabled         = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false );
+		$slug            = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', '' );
+		$response_mode   = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE );
+		$token_in_urls   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_token_in_urls', true );
+		$probe_enabled   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_hide_login_probe', true );
+		$probe_threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_probe_threshold', 5 );
+		$probe_timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_probe_timeframe', 10 );
+		$preview_url     = $hide_login && $hide_login->is_active() ? $hide_login->get_login_url() : '';
+		$kill_switch     = defined( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN' ) && REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN;
 		?>
 		<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
 			<?php settings_fields( 'reportedip_hive_hide_login' ); ?>
@@ -4652,6 +4655,36 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-toggle__label"><?php esc_html_e( 'Append the slug as a marker query argument to all generated login URLs', 'reportedip-hive' ); ?></span>
 					</label>
 					<p class="rip-help-text"><?php esc_html_e( 'Off by default — the slug already lives in the URL path, the extra query argument is redundant and can collide with plugins that use the same name. Enable only if you have a specific integration that expects the marker.', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+					<?php esc_html_e( 'Block scanners probing the old login URL', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'A single accidental hit on the old URL is harmless and only logged. A repeated pattern from one IP is almost always a scanner — block it on the same escalating ladder as other threats and share it with the community.', 'reportedip-hive' ); ?></p>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_monitor_hide_login_probe" value="1" class="rip-toggle__input" <?php checked( $probe_enabled ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Block IPs that repeatedly probe the hidden login URL', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'On by default. The passive recon log stays regardless of this setting — turning it off only disables the IP block and community report.', 'reportedip-hive' ); ?></p>
+				</div>
+
+				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_hide_login_probe_threshold"><?php esc_html_e( 'How many hits?', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_hide_login_probe_threshold" name="reportedip_hive_hide_login_probe_threshold" value="<?php echo esc_attr( (string) $probe_threshold ); ?>" min="1" max="100" class="rip-input" />
+						<p class="rip-help-text"><?php esc_html_e( 'Block after this many direct hits from one IP. 5 is a good starting point.', 'reportedip-hive' ); ?></p>
+					</div>
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_hide_login_probe_timeframe"><?php esc_html_e( 'Within how many minutes?', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_hide_login_probe_timeframe" name="reportedip_hive_hide_login_probe_timeframe" value="<?php echo esc_attr( (string) $probe_timeframe ); ?>" min="1" max="1440" class="rip-input" />
+						<p class="rip-help-text"><?php esc_html_e( 'Counter window. A real user rarely hits the old URL twice — 10 minutes is forgiving.', 'reportedip-hive' ); ?></p>
+					</div>
 				</div>
 			</div>
 
