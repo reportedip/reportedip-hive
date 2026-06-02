@@ -70,6 +70,78 @@ class ReportedIP_Hive_Scan_Detector {
 	);
 
 	/**
+	 * Paths that browsers, mobile operating systems, PWApps and crawlers
+	 * request on their own. They 404 on any site that has not set a Site Icon,
+	 * shipped a web manifest or published the courtesy file — so counting them
+	 * toward the rate-based burst trigger auto-blocks ordinary visitors (a
+	 * single iOS page view alone fires several apple-touch-icon requests).
+	 *
+	 * Matched ONLY for the rate trigger; honeypot pattern hits are unaffected
+	 * because none of these overlap a KNOWN_SCAN_PATH. Extendable via the
+	 * `reportedip_hive_scan_404_benign_paths` filter; the apple-touch-icon,
+	 * favicon and mstile families are matched by pattern in is_benign_404_path()
+	 * so every size variant is covered without listing each one here.
+	 */
+	private const BENIGN_404_PATHS = array(
+		'/browserconfig.xml',
+		'/site.webmanifest',
+		'/manifest.json',
+		'/manifest.webmanifest',
+		'/robots.txt',
+		'/sitemap.xml',
+		'/sitemap_index.xml',
+		'/ads.txt',
+		'/app-ads.txt',
+		'/humans.txt',
+		'/security.txt',
+		'/apple-app-site-association',
+		'/.well-known/apple-app-site-association',
+		'/.well-known/assetlinks.json',
+		'/.well-known/security.txt',
+		'/.well-known/change-password',
+		'/.well-known/traffic-advice',
+		'/.well-known/appspecific/com.chrome.devtools.json',
+		'/.well-known/gpc.json',
+		'/.well-known/dnt-policy.txt',
+	);
+
+	/**
+	 * File extensions for assets a browser fetches to render a page (images,
+	 * fonts, media). A burst of these 404ing from one visitor is a broken page,
+	 * a half-migrated site or a CDN hiccup — not a path-walking scanner, which
+	 * probes for executables, configs and backups (.php, .env, .sql, .zip,
+	 * .bak …). Excluded from the rate trigger only; honeypot pattern hits and
+	 * non-asset extensions still count. Tunable via the
+	 * `reportedip_hive_scan_404_asset_extensions` filter.
+	 */
+	private const PASSIVE_ASSET_EXTENSIONS = array(
+		'png',
+		'jpg',
+		'jpeg',
+		'gif',
+		'svg',
+		'webp',
+		'avif',
+		'ico',
+		'bmp',
+		'tif',
+		'tiff',
+		'woff',
+		'woff2',
+		'ttf',
+		'otf',
+		'eot',
+		'mp4',
+		'webm',
+		'ogv',
+		'ogg',
+		'mp3',
+		'wav',
+		'm4a',
+		'm4v',
+	);
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_Scan_Detector|null
@@ -152,6 +224,20 @@ class ReportedIP_Hive_Scan_Detector {
 			}
 		}
 
+		/*
+		 * Browsers, mobile OSes, PWApps and crawlers auto-request icons,
+		 * manifests and well-known / courtesy files, and a broken or migrated
+		 * page can 404 a whole gallery of images and fonts. A single iOS page
+		 * view alone fires several apple-touch-icon requests. Counting this
+		 * render-asset noise toward the burst trigger auto-blocks ordinary
+		 * visitors, so skip it for the rate trigger. Honeypot pattern hits stay
+		 * armed for every extension because they are evaluated above.
+		 */
+		if ( ! $is_scan_hit
+			&& ( $this->is_benign_404_path( $path ) || $this->is_passive_asset_404( $path ) ) ) {
+			return;
+		}
+
 		$client  = ReportedIP_Hive::get_instance();
 		$monitor = $client->get_security_monitor();
 		if ( ! ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) ) {
@@ -204,5 +290,46 @@ class ReportedIP_Hive_Scan_Detector {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Whether a 404 path is a benign client / crawler auto-request (icons,
+	 * manifests, well-known endpoints, courtesy files) that must not count
+	 * toward the rate-based burst trigger.
+	 *
+	 * The apple-touch-icon, favicon and mstile families are matched by pattern
+	 * so every size variant (e.g. /apple-touch-icon-180x180.png) is covered.
+	 * The remaining exact paths are extendable via the
+	 * `reportedip_hive_scan_404_benign_paths` filter.
+	 *
+	 * @param string $path Lower-case, query-stripped request path.
+	 * @return bool        True when the path must be ignored by the rate trigger.
+	 */
+	private function is_benign_404_path( string $path ): bool {
+		if ( (bool) preg_match( '#^/(apple-touch-icon[a-z0-9-]*|favicon[a-z0-9-]*|mstile-[a-z0-9-]+)\.(png|ico|svg)$#', $path ) ) {
+			return true;
+		}
+		$benign = (array) apply_filters( 'reportedip_hive_scan_404_benign_paths', self::BENIGN_404_PATHS );
+		return in_array( $path, $benign, true );
+	}
+
+	/**
+	 * Whether a 404 path points at a browser-rendered asset (image, font,
+	 * media). A burst of these is broken-page or migration noise, not a scan,
+	 * so it is kept out of the rate trigger. Honeypot pattern hits are
+	 * evaluated before this guard and are unaffected; scanner-relevant
+	 * extensions (.php, .env, .sql, .zip, .bak, .old, .log …) are not listed
+	 * and therefore still count.
+	 *
+	 * @param string $path Lower-case, query-stripped request path.
+	 * @return bool        True for passive render-asset extensions.
+	 */
+	private function is_passive_asset_404( string $path ): bool {
+		$ext = strtolower( (string) pathinfo( $path, PATHINFO_EXTENSION ) );
+		if ( '' === $ext ) {
+			return false;
+		}
+		$extensions = (array) apply_filters( 'reportedip_hive_scan_404_asset_extensions', self::PASSIVE_ASSET_EXTENSIONS );
+		return in_array( $ext, $extensions, true );
 	}
 }

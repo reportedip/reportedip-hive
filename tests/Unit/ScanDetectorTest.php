@@ -177,5 +177,130 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'/wp-content/debug.log'      => array( '/wp-content/debug.log' ),
 			);
 		}
+
+		private function call_is_benign_404_path( string $path ): bool {
+			$instance   = \ReportedIP_Hive_Scan_Detector::get_instance();
+			$reflection = new ReflectionClass( $instance );
+			$method     = $reflection->getMethod( 'is_benign_404_path' );
+			return (bool) $method->invoke( $instance, $path );
+		}
+
+		/**
+		 * Client / crawler auto-requests (icon families, manifests, well-known
+		 * and courtesy files) must be excluded from the rate-based burst
+		 * trigger so an iOS page view's apple-touch-icon volley cannot auto-block
+		 * a real visitor. Size variants are covered by pattern.
+		 *
+		 * @dataProvider benign_404_paths
+		 */
+		public function test_benign_404_paths_are_ignored_by_rate_trigger( string $path ) {
+			$this->assertTrue(
+				$this->call_is_benign_404_path( $path ),
+				"Benign auto-request '$path' must be ignored by the 404 burst trigger"
+			);
+		}
+
+		public function benign_404_paths(): array {
+			return array(
+				'apple-touch-icon'             => array( '/apple-touch-icon.png' ),
+				'apple-touch-icon precomposed' => array( '/apple-touch-icon-precomposed.png' ),
+				'apple-touch-icon 120'         => array( '/apple-touch-icon-120x120.png' ),
+				'apple-touch-icon 180 precomp' => array( '/apple-touch-icon-180x180-precomposed.png' ),
+				'favicon.ico'                  => array( '/favicon.ico' ),
+				'favicon 32'                   => array( '/favicon-32x32.png' ),
+				'mstile'                       => array( '/mstile-150x150.png' ),
+				'site.webmanifest'             => array( '/site.webmanifest' ),
+				'manifest.json'                => array( '/manifest.json' ),
+				'browserconfig'                => array( '/browserconfig.xml' ),
+				'robots.txt'                   => array( '/robots.txt' ),
+				'ads.txt'                      => array( '/ads.txt' ),
+				'apple-app-site-association'   => array( '/.well-known/apple-app-site-association' ),
+				'chrome devtools probe'        => array( '/.well-known/appspecific/com.chrome.devtools.json' ),
+			);
+		}
+
+		/**
+		 * Real content, broken site assets and honeypot paths must NOT be
+		 * treated as benign — they still feed the trigger. The .php "icon"
+		 * guards against a scanner disguising a probe with an icon-like name.
+		 *
+		 * @dataProvider non_benign_404_paths
+		 */
+		public function test_real_paths_still_count_toward_rate_trigger( string $path ) {
+			$this->assertFalse(
+				$this->call_is_benign_404_path( $path ),
+				"Path '$path' must NOT be excluded from the 404 burst trigger"
+			);
+		}
+
+		public function non_benign_404_paths(): array {
+			return array(
+				'home'                  => array( '/' ),
+				'page'                  => array( '/about' ),
+				'content path'          => array( '/team/jane-doe' ),
+				'honeypot .env'         => array( '/.env' ),
+				'honeypot wp-config'    => array( '/wp-config.php.bak' ),
+				'backup probe'          => array( '/x/backup.zip' ),
+				'fake-icon php'         => array( '/apple-touch-icon.php' ),
+				'fake-favicon php'      => array( '/favicon.php' ),
+			);
+		}
+
+		private function call_is_passive_asset_404( string $path ): bool {
+			$instance   = \ReportedIP_Hive_Scan_Detector::get_instance();
+			$reflection = new ReflectionClass( $instance );
+			$method     = $reflection->getMethod( 'is_passive_asset_404' );
+			return (bool) $method->invoke( $instance, $path );
+		}
+
+		/**
+		 * A burst of missing render assets (images, fonts, media) from one IP is
+		 * a broken page or a half-migrated site, not a path-walking scan, so
+		 * these extensions are kept out of the rate trigger.
+		 *
+		 * @dataProvider passive_asset_paths
+		 */
+		public function test_passive_asset_404s_are_ignored_by_rate_trigger( string $path ) {
+			$this->assertTrue(
+				$this->call_is_passive_asset_404( $path ),
+				"Render asset '$path' must be ignored by the 404 burst trigger"
+			);
+		}
+
+		public function passive_asset_paths(): array {
+			return array(
+				'missing upload jpg' => array( '/wp-content/uploads/2024/06/photo.jpg' ),
+				'theme webp'         => array( '/wp-content/themes/x/img/hero.webp' ),
+				'apple icon png'     => array( '/apple-touch-icon.png' ),
+				'font woff2'         => array( '/wp-content/themes/x/fonts/inter.woff2' ),
+				'svg sprite'         => array( '/assets/icons.svg' ),
+				'video mp4'          => array( '/media/promo.mp4' ),
+			);
+		}
+
+		/**
+		 * Scanner-relevant extensions and extension-less paths must NOT be
+		 * treated as passive assets — the rate trigger must keep counting them.
+		 *
+		 * @dataProvider non_asset_paths
+		 */
+		public function test_scanner_relevant_paths_are_not_treated_as_assets( string $path ) {
+			$this->assertFalse(
+				$this->call_is_passive_asset_404( $path ),
+				"Path '$path' must keep feeding the 404 burst trigger"
+			);
+		}
+
+		public function non_asset_paths(): array {
+			return array(
+				'php probe'      => array( '/old/wp-login.php' ),
+				'zip backup'     => array( '/backup.zip' ),
+				'sql dump'       => array( '/db.sql' ),
+				'bak file'       => array( '/config.bak' ),
+				'log file'       => array( '/error.log' ),
+				'no extension'   => array( '/wp-admin/network/' ),
+				'content path'   => array( '/about' ),
+			);
+		}
 	}
 }

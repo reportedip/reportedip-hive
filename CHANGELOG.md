@@ -22,6 +22,18 @@ All changes to ReportedIP Hive are documented here.
 - **Multisite default seeding wrote to a single blog instead of the network.**
   Activation, the wizard-skip seed and the settings reset now route through
   `ReportedIP_Hive_Option_Routing`, so network-wide defaults land in sitemeta.
+- **404 scanner false-positives auto-blocked real visitors.** The rate-based
+  404 trigger counted browser, OS and crawler auto-requests — a single iOS page
+  view fires several `apple-touch-icon` requests, and a broken or migrated page
+  can 404 a whole gallery of images — so ordinary traffic crossed the burst
+  threshold and earned a 24 h block. Those requests are now excluded from the
+  rate trigger: a benign-path allowlist (apple-touch-icon / favicon / mstile
+  families, web manifests, `browserconfig.xml`, `robots.txt`, `ads.txt`,
+  `.well-known` endpoints) plus a render-asset extension skip (images, fonts,
+  media). Honeypot pattern hits (`/.env`, `/wp-config.php.bak`, `/.git/config`,
+  …) stay armed for every extension. Both lists are filterable via
+  `reportedip_hive_scan_404_benign_paths` and
+  `reportedip_hive_scan_404_asset_extensions`.
 
 ### Changed
 
