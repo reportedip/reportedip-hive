@@ -1064,6 +1064,26 @@ class ReportedIP_Hive {
 	}
 
 	/**
+	 * Whether the current request belongs to a logged-in operator who must
+	 * never be locked out by an automatic IP block.
+	 *
+	 * A site admin, editor or shop manager (the `edit_others_posts` capability)
+	 * who happens to share an IP that a sensor auto-blocked — e.g. one tripped
+	 * by anonymous front-end plugin traffic from the same network — would
+	 * otherwise be wp_die()'d out of their own site and backend. The exemption
+	 * is keyed on capability, not merely login: it cannot be abused without
+	 * valid privileged credentials, at which point an IP block is moot anyway.
+	 * It only spares the authenticated operator session; anonymous visitors on
+	 * the same blocked IP are still served the block.
+	 *
+	 * @return bool True when the current user must not be IP-blocked.
+	 * @since  2.0.23
+	 */
+	private function is_block_exempt_operator() {
+		return is_user_logged_in() && current_user_can( 'edit_others_posts' );
+	}
+
+	/**
 	 * Block admin access for blocked IPs
 	 */
 	public function block_admin_access() {
@@ -1072,6 +1092,10 @@ class ReportedIP_Hive {
 		}
 
 		if ( $this->is_report_only_mode() ) {
+			return;
+		}
+
+		if ( $this->is_block_exempt_operator() ) {
 			return;
 		}
 
@@ -1267,6 +1291,10 @@ class ReportedIP_Hive {
 	 */
 	private function check_ip_access() {
 		if ( wp_doing_ajax() || wp_doing_cron() ) {
+			return;
+		}
+
+		if ( $this->is_block_exempt_operator() ) {
 			return;
 		}
 

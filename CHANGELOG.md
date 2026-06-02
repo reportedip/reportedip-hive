@@ -42,6 +42,15 @@ All changes to ReportedIP Hive are documented here.
   high-volume first-party namespaces (`/sliderrevolution`, `/elementor/v1`,
   `/wc/store`) alongside the existing cookie-consent ones; logged-in users were
   already exempt. Extend it via `reportedip_hive_rest_bypass_routes`.
+- **A logged-in admin, editor or shop manager could be locked out of their own
+  site by an automatic IP block.** Once an IP was auto-blocked — for example by
+  one of the false positives above, triggered by anonymous front-end traffic
+  from the same network — the front-end and wp-admin block enforcement refused
+  it unconditionally, with no exemption for an authenticated operator on that
+  IP. A logged-in user with the `edit_others_posts` capability is now exempt
+  from the auto-block lockout on both surfaces; the exemption runs before the
+  per-IP access cache, so a cached block cannot lock them out either. It is
+  capability-gated and cannot be used without valid privileged credentials.
 
 ### Changed
 
