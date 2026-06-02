@@ -2267,6 +2267,30 @@ class ReportedIP_Hive_Admin_Settings {
 				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
 			)
 		);
+		register_setting(
+			'reportedip_hive_hide_login',
+			'reportedip_hive_monitor_hide_login_probe',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_hide_login',
+			'reportedip_hive_hide_login_probe_threshold',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
+			)
+		);
+		register_setting(
+			'reportedip_hive_hide_login',
+			'reportedip_hive_hide_login_probe_timeframe',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
+			)
+		);
 
 		register_setting(
 			'reportedip_hive_advanced_privacy',
