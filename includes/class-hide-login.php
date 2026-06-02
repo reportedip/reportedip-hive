@@ -589,20 +589,87 @@ class ReportedIP_Hive_Hide_Login {
 	}
 
 	/**
-	 * Light recon log — non-PII, useful to spot scanners. Whitelisted IPs
-	 * are skipped to avoid spamming legitimate admin testing.
+	 * Whether the hidden-login probe sensor is armed. The sensor runs only on
+	 * the direct-hit path (Hide-Login already active) and behind its own
+	 * monitor toggle, so operators can keep the passive recon log without the
+	 * escalating IP block.
 	 */
-	private function log_recon_attempt(): void {
-		if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
+	private function probe_sensor_enabled(): bool {
+		return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_hide_login_probe', true );
+	}
+
+	/**
+	 * Number of direct hits within the timeframe that promote a prober from
+	 * "logged" to "blocked". Floored at 1 so a misconfigured 0 cannot silently
+	 * disable the block.
+	 */
+	private function get_probe_threshold(): int {
+		return max( 1, (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_probe_threshold', 5 ) );
+	}
+
+	/**
+	 * Rolling window in minutes the probe count is measured over.
+	 */
+	private function get_probe_timeframe(): int {
+		return max( 1, (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_probe_timeframe', 10 ) );
+	}
+
+	/**
+	 * Feed a direct hit on the hidden login URL into the shared attempt counter.
+	 *
+	 * Delegates to the Security-Monitor so the probe reuses the exact escalation
+	 * ladder and community-report path the other sensors use: nothing happens
+	 * below the threshold; a confirmed scanner pattern is blocked and reported.
+	 *
+	 * @param string $ip Client IP — already non-empty and non-whitelisted.
+	 */
+	private function maybe_track_probe( string $ip ): void {
+		if ( ! $this->probe_sensor_enabled() ) {
 			return;
 		}
+		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
+			return;
+		}
+		$monitor = ReportedIP_Hive::get_instance()->get_security_monitor();
+		if ( ! ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) ) {
+			return;
+		}
+		$monitor->track_generic_attempt(
+			$ip,
+			'hide_login_probe',
+			'hide_login_probe',
+			$this->get_probe_threshold(),
+			$this->get_probe_timeframe(),
+			array( 'path' => $this->get_request_path() )
+		);
+	}
+
+	/**
+	 * Light recon log + threshold sensor on a direct hit of the hidden login URL.
+	 *
+	 * The low-severity `hide_login_block` log is throttled per IP so a hammering
+	 * scanner cannot flood the log. The threshold sensor (maybe_track_probe) runs
+	 * BEFORE that throttle so every hit is counted toward the escalation ladder.
+	 * Whitelisted IPs are skipped entirely so legitimate admin testing is never
+	 * blocked or logged.
+	 */
+	private function log_recon_attempt(): void {
 		$ip = ReportedIP_Hive::get_client_ip();
+		if ( '' === (string) $ip || 'unknown' === $ip ) {
+			return;
+		}
 
 		if ( class_exists( 'ReportedIP_Hive_IP_Manager' ) ) {
 			$ip_manager = ReportedIP_Hive_IP_Manager::get_instance();
 			if ( method_exists( $ip_manager, 'is_whitelisted' ) && $ip_manager->is_whitelisted( $ip ) ) {
 				return;
 			}
+		}
+
+		$this->maybe_track_probe( $ip );
+
+		if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
+			return;
 		}
 
 		$throttle_key = 'rip_hl_recon_' . md5( $ip );

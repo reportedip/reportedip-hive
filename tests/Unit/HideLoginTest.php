@@ -262,6 +262,80 @@ class HideLoginTest extends TestCase {
 
 		$this->assertFalse( $this->instance()->is_active(), 'Kill-switch constant must override active state' );
 	}
+
+	/**
+	 * Invoke a private no-arg method on the singleton via reflection.
+	 *
+	 * @param string $method Private method name.
+	 * @return mixed
+	 */
+	private function call_private( string $method ) {
+		$inst       = $this->instance();
+		$reflection = new \ReflectionClass( $inst );
+		$ref        = $reflection->getMethod( $method );
+		return $ref->invoke( $inst );
+	}
+
+	public function test_probe_sensor_enabled_defaults_to_true() {
+		$this->assertTrue( (bool) $this->call_private( 'probe_sensor_enabled' ) );
+	}
+
+	public function test_probe_sensor_can_be_disabled() {
+		$GLOBALS['wp_options']['reportedip_hive_monitor_hide_login_probe'] = false;
+		$this->assertFalse( (bool) $this->call_private( 'probe_sensor_enabled' ) );
+	}
+
+	public function test_probe_threshold_defaults_to_five() {
+		$this->assertSame( 5, (int) $this->call_private( 'get_probe_threshold' ) );
+	}
+
+	public function test_probe_threshold_reads_option() {
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_probe_threshold'] = 12;
+		$this->assertSame( 12, (int) $this->call_private( 'get_probe_threshold' ) );
+	}
+
+	public function test_probe_threshold_floors_at_one() {
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_probe_threshold'] = 0;
+		$this->assertSame( 1, (int) $this->call_private( 'get_probe_threshold' ) );
+	}
+
+	public function test_probe_timeframe_defaults_to_ten() {
+		$this->assertSame( 10, (int) $this->call_private( 'get_probe_timeframe' ) );
+	}
+
+	public function test_probe_timeframe_floors_at_one() {
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_probe_timeframe'] = 0;
+		$this->assertSame( 1, (int) $this->call_private( 'get_probe_timeframe' ) );
+	}
+
+	/**
+	 * Architecture invariant: the probe sensor must hand off to the
+	 * Security-Monitor with the 'hide_login_probe' attempt type, gated on the
+	 * monitor toggle, and the counting handoff must happen BEFORE the recon-log
+	 * throttle (set_transient) so the 5-second log throttle never starves the
+	 * attempt counter. Verified by source inspection so a future refactor
+	 * cannot silently break the ordering.
+	 */
+	public function test_probe_sensor_counts_before_log_throttle() {
+		$source = file_get_contents(
+			dirname( __DIR__, 2 ) . '/includes/class-hide-login.php'
+		);
+		$this->assertNotFalse( $source );
+
+		$this->assertStringContainsString( 'track_generic_attempt', $source );
+		$this->assertStringContainsString( "'hide_login_probe'", $source );
+		$this->assertStringContainsString( 'reportedip_hive_monitor_hide_login_probe', $source );
+
+		$track_pos = strpos( $source, 'track_generic_attempt' );
+		$set_trans = strpos( $source, "set_transient( \$throttle_key" );
+		$this->assertNotFalse( $track_pos );
+		$this->assertNotFalse( $set_trans );
+		$this->assertLessThan(
+			$set_trans,
+			$track_pos,
+			'Probe counting must run before the recon-log throttle is set'
+		);
+	}
 }
 
 }
