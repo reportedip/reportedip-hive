@@ -202,20 +202,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function benign_404_paths(): array {
 			return array(
-				'apple-touch-icon'             => array( '/apple-touch-icon.png' ),
-				'apple-touch-icon precomposed' => array( '/apple-touch-icon-precomposed.png' ),
-				'apple-touch-icon 120'         => array( '/apple-touch-icon-120x120.png' ),
-				'apple-touch-icon 180 precomp' => array( '/apple-touch-icon-180x180-precomposed.png' ),
-				'favicon.ico'                  => array( '/favicon.ico' ),
-				'favicon 32'                   => array( '/favicon-32x32.png' ),
-				'mstile'                       => array( '/mstile-150x150.png' ),
-				'site.webmanifest'             => array( '/site.webmanifest' ),
-				'manifest.json'                => array( '/manifest.json' ),
-				'browserconfig'                => array( '/browserconfig.xml' ),
-				'robots.txt'                   => array( '/robots.txt' ),
-				'ads.txt'                      => array( '/ads.txt' ),
-				'apple-app-site-association'   => array( '/.well-known/apple-app-site-association' ),
-				'chrome devtools probe'        => array( '/.well-known/appspecific/com.chrome.devtools.json' ),
+				'site.webmanifest'           => array( '/site.webmanifest' ),
+				'manifest.json'              => array( '/manifest.json' ),
+				'browserconfig'              => array( '/browserconfig.xml' ),
+				'robots.txt'                 => array( '/robots.txt' ),
+				'ads.txt'                    => array( '/ads.txt' ),
+				'apple-app-site-association' => array( '/.well-known/apple-app-site-association' ),
+				'chrome devtools probe'      => array( '/.well-known/appspecific/com.chrome.devtools.json' ),
 			);
 		}
 
@@ -269,12 +262,16 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function passive_asset_paths(): array {
 			return array(
-				'missing upload jpg' => array( '/wp-content/uploads/2024/06/photo.jpg' ),
-				'theme webp'         => array( '/wp-content/themes/x/img/hero.webp' ),
-				'apple icon png'     => array( '/apple-touch-icon.png' ),
-				'font woff2'         => array( '/wp-content/themes/x/fonts/inter.woff2' ),
-				'svg sprite'         => array( '/assets/icons.svg' ),
-				'video mp4'          => array( '/media/promo.mp4' ),
+				'missing upload jpg'  => array( '/wp-content/uploads/2024/06/photo.jpg' ),
+				'theme webp'          => array( '/wp-content/themes/x/img/hero.webp' ),
+				'apple icon png'      => array( '/apple-touch-icon.png' ),
+				'apple icon variant'  => array( '/apple-touch-icon-180x180-precomposed.png' ),
+				'favicon ico'         => array( '/favicon.ico' ),
+				'favicon variant png' => array( '/favicon-32x32.png' ),
+				'mstile png'          => array( '/mstile-150x150.png' ),
+				'font woff2'          => array( '/wp-content/themes/x/fonts/inter.woff2' ),
+				'svg sprite'          => array( '/assets/icons.svg' ),
+				'video mp4'           => array( '/media/promo.mp4' ),
 			);
 		}
 

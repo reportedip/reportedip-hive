@@ -78,9 +78,9 @@ class ReportedIP_Hive_Scan_Detector {
 	 *
 	 * Matched ONLY for the rate trigger; honeypot pattern hits are unaffected
 	 * because none of these overlap a KNOWN_SCAN_PATH. Extendable via the
-	 * `reportedip_hive_scan_404_benign_paths` filter; the apple-touch-icon,
-	 * favicon and mstile families are matched by pattern in is_benign_404_path()
-	 * so every size variant is covered without listing each one here.
+	 * `reportedip_hive_scan_404_benign_paths` filter. Icon families
+	 * (apple-touch-icon, favicon, mstile) are render assets and are excluded by
+	 * is_passive_asset_404() via their .png/.ico/.svg extension, not listed here.
 	 */
 	private const BENIGN_404_PATHS = array(
 		'/browserconfig.xml',
@@ -234,7 +234,7 @@ class ReportedIP_Hive_Scan_Detector {
 		 * armed for every extension because they are evaluated above.
 		 */
 		if ( ! $is_scan_hit
-			&& ( $this->is_benign_404_path( $path ) || $this->is_passive_asset_404( $path ) ) ) {
+			&& ( $this->is_passive_asset_404( $path ) || $this->is_benign_404_path( $path ) ) ) {
 			return;
 		}
 
@@ -293,22 +293,18 @@ class ReportedIP_Hive_Scan_Detector {
 	}
 
 	/**
-	 * Whether a 404 path is a benign client / crawler auto-request (icons,
-	 * manifests, well-known endpoints, courtesy files) that must not count
-	 * toward the rate-based burst trigger.
+	 * Whether a 404 path is a benign non-asset courtesy file (web manifests,
+	 * browserconfig, robots/ads/security.txt, .well-known endpoints) that must
+	 * not count toward the rate-based burst trigger. Icon families
+	 * (apple-touch-icon, favicon, mstile) are render assets and are handled by
+	 * is_passive_asset_404() via their extension, so they are absent here.
 	 *
-	 * The apple-touch-icon, favicon and mstile families are matched by pattern
-	 * so every size variant (e.g. /apple-touch-icon-180x180.png) is covered.
-	 * The remaining exact paths are extendable via the
-	 * `reportedip_hive_scan_404_benign_paths` filter.
+	 * Extendable via the `reportedip_hive_scan_404_benign_paths` filter.
 	 *
 	 * @param string $path Lower-case, query-stripped request path.
 	 * @return bool        True when the path must be ignored by the rate trigger.
 	 */
 	private function is_benign_404_path( string $path ): bool {
-		if ( (bool) preg_match( '#^/(apple-touch-icon[a-z0-9-]*|favicon[a-z0-9-]*|mstile-[a-z0-9-]+)\.(png|ico|svg)$#', $path ) ) {
-			return true;
-		}
 		$benign = (array) apply_filters( 'reportedip_hive_scan_404_benign_paths', self::BENIGN_404_PATHS );
 		return in_array( $path, $benign, true );
 	}
