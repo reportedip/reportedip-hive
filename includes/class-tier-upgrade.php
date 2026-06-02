@@ -109,6 +109,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 		}
 
 		self::ensure_email_in_allowed_methods();
+		self::ensure_hardening_enabled_for_pro();
 
 		ReportedIP_Hive_Option_Routing::set(
 			self::NOTICE_OPT,
@@ -384,6 +385,24 @@ class ReportedIP_Hive_Tier_Upgrade {
 		}
 		$decoded[] = 'email';
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_allowed_methods', wp_json_encode( array_values( $decoded ) ) );
+	}
+
+	/**
+	 * Persist Hardening Mode as enabled on a PRO+ upgrade, so the option sticks
+	 * and renders checked. Skipped when the admin has explicitly chosen a value
+	 * (an explicit opt-out is never silently re-enabled).
+	 *
+	 * @return void
+	 * @since  2.0.2
+	 */
+	private static function ensure_hardening_enabled_for_pro() {
+		if ( ! class_exists( 'ReportedIP_Hive_Hardening_Mode' ) ) {
+			return;
+		}
+		if ( ReportedIP_Hive_Hardening_Mode::master_toggle_is_explicit() ) {
+			return;
+		}
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Hardening_Mode::OPT_MASTER_ENABLED, true );
 	}
 
 	/**

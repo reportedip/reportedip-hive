@@ -30,7 +30,8 @@ namespace {
 	if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager_Stub_For_Hardening' ) ) {
 		class ReportedIP_Hive_Mode_Manager_Stub_For_Hardening {
 			public static $available = true;
-			private static $instance = null;
+			public static $tier      = 'free';
+			private static $instance  = null;
 			public static function get_instance() {
 				if ( null === self::$instance ) {
 					self::$instance = new self();
@@ -43,6 +44,18 @@ namespace {
 					'reason'    => self::$available ? 'ok' : 'tier',
 					'min_tier'  => 'professional',
 				);
+			}
+			public function tier_at_least( $min ) {
+				$order = array(
+					'free'         => 0,
+					'contributor'  => 1,
+					'professional' => 2,
+					'business'     => 3,
+					'enterprise'   => 4,
+				);
+				$cur  = isset( $order[ self::$tier ] ) ? $order[ self::$tier ] : 0;
+				$need = isset( $order[ $min ] ) ? $order[ $min ] : 0;
+				return $cur >= $need;
 			}
 		}
 	}
@@ -88,7 +101,44 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['wp_options']    = array();
 			$GLOBALS['wp_transients'] = array();
 			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$available = true;
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$tier      = 'free';
 			\ReportedIP_Hive_Logger_Stub_For_Hardening::$events          = array();
+		}
+
+		public function test_master_defaults_on_for_pro_when_option_absent() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$tier = 'professional';
+
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::master_toggle_is_explicit() );
+			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::is_master_enabled() );
+		}
+
+		public function test_master_defaults_off_for_free_when_option_absent() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$tier = 'free';
+
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::master_toggle_is_explicit() );
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_master_enabled() );
+		}
+
+		public function test_explicit_off_wins_over_pro_default() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$tier      = 'professional';
+			$GLOBALS['wp_options']['reportedip_hive_hardening_enabled'] = false;
+
+			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::master_toggle_is_explicit() );
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_master_enabled() );
+		}
+
+		public function test_is_available_auto_on_for_pro_without_explicit_toggle() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$tier      = 'professional';
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$available = true;
+
+			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::is_available() );
+		}
+
+		public function test_is_available_false_for_free_even_without_explicit_toggle() {
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$tier      = 'free';
+			\ReportedIP_Hive_Mode_Manager_Stub_For_Hardening::$available = false;
+
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_available() );
 		}
 
 		public function test_inactive_when_no_transient() {

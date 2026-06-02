@@ -52,8 +52,10 @@ final class ReportedIP_Hive_Hardening_Mode {
 	const DEFAULT_LOGIN_THRESHOLD  = 2;
 	const DEFAULT_LOGIN_TIMEFRAME  = 5;
 	const DEFAULT_BLOCK_THRESHOLD  = 60;
-	const DEFAULT_MASTER_ENABLED   = false;
 	const DEFAULT_REALTIME_ENABLED = true;
+
+	const OPT_MASTER_ENABLED = 'reportedip_hive_hardening_enabled';
+	const SENTINEL_UNSET     = '__rip_hive_hardening_unset__';
 
 	/**
 	 * Whether the hardening mode is currently scharfgeschaltet.
@@ -100,12 +102,73 @@ final class ReportedIP_Hive_Hardening_Mode {
 	}
 
 	/**
+	 * Tier-aware default for the master toggle.
+	 *
+	 * Hardening Mode auto-enables on Professional and higher: once a site is
+	 * licensed PRO+, coordinated-attack hardening is on unless the admin has
+	 * explicitly switched it off. Free / Contributor never auto-enable and are
+	 * tier-gated out of {@see is_available()} regardless.
+	 *
+	 * @return bool
+	 * @since  2.0.2
+	 */
+	public static function default_master_enabled() {
+		return self::tier_is_pro_or_higher();
+	}
+
+	/**
+	 * Whether the admin has explicitly persisted a master-toggle value.
+	 *
+	 * Distinguishes "never touched" (→ tier-aware default) from a deliberate
+	 * on/off. The tier-upgrade hook uses this so an explicit opt-out is never
+	 * silently re-enabled when the site is promoted to PRO+.
+	 *
+	 * @return bool
+	 * @since  2.0.2
+	 */
+	public static function master_toggle_is_explicit() {
+		return self::SENTINEL_UNSET !== ReportedIP_Hive_Option_Routing::get( self::OPT_MASTER_ENABLED, self::SENTINEL_UNSET );
+	}
+
+	/**
+	 * Effective master-toggle state: an explicit admin value wins, otherwise
+	 * the tier-aware default from {@see default_master_enabled()}.
+	 *
+	 * @return bool
+	 * @since  2.0.2
+	 */
+	public static function is_master_enabled() {
+		$stored = ReportedIP_Hive_Option_Routing::get( self::OPT_MASTER_ENABLED, self::SENTINEL_UNSET );
+		if ( self::SENTINEL_UNSET === $stored ) {
+			return self::default_master_enabled();
+		}
+		return (bool) $stored;
+	}
+
+	/**
+	 * Whether the active tier is Professional or higher.
+	 *
+	 * @return bool
+	 * @since  2.0.2
+	 */
+	private static function tier_is_pro_or_higher() {
+		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+			return false;
+		}
+		$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
+		if ( ! method_exists( $mgr, 'tier_at_least' ) ) {
+			return false;
+		}
+		return (bool) $mgr->tier_at_least( 'professional' );
+	}
+
+	/**
 	 * Whether the feature is licensed + master-toggle on.
 	 *
 	 * @return bool
 	 */
 	public static function is_available() {
-		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_enabled', self::DEFAULT_MASTER_ENABLED ) ) {
+		if ( ! self::is_master_enabled() ) {
 			return false;
 		}
 		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
