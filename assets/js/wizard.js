@@ -105,9 +105,10 @@
 				}
 				if ($el.is(':checkbox')) {
 					if (name.slice(-2) === '[]') {
+						var arrayKey = name.slice(0, -2);
 						if ($el.is(':checked')) {
-							if (!data[name]) { data[name] = []; }
-							data[name].push($el.val());
+							if (!data[arrayKey]) { data[arrayKey] = []; }
+							data[arrayKey].push($el.val());
 						}
 					} else {
 						data[name] = $el.is(':checked') ? 1 : 0;
