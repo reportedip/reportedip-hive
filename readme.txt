@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.0.21
+Stable tag: 2.0.22
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -327,6 +327,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.0.22 =
+
+Fixed: with several 2FA methods configured, switching from Email to the SMS tab and submitting a wrong or expired code snapped the page back to Email and discarded the typed code. The challenge now keeps the chosen method across a re-render, so users stay on their tab, see the error and can re-enter. Applies to both wp-login.php and the WooCommerce frontend flow.
 
 = 2.0.21 =
 

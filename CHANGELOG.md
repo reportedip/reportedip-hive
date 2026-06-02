@@ -2,6 +2,20 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.22] — 2026-06-02
+
+### Fixed
+
+- **2FA challenge reverted to the default method after a failed attempt.**
+  With several methods configured, switching from Email to the SMS tab,
+  requesting a code and submitting a wrong or expired one snapped the page
+  back to the Email tab — the chosen method and the typed code were both
+  lost. The challenge handler now keeps the submitted method across a
+  re-render (failed verify, soft lockout), so the user stays on their tab,
+  sees the error and can re-enter. The value is still validated against the
+  account's active methods, so a forged method falls back safely. Fixes both
+  the wp-login.php and the WooCommerce frontend flow.
+
 ## [2.0.21] — 2026-06-02
 
 ### New

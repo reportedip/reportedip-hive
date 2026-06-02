@@ -875,6 +875,12 @@ class ReportedIP_Hive_Two_Factor {
 
 		$request_method = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : '';
 		if ( 'POST' === $request_method ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Selects which method tab re-renders after a failed attempt; validated against $allowed_methods below and only acted upon (verified) once verify_form_nonce() passes.
+			$submitted_method = isset( $_POST['reportedip_2fa_method'] ) ? sanitize_key( wp_unslash( $_POST['reportedip_2fa_method'] ) ) : '';
+			if ( '' !== $submitted_method ) {
+				$method = $submitted_method;
+			}
+
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- The submitted nonce is verified by verify_form_nonce() on the next line.
 			$form_nonce = isset( $_POST['_reportedip_2fa_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_reportedip_2fa_nonce'] ) ) : '';
 			if ( ! $this->verify_form_nonce( $form_nonce, $user_id ) ) {
@@ -892,12 +898,11 @@ class ReportedIP_Hive_Two_Factor {
 					);
 				} else {
 					// phpcs:disable WordPress.Security.NonceVerification.Missing -- Form nonce verified by verify_form_nonce() above.
-					$submitted_code   = isset( $_POST['reportedip_2fa_code'] ) ? sanitize_text_field( wp_unslash( $_POST['reportedip_2fa_code'] ) ) : '';
-					$submitted_method = isset( $_POST['reportedip_2fa_method'] ) ? sanitize_key( wp_unslash( $_POST['reportedip_2fa_method'] ) ) : $method;
-					$trust_device     = ! empty( $_POST['reportedip_2fa_trust_device'] );
+					$submitted_code = isset( $_POST['reportedip_2fa_code'] ) ? sanitize_text_field( wp_unslash( $_POST['reportedip_2fa_code'] ) ) : '';
+					$trust_device   = ! empty( $_POST['reportedip_2fa_trust_device'] );
 					// phpcs:enable WordPress.Security.NonceVerification.Missing
 
-					$verified = $this->verify_2fa_code( $user_id, $submitted_code, $submitted_method );
+					$verified = $this->verify_2fa_code( $user_id, $submitted_code, $method );
 
 					if ( $verified ) {
 						$this->reset_failed_attempts( $user_id );
