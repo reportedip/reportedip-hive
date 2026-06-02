@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.0.20
+Stable tag: 2.0.21
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -327,6 +327,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.0.21 =
+
+New: Hide-Login probe sensor — when Hide Login is active, repeated direct hits on the old wp-login.php from one IP are blocked on the escalation ladder (and reported to the community), while a single accidental visit stays harmless. Tunable threshold and timeframe on the Login tab. Changed: the 2FA challenge method picker now stacks vertically with full labels on narrow themed login cards instead of truncating to "A…/E…/S…".
 
 = 2.0.20 =
 

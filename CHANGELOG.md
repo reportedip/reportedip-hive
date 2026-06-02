@@ -2,6 +2,27 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.21] — 2026-06-02
+
+### New
+
+- **Hide-Login probe sensor.** When Hide Login is active, repeated direct
+  hits on the old `/wp-login.php` from one IP are now treated as a scan and
+  blocked on the standard escalation ladder, with a community report — reusing
+  the same path as the other sensors. A single accidental visit stays harmless
+  (only the existing low-severity recon log fires); a pattern triggers the
+  block. Tunable on the Login settings tab: a master toggle (on by default),
+  a hit threshold (default 5) and a timeframe (default 10 minutes). Whitelisted
+  IPs are never counted.
+
+### Changed
+
+- **2FA challenge method picker no longer truncates on narrow login cards.**
+  Inside a narrow themed storefront login column the method tabs collapsed to
+  "A…/E…/S…/W…". The selector now reacts to the actual card width (CSS
+  container query) and stacks the methods as a vertical, full-label list when
+  space is tight, so every method stays readable.
+
 ## [2.0.20] — 2026-06-01
 
 ### Fixed
