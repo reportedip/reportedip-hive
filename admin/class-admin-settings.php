@@ -7231,7 +7231,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$status       = $mode_manager->feature_status( 'hardening_mode' );
 		$is_available = ! empty( $status['available'] );
 		$tier_gated   = isset( $status['reason'] ) && 'tier' === $status['reason'];
-		$master_on    = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_enabled', false );
+		$master_on    = ReportedIP_Hive_Hardening_Mode::is_master_enabled();
 		$is_active    = ReportedIP_Hive_Hardening_Mode::is_active();
 		$expires_at   = ReportedIP_Hive_Hardening_Mode::expires_at();
 		$reason       = ReportedIP_Hive_Hardening_Mode::current_reason();
@@ -7328,8 +7328,11 @@ class ReportedIP_Hive_Admin_Settings {
 							<?php esc_html_e( 'Enable automatic hardening on coordinated-attack detection', 'reportedip-hive' ); ?>
 						</span>
 					</label>
+					<?php self::render_tier_lock( $status, array( 'label' => __( 'PRO', 'reportedip-hive' ) ) ); ?>
 					<?php if ( ! $is_available ) : ?>
-						<p class="rip-help-text"><?php esc_html_e( 'Available on Professional, Business and Enterprise plans.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text"><?php esc_html_e( 'Available on Professional, Business and Enterprise plans. On Professional and above it is on by default — switch it off here if you prefer manual control.', 'reportedip-hive' ); ?></p>
+					<?php else : ?>
+						<p class="rip-help-text"><?php esc_html_e( 'On by default for your plan. Switch it off if you prefer to rely only on the per-IP thresholds.', 'reportedip-hive' ); ?></p>
 					<?php endif; ?>
 				</div>
 
