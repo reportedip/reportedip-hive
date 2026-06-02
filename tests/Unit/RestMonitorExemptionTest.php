@@ -161,6 +161,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'complianz consent'          => array( '/complianz/v1/consent' ),
 				'borlabs cookie consent'     => array( '/borlabs-cookie/v1/consent' ),
 				'cookie law info consent'    => array( '/cookie-law-info/v1/consent' ),
+				'slider revolution render'   => array( '/sliderrevolution/sliders/43' ),
+				'elementor frontend'         => array( '/elementor/v1/documents/12' ),
+				'woocommerce store cart'     => array( '/wc/store/v1/cart' ),
 			);
 		}
 	}

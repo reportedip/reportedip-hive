@@ -16,8 +16,11 @@
  *
  * Bypass list: REST routes the plugin needs for its own admin AJAX-style
  * features (the `reportedip-hive/v1` 2FA challenge endpoints handle their
- * own throttling) plus the standard `oembed` namespace which is hit by
- * legitimate embed previews.
+ * own throttling), the standard `oembed` namespace hit by legitimate embed
+ * previews, cookie-consent namespaces, and high-volume first-party content,
+ * page-builder and commerce namespaces whose frontends legitimately burst the
+ * REST API on ordinary page loads. The list is filterable via
+ * `reportedip_hive_rest_bypass_routes`.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <ps@cms-admins.de>
@@ -188,6 +191,19 @@ class ReportedIP_Hive_REST_Monitor {
 			'/complianz/v1',
 			'/cookie-law-info/v1',
 			'/real-cookie-banner/v1',
+			/*
+			 * High-volume first-party content, page-builder and commerce
+			 * namespaces. Their frontends render by fetching from the REST API
+			 * on ordinary page loads — a Slider Revolution re-fetch or a
+			 * WooCommerce cart-fragment poll can issue hundreds of anonymous
+			 * requests per visitor in minutes. That is legitimate rendering
+			 * traffic, not scraping; counting it against the global budget
+			 * blocks real visitors. Add other plugins via the
+			 * `reportedip_hive_rest_bypass_routes` filter. Alphabetised:
+			 */
+			'/elementor/v1',
+			'/sliderrevolution',
+			'/wc/store',
 		);
 		$bypass = (array) apply_filters( 'reportedip_hive_rest_bypass_routes', $bypass );
 

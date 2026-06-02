@@ -34,6 +34,14 @@ All changes to ReportedIP Hive are documented here.
   …) stay armed for every extension. Both lists are filterable via
   `reportedip_hive_scan_404_benign_paths` and
   `reportedip_hive_scan_404_asset_extensions`.
+- **REST burst trigger blocked legitimate first-party plugin traffic.** The
+  global REST rate-limit counted anonymous render traffic from content and
+  commerce plugins — Slider Revolution re-fetching a slider, a WooCommerce
+  cart-fragment poll — so a single visitor on a slider-heavy page could cross
+  the threshold and earn an auto-block. The default bypass set now covers
+  high-volume first-party namespaces (`/sliderrevolution`, `/elementor/v1`,
+  `/wc/store`) alongside the existing cookie-consent ones; logged-in users were
+  already exempt. Extend it via `reportedip_hive_rest_bypass_routes`.
 
 ### Changed
 
