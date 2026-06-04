@@ -6,7 +6,7 @@
  * and AJAX endpoints for 2FA setup/management.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @author    Patrick Schlesinger <1@reportedip.de>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -261,7 +261,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_trusted_devices" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_extended_remember" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_branded_login" value="0" />
-			<input type="hidden" name="reportedip_hive_2fa_sms_avv_confirmed" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_require_on_password_reset" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_password_reset_block_email_only" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_frontend_enabled" value="0" />
@@ -400,7 +399,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						</span>
 					</label>
 					<p class="rip-help-text">
-						<?php esc_html_e( 'Needs a configured SMS provider (seven.io, sipgate, MessageBird) and a confirmed DPA. Less secure than Authenticator or Passkey, so use it only as a fallback.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'Delivered through the managed reportedip.de relay (Professional plan and higher). Less secure than Authenticator or Passkey, so use it only as a fallback.', 'reportedip-hive' ); ?>
 					</p>
 				</div>
 			</div>
@@ -1017,30 +1016,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 
 		register_setting(
 			'reportedip_hive_2fa_settings',
-			'reportedip_hive_2fa_sms_provider',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_sms_provider' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_2fa_settings',
-			'reportedip_hive_2fa_sms_avv_confirmed',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-			)
-		);
-		register_setting(
-			'reportedip_hive_2fa_settings',
-			'reportedip_hive_2fa_sms_provider_config_raw',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_sms_provider_config' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_2fa_settings',
 			'reportedip_hive_2fa_extended_remember',
 			array(
 				'type'              => 'boolean',
@@ -1159,17 +1134,14 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	}
 
 	/**
-	 * Render the SMS-provider admin section (DSGVO gate, provider selector,
-	 * per-provider credentials form, test-dispatch button).
+	 * Render the SMS section. SMS-2FA is a Professional-tier feature delivered
+	 * exclusively through the managed reportedip.de relay; this renders either
+	 * the active-relay status with a test-dispatch button, or a tier-lock card.
 	 */
 	public static function render_sms_provider_section() {
 		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 			return;
 		}
-		$providers     = ReportedIP_Hive_Two_Factor_SMS::providers();
-		$active_id     = (string) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_SMS::OPT_PROVIDER, '' );
-		$avv_confirmed = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
-		$active_config = ReportedIP_Hive_Two_Factor_SMS::get_provider_config();
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$relay_status = $mode_manager->feature_status( 'sms_relay_via_api' );
@@ -1177,16 +1149,16 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-				<?php esc_html_e( 'SMS provider (GDPR-compliant)', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'SMS code (Professional)', 'reportedip-hive' ); ?>
 			</h2>
 			<p class="rip-settings-section__desc">
-				<?php esc_html_e( 'Sends SMS codes through your chosen provider; you must sign a DPA with it. Phone numbers are stored encrypted and the SMS contains only the code, no site or user data.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'SMS-2FA is delivered through the managed reportedip.de relay, included with Professional and Business plans. Phone numbers are stored encrypted and the SMS contains only the code, no site or user data.', 'reportedip-hive' ); ?>
 			</p>
 
-			<?php if ( $relay_status['available'] ) : ?>
+			<?php if ( ! empty( $relay_status['available'] ) ) : ?>
 				<div class="rip-alert rip-alert--success">
 					<strong><?php esc_html_e( 'Managed SMS relay active', 'reportedip-hive' ); ?>:</strong>
-					<?php esc_html_e( 'SMS-2FA flows through reportedip.de — included with your plan, no third-party SMS contract needed.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'SMS-2FA flows through reportedip.de — included with your plan, no separate SMS contract needed.', 'reportedip-hive' ); ?>
 					<?php
 					$allowed_methods_for_hint = class_exists( 'ReportedIP_Hive_Two_Factor' )
 						? ReportedIP_Hive_Two_Factor::get_allowed_methods()
@@ -1197,157 +1169,28 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						<em><?php esc_html_e( 'Final step: enable “SMS code” in the methods list above to roll it out to your users.', 'reportedip-hive' ); ?></em>
 					<?php endif; ?>
 				</div>
-			<?php elseif ( 'tier' === $relay_status['reason'] ) : ?>
-				<p class="rip-help-text">
-					<?php esc_html_e( 'Tip: Professional and Business plans include SMS-2FA via our managed EU gateway — no separate provider contract required.', 'reportedip-hive' ); ?>
-					<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $relay_status ); ?>
-				</p>
+
+				<?php $sms_ready = ReportedIP_Hive_Two_Factor_SMS::is_ready(); ?>
+				<div class="rip-form-group" data-ready="<?php echo $sms_ready ? '1' : '0'; ?>">
+					<label class="rip-label" for="rip-sms-test-number"><?php esc_html_e( 'Test SMS to (E.164):', 'reportedip-hive' ); ?></label>
+					<input type="tel" id="rip-sms-test-number" class="rip-input" placeholder="+491511234567" style="width: 220px;" <?php disabled( ! $sms_ready ); ?> />
+					<button type="button" class="rip-button rip-button--secondary" id="rip-sms-test-btn" <?php disabled( ! $sms_ready ); ?>><?php esc_html_e( 'Send test SMS', 'reportedip-hive' ); ?></button>
+					<p class="rip-help-text" id="rip-sms-test-status" role="status"></p>
+				</div>
+			<?php else : ?>
+				<div class="rip-alert rip-alert--info">
+					<strong><?php esc_html_e( 'SMS code is a Professional feature', 'reportedip-hive' ); ?>:</strong>
+					<?php esc_html_e( 'Professional and Business plans include SMS-2FA via our managed EU gateway — no separate provider contract required. TOTP, Email and Passkeys remain available on every plan.', 'reportedip-hive' ); ?>
+					<?php
+					if ( 'tier' === ( $relay_status['reason'] ?? '' ) ) {
+						ReportedIP_Hive_Admin_Settings::render_tier_lock( $relay_status );
+					}
+					?>
+				</div>
 			<?php endif; ?>
-
-			<div class="rip-form-group">
-				<label class="rip-label" for="reportedip_2fa_sms_provider"><?php esc_html_e( 'SMS provider', 'reportedip-hive' ); ?></label>
-				<select id="reportedip_2fa_sms_provider" name="reportedip_hive_2fa_sms_provider" class="rip-select">
-					<option value=""><?php esc_html_e( '— not configured —', 'reportedip-hive' ); ?></option>
-					<?php
-					foreach ( $providers as $pid => $class ) :
-						if ( ! class_exists( $class ) ) {
-							continue;
-						}
-						$is_relay     = ( 'reportedip_relay' === $pid );
-						$relay_locked = ( $is_relay && ! $relay_status['available'] );
-						?>
-						<option
-							value="<?php echo esc_attr( $pid ); ?>"
-							<?php selected( $active_id, $pid ); ?>
-							<?php disabled( $relay_locked ); ?>
-						>
-							<?php
-							$display_name = call_user_func( array( $class, 'display_name' ) );
-							$region       = call_user_func( array( $class, 'region' ) );
-
-							if ( $is_relay ) {
-								$min_tier   = $relay_status['min_tier'] ?? 'professional';
-								$tier_short = $mode_manager->get_tier_info( (string) $min_tier )['short_label'];
-								$suffix     = $relay_status['available']
-									? __( '(managed, included)', 'reportedip-hive' )
-									: sprintf(
-										/* translators: %s = required tier short label, e.g. PRO */
-										__( '(requires %s+)', 'reportedip-hive' ),
-										$tier_short
-									);
-								printf( '%s — %s %s', esc_html( $display_name ), esc_html( $region ), esc_html( $suffix ) );
-							} else {
-								printf( '%s — %s', esc_html( $display_name ), esc_html( $region ) );
-							}
-							?>
-						</option>
-					<?php endforeach; ?>
-				</select>
-			</div>
-
-			<?php
-			foreach ( $providers as $pid => $class ) :
-				if ( ! class_exists( $class ) ) {
-					continue;
-				}
-				$is_active = ( $pid === $active_id );
-				$fields    = call_user_func( array( $class, 'config_fields' ) );
-				$avv       = call_user_func( array( $class, 'avv_url' ) );
-				?>
-				<fieldset class="rip-sms-provider-config" data-provider="<?php echo esc_attr( $pid ); ?>" <?php echo $is_active ? '' : 'style="display:none;"'; ?>>
-					<legend>
-						<?php
-						printf(
-							/* translators: %s: provider name */
-							esc_html__( 'Credentials: %s', 'reportedip-hive' ),
-							esc_html( call_user_func( array( $class, 'display_name' ) ) )
-						);
-						?>
-					</legend>
-					<p class="rip-help-text">
-						<?php
-						printf(
-							/* translators: %s: URL */
-							wp_kses_post( __( 'Provider DPA: <a href="%s" target="_blank" rel="noopener">Open terms</a>', 'reportedip-hive' ) ),
-							esc_url( $avv )
-						);
-						?>
-					</p>
-					<?php
-					foreach ( $fields as $field_key => $field_spec ) :
-						$value = ( $is_active && isset( $active_config[ $field_key ] ) ) ? $active_config[ $field_key ] : '';
-						?>
-						<div class="rip-form-group">
-							<label class="rip-label" for="rip-sms-<?php echo esc_attr( $pid . '-' . $field_key ); ?>">
-								<?php echo esc_html( $field_spec['label'] ); ?>
-								<?php
-								if ( ! empty( $field_spec['required'] ) ) :
-									?>
-									<span aria-hidden="true">*</span><?php endif; ?>
-							</label>
-							<input
-								type="<?php echo esc_attr( $field_spec['type'] ?? 'text' ); ?>"
-								id="rip-sms-<?php echo esc_attr( $pid . '-' . $field_key ); ?>"
-								name="reportedip_hive_2fa_sms_provider_config_raw[<?php echo esc_attr( $pid ); ?>][<?php echo esc_attr( $field_key ); ?>]"
-								value="<?php echo esc_attr( $value ); ?>"
-								class="rip-input"
-								autocomplete="off"
-							/>
-							<?php if ( ! empty( $field_spec['help'] ) ) : ?>
-								<p class="rip-help-text"><?php echo esc_html( $field_spec['help'] ); ?></p>
-							<?php endif; ?>
-						</div>
-					<?php endforeach; ?>
-				</fieldset>
-			<?php endforeach; ?>
-
-			<?php
-			$is_relay_active = ( 'reportedip_relay' === $active_id && ! empty( $relay_status['available'] ) );
-			$avv_label       = $is_relay_active
-				? __( 'I have accepted the ReportedIP AVV (signed with my plan subscription).', 'reportedip-hive' )
-				: __( 'I confirm that a DPA with the selected SMS provider is in place.', 'reportedip-hive' );
-			$avv_help        = $is_relay_active
-				? __( 'The AVV is part of your active plan and is automatically in force — no separate provider contract needed.', 'reportedip-hive' )
-				: __( 'Without this confirmation no SMS is ever sent — privacy hard gate.', 'reportedip-hive' );
-			?>
-			<div class="rip-form-group">
-				<label class="rip-toggle">
-					<input type="checkbox"
-						class="rip-toggle__input"
-						name="reportedip_hive_2fa_sms_avv_confirmed"
-						value="1"
-						<?php checked( $avv_confirmed || $is_relay_active ); ?> />
-					<span class="rip-toggle__slider"></span>
-					<span class="rip-toggle__label">
-						<?php echo esc_html( $avv_label ); ?>
-					</span>
-				</label>
-				<p class="rip-help-text"><?php echo esc_html( $avv_help ); ?></p>
-			</div>
-
-			<?php $sms_ready = ReportedIP_Hive_Two_Factor_SMS::is_ready(); ?>
-			<div class="rip-form-group" data-ready="<?php echo $sms_ready ? '1' : '0'; ?>">
-				<label class="rip-label" for="rip-sms-test-number"><?php esc_html_e( 'Test SMS to (E.164):', 'reportedip-hive' ); ?></label>
-				<input type="tel" id="rip-sms-test-number" class="rip-input" placeholder="+491511234567" style="width: 220px;" <?php disabled( ! $sms_ready ); ?> />
-				<button type="button" class="rip-button rip-button--secondary" id="rip-sms-test-btn" <?php disabled( ! $sms_ready ); ?>><?php esc_html_e( 'Send test SMS', 'reportedip-hive' ); ?></button>
-				<p class="rip-help-text" id="rip-sms-test-status" role="status">
-					<?php if ( ! $sms_ready ) : ?>
-						<?php esc_html_e( 'Pick a provider, save the AVV checkbox and store your provider credentials before testing.', 'reportedip-hive' ); ?>
-					<?php endif; ?>
-				</p>
-			</div>
 
 			<script>
 			(function(){
-				var sel = document.getElementById('reportedip_2fa_sms_provider');
-				if (sel) {
-					sel.addEventListener('change', function(){
-						var val = this.value;
-						document.querySelectorAll('.rip-sms-provider-config').forEach(function(fs){
-							fs.style.display = (fs.getAttribute('data-provider') === val) ? '' : 'none';
-						});
-					});
-				}
 				var btn = document.getElementById('rip-sms-test-btn');
 				if (btn && !btn.disabled) {
 					btn.addEventListener('click', function(){
@@ -1405,80 +1248,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	public static function sanitize_max_skips( $input ) {
 		$n = absint( $input );
 		return max( 0, min( 20, $n ) );
-	}
-
-	/**
-	 * Sanitize the SMS-provider identifier against the registered providers.
-	 *
-	 * @param mixed $input
-	 * @return string
-	 */
-	public static function sanitize_sms_provider( $input ) {
-		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-			return '';
-		}
-		$input    = sanitize_key( (string) $input );
-		$registry = ReportedIP_Hive_Two_Factor_SMS::providers();
-		$value    = isset( $registry[ $input ] ) ? $input : '';
-
-		if ( 'reportedip_relay' === $value && class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$relay_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
-			if ( ! empty( $relay_status['available'] ) ) {
-				ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, true );
-			}
-		}
-
-		return $value;
-	}
-
-	/**
-	 * Sanitize the provider-config payload and persist it encrypted.
-	 *
-	 * The per-field raw inputs arrive under `reportedip_hive_2fa_sms_provider_config_raw`
-	 * as a nested array keyed by provider id. We pick the currently active
-	 * provider's fields, validate against its schema, and store the whole thing
-	 * via ReportedIP_Hive_Two_Factor_SMS::save_provider_config() (which
-	 * encrypts the JSON). This routine returns an empty placeholder string
-	 * because we never want the raw secrets sitting in `wp_options`.
-	 *
-	 * @param mixed $input
-	 * @return string Always empty — the real config lives in OPT_PROVIDER_CONF encrypted.
-	 */
-	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by register_setting() sanitize_callback signature; the real config is read from $_POST['reportedip_hive_2fa_sms_provider_config_raw'] and stored encrypted via save_provider_config().
-	public static function sanitize_sms_provider_config( $input ) {
-		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-			return '';
-		}
-		// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Settings API verifies the options-page nonce before invoking sanitize_callback. The raw array is recursively sanitized field-by-field below via sanitize_text_field().
-		$raw = isset( $_POST['reportedip_hive_2fa_sms_provider_config_raw'] ) && is_array( $_POST['reportedip_hive_2fa_sms_provider_config_raw'] )
-			? wp_unslash( $_POST['reportedip_hive_2fa_sms_provider_config_raw'] )
-			: array();
-
-		$provider = isset( $_POST['reportedip_hive_2fa_sms_provider'] )
-			? sanitize_key( wp_unslash( $_POST['reportedip_hive_2fa_sms_provider'] ) )
-			: '';
-		// phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-
-		if ( '' === $provider || empty( $raw[ $provider ] ) ) {
-			ReportedIP_Hive_Two_Factor_SMS::save_provider_config( array() );
-			return '';
-		}
-
-		$registry = ReportedIP_Hive_Two_Factor_SMS::providers();
-		if ( empty( $registry[ $provider ] ) ) {
-			return '';
-		}
-		$class  = $registry[ $provider ];
-		$fields = call_user_func( array( $class, 'config_fields' ) );
-
-		$clean = array();
-		foreach ( $fields as $key => $spec ) {
-			$value         = isset( $raw[ $provider ][ $key ] ) ? (string) $raw[ $provider ][ $key ] : '';
-			$clean[ $key ] = sanitize_text_field( $value );
-		}
-
-		ReportedIP_Hive_Two_Factor_SMS::save_provider_config( $clean );
-		return '';
 	}
 
 	/**
@@ -2088,7 +1857,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_user() above.
 			$consent = ! empty( $_POST['consent'] );
 			if ( ! $consent ) {
-				wp_send_json_error( array( 'message' => __( 'Please confirm processing of your phone number by the EU SMS provider.', 'reportedip-hive' ) ) );
+				wp_send_json_error( array( 'message' => __( 'Please confirm processing of your phone number by the managed SMS relay.', 'reportedip-hive' ) ) );
 			}
 
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified in validate_ajax_user() above; raw value is normalized/validated by ReportedIP_Hive_Two_Factor_SMS::normalise_phone() (E.164 strict regex) on the next line.
@@ -2171,8 +1940,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	}
 
 	/**
-	 * AJAX: Admin-only test dispatch of an SMS to an arbitrary number to
-	 * confirm provider credentials work before rolling 2FA to users.
+	 * AJAX: Admin-only test dispatch of an SMS through the managed relay to an
+	 * arbitrary number to confirm SMS-2FA works before rolling it out to users.
 	 */
 	public function ajax_admin_test_sms() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -2180,7 +1949,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission.', 'reportedip-hive' ) ) );
 		}
 		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) || ! ReportedIP_Hive_Two_Factor_SMS::is_ready() ) {
-			wp_send_json_error( array( 'message' => __( 'SMS sending is not configured (provider/DPA/keys).', 'reportedip-hive' ) ) );
+			wp_send_json_error( array( 'message' => __( 'SMS sending is not available on your current plan.', 'reportedip-hive' ) ) );
 		}
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified by check_ajax_referer() above; raw value is normalized/validated by ReportedIP_Hive_Two_Factor_SMS::normalise_phone() (E.164 strict regex) on the next line.
@@ -2190,9 +1959,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			wp_send_json_error( array( 'message' => $phone->get_error_message() ) );
 		}
 
-		$class  = ReportedIP_Hive_Two_Factor_SMS::get_active_provider_class();
-		$config = ReportedIP_Hive_Two_Factor_SMS::get_provider_config();
-		$result = call_user_func( array( $class, 'send' ), $phone, __( 'ReportedIP Hive: Test SMS. Setup was successful.', 'reportedip-hive' ), $config );
+		$result = ReportedIP_Hive_SMS_Provider_Relay::send( $phone, __( 'ReportedIP Hive: Test SMS. Setup was successful.', 'reportedip-hive' ), array() );
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );

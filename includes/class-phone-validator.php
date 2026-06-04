@@ -9,12 +9,8 @@
  * well-formed E.164 number and forwards it to the relay; the relay returns
  * HTTP 422 with code "country_not_supported" when a number is rejected.
  *
- * Locally configured SMS providers (seven.io, sipgate, MessageBird) bypass
- * the relay entirely — the site operator pays directly and decides which
- * destinations to allow.
- *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @author    Patrick Schlesinger <1@reportedip.de>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -81,21 +77,6 @@ class ReportedIP_Hive_Phone_Validator {
 			return null;
 		}
 		return '+' . substr( $phone, 1, 3 );
-	}
-
-	/**
-	 * Backwards-compatibility shim — was the EU whitelist gate, now a no-op
-	 * pass-through that just re-checks E.164 validity.
-	 *
-	 * @deprecated 1.7.0 Routing decisions moved to the server. Use
-	 *             {@see is_valid_e164()} instead. Kept so that older callers
-	 *             do not break.
-	 *
-	 * @param string $phone Phone number.
-	 * @return bool
-	 */
-	public static function is_eu( $phone ) {
-		return self::is_valid_e164( $phone );
 	}
 
 	/**

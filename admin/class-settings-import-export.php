@@ -14,7 +14,7 @@
  * site-specific key and would be useless on the target site anyway.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @author    Patrick Schlesinger <1@reportedip.de>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -171,8 +171,6 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_2fa_extended_remember',
 					'reportedip_hive_2fa_branded_login',
 					'reportedip_hive_2fa_ip_allowlist',
-					'reportedip_hive_2fa_sms_provider',
-					'reportedip_hive_2fa_sms_avv_confirmed',
 				),
 			),
 			'ip_lists'         => array(
@@ -186,17 +184,12 @@ class ReportedIP_Hive_Settings_Import_Export {
 	/**
 	 * Secret keys, exported only when the explicit opt-in is set.
 	 *
-	 * SMS provider config remains AES-256 encrypted with the site key.
-	 * It will not decode on a different site, but is included so that
-	 * an admin restoring a backup on the SAME site keeps SMS access.
-	 *
 	 * @since  1.2.0
 	 * @return array<int, string>
 	 */
 	public static function secret_options(): array {
 		return array(
 			'reportedip_hive_api_key',
-			'reportedip_hive_2fa_sms_provider_config_raw',
 		);
 	}
 

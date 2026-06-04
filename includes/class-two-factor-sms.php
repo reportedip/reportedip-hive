@@ -1,20 +1,22 @@
 <?php
 /**
- * SMS-OTP orchestration (DSGVO-conformant EU-provider adapters only).
+ * SMS-OTP orchestration via the managed reportedip.de relay (Professional+).
  *
  * Important design constraints:
- *   - NO default provider is shipped — the admin MUST configure an own account.
- *   - The admin MUST confirm an AVV/DPA with the chosen provider before the
- *     plugin will dispatch any SMS (hard gate in send_code()).
+ *   - SMS is a Professional-tier feature delivered exclusively through the
+ *     managed reportedip.de relay. There is no self-hosted provider option —
+ *     {@see is_ready()} returns true only while the relay is available.
+ *   - The relay AVV with reportedip.de is part of the plan subscription, so no
+ *     per-provider DPA confirmation is required on the site.
  *   - Phone numbers are stored encrypted (libsodium / OpenSSL fallback) via
  *     ReportedIP_Hive_Two_Factor_Crypto so a DB dump alone is insufficient.
- *   - SMS bodies contain only the code and a minimal German notice — no site
- *     name, no user name, no IP, no device hints, no URLs.
+ *   - SMS bodies are rendered server-side; only the code, expiry and locale
+ *     leave the site — no site name, user name, IP, device hints or URLs.
  *   - Audit log entries mask the number to +<country-code> ****<last 2>.
  *   - Rate-limits (3 sends / 15 min, 60 s cooldown) mirror the email flow.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @author    Patrick Schlesinger <1@reportedip.de>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -26,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Provider contract. Every EU-provider adapter implements this.
+ * Provider contract implemented by the managed reportedip.de relay adapter.
  */
 interface ReportedIP_Hive_SMS_Provider {
 
@@ -60,7 +62,7 @@ interface ReportedIP_Hive_SMS_Provider {
  * Orchestrator — called by the 2FA challenge and by the onboarding AJAX flow.
  *
  * Interface + orchestrator ship in the same file because the interface is the
- * contract for the provider adapters registered below; splitting them hurts
+ * contract for the relay adapter registered below; splitting them hurts
  * readability more than it helps.
  */
 // phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
@@ -85,115 +87,35 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	const BACKOFF_LADDER = array( 0, 120, 300, 900, 1800, 3600 );
 
 	/**
-	 * Option names (global admin settings).
+	 * Provider id of the managed reportedip.de SMS relay — the only provider.
 	 */
-	const OPT_PROVIDER      = 'reportedip_hive_2fa_sms_provider';
-	const OPT_AVV_CONFIRMED = 'reportedip_hive_2fa_sms_avv_confirmed';
-	const OPT_FROM          = 'reportedip_hive_2fa_sms_from';
-	const OPT_PROVIDER_CONF = 'reportedip_hive_2fa_sms_provider_config';
+	const PROVIDER_RELAY = 'reportedip_relay';
 
 	/**
-	 * Provider registry — add new adapters here.
+	 * Provider registry — the managed reportedip.de relay is the only adapter.
 	 *
 	 * @return array<string, class-string<ReportedIP_Hive_SMS_Provider>>
 	 */
 	public static function providers() {
-		$registry = array(
-			'reportedip_relay' => 'ReportedIP_Hive_SMS_Provider_Relay',
-			'sevenio'          => 'ReportedIP_Hive_SMS_Provider_Sevenio',
-			'sipgate'          => 'ReportedIP_Hive_SMS_Provider_Sipgate',
-			'messagebird'      => 'ReportedIP_Hive_SMS_Provider_MessageBird',
+		return array(
+			self::PROVIDER_RELAY => 'ReportedIP_Hive_SMS_Provider_Relay',
 		);
-
-		/**
-		 * Allow third parties to register additional EU-compliant providers.
-		 * Providers registered via this filter MUST implement the
-		 * ReportedIP_Hive_SMS_Provider interface.
-		 */
-		return (array) apply_filters( 'reportedip_2fa_sms_providers', $registry );
-	}
-
-	/**
-	 * Return the currently selected provider class name, or '' if not configured.
-	 *
-	 * @return string
-	 */
-	public static function get_active_provider_class() {
-		$selected = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_PROVIDER, '' );
-		$registry = self::providers();
-		if ( '' === $selected || empty( $registry[ $selected ] ) ) {
-			return '';
-		}
-		$class = $registry[ $selected ];
-		return class_exists( $class ) ? $class : '';
 	}
 
 	/**
 	 * Is the plugin in a state where it may dispatch SMS messages?
 	 *
-	 * Hard gate — returns false unless provider is chosen, configured AND AVV
-	 * was explicitly confirmed by the admin.
+	 * Hard gate — SMS is a Professional-tier feature delivered through the
+	 * managed reportedip.de relay; returns true only while the relay is
+	 * available for the current tier and mode.
 	 *
 	 * @return bool
 	 */
 	public static function is_ready() {
-		// PRO+ customers using the reportedip.de relay don't need a local provider/AVV setup —
-		// the relay AVV with reportedip.de is the relevant agreement.
-		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'sms' ) ) {
-				return true;
-			}
-		}
-
-		if ( ! self::get_active_provider_class() ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
 			return false;
 		}
-		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_AVV_CONFIRMED, false ) ) {
-			return false;
-		}
-		$config = self::get_provider_config();
-		return ! empty( $config );
-	}
-
-	/**
-	 * Load and decrypt the active provider's config array.
-	 *
-	 * Secrets in the config (api_key, token etc.) are stored encrypted; this
-	 * returns the decrypted form for actual dispatch.
-	 *
-	 * @return array
-	 */
-	public static function get_provider_config() {
-		$raw = ReportedIP_Hive_Option_Routing::get( self::OPT_PROVIDER_CONF, '' );
-		if ( empty( $raw ) ) {
-			return array();
-		}
-		$decrypted = ReportedIP_Hive_Two_Factor_Crypto::decrypt( $raw );
-		if ( false === $decrypted ) {
-			return array();
-		}
-		$decoded = json_decode( $decrypted, true );
-		return is_array( $decoded ) ? $decoded : array();
-	}
-
-	/**
-	 * Persist the provider config encrypted.
-	 *
-	 * @param array $config
-	 * @return bool
-	 */
-	public static function save_provider_config( $config ) {
-		if ( empty( $config ) ) {
-			ReportedIP_Hive_Option_Routing::delete( self::OPT_PROVIDER_CONF );
-			return true;
-		}
-		$encrypted = ReportedIP_Hive_Two_Factor_Crypto::encrypt( wp_json_encode( $config ) );
-		if ( false === $encrypted ) {
-			return false;
-		}
-		ReportedIP_Hive_Option_Routing::set( self::OPT_PROVIDER_CONF, $encrypted );
-		return true;
+		return ReportedIP_Hive_Mode_Manager::get_instance()->is_relay_available( 'sms' );
 	}
 
 	/**
@@ -302,39 +224,20 @@ class ReportedIP_Hive_Two_Factor_SMS {
 
 		$code           = wp_rand( 100000, 999999 );
 		$code_hash      = wp_hash_password( (string) $code );
-		$provider_class = self::get_active_provider_class();
-		$config         = self::get_provider_config();
 		$expiry_minutes = (int) ( self::CODE_TTL / 60 );
 
-		// Tier- and mode-aware switch: PRO+ Community-mode customers route through reportedip.de.
-		// In that case we transmit ONLY the code + expiry as template vars — the Service renders
-		// the final SMS body server-side. The verification code never enters a freshly composed
-		// string on the customer site, only the API payload.
-		$use_relay = false;
-		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' )
-			&& class_exists( 'ReportedIP_Hive_SMS_Provider_Relay' ) ) {
-			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( $mgr->is_relay_available( 'sms' ) ) {
-				$use_relay = true;
-			}
-		}
-
-		if ( $use_relay ) {
-			$result = ReportedIP_Hive_SMS_Provider_Relay::send_code(
-				$phone,
-				(string) $code,
-				$expiry_minutes,
-				substr( (string) get_locale(), 0, 2 )
-			);
-		} else {
-			$body = sprintf(
-				/* translators: 1: 6-digit code, 2: validity in minutes */
-				__( 'Your verification code: %1$d (valid for %2$d minutes). Never share this code.', 'reportedip-hive' ),
-				$code,
-				$expiry_minutes
-			);
-			$result = call_user_func( array( $provider_class, 'send' ), $phone, $body, $config );
-		}
+		/*
+		 * The managed reportedip.de relay is the only dispatch path. We transmit
+		 * ONLY the code + expiry as template vars — the Service renders the final
+		 * SMS body server-side. The verification code never enters a freshly
+		 * composed string on the customer site, only the API payload.
+		 */
+		$result = ReportedIP_Hive_SMS_Provider_Relay::send_code(
+			$phone,
+			(string) $code,
+			$expiry_minutes,
+			substr( (string) get_locale(), 0, 2 )
+		);
 
 		if ( is_wp_error( $result ) ) {
 			$logger = ReportedIP_Hive_Logger::get_instance();
@@ -343,7 +246,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 				ReportedIP_Hive::get_client_ip(),
 				array(
 					'user_id'      => $user_id,
-					'provider'     => call_user_func( array( $provider_class, 'id' ) ),
+					'provider'     => self::PROVIDER_RELAY,
 					'masked_phone' => self::mask_phone( $phone ),
 					'error_code'   => $result->get_error_code(),
 				)
@@ -376,7 +279,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 			ReportedIP_Hive::get_client_ip(),
 			array(
 				'user_id'      => $user_id,
-				'provider'     => call_user_func( array( $provider_class, 'id' ) ),
+				'provider'     => self::PROVIDER_RELAY,
 				'masked_phone' => self::mask_phone( $phone ),
 			)
 		);
@@ -514,13 +417,9 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	}
 
 	/**
-	 * Load provider adapter classes.
+	 * Load the relay provider adapter class.
 	 */
 	public static function load_providers() {
-		$base = REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/sms-providers/';
-		require_once $base . 'class-sms-provider-sevenio.php';
-		require_once $base . 'class-sms-provider-sipgate.php';
-		require_once $base . 'class-sms-provider-messagebird.php';
-		require_once $base . 'class-sms-provider-relay.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/sms-providers/class-sms-provider-relay.php';
 	}
 }

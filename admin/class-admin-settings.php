@@ -3,7 +3,7 @@
  * Admin Settings Class for ReportedIP Hive.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @author    Patrick Schlesinger <1@reportedip.de>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -923,7 +923,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'variant'           => 'info',
 				'extra_classes'     => 'rip-tier-upgrade-banner',
 				'title'             => $title,
-				'body'              => __( 'Two-factor authentication via the managed reportedip.de relay is now included with your plan. The SMS provider has been prefilled for you — these small steps remain:', 'reportedip-hive' ),
+				'body'              => __( 'Two-factor authentication via the managed reportedip.de relay is now included with your plan. SMS is ready to use — enable it as a method to roll it out:', 'reportedip-hive' ),
 				'checklist'         => $checklist,
 				'primary_action'    => array(
 					'label' => __( 'Open 2FA settings', 'reportedip-hive' ),
@@ -4993,6 +4993,26 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php /* Checkbox-off fallbacks. (minimal_/detailed_logging are JS-driven hidden fields, see below.) */ ?>
 			<input type="hidden" name="reportedip_hive_log_user_agents" value="0" />
 			<input type="hidden" name="reportedip_hive_log_referer_domains" value="0" />
+
+			<div class="rip-alert rip-alert--info">
+				<?php
+				printf(
+					wp_kses(
+						/* translators: %s = privacy-text generator URL */
+						__( 'Need a privacy-policy passage for this site? Generate a ready-to-paste text (German or English), tailored to your configuration, at <a href="%s" target="_blank" rel="noopener">reportedip.de/dashboard/dsgvo</a>. A suggested text is also registered under <strong>Tools &rarr; Privacy</strong>.', 'reportedip-hive' ),
+						array(
+							'a'      => array(
+								'href'   => array(),
+								'target' => array(),
+								'rel'    => array(),
+							),
+							'strong' => array(),
+						)
+					),
+					'https://reportedip.de/dashboard/dsgvo'
+				);
+				?>
+			</div>
 
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">

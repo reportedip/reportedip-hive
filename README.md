@@ -48,7 +48,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 - **TOTP** (RFC 6238) — Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest.
 - **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello, YubiKey. In-house implementation, phishing-resistant, no Composer dependency.
 - **Email OTP** — 6-digit, 10 min validity, rate-limited (3 sends / 15 min).
-- **SMS OTP** — GDPR-compliant providers (Sipgate, MessageBird, seven.io) with explicit DPA confirmation.
+- **SMS OTP (Professional)** — delivered through the managed reportedip.de relay, included with Professional and Business plans. No own SMS account or carrier contract required.
 
 Plus 10 single-use recovery codes, trusted-device tokens (default 30 days), multi-stage 2FA rate-limit (3/5/10/15 fails → 30 s/5 m/30 m/1 h delays, 15th fail graduates to a real progressive block), role-based enforcement with grace period, frontend onboarding wizard, branded login page option, IP allowlist for 2FA bypass.
 
@@ -159,7 +159,7 @@ For instant updates: WP Admin → *Plugins → Check for updates*.
 - **WordPress 5.0–6.9** (tested up to 6.9)
 - **MySQL 5.7+** or MariaDB equivalent
 - **Optional:** WooCommerce (monitored if active, never required)
-- **Optional:** SMS provider account (Sipgate / MessageBird / seven.io) for SMS 2FA
+- **Optional:** Professional plan (or higher) for SMS 2FA via the managed relay
 
 ---
 
@@ -250,7 +250,7 @@ The tag name **must** start with `v` and match the plugin version (`v1.5.2` ↔ 
 Bug reports, feature requests, and pull requests are welcome.
 
 - Issues: <https://github.com/reportedip/reportedip-hive/issues>
-- Security disclosures (do **not** open a public issue): <ps@cms-admins.de>
+- Security disclosures (do **not** open a public issue): <abuse@reportedip.de>
 - PRs target `main`; CI must be green.
 
 **Language policy:** all code, comments, identifiers, commit messages, and user-facing strings are English.
@@ -260,5 +260,5 @@ Bug reports, feature requests, and pull requests are welcome.
 ## Support
 
 - Website & documentation: <https://reportedip.de>
-- Email: <ps@cms-admins.de>
+- Email: <1@reportedip.de>
 - Status: see [GitHub Releases](https://github.com/reportedip/reportedip-hive/releases) for the current version and changelog

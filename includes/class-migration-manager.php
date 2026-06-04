@@ -13,7 +13,7 @@
  * seconds.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @author    Patrick Schlesinger <1@reportedip.de>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 7;
+	public const CURRENT_VERSION = 8;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -230,6 +230,43 @@ final class ReportedIP_Hive_Migration_Manager {
 			}
 		} else {
 			delete_option( 'reportedip_hive_decoy_block_hours' );
+		}
+	}
+
+	/**
+	 * v8 — drop the self-hosted SMS-provider settings. From 2.0.25 SMS-2FA is a
+	 * Professional feature delivered exclusively through the managed
+	 * reportedip.de relay; the third-party provider adapters (Sipgate,
+	 * MessageBird, seven.io), the provider selector, the per-provider
+	 * credentials store and the per-provider AVV flag no longer exist.
+	 *
+	 * Removes the now-orphaned options on both single-site (option storage) and
+	 * Multisite (network + per-site option storage). Idempotent.
+	 *
+	 * @return void
+	 * @since  2.0.25
+	 */
+	private static function migrate_to_v8() {
+		$keys = array(
+			'reportedip_hive_2fa_sms_provider',
+			'reportedip_hive_2fa_sms_avv_confirmed',
+			'reportedip_hive_2fa_sms_provider_config',
+			'reportedip_hive_2fa_sms_from',
+		);
+
+		foreach ( $keys as $key ) {
+			delete_site_option( $key );
+		}
+
+		if ( is_multisite() ) {
+			$site_ids = (array) get_sites( array( 'fields' => 'ids' ) );
+			foreach ( $site_ids as $site_id ) {
+				switch_to_blog( (int) $site_id );
+				foreach ( $keys as $key ) {
+					delete_option( $key );
+				}
+				restore_current_blog();
+			}
 		}
 	}
 

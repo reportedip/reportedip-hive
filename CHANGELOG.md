@@ -2,6 +2,71 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.25] — 2026-06-04
+
+### Added
+
+- **GDPR / privacy integration (`includes/class-privacy.php`).** Registers a
+  suggested privacy-policy passage in the WordPress Privacy Policy Guide
+  (Tools -> Privacy) and a personal-data exporter/eraser for a user's own login
+  attempts (matched by username) and trusted devices (matched by user id). The
+  2FA-secret exporter/eraser in `class-two-factor-admin.php` is unchanged.
+- **Privacy-text generator pointer.** Site operators can generate a
+  configuration-aware, copy/paste privacy passage (German / English) at
+  `https://reportedip.de/dashboard/dsgvo`; linked from the readme and the
+  Privacy Policy Guide entry.
+
+### Changed
+
+- **SMS 2FA is now a Professional feature, delivered exclusively through the
+  managed reportedip.de relay.** The self-hosted SMS provider option and its
+  three third-party adapters were removed; `ReportedIP_Hive_Two_Factor_SMS`
+  routes every dispatch through `ReportedIP_Hive_SMS_Provider_Relay`, gated by
+  `Mode_Manager::is_relay_available('sms')`. `is_ready()` is true only while the
+  relay is available for the current tier.
+- **Admin UI** on Settings → 2FA → SMS collapses to a relay-status panel with a
+  test-dispatch button (Professional+) or a tier-lock card (everyone else). The
+  provider selector, per-provider credential fields and the per-provider AVV
+  checkbox are gone — the relay AVV is part of the plan subscription.
+- **HaveIBeenPwned documentation corrected.** The readme described the HIBP
+  range check as "off / opt-in"; it is on by default together with the password
+  policy (server-side, k-anonymity — only a 5-char hash prefix leaves the
+  server, no visitor IP). Behaviour is unchanged; the documentation now matches
+  the code default.
+- **Contact addresses rotated.** Security disclosures now use
+  `abuse@reportedip.de`; general and authorship contacts use `1@reportedip.de`.
+  `ps@cms-admins.de` is retired from the repository (file headers,
+  `composer.json`, `REPORTEDIP_HIVE_CONTACT_MAIL`, readme and issue templates).
+
+### Removed
+
+- Third-party SMS provider adapters (`includes/sms-providers/class-sms-provider-{sipgate,messagebird,sevenio}.php`).
+- The `reportedip_2fa_sms_providers` extension filter.
+- Options `reportedip_hive_2fa_sms_provider`, `…_sms_avv_confirmed`,
+  `…_sms_provider_config`, `…_sms_from` and their settings registration,
+  sanitizers, import/export keys and the deprecated `Phone_Validator::is_eu()`
+  shim.
+
+### Fixed
+
+- **Dead documentation links.** The readme's "External Services" and contact
+  sections linked `reportedip.de/privacy`, `/terms` and `/legal/avv`, none of
+  which existed. They now point to the live `/datenschutzerklaerung/`,
+  `/nutzungsbedingungen/` and `/legal/avv/` pages.
+
+### Migration
+
+- **Schema v8** (`Migration_Manager::migrate_to_v8()`) deletes the now-orphaned
+  SMS provider options on upgrade, on both single-site and Multisite storage.
+
+### Breaking
+
+- Sites that sent 2FA SMS via a self-configured provider — or on any tier that
+  does not run the managed relay (Free / Contributor) — can no longer send SMS.
+  Affected users fall back to TOTP, Email or a passkey. A user whose only
+  enrolled method was SMS hits the existing no-usable-method path
+  (`Two_Factor_Reset_Gate::assess_methods_health()`), which alerts the admin.
+
 ## [2.0.23] — 2026-06-02
 
 ### Fixed
@@ -768,12 +833,9 @@ All changes to ReportedIP Hive are documented here.
   the relay returns HTTP 422 with code `country_not_supported` for any
   destination it does not serve, mapped to a typed `WP_Error`
   (`reportedip_sms_country_not_supported`) so the 2FA UI can encourage
-  TOTP, Email or a passkey instead. Locally configured providers
-  (seven.io, sipgate, MessageBird) bypass the relay entirely — the site
-  operator pays directly and decides which destinations to allow. This
-  removes the situation where a fully valid US/UK/AU number was rejected
-  client-side even though the operator's chosen provider would have
-  delivered the SMS without complaint.
+  TOTP, Email or a passkey instead. This removes the situation where a
+  fully valid US/UK/AU number was rejected client-side even though the
+  managed relay would have delivered the SMS without complaint.
 - **`Two_Factor_SMS::sanitize_phone()` no longer hard-rejects non-EU
   numbers.** The blanket "Only EU phone numbers are supported for
   SMS-2FA." error is removed; format validation stays.
@@ -1479,10 +1541,10 @@ first admin visit and behave identically to v1.x.
   provider.** When `reportedip_relay` is selected, the label reads
   *"I have accepted the ReportedIP AVV (signed with my plan
   subscription)"* and is auto-checked because the AVV is part of
-  the plan subscription. For self-hosted providers (Sipgate,
-  MessageBird, sevenio) the original *"I confirm that a DPA …"*
-  wording is preserved. The privacy hard gate behaviour is
-  unchanged: no SMS is dispatched until the flag is true.
+  the plan subscription. For a self-hosted provider the original
+  *"I confirm that a DPA …"* wording is preserved. The privacy hard
+  gate behaviour is unchanged: no SMS is dispatched until the flag
+  is true.
 - The "Managed SMS relay active" info box on the 2FA tab gains a
   final-step hint when the SMS method is not yet in the site's
   allow list, pointing the operator to the methods list above.
@@ -2261,7 +2323,7 @@ First public release of the plugin under its final product name **ReportedIP Hiv
 
 - **6-step setup wizard** with privacy-first defaults (Welcome → Mode+API → Protection → 2FA → Privacy → Done).
 - **Modern admin dashboard** with real-time charts, health score (30% config + 30% success + 25% cache hit + 15% response time), queue monitor, and mode badge.
-- **2FA suite with 4 methods**: TOTP (RFC 6238), email OTP, SMS via EU providers (Sipgate / MessageBird / seven.io, numbers encrypted at rest), WebAuthn/FIDO2 (Face ID, Touch ID, Windows Hello, YubiKey) — including a 5-step onboarding wizard.
+- **2FA suite with 4 methods**: TOTP (RFC 6238), email OTP, SMS (numbers encrypted at rest), WebAuthn/FIDO2 (Face ID, Touch ID, Windows Hello, YubiKey) — including a 5-step onboarding wizard.
 - **CSV import/export** for whitelist, blocked IPs, logs.
 - **Report-only mode** for safe threshold tuning.
 - **4 cron jobs**: cleanup (daily), reputation sync (hourly), queue processing (15 min), quota refresh (6 h) — triggerable manually from the dashboard.

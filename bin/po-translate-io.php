@@ -16,7 +16,7 @@
  * different gettext contexts stays distinct.
  *
  * @package ReportedIP_Hive
- * @author  Patrick Schlesinger <ps@cms-admins.de>
+ * @author  Patrick Schlesinger <1@reportedip.de>
  * @license GPL-2.0-or-later
  * @since   2.0.18
  */

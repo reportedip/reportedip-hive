@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.0.23
+ * Version: 2.0.25
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -17,7 +17,7 @@
  * Update URI: https://github.com/reportedip/reportedip-hive
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @author    Patrick Schlesinger <1@reportedip.de>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -54,7 +54,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.0.23' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.0.25' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -70,7 +70,7 @@ define( 'REPORTEDIP_MAX_SETTINGS_UPLOAD_SIZE', 524288 );
  */
 define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.de' );
 define( 'REPORTEDIP_HIVE_UPGRADE_URL', 'https://reportedip.de/dashboard/' );
-define( 'REPORTEDIP_HIVE_CONTACT_MAIL', 'ps@cms-admins.de' );
+define( 'REPORTEDIP_HIVE_CONTACT_MAIL', '1@reportedip.de' );
 define( 'REPORTEDIP_HIVE_HONEYPOT_URL', 'https://reportedip.de/docs/honeypot-server/' );
 define( 'REPORTEDIP_HIVE_FAQ_URL', 'https://reportedip.de/faq/' );
 define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.de/register/' );
@@ -312,6 +312,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-privacy.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-phone-validator.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-relay-usage-tracker.php';
@@ -402,6 +403,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_WooCommerce_Monitor::get_instance();
 		ReportedIP_Hive_Geo_Anomaly::get_instance();
 		ReportedIP_Hive_Password_Strength::get_instance();
+		ReportedIP_Hive_Privacy::get_instance();
 		new ReportedIP_Hive_Two_Factor();
 		new ReportedIP_Hive_Two_Factor_Reset_Gate();
 

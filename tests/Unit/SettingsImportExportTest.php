@@ -4,7 +4,7 @@
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
- * @author     Patrick Schlesinger <ps@cms-admins.de>
+ * @author     Patrick Schlesinger <1@reportedip.de>
  * @copyright  2025-2026 Patrick Schlesinger
  * @license    GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link       https://github.com/reportedip/reportedip-hive
@@ -67,7 +67,6 @@ class SettingsImportExportTest extends TestCase {
 		$this->assertContains( 'reportedip_hive_log_level', $keys, 'privacy_logs key missing' );
 		$this->assertContains( 'reportedip_hive_2fa_enabled_global', $keys, '2FA key missing' );
 		$this->assertContains( 'reportedip_hive_api_key', $keys, 'secret key missing' );
-		$this->assertContains( 'reportedip_hive_2fa_sms_provider_config_raw', $keys, 'SMS secret missing' );
 	}
 
 	/**

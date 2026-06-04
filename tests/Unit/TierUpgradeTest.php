@@ -5,7 +5,6 @@
  * Locks down the post-upgrade soft-activation contract:
  *  - upgrade detection (Free/Contributor → PRO+ true; cross-paid, downgrade and
  *    same-tier transitions false),
- *  - SMS-provider prefill only when the option was empty,
  *  - email method auto-added to the allow-list without removing existing entries,
  *  - notice payload set on upgrade, dismissed flag cleared so a fresh upgrade
  *    re-shows the banner,
@@ -13,7 +12,7 @@
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
- * @author     Patrick Schlesinger <ps@cms-admins.de>
+ * @author     Patrick Schlesinger <1@reportedip.de>
  * @copyright  2025-2026 Patrick Schlesinger
  * @license    GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link       https://github.com/reportedip/reportedip-hive
@@ -65,18 +64,9 @@ class TierUpgradeTest extends TestCase {
 		$this->assertFalse( \ReportedIP_Hive_Tier_Upgrade::is_upgrade_to_pro( 'professional', 'professional' ) );
 	}
 
-	public function test_on_tier_changed_prefills_empty_provider_with_relay() {
+	public function test_on_tier_changed_does_not_write_sms_provider_option() {
 		\ReportedIP_Hive_Tier_Upgrade::on_tier_changed( 'free', 'professional' );
-		$this->assertSame(
-			'reportedip_relay',
-			$GLOBALS['wp_options']['reportedip_hive_2fa_sms_provider'] ?? null
-		);
-	}
-
-	public function test_on_tier_changed_respects_existing_provider() {
-		$GLOBALS['wp_options']['reportedip_hive_2fa_sms_provider'] = 'sipgate';
-		\ReportedIP_Hive_Tier_Upgrade::on_tier_changed( 'free', 'professional' );
-		$this->assertSame( 'sipgate', $GLOBALS['wp_options']['reportedip_hive_2fa_sms_provider'] );
+		$this->assertArrayNotHasKey( 'reportedip_hive_2fa_sms_provider', $GLOBALS['wp_options'] );
 	}
 
 	public function test_on_tier_changed_writes_notice_payload() {
@@ -132,31 +122,16 @@ class TierUpgradeTest extends TestCase {
 
 	public function test_should_show_notice_false_when_all_steps_done() {
 		\ReportedIP_Hive_Tier_Upgrade::on_tier_changed( 'free', 'professional' );
-		$GLOBALS['wp_options']['reportedip_hive_2fa_sms_avv_confirmed']  = true;
-		$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods']    = '["totp","email","sms"]';
+		$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods'] = '["totp","email","sms"]';
 
 		$this->assertFalse( \ReportedIP_Hive_Tier_Upgrade::should_show_notice() );
 	}
 
-	public function test_should_show_notice_true_when_avv_open() {
+	public function test_should_show_notice_true_when_method_open() {
 		\ReportedIP_Hive_Tier_Upgrade::on_tier_changed( 'free', 'professional' );
-		$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods'] = '["totp","email","sms"]';
+		$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods'] = '["totp","email"]';
 
 		$this->assertTrue( \ReportedIP_Hive_Tier_Upgrade::should_show_notice() );
-	}
-
-	public function test_get_setup_checklist_marks_provider_done_when_relay_selected() {
-		$GLOBALS['wp_options']['reportedip_hive_2fa_sms_provider'] = 'reportedip_relay';
-
-		$items = \ReportedIP_Hive_Tier_Upgrade::get_setup_checklist();
-		$by    = array();
-		foreach ( $items as $item ) {
-			$by[ $item['key'] ] = $item['done'];
-		}
-
-		$this->assertTrue( $by['provider'] );
-		$this->assertFalse( $by['avv'] );
-		$this->assertFalse( $by['method'] );
 	}
 
 	public function test_get_setup_checklist_marks_method_done_when_sms_in_allow_list() {

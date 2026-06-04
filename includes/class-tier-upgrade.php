@@ -4,7 +4,7 @@
  * one-time setup banner shown after a Free/Contributor → PRO+ promotion.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <ps@cms-admins.de>
+ * @author    Patrick Schlesinger <1@reportedip.de>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -41,11 +41,6 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * can show a fresh banner.
 	 */
 	const NOTICE_DISMISSED = 'reportedip_hive_tier_upgrade_dismissed';
-
-	/**
-	 * Provider id used for the managed reportedip.de SMS gateway.
-	 */
-	const PROVIDER_RELAY = 'reportedip_relay';
 
 	/**
 	 * Tier slugs that are considered "free" for upgrade detection purposes.
@@ -93,10 +88,13 @@ class ReportedIP_Hive_Tier_Upgrade {
 	}
 
 	/**
-	 * Upgrade path: pre-fill the managed relay defaults, store the post-upgrade
-	 * setup-banner payload, reset every administrator's promo state (so the
-	 * upgrade banner is not blocked by a stale global cap) and send a factual
-	 * welcome mail to the admin recipient list.
+	 * Upgrade path: store the post-upgrade setup-banner payload, ensure the email
+	 * method is available, enable Hardening Mode, reset every administrator's
+	 * promo state (so the upgrade banner is not blocked by a stale global cap)
+	 * and send a factual welcome mail to the admin recipient list.
+	 *
+	 * SMS-2FA via the managed relay becomes available automatically with the
+	 * paid tier; the admin is only nudged (not forced) to enable it as a method.
 	 *
 	 * @param string $prev
 	 * @param string $next
@@ -104,10 +102,6 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @since  2.0.16
 	 */
 	private static function handle_upgrade_to_pro( $prev, $next ) {
-		if ( '' === (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_provider', '' ) ) {
-			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_sms_provider', self::PROVIDER_RELAY );
-		}
-
 		self::ensure_email_in_allowed_methods();
 		self::ensure_hardening_enabled_for_pro();
 
@@ -233,10 +227,10 @@ class ReportedIP_Hive_Tier_Upgrade {
 			);
 			$intro = sprintf(
 				/* translators: %s = tier label */
-				__( 'Your %s plan is now active. The managed mail and SMS relay is included; the SMS provider has been prefilled for you.', 'reportedip-hive' ),
+				__( 'Your %s plan is now active. The managed mail and SMS relay is included and ready to use.', 'reportedip-hive' ),
 				$tier_label
 			);
-			$body = __( 'Open the Hive dashboard to finish the small remaining setup steps (AVV confirmation, enable SMS as a 2FA method).', 'reportedip-hive' );
+			$body = __( 'Open the Hive dashboard to enable SMS as a 2FA method if you want to roll it out to your users.', 'reportedip-hive' );
 		} else {
 			$subject = sprintf(
 				/* translators: %s = site name */
@@ -310,7 +304,11 @@ class ReportedIP_Hive_Tier_Upgrade {
 	}
 
 	/**
-	 * Three-step setup checklist for the post-upgrade banner.
+	 * Setup checklist for the post-upgrade banner.
+	 *
+	 * SMS via the managed reportedip.de relay is available automatically with
+	 * the paid tier (no provider choice, no per-provider AVV), so the only
+	 * remaining action is the optional rollout of SMS as a 2FA method.
 	 *
 	 * Each entry is `array{key:string,label:string,done:bool}` so the
 	 * renderer can mark ✓/⬜ without re-implementing the conditions.
@@ -318,29 +316,12 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return array<int,array{key:string,label:string,done:bool}>
 	 */
 	public static function get_setup_checklist() {
-		$provider = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_provider', '' );
-		$avv      = false;
-		if ( class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-			$avv = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_SMS::OPT_AVV_CONFIRMED, false );
-		} else {
-			$avv = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_sms_avv_confirmed', false );
-		}
 		$method_active = self::is_method_in_allowed_list( 'sms' );
 
 		return array(
 			array(
-				'key'   => 'provider',
-				'label' => __( 'Managed SMS provider selected', 'reportedip-hive' ),
-				'done'  => ( self::PROVIDER_RELAY === $provider ),
-			),
-			array(
-				'key'   => 'avv',
-				'label' => __( 'ReportedIP AVV confirmed on the 2FA settings tab', 'reportedip-hive' ),
-				'done'  => $avv,
-			),
-			array(
 				'key'   => 'method',
-				'label' => __( 'SMS code enabled as a 2FA method', 'reportedip-hive' ),
+				'label' => __( 'SMS code enabled as a 2FA method (optional)', 'reportedip-hive' ),
 				'done'  => $method_active,
 			),
 		);

@@ -4,7 +4,7 @@
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
- * @author     Patrick Schlesinger <ps@cms-admins.de>
+ * @author     Patrick Schlesinger <1@reportedip.de>
  * @copyright  2025-2026 Patrick Schlesinger
  * @license    GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link       https://github.com/reportedip/reportedip-hive
@@ -132,9 +132,6 @@ class SettingsKeysAreStableTest extends TestCase {
 			'reportedip_hive_2fa_reminder_hard_roles',
 			'reportedip_hive_2fa_reminder_hard_threshold',
 			'reportedip_hive_2fa_require_on_password_reset',
-			'reportedip_hive_2fa_sms_avv_confirmed',
-			'reportedip_hive_2fa_sms_provider',
-			'reportedip_hive_2fa_sms_provider_config_raw',
 			'reportedip_hive_2fa_trusted_device_days',
 			'reportedip_hive_2fa_trusted_devices',
 			'reportedip_hive_2fa_xmlrpc_app_password_only',

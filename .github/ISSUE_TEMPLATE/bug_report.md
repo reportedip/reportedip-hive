@@ -38,4 +38,4 @@ Please do not share API keys, third-party IPs, hashes, or any other sensitive da
 
 ## Security-related?
 
-For security-related bugs, **do not** report publicly. Email <ps@cms-admins.de> instead.
+For security-related bugs, **do not** report publicly. Email <abuse@reportedip.de> instead.
