@@ -300,7 +300,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			delete_transient( self::TRANSIENT_PREFIX . $user_id );
 			$fallback = $is_frontend && function_exists( 'wc_get_page_permalink' )
 				? (string) wc_get_page_permalink( 'myaccount' )
-				: admin_url();
+				: ( is_network_admin() ? network_admin_url() : admin_url() );
 			wp_safe_redirect( $fallback );
 			exit;
 		}
@@ -328,7 +328,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			);
 		}
 
-		$dashboard_url   = admin_url();
+		$dashboard_url   = is_network_admin() ? network_admin_url() : admin_url();
 		$dashboard_label = __( 'Go to dashboard', 'reportedip-hive' );
 		if ( $is_frontend && function_exists( 'wc_get_page_permalink' ) ) {
 			$dashboard_url   = (string) wc_get_page_permalink( 'myaccount' );
@@ -388,7 +388,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			array(
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 				'nonce'         => wp_create_nonce( 'reportedip_hive_nonce' ),
-				'dashboardUrl'  => admin_url(),
+				'dashboardUrl'  => is_network_admin() ? network_admin_url() : admin_url(),
 				'userId'        => $user->ID,
 				'userEmail'     => $user->user_email,
 				'maskedEmail'   => ReportedIP_Hive_Two_Factor::mask_email( $user->user_email ),
@@ -527,7 +527,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			&& ! current_user_can( 'edit_posts' ) ) {
 			return ReportedIP_Hive_Two_Factor_Frontend::setup_url();
 		}
-		return admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+		return is_network_admin() ? network_admin_url( 'admin.php?page=' . self::PAGE_SLUG ) : admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 	}
 
 	/**
@@ -553,7 +553,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 				return $account_url;
 			}
 		}
-		return admin_url();
+		return is_network_admin() ? network_admin_url() : admin_url();
 	}
 
 	/**

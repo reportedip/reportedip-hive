@@ -33,22 +33,22 @@
     /* Status Colors */
     --rip-success: #10B981;
     --rip-success-light: #34D399;
-    --rip-success-dark: #059669;
+    --rip-success-dark: #047857;
     --rip-success-bg: rgba(16, 185, 129, 0.1);
 
     --rip-danger: #EF4444;
     --rip-danger-light: #F87171;
-    --rip-danger-dark: #DC2626;
+    --rip-danger-dark: #B91C1C;
     --rip-danger-bg: rgba(239, 68, 68, 0.1);
 
     --rip-warning: #F59E0B;
     --rip-warning-light: #FBBF24;
-    --rip-warning-dark: #D97706;
+    --rip-warning-dark: #92400E;
     --rip-warning-bg: rgba(245, 158, 11, 0.1);
 
     --rip-info: #3B82F6;
     --rip-info-light: #60A5FA;
-    --rip-info-dark: #2563EB;
+    --rip-info-dark: #1D4ED8;
     --rip-info-bg: rgba(59, 130, 246, 0.1);
 
     --rip-woocommerce: #7F54B3;

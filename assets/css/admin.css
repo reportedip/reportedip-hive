@@ -38,7 +38,7 @@
 }
 
 .severity-high {
-    color: var(--rip-warning-dark, #D97706);
+    color: var(--rip-warning-dark, #92400E);
     font-weight: 600;
 }
 
@@ -67,13 +67,13 @@
 
 #api-test-result.success {
     background: var(--rip-success-bg, rgba(16, 185, 129, 0.1));
-    color: var(--rip-success-dark, #059669);
+    color: var(--rip-success-dark, #047857);
     border: 1px solid var(--rip-success-light, #34D399);
 }
 
 #api-test-result.error {
     background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
-    color: var(--rip-danger-dark, #DC2626);
+    color: var(--rip-danger-dark, #B91C1C);
     border: 1px solid var(--rip-danger-light, #F87171);
 }
 
@@ -267,25 +267,25 @@
 
 .reportedip-notification.success {
     background: var(--rip-success-bg, rgba(16, 185, 129, 0.1));
-    color: var(--rip-success-dark, #059669);
+    color: var(--rip-success-dark, #047857);
     border: 1px solid var(--rip-success-light, #34D399);
 }
 
 .reportedip-notification.error {
     background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
-    color: var(--rip-danger-dark, #DC2626);
+    color: var(--rip-danger-dark, #B91C1C);
     border: 1px solid var(--rip-danger-light, #F87171);
 }
 
 .reportedip-notification.warning {
     background: var(--rip-warning-bg, rgba(245, 158, 11, 0.1));
-    color: var(--rip-warning-dark, #D97706);
+    color: var(--rip-warning-dark, #92400E);
     border: 1px solid var(--rip-warning-light, #FBBF24);
 }
 
 .reportedip-notification.info {
     background: var(--rip-info-bg, rgba(59, 130, 246, 0.1));
-    color: var(--rip-info-dark, #2563EB);
+    color: var(--rip-info-dark, #1D4ED8);
     border: 1px solid var(--rip-info-light, #60A5FA);
 }
 
@@ -326,17 +326,17 @@
 
 .status-badge.whitelisted {
     background: var(--rip-success-bg, rgba(16, 185, 129, 0.1));
-    color: var(--rip-success-dark, #059669);
+    color: var(--rip-success-dark, #047857);
 }
 
 .status-badge.blocked {
     background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
-    color: var(--rip-danger-dark, #DC2626);
+    color: var(--rip-danger-dark, #B91C1C);
 }
 
 .status-badge.clean {
     background: var(--rip-info-bg, rgba(59, 130, 246, 0.1));
-    color: var(--rip-info-dark, #2563EB);
+    color: var(--rip-info-dark, #1D4ED8);
 }
 
 .ip-details {
@@ -1002,4 +1002,35 @@ code.ip-address {
     font-size: 12px;
     overflow: auto;
     white-space: pre;
+}
+
+/* ==========================================================================
+   Override standard WordPress notices to use high contrast on our pages
+   ========================================================================== */
+#wpbody-content .notice.notice-success {
+    background: var(--rip-success-bg, rgba(16, 185, 129, 0.1));
+    border-color: rgba(16, 185, 129, 0.2);
+    border-left-color: var(--rip-success-dark, #047857);
+    color: var(--rip-success-dark, #047857);
+}
+
+#wpbody-content .notice.notice-error {
+    background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
+    border-color: rgba(239, 68, 68, 0.2);
+    border-left-color: var(--rip-danger-dark, #B91C1C);
+    color: var(--rip-danger-dark, #B91C1C);
+}
+
+#wpbody-content .notice.notice-warning {
+    background: var(--rip-warning-bg, rgba(245, 158, 11, 0.1));
+    border-color: rgba(245, 158, 11, 0.2);
+    border-left-color: var(--rip-warning-dark, #92400E);
+    color: var(--rip-warning-dark, #92400E);
+}
+
+#wpbody-content .notice.notice-info {
+    background: var(--rip-info-bg, rgba(59, 130, 246, 0.1));
+    border-color: rgba(59, 130, 246, 0.2);
+    border-left-color: var(--rip-info-dark, #1D4ED8);
+    color: var(--rip-info-dark, #1D4ED8);
 }

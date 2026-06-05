@@ -256,7 +256,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 					'label' => $is_upgrade
 						? __( 'Open Hive dashboard', 'reportedip-hive' )
 						: __( 'Open customer portal', 'reportedip-hive' ),
-					'url'   => $is_upgrade ? admin_url( 'admin.php?page=reportedip-hive' ) : $portal_url,
+					'url'   => $is_upgrade ? ( is_network_admin() ? network_admin_url( 'admin.php?page=reportedip-hive' ) : admin_url( 'admin.php?page=reportedip-hive' ) ) : $portal_url,
 				),
 				'context'         => array(
 					'kind' => $is_upgrade ? 'tier_welcome' : 'tier_goodbye',
@@ -343,7 +343,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 
 		$redirect = wp_get_referer();
 		if ( ! $redirect ) {
-			$redirect = admin_url( 'admin.php?page=reportedip-hive' );
+			$redirect = is_network_admin() ? network_admin_url( 'admin.php?page=reportedip-hive' ) : admin_url( 'admin.php?page=reportedip-hive' );
 		}
 		wp_safe_redirect( $redirect );
 		exit;

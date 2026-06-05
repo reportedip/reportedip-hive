@@ -55,6 +55,23 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Get the correct admin URL for a plugin page.
+	 *
+	 * Handles Multisite network admin screens properly by routing to
+	 * network_admin_url() when is_network_admin() is true.
+	 *
+	 * @param string $path Target path, e.g. admin.php?page=...
+	 * @return string Absolute admin URL.
+	 * @since  2.0.26
+	 */
+	public static function get_admin_page_url( $path ) {
+		if ( is_network_admin() ) {
+			return network_admin_url( $path );
+		}
+		return admin_url( $path );
+	}
+
+	/**
 	 * Handle Settings-API submissions on the network admin.
 	 *
 	 * Mirrors WordPress core's options.php whitelist + sanitize-callback
@@ -228,7 +245,30 @@ class ReportedIP_Hive_Admin_Settings {
 			delete_transient( 'settings_errors' );
 		}
 
-		settings_errors();
+		$errors = get_settings_errors();
+		if ( ! empty( $errors ) ) {
+			foreach ( $errors as $error ) {
+				$type    = (string) ( $error['type'] ?? 'success' );
+				$variant = 'info';
+				if ( 'error' === $type ) {
+					$variant = 'error';
+				} elseif ( 'warning' === $type ) {
+					$variant = 'warning';
+				} elseif ( 'success' === $type || 'updated' === $type ) {
+					$variant = 'success';
+				}
+
+				ReportedIP_Hive_Admin_Notice::render(
+					array(
+						'variant'     => $variant,
+						'body'        => $error['message'] ?? '',
+						'dismissible' => true,
+					)
+				);
+			}
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Custom notice rendering requires clearing settings errors to prevent double-rendering.
+			$GLOBALS['wp_settings_errors'] = array();
+		}
 	}
 
 	/**
@@ -381,7 +421,7 @@ class ReportedIP_Hive_Admin_Settings {
 				? __( 'Community only', 'reportedip-hive' )
 				: __( 'Mode required', 'reportedip-hive' );
 			$label         = $opts['label'] ?? $label_default;
-			$href          = $opts['href'] ?? admin_url( 'admin.php?page=reportedip-hive-settings&tab=general' );
+			$href          = $opts['href'] ?? self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' );
 			?>
 			<a href="<?php echo esc_url( $href ); ?>" class="rip-tier-lock rip-tier-lock--mode">
 				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h.5A1.5 1.5 0 0117 10.5v6A1.5 1.5 0 0115.5 18h-11A1.5 1.5 0 013 16.5v-6A1.5 1.5 0 014.5 9H5zm2 0V7a3 3 0 116 0v2H7z" clip-rule="evenodd"/></svg>
@@ -909,7 +949,7 @@ class ReportedIP_Hive_Admin_Settings {
 			? (string) $tier_info['label']
 			: __( 'paid', 'reportedip-hive' );
 
-		$two_factor_url = admin_url( 'admin.php?page=reportedip-hive-settings&tab=two_factor' );
+		$two_factor_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=two_factor' );
 		$checklist      = ReportedIP_Hive_Tier_Upgrade::get_setup_checklist();
 
 		$title = sprintf(
@@ -1002,9 +1042,9 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 		}
 
-		$dashboard_url   = admin_url( 'admin.php?page=reportedip-hive-community' );
+		$dashboard_url   = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 		$cap_dismiss_url = wp_nonce_url(
-			admin_url( 'admin-post.php?action=reportedip_hive_cap_notice_dismiss' ),
+			self::get_admin_page_url( 'admin-post.php?action=reportedip_hive_cap_notice_dismiss' ),
 			'reportedip_hive_cap_notice_dismiss'
 		);
 		ReportedIP_Hive_Admin_Notice::render(
@@ -1087,7 +1127,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$redirect = wp_get_referer();
 		if ( ! $redirect ) {
-			$redirect = admin_url();
+			$redirect = self::get_admin_page_url( '' );
 		}
 		wp_safe_redirect( $redirect );
 		exit;
@@ -1101,7 +1141,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		if ( $mode_manager->is_community_layer_degraded() ) {
-			$upgrade_url = admin_url( 'admin.php?page=reportedip-hive-community' );
+			$upgrade_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 			$body        = sprintf(
 				'<strong>%1$s</strong> %2$s <a href="%3$s">%4$s</a>',
 				esc_html__( 'Community threat-check rate-limited.', 'reportedip-hive' ),
@@ -1137,7 +1177,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$pending_count = (int) ( $counts->pending_count ?? 0 );
 
 		if ( $failed_count > 0 ) {
-			$queue_url = admin_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
+			$queue_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
 			$body      = sprintf(
 				'<strong>%1$s</strong> %2$s',
 				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
@@ -1189,8 +1229,8 @@ class ReportedIP_Hive_Admin_Settings {
 		$critical_threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 );
 
 		if ( $pending_count >= $critical_threshold ) {
-			$queue_url     = admin_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
-			$community_url = admin_url( 'admin.php?page=reportedip-hive-community' );
+			$queue_url     = self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
+			$community_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 			$body          = sprintf(
 				'<strong>%1$s</strong> %2$s',
 				esc_html__( 'Queue Critical:', 'reportedip-hive' ),
@@ -1209,7 +1249,7 @@ class ReportedIP_Hive_Admin_Settings {
 				)
 			);
 		} elseif ( $pending_count >= $warning_threshold ) {
-			$community_url = admin_url( 'admin.php?page=reportedip-hive-community' );
+			$community_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 			$body          = sprintf(
 				'<strong>%1$s</strong> %2$s',
 				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
@@ -1459,7 +1499,7 @@ class ReportedIP_Hive_Admin_Settings {
 					</table>
 				<?php endif; ?>
 				<p>
-					<a class="rip-button rip-button--secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-site-logs' ) ); ?>"><?php esc_html_e( 'View all logs for this site', 'reportedip-hive' ); ?></a>
+					<a class="rip-button rip-button--secondary" href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-site-logs' ) ); ?>"><?php esc_html_e( 'View all logs for this site', 'reportedip-hive' ); ?></a>
 				</p>
 			</div>
 		</div>
@@ -3174,7 +3214,7 @@ class ReportedIP_Hive_Admin_Settings {
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 							<?php esc_html_e( 'Recent Activity', 'reportedip-hive' ); ?>
 						</h2>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-security&tab=logs' ) ); ?>" class="rip-button rip-button--ghost rip-button--sm">
+						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=logs' ) ); ?>" class="rip-button rip-button--ghost rip-button--sm">
 							<?php esc_html_e( 'View All', 'reportedip-hive' ); ?>
 						</a>
 					</div>
@@ -3246,28 +3286,28 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 
 					<div class="rip-quick-actions">
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-settings' ) ); ?>" class="rip-quick-action">
+						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings' ) ); ?>" class="rip-quick-action">
 							<div class="rip-quick-action__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 							</div>
 							<span class="rip-quick-action__label"><?php esc_html_e( 'Settings', 'reportedip-hive' ); ?></span>
 						</a>
 
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-security&tab=blocked' ) ); ?>" class="rip-quick-action">
+						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=blocked' ) ); ?>" class="rip-quick-action">
 							<div class="rip-quick-action__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 							</div>
 							<span class="rip-quick-action__label"><?php esc_html_e( 'Blocked IPs', 'reportedip-hive' ); ?></span>
 						</a>
 
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-security&tab=whitelist' ) ); ?>" class="rip-quick-action">
+						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=whitelist' ) ); ?>" class="rip-quick-action">
 							<div class="rip-quick-action__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
 							</div>
 							<span class="rip-quick-action__label"><?php esc_html_e( 'Whitelist', 'reportedip-hive' ); ?></span>
 						</a>
 
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-security&tab=logs' ) ); ?>" class="rip-quick-action">
+						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=logs' ) ); ?>" class="rip-quick-action">
 							<div class="rip-quick-action__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
 							</div>
@@ -3275,7 +3315,7 @@ class ReportedIP_Hive_Admin_Settings {
 						</a>
 
 						<?php if ( $mode_manager->is_community_mode() ) : ?>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-security&tab=lookup' ) ); ?>" class="rip-quick-action">
+						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=lookup' ) ); ?>" class="rip-quick-action">
 							<div class="rip-quick-action__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 							</div>
@@ -4606,84 +4646,88 @@ class ReportedIP_Hive_Admin_Settings {
 
 				<div class="rip-form-group">
 					<label class="rip-toggle">
-						<input type="checkbox" name="reportedip_hive_hide_login_enabled" value="1" class="rip-toggle__input" <?php checked( $enabled ); ?> />
+						<input type="checkbox" id="rip-hide-login-enabled" name="reportedip_hive_hide_login_enabled" value="1" class="rip-toggle__input" <?php checked( $enabled ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Enable Hide Login', 'reportedip-hive' ); ?></span>
 					</label>
 				</div>
+			</div>
 
-				<div class="rip-form-group">
-					<label class="rip-label" for="reportedip_hive_hide_login_slug"><?php esc_html_e( 'Custom login slug', 'reportedip-hive' ); ?></label>
-					<div class="rip-input-row" style="display:flex; align-items:center; gap:.5rem;">
-						<span class="rip-help-text" style="white-space:nowrap;"><?php echo esc_html( trailingslashit( home_url() ) ); ?></span>
-						<input type="text" id="reportedip_hive_hide_login_slug" name="reportedip_hive_hide_login_slug" value="<?php echo esc_attr( $slug ); ?>" class="rip-input" placeholder="welcome" autocomplete="off" spellcheck="false" />
-					</div>
-					<p class="rip-help-text">
-						<?php esc_html_e( '3–50 characters: lowercase letters, digits, dashes or underscores. Reserved WordPress paths and existing post/page/author slugs are rejected.', 'reportedip-hive' ); ?>
-					</p>
-					<?php if ( '' !== $preview_url ) : ?>
+			<div id="rip-hide-login-dependent-fields"<?php echo $enabled ? '' : ' class="rip-is-disabled"'; ?>>
+				<div class="rip-settings-section">
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_hide_login_slug"><?php esc_html_e( 'Custom login slug', 'reportedip-hive' ); ?></label>
+						<div class="rip-input-row" style="display:flex; align-items:center; gap:.5rem;">
+							<span class="rip-help-text" style="white-space:nowrap;"><?php echo esc_html( trailingslashit( home_url() ) ); ?></span>
+							<input type="text" id="reportedip_hive_hide_login_slug" name="reportedip_hive_hide_login_slug" value="<?php echo esc_attr( $slug ); ?>" class="rip-input" placeholder="welcome" autocomplete="off" spellcheck="false" <?php disabled( ! $enabled ); ?> />
+						</div>
 						<p class="rip-help-text">
-							<strong><?php esc_html_e( 'Active login URL:', 'reportedip-hive' ); ?></strong>
-							<code><?php echo esc_html( $preview_url ); ?></code>
+							<?php esc_html_e( '3–50 characters: lowercase letters, digits, dashes or underscores. Reserved WordPress paths and existing post/page/author slugs are rejected.', 'reportedip-hive' ); ?>
 						</p>
-					<?php endif; ?>
-				</div>
-			</div>
-
-			<div class="rip-settings-section">
-				<h2 class="rip-settings-section__title">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-					<?php esc_html_e( 'What visitors see at the old URL', 'reportedip-hive' ); ?>
-				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Choose the response when someone hits wp-login.php or wp-admin without being logged in.', 'reportedip-hive' ); ?></p>
-
-				<div class="rip-form-group">
-					<label class="rip-radio">
-						<input type="radio" name="reportedip_hive_hide_login_response_mode" value="block_page" <?php checked( $response_mode, 'block_page' ); ?> />
-						<span><strong><?php esc_html_e( 'Hive block page (recommended)', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'shows the same 403 page as a blocked IP. Branded and friendly to legitimate users who got there by accident.', 'reportedip-hive' ); ?></span>
-					</label>
-					<label class="rip-radio">
-						<input type="radio" name="reportedip_hive_hide_login_response_mode" value="404" <?php checked( $response_mode, '404' ); ?> />
-						<span><strong><?php esc_html_e( 'Soft 404', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'serves the theme’s 404 page. Hides that the plugin exists at all — better against fingerprinting, less helpful to humans.', 'reportedip-hive' ); ?></span>
-					</label>
-				</div>
-
-				<div class="rip-form-group">
-					<label class="rip-toggle">
-						<input type="checkbox" name="reportedip_hive_hide_login_token_in_urls" value="1" class="rip-toggle__input" <?php checked( $token_in_urls ); ?> />
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Append the slug as a marker query argument to all generated login URLs', 'reportedip-hive' ); ?></span>
-					</label>
-					<p class="rip-help-text"><?php esc_html_e( 'Off by default — the slug already lives in the URL path, the extra query argument is redundant and can collide with plugins that use the same name. Enable only if you have a specific integration that expects the marker.', 'reportedip-hive' ); ?></p>
-				</div>
-			</div>
-
-			<div class="rip-settings-section">
-				<h2 class="rip-settings-section__title">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-					<?php esc_html_e( 'Block scanners probing the old login URL', 'reportedip-hive' ); ?>
-				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'A single accidental hit on the old URL is harmless and only logged. A repeated pattern from one IP is almost always a scanner — block it on the same escalating ladder as other threats and share it with the community.', 'reportedip-hive' ); ?></p>
-
-				<div class="rip-form-group">
-					<label class="rip-toggle">
-						<input type="checkbox" name="reportedip_hive_monitor_hide_login_probe" value="1" class="rip-toggle__input" <?php checked( $probe_enabled ); ?> />
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Block IPs that repeatedly probe the hidden login URL', 'reportedip-hive' ); ?></span>
-					</label>
-					<p class="rip-help-text"><?php esc_html_e( 'On by default. The passive recon log stays regardless of this setting — turning it off only disables the IP block and community report.', 'reportedip-hive' ); ?></p>
-				</div>
-
-				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
-					<div class="rip-form-group">
-						<label class="rip-label" for="reportedip_hive_hide_login_probe_threshold"><?php esc_html_e( 'How many hits?', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hide_login_probe_threshold" name="reportedip_hive_hide_login_probe_threshold" value="<?php echo esc_attr( (string) $probe_threshold ); ?>" min="1" max="100" class="rip-input" />
-						<p class="rip-help-text"><?php esc_html_e( 'Block after this many direct hits from one IP. 5 is a good starting point.', 'reportedip-hive' ); ?></p>
+						<?php if ( '' !== $preview_url ) : ?>
+							<p class="rip-help-text">
+								<strong><?php esc_html_e( 'Active login URL:', 'reportedip-hive' ); ?></strong>
+								<code><?php echo esc_html( $preview_url ); ?></code>
+							</p>
+						<?php endif; ?>
 					</div>
+				</div>
+
+				<div class="rip-settings-section">
+					<h2 class="rip-settings-section__title">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+						<?php esc_html_e( 'What visitors see at the old URL', 'reportedip-hive' ); ?>
+					</h2>
+					<p class="rip-settings-section__desc"><?php esc_html_e( 'Choose the response when someone hits wp-login.php or wp-admin without being logged in.', 'reportedip-hive' ); ?></p>
+
 					<div class="rip-form-group">
-						<label class="rip-label" for="reportedip_hive_hide_login_probe_timeframe"><?php esc_html_e( 'Within how many minutes?', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hide_login_probe_timeframe" name="reportedip_hive_hide_login_probe_timeframe" value="<?php echo esc_attr( (string) $probe_timeframe ); ?>" min="1" max="1440" class="rip-input" />
-						<p class="rip-help-text"><?php esc_html_e( 'Counter window. A real user rarely hits the old URL twice — 10 minutes is forgiving.', 'reportedip-hive' ); ?></p>
+						<label class="rip-radio">
+							<input type="radio" name="reportedip_hive_hide_login_response_mode" value="block_page" <?php checked( $response_mode, 'block_page' ); ?> <?php disabled( ! $enabled ); ?> />
+							<span><strong><?php esc_html_e( 'Hive block page (recommended)', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'shows the same 403 page as a blocked IP. Branded and friendly to legitimate users who got there by accident.', 'reportedip-hive' ); ?></span>
+						</label>
+						<label class="rip-radio">
+							<input type="radio" name="reportedip_hive_hide_login_response_mode" value="404" <?php checked( $response_mode, '404' ); ?> <?php disabled( ! $enabled ); ?> />
+							<span><strong><?php esc_html_e( 'Soft 404', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'serves the theme’s 404 page. Hides that the plugin exists at all — better against fingerprinting, less helpful to humans.', 'reportedip-hive' ); ?></span>
+						</label>
+					</div>
+
+					<div class="rip-form-group">
+						<label class="rip-toggle">
+							<input type="checkbox" name="reportedip_hive_hide_login_token_in_urls" value="1" class="rip-toggle__input" <?php checked( $token_in_urls ); ?> <?php disabled( ! $enabled ); ?> />
+							<span class="rip-toggle__slider"></span>
+							<span class="rip-toggle__label"><?php esc_html_e( 'Append the slug as a marker query argument to all generated login URLs', 'reportedip-hive' ); ?></span>
+						</label>
+						<p class="rip-help-text"><?php esc_html_e( 'Off by default — the slug already lives in the URL path, the extra query argument is redundant and can collide with plugins that use the same name. Enable only if you have a specific integration that expects the marker.', 'reportedip-hive' ); ?></p>
+					</div>
+				</div>
+
+				<div class="rip-settings-section">
+					<h2 class="rip-settings-section__title">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+						<?php esc_html_e( 'Block scanners probing the old login URL', 'reportedip-hive' ); ?>
+					</h2>
+					<p class="rip-settings-section__desc"><?php esc_html_e( 'A single accidental hit on the old URL is harmless and only logged. A repeated pattern from one IP is almost always a scanner — block it on the same escalating ladder as other threats and share it with the community.', 'reportedip-hive' ); ?></p>
+
+					<div class="rip-form-group">
+						<label class="rip-toggle">
+							<input type="checkbox" name="reportedip_hive_monitor_hide_login_probe" value="1" class="rip-toggle__input" <?php checked( $probe_enabled ); ?> <?php disabled( ! $enabled ); ?> />
+							<span class="rip-toggle__slider"></span>
+							<span class="rip-toggle__label"><?php esc_html_e( 'Block IPs that repeatedly probe the hidden login URL', 'reportedip-hive' ); ?></span>
+						</label>
+						<p class="rip-help-text"><?php esc_html_e( 'On by default. The passive recon log stays regardless of this setting — turning it off only disables the IP block and community report.', 'reportedip-hive' ); ?></p>
+					</div>
+
+					<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
+						<div class="rip-form-group">
+							<label class="rip-label" for="reportedip_hive_hide_login_probe_threshold"><?php esc_html_e( 'How many hits?', 'reportedip-hive' ); ?></label>
+							<input type="number" id="reportedip_hive_hide_login_probe_threshold" name="reportedip_hive_hide_login_probe_threshold" value="<?php echo esc_attr( (string) $probe_threshold ); ?>" min="1" max="100" class="rip-input" <?php disabled( ! $enabled ); ?> />
+							<p class="rip-help-text"><?php esc_html_e( 'Block after this many direct hits from one IP. 5 is a good starting point.', 'reportedip-hive' ); ?></p>
+						</div>
+						<div class="rip-form-group">
+							<label class="rip-label" for="reportedip_hive_hide_login_probe_timeframe"><?php esc_html_e( 'Within how many minutes?', 'reportedip-hive' ); ?></label>
+							<input type="number" id="reportedip_hive_hide_login_probe_timeframe" name="reportedip_hive_hide_login_probe_timeframe" value="<?php echo esc_attr( (string) $probe_timeframe ); ?>" min="1" max="1440" class="rip-input" <?php disabled( ! $enabled ); ?> />
+							<p class="rip-help-text"><?php esc_html_e( 'Counter window. A real user rarely hits the old URL twice — 10 minutes is forgiving.', 'reportedip-hive' ); ?></p>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -4704,6 +4748,21 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php submit_button( __( 'Save Hide Login settings', 'reportedip-hive' ), 'rip-button rip-button--primary', 'submit', false ); ?>
 			</div>
 		</form>
+
+		<script>
+		(function () {
+			var toggle = document.getElementById('rip-hide-login-enabled');
+			var deps   = document.getElementById('rip-hide-login-dependent-fields');
+			if (!toggle || !deps) { return; }
+			toggle.addEventListener('change', function () {
+				deps.classList.toggle('rip-is-disabled', !toggle.checked);
+				var inputs = deps.querySelectorAll('input, select, textarea, button');
+				inputs.forEach(function (input) {
+					input.disabled = !toggle.checked;
+				});
+			});
+		})();
+		</script>
 		<?php
 	}
 
@@ -4995,23 +5054,32 @@ class ReportedIP_Hive_Admin_Settings {
 			<input type="hidden" name="reportedip_hive_log_referer_domains" value="0" />
 
 			<div class="rip-alert rip-alert--info">
-				<?php
-				printf(
-					wp_kses(
-						/* translators: %s = privacy-text generator URL */
-						__( 'Need a privacy-policy passage for this site? Generate a ready-to-paste text (German or English), tailored to your configuration, at <a href="%s" target="_blank" rel="noopener">reportedip.de/dashboard/dsgvo</a>. A suggested text is also registered under <strong>Tools &rarr; Privacy</strong>.', 'reportedip-hive' ),
-						array(
-							'a'      => array(
-								'href'   => array(),
-								'target' => array(),
-								'rel'    => array(),
+				<svg class="rip-alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<circle cx="12" cy="12" r="10"></circle>
+					<line x1="12" y1="16" x2="12" y2="12"></line>
+					<line x1="12" y1="8" x2="12.01" y2="8"></line>
+				</svg>
+				<div class="rip-alert__content">
+					<div class="rip-alert__message">
+						<?php
+						printf(
+							wp_kses(
+								/* translators: %s = privacy-text generator URL */
+								__( 'Need a privacy policy statement for this site? Generate a custom-tailored text (German or English) based on your configuration at <a href="%s" target="_blank" rel="noopener">reportedip.de/dashboard/dsgvo</a>. A draft text is also registered under <strong>Tools &rarr; Privacy</strong>.', 'reportedip-hive' ),
+								array(
+									'a'      => array(
+										'href'   => array(),
+										'target' => array(),
+										'rel'    => array(),
+									),
+									'strong' => array(),
+								)
 							),
-							'strong' => array(),
-						)
-					),
-					'https://reportedip.de/dashboard/dsgvo'
-				);
-				?>
+							'https://reportedip.de/dashboard/dsgvo'
+						);
+						?>
+					</div>
+				</div>
 			</div>
 
 			<div class="rip-settings-section">
@@ -5534,7 +5602,7 @@ class ReportedIP_Hive_Admin_Settings {
 			printf(
 				/* translators: %s: link to the System Status page */
 				esc_html__( 'are now on the %s page.', 'reportedip-hive' ),
-				'<a href="' . esc_url( admin_url( 'admin.php?page=reportedip-hive-debug' ) ) . '">' . esc_html__( 'System Status', 'reportedip-hive' ) . '</a>'
+				'<a href="' . esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-debug' ) ) . '">' . esc_html__( 'System Status', 'reportedip-hive' ) . '</a>'
 			);
 			?>
 		</div>
@@ -5691,7 +5759,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 				<p class="rip-settings-section__desc"><?php esc_html_e( 'Re-run the guided setup to reconfigure mode, API access, detection thresholds and notifications. Existing settings are pre-filled — you can review and confirm each step.', 'reportedip-hive' ); ?></p>
 				<div class="rip-flex rip-gap-2">
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-wizard&step=1' ) ); ?>" class="rip-button rip-button--secondary">
+					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-wizard&step=1' ) ); ?>" class="rip-button rip-button--secondary">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
 						<?php esc_html_e( 'Restart setup wizard', 'reportedip-hive' ); ?>
 					</a>
@@ -6067,7 +6135,7 @@ class ReportedIP_Hive_Admin_Settings {
 			if ( $this->api_client->is_configured() && $mode_manager->is_community_mode() ) {
 				$this->api_client->refresh_api_quota();
 			}
-			wp_safe_redirect( admin_url( 'admin.php?page=reportedip-hive-community&refreshed=1' ) );
+			wp_safe_redirect( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&refreshed=1' ) );
 			exit;
 		}
 
@@ -6111,7 +6179,7 @@ class ReportedIP_Hive_Admin_Settings {
 		}
 
 		$refresh_url = wp_nonce_url(
-			admin_url( 'admin.php?page=reportedip-hive-community&rip_refresh=1' ),
+			self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&rip_refresh=1' ),
 			'reportedip_hive_refresh_quota'
 		);
 
@@ -6139,8 +6207,8 @@ class ReportedIP_Hive_Admin_Settings {
 		$subtab = isset( $_GET['subtab'] ) ? sanitize_key( wp_unslash( $_GET['subtab'] ) ) : 'main';
 		$subtab = in_array( $subtab, array( 'main', 'promote' ), true ) ? $subtab : 'main';
 
-		$main_tab_url    = admin_url( 'admin.php?page=reportedip-hive-community' );
-		$promote_tab_url = admin_url( 'admin.php?page=reportedip-hive-community&subtab=promote' );
+		$main_tab_url    = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
+		$promote_tab_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&subtab=promote' );
 
 		$this->render_page_header( __( 'Community & Quota', 'reportedip-hive' ), __( 'Manage your API quota and community participation', 'reportedip-hive' ) );
 		?>
@@ -6165,21 +6233,31 @@ class ReportedIP_Hive_Admin_Settings {
 						<strong><?php esc_html_e( 'Local Shield mode active', 'reportedip-hive' ); ?></strong><br>
 						<?php esc_html_e( 'The plugin is currently running in local mode. Community features like shared reports, quota management and tier upgrades are disabled. Switch to community mode to benefit from the community threat intelligence.', 'reportedip-hive' ); ?>
 						<br><br>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary">
+						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary">
 							<?php esc_html_e( 'Switch to Community', 'reportedip-hive' ); ?>
 						</a>
 					</div>
 				<?php elseif ( ! $is_configured ) : ?>
 					<div class="rip-alert rip-alert--warning rip-mb-6">
-						<strong><?php esc_html_e( 'API key is missing', 'reportedip-hive' ); ?></strong><br>
-						<?php esc_html_e( 'Community mode is active, but no API key is configured. Without a key, neither reports can be sent nor quota/tier can be queried.', 'reportedip-hive' ); ?>
-						<br><br>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary">
-							<?php esc_html_e( 'Add API key', 'reportedip-hive' ); ?>
-						</a>
-						<a href="<?php echo esc_url( REPORTEDIP_HIVE_REGISTER_URL ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--secondary">
-							<?php esc_html_e( 'Create account', 'reportedip-hive' ); ?>
-						</a>
+						<svg class="rip-alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+							<line x1="12" y1="9" x2="12" y2="13"></line>
+							<line x1="12" y1="17" x2="12.01" y2="17"></line>
+						</svg>
+						<div class="rip-alert__content">
+							<div class="rip-alert__title"><?php esc_html_e( 'API key is missing', 'reportedip-hive' ); ?></div>
+							<div class="rip-alert__message">
+								<?php esc_html_e( 'Community mode is active, but no API key is configured. Without a key, neither reports can be sent nor quota/tier can be queried.', 'reportedip-hive' ); ?>
+							</div>
+							<div style="margin-top:12px; display:flex; gap:8px;">
+								<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary">
+									<?php esc_html_e( 'Add API key', 'reportedip-hive' ); ?>
+								</a>
+								<a href="<?php echo esc_url( REPORTEDIP_HIVE_REGISTER_URL ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--secondary">
+									<?php esc_html_e( 'Create account', 'reportedip-hive' ); ?>
+								</a>
+							</div>
+						</div>
 					</div>
 				<?php endif; ?>
 
@@ -6729,7 +6807,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</p>
 				<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>">
 					<?php settings_fields( 'reportedip_hive_promote' ); ?>
-					<input type="hidden" name="_wp_http_referer" value="<?php echo esc_attr( admin_url( 'admin.php?page=reportedip-hive-community&subtab=promote' ) ); ?>">
+					<input type="hidden" name="_wp_http_referer" value="<?php echo esc_attr( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&subtab=promote' ) ); ?>">
 
 					<p style="margin-top:0;">
 						<label style="display:flex;align-items:center;gap:.5em;cursor:pointer;">
@@ -7349,7 +7427,11 @@ class ReportedIP_Hive_Admin_Settings {
 							<?php esc_html_e( 'Enable automatic hardening on coordinated-attack detection', 'reportedip-hive' ); ?>
 						</span>
 					</label>
-					<?php self::render_tier_lock( $status, array( 'label' => __( 'PRO', 'reportedip-hive' ) ) ); ?>
+					<?php if ( ! $is_available && 'tier' === $status['reason'] ) : ?>
+						&nbsp;<?php self::render_tier_lock( $status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+					<?php else : ?>
+						&nbsp;<span class="rip-tier-badge rip-tier-badge--professional" style="font-size:10px;padding:2px 6px;">PRO</span>
+					<?php endif; ?>
 					<?php if ( ! $is_available ) : ?>
 						<p class="rip-help-text"><?php esc_html_e( 'Available on Professional, Business and Enterprise plans. On by default; switch it off here if you prefer manual control.', 'reportedip-hive' ); ?></p>
 					<?php else : ?>

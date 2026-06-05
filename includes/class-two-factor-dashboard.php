@@ -45,8 +45,8 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 
 		$stats            = self::compute_stats();
 		$users            = self::list_users( 200 );
-		$export_users_url = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=users' ), 'reportedip_hive_2fa_export' );
-		$export_audit_url = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=audit' ), 'reportedip_hive_2fa_export' );
+		$export_users_url = wp_nonce_url( ( is_network_admin() ? network_admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=users' ) : admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=users' ) ), 'reportedip_hive_2fa_export' );
+		$export_audit_url = wp_nonce_url( ( is_network_admin() ? network_admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=audit' ) : admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=audit' ) ), 'reportedip_hive_2fa_export' );
 		?>
 		<div class="wrap rip-wrap">
 			<div class="rip-header">

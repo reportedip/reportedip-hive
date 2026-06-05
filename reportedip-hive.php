@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.0.25
+ * Version: 2.0.26
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -54,7 +54,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.0.25' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.0.26' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -1170,7 +1170,7 @@ class ReportedIP_Hive {
 			$pending_count = (int) ( $counts->pending_count ?? 0 );
 
 			if ( $failed_count > 0 ) {
-				$queue_url = admin_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
+				$queue_url = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
 				$body      = sprintf(
 					'<strong>%1$s</strong> %2$s',
 					esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
@@ -1220,8 +1220,8 @@ class ReportedIP_Hive {
 
 			$warning_threshold  = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 );
 			$critical_threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 );
-			$queue_url          = admin_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
-			$community_url      = admin_url( 'admin.php?page=reportedip-hive-community' );
+			$queue_url          = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
+			$community_url      = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 			$queue_dismissed    = get_user_meta( $user_id, 'reportedip_dismissed_queue_warning_' . gmdate( 'Y-m-d' ), true );
 
 			if ( $pending_count >= $critical_threshold ) {
@@ -1268,7 +1268,7 @@ class ReportedIP_Hive {
 
 		$api_key = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		if ( empty( $api_key ) && $is_plugin_page ) {
-			$settings_url = admin_url( 'admin.php?page=reportedip-hive' );
+			$settings_url = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive' );
 			$body         = sprintf(
 				'<strong>%1$s</strong> %2$s',
 				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),

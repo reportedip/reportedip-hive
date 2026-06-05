@@ -113,7 +113,7 @@ final class ReportedIP_Hive_Admin_Notice {
 			? $args['variant']
 			: 'info';
 
-		$classes = array( 'notice', 'rip-notice', 'rip-notice--' . $variant );
+		$classes = array( 'notice', 'rip-notice', 'rip-notice--' . $variant, 'inline' );
 		if ( ! empty( $args['dismissible'] ) ) {
 			$classes[] = 'is-dismissible';
 		}
@@ -235,7 +235,7 @@ final class ReportedIP_Hive_Admin_Notice {
 				)
 			);
 			?>
-			<form class="rip-notice__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<form class="rip-notice__form" method="post" action="<?php echo esc_url( is_network_admin() ? network_admin_url( 'admin-post.php' ) : admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="<?php echo esc_attr( $action['form_action'] ); ?>" />
 				<?php wp_nonce_field( $action['nonce'] ); ?>
 				<button type="submit" class="rip-notice__btn rip-notice__btn--<?php echo esc_attr( $action['variant'] ); ?>">

@@ -102,7 +102,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				if (!window.confirm(a.getAttribute('data-confirm'))) return;
 				var f = document.createElement('form');
 				f.method = 'post';
-				f.action = <?php echo wp_json_encode( admin_url( 'admin-post.php' ) ); ?>;
+				f.action = <?php echo wp_json_encode( is_network_admin() ? network_admin_url( 'admin-post.php' ) : admin_url( 'admin-post.php' ) ); ?>;
 				f.style.display = 'none';
 				['action:reportedip_hive_2fa_admin_reset','user_id:'+a.getAttribute('data-user'),'_wpnonce:'+a.getAttribute('data-nonce')].forEach(function(p){
 					var i = document.createElement('input'); var kv = p.split(':'); i.type='hidden'; i.name=kv[0]; i.value=kv.slice(1).join(':'); f.appendChild(i);
@@ -182,7 +182,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			)
 		);
 
-		wp_safe_redirect( add_query_arg( 'reportedip_2fa_reset', (int) $user_id, admin_url( 'users.php' ) ) );
+		wp_safe_redirect( add_query_arg( 'reportedip_2fa_reset', (int) $user_id, is_network_admin() ? network_admin_url( 'users.php' ) : admin_url( 'users.php' ) ) );
 		exit;
 	}
 
@@ -386,18 +386,28 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					<p class="rip-help-text"><?php esc_html_e( 'Phishing-resistant sign-in via Face ID, Touch ID, Windows Hello or a hardware key (YubiKey).', 'reportedip-hive' ); ?></p>
 				</div>
 
+				<?php
+				$sms_relay_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
+				$sms_locked       = ! $sms_relay_status['available'];
+				?>
 				<div class="rip-form-group">
 					<label class="rip-toggle">
 						<input type="checkbox"
 							class="rip-toggle__input"
 							name="reportedip_hive_2fa_method_sms"
 							value="1"
-							<?php checked( in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $allowed_methods, true ) ); ?> />
+							<?php checked( in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $allowed_methods, true ) ); ?>
+							<?php disabled( $sms_locked ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
 							<?php esc_html_e( 'SMS code', 'reportedip-hive' ); ?>
 						</span>
 					</label>
+					<?php if ( $sms_locked && 'tier' === $sms_relay_status['reason'] ) : ?>
+						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $sms_relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+					<?php else : ?>
+						&nbsp;<span class="rip-tier-badge rip-tier-badge--professional" style="font-size:10px;padding:2px 6px;">PRO</span>
+					<?php endif; ?>
 					<p class="rip-help-text">
 						<?php esc_html_e( 'Delivered through the managed reportedip.de relay (Professional plan and higher). Less secure than Authenticator or Passkey, so use it only as a fallback.', 'reportedip-hive' ); ?>
 					</p>
@@ -490,6 +500,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					<?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?>
 					<?php if ( $rip_frontend_locked && 'tier' === $rip_frontend_status['reason'] ) : ?>
 						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $rip_frontend_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+					<?php else : ?>
+						&nbsp;<span class="rip-tier-badge rip-tier-badge--professional" style="font-size:10px;padding:2px 6px;">PRO</span>
 					<?php endif; ?>
 				</h2>
 				<p class="rip-settings-section__desc">
@@ -1183,7 +1195,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					<?php esc_html_e( 'Professional and Business plans include SMS-2FA via our managed EU gateway — no separate provider contract required. TOTP, Email and Passkeys remain available on every plan.', 'reportedip-hive' ); ?>
 					<?php
 					if ( 'tier' === ( $relay_status['reason'] ?? '' ) ) {
-						ReportedIP_Hive_Admin_Settings::render_tier_lock( $relay_status );
+						ReportedIP_Hive_Admin_Settings::render_tier_lock( $relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) );
 					}
 					?>
 				</div>

@@ -251,7 +251,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			delete_option( ReportedIP_Hive_Mode_Manager::OPTION_WIZARD_SKIPPED );
 		}
 
-		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+		wp_safe_redirect( self::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) );
 		exit;
 	}
 
@@ -349,9 +349,9 @@ class ReportedIP_Hive_Setup_Wizard {
 			array(
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 				'nonce'         => wp_create_nonce( 'reportedip_wizard_nonce' ),
-				'dashboardUrl'  => admin_url( 'admin.php?page=reportedip-hive' ),
+				'dashboardUrl'  => self::get_admin_page_url( 'admin.php?page=reportedip-hive' ),
 				'registerUrl'   => 'https://reportedip.de/register/',
-				'wizardBaseUrl' => admin_url( 'admin.php?page=' . self::PAGE_SLUG ),
+				'wizardBaseUrl' => self::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ),
 				'defaults'      => ReportedIP_Hive_Defaults::wizard(),
 				'savedApiKey'   => $saved_key,
 				'tier'          => $saved_tier,
@@ -398,7 +398,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 			<div class="rip-wizard__header-actions">
 				<?php ReportedIP_Hive_Admin_Settings::render_tier_badge(); ?>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive' ) ); ?>" class="rip-wizard__skip-link" id="rip-skip-wizard">
+				<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive' ) ); ?>" class="rip-wizard__skip-link" id="rip-skip-wizard">
 					<?php esc_html_e( 'Skip setup', 'reportedip-hive' ); ?> →
 				</a>
 			</div>
@@ -579,7 +579,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( add_query_arg( 'step', 2, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--primary rip-button--large">
+				<a href="<?php echo esc_url( self::get_wizard_url( 2 ) ); ?>" class="rip-button rip-button--primary rip-button--large">
 					<?php esc_html_e( 'Start setup', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
 				</a>
@@ -743,7 +743,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( add_query_arg( 'step', 1, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 1 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
@@ -939,11 +939,11 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( add_query_arg( 'step', 2, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 2 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
-				<a href="<?php echo esc_url( add_query_arg( 'step', 4, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--primary" id="rip-step3-next">
+				<a href="<?php echo esc_url( self::get_wizard_url( 4 ) ); ?>" class="rip-button rip-button--primary" id="rip-step3-next">
 					<?php esc_html_e( 'Next: 2FA', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
 				</a>
@@ -1024,10 +1024,22 @@ class ReportedIP_Hive_Setup_Wizard {
 				<div class="rip-config-card__body">
 					<p class="rip-help-block"><?php esc_html_e( 'Choose which methods users can set up.', 'reportedip-hive' ); ?></p>
 					<div class="rip-method-grid" id="rip-2fa-methods">
-						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'sms' ) ); ?>" data-method="sms">
+						<?php
+						$sms_relay_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
+						$sms_locked       = ! $sms_relay_status['available'];
+						$sms_classes      = $method_classes( 'sms' );
+						if ( $sms_locked ) {
+							$sms_classes .= ' rip-method-card--disabled';
+						}
+						?>
+						<div class="rip-method-card<?php echo esc_attr( $sms_classes ); ?>" data-method="sms">
 							<span class="rip-method-card__check"></span>
 							<div class="rip-method-card__badges">
-								<span class="rip-tier-badge rip-tier-badge--professional"><?php esc_html_e( 'PRO', 'reportedip-hive' ); ?></span>
+								<?php if ( $sms_locked && 'tier' === $sms_relay_status['reason'] ) : ?>
+									<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $sms_relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+								<?php else : ?>
+									<span class="rip-tier-badge rip-tier-badge--professional"><?php esc_html_e( 'PRO', 'reportedip-hive' ); ?></span>
+								<?php endif; ?>
 							</div>
 							<div class="rip-method-card__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
@@ -1162,7 +1174,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 						<h3><?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?></h3>
 						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
-							&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $frontend_status, array( 'label' => __( 'PRO', 'reportedip-hive' ) ) ); ?>
+							&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $frontend_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
 						<?php endif; ?>
 					</div>
 					<div class="rip-config-card__body">
@@ -1210,11 +1222,11 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( add_query_arg( 'step', 3, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 3 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
-				<a href="<?php echo esc_url( add_query_arg( 'step', 5, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--primary" id="rip-step4-next">
+				<a href="<?php echo esc_url( self::get_wizard_url( 5 ) ); ?>" class="rip-button rip-button--primary" id="rip-step4-next">
 					<?php esc_html_e( 'Next: Privacy', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
 				</a>
@@ -1321,11 +1333,11 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( add_query_arg( 'step', 4, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 4 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
-				<a href="<?php echo esc_url( add_query_arg( 'step', 6, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--primary" id="rip-step5-next">
+				<a href="<?php echo esc_url( self::get_wizard_url( 6 ) ); ?>" class="rip-button rip-button--primary" id="rip-step5-next">
 					<?php esc_html_e( 'Next: Notifications', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
 				</a>
@@ -1479,7 +1491,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			<?php endif; ?>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( add_query_arg( 'step', 5, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 5 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
@@ -1568,7 +1580,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( add_query_arg( 'step', 6, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 6 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
@@ -1600,7 +1612,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		if ( ! in_array( $current_align, array( 'left', 'center', 'right', 'below' ), true ) ) {
 			$current_align = 'center';
 		}
-		$skip_url      = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&step=9' );
+		$skip_url      = self::get_wizard_url( 9 );
 		$preview_align = 'below' === $current_align ? 'center' : $current_align;
 		?>
 		<div class="rip-wizard__configuration">
@@ -1668,7 +1680,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( add_query_arg( 'step', 7, admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 7 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
@@ -1800,12 +1812,12 @@ class ReportedIP_Hive_Setup_Wizard {
 
 			<div class="rip-wizard__actions">
 				<?php if ( $twofa_setup_pending ) : ?>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive-2fa-onboarding' ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-2fa-onboarding' ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
 					<?php esc_html_e( 'Set up 2FA for my account now', 'reportedip-hive' ); ?>
 				</a>
 				<?php endif; ?>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=reportedip-hive' ) ); ?>" class="rip-button rip-button--primary rip-button--large">
+				<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive' ) ); ?>" class="rip-button rip-button--primary rip-button--large">
 					<?php esc_html_e( 'Go to dashboard', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
 				</a>
@@ -1865,10 +1877,9 @@ class ReportedIP_Hive_Setup_Wizard {
 					'mode'         => $mode,
 					'redirect_url' => add_query_arg(
 						array(
-							'step' => 3,
 							'mode' => $mode,
 						),
-						admin_url( 'admin.php?page=' . self::PAGE_SLUG )
+						self::get_wizard_url( 3 )
 					),
 				)
 			);
@@ -2076,7 +2087,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		wp_send_json_success(
 			array(
 				'message'      => __( 'Setup skipped.', 'reportedip-hive' ),
-				'redirect_url' => admin_url( 'admin.php?page=reportedip-hive' ),
+				'redirect_url' => self::get_admin_page_url( 'admin.php?page=reportedip-hive' ),
 			)
 		);
 	}
@@ -2102,8 +2113,21 @@ class ReportedIP_Hive_Setup_Wizard {
 				'page' => self::PAGE_SLUG,
 				'step' => $step,
 			),
-			admin_url( 'admin.php' )
+			self::get_admin_page_url( 'admin.php' )
 		);
+	}
+
+	/**
+	 * Get the correct admin URL for a plugin page.
+	 *
+	 * @param string $path Target path.
+	 * @return string Admin URL.
+	 */
+	public static function get_admin_page_url( $path ) {
+		if ( is_network_admin() ) {
+			return network_admin_url( $path );
+		}
+		return admin_url( $path );
 	}
 
 	/**

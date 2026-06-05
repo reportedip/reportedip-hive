@@ -28,25 +28,25 @@
 .rip-notice.rip-notice--info {
     background: var(--rip-info-bg, rgba(59, 130, 246, 0.1));
     border-color: rgba(59, 130, 246, 0.2);
-    color: var(--rip-info-dark, #2563EB);
+    color: var(--rip-info-dark, #1D4ED8);
 }
 
 .rip-notice.rip-notice--warning {
     background: var(--rip-warning-bg, rgba(245, 158, 11, 0.1));
     border-color: rgba(245, 158, 11, 0.2);
-    color: var(--rip-warning-dark, #D97706);
+    color: var(--rip-warning-dark, #92400E);
 }
 
 .rip-notice.rip-notice--error {
     background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
     border-color: rgba(239, 68, 68, 0.2);
-    color: var(--rip-danger-dark, #DC2626);
+    color: var(--rip-danger-dark, #B91C1C);
 }
 
 .rip-notice.rip-notice--success {
     background: var(--rip-success-bg, rgba(16, 185, 129, 0.1));
     border-color: rgba(16, 185, 129, 0.2);
-    color: var(--rip-success-dark, #059669);
+    color: var(--rip-success-dark, #047857);
 }
 
 .rip-notice .rip-notice__title {

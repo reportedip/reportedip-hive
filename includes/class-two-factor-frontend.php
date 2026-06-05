@@ -452,7 +452,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 			return;
 		}
 
-		wp_safe_redirect( admin_url( 'admin.php?page=reportedip-hive-2fa-onboarding' ) );
+		wp_safe_redirect( is_network_admin() ? network_admin_url( 'admin.php?page=reportedip-hive-2fa-onboarding' ) : admin_url( 'admin.php?page=reportedip-hive-2fa-onboarding' ) );
 	}
 
 	/**
