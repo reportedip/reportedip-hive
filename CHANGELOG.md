@@ -2,6 +2,15 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.27] — 2026-06-05
+
+### Added
+- **WPMU network admin compatibility.** Replaced hardcoded `admin_url` references with dynamic `ReportedIP_Hive_Admin_Settings::get_admin_page_url` context resolution, keeping administrators in the Network Admin context when managing network-activated settings, onboarding, 2FA settings, or resets.
+- **Text-independent login error masking.** Refactored error masking in `normalize_login_errors` to check error codes within the global `$errors` object rather than string matching. This ensures 2FA onboarding, password resets, and IP/reputation blocks pass through unmasked across all languages (including German) while keeping credential errors securely masked.
+
+### Changed
+- **Styled missing API key warning.** Restyled and rebuilt the missing API key notice on the community page to use the premium design system's BEM classes and SVG layouts.
+
 ## [2.0.25] — 2026-06-04
 
 ### Added
