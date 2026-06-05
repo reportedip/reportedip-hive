@@ -47,7 +47,14 @@ class ReportedIP_Hive_User_Enumeration {
 	 *
 	 * @var string[]
 	 */
-	private const PASSTHROUGH_NEEDLES_RESET = array( 'two-factor', 'reset blocked' );
+	private const PASSTHROUGH_NEEDLES_RESET = array(
+		'two-factor',
+		'zwei-faktor',
+		'2fa',
+		'reset blocked',
+		'blockiert',
+		'bestätigung',
+	);
 
 	/**
 	 * Substrings that let a login-flow error message pass through the
@@ -59,9 +66,25 @@ class ReportedIP_Hive_User_Enumeration {
 	 * reset. The phrasing is stable English; translations should keep the
 	 * "two-factor" token in place.
 	 *
+	 * Also contains general security-block needles (like IP blocking or reputation
+	 * blocks) so that locked-out users see the correct block reason rather than
+	 * an incorrect credential message.
+	 *
 	 * @var string[]
 	 */
-	private const PASSTHROUGH_NEEDLES_LOGIN = array( 'two-factor' );
+	private const PASSTHROUGH_NEEDLES_LOGIN = array(
+		'two-factor',
+		'zwei-faktor',
+		'2fa',
+		'erforderlich',
+		'kontingent',
+		'blocked',
+		'gesperrt',
+		'reputation',
+		'access denied',
+		'zugriff verweigert',
+		'reportedip',
+	);
 
 	/**
 	 * Singleton instance.
