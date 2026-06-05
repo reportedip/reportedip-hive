@@ -243,20 +243,42 @@ class ReportedIP_Hive_User_Enumeration {
 		$flag_expired = isset( $_GET['reportedip_2fa_expired'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_expired'] ) );
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		$is_reset_passthrough = is_string( $error )
-			&& in_array( $action, array( 'rp', 'resetpass' ), true )
-			&& self::contains_any( $error, self::PASSTHROUGH_NEEDLES_RESET );
-
-		$is_login_passthrough = is_string( $error )
-			&& in_array( $action, array( '', 'login' ), true )
-			&& self::contains_any( $error, self::PASSTHROUGH_NEEDLES_LOGIN );
-
 		if ( $flag_locked
 			|| $flag_expired
-			|| in_array( $action, self::PASSTHROUGH_ACTIONS, true )
-			|| $is_reset_passthrough
-			|| $is_login_passthrough ) {
+			|| in_array( $action, self::PASSTHROUGH_ACTIONS, true ) ) {
 			return $error;
+		}
+
+		global $errors;
+		if ( $errors instanceof \WP_Error ) {
+			$codes      = $errors->get_error_codes();
+			$mask_codes = array( 'invalid_username', 'invalid_email', 'incorrect_password', 'invalid_credentials' );
+
+			$should_mask = false;
+			foreach ( $codes as $code ) {
+				if ( in_array( $code, $mask_codes, true ) ) {
+					$should_mask = true;
+				} else {
+					// We have a non-credential error (e.g. 2FA or IP block), bypass masking.
+					return $error;
+				}
+			}
+			if ( $should_mask ) {
+				return __( 'Invalid credentials.', 'reportedip-hive' );
+			}
+		} else {
+			// Fallback if global $errors is not set or not a WP_Error (e.g. unit tests or custom overrides)
+			$is_reset_passthrough = is_string( $error )
+				&& in_array( $action, array( 'rp', 'resetpass' ), true )
+				&& self::contains_any( $error, self::PASSTHROUGH_NEEDLES_RESET );
+
+			$is_login_passthrough = is_string( $error )
+				&& in_array( $action, array( '', 'login' ), true )
+				&& self::contains_any( $error, self::PASSTHROUGH_NEEDLES_LOGIN );
+
+			if ( $is_reset_passthrough || $is_login_passthrough ) {
+				return $error;
+			}
 		}
 
 		return __( 'Invalid credentials.', 'reportedip-hive' );
