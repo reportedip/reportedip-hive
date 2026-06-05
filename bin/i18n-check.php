@@ -324,10 +324,11 @@ final class I18nCheck {
 	 * @return int Exit code.
 	 */
 	private function wp( string $args ): int {
-		$bin = $this->is_windows() ? 'vendor\\bin\\wp.bat' : 'vendor/bin/wp';
+		$boot = $this->path( 'vendor/wp-cli/wp-cli/php/boot-fs.php' );
 		$cmd = sprintf(
-			'%s %s %s --path=%s 2>%s',
-			escapeshellarg( $bin ),
+			'%s %s %s %s --path=%s 2>%s',
+			escapeshellarg( PHP_BINARY ),
+			escapeshellarg( $boot ),
 			$args,
 			'--quiet',
 			escapeshellarg( $this->root ),
