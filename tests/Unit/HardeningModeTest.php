@@ -501,5 +501,53 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNotSame( $wm, $lm, 'state marker and log-noise marker must live in separate transient namespaces' );
 			$this->assertStringStartsWith( 'reportedip_hive_hardening_logged_window_', $lm );
 		}
+
+		public function test_distributed_detection_defaults_when_options_absent() {
+			$this->assertSame( 10, \ReportedIP_Hive_Hardening_Mode::detect_window_minutes() );
+			$this->assertSame( 5, \ReportedIP_Hive_Hardening_Mode::detect_min_ips() );
+			$this->assertSame( 20, \ReportedIP_Hive_Hardening_Mode::detect_min_attempts() );
+		}
+
+		public function test_distributed_getters_clamp_out_of_range_values() {
+			$GLOBALS['wp_options']['reportedip_hive_hardening_detect_window_minutes'] = 9999;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_detect_min_ips']        = 1;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_detect_min_attempts']   = 0;
+
+			$this->assertSame( 120, \ReportedIP_Hive_Hardening_Mode::detect_window_minutes(), 'window clamps to 120 max' );
+			$this->assertSame( 2, \ReportedIP_Hive_Hardening_Mode::detect_min_ips(), 'min IPs clamps to 2 floor' );
+			$this->assertSame( 20, \ReportedIP_Hive_Hardening_Mode::detect_min_attempts(), 'zero falls back to default' );
+		}
+
+		public function test_breaches_distributed_thresholds_with_defaults() {
+			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 5, 20 ) );
+			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 12, 96 ) );
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 4, 20 ), 'too few IPs' );
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 5, 19 ), 'too few attempts' );
+		}
+
+		public function test_breaches_distributed_thresholds_honours_custom_options() {
+			$GLOBALS['wp_options']['reportedip_hive_hardening_detect_min_ips']      = 3;
+			$GLOBALS['wp_options']['reportedip_hive_hardening_detect_min_attempts'] = 10;
+
+			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 3, 10 ) );
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 2, 10 ) );
+		}
+
+		public function test_rolling_window_bucket_label_is_stable_within_a_window() {
+			$base  = 1700000000;
+			$same  = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 10, $base );
+			$later = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 10, $base + 120 );
+			$next  = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 10, $base + 600 );
+
+			$this->assertSame( $same, $later, 'same 10-min slice yields the same bucket label' );
+			$this->assertNotSame( $same, $next, 'crossing the window boundary yields a new bucket label' );
+			$this->assertStringStartsWith( 'rolling-10m-', $same );
+		}
+
+		public function test_is_rolling_window_label_discriminates_burst_from_distributed() {
+			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( 'rolling-10m-2833333' ) );
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( '2026-05-27 12:44' ) );
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( '' ) );
+		}
 	}
 }

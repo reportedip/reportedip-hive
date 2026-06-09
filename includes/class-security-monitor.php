@@ -1171,14 +1171,31 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
-	 * Check for coordinated attacks
+	 * Check for coordinated attacks.
+	 *
+	 * Runs two complementary detectors and returns the union of their hits
+	 * (each row carries `time_window`, `unique_ips`, `total_attempts`):
+	 *
+	 *  1. Burst — ≥ 3 distinct IPs AND ≥ 20 attempts inside a single calendar
+	 *     minute. Catches simultaneous floods.
+	 *  2. Distributed — ≥ {@see ReportedIP_Hive_Hardening_Mode::detect_min_ips()}
+	 *     distinct IPs AND ≥ detect_min_attempts() across the rolling
+	 *     detect_window_minutes() window. Catches botnets that rotate IPs over
+	 *     several minutes and would otherwise slip under the per-minute burst
+	 *     rule.
+	 *
+	 * The table lives under `base_prefix` (network-wide), so on Multisite the
+	 * aggregate spans every site in the network — a distributed attack hitting
+	 * many sub-sites is detected as one coordinated pattern.
+	 *
+	 * @return array<int,object>
 	 */
 	public function check_coordinated_attacks() {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_attempts';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->prefix and a hardcoded suffix; safe.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->base_prefix and a hardcoded suffix; safe.
 		$coordinated_attacks = $wpdb->get_results(
 			"SELECT
                 DATE_FORMAT(last_attempt, '%Y-%m-%d %H:%i') as time_window,
@@ -1191,6 +1208,15 @@ class ReportedIP_Hive_Security_Monitor {
              HAVING unique_ips >= 3 AND total_attempts >= 20
              ORDER BY time_window DESC"
 		);
+
+		if ( ! is_array( $coordinated_attacks ) ) {
+			$coordinated_attacks = array();
+		}
+
+		$distributed = $this->detect_distributed_attack_window();
+		if ( null !== $distributed ) {
+			array_unshift( $coordinated_attacks, $distributed );
+		}
 
 		if ( ! empty( $coordinated_attacks ) ) {
 			$marker_class_exists = class_exists( 'ReportedIP_Hive_Hardening_Mode' );
@@ -1220,6 +1246,78 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 
 		return $coordinated_attacks;
+	}
+
+	/**
+	 * Distributed-attack detector — rolling-window aggregate.
+	 *
+	 * Sums failed-login attempts and counts distinct IPs over the configurable
+	 * sliding window (default 10 min) and returns a synthetic row when the
+	 * configured thresholds are breached. The synthetic `time_window` is a
+	 * stable per-window bucket label so the existing suppression markers do not
+	 * re-log the same window on every cron sweep.
+	 *
+	 * @return object|null Row with `time_window`, `unique_ips`, `total_attempts`, or null.
+	 * @since  2.0.29
+	 */
+	private function detect_distributed_attack_window() {
+		global $wpdb;
+
+		if ( ! class_exists( 'ReportedIP_Hive_Hardening_Mode' ) ) {
+			return null;
+		}
+
+		$window     = ReportedIP_Hive_Hardening_Mode::detect_window_minutes();
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->base_prefix and a hardcoded suffix; interval is a prepared integer.
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT COUNT(DISTINCT ip_address) as unique_ips,
+                        COALESCE(SUM(attempt_count), 0) as total_attempts
+                 FROM $table_name
+                 WHERE last_attempt > DATE_SUB(NOW(), INTERVAL %d MINUTE)
+                 AND attempt_type = 'login'",
+				$window
+			)
+		);
+
+		if ( ! $row ) {
+			return null;
+		}
+
+		$unique_ips     = (int) $row->unique_ips;
+		$total_attempts = (int) $row->total_attempts;
+
+		if ( ! ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( $unique_ips, $total_attempts ) ) {
+			return null;
+		}
+
+		return $this->build_rolling_reason_row( $unique_ips, $total_attempts, $window );
+	}
+
+	/**
+	 * Build the synthetic coordinated-attack row for a rolling-window hit.
+	 *
+	 * Separated from the query so the row shape and bucket labelling are unit
+	 * testable without a database.
+	 *
+	 * @param int      $unique_ips     Distinct IPs in the window.
+	 * @param int      $total_attempts Summed attempts in the window.
+	 * @param int      $window_minutes Window length used for the bucket label.
+	 * @param int|null $now            Override timestamp (testing); defaults to time().
+	 * @return object
+	 * @since  2.0.29
+	 */
+	public function build_rolling_reason_row( $unique_ips, $total_attempts, $window_minutes, $now = null ) {
+		$now = null === $now ? time() : (int) $now;
+
+		$row                 = new stdClass();
+		$row->time_window    = ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( $window_minutes, $now );
+		$row->unique_ips     = (int) $unique_ips;
+		$row->total_attempts = (int) $total_attempts;
+
+		return $row;
 	}
 
 	/**

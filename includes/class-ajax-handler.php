@@ -1282,12 +1282,12 @@ class ReportedIP_Hive_Ajax_Handler {
 			$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'reportedip_hive_%'" );
 
 			$tables = array(
-				$wpdb->prefix . 'reportedip_hive_logs',
-				$wpdb->prefix . 'reportedip_hive_blocked',
-				$wpdb->prefix . 'reportedip_hive_whitelist',
-				$wpdb->prefix . 'reportedip_hive_api_queue',
-				$wpdb->prefix . 'reportedip_hive_attempts',
-				$wpdb->prefix . 'reportedip_hive_stats',
+				$wpdb->base_prefix . 'reportedip_hive_logs',
+				$wpdb->base_prefix . 'reportedip_hive_blocked',
+				$wpdb->base_prefix . 'reportedip_hive_whitelist',
+				$wpdb->base_prefix . 'reportedip_hive_api_queue',
+				$wpdb->base_prefix . 'reportedip_hive_attempts',
+				$wpdb->base_prefix . 'reportedip_hive_stats',
 			);
 
 			foreach ( $tables as $table ) {

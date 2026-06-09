@@ -335,6 +335,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.0.29 =
+
+Security: Hardening Mode now also catches distributed botnets that rotate IPs over several minutes, not just bursts that hit within a single minute. A second detector aggregates distinct IPs and failed logins across a configurable rolling window (default 10 minutes) and tightens the failed-login and reputation thresholds network-wide once the pattern crosses 5 IPs / 20 attempts; the original same-minute burst rule stays in place. The detection window, minimum distinct IPs and minimum total attempts are configurable on the Hardening Mode settings tab. Fixed a multisite bug where coordinated-attack detection and the plugin reset queried a per-site table instead of the network-wide one, leaving detection inert on sub-sites.
+
 = 2.0.28 =
 
 Fewer false positives: the bot allowlist now also exempts WordPress core loopback, uptime monitors (UptimeRobot, Pingdom, Site24x7, StatusCake, BetterStack) and a wider set of search / social crawlers from the 404 and REST burst triggers, and the `Pinterest` / `Slackbot` tokens were broadened to match the real user-agent strings. The scan detector no longer counts missing `css`, `js`, `.map` or `.webmanifest` files toward the scanner threshold. Honeypot-path detection stays active for every user-agent. Business tier copy across the settings card, setup wizard and mode descriptor now states the multi-bookable model (15 domains per licence, bookable x2–x20 with a volume discount). Documentation pass: the free-vs-paid positioning was corrected (the protection core is free; SMS 2FA, WooCommerce frontend 2FA and Hardening Mode need a Professional plan), the multisite FAQ now reflects the network-only support shipped in 2.0.0, and several stale facts (schema version, removed SMS-provider filter, table count, wizard step count, Enterprise price floor) were fixed.

@@ -2,6 +2,38 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.29] — Unreleased
+
+### Security
+
+- **Hardening Mode now catches distributed botnets, not just same-minute
+  bursts.** The coordinated-attack detector previously fired only when ≥ 3 IPs
+  and ≥ 20 failed logins landed in the *same calendar minute*. A botnet that
+  rotates IPs every couple of minutes — each IP auto-blocked at the per-IP
+  threshold before the next starts — never satisfied that rule, so hardening
+  stayed dormant through exactly the attack it exists to stop. A second,
+  complementary detector now aggregates distinct IPs and failed logins across a
+  configurable rolling window (default 10 minutes) and tightens thresholds when
+  the distributed pattern crosses ≥ 5 IPs / ≥ 20 attempts. The original
+  same-minute burst rule is retained, so both simultaneous floods and slow
+  rotating attacks are covered.
+
+### Fixed
+
+- **Multisite: coordinated-attack detection queried the wrong table.**
+  `Security_Monitor::check_coordinated_attacks()` and the plugin-reset handler
+  read `$wpdb->prefix . 'reportedip_hive_attempts'` instead of the canonical
+  `base_prefix`. On a sub-site that points at a non-existent per-site table, so
+  detection was effectively dead and the data reset silently skipped the real
+  network-wide tables. Both now use `base_prefix`, making detection correctly
+  network-wide.
+
+### New
+
+- **Configurable distributed-detection thresholds** on the Hardening Mode
+  settings tab: detection window (minutes), minimum distinct IPs and minimum
+  total attempts, with conservative defaults (10 / 5 / 20).
+
 ## [2.0.28] — 2026-06-09
 
 ### Changed

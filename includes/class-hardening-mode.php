@@ -54,8 +54,15 @@ final class ReportedIP_Hive_Hardening_Mode {
 	const DEFAULT_BLOCK_THRESHOLD  = 60;
 	const DEFAULT_REALTIME_ENABLED = true;
 
-	const OPT_MASTER_ENABLED = 'reportedip_hive_hardening_enabled';
-	const SENTINEL_UNSET     = '__rip_hive_hardening_unset__';
+	const DEFAULT_DETECT_WINDOW_MINUTES = 10;
+	const DEFAULT_DETECT_MIN_IPS        = 5;
+	const DEFAULT_DETECT_MIN_ATTEMPTS   = 20;
+
+	const OPT_MASTER_ENABLED        = 'reportedip_hive_hardening_enabled';
+	const OPT_DETECT_WINDOW_MINUTES = 'reportedip_hive_hardening_detect_window_minutes';
+	const OPT_DETECT_MIN_IPS        = 'reportedip_hive_hardening_detect_min_ips';
+	const OPT_DETECT_MIN_ATTEMPTS   = 'reportedip_hive_hardening_detect_min_attempts';
+	const SENTINEL_UNSET            = '__rip_hive_hardening_unset__';
 
 	/**
 	 * Whether the hardening mode is currently scharfgeschaltet.
@@ -185,6 +192,85 @@ final class ReportedIP_Hive_Hardening_Mode {
 	 */
 	public static function is_realtime_detection_enabled() {
 		return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_realtime_detection', self::DEFAULT_REALTIME_ENABLED );
+	}
+
+	/**
+	 * Sliding-window length (minutes) for the distributed-attack detector.
+	 *
+	 * Unlike the legacy same-minute burst rule, the distributed detector
+	 * aggregates failed logins across this rolling window so a botnet that
+	 * rotates IPs every couple of minutes is still caught.
+	 *
+	 * @return int Clamped to 1–120.
+	 * @since  2.0.29
+	 */
+	public static function detect_window_minutes() {
+		$value = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_DETECT_WINDOW_MINUTES, self::DEFAULT_DETECT_WINDOW_MINUTES );
+		return max( 1, min( 120, $value > 0 ? $value : self::DEFAULT_DETECT_WINDOW_MINUTES ) );
+	}
+
+	/**
+	 * Minimum distinct attacking IPs within the window to flag a distributed attack.
+	 *
+	 * @return int Clamped to 2–100.
+	 * @since  2.0.29
+	 */
+	public static function detect_min_ips() {
+		$value = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_DETECT_MIN_IPS, self::DEFAULT_DETECT_MIN_IPS );
+		return max( 2, min( 100, $value > 0 ? $value : self::DEFAULT_DETECT_MIN_IPS ) );
+	}
+
+	/**
+	 * Minimum total failed-login attempts within the window to flag a distributed attack.
+	 *
+	 * @return int Clamped to 3–1000.
+	 * @since  2.0.29
+	 */
+	public static function detect_min_attempts() {
+		$value = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_DETECT_MIN_ATTEMPTS, self::DEFAULT_DETECT_MIN_ATTEMPTS );
+		return max( 3, min( 1000, $value > 0 ? $value : self::DEFAULT_DETECT_MIN_ATTEMPTS ) );
+	}
+
+	/**
+	 * Whether a window aggregate breaches the configured distributed thresholds.
+	 *
+	 * @param int $unique_ips     Distinct IPs seen in the window.
+	 * @param int $total_attempts Summed failed-login attempts in the window.
+	 * @return bool
+	 * @since  2.0.29
+	 */
+	public static function breaches_distributed_thresholds( $unique_ips, $total_attempts ) {
+		return (int) $unique_ips >= self::detect_min_ips() && (int) $total_attempts >= self::detect_min_attempts();
+	}
+
+	/**
+	 * Stable `time_window` label for a rolling-window detection.
+	 *
+	 * Buckets `$now` into fixed slices of the window length so the suppression
+	 * markers ({@see window_marker_key()} / {@see log_marker_key()}) stay stable
+	 * for the duration of one window instead of changing every second. The label
+	 * is intentionally distinct from the `%Y-%m-%d %H:%i` burst labels.
+	 *
+	 * @param int $window_minutes Window length in minutes.
+	 * @param int $now            Unix timestamp.
+	 * @return string e.g. `rolling-10m-2876421`.
+	 * @since  2.0.29
+	 */
+	public static function rolling_window_bucket_label( $window_minutes, $now ) {
+		$window = max( 1, (int) $window_minutes );
+		$bucket = (int) floor( (int) $now / ( $window * MINUTE_IN_SECONDS ) );
+		return 'rolling-' . $window . 'm-' . $bucket;
+	}
+
+	/**
+	 * Whether a reason payload originated from the rolling-window detector.
+	 *
+	 * @param string $time_window Reason `time_window` value.
+	 * @return bool
+	 * @since  2.0.29
+	 */
+	public static function is_rolling_window_label( $time_window ) {
+		return 0 === strpos( (string) $time_window, 'rolling-' );
 	}
 
 	/**
