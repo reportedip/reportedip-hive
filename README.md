@@ -4,12 +4,12 @@
 [![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-777BB4.svg)](https://www.php.net/)
 [![WordPress 5.0+](https://img.shields.io/badge/WordPress-5.0%2B-21759B.svg)](https://wordpress.org/)
 [![Multisite](https://img.shields.io/badge/Multisite-network--aware-21759B.svg)](#multisite-support)
-[![Tests](https://img.shields.io/badge/PHPUnit-454%20tests-brightgreen.svg)](https://github.com/reportedip/reportedip-hive/actions)
+[![Tests](https://img.shields.io/badge/PHPUnit-unit%20%2B%20Multisite-brightgreen.svg)](https://github.com/reportedip/reportedip-hive/actions)
 [![Made in Germany](https://img.shields.io/badge/Made%20in-Germany-black.svg)](https://reportedip.de)
 
 > **Community-powered WordPress security: 12 attack sensors, 4 progressive 2FA methods, herd-immunity threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.**
 
-Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker — before the password is even checked. One drop-in replaces brute-force protection, full 2FA suite and threat intelligence; no upsell tiers, no "Pro" gate.
+Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker — before the password is even checked. One drop-in replaces brute-force protection, a multi-method 2FA suite and threat intelligence. The entire detection and identity core is free and GPL-2.0; the paid Professional / Business plans add managed mail/SMS relays, multi-site management and a handful of advanced modules on top — they never gate the core protection.
 
 → Product: <https://reportedip.de> · Releases: [GitHub](https://github.com/reportedip/reportedip-hive/releases) · Docs: <https://reportedip.de/docs>
 
@@ -17,12 +17,12 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 
 ## Why pick it
 
-- **One plugin instead of three.** Brute-force protection + complete 2FA suite + opt-in community threat intelligence. Single drop-in, GPL-2.0, public on GitHub.
+- **One plugin instead of three.** Brute-force protection + a multi-method 2FA suite + opt-in community threat intelligence. Single drop-in, GPL-2.0, public on GitHub. The full protection core is free; paid plans only add relays, multi-site and advanced modules (see [Free vs. paid](#free-vs-paid)).
 - **Progressive blocks that don't burn legitimate users.** First-time tripping gets a 5-minute timeout; repeat offenders climb 5 m → 15 m → 30 m → 24 h → 48 h → 7 d. CGNAT visitors and fat-fingered admins recover in minutes; brute-forcers pay the full price.
 - **Privacy-first by default.** GDPR-minimal logging, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium. Lawful basis (Art. 6(1)(f) GDPR) documented in-product.
 - **Cache-plugin-safe.** WP Rocket / W3TC / WP Super Cache / LiteSpeed cannot store the 403 page or serve cached HTML to blocked IPs on protected paths.
 - **Multisite-native.** Network-only activation, single threat decision applies network-wide, Site Admins get a read-only UI with two narrow override fields. Cross-site brute-force aggregates into one central counter so an attacker pivoting between sub-sites trips the threshold faster, not slower.
-- **Code you can read.** PHPStan level 5 clean, WPCS clean with zero warnings, 435 unit + 19 Multisite PHPUnit tests with 757 assertions on every commit. No bundled minified bytes you can't audit.
+- **Code you can read.** PHPStan level 5 clean, WPCS clean with zero warnings, a comprehensive PHPUnit suite (unit + Multisite) running on every commit. No bundled minified bytes you can't audit.
 
 ## Feature overview
 
@@ -43,14 +43,16 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | WooCommerce login | checkout + my-account forms tracked separately | Optional themed frontend 2FA on Professional plan |
 | Cookie-banner consent endpoints | always-bypassed | Real Cookie Banner, Complianz, Borlabs, CookieYes baked in |
 
-### Two-Factor Authentication — full suite, all included
+### Two-Factor Authentication — four methods
 
-- **TOTP** (RFC 6238) — Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest.
-- **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello, YubiKey. In-house implementation, phishing-resistant, no Composer dependency.
-- **Email OTP** — 6-digit, 10 min validity, rate-limited (3 sends / 15 min).
-- **SMS OTP (Professional)** — delivered through the managed reportedip.de relay, included with Professional and Business plans. No own SMS account or carrier contract required.
+Three methods work in **every plan**, including Free and the fully-offline Local Shield; SMS is the one method that rides the managed relay and therefore needs a Professional plan.
 
-Plus 10 single-use recovery codes, trusted-device tokens (default 30 days), multi-stage 2FA rate-limit (3/5/10/15 fails → 30 s/5 m/30 m/1 h delays, 15th fail graduates to a real progressive block), role-based enforcement with grace period, frontend onboarding wizard, branded login page option, IP allowlist for 2FA bypass.
+- **TOTP** (RFC 6238) — Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest. *Free.*
+- **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello, YubiKey. In-house implementation, phishing-resistant, no Composer dependency. *Free.*
+- **Email OTP** — 6-digit, 10 min validity, rate-limited (3 sends / 15 min). *Free.*
+- **SMS OTP — Professional plan.** Delivered through the managed reportedip.de relay (included with Professional and Business). No own SMS account or carrier contract required. Free / Contributor sites use TOTP, Passkey or Email instead.
+
+Plus — all free, in every plan — 10 single-use recovery codes, trusted-device tokens (default 30 days), multi-stage 2FA rate-limit (3/5/10/15 fails → 30 s/5 m/30 m/1 h delays, 15th fail graduates to a real progressive block), role-based enforcement with grace period, frontend onboarding wizard, branded login page option, IP allowlist for 2FA bypass, and the password-reset 2FA gate.
 
 **WooCommerce frontend 2FA — Professional plan and higher.** When enabled, customers signing in through `[woocommerce_my_account]`, the classic checkout, or the WooCommerce Cart / Checkout blocks see the second factor inside the active storefront theme instead of bouncing to wp-login.php. Customer / Subscriber roles get a themed onboarding wizard on a dedicated slug. Cart and checkout state survive the redirect roundtrip; the trusted-device cookie is shared with the wp-login flow. A tier downgrade soft-disables the module — existing customer secrets stay valid, only new onboardings are blocked.
 
@@ -66,15 +68,36 @@ Documented limitation: a blocked attacker visiting a *publicly cached* GET URL s
 
 ### Two operating modes — pick what fits
 
+The two **modes** decide whether the plugin talks to reportedip.de at all. They are independent of the **plan** (Free → Enterprise), which decides the relay quotas and the advanced modules. A Free site can run either mode; SMS 2FA and Hardening Mode additionally need a Professional plan because they ride the managed relay / coordinated-attack infrastructure.
+
 | | Local Shield | Community Network |
 |---|---|---|
 | Account required | No | Free account at reportedip.de |
 | External calls | None | Reputation lookups + anonymised reports |
+| All 12 detection sensors | ✓ | ✓ |
+| Core 2FA (TOTP, Passkey, Email, Recovery) | ✓ | ✓ |
+| Progressive block escalation + password-reset gate | ✓ | ✓ |
 | Pre-auth IP reputation check | – | ✓ |
 | Coordinated-attack detection | – | ✓ |
-| All 12 sensors | ✓ | ✓ |
-| Full 2FA suite | ✓ | ✓ |
+| SMS 2FA (managed relay) | – | Professional+ |
+| Hardening Mode (auto-tighten thresholds on attack) | – | Professional+ |
 | Privacy | 100 % offline | Strictly opt-in, no usernames or comment content shared |
+
+<a id="free-vs-paid"></a>
+
+### Free vs. paid
+
+The plugin itself is **free, GPL-2.0 and fully functional** in both modes. Everything that detects an attack, blocks an IP, logs an event or verifies a second factor with TOTP / Passkey / Email / Recovery codes works on every plan, including the 100 %-offline Local Shield — no account, nothing held back.
+
+What the paid **Professional** (3 domains) and **Business** (15 domains, multi-bookable) plans add on top:
+
+- **Managed mail relay** — 2FA mails through clean SPF/DKIM/DMARC infrastructure, auto-fallback to `wp_mail()` on cap.
+- **Managed SMS relay** — SMS OTP without your own carrier/Twilio contract.
+- **WooCommerce frontend 2FA** — the second factor rendered inside the storefront theme on My Account / checkout / WC blocks.
+- **Hardening Mode** — automatically tighten failed-login and reputation thresholds network-wide for one hour when a coordinated attack is detected.
+- Higher API quotas, multi-site dashboard, priority blacklist sync, longer log retention, prepaid mail/SMS top-up bundles. Business adds white-label, the full WP-CLI surface, role-based login-time restrictions and a GDPR export tool.
+
+Pricing and the full tier matrix live at <https://reportedip.de>.
 
 ### Promote / community shortcodes
 
@@ -85,7 +108,7 @@ Documented limitation: a blocked attacker visiting a *publicly cached* GET URL s
 
 ### Admin UX
 
-- **8-step setup wizard** (Welcome → Connect → Protection → 2FA → Privacy → Login → Promote → Done) with privacy-first defaults and a celebratory final step
+- **9-step setup wizard** (Welcome → Connect → Protection → 2FA → Privacy → Notifications → Login → Promote → Done) with privacy-first defaults and a celebratory final step
 - **Real-time dashboard** with 7- and 30-day Chart.js trend lines
 - **Five list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, plus the 2FA admin grid
 - **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup
@@ -102,9 +125,9 @@ Documented limitation: a blocked attacker visiting a *publicly cached* GET URL s
 
 - **REST API** namespace `reportedip-hive/v1` with `/2fa/challenge`, `/2fa/verify`, `/2fa/methods` for headless flows
 - **WP-CLI** tree `wp reportedip 2fa` for user 2FA administration
-- **PHP filters** — `reportedip_hive_rest_bypass_routes`, `reportedip_hive_rest_sensitive_routes`, `reportedip_hive_event_category_map`, `reportedip_2fa_sms_providers`, `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path`
+- **PHP filters** — `reportedip_hive_rest_bypass_routes`, `reportedip_hive_rest_sensitive_routes`, `reportedip_hive_event_category_map`, `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path`, `reportedip_hive_decoy_paths`, `reportedip_hive_bot_allowlist_patterns`
 - **Constants** — `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` (emergency override from `wp-config.php`)
-- **6 database tables** (auto-migrated, opt-in delete on uninstall)
+- **7 database tables** (auto-migrated, opt-in delete on uninstall)
 - **Internationalisation-ready** (text domain `reportedip-hive`, English source + German translation included)
 
 ### What this plugin does NOT include
@@ -156,7 +179,7 @@ For instant updates: WP Admin → *Plugins → Check for updates*.
 ## Requirements
 
 - **PHP 8.1+**
-- **WordPress 5.0–6.9** (tested up to 6.9)
+- **WordPress 5.0–7.0** (tested up to 7.0)
 - **MySQL 5.7+** or MariaDB equivalent
 - **Optional:** WooCommerce (monitored if active, never required)
 - **Optional:** Professional plan (or higher) for SMS 2FA via the managed relay
@@ -188,7 +211,7 @@ The codebase ships a dedicated PHPUnit-Multisite suite (`tests/Multisite/`, `php
 git clone https://github.com/reportedip/reportedip-hive.git
 cd reportedip-hive
 composer install
-composer test           # PHPUnit unit suite (435 tests)
+composer test           # PHPUnit unit suite
 composer lint           # PHPCS against WordPress Coding Standards
 composer analyse        # PHPStan level 5
 composer check-all      # all three

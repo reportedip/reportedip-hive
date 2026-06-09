@@ -2,6 +2,47 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.0.28] — 2026-06-09
+
+### Changed
+
+- **Business tier copy now states the multi-bookable model.** The Settings
+  upgrade card, the setup-wizard tier card and `Mode_Manager`'s Business
+  descriptor now spell out "15 domains per licence" and "bookable x2–x20 —
+  domains, API quota and 2FA mail/SMS scale with the licence count (volume
+  discount)", matching the live Stripe volume pricing.
+- **Bot allowlist expanded** so legitimate crawlers no longer trip the 404 /
+  REST burst triggers: WordPress core (pingbacks/loopback), uptime monitors
+  (UptimeRobot, Pingdom, Site24x7, StatusCake, BetterStack), more search and
+  social bots (PetalBot, SeznamBot, Qwantify, CocCocBot, MojeekBot, Yeti,
+  NaverBot, Mastodon, Tumblr, HubSpot, Screaming Frog, Lighthouse, …). The
+  `Pinterestbot` / `Slackbot-LinkExpanding` tokens were broadened to
+  `Pinterest` / `Slackbot` to match the real user-agent strings. Honeypot-path
+  detection stays active for every user-agent regardless of allowlist.
+- **Scan detector ignores static-asset 404s.** `css`, `js`, `map` and
+  `webmanifest` join the passive-asset extension list, so a missing stylesheet
+  or source map never counts toward the scanner threshold.
+
+### Documentation
+
+- **Free-vs-paid positioning corrected across README and readme.txt.** The
+  former "no upsell tiers / no Pro gate / no feature held behind a paywall"
+  claims were inaccurate: `hardening_mode` and `frontend_2fa` run locally but
+  require a Professional plan. The docs now state honestly that the detection
+  and identity core (all 12 sensors, TOTP / Passkey / Email / Recovery 2FA,
+  progressive blocking, the password-reset gate, dashboards and exports) is
+  free and GPL-2.0, while paid plans add the managed relays, multi-site
+  management, WooCommerce frontend 2FA, Hardening Mode, white-label and higher
+  quotas.
+- **Stale facts fixed:** the multisite FAQ ("single-site for now") now
+  describes the network-only Multisite support shipped in 2.0.0; schema version
+  corrected v4 → v8; the removed `reportedip_2fa_sms_providers` filter and the
+  removed "SMS provider credentials" reference were dropped; the database-table
+  count corrected 6 → 7; the setup wizard is consistently described as 9 steps;
+  the Enterprise price floor updated to "from ~663 €/month"; volatile test
+  counts replaced with durable wording; the 2.0.27 changelog entry was added to
+  readme.txt.
+
 ## [2.0.27] — 2026-06-05
 
 ### Added

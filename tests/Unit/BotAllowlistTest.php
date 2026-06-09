@@ -122,6 +122,34 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'Twitterbot/1.0',
 					'Twitterbot',
 				),
+				'pinterest-generic' => array(
+					'Pinterest/0.2 (+http://www.pinterest.com/)',
+					'Pinterest',
+				),
+				'slackbot-generic'  => array(
+					'Slackbot 1.0 (+https://api.slack.com/robots)',
+					'Slackbot',
+				),
+				'wordpress-core'    => array(
+					'WordPress/6.5.2; http://example.com',
+					'WordPress',
+				),
+				'uptimerobot'       => array(
+					'Mozilla/5.0 (compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)',
+					'UptimeRobot',
+				),
+				'pingdom'           => array(
+					'Pingdom.com_bot_version_1.4_(http://www.pingdom.com/)',
+					'Pingdom',
+				),
+				'petalbot'          => array(
+					'Mozilla/5.0 (compatible; PetalBot; +https://webmaster.petalbot.com/)',
+					'PetalBot',
+				),
+				'lighthouse'        => array(
+					'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Chrome-Lighthouse',
+					'Chrome-Lighthouse',
+				),
 			);
 		}
 

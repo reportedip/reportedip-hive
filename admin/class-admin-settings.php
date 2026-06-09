@@ -6034,7 +6034,8 @@ class ReportedIP_Hive_Admin_Settings {
 				'features'    => array(
 					__( '2,500 2FA mails / month', 'reportedip-hive' ),
 					__( '75 2FA SMS / month + prepaid bundles', 'reportedip-hive' ),
-					__( 'Multi-site licence (15 domains)', 'reportedip-hive' ),
+					__( 'Multi-site licence (15 domains per licence)', 'reportedip-hive' ),
+					__( 'Bookable x2–x20: domains, API quota and 2FA mail/SMS scale with the licence count (volume discount)', 'reportedip-hive' ),
 					__( 'Whitelabel (wizards, 2FA page, all texts & email templates)', 'reportedip-hive' ),
 					__( 'WooCommerce integration', 'reportedip-hive' ),
 					__( 'Full WP-CLI automation', 'reportedip-hive' ),

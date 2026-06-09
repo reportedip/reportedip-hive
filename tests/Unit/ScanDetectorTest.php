@@ -272,6 +272,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'font woff2'          => array( '/wp-content/themes/x/fonts/inter.woff2' ),
 				'svg sprite'          => array( '/assets/icons.svg' ),
 				'video mp4'           => array( '/media/promo.mp4' ),
+				'stylesheet css'      => array( '/wp-content/themes/x/style.css' ),
+				'script js'           => array( '/wp-content/themes/x/script.js' ),
+				'source map js.map'   => array( '/wp-content/themes/x/script.js.map' ),
+				'webmanifest file'    => array( '/site.webmanifest' ),
 			);
 		}
 

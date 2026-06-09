@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.0.27
+Stable tag: 2.0.28
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -16,21 +16,23 @@ Community-powered WordPress security: 12 attack sensors, 4 2FA methods, threat s
 
 **Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker — before the password is even checked.**
 
-ReportedIP Hive is a complete security plugin for serious WordPress sites: 12 detection sensors, four 2FA methods in the core (TOTP, Passkey/WebAuthn, email, SMS), progressive block escalation, and an opt-in community-intelligence network. Engineered in Germany with privacy as the design principle, not a checkbox.
+ReportedIP Hive is a complete security plugin for serious WordPress sites: 12 detection sensors, four 2FA methods (TOTP, Passkey/WebAuthn and email in every plan; SMS on Professional via the managed relay), progressive block escalation, and an opt-in community-intelligence network. Engineered in Germany with privacy as the design principle, not a checkbox.
 
-Two ways to run, no feature held hostage behind a paywall:
+The entire detection and identity core is **free, GPL-2.0 and complete** — every sensor, the core 2FA methods, progressive blocking, the password-reset gate, every dashboard and export. Paid plans add managed relays, multi-site management and a few advanced modules on top (see *Plans* below); they never gate the core protection.
+
+Two ways to run:
 
 * **Local Shield** — works fully offline; nothing ever leaves your site.
 * **Community Network** — free account at [reportedip.de](https://reportedip.de) lights up real-time IP reputation lookups and anonymised threat sharing.
 
 = Why agencies and serious site owners pick it =
 
-* **One plugin instead of three.** Brute-force protection, full 2FA suite and threat intelligence in a single drop-in. The plugin itself stays free and Open Source — paid plans only buy optional server-side comfort (managed mail/SMS relay, multi-site, higher API quotas), never the protection itself.
+* **One plugin instead of three.** Brute-force protection, a four-method 2FA suite and threat intelligence in a single drop-in. The full protection core stays free and Open Source — paid plans add the managed mail/SMS relays, multi-site management, higher API quotas and a few advanced modules (WooCommerce frontend 2FA, Hardening Mode, white-label), never the core protection itself.
 * **Progressive blocks that don't burn legitimate users.** A first-time tripping CGNAT visitor or a fat-fingered admin gets a 5-minute timeout — repeat offenders climb the ladder up to 7 days. Nobody pays a 24h block for a typo.
 * **Privacy-first by default.** GDPR-minimal logging mode, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium.
 * **Hardening Mode on coordinated attacks (PRO).** When the plugin spots ≥ 3 IPs / ≥ 20 failed logins in the same minute it tightens the failed-login and reputation thresholds network-wide for one hour. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
-* **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan-clean, WPCS-clean (zero warnings), 435 unit + 19 Multisite PHPUnit tests with 757 assertions on every commit.
+* **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan level 5 clean, WPCS-clean (zero warnings), a comprehensive PHPUnit suite (unit + Multisite) running on every commit.
 
 = 12 detection sensors (every one tunable) =
 
@@ -47,12 +49,14 @@ Two ways to run, no feature held hostage behind a paywall:
 * **WooCommerce login hooks** — checkout + my-account forms tracked separately
 * **Cookie-banner consent endpoints whitelisted by default** — Real Cookie Banner, Complianz, Borlabs, CookieYes never get rate-limited
 
-= Two-Factor Authentication (full suite, all included) =
+= Two-Factor Authentication (four methods) =
 
-* **TOTP** — RFC 6238, works with Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest.
-* **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello, YubiKey. In-house implementation, no Composer dependency. Phishing-resistant.
-* **Email OTP** — 6-digit code, 10-minute validity, rate-limited (3 sends / 15 min, 60 s cooldown), 5 verify attempts per code.
-* **SMS OTP (Professional)** — delivered through the managed reportedip.de relay, included with Professional and Business plans. No own SMS account or carrier contract required. Phone numbers encrypted at rest.
+Three of the four methods work in **every plan**, including Free and the fully-offline Local Shield. SMS is the one method that rides the managed relay, so it needs a Professional plan.
+
+* **TOTP** — RFC 6238, works with Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest. *Free.*
+* **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello, YubiKey. In-house implementation, no Composer dependency. Phishing-resistant. *Free.*
+* **Email OTP** — 6-digit code, 10-minute validity, rate-limited (3 sends / 15 min, 60 s cooldown), 5 verify attempts per code. *Free.*
+* **SMS OTP (Professional)** — delivered through the managed reportedip.de relay, included with Professional and Business plans. No own SMS account or carrier contract required. Phone numbers encrypted at rest. Free / Contributor sites use TOTP, Passkey or Email instead.
 
 Plus:
 
@@ -128,9 +132,9 @@ Show the world that your site is part of the hive — and earn community-network
   * `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path` — replace the mailer
 * **Constants** for emergency overrides:
   * `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` — temporarily disable hide-login from `wp-config.php`
-* **6 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats, plus trusted_devices for 2FA.
+* **7 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats and trusted_devices.
 * **Internationalisation-ready.** Text domain `reportedip-hive`, English source with German translation included.
-* **Test suite.** 435 unit PHPUnit tests + 19 Multisite tests, 757 assertions total; PHPStan level 5 (No errors); WPCS-compliant with zero warnings.
+* **Test suite.** A comprehensive PHPUnit suite (unit + Multisite) runs on every commit; PHPStan level 5 (No errors); WPCS-compliant with zero warnings.
 
 = What this plugin does NOT include =
 
@@ -146,15 +150,15 @@ Pair it with a malware scanner if you need that surface — Hive deliberately st
 
 == Plans (optional, comfort only) ==
 
-The plugin itself is **free, GPL-2.0 and complete** in every operating mode — every sensor, every 2FA method, every alert, every dashboard, the password-reset gate. Nothing is held back behind a paywall.
+The full **detection and identity core is free, GPL-2.0 and complete** in every operating mode — all 12 sensors, the core 2FA methods (TOTP, Passkey, Email, Recovery codes), progressive block escalation, the password-reset gate, every alert, every dashboard and export. None of that is ever gated.
 
-Paid plans only buy the **server-side comfort** at reportedip.de — useful for sites that don't want to maintain their own SMTP / SMS / multi-site stack:
+Paid plans add the **managed relays, multi-site management and a handful of advanced modules** at reportedip.de — useful for sites that don't want to maintain their own SMTP / SMS / multi-site stack, run a WooCommerce storefront, or need network-wide auto-hardening:
 
 = Free / Contributor (0 €) =
 
-* Full plugin functionality, including all sensors and the 2FA suite
+* Full core functionality — all 12 sensors, progressive blocking, the password-reset gate, every dashboard and export
 * 1 domain per licence, 1,000 IP-reputation checks/day, 50 reports/day
-* Local-mode `wp_mail()` for 2FA emails; TOTP, Passkey and Email 2FA included (SMS 2FA requires Professional)
+* Local-mode `wp_mail()` for 2FA emails; TOTP, Passkey and Email 2FA included (SMS 2FA, WooCommerce frontend 2FA and Hardening Mode require Professional)
 * 30-day log retention, community support
 * **Contributor tier** is identical to Free but earns curated-feed access for sites that operate a public honeypot
 
@@ -163,24 +167,27 @@ Paid plans only buy the **server-side comfort** at reportedip.de — useful for 
 * 25,000 reputation checks/day, 1,000 reports/day
 * **Managed mail relay** — 500 transactional 2FA mails/month routed through reportedip.de's clean SPF/DKIM/DMARC infrastructure (auto-fallback to `wp_mail()` on cap)
 * **Managed SMS relay** — 25 worldwide OTP SMS/month with no third-party Twilio account required
+* **WooCommerce frontend 2FA** — the second factor rendered inside the storefront theme on My Account, classic checkout and the WC blocks
+* **Hardening Mode** — auto-tighten failed-login and reputation thresholds network-wide for one hour on a detected coordinated attack
 * Multi-site dashboard, priority sync (daily blacklist download), 90-day log retention, e-mail support (48 h SLA)
 * Prepaid top-up bundles (SMS and mail) available for heavy months
 
-= Business (39 €/month, 389 €/year — up to 15 domains) =
+= Business (39 €/month, 389 €/year — up to 15 domains per licence) =
 
 * 100,000 checks/day, 5,000 reports/day
 * **2,500 mail/month + 75 SMS/month included**
-* White-label (logo, copy, mail templates), WooCommerce-specific 2FA hooks, full WP-CLI surface, role-based login-time restrictions
+* Everything in Professional, plus white-label (logo, copy, mail templates), the WooCommerce complete integration, full WP-CLI surface and role-based login-time restrictions
 * 1-year log retention, weekly security PDF report, GDPR data-export tool, priority support (12 h SLA)
+* **Multi-bookable:** book Business x2–x20 to scale domains, API quota and 2FA mail/SMS with the licence count — a volume discount applies automatically
 
-= Enterprise (custom, from ~99 €/month) =
+= Enterprise (custom, from ~663 €/month) =
 
 * Unlimited checks and reports, custom mail/SMS quotas, custom domain limit
 * Custom AVV / DPA terms, dedicated onboarding, phone support (4 h response)
 
 **Bundles (PRO+ only, refundable until first use):** 50/200/500-SMS bundles (14.90 / 49.90 / 99.90 €), 1k/5k/25k-mail bundles (4.90 / 14.90 / 49.90 €). All prices VAT-inclusive (Stripe `tax_behavior = inclusive`).
 
-What stays Free regardless of plan: every sensor, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, every dashboard, every export, the entire plugin source. SMS 2FA is the one method that needs a paid plan (it runs on the managed relay). The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
+What stays Free regardless of plan: all 12 detection sensors, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
 
@@ -201,8 +208,8 @@ A short architectural map for evaluators:
 = Storage =
 
 * **7 dedicated tables** under the `wp_reportedip_hive_` prefix: `logs`, `blocked`, `whitelist`, `attempts`, `api_queue`, `stats`, `trusted_devices`.
-* **Schema v4**, auto-migrated on plugin update; opt-in delete on uninstall.
-* All secrets at rest (TOTP seeds, SMS provider credentials, phone numbers) sealed with libsodium (OpenSSL fallback). Plain user-meta storage is never used for credentials.
+* **Schema v8**, auto-migrated step-by-step on plugin update; opt-in delete on uninstall.
+* All secrets at rest (TOTP seeds, phone numbers) sealed with libsodium (OpenSSL fallback). Plain user-meta storage is never used for credentials.
 
 = Throttle ladder =
 
@@ -258,7 +265,7 @@ No. *Local Shield* works completely offline with no account and no external call
 
 = How is this different from Wordfence / Sucuri / iThemes Security? =
 
-* **Four 2FA methods in the core**, not behind a paywall — TOTP, Email, SMS and Passkey/WebAuthn.
+* **Three free 2FA methods** — TOTP, Email and Passkey/WebAuthn work on every plan, including the free tier (SMS is the one method that needs a Professional plan, because it rides our managed relay).
 * **Progressive block escalation** that adapts to repeat offenders without punishing first-time tripping legitimate users.
 * **Cache-plugin-safe by default** — Wordfence in particular has had repeated cache-coupling issues.
 * **Privacy by default** — minimal data collection, automatic anonymisation, opt-in community sharing, all secrets encrypted at rest.
@@ -296,7 +303,7 @@ Use one of the ten recovery codes you saved at setup. Each is single-use. With s
 
 = Is multisite supported? =
 
-Single-site for now. Multisite support is on the roadmap.
+Yes — fully, since 2.0.0. On Multisite the plugin is **network-only** (`Network: true`), so per-site activation is hidden by WordPress and the security configuration stays uniform across the network. A single threat decision applies network-wide: cross-site brute-force attempts aggregate into one central counter, and one block locks the IP out of every sub-site. Network Admins get the full settings and an all-sites Logs view; Site Admins on a sub-site get a read-only Status / Logs UI plus two writable per-site overrides (Frontend-2FA slug and additive 2FA-enforcement roles). Cron runs only on the main site. A dedicated PHPUnit-Multisite suite and Playwright projects gate every release against both topologies.
 
 = How do I get support? =
 
@@ -327,6 +334,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.0.28 =
+
+Fewer false positives: the bot allowlist now also exempts WordPress core loopback, uptime monitors (UptimeRobot, Pingdom, Site24x7, StatusCake, BetterStack) and a wider set of search / social crawlers from the 404 and REST burst triggers, and the `Pinterest` / `Slackbot` tokens were broadened to match the real user-agent strings. The scan detector no longer counts missing `css`, `js`, `.map` or `.webmanifest` files toward the scanner threshold. Honeypot-path detection stays active for every user-agent. Business tier copy across the settings card, setup wizard and mode descriptor now states the multi-bookable model (15 domains per licence, bookable x2–x20 with a volume discount). Documentation pass: the free-vs-paid positioning was corrected (the protection core is free; SMS 2FA, WooCommerce frontend 2FA and Hardening Mode need a Professional plan), the multisite FAQ now reflects the network-only support shipped in 2.0.0, and several stale facts (schema version, removed SMS-provider filter, table count, wizard step count, Enterprise price floor) were fixed.
+
+= 2.0.27 =
+
+Multisite Network Admin compatibility: hardcoded `admin_url` references were replaced with context-aware URL resolution, so administrators stay in the Network Admin context when managing network-activated settings, onboarding, 2FA settings or resets. Login-error masking is now keyed on error codes inside the global `$errors` object instead of matching error strings, so 2FA onboarding, password resets and IP/reputation blocks surface their real reason across all languages (German included) while genuine credential errors stay masked. The missing-API-key notice on the Community page was rebuilt on the design-system BEM classes and SVG layout.
 
 = 2.0.25 =
 
@@ -503,6 +518,12 @@ Initial public release as ReportedIP Hive. Three threshold channels, two operati
 
 == Upgrade Notice ==
 
+= 2.0.28 =
+Fewer false-positive blocks of legitimate crawlers and asset 404s, Business multi-bookable tier copy, and a documentation pass correcting the free-vs-paid positioning. No breaking changes.
+
+= 2.0.27 =
+Multisite Network Admin URL fixes and language-independent login-error masking (German included). No breaking changes.
+
 = 2.0.25 =
 SMS 2FA is now a Professional feature via the managed reportedip.de relay; the self-hosted SMS providers are removed. Sites that sent SMS via a self-configured provider or on a non-paid plan lose it — users fall back to TOTP, Email or a passkey. A v8 migration removes the old options.
 
@@ -519,7 +540,7 @@ German translation (de_DE, formal) added — the admin UI now displays in German
 * IP addresses of blocked or suspicious visitors
 * Security event timestamps and event types (login failures, spam attempts, XMLRPC abuse, …)
 * Optional, off by default: truncated user-agent strings (max. 50 characters) and request paths
-* Encrypted at rest: 2FA TOTP seeds, SMS provider credentials, user phone numbers (libsodium with OpenSSL fallback)
+* Encrypted at rest: 2FA TOTP seeds and user phone numbers (libsodium with OpenSSL fallback)
 
 **Data shared with the Community Network (only when enabled)**
 

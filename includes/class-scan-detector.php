@@ -115,6 +115,10 @@ class ReportedIP_Hive_Scan_Detector {
 	 * `reportedip_hive_scan_404_asset_extensions` filter.
 	 */
 	private const PASSIVE_ASSET_EXTENSIONS = array(
+		'css',
+		'js',
+		'map',
+		'webmanifest',
 		'png',
 		'jpg',
 		'jpeg',

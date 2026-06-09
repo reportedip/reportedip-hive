@@ -568,9 +568,10 @@ class ReportedIP_Hive_Setup_Wizard {
 						<h3 class="rip-tier-card__title"><?php esc_html_e( 'Agencies & WooCommerce', 'reportedip-hive' ); ?></h3>
 					</header>
 					<ul class="rip-tier-card__list">
-						<li><?php esc_html_e( '15 domains · whitelabel · WooCommerce integration', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( '15 domains per licence · whitelabel · WooCommerce integration', 'reportedip-hive' ); ?></li>
 						<li><?php esc_html_e( 'SMS-2FA: 75/month + prepaid bundles', 'reportedip-hive' ); ?></li>
 						<li><?php esc_html_e( 'Mail-2FA: 2,500/month + prepaid bundles · GDPR export tool', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'Bookable x2–x20: scales domains & quota (volume discount)', 'reportedip-hive' ); ?></li>
 					</ul>
 					<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="rip-button rip-button--secondary rip-button--sm">
 						<?php esc_html_e( 'See plans →', 'reportedip-hive' ); ?>
