@@ -281,7 +281,7 @@ class ReportedIP_Hive_Scan_Detector {
 	 * Whether the request path matches a known scanner signature.
 	 */
 	private function is_known_scan_path( string $path ): bool {
-		$paths    = (array) apply_filters( 'reportedip_hive_scan_paths', self::KNOWN_SCAN_PATHS );
+		$paths    = (array) apply_filters( 'reportedip_hive_scan_paths', $this->scan_paths() );
 		$prefixes = (array) apply_filters( 'reportedip_hive_scan_prefixes', self::KNOWN_SCAN_PREFIXES );
 
 		if ( in_array( $path, $paths, true ) ) {
@@ -294,6 +294,34 @@ class ReportedIP_Hive_Scan_Detector {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * The effective probe-path list: the bundled signatures plus the
+	 * server-delivered `scan_paths` ruleset (free baseline, the richer list on
+	 * Professional). Memoised per request; the ruleset read is itself cached.
+	 *
+	 * @return string[]
+	 * @since  2.2.0
+	 */
+	private function scan_paths(): array {
+		static $cache = null;
+		if ( null !== $cache ) {
+			return $cache;
+		}
+		$paths = self::KNOWN_SCAN_PATHS;
+		if ( class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {
+			$ruleset = ReportedIP_Hive_Rule_Sync::get_instance()->get_ruleset( 'scan_paths' );
+			if ( isset( $ruleset['rules'] ) && is_array( $ruleset['rules'] ) ) {
+				foreach ( $ruleset['rules'] as $probe ) {
+					if ( is_string( $probe ) && '' !== $probe ) {
+						$paths[] = strtolower( $probe );
+					}
+				}
+			}
+		}
+		$cache = array_values( array_unique( $paths ) );
+		return $cache;
 	}
 
 	/**

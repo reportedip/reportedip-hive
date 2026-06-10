@@ -81,11 +81,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_cache_does_not_mask_a_write(): void {
-			$this->assertNull( \ReportedIP_Hive_Rule_Store::get( 'ua_blocklist' ) );
-			\ReportedIP_Hive_Rule_Store::set( 'ua_blocklist', array( 'key' => 'ua_blocklist', 'version' => 1, 'rules' => array( 'sqlmap' ) ) );
-			$got = \ReportedIP_Hive_Rule_Store::get( 'ua_blocklist' );
+			$this->assertNull( \ReportedIP_Hive_Rule_Store::get( 'scan_paths' ) );
+			\ReportedIP_Hive_Rule_Store::set( 'scan_paths', array( 'key' => 'scan_paths', 'version' => 1, 'rules' => array( '/x.php' ) ) );
+			$got = \ReportedIP_Hive_Rule_Store::get( 'scan_paths' );
 			$this->assertIsArray( $got );
-			$this->assertSame( array( 'sqlmap' ), $got['rules'] );
+			$this->assertSame( array( '/x.php' ), $got['rules'] );
 		}
 	}
 }

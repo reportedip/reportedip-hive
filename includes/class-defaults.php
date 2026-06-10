@@ -79,7 +79,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_ruleset_waf'                    => '',
 		'reportedip_hive_ruleset_bot_signatures'         => '',
 		'reportedip_hive_ruleset_disposable_domains'     => '',
-		'reportedip_hive_ruleset_ua_blocklist'           => '',
 		'reportedip_hive_ruleset_scan_paths'             => '',
 
 		'reportedip_hive_waf_enabled'                    => true,
