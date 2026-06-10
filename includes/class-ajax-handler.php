@@ -127,6 +127,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_rule_sync_now', array( $this, 'ajax_rule_sync_now' ) );
 		add_action( 'wp_ajax_reportedip_hive_waf_toggle', array( $this, 'ajax_waf_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_waf_dropin_toggle', array( $this, 'ajax_waf_dropin_toggle' ) );
+		add_action( 'wp_ajax_reportedip_hive_waf_set_paranoia', array( $this, 'ajax_waf_set_paranoia' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
@@ -1489,6 +1490,47 @@ class ReportedIP_Hive_Ajax_Handler {
 		ReportedIP_Hive_Option_Routing::set( $option, $new );
 
 		wp_send_json_success( array( 'state' => $new ) );
+	}
+
+	/**
+	 * AJAX: flip the pre-WordPress WAF drop-in on or off.
+	 *
+	 * Flipping the option fires the manager's update_option hook, which writes
+	 * or removes the guard and its server directive. Returns a message that
+	 * reflects what happened (including a writability warning when the target
+	 * cannot be written).
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	/**
+	 * AJAX: set the WAF Paranoia Level (Professional only, 1-3).
+	 *
+	 * Free tiers are clamped to Level 1 by the engine regardless; this control
+	 * only affects Professional installs that sync the deeper ruleset.
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public function ajax_waf_set_paranoia() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
+		if ( empty( $status['available'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Paranoia Level 2/3 requires a Professional plan.', 'reportedip-hive' ) ) );
+		}
+
+		$level = isset( $_POST['level'] ) ? (int) $_POST['level'] : 1;
+		if ( $level < 1 || $level > 3 ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid level.', 'reportedip-hive' ) ) );
+		}
+
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_PARANOIA, $level );
+		wp_send_json_success( array( 'level' => $level ) );
 	}
 
 	/**

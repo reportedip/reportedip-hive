@@ -1483,6 +1483,35 @@ class ReportedIP_Hive_Admin_Settings {
 
 		echo '<p class="rip-help-text">' . esc_html__( 'The WAF engine and the Paranoia-Level-1 baseline rules are free on every plan. Paranoia Level 2/3 ride the Professional ruleset.', 'reportedip-hive' ) . '</p>';
 
+		$paranoia_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
+		$paranoia_choice = (int) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_PARANOIA, 2 );
+		$paranoia_levels = array(
+			1 => __( 'Level 1 — baseline (OWASP Top 10, false-positive averse)', 'reportedip-hive' ),
+			2 => __( 'Level 2 — recommended (adds blind SQLi, LFI wrappers, obfuscated XSS)', 'reportedip-hive' ),
+			3 => __( 'Level 3 — strict (aggressive, may need tuning)', 'reportedip-hive' ),
+		);
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-paranoia">' . esc_html__( 'Paranoia Level', 'reportedip-hive' ) . '</label>';
+		if ( empty( $paranoia_status['available'] ) ) {
+			echo '<p class="rip-help-text">' . esc_html__( 'Level 1 is active. Higher levels are delivered with the Professional ruleset.', 'reportedip-hive' ) . ' ';
+			self::render_tier_lock( $paranoia_status, array( 'label' => __( 'Unlock Level 2/3 with Professional', 'reportedip-hive' ) ) );
+			echo '</p>';
+		} else {
+			echo '<select id="rip-waf-paranoia" class="rip-select">';
+			foreach ( $paranoia_levels as $level => $label ) {
+				printf(
+					'<option value="%d"%s>%s</option>',
+					absint( $level ),
+					selected( $paranoia_choice, $level, false ),
+					esc_html( $label )
+				);
+			}
+			echo '</select>';
+			echo <<<'RIPJS'
+<script>jQuery(function($){$('#rip-waf-paranoia').on('change',function(){var s=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_waf_set_paranoia',level:$(this).val(),nonce:reportedip_hive_ajax.nonce},function(r){s.prop('disabled',false);location.reload();});});});</script>
+RIPJS;
+		}
+		echo '</div>';
+
 		printf(
 			'<button type="button" class="rip-button rip-button--secondary rip-waf-toggle" data-field="enabled">%s</button> ',
 			esc_html( $enabled ? __( 'Disable engine', 'reportedip-hive' ) : __( 'Enable engine', 'reportedip-hive' ) )
