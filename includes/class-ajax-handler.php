@@ -131,6 +131,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_bot_action', array( $this, 'ajax_bot_action' ) );
 		add_action( 'wp_ajax_reportedip_hive_disposable_action', array( $this, 'ajax_disposable_action' ) );
 		add_action( 'wp_ajax_reportedip_hive_spam_toggle', array( $this, 'ajax_spam_toggle' ) );
+		add_action( 'wp_ajax_reportedip_hive_scan_toggle', array( $this, 'ajax_scan_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
@@ -1661,6 +1662,35 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		$option = $map[ $field ];
 		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, 'honeypot' === $field );
+		ReportedIP_Hive_Option_Routing::set( $option, $new );
+
+		wp_send_json_success( array( 'state' => $new ) );
+	}
+
+	/**
+	 * AJAX: flip the scan detector or the decoy-path trap on or off.
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public function ajax_scan_toggle() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
+		$map   = array(
+			'scan'  => 'reportedip_hive_monitor_404_scans',
+			'decoy' => 'reportedip_hive_decoy_pathblock_enabled',
+		);
+		if ( ! isset( $map[ $field ] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'reportedip-hive' ) ) );
+		}
+
+		$option = $map[ $field ];
+		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, true );
 		ReportedIP_Hive_Option_Routing::set( $option, $new );
 
 		wp_send_json_success( array( 'state' => $new ) );

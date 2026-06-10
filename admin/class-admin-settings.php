@@ -1424,6 +1424,9 @@ class ReportedIP_Hive_Admin_Settings {
 			case 'spam':
 				$this->render_spam_tab();
 				break;
+			case 'scan':
+				$this->render_scan_tab();
+				break;
 			case 'hardening':
 				$this->render_hardening_tab();
 				break;
@@ -1753,6 +1756,83 @@ RIPJS;
 		echo <<<'RIPJS'
 <script>jQuery(function($){$('.rip-spam-toggle').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_spam_toggle',field:$(this).data('field'),nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);location.reload();});});$('#rip-disposable-action').on('change',function(){var s=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_disposable_action',mode:$(this).val(),nonce:reportedip_hive_ajax.nonce},function(r){s.prop('disabled',false);location.reload();});});});</script>
 RIPJS;
+	}
+
+	/**
+	 * Render the Scan & Decoy tab: live status of the 404/honeypot scan detector
+	 * and the decoy-path trap. Both sensors are free on every plan; their
+	 * honeypot path list rides the server-delivered `scan_paths` ruleset and the
+	 * numeric thresholds live on the Settings › Protection tab.
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	private function render_scan_tab() {
+		$scan_on   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_404_scans', true );
+		$decoy_on  = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_pathblock_enabled', true );
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_threshold', 8 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_timeframe', 1 );
+		$path_ver  = 0;
+		if ( class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {
+			$ruleset  = ReportedIP_Hive_Rule_Sync::get_instance()->get_ruleset( 'scan_paths' );
+			$path_ver = isset( $ruleset['version'] ) ? (int) $ruleset['version'] : 0;
+		}
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Scan & Decoy Detection', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Detects vulnerability scanners by high-rate 404s and instant hits on known-bad probe paths (.env, wp-config.bak, /.git/), and traps bots on decoy paths. The probe-path list is delivered through the scan_paths ruleset; the numeric thresholds live on Settings › Protection.', 'reportedip-hive' ) . '</p>';
+
+		echo '<div class="rip-grid rip-grid-cols-4">';
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_attr( $scan_on ? 'rip-badge--success' : 'rip-badge--neutral' ),
+			esc_html( $scan_on ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ) ),
+			esc_html__( 'Scan detector', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%1$d / %2$d&thinsp;%3$s</div><div class="rip-stat-card__label">%4$s</div></div></div>',
+			absint( $threshold ),
+			absint( $timeframe ),
+			esc_html_x( 'min', 'minutes abbreviation', 'reportedip-hive' ),
+			esc_html__( '404 trigger', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_attr( $decoy_on ? 'rip-badge--success' : 'rip-badge--neutral' ),
+			esc_html( $decoy_on ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ) ),
+			esc_html__( 'Decoy trap', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%s</div><div class="rip-stat-card__label">%s</div></div></div>',
+			$path_ver > 0 ? esc_html( 'v' . $path_ver ) : esc_html__( 'Baseline', 'reportedip-hive' ),
+			esc_html__( 'Probe-path list', 'reportedip-hive' )
+		);
+		echo '</div>';
+
+		printf(
+			'<button type="button" class="rip-button rip-button--secondary rip-scan-toggle" data-field="scan">%s</button> ',
+			esc_html( $scan_on ? __( 'Disable scan detector', 'reportedip-hive' ) : __( 'Enable scan detector', 'reportedip-hive' ) )
+		);
+		printf(
+			'<button type="button" class="rip-button rip-button--secondary rip-scan-toggle" data-field="decoy">%s</button>',
+			esc_html( $decoy_on ? __( 'Disable decoy trap', 'reportedip-hive' ) : __( 'Enable decoy trap', 'reportedip-hive' ) )
+		);
+
+		echo '<p class="rip-help-text">';
+		printf(
+			/* translators: 1: opening Protection-settings link tag, 2: closing tag, 3: opening Rule-Sync link tag, 4: closing tag. */
+			esc_html__( 'Tune the 404 thresholds on the %1$sProtection settings%2$s; review the active probe-path list on the %3$sRule Sync%4$s tab.', 'reportedip-hive' ),
+			'<a href="' . esc_url( admin_url( 'admin.php?page=reportedip-hive-settings&tab=protection' ) ) . '">',
+			'</a>',
+			'<a href="' . esc_url( admin_url( 'admin.php?page=reportedip-hive-firewall&tab=rule_sync' ) ) . '">',
+			'</a>'
+		);
+		echo '</p>';
+
+		echo <<<'RIPJS'
+<script>jQuery(function($){$('.rip-scan-toggle').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_scan_toggle',field:$(this).data('field'),nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);location.reload();});});});</script>
+RIPJS;
+
+		echo '</div></div>';
 	}
 
 	/**

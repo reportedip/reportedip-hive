@@ -192,6 +192,7 @@ class ReportedIP_Hive {
 		add_action( 'delete_user', array( __CLASS__, 'on_user_deleted' ) );
 		if ( ! is_multisite() || is_main_site() ) {
 			add_action( 'admin_init', array( 'ReportedIP_Hive_Cron_Handler', 'ensure_scheduled' ) );
+			add_action( 'admin_init', array( __CLASS__, 'maybe_seed_on_upgrade' ) );
 		}
 
 		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
@@ -1576,6 +1577,29 @@ class ReportedIP_Hive {
 	 */
 	private static function set_default_options_static() {
 		ReportedIP_Hive_Defaults::seed_missing();
+	}
+
+	/**
+	 * Seed newly-added default options after an in-place plugin update.
+	 *
+	 * The activation hook only fires on a manual (re)activation, so options
+	 * introduced in a release are missing on a site that auto-updated. A boolean
+	 * default-on option without a stored row cannot be switched off — WordPress
+	 * treats `update_option( $key, false )` on an absent option as a no-op — so
+	 * its admin toggle would silently do nothing. Re-seeding once per version
+	 * change (gated by a stored version marker, main-site-only on Multisite so
+	 * the network keys are written once) closes that gap.
+	 *
+	 * @return void
+	 * @since 2.2.0
+	 */
+	public static function maybe_seed_on_upgrade() {
+		$stored = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_seeded_version', '' );
+		if ( REPORTEDIP_HIVE_VERSION === $stored ) {
+			return;
+		}
+		ReportedIP_Hive_Defaults::seed_missing();
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_seeded_version', REPORTEDIP_HIVE_VERSION );
 	}
 
 	/**
