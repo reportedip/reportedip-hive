@@ -44,6 +44,7 @@ Two ways to run:
 * **REST API rate-limit** — global cap, default 240 / 5 min (sensitive routes 20 / 5 min)
 * **User enumeration defence** — `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking
 * **404 / scanner detection** — default 12 / 2 min, plus instant block on known-bad paths (`.env`, `wp-config.bak`, `/.git/`)
+* **Web Application Firewall** — request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
 * **Geographic anomaly** — login from a country never seen for the user, optionally revokes trusted-device cookies
 * **Password policy** — minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
 * **WooCommerce login hooks** — checkout + my-account forms tracked separately
@@ -141,8 +142,6 @@ Show the world that your site is part of the hive — and earn community-network
 Honest scope so you can plan around it:
 
 * No malware scanner / file-integrity monitor
-* No web-application firewall (WAF) rules — IP-level blocking only
-* No `advanced-cache.php` drop-in (use a server-level firewall for blocking on cached public pages)
 * No Cloudflare API integration
 * No payment-fraud scoring
 

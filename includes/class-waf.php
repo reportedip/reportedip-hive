@@ -135,13 +135,31 @@ class ReportedIP_Hive_WAF {
 	 * @since  2.2.0
 	 */
 	public function inspect() {
-		if ( wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+		/*
+		 * Exempt cron, WP-CLI and the authenticated back office. wp-admin and
+		 * admin-ajax (both `is_admin()` at this hook) are backend contexts whose
+		 * payloads come from already-authenticated users; inspecting them only
+		 * manufactures false positives. REST_REQUEST is not yet defined at
+		 * `init` priority 1, so back-office detection rests on is_admin().
+		 */
+		if ( wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) || is_admin() ) {
 			return;
 		}
 		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true ) ) {
 			return;
 		}
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
+			return;
+		}
+
+		/*
+		 * Content authors — editors, authors, contributors, including multisite
+		 * editors who lack `unfiltered_html` — legitimately submit markup and
+		 * code through the block-editor REST saves and the classic editor. They
+		 * are exempt; the WAF targets the external, unauthenticated front-end
+		 * attack surface.
+		 */
+		if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
 			return;
 		}
 
@@ -154,16 +172,6 @@ class ReportedIP_Hive_WAF {
 			? ReportedIP_Hive_IP_Manager::get_instance()
 			: null;
 		if ( $ip_manager && method_exists( $ip_manager, 'is_whitelisted' ) && $ip_manager->is_whitelisted( $ip ) ) {
-			return;
-		}
-
-		/*
-		 * An administrator who can post unfiltered HTML legitimately submits
-		 * markup and code that would trip XSS/SQLi signatures. Inspecting them
-		 * would only manufacture self-inflicted lockouts, so they are exempt —
-		 * the WAF defends against unauthenticated and low-privilege traffic.
-		 */
-		if ( is_user_logged_in() && current_user_can( 'unfiltered_html' ) ) {
 			return;
 		}
 

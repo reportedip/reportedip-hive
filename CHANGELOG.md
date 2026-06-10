@@ -2,6 +2,41 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.2.0] — Unreleased
+
+### New
+
+- **Rule delivery framework.** Server-delivered, versioned, Ed25519-signed,
+  tier-staggered rulesets (`waf`, `bot_signatures`, `disposable_domains`,
+  `ua_blocklist`, `scan_paths`). The plugin verifies every ruleset against a
+  bundled public key before applying it and always falls back to the bundled
+  baseline — a tampered, oversized or unreachable feed can never poison the
+  rules. Synced every six hours (Community mode + API key + toggle); the
+  bundled baselines work fully offline. Network-wide on multisite (sitemeta).
+- **Web Application Firewall.** Request-inspecting engine on `init` that matches
+  the active `waf` ruleset against the URI, query, body and user-agent and
+  blocks via the shared cache-safe, reference-coded 403 path. The engine and
+  the Paranoia-Level-1 baseline are free on every plan; Professional unlocks
+  Level 2/3. ReDoS-hardened (bounded PCRE backtracking, fail-open on a malformed
+  rule), whitelist- and content-author-aware to avoid false positives, with a
+  repeat-offender escalation into the existing block ladder.
+- **Extended Protection drop-in (optional).** A pre-WordPress `auto_prepend_file`
+  guard that runs the WAF before WordPress loads — Apache (`.htaccess`),
+  PHP-FPM (`.user.ini`) auto-config and an nginx snippet generator. Off by
+  default; removal always strips the directive before deleting the guard so a
+  stale prepend can never fatal the site.
+- **Firewall admin area** with a Rule Sync status view (per-ruleset version and
+  source, Free-vs-Professional comparison), a WAF status + controls tab
+  (engine/mode/active rules, Paranoia-Level selector) and the Extended
+  Protection box. Hardening folds into the Firewall tab strip and the Audit
+  Trail into Security › Activity, keeping the menu lean.
+
+### Performance
+
+- WAF adds ~4 µs CPU per request and zero extra database queries when a
+  persistent object cache is present; the whitelist lookup is de-duplicated on
+  the request hot path so it is no longer queried twice per visitor.
+
 ## [2.1.0] — 2026-06-10
 
 ### New
