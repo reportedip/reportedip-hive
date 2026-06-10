@@ -149,8 +149,6 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		}
 
 		$server = $this->detect_server();
-		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_DROPIN_SERVER, $server );
-		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_DROPIN_PATH, $prepend );
 
 		if ( 'apache' === $server ) {
 			return $this->write_directive( $this->htaccess_path(), $this->htaccess_lines( $prepend ) );
@@ -186,9 +184,6 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		if ( '' !== $prepend && file_exists( $prepend ) ) {
 			wp_delete_file( $prepend );
 		}
-
-		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_DROPIN_SERVER, '' );
-		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_DROPIN_PATH, '' );
 
 		return true;
 	}

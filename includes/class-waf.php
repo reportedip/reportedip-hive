@@ -55,16 +55,6 @@ class ReportedIP_Hive_WAF {
 	const OPT_DROPIN_ENABLED = 'reportedip_hive_waf_dropin_enabled';
 
 	/**
-	 * Last resolved guard path for the drop-in.
-	 */
-	const OPT_DROPIN_PATH = 'reportedip_hive_waf_dropin_path';
-
-	/**
-	 * Last detected server type for the drop-in.
-	 */
-	const OPT_DROPIN_SERVER = 'reportedip_hive_waf_dropin_server';
-
-	/**
 	 * Counting window (minutes) for the repeat-offender escalation ladder.
 	 */
 	const ESCALATION_TIMEFRAME_MINUTES = 10;
