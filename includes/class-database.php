@@ -209,19 +209,32 @@ class ReportedIP_Hive_Database {
 	public function is_whitelisted( $ip_address ) {
 		global $wpdb;
 
+		/*
+		 * Per-request memo keyed by IP. Both the init-priority-1 IP-block gate
+		 * and the WAF engine check the same client IP on every request; without
+		 * this memo each visitor would cost two identical whitelist queries on
+		 * the hot path. The result is stable within a request, so a function-
+		 * static cache is safe (whitelist edits take effect on the next request).
+		 */
+		static $request_cache = array();
+		if ( isset( $request_cache[ $ip_address ] ) ) {
+			return $request_cache[ $ip_address ];
+		}
+
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_whitelist';
 
 		$exact_match = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $table_name 
-                 WHERE ip_address = %s 
-                 AND is_active = 1 
+				"SELECT COUNT(*) FROM $table_name
+                 WHERE ip_address = %s
+                 AND is_active = 1
                  AND (expires_at IS NULL OR expires_at > NOW())",
 				$ip_address
 			)
 		);
 
 		if ( $exact_match > 0 ) {
+			$request_cache[ $ip_address ] = true;
 			return true;
 		}
 
@@ -238,10 +251,12 @@ class ReportedIP_Hive_Database {
 
 		foreach ( $cidr_ranges as $cidr ) {
 			if ( $this->ip_in_range( $ip_address, $cidr ) ) {
+				$request_cache[ $ip_address ] = true;
 				return true;
 			}
 		}
 
+		$request_cache[ $ip_address ] = false;
 		return false;
 	}
 
