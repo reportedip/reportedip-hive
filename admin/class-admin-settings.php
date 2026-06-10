@@ -1845,6 +1845,35 @@ RIPJS;
 			$writable = $writer->is_writable_target();
 			$present  = $writer->is_block_present();
 		}
+		$server     = class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
+			? ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->detect_server()
+			: 'unknown';
+		$is_apache  = ( 'apache' === $server || 'fpm' === $server );
+		$server_lbl = array(
+			'apache'  => 'Apache (.htaccess)',
+			'fpm'     => 'PHP-FPM / Apache',
+			'nginx'   => 'nginx',
+			'unknown' => __( 'Unknown', 'reportedip-hive' ),
+		);
+
+		/**
+		 * Resolve the .htaccess-block status badge: the empty marker skeleton
+		 * that a disabled trap leaves behind must not read as "active", so the
+		 * badge is gated on the trap actually being on.
+		 */
+		if ( ! $decoy_on ) {
+			$block_class = 'rip-badge--neutral';
+			$block_label = __( 'Inactive', 'reportedip-hive' );
+		} elseif ( $present && $is_apache ) {
+			$block_class = 'rip-badge--success';
+			$block_label = __( 'Active', 'reportedip-hive' );
+		} elseif ( $writable ) {
+			$block_class = 'rip-badge--warning';
+			$block_label = __( 'Pending', 'reportedip-hive' );
+		} else {
+			$block_class = 'rip-badge--info';
+			$block_label = __( 'Manual', 'reportedip-hive' );
+		}
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Decoy Path Block', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'Detects requests to known bait paths (.env.backup, wp-config.old.php, db-dump-master.sql.php …) that legitimate visitors never request. Each hit is logged, shared with the community network, and answered with a 403, but the IP is not added to your local block list, so a misbehaving backup plugin cannot lock you out.', 'reportedip-hive' ) . '</p>';
@@ -1858,24 +1887,25 @@ RIPJS;
 		);
 		printf(
 			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
-			esc_attr( $present ? 'rip-badge--success' : 'rip-badge--neutral' ),
-			esc_html( $present ? __( 'Installed', 'reportedip-hive' ) : __( 'Not installed', 'reportedip-hive' ) ),
+			esc_attr( $block_class ),
+			esc_html( $block_label ),
 			esc_html__( '.htaccess block', 'reportedip-hive' )
 		);
 		printf(
-			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
-			esc_attr( $writable ? 'rip-badge--success' : 'rip-badge--warning' ),
-			esc_html( $writable ? __( 'Writable', 'reportedip-hive' ) : __( 'Not writable', 'reportedip-hive' ) ),
-			esc_html__( 'Config target', 'reportedip-hive' )
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%s</div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_html( $server_lbl[ $server ] ?? $server ),
+			esc_html__( 'Detected server', 'reportedip-hive' )
 		);
 		echo '</div>';
 
-		if ( $writable && $present ) {
+		if ( ! $decoy_on ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The decoy trap is off — no rewrite rules are active and no bait-path hits are reported.', 'reportedip-hive' ) . '</div>';
+		} elseif ( $is_apache && $writable && $present ) {
 			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Auto-managed — Hive wrote the rewrite block to .htaccess. Real bait files on disk will no longer be served directly.', 'reportedip-hive' ) . '</div>';
-		} elseif ( $writable ) {
-			echo '<div class="rip-alert rip-alert--info">' . esc_html__( '.htaccess is writable but the block is not in place yet. Toggle the switch above to trigger a sync.', 'reportedip-hive' ) . '</div>';
+		} elseif ( $is_apache && $writable ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( '.htaccess is writable but the block is not in place yet. Re-toggle the trap to trigger a sync.', 'reportedip-hive' ) . '</div>';
 		} else {
-			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( '.htaccess is not writable (or this server does not use one). Paste the snippet below into your server config manually.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'This server is not auto-managed (nginx, or a read-only .htaccess). The PHP sensor still catches bait-path hits; paste the matching snippet below to also block them at the web-server layer.', 'reportedip-hive' ) . '</div>';
 		}
 
 		printf(
@@ -1884,16 +1914,47 @@ RIPJS;
 		);
 
 		if ( class_exists( 'ReportedIP_Hive_Decoy_Path_Block' ) ) {
-			echo '<details class="rip-form-group"><summary><strong>' . esc_html__( 'Server-config snippets (live preview / nginx copy-paste)', 'reportedip-hive' ) . '</strong></summary>';
-			echo '<p class="rip-help-text">' . esc_html__( 'On Apache, the .htaccess block is auto-managed — the snippet below shows what Hive wrote (or would write) verbatim. On nginx, copy the second snippet into your server { … } block. Both snippets rewrite to /index.php so the Hive sensor still loads, logs the hit and reports it; using [F,L] / return 403 directly would skip detection entirely.', 'reportedip-hive' ) . '</p>';
-			echo '<p><strong>' . esc_html__( 'Apache (.htaccess)', 'reportedip-hive' ) . '</strong></p>';
-			echo '<pre class="rip-code-snippet"><code>' . esc_html( ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet() ) . '</code></pre>';
-			echo '<p><strong>' . esc_html__( 'nginx (regex form — plain nginx)', 'reportedip-hive' ) . '</strong></p>';
-			echo '<pre class="rip-code-snippet"><code>' . esc_html( ReportedIP_Hive_Decoy_Path_Block::nginx_snippet() ) . '</code></pre>';
-			echo '<p><strong>' . esc_html__( 'nginx (exact-match form — ISPConfig & managed stacks)', 'reportedip-hive' ) . '</strong></p>';
-			echo '<p class="rip-help-text">' . esc_html__( 'Use this variant when your host template ships a "location ~ /\\." dot-file deny rule before your custom directives — exact-match locations have higher priority than any regex location and survive that ordering.', 'reportedip-hive' ) . '</p>';
-			echo '<pre class="rip-code-snippet"><code>' . esc_html( ReportedIP_Hive_Decoy_Path_Block::nginx_snippet_exact_match() ) . '</code></pre>';
+			$open = ( $decoy_on && ! $is_apache ) ? ' open' : '';
+			echo '<details class="rip-form-group"' . esc_attr( $open ) . '><summary><strong>' . esc_html__( 'Server-config snippets (live preview / copy-paste)', 'reportedip-hive' ) . '</strong></summary>';
+			echo '<p class="rip-help-text">' . esc_html__( 'On Apache the .htaccess block is auto-managed — the first snippet shows what Hive wrote (or would write) verbatim. On nginx, copy the matching snippet into your server { … } block and reload. Every snippet rewrites to /index.php so the Hive sensor still loads, logs the hit and reports it; a bare [F,L] / return 403 would skip detection entirely.', 'reportedip-hive' ) . '</p>';
+
+			$snippets = array(
+				array(
+					'id'    => 'rip-decoy-snip-apache',
+					'label' => __( 'Apache (.htaccess)', 'reportedip-hive' ),
+					'note'  => '',
+					'code'  => ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet(),
+				),
+				array(
+					'id'    => 'rip-decoy-snip-nginx',
+					'label' => __( 'nginx (regex form — plain nginx)', 'reportedip-hive' ),
+					'note'  => '',
+					'code'  => ReportedIP_Hive_Decoy_Path_Block::nginx_snippet(),
+				),
+				array(
+					'id'    => 'rip-decoy-snip-nginx-exact',
+					'label' => __( 'nginx (exact-match form — ISPConfig & managed stacks)', 'reportedip-hive' ),
+					'note'  => __( 'Use this variant when your host template ships a "location ~ /\\." dot-file deny rule before your custom directives — exact-match locations have higher priority than any regex location and survive that ordering.', 'reportedip-hive' ),
+					'code'  => ReportedIP_Hive_Decoy_Path_Block::nginx_snippet_exact_match(),
+				),
+			);
+			foreach ( $snippets as $snip ) {
+				printf(
+					'<p><strong>%1$s</strong> <button type="button" class="rip-button rip-button--secondary rip-snippet-copy" data-target="%2$s">%3$s</button></p>',
+					esc_html( $snip['label'] ),
+					esc_attr( $snip['id'] ),
+					esc_html__( 'Copy snippet', 'reportedip-hive' )
+				);
+				if ( '' !== $snip['note'] ) {
+					echo '<p class="rip-help-text">' . esc_html( $snip['note'] ) . '</p>';
+				}
+				echo '<pre class="rip-code-snippet" id="' . esc_attr( $snip['id'] ) . '"><code>' . esc_html( $snip['code'] ) . '</code></pre>';
+			}
 			echo '</details>';
+
+			echo <<<'RIPJS'
+<script>jQuery(function($){$('.rip-snippet-copy').on('click',function(e){e.preventDefault();var t=document.getElementById($(this).data('target'));if(t&&navigator.clipboard){navigator.clipboard.writeText(t.textContent);$(this).addClass('rip-button--copied');setTimeout(function(){},1200);}});});</script>
+RIPJS;
 		}
 
 		echo '</div></div>';

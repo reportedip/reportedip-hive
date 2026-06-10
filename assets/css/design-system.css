@@ -701,6 +701,12 @@ button.rip-tier-lock--mode:hover {
     border-color: var(--rip-gray-400);
 }
 
+.rip-button--copied {
+    background: var(--rip-success);
+    color: white;
+    border-color: var(--rip-success);
+}
+
 .rip-button--success {
     background: var(--rip-gradient-success);
     color: white;
