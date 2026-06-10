@@ -50,13 +50,6 @@ final class ReportedIP_Hive_Wizard_Schema {
 	const SAVE_STEPS = array( 3, 4, 5, 6, 8 );
 
 	/**
-	 * The 2FA methods a site may offer.
-	 *
-	 * @var string[]
-	 */
-	const VALID_METHODS = array( 'totp', 'email', 'webauthn', 'sms' );
-
-	/**
 	 * Option key for the WooCommerce Frontend-2FA master toggle.
 	 */
 	const OPT_FRONTEND_ENABLED = 'reportedip_hive_2fa_frontend_enabled';
@@ -427,14 +420,15 @@ final class ReportedIP_Hive_Wizard_Schema {
 
 	/**
 	 * Intersect the posted comma-separated methods with the valid set, falling
-	 * back to TOTP + Email when nothing usable remains.
+	 * back to TOTP + Email when nothing usable remains. The valid-method
+	 * allow-list is owned by {@see ReportedIP_Hive_Two_Factor::filter_valid_methods()}.
 	 *
 	 * @param array<string, mixed> $post POST payload.
 	 * @return string[]
 	 */
 	private static function sanitize_methods( array $post ) {
 		$raw     = isset( $post['2fa_methods'] ) ? sanitize_text_field( wp_unslash( (string) $post['2fa_methods'] ) ) : 'totp,email';
-		$methods = array_values( array_intersect( array_map( 'trim', explode( ',', $raw ) ), self::VALID_METHODS ) );
+		$methods = ReportedIP_Hive_Two_Factor::filter_valid_methods( array_map( 'trim', explode( ',', $raw ) ) );
 		if ( empty( $methods ) ) {
 			$methods = array( 'totp', 'email' );
 		}
@@ -442,7 +436,8 @@ final class ReportedIP_Hive_Wizard_Schema {
 	}
 
 	/**
-	 * Intersect posted enforce-roles with the real role list. When 2FA is on
+	 * Intersect posted enforce-roles with the real role list (via
+	 * {@see ReportedIP_Hive_Two_Factor::filter_valid_roles()}). When 2FA is on
 	 * but no role was picked, fall back to administrator so enforcement is
 	 * never silently empty.
 	 *
@@ -450,11 +445,10 @@ final class ReportedIP_Hive_Wizard_Schema {
 	 * @return string[]
 	 */
 	private static function sanitize_roles( array $post ) {
-		$valid    = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
 		$posted   = isset( $post['2fa_enforce_role'] ) && is_array( $post['2fa_enforce_role'] )
 			? array_map( 'sanitize_text_field', wp_unslash( $post['2fa_enforce_role'] ) )
 			: array();
-		$enforced = array_values( array_intersect( $posted, $valid ) );
+		$enforced = ReportedIP_Hive_Two_Factor::filter_valid_roles( $posted );
 		if ( ! empty( $post['2fa_enabled_global'] ) && empty( $enforced ) ) {
 			$enforced = array( 'administrator' );
 		}

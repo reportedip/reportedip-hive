@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.0.29
+ * Version: 2.1.0
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -54,7 +54,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.0.29' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.1.0' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -288,6 +288,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-defaults.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-wizard-schema.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-ref.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-logger.php';
@@ -414,6 +415,9 @@ class ReportedIP_Hive {
 		new ReportedIP_Hive_Two_Factor_WebAuthn();
 
 		new ReportedIP_Hive_Two_Factor_REST();
+
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mainwp-integration.php';
+		ReportedIP_Hive_MainWP_Integration::init();
 
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Two_Factor_Admin();
@@ -1359,11 +1363,32 @@ class ReportedIP_Hive {
 	 *
 	 * @since 1.0.0
 	 */
-	private function show_blocked_page() {
+	private function show_blocked_page( $reason = 'ip_block' ) {
 		self::emit_block_response_headers();
 		status_header( 403 );
+		$reportedip_hive_block_context = is_string( $reason ) && '' !== $reason ? $reason : 'ip_block';
 		include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/blocked.php';
 		exit;
+	}
+
+	/**
+	 * Resolve the public reference code for a blocked-page response.
+	 *
+	 * Thin facade over {@see ReportedIP_Hive_Block_Ref::code()} that supplies
+	 * the central client IP. The IP is only hashed into the incident token and
+	 * never appears in the returned string, so the code is safe to print on the
+	 * block page and emit as the `X-RIP-Ref` header.
+	 *
+	 * @param string               $reason  Reason key (see ReportedIP_Hive_Block_Ref::CATEGORY_MAP).
+	 * @param array<string, mixed> $context Optional context (`minutes`, `window`).
+	 * @return string Reference code, e.g. `IP_BLOCK-3F9A2B71`.
+	 * @since  2.1.0
+	 */
+	public static function block_ref_code( $reason, $context = array() ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Block_Ref' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-ref.php';
+		}
+		return ReportedIP_Hive_Block_Ref::code( $reason, self::get_client_ip(), is_array( $context ) ? $context : array() );
 	}
 
 	/**

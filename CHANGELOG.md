@@ -2,6 +2,41 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.0] — 2026-06-10
+
+### New
+
+- **MainWP integration.** The plugin is now remote-manageable from a MainWP
+  dashboard without an extra child plugin. It hooks the MainWP Child
+  `mainwp_child_extra_execution` filter (authenticated by the MainWP Child
+  channel) and answers two jobs: a security-metrics sync (aggregate counts only
+  — active blocks, whitelist size, failed logins, comment spam, reputation
+  blocks, queue size, recent critical events, 2FA-enabled users — no IPs,
+  usernames, secrets or the API key leave the site) and API-key provisioning
+  (sets `reportedip_hive_api_key` from the trusted dashboard).
+- **Block-page reference codes.** Every blocked response now carries a
+  correlatable reference code (e.g. `WAF_SQLI-3F9A2B71`), shown on the page and
+  emitted as the `X-RIP-Ref` header. A wrongly blocked visitor can quote one
+  short string an admin matches in the logs; the incident token is a one-way
+  hash of the IP, reason and hour, so no personal data is exposed.
+
+### Changed
+
+- **Blocked page rebuilt on the design system.** Sharp-edged card, inline SVG
+  shield icon (no emoji), design-system palette, and every string is now
+  translatable (German included).
+
+### Fixed
+
+- **2FA option sanitisers clobbered direct writes.** The allowed-methods and
+  enforced-roles sanitisers fire for *every* write to their options via the
+  `sanitize_option_*` filter, not only the settings form. A direct write (setup
+  wizard, settings import, WP-CLI) was discarded — collapsing the allowed
+  methods to TOTP only and wiping the enforced roles. Both sanitisers now detect
+  the settings-form shape and pass direct writes through `filter_valid_methods()`
+  / `filter_valid_roles()` (the new single source of truth on
+  `ReportedIP_Hive_Two_Factor`).
+
 ## [2.0.29] — 2026-06-09
 
 ### Security
@@ -35,6 +70,21 @@ All changes to ReportedIP Hive are documented here.
   total attempts, with conservative defaults (10 / 5 / 20).
 
 ## [2.0.28] — 2026-06-09
+
+### Fixed
+
+- **Setup wizard now persists every selected 2FA method and enforced role.**
+  The 2FA step saved only TOTP and silently dropped the enforced-roles list no
+  matter what was chosen. The `register_setting` sanitisers for
+  `2fa_allowed_methods` and `2fa_enforce_roles` run via the global
+  `sanitize_option_<key>` filter on every write — not just the settings form —
+  yet they only understood the form's shape: the methods sanitiser rebuilt the
+  list from the per-method `$_POST` checkboxes (absent on a wizard save, so it
+  collapsed to TOTP) and the roles sanitiser required an array and rejected the
+  JSON string the wizard writes (wiping the list to empty). Both now sanitise
+  the value they are handed while keeping the settings-form checkbox path
+  authoritative, so the wizard, tier-upgrade and settings-import write paths
+  round-trip correctly.
 
 ### Changed
 

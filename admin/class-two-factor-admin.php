@@ -1416,29 +1416,55 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	}
 
 	/**
-	 * Sanitize allowed methods from checkbox inputs into JSON.
+	 * Sanitize the allowed-methods option into a JSON array.
 	 *
-	 * @param mixed $input Raw input (not used, we read from $_POST).
+	 * This sanitiser runs for every write to `reportedip_hive_2fa_allowed_methods`
+	 * via the `sanitize_option_*` filter that {@see register_setting()} installs —
+	 * not only the settings form. Two write shapes therefore reach it:
+	 *
+	 *  - The settings form posts one checkbox per method
+	 *    (`reportedip_hive_2fa_method_totp` …); the option field itself is an
+	 *    empty hidden input, so the value lives in those per-method keys.
+	 *  - Every other writer (setup wizard, tier-upgrade, settings import,
+	 *    WP-CLI) passes the value directly as a JSON array string or array.
+	 *
+	 * Detecting the form by the presence of any per-method checkbox key keeps the
+	 * checkbox path authoritative for the form while letting a direct value pass
+	 * through untouched — previously the direct value was discarded and the option
+	 * collapsed to TOTP only (the wizard "only TOTP gets saved" bug).
+	 *
+	 * @param mixed $input JSON array string / array of method slugs (direct writers).
 	 * @return string JSON array of methods.
 	 */
-	public static function sanitize_allowed_methods( $input ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
-		$methods = array();
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Handled by Settings API
-		if ( ! empty( $_POST['reportedip_hive_2fa_method_totp'] ) ) {
-			$methods[] = ReportedIP_Hive_Two_Factor::METHOD_TOTP;
+	public static function sanitize_allowed_methods( $input ) {
+		$checkboxes = array(
+			'reportedip_hive_2fa_method_totp'     => ReportedIP_Hive_Two_Factor::METHOD_TOTP,
+			'reportedip_hive_2fa_method_email'    => ReportedIP_Hive_Two_Factor::METHOD_EMAIL,
+			'reportedip_hive_2fa_method_webauthn' => ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN,
+			'reportedip_hive_2fa_method_sms'      => ReportedIP_Hive_Two_Factor::METHOD_SMS,
+		);
+
+		$is_settings_form = false;
+		foreach ( array_keys( $checkboxes ) as $checkbox_key ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Handled by Settings API; this only detects the form shape.
+			if ( isset( $_POST[ $checkbox_key ] ) ) {
+				$is_settings_form = true;
+				break;
+			}
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Handled by Settings API
-		if ( ! empty( $_POST['reportedip_hive_2fa_method_email'] ) ) {
-			$methods[] = ReportedIP_Hive_Two_Factor::METHOD_EMAIL;
+
+		if ( $is_settings_form ) {
+			$methods = array();
+			foreach ( $checkboxes as $checkbox_key => $method ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Handled by Settings API.
+				if ( ! empty( $_POST[ $checkbox_key ] ) ) {
+					$methods[] = $method;
+				}
+			}
+		} else {
+			$methods = ReportedIP_Hive_Two_Factor::filter_valid_methods( ReportedIP_Hive_Option_Routing::to_array( $input ) );
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Handled by Settings API
-		if ( ! empty( $_POST['reportedip_hive_2fa_method_webauthn'] ) ) {
-			$methods[] = ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN;
-		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Handled by Settings API
-		if ( ! empty( $_POST['reportedip_hive_2fa_method_sms'] ) ) {
-			$methods[] = ReportedIP_Hive_Two_Factor::METHOD_SMS;
-		}
+
 		if ( empty( $methods ) ) {
 			$methods = array( ReportedIP_Hive_Two_Factor::METHOD_TOTP );
 		}
@@ -1446,23 +1472,20 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	}
 
 	/**
-	 * Sanitize enforced roles from checkbox inputs into JSON.
+	 * Sanitize the enforce-roles option into a JSON array.
 	 *
-	 * @param mixed $input Raw input from form.
+	 * Like {@see sanitize_allowed_methods()} this runs for every write to
+	 * `reportedip_hive_2fa_enforce_roles`. The settings form submits an array
+	 * (`reportedip_hive_2fa_enforce_roles[]`); the setup wizard, import and
+	 * WP-CLI pass a JSON array string. {@see ReportedIP_Hive_Option_Routing::to_array()}
+	 * normalises both shapes — the previous `is_array()` guard rejected the JSON
+	 * string and silently wiped the wizard's enforced roles to an empty list.
+	 *
+	 * @param mixed $input Array (settings form) or JSON array string (other writers).
 	 * @return string JSON array of role slugs.
 	 */
 	public static function sanitize_enforce_roles( $input ) {
-		if ( ! is_array( $input ) ) {
-			return '[]';
-		}
-		$valid_roles = array_keys( wp_roles()->get_names() );
-		$roles       = array_filter(
-			$input,
-			function ( $role ) use ( $valid_roles ) {
-				return in_array( $role, $valid_roles, true );
-			}
-		);
-		return wp_json_encode( array_values( $roles ) );
+		return wp_json_encode( ReportedIP_Hive_Two_Factor::filter_valid_roles( ReportedIP_Hive_Option_Routing::to_array( $input ) ) );
 	}
 
 	/**

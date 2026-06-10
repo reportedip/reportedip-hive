@@ -487,6 +487,46 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
+	 * The verification methods a site may offer for enrolment.
+	 *
+	 * Single source of truth for the allowed-method allow-list: the setup wizard,
+	 * the settings-form sanitiser, tier-upgrade and settings import all validate
+	 * against this list. METHOD_RECOVERY is intentionally excluded — recovery
+	 * codes are an automatic fallback, not a method an admin opts into.
+	 *
+	 * @return string[] Method identifiers.
+	 * @since  2.0.28
+	 */
+	public static function valid_methods() {
+		return array( self::METHOD_TOTP, self::METHOD_EMAIL, self::METHOD_WEBAUTHN, self::METHOD_SMS );
+	}
+
+	/**
+	 * Reduce an arbitrary list of method slugs to the valid, de-duplicated set,
+	 * preserving the input order.
+	 *
+	 * @param array<int, mixed> $methods Candidate method slugs.
+	 * @return string[]
+	 * @since  2.0.28
+	 */
+	public static function filter_valid_methods( array $methods ) {
+		return array_values( array_unique( array_intersect( array_map( 'strval', $methods ), self::valid_methods() ) ) );
+	}
+
+	/**
+	 * Reduce an arbitrary list of role slugs to the ones that actually exist on
+	 * this site, de-duplicated and preserving the input order.
+	 *
+	 * @param array<int, mixed> $roles Candidate role slugs.
+	 * @return string[]
+	 * @since  2.0.28
+	 */
+	public static function filter_valid_roles( array $roles ) {
+		$valid = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
+		return array_values( array_unique( array_intersect( array_map( 'strval', $roles ), $valid ) ) );
+	}
+
+	/**
 	 * Map a method identifier to its "enabled" user-meta key.
 	 *
 	 * @param string $method Method identifier.

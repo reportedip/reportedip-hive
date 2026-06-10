@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.0.29
+Stable tag: 2.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -334,6 +334,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.0 =
+
+New: MainWP integration — the plugin is now remote-manageable from a MainWP dashboard (aggregate security metrics sync and API-key provisioning) with no extra child plugin, authenticated through the MainWP Child channel. New: blocked pages now show a correlatable reference code (also sent as the `X-RIP-Ref` header) so a wrongly blocked visitor can quote one short string an admin can match in the logs — no personal data is exposed. The blocked page was rebuilt on the design system (sharp-edged card, inline SVG, no emoji) and fully translated. Fixed: the 2FA allowed-methods and enforced-roles sanitisers ran for every option write (setup wizard, import, WP-CLI), not just the settings form, so a direct write could collapse the methods to TOTP only or wipe the enforced roles; both now detect the form shape and preserve direct writes.
 
 = 2.0.29 =
 
