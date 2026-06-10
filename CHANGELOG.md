@@ -8,7 +8,7 @@ All changes to ReportedIP Hive are documented here.
 
 - **Rule delivery framework.** Server-delivered, versioned, Ed25519-signed,
   tier-staggered rulesets (`waf`, `bot_signatures`, `disposable_domains`,
-  `ua_blocklist`, `scan_paths`). The plugin verifies every ruleset against a
+  `scan_paths`). The plugin verifies every ruleset against a
   bundled public key before applying it and always falls back to the bundled
   baseline — a tampered, oversized or unreachable feed can never poison the
   rules. Synced every six hours (Community mode + API key + toggle); the

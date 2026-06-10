@@ -601,7 +601,7 @@ This plugin connects to external services only when explicitly configured. *Loca
 
 = ReportedIP Rule Sync =
 
-* Service URL: `https://reportedip.de/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `ua_blocklist`, `scan_paths`)
+* Service URL: `https://reportedip.de/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `scan_paths`)
 * Purpose: fetch signed firewall rule updates; the bundled baseline rulesets stay active without any connection, and Professional plans receive the deeper, frequently-updated rulesets through this channel
 * Default: off — only active in Community Network mode AND with a configured API key AND the Rule Sync toggle enabled; runs every six hours via cron, and conditional `If-None-Match` requests return HTTP 304 when nothing changed
 * Data transmitted: the API key, the current ETag and the site domain; each downloaded ruleset carries an Ed25519 signature that the plugin verifies against a bundled public key before applying it
