@@ -45,6 +45,31 @@ class ReportedIP_Hive_WAF {
 	const OPT_PARANOIA = 'reportedip_hive_waf_paranoia';
 
 	/**
+	 * Number of confirmed hits within the window before the IP is laddered.
+	 */
+	const OPT_BLOCK_THRESHOLD = 'reportedip_hive_waf_block_threshold';
+
+	/**
+	 * Drop-in (pre-WordPress execution) master toggle.
+	 */
+	const OPT_DROPIN_ENABLED = 'reportedip_hive_waf_dropin_enabled';
+
+	/**
+	 * Last resolved guard path for the drop-in.
+	 */
+	const OPT_DROPIN_PATH = 'reportedip_hive_waf_dropin_path';
+
+	/**
+	 * Last detected server type for the drop-in.
+	 */
+	const OPT_DROPIN_SERVER = 'reportedip_hive_waf_dropin_server';
+
+	/**
+	 * Counting window (minutes) for the repeat-offender escalation ladder.
+	 */
+	const ESCALATION_TIMEFRAME_MINUTES = 10;
+
+	/**
 	 * Hard cap on bytes scanned from the request body, so a multi-megabyte
 	 * upload cannot turn rule evaluation into a denial-of-service vector.
 	 */
@@ -147,9 +172,41 @@ class ReportedIP_Hive_WAF {
 			return;
 		}
 
-		$subjects = $this->collect_subjects( $this->required_targets( $rules ) );
+		$raw_body = file_get_contents( 'php://input', false, null, 0, self::MAX_BODY_BYTES );
+		$hit      = $this->evaluate(
+			$rules,
+			wp_unslash( $_SERVER ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- wp_unslash applied; raw attack surface inspected verbatim, never echoed.
+			wp_unslash( $_POST ),   // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Raw attack surface inspected before any handler; nonce belongs to the real handler.
+			is_string( $raw_body ) ? $raw_body : null
+		);
+
+		if ( null !== $hit ) {
+			$this->handle_hit( $hit, $ip );
+		}
+	}
+
+	/**
+	 * Pure detection core: test the supplied request data against the supplied
+	 * rules and return the first matching rule, or null. Takes the request data
+	 * as arguments (no superglobal or WordPress access) so it is deterministically
+	 * unit-testable and reusable. ReDoS is bounded by a temporary PCRE
+	 * backtrack-limit that is always restored.
+	 *
+	 * @param array<int,array<string,mixed>> $rules    Active rules.
+	 * @param array<string,mixed>            $server   Request server vars (e.g. $_SERVER), unslashed.
+	 * @param array<string,mixed>            $post     Request body params (e.g. $_POST), unslashed.
+	 * @param string|null                    $raw_body Raw request body for non-form payloads, or null.
+	 * @return array<string,mixed>|null The matched rule, or null when nothing matches.
+	 * @since  2.2.0
+	 */
+	public function evaluate( array $rules, array $server, array $post, $raw_body ) {
+		if ( empty( $rules ) ) {
+			return null;
+		}
+
+		$subjects = $this->collect_subjects( $this->required_targets( $rules ), $server, $post, $raw_body );
 		if ( empty( $subjects ) ) {
-			return;
+			return null;
 		}
 
 		$previous_limit = ini_get( 'pcre.backtrack_limit' );
@@ -159,6 +216,9 @@ class ReportedIP_Hive_WAF {
 
 		$hit = null;
 		foreach ( $rules as $rule ) {
+			if ( ! is_array( $rule ) || empty( $rule['pattern'] ) ) {
+				continue;
+			}
 			$target  = isset( $rule['target'] ) ? (string) $rule['target'] : 'all';
 			$subject = isset( $subjects[ $target ] ) ? $subjects[ $target ] : '';
 			if ( '' === $subject ) {
@@ -174,9 +234,7 @@ class ReportedIP_Hive_WAF {
 			ini_set( 'pcre.backtrack_limit', (string) $previous_limit ); // phpcs:ignore WordPress.PHP.IniSet.Risky -- Restoring the previous PCRE backtrack limit.
 		}
 
-		if ( null !== $hit ) {
-			$this->handle_hit( $hit, $ip );
-		}
+		return $hit;
 	}
 
 	/**
@@ -293,14 +351,14 @@ class ReportedIP_Hive_WAF {
 	 * @return array<string,string>
 	 * @since  2.2.0
 	 */
-	private function collect_subjects( array $targets ) {
+	private function collect_subjects( array $targets, array $server, array $post, $raw_body ) {
 		$want_uri  = isset( $targets['uri'] ) || isset( $targets['all'] );
 		$want_body = isset( $targets['body'] ) || isset( $targets['all'] );
 		$want_ua   = isset( $targets['ua'] ) || isset( $targets['all'] );
 
-		$uri  = $want_uri ? $this->uri_subject() : '';
-		$body = $want_body ? $this->body_subject() : '';
-		$ua   = $want_ua ? $this->ua_subject() : '';
+		$uri  = $want_uri ? $this->uri_subject( $server ) : '';
+		$body = $want_body ? $this->body_subject( $post, $raw_body ) : '';
+		$ua   = $want_ua ? $this->ua_subject( $server ) : '';
 
 		$subjects = array();
 		if ( isset( $targets['uri'] ) ) {
@@ -322,11 +380,12 @@ class ReportedIP_Hive_WAF {
 	 * Build the URI subject: the raw request target plus a once-decoded variant
 	 * so both `../` and `%2e%2e` style payloads are visible to a single pattern.
 	 *
+	 * @param array<string,mixed> $server Unslashed server vars.
 	 * @return string
 	 * @since  2.2.0
 	 */
-	private function uri_subject() {
-		$raw = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw attack surface is inspected verbatim; never echoed.
+	private function uri_subject( array $server ) {
+		$raw = isset( $server['REQUEST_URI'] ) ? (string) $server['REQUEST_URI'] : '';
 		if ( '' === $raw ) {
 			return '';
 		}
@@ -338,18 +397,18 @@ class ReportedIP_Hive_WAF {
 	 * Build the body subject from the parsed parameters and the raw input
 	 * stream (for JSON / non-form bodies), bounded to {@see MAX_BODY_BYTES}.
 	 *
+	 * @param array<string,mixed> $post     Unslashed body params.
+	 * @param string|null         $raw_body Raw request body, or null.
 	 * @return string
 	 * @since  2.2.0
 	 */
-	private function body_subject() {
+	private function body_subject( array $post, $raw_body ) {
 		$parts = array();
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- The WAF inspects the raw request as attack surface before any handler runs; nonce verification belongs to the real handler.
-		if ( ! empty( $_POST ) ) {
-			$parts[] = $this->flatten( wp_unslash( $_POST ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw attack surface is inspected verbatim, not processed.
+		if ( ! empty( $post ) ) {
+			$parts[] = $this->flatten( $post );
 		}
-		$raw = file_get_contents( 'php://input', false, null, 0, self::MAX_BODY_BYTES );
-		if ( is_string( $raw ) && '' !== $raw ) {
-			$parts[] = $raw;
+		if ( is_string( $raw_body ) && '' !== $raw_body ) {
+			$parts[] = substr( $raw_body, 0, self::MAX_BODY_BYTES );
 		}
 		if ( empty( $parts ) ) {
 			return '';
@@ -360,12 +419,13 @@ class ReportedIP_Hive_WAF {
 	/**
 	 * Build the user-agent subject.
 	 *
+	 * @param array<string,mixed> $server Unslashed server vars.
 	 * @return string
 	 * @since  2.2.0
 	 */
-	private function ua_subject() {
-		return isset( $_SERVER['HTTP_USER_AGENT'] )
-			? $this->cap( (string) wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw attack surface is inspected verbatim, never echoed.
+	private function ua_subject( array $server ) {
+		return isset( $server['HTTP_USER_AGENT'] )
+			? $this->cap( (string) $server['HTTP_USER_AGENT'] )
 			: '';
 	}
 
@@ -463,6 +523,45 @@ class ReportedIP_Hive_WAF {
 			return;
 		}
 
+		$this->escalate( $ip, $group, $rule_id );
+
 		ReportedIP_Hive::serve_blocked_page( $reason );
+	}
+
+	/**
+	 * Feed a confirmed hit into the shared attempt tracker so a repeat offender
+	 * graduates to a laddered IP block via the existing escalation path. The
+	 * threshold defaults to 3 so a single false positive blocks only the
+	 * offending request, not the IP.
+	 *
+	 * @param string $ip      Client IP.
+	 * @param string $group   Rule group.
+	 * @param string $rule_id Rule id.
+	 * @return void
+	 * @since  2.2.0
+	 */
+	private function escalate( $ip, $group, $rule_id ) {
+		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
+			return;
+		}
+		$monitor = ReportedIP_Hive::get_instance()->get_security_monitor();
+		if ( ! ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) ) {
+			return;
+		}
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_BLOCK_THRESHOLD, 3 );
+		if ( $threshold < 1 ) {
+			$threshold = 1;
+		}
+		$monitor->track_generic_attempt(
+			$ip,
+			'waf',
+			'waf_block',
+			$threshold,
+			self::ESCALATION_TIMEFRAME_MINUTES,
+			array(
+				'group' => $group,
+				'rule'  => $rule_id,
+			)
+		);
 	}
 }

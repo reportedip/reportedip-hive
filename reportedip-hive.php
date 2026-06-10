@@ -313,6 +313,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-enumeration.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-scan-detector.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
@@ -405,6 +406,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_User_Enumeration::get_instance();
 		ReportedIP_Hive_Scan_Detector::get_instance();
 		ReportedIP_Hive_WAF::get_instance();
+		ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
 		ReportedIP_Hive_WooCommerce_Monitor::get_instance();
 		ReportedIP_Hive_Geo_Anomaly::get_instance();
 		ReportedIP_Hive_Password_Strength::get_instance();
@@ -474,6 +476,23 @@ class ReportedIP_Hive {
 		}
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->sync();
 
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_dropin_enabled', false ) ) {
+			foreach ( array(
+				'includes/class-rule-store.php',
+				'includes/class-rule-sync.php',
+				'includes/class-waf.php',
+				'includes/class-waf-dropin-manager.php',
+			) as $relative ) {
+				$path = REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
+				if ( file_exists( $path ) ) {
+					require_once $path;
+				}
+			}
+			if ( class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+				ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->sync();
+			}
+		}
+
 		$wizard_completed = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_wizard_completed', false );
 		$api_key          = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 
@@ -526,6 +545,11 @@ class ReportedIP_Hive {
 		}
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->remove();
 
+		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php';
+		}
+		ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->remove();
+
 		flush_rewrite_rules();
 	}
 
@@ -546,6 +570,19 @@ class ReportedIP_Hive {
 			if ( file_exists( $path ) ) {
 				require_once $path;
 			}
+		}
+
+		foreach ( array(
+			'includes/class-waf.php',
+			'includes/class-waf-dropin-manager.php',
+		) as $relative ) {
+			$path = REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
+			if ( file_exists( $path ) ) {
+				require_once $path;
+			}
+		}
+		if ( class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+			ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->remove();
 		}
 
 		$delete_requested = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', false );

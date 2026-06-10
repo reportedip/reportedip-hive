@@ -126,6 +126,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_run_queue_now', array( $this, 'ajax_run_queue_now' ) );
 		add_action( 'wp_ajax_reportedip_hive_rule_sync_now', array( $this, 'ajax_rule_sync_now' ) );
 		add_action( 'wp_ajax_reportedip_hive_waf_toggle', array( $this, 'ajax_waf_toggle' ) );
+		add_action( 'wp_ajax_reportedip_hive_waf_dropin_toggle', array( $this, 'ajax_waf_dropin_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
@@ -1488,6 +1489,52 @@ class ReportedIP_Hive_Ajax_Handler {
 		ReportedIP_Hive_Option_Routing::set( $option, $new );
 
 		wp_send_json_success( array( 'state' => $new ) );
+	}
+
+	/**
+	 * AJAX: flip the pre-WordPress WAF drop-in on or off.
+	 *
+	 * Flipping the option fires the manager's update_option hook, which writes
+	 * or removes the guard and its server directive. Returns a message that
+	 * reflects what happened (including a writability warning when the target
+	 * cannot be written).
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public function ajax_waf_dropin_toggle() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+			wp_send_json_error( array( 'message' => __( 'The drop-in manager is unavailable.', 'reportedip-hive' ) ) );
+		}
+
+		$option = ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED;
+		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, false );
+		$dropin = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+
+		if ( $new && 'nginx' !== $dropin->detect_server() && ! $dropin->is_writable_target() ) {
+			wp_send_json_error( array( 'message' => __( 'The server configuration target is not writable. Adjust file permissions and try again.', 'reportedip-hive' ) ) );
+		}
+
+		ReportedIP_Hive_Option_Routing::set( $option, $new );
+
+		$message = $new
+			? __( 'Extended protection enabled.', 'reportedip-hive' )
+			: __( 'Extended protection disabled.', 'reportedip-hive' );
+		if ( $new && 'nginx' === $dropin->detect_server() ) {
+			$message = __( 'Guard file generated. Paste the nginx snippet into your server block and reload nginx.', 'reportedip-hive' );
+		}
+
+		wp_send_json_success(
+			array(
+				'state'   => $new,
+				'message' => $message,
+			)
+		);
 	}
 
 	/**

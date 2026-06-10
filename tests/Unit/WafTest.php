@@ -81,6 +81,50 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayHasKey( 'all', $targets );
 		}
 
+		public function test_evaluate_matches_uri_target(): void {
+			$rules = array(
+				array( 'id' => 'trav', 'group' => 'path_traversal', 'pattern' => '\.\./', 'paranoia' => 1, 'target' => 'uri' ),
+			);
+			$hit = $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => '/?f=../../etc/passwd' ), array(), null );
+			$this->assertIsArray( $hit );
+			$this->assertSame( 'trav', $hit['id'] );
+		}
+
+		public function test_evaluate_decodes_encoded_traversal_in_uri(): void {
+			$rules = array(
+				array( 'id' => 'trav', 'group' => 'path_traversal', 'pattern' => '\.\./', 'paranoia' => 1, 'target' => 'uri' ),
+			);
+			$hit = $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => '/?f=%2e%2e%2fetc' ), array(), null );
+			$this->assertIsArray( $hit );
+		}
+
+		public function test_evaluate_matches_body_and_raw(): void {
+			$rules = array(
+				array( 'id' => 'sqli', 'group' => 'sql_injection', 'pattern' => '(?i)\bunion\b[\s\S]{0,80}?\bselect\b', 'paranoia' => 1, 'target' => 'body' ),
+			);
+			$hit_post = $this->waf()->evaluate( $rules, array(), array( 'q' => '1 UNION SELECT pw' ), null );
+			$this->assertIsArray( $hit_post );
+			$hit_raw = $this->waf()->evaluate( $rules, array(), array(), '{"q":"1 union select pw"}' );
+			$this->assertIsArray( $hit_raw );
+		}
+
+		public function test_evaluate_returns_null_for_clean_request(): void {
+			$rules = array(
+				array( 'id' => 'sqli', 'group' => 'sql_injection', 'pattern' => '(?i)\bunion\b[\s\S]{0,80}?\bselect\b', 'paranoia' => 1, 'target' => 'all' ),
+			);
+			$hit = $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => '/shop?page=2' ), array( 'name' => 'Jane' ), null );
+			$this->assertNull( $hit );
+		}
+
+		public function test_evaluate_short_circuits_on_first_hit(): void {
+			$rules = array(
+				array( 'id' => 'first', 'group' => 'xss', 'pattern' => '(?i)<script', 'paranoia' => 1, 'target' => 'all' ),
+				array( 'id' => 'second', 'group' => 'xss', 'pattern' => '(?i)<script', 'paranoia' => 1, 'target' => 'all' ),
+			);
+			$hit = $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => '/?x=<script>' ), array(), null );
+			$this->assertSame( 'first', $hit['id'] );
+		}
+
 		public function test_paranoia_cap_is_one_without_priority(): void {
 			$this->assertSame( 1, $this->waf()->paranoia_cap() );
 		}

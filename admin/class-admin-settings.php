@@ -1497,6 +1497,74 @@ class ReportedIP_Hive_Admin_Settings {
 RIPJS;
 
 		echo '</div></div>';
+
+		$this->render_waf_dropin_box();
+	}
+
+	/**
+	 * Render the "Extended Protection" box: the optional pre-WordPress drop-in
+	 * that runs the WAF before WordPress loads. Shows the detected server, the
+	 * write status, a toggle and — for nginx — the copy-paste config snippet.
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	private function render_waf_dropin_box() {
+		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+			return;
+		}
+		$dropin     = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+		$enabled    = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
+		$server     = $dropin->detect_server();
+		$writable   = $dropin->is_writable_target();
+		$active     = $dropin->is_active();
+		$is_nginx   = ( 'nginx' === $server );
+		$server_lbl = array(
+			'apache'  => 'Apache (mod_php, .htaccess)',
+			'fpm'     => 'PHP-FPM / CGI (.user.ini)',
+			'nginx'   => 'nginx (manual snippet)',
+			'unknown' => __( 'Unknown', 'reportedip-hive' ),
+		);
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Extended Protection (pre-WordPress)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Optionally run the firewall before WordPress loads, so a malicious request is rejected earlier and cheaper. Off by default — enable only after confirming your server can write the configuration.', 'reportedip-hive' ) . '</p>';
+
+		echo '<div class="rip-grid rip-grid-cols-3">';
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_attr( $active ? 'rip-badge--success' : 'rip-badge--neutral' ),
+			esc_html( $active ? __( 'Installed', 'reportedip-hive' ) : __( 'Not installed', 'reportedip-hive' ) ),
+			esc_html__( 'Drop-in', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%s</div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_html( $server_lbl[ $server ] ?? $server ),
+			esc_html__( 'Detected server', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_attr( $writable ? 'rip-badge--success' : 'rip-badge--warning' ),
+			esc_html( $writable ? __( 'Writable', 'reportedip-hive' ) : __( 'Not writable', 'reportedip-hive' ) ),
+			esc_html__( 'Config target', 'reportedip-hive' )
+		);
+		echo '</div>';
+
+		if ( $is_nginx ) {
+			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'On nginx the directive cannot be written automatically. Enable the drop-in to generate the guard file, then paste this snippet into your server block and reload nginx. Remove it again before deactivating the plugin.', 'reportedip-hive' ) . '</div>';
+			echo '<pre class="rip-code-block" id="rip-waf-nginx-snippet">' . esc_html( $dropin->nginx_snippet() ) . '</pre>';
+			echo '<button type="button" class="rip-button rip-button--secondary" id="rip-waf-nginx-copy">' . esc_html__( 'Copy snippet', 'reportedip-hive' ) . '</button> ';
+		}
+
+		printf(
+			'<button type="button" class="rip-button rip-button--primary rip-waf-dropin-toggle">%s</button>',
+			esc_html( $enabled ? __( 'Disable extended protection', 'reportedip-hive' ) : __( 'Enable extended protection', 'reportedip-hive' ) )
+		);
+
+		echo <<<'RIPJS'
+<script>jQuery(function($){$('.rip-waf-dropin-toggle').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_waf_dropin_toggle',nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);if(r&&r.data&&r.data.message){window.alert(r.data.message);}location.reload();});});$('#rip-waf-nginx-copy').on('click',function(e){e.preventDefault();var t=document.getElementById('rip-waf-nginx-snippet');if(t&&navigator.clipboard){navigator.clipboard.writeText(t.textContent);}});});</script>
+RIPJS;
+
+		echo '</div></div>';
 	}
 
 	/**

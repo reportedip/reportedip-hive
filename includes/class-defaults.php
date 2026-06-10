@@ -85,6 +85,10 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_waf_enabled'                    => true,
 		'reportedip_hive_waf_report_only'                => false,
 		'reportedip_hive_waf_paranoia'                   => 1,
+		'reportedip_hive_waf_block_threshold'            => 3,
+		'reportedip_hive_waf_dropin_enabled'             => false,
+		'reportedip_hive_waf_dropin_path'                => '',
+		'reportedip_hive_waf_dropin_server'              => '',
 
 		'reportedip_hive_monitor_failed_logins'          => true,
 		'reportedip_hive_failed_login_threshold'         => 5,
