@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 8;
+	public const CURRENT_VERSION = 9;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -268,6 +268,21 @@ final class ReportedIP_Hive_Migration_Manager {
 				restore_current_blog();
 			}
 		}
+	}
+
+	/**
+	 * Schema v9: create the audit-log table.
+	 *
+	 * Backs the Business-tier audit event trail. Created network-wide (under
+	 * `base_prefix`) so a site that later upgrades captures immediately.
+	 * Delegates to the idempotent {@see ReportedIP_Hive_Schema::ensure_tables()},
+	 * so a re-run is a no-op.
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	private static function migrate_to_v9() {
+		ReportedIP_Hive_Schema::ensure_tables();
 	}
 
 	/**

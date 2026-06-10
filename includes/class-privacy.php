@@ -203,6 +203,39 @@ class ReportedIP_Hive_Privacy {
 			);
 		}
 
+		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$audit = $wpdb->get_results( $wpdb->prepare( "SELECT id, created_at, ip, event_type, event_action, event_data FROM {$audit_table} WHERE user_id = %d", $user->ID ) );
+		foreach ( (array) $audit as $row ) {
+			$items[] = array(
+				'group_id'    => 'reportedip-hive-audit',
+				'group_label' => __( 'ReportedIP Hive — audit trail', 'reportedip-hive' ),
+				'item_id'     => 'rip-hive-audit-' . (int) $row->id,
+				'data'        => array(
+					array(
+						'name'  => __( 'Time', 'reportedip-hive' ),
+						'value' => $row->created_at,
+					),
+					array(
+						'name'  => __( 'Event', 'reportedip-hive' ),
+						'value' => $row->event_type,
+					),
+					array(
+						'name'  => __( 'Action', 'reportedip-hive' ),
+						'value' => $row->event_action,
+					),
+					array(
+						'name'  => __( 'IP address', 'reportedip-hive' ),
+						'value' => $row->ip,
+					),
+					array(
+						'name'  => __( 'Details', 'reportedip-hive' ),
+						'value' => $row->event_data,
+					),
+				),
+			);
+		}
+
 		return array(
 			'data' => $items,
 			'done' => true,
@@ -238,6 +271,12 @@ class ReportedIP_Hive_Privacy {
 		$devices_table = $wpdb->base_prefix . 'reportedip_hive_trusted_devices';
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$removed += (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$devices_table} WHERE user_id = %d", $user->ID ) );
+
+		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$removed += (int) $wpdb->query( $wpdb->prepare( "UPDATE {$audit_table} SET username = '', ip = '', user_id = NULL, event_data = NULL WHERE user_id = %d", $user->ID ) );
+
+		delete_user_meta( $user->ID, '_reportedip_hive_known_ips' );
 
 		return array(
 			'items_removed'  => $removed,

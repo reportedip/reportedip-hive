@@ -189,12 +189,19 @@ class ReportedIP_Hive_Cron_Handler {
 			$cleaned_logs    = $this->database->cleanup_old_data( $retention_days );
 			$expired_entries = $this->ip_manager->cleanup_expired_entries();
 
+			$cleaned_audit = 0;
+			if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
+				$audit_retention = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_retention_days', 30 );
+				$cleaned_audit   = ReportedIP_Hive_Audit_Logger::cleanup( $audit_retention );
+			}
+
 			$this->logger->info(
 				'Daily cleanup completed',
 				'system',
 				array(
 					'anonymized_entries' => $anonymized,
 					'cleaned_logs'       => $cleaned_logs,
+					'cleaned_audit'      => $cleaned_audit,
 					'expired_entries'    => $expired_entries,
 					'retention_days'     => $retention_days,
 					'anonymize_days'     => $anonymize_days,

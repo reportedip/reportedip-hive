@@ -32,6 +32,7 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'admin_notices', array( $this, 'render_tier_upgrade_banner' ) );
 		add_action( 'admin_notices', array( $this, 'render_cap_status_notice' ), 5 );
 		add_action( 'admin_post_reportedip_hive_cap_notice_dismiss', array( $this, 'handle_cap_notice_dismiss' ) );
+		add_action( 'admin_post_reportedip_hive_audit_export', array( $this, 'handle_audit_export' ) );
 		add_action( 'updated_option', array( $this, 'maybe_sync_notifications_to_api' ), 10, 1 );
 		add_action( 'network_admin_edit_reportedip_hive_save_settings', array( $this, 'handle_network_admin_save' ) );
 	}
@@ -1134,6 +1135,60 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * `admin-post.php?action=reportedip_hive_audit_export` handler.
+	 *
+	 * Streams the audit log as CSV or JSON. Business+ only; on Multisite a site
+	 * administrator exports only their own blog's rows.
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public function handle_audit_export() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( 'reportedip_hive_audit_export' );
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
+		if ( empty( $status['available'] ) ) {
+			wp_die( esc_html__( 'The audit log is not available on your plan.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified by check_admin_referer() above.
+		$format = ( isset( $_GET['format'] ) && 'json' === sanitize_key( wp_unslash( $_GET['format'] ) ) ) ? 'json' : 'csv';
+
+		global $wpdb;
+		$table = $wpdb->base_prefix . ReportedIP_Hive_Audit_Logger::TABLE;
+		$cols  = 'created_at, ip, user_id, username, event_type, event_action, event_data, country_code';
+		if ( is_multisite() && ! is_network_admin() ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name from base_prefix; column list literal; blog id bound.
+			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT $cols FROM $table WHERE blog_id = %d ORDER BY created_at DESC LIMIT 10000", get_current_blog_id() ), ARRAY_A );
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name from base_prefix; column list literal.
+			$rows = $wpdb->get_results( "SELECT $cols FROM $table ORDER BY created_at DESC LIMIT 10000", ARRAY_A );
+		}
+		$rows = (array) $rows;
+
+		nocache_headers();
+		if ( 'json' === $format ) {
+			header( 'Content-Type: application/json; charset=utf-8' );
+			header( 'Content-Disposition: attachment; filename="reportedip-hive-audit-' . gmdate( 'Y-m-d' ) . '.json"' );
+			echo wp_json_encode( $rows, JSON_PRETTY_PRINT );
+			exit;
+		}
+
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="reportedip-hive-audit-' . gmdate( 'Y-m-d' ) . '.csv"' );
+		$output = fopen( 'php://output', 'w' );
+		fputcsv( $output, array( 'created_at', 'ip', 'user_id', 'username', 'event_type', 'event_action', 'event_data', 'country_code' ) );
+		foreach ( $rows as $row ) {
+			fputcsv( $output, $row );
+		}
+		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- php://output stream
+		exit;
+	}
+
+	/**
 	 * Render inline notices within plugin pages (replaces admin_notices)
 	 */
 	public function render_inline_notices() {
@@ -2070,11 +2125,186 @@ RIPJS;
 	 * @return void
 	 */
 	private function render_hardening_tab() {
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'security_headers_advanced' );
-		if ( empty( $status['available'] ) ) {
-			self::render_tier_lock( $status, array( 'label' => __( 'Unlock advanced hardening with Professional', 'reportedip-hive' ) ) );
+		if ( ! class_exists( 'ReportedIP_Hive_Security_Headers' ) ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Security headers are unavailable.', 'reportedip-hive' ) . '</div>';
+			return;
 		}
-		echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Security headers, CSP builder and the hardening controls ship in a later release.', 'reportedip-hive' ) . '</div>';
+
+		$h          = 'ReportedIP_Hive_Security_Headers';
+		$adv_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'security_headers_advanced' );
+		$adv_ok     = ! empty( $adv_status['available'] );
+		$enabled    = $h::is_enabled();
+		$conflicts  = $h::conflicts();
+		$get        = static function ( $key, $fallback ) {
+			return ReportedIP_Hive_Option_Routing::get( $key, $fallback );
+		};
+		$select     = static function ( $id, $opt_key, $label, array $choices, $current ) {
+			printf( '<div class="rip-form-row"><label class="rip-form-label" for="%s">%s</label>', esc_attr( $id ), esc_html( $label ) );
+			printf( '<select id="%s" class="rip-select" data-opt="%s">', esc_attr( $id ), esc_attr( $opt_key ) );
+			foreach ( $choices as $value => $choice_label ) {
+				printf( '<option value="%s"%s>%s</option>', esc_attr( (string) $value ), selected( (string) $current, (string) $value, false ), esc_html( $choice_label ) );
+			}
+			echo '</select></div>';
+		};
+		$on_off     = array(
+			'1' => __( 'On', 'reportedip-hive' ),
+			'0' => __( 'Off', 'reportedip-hive' ),
+		);
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Security Headers', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Sends hardening response headers on every front-end request. The basic trio is free; HSTS, Permissions-Policy, the Content-Security-Policy and the Cross-Origin headers are part of advanced hardening. A header already set by your server or another plugin is detected and left untouched.', 'reportedip-hive' ) . '</p>';
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_attr( $enabled ? 'rip-badge--success' : 'rip-badge--neutral' ),
+			esc_html( $enabled ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ) ),
+			esc_html__( 'Header engine', 'reportedip-hive' )
+		);
+		if ( ! empty( $conflicts ) ) {
+			printf(
+				'<div class="rip-alert rip-alert--warning">%s <strong>%s</strong></div>',
+				esc_html__( 'These headers are already set elsewhere and are left untouched:', 'reportedip-hive' ),
+				esc_html( implode( ', ', $conflicts ) )
+			);
+		}
+		$select( 'rip-hdr-enabled', $h::OPT_ENABLED, __( 'Header engine', 'reportedip-hive' ), $on_off, $enabled ? '1' : '0' );
+		echo '</div></div>';
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Basic Headers', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		$select( 'rip-hdr-xcto', $h::OPT_XCTO, __( 'X-Content-Type-Options: nosniff', 'reportedip-hive' ), $on_off, (bool) $get( $h::OPT_XCTO, true ) ? '1' : '0' );
+		$select(
+			'rip-hdr-xfo',
+			$h::OPT_XFO,
+			__( 'X-Frame-Options (clickjacking)', 'reportedip-hive' ),
+			array(
+				'SAMEORIGIN' => 'SAMEORIGIN',
+				'DENY'       => 'DENY',
+				'off'        => __( 'Off', 'reportedip-hive' ),
+			),
+			(string) $get( $h::OPT_XFO, 'SAMEORIGIN' )
+		);
+		$select(
+			'rip-hdr-referrer',
+			$h::OPT_REFERRER,
+			__( 'Referrer-Policy', 'reportedip-hive' ),
+			array(
+				'no-referrer'                     => 'no-referrer',
+				'same-origin'                     => 'same-origin',
+				'strict-origin'                   => 'strict-origin',
+				'strict-origin-when-cross-origin' => 'strict-origin-when-cross-origin',
+				'no-referrer-when-downgrade'      => 'no-referrer-when-downgrade',
+			),
+			(string) $get( $h::OPT_REFERRER, 'strict-origin-when-cross-origin' )
+		);
+		echo '</div></div>';
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Advanced Headers', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		if ( ! $adv_ok ) {
+			self::render_tier_lock( $adv_status, array( 'label' => __( 'Advanced headers — Professional', 'reportedip-hive' ) ) );
+			echo '<p class="rip-help-text">' . esc_html__( 'HSTS, Permissions-Policy, the CSP builder and the Cross-Origin headers unlock with Professional. The basic headers above stay free.', 'reportedip-hive' ) . '</p>';
+			echo '</div></div>';
+			return;
+		}
+
+		$select( 'rip-hdr-hsts', $h::OPT_HSTS_ENABLED, __( 'HTTP Strict Transport Security (HSTS)', 'reportedip-hive' ), $on_off, (bool) $get( $h::OPT_HSTS_ENABLED, false ) ? '1' : '0' );
+		$select(
+			'rip-hdr-hsts-age',
+			$h::OPT_HSTS_MAX_AGE,
+			__( 'HSTS max-age', 'reportedip-hive' ),
+			array(
+				'15552000' => __( '6 months', 'reportedip-hive' ),
+				'31536000' => __( '1 year', 'reportedip-hive' ),
+				'63072000' => __( '2 years (preload-ready)', 'reportedip-hive' ),
+			),
+			(string) (int) $get( $h::OPT_HSTS_MAX_AGE, 63072000 )
+		);
+		$select( 'rip-hdr-hsts-sub', $h::OPT_HSTS_SUBDOMAINS, __( 'HSTS includeSubDomains', 'reportedip-hive' ), $on_off, (bool) $get( $h::OPT_HSTS_SUBDOMAINS, false ) ? '1' : '0' );
+		$select( 'rip-hdr-hsts-preload', $h::OPT_HSTS_PRELOAD, __( 'HSTS preload', 'reportedip-hive' ), $on_off, (bool) $get( $h::OPT_HSTS_PRELOAD, false ) ? '1' : '0' );
+
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-hdr-perm">%s</label><input type="text" id="rip-hdr-perm" class="rip-input" data-opt="%s" value="%s" /></div>',
+			esc_html__( 'Permissions-Policy', 'reportedip-hive' ),
+			esc_attr( $h::OPT_PERMISSIONS ),
+			esc_attr( (string) $get( $h::OPT_PERMISSIONS, '' ) )
+		);
+
+		$select(
+			'rip-hdr-csp-mode',
+			$h::OPT_CSP_MODE,
+			__( 'Content-Security-Policy mode', 'reportedip-hive' ),
+			array(
+				'off'         => __( 'Off', 'reportedip-hive' ),
+				'report_only' => __( 'Report-Only (test first — recommended)', 'reportedip-hive' ),
+				'enforce'     => __( 'Enforce', 'reportedip-hive' ),
+			),
+			(string) $get( $h::OPT_CSP_MODE, 'off' )
+		);
+		echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'Enforcing a CSP can break themes and plugins that rely on inline scripts. Always run Report-Only first and review the violations before you enforce.', 'reportedip-hive' ) . '</div>';
+		$csp_policy = (string) $get( $h::OPT_CSP_POLICY, '' );
+		if ( '' === $csp_policy ) {
+			$csp_policy = $h::CSP_BASELINE;
+		}
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-hdr-csp">%s</label><textarea id="rip-hdr-csp" class="rip-input rip-input--textarea" rows="4" data-opt="%s">%s</textarea></div>',
+			esc_html__( 'CSP policy', 'reportedip-hive' ),
+			esc_attr( $h::OPT_CSP_POLICY ),
+			esc_textarea( $csp_policy )
+		);
+		printf(
+			'<p><button type="button" class="rip-button rip-button--secondary rip-csp-preset" data-policy="%s">%s</button></p>',
+			esc_attr( $h::CSP_BASELINE ),
+			esc_html__( 'Insert OWASP baseline', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-hdr-csp-uri">%s</label><input type="text" id="rip-hdr-csp-uri" class="rip-input" data-opt="%s" value="%s" /></div>',
+			esc_html__( 'CSP report-uri (optional)', 'reportedip-hive' ),
+			esc_attr( $h::OPT_CSP_REPORT_URI ),
+			esc_attr( (string) $get( $h::OPT_CSP_REPORT_URI, '' ) )
+		);
+
+		$select(
+			'rip-hdr-coop',
+			$h::OPT_COOP,
+			__( 'Cross-Origin-Opener-Policy', 'reportedip-hive' ),
+			array(
+				'off'         => __( 'Off', 'reportedip-hive' ),
+				'same-origin' => 'same-origin',
+			),
+			(string) $get( $h::OPT_COOP, 'off' )
+		);
+		$select(
+			'rip-hdr-corp',
+			$h::OPT_CORP,
+			__( 'Cross-Origin-Resource-Policy', 'reportedip-hive' ),
+			array(
+				'off'         => __( 'Off', 'reportedip-hive' ),
+				'same-origin' => 'same-origin',
+			),
+			(string) $get( $h::OPT_CORP, 'off' )
+		);
+		$select(
+			'rip-hdr-coep',
+			$h::OPT_COEP,
+			__( 'Cross-Origin-Embedder-Policy', 'reportedip-hive' ),
+			array(
+				'off'          => __( 'Off', 'reportedip-hive' ),
+				'require-corp' => 'require-corp',
+			),
+			(string) $get( $h::OPT_COEP, 'off' )
+		);
+
+		echo '</div></div>';
+
+		printf(
+			'<p><button type="button" class="rip-button rip-button--primary" id="rip-headers-save">%s</button> <span id="rip-headers-saved" class="rip-help-text"></span></p>',
+			esc_html__( 'Save headers', 'reportedip-hive' )
+		);
+
+		echo <<<'RIPJS'
+<script>jQuery(function($){
+$('.rip-csp-preset').on('click',function(e){e.preventDefault();$('#rip-hdr-csp').val($(this).data('policy'));});
+$('#rip-headers-save').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);var p={};$('[data-opt]').each(function(){p[$(this).data('opt')]=$(this).val();});$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_headers_save',payload:JSON.stringify(p),nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);location.reload();});});
+});</script>
+RIPJS;
 	}
 
 	/**
@@ -2089,8 +2319,33 @@ RIPJS;
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
 		if ( empty( $status['available'] ) ) {
 			self::render_tier_lock( $status, array( 'label' => __( 'Unlock the Audit Log with Business', 'reportedip-hive' ) ) );
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The user-lifecycle audit trail — logins, role changes with the actor, new-IP alerts — unlocks with Business. Your standard security events stay available in the Event Log.', 'reportedip-hive' ) . '</div>';
+			return;
 		}
-		echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The audit event trail ships in a later release. Standard security events remain in the Event Log.', 'reportedip-hive' ) . '</div>';
+
+		if ( ! class_exists( 'ReportedIP_Hive_Audit_Log_Table' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-audit-log-table.php';
+		}
+		$table = new ReportedIP_Hive_Audit_Log_Table();
+		$table->prepare_items();
+
+		$csv_url  = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_audit_export&format=csv' ), 'reportedip_hive_audit_export' );
+		$json_url = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_audit_export&format=json' ), 'reportedip_hive_audit_export' );
+		printf(
+			'<p><a class="rip-button rip-button--secondary" href="%s">%s</a> <a class="rip-button rip-button--secondary" href="%s">%s</a></p>',
+			esc_url( $csv_url ),
+			esc_html__( 'Export CSV', 'reportedip-hive' ),
+			esc_url( $json_url ),
+			esc_html__( 'Export JSON', 'reportedip-hive' )
+		);
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page slug echoed back into the filter form.
+		$page = isset( $_REQUEST['page'] ) ? sanitize_key( wp_unslash( $_REQUEST['page'] ) ) : 'reportedip-hive-security';
+		echo '<form method="get">';
+		printf( '<input type="hidden" name="page" value="%s" />', esc_attr( $page ) );
+		echo '<input type="hidden" name="tab" value="activity" /><input type="hidden" name="sub" value="audit" />';
+		$table->display();
+		echo '</form>';
 	}
 
 	/**

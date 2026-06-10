@@ -231,6 +231,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Admin_Notice::register_hooks();
 		ReportedIP_Hive_Decoy_Path_Block::get_instance()->register_hooks();
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->register_hooks();
+		ReportedIP_Hive_Audit_Logger::get_instance()->register_hooks();
 	}
 
 	/**
@@ -327,6 +328,8 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-bot-verifier.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-disposable-email.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-logger.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-score.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
@@ -424,6 +427,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Bot_Verifier::get_instance();
 		ReportedIP_Hive_Disposable_Email::get_instance();
 		ReportedIP_Hive_Comment_Honeypot::get_instance();
+		ReportedIP_Hive_Security_Headers::get_instance();
 		ReportedIP_Hive_WooCommerce_Monitor::get_instance();
 		ReportedIP_Hive_Geo_Anomaly::get_instance();
 		ReportedIP_Hive_Password_Strength::get_instance();
@@ -617,6 +621,8 @@ class ReportedIP_Hive {
 		foreach ( ReportedIP_Hive_Two_Factor::get_all_meta_keys() as $key ) {
 			delete_metadata( 'user', 0, $key, '', true );
 		}
+
+		delete_metadata( 'user', 0, '_reportedip_hive_known_ips', '', true );
 	}
 
 	/**
