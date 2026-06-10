@@ -124,6 +124,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_dashboard_stats', array( $this, 'ajax_dashboard_stats' ) );
 
 		add_action( 'wp_ajax_reportedip_hive_run_queue_now', array( $this, 'ajax_run_queue_now' ) );
+		add_action( 'wp_ajax_reportedip_hive_rule_sync_now', array( $this, 'ajax_rule_sync_now' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
@@ -1425,6 +1426,32 @@ class ReportedIP_Hive_Ajax_Handler {
 					'remaining' => (int) $queue_size,
 				)
 			);
+		} catch ( \Throwable $e ) {
+			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+		}
+	}
+
+	/**
+	 * AJAX: trigger an on-demand ruleset sync (Priority Sync, Professional+).
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	public function ajax_rule_sync_now() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
+		if ( empty( $status['available'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Priority Sync requires a Professional plan.', 'reportedip-hive' ) ) );
+		}
+
+		try {
+			ReportedIP_Hive_Rule_Sync::get_instance()->sync_all();
+			wp_send_json_success( array( 'message' => __( 'Rulesets synced.', 'reportedip-hive' ) ) );
 		} catch ( \Throwable $e ) {
 			wp_send_json_error( array( 'message' => $e->getMessage() ) );
 		}

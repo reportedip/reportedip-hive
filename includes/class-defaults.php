@@ -74,6 +74,14 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_report_cooldown_hours'          => 24,
 		'reportedip_hive_report_only_mode'               => false,
 
+		'reportedip_hive_rule_sync_enabled'              => true,
+		'reportedip_hive_rule_sync_last_run'             => 0,
+		'reportedip_hive_ruleset_waf'                    => '',
+		'reportedip_hive_ruleset_bot_signatures'         => '',
+		'reportedip_hive_ruleset_disposable_domains'     => '',
+		'reportedip_hive_ruleset_ua_blocklist'           => '',
+		'reportedip_hive_ruleset_scan_paths'             => '',
+
 		'reportedip_hive_monitor_failed_logins'          => true,
 		'reportedip_hive_failed_login_threshold'         => 5,
 		'reportedip_hive_failed_login_timeframe'         => 15,

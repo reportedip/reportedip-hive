@@ -1338,6 +1338,33 @@ class ReportedIP_Hive_Admin_Settings {
 
 		add_submenu_page(
 			'reportedip-hive',
+			__( 'Firewall', 'reportedip-hive' ),
+			__( 'Firewall', 'reportedip-hive' ),
+			$cap,
+			'reportedip-hive-firewall',
+			array( $this, 'firewall_page' )
+		);
+
+		add_submenu_page(
+			'reportedip-hive',
+			__( 'Hardening', 'reportedip-hive' ),
+			__( 'Hardening', 'reportedip-hive' ),
+			$cap,
+			'reportedip-hive-hardening',
+			array( $this, 'hardening_page' )
+		);
+
+		add_submenu_page(
+			'reportedip-hive',
+			__( 'Audit Log', 'reportedip-hive' ),
+			__( 'Audit Log', 'reportedip-hive' ),
+			$cap,
+			'reportedip-hive-audit',
+			array( $this, 'audit_page' )
+		);
+
+		add_submenu_page(
+			'reportedip-hive',
 			__( 'Settings', 'reportedip-hive' ),
 			__( 'Settings', 'reportedip-hive' ),
 			$cap,
@@ -1362,6 +1389,191 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip-hive-community',
 			array( $this, 'community_page' )
 		);
+	}
+
+	/**
+	 * Firewall admin page — request-inspecting defence and the server-delivered
+	 * rule sync. The Rule Sync tab surfaces the Phase-1 framework (per-ruleset
+	 * version + source, last sync, mode); the WAF/Bot/Scan tabs are placeholders
+	 * until their sensors land in a later phase.
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	public function firewall_page() {
+		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'overview'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only tab routing.
+		$this->render_page_header( __( 'Firewall', 'reportedip-hive' ), __( 'Request-inspecting defence and server-delivered rules', 'reportedip-hive' ) );
+
+		$tabs = array(
+			'overview'  => __( 'Overview', 'reportedip-hive' ),
+			'waf'       => __( 'WAF', 'reportedip-hive' ),
+			'bot'       => __( 'Bot Verification', 'reportedip-hive' ),
+			'rule_sync' => __( 'Rule Sync', 'reportedip-hive' ),
+			'scan'      => __( 'Scan & Decoy', 'reportedip-hive' ),
+		);
+		echo '<nav class="rip-nav-tabs">';
+		foreach ( $tabs as $slug => $label ) {
+			$class = 'rip-nav-tabs__tab' . ( $active_tab === $slug ? ' rip-nav-tabs__tab--active' : '' );
+			printf(
+				'<a href="%s" class="%s">%s</a>',
+				esc_url( admin_url( 'admin.php?page=reportedip-hive-firewall&tab=' . $slug ) ),
+				esc_attr( $class ),
+				esc_html( $label )
+			);
+		}
+		echo '</nav>';
+
+		echo '<div class="rip-content">';
+		if ( 'rule_sync' === $active_tab ) {
+			$this->render_rule_sync_tab();
+		} elseif ( 'overview' === $active_tab ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The firewall bundles request inspection, verified-bot detection and the server-delivered rule sync. Use the Rule Sync tab to review the active rulesets.', 'reportedip-hive' ) . '</div>';
+		} else {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'This engine ships in a later release. The server-delivered rule sync that feeds it is already active — see the Rule Sync tab.', 'reportedip-hive' ) . '</div>';
+		}
+		echo '</div>';
+
+		$this->render_page_footer();
+	}
+
+	/**
+	 * Render the Rule Sync status surface: per-ruleset version and source, the
+	 * last sync time and the operation-mode-aware state.
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	private function render_rule_sync_tab() {
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$sync         = ReportedIP_Hive_Rule_Sync::get_instance();
+		$priority     = $mode_manager->feature_status( 'rule_sync_priority' );
+		$last_run     = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rule_sync_last_run', 0 );
+		$enabled      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rule_sync_enabled', true );
+		$has_priority = ! empty( $priority['available'] );
+
+		$this->render_rule_sync_tiers( $has_priority );
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Active rulesets', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+
+		if ( $mode_manager->is_local_mode() ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets.', 'reportedip-hive' ) . '</div>';
+		}
+
+		echo '<table class="rip-table"><thead><tr><th>' . esc_html__( 'Ruleset', 'reportedip-hive' ) . '</th><th>' . esc_html__( 'Version', 'reportedip-hive' ) . '</th><th>' . esc_html__( 'Source', 'reportedip-hive' ) . '</th></tr></thead><tbody>';
+		foreach ( ReportedIP_Hive_Rule_Store::VALID_KEYS as $key ) {
+			$ruleset = $sync->get_ruleset( $key );
+			$version = isset( $ruleset['version'] ) ? (int) $ruleset['version'] : 0;
+			$synced  = $version > 0;
+			$badge   = $synced ? 'rip-badge--success' : 'rip-badge--neutral';
+			$source  = $synced
+				? __( 'synced (Professional feed)', 'reportedip-hive' )
+				: __( 'bundled baseline (Free)', 'reportedip-hive' );
+			printf(
+				'<tr><td><code>%s</code></td><td>%d</td><td><span class="rip-badge %s">%s</span></td></tr>',
+				esc_html( $key ),
+				absint( $version ),
+				esc_attr( $badge ),
+				esc_html( $source )
+			);
+		}
+		echo '</tbody></table>';
+
+		echo '<p class="rip-help-text">' . esc_html__( 'Master toggle:', 'reportedip-hive' ) . ' ' . ( $enabled ? esc_html__( 'enabled', 'reportedip-hive' ) : esc_html__( 'disabled', 'reportedip-hive' ) ) . ' &middot; ' . esc_html__( 'Last sync:', 'reportedip-hive' ) . ' ' . ( $last_run ? esc_html( wp_date( 'Y-m-d H:i:s', $last_run ) ) : esc_html__( 'never (baseline only)', 'reportedip-hive' ) ) . '</p>';
+
+		if ( ! $has_priority ) {
+			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active and free on every plan. Priority Sync — deeper coverage and frequent updates — is part of the Professional plan.', 'reportedip-hive' ) . '</p>';
+			self::render_tier_lock( $priority, array( 'label' => __( 'Unlock Priority Sync with Professional', 'reportedip-hive' ) ) );
+		} else {
+			echo '<button type="button" class="rip-button rip-button--primary" id="rip-rule-sync-now">' . esc_html__( 'Sync now', 'reportedip-hive' ) . '</button>';
+			echo <<<'RIPJS'
+<script>jQuery(function($){$('#rip-rule-sync-now').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_rule_sync_now',nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);if(r&&r.data&&r.data.message){window.alert(r.data.message);}location.reload();});});});</script>
+RIPJS;
+		}
+
+		echo '</div></div>';
+	}
+
+	/**
+	 * Render the two-column Free-vs-Professional coverage comparison for the
+	 * Rule Sync tab so the plan boundary is explicit: the WAF engine and the
+	 * baseline rulesets ship with every plan, Priority Sync is Professional.
+	 *
+	 * @param bool $has_priority Whether the current tier has Priority Sync.
+	 * @return void
+	 * @since 2.2.0
+	 */
+	private function render_rule_sync_tiers( $has_priority ) {
+		$free_features = array(
+			__( 'WAF engine — always on, every plan', 'reportedip-hive' ),
+			__( 'Baseline rulesets (OWASP Top 10, Paranoia Level 1)', 'reportedip-hive' ),
+			__( 'Bundled with the plugin — no connection required', 'reportedip-hive' ),
+		);
+		$pro_features  = array(
+			__( 'Deeper coverage (Paranoia Level 2/3, obfuscation & bypass)', 'reportedip-hive' ),
+			__( 'Server-delivered, Ed25519-signed rule updates', 'reportedip-hive' ),
+			__( 'Frequent refresh via the Community Network', 'reportedip-hive' ),
+		);
+
+		echo '<div class="rip-grid rip-grid-cols-2">';
+
+		echo '<div class="rip-card"><div class="rip-card__header rip-card__header--icon"><h3 class="rip-card__title">' . esc_html__( 'Included — every plan', 'reportedip-hive' ) . '</h3>';
+		self::render_tier_badge( 'free' );
+		echo '</div><div class="rip-card__body"><ul class="rip-pricing-card__features">';
+		foreach ( $free_features as $feature ) {
+			echo '<li>' . esc_html( $feature ) . '</li>';
+		}
+		echo '</ul></div></div>';
+
+		$pro_state = $has_priority
+			? '<span class="rip-badge rip-badge--success">' . esc_html__( 'Active on your plan', 'reportedip-hive' ) . '</span>'
+			: '<span class="rip-badge rip-badge--info">' . esc_html__( 'Professional and higher', 'reportedip-hive' ) . '</span>';
+		echo '<div class="rip-card"><div class="rip-card__header rip-card__header--icon"><h3 class="rip-card__title">' . esc_html__( 'Priority Sync', 'reportedip-hive' ) . '</h3>';
+		self::render_tier_badge( 'professional' );
+		echo '</div><div class="rip-card__body"><ul class="rip-pricing-card__features">';
+		foreach ( $pro_features as $feature ) {
+			echo '<li>' . esc_html( $feature ) . '</li>';
+		}
+		echo '</ul><p class="rip-help-text">' . $pro_state . '</p></div></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $pro_state is built from esc_html__ literals above.
+
+		echo '</div>';
+	}
+
+	/**
+	 * Hardening admin page — security headers and preventive hardening. Tier-
+	 * locked scaffold; content lands in a later phase.
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	public function hardening_page() {
+		$this->render_page_header( __( 'Hardening', 'reportedip-hive' ), __( 'Preventive hardening and security headers', 'reportedip-hive' ) );
+		echo '<div class="rip-content">';
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'security_headers_advanced' );
+		if ( empty( $status['available'] ) ) {
+			self::render_tier_lock( $status, array( 'label' => __( 'Unlock advanced hardening with Professional', 'reportedip-hive' ) ) );
+		}
+		echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Security headers, CSP builder and the hardening controls ship in a later release.', 'reportedip-hive' ) . '</div>';
+		echo '</div>';
+		$this->render_page_footer();
+	}
+
+	/**
+	 * Audit Log admin page — user-lifecycle audit trail. Business+ tier-locked
+	 * scaffold; content lands in a later phase.
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	public function audit_page() {
+		$this->render_page_header( __( 'Audit Log', 'reportedip-hive' ), __( 'User-lifecycle audit trail', 'reportedip-hive' ) );
+		echo '<div class="rip-content">';
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
+		if ( empty( $status['available'] ) ) {
+			self::render_tier_lock( $status, array( 'label' => __( 'Unlock the Audit Log with Business', 'reportedip-hive' ) ) );
+		}
+		echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The audit event trail ships in a later release. Standard security events remain in the Logs view.', 'reportedip-hive' ) . '</div>';
+		echo '</div>';
+		$this->render_page_footer();
 	}
 
 	/**
@@ -1411,6 +1623,15 @@ class ReportedIP_Hive_Admin_Settings {
 			'manage_options',
 			'reportedip-hive-site-2fa',
 			array( $this, 'render_site_2fa_settings_page' )
+		);
+
+		add_submenu_page(
+			'reportedip-hive-site',
+			__( 'Audit Log', 'reportedip-hive' ),
+			__( 'Audit Log', 'reportedip-hive' ),
+			'manage_options',
+			'reportedip-hive-site-audit',
+			array( $this, 'audit_page' )
 		);
 	}
 
@@ -5774,6 +5995,26 @@ class ReportedIP_Hive_Admin_Settings {
 						<div class="rip-info-item">
 							<span class="rip-info-label"><?php esc_html_e( 'Log Level', 'reportedip-hive' ); ?></span>
 							<span class="rip-info-value"><code><?php echo esc_html( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_level', 'info' ) ); ?></code></span>
+						</div>
+						<?php
+						$rule_sync_last = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rule_sync_last_run', 0 );
+						$rule_sync_obj  = ReportedIP_Hive_Rule_Sync::get_instance();
+						$ruleset_parts  = array();
+						foreach ( ReportedIP_Hive_Rule_Store::VALID_KEYS as $rule_key ) {
+							$rule_row        = $rule_sync_obj->get_ruleset( $rule_key );
+							$rule_version    = isset( $rule_row['version'] ) ? (int) $rule_row['version'] : 0;
+							$ruleset_parts[] = $rule_key . ' v' . $rule_version . ( $rule_version > 0 ? '' : ' (baseline)' );
+						}
+						?>
+						<div class="rip-info-item">
+							<span class="rip-info-label"><?php esc_html_e( 'Last Rule Sync', 'reportedip-hive' ); ?></span>
+							<span class="rip-info-value">
+								<?php echo $rule_sync_last ? esc_html( wp_date( 'Y-m-d H:i:s', $rule_sync_last ) ) : esc_html__( 'never (baseline only)', 'reportedip-hive' ); ?>
+							</span>
+						</div>
+						<div class="rip-info-item">
+							<span class="rip-info-label"><?php esc_html_e( 'Ruleset Versions', 'reportedip-hive' ); ?></span>
+							<span class="rip-info-value"><code><?php echo esc_html( implode( ', ', $ruleset_parts ) ); ?></code></span>
 						</div>
 					</div>
 				</div>

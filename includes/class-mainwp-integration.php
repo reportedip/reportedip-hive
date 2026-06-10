@@ -38,14 +38,24 @@ class ReportedIP_Hive_MainWP_Integration {
 	/**
 	 * Register the MainWP hooks.
 	 *
-	 * The `mainwp_child_extra_execution` filter is fired exclusively by the
-	 * MainWP Child component; without it the registration has no effect.
+	 * Two entry points, both provided by the MainWP Child component and both
+	 * authenticated/signed; without MainWP Child the registrations are inert:
+	 *
+	 *  - `mainwp_child_extra_execution`  — fired by the dedicated `extra_execution`
+	 *    call (dashboard "fetch now" buttons). $data = full $_POST.
+	 *  - `mainwp_site_sync_others_data`  — fired during every regular sync; lets the
+	 *    metrics ride the normal MainWP sync without an extra round-trip.
+	 *    $data = decoded `othersData`.
+	 *
+	 * The same handler serves both: it only acts when the dashboard included the
+	 * `reportedip_hive_sync` / `reportedip_hive_provision` keys.
 	 *
 	 * @return void
 	 * @since  2.1.0
 	 */
 	public static function init() {
 		add_filter( 'mainwp_child_extra_execution', array( __CLASS__, 'handle_child_execution' ), 10, 2 );
+		add_filter( 'mainwp_site_sync_others_data', array( __CLASS__, 'handle_child_execution' ), 10, 2 );
 	}
 
 	/**
@@ -99,10 +109,20 @@ class ReportedIP_Hive_MainWP_Integration {
 	 * @since  2.1.0
 	 */
 	protected static function collect_metrics( $days ) {
+		$days = max( 1, (int) $days );
+
 		$metrics = array(
-			'version' => defined( 'REPORTEDIP_HIVE_VERSION' ) ? REPORTEDIP_HIVE_VERSION : '',
-			'active'  => true,
+			'version'     => defined( 'REPORTEDIP_HIVE_VERSION' ) ? REPORTEDIP_HIVE_VERSION : '',
+			'active'      => true,
+			'period_days' => $days,
 		);
+
+		// Aktuell konfigurierten reportedip.de-API-Key mitliefern, damit das Dashboard
+		// den tatsächlich auf der Site gesetzten Key auflisten/verifizieren kann.
+		// Übertragung erfolgt ausschließlich über die signierte MainWP-Verbindung.
+		if ( class_exists( 'ReportedIP_Hive_Option_Routing' ) ) {
+			$metrics['api_key'] = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
+		}
 
 		if ( ! class_exists( 'ReportedIP_Hive_Database' ) ) {
 			return $metrics;
@@ -121,11 +141,11 @@ class ReportedIP_Hive_MainWP_Integration {
 		if ( method_exists( $db, 'get_security_summary' ) ) {
 			$summary = $db->get_security_summary( $days );
 			if ( is_array( $summary ) && isset( $summary['summary'] ) ) {
-				$s                            = $summary['summary'];
-				$metrics['blocks_30d']        = isset( $s->total_blocked_ips ) ? (int) $s->total_blocked_ips : 0;
-				$metrics['failed_logins_30d'] = isset( $s->total_failed_logins ) ? (int) $s->total_failed_logins : 0;
-				$metrics['comment_spam_30d']  = isset( $s->total_comment_spam ) ? (int) $s->total_comment_spam : 0;
-				$metrics['reputation_blocks'] = isset( $s->total_reputation_blocks ) ? (int) $s->total_reputation_blocks : 0;
+				$s                              = $summary['summary'];
+				$metrics['blocks_period']       = isset( $s->total_blocked_ips ) ? (int) $s->total_blocked_ips : 0;
+				$metrics['failed_logins_period'] = isset( $s->total_failed_logins ) ? (int) $s->total_failed_logins : 0;
+				$metrics['comment_spam_period'] = isset( $s->total_comment_spam ) ? (int) $s->total_comment_spam : 0;
+				$metrics['reputation_blocks']   = isset( $s->total_reputation_blocks ) ? (int) $s->total_reputation_blocks : 0;
 			}
 		}
 
@@ -133,18 +153,44 @@ class ReportedIP_Hive_MainWP_Integration {
 			$metrics['queue_size'] = (int) $db->get_queue_size();
 		}
 
-		if ( method_exists( $db, 'get_recent_critical_events' ) ) {
-			$critical                = $db->get_recent_critical_events( 24, 200 );
-			$metrics['critical_24h'] = is_array( $critical ) ? count( $critical ) : 0;
-		}
-
-		$metrics['twofa_users'] = self::count_2fa_users();
+		$metrics['critical_24h'] = self::count_critical_events( 24 );
+		$metrics['twofa_users']  = self::count_2fa_users();
 
 		return $metrics;
 	}
 
 	/**
+	 * Count high/critical security log events within the last N hours.
+	 *
+	 * Uses a direct COUNT so the value is not capped by any LIMIT (unlike
+	 * iterating the list returned by get_recent_critical_events()).
+	 *
+	 * @param int $hours Lookback window in hours.
+	 * @return int
+	 * @since  2.1.1
+	 */
+	protected static function count_critical_events( $hours ) {
+		global $wpdb;
+
+		$table  = $wpdb->base_prefix . 'reportedip_hive_logs';
+		$cutoff = gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $hours ) * HOUR_IN_SECONDS );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Aggregate count for a remote dashboard sync; table name is internal.
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE severity IN ('high', 'critical') AND created_at >= %s",
+				$cutoff
+			)
+		);
+
+		return (int) $count;
+	}
+
+	/**
 	 * Count users with two-factor authentication enabled.
+	 *
+	 * Mirrors ReportedIP_Hive_Two_Factor::is_user_enabled(): a user counts if any
+	 * per-method flag (TOTP/E-Mail/WebAuthn/SMS) is set, or the legacy enabled flag.
 	 *
 	 * @return int
 	 * @since  2.1.0
@@ -152,11 +198,22 @@ class ReportedIP_Hive_MainWP_Integration {
 	protected static function count_2fa_users() {
 		global $wpdb;
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Aggregate count for a remote dashboard sync; not cacheable per-request.
+		$keys = array(
+			'reportedip_hive_2fa_totp_enabled',
+			'reportedip_hive_2fa_email_enabled',
+			'reportedip_hive_2fa_webauthn_enabled',
+			'reportedip_hive_2fa_sms_enabled',
+			'reportedip_hive_2fa_enabled',
+		);
+
+		$placeholders = implode( ', ', array_fill( 0, count( $keys ), '%s' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Aggregate count for a remote dashboard sync.
 		$count = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(DISTINCT user_id) FROM {$wpdb->usermeta} WHERE meta_key = %s AND meta_value IN ('1', 'yes', 'true')",
-				'reportedip_hive_2fa_enabled'
+				"SELECT COUNT(DISTINCT user_id) FROM {$wpdb->usermeta}
+				 WHERE meta_key IN ($placeholders) AND meta_value IN ('1', 'yes', 'true')",
+				$keys
 			)
 		);
 

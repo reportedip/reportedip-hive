@@ -83,6 +83,7 @@ class ReportedIP_Hive_Cron_Handler {
 		add_action( 'reportedip_hive_sync_reputation', array( $this, 'cron_sync_reputation' ) );
 		add_action( 'reportedip_hive_process_queue', array( $this, 'cron_process_queue' ) );
 		add_action( 'reportedip_hive_refresh_quota', array( $this, 'cron_refresh_quota' ) );
+		add_action( 'reportedip_hive_sync_rulesets', array( $this, 'cron_sync_rulesets' ) );
 
 		add_filter( 'cron_schedules', array( __CLASS__, 'add_cron_intervals' ) );
 	}
@@ -100,6 +101,7 @@ class ReportedIP_Hive_Cron_Handler {
 		'reportedip_hive_sync_reputation' => 'hourly',
 		'reportedip_hive_process_queue'   => 'fifteen_minutes',
 		'reportedip_hive_refresh_quota'   => 'six_hours',
+		'reportedip_hive_sync_rulesets'   => 'six_hours',
 	);
 
 	/**
@@ -371,6 +373,27 @@ class ReportedIP_Hive_Cron_Handler {
 			}
 		} catch ( Exception $e ) {
 			$this->logger->error( 'Relay quota refresh failed: ' . $e->getMessage(), 'system' );
+		}
+	}
+
+	/**
+	 * Cron job: sync server-delivered rulesets (runs every 6 hours).
+	 *
+	 * Delegates to {@see ReportedIP_Hive_Rule_Sync::sync_all()}, which holds its
+	 * own 5-minute lock, checks opt-in eligibility (community mode + API key) and
+	 * falls back to the bundled baseline on any failure.
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public function cron_sync_rulesets() {
+		if ( ! class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {
+			return;
+		}
+		try {
+			ReportedIP_Hive_Rule_Sync::get_instance()->sync_all();
+		} catch ( Exception $e ) {
+			$this->logger->error( 'Ruleset sync failed: ' . $e->getMessage(), 'system' );
 		}
 	}
 

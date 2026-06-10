@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive 2.1.0\n"
+"Project-Id-Version: ReportedIP Hive 2.1.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-10T05:48:04+00:00\n"
+"POT-Creation-Date: 2026-06-10T10:11:42+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -18,10 +18,10 @@ msgstr ""
 #: reportedip-hive.php
 #: admin/class-admin-settings.php:1312
 #: admin/class-admin-settings.php:1313
-#: admin/class-admin-settings.php:1380
-#: admin/class-admin-settings.php:1381
-#: admin/class-admin-settings.php:1430
-#: admin/class-admin-settings.php:3154
+#: admin/class-admin-settings.php:1592
+#: admin/class-admin-settings.php:1593
+#: admin/class-admin-settings.php:1651
+#: admin/class-admin-settings.php:3375
 msgid "ReportedIP Hive"
 msgstr ""
 
@@ -50,7 +50,7 @@ msgid "Missing option group."
 msgstr ""
 
 #: admin/class-admin-settings.php:131
-#: admin/class-admin-settings.php:6817
+#: admin/class-admin-settings.php:7058
 msgid "Settings saved."
 msgstr ""
 
@@ -128,7 +128,7 @@ msgstr ""
 
 #: admin/class-admin-settings.php:585
 #: admin/class-setup-wizard.php:685
-#: includes/class-mode-manager.php:638
+#: includes/class-mode-manager.php:683
 msgid "Community Network"
 msgstr ""
 
@@ -170,10 +170,10 @@ msgid "No SMTP/SMS provider contract needed — managed by reportedip.de"
 msgstr ""
 
 #: admin/class-admin-settings.php:646
-#: admin/class-admin-settings.php:1629
-#: admin/class-admin-settings.php:6522
-#: admin/class-admin-settings.php:6540
-#: admin/class-admin-settings.php:7507
+#: admin/class-admin-settings.php:1850
+#: admin/class-admin-settings.php:6763
+#: admin/class-admin-settings.php:6781
+#: admin/class-admin-settings.php:7748
 #: admin/class-setup-wizard.php:1040
 #: admin/class-setup-wizard.php:1178
 #: admin/class-two-factor-admin.php:407
@@ -378,33 +378,33 @@ msgstr ""
 
 #: admin/class-admin-settings.php:1183
 #: admin/class-admin-settings.php:1255
-#: reportedip-hive.php:1180
-#: reportedip-hive.php:1254
-#: reportedip-hive.php:1278
+#: reportedip-hive.php:1182
+#: reportedip-hive.php:1256
+#: reportedip-hive.php:1280
 msgid "ReportedIP Hive:"
 msgstr ""
 
 #. translators: %1$d: number of failed reports, %2$s: link to queue page
 #: admin/class-admin-settings.php:1186
-#: reportedip-hive.php:1183
+#: reportedip-hive.php:1185
 #, php-format
 msgid "%1$d API reports failed. %2$s"
 msgstr ""
 
 #: admin/class-admin-settings.php:1188
-#: reportedip-hive.php:1185
+#: reportedip-hive.php:1187
 msgid "View queue"
 msgstr ""
 
 #: admin/class-admin-settings.php:1198
 #: admin/class-admin-settings.php:1219
-#: reportedip-hive.php:1196
-#: reportedip-hive.php:1217
+#: reportedip-hive.php:1198
+#: reportedip-hive.php:1219
 msgid "Retry all"
 msgstr ""
 
 #: admin/class-admin-settings.php:1211
-#: reportedip-hive.php:1208
+#: reportedip-hive.php:1210
 msgid "Retrying…"
 msgstr ""
 
@@ -420,20 +420,20 @@ msgstr ""
 
 #: admin/class-admin-settings.php:1241
 #: admin/class-admin-settings.php:1260
-#: reportedip-hive.php:1239
-#: reportedip-hive.php:1259
+#: reportedip-hive.php:1241
+#: reportedip-hive.php:1261
 msgid "Upgrade API tier"
 msgstr ""
 
 #: admin/class-admin-settings.php:1242
-#: reportedip-hive.php:1240
+#: reportedip-hive.php:1242
 msgid "Manage queue"
 msgstr ""
 
 #. translators: 1: pending count, 2: upgrade link
 #. translators: %1$d: number of pending reports, %2$s: link to community page
 #: admin/class-admin-settings.php:1258
-#: reportedip-hive.php:1257
+#: reportedip-hive.php:1259
 #, php-format
 msgid "%1$d reports pending processing. %2$s for higher limits."
 msgstr ""
@@ -445,515 +445,687 @@ msgstr ""
 
 #: admin/class-admin-settings.php:1332
 #: admin/class-admin-settings.php:1333
-#: admin/class-admin-settings.php:3424
+#: admin/class-admin-settings.php:3645
 #: includes/class-two-factor-reset-gate.php:377
 msgid "Security"
 msgstr ""
 
 #: admin/class-admin-settings.php:1341
 #: admin/class-admin-settings.php:1342
-#: admin/class-admin-settings.php:3356
-#: admin/class-admin-settings.php:3870
-msgid "Settings"
+#: admin/class-admin-settings.php:1405
+msgid "Firewall"
 msgstr ""
 
 #: admin/class-admin-settings.php:1350
 #: admin/class-admin-settings.php:1351
-#: admin/class-admin-settings.php:5668
-#: admin/class-admin-settings.php:5688
-msgid "System Status"
+#: admin/class-admin-settings.php:1549
+#: admin/class-logs-table.php:120
+msgid "Hardening"
 msgstr ""
 
 #: admin/class-admin-settings.php:1359
-#: admin/class-admin-settings.php:6277
-#: admin/class-admin-settings.php:6283
+#: admin/class-admin-settings.php:1360
+#: admin/class-admin-settings.php:1568
+#: admin/class-admin-settings.php:1630
+#: admin/class-admin-settings.php:1631
+msgid "Audit Log"
+msgstr ""
+
+#: admin/class-admin-settings.php:1368
+#: admin/class-admin-settings.php:1369
+#: admin/class-admin-settings.php:3577
+#: admin/class-admin-settings.php:4091
+msgid "Settings"
+msgstr ""
+
+#: admin/class-admin-settings.php:1377
+#: admin/class-admin-settings.php:1378
+#: admin/class-admin-settings.php:5889
+#: admin/class-admin-settings.php:5909
+msgid "System Status"
+msgstr ""
+
+#: admin/class-admin-settings.php:1386
+#: admin/class-admin-settings.php:6518
+#: admin/class-admin-settings.php:6524
 msgid "Community & Quota"
 msgstr ""
 
-#: admin/class-admin-settings.php:1360
-#: includes/class-mode-manager.php:639
+#: admin/class-admin-settings.php:1387
+#: includes/class-mode-manager.php:684
 msgid "Community"
 msgstr ""
 
-#: admin/class-admin-settings.php:1391
-#: admin/class-admin-settings.php:1392
-#: admin/class-admin-settings.php:5365
+#: admin/class-admin-settings.php:1405
+msgid "Request-inspecting defence and server-delivered rules"
+msgstr ""
+
+#: admin/class-admin-settings.php:1408
+msgid "Overview"
+msgstr ""
+
+#: admin/class-admin-settings.php:1409
+msgid "WAF"
+msgstr ""
+
+#: admin/class-admin-settings.php:1410
+msgid "Bot Verification"
+msgstr ""
+
+#: admin/class-admin-settings.php:1411
+msgid "Rule Sync"
+msgstr ""
+
+#: admin/class-admin-settings.php:1412
+msgid "Scan & Decoy"
+msgstr ""
+
+#: admin/class-admin-settings.php:1430
+msgid "The firewall bundles request inspection, verified-bot detection and the server-delivered rule sync. Use the Rule Sync tab to review the active rulesets."
+msgstr ""
+
+#: admin/class-admin-settings.php:1432
+msgid "This engine ships in a later release. The server-delivered rule sync that feeds it is already active — see the Rule Sync tab."
+msgstr ""
+
+#: admin/class-admin-settings.php:1456
+msgid "Active rulesets"
+msgstr ""
+
+#: admin/class-admin-settings.php:1459
+msgid "Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets."
+msgstr ""
+
+#: admin/class-admin-settings.php:1462
+msgid "Ruleset"
+msgstr ""
+
+#: admin/class-admin-settings.php:1462
+msgid "Version"
+msgstr ""
+
+#: admin/class-admin-settings.php:1462
+msgid "Source"
+msgstr ""
+
+#: admin/class-admin-settings.php:1469
+msgid "synced (Professional feed)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1470
+msgid "bundled baseline (Free)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1481
+msgid "Master toggle:"
+msgstr ""
+
+#: admin/class-admin-settings.php:1481
+#: admin/class-admin-settings.php:1871
+msgid "enabled"
+msgstr ""
+
+#: admin/class-admin-settings.php:1481
+#: admin/class-admin-settings.php:1875
+msgid "disabled"
+msgstr ""
+
+#: admin/class-admin-settings.php:1481
+msgid "Last sync:"
+msgstr ""
+
+#: admin/class-admin-settings.php:1481
+#: admin/class-admin-settings.php:6012
+msgid "never (baseline only)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1484
+msgid "The bundled baseline rulesets stay active and free on every plan. Priority Sync — deeper coverage and frequent updates — is part of the Professional plan."
+msgstr ""
+
+#: admin/class-admin-settings.php:1485
+msgid "Unlock Priority Sync with Professional"
+msgstr ""
+
+#: admin/class-admin-settings.php:1487
+msgid "Sync now"
+msgstr ""
+
+#: admin/class-admin-settings.php:1507
+msgid "WAF engine — always on, every plan"
+msgstr ""
+
+#: admin/class-admin-settings.php:1508
+msgid "Baseline rulesets (OWASP Top 10, Paranoia Level 1)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1509
+msgid "Bundled with the plugin — no connection required"
+msgstr ""
+
+#: admin/class-admin-settings.php:1512
+msgid "Deeper coverage (Paranoia Level 2/3, obfuscation & bypass)"
+msgstr ""
+
+#: admin/class-admin-settings.php:1513
+msgid "Server-delivered, Ed25519-signed rule updates"
+msgstr ""
+
+#: admin/class-admin-settings.php:1514
+msgid "Frequent refresh via the Community Network"
+msgstr ""
+
+#: admin/class-admin-settings.php:1519
+msgid "Included — every plan"
+msgstr ""
+
+#: admin/class-admin-settings.php:1528
+msgid "Active on your plan"
+msgstr ""
+
+#: admin/class-admin-settings.php:1529
+msgid "Professional and higher"
+msgstr ""
+
+#: admin/class-admin-settings.php:1530
+msgid "Priority Sync"
+msgstr ""
+
+#: admin/class-admin-settings.php:1549
+msgid "Preventive hardening and security headers"
+msgstr ""
+
+#: admin/class-admin-settings.php:1553
+msgid "Unlock advanced hardening with Professional"
+msgstr ""
+
+#: admin/class-admin-settings.php:1555
+msgid "Security headers, CSP builder and the hardening controls ship in a later release."
+msgstr ""
+
+#: admin/class-admin-settings.php:1568
+msgid "User-lifecycle audit trail"
+msgstr ""
+
+#: admin/class-admin-settings.php:1572
+msgid "Unlock the Audit Log with Business"
+msgstr ""
+
+#: admin/class-admin-settings.php:1574
+msgid "The audit event trail ships in a later release. Standard security events remain in the Logs view."
+msgstr ""
+
+#: admin/class-admin-settings.php:1603
+#: admin/class-admin-settings.php:1604
+#: admin/class-admin-settings.php:5586
 #: admin/class-api-queue-table.php:53
 #: admin/class-two-factor-admin.php:1556
 #: includes/class-two-factor-dashboard.php:107
 msgid "Status"
 msgstr ""
 
-#: admin/class-admin-settings.php:1400
+#: admin/class-admin-settings.php:1612
 msgid "Logs (this site)"
 msgstr ""
 
-#: admin/class-admin-settings.php:1401
+#: admin/class-admin-settings.php:1613
 msgid "Logs"
 msgstr ""
 
-#: admin/class-admin-settings.php:1409
-#: admin/class-admin-settings.php:1410
-#: admin/class-admin-settings.php:1611
+#: admin/class-admin-settings.php:1621
+#: admin/class-admin-settings.php:1622
+#: admin/class-admin-settings.php:1832
 msgid "2FA Site Settings"
 msgstr ""
 
-#: admin/class-admin-settings.php:1424
-#: admin/class-admin-settings.php:1517
-#: admin/class-admin-settings.php:1585
+#: admin/class-admin-settings.php:1645
+#: admin/class-admin-settings.php:1738
+#: admin/class-admin-settings.php:1806
 msgid "You do not have permission to view this page."
 msgstr ""
 
-#: admin/class-admin-settings.php:1431
+#: admin/class-admin-settings.php:1652
 msgid "Site security overview"
 msgstr ""
 
-#: admin/class-admin-settings.php:1443
-#: admin/class-admin-settings.php:3171
+#: admin/class-admin-settings.php:1664
+#: admin/class-admin-settings.php:3392
 msgid "Events (24h)"
 msgstr ""
 
-#: admin/class-admin-settings.php:1452
+#: admin/class-admin-settings.php:1673
 msgid "Failed logins (24h)"
 msgstr ""
 
-#: admin/class-admin-settings.php:1461
+#: admin/class-admin-settings.php:1682
 msgid "Active IP blocks (network-wide)"
 msgstr ""
 
-#: admin/class-admin-settings.php:1470
+#: admin/class-admin-settings.php:1691
 msgid "Whitelisted IPs (network-wide)"
 msgstr ""
 
-#: admin/class-admin-settings.php:1476
+#: admin/class-admin-settings.php:1697
 msgid "Recent activity on this site"
 msgstr ""
 
-#: admin/class-admin-settings.php:1479
-#: admin/class-admin-settings.php:1546
+#: admin/class-admin-settings.php:1700
+#: admin/class-admin-settings.php:1767
 msgid "No events recorded yet."
 msgstr ""
 
-#: admin/class-admin-settings.php:1484
-#: admin/class-admin-settings.php:1551
+#: admin/class-admin-settings.php:1705
+#: admin/class-admin-settings.php:1772
 msgid "When"
 msgstr ""
 
-#: admin/class-admin-settings.php:1485
-#: admin/class-admin-settings.php:1552
+#: admin/class-admin-settings.php:1706
+#: admin/class-admin-settings.php:1773
 #: includes/class-security-monitor.php:1041
 msgid "Event"
 msgstr ""
 
-#: admin/class-admin-settings.php:1486
-#: admin/class-admin-settings.php:1553
+#: admin/class-admin-settings.php:1707
+#: admin/class-admin-settings.php:1774
 msgid "IP"
 msgstr ""
 
-#: admin/class-admin-settings.php:1487
-#: admin/class-admin-settings.php:1554
+#: admin/class-admin-settings.php:1708
+#: admin/class-admin-settings.php:1775
 #: admin/class-logs-table.php:54
 msgid "Severity"
 msgstr ""
 
-#: admin/class-admin-settings.php:1502
+#: admin/class-admin-settings.php:1723
 msgid "View all logs for this site"
 msgstr ""
 
-#: admin/class-admin-settings.php:1537
+#: admin/class-admin-settings.php:1758
 msgid "Security Logs"
 msgstr ""
 
-#: admin/class-admin-settings.php:1538
+#: admin/class-admin-settings.php:1759
 msgid "Showing security events recorded for this site only"
 msgstr ""
 
-#: admin/class-admin-settings.php:1612
+#: admin/class-admin-settings.php:1833
 msgid "Per-site overrides for the WooCommerce-style frontend 2FA flow"
 msgstr ""
 
-#: admin/class-admin-settings.php:1618
+#: admin/class-admin-settings.php:1839
 msgid "Saved."
 msgstr ""
 
-#: admin/class-admin-settings.php:1618
+#: admin/class-admin-settings.php:1839
 msgid "Site overrides updated."
 msgstr ""
 
-#: admin/class-admin-settings.php:1627
+#: admin/class-admin-settings.php:1848
 #: admin/class-setup-wizard.php:1176
 #: admin/class-two-factor-admin.php:500
 msgid "Frontend login for WooCommerce"
 msgstr ""
 
-#: admin/class-admin-settings.php:1633
+#: admin/class-admin-settings.php:1854
 #: admin/class-two-factor-admin.php:508
 msgid "Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php."
 msgstr ""
 
-#: admin/class-admin-settings.php:1640
+#: admin/class-admin-settings.php:1861
 msgid "WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA — these slug overrides take effect once it is."
 msgstr ""
 
-#: admin/class-admin-settings.php:1645
+#: admin/class-admin-settings.php:1866
 msgid "Network configuration (managed by Super Admin)"
 msgstr ""
 
-#: admin/class-admin-settings.php:1648
+#: admin/class-admin-settings.php:1869
 msgid "Themed challenge page"
 msgstr ""
 
-#: admin/class-admin-settings.php:1650
-msgid "enabled"
-msgstr ""
-
-#: admin/class-admin-settings.php:1652
+#: admin/class-admin-settings.php:1873
 msgid "locked by tier"
 msgstr ""
 
-#: admin/class-admin-settings.php:1654
-msgid "disabled"
-msgstr ""
-
-#: admin/class-admin-settings.php:1658
+#: admin/class-admin-settings.php:1879
 msgid "Customer self-service opt-in"
 msgstr ""
 
-#: admin/class-admin-settings.php:1659
+#: admin/class-admin-settings.php:1880
 msgid "allowed"
 msgstr ""
 
-#: admin/class-admin-settings.php:1659
+#: admin/class-admin-settings.php:1880
 msgid "not allowed"
 msgstr ""
 
-#: admin/class-admin-settings.php:1665
+#: admin/class-admin-settings.php:1886
 msgid "Per-site slug overrides"
 msgstr ""
 
-#: admin/class-admin-settings.php:1669
+#: admin/class-admin-settings.php:1890
 msgid "Challenge page slug — site override"
 msgstr ""
 
 #. translators: 1: network-default slug, 2: effective URL on this site
 #. translators: 1: network-default setup slug, 2: effective URL on this site
-#: admin/class-admin-settings.php:1689
-#: admin/class-admin-settings.php:1719
+#: admin/class-admin-settings.php:1910
+#: admin/class-admin-settings.php:1940
 #, php-format
 msgid "Network default: %1$s. Leave empty to inherit. Effective URL on this site: %2$s"
 msgstr ""
 
-#: admin/class-admin-settings.php:1699
+#: admin/class-admin-settings.php:1920
 msgid "Setup page slug (onboarding) — site override"
 msgstr ""
 
-#: admin/class-admin-settings.php:1732
+#: admin/class-admin-settings.php:1953
 msgid "2FA enforcement — role overrides for this site"
 msgstr ""
 
-#: admin/class-admin-settings.php:1735
+#: admin/class-admin-settings.php:1956
 msgid "The Super Admin enforces 2FA on certain roles network-wide. You can add roles on top of that list for this site only — but you cannot remove network-required roles here."
 msgstr ""
 
-#: admin/class-admin-settings.php:1739
+#: admin/class-admin-settings.php:1960
 msgid "Network-required roles (always enforced on this site)"
 msgstr ""
 
-#: admin/class-admin-settings.php:1741
+#: admin/class-admin-settings.php:1962
 msgid "The Super Admin has not enforced 2FA on any role network-wide."
 msgstr ""
 
-#: admin/class-admin-settings.php:1746
+#: admin/class-admin-settings.php:1967
 msgid "network"
 msgstr ""
 
-#: admin/class-admin-settings.php:1757
+#: admin/class-admin-settings.php:1978
 msgid "Additional roles to enforce on THIS site"
 msgstr ""
 
-#: admin/class-admin-settings.php:1760
+#: admin/class-admin-settings.php:1981
 msgid "Pick roles that should require 2FA on this sub-site in addition to the network-required ones above. Network-required roles stay enforced regardless of the boxes here."
 msgstr ""
 
-#: admin/class-admin-settings.php:1779
+#: admin/class-admin-settings.php:2000
 msgid "enforced by network"
 msgstr ""
 
-#: admin/class-admin-settings.php:1789
+#: admin/class-admin-settings.php:2010
 msgid "Save site overrides"
 msgstr ""
 
-#: admin/class-admin-settings.php:1828
+#: admin/class-admin-settings.php:2049
 msgid "Site view"
 msgstr ""
 
-#: admin/class-admin-settings.php:1829
+#: admin/class-admin-settings.php:2050
 msgid "Open Network Admin"
 msgstr ""
 
-#: admin/class-admin-settings.php:1924
+#: admin/class-admin-settings.php:2145
 msgid "Centrally managed:"
 msgstr ""
 
-#: admin/class-admin-settings.php:1925
+#: admin/class-admin-settings.php:2146
 msgid "this site is part of a managed ReportedIP Hive network. For Whitelist or mode changes, contact your Network Admin."
 msgstr ""
 
-#: admin/class-admin-settings.php:1945
+#: admin/class-admin-settings.php:2166
 msgid "Security check failed. Please reload and try again."
 msgstr ""
 
-#: admin/class-admin-settings.php:2722
+#: admin/class-admin-settings.php:2943
 msgid "API key must be between 32 and 64 characters."
 msgstr ""
 
-#: admin/class-admin-settings.php:2732
+#: admin/class-admin-settings.php:2953
 msgid "API key must contain only alphanumeric characters."
 msgstr ""
 
-#: admin/class-admin-settings.php:2755
+#: admin/class-admin-settings.php:2976
 msgid "API endpoint must be a valid URL."
 msgstr ""
 
-#: admin/class-admin-settings.php:2765
+#: admin/class-admin-settings.php:2986
 msgid "API endpoint must use HTTPS for security."
 msgstr ""
 
 #. translators: 1: adjusted threshold value, 2: minimum allowed value, 3: maximum allowed value
-#: admin/class-admin-settings.php:2848
+#: admin/class-admin-settings.php:3069
 #, php-format
 msgid "Failed login threshold was adjusted to %1$d (must be between %2$d and %3$d)."
 msgstr ""
 
 #. translators: 1: adjusted value in minutes, 2: minimum allowed value, 3: maximum allowed value
-#: admin/class-admin-settings.php:2874
+#: admin/class-admin-settings.php:3095
 #, php-format
 msgid "Time window was adjusted to %1$d minutes (must be between %2$d and %3$d)."
 msgstr ""
 
 #. translators: 1: adjusted threshold value, 2: minimum allowed value, 3: maximum allowed value
-#: admin/class-admin-settings.php:2900
+#: admin/class-admin-settings.php:3121
 #, php-format
 msgid "Comment spam threshold was adjusted to %1$d (must be between %2$d and %3$d)."
 msgstr ""
 
 #. translators: 1: adjusted threshold value, 2: minimum allowed value, 3: maximum allowed value
-#: admin/class-admin-settings.php:2926
+#: admin/class-admin-settings.php:3147
 #, php-format
 msgid "XMLRPC threshold was adjusted to %1$d (must be between %2$d and %3$d)."
 msgstr ""
 
 #. translators: 1: adjusted threshold percentage, 2: minimum allowed value, 3: maximum allowed value
-#: admin/class-admin-settings.php:3003
+#: admin/class-admin-settings.php:3224
 #, php-format
 msgid "Block threshold was adjusted to %1$d%% (must be between %2$d and %3$d)."
 msgstr ""
 
-#: admin/class-admin-settings.php:3050
+#: admin/class-admin-settings.php:3271
 msgid "Set a custom login slug before enabling Hide Login — otherwise the feature has nowhere to send admins."
 msgstr ""
 
-#: admin/class-admin-settings.php:3154
+#: admin/class-admin-settings.php:3375
 msgid "Security Dashboard"
 msgstr ""
 
-#: admin/class-admin-settings.php:3182
-#: admin/class-admin-settings.php:3363
+#: admin/class-admin-settings.php:3403
+#: admin/class-admin-settings.php:3584
 #: admin/class-blocked-ips-table.php:37
-#: reportedip-hive.php:831
+#: reportedip-hive.php:833
 msgid "Blocked IPs"
 msgstr ""
 
-#: admin/class-admin-settings.php:3193
+#: admin/class-admin-settings.php:3414
 #: admin/class-whitelist-table.php:37
 msgid "Whitelisted IPs"
 msgstr ""
 
-#: admin/class-admin-settings.php:3205
+#: admin/class-admin-settings.php:3426
 msgid "API Queue"
 msgstr ""
 
-#: admin/class-admin-settings.php:3214
-#: includes/class-mode-manager.php:629
+#: admin/class-admin-settings.php:3435
+#: includes/class-mode-manager.php:674
 msgid "Local"
 msgstr ""
 
-#: admin/class-admin-settings.php:3215
+#: admin/class-admin-settings.php:3436
 msgid "Protection Active"
 msgstr ""
 
-#: admin/class-admin-settings.php:3236
+#: admin/class-admin-settings.php:3457
 msgid "Security Events"
 msgstr ""
 
-#: admin/class-admin-settings.php:3238
+#: admin/class-admin-settings.php:3459
 msgid "7 Days"
 msgstr ""
 
-#: admin/class-admin-settings.php:3239
-#: admin/class-admin-settings.php:3700
-#: admin/class-admin-settings.php:3726
+#: admin/class-admin-settings.php:3460
+#: admin/class-admin-settings.php:3921
+#: admin/class-admin-settings.php:3947
 msgid "30 Days"
 msgstr ""
 
-#: admin/class-admin-settings.php:3250
+#: admin/class-admin-settings.php:3471
 msgid "No threats detected yet — protection is active."
 msgstr ""
 
-#: admin/class-admin-settings.php:3251
+#: admin/class-admin-settings.php:3472
 msgid "Your dashboard will fill up automatically as ReportedIP Hive blocks attempts. We watch:"
 msgstr ""
 
-#: admin/class-admin-settings.php:3253
+#: admin/class-admin-settings.php:3474
 msgid "Failed logins and password-spray patterns"
 msgstr ""
 
-#: admin/class-admin-settings.php:3254
+#: admin/class-admin-settings.php:3475
 msgid "Comment spam and XML-RPC abuse"
 msgstr ""
 
-#: admin/class-admin-settings.php:3255
+#: admin/class-admin-settings.php:3476
 msgid "404 honeypot scans (.env, .git, wp-config.php.bak)"
 msgstr ""
 
-#: admin/class-admin-settings.php:3265
+#: admin/class-admin-settings.php:3486
 msgid "Threat Distribution"
 msgstr ""
 
-#: admin/class-admin-settings.php:3278
+#: admin/class-admin-settings.php:3499
 msgid "Recent Activity"
 msgstr ""
 
-#: admin/class-admin-settings.php:3281
+#: admin/class-admin-settings.php:3502
 msgid "View All"
 msgstr ""
 
-#: admin/class-admin-settings.php:3291
+#: admin/class-admin-settings.php:3512
 msgid "No critical events in the last 24 hours. Your site is secure!"
 msgstr ""
 
-#: admin/class-admin-settings.php:3334
+#: admin/class-admin-settings.php:3555
 #: admin/class-api-queue-table.php:263
 msgid "ago"
 msgstr ""
 
-#: admin/class-admin-settings.php:3347
-#: admin/class-admin-settings.php:5845
+#: admin/class-admin-settings.php:3568
+#: admin/class-admin-settings.php:6086
 msgid "Quick Actions"
 msgstr ""
 
-#: admin/class-admin-settings.php:3370
-#: admin/class-admin-settings.php:3490
+#: admin/class-admin-settings.php:3591
+#: admin/class-admin-settings.php:3711
 msgid "Whitelist"
 msgstr ""
 
-#: admin/class-admin-settings.php:3377
+#: admin/class-admin-settings.php:3598
 msgid "View Logs"
 msgstr ""
 
-#: admin/class-admin-settings.php:3385
-#: admin/class-admin-settings.php:3521
+#: admin/class-admin-settings.php:3606
+#: admin/class-admin-settings.php:3742
 msgid "IP Lookup"
 msgstr ""
 
-#: admin/class-admin-settings.php:3424
+#: admin/class-admin-settings.php:3645
 msgid "Manage blocked IPs, whitelist, and security logs"
 msgstr ""
 
-#: admin/class-admin-settings.php:3431
+#: admin/class-admin-settings.php:3652
 msgid "IP Lists"
 msgstr ""
 
-#: admin/class-admin-settings.php:3435
+#: admin/class-admin-settings.php:3656
 msgid "Activity"
 msgstr ""
 
-#: admin/class-admin-settings.php:3440
+#: admin/class-admin-settings.php:3661
 msgid "Advanced"
 msgstr ""
 
-#: admin/class-admin-settings.php:3485
-#: admin/class-admin-settings.php:5759
+#: admin/class-admin-settings.php:3706
+#: admin/class-admin-settings.php:5980
 msgid "Blocked"
 msgstr ""
 
-#: admin/class-admin-settings.php:3516
+#: admin/class-admin-settings.php:3737
 msgid "Event Log"
 msgstr ""
 
-#: admin/class-admin-settings.php:3554
-#: admin/class-admin-settings.php:3740
-#: admin/class-admin-settings.php:3801
+#: admin/class-admin-settings.php:3775
+#: admin/class-admin-settings.php:3961
+#: admin/class-admin-settings.php:4022
 msgid "Search"
 msgstr ""
 
-#: admin/class-admin-settings.php:3561
+#: admin/class-admin-settings.php:3782
 msgid "Export CSV"
 msgstr ""
 
-#: admin/class-admin-settings.php:3564
+#: admin/class-admin-settings.php:3785
 msgid "Export JSON"
 msgstr ""
 
-#: admin/class-admin-settings.php:3581
+#: admin/class-admin-settings.php:3802
 msgid "This page shows all pending API reports that will be sent to the ReportedIP service. Reports are processed automatically via cron (hourly). Failed reports will be retried up to 3 times."
 msgstr ""
 
-#: admin/class-admin-settings.php:3590
+#: admin/class-admin-settings.php:3811
 msgid "Search IP"
 msgstr ""
 
-#: admin/class-admin-settings.php:3602
-#: admin/class-admin-settings.php:3651
+#: admin/class-admin-settings.php:3823
+#: admin/class-admin-settings.php:3872
 msgid "Retrying..."
 msgstr ""
 
-#: admin/class-admin-settings.php:3612
+#: admin/class-admin-settings.php:3833
 msgid "Error retrying report"
 msgstr ""
 
-#: admin/class-admin-settings.php:3613
+#: admin/class-admin-settings.php:3834
 #: admin/class-api-queue-table.php:82
 #: admin/class-api-queue-table.php:282
 msgid "Retry"
 msgstr ""
 
-#: admin/class-admin-settings.php:3623
+#: admin/class-admin-settings.php:3844
 msgid "Are you sure you want to delete this queue item?"
 msgstr ""
 
-#: admin/class-admin-settings.php:3627
+#: admin/class-admin-settings.php:3848
 msgid "Deleting..."
 msgstr ""
 
-#: admin/class-admin-settings.php:3637
+#: admin/class-admin-settings.php:3858
 msgid "Error deleting report"
 msgstr ""
 
-#: admin/class-admin-settings.php:3638
+#: admin/class-admin-settings.php:3859
 #: admin/class-api-queue-table.php:83
 #: admin/class-api-queue-table.php:289
 #: admin/class-logs-table.php:77
 msgid "Delete"
 msgstr ""
 
-#: admin/class-admin-settings.php:3647
+#: admin/class-admin-settings.php:3868
 msgid "Are you sure you want to retry all failed reports?"
 msgstr ""
 
-#: admin/class-admin-settings.php:3660
+#: admin/class-admin-settings.php:3881
 msgid "Error retrying reports"
 msgstr ""
 
-#: admin/class-admin-settings.php:3661
+#: admin/class-admin-settings.php:3882
 msgid "Retry All Failed"
 msgstr ""
 
-#: admin/class-admin-settings.php:3684
+#: admin/class-admin-settings.php:3905
 msgid "Block an IP Address"
 msgstr ""
 
-#: admin/class-admin-settings.php:3690
+#: admin/class-admin-settings.php:3911
 #: admin/class-api-queue-table.php:51
 #: admin/class-blocked-ips-table.php:51
 #: admin/class-logs-table.php:53
@@ -961,1726 +1133,1734 @@ msgstr ""
 msgid "IP Address"
 msgstr ""
 
-#: admin/class-admin-settings.php:3693
-#: admin/class-admin-settings.php:3769
+#: admin/class-admin-settings.php:3914
+#: admin/class-admin-settings.php:3990
 #: admin/class-blocked-ips-table.php:52
 #: admin/class-whitelist-table.php:53
 msgid "Reason"
 msgstr ""
 
-#: admin/class-admin-settings.php:3697
-#: admin/class-admin-settings.php:3723
+#: admin/class-admin-settings.php:3918
+#: admin/class-admin-settings.php:3944
 msgid "24 Hours"
 msgstr ""
 
-#: admin/class-admin-settings.php:3698
-#: admin/class-admin-settings.php:3724
+#: admin/class-admin-settings.php:3919
+#: admin/class-admin-settings.php:3945
 msgid "3 Days"
 msgstr ""
 
-#: admin/class-admin-settings.php:3699
-#: admin/class-admin-settings.php:3725
+#: admin/class-admin-settings.php:3920
+#: admin/class-admin-settings.php:3946
 msgid "1 Week"
 msgstr ""
 
-#: admin/class-admin-settings.php:3701
-#: admin/class-admin-settings.php:3727
+#: admin/class-admin-settings.php:3922
+#: admin/class-admin-settings.php:3948
 #: admin/class-blocked-ips-table.php:126
 msgid "Permanent"
 msgstr ""
 
-#: admin/class-admin-settings.php:3704
+#: admin/class-admin-settings.php:3925
 #: admin/class-logs-table.php:78
 #: admin/class-logs-table.php:157
 msgid "Block IP"
 msgstr ""
 
-#: admin/class-admin-settings.php:3713
+#: admin/class-admin-settings.php:3934
 msgid "Import Blocked IPs from CSV"
 msgstr ""
 
-#: admin/class-admin-settings.php:3730
-#: admin/class-admin-settings.php:3791
+#: admin/class-admin-settings.php:3951
+#: admin/class-admin-settings.php:4012
 msgid "Import CSV"
 msgstr ""
 
-#: admin/class-admin-settings.php:3732
-#: admin/class-admin-settings.php:3793
+#: admin/class-admin-settings.php:3953
+#: admin/class-admin-settings.php:4014
 msgid "CSV format: One IP address per line, or columns: ip_address, reason (optional)"
 msgstr ""
 
-#: admin/class-admin-settings.php:3760
-#: admin/class-admin-settings.php:3774
+#: admin/class-admin-settings.php:3981
+#: admin/class-admin-settings.php:3995
 msgid "Add to Whitelist"
 msgstr ""
 
-#: admin/class-admin-settings.php:3766
+#: admin/class-admin-settings.php:3987
 msgid "IP Address or CIDR"
 msgstr ""
 
-#: admin/class-admin-settings.php:3772
+#: admin/class-admin-settings.php:3993
 msgid "Expires (optional)"
 msgstr ""
 
-#: admin/class-admin-settings.php:3783
+#: admin/class-admin-settings.php:4004
 msgid "Import Whitelist from CSV"
 msgstr ""
 
-#: admin/class-admin-settings.php:3819
+#: admin/class-admin-settings.php:4040
 msgid "IP Address Lookup"
 msgstr ""
 
-#: admin/class-admin-settings.php:3823
+#: admin/class-admin-settings.php:4044
 msgid "Check the reputation of any IP address using the ReportedIP.de service."
 msgstr ""
 
-#: admin/class-admin-settings.php:3827
+#: admin/class-admin-settings.php:4048
 msgid "Enter IP address..."
 msgstr ""
 
-#: admin/class-admin-settings.php:3831
+#: admin/class-admin-settings.php:4052
 msgid "Lookup"
 msgstr ""
 
-#: admin/class-admin-settings.php:3836
+#: admin/class-admin-settings.php:4057
 msgid "Lookup Results"
 msgstr ""
 
-#: admin/class-admin-settings.php:3871
+#: admin/class-admin-settings.php:4092
 msgid "Configure how ReportedIP Hive protects your site — grouped by topic so you can find what you need quickly."
 msgstr ""
 
-#: admin/class-admin-settings.php:3878
+#: admin/class-admin-settings.php:4099
 msgid "General"
 msgstr ""
 
-#: admin/class-admin-settings.php:3882
+#: admin/class-admin-settings.php:4103
 msgid "Detection"
 msgstr ""
 
-#: admin/class-admin-settings.php:3886
+#: admin/class-admin-settings.php:4107
 msgid "Blocking"
 msgstr ""
 
-#: admin/class-admin-settings.php:3890
+#: admin/class-admin-settings.php:4111
 msgid "Hide Login"
 msgstr ""
 
-#: admin/class-admin-settings.php:3894
+#: admin/class-admin-settings.php:4115
 #: admin/class-settings-import-export.php:122
 #: admin/class-setup-wizard.php:51
 #: admin/class-setup-wizard.php:1390
 msgid "Notifications"
 msgstr ""
 
-#: admin/class-admin-settings.php:3898
+#: admin/class-admin-settings.php:4119
 msgid "Privacy & Logs"
 msgstr ""
 
-#: admin/class-admin-settings.php:3902
+#: admin/class-admin-settings.php:4123
 msgid "Performance & Tools"
 msgstr ""
 
-#: admin/class-admin-settings.php:3906
+#: admin/class-admin-settings.php:4127
 msgid "Two-Factor Auth"
 msgstr ""
 
-#: admin/class-admin-settings.php:3910
+#: admin/class-admin-settings.php:4131
 msgid "Hardening Mode"
 msgstr ""
 
-#: admin/class-admin-settings.php:3969
+#: admin/class-admin-settings.php:4190
 msgid "Operation Mode"
 msgstr ""
 
-#: admin/class-admin-settings.php:3971
+#: admin/class-admin-settings.php:4192
 msgid "Choose how ReportedIP Hive should operate. You can switch modes at any time."
 msgstr ""
 
-#: admin/class-admin-settings.php:3976
+#: admin/class-admin-settings.php:4197
 msgid "Mode changes take effect immediately after saving."
 msgstr ""
 
-#: admin/class-admin-settings.php:3978
+#: admin/class-admin-settings.php:4199
 msgid "Save Mode"
 msgstr ""
 
-#: admin/class-admin-settings.php:3987
+#: admin/class-admin-settings.php:4208
 msgid "API Configuration"
 msgstr ""
 
-#: admin/class-admin-settings.php:3989
+#: admin/class-admin-settings.php:4210
 msgid "Connect to the ReportedIP community network for enhanced protection."
 msgstr ""
 
-#: admin/class-admin-settings.php:3995
+#: admin/class-admin-settings.php:4216
 msgid "API Key"
 msgstr ""
 
-#: admin/class-admin-settings.php:3998
+#: admin/class-admin-settings.php:4219
 msgid "Your ReportedIP.de API key."
 msgstr ""
 
-#: admin/class-admin-settings.php:3999
+#: admin/class-admin-settings.php:4220
 msgid "Get API Key"
 msgstr ""
 
-#: admin/class-admin-settings.php:4004
+#: admin/class-admin-settings.php:4225
 msgid "API Endpoint"
 msgstr ""
 
-#: admin/class-admin-settings.php:4006
+#: admin/class-admin-settings.php:4227
 msgid "The ReportedIP.de API endpoint URL."
 msgstr ""
 
-#: admin/class-admin-settings.php:4011
+#: admin/class-admin-settings.php:4232
 msgid "Trusted IP Header"
 msgstr ""
 
-#: admin/class-admin-settings.php:4015
+#: admin/class-admin-settings.php:4236
 msgid "None (REMOTE_ADDR only)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4018
+#: admin/class-admin-settings.php:4239
 msgid "Cloudflare (CF-Connecting-IP)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4021
+#: admin/class-admin-settings.php:4242
 msgid "Nginx (X-Real-IP)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4024
+#: admin/class-admin-settings.php:4245
 msgid "Generic Proxy (X-Forwarded-For)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4027
+#: admin/class-admin-settings.php:4248
 msgid "Client-IP Header"
 msgstr ""
 
-#: admin/class-admin-settings.php:4031
+#: admin/class-admin-settings.php:4252
 msgid "Select which HTTP header to trust for determining the client IP. Use \"None\" unless your site is behind a reverse proxy."
 msgstr ""
 
-#: admin/class-admin-settings.php:4038
+#: admin/class-admin-settings.php:4259
 msgid "Test Connection"
 msgstr ""
 
-#: admin/class-admin-settings.php:4040
+#: admin/class-admin-settings.php:4261
 msgid "Save Changes"
 msgstr ""
 
-#: admin/class-admin-settings.php:4083
+#: admin/class-admin-settings.php:4304
 msgid "Failed login attempts"
 msgstr ""
 
-#: admin/class-admin-settings.php:4085
+#: admin/class-admin-settings.php:4306
 msgid "Catches password-guessing attacks. We count wrong passwords per IP. Once an IP exceeds the limit within the window, it is treated as a threat. A second layer also fires if one IP probes many different usernames in a short window (password-spray / credential-stuffing)."
 msgstr ""
 
-#: admin/class-admin-settings.php:4091
+#: admin/class-admin-settings.php:4312
 msgid "Watch failed logins"
 msgstr ""
 
-#: admin/class-admin-settings.php:4097
+#: admin/class-admin-settings.php:4318
 msgid "How many wrong passwords?"
 msgstr ""
 
-#: admin/class-admin-settings.php:4099
+#: admin/class-admin-settings.php:4320
 msgid "Trigger after this many failed attempts from one IP. 5 is a good starting point."
 msgstr ""
 
-#: admin/class-admin-settings.php:4102
-#: admin/class-admin-settings.php:4116
-#: admin/class-admin-settings.php:4144
-#: admin/class-admin-settings.php:4173
-#: admin/class-admin-settings.php:4208
-#: admin/class-admin-settings.php:4235
-#: admin/class-admin-settings.php:4271
-#: admin/class-admin-settings.php:4298
-#: admin/class-admin-settings.php:4790
+#: admin/class-admin-settings.php:4323
+#: admin/class-admin-settings.php:4337
+#: admin/class-admin-settings.php:4365
+#: admin/class-admin-settings.php:4394
+#: admin/class-admin-settings.php:4429
+#: admin/class-admin-settings.php:4456
+#: admin/class-admin-settings.php:4492
+#: admin/class-admin-settings.php:4519
+#: admin/class-admin-settings.php:5011
 msgid "Within how many minutes?"
 msgstr ""
 
-#: admin/class-admin-settings.php:4104
+#: admin/class-admin-settings.php:4325
 msgid "Counters reset after this window. Shorter = stricter, but more sensitive to legitimate users mistyping their password."
 msgstr ""
 
-#: admin/class-admin-settings.php:4108
+#: admin/class-admin-settings.php:4329
 msgid "Password-spray detection"
 msgstr ""
 
-#: admin/class-admin-settings.php:4109
+#: admin/class-admin-settings.php:4330
 msgid "Triggers when one IP tries many different usernames quickly — a stronger signal than the per-IP attempt count above."
 msgstr ""
 
-#: admin/class-admin-settings.php:4112
+#: admin/class-admin-settings.php:4333
 msgid "How many distinct usernames?"
 msgstr ""
 
-#: admin/class-admin-settings.php:4125
-#: admin/class-admin-settings.php:6700
+#: admin/class-admin-settings.php:4346
+#: admin/class-admin-settings.php:6941
 msgid "Comment spam"
 msgstr ""
 
-#: admin/class-admin-settings.php:4127
+#: admin/class-admin-settings.php:4348
 msgid "When the same IP submits comments that WordPress flags as spam in rapid succession, treat that IP as a threat."
 msgstr ""
 
-#: admin/class-admin-settings.php:4133
+#: admin/class-admin-settings.php:4354
 msgid "Watch comment spam"
 msgstr ""
 
-#: admin/class-admin-settings.php:4139
+#: admin/class-admin-settings.php:4360
 msgid "How many spam comments?"
 msgstr ""
 
-#: admin/class-admin-settings.php:4141
+#: admin/class-admin-settings.php:4362
 msgid "Counts comments WordPress already marked as spam. 3 catches most bots."
 msgstr ""
 
-#: admin/class-admin-settings.php:4146
+#: admin/class-admin-settings.php:4367
 msgid "Counter window. Real spammers post quickly — 60 minutes is generous."
 msgstr ""
 
-#: admin/class-admin-settings.php:4154
+#: admin/class-admin-settings.php:4375
 msgid "XML-RPC abuse"
 msgstr ""
 
-#: admin/class-admin-settings.php:4156
+#: admin/class-admin-settings.php:4377
 msgid "XML-RPC is an older WordPress remote-control interface that bots often hammer to brute-force passwords. Most modern sites do not actively use it."
 msgstr ""
 
-#: admin/class-admin-settings.php:4162
+#: admin/class-admin-settings.php:4383
 msgid "Watch XML-RPC requests"
 msgstr ""
 
-#: admin/class-admin-settings.php:4168
+#: admin/class-admin-settings.php:4389
 msgid "How many requests?"
 msgstr ""
 
-#: admin/class-admin-settings.php:4170
+#: admin/class-admin-settings.php:4391
 msgid "Trigger after this many XML-RPC calls from one IP."
 msgstr ""
 
-#: admin/class-admin-settings.php:4175
+#: admin/class-admin-settings.php:4396
 msgid "Counter window for XML-RPC requests."
 msgstr ""
 
-#: admin/class-admin-settings.php:4183
+#: admin/class-admin-settings.php:4404
 msgid "Application password abuse"
 msgstr ""
 
-#: admin/class-admin-settings.php:4185
+#: admin/class-admin-settings.php:4406
 msgid "Application passwords authenticate over REST and XML-RPC and skip the normal login 2FA prompt. We rate-limit failed app-password sign-ins and can optionally block new app passwords for 2FA-enforced roles until enrolment is finished."
 msgstr ""
 
-#: admin/class-admin-settings.php:4191
+#: admin/class-admin-settings.php:4412
 msgid "Watch application-password authentications"
 msgstr ""
 
-#: admin/class-admin-settings.php:4198
+#: admin/class-admin-settings.php:4419
 msgid "Block app-password creation until 2FA enrolment is finished (for enforced roles)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4204
+#: admin/class-admin-settings.php:4425
 msgid "How many failed auths?"
 msgstr ""
 
-#: admin/class-admin-settings.php:4217
+#: admin/class-admin-settings.php:4438
 msgid "REST API abuse"
 msgstr ""
 
-#: admin/class-admin-settings.php:4219
+#: admin/class-admin-settings.php:4440
 msgid "Per-IP rate limit on /wp-json/* requests. Catches scrapers and vulnerability scanners that hammer the REST surface. Sensitive routes (/wp/v2/users, /wp/v2/comments) use a tighter threshold by default."
 msgstr ""
 
-#: admin/class-admin-settings.php:4225
+#: admin/class-admin-settings.php:4446
 msgid "Watch REST API requests"
 msgstr ""
 
-#: admin/class-admin-settings.php:4231
+#: admin/class-admin-settings.php:4452
 msgid "Global requests threshold"
 msgstr ""
 
-#: admin/class-admin-settings.php:4239
+#: admin/class-admin-settings.php:4460
 msgid "Sensitive-route threshold"
 msgstr ""
 
-#: admin/class-admin-settings.php:4241
+#: admin/class-admin-settings.php:4462
 msgid "Tighter limit for /wp/v2/users and /wp/v2/comments."
 msgstr ""
 
-#: admin/class-admin-settings.php:4244
+#: admin/class-admin-settings.php:4465
 msgid "Sensitive timeframe (min)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4253
+#: admin/class-admin-settings.php:4474
 msgid "User enumeration defence"
 msgstr ""
 
-#: admin/class-admin-settings.php:4255
+#: admin/class-admin-settings.php:4476
 msgid "Closes the four classic username-leak vectors: ?author= probes, /wp-json/wp/v2/users, oEmbed author leaks, and the verbose \"user does not exist\" login error. Repeated probes from one IP also trip the auto-block."
 msgstr ""
 
-#: admin/class-admin-settings.php:4261
+#: admin/class-admin-settings.php:4482
 msgid "Block username discovery and unify login errors"
 msgstr ""
 
-#: admin/class-admin-settings.php:4267
+#: admin/class-admin-settings.php:4488
 msgid "How many probes?"
 msgstr ""
 
-#: admin/class-admin-settings.php:4280
+#: admin/class-admin-settings.php:4501
 msgid "404 / Scanner detection"
 msgstr ""
 
-#: admin/class-admin-settings.php:4282
+#: admin/class-admin-settings.php:4503
 msgid "Catches vulnerability scanners. A single hit on a known-bad path (.env, wp-config.php.bak, /.git/config, /phpmyadmin, …) triggers immediately; bursts of regular 404s also count."
 msgstr ""
 
-#: admin/class-admin-settings.php:4288
+#: admin/class-admin-settings.php:4509
 msgid "Watch suspicious 404s and known scanner paths"
 msgstr ""
 
-#: admin/class-admin-settings.php:4294
+#: admin/class-admin-settings.php:4515
 msgid "404 burst threshold"
 msgstr ""
 
-#: admin/class-admin-settings.php:4307
+#: admin/class-admin-settings.php:4528
 msgid "Skip burst triggers for verified search engines and AI crawlers (User-Agent based)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4309
+#: admin/class-admin-settings.php:4530
 msgid "Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot and similar crawlers are exempt from the 404 burst trigger and the REST burst trigger. Pattern-based detection (.env, wp-config.php.bak, /phpmyadmin/, …) stays active for all visitors, including spoofed bot User-Agents."
 msgstr ""
 
-#: admin/class-admin-settings.php:4316
+#: admin/class-admin-settings.php:4537
 msgid "WooCommerce login"
 msgstr ""
 
-#: admin/class-admin-settings.php:4318
+#: admin/class-admin-settings.php:4539
 msgid "Hooks into WooCommerce-specific login failures (my-account form, checkout AJAX login). Uses the same threshold as Failed login attempts."
 msgstr ""
 
-#: admin/class-admin-settings.php:4324
+#: admin/class-admin-settings.php:4545
 msgid "Watch WooCommerce login attempts"
 msgstr ""
 
-#: admin/class-admin-settings.php:4332
+#: admin/class-admin-settings.php:4553
 msgid "Geographic anomaly"
 msgstr ""
 
-#: admin/class-admin-settings.php:4334
+#: admin/class-admin-settings.php:4555
 msgid "Watches successful logins. When a user signs in from a country or network (ASN) not seen in the recent look-back window, the event is logged and trusted-device cookies can be revoked to force a fresh 2FA challenge. Location data reuses the cached community lookup, so no extra request is made."
 msgstr ""
 
-#: admin/class-admin-settings.php:4340
+#: admin/class-admin-settings.php:4561
 msgid "Watch logins from new countries / networks"
 msgstr ""
 
-#: admin/class-admin-settings.php:4347
+#: admin/class-admin-settings.php:4568
 msgid "Revoke trusted-device cookies on geo anomaly (forces 2FA on next login)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4354
+#: admin/class-admin-settings.php:4575
 msgid "Also share anomalies with the community network (off by default — informational)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4358
+#: admin/class-admin-settings.php:4579
 msgid "Look-back window (days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4360
+#: admin/class-admin-settings.php:4581
 msgid "How long a country/ASN stays \"known\" for a user."
 msgstr ""
 
-#: admin/class-admin-settings.php:4367
+#: admin/class-admin-settings.php:4588
 msgid "Password strength policy"
 msgstr ""
 
-#: admin/class-admin-settings.php:4369
+#: admin/class-admin-settings.php:4590
 msgid "Enforces a minimum length, character-class diversity and an optional public-breach check (HaveIBeenPwned k-anonymity — only the first 5 SHA-1 hex characters of the password leave the server). Applies to users in the 2FA-enforced roles by default."
 msgstr ""
 
-#: admin/class-admin-settings.php:4375
+#: admin/class-admin-settings.php:4596
 msgid "Enforce password policy"
 msgstr ""
 
-#: admin/class-admin-settings.php:4382
+#: admin/class-admin-settings.php:4603
 msgid "Reject passwords that appear in public breaches (HaveIBeenPwned, k-anonymity protocol)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4389
+#: admin/class-admin-settings.php:4610
 msgid "Apply to all users (default: only 2FA-enforced roles)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4395
+#: admin/class-admin-settings.php:4616
 msgid "Minimum length"
 msgstr ""
 
-#: admin/class-admin-settings.php:4399
+#: admin/class-admin-settings.php:4620
 msgid "Required character classes (lower / upper / digit / symbol)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4408
+#: admin/class-admin-settings.php:4629
 #: includes/class-mode-manager.php:282
 msgid "Decoy Path Block"
 msgstr ""
 
-#: admin/class-admin-settings.php:4410
+#: admin/class-admin-settings.php:4631
 msgid "Detects requests to known bait paths (.env.backup, wp-config.old.php, db-dump-master.sql.php …) that legitimate visitors never request. Each hit is logged, shared with the community network, and answered with a 403, but the IP is not added to your local block list, so a misbehaving backup plugin cannot lock you out."
 msgstr ""
 
-#: admin/class-admin-settings.php:4417
+#: admin/class-admin-settings.php:4638
 msgid "Detect and report decoy-path hits"
 msgstr ""
 
-#: admin/class-admin-settings.php:4429
+#: admin/class-admin-settings.php:4650
 msgid "Auto-managed — Hive wrote the rewrite block to .htaccess. Real bait files on disk will no longer be served directly."
 msgstr ""
 
-#: admin/class-admin-settings.php:4433
+#: admin/class-admin-settings.php:4654
 msgid ".htaccess is writable but the block is not in place yet. Toggle the switch above to trigger a sync."
 msgstr ""
 
-#: admin/class-admin-settings.php:4437
+#: admin/class-admin-settings.php:4658
 msgid ".htaccess is not writable (or this server does not use one). Paste the snippet below into your server config manually."
 msgstr ""
 
-#: admin/class-admin-settings.php:4443
+#: admin/class-admin-settings.php:4664
 msgid "Server-config snippets (live preview / nginx copy-paste)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4444
+#: admin/class-admin-settings.php:4665
 msgid "On Apache, the .htaccess block is auto-managed — the snippet below shows what Hive wrote (or would write) verbatim. On nginx, copy the second snippet into your server { … } block. Both snippets rewrite to /index.php so the Hive sensor still loads, logs the hit and reports it; using [F,L] / return 403 directly would skip detection entirely."
 msgstr ""
 
-#: admin/class-admin-settings.php:4446
+#: admin/class-admin-settings.php:4667
 msgid "Apache (.htaccess)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4449
+#: admin/class-admin-settings.php:4670
 msgid "nginx (regex form — plain nginx)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4452
+#: admin/class-admin-settings.php:4673
 msgid "nginx (exact-match form — ISPConfig & managed stacks)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4453
+#: admin/class-admin-settings.php:4674
 msgid "Use this variant when your host template ships a \"location ~ /\\.\" dot-file deny rule before your custom directives — exact-match locations have higher priority than any regex location and survive that ordering."
 msgstr ""
 
-#: admin/class-admin-settings.php:4459
+#: admin/class-admin-settings.php:4680
 msgid "Save detection settings"
 msgstr ""
 
-#: admin/class-admin-settings.php:4484
+#: admin/class-admin-settings.php:4705
 msgid "How blocking decides"
 msgstr ""
 
-#: admin/class-admin-settings.php:4489
+#: admin/class-admin-settings.php:4710
 msgid "Report-only mode wins above everything."
 msgstr ""
 
-#: admin/class-admin-settings.php:4490
+#: admin/class-admin-settings.php:4711
 msgid "If on, the plugin only logs and never blocks. Step 2 and 3 are bypassed."
 msgstr ""
 
-#: admin/class-admin-settings.php:4496
+#: admin/class-admin-settings.php:4717
 msgid "Auto-blocking must be on for any block to happen."
 msgstr ""
 
-#: admin/class-admin-settings.php:4497
+#: admin/class-admin-settings.php:4718
 msgid "Off = the plugin watches but never inserts an IP into the block list."
 msgstr ""
 
-#: admin/class-admin-settings.php:4503
+#: admin/class-admin-settings.php:4724
 msgid "Progressive blocking controls the duration."
 msgstr ""
 
-#: admin/class-admin-settings.php:4504
+#: admin/class-admin-settings.php:4725
 msgid "On = ladder (5 min → … → 7 d). Off = the fixed \"Block length\" below. Whitelist entries always win."
 msgstr ""
 
-#: admin/class-admin-settings.php:4513
+#: admin/class-admin-settings.php:4734
 #: admin/class-setup-wizard.php:1742
 msgid "Auto-blocking"
 msgstr ""
 
-#: admin/class-admin-settings.php:4515
+#: admin/class-admin-settings.php:4736
 msgid "When detection triggers, automatically block the offender. Disable this if you only want to monitor — none of the duration settings below take effect when this is off."
 msgstr ""
 
-#: admin/class-admin-settings.php:4521
+#: admin/class-admin-settings.php:4742
 msgid "Block IPs automatically when a threshold is crossed"
 msgstr ""
 
-#: admin/class-admin-settings.php:4528
+#: admin/class-admin-settings.php:4749
 msgid "Community confidence to block"
 msgstr ""
 
-#: admin/class-admin-settings.php:4530
+#: admin/class-admin-settings.php:4751
 msgid "When community-mode is on, only block IPs the network is at least this confident about (0–100). Lower = more aggressive but more false positives."
 msgstr ""
 
-#: admin/class-admin-settings.php:4535
+#: admin/class-admin-settings.php:4756
 #: admin/class-setup-wizard.php:920
 msgid "Block duration strategy"
 msgstr ""
 
-#: admin/class-admin-settings.php:4538
+#: admin/class-admin-settings.php:4759
 msgid "Pick one: a fixed length, or the progressive ladder. The ladder is recommended — legitimate visitors who trip once recover in minutes, repeat offenders still pay full price."
 msgstr ""
 
-#: admin/class-admin-settings.php:4544
+#: admin/class-admin-settings.php:4765
 msgid "Use a progressive ladder (recommended)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4549
+#: admin/class-admin-settings.php:4770
 msgid "Block length (hours)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4551
+#: admin/class-admin-settings.php:4772
 msgid "Used when the progressive ladder is OFF. 0 = permanent."
 msgstr ""
 
-#: admin/class-admin-settings.php:4556
+#: admin/class-admin-settings.php:4777
 msgid "Ladder (minutes, comma-separated)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4564
+#: admin/class-admin-settings.php:4785
 msgid "Default: 5,15,30,1440,2880,10080 — 5 min, 15 min, 30 min, 24 h, 48 h, 7 d. The last entry caps the ladder; further offences keep getting that duration."
 msgstr ""
 
-#: admin/class-admin-settings.php:4567
+#: admin/class-admin-settings.php:4788
 msgid "Reset window (days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4569
+#: admin/class-admin-settings.php:4790
 msgid "After this many days without a new block, the IP starts again at ladder step 1."
 msgstr ""
 
-#: admin/class-admin-settings.php:4578
+#: admin/class-admin-settings.php:4799
 msgid "Report-only mode"
 msgstr ""
 
-#: admin/class-admin-settings.php:4580
+#: admin/class-admin-settings.php:4801
 msgid "Audit mode: detect and log incidents but do not block anyone. Useful before flipping enforcement on."
 msgstr ""
 
-#: admin/class-admin-settings.php:4586
+#: admin/class-admin-settings.php:4807
 msgid "Watch and report only — never block"
 msgstr ""
 
-#: admin/class-admin-settings.php:4589
+#: admin/class-admin-settings.php:4810
 msgid "Heads up:"
 msgstr ""
 
-#: admin/class-admin-settings.php:4590
+#: admin/class-admin-settings.php:4811
 msgid "When this is on, no IP is blocked even if Auto-blocking is enabled."
 msgstr ""
 
-#: admin/class-admin-settings.php:4595
+#: admin/class-admin-settings.php:4816
 msgid "Report cool-down (hours)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4597
+#: admin/class-admin-settings.php:4818
 msgid "Wait at least this long before re-reporting the same IP to the community network. Prevents duplicate reports."
 msgstr ""
 
-#: admin/class-admin-settings.php:4604
+#: admin/class-admin-settings.php:4825
 msgid "Blocked-page contact link"
 msgstr ""
 
-#: admin/class-admin-settings.php:4606
+#: admin/class-admin-settings.php:4827
 msgid "Optional URL shown to blocked visitors if they think the block is a mistake. Accepts a full https:// URL (e.g. your contact form) or a \"mailto:\" link. Leave empty to hide the link."
 msgstr ""
 
-#: admin/class-admin-settings.php:4609
+#: admin/class-admin-settings.php:4830
 msgid "Contact URL"
 msgstr ""
 
-#: admin/class-admin-settings.php:4612
+#: admin/class-admin-settings.php:4833
 msgid "Quick option:"
 msgstr ""
 
 #. translators: %s: site admin email address
-#: admin/class-admin-settings.php:4616
+#: admin/class-admin-settings.php:4837
 #, php-format
 msgid "Use site admin email (%s)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4635
+#: admin/class-admin-settings.php:4856
 msgid "Save blocking settings"
 msgstr ""
 
-#: admin/class-admin-settings.php:4693
+#: admin/class-admin-settings.php:4914
 msgid "Kill switch is active."
 msgstr ""
 
-#: admin/class-admin-settings.php:4694
+#: admin/class-admin-settings.php:4915
 msgid "The constant REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN is defined as true in wp-config.php — Hide Login is disabled until you remove it. This is the recovery path: if you ever lose your custom slug, drop the constant in and the original wp-login.php is reachable again."
 msgstr ""
 
-#: admin/class-admin-settings.php:4701
+#: admin/class-admin-settings.php:4922
 msgid "Hide WordPress login"
 msgstr ""
 
-#: admin/class-admin-settings.php:4703
+#: admin/class-admin-settings.php:4924
 msgid "Move wp-login.php behind a custom slug. Bots that scan default WordPress paths will no longer find a login form to brute-force."
 msgstr ""
 
-#: admin/class-admin-settings.php:4706
+#: admin/class-admin-settings.php:4927
 msgid "Heads up — this is security through obscurity."
 msgstr ""
 
-#: admin/class-admin-settings.php:4707
+#: admin/class-admin-settings.php:4928
 msgid "Hiding the login URL stops automated scanners but does not replace strong passwords, 2FA or rate limiting. Use it as one layer of a defense-in-depth setup."
 msgstr ""
 
-#: admin/class-admin-settings.php:4714
+#: admin/class-admin-settings.php:4935
 #: admin/class-setup-wizard.php:1545
 msgid "Enable Hide Login"
 msgstr ""
 
-#: admin/class-admin-settings.php:4722
+#: admin/class-admin-settings.php:4943
 msgid "Custom login slug"
 msgstr ""
 
-#: admin/class-admin-settings.php:4728
+#: admin/class-admin-settings.php:4949
 msgid "3–50 characters: lowercase letters, digits, dashes or underscores. Reserved WordPress paths and existing post/page/author slugs are rejected."
 msgstr ""
 
-#: admin/class-admin-settings.php:4732
+#: admin/class-admin-settings.php:4953
 msgid "Active login URL:"
 msgstr ""
 
-#: admin/class-admin-settings.php:4742
+#: admin/class-admin-settings.php:4963
 msgid "What visitors see at the old URL"
 msgstr ""
 
-#: admin/class-admin-settings.php:4744
+#: admin/class-admin-settings.php:4965
 msgid "Choose the response when someone hits wp-login.php or wp-admin without being logged in."
 msgstr ""
 
-#: admin/class-admin-settings.php:4749
+#: admin/class-admin-settings.php:4970
 msgid "Hive block page (recommended)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4749
+#: admin/class-admin-settings.php:4970
 msgid "shows the same 403 page as a blocked IP. Branded and friendly to legitimate users who got there by accident."
 msgstr ""
 
-#: admin/class-admin-settings.php:4753
+#: admin/class-admin-settings.php:4974
 msgid "Soft 404"
 msgstr ""
 
-#: admin/class-admin-settings.php:4753
+#: admin/class-admin-settings.php:4974
 msgid "serves the theme’s 404 page. Hides that the plugin exists at all — better against fingerprinting, less helpful to humans."
 msgstr ""
 
-#: admin/class-admin-settings.php:4761
+#: admin/class-admin-settings.php:4982
 msgid "Append the slug as a marker query argument to all generated login URLs"
 msgstr ""
 
-#: admin/class-admin-settings.php:4763
+#: admin/class-admin-settings.php:4984
 msgid "Off by default — the slug already lives in the URL path, the extra query argument is redundant and can collide with plugins that use the same name. Enable only if you have a specific integration that expects the marker."
 msgstr ""
 
-#: admin/class-admin-settings.php:4770
+#: admin/class-admin-settings.php:4991
 msgid "Block scanners probing the old login URL"
 msgstr ""
 
-#: admin/class-admin-settings.php:4772
+#: admin/class-admin-settings.php:4993
 msgid "A single accidental hit on the old URL is harmless and only logged. A repeated pattern from one IP is almost always a scanner — block it on the same escalating ladder as other threats and share it with the community."
 msgstr ""
 
-#: admin/class-admin-settings.php:4778
+#: admin/class-admin-settings.php:4999
 msgid "Block IPs that repeatedly probe the hidden login URL"
 msgstr ""
 
-#: admin/class-admin-settings.php:4780
+#: admin/class-admin-settings.php:5001
 msgid "On by default. The passive recon log stays regardless of this setting — turning it off only disables the IP block and community report."
 msgstr ""
 
-#: admin/class-admin-settings.php:4785
+#: admin/class-admin-settings.php:5006
 msgid "How many hits?"
 msgstr ""
 
-#: admin/class-admin-settings.php:4787
+#: admin/class-admin-settings.php:5008
 msgid "Block after this many direct hits from one IP. 5 is a good starting point."
 msgstr ""
 
-#: admin/class-admin-settings.php:4792
+#: admin/class-admin-settings.php:5013
 msgid "Counter window. A real user rarely hits the old URL twice — 10 minutes is forgiving."
 msgstr ""
 
-#: admin/class-admin-settings.php:4801
+#: admin/class-admin-settings.php:5022
 msgid "Locked out? Recovery via wp-config.php"
 msgstr ""
 
-#: admin/class-admin-settings.php:4803
+#: admin/class-admin-settings.php:5024
 msgid "If you forget the slug, add this constant to wp-config.php (above the line that says “That’s all, stop editing!”). The original wp-login.php becomes reachable again — Hide Login stays inactive until you remove the constant."
 msgstr ""
 
-#: admin/class-admin-settings.php:4811
+#: admin/class-admin-settings.php:5032
 msgid "Save Hide Login settings"
 msgstr ""
 
-#: admin/class-admin-settings.php:4867
+#: admin/class-admin-settings.php:5088
 msgid "PRO mail relay active."
 msgstr ""
 
-#: admin/class-admin-settings.php:4868
+#: admin/class-admin-settings.php:5089
 msgid "All plugin mails go through the reportedip.de relay so they pass authentication checks and stay out of spam folders. Your \"From email\" below is used as Reply-To, so replies still reach your inbox."
 msgstr ""
 
-#: admin/class-admin-settings.php:4872
+#: admin/class-admin-settings.php:5093
 msgid "Free tier — mails leave your server directly."
 msgstr ""
 
-#: admin/class-admin-settings.php:4873
+#: admin/class-admin-settings.php:5094
 msgid "Upgrade to PRO to route mails through the EU-based reportedip.de relay, which handles SPF/DKIM/DMARC so mails are less likely to land in spam."
 msgstr ""
 
-#: admin/class-admin-settings.php:4874
+#: admin/class-admin-settings.php:5095
 msgid "Learn more"
 msgstr ""
 
-#: admin/class-admin-settings.php:4892
+#: admin/class-admin-settings.php:5113
 #: admin/class-setup-wizard.php:1396
 msgid "Alert recipients"
 msgstr ""
 
-#: admin/class-admin-settings.php:4894
+#: admin/class-admin-settings.php:5115
 msgid "Send an email when something significant happens — repeated brute-force attempts, new blocks, etc. The recipient list also receives 2FA-related operational mails."
 msgstr ""
 
-#: admin/class-admin-settings.php:4900
+#: admin/class-admin-settings.php:5121
 msgid "Send admin notifications when security events occur"
 msgstr ""
 
-#: admin/class-admin-settings.php:4905
+#: admin/class-admin-settings.php:5126
 #: admin/class-setup-wizard.php:1406
 msgid "Recipients"
 msgstr ""
 
-#: admin/class-admin-settings.php:4913
+#: admin/class-admin-settings.php:5134
 #: admin/class-setup-wizard.php:1414
 msgid "One or more email addresses, separated by commas, spaces or new lines. Invalid entries are dropped on save."
 msgstr ""
 
-#: admin/class-admin-settings.php:4920
+#: admin/class-admin-settings.php:5141
 #: admin/class-setup-wizard.php:1423
 msgid "Sender (used for all plugin mails)"
 msgstr ""
 
-#: admin/class-admin-settings.php:4922
+#: admin/class-admin-settings.php:5143
 #: admin/class-setup-wizard.php:1426
 msgid "Applies to every plugin mail — security alerts AND 2FA login codes — so both arrive from the same address. Leave both fields empty to use the recommended defaults: your site name and the WordPress admin email."
 msgstr ""
 
-#: admin/class-admin-settings.php:4925
+#: admin/class-admin-settings.php:5146
 #: admin/class-setup-wizard.php:1429
 msgid "From name"
 msgstr ""
 
 #. translators: 1: HTML-wrapped site name, 2: plain site name (Tip example)
-#: admin/class-admin-settings.php:4941
+#: admin/class-admin-settings.php:5162
 #, php-format
 msgid "Display name shown in the recipient's inbox. Leave empty to use your site name (currently: %1$s). Tip: include \"Security\" or \"Alerts\" to make it instantly recognizable, e.g. \"%2$s Security\"."
 msgstr ""
 
-#: admin/class-admin-settings.php:4952
+#: admin/class-admin-settings.php:5173
 #: admin/class-setup-wizard.php:1455
 msgid "From email"
 msgstr ""
 
-#: admin/class-admin-settings.php:4964
+#: admin/class-admin-settings.php:5185
 #: admin/class-setup-wizard.php:1467
 msgid "Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.de, so any address you enter here is safe to use."
 msgstr ""
 
-#: admin/class-admin-settings.php:4966
+#: admin/class-admin-settings.php:5187
 #: admin/class-setup-wizard.php:1469
 msgid "Should match a domain you own, so mail-server checks (SPF/DKIM) do not reject the message."
 msgstr ""
 
-#: admin/class-admin-settings.php:4977
+#: admin/class-admin-settings.php:5198
 #: admin/class-setup-wizard.php:1481
 msgid "Sync with reportedip.de"
 msgstr ""
 
-#: admin/class-admin-settings.php:4980
+#: admin/class-admin-settings.php:5201
 msgid "Mirrors the contact set above to your reportedip.de account dashboard so the relay sees the same configuration."
 msgstr ""
 
-#: admin/class-admin-settings.php:4982
+#: admin/class-admin-settings.php:5203
 msgid "Recommended on for PRO accounts."
 msgstr ""
 
-#: admin/class-admin-settings.php:4990
+#: admin/class-admin-settings.php:5211
 #: admin/class-setup-wizard.php:1487
 msgid "Mirror this contact set to my reportedip.de account"
 msgstr ""
 
-#: admin/class-admin-settings.php:4999
+#: admin/class-admin-settings.php:5220
 msgid "Sign-in notifications"
 msgstr ""
 
-#: admin/class-admin-settings.php:5005
+#: admin/class-admin-settings.php:5226
 msgid "Email on sign-in from a new device"
 msgstr ""
 
-#: admin/class-admin-settings.php:5007
+#: admin/class-admin-settings.php:5228
 msgid "Notifies the user when a sign-in comes from a previously unseen browser/IP combination. Uses the unified mail provider configured above."
 msgstr ""
 
-#: admin/class-admin-settings.php:5014
+#: admin/class-admin-settings.php:5235
 msgid "Service notices & upgrade hints"
 msgstr ""
 
-#: admin/class-admin-settings.php:5017
+#: admin/class-admin-settings.php:5238
 msgid "Controls operational mails (quota warnings, plan changes) and in-admin upgrade hints. Security recommendations and status notices are always shown; these toggles only affect promotional content."
 msgstr ""
 
-#: admin/class-admin-settings.php:5024
+#: admin/class-admin-settings.php:5245
 msgid "Show upgrade hints in the admin"
 msgstr ""
 
-#: admin/class-admin-settings.php:5026
+#: admin/class-admin-settings.php:5247
 msgid "When off, all PRO-feature promotion (dashboard cards, inline upsells, WooCommerce 2FA banner) is hidden site-wide. Status notices and security recommendations remain unaffected."
 msgstr ""
 
-#: admin/class-admin-settings.php:5033
+#: admin/class-admin-settings.php:5254
 msgid "Email when the managed-relay quota reaches 80% or 100%"
 msgstr ""
 
-#: admin/class-admin-settings.php:5035
+#: admin/class-admin-settings.php:5256
 msgid "Sent at most once per month per channel and stage. Recipients are the alert list configured above."
 msgstr ""
 
-#: admin/class-admin-settings.php:5042
+#: admin/class-admin-settings.php:5263
 msgid "Email when the plan changes (upgrade or downgrade)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5044
+#: admin/class-admin-settings.php:5265
 msgid "One factual mail per tier change with a short summary of what becomes available or pauses. No marketing copy."
 msgstr ""
 
-#: admin/class-admin-settings.php:5049
+#: admin/class-admin-settings.php:5270
 msgid "Save notification settings"
 msgstr ""
 
-#: admin/class-admin-settings.php:5056
+#: admin/class-admin-settings.php:5277
 msgid "Test the email pipeline"
 msgstr ""
 
-#: admin/class-admin-settings.php:5058
+#: admin/class-admin-settings.php:5279
 msgid "Sends a sample mail through the unified branded template and your active mail provider. Useful before flipping notifications on, or after changing SMTP settings."
 msgstr ""
 
-#: admin/class-admin-settings.php:5062
-#: admin/class-admin-settings.php:5070
+#: admin/class-admin-settings.php:5283
+#: admin/class-admin-settings.php:5291
 msgid "Send test email"
 msgstr ""
 
-#: admin/class-admin-settings.php:5071
+#: admin/class-admin-settings.php:5292
 #: includes/class-two-factor-onboarding.php:398
 msgid "Sending…"
 msgstr ""
 
-#: admin/class-admin-settings.php:5083
+#: admin/class-admin-settings.php:5304
 msgid "Test email failed."
 msgstr ""
 
-#: admin/class-admin-settings.php:5086
-#: reportedip-hive.php:684
+#: admin/class-admin-settings.php:5307
+#: reportedip-hive.php:686
 msgid "Request failed. Check server logs."
 msgstr ""
 
 #. translators: %s = privacy-text generator URL
-#: admin/class-admin-settings.php:5131
+#: admin/class-admin-settings.php:5352
 #, php-format
 msgid "Need a privacy policy statement for this site? Generate a custom-tailored text (German or English) based on your configuration at <a href=\"%s\" target=\"_blank\" rel=\"noopener\">reportedip.de/dashboard/dsgvo</a>. A draft text is also registered under <strong>Tools &rarr; Privacy</strong>."
 msgstr ""
 
-#: admin/class-admin-settings.php:5151
+#: admin/class-admin-settings.php:5372
 msgid "Logging profile"
 msgstr ""
 
-#: admin/class-admin-settings.php:5153
+#: admin/class-admin-settings.php:5374
 msgid "Pick how much detail to keep about security events. Minimal is the privacy-first choice; Detailed helps when investigating attacks."
 msgstr ""
 
-#: admin/class-admin-settings.php:5158
+#: admin/class-admin-settings.php:5379
 msgid "Minimal"
 msgstr ""
 
-#: admin/class-admin-settings.php:5158
+#: admin/class-admin-settings.php:5379
 msgid "Essential security events only. Recommended for strict GDPR setups."
 msgstr ""
 
-#: admin/class-admin-settings.php:5162
+#: admin/class-admin-settings.php:5383
 msgid "Standard"
 msgstr ""
 
-#: admin/class-admin-settings.php:5162
+#: admin/class-admin-settings.php:5383
 msgid "Default. Enough context to spot patterns without storing personal data."
 msgstr ""
 
-#: admin/class-admin-settings.php:5166
+#: admin/class-admin-settings.php:5387
 msgid "Detailed"
 msgstr ""
 
-#: admin/class-admin-settings.php:5166
+#: admin/class-admin-settings.php:5387
 msgid "Adds hashed usernames so repeat-offender analysis is possible. Disable if you do not need it."
 msgstr ""
 
-#: admin/class-admin-settings.php:5174
+#: admin/class-admin-settings.php:5395
 msgid "Log severity threshold"
 msgstr ""
 
-#: admin/class-admin-settings.php:5176
+#: admin/class-admin-settings.php:5397
 msgid "Debug — everything (verbose, dev only)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5177
+#: admin/class-admin-settings.php:5398
 msgid "Info — normal events (recommended)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5178
+#: admin/class-admin-settings.php:5399
 msgid "Warning — only important events"
 msgstr ""
 
-#: admin/class-admin-settings.php:5179
+#: admin/class-admin-settings.php:5400
 msgid "Error — critical events only"
 msgstr ""
 
-#: admin/class-admin-settings.php:5198
+#: admin/class-admin-settings.php:5419
 msgid "What we record about visitors"
 msgstr ""
 
-#: admin/class-admin-settings.php:5200
+#: admin/class-admin-settings.php:5421
 msgid "Both options below are off by default for privacy. Enable only what you need for incident analysis."
 msgstr ""
 
-#: admin/class-admin-settings.php:5206
+#: admin/class-admin-settings.php:5427
 msgid "Log browser user-agent strings (truncated to 50 chars to limit fingerprinting)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5213
+#: admin/class-admin-settings.php:5434
 msgid "Log referrer domain only (e.g. \"example.com\" — never the full URL)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5221
+#: admin/class-admin-settings.php:5442
 msgid "How long we keep data"
 msgstr ""
 
-#: admin/class-admin-settings.php:5223
+#: admin/class-admin-settings.php:5444
 msgid "Old log entries are removed automatically. Anonymisation strips personal data even earlier without losing the security signal."
 msgstr ""
 
-#: admin/class-admin-settings.php:5227
+#: admin/class-admin-settings.php:5448
 msgid "Delete logs after (days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5229
+#: admin/class-admin-settings.php:5450
 msgid "30 days is plenty for security analysis. Longer retention may require a privacy-policy update."
 msgstr ""
 
-#: admin/class-admin-settings.php:5232
+#: admin/class-admin-settings.php:5453
 msgid "Anonymise older entries after (days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5234
+#: admin/class-admin-settings.php:5455
 msgid "Removes IP last-octet, user-agent strings, etc. while keeping aggregate counts."
 msgstr ""
 
-#: admin/class-admin-settings.php:5237
+#: admin/class-admin-settings.php:5458
 msgid "The \"Delete plugin data on uninstall\" toggle moved to Performance & Tools. Maintenance buttons (cleanup / anonymise / export) live on the System Status page."
 msgstr ""
 
-#: admin/class-admin-settings.php:5241
+#: admin/class-admin-settings.php:5462
 msgid "GDPR note:"
 msgstr ""
 
-#: admin/class-admin-settings.php:5242
+#: admin/class-admin-settings.php:5463
 msgid "IP-based blocking has a legitimate-interest legal basis under GDPR. Mention security monitoring in your privacy policy."
 msgstr ""
 
-#: admin/class-admin-settings.php:5246
+#: admin/class-admin-settings.php:5467
 msgid "Save privacy & logs settings"
 msgstr ""
 
-#: admin/class-admin-settings.php:5262
+#: admin/class-admin-settings.php:5483
 msgid "Maintenance & exports"
 msgstr ""
 
-#: admin/class-admin-settings.php:5264
+#: admin/class-admin-settings.php:5485
 msgid "These actions run immediately. Retention and anonymisation thresholds are configured on the Privacy & Logs tab."
 msgstr ""
 
-#: admin/class-admin-settings.php:5270
+#: admin/class-admin-settings.php:5491
 msgid "Database cleanup"
 msgstr ""
 
-#: admin/class-admin-settings.php:5273
+#: admin/class-admin-settings.php:5494
 msgid "Clean up logs"
 msgstr ""
 
 #. translators: %d: number of days after which log entries are removed
-#: admin/class-admin-settings.php:5278
+#: admin/class-admin-settings.php:5499
 #, php-format
 msgid "Removes logs older than %d days right now."
 msgstr ""
 
-#: admin/class-admin-settings.php:5283
+#: admin/class-admin-settings.php:5504
 msgid "Anonymise old data"
 msgstr ""
 
-#: admin/class-admin-settings.php:5286
+#: admin/class-admin-settings.php:5507
 msgid "Anonymise"
 msgstr ""
 
 #. translators: %d: number of days after which personal data is anonymized
-#: admin/class-admin-settings.php:5291
+#: admin/class-admin-settings.php:5512
 #, php-format
 msgid "Strips personal data older than %d days right now."
 msgstr ""
 
-#: admin/class-admin-settings.php:5296
+#: admin/class-admin-settings.php:5517
 msgid "Export logs"
 msgstr ""
 
-#: admin/class-admin-settings.php:5301
+#: admin/class-admin-settings.php:5522
 msgid "Download log entries for offline analysis."
 msgstr ""
 
-#: admin/class-admin-settings.php:5323
+#: admin/class-admin-settings.php:5544
 msgid "Process API queue"
 msgstr ""
 
-#: admin/class-admin-settings.php:5324
+#: admin/class-admin-settings.php:5545
 msgid "Refresh API & relay quota"
 msgstr ""
 
-#: admin/class-admin-settings.php:5325
+#: admin/class-admin-settings.php:5546
 msgid "Reputation sync"
 msgstr ""
 
-#: admin/class-admin-settings.php:5326
+#: admin/class-admin-settings.php:5547
 msgid "Daily cleanup"
 msgstr ""
 
-#: admin/class-admin-settings.php:5345
+#: admin/class-admin-settings.php:5566
 msgid "Cron status"
 msgstr ""
 
-#: admin/class-admin-settings.php:5348
+#: admin/class-admin-settings.php:5569
 msgid "WP-Cron processes the report queue and refreshes quota counters. If the next-run times below stay in the past, WP-Cron is not firing — set up a server cron (snippet below) or check your CDN/cache plugin."
 msgstr ""
 
-#: admin/class-admin-settings.php:5353
+#: admin/class-admin-settings.php:5574
 msgid "WP-Cron has not fired any ReportedIP Hive hook in the last 24 h."
 msgstr ""
 
-#: admin/class-admin-settings.php:5354
+#: admin/class-admin-settings.php:5575
 msgid "Likely cause: another plugin's cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below."
 msgstr ""
 
-#: admin/class-admin-settings.php:5363
+#: admin/class-admin-settings.php:5584
 msgid "Hook"
 msgstr ""
 
-#: admin/class-admin-settings.php:5364
+#: admin/class-admin-settings.php:5585
 msgid "Next run"
 msgstr ""
 
-#: admin/class-admin-settings.php:5374
+#: admin/class-admin-settings.php:5595
 msgid "Not scheduled"
 msgstr ""
 
-#: admin/class-admin-settings.php:5375
+#: admin/class-admin-settings.php:5596
 msgid "—"
 msgstr ""
 
-#: admin/class-admin-settings.php:5380
+#: admin/class-admin-settings.php:5601
 msgid "Overdue"
 msgstr ""
 
-#: admin/class-admin-settings.php:5383
+#: admin/class-admin-settings.php:5604
 #: admin/class-api-queue-table.php:480
 msgid "Pending"
 msgstr ""
 
-#: admin/class-admin-settings.php:5386
+#: admin/class-admin-settings.php:5607
 msgid "Scheduled"
 msgstr ""
 
-#: admin/class-admin-settings.php:5402
+#: admin/class-admin-settings.php:5623
 msgid "Queue lock"
 msgstr ""
 
-#: admin/class-admin-settings.php:5402
+#: admin/class-admin-settings.php:5623
 msgid "Prevents two queue workers from colliding (5 min TTL)."
 msgstr ""
 
-#: admin/class-admin-settings.php:5406
+#: admin/class-admin-settings.php:5627
 msgid "Held"
 msgstr ""
 
-#: admin/class-admin-settings.php:5408
-#: includes/class-mode-manager.php:739
-#: includes/class-mode-manager.php:740
+#: admin/class-admin-settings.php:5629
+#: includes/class-mode-manager.php:784
+#: includes/class-mode-manager.php:785
 msgid "Free"
 msgstr ""
 
-#: admin/class-admin-settings.php:5417
+#: admin/class-admin-settings.php:5638
 msgid "Run queue now"
 msgstr ""
 
-#: admin/class-admin-settings.php:5420
+#: admin/class-admin-settings.php:5641
 msgid "Clear queue lock"
 msgstr ""
 
-#: admin/class-admin-settings.php:5442
+#: admin/class-admin-settings.php:5663
 msgid "Processing queue…"
 msgstr ""
 
-#: admin/class-admin-settings.php:5506
+#: admin/class-admin-settings.php:5727
 msgid "Recommended: dedicated server cron"
 msgstr ""
 
-#: admin/class-admin-settings.php:5511
+#: admin/class-admin-settings.php:5732
 msgid "wp-cron.php has a per-spawn time budget (WP_CRON_LOCK_TIMEOUT, 60–90 s on most setups). When other plugins schedule heavy workers, the budget can be consumed before ReportedIP Hive's hooks are reached. A dedicated cron line that targets only our hooks via WP-CLI bypasses the shared budget completely."
 msgstr ""
 
-#: admin/class-admin-settings.php:5514
+#: admin/class-admin-settings.php:5735
 msgid "Standard crontab"
 msgstr ""
 
-#: admin/class-admin-settings.php:5517
+#: admin/class-admin-settings.php:5738
 msgid "ISPConfig template (uses {SITE_PHP} and {DOCROOT_CLIENT} variables)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5521
+#: admin/class-admin-settings.php:5742
 msgid "Optional:"
 msgstr ""
 
-#: admin/class-admin-settings.php:5522
+#: admin/class-admin-settings.php:5743
 msgid "after the dedicated cron is in place and verified, you can disable WordPress' built-in cron loopback to avoid duplicate runs by adding to wp-config.php:"
 msgstr ""
 
-#: admin/class-admin-settings.php:5526
+#: admin/class-admin-settings.php:5747
 msgid "Adjust the WP-CLI path if it differs on your host. The plugin auto-detected the path shown above."
 msgstr ""
 
-#: admin/class-admin-settings.php:5556
+#: admin/class-admin-settings.php:5777
 msgid "Caching — saves API credits"
 msgstr ""
 
-#: admin/class-admin-settings.php:5558
+#: admin/class-admin-settings.php:5779
 msgid "Caching reuses the result of past IP lookups instead of asking the community network again. Typically saves 70–90% of API calls."
 msgstr ""
 
-#: admin/class-admin-settings.php:5564
+#: admin/class-admin-settings.php:5785
 msgid "Cache IP-reputation results (recommended)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5570
+#: admin/class-admin-settings.php:5791
 msgid "Cache results for (hours)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5572
+#: admin/class-admin-settings.php:5793
 msgid "How long to keep a \"known IP\" answer. 24–48 hours fits most sites."
 msgstr ""
 
-#: admin/class-admin-settings.php:5575
+#: admin/class-admin-settings.php:5796
 msgid "Cache \"unknown IP\" for (hours)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5577
+#: admin/class-admin-settings.php:5798
 msgid "Shorter than the regular cache so a freshly-reported IP gets re-checked sooner."
 msgstr ""
 
-#: admin/class-admin-settings.php:5585
+#: admin/class-admin-settings.php:5806
 msgid "API rate limit"
 msgstr ""
 
-#: admin/class-admin-settings.php:5587
+#: admin/class-admin-settings.php:5808
 msgid "Hourly ceiling on outgoing API calls. Counted in three independent buckets — reputation lookups, report submissions, and meta/quota sync — so a bot scan can no longer freeze the report queue."
 msgstr ""
 
-#: admin/class-admin-settings.php:5590
+#: admin/class-admin-settings.php:5811
 msgid "Max API calls per hour"
 msgstr ""
 
-#: admin/class-admin-settings.php:5592
+#: admin/class-admin-settings.php:5813
 msgid "0 = auto (tier-bound caps scale with your subscription — Free 150/h reputation, Professional 3 000/h, Business 12 000/h, Enterprise unlimited). A positive number overrides all three buckets uniformly."
 msgstr ""
 
-#: admin/class-admin-settings.php:5599
+#: admin/class-admin-settings.php:5820
 msgid "Uninstall behaviour"
 msgstr ""
 
-#: admin/class-admin-settings.php:5605
+#: admin/class-admin-settings.php:5826
 msgid "Delete all plugin data on uninstall (logs, settings, IP lists)"
 msgstr ""
 
-#: admin/class-admin-settings.php:5607
+#: admin/class-admin-settings.php:5828
 msgid "Off by default — uninstalling normally keeps your configuration so reinstalling restores it."
 msgstr ""
 
-#: admin/class-admin-settings.php:5612
+#: admin/class-admin-settings.php:5833
 msgid "Save performance settings"
 msgstr ""
 
-#: admin/class-admin-settings.php:5619
+#: admin/class-admin-settings.php:5840
 msgid "Live usage stats"
 msgstr ""
 
-#: admin/class-admin-settings.php:5624
+#: admin/class-admin-settings.php:5845
 msgid "Estimated monthly API calls"
 msgstr ""
 
 #. translators: %1$s: confidence level, %2$s: daily average
-#: admin/class-admin-settings.php:5629
+#: admin/class-admin-settings.php:5850
 #, php-format
 msgid "Confidence: %1$s · Daily avg: %2$s"
 msgstr ""
 
-#: admin/class-admin-settings.php:5636
+#: admin/class-admin-settings.php:5857
 msgid "Cache efficiency"
 msgstr ""
 
 #. translators: %1$s: cache hits, %2$s: cache misses
-#: admin/class-admin-settings.php:5641
+#: admin/class-admin-settings.php:5862
 #, php-format
 msgid "Hits: %1$s · Misses: %2$s"
 msgstr ""
 
-#: admin/class-admin-settings.php:5648
+#: admin/class-admin-settings.php:5869
 msgid "Credits saved this month"
 msgstr ""
 
-#: admin/class-admin-settings.php:5654
+#: admin/class-admin-settings.php:5875
 msgid "API health"
 msgstr ""
 
-#: admin/class-admin-settings.php:5662
+#: admin/class-admin-settings.php:5883
 msgid "Cache management, setup wizard restart, settings import/export and maintenance/exports"
 msgstr ""
 
 #. translators: %s: link to the System Status page
-#: admin/class-admin-settings.php:5667
+#: admin/class-admin-settings.php:5888
 #, php-format
 msgid "are now on the %s page."
 msgstr ""
 
-#: admin/class-admin-settings.php:5688
+#: admin/class-admin-settings.php:5909
 msgid "Health, maintenance and tools"
 msgstr ""
 
-#: admin/class-admin-settings.php:5697
+#: admin/class-admin-settings.php:5918
 msgid "Logging"
 msgstr ""
 
-#: admin/class-admin-settings.php:5701
+#: admin/class-admin-settings.php:5922
 msgid "Database"
 msgstr ""
 
-#: admin/class-admin-settings.php:5705
+#: admin/class-admin-settings.php:5926
 msgid "API"
 msgstr ""
 
-#: admin/class-admin-settings.php:5735
+#: admin/class-admin-settings.php:5956
 msgid "System Information"
 msgstr ""
 
-#: admin/class-admin-settings.php:5740
+#: admin/class-admin-settings.php:5961
 msgid "Plugin Version"
 msgstr ""
 
-#: admin/class-admin-settings.php:5744
+#: admin/class-admin-settings.php:5965
 msgid "PHP Version"
 msgstr ""
 
-#: admin/class-admin-settings.php:5748
+#: admin/class-admin-settings.php:5969
 msgid "WordPress Version"
 msgstr ""
 
-#: admin/class-admin-settings.php:5752
+#: admin/class-admin-settings.php:5973
 msgid "Your IP Address"
 msgstr ""
 
-#: admin/class-admin-settings.php:5757
+#: admin/class-admin-settings.php:5978
 msgid "Whitelisted"
 msgstr ""
 
-#: admin/class-admin-settings.php:5765
+#: admin/class-admin-settings.php:5986
 msgid "Protection Mode"
 msgstr ""
 
-#: admin/class-admin-settings.php:5768
+#: admin/class-admin-settings.php:5989
 msgid "Report Only"
 msgstr ""
 
-#: admin/class-admin-settings.php:5770
+#: admin/class-admin-settings.php:5991
 msgid "Full Protection"
 msgstr ""
 
-#: admin/class-admin-settings.php:5775
+#: admin/class-admin-settings.php:5996
 msgid "Log Level"
 msgstr ""
 
-#: admin/class-admin-settings.php:5786
+#: admin/class-admin-settings.php:6010
+msgid "Last Rule Sync"
+msgstr ""
+
+#: admin/class-admin-settings.php:6016
+msgid "Ruleset Versions"
+msgstr ""
+
+#: admin/class-admin-settings.php:6027
 msgid "Cache management"
 msgstr ""
 
-#: admin/class-admin-settings.php:5792
+#: admin/class-admin-settings.php:6033
 msgid "Entries"
 msgstr ""
 
 #. translators: %1$s: active entries, %2$s: expired entries
-#: admin/class-admin-settings.php:5796
+#: admin/class-admin-settings.php:6037
 #, php-format
 msgid "%1$s active, %2$s expired"
 msgstr ""
 
-#: admin/class-admin-settings.php:5801
+#: admin/class-admin-settings.php:6042
 msgid "Size"
 msgstr ""
 
-#: admin/class-admin-settings.php:5807
+#: admin/class-admin-settings.php:6048
 msgid "Clear all cache"
 msgstr ""
 
-#: admin/class-admin-settings.php:5810
+#: admin/class-admin-settings.php:6051
 msgid "Clean expired entries"
 msgstr ""
 
-#: admin/class-admin-settings.php:5821
+#: admin/class-admin-settings.php:6062
 msgid "Setup wizard"
 msgstr ""
 
-#: admin/class-admin-settings.php:5823
+#: admin/class-admin-settings.php:6064
 msgid "Re-run the guided setup to reconfigure mode, API access, detection thresholds and notifications. Existing settings are pre-filled — you can review and confirm each step."
 msgstr ""
 
-#: admin/class-admin-settings.php:5827
+#: admin/class-admin-settings.php:6068
 msgid "Restart setup wizard"
 msgstr ""
 
-#: admin/class-admin-settings.php:5850
+#: admin/class-admin-settings.php:6091
 msgid "Connection Tests"
 msgstr ""
 
-#: admin/class-admin-settings.php:5855
+#: admin/class-admin-settings.php:6096
 msgid "Test Database"
 msgstr ""
 
-#: admin/class-admin-settings.php:5860
+#: admin/class-admin-settings.php:6101
 msgid "Test API"
 msgstr ""
 
-#: admin/class-admin-settings.php:5864
+#: admin/class-admin-settings.php:6105
 msgid "Enable WP_DEBUG for additional diagnostic tests."
 msgstr ""
 
-#: admin/class-admin-settings.php:5870
+#: admin/class-admin-settings.php:6111
 msgid "Reset Plugin"
 msgstr ""
 
-#: admin/class-admin-settings.php:5871
+#: admin/class-admin-settings.php:6112
 msgid "Reset all plugin settings to defaults. This will not delete your blocked IPs or logs."
 msgstr ""
 
-#: admin/class-admin-settings.php:5875
+#: admin/class-admin-settings.php:6116
 msgid "Reset Settings"
 msgstr ""
 
-#: admin/class-admin-settings.php:5879
+#: admin/class-admin-settings.php:6120
 msgid "Reset All Data"
 msgstr ""
 
-#: admin/class-admin-settings.php:5925
+#: admin/class-admin-settings.php:6166
 msgid "No recent logs found"
 msgstr ""
 
-#: admin/class-admin-settings.php:5926
+#: admin/class-admin-settings.php:6167
 msgid "No logs in the last 24 hours. This might indicate a logging problem."
 msgstr ""
 
-#: admin/class-admin-settings.php:5928
+#: admin/class-admin-settings.php:6169
 msgid "Logging system operational"
 msgstr ""
 
 #. translators: %s: timestamp of the most recent log entry
-#: admin/class-admin-settings.php:5930
+#: admin/class-admin-settings.php:6171
 #, php-format
 msgid "Last log entry: %s"
 msgstr ""
 
-#: admin/class-admin-settings.php:5936
+#: admin/class-admin-settings.php:6177
 msgid "Log level is set to \"error\" - many events may not be logged."
 msgstr ""
 
-#: admin/class-admin-settings.php:5940
+#: admin/class-admin-settings.php:6181
 msgid "Logging system error"
 msgstr ""
 
-#: admin/class-admin-settings.php:5953
+#: admin/class-admin-settings.php:6194
 msgid "Database tables missing"
 msgstr ""
 
-#: admin/class-admin-settings.php:5954
+#: admin/class-admin-settings.php:6195
 msgid "Plugin tables not found. Try deactivating and reactivating the plugin."
 msgstr ""
 
-#: admin/class-admin-settings.php:5956
+#: admin/class-admin-settings.php:6197
 msgid "Database operational"
 msgstr ""
 
 #. translators: %d: total number of log entries in the database
-#: admin/class-admin-settings.php:5962
+#: admin/class-admin-settings.php:6203
 #, php-format
 msgid "Total log entries: %d"
 msgstr ""
 
-#: admin/class-admin-settings.php:5966
+#: admin/class-admin-settings.php:6207
 msgid "Database error"
 msgstr ""
 
-#: admin/class-admin-settings.php:5973
+#: admin/class-admin-settings.php:6214
 #: includes/class-api-client.php:303
 msgid "API not configured"
 msgstr ""
 
-#: admin/class-admin-settings.php:5974
+#: admin/class-admin-settings.php:6215
 msgid "API key not set. Some features will not work."
 msgstr ""
 
-#: admin/class-admin-settings.php:5982
+#: admin/class-admin-settings.php:6223
 msgid "API connection operational"
 msgstr ""
 
-#: admin/class-admin-settings.php:5983
+#: admin/class-admin-settings.php:6224
 msgid "API connection test successful."
 msgstr ""
 
-#: admin/class-admin-settings.php:5986
+#: admin/class-admin-settings.php:6227
 msgid "API connection failed"
 msgstr ""
 
-#: admin/class-admin-settings.php:5987
+#: admin/class-admin-settings.php:6228
 msgid "Unknown API error"
 msgstr ""
 
-#: admin/class-admin-settings.php:5992
+#: admin/class-admin-settings.php:6233
 msgid "API system error"
 msgstr ""
 
-#: admin/class-admin-settings.php:6050
+#: admin/class-admin-settings.php:6291
 msgid "Local protection included"
 msgstr ""
 
-#: admin/class-admin-settings.php:6051
+#: admin/class-admin-settings.php:6292
 msgid "Community threat checks"
 msgstr ""
 
-#: admin/class-admin-settings.php:6052
+#: admin/class-admin-settings.php:6293
 msgid "Limited reports"
 msgstr ""
 
-#: admin/class-admin-settings.php:6062
+#: admin/class-admin-settings.php:6303
 msgid "Full report permission"
 msgstr ""
 
-#: admin/class-admin-settings.php:6063
-#: admin/class-admin-settings.php:6647
+#: admin/class-admin-settings.php:6304
+#: admin/class-admin-settings.php:6888
 msgid "Community recognition"
 msgstr ""
 
-#: admin/class-admin-settings.php:6064
-#: admin/class-admin-settings.php:6084
+#: admin/class-admin-settings.php:6305
+#: admin/class-admin-settings.php:6325
 msgid "Email support"
 msgstr ""
 
-#: admin/class-admin-settings.php:6078
+#: admin/class-admin-settings.php:6319
 msgid "500 2FA mails / month via reportedip.de SMTP"
 msgstr ""
 
-#: admin/class-admin-settings.php:6079
+#: admin/class-admin-settings.php:6320
 msgid "25 included 2FA SMS per month — managed via reportedip.de"
 msgstr ""
 
-#: admin/class-admin-settings.php:6080
+#: admin/class-admin-settings.php:6321
 msgid "Multi-site licence (3 domains)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6081
+#: admin/class-admin-settings.php:6322
 msgid "Priority sync (daily blacklist download)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6082
+#: admin/class-admin-settings.php:6323
 msgid "2FA usage reports & per-role policies"
 msgstr ""
 
-#: admin/class-admin-settings.php:6083
+#: admin/class-admin-settings.php:6324
 msgid "Bulk operations & analytics"
 msgstr ""
 
-#: admin/class-admin-settings.php:6098
+#: admin/class-admin-settings.php:6339
 msgid "2,500 2FA mails / month"
 msgstr ""
 
-#: admin/class-admin-settings.php:6099
+#: admin/class-admin-settings.php:6340
 msgid "75 2FA SMS / month + prepaid bundles"
 msgstr ""
 
-#: admin/class-admin-settings.php:6100
+#: admin/class-admin-settings.php:6341
 msgid "Multi-site licence (15 domains per licence)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6101
+#: admin/class-admin-settings.php:6342
 msgid "Bookable x2–x20: domains, API quota and 2FA mail/SMS scale with the licence count (volume discount)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6102
+#: admin/class-admin-settings.php:6343
 msgid "Whitelabel (wizards, 2FA page, all texts & email templates)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6103
+#: admin/class-admin-settings.php:6344
 msgid "WooCommerce integration"
 msgstr ""
 
-#: admin/class-admin-settings.php:6104
+#: admin/class-admin-settings.php:6345
 msgid "Full WP-CLI automation"
 msgstr ""
 
-#: admin/class-admin-settings.php:6105
+#: admin/class-admin-settings.php:6346
 msgid "Restrict user login times"
 msgstr ""
 
-#: admin/class-admin-settings.php:6106
+#: admin/class-admin-settings.php:6347
 msgid "GDPR export tool"
 msgstr ""
 
-#: admin/class-admin-settings.php:6107
+#: admin/class-admin-settings.php:6348
 msgid "Priority support"
 msgstr ""
 
-#: admin/class-admin-settings.php:6121
+#: admin/class-admin-settings.php:6362
 msgid "Unlimited API calls and reports"
 msgstr ""
 
-#: admin/class-admin-settings.php:6122
+#: admin/class-admin-settings.php:6363
 msgid "Custom SMS volume + dedicated sender"
 msgstr ""
 
-#: admin/class-admin-settings.php:6123
+#: admin/class-admin-settings.php:6364
 msgid "Phone support with 4 h SLA"
 msgstr ""
 
-#: admin/class-admin-settings.php:6124
+#: admin/class-admin-settings.php:6365
 msgid "Tailored DPA / AVV adjustments"
 msgstr ""
 
-#: admin/class-admin-settings.php:6125
+#: admin/class-admin-settings.php:6366
 msgid "Dedicated onboarding"
 msgstr ""
 
-#: admin/class-admin-settings.php:6231
-#: admin/class-admin-settings.php:6232
+#: admin/class-admin-settings.php:6472
+#: admin/class-admin-settings.php:6473
 msgid "Unbegrenzt"
 msgstr ""
 
-#: admin/class-admin-settings.php:6277
+#: admin/class-admin-settings.php:6518
 msgid "Manage your API quota and community participation"
 msgstr ""
 
-#: admin/class-admin-settings.php:6282
+#: admin/class-admin-settings.php:6523
 msgid "Community sections"
 msgstr ""
 
-#: admin/class-admin-settings.php:6284
+#: admin/class-admin-settings.php:6525
 #: admin/class-setup-wizard.php:53
 #: admin/class-setup-wizard.php:1797
 msgid "Promote"
 msgstr ""
 
-#: admin/class-admin-settings.php:6291
+#: admin/class-admin-settings.php:6532
 msgid "Status has been refreshed."
 msgstr ""
 
-#: admin/class-admin-settings.php:6297
+#: admin/class-admin-settings.php:6538
 msgid "Local Shield mode active"
 msgstr ""
 
-#: admin/class-admin-settings.php:6298
+#: admin/class-admin-settings.php:6539
 msgid "The plugin is currently running in local mode. Community features like shared reports, quota management and tier upgrades are disabled. Switch to community mode to benefit from the community threat intelligence."
 msgstr ""
 
-#: admin/class-admin-settings.php:6301
+#: admin/class-admin-settings.php:6542
 msgid "Switch to Community"
 msgstr ""
 
-#: admin/class-admin-settings.php:6312
+#: admin/class-admin-settings.php:6553
 msgid "API key is missing"
 msgstr ""
 
-#: admin/class-admin-settings.php:6314
+#: admin/class-admin-settings.php:6555
 msgid "Community mode is active, but no API key is configured. Without a key, neither reports can be sent nor quota/tier can be queried."
 msgstr ""
 
-#: admin/class-admin-settings.php:6318
+#: admin/class-admin-settings.php:6559
 msgid "Add API key"
 msgstr ""
 
-#: admin/class-admin-settings.php:6321
+#: admin/class-admin-settings.php:6562
 msgid "Create account"
 msgstr ""
 
-#: admin/class-admin-settings.php:6337
+#: admin/class-admin-settings.php:6578
 msgid "Your current status"
 msgstr ""
 
-#: admin/class-admin-settings.php:6340
+#: admin/class-admin-settings.php:6581
 msgid "Refresh status now"
 msgstr ""
 
-#: admin/class-admin-settings.php:6346
+#: admin/class-admin-settings.php:6587
 msgid "Refresh"
 msgstr ""
 
-#: admin/class-admin-settings.php:6353
+#: admin/class-admin-settings.php:6594
 msgid "The status could not be fetched from the service right now. Please check your API key and internet connection, then try again."
 msgstr ""
 
-#: admin/class-admin-settings.php:6371
+#: admin/class-admin-settings.php:6612
 msgid "Honeypot-Tier (unbegrenzt)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6373
+#: admin/class-admin-settings.php:6614
 msgid "API Tier"
 msgstr ""
 
-#: admin/class-admin-settings.php:6392
+#: admin/class-admin-settings.php:6633
 msgid "∞"
 msgstr ""
 
-#: admin/class-admin-settings.php:6398
+#: admin/class-admin-settings.php:6639
 msgid "Reports available today"
 msgstr ""
 
-#: admin/class-admin-settings.php:6416
+#: admin/class-admin-settings.php:6657
 msgid "Reports in queue"
 msgstr ""
 
 #. translators: %d: number of days
-#: admin/class-admin-settings.php:6432
+#: admin/class-admin-settings.php:6673
 #: admin/class-setup-wizard.php:1765
 #, php-format
 msgid "%d day"
@@ -2688,754 +2868,754 @@ msgid_plural "%d days"
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-admin-settings.php:6438
+#: admin/class-admin-settings.php:6679
 msgid "Oldest report"
 msgstr ""
 
-#: admin/class-admin-settings.php:6445
+#: admin/class-admin-settings.php:6686
 msgid "Notice:"
 msgstr ""
 
 #. translators: %s: reset date/time
-#: admin/class-admin-settings.php:6454
+#: admin/class-admin-settings.php:6695
 #, php-format
 msgid "Reset: %s"
 msgstr ""
 
 #. translators: %d: days to clear queue
-#: admin/class-admin-settings.php:6470
+#: admin/class-admin-settings.php:6711
 #, php-format
 msgid "At current quota, the queue will clear in about %d days."
 msgstr ""
 
-#: admin/class-admin-settings.php:6488
+#: admin/class-admin-settings.php:6729
 msgid "Tier overview"
 msgstr ""
 
-#: admin/class-admin-settings.php:6500
+#: admin/class-admin-settings.php:6741
 msgid "Unlimited"
 msgstr ""
 
-#: admin/class-admin-settings.php:6511
+#: admin/class-admin-settings.php:6752
 msgid "100% mail delivery via reportedip.de"
 msgstr ""
 
-#: admin/class-admin-settings.php:6515
+#: admin/class-admin-settings.php:6756
 msgid "Clean SPF / DKIM / DMARC reputation — no more spam folders"
 msgstr ""
 
-#: admin/class-admin-settings.php:6516
+#: admin/class-admin-settings.php:6757
 msgid "No SMTP setup on your server, no own credentials to rotate"
 msgstr ""
 
-#: admin/class-admin-settings.php:6517
+#: admin/class-admin-settings.php:6758
 msgid "Branded sender, optional reply-to override"
 msgstr ""
 
-#: admin/class-admin-settings.php:6520
+#: admin/class-admin-settings.php:6761
 msgid "Included with Professional (500/mo) and Business (2,500/mo)."
 msgstr ""
 
-#: admin/class-admin-settings.php:6529
+#: admin/class-admin-settings.php:6770
 msgid "Managed SMS-2FA delivery (Professional and above)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6533
+#: admin/class-admin-settings.php:6774
 msgid "No third-party SMS contract, no top-up management"
 msgstr ""
 
-#: admin/class-admin-settings.php:6534
+#: admin/class-admin-settings.php:6775
 msgid "Anti-fraud routing — high-risk destinations blocked, GDPR-friendly"
 msgstr ""
 
-#: admin/class-admin-settings.php:6535
+#: admin/class-admin-settings.php:6776
 msgid "Server-side anti-spam: per-recipient backoff (2/5/15/30/60 min)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6538
+#: admin/class-admin-settings.php:6779
 msgid "Included with Professional (25/mo) and Business (75/mo + bundles)."
 msgstr ""
 
-#: admin/class-admin-settings.php:6559
+#: admin/class-admin-settings.php:6800
 msgid "Current tier"
 msgstr ""
 
-#: admin/class-admin-settings.php:6569
+#: admin/class-admin-settings.php:6810
 msgid "Reports/day"
 msgstr ""
 
 #. translators: %s: number of API checks
-#: admin/class-admin-settings.php:6576
+#: admin/class-admin-settings.php:6817
 #, php-format
 msgid "%s API checks/day"
 msgstr ""
 
 #. translators: %s: monthly mail relay allowance, e.g. "500 / month" or "unlimited".
-#: admin/class-admin-settings.php:6585
+#: admin/class-admin-settings.php:6826
 #, php-format
 msgid "Mail relay: %s"
 msgstr ""
 
 #. translators: %s: monthly SMS relay allowance, e.g. "25 / month" or "unlimited".
-#: admin/class-admin-settings.php:6590
+#: admin/class-admin-settings.php:6831
 #, php-format
 msgid "SMS relay: %s"
 msgstr ""
 
 #. translators: %s: number of domains the plan covers, e.g. "3" or "unlimited".
-#: admin/class-admin-settings.php:6595
+#: admin/class-admin-settings.php:6836
 #, php-format
 msgid "Domains: %s"
 msgstr ""
 
-#: admin/class-admin-settings.php:6605
+#: admin/class-admin-settings.php:6846
 msgid "Current plan"
 msgstr ""
 
-#: admin/class-admin-settings.php:6609
+#: admin/class-admin-settings.php:6850
 msgid "Kontakt aufnehmen"
 msgstr ""
 
-#: admin/class-admin-settings.php:6613
+#: admin/class-admin-settings.php:6854
 msgid "Upgrade"
 msgstr ""
 
-#: admin/class-admin-settings.php:6622
+#: admin/class-admin-settings.php:6863
 msgid "Honeypot status detected"
 msgstr ""
 
-#: admin/class-admin-settings.php:6623
+#: admin/class-admin-settings.php:6864
 msgid "Your key has honeypot privileges: unlimited reports, unlimited API checks, higher weighting."
 msgstr ""
 
-#: admin/class-admin-settings.php:6636
+#: admin/class-admin-settings.php:6877
 msgid "Honeypot program (free!)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6640
+#: admin/class-admin-settings.php:6881
 msgid "Running a honeypot server? Join our honeypot network and enjoy special benefits:"
 msgstr ""
 
-#: admin/class-admin-settings.php:6644
+#: admin/class-admin-settings.php:6885
 msgid "Unlimited reports"
 msgstr ""
 
-#: admin/class-admin-settings.php:6644
+#: admin/class-admin-settings.php:6885
 msgid "No daily limits"
 msgstr ""
 
-#: admin/class-admin-settings.php:6645
+#: admin/class-admin-settings.php:6886
 msgid "Higher weighting"
 msgstr ""
 
-#: admin/class-admin-settings.php:6645
+#: admin/class-admin-settings.php:6886
 msgid "Your reports count more"
 msgstr ""
 
-#: admin/class-admin-settings.php:6646
+#: admin/class-admin-settings.php:6887
 msgid "Special API keys"
 msgstr ""
 
-#: admin/class-admin-settings.php:6646
+#: admin/class-admin-settings.php:6887
 msgid "Optimised for automated systems"
 msgstr ""
 
-#: admin/class-admin-settings.php:6647
+#: admin/class-admin-settings.php:6888
 msgid "Visible as an active contributor"
 msgstr ""
 
-#: admin/class-admin-settings.php:6651
+#: admin/class-admin-settings.php:6892
 msgid "Learn more about the honeypot program"
 msgstr ""
 
-#: admin/class-admin-settings.php:6662
+#: admin/class-admin-settings.php:6903
 msgid "Your activity (last 30 days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6684
+#: admin/class-admin-settings.php:6925
 msgid "Security events"
 msgstr ""
 
-#: admin/class-admin-settings.php:6688
+#: admin/class-admin-settings.php:6929
 msgid "IPs blocked"
 msgstr ""
 
-#: admin/class-admin-settings.php:6692
+#: admin/class-admin-settings.php:6933
 msgid "Reported to community"
 msgstr ""
 
-#: admin/class-admin-settings.php:6696
+#: admin/class-admin-settings.php:6937
 #: admin/class-setup-wizard.php:836
 msgid "Failed logins"
 msgstr ""
 
-#: admin/class-admin-settings.php:6704
+#: admin/class-admin-settings.php:6945
 msgid "Reputation blocks"
 msgstr ""
 
-#: admin/class-admin-settings.php:6709
+#: admin/class-admin-settings.php:6950
 msgid "API calls (lifetime)"
 msgstr ""
 
-#: admin/class-admin-settings.php:6713
+#: admin/class-admin-settings.php:6954
 msgid "API success rate"
 msgstr ""
 
-#: admin/class-admin-settings.php:6720
+#: admin/class-admin-settings.php:6961
 msgid "Recommendation:"
 msgstr ""
 
 #. translators: %d: number of events
-#: admin/class-admin-settings.php:6725
+#: admin/class-admin-settings.php:6966
 #, php-format
 msgid "You have detected %d security events but have not reported anything to the community yet. A Contributor upgrade lets you share up to 200 reports per day and strengthens threat intelligence for everyone."
 msgstr ""
 
-#: admin/class-admin-settings.php:6732
+#: admin/class-admin-settings.php:6973
 msgid "Upgrade now"
 msgstr ""
 
-#: admin/class-admin-settings.php:6769
+#: admin/class-admin-settings.php:7010
 msgid "Footer Badge"
 msgstr ""
 
-#: admin/class-admin-settings.php:6770
+#: admin/class-admin-settings.php:7011
 msgid "Compact \"Protected by ReportedIP Hive\" badge — fits any footer or sidebar."
 msgstr ""
 
-#: admin/class-admin-settings.php:6776
+#: admin/class-admin-settings.php:7017
 msgid "Stat Card — All-Time"
 msgstr ""
 
-#: admin/class-admin-settings.php:6777
+#: admin/class-admin-settings.php:7018
 msgid "Cumulative threat count since installation — animates up on first scroll into view, with a live indicator dot."
 msgstr ""
 
-#: admin/class-admin-settings.php:6786
+#: admin/class-admin-settings.php:7027
 msgid "Community Banner"
 msgstr ""
 
-#: admin/class-admin-settings.php:6787
+#: admin/class-admin-settings.php:7028
 msgid "Wider banner that pitches community participation — perfect for landing pages or \"About\" sections."
 msgstr ""
 
-#: admin/class-admin-settings.php:6796
+#: admin/class-admin-settings.php:7037
 msgid "Shield Icon"
 msgstr ""
 
-#: admin/class-admin-settings.php:6797
+#: admin/class-admin-settings.php:7038
 msgid "Discreet icon-only shield — pair with a footer line or a fixed corner widget."
 msgstr ""
 
-#: admin/class-admin-settings.php:6803
+#: admin/class-admin-settings.php:7044
 msgid "Login Activity"
 msgstr ""
 
-#: admin/class-admin-settings.php:6804
+#: admin/class-admin-settings.php:7045
 msgid "Live successful-login counter (30 days) — a quiet confidence signal in a customer dashboard or \"About\" footer."
 msgstr ""
 
-#: admin/class-admin-settings.php:6827
+#: admin/class-admin-settings.php:7068
 msgid "Help grow the ReportedIP community"
 msgstr ""
 
-#: admin/class-admin-settings.php:6832
+#: admin/class-admin-settings.php:7073
 msgid "Add a small badge to your site that links back to ReportedIP. Every link strengthens the community network and helps more sites stay protected."
 msgstr ""
 
-#: admin/class-admin-settings.php:6835
+#: admin/class-admin-settings.php:7076
 msgid "Banners render inside Shadow DOM, so your theme cannot override the design. The link itself stays in regular HTML — search engines will find it and credit your site."
 msgstr ""
 
-#: admin/class-admin-settings.php:6853
+#: admin/class-admin-settings.php:7094
 msgid "Auto-footer badge"
 msgstr ""
 
-#: admin/class-admin-settings.php:6870
+#: admin/class-admin-settings.php:7111
 msgid "Live preview — updates as you change the variant and position below."
 msgstr ""
 
-#: admin/class-admin-settings.php:6879
+#: admin/class-admin-settings.php:7120
 msgid "Show a \"Protected by ReportedIP Hive\" badge in the site footer"
 msgstr ""
 
-#: admin/class-admin-settings.php:6882
+#: admin/class-admin-settings.php:7123
 msgid "Renders automatically at the bottom of every front-end page. No shortcode placement needed."
 msgstr ""
 
-#: admin/class-admin-settings.php:6887
-#: admin/class-admin-settings.php:7084
+#: admin/class-admin-settings.php:7128
+#: admin/class-admin-settings.php:7325
 #: admin/class-setup-wizard.php:1643
 msgid "Variant"
 msgstr ""
 
-#: admin/class-admin-settings.php:6890
+#: admin/class-admin-settings.php:7131
 msgid "Footer badge"
 msgstr ""
 
-#: admin/class-admin-settings.php:6894
+#: admin/class-admin-settings.php:7135
 msgid "Shield icon"
 msgstr ""
 
-#: admin/class-admin-settings.php:6899
+#: admin/class-admin-settings.php:7140
 #: admin/class-setup-wizard.php:1655
 msgid "Position"
 msgstr ""
 
-#: admin/class-admin-settings.php:6902
-#: admin/class-admin-settings.php:7130
+#: admin/class-admin-settings.php:7143
+#: admin/class-admin-settings.php:7371
 msgid "Left"
 msgstr ""
 
-#: admin/class-admin-settings.php:6906
-#: admin/class-admin-settings.php:7133
+#: admin/class-admin-settings.php:7147
+#: admin/class-admin-settings.php:7374
 msgid "Center"
 msgstr ""
 
-#: admin/class-admin-settings.php:6910
-#: admin/class-admin-settings.php:7136
+#: admin/class-admin-settings.php:7151
+#: admin/class-admin-settings.php:7377
 msgid "Right"
 msgstr ""
 
-#: admin/class-admin-settings.php:6914
+#: admin/class-admin-settings.php:7155
 msgid "Below content"
 msgstr ""
 
-#: admin/class-admin-settings.php:6917
+#: admin/class-admin-settings.php:7158
 msgid "Below content renders the badge as a full-width row directly below your theme footer — works across classic and block themes."
 msgstr ""
 
-#: admin/class-admin-settings.php:6922
+#: admin/class-admin-settings.php:7163
 msgid "Save"
 msgstr ""
 
-#: admin/class-admin-settings.php:6957
+#: admin/class-admin-settings.php:7198
 msgid "Manual shortcodes"
 msgstr ""
 
-#: admin/class-admin-settings.php:6962
+#: admin/class-admin-settings.php:7203
 msgid "Drop any of these shortcodes into a post, page, widget, or theme template. Each one renders a self-contained banner that links back to reportedip.de with UTM tracking."
 msgstr ""
 
-#: admin/class-admin-settings.php:6966
+#: admin/class-admin-settings.php:7207
 msgid "Featured: show your contribution to the community"
 msgstr ""
 
-#: admin/class-admin-settings.php:6968
+#: admin/class-admin-settings.php:7209
 msgid "A \"contributor\" tone reads as \"ReportedIP Contributor\" with a count of API reports your site has shared with the community in the last 30 days."
 msgstr ""
 
-#: admin/class-admin-settings.php:6997
-#: admin/class-admin-settings.php:7197
+#: admin/class-admin-settings.php:7238
+#: admin/class-admin-settings.php:7438
 #: admin/class-two-factor-admin.php:1538
 #: templates/two-factor-onboarding.php:291
 #: templates/two-factor-onboarding.php:448
 msgid "Copy"
 msgstr ""
 
-#: admin/class-admin-settings.php:7004
+#: admin/class-admin-settings.php:7245
 msgid "All available attributes"
 msgstr ""
 
-#: admin/class-admin-settings.php:7006
+#: admin/class-admin-settings.php:7247
 msgid "type"
 msgstr ""
 
-#: admin/class-admin-settings.php:7007
+#: admin/class-admin-settings.php:7248
 msgid "tone"
 msgstr ""
 
-#: admin/class-admin-settings.php:7008
+#: admin/class-admin-settings.php:7249
 msgid "bg"
 msgstr ""
 
-#: admin/class-admin-settings.php:7009
+#: admin/class-admin-settings.php:7250
 msgid "color"
 msgstr ""
 
-#: admin/class-admin-settings.php:7010
+#: admin/class-admin-settings.php:7251
 msgid "border"
 msgstr ""
 
-#: admin/class-admin-settings.php:7011
+#: admin/class-admin-settings.php:7252
 msgid "intro"
 msgstr ""
 
-#: admin/class-admin-settings.php:7012
+#: admin/class-admin-settings.php:7253
 msgid "label"
 msgstr ""
 
-#: admin/class-admin-settings.php:7013
+#: admin/class-admin-settings.php:7254
 msgid "live"
 msgstr ""
 
-#: admin/class-admin-settings.php:7014
+#: admin/class-admin-settings.php:7255
 msgid "theme"
 msgstr ""
 
-#: admin/class-admin-settings.php:7015
+#: admin/class-admin-settings.php:7256
 msgid "align"
 msgstr ""
 
-#: admin/class-admin-settings.php:7027
+#: admin/class-admin-settings.php:7268
 #: includes/class-frontend-shortcodes.php:371
 msgid "attacks blocked"
 msgstr ""
 
-#: admin/class-admin-settings.php:7028
-#: admin/class-admin-settings.php:7032
+#: admin/class-admin-settings.php:7269
+#: admin/class-admin-settings.php:7273
 #: admin/class-setup-wizard.php:1634
 #: includes/class-frontend-shortcodes.php:372
 #: includes/class-frontend-shortcodes.php:415
 msgid "Active threat protection"
 msgstr ""
 
-#: admin/class-admin-settings.php:7031
+#: admin/class-admin-settings.php:7272
 #: includes/class-frontend-shortcodes.php:414
 msgid "attacks blocked (30 days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7035
+#: admin/class-admin-settings.php:7276
 #: includes/class-frontend-shortcodes.php:383
 msgid "IPs currently blocked"
 msgstr ""
 
-#: admin/class-admin-settings.php:7036
+#: admin/class-admin-settings.php:7277
 #: includes/class-frontend-shortcodes.php:384
 msgid "Active IP protection"
 msgstr ""
 
-#: admin/class-admin-settings.php:7039
+#: admin/class-admin-settings.php:7280
 #: includes/class-frontend-shortcodes.php:389
 msgid "Trusted IPs"
 msgstr ""
 
-#: admin/class-admin-settings.php:7040
+#: admin/class-admin-settings.php:7281
 #: includes/class-frontend-shortcodes.php:390
 msgid "Trust-aware filtering"
 msgstr ""
 
-#: admin/class-admin-settings.php:7043
+#: admin/class-admin-settings.php:7284
 #: includes/class-frontend-shortcodes.php:395
 msgid "Failed logins blocked (30 days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7044
+#: admin/class-admin-settings.php:7285
 #: admin/class-setup-wizard.php:502
 #: includes/class-frontend-shortcodes.php:396
 msgid "Brute-force protection"
 msgstr ""
 
-#: admin/class-admin-settings.php:7047
+#: admin/class-admin-settings.php:7288
 #: includes/class-frontend-shortcodes.php:401
 msgid "Spam comments stopped (30 days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7048
+#: admin/class-admin-settings.php:7289
 #: includes/class-frontend-shortcodes.php:402
 msgid "Comment spam protection"
 msgstr ""
 
-#: admin/class-admin-settings.php:7051
+#: admin/class-admin-settings.php:7292
 #: includes/class-frontend-shortcodes.php:407
 msgid "reports shared this month"
 msgstr ""
 
-#: admin/class-admin-settings.php:7052
+#: admin/class-admin-settings.php:7293
 #: includes/class-frontend-shortcodes.php:408
 msgid "Community contributor"
 msgstr ""
 
-#: admin/class-admin-settings.php:7055
+#: admin/class-admin-settings.php:7296
 #: includes/class-frontend-shortcodes.php:216
 #: includes/class-frontend-shortcodes.php:377
 msgid "IPs reported to the community"
 msgstr ""
 
-#: admin/class-admin-settings.php:7056
+#: admin/class-admin-settings.php:7297
 #: includes/class-frontend-shortcodes.php:378
 msgid "Active community member"
 msgstr ""
 
-#: admin/class-admin-settings.php:7073
+#: admin/class-admin-settings.php:7314
 msgid "Build your own banner"
 msgstr ""
 
-#: admin/class-admin-settings.php:7078
+#: admin/class-admin-settings.php:7319
 msgid "Configure every attribute. The preview updates as you change values, and the matching shortcode is generated on the right — just copy it into your post or template."
 msgstr ""
 
-#: admin/class-admin-settings.php:7086
+#: admin/class-admin-settings.php:7327
 msgid "Badge — compact pill"
 msgstr ""
 
-#: admin/class-admin-settings.php:7087
+#: admin/class-admin-settings.php:7328
 msgid "Stat — single big number"
 msgstr ""
 
-#: admin/class-admin-settings.php:7088
+#: admin/class-admin-settings.php:7329
 msgid "Banner — full marketing block"
 msgstr ""
 
-#: admin/class-admin-settings.php:7089
+#: admin/class-admin-settings.php:7330
 msgid "Shield — icon only"
 msgstr ""
 
-#: admin/class-admin-settings.php:7094
+#: admin/class-admin-settings.php:7335
 msgid "Stat type"
 msgstr ""
 
-#: admin/class-admin-settings.php:7096
+#: admin/class-admin-settings.php:7337
 msgid "attacks_total — Lifetime attacks"
 msgstr ""
 
-#: admin/class-admin-settings.php:7097
+#: admin/class-admin-settings.php:7338
 msgid "attacks_30d — Last 30 days"
 msgstr ""
 
-#: admin/class-admin-settings.php:7098
+#: admin/class-admin-settings.php:7339
 msgid "reports_total — Lifetime reports"
 msgstr ""
 
-#: admin/class-admin-settings.php:7099
+#: admin/class-admin-settings.php:7340
 msgid "api_reports_30d — Reports this month"
 msgstr ""
 
-#: admin/class-admin-settings.php:7100
+#: admin/class-admin-settings.php:7341
 msgid "blocked_active — Currently blocked"
 msgstr ""
 
-#: admin/class-admin-settings.php:7101
+#: admin/class-admin-settings.php:7342
 msgid "whitelist_active — Trusted IPs"
 msgstr ""
 
-#: admin/class-admin-settings.php:7102
+#: admin/class-admin-settings.php:7343
 msgid "logins_30d — Failed logins (30 days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7103
+#: admin/class-admin-settings.php:7344
 msgid "spam_30d — Spam (30 days)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7108
+#: admin/class-admin-settings.php:7349
 msgid "Tone"
 msgstr ""
 
-#: admin/class-admin-settings.php:7110
+#: admin/class-admin-settings.php:7351
 msgid "protect — \"Protected by ReportedIP Hive\""
 msgstr ""
 
-#: admin/class-admin-settings.php:7111
+#: admin/class-admin-settings.php:7352
 msgid "trust — \"Secured by ReportedIP Hive\""
 msgstr ""
 
-#: admin/class-admin-settings.php:7112
+#: admin/class-admin-settings.php:7353
 msgid "community — \"Part of the ReportedIP Hive\""
 msgstr ""
 
-#: admin/class-admin-settings.php:7113
+#: admin/class-admin-settings.php:7354
 msgid "contributor — \"ReportedIP Contributor\""
 msgstr ""
 
-#: admin/class-admin-settings.php:7118
+#: admin/class-admin-settings.php:7359
 msgid "Theme"
 msgstr ""
 
-#: admin/class-admin-settings.php:7120
+#: admin/class-admin-settings.php:7361
 msgid "Dark"
 msgstr ""
 
-#: admin/class-admin-settings.php:7123
+#: admin/class-admin-settings.php:7364
 msgid "Light"
 msgstr ""
 
-#: admin/class-admin-settings.php:7128
+#: admin/class-admin-settings.php:7369
 msgid "Alignment"
 msgstr ""
 
-#: admin/class-admin-settings.php:7143
+#: admin/class-admin-settings.php:7384
 msgid "Background"
 msgstr ""
 
-#: admin/class-admin-settings.php:7144
-#: admin/class-admin-settings.php:7151
-#: admin/class-admin-settings.php:7161
-#: admin/class-admin-settings.php:7168
+#: admin/class-admin-settings.php:7385
+#: admin/class-admin-settings.php:7392
+#: admin/class-admin-settings.php:7402
+#: admin/class-admin-settings.php:7409
 msgid "reset"
 msgstr ""
 
-#: admin/class-admin-settings.php:7150
+#: admin/class-admin-settings.php:7391
 msgid "Gradient stop"
 msgstr ""
 
-#: admin/class-admin-settings.php:7160
+#: admin/class-admin-settings.php:7401
 msgid "Foreground"
 msgstr ""
 
-#: admin/class-admin-settings.php:7167
+#: admin/class-admin-settings.php:7408
 msgid "Border"
 msgstr ""
 
-#: admin/class-admin-settings.php:7175
+#: admin/class-admin-settings.php:7416
 msgid "Intro override"
 msgstr ""
 
-#: admin/class-admin-settings.php:7176
-#: admin/class-admin-settings.php:7181
+#: admin/class-admin-settings.php:7417
+#: admin/class-admin-settings.php:7422
 msgid "Leave empty to use tone default"
 msgstr ""
 
-#: admin/class-admin-settings.php:7180
+#: admin/class-admin-settings.php:7421
 msgid "Label override"
 msgstr ""
 
-#: admin/class-admin-settings.php:7186
+#: admin/class-admin-settings.php:7427
 msgid "Show pulsing live indicator"
 msgstr ""
 
-#: admin/class-admin-settings.php:7194
+#: admin/class-admin-settings.php:7435
 msgid "Generated shortcode"
 msgstr ""
 
-#: admin/class-admin-settings.php:7202
+#: admin/class-admin-settings.php:7443
 msgid "Drop the shortcode into any post, page, widget, or template. The banner will render with these exact settings."
 msgstr ""
 
-#: admin/class-admin-settings.php:7222
+#: admin/class-admin-settings.php:7463
 #: admin/class-two-factor-admin.php:1527
 #: includes/class-two-factor-onboarding.php:403
 msgid "Copied!"
 msgstr ""
 
-#: admin/class-admin-settings.php:7227
-#: admin/class-admin-settings.php:7230
+#: admin/class-admin-settings.php:7468
+#: admin/class-admin-settings.php:7471
 msgid "Copy this shortcode:"
 msgstr ""
 
-#: admin/class-admin-settings.php:7412
+#: admin/class-admin-settings.php:7653
 #: includes/class-mode-manager.php:289
 msgid "Hardening Mode on Coordinated Attack"
 msgstr ""
 
-#: admin/class-admin-settings.php:7415
+#: admin/class-admin-settings.php:7656
 msgid "When the plugin detects ≥ 3 IPs / ≥ 20 failed logins in the same minute (burst), or many distinct IPs across the rolling detection window below (distributed botnet), it tightens the failed-login and reputation thresholds network-wide for the configured duration. The attack stops mid-flight instead of slipping under the per-IP threshold."
 msgstr ""
 
-#: admin/class-admin-settings.php:7420
+#: admin/class-admin-settings.php:7661
 msgid "Hardening Mode is currently active."
 msgstr ""
 
 #. translators: %s: HH:MM expiry time in site timezone.
-#: admin/class-admin-settings.php:7425
+#: admin/class-admin-settings.php:7666
 #, php-format
 msgid "Active until %s site time."
 msgstr ""
 
 #. translators: 1: number of attacking IPs, 2: total attempts.
-#: admin/class-admin-settings.php:7433
+#: admin/class-admin-settings.php:7674
 #, php-format
 msgid "Trigger: %1$d IPs, %2$d attempts across the detection window (distributed)."
 msgstr ""
 
 #. translators: 1: number of attacking IPs, 2: total attempts, 3: time window.
-#: admin/class-admin-settings.php:7440
+#: admin/class-admin-settings.php:7681
 #, php-format
 msgid "Trigger: %1$d IPs, %2$d attempts in minute %3$s (burst)."
 msgstr ""
 
-#: admin/class-admin-settings.php:7449
+#: admin/class-admin-settings.php:7690
 msgid "Deactivate now"
 msgstr ""
 
-#: admin/class-admin-settings.php:7479
+#: admin/class-admin-settings.php:7720
 msgid "Hardening Mode is part of the Professional plan and above. Upgrade to switch automatic hardening on for coordinated-attack patterns."
 msgstr ""
 
-#: admin/class-admin-settings.php:7503
+#: admin/class-admin-settings.php:7744
 msgid "Enable automatic hardening on coordinated-attack detection"
 msgstr ""
 
-#: admin/class-admin-settings.php:7512
+#: admin/class-admin-settings.php:7753
 msgid "Available on Professional, Business and Enterprise plans. On by default; switch it off here if you prefer manual control."
 msgstr ""
 
-#: admin/class-admin-settings.php:7514
+#: admin/class-admin-settings.php:7755
 msgid "On by default for your plan. Switch it off if you prefer to rely only on the per-IP thresholds."
 msgstr ""
 
-#: admin/class-admin-settings.php:7524
+#: admin/class-admin-settings.php:7765
 msgid "Realtime detection (in addition to the hourly cron sweep)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7527
+#: admin/class-admin-settings.php:7768
 msgid "Inspects every failed login at most once per minute (debounced). Cuts reaction time from up to 60 minutes down to under one minute."
 msgstr ""
 
-#: admin/class-admin-settings.php:7531
+#: admin/class-admin-settings.php:7772
 msgid "Hardening duration (minutes)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7533
+#: admin/class-admin-settings.php:7774
 msgid "How long the hardening window stays in effect after a detection. Default 60 minutes."
 msgstr ""
 
-#: admin/class-admin-settings.php:7537
+#: admin/class-admin-settings.php:7778
 msgid "Failed-login threshold during hardening"
 msgstr ""
 
-#: admin/class-admin-settings.php:7539
+#: admin/class-admin-settings.php:7780
 msgid "Normal default is 5. Hardening tightens to this value (default 2). Manual stricter settings outside hardening are never weakened."
 msgstr ""
 
-#: admin/class-admin-settings.php:7543
+#: admin/class-admin-settings.php:7784
 msgid "Failed-login timeframe during hardening (minutes)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7545
+#: admin/class-admin-settings.php:7786
 msgid "Normal default is 15 minutes. Hardening tightens to this value (default 5)."
 msgstr ""
 
-#: admin/class-admin-settings.php:7549
+#: admin/class-admin-settings.php:7790
 msgid "Reputation block threshold during hardening (%)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7551
+#: admin/class-admin-settings.php:7792
 msgid "Normal default is 75 %. Hardening tightens to this value (default 60 %). IPs with a community-confidence score above this threshold are blocked before authentication."
 msgstr ""
 
-#: admin/class-admin-settings.php:7554
+#: admin/class-admin-settings.php:7795
 msgid "Distributed-attack detection"
 msgstr ""
 
-#: admin/class-admin-settings.php:7555
+#: admin/class-admin-settings.php:7796
 msgid "Catches botnets that rotate IPs over several minutes — each IP stays under the per-IP block threshold, but together they breach these limits across the rolling window. Defaults are conservative enough that a small site practically never reaches them legitimately."
 msgstr ""
 
-#: admin/class-admin-settings.php:7558
+#: admin/class-admin-settings.php:7799
 msgid "Detection window (minutes)"
 msgstr ""
 
-#: admin/class-admin-settings.php:7560
+#: admin/class-admin-settings.php:7801
 msgid "Rolling window over which distinct IPs and failed logins are aggregated. Default 10 minutes."
 msgstr ""
 
-#: admin/class-admin-settings.php:7564
+#: admin/class-admin-settings.php:7805
 msgid "Minimum distinct IPs"
 msgstr ""
 
-#: admin/class-admin-settings.php:7566
+#: admin/class-admin-settings.php:7807
 msgid "How many different IPs must fail login within the window to count as distributed. Default 5."
 msgstr ""
 
-#: admin/class-admin-settings.php:7570
+#: admin/class-admin-settings.php:7811
 msgid "Minimum total attempts"
 msgstr ""
 
-#: admin/class-admin-settings.php:7572
+#: admin/class-admin-settings.php:7813
 msgid "Total failed logins across all those IPs within the window. Default 20."
 msgstr ""
 
-#: admin/class-admin-settings.php:7576
+#: admin/class-admin-settings.php:7817
 msgid "Save Hardening Settings"
 msgstr ""
 
@@ -3466,7 +3646,7 @@ msgstr ""
 #: admin/class-two-factor-admin.php:1532
 #: includes/class-two-factor-onboarding.php:326
 #: includes/class-two-factor.php:1748
-#: reportedip-hive.php:685
+#: reportedip-hive.php:687
 msgid "Error"
 msgstr ""
 
@@ -3674,8 +3854,8 @@ msgid "Log Entries"
 msgstr ""
 
 #: admin/class-logs-table.php:51
-#: includes/class-ajax-handler.php:228
-#: includes/class-ajax-handler.php:264
+#: includes/class-ajax-handler.php:229
+#: includes/class-ajax-handler.php:265
 #: includes/class-security-monitor.php:1043
 #: includes/class-two-factor-notifications.php:202
 #: includes/class-two-factor-notifications.php:216
@@ -3697,10 +3877,6 @@ msgstr ""
 
 #: admin/class-logs-table.php:119
 msgid "Captured while Hardening Mode was active."
-msgstr ""
-
-#: admin/class-logs-table.php:120
-msgid "Hardening"
 msgstr ""
 
 #: admin/class-logs-table.php:130
@@ -3728,14 +3904,14 @@ msgid "Failed Login"
 msgstr ""
 
 #: admin/class-logs-table.php:346
-#: reportedip-hive.php:817
-#: reportedip-hive.php:832
+#: reportedip-hive.php:819
+#: reportedip-hive.php:834
 msgid "Comment Spam"
 msgstr ""
 
 #: admin/class-logs-table.php:347
-#: reportedip-hive.php:818
-#: reportedip-hive.php:833
+#: reportedip-hive.php:820
+#: reportedip-hive.php:835
 msgid "XMLRPC Abuse"
 msgstr ""
 
@@ -3897,37 +4073,38 @@ msgstr ""
 #: admin/class-setup-wizard.php:1899
 #: admin/class-setup-wizard.php:2039
 #: admin/class-setup-wizard.php:2077
-#: includes/class-ajax-handler.php:140
-#: includes/class-ajax-handler.php:399
-#: includes/class-ajax-handler.php:423
-#: includes/class-ajax-handler.php:458
-#: includes/class-ajax-handler.php:497
-#: includes/class-ajax-handler.php:526
-#: includes/class-ajax-handler.php:558
-#: includes/class-ajax-handler.php:590
-#: includes/class-ajax-handler.php:668
-#: includes/class-ajax-handler.php:706
-#: includes/class-ajax-handler.php:746
-#: includes/class-ajax-handler.php:815
-#: includes/class-ajax-handler.php:849
-#: includes/class-ajax-handler.php:913
-#: includes/class-ajax-handler.php:993
-#: includes/class-ajax-handler.php:1023
-#: includes/class-ajax-handler.php:1053
-#: includes/class-ajax-handler.php:1130
-#: includes/class-ajax-handler.php:1190
-#: includes/class-ajax-handler.php:1234
-#: includes/class-ajax-handler.php:1275
-#: includes/class-ajax-handler.php:1316
-#: includes/class-ajax-handler.php:1337
-#: includes/class-ajax-handler.php:1412
-#: includes/class-ajax-handler.php:1448
-#: includes/class-ajax-handler.php:1479
+#: includes/class-ajax-handler.php:141
+#: includes/class-ajax-handler.php:400
+#: includes/class-ajax-handler.php:424
+#: includes/class-ajax-handler.php:459
+#: includes/class-ajax-handler.php:498
+#: includes/class-ajax-handler.php:527
+#: includes/class-ajax-handler.php:559
+#: includes/class-ajax-handler.php:591
+#: includes/class-ajax-handler.php:669
+#: includes/class-ajax-handler.php:707
+#: includes/class-ajax-handler.php:747
+#: includes/class-ajax-handler.php:816
+#: includes/class-ajax-handler.php:850
+#: includes/class-ajax-handler.php:914
+#: includes/class-ajax-handler.php:994
+#: includes/class-ajax-handler.php:1024
+#: includes/class-ajax-handler.php:1054
+#: includes/class-ajax-handler.php:1131
+#: includes/class-ajax-handler.php:1191
+#: includes/class-ajax-handler.php:1235
+#: includes/class-ajax-handler.php:1276
+#: includes/class-ajax-handler.php:1317
+#: includes/class-ajax-handler.php:1338
+#: includes/class-ajax-handler.php:1413
+#: includes/class-ajax-handler.php:1444
+#: includes/class-ajax-handler.php:1475
+#: includes/class-ajax-handler.php:1506
 msgid "Insufficient permissions."
 msgstr ""
 
 #: admin/class-settings-import-export.php:455
-#: includes/class-ajax-handler.php:1360
+#: includes/class-ajax-handler.php:1361
 msgid "No file uploaded."
 msgstr ""
 
@@ -4123,7 +4300,7 @@ msgstr ""
 
 #: admin/class-setup-wizard.php:553
 #: admin/class-setup-wizard.php:1042
-#: includes/class-mode-manager.php:758
+#: includes/class-mode-manager.php:803
 msgid "PRO"
 msgstr ""
 
@@ -4149,8 +4326,8 @@ msgid "See plans →"
 msgstr ""
 
 #: admin/class-setup-wizard.php:567
-#: includes/class-mode-manager.php:766
-#: includes/class-mode-manager.php:767
+#: includes/class-mode-manager.php:811
+#: includes/class-mode-manager.php:812
 msgid "Business"
 msgstr ""
 
@@ -4215,7 +4392,7 @@ msgid "Community mode gives you real-time threat intelligence. Local Shield runs
 msgstr ""
 
 #: admin/class-setup-wizard.php:662
-#: includes/class-mode-manager.php:628
+#: includes/class-mode-manager.php:673
 msgid "Local Shield"
 msgstr ""
 
@@ -4941,7 +5118,7 @@ msgstr ""
 #. translators: %s: user display name
 #. translators: %s: admin display name
 #: admin/class-two-factor-admin.php:161
-#: includes/class-ajax-handler.php:253
+#: includes/class-ajax-handler.php:254
 #: includes/class-two-factor-email.php:136
 #: includes/class-two-factor-notifications.php:226
 #: includes/class-two-factor-reset-gate.php:1190
@@ -5700,310 +5877,318 @@ msgstr ""
 msgid "Manage Hardening settings"
 msgstr ""
 
-#: includes/class-ajax-handler.php:150
+#: includes/class-ajax-handler.php:151
 msgid "Invalid mode specified."
 msgstr ""
 
 #. translators: %s: mode label
-#: includes/class-ajax-handler.php:164
+#: includes/class-ajax-handler.php:165
 #, php-format
 msgid "Mode changed to %s"
 msgstr ""
 
-#: includes/class-ajax-handler.php:174
+#: includes/class-ajax-handler.php:175
 msgid "Failed to change mode. Please try again."
 msgstr ""
 
-#: includes/class-ajax-handler.php:187
-#: includes/class-ajax-handler.php:205
-#: includes/class-ajax-handler.php:308
-#: includes/class-ajax-handler.php:336
+#: includes/class-ajax-handler.php:188
+#: includes/class-ajax-handler.php:206
+#: includes/class-ajax-handler.php:309
+#: includes/class-ajax-handler.php:337
 msgid "Unauthorized."
 msgstr ""
 
-#: includes/class-ajax-handler.php:217
+#: includes/class-ajax-handler.php:218
 msgid "No valid recipient address available."
-msgstr ""
-
-#: includes/class-ajax-handler.php:224
-#: includes/class-ajax-handler.php:260
-msgid "Test type"
 msgstr ""
 
 #: includes/class-ajax-handler.php:225
 #: includes/class-ajax-handler.php:261
-msgid "Brand template + provider verification"
+msgid "Test type"
 msgstr ""
 
 #: includes/class-ajax-handler.php:226
 #: includes/class-ajax-handler.php:262
+msgid "Brand template + provider verification"
+msgstr ""
+
+#: includes/class-ajax-handler.php:227
+#: includes/class-ajax-handler.php:263
 msgid "Triggered by"
 msgstr ""
 
 #. translators: %s: site name
-#: includes/class-ajax-handler.php:248
+#: includes/class-ajax-handler.php:249
 #, php-format
 msgid "[%s] ReportedIP Hive test email"
 msgstr ""
 
-#: includes/class-ajax-handler.php:256
+#: includes/class-ajax-handler.php:257
 msgid "This is a test message from ReportedIP Hive. If you can read this in your usual mail client, the brand template and your active mail provider are working correctly."
 msgstr ""
 
-#: includes/class-ajax-handler.php:267
+#: includes/class-ajax-handler.php:268
 msgid "No action required. This email was sent on demand from the plugin settings."
 msgstr ""
 
 #. translators: %s: masked recipient
-#: includes/class-ajax-handler.php:278
+#: includes/class-ajax-handler.php:279
 #, php-format
 msgid "Test email sent to %s."
 msgstr ""
 
-#: includes/class-ajax-handler.php:282
+#: includes/class-ajax-handler.php:283
 msgid "Note: the managed relay is currently in cooldown for this recipient — the mail was delivered through the local wp_mail() fallback. Check the Activity log for the most recent 402/429 entry to see why."
 msgstr ""
 
-#: includes/class-ajax-handler.php:295
+#: includes/class-ajax-handler.php:296
 msgid "Test email could not be sent. Check the WordPress mail configuration or your active mail provider."
 msgstr ""
 
-#: includes/class-ajax-handler.php:405
-#: includes/class-ajax-handler.php:431
+#: includes/class-ajax-handler.php:406
+#: includes/class-ajax-handler.php:432
 msgid "Invalid IP address."
 msgstr ""
 
-#: includes/class-ajax-handler.php:435
+#: includes/class-ajax-handler.php:436
 msgid "Reason is required."
 msgstr ""
 
-#: includes/class-ajax-handler.php:466
-#: includes/class-ajax-handler.php:503
+#: includes/class-ajax-handler.php:467
+#: includes/class-ajax-handler.php:504
 msgid "IP address is required."
 msgstr ""
 
-#: includes/class-ajax-handler.php:470
+#: includes/class-ajax-handler.php:471
 msgid "Invalid IP address or CIDR format."
 msgstr ""
 
-#: includes/class-ajax-handler.php:474
+#: includes/class-ajax-handler.php:475
 msgid "Invalid expiration date."
 msgstr ""
 
 #. translators: 1: number of old log entries removed, 2: number of expired IP entries removed
-#: includes/class-ajax-handler.php:538
+#: includes/class-ajax-handler.php:539
 #, php-format
 msgid "Cleanup completed. Removed %1$d old log entries and %2$d expired IP entries."
 msgstr ""
 
 #. translators: 1: number of anonymized entries, 2: minimum age in days
-#: includes/class-ajax-handler.php:569
+#: includes/class-ajax-handler.php:570
 #, php-format
 msgid "Anonymization completed. Anonymized %1$d entries older than %2$d days."
 msgstr ""
 
-#: includes/class-ajax-handler.php:610
+#: includes/class-ajax-handler.php:611
 msgid "Imported from CSV"
 msgstr ""
 
 #. translators: 1: line number in CSV file, 2: invalid IP value found
-#: includes/class-ajax-handler.php:614
+#: includes/class-ajax-handler.php:615
 #, php-format
 msgid "Line %1$d: Invalid IP \"%2$s\""
 msgstr ""
 
 #. translators: 1: line number in CSV file, 2: IP address, 3: error message returned by the blocker
-#: includes/class-ajax-handler.php:628
+#: includes/class-ajax-handler.php:629
 #, php-format
 msgid "Line %1$d: Failed to block \"%2$s\" - %3$s"
 msgstr ""
 
 #. translators: 1: number of imported IPs, 2: number of skipped IPs, 3: number of errors
-#: includes/class-ajax-handler.php:651
+#: includes/class-ajax-handler.php:652
 #, php-format
 msgid "%1$d IPs imported, %2$d skipped (already blocked), %3$d errors."
 msgstr ""
 
 #. translators: 1: number of IPs imported to whitelist, 2: number of errors
-#: includes/class-ajax-handler.php:691
+#: includes/class-ajax-handler.php:692
 #, php-format
 msgid "%1$d IPs imported to whitelist, %2$d errors."
 msgstr ""
 
 #. translators: %s: severity level used in the test event
-#: includes/class-ajax-handler.php:727
+#: includes/class-ajax-handler.php:728
 #, php-format
 msgid "Successfully logged %s severity test event."
 msgstr ""
 
-#: includes/class-ajax-handler.php:732
+#: includes/class-ajax-handler.php:733
 msgid "Failed to log test event. Check database connection."
 msgstr ""
 
-#: includes/class-ajax-handler.php:756
+#: includes/class-ajax-handler.php:757
 msgid "Basic database connection failed."
 msgstr ""
 
-#: includes/class-ajax-handler.php:764
+#: includes/class-ajax-handler.php:765
 msgid "Plugin database tables are missing. Try deactivating and reactivating the plugin."
 msgstr ""
 
-#: includes/class-ajax-handler.php:785
+#: includes/class-ajax-handler.php:786
 msgid "Database insert test failed: "
 msgstr ""
 
-#: includes/class-ajax-handler.php:793
+#: includes/class-ajax-handler.php:794
 msgid "Database connection and functionality test successful."
 msgstr ""
 
-#: includes/class-ajax-handler.php:832
+#: includes/class-ajax-handler.php:833
 msgid "Cron jobs triggered successfully. Check logs for results."
 msgstr ""
 
-#: includes/class-ajax-handler.php:870
+#: includes/class-ajax-handler.php:871
 msgid "Auto-block function test successful! Test IP was blocked."
 msgstr ""
 
 #. translators: %s: human readable reason why the IP was not blocked
-#: includes/class-ajax-handler.php:892
+#: includes/class-ajax-handler.php:893
 #, php-format
 msgid "Auto-block function test completed. IP was not blocked. Reason: %s"
 msgstr ""
 
 #. translators: 1: number of attempts recorded, 2: configured threshold, 3: "Yes" or "No" indicating threshold exceeded
-#: includes/class-ajax-handler.php:958
+#: includes/class-ajax-handler.php:959
 #, php-format
 msgid "Failed login threshold simulation completed. %1$d attempts recorded, threshold is %2$d. Threshold exceeded: %3$s"
 msgstr ""
 
 #. translators: 1: number of attempts that were actually recorded, 2: number of attempts that were expected
-#: includes/class-ajax-handler.php:975
+#: includes/class-ajax-handler.php:976
 #, php-format
 msgid "Simulation failed. Only %1$d attempts recorded, but %2$d were expected."
 msgstr ""
 
 #. translators: %d: number of cache entries that were removed
-#: includes/class-ajax-handler.php:1004
+#: includes/class-ajax-handler.php:1005
 #, php-format
 msgid "Cache cleared successfully. Removed %d cache entries."
 msgstr ""
 
 #. translators: %d: number of expired cache entries that were removed
-#: includes/class-ajax-handler.php:1034
+#: includes/class-ajax-handler.php:1035
 #, php-format
 msgid "Expired cache entries cleaned up. Removed %d expired entries."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1059
-#: includes/class-ajax-handler.php:1196
+#: includes/class-ajax-handler.php:1060
+#: includes/class-ajax-handler.php:1197
 msgid "Invalid report ID."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1069
+#: includes/class-ajax-handler.php:1070
 msgid "Queue row not found."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1105
+#: includes/class-ajax-handler.php:1106
 msgid "Report sent."
 msgstr ""
 
 #. translators: %s: API error message
-#: includes/class-ajax-handler.php:1113
+#: includes/class-ajax-handler.php:1114
 #, php-format
 msgid "Send failed: %s"
 msgstr ""
 
-#: includes/class-ajax-handler.php:1114
+#: includes/class-ajax-handler.php:1115
 msgid "unknown error"
 msgstr ""
 
 #. translators: 1: reset count, 2: processed count, 3: errors count
-#: includes/class-ajax-handler.php:1160
+#: includes/class-ajax-handler.php:1161
 #, php-format
 msgid "%1$d failed reset · %2$d sent · %3$d errors"
 msgstr ""
 
-#: includes/class-ajax-handler.php:1215
+#: includes/class-ajax-handler.php:1216
 msgid "Queue item deleted."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1220
+#: includes/class-ajax-handler.php:1221
 msgid "Failed to delete queue item."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1262
+#: includes/class-ajax-handler.php:1263
 msgid "All settings have been reset to defaults. The page will reload."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1303
+#: includes/class-ajax-handler.php:1304
 msgid "All plugin data has been deleted. The page will reload."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1321
+#: includes/class-ajax-handler.php:1322
 msgid "Invalid notice ID."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1368
+#: includes/class-ajax-handler.php:1369
 msgid "File exceeds upload_max_filesize."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1369
+#: includes/class-ajax-handler.php:1370
 msgid "File exceeds MAX_FILE_SIZE."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1370
+#: includes/class-ajax-handler.php:1371
 msgid "File was only partially uploaded."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1371
+#: includes/class-ajax-handler.php:1372
 msgid "No file was uploaded."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1372
+#: includes/class-ajax-handler.php:1373
 msgid "Missing temporary folder."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1373
+#: includes/class-ajax-handler.php:1374
 msgid "Failed to write file to disk."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1374
+#: includes/class-ajax-handler.php:1375
 msgid "File upload stopped by extension."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1376
+#: includes/class-ajax-handler.php:1377
 msgid "Unknown upload error."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1381
+#: includes/class-ajax-handler.php:1382
 msgid "File too large. Maximum size is 1 MB."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1386
+#: includes/class-ajax-handler.php:1387
 msgid "Invalid file type. Only CSV and TXT files are allowed."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1392
+#: includes/class-ajax-handler.php:1393
 msgid "Failed to read uploaded file."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1424
+#: includes/class-ajax-handler.php:1425
 msgid "Queue processed and quota refreshed. Check Activity log for details."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1457
+#: includes/class-ajax-handler.php:1449
+msgid "Priority Sync requires a Professional plan."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1454
+msgid "Rulesets synced."
+msgstr ""
+
+#: includes/class-ajax-handler.php:1484
 msgid "Queue lock cleared."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1458
+#: includes/class-ajax-handler.php:1485
 msgid "No queue lock was held."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1489
+#: includes/class-ajax-handler.php:1516
 msgid "Hardening Mode deactivated."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1490
+#: includes/class-ajax-handler.php:1517
 msgid "Hardening Mode was not active."
 msgstr ""
 
@@ -6063,11 +6248,11 @@ msgstr ""
 msgid "%d reports remaining today."
 msgstr ""
 
-#: includes/class-cron-handler.php:165
+#: includes/class-cron-handler.php:167
 msgid "Every 15 Minutes"
 msgstr ""
 
-#: includes/class-cron-handler.php:171
+#: includes/class-cron-handler.php:173
 msgid "Every 6 Hours"
 msgstr ""
 
@@ -6359,60 +6544,116 @@ msgstr ""
 msgid "Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected."
 msgstr ""
 
-#: includes/class-mode-manager.php:630
+#: includes/class-mode-manager.php:295
+msgid "Web Application Firewall"
+msgstr ""
+
+#: includes/class-mode-manager.php:296
+msgid "Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync."
+msgstr ""
+
+#: includes/class-mode-manager.php:302
+msgid "Priority Rule Sync"
+msgstr ""
+
+#: includes/class-mode-manager.php:303
+msgid "Daily, full-ruleset delivery (broader signatures, higher paranoia levels, bot IP-range feeds, live disposable lists) instead of the bundled baseline."
+msgstr ""
+
+#: includes/class-mode-manager.php:308
+msgid "Verified Bot Detection"
+msgstr ""
+
+#: includes/class-mode-manager.php:309
+msgid "Verify search-engine crawlers via IP ranges and forward-confirmed reverse DNS; flag or block user-agent spoofers."
+msgstr ""
+
+#: includes/class-mode-manager.php:314
+msgid "Disposable Email Block"
+msgstr ""
+
+#: includes/class-mode-manager.php:315
+msgid "Block registrations from throwaway-mail providers. Baseline list is free; the live list arrives via Priority Sync."
+msgstr ""
+
+#: includes/class-mode-manager.php:320
+msgid "Security Headers"
+msgstr ""
+
+#: includes/class-mode-manager.php:321
+msgid "Site-wide X-Content-Type-Options, X-Frame-Options and Referrer-Policy."
+msgstr ""
+
+#: includes/class-mode-manager.php:327
+msgid "Advanced Security Headers"
+msgstr ""
+
+#: includes/class-mode-manager.php:328
+msgid "CSP builder, HSTS with preload, Permissions-Policy and the Cross-Origin-Opener/Embedder/Resource trio."
+msgstr ""
+
+#: includes/class-mode-manager.php:334
+msgid "Audit Event Trail"
+msgstr ""
+
+#: includes/class-mode-manager.php:335
+msgid "User-lifecycle audit log (role changes with actor, new-IP alerts) with filtering, CSV/JSON export and long retention."
+msgstr ""
+
+#: includes/class-mode-manager.php:675
 msgid "Standalone protection without external connectivity"
 msgstr ""
 
-#: includes/class-mode-manager.php:640
+#: includes/class-mode-manager.php:685
 msgid "Connected to the community threat intelligence network"
 msgstr ""
 
-#: includes/class-mode-manager.php:741
+#: includes/class-mode-manager.php:786
 msgid "Local protection, free forever."
 msgstr ""
 
-#: includes/class-mode-manager.php:748
+#: includes/class-mode-manager.php:793
 msgid "Contributor"
 msgstr ""
 
-#: includes/class-mode-manager.php:749
+#: includes/class-mode-manager.php:794
 msgid "Contrib."
 msgstr ""
 
-#: includes/class-mode-manager.php:750
+#: includes/class-mode-manager.php:795
 msgid "Honeypot operator — community contributor."
 msgstr ""
 
-#: includes/class-mode-manager.php:757
+#: includes/class-mode-manager.php:802
 msgid "Professional"
 msgstr ""
 
-#: includes/class-mode-manager.php:759
+#: includes/class-mode-manager.php:804
 msgid "Up to 3 domains, managed mail and SMS relay, priority sync."
 msgstr ""
 
-#: includes/class-mode-manager.php:768
+#: includes/class-mode-manager.php:813
 msgid "Agency-grade: 15 domains per licence (bookable x2–x20), whitelabel, WooCommerce, full WP-CLI."
 msgstr ""
 
-#: includes/class-mode-manager.php:775
-#: includes/class-mode-manager.php:776
+#: includes/class-mode-manager.php:820
+#: includes/class-mode-manager.php:821
 msgid "Enterprise"
 msgstr ""
 
-#: includes/class-mode-manager.php:777
+#: includes/class-mode-manager.php:822
 msgid "Unlimited domains, AVV, dedicated onboarding, priority phone support."
 msgstr ""
 
-#: includes/class-mode-manager.php:784
+#: includes/class-mode-manager.php:829
 msgid "Honeypot Operator"
 msgstr ""
 
-#: includes/class-mode-manager.php:785
+#: includes/class-mode-manager.php:830
 msgid "Honeypot"
 msgstr ""
 
-#: includes/class-mode-manager.php:786
+#: includes/class-mode-manager.php:831
 msgid "Operating a honeypot node for the network."
 msgstr ""
 
@@ -7500,109 +7741,109 @@ msgstr ""
 msgid "SMS relay failed (%s)."
 msgstr ""
 
-#: reportedip-hive.php:671
+#: reportedip-hive.php:673
 msgid "Testing connection..."
 msgstr ""
 
-#: reportedip-hive.php:672
+#: reportedip-hive.php:674
 msgid "Connection successful!"
 msgstr ""
 
-#: reportedip-hive.php:673
+#: reportedip-hive.php:675
 msgid "Connection failed!"
 msgstr ""
 
-#: reportedip-hive.php:674
+#: reportedip-hive.php:676
 msgid "Are you sure you want to unblock this IP?"
 msgstr ""
 
-#: reportedip-hive.php:675
+#: reportedip-hive.php:677
 msgid "Are you sure you want to whitelist this IP?"
 msgstr ""
 
-#: reportedip-hive.php:676
+#: reportedip-hive.php:678
 msgid "Are you sure you want to reset all settings to defaults?"
 msgstr ""
 
-#: reportedip-hive.php:677
+#: reportedip-hive.php:679
 msgid "WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!"
 msgstr ""
 
-#: reportedip-hive.php:678
+#: reportedip-hive.php:680
 msgid "Are you absolutely sure?"
 msgstr ""
 
-#: reportedip-hive.php:679
+#: reportedip-hive.php:681
 msgid "Enter reason for whitelisting (optional):"
 msgstr ""
 
-#: reportedip-hive.php:680
+#: reportedip-hive.php:682
 msgid "Enter reason for blocking this IP:"
 msgstr ""
 
-#: reportedip-hive.php:681
+#: reportedip-hive.php:683
 msgid "Blocked from security logs"
 msgstr ""
 
-#: reportedip-hive.php:682
+#: reportedip-hive.php:684
 msgid "Export logs from how many days? (default: 30)"
 msgstr ""
 
-#: reportedip-hive.php:683
+#: reportedip-hive.php:685
 msgid "Database connection successful!"
 msgstr ""
 
-#: reportedip-hive.php:816
-#: reportedip-hive.php:830
+#: reportedip-hive.php:818
+#: reportedip-hive.php:832
 msgid "Failed Logins"
 msgstr ""
 
-#: reportedip-hive.php:819
-#: reportedip-hive.php:834
+#: reportedip-hive.php:821
+#: reportedip-hive.php:836
 msgid "Admin Scanning"
 msgstr ""
 
-#: reportedip-hive.php:835
+#: reportedip-hive.php:837
 msgid "API Calls"
 msgstr ""
 
-#: reportedip-hive.php:836
+#: reportedip-hive.php:838
 msgid "Cache Hits"
 msgstr ""
 
-#: reportedip-hive.php:944
+#: reportedip-hive.php:946
 msgid "Your IP address has been blocked due to suspicious activity."
 msgstr ""
 
-#: reportedip-hive.php:972
+#: reportedip-hive.php:974
 msgid "Access denied due to IP reputation."
 msgstr ""
 
-#: reportedip-hive.php:1111
+#: reportedip-hive.php:1113
 msgid "Access denied. Your IP address has been blocked due to suspicious activity."
 msgstr ""
 
-#: reportedip-hive.php:1216
+#: reportedip-hive.php:1218
 msgid "Retry failed."
 msgstr ""
 
-#: reportedip-hive.php:1234
+#: reportedip-hive.php:1236
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr ""
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
-#: reportedip-hive.php:1237
+#: reportedip-hive.php:1239
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
 msgstr ""
 
 #. translators: %s: link to settings page
-#: reportedip-hive.php:1281
+#: reportedip-hive.php:1283
 #, php-format
 msgid "No API key configured. %s"
 msgstr ""
 
-#: reportedip-hive.php:1282
+#: reportedip-hive.php:1284
 msgid "Configure now"
 msgstr ""
 
