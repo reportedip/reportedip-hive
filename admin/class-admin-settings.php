@@ -3871,6 +3871,158 @@ RIPJS;
 	}
 
 	/**
+	 * Render the protection- and hardening-score section on the dashboard.
+	 *
+	 * Two SVG ring gauges (detection / hardening) followed by per-group item
+	 * breakdowns with activate-direct-links and tier/mode-lock CTAs, plus
+	 * independent-verification deep links for the site host.
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	private function render_score_section() {
+		if ( ! class_exists( 'ReportedIP_Hive_Score' ) ) {
+			return;
+		}
+
+		$detection = ReportedIP_Hive_Score::detection_score();
+		$hardening = ReportedIP_Hive_Score::hardening_score();
+		$host      = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		?>
+		<section class="rip-score-section">
+			<div class="rip-score-gauges">
+				<?php
+				$this->render_score_gauge( $detection, __( 'Detection Score', 'reportedip-hive' ) );
+				$this->render_score_gauge( $hardening, __( 'Hardening Score', 'reportedip-hive' ) );
+				?>
+			</div>
+			<div class="rip-score-breakdowns">
+				<?php
+				$this->render_score_items( $detection, __( 'Detection sensors', 'reportedip-hive' ) );
+				$this->render_score_items( $hardening, __( 'Hardening features', 'reportedip-hive' ) );
+				?>
+			</div>
+			<?php if ( '' !== $host ) : ?>
+			<div class="rip-score-verify">
+				<span class="rip-score-verify__label"><?php esc_html_e( 'Verify independently:', 'reportedip-hive' ); ?></span>
+				<a class="rip-button rip-button--secondary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( 'https://developer.mozilla.org/en-US/observatory/analyze?host=' . rawurlencode( $host ) ); ?>">
+					<?php esc_html_e( 'Mozilla Observatory', 'reportedip-hive' ); ?>
+				</a>
+				<a class="rip-button rip-button--secondary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( 'https://securityheaders.com/?followRedirects=on&q=' . rawurlencode( $host ) ); ?>">
+					<?php esc_html_e( 'securityheaders.com', 'reportedip-hive' ); ?>
+				</a>
+			</div>
+			<?php endif; ?>
+		</section>
+		<?php
+	}
+
+	/**
+	 * Render a single SVG ring gauge with its score, grade and caption.
+	 *
+	 * @param array<string,mixed> $summary One group summary from ReportedIP_Hive_Score.
+	 * @param string              $title   Group title.
+	 * @return void
+	 * @since  2.2.0
+	 */
+	private function render_score_gauge( array $summary, $title ) {
+		$score  = (int) ( $summary['score'] ?? 0 );
+		$grade  = (string) ( $summary['grade'] ?? 'F' );
+		$earned = (int) ( $summary['earned'] ?? 0 );
+		$max    = (int) ( $summary['max'] ?? 0 );
+		$locked = (int) ( $summary['locked_potential'] ?? 0 );
+		$band   = $score < 40 ? 'danger' : ( $score < 70 ? 'warning' : 'success' );
+		$circ   = 2 * M_PI * 52;
+		$offset = $circ * ( 1 - $score / 100 );
+
+		/* translators: 1: score group title, 2: numeric score out of 100 */
+		$aria = sprintf( __( '%1$s: %2$d out of 100', 'reportedip-hive' ), $title, $score );
+		/* translators: 1: earned points, 2: maximum points */
+		$caption = sprintf( __( '%1$d of %2$d points', 'reportedip-hive' ), $earned, $max );
+		?>
+		<div class="rip-stat-card rip-gauge-card">
+			<div class="rip-gauge">
+				<svg class="rip-gauge__svg" viewBox="0 0 120 120" role="img" aria-label="<?php echo esc_attr( $aria ); ?>">
+					<circle class="rip-gauge__track" cx="60" cy="60" r="52" fill="none" stroke-width="10" />
+					<circle class="rip-gauge__value rip-gauge__value--<?php echo esc_attr( $band ); ?>" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="<?php echo esc_attr( (string) round( $circ, 2 ) ); ?>" stroke-dashoffset="<?php echo esc_attr( (string) round( $offset, 2 ) ); ?>" transform="rotate(-90 60 60)" />
+				</svg>
+				<div class="rip-gauge__center">
+					<span class="rip-gauge__score"><?php echo esc_html( (string) $score ); ?></span>
+					<span class="rip-gauge__grade rip-gauge__grade--<?php echo esc_attr( $band ); ?>"><?php echo esc_html( $grade ); ?></span>
+				</div>
+			</div>
+			<div class="rip-gauge-card__meta">
+				<h3 class="rip-gauge-card__title"><?php echo esc_html( $title ); ?></h3>
+				<p class="rip-gauge-card__caption">
+					<?php
+					echo esc_html( $caption );
+					if ( $locked > 0 ) {
+						/* translators: %d: points unlockable through an upgrade or mode switch */
+						echo ' · ' . esc_html( sprintf( __( '+%d unlockable', 'reportedip-hive' ), $locked ) );
+					}
+					?>
+				</p>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the collapsible per-item breakdown for one score group.
+	 *
+	 * @param array<string,mixed> $summary One group summary from ReportedIP_Hive_Score.
+	 * @param string              $title   Group title.
+	 * @return void
+	 * @since  2.2.0
+	 */
+	private function render_score_items( array $summary, $title ) {
+		$items = isset( $summary['items'] ) && is_array( $summary['items'] ) ? $summary['items'] : array();
+		if ( empty( $items ) ) {
+			return;
+		}
+		?>
+		<details class="rip-score-list">
+			<summary class="rip-score-list__summary"><?php echo esc_html( $title ); ?></summary>
+			<ul class="rip-score-items">
+				<?php
+				foreach ( $items as $item ) :
+					$weight    = (int) ( $item['weight'] ?? 0 );
+					$available = ! empty( $item['available'] );
+					$enabled   = ! empty( $item['enabled'] );
+					/* translators: %d: weight of the security item in points */
+					$weight_label = sprintf( __( '%d pts', 'reportedip-hive' ), $weight );
+					?>
+					<li class="rip-score-item">
+						<span class="rip-score-item__label"><?php echo esc_html( (string) ( $item['label'] ?? '' ) ); ?></span>
+						<span class="rip-score-item__weight"><?php echo esc_html( $weight_label ); ?></span>
+						<span class="rip-score-item__state">
+							<?php
+							if ( ! $available && ! empty( $item['status'] ) ) {
+								/* translators: %d: points unlockable by upgrading or switching mode */
+								$lock_label = sprintf( __( '+%d pts', 'reportedip-hive' ), $weight );
+								self::render_tier_lock( $item['status'], array( 'label' => $lock_label ) );
+							} elseif ( $enabled ) {
+								?>
+								<span class="rip-score-item__on">
+									<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4l3.1 3.1 6.8-6.8a1 1 0 011.4 0z" clip-rule="evenodd"/></svg>
+									<?php esc_html_e( 'Active', 'reportedip-hive' ); ?>
+								</span>
+								<?php
+							} else {
+								?>
+								<a class="rip-score-item__enable" href="<?php echo esc_url( (string) ( $item['settings_url'] ?? '' ) ); ?>"><?php esc_html_e( 'Enable', 'reportedip-hive' ); ?></a>
+								<?php
+							}
+							?>
+						</span>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</details>
+		<?php
+	}
+
+	/**
 	 * Dashboard page
 	 */
 	public function dashboard_page() {
@@ -3946,6 +4098,8 @@ RIPJS;
 					</div>
 					<?php endif; ?>
 				</div>
+
+				<?php $this->render_score_section(); ?>
 
 				<?php
 				if ( $mode_manager->is_community_mode() && $mode_manager->tier_at_least( 'professional' ) ) {

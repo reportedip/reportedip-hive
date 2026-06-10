@@ -2,7 +2,8 @@
 /**
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
- * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
+ * Description: Community-powered WordPress security — real-time threat intelligence
+ * with 5-layer defense and 4-method 2FA. Be part of the hive.
  * Version: 2.1.1
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
@@ -214,6 +215,14 @@ class ReportedIP_Hive {
 		add_action( 'update_option_reportedip_hive_2fa_enforce_roles_extra', $flush_routing_cache );
 		add_action( 'update_site_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
 
+		$flush_score = array( 'ReportedIP_Hive_Score', 'flush_on_option_change' );
+		add_action( 'updated_option', $flush_score );
+		add_action( 'added_option', $flush_score );
+		add_action( 'deleted_option', $flush_score );
+		add_action( 'update_site_option', $flush_score );
+		add_action( 'add_site_option', $flush_score );
+		add_action( 'reportedip_hive_mode_changed', array( 'ReportedIP_Hive_Score', 'flush_cache' ) );
+
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Ajax_Handler( $this );
 		}
@@ -318,6 +327,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-bot-verifier.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-disposable-email.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-score.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
