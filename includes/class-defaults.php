@@ -82,6 +82,10 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_ruleset_ua_blocklist'           => '',
 		'reportedip_hive_ruleset_scan_paths'             => '',
 
+		'reportedip_hive_waf_enabled'                    => true,
+		'reportedip_hive_waf_report_only'                => false,
+		'reportedip_hive_waf_paranoia'                   => 1,
+
 		'reportedip_hive_monitor_failed_logins'          => true,
 		'reportedip_hive_failed_login_threshold'         => 5,
 		'reportedip_hive_failed_login_timeframe'         => 15,

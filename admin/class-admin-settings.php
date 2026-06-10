@@ -1347,24 +1347,6 @@ class ReportedIP_Hive_Admin_Settings {
 
 		add_submenu_page(
 			'reportedip-hive',
-			__( 'Hardening', 'reportedip-hive' ),
-			__( 'Hardening', 'reportedip-hive' ),
-			$cap,
-			'reportedip-hive-hardening',
-			array( $this, 'hardening_page' )
-		);
-
-		add_submenu_page(
-			'reportedip-hive',
-			__( 'Audit Log', 'reportedip-hive' ),
-			__( 'Audit Log', 'reportedip-hive' ),
-			$cap,
-			'reportedip-hive-audit',
-			array( $this, 'audit_page' )
-		);
-
-		add_submenu_page(
-			'reportedip-hive',
 			__( 'Settings', 'reportedip-hive' ),
 			__( 'Settings', 'reportedip-hive' ),
 			$cap,
@@ -1410,7 +1392,11 @@ class ReportedIP_Hive_Admin_Settings {
 			'bot'       => __( 'Bot Verification', 'reportedip-hive' ),
 			'rule_sync' => __( 'Rule Sync', 'reportedip-hive' ),
 			'scan'      => __( 'Scan & Decoy', 'reportedip-hive' ),
+			'hardening' => __( 'Hardening', 'reportedip-hive' ),
 		);
+		if ( ! isset( $tabs[ $active_tab ] ) ) {
+			$active_tab = 'overview';
+		}
 		echo '<nav class="rip-nav-tabs">';
 		foreach ( $tabs as $slug => $label ) {
 			$class = 'rip-nav-tabs__tab' . ( $active_tab === $slug ? ' rip-nav-tabs__tab--active' : '' );
@@ -1424,16 +1410,93 @@ class ReportedIP_Hive_Admin_Settings {
 		echo '</nav>';
 
 		echo '<div class="rip-content">';
-		if ( 'rule_sync' === $active_tab ) {
-			$this->render_rule_sync_tab();
-		} elseif ( 'overview' === $active_tab ) {
-			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The firewall bundles request inspection, verified-bot detection and the server-delivered rule sync. Use the Rule Sync tab to review the active rulesets.', 'reportedip-hive' ) . '</div>';
-		} else {
-			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'This engine ships in a later release. The server-delivered rule sync that feeds it is already active — see the Rule Sync tab.', 'reportedip-hive' ) . '</div>';
+		switch ( $active_tab ) {
+			case 'rule_sync':
+				$this->render_rule_sync_tab();
+				break;
+			case 'waf':
+				$this->render_waf_tab();
+				break;
+			case 'hardening':
+				$this->render_hardening_tab();
+				break;
+			case 'overview':
+				echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The firewall bundles request inspection, verified-bot detection and the server-delivered rule sync. Use the Rule Sync tab to review the active rulesets.', 'reportedip-hive' ) . '</div>';
+				break;
+			default:
+				echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'This engine ships in a later release. The server-delivered rule sync that feeds it is already active — see the Rule Sync tab.', 'reportedip-hive' ) . '</div>';
 		}
 		echo '</div>';
 
 		$this->render_page_footer();
+	}
+
+	/**
+	 * Render the WAF tab: live engine status (state, mode, active rules,
+	 * Paranoia ceiling) plus the enable and report-only toggles. The engine is
+	 * free on every plan; deeper Paranoia Levels ride the Professional ruleset.
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	private function render_waf_tab() {
+		if ( ! class_exists( 'ReportedIP_Hive_WAF' ) ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The WAF engine is unavailable.', 'reportedip-hive' ) . '</div>';
+			return;
+		}
+
+		$waf         = ReportedIP_Hive_WAF::get_instance();
+		$enabled     = $waf->is_enabled();
+		$report_only = $waf->is_report_only();
+		$rule_count  = $waf->active_rule_count();
+		$pl_cap      = $waf->paranoia_cap();
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Web Application Firewall', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+
+		echo '<div class="rip-grid rip-grid-cols-4">';
+
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_attr( $enabled ? 'rip-badge--success' : 'rip-badge--neutral' ),
+			esc_html( $enabled ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ) ),
+			esc_html__( 'Engine', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_attr( $report_only ? 'rip-badge--warning' : 'rip-badge--info' ),
+			esc_html( $report_only ? __( 'Report only', 'reportedip-hive' ) : __( 'Enforcing', 'reportedip-hive' ) ),
+			esc_html__( 'Mode', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%d</div><div class="rip-stat-card__label">%s</div></div></div>',
+			absint( $rule_count ),
+			esc_html__( 'Active rules', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%s%d</div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_html_x( 'PL', 'Paranoia Level abbreviation', 'reportedip-hive' ),
+			absint( $pl_cap ),
+			esc_html__( 'Paranoia ceiling', 'reportedip-hive' )
+		);
+
+		echo '</div>';
+
+		echo '<p class="rip-help-text">' . esc_html__( 'The WAF engine and the Paranoia-Level-1 baseline rules are free on every plan. Paranoia Level 2/3 ride the Professional ruleset.', 'reportedip-hive' ) . '</p>';
+
+		printf(
+			'<button type="button" class="rip-button rip-button--secondary rip-waf-toggle" data-field="enabled">%s</button> ',
+			esc_html( $enabled ? __( 'Disable engine', 'reportedip-hive' ) : __( 'Enable engine', 'reportedip-hive' ) )
+		);
+		printf(
+			'<button type="button" class="rip-button rip-button--secondary rip-waf-toggle" data-field="report_only">%s</button>',
+			esc_html( $report_only ? __( 'Switch to enforcing', 'reportedip-hive' ) : __( 'Switch to report-only', 'reportedip-hive' ) )
+		);
+
+		echo <<<'RIPJS'
+<script>jQuery(function($){$('.rip-waf-toggle').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_waf_toggle',field:$(this).data('field'),nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);location.reload();});});});</script>
+RIPJS;
+
+		echo '</div></div>';
 	}
 
 	/**
@@ -1539,41 +1602,34 @@ RIPJS;
 	}
 
 	/**
-	 * Hardening admin page — security headers and preventive hardening. Tier-
-	 * locked scaffold; content lands in a later phase.
+	 * Render the Hardening tab inside the Firewall page — preventive hardening
+	 * and security headers. Tier-locked scaffold; controls land in a later phase.
 	 *
 	 * @since 2.2.0
 	 * @return void
 	 */
-	public function hardening_page() {
-		$this->render_page_header( __( 'Hardening', 'reportedip-hive' ), __( 'Preventive hardening and security headers', 'reportedip-hive' ) );
-		echo '<div class="rip-content">';
+	private function render_hardening_tab() {
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'security_headers_advanced' );
 		if ( empty( $status['available'] ) ) {
 			self::render_tier_lock( $status, array( 'label' => __( 'Unlock advanced hardening with Professional', 'reportedip-hive' ) ) );
 		}
 		echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Security headers, CSP builder and the hardening controls ship in a later release.', 'reportedip-hive' ) . '</div>';
-		echo '</div>';
-		$this->render_page_footer();
 	}
 
 	/**
-	 * Audit Log admin page — user-lifecycle audit trail. Business+ tier-locked
-	 * scaffold; content lands in a later phase.
+	 * Render the Audit sub-tab inside the Security page — user-lifecycle audit
+	 * trail. Business+ tier-locked scaffold; the event trail lands in a later
+	 * phase.
 	 *
 	 * @since 2.2.0
 	 * @return void
 	 */
-	public function audit_page() {
-		$this->render_page_header( __( 'Audit Log', 'reportedip-hive' ), __( 'User-lifecycle audit trail', 'reportedip-hive' ) );
-		echo '<div class="rip-content">';
+	private function render_audit_tab() {
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
 		if ( empty( $status['available'] ) ) {
 			self::render_tier_lock( $status, array( 'label' => __( 'Unlock the Audit Log with Business', 'reportedip-hive' ) ) );
 		}
-		echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The audit event trail ships in a later release. Standard security events remain in the Logs view.', 'reportedip-hive' ) . '</div>';
-		echo '</div>';
-		$this->render_page_footer();
+		echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The audit event trail ships in a later release. Standard security events remain in the Event Log.', 'reportedip-hive' ) . '</div>';
 	}
 
 	/**
@@ -1623,15 +1679,6 @@ RIPJS;
 			'manage_options',
 			'reportedip-hive-site-2fa',
 			array( $this, 'render_site_2fa_settings_page' )
-		);
-
-		add_submenu_page(
-			'reportedip-hive-site',
-			__( 'Audit Log', 'reportedip-hive' ),
-			__( 'Audit Log', 'reportedip-hive' ),
-			'manage_options',
-			'reportedip-hive-site-audit',
-			array( $this, 'audit_page' )
 		);
 	}
 
@@ -3742,11 +3789,17 @@ RIPJS;
 				<?php esc_html_e( 'IP Lookup', 'reportedip-hive' ); ?>
 			</a>
 			<?php endif; ?>
+			<a href="?page=reportedip-hive-security&tab=activity&sub=audit" class="rip-sub-tabs__tab <?php echo $sub_tab === 'audit' ? 'rip-sub-tabs__tab--active' : ''; ?>">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+				<?php esc_html_e( 'Audit Trail', 'reportedip-hive' ); ?>
+			</a>
 		</div>
 
 		<?php
 		if ( $sub_tab === 'lookup' && $mode_manager->is_community_mode() ) {
 			$this->render_lookup_tab();
+		} elseif ( $sub_tab === 'audit' ) {
+			$this->render_audit_tab();
 		} else {
 			$this->render_logs_tab();
 		}

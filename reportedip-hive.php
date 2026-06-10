@@ -312,6 +312,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rest-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-enumeration.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-scan-detector.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
@@ -403,6 +404,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_REST_Monitor::get_instance();
 		ReportedIP_Hive_User_Enumeration::get_instance();
 		ReportedIP_Hive_Scan_Detector::get_instance();
+		ReportedIP_Hive_WAF::get_instance();
 		ReportedIP_Hive_WooCommerce_Monitor::get_instance();
 		ReportedIP_Hive_Geo_Anomaly::get_instance();
 		ReportedIP_Hive_Password_Strength::get_instance();
@@ -1366,11 +1368,34 @@ class ReportedIP_Hive {
 	 * @since 1.0.0
 	 */
 	private function show_blocked_page( $reason = 'ip_block' ) {
+		self::serve_blocked_page( $reason );
+	}
+
+	/**
+	 * Render the 403 block page and terminate. Public entry point so sensors
+	 * that live in their own classes (e.g. the WAF engine) reject the current
+	 * request through the identical cache-safe, ref-coded response path.
+	 *
+	 * @param string $reason Reason key (see {@see ReportedIP_Hive_Block_Ref::CATEGORY_MAP}).
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public static function serve_blocked_page( $reason = 'ip_block' ) {
 		self::emit_block_response_headers();
 		status_header( 403 );
 		$reportedip_hive_block_context = is_string( $reason ) && '' !== $reason ? $reason : 'ip_block';
 		include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/blocked.php';
 		exit;
+	}
+
+	/**
+	 * Accessor for the shared structured logger.
+	 *
+	 * @return ReportedIP_Hive_Logger|null
+	 * @since  2.2.0
+	 */
+	public function get_logger() {
+		return $this->logger;
 	}
 
 	/**

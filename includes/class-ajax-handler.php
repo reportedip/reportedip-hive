@@ -125,6 +125,7 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		add_action( 'wp_ajax_reportedip_hive_run_queue_now', array( $this, 'ajax_run_queue_now' ) );
 		add_action( 'wp_ajax_reportedip_hive_rule_sync_now', array( $this, 'ajax_rule_sync_now' ) );
+		add_action( 'wp_ajax_reportedip_hive_waf_toggle', array( $this, 'ajax_waf_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
@@ -1455,6 +1456,38 @@ class ReportedIP_Hive_Ajax_Handler {
 		} catch ( \Throwable $e ) {
 			wp_send_json_error( array( 'message' => $e->getMessage() ) );
 		}
+	}
+
+	/**
+	 * AJAX: flip a WAF engine toggle (enabled or report-only).
+	 *
+	 * Capability- and nonce-gated. Accepts the `field` parameter and toggles the
+	 * matching option, returning the new boolean state for the UI to reflect.
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public function ajax_waf_toggle() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
+		$map   = array(
+			'enabled'     => ReportedIP_Hive_WAF::OPT_ENABLED,
+			'report_only' => ReportedIP_Hive_WAF::OPT_REPORT_ONLY,
+		);
+		if ( ! isset( $map[ $field ] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'reportedip-hive' ) ) );
+		}
+
+		$option = $map[ $field ];
+		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, 'enabled' === $field );
+		ReportedIP_Hive_Option_Routing::set( $option, $new );
+
+		wp_send_json_success( array( 'state' => $new ) );
 	}
 
 	/**
