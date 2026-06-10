@@ -25,11 +25,25 @@ All changes to ReportedIP Hive are documented here.
   PHP-FPM (`.user.ini`) auto-config and an nginx snippet generator. Off by
   default; removal always strips the directive before deleting the guard so a
   stale prepend can never fatal the site.
+- **Verified bot detection.** Confirms that a request claiming to be Googlebot,
+  Bingbot or another crawler genuinely originates from it — a DNS-free match
+  against the crawler's official IP ranges first (Priority Sync), then a
+  forward-confirmed reverse-DNS fallback. A spoofer is flagged (default) or
+  blocked; a genuine crawler is never blocked. Free on every plan.
+- **Disposable-email blocking.** Inspects the address on registration (WordPress
+  and WooCommerce) against the `disposable_domains` list. Three modes
+  (off/monitor/block); privacy relays (Apple Hide My Email, Firefox Relay, …)
+  are a distinct category that passes through by default. Free on every plan;
+  the live list rides Priority Sync.
+- **Comment honeypot.** An invisible, screen-reader-excluded decoy field on the
+  comment form; spam bots that fill every field are rejected with no CAPTCHA
+  friction for real visitors.
 - **Firewall admin area** with a Rule Sync status view (per-ruleset version and
   source, Free-vs-Professional comparison), a WAF status + controls tab
-  (engine/mode/active rules, Paranoia-Level selector) and the Extended
-  Protection box. Hardening folds into the Firewall tab strip and the Audit
-  Trail into Security › Activity, keeping the menu lean.
+  (engine/mode/active rules, Paranoia-Level selector), a Bot Verification tab,
+  a Spam Defence tab (disposable-email + honeypot) and the Extended Protection
+  box. Hardening folds into the Firewall tab strip and the Audit Trail into
+  Security › Activity, keeping the menu lean.
 
 ### Performance
 

@@ -250,7 +250,7 @@ class ReportedIP_Hive_Database {
 		}
 
 		foreach ( $cidr_ranges as $cidr ) {
-			if ( $this->ip_in_range( $ip_address, $cidr ) ) {
+			if ( self::ip_in_cidr( $ip_address, $cidr ) ) {
 				$request_cache[ $ip_address ] = true;
 				return true;
 			}
@@ -1276,9 +1276,18 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Check if IP is in CIDR range
+	 * Check whether an IP falls inside a CIDR range (or equals a bare IP).
+	 *
+	 * Pure, dependency-free and side-effect-free so sensors that need a
+	 * request-path CIDR test (e.g. the verified-bot IP-range match) can reuse
+	 * one canonical IPv4/IPv6 implementation instead of duplicating it.
+	 *
+	 * @param string $ip   Candidate IP address.
+	 * @param string $cidr CIDR range (`192.0.2.0/24`, `2001:db8::/32`) or a bare IP.
+	 * @return bool True when the IP is inside the range.
+	 * @since  2.2.0
 	 */
-	private function ip_in_range( $ip, $cidr ) {
+	public static function ip_in_cidr( $ip, $cidr ) {
 		if ( ! is_string( $ip ) || ! is_string( $cidr ) || $ip === '' || $cidr === '' ) {
 			return false;
 		}

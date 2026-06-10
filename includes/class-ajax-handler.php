@@ -128,6 +128,9 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_waf_toggle', array( $this, 'ajax_waf_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_waf_dropin_toggle', array( $this, 'ajax_waf_dropin_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_waf_set_paranoia', array( $this, 'ajax_waf_set_paranoia' ) );
+		add_action( 'wp_ajax_reportedip_hive_bot_action', array( $this, 'ajax_bot_action' ) );
+		add_action( 'wp_ajax_reportedip_hive_disposable_action', array( $this, 'ajax_disposable_action' ) );
+		add_action( 'wp_ajax_reportedip_hive_spam_toggle', array( $this, 'ajax_spam_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
@@ -1577,6 +1580,90 @@ class ReportedIP_Hive_Ajax_Handler {
 				'message' => $message,
 			)
 		);
+	}
+
+	/**
+	 * AJAX: set the verified-bot action (off / flag / block).
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public function ajax_bot_action() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'bot_verification' );
+		if ( empty( $status['available'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Bot verification is unavailable on this plan.', 'reportedip-hive' ) ) );
+		}
+
+		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
+		if ( ! in_array( $mode, array( 'off', 'flag', 'block' ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid action.', 'reportedip-hive' ) ) );
+		}
+
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Bot_Verifier::OPT_ACTION, $mode );
+		wp_send_json_success( array( 'mode' => $mode ) );
+	}
+
+	/**
+	 * AJAX: set the disposable-email action (off / monitor / block).
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public function ajax_disposable_action() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'disposable_email' );
+		if ( empty( $status['available'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Disposable-email blocking is unavailable on this plan.', 'reportedip-hive' ) ) );
+		}
+
+		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
+		if ( ! in_array( $mode, array( 'off', 'monitor', 'block' ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid action.', 'reportedip-hive' ) ) );
+		}
+
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Disposable_Email::OPT_ACTION, $mode );
+		wp_send_json_success( array( 'mode' => $mode ) );
+	}
+
+	/**
+	 * AJAX: flip a boolean spam-defence toggle (privacy-relay block or the
+	 * comment honeypot).
+	 *
+	 * @return void
+	 * @since  2.2.0
+	 */
+	public function ajax_spam_toggle() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
+		$map   = array(
+			'block_relays' => ReportedIP_Hive_Disposable_Email::OPT_BLOCK_RELAYS,
+			'honeypot'     => ReportedIP_Hive_Comment_Honeypot::OPT_ENABLED,
+		);
+		if ( ! isset( $map[ $field ] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'reportedip-hive' ) ) );
+		}
+
+		$option = $map[ $field ];
+		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, 'honeypot' === $field );
+		ReportedIP_Hive_Option_Routing::set( $option, $new );
+
+		wp_send_json_success( array( 'state' => $new ) );
 	}
 
 	/**

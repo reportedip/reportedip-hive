@@ -55,6 +55,7 @@ final class ReportedIP_Hive_Block_Ref {
 		'waf_cmd'       => 'WAF_CMD',
 		'waf_file'      => 'WAF_FILE',
 		'waf_scanner'   => 'WAF_SCANNER',
+		'fake_bot'      => 'FAKE_BOT',
 	);
 
 	/**

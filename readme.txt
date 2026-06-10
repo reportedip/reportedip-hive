@@ -45,6 +45,9 @@ Two ways to run:
 * **User enumeration defence** — `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking
 * **404 / scanner detection** — default 12 / 2 min, plus instant block on known-bad paths (`.env`, `wp-config.bak`, `/.git/`)
 * **Web Application Firewall** — request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
+* **Verified bot detection** — confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
+* **Disposable-email blocking** — inspects the address at registration (WordPress + WooCommerce) against the throwaway-mail list (off / monitor / block). Privacy relays (Apple Hide My Email, Firefox Relay, …) pass through by default. Free; the live list rides Priority Sync
+* **Comment honeypot** — invisible, screen-reader-excluded decoy field; spam bots that fill it are rejected with no CAPTCHA friction
 * **Geographic anomaly** — login from a country never seen for the user, optionally revokes trusted-device cookies
 * **Password policy** — minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
 * **WooCommerce login hooks** — checkout + my-account forms tracked separately

@@ -1390,6 +1390,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'overview'  => __( 'Overview', 'reportedip-hive' ),
 			'waf'       => __( 'WAF', 'reportedip-hive' ),
 			'bot'       => __( 'Bot Verification', 'reportedip-hive' ),
+			'spam'      => __( 'Spam Defence', 'reportedip-hive' ),
 			'rule_sync' => __( 'Rule Sync', 'reportedip-hive' ),
 			'scan'      => __( 'Scan & Decoy', 'reportedip-hive' ),
 			'hardening' => __( 'Hardening', 'reportedip-hive' ),
@@ -1416,6 +1417,12 @@ class ReportedIP_Hive_Admin_Settings {
 				break;
 			case 'waf':
 				$this->render_waf_tab();
+				break;
+			case 'bot':
+				$this->render_bot_tab();
+				break;
+			case 'spam':
+				$this->render_spam_tab();
 				break;
 			case 'hardening':
 				$this->render_hardening_tab();
@@ -1594,6 +1601,158 @@ RIPJS;
 RIPJS;
 
 		echo '</div></div>';
+	}
+
+	/**
+	 * Render the Bot Verification tab: the verified-bot sensor status, the action
+	 * selector (off / flag / block) and the active bot-list version. Free on
+	 * every plan; the official IP-range feeds ride the Professional ruleset.
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	private function render_bot_tab() {
+		if ( ! class_exists( 'ReportedIP_Hive_Bot_Verifier' ) ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The bot verifier is unavailable.', 'reportedip-hive' ) . '</div>';
+			return;
+		}
+
+		$verifier = ReportedIP_Hive_Bot_Verifier::get_instance();
+		$action   = $verifier->action();
+		$enabled  = $verifier->is_enabled();
+		$rules    = $verifier->get_bot_rules();
+		$bot_ver  = 0;
+		if ( class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {
+			$ruleset = ReportedIP_Hive_Rule_Sync::get_instance()->get_ruleset( 'bot_signatures' );
+			$bot_ver = isset( $ruleset['version'] ) ? (int) $ruleset['version'] : 0;
+		}
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Verified Bot Detection', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+
+		echo '<div class="rip-grid rip-grid-cols-3">';
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_attr( $enabled ? 'rip-badge--success' : 'rip-badge--neutral' ),
+			esc_html( $enabled ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ) ),
+			esc_html__( 'Sensor', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%d</div><div class="rip-stat-card__label">%s</div></div></div>',
+			absint( count( $rules ) ),
+			esc_html__( 'Known crawlers', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%s</div><div class="rip-stat-card__label">%s</div></div></div>',
+			$bot_ver > 0 ? esc_html( 'v' . $bot_ver ) : esc_html__( 'Baseline', 'reportedip-hive' ),
+			esc_html__( 'Bot list', 'reportedip-hive' )
+		);
+		echo '</div>';
+
+		echo '<p class="rip-help-text">' . esc_html__( 'Confirms that a request claiming to be Googlebot, Bingbot or another crawler genuinely originates from that crawler (official IP ranges, then forward-confirmed reverse DNS). A spoofer is flagged or blocked; a genuine crawler is never blocked.', 'reportedip-hive' ) . '</p>';
+
+		$actions = array(
+			'off'   => __( 'Off — do not verify', 'reportedip-hive' ),
+			'flag'  => __( 'Flag — log spoofers only (recommended)', 'reportedip-hive' ),
+			'block' => __( 'Block — reject confirmed spoofers', 'reportedip-hive' ),
+		);
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-bot-action">' . esc_html__( 'Action on a confirmed spoofer', 'reportedip-hive' ) . '</label>';
+		echo '<select id="rip-bot-action" class="rip-select">';
+		foreach ( $actions as $value => $label ) {
+			printf(
+				'<option value="%s"%s>%s</option>',
+				esc_attr( $value ),
+				selected( $action, $value, false ),
+				esc_html( $label )
+			);
+		}
+		echo '</select></div>';
+
+		echo <<<'RIPJS'
+<script>jQuery(function($){$('#rip-bot-action').on('change',function(){var s=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_bot_action',mode:$(this).val(),nonce:reportedip_hive_ajax.nonce},function(r){s.prop('disabled',false);location.reload();});});});</script>
+RIPJS;
+
+		echo '</div></div>';
+	}
+
+	/**
+	 * Render the Spam Defence tab: the disposable-email action selector, the
+	 * privacy-relay toggle (with an out-loud warning) and the comment-honeypot
+	 * toggle. Free on every plan; the live disposable list rides Priority Sync.
+	 *
+	 * @since 2.2.0
+	 * @return void
+	 */
+	private function render_spam_tab() {
+		$disp_action = 'monitor';
+		$disp_ver    = 0;
+		if ( class_exists( 'ReportedIP_Hive_Disposable_Email' ) ) {
+			$disp_action = ReportedIP_Hive_Disposable_Email::get_instance()->action();
+		}
+		if ( class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {
+			$ruleset  = ReportedIP_Hive_Rule_Sync::get_instance()->get_ruleset( 'disposable_domains' );
+			$disp_ver = isset( $ruleset['version'] ) ? (int) $ruleset['version'] : 0;
+		}
+		$block_relays = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_email_relays', false );
+		$honeypot     = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_honeypot_enabled', true );
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Disposable Email', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Inspects the e-mail address at registration (WordPress and WooCommerce) against the throwaway-mail list. Monitor logs a match; Block rejects the registration. The live, frequently-updated list rides the Professional ruleset.', 'reportedip-hive' ) . '</p>';
+
+		echo '<div class="rip-grid rip-grid-cols-2">';
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%s</div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_html( ucfirst( $disp_action ) ),
+			esc_html__( 'Mode', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">%s</div><div class="rip-stat-card__label">%s</div></div></div>',
+			$disp_ver > 0 ? esc_html( 'v' . $disp_ver ) : esc_html__( 'Baseline', 'reportedip-hive' ),
+			esc_html__( 'Domain list', 'reportedip-hive' )
+		);
+		echo '</div>';
+
+		$disp_actions = array(
+			'off'     => __( 'Off', 'reportedip-hive' ),
+			'monitor' => __( 'Monitor — log only (recommended)', 'reportedip-hive' ),
+			'block'   => __( 'Block — reject registration', 'reportedip-hive' ),
+		);
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-disposable-action">' . esc_html__( 'Action on a throwaway address', 'reportedip-hive' ) . '</label>';
+		echo '<select id="rip-disposable-action" class="rip-select">';
+		foreach ( $disp_actions as $value => $label ) {
+			printf(
+				'<option value="%s"%s>%s</option>',
+				esc_attr( $value ),
+				selected( $disp_action, $value, false ),
+				esc_html( $label )
+			);
+		}
+		echo '</select></div>';
+
+		echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'Blocking privacy relays also rejects legitimate Apple Hide My Email and Firefox Relay users. Leave this off unless you accept that trade-off.', 'reportedip-hive' ) . '</div>';
+		printf(
+			'<button type="button" class="rip-button rip-button--secondary rip-spam-toggle" data-field="block_relays">%s</button>',
+			esc_html( $block_relays ? __( 'Stop blocking privacy relays', 'reportedip-hive' ) : __( 'Also block privacy relays', 'reportedip-hive' ) )
+		);
+
+		echo '</div></div>';
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Comment Honeypot', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Adds an invisible decoy field to the comment form. Spam bots that fill every field trip it and are rejected — no CAPTCHA, no friction for real visitors.', 'reportedip-hive' ) . '</p>';
+		printf(
+			'<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value"><span class="rip-badge %s">%s</span></div><div class="rip-stat-card__label">%s</div></div></div>',
+			esc_attr( $honeypot ? 'rip-badge--success' : 'rip-badge--neutral' ),
+			esc_html( $honeypot ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ) ),
+			esc_html__( 'Honeypot', 'reportedip-hive' )
+		);
+		printf(
+			'<p><button type="button" class="rip-button rip-button--secondary rip-spam-toggle" data-field="honeypot">%s</button></p>',
+			esc_html( $honeypot ? __( 'Disable honeypot', 'reportedip-hive' ) : __( 'Enable honeypot', 'reportedip-hive' ) )
+		);
+		echo '</div></div>';
+
+		echo <<<'RIPJS'
+<script>jQuery(function($){$('.rip-spam-toggle').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_spam_toggle',field:$(this).data('field'),nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);location.reload();});});$('#rip-disposable-action').on('change',function(){var s=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_disposable_action',mode:$(this).val(),nonce:reportedip_hive_ajax.nonce},function(r){s.prop('disabled',false);location.reload();});});});</script>
+RIPJS;
 	}
 
 	/**

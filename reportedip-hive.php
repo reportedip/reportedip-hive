@@ -314,6 +314,9 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-scan-detector.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-bot-verifier.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-disposable-email.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
@@ -407,6 +410,9 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Scan_Detector::get_instance();
 		ReportedIP_Hive_WAF::get_instance();
 		ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+		ReportedIP_Hive_Bot_Verifier::get_instance();
+		ReportedIP_Hive_Disposable_Email::get_instance();
+		ReportedIP_Hive_Comment_Honeypot::get_instance();
 		ReportedIP_Hive_WooCommerce_Monitor::get_instance();
 		ReportedIP_Hive_Geo_Anomaly::get_instance();
 		ReportedIP_Hive_Password_Strength::get_instance();

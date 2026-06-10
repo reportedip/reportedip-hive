@@ -90,6 +90,12 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_waf_dropin_path'                => '',
 		'reportedip_hive_waf_dropin_server'              => '',
 
+		'reportedip_hive_monitor_bot_verification'       => true,
+		'reportedip_hive_bot_action'                     => 'flag',
+		'reportedip_hive_disposable_email_action'        => 'monitor',
+		'reportedip_hive_block_email_relays'             => false,
+		'reportedip_hive_comment_honeypot_enabled'       => true,
+
 		'reportedip_hive_monitor_failed_logins'          => true,
 		'reportedip_hive_failed_login_threshold'         => 5,
 		'reportedip_hive_failed_login_timeframe'         => 15,
