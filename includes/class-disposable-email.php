@@ -15,7 +15,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Registration-time disposable-email and privacy-relay classifier.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 class ReportedIP_Hive_Disposable_Email {
 
@@ -73,7 +73,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 * Get the singleton instance.
 	 *
 	 * @return ReportedIP_Hive_Disposable_Email
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -85,7 +85,7 @@ class ReportedIP_Hive_Disposable_Email {
 	/**
 	 * Hook the WordPress and WooCommerce registration validation points.
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 */
 	private function __construct() {
 		add_filter( 'registration_errors', array( $this, 'on_registration_errors' ), 10, 3 );
@@ -99,7 +99,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 * @param string   $login  Sanitised user login (unused).
 	 * @param string   $email  Submitted e-mail address.
 	 * @return WP_Error
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_registration_errors( $errors, $login, $email ) {
 		if ( $errors instanceof WP_Error ) {
@@ -116,7 +116,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 * @param string   $email    Submitted e-mail address.
 	 * @param WP_Error $errors   WooCommerce validation errors.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_woocommerce_register( $username, $email, $errors ) {
 		if ( $errors instanceof WP_Error ) {
@@ -128,7 +128,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 * Whether the sensor is active (action not off, feature available).
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function is_enabled() {
 		if ( 'off' === $this->action() ) {
@@ -147,7 +147,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 * The configured action: off | monitor | block.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function action() {
 		$action = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_ACTION, 'monitor' );
@@ -162,7 +162,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 * @param string   $email  Submitted e-mail address.
 	 * @param WP_Error $errors Errors object to add to when blocking.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function evaluate( $email, WP_Error $errors ) {
 		if ( ! $this->is_enabled() ) {
@@ -213,7 +213,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 * bundled baseline).
 	 *
 	 * @return array<int,mixed>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function get_disposable_rules() {
 		if ( ! class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {
@@ -228,7 +228,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 *
 	 * @param string $email E-mail address.
 	 * @return string Domain, or empty string when none.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function domain_of( $email ) {
 		$email = strtolower( trim( (string) $email ) );
@@ -248,7 +248,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 * @param string           $domain Lower-cased domain.
 	 * @param array<int,mixed> $rules  Disposable-domain rules.
 	 * @return string `disposable` | `relay` | `clean`.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function classify_domain( $domain, array $rules ) {
 		$domain = strtolower( trim( (string) $domain ) );
@@ -287,7 +287,7 @@ class ReportedIP_Hive_Disposable_Email {
 	 * @param string $domain Candidate domain.
 	 * @param string $base   Base domain.
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function is_subdomain_of( $domain, $base ) {
 		$suffix = '.' . $base;

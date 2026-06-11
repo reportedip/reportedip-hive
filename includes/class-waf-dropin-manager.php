@@ -25,7 +25,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Manages the pre-WordPress WAF drop-in and its server directive.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 class ReportedIP_Hive_WAF_Dropin_Manager {
 
@@ -77,7 +77,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * Get the singleton instance.
 	 *
 	 * @return ReportedIP_Hive_WAF_Dropin_Manager
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -89,7 +89,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Wire the toggle hooks and the self-heal.
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 */
 	private function __construct() {
 		add_action( 'update_option_' . ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, array( $this, 'on_toggle' ) );
@@ -146,7 +146,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * React to the drop-in toggle changing: sync when on, remove when off.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_toggle() {
 		if ( (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false ) ) {
@@ -161,7 +161,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * ruleset change or an externally edited config self-heals.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function maybe_self_heal() {
 		if ( ! $this->is_main_site() ) {
@@ -183,7 +183,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * the shared server filesystem.
 	 *
 	 * @return bool True on success.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function sync() {
 		if ( ! $this->is_main_site() ) {
@@ -225,7 +225,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * or a stale auto_prepend_file would fatal every request.
 	 *
 	 * @return bool True (best effort; missing pieces are treated as removed).
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function remove() {
 		if ( ! $this->is_main_site() ) {
@@ -247,7 +247,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * Whether the guard directive is currently present in either target file.
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function is_active() {
 		foreach ( array( $this->htaccess_path(), $this->user_ini_path() ) as $file ) {
@@ -265,7 +265,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * Detected server type token for the UI (apache|fpm|nginx|unknown).
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function detect_server() {
 		$sapi     = php_sapi_name();
@@ -291,7 +291,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * resolved guard path.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function nginx_snippet() {
 		$path = $this->prepend_path();
@@ -306,7 +306,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * Absolute path of the generated guard file.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function prepend_path() {
 		if ( ! defined( 'WP_CONTENT_DIR' ) ) {
@@ -319,7 +319,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * True when PHP can write the directive target for the detected server.
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function is_writable_target() {
 		$server = $this->detect_server();
@@ -340,7 +340,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * Resolve the `.htaccess` path via the WP-Admin helper.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function htaccess_path() {
 		$home = $this->home_path();
@@ -351,7 +351,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * Resolve the `.user.ini` path in the document root.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function user_ini_path() {
 		$home = $this->home_path();
@@ -362,7 +362,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * Site home path with a trailing slash, or empty when unavailable.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function home_path() {
 		if ( ! function_exists( 'get_home_path' ) && defined( 'ABSPATH' ) ) {
@@ -383,7 +383,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 *
 	 * @param string $prepend Guard path.
 	 * @return string[]
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function htaccess_lines( $prepend ) {
 		return array( 'php_value auto_prepend_file "' . $prepend . '"' );
@@ -394,7 +394,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 *
 	 * @param string $prepend Guard path.
 	 * @return string[]
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function user_ini_lines( $prepend ) {
 		return array( 'auto_prepend_file=' . $prepend );
@@ -407,7 +407,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * @param string   $file  Target config file.
 	 * @param string[] $lines Directive lines.
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function write_directive( $file, array $lines ) {
 		if ( '' === $file ) {
@@ -439,7 +439,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 *
 	 * @param string $file Target config file.
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function strip_directive( $file ) {
 		if ( '' === $file || ! file_exists( $file ) ) {
@@ -465,7 +465,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * whitelist baked in. The guard is fail-open and runs without WordPress.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function generate_prepend() {
 		$rules     = class_exists( 'ReportedIP_Hive_WAF' ) ? ReportedIP_Hive_WAF::get_instance()->get_active_rules() : array();
@@ -589,7 +589,7 @@ PHP;
 	 * whitelisted client is never blocked by the pre-WordPress layer.
 	 *
 	 * @return string[]
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function whitelist_snapshot() {
 		if ( ! class_exists( 'ReportedIP_Hive_Database' ) ) {
@@ -621,7 +621,7 @@ PHP;
 	 * is shared network-wide, so only the main site manages it).
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function is_main_site() {
 		return ! function_exists( 'is_multisite' ) || ! is_multisite() || is_main_site();

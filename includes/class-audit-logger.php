@@ -17,7 +17,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Captures and stores user-lifecycle audit events.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 class ReportedIP_Hive_Audit_Logger {
 
@@ -69,7 +69,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * Get the singleton instance.
 	 *
 	 * @return ReportedIP_Hive_Audit_Logger
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -81,7 +81,7 @@ class ReportedIP_Hive_Audit_Logger {
 	/**
 	 * Private constructor — wiring happens in register_hooks().
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 */
 	private function __construct() {}
 
@@ -89,7 +89,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * Whether audit capture is available for the current tier/mode.
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function is_available() {
 		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
@@ -103,7 +103,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * Register the lifecycle hooks — only when capture is available and enabled.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function register_hooks() {
 		if ( ! self::is_available() ) {
@@ -129,7 +129,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param string  $user_login Login name.
 	 * @param WP_User $user       Authenticated user.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_login( $user_login, $user ) {
 		$user_id = ( $user instanceof WP_User ) ? (int) $user->ID : 0;
@@ -143,7 +143,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 *
 	 * @param string $username Submitted login name.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_login_failed( $username ) {
 		$this->log_event( 'login', 'failed', array(), 0, (string) $username );
@@ -154,7 +154,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 *
 	 * @param int $user_id Logging-out user id (WP 5.5+).
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_logout( $user_id = 0 ) {
 		$this->log_event( 'logout', 'success', array(), (int) $user_id );
@@ -165,7 +165,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 *
 	 * @param string $user_login Login name the reset was requested for.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_retrieve_password( $user_login ) {
 		$this->log_event( 'password_reset', 'requested', array(), 0, (string) $user_login );
@@ -177,7 +177,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param WP_User $user     User whose password was reset.
 	 * @param string  $new_pass New password (ignored).
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_password_reset( $user, $new_pass ) {
 		unset( $new_pass );
@@ -192,7 +192,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param int     $user_id       Updated user id.
 	 * @param WP_User $old_user_data Pre-update user object.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_profile_update( $user_id, $old_user_data ) {
 		$user_id = (int) $user_id;
@@ -213,7 +213,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param string   $role      New primary role.
 	 * @param string[] $old_roles Previous roles.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_role_change( $user_id, $role, $old_roles ) {
 		$data  = array(
@@ -231,7 +231,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 *
 	 * @param int $user_id Registered user id.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function on_register( $user_id ) {
 		$user  = get_userdata( (int) $user_id );
@@ -248,7 +248,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param int                  $user_id  Subject user id (0 for none).
 	 * @param string               $username Subject username.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function log_event( $type, $action, array $data, $user_id = 0, $username = '' ) {
 		global $wpdb;
@@ -284,7 +284,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 *
 	 * @param array<string,mixed> $ctx Context (blog_id, created_at, ip, user_id, username, event_type, event_action, data, risk_score, country_code, user_agent).
 	 * @return array<string,mixed>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function build_row( array $ctx ) {
 		$data = isset( $ctx['data'] ) && is_array( $ctx['data'] ) ? self::redact( $ctx['data'] ) : array();
@@ -309,7 +309,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 *
 	 * @param array<string,mixed> $data Raw data.
 	 * @return array<string,mixed>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function redact( array $data ) {
 		$out = array();
@@ -339,7 +339,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param string   $ip    Candidate IP.
 	 * @param string[] $known Known IPs.
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function is_new_ip( $ip, array $known ) {
 		return '' !== $ip && ! in_array( $ip, $known, true );
@@ -351,7 +351,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param int    $user_id User id.
 	 * @param string $ip      Client IP.
 	 * @return bool True when the IP had not been seen for this user.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function note_ip( $user_id, $ip ) {
 		$user_id = (int) $user_id;
@@ -376,7 +376,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 *
 	 * @param int $retention_days Days to keep.
 	 * @return int Rows deleted.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function cleanup( $retention_days ) {
 		global $wpdb;
@@ -391,7 +391,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * Resolve the client IP through the plugin's central helper.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function client_ip() {
 		if ( class_exists( 'ReportedIP_Hive' ) ) {

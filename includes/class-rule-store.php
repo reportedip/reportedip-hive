@@ -13,7 +13,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Stores and retrieves the active (synced) ruleset per key.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 final class ReportedIP_Hive_Rule_Store {
 
@@ -51,7 +51,7 @@ final class ReportedIP_Hive_Rule_Store {
 	 *
 	 * @param string $key Ruleset key.
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function is_valid_key( $key ) {
 		return is_string( $key ) && in_array( $key, self::VALID_KEYS, true );
@@ -62,7 +62,7 @@ final class ReportedIP_Hive_Rule_Store {
 	 *
 	 * @param string $key Ruleset key.
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function option_key( $key ) {
 		return self::OPTION_PREFIX . $key;
@@ -73,7 +73,7 @@ final class ReportedIP_Hive_Rule_Store {
 	 *
 	 * @param string $key Ruleset key.
 	 * @return array<string, mixed>|null
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function get( $key ) {
 		if ( ! self::is_valid_key( $key ) ) {
@@ -102,7 +102,7 @@ final class ReportedIP_Hive_Rule_Store {
 	 * @param string               $key     Ruleset key.
 	 * @param array<string, mixed> $ruleset Ruleset array (must contain a `rules` array).
 	 * @return bool True on success.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function set( $key, array $ruleset ) {
 		if ( ! self::is_valid_key( $key ) || ! isset( $ruleset['rules'] ) || ! is_array( $ruleset['rules'] ) ) {
@@ -117,7 +117,7 @@ final class ReportedIP_Hive_Rule_Store {
 	 *
 	 * @param string $key Ruleset key.
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function delete( $key ) {
 		if ( ! self::is_valid_key( $key ) ) {
@@ -131,7 +131,7 @@ final class ReportedIP_Hive_Rule_Store {
 	 * Drop the per-request cache. Test/seam helper.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function flush_cache() {
 		self::$cache = array();

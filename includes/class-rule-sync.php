@@ -21,7 +21,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Server-delivered ruleset sync + signature verification.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 final class ReportedIP_Hive_Rule_Sync {
 
@@ -65,7 +65,7 @@ final class ReportedIP_Hive_Rule_Sync {
 
 	/**
 	 * @return self
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function get_instance() {
 		if ( null === self::$instance ) {
@@ -80,7 +80,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 *
 	 * @param string $key Ruleset key.
 	 * @return array<string, mixed>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function get_ruleset( $key ) {
 		$stored = ReportedIP_Hive_Rule_Store::get( $key );
@@ -95,7 +95,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 *
 	 * @param string $key Ruleset key.
 	 * @return array<string, mixed>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function load_baseline( $key ) {
 		$empty = array(
@@ -122,7 +122,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 * inject additional keys without a code change.
 	 *
 	 * @return array<int|string, string>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function public_keys() {
 		$keys = array_values(
@@ -149,7 +149,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 * @param string $payload       The exact signed payload string.
 	 * @param string $signature_b64 Base64-encoded detached signature.
 	 * @return bool True when the signature validates against an accepted key.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function verify_signature( $payload, $signature_b64 ) {
 		if ( ! function_exists( 'sodium_crypto_sign_verify_detached' ) ) {
@@ -187,7 +187,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 * @param string               $key      Expected ruleset key.
 	 * @param array<string, mixed> $envelope Response envelope with `payload` + `signature`.
 	 * @return bool True when the ruleset was verified and stored.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function apply_ruleset( $key, $envelope ) {
 		if ( ! ReportedIP_Hive_Rule_Store::is_valid_key( $key ) || ! is_array( $envelope ) ) {
@@ -231,7 +231,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 * check. Safe to call from cron and from the self-heal path.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function sync_all() {
 		if ( ! $this->is_sync_eligible() ) {
@@ -257,7 +257,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 *
 	 * @param string $key Ruleset key.
 	 * @return bool True when a fresh ruleset was applied.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function sync_ruleset( $key ) {
 		if ( ! ReportedIP_Hive_Rule_Store::is_valid_key( $key ) ) {
@@ -292,7 +292,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 * @param string $url  Endpoint URL.
 	 * @param string $etag Previously stored ETag (sent as If-None-Match).
 	 * @return array{code:int,body:string,etag:string}|null
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	protected function fetch_remote( $url, $etag ) {
 		if ( '' === $url ) {
@@ -323,7 +323,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 *
 	 * @param string $key Ruleset key.
 	 * @return string Endpoint URL, or '' when no API endpoint is configured.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	protected function endpoint_for( $key ) {
 		$base = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', '' );
@@ -339,7 +339,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 * WP.org opt-in compliance).
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function is_sync_eligible() {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rule_sync_enabled', true ) ) {
@@ -361,7 +361,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 * @param string $key    Ruleset key.
 	 * @param string $reason Machine reason.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function log_signature_failure( $key, $reason ) {
 		if ( class_exists( 'ReportedIP_Hive_Logger' ) ) {

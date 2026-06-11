@@ -20,7 +20,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Calculates the detection and hardening security scores.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 final class ReportedIP_Hive_Score {
 
@@ -89,7 +89,7 @@ final class ReportedIP_Hive_Score {
 	 *
 	 * @param array<int,array<string,mixed>> $items Item descriptors.
 	 * @return array{score:int,grade:string,earned:int,max:int,locked_potential:int,off_potential:int,items:array<int,array<string,mixed>>}
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function compute( array $items ) {
 		$earned  = 0;
@@ -129,7 +129,7 @@ final class ReportedIP_Hive_Score {
 	 *
 	 * @param int $score Score in the 0-100 range.
 	 * @return string A+ | A | B | C | D | F.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function grade_for( $score ) {
 		$score = (int) $score;
@@ -155,7 +155,7 @@ final class ReportedIP_Hive_Score {
 	 * Computed scores for both groups, served from the transient cache.
 	 *
 	 * @return array{detection:array<string,mixed>,hardening:array<string,mixed>}
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function all() {
 		$cached = get_transient( self::CACHE_KEY );
@@ -176,7 +176,7 @@ final class ReportedIP_Hive_Score {
 	 * Detection score summary.
 	 *
 	 * @return array<string,mixed>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function detection_score() {
 		return self::all()['detection'];
@@ -186,7 +186,7 @@ final class ReportedIP_Hive_Score {
 	 * Hardening score summary.
 	 *
 	 * @return array<string,mixed>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function hardening_score() {
 		return self::all()['hardening'];
@@ -196,7 +196,7 @@ final class ReportedIP_Hive_Score {
 	 * Drop the cached score so the next read recomputes from live state.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function flush_cache() {
 		delete_transient( self::CACHE_KEY );
@@ -211,7 +211,7 @@ final class ReportedIP_Hive_Score {
 	 *
 	 * @param string $option Option name being written.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function flush_on_option_change( $option ) {
 		if ( is_string( $option ) && 0 === strpos( $option, 'reportedip_hive_' ) ) {
@@ -223,7 +223,7 @@ final class ReportedIP_Hive_Score {
 	 * Build the detection-group item descriptors from live sensor state.
 	 *
 	 * @return array<int,array<string,mixed>>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function detection_items() {
 		$w = self::DETECTION_WEIGHTS;
@@ -247,7 +247,7 @@ final class ReportedIP_Hive_Score {
 	 * Build the hardening-group item descriptors from live feature state.
 	 *
 	 * @return array<int,array<string,mixed>>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function hardening_items() {
 		$w               = self::HARDENING_WEIGHTS;
@@ -277,7 +277,7 @@ final class ReportedIP_Hive_Score {
 	 * @param ?string $feature_key  Feature-matrix key for tier/mode gating, or null for Free core.
 	 * @param bool    $present      Whether the feature exists in this build.
 	 * @return array<string,mixed>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function item( $key, $weight, $group, $label, $enabled, $settings_url, $feature_key = null, $present = true ) {
 		list( $available, $status ) = self::resolve_availability( $feature_key );
@@ -300,7 +300,7 @@ final class ReportedIP_Hive_Score {
 	 *
 	 * @param ?string $feature_key Feature-matrix key, or null for ungated Free core.
 	 * @return array{0:bool,1:?array<string,mixed>}
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function resolve_availability( $feature_key ) {
 		if ( null === $feature_key || ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
@@ -314,7 +314,7 @@ final class ReportedIP_Hive_Score {
 	 * True when two-factor is enforced for at least one role.
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function twofa_enforced() {
 		if ( ! class_exists( 'ReportedIP_Hive_Option_Routing' ) ) {
@@ -330,7 +330,7 @@ final class ReportedIP_Hive_Score {
 	 * @param string $key      Option key.
 	 * @param mixed  $fallback Value returned when the option is unset.
 	 * @return mixed
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function opt( $key, $fallback ) {
 		if ( ! class_exists( 'ReportedIP_Hive_Option_Routing' ) ) {
@@ -345,7 +345,7 @@ final class ReportedIP_Hive_Score {
 	 * @param string $page Admin page slug.
 	 * @param string $tab  Tab slug.
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function url( $page, $tab ) {
 		$path = 'admin.php?page=' . $page . '&tab=' . $tab;

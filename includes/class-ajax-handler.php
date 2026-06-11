@@ -1442,7 +1442,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	/**
 	 * AJAX: trigger an on-demand ruleset sync (Priority Sync, Professional+).
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 * @return void
 	 */
 	public function ajax_rule_sync_now() {
@@ -1472,7 +1472,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * matching option, returning the new boolean state for the UI to reflect.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function ajax_waf_toggle() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -1506,7 +1506,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * cannot be written).
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	/**
 	 * AJAX: set the WAF Paranoia Level (Professional only, 1-3).
@@ -1515,7 +1515,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * only affects Professional installs that sync the deeper ruleset.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function ajax_waf_set_paranoia() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -1547,7 +1547,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * cannot be written).
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function ajax_waf_dropin_toggle() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -1588,7 +1588,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * AJAX: set the verified-bot action (off / flag / block).
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function ajax_bot_action() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -1615,7 +1615,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * AJAX: set the disposable-email action (off / monitor / block).
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function ajax_disposable_action() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -1643,7 +1643,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * comment honeypot).
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function ajax_spam_toggle() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -1672,7 +1672,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * AJAX: flip the scan detector or the decoy-path trap on or off.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function ajax_scan_toggle() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -1706,7 +1706,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * so a Free user cannot persist them through a crafted request.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function ajax_headers_save() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -1767,7 +1767,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * @param mixed                 $value Raw value from the JSON payload.
 	 * @param string|array{0:string,1:string[]} $spec  Type: bool|int|text|textarea|url, or array('enum', $allowed).
 	 * @return mixed Sanitised value, or null when invalid (caller skips it).
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function sanitize_header_value( $value, $spec ) {
 		if ( is_array( $spec ) && 'enum' === ( $spec[0] ?? '' ) ) {

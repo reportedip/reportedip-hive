@@ -15,7 +15,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * WAF request-inspection engine.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 class ReportedIP_Hive_WAF {
 
@@ -99,7 +99,7 @@ class ReportedIP_Hive_WAF {
 	 * Get the singleton instance.
 	 *
 	 * @return ReportedIP_Hive_WAF
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -112,7 +112,7 @@ class ReportedIP_Hive_WAF {
 	 * Wire the inspection hook. Priority 1 mirrors the IP-block gate so a
 	 * malicious request is rejected before other plugins' `init` handlers run.
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 */
 	private function __construct() {
 		add_action( 'init', array( $this, 'inspect' ), 1 );
@@ -122,7 +122,7 @@ class ReportedIP_Hive_WAF {
 	 * Inspect the current request and block (or log) the first rule hit.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function inspect() {
 		/*
@@ -195,7 +195,7 @@ class ReportedIP_Hive_WAF {
 	 * @param array<string,mixed>            $post     Request body params (e.g. $_POST), unslashed.
 	 * @param string|null                    $raw_body Raw request body for non-form payloads, or null.
 	 * @return array<string,mixed>|null The matched rule, or null when nothing matches.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function evaluate( array $rules, array $server, array $post, $raw_body ) {
 		if ( empty( $rules ) ) {
@@ -243,7 +243,7 @@ class ReportedIP_Hive_WAF {
 	 * feature is available, so a downgrade silently falls back to the free floor.
 	 *
 	 * @return array<int,array<string,mixed>>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function get_active_rules() {
 		if ( ! class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {
@@ -277,7 +277,7 @@ class ReportedIP_Hive_WAF {
 	 * level (2 or 3) carried in the synced ruleset.
 	 *
 	 * @return int 1, 2 or 3.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function paranoia_cap() {
 		$priority_available = false;
@@ -296,7 +296,7 @@ class ReportedIP_Hive_WAF {
 	 * Whether the engine is enabled (display helper for the admin surface).
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function is_enabled() {
 		return (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true );
@@ -306,7 +306,7 @@ class ReportedIP_Hive_WAF {
 	 * Whether report-only mode is active (engine logs, never blocks).
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function is_report_only() {
 		if ( ReportedIP_Hive_Option_Routing::get( self::OPT_REPORT_ONLY, false ) ) {
@@ -319,7 +319,7 @@ class ReportedIP_Hive_WAF {
 	 * Count of rules active under the current tier (display helper).
 	 *
 	 * @return int
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function active_rule_count() {
 		return count( $this->get_active_rules() );
@@ -331,7 +331,7 @@ class ReportedIP_Hive_WAF {
 	 *
 	 * @param array<int,array<string,mixed>> $rules Active rules.
 	 * @return array<string,bool> Keyed by target name.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function required_targets( array $rules ) {
 		$needed = array();
@@ -347,7 +347,7 @@ class ReportedIP_Hive_WAF {
 	 *
 	 * @param array<string,bool> $targets Required target map.
 	 * @return array<string,string>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function collect_subjects( array $targets, array $server, array $post, $raw_body ) {
 		$want_uri  = isset( $targets['uri'] ) || isset( $targets['all'] );
@@ -380,7 +380,7 @@ class ReportedIP_Hive_WAF {
 	 *
 	 * @param array<string,mixed> $server Unslashed server vars.
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function uri_subject( array $server ) {
 		$raw = isset( $server['REQUEST_URI'] ) ? (string) $server['REQUEST_URI'] : '';
@@ -398,7 +398,7 @@ class ReportedIP_Hive_WAF {
 	 * @param array<string,mixed> $post     Unslashed body params.
 	 * @param string|null         $raw_body Raw request body, or null.
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function body_subject( array $post, $raw_body ) {
 		$parts = array();
@@ -419,7 +419,7 @@ class ReportedIP_Hive_WAF {
 	 *
 	 * @param array<string,mixed> $server Unslashed server vars.
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function ua_subject( array $server ) {
 		return isset( $server['HTTP_USER_AGENT'] )
@@ -432,7 +432,7 @@ class ReportedIP_Hive_WAF {
 	 *
 	 * @param mixed $value Value to flatten.
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function flatten( $value ) {
 		if ( is_array( $value ) ) {
@@ -453,7 +453,7 @@ class ReportedIP_Hive_WAF {
 	 *
 	 * @param string $subject Subject string.
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function cap( $subject ) {
 		if ( strlen( $subject ) > self::MAX_SUBJECT_BYTES ) {
@@ -473,7 +473,7 @@ class ReportedIP_Hive_WAF {
 	 * @param string $pattern Raw PCRE body (no delimiters).
 	 * @param string $subject Subject to test.
 	 * @return bool True on a confirmed match.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function matches( $pattern, $subject ) {
 		if ( '' === $pattern ) {
@@ -490,7 +490,7 @@ class ReportedIP_Hive_WAF {
 	 * @param array<string,mixed> $rule The matched rule.
 	 * @param string              $ip   Client IP.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function handle_hit( array $rule, $ip ) {
 		$group    = isset( $rule['group'] ) ? (string) $rule['group'] : '';
@@ -536,7 +536,7 @@ class ReportedIP_Hive_WAF {
 	 * @param string $group   Rule group.
 	 * @param string $rule_id Rule id.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function escalate( $ip, $group, $rule_id ) {
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {

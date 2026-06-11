@@ -13,7 +13,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  *
  * @phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only filter/sort query args; no state change.
  * @phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
@@ -33,14 +33,14 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
 /**
  * Renders the audit event trail as a sortable, filterable table.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 
 	/**
 	 * Constructor.
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 */
 	public function __construct() {
 		parent::__construct(
@@ -56,7 +56,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	 * Column definitions.
 	 *
 	 * @return array<string,string>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function get_columns() {
 		return array(
@@ -73,7 +73,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	 * Sortable columns.
 	 *
 	 * @return array<string,array{0:string,1:bool}>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	protected function get_sortable_columns() {
 		return array(
@@ -89,7 +89,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	 * @param object $item        Audit row.
 	 * @param string $column_name Column key.
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	protected function column_default( $item, $column_name ) {
 		switch ( $column_name ) {
@@ -134,7 +134,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	 *
 	 * @param string $json Raw JSON from the row.
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function render_data( $json ) {
 		if ( '' === $json ) {
@@ -159,7 +159,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	 *
 	 * @param string $which Table position.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	protected function extra_tablenav( $which ) {
 		if ( 'top' !== $which ) {
@@ -194,7 +194,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	 * Load rows for the current page with the active filters applied.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function prepare_items() {
 		global $wpdb;
@@ -259,7 +259,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	 * Empty-state message.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function no_items() {
 		esc_html_e( 'No audit events recorded yet.', 'reportedip-hive' );

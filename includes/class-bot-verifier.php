@@ -17,7 +17,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Two-stage verified-bot sensor (IP-range match first, FCrDNS fallback).
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 class ReportedIP_Hive_Bot_Verifier {
 
@@ -67,7 +67,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * Get the singleton instance.
 	 *
 	 * @return ReportedIP_Hive_Bot_Verifier
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -81,7 +81,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * WAF (both priority 1) so an already-blocked request never reaches the
 	 * comparatively heavier verification path.
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 */
 	private function __construct() {
 		add_action( 'init', array( $this, 'inspect' ), 4 );
@@ -92,7 +92,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * on a spoofer according to the configured action.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function inspect() {
 		if ( wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) || is_admin() ) {
@@ -140,7 +140,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * Whether the sensor is active (enabled, action not off, feature available).
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function is_enabled() {
 		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_MONITOR, true ) ) {
@@ -162,7 +162,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * The configured action for a confirmed spoofer.
 	 *
 	 * @return string off | flag | block.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function action() {
 		$action = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_ACTION, 'flag' );
@@ -174,7 +174,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * bundled baseline).
 	 *
 	 * @return array<int,array<string,mixed>>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function get_bot_rules() {
 		if ( ! class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {
@@ -192,7 +192,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * @param array<int,array<string,mixed>> $rules Bot-signature rules.
 	 * @param string                         $ua    Request user-agent.
 	 * @return array<string,mixed>|null The matched rule, or null.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function match_bot( array $rules, $ua ) {
 		if ( '' === $ua ) {
@@ -223,7 +223,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * @param callable|null       $ptr     PTR resolver `fn(string $ip): string|false`.
 	 * @param callable|null       $forward Forward resolver `fn(string $host): string|false`.
 	 * @return string `verified` or `fake`.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function classify( array $bot, $ip, $ptr = null, $forward = null ) {
 		$ranges = isset( $bot['ranges'] ) && is_array( $bot['ranges'] ) ? $bot['ranges'] : array();
@@ -277,7 +277,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * @param array<string,mixed> $bot Matched bot rule.
 	 * @param string              $ip  Client IP.
 	 * @return string `verified` or `fake`.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function cached_verdict( array $bot, $ip ) {
 		$token = isset( $bot['ua'] ) ? (string) $bot['ua'] : 'bot';
@@ -300,7 +300,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * @param array<string,mixed> $bot Matched bot rule.
 	 * @param string              $ip  Client IP.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function handle_fake( array $bot, $ip ) {
 		$action = $this->action();

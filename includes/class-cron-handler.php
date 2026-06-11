@@ -391,7 +391,7 @@ class ReportedIP_Hive_Cron_Handler {
 	 * falls back to the bundled baseline on any failure.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function cron_sync_rulesets() {
 		if ( ! class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {

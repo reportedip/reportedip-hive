@@ -1141,7 +1141,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * administrator exports only their own blog's rows.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function handle_audit_export() {
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -1433,7 +1433,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * trail. Business+ tier-locked scaffold; the event trail lands in a later
 	 * phase.
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 * @return void
 	 */
 	private function render_audit_tab() {
@@ -3254,7 +3254,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * independent-verification deep links for the site host.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function render_score_section() {
 		if ( ! class_exists( 'ReportedIP_Hive_Score' ) ) {
@@ -3299,7 +3299,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @param array<string,mixed> $summary One group summary from ReportedIP_Hive_Score.
 	 * @param string              $title   Group title.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function render_score_gauge( array $summary, $title ) {
 		$score  = (int) ( $summary['score'] ?? 0 );
@@ -3349,7 +3349,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @param array<string,mixed> $summary One group summary from ReportedIP_Hive_Score.
 	 * @param string              $title   Group title.
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function render_score_items( array $summary, $title ) {
 		$items = isset( $summary['items'] ) && is_array( $summary['items'] ) ? $summary['items'] : array();

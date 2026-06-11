@@ -279,7 +279,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * so a re-run is a no-op.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function migrate_to_v9() {
 		ReportedIP_Hive_Schema::ensure_tables();

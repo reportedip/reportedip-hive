@@ -13,7 +13,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Hidden-field comment honeypot.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 class ReportedIP_Hive_Comment_Honeypot {
 
@@ -48,7 +48,7 @@ class ReportedIP_Hive_Comment_Honeypot {
 	 * Get the singleton instance.
 	 *
 	 * @return ReportedIP_Hive_Comment_Honeypot
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -60,7 +60,7 @@ class ReportedIP_Hive_Comment_Honeypot {
 	/**
 	 * Wire the form-render and the early validation hooks.
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 */
 	private function __construct() {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_style' ) );
@@ -74,7 +74,7 @@ class ReportedIP_Hive_Comment_Honeypot {
 	 * printed only where a comment form can appear.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function enqueue_style() {
 		if ( ! $this->is_enabled() || ! is_singular() || ! comments_open() ) {
@@ -92,7 +92,7 @@ class ReportedIP_Hive_Comment_Honeypot {
 	 * Whether the honeypot is enabled.
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function is_enabled() {
 		return (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true );
@@ -102,7 +102,7 @@ class ReportedIP_Hive_Comment_Honeypot {
 	 * Echo the decoy field into the comment form.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function render_field() {
 		if ( ! $this->is_enabled() ) {
@@ -134,7 +134,7 @@ class ReportedIP_Hive_Comment_Honeypot {
 	 * keep it away from assistive tech and password managers.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function field_markup() {
 		$name = esc_attr( self::FIELD_NAME );
@@ -149,7 +149,7 @@ class ReportedIP_Hive_Comment_Honeypot {
 	 *
 	 * @param array<string,mixed> $commentdata Incoming comment data.
 	 * @return array<string,mixed>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function check_comment( $commentdata ) {
 		if ( ! $this->is_enabled() ) {
@@ -183,7 +183,7 @@ class ReportedIP_Hive_Comment_Honeypot {
 	 *
 	 * @param array<string,mixed> $post Request body params.
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function is_sprung( array $post ) {
 		return isset( $post[ self::FIELD_NAME ] ) && '' !== trim( (string) $post[ self::FIELD_NAME ] );

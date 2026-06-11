@@ -302,7 +302,7 @@ class ReportedIP_Hive_Scan_Detector {
 	 * Professional). Memoised per request; the ruleset read is itself cached.
 	 *
 	 * @return string[]
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private function scan_paths(): array {
 		static $cache = null;

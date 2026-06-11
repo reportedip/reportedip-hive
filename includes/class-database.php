@@ -1303,7 +1303,7 @@ class ReportedIP_Hive_Database {
 	 * @param string $ip   Candidate IP address.
 	 * @param string $cidr CIDR range (`192.0.2.0/24`, `2001:db8::/32`) or a bare IP.
 	 * @return bool True when the IP is inside the range.
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function ip_in_cidr( $ip, $cidr ) {
 		if ( ! is_string( $ip ) || ! is_string( $cidr ) || $ip === '' || $cidr === '' ) {

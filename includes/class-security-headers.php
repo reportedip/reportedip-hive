@@ -15,7 +15,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.2.0
+ * @since     2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Emits and reports the site-wide security headers.
  *
- * @since 2.2.0
+ * @since 2.1.2
  */
 class ReportedIP_Hive_Security_Headers {
 
@@ -66,7 +66,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * Get the singleton instance.
 	 *
 	 * @return ReportedIP_Hive_Security_Headers
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
@@ -78,7 +78,7 @@ class ReportedIP_Hive_Security_Headers {
 	/**
 	 * Wire the front-end header hook.
 	 *
-	 * @since 2.2.0
+	 * @since 2.1.2
 	 */
 	private function __construct() {
 		add_action( 'send_headers', array( $this, 'emit' ), 10 );
@@ -88,7 +88,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * Send the configured headers, skipping any already present.
 	 *
 	 * @return void
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public function emit() {
 		if ( headers_sent() ) {
@@ -111,7 +111,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * The header name/value map this site would emit under the current config.
 	 *
 	 * @return array<string,string>
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function planned_headers() {
 		$headers = array();
@@ -180,7 +180,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * Planned headers that are already sent elsewhere (server/other plugin).
 	 *
 	 * @return string[] Conflicting header names (original casing).
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function conflicts() {
 		$present = self::sent_header_names();
@@ -197,7 +197,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * Whether the master toggle is on.
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function is_enabled() {
 		return (bool) self::opt( self::OPT_ENABLED, false );
@@ -207,7 +207,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * Whether at least one basic header is active (Score contract).
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function basic_active() {
 		if ( ! self::is_enabled() ) {
@@ -222,7 +222,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * Whether at least one advanced header is active and available (Score contract).
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function advanced_active() {
 		if ( ! self::is_enabled() || ! self::advanced_available() ) {
@@ -240,7 +240,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * Whether the advanced header set is unlocked for the current tier/mode.
 	 *
 	 * @return bool
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	public static function advanced_available() {
 		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
@@ -254,7 +254,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * Normalised X-Frame-Options value: SAMEORIGIN | DENY | off.
 	 *
 	 * @return string
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function xfo_value() {
 		$value = strtoupper( trim( (string) self::opt( self::OPT_XFO, 'SAMEORIGIN' ) ) );
@@ -271,7 +271,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * Lower-cased names of headers already queued for this response.
 	 *
 	 * @return string[]
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function sent_header_names() {
 		if ( ! function_exists( 'headers_list' ) ) {
@@ -293,7 +293,7 @@ class ReportedIP_Hive_Security_Headers {
 	 * @param string $key      Option key.
 	 * @param mixed  $fallback Value returned when the option is unset.
 	 * @return mixed
-	 * @since  2.2.0
+	 * @since  2.1.2
 	 */
 	private static function opt( $key, $fallback ) {
 		if ( ! class_exists( 'ReportedIP_Hive_Option_Routing' ) ) {
