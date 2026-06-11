@@ -86,6 +86,14 @@ class ReportedIP_Hive_WAF {
 		'cmd_injection'  => 'waf_cmd',
 		'file_probe'     => 'waf_file',
 		'scanner_ua'     => 'waf_scanner',
+		'log4shell'      => 'waf_log4shell',
+		'ssrf'           => 'waf_ssrf',
+		'php_injection'  => 'waf_php',
+		'nosql'          => 'waf_nosql',
+		'xxe'            => 'waf_xxe',
+		'webshell'       => 'waf_webshell',
+		'crlf'           => 'waf_crlf',
+		'ssti'           => 'waf_ssti',
 	);
 
 	/**
