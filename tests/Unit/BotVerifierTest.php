@@ -101,6 +101,44 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'fake', $this->verifier()->classify( $bot, '66.249.66.1', $ptr, $forward ) );
 		}
 
+		public function test_classify_verified_by_ipv6_range(): void {
+			$bot = array( 'ua' => 'facebookexternalhit', 'domains' => array( '.fbsv.net' ), 'ranges' => array( '2a03:2880::/29' ) );
+			$this->assertSame( 'verified', $this->verifier()->classify( $bot, '2a03:2880:10ff:12::1' ) );
+		}
+
+		public function test_classify_fcrdns_confirms_ipv6_client(): void {
+			$bot     = array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array() );
+			$ptr     = static function ( $ip ) {
+				return 'crawl-v6.googlebot.com';
+			};
+			$forward = static function ( $host ) {
+				return array( '203.0.113.5', '2001:4860:4801:10::1' );
+			};
+			$this->assertSame( 'verified', $this->verifier()->classify( $bot, '2001:4860:4801:0010:0:0:0:1', $ptr, $forward ) );
+		}
+
+		public function test_classify_fcrdns_ipv6_match_ignores_text_notation(): void {
+			$bot     = array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array() );
+			$ptr     = static function ( $ip ) {
+				return 'crawl-v6.googlebot.com';
+			};
+			$forward = static function ( $host ) {
+				return array( '2001:4860:4801:0010:0000:0000:0000:0001' );
+			};
+			$this->assertSame( 'verified', $this->verifier()->classify( $bot, '2001:4860:4801:10::1', $ptr, $forward ) );
+		}
+
+		public function test_classify_fcrdns_fake_when_no_address_confirms(): void {
+			$bot     = array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array() );
+			$ptr     = static function ( $ip ) {
+				return 'crawl-v6.googlebot.com';
+			};
+			$forward = static function ( $host ) {
+				return array( '203.0.113.5', '2001:4860:4801:10::99' );
+			};
+			$this->assertSame( 'fake', $this->verifier()->classify( $bot, '2001:4860:4801:10::1', $ptr, $forward ) );
+		}
+
 		public function test_action_defaults_to_flag(): void {
 			$this->assertSame( 'flag', $this->verifier()->action() );
 		}

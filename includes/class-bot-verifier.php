@@ -218,10 +218,15 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * for range-less crawlers, the PTR record must resolve to one of the rule's
 	 * valid domain suffixes and forward-confirm back to the same IP.
 	 *
+	 * The forward confirmation compares addresses by their packed binary form, so
+	 * it works for IPv6 (where text notations differ but the address is the same)
+	 * and the default resolver looks up both A and AAAA records — `gethostbyname()`
+	 * only ever returned IPv4, which silently failed every IPv6 crawler.
+	 *
 	 * @param array<string,mixed> $bot     Matched bot rule (`ranges`, `domains`).
 	 * @param string              $ip      Client IP.
 	 * @param callable|null       $ptr     PTR resolver `fn(string $ip): string|false`.
-	 * @param callable|null       $forward Forward resolver `fn(string $host): string|false`.
+	 * @param callable|null       $forward Forward resolver `fn(string $host): string|string[]|false` (one IP or a list of A/AAAA addresses).
 	 * @return string `verified` or `fake`.
 	 * @since  2.1.2
 	 */
@@ -242,7 +247,7 @@ class ReportedIP_Hive_Bot_Verifier {
 		}
 
 		$ptr     = is_callable( $ptr ) ? $ptr : 'gethostbyaddr';
-		$forward = is_callable( $forward ) ? $forward : 'gethostbyname';
+		$forward = is_callable( $forward ) ? $forward : array( __CLASS__, 'resolve_host_ips' );
 
 		$host = call_user_func( $ptr, $ip );
 		if ( ! is_string( $host ) || '' === $host || $host === $ip ) {
@@ -265,8 +270,67 @@ class ReportedIP_Hive_Bot_Verifier {
 			return 'fake';
 		}
 
-		$resolved = call_user_func( $forward, $host );
-		return ( is_string( $resolved ) && $resolved === $ip ) ? 'verified' : 'fake';
+		$resolved   = call_user_func( $forward, $host );
+		$candidates = is_array( $resolved ) ? $resolved : array( $resolved );
+		foreach ( $candidates as $candidate ) {
+			$candidate = (string) $candidate;
+			if ( '' !== $candidate && self::ip_equals( $candidate, $ip ) ) {
+				return 'verified';
+			}
+		}
+		return 'fake';
+	}
+
+	/**
+	 * Compare two IP addresses by their packed binary form, so differing IPv6
+	 * text notations (compressed vs expanded, leading zeros) for the same address
+	 * still match and a plain string compare can never reject a valid IPv6 hit.
+	 *
+	 * @param string $a First address.
+	 * @param string $b Second address.
+	 * @return bool True when both parse to the same address.
+	 * @since  2.1.3
+	 */
+	private static function ip_equals( $a, $b ) {
+		if ( $a === $b ) {
+			return true;
+		}
+		$pa = @inet_pton( $a ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- inet_pton warns on a malformed address; the false return is handled.
+		$pb = @inet_pton( $b ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- inet_pton warns on a malformed address; the false return is handled.
+		return false !== $pa && false !== $pb && $pa === $pb;
+	}
+
+	/**
+	 * Default forward resolver: every A and AAAA address a host resolves to, so
+	 * the FCrDNS confirmation can match an IPv6 client. Falls back to
+	 * `gethostbyname()` (IPv4 only) when `dns_get_record()` is unavailable.
+	 *
+	 * @param string $host Hostname to resolve.
+	 * @return string[] Resolved IP addresses (may be empty).
+	 * @since  2.1.3
+	 */
+	public static function resolve_host_ips( $host ) {
+		if ( ! is_string( $host ) || '' === $host ) {
+			return array();
+		}
+		if ( function_exists( 'dns_get_record' ) ) {
+			$records = @dns_get_record( $host, DNS_A | DNS_AAAA ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- A failed DNS lookup must not surface a warning; the empty/false return is handled.
+			if ( is_array( $records ) ) {
+				$ips = array();
+				foreach ( $records as $record ) {
+					if ( isset( $record['ipv6'] ) && is_string( $record['ipv6'] ) ) {
+						$ips[] = $record['ipv6'];
+					} elseif ( isset( $record['ip'] ) && is_string( $record['ip'] ) ) {
+						$ips[] = $record['ip'];
+					}
+				}
+				if ( ! empty( $ips ) ) {
+					return $ips;
+				}
+			}
+		}
+		$v4 = gethostbyname( $host );
+		return ( '' !== $v4 && $v4 !== $host ) ? array( $v4 ) : array();
 	}
 
 	/**

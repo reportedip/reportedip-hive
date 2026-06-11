@@ -8,14 +8,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-06-11T07:25:39+00:00\n"
+"PO-Revision-Date: 2026-06-11T09:28:21+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php:3
+#: reportedip-hive.php:5
 #: admin/class-admin-settings.php:1367
 #: admin/class-admin-settings.php:1368
 #: admin/class-admin-settings.php:1485
@@ -27,18 +27,18 @@ msgstr "ReportedIP Hive"
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php:4
-#: reportedip-hive.php:9
+#: reportedip-hive.php:7
+#: reportedip-hive.php:17
 msgid "https://reportedip.de"
 msgstr "https://reportedip.de"
 
 #. Description of the plugin
-#: reportedip-hive.php:5
+#: reportedip-hive.php:9
 msgid "Community-powered WordPress security — real-time threat intelligence"
 msgstr "Community-gestützte WordPress-Sicherheit — Bedrohungsdaten in Echtzeit"
 
 #. Author of the plugin
-#: reportedip-hive.php:8
+#: reportedip-hive.php:15
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr "Patrick Schlesinger, ReportedIP"
 

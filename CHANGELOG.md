@@ -2,6 +2,19 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.3] — 2026-06-11
+
+### Fixes
+
+- Verified-bot detection no longer flags genuine crawlers that connect over
+  IPv6 as fake. The FCrDNS forward-confirmation used `gethostbyname()` (IPv4
+  only), so every IPv6 crawler without a published IP range failed
+  verification; it now resolves A and AAAA records and compares addresses by
+  their packed binary form.
+- `facebookexternalhit` (Meta) is verified against Meta's published IP ranges
+  (AS32934) instead of reverse DNS, which Meta does not provide reliably — real
+  Facebook link-preview crawlers from `2a03:2880::/29` are no longer flagged.
+
 ## [2.1.2] — 2026-06-11
 
 ### New
