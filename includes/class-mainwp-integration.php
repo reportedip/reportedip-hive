@@ -156,7 +156,49 @@ class ReportedIP_Hive_MainWP_Integration {
 		$metrics['critical_24h'] = self::count_critical_events( 24 );
 		$metrics['twofa_users']  = self::count_2fa_users();
 
+		$metrics = array_merge( $metrics, self::collect_waf_status() );
+
 		return $metrics;
+	}
+
+	/**
+	 * Report the WAF engine and pre-WordPress drop-in status.
+	 *
+	 * Mirrors the firewall admin "Extended Protection" box so the MainWP overview
+	 * can flag sites whose drop-in is enabled but not yet running — typically an
+	 * nginx host that still needs the manual server snippet. `waf_needs_setup` is
+	 * the derived "needs care" flag: enabled, not running, and on a server MainWP
+	 * cannot auto-configure (nginx/unknown); Apache and PHP-FPM write the directive
+	 * themselves and resolve on their own.
+	 *
+	 * @return array
+	 * @since  2.1.6
+	 */
+	protected static function collect_waf_status() {
+		if ( ! class_exists( 'ReportedIP_Hive_WAF' ) ) {
+			return array();
+		}
+
+		$waf    = ReportedIP_Hive_WAF::get_instance();
+		$status = array(
+			'waf_enabled'     => (bool) $waf->is_enabled(),
+			'waf_report_only' => (bool) $waf->is_report_only(),
+		);
+
+		if ( class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) && class_exists( 'ReportedIP_Hive_Option_Routing' ) ) {
+			$dropin = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+
+			$dropin_enabled = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
+			$running        = (bool) $dropin->is_running();
+			$server         = (string) $dropin->detect_server();
+
+			$status['waf_dropin_enabled'] = $dropin_enabled;
+			$status['waf_dropin_running'] = $running;
+			$status['waf_server']         = $server;
+			$status['waf_needs_setup']    = $dropin_enabled && ! $running && ! in_array( $server, array( 'apache', 'fpm' ), true );
+		}
+
+		return $status;
 	}
 
 	/**

@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.5
+Stable tag: 2.1.6
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.6 =
+
+Fixed: genuine search crawlers are no longer mislabelled "fake bot". The verified-bot classifier wrongly treated an out-of-range IP as a spoofer and a failed reverse-DNS lookup as proof of forgery, so a real Bing crawler from a /24 missing from the seed (52.167.144.0/24) or any crawler on a host with a flaky resolver was flagged. Classification is now three-state — IP-range match verifies, a foreign-domain PTR is fake, and a missing range or unresolved DNS stays "unknown" and is never flagged; out-of-range IPs fall back to forward-confirmed reverse DNS. New: the MainWP sync reports the WAF drop-in status so a dashboard can flag sites whose extended protection is enabled but not yet running.
 
 = 2.1.5 =
 

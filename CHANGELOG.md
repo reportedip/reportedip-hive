@@ -2,6 +2,28 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.6] — 2026-06-12
+
+### Fixes
+
+- **Genuine search crawlers are no longer mislabelled "fake bot".** The
+  verified-bot classifier treated an out-of-range IP as a decisive spoofer and a
+  failed reverse-DNS lookup as proof of forgery — so a real Bing crawler from a
+  /24 missing from the seed (e.g. `52.167.144.0/24`), or any crawler on a host
+  with a flaky resolver, was flagged. Classification is now three-state: an
+  IP-range match verifies, a PTR on a foreign domain is fake, and a missing range
+  or unresolved DNS stays `unknown` (never flagged). Out-of-range IPs fall back
+  to forward-confirmed reverse DNS instead of an automatic fake verdict.
+
+### Added
+
+- **MainWP sync now reports the WAF pre-WordPress drop-in status.** The MainWP
+  integration module ships `waf_enabled`, `waf_report_only`, `waf_dropin_enabled`,
+  `waf_dropin_running`, `waf_server` and the derived `waf_needs_setup` flag with
+  every sync, so a MainWP dashboard can flag sites whose extended protection is
+  enabled but not yet running — typically an nginx host still waiting for the
+  manual server snippet. Counts only; no new data leaves the site.
+
 ## [2.1.5] — 2026-06-11
 
 ### Fixes
