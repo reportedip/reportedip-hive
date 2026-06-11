@@ -39,7 +39,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 			\ReportedIP_Hive_Rule_Store::flush_cache();
 			$flag = new \ReflectionProperty( \ReportedIP_Hive_WAF_Dropin_Manager::class, 'resync_queued' );
-			$flag->setAccessible( true );
 			$flag->setValue( $this->mgr(), false );
 		}
 
@@ -49,7 +48,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		private function call_private( string $method, array $args ) {
 			$ref = new \ReflectionMethod( \ReportedIP_Hive_WAF_Dropin_Manager::class, $method );
-			$ref->setAccessible( true );
 			return $ref->invoke( $this->mgr(), ...$args );
 		}
 

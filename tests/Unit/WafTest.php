@@ -42,7 +42,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		private function call_private( string $method, array $args ) {
 			$ref = new \ReflectionMethod( \ReportedIP_Hive_WAF::class, $method );
-			$ref->setAccessible( true );
 			return $ref->invoke( $this->waf(), ...$args );
 		}
 
