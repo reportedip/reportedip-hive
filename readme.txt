@@ -16,7 +16,7 @@ Community-powered WordPress security: 12 attack sensors, 4 2FA methods, threat s
 
 **Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker — before the password is even checked.**
 
-ReportedIP Hive is a complete security plugin for serious WordPress sites: 12 detection sensors, four 2FA methods (TOTP, Passkey/WebAuthn and email in every plan; SMS on Professional via the managed relay), progressive block escalation, and an opt-in community-intelligence network. Engineered in Germany with privacy as the design principle, not a checkbox.
+ReportedIP Hive is a complete security plugin for serious WordPress sites: 16 detection sensors, four 2FA methods (TOTP, Passkey/WebAuthn and email in every plan; SMS on Professional via the managed relay), progressive block escalation, and an opt-in community-intelligence network. Engineered in Germany with privacy as the design principle, not a checkbox.
 
 The entire detection and identity core is **free, GPL-2.0 and complete** — every sensor, the core 2FA methods, progressive blocking, the password-reset gate, every dashboard and export. Paid plans add managed relays, multi-site management and a few advanced modules on top (see *Plans* below); they never gate the core protection.
 
@@ -35,7 +35,7 @@ Two ways to run:
 * **Security headers out of the box.** The basic hardening trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is free; HSTS, Permissions-Policy, a report-only-first Content-Security-Policy and the cross-origin isolation trio come with Professional. Headers already sent by your server or another plugin are detected and left untouched.
 * **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan level 5 clean, WPCS-clean (zero warnings), a comprehensive PHPUnit suite (unit + Multisite) running on every commit.
 
-= 12 detection sensors (every one tunable) =
+= 16 detection sensors (every one tunable) =
 
 * **Failed logins** — default 5 fails / 15 min
 * **Password spray** — distinct usernames from same IP, default 5 / 10 min
@@ -153,13 +153,13 @@ Pair it with a malware scanner if you need that surface — Hive deliberately st
 
 == Plans (optional, comfort only) ==
 
-The full **detection and identity core is free, GPL-2.0 and complete** in every operating mode — all 12 sensors, the core 2FA methods (TOTP, Passkey, Email, Recovery codes), progressive block escalation, the password-reset gate, every alert, every dashboard and export. None of that is ever gated.
+The full **detection and identity core is free, GPL-2.0 and complete** in every operating mode — all 16 sensors, the core 2FA methods (TOTP, Passkey, Email, Recovery codes), progressive block escalation, the password-reset gate, every alert, every dashboard and export. None of that is ever gated.
 
 Paid plans add the **managed relays, multi-site management and a handful of advanced modules** at reportedip.de — useful for sites that don't want to maintain their own SMTP / SMS / multi-site stack, run a WooCommerce storefront, or need network-wide auto-hardening:
 
 = Free / Contributor (0 €) =
 
-* Full core functionality — all 12 sensors, progressive blocking, the password-reset gate, every dashboard and export
+* Full core functionality — all 16 sensors, progressive blocking, the password-reset gate, every dashboard and export
 * 1 domain per licence, 1,000 IP-reputation checks/day, 50 reports/day
 * Local-mode `wp_mail()` for 2FA emails; TOTP, Passkey and Email 2FA included (SMS 2FA, WooCommerce frontend 2FA and Hardening Mode require Professional)
 * 30-day log retention, community support
@@ -193,7 +193,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 
 **Bundles (PRO+ only, refundable until first use):** 50/200/500-SMS bundles (14.90 / 49.90 / 99.90 €), 1k/5k/25k-mail bundles (4.90 / 14.90 / 49.90 €). All prices VAT-inclusive (Stripe `tax_behavior = inclusive`).
 
-What stays Free regardless of plan: all 12 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, disposable-email blocking, the comment honeypot, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
+What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, disposable-email blocking, the comment honeypot, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
 

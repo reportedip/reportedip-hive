@@ -26,7 +26,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 
 ## Feature overview
 
-### 12 detection sensors (every one tunable)
+### 16 detection sensors (every one tunable)
 
 | Sensor | Default threshold | Notes |
 |---|---|---|
@@ -78,7 +78,7 @@ The two **modes** decide whether the plugin talks to reportedip.de at all. They 
 |---|---|---|
 | Account required | No | Free account at reportedip.de |
 | External calls | None | Reputation lookups + anonymised reports |
-| All 12 detection sensors | ✓ | ✓ |
+| All 16 detection sensors | ✓ | ✓ |
 | Core 2FA (TOTP, Passkey, Email, Recovery) | ✓ | ✓ |
 | Progressive block escalation + password-reset gate | ✓ | ✓ |
 | Pre-auth IP reputation check | – | ✓ |
