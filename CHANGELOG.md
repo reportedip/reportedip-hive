@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [2.1.3] — 2026-06-11
+## [Unreleased]
 
 ### Changed
 
@@ -29,6 +29,8 @@ All changes to ReportedIP Hive are documented here.
   hides the Free-vs-Professional comparison once Priority Sync is active.
 - The Hardening tab's save button now also renders for plans without advanced
   headers, so the free basic headers can be saved again.
+
+## [2.1.3] — 2026-06-11
 
 ### Fixes
 

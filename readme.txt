@@ -343,7 +343,7 @@ The full structured changelog lives in [CHANGELOG.md](https://github.com/reporte
 
 = 2.1.3 =
 
-Firewall admin UX overhaul: the Overview tab is now a mini-dashboard with per-module status, 7-day activity counters and the recent firewall event stream; every tab opens with a short intro explaining what the module does. A new Server Setup tab gathers every web-server snippet in one place — the WAF auto_prepend_file directive (with a new php.ini / hosting-panel option as the recommended manual route next to the nginx snippet), the decoy rewrite rules and a server-level export of the configured security headers for nginx and Apache. Extended Protection setup is now verifiable: the status reports whether the guard actually executed for the current request and confirms "Setup complete" the moment it works. The Bot Verification tab shows the verified crawler list and 7-day spoofer counts, the Rule Sync tab brands synced rulesets as delivered by the reportedip.de Rule API and hides the plan comparison once Priority Sync is active. Fixed: verified-bot detection no longer flags genuine IPv6 crawlers (FCrDNS now resolves AAAA records), facebookexternalhit verifies against Meta's published IP ranges, and the basic security headers can be saved again on free plans.
+Fixed: verified-bot detection no longer flags genuine crawlers that connect over IPv6 (the forward-confirmation now resolves AAAA records as well), and facebookexternalhit is verified against Meta's published IP ranges instead of reverse DNS, which Meta does not provide reliably.
 
 = 2.1.2 =
 
