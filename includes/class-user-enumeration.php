@@ -341,6 +341,26 @@ class ReportedIP_Hive_User_Enumeration {
 			return;
 		}
 
+		/*
+		 * A verified search/AI crawler fetching the author archive
+		 * (`/author/<slug>/`) is not an enumeration attack — Googlebot indexes
+		 * those pages routinely. The 404 in block_author_param() already
+		 * prevents the username leak, so a genuine crawler must not accumulate
+		 * probes and trip the IP-block ladder, or it gets locked out of the
+		 * site (an SEO regression). The bot-allowlist is the same UA gate the
+		 * 404-burst and REST-burst sensors use; a spoofed crawler UA still only
+		 * earns a 404, never the data leak.
+		 */
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_allowlist_enabled', true )
+			&& class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
+			$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
+				? (string) wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Matched as an opaque token, never stored or echoed.
+				: '';
+			if ( ReportedIP_Hive_Bot_Allowlist::is_verified_search_or_ai_bot( $ua ) ) {
+				return;
+			}
+		}
+
 		$ip_manager = class_exists( 'ReportedIP_Hive_IP_Manager' )
 			? ReportedIP_Hive_IP_Manager::get_instance()
 			: null;

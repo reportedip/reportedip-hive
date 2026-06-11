@@ -2,6 +2,28 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.5] — 2026-06-11
+
+### Fixes
+
+- **Genuine search crawlers are no longer blocked as user-enumeration.**
+  Googlebot (and other verified crawlers) routinely index author archives
+  (`/author/<slug>/`), which the user-enumeration sensor counted as probes and
+  escalated to an IP block — locking the crawler out of the site for up to two
+  days, an SEO regression. The sensor now exempts verified-crawler User-Agents
+  from the probe ladder (the same allowlist the 404- and REST-burst sensors
+  use); the 404 that hides the username is still served, so a spoofed crawler
+  UA gains nothing.
+- **Loopback and private addresses are never reported as attackers.**
+  `get_client_ip()` accepted any syntactically valid address from the trusted
+  proxy header, so an internal hop (`127.0.0.1`, `::1`, `10.0.0.0/8`,
+  `172.16.0.0/12`, `192.168.0.0/16`, link-local) could become the "client" IP
+  and get flagged. It now requires a publicly-routable address on that path.
+- **The API report queue drops non-public IPs.** A new `is_public_ip()` gate in
+  `queue_api_report()` rejects the `unknown` sentinel and every private/reserved
+  range before queueing, so a mis-detected internal request no longer produces a
+  report that the remote API rejects after three wasted retries.
+
 ## [2.1.4] — 2026-06-11
 
 ### Changed

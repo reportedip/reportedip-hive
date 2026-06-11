@@ -613,6 +613,16 @@ class ReportedIP_Hive_Database {
 	public function queue_api_report( $ip_address, $category_ids, $comment, $report_type = 'negative', $priority = 'normal' ) {
 		global $wpdb;
 
+		/*
+		 * Never queue a non-public address. An `unknown`, loopback or private
+		 * IP cannot be a community threat — the remote API rejects it ("invalid
+		 * ip" / "whitelisted local") after three wasted retries. Drop it here so
+		 * a mis-detected internal request never reaches the queue at all.
+		 */
+		if ( class_exists( 'ReportedIP_Hive' ) && ! ReportedIP_Hive::is_public_ip( $ip_address ) ) {
+			return false;
+		}
+
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		$cooldown_hours = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_cooldown_hours', 24 );

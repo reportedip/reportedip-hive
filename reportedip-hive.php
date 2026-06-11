@@ -4,7 +4,7 @@
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence
  * with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.1.4
+ * Version: 2.1.5
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -55,7 +55,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.1.4' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.1.5' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -1568,7 +1568,15 @@ class ReportedIP_Hive {
 			$server_value = wp_unslash( $_SERVER[ $trusted_header ] );
 			$ips          = explode( ',', (string) $server_value );
 			$ip           = trim( $ips[0] );
-			if ( filter_var( $ip, FILTER_VALIDATE_IP ) !== false ) {
+			/*
+			 * Only accept a publicly-routable address from the proxy header. A
+			 * private or reserved value (a loopback/RFC1918 hop the proxy
+			 * prepended, an internal health-check, or a spoofed 10.0.0.1) must
+			 * not become the "client" IP, or internal infrastructure ends up
+			 * flagged as an attacker and queued for an API report it can never
+			 * pass. Falls through to REMOTE_ADDR when the header is not public.
+			 */
+			if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) !== false ) {
 				return $ip;
 			}
 		}
@@ -1576,6 +1584,25 @@ class ReportedIP_Hive {
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via filter_var
 		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? wp_unslash( $_SERVER['REMOTE_ADDR'] ) : 'unknown';
 		return filter_var( $remote_addr, FILTER_VALIDATE_IP ) ? $remote_addr : 'unknown';
+	}
+
+	/**
+	 * Whether an address is a publicly-routable IP that may be blocked, reported
+	 * or escalated. Rejects the empty/`unknown` sentinel and every private or
+	 * reserved range (loopback `127.0.0.1`/`::1`, RFC1918 `10/172.16/192.168`,
+	 * link-local, etc.). Loopback and internal requests (wp-cron, REST loopback,
+	 * proxy health checks) legitimately carry such addresses; they are never an
+	 * external attacker, so the sensors and the report queue must skip them.
+	 *
+	 * @param string $ip Candidate IP address.
+	 * @return bool      True when the address is a public, reportable IP.
+	 * @since  2.1.5
+	 */
+	public static function is_public_ip( $ip ) {
+		if ( ! is_string( $ip ) || '' === $ip || 'unknown' === $ip ) {
+			return false;
+		}
+		return false !== filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
 	}
 
 	/**

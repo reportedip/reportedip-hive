@@ -4,12 +4,14 @@
  *
  * Pure User-Agent pattern matcher with a per-request decision cache. Consumed
  * by the rate-based sensors (404 burst trigger, REST burst trigger) to skip
- * the per-IP threshold for traffic that obviously comes from a known crawler.
+ * the per-IP threshold for traffic that obviously comes from a known crawler,
+ * and by the author-archive arm of the user-enumeration sensor (genuine
+ * crawlers index `/author/<slug>/` pages, so they must not trip the IP ladder).
  *
  * Honeypot-path sensors (`.env`, `wp-config.php.bak`, `/phpmyadmin/`, …) and
- * user-enumeration sensors (`?author=`, `/wp-json/wp/v2/users`) intentionally
- * do NOT consult this class — legit crawlers never request those paths, so a
- * spoofed "Googlebot" UA on `/.env` is itself the attack indicator.
+ * the REST `/wp-json/wp/v2/users` lockdown intentionally do NOT consult this
+ * class — legit crawlers never request those paths, so a spoofed "Googlebot"
+ * UA on `/.env` is itself the attack indicator.
  *
  * No network I/O, no DB access. UA spoofing is accepted as a known limitation;
  * pattern-based sensors catch the cases where it would matter. Future phases

@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.4
+Stable tag: 2.1.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.5 =
+
+Fixed: genuine search crawlers (Googlebot and friends) are no longer auto-blocked as user enumeration when they index author archives — the sensor now exempts verified-crawler user-agents from the IP-block ladder while still serving the 404 that hides the username, so this is SEO-safe. Fixed: loopback and private addresses (127.0.0.1, ::1, RFC1918, link-local) can no longer be mistaken for the client IP via the trusted proxy header, and the API report queue now drops the "unknown" sentinel and all private/reserved ranges before queueing — no more wasted report retries for internal requests.
 
 = 2.1.4 =
 
