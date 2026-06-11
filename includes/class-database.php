@@ -1325,40 +1325,63 @@ class ReportedIP_Hive_Database {
 		}
 
 		list($subnet, $mask) = explode( '/', $cidr, 2 );
-		$mask                = (int) $mask;
+		if ( ! is_numeric( $mask ) ) {
+			return false;
+		}
+		$mask = (int) $mask;
 
-		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
-			$ip_long     = ip2long( $ip );
-			$subnet_long = ip2long( $subnet );
-			$mask_long   = -1 << ( 32 - $mask );
+		$ip_is_v4     = (bool) filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
+		$subnet_is_v4 = (bool) filter_var( $subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
 
-			return ( $ip_long & $mask_long ) === ( $subnet_long & $mask_long );
-		} elseif ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
-			$ip_bin     = inet_pton( $ip );
-			$subnet_bin = inet_pton( $subnet );
-
-			if ( $ip_bin === false || $subnet_bin === false ) {
-				return false;
-			}
-
-			$bytes = intval( $mask / 8 );
-			$bits  = $mask % 8;
-
-			for ( $i = 0; $i < $bytes; $i++ ) {
-				if ( $ip_bin[ $i ] !== $subnet_bin[ $i ] ) {
-					return false;
-				}
-			}
-
-			if ( $bits > 0 ) {
-				$mask_byte = 0xFF << ( 8 - $bits );
-				return ( ord( $ip_bin[ $bytes ] ) & $mask_byte ) === ( ord( $subnet_bin[ $bytes ] ) & $mask_byte );
-			}
-
-			return true;
+		/*
+		 * The IP and the CIDR must be the same family. A v4 address can never
+		 * fall inside a v6 range (or vice-versa), and — critically — testing a
+		 * v4 IP against a v6 CIDR is exactly what fed a /33..128 mask into the
+		 * 32-bit shift below and raised "bit shift by negative number". Reject
+		 * the mismatch instead of crashing the request.
+		 */
+		if ( $ip_is_v4 !== $subnet_is_v4 ) {
+			return false;
 		}
 
-		return false;
+		if ( $ip_is_v4 ) {
+			if ( $mask < 0 || $mask > 32 ) {
+				return false;
+			}
+			$ip_long     = ip2long( $ip );
+			$subnet_long = ip2long( $subnet );
+			if ( false === $ip_long || false === $subnet_long ) {
+				return false;
+			}
+			$mask_long = ( 0 === $mask ) ? 0 : ( -1 << ( 32 - $mask ) );
+			return ( $ip_long & $mask_long ) === ( $subnet_long & $mask_long );
+		}
+
+		if ( ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) || $mask < 0 || $mask > 128 ) {
+			return false;
+		}
+
+		$ip_bin     = inet_pton( $ip );
+		$subnet_bin = inet_pton( $subnet );
+		if ( false === $ip_bin || false === $subnet_bin || strlen( $ip_bin ) !== strlen( $subnet_bin ) ) {
+			return false;
+		}
+
+		$bytes = intdiv( $mask, 8 );
+		$bits  = $mask % 8;
+
+		for ( $i = 0; $i < $bytes; $i++ ) {
+			if ( $ip_bin[ $i ] !== $subnet_bin[ $i ] ) {
+				return false;
+			}
+		}
+
+		if ( $bits > 0 ) {
+			$mask_byte = ( 0xFF << ( 8 - $bits ) ) & 0xFF;
+			return ( ord( $ip_bin[ $bytes ] ) & $mask_byte ) === ( ord( $subnet_bin[ $bytes ] ) & $mask_byte );
+		}
+
+		return true;
 	}
 
 	/**

@@ -343,7 +343,7 @@ The full structured changelog lives in [CHANGELOG.md](https://github.com/reporte
 
 = 2.1.5 =
 
-Fixed: genuine search crawlers (Googlebot and friends) are no longer auto-blocked as user enumeration when they index author archives — the sensor now exempts verified-crawler user-agents from the IP-block ladder while still serving the 404 that hides the username, so this is SEO-safe. Fixed: loopback and private addresses (127.0.0.1, ::1, RFC1918, link-local) can no longer be mistaken for the client IP via the trusted proxy header, and the API report queue now drops the "unknown" sentinel and all private/reserved ranges before queueing — no more wasted report retries for internal requests.
+Fixed: a fatal "bit shift by negative number" error in the CIDR matcher when a v4 address was tested against a v6 range (a v6 whitelist entry or bot IP-range feed) — it now rejects mismatched families and out-of-range masks cleanly. Fixed: genuine search crawlers (Googlebot and friends) are no longer auto-blocked as user enumeration when they index author archives — the sensor now exempts verified-crawler user-agents from the IP-block ladder while still serving the 404 that hides the username, so this is SEO-safe. Fixed: loopback and private addresses (127.0.0.1, ::1, RFC1918, link-local) can no longer be mistaken for the client IP via the trusted proxy header, and the API report queue now drops the "unknown" sentinel and all private/reserved ranges before queueing — no more wasted report retries for internal requests.
 
 = 2.1.4 =
 

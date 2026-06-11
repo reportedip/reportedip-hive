@@ -6,6 +6,12 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **Fatal `ArithmeticError: Bit shift by negative number` in the CIDR matcher.**
+  `ip_in_cidr()` branched on the IP family but never checked the CIDR family, so
+  testing a v4 address against a v6 range (e.g. a `::1/128` whitelist entry or a
+  bot IP-range feed) fed a `/33..128` mask into the 32-bit shift and crashed the
+  request. It now rejects mismatched families and out-of-range/malformed masks
+  cleanly, and handles `/0` and `/128` host routes correctly.
 - **Genuine search crawlers are no longer blocked as user-enumeration.**
   Googlebot (and other verified crawlers) routinely index author archives
   (`/author/<slug>/`), which the user-enumeration sensor counted as probes and
