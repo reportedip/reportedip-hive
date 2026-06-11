@@ -219,7 +219,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			ReportedIP_Hive_Admin_Settings::render_tier_lock( $paranoia_status, array( 'label' => __( 'Unlock Level 2/3 with Professional', 'reportedip-hive' ) ) );
 			echo '</p>';
 		} else {
-			echo '<select id="rip-waf-paranoia" class="rip-select">';
+			echo '<select id="rip-waf-paranoia" class="rip-select" data-rip-action="reportedip_hive_waf_set_paranoia" data-rip-param="level">';
 			foreach ( $paranoia_levels as $level => $label ) {
 				printf(
 					'<option value="%d"%s>%s</option>',
@@ -229,24 +229,17 @@ class ReportedIP_Hive_Admin_Firewall {
 				);
 			}
 			echo '</select>';
-			echo <<<'RIPJS'
-<script>jQuery(function($){$('#rip-waf-paranoia').on('change',function(){var s=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_waf_set_paranoia',level:$(this).val(),nonce:reportedip_hive_ajax.nonce},function(r){s.prop('disabled',false);location.reload();});});});</script>
-RIPJS;
 		}
 		echo '</div>';
 
 		printf(
-			'<button type="button" class="rip-button rip-button--secondary rip-waf-toggle" data-field="enabled">%s</button> ',
+			'<button type="button" class="rip-button rip-button--secondary" data-rip-action="reportedip_hive_waf_toggle" data-rip-field="enabled">%s</button> ',
 			esc_html( $enabled ? __( 'Disable engine', 'reportedip-hive' ) : __( 'Enable engine', 'reportedip-hive' ) )
 		);
 		printf(
-			'<button type="button" class="rip-button rip-button--secondary rip-waf-toggle" data-field="report_only">%s</button>',
+			'<button type="button" class="rip-button rip-button--secondary" data-rip-action="reportedip_hive_waf_toggle" data-rip-field="report_only">%s</button>',
 			esc_html( $report_only ? __( 'Switch to enforcing', 'reportedip-hive' ) : __( 'Switch to report-only', 'reportedip-hive' ) )
 		);
-
-		echo <<<'RIPJS'
-<script>jQuery(function($){$('.rip-waf-toggle').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_waf_toggle',field:$(this).data('field'),nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);location.reload();});});});</script>
-RIPJS;
 
 		echo '</div></div>';
 
@@ -307,17 +300,13 @@ RIPJS;
 		if ( $is_nginx ) {
 			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'On nginx the directive cannot be written automatically. Enable the drop-in to generate the guard file, then paste this snippet into your server block and reload nginx. Remove it again before deactivating the plugin.', 'reportedip-hive' ) . '</div>';
 			echo '<pre class="rip-code-block" id="rip-waf-nginx-snippet">' . esc_html( $dropin->nginx_snippet() ) . '</pre>';
-			echo '<button type="button" class="rip-button rip-button--secondary" id="rip-waf-nginx-copy">' . esc_html__( 'Copy snippet', 'reportedip-hive' ) . '</button> ';
+			echo '<button type="button" class="rip-button rip-button--secondary" data-rip-copy="#rip-waf-nginx-snippet">' . esc_html__( 'Copy snippet', 'reportedip-hive' ) . '</button> ';
 		}
 
 		printf(
-			'<button type="button" class="rip-button rip-button--primary rip-waf-dropin-toggle">%s</button>',
+			'<button type="button" class="rip-button rip-button--primary" data-rip-action="reportedip_hive_waf_dropin_toggle">%s</button>',
 			esc_html( $enabled ? __( 'Disable extended protection', 'reportedip-hive' ) : __( 'Enable extended protection', 'reportedip-hive' ) )
 		);
-
-		echo <<<'RIPJS'
-<script>jQuery(function($){$('.rip-waf-dropin-toggle').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_waf_dropin_toggle',nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);if(r&&r.data&&r.data.message){window.alert(r.data.message);}location.reload();});});$('#rip-waf-nginx-copy').on('click',function(e){e.preventDefault();var t=document.getElementById('rip-waf-nginx-snippet');if(t&&navigator.clipboard){navigator.clipboard.writeText(t.textContent);}});});</script>
-RIPJS;
 
 		echo '</div></div>';
 	}
@@ -378,7 +367,7 @@ RIPJS;
 			'block' => __( 'Block — reject confirmed spoofers', 'reportedip-hive' ),
 		);
 		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-bot-action">' . esc_html__( 'Action on a confirmed spoofer', 'reportedip-hive' ) . '</label>';
-		echo '<select id="rip-bot-action" class="rip-select">';
+		echo '<select id="rip-bot-action" class="rip-select" data-rip-action="reportedip_hive_bot_action" data-rip-param="mode">';
 		foreach ( $actions as $value => $label ) {
 			printf(
 				'<option value="%s"%s>%s</option>',
@@ -388,10 +377,6 @@ RIPJS;
 			);
 		}
 		echo '</select></div>';
-
-		echo <<<'RIPJS'
-<script>jQuery(function($){$('#rip-bot-action').on('change',function(){var s=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_bot_action',mode:$(this).val(),nonce:reportedip_hive_ajax.nonce},function(r){s.prop('disabled',false);location.reload();});});});</script>
-RIPJS;
 
 		echo '</div></div>';
 	}
@@ -441,7 +426,7 @@ RIPJS;
 			'block'   => __( 'Block — reject registration', 'reportedip-hive' ),
 		);
 		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-disposable-action">' . esc_html__( 'Action on a throwaway address', 'reportedip-hive' ) . '</label>';
-		echo '<select id="rip-disposable-action" class="rip-select">';
+		echo '<select id="rip-disposable-action" class="rip-select" data-rip-action="reportedip_hive_disposable_action" data-rip-param="mode">';
 		foreach ( $disp_actions as $value => $label ) {
 			printf(
 				'<option value="%s"%s>%s</option>',
@@ -454,7 +439,7 @@ RIPJS;
 
 		echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'Blocking privacy relays also rejects legitimate Apple Hide My Email and Firefox Relay users. Leave this off unless you accept that trade-off.', 'reportedip-hive' ) . '</div>';
 		printf(
-			'<button type="button" class="rip-button rip-button--secondary rip-spam-toggle" data-field="block_relays">%s</button>',
+			'<button type="button" class="rip-button rip-button--secondary" data-rip-action="reportedip_hive_spam_toggle" data-rip-field="block_relays">%s</button>',
 			esc_html( $block_relays ? __( 'Stop blocking privacy relays', 'reportedip-hive' ) : __( 'Also block privacy relays', 'reportedip-hive' ) )
 		);
 
@@ -470,14 +455,10 @@ RIPJS;
 			)
 		);
 		printf(
-			'<p><button type="button" class="rip-button rip-button--secondary rip-spam-toggle" data-field="honeypot">%s</button></p>',
+			'<p><button type="button" class="rip-button rip-button--secondary" data-rip-action="reportedip_hive_spam_toggle" data-rip-field="honeypot">%s</button></p>',
 			esc_html( $honeypot ? __( 'Disable honeypot', 'reportedip-hive' ) : __( 'Enable honeypot', 'reportedip-hive' ) )
 		);
 		echo '</div></div>';
-
-		echo <<<'RIPJS'
-<script>jQuery(function($){$('.rip-spam-toggle').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_spam_toggle',field:$(this).data('field'),nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);location.reload();});});$('#rip-disposable-action').on('change',function(){var s=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_disposable_action',mode:$(this).val(),nonce:reportedip_hive_ajax.nonce},function(r){s.prop('disabled',false);location.reload();});});});</script>
-RIPJS;
 	}
 
 	/**
@@ -526,7 +507,7 @@ RIPJS;
 		echo '</div>';
 
 		printf(
-			'<button type="button" class="rip-button rip-button--secondary rip-scan-toggle" data-field="scan">%s</button>',
+			'<button type="button" class="rip-button rip-button--secondary" data-rip-action="reportedip_hive_scan_toggle" data-rip-field="scan">%s</button>',
 			esc_html( $scan_on ? __( 'Disable scan detector', 'reportedip-hive' ) : __( 'Enable scan detector', 'reportedip-hive' ) )
 		);
 
@@ -540,10 +521,6 @@ RIPJS;
 			'</a>'
 		);
 		echo '</p>';
-
-		echo <<<'RIPJS'
-<script>jQuery(function($){$('.rip-scan-toggle').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_scan_toggle',field:$(this).data('field'),nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);location.reload();});});});</script>
-RIPJS;
 
 		echo '</div></div>';
 
@@ -635,7 +612,7 @@ RIPJS;
 		}
 
 		printf(
-			'<button type="button" class="rip-button rip-button--secondary rip-scan-toggle" data-field="decoy">%s</button>',
+			'<button type="button" class="rip-button rip-button--secondary" data-rip-action="reportedip_hive_scan_toggle" data-rip-field="decoy">%s</button>',
 			esc_html( $decoy_on ? __( 'Disable decoy trap', 'reportedip-hive' ) : __( 'Enable decoy trap', 'reportedip-hive' ) )
 		);
 
@@ -666,7 +643,7 @@ RIPJS;
 			);
 			foreach ( $snippets as $snip ) {
 				printf(
-					'<p><strong>%1$s</strong> <button type="button" class="rip-button rip-button--secondary rip-snippet-copy" data-target="%2$s">%3$s</button></p>',
+					'<p><strong>%1$s</strong> <button type="button" class="rip-button rip-button--secondary" data-rip-copy="#%2$s">%3$s</button></p>',
 					esc_html( $snip['label'] ),
 					esc_attr( $snip['id'] ),
 					esc_html__( 'Copy snippet', 'reportedip-hive' )
@@ -677,10 +654,6 @@ RIPJS;
 				echo '<pre class="rip-code-snippet" id="' . esc_attr( $snip['id'] ) . '"><code>' . esc_html( $snip['code'] ) . '</code></pre>';
 			}
 			echo '</details>';
-
-			echo <<<'RIPJS'
-<script>jQuery(function($){$('.rip-snippet-copy').on('click',function(e){e.preventDefault();var t=document.getElementById($(this).data('target'));if(t&&navigator.clipboard){navigator.clipboard.writeText(t.textContent);$(this).addClass('rip-button--copied');setTimeout(function(){},1200);}});});</script>
-RIPJS;
 		}
 
 		echo '</div></div>';
@@ -734,10 +707,7 @@ RIPJS;
 			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active and free on every plan. Priority Sync — deeper coverage and frequent updates — is part of the Professional plan.', 'reportedip-hive' ) . '</p>';
 			ReportedIP_Hive_Admin_Settings::render_tier_lock( $priority, array( 'label' => __( 'Unlock Priority Sync with Professional', 'reportedip-hive' ) ) );
 		} else {
-			echo '<button type="button" class="rip-button rip-button--primary" id="rip-rule-sync-now">' . esc_html__( 'Sync now', 'reportedip-hive' ) . '</button>';
-			echo <<<'RIPJS'
-<script>jQuery(function($){$('#rip-rule-sync-now').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_rule_sync_now',nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);if(r&&r.data&&r.data.message){window.alert(r.data.message);}location.reload();});});});</script>
-RIPJS;
+			echo '<button type="button" class="rip-button rip-button--primary" id="rip-rule-sync-now" data-rip-action="reportedip_hive_rule_sync_now">' . esc_html__( 'Sync now', 'reportedip-hive' ) . '</button>';
 		}
 
 		echo '</div></div>';
@@ -963,12 +933,5 @@ RIPJS;
 			'<p><button type="button" class="rip-button rip-button--primary" id="rip-headers-save">%s</button> <span id="rip-headers-saved" class="rip-help-text"></span></p>',
 			esc_html__( 'Save headers', 'reportedip-hive' )
 		);
-
-		echo <<<'RIPJS'
-<script>jQuery(function($){
-$('.rip-csp-preset').on('click',function(e){e.preventDefault();$('#rip-hdr-csp').val($(this).data('policy'));});
-$('#rip-headers-save').on('click',function(e){e.preventDefault();var b=$(this).prop('disabled',true);var p={};$('[data-opt]').each(function(){p[$(this).data('opt')]=$(this).val();});$.post(reportedip_hive_ajax.ajax_url,{action:'reportedip_hive_headers_save',payload:JSON.stringify(p),nonce:reportedip_hive_ajax.nonce},function(r){b.prop('disabled',false);location.reload();});});
-});</script>
-RIPJS;
 	}
 }

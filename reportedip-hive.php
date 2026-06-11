@@ -726,6 +726,16 @@ class ReportedIP_Hive {
 			);
 		}
 
+		if ( str_contains( (string) $hook, 'reportedip-hive-firewall' ) ) {
+			wp_enqueue_script(
+				'reportedip-hive-firewall',
+				REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/firewall.js',
+				array( 'jquery', 'reportedip-hive-admin' ),
+				REPORTEDIP_HIVE_VERSION,
+				true
+			);
+		}
+
 		wp_localize_script(
 			'reportedip-hive-admin',
 			'reportedip_hive_ajax',
