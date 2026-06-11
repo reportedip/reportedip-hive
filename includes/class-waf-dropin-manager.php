@@ -15,7 +15,10 @@
  * (never auto-written). The generated guard is fail-open — any error or missing
  * dependency lets the request through so the drop-in can never take the site
  * down. Removal always strips the directive *before* deleting the guard file so
- * a stale `auto_prepend_file` can never point at a missing file.
+ * a stale `auto_prepend_file` can never point at a missing file. The guard is
+ * rebaked immediately (queued once per request on shutdown) when the `waf`
+ * ruleset is re-applied or the IP whitelist changes; the hourly self-heal is
+ * only the fallback.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.de>
@@ -54,7 +57,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 1;
+	const DROPIN_VERSION = 2;
 
 	/**
 	 * Singleton instance.
@@ -62,6 +65,13 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * @var ReportedIP_Hive_WAF_Dropin_Manager|null
 	 */
 	private static $instance = null;
+
+	/**
+	 * Whether a guard rebake is already queued for this request.
+	 *
+	 * @var bool
+	 */
+	private $resync_queued = false;
 
 	/**
 	 * Get the singleton instance.
@@ -84,7 +94,52 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	private function __construct() {
 		add_action( 'update_option_' . ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, array( $this, 'on_toggle' ) );
 		add_action( 'update_site_option_' . ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, array( $this, 'on_toggle' ) );
+		add_action( 'reportedip_hive_ruleset_applied', array( $this, 'on_ruleset_applied' ) );
+		add_action( 'reportedip_hive_whitelist_changed', array( $this, 'queue_resync' ) );
 		add_action( 'admin_init', array( $this, 'maybe_self_heal' ) );
+	}
+
+	/**
+	 * React to a freshly applied ruleset: only the `waf` ruleset is baked into
+	 * the guard, every other key is irrelevant here.
+	 *
+	 * @param string $key Applied ruleset key.
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function on_ruleset_applied( $key ) {
+		if ( 'waf' === $key ) {
+			$this->queue_resync();
+		}
+	}
+
+	/**
+	 * Queue a guard rebake on shutdown (at most once per request), so bulk
+	 * whitelist actions and multi-ruleset syncs trigger a single regenerate
+	 * with the final state instead of one write per change.
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function queue_resync() {
+		if ( $this->resync_queued ) {
+			return;
+		}
+		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false ) ) {
+			return;
+		}
+		$this->resync_queued = true;
+		add_action( 'shutdown', array( $this, 'run_queued_resync' ) );
+	}
+
+	/**
+	 * Shutdown callback for the queued rebake (void wrapper around sync()).
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function run_queued_resync() {
+		$this->sync();
 	}
 
 	/**
@@ -416,9 +471,10 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$rules     = class_exists( 'ReportedIP_Hive_WAF' ) ? ReportedIP_Hive_WAF::get_instance()->get_active_rules() : array();
 		$whitelist = $this->whitelist_snapshot();
 
-		$rules_export = var_export( array_values( $rules ), true );      // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking a literal rules array into a generated PHP file, not debugging.
-		$wl_export    = var_export( array_values( $whitelist ), true );  // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking a literal whitelist array into a generated PHP file, not debugging.
-		$version      = self::DROPIN_VERSION;
+		$rules_export  = var_export( array_values( $rules ), true );      // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking a literal rules array into a generated PHP file, not debugging.
+		$wl_export     = var_export( array_values( $whitelist ), true );  // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking a literal whitelist array into a generated PHP file, not debugging.
+		$header_export = var_export( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the trusted proxy header literal into a generated PHP file, not debugging.
+		$version       = self::DROPIN_VERSION;
 
 		$template = <<<'PHP'
 <?php
@@ -436,7 +492,16 @@ define( 'REPORTEDIP_HIVE_WAF_DROPIN', __RIP_VERSION__ );
 		$whitelist = __RIP_WHITELIST__;
 		if ( empty( $rules ) ) { return; }
 
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+		$ip      = '';
+		$trusted = __RIP_TRUSTED_HEADER__;
+		if ( '' !== $trusted && isset( $_SERVER[ $trusted ] ) ) {
+			$parts     = explode( ',', (string) $_SERVER[ $trusted ] );
+			$candidate = trim( $parts[0] );
+			if ( false !== filter_var( $candidate, FILTER_VALIDATE_IP ) ) { $ip = $candidate; }
+		}
+		if ( '' === $ip ) {
+			$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+		}
 		foreach ( $whitelist as $entry ) {
 			if ( reportedip_hive_dropin_ip_match( $ip, (string) $entry ) ) { return; }
 		}
@@ -513,8 +578,8 @@ if ( ! function_exists( 'reportedip_hive_dropin_ip_match' ) ) {
 PHP;
 
 		return str_replace(
-			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__' ),
-			array( (string) $version, $rules_export, $wl_export ),
+			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_TRUSTED_HEADER__' ),
+			array( (string) $version, $rules_export, $wl_export, $header_export ),
 			$template
 		);
 	}

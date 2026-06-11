@@ -208,7 +208,22 @@ final class ReportedIP_Hive_Rule_Sync {
 			$this->log_signature_failure( $key, 'payload_shape_invalid' );
 			return false;
 		}
-		return ReportedIP_Hive_Rule_Store::set( $key, $data );
+		$stored = ReportedIP_Hive_Rule_Store::set( $key, $data );
+		if ( $stored ) {
+			/**
+			 * Fires after a verified ruleset has been stored.
+			 *
+			 * Consumers that bake rules into derived artefacts (the pre-WordPress
+			 * WAF drop-in) listen here to regenerate immediately instead of
+			 * waiting for the hourly self-heal.
+			 *
+			 * @param string $key     Ruleset key (waf|bot_signatures|disposable_domains|scan_paths).
+			 * @param int    $version Applied ruleset version.
+			 * @since 2.1.2
+			 */
+			do_action( 'reportedip_hive_ruleset_applied', $key, isset( $data['version'] ) ? (int) $data['version'] : 0 );
+		}
+		return $stored;
 	}
 
 	/**

@@ -200,6 +200,19 @@ class ReportedIP_Hive_Database {
 
 		wp_cache_delete( 'rip_whitelist_cidrs', 'reportedip' );
 
+		if ( false !== $result ) {
+			/**
+			 * Fires after an IP/CIDR entry was added to the whitelist.
+			 *
+			 * The WAF drop-in listens here to rebake the guard file so the new
+			 * entry is honoured by the pre-WordPress layer immediately.
+			 *
+			 * @param string $ip_address Whitelisted IP or CIDR range.
+			 * @since 2.1.2
+			 */
+			do_action( 'reportedip_hive_whitelist_changed', $ip_address );
+		}
+
 		return $result;
 	}
 
@@ -304,6 +317,11 @@ class ReportedIP_Hive_Database {
 		) !== false;
 
 		wp_cache_delete( 'rip_whitelist_cidrs', 'reportedip' );
+
+		if ( $result ) {
+			/** This action is documented in includes/class-database.php (add_to_whitelist). */
+			do_action( 'reportedip_hive_whitelist_changed', $ip_address );
+		}
 
 		return $result;
 	}

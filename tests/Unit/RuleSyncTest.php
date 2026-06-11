@@ -37,6 +37,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			parent::setUp();
 			$GLOBALS['wp_options'] = array();
 			$GLOBALS['wp_filters'] = array();
+			$GLOBALS['wp_actions'] = array();
 			\ReportedIP_Hive_Rule_Store::flush_cache();
 
 			$keypair      = sodium_crypto_sign_keypair();
@@ -114,6 +115,35 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$envelope = $this->signed_envelope( array( 'key' => 'waf', 'version' => 5, 'rules' => array( array( 'id' => 'r' ) ) ) );
 			$this->assertTrue( $this->sync()->apply_ruleset( 'waf', $envelope ) );
 			$this->assertSame( 5, $this->sync()->get_ruleset( 'waf' )['version'] );
+		}
+
+		public function test_apply_ruleset_fires_applied_action(): void {
+			$calls = array();
+			add_action(
+				'reportedip_hive_ruleset_applied',
+				static function ( $key, $version ) use ( &$calls ) {
+					$calls[] = array( $key, $version );
+				},
+				10,
+				2
+			);
+			$envelope = $this->signed_envelope( array( 'key' => 'waf', 'version' => 7, 'rules' => array( array( 'id' => 'r' ) ) ) );
+			$this->assertTrue( $this->sync()->apply_ruleset( 'waf', $envelope ) );
+			$this->assertSame( array( array( 'waf', 7 ) ), $calls, 'A stored ruleset must announce itself exactly once with key and version.' );
+		}
+
+		public function test_apply_ruleset_rejected_envelope_fires_no_action(): void {
+			$fired = 0;
+			add_action(
+				'reportedip_hive_ruleset_applied',
+				static function () use ( &$fired ) {
+					++$fired;
+				}
+			);
+			$envelope             = $this->signed_envelope( array( 'key' => 'waf', 'version' => 7, 'rules' => array() ) );
+			$envelope['payload'] .= 'tamper';
+			$this->assertFalse( $this->sync()->apply_ruleset( 'waf', $envelope ) );
+			$this->assertSame( 0, $fired, 'A rejected envelope must never fire the applied action.' );
 		}
 
 		public function test_apply_ruleset_rejects_bad_signature(): void {
