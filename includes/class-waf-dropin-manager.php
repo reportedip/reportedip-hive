@@ -209,7 +209,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			return $this->write_directive( $this->htaccess_path(), $this->htaccess_lines( $prepend ) );
 		}
 		if ( 'fpm' === $server ) {
-			return $this->write_directive( $this->user_ini_path(), $this->user_ini_lines( $prepend ) );
+			return $this->write_user_ini_directive( $this->user_ini_path(), $this->user_ini_lines( $prepend ) );
 		}
 
 		/*
@@ -253,7 +253,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		foreach ( array( $this->htaccess_path(), $this->user_ini_path() ) as $file ) {
 			if ( '' !== $file && file_exists( $file ) && is_readable( $file ) ) {
 				$contents = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a same-host config file to report status; WP_Filesystem is unavailable on the front end.
-				if ( false !== $contents && false !== strpos( $contents, '# BEGIN ' . self::MARKER ) ) {
+				if ( false !== $contents && ( false !== strpos( $contents, '# BEGIN ' . self::MARKER ) || false !== strpos( $contents, '; BEGIN ' . self::MARKER ) ) ) {
 					return true;
 				}
 			}
@@ -438,6 +438,46 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	}
 
 	/**
+	 * Write an idempotent marker block into a `.user.ini` file, creating it when
+	 * the directory is writable.
+	 *
+	 * The PHP INI parser only accepts `;` comments — `#` was removed in PHP 7,
+	 * and WordPress' insert_with_markers() instruction comment even contains
+	 * parentheses, which abort `.user.ini` parsing with a syntax error BEFORE
+	 * the directive line is reached. The block therefore uses `;` markers and
+	 * nothing but the bare directive lines in between.
+	 *
+	 * @param string   $file  Target `.user.ini` file.
+	 * @param string[] $lines Directive lines.
+	 * @return bool
+	 * @since  2.1.7
+	 */
+	private function write_user_ini_directive( $file, array $lines ) {
+		if ( '' === $file ) {
+			return false;
+		}
+		if ( ! file_exists( $file ) ) {
+			if ( ! is_writable( dirname( $file ) ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Same-host directory writability probe.
+				return false;
+			}
+			if ( false === file_put_contents( $file, '' ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Creating an empty same-host config file before writing the marker block.
+				return false;
+			}
+		}
+		if ( ! is_readable( $file ) || ! is_writable( $file ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Same-host writability probe.
+			return false;
+		}
+		$contents = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a same-host config file to replace our marker block.
+		if ( false === $contents ) {
+			return false;
+		}
+		$contents = rtrim( $this->remove_marker_block( $contents ), "\r\n" );
+		$block    = '; BEGIN ' . self::MARKER . "\n" . implode( "\n", $lines ) . "\n; END " . self::MARKER . "\n";
+		$contents = ( '' === $contents ) ? $block : $contents . "\n" . $block;
+		return false !== file_put_contents( $file, $contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing back the same-host config file with the refreshed marker block.
+	}
+
+	/**
 	 * Write an idempotent marker block into a config file, creating it when the
 	 * directory is writable.
 	 *
@@ -489,12 +529,28 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		if ( false === $contents ) {
 			return false;
 		}
-		$pattern  = '/# BEGIN ' . preg_quote( self::MARKER, '/' ) . '.*?# END ' . preg_quote( self::MARKER, '/' ) . '\R?/s';
-		$stripped = preg_replace( $pattern, '', $contents );
-		if ( null === $stripped || $stripped === $contents ) {
+		$stripped = $this->remove_marker_block( $contents );
+		if ( $stripped === $contents ) {
 			return true;
 		}
 		return false !== file_put_contents( $file, ltrim( $stripped, "\r\n" ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing back the stripped same-host config file.
+	}
+
+	/**
+	 * Remove every marker block variant from a config file body: the `#` block
+	 * insert_with_markers() writes into `.htaccess` and the `;` block the
+	 * `.user.ini` writer uses (plus the broken legacy `#` block that pre-2.1.7
+	 * versions wrote into `.user.ini`).
+	 *
+	 * @param string $contents Config file body.
+	 * @return string Body without marker blocks.
+	 * @since  2.1.7
+	 */
+	private function remove_marker_block( $contents ) {
+		$marker   = preg_quote( self::MARKER, '/' );
+		$pattern  = '/[#;] BEGIN ' . $marker . '.*?[#;] END ' . $marker . '\R?/s';
+		$stripped = preg_replace( $pattern, '', $contents );
+		return null === $stripped ? $contents : $stripped;
 	}
 
 	/**

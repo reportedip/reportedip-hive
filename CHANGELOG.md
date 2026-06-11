@@ -2,6 +2,21 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixes
+
+- **The WAF `.user.ini` directive never took effect on PHP-FPM/CGI hosts.** The
+  drop-in manager wrote the `auto_prepend_file` block via WordPress'
+  `insert_with_markers()`, which uses `#` comment markers and injects a
+  translatable instruction comment. The PHP INI parser only accepts `;`
+  comments (`#` was removed in PHP 7), and the instruction comment contains
+  parentheses — a hard INI syntax error that aborts `.user.ini` parsing before
+  the directive line is reached, so the guard silently never ran. The
+  `.user.ini` block now uses `;` markers with nothing but the bare directive,
+  and the hourly self-heal replaces the broken legacy `#` block on existing
+  installs automatically.
+
 ## [2.1.6] — 2026-06-12
 
 ### Fixes

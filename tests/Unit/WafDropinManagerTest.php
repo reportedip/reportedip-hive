@@ -112,6 +112,70 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertTrue( $this->call_private( 'strip_directive', array( sys_get_temp_dir() . '/does-not-exist-rip.htaccess' ) ) );
 		}
 
+		public function test_user_ini_block_uses_semicolon_markers_and_parses_as_ini(): void {
+			$file = tempnam( sys_get_temp_dir(), 'rip-userini-' );
+			$ok   = $this->call_private( 'write_user_ini_directive', array( $file, array( 'auto_prepend_file=/srv/wp-content/reportedip-hive-waf.php' ) ) );
+			$this->assertTrue( $ok );
+
+			$after = (string) file_get_contents( $file );
+			$this->assertStringContainsString( '; BEGIN ReportedIP Hive WAF', $after );
+			$this->assertStringContainsString( '; END ReportedIP Hive WAF', $after );
+			$this->assertStringNotContainsString( '# BEGIN', $after, 'Hash comments are invalid INI since PHP 7 and must never reach .user.ini.' );
+
+			$parsed = parse_ini_file( $file );
+			$this->assertIsArray( $parsed, 'The written .user.ini must survive the PHP INI parser.' );
+			$this->assertSame( '/srv/wp-content/reportedip-hive-waf.php', $parsed['auto_prepend_file'] );
+			unlink( $file );
+		}
+
+		public function test_user_ini_writer_replaces_broken_legacy_hash_block(): void {
+			$file   = tempnam( sys_get_temp_dir(), 'rip-userini-' );
+			$legacy = "memory_limit=256M\n"
+				. "# BEGIN ReportedIP Hive WAF\n"
+				. "# The directives (lines) between \"BEGIN ReportedIP Hive WAF\" and \"END ReportedIP Hive WAF\" are\n"
+				. "# dynamically generated, and should only be modified via WordPress filters.\n"
+				. "# Any changes to the directives between these markers will be overwritten.\n"
+				. "auto_prepend_file=/old/path.php\n"
+				. "# END ReportedIP Hive WAF\n";
+			file_put_contents( $file, $legacy );
+			$this->assertFalse( @parse_ini_file( $file ), 'Precondition: the legacy insert_with_markers() block must break INI parsing.' );
+
+			$ok = $this->call_private( 'write_user_ini_directive', array( $file, array( 'auto_prepend_file=/new/path.php' ) ) );
+			$this->assertTrue( $ok );
+
+			$after = (string) file_get_contents( $file );
+			$this->assertStringNotContainsString( '# BEGIN', $after );
+			$this->assertStringContainsString( 'memory_limit=256M', $after, 'Foreign directives outside the marker block must survive.' );
+
+			$parsed = parse_ini_file( $file );
+			$this->assertIsArray( $parsed );
+			$this->assertSame( '/new/path.php', $parsed['auto_prepend_file'] );
+			$this->assertSame( '256M', $parsed['memory_limit'] );
+			unlink( $file );
+		}
+
+		public function test_user_ini_writer_is_idempotent(): void {
+			$file = tempnam( sys_get_temp_dir(), 'rip-userini-' );
+			$this->call_private( 'write_user_ini_directive', array( $file, array( 'auto_prepend_file=/x.php' ) ) );
+			$this->call_private( 'write_user_ini_directive', array( $file, array( 'auto_prepend_file=/x.php' ) ) );
+
+			$after = (string) file_get_contents( $file );
+			$this->assertSame( 1, substr_count( $after, '; BEGIN ReportedIP Hive WAF' ), 'Re-running the writer must replace, not duplicate, the block.' );
+			unlink( $file );
+		}
+
+		public function test_strip_directive_removes_semicolon_block(): void {
+			$file = tempnam( sys_get_temp_dir(), 'rip-userini-' );
+			file_put_contents( $file, "upload_max_filesize=64M\n; BEGIN ReportedIP Hive WAF\nauto_prepend_file=/x.php\n; END ReportedIP Hive WAF\n" );
+
+			$this->assertTrue( $this->call_private( 'strip_directive', array( $file ) ) );
+
+			$after = (string) file_get_contents( $file );
+			$this->assertStringNotContainsString( 'ReportedIP Hive WAF', $after );
+			$this->assertStringContainsString( 'upload_max_filesize=64M', $after );
+			unlink( $file );
+		}
+
 		public function test_generate_prepend_bakes_rules_and_guard_marker(): void {
 			$php = $this->call_private( 'generate_prepend', array() );
 			$this->assertStringContainsString( "define( 'REPORTEDIP_HIVE_WAF_DROPIN'", $php );
