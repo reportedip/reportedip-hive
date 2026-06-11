@@ -40,8 +40,25 @@ namespace ReportedIP\Hive\Tests\Unit {
 			foreach ( \ReportedIP_Hive_Wizard_Schema::SAVE_STEPS as $step ) {
 				$this->assertContains( $step, \ReportedIP_Hive_Wizard_Schema::FIELD_STEPS );
 			}
-			$this->assertContains( 7, \ReportedIP_Hive_Wizard_Schema::FIELD_STEPS, 'Hide Login is a field step…' );
-			$this->assertNotContains( 7, \ReportedIP_Hive_Wizard_Schema::SAVE_STEPS, '…but is saved by the wizard helper, not the schema.' );
+			$this->assertContains( 8, \ReportedIP_Hive_Wizard_Schema::FIELD_STEPS, 'Hide Login is a field step…' );
+			$this->assertNotContains( 8, \ReportedIP_Hive_Wizard_Schema::SAVE_STEPS, '…but is saved by the wizard helper, not the schema.' );
+		}
+
+		public function test_save_step_4_persists_firewall_fields() {
+			\ReportedIP_Hive_Wizard_Schema::save_step(
+				4,
+				array(
+					'waf_enabled'             => 1,
+					'bot_action'              => 'block',
+					'disposable_email_action' => 'bogus-value',
+				)
+			);
+
+			$this->assertSame( 1, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_enabled', null ) );
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_report_only', null ), 'absent checkbox = false' );
+			$this->assertSame( 'block', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_action', null ) );
+			$this->assertSame( 'monitor', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_disposable_email_action', null ), 'invalid enum falls back to the safe default' );
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_honeypot_enabled', null ), 'absent checkbox = false' );
 		}
 
 		public function test_every_option_backed_field_has_a_default() {
@@ -61,9 +78,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
-		public function test_save_step_5_persists_bools_and_clamps_ints() {
+		public function test_save_step_6_persists_bools_and_clamps_ints() {
 			\ReportedIP_Hive_Wizard_Schema::save_step(
-				5,
+				6,
 				array(
 					'minimal_logging'     => 0,
 					'data_retention_days' => 5,
@@ -108,7 +125,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_save_step_ignores_non_save_steps() {
-			\ReportedIP_Hive_Wizard_Schema::save_step( 7, array( 'hide_login_enabled' => 1 ) );
+			\ReportedIP_Hive_Wizard_Schema::save_step( 8, array( 'hide_login_enabled' => 1 ) );
 			\ReportedIP_Hive_Wizard_Schema::save_step( 99, array() );
 
 			$this->assertSame( array(), $GLOBALS['wp_options'], 'steps outside SAVE_STEPS write nothing here' );

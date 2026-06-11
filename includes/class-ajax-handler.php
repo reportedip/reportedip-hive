@@ -124,6 +124,15 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_dashboard_stats', array( $this, 'ajax_dashboard_stats' ) );
 
 		add_action( 'wp_ajax_reportedip_hive_run_queue_now', array( $this, 'ajax_run_queue_now' ) );
+		add_action( 'wp_ajax_reportedip_hive_rule_sync_now', array( $this, 'ajax_rule_sync_now' ) );
+		add_action( 'wp_ajax_reportedip_hive_waf_toggle', array( $this, 'ajax_waf_toggle' ) );
+		add_action( 'wp_ajax_reportedip_hive_waf_dropin_toggle', array( $this, 'ajax_waf_dropin_toggle' ) );
+		add_action( 'wp_ajax_reportedip_hive_waf_set_paranoia', array( $this, 'ajax_waf_set_paranoia' ) );
+		add_action( 'wp_ajax_reportedip_hive_bot_action', array( $this, 'ajax_bot_action' ) );
+		add_action( 'wp_ajax_reportedip_hive_disposable_action', array( $this, 'ajax_disposable_action' ) );
+		add_action( 'wp_ajax_reportedip_hive_spam_toggle', array( $this, 'ajax_spam_toggle' ) );
+		add_action( 'wp_ajax_reportedip_hive_scan_toggle', array( $this, 'ajax_scan_toggle' ) );
+		add_action( 'wp_ajax_reportedip_hive_headers_save', array( $this, 'ajax_headers_save' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
@@ -1427,6 +1436,358 @@ class ReportedIP_Hive_Ajax_Handler {
 			);
 		} catch ( \Throwable $e ) {
 			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+		}
+	}
+
+	/**
+	 * AJAX: trigger an on-demand ruleset sync (Priority Sync, Professional+).
+	 *
+	 * @since 2.1.2
+	 * @return void
+	 */
+	public function ajax_rule_sync_now() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
+		if ( empty( $status['available'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Priority Sync requires a Professional plan.', 'reportedip-hive' ) ) );
+		}
+
+		try {
+			ReportedIP_Hive_Rule_Sync::get_instance()->sync_all();
+			wp_send_json_success( array( 'message' => __( 'Rulesets synced.', 'reportedip-hive' ) ) );
+		} catch ( \Throwable $e ) {
+			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+		}
+	}
+
+	/**
+	 * AJAX: flip a WAF engine toggle (enabled or report-only).
+	 *
+	 * Capability- and nonce-gated. Accepts the `field` parameter and toggles the
+	 * matching option, returning the new boolean state for the UI to reflect.
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function ajax_waf_toggle() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
+		$map   = array(
+			'enabled'     => ReportedIP_Hive_WAF::OPT_ENABLED,
+			'report_only' => ReportedIP_Hive_WAF::OPT_REPORT_ONLY,
+		);
+		if ( ! isset( $map[ $field ] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'reportedip-hive' ) ) );
+		}
+
+		$option = $map[ $field ];
+		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, 'enabled' === $field );
+		ReportedIP_Hive_Option_Routing::set( $option, $new );
+
+		wp_send_json_success( array( 'state' => $new ) );
+	}
+
+	/**
+	 * AJAX: flip the pre-WordPress WAF drop-in on or off.
+	 *
+	 * Flipping the option fires the manager's update_option hook, which writes
+	 * or removes the guard and its server directive. Returns a message that
+	 * reflects what happened (including a writability warning when the target
+	 * cannot be written).
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	/**
+	 * AJAX: set the WAF Paranoia Level (Professional only, 1-3).
+	 *
+	 * Free tiers are clamped to Level 1 by the engine regardless; this control
+	 * only affects Professional installs that sync the deeper ruleset.
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function ajax_waf_set_paranoia() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
+		if ( empty( $status['available'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Paranoia Level 2/3 requires a Professional plan.', 'reportedip-hive' ) ) );
+		}
+
+		$level = isset( $_POST['level'] ) ? (int) $_POST['level'] : 1;
+		if ( $level < 1 || $level > 3 ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid level.', 'reportedip-hive' ) ) );
+		}
+
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_PARANOIA, $level );
+		wp_send_json_success( array( 'level' => $level ) );
+	}
+
+	/**
+	 * AJAX: flip the pre-WordPress WAF drop-in on or off.
+	 *
+	 * Flipping the option fires the manager's update_option hook, which writes
+	 * or removes the guard and its server directive. Returns a message that
+	 * reflects what happened (including a writability warning when the target
+	 * cannot be written).
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function ajax_waf_dropin_toggle() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+			wp_send_json_error( array( 'message' => __( 'The drop-in manager is unavailable.', 'reportedip-hive' ) ) );
+		}
+
+		$option = ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED;
+		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, false );
+		$dropin = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+
+		if ( $new && 'nginx' !== $dropin->detect_server() && ! $dropin->is_writable_target() ) {
+			wp_send_json_error( array( 'message' => __( 'The server configuration target is not writable. Adjust file permissions and try again.', 'reportedip-hive' ) ) );
+		}
+
+		ReportedIP_Hive_Option_Routing::set( $option, $new );
+
+		$message = $new
+			? __( 'Extended protection enabled.', 'reportedip-hive' )
+			: __( 'Extended protection disabled.', 'reportedip-hive' );
+		if ( $new && 'nginx' === $dropin->detect_server() ) {
+			$message = __( 'Guard file generated. Paste the nginx snippet into your server block and reload nginx.', 'reportedip-hive' );
+		}
+
+		wp_send_json_success(
+			array(
+				'state'   => $new,
+				'message' => $message,
+			)
+		);
+	}
+
+	/**
+	 * AJAX: set the verified-bot action (off / flag / block).
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function ajax_bot_action() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'bot_verification' );
+		if ( empty( $status['available'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Bot verification is unavailable on this plan.', 'reportedip-hive' ) ) );
+		}
+
+		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
+		if ( ! in_array( $mode, array( 'off', 'flag', 'block' ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid action.', 'reportedip-hive' ) ) );
+		}
+
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Bot_Verifier::OPT_ACTION, $mode );
+		wp_send_json_success( array( 'mode' => $mode ) );
+	}
+
+	/**
+	 * AJAX: set the disposable-email action (off / monitor / block).
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function ajax_disposable_action() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'disposable_email' );
+		if ( empty( $status['available'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Disposable-email blocking is unavailable on this plan.', 'reportedip-hive' ) ) );
+		}
+
+		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
+		if ( ! in_array( $mode, array( 'off', 'monitor', 'block' ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid action.', 'reportedip-hive' ) ) );
+		}
+
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Disposable_Email::OPT_ACTION, $mode );
+		wp_send_json_success( array( 'mode' => $mode ) );
+	}
+
+	/**
+	 * AJAX: flip a boolean spam-defence toggle (privacy-relay block or the
+	 * comment honeypot).
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function ajax_spam_toggle() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
+		$map   = array(
+			'block_relays' => ReportedIP_Hive_Disposable_Email::OPT_BLOCK_RELAYS,
+			'honeypot'     => ReportedIP_Hive_Comment_Honeypot::OPT_ENABLED,
+		);
+		if ( ! isset( $map[ $field ] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'reportedip-hive' ) ) );
+		}
+
+		$option = $map[ $field ];
+		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, 'honeypot' === $field );
+		ReportedIP_Hive_Option_Routing::set( $option, $new );
+
+		wp_send_json_success( array( 'state' => $new ) );
+	}
+
+	/**
+	 * AJAX: flip the scan detector or the decoy-path trap on or off.
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function ajax_scan_toggle() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
+		$map   = array(
+			'scan'  => 'reportedip_hive_monitor_404_scans',
+			'decoy' => 'reportedip_hive_decoy_pathblock_enabled',
+		);
+		if ( ! isset( $map[ $field ] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'reportedip-hive' ) ) );
+		}
+
+		$option = $map[ $field ];
+		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, true );
+		ReportedIP_Hive_Option_Routing::set( $option, $new );
+
+		wp_send_json_success( array( 'state' => $new ) );
+	}
+
+	/**
+	 * AJAX: persist the security-header configuration from the Hardening tab.
+	 *
+	 * Accepts a JSON payload of option-key => raw-value pairs, validates every
+	 * key against a typed allowlist and sanitises per type. Advanced keys are
+	 * only honoured while the `security_headers_advanced` feature is available,
+	 * so a Free user cannot persist them through a crafted request.
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function ajax_headers_save() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
+		}
+
+		$raw  = isset( $_POST['payload'] ) ? wp_unslash( $_POST['payload'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON blob; decoded below and each field sanitised per typed allowlist in sanitize_header_value().
+		$data = json_decode( (string) $raw, true );
+		if ( ! is_array( $data ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid payload.', 'reportedip-hive' ) ) );
+		}
+
+		$h        = 'ReportedIP_Hive_Security_Headers';
+		$basic    = array(
+			$h::OPT_ENABLED  => 'bool',
+			$h::OPT_XCTO     => 'bool',
+			$h::OPT_XFO      => array( 'enum', array( 'SAMEORIGIN', 'DENY', 'off' ) ),
+			$h::OPT_REFERRER => array( 'enum', array( 'no-referrer', 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'no-referrer-when-downgrade' ) ),
+		);
+		$advanced = array(
+			$h::OPT_HSTS_ENABLED    => 'bool',
+			$h::OPT_HSTS_MAX_AGE    => 'int',
+			$h::OPT_HSTS_SUBDOMAINS => 'bool',
+			$h::OPT_HSTS_PRELOAD    => 'bool',
+			$h::OPT_PERMISSIONS     => 'text',
+			$h::OPT_CSP_MODE        => array( 'enum', array( 'off', 'report_only', 'enforce' ) ),
+			$h::OPT_CSP_POLICY      => 'textarea',
+			$h::OPT_CSP_REPORT_URI  => 'url',
+			$h::OPT_COOP            => array( 'enum', array( 'off', 'same-origin' ) ),
+			$h::OPT_CORP            => array( 'enum', array( 'off', 'same-origin' ) ),
+			$h::OPT_COEP            => array( 'enum', array( 'off', 'require-corp' ) ),
+		);
+
+		$allowed = $basic;
+		if ( $h::advanced_available() ) {
+			$allowed += $advanced;
+		}
+
+		foreach ( $allowed as $option => $spec ) {
+			if ( ! array_key_exists( $option, $data ) ) {
+				continue;
+			}
+			$value = $this->sanitize_header_value( $data[ $option ], $spec );
+			if ( null === $value ) {
+				continue;
+			}
+			ReportedIP_Hive_Option_Routing::set( $option, $value );
+		}
+
+		wp_send_json_success();
+	}
+
+	/**
+	 * Sanitise one security-header value against its type spec.
+	 *
+	 * @param mixed                 $value Raw value from the JSON payload.
+	 * @param string|array{0:string,1:string[]} $spec  Type: bool|int|text|textarea|url, or array('enum', $allowed).
+	 * @return mixed Sanitised value, or null when invalid (caller skips it).
+	 * @since  2.1.2
+	 */
+	private function sanitize_header_value( $value, $spec ) {
+		if ( is_array( $spec ) && 'enum' === ( $spec[0] ?? '' ) ) {
+			$value = is_scalar( $value ) ? (string) $value : '';
+			return in_array( $value, $spec[1], true ) ? $value : null;
+		}
+
+		switch ( $spec ) {
+			case 'bool':
+				return (bool) (int) $value;
+			case 'int':
+				return absint( $value );
+			case 'url':
+				$value = is_scalar( $value ) ? (string) $value : '';
+				return '' === $value ? '' : esc_url_raw( $value );
+			case 'textarea':
+				return sanitize_textarea_field( is_scalar( $value ) ? (string) $value : '' );
+			case 'text':
+			default:
+				return sanitize_text_field( is_scalar( $value ) ? (string) $value : '' );
 		}
 	}
 

@@ -54,6 +54,8 @@ function resetWizard(): void {
 		'reportedip_hive_2fa_frontend_enabled',
 		'reportedip_hive_minimal_logging',
 		'reportedip_hive_data_retention_days',
+		'reportedip_hive_waf_report_only',
+		'reportedip_hive_bot_action',
 	];
 	for (const key of keys) {
 		try {
@@ -92,21 +94,35 @@ test.describe('setup wizard — per-step server save', () => {
 		resetWizard();
 	});
 
+	test('Firewall step persists toggles + action selects', async ({ page }) => {
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=4');
+
+		await setToggle(page, '#rip-waf-report-only', true);
+		await page.selectOption('#rip-wizard-bot-action', 'block');
+
+		await page.click('#rip-step4-next');
+		await page.waitForURL((url) => url.searchParams.get('step') === '5');
+
+		expect(wpOption('reportedip_hive_waf_report_only')).toBe('1');
+		expect(wpOption('reportedip_hive_bot_action')).toBe('block');
+	});
+
 	test('Privacy step persists toggles + selects, Back re-renders saved state', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=5');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=6');
 
 		await setToggle(page, '#rip-minimal-logging', false);
 		await page.selectOption('#rip-data-retention', '90');
 
-		await page.click('#rip-step5-next');
-		await page.waitForURL((url) => url.searchParams.get('step') === '6');
+		await page.click('#rip-step6-next');
+		await page.waitForURL((url) => url.searchParams.get('step') === '7');
 
 		expect(wpOption('reportedip_hive_minimal_logging')).toBe('0');
 		expect(wpOption('reportedip_hive_data_retention_days')).toBe('90');
 
-		await page.click('.rip-wizard__actions a[href*="step=5"]');
-		await page.waitForURL((url) => url.searchParams.get('step') === '5');
+		await page.click('.rip-wizard__actions a[href*="step=6"]');
+		await page.waitForURL((url) => url.searchParams.get('step') === '6');
 
 		await expect(page.locator('#rip-data-retention')).toHaveValue('90');
 		await expect(page.locator('#rip-minimal-logging')).not.toBeChecked();
@@ -114,7 +130,7 @@ test.describe('setup wizard — per-step server save', () => {
 
 	test('2FA step persists the global toggle, methods and enforce-roles', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=4');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=5');
 
 		await setToggle(page, '#rip-2fa-enabled', true);
 
@@ -124,7 +140,7 @@ test.describe('setup wizard — per-step server save', () => {
 			await totp.click();
 		}
 
-		await page.click('#rip-step4-next');
+		await page.click('#rip-step5-next');
 
 		// The save is asserted by polling the DB directly, decoupled from where
 		// the page navigates: enabling + enforcing 2FA for the admin can trigger

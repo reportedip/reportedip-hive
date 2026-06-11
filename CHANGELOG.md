@@ -2,6 +2,97 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.2] — 2026-06-11
+
+### New
+
+- **Rule delivery framework.** Server-delivered, versioned, Ed25519-signed,
+  tier-staggered rulesets (`waf`, `bot_signatures`, `disposable_domains`,
+  `scan_paths`). The plugin verifies every ruleset against a
+  bundled public key before applying it and always falls back to the bundled
+  baseline — a tampered, oversized or unreachable feed can never poison the
+  rules. Synced every six hours (Community mode + API key + toggle); the
+  bundled baselines work fully offline. Network-wide on multisite (sitemeta).
+- **Web Application Firewall.** Request-inspecting engine on `init` that matches
+  the active `waf` ruleset against the URI, query, body and user-agent and
+  blocks via the shared cache-safe, reference-coded 403 path. The engine and
+  the Paranoia-Level-1 baseline are free on every plan; Professional unlocks
+  Level 2/3. ReDoS-hardened (bounded PCRE backtracking, fail-open on a malformed
+  rule), whitelist- and content-author-aware to avoid false positives, with a
+  repeat-offender escalation into the existing block ladder.
+- **Extended Protection drop-in (optional).** A pre-WordPress `auto_prepend_file`
+  guard that runs the WAF before WordPress loads — Apache (`.htaccess`),
+  PHP-FPM (`.user.ini`) auto-config and an nginx snippet generator. Off by
+  default; removal always strips the directive before deleting the guard so a
+  stale prepend can never fatal the site.
+- **Verified bot detection.** Confirms that a request claiming to be Googlebot,
+  Bingbot or another crawler genuinely originates from it — a DNS-free match
+  against the crawler's official IP ranges first (Priority Sync), then a
+  forward-confirmed reverse-DNS fallback. A spoofer is flagged (default) or
+  blocked; a genuine crawler is never blocked. Free on every plan.
+- **Disposable-email blocking.** Inspects the address on registration (WordPress
+  and WooCommerce) against the `disposable_domains` list. Three modes
+  (off/monitor/block); privacy relays (Apple Hide My Email, Firefox Relay, …)
+  are a distinct category that passes through by default. Free on every plan;
+  the live list rides Priority Sync.
+- **Comment honeypot.** An invisible, screen-reader-excluded decoy field on the
+  comment form; spam bots that fill every field are rejected with no CAPTCHA
+  friction for real visitors.
+- **Firewall admin area** with a Rule Sync status view (per-ruleset version and
+  source, Free-vs-Professional comparison), a WAF status + controls tab
+  (engine/mode/active rules, Paranoia-Level selector), a Bot Verification tab,
+  a Spam Defence tab (disposable-email + honeypot) and the Extended Protection
+  box. Hardening folds into the Firewall tab strip and the Audit Trail into
+  Security › Activity, keeping the menu lean.
+- **Protection & hardening score.** Two dashboard gauges (0–100 plus an
+  A+–F grade, Mozilla-Observatory style) that rate the detection coverage and
+  the hardening posture, with per-item deep links to switch a sensor on.
+  Locked features count toward the visible potential, not the score.
+- **Security headers.** Hardening response headers on every front-end request:
+  the basic trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is
+  free; HSTS, Permissions-Policy, a Content-Security-Policy (report-only by
+  default) and the cross-origin trio (COOP/CORP/COEP) come with Professional.
+  Headers already sent by the server or another plugin are detected and left
+  untouched.
+- **Audit event trail (Business).** Append-only user-lifecycle trail — logins,
+  failed logins, password resets, profile updates, role changes including the
+  acting user, registrations and new-IP detection — with filters, CSV/JSON
+  export, GDPR export/erasure integration and retention cleanup. Standard
+  security logs stay available on every plan.
+- **Firewall step in the setup wizard.** The wizard now covers the WAF
+  (enable/report-only), verified-bot action, disposable-email mode and the
+  comment honeypot with their safe defaults.
+- **Settings export/import covers the firewall.** New `firewall`, `headers` and
+  `audit` sections carry the new configuration between sites; the host-specific
+  drop-in toggle and runtime ruleset state intentionally stay local.
+
+### Fixes
+
+- The pre-WordPress WAF drop-in is rebaked immediately after a rule sync and
+  after every whitelist change (queued once per request), so a freshly
+  whitelisted client or an updated ruleset no longer waits for the hourly
+  self-heal.
+- The drop-in guard now honours the configured trusted proxy header when
+  resolving the client IP, matching the in-WordPress engine — behind a proxy
+  the baked-in whitelist previously never matched.
+- Settings export/import reads and writes through the network-aware option
+  layer, so exports taken in the multisite network admin carry the real values.
+- The System Status page reports the WAF drop-in state (active, detected
+  server, config-target writability).
+
+### Performance
+
+- WAF adds ~4 µs CPU per request and zero extra database queries when a
+  persistent object cache is present; the whitelist lookup is de-duplicated on
+  the request hot path so it is no longer queried twice per visitor.
+
+### Changed
+
+- The Firewall admin page renders from its own class and drives every toggle,
+  select and copy button through a single delegated script
+  (`assets/js/firewall.js`) instead of per-tab inline scripts; AJAX errors now
+  surface a message instead of silently reloading.
+
 ## [2.1.0] — 2026-06-10
 
 ### New

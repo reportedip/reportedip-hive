@@ -10,7 +10,7 @@
  * never saved" (the 1.x sessionStorage bug where the 2FA step silently
  * dropped every value).
  *
- * Step 7 (Hide Login) is intentionally NOT persisted here: its slug needs a
+ * Step 8 (Hide Login) is intentionally NOT persisted here: its slug needs a
  * live uniqueness/blacklist validation + a rewrite flush, so the wizard owns
  * that one in `save_hide_login_step()`. Its fields still appear in
  * {@see fields()} for the drift test and inventory.
@@ -39,15 +39,15 @@ final class ReportedIP_Hive_Wizard_Schema {
 	 *
 	 * @var int[]
 	 */
-	const FIELD_STEPS = array( 3, 4, 5, 6, 7, 8 );
+	const FIELD_STEPS = array( 3, 4, 5, 6, 7, 8, 9 );
 
 	/**
-	 * Steps whose fields {@see save_step()} persists generically. Step 7 is
+	 * Steps whose fields {@see save_step()} persists generically. Step 8 is
 	 * handled by the wizard itself (slug validation + rewrite flush).
 	 *
 	 * @var int[]
 	 */
-	const SAVE_STEPS = array( 3, 4, 5, 6, 8 );
+	const SAVE_STEPS = array( 3, 4, 5, 6, 7, 9 );
 
 	/**
 	 * Option key for the WooCommerce Frontend-2FA master toggle.
@@ -101,6 +101,36 @@ final class ReportedIP_Hive_Wizard_Schema {
 					)
 				);
 			case 4:
+				return array(
+					array(
+						'name'   => 'waf_enabled',
+						'kind'   => 'bool',
+						'option' => 'reportedip_hive_waf_enabled',
+					),
+					array(
+						'name'   => 'waf_report_only',
+						'kind'   => 'bool',
+						'option' => 'reportedip_hive_waf_report_only',
+					),
+					array(
+						'name'    => 'bot_action',
+						'kind'    => 'enum',
+						'option'  => 'reportedip_hive_bot_action',
+						'allowed' => array( 'flag', 'off', 'block' ),
+					),
+					array(
+						'name'    => 'disposable_email_action',
+						'kind'    => 'enum',
+						'option'  => 'reportedip_hive_disposable_email_action',
+						'allowed' => array( 'monitor', 'off', 'block' ),
+					),
+					array(
+						'name'   => 'comment_honeypot_enabled',
+						'kind'   => 'bool',
+						'option' => 'reportedip_hive_comment_honeypot_enabled',
+					),
+				);
+			case 5:
 				return array(
 					array(
 						'name'   => '2fa_enabled_global',
@@ -157,7 +187,7 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'option' => self::OPT_FRONTEND_ENABLED,
 					),
 				);
-			case 5:
+			case 6:
 				return array(
 					array(
 						'name'   => 'minimal_logging',
@@ -194,7 +224,7 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'option' => 'reportedip_hive_delete_data_on_uninstall',
 					),
 				);
-			case 6:
+			case 7:
 				return array(
 					array(
 						'name'   => 'notify_admin',
@@ -222,7 +252,7 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'option' => 'reportedip_hive_notify_sync_to_api',
 					),
 				);
-			case 7:
+			case 8:
 				return array(
 					array(
 						'name'   => 'hide_login_enabled',
@@ -241,7 +271,7 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'allowed' => array( 'block_page', '404' ),
 					),
 				);
-			case 8:
+			case 9:
 				return array(
 					array(
 						'name'   => 'promote_enabled',

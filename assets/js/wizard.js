@@ -17,7 +17,7 @@
 (function ($) {
 	'use strict';
 
-	var FIELD_STEPS = [ 3, 4, 5, 6, 7, 8 ];
+	var FIELD_STEPS = [ 3, 4, 5, 6, 7, 8, 9 ];
 
 	var ReportedIPWizard = {
 
@@ -31,9 +31,9 @@
 			this.updateBlockStrategyState();
 			this.update2faEnabledState();
 			this.update2faMethodsHidden();
-			this.initStep7();
+			this.initHideLoginStep();
 			this.initPromotePreview();
-			this.initStep9();
+			this.initCompleteStep();
 		},
 
 		bindEvents: function () {
@@ -49,11 +49,11 @@
 			$(document).on('change', '#rip-monitor-logins, #rip-monitor-comments, #rip-monitor-xmlrpc', this.updateMonitoringWarning.bind(this));
 			$(document).on('change', '#rip-auto-block', this.updateBlockStrategyState.bind(this));
 
-			// Step 4: 2FA method-card multi-select + enabled state
+			// 2FA step (5): method-card multi-select + enabled state
 			$(document).on('click', '.rip-method-card', this.handleMethodCardClick.bind(this));
 			$(document).on('change', '#rip-2fa-enabled', this.update2faEnabledState.bind(this));
 
-			// Step 7: live slug validation + toggle-driven enable state
+			// Hide-Login step (8): live slug validation + toggle-driven enable state
 			$(document).on('input', '#rip-hide-login-slug', this.debounceValidateSlug.bind(this));
 			$(document).on('change', '#rip-hide-login-enabled', this.toggleHideLoginFields.bind(this));
 
@@ -123,11 +123,11 @@
 		},
 
 		/**
-		 * Step-4 guard: when 2FA is on the user must keep at least one method;
-		 * an empty role list silently falls back to administrator. Only enforced
-		 * when moving forward so Back never traps the user.
+		 * 2FA-step guard (step 5): when 2FA is on the user must keep at least
+		 * one method; an empty role list silently falls back to administrator.
+		 * Only enforced when moving forward so Back never traps the user.
 		 */
-		validateStep4: function (data, forward) {
+		validate2faStep: function (data, forward) {
 			if (!forward || !data['2fa_enabled_global']) {
 				return true;
 			}
@@ -152,7 +152,7 @@
 
 			var data = this.collectStep($('.rip-wizard__step-content'));
 			var forward = this.stepFromUrl(target) > step;
-			if (step === 4 && !this.validateStep4(data, forward)) {
+			if (step === 5 && !this.validate2faStep(data, forward)) {
 				return;
 			}
 
@@ -365,7 +365,7 @@
 		},
 
 		// ========================================================================
-		// Step 4: 2FA
+		// 2FA step (5)
 		// ========================================================================
 
 		handleMethodCardClick: function (e) {
@@ -390,10 +390,10 @@
 		},
 
 		// ========================================================================
-		// Step 7: Hide Login (slug validation)
+		// Hide-Login step (8): slug validation
 		// ========================================================================
 
-		initStep7: function () {
+		initHideLoginStep: function () {
 			if (!$('#rip-hide-login-enabled').length) { return; }
 			this.toggleHideLoginFields();
 		},
@@ -444,7 +444,7 @@
 		},
 
 		// ========================================================================
-		// Step 8: Promote — live preview of the footer badge
+		// Promote step (9) — live preview of the footer badge
 		// ========================================================================
 
 		initPromotePreview: function () {
@@ -490,10 +490,10 @@
 		},
 
 		// ========================================================================
-		// Step 9: Setup-complete celebration trigger
+		// Complete step (10): celebration trigger
 		// ========================================================================
 
-		initStep9: function () {
+		initCompleteStep: function () {
 			var $complete = $('.rip-wizard__complete');
 			if (!$complete.length) { return; }
 			window.requestAnimationFrame(function () {

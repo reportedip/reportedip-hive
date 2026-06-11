@@ -173,6 +173,53 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_2fa_ip_allowlist',
 				),
 			),
+			'firewall'         => array(
+				'label'       => __( 'Firewall & spam defence', 'reportedip-hive' ),
+				'description' => __( 'WAF engine, bot verification, disposable-email and comment-honeypot settings. The pre-WordPress drop-in toggle is host-specific and stays local.', 'reportedip-hive' ),
+				'options'     => array(
+					'reportedip_hive_waf_enabled',
+					'reportedip_hive_waf_report_only',
+					'reportedip_hive_waf_paranoia',
+					'reportedip_hive_waf_block_threshold',
+					'reportedip_hive_rule_sync_enabled',
+					'reportedip_hive_monitor_bot_verification',
+					'reportedip_hive_bot_action',
+					'reportedip_hive_disposable_email_action',
+					'reportedip_hive_block_email_relays',
+					'reportedip_hive_comment_honeypot_enabled',
+				),
+			),
+			'headers'          => array(
+				'label'       => __( 'Security headers', 'reportedip-hive' ),
+				'description' => __( 'Basic and advanced HTTP response headers (HSTS, CSP, Permissions-Policy, cross-origin isolation).', 'reportedip-hive' ),
+				'options'     => array(
+					'reportedip_hive_headers_enabled',
+					'reportedip_hive_header_xcto',
+					'reportedip_hive_header_xfo',
+					'reportedip_hive_header_referrer',
+					'reportedip_hive_hsts_enabled',
+					'reportedip_hive_hsts_max_age',
+					'reportedip_hive_hsts_subdomains',
+					'reportedip_hive_hsts_preload',
+					'reportedip_hive_permissions_policy',
+					'reportedip_hive_csp_mode',
+					'reportedip_hive_csp_policy',
+					'reportedip_hive_csp_report_uri',
+					'reportedip_hive_coop',
+					'reportedip_hive_corp',
+					'reportedip_hive_coep',
+				),
+			),
+			'audit'            => array(
+				'label'       => __( 'Audit trail', 'reportedip-hive' ),
+				'description' => __( 'Audit event trail policy (capture, retention, alerts). The recorded events themselves stay site-local.', 'reportedip-hive' ),
+				'options'     => array(
+					'reportedip_hive_audit_enabled',
+					'reportedip_hive_audit_retention_days',
+					'reportedip_hive_audit_new_ip_alert',
+					'reportedip_hive_audit_anonymize_ip',
+				),
+			),
 			'ip_lists'         => array(
 				'label'       => __( 'IP lists', 'reportedip-hive' ),
 				'description' => __( 'Whitelist + blocked IPs (manual entries only — runtime-blocked IPs stay site-local).', 'reportedip-hive' ),
@@ -337,13 +384,13 @@ class ReportedIP_Hive_Settings_Import_Export {
 		foreach ( $valid_sections as $section_slug ) {
 			$section = self::sections()[ $section_slug ];
 			foreach ( $section['options'] as $key ) {
-				$options[ $key ] = get_option( $key, null );
+				$options[ $key ] = ReportedIP_Hive_Option_Routing::get( $key, null );
 			}
 		}
 
 		if ( $include_secrets ) {
 			foreach ( self::secret_options() as $key ) {
-				$options[ $key ] = get_option( $key, null );
+				$options[ $key ] = ReportedIP_Hive_Option_Routing::get( $key, null );
 			}
 		}
 
@@ -512,7 +559,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 				if ( ! array_key_exists( $key, $incoming ) ) {
 					continue;
 				}
-				$current = get_option( $key, null );
+				$current = ReportedIP_Hive_Option_Routing::get( $key, null );
 				$status  = $this->values_equal( $current, $incoming[ $key ] ) ? 'unchanged' : 'changed';
 				$rows[]  = array(
 					'key'      => $key,
@@ -602,8 +649,8 @@ class ReportedIP_Hive_Settings_Import_Export {
 				++$skipped;
 				continue;
 			}
-			$ok = update_option( $key, $value );
-			if ( false === $ok && get_option( $key ) !== $value ) {
+			$ok = ReportedIP_Hive_Option_Routing::set( $key, $value );
+			if ( false === $ok && ReportedIP_Hive_Option_Routing::get( $key ) !== $value ) {
 				$errors[] = sprintf( /* translators: %s: option key */ __( 'Could not write %s.', 'reportedip-hive' ), $key );
 				++$skipped;
 				continue;

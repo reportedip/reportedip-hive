@@ -46,6 +46,7 @@ final class ReportedIP_Hive_Schema {
 	public const TABLE_API_QUEUE       = 'reportedip_hive_api_queue';
 	public const TABLE_STATS           = 'reportedip_hive_stats';
 	public const TABLE_TRUSTED_DEVICES = 'reportedip_hive_trusted_devices';
+	public const TABLE_AUDIT_LOG       = 'reportedip_hive_audit_log';
 
 	/**
 	 * Plugin table suffixes (without prefix).
@@ -64,6 +65,7 @@ final class ReportedIP_Hive_Schema {
 		self::TABLE_API_QUEUE,
 		self::TABLE_STATS,
 		self::TABLE_TRUSTED_DEVICES,
+		self::TABLE_AUDIT_LOG,
 	);
 
 	/**
@@ -75,6 +77,7 @@ final class ReportedIP_Hive_Schema {
 		self::TABLE_LOGS,
 		self::TABLE_API_QUEUE,
 		self::TABLE_STATS,
+		self::TABLE_AUDIT_LOG,
 	);
 
 	/**
@@ -261,6 +264,27 @@ final class ReportedIP_Hive_Schema {
 			KEY idx_expires_at (expires_at)
 		) $charset_collate;";
 
+		$table_audit = $prefix . 'reportedip_hive_audit_log';
+		$sql_audit   = "CREATE TABLE $table_audit (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			blog_id int(11) unsigned NOT NULL DEFAULT 0,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP,
+			ip varchar(64) DEFAULT NULL,
+			user_id bigint(20) unsigned DEFAULT NULL,
+			username varchar(60) DEFAULT NULL,
+			event_type varchar(32) NOT NULL,
+			event_action varchar(64) NOT NULL,
+			event_data text DEFAULT NULL,
+			risk_score int(11) DEFAULT NULL,
+			country_code varchar(8) DEFAULT NULL,
+			user_agent text DEFAULT NULL,
+			PRIMARY KEY  (id),
+			KEY idx_audit_blog_event (blog_id, event_type, created_at),
+			KEY idx_audit_user (user_id),
+			KEY idx_audit_ip (ip),
+			KEY idx_audit_created (created_at)
+		) $charset_collate;";
+
 		dbDelta( $sql_logs );
 		dbDelta( $sql_whitelist );
 		dbDelta( $sql_blocked );
@@ -268,6 +292,7 @@ final class ReportedIP_Hive_Schema {
 		dbDelta( $sql_queue );
 		dbDelta( $sql_stats );
 		dbDelta( $sql_trusted );
+		dbDelta( $sql_audit );
 
 		self::ensure_additional_indexes();
 	}

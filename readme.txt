@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.0
+Stable tag: 2.1.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -16,7 +16,7 @@ Community-powered WordPress security: 12 attack sensors, 4 2FA methods, threat s
 
 **Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker — before the password is even checked.**
 
-ReportedIP Hive is a complete security plugin for serious WordPress sites: 12 detection sensors, four 2FA methods (TOTP, Passkey/WebAuthn and email in every plan; SMS on Professional via the managed relay), progressive block escalation, and an opt-in community-intelligence network. Engineered in Germany with privacy as the design principle, not a checkbox.
+ReportedIP Hive is a complete security plugin for serious WordPress sites: 16 detection sensors, four 2FA methods (TOTP, Passkey/WebAuthn and email in every plan; SMS on Professional via the managed relay), progressive block escalation, and an opt-in community-intelligence network. Engineered in Germany with privacy as the design principle, not a checkbox.
 
 The entire detection and identity core is **free, GPL-2.0 and complete** — every sensor, the core 2FA methods, progressive blocking, the password-reset gate, every dashboard and export. Paid plans add managed relays, multi-site management and a few advanced modules on top (see *Plans* below); they never gate the core protection.
 
@@ -32,9 +32,10 @@ Two ways to run:
 * **Privacy-first by default.** GDPR-minimal logging mode, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium.
 * **Hardening Mode on coordinated attacks (PRO).** When the plugin spots ≥ 3 IPs / ≥ 20 failed logins in the same minute it tightens the failed-login and reputation thresholds network-wide for one hour. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
+* **Security headers out of the box.** The basic hardening trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is free; HSTS, Permissions-Policy, a report-only-first Content-Security-Policy and the cross-origin isolation trio come with Professional. Headers already sent by your server or another plugin are detected and left untouched.
 * **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan level 5 clean, WPCS-clean (zero warnings), a comprehensive PHPUnit suite (unit + Multisite) running on every commit.
 
-= 12 detection sensors (every one tunable) =
+= 16 detection sensors (every one tunable) =
 
 * **Failed logins** — default 5 fails / 15 min
 * **Password spray** — distinct usernames from same IP, default 5 / 10 min
@@ -44,6 +45,10 @@ Two ways to run:
 * **REST API rate-limit** — global cap, default 240 / 5 min (sensitive routes 20 / 5 min)
 * **User enumeration defence** — `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking
 * **404 / scanner detection** — default 12 / 2 min, plus instant block on known-bad paths (`.env`, `wp-config.bak`, `/.git/`)
+* **Web Application Firewall** — request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
+* **Verified bot detection** — confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
+* **Disposable-email blocking** — inspects the address at registration (WordPress + WooCommerce) against the throwaway-mail list (off / monitor / block). Privacy relays (Apple Hide My Email, Firefox Relay, …) pass through by default. Free; the live list rides Priority Sync
+* **Comment honeypot** — invisible, screen-reader-excluded decoy field; spam bots that fill it are rejected with no CAPTCHA friction
 * **Geographic anomaly** — login from a country never seen for the user, optionally revokes trusted-device cookies
 * **Password policy** — minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
 * **WooCommerce login hooks** — checkout + my-account forms tracked separately
@@ -107,9 +112,9 @@ Show the world that your site is part of the hive — and earn community-network
 
 = Admin UX =
 
-* **9-step setup wizard** with privacy-first defaults: Welcome → Connect → Protection → 2FA → Privacy → Notifications → Login → Promote → Done. Skippable (3 skips, 7-day grace).
-* **Real-time dashboard** with 7- and 30-day Chart.js trend lines.
-* **Five list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, plus the 2FA admin grid.
+* **10-step setup wizard** with privacy-first defaults: Welcome → Connect → Protection → Firewall → 2FA → Privacy → Notifications → Login → Promote → Done. Skippable (3 skips, 7-day grace).
+* **Real-time dashboard** with detection & hardening score gauges (0–100 plus an A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines.
+* **Six list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), plus the 2FA admin grid.
 * **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup.
 * **Trust badges** on every admin page: "Security Focused", "GDPR Compliant", "Made in Germany".
 
@@ -132,7 +137,7 @@ Show the world that your site is part of the hive — and earn community-network
   * `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path` — replace the mailer
 * **Constants** for emergency overrides:
   * `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` — temporarily disable hide-login from `wp-config.php`
-* **7 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats and trusted_devices.
+* **8 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats, trusted_devices and audit_log.
 * **Internationalisation-ready.** Text domain `reportedip-hive`, English source with German translation included.
 * **Test suite.** A comprehensive PHPUnit suite (unit + Multisite) runs on every commit; PHPStan level 5 (No errors); WPCS-compliant with zero warnings.
 
@@ -141,8 +146,6 @@ Show the world that your site is part of the hive — and earn community-network
 Honest scope so you can plan around it:
 
 * No malware scanner / file-integrity monitor
-* No web-application firewall (WAF) rules — IP-level blocking only
-* No `advanced-cache.php` drop-in (use a server-level firewall for blocking on cached public pages)
 * No Cloudflare API integration
 * No payment-fraud scoring
 
@@ -150,13 +153,13 @@ Pair it with a malware scanner if you need that surface — Hive deliberately st
 
 == Plans (optional, comfort only) ==
 
-The full **detection and identity core is free, GPL-2.0 and complete** in every operating mode — all 12 sensors, the core 2FA methods (TOTP, Passkey, Email, Recovery codes), progressive block escalation, the password-reset gate, every alert, every dashboard and export. None of that is ever gated.
+The full **detection and identity core is free, GPL-2.0 and complete** in every operating mode — all 16 sensors, the core 2FA methods (TOTP, Passkey, Email, Recovery codes), progressive block escalation, the password-reset gate, every alert, every dashboard and export. None of that is ever gated.
 
 Paid plans add the **managed relays, multi-site management and a handful of advanced modules** at reportedip.de — useful for sites that don't want to maintain their own SMTP / SMS / multi-site stack, run a WooCommerce storefront, or need network-wide auto-hardening:
 
 = Free / Contributor (0 €) =
 
-* Full core functionality — all 12 sensors, progressive blocking, the password-reset gate, every dashboard and export
+* Full core functionality — all 16 sensors, progressive blocking, the password-reset gate, every dashboard and export
 * 1 domain per licence, 1,000 IP-reputation checks/day, 50 reports/day
 * Local-mode `wp_mail()` for 2FA emails; TOTP, Passkey and Email 2FA included (SMS 2FA, WooCommerce frontend 2FA and Hardening Mode require Professional)
 * 30-day log retention, community support
@@ -169,6 +172,8 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * **Managed SMS relay** — 25 worldwide OTP SMS/month with no third-party Twilio account required
 * **WooCommerce frontend 2FA** — the second factor rendered inside the storefront theme on My Account, classic checkout and the WC blocks
 * **Hardening Mode** — auto-tighten failed-login and reputation thresholds network-wide for one hour on a detected coordinated attack
+* **Advanced security headers** — HSTS, Permissions-Policy, the Content-Security-Policy builder and the cross-origin isolation trio (the basic header trio stays free)
+* **Priority Sync** — the deeper, frequently-updated, Ed25519-signed WAF Paranoia-Level-2/3 rulesets plus the live bot-IP-range and disposable-domain feeds
 * Multi-site dashboard, priority sync (daily blacklist download), 90-day log retention, e-mail support (48 h SLA)
 * Prepaid top-up bundles (SMS and mail) available for heavy months
 
@@ -177,6 +182,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * 100,000 checks/day, 5,000 reports/day
 * **2,500 mail/month + 75 SMS/month included**
 * Everything in Professional, plus white-label (logo, copy, mail templates), the WooCommerce complete integration, full WP-CLI surface and role-based login-time restrictions
+* **Audit event trail** — append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export
 * 1-year log retention, weekly security PDF report, GDPR data-export tool, priority support (12 h SLA)
 * **Multi-bookable:** book Business x2–x20 to scale domains, API quota and 2FA mail/SMS with the licence count — a volume discount applies automatically
 
@@ -187,7 +193,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 
 **Bundles (PRO+ only, refundable until first use):** 50/200/500-SMS bundles (14.90 / 49.90 / 99.90 €), 1k/5k/25k-mail bundles (4.90 / 14.90 / 49.90 €). All prices VAT-inclusive (Stripe `tax_behavior = inclusive`).
 
-What stays Free regardless of plan: all 12 detection sensors, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
+What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, disposable-email blocking, the comment honeypot, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
 
@@ -207,8 +213,8 @@ A short architectural map for evaluators:
 
 = Storage =
 
-* **7 dedicated tables** under the `wp_reportedip_hive_` prefix: `logs`, `blocked`, `whitelist`, `attempts`, `api_queue`, `stats`, `trusted_devices`.
-* **Schema v8**, auto-migrated step-by-step on plugin update; opt-in delete on uninstall.
+* **8 dedicated tables** under the `wp_reportedip_hive_` prefix: `logs`, `blocked`, `whitelist`, `attempts`, `api_queue`, `stats`, `trusted_devices`, `audit_log`.
+* **Schema v9**, auto-migrated step-by-step on plugin update; opt-in delete on uninstall.
 * All secrets at rest (TOTP seeds, phone numbers) sealed with libsodium (OpenSSL fallback). Plain user-meta storage is never used for credentials.
 
 = Throttle ladder =
@@ -234,7 +240,7 @@ Every option lives under the `reportedip_hive_` prefix in `wp_options` (tracked 
    * Direct link (always latest): [github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip](https://github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip)
    * Or open the [latest release page](https://github.com/reportedip/reportedip-hive/releases/latest) and grab `reportedip-hive.zip` from the *Assets* section.
 2. WP Admin → *Plugins → Add New → Upload Plugin* → pick `reportedip-hive.zip`.
-3. Activate and follow the 9-step setup wizard.
+3. Activate and follow the 10-step setup wizard.
 
 **Do not** use the auto-generated "Source code (zip)" link, nor the *Code → Download ZIP* button on the repository page. Those archives have a top-level folder named `reportedip-hive-X.Y.Z` (with the version) instead of `reportedip-hive/`. WordPress would install the plugin under that versioned slug, breaking in-place updates and producing a duplicate plugin folder on every release. Only the asset `reportedip-hive.zip` is built for installation.
 
@@ -327,13 +333,17 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 4. **Security Event Logs** — Searchable, severity-filterable, JSON / CSV export, bulk delete + bulk block + bulk whitelist actions.
 5. **Settings → Blocking** — How-blocking-decides info card, auto-block toggle, progressive ladder editor with reset window, report-only mode toggle, blocked-page contact link.
 6. **Settings → Two-Factor** — Method enable/disable, role enforcement, grace period, IP allowlist, recovery-code management, trusted-device list.
-7. **Setup Wizard** — 9-step guided configuration with privacy-first defaults and a celebration on the final step.
+7. **Setup Wizard** — 10-step guided configuration with privacy-first defaults and a celebration on the final step.
 8. **API Queue** — Pending and failed report queue with retry, quota status, queue-health indicators.
 9. **Promote** — Auto-footer badge configurator and shortcode showcase with live previews.
 
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.2 =
+
+New: a complete firewall layer. A request-inspecting Web Application Firewall (engine + OWASP-Top-10 Paranoia-Level-1 baseline free on every plan, Level 2/3 with Professional, ReDoS-hardened and fail-open) fed by server-delivered, versioned, Ed25519-signed rulesets with a bundled offline baseline; an optional pre-WordPress drop-in that blocks before WordPress loads (Apache/PHP-FPM auto-config, nginx snippet, rebaked immediately on rule sync and whitelist changes, trusted-proxy-header aware); verified-bot detection (official IP ranges, then forward-confirmed reverse DNS — genuine crawlers are never blocked); disposable-email blocking with privacy-relay pass-through; an invisible comment honeypot; a Firewall admin area with per-tab controls and a Rule Sync status view. Also new: detection & hardening score gauges on the dashboard (A+–F grade), security response headers (basic trio free, advanced with Professional, conflict detection), the Business audit event trail (user-lifecycle events including role changes with the acting user, CSV/JSON export, GDPR integration), a firewall step in the setup wizard, and settings export/import coverage for the firewall, headers and audit configuration. Schema v9 adds the audit_log table.
 
 = 2.1.0 =
 
@@ -596,6 +606,15 @@ This plugin connects to external services only when explicitly configured. *Loca
 * Default: off — only available for Professional, Business and Enterprise plans, only when a user actively enrolled SMS as a 2FA factor; routing is worldwide except for a small number of high-cost destinations that are unsupported by the managed relay (HTTP 422 with code `country_not_supported` is returned to the plugin in that case)
 * Data transmitted: recipient phone number (E.164), the verification code, expiry minutes, language code, the site domain
 * Privacy / DPA: [reportedip.de/legal/avv/](https://reportedip.de/legal/avv/)
+
+= ReportedIP Rule Sync =
+
+* Service URL: `https://reportedip.de/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `scan_paths`)
+* Purpose: fetch signed firewall rule updates; the bundled baseline rulesets stay active without any connection, and Professional plans receive the deeper, frequently-updated rulesets through this channel
+* Default: off — only active in Community Network mode AND with a configured API key AND the Rule Sync toggle enabled; runs every six hours via cron, and conditional `If-None-Match` requests return HTTP 304 when nothing changed
+* Data transmitted: the API key, the current ETag and the site domain; each downloaded ruleset carries an Ed25519 signature that the plugin verifies against a bundled public key before applying it
+* Terms: [reportedip.de/nutzungsbedingungen/](https://reportedip.de/nutzungsbedingungen/)
+* Privacy / DPA: [reportedip.de/datenschutzerklaerung/](https://reportedip.de/datenschutzerklaerung/)
 
 = GitHub Releases API (Plugin Update Checker) =
 

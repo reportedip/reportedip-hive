@@ -2,8 +2,9 @@
 /**
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.de
- * Description: Community-powered WordPress security — real-time threat intelligence with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.1.0
+ * Description: Community-powered WordPress security — real-time threat intelligence
+ * with 5-layer defense and 4-method 2FA. Be part of the hive.
+ * Version: 2.1.2
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -54,7 +55,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.1.0' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.1.2' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -192,6 +193,7 @@ class ReportedIP_Hive {
 		add_action( 'delete_user', array( __CLASS__, 'on_user_deleted' ) );
 		if ( ! is_multisite() || is_main_site() ) {
 			add_action( 'admin_init', array( 'ReportedIP_Hive_Cron_Handler', 'ensure_scheduled' ) );
+			add_action( 'admin_init', array( __CLASS__, 'maybe_seed_on_upgrade' ) );
 		}
 
 		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
@@ -213,6 +215,14 @@ class ReportedIP_Hive {
 		add_action( 'update_option_reportedip_hive_2fa_enforce_roles_extra', $flush_routing_cache );
 		add_action( 'update_site_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
 
+		$flush_score = array( 'ReportedIP_Hive_Score', 'flush_on_option_change' );
+		add_action( 'updated_option', $flush_score );
+		add_action( 'added_option', $flush_score );
+		add_action( 'deleted_option', $flush_score );
+		add_action( 'update_site_option', $flush_score );
+		add_action( 'add_site_option', $flush_score );
+		add_action( 'reportedip_hive_mode_changed', array( 'ReportedIP_Hive_Score', 'flush_cache' ) );
+
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Ajax_Handler( $this );
 		}
@@ -221,6 +231,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Admin_Notice::register_hooks();
 		ReportedIP_Hive_Decoy_Path_Block::get_instance()->register_hooks();
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->register_hooks();
+		ReportedIP_Hive_Audit_Logger::get_instance()->register_hooks();
 	}
 
 	/**
@@ -289,6 +300,8 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-wizard-schema.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-ref.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-store.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-sync.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-logger.php';
@@ -310,6 +323,14 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rest-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-enumeration.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-scan-detector.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-bot-verifier.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-disposable-email.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-logger.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-score.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
@@ -363,6 +384,7 @@ class ReportedIP_Hive {
 		if ( is_admin() ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ajax-handler.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-settings.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-firewall.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-two-factor-admin.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-logs-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-blocked-ips-table.php';
@@ -401,6 +423,12 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_REST_Monitor::get_instance();
 		ReportedIP_Hive_User_Enumeration::get_instance();
 		ReportedIP_Hive_Scan_Detector::get_instance();
+		ReportedIP_Hive_WAF::get_instance();
+		ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+		ReportedIP_Hive_Bot_Verifier::get_instance();
+		ReportedIP_Hive_Disposable_Email::get_instance();
+		ReportedIP_Hive_Comment_Honeypot::get_instance();
+		ReportedIP_Hive_Security_Headers::get_instance();
 		ReportedIP_Hive_WooCommerce_Monitor::get_instance();
 		ReportedIP_Hive_Geo_Anomaly::get_instance();
 		ReportedIP_Hive_Password_Strength::get_instance();
@@ -470,6 +498,23 @@ class ReportedIP_Hive {
 		}
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->sync();
 
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_dropin_enabled', false ) ) {
+			foreach ( array(
+				'includes/class-rule-store.php',
+				'includes/class-rule-sync.php',
+				'includes/class-waf.php',
+				'includes/class-waf-dropin-manager.php',
+			) as $relative ) {
+				$path = REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
+				if ( file_exists( $path ) ) {
+					require_once $path;
+				}
+			}
+			if ( class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+				ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->sync();
+			}
+		}
+
 		$wizard_completed = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_wizard_completed', false );
 		$api_key          = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 
@@ -522,6 +567,11 @@ class ReportedIP_Hive {
 		}
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->remove();
 
+		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php';
+		}
+		ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->remove();
+
 		flush_rewrite_rules();
 	}
 
@@ -544,6 +594,19 @@ class ReportedIP_Hive {
 			}
 		}
 
+		foreach ( array(
+			'includes/class-waf.php',
+			'includes/class-waf-dropin-manager.php',
+		) as $relative ) {
+			$path = REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
+			if ( file_exists( $path ) ) {
+				require_once $path;
+			}
+		}
+		if ( class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+			ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->remove();
+		}
+
 		$delete_requested = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', false );
 		if ( ! $delete_requested ) {
 			return;
@@ -559,6 +622,8 @@ class ReportedIP_Hive {
 		foreach ( ReportedIP_Hive_Two_Factor::get_all_meta_keys() as $key ) {
 			delete_metadata( 'user', 0, $key, '', true );
 		}
+
+		delete_metadata( 'user', 0, '_reportedip_hive_known_ips', '', true );
 	}
 
 	/**
@@ -655,6 +720,16 @@ class ReportedIP_Hive {
 			wp_enqueue_script(
 				'reportedip-hive-settings-import-export',
 				REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/settings-import-export.js',
+				array( 'jquery', 'reportedip-hive-admin' ),
+				REPORTEDIP_HIVE_VERSION,
+				true
+			);
+		}
+
+		if ( str_contains( (string) $hook, 'reportedip-hive-firewall' ) ) {
+			wp_enqueue_script(
+				'reportedip-hive-firewall',
+				REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/firewall.js',
 				array( 'jquery', 'reportedip-hive-admin' ),
 				REPORTEDIP_HIVE_VERSION,
 				true
@@ -1364,11 +1439,34 @@ class ReportedIP_Hive {
 	 * @since 1.0.0
 	 */
 	private function show_blocked_page( $reason = 'ip_block' ) {
+		self::serve_blocked_page( $reason );
+	}
+
+	/**
+	 * Render the 403 block page and terminate. Public entry point so sensors
+	 * that live in their own classes (e.g. the WAF engine) reject the current
+	 * request through the identical cache-safe, ref-coded response path.
+	 *
+	 * @param string $reason Reason key (see {@see ReportedIP_Hive_Block_Ref::CATEGORY_MAP}).
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public static function serve_blocked_page( $reason = 'ip_block' ) {
 		self::emit_block_response_headers();
 		status_header( 403 );
 		$reportedip_hive_block_context = is_string( $reason ) && '' !== $reason ? $reason : 'ip_block';
 		include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/blocked.php';
 		exit;
+	}
+
+	/**
+	 * Accessor for the shared structured logger.
+	 *
+	 * @return ReportedIP_Hive_Logger|null
+	 * @since  2.1.2
+	 */
+	public function get_logger() {
+		return $this->logger;
 	}
 
 	/**
@@ -1506,6 +1604,29 @@ class ReportedIP_Hive {
 	 */
 	private static function set_default_options_static() {
 		ReportedIP_Hive_Defaults::seed_missing();
+	}
+
+	/**
+	 * Seed newly-added default options after an in-place plugin update.
+	 *
+	 * The activation hook only fires on a manual (re)activation, so options
+	 * introduced in a release are missing on a site that auto-updated. A boolean
+	 * default-on option without a stored row cannot be switched off — WordPress
+	 * treats `update_option( $key, false )` on an absent option as a no-op — so
+	 * its admin toggle would silently do nothing. Re-seeding once per version
+	 * change (gated by a stored version marker, main-site-only on Multisite so
+	 * the network keys are written once) closes that gap.
+	 *
+	 * @return void
+	 * @since 2.1.2
+	 */
+	public static function maybe_seed_on_upgrade() {
+		$stored = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_seeded_version', '' );
+		if ( REPORTEDIP_HIVE_VERSION === $stored ) {
+			return;
+		}
+		ReportedIP_Hive_Defaults::seed_missing();
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_seeded_version', REPORTEDIP_HIVE_VERSION );
 	}
 
 	/**

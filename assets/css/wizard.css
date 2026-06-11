@@ -1476,7 +1476,7 @@ body.rip-wizard-page select.rip-select option {
  * needs more breathing room before the toggle row sits underneath. The other
  * call sites (privacy step, etc.) keep the original tighter spacing.
  */
-.rip-wizard__step-content[data-step="7"] .rip-gdpr-notice {
+.rip-wizard__step-content[data-step="8"] .rip-gdpr-notice {
     margin-bottom: var(--rip-space-6, 1.75rem);
     padding-bottom: 0.95rem;
 }

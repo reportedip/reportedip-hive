@@ -43,15 +43,16 @@ class ReportedIP_Hive_Setup_Wizard {
 	 */
 	private function get_step_labels() {
 		return array(
-			1 => __( 'Welcome', 'reportedip-hive' ),
-			2 => __( 'Connect', 'reportedip-hive' ),
-			3 => __( 'Protection', 'reportedip-hive' ),
-			4 => __( '2FA', 'reportedip-hive' ),
-			5 => __( 'Privacy', 'reportedip-hive' ),
-			6 => __( 'Notifications', 'reportedip-hive' ),
-			7 => __( 'Login', 'reportedip-hive' ),
-			8 => __( 'Promote', 'reportedip-hive' ),
-			9 => __( 'Done', 'reportedip-hive' ),
+			1  => __( 'Welcome', 'reportedip-hive' ),
+			2  => __( 'Connect', 'reportedip-hive' ),
+			3  => __( 'Protection', 'reportedip-hive' ),
+			4  => __( 'Firewall', 'reportedip-hive' ),
+			5  => __( '2FA', 'reportedip-hive' ),
+			6  => __( 'Privacy', 'reportedip-hive' ),
+			7  => __( 'Notifications', 'reportedip-hive' ),
+			8  => __( 'Login', 'reportedip-hive' ),
+			9  => __( 'Promote', 'reportedip-hive' ),
+			10 => __( 'Done', 'reportedip-hive' ),
 		);
 	}
 
@@ -91,8 +92,8 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * POSTs it here with the step index. Sanitisation + persistence is owned by
 	 * {@see ReportedIP_Hive_Wizard_Schema} so render, collection and save can
 	 * never drift — the root cause of the 1.x bug where the 2FA step silently
-	 * saved nothing. Step 7 (Hide Login) is delegated to the slug-validating
-	 * helper; the optional notification-sync side-effect runs for step 6.
+	 * saved nothing. Step 8 (Hide Login) is delegated to the slug-validating
+	 * helper; the optional notification-sync side-effect runs for step 7.
 	 *
 	 * @since 2.0.2
 	 */
@@ -111,13 +112,13 @@ class ReportedIP_Hive_Setup_Wizard {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above; the schema sanitises every field per its declared type.
 		$post = wp_unslash( $_POST );
 
-		if ( 7 === $step ) {
+		if ( 8 === $step ) {
 			$this->save_hide_login_step();
 		} else {
 			ReportedIP_Hive_Wizard_Schema::save_step( $step, $post );
 		}
 
-		if ( 6 === $step ) {
+		if ( 7 === $step ) {
 			$this->maybe_sync_notifications( $post );
 		}
 
@@ -176,7 +177,7 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		wp_send_json_success(
 			array(
-				'redirect_url' => $this->get_wizard_url( 9 ),
+				'redirect_url' => $this->get_wizard_url( 10 ),
 				'summary'      => $apply_summary,
 			)
 		);
@@ -334,7 +335,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			true
 		);
 
-		if ( 8 === $this->current_step && class_exists( 'ReportedIP_Hive_Frontend_Shortcodes' ) ) {
+		if ( 9 === $this->current_step && class_exists( 'ReportedIP_Hive_Frontend_Shortcodes' ) ) {
 			ReportedIP_Hive_Frontend_Shortcodes::get_instance()->enqueue_frontend_script();
 		}
 
@@ -450,21 +451,24 @@ class ReportedIP_Hive_Setup_Wizard {
 					$this->render_step_protection();
 					break;
 				case 4:
-					$this->render_step_two_factor();
+					$this->render_step_firewall();
 					break;
 				case 5:
-					$this->render_step_privacy();
+					$this->render_step_two_factor();
 					break;
 				case 6:
-					$this->render_step_notifications();
+					$this->render_step_privacy();
 					break;
 				case 7:
-					$this->render_step_hide_login();
+					$this->render_step_notifications();
 					break;
 				case 8:
-					$this->render_step_promote();
+					$this->render_step_hide_login();
 					break;
 				case 9:
+					$this->render_step_promote();
+					break;
+				case 10:
 					$this->render_step_complete();
 					break;
 			}
@@ -945,6 +949,102 @@ class ReportedIP_Hive_Setup_Wizard {
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
 				<a href="<?php echo esc_url( self::get_wizard_url( 4 ) ); ?>" class="rip-button rip-button--primary" id="rip-step3-next">
+					<?php esc_html_e( 'Next: Firewall', 'reportedip-hive' ); ?>
+					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+				</a>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Step 4: Firewall & spam defence.
+	 *
+	 * Surfaces the request firewall and the registration/comment spam sensors
+	 * with their safe defaults. Advanced controls (Paranoia Level, the
+	 * pre-WordPress drop-in, privacy-relay blocking) intentionally stay on the
+	 * Firewall admin page — the wizard only covers the everyday decisions.
+	 *
+	 * @since 2.1.2
+	 */
+	private function render_step_firewall() {
+		$opt         = static function ( $key, $fallback = true ) {
+			return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_' . $key, $fallback );
+		};
+		$bot_action  = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_action', 'flag' );
+		$disp_action = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_disposable_email_action', 'monitor' );
+		?>
+		<div class="rip-wizard__configuration">
+			<h1 class="rip-wizard__title"><?php esc_html_e( 'Set up the firewall', 'reportedip-hive' ); ?></h1>
+			<p class="rip-wizard__subtitle"><?php esc_html_e( 'The request firewall and the spam sensors ship with safe defaults — review them here. Advanced controls (Paranoia Level, pre-WordPress drop-in) live on the Firewall page.', 'reportedip-hive' ); ?></p>
+
+			<!-- Web Application Firewall -->
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+					<h3><?php esc_html_e( 'Web Application Firewall', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Inspects every request for SQL injection, XSS, path traversal and scanner patterns before they reach your site. The engine and the baseline ruleset are free on every plan.', 'reportedip-hive' ); ?></p>
+					<label class="rip-toggle">
+						<input type="checkbox" name="waf_enabled" id="rip-waf-enabled" <?php checked( $opt( 'waf_enabled' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Enable the firewall engine', 'reportedip-hive' ); ?></span>
+					</label>
+					<label class="rip-toggle">
+						<input type="checkbox" name="waf_report_only" id="rip-waf-report-only" <?php checked( $opt( 'waf_report_only', false ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Report-only (log matches, do not block)', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-block"><?php esc_html_e( 'Report-only is great for a trial run: matches are logged but never blocked. Turn it off in production.', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<!-- Verified bots -->
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+					<h3><?php esc_html_e( 'Verified bots', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Confirms that a request claiming to be Googlebot or Bingbot genuinely is that crawler. A genuine crawler is never blocked; only confirmed impostors are flagged or rejected.', 'reportedip-hive' ); ?></p>
+					<label class="rip-label" for="rip-wizard-bot-action"><?php esc_html_e( 'Action on a confirmed impostor', 'reportedip-hive' ); ?></label>
+					<select id="rip-wizard-bot-action" name="bot_action" class="rip-select">
+						<option value="off" <?php selected( $bot_action, 'off' ); ?>><?php esc_html_e( 'Off — do not verify', 'reportedip-hive' ); ?></option>
+						<option value="flag" <?php selected( $bot_action, 'flag' ); ?>><?php esc_html_e( 'Flag — log impostors only (recommended)', 'reportedip-hive' ); ?></option>
+						<option value="block" <?php selected( $bot_action, 'block' ); ?>><?php esc_html_e( 'Block — reject confirmed impostors', 'reportedip-hive' ); ?></option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Spam defence -->
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+					<h3><?php esc_html_e( 'Spam defence', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Throwaway e-mail domains at registration and an invisible decoy field in the comment form stop most automated spam without a CAPTCHA.', 'reportedip-hive' ); ?></p>
+					<label class="rip-label" for="rip-wizard-disposable-action"><?php esc_html_e( 'Action on a throwaway e-mail address', 'reportedip-hive' ); ?></label>
+					<select id="rip-wizard-disposable-action" name="disposable_email_action" class="rip-select">
+						<option value="off" <?php selected( $disp_action, 'off' ); ?>><?php esc_html_e( 'Off', 'reportedip-hive' ); ?></option>
+						<option value="monitor" <?php selected( $disp_action, 'monitor' ); ?>><?php esc_html_e( 'Monitor — log only (recommended)', 'reportedip-hive' ); ?></option>
+						<option value="block" <?php selected( $disp_action, 'block' ); ?>><?php esc_html_e( 'Block — reject registration', 'reportedip-hive' ); ?></option>
+					</select>
+					<label class="rip-toggle">
+						<input type="checkbox" name="comment_honeypot_enabled" id="rip-comment-honeypot" <?php checked( $opt( 'comment_honeypot_enabled' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Comment honeypot — invisible to visitors, fatal to bots', 'reportedip-hive' ); ?></span>
+					</label>
+				</div>
+			</div>
+
+			<div class="rip-wizard__actions">
+				<a href="<?php echo esc_url( self::get_wizard_url( 3 ) ); ?>" class="rip-button rip-button--secondary">
+					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
+				</a>
+				<a href="<?php echo esc_url( self::get_wizard_url( 5 ) ); ?>" class="rip-button rip-button--primary" id="rip-step4-next">
 					<?php esc_html_e( 'Next: 2FA', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
 				</a>
@@ -954,7 +1054,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Step 4: 2FA Setup
+	 * Step 5: 2FA Setup
 	 *
 	 * PRO+ tiers get SMS + Email + TOTP pre-selected by default since the
 	 * managed mail/SMS relay handles delivery without any extra setup. Free
@@ -1223,11 +1323,11 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( self::get_wizard_url( 3 ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 4 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
-				<a href="<?php echo esc_url( self::get_wizard_url( 5 ) ); ?>" class="rip-button rip-button--primary" id="rip-step4-next">
+				<a href="<?php echo esc_url( self::get_wizard_url( 6 ) ); ?>" class="rip-button rip-button--primary" id="rip-step5-next">
 					<?php esc_html_e( 'Next: Privacy', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
 				</a>
@@ -1237,7 +1337,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Step 5: Privacy & GDPR
+	 * Step 6: Privacy & GDPR
 	 */
 	private function render_step_privacy() {
 		$opt       = static function ( $key, $fallback = false ) {
@@ -1334,11 +1434,11 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( self::get_wizard_url( 4 ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 5 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
-				<a href="<?php echo esc_url( self::get_wizard_url( 6 ) ); ?>" class="rip-button rip-button--primary" id="rip-step5-next">
+				<a href="<?php echo esc_url( self::get_wizard_url( 7 ) ); ?>" class="rip-button rip-button--primary" id="rip-step6-next">
 					<?php esc_html_e( 'Next: Notifications', 'reportedip-hive' ); ?>
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
 				</a>
@@ -1348,7 +1448,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Step 6: Notifications.
+	 * Step 7: Notifications.
 	 *
 	 * Configurable recipient list (comma- or whitespace-separated), From-name
 	 * and From-email for both security alerts and 2FA mails. The same
@@ -1492,7 +1592,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			<?php endif; ?>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( self::get_wizard_url( 5 ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 6 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
@@ -1506,7 +1606,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Step 7: Hide Login (optional).
+	 * Step 8: Hide Login (optional).
 	 *
 	 * Lets the user pick a custom slug that replaces wp-login.php. The user
 	 * can skip this step entirely — the toggle stays off and the feature is
@@ -1581,7 +1681,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( self::get_wizard_url( 6 ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 7 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
@@ -1595,7 +1695,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Step 8: Promote (optional auto-footer badge).
+	 * Step 9: Promote (optional auto-footer badge).
 	 *
 	 * Lets the user opt into a small footer badge that links back to
 	 * reportedip.de. Variant + alignment + enabled state save in one AJAX
@@ -1613,7 +1713,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		if ( ! in_array( $current_align, array( 'left', 'center', 'right', 'below' ), true ) ) {
 			$current_align = 'center';
 		}
-		$skip_url      = self::get_wizard_url( 9 );
+		$skip_url      = self::get_wizard_url( 10 );
 		$preview_align = 'below' === $current_align ? 'center' : $current_align;
 		?>
 		<div class="rip-wizard__configuration">
@@ -1681,7 +1781,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<div class="rip-wizard__actions">
-				<a href="<?php echo esc_url( self::get_wizard_url( 7 ) ); ?>" class="rip-button rip-button--secondary">
+				<a href="<?php echo esc_url( self::get_wizard_url( 8 ) ); ?>" class="rip-button rip-button--secondary">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
 					<?php esc_html_e( 'Back', 'reportedip-hive' ); ?>
 				</a>
@@ -1698,7 +1798,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Step 9: Complete / Summary
+	 * Step 10: Complete / Summary
 	 */
 	private function render_step_complete() {
 		$this->finalize_wizard();

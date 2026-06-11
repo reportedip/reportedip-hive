@@ -32,6 +32,7 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'admin_notices', array( $this, 'render_tier_upgrade_banner' ) );
 		add_action( 'admin_notices', array( $this, 'render_cap_status_notice' ), 5 );
 		add_action( 'admin_post_reportedip_hive_cap_notice_dismiss', array( $this, 'handle_cap_notice_dismiss' ) );
+		add_action( 'admin_post_reportedip_hive_audit_export', array( $this, 'handle_audit_export' ) );
 		add_action( 'updated_option', array( $this, 'maybe_sync_notifications_to_api' ), 10, 1 );
 		add_action( 'network_admin_edit_reportedip_hive_save_settings', array( $this, 'handle_network_admin_save' ) );
 	}
@@ -189,7 +190,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @param string $title   Page title
 	 * @param string $subtitle Page subtitle/description
 	 */
-	private function render_page_header( $title, $subtitle ) {
+	public static function render_page_header( $title, $subtitle ) {
 		?>
 		<div class="wrap rip-wrap">
 			<div class="rip-header">
@@ -209,8 +210,8 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php self::render_header_actions(); ?>
 			</div>
 
-			<?php $this->render_inline_notices(); ?>
-			<?php $this->render_settings_saved_notice(); ?>
+			<?php self::render_inline_notices(); ?>
+			<?php self::render_settings_saved_notice(); ?>
 		<?php
 	}
 
@@ -228,7 +229,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @return void
 	 * @since  2.0.0
 	 */
-	private function render_settings_saved_notice() {
+	public static function render_settings_saved_notice() {
 		$transient = get_transient( 'settings_errors' );
 		if ( is_array( $transient ) ) {
 			foreach ( $transient as $error ) {
@@ -900,7 +901,7 @@ class ReportedIP_Hive_Admin_Settings {
 	/**
 	 * Render unified page footer with trust badges
 	 */
-	private function render_page_footer() {
+	public static function render_page_footer() {
 		?>
 			<div class="rip-trust-badges">
 				<div class="rip-trust-badge">
@@ -1134,9 +1135,63 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * `admin-post.php?action=reportedip_hive_audit_export` handler.
+	 *
+	 * Streams the audit log as CSV or JSON. Business+ only; on Multisite a site
+	 * administrator exports only their own blog's rows.
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	public function handle_audit_export() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( 'reportedip_hive_audit_export' );
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
+		if ( empty( $status['available'] ) ) {
+			wp_die( esc_html__( 'The audit log is not available on your plan.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified by check_admin_referer() above.
+		$format = ( isset( $_GET['format'] ) && 'json' === sanitize_key( wp_unslash( $_GET['format'] ) ) ) ? 'json' : 'csv';
+
+		global $wpdb;
+		$table = $wpdb->base_prefix . ReportedIP_Hive_Audit_Logger::TABLE;
+		$cols  = 'created_at, ip, user_id, username, event_type, event_action, event_data, country_code';
+		if ( is_multisite() && ! is_network_admin() ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name from base_prefix; column list literal; blog id bound.
+			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT $cols FROM $table WHERE blog_id = %d ORDER BY created_at DESC LIMIT 10000", get_current_blog_id() ), ARRAY_A );
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name from base_prefix; column list literal.
+			$rows = $wpdb->get_results( "SELECT $cols FROM $table ORDER BY created_at DESC LIMIT 10000", ARRAY_A );
+		}
+		$rows = (array) $rows;
+
+		nocache_headers();
+		if ( 'json' === $format ) {
+			header( 'Content-Type: application/json; charset=utf-8' );
+			header( 'Content-Disposition: attachment; filename="reportedip-hive-audit-' . gmdate( 'Y-m-d' ) . '.json"' );
+			echo wp_json_encode( $rows, JSON_PRETTY_PRINT );
+			exit;
+		}
+
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="reportedip-hive-audit-' . gmdate( 'Y-m-d' ) . '.csv"' );
+		$output = fopen( 'php://output', 'w' );
+		fputcsv( $output, array( 'created_at', 'ip', 'user_id', 'username', 'event_type', 'event_action', 'event_data', 'country_code' ) );
+		foreach ( $rows as $row ) {
+			fputcsv( $output, $row );
+		}
+		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- php://output stream
+		exit;
+	}
+
+	/**
 	 * Render inline notices within plugin pages (replaces admin_notices)
 	 */
-	public function render_inline_notices() {
+	public static function render_inline_notices() {
 		global $wpdb;
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
@@ -1338,6 +1393,15 @@ class ReportedIP_Hive_Admin_Settings {
 
 		add_submenu_page(
 			'reportedip-hive',
+			__( 'Firewall', 'reportedip-hive' ),
+			__( 'Firewall', 'reportedip-hive' ),
+			$cap,
+			'reportedip-hive-firewall',
+			array( ReportedIP_Hive_Admin_Firewall::get_instance(), 'firewall_page' )
+		);
+
+		add_submenu_page(
+			'reportedip-hive',
 			__( 'Settings', 'reportedip-hive' ),
 			__( 'Settings', 'reportedip-hive' ),
 			$cap,
@@ -1362,6 +1426,47 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip-hive-community',
 			array( $this, 'community_page' )
 		);
+	}
+
+	/**
+	 * Render the Audit sub-tab inside the Security page — user-lifecycle audit
+	 * trail. Business+ tier-locked scaffold; the event trail lands in a later
+	 * phase.
+	 *
+	 * @since 2.1.2
+	 * @return void
+	 */
+	private function render_audit_tab() {
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
+		if ( empty( $status['available'] ) ) {
+			self::render_tier_lock( $status, array( 'label' => __( 'Unlock the Audit Log with Business', 'reportedip-hive' ) ) );
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The user-lifecycle audit trail — logins, role changes with the actor, new-IP alerts — unlocks with Business. Your standard security events stay available in the Event Log.', 'reportedip-hive' ) . '</div>';
+			return;
+		}
+
+		if ( ! class_exists( 'ReportedIP_Hive_Audit_Log_Table' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-audit-log-table.php';
+		}
+		$table = new ReportedIP_Hive_Audit_Log_Table();
+		$table->prepare_items();
+
+		$csv_url  = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_audit_export&format=csv' ), 'reportedip_hive_audit_export' );
+		$json_url = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_audit_export&format=json' ), 'reportedip_hive_audit_export' );
+		printf(
+			'<p><a class="rip-button rip-button--secondary" href="%s">%s</a> <a class="rip-button rip-button--secondary" href="%s">%s</a></p>',
+			esc_url( $csv_url ),
+			esc_html__( 'Export CSV', 'reportedip-hive' ),
+			esc_url( $json_url ),
+			esc_html__( 'Export JSON', 'reportedip-hive' )
+		);
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page slug echoed back into the filter form.
+		$page = isset( $_REQUEST['page'] ) ? sanitize_key( wp_unslash( $_REQUEST['page'] ) ) : 'reportedip-hive-security';
+		echo '<form method="get">';
+		printf( '<input type="hidden" name="page" value="%s" />', esc_attr( $page ) );
+		echo '<input type="hidden" name="tab" value="activity" /><input type="hidden" name="sub" value="audit" />';
+		$table->display();
+		echo '</form>';
 	}
 
 	/**
@@ -1841,7 +1946,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since  2.0.0
 	 */
 	private function render_site_admin_footer() {
-		$this->render_page_footer();
+		self::render_page_footer();
 	}
 
 	/**
@@ -3142,6 +3247,158 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Render the protection- and hardening-score section on the dashboard.
+	 *
+	 * Two SVG ring gauges (detection / hardening) followed by per-group item
+	 * breakdowns with activate-direct-links and tier/mode-lock CTAs, plus
+	 * independent-verification deep links for the site host.
+	 *
+	 * @return void
+	 * @since  2.1.2
+	 */
+	private function render_score_section() {
+		if ( ! class_exists( 'ReportedIP_Hive_Score' ) ) {
+			return;
+		}
+
+		$detection = ReportedIP_Hive_Score::detection_score();
+		$hardening = ReportedIP_Hive_Score::hardening_score();
+		$host      = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		?>
+		<section class="rip-score-section">
+			<div class="rip-score-gauges">
+				<?php
+				$this->render_score_gauge( $detection, __( 'Detection Score', 'reportedip-hive' ) );
+				$this->render_score_gauge( $hardening, __( 'Hardening Score', 'reportedip-hive' ) );
+				?>
+			</div>
+			<div class="rip-score-breakdowns">
+				<?php
+				$this->render_score_items( $detection, __( 'Detection sensors', 'reportedip-hive' ) );
+				$this->render_score_items( $hardening, __( 'Hardening features', 'reportedip-hive' ) );
+				?>
+			</div>
+			<?php if ( '' !== $host ) : ?>
+			<div class="rip-score-verify">
+				<span class="rip-score-verify__label"><?php esc_html_e( 'Verify independently:', 'reportedip-hive' ); ?></span>
+				<a class="rip-button rip-button--secondary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( 'https://developer.mozilla.org/en-US/observatory/analyze?host=' . rawurlencode( $host ) ); ?>">
+					<?php esc_html_e( 'Mozilla Observatory', 'reportedip-hive' ); ?>
+				</a>
+				<a class="rip-button rip-button--secondary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( 'https://securityheaders.com/?followRedirects=on&q=' . rawurlencode( $host ) ); ?>">
+					<?php esc_html_e( 'securityheaders.com', 'reportedip-hive' ); ?>
+				</a>
+			</div>
+			<?php endif; ?>
+		</section>
+		<?php
+	}
+
+	/**
+	 * Render a single SVG ring gauge with its score, grade and caption.
+	 *
+	 * @param array<string,mixed> $summary One group summary from ReportedIP_Hive_Score.
+	 * @param string              $title   Group title.
+	 * @return void
+	 * @since  2.1.2
+	 */
+	private function render_score_gauge( array $summary, $title ) {
+		$score  = (int) ( $summary['score'] ?? 0 );
+		$grade  = (string) ( $summary['grade'] ?? 'F' );
+		$earned = (int) ( $summary['earned'] ?? 0 );
+		$max    = (int) ( $summary['max'] ?? 0 );
+		$locked = (int) ( $summary['locked_potential'] ?? 0 );
+		$band   = $score < 40 ? 'danger' : ( $score < 70 ? 'warning' : 'success' );
+		$circ   = 2 * M_PI * 52;
+		$offset = $circ * ( 1 - $score / 100 );
+
+		/* translators: 1: score group title, 2: numeric score out of 100 */
+		$aria = sprintf( __( '%1$s: %2$d out of 100', 'reportedip-hive' ), $title, $score );
+		/* translators: 1: earned points, 2: maximum points */
+		$caption = sprintf( __( '%1$d of %2$d points', 'reportedip-hive' ), $earned, $max );
+		?>
+		<div class="rip-stat-card rip-gauge-card">
+			<div class="rip-gauge">
+				<svg class="rip-gauge__svg" viewBox="0 0 120 120" role="img" aria-label="<?php echo esc_attr( $aria ); ?>">
+					<circle class="rip-gauge__track" cx="60" cy="60" r="52" fill="none" stroke-width="10" />
+					<circle class="rip-gauge__value rip-gauge__value--<?php echo esc_attr( $band ); ?>" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="<?php echo esc_attr( (string) round( $circ, 2 ) ); ?>" stroke-dashoffset="<?php echo esc_attr( (string) round( $offset, 2 ) ); ?>" transform="rotate(-90 60 60)" />
+				</svg>
+				<div class="rip-gauge__center">
+					<span class="rip-gauge__score"><?php echo esc_html( (string) $score ); ?></span>
+					<span class="rip-gauge__grade rip-gauge__grade--<?php echo esc_attr( $band ); ?>"><?php echo esc_html( $grade ); ?></span>
+				</div>
+			</div>
+			<div class="rip-gauge-card__meta">
+				<h3 class="rip-gauge-card__title"><?php echo esc_html( $title ); ?></h3>
+				<p class="rip-gauge-card__caption">
+					<?php
+					echo esc_html( $caption );
+					if ( $locked > 0 ) {
+						/* translators: %d: points unlockable through an upgrade or mode switch */
+						echo ' · ' . esc_html( sprintf( __( '+%d unlockable', 'reportedip-hive' ), $locked ) );
+					}
+					?>
+				</p>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the collapsible per-item breakdown for one score group.
+	 *
+	 * @param array<string,mixed> $summary One group summary from ReportedIP_Hive_Score.
+	 * @param string              $title   Group title.
+	 * @return void
+	 * @since  2.1.2
+	 */
+	private function render_score_items( array $summary, $title ) {
+		$items = isset( $summary['items'] ) && is_array( $summary['items'] ) ? $summary['items'] : array();
+		if ( empty( $items ) ) {
+			return;
+		}
+		?>
+		<details class="rip-score-list">
+			<summary class="rip-score-list__summary"><?php echo esc_html( $title ); ?></summary>
+			<ul class="rip-score-items">
+				<?php
+				foreach ( $items as $item ) :
+					$weight    = (int) ( $item['weight'] ?? 0 );
+					$available = ! empty( $item['available'] );
+					$enabled   = ! empty( $item['enabled'] );
+					/* translators: %d: weight of the security item in points */
+					$weight_label = sprintf( __( '%d pts', 'reportedip-hive' ), $weight );
+					?>
+					<li class="rip-score-item">
+						<span class="rip-score-item__label"><?php echo esc_html( (string) ( $item['label'] ?? '' ) ); ?></span>
+						<span class="rip-score-item__weight"><?php echo esc_html( $weight_label ); ?></span>
+						<span class="rip-score-item__state">
+							<?php
+							if ( ! $available && ! empty( $item['status'] ) ) {
+								/* translators: %d: points unlockable by upgrading or switching mode */
+								$lock_label = sprintf( __( '+%d pts', 'reportedip-hive' ), $weight );
+								self::render_tier_lock( $item['status'], array( 'label' => $lock_label ) );
+							} elseif ( $enabled ) {
+								?>
+								<span class="rip-score-item__on">
+									<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 011.4-1.4l3.1 3.1 6.8-6.8a1 1 0 011.4 0z" clip-rule="evenodd"/></svg>
+									<?php esc_html_e( 'Active', 'reportedip-hive' ); ?>
+								</span>
+								<?php
+							} else {
+								?>
+								<a class="rip-score-item__enable" href="<?php echo esc_url( (string) ( $item['settings_url'] ?? '' ) ); ?>"><?php esc_html_e( 'Enable', 'reportedip-hive' ); ?></a>
+								<?php
+							}
+							?>
+						</span>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</details>
+		<?php
+	}
+
+	/**
 	 * Dashboard page
 	 */
 	public function dashboard_page() {
@@ -3151,7 +3408,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 
-		$this->render_page_header( __( 'ReportedIP Hive', 'reportedip-hive' ), __( 'Security Dashboard', 'reportedip-hive' ) );
+		self::render_page_header( __( 'ReportedIP Hive', 'reportedip-hive' ), __( 'Security Dashboard', 'reportedip-hive' ) );
 		?>
 
 			<div class="rip-dashboard">
@@ -3217,6 +3474,8 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 					<?php endif; ?>
 				</div>
+
+				<?php $this->render_score_section(); ?>
 
 				<?php
 				if ( $mode_manager->is_community_mode() && $mode_manager->tier_at_least( 'professional' ) ) {
@@ -3390,7 +3649,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 			</div><!-- /.rip-dashboard -->
 
-		<?php $this->render_page_footer(); ?>
+		<?php self::render_page_footer(); ?>
 		<?php
 	}
 
@@ -3400,9 +3659,9 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	public function security_page() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab navigation only, no data modification
-		$active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'ip_lists';
+		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'ip_lists';
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab navigation only, no data modification
-		$sub_tab = isset( $_GET['sub'] ) ? sanitize_text_field( wp_unslash( $_GET['sub'] ) ) : '';
+		$sub_tab = isset( $_GET['sub'] ) ? sanitize_key( wp_unslash( $_GET['sub'] ) ) : '';
 
 		if ( $active_tab === 'blocked' || $active_tab === 'whitelist' ) {
 			$sub_tab    = $active_tab;
@@ -3415,13 +3674,19 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( $active_tab === 'api_queue' ) {
 			$active_tab = 'advanced';
 		}
+		if ( ! in_array( $active_tab, array( 'ip_lists', 'activity', 'advanced' ), true ) ) {
+			$active_tab = 'ip_lists';
+		}
+		if ( ! in_array( $sub_tab, array( '', 'blocked', 'whitelist', 'logs', 'lookup', 'audit' ), true ) ) {
+			$sub_tab = '';
+		}
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 
 		$database    = ReportedIP_Hive_Database::get_instance();
 		$queue_stats = $database->get_queue_statistics();
 
-		$this->render_page_header( __( 'Security', 'reportedip-hive' ), __( 'Manage blocked IPs, whitelist, and security logs', 'reportedip-hive' ) );
+		self::render_page_header( __( 'Security', 'reportedip-hive' ), __( 'Manage blocked IPs, whitelist, and security logs', 'reportedip-hive' ) );
 		?>
 
 			<!-- Main Navigation Tabs -->
@@ -3467,7 +3732,7 @@ class ReportedIP_Hive_Admin_Settings {
 				?>
 			</div>
 
-		<?php $this->render_page_footer(); ?>
+		<?php self::render_page_footer(); ?>
 		<?php
 	}
 
@@ -3521,11 +3786,17 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php esc_html_e( 'IP Lookup', 'reportedip-hive' ); ?>
 			</a>
 			<?php endif; ?>
+			<a href="?page=reportedip-hive-security&tab=activity&sub=audit" class="rip-sub-tabs__tab <?php echo $sub_tab === 'audit' ? 'rip-sub-tabs__tab--active' : ''; ?>">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+				<?php esc_html_e( 'Audit Trail', 'reportedip-hive' ); ?>
+			</a>
 		</div>
 
 		<?php
 		if ( $sub_tab === 'lookup' && $mode_manager->is_community_mode() ) {
 			$this->render_lookup_tab();
+		} elseif ( $sub_tab === 'audit' ) {
+			$this->render_audit_tab();
 		} else {
 			$this->render_logs_tab();
 		}
@@ -3866,7 +4137,7 @@ class ReportedIP_Hive_Admin_Settings {
 			$active_tab = $tab_aliases[ $active_tab ];
 		}
 
-		$this->render_page_header(
+		self::render_page_header(
 			__( 'Settings', 'reportedip-hive' ),
 			__( 'Configure how ReportedIP Hive protects your site — grouped by topic so you can find what you need quickly.', 'reportedip-hive' )
 		);
@@ -3953,7 +4224,7 @@ class ReportedIP_Hive_Admin_Settings {
 				?>
 			</div>
 
-		<?php $this->render_page_footer(); ?>
+		<?php self::render_page_footer(); ?>
 		<?php
 	}
 
@@ -4407,52 +4678,16 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z"/></svg>
 					<?php esc_html_e( 'Decoy Path Block', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Detects requests to known bait paths (.env.backup, wp-config.old.php, db-dump-master.sql.php …) that legitimate visitors never request. Each hit is logged, shared with the community network, and answered with a 403, but the IP is not added to your local block list, so a misbehaving backup plugin cannot lock you out.', 'reportedip-hive' ); ?></p>
-
-				<input type="hidden" name="reportedip_hive_decoy_pathblock_enabled" value="0" />
-				<div class="rip-form-group">
-					<label class="rip-toggle">
-						<input type="checkbox" name="reportedip_hive_decoy_pathblock_enabled" value="1" class="rip-toggle__input" <?php checked( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_pathblock_enabled', true ) ); ?> />
-						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Detect and report decoy-path hits', 'reportedip-hive' ); ?></span>
-					</label>
-				</div>
-
-				<?php
-				$writer            = ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance();
-				$writer_writable   = $writer->is_writable_target();
-				$writer_block_seen = $writer->is_block_present();
-				?>
-				<div class="rip-form-group">
-					<?php if ( $writer_writable && $writer_block_seen ) : ?>
-						<div class="rip-alert rip-alert--success">
-							<?php esc_html_e( 'Auto-managed — Hive wrote the rewrite block to .htaccess. Real bait files on disk will no longer be served directly.', 'reportedip-hive' ); ?>
-						</div>
-					<?php elseif ( $writer_writable ) : ?>
-						<div class="rip-alert rip-alert--info">
-							<?php esc_html_e( '.htaccess is writable but the block is not in place yet. Toggle the switch above to trigger a sync.', 'reportedip-hive' ); ?>
-						</div>
-					<?php else : ?>
-						<div class="rip-alert rip-alert--warning">
-							<?php esc_html_e( '.htaccess is not writable (or this server does not use one). Paste the snippet below into your server config manually.', 'reportedip-hive' ); ?>
-						</div>
-					<?php endif; ?>
-				</div>
-
-				<details class="rip-form-group">
-					<summary><strong><?php esc_html_e( 'Server-config snippets (live preview / nginx copy-paste)', 'reportedip-hive' ); ?></strong></summary>
-					<p class="rip-help-text"><?php esc_html_e( 'On Apache, the .htaccess block is auto-managed — the snippet below shows what Hive wrote (or would write) verbatim. On nginx, copy the second snippet into your server { … } block. Both snippets rewrite to /index.php so the Hive sensor still loads, logs the hit and reports it; using [F,L] / return 403 directly would skip detection entirely.', 'reportedip-hive' ); ?></p>
-
-					<p><strong><?php esc_html_e( 'Apache (.htaccess)', 'reportedip-hive' ); ?></strong></p>
-					<pre class="rip-code-snippet"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet() ); ?></code></pre>
-
-					<p><strong><?php esc_html_e( 'nginx (regex form — plain nginx)', 'reportedip-hive' ); ?></strong></p>
-					<pre class="rip-code-snippet"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::nginx_snippet() ); ?></code></pre>
-
-					<p><strong><?php esc_html_e( 'nginx (exact-match form — ISPConfig & managed stacks)', 'reportedip-hive' ); ?></strong></p>
-					<p class="rip-help-text"><?php esc_html_e( 'Use this variant when your host template ships a "location ~ /\\." dot-file deny rule before your custom directives — exact-match locations have higher priority than any regex location and survive that ordering.', 'reportedip-hive' ); ?></p>
-					<pre class="rip-code-snippet"><code><?php echo esc_html( ReportedIP_Hive_Decoy_Path_Block::nginx_snippet_exact_match() ); ?></code></pre>
-				</details>
+				<p class="rip-settings-section__desc">
+					<?php
+					printf(
+						/* translators: 1: opening link tag to the Firewall Scan & Decoy tab, 2: closing link tag. */
+						esc_html__( 'The decoy-path trap, its auto-managed .htaccess block and the server-config snippets now live on the %1$sFirewall › Scan & Decoy%2$s tab, next to the scan detector.', 'reportedip-hive' ),
+						'<a href="' . esc_url( admin_url( 'admin.php?page=reportedip-hive-firewall&tab=scan' ) ) . '">',
+						'</a>'
+					);
+					?>
+				</p>
 			</div>
 
 			<div class="rip-form-actions">
@@ -5685,7 +5920,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$cache      = ReportedIP_Hive_Cache::get_instance();
 		$cache_info = $cache->get_cache_info();
 
-		$this->render_page_header( __( 'System Status', 'reportedip-hive' ), __( 'Health, maintenance and tools', 'reportedip-hive' ) );
+		self::render_page_header( __( 'System Status', 'reportedip-hive' ), __( 'Health, maintenance and tools', 'reportedip-hive' ) );
 		?>
 
 			<!-- Health Status Cards -->
@@ -5774,6 +6009,50 @@ class ReportedIP_Hive_Admin_Settings {
 						<div class="rip-info-item">
 							<span class="rip-info-label"><?php esc_html_e( 'Log Level', 'reportedip-hive' ); ?></span>
 							<span class="rip-info-value"><code><?php echo esc_html( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_level', 'info' ) ); ?></code></span>
+						</div>
+						<?php
+						$rule_sync_last = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rule_sync_last_run', 0 );
+						$rule_sync_obj  = ReportedIP_Hive_Rule_Sync::get_instance();
+						$ruleset_parts  = array();
+						foreach ( ReportedIP_Hive_Rule_Store::VALID_KEYS as $rule_key ) {
+							$rule_row        = $rule_sync_obj->get_ruleset( $rule_key );
+							$rule_version    = isset( $rule_row['version'] ) ? (int) $rule_row['version'] : 0;
+							$ruleset_parts[] = $rule_key . ' v' . $rule_version . ( $rule_version > 0 ? '' : ' (baseline)' );
+						}
+						?>
+						<div class="rip-info-item">
+							<span class="rip-info-label"><?php esc_html_e( 'Last Rule Sync', 'reportedip-hive' ); ?></span>
+							<span class="rip-info-value">
+								<?php echo $rule_sync_last ? esc_html( wp_date( 'Y-m-d H:i:s', $rule_sync_last ) ) : esc_html__( 'never (baseline only)', 'reportedip-hive' ); ?>
+							</span>
+						</div>
+						<div class="rip-info-item">
+							<span class="rip-info-label"><?php esc_html_e( 'Ruleset Versions', 'reportedip-hive' ); ?></span>
+							<span class="rip-info-value"><code><?php echo esc_html( implode( ', ', $ruleset_parts ) ); ?></code></span>
+						</div>
+						<?php
+						$dropin_mgr      = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+						$dropin_enabled  = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
+						$dropin_server   = $dropin_mgr->detect_server();
+						$dropin_writable = $dropin_mgr->is_writable_target();
+						?>
+						<div class="rip-info-item">
+							<span class="rip-info-label"><?php esc_html_e( 'WAF Drop-in', 'reportedip-hive' ); ?></span>
+							<span class="rip-info-value">
+								<?php if ( $dropin_mgr->is_active() ) : ?>
+									<span class="rip-badge rip-badge--success"><?php esc_html_e( 'Active', 'reportedip-hive' ); ?></span>
+								<?php elseif ( $dropin_enabled && 'nginx' === $dropin_server ) : ?>
+									<span class="rip-badge rip-badge--info"><?php esc_html_e( 'Enabled (manual nginx config)', 'reportedip-hive' ); ?></span>
+								<?php elseif ( $dropin_enabled ) : ?>
+									<span class="rip-badge rip-badge--warning"><?php esc_html_e( 'Enabled, directive missing', 'reportedip-hive' ); ?></span>
+								<?php else : ?>
+									<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'Disabled', 'reportedip-hive' ); ?></span>
+								<?php endif; ?>
+								<code><?php echo esc_html( $dropin_server ); ?></code>
+								<?php if ( $dropin_enabled && ! $dropin_writable ) : ?>
+									<span class="rip-badge rip-badge--warning"><?php esc_html_e( 'Target not writable', 'reportedip-hive' ); ?></span>
+								<?php endif; ?>
+							</span>
 						</div>
 					</div>
 				</div>
@@ -5885,7 +6164,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 			</div>
 
-		<?php $this->render_page_footer(); ?>
+		<?php self::render_page_footer(); ?>
 		<?php
 	}
 
@@ -6274,7 +6553,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$main_tab_url    = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 		$promote_tab_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&subtab=promote' );
 
-		$this->render_page_header( __( 'Community & Quota', 'reportedip-hive' ), __( 'Manage your API quota and community participation', 'reportedip-hive' ) );
+		self::render_page_header( __( 'Community & Quota', 'reportedip-hive' ), __( 'Manage your API quota and community participation', 'reportedip-hive' ) );
 		?>
 
 			<div class="rip-content">
@@ -6744,7 +7023,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 			</div>
 
-		<?php $this->render_page_footer(); ?>
+		<?php self::render_page_footer(); ?>
 		<?php
 	}
 

@@ -200,6 +200,19 @@ class ReportedIP_Hive_Database {
 
 		wp_cache_delete( 'rip_whitelist_cidrs', 'reportedip' );
 
+		if ( false !== $result ) {
+			/**
+			 * Fires after an IP/CIDR entry was added to the whitelist.
+			 *
+			 * The WAF drop-in listens here to rebake the guard file so the new
+			 * entry is honoured by the pre-WordPress layer immediately.
+			 *
+			 * @param string $ip_address Whitelisted IP or CIDR range.
+			 * @since 2.1.2
+			 */
+			do_action( 'reportedip_hive_whitelist_changed', $ip_address );
+		}
+
 		return $result;
 	}
 
@@ -209,19 +222,32 @@ class ReportedIP_Hive_Database {
 	public function is_whitelisted( $ip_address ) {
 		global $wpdb;
 
+		/*
+		 * Per-request memo keyed by IP. Both the init-priority-1 IP-block gate
+		 * and the WAF engine check the same client IP on every request; without
+		 * this memo each visitor would cost two identical whitelist queries on
+		 * the hot path. The result is stable within a request, so a function-
+		 * static cache is safe (whitelist edits take effect on the next request).
+		 */
+		static $request_cache = array();
+		if ( isset( $request_cache[ $ip_address ] ) ) {
+			return $request_cache[ $ip_address ];
+		}
+
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_whitelist';
 
 		$exact_match = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $table_name 
-                 WHERE ip_address = %s 
-                 AND is_active = 1 
+				"SELECT COUNT(*) FROM $table_name
+                 WHERE ip_address = %s
+                 AND is_active = 1
                  AND (expires_at IS NULL OR expires_at > NOW())",
 				$ip_address
 			)
 		);
 
 		if ( $exact_match > 0 ) {
+			$request_cache[ $ip_address ] = true;
 			return true;
 		}
 
@@ -237,11 +263,13 @@ class ReportedIP_Hive_Database {
 		}
 
 		foreach ( $cidr_ranges as $cidr ) {
-			if ( $this->ip_in_range( $ip_address, $cidr ) ) {
+			if ( self::ip_in_cidr( $ip_address, $cidr ) ) {
+				$request_cache[ $ip_address ] = true;
 				return true;
 			}
 		}
 
+		$request_cache[ $ip_address ] = false;
 		return false;
 	}
 
@@ -289,6 +317,11 @@ class ReportedIP_Hive_Database {
 		) !== false;
 
 		wp_cache_delete( 'rip_whitelist_cidrs', 'reportedip' );
+
+		if ( $result ) {
+			/** This action is documented in includes/class-database.php (add_to_whitelist). */
+			do_action( 'reportedip_hive_whitelist_changed', $ip_address );
+		}
 
 		return $result;
 	}
@@ -1261,9 +1294,18 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Check if IP is in CIDR range
+	 * Check whether an IP falls inside a CIDR range (or equals a bare IP).
+	 *
+	 * Pure, dependency-free and side-effect-free so sensors that need a
+	 * request-path CIDR test (e.g. the verified-bot IP-range match) can reuse
+	 * one canonical IPv4/IPv6 implementation instead of duplicating it.
+	 *
+	 * @param string $ip   Candidate IP address.
+	 * @param string $cidr CIDR range (`192.0.2.0/24`, `2001:db8::/32`) or a bare IP.
+	 * @return bool True when the IP is inside the range.
+	 * @since  2.1.2
 	 */
-	private function ip_in_range( $ip, $cidr ) {
+	public static function ip_in_cidr( $ip, $cidr ) {
 		if ( ! is_string( $ip ) || ! is_string( $cidr ) || $ip === '' || $cidr === '' ) {
 			return false;
 		}

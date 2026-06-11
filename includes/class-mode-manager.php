@@ -289,6 +289,51 @@ class ReportedIP_Hive_Mode_Manager {
 				'label'         => __( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ),
 				'description'   => __( 'Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected.', 'reportedip-hive' ),
 			),
+			'waf'                          => array(
+				'local'       => true,
+				'community'   => true,
+				'label'       => __( 'Web Application Firewall', 'reportedip-hive' ),
+				'description' => __( 'Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync.', 'reportedip-hive' ),
+			),
+			'rule_sync_priority'           => array(
+				'local'         => false,
+				'community'     => true,
+				'requires_tier' => 'professional',
+				'label'         => __( 'Priority Rule Sync', 'reportedip-hive' ),
+				'description'   => __( 'Daily, full-ruleset delivery (broader signatures, higher paranoia levels, bot IP-range feeds, live disposable lists) instead of the bundled baseline.', 'reportedip-hive' ),
+			),
+			'bot_verification'             => array(
+				'local'       => true,
+				'community'   => true,
+				'label'       => __( 'Verified Bot Detection', 'reportedip-hive' ),
+				'description' => __( 'Verify search-engine crawlers via IP ranges and forward-confirmed reverse DNS; flag or block user-agent spoofers.', 'reportedip-hive' ),
+			),
+			'disposable_email'             => array(
+				'local'       => true,
+				'community'   => true,
+				'label'       => __( 'Disposable Email Block', 'reportedip-hive' ),
+				'description' => __( 'Block registrations from throwaway-mail providers. Baseline list is free; the live list arrives via Priority Sync.', 'reportedip-hive' ),
+			),
+			'security_headers'             => array(
+				'local'       => true,
+				'community'   => true,
+				'label'       => __( 'Security Headers', 'reportedip-hive' ),
+				'description' => __( 'Site-wide X-Content-Type-Options, X-Frame-Options and Referrer-Policy.', 'reportedip-hive' ),
+			),
+			'security_headers_advanced'    => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'professional',
+				'label'         => __( 'Advanced Security Headers', 'reportedip-hive' ),
+				'description'   => __( 'CSP builder, HSTS with preload, Permissions-Policy and the Cross-Origin-Opener/Embedder/Resource trio.', 'reportedip-hive' ),
+			),
+			'audit_log'                    => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'business',
+				'label'         => __( 'Audit Event Trail', 'reportedip-hive' ),
+				'description'   => __( 'User-lifecycle audit log (role changes with actor, new-IP alerts) with filtering, CSV/JSON export and long retention.', 'reportedip-hive' ),
+			),
 		);
 	}
 

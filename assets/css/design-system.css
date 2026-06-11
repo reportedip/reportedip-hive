@@ -701,6 +701,12 @@ button.rip-tier-lock--mode:hover {
     border-color: var(--rip-gray-400);
 }
 
+.rip-button--copied {
+    background: var(--rip-success);
+    color: white;
+    border-color: var(--rip-success);
+}
+
 .rip-button--success {
     background: var(--rip-gradient-success);
     color: white;
@@ -1121,6 +1127,15 @@ button.rip-tier-lock--mode:hover {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+.rip-hp-field {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
 }
 
 /* ==========================================================================

@@ -542,6 +542,33 @@ if ( ! function_exists( 'sanitize_text_field' ) ) {
 	}
 }
 
+if ( ! function_exists( 'sanitize_key' ) ) {
+	/**
+	 * Sanitizes a string key: lowercase alphanumerics, dashes and underscores.
+	 *
+	 * @param string $key Key to sanitize.
+	 * @return string
+	 */
+	function sanitize_key( $key ) {
+		return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $key ) );
+	}
+}
+
+if ( ! function_exists( 'wp_unslash' ) ) {
+	/**
+	 * Removes slashes from a string or recursively from an array of strings.
+	 *
+	 * @param string|array $value Value to unslash.
+	 * @return string|array
+	 */
+	function wp_unslash( $value ) {
+		if ( is_array( $value ) ) {
+			return array_map( 'wp_unslash', $value );
+		}
+		return is_string( $value ) ? stripslashes( $value ) : $value;
+	}
+}
+
 if ( ! function_exists( 'wp_kses_post' ) ) {
 	/**
 	 * Sanitizes content for allowed HTML tags for post content.
