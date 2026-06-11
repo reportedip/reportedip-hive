@@ -102,10 +102,21 @@ class ReportedIP_Hive_Audit_Logger {
 	/**
 	 * Register the lifecycle hooks — only when capture is available and enabled.
 	 *
+	 * The tier gate resolves translated feature labels, so checking it before
+	 * `init` would trigger WordPress 6.7's too-early textdomain notice (and
+	 * break cookie headers on debug installs). When called from the plugin
+	 * bootstrap the registration therefore defers itself to `init`; every
+	 * captured event (logins, profile updates, role changes) fires after
+	 * `init`, so nothing is missed.
+	 *
 	 * @return void
 	 * @since  2.1.2
 	 */
 	public function register_hooks() {
+		if ( ! did_action( 'init' ) && ! doing_action( 'init' ) ) {
+			add_action( 'init', array( $this, 'register_hooks' ), 1 );
+			return;
+		}
 		if ( ! self::is_available() ) {
 			return;
 		}
