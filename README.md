@@ -42,6 +42,10 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | Password policy | min length, character classes, optional HIBP k-anonymity | |
 | WooCommerce login | checkout + my-account forms tracked separately | Optional themed frontend 2FA on Professional plan |
 | Cookie-banner consent endpoints | always-bypassed | Real Cookie Banner, Complianz, Borlabs, CookieYes baked in |
+| Web Application Firewall | Paranoia Level 1 baseline | SQLi/XSS/traversal/LFI/scanner patterns; PL 2/3 ruleset with Professional; ReDoS-hardened, fail-open |
+| Verified bot detection | flag (default) or block | Official Google/Bing IP ranges first, FCrDNS fallback; genuine crawlers never blocked |
+| Disposable-email blocking | monitor (default) | Registration (WP + WooCommerce); privacy relays pass through by default |
+| Comment honeypot | on | Invisible decoy field, no CAPTCHA friction |
 
 ### Two-Factor Authentication — four methods
 
@@ -95,6 +99,8 @@ What the paid **Professional** (3 domains) and **Business** (15 domains, multi-b
 - **Managed SMS relay** — SMS OTP without your own carrier/Twilio contract.
 - **WooCommerce frontend 2FA** — the second factor rendered inside the storefront theme on My Account / checkout / WC blocks.
 - **Hardening Mode** — automatically tighten failed-login and reputation thresholds network-wide for one hour when a coordinated attack is detected.
+- **Advanced security headers** — HSTS, Permissions-Policy, the CSP builder (report-only first) and the cross-origin isolation trio; the basic header trio stays free.
+- **Priority Sync** — the deeper, Ed25519-signed WAF Paranoia-Level-2/3 rulesets plus the live bot-IP-range and disposable-domain feeds; the bundled baselines stay free and work offline. Business adds the append-only **audit event trail** (user-lifecycle events with the acting user, CSV/JSON export).
 - Higher API quotas, multi-site dashboard, priority blacklist sync, longer log retention, prepaid mail/SMS top-up bundles. Business adds white-label, the full WP-CLI surface, role-based login-time restrictions and a GDPR export tool.
 
 Pricing and the full tier matrix live at <https://reportedip.de>.
@@ -108,9 +114,9 @@ Pricing and the full tier matrix live at <https://reportedip.de>.
 
 ### Admin UX
 
-- **9-step setup wizard** (Welcome → Connect → Protection → 2FA → Privacy → Notifications → Login → Promote → Done) with privacy-first defaults and a celebratory final step
-- **Real-time dashboard** with 7- and 30-day Chart.js trend lines
-- **Five list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, plus the 2FA admin grid
+- **10-step setup wizard** (Welcome → Connect → Protection → Firewall → 2FA → Privacy → Notifications → Login → Promote → Done) with privacy-first defaults and a celebratory final step
+- **Real-time dashboard** with detection & hardening score gauges (0–100, A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines
+- **Six list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), plus the 2FA admin grid
 - **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup
 - **Trust badges** on every admin page
 
@@ -127,7 +133,7 @@ Pricing and the full tier matrix live at <https://reportedip.de>.
 - **WP-CLI** tree `wp reportedip 2fa` for user 2FA administration
 - **PHP filters** — `reportedip_hive_rest_bypass_routes`, `reportedip_hive_rest_sensitive_routes`, `reportedip_hive_event_category_map`, `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path`, `reportedip_hive_decoy_paths`, `reportedip_hive_bot_allowlist_patterns`
 - **Constants** — `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` (emergency override from `wp-config.php`)
-- **7 database tables** (auto-migrated, opt-in delete on uninstall)
+- **8 database tables** (auto-migrated, opt-in delete on uninstall)
 - **Internationalisation-ready** (text domain `reportedip-hive`, English source + German translation included)
 
 ### What this plugin does NOT include
@@ -135,8 +141,6 @@ Pricing and the full tier matrix live at <https://reportedip.de>.
 Honest scope so you can plan around it:
 
 - No malware scanner / file-integrity monitor
-- No web-application firewall (WAF) rules — IP-level blocking only
-- No `advanced-cache.php` drop-in (server-level firewall is the right tool for cached-public-page denial)
 - No Cloudflare API integration, no payment-fraud scoring
 
 Pair it with a malware scanner if your stack needs that surface. Hive deliberately stays focused on identity, brute-force and threat intelligence.
@@ -151,7 +155,7 @@ Pair it with a malware scanner if your stack needs that surface. Hive deliberate
    - Direct link (always latest): <https://github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip>
    - Or open the [latest release page](https://github.com/reportedip/reportedip-hive/releases/latest) and grab `reportedip-hive.zip` from the *Assets* section.
 2. WP Admin → *Plugins → Add New → Upload Plugin* → pick `reportedip-hive.zip`.
-3. Activate → run through the 9-step setup wizard.
+3. Activate → run through the 10-step setup wizard.
 
 > **Do not use the auto-generated "Source code (zip)" link** or the *Code → Download ZIP* button on the repository page. Those archives have a top-level folder named `reportedip-hive-X.Y.Z` (with the version) instead of `reportedip-hive/`. WordPress installs the plugin under that versioned slug, which breaks in-place updates and creates a duplicate plugin folder on every release. Only the asset `reportedip-hive.zip` is built for installation.
 
@@ -193,7 +197,7 @@ Hive 2.0+ is fully network-aware. The plugin header sets `Network: true`, so on 
 | Topic | Behaviour |
 |---|---|
 | Activation | Network-only (`Network: true` in plugin header). Single-site installs auto-migrate v1.x → v5 transparently. |
-| Tables | All seven plugin tables live under `$wpdb->base_prefix`. `logs`, `api_queue`, `stats` carry a `blog_id` column so the Network Admin can filter and Site Admins are auto-scoped. |
+| Tables | All eight plugin tables live under `$wpdb->base_prefix`. `logs`, `api_queue`, `stats` and `audit_log` carry a `blog_id` column so the Network Admin can filter and Site Admins are auto-scoped. |
 | Cross-site brute-force | Failed logins on Site A and Site B aggregate into the same central `attempts` row, so a streamed attack across sub-sites trips the threshold *faster*, and one `blocked` entry locks the IP out of every sub-site. |
 | Site Admin UI | Read-only Status / Logs (auto-scoped via `blog_id`) plus a 2FA Site Settings page with exactly two writable overrides: per-site Frontend-2FA slug and additive 2FA enforcement roles. Site Admins cannot drop a role the Network requires. |
 | Super Admins | Forced into 2FA setup unconditionally via `reportedip_hive_2fa_enforce_super_admins` (default on). |

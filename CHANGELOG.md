@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [2.2.0] — Unreleased
+## [2.1.2] — Unreleased
 
 ### New
 
@@ -44,12 +44,54 @@ All changes to ReportedIP Hive are documented here.
   a Spam Defence tab (disposable-email + honeypot) and the Extended Protection
   box. Hardening folds into the Firewall tab strip and the Audit Trail into
   Security › Activity, keeping the menu lean.
+- **Protection & hardening score.** Two dashboard gauges (0–100 plus an
+  A+–F grade, Mozilla-Observatory style) that rate the detection coverage and
+  the hardening posture, with per-item deep links to switch a sensor on.
+  Locked features count toward the visible potential, not the score.
+- **Security headers.** Hardening response headers on every front-end request:
+  the basic trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is
+  free; HSTS, Permissions-Policy, a Content-Security-Policy (report-only by
+  default) and the cross-origin trio (COOP/CORP/COEP) come with Professional.
+  Headers already sent by the server or another plugin are detected and left
+  untouched.
+- **Audit event trail (Business).** Append-only user-lifecycle trail — logins,
+  failed logins, password resets, profile updates, role changes including the
+  acting user, registrations and new-IP detection — with filters, CSV/JSON
+  export, GDPR export/erasure integration and retention cleanup. Standard
+  security logs stay available on every plan.
+- **Firewall step in the setup wizard.** The wizard now covers the WAF
+  (enable/report-only), verified-bot action, disposable-email mode and the
+  comment honeypot with their safe defaults.
+- **Settings export/import covers the firewall.** New `firewall`, `headers` and
+  `audit` sections carry the new configuration between sites; the host-specific
+  drop-in toggle and runtime ruleset state intentionally stay local.
+
+### Fixes
+
+- The pre-WordPress WAF drop-in is rebaked immediately after a rule sync and
+  after every whitelist change (queued once per request), so a freshly
+  whitelisted client or an updated ruleset no longer waits for the hourly
+  self-heal.
+- The drop-in guard now honours the configured trusted proxy header when
+  resolving the client IP, matching the in-WordPress engine — behind a proxy
+  the baked-in whitelist previously never matched.
+- Settings export/import reads and writes through the network-aware option
+  layer, so exports taken in the multisite network admin carry the real values.
+- The System Status page reports the WAF drop-in state (active, detected
+  server, config-target writability).
 
 ### Performance
 
 - WAF adds ~4 µs CPU per request and zero extra database queries when a
   persistent object cache is present; the whitelist lookup is de-duplicated on
   the request hot path so it is no longer queried twice per visitor.
+
+### Changed
+
+- The Firewall admin page renders from its own class and drives every toggle,
+  select and copy button through a single delegated script
+  (`assets/js/firewall.js`) instead of per-tab inline scripts; AJAX errors now
+  surface a message instead of silently reloading.
 
 ## [2.1.0] — 2026-06-10
 
