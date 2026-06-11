@@ -52,6 +52,13 @@ class ReportedIP_Hive_Bot_Verifier {
 	const CACHE_FAKE = 3600;
 
 	/**
+	 * Cache lifetime (seconds) for an `unknown` (DNS-undecidable) result. Kept
+	 * short so a transient resolver failure re-checks soon instead of leaving a
+	 * genuine crawler unverified for an hour.
+	 */
+	const CACHE_UNKNOWN = 900;
+
+	/**
 	 * Transient key prefix for cached verification verdicts.
 	 */
 	const CACHE_PREFIX = 'reportedip_hive_botverify_';
@@ -227,31 +234,48 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * @param string              $ip      Client IP.
 	 * @param callable|null       $ptr     PTR resolver `fn(string $ip): string|false`.
 	 * @param callable|null       $forward Forward resolver `fn(string $host): string|string[]|false` (one IP or a list of A/AAAA addresses).
-	 * @return string `verified` or `fake`.
+	 * @return string `verified`, `fake`, or `unknown` when DNS cannot decide.
 	 * @since  2.1.2
 	 */
 	public function classify( array $bot, $ip, $ptr = null, $forward = null ) {
-		$ranges = isset( $bot['ranges'] ) && is_array( $bot['ranges'] ) ? $bot['ranges'] : array();
-		if ( ! empty( $ranges ) ) {
-			foreach ( $ranges as $cidr ) {
-				if ( ReportedIP_Hive_Database::ip_in_cidr( $ip, (string) $cidr ) ) {
-					return 'verified';
-				}
+		$ranges  = isset( $bot['ranges'] ) && is_array( $bot['ranges'] ) ? $bot['ranges'] : array();
+		$domains = isset( $bot['domains'] ) && is_array( $bot['domains'] ) ? $bot['domains'] : array();
+
+		/*
+		 * Stage A — an official IP-range match is a decisive positive and touches
+		 * no DNS.
+		 */
+		foreach ( $ranges as $cidr ) {
+			if ( ReportedIP_Hive_Database::ip_in_cidr( $ip, (string) $cidr ) ) {
+				return 'verified';
 			}
-			return 'fake';
 		}
 
-		$domains = isset( $bot['domains'] ) && is_array( $bot['domains'] ) ? $bot['domains'] : array();
+		/*
+		 * A range list is a fast-path allowlist, not an exhaustive denylist:
+		 * Bing/Google publish more crawler /24s than any seed carries, so an
+		 * out-of-range IP must still get the FCrDNS check when the rule has
+		 * domain suffixes. Treating out-of-range as an automatic spoofer is what
+		 * flagged every genuine Bing crawler whose /24 was missing from the seed.
+		 * Only a range-only rule (no domains) is decisive on the range miss.
+		 */
 		if ( empty( $domains ) ) {
-			return 'fake';
+			return empty( $ranges ) ? 'unknown' : 'fake';
 		}
 
 		$ptr     = is_callable( $ptr ) ? $ptr : 'gethostbyaddr';
 		$forward = is_callable( $forward ) ? $forward : array( __CLASS__, 'resolve_host_ips' );
 
 		$host = call_user_func( $ptr, $ip );
+		/*
+		 * A failed PTR lookup — gethostbyaddr() returns the IP unchanged on
+		 * failure — is a DNS problem, NOT proof of a spoofer. Stay 'unknown' so a
+		 * genuine crawler on a host with flaky or rate-limited reverse DNS is
+		 * never flagged (the old code returned 'fake' here and mislabelled real
+		 * crawlers whenever the server's resolver hiccuped).
+		 */
 		if ( ! is_string( $host ) || '' === $host || $host === $ip ) {
-			return 'fake';
+			return 'unknown';
 		}
 		$host = strtolower( rtrim( $host, '.' ) );
 
@@ -266,11 +290,21 @@ class ReportedIP_Hive_Bot_Verifier {
 				break;
 			}
 		}
+		/*
+		 * The PTR resolved to a foreign domain — this is a confirmed spoofer.
+		 */
 		if ( ! $suffix_ok ) {
 			return 'fake';
 		}
 
-		$resolved   = call_user_func( $forward, $host );
+		$resolved = call_user_func( $forward, $host );
+		/*
+		 * Right PTR suffix but forward DNS is unavailable — cannot confirm or
+		 * deny, so stay 'unknown' rather than flag a probably-genuine crawler.
+		 */
+		if ( empty( $resolved ) ) {
+			return 'unknown';
+		}
 		$candidates = is_array( $resolved ) ? $resolved : array( $resolved );
 		foreach ( $candidates as $candidate ) {
 			$candidate = (string) $candidate;
@@ -278,6 +312,9 @@ class ReportedIP_Hive_Bot_Verifier {
 				return 'verified';
 			}
 		}
+		/*
+		 * Right suffix but no forward address confirms the IP — a forged PTR.
+		 */
 		return 'fake';
 	}
 
@@ -348,12 +385,19 @@ class ReportedIP_Hive_Bot_Verifier {
 		$key   = self::CACHE_PREFIX . md5( $ip . '|' . $token );
 
 		$cached = get_transient( $key );
-		if ( 'verified' === $cached || 'fake' === $cached ) {
+		if ( 'verified' === $cached || 'fake' === $cached || 'unknown' === $cached ) {
 			return $cached;
 		}
 
 		$verdict = $this->classify( $bot, $ip );
-		set_transient( $key, $verdict, 'verified' === $verdict ? self::CACHE_VERIFIED : self::CACHE_FAKE );
+		if ( 'verified' === $verdict ) {
+			$ttl = self::CACHE_VERIFIED;
+		} elseif ( 'unknown' === $verdict ) {
+			$ttl = self::CACHE_UNKNOWN;
+		} else {
+			$ttl = self::CACHE_FAKE;
+		}
+		set_transient( $key, $verdict, $ttl );
 		return $verdict;
 	}
 

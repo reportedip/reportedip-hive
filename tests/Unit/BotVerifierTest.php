@@ -58,9 +58,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'verified', $this->verifier()->classify( $bot, '66.249.66.1' ) );
 		}
 
-		public function test_classify_fake_when_outside_published_range(): void {
-			$bot = array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array( '66.249.66.0/24' ) );
+		public function test_classify_range_only_rule_fake_when_outside_range(): void {
+			$bot = array( 'ua' => 'facebookexternalhit', 'domains' => array(), 'ranges' => array( '2a03:2880::/29' ) );
 			$this->assertSame( 'fake', $this->verifier()->classify( $bot, '203.0.113.7' ) );
+		}
+
+		public function test_classify_falls_back_to_fcrdns_when_outside_range(): void {
+			// The real-world Bing case: a genuine crawler IP missing from the seed
+			// range list must still verify via reverse DNS, not be flagged fake.
+			$bot     = array( 'ua' => 'bingbot', 'domains' => array( '.search.msn.com' ), 'ranges' => array( '157.55.39.0/24' ) );
+			$ptr     = static function ( $ip ) {
+				return 'msnbot-52-167-144-158.search.msn.com';
+			};
+			$forward = static function ( $host ) {
+				return '52.167.144.158';
+			};
+			$this->assertSame( 'verified', $this->verifier()->classify( $bot, '52.167.144.158', $ptr, $forward ) );
+		}
+
+		public function test_classify_unknown_when_outside_range_and_ptr_fails(): void {
+			$bot = array( 'ua' => 'bingbot', 'domains' => array( '.search.msn.com' ), 'ranges' => array( '157.55.39.0/24' ) );
+			$ptr = static function ( $ip ) {
+				return $ip;
+			};
+			$this->assertSame( 'unknown', $this->verifier()->classify( $bot, '52.167.144.158', $ptr ) );
 		}
 
 		public function test_classify_verified_by_fcrdns(): void {
@@ -74,12 +95,29 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'verified', $this->verifier()->classify( $bot, '66.249.66.1', $ptr, $forward ) );
 		}
 
-		public function test_classify_fake_when_no_ptr(): void {
+		public function test_classify_unknown_when_no_ptr(): void {
+			// A failed reverse-DNS lookup is a resolver problem, not a spoofer.
 			$bot = array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array() );
 			$ptr = static function ( $ip ) {
 				return $ip;
 			};
-			$this->assertSame( 'fake', $this->verifier()->classify( $bot, '203.0.113.7', $ptr ) );
+			$this->assertSame( 'unknown', $this->verifier()->classify( $bot, '203.0.113.7', $ptr ) );
+		}
+
+		public function test_classify_unknown_when_forward_dns_unavailable(): void {
+			$bot     = array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array() );
+			$ptr     = static function ( $ip ) {
+				return 'crawl-1.googlebot.com';
+			};
+			$forward = static function ( $host ) {
+				return array();
+			};
+			$this->assertSame( 'unknown', $this->verifier()->classify( $bot, '66.249.66.1', $ptr, $forward ) );
+		}
+
+		public function test_classify_no_ranges_no_domains_is_unknown(): void {
+			$bot = array( 'ua' => 'weirdbot', 'domains' => array(), 'ranges' => array() );
+			$this->assertSame( 'unknown', $this->verifier()->classify( $bot, '203.0.113.7' ) );
 		}
 
 		public function test_classify_fake_when_ptr_domain_mismatch(): void {
