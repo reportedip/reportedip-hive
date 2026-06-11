@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.3
+Stable tag: 2.1.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.4 =
+
+Firewall admin UX overhaul: the Overview tab is now a mini-dashboard (per-module status, 7-day activity counters, recent firewall event stream), every tab opens with a short plain-language intro, and a new Server Setup tab gathers every web-server snippet in one place — the WAF auto_prepend_file directive (with a new php.ini / hosting-panel option next to the nginx snippet), the decoy rewrite rules and a server-level export of the configured security headers. Extended Protection setup is now verifiable: the status reports whether the guard actually executed for the current request. The Bot Verification tab shows the verified crawler list and 7-day spoofer counts; the Rule Sync tab brands synced rulesets as delivered by the reportedip.de Rule API. New: specific WAF block reason codes for SSRF, Log4Shell, PHP object injection, NoSQL, XXE, web-shell, CRLF and template injection. Fixed: the basic security headers can be saved again on free plans.
 
 = 2.1.3 =
 

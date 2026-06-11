@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.1.4] — 2026-06-11
 
 ### Changed
 
@@ -29,6 +29,15 @@ All changes to ReportedIP Hive are documented here.
   hides the Free-vs-Professional comparison once Priority Sync is active.
 - The Hardening tab's save button now also renders for plans without advanced
   headers, so the free basic headers can be saved again.
+
+### New
+
+- WAF block reason codes for the newer attack classes delivered through the
+  rule sync — SSRF, Log4Shell/JNDI, PHP object injection, NoSQL injection, XXE,
+  web-shell uploads, CRLF and template injection now surface a specific
+  `X-RIP-Ref` reason instead of the generic scan code. The detection rules
+  themselves ship through the server-delivered ruleset, not the bundled
+  baseline.
 
 ## [2.1.3] — 2026-06-11
 
