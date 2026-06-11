@@ -384,6 +384,7 @@ class ReportedIP_Hive {
 		if ( is_admin() ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ajax-handler.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-settings.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-firewall.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-two-factor-admin.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-logs-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-blocked-ips-table.php';
