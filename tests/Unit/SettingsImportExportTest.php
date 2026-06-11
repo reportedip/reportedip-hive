@@ -32,6 +32,8 @@ class SettingsImportExportTest extends TestCase {
 	protected function set_up() {
 		parent::set_up();
 
+		require_once dirname( __DIR__, 2 ) . '/includes/class-option-routing.php';
+
 		$class_path = dirname( __DIR__, 2 ) . '/admin/class-settings-import-export.php';
 		if ( ! class_exists( ReportedIP_Hive_Settings_Import_Export::class ) ) {
 			require_once $class_path;
@@ -52,7 +54,54 @@ class SettingsImportExportTest extends TestCase {
 		$this->assertContains( 'privacy_logs', $slugs );
 		$this->assertContains( 'performance', $slugs );
 		$this->assertContains( 'twofactor_global', $slugs );
+		$this->assertContains( 'firewall', $slugs );
+		$this->assertContains( 'headers', $slugs );
+		$this->assertContains( 'audit', $slugs );
 		$this->assertContains( 'ip_lists', $slugs );
+	}
+
+	/**
+	 * The firewall section carries the portable sensor settings but must never
+	 * export host-specific state: the drop-in toggle would write server config
+	 * files on import, and stored rulesets are runtime state.
+	 */
+	public function test_firewall_section_excludes_host_specific_state(): void {
+		$keys = ReportedIP_Hive_Settings_Import_Export::importable_keys();
+
+		$this->assertContains( 'reportedip_hive_waf_enabled', $keys );
+		$this->assertContains( 'reportedip_hive_bot_action', $keys );
+		$this->assertContains( 'reportedip_hive_disposable_email_action', $keys );
+		$this->assertContains( 'reportedip_hive_comment_honeypot_enabled', $keys );
+		$this->assertContains( 'reportedip_hive_headers_enabled', $keys );
+		$this->assertContains( 'reportedip_hive_csp_policy', $keys );
+		$this->assertContains( 'reportedip_hive_audit_retention_days', $keys );
+
+		$this->assertNotContains( 'reportedip_hive_waf_dropin_enabled', $keys, 'Drop-in toggle is host-specific and must stay local.' );
+		$this->assertNotContains( 'reportedip_hive_rule_sync_last_run', $keys, 'Sync timestamps are runtime state.' );
+		$this->assertNotContains( 'reportedip_hive_ruleset_waf', $keys, 'Stored rulesets are runtime state.' );
+	}
+
+	/**
+	 * Round-trip: exporting the firewall + headers sections and applying the
+	 * payload elsewhere reproduces the configuration.
+	 */
+	public function test_firewall_and_headers_round_trip(): void {
+		$GLOBALS['wp_options']['reportedip_hive_waf_report_only'] = true;
+		$GLOBALS['wp_options']['reportedip_hive_bot_action']      = 'block';
+		$GLOBALS['wp_options']['reportedip_hive_csp_mode']        = 'report_only';
+
+		$payload = ReportedIP_Hive_Settings_Import_Export::get_instance()
+			->build_export_payload( array( 'firewall', 'headers' ), false );
+
+		$GLOBALS['wp_options'] = array();
+
+		$result = ReportedIP_Hive_Settings_Import_Export::get_instance()
+			->apply_payload( json_decode( (string) wp_json_encode( $payload ), true ), array( 'firewall', 'headers' ) );
+
+		$this->assertGreaterThanOrEqual( 3, $result['written'] );
+		$this->assertTrue( $GLOBALS['wp_options']['reportedip_hive_waf_report_only'] );
+		$this->assertSame( 'block', $GLOBALS['wp_options']['reportedip_hive_bot_action'] );
+		$this->assertSame( 'report_only', $GLOBALS['wp_options']['reportedip_hive_csp_mode'] );
 	}
 
 	/**

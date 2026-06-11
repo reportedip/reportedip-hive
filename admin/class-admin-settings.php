@@ -4538,9 +4538,9 @@ RIPJS;
 	 */
 	public function security_page() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab navigation only, no data modification
-		$active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'ip_lists';
+		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'ip_lists';
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab navigation only, no data modification
-		$sub_tab = isset( $_GET['sub'] ) ? sanitize_text_field( wp_unslash( $_GET['sub'] ) ) : '';
+		$sub_tab = isset( $_GET['sub'] ) ? sanitize_key( wp_unslash( $_GET['sub'] ) ) : '';
 
 		if ( $active_tab === 'blocked' || $active_tab === 'whitelist' ) {
 			$sub_tab    = $active_tab;
@@ -4552,6 +4552,12 @@ RIPJS;
 		}
 		if ( $active_tab === 'api_queue' ) {
 			$active_tab = 'advanced';
+		}
+		if ( ! in_array( $active_tab, array( 'ip_lists', 'activity', 'advanced' ), true ) ) {
+			$active_tab = 'ip_lists';
+		}
+		if ( ! in_array( $sub_tab, array( '', 'blocked', 'whitelist', 'logs', 'lookup', 'audit' ), true ) ) {
+			$sub_tab = '';
 		}
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
@@ -6902,6 +6908,30 @@ RIPJS;
 						<div class="rip-info-item">
 							<span class="rip-info-label"><?php esc_html_e( 'Ruleset Versions', 'reportedip-hive' ); ?></span>
 							<span class="rip-info-value"><code><?php echo esc_html( implode( ', ', $ruleset_parts ) ); ?></code></span>
+						</div>
+						<?php
+						$dropin_mgr      = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+						$dropin_enabled  = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
+						$dropin_server   = $dropin_mgr->detect_server();
+						$dropin_writable = $dropin_mgr->is_writable_target();
+						?>
+						<div class="rip-info-item">
+							<span class="rip-info-label"><?php esc_html_e( 'WAF Drop-in', 'reportedip-hive' ); ?></span>
+							<span class="rip-info-value">
+								<?php if ( $dropin_mgr->is_active() ) : ?>
+									<span class="rip-badge rip-badge--success"><?php esc_html_e( 'Active', 'reportedip-hive' ); ?></span>
+								<?php elseif ( $dropin_enabled && 'nginx' === $dropin_server ) : ?>
+									<span class="rip-badge rip-badge--info"><?php esc_html_e( 'Enabled (manual nginx config)', 'reportedip-hive' ); ?></span>
+								<?php elseif ( $dropin_enabled ) : ?>
+									<span class="rip-badge rip-badge--warning"><?php esc_html_e( 'Enabled, directive missing', 'reportedip-hive' ); ?></span>
+								<?php else : ?>
+									<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'Disabled', 'reportedip-hive' ); ?></span>
+								<?php endif; ?>
+								<code><?php echo esc_html( $dropin_server ); ?></code>
+								<?php if ( $dropin_enabled && ! $dropin_writable ) : ?>
+									<span class="rip-badge rip-badge--warning"><?php esc_html_e( 'Target not writable', 'reportedip-hive' ); ?></span>
+								<?php endif; ?>
+							</span>
 						</div>
 					</div>
 				</div>
