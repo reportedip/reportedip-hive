@@ -1450,6 +1450,91 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
+	 * Get recent events restricted to a set of event types (firewall overview).
+	 *
+	 * Mirrors {@see get_recent_events()} including the dual UTC/MySQL cutoff,
+	 * but filters on an explicit event-type whitelist so a surface can show only
+	 * its own sensors' stream.
+	 *
+	 * @param string[] $event_types Event types to include.
+	 * @param int      $hours       Lookback window in hours.
+	 * @param int      $limit       Maximum rows.
+	 * @return array Event rows with `details` decoded to array.
+	 */
+	public function get_recent_events_by_types( array $event_types, $hours = 24, $limit = 10 ) {
+		global $wpdb;
+
+		$event_types = array_values( array_filter( array_map( 'strval', $event_types ) ) );
+		if ( empty( $event_types ) ) {
+			return array();
+		}
+
+		$table_name   = $wpdb->base_prefix . 'reportedip_hive_logs';
+		$cutoff_utc   = gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $hours ) * HOUR_IN_SECONDS );
+		$placeholders = implode( ',', array_fill( 0, count( $event_types ), '%s' ) );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders is a generated %s list; values are bound below.
+		$events = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM $table_name
+                 WHERE event_type IN ($placeholders)
+                   AND (created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d HOUR))
+                 ORDER BY created_at DESC
+                 LIMIT %d",
+				array_merge( $event_types, array( $cutoff_utc, $hours, $limit ) )
+			)
+		);
+
+		foreach ( $events as $event ) {
+			if ( is_string( $event->details ) ) {
+				$event->details = json_decode( $event->details, true );
+			}
+		}
+
+		return $events;
+	}
+
+	/**
+	 * Count events per event type within a lookback window (firewall overview).
+	 *
+	 * @param string[] $event_types Event types to count.
+	 * @param int      $hours       Lookback window in hours.
+	 * @return array<string,int> Map of event type to count (missing types are 0).
+	 */
+	public function get_event_type_counts( array $event_types, $hours = 24 ) {
+		global $wpdb;
+
+		$event_types = array_values( array_filter( array_map( 'strval', $event_types ) ) );
+		$counts      = array_fill_keys( $event_types, 0 );
+		if ( empty( $event_types ) ) {
+			return $counts;
+		}
+
+		$table_name   = $wpdb->base_prefix . 'reportedip_hive_logs';
+		$cutoff_utc   = gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $hours ) * HOUR_IN_SECONDS );
+		$placeholders = implode( ',', array_fill( 0, count( $event_types ), '%s' ) );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders is a generated %s list; values are bound below.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT event_type, COUNT(*) AS cnt FROM $table_name
+                 WHERE event_type IN ($placeholders)
+                   AND (created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d HOUR))
+                 GROUP BY event_type",
+				array_merge( $event_types, array( $cutoff_utc, $hours ) )
+			)
+		);
+
+		foreach ( (array) $rows as $row ) {
+			if ( isset( $counts[ $row->event_type ] ) ) {
+				$counts[ $row->event_type ] = (int) $row->cnt;
+			}
+		}
+
+		return $counts;
+	}
+
+	/**
 	 * Get IP management statistics
 	 */
 	public function get_ip_management_stats() {

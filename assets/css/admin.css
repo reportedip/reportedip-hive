@@ -1004,6 +1004,15 @@ code.ip-address {
     white-space: pre;
 }
 
+/* One-paragraph "what does this tab do" intro under the firewall tab strip. */
+.rip-tab-intro {
+    max-width: 60rem;
+    margin: 0 0 var(--rip-space-5, 1.25rem);
+    color: var(--rip-gray-600, #4B5563);
+    font-size: var(--rip-text-sm, 0.875rem);
+    line-height: 1.6;
+}
+
 /* ==========================================================================
    Override standard WordPress notices to use high contrast on our pages
    ========================================================================== */

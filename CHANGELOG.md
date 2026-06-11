@@ -4,6 +4,32 @@ All changes to ReportedIP Hive are documented here.
 
 ## [2.1.3] — 2026-06-11
 
+### Changed
+
+- **Firewall admin UX overhaul.** The Overview tab is now a real mini-dashboard:
+  per-module status table, 7-day activity counters and the recent firewall
+  event stream (new type-filtered log queries). Every tab opens with a short
+  plain-language intro explaining what the module does.
+- **One place for all server rules.** A new Server Setup tab bundles every
+  web-server-level snippet — the WAF `auto_prepend_file` directive, the decoy
+  rewrite rules and an optional server-level export of the configured security
+  headers (nginx `add_header` / Apache `Header` lines generated from the live
+  Hardening configuration). The WAF and Scan & Decoy tabs link there instead of
+  scattering snippets across tabs.
+- **Extended Protection setup is verifiable.** The drop-in status now reports
+  the definitive signal — whether the guard executed for the current request —
+  and shows "Setup complete" the moment it works. On nginx and managed hosts
+  the manual step is an explicit either/or choice: a php.ini /
+  hosting-panel `auto_prepend_file` line (new, usually the easiest route) or
+  the nginx snippet.
+- **Bot Verification tab** now shows the verified crawler list as badges
+  (range-verified vs rDNS-verified), 7-day spoofer counts and how verification
+  works; the Rule Sync tab brands synced rulesets as delivered by the
+  reportedip.de Rule API, adds rule counts and per-ruleset consumer links, and
+  hides the Free-vs-Professional comparison once Priority Sync is active.
+- The Hardening tab's save button now also renders for plans without advanced
+  headers, so the free basic headers can be saved again.
+
 ### Fixes
 
 - Verified-bot detection no longer flags genuine crawlers that connect over

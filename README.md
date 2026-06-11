@@ -116,6 +116,7 @@ Pricing and the full tier matrix live at <https://reportedip.de>.
 
 - **10-step setup wizard** (Welcome → Connect → Protection → Firewall → 2FA → Privacy → Notifications → Login → Promote → Done) with privacy-first defaults and a celebratory final step
 - **Real-time dashboard** with detection & hardening score gauges (0–100, A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines
+- **Firewall area** with an overview mini-dashboard (per-module status, 7-day activity, recent firewall events), per-module tabs that each open with a plain-language intro, and a **Server Setup tab** that gathers every web-server snippet in one place — the WAF `auto_prepend_file` directive (php.ini / hosting-panel line or nginx snippet, with live verification that the guard actually runs), the decoy rewrite rules and a server-level export of the configured security headers
 - **Six list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), plus the 2FA admin grid
 - **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup
 - **Trust badges** on every admin page

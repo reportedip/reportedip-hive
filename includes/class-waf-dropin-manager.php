@@ -262,6 +262,31 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	}
 
 	/**
+	 * Whether the guard actually executed for the current request — the
+	 * definitive "it works" signal. The guard defines the constant on every PHP
+	 * request (including wp-admin), so the admin page itself proves the chain
+	 * end to end, regardless of how the directive was installed (auto-written,
+	 * nginx snippet or a php.ini edit).
+	 *
+	 * @return bool
+	 * @since  2.1.3
+	 */
+	public function is_running() {
+		return defined( 'REPORTEDIP_HIVE_WAF_DROPIN' );
+	}
+
+	/**
+	 * Whether the generated guard file exists on disk.
+	 *
+	 * @return bool
+	 * @since  2.1.3
+	 */
+	public function guard_exists() {
+		$path = $this->prepend_path();
+		return '' !== $path && file_exists( $path );
+	}
+
+	/**
 	 * Detected server type token for the UI (apache|fpm|nginx|unknown).
 	 *
 	 * @return string
@@ -300,6 +325,18 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			. '    fastcgi_param PHP_VALUE "auto_prepend_file=' . $path . "\";\n"
 			. "    # keep your existing fastcgi_pass / include fastcgi_params directives below\n"
 			. '}';
+	}
+
+	/**
+	 * The php.ini / hosting-panel directive line, the manual alternative to the
+	 * nginx snippet on stacks where the operator can edit PHP settings (ISPConfig,
+	 * Plesk, cPanel "PHP options"). A php-fpm reload applies it.
+	 *
+	 * @return string
+	 * @since  2.1.3
+	 */
+	public function php_ini_snippet() {
+		return 'auto_prepend_file = ' . $this->prepend_path();
 	}
 
 	/**
