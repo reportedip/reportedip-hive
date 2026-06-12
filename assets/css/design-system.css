@@ -1104,6 +1104,7 @@ button.rip-tier-lock--mode:hover {
 
 /* Grid */
 .rip-grid { display: grid; }
+.rip-grid:not([class*="rip-gap-"]) { gap: var(--rip-space-4); }
 .rip-grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
 .rip-grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
 .rip-grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
@@ -1306,6 +1307,24 @@ button.rip-tier-lock--mode:hover {
 .rip-alert + .rip-content,
 .rip-alert + .rip-health-grid {
     margin-top: var(--rip-space-4);
+}
+
+/*
+ * Vertical rhythm between stacked top-level blocks inside a content panel
+ * (firewall tabs render several cards / grids directly under .rip-content,
+ * which is a padding-only container with no gap of its own).
+ */
+.rip-content > .rip-card,
+.rip-content > .rip-grid,
+.rip-content > .rip-alert,
+.rip-content > details {
+    margin-bottom: var(--rip-space-5);
+}
+.rip-content > .rip-card:last-child,
+.rip-content > .rip-grid:last-child,
+.rip-content > .rip-alert:last-child,
+.rip-content > details:last-child {
+    margin-bottom: 0;
 }
 
 /* ==========================================================================

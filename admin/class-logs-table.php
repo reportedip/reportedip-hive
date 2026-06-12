@@ -342,14 +342,28 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 		<div class="alignleft actions">
 			<select name="event_type">
 				<option value=""><?php esc_html_e( 'All Event Types', 'reportedip-hive' ); ?></option>
-				<option value="failed_login" <?php selected( $event_type, 'failed_login' ); ?>><?php esc_html_e( 'Failed Login', 'reportedip-hive' ); ?></option>
-				<option value="comment_spam" <?php selected( $event_type, 'comment_spam' ); ?>><?php esc_html_e( 'Comment Spam', 'reportedip-hive' ); ?></option>
-				<option value="xmlrpc_abuse" <?php selected( $event_type, 'xmlrpc_abuse' ); ?>><?php esc_html_e( 'XMLRPC Abuse', 'reportedip-hive' ); ?></option>
-				<option value="ip_blocked" <?php selected( $event_type, 'ip_blocked' ); ?>><?php esc_html_e( 'IP Blocked', 'reportedip-hive' ); ?></option>
-				<option value="hardening_mode_activated" <?php selected( $event_type, 'hardening_mode_activated' ); ?>><?php esc_html_e( 'Hardening Mode Activated', 'reportedip-hive' ); ?></option>
-				<option value="hardening_mode_extended" <?php selected( $event_type, 'hardening_mode_extended' ); ?>><?php esc_html_e( 'Hardening Mode Extended', 'reportedip-hive' ); ?></option>
-				<option value="hardening_mode_deactivated" <?php selected( $event_type, 'hardening_mode_deactivated' ); ?>><?php esc_html_e( 'Hardening Mode Deactivated', 'reportedip-hive' ); ?></option>
-				<option value="coordinated_attack_detected" <?php selected( $event_type, 'coordinated_attack_detected' ); ?>><?php esc_html_e( 'Coordinated Attack Detected', 'reportedip-hive' ); ?></option>
+				<optgroup label="<?php esc_attr_e( 'Login &amp; Spam', 'reportedip-hive' ); ?>">
+					<option value="failed_login" <?php selected( $event_type, 'failed_login' ); ?>><?php esc_html_e( 'Failed Login', 'reportedip-hive' ); ?></option>
+					<option value="comment_spam" <?php selected( $event_type, 'comment_spam' ); ?>><?php esc_html_e( 'Comment Spam', 'reportedip-hive' ); ?></option>
+					<option value="xmlrpc_abuse" <?php selected( $event_type, 'xmlrpc_abuse' ); ?>><?php esc_html_e( 'XMLRPC Abuse', 'reportedip-hive' ); ?></option>
+					<option value="ip_blocked" <?php selected( $event_type, 'ip_blocked' ); ?>><?php esc_html_e( 'IP Blocked', 'reportedip-hive' ); ?></option>
+				</optgroup>
+				<optgroup label="<?php esc_attr_e( 'Firewall', 'reportedip-hive' ); ?>">
+					<option value="waf_block" <?php selected( $event_type, 'waf_block' ); ?>><?php esc_html_e( 'WAF Block', 'reportedip-hive' ); ?></option>
+					<option value="waf_would_block" <?php selected( $event_type, 'waf_would_block' ); ?>><?php esc_html_e( 'WAF Match (report-only)', 'reportedip-hive' ); ?></option>
+					<option value="fake_bot" <?php selected( $event_type, 'fake_bot' ); ?>><?php esc_html_e( 'Spoofed Crawler (flagged)', 'reportedip-hive' ); ?></option>
+					<option value="fake_bot_blocked" <?php selected( $event_type, 'fake_bot_blocked' ); ?>><?php esc_html_e( 'Spoofed Crawler (blocked)', 'reportedip-hive' ); ?></option>
+					<option value="decoy_pathblock_hit" <?php selected( $event_type, 'decoy_pathblock_hit' ); ?>><?php esc_html_e( 'Decoy Path Hit', 'reportedip-hive' ); ?></option>
+					<option value="scan_404" <?php selected( $event_type, 'scan_404' ); ?>><?php esc_html_e( 'Scan Detected', 'reportedip-hive' ); ?></option>
+					<option value="disposable_email" <?php selected( $event_type, 'disposable_email' ); ?>><?php esc_html_e( 'Disposable Email', 'reportedip-hive' ); ?></option>
+					<option value="rule_sync_signature_fail" <?php selected( $event_type, 'rule_sync_signature_fail' ); ?>><?php esc_html_e( 'Ruleset Signature Failure', 'reportedip-hive' ); ?></option>
+				</optgroup>
+				<optgroup label="<?php esc_attr_e( 'Hardening Mode', 'reportedip-hive' ); ?>">
+					<option value="hardening_mode_activated" <?php selected( $event_type, 'hardening_mode_activated' ); ?>><?php esc_html_e( 'Hardening Mode Activated', 'reportedip-hive' ); ?></option>
+					<option value="hardening_mode_extended" <?php selected( $event_type, 'hardening_mode_extended' ); ?>><?php esc_html_e( 'Hardening Mode Extended', 'reportedip-hive' ); ?></option>
+					<option value="hardening_mode_deactivated" <?php selected( $event_type, 'hardening_mode_deactivated' ); ?>><?php esc_html_e( 'Hardening Mode Deactivated', 'reportedip-hive' ); ?></option>
+					<option value="coordinated_attack_detected" <?php selected( $event_type, 'coordinated_attack_detected' ); ?>><?php esc_html_e( 'Coordinated Attack Detected', 'reportedip-hive' ); ?></option>
+				</optgroup>
 			</select>
 
 			<select name="severity">
