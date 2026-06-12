@@ -23,8 +23,8 @@ export async function loginAsAdmin(page: Page, loginPath = '/wp-login.php'): Pro
 
     const skipOnboarding = page.locator('a:has-text("Set up later"), a:has-text("Skip"):not([href="#"])').first();
     if ((await skipOnboarding.count()) > 0 && (await skipOnboarding.isVisible().catch(() => false))) {
-        await skipOnboarding.click().catch(() => undefined);
-        await page.waitForLoadState('networkidle').catch(() => undefined);
+        await skipOnboarding.click({ timeout: 5_000 }).catch(() => undefined);
+        await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => undefined);
     }
 }
 
