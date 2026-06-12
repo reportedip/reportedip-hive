@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.6
+Stable tag: 2.1.7
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.7 =
+
+Changed: tier-gated features are now marked consistently across the whole admin UI — one compact tier badge everywhere, with a lock glyph linking to the plan comparison while locked and an "included in your plan" marker once unlocked, so the plan boundary stays visible on every page (Bot Verification and Disposable Email card headers included); the Free/Contributor header badge links to the plan comparison for admins. The Logs event-type filter is grouped and now covers all firewall events. Fixed: upgrade chips linked against a non-existent constant and silently fell back; the JSON log export delivered CSV and serialised the details column as "Array"; the WAF .user.ini directive never took effect on PHP-FPM/CGI hosts because the block was written with INI-invalid # comment markers (now ; markers, self-healing on existing installs); firewall tabs lost their vertical spacing.
 
 = 2.1.6 =
 

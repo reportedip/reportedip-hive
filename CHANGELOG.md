@@ -2,10 +2,35 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.1.7] — 2026-06-12
+
+### Changed
+
+- **Unified tier markers across the admin UI.** Every tier-gated control now
+  renders the same compact tier badge through a single helper: locked
+  features show the badge with a lock glyph linking to the plan comparison,
+  available features keep the badge as an "included in your plan" marker —
+  so paying customers keep seeing what their plan covers. This replaces four
+  ad-hoc inline-styled "PRO" mini badges, the mixed lock-chip/badge
+  constructs and a generic info badge on the Rule Sync comparison card.
+- **Bot Verification and Disposable Email now carry a visible tier marker**
+  in their card headers instead of burying the plan boundary in help text.
+- **The Free/Contributor tier badge in the page header now links to the plan
+  comparison** (shown to admins only); paid tiers stay non-interactive.
+- **The Logs event-type filter is grouped** (Login & Spam / Firewall /
+  Hardening Mode) and now covers the firewall events: WAF blocks and
+  report-only matches, spoofed crawlers, decoy-path hits, scan detection,
+  disposable-email matches and ruleset signature failures.
 
 ### Fixes
 
+- **Every tier-lock chip linked against a constant that never existed**
+  (`REPORTEDIP_UPGRADE_URL`), so the upgrade link silently fell back to a
+  hard-coded URL. All upgrade affordances now share one canonical pricing
+  URL.
+- **Firewall tabs rendered their stacked cards and grids without vertical
+  spacing** under the content panel; the design system now applies a
+  consistent rhythm between top-level blocks.
 - **The log export delivered CSV regardless of which export button was
   clicked, and the CSV Details column only contained the word "Array".** The
   AJAX handler read `format`/`days` from `$_POST` while the export buttons are
