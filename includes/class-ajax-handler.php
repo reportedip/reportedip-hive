@@ -337,6 +337,12 @@ class ReportedIP_Hive_Ajax_Handler {
 
 	/**
 	 * AJAX: Export logs
+	 *
+	 * The export buttons on the Logs tab are plain GET links, so the
+	 * parameters arrive in the query string — `format` and `days` are read
+	 * from `$_REQUEST` to support both the links and programmatic POSTs.
+	 * Reading `$_POST` only made every export fall back to the CSV/30-day
+	 * defaults regardless of the requested format.
 	 */
 	public function ajax_export_logs() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -345,15 +351,18 @@ class ReportedIP_Hive_Ajax_Handler {
 			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'reportedip-hive' ) ) );
 		}
 
-		$format = isset( $_POST['format'] ) ? sanitize_text_field( wp_unslash( $_POST['format'] ) ) : 'csv';
-		$days   = intval( $_POST['days'] ?? 30 );
+		$format = isset( $_REQUEST['format'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['format'] ) ) : 'csv';
+		$days   = isset( $_REQUEST['days'] ) ? absint( wp_unslash( $_REQUEST['days'] ) ) : 30;
+		if ( $days < 1 ) {
+			$days = 30;
+		}
 
 		$logs = $this->logger->get_logs( $days );
 
-		if ( $format === 'csv' ) {
-			$this->export_logs_csv( $logs );
-		} else {
+		if ( 'json' === $format ) {
 			$this->export_logs_json( $logs );
+		} else {
+			$this->export_logs_csv( $logs );
 		}
 	}
 
@@ -367,22 +376,41 @@ class ReportedIP_Hive_Ajax_Handler {
 		header( 'Content-Disposition: attachment; filename="reportedip-hive-logs-' . gmdate( 'Y-m-d' ) . '.csv"' );
 
 		$output = fopen( 'php://output', 'w' );
-		fputcsv( $output, array( 'Date', 'Event Type', 'IP Address', 'Details' ) );
+		fputcsv( $output, array( 'Date', 'Event Type', 'IP Address', 'Severity', 'Details' ) );
 
 		foreach ( $logs as $log ) {
-			fputcsv(
-				$output,
-				array(
-					$log->created_at,
-					$log->event_type,
-					$log->ip_address,
-					$log->details,
-				)
-			);
+			fputcsv( $output, self::csv_export_row( $log ) );
 		}
 
 		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- php://output stream
 		exit;
+	}
+
+	/**
+	 * Build one CSV export row for a log entry.
+	 *
+	 * `ReportedIP_Hive_Logger::get_logs()` JSON-decodes the `details` column
+	 * into an array, so the value must be re-encoded for the flat CSV cell —
+	 * passing the raw array to `fputcsv()` casts it to the literal string
+	 * "Array" and silently loses the entire payload.
+	 *
+	 * @param object $log Log row as returned by ReportedIP_Hive_Logger::get_logs().
+	 * @return array<int,string> Ordered cells: date, event type, IP, severity, details.
+	 * @since  2.1.7
+	 */
+	public static function csv_export_row( $log ) {
+		$details = isset( $log->details ) ? $log->details : '';
+		if ( is_array( $details ) || is_object( $details ) ) {
+			$details = (string) wp_json_encode( $details );
+		}
+
+		return array(
+			isset( $log->created_at ) ? (string) $log->created_at : '',
+			isset( $log->event_type ) ? (string) $log->event_type : '',
+			isset( $log->ip_address ) ? (string) $log->ip_address : '',
+			isset( $log->severity ) ? (string) $log->severity : '',
+			(string) $details,
+		);
 	}
 
 	/**

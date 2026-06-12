@@ -6,6 +6,14 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **The log export delivered CSV regardless of which export button was
+  clicked, and the CSV Details column only contained the word "Array".** The
+  AJAX handler read `format`/`days` from `$_POST` while the export buttons are
+  GET links, so the JSON export silently fell back to CSV; and the decoded
+  details array was handed straight to `fputcsv()`, which casts it to the
+  literal string "Array". The parameters are now read from `$_REQUEST`, the
+  details cell carries the full payload as JSON, and the CSV gains a Severity
+  column.
 - **The WAF `.user.ini` directive never took effect on PHP-FPM/CGI hosts.** The
   drop-in manager wrote the `auto_prepend_file` block via WordPress'
   `insert_with_markers()`, which uses `#` comment markers and injects a
