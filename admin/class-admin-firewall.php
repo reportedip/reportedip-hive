@@ -633,11 +633,10 @@ class ReportedIP_Hive_Admin_Firewall {
 			2 => __( 'Level 2 — recommended (adds blind SQLi, LFI wrappers, obfuscated XSS)', 'reportedip-hive' ),
 			3 => __( 'Level 3 — strict (aggressive, may need tuning)', 'reportedip-hive' ),
 		);
-		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-paranoia">' . esc_html__( 'Paranoia Level', 'reportedip-hive' ) . '</label>';
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-paranoia">' . esc_html__( 'Paranoia Level', 'reportedip-hive' ) . '</label> ';
+		ReportedIP_Hive_Admin_Settings::render_tier_marker( $paranoia_status );
 		if ( empty( $paranoia_status['available'] ) ) {
-			echo '<p class="rip-help-text">' . esc_html__( 'Level 1 is active. Higher levels are delivered with the Professional ruleset.', 'reportedip-hive' ) . ' ';
-			ReportedIP_Hive_Admin_Settings::render_tier_lock( $paranoia_status, array( 'label' => __( 'Unlock Level 2/3 with Professional', 'reportedip-hive' ) ) );
-			echo '</p>';
+			echo '<p class="rip-help-text">' . esc_html__( 'Level 1 is active. Higher levels are delivered with the Professional ruleset.', 'reportedip-hive' ) . '</p>';
 		} else {
 			echo '<select id="rip-waf-paranoia" class="rip-select" data-rip-action="reportedip_hive_waf_set_paranoia" data-rip-param="level">';
 			foreach ( $paranoia_levels as $level => $label ) {
@@ -795,7 +794,9 @@ class ReportedIP_Hive_Admin_Firewall {
 			$spoof_counts = ReportedIP_Hive_Database::get_instance()->get_event_type_counts( array( 'fake_bot', 'fake_bot_blocked' ), 7 * 24 );
 		}
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Verified Bot Detection', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Verified Bot Detection', 'reportedip-hive' ) . '</h2>';
+		ReportedIP_Hive_Admin_Settings::render_tier_marker( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' ) );
+		echo '</div><div class="rip-card__body">';
 
 		echo '<div class="rip-grid rip-grid-cols-4">';
 		self::render_stat_card(
@@ -891,7 +892,9 @@ class ReportedIP_Hive_Admin_Firewall {
 		$block_relays = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_email_relays', false );
 		$honeypot     = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_honeypot_enabled', true );
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Disposable Email', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Disposable Email', 'reportedip-hive' ) . '</h2>';
+		ReportedIP_Hive_Admin_Settings::render_tier_marker( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' ) );
+		echo '</div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'Inspects the e-mail address at registration (WordPress and WooCommerce) against the throwaway-mail list. Monitor logs a match; Block rejects the registration. The live, frequently-updated list rides the Professional ruleset.', 'reportedip-hive' ) . '</p>';
 
 		echo '<div class="rip-grid rip-grid-cols-2">';
@@ -1342,7 +1345,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		}
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Active rulesets', 'reportedip-hive' ) . '</h2>';
-		ReportedIP_Hive_Admin_Settings::render_tier_badge( $has_priority ? 'professional' : 'free' );
+		ReportedIP_Hive_Admin_Settings::render_tier_marker( $priority );
 		echo '</div><div class="rip-card__body">';
 
 		if ( $has_priority ) {
@@ -1382,8 +1385,9 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '<p class="rip-help-text">' . esc_html__( 'Sync:', 'reportedip-hive' ) . ' ' . ( $enabled ? esc_html__( 'enabled', 'reportedip-hive' ) : esc_html__( 'disabled', 'reportedip-hive' ) ) . ' &middot; ' . esc_html__( 'Last sync:', 'reportedip-hive' ) . ' ' . ( $last_run ? esc_html( wp_date( 'Y-m-d H:i:s', $last_run ) ) : esc_html__( 'never (baseline only)', 'reportedip-hive' ) ) . '</p>';
 
 		if ( ! $has_priority ) {
-			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active and free on every plan. Priority Sync — deeper coverage and frequent updates — is part of the Professional plan.', 'reportedip-hive' ) . '</p>';
-			ReportedIP_Hive_Admin_Settings::render_tier_lock( $priority, array( 'label' => __( 'Unlock Priority Sync with Professional', 'reportedip-hive' ) ) );
+			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active and free on every plan. Priority Sync — deeper coverage and frequent updates — is part of the Professional plan.', 'reportedip-hive' ) . ' ';
+			ReportedIP_Hive_Admin_Settings::render_tier_lock( $priority, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) );
+			echo '</p>';
 		} else {
 			echo '<button type="button" class="rip-button rip-button--primary" id="rip-rule-sync-now" data-rip-action="reportedip_hive_rule_sync_now">' . esc_html__( 'Sync now', 'reportedip-hive' ) . '</button>';
 		}
@@ -1423,16 +1427,22 @@ class ReportedIP_Hive_Admin_Firewall {
 		}
 		echo '</ul></div></div>';
 
-		$pro_state = $has_priority
-			? '<span class="rip-badge rip-badge--success">' . esc_html__( 'Active on your plan', 'reportedip-hive' ) . '</span>'
-			: '<span class="rip-badge rip-badge--info">' . esc_html__( 'Professional and higher', 'reportedip-hive' ) . '</span>';
 		echo '<div class="rip-card"><div class="rip-card__header rip-card__header--icon"><h3 class="rip-card__title">' . esc_html__( 'Priority Sync', 'reportedip-hive' ) . '</h3>';
 		ReportedIP_Hive_Admin_Settings::render_tier_badge( 'professional' );
 		echo '</div><div class="rip-card__body"><ul class="rip-pricing-card__features">';
 		foreach ( $pro_features as $feature ) {
 			echo '<li>' . esc_html( $feature ) . '</li>';
 		}
-		echo '</ul><p class="rip-help-text">' . $pro_state . '</p></div></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $pro_state is built from esc_html__ literals above.
+		echo '</ul><p class="rip-help-text">';
+		if ( $has_priority ) {
+			echo '<span class="rip-badge rip-badge--success">' . esc_html__( 'Active on your plan', 'reportedip-hive' ) . '</span>';
+		} else {
+			ReportedIP_Hive_Admin_Settings::render_tier_lock(
+				ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' ),
+				array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) )
+			);
+		}
+		echo '</p></div></div>';
 
 		echo '</div>';
 	}
@@ -1521,9 +1531,10 @@ class ReportedIP_Hive_Admin_Firewall {
 		);
 		echo '</div></div>';
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Advanced Headers', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Advanced Headers', 'reportedip-hive' ) . '</h2>';
+		ReportedIP_Hive_Admin_Settings::render_tier_marker( $adv_status );
+		echo '</div><div class="rip-card__body">';
 		if ( ! $adv_ok ) {
-			ReportedIP_Hive_Admin_Settings::render_tier_lock( $adv_status, array( 'label' => __( 'Advanced headers — Professional', 'reportedip-hive' ) ) );
 			echo '<p class="rip-help-text">' . esc_html__( 'HSTS, Permissions-Policy, the CSP builder and the Cross-Origin headers unlock with Professional. The basic headers above stay free.', 'reportedip-hive' ) . '</p>';
 			echo '</div></div>';
 			printf(

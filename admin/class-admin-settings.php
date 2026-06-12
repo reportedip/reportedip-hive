@@ -292,9 +292,19 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php if ( ! empty( $opts['show_mode'] ) ) : ?>
 				<?php self::render_mode_badge(); ?>
 			<?php endif; ?>
-			<?php if ( ! empty( $opts['show_tier'] ) ) : ?>
-				<?php self::render_tier_badge(); ?>
-			<?php endif; ?>
+			<?php
+			if ( ! empty( $opts['show_tier'] ) ) {
+				$tier_key  = ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info()['key'];
+				$tier_opts = array();
+				if ( in_array( $tier_key, array( 'free', 'contributor' ), true ) && current_user_can( 'manage_options' ) ) {
+					$tier_opts = array(
+						'href'  => self::pricing_url(),
+						'title' => __( 'Compare plans — unlock PRO protection, managed 2FA delivery and priority rulesets', 'reportedip-hive' ),
+					);
+				}
+				self::render_tier_badge( null, $tier_opts );
+			}
+			?>
 		</div>
 		<?php
 	}
@@ -325,21 +335,149 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Render the tier badge.
 	 *
 	 * @param string|null $tier Optional explicit tier (defaults to current tier).
+	 * @param array       $opts {
+	 *     Optional. Render flags.
+	 *     @type bool   $small  Compact variant for inline placement (default false).
+	 *     @type bool   $locked Render a lock glyph instead of the tier icon (default false).
+	 *     @type string $href   When non-empty the badge renders as an external link.
+	 *     @type string $title  Tooltip override (defaults to the tier description).
+	 * }
 	 * @return void
 	 * @since 1.5.3
 	 */
-	public static function render_tier_badge( $tier = null ) {
+	public static function render_tier_badge( $tier = null, $opts = array() ) {
+		$opts = wp_parse_args(
+			$opts,
+			array(
+				'small'  => false,
+				'locked' => false,
+				'href'   => '',
+				'title'  => '',
+			)
+		);
+
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$info         = $mode_manager->get_tier_info( $tier );
-		?>
-		<span
-			class="rip-tier-badge <?php echo esc_attr( $info['badge_class'] ); ?>"
-			title="<?php echo esc_attr( $info['description'] ); ?>"
-		>
-			<?php echo self::kses_inline_svg( $info['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally; the SVG is whitelisted by the helper. ?>
-			<?php echo esc_html( $info['short_label'] ); ?>
-		</span>
-		<?php
+
+		$classes = 'rip-tier-badge ' . $info['badge_class'];
+		if ( ! empty( $opts['small'] ) ) {
+			$classes .= ' rip-tier-badge--sm';
+		}
+
+		$title = '' !== $opts['title'] ? $opts['title'] : $info['description'];
+
+		if ( '' !== $opts['href'] ) {
+			printf(
+				'<a class="%1$s" title="%2$s" href="%3$s" target="_blank" rel="noopener noreferrer">',
+				esc_attr( $classes ),
+				esc_attr( $title ),
+				esc_url( $opts['href'] )
+			);
+		} else {
+			printf(
+				'<span class="%1$s" title="%2$s">',
+				esc_attr( $classes ),
+				esc_attr( $title )
+			);
+		}
+
+		if ( ! empty( $opts['locked'] ) ) {
+			echo '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h.5A1.5 1.5 0 0117 10.5v6A1.5 1.5 0 0115.5 18h-11A1.5 1.5 0 013 16.5v-6A1.5 1.5 0 014.5 9H5zm2 0V7a3 3 0 116 0v2H7z" clip-rule="evenodd"/></svg>';
+		} else {
+			echo self::kses_inline_svg( $info['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally; the SVG is whitelisted by the helper.
+		}
+
+		echo esc_html( $info['short_label'] );
+
+		echo '' !== $opts['href'] ? '</a>' : '</span>';
+	}
+
+	/**
+	 * Render the canonical tier marker for a tier-gated feature.
+	 *
+	 * Single entry point that keeps the tier story visible in both directions:
+	 *
+	 *  - feature locked by tier  — compact tier badge with a lock glyph,
+	 *    linked to the pricing page so the upgrade path is one click away
+	 *  - feature locked by mode  — delegates to the mode tier-lock chip
+	 *  - feature available       — the same compact tier badge without the
+	 *    lock, so paying customers keep seeing what their plan includes
+	 *  - feature has no tier gate — renders nothing
+	 *
+	 * @param array $status Output of Mode_Manager::feature_status().
+	 * @param array $opts {
+	 *     Optional. Render flags.
+	 *     @type bool   $link Whether the locked badge links out (default true);
+	 *                        set false when the marker sits inside another link.
+	 *     @type string $href Override the locked-badge link target.
+	 * }
+	 * @return void
+	 * @since 2.1.7
+	 */
+	public static function render_tier_marker( $status, $opts = array() ) {
+		if ( empty( $status ) || ! is_array( $status ) || empty( $status['min_tier'] ) ) {
+			return;
+		}
+
+		$opts = wp_parse_args(
+			$opts,
+			array(
+				'link' => true,
+				'href' => '',
+			)
+		);
+
+		$min_tier = (string) $status['min_tier'];
+
+		if ( ! empty( $status['available'] ) ) {
+			self::render_tier_badge(
+				$min_tier,
+				array(
+					'small' => true,
+					'title' => __( 'Included in your plan', 'reportedip-hive' ),
+				)
+			);
+			return;
+		}
+
+		$reason = $status['reason'] ?? '';
+
+		if ( 'mode' === $reason ) {
+			self::render_tier_lock( $status, '' !== $opts['href'] ? array( 'href' => $opts['href'] ) : array() );
+			return;
+		}
+
+		if ( 'tier' !== $reason ) {
+			return;
+		}
+
+		$tier_label = ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info( $min_tier )['label'];
+		$href       = '';
+		if ( ! empty( $opts['link'] ) ) {
+			$href = '' !== $opts['href'] ? $opts['href'] : self::pricing_url();
+		}
+
+		self::render_tier_badge(
+			$min_tier,
+			array(
+				'small'  => true,
+				'locked' => true,
+				'href'   => $href,
+				/* translators: %s = plan name (e.g. "Professional") */
+				'title'  => sprintf( __( 'Available with the %s plan and higher — compare plans', 'reportedip-hive' ), $tier_label ),
+			)
+		);
+	}
+
+	/**
+	 * Canonical target for upgrade affordances (locked tier markers, header
+	 * badge): the public pricing page where plans can be compared and booked.
+	 *
+	 * @return string
+	 * @since 2.1.7
+	 */
+	public static function pricing_url() {
+		return 'https://reportedip.de/pricing/';
 	}
 
 	/**
@@ -439,7 +577,7 @@ class ReportedIP_Hive_Admin_Settings {
 			$variant    = ( 'business' === $min_tier || 'enterprise' === $min_tier )
 				? 'rip-tier-lock--business'
 				: '';
-			$href       = $opts['href'] ?? ( defined( 'REPORTEDIP_UPGRADE_URL' ) ? REPORTEDIP_UPGRADE_URL : 'https://reportedip.de/pricing/' );
+			$href       = $opts['href'] ?? self::pricing_url();
 			$label      = $opts['label'] ?? sprintf(
 				/* translators: %s = tier name (e.g. "PRO", "Business") */
 				__( '%s+', 'reportedip-hive' ),
@@ -487,9 +625,7 @@ class ReportedIP_Hive_Admin_Settings {
 			return;
 		}
 
-		$upgrade_url = defined( 'REPORTEDIP_HIVE_UPGRADE_URL' )
-			? REPORTEDIP_HIVE_UPGRADE_URL
-			: 'https://reportedip.de/pricing/';
+		$upgrade_url = self::pricing_url();
 		?>
 		<div class="rip-alert rip-alert--info rip-pro-upsell">
 			<p class="rip-pro-upsell__title">
@@ -1439,7 +1575,7 @@ class ReportedIP_Hive_Admin_Settings {
 	private function render_audit_tab() {
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
 		if ( empty( $status['available'] ) ) {
-			self::render_tier_lock( $status, array( 'label' => __( 'Unlock the Audit Log with Business', 'reportedip-hive' ) ) );
+			self::render_tier_marker( $status );
 			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The user-lifecycle audit trail — logins, role changes with the actor, new-IP alerts — unlocks with Business. Your standard security events stay available in the Event Log.', 'reportedip-hive' ) . '</div>';
 			return;
 		}
@@ -1452,13 +1588,16 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$csv_url  = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_audit_export&format=csv' ), 'reportedip_hive_audit_export' );
 		$json_url = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_audit_export&format=json' ), 'reportedip_hive_audit_export' );
+		echo '<p>';
 		printf(
-			'<p><a class="rip-button rip-button--secondary" href="%s">%s</a> <a class="rip-button rip-button--secondary" href="%s">%s</a></p>',
+			'<a class="rip-button rip-button--secondary" href="%s">%s</a> <a class="rip-button rip-button--secondary" href="%s">%s</a> ',
 			esc_url( $csv_url ),
 			esc_html__( 'Export CSV', 'reportedip-hive' ),
 			esc_url( $json_url ),
 			esc_html__( 'Export JSON', 'reportedip-hive' )
 		);
+		self::render_tier_marker( $status );
+		echo '</p>';
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page slug echoed back into the filter form.
 		$page = isset( $_REQUEST['page'] ) ? sanitize_key( wp_unslash( $_REQUEST['page'] ) ) : 'reportedip-hive-security';
@@ -1730,9 +1869,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<h2 class="rip-settings-section__title">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 						<?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?>
-						<?php if ( $frontend_locked_by_tier ) : ?>
-							&nbsp;<?php self::render_tier_lock( $frontend_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-						<?php endif; ?>
+						&nbsp;<?php self::render_tier_marker( $frontend_status ); ?>
 					</h2>
 					<p class="rip-settings-section__desc">
 						<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
@@ -4181,9 +4318,8 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php esc_html_e( 'Hardening Mode', 'reportedip-hive' ); ?>
 					<?php
 					$hm_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'hardening_mode' );
-					if ( ! empty( $hm_status['min_tier'] ) && empty( $hm_status['available'] ) ) {
-						echo ' <span class="rip-tier-badge rip-tier-badge--professional" style="font-size:10px;padding:2px 6px;">PRO</span>';
-					}
+					echo ' ';
+					self::render_tier_marker( $hm_status, array( 'link' => false ) );
 					?>
 				</a>
 			</nav>
@@ -6788,7 +6924,7 @@ class ReportedIP_Hive_Admin_Settings {
 								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
 									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 									<?php esc_html_e( '100% mail delivery via reportedip.de', 'reportedip-hive' ); ?>
-									<?php self::render_tier_badge( 'professional' ); ?>
+									<?php self::render_tier_marker( $mail_relay_status ); ?>
 								</h3>
 								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
 									<li><?php esc_html_e( 'Clean SPF / DKIM / DMARC reputation — no more spam folders', 'reportedip-hive' ); ?></li>
@@ -6797,16 +6933,13 @@ class ReportedIP_Hive_Admin_Settings {
 								</ul>
 								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">
 									<?php esc_html_e( 'Included with Professional (500/mo) and Business (2,500/mo).', 'reportedip-hive' ); ?>
-									<?php if ( ! $mail_relay_status['available'] ) : ?>
-										&nbsp;<?php self::render_tier_lock( $mail_relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-									<?php endif; ?>
 								</p>
 							</div>
 							<div class="rip-card rip-relay-highlight rip-relay-highlight--sms">
 								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
 									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
 									<?php esc_html_e( 'Managed SMS-2FA delivery (Professional and above)', 'reportedip-hive' ); ?>
-									<?php self::render_tier_badge( 'professional' ); ?>
+									<?php self::render_tier_marker( $sms_relay_status ); ?>
 								</h3>
 								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
 									<li><?php esc_html_e( 'No third-party SMS contract, no top-up management', 'reportedip-hive' ); ?></li>
@@ -6815,9 +6948,6 @@ class ReportedIP_Hive_Admin_Settings {
 								</ul>
 								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">
 									<?php esc_html_e( 'Included with Professional (25/mo) and Business (75/mo + bundles).', 'reportedip-hive' ); ?>
-									<?php if ( ! $sms_relay_status['available'] ) : ?>
-										&nbsp;<?php self::render_tier_lock( $sms_relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-									<?php endif; ?>
 								</p>
 							</div>
 						</div>
@@ -7782,11 +7912,7 @@ class ReportedIP_Hive_Admin_Settings {
 							<?php esc_html_e( 'Enable automatic hardening on coordinated-attack detection', 'reportedip-hive' ); ?>
 						</span>
 					</label>
-					<?php if ( ! $is_available && 'tier' === $status['reason'] ) : ?>
-						&nbsp;<?php self::render_tier_lock( $status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-					<?php else : ?>
-						&nbsp;<span class="rip-tier-badge rip-tier-badge--professional" style="font-size:10px;padding:2px 6px;">PRO</span>
-					<?php endif; ?>
+					&nbsp;<?php self::render_tier_marker( $status ); ?>
 					<?php if ( ! $is_available ) : ?>
 						<p class="rip-help-text"><?php esc_html_e( 'Available on Professional, Business and Enterprise plans. On by default; switch it off here if you prefer manual control.', 'reportedip-hive' ); ?></p>
 					<?php else : ?>

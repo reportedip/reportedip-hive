@@ -403,11 +403,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							<?php esc_html_e( 'SMS code', 'reportedip-hive' ); ?>
 						</span>
 					</label>
-					<?php if ( $sms_locked && 'tier' === $sms_relay_status['reason'] ) : ?>
-						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $sms_relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-					<?php else : ?>
-						&nbsp;<span class="rip-tier-badge rip-tier-badge--professional" style="font-size:10px;padding:2px 6px;">PRO</span>
-					<?php endif; ?>
+					&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $sms_relay_status ); ?>
 					<p class="rip-help-text">
 						<?php esc_html_e( 'Delivered through the managed reportedip.de relay (Professional plan and higher). Less secure than Authenticator or Passkey, so use it only as a fallback.', 'reportedip-hive' ); ?>
 					</p>
@@ -498,11 +494,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				<h2 class="rip-settings-section__title">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 					<?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?>
-					<?php if ( $rip_frontend_locked && 'tier' === $rip_frontend_status['reason'] ) : ?>
-						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $rip_frontend_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-					<?php else : ?>
-						&nbsp;<span class="rip-tier-badge rip-tier-badge--professional" style="font-size:10px;padding:2px 6px;">PRO</span>
-					<?php endif; ?>
+					&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $rip_frontend_status ); ?>
 				</h2>
 				<p class="rip-settings-section__desc">
 					<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>

@@ -282,6 +282,35 @@
     height: 0.95rem;
 }
 
+/* Compact variant for inline placement next to titles, toggles and nav tabs. */
+.rip-tier-badge--sm {
+    padding: 0.125rem 0.45rem;
+    font-size: 0.625rem;
+    gap: 0.25rem;
+}
+
+.rip-tier-badge--sm svg {
+    width: 0.7rem;
+    height: 0.7rem;
+}
+
+/* Linked badge (locked marker or header upgrade affordance). */
+a.rip-tier-badge {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a.rip-tier-badge:hover {
+    text-decoration: none;
+    filter: brightness(1.08);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+}
+
+a.rip-tier-badge--free:hover {
+    filter: none;
+    box-shadow: var(--rip-shadow-sm);
+}
+
 .rip-tier-badge--free {
     background: var(--rip-gray-200);
     color: var(--rip-gray-700);

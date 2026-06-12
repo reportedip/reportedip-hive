@@ -554,7 +554,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			<div class="rip-wizard__tier-teaser">
 				<article class="rip-tier-card">
 					<header class="rip-tier-card__header">
-						<span class="rip-tier-badge rip-tier-badge--professional"><?php esc_html_e( 'PRO', 'reportedip-hive' ); ?></span>
+						<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( 'professional' ); ?>
 						<h3 class="rip-tier-card__title"><?php esc_html_e( 'Reliable 2FA delivery', 'reportedip-hive' ); ?></h3>
 					</header>
 					<ul class="rip-tier-card__list">
@@ -568,7 +568,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				</article>
 				<article class="rip-tier-card">
 					<header class="rip-tier-card__header">
-						<span class="rip-tier-badge rip-tier-badge--business"><?php esc_html_e( 'Business', 'reportedip-hive' ); ?></span>
+						<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( 'business' ); ?>
 						<h3 class="rip-tier-card__title"><?php esc_html_e( 'Agencies & WooCommerce', 'reportedip-hive' ); ?></h3>
 					</header>
 					<ul class="rip-tier-card__list">
@@ -1136,11 +1136,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<div class="rip-method-card<?php echo esc_attr( $sms_classes ); ?>" data-method="sms">
 							<span class="rip-method-card__check"></span>
 							<div class="rip-method-card__badges">
-								<?php if ( $sms_locked && 'tier' === $sms_relay_status['reason'] ) : ?>
-									<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $sms_relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-								<?php else : ?>
-									<span class="rip-tier-badge rip-tier-badge--professional"><?php esc_html_e( 'PRO', 'reportedip-hive' ); ?></span>
-								<?php endif; ?>
+								<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $sms_relay_status ); ?>
 							</div>
 							<div class="rip-method-card__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
@@ -1170,7 +1166,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'email' ) ); ?>" data-method="email">
 							<span class="rip-method-card__check"></span>
 							<div class="rip-method-card__badges">
-								<span class="rip-tier-badge rip-tier-badge--professional"><?php esc_html_e( 'PRO mail relay', 'reportedip-hive' ); ?></span>
+								<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'mail_relay_via_api' ) ); ?>
 							</div>
 							<div class="rip-method-card__icon">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -1274,9 +1270,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					<div class="rip-config-card__header">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 						<h3><?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?></h3>
-						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
-							&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $frontend_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-						<?php endif; ?>
+						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $frontend_status ); ?>
 					</div>
 					<div class="rip-config-card__body">
 						<p class="rip-help-block">
