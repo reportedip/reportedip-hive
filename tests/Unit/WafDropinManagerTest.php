@@ -221,5 +221,34 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( "\$trusted = ''", $php, 'Without a configured trusted header the guard must not read any proxy header.' );
 			$this->assertStringContainsString( 'REMOTE_ADDR', $php );
 		}
+
+		public function test_neutralize_guard_keeps_file_as_inert_stub(): void {
+			$path = $this->mgr()->prepend_path();
+			$this->assertNotSame( '', $path );
+			if ( ! is_dir( dirname( $path ) ) ) {
+				mkdir( dirname( $path ), 0777, true );
+			}
+			file_put_contents( $path, "<?php\ndefine( 'REPORTEDIP_HIVE_WAF_DROPIN', 2 );\n" );
+
+			$ok = $this->call_private( 'neutralize_guard', array() );
+			$this->assertTrue( $ok );
+
+			$this->assertFileExists( $path, 'The guard must be neutralised, never deleted — a dangling auto_prepend_file would 500 the whole site.' );
+			$after = (string) file_get_contents( $path );
+			$this->assertStringNotContainsString( "define( 'REPORTEDIP_HIVE_WAF_DROPIN'", $after, 'The inert stub must not define the active marker, so is_running() reports false.' );
+			$this->assertStringContainsString( 'return;', $after );
+			$this->assert_valid_php( $after );
+
+			unlink( $path );
+		}
+
+		public function test_neutralize_guard_is_noop_when_file_absent(): void {
+			$path = $this->mgr()->prepend_path();
+			if ( '' !== $path && file_exists( $path ) ) {
+				unlink( $path );
+			}
+			$this->assertTrue( $this->call_private( 'neutralize_guard', array() ) );
+			$this->assertFileDoesNotExist( $path, 'Neutralisation must not create a guard file where none existed.' );
+		}
 	}
 }

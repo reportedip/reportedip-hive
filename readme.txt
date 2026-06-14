@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.7
+Stable tag: 2.1.8
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.8 =
+
+Security: the Extended Protection (WAF drop-in) can no longer take a site offline when it is removed. When the auto_prepend_file directive lived in a file Hive cannot edit — an nginx fastcgi_param or a hand-edited php.ini line — deactivating or deleting the plugin used to delete the guard file while that directive stayed behind, leaving PHP pointing at a missing file and crashing every request (including wp-admin) with a 500. Removal now strips the directives Hive controls (.htaccess, .user.ini) and neutralises the guard to an inert placeholder instead of deleting it, so a leftover directive can never reference a missing file. Server Setup now shows a prominent warning plus recovery steps next to the nginx/php.ini snippet.
 
 = 2.1.7 =
 

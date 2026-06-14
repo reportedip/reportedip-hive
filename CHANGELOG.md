@@ -2,6 +2,28 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.8] — 2026-06-14
+
+### Security
+
+- **Extended Protection (WAF drop-in) can no longer take a site offline when
+  it is removed.** When the `auto_prepend_file` directive lived in a file Hive
+  cannot edit — an nginx `fastcgi_param` or a hand-edited `php.ini` line —
+  deactivating or deleting the plugin used to delete the guard file while that
+  directive stayed behind, leaving PHP pointing at a missing file and crashing
+  every request (including wp-admin) with a 500. Removal now strips the
+  directives Hive does control (`.htaccess`, `.user.ini`) and *neutralises* the
+  guard to an inert placeholder instead of deleting it, so a leftover directive
+  can never reference a missing file. This mirrors how Wordfence keeps its
+  `wordfence-waf.php` fail-safe.
+
+### Changed
+
+- **Server Setup now shows a prominent warning and recovery steps** next to the
+  nginx / php.ini snippet: how to remove the directive before uninstalling and,
+  if a 500 ever appears, how to recover by commenting out the line and reloading
+  PHP-FPM / nginx — no FTP file restore needed.
+
 ## [2.1.7] — 2026-06-12
 
 ### Changed

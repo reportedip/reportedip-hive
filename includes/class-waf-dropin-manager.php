@@ -14,11 +14,16 @@
  * PHP-FPM/CGI gets a `.user.ini` directive, and nginx gets a copy-paste snippet
  * (never auto-written). The generated guard is fail-open — any error or missing
  * dependency lets the request through so the drop-in can never take the site
- * down. Removal always strips the directive *before* deleting the guard file so
- * a stale `auto_prepend_file` can never point at a missing file. The guard is
- * rebaked immediately (queued once per request on shutdown) when the `waf`
- * ruleset is re-applied or the IP whitelist changes; the hourly self-heal is
- * only the fallback.
+ * down. Removal strips every directive the plugin controls (`.htaccess`,
+ * `.user.ini`) and then *neutralises* the guard to an inert stub instead of
+ * deleting it: a directive the plugin cannot reach (an nginx `fastcgi_param` or
+ * a hand-edited `php.ini` `auto_prepend_file`) would otherwise point at a
+ * missing file and fatal every request — the classic "waf-drop-in 500" that
+ * locks the admin out of their own site. An always-present, do-nothing stub
+ * makes that failure mode structurally impossible. The guard is rebaked
+ * immediately (queued once per request on shutdown) when the `waf` ruleset is
+ * re-applied or the IP whitelist changes; the hourly self-heal is only the
+ * fallback.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.de>
@@ -220,9 +225,17 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	}
 
 	/**
-	 * Remove the drop-in completely. Strips the directive from BOTH possible
-	 * targets FIRST, then deletes the guard file — never the other way round,
-	 * or a stale auto_prepend_file would fatal every request.
+	 * Remove the drop-in. Strips the directive from BOTH plugin-controlled
+	 * targets FIRST, then *neutralises* the guard to an inert stub instead of
+	 * deleting it.
+	 *
+	 * Deleting the guard file is the original sin behind the "waf-drop-in 500":
+	 * an nginx `fastcgi_param` or a hand-edited `php.ini auto_prepend_file` line
+	 * lives outside everything the plugin can write, so stripping `.htaccess` /
+	 * `.user.ini` leaves that pointer in place. A deleted target then fatals
+	 * every PHP request — including wp-admin — and the site can only be revived
+	 * over FTP/SSH. Leaving a do-nothing stub on disk keeps any such orphaned
+	 * pointer harmless: PHP loads an existing file that immediately returns.
 	 *
 	 * @return bool True (best effort; missing pieces are treated as removed).
 	 * @since  2.1.2
@@ -235,12 +248,42 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$this->strip_directive( $this->htaccess_path() );
 		$this->strip_directive( $this->user_ini_path() );
 
-		$prepend = $this->prepend_path();
-		if ( '' !== $prepend && file_exists( $prepend ) ) {
-			wp_delete_file( $prepend );
-		}
+		return $this->neutralize_guard();
+	}
 
-		return true;
+	/**
+	 * Overwrite the guard file with an inert stub so a stale `auto_prepend_file`
+	 * the plugin cannot reach (nginx / hand-edited php.ini) can never point at a
+	 * missing file. A do-nothing-but-present file is always safe; a dangling
+	 * pointer is a site-wide 500. Wordfence's `wordfence-waf.php` works the same
+	 * way — the prepend target is engineered to be fail-safe, not deleted.
+	 *
+	 * The stub deliberately does NOT define `REPORTEDIP_HIVE_WAF_DROPIN`, so
+	 * {@see is_running()} correctly reports the WAF as inactive afterwards.
+	 *
+	 * @return bool True on success or when there is nothing to neutralise.
+	 * @since  2.1.8
+	 */
+	private function neutralize_guard() {
+		$prepend = $this->prepend_path();
+		if ( '' === $prepend ) {
+			return true;
+		}
+		if ( ! file_exists( $prepend ) ) {
+			return true;
+		}
+		$stub = "<?php\n"
+			. "/**\n"
+			. " * ReportedIP Hive WAF drop-in — DISABLED.\n"
+			. " *\n"
+			. " * This file is intentionally inert. It is left in place (rather than\n"
+			. " * deleted) so a leftover auto_prepend_file directive in php.ini or an\n"
+			. " * nginx fastcgi_param cannot point at a missing file and break the site\n"
+			. " * with a 500 error. It is safe to delete once no auto_prepend_file points\n"
+			. " * here.\n"
+			. " */\n"
+			. "return;\n";
+		return false !== file_put_contents( $prepend, $stub ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Neutralising a same-host auto_prepend_file target; WP_Filesystem cannot reliably write outside the plugin dir.
 	}
 
 	/**

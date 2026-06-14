@@ -1208,7 +1208,13 @@ class ReportedIP_Hive_Admin_Firewall {
 			__( 'For direct nginx access: merge this into your existing "location ~ \\.php$" block and reload nginx. Do not combine with Option A.', 'reportedip-hive' )
 		);
 
-		echo '<p class="rip-help-text">' . esc_html__( 'Important: remove the directive again before deactivating the plugin, otherwise PHP would reference a file that no longer exists.', 'reportedip-hive' ) . '</p>';
+		echo '<div class="rip-alert rip-alert--warning">';
+		echo '<strong>' . esc_html__( 'Before deactivating or deleting Hive, remove this directive from your php.ini / nginx config first.', 'reportedip-hive' ) . '</strong> ';
+		echo esc_html__( 'Because this directive lives in a file Hive cannot edit, it stays behind when the plugin is removed. Hive now leaves an inert placeholder at the guard path so a leftover directive can no longer crash the site with a 500 error — but the cleanest path is still to remove the line yourself.', 'reportedip-hive' );
+		echo '<br><br>';
+		echo '<strong>' . esc_html__( 'Recovery, if the site ever returns a 500 referencing reportedip-hive-waf.php:', 'reportedip-hive' ) . '</strong> ';
+		echo esc_html__( 'comment out the auto_prepend_file line in your php.ini / nginx config (prefix it with a semicolon, or delete it) and reload PHP-FPM / nginx. No FTP file restore is required.', 'reportedip-hive' );
+		echo '</div>';
 
 		echo '</div></div>';
 	}

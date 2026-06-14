@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive 2.1.6\n"
+"Project-Id-Version: ReportedIP Hive 2.1.7\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-12T07:23:57+00:00\n"
+"POT-Creation-Date: 2026-06-14T14:19:34+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -207,7 +207,7 @@ msgstr ""
 #: admin/class-admin-firewall.php:983
 #: admin/class-admin-firewall.php:1063
 #: admin/class-admin-firewall.php:1078
-#: admin/class-admin-firewall.php:1483
+#: admin/class-admin-firewall.php:1489
 #: admin/class-admin-settings.php:3521
 #: admin/class-admin-settings.php:6179
 #: admin/class-setup-wizard.php:1838
@@ -221,7 +221,7 @@ msgstr ""
 #: admin/class-admin-firewall.php:944
 #: admin/class-admin-firewall.php:983
 #: admin/class-admin-firewall.php:1078
-#: admin/class-admin-firewall.php:1483
+#: admin/class-admin-firewall.php:1489
 #: admin/class-admin-settings.php:6185
 msgid "Disabled"
 msgstr ""
@@ -251,12 +251,12 @@ msgstr ""
 #: admin/class-admin-firewall.php:421
 #: admin/class-admin-firewall.php:694
 #: admin/class-admin-firewall.php:916
-#: admin/class-admin-firewall.php:1476
-#: admin/class-admin-firewall.php:1515
-#: admin/class-admin-firewall.php:1574
-#: admin/class-admin-firewall.php:1608
-#: admin/class-admin-firewall.php:1618
-#: admin/class-admin-firewall.php:1628
+#: admin/class-admin-firewall.php:1482
+#: admin/class-admin-firewall.php:1521
+#: admin/class-admin-firewall.php:1580
+#: admin/class-admin-firewall.php:1614
+#: admin/class-admin-firewall.php:1624
+#: admin/class-admin-firewall.php:1634
 #: admin/class-setup-wizard.php:1030
 #: admin/class-setup-wizard.php:1849
 #: admin/class-setup-wizard.php:1885
@@ -327,7 +327,7 @@ msgid "Scan detector: %1$s · Decoy trap: %2$s"
 msgstr ""
 
 #: admin/class-admin-firewall.php:420
-#: admin/class-admin-firewall.php:1479
+#: admin/class-admin-firewall.php:1485
 #: includes/class-mode-manager.php:320
 msgid "Security Headers"
 msgstr ""
@@ -813,326 +813,338 @@ msgstr ""
 msgid "For direct nginx access: merge this into your existing \"location ~ \\.php$\" block and reload nginx. Do not combine with Option A."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1211
-msgid "Important: remove the directive again before deactivating the plugin, otherwise PHP would reference a file that no longer exists."
+#: admin/class-admin-firewall.php:1212
+msgid "Before deactivating or deleting Hive, remove this directive from your php.ini / nginx config first."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1234
+#: admin/class-admin-firewall.php:1213
+msgid "Because this directive lives in a file Hive cannot edit, it stays behind when the plugin is removed. Hive now leaves an inert placeholder at the guard path so a leftover directive can no longer crash the site with a 500 error — but the cleanest path is still to remove the line yourself."
+msgstr ""
+
+#: admin/class-admin-firewall.php:1215
+msgid "Recovery, if the site ever returns a 500 referencing reportedip-hive-waf.php:"
+msgstr ""
+
+#: admin/class-admin-firewall.php:1216
+msgid "comment out the auto_prepend_file line in your php.ini / nginx config (prefix it with a semicolon, or delete it) and reload PHP-FPM / nginx. No FTP file restore is required."
+msgstr ""
+
+#: admin/class-admin-firewall.php:1240
 msgid "Decoy Path Block (rewrite rules)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1235
+#: admin/class-admin-firewall.php:1241
 msgid "Blocks the bait paths at the web-server layer so real backup files on disk are never served directly. Every snippet rewrites to /index.php on purpose: the Hive sensor still loads, logs the hit and reports it — a bare return 403 would skip detection entirely."
 msgstr ""
 
 #. translators: 1: opening link tag to the Scan & Decoy tab, 2: closing tag.
-#: admin/class-admin-firewall.php:1241
+#: admin/class-admin-firewall.php:1247
 #, php-format
 msgid "The decoy trap is currently off — enable it on the %1$sScan & Decoy tab%2$s before adding server rules."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1247
+#: admin/class-admin-firewall.php:1253
 msgid "On Apache this block is auto-managed in .htaccess — the snippet below shows verbatim what Hive wrote (or would write). No manual step needed."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1252
+#: admin/class-admin-firewall.php:1258
 msgid "Apache (.htaccess) — auto-managed"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1257
+#: admin/class-admin-firewall.php:1263
 msgid "nginx — regex form (plain nginx)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1262
+#: admin/class-admin-firewall.php:1268
 msgid "nginx — exact-match form (ISPConfig & managed stacks)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1264
+#: admin/class-admin-firewall.php:1270
 msgid "Use this variant when your host template ships a \"location ~ /\\.\" dot-file deny rule before your custom directives — exact-match locations have higher priority than any regex location and survive that ordering."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1284
+#: admin/class-admin-firewall.php:1290
 msgid "Security Headers at the web server (optional)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1285
+#: admin/class-admin-firewall.php:1291
 msgid "Hive already sends the configured headers via PHP on every WordPress response — nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror your live configuration from the Hardening tab."
 msgstr ""
 
 #. translators: 1: opening link tag to the Hardening tab, 2: closing tag.
-#: admin/class-admin-firewall.php:1291
+#: admin/class-admin-firewall.php:1297
 #, php-format
 msgid "No headers are configured yet. Enable the header engine on the %1$sHardening tab%2$s first — the snippets here update automatically."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1307
+#: admin/class-admin-firewall.php:1313
 msgid "Show server snippets (generated from your current header settings)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1310
+#: admin/class-admin-firewall.php:1316
 msgid "nginx (server block)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1312
+#: admin/class-admin-firewall.php:1318
 msgid "When a header is set at the server, Hive detects it and stops sending its own copy — no duplicates."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1316
+#: admin/class-admin-firewall.php:1322
 msgid "Apache (.htaccess or vhost, requires mod_headers)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1334
+#: admin/class-admin-firewall.php:1340
 msgid "The detection rules behind the WAF, Bot Verification, Spam Defence and Scan Detection are not hard-coded: they are versioned rulesets, maintained on reportedip.de, signed with Ed25519 and delivered through the Rule API. A bundled baseline ships with the plugin, so every install is protected even fully offline."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1347
+#: admin/class-admin-firewall.php:1353
 msgid "Active rulesets"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1352
+#: admin/class-admin-firewall.php:1358
 msgid "Priority Sync is active on your plan — the rulesets below refresh automatically from the reportedip.de Rule API, signed and verified on every download."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1354
+#: admin/class-admin-firewall.php:1360
 msgid "Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1358
+#: admin/class-admin-firewall.php:1364
 msgid "Ruleset"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1358
+#: admin/class-admin-firewall.php:1364
 msgid "Feeds"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1358
+#: admin/class-admin-firewall.php:1364
 msgid "Rules"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1358
+#: admin/class-admin-firewall.php:1364
 msgid "Version"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1358
+#: admin/class-admin-firewall.php:1364
 msgid "Source"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1366
+#: admin/class-admin-firewall.php:1372
 msgid "reportedip.de Rule API"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1367
+#: admin/class-admin-firewall.php:1373
 msgid "Bundled baseline"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1378
+#: admin/class-admin-firewall.php:1384
 msgid "bundled"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1385
+#: admin/class-admin-firewall.php:1391
 msgid "Sync:"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1385
+#: admin/class-admin-firewall.php:1391
 #: admin/class-admin-settings.php:1892
 msgid "enabled"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1385
+#: admin/class-admin-firewall.php:1391
 #: admin/class-admin-settings.php:1896
 msgid "disabled"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1385
+#: admin/class-admin-firewall.php:1391
 msgid "Last sync:"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1385
+#: admin/class-admin-firewall.php:1391
 #: admin/class-admin-settings.php:6162
 msgid "never (baseline only)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1388
+#: admin/class-admin-firewall.php:1394
 msgid "The bundled baseline rulesets stay active and free on every plan. Priority Sync — deeper coverage and frequent updates — is part of the Professional plan."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1389
-#: admin/class-admin-firewall.php:1442
+#: admin/class-admin-firewall.php:1395
+#: admin/class-admin-firewall.php:1448
 #: admin/class-admin-settings.php:783
 #: admin/class-two-factor-admin.php:1190
 msgid "Unlock with Professional"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1392
+#: admin/class-admin-firewall.php:1398
 msgid "Sync now"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1410
+#: admin/class-admin-firewall.php:1416
 msgid "WAF engine — always on, every plan"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1411
+#: admin/class-admin-firewall.php:1417
 msgid "Baseline rulesets (OWASP Top 10, Paranoia Level 1)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1412
+#: admin/class-admin-firewall.php:1418
 msgid "Bundled with the plugin — no connection required"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1415
+#: admin/class-admin-firewall.php:1421
 msgid "Deeper coverage (Paranoia Level 2/3, obfuscation & bypass)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1416
+#: admin/class-admin-firewall.php:1422
 msgid "Server-delivered, Ed25519-signed rule updates"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1417
+#: admin/class-admin-firewall.php:1423
 msgid "Frequent refresh via the Community Network"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1422
+#: admin/class-admin-firewall.php:1428
 msgid "Included — every plan"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1430
+#: admin/class-admin-firewall.php:1436
 msgid "Priority Sync"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1438
+#: admin/class-admin-firewall.php:1444
 msgid "Active on your plan"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1460
+#: admin/class-admin-firewall.php:1466
 msgid "Security headers are unavailable."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1464
+#: admin/class-admin-firewall.php:1470
 msgid "Hardening response headers tell the browser to refuse risky behaviour — MIME sniffing, framing by foreign sites, leaking referrers, downgrade to HTTP. Hive sends them via PHP on every front-end response; an optional server-level export for static files lives on the Server Setup tab."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1475
+#: admin/class-admin-firewall.php:1481
 #: admin/class-setup-wizard.php:1883
 msgid "On"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1480
+#: admin/class-admin-firewall.php:1486
 msgid "Sends hardening response headers on every front-end request. The basic trio is free; HSTS, Permissions-Policy, the Content-Security-Policy and the Cross-Origin headers are part of advanced hardening. A header already set by your server or another plugin is detected and left untouched."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1485
-#: admin/class-admin-firewall.php:1495
+#: admin/class-admin-firewall.php:1491
+#: admin/class-admin-firewall.php:1501
 msgid "Header engine"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1491
+#: admin/class-admin-firewall.php:1497
 msgid "These headers are already set elsewhere and are left untouched:"
 msgstr ""
 
 #. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
-#: admin/class-admin-firewall.php:1499
+#: admin/class-admin-firewall.php:1505
 #, php-format
 msgid "Running nginx? The %1$sServer Setup tab%2$s generates matching add_header lines from this configuration so static files are covered too."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1506
+#: admin/class-admin-firewall.php:1512
 msgid "Basic Headers"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1507
+#: admin/class-admin-firewall.php:1513
 msgid "X-Content-Type-Options: nosniff"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1511
+#: admin/class-admin-firewall.php:1517
 msgid "X-Frame-Options (clickjacking)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1522
+#: admin/class-admin-firewall.php:1528
 msgid "Referrer-Policy"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1534
+#: admin/class-admin-firewall.php:1540
 msgid "Advanced Headers"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1538
+#: admin/class-admin-firewall.php:1544
 msgid "HSTS, Permissions-Policy, the CSP builder and the Cross-Origin headers unlock with Professional. The basic headers above stay free."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1542
-#: admin/class-admin-firewall.php:1638
+#: admin/class-admin-firewall.php:1548
+#: admin/class-admin-firewall.php:1644
 msgid "Save headers"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1547
+#: admin/class-admin-firewall.php:1553
 msgid "HTTP Strict Transport Security (HSTS)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1551
+#: admin/class-admin-firewall.php:1557
 msgid "HSTS max-age"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1553
+#: admin/class-admin-firewall.php:1559
 msgid "6 months"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1554
+#: admin/class-admin-firewall.php:1560
 msgid "1 year"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1555
+#: admin/class-admin-firewall.php:1561
 msgid "2 years (preload-ready)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1559
+#: admin/class-admin-firewall.php:1565
 msgid "HSTS includeSubDomains"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1560
+#: admin/class-admin-firewall.php:1566
 msgid "HSTS preload"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1564
+#: admin/class-admin-firewall.php:1570
 msgid "Permissions-Policy"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1572
+#: admin/class-admin-firewall.php:1578
 msgid "Content-Security-Policy mode"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1575
+#: admin/class-admin-firewall.php:1581
 msgid "Report-Only (test first — recommended)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1576
+#: admin/class-admin-firewall.php:1582
 msgid "Enforce"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1580
+#: admin/class-admin-firewall.php:1586
 msgid "Enforcing a CSP can break themes and plugins that rely on inline scripts. Always run Report-Only first and review the violations before you enforce."
 msgstr ""
 
-#: admin/class-admin-firewall.php:1587
+#: admin/class-admin-firewall.php:1593
 msgid "CSP policy"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1594
+#: admin/class-admin-firewall.php:1600
 msgid "Insert OWASP baseline"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1598
+#: admin/class-admin-firewall.php:1604
 msgid "CSP report-uri (optional)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1606
+#: admin/class-admin-firewall.php:1612
 msgid "Cross-Origin-Opener-Policy"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1616
+#: admin/class-admin-firewall.php:1622
 msgid "Cross-Origin-Resource-Policy"
 msgstr ""
 
-#: admin/class-admin-firewall.php:1626
+#: admin/class-admin-firewall.php:1632
 msgid "Cross-Origin-Embedder-Policy"
 msgstr ""
 
