@@ -327,6 +327,246 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
+	 * Fetch the active WAF exceptions (allowlist), cached network-wide.
+	 *
+	 * The WAF engine reads this on every front-end request, so the active set
+	 * is cached for 300 seconds; {@see self::add_waf_exception()} and
+	 * {@see self::remove_waf_exception()} invalidate it on write.
+	 *
+	 * @return array<int,object> Active exception rows ordered newest first.
+	 * @since  2.1.9
+	 */
+	public function get_active_waf_exceptions() {
+		global $wpdb;
+
+		/*
+		 * Hot-path guard: the WAF reads this on every front-end request. A count
+		 * marker (default 0, so it also short-circuits before the v10 migration
+		 * creates the table) skips the query entirely on the overwhelming
+		 * majority of installs that hold no exceptions.
+		 */
+		if ( class_exists( 'ReportedIP_Hive_Option_Routing' )
+			&& 0 === (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_exceptions_active', 0 ) ) {
+			return array();
+		}
+
+		$cached = wp_cache_get( 'rip_waf_exceptions', 'reportedip' );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_waf_exceptions';
+		$rows       = $wpdb->get_results( "SELECT * FROM $table_name WHERE is_active = 1 ORDER BY created_at DESC" );
+		$rows       = is_array( $rows ) ? $rows : array();
+
+		wp_cache_set( 'rip_waf_exceptions', $rows, 'reportedip', 300 );
+
+		return $rows;
+	}
+
+	/**
+	 * List WAF exceptions for the admin surface.
+	 *
+	 * @param bool $active_only Only active rows when true.
+	 * @return array<int,object> Exception rows ordered newest first.
+	 * @since  2.1.9
+	 */
+	public function get_waf_exceptions( $active_only = true ) {
+		global $wpdb;
+
+		$table_name   = $wpdb->base_prefix . 'reportedip_hive_waf_exceptions';
+		$where_clause = $active_only ? 'WHERE is_active = 1' : '';
+
+		$rows = $wpdb->get_results( "SELECT * FROM $table_name $where_clause ORDER BY created_at DESC" );
+
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * Add a WAF exception to the backend allowlist.
+	 *
+	 * A `scope='all'` exception with neither a path prefix nor an IP scope is
+	 * rejected — it would disable the whole engine. Duplicate active rows
+	 * (same scope, rule, path and IP) are not inserted twice.
+	 *
+	 * @param array<string,mixed> $args {
+	 *     @type string      $scope       'rule', 'group' or 'all'.
+	 *     @type string|null $rule_id     Rule id (scope=rule) or group name (scope=group).
+	 *     @type string|null $path_prefix Optional leading-slash path prefix.
+	 *     @type string|null $ip_address  Optional IP or CIDR scope.
+	 *     @type string      $reason      Free-text reason.
+	 *     @type int|null    $created_from_log_id Originating log row id.
+	 *     @type string      $source      'manual', 'log' or 'filter'.
+	 *     @type int|null    $added_by    User id; defaults to current user.
+	 * }
+	 * @return int|WP_Error Inserted row id, or a WP_Error on invalid input.
+	 * @since  2.1.9
+	 */
+	public function add_waf_exception( array $args ) {
+		global $wpdb;
+
+		$scope = isset( $args['scope'] ) ? (string) $args['scope'] : 'rule';
+		if ( ! in_array( $scope, array( 'rule', 'group', 'all' ), true ) ) {
+			return new WP_Error( 'rip_waf_exception_scope', __( 'Invalid exception scope.', 'reportedip-hive' ) );
+		}
+
+		$rule_id     = isset( $args['rule_id'] ) ? trim( (string) $args['rule_id'] ) : '';
+		$path_prefix = isset( $args['path_prefix'] ) ? trim( (string) $args['path_prefix'] ) : '';
+		$ip_address  = isset( $args['ip_address'] ) ? trim( (string) $args['ip_address'] ) : '';
+
+		if ( 'all' === $scope && '' === $path_prefix && '' === $ip_address ) {
+			return new WP_Error(
+				'rip_waf_exception_too_broad',
+				__( 'A whole-engine exception must be scoped to at least a path or an IP address.', 'reportedip-hive' )
+			);
+		}
+
+		if ( in_array( $scope, array( 'rule', 'group' ), true ) && '' === $rule_id ) {
+			return new WP_Error(
+				'rip_waf_exception_rule_required',
+				__( 'A rule or group identifier is required for this exception scope.', 'reportedip-hive' )
+			);
+		}
+
+		if ( '' !== $path_prefix && '/' !== $path_prefix[0] ) {
+			$path_prefix = '/' . $path_prefix;
+		}
+
+		$ip_type = null;
+		if ( '' !== $ip_address ) {
+			if ( false !== strpos( $ip_address, '/' ) ) {
+				$ip_type = 'cidr';
+			} elseif ( false !== strpos( $ip_address, ':' ) ) {
+				$ip_type = 'ipv6';
+			} else {
+				$ip_type = 'ipv4';
+			}
+			if ( 'cidr' !== $ip_type && ! filter_var( $ip_address, FILTER_VALIDATE_IP ) ) {
+				return new WP_Error( 'rip_waf_exception_ip', __( 'Invalid IP address.', 'reportedip-hive' ) );
+			}
+		}
+
+		$source   = isset( $args['source'] ) && in_array( $args['source'], array( 'manual', 'log', 'filter' ), true )
+			? (string) $args['source']
+			: 'manual';
+		$added_by = isset( $args['added_by'] ) ? (int) $args['added_by'] : get_current_user_id();
+		$log_id   = isset( $args['created_from_log_id'] ) && $args['created_from_log_id'] ? (int) $args['created_from_log_id'] : null;
+
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_waf_exceptions';
+
+		$existing = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM $table_name
+				 WHERE is_active = 1 AND scope = %s
+				 AND COALESCE(rule_id,'') = %s
+				 AND COALESCE(path_prefix,'') = %s
+				 AND COALESCE(ip_address,'') = %s",
+				$scope,
+				$rule_id,
+				$path_prefix,
+				$ip_address
+			)
+		);
+		if ( $existing ) {
+			return (int) $existing;
+		}
+
+		$result = $wpdb->insert(
+			$table_name,
+			array(
+				'scope'               => $scope,
+				'rule_id'             => '' === $rule_id ? null : $rule_id,
+				'path_prefix'         => '' === $path_prefix ? null : $path_prefix,
+				'ip_address'          => '' === $ip_address ? null : $ip_address,
+				'ip_type'             => $ip_type,
+				'reason'              => isset( $args['reason'] ) ? (string) $args['reason'] : null,
+				'created_from_log_id' => $log_id,
+				'source'              => $source,
+				'added_by'            => $added_by,
+			),
+			array( '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d' )
+		);
+
+		if ( false === $result ) {
+			return new WP_Error( 'rip_waf_exception_insert', __( 'Could not store the exception.', 'reportedip-hive' ) );
+		}
+
+		wp_cache_delete( 'rip_waf_exceptions', 'reportedip' );
+		$this->refresh_waf_exception_count();
+
+		/**
+		 * Fires after a WAF exception was added or removed.
+		 *
+		 * The WAF drop-in listens here to rebake its guard file so the change
+		 * is honoured by the pre-WordPress layer immediately.
+		 *
+		 * @since 2.1.9
+		 */
+		do_action( 'reportedip_hive_waf_exceptions_changed' );
+
+		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Soft-delete a WAF exception by id.
+	 *
+	 * @param int $id Exception row id.
+	 * @return bool True when a row was deactivated.
+	 * @since  2.1.9
+	 */
+	public function remove_waf_exception( $id ) {
+		global $wpdb;
+
+		$id = (int) $id;
+		if ( $id <= 0 ) {
+			return false;
+		}
+
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_waf_exceptions';
+
+		$result = $wpdb->update(
+			$table_name,
+			array( 'is_active' => 0 ),
+			array( 'id' => $id ),
+			array( '%d' ),
+			array( '%d' )
+		);
+
+		if ( false === $result ) {
+			return false;
+		}
+
+		wp_cache_delete( 'rip_waf_exceptions', 'reportedip' );
+		$this->refresh_waf_exception_count();
+
+		/** This action is documented in includes/class-database.php (add_waf_exception). */
+		do_action( 'reportedip_hive_waf_exceptions_changed' );
+
+		return $result > 0;
+	}
+
+	/**
+	 * Recompute and persist the active WAF-exception count marker used by
+	 * {@see self::get_active_waf_exceptions()} to skip the hot-path query when
+	 * no exceptions exist.
+	 *
+	 * @return void
+	 * @since  2.1.9
+	 */
+	private function refresh_waf_exception_count() {
+		global $wpdb;
+
+		if ( ! class_exists( 'ReportedIP_Hive_Option_Routing' ) ) {
+			return;
+		}
+
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_waf_exceptions';
+		$count      = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table_name WHERE is_active = 1" );
+
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_waf_exceptions_active', $count );
+	}
+
+	/**
 	 * Block IP address
 	 */
 	public function block_ip( $ip_address, $reason, $block_type = 'automatic', $duration_hours = 24 ) {

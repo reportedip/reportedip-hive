@@ -173,6 +173,21 @@ class ReportedIP_Hive_WAF {
 			return;
 		}
 
+		$route      = $this->current_rest_route();
+		$path       = $this->current_request_path();
+		$exceptions = $this->load_exceptions();
+
+		/*
+		 * Whole-engine exceptions (backend scope='all') and the developer-only
+		 * `reportedip_hive_waf_bypass_routes` opt-in skip inspection for
+		 * first-party endpoints whose body legitimately carries attack-like
+		 * payloads — e.g. a security API that ingests reported attack data —
+		 * before the body is even read, so the WAF never bans its own caller.
+		 */
+		if ( $this->request_is_fully_excepted( $exceptions, $route, $path, $ip ) ) {
+			return;
+		}
+
 		$rules = $this->get_active_rules();
 		if ( empty( $rules ) ) {
 			return;
@@ -186,9 +201,282 @@ class ReportedIP_Hive_WAF {
 			is_string( $raw_body ) ? $raw_body : null
 		);
 
-		if ( null !== $hit ) {
+		if ( null !== $hit && ! $this->hit_is_excepted( $exceptions, $route, $path, $ip, $hit ) ) {
 			$this->handle_hit( $hit, $ip );
 		}
+	}
+
+	/**
+	 * Load the active WAF exceptions (backend allowlist) for this request.
+	 *
+	 * Returns the raw rows from the network-wide table, cached by the database
+	 * layer; an empty array when the engine runs without a database (tests) or
+	 * no exceptions exist.
+	 *
+	 * @return array<int,object> Active exception rows.
+	 * @since  2.1.9
+	 */
+	private function load_exceptions(): array {
+		if ( ! class_exists( 'ReportedIP_Hive_Database' ) ) {
+			return array();
+		}
+		$database = ReportedIP_Hive_Database::get_instance();
+		if ( ! method_exists( $database, 'get_active_waf_exceptions' ) ) {
+			return array();
+		}
+		return (array) $database->get_active_waf_exceptions();
+	}
+
+	/**
+	 * The decoded request path (no query string) for path-prefix matching.
+	 *
+	 * Only the URI path is used — never the query string — so a bypass token
+	 * cannot be smuggled through an unrelated query parameter.
+	 *
+	 * @return string Leading-slash request path, or '' when unavailable.
+	 * @since  2.1.9
+	 */
+	private function current_request_path(): string {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Raw URI parsed for its path only, never stored or echoed.
+		$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+		return (string) wp_parse_url( $uri, PHP_URL_PATH );
+	}
+
+	/**
+	 * Whether the request is exempt from inspection entirely — a backend
+	 * `scope='all'` exception whose location matches, or the developer-only
+	 * `reportedip_hive_waf_bypass_routes` opt-in.
+	 *
+	 * @param array<int,object> $exceptions Active exception rows.
+	 * @param string            $route      Resolved REST route, or ''.
+	 * @param string            $path       Request path.
+	 * @param string            $ip         Client IP.
+	 * @return bool True when the whole engine must skip this request.
+	 * @since  2.1.9
+	 */
+	private function request_is_fully_excepted( array $exceptions, string $route, string $path, string $ip ): bool {
+		foreach ( $exceptions as $exception ) {
+			if ( 'all' === $this->exception_scope( $exception )
+				&& $this->exception_location_matches( $exception, $route, $path, $ip ) ) {
+				return true;
+			}
+		}
+
+		/**
+		 * Filters the REST route prefixes that bypass WAF inspection entirely.
+		 *
+		 * Developer-only escape hatch alongside the backend exception list. Use
+		 * for first-party REST endpoints whose request body legitimately carries
+		 * attack-like payloads. Matched the same way as the REST burst monitor's
+		 * `reportedip_hive_rest_bypass_routes`: an anchored `str_starts_with`
+		 * test against the WP REST route (e.g. `/my-api/v1`), never an unanchored
+		 * substring of the raw URI or query string. Empty by default.
+		 *
+		 * @since 2.1.9
+		 *
+		 * @param array<int,string> $routes REST route prefixes to bypass.
+		 */
+		$routes = (array) apply_filters( 'reportedip_hive_waf_bypass_routes', array() );
+		if ( ! empty( $routes ) && $this->route_in_bypass_list( $route, $routes ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether a rule hit is cancelled by a backend exception scoped to the
+	 * matched rule id (`scope='rule'`) or its group (`scope='group'`).
+	 *
+	 * @param array<int,object>   $exceptions Active exception rows.
+	 * @param string              $route      Resolved REST route, or ''.
+	 * @param string              $path       Request path.
+	 * @param string              $ip         Client IP.
+	 * @param array<string,mixed> $hit        The matched rule.
+	 * @return bool True when the hit must be suppressed.
+	 * @since  2.1.9
+	 */
+	private function hit_is_excepted( array $exceptions, string $route, string $path, string $ip, array $hit ): bool {
+		$rule_id = isset( $hit['id'] ) ? (string) $hit['id'] : '';
+		$group   = isset( $hit['group'] ) ? (string) $hit['group'] : '';
+
+		foreach ( $exceptions as $exception ) {
+			$scope  = $this->exception_scope( $exception );
+			$target = isset( $exception->rule_id ) ? (string) $exception->rule_id : '';
+			if ( 'rule' === $scope && ( '' === $target || $target !== $rule_id ) ) {
+				continue;
+			}
+			if ( 'group' === $scope && ( '' === $target || $target !== $group ) ) {
+				continue;
+			}
+			if ( ( 'rule' === $scope || 'group' === $scope )
+				&& $this->exception_location_matches( $exception, $route, $path, $ip ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Normalised scope of an exception row.
+	 *
+	 * @param object $exception Exception row.
+	 * @return string 'rule', 'group' or 'all'.
+	 * @since  2.1.9
+	 */
+	private function exception_scope( $exception ): string {
+		$scope = isset( $exception->scope ) ? (string) $exception->scope : 'rule';
+		return in_array( $scope, array( 'rule', 'group', 'all' ), true ) ? $scope : 'rule';
+	}
+
+	/**
+	 * Whether an exception's location scope (path prefix + IP) matches the
+	 * current request. A NULL/empty path prefix or IP scope means "anywhere".
+	 *
+	 * @param object $exception Exception row.
+	 * @param string $route     Resolved REST route, or ''.
+	 * @param string $path      Request path.
+	 * @param string $ip        Client IP.
+	 * @return bool True when both the path-prefix and IP scope match.
+	 * @since  2.1.9
+	 */
+	private function exception_location_matches( $exception, string $route, string $path, string $ip ): bool {
+		$path_prefix = isset( $exception->path_prefix ) ? (string) $exception->path_prefix : '';
+		if ( '' !== $path_prefix && ! $this->path_prefix_matches( $path_prefix, $route, $path ) ) {
+			return false;
+		}
+
+		$ip_scope = isset( $exception->ip_address ) ? (string) $exception->ip_address : '';
+		if ( '' !== $ip_scope && ! $this->ip_scope_matches( $ip_scope, $ip ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Anchored path-prefix match against the request path and, for REST
+	 * requests, the canonical `/{rest_prefix}{route}` path. Always a
+	 * `str_starts_with` test on the decoded path — never the query string.
+	 *
+	 * @param string $prefix Leading-slash path prefix.
+	 * @param string $route  Resolved REST route, or ''.
+	 * @param string $path   Request path.
+	 * @return bool True when any candidate path starts with the prefix.
+	 * @since  2.1.9
+	 */
+	private function path_prefix_matches( string $prefix, string $route, string $path ): bool {
+		if ( '' !== $path && str_starts_with( $path, $prefix ) ) {
+			return true;
+		}
+		if ( '' !== $route ) {
+			$rest_path = '/' . trim( rest_get_url_prefix(), '/' ) . $route;
+			if ( str_starts_with( $rest_path, $prefix ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Whether an exception's IP scope (single IP or CIDR) covers the client IP.
+	 *
+	 * @param string $ip_scope Single IP or CIDR range.
+	 * @param string $ip       Client IP.
+	 * @return bool True when the scope covers the IP.
+	 * @since  2.1.9
+	 */
+	private function ip_scope_matches( string $ip_scope, string $ip ): bool {
+		if ( $ip_scope === $ip ) {
+			return true;
+		}
+		if ( false !== strpos( $ip_scope, '/' ) && class_exists( 'ReportedIP_Hive_Database' ) ) {
+			return ReportedIP_Hive_Database::ip_in_cidr( $ip, $ip_scope );
+		}
+		return false;
+	}
+
+	/**
+	 * Resolve the WP REST route for the current request at `init` priority 1,
+	 * where the REST request is not yet parsed. Returns the route in the same
+	 * shape as {@see WP_REST_Request::get_route()} (e.g. `/reportedip/v2/check`),
+	 * or '' for non-REST requests.
+	 *
+	 * @return string Leading-slash REST route, or '' when this is not a REST request.
+	 * @since  2.1.9
+	 */
+	private function current_rest_route(): string {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Raw URI parsed for its path only, never stored or echoed.
+		$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Read-only routing check; value normalised in resolve_rest_route().
+		$rest_route = isset( $_GET['rest_route'] ) ? (string) wp_unslash( $_GET['rest_route'] ) : null;
+
+		return $this->resolve_rest_route( $uri, $rest_route, rest_get_url_prefix() );
+	}
+
+	/**
+	 * Pure REST-route resolver. Extracted so the anti-smuggle behaviour is
+	 * deterministically unit-testable without superglobals.
+	 *
+	 * Only the request PATH and the explicit `rest_route` param are trusted —
+	 * never the wider query string — so an attacker cannot smuggle a bypass
+	 * token through an unrelated query parameter (e.g.
+	 * `POST /xmlrpc.php?x=/my-api/v1`). For plain permalinks the `rest_route`
+	 * param is honoured only when the request actually hits the REST entry
+	 * script (site root or `index.php`), never a decoy carried on an arbitrary
+	 * endpoint such as `/xmlrpc.php` or `/wp-comments-post.php`.
+	 *
+	 * @param string      $uri        Raw request URI (may include a query string).
+	 * @param string|null $rest_route Value of the `rest_route` GET param, or null.
+	 * @param string      $rest_prefix REST URL prefix (e.g. `wp-json`).
+	 * @return string Leading-slash REST route, or '' when not a REST request.
+	 * @since  2.1.9
+	 */
+	private function resolve_rest_route( string $uri, $rest_route, string $rest_prefix ): string {
+		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
+
+		// Plain permalinks: ?rest_route=/ns/route — only on the REST entry script.
+		if ( null !== $rest_route && '' !== (string) $rest_route ) {
+			$script = strtolower( basename( $path ) );
+			if ( '' === $script || 'index.php' === $script ) {
+				return '/' . ltrim( (string) $rest_route, '/' );
+			}
+			return '';
+		}
+
+		// Pretty permalinks: strip the REST URL prefix segment from the path.
+		if ( '' === $path ) {
+			return '';
+		}
+		$prefix = '/' . trim( $rest_prefix, '/' ) . '/';
+		$pos    = strpos( $path, $prefix );
+		if ( false === $pos ) {
+			return '';
+		}
+		return substr( $path, $pos + strlen( $prefix ) - 1 );
+	}
+
+	/**
+	 * Anchored prefix match of a resolved REST route against a bypass list,
+	 * mirroring the REST monitor's `str_starts_with` route matching.
+	 *
+	 * @param string           $route  Resolved REST route (leading slash) or ''.
+	 * @param array<int,mixed> $routes Route prefixes that grant a bypass.
+	 * @return bool True when $route starts with any non-empty prefix.
+	 * @since  2.1.9
+	 */
+	private function route_in_bypass_list( string $route, array $routes ): bool {
+		if ( '' === $route ) {
+			return false;
+		}
+		foreach ( $routes as $needle ) {
+			$needle = (string) $needle;
+			if ( '' !== $needle && str_starts_with( $route, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

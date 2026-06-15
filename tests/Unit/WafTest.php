@@ -166,5 +166,176 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertCount( 1, $this->waf()->get_active_rules() );
 		}
+
+		public function test_resolve_route_pretty_permalink_strips_prefix(): void {
+			$this->assertSame(
+				'/reportedip/v2/report',
+				$this->call_private( 'resolve_rest_route', array( '/wp-json/reportedip/v2/report?x=1', null, 'wp-json' ) )
+			);
+		}
+
+		public function test_resolve_route_pretty_permalink_subdirectory_install(): void {
+			$this->assertSame(
+				'/reportedip/v2/check',
+				$this->call_private( 'resolve_rest_route', array( '/blog/wp-json/reportedip/v2/check', null, 'wp-json' ) )
+			);
+		}
+
+		public function test_resolve_route_plain_permalink_on_rest_entry(): void {
+			$this->assertSame(
+				'/reportedip/v2/report',
+				$this->call_private( 'resolve_rest_route', array( '/index.php?rest_route=/reportedip/v2/report', '/reportedip/v2/report', 'wp-json' ) )
+			);
+			$this->assertSame(
+				'/reportedip/v2',
+				$this->call_private( 'resolve_rest_route', array( '/?rest_route=/reportedip/v2', '/reportedip/v2', 'wp-json' ) )
+			);
+		}
+
+		public function test_resolve_route_ignores_non_rest_request(): void {
+			$this->assertSame(
+				'',
+				$this->call_private( 'resolve_rest_route', array( '/shop?page=2', null, 'wp-json' ) )
+			);
+		}
+
+		/**
+		 * Anti-smuggle: a decoy bypass token in an unrelated query parameter on a
+		 * non-REST endpoint must NOT resolve to a route, or the WAF could be
+		 * disabled globally with `POST /xmlrpc.php?x=/reportedip/v2`.
+		 */
+		public function test_resolve_route_rejects_query_string_smuggle(): void {
+			$this->assertSame(
+				'',
+				$this->call_private( 'resolve_rest_route', array( '/xmlrpc.php?x=/reportedip/v2', null, 'wp-json' ) )
+			);
+		}
+
+		/**
+		 * Anti-smuggle: a `rest_route` decoy carried on a real PHP endpoint that
+		 * is NOT the REST entry script must be ignored, so an attacker cannot
+		 * append `?rest_route=/reportedip/v2` to `/xmlrpc.php` to skip the WAF.
+		 */
+		public function test_resolve_route_rejects_rest_route_decoy_on_other_script(): void {
+			$this->assertSame(
+				'',
+				$this->call_private( 'resolve_rest_route', array( '/xmlrpc.php?rest_route=/reportedip/v2', '/reportedip/v2', 'wp-json' ) )
+			);
+		}
+
+		public function test_route_in_bypass_list_anchored_prefix_match(): void {
+			$this->assertTrue(
+				$this->call_private( 'route_in_bypass_list', array( '/reportedip/v2/report', array( '/reportedip/v2' ) ) )
+			);
+			$this->assertFalse(
+				$this->call_private( 'route_in_bypass_list', array( '/wp/v2/posts', array( '/reportedip/v2' ) ) )
+			);
+		}
+
+		public function test_route_in_bypass_list_ignores_empty_inputs(): void {
+			$this->assertFalse( $this->call_private( 'route_in_bypass_list', array( '', array( '/reportedip/v2' ) ) ) );
+			$this->assertFalse( $this->call_private( 'route_in_bypass_list', array( '/reportedip/v2', array( '' ) ) ) );
+		}
+
+		public function test_path_prefix_matches_request_path(): void {
+			$this->assertTrue( $this->call_private( 'path_prefix_matches', array( '/kontakt', '', '/kontakt/form' ) ) );
+		}
+
+		public function test_path_prefix_matches_rest_route_on_plain_permalink(): void {
+			$this->assertTrue(
+				$this->call_private( 'path_prefix_matches', array( '/wp-json/reportedip/v2', '/reportedip/v2/report', '/index.php' ) )
+			);
+		}
+
+		public function test_path_prefix_ignores_unrelated_path(): void {
+			$this->assertFalse( $this->call_private( 'path_prefix_matches', array( '/wp-json/reportedip/v2', '', '/xmlrpc.php' ) ) );
+		}
+
+		public function test_ip_scope_matches_exact_only_without_database(): void {
+			$this->assertTrue( $this->call_private( 'ip_scope_matches', array( '203.0.113.7', '203.0.113.7' ) ) );
+			$this->assertFalse( $this->call_private( 'ip_scope_matches', array( '203.0.113.7', '203.0.113.8' ) ) );
+		}
+
+		public function test_exception_location_matches_path_scope(): void {
+			$exception = (object) array(
+				'path_prefix' => '/kontakt',
+				'ip_address'  => '',
+			);
+			$this->assertTrue( $this->call_private( 'exception_location_matches', array( $exception, '', '/kontakt', '1.2.3.4' ) ) );
+			$this->assertFalse( $this->call_private( 'exception_location_matches', array( $exception, '', '/shop', '1.2.3.4' ) ) );
+		}
+
+		public function test_hit_excepted_by_rule_scope_on_path(): void {
+			$exception = (object) array(
+				'scope'       => 'rule',
+				'rule_id'     => 'waf_sqli_union',
+				'path_prefix' => '/kontakt',
+				'ip_address'  => '',
+			);
+			$hit = array(
+				'id'    => 'waf_sqli_union',
+				'group' => 'sql_injection',
+			);
+			$this->assertTrue( $this->call_private( 'hit_is_excepted', array( array( $exception ), '', '/kontakt', '1.2.3.4', $hit ) ) );
+			$this->assertFalse( $this->call_private( 'hit_is_excepted', array( array( $exception ), '', '/shop', '1.2.3.4', $hit ) ) );
+		}
+
+		public function test_hit_not_excepted_for_different_rule(): void {
+			$exception = (object) array(
+				'scope'       => 'rule',
+				'rule_id'     => 'waf_xss_onerror',
+				'path_prefix' => '',
+				'ip_address'  => '',
+			);
+			$hit = array(
+				'id'    => 'waf_sqli_union',
+				'group' => 'sql_injection',
+			);
+			$this->assertFalse( $this->call_private( 'hit_is_excepted', array( array( $exception ), '', '/kontakt', '1.2.3.4', $hit ) ) );
+		}
+
+		public function test_hit_excepted_by_group_scope(): void {
+			$exception = (object) array(
+				'scope'       => 'group',
+				'rule_id'     => 'sql_injection',
+				'path_prefix' => '',
+				'ip_address'  => '',
+			);
+			$hit = array(
+				'id'    => 'waf_sqli_union',
+				'group' => 'sql_injection',
+			);
+			$this->assertTrue( $this->call_private( 'hit_is_excepted', array( array( $exception ), '', '/anywhere', '1.2.3.4', $hit ) ) );
+		}
+
+		public function test_request_fully_excepted_by_all_scope_on_path(): void {
+			$exception = (object) array(
+				'scope'       => 'all',
+				'rule_id'     => null,
+				'path_prefix' => '/wp-json/reportedip/v2',
+				'ip_address'  => '',
+			);
+			$this->assertTrue(
+				$this->call_private(
+					'request_is_fully_excepted',
+					array( array( $exception ), '/reportedip/v2/report', '/wp-json/reportedip/v2/report', '1.2.3.4' )
+				)
+			);
+			$this->assertFalse(
+				$this->call_private( 'request_is_fully_excepted', array( array( $exception ), '', '/shop', '1.2.3.4' ) )
+			);
+		}
+
+		public function test_rule_scope_does_not_fully_except_request(): void {
+			$exception = (object) array(
+				'scope'       => 'rule',
+				'rule_id'     => 'waf_sqli_union',
+				'path_prefix' => '',
+				'ip_address'  => '',
+			);
+			$this->assertFalse(
+				$this->call_private( 'request_is_fully_excepted', array( array( $exception ), '', '/kontakt', '1.2.3.4' ) )
+			);
+		}
 	}
 }

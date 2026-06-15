@@ -93,6 +93,8 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_block_ip', array( $this, 'ajax_block_ip' ) );
 		add_action( 'wp_ajax_reportedip_hive_add_whitelist', array( $this, 'ajax_add_whitelist' ) );
 		add_action( 'wp_ajax_reportedip_hive_remove_whitelist', array( $this, 'ajax_remove_whitelist' ) );
+		add_action( 'wp_ajax_reportedip_hive_add_waf_exception', array( $this, 'ajax_add_waf_exception' ) );
+		add_action( 'wp_ajax_reportedip_hive_remove_waf_exception', array( $this, 'ajax_remove_waf_exception' ) );
 		add_action( 'wp_ajax_reportedip_hive_cleanup_logs', array( $this, 'ajax_cleanup_logs' ) );
 		add_action( 'wp_ajax_reportedip_hive_anonymize_data', array( $this, 'ajax_anonymize_data' ) );
 
@@ -551,6 +553,71 @@ class ReportedIP_Hive_Ajax_Handler {
 		} catch ( Exception $e ) {
 			wp_send_json_error( $e->getMessage() );
 		}
+	}
+
+	/**
+	 * AJAX: Add a WAF exception to the backend allowlist.
+	 *
+	 * Accepts a manual entry from the firewall admin or a one-click
+	 * rule-on-path exception created from a WAF log row.
+	 *
+	 * @return void
+	 * @since  2.1.9
+	 */
+	public function ajax_add_waf_exception() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
+		}
+
+		$args = array(
+			'scope'               => isset( $_POST['scope'] ) ? sanitize_key( wp_unslash( $_POST['scope'] ) ) : 'rule',
+			'rule_id'             => isset( $_POST['rule_id'] ) ? sanitize_text_field( wp_unslash( $_POST['rule_id'] ) ) : '',
+			'path_prefix'         => isset( $_POST['path_prefix'] ) ? sanitize_text_field( wp_unslash( $_POST['path_prefix'] ) ) : '',
+			'ip_address'          => isset( $_POST['ip_address'] ) ? sanitize_text_field( wp_unslash( $_POST['ip_address'] ) ) : '',
+			'reason'              => isset( $_POST['reason'] ) ? sanitize_textarea_field( wp_unslash( $_POST['reason'] ) ) : '',
+			'created_from_log_id' => isset( $_POST['log_id'] ) ? absint( wp_unslash( $_POST['log_id'] ) ) : 0,
+			'source'              => isset( $_POST['source'] ) ? sanitize_key( wp_unslash( $_POST['source'] ) ) : 'manual',
+		);
+
+		$result = $this->database->add_waf_exception( $args );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( $result->get_error_message() );
+		}
+
+		wp_send_json_success(
+			array(
+				'id'      => (int) $result,
+				'message' => __( 'WAF exception saved.', 'reportedip-hive' ),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: Remove a WAF exception by id.
+	 *
+	 * @return void
+	 * @since  2.1.9
+	 */
+	public function ajax_remove_waf_exception() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
+		}
+
+		$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
+		if ( $id <= 0 ) {
+			wp_send_json_error( __( 'A valid exception id is required.', 'reportedip-hive' ) );
+		}
+
+		if ( $this->database->remove_waf_exception( $id ) ) {
+			wp_send_json_success( array( 'message' => __( 'WAF exception removed.', 'reportedip-hive' ) ) );
+		}
+
+		wp_send_json_error( __( 'Could not remove the exception.', 'reportedip-hive' ) );
 	}
 
 	/**

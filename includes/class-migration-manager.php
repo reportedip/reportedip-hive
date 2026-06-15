@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 9;
+	public const CURRENT_VERSION = 10;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -282,6 +282,20 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * @since  2.1.2
 	 */
 	private static function migrate_to_v9() {
+		ReportedIP_Hive_Schema::ensure_tables();
+	}
+
+	/**
+	 * Adds the network-wide `waf_exceptions` table backing the backend-managed
+	 * WAF allowlist (rule/group/whole-path exceptions). Created under
+	 * `base_prefix` so a single decision applies across the network, like the
+	 * whitelist. Delegates to the idempotent
+	 * {@see ReportedIP_Hive_Schema::ensure_tables()}, so a re-run is a no-op.
+	 *
+	 * @return void
+	 * @since  2.1.9
+	 */
+	private static function migrate_to_v10() {
 		ReportedIP_Hive_Schema::ensure_tables();
 	}
 

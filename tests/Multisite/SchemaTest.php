@@ -60,6 +60,19 @@ class ReportedIP_Hive_Schema_Multisite_Test extends WP_UnitTestCase {
 		$this->assertFalse(
 			ReportedIP_Hive_Schema::column_exists( 'reportedip_hive_trusted_devices', 'blog_id' )
 		);
+		$this->assertFalse(
+			ReportedIP_Hive_Schema::column_exists( 'reportedip_hive_waf_exceptions', 'blog_id' )
+		);
+	}
+
+	public function test_waf_exceptions_table_exists_network_wide() {
+		$this->assertTrue(
+			ReportedIP_Hive_Schema::column_exists( 'reportedip_hive_waf_exceptions', 'scope' )
+		);
+		$this->assertSame(
+			$GLOBALS['wpdb']->base_prefix . 'reportedip_hive_waf_exceptions',
+			ReportedIP_Hive_Schema::table( 'reportedip_hive_waf_exceptions' )
+		);
 	}
 
 	public function test_cleanup_blog_data_only_removes_target_blog_rows() {

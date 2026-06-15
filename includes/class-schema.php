@@ -47,6 +47,7 @@ final class ReportedIP_Hive_Schema {
 	public const TABLE_STATS           = 'reportedip_hive_stats';
 	public const TABLE_TRUSTED_DEVICES = 'reportedip_hive_trusted_devices';
 	public const TABLE_AUDIT_LOG       = 'reportedip_hive_audit_log';
+	public const TABLE_WAF_EXCEPTIONS  = 'reportedip_hive_waf_exceptions';
 
 	/**
 	 * Plugin table suffixes (without prefix).
@@ -66,6 +67,7 @@ final class ReportedIP_Hive_Schema {
 		self::TABLE_STATS,
 		self::TABLE_TRUSTED_DEVICES,
 		self::TABLE_AUDIT_LOG,
+		self::TABLE_WAF_EXCEPTIONS,
 	);
 
 	/**
@@ -285,6 +287,26 @@ final class ReportedIP_Hive_Schema {
 			KEY idx_audit_created (created_at)
 		) $charset_collate;";
 
+		$table_waf_exceptions = $prefix . 'reportedip_hive_waf_exceptions';
+		$sql_waf_exceptions   = "CREATE TABLE $table_waf_exceptions (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			scope enum('rule','group','all') NOT NULL DEFAULT 'rule',
+			rule_id varchar(100) DEFAULT NULL,
+			path_prefix varchar(255) DEFAULT NULL,
+			ip_address varchar(45) DEFAULT NULL,
+			ip_type enum('ipv4','ipv6','cidr') DEFAULT NULL,
+			reason text DEFAULT NULL,
+			created_from_log_id bigint(20) unsigned DEFAULT NULL,
+			source enum('manual','log','filter') NOT NULL DEFAULT 'manual',
+			added_by bigint(20) unsigned NOT NULL,
+			is_active tinyint(1) DEFAULT 1,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY  (id),
+			KEY idx_is_active (is_active),
+			KEY idx_rule_id (rule_id),
+			KEY idx_scope (scope)
+		) $charset_collate;";
+
 		dbDelta( $sql_logs );
 		dbDelta( $sql_whitelist );
 		dbDelta( $sql_blocked );
@@ -293,6 +315,7 @@ final class ReportedIP_Hive_Schema {
 		dbDelta( $sql_stats );
 		dbDelta( $sql_trusted );
 		dbDelta( $sql_audit );
+		dbDelta( $sql_waf_exceptions );
 
 		self::ensure_additional_indexes();
 	}

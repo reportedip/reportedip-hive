@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.8
+Stable tag: 2.1.9
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.9 =
+
+New: backend-managed WAF exceptions (allowlist). Relieve a false positive from the admin instead of in code — the way ModSecurity exclusions and the Wordfence allowlist work. Firewall → WAF gains a "WAF Exceptions" section, and every WAF log row carries an "Allow" action that adds a narrow exception for that rule on that path. An exception is scoped to a single rule, a rule group, or — for a first-party endpoint that legitimately receives attack-like payloads — the whole engine on a path, optionally narrowed to an IP/CIDR; a whole-engine exception must always carry a path or IP. Exceptions are network-wide and available on every plan; the protection engine stays free.
 
 = 2.1.8 =
 

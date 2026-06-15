@@ -57,6 +57,11 @@
             $(document).on('submit', '#add-whitelist-form', this.addToWhitelist);
             $(document).on('submit', '#block-ip-form', this.blockIP);
 
+            // WAF exceptions (backend allowlist)
+            $(document).on('submit', '#add-waf-exception-form', this.addWafException);
+            $(document).on('click', '.remove-waf-exception', this.removeWafException);
+            $(document).on('click', '.allow-waf-exception', this.allowWafFromLog);
+
             // Lookup button on the lookup tab
             $(document).on('click', '#lookup-ip-button', this.performLookupTabSearch);
 
@@ -371,9 +376,116 @@
             });
         },
 
+        addWafException: function(e) {
+            e.preventDefault();
+
+            const $form = $(this);
+            const formData = $form.serialize();
+
+            ReportedIPAdmin.showLoading($form);
+
+            $.ajax({
+                url: reportedip_hive_ajax.ajax_url,
+                type: 'POST',
+                data: formData + '&action=reportedip_hive_add_waf_exception&nonce=' + reportedip_hive_ajax.nonce,
+                success: function(response) {
+                    if (response.success) {
+                        ReportedIPAdmin.showNotification('WAF exception saved', 'success');
+                        $form[0].reset();
+                        window.location.reload();
+                    } else {
+                        ReportedIPAdmin.showNotification(response.data || 'Failed to save the exception', 'error');
+                    }
+                },
+                error: function() {
+                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                },
+                complete: function() {
+                    ReportedIPAdmin.hideLoading($form);
+                }
+            });
+        },
+
+        removeWafException: function(e) {
+            e.preventDefault();
+
+            if (!confirm('Remove this WAF exception?')) {
+                return;
+            }
+
+            const $button = $(this);
+
+            $button.prop('disabled', true);
+
+            $.ajax({
+                url: reportedip_hive_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'reportedip_hive_remove_waf_exception',
+                    id: $button.data('id'),
+                    nonce: reportedip_hive_ajax.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        ReportedIPAdmin.showNotification('WAF exception removed', 'success');
+                        $button.closest('tr').fadeOut(300, function() {
+                            $(this).remove();
+                        });
+                    } else {
+                        ReportedIPAdmin.showNotification(response.data || 'Failed to remove the exception', 'error');
+                        $button.prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    $button.prop('disabled', false);
+                }
+            });
+        },
+
+        allowWafFromLog: function(e) {
+            e.preventDefault();
+
+            const $button = $(this);
+            const rule = $button.data('rule');
+            const path = $button.data('path') || '';
+
+            if (!confirm('Allow rule "' + rule + '" on path "' + (path || '/') + '"? The WAF stays active everywhere else.')) {
+                return;
+            }
+
+            $button.prop('disabled', true);
+
+            $.ajax({
+                url: reportedip_hive_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'reportedip_hive_add_waf_exception',
+                    scope: 'rule',
+                    rule_id: rule,
+                    path_prefix: path,
+                    source: 'log',
+                    log_id: $button.data('log') || 0,
+                    nonce: reportedip_hive_ajax.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        ReportedIPAdmin.showNotification('WAF exception added for this rule', 'success');
+                    } else {
+                        ReportedIPAdmin.showNotification(response.data || 'Failed to add the exception', 'error');
+                        $button.prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    $button.prop('disabled', false);
+                }
+            });
+        },
+
         removeFromWhitelist: function(e) {
             e.preventDefault();
-            
+
             if (!confirm('Are you sure you want to remove this IP from the whitelist?')) {
                 return;
             }

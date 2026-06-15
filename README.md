@@ -42,7 +42,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | Password policy | min length, character classes, optional HIBP k-anonymity | |
 | WooCommerce login | checkout + my-account forms tracked separately | Optional themed frontend 2FA on Professional plan |
 | Cookie-banner consent endpoints | always-bypassed | Real Cookie Banner, Complianz, Borlabs, CookieYes baked in |
-| Web Application Firewall | Paranoia Level 1 baseline | SQLi/XSS/traversal/LFI/scanner patterns; PL 2/3 ruleset with Professional; ReDoS-hardened, fail-open |
+| Web Application Firewall | Paranoia Level 1 baseline + backend exceptions | SQLi/XSS/traversal/LFI/scanner patterns; PL 2/3 ruleset with Professional; ReDoS-hardened, fail-open; false positives relieved via a backend allowlist (rule/group/whole-path, "Allow" from the log) |
 | Verified bot detection | flag (default) or block | Official Google/Bing IP ranges first, FCrDNS fallback; genuine crawlers never blocked |
 | Disposable-email blocking | monitor (default) | Registration (WP + WooCommerce); privacy relays pass through by default |
 | Comment honeypot | on | Invisible decoy field, no CAPTCHA friction |

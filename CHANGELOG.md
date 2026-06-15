@@ -2,7 +2,30 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [2.1.8] — 2026-06-14
+## [2.1.9] — 2026-06-15
+
+### Added
+
+- **Backend-managed WAF exceptions (allowlist).** A false positive can now be
+  relieved from the admin without touching code — the way ModSecurity exclusions
+  and the Wordfence allowlist work. Firewall → WAF gains a "WAF Exceptions"
+  section, and every WAF log row carries an "Allow" action that creates a narrow
+  exception for exactly that rule on that path. An exception is scoped to a
+  single rule, a rule group, or — for a first-party endpoint that legitimately
+  receives attack-like payloads (a security API ingesting reported attack data)
+  — the whole engine on a path, optionally narrowed to an IP/CIDR. A
+  whole-engine exception must always carry a path or IP, so the engine can never
+  be globally disabled by accident. Exceptions are network-wide data
+  (`reportedip_hive_waf_exceptions`, `db_version` 10), available on every plan —
+  the protection engine itself stays free. Nothing site-specific ships in the
+  code.
+- **Developer hook `reportedip_hive_waf_bypass_routes`** complements the backend
+  list as a code-level escape hatch (empty by default). Matching is an anchored
+  `str_starts_with` test against the resolved WP REST route — never an
+  unanchored substring of the raw URI — so a decoy bypass token in an unrelated
+  query parameter (`?x=/my-api/v1`) cannot disable the WAF.
+
+## [2.1.8] — 2026-06-15
 
 ### Security
 

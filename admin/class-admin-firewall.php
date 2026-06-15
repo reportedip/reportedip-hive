@@ -663,6 +663,62 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '</div></div>';
 
 		$this->render_waf_dropin_box();
+		$this->render_waf_exceptions_box();
+	}
+
+	/**
+	 * Render the backend-managed WAF exceptions (allowlist) box: a narrow
+	 * add-form plus the list of active exceptions. Lets an operator relieve a
+	 * false positive — a single rule on a path, or a whole-engine bypass for a
+	 * first-party endpoint that legitimately carries attack-like payloads —
+	 * without touching code. Mirrors how ModSecurity exclusions and the
+	 * Wordfence allowlist work: exceptions are data, not shipped rules.
+	 *
+	 * @return void
+	 * @since  2.1.9
+	 */
+	private function render_waf_exceptions_box() {
+		if ( ! class_exists( 'ReportedIP_Hive_WAF_Exceptions_Table' ) ) {
+			return;
+		}
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'WAF Exceptions', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Relieve a false positive without editing code. Scope an exception to a single rule (optionally on one path), a rule group, or — for a first-party endpoint that legitimately receives attack-like payloads — the whole engine on a path. A whole-engine exception must always carry a path or IP.', 'reportedip-hive' ) . '</p>';
+
+		echo '<form id="add-waf-exception-form" class="rip-form">';
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-scope">' . esc_html__( 'Scope', 'reportedip-hive' ) . '</label>';
+		echo '<select id="rip-waf-ex-scope" name="scope" class="rip-select">';
+		echo '<option value="rule">' . esc_html__( 'Single rule', 'reportedip-hive' ) . '</option>';
+		echo '<option value="group">' . esc_html__( 'Rule group', 'reportedip-hive' ) . '</option>';
+		echo '<option value="all">' . esc_html__( 'Whole engine (path/IP required)', 'reportedip-hive' ) . '</option>';
+		echo '</select></div>';
+
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-rule">' . esc_html__( 'Rule ID or group', 'reportedip-hive' ) . '</label>';
+		echo '<input type="text" id="rip-waf-ex-rule" name="rule_id" class="rip-input" placeholder="waf_sqli_union" /></div>';
+
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-path">' . esc_html__( 'Path prefix (optional)', 'reportedip-hive' ) . '</label>';
+		echo '<input type="text" id="rip-waf-ex-path" name="path_prefix" class="rip-input" placeholder="/wp-json/my-api/v1" /></div>';
+
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-ip">' . esc_html__( 'IP or CIDR (optional)', 'reportedip-hive' ) . '</label>';
+		echo '<input type="text" id="rip-waf-ex-ip" name="ip_address" class="rip-input" placeholder="203.0.113.7" /></div>';
+
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-reason">' . esc_html__( 'Reason (optional)', 'reportedip-hive' ) . '</label>';
+		echo '<input type="text" id="rip-waf-ex-reason" name="reason" class="rip-input" /></div>';
+
+		echo '<button type="submit" class="rip-button rip-button--primary">' . esc_html__( 'Add exception', 'reportedip-hive' ) . '</button>';
+		echo '</form>';
+
+		$table = new ReportedIP_Hive_WAF_Exceptions_Table();
+		$table->prepare_items();
+		$table->process_bulk_action();
+
+		echo '<form method="post">';
+		printf( '<input type="hidden" name="page" value="%s" />', esc_attr( 'reportedip-hive-firewall' ) );
+		printf( '<input type="hidden" name="tab" value="%s" />', esc_attr( 'waf' ) );
+		$table->display();
+		echo '</form>';
+
+		echo '</div></div>';
 	}
 
 	/**

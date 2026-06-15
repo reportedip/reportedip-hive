@@ -554,6 +554,30 @@ if ( ! function_exists( 'sanitize_key' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_parse_url' ) ) {
+	/**
+	 * Parses a URL, mirroring WordPress's wrapper around PHP's parse_url().
+	 *
+	 * @param string $url       URL to parse.
+	 * @param int    $component Component to return, or -1 for the full array.
+	 * @return mixed Parsed component, array, or false on failure.
+	 */
+	function wp_parse_url( $url, $component = -1 ) {
+		return parse_url( $url, $component );
+	}
+}
+
+if ( ! function_exists( 'rest_get_url_prefix' ) ) {
+	/**
+	 * Returns the REST API URL prefix.
+	 *
+	 * @return string
+	 */
+	function rest_get_url_prefix() {
+		return 'wp-json';
+	}
+}
+
 if ( ! function_exists( 'wp_unslash' ) ) {
 	/**
 	 * Removes slashes from a string or recursively from an array of strings.

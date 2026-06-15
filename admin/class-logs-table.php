@@ -145,22 +145,37 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 				return wp_kses_post( $this->logger->format_details( $item->details ) );
 
 			case 'actions':
-				$actions  = '<div class="action-buttons-inline">';
-				$actions .= sprintf(
+				$actions    = '<div class="action-buttons-inline">';
+				$actions   .= sprintf(
 					'<button class="button button-small lookup-ip" data-ip="%s" title="%s"><span class="dashicons dashicons-search"></span></button>',
 					esc_attr( $item->ip_address ),
 					esc_attr__( 'Lookup IP', 'reportedip-hive' )
 				);
-				$actions .= sprintf(
+				$actions   .= sprintf(
 					'<button class="button button-small block-ip button-danger" data-ip="%s" title="%s"><span class="dashicons dashicons-dismiss"></span></button>',
 					esc_attr( $item->ip_address ),
 					esc_attr__( 'Block IP', 'reportedip-hive' )
 				);
-				$actions .= sprintf(
+				$actions   .= sprintf(
 					'<button class="button button-small whitelist-ip button-success" data-ip="%s" title="%s"><span class="dashicons dashicons-yes-alt"></span></button>',
 					esc_attr( $item->ip_address ),
 					esc_attr__( 'Whitelist IP', 'reportedip-hive' )
 				);
+				$event_type = $item->event_type ?? '';
+				if ( 'waf_block' === $event_type || 'waf_would_block' === $event_type ) {
+					$details = json_decode( (string) ( $item->details ?? '' ), true );
+					$rule    = is_array( $details ) && isset( $details['rule'] ) ? (string) $details['rule'] : '';
+					$path    = is_array( $details ) && isset( $details['request_path'] ) ? (string) $details['request_path'] : '';
+					if ( '' !== $rule ) {
+						$actions .= sprintf(
+							'<button class="button button-small allow-waf-exception" data-rule="%s" data-path="%s" data-log="%d" title="%s"><span class="dashicons dashicons-shield-alt"></span></button>',
+							esc_attr( $rule ),
+							esc_attr( $path ),
+							(int) ( $item->id ?? 0 ),
+							esc_attr__( 'Allow this rule on this path (WAF exception)', 'reportedip-hive' )
+						);
+					}
+				}
 				$actions .= '</div>';
 				return $actions;
 
