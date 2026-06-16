@@ -62,7 +62,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 2;
+	const DROPIN_VERSION = 3;
 
 	/**
 	 * Singleton instance.
@@ -101,6 +101,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		add_action( 'update_site_option_' . ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, array( $this, 'on_toggle' ) );
 		add_action( 'reportedip_hive_ruleset_applied', array( $this, 'on_ruleset_applied' ) );
 		add_action( 'reportedip_hive_whitelist_changed', array( $this, 'queue_resync' ) );
+		add_action( 'reportedip_hive_waf_exceptions_changed', array( $this, 'queue_resync' ) );
 		add_action( 'admin_init', array( $this, 'maybe_self_heal' ) );
 	}
 
@@ -604,11 +605,13 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * @since  2.1.2
 	 */
 	private function generate_prepend() {
-		$rules     = class_exists( 'ReportedIP_Hive_WAF' ) ? ReportedIP_Hive_WAF::get_instance()->get_active_rules() : array();
-		$whitelist = $this->whitelist_snapshot();
+		$rules      = class_exists( 'ReportedIP_Hive_WAF' ) ? ReportedIP_Hive_WAF::get_instance()->get_active_rules() : array();
+		$whitelist  = $this->whitelist_snapshot();
+		$exceptions = $this->exceptions_snapshot();
 
 		$rules_export  = var_export( array_values( $rules ), true );      // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking a literal rules array into a generated PHP file, not debugging.
 		$wl_export     = var_export( array_values( $whitelist ), true );  // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking a literal whitelist array into a generated PHP file, not debugging.
+		$ex_export     = var_export( array_values( $exceptions ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the literal WAF-exception allowlist into a generated PHP file, not debugging.
 		$header_export = var_export( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the trusted proxy header literal into a generated PHP file, not debugging.
 		$version       = self::DROPIN_VERSION;
 
@@ -621,67 +624,6 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
  */
 if ( defined( 'REPORTEDIP_HIVE_WAF_DROPIN' ) ) { return; }
 define( 'REPORTEDIP_HIVE_WAF_DROPIN', __RIP_VERSION__ );
-
-(function () {
-	try {
-		$rules     = __RIP_RULES__;
-		$whitelist = __RIP_WHITELIST__;
-		if ( empty( $rules ) ) { return; }
-
-		$ip      = '';
-		$trusted = __RIP_TRUSTED_HEADER__;
-		if ( '' !== $trusted && isset( $_SERVER[ $trusted ] ) ) {
-			$parts     = explode( ',', (string) $_SERVER[ $trusted ] );
-			$candidate = trim( $parts[0] );
-			if ( false !== filter_var( $candidate, FILTER_VALIDATE_IP ) ) { $ip = $candidate; }
-		}
-		if ( '' === $ip ) {
-			$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
-		}
-		foreach ( $whitelist as $entry ) {
-			if ( reportedip_hive_dropin_ip_match( $ip, (string) $entry ) ) { return; }
-		}
-
-		$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
-		$dec = rawurldecode( $uri );
-		$uri_subject = ( $uri === $dec ) ? $uri : $uri . "\n" . $dec;
-		$ua  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
-		$body = '';
-		if ( ! empty( $_POST ) ) { $body .= reportedip_hive_dropin_flatten( $_POST ); }
-		$raw = file_get_contents( 'php://input', false, null, 0, 65536 );
-		if ( is_string( $raw ) && '' !== $raw ) { $body .= "\n" . $raw; }
-		$all = $uri_subject . "\n" . $body . "\n" . $ua;
-
-		$prev = ini_get( 'pcre.backtrack_limit' );
-		if ( false !== $prev ) { @ini_set( 'pcre.backtrack_limit', '100000' ); }
-		$hit = null;
-		foreach ( $rules as $rule ) {
-			if ( empty( $rule['pattern'] ) ) { continue; }
-			$target = isset( $rule['target'] ) ? $rule['target'] : 'all';
-			if ( 'uri' === $target ) { $subject = $uri_subject; }
-			elseif ( 'body' === $target ) { $subject = $body; }
-			elseif ( 'ua' === $target ) { $subject = $ua; }
-			else { $subject = $all; }
-			if ( '' === $subject ) { continue; }
-			$compiled = '~' . str_replace( '~', '\~', (string) $rule['pattern'] ) . '~';
-			if ( 1 === @preg_match( $compiled, $subject ) ) { $hit = $rule; break; }
-		}
-		if ( false !== $prev ) { @ini_set( 'pcre.backtrack_limit', (string) $prev ); }
-
-		if ( null !== $hit ) {
-			$group = isset( $hit['group'] ) ? preg_replace( '/[^a-z_]/', '', (string) $hit['group'] ) : 'rule';
-			if ( ! headers_sent() ) {
-				header( 'HTTP/1.1 403 Forbidden' );
-				header( 'X-RIP-WAF: ' . $group );
-				header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
-			}
-			echo 'Forbidden';
-			exit;
-		}
-	} catch ( \Throwable $e ) {
-		return;
-	}
-})();
 
 if ( ! function_exists( 'reportedip_hive_dropin_flatten' ) ) {
 	function reportedip_hive_dropin_flatten( $value ) {
@@ -711,11 +653,104 @@ if ( ! function_exists( 'reportedip_hive_dropin_ip_match' ) ) {
 		return ( $ip_bin[ $bytes ] & $mask ) === ( $net_bin[ $bytes ] & $mask );
 	}
 }
+if ( ! function_exists( 'reportedip_hive_dropin_loc_match' ) ) {
+	function reportedip_hive_dropin_loc_match( $ex, $path, $ip ) {
+		$prefix = isset( $ex['path_prefix'] ) ? (string) $ex['path_prefix'] : '';
+		if ( '' !== $prefix && ( '' === $path || 0 !== strpos( $path, $prefix ) ) ) { return false; }
+		$scope_ip = isset( $ex['ip_address'] ) ? (string) $ex['ip_address'] : '';
+		if ( '' !== $scope_ip && ! reportedip_hive_dropin_ip_match( $ip, $scope_ip ) ) { return false; }
+		return true;
+	}
+}
+if ( ! function_exists( 'reportedip_hive_dropin_excepted' ) ) {
+	function reportedip_hive_dropin_excepted( $exceptions, $rule, $path, $ip ) {
+		$rid = isset( $rule['id'] ) ? (string) $rule['id'] : '';
+		$grp = isset( $rule['group'] ) ? (string) $rule['group'] : '';
+		foreach ( $exceptions as $ex ) {
+			$scope  = isset( $ex['scope'] ) ? (string) $ex['scope'] : '';
+			$target = isset( $ex['rule_id'] ) ? (string) $ex['rule_id'] : '';
+			if ( 'rule' === $scope && '' !== $target && $target === $rid && reportedip_hive_dropin_loc_match( $ex, $path, $ip ) ) { return true; }
+			if ( 'group' === $scope && '' !== $target && $target === $grp && reportedip_hive_dropin_loc_match( $ex, $path, $ip ) ) { return true; }
+		}
+		return false;
+	}
+}
+
+(function () {
+	try {
+		$rules      = __RIP_RULES__;
+		$whitelist  = __RIP_WHITELIST__;
+		$exceptions = __RIP_EXCEPTIONS__;
+		if ( empty( $rules ) ) { return; }
+
+		$ip      = '';
+		$trusted = __RIP_TRUSTED_HEADER__;
+		if ( '' !== $trusted && isset( $_SERVER[ $trusted ] ) ) {
+			$parts     = explode( ',', (string) $_SERVER[ $trusted ] );
+			$candidate = trim( $parts[0] );
+			if ( false !== filter_var( $candidate, FILTER_VALIDATE_IP ) ) { $ip = $candidate; }
+		}
+		if ( '' === $ip ) {
+			$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+		}
+		foreach ( $whitelist as $entry ) {
+			if ( reportedip_hive_dropin_ip_match( $ip, (string) $entry ) ) { return; }
+		}
+
+		$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+		$dec = rawurldecode( $uri );
+		$req_path = (string) parse_url( $uri, PHP_URL_PATH );
+		foreach ( $exceptions as $ex ) {
+			if ( 'all' === ( isset( $ex['scope'] ) ? $ex['scope'] : '' ) && reportedip_hive_dropin_loc_match( $ex, $req_path, $ip ) ) { return; }
+		}
+		$uri_subject = ( $uri === $dec ) ? $uri : $uri . "\n" . $dec;
+		$ua  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
+		$body = '';
+		if ( ! empty( $_POST ) ) { $body .= reportedip_hive_dropin_flatten( $_POST ); }
+		$raw = file_get_contents( 'php://input', false, null, 0, 65536 );
+		if ( is_string( $raw ) && '' !== $raw ) { $body .= "\n" . $raw; }
+		$all = $uri_subject . "\n" . $body . "\n" . $ua;
+
+		$prev = ini_get( 'pcre.backtrack_limit' );
+		if ( false !== $prev ) { @ini_set( 'pcre.backtrack_limit', '100000' ); }
+		$hit = null;
+		foreach ( $rules as $rule ) {
+			if ( empty( $rule['pattern'] ) ) { continue; }
+			$target = isset( $rule['target'] ) ? $rule['target'] : 'all';
+			if ( 'uri' === $target ) { $subject = $uri_subject; }
+			elseif ( 'body' === $target ) { $subject = $body; }
+			elseif ( 'ua' === $target ) { $subject = $ua; }
+			else { $subject = $all; }
+			if ( '' === $subject ) { continue; }
+			$compiled = '~' . str_replace( '~', '\~', (string) $rule['pattern'] ) . '~';
+			if ( 1 === @preg_match( $compiled, $subject ) ) {
+				if ( reportedip_hive_dropin_excepted( $exceptions, $rule, $req_path, $ip ) ) { continue; }
+				$hit = $rule; break;
+			}
+		}
+		if ( false !== $prev ) { @ini_set( 'pcre.backtrack_limit', (string) $prev ); }
+
+		if ( null !== $hit ) {
+			$group = isset( $hit['group'] ) ? preg_replace( '/[^a-z_]/', '', (string) $hit['group'] ) : 'rule';
+			if ( ! headers_sent() ) {
+				header( 'HTTP/1.1 403 Forbidden' );
+				header( 'X-RIP-WAF: ' . $group );
+				header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+			}
+			echo 'Forbidden';
+			exit;
+		}
+	} catch ( \Throwable $e ) {
+		return;
+	}
+})();
+
+
 PHP;
 
 		return str_replace(
-			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_TRUSTED_HEADER__' ),
-			array( (string) $version, $rules_export, $wl_export, $header_export ),
+			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__' ),
+			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export ),
 			$template
 		);
 	}
@@ -744,6 +779,42 @@ PHP;
 					if ( '' !== $ip ) {
 						$out[] = (string) $ip;
 					}
+				}
+			}
+		} catch ( \Throwable $e ) {
+			return array();
+		}
+		return $out;
+	}
+
+	/**
+	 * Snapshot of the active WAF exceptions to bake into the guard, so the
+	 * pre-WordPress layer honours the same allowlist as the in-WordPress engine
+	 * (scope rule/group/all, with optional path-prefix and IP/CIDR scope).
+	 *
+	 * @return array<int,array<string,string>>
+	 * @since  2.1.10
+	 */
+	private function exceptions_snapshot() {
+		if ( ! class_exists( 'ReportedIP_Hive_Database' ) ) {
+			return array();
+		}
+		$db = ReportedIP_Hive_Database::get_instance();
+		if ( ! ( $db instanceof ReportedIP_Hive_Database ) ) {
+			return array();
+		}
+		$out = array();
+		try {
+			$rows = $db->get_active_waf_exceptions();
+			if ( is_array( $rows ) ) {
+				foreach ( $rows as $row ) {
+					$r     = (array) $row;
+					$out[] = array(
+						'scope'       => (string) ( $r['scope'] ?? '' ),
+						'rule_id'     => (string) ( $r['rule_id'] ?? '' ),
+						'path_prefix' => (string) ( $r['path_prefix'] ?? '' ),
+						'ip_address'  => (string) ( $r['ip_address'] ?? '' ),
+					);
 				}
 			}
 		} catch ( \Throwable $e ) {

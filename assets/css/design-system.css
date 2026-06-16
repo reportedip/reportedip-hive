@@ -823,6 +823,109 @@ button.rip-tier-lock--mode:hover {
     margin-bottom: var(--rip-space-1);
 }
 
+.rip-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rip-space-1);
+    margin-bottom: var(--rip-space-4);
+    max-width: 30rem;
+}
+
+.rip-form-label {
+    font-size: var(--rip-text-sm);
+    font-weight: 600;
+    color: var(--rip-gray-700);
+}
+
+.rip-waf-jump {
+    position: sticky;
+    top: var(--rip-space-8);
+    z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--rip-space-2);
+    margin-bottom: var(--rip-space-5);
+    padding: var(--rip-space-2) var(--rip-space-3);
+    background: var(--rip-gray-50);
+    border: 1px solid var(--rip-gray-200);
+}
+
+.rip-waf-jump__label {
+    font-size: var(--rip-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--rip-gray-500);
+}
+
+.rip-waf-jump__link {
+    font-size: var(--rip-text-sm);
+    font-weight: 600;
+    color: var(--rip-primary);
+    text-decoration: none;
+    padding: var(--rip-space-1) var(--rip-space-2);
+}
+
+.rip-waf-jump__link:hover,
+.rip-waf-jump__link:focus {
+    color: var(--rip-primary-dark);
+    background: var(--rip-gray-100);
+}
+
+#rip-waf-engine,
+#rip-waf-dropin,
+#rip-waf-exceptions {
+    scroll-margin-top: 5rem;
+}
+
+.rip-faq {
+    margin-top: var(--rip-space-6);
+    border-top: 1px solid var(--rip-gray-200);
+    padding-top: var(--rip-space-4);
+}
+
+.rip-faq__title {
+    margin: 0 0 var(--rip-space-3);
+    font-size: var(--rip-text-base);
+    color: var(--rip-gray-900);
+}
+
+.rip-faq__item {
+    padding: var(--rip-space-2) 0;
+    border-bottom: 1px solid var(--rip-gray-100);
+}
+
+.rip-faq__q {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--rip-gray-800);
+    list-style: none;
+}
+
+.rip-faq__q::-webkit-details-marker {
+    display: none;
+}
+
+.rip-faq__q::before {
+    content: '+';
+    display: inline-block;
+    width: 1em;
+    color: var(--rip-primary);
+    font-weight: 700;
+}
+
+.rip-faq__item[open] .rip-faq__q::before {
+    content: '\2212';
+}
+
+.rip-faq__a {
+    margin: var(--rip-space-2) 0 0 1em;
+    color: var(--rip-gray-600);
+    font-size: var(--rip-text-sm);
+    line-height: 1.6;
+}
+
 .rip-help-text {
     font-size: var(--rip-text-xs);
     color: var(--rip-gray-500);

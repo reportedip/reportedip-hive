@@ -187,6 +187,36 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assert_valid_php( $this->call_private( 'generate_prepend', array() ) );
 		}
 
+		/**
+		 * The guard helper functions are declared conditionally
+		 * (`if ( ! function_exists() )`), so they are NOT hoisted. The immediately
+		 * invoked guard closure calls them, therefore every helper MUST appear
+		 * before the closure or the guard fatals and fails open on the first
+		 * request that reads the body or evaluates an exception.
+		 */
+		public function test_guard_defines_helpers_before_the_closure(): void {
+			$php     = $this->call_private( 'generate_prepend', array() );
+			$closure = strpos( $php, '(function () {' );
+			$this->assertNotFalse( $closure );
+			foreach ( array(
+				'reportedip_hive_dropin_flatten',
+				'reportedip_hive_dropin_ip_match',
+				'reportedip_hive_dropin_loc_match',
+				'reportedip_hive_dropin_excepted',
+			) as $fn ) {
+				$def = strpos( $php, 'function ' . $fn . '(' );
+				$this->assertNotFalse( $def, "Guard must define {$fn}()." );
+				$this->assertLessThan( $closure, $def, "{$fn}() must be declared before the guard closure runs." );
+			}
+		}
+
+		public function test_guard_wires_exception_allowlist(): void {
+			$php = $this->call_private( 'generate_prepend', array() );
+			$this->assertStringContainsString( '$exceptions =', $php );
+			$this->assertStringContainsString( 'reportedip_hive_dropin_excepted( $exceptions, $rule', $php );
+			$this->assertStringContainsString( 'reportedip_hive_dropin_loc_match( $ex, $req_path, $ip )', $php );
+		}
+
 		public function test_queue_resync_noop_when_dropin_disabled(): void {
 			$this->mgr()->queue_resync();
 			$this->assertSame( 0, $this->count_shutdown_syncs(), 'A disabled drop-in must never queue a rebake.' );

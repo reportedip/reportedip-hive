@@ -2,6 +2,29 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.10] — 2026-06-16
+
+### Fixed
+
+- **Extended Protection (pre-WordPress guard) now honours WAF exceptions — and
+  inspects request bodies at all.** The generated guard declared its helper
+  functions *after* the immediately-invoked guard closure; because those
+  declarations are conditional (`function_exists`) they are not hoisted, so the
+  closure fatally errored and failed open on every request that carried a POST
+  body. Body inspection in the pre-WordPress layer was therefore a no-op (the
+  in-WordPress engine still caught those requests). Helpers are now declared
+  before the closure, so the guard inspects bodies as intended. The guard also
+  bakes in the active WAF exceptions (rule / group / whole-path, with optional
+  path-prefix and IP/CIDR scope) and rebakes when the allowlist changes, so the
+  pre-WordPress layer and the in-WordPress engine honour the same exceptions.
+
+### Added
+
+- **WAF tab orientation: a sticky "jump to" bar** (Engine & rules · Extended
+  protection · Exceptions) and a **WAF-exceptions FAQ** explaining why a
+  first-party request can trip the firewall, what an exception does, how tightly
+  to scope it, and that exceptions also apply to Extended Protection.
+
 ## [2.1.9] — 2026-06-15
 
 ### Added

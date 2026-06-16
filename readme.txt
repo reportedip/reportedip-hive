@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.9
+Stable tag: 2.1.10
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.10 =
+
+Fixed: Extended Protection (the pre-WordPress guard) now honours WAF exceptions and inspects request bodies as intended. The guard previously declared its helpers after the guard closure, which made it fail open on POST requests, so pre-WordPress body inspection was a no-op (the in-WordPress engine still caught them). Active exceptions are now baked into the guard and rebaked when the allowlist changes. Added: a sticky "jump to" bar and a FAQ on the WAF tab so it is easier to find the engine, Extended Protection and exception settings and to understand how exceptions work.
 
 = 2.1.9 =
 

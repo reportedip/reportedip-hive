@@ -587,13 +587,20 @@ class ReportedIP_Hive_Admin_Firewall {
 
 		self::render_tab_intro( __( 'The Web Application Firewall inspects every front-end request (URL, body, user-agent) against attack signatures — SQL injection, XSS, path traversal, command injection — and blocks the request before it reaches your site. Engine and baseline rules are free on every plan.', 'reportedip-hive' ) );
 
+		echo '<nav class="rip-waf-jump" aria-label="' . esc_attr__( 'WAF sections', 'reportedip-hive' ) . '">';
+		echo '<span class="rip-waf-jump__label">' . esc_html__( 'Jump to:', 'reportedip-hive' ) . '</span>';
+		echo '<a class="rip-waf-jump__link" href="#rip-waf-engine">' . esc_html__( 'Engine & rules', 'reportedip-hive' ) . '</a>';
+		echo '<a class="rip-waf-jump__link" href="#rip-waf-dropin">' . esc_html__( 'Extended protection', 'reportedip-hive' ) . '</a>';
+		echo '<a class="rip-waf-jump__link" href="#rip-waf-exceptions">' . esc_html__( 'Exceptions', 'reportedip-hive' ) . '</a>';
+		echo '</nav>';
+
 		$waf         = ReportedIP_Hive_WAF::get_instance();
 		$enabled     = $waf->is_enabled();
 		$report_only = $waf->is_report_only();
 		$rule_count  = $waf->active_rule_count();
 		$pl_cap      = $waf->paranoia_cap();
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Web Application Firewall', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<div class="rip-card" id="rip-waf-engine"><div class="rip-card__header"><h2>' . esc_html__( 'Web Application Firewall', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 
 		echo '<div class="rip-grid rip-grid-cols-4">';
 		self::render_stat_card(
@@ -682,7 +689,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			return;
 		}
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'WAF Exceptions', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<div class="rip-card" id="rip-waf-exceptions"><div class="rip-card__header"><h2>' . esc_html__( 'WAF Exceptions', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'Relieve a false positive without editing code. Scope an exception to a single rule (optionally on one path), a rule group, or — for a first-party endpoint that legitimately receives attack-like payloads — the whole engine on a path. A whole-engine exception must always carry a path or IP.', 'reportedip-hive' ) . '</p>';
 
 		echo '<form id="add-waf-exception-form" class="rip-form">';
@@ -717,6 +724,18 @@ class ReportedIP_Hive_Admin_Firewall {
 		printf( '<input type="hidden" name="tab" value="%s" />', esc_attr( 'waf' ) );
 		$table->display();
 		echo '</form>';
+
+		echo '<div class="rip-faq">';
+		echo '<h3 class="rip-faq__title">' . esc_html__( 'How WAF exceptions work', 'reportedip-hive' ) . '</h3>';
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Why does my own firewall block a legitimate request?', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'The WAF matches every request against attack signatures (SQL injection, XSS, and so on). When an endpoint legitimately carries attack-like data — for example an API that ingests reported attack payloads — a rule fires even though it is not an attack. That is a false positive, and an exception is the right tool for it.', 'reportedip-hive' ) . '</p></details>';
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'What exactly does an exception do?', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'It cancels a rule hit instead of blocking it — as narrowly as you choose: a single rule, optionally only on one path; a whole rule group; or, for an ingest endpoint, the whole engine on one path. A whole-engine exception always requires a path or IP, so the firewall can never be switched off everywhere by accident.', 'reportedip-hive' ) . '</p></details>';
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Does this weaken my security?', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'Only within the scope you pick. A rule-on-path exception leaves every other rule and every other path fully protected. Keep the scope as tight as possible — prefer a single rule on a single path over a global rule exception.', 'reportedip-hive' ) . '</p></details>';
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Do exceptions also apply to Extended Protection (pre-WordPress)?', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'Yes. Active exceptions are baked into the pre-WordPress guard too, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist.', 'reportedip-hive' ) . '</p></details>';
+		echo '</div>';
 
 		echo '</div></div>';
 	}
@@ -757,7 +776,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			$status_badge = 'rip-badge--warning';
 		}
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Extended Protection (pre-WordPress)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<div class="rip-card" id="rip-waf-dropin"><div class="rip-card__header"><h2>' . esc_html__( 'Extended Protection (pre-WordPress)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'Optionally run the firewall before WordPress loads, so a malicious request is rejected earlier and cheaper. Off by default. On Apache and PHP-FPM the configuration is written automatically; on nginx or via php.ini one manual step is needed (see Server Setup).', 'reportedip-hive' ) . '</p>';
 
 		echo '<div class="rip-grid rip-grid-cols-3">';
