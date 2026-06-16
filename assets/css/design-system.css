@@ -926,6 +926,22 @@ button.rip-tier-lock--mode:hover {
     line-height: 1.6;
 }
 
+.rip-field-hint {
+    margin: var(--rip-space-1) 0 0;
+    max-width: 30rem;
+    color: var(--rip-gray-500);
+    font-size: var(--rip-text-xs);
+    line-height: 1.5;
+}
+
+.rip-field-hint code,
+.rip-faq__a code {
+    padding: 0.05em 0.35em;
+    background: var(--rip-gray-100);
+    color: var(--rip-gray-800);
+    font-size: 0.95em;
+}
+
 .rip-help-text {
     font-size: var(--rip-text-xs);
     color: var(--rip-gray-500);

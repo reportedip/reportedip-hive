@@ -2,6 +2,19 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.11] — 2026-06-16
+
+### Changed
+
+- **WAF exception form is now self-explanatory.** Each field carries an inline
+  hint, the scope selector progressively reveals only the relevant field, and
+  the ambiguous "Rule ID or group" field is split into a Rule ID input (single
+  rule) and a Rule group dropdown populated from the engine's known categories —
+  so it is clear what to enter and where the value comes from (the WAF block
+  log, or the one-click "Allow" button). The exceptions FAQ was rewritten to
+  explain what to configure, where to find a rule ID or group, how to pick a
+  scope, and how the path/IP filters work.
+
 ## [2.1.10] — 2026-06-16
 
 ### Fixed

@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-06-16T06:24:35+00:00\n"
+"PO-Revision-Date: 2026-06-16T07:04:03+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
@@ -83,7 +83,7 @@ msgid "Scanner probe paths"
 msgstr "Scanner-Sondierungspfade"
 
 #: admin/class-admin-firewall.php:178
-#: admin/class-admin-firewall.php:1052
+#: admin/class-admin-firewall.php:1116
 msgid "Scan Detection"
 msgstr "Scan-Erkennung"
 
@@ -171,7 +171,7 @@ msgid "Module"
 msgstr "Modul"
 
 #: admin/class-admin-firewall.php:298
-#: admin/class-admin-firewall.php:787
+#: admin/class-admin-firewall.php:851
 #: admin/class-admin-settings.php:1635
 #: admin/class-admin-settings.php:1636
 #: admin/class-admin-settings.php:5736
@@ -202,12 +202,12 @@ msgstr "WAF-Engine"
 #: admin/class-admin-firewall.php:406
 #: admin/class-admin-firewall.php:421
 #: admin/class-admin-firewall.php:608
-#: admin/class-admin-firewall.php:879
-#: admin/class-admin-firewall.php:1019
-#: admin/class-admin-firewall.php:1058
-#: admin/class-admin-firewall.php:1138
-#: admin/class-admin-firewall.php:1153
-#: admin/class-admin-firewall.php:1564
+#: admin/class-admin-firewall.php:943
+#: admin/class-admin-firewall.php:1083
+#: admin/class-admin-firewall.php:1122
+#: admin/class-admin-firewall.php:1202
+#: admin/class-admin-firewall.php:1217
+#: admin/class-admin-firewall.php:1628
 #: admin/class-admin-settings.php:3521
 #: admin/class-admin-settings.php:6179
 #: admin/class-setup-wizard.php:1838
@@ -217,11 +217,11 @@ msgstr "Aktiv"
 
 #: admin/class-admin-firewall.php:328
 #: admin/class-admin-firewall.php:608
-#: admin/class-admin-firewall.php:879
-#: admin/class-admin-firewall.php:1019
-#: admin/class-admin-firewall.php:1058
-#: admin/class-admin-firewall.php:1153
-#: admin/class-admin-firewall.php:1564
+#: admin/class-admin-firewall.php:943
+#: admin/class-admin-firewall.php:1083
+#: admin/class-admin-firewall.php:1122
+#: admin/class-admin-firewall.php:1217
+#: admin/class-admin-firewall.php:1628
 #: admin/class-admin-settings.php:6185
 msgid "Disabled"
 msgstr "Deaktiviert"
@@ -249,14 +249,14 @@ msgstr "Anfragen werden nicht geprüft."
 #: admin/class-admin-firewall.php:391
 #: admin/class-admin-firewall.php:406
 #: admin/class-admin-firewall.php:421
-#: admin/class-admin-firewall.php:769
-#: admin/class-admin-firewall.php:991
-#: admin/class-admin-firewall.php:1557
-#: admin/class-admin-firewall.php:1596
-#: admin/class-admin-firewall.php:1655
-#: admin/class-admin-firewall.php:1689
-#: admin/class-admin-firewall.php:1699
-#: admin/class-admin-firewall.php:1709
+#: admin/class-admin-firewall.php:833
+#: admin/class-admin-firewall.php:1055
+#: admin/class-admin-firewall.php:1621
+#: admin/class-admin-firewall.php:1660
+#: admin/class-admin-firewall.php:1719
+#: admin/class-admin-firewall.php:1753
+#: admin/class-admin-firewall.php:1763
+#: admin/class-admin-firewall.php:1773
 #: admin/class-setup-wizard.php:1030
 #: admin/class-setup-wizard.php:1849
 #: admin/class-setup-wizard.php:1885
@@ -269,7 +269,7 @@ msgid "Optional: run the WAF before WordPress loads."
 msgstr "Optional: Die WAF läuft, bevor WordPress lädt."
 
 #: admin/class-admin-firewall.php:352
-#: admin/class-admin-firewall.php:772
+#: admin/class-admin-firewall.php:836
 msgid "Running"
 msgstr "Läuft"
 
@@ -286,7 +286,7 @@ msgid "Enabled, but the server directive is not active yet."
 msgstr "Aktiviert, aber die Server-Direktive ist noch nicht aktiv."
 
 #: admin/class-admin-firewall.php:361
-#: admin/class-admin-firewall.php:779
+#: admin/class-admin-firewall.php:843
 msgid "Extended Protection (pre-WordPress)"
 msgstr "Erweiterter Schutz (vor WordPress)"
 
@@ -327,7 +327,7 @@ msgid "Scan detector: %1$s · Decoy trap: %2$s"
 msgstr "Scan-Detektor: %1$s · Köderfalle: %2$s"
 
 #: admin/class-admin-firewall.php:420
-#: admin/class-admin-firewall.php:1560
+#: admin/class-admin-firewall.php:1624
 #: includes/class-mode-manager.php:320
 msgid "Security Headers"
 msgstr "Security-Header"
@@ -347,8 +347,8 @@ msgid "Synced"
 msgstr "Synchronisiert"
 
 #: admin/class-admin-firewall.php:446
-#: admin/class-admin-firewall.php:984
-#: admin/class-admin-firewall.php:1071
+#: admin/class-admin-firewall.php:1048
+#: admin/class-admin-firewall.php:1135
 msgid "Baseline"
 msgstr "Basis"
 
@@ -443,7 +443,7 @@ msgid "Enforcing"
 msgstr "Aktiv blockierend"
 
 #: admin/class-admin-firewall.php:617
-#: admin/class-admin-firewall.php:979
+#: admin/class-admin-firewall.php:1043
 #: admin/class-setup-wizard.php:1830
 msgid "Mode"
 msgstr "Modus"
@@ -510,744 +510,855 @@ msgstr "WAF-Ausnahmen"
 msgid "Relieve a false positive without editing code. Scope an exception to a single rule (optionally on one path), a rule group, or — for a first-party endpoint that legitimately receives attack-like payloads — the whole engine on a path. A whole-engine exception must always carry a path or IP."
 msgstr "Einen Fehlalarm ohne Code-Eingriff entschärfen. Beschränke eine Ausnahme auf eine einzelne Regel (optional auf einen Pfad), eine Regelgruppe oder — für einen First-Party-Endpunkt, der legitim angriffsartige Nutzdaten empfängt — die gesamte Engine auf einem Pfad. Eine Ausnahme für die gesamte Engine muss immer einen Pfad oder eine IP tragen."
 
-#: admin/class-admin-firewall.php:696
+#: admin/class-admin-firewall.php:697
 #: admin/class-waf-exceptions-table.php:69
 msgid "Scope"
 msgstr "Geltungsbereich"
 
-#: admin/class-admin-firewall.php:698
-msgid "Single rule"
-msgstr "Einzelne Regel"
-
 #: admin/class-admin-firewall.php:699
+msgid "Single rule — exempt one specific rule"
+msgstr "Einzelne Regel — eine bestimmte Regel ausnehmen"
+
+#: admin/class-admin-firewall.php:700
+msgid "Rule group — exempt a whole category"
+msgstr "Regelgruppe — eine ganze Kategorie ausnehmen"
+
+#: admin/class-admin-firewall.php:701
+msgid "Whole engine — only on a trusted path/IP"
+msgstr "Gesamte Engine — nur auf vertrauenswürdigem Pfad/IP"
+
+#: admin/class-admin-firewall.php:703
+msgid "How broadly the exception applies. Start with \"Single rule\" — it is the narrowest and the right choice for almost every false positive."
+msgstr "Wie breit die Ausnahme gilt. Beginne mit „Einzelne Regel\" — das ist am engsten und für fast jeden Fehlalarm die richtige Wahl."
+
+#: admin/class-admin-firewall.php:705
+msgid "Rule ID"
+msgstr "Regel-ID"
+
+#: admin/class-admin-firewall.php:707
+msgid "The exact rule that fired. You will find it in the firewall log as <code>Rule:</code> (Security &rarr; Activity &rarr; WAF Block). Easiest of all: click the shield \"Allow\" button on the blocked event there and this is filled in for you."
+msgstr "Die genaue Regel, die ausgelöst hat. Du findest sie im Firewall-Protokoll als <code>Rule:</code> (Sicherheit &rarr; Aktivität &rarr; WAF-Block). Am einfachsten: Klicke dort beim blockierten Ereignis den Schild-Button „Erlauben\" — dann wird dies für dich ausgefüllt."
+
+#: admin/class-admin-firewall.php:709
 msgid "Rule group"
 msgstr "Regelgruppe"
 
-#: admin/class-admin-firewall.php:700
-msgid "Whole engine (path/IP required)"
-msgstr "Gesamte Engine (Pfad/IP erforderlich)"
-
-#: admin/class-admin-firewall.php:703
-msgid "Rule ID or group"
-msgstr "Regel-ID oder Gruppe"
-
-#: admin/class-admin-firewall.php:706
-msgid "Path prefix (optional)"
-msgstr "Pfad-Präfix (optional)"
-
-#: admin/class-admin-firewall.php:709
-msgid "IP or CIDR (optional)"
-msgstr "IP oder CIDR (optional)"
-
-#: admin/class-admin-firewall.php:712
-msgid "Reason (optional)"
-msgstr "Grund (optional)"
-
 #: admin/class-admin-firewall.php:715
+msgid "Exempts every rule in this category at once — shown in the log as \"Group:\". Broader than a single rule, so use it only when several rules of the same kind keep misfiring."
+msgstr "Nimmt alle Regeln dieser Kategorie auf einmal aus — im Protokoll als „Group:\" angezeigt. Breiter als eine einzelne Regel, daher nur verwenden, wenn mehrere Regeln derselben Art immer wieder fälschlich anschlagen."
+
+#: admin/class-admin-firewall.php:717
+msgid "No rule needed — the WAF skips the path and/or IP below entirely. Use this only for a first-party endpoint you fully trust (e.g. your own API that receives attack samples). A path or IP is required."
+msgstr "Keine Regel nötig — die WAF überspringt den unten angegebenen Pfad und/oder die IP vollständig. Nutze das nur für einen First-Party-Endpunkt, dem du voll vertraust (z. B. deine eigene API, die Angriffs-Beispiele empfängt). Ein Pfad oder eine IP ist erforderlich."
+
+#: admin/class-admin-firewall.php:719
+msgid "Path prefix"
+msgstr "Pfad-Präfix"
+
+#: admin/class-admin-firewall.php:721
+msgid "Optional. Limits the exception to URLs that start with this path. Leave empty to apply everywhere (single-rule and group scope only)."
+msgstr "Optional. Beschränkt die Ausnahme auf URLs, die mit diesem Pfad beginnen. Leer lassen, um überall zu gelten (nur bei Einzelregel- und Gruppen-Geltungsbereich)."
+
+#: admin/class-admin-firewall.php:723
+msgid "IP or CIDR"
+msgstr "IP oder CIDR"
+
+#: admin/class-admin-firewall.php:725
+msgid "Optional. Limits the exception to this client IP or range, e.g. 203.0.113.0/24."
+msgstr "Optional. Beschränkt die Ausnahme auf diese Client-IP oder diesen Bereich, z. B. 203.0.113.0/24."
+
+#: admin/class-admin-firewall.php:727
+#: admin/class-admin-settings.php:4101
+#: admin/class-admin-settings.php:4177
+#: admin/class-blocked-ips-table.php:52
+#: admin/class-waf-exceptions-table.php:73
+#: admin/class-whitelist-table.php:53
+msgid "Reason"
+msgstr "Grund"
+
+#: admin/class-admin-firewall.php:728
+msgid "e.g. report ingest endpoint"
+msgstr "z. B. Report-Ingest-Endpunkt"
+
+#: admin/class-admin-firewall.php:729
+msgid "Optional. Shown in the list below so you remember later why this exception exists."
+msgstr "Optional. Wird in der Liste unten angezeigt, damit du später weißt, warum diese Ausnahme existiert."
+
+#: admin/class-admin-firewall.php:731
 msgid "Add exception"
 msgstr "Ausnahme hinzufügen"
 
-#: admin/class-admin-firewall.php:729
-msgid "How WAF exceptions work"
-msgstr "Wie WAF-Ausnahmen funktionieren"
+#: admin/class-admin-firewall.php:745
+msgid "Understanding WAF exceptions"
+msgstr "WAF-Ausnahmen verstehen"
 
-#: admin/class-admin-firewall.php:730
-msgid "Why does my own firewall block a legitimate request?"
-msgstr "Warum blockiert meine eigene Firewall eine legitime Anfrage?"
+#: admin/class-admin-firewall.php:747
+msgid "What is this for, and do I need it?"
+msgstr "Wofür ist das, und brauche ich es?"
 
-#: admin/class-admin-firewall.php:731
-msgid "The WAF matches every request against attack signatures (SQL injection, XSS, and so on). When an endpoint legitimately carries attack-like data — for example an API that ingests reported attack payloads — a rule fires even though it is not an attack. That is a false positive, and an exception is the right tool for it."
-msgstr "Die WAF prüft jede Anfrage gegen Angriffssignaturen (SQL-Injection, XSS und so weiter). Wenn ein Endpunkt legitim angriffsartige Daten transportiert — etwa eine API, die gemeldete Angriffs-Payloads entgegennimmt —, schlägt eine Regel an, obwohl es kein Angriff ist. Das ist ein Fehlalarm, und eine Ausnahme ist das richtige Mittel dagegen."
+#: admin/class-admin-firewall.php:748
+msgid "The WAF matches every front-end request against attack signatures (SQL injection, XSS, and so on). Occasionally a legitimate request looks like an attack — for example an API endpoint that receives reported attack samples, or a form that contains code. The rule fires even though nothing malicious is happening: a false positive. An exception tells the WAF to let that specific case through. Most sites never need one — only add an exception when you have confirmed a real false positive in the log."
+msgstr "Die WAF prüft jede Frontend-Anfrage gegen Angriffssignaturen (SQL-Injection, XSS und so weiter). Gelegentlich sieht eine legitime Anfrage wie ein Angriff aus — etwa ein API-Endpunkt, der gemeldete Angriffs-Beispiele empfängt, oder ein Formular mit Code-Inhalt. Die Regel schlägt an, obwohl nichts Bösartiges passiert: ein Fehlalarm. Eine Ausnahme weist die WAF an, genau diesen Fall durchzulassen. Die meisten Seiten brauchen keine — lege eine Ausnahme nur an, wenn du im Protokoll einen echten Fehlalarm bestätigt hast."
 
-#: admin/class-admin-firewall.php:732
-msgid "What exactly does an exception do?"
-msgstr "Was genau bewirkt eine Ausnahme?"
+#: admin/class-admin-firewall.php:750
+msgid "Where do I get the Rule ID or group? I do not know what to type."
+msgstr "Woher bekomme ich die Regel-ID oder Gruppe? Ich weiß nicht, was ich eingeben soll."
 
-#: admin/class-admin-firewall.php:733
-msgid "It cancels a rule hit instead of blocking it — as narrowly as you choose: a single rule, optionally only on one path; a whole rule group; or, for an ingest endpoint, the whole engine on one path. A whole-engine exception always requires a path or IP, so the firewall can never be switched off everywhere by accident."
-msgstr "Sie hebt einen Regeltreffer auf, statt zu blockieren — so eng, wie du es wählst: eine einzelne Regel, optional nur auf einem Pfad; eine ganze Regelgruppe; oder, für einen Ingest-Endpunkt, die gesamte Engine auf einem Pfad. Eine Ausnahme für die gesamte Engine erfordert immer einen Pfad oder eine IP, damit die Firewall nie versehentlich überall abgeschaltet wird."
+#: admin/class-admin-firewall.php:751
+msgid "You normally do not type it at all. Every block is recorded under <strong>Security &rarr; Activity &rarr; WAF Block</strong>, and each entry names the rule that fired (<code>Rule: waf_sqli_union</code>) and its category (<code>Group: sql_injection</code>). The quickest path is the shield <strong>\"Allow\"</strong> button on that log row: it creates a single-rule exception for exactly that rule and path in one click, so you never have to know rule IDs. The form above is only for adding one by hand — copy the value after <code>Rule:</code> into the Rule ID field, or pick the category in the Rule group dropdown."
+msgstr "Normalerweise musst du sie gar nicht eingeben. Jede Blockierung wird unter <strong>Sicherheit &rarr; Aktivität &rarr; WAF-Block</strong> protokolliert, und jeder Eintrag nennt die ausgelöste Regel (<code>Rule: waf_sqli_union</code>) und ihre Kategorie (<code>Group: sql_injection</code>). Am schnellsten geht es über den Schild-Button <strong>„Erlauben\"</strong> in dieser Log-Zeile: Er legt mit einem Klick eine Einzelregel-Ausnahme für genau diese Regel und diesen Pfad an, sodass du nie Regel-IDs kennen musst. Das Formular oben dient nur dem manuellen Anlegen — kopiere den Wert hinter <code>Rule:</code> in das Feld Regel-ID oder wähle die Kategorie im Dropdown Regelgruppe."
 
-#: admin/class-admin-firewall.php:734
-msgid "Does this weaken my security?"
-msgstr "Schwächt das meine Sicherheit?"
+#: admin/class-admin-firewall.php:753
+msgid "Which scope should I choose — rule, group or whole engine?"
+msgstr "Welchen Geltungsbereich soll ich wählen — Regel, Gruppe oder gesamte Engine?"
 
-#: admin/class-admin-firewall.php:735
-msgid "Only within the scope you pick. A rule-on-path exception leaves every other rule and every other path fully protected. Keep the scope as tight as possible — prefer a single rule on a single path over a global rule exception."
-msgstr "Nur im gewählten Geltungsbereich. Eine Regel-auf-Pfad-Ausnahme lässt jede andere Regel und jeden anderen Pfad voll geschützt. Halte den Bereich so eng wie möglich — bevorzuge eine einzelne Regel auf einem einzelnen Pfad gegenüber einer globalen Regel-Ausnahme."
+#: admin/class-admin-firewall.php:754
+msgid "Single rule is the narrowest and the right default: it exempts exactly one rule, optionally only on one path. Rule group exempts a whole category (every XSS rule, say) — broader, only when several related rules keep misfiring. Whole engine skips all inspection and is reserved for a first-party endpoint you fully trust; it always requires a path or IP, so protection is never switched off everywhere by accident. Rule of thumb: pick the smallest scope that stops the false positive."
+msgstr "Einzelne Regel ist am engsten und der richtige Standard: Sie nimmt genau eine Regel aus, optional nur auf einem Pfad. Regelgruppe nimmt eine ganze Kategorie aus (z. B. jede XSS-Regel) — breiter, nur wenn mehrere verwandte Regeln immer wieder fälschlich anschlagen. Gesamte Engine überspringt jede Prüfung und ist einem First-Party-Endpunkt vorbehalten, dem du voll vertraust; sie erfordert immer einen Pfad oder eine IP, damit der Schutz nie versehentlich überall abgeschaltet wird. Faustregel: Wähle den kleinsten Geltungsbereich, der den Fehlalarm stoppt."
 
-#: admin/class-admin-firewall.php:736
-msgid "Do exceptions also apply to Extended Protection (pre-WordPress)?"
-msgstr "Gelten Ausnahmen auch für den Erweiterten Schutz (vor WordPress)?"
+#: admin/class-admin-firewall.php:756
+msgid "How do the path and IP fields work?"
+msgstr "Wie funktionieren die Felder Pfad und IP?"
 
-#: admin/class-admin-firewall.php:737
-msgid "Yes. Active exceptions are baked into the pre-WordPress guard too, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist."
-msgstr "Ja. Aktive Ausnahmen werden auch in den Pre-WordPress-Guard eingebacken, sodass die WordPress-Engine und der Erweiterte-Schutz-Layer dieselbe Ausnahmeliste berücksichtigen."
+#: admin/class-admin-firewall.php:757
+msgid "Both are optional narrowing filters. Path prefix limits the exception to URLs that start with the value you enter (for example /wp-json/my-api/v1, matching every route below it). IP or CIDR limits it to one client address or range. Leave them empty and a single-rule or group exception applies site-wide; set them to make it as tight as possible. For a whole-engine exception at least one of the two is mandatory."
+msgstr "Beide sind optionale Eingrenzungsfilter. Pfad-Präfix beschränkt die Ausnahme auf URLs, die mit dem eingegebenen Wert beginnen (z. B. /wp-json/my-api/v1, passend auf jede darunterliegende Route). IP oder CIDR beschränkt sie auf eine Client-Adresse oder einen Bereich. Lässt du sie leer, gilt eine Einzelregel- oder Gruppen-Ausnahme site-weit; setzt du sie, wird sie so eng wie möglich. Für eine Ausnahme der gesamten Engine ist mindestens eines der beiden Pflicht."
 
-#: admin/class-admin-firewall.php:765
-#: admin/class-admin-firewall.php:1125
+#: admin/class-admin-firewall.php:759
+msgid "Does this weaken my security, and does it apply to Extended Protection?"
+msgstr "Schwächt das meine Sicherheit, und gilt es auch für den Erweiterten Schutz?"
+
+#: admin/class-admin-firewall.php:760
+msgid "Only within the scope you pick — a rule-on-path exception leaves every other rule and every other path fully protected, which is why tight scoping matters. Exceptions apply everywhere the engine runs: they are also baked into the pre-WordPress guard, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist."
+msgstr "Nur im gewählten Geltungsbereich — eine Regel-auf-Pfad-Ausnahme lässt jede andere Regel und jeden anderen Pfad voll geschützt, weshalb enges Scoping wichtig ist. Ausnahmen gelten überall, wo die Engine läuft: Sie werden auch in den Pre-WordPress-Guard eingebacken, sodass die WordPress-Engine und der Erweiterte-Schutz-Layer dieselbe Ausnahmeliste berücksichtigen."
+
+#: admin/class-admin-firewall.php:779
+msgid "SQL injection"
+msgstr "SQL-Injection"
+
+#: admin/class-admin-firewall.php:780
+msgid "Cross-site scripting (XSS)"
+msgstr "Cross-Site-Scripting (XSS)"
+
+#: admin/class-admin-firewall.php:781
+msgid "Path traversal"
+msgstr "Path Traversal"
+
+#: admin/class-admin-firewall.php:782
+msgid "Command injection"
+msgstr "Command Injection"
+
+#: admin/class-admin-firewall.php:783
+msgid "Sensitive-file probing"
+msgstr "Sondieren sensibler Dateien"
+
+#: admin/class-admin-firewall.php:784
+msgid "Scanner / tool user-agents"
+msgstr "Scanner-/Tool-User-Agents"
+
+#: admin/class-admin-firewall.php:785
+msgid "Log4Shell (JNDI)"
+msgstr "Log4Shell (JNDI)"
+
+#: admin/class-admin-firewall.php:786
+msgid "Server-side request forgery (SSRF)"
+msgstr "Server-Side Request Forgery (SSRF)"
+
+#: admin/class-admin-firewall.php:787
+msgid "PHP injection"
+msgstr "PHP-Injection"
+
+#: admin/class-admin-firewall.php:788
+msgid "NoSQL injection"
+msgstr "NoSQL-Injection"
+
+#: admin/class-admin-firewall.php:789
+msgid "XML external entity (XXE)"
+msgstr "XML External Entity (XXE)"
+
+#: admin/class-admin-firewall.php:790
+msgid "Web shell"
+msgstr "Webshell"
+
+#: admin/class-admin-firewall.php:791
+msgid "CRLF / header injection"
+msgstr "CRLF-/Header-Injection"
+
+#: admin/class-admin-firewall.php:792
+msgid "Server-side template injection (SSTI)"
+msgstr "Server-Side Template Injection (SSTI)"
+
+#. translators: 1: human-readable group name, 2: raw group token shown in the log.
+#: admin/class-admin-firewall.php:801
+#, php-format
+msgid "%1$s (%2$s)"
+msgstr "%1$s (%2$s)"
+
+#: admin/class-admin-firewall.php:829
+#: admin/class-admin-firewall.php:1189
 msgid "Unknown"
 msgstr "Unbekannt"
 
-#: admin/class-admin-firewall.php:775
+#: admin/class-admin-firewall.php:839
 msgid "Waiting for server config"
 msgstr "Wartet auf Server-Konfiguration"
 
-#: admin/class-admin-firewall.php:780
+#: admin/class-admin-firewall.php:844
 msgid "Optionally run the firewall before WordPress loads, so a malicious request is rejected earlier and cheaper. Off by default. On Apache and PHP-FPM the configuration is written automatically; on nginx or via php.ini one manual step is needed (see Server Setup)."
 msgstr "Lässt die Firewall optional laufen, bevor WordPress lädt — eine bösartige Anfrage wird so früher und ressourcenschonender abgewiesen. Standardmäßig aus. Auf Apache und PHP-FPM wird die Konfiguration automatisch geschrieben; bei nginx oder via php.ini ist ein manueller Schritt nötig (siehe Server-Setup)."
 
-#: admin/class-admin-firewall.php:793
-#: admin/class-admin-firewall.php:1168
+#: admin/class-admin-firewall.php:857
+#: admin/class-admin-firewall.php:1232
 msgid "Detected server"
 msgstr "Erkannter Server"
 
-#: admin/class-admin-firewall.php:798
+#: admin/class-admin-firewall.php:862
 msgid "Generated"
 msgstr "Erzeugt"
 
-#: admin/class-admin-firewall.php:798
+#: admin/class-admin-firewall.php:862
 msgid "Not generated"
 msgstr "Nicht erzeugt"
 
-#: admin/class-admin-firewall.php:800
+#: admin/class-admin-firewall.php:864
 msgid "Guard file"
 msgstr "Guard-Datei"
 
-#: admin/class-admin-firewall.php:806
+#: admin/class-admin-firewall.php:870
 msgid "Setup complete — the guard executed for this very request, so every request to this site passes the firewall before WordPress loads."
 msgstr "Setup vollständig — der Guard wurde für genau diese Anfrage ausgeführt. Jede Anfrage an diese Website durchläuft die Firewall, bevor WordPress lädt."
 
-#: admin/class-admin-firewall.php:808
+#: admin/class-admin-firewall.php:872
 msgid "The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes — reload this page shortly; the status flips to Running as soon as the guard executes."
 msgstr "Die Direktive wurde automatisch geschrieben. PHP-FPM cached .user.ini bis zu fünf Minuten — laden Sie diese Seite in Kürze neu; der Status springt auf „Läuft\", sobald der Guard ausgeführt wird."
 
 #. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
-#: admin/class-admin-firewall.php:813
+#: admin/class-admin-firewall.php:877
 #, php-format
 msgid "One manual step left: add the directive to your server. The %1$sServer Setup tab%2$s shows both options (nginx snippet or php.ini line) with your live paths — this status flips to Running automatically once it works."
 msgstr "Ein manueller Schritt fehlt noch: Fügen Sie die Direktive auf Ihrem Server hinzu. Der %1$sServer-Setup-Tab%2$s zeigt beide Optionen (nginx-Snippet oder php.ini-Zeile) mit Ihren Live-Pfaden — dieser Status springt automatisch auf „Läuft\", sobald es funktioniert."
 
-#: admin/class-admin-firewall.php:822
+#: admin/class-admin-firewall.php:886
 msgid "Disable extended protection"
 msgstr "Erweiterten Schutz deaktivieren"
 
-#: admin/class-admin-firewall.php:822
+#: admin/class-admin-firewall.php:886
 msgid "Enable extended protection"
 msgstr "Erweiterten Schutz aktivieren"
 
-#: admin/class-admin-firewall.php:827
-#: admin/class-admin-firewall.php:1197
+#: admin/class-admin-firewall.php:891
+#: admin/class-admin-firewall.php:1261
 msgid "Open Server Setup"
 msgstr "Server-Setup öffnen"
 
-#: admin/class-admin-firewall.php:843
+#: admin/class-admin-firewall.php:907
 msgid "The bot verifier is unavailable."
 msgstr "Die Bot-Verifizierung ist nicht verfügbar."
 
-#: admin/class-admin-firewall.php:847
+#: admin/class-admin-firewall.php:911
 msgid "Many attackers disguise themselves as Googlebot to slip past rate limits. This sensor checks whether a request claiming to be a known crawler really comes from that crawler — first against the official IP ranges, then via forward-confirmed reverse DNS. Genuine crawlers are never blocked, so it is SEO-safe by design."
 msgstr "Viele Angreifer tarnen sich als Googlebot, um an Rate-Limits vorbeizukommen. Dieser Sensor prüft, ob eine Anfrage, die sich als bekannter Crawler ausgibt, wirklich von diesem Crawler stammt — zuerst gegen die offiziellen IP-Bereiche, dann per forward-confirmed Reverse-DNS. Echte Crawler werden nie blockiert, der Sensor ist also konstruktionsbedingt SEO-sicher."
 
-#: admin/class-admin-firewall.php:872
+#: admin/class-admin-firewall.php:936
 #: includes/class-mode-manager.php:308
 msgid "Verified Bot Detection"
 msgstr "Verifizierte Bot-Erkennung"
 
-#: admin/class-admin-firewall.php:881
+#: admin/class-admin-firewall.php:945
 msgid "Sensor"
 msgstr "Sensor"
 
-#: admin/class-admin-firewall.php:887
+#: admin/class-admin-firewall.php:951
 msgid "Known crawlers"
 msgstr "Bekannte Crawler"
 
-#: admin/class-admin-firewall.php:893
+#: admin/class-admin-firewall.php:957
 msgid "With official IP ranges"
 msgstr "Mit offiziellen IP-Bereichen"
 
-#: admin/class-admin-firewall.php:899
+#: admin/class-admin-firewall.php:963
 msgid "Spoofers caught (7 days)"
 msgstr "Gefälschte Crawler erkannt (7 Tage)"
 
-#: admin/class-admin-firewall.php:905
+#: admin/class-admin-firewall.php:969
 msgid "Crawlers currently verified:"
 msgstr "Aktuell verifizierte Crawler:"
 
-#: admin/class-admin-firewall.php:920
+#: admin/class-admin-firewall.php:984
 msgid "Green: verified DNS-free against the official IP ranges. Grey: verified via forward-confirmed reverse DNS. The frequently-refreshed range feeds (Google, Bing) arrive with the Professional ruleset."
 msgstr "Grün: DNS-frei gegen die offiziellen IP-Bereiche verifiziert. Grau: per forward-confirmed Reverse-DNS verifiziert. Die häufig aktualisierten Range-Feeds (Google, Bing) kommen mit dem Professional-Regelsatz."
 
-#: admin/class-admin-firewall.php:924
+#: admin/class-admin-firewall.php:988
 msgid "The crawler list is delivered and signed by the reportedip.de Rule API."
 msgstr "Die Crawler-Liste wird von der reportedip.de-Rule-API geliefert und signiert."
 
-#: admin/class-admin-firewall.php:925
+#: admin/class-admin-firewall.php:989
 msgid "The bundled baseline crawler list is active. Connect the Community Network for the server-delivered list."
 msgstr "Die mitgelieferte Basis-Crawler-Liste ist aktiv. Verbinden Sie das Community-Netzwerk für die server-gelieferte Liste."
 
-#: admin/class-admin-firewall.php:928
+#: admin/class-admin-firewall.php:992
 #: admin/class-setup-wizard.php:1013
 msgid "Off — do not verify"
 msgstr "Aus — nicht verifizieren"
 
-#: admin/class-admin-firewall.php:929
+#: admin/class-admin-firewall.php:993
 msgid "Flag — log spoofers only (recommended)"
 msgstr "Markieren — Fälscher nur protokollieren (empfohlen)"
 
-#: admin/class-admin-firewall.php:930
+#: admin/class-admin-firewall.php:994
 msgid "Block — reject confirmed spoofers"
 msgstr "Blockieren — bestätigte Fälscher abweisen"
 
-#: admin/class-admin-firewall.php:932
+#: admin/class-admin-firewall.php:996
 msgid "Action on a confirmed spoofer"
 msgstr "Aktion bei bestätigtem Fälscher"
 
-#: admin/class-admin-firewall.php:956
+#: admin/class-admin-firewall.php:1020
 msgid "Stops registration and comment spam at its two favourite doors: throwaway e-mail addresses are detected at signup (WordPress and WooCommerce), and an invisible honeypot field rejects comment bots — no CAPTCHA, no friction for real visitors."
 msgstr "Stoppt Registrierungs- und Kommentar-Spam an seinen zwei beliebtesten Türen: Wegwerf-E-Mail-Adressen werden bei der Registrierung erkannt (WordPress und WooCommerce), und ein unsichtbares Honeypot-Feld weist Kommentar-Bots ab — kein CAPTCHA, keine Hürde für echte Besucher."
 
-#: admin/class-admin-firewall.php:970
+#: admin/class-admin-firewall.php:1034
 #: admin/class-logs-table.php:373
 msgid "Disposable Email"
 msgstr "Wegwerf-E-Mail"
 
-#: admin/class-admin-firewall.php:973
+#: admin/class-admin-firewall.php:1037
 msgid "Inspects the e-mail address at registration (WordPress and WooCommerce) against the throwaway-mail list. Monitor logs a match; Block rejects the registration. The live, frequently-updated list rides the Professional ruleset."
 msgstr "Prüft die E-Mail-Adresse bei der Registrierung (WordPress und WooCommerce) gegen die Wegwerf-Mail-Liste. „Überwachen“ protokolliert einen Treffer; „Blockieren“ weist die Registrierung ab. Die laufend aktualisierte Liste kommt mit dem Professional-Regelsatz."
 
-#: admin/class-admin-firewall.php:985
+#: admin/class-admin-firewall.php:1049
 msgid "Domain list"
 msgstr "Domain-Liste"
 
-#: admin/class-admin-firewall.php:992
+#: admin/class-admin-firewall.php:1056
 #: admin/class-setup-wizard.php:1031
 msgid "Monitor — log only (recommended)"
 msgstr "Überwachen — nur protokollieren (empfohlen)"
 
-#: admin/class-admin-firewall.php:993
+#: admin/class-admin-firewall.php:1057
 #: admin/class-setup-wizard.php:1032
 msgid "Block — reject registration"
 msgstr "Blockieren — Registrierung abweisen"
 
-#: admin/class-admin-firewall.php:995
+#: admin/class-admin-firewall.php:1059
 msgid "Action on a throwaway address"
 msgstr "Aktion bei einer Wegwerf-Adresse"
 
-#: admin/class-admin-firewall.php:1007
+#: admin/class-admin-firewall.php:1071
 msgid "Blocking privacy relays also rejects legitimate Apple Hide My Email and Firefox Relay users. Leave this off unless you accept that trade-off."
 msgstr "Das Blockieren von Privacy-Relays weist auch legitime Nutzer von Apple Hide My Email und Firefox Relay ab. Lassen Sie dies aus, sofern Sie diesen Kompromiss nicht in Kauf nehmen."
 
-#: admin/class-admin-firewall.php:1010
+#: admin/class-admin-firewall.php:1074
 msgid "Stop blocking privacy relays"
 msgstr "Privacy-Relays nicht mehr blockieren"
 
-#: admin/class-admin-firewall.php:1010
+#: admin/class-admin-firewall.php:1074
 msgid "Also block privacy relays"
 msgstr "Auch Privacy-Relays blockieren"
 
-#: admin/class-admin-firewall.php:1015
+#: admin/class-admin-firewall.php:1079
 msgid "Comment Honeypot"
 msgstr "Kommentar-Honeypot"
 
-#: admin/class-admin-firewall.php:1016
+#: admin/class-admin-firewall.php:1080
 msgid "Adds an invisible decoy field to the comment form. Spam bots that fill every field trip it and are rejected — no CAPTCHA, no friction for real visitors."
 msgstr "Fügt dem Kommentarformular ein unsichtbares Köderfeld hinzu. Spam-Bots, die jedes Feld ausfüllen, lösen es aus und werden abgewiesen — kein CAPTCHA, keine Hürde für echte Besucher."
 
-#: admin/class-admin-firewall.php:1021
+#: admin/class-admin-firewall.php:1085
 #: includes/class-mode-manager.php:830
 msgid "Honeypot"
 msgstr "Honeypot"
 
-#: admin/class-admin-firewall.php:1026
+#: admin/class-admin-firewall.php:1090
 msgid "Disable honeypot"
 msgstr "Honeypot deaktivieren"
 
-#: admin/class-admin-firewall.php:1026
+#: admin/class-admin-firewall.php:1090
 msgid "Enable honeypot"
 msgstr "Honeypot aktivieren"
 
-#: admin/class-admin-firewall.php:1041
+#: admin/class-admin-firewall.php:1105
 msgid "Catches vulnerability scanners two ways: a burst of 404s in a short window (rate trigger), and a single request to a known bait path like .env or wp-config.php.bak (instant trigger). Both sensors run in PHP and need no server configuration; the optional web-server rules on the Server Setup tab harden the same paths one layer earlier."
 msgstr "Fängt Schwachstellen-Scanner auf zwei Wegen: über eine 404-Welle in kurzer Zeit (Raten-Trigger) und über eine einzelne Anfrage an einen bekannten Köderpfad wie .env oder wp-config.php.bak (Sofort-Trigger). Beide Sensoren laufen in PHP und brauchen keine Server-Konfiguration; die optionalen Webserver-Regeln im Server-Setup-Tab härten dieselben Pfade eine Ebene früher."
 
-#: admin/class-admin-firewall.php:1053
+#: admin/class-admin-firewall.php:1117
 msgid "Detects vulnerability scanners by high-rate 404s and instant hits on known-bad probe paths (.env, wp-config.bak, /.git/). The probe-path list is delivered through the scan_paths ruleset; the numeric thresholds live on Settings › Protection."
 msgstr "Erkennt Schwachstellen-Scanner an gehäuften 404ern und Sofort-Treffern auf bekannten Probe-Pfaden (.env, wp-config.bak, /.git/). Die Probe-Pfad-Liste kommt über den scan_paths-Regelsatz; die Zahlen-Schwellen liegen unter Einstellungen › Schutz."
 
-#: admin/class-admin-firewall.php:1060
+#: admin/class-admin-firewall.php:1124
 #: includes/class-score.php:235
 msgid "Scan detector"
 msgstr "Scan-Detektor"
 
-#: admin/class-admin-firewall.php:1065
+#: admin/class-admin-firewall.php:1129
 msgctxt "minutes abbreviation"
 msgid "min"
 msgstr "Min"
 
-#: admin/class-admin-firewall.php:1066
+#: admin/class-admin-firewall.php:1130
 msgid "404 trigger"
 msgstr "404-Auslöser"
 
-#: admin/class-admin-firewall.php:1072
+#: admin/class-admin-firewall.php:1136
 msgid "Probe-path list"
 msgstr "Probe-Pfad-Liste"
 
-#: admin/class-admin-firewall.php:1079
+#: admin/class-admin-firewall.php:1143
 msgid "Disable scan detector"
 msgstr "Scan-Detektor deaktivieren"
 
-#: admin/class-admin-firewall.php:1079
+#: admin/class-admin-firewall.php:1143
 msgid "Enable scan detector"
 msgstr "Scan-Detektor aktivieren"
 
 #. translators: 1: opening Protection-settings link tag, 2: closing tag, 3: opening Rule-Sync link tag, 4: closing tag.
-#: admin/class-admin-firewall.php:1085
+#: admin/class-admin-firewall.php:1149
 #, php-format
 msgid "Tune the 404 thresholds on the %1$sProtection settings%2$s; review the active probe-path list on the %3$sRule Sync%4$s tab."
 msgstr "Stelle die 404-Schwellen unter %1$sSchutz-Einstellungen%2$s ein; die aktive Probe-Pfad-Liste findest du im Tab %3$sRegel-Sync%4$s."
 
-#: admin/class-admin-firewall.php:1135
+#: admin/class-admin-firewall.php:1199
 #: admin/class-setup-wizard.php:1838
 msgid "Inactive"
 msgstr "Inaktiv"
 
-#: admin/class-admin-firewall.php:1141
+#: admin/class-admin-firewall.php:1205
 #: admin/class-admin-settings.php:5754
 #: admin/class-api-queue-table.php:480
 msgid "Pending"
 msgstr "Ausstehend"
 
-#: admin/class-admin-firewall.php:1144
+#: admin/class-admin-firewall.php:1208
 msgid "Manual"
 msgstr "Manuell"
 
-#: admin/class-admin-firewall.php:1147
+#: admin/class-admin-firewall.php:1211
 #: admin/class-admin-settings.php:4815
 #: includes/class-mode-manager.php:282
 msgid "Decoy Path Block"
 msgstr "Köderpfad-Sperre"
 
-#: admin/class-admin-firewall.php:1148
+#: admin/class-admin-firewall.php:1212
 msgid "Detects requests to known bait paths (.env.backup, wp-config.old.php, db-dump-master.sql.php …) that legitimate visitors never request. Each hit is logged, shared with the community network, and answered with a 403, but the IP is not added to your local block list, so a misbehaving backup plugin cannot lock you out."
 msgstr "Erkennt Anfragen an bekannte Köderpfade (.env.backup, wp-config.old.php, db-dump-master.sql.php …), die legitime Besucher nie aufrufen. Jeder Treffer wird protokolliert, mit dem Community-Netzwerk geteilt und mit einem 403 beantwortet; die IP wird aber nicht in Ihre lokale Sperrliste aufgenommen, damit ein fehlerhaftes Backup-Plugin Sie nicht aussperren kann."
 
-#: admin/class-admin-firewall.php:1155
+#: admin/class-admin-firewall.php:1219
 msgid "Decoy trap"
 msgstr "Köder-Falle"
 
-#: admin/class-admin-firewall.php:1162
+#: admin/class-admin-firewall.php:1226
 msgid ".htaccess block"
 msgstr ".htaccess-Block"
 
-#: admin/class-admin-firewall.php:1174
+#: admin/class-admin-firewall.php:1238
 msgid "The decoy trap is off — no rewrite rules are active and no bait-path hits are reported."
 msgstr "Die Köder-Falle ist aus — es sind keine Rewrite-Regeln aktiv und es werden keine Köderpfad-Treffer gemeldet."
 
-#: admin/class-admin-firewall.php:1176
+#: admin/class-admin-firewall.php:1240
 msgid "Auto-managed — Hive wrote the rewrite block to .htaccess. Real bait files on disk will no longer be served directly."
 msgstr "Automatisch verwaltet — Hive hat den Rewrite-Block in die .htaccess geschrieben. Echte Köderdateien auf der Festplatte werden nicht mehr direkt ausgeliefert."
 
-#: admin/class-admin-firewall.php:1178
+#: admin/class-admin-firewall.php:1242
 msgid ".htaccess is writable but the block is not in place yet. Re-toggle the trap to trigger a sync."
 msgstr "Die .htaccess ist beschreibbar, aber der Block ist noch nicht gesetzt. Schalte die Falle erneut um, um eine Synchronisierung auszulösen."
 
 #. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
-#: admin/class-admin-firewall.php:1183
+#: admin/class-admin-firewall.php:1247
 #, php-format
 msgid "This server is not auto-managed (nginx, or a read-only .htaccess). The PHP sensor still catches every bait-path hit; the optional web-server rule on the %1$sServer Setup tab%2$s blocks them one layer earlier."
 msgstr "Dieser Server wird nicht automatisch verwaltet (nginx oder eine schreibgeschützte .htaccess). Der PHP-Sensor fängt weiterhin jeden Köderpfad-Treffer ab; die optionale Webserver-Regel im %1$sServer-Setup-Tab%2$s blockiert sie eine Ebene früher."
 
-#: admin/class-admin-firewall.php:1192
+#: admin/class-admin-firewall.php:1256
 msgid "Disable decoy trap"
 msgstr "Köder-Falle deaktivieren"
 
-#: admin/class-admin-firewall.php:1192
+#: admin/class-admin-firewall.php:1256
 msgid "Enable decoy trap"
 msgstr "Köder-Falle aktivieren"
 
-#: admin/class-admin-firewall.php:1213
+#: admin/class-admin-firewall.php:1277
 msgid "All web-server-level rules in one place, with your live paths filled in. Everything here is optional — the PHP sensors work without any of it — but each rule rejects bad requests one layer earlier. Configure your server once, from this tab only."
 msgstr "Alle Regeln auf Webserver-Ebene an einer Stelle, mit Ihren Live-Pfaden ausgefüllt. Alles hier ist optional — die PHP-Sensoren funktionieren auch ohne —, aber jede Regel weist bösartige Anfragen eine Ebene früher ab. Konfigurieren Sie Ihren Server einmal, ausschließlich über diesen Tab."
 
-#: admin/class-admin-firewall.php:1238
+#: admin/class-admin-firewall.php:1302
 msgid "WAF Extended Protection (auto_prepend_file)"
 msgstr "WAF Extended Protection (auto_prepend_file)"
 
-#: admin/class-admin-firewall.php:1239
+#: admin/class-admin-firewall.php:1303
 msgid "Runs the firewall guard before WordPress loads. Hive generates the guard file; the server only needs one auto_prepend_file directive pointing at it."
 msgstr "Führt den Firewall-Guard aus, bevor WordPress lädt. Hive erzeugt die Guard-Datei; der Server braucht nur eine auto_prepend_file-Direktive, die darauf zeigt."
 
 #. translators: 1: opening link tag to the WAF tab, 2: closing tag.
-#: admin/class-admin-firewall.php:1245
+#: admin/class-admin-firewall.php:1309
 #, php-format
 msgid "Extended Protection is currently off. Enable it on the %1$sWAF tab%2$s first — that generates the guard file this directive points at."
 msgstr "Extended Protection ist derzeit aus. Aktivieren Sie sie zuerst im %1$sWAF-Tab%2$s — dabei wird die Guard-Datei erzeugt, auf die diese Direktive zeigt."
 
-#: admin/class-admin-firewall.php:1255
+#: admin/class-admin-firewall.php:1319
 msgid "Setup complete — the guard executed for this very request. No further action needed; Hive keeps the guard file up to date automatically on every rule sync."
 msgstr "Setup vollständig — der Guard wurde für genau diese Anfrage ausgeführt. Keine weitere Aktion nötig; Hive hält die Guard-Datei bei jedem Rule-Sync automatisch aktuell."
 
-#: admin/class-admin-firewall.php:1260
+#: admin/class-admin-firewall.php:1324
 msgid "This server is auto-managed: Hive wrote the directive itself (.htaccess on Apache, .user.ini on PHP-FPM). PHP-FPM caches .user.ini for up to five minutes — the status flips to Running on its own."
 msgstr "Dieser Server wird automatisch verwaltet: Hive hat die Direktive selbst geschrieben (.htaccess auf Apache, .user.ini auf PHP-FPM). PHP-FPM cached .user.ini bis zu fünf Minuten — der Status springt von selbst auf „Läuft\"."
 
-#: admin/class-admin-firewall.php:1262
+#: admin/class-admin-firewall.php:1326
 msgid "This server is auto-managed — Hive wrote and maintains the directive itself (.htaccess on Apache, .user.ini on PHP-FPM)."
 msgstr "Dieser Server wird automatisch verwaltet — Hive hat die Direktive selbst geschrieben und pflegt sie (.htaccess auf Apache, .user.ini auf PHP-FPM)."
 
-#: admin/class-admin-firewall.php:1269
+#: admin/class-admin-firewall.php:1333
 msgid "One manual step: add the directive below. Pick exactly ONE of the two options — whichever your hosting lets you edit. The status above flips to Running automatically once the directive is live."
 msgstr "Ein manueller Schritt: Fügen Sie die untenstehende Direktive hinzu. Wählen Sie genau EINE der beiden Optionen — je nachdem, was Ihr Hosting bearbeiten lässt. Der Status oben springt automatisch auf „Läuft\", sobald die Direktive aktiv ist."
 
-#: admin/class-admin-firewall.php:1274
+#: admin/class-admin-firewall.php:1338
 msgid "Option A — php.ini / hosting panel (recommended)"
 msgstr "Option A — php.ini / Hosting-Panel (empfohlen)"
 
-#: admin/class-admin-firewall.php:1276
+#: admin/class-admin-firewall.php:1340
 msgid "Most managed hosts (ISPConfig, Plesk, cPanel) offer a \"custom php.ini settings\" field — paste this single line there and reload PHP-FPM. This is usually the easiest route."
 msgstr "Die meisten Managed-Hoster (ISPConfig, Plesk, cPanel) bieten ein Feld für \"eigene php.ini-Einstellungen\" — fügen Sie diese eine Zeile dort ein und laden Sie PHP-FPM neu. Das ist meist der einfachste Weg."
 
-#: admin/class-admin-firewall.php:1281
+#: admin/class-admin-firewall.php:1345
 msgid "Option B — nginx server block"
 msgstr "Option B — nginx-Server-Block"
 
-#: admin/class-admin-firewall.php:1283
+#: admin/class-admin-firewall.php:1347
 msgid "For direct nginx access: merge this into your existing \"location ~ \\.php$\" block and reload nginx. Do not combine with Option A."
 msgstr "Bei direktem nginx-Zugriff: Führen Sie dies mit Ihrem bestehenden \"location ~ \\.php$\"-Block zusammen und laden Sie nginx neu. Nicht mit Option A kombinieren."
 
-#: admin/class-admin-firewall.php:1287
+#: admin/class-admin-firewall.php:1351
 msgid "Before deactivating or deleting Hive, remove this directive from your php.ini / nginx config first."
 msgstr "Entfernen Sie diese Direktive zuerst aus Ihrer php.ini- / nginx-Konfiguration, bevor Sie Hive deaktivieren oder löschen."
 
-#: admin/class-admin-firewall.php:1288
+#: admin/class-admin-firewall.php:1352
 msgid "Because this directive lives in a file Hive cannot edit, it stays behind when the plugin is removed. Hive now leaves an inert placeholder at the guard path so a leftover directive can no longer crash the site with a 500 error — but the cleanest path is still to remove the line yourself."
 msgstr "Da diese Direktive in einer Datei steht, die Hive nicht bearbeiten kann, bleibt sie beim Entfernen des Plugins zurück. Hive hinterlässt am Guard-Pfad nun eine inerte Platzhalterdatei, sodass eine zurückgebliebene Direktive die Website nicht mehr mit einem 500-Fehler lahmlegen kann — am saubersten ist es jedoch weiterhin, die Zeile selbst zu entfernen."
 
-#: admin/class-admin-firewall.php:1290
+#: admin/class-admin-firewall.php:1354
 msgid "Recovery, if the site ever returns a 500 referencing reportedip-hive-waf.php:"
 msgstr "Wiederherstellung, falls die Website einmal einen 500-Fehler mit Bezug auf reportedip-hive-waf.php zeigt:"
 
-#: admin/class-admin-firewall.php:1291
+#: admin/class-admin-firewall.php:1355
 msgid "comment out the auto_prepend_file line in your php.ini / nginx config (prefix it with a semicolon, or delete it) and reload PHP-FPM / nginx. No FTP file restore is required."
 msgstr "Kommentieren Sie die auto_prepend_file-Zeile in Ihrer php.ini- / nginx-Konfiguration aus (stellen Sie ein Semikolon voran oder löschen Sie sie) und laden Sie PHP-FPM / nginx neu. Eine Dateiwiederherstellung per FTP ist nicht nötig."
 
-#: admin/class-admin-firewall.php:1315
+#: admin/class-admin-firewall.php:1379
 msgid "Decoy Path Block (rewrite rules)"
 msgstr "Decoy Path Block (Rewrite-Regeln)"
 
-#: admin/class-admin-firewall.php:1316
+#: admin/class-admin-firewall.php:1380
 msgid "Blocks the bait paths at the web-server layer so real backup files on disk are never served directly. Every snippet rewrites to /index.php on purpose: the Hive sensor still loads, logs the hit and reports it — a bare return 403 would skip detection entirely."
 msgstr "Blockiert die Köderpfade auf Webserver-Ebene, damit echte Backup-Dateien auf der Festplatte nie direkt ausgeliefert werden. Jedes Snippet rewritet bewusst auf /index.php: Der Hive-Sensor lädt weiterhin, protokolliert den Treffer und meldet ihn — ein bloßes return 403 würde die Erkennung komplett überspringen."
 
 #. translators: 1: opening link tag to the Scan & Decoy tab, 2: closing tag.
-#: admin/class-admin-firewall.php:1322
+#: admin/class-admin-firewall.php:1386
 #, php-format
 msgid "The decoy trap is currently off — enable it on the %1$sScan & Decoy tab%2$s before adding server rules."
 msgstr "Die Köderfalle ist derzeit aus — aktivieren Sie sie im Tab %1$sScan & Decoy%2$s, bevor Sie Server-Regeln hinzufügen."
 
-#: admin/class-admin-firewall.php:1328
+#: admin/class-admin-firewall.php:1392
 msgid "On Apache this block is auto-managed in .htaccess — the snippet below shows verbatim what Hive wrote (or would write). No manual step needed."
 msgstr "Auf Apache wird dieser Block automatisch in der .htaccess verwaltet — das Snippet unten zeigt wortgleich, was Hive geschrieben hat (oder schreiben würde). Kein manueller Schritt nötig."
 
-#: admin/class-admin-firewall.php:1333
+#: admin/class-admin-firewall.php:1397
 msgid "Apache (.htaccess) — auto-managed"
 msgstr "Apache (.htaccess) — automatisch verwaltet"
 
-#: admin/class-admin-firewall.php:1338
+#: admin/class-admin-firewall.php:1402
 msgid "nginx — regex form (plain nginx)"
 msgstr "nginx — Regex-Form (pures nginx)"
 
-#: admin/class-admin-firewall.php:1343
+#: admin/class-admin-firewall.php:1407
 msgid "nginx — exact-match form (ISPConfig & managed stacks)"
 msgstr "nginx — Exact-Match-Form (ISPConfig & Managed-Stacks)"
 
-#: admin/class-admin-firewall.php:1345
+#: admin/class-admin-firewall.php:1409
 msgid "Use this variant when your host template ships a \"location ~ /\\.\" dot-file deny rule before your custom directives — exact-match locations have higher priority than any regex location and survive that ordering."
 msgstr "Verwenden Sie diese Variante, wenn Ihre Host-Vorlage eine \"location ~ /\\.\"-Deny-Regel für Dot-Dateien vor Ihren eigenen Direktiven mitbringt — Exact-Match-Locations haben eine höhere Priorität als jede Regex-Location und überstehen diese Reihenfolge."
 
-#: admin/class-admin-firewall.php:1365
+#: admin/class-admin-firewall.php:1429
 msgid "Security Headers at the web server (optional)"
 msgstr "Security-Header am Webserver (optional)"
 
-#: admin/class-admin-firewall.php:1366
+#: admin/class-admin-firewall.php:1430
 msgid "Hive already sends the configured headers via PHP on every WordPress response — nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror your live configuration from the Hardening tab."
 msgstr "Hive sendet die konfigurierten Header bereits per PHP mit jeder WordPress-Antwort — für normale Seiten ist nichts zu tun. Wer sie zusätzlich am Webserver setzt, deckt auch statische Dateien (Bilder, CSS, Uploads) ab, die PHP nie durchlaufen. Die Snippets spiegeln Ihre Live-Konfiguration aus dem Hardening-Tab."
 
 #. translators: 1: opening link tag to the Hardening tab, 2: closing tag.
-#: admin/class-admin-firewall.php:1372
+#: admin/class-admin-firewall.php:1436
 #, php-format
 msgid "No headers are configured yet. Enable the header engine on the %1$sHardening tab%2$s first — the snippets here update automatically."
 msgstr "Es sind noch keine Header konfiguriert. Aktivieren Sie zuerst die Header-Engine im %1$sHardening-Tab%2$s — die Snippets hier aktualisieren sich automatisch."
 
-#: admin/class-admin-firewall.php:1388
+#: admin/class-admin-firewall.php:1452
 msgid "Show server snippets (generated from your current header settings)"
 msgstr "Server-Snippets anzeigen (aus Ihren aktuellen Header-Einstellungen erzeugt)"
 
-#: admin/class-admin-firewall.php:1391
+#: admin/class-admin-firewall.php:1455
 msgid "nginx (server block)"
 msgstr "nginx (Server-Block)"
 
-#: admin/class-admin-firewall.php:1393
+#: admin/class-admin-firewall.php:1457
 msgid "When a header is set at the server, Hive detects it and stops sending its own copy — no duplicates."
 msgstr "Ist ein Header am Server gesetzt, erkennt Hive das und sendet seine eigene Kopie nicht mehr — keine Duplikate."
 
-#: admin/class-admin-firewall.php:1397
+#: admin/class-admin-firewall.php:1461
 msgid "Apache (.htaccess or vhost, requires mod_headers)"
 msgstr "Apache (.htaccess oder vhost, benötigt mod_headers)"
 
-#: admin/class-admin-firewall.php:1415
+#: admin/class-admin-firewall.php:1479
 msgid "The detection rules behind the WAF, Bot Verification, Spam Defence and Scan Detection are not hard-coded: they are versioned rulesets, maintained on reportedip.de, signed with Ed25519 and delivered through the Rule API. A bundled baseline ships with the plugin, so every install is protected even fully offline."
 msgstr "Die Erkennungsregeln hinter WAF, Bot Verification, Spam Defence und Scan Detection sind nicht hartcodiert: Es sind versionierte Regelsätze, gepflegt auf reportedip.de, signiert mit Ed25519 und ausgeliefert über die Rule-API. Eine mitgelieferte Baseline steckt im Plugin, sodass jede Installation auch komplett offline geschützt ist."
 
-#: admin/class-admin-firewall.php:1428
+#: admin/class-admin-firewall.php:1492
 msgid "Active rulesets"
 msgstr "Aktive Regelsätze"
 
-#: admin/class-admin-firewall.php:1433
+#: admin/class-admin-firewall.php:1497
 msgid "Priority Sync is active on your plan — the rulesets below refresh automatically from the reportedip.de Rule API, signed and verified on every download."
 msgstr "Priority Sync ist in Ihrem Tarif aktiv — die untenstehenden Regelsätze aktualisieren sich automatisch über die reportedip.de-Rule-API, bei jedem Download signiert und verifiziert."
 
-#: admin/class-admin-firewall.php:1435
+#: admin/class-admin-firewall.php:1499
 msgid "Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets."
 msgstr "Local-Shield-Modus: Die mitgelieferten Basis-Regelsätze sind aktiv. Verbinden Sie das Community-Netzwerk, um die umfangreicheren, häufig aktualisierten Regelsätze zu erhalten."
 
-#: admin/class-admin-firewall.php:1439
+#: admin/class-admin-firewall.php:1503
 msgid "Ruleset"
 msgstr "Regelsatz"
 
-#: admin/class-admin-firewall.php:1439
+#: admin/class-admin-firewall.php:1503
 msgid "Feeds"
 msgstr "Versorgt"
 
-#: admin/class-admin-firewall.php:1439
+#: admin/class-admin-firewall.php:1503
 msgid "Rules"
 msgstr "Regeln"
 
-#: admin/class-admin-firewall.php:1439
+#: admin/class-admin-firewall.php:1503
 msgid "Version"
 msgstr "Version"
 
-#: admin/class-admin-firewall.php:1439
+#: admin/class-admin-firewall.php:1503
 #: admin/class-waf-exceptions-table.php:74
 msgid "Source"
 msgstr "Quelle"
 
-#: admin/class-admin-firewall.php:1447
+#: admin/class-admin-firewall.php:1511
 msgid "reportedip.de Rule API"
 msgstr "reportedip.de-Rule-API"
 
-#: admin/class-admin-firewall.php:1448
+#: admin/class-admin-firewall.php:1512
 msgid "Bundled baseline"
 msgstr "Mitgelieferte Baseline"
 
-#: admin/class-admin-firewall.php:1459
+#: admin/class-admin-firewall.php:1523
 msgid "bundled"
 msgstr "mitgeliefert"
 
-#: admin/class-admin-firewall.php:1466
+#: admin/class-admin-firewall.php:1530
 msgid "Sync:"
 msgstr "Sync:"
 
-#: admin/class-admin-firewall.php:1466
+#: admin/class-admin-firewall.php:1530
 #: admin/class-admin-settings.php:1892
 msgid "enabled"
 msgstr "aktiviert"
 
-#: admin/class-admin-firewall.php:1466
+#: admin/class-admin-firewall.php:1530
 #: admin/class-admin-settings.php:1896
 msgid "disabled"
 msgstr "deaktiviert"
 
-#: admin/class-admin-firewall.php:1466
+#: admin/class-admin-firewall.php:1530
 msgid "Last sync:"
 msgstr "Letzter Sync:"
 
-#: admin/class-admin-firewall.php:1466
+#: admin/class-admin-firewall.php:1530
 #: admin/class-admin-settings.php:6162
 msgid "never (baseline only)"
 msgstr "nie (nur Baseline)"
 
-#: admin/class-admin-firewall.php:1469
+#: admin/class-admin-firewall.php:1533
 msgid "The bundled baseline rulesets stay active and free on every plan. Priority Sync — deeper coverage and frequent updates — is part of the Professional plan."
 msgstr "Die mitgelieferten Basis-Regelsätze bleiben in jedem Tarif aktiv und kostenlos. Priority-Sync — tiefere Abdeckung und häufige Updates — ist Teil des Professional-Tarifs."
 
-#: admin/class-admin-firewall.php:1470
-#: admin/class-admin-firewall.php:1523
+#: admin/class-admin-firewall.php:1534
+#: admin/class-admin-firewall.php:1587
 #: admin/class-admin-settings.php:783
 #: admin/class-two-factor-admin.php:1190
 msgid "Unlock with Professional"
 msgstr "Mit Professional freischalten"
 
-#: admin/class-admin-firewall.php:1473
+#: admin/class-admin-firewall.php:1537
 msgid "Sync now"
 msgstr "Jetzt synchronisieren"
 
-#: admin/class-admin-firewall.php:1491
+#: admin/class-admin-firewall.php:1555
 msgid "WAF engine — always on, every plan"
 msgstr "WAF-Engine — immer aktiv, in jedem Tarif"
 
-#: admin/class-admin-firewall.php:1492
+#: admin/class-admin-firewall.php:1556
 msgid "Baseline rulesets (OWASP Top 10, Paranoia Level 1)"
 msgstr "Basis-Regelsätze (OWASP Top 10, Paranoia Level 1)"
 
-#: admin/class-admin-firewall.php:1493
+#: admin/class-admin-firewall.php:1557
 msgid "Bundled with the plugin — no connection required"
 msgstr "Im Plugin enthalten — keine Verbindung nötig"
 
-#: admin/class-admin-firewall.php:1496
+#: admin/class-admin-firewall.php:1560
 msgid "Deeper coverage (Paranoia Level 2/3, obfuscation & bypass)"
 msgstr "Tiefere Abdeckung (Paranoia Level 2/3, Obfuskation & Bypass)"
 
-#: admin/class-admin-firewall.php:1497
+#: admin/class-admin-firewall.php:1561
 msgid "Server-delivered, Ed25519-signed rule updates"
 msgstr "Servergelieferte, Ed25519-signierte Regel-Updates"
 
-#: admin/class-admin-firewall.php:1498
+#: admin/class-admin-firewall.php:1562
 msgid "Frequent refresh via the Community Network"
 msgstr "Häufige Aktualisierung über das Community-Netzwerk"
 
-#: admin/class-admin-firewall.php:1503
+#: admin/class-admin-firewall.php:1567
 msgid "Included — every plan"
 msgstr "Enthalten — in jedem Tarif"
 
-#: admin/class-admin-firewall.php:1511
+#: admin/class-admin-firewall.php:1575
 msgid "Priority Sync"
 msgstr "Priority-Sync"
 
-#: admin/class-admin-firewall.php:1519
+#: admin/class-admin-firewall.php:1583
 msgid "Active on your plan"
 msgstr "In Ihrem Tarif aktiv"
 
-#: admin/class-admin-firewall.php:1541
+#: admin/class-admin-firewall.php:1605
 msgid "Security headers are unavailable."
 msgstr "Sicherheits-Header sind nicht verfügbar."
 
-#: admin/class-admin-firewall.php:1545
+#: admin/class-admin-firewall.php:1609
 msgid "Hardening response headers tell the browser to refuse risky behaviour — MIME sniffing, framing by foreign sites, leaking referrers, downgrade to HTTP. Hive sends them via PHP on every front-end response; an optional server-level export for static files lives on the Server Setup tab."
 msgstr "Hardening-Response-Header weisen den Browser an, riskantes Verhalten zu verweigern — MIME-Sniffing, Einbettung durch fremde Seiten, Referrer-Lecks, Downgrade auf HTTP. Hive sendet sie per PHP mit jeder Frontend-Antwort; ein optionaler Export für statische Dateien auf Server-Ebene befindet sich im Server-Setup-Tab."
 
-#: admin/class-admin-firewall.php:1556
+#: admin/class-admin-firewall.php:1620
 #: admin/class-setup-wizard.php:1883
 msgid "On"
 msgstr "Ein"
 
-#: admin/class-admin-firewall.php:1561
+#: admin/class-admin-firewall.php:1625
 msgid "Sends hardening response headers on every front-end request. The basic trio is free; HSTS, Permissions-Policy, the Content-Security-Policy and the Cross-Origin headers are part of advanced hardening. A header already set by your server or another plugin is detected and left untouched."
 msgstr "Sendet härtende Response-Header bei jeder Front-End-Anfrage. Das Basis-Trio ist gratis; HSTS, Permissions-Policy, die Content-Security-Policy und die Cross-Origin-Header gehören zur erweiterten Härtung. Ein Header, den dein Server oder ein anderes Plugin bereits setzt, wird erkannt und unangetastet gelassen."
 
-#: admin/class-admin-firewall.php:1566
-#: admin/class-admin-firewall.php:1576
+#: admin/class-admin-firewall.php:1630
+#: admin/class-admin-firewall.php:1640
 msgid "Header engine"
 msgstr "Header-Engine"
 
-#: admin/class-admin-firewall.php:1572
+#: admin/class-admin-firewall.php:1636
 msgid "These headers are already set elsewhere and are left untouched:"
 msgstr "Diese Header werden bereits anderswo gesetzt und unangetastet gelassen:"
 
 #. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
-#: admin/class-admin-firewall.php:1580
+#: admin/class-admin-firewall.php:1644
 #, php-format
 msgid "Running nginx? The %1$sServer Setup tab%2$s generates matching add_header lines from this configuration so static files are covered too."
 msgstr "Sie nutzen nginx? Der %1$sServer-Setup-Tab%2$s erzeugt passende add_header-Zeilen aus dieser Konfiguration, damit auch statische Dateien abgedeckt sind."
 
-#: admin/class-admin-firewall.php:1587
+#: admin/class-admin-firewall.php:1651
 msgid "Basic Headers"
 msgstr "Basis-Header"
 
-#: admin/class-admin-firewall.php:1588
+#: admin/class-admin-firewall.php:1652
 msgid "X-Content-Type-Options: nosniff"
 msgstr "X-Content-Type-Options: nosniff"
 
-#: admin/class-admin-firewall.php:1592
+#: admin/class-admin-firewall.php:1656
 msgid "X-Frame-Options (clickjacking)"
 msgstr "X-Frame-Options (Clickjacking)"
 
-#: admin/class-admin-firewall.php:1603
+#: admin/class-admin-firewall.php:1667
 msgid "Referrer-Policy"
 msgstr "Referrer-Policy"
 
-#: admin/class-admin-firewall.php:1615
+#: admin/class-admin-firewall.php:1679
 msgid "Advanced Headers"
 msgstr "Erweiterte Header"
 
-#: admin/class-admin-firewall.php:1619
+#: admin/class-admin-firewall.php:1683
 msgid "HSTS, Permissions-Policy, the CSP builder and the Cross-Origin headers unlock with Professional. The basic headers above stay free."
 msgstr "HSTS, Permissions-Policy, der CSP-Builder und die Cross-Origin-Header werden mit Professional freigeschaltet. Die Basis-Header oben bleiben gratis."
 
-#: admin/class-admin-firewall.php:1623
-#: admin/class-admin-firewall.php:1719
+#: admin/class-admin-firewall.php:1687
+#: admin/class-admin-firewall.php:1783
 msgid "Save headers"
 msgstr "Header speichern"
 
-#: admin/class-admin-firewall.php:1628
+#: admin/class-admin-firewall.php:1692
 msgid "HTTP Strict Transport Security (HSTS)"
 msgstr "HTTP Strict Transport Security (HSTS)"
 
-#: admin/class-admin-firewall.php:1632
+#: admin/class-admin-firewall.php:1696
 msgid "HSTS max-age"
 msgstr "HSTS max-age"
 
-#: admin/class-admin-firewall.php:1634
+#: admin/class-admin-firewall.php:1698
 msgid "6 months"
 msgstr "6 Monate"
 
-#: admin/class-admin-firewall.php:1635
+#: admin/class-admin-firewall.php:1699
 msgid "1 year"
 msgstr "1 Jahr"
 
-#: admin/class-admin-firewall.php:1636
+#: admin/class-admin-firewall.php:1700
 msgid "2 years (preload-ready)"
 msgstr "2 Jahre (Preload-fähig)"
 
-#: admin/class-admin-firewall.php:1640
+#: admin/class-admin-firewall.php:1704
 msgid "HSTS includeSubDomains"
 msgstr "HSTS includeSubDomains"
 
-#: admin/class-admin-firewall.php:1641
+#: admin/class-admin-firewall.php:1705
 msgid "HSTS preload"
 msgstr "HSTS preload"
 
-#: admin/class-admin-firewall.php:1645
+#: admin/class-admin-firewall.php:1709
 msgid "Permissions-Policy"
 msgstr "Permissions-Policy"
 
-#: admin/class-admin-firewall.php:1653
+#: admin/class-admin-firewall.php:1717
 msgid "Content-Security-Policy mode"
 msgstr "Content-Security-Policy-Modus"
 
-#: admin/class-admin-firewall.php:1656
+#: admin/class-admin-firewall.php:1720
 msgid "Report-Only (test first — recommended)"
 msgstr "Report-Only (erst testen — empfohlen)"
 
-#: admin/class-admin-firewall.php:1657
+#: admin/class-admin-firewall.php:1721
 msgid "Enforce"
 msgstr "Erzwingen"
 
-#: admin/class-admin-firewall.php:1661
+#: admin/class-admin-firewall.php:1725
 msgid "Enforcing a CSP can break themes and plugins that rely on inline scripts. Always run Report-Only first and review the violations before you enforce."
 msgstr "Eine erzwungene CSP kann Themes und Plugins zerschießen, die auf Inline-Skripte angewiesen sind. Führe immer erst Report-Only aus und prüfe die Verstöße, bevor du erzwingst."
 
-#: admin/class-admin-firewall.php:1668
+#: admin/class-admin-firewall.php:1732
 msgid "CSP policy"
 msgstr "CSP-Richtlinie"
 
-#: admin/class-admin-firewall.php:1675
+#: admin/class-admin-firewall.php:1739
 msgid "Insert OWASP baseline"
 msgstr "OWASP-Basis einfügen"
 
-#: admin/class-admin-firewall.php:1679
+#: admin/class-admin-firewall.php:1743
 msgid "CSP report-uri (optional)"
 msgstr "CSP report-uri (optional)"
 
-#: admin/class-admin-firewall.php:1687
+#: admin/class-admin-firewall.php:1751
 msgid "Cross-Origin-Opener-Policy"
 msgstr "Cross-Origin-Opener-Policy"
 
-#: admin/class-admin-firewall.php:1697
+#: admin/class-admin-firewall.php:1761
 msgid "Cross-Origin-Resource-Policy"
 msgstr "Cross-Origin-Resource-Policy"
 
-#: admin/class-admin-firewall.php:1707
+#: admin/class-admin-firewall.php:1771
 msgid "Cross-Origin-Embedder-Policy"
 msgstr "Cross-Origin-Embedder-Policy"
 
@@ -2235,14 +2346,6 @@ msgstr "Eine IP-Adresse sperren"
 #: admin/class-whitelist-table.php:51
 msgid "IP Address"
 msgstr "IP-Adresse"
-
-#: admin/class-admin-settings.php:4101
-#: admin/class-admin-settings.php:4177
-#: admin/class-blocked-ips-table.php:52
-#: admin/class-waf-exceptions-table.php:73
-#: admin/class-whitelist-table.php:53
-msgid "Reason"
-msgstr "Grund"
 
 #: admin/class-admin-settings.php:4105
 #: admin/class-admin-settings.php:4131

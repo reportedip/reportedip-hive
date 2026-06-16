@@ -34,6 +34,7 @@
         init: function() {
             this.bindEvents();
             this.initTooltips();
+            this.initWafExceptionForm();
 
             // Debug / System Status page handlers
             if ($('#test-api-connection-debug').length || $('#test-database-connection').length) {
@@ -374,6 +375,25 @@
                     ReportedIPAdmin.hideLoading($form);
                 }
             });
+        },
+
+        initWafExceptionForm: function() {
+            const $scope = $('#rip-waf-ex-scope');
+            if (!$scope.length) {
+                return;
+            }
+            const apply = function() {
+                const value = $scope.val();
+                $('#add-waf-exception-form [data-rip-scope]').each(function() {
+                    const matches = $(this).attr('data-rip-scope') === value;
+                    $(this).toggleClass('rip-hidden', !matches);
+                    // Both the rule input and the group select share name="rule_id";
+                    // disabling the inactive one keeps it out of the serialized form.
+                    $(this).find('[name="rule_id"]').prop('disabled', !matches);
+                });
+            };
+            $scope.on('change', apply);
+            apply();
         },
 
         addWafException: function(e) {

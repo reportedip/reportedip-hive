@@ -693,24 +693,40 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '<p class="rip-help-text">' . esc_html__( 'Relieve a false positive without editing code. Scope an exception to a single rule (optionally on one path), a rule group, or — for a first-party endpoint that legitimately receives attack-like payloads — the whole engine on a path. A whole-engine exception must always carry a path or IP.', 'reportedip-hive' ) . '</p>';
 
 		echo '<form id="add-waf-exception-form" class="rip-form">';
+
 		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-scope">' . esc_html__( 'Scope', 'reportedip-hive' ) . '</label>';
 		echo '<select id="rip-waf-ex-scope" name="scope" class="rip-select">';
-		echo '<option value="rule">' . esc_html__( 'Single rule', 'reportedip-hive' ) . '</option>';
-		echo '<option value="group">' . esc_html__( 'Rule group', 'reportedip-hive' ) . '</option>';
-		echo '<option value="all">' . esc_html__( 'Whole engine (path/IP required)', 'reportedip-hive' ) . '</option>';
-		echo '</select></div>';
+		echo '<option value="rule">' . esc_html__( 'Single rule — exempt one specific rule', 'reportedip-hive' ) . '</option>';
+		echo '<option value="group">' . esc_html__( 'Rule group — exempt a whole category', 'reportedip-hive' ) . '</option>';
+		echo '<option value="all">' . esc_html__( 'Whole engine — only on a trusted path/IP', 'reportedip-hive' ) . '</option>';
+		echo '</select>';
+		echo '<p class="rip-field-hint">' . esc_html__( 'How broadly the exception applies. Start with "Single rule" — it is the narrowest and the right choice for almost every false positive.', 'reportedip-hive' ) . '</p></div>';
 
-		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-rule">' . esc_html__( 'Rule ID or group', 'reportedip-hive' ) . '</label>';
-		echo '<input type="text" id="rip-waf-ex-rule" name="rule_id" class="rip-input" placeholder="waf_sqli_union" /></div>';
+		echo '<div class="rip-form-row" data-rip-scope="rule"><label class="rip-form-label" for="rip-waf-ex-rule">' . esc_html__( 'Rule ID', 'reportedip-hive' ) . '</label>';
+		echo '<input type="text" id="rip-waf-ex-rule" name="rule_id" class="rip-input" placeholder="waf_sqli_union" />';
+		echo '<p class="rip-field-hint">' . wp_kses( __( 'The exact rule that fired. You will find it in the firewall log as <code>Rule:</code> (Security &rarr; Activity &rarr; WAF Block). Easiest of all: click the shield "Allow" button on the blocked event there and this is filled in for you.', 'reportedip-hive' ), array( 'code' => array() ) ) . '</p></div>';
 
-		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-path">' . esc_html__( 'Path prefix (optional)', 'reportedip-hive' ) . '</label>';
-		echo '<input type="text" id="rip-waf-ex-path" name="path_prefix" class="rip-input" placeholder="/wp-json/my-api/v1" /></div>';
+		echo '<div class="rip-form-row rip-hidden" data-rip-scope="group"><label class="rip-form-label" for="rip-waf-ex-group">' . esc_html__( 'Rule group', 'reportedip-hive' ) . '</label>';
+		echo '<select id="rip-waf-ex-group" name="rule_id" class="rip-select" disabled>';
+		foreach ( self::waf_group_choices() as $group_key => $group_label ) {
+			printf( '<option value="%s">%s</option>', esc_attr( $group_key ), esc_html( $group_label ) );
+		}
+		echo '</select>';
+		echo '<p class="rip-field-hint">' . esc_html__( 'Exempts every rule in this category at once — shown in the log as "Group:". Broader than a single rule, so use it only when several rules of the same kind keep misfiring.', 'reportedip-hive' ) . '</p></div>';
 
-		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-ip">' . esc_html__( 'IP or CIDR (optional)', 'reportedip-hive' ) . '</label>';
-		echo '<input type="text" id="rip-waf-ex-ip" name="ip_address" class="rip-input" placeholder="203.0.113.7" /></div>';
+		echo '<div class="rip-form-row rip-hidden" data-rip-scope="all"><p class="rip-field-hint">' . esc_html__( 'No rule needed — the WAF skips the path and/or IP below entirely. Use this only for a first-party endpoint you fully trust (e.g. your own API that receives attack samples). A path or IP is required.', 'reportedip-hive' ) . '</p></div>';
 
-		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-reason">' . esc_html__( 'Reason (optional)', 'reportedip-hive' ) . '</label>';
-		echo '<input type="text" id="rip-waf-ex-reason" name="reason" class="rip-input" /></div>';
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-path">' . esc_html__( 'Path prefix', 'reportedip-hive' ) . '</label>';
+		echo '<input type="text" id="rip-waf-ex-path" name="path_prefix" class="rip-input" placeholder="/wp-json/my-api/v1" />';
+		echo '<p class="rip-field-hint">' . esc_html__( 'Optional. Limits the exception to URLs that start with this path. Leave empty to apply everywhere (single-rule and group scope only).', 'reportedip-hive' ) . '</p></div>';
+
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-ip">' . esc_html__( 'IP or CIDR', 'reportedip-hive' ) . '</label>';
+		echo '<input type="text" id="rip-waf-ex-ip" name="ip_address" class="rip-input" placeholder="203.0.113.7" />';
+		echo '<p class="rip-field-hint">' . esc_html__( 'Optional. Limits the exception to this client IP or range, e.g. 203.0.113.0/24.', 'reportedip-hive' ) . '</p></div>';
+
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-reason">' . esc_html__( 'Reason', 'reportedip-hive' ) . '</label>';
+		echo '<input type="text" id="rip-waf-ex-reason" name="reason" class="rip-input" placeholder="' . esc_attr__( 'e.g. report ingest endpoint', 'reportedip-hive' ) . '" />';
+		echo '<p class="rip-field-hint">' . esc_html__( 'Optional. Shown in the list below so you remember later why this exception exists.', 'reportedip-hive' ) . '</p></div>';
 
 		echo '<button type="submit" class="rip-button rip-button--primary">' . esc_html__( 'Add exception', 'reportedip-hive' ) . '</button>';
 		echo '</form>';
@@ -726,18 +742,72 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '</form>';
 
 		echo '<div class="rip-faq">';
-		echo '<h3 class="rip-faq__title">' . esc_html__( 'How WAF exceptions work', 'reportedip-hive' ) . '</h3>';
-		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Why does my own firewall block a legitimate request?', 'reportedip-hive' ) . '</summary>';
-		echo '<p class="rip-faq__a">' . esc_html__( 'The WAF matches every request against attack signatures (SQL injection, XSS, and so on). When an endpoint legitimately carries attack-like data — for example an API that ingests reported attack payloads — a rule fires even though it is not an attack. That is a false positive, and an exception is the right tool for it.', 'reportedip-hive' ) . '</p></details>';
-		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'What exactly does an exception do?', 'reportedip-hive' ) . '</summary>';
-		echo '<p class="rip-faq__a">' . esc_html__( 'It cancels a rule hit instead of blocking it — as narrowly as you choose: a single rule, optionally only on one path; a whole rule group; or, for an ingest endpoint, the whole engine on one path. A whole-engine exception always requires a path or IP, so the firewall can never be switched off everywhere by accident.', 'reportedip-hive' ) . '</p></details>';
-		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Does this weaken my security?', 'reportedip-hive' ) . '</summary>';
-		echo '<p class="rip-faq__a">' . esc_html__( 'Only within the scope you pick. A rule-on-path exception leaves every other rule and every other path fully protected. Keep the scope as tight as possible — prefer a single rule on a single path over a global rule exception.', 'reportedip-hive' ) . '</p></details>';
-		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Do exceptions also apply to Extended Protection (pre-WordPress)?', 'reportedip-hive' ) . '</summary>';
-		echo '<p class="rip-faq__a">' . esc_html__( 'Yes. Active exceptions are baked into the pre-WordPress guard too, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist.', 'reportedip-hive' ) . '</p></details>';
+		echo '<h3 class="rip-faq__title">' . esc_html__( 'Understanding WAF exceptions', 'reportedip-hive' ) . '</h3>';
+
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'What is this for, and do I need it?', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'The WAF matches every front-end request against attack signatures (SQL injection, XSS, and so on). Occasionally a legitimate request looks like an attack — for example an API endpoint that receives reported attack samples, or a form that contains code. The rule fires even though nothing malicious is happening: a false positive. An exception tells the WAF to let that specific case through. Most sites never need one — only add an exception when you have confirmed a real false positive in the log.', 'reportedip-hive' ) . '</p></details>';
+
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Where do I get the Rule ID or group? I do not know what to type.', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . wp_kses(
+			__( 'You normally do not type it at all. Every block is recorded under <strong>Security &rarr; Activity &rarr; WAF Block</strong>, and each entry names the rule that fired (<code>Rule: waf_sqli_union</code>) and its category (<code>Group: sql_injection</code>). The quickest path is the shield <strong>"Allow"</strong> button on that log row: it creates a single-rule exception for exactly that rule and path in one click, so you never have to know rule IDs. The form above is only for adding one by hand — copy the value after <code>Rule:</code> into the Rule ID field, or pick the category in the Rule group dropdown.', 'reportedip-hive' ),
+			array(
+				'code'   => array(),
+				'strong' => array(),
+			)
+		) . '</p></details>';
+
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Which scope should I choose — rule, group or whole engine?', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'Single rule is the narrowest and the right default: it exempts exactly one rule, optionally only on one path. Rule group exempts a whole category (every XSS rule, say) — broader, only when several related rules keep misfiring. Whole engine skips all inspection and is reserved for a first-party endpoint you fully trust; it always requires a path or IP, so protection is never switched off everywhere by accident. Rule of thumb: pick the smallest scope that stops the false positive.', 'reportedip-hive' ) . '</p></details>';
+
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'How do the path and IP fields work?', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'Both are optional narrowing filters. Path prefix limits the exception to URLs that start with the value you enter (for example /wp-json/my-api/v1, matching every route below it). IP or CIDR limits it to one client address or range. Leave them empty and a single-rule or group exception applies site-wide; set them to make it as tight as possible. For a whole-engine exception at least one of the two is mandatory.', 'reportedip-hive' ) . '</p></details>';
+
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Does this weaken my security, and does it apply to Extended Protection?', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'Only within the scope you pick — a rule-on-path exception leaves every other rule and every other path fully protected, which is why tight scoping matters. Exceptions apply everywhere the engine runs: they are also baked into the pre-WordPress guard, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist.', 'reportedip-hive' ) . '</p></details>';
+
 		echo '</div>';
 
 		echo '</div></div>';
+	}
+
+	/**
+	 * The selectable WAF rule groups for the exception form, keyed by the
+	 * canonical group token (as it appears in the firewall log) and labelled
+	 * "Human name (token)" so the value matches what the operator sees there.
+	 * Derived from {@see ReportedIP_Hive_WAF::GROUP_REASON} so the list tracks
+	 * the engine's known categories.
+	 *
+	 * @return array<string,string> Group token => option label.
+	 * @since  2.1.11
+	 */
+	private static function waf_group_choices() {
+		$labels = array(
+			'sql_injection'  => __( 'SQL injection', 'reportedip-hive' ),
+			'xss'            => __( 'Cross-site scripting (XSS)', 'reportedip-hive' ),
+			'path_traversal' => __( 'Path traversal', 'reportedip-hive' ),
+			'cmd_injection'  => __( 'Command injection', 'reportedip-hive' ),
+			'file_probe'     => __( 'Sensitive-file probing', 'reportedip-hive' ),
+			'scanner_ua'     => __( 'Scanner / tool user-agents', 'reportedip-hive' ),
+			'log4shell'      => __( 'Log4Shell (JNDI)', 'reportedip-hive' ),
+			'ssrf'           => __( 'Server-side request forgery (SSRF)', 'reportedip-hive' ),
+			'php_injection'  => __( 'PHP injection', 'reportedip-hive' ),
+			'nosql'          => __( 'NoSQL injection', 'reportedip-hive' ),
+			'xxe'            => __( 'XML external entity (XXE)', 'reportedip-hive' ),
+			'webshell'       => __( 'Web shell', 'reportedip-hive' ),
+			'crlf'           => __( 'CRLF / header injection', 'reportedip-hive' ),
+			'ssti'           => __( 'Server-side template injection (SSTI)', 'reportedip-hive' ),
+		);
+
+		$groups = class_exists( 'ReportedIP_Hive_WAF' ) ? array_keys( ReportedIP_Hive_WAF::GROUP_REASON ) : array_keys( $labels );
+
+		$choices = array();
+		foreach ( $groups as $group_key ) {
+			$name = isset( $labels[ $group_key ] ) ? $labels[ $group_key ] : $group_key;
+			/* translators: 1: human-readable group name, 2: raw group token shown in the log. */
+			$choices[ $group_key ] = sprintf( __( '%1$s (%2$s)', 'reportedip-hive' ), $name, $group_key );
+		}
+
+		return $choices;
 	}
 
 	/**

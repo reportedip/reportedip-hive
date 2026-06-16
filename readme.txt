@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.10
+Stable tag: 2.1.11
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.11 =
+
+Changed: the WAF exception form is now self-explanatory. Every field has an inline hint, the scope selector reveals only the relevant field, and the ambiguous "Rule ID or group" field is split into a Rule ID input and a Rule group dropdown of the engine's known categories — so it is clear what to enter and where to get it (the WAF block log, or the one-click "Allow" button on a blocked event). The exceptions FAQ was rewritten to cover what to configure, where to find a rule ID or group, how to choose a scope, and how the path/IP filters work.
 
 = 2.1.10 =
 
