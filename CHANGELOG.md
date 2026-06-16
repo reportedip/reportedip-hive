@@ -2,6 +2,33 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.13] — 2026-06-16
+
+### Changed
+
+- **Security dashboard reworked into a full analytics view.** The Security
+  Events, Threat Distribution and Recent Activity sections now draw on every
+  sensor instead of five legacy categories. New: a headline strip (attacks
+  blocked over 30 days / today, IPs currently blocked, active protection
+  layers), a stacked timeline grouped into seven threat families with a
+  7/30/90-day selector, a doughnut by attack vector, a WAF rule-group bar
+  chart, a severity breakdown, and a Top Attackers table. Recent Activity
+  entries now carry a severity badge and threat-family label. A single,
+  frequency-capped card promotes the deeper analytics on higher plans.
+
+### Fixed
+
+- **Hardening Mode no longer triggers on routine background brute-force.** The
+  coordinated-attack detectors now count individual `failed_login` events over
+  a real time window from the logs table instead of summing the cumulative
+  per-IP counter from the attempts table, which over-counted any IP merely
+  active in the window with its full lifetime total. Detection defaults were
+  raised to realistic values (distributed: 10 distinct IPs and 50 attempts in
+  10 minutes; burst: 8 IPs and 30 attempts in one minute) so a normal botnet
+  baseline no longer tightens login thresholds network-wide. New installs pick
+  up the new defaults; sites that previously saved the Hardening tab keep their
+  stored values.
+
 ## [2.1.12] — 2026-06-16
 
 ### Added
