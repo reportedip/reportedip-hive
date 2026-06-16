@@ -97,6 +97,35 @@ class ReportedIP_Hive_WAF {
 	);
 
 	/**
+	 * Human-readable label for every rule group.
+	 *
+	 * Canonical source for both the Firewall exception dropdown and the
+	 * dashboard WAF chart, keyed off {@see GROUP_REASON} so a new group is
+	 * named in exactly one place.
+	 *
+	 * @return array<string, string> Map of group key to translated label.
+	 * @since  2.1.13
+	 */
+	public static function group_labels() {
+		return array(
+			'sql_injection'  => __( 'SQL injection', 'reportedip-hive' ),
+			'xss'            => __( 'Cross-site scripting (XSS)', 'reportedip-hive' ),
+			'path_traversal' => __( 'Path traversal', 'reportedip-hive' ),
+			'cmd_injection'  => __( 'Command injection', 'reportedip-hive' ),
+			'file_probe'     => __( 'Sensitive-file probing', 'reportedip-hive' ),
+			'scanner_ua'     => __( 'Scanner / tool user-agents', 'reportedip-hive' ),
+			'log4shell'      => __( 'Log4Shell (JNDI)', 'reportedip-hive' ),
+			'ssrf'           => __( 'Server-side request forgery (SSRF)', 'reportedip-hive' ),
+			'php_injection'  => __( 'PHP injection', 'reportedip-hive' ),
+			'nosql'          => __( 'NoSQL injection', 'reportedip-hive' ),
+			'xxe'            => __( 'XML external entity (XXE)', 'reportedip-hive' ),
+			'webshell'       => __( 'Web shell', 'reportedip-hive' ),
+			'crlf'           => __( 'CRLF / header injection', 'reportedip-hive' ),
+			'ssti'           => __( 'Server-side template injection (SSTI)', 'reportedip-hive' ),
+		);
+	}
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_WAF|null

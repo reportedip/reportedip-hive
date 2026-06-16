@@ -1898,4 +1898,191 @@ class ReportedIP_Hive_Database {
 			),
 		);
 	}
+
+	/**
+	 * Aggregate threat telemetry for the Security Dashboard.
+	 *
+	 * A single pass over the logs table, folded through
+	 * {@see ReportedIP_Hive_Event_Taxonomy} into per-day family time series plus
+	 * family/severity totals, a WAF rule-group breakdown, period/today totals and
+	 * the most active attacker IPs. Network-wide (base_prefix); on single site
+	 * identical to the local scope. The window guard OR's a PHP-computed UTC
+	 * cutoff with the MySQL relative cutoff so a skewed DB session timezone cannot
+	 * collapse the result to zero (mirrors {@see get_recent_events()}).
+	 *
+	 * @param int $days Lookback window in days (clamped 1..90).
+	 * @return array{
+	 *     days:int,
+	 *     labels:array<int,string>,
+	 *     families:array<int,array{key:string,label:string,data:array<int,int>}>,
+	 *     by_family:array<string,int>,
+	 *     by_severity:array{critical:int,high:int,medium:int,low:int},
+	 *     waf_groups:array<string,int>,
+	 *     totals:array{period:int,today:int},
+	 *     top_ips:array<int,array{ip:string,count:int,last_seen:string,blocked:bool}>
+	 * }
+	 * @since 2.1.13
+	 */
+	public function get_threat_analytics( $days = 7 ) {
+		global $wpdb;
+
+		$days       = max( 1, min( 90, (int) $days ) );
+		$logs_table = $wpdb->base_prefix . 'reportedip_hive_logs';
+		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS );
+
+		$labels_map  = ReportedIP_Hive_Event_Taxonomy::labels();
+		$family_keys = array_keys( $labels_map );
+
+		$labels   = array();
+		$date_pos = array();
+		$now      = time();
+		for ( $i = $days - 1; $i >= 0; $i-- ) {
+			$day_ts            = $now - $i * DAY_IN_SECONDS;
+			$date              = gmdate( 'Y-m-d', $day_ts );
+			$date_pos[ $date ] = count( $labels );
+			$labels[]          = date_i18n( 'M j', $day_ts );
+		}
+
+		$series    = array();
+		$by_family = array();
+		foreach ( $family_keys as $fkey ) {
+			$series[ $fkey ]    = array_fill( 0, $days, 0 );
+			$by_family[ $fkey ] = 0;
+		}
+		$by_severity = array(
+			'critical' => 0,
+			'high'     => 0,
+			'medium'   => 0,
+			'low'      => 0,
+		);
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT DATE(created_at) AS d, event_type, severity, COUNT(*) AS c
+				 FROM $logs_table
+				 WHERE created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)
+				 GROUP BY DATE(created_at), event_type, severity",
+				$cutoff_utc,
+				$days
+			)
+		);
+
+		foreach ( (array) $rows as $row ) {
+			$family = ReportedIP_Hive_Event_Taxonomy::classify( $row->event_type );
+			if ( null === $family ) {
+				continue;
+			}
+			$count                 = (int) $row->c;
+			$by_family[ $family ] += $count;
+
+			$severity = (string) $row->severity;
+			if ( isset( $by_severity[ $severity ] ) ) {
+				$by_severity[ $severity ] += $count;
+			}
+
+			if ( isset( $date_pos[ $row->d ] ) ) {
+				$series[ $family ][ $date_pos[ $row->d ] ] += $count;
+			}
+		}
+
+		$families = array();
+		foreach ( $family_keys as $fkey ) {
+			$families[] = array(
+				'key'   => $fkey,
+				'label' => $labels_map[ $fkey ],
+				'data'  => $series[ $fkey ],
+			);
+		}
+
+		$period_total = array_sum( $by_family );
+		$today_total  = 0;
+		$last_pos     = $days - 1;
+		foreach ( $family_keys as $fkey ) {
+			$today_total += $series[ $fkey ][ $last_pos ];
+		}
+
+		$waf_rows   = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT details FROM $logs_table
+				 WHERE event_type IN ('waf_block','waf_would_block')
+				   AND ( created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d DAY) )
+				 ORDER BY created_at DESC
+				 LIMIT 5000",
+				$cutoff_utc,
+				$days
+			)
+		);
+		$waf_groups = array();
+		foreach ( (array) $waf_rows as $row ) {
+			$decoded              = json_decode( (string) $row->details, true );
+			$group                = ( is_array( $decoded ) && ! empty( $decoded['group'] ) )
+				? (string) $decoded['group']
+				: 'other';
+			$waf_groups[ $group ] = ( $waf_groups[ $group ] ?? 0 ) + 1;
+		}
+		arsort( $waf_groups );
+
+		$top_ips      = array();
+		$threat_types = ReportedIP_Hive_Event_Taxonomy::threat_event_types();
+		if ( ! empty( $threat_types ) ) {
+			$placeholders = implode( ',', array_fill( 0, count( $threat_types ), '%s' ) );
+			$top_rows     = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT ip_address, COUNT(*) AS c, MAX(created_at) AS last_seen
+					 FROM $logs_table
+					 WHERE event_type IN ($placeholders)
+					   AND ip_address <> ''
+					   AND ( created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d DAY) )
+					 GROUP BY ip_address
+					 ORDER BY c DESC
+					 LIMIT 10",
+					array_merge( $threat_types, array( $cutoff_utc, $days ) )
+				)
+			);
+
+			$ips = array();
+			foreach ( (array) $top_rows as $row ) {
+				$ips[] = (string) $row->ip_address;
+			}
+
+			$active_blocks = array();
+			if ( ! empty( $ips ) ) {
+				$blocked_table = $wpdb->base_prefix . 'reportedip_hive_blocked';
+				$ip_ph         = implode( ',', array_fill( 0, count( $ips ), '%s' ) );
+				$blocked_rows  = $wpdb->get_col(
+					$wpdb->prepare(
+						"SELECT ip_address FROM $blocked_table
+						 WHERE is_active = 1
+						   AND ip_address IN ($ip_ph)
+						   AND ( blocked_until IS NULL OR blocked_until > NOW() )",
+						$ips
+					)
+				);
+				$active_blocks = array_flip( array_map( 'strval', (array) $blocked_rows ) );
+			}
+
+			foreach ( (array) $top_rows as $row ) {
+				$top_ips[] = array(
+					'ip'        => (string) $row->ip_address,
+					'count'     => (int) $row->c,
+					'last_seen' => (string) $row->last_seen,
+					'blocked'   => isset( $active_blocks[ (string) $row->ip_address ] ),
+				);
+			}
+		}
+
+		return array(
+			'days'        => $days,
+			'labels'      => $labels,
+			'families'    => $families,
+			'by_family'   => $by_family,
+			'by_severity' => $by_severity,
+			'waf_groups'  => $waf_groups,
+			'totals'      => array(
+				'period' => $period_total,
+				'today'  => $today_total,
+			),
+			'top_ips'     => $top_ips,
+		);
+	}
 }

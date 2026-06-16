@@ -54,10 +54,25 @@
     margin-bottom: var(--rip-space-6);
 }
 
+.rip-charts-grid--even {
+    grid-template-columns: 1fr 1fr;
+}
+
 @media (max-width: 1200px) {
-    .rip-charts-grid {
+    .rip-charts-grid,
+    .rip-charts-grid--even {
         grid-template-columns: 1fr;
     }
+}
+
+/* Hero KPI accent — emphasises the headline "attacks blocked" card without
+   resorting to an accent border (anti-AI-watermark rule). */
+.rip-stat-card--accent {
+    background: var(--rip-gray-50);
+}
+
+.rip-stat-card--accent .rip-stat-card__value {
+    color: var(--rip-success);
 }
 
 .rip-chart-card {
@@ -214,6 +229,12 @@
     background: var(--rip-gray-100);
     padding: 1px 6px;
     border-radius: var(--rip-radius-sm);
+}
+
+.rip-activity-item__family {
+    font-size: var(--rip-text-xs);
+    font-weight: 500;
+    color: var(--rip-gray-500);
 }
 
 .rip-activity-item__desc {

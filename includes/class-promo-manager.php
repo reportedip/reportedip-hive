@@ -96,6 +96,11 @@ class ReportedIP_Hive_Promo_Manager {
 	const KEY_HARDENING_MODE = 'hardening_mode';
 
 	/**
+	 * Promo key — advanced threat-analytics card on the Security Dashboard.
+	 */
+	const KEY_ADVANCED_ANALYTICS = 'advanced_analytics';
+
+	/**
 	 * Whether a promo surface keyed `$key` is allowed to render now for `$user_id`.
 	 *
 	 * @param string $key     One of the KEY_* constants.

@@ -55,12 +55,40 @@
                 gray200: style.getPropertyValue('--rip-gray-200').trim() || '#E5E7EB'
             };
 
+            // Categorical color per threat family (keys match the PHP taxonomy)
+            this.familyColors = {
+                login:    this.colors.danger,
+                firewall: this.colors.primary,
+                scanner:  this.colors.warning,
+                bot:      this.colors.info,
+                recon:    this.colors.success,
+                spam:     this.colors.gray,
+                anomaly:  style.getPropertyValue('--rip-primary-light').trim() || '#818CF8'
+            };
+
+            // Severity scale, most-to-least serious
+            this.severityColors = {
+                critical: this.colors.danger,
+                high:     this.colors.warning,
+                medium:   this.colors.info,
+                low:      this.colors.gray
+            };
+
             // Set global Chart.js defaults
             this.setChartDefaults();
 
             // Initialize charts if canvas elements exist
             this.initSecurityEventsChart();
             this.initThreatDistributionChart();
+            this.initWafGroupsChart();
+            this.initSeverityChart();
+        },
+
+        /**
+         * Resolve a categorical color for a threat-family key.
+         */
+        familyColor: function(key) {
+            return (this.familyColors && this.familyColors[key]) || this.colors.gray;
         },
 
         /**
@@ -90,66 +118,46 @@
 
             var ctx = canvas.getContext('2d');
             var data = this.getChartData('securityEvents');
+            var families = data.families || [];
 
-            // Show empty state if no data
-            if (!data.labels || data.labels.length === 0) {
+            // Only chart families that actually have events in the window
+            var active = families.filter(function(f) {
+                return (f.data || []).reduce(function(a, b) { return a + b; }, 0) > 0;
+            });
+
+            if (!data.labels || data.labels.length === 0 || active.length === 0) {
                 this.showEmptyState(canvas, 'No security events recorded yet');
                 return;
             }
 
-            // Destroy existing chart if it exists
             if (this.charts.securityEvents) {
                 this.charts.securityEvents.destroy();
             }
+
+            var self = this;
+            var datasets = active.map(function(family) {
+                var color = self.familyColor(family.key);
+                return {
+                    label: family.label,
+                    data: family.data || [],
+                    borderColor: color,
+                    backgroundColor: self.hexToRgba(color, 0.15),
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: color,
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2
+                };
+            });
 
             this.charts.securityEvents = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.labels || [],
-                    datasets: [
-                        {
-                            label: reportedipCharts.strings.failedLogins || 'Failed Logins',
-                            data: data.failedLogins || [],
-                            borderColor: this.colors.danger,
-                            backgroundColor: this.colors.dangerLight,
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 0,
-                            pointHoverRadius: 6,
-                            pointHoverBackgroundColor: this.colors.danger,
-                            pointHoverBorderColor: '#fff',
-                            pointHoverBorderWidth: 2
-                        },
-                        {
-                            label: reportedipCharts.strings.blockedIPs || 'Blocked IPs',
-                            data: data.blockedIPs || [],
-                            borderColor: this.colors.warning,
-                            backgroundColor: this.colors.warningLight,
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 0,
-                            pointHoverRadius: 6,
-                            pointHoverBackgroundColor: this.colors.warning,
-                            pointHoverBorderColor: '#fff',
-                            pointHoverBorderWidth: 2
-                        },
-                        {
-                            label: reportedipCharts.strings.commentSpam || 'Comment Spam',
-                            data: data.commentSpam || [],
-                            borderColor: this.colors.info,
-                            backgroundColor: this.colors.infoLight,
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 0,
-                            pointHoverRadius: 6,
-                            pointHoverBackgroundColor: this.colors.info,
-                            pointHoverBorderColor: '#fff',
-                            pointHoverBorderWidth: 2
-                        }
-                    ]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
@@ -164,7 +172,7 @@
                             position: 'bottom',
                             labels: {
                                 usePointStyle: true,
-                                padding: 20,
+                                padding: 16,
                                 font: {
                                     size: 12
                                 }
@@ -177,25 +185,24 @@
                     },
                     scales: {
                         x: {
+                            stacked: true,
                             grid: {
                                 display: false
                             },
                             ticks: {
-                                maxRotation: 0
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 12
                             }
                         },
                         y: {
+                            stacked: true,
                             beginAtZero: true,
                             grid: {
                                 color: 'rgba(0, 0, 0, 0.05)'
                             },
                             ticks: {
-                                stepSize: 1,
-                                callback: function(value) {
-                                    if (Number.isInteger(value)) {
-                                        return value;
-                                    }
-                                }
+                                precision: 0
                             }
                         }
                     }
@@ -225,23 +232,18 @@
                 this.charts.threatDistribution.destroy();
             }
 
+            var self = this;
+            var bgColors = (data.keys || []).map(function(key) {
+                return self.familyColor(key);
+            });
+
             this.charts.threatDistribution = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: data.labels || [
-                        reportedipCharts.strings.failedLogins || 'Failed Logins',
-                        reportedipCharts.strings.commentSpam || 'Comment Spam',
-                        reportedipCharts.strings.xmlrpcAbuse || 'XMLRPC Abuse',
-                        reportedipCharts.strings.adminScanning || 'Admin Scanning'
-                    ],
+                    labels: data.labels || [],
                     datasets: [{
-                        data: data.values || [0, 0, 0, 0],
-                        backgroundColor: [
-                            this.colors.danger,
-                            this.colors.info,
-                            this.colors.warning,
-                            this.colors.primary
-                        ],
+                        data: data.values || [],
+                        backgroundColor: bgColors,
                         borderWidth: 0,
                         hoverOffset: 10
                     }]
@@ -278,6 +280,115 @@
                     }
                 }
             });
+        },
+
+        /**
+         * Initialize WAF rule-group horizontal bar chart
+         */
+        initWafGroupsChart: function() {
+            var data = this.getChartData('wafGroups');
+            this.initBarChart('rip-waf-groups-chart', 'wafGroups', {
+                labels: data.labels || [],
+                values: data.values || [],
+                colors: this.familyColor('firewall'),
+                horizontal: true,
+                emptyMsg: 'No firewall hits in this period'
+            });
+        },
+
+        /**
+         * Initialize severity-breakdown bar chart
+         */
+        initSeverityChart: function() {
+            var data = this.getChartData('severity');
+            var strings = reportedipCharts.strings || {};
+            var order = ['critical', 'high', 'medium', 'low'];
+            var self = this;
+            this.initBarChart('rip-severity-chart', 'severity', {
+                labels: [
+                    strings.critical || 'Critical',
+                    strings.high || 'High',
+                    strings.medium || 'Medium',
+                    strings.low || 'Low'
+                ],
+                values: order.map(function(k) { return (data && data[k]) ? data[k] : 0; }),
+                colors: order.map(function(k) { return self.severityColors[k]; }),
+                horizontal: false,
+                emptyMsg: 'No threats detected yet'
+            });
+        },
+
+        /**
+         * Shared bar-chart renderer for the WAF and severity charts.
+         *
+         * @param {string} canvasId Target canvas element id.
+         * @param {string} chartKey Key under this.charts for destroy/re-init.
+         * @param {object} cfg      {labels, values, colors, horizontal, emptyMsg}.
+         */
+        initBarChart: function(canvasId, chartKey, cfg) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            var values = cfg.values || [];
+            var total = values.reduce(function(a, b) { return a + b; }, 0);
+            if (!cfg.labels || cfg.labels.length === 0 || total === 0) {
+                this.showEmptyState(canvas, cfg.emptyMsg);
+                return;
+            }
+
+            if (this.charts[chartKey]) {
+                this.charts[chartKey].destroy();
+            }
+
+            var valueAxis = {
+                beginAtZero: true,
+                grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                ticks: { precision: 0 }
+            };
+            var categoryAxis = { grid: { display: false } };
+
+            this.charts[chartKey] = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: cfg.labels,
+                    datasets: [{
+                        label: (reportedipCharts.strings && reportedipCharts.strings.events) || 'Events',
+                        data: values,
+                        backgroundColor: cfg.colors,
+                        borderWidth: 0,
+                        maxBarThickness: cfg.horizontal ? 22 : 48
+                    }]
+                },
+                options: {
+                    indexAxis: cfg.horizontal ? 'y' : 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: cfg.horizontal
+                        ? { x: valueAxis, y: categoryAxis }
+                        : { x: categoryAxis, y: valueAxis }
+                }
+            });
+        },
+
+        /**
+         * Convert a #rrggbb color to an rgba() string with the given alpha.
+         * Returns the input unchanged when it is not a hex color.
+         */
+        hexToRgba: function(hex, alpha) {
+            if (typeof hex !== 'string' || hex.charAt(0) !== '#') {
+                return hex;
+            }
+            var h = hex.replace('#', '');
+            if (h.length === 3) {
+                h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2);
+            }
+            var r = parseInt(h.substring(0, 2), 16);
+            var g = parseInt(h.substring(2, 4), 16);
+            var b = parseInt(h.substring(4, 6), 16);
+            return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
         },
 
         /**
@@ -349,6 +460,8 @@
                         // Re-init charts
                         self.initSecurityEventsChart();
                         self.initThreatDistributionChart();
+                        self.initWafGroupsChart();
+                        self.initSeverityChart();
                     }
                 }
             });

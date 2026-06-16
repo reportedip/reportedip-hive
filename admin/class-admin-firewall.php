@@ -781,23 +781,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	 * @since  2.1.11
 	 */
 	private static function waf_group_choices() {
-		$labels = array(
-			'sql_injection'  => __( 'SQL injection', 'reportedip-hive' ),
-			'xss'            => __( 'Cross-site scripting (XSS)', 'reportedip-hive' ),
-			'path_traversal' => __( 'Path traversal', 'reportedip-hive' ),
-			'cmd_injection'  => __( 'Command injection', 'reportedip-hive' ),
-			'file_probe'     => __( 'Sensitive-file probing', 'reportedip-hive' ),
-			'scanner_ua'     => __( 'Scanner / tool user-agents', 'reportedip-hive' ),
-			'log4shell'      => __( 'Log4Shell (JNDI)', 'reportedip-hive' ),
-			'ssrf'           => __( 'Server-side request forgery (SSRF)', 'reportedip-hive' ),
-			'php_injection'  => __( 'PHP injection', 'reportedip-hive' ),
-			'nosql'          => __( 'NoSQL injection', 'reportedip-hive' ),
-			'xxe'            => __( 'XML external entity (XXE)', 'reportedip-hive' ),
-			'webshell'       => __( 'Web shell', 'reportedip-hive' ),
-			'crlf'           => __( 'CRLF / header injection', 'reportedip-hive' ),
-			'ssti'           => __( 'Server-side template injection (SSTI)', 'reportedip-hive' ),
-		);
-
+		$labels = class_exists( 'ReportedIP_Hive_WAF' ) ? ReportedIP_Hive_WAF::group_labels() : array();
 		$groups = class_exists( 'ReportedIP_Hive_WAF' ) ? array_keys( ReportedIP_Hive_WAF::GROUP_REASON ) : array_keys( $labels );
 
 		$choices = array();

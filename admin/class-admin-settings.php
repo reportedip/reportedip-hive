@@ -882,6 +882,167 @@ class ReportedIP_Hive_Admin_Settings {
 		<?php
 	}
 
+	/**
+	 * Count how many protection layers are currently switched on.
+	 *
+	 * Reads the canonical sensor/feature toggles through the option router so the
+	 * "N/M layers active" hero KPI reflects the real configuration network-wide.
+	 *
+	 * @return array{active:int,total:int}
+	 * @since  2.1.13
+	 */
+	private function get_active_protection_layers() {
+		$layers = array(
+			'reportedip_hive_monitor_failed_logins'    => true,
+			'reportedip_hive_monitor_comments'         => true,
+			'reportedip_hive_monitor_xmlrpc'           => true,
+			'reportedip_hive_monitor_app_passwords'    => true,
+			'reportedip_hive_monitor_rest_api'         => true,
+			'reportedip_hive_block_user_enumeration'   => true,
+			'reportedip_hive_monitor_404_scans'        => true,
+			'reportedip_hive_monitor_geo_anomaly'      => true,
+			'reportedip_hive_monitor_woocommerce'      => true,
+			'reportedip_hive_waf_enabled'              => true,
+			'reportedip_hive_monitor_bot_verification' => true,
+			'reportedip_hive_comment_honeypot_enabled' => true,
+			'reportedip_hive_decoy_pathblock_enabled'  => true,
+			'reportedip_hive_auto_block'               => true,
+			'reportedip_hive_block_escalation_enabled' => true,
+			'reportedip_hive_password_policy_enabled'  => true,
+			'reportedip_hive_2fa_enabled_global'       => false,
+			'reportedip_hive_hide_login_enabled'       => false,
+			'reportedip_hive_headers_enabled'          => false,
+			'reportedip_hive_audit_enabled'            => true,
+		);
+
+		$active = 0;
+		foreach ( $layers as $key => $default ) {
+			if ( ReportedIP_Hive_Option_Routing::get( $key, $default ) ) {
+				++$active;
+			}
+		}
+
+		return array(
+			'active' => $active,
+			'total'  => count( $layers ),
+		);
+	}
+
+	/**
+	 * Render the most active attacker IPs over the last 30 days.
+	 *
+	 * @param array<int,array{ip:string,count:int,last_seen:string,blocked:bool}> $top_ips Rows from get_threat_analytics().
+	 * @return void
+	 * @since  2.1.13
+	 */
+	private function render_top_attackers_table( $top_ips ) {
+		?>
+		<div class="rip-dashboard__section">
+			<div class="rip-dashboard__section-title">
+				<h2>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+					<?php esc_html_e( 'Top Attackers (30 days)', 'reportedip-hive' ); ?>
+				</h2>
+				<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=blocked' ) ); ?>" class="rip-button rip-button--ghost rip-button--sm">
+					<?php esc_html_e( 'Manage Blocks', 'reportedip-hive' ); ?>
+				</a>
+			</div>
+
+			<div class="rip-card">
+				<?php if ( empty( $top_ips ) ) : ?>
+					<div class="rip-empty-state rip-empty-state--compact">
+						<svg class="rip-empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+							<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+						<p class="rip-empty-state__text"><?php esc_html_e( 'No attacker activity recorded in the last 30 days.', 'reportedip-hive' ); ?></p>
+					</div>
+				<?php else : ?>
+					<table class="rip-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'IP Address', 'reportedip-hive' ); ?></th>
+								<th><?php esc_html_e( 'Attacks', 'reportedip-hive' ); ?></th>
+								<th><?php esc_html_e( 'Last Seen', 'reportedip-hive' ); ?></th>
+								<th><?php esc_html_e( 'Status', 'reportedip-hive' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $top_ips as $row ) : ?>
+								<tr>
+									<td><code><?php echo esc_html( $row['ip'] ); ?></code></td>
+									<td><?php echo esc_html( number_format_i18n( $row['count'] ) ); ?></td>
+									<td>
+										<?php
+										/* translators: %s = human-readable time difference, e.g. "3 hours". */
+										echo esc_html( sprintf( __( '%s ago', 'reportedip-hive' ), human_time_diff( strtotime( $row['last_seen'] ), time() ) ) );
+										?>
+									</td>
+									<td>
+										<?php if ( $row['blocked'] ) : ?>
+											<span class="rip-badge rip-badge--danger"><?php esc_html_e( 'Blocked', 'reportedip-hive' ); ?></span>
+										<?php else : ?>
+											<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'Monitored', 'reportedip-hive' ); ?></span>
+										<?php endif; ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the advanced-analytics upsell card for non-Professional tiers.
+	 *
+	 * Deliberately understated: a single frequency-capped card that previews the
+	 * deeper analytics unlocked by higher plans. Falls silent for Professional
+	 * and above, and respects the global promo cap.
+	 *
+	 * @return void
+	 * @since  2.1.13
+	 */
+	private function render_analytics_pro_card() {
+		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' )
+			&& ! ReportedIP_Hive_Promo_Manager::can_show( ReportedIP_Hive_Promo_Manager::KEY_ADVANCED_ANALYTICS )
+		) {
+			return;
+		}
+
+		$status = array(
+			'available' => false,
+			'reason'    => 'tier',
+			'min_tier'  => 'professional',
+		);
+		?>
+		<div class="rip-card rip-mb-6 rip-promo-card">
+			<div class="rip-card__header">
+				<h2 class="rip-card__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
+					<?php esc_html_e( 'Go deeper with advanced analytics', 'reportedip-hive' ); ?>
+				</h2>
+			</div>
+			<div class="rip-card__body">
+				<p><?php esc_html_e( 'Professional and Business plans unlock the full picture behind these charts — longer history, attacker geography and a tamper-evident audit trail.', 'reportedip-hive' ); ?></p>
+				<ul class="rip-promo-card__benefits">
+					<li><?php esc_html_e( 'Extended history and longer log retention', 'reportedip-hive' ); ?></li>
+					<li><?php esc_html_e( 'Priority rulesets — broader WAF signatures and live bot / disposable feeds', 'reportedip-hive' ); ?></li>
+					<li><?php esc_html_e( 'Audit event trail with CSV / JSON export (Business)', 'reportedip-hive' ); ?></li>
+				</ul>
+				<div class="rip-flex rip-gap-2 rip-mt-3">
+					<?php self::render_tier_lock( $status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+				</div>
+			</div>
+		</div>
+		<?php
+
+		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' ) ) {
+			ReportedIP_Hive_Promo_Manager::mark_shown( ReportedIP_Hive_Promo_Manager::KEY_ADVANCED_ANALYTICS );
+		}
+	}
+
 	private function render_relay_quota_section( $mode_manager ) {
 		$snapshot = $mode_manager->get_relay_quota_snapshot();
 		$tier     = $mode_manager->get_tier_info( $snapshot['tier'] );
@@ -3518,9 +3679,8 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Dashboard page
 	 */
 	public function dashboard_page() {
-		$stats         = $this->get_dashboard_stats();
+		$ip_stats      = $this->database->get_ip_management_stats();
 		$recent_events = $this->database->get_recent_events( 24, 10 );
-		$api_status    = $this->api_client->is_configured() ? $this->api_client->test_connection() : array( 'success' => false );
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 
@@ -3529,66 +3689,50 @@ class ReportedIP_Hive_Admin_Settings {
 
 			<div class="rip-dashboard">
 				<?php
-				$queue_stats = $this->database->get_queue_statistics();
+				$analytics = $this->database->get_threat_analytics( 30 );
+				$layers    = $this->get_active_protection_layers();
 				?>
 
-				<!-- Stat Cards (New Design) -->
 				<div class="rip-stat-cards">
-					<!-- Events Card -->
+					<div class="rip-stat-card rip-stat-card--accent">
+						<div class="rip-stat-card__icon rip-stat-card__icon--success">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+						</div>
+						<div class="rip-stat-card__content">
+							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $analytics['totals']['period'] ) ); ?></div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'Attacks blocked (30 days)', 'reportedip-hive' ); ?></div>
+						</div>
+					</div>
+
 					<div class="rip-stat-card">
 						<div class="rip-stat-card__icon rip-stat-card__icon--danger">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
 						</div>
 						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value"><?php echo esc_html( $stats['events_24h'] ); ?></div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'Events (24h)', 'reportedip-hive' ); ?></div>
+							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $analytics['totals']['today'] ) ); ?></div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'Blocked today', 'reportedip-hive' ); ?></div>
 						</div>
 					</div>
 
-					<!-- Blocked IPs Card -->
 					<div class="rip-stat-card">
 						<div class="rip-stat-card__icon rip-stat-card__icon--warning">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
 						</div>
 						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value"><?php echo esc_html( $stats['blocked_ips'] ); ?></div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'Blocked IPs', 'reportedip-hive' ); ?></div>
+							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $ip_stats['active_blocked'] ?? 0 ) ); ?></div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'IPs currently blocked', 'reportedip-hive' ); ?></div>
 						</div>
 					</div>
 
-					<!-- Whitelisted IPs Card -->
 					<div class="rip-stat-card">
-						<div class="rip-stat-card__icon rip-stat-card__icon--success">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+						<div class="rip-stat-card__icon rip-stat-card__icon--primary">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
 						</div>
 						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value"><?php echo esc_html( $stats['whitelisted_ips'] ); ?></div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'Whitelisted IPs', 'reportedip-hive' ); ?></div>
+							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $layers['active'] ) . '/' . number_format_i18n( $layers['total'] ) ); ?></div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'Protection layers active', 'reportedip-hive' ); ?></div>
 						</div>
 					</div>
-
-					<!-- API/Queue Card (Community Mode) or Cache Card (Local Mode) -->
-					<?php if ( $mode_manager->is_community_mode() ) : ?>
-					<div class="rip-stat-card">
-						<div class="rip-stat-card__icon rip-stat-card__icon--<?php echo $api_status['success'] ? 'primary' : 'danger'; ?>">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-						</div>
-						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value"><?php echo (int) $queue_stats['pending']; ?></div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'API Queue', 'reportedip-hive' ); ?></div>
-						</div>
-					</div>
-					<?php else : ?>
-					<div class="rip-stat-card">
-						<div class="rip-stat-card__icon rip-stat-card__icon--info">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-						</div>
-						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value"><?php esc_html_e( 'Local', 'reportedip-hive' ); ?></div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'Protection Active', 'reportedip-hive' ); ?></div>
-						</div>
-					</div>
-					<?php endif; ?>
 				</div>
 
 				<?php $this->render_score_section(); ?>
@@ -3603,20 +3747,19 @@ class ReportedIP_Hive_Admin_Settings {
 
 				<?php $this->render_api_usage_card(); ?>
 
-				<!-- Charts Section -->
 				<div class="rip-charts-grid">
-					<!-- Security Events Chart -->
 					<div class="rip-chart-card">
 						<div class="rip-chart-card__header">
 							<h3 class="rip-chart-card__title"><?php esc_html_e( 'Security Events', 'reportedip-hive' ); ?></h3>
 							<div class="rip-time-selector">
 								<button type="button" class="rip-time-selector__btn rip-time-selector__btn--active" data-period="7"><?php esc_html_e( '7 Days', 'reportedip-hive' ); ?></button>
 								<button type="button" class="rip-time-selector__btn" data-period="30"><?php esc_html_e( '30 Days', 'reportedip-hive' ); ?></button>
+								<button type="button" class="rip-time-selector__btn" data-period="90"><?php esc_html_e( '90 Days', 'reportedip-hive' ); ?></button>
 							</div>
 						</div>
 						<div class="rip-chart-card__body">
 							<canvas id="rip-security-events-chart" class="rip-chart-card__canvas"></canvas>
-							<?php if ( (int) $stats['events_24h'] === 0 && (int) $stats['blocked_ips'] === 0 ) : ?>
+							<?php if ( (int) $analytics['totals']['period'] === 0 ) : ?>
 								<div id="rip-security-events-empty" class="rip-chart-card__empty">
 									<svg class="rip-chart-card__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
 										<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -3625,16 +3768,15 @@ class ReportedIP_Hive_Admin_Settings {
 									<h4><?php esc_html_e( 'No threats detected yet — protection is active.', 'reportedip-hive' ); ?></h4>
 									<p><?php esc_html_e( 'Your dashboard will fill up automatically as ReportedIP Hive blocks attempts. We watch:', 'reportedip-hive' ); ?></p>
 									<ul>
-										<li><?php esc_html_e( 'Failed logins and password-spray patterns', 'reportedip-hive' ); ?></li>
-										<li><?php esc_html_e( 'Comment spam and XML-RPC abuse', 'reportedip-hive' ); ?></li>
-										<li><?php esc_html_e( '404 honeypot scans (.env, .git, wp-config.php.bak)', 'reportedip-hive' ); ?></li>
+										<li><?php esc_html_e( 'Login brute-force, credential spray and 2FA attacks', 'reportedip-hive' ); ?></li>
+										<li><?php esc_html_e( 'Firewall (WAF) hits: SQL injection, XSS, path traversal', 'reportedip-hive' ); ?></li>
+										<li><?php esc_html_e( 'Scanners, fake bots, enumeration and spam floods', 'reportedip-hive' ); ?></li>
 									</ul>
 								</div>
 							<?php endif; ?>
 						</div>
 					</div>
 
-					<!-- Threat Distribution Chart -->
 					<div class="rip-chart-card">
 						<div class="rip-chart-card__header">
 							<h3 class="rip-chart-card__title"><?php esc_html_e( 'Threat Distribution', 'reportedip-hive' ); ?></h3>
@@ -3644,6 +3786,34 @@ class ReportedIP_Hive_Admin_Settings {
 						</div>
 					</div>
 				</div>
+
+				<div class="rip-charts-grid rip-charts-grid--even">
+					<div class="rip-chart-card">
+						<div class="rip-chart-card__header">
+							<h3 class="rip-chart-card__title"><?php esc_html_e( 'Firewall — Top Attack Types', 'reportedip-hive' ); ?></h3>
+						</div>
+						<div class="rip-chart-card__body">
+							<canvas id="rip-waf-groups-chart" class="rip-chart-card__canvas"></canvas>
+						</div>
+					</div>
+
+					<div class="rip-chart-card">
+						<div class="rip-chart-card__header">
+							<h3 class="rip-chart-card__title"><?php esc_html_e( 'Severity Breakdown', 'reportedip-hive' ); ?></h3>
+						</div>
+						<div class="rip-chart-card__body">
+							<canvas id="rip-severity-chart" class="rip-chart-card__canvas"></canvas>
+						</div>
+					</div>
+				</div>
+
+				<?php $this->render_top_attackers_table( $analytics['top_ips'] ); ?>
+
+				<?php
+				if ( ! $mode_manager->tier_at_least( 'professional' ) ) {
+					$this->render_analytics_pro_card();
+				}
+				?>
 
 				<!-- Recent Activity Section -->
 				<div class="rip-dashboard__section">
@@ -3668,24 +3838,19 @@ class ReportedIP_Hive_Admin_Settings {
 						<?php else : ?>
 							<ul class="rip-activity-list">
 								<?php
+								$severity_labels = array(
+									'critical' => __( 'Critical', 'reportedip-hive' ),
+									'high'     => __( 'High', 'reportedip-hive' ),
+									'medium'   => __( 'Medium', 'reportedip-hive' ),
+									'low'      => __( 'Low', 'reportedip-hive' ),
+								);
+								$family_labels = ReportedIP_Hive_Event_Taxonomy::labels();
 								foreach ( $recent_events as $event ) :
-									$icon_class = 'info';
-									switch ( $event->severity ) {
-										case 'critical':
-											$icon_class = 'danger';
-											break;
-										case 'high':
-											$icon_class = 'danger';
-											break;
-										case 'medium':
-											$icon_class = 'warning';
-											break;
-										case 'low':
-											$icon_class = 'success';
-											break;
-									}
-
-									$time_ago = human_time_diff( strtotime( $event->created_at ), time() );
+									$icon_class   = $this->severity_badge_class( $event->severity );
+									$badge_label  = $severity_labels[ $event->severity ] ?? ucfirst( (string) $event->severity );
+									$family_key   = ReportedIP_Hive_Event_Taxonomy::classify( $event->event_type );
+									$family_name  = null !== $family_key ? ( $family_labels[ $family_key ] ?? $family_key ) : '';
+									$time_ago     = human_time_diff( strtotime( $event->created_at ), time() );
 									?>
 								<li class="rip-activity-item">
 									<div class="rip-activity-item__icon rip-activity-item__icon--<?php echo esc_attr( $icon_class ); ?>">
@@ -3699,7 +3864,11 @@ class ReportedIP_Hive_Admin_Settings {
 									</div>
 									<div class="rip-activity-item__content">
 										<div class="rip-activity-item__title">
+											<span class="rip-badge rip-badge--<?php echo esc_attr( $icon_class ); ?>"><?php echo esc_html( $badge_label ); ?></span>
 											<?php echo esc_html( ucwords( str_replace( '_', ' ', $event->event_type ) ) ); ?>
+											<?php if ( '' !== $family_name ) : ?>
+												<span class="rip-activity-item__family"><?php echo esc_html( $family_name ); ?></span>
+											<?php endif; ?>
 											<span class="rip-activity-item__ip"><?php echo esc_html( $event->ip_address ); ?></span>
 										</div>
 										<div class="rip-activity-item__desc">

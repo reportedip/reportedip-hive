@@ -303,6 +303,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-store.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-sync.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-event-taxonomy.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-logger.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cache.php';
@@ -820,61 +821,32 @@ class ReportedIP_Hive {
 	public function get_chart_data( $days = 7 ) {
 		$mode_manager = $this->get_mode_manager();
 
-		$days = in_array( (int) $days, array( 7, 30 ), true ) ? (int) $days : 7;
+		$days = in_array( (int) $days, array( 7, 30, 90 ), true ) ? (int) $days : 7;
 
-		$labels         = array();
-		$failed_logins  = array();
-		$blocked_ips    = array();
-		$comment_spam   = array();
-		$xmlrpc_events  = array();
-		$admin_scanning = array();
+		$analytics = ReportedIP_Hive_Database::get_instance()->get_threat_analytics( $days );
 
-		global $wpdb;
-		$logs_table = $wpdb->prefix . 'reportedip_hive_logs';
-		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS );
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
-		$log_stats = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT DATE(created_at) as stat_date,
-					SUM(CASE WHEN event_type LIKE %s THEN 1 ELSE 0 END) as failed_logins,
-					SUM(CASE WHEN event_type LIKE %s OR event_type LIKE %s OR event_type LIKE %s THEN 1 ELSE 0 END) as blocked_ips,
-					SUM(CASE WHEN event_type LIKE %s OR event_type LIKE %s THEN 1 ELSE 0 END) as comment_spam,
-					SUM(CASE WHEN event_type LIKE %s THEN 1 ELSE 0 END) as xmlrpc_events,
-					SUM(CASE WHEN event_type LIKE %s OR event_type LIKE %s THEN 1 ELSE 0 END) as admin_scanning,
-					COUNT(*) as total_events
-				FROM $logs_table
-				WHERE created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)
-				GROUP BY DATE(created_at)
-				ORDER BY stat_date ASC",
-				'%' . $wpdb->esc_like( 'failed_login' ) . '%',
-				'%' . $wpdb->esc_like( 'block' ) . '%',
-				'%' . $wpdb->esc_like( 'auto_block' ) . '%',
-				'%' . $wpdb->esc_like( 'reputation' ) . '%',
-				'%' . $wpdb->esc_like( 'spam' ) . '%',
-				'%' . $wpdb->esc_like( 'comment' ) . '%',
-				'%' . $wpdb->esc_like( 'xmlrpc' ) . '%',
-				'%' . $wpdb->esc_like( 'admin_scan' ) . '%',
-				'%' . $wpdb->esc_like( 'wp_admin' ) . '%',
-				$cutoff_utc,
-				$days
-			)
-		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-
-		foreach ( $log_stats as $stat ) {
-			$labels[]         = date_i18n( 'M j', strtotime( $stat->stat_date ) );
-			$failed_logins[]  = (int) $stat->failed_logins;
-			$blocked_ips[]    = (int) $stat->blocked_ips;
-			$comment_spam[]   = (int) $stat->comment_spam;
-			$xmlrpc_events[]  = (int) $stat->xmlrpc_events;
-			$admin_scanning[] = (int) $stat->admin_scanning;
+		$dist_labels = array();
+		$dist_keys   = array();
+		$dist_values = array();
+		foreach ( $analytics['families'] as $family ) {
+			$total = (int) ( $analytics['by_family'][ $family['key'] ] ?? 0 );
+			if ( $total <= 0 ) {
+				continue;
+			}
+			$dist_keys[]   = $family['key'];
+			$dist_labels[] = $family['label'];
+			$dist_values[] = $total;
 		}
 
-		$total_failed_logins  = array_sum( $failed_logins );
-		$total_comment_spam   = array_sum( $comment_spam );
-		$total_xmlrpc         = array_sum( $xmlrpc_events );
-		$total_admin_scanning = array_sum( $admin_scanning );
+		$waf_label_map = class_exists( 'ReportedIP_Hive_WAF' ) ? ReportedIP_Hive_WAF::group_labels() : array();
+		$waf_labels    = array();
+		$waf_values    = array();
+		foreach ( array_slice( $analytics['waf_groups'], 0, 8, true ) as $group => $count ) {
+			$waf_labels[] = $waf_label_map[ $group ] ?? ucwords( str_replace( '_', ' ', (string) $group ) );
+			$waf_values[] = (int) $count;
+		}
+
+		$severity = $analytics['by_severity'];
 
 		return array(
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
@@ -882,34 +854,32 @@ class ReportedIP_Hive {
 			'mode'    => $mode_manager->get_mode(),
 			'data'    => array(
 				'securityEvents'     => array(
-					'labels'       => $labels,
-					'failedLogins' => $failed_logins,
-					'blockedIPs'   => $blocked_ips,
-					'commentSpam'  => $comment_spam,
+					'labels'   => $analytics['labels'],
+					'families' => $analytics['families'],
 				),
 				'threatDistribution' => array(
-					'labels' => array(
-						__( 'Failed Logins', 'reportedip-hive' ),
-						__( 'Comment Spam', 'reportedip-hive' ),
-						__( 'XMLRPC Abuse', 'reportedip-hive' ),
-						__( 'Admin Scanning', 'reportedip-hive' ),
-					),
-					'values' => array( $total_failed_logins, $total_comment_spam, $total_xmlrpc, $total_admin_scanning ),
+					'labels' => $dist_labels,
+					'keys'   => $dist_keys,
+					'values' => $dist_values,
 				),
-				'apiUsage'           => array(
-					'labels'    => $labels,
-					'apiCalls'  => array_fill( 0, count( $labels ), 0 ),
-					'cacheHits' => array_fill( 0, count( $labels ), 0 ),
+				'wafGroups'          => array(
+					'labels' => $waf_labels,
+					'values' => $waf_values,
+				),
+				'severity'           => array(
+					'critical' => (int) $severity['critical'],
+					'high'     => (int) $severity['high'],
+					'medium'   => (int) $severity['medium'],
+					'low'      => (int) $severity['low'],
 				),
 			),
 			'strings' => array(
-				'failedLogins'  => __( 'Failed Logins', 'reportedip-hive' ),
-				'blockedIPs'    => __( 'Blocked IPs', 'reportedip-hive' ),
-				'commentSpam'   => __( 'Comment Spam', 'reportedip-hive' ),
-				'xmlrpcAbuse'   => __( 'XMLRPC Abuse', 'reportedip-hive' ),
-				'adminScanning' => __( 'Admin Scanning', 'reportedip-hive' ),
-				'apiCalls'      => __( 'API Calls', 'reportedip-hive' ),
-				'cacheHits'     => __( 'Cache Hits', 'reportedip-hive' ),
+				'events'   => __( 'Events', 'reportedip-hive' ),
+				'attacks'  => __( 'Attacks', 'reportedip-hive' ),
+				'critical' => __( 'Critical', 'reportedip-hive' ),
+				'high'     => __( 'High', 'reportedip-hive' ),
+				'medium'   => __( 'Medium', 'reportedip-hive' ),
+				'low'      => __( 'Low', 'reportedip-hive' ),
 			),
 		);
 	}
