@@ -504,8 +504,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_distributed_detection_defaults_when_options_absent() {
 			$this->assertSame( 10, \ReportedIP_Hive_Hardening_Mode::detect_window_minutes() );
-			$this->assertSame( 5, \ReportedIP_Hive_Hardening_Mode::detect_min_ips() );
-			$this->assertSame( 20, \ReportedIP_Hive_Hardening_Mode::detect_min_attempts() );
+			$this->assertSame( 10, \ReportedIP_Hive_Hardening_Mode::detect_min_ips() );
+			$this->assertSame( 50, \ReportedIP_Hive_Hardening_Mode::detect_min_attempts() );
 		}
 
 		public function test_distributed_getters_clamp_out_of_range_values() {
@@ -515,14 +515,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertSame( 120, \ReportedIP_Hive_Hardening_Mode::detect_window_minutes(), 'window clamps to 120 max' );
 			$this->assertSame( 2, \ReportedIP_Hive_Hardening_Mode::detect_min_ips(), 'min IPs clamps to 2 floor' );
-			$this->assertSame( 20, \ReportedIP_Hive_Hardening_Mode::detect_min_attempts(), 'zero falls back to default' );
+			$this->assertSame( 50, \ReportedIP_Hive_Hardening_Mode::detect_min_attempts(), 'zero falls back to default' );
 		}
 
 		public function test_breaches_distributed_thresholds_with_defaults() {
-			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 5, 20 ) );
-			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 12, 96 ) );
-			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 4, 20 ), 'too few IPs' );
-			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 5, 19 ), 'too few attempts' );
+			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 10, 50 ) );
+			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 20, 120 ) );
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 9, 50 ), 'too few IPs' );
+			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 10, 49 ), 'too few attempts' );
 		}
 
 		public function test_breaches_distributed_thresholds_honours_custom_options() {

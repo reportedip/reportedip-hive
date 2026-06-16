@@ -55,8 +55,8 @@ final class ReportedIP_Hive_Hardening_Mode {
 	const DEFAULT_REALTIME_ENABLED = true;
 
 	const DEFAULT_DETECT_WINDOW_MINUTES = 10;
-	const DEFAULT_DETECT_MIN_IPS        = 5;
-	const DEFAULT_DETECT_MIN_ATTEMPTS   = 20;
+	const DEFAULT_DETECT_MIN_IPS        = 10;
+	const DEFAULT_DETECT_MIN_ATTEMPTS   = 50;
 
 	const OPT_MASTER_ENABLED        = 'reportedip_hive_hardening_enabled';
 	const OPT_DETECT_WINDOW_MINUTES = 'reportedip_hive_hardening_detect_window_minutes';
@@ -283,9 +283,9 @@ final class ReportedIP_Hive_Hardening_Mode {
 	 *  - When the candidate `time_window` has a live marker AND the candidate
 	 *    is not strictly more severe than what the marker remembers, return
 	 *    false. This is what stops the hourly cron sweep from re-emitting
-	 *    `hardening_mode_activated` for the same row in
-	 *    `wp_reportedip_hive_attempts` — even after the hardening window
-	 *    expired naturally and `TRANSIENT_REASON` was deleted.
+	 *    `hardening_mode_activated` for the same detection window — even after
+	 *    the hardening window expired naturally and `TRANSIENT_REASON` was
+	 *    deleted.
 	 *  - When the candidate is strictly more severe than the comparison
 	 *    reason (live REASON if present, otherwise the marker payload), the
 	 *    window re-arms: replace `TRANSIENT_UNTIL`, `TRANSIENT_REASON` AND

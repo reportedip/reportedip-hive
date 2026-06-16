@@ -22,11 +22,11 @@
 class ReportedIP_Hive_Hardening_Detection_Multisite_Test extends WP_UnitTestCase {
 
 	/**
-	 * Fully-qualified attempts table name (network-wide).
+	 * Fully-qualified logs table name (network-wide).
 	 *
 	 * @var string
 	 */
-	private $attempts;
+	private $logs;
 
 	public function set_up() {
 		parent::set_up();
@@ -34,33 +34,37 @@ class ReportedIP_Hive_Hardening_Detection_Multisite_Test extends WP_UnitTestCase
 			$this->markTestSkipped( 'Multisite required.' );
 		}
 		ReportedIP_Hive_Schema::ensure_tables();
-		$this->attempts = ReportedIP_Hive_Schema::table( 'reportedip_hive_attempts' );
+		$this->logs = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- test fixture reset.
-		$GLOBALS['wpdb']->query( "TRUNCATE TABLE {$this->attempts}" );
+		$GLOBALS['wpdb']->query( "TRUNCATE TABLE {$this->logs}" );
 	}
 
 	/**
-	 * Seed N distinct IPs, one failed-login row each, staggered one minute apart
-	 * so no single calendar minute holds enough IPs to trip the burst rule.
+	 * Seed N distinct IPs with M real `failed_login` rows each into the logs
+	 * table, staggered 30 s apart so at most two IPs share any calendar minute
+	 * (well under the burst rule) while all rows stay inside the rolling window.
+	 *
+	 * The detectors count individual log rows, so M rows per IP contribute M to
+	 * `total_attempts` — mirroring how `wp_login_failed` logs one row per attempt.
 	 *
 	 * @param int $ip_count        Number of distinct IPs.
-	 * @param int $attempts_per_ip attempt_count stored per IP.
+	 * @param int $attempts_per_ip Number of failed_login rows per IP.
 	 * @return void
 	 */
 	private function seed_rotating_attack( $ip_count, $attempts_per_ip ) {
 		global $wpdb;
 		for ( $i = 0; $i < $ip_count; $i++ ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- test fixture insert.
-			$wpdb->query(
-				$wpdb->prepare(
-					"INSERT INTO {$this->attempts} (ip_address, attempt_type, attempt_count, first_attempt, last_attempt)
-					 VALUES (%s, 'login', %d, DATE_SUB(NOW(), INTERVAL %d MINUTE), DATE_SUB(NOW(), INTERVAL %d MINUTE))",
-					'198.51.100.' . ( 10 + $i ),
-					$attempts_per_ip,
-					$i,
-					$i
-				)
-			);
+			for ( $a = 0; $a < $attempts_per_ip; $a++ ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- test fixture insert.
+				$wpdb->query(
+					$wpdb->prepare(
+						"INSERT INTO {$this->logs} (event_type, ip_address, severity, created_at)
+						 VALUES ('failed_login', %s, 'medium', DATE_SUB(NOW(), INTERVAL %d SECOND))",
+						'198.51.100.' . ( 10 + $i ),
+						$i * 30
+					)
+				);
+			}
 		}
 	}
 
@@ -80,22 +84,22 @@ class ReportedIP_Hive_Hardening_Detection_Multisite_Test extends WP_UnitTestCase
 	}
 
 	public function test_rotating_botnet_is_detected_by_rolling_window() {
-		$this->seed_rotating_attack( 6, 5 );
+		$this->seed_rotating_attack( 12, 5 );
 
 		$monitor = new ReportedIP_Hive_Security_Monitor();
 		$rows    = $monitor->check_coordinated_attacks();
 
 		$rolling = $this->rolling_row( $rows );
 		$this->assertNotNull( $rolling, 'rotating botnet must be caught by the distributed detector' );
-		$this->assertSame( 6, (int) $rolling->unique_ips );
-		$this->assertSame( 30, (int) $rolling->total_attempts );
+		$this->assertSame( 12, (int) $rolling->unique_ips );
+		$this->assertSame( 60, (int) $rolling->total_attempts );
 
 		$reason = $monitor->strongest_coordinated_reason( $rows );
-		$this->assertSame( 6, (int) $reason['unique_ips'], 'strongest reason reflects the distributed hit' );
+		$this->assertSame( 12, (int) $reason['unique_ips'], 'strongest reason reflects the distributed hit' );
 	}
 
 	public function test_same_data_does_not_trip_the_minute_burst_rule() {
-		$this->seed_rotating_attack( 6, 5 );
+		$this->seed_rotating_attack( 12, 5 );
 
 		$monitor = new ReportedIP_Hive_Security_Monitor();
 		$rows    = $monitor->check_coordinated_attacks();
@@ -118,7 +122,7 @@ class ReportedIP_Hive_Hardening_Detection_Multisite_Test extends WP_UnitTestCase
 	}
 
 	public function test_detection_reads_network_wide_table_from_subsite() {
-		$this->seed_rotating_attack( 6, 5 );
+		$this->seed_rotating_attack( 12, 5 );
 
 		$blog_id = self::factory()->blog->create();
 		switch_to_blog( $blog_id );
@@ -127,7 +131,7 @@ class ReportedIP_Hive_Hardening_Detection_Multisite_Test extends WP_UnitTestCase
 			$rows    = $monitor->check_coordinated_attacks();
 			$rolling = $this->rolling_row( $rows );
 			$this->assertNotNull( $rolling, 'detector must read base_prefix, not the sub-site prefix' );
-			$this->assertSame( 6, (int) $rolling->unique_ips );
+			$this->assertSame( 12, (int) $rolling->unique_ips );
 		} finally {
 			restore_current_blog();
 		}

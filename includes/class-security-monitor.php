@@ -1176,13 +1176,23 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Runs two complementary detectors and returns the union of their hits
 	 * (each row carries `time_window`, `unique_ips`, `total_attempts`):
 	 *
-	 *  1. Burst — ≥ 3 distinct IPs AND ≥ 20 attempts inside a single calendar
-	 *     minute. Catches simultaneous floods.
+	 *  1. Burst — ≥ 8 distinct IPs AND ≥ 30 attempts inside a single calendar
+	 *     minute. Catches sharp simultaneous floods.
 	 *  2. Distributed — ≥ {@see ReportedIP_Hive_Hardening_Mode::detect_min_ips()}
 	 *     distinct IPs AND ≥ detect_min_attempts() across the rolling
 	 *     detect_window_minutes() window. Catches botnets that rotate IPs over
 	 *     several minutes and would otherwise slip under the per-minute burst
 	 *     rule.
+	 *
+	 * Both detectors count individual `failed_login` rows in the `logs` table
+	 * over a real `created_at` window — NOT `SUM(attempt_count)` from the
+	 * aggregated `attempts` table, whose per-IP counter is cumulative (it
+	 * accumulates across a rolling 1 h gap) and would over-count any IP that is
+	 * merely active in the window with its full lifetime total. The logs table
+	 * carries one timestamped row per attempt, so the magnitude reflects real
+	 * in-window attempts (note: a `failed_login` is logged before an
+	 * already-blocked IP is short-circuited, so a blocked attacker stops adding
+	 * rows — the count tracks the active front line of an attack).
 	 *
 	 * The table lives under `base_prefix` (network-wide), so on Multisite the
 	 * aggregate spans every site in the network — a distributed attack hitting
@@ -1193,19 +1203,19 @@ class ReportedIP_Hive_Security_Monitor {
 	public function check_coordinated_attacks() {
 		global $wpdb;
 
-		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->base_prefix and a hardcoded suffix; safe.
 		$coordinated_attacks = $wpdb->get_results(
 			"SELECT
-                DATE_FORMAT(last_attempt, '%Y-%m-%d %H:%i') as time_window,
+                DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') as time_window,
                 COUNT(DISTINCT ip_address) as unique_ips,
-                SUM(attempt_count) as total_attempts
+                COUNT(*) as total_attempts
              FROM $table_name
-             WHERE last_attempt > DATE_SUB(NOW(), INTERVAL 2 HOUR)
-             AND attempt_type = 'login'
+             WHERE created_at > DATE_SUB(NOW(), INTERVAL 2 HOUR)
+             AND event_type = 'failed_login'
              GROUP BY time_window
-             HAVING unique_ips >= 3 AND total_attempts >= 20
+             HAVING unique_ips >= 8 AND total_attempts >= 30
              ORDER BY time_window DESC"
 		);
 
@@ -1257,11 +1267,14 @@ class ReportedIP_Hive_Security_Monitor {
 	/**
 	 * Distributed-attack detector — rolling-window aggregate.
 	 *
-	 * Sums failed-login attempts and counts distinct IPs over the configurable
+	 * Counts distinct IPs and real `failed_login` events over the configurable
 	 * sliding window (default 10 min) and returns a synthetic row when the
-	 * configured thresholds are breached. The synthetic `time_window` is a
-	 * stable per-window bucket label so the existing suppression markers do not
-	 * re-log the same window on every cron sweep.
+	 * configured thresholds are breached. Reads individual rows from the `logs`
+	 * table (one per attempt) rather than `SUM(attempt_count)` from the
+	 * cumulative `attempts` table, so the magnitude reflects in-window attempts
+	 * and not an IP's lifetime counter. The synthetic `time_window` is a stable
+	 * per-window bucket label so the existing suppression markers do not re-log
+	 * the same window on every cron sweep.
 	 *
 	 * @return object|null Row with `time_window`, `unique_ips`, `total_attempts`, or null.
 	 * @since  2.0.29
@@ -1274,16 +1287,16 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 
 		$window     = ReportedIP_Hive_Hardening_Mode::detect_window_minutes();
-		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->base_prefix and a hardcoded suffix; interval is a prepared integer.
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT COUNT(DISTINCT ip_address) as unique_ips,
-                        COALESCE(SUM(attempt_count), 0) as total_attempts
+                        COUNT(*) as total_attempts
                  FROM $table_name
-                 WHERE last_attempt > DATE_SUB(NOW(), INTERVAL %d MINUTE)
-                 AND attempt_type = 'login'",
+                 WHERE created_at > DATE_SUB(NOW(), INTERVAL %d MINUTE)
+                 AND event_type = 'failed_login'",
 				$window
 			)
 		);
