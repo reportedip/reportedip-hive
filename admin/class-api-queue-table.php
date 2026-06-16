@@ -454,13 +454,13 @@ class ReportedIP_Hive_API_Queue_Table extends WP_List_Table {
 		</div>
 
 		<div class="alignleft actions">
-			<button type="button" class="button" id="retry-all-failed" <?php echo $stats['retryable'] === 0 ? 'disabled' : ''; ?>>
+			<button type="button" class="button rip-retry-all-failed" <?php echo $stats['failed'] === 0 ? 'disabled' : ''; ?>>
 				<?php
 				echo esc_html(
 					sprintf(
-						/* translators: %d: number of retryable items */
+						/* translators: %d: number of failed items */
 						__( 'Retry All Failed (%d)', 'reportedip-hive' ),
-						$stats['retryable']
+						$stats['failed']
 					)
 				);
 				?>

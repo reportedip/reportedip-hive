@@ -104,6 +104,7 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 			return $this->send_via_fallback( $to, $subject, $html_body, $plain_body, $headers );
 		}
 
+		$this->log_error( $status, (string) ( $result['error'] ?? '' ) );
 		return false;
 	}
 
@@ -151,6 +152,34 @@ class ReportedIP_Hive_Mail_Provider_Relay implements ReportedIP_Hive_Mail_Provid
 			array(
 				'status' => (int) $status,
 				'error'  => (string) $error,
+			)
+		);
+	}
+
+	/**
+	 * Record a non-retryable relay-mail failure so the cause is not silently
+	 * swallowed. Unlike the 402/429/retryable path, these errors do not fall
+	 * back to local mail, so without this log the operator only sees the
+	 * generic `mail_failed` warning with no reason attached.
+	 *
+	 * @param int    $status HTTP status from the relay.
+	 * @param string $error  Relay error message.
+	 * @return void
+	 * @since  2.1.8
+	 */
+	private function log_error( $status, $error ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
+			return;
+		}
+		$logger = ReportedIP_Hive_Logger::get_instance();
+		$ip     = (string) ReportedIP_Hive::get_client_ip();
+		$logger->log(
+			'mail_relay_error',
+			$ip,
+			'medium',
+			array(
+				'status' => (int) $status,
+				'error'  => ReportedIP_Hive_Logger::truncate( (string) $error, 200 ),
 			)
 		);
 	}

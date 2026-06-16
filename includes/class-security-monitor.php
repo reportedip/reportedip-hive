@@ -1218,23 +1218,29 @@ class ReportedIP_Hive_Security_Monitor {
 			array_unshift( $coordinated_attacks, $distributed );
 		}
 
-		if ( ! empty( $coordinated_attacks ) ) {
-			$marker_class_exists = class_exists( 'ReportedIP_Hive_Hardening_Mode' );
-			foreach ( $coordinated_attacks as $attack ) {
-				$log_key = $marker_class_exists
-					? ReportedIP_Hive_Hardening_Mode::log_marker_key( (string) $attack->time_window )
-					: '';
-				if ( '' !== $log_key && get_site_transient( $log_key ) ) {
-					continue;
-				}
+		/*
+		 * One critical log per sweep, not one per bucket: the minute-bucket SQL
+		 * rows and the prepended rolling-window row describe the same incident
+		 * measured two ways, so logging every row produced duplicate
+		 * `coordinated_attack_detected` events at the same instant. Emit only the
+		 * strongest reason; the full row set is still returned for the hardening
+		 * activation path. Suppression is keyed on the chosen window so an hourly
+		 * cron re-scan of the 2 h lookback does not re-log the same incident.
+		 */
+		$strongest = $this->strongest_coordinated_reason( $coordinated_attacks );
+		if ( is_array( $strongest ) && '' !== (string) $strongest['time_window'] ) {
+			$log_key = class_exists( 'ReportedIP_Hive_Hardening_Mode' )
+				? ReportedIP_Hive_Hardening_Mode::log_marker_key( (string) $strongest['time_window'] )
+				: '';
 
+			if ( '' === $log_key || ! get_site_transient( $log_key ) ) {
 				$this->logger->log_security_event(
 					'coordinated_attack_detected',
 					'multiple',
 					array(
-						'time_window'    => $attack->time_window,
-						'unique_ips'     => $attack->unique_ips,
-						'total_attempts' => $attack->total_attempts,
+						'time_window'    => $strongest['time_window'],
+						'unique_ips'     => $strongest['unique_ips'],
+						'total_attempts' => $strongest['total_attempts'],
 					),
 					'critical'
 				);

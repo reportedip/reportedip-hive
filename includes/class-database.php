@@ -1489,6 +1489,10 @@ class ReportedIP_Hive_Database {
 	/**
 	 * Reset all failed reports for retry
 	 *
+	 * Resets every failed row, including ones that already exhausted
+	 * max_attempts: this is a manual, admin-initiated action that
+	 * deliberately overrides the automatic retry ceiling enforced by cron.
+	 *
 	 * @return int Number of reports reset
 	 */
 	public function reset_all_failed_reports() {
@@ -1499,8 +1503,7 @@ class ReportedIP_Hive_Database {
 		$result = $wpdb->query(
 			"UPDATE $table_name
              SET status = 'pending', attempts = 0, error_message = NULL, last_attempt = NULL
-             WHERE status = 'failed'
-             AND attempts < max_attempts"
+             WHERE status = 'failed'"
 		);
 
 		return $result !== false ? $result : 0;

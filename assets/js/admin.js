@@ -1160,4 +1160,37 @@
         sync();
     });
 
+    /**
+     * Unified "Retry all failed" handler.
+     *
+     * Shared by the queue-tab tablenav button and the failed-reports admin
+     * notice (both carry the .rip-retry-all-failed class), so the retry logic
+     * and the nonce source live in exactly one place.
+     */
+    jQuery(function ($) {
+        if (typeof reportedip_hive_ajax === 'undefined') {
+            return;
+        }
+        var strings = reportedip_hive_ajax.strings || {};
+        $(document).on('click', '.rip-retry-all-failed', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+            $btn.prop('disabled', true);
+            $.post(reportedip_hive_ajax.ajax_url, {
+                action: 'reportedip_hive_retry_all_failed',
+                nonce: reportedip_hive_ajax.nonce
+            }).done(function (response) {
+                if (response && response.success) {
+                    location.reload();
+                } else {
+                    $btn.prop('disabled', false);
+                    window.alert((response && response.data) || strings.generic_error || 'Error');
+                }
+            }).fail(function () {
+                $btn.prop('disabled', false);
+                window.alert(strings.request_failed || strings.generic_error || 'Error');
+            });
+        });
+    });
+
 })(jQuery);

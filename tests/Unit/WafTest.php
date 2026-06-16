@@ -47,24 +47,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_matches_detects_sql_injection(): void {
 			$pattern = '(?i)\bunion\b[\s\S]{0,80}?\bselect\b';
-			$this->assertTrue( $this->call_private( 'matches', array( $pattern, 'id=1 UNION SELECT pwd FROM users' ) ) );
+			$this->assertNotNull( $this->call_private( 'match_fragment', array( $pattern, 'id=1 UNION SELECT pwd FROM users' ) ) );
 		}
 
 		public function test_matches_ignores_clean_input(): void {
 			$pattern = '(?i)\bunion\b[\s\S]{0,80}?\bselect\b';
-			$this->assertFalse( $this->call_private( 'matches', array( $pattern, 'a perfectly ordinary search query' ) ) );
+			$this->assertNull( $this->call_private( 'match_fragment', array( $pattern, 'a perfectly ordinary search query' ) ) );
 		}
 
 		public function test_matches_escapes_tilde_delimiter(): void {
-			$this->assertTrue( $this->call_private( 'matches', array( 'foo~bar', 'xx foo~bar yy' ) ) );
+			$this->assertSame( 'foo~bar', $this->call_private( 'match_fragment', array( 'foo~bar', 'xx foo~bar yy' ) ) );
 		}
 
 		public function test_malformed_pattern_fails_open(): void {
-			$this->assertFalse( $this->call_private( 'matches', array( '(unbalanced', 'anything at all' ) ) );
+			$this->assertNull( $this->call_private( 'match_fragment', array( '(unbalanced', 'anything at all' ) ) );
 		}
 
 		public function test_empty_pattern_never_matches(): void {
-			$this->assertFalse( $this->call_private( 'matches', array( '', 'anything' ) ) );
+			$this->assertNull( $this->call_private( 'match_fragment', array( '', 'anything' ) ) );
 		}
 
 		public function test_required_targets_collapses_duplicates(): void {
@@ -87,6 +87,17 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$hit = $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => '/?f=../../etc/passwd' ), array(), null );
 			$this->assertIsArray( $hit );
 			$this->assertSame( 'trav', $hit['id'] );
+		}
+
+		public function test_evaluate_exposes_matched_fragment_for_logging(): void {
+			$rules = array(
+				array( 'id' => 'trav', 'group' => 'path_traversal', 'pattern' => '\.\./', 'paranoia' => 1, 'target' => 'uri' ),
+			);
+			$hit = $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => '/?f=../../etc/passwd' ), array(), null );
+			$this->assertIsArray( $hit );
+			$this->assertArrayHasKey( 'matched', $hit, 'A hit must carry the substring that tripped the rule.' );
+			$this->assertSame( '../', $hit['matched'], 'Matched fragment must be the actual offending value.' );
+			$this->assertSame( 'uri', $hit['matched_target'], 'Matched target must record which subject matched.' );
 		}
 
 		public function test_evaluate_decodes_encoded_traversal_in_uri(): void {

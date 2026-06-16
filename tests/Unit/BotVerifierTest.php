@@ -63,6 +63,25 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'fake', $this->verifier()->classify( $bot, '203.0.113.7' ) );
 		}
 
+		public function test_classify_reports_reason_for_log_diagnostics(): void {
+			$reason = '';
+
+			$bot = array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array( '66.249.66.0/24' ) );
+			$this->verifier()->classify( $bot, '66.249.66.1', null, null, $reason );
+			$this->assertSame( 'ip_range_match', $reason, 'A range hit must record why it verified.' );
+
+			$bot = array( 'ua' => 'facebookexternalhit', 'domains' => array(), 'ranges' => array( '2a03:2880::/29' ) );
+			$this->verifier()->classify( $bot, '203.0.113.7', null, null, $reason );
+			$this->assertSame( 'ip_not_in_official_range', $reason, 'A range-only miss must record the reason.' );
+
+			$bot = array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array() );
+			$ptr = static function ( $ip ) {
+				return 'host.evil.example.com';
+			};
+			$this->verifier()->classify( $bot, '203.0.113.7', $ptr, null, $reason );
+			$this->assertStringStartsWith( 'ptr_foreign_domain:', $reason, 'A foreign PTR must record the offending host.' );
+		}
+
 		public function test_classify_falls_back_to_fcrdns_when_outside_range(): void {
 			// The real-world Bing case: a genuine crawler IP missing from the seed
 			// range list must still verify via reverse DNS, not be flagged fake.

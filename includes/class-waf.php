@@ -518,8 +518,11 @@ class ReportedIP_Hive_WAF {
 			if ( '' === $subject ) {
 				continue;
 			}
-			if ( $this->matches( (string) $rule['pattern'], $subject ) ) {
-				$hit = $rule;
+			$fragment = $this->match_fragment( (string) $rule['pattern'], $subject );
+			if ( null !== $fragment ) {
+				$hit                   = $rule;
+				$hit['matched']        = $fragment;
+				$hit['matched_target'] = $target;
 				break;
 			}
 		}
@@ -759,25 +762,27 @@ class ReportedIP_Hive_WAF {
 	}
 
 	/**
-	 * Safely evaluate a rule pattern against a subject.
+	 * Evaluate a rule pattern and return the substring it matched.
 	 *
-	 * The pattern ships without delimiters; a tilde delimiter is added (and any
-	 * literal tilde escaped). A `false` return — an invalid pattern or a
-	 * backtrack-limit hit — is treated as a non-match (fail-open) so a single
-	 * bad rule can never take the site down or hang the request.
+	 * Returns the matched fragment (capture group 0) so a block log can record
+	 * exactly what tripped the rule — the single most useful field for telling a
+	 * real attack from a false positive. An invalid pattern or a backtrack-limit
+	 * hit returns null (fail-open, treated as a non-match) so a single bad
+	 * delivered rule can never take the site down or hang the request.
 	 *
 	 * @param string $pattern Raw PCRE body (no delimiters).
 	 * @param string $subject Subject to test.
-	 * @return bool True on a confirmed match.
-	 * @since  2.1.2
+	 * @return string|null The matched fragment, or null on no match / bad pattern.
+	 * @since  2.1.8
 	 */
-	private function matches( $pattern, $subject ) {
+	private function match_fragment( $pattern, $subject ) {
 		if ( '' === $pattern ) {
-			return false;
+			return null;
 		}
 		$compiled = '~' . str_replace( '~', '\~', $pattern ) . '~';
-		$result   = @preg_match( $compiled, $subject ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- A malformed delivered rule must fail open, not emit a warning into the response.
-		return 1 === $result;
+		$matches  = array();
+		$result   = @preg_match( $compiled, $subject, $matches ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- A malformed delivered rule must fail open, not emit a warning into the response.
+		return 1 === $result && isset( $matches[0] ) ? (string) $matches[0] : null;
 	}
 
 	/**
@@ -799,15 +804,25 @@ class ReportedIP_Hive_WAF {
 		if ( class_exists( 'ReportedIP_Hive' ) ) {
 			$logger = ReportedIP_Hive::get_instance()->get_logger();
 			if ( $logger instanceof ReportedIP_Hive_Logger ) {
+				$details = array(
+					'rule'        => $rule_id,
+					'group'       => $group,
+					'target'      => isset( $rule['target'] ) ? (string) $rule['target'] : 'all',
+					'report_only' => $report_only,
+					'paranoia'    => isset( $rule['paranoia'] ) ? (int) $rule['paranoia'] : 1,
+				);
+				if ( isset( $rule['matched_target'] ) ) {
+					$details['matched_target'] = (string) $rule['matched_target'];
+				}
+				if ( isset( $rule['matched'] ) ) {
+					$details['matched'] = ReportedIP_Hive_Logger::truncate( (string) $rule['matched'], 160 );
+				}
+				$details = array_merge( $details, ReportedIP_Hive_Logger::request_snapshot() );
+
 				$logger->log_security_event(
 					$report_only ? 'waf_would_block' : 'waf_block',
 					$ip,
-					array(
-						'rule'        => $rule_id,
-						'group'       => $group,
-						'target'      => isset( $rule['target'] ) ? (string) $rule['target'] : 'all',
-						'report_only' => $report_only,
-					),
+					$details,
 					$severity
 				);
 			}

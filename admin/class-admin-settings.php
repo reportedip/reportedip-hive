@@ -1387,33 +1387,12 @@ class ReportedIP_Hive_Admin_Settings {
 						array(
 							'type'    => 'button',
 							'label'   => __( 'Retry all', 'reportedip-hive' ),
-							'id'      => 'retry-failed-reports-notice',
+							'class'   => 'rip-retry-all-failed',
 							'variant' => 'secondary',
 						),
 					),
 				)
 			);
-			?>
-			<script>
-			jQuery(document).ready(function($) {
-				$('#retry-failed-reports-notice').on('click', function(e) {
-					e.preventDefault();
-					var $btn = $(this);
-					$btn.prop('disabled', true).text('<?php echo esc_js( __( 'Retrying…', 'reportedip-hive' ) ); ?>');
-					$.post(ajaxurl, {
-						action: 'reportedip_hive_retry_all_failed',
-						nonce: '<?php echo esc_js( wp_create_nonce( 'reportedip_hive_nonce' ) ); ?>'
-					}, function(response) {
-						if (response.success) {
-							location.reload();
-						} else {
-							$btn.prop('disabled', false).text('<?php echo esc_js( __( 'Retry all', 'reportedip-hive' ) ); ?>');
-						}
-					});
-				});
-			});
-			</script>
-			<?php
 		}
 
 		$warning_threshold  = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 );
@@ -3991,7 +3970,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		<?php $queue_table->display_statistics(); ?>
 
-		<form method="get">
+		<form method="post">
 			<input type="hidden" name="page" value="reportedip-hive-security" />
 			<input type="hidden" name="tab" value="api_queue" />
 			<?php
@@ -4044,29 +4023,6 @@ class ReportedIP_Hive_Admin_Settings {
 					} else {
 						alert(response.data || '<?php esc_html_e( 'Error deleting report', 'reportedip-hive' ); ?>');
 						$button.prop('disabled', false).text('<?php esc_html_e( 'Delete', 'reportedip-hive' ); ?>');
-					}
-				});
-			});
-
-			$('#retry-all-failed').on('click', function(e) {
-				e.preventDefault();
-				var $button = $(this);
-
-				if (!confirm('<?php esc_html_e( 'Are you sure you want to retry all failed reports?', 'reportedip-hive' ); ?>')) {
-					return;
-				}
-
-				$button.prop('disabled', true).text('<?php esc_html_e( 'Retrying...', 'reportedip-hive' ); ?>');
-
-				$.post(ajaxurl, {
-					action: 'reportedip_hive_retry_all_failed',
-					nonce: reportedip_hive_ajax.nonce
-				}, function(response) {
-					if (response.success) {
-						location.reload();
-					} else {
-						alert(response.data || '<?php esc_html_e( 'Error retrying reports', 'reportedip-hive' ); ?>');
-						$button.prop('disabled', false).text('<?php esc_html_e( 'Retry All Failed', 'reportedip-hive' ); ?>');
 					}
 				});
 			});

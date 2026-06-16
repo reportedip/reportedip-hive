@@ -15,6 +15,34 @@ All changes to ReportedIP Hive are documented here.
   explain what to configure, where to find a rule ID or group, how to pick a
   scope, and how the path/IP filters work.
 
+### Fixed
+
+- **API queue bulk actions work again.** The queue tab wrapped its list table in
+  a `method="get"` form while `process_bulk_action()` read `$_POST`, so selecting
+  rows and applying Retry / Delete silently reloaded the page with no effect. The
+  form is now `method="post"`, matching the logs / blocked / whitelist tabs.
+- **"Retry all failed" now revives permanently-failed reports.** The bulk reset
+  excluded rows that had already reached `max_attempts`, so a manual retry of an
+  all-exhausted queue reset nothing. A manual, admin-initiated retry now resets
+  every failed row (overriding the automatic cron ceiling), consistent with the
+  per-row retry; the tab's "Retry All Failed" button counts and enables on all
+  failed rows.
+- **Coordinated-attack detections are logged once per sweep.** The minute-bucket
+  query and the rolling-window detector each logged a `coordinated_attack_detected`
+  event for the same incident; only the strongest reason is logged now.
+
+### Added
+
+- **Block decisions are self-explanatory in the log.** WAF blocks now record the
+  matched value, the inspected target, the request method, URI and User-Agent,
+  and the active paranoia level; the bot verifier records the verification reason
+  (e.g. `ptr_foreign_domain`, `ip_not_in_official_range`) plus the real
+  User-Agent; the 404 scan detector records method and User-Agent. A block
+  decision is now diagnosable without reproducing the request.
+- **Failed relay-mail and API calls record a reason.** Non-retryable relay-mail
+  failures are logged (`mail_relay_error`) instead of being dropped, and
+  `api_call_failed` carries a preview of the rejecting response body.
+
 ## [2.1.10] — 2026-06-16
 
 ### Fixed

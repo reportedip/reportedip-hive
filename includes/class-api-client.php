@@ -353,7 +353,7 @@ class ReportedIP_Hive_API {
 				'retry_after' => wp_remote_retrieve_header( $response, 'retry-after' ),
 			);
 		} else {
-			$this->track_api_call( false, $response_time, 'http_' . $response_code, 'submission' );
+			$this->track_api_call( false, $response_time, 'http_' . $response_code, 'submission', substr( (string) $body, 0, 200 ) );
 			$error_message = 'Unknown error';
 			if ( isset( $response_data['message'] ) ) {
 				$error_message = $response_data['message'];
@@ -1541,8 +1541,12 @@ class ReportedIP_Hive_API {
 	 * @param string      $bucket        One of 'reputation', 'submission', 'meta'.
 	 *                                   Defaults to 'meta' so callers that forget the
 	 *                                   bucket cannot accidentally drain reputation.
+	 * @param string      $error_detail  Short response-body preview for a failed
+	 *                                   call, surfaced in the `api_call_failed` log
+	 *                                   so an HTTP 4xx rejection reason is visible
+	 *                                   without re-running the request.
 	 */
-	private function track_api_call( $success, $response_time, $error_type = null, $bucket = 'meta' ) {
+	private function track_api_call( $success, $response_time, $error_type = null, $bucket = 'meta', $error_detail = '' ) {
 		$this->increment_hourly_api_calls( $bucket );
 
 		$stats_defaults = array(
@@ -1581,14 +1585,18 @@ class ReportedIP_Hive_API {
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_stats', $stats );
 
 		if ( ! $success && $error_type !== 'rate_limited' ) {
+			$failure_details = array(
+				'error_type'    => $error_type,
+				'response_time' => $response_time,
+				'success_rate'  => $stats['success_rate'],
+			);
+			if ( '' !== (string) $error_detail && class_exists( 'ReportedIP_Hive_Logger' ) ) {
+				$failure_details['detail'] = ReportedIP_Hive_Logger::truncate( (string) $error_detail, 200 );
+			}
 			$this->logger->log_security_event(
 				'api_call_failed',
 				'system',
-				array(
-					'error_type'    => $error_type,
-					'response_time' => $response_time,
-					'success_rate'  => $stats['success_rate'],
-				),
+				$failure_details,
 				'medium'
 			);
 		}

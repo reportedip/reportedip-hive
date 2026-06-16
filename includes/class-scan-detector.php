@@ -259,9 +259,12 @@ class ReportedIP_Hive_Scan_Detector {
 			'scan_404',
 			$threshold,
 			$timeframe,
-			array(
-				'path'        => $path,
-				'pattern_hit' => $is_scan_hit,
+			array_merge(
+				array(
+					'path'        => $path,
+					'pattern_hit' => $is_scan_hit,
+				),
+				ReportedIP_Hive_Logger::request_snapshot()
 			)
 		);
 	}

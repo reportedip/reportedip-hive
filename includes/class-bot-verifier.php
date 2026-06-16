@@ -71,6 +71,15 @@ class ReportedIP_Hive_Bot_Verifier {
 	private static $instance = null;
 
 	/**
+	 * Why the most recent verdict was reached (e.g. `ptr_foreign_domain`,
+	 * `ip_not_in_official_range`, `cached`). Surfaced in the spoofer log so an
+	 * operator can tell a real spoof from a DNS/verification gap.
+	 *
+	 * @var string
+	 */
+	private $last_reason = '';
+
+	/**
 	 * Get the singleton instance.
 	 *
 	 * @return ReportedIP_Hive_Bot_Verifier
@@ -237,7 +246,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * @return string `verified`, `fake`, or `unknown` when DNS cannot decide.
 	 * @since  2.1.2
 	 */
-	public function classify( array $bot, $ip, $ptr = null, $forward = null ) {
+	public function classify( array $bot, $ip, $ptr = null, $forward = null, &$reason = null ) {
 		$ranges  = isset( $bot['ranges'] ) && is_array( $bot['ranges'] ) ? $bot['ranges'] : array();
 		$domains = isset( $bot['domains'] ) && is_array( $bot['domains'] ) ? $bot['domains'] : array();
 
@@ -247,6 +256,7 @@ class ReportedIP_Hive_Bot_Verifier {
 		 */
 		foreach ( $ranges as $cidr ) {
 			if ( ReportedIP_Hive_Database::ip_in_cidr( $ip, (string) $cidr ) ) {
+				$reason = 'ip_range_match';
 				return 'verified';
 			}
 		}
@@ -260,7 +270,12 @@ class ReportedIP_Hive_Bot_Verifier {
 		 * Only a range-only rule (no domains) is decisive on the range miss.
 		 */
 		if ( empty( $domains ) ) {
-			return empty( $ranges ) ? 'unknown' : 'fake';
+			if ( empty( $ranges ) ) {
+				$reason = 'no_verification_signals';
+				return 'unknown';
+			}
+			$reason = 'ip_not_in_official_range';
+			return 'fake';
 		}
 
 		$ptr     = is_callable( $ptr ) ? $ptr : 'gethostbyaddr';
@@ -275,6 +290,7 @@ class ReportedIP_Hive_Bot_Verifier {
 		 * crawlers whenever the server's resolver hiccuped).
 		 */
 		if ( ! is_string( $host ) || '' === $host || $host === $ip ) {
+			$reason = 'ptr_unresolved';
 			return 'unknown';
 		}
 		$host = strtolower( rtrim( $host, '.' ) );
@@ -294,6 +310,7 @@ class ReportedIP_Hive_Bot_Verifier {
 		 * The PTR resolved to a foreign domain — this is a confirmed spoofer.
 		 */
 		if ( ! $suffix_ok ) {
+			$reason = 'ptr_foreign_domain:' . substr( $host, 0, 80 );
 			return 'fake';
 		}
 
@@ -303,18 +320,21 @@ class ReportedIP_Hive_Bot_Verifier {
 		 * deny, so stay 'unknown' rather than flag a probably-genuine crawler.
 		 */
 		if ( empty( $resolved ) ) {
+			$reason = 'forward_dns_unresolved';
 			return 'unknown';
 		}
 		$candidates = is_array( $resolved ) ? $resolved : array( $resolved );
 		foreach ( $candidates as $candidate ) {
 			$candidate = (string) $candidate;
 			if ( '' !== $candidate && self::ip_equals( $candidate, $ip ) ) {
+				$reason = 'fcrdns_confirmed';
 				return 'verified';
 			}
 		}
 		/*
 		 * Right suffix but no forward address confirms the IP — a forged PTR.
 		 */
+		$reason = 'ptr_forward_mismatch:' . substr( $host, 0, 80 );
 		return 'fake';
 	}
 
@@ -386,10 +406,13 @@ class ReportedIP_Hive_Bot_Verifier {
 
 		$cached = get_transient( $key );
 		if ( 'verified' === $cached || 'fake' === $cached || 'unknown' === $cached ) {
+			$this->last_reason = 'cached';
 			return $cached;
 		}
 
-		$verdict = $this->classify( $bot, $ip );
+		$reason            = '';
+		$verdict           = $this->classify( $bot, $ip, null, null, $reason );
+		$this->last_reason = '' !== $reason ? $reason : 'unspecified';
 		if ( 'verified' === $verdict ) {
 			$ttl = self::CACHE_VERIFIED;
 		} elseif ( 'unknown' === $verdict ) {
@@ -416,13 +439,17 @@ class ReportedIP_Hive_Bot_Verifier {
 		if ( class_exists( 'ReportedIP_Hive' ) ) {
 			$logger = ReportedIP_Hive::get_instance()->get_logger();
 			if ( $logger instanceof ReportedIP_Hive_Logger ) {
+				$details = array(
+					'claimed_bot' => isset( $bot['ua'] ) ? (string) $bot['ua'] : '',
+					'action'      => $action,
+					'reason'      => '' !== $this->last_reason ? $this->last_reason : 'unspecified',
+				);
+				$details = array_merge( $details, ReportedIP_Hive_Logger::request_snapshot() );
+
 				$logger->log_security_event(
 					'block' === $action ? 'fake_bot_blocked' : 'fake_bot',
 					$ip,
-					array(
-						'claimed_bot' => isset( $bot['ua'] ) ? (string) $bot['ua'] : '',
-						'action'      => $action,
-					),
+					$details,
 					'medium'
 				);
 			}

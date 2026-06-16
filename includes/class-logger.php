@@ -160,6 +160,58 @@ class ReportedIP_Hive_Logger {
 	}
 
 	/**
+	 * Truncate a value for log storage with an explicit overflow marker.
+	 *
+	 * Block events carry attacker payloads and request fragments; storing them
+	 * verbatim would bloat the `details` JSON and risk capturing more PII than
+	 * data-minimisation allows. The marker tells an operator the value was cut.
+	 *
+	 * @param mixed $value Raw value.
+	 * @param int   $max   Maximum length in bytes.
+	 * @return string Truncated value.
+	 * @since  2.1.8
+	 */
+	public static function truncate( $value, $max ) {
+		$value = (string) $value;
+		if ( $max > 0 && strlen( $value ) > $max ) {
+			return substr( $value, 0, $max ) . '...';
+		}
+		return $value;
+	}
+
+	/**
+	 * Capture the minimal request context needed to triage a block decision.
+	 *
+	 * Sensors that drop a request (WAF, bot verifier, scan detector) call this
+	 * so every block log answers "which request, with what method and client"
+	 * without the operator having to reproduce the hit. Values are truncated;
+	 * nothing here is shared with the community network.
+	 *
+	 * @return array<string,string> Keys: method, uri, user_agent (each optional).
+	 * @since  2.1.8
+	 */
+	public static function request_snapshot() {
+		$snapshot = array();
+
+		$method = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : '';
+		if ( '' !== $method ) {
+			$snapshot['method'] = self::truncate( $method, 10 );
+		}
+
+		$uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+		if ( '' !== $uri ) {
+			$snapshot['uri'] = self::truncate( $uri, 256 );
+		}
+
+		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+		if ( '' !== $user_agent ) {
+			$snapshot['user_agent'] = self::truncate( $user_agent, 200 );
+		}
+
+		return $snapshot;
+	}
+
+	/**
 	 * Log critical message
 	 */
 	public function critical( $message, $ip_address = null, $details = array() ) {

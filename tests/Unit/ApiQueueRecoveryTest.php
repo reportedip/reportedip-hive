@@ -304,6 +304,42 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * Manual "Retry all failed" must revive every failed row, including
+		 * ones that already exhausted max_attempts. The automatic retry
+		 * ceiling is a cron concept; an admin clicking the button explicitly
+		 * overrides it. Regression guard: the reset SQL must NOT carry an
+		 * `attempts < max_attempts` predicate (which silently no-oped on
+		 * permanently-failed rows).
+		 */
+		public function test_reset_all_failed_reports_includes_permanently_failed(): void {
+			$db = new \ReportedIP_Hive_Database();
+			$db->reset_all_failed_reports();
+
+			$this->assertCount(
+				1,
+				$GLOBALS['wpdb']->queries,
+				'Reset must issue exactly one UPDATE.'
+			);
+
+			$reset_sql = $GLOBALS['wpdb']->queries[0];
+			$this->assertStringContainsString(
+				"status = 'pending'",
+				$reset_sql,
+				'Reset must move failed rows back to pending.'
+			);
+			$this->assertStringContainsString(
+				"WHERE status = 'failed'",
+				$reset_sql,
+				'Reset must target failed rows.'
+			);
+			$this->assertStringNotContainsString(
+				'attempts < max_attempts',
+				$reset_sql,
+				'Manual retry must not exclude rows that exhausted max_attempts.'
+			);
+		}
+
+		/**
 		 * The queue lock transient key is exposed as a class constant so the
 		 * recovery sweep, the manual-trigger AJAX endpoint and the cron
 		 * handler all agree on the same lock identifier. Locking down the

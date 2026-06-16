@@ -247,16 +247,21 @@ final class ReportedIP_Hive_Admin_Notice {
 		}
 
 		if ( 'button' === $type ) {
-			$action = wp_parse_args(
+			$action  = wp_parse_args(
 				$action,
 				array(
 					'label'   => '',
 					'id'      => '',
+					'class'   => '',
 					'variant' => 'secondary',
 				)
 			);
+			$classes = 'rip-notice__btn rip-notice__btn--' . $action['variant'];
+			if ( '' !== $action['class'] ) {
+				$classes .= ' ' . $action['class'];
+			}
 			?>
-			<button type="button" class="rip-notice__btn rip-notice__btn--<?php echo esc_attr( $action['variant'] ); ?>"
+			<button type="button" class="<?php echo esc_attr( $classes ); ?>"
 				<?php if ( '' !== $action['id'] ) : ?>
 					id="<?php echo esc_attr( $action['id'] ); ?>"
 				<?php endif; ?>
