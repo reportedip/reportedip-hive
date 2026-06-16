@@ -14,7 +14,9 @@
  *   - `reportedip_hive_sync`      returns aggregated security metrics in
  *                                 `$information['reportedip_hive']`.
  *   - `reportedip_hive_provision` sets the site's `reportedip_hive_api_key` and
- *                                 confirms it (`provisioned => true`).
+ *                                 confirms it (`provisioned => true`); with a
+ *                                 `community` flag it also switches the site into
+ *                                 Community Network mode (`operation_mode`).
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.de>
@@ -88,6 +90,12 @@ class ReportedIP_Hive_MainWP_Integration {
 				ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_key', $api_key );
 				$payload['provisioned'] = true;
 			}
+
+			if ( ! empty( $data['reportedip_hive_provision']['community'] ) && class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+				$mode_manager              = ReportedIP_Hive_Mode_Manager::get_instance();
+				$ok                        = $mode_manager->set_mode( ReportedIP_Hive_Mode_Manager::MODE_COMMUNITY );
+				$payload['operation_mode'] = $ok ? ReportedIP_Hive_Mode_Manager::MODE_COMMUNITY : $mode_manager->get_mode();
+			}
 		}
 
 		if ( ! empty( $payload ) ) {
@@ -124,6 +132,10 @@ class ReportedIP_Hive_MainWP_Integration {
 			$metrics['api_key'] = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		}
 
+		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+			$metrics['operation_mode'] = (string) ReportedIP_Hive_Mode_Manager::get_instance()->get_mode();
+		}
+
 		if ( ! class_exists( 'ReportedIP_Hive_Database' ) ) {
 			return $metrics;
 		}
@@ -141,11 +153,11 @@ class ReportedIP_Hive_MainWP_Integration {
 		if ( method_exists( $db, 'get_security_summary' ) ) {
 			$summary = $db->get_security_summary( $days );
 			if ( is_array( $summary ) && isset( $summary['summary'] ) ) {
-				$s                              = $summary['summary'];
-				$metrics['blocks_period']       = isset( $s->total_blocked_ips ) ? (int) $s->total_blocked_ips : 0;
+				$s                               = $summary['summary'];
+				$metrics['blocks_period']        = isset( $s->total_blocked_ips ) ? (int) $s->total_blocked_ips : 0;
 				$metrics['failed_logins_period'] = isset( $s->total_failed_logins ) ? (int) $s->total_failed_logins : 0;
-				$metrics['comment_spam_period'] = isset( $s->total_comment_spam ) ? (int) $s->total_comment_spam : 0;
-				$metrics['reputation_blocks']   = isset( $s->total_reputation_blocks ) ? (int) $s->total_reputation_blocks : 0;
+				$metrics['comment_spam_period']  = isset( $s->total_comment_spam ) ? (int) $s->total_comment_spam : 0;
+				$metrics['reputation_blocks']    = isset( $s->total_reputation_blocks ) ? (int) $s->total_reputation_blocks : 0;
 			}
 		}
 

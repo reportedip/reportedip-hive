@@ -2,6 +2,15 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.12] — 2026-06-16
+
+### Added
+
+- **MainWP provisioning can switch a managed site into Community Network mode.**
+  A `community` flag on the `reportedip_hive_provision` job sets the operation
+  mode alongside the API key, and the sync job now reports the current
+  `operation_mode` so the dashboard reflects each child site's mode.
+
 ## [2.1.11] — 2026-06-16
 
 ### Changed
