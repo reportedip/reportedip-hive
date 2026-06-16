@@ -107,10 +107,14 @@ class ReportedIP_Hive_MainWP_Integration {
 	}
 
 	/**
-	 * Aggregate this site's security metrics.
+	 * Aggregate this site's security metrics for the MainWP dashboard.
 	 *
-	 * Returns counts only — no IP addresses, usernames, secrets or the API key
-	 * leave the site through this channel.
+	 * No visitor data leaves the site — no IP addresses, usernames or log
+	 * contents, only aggregate counts. The site's own configured API key and
+	 * operation mode are included so the operator's dashboard can list and
+	 * verify which key and mode are live on each child site; both travel only
+	 * over the authenticated, signed MainWP connection, and the dashboard stores
+	 * the key masked.
 	 *
 	 * @param int $days Time window for the period metrics.
 	 * @return array
@@ -125,9 +129,6 @@ class ReportedIP_Hive_MainWP_Integration {
 			'period_days' => $days,
 		);
 
-		// Aktuell konfigurierten reportedip.de-API-Key mitliefern, damit das Dashboard
-		// den tatsächlich auf der Site gesetzten Key auflisten/verifizieren kann.
-		// Übertragung erfolgt ausschließlich über die signierte MainWP-Verbindung.
 		if ( class_exists( 'ReportedIP_Hive_Option_Routing' ) ) {
 			$metrics['api_key'] = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
 		}
