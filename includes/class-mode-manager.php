@@ -370,7 +370,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @return bool
 	 */
 	public function tier_at_least( $minimum ) {
-		$tier     = $this->get_current_tier();
+		$tier     = $this->get_cached_tier_or_default();
 		$ord      = self::TIER_ORDER;
 		$idx_have = array_search( $tier, $ord, true );
 		$idx_need = array_search( $minimum, $ord, true );
@@ -381,42 +381,20 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
-	 * Determine the current tier from cached API state (verify-key or relay-quota).
+	 * Determine the current tier from cached API state (verify-key, relay-quota
+	 * or the durable known-tier baseline).
+	 *
+	 * Never performs a live `/relay-quota` call: this method runs on hot,
+	 * per-request paths (WAF, security headers, bot verification via
+	 * {@see feature_status()}), where a synchronous HTTP round-trip would both
+	 * delay the response and — on installs whose cache cannot be populated —
+	 * stampede the service. Live refresh is owned exclusively by the six-hour
+	 * cron and the API-key-save hook. Delegates to {@see get_cached_tier_or_default()}.
 	 *
 	 * @return string
 	 */
 	public function get_current_tier() {
-		if ( null !== $this->cached_tier ) {
-			return $this->cached_tier;
-		}
-
-		$tier   = 'free';
-		$status = get_transient( 'reportedip_hive_api_status' );
-		if ( is_array( $status ) ) {
-			$role = $status['userRole'] ?? ( $status['user_role'] ?? '' );
-			if ( ! empty( $role ) ) {
-				$tier              = self::tier_from_role( (string) $role );
-				$this->cached_tier = $tier;
-				return $tier;
-			}
-		}
-		$quota = get_transient( 'reportedip_hive_relay_quota' );
-		if ( is_array( $quota ) && ! empty( $quota['tier'] ) ) {
-			$tier              = (string) $quota['tier'];
-			$this->cached_tier = $tier;
-			return $tier;
-		}
-		if ( class_exists( 'ReportedIP_Hive_API' ) ) {
-			$api   = ReportedIP_Hive_API::get_instance();
-			$fresh = $api->get_relay_quota();
-			if ( ! empty( $fresh['tier'] ) ) {
-				$tier              = (string) $fresh['tier'];
-				$this->cached_tier = $tier;
-				return $tier;
-			}
-		}
-		$this->cached_tier = $tier;
-		return $tier;
+		return $this->get_cached_tier_or_default();
 	}
 
 	/**
@@ -1199,14 +1177,21 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
-	 * Soft tier lookup that never triggers a live `/relay-quota` API call.
+	 * Canonical tier lookup. Never triggers a live `/relay-quota` API call.
 	 *
-	 * Used by per-request paths (admin notices, the API-usage card) that may
-	 * render on every wp-admin page load: a 30-second timeout on a missing
-	 * cache would block the whole admin UI.
+	 * This is the single read path for the current tier on both admin and
+	 * front-end requests; {@see get_current_tier()} and {@see tier_at_least()}
+	 * delegate here. A live HTTP round-trip on a hot path would delay the
+	 * response and stampede the service when the cache cannot be populated.
 	 *
-	 * Falls back to {@see TIER_DEFAULT} if neither the api-status nor the
-	 * relay-quota transient is populated yet.
+	 * Lookup order (most-fresh to most-durable):
+	 *   1. per-request memo (`$cached_tier`)
+	 *   2. `reportedip_hive_api_status` transient — `userRole` (5 min)
+	 *   3. `reportedip_hive_relay_quota` transient — `tier` (12 h)
+	 *   4. `reportedip_hive_known_tier` option — durable baseline that survives
+	 *      relay-mail/sms cache busting and the gap between six-hour cron runs,
+	 *      so a paid site is never mis-read as `free` mid-window
+	 *   5. `free`
 	 *
 	 * @return string
 	 * @since  2.0.7
@@ -1220,14 +1205,25 @@ class ReportedIP_Hive_Mode_Manager {
 		if ( is_array( $status ) ) {
 			$role = $status['userRole'] ?? ( $status['user_role'] ?? '' );
 			if ( ! empty( $role ) ) {
-				return self::tier_from_role( (string) $role );
+				$this->cached_tier = self::tier_from_role( (string) $role );
+				return $this->cached_tier;
 			}
 		}
+
 		$quota = get_transient( 'reportedip_hive_relay_quota' );
 		if ( is_array( $quota ) && ! empty( $quota['tier'] ) ) {
-			return (string) $quota['tier'];
+			$this->cached_tier = (string) $quota['tier'];
+			return $this->cached_tier;
 		}
-		return 'free';
+
+		$known = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_known_tier', '' );
+		if ( '' !== $known ) {
+			$this->cached_tier = $known;
+			return $this->cached_tier;
+		}
+
+		$this->cached_tier = 'free';
+		return $this->cached_tier;
 	}
 
 	/**

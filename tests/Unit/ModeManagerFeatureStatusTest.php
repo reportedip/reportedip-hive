@@ -289,6 +289,47 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		}
 	}
 
+	public function test_known_tier_option_is_durable_tier_fallback() {
+		$this->pretend_mode( 'community' );
+
+		$GLOBALS['wp_options']['reportedip_hive_known_tier'] = 'professional';
+		\ReportedIP_Hive_Mode_Manager::get_instance()->flush_cached_tier();
+
+		$mm = \ReportedIP_Hive_Mode_Manager::get_instance();
+
+		$this->assertSame( 'professional', $mm->get_current_tier() );
+		$this->assertTrue(
+			$mm->tier_at_least( 'professional' ),
+			'A paid site whose status/relay transients lapsed must stay paid via the durable known_tier baseline.'
+		);
+	}
+
+	public function test_relay_quota_transient_supplies_tier_when_api_status_absent() {
+		$this->pretend_mode( 'community' );
+
+		$GLOBALS['wp_transients']['reportedip_hive_relay_quota'] = array(
+			'value'   => array( 'tier' => 'business' ),
+			'expires' => time() + 3600,
+		);
+		\ReportedIP_Hive_Mode_Manager::get_instance()->flush_cached_tier();
+
+		$this->assertSame( 'business', \ReportedIP_Hive_Mode_Manager::get_instance()->get_current_tier() );
+	}
+
+	public function test_cold_cache_degrades_to_free_without_a_live_api_call() {
+		$this->pretend_mode( 'community' );
+		\ReportedIP_Hive_Mode_Manager::get_instance()->flush_cached_tier();
+
+		$mm = \ReportedIP_Hive_Mode_Manager::get_instance();
+
+		$this->assertSame( 'free', $mm->get_current_tier() );
+		$this->assertFalse( $mm->tier_at_least( 'professional' ) );
+		$this->assertFalse(
+			class_exists( 'ReportedIP_Hive_API' ),
+			'A cold tier lookup must never load or reach the API client (no live /relay-quota call).'
+		);
+	}
+
 	public function test_tier_changed_action_flushes_memo() {
 		$this->pretend_mode( 'community' );
 		$this->pretend_tier( 'free' );

@@ -4,7 +4,7 @@
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence
  * with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.1.15
+ * Version: 2.1.16
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -55,7 +55,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.1.15' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.1.16' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -223,6 +223,13 @@ class ReportedIP_Hive {
 		add_action( 'add_site_option', $flush_score );
 		add_action( 'reportedip_hive_mode_changed', array( 'ReportedIP_Hive_Score', 'flush_cache' ) );
 
+		$on_api_key_change = array( __CLASS__, 'on_api_key_change' );
+		add_action( 'add_option_reportedip_hive_api_key', $on_api_key_change );
+		add_action( 'update_option_reportedip_hive_api_key', $on_api_key_change );
+		add_action( 'add_site_option_reportedip_hive_api_key', $on_api_key_change );
+		add_action( 'update_site_option_reportedip_hive_api_key', $on_api_key_change );
+		add_action( 'reportedip_hive_refresh_tier_after_key_change', array( __CLASS__, 'refresh_tier_after_key_change' ) );
+
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Ajax_Handler( $this );
 		}
@@ -287,6 +294,58 @@ class ReportedIP_Hive {
 			array( 'user_id' => $user_id ),
 			array( '%d' )
 		);
+	}
+
+	/**
+	 * React to an API-key change so the tier cache is populated without the
+	 * front-end ever polling `/relay-quota` live.
+	 *
+	 * Fires on both single-site (`update_option_*`) and Multisite
+	 * (`update_site_option_*`) save paths, and therefore covers Settings-API,
+	 * wizard, WP-CLI, settings import and MainWP provisioning alike. The handler
+	 * re-reads the current key rather than trusting the hook arguments, whose
+	 * shape differs between those hooks.
+	 *
+	 * On a cleared key the durable tier baseline and relay caches are dropped so
+	 * a removed key is not mis-read as a still-paid tier. On a present key a
+	 * one-off background event refreshes the tier shortly after the request, so
+	 * the saving request itself is never blocked on an HTTP round-trip.
+	 *
+	 * @return void
+	 * @since 2.1.16
+	 */
+	public static function on_api_key_change() {
+		$key = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
+
+		if ( '' === $key ) {
+			delete_transient( 'reportedip_hive_relay_quota' );
+			delete_transient( 'reportedip_hive_relay_quota_cooldown' );
+			delete_transient( 'reportedip_hive_api_status' );
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_known_tier', '' );
+			return;
+		}
+
+		delete_transient( 'reportedip_hive_relay_quota_cooldown' );
+
+		if ( ! wp_next_scheduled( 'reportedip_hive_refresh_tier_after_key_change' ) ) {
+			wp_schedule_single_event( time() + 5, 'reportedip_hive_refresh_tier_after_key_change' );
+		}
+	}
+
+	/**
+	 * Background handler that refreshes the tier/quota caches after an API-key
+	 * change. Runs out of band via {@see wp_schedule_single_event()}.
+	 *
+	 * @return void
+	 * @since 2.1.16
+	 */
+	public static function refresh_tier_after_key_change() {
+		if ( ! class_exists( 'ReportedIP_Hive_API' ) ) {
+			return;
+		}
+		$api = ReportedIP_Hive_API::get_instance();
+		$api->refresh_api_quota();
+		$api->get_relay_quota( true );
 	}
 
 	/**

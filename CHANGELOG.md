@@ -2,6 +2,26 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.16] — 2026-06-17
+
+### Fixed
+
+- **Stopped the runaway `/relay-quota` polling that could fire on every
+  front-end request.** A tier lookup on a cold or error-returning cache fell
+  through to a live `/relay-quota` call, and that lookup runs on hot paths
+  (firewall, security headers, bot verification), so a site under load polled
+  the service thousands of times a minute. Tier reads are now served purely
+  from cache — the status transient, the relay-quota transient, then the
+  durable known-tier baseline — and never trigger a live call.
+
+### Changed
+
+- A failed `/relay-quota` response now arms a short cooldown so it is not
+  retried on the next request, the meta-bucket hourly rate limit also guards
+  the call, and saving an API key refreshes the tier once in the background
+  instead of letting a live front-end lookup discover it. Live refresh is owned
+  solely by the six-hour cron and the key-save hook.
+
 ## [2.1.15] — 2026-06-17
 
 ### Fixed

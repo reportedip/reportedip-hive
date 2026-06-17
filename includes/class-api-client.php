@@ -736,7 +736,8 @@ class ReportedIP_Hive_API {
 	 * @return array{tier?: string, role?: string, mail?: array<string,mixed>, sms?: array<string,mixed>, mail_bundle_balance?: int, sms_bundle_balance?: int, fetched_at?: int, error?: string, status_code?: int, response_raw?: array<string,mixed>|null}
 	 */
 	public function get_relay_quota( $force_refresh = false ) {
-		$cache_key = 'reportedip_hive_relay_quota';
+		$cache_key    = 'reportedip_hive_relay_quota';
+		$cooldown_key = 'reportedip_hive_relay_quota_cooldown';
 
 		if ( ! $force_refresh ) {
 			$cached = get_transient( $cache_key );
@@ -745,12 +746,29 @@ class ReportedIP_Hive_API {
 			}
 		}
 
+		$cooldown = get_transient( $cooldown_key );
+		if ( is_array( $cooldown ) && isset( $cooldown['until'] ) && (int) $cooldown['until'] > time() ) {
+			return array(
+				'error'       => 'client_backoff',
+				'status_code' => (int) ( $cooldown['code'] ?? 0 ),
+				'retry_after' => max( 1, (int) $cooldown['until'] - time() ),
+			);
+		}
+
+		if ( $this->is_rate_limited( 'meta' ) ) {
+			return array(
+				'error'       => 'rate_limited',
+				'status_code' => 429,
+			);
+		}
+
 		$start_time    = microtime( true );
 		$response      = $this->make_request( 'GET', 'relay-quota', array(), null, $this->timeout );
 		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		if ( is_wp_error( $response ) ) {
 			$this->track_api_call( false, $response_time, 'wp_error', 'meta' );
+			$this->set_relay_quota_cooldown( 0, 0 );
 			return array( 'error' => $response->get_error_message() );
 		}
 
@@ -760,6 +778,7 @@ class ReportedIP_Hive_API {
 		$this->track_api_call( $code >= 200 && $code < 300, $response_time, ( $code >= 200 && $code < 300 ) ? null : 'http_' . $code, 'meta' );
 
 		if ( $code >= 200 && $code < 300 && is_array( $body ) ) {
+			delete_transient( $cooldown_key );
 			$body['fetched_at'] = time();
 			/*
 			 * TTL must be longer than the refresh-quota cron interval (6 h);
@@ -771,10 +790,44 @@ class ReportedIP_Hive_API {
 			return $body;
 		}
 
+		$retry_after = $this->parse_retry_after( wp_remote_retrieve_header( $response, 'retry-after' ) );
+		if ( 429 === $code && $retry_after > 0 ) {
+			$this->set_rate_limited( time() + $retry_after );
+		}
+		$this->set_relay_quota_cooldown( $code, $retry_after );
+
 		return array(
 			'error'        => 'http_' . $code,
 			'status_code'  => $code,
 			'response_raw' => is_array( $body ) ? $body : null,
+		);
+	}
+
+	/**
+	 * Remember a failed `/relay-quota` response so the next lookup short-circuits
+	 * without another outbound HTTP call.
+	 *
+	 * Without this negative cache a tier lookup on a cold or error-returning
+	 * install re-polls the service on every request — the runaway that motivated
+	 * the change. Mirrors the per-endpoint backoff in {@see relay_request()}:
+	 * honour an explicit `Retry-After`, otherwise back off 15 minutes, clamped
+	 * to the [60 s, 1 day] window.
+	 *
+	 * @param int $code        HTTP status code that triggered the backoff (0 for a transport error).
+	 * @param int $retry_after Server-supplied delta-seconds, or 0 when absent.
+	 * @return void
+	 * @since 2.1.16
+	 */
+	private function set_relay_quota_cooldown( $code, $retry_after ) {
+		$seconds = $retry_after > 0 ? $retry_after : 15 * MINUTE_IN_SECONDS;
+		$seconds = max( 60, min( DAY_IN_SECONDS, $seconds ) );
+		set_transient(
+			'reportedip_hive_relay_quota_cooldown',
+			array(
+				'until' => time() + $seconds,
+				'code'  => (int) $code,
+			),
+			$seconds + MINUTE_IN_SECONDS
 		);
 	}
 
