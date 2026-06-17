@@ -2,6 +2,27 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.14] — 2026-06-17
+
+### Fixed
+
+- **Auto-blocking no longer silently fails on servers whose database timezone
+  is not UTC.** Expiry and attempt timestamps are written in UTC but were
+  compared against the MySQL session clock (`NOW()` / `CURDATE()`). On a
+  non-UTC server this made the per-IP attempt counter never accumulate inside
+  its window — so the failed-login and XML-RPC thresholds were never reached
+  and no offender was ever blocked — and treated every freshly written block as
+  already expired, leaving the block list empty during an active attack. Every
+  datetime column and every comparison is now UTC-consistent.
+
+### Changed
+
+- All stored datetimes are normalised to UTC across the database layer, the
+  coordinated-attack detector, the queue recovery sweep, trusted-device expiry
+  and the daily statistics. Admin tables (logs, blocked IPs, whitelist, audit
+  trail, WAF exceptions) now render timestamps in the site timezone instead of
+  raw UTC.
+
 ## [2.1.13] — 2026-06-16
 
 ### Changed

@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.13
+Stable tag: 2.1.14
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -163,7 +163,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * 1 domain per licence, 1,000 IP-reputation checks/day, 50 reports/day
 * Local-mode `wp_mail()` for 2FA emails; TOTP, Passkey and Email 2FA included (SMS 2FA, WooCommerce frontend 2FA and Hardening Mode require Professional)
 * 30-day log retention, community support
-* **Contributor tier** is identical to Free but earns curated-feed access for sites that operate a public honeypot
+* **Contributor tier** is identical to Free but earns threat-feed access for sites that operate a public honeypot
 
 = Professional (14.90 €/month, 149 €/year — covers up to 3 domains) =
 
@@ -680,7 +680,7 @@ ReportedIP Hive is one piece of an Open-Source ecosystem around community-driven
 
 * **Hive** (this plugin) — [github.com/reportedip/reportedip-hive](https://github.com/reportedip/reportedip-hive). Community-powered WordPress security: IP threat intelligence, brute-force protection and the complete 2FA suite. Be part of the hive.
 * **Honeypot Server** — [github.com/reportedip/honeypot-server](https://github.com/reportedip/honeypot-server). PHP honeypot that emulates WordPress, Drupal and Joomla to detect malicious traffic. 36 threat analyzers, automatic reporting to the reportedip.de API, admin dashboard, AI content generation, bot detection. Zero Composer dependencies, SQLite, Docker-ready. Run one yourself to feed the network and earn the Contributor tier.
-* **Blacklist** — [github.com/reportedip/reportedip-blacklist](https://github.com/reportedip/reportedip-blacklist). Community-driven IP threat-intelligence feed with curated and dynamic blacklists, updated daily. Free to consume, no account required.
+* **Blacklist** — [github.com/reportedip/reportedip-blacklist](https://github.com/reportedip/reportedip-blacklist). Community-driven IP threat-intelligence feed, updated daily. Free to consume, no account required.
 
 Project home, documentation and the optional managed-relay service: [reportedip.de](https://reportedip.de).
 
