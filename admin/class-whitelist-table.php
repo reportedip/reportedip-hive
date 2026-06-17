@@ -123,7 +123,7 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 				return esc_html( $item->reason ?? '' );
 
 			case 'created_at':
-				return esc_html( $item->created_at );
+				return esc_html( ReportedIP_Hive::format_local_datetime( $item->created_at ) );
 
 			case 'expires_at':
 				if ( empty( $item->expires_at ) ) {

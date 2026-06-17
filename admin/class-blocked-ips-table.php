@@ -125,10 +125,10 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 				if ( empty( $item->blocked_until ) ) {
 					return '<span class="status-warning">' . __( 'Permanent', 'reportedip-hive' ) . '</span>';
 				}
-				return esc_html( $item->blocked_until );
+				return esc_html( ReportedIP_Hive::format_local_datetime( $item->blocked_until ) );
 
 			case 'created_at':
-				return esc_html( $item->created_at );
+				return esc_html( ReportedIP_Hive::format_local_datetime( $item->created_at ) );
 
 			case 'actions':
 				$actions  = '<div class="action-buttons-inline">';

@@ -59,7 +59,7 @@ class ReportedIP_Hive_Hardening_Detection_Multisite_Test extends WP_UnitTestCase
 				$wpdb->query(
 					$wpdb->prepare(
 						"INSERT INTO {$this->logs} (event_type, ip_address, severity, created_at)
-						 VALUES ('failed_login', %s, 'medium', DATE_SUB(NOW(), INTERVAL %d SECOND))",
+						 VALUES ('failed_login', %s, 'medium', DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d SECOND))",
 						'198.51.100.' . ( 10 + $i ),
 						$i * 30
 					)

@@ -94,7 +94,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	protected function column_default( $item, $column_name ) {
 		switch ( $column_name ) {
 			case 'created_at':
-				return esc_html( (string) $item->created_at );
+				return esc_html( ReportedIP_Hive::format_local_datetime( $item->created_at ) );
 
 			case 'username':
 				$name = (string) ( $item->username ?? '' );

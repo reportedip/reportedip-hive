@@ -85,6 +85,10 @@ namespace {
 				return null;
 			}
 
+			public function get_results( $sql = null ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+				return array();
+			}
+
 			public function replace( $table, $data, $format = null ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 				$this->writes[] = array(
 					'table' => $table,
@@ -190,6 +194,43 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$sql = $this->all_sql();
 			$this->assertStringContainsString( 'UTC_TIMESTAMP()', $sql );
 			$this->assertStringNotContainsString( 'NOW()', $sql, 'Queue dedup must not use the session-local NOW().' );
+		}
+
+		/**
+		 * Security-event logs must be stamped with an explicit UTC created_at
+		 * instead of relying on the MySQL CURRENT_TIMESTAMP default (session
+		 * clock). Otherwise the "X ago" / time-window reads drift on non-UTC
+		 * hosts and the localized table display would be wrong.
+		 */
+		public function test_security_log_stamps_created_at(): void {
+			$db = new \ReportedIP_Hive_Database();
+			$db->log_security_event( 'failed_login', '1.2.3.4', array(), 'low' );
+
+			$writes = array_filter(
+				$GLOBALS['wpdb']->writes,
+				static function ( $w ) {
+					return false !== strpos( $w['table'], 'reportedip_hive_logs' );
+				}
+			);
+			$this->assertNotEmpty( $writes, 'A log row must be written.' );
+			$this->assertArrayHasKey(
+				'created_at',
+				array_values( $writes )[0]['data'],
+				'Logs must carry an explicit UTC created_at, not the server-local default.'
+			);
+		}
+
+		/**
+		 * The logs read window must also measure from UTC_TIMESTAMP() now that
+		 * created_at is written in UTC.
+		 */
+		public function test_get_logs_window_is_utc(): void {
+			$db = new \ReportedIP_Hive_Database();
+			$db->get_logs( 30, 100 );
+
+			$sql = $this->all_sql();
+			$this->assertStringContainsString( 'DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)', $sql );
+			$this->assertStringNotContainsString( 'NOW()', $sql, 'get_logs must not use the session-local NOW().' );
 		}
 
 		/**

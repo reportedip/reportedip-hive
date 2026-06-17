@@ -71,7 +71,7 @@ class ReportedIP_Hive_Logger {
 		}
 
 		$log_details = array(
-			'timestamp' => current_time( 'mysql' ),
+			'timestamp' => current_time( 'mysql', true ),
 		);
 
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_minimal_logging', true ) ) {
@@ -295,7 +295,7 @@ class ReportedIP_Hive_Logger {
 			$wpdb->prepare(
 				"SELECT * FROM $table_name
                  WHERE ip_address = %s
-                 AND created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)
+                 AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
                  ORDER BY created_at DESC
                  LIMIT %d",
 				$ip_address,

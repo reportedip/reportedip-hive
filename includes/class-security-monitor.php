@@ -1212,7 +1212,7 @@ class ReportedIP_Hive_Security_Monitor {
                 COUNT(DISTINCT ip_address) as unique_ips,
                 COUNT(*) as total_attempts
              FROM $table_name
-             WHERE created_at > DATE_SUB(NOW(), INTERVAL 2 HOUR)
+             WHERE created_at > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 HOUR)
              AND event_type = 'failed_login'
              GROUP BY time_window
              HAVING unique_ips >= 8 AND total_attempts >= 30
@@ -1295,7 +1295,7 @@ class ReportedIP_Hive_Security_Monitor {
 				"SELECT COUNT(DISTINCT ip_address) as unique_ips,
                         COUNT(*) as total_attempts
                  FROM $table_name
-                 WHERE created_at > DATE_SUB(NOW(), INTERVAL %d MINUTE)
+                 WHERE created_at > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE)
                  AND event_type = 'failed_login'",
 				$window
 			)

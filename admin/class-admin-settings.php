@@ -1873,7 +1873,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<tbody>
 						<?php foreach ( $stats['recent_events'] as $row ) : ?>
 							<tr>
-								<td><?php echo esc_html( (string) $row->created_at ); ?></td>
+								<td><?php echo esc_html( ReportedIP_Hive::format_local_datetime( $row->created_at ) ); ?></td>
 								<td><?php echo esc_html( (string) $row->event_type ); ?></td>
 								<td><code><?php echo esc_html( (string) $row->ip_address ); ?></code></td>
 								<td><span class="rip-badge rip-badge--<?php echo esc_attr( $this->severity_badge_class( (string) $row->severity ) ); ?>"><?php echo esc_html( (string) $row->severity ); ?></span></td>
@@ -1940,7 +1940,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<tbody>
 						<?php foreach ( $rows as $row ) : ?>
 							<tr>
-								<td><?php echo esc_html( (string) $row->created_at ); ?></td>
+								<td><?php echo esc_html( ReportedIP_Hive::format_local_datetime( $row->created_at ) ); ?></td>
 								<td><?php echo esc_html( (string) $row->event_type ); ?></td>
 								<td><code><?php echo esc_html( (string) $row->ip_address ); ?></code></td>
 								<td><span class="rip-badge rip-badge--<?php echo esc_attr( $this->severity_badge_class( (string) $row->severity ) ); ?>"><?php echo esc_html( (string) $row->severity ); ?></span></td>
@@ -2246,13 +2246,13 @@ class ReportedIP_Hive_Admin_Settings {
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- $logs is a constant table name from Schema::table(); per-site admin dashboard widget with naturally fresh data, caching would only delay incident visibility.
 		$events_24h        = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $logs WHERE blog_id = %d AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+				"SELECT COUNT(*) FROM $logs WHERE blog_id = %d AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)",
 				$blog_id
 			)
 		);
 		$failed_logins_24h = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $logs WHERE blog_id = %d AND event_type LIKE %s AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+				"SELECT COUNT(*) FROM $logs WHERE blog_id = %d AND event_type LIKE %s AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)",
 				$blog_id,
 				'%failed_login%'
 			)
@@ -6467,7 +6467,7 @@ class ReportedIP_Hive_Admin_Settings {
 			} else {
 				$health['logging']['message'] = __( 'Logging system operational', 'reportedip-hive' );
 				/* translators: %s: timestamp of the most recent log entry */
-				$health['logging']['details'][] = sprintf( __( 'Last log entry: %s', 'reportedip-hive' ), $recent_logs[0]->created_at );
+				$health['logging']['details'][] = sprintf( __( 'Last log entry: %s', 'reportedip-hive' ), ReportedIP_Hive::format_local_datetime( $recent_logs[0]->created_at ) );
 			}
 
 			$log_level = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_level', 'info' );
@@ -6551,7 +6551,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$events_24h = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM $logs_table
-				 WHERE created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)",
+				 WHERE created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)",
 				$cutoff_utc
 			)
 		);

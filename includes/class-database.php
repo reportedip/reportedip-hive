@@ -136,8 +136,9 @@ class ReportedIP_Hive_Database {
 				'ip_address' => $ip_address,
 				'details'    => wp_json_encode( $details ),
 				'severity'   => $severity,
+				'created_at' => current_time( 'mysql', true ),
 			),
-			array( '%d', '%s', '%s', '%s', '%s' )
+			array( '%d', '%s', '%s', '%s', '%s', '%s' )
 		);
 	}
 
@@ -149,7 +150,7 @@ class ReportedIP_Hive_Database {
 
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
 
-		$where_clause = 'WHERE created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)';
+		$where_clause = 'WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)';
 		$params       = array( $days );
 
 		if ( $event_type ) {
@@ -194,8 +195,9 @@ class ReportedIP_Hive_Database {
 				'reason'     => $reason,
 				'added_by'   => $added_by,
 				'expires_at' => $expires_at,
+				'created_at' => current_time( 'mysql', true ),
 			),
-			array( '%s', '%s', '%s', '%d', '%s' )
+			array( '%s', '%s', '%s', '%d', '%s', '%s' )
 		);
 
 		wp_cache_delete( 'rip_whitelist_cidrs', 'reportedip' );
@@ -483,8 +485,9 @@ class ReportedIP_Hive_Database {
 				'created_from_log_id' => $log_id,
 				'source'              => $source,
 				'added_by'            => $added_by,
+				'created_at'          => current_time( 'mysql', true ),
 			),
-			array( '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d' )
+			array( '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%s' )
 		);
 
 		if ( false === $result ) {
@@ -589,8 +592,9 @@ class ReportedIP_Hive_Database {
 				'block_type'    => $block_type,
 				'blocked_until' => $blocked_until,
 				'is_active'     => 1,
+				'created_at'    => current_time( 'mysql', true ),
 			),
-			array( '%s', '%s', '%s', '%s', '%d' )
+			array( '%s', '%s', '%s', '%s', '%d', '%s' )
 		);
 	}
 
@@ -626,8 +630,9 @@ class ReportedIP_Hive_Database {
 				'block_type'    => $block_type,
 				'blocked_until' => $blocked_until,
 				'is_active'     => 1,
+				'created_at'    => current_time( 'mysql', true ),
 			),
-			array( '%s', '%s', '%s', '%s', '%d' )
+			array( '%s', '%s', '%s', '%s', '%d', '%s' )
 		);
 	}
 
@@ -1129,8 +1134,8 @@ class ReportedIP_Hive_Database {
 		$old_logs = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT id, details FROM $logs_table 
-                 WHERE created_at < DATE_SUB(NOW(), INTERVAL %d DAY)
-                 AND created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)",
+                 WHERE created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
+                 AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)",
 				$days,
 				ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 )
 			)
@@ -1162,7 +1167,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"UPDATE $attempts_table 
                  SET username = NULL, user_agent = NULL 
-                 WHERE last_attempt < DATE_SUB(NOW(), INTERVAL %d DAY)
+                 WHERE last_attempt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
                  AND (username IS NOT NULL OR user_agent IS NOT NULL)",
 				$days
 			)
@@ -1192,7 +1197,7 @@ class ReportedIP_Hive_Database {
 		foreach ( $tables_to_clean as $table => $date_column ) {
 			$result = $wpdb->query(
 				$wpdb->prepare(
-					"DELETE FROM $table WHERE $date_column < DATE_SUB(NOW(), INTERVAL %d DAY)",
+					"DELETE FROM $table WHERE $date_column < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)",
 					$days
 				)
 			);
@@ -1204,7 +1209,7 @@ class ReportedIP_Hive_Database {
 		$completed_reports = $wpdb->query(
 			"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
              WHERE status = 'completed'
-             AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)"
+             AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)"
 		);
 
 		if ( $completed_reports !== false ) {
@@ -1215,7 +1220,7 @@ class ReportedIP_Hive_Database {
 			"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
              WHERE status = 'failed'
              AND attempts >= max_attempts
-             AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)"
+             AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)"
 		);
 
 		if ( $failed_reports !== false ) {
@@ -1227,7 +1232,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
 				 WHERE status IN ('pending', 'failed')
-				 AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
+				 AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)",
 				$queue_max_age
 			)
 		);
@@ -1643,7 +1648,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"SELECT event_type, severity, COUNT(*) as count, COUNT(DISTINCT ip_address) as unique_ips
                  FROM $table_name 
-                 WHERE created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)
+                 WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
                  GROUP BY event_type, severity
                  ORDER BY count DESC",
 				$days
@@ -1671,7 +1676,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"SELECT * FROM $table_name
                  WHERE severity IN ('high', 'critical')
-                   AND ( created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d HOUR) )
+                   AND ( created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d HOUR) )
                  ORDER BY created_at DESC
                  LIMIT %d",
 				$cutoff_utc,
@@ -1711,7 +1716,7 @@ class ReportedIP_Hive_Database {
 		$events = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM $table_name
-                 WHERE created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d HOUR)
+                 WHERE created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d HOUR)
                  ORDER BY created_at DESC
                  LIMIT %d",
 				$cutoff_utc,
@@ -1758,7 +1763,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"SELECT * FROM $table_name
                  WHERE event_type IN ($placeholders)
-                   AND (created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d HOUR))
+                   AND (created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d HOUR))
                  ORDER BY created_at DESC
                  LIMIT %d",
 				array_merge( $event_types, array( $cutoff_utc, $hours, $limit ) )
@@ -1799,7 +1804,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"SELECT event_type, COUNT(*) AS cnt FROM $table_name
                  WHERE event_type IN ($placeholders)
-                   AND (created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d HOUR))
+                   AND (created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d HOUR))
                  GROUP BY event_type",
 				array_merge( $event_types, array( $cutoff_utc, $hours ) )
 			)
@@ -1869,7 +1874,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"SELECT event_type, COUNT(*) as count
                  FROM $logs_table 
-                 WHERE created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)
+                 WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
                  GROUP BY event_type",
 				$days
 			)
@@ -1964,7 +1969,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"SELECT DATE(created_at) AS d, event_type, severity, COUNT(*) AS c
 				 FROM $logs_table
-				 WHERE created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)
+				 WHERE created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
 				 GROUP BY DATE(created_at), event_type, severity",
 				$cutoff_utc,
 				$days
@@ -2009,7 +2014,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"SELECT details FROM $logs_table
 				 WHERE event_type IN ('waf_block','waf_would_block')
-				   AND ( created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d DAY) )
+				   AND ( created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY) )
 				 ORDER BY created_at DESC
 				 LIMIT 5000",
 				$cutoff_utc,
@@ -2036,7 +2041,7 @@ class ReportedIP_Hive_Database {
 					 FROM $logs_table
 					 WHERE event_type IN ($placeholders)
 					   AND ip_address <> ''
-					   AND ( created_at >= %s OR created_at >= DATE_SUB(NOW(), INTERVAL %d DAY) )
+					   AND ( created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY) )
 					 GROUP BY ip_address
 					 ORDER BY c DESC
 					 LIMIT 10",

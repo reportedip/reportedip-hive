@@ -1577,6 +1577,27 @@ class ReportedIP_Hive {
 	}
 
 	/**
+	 * Format a stored UTC datetime string for display in the site timezone.
+	 *
+	 * Every plugin datetime column (except the admin-entered whitelist expiry)
+	 * is stored in UTC. Admin tables render those values through this helper so
+	 * the same install reads correctly for an operator in any timezone instead
+	 * of showing raw UTC.
+	 *
+	 * @param string $utc_mysql A 'Y-m-d H:i:s' UTC datetime string.
+	 * @return string           Localised datetime, or '' when empty/invalid.
+	 * @since  2.1.14
+	 */
+	public static function format_local_datetime( $utc_mysql ) {
+		$utc_mysql = (string) $utc_mysql;
+		if ( '' === $utc_mysql || 0 === strpos( $utc_mysql, '0000-00-00' ) ) {
+			return '';
+		}
+		$format = get_option( 'date_format', 'Y-m-d' ) . ' ' . get_option( 'time_format', 'H:i:s' );
+		return get_date_from_gmt( $utc_mysql, $format );
+	}
+
+	/**
 	 * Get the canonical option-key => default map.
 	 *
 	 * Delegates to {@see ReportedIP_Hive_Defaults::all_option_defaults()} —

@@ -144,7 +144,7 @@ class ReportedIP_Hive_WAF_Exceptions_Table extends WP_List_Table {
 				return esc_html( (string) ( $item->source ?? 'manual' ) );
 
 			case 'created_at':
-				return esc_html( (string) ( $item->created_at ?? '' ) );
+				return esc_html( ReportedIP_Hive::format_local_datetime( $item->created_at ?? '' ) );
 
 			case 'actions':
 				return sprintf(
