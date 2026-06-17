@@ -124,6 +124,33 @@ class ReportedIP_Hive_Logger {
 	}
 
 	/**
+	 * Prepare a single detail value for display.
+	 *
+	 * Arrays/objects are JSON-encoded; datetime-valued keys (stored in UTC) are
+	 * converted to the site timezone so every printed time matches the rest of
+	 * the WordPress admin instead of showing raw UTC.
+	 *
+	 * @param string $key   Detail key.
+	 * @param mixed  $value Detail value.
+	 * @return string       Display-ready value.
+	 * @since  2.1.15
+	 */
+	private static function format_detail_value( $key, $value ) {
+		if ( is_array( $value ) || is_object( $value ) ) {
+			return (string) wp_json_encode( $value );
+		}
+		if ( in_array( $key, array( 'timestamp', 'time_window' ), true )
+			&& is_string( $value ) && '' !== $value
+			&& class_exists( 'ReportedIP_Hive' ) ) {
+			$local = ReportedIP_Hive::format_local_datetime( $value );
+			if ( '' !== $local ) {
+				return $local;
+			}
+		}
+		return (string) $value;
+	}
+
+	/**
 	 * Format log details for display
 	 */
 	public function format_details( $details ) {
@@ -136,9 +163,7 @@ class ReportedIP_Hive_Logger {
 			if ( json_last_error() === JSON_ERROR_NONE ) {
 				$formatted = array();
 				foreach ( $decoded as $key => $value ) {
-					if ( is_array( $value ) || is_object( $value ) ) {
-						$value = wp_json_encode( $value );
-					}
+					$value       = self::format_detail_value( $key, $value );
 					$formatted[] = '<strong>' . esc_html( ucfirst( str_replace( '_', ' ', $key ) ) ) . ':</strong> ' . esc_html( $value );
 				}
 				return implode( '<br>', $formatted );
