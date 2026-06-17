@@ -441,7 +441,7 @@ class ReportedIP_Hive_IP_Manager {
 			"UPDATE $blocked_table
              SET is_active = 0
              WHERE blocked_until IS NOT NULL
-             AND blocked_until < NOW()
+             AND blocked_until < UTC_TIMESTAMP()
              AND is_active = 1"
 		);
 

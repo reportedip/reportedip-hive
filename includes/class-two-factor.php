@@ -1475,7 +1475,7 @@ class ReportedIP_Hive_Two_Factor {
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
 		$device = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM $table WHERE token_hash = %s AND user_id = %d AND expires_at > NOW()",
+				"SELECT * FROM $table WHERE token_hash = %s AND user_id = %d AND expires_at > UTC_TIMESTAMP()",
 				$token_hash,
 				$user_id
 			)
@@ -1869,7 +1869,7 @@ class ReportedIP_Hive_Two_Factor {
 		$table = self::get_trusted_table();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from $wpdb->prefix; no user input in SQL.
-		return (int) $wpdb->query( "DELETE FROM $table WHERE expires_at < NOW()" );
+		return (int) $wpdb->query( "DELETE FROM $table WHERE expires_at < UTC_TIMESTAMP()" );
 	}
 
 	/**

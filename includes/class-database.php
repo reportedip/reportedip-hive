@@ -644,7 +644,7 @@ class ReportedIP_Hive_Database {
 				"SELECT COUNT(*) FROM $table_name 
                  WHERE ip_address = %s 
                  AND is_active = 1 
-                 AND (blocked_until IS NULL OR blocked_until > NOW())",
+                 AND (blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP())",
 				$ip_address
 			)
 		);
@@ -662,7 +662,7 @@ class ReportedIP_Hive_Database {
 
 		$where_clause = '';
 		if ( $active_only ) {
-			$where_clause = 'WHERE is_active = 1 AND (blocked_until IS NULL OR blocked_until > NOW())';
+			$where_clause = 'WHERE is_active = 1 AND (blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP())';
 		}
 
 		return $wpdb->get_results( "SELECT * FROM $table_name $where_clause ORDER BY created_at DESC" );
@@ -681,7 +681,7 @@ class ReportedIP_Hive_Database {
 
 		$where_clause = '';
 		if ( $active_only ) {
-			$where_clause = 'WHERE is_active = 1 AND (blocked_until IS NULL OR blocked_until > NOW())';
+			$where_clause = 'WHERE is_active = 1 AND (blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP())';
 		}
 
 		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table_name $where_clause" );
@@ -736,7 +736,7 @@ class ReportedIP_Hive_Database {
 				"SELECT * FROM $table_name 
                  WHERE ip_address = %s 
                  AND attempt_type = %s 
-                 AND last_attempt > DATE_SUB(NOW(), INTERVAL 1 HOUR)",
+                 AND last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR)",
 				$ip_address,
 				$attempt_type
 			)
@@ -749,13 +749,14 @@ class ReportedIP_Hive_Database {
 					'attempt_count' => $existing->attempt_count + 1,
 					'username'      => $username ?: $existing->username,
 					'user_agent'    => $user_agent ?: $existing->user_agent,
-					'last_attempt'  => current_time( 'mysql' ),
+					'last_attempt'  => current_time( 'mysql', true ),
 				),
 				array( 'id' => $existing->id ),
 				array( '%d', '%s', '%s', '%s' ),
 				array( '%d' )
 			);
 		} else {
+			$now_utc = current_time( 'mysql', true );
 			return $wpdb->insert(
 				$table_name,
 				array(
@@ -764,8 +765,10 @@ class ReportedIP_Hive_Database {
 					'username'      => $username,
 					'user_agent'    => $user_agent,
 					'attempt_count' => 1,
+					'first_attempt' => $now_utc,
+					'last_attempt'  => $now_utc,
 				),
-				array( '%s', '%s', '%s', '%s', '%d' )
+				array( '%s', '%s', '%s', '%s', '%d', '%s', '%s' )
 			);
 		}
 	}
@@ -783,7 +786,7 @@ class ReportedIP_Hive_Database {
 				"SELECT COALESCE(SUM(attempt_count), 0) FROM $table_name 
                  WHERE ip_address = %s 
                  AND attempt_type = %s 
-                 AND last_attempt > DATE_SUB(NOW(), INTERVAL %d MINUTE)",
+                 AND last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE)",
 				$ip_address,
 				$attempt_type,
 				$minutes
@@ -826,7 +829,7 @@ class ReportedIP_Hive_Database {
                  WHERE ip_address = %s
                  AND report_type = 'negative'
                  AND status = 'completed'
-                 AND created_at > DATE_SUB(NOW(), INTERVAL %d HOUR)",
+                 AND created_at > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d HOUR)",
 				$ip_address,
 				$hours
 			)
@@ -878,9 +881,9 @@ class ReportedIP_Hive_Database {
                  WHERE ip_address = %s
                  AND report_type = %s
                  AND (
-                     ( status IN ('pending', 'processing') AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR) )
+                     ( status IN ('pending', 'processing') AND created_at > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR) )
                      OR
-                     ( status = 'failed' AND last_attempt IS NOT NULL AND last_attempt > DATE_SUB(NOW(), INTERVAL 15 MINUTE) )
+                     ( status = 'failed' AND last_attempt IS NOT NULL AND last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 15 MINUTE) )
                  )",
 				$ip_address,
 				$report_type
@@ -900,8 +903,9 @@ class ReportedIP_Hive_Database {
 				'comment'      => $comment,
 				'report_type'  => $report_type,
 				'priority'     => $priority,
+				'created_at'   => current_time( 'mysql', true ),
 			),
-			array( '%d', '%s', '%s', '%s', '%s', '%s' )
+			array( '%d', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
 	}
 
@@ -941,7 +945,7 @@ class ReportedIP_Hive_Database {
 
 		$data = array(
 			'status'       => $status,
-			'last_attempt' => current_time( 'mysql' ),
+			'last_attempt' => current_time( 'mysql', true ),
 		);
 
 		if ( $error_message ) {
@@ -987,7 +991,7 @@ class ReportedIP_Hive_Database {
 
 		return $wpdb->update(
 			$table_name,
-			array( 'submitted_at' => current_time( 'mysql' ) ),
+			array( 'submitted_at' => current_time( 'mysql', true ) ),
 			array( 'id' => (int) $report_id ),
 			array( '%s' ),
 			array( '%d' )
@@ -1034,9 +1038,9 @@ class ReportedIP_Hive_Database {
                  WHERE status = 'processing'
                    AND attempts < max_attempts
                    AND (
-                     ( submitted_at IS NOT NULL AND submitted_at < DATE_SUB(NOW(), INTERVAL %d MINUTE) )
+                     ( submitted_at IS NOT NULL AND submitted_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE) )
                      OR
-                     ( submitted_at IS NULL AND ( last_attempt IS NULL OR last_attempt < DATE_SUB(NOW(), INTERVAL %d MINUTE) ) )
+                     ( submitted_at IS NULL AND ( last_attempt IS NULL OR last_attempt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE) ) )
                    )",
 				$timeout,
 				$timeout
@@ -1050,9 +1054,9 @@ class ReportedIP_Hive_Database {
                  WHERE status = 'processing'
                    AND attempts >= max_attempts
                    AND (
-                     ( submitted_at IS NOT NULL AND submitted_at < DATE_SUB(NOW(), INTERVAL %d MINUTE) )
+                     ( submitted_at IS NOT NULL AND submitted_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE) )
                      OR
-                     ( submitted_at IS NULL AND ( last_attempt IS NULL OR last_attempt < DATE_SUB(NOW(), INTERVAL %d MINUTE) ) )
+                     ( submitted_at IS NULL AND ( last_attempt IS NULL OR last_attempt < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE) ) )
                    )",
 				$timeout,
 				$timeout
@@ -1105,7 +1109,7 @@ class ReportedIP_Hive_Database {
 		return $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM $table_name 
-                 WHERE stat_date >= DATE_SUB(CURDATE(), INTERVAL %d DAY) 
+                 WHERE stat_date >= DATE_SUB(UTC_DATE(), INTERVAL %d DAY) 
                  ORDER BY stat_date DESC",
 				$days
 			)
@@ -1139,7 +1143,7 @@ class ReportedIP_Hive_Database {
 				$anonymized_details = array_diff_key( $details, array_flip( $personal_fields ) );
 
 				$anonymized_details['anonymized']    = true;
-				$anonymized_details['anonymized_at'] = current_time( 'mysql' );
+				$anonymized_details['anonymized_at'] = current_time( 'mysql', true );
 
 				$wpdb->update(
 					$logs_table,
@@ -1824,14 +1828,14 @@ class ReportedIP_Hive_Database {
 		$stats['active_blocked'] = $wpdb->get_var(
 			"SELECT COUNT(*) FROM $blocked_table 
              WHERE is_active = 1 
-             AND (blocked_until IS NULL OR blocked_until > NOW())"
+             AND (blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP())"
 		);
 
 		$stats['expired_blocked'] = $wpdb->get_var(
 			"SELECT COUNT(*) FROM $blocked_table 
              WHERE is_active = 1 
              AND blocked_until IS NOT NULL 
-             AND blocked_until <= NOW()"
+             AND blocked_until <= UTC_TIMESTAMP()"
 		);
 
 		$stats['active_whitelist'] = $wpdb->get_var(
@@ -1881,7 +1885,7 @@ class ReportedIP_Hive_Database {
                     SUM(api_reports_sent) as total_api_reports,
                     SUM(reputation_blocks) as total_reputation_blocks
                  FROM $stats_table 
-                 WHERE stat_date >= DATE_SUB(CURDATE(), INTERVAL %d DAY)",
+                 WHERE stat_date >= DATE_SUB(UTC_DATE(), INTERVAL %d DAY)",
 				$days
 			)
 		);
@@ -2054,7 +2058,7 @@ class ReportedIP_Hive_Database {
 						"SELECT ip_address FROM $blocked_table
 						 WHERE is_active = 1
 						   AND ip_address IN ($ip_ph)
-						   AND ( blocked_until IS NULL OR blocked_until > NOW() )",
+						   AND ( blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP() )",
 						$ips
 					)
 				);

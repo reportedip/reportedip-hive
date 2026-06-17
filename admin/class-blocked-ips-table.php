@@ -167,7 +167,7 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 			$orderby = 'created_at';
 		}
 
-		$where = array( 'is_active = 1 AND (blocked_until IS NULL OR blocked_until > NOW())' );
+		$where = array( 'is_active = 1 AND (blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP())' );
 
 		if ( ! empty( $_REQUEST['block_type'] ) ) {
 			$block_type = sanitize_text_field( wp_unslash( $_REQUEST['block_type'] ) );

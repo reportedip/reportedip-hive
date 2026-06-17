@@ -555,7 +555,7 @@ class ReportedIP_Hive_API {
 							array(
 								'status'        => 'pending',
 								'error_message' => $error_message,
-								'last_attempt'  => current_time( 'mysql' ),
+								'last_attempt'  => current_time( 'mysql', true ),
 							),
 							array( 'id' => $report->id ),
 							array( '%s', '%s', '%s' ),

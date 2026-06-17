@@ -272,7 +272,7 @@ class ReportedIP_Hive_Audit_Logger {
 		$row = self::build_row(
 			array(
 				'blog_id'      => get_current_blog_id(),
-				'created_at'   => current_time( 'mysql' ),
+				'created_at'   => current_time( 'mysql', true ),
 				'ip'           => self::client_ip(),
 				'user_id'      => $user_id,
 				'username'     => $username,

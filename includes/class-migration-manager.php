@@ -175,7 +175,7 @@ final class ReportedIP_Hive_Migration_Manager {
 		$trusted_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_trusted_devices' );
 		if ( ReportedIP_Hive_Schema::tables_exist() ) {
 			$wpdb->query(
-				"UPDATE $trusted_table SET expires_at = LEAST( expires_at, DATE_ADD( NOW(), INTERVAL 1 DAY ) )"
+				"UPDATE $trusted_table SET expires_at = LEAST( expires_at, DATE_ADD( UTC_TIMESTAMP(), INTERVAL 1 DAY ) )"
 			);
 		}
 	}
