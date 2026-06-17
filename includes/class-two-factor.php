@@ -1489,7 +1489,7 @@ class ReportedIP_Hive_Two_Factor {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$wpdb->update(
 			$table,
-			array( 'last_used_at' => current_time( 'mysql' ) ),
+			array( 'last_used_at' => current_time( 'mysql', true ) ),
 			array( 'id' => $device->id ),
 			array( '%s' ),
 			array( '%d' )
@@ -1523,7 +1523,7 @@ class ReportedIP_Hive_Two_Factor {
 				'token_hash'  => $token_hash,
 				'device_name' => $device_name,
 				'ip_address'  => ReportedIP_Hive::get_client_ip(),
-				'created_at'  => current_time( 'mysql' ),
+				'created_at'  => current_time( 'mysql', true ),
 				'expires_at'  => gmdate( 'Y-m-d H:i:s', $expiry ),
 			),
 			array( '%d', '%s', '%s', '%s', '%s', '%s' )
