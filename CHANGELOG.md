@@ -2,6 +2,16 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.15] — 2026-06-17
+
+### Fixed
+
+- **Every timestamp in the admin now renders in the site timezone.** The
+  "Timestamp" line inside a log row's details — and the coordinated-attack time
+  window — were printed in raw UTC, off by the site offset from the localized
+  row time and the rest of the WordPress admin. Both are now converted to the
+  configured site timezone.
+
 ## [2.1.14] — 2026-06-17
 
 ### Fixed
