@@ -55,6 +55,15 @@ class ReportedIP_Hive_WAF {
 	const OPT_DROPIN_ENABLED = 'reportedip_hive_waf_dropin_enabled';
 
 	/**
+	 * Drop-in body-inspection skip for authenticated requests. When on (default),
+	 * the pre-WordPress guard does not inspect the request body once a WordPress
+	 * logged-in cookie is present, so a signed-in editor's rich content cannot
+	 * trip an injection signature. URL and user-agent rules still run, and the
+	 * in-WordPress engine remains the capability-aware backstop for forged cookies.
+	 */
+	const OPT_DROPIN_SKIP_AUTHENTICATED = 'reportedip_hive_waf_dropin_skip_authenticated';
+
+	/**
 	 * Counting window (minutes) for the repeat-offender escalation ladder.
 	 */
 	const ESCALATION_TIMEFRAME_MINUTES = 10;

@@ -62,7 +62,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 3;
+	const DROPIN_VERSION = 4;
 
 	/**
 	 * Singleton instance.
@@ -102,6 +102,10 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		add_action( 'reportedip_hive_ruleset_applied', array( $this, 'on_ruleset_applied' ) );
 		add_action( 'reportedip_hive_whitelist_changed', array( $this, 'queue_resync' ) );
 		add_action( 'reportedip_hive_waf_exceptions_changed', array( $this, 'queue_resync' ) );
+		foreach ( array( ReportedIP_Hive_WAF::OPT_ENABLED, ReportedIP_Hive_WAF::OPT_REPORT_ONLY, ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED ) as $opt ) {
+			add_action( 'update_option_' . $opt, array( $this, 'queue_resync' ) );
+			add_action( 'update_site_option_' . $opt, array( $this, 'queue_resync' ) );
+		}
 		add_action( 'admin_init', array( $this, 'maybe_self_heal' ) );
 	}
 
@@ -331,23 +335,40 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	}
 
 	/**
-	 * Detected server type token for the UI (apache|fpm|nginx|unknown).
+	 * Detected wiring target token (apache|fpm|nginx|unknown).
 	 *
+	 * The token names the mechanism used to install the directive, NOT the
+	 * front-end web server: it decides between `.htaccess` (mod_php),
+	 * auto-written `.user.ini` (PHP-FPM/CGI/LiteSpeed) and the hand-pasted
+	 * nginx snippet.
+	 *
+	 * The PHP SAPI is therefore checked BEFORE the SERVER_SOFTWARE string.
+	 * Under PHP-FPM — which is how nginx (and most modern Apache) serve PHP —
+	 * `auto_prepend_file` in a document-root `.user.ini` is honoured for every
+	 * PHP request regardless of the web server's `location` blocks. The manual
+	 * nginx snippet, by contrast, only covers the single `location` it is pasted
+	 * into, so endpoints handled by their own blocks (wp-login.php, the cached
+	 * front controller) silently escape the guard. Preferring `.user.ini`
+	 * whenever a FastCGI SAPI is present closes that coverage gap and removes the
+	 * manual step. The bare `nginx` token is reserved for the rare nginx stack
+	 * without a FastCGI PHP SAPI, where only the snippet can wire the directive.
+	 *
+	 * @param string|null $sapi Override SAPI (defaults to php_sapi_name()); for tests.
 	 * @return string
 	 * @since  2.1.2
 	 */
-	public function detect_server() {
-		$sapi     = php_sapi_name();
+	public function detect_server( $sapi = null ) {
+		$sapi     = null === $sapi ? php_sapi_name() : (string) $sapi;
 		$software = isset( $_SERVER['SERVER_SOFTWARE'] ) ? strtolower( (string) wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Lower-cased token compare only.
 
-		if ( false !== strpos( $software, 'nginx' ) ) {
-			return 'nginx';
-		}
 		if ( 'apache2handler' === $sapi ) {
 			return 'apache';
 		}
 		if ( in_array( $sapi, array( 'fpm-fcgi', 'cgi-fcgi', 'litespeed' ), true ) ) {
 			return 'fpm';
+		}
+		if ( false !== strpos( $software, 'nginx' ) ) {
+			return 'nginx';
 		}
 		if ( false !== strpos( $software, 'apache' ) ) {
 			return 'apache';
@@ -615,6 +636,14 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$header_export = var_export( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the trusted proxy header literal into a generated PHP file, not debugging.
 		$version       = self::DROPIN_VERSION;
 
+		$engine_enabled = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_ENABLED, true );
+		$report_only    = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_REPORT_ONLY, false );
+		$skip_authed    = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED, true );
+
+		$engine_export = $engine_enabled ? 'true' : 'false';
+		$report_export = $report_only ? 'true' : 'false';
+		$skip_export   = $skip_authed ? 'true' : 'false';
+
 		$template = <<<'PHP'
 <?php
 /**
@@ -675,6 +704,15 @@ if ( ! function_exists( 'reportedip_hive_dropin_excepted' ) ) {
 		return false;
 	}
 }
+if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
+	function reportedip_hive_dropin_has_login_cookie( $cookies ) {
+		if ( ! is_array( $cookies ) ) { return false; }
+		foreach ( $cookies as $k => $v ) {
+			if ( 0 === strncmp( (string) $k, 'wordpress_logged_in_', 20 ) && '' !== (string) $v ) { return true; }
+		}
+		return false;
+	}
+}
 
 (function () {
 	try {
@@ -682,6 +720,7 @@ if ( ! function_exists( 'reportedip_hive_dropin_excepted' ) ) {
 		$whitelist  = __RIP_WHITELIST__;
 		$exceptions = __RIP_EXCEPTIONS__;
 		if ( empty( $rules ) ) { return; }
+		if ( ! __RIP_ENGINE_ENABLED__ || __RIP_REPORT_ONLY__ ) { return; }
 
 		$ip      = '';
 		$trusted = __RIP_TRUSTED_HEADER__;
@@ -706,9 +745,12 @@ if ( ! function_exists( 'reportedip_hive_dropin_excepted' ) ) {
 		$uri_subject = ( $uri === $dec ) ? $uri : $uri . "\n" . $dec;
 		$ua  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
 		$body = '';
-		if ( ! empty( $_POST ) ) { $body .= reportedip_hive_dropin_flatten( $_POST ); }
-		$raw = file_get_contents( 'php://input', false, null, 0, 65536 );
-		if ( is_string( $raw ) && '' !== $raw ) { $body .= "\n" . $raw; }
+		$skip_body = __RIP_SKIP_AUTHED__ && reportedip_hive_dropin_has_login_cookie( $_COOKIE );
+		if ( ! $skip_body ) {
+			if ( ! empty( $_POST ) ) { $body .= reportedip_hive_dropin_flatten( $_POST ); }
+			$raw = file_get_contents( 'php://input', false, null, 0, 65536 );
+			if ( is_string( $raw ) && '' !== $raw ) { $body .= "\n" . $raw; }
+		}
 		$all = $uri_subject . "\n" . $body . "\n" . $ua;
 
 		$prev = ini_get( 'pcre.backtrack_limit' );
@@ -749,8 +791,8 @@ if ( ! function_exists( 'reportedip_hive_dropin_excepted' ) ) {
 PHP;
 
 		return str_replace(
-			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__' ),
-			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export ),
+			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__' ),
+			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $engine_export, $report_export, $skip_export ),
 			$template
 		);
 	}

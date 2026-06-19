@@ -80,11 +80,13 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	/**
 	 * Progressive backoff ladder (seconds) per recipient/user within RATE_WINDOW.
 	 * Index 0 = 1st send, index N = (N+1)-th send.
-	 * Mirrors the server-side {@see ReportedIP_Constants::RELAY_BACKOFF_LADDER}.
+	 * Mirrors the server-side {@see ReportedIP_Constants::RELAY_BACKOFF_LADDER}:
+	 * gentle early rungs (0s/30s/60s) cover legitimate resends, escalation only
+	 * bites a burst. Keep this array in lock-step with the relay ladder.
 	 *
 	 * @var int[]
 	 */
-	const BACKOFF_LADDER = array( 0, 120, 300, 900, 1800, 3600 );
+	const BACKOFF_LADDER = array( 0, 30, 60, 120, 300, 900 );
 
 	/**
 	 * Provider id of the managed reportedip.de SMS relay — the only provider.

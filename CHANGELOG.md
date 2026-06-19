@@ -2,6 +2,42 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.17] — 2026-06-19
+
+### Fixed
+
+- **Extended Protection now covers every PHP endpoint on nginx, automatically.**
+  On nginx the guard was wired only through a hand-pasted `location` snippet,
+  which protects just the one `location` block it lands in — so requests handled
+  by their own blocks (wp-login.php, the cached front controller) slipped past
+  the firewall while admin-ajax was covered. Hive now detects the PHP-FPM SAPI
+  ahead of the nginx server string and writes a document-root `.user.ini`
+  instead; PHP-FPM honours `auto_prepend_file` there for every request
+  regardless of nginx `location` blocks, with no manual step. The nginx/php.ini
+  snippet remains the fallback only for stacks without a FastCGI PHP SAPI.
+- **The pre-WordPress WAF guard (Extended Protection) no longer blocks signed-in
+  editors saving content.** The guard runs before WordPress via
+  `auto_prepend_file` and previously inspected the request body unconditionally,
+  so a logged-in user saving a post through `admin-ajax.php` or the REST API
+  could trip the XSS/SQLi signature (HTTP 403, `X-Rip-Waf`). The guard now
+  detects the `wordpress_logged_in` cookie and skips body inspection for
+  authenticated requests (default on, option
+  `reportedip_hive_waf_dropin_skip_authenticated`); URL and user-agent rules
+  still run, and the in-WordPress engine remains the capability-aware backstop.
+- **Disabling the WAF engine (or switching to report-only) now also neutralises
+  the pre-WordPress guard.** The guard bakes the engine-enabled and report-only
+  state in and self-heals on toggle, so the firewall can no longer keep
+  enforcing after it was switched off in the admin.
+
+### Changed
+
+- **Softened the SMS 2FA backoff ladder so legitimate resends are no longer
+  punished.** The per-recipient ladder now climbs `0s → 30s → 1m → 2m → 5m →
+  15m` (was `0s → 2m → 5m → 15m → 30m → 60m`) — the gentle early rungs cover a
+  slow or missed SMS, while escalation still throttles a genuine burst. Mirrors
+  the matching change in the reportedip.de relay rate-limiter; the daily
+  per-recipient hard cap and the monthly relay quota remain the cost ceiling.
+
 ## [2.1.16] — 2026-06-17
 
 ### Fixed

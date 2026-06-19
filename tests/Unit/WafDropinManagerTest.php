@@ -71,6 +71,39 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 0, $exit_code, 'Generated guard must be syntactically valid PHP: ' . implode( "\n", $output ) );
 		}
 
+		/**
+		 * Execute the freshly generated guard in an isolated PHP subprocess with
+		 * the given superglobals and report the verdict. The guard prints
+		 * "Forbidden" and exits on a block; otherwise the bootstrap reaches the
+		 * trailing "PASS". This exercises the real generated code end to end.
+		 *
+		 * @param array $server REQUEST_URI / REMOTE_ADDR / HTTP_USER_AGENT etc.
+		 * @param array $cookie Request cookies.
+		 * @param array $post   POST body.
+		 * @return string "Forbidden" when blocked, "PASS" when allowed through.
+		 */
+		private function run_guard( array $server, array $cookie = array(), array $post = array() ): string {
+			$server += array( 'REMOTE_ADDR' => '203.0.113.9', 'HTTP_USER_AGENT' => 'Mozilla/5.0' );
+			$guard   = tempnam( sys_get_temp_dir(), 'rip-guard-' ) . '.php';
+			file_put_contents( $guard, $this->call_private( 'generate_prepend', array() ) );
+			$boot = tempnam( sys_get_temp_dir(), 'rip-boot-' ) . '.php';
+			file_put_contents(
+				$boot,
+				"<?php\n"
+					. '$_SERVER = ' . var_export( $server, true ) . ";\n"
+					. '$_COOKIE = ' . var_export( $cookie, true ) . ";\n"
+					. '$_POST = ' . var_export( $post, true ) . ";\n"
+					. 'include ' . var_export( $guard, true ) . ";\n"
+					. "echo 'PASS';\n"
+			);
+			$output    = array();
+			$exit_code = 0;
+			exec( escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( $boot ), $output, $exit_code );
+			unlink( $guard );
+			unlink( $boot );
+			return trim( implode( '', $output ) );
+		}
+
 		public function test_detect_server_recognises_nginx(): void {
 			$_SERVER['SERVER_SOFTWARE'] = 'nginx/1.25.3';
 			$this->assertSame( 'nginx', $this->mgr()->detect_server() );
@@ -83,7 +116,35 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_detect_server_unknown_when_blank(): void {
 			$_SERVER['SERVER_SOFTWARE'] = '';
-			$this->assertSame( 'unknown', $this->mgr()->detect_server() );
+			$this->assertSame( 'unknown', $this->mgr()->detect_server( 'cli' ) );
+		}
+
+		public function test_detect_server_prefers_user_ini_under_nginx_fpm(): void {
+			$_SERVER['SERVER_SOFTWARE'] = 'nginx/1.25.3';
+			$this->assertSame(
+				'fpm',
+				$this->mgr()->detect_server( 'fpm-fcgi' ),
+				'nginx fronting PHP-FPM must wire the directive via .user.ini, not the partial-coverage nginx snippet.'
+			);
+		}
+
+		public function test_detect_server_litespeed_uses_user_ini(): void {
+			$_SERVER['SERVER_SOFTWARE'] = 'LiteSpeed';
+			$this->assertSame( 'fpm', $this->mgr()->detect_server( 'litespeed' ) );
+		}
+
+		public function test_detect_server_mod_php_uses_htaccess(): void {
+			$_SERVER['SERVER_SOFTWARE'] = 'Apache/2.4.57 (Unix)';
+			$this->assertSame( 'apache', $this->mgr()->detect_server( 'apache2handler' ) );
+		}
+
+		public function test_detect_server_bare_nginx_without_fpm_falls_back_to_snippet(): void {
+			$_SERVER['SERVER_SOFTWARE'] = 'nginx/1.25.3';
+			$this->assertSame(
+				'nginx',
+				$this->mgr()->detect_server( 'cli' ),
+				'Only nginx without a FastCGI PHP SAPI keeps the manual-snippet path.'
+			);
 		}
 
 		public function test_nginx_snippet_includes_resolved_path(): void {
@@ -203,6 +264,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_dropin_ip_match',
 				'reportedip_hive_dropin_loc_match',
 				'reportedip_hive_dropin_excepted',
+				'reportedip_hive_dropin_has_login_cookie',
 			) as $fn ) {
 				$def = strpos( $php, 'function ' . $fn . '(' );
 				$this->assertNotFalse( $def, "Guard must define {$fn}()." );
@@ -279,6 +341,70 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 			$this->assertTrue( $this->call_private( 'neutralize_guard', array() ) );
 			$this->assertFileDoesNotExist( $path, 'Neutralisation must not create a guard file where none existed.' );
+		}
+
+		public function test_generate_prepend_bakes_engine_report_and_skip_flags(): void {
+			$php = $this->call_private( 'generate_prepend', array() );
+			$this->assertStringContainsString( 'if ( ! true || false ) { return; }', $php, 'Default state bakes engine=enabled, report-only=off.' );
+			$this->assertStringContainsString( '$skip_body = true &&', $php, 'Authenticated body-skip defaults on.' );
+			$this->assert_valid_php( $php );
+		}
+
+		public function test_guard_skips_body_for_authenticated_editor(): void {
+			$verdict = $this->run_guard(
+				array( 'REQUEST_URI' => '/wp-admin/admin-ajax.php' ),
+				array( 'wordpress_logged_in_abc123' => 'editor|1700000000|token|hmac' ),
+				array( 'content' => '<script>alert(1)</script>' )
+			);
+			$this->assertSame( 'PASS', $verdict, 'A signed-in editor posting rich content must not be blocked.' );
+		}
+
+		public function test_guard_blocks_body_attack_when_not_authenticated(): void {
+			$verdict = $this->run_guard(
+				array( 'REQUEST_URI' => '/wp-admin/admin-ajax.php' ),
+				array(),
+				array( 'content' => '<script>alert(1)</script>' )
+			);
+			$this->assertSame( 'Forbidden', $verdict, 'Without a login cookie the body must still be inspected.' );
+		}
+
+		public function test_guard_still_blocks_url_traversal_when_authenticated(): void {
+			$verdict = $this->run_guard(
+				array( 'REQUEST_URI' => '/wp-admin/admin-ajax.php?file=../../../../etc/passwd' ),
+				array( 'wordpress_logged_in_abc123' => 'editor|1700000000|token|hmac' ),
+				array()
+			);
+			$this->assertSame( 'Forbidden', $verdict, 'URL-based attacks must be caught even for authenticated sessions.' );
+		}
+
+		public function test_guard_inspects_body_when_skip_disabled(): void {
+			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED ] = false;
+			$verdict = $this->run_guard(
+				array( 'REQUEST_URI' => '/wp-admin/admin-ajax.php' ),
+				array( 'wordpress_logged_in_abc123' => 'editor|1700000000|token|hmac' ),
+				array( 'content' => '<script>alert(1)</script>' )
+			);
+			$this->assertSame( 'Forbidden', $verdict, 'With the skip option off the body is inspected even when authenticated.' );
+		}
+
+		public function test_guard_is_noop_when_engine_disabled(): void {
+			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_ENABLED ] = false;
+			$verdict = $this->run_guard(
+				array( 'REQUEST_URI' => '/' ),
+				array(),
+				array( 'q' => '<script>alert(1)</script>' )
+			);
+			$this->assertSame( 'PASS', $verdict, 'Disabling the WAF engine must also neutralise the pre-WordPress guard.' );
+		}
+
+		public function test_guard_is_noop_in_report_only_mode(): void {
+			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_REPORT_ONLY ] = true;
+			$verdict = $this->run_guard(
+				array( 'REQUEST_URI' => '/' ),
+				array(),
+				array( 'q' => '<script>alert(1)</script>' )
+			);
+			$this->assertSame( 'PASS', $verdict, 'Report-only mode must not block at the pre-WordPress layer.' );
 		}
 	}
 }
