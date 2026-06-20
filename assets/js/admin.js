@@ -195,6 +195,50 @@
                     $('#reset-results').html('<div class="rip-test-error">Request failed</div>');
                 });
             });
+
+            // Clear all cache
+            $('#clear-cache').on('click', function() {
+                var $btn = $(this);
+                $btn.prop('disabled', true);
+
+                $.post(ajaxurl, {
+                    action: 'reportedip_hive_clear_cache',
+                    nonce: nonce
+                }, function(response) {
+                    $btn.prop('disabled', false);
+                    if (response.success) {
+                        ReportedIPAdmin.showNotification((response.data && response.data.message) || 'Cache cleared.', 'success');
+                        setTimeout(function() { location.reload(); }, 1200);
+                    } else {
+                        ReportedIPAdmin.showNotification(response.data || 'Failed to clear cache.', 'error');
+                    }
+                }).fail(function() {
+                    $btn.prop('disabled', false);
+                    ReportedIPAdmin.showNotification('Request failed. Check server logs.', 'error');
+                });
+            });
+
+            // Clean expired cache entries
+            $('#cleanup-expired-cache').on('click', function() {
+                var $btn = $(this);
+                $btn.prop('disabled', true);
+
+                $.post(ajaxurl, {
+                    action: 'reportedip_hive_cleanup_cache',
+                    nonce: nonce
+                }, function(response) {
+                    $btn.prop('disabled', false);
+                    if (response.success) {
+                        ReportedIPAdmin.showNotification((response.data && response.data.message) || 'Expired entries cleaned.', 'success');
+                        setTimeout(function() { location.reload(); }, 1200);
+                    } else {
+                        ReportedIPAdmin.showNotification(response.data || 'Failed to clean expired entries.', 'error');
+                    }
+                }).fail(function() {
+                    $btn.prop('disabled', false);
+                    ReportedIPAdmin.showNotification('Request failed. Check server logs.', 'error');
+                });
+            });
         },
 
         /**
