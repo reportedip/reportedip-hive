@@ -5815,12 +5815,17 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 1.6.7
 	 */
 	private function render_cron_status_panel() {
-		$hooks = array(
+		$labels = array(
 			'reportedip_hive_process_queue'   => __( 'Process API queue', 'reportedip-hive' ),
 			'reportedip_hive_refresh_quota'   => __( 'Refresh API & relay quota', 'reportedip-hive' ),
 			'reportedip_hive_sync_reputation' => __( 'Reputation sync', 'reportedip-hive' ),
+			'reportedip_hive_sync_rulesets'   => __( 'Ruleset sync', 'reportedip-hive' ),
 			'reportedip_hive_cleanup'         => __( 'Daily cleanup', 'reportedip-hive' ),
 		);
+		$hooks  = array();
+		foreach ( ReportedIP_Hive_Cron_Handler::get_hook_names() as $hook_name ) {
+			$hooks[ $hook_name ] = isset( $labels[ $hook_name ] ) ? $labels[ $hook_name ] : $hook_name;
+		}
 
 		$now             = time();
 		$lock_held       = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
@@ -5980,7 +5985,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 1.6.8
 	 */
 	private function render_cron_setup_snippet() {
-		$hooks_arg = 'reportedip_hive_process_queue reportedip_hive_refresh_quota reportedip_hive_sync_reputation reportedip_hive_cleanup';
+		$hooks_arg = implode( ' ', ReportedIP_Hive_Cron_Handler::get_hook_names() );
 		$abspath   = defined( 'ABSPATH' ) ? rtrim( ABSPATH, '/\\' ) : '/path/to/wordpress';
 		$wp_cli    = file_exists( $abspath . '/wp-cli.phar' ) ? $abspath . '/wp-cli.phar' : '/usr/local/bin/wp';
 		$snippet   = sprintf(
