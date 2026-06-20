@@ -1370,7 +1370,12 @@ class ReportedIP_Hive_Ajax_Handler {
 	}
 
 	/**
-	 * AJAX handler: Reset all plugin data (settings, blocked IPs, logs, cache)
+	 * AJAX handler: Reset all plugin data.
+	 *
+	 * Mirrors the data-deletion path of {@see ReportedIP_Hive::uninstall()} but
+	 * keeps the table structure intact (truncate, not drop): empties all plugin
+	 * tables, removes every plugin option (multisite-aware, including network
+	 * sitemeta and transients) and deletes all per-user 2FA metadata.
 	 */
 	public function ajax_reset_all_data() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
@@ -1380,29 +1385,14 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		try {
-			global $wpdb;
+			ReportedIP_Hive_Schema::truncate_all_tables();
 
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk deletion for plugin reset.
-			$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'reportedip_hive_%'" );
+			ReportedIP_Hive_Option_Routing::delete_all_plugin_options();
 
-			$tables = array(
-				$wpdb->base_prefix . 'reportedip_hive_logs',
-				$wpdb->base_prefix . 'reportedip_hive_blocked',
-				$wpdb->base_prefix . 'reportedip_hive_whitelist',
-				$wpdb->base_prefix . 'reportedip_hive_api_queue',
-				$wpdb->base_prefix . 'reportedip_hive_attempts',
-				$wpdb->base_prefix . 'reportedip_hive_stats',
-			);
-
-			foreach ( $tables as $table ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Bulk table truncation for plugin reset.
-				$wpdb->query( "TRUNCATE TABLE {$table}" );
+			foreach ( ReportedIP_Hive_Two_Factor::get_all_meta_keys() as $meta_key ) {
+				delete_metadata( 'user', 0, $meta_key, '', true );
 			}
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk deletion for plugin reset.
-			$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_reportedip_hive_%' OR option_name LIKE '_transient_timeout_reportedip_hive_%'" );
-
-			ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_wizard_completed' );
+			delete_metadata( 'user', 0, '_reportedip_hive_known_ips', '', true );
 
 			wp_send_json_success( __( 'All plugin data has been deleted. The page will reload.', 'reportedip-hive' ) );
 		} catch ( Exception $e ) {

@@ -377,6 +377,27 @@ final class ReportedIP_Hive_Schema {
 	}
 
 	/**
+	 * Empty all plugin tables while keeping their structure. Used by the
+	 * "Reset all data" admin action, which wipes accumulated data but leaves
+	 * the plugin installed and operational.
+	 *
+	 * @return void
+	 * @since  2.0.26
+	 */
+	public static function truncate_all_tables() {
+		global $wpdb;
+		foreach ( self::TABLE_SUFFIXES as $suffix ) {
+			$table = self::table( $suffix );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Existence probe before truncation; table name from a hardcoded suffix list.
+			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+				continue;
+			}
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from a hardcoded suffix list; truncation for the reset action.
+			$wpdb->query( "TRUNCATE TABLE $table" );
+		}
+	}
+
+	/**
 	 * Remove all data belonging to a specific blog from `blog_id`-scoped tables.
 	 *
 	 * Hooked from `wp_delete_site`. Network-wide tables (whitelist, blocked,
