@@ -115,26 +115,22 @@ namespace ReportedIP\Hive\Tests\Unit {
 		private function client(): \ReportedIP_Hive_API {
 			$client = ( new \ReflectionClass( \ReportedIP_Hive_API::class ) )->newInstanceWithoutConstructor();
 			$logger = new \ReflectionProperty( \ReportedIP_Hive_API::class, 'logger' );
-			$logger->setAccessible( true );
 			$logger->setValue( $client, new Spy_Logger() );
 			return $client;
 		}
 
 		private function spy( \ReportedIP_Hive_API $client ): Spy_Logger {
 			$logger = new \ReflectionProperty( \ReportedIP_Hive_API::class, 'logger' );
-			$logger->setAccessible( true );
 			return $logger->getValue( $client );
 		}
 
 		private function push( \ReportedIP_Hive_API $client, array $stats, bool $success ): array {
 			$method = new \ReflectionMethod( \ReportedIP_Hive_API::class, 'push_recent_call' );
-			$method->setAccessible( true );
 			return $method->invoke( $client, $stats, $success );
 		}
 
 		private function track( \ReportedIP_Hive_API $client, bool $success, $error_type = null ): void {
 			$method = new \ReflectionMethod( \ReportedIP_Hive_API::class, 'track_api_call' );
-			$method->setAccessible( true );
 			$method->invoke( $client, $success, 100.0, $error_type, 'meta', '' );
 		}
 
@@ -258,7 +254,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		private function run_v11(): void {
 			$method = new \ReflectionMethod( \ReportedIP_Hive_Migration_Manager::class, 'migrate_to_v11' );
-			$method->setAccessible( true );
 			$method->invoke( null );
 		}
 	}
