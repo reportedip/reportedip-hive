@@ -226,6 +226,13 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     transition: var(--rip-transition);
+    text-decoration: none;
+}
+
+a.rip-mode-badge:hover,
+a.rip-mode-badge:focus {
+    filter: brightness(1.12);
+    text-decoration: none;
 }
 
 .rip-mode-badge svg {
@@ -1070,6 +1077,18 @@ button.rip-tier-lock--mode:hover {
 
 .rip-alert__content {
     flex: 1;
+}
+
+.rip-alert__content--row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rip-space-4);
+    flex-wrap: wrap;
+}
+
+.rip-alert__content--row .rip-button {
+    flex-shrink: 0;
 }
 
 .rip-alert__title {

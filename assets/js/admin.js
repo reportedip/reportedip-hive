@@ -196,6 +196,32 @@
                 });
             });
 
+            // Reset API statistics
+            $('#reset-api-stats').on('click', function() {
+                if (!confirm(reportedip_hive_ajax.strings.confirm_reset_api_stats || 'Reset the API statistics counter? This clears usage history only.')) {
+                    return;
+                }
+
+                var $btn = $(this);
+                $btn.prop('disabled', true);
+
+                $.post(ajaxurl, {
+                    action: 'reportedip_hive_reset_api_stats',
+                    nonce: nonce
+                }, function(response) {
+                    $btn.prop('disabled', false);
+                    if (response.success) {
+                        ReportedIPAdmin.showNotification(escapeHtml(response.data) || 'API statistics reset.', 'success');
+                        setTimeout(function() { location.reload(); }, 1200);
+                    } else {
+                        ReportedIPAdmin.showNotification(response.data || 'Failed to reset API statistics.', 'error');
+                    }
+                }).fail(function() {
+                    $btn.prop('disabled', false);
+                    ReportedIPAdmin.showNotification('Request failed', 'error');
+                });
+            });
+
             // Clear all cache
             $('#clear-cache').on('click', function() {
                 var $btn = $(this);

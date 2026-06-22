@@ -810,6 +810,7 @@ class ReportedIP_Hive {
 					'confirm_unblock'         => __( 'Are you sure you want to unblock this IP?', 'reportedip-hive' ),
 					'confirm_whitelist'       => __( 'Are you sure you want to whitelist this IP?', 'reportedip-hive' ),
 					'confirm_reset_settings'  => __( 'Are you sure you want to reset all settings to defaults?', 'reportedip-hive' ),
+					'confirm_reset_api_stats' => __( 'Reset the API statistics counter? This clears usage history only.', 'reportedip-hive' ),
 					'confirm_uninstall_warn'  => __( 'WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!', 'reportedip-hive' ),
 					'confirm_uninstall_final' => __( 'Are you absolutely sure?', 'reportedip-hive' ),
 					'prompt_whitelist_reason' => __( 'Enter reason for whitelisting (optional):', 'reportedip-hive' ),

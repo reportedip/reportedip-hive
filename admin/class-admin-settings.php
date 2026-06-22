@@ -319,16 +319,33 @@ class ReportedIP_Hive_Admin_Settings {
 	public static function render_mode_badge( $mode = null ) {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$info         = $mode_manager->get_mode_info( $mode );
-		?>
-		<span class="rip-mode-badge <?php echo esc_attr( $info['badge_class'] ); ?>">
-			<?php if ( $info['key'] === 'local' ) : ?>
-				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-			<?php else : ?>
-				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2 10h16M10 2c2.8 2.8 4.4 6.5 4.4 8s-1.6 5.2-4.4 8c-2.8-2.8-4.4-6.5-4.4-8s1.6-5.2 4.4-8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-			<?php endif; ?>
-			<?php echo esc_html( $info['label'] ); ?>
-		</span>
-		<?php
+
+		$community_reachable = ( ! is_multisite() || is_network_admin() )
+			&& current_user_can( is_network_admin() ? 'manage_network_options' : 'manage_options' );
+		$community_url       = $community_reachable
+			? self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' )
+			: '';
+
+		if ( '' !== $community_url ) {
+			printf(
+				'<a class="rip-mode-badge %1$s" href="%2$s" title="%3$s">',
+				esc_attr( $info['badge_class'] ),
+				esc_url( $community_url ),
+				esc_attr__( 'Open the Community page', 'reportedip-hive' )
+			);
+		} else {
+			printf( '<span class="rip-mode-badge %1$s">', esc_attr( $info['badge_class'] ) );
+		}
+
+		if ( 'local' === $info['key'] ) {
+			echo '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
+		} else {
+			echo '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2 10h16M10 2c2.8 2.8 4.4 6.5 4.4 8s-1.6 5.2-4.4 8c-2.8-2.8-4.4-6.5-4.4-8s1.6-5.2 4.4-8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>';
+		}
+
+		echo esc_html( $info['label'] );
+
+		echo '' !== $community_url ? '</a>' : '</span>';
 	}
 
 	/**
@@ -803,9 +820,21 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( ! is_array( $stats_raw ) || empty( $stats_raw['total_calls'] ) ) {
 			return;
 		}
-		$total   = (int) $stats_raw['total_calls'];
-		$success = (float) ( $stats_raw['success_rate'] ?? 0 );
-		$avg_ms  = (float) ( $stats_raw['avg_response_time'] ?? 0 );
+		$total        = (int) $stats_raw['total_calls'];
+		$avg_ms       = (float) ( $stats_raw['avg_response_time'] ?? 0 );
+		$recent_total = (int) ( $stats_raw['recent_total'] ?? 0 );
+		$lifetime     = (float) ( $stats_raw['success_rate'] ?? 0 );
+
+		$has_window     = $recent_total >= 10;
+		$success        = $has_window ? (float) ( $stats_raw['recent_success_rate'] ?? 100 ) : $lifetime;
+		$rate_label     = $has_window
+			? esc_html__( 'Success rate (recent)', 'reportedip-hive' )
+			: esc_html__( 'Success rate', 'reportedip-hive' );
+		$is_degraded    = $has_window && $success < 80;
+		$health_variant = $is_degraded ? 'danger' : 'success';
+		$health_label   = $is_degraded
+			? esc_html__( 'Degraded', 'reportedip-hive' )
+			: esc_html__( 'Healthy', 'reportedip-hive' );
 
 		$snapshot     = ReportedIP_Hive_Mode_Manager::get_instance()->get_api_rate_limit_snapshot();
 		$source_label = 'manual' === $snapshot['source']
@@ -828,7 +857,12 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
 					<?php esc_html_e( 'API call usage', 'reportedip-hive' ); ?>
 				</h2>
-				<span class="rip-badge rip-badge--neutral"><?php echo $source_label; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pre-escaped above. ?></span>
+				<div class="rip-header__actions">
+					<?php if ( $has_window ) : ?>
+						<span class="rip-badge rip-badge--<?php echo esc_attr( $health_variant ); ?>"><?php echo esc_html( $health_label ); ?></span>
+					<?php endif; ?>
+					<span class="rip-badge rip-badge--neutral"><?php echo $source_label; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pre-escaped above. ?></span>
+				</div>
 			</div>
 			<div class="rip-card__body">
 				<div class="rip-stat-cards">
@@ -847,7 +881,7 @@ class ReportedIP_Hive_Admin_Settings {
 						</div>
 						<div class="rip-stat-card__content">
 							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $success ) ); ?>%</div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'Success rate', 'reportedip-hive' ); ?></div>
+							<div class="rip-stat-card__label"><?php echo esc_html( $rate_label ); ?></div>
 						</div>
 					</div>
 					<div class="rip-stat-card">
@@ -877,6 +911,12 @@ class ReportedIP_Hive_Admin_Settings {
 						</div>
 					<?php endforeach; ?>
 				</div>
+			</div>
+			<div class="rip-card__footer">
+				<button type="button" id="reset-api-stats" class="rip-button rip-button--secondary">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+					<?php esc_html_e( 'Reset API statistics', 'reportedip-hive' ); ?>
+				</button>
 			</div>
 		</div>
 		<?php
@@ -3844,13 +3884,13 @@ class ReportedIP_Hive_Admin_Settings {
 									'medium'   => __( 'Medium', 'reportedip-hive' ),
 									'low'      => __( 'Low', 'reportedip-hive' ),
 								);
-								$family_labels = ReportedIP_Hive_Event_Taxonomy::labels();
+								$family_labels   = ReportedIP_Hive_Event_Taxonomy::labels();
 								foreach ( $recent_events as $event ) :
-									$icon_class   = $this->severity_badge_class( $event->severity );
-									$badge_label  = $severity_labels[ $event->severity ] ?? ucfirst( (string) $event->severity );
-									$family_key   = ReportedIP_Hive_Event_Taxonomy::classify( $event->event_type );
-									$family_name  = null !== $family_key ? ( $family_labels[ $family_key ] ?? $family_key ) : '';
-									$time_ago     = human_time_diff( strtotime( $event->created_at ), time() );
+									$icon_class  = $this->severity_badge_class( $event->severity );
+									$badge_label = $severity_labels[ $event->severity ] ?? ucfirst( (string) $event->severity );
+									$family_key  = ReportedIP_Hive_Event_Taxonomy::classify( $event->event_type );
+									$family_name = null !== $family_key ? ( $family_labels[ $family_key ] ?? $family_key ) : '';
+									$time_ago    = human_time_diff( strtotime( $event->created_at ), time() );
 									?>
 								<li class="rip-activity-item">
 									<div class="rip-activity-item__icon rip-activity-item__icon--<?php echo esc_attr( $icon_class ); ?>">
@@ -6819,14 +6859,33 @@ class ReportedIP_Hive_Admin_Settings {
 		$main_tab_url    = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 		$promote_tab_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&subtab=promote' );
 
-		self::render_page_header( __( 'Community & Quota', 'reportedip-hive' ), __( 'Manage your API quota and community participation', 'reportedip-hive' ) );
+		$shortcodes         = ReportedIP_Hive_Frontend_Shortcodes::get_instance();
+		$contribution_stats = $shortcodes->get_cached_stats();
+		$reports_30d        = (int) ( $contribution_stats['api_reports_30d'] ?? 0 );
+		$reports_total      = (int) ( $contribution_stats['reports_total'] ?? 0 );
+		$badge_active       = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false );
+
+		$contribution_args = array(
+			'reports_30d'       => $reports_30d,
+			'reports_total'     => $reports_total,
+			'badge_active'      => $badge_active,
+			'is_honeypot'       => $is_honeypot,
+			'is_community_mode' => $is_community_mode,
+			'is_configured'     => $is_configured,
+			'tier'              => $tier,
+			'upgrade_url'       => $upgrade_url,
+			'honeypot_url'      => $honeypot_url,
+			'security_summary'  => $security_summary,
+		);
+
+		self::render_page_header( __( 'Community & Quota', 'reportedip-hive' ), __( 'Join the hive — share threats, set a badge, and help every member stay protected', 'reportedip-hive' ) );
 		?>
 
 			<div class="rip-content">
 
 				<nav class="nav-tab-wrapper rip-mb-6" aria-label="<?php esc_attr_e( 'Community sections', 'reportedip-hive' ); ?>">
-					<a href="<?php echo esc_url( $main_tab_url ); ?>" class="nav-tab <?php echo 'main' === $subtab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Community & Quota', 'reportedip-hive' ); ?></a>
-					<a href="<?php echo esc_url( $promote_tab_url ); ?>" class="nav-tab <?php echo 'promote' === $subtab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Promote', 'reportedip-hive' ); ?></a>
+					<a href="<?php echo esc_url( $main_tab_url ); ?>" class="nav-tab <?php echo 'main' === $subtab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Community', 'reportedip-hive' ); ?></a>
+					<a href="<?php echo esc_url( $promote_tab_url ); ?>" class="nav-tab <?php echo 'promote' === $subtab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Backlink tools', 'reportedip-hive' ); ?></a>
 				</nav>
 
 				<?php if ( 'main' === $subtab ) : ?>
@@ -6839,12 +6898,18 @@ class ReportedIP_Hive_Admin_Settings {
 
 					<?php if ( ! $is_community_mode ) : ?>
 					<div class="rip-alert rip-alert--info rip-mb-6">
-						<strong><?php esc_html_e( 'Local Shield mode active', 'reportedip-hive' ); ?></strong><br>
-						<?php esc_html_e( 'The plugin is currently running in local mode. Community features like shared reports, quota management and tier upgrades are disabled. Switch to community mode to benefit from the community threat intelligence.', 'reportedip-hive' ); ?>
-						<br><br>
-						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary">
-							<?php esc_html_e( 'Switch to Community', 'reportedip-hive' ); ?>
-						</a>
+						<svg class="rip-alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+						</svg>
+						<div class="rip-alert__content rip-alert__content--row">
+							<div>
+								<div class="rip-alert__title"><?php esc_html_e( 'Local Shield mode active', 'reportedip-hive' ); ?></div>
+								<div class="rip-alert__message"><?php esc_html_e( 'Running locally — shared reports, quota and tier upgrades are off. Join the Community Network for shared threat intelligence.', 'reportedip-hive' ); ?></div>
+							</div>
+							<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary rip-button--sm">
+								<?php esc_html_e( 'Switch to Community', 'reportedip-hive' ); ?>
+							</a>
+						</div>
 					</div>
 				<?php elseif ( ! $is_configured ) : ?>
 					<div class="rip-alert rip-alert--warning rip-mb-6">
@@ -6870,7 +6935,13 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 				<?php endif; ?>
 
-				<!-- Current Status -->
+					<?php $this->render_community_hero( $contribution_args ); ?>
+
+					<?php $this->render_backlink_booster(); ?>
+
+					<?php $this->render_contribution_panel( $contribution_args ); ?>
+
+					<!-- Current Status -->
 				<div class="rip-card rip-mb-6">
 					<div class="rip-card__header">
 						<h2 class="rip-card__title">
@@ -7023,6 +7094,32 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 				</div>
 
+				<!-- Honeypot Program -->
+				<div class="rip-highlight-card rip-mb-6">
+					<h2 class="rip-highlight-card__title">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/>
+							<path d="M12 6v6l4 2"/>
+						</svg>
+						<?php esc_html_e( 'Honeypot program (free!)', 'reportedip-hive' ); ?>
+					</h2>
+
+					<p>
+						<?php esc_html_e( 'Running a honeypot server? Join our honeypot network and enjoy special benefits:', 'reportedip-hive' ); ?>
+					</p>
+
+					<ul>
+						<li><strong><?php esc_html_e( 'Unlimited reports', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'No daily limits', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Higher weighting', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'Your reports count more', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Special API keys', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'Optimised for automated systems', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Community recognition', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'Visible as an active contributor', 'reportedip-hive' ); ?></li>
+					</ul>
+
+					<a href="<?php echo esc_url( $honeypot_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-mt-3">
+						<?php esc_html_e( 'Learn more about the honeypot program', 'reportedip-hive' ); ?>
+					</a>
+				</div>
+
 				<!-- Upgrade Options -->
 				<div class="rip-card rip-mb-6">
 					<div class="rip-card__header">
@@ -7165,116 +7262,6 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 				</div>
 
-				<!-- Honeypot Program -->
-				<div class="rip-highlight-card rip-mb-6">
-					<h2 class="rip-highlight-card__title">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/>
-							<path d="M12 6v6l4 2"/>
-						</svg>
-						<?php esc_html_e( 'Honeypot program (free!)', 'reportedip-hive' ); ?>
-					</h2>
-
-					<p>
-						<?php esc_html_e( 'Running a honeypot server? Join our honeypot network and enjoy special benefits:', 'reportedip-hive' ); ?>
-					</p>
-
-					<ul>
-						<li><strong><?php esc_html_e( 'Unlimited reports', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'No daily limits', 'reportedip-hive' ); ?></li>
-						<li><strong><?php esc_html_e( 'Higher weighting', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'Your reports count more', 'reportedip-hive' ); ?></li>
-						<li><strong><?php esc_html_e( 'Special API keys', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'Optimised for automated systems', 'reportedip-hive' ); ?></li>
-						<li><strong><?php esc_html_e( 'Community recognition', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'Visible as an active contributor', 'reportedip-hive' ); ?></li>
-					</ul>
-
-					<a href="<?php echo esc_url( $honeypot_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-mt-3">
-						<?php esc_html_e( 'Learn more about the honeypot program', 'reportedip-hive' ); ?>
-					</a>
-				</div>
-
-				<!-- Activity Summary -->
-				<div class="rip-card">
-					<div class="rip-card__header">
-						<h2 class="rip-card__title">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-							</svg>
-							<?php esc_html_e( 'Your activity (last 30 days)', 'reportedip-hive' ); ?>
-						</h2>
-					</div>
-					<div class="rip-card__body">
-						<?php
-						$failed_logins     = (int) ( $security_summary['summary']->total_failed_logins ?? 0 );
-						$comment_spam      = (int) ( $security_summary['summary']->total_comment_spam ?? 0 );
-						$xmlrpc_calls      = (int) ( $security_summary['summary']->total_xmlrpc_calls ?? 0 );
-						$reputation_blocks = (int) ( $security_summary['summary']->total_reputation_blocks ?? 0 );
-						$total_events      = $failed_logins + $comment_spam + $xmlrpc_calls;
-						$total_blocked     = (int) ( $security_summary['summary']->total_blocked_ips ?? 0 );
-						$total_api_reports = (int) ( $security_summary['summary']->total_api_reports ?? 0 );
-
-						$api_stats_raw = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_stats', array() );
-						$api_stats     = is_array( $api_stats_raw ) ? $api_stats_raw : array();
-						$api_total     = (int) ( $api_stats['total_calls'] ?? 0 );
-						$api_success   = (float) ( $api_stats['success_rate'] ?? 0 );
-						?>
-
-						<div class="rip-activity-stats">
-							<div class="rip-activity-stat">
-								<div class="rip-activity-stat__value rip-activity-stat__value--danger"><?php echo esc_html( number_format_i18n( $total_events ) ); ?></div>
-								<div class="rip-activity-stat__label"><?php esc_html_e( 'Security events', 'reportedip-hive' ); ?></div>
-							</div>
-							<div class="rip-activity-stat">
-								<div class="rip-activity-stat__value rip-activity-stat__value--warning"><?php echo esc_html( number_format_i18n( $total_blocked ) ); ?></div>
-								<div class="rip-activity-stat__label"><?php esc_html_e( 'IPs blocked', 'reportedip-hive' ); ?></div>
-							</div>
-							<div class="rip-activity-stat">
-								<div class="rip-activity-stat__value rip-activity-stat__value--success"><?php echo esc_html( number_format_i18n( $total_api_reports ) ); ?></div>
-								<div class="rip-activity-stat__label"><?php esc_html_e( 'Reported to community', 'reportedip-hive' ); ?></div>
-							</div>
-							<div class="rip-activity-stat">
-								<div class="rip-activity-stat__value rip-activity-stat__value--danger"><?php echo esc_html( number_format_i18n( $failed_logins ) ); ?></div>
-								<div class="rip-activity-stat__label"><?php esc_html_e( 'Failed logins', 'reportedip-hive' ); ?></div>
-							</div>
-							<div class="rip-activity-stat">
-								<div class="rip-activity-stat__value rip-activity-stat__value--warning"><?php echo esc_html( number_format_i18n( $comment_spam ) ); ?></div>
-								<div class="rip-activity-stat__label"><?php esc_html_e( 'Comment spam', 'reportedip-hive' ); ?></div>
-							</div>
-							<div class="rip-activity-stat">
-								<div class="rip-activity-stat__value rip-activity-stat__value--info"><?php echo esc_html( number_format_i18n( $reputation_blocks ) ); ?></div>
-								<div class="rip-activity-stat__label"><?php esc_html_e( 'Reputation blocks', 'reportedip-hive' ); ?></div>
-							</div>
-							<?php if ( $api_total > 0 ) : ?>
-							<div class="rip-activity-stat">
-								<div class="rip-activity-stat__value rip-activity-stat__value--info"><?php echo esc_html( number_format_i18n( $api_total ) ); ?></div>
-								<div class="rip-activity-stat__label"><?php esc_html_e( 'API calls (lifetime)', 'reportedip-hive' ); ?></div>
-							</div>
-							<div class="rip-activity-stat">
-								<div class="rip-activity-stat__value rip-activity-stat__value--success"><?php echo esc_html( number_format_i18n( $api_success ) ); ?>%</div>
-								<div class="rip-activity-stat__label"><?php esc_html_e( 'API success rate', 'reportedip-hive' ); ?></div>
-							</div>
-							<?php endif; ?>
-						</div>
-
-						<?php if ( $total_events > 0 && $total_api_reports === 0 && 'free' === $tier['slug'] ) : ?>
-							<div class="rip-alert rip-alert--info rip-mt-4">
-								<strong><?php esc_html_e( 'Recommendation:', 'reportedip-hive' ); ?></strong>
-								<?php
-								echo esc_html(
-									sprintf(
-										/* translators: %d: number of events */
-										__( 'You have detected %d security events but have not reported anything to the community yet. A Contributor upgrade lets you share up to 200 reports per day and strengthens threat intelligence for everyone.', 'reportedip-hive' ),
-										$total_events
-									)
-								);
-								?>
-								<br><br>
-								<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-button--sm">
-									<?php esc_html_e( 'Upgrade now', 'reportedip-hive' ); ?>
-								</a>
-							</div>
-						<?php endif; ?>
-					</div>
-				</div>
-
 				<?php endif; ?>
 
 				<?php if ( 'promote' === $subtab ) : ?>
@@ -7288,18 +7275,16 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render the "Promote" sub-tab inside the Community page.
+	 * Render the "Backlink tools" sub-tab inside the Community page.
 	 *
-	 * Surfaces the auto-footer toggle plus copy-to-clipboard previews for the
-	 * four public shortcodes that drive backlinks to reportedip.de.
+	 * Holds the advanced placement tools: copy-to-clipboard previews for the
+	 * public shortcodes plus the visual banner customizer. The one-click
+	 * auto-footer badge lives on the main Community tab
+	 * ({@see render_backlink_booster()}).
 	 *
 	 * @since 1.3.0
 	 */
 	private function render_promote_tab() {
-		$auto_enabled = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false );
-		$auto_variant = ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_variant', 'badge' ) );
-		$auto_align   = $this->sanitize_auto_footer_align( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_align', 'center' ) );
-
 		$shortcodes = ReportedIP_Hive_Frontend_Shortcodes::get_instance();
 
 		$showcase = array(
@@ -7348,144 +7333,24 @@ class ReportedIP_Hive_Admin_Settings {
 				),
 			),
 		);
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- WordPress sets `settings-updated` on its own redirect after the Settings API form save; not user-mutable.
-		if ( isset( $_GET['settings-updated'] ) ) :
-			?>
-			<div class="rip-alert rip-alert--success rip-mb-6">
-				<?php esc_html_e( 'Settings saved.', 'reportedip-hive' ); ?>
-			</div>
-			<?php
-		endif;
 		?>
 
 		<div class="rip-card rip-mb-6">
 			<div class="rip-card__header">
 				<h2 class="rip-card__title">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-					<?php esc_html_e( 'Help grow the ReportedIP community', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Backlink tools', 'reportedip-hive' ); ?>
 				</h2>
 			</div>
 			<div class="rip-card__body">
+				<p style="margin-top:0;">
+					<?php esc_html_e( 'These are the advanced placement tools. The one-click footer badge — the easiest way to link back and join the hive — now lives on the Community tab.', 'reportedip-hive' ); ?>
+				</p>
 				<p>
-					<?php esc_html_e( 'Add a small badge to your site that links back to ReportedIP. Every link strengthens the community network and helps more sites stay protected.', 'reportedip-hive' ); ?>
+					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' ) ); ?>" class="rip-button rip-button--secondary">
+						<?php esc_html_e( 'Go to the one-click footer badge', 'reportedip-hive' ); ?>
+					</a>
 				</p>
-				<p style="color:var(--rip-gray-600);">
-					<?php esc_html_e( 'Banners render inside Shadow DOM, so your theme cannot override the design. The link itself stays in regular HTML — search engines will find it and credit your site.', 'reportedip-hive' ); ?>
-				</p>
-			</div>
-		</div>
-
-		<?php
-		$preview_align_map = array(
-			'left'   => 'flex-start',
-			'center' => 'center',
-			'right'  => 'flex-end',
-			'below'  => 'center',
-		);
-		$preview_justify   = $preview_align_map[ $auto_align ] ?? 'center';
-		?>
-		<div class="rip-card rip-mb-6">
-			<div class="rip-card__header">
-				<h2 class="rip-card__title">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-					<?php esc_html_e( 'Auto-footer badge', 'reportedip-hive' ); ?>
-				</h2>
-			</div>
-			<div class="rip-card__body">
-				<div id="rip-auto-footer-preview" style="background:var(--rip-gray-50);border:1px dashed var(--rip-gray-300);border-radius:var(--rip-radius-lg);padding:1.5em;min-height:90px;display:flex;align-items:center;justify-content:<?php echo esc_attr( $preview_justify ); ?>;margin-bottom:.6em;">
-					<?php
-					echo $shortcodes->build_element( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes its own attributes; the custom-element wrapper would be stripped by wp_kses.
-						$auto_variant,
-						array(
-							'utm_medium' => 'admin-preview',
-							'theme'      => 'dark',
-							'align'      => 'center',
-						)
-					);
-					?>
-				</div>
-				<p style="margin:0 0 1.25em;font-size:.85em;color:var(--rip-gray-600);">
-					<?php esc_html_e( 'Live preview — updates as you change the variant and position below.', 'reportedip-hive' ); ?>
-				</p>
-				<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>">
-					<?php settings_fields( 'reportedip_hive_promote' ); ?>
-					<input type="hidden" name="_wp_http_referer" value="<?php echo esc_attr( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&subtab=promote' ) ); ?>">
-
-					<p style="margin-top:0;">
-						<label style="display:flex;align-items:center;gap:.5em;cursor:pointer;">
-							<input type="checkbox" name="reportedip_hive_auto_footer_enabled" value="1" <?php checked( $auto_enabled ); ?>>
-							<strong><?php esc_html_e( 'Show a "Protected by ReportedIP Hive" badge in the site footer', 'reportedip-hive' ); ?></strong>
-						</label>
-						<span style="display:block;margin-left:1.65em;color:var(--rip-gray-600);font-size:.9em;">
-							<?php esc_html_e( 'Renders automatically at the bottom of every front-end page. No shortcode placement needed.', 'reportedip-hive' ); ?>
-						</span>
-					</p>
-
-					<fieldset style="margin-top:1.25em;">
-						<legend style="font-weight:600;margin-bottom:.5em;"><?php esc_html_e( 'Variant', 'reportedip-hive' ); ?></legend>
-						<label style="display:inline-flex;align-items:center;gap:.4em;margin-right:1.5em;">
-							<input type="radio" name="reportedip_hive_auto_footer_variant" value="badge" <?php checked( $auto_variant, 'badge' ); ?>>
-							<?php esc_html_e( 'Footer badge', 'reportedip-hive' ); ?>
-						</label>
-						<label style="display:inline-flex;align-items:center;gap:.4em;">
-							<input type="radio" name="reportedip_hive_auto_footer_variant" value="shield" <?php checked( $auto_variant, 'shield' ); ?>>
-							<?php esc_html_e( 'Shield icon', 'reportedip-hive' ); ?>
-						</label>
-					</fieldset>
-
-					<fieldset style="margin-top:1.25em;">
-						<legend style="font-weight:600;margin-bottom:.5em;"><?php esc_html_e( 'Position', 'reportedip-hive' ); ?></legend>
-						<label style="display:inline-flex;align-items:center;gap:.4em;margin-right:1.5em;">
-							<input type="radio" name="reportedip_hive_auto_footer_align" value="left" <?php checked( $auto_align, 'left' ); ?>>
-							<?php esc_html_e( 'Left', 'reportedip-hive' ); ?>
-						</label>
-						<label style="display:inline-flex;align-items:center;gap:.4em;margin-right:1.5em;">
-							<input type="radio" name="reportedip_hive_auto_footer_align" value="center" <?php checked( $auto_align, 'center' ); ?>>
-							<?php esc_html_e( 'Center', 'reportedip-hive' ); ?>
-						</label>
-						<label style="display:inline-flex;align-items:center;gap:.4em;margin-right:1.5em;">
-							<input type="radio" name="reportedip_hive_auto_footer_align" value="right" <?php checked( $auto_align, 'right' ); ?>>
-							<?php esc_html_e( 'Right', 'reportedip-hive' ); ?>
-						</label>
-						<label style="display:inline-flex;align-items:center;gap:.4em;">
-							<input type="radio" name="reportedip_hive_auto_footer_align" value="below" <?php checked( $auto_align, 'below' ); ?>>
-							<?php esc_html_e( 'Below content', 'reportedip-hive' ); ?>
-						</label>
-						<span style="display:block;margin-top:.5em;color:var(--rip-gray-600);font-size:.9em;">
-							<?php esc_html_e( 'Below content renders the badge as a full-width row directly below your theme footer — works across classic and block themes.', 'reportedip-hive' ); ?>
-						</span>
-					</fieldset>
-
-					<p style="margin-top:1.5em;">
-						<button type="submit" class="rip-button rip-button--primary"><?php esc_html_e( 'Save', 'reportedip-hive' ); ?></button>
-					</p>
-				</form>
-				<script>
-				(function(){
-					var wrap = document.getElementById('rip-auto-footer-preview');
-					if (!wrap) return;
-					var initial = wrap.querySelector('rip-hive-banner');
-					if (!initial) return;
-					var blueprint = initial.cloneNode(true);
-					var alignMap = {left:'flex-start', center:'center', right:'flex-end', below:'center'};
-					function getRadio(name){
-						var el = document.querySelector('input[name="' + name + '"]:checked');
-						return el ? el.value : '';
-					}
-					function rerender(){
-						var variant = getRadio('reportedip_hive_auto_footer_variant') || 'badge';
-						var align   = getRadio('reportedip_hive_auto_footer_align') || 'center';
-						var fresh   = blueprint.cloneNode(true);
-						fresh.setAttribute('data-variant', variant);
-						wrap.replaceChildren(fresh);
-						wrap.style.justifyContent = alignMap[align] || 'center';
-					}
-					document.querySelectorAll('input[name="reportedip_hive_auto_footer_variant"], input[name="reportedip_hive_auto_footer_align"]').forEach(function(r){
-						r.addEventListener('change', rerender);
-					});
-				})();
-				</script>
 			</div>
 		</div>
 
@@ -7913,6 +7778,385 @@ class ReportedIP_Hive_Admin_Settings {
 			update();
 		})();
 		</script>
+		<?php
+	}
+
+	/**
+	 * Render the Community hero band.
+	 *
+	 * Light, design-system intro that frames participation as the page's
+	 * purpose and surfaces a single headline contribution figure. The detailed
+	 * per-channel status lives in {@see render_contribution_panel()}.
+	 *
+	 * @param array $args Shared community context (see community_page()).
+	 * @return void
+	 * @since  2.0.26
+	 */
+	private function render_community_hero( array $args ) {
+		$reports_total = (int) ( $args['reports_total'] ?? 0 );
+		?>
+		<div class="rip-card rip-mb-6">
+			<div class="rip-card__body">
+				<h2 class="rip-card__title" style="margin-top:0;">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+					<?php esc_html_e( 'You are part of the hive', 'reportedip-hive' ); ?>
+				</h2>
+				<p style="max-width:65ch;">
+					<?php esc_html_e( 'ReportedIP works like a swarm: every site that shares the threats it sees, and links back to the network, makes all of us faster at spotting the next attack. Two things take a minute and help everyone — share your blocks and set a footer badge.', 'reportedip-hive' ); ?>
+				</p>
+				<?php if ( $reports_total > 0 ) : ?>
+					<p style="margin-bottom:0;font-size:var(--rip-text-lg,1.125rem);">
+						<?php
+						echo wp_kses(
+							sprintf(
+								/* translators: %s: formatted number of threats this site has shared. */
+								__( 'So far your site has shared <strong>%s threats</strong> with the community. Thank you.', 'reportedip-hive' ),
+								esc_html( number_format_i18n( $reports_total ) )
+							),
+							array( 'strong' => array() )
+						);
+						?>
+					</p>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the one-click backlink (auto-footer badge) booster.
+	 *
+	 * The single most important participation action: an inviting, prominent
+	 * card that activates the "Protected by ReportedIP Hive" footer link in one
+	 * click. The badge stays strictly opt-in (default off) per WordPress.org
+	 * guidelines — reach comes from persuasion, not a forced link.
+	 *
+	 * @return void
+	 * @since  2.0.26
+	 */
+	private function render_backlink_booster() {
+		$auto_enabled = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false );
+		$auto_variant = ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_variant', 'badge' ) );
+		$auto_align   = $this->sanitize_auto_footer_align( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_align', 'center' ) );
+
+		$shortcodes = ReportedIP_Hive_Frontend_Shortcodes::get_instance();
+
+		$preview_align_map = array(
+			'left'   => 'flex-start',
+			'center' => 'center',
+			'right'  => 'flex-end',
+			'below'  => 'center',
+		);
+		$preview_justify   = $preview_align_map[ $auto_align ] ?? 'center';
+
+		$tools_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&subtab=promote' );
+		?>
+		<div class="rip-card rip-mb-6">
+			<div class="rip-card__header">
+				<h2 class="rip-card__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+					<?php esc_html_e( 'Set your badge — in one click', 'reportedip-hive' ); ?>
+				</h2>
+			</div>
+			<div class="rip-card__body">
+				<?php
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- WordPress sets `settings-updated` on its own redirect after the Settings API form save; not user-mutable.
+				if ( isset( $_GET['settings-updated'] ) ) :
+					?>
+					<div class="rip-alert rip-alert--success rip-mb-4">
+						<?php esc_html_e( 'Saved. Thank you for backing the hive.', 'reportedip-hive' ); ?>
+					</div>
+					<?php
+				endif;
+				?>
+
+				<?php if ( $auto_enabled ) : ?>
+					<div class="rip-alert rip-alert--success rip-mb-4">
+						<strong><?php esc_html_e( 'Your badge is live.', 'reportedip-hive' ); ?></strong>
+						<?php esc_html_e( 'Your site now links back to the network and shows as a community member. You can change the look below.', 'reportedip-hive' ); ?>
+					</div>
+				<?php endif; ?>
+
+				<p style="margin-top:0;max-width:65ch;">
+					<?php esc_html_e( 'Show a small "Protected by ReportedIP Hive" badge in your footer. It is the quickest way to support the community — and it puts your site on the map.', 'reportedip-hive' ); ?>
+				</p>
+				<ul style="margin:0 0 1.25em 18px;padding:0;color:var(--rip-gray-700,#374151);max-width:65ch;">
+					<li><?php esc_html_e( 'Strengthens the network — more links mean more sites discover the shared protection.', 'reportedip-hive' ); ?></li>
+					<li><?php esc_html_e( 'Makes your site visible as an active contributor, not just a consumer.', 'reportedip-hive' ); ?></li>
+					<li><?php esc_html_e( 'Clean, real HTML link inside Shadow DOM — search engines credit your site and your theme cannot override the design.', 'reportedip-hive' ); ?></li>
+				</ul>
+
+				<div id="rip-auto-footer-preview" style="background:var(--rip-gray-50);border:1px dashed var(--rip-gray-300);border-radius:var(--rip-radius-lg);padding:1.5em;min-height:90px;display:flex;align-items:center;justify-content:<?php echo esc_attr( $preview_justify ); ?>;margin-bottom:.6em;">
+					<?php
+					// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes its own attributes; the custom-element wrapper would be stripped by wp_kses.
+					echo $shortcodes->build_element(
+						$auto_variant,
+						array(
+							'utm_medium' => 'admin-preview',
+							'theme'      => 'dark',
+							'align'      => 'center',
+						)
+					);
+					// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
+					?>
+				</div>
+				<p style="margin:0 0 1.25em;font-size:.85em;color:var(--rip-gray-600);">
+					<?php esc_html_e( 'Live preview — updates as you change the variant and position below.', 'reportedip-hive' ); ?>
+				</p>
+				<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>">
+					<?php settings_fields( 'reportedip_hive_promote' ); ?>
+					<input type="hidden" name="_wp_http_referer" value="<?php echo esc_attr( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' ) ); ?>">
+
+					<p style="margin-top:0;">
+						<label style="display:flex;align-items:center;gap:.5em;cursor:pointer;">
+							<input type="checkbox" name="reportedip_hive_auto_footer_enabled" value="1" <?php checked( $auto_enabled ); ?>>
+							<strong><?php esc_html_e( 'Show a "Protected by ReportedIP Hive" badge in the site footer', 'reportedip-hive' ); ?></strong>
+						</label>
+						<span style="display:block;margin-left:1.65em;color:var(--rip-gray-600);font-size:.9em;">
+							<?php esc_html_e( 'Renders automatically at the bottom of every front-end page. No shortcode placement needed.', 'reportedip-hive' ); ?>
+						</span>
+					</p>
+
+					<fieldset style="margin-top:1.25em;">
+						<legend style="font-weight:600;margin-bottom:.5em;"><?php esc_html_e( 'Variant', 'reportedip-hive' ); ?></legend>
+						<label style="display:inline-flex;align-items:center;gap:.4em;margin-right:1.5em;">
+							<input type="radio" name="reportedip_hive_auto_footer_variant" value="badge" <?php checked( $auto_variant, 'badge' ); ?>>
+							<?php esc_html_e( 'Footer badge', 'reportedip-hive' ); ?>
+						</label>
+						<label style="display:inline-flex;align-items:center;gap:.4em;">
+							<input type="radio" name="reportedip_hive_auto_footer_variant" value="shield" <?php checked( $auto_variant, 'shield' ); ?>>
+							<?php esc_html_e( 'Shield icon', 'reportedip-hive' ); ?>
+						</label>
+					</fieldset>
+
+					<fieldset style="margin-top:1.25em;">
+						<legend style="font-weight:600;margin-bottom:.5em;"><?php esc_html_e( 'Position', 'reportedip-hive' ); ?></legend>
+						<label style="display:inline-flex;align-items:center;gap:.4em;margin-right:1.5em;">
+							<input type="radio" name="reportedip_hive_auto_footer_align" value="left" <?php checked( $auto_align, 'left' ); ?>>
+							<?php esc_html_e( 'Left', 'reportedip-hive' ); ?>
+						</label>
+						<label style="display:inline-flex;align-items:center;gap:.4em;margin-right:1.5em;">
+							<input type="radio" name="reportedip_hive_auto_footer_align" value="center" <?php checked( $auto_align, 'center' ); ?>>
+							<?php esc_html_e( 'Center', 'reportedip-hive' ); ?>
+						</label>
+						<label style="display:inline-flex;align-items:center;gap:.4em;margin-right:1.5em;">
+							<input type="radio" name="reportedip_hive_auto_footer_align" value="right" <?php checked( $auto_align, 'right' ); ?>>
+							<?php esc_html_e( 'Right', 'reportedip-hive' ); ?>
+						</label>
+						<label style="display:inline-flex;align-items:center;gap:.4em;">
+							<input type="radio" name="reportedip_hive_auto_footer_align" value="below" <?php checked( $auto_align, 'below' ); ?>>
+							<?php esc_html_e( 'Below content', 'reportedip-hive' ); ?>
+						</label>
+						<span style="display:block;margin-top:.5em;color:var(--rip-gray-600);font-size:.9em;">
+							<?php esc_html_e( 'Below content renders the badge as a full-width row directly below your theme footer — works across classic and block themes.', 'reportedip-hive' ); ?>
+						</span>
+					</fieldset>
+
+					<p style="margin-top:1.5em;display:flex;gap:.75em;align-items:center;flex-wrap:wrap;">
+						<button type="submit" class="rip-button rip-button--primary"><?php esc_html_e( 'Save', 'reportedip-hive' ); ?></button>
+						<a href="<?php echo esc_url( $tools_url ); ?>" class="rip-button rip-button--ghost rip-button--sm"><?php esc_html_e( 'Advanced backlink tools', 'reportedip-hive' ); ?></a>
+					</p>
+				</form>
+				<script>
+				(function(){
+					var wrap = document.getElementById('rip-auto-footer-preview');
+					if (!wrap) return;
+					var initial = wrap.querySelector('rip-hive-banner');
+					if (!initial) return;
+					var blueprint = initial.cloneNode(true);
+					var alignMap = {left:'flex-start', center:'center', right:'flex-end', below:'center'};
+					function getRadio(name){
+						var el = document.querySelector('input[name="' + name + '"]:checked');
+						return el ? el.value : '';
+					}
+					function rerender(){
+						var variant = getRadio('reportedip_hive_auto_footer_variant') || 'badge';
+						var align   = getRadio('reportedip_hive_auto_footer_align') || 'center';
+						var fresh   = blueprint.cloneNode(true);
+						fresh.setAttribute('data-variant', variant);
+						wrap.replaceChildren(fresh);
+						wrap.style.justifyContent = alignMap[align] || 'center';
+					}
+					document.querySelectorAll('input[name="reportedip_hive_auto_footer_variant"], input[name="reportedip_hive_auto_footer_align"]').forEach(function(r){
+						r.addEventListener('change', rerender);
+					});
+				})();
+				</script>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the "Your contribution & activity" panel.
+	 *
+	 * Three participation channels (share reports, footer badge, honeypot) shown
+	 * as live status, followed by the 30-day activity figures and the
+	 * share-your-reports recommendation for free, connected sites.
+	 *
+	 * @param array $args Shared community context (see community_page()).
+	 * @return void
+	 * @since  2.0.26
+	 */
+	private function render_contribution_panel( array $args ) {
+		$reports_30d       = (int) ( $args['reports_30d'] ?? 0 );
+		$badge_active      = ! empty( $args['badge_active'] );
+		$is_honeypot       = ! empty( $args['is_honeypot'] );
+		$is_community_mode = ! empty( $args['is_community_mode'] );
+		$is_configured     = ! empty( $args['is_configured'] );
+		$tier              = is_array( $args['tier'] ?? null ) ? $args['tier'] : array( 'slug' => 'free' );
+		$upgrade_url       = (string) ( $args['upgrade_url'] ?? '' );
+		$honeypot_url      = (string) ( $args['honeypot_url'] ?? '' );
+		$security_summary  = is_array( $args['security_summary'] ?? null ) ? $args['security_summary'] : array();
+
+		$reports_active = $is_community_mode && $is_configured;
+		$settings_url   = self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' );
+
+		$channels = array(
+			array(
+				'title'  => __( 'Share threats', 'reportedip-hive' ),
+				'active' => $reports_active && $reports_30d > 0,
+				'status' => $reports_active
+					? ( $reports_30d > 0
+						/* translators: %s: number of reports shared in the last 30 days. */
+						? sprintf( __( '%s shared in the last 30 days', 'reportedip-hive' ), number_format_i18n( $reports_30d ) )
+						: __( 'Connected — nothing shared yet', 'reportedip-hive' ) )
+					: __( 'Local mode — not sharing', 'reportedip-hive' ),
+				'action' => $reports_active ? null : array(
+					'url'   => $is_community_mode ? $upgrade_url : $settings_url,
+					'label' => $is_community_mode ? __( 'Upgrade to share more', 'reportedip-hive' ) : __( 'Switch to Community', 'reportedip-hive' ),
+					'blank' => $is_community_mode,
+				),
+			),
+			array(
+				'title'  => __( 'Footer badge', 'reportedip-hive' ),
+				'active' => $badge_active,
+				'status' => $badge_active
+					? __( 'Live — linking back to the hive', 'reportedip-hive' )
+					: __( 'Not set — one click activates it', 'reportedip-hive' ),
+				'action' => $badge_active ? null : array(
+					'url'   => '#rip-auto-footer-preview',
+					'label' => __( 'Set the badge', 'reportedip-hive' ),
+					'blank' => false,
+				),
+			),
+			array(
+				'title'  => __( 'Honeypot', 'reportedip-hive' ),
+				'active' => $is_honeypot,
+				'status' => $is_honeypot
+					? __( 'Active — unlimited, higher weighting', 'reportedip-hive' )
+					: __( 'Run a honeypot for extra impact', 'reportedip-hive' ),
+				'action' => $is_honeypot ? null : array(
+					'url'   => $honeypot_url,
+					'label' => __( 'Learn more', 'reportedip-hive' ),
+					'blank' => true,
+				),
+			),
+		);
+		?>
+		<div class="rip-card rip-mb-6">
+			<div class="rip-card__header">
+				<h2 class="rip-card__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+					<?php esc_html_e( 'Your contribution & activity', 'reportedip-hive' ); ?>
+				</h2>
+			</div>
+			<div class="rip-card__body">
+				<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:1em;margin-bottom:1.75em;">
+					<?php foreach ( $channels as $channel ) : ?>
+						<div class="rip-card" style="padding:1.25em;background:var(--rip-gray-50);">
+							<div style="display:flex;align-items:center;justify-content:space-between;gap:.5em;margin-bottom:.5em;">
+								<strong><?php echo esc_html( $channel['title'] ); ?></strong>
+								<?php if ( $channel['active'] ) : ?>
+									<span class="rip-badge rip-badge--success"><?php esc_html_e( 'Active', 'reportedip-hive' ); ?></span>
+								<?php else : ?>
+									<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'Off', 'reportedip-hive' ); ?></span>
+								<?php endif; ?>
+							</div>
+							<p style="margin:0;color:var(--rip-gray-600);font-size:.9em;"><?php echo esc_html( $channel['status'] ); ?></p>
+							<?php if ( ! empty( $channel['action'] ) && '' !== (string) $channel['action']['url'] ) : ?>
+								<p style="margin:.75em 0 0;">
+									<a href="<?php echo esc_url( $channel['action']['url'] ); ?>"<?php echo $channel['action']['blank'] ? ' target="_blank" rel="noopener"' : ''; ?> class="rip-button rip-button--secondary rip-button--sm"><?php echo esc_html( $channel['action']['label'] ); ?></a>
+								</p>
+							<?php endif; ?>
+						</div>
+					<?php endforeach; ?>
+				</div>
+
+				<?php
+				$failed_logins     = (int) ( $security_summary['summary']->total_failed_logins ?? 0 );
+				$comment_spam      = (int) ( $security_summary['summary']->total_comment_spam ?? 0 );
+				$xmlrpc_calls      = (int) ( $security_summary['summary']->total_xmlrpc_calls ?? 0 );
+				$reputation_blocks = (int) ( $security_summary['summary']->total_reputation_blocks ?? 0 );
+				$total_events      = $failed_logins + $comment_spam + $xmlrpc_calls;
+				$total_blocked     = (int) ( $security_summary['summary']->total_blocked_ips ?? 0 );
+				$total_api_reports = (int) ( $security_summary['summary']->total_api_reports ?? 0 );
+
+				$api_stats_raw = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_stats', array() );
+				$api_stats     = is_array( $api_stats_raw ) ? $api_stats_raw : array();
+				$api_total     = (int) ( $api_stats['total_calls'] ?? 0 );
+				$api_success   = (float) ( $api_stats['success_rate'] ?? 0 );
+				?>
+
+				<h3 style="margin:0 0 .75em;font-size:var(--rip-text-base,1rem);color:var(--rip-gray-700);"><?php esc_html_e( 'Last 30 days', 'reportedip-hive' ); ?></h3>
+
+				<div class="rip-activity-stats">
+					<div class="rip-activity-stat">
+						<div class="rip-activity-stat__value rip-activity-stat__value--danger"><?php echo esc_html( number_format_i18n( $total_events ) ); ?></div>
+						<div class="rip-activity-stat__label"><?php esc_html_e( 'Security events', 'reportedip-hive' ); ?></div>
+					</div>
+					<div class="rip-activity-stat">
+						<div class="rip-activity-stat__value rip-activity-stat__value--warning"><?php echo esc_html( number_format_i18n( $total_blocked ) ); ?></div>
+						<div class="rip-activity-stat__label"><?php esc_html_e( 'IPs blocked', 'reportedip-hive' ); ?></div>
+					</div>
+					<div class="rip-activity-stat">
+						<div class="rip-activity-stat__value rip-activity-stat__value--success"><?php echo esc_html( number_format_i18n( $total_api_reports ) ); ?></div>
+						<div class="rip-activity-stat__label"><?php esc_html_e( 'Reported to community', 'reportedip-hive' ); ?></div>
+					</div>
+					<div class="rip-activity-stat">
+						<div class="rip-activity-stat__value rip-activity-stat__value--danger"><?php echo esc_html( number_format_i18n( $failed_logins ) ); ?></div>
+						<div class="rip-activity-stat__label"><?php esc_html_e( 'Failed logins', 'reportedip-hive' ); ?></div>
+					</div>
+					<div class="rip-activity-stat">
+						<div class="rip-activity-stat__value rip-activity-stat__value--warning"><?php echo esc_html( number_format_i18n( $comment_spam ) ); ?></div>
+						<div class="rip-activity-stat__label"><?php esc_html_e( 'Comment spam', 'reportedip-hive' ); ?></div>
+					</div>
+					<div class="rip-activity-stat">
+						<div class="rip-activity-stat__value rip-activity-stat__value--info"><?php echo esc_html( number_format_i18n( $reputation_blocks ) ); ?></div>
+						<div class="rip-activity-stat__label"><?php esc_html_e( 'Reputation blocks', 'reportedip-hive' ); ?></div>
+					</div>
+					<?php if ( $api_total > 0 ) : ?>
+					<div class="rip-activity-stat">
+						<div class="rip-activity-stat__value rip-activity-stat__value--info"><?php echo esc_html( number_format_i18n( $api_total ) ); ?></div>
+						<div class="rip-activity-stat__label"><?php esc_html_e( 'API calls (lifetime)', 'reportedip-hive' ); ?></div>
+					</div>
+					<div class="rip-activity-stat">
+						<div class="rip-activity-stat__value rip-activity-stat__value--success"><?php echo esc_html( number_format_i18n( $api_success ) ); ?>%</div>
+						<div class="rip-activity-stat__label"><?php esc_html_e( 'API success rate', 'reportedip-hive' ); ?></div>
+					</div>
+					<?php endif; ?>
+				</div>
+
+				<?php if ( $total_events > 0 && 0 === $total_api_reports && 'free' === $tier['slug'] ) : ?>
+					<div class="rip-alert rip-alert--info rip-mt-4">
+						<strong><?php esc_html_e( 'Recommendation:', 'reportedip-hive' ); ?></strong>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %d: number of events */
+								__( 'You have detected %d security events but have not reported anything to the community yet. A Contributor upgrade lets you share up to 200 reports per day and strengthens threat intelligence for everyone.', 'reportedip-hive' ),
+								$total_events
+							)
+						);
+						?>
+						<br><br>
+						<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-button--sm">
+							<?php esc_html_e( 'Upgrade now', 'reportedip-hive' ); ?>
+						</a>
+					</div>
+				<?php endif; ?>
+			</div>
+		</div>
 		<?php
 	}
 

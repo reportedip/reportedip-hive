@@ -1484,6 +1484,41 @@ class ReportedIP_Hive_API {
 	private const RATE_LIMIT_BUCKETS = array( 'reputation', 'submission', 'meta' );
 
 	/**
+	 * Maximum number of recent call outcomes retained for the rolling health window.
+	 *
+	 * The health metric (success rate, degraded flag, health score) is derived
+	 * from this recency-weighted window rather than the lifetime counters, so a
+	 * one-off outage cannot permanently brand the install "degraded".
+	 *
+	 * @since 2.1.18
+	 */
+	private const RECENT_WINDOW_SIZE = 50;
+
+	/**
+	 * Maximum age, in days, of a retained recent-window entry.
+	 *
+	 * Expressed in days (not `DAY_IN_SECONDS`) because class constants are
+	 * evaluated at load time, before WordPress defines the time constants.
+	 *
+	 * @since 2.1.18
+	 */
+	private const RECENT_WINDOW_TTL_DAYS = 7;
+
+	/**
+	 * Minimum number of recent calls before the window is judged for health.
+	 *
+	 * @since 2.1.18
+	 */
+	private const RECENT_HEALTH_MIN_SAMPLE = 10;
+
+	/**
+	 * Success-rate percentage below which the recent window counts as degraded.
+	 *
+	 * @since 2.1.18
+	 */
+	private const RECENT_HEALTH_MIN_RATE = 80;
+
+	/**
 	 * Check if we're currently rate limited.
 	 *
 	 * @param string|null $bucket One of 'reputation', 'submission', 'meta'. Pass null to
@@ -1607,8 +1642,9 @@ class ReportedIP_Hive_API {
 			'successful_calls'    => 0,
 			'failed_calls'        => 0,
 			'total_response_time' => 0,
-			'last_reset'          => current_time( 'mysql' ),
+			'last_reset'          => current_time( 'mysql', true ),
 			'error_types'         => array(),
+			'recent'              => array(),
 		);
 
 		$stored = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_stats', array() );
@@ -1635,26 +1671,35 @@ class ReportedIP_Hive_API {
 		$stats['avg_response_time'] = $stats['total_calls'] > 0 ?
 			round( $stats['total_response_time'] / $stats['total_calls'], 2 ) : 0;
 
+		$stats = $this->push_recent_call( $stats, $success );
+
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_stats', $stats );
 
 		if ( ! $success && $error_type !== 'rate_limited' ) {
-			$failure_details = array(
-				'error_type'    => $error_type,
-				'response_time' => $response_time,
-				'success_rate'  => $stats['success_rate'],
-			);
-			if ( '' !== (string) $error_detail && class_exists( 'ReportedIP_Hive_Logger' ) ) {
-				$failure_details['detail'] = ReportedIP_Hive_Logger::truncate( (string) $error_detail, 200 );
+			$throttle_key = 'reportedip_hive_apifail_log_' . ( $error_type ? $error_type : 'unknown' );
+
+			if ( ! get_transient( $throttle_key ) ) {
+				$failure_details = array(
+					'error_type'    => $error_type,
+					'response_time' => $response_time,
+					'success_rate'  => $stats['recent_success_rate'],
+				);
+				if ( '' !== (string) $error_detail && class_exists( 'ReportedIP_Hive_Logger' ) ) {
+					$failure_details['detail'] = ReportedIP_Hive_Logger::truncate( (string) $error_detail, 200 );
+				}
+				$this->logger->log_security_event(
+					'api_call_failed',
+					'system',
+					$failure_details,
+					'medium'
+				);
+
+				set_transient( $throttle_key, time(), MINUTE_IN_SECONDS );
 			}
-			$this->logger->log_security_event(
-				'api_call_failed',
-				'system',
-				$failure_details,
-				'medium'
-			);
 		}
 
-		if ( $stats['total_calls'] >= 10 && $stats['success_rate'] < 80 ) {
+		if ( $stats['recent_total'] >= self::RECENT_HEALTH_MIN_SAMPLE
+			&& $stats['recent_success_rate'] < self::RECENT_HEALTH_MIN_RATE ) {
 			$last_health_warning = get_transient( 'reportedip_hive_health_warning_logged' );
 
 			if ( ! $last_health_warning ) {
@@ -1662,7 +1707,8 @@ class ReportedIP_Hive_API {
 					'api_health_degraded',
 					'system',
 					array(
-						'success_rate' => $stats['success_rate'],
+						'success_rate' => $stats['recent_success_rate'],
+						'recent_calls' => $stats['recent_total'],
 						'total_calls'  => $stats['total_calls'],
 						'failed_calls' => $stats['failed_calls'],
 					),
@@ -1675,17 +1721,72 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
+	 * Append the latest call outcome to the rolling health window and recompute
+	 * the recency-weighted success rate.
+	 *
+	 * The window keeps at most {@see self::RECENT_WINDOW_SIZE} entries no older
+	 * than {@see self::RECENT_WINDOW_TTL_DAYS} days, so the health metric reflects
+	 * current behaviour and self-heals within a window's worth of calls after
+	 * recovery.
+	 *
+	 * @param array $stats   Stats array being assembled in track_api_call().
+	 * @param bool  $success Whether the just-tracked call succeeded.
+	 * @return array         Stats array with `recent`, `recent_total` and
+	 *                       `recent_success_rate` populated.
+	 * @since 2.1.18
+	 */
+	private function push_recent_call( array $stats, $success ) {
+		$now    = time();
+		$recent = isset( $stats['recent'] ) && is_array( $stats['recent'] ) ? $stats['recent'] : array();
+
+		$recent[] = array(
+			't'  => $now,
+			'ok' => $success ? 1 : 0,
+		);
+
+		$cutoff = $now - ( self::RECENT_WINDOW_TTL_DAYS * DAY_IN_SECONDS );
+		$recent = array_values(
+			array_filter(
+				$recent,
+				static function ( $entry ) use ( $cutoff ) {
+					return isset( $entry['t'] ) && (int) $entry['t'] >= $cutoff;
+				}
+			)
+		);
+
+		if ( count( $recent ) > self::RECENT_WINDOW_SIZE ) {
+			$recent = array_slice( $recent, -self::RECENT_WINDOW_SIZE );
+		}
+
+		$recent_ok = 0;
+		foreach ( $recent as $entry ) {
+			$recent_ok += (int) $entry['ok'];
+		}
+		$recent_total = count( $recent );
+
+		$stats['recent']              = $recent;
+		$stats['recent_total']        = $recent_total;
+		$stats['recent_success_rate'] = $recent_total > 0
+			? round( ( $recent_ok / $recent_total ) * 100, 2 )
+			: 100.0;
+
+		return $stats;
+	}
+
+	/**
 	 * Get comprehensive API health status
 	 */
 	public function get_api_health_status() {
 		$api_stats = ReportedIP_Hive_Option_Routing::get(
 			'reportedip_hive_api_stats',
 			array(
-				'total_calls'       => 0,
-				'successful_calls'  => 0,
-				'failed_calls'      => 0,
-				'success_rate'      => 0,
-				'avg_response_time' => 0,
+				'total_calls'         => 0,
+				'successful_calls'    => 0,
+				'failed_calls'        => 0,
+				'success_rate'        => 0,
+				'avg_response_time'   => 0,
+				'recent_total'        => 0,
+				'recent_success_rate' => 100.0,
 			)
 		);
 
@@ -1701,6 +1802,39 @@ class ReportedIP_Hive_API {
 			'health_score'      => $this->calculate_health_score( $api_stats, $cache_stats ),
 		);
 	}
+
+	/**
+	 * Reset the API statistics to a clean baseline.
+	 *
+	 * Zeroes the lifetime counters, empties the rolling health window and clears
+	 * the throttle transient that suppresses repeat degraded-health warnings, so
+	 * the dashboard reflects a fresh start. Used by the manual "Reset API
+	 * statistics" action and by the one-time poisoned-stats migration.
+	 *
+	 * @return void
+	 * @since 2.1.18
+	 */
+	public function reset_api_statistics() {
+		ReportedIP_Hive_Option_Routing::set(
+			'reportedip_hive_api_stats',
+			array(
+				'total_calls'         => 0,
+				'successful_calls'    => 0,
+				'failed_calls'        => 0,
+				'total_response_time' => 0,
+				'last_reset'          => current_time( 'mysql', true ),
+				'error_types'         => array(),
+				'recent'              => array(),
+				'recent_total'        => 0,
+				'recent_success_rate' => 100.0,
+				'success_rate'        => 0,
+				'avg_response_time'   => 0,
+			)
+		);
+
+		delete_transient( 'reportedip_hive_health_warning_logged' );
+	}
+
 	/**
 	 * Calculate overall health score
 	 */
@@ -1711,7 +1845,10 @@ class ReportedIP_Hive_API {
 			$score += 30;
 		}
 
-		if ( isset( $api_stats['success_rate'] ) && $api_stats['total_calls'] > 0 ) {
+		$recent_total = (int) ( $api_stats['recent_total'] ?? 0 );
+		if ( $recent_total >= self::RECENT_HEALTH_MIN_SAMPLE ) {
+			$score += ( (float) $api_stats['recent_success_rate'] / 100 ) * 30;
+		} elseif ( isset( $api_stats['success_rate'] ) && $api_stats['total_calls'] > 0 ) {
 			$score += ( $api_stats['success_rate'] / 100 ) * 30;
 		} elseif ( $this->is_configured() ) {
 			$score += 15;

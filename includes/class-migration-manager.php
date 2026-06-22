@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 10;
+	public const CURRENT_VERSION = 11;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -297,6 +297,54 @@ final class ReportedIP_Hive_Migration_Manager {
 	 */
 	private static function migrate_to_v10() {
 		ReportedIP_Hive_Schema::ensure_tables();
+	}
+
+	/**
+	 * Clears a poisoned API-statistics counter.
+	 *
+	 * Before 2.1.18 `reportedip_hive_api_stats` was a lifetime cumulative
+	 * counter with no reset, so a single outage could pin `success_rate` low
+	 * forever and brand the install "API health degraded" indefinitely. The
+	 * rolling health window introduced in 2.1.18 fixes this going forward; this
+	 * migration removes the legacy stuck value so the dashboard recovers on
+	 * upgrade. Only installs that actually look poisoned (enough calls, low
+	 * lifetime rate) are reset — healthy installs keep their usage history.
+	 *
+	 * @return void
+	 * @since  2.1.18
+	 */
+	private static function migrate_to_v11() {
+		$stats = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_stats', array() );
+
+		if ( ! is_array( $stats ) || empty( $stats ) ) {
+			return;
+		}
+
+		$total        = (int) ( $stats['total_calls'] ?? 0 );
+		$success_rate = (float) ( $stats['success_rate'] ?? 100 );
+
+		if ( $total < 10 || $success_rate >= 80 ) {
+			return;
+		}
+
+		ReportedIP_Hive_Option_Routing::set(
+			'reportedip_hive_api_stats',
+			array(
+				'total_calls'         => 0,
+				'successful_calls'    => 0,
+				'failed_calls'        => 0,
+				'total_response_time' => 0,
+				'last_reset'          => current_time( 'mysql', true ),
+				'error_types'         => array(),
+				'recent'              => array(),
+				'recent_total'        => 0,
+				'recent_success_rate' => 100.0,
+				'success_rate'        => 0,
+				'avg_response_time'   => 0,
+			)
+		);
+
+		delete_transient( 'reportedip_hive_health_warning_logged' );
 	}
 
 	/**

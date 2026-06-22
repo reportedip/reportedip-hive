@@ -2,6 +2,31 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.18] — 2026-06-22
+
+### Fixed
+
+- **"API health degraded" no longer sticks forever after a one-off outage.**
+  The API success rate was a lifetime cumulative counter with no reset, so a
+  single bad spell (e.g. a burst of failed calls) pinned the rate low for good
+  and the dashboard kept reporting "degraded" long after the API had recovered.
+  Health is now measured over a rolling window of the most recent calls (last 50
+  within 7 days), so the metric reflects current behaviour and recovers on its
+  own within a window's worth of successful calls. Lifetime usage counters are
+  kept for the "Total API calls" figure and the monthly estimate.
+- **A runaway loop can no longer flood the security log.** Repeated
+  `api_call_failed` entries are now throttled per error type (at most one per
+  minute), so a failure burst is summarised instead of writing tens of thousands
+  of rows.
+- **API statistics are written in UTC** (`last_reset`), matching the plugin-wide
+  datetime convention.
+
+### Changed
+
+- **Added a "Reset API statistics" action** to the API call usage card and a
+  one-time upgrade step that clears a previously poisoned counter (only on
+  installs that look stuck — healthy usage history is left untouched).
+
 ## [2.1.17] — 2026-06-19
 
 ### Fixed

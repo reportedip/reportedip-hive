@@ -120,6 +120,7 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		add_action( 'wp_ajax_reportedip_hive_reset_settings', array( $this, 'ajax_reset_settings' ) );
 		add_action( 'wp_ajax_reportedip_hive_reset_all_data', array( $this, 'ajax_reset_all_data' ) );
+		add_action( 'wp_ajax_reportedip_hive_reset_api_stats', array( $this, 'ajax_reset_api_stats' ) );
 
 		add_action( 'wp_ajax_reportedip_hive_dismiss_notice', array( $this, 'ajax_dismiss_notice' ) );
 
@@ -1364,6 +1365,40 @@ class ReportedIP_Hive_Ajax_Handler {
 			);
 
 			wp_send_json_success( __( 'All settings have been reset to defaults. The page will reload.', 'reportedip-hive' ) );
+		} catch ( Exception $e ) {
+			wp_send_json_error( $e->getMessage() );
+		}
+	}
+
+	/**
+	 * AJAX handler: Reset the API statistics counter.
+	 *
+	 * Clears the lifetime usage counters and the rolling health window so the
+	 * "API call usage" card starts fresh. Leaves all other settings and data
+	 * untouched.
+	 *
+	 * @return void
+	 * @since  2.1.18
+	 */
+	public function ajax_reset_api_stats() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
+		}
+
+		try {
+			$this->api_client->reset_api_statistics();
+
+			$this->logger->info(
+				'API statistics have been reset',
+				'0.0.0.0',
+				array(
+					'user_id' => get_current_user_id(),
+				)
+			);
+
+			wp_send_json_success( __( 'API statistics have been reset. The page will reload.', 'reportedip-hive' ) );
 		} catch ( Exception $e ) {
 			wp_send_json_error( $e->getMessage() );
 		}
