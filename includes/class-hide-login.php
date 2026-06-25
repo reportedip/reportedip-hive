@@ -122,6 +122,8 @@ class ReportedIP_Hive_Hide_Login {
 		foreach ( array( 'site_url', 'network_site_url', 'admin_url', 'login_url', 'lostpassword_url', 'register_url', 'logout_url', 'wp_redirect' ) as $hook ) {
 			add_filter( $hook, array( $this, 'filter_url' ), 100, 1 );
 		}
+
+		add_filter( 'rocket_cache_reject_uri', array( $this, 'exclude_login_from_cache_uri' ) );
 	}
 
 	/**
@@ -387,6 +389,8 @@ class ReportedIP_Hive_Hide_Login {
 		$this->serving_login = true;
 		$this->request_path  = '/wp-login.php';
 
+		$this->emit_login_no_cache_headers();
+
 		// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- QUERY_STRING is forwarded verbatim into REQUEST_URI so wp-login.php sees the original request; sanitize_text_field() above strips control chars, no SQL/HTML context here.
 		$query = isset( $_SERVER['QUERY_STRING'] ) && '' !== (string) $_SERVER['QUERY_STRING']
 			? '?' . sanitize_text_field( wp_unslash( (string) $_SERVER['QUERY_STRING'] ) )
@@ -404,6 +408,66 @@ class ReportedIP_Hive_Hide_Login {
 
 		require_once ABSPATH . 'wp-login.php';
 		exit;
+	}
+
+	/**
+	 * Stop every known page-cache layer from storing the hidden login page.
+	 *
+	 * A cached login page is served as static HTML without PHP running, so
+	 * wp-login.php never gets to set the `wordpress_test_cookie`. The next
+	 * POST then fails the cookie handshake with "Cookies are blocked…" and
+	 * the user can never sign in — the login simply appears to do nothing.
+	 * Because the slug is an ordinary URL (not `/wp-login.php`), cache plugins
+	 * do not exclude it automatically, so we have to opt out explicitly.
+	 *
+	 * The DONOTCACHE* constants and no-store headers are honoured by WP Rocket,
+	 * W3 Total Cache, WP Super Cache, WP Fastest Cache, Comet Cache, Cache
+	 * Enabler and Hummingbird; the LiteSpeed header plus its control action
+	 * cover LiteSpeed Cache. The matching URL-level WP Rocket exclusion lives
+	 * in {@see self::exclude_login_from_cache_uri()}.
+	 */
+	private function emit_login_no_cache_headers(): void {
+		if ( class_exists( 'ReportedIP_Hive' ) ) {
+			ReportedIP_Hive::emit_block_response_headers();
+		}
+
+		if ( ! headers_sent() ) {
+			header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0' );
+			header( 'Vary: Cookie' );
+			header( 'X-LiteSpeed-Cache-Control: no-cache' );
+		}
+
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- LiteSpeed Cache's own documented control hook; the name is fixed by that plugin and cannot be prefixed.
+		do_action( 'litespeed_control_set_nocache', 'reportedip-hive hidden login page' );
+	}
+
+	/**
+	 * Add the hidden login slug to WP Rocket's never-cache URI list.
+	 *
+	 * WP Rocket can serve a previously cached copy from `advanced-cache.php`
+	 * before our `serve_wp_login()` ever runs, so the constant-based opt-out
+	 * is not enough on its own — the URL has to be rejected at WP Rocket's own
+	 * cache layer. The pattern is anchored to the slug with an optional
+	 * trailing slash and query string.
+	 *
+	 * @param string[]|mixed $uris Existing rejected URIs.
+	 * @return string[]            URIs with the login slug appended.
+	 */
+	public function exclude_login_from_cache_uri( $uris ): array {
+		$uris = is_array( $uris ) ? $uris : array();
+
+		if ( ! $this->is_active() ) {
+			return $uris;
+		}
+
+		$slug = $this->get_slug();
+		if ( '' === $slug ) {
+			return $uris;
+		}
+
+		$uris[] = '/' . $slug . '(/.*)?';
+
+		return $uris;
 	}
 
 	/**

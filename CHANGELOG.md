@@ -2,6 +2,22 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- **Hidden login no longer breaks behind a page cache (WP Rocket & co.).**
+  When "Hide login" was active, the custom login slug is an ordinary URL, so
+  page-cache plugins happily cached it. A cached login page is served as static
+  HTML without PHP running, so `wp-login.php` never set the `wordpress_test_cookie`
+  — the next sign-in then failed the cookie handshake ("Cookies are blocked…")
+  and the login appeared to do nothing. The served login page now opts out of
+  every known page cache: it defines the `DONOTCACHE*` constants and sends
+  no-store / LiteSpeed bypass headers before rendering (covers WP Rocket, W3 Total
+  Cache, WP Super Cache, WP Fastest Cache, Comet Cache, Cache Enabler, Hummingbird
+  and LiteSpeed Cache), and the slug is also added to WP Rocket's never-cache URL
+  list so a copy cannot be served from `advanced-cache.php` before init.
+
 ## [2.1.18] — 2026-06-22
 
 ### Fixed

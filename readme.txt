@@ -341,6 +341,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= Unreleased =
+
+Fixed: hidden login no longer breaks behind a page cache (WP Rocket and others). The custom login slug is an ordinary URL, so cache plugins could store it; a cached login page never sets the cookie that wp-login.php checks, and the next sign-in silently failed. The login page now opts out of every known page cache (WP Rocket, W3 Total Cache, WP Super Cache, WP Fastest Cache, Comet Cache, Cache Enabler, Hummingbird, LiteSpeed) before it renders.
+
 = 2.1.18 =
 
 Fixed: the "API health degraded" status no longer sticks forever after a one-off outage. The success rate used to be a lifetime counter with no reset, so a single bad spell pinned it low for good. Health is now measured over a rolling window of the most recent calls and recovers on its own once the API is healthy again. Added a "Reset API statistics" button and a one-time upgrade step that clears a previously stuck counter. A runaway failure burst can no longer flood the security log (per-error throttling).

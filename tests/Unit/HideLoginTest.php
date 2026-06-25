@@ -252,6 +252,38 @@ class HideLoginTest extends TestCase {
 		$this->assertTrue( $inst->is_active(), 'Both enabled + slug => active' );
 	}
 
+	public function test_cache_uri_exclusion_added_when_active() {
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_enabled'] = true;
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_slug']    = 'welcome';
+
+		$result = $this->instance()->exclude_login_from_cache_uri( array( '/existing-rule' ) );
+
+		$this->assertContains( '/welcome(/.*)?', $result, 'Active hide-login must register its slug as a never-cache URI.' );
+		$this->assertContains( '/existing-rule', $result, 'Existing reject rules must be preserved.' );
+	}
+
+	public function test_cache_uri_exclusion_skipped_when_inactive() {
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_enabled'] = false;
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_slug']    = 'welcome';
+
+		$this->assertSame(
+			array( '/keep' ),
+			$this->instance()->exclude_login_from_cache_uri( array( '/keep' ) ),
+			'Disabled hide-login must not touch the cache reject list.'
+		);
+	}
+
+	public function test_cache_uri_exclusion_tolerates_non_array_input() {
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_enabled'] = true;
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_slug']    = 'welcome';
+
+		$this->assertSame(
+			array( '/welcome(/.*)?' ),
+			$this->instance()->exclude_login_from_cache_uri( null ),
+			'A non-array filter value (some cache plugins pass null) must not fatal.'
+		);
+	}
+
 	public function test_kill_switch_constant_disables_feature() {
 		if ( ! defined( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN' ) ) {
 			define( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN', true );
@@ -334,6 +366,57 @@ class HideLoginTest extends TestCase {
 			$set_trans,
 			$track_pos,
 			'Probe counting must run before the recon-log throttle is set'
+		);
+	}
+
+	/**
+	 * Architecture invariant: the served hidden-login page must opt out of
+	 * every page cache before wp-login.php renders. A cached login page never
+	 * sets the wordpress_test_cookie, so the next POST fails the cookie
+	 * handshake and login silently does nothing. Verified by source inspection
+	 * so a refactor cannot drop the cache-prevention.
+	 */
+	public function test_serve_wp_login_emits_no_cache_before_render() {
+		$source = (string) file_get_contents(
+			dirname( __DIR__, 2 ) . '/includes/class-hide-login.php'
+		);
+
+		$emit_pos    = strpos( $source, '$this->emit_login_no_cache_headers();' );
+		$require_pos = strpos( $source, "require_once ABSPATH . 'wp-login.php'" );
+
+		$this->assertNotFalse( $emit_pos, 'serve_wp_login() must call emit_login_no_cache_headers().' );
+		$this->assertNotFalse( $require_pos );
+		$this->assertLessThan(
+			$require_pos,
+			$emit_pos,
+			'No-cache opt-out must run before wp-login.php is required and output begins.'
+		);
+	}
+
+	public function test_no_cache_helper_covers_known_cache_plugins() {
+		$source = (string) file_get_contents(
+			dirname( __DIR__, 2 ) . '/includes/class-hide-login.php'
+		);
+
+		$this->assertStringContainsString(
+			'emit_block_response_headers()',
+			$source,
+			'Must reuse the central DONOTCACHE* / no-store helper (WP Rocket, W3TC, WP Super Cache, WP Fastest Cache, Comet Cache, Cache Enabler, Hummingbird).'
+		);
+		$this->assertStringContainsString(
+			'X-LiteSpeed-Cache-Control: no-cache',
+			$source,
+			'LiteSpeed Cache needs its dedicated bypass header.'
+		);
+		$this->assertStringContainsString(
+			'litespeed_control_set_nocache',
+			$source,
+			'LiteSpeed Cache control action arms the runtime no-cache.'
+		);
+		$this->assertStringContainsString(
+			"add_filter( 'rocket_cache_reject_uri'",
+			$source,
+			'WP Rocket can serve a cached copy from advanced-cache.php before init, so the slug also needs a URL-level reject rule.'
 		);
 	}
 }
