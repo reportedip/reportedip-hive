@@ -2,6 +2,21 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- **WAF Extended Protection now shows nginx setup instructions.** An nginx +
+  PHP-FPM stack is reported by PHP as the `fpm` SAPI, so Hive treated it as
+  fully auto-managed (via `.user.ini`) and hid the manual snippets — leaving
+  nginx operators without instructions when the auto-written `.user.ini` did
+  not take effect (the common case when `user_ini.filename` is disabled or the
+  document root is not the scan path). When the auto-written directive is not
+  yet running, the Server Setup tab now surfaces the manual options — the
+  php.ini / PHP-FPM-pool line (`php_admin_value[auto_prepend_file]`) and the
+  nginx `fastcgi_param PHP_VALUE "auto_prepend_file=…"` server block — and the
+  WAF tab links to them.
+
 ## [2.1.19] — 2026-06-25
 
 ### Fixed

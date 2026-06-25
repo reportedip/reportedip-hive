@@ -859,7 +859,14 @@ class ReportedIP_Hive_Admin_Firewall {
 		if ( $enabled && $running ) {
 			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Setup complete — the guard executed for this very request, so every request to this site passes the firewall before WordPress loads.', 'reportedip-hive' ) . '</div>';
 		} elseif ( $enabled && $auto ) {
-			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes — reload this page shortly; the status flips to Running as soon as the guard executes.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--info">';
+			printf(
+				/* translators: 1: opening link tag to the Server Setup tab, 2: closing tag. */
+				esc_html__( 'The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes — reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead.', 'reportedip-hive' ),
+				'<a href="' . esc_url( self::tab_url( 'server' ) ) . '">',
+				'</a>'
+			);
+			echo '</div>';
 		} elseif ( $enabled ) {
 			echo '<div class="rip-alert rip-alert--warning">';
 			printf(
@@ -1309,25 +1316,32 @@ class ReportedIP_Hive_Admin_Firewall {
 			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Setup complete — the guard executed for this very request. No further action needed; Hive keeps the guard file up to date automatically on every rule sync.', 'reportedip-hive' ) . '</div>';
 		}
 
-		if ( $auto ) {
-			if ( ! $running ) {
-				echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'This server is auto-managed: Hive wrote the directive itself (.htaccess on Apache, .user.ini on PHP-FPM). PHP-FPM caches .user.ini for up to five minutes — the status flips to Running on its own.', 'reportedip-hive' ) . '</div>';
-			} else {
-				echo '<p class="rip-help-text">' . esc_html__( 'This server is auto-managed — Hive wrote and maintains the directive itself (.htaccess on Apache, .user.ini on PHP-FPM).', 'reportedip-hive' ) . '</p>';
-			}
+		if ( $auto && $running ) {
+			echo '<p class="rip-help-text">' . esc_html__( 'This server is auto-managed — Hive wrote and maintains the directive itself (.htaccess on Apache, .user.ini on PHP-FPM).', 'reportedip-hive' ) . '</p>';
 			echo '</div></div>';
 			return;
 		}
 
-		if ( ! $running ) {
+		/*
+		 * `detect_server()` reports the PHP SAPI, so an nginx + PHP-FPM stack is
+		 * classified as `fpm` and Hive writes a `.user.ini`. That file is only
+		 * honoured when PHP's `user_ini.filename` is enabled and the document
+		 * root is the scan path — frequently not the case on nginx. When the
+		 * auto-written directive has not taken effect we therefore fall through
+		 * to the manual snippets (php.ini / FPM pool + nginx server block) so
+		 * nginx operators are never left without instructions.
+		 */
+		if ( $auto && ! $running ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Hive wrote the directive automatically (.htaccess on Apache, .user.ini on PHP-FPM), and PHP-FPM caches .user.ini for up to five minutes — give it a moment. If the status never flips to Running — common on nginx, or when PHP\'s user_ini.filename is disabled or the document root is not the .user.ini scan path — apply ONE of the manual options below instead.', 'reportedip-hive' ) . '</div>';
+		} elseif ( ! $running ) {
 			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'One manual step: add the directive below. Pick exactly ONE of the two options — whichever your hosting lets you edit. The status above flips to Running automatically once the directive is live.', 'reportedip-hive' ) . '</div>';
 		}
 
 		self::render_snippet(
 			'rip-waf-snip-phpini',
-			__( 'Option A — php.ini / hosting panel (recommended)', 'reportedip-hive' ),
+			__( 'Option A — php.ini / PHP-FPM pool / hosting panel (recommended)', 'reportedip-hive' ),
 			$dropin->php_ini_snippet(),
-			__( 'Most managed hosts (ISPConfig, Plesk, cPanel) offer a "custom php.ini settings" field — paste this single line there and reload PHP-FPM. This is usually the easiest route.', 'reportedip-hive' )
+			__( 'Most managed hosts (ISPConfig, Plesk, cPanel) offer a "custom php.ini settings" field — paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx.', 'reportedip-hive' )
 		);
 
 		self::render_snippet(
