@@ -6,6 +6,14 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixed
 
+- **Hidden login no longer breaks on trailing-slash sites.** The login form
+  action was generated as `…/<slug>` without a trailing slash. On a site whose
+  permalinks use trailing slashes — and whose web server enforces them (common
+  on nginx) — a POST to `/<slug>` is answered with a 301 redirect to `/<slug>/`,
+  which the browser replays as a GET and silently drops the credentials. Sign-in
+  then appeared to do nothing. The login URL now follows the site's permalink
+  convention (`user_trailingslashit()`), so the form posts straight to `/<slug>/`
+  and no redirect happens. Sites without trailing-slash permalinks are unchanged.
 - **Hidden login no longer breaks behind a page cache (WP Rocket & co.).**
   When "Hide login" was active, the custom login slug is an ordinary URL, so
   page-cache plugins happily cached it. A cached login page is served as static

@@ -7891,37 +7891,37 @@ msgid "Not found."
 msgstr "Nicht gefunden."
 
 #. translators: 1: minimum slug length, 2: maximum slug length
-#: includes/class-hide-login.php:571
+#: includes/class-hide-login.php:619
 #, php-format
 msgid "The login slug must be %1$d–%2$d characters of lowercase letters, digits, dashes or underscores, and may not start or end with a dash."
 msgstr "Der Anmelde-Slug muss %1$d–%2$d Zeichen aus Kleinbuchstaben, Ziffern, Bindestrichen oder Unterstrichen enthalten und darf nicht mit einem Bindestrich beginnen oder enden."
 
 #. translators: %s: rejected slug
-#: includes/class-hide-login.php:584
+#: includes/class-hide-login.php:632
 #, php-format
 msgid "The slug \"%s\" is reserved by WordPress and cannot be used."
 msgstr "Der Slug \"%s\" ist von WordPress reserviert und kann nicht verwendet werden."
 
 #. translators: 1: rejected slug, 2: where it already exists
-#: includes/class-hide-login.php:595
+#: includes/class-hide-login.php:643
 #, php-format
 msgid "The slug \"%1$s\" already exists as %2$s. Pick a different slug."
 msgstr "Der Slug \"%1$s\" existiert bereits als %2$s. Wählen Sie einen anderen Slug."
 
-#: includes/class-hide-login.php:614
+#: includes/class-hide-login.php:662
 msgid "a published page"
 msgstr "eine veröffentlichte Seite"
 
-#: includes/class-hide-login.php:619
+#: includes/class-hide-login.php:667
 msgid "a published post"
 msgstr "ein veröffentlichter Beitrag"
 
-#: includes/class-hide-login.php:624
+#: includes/class-hide-login.php:672
 msgid "a user/author archive"
 msgstr "ein Benutzer-/Autorenarchiv"
 
 #. translators: %s: taxonomy name
-#: includes/class-hide-login.php:631
+#: includes/class-hide-login.php:679
 #, php-format
 msgid "a %s archive"
 msgstr "ein %s-Archiv"

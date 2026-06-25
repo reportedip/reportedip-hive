@@ -120,6 +120,22 @@ namespace {
 		}
 	}
 
+	if ( ! function_exists( 'untrailingslashit' ) ) {
+		function untrailingslashit( $string ) {
+			return rtrim( (string) $string, '/\\' );
+		}
+	}
+
+	if ( ! function_exists( 'user_trailingslashit' ) ) {
+		/**
+		 * Test double: emulate a site that uses trailing-slash permalinks, so
+		 * the production behaviour (slash added) is exercised deterministically.
+		 */
+		function user_trailingslashit( $string, $type_of_url = '' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return rtrim( (string) $string, '/' ) . '/';
+		}
+	}
+
 	require_once dirname( __DIR__, 2 ) . '/includes/class-hide-login.php';
 }
 
@@ -281,6 +297,30 @@ class HideLoginTest extends TestCase {
 			array( '/welcome(/.*)?' ),
 			$this->instance()->exclude_login_from_cache_uri( null ),
 			'A non-array filter value (some cache plugins pass null) must not fatal.'
+		);
+	}
+
+	public function test_filter_url_adds_trailing_slash_to_login_action() {
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_enabled']       = true;
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_slug']          = 'welcome';
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_token_in_urls'] = false;
+
+		$this->assertSame(
+			'http://site.test/welcome/',
+			$this->instance()->filter_url( 'http://site.test/wp-login.php' ),
+			'On a trailing-slash site the login form action must post straight to /<slug>/ so a 301 cannot drop the POST body.'
+		);
+	}
+
+	public function test_filter_url_preserves_query_string_when_adding_slash() {
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_enabled']       = true;
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_slug']          = 'welcome';
+		$GLOBALS['wp_options']['reportedip_hive_hide_login_token_in_urls'] = false;
+
+		$this->assertSame(
+			'http://site.test/welcome/?action=logout&_wpnonce=abc',
+			$this->instance()->filter_url( 'http://site.test/wp-login.php?action=logout&_wpnonce=abc' ),
+			'The slash belongs on the path; the query string (logout action + nonce) must stay intact.'
 		);
 	}
 

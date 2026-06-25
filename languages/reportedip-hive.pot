@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-25T19:43:46+00:00\n"
+"POT-Creation-Date: 2026-06-25T20:33:46+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -7899,37 +7899,37 @@ msgid "Not found."
 msgstr ""
 
 #. translators: 1: minimum slug length, 2: maximum slug length
-#: includes/class-hide-login.php:571
+#: includes/class-hide-login.php:619
 #, php-format
 msgid "The login slug must be %1$d–%2$d characters of lowercase letters, digits, dashes or underscores, and may not start or end with a dash."
 msgstr ""
 
 #. translators: %s: rejected slug
-#: includes/class-hide-login.php:584
+#: includes/class-hide-login.php:632
 #, php-format
 msgid "The slug \"%s\" is reserved by WordPress and cannot be used."
 msgstr ""
 
 #. translators: 1: rejected slug, 2: where it already exists
-#: includes/class-hide-login.php:595
+#: includes/class-hide-login.php:643
 #, php-format
 msgid "The slug \"%1$s\" already exists as %2$s. Pick a different slug."
 msgstr ""
 
-#: includes/class-hide-login.php:614
+#: includes/class-hide-login.php:662
 msgid "a published page"
 msgstr ""
 
-#: includes/class-hide-login.php:619
+#: includes/class-hide-login.php:667
 msgid "a published post"
 msgstr ""
 
-#: includes/class-hide-login.php:624
+#: includes/class-hide-login.php:672
 msgid "a user/author archive"
 msgstr ""
 
 #. translators: %s: taxonomy name
-#: includes/class-hide-login.php:631
+#: includes/class-hide-login.php:679
 #, php-format
 msgid "a %s archive"
 msgstr ""

@@ -343,6 +343,8 @@ The full structured changelog lives in [CHANGELOG.md](https://github.com/reporte
 
 = 2.1.19 =
 
+Fixed: hidden login no longer breaks on trailing-slash sites. The login form action was generated without a trailing slash, so on sites whose server enforces trailing slashes a POST to the login slug was 301-redirected and the credentials were dropped — sign-in appeared to do nothing. The login URL now follows the site's permalink convention. Sites without trailing-slash permalinks are unchanged.
+
 Fixed: hidden login no longer breaks behind a page cache (WP Rocket and others). The custom login slug is an ordinary URL, so cache plugins could store it; a cached login page never sets the cookie that wp-login.php checks, and the next sign-in silently failed. The login page now opts out of every known page cache (WP Rocket, W3 Total Cache, WP Super Cache, WP Fastest Cache, Comet Cache, Cache Enabler, Hummingbird, LiteSpeed) before it renders.
 
 = 2.1.18 =

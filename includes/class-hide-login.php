@@ -518,8 +518,56 @@ class ReportedIP_Hive_Hide_Login {
 
 		$slug = $this->get_slug();
 		$new  = str_replace( 'wp-login.php', $slug, $url );
+		$new  = $this->apply_login_trailing_slash( $new, $slug );
 
 		return $this->maybe_add_token( $new, $slug );
+	}
+
+	/**
+	 * Normalise the rewritten login URL's trailing slash to the site's
+	 * permalink convention.
+	 *
+	 * `str_replace()` inherits wp-login.php's slash-less form, so the login
+	 * form action comes out as `…/<slug>` with no trailing slash. On a site
+	 * whose permalinks use trailing slashes — and whose web server enforces
+	 * them — a POST to `/<slug>` is answered with a 301 redirect to `/<slug>/`,
+	 * which the browser replays as a GET, silently dropping the POST body. The
+	 * sign-in then appears to do nothing. Routing the URL through
+	 * user_trailingslashit() makes the form post straight to `/<slug>/`, so no
+	 * redirect happens.
+	 *
+	 * Only the bare slug path is adjusted; the query string and fragment are
+	 * preserved, and installs that do not use trailing-slash permalinks are
+	 * left untouched.
+	 *
+	 * @param string $url  Rewritten login URL.
+	 * @param string $slug Hidden login slug.
+	 * @return string
+	 */
+	private function apply_login_trailing_slash( string $url, string $slug ): string {
+		if ( '' === $slug || ! function_exists( 'user_trailingslashit' ) ) {
+			return $url;
+		}
+
+		$fragment = '';
+		$hash_pos = strpos( $url, '#' );
+		if ( false !== $hash_pos ) {
+			$fragment = substr( $url, $hash_pos );
+			$url      = substr( $url, 0, $hash_pos );
+		}
+
+		$query = '';
+		$q_pos = strpos( $url, '?' );
+		if ( false !== $q_pos ) {
+			$query = substr( $url, $q_pos );
+			$url   = substr( $url, 0, $q_pos );
+		}
+
+		if ( preg_match( '#/' . preg_quote( $slug, '#' ) . '/?$#', $url ) ) {
+			$url = user_trailingslashit( untrailingslashit( $url ) );
+		}
+
+		return $url . $query . $fragment;
 	}
 
 	/**
