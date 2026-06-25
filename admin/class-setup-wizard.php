@@ -1647,6 +1647,10 @@ class ReportedIP_Hive_Setup_Wizard {
 						</div>
 						<p class="rip-help-text"><?php esc_html_e( '3–50 characters: lowercase letters, digits, dashes or underscores. We will reject reserved WordPress paths and existing post/page slugs when you save.', 'reportedip-hive' ); ?></p>
 						<p class="rip-help-text rip-validation-line" id="rip-hide-login-validation" aria-live="polite"></p>
+							<div class="rip-gdpr-notice rip-mt-3">
+								<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+								<span><?php esc_html_e( 'Works with page caches: Hive automatically excludes the login URL from WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache and other caching plugins. After changing the slug, clear your page cache once so the old URL is purged.', 'reportedip-hive' ); ?></span>
+							</div>
 					</div>
 
 					<hr class="rip-helper-divider">

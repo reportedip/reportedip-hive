@@ -5272,6 +5272,10 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 				</div>
 
+				<div class="rip-alert rip-alert--info">
+					<?php esc_html_e( 'Page-cache compatible: Hive automatically excludes the login URL from caching for WP Rocket, LiteSpeed Cache, W3 Total Cache, WP Super Cache, WP Fastest Cache, Cache Enabler, Comet Cache and Hummingbird. After changing the slug, clear your page cache once so the previous URL is purged.', 'reportedip-hive' ); ?>
+				</div>
+
 				<div class="rip-settings-section">
 					<h2 class="rip-settings-section__title">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
