@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.19
+Stable tag: 2.1.20
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -341,7 +341,7 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
-= Unreleased =
+= 2.1.20 =
 
 Fixed: the WAF Extended Protection (auto_prepend_file) screen now shows nginx setup instructions. nginx + PHP-FPM was treated as fully auto-managed, hiding the manual snippets; when the auto-written .user.ini does not take effect, the Server Setup tab now shows the php.ini / PHP-FPM-pool line and the nginx server-block snippet.
 

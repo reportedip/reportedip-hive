@@ -10071,11 +10071,11 @@ msgstr "Funktioniert mit Seiten-Caches: Hive nimmt die Login-URL automatisch vom
 #: admin/class-admin-firewall.php:865
 #, php-format
 msgid "The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes — reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead."
-msgstr "Die Direktive wurde automatisch geschrieben. PHP-FPM cacht die .user.ini bis zu fünf Minuten — lade die Seite gleich neu. Falls der Status nie auf „Läuft" springt (häufig bei nginx + PHP-FPM), enthält der %1$sServer-Setup-Tab%2$s eine manuelle nginx-/php.ini-Option, die du stattdessen anwenden kannst."
+msgstr "Die Direktive wurde automatisch geschrieben. PHP-FPM cacht die .user.ini bis zu fünf Minuten — lade die Seite gleich neu. Falls der Status nie auf „Läuft\" springt (häufig bei nginx + PHP-FPM), enthält der %1$sServer-Setup-Tab%2$s eine manuelle nginx-/php.ini-Option, die du stattdessen anwenden kannst."
 
 #: admin/class-admin-firewall.php:1335
 msgid "Hive wrote the directive automatically (.htaccess on Apache, .user.ini on PHP-FPM), and PHP-FPM caches .user.ini for up to five minutes — give it a moment. If the status never flips to Running — common on nginx, or when PHP's user_ini.filename is disabled or the document root is not the .user.ini scan path — apply ONE of the manual options below instead."
-msgstr "Hive hat die Direktive automatisch geschrieben (.htaccess bei Apache, .user.ini bei PHP-FPM), und PHP-FPM cacht die .user.ini bis zu fünf Minuten — gib ihr einen Moment. Falls der Status nie auf „Läuft" springt — häufig bei nginx, oder wenn PHPs user_ini.filename deaktiviert ist oder das Document-Root nicht der .user.ini-Scan-Pfad ist — wende stattdessen EINE der manuellen Optionen unten an."
+msgstr "Hive hat die Direktive automatisch geschrieben (.htaccess bei Apache, .user.ini bei PHP-FPM), und PHP-FPM cacht die .user.ini bis zu fünf Minuten — gib ihr einen Moment. Falls der Status nie auf „Läuft\" springt — häufig bei nginx, oder wenn PHPs user_ini.filename deaktiviert ist oder das Document-Root nicht der .user.ini-Scan-Pfad ist — wende stattdessen EINE der manuellen Optionen unten an."
 
 #: admin/class-admin-firewall.php:1342
 msgid "Option A — php.ini / PHP-FPM pool / hosting panel (recommended)"
@@ -10083,4 +10083,4 @@ msgstr "Option A — php.ini / PHP-FPM-Pool / Hosting-Panel (empfohlen)"
 
 #: admin/class-admin-firewall.php:1344
 msgid "Most managed hosts (ISPConfig, Plesk, cPanel) offer a \"custom php.ini settings\" field — paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx."
-msgstr "Die meisten Managed-Hoster (ISPConfig, Plesk, cPanel) bieten ein Feld „eigene php.ini-Einstellungen" — füge diese eine Zeile dort ein und lade PHP-FPM neu. In einer PHP-FPM-Pool-Konfiguration lautet die entsprechende Zeile php_admin_value[auto_prepend_file] = <derselbe Pfad>. Auf nginx ist das meist der einfachste Weg."
+msgstr "Die meisten Managed-Hoster (ISPConfig, Plesk, cPanel) bieten ein Feld „eigene php.ini-Einstellungen\" — füge diese eine Zeile dort ein und lade PHP-FPM neu. In einer PHP-FPM-Pool-Konfiguration lautet die entsprechende Zeile php_admin_value[auto_prepend_file] = <derselbe Pfad>. Auf nginx ist das meist der einfachste Weg."
