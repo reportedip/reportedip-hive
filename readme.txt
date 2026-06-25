@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.18
+Stable tag: 2.1.19
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -341,7 +341,7 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
-= Unreleased =
+= 2.1.19 =
 
 Fixed: hidden login no longer breaks behind a page cache (WP Rocket and others). The custom login slug is an ordinary URL, so cache plugins could store it; a cached login page never sets the cookie that wp-login.php checks, and the next sign-in silently failed. The login page now opts out of every known page cache (WP Rocket, W3 Total Cache, WP Super Cache, WP Fastest Cache, Comet Cache, Cache Enabler, Hummingbird, LiteSpeed) before it renders.
 
