@@ -4,7 +4,7 @@
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence
  * with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.1.20
+ * Version: 2.1.21
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -55,7 +55,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.1.20' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.1.21' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -1553,6 +1553,34 @@ class ReportedIP_Hive {
 			header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
 			header( 'Pragma: no-cache' );
 		}
+	}
+
+	/**
+	 * Neutralise the front-end head/footer side-effects that misfire when a
+	 * standalone plugin page (setup wizard, 2FA onboarding) renders inside
+	 * wp-admin.
+	 *
+	 * Because `is_admin()` is true while `wp_head()`/`wp_footer()` run, the
+	 * front-end `wp_enqueue_scripts` phase would invoke third-party theme /
+	 * optimisation callbacks that deregister core scripts like jQuery — which
+	 * WordPress rejects in the admin area with a `_doing_it_wrong` notice. These
+	 * pages enqueue their own assets directly, so the whole front-end enqueue
+	 * phase plus the emoji detector and the admin-bar bump styles are pure
+	 * third-party noise here. Callers still hide the bar via
+	 * `show_admin_bar( false )`.
+	 *
+	 * @since 2.1.21
+	 * @return void
+	 */
+	public static function isolate_standalone_frontend_page() {
+		remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+		remove_action( 'wp_print_styles', 'print_emoji_styles' );
+		remove_action( 'wp_head', 'wp_admin_bar_header' );
+		remove_action( 'wp_footer', 'wp_admin_bar_render', 1000 );
+		remove_action( 'wp_head', 'wp_enqueue_scripts', 1 );
+		remove_action( 'wp_head', 'wp_enqueue_admin_bar_bump_styles' );
+		remove_action( 'wp_head', 'wp_enqueue_admin_bar_header_styles' );
+		remove_action( 'wp_head', '_admin_bar_bump_cb' );
 	}
 
 	/**

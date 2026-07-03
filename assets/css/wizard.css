@@ -166,13 +166,17 @@ body.rip-wizard-page [hidden] {
 /* Step Indicator */
 .rip-wizard__steps {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    align-items: flex-start;
+    gap: 0.15rem;
     margin-bottom: 3rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 
 .rip-wizard__step {
     display: flex;
+    flex: 0 1 auto;
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
@@ -210,10 +214,12 @@ body.rip-wizard-page [hidden] {
 }
 
 .rip-wizard__step-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--rip-gray-600);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
+    text-align: center;
+    line-height: 1.2;
     white-space: nowrap;
 }
 
@@ -227,11 +233,13 @@ body.rip-wizard-page [hidden] {
 }
 
 .rip-wizard__step-connector {
-    width: 4rem;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0.75rem;
     height: 2px;
     background: var(--rip-gray-200);
-    margin: 0 0.5rem;
-    margin-bottom: 1.5rem;
+    margin: 1.25rem 0.35rem 0;
+    align-self: flex-start;
 }
 
 .rip-wizard__step-connector--completed {
@@ -1403,6 +1411,7 @@ body.rip-wizard-page [hidden] {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-width: 0;
 }
 
 .rip-config-card__body .rip-gdpr-select-group + .rip-gdpr-select-group {
@@ -1415,35 +1424,52 @@ body.rip-wizard-page [hidden] {
     font-weight: 500;
 }
 
+/*
+ * The wizard renders inside the active front-end theme, so its stylesheet can
+ * override a bare <select> — collapsing the width or forcing an unreadable
+ * (e.g. white-on-white) text colour. Pin the layout-critical properties with
+ * !important so the control stays full-width and legible regardless of theme.
+ */
 body.rip-wizard-page select.rip-select {
-    width: 100%;
-    padding: 0.625rem 2rem 0.625rem 0.75rem;
-    background: #fff;
-    border: 1px solid var(--rip-gray-300);
+    display: block !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 2.75rem;
+    margin: 0 !important;
+    padding: 0.625rem 2rem 0.625rem 0.75rem !important;
+    background-color: #fff !important;
+    border: 1px solid var(--rip-gray-300) !important;
     border-radius: var(--rip-radius);
-    color: var(--rip-gray-900);
-    font-size: 0.875rem;
-    line-height: 1.4;
+    color: var(--rip-gray-900) !important;
+    -webkit-text-fill-color: var(--rip-gray-900);
+    font-size: 0.875rem !important;
+    font-family: var(--rip-font-sans, inherit);
+    line-height: 1.4 !important;
+    text-transform: none !important;
     transition: var(--rip-transition);
     cursor: pointer;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.5rem center;
-    background-size: 1.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.5rem center !important;
+    background-size: 1.25rem !important;
 }
 
 body.rip-wizard-page select.rip-select:focus {
     outline: none;
-    border-color: var(--rip-primary);
+    border-color: var(--rip-primary) !important;
     box-shadow: 0 0 0 3px var(--rip-primary-100);
 }
 
 body.rip-wizard-page select.rip-select option {
-    background: #fff;
-    color: var(--rip-gray-900);
+    background-color: #fff !important;
+    color: var(--rip-gray-900) !important;
+    -webkit-text-fill-color: var(--rip-gray-900);
 }
 
 .rip-gdpr-notice {

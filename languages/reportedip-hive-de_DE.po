@@ -51,7 +51,7 @@ msgstr "WAF-Signaturen"
 
 #: admin/class-admin-firewall.php:163
 #: admin/class-admin-firewall.php:603
-#: admin/class-setup-wizard.php:985
+#: admin/class-setup-wizard.php:999
 #: includes/class-mode-manager.php:295
 #: includes/class-score.php:233
 msgid "Web Application Firewall"
@@ -176,7 +176,7 @@ msgstr "Modul"
 #: admin/class-admin-settings.php:1816
 #: admin/class-admin-settings.php:5910
 #: admin/class-api-queue-table.php:53
-#: admin/class-two-factor-admin.php:1548
+#: admin/class-two-factor-admin.php:1561
 #: includes/class-two-factor-dashboard.php:107
 msgid "Status"
 msgstr "Status"
@@ -211,8 +211,8 @@ msgstr "WAF-Engine"
 #: admin/class-admin-settings.php:3701
 #: admin/class-admin-settings.php:6353
 #: admin/class-admin-settings.php:8075
-#: admin/class-setup-wizard.php:1842
-#: admin/class-two-factor-admin.php:2118
+#: admin/class-setup-wizard.php:1868
+#: admin/class-two-factor-admin.php:2131
 msgid "Active"
 msgstr "Aktiv"
 
@@ -259,10 +259,10 @@ msgstr "Anfragen werden nicht geprüft."
 #: admin/class-admin-firewall.php:1767
 #: admin/class-admin-firewall.php:1777
 #: admin/class-admin-settings.php:8077
-#: admin/class-setup-wizard.php:1030
-#: admin/class-setup-wizard.php:1853
-#: admin/class-setup-wizard.php:1889
-#: admin/class-setup-wizard.php:1905
+#: admin/class-setup-wizard.php:1056
+#: admin/class-setup-wizard.php:1879
+#: admin/class-setup-wizard.php:1915
+#: admin/class-setup-wizard.php:1931
 msgid "Off"
 msgstr "Aus"
 
@@ -289,6 +289,7 @@ msgstr "Aktiviert, aber die Server-Direktive ist noch nicht aktiv."
 
 #: admin/class-admin-firewall.php:361
 #: admin/class-admin-firewall.php:833
+#: admin/class-setup-wizard.php:1021
 msgid "Extended Protection (pre-WordPress)"
 msgstr "Erweiterter Schutz (vor WordPress)"
 
@@ -448,7 +449,7 @@ msgstr "Aktiv blockierend"
 
 #: admin/class-admin-firewall.php:617
 #: admin/class-admin-firewall.php:1040
-#: admin/class-setup-wizard.php:1834
+#: admin/class-setup-wizard.php:1860
 msgid "Mode"
 msgstr "Modus"
 
@@ -651,10 +652,6 @@ msgstr "Unbekannt"
 msgid "Waiting for server config"
 msgstr "Wartet auf Server-Konfiguration"
 
-#: admin/class-admin-firewall.php:834
-msgid "Optionally run the firewall before WordPress loads, so a malicious request is rejected earlier and cheaper. Off by default. On Apache and PHP-FPM the configuration is written automatically; on nginx or via php.ini one manual step is needed (see Server Setup)."
-msgstr "Lässt die Firewall optional laufen, bevor WordPress lädt — eine bösartige Anfrage wird so früher und ressourcenschonender abgewiesen. Standardmäßig aus. Auf Apache und PHP-FPM wird die Konfiguration automatisch geschrieben; bei nginx oder via php.ini ist ein manueller Schritt nötig (siehe Server-Setup)."
-
 #: admin/class-admin-firewall.php:847
 #: admin/class-admin-firewall.php:1229
 msgid "Detected server"
@@ -741,7 +738,7 @@ msgid "The bundled baseline crawler list is active. Connect the Community Networ
 msgstr "Die mitgelieferte Basis-Crawler-Liste ist aktiv. Verbinden Sie das Community-Netzwerk für die server-gelieferte Liste."
 
 #: admin/class-admin-firewall.php:989
-#: admin/class-setup-wizard.php:1013
+#: admin/class-setup-wizard.php:1039
 msgid "Off — do not verify"
 msgstr "Aus — nicht verifizieren"
 
@@ -775,12 +772,12 @@ msgid "Domain list"
 msgstr "Domain-Liste"
 
 #: admin/class-admin-firewall.php:1053
-#: admin/class-setup-wizard.php:1031
+#: admin/class-setup-wizard.php:1057
 msgid "Monitor — log only (recommended)"
 msgstr "Überwachen — nur protokollieren (empfohlen)"
 
 #: admin/class-admin-firewall.php:1054
-#: admin/class-setup-wizard.php:1032
+#: admin/class-setup-wizard.php:1058
 msgid "Block — reject registration"
 msgstr "Blockieren — Registrierung abweisen"
 
@@ -863,7 +860,7 @@ msgid "Tune the 404 thresholds on the %1$sProtection settings%2$s; review the ac
 msgstr "Stelle die 404-Schwellen unter %1$sSchutz-Einstellungen%2$s ein; die aktive Probe-Pfad-Liste findest du im Tab %3$sRegel-Sync%4$s."
 
 #: admin/class-admin-firewall.php:1196
-#: admin/class-setup-wizard.php:1842
+#: admin/class-setup-wizard.php:1868
 msgid "Inactive"
 msgstr "Inaktiv"
 
@@ -1119,7 +1116,7 @@ msgstr "Die mitgelieferten Basis-Regelsätze bleiben in jedem Tarif aktiv und ko
 #: admin/class-admin-firewall.php:1591
 #: admin/class-admin-settings.php:800
 #: admin/class-admin-settings.php:1075
-#: admin/class-two-factor-admin.php:1190
+#: admin/class-two-factor-admin.php:1203
 msgid "Unlock with Professional"
 msgstr "Mit Professional freischalten"
 
@@ -1172,7 +1169,7 @@ msgid "Hardening response headers tell the browser to refuse risky behaviour —
 msgstr "Hardening-Response-Header weisen den Browser an, riskantes Verhalten zu verweigern — MIME-Sniffing, Einbettung durch fremde Seiten, Referrer-Lecks, Downgrade auf HTTP. Hive sendet sie per PHP mit jeder Frontend-Antwort; ein optionaler Export für statische Dateien auf Server-Ebene befindet sich im Server-Setup-Tab."
 
 #: admin/class-admin-firewall.php:1624
-#: admin/class-setup-wizard.php:1887
+#: admin/class-setup-wizard.php:1913
 msgid "On"
 msgstr "Ein"
 
@@ -1345,22 +1342,22 @@ msgid "Available with the Professional plan and higher"
 msgstr "Verfügbar ab dem Professional-Tarif"
 
 #: admin/class-admin-settings.php:652
-#: admin/class-setup-wizard.php:1281
+#: admin/class-setup-wizard.php:1307
 msgid "Themed challenge page on the My Account / Checkout slug"
 msgstr "Themenkonforme Challenge-Seite auf dem Mein-Konto-/Kassen-Slug"
 
 #: admin/class-admin-settings.php:653
-#: admin/class-setup-wizard.php:1282
+#: admin/class-setup-wizard.php:1308
 msgid "Themed onboarding wizard for Customer / Subscriber roles"
 msgstr "Themenkonformer Onboarding-Assistent für die Rollen Kunde / Abonnent"
 
 #: admin/class-admin-settings.php:654
-#: admin/class-setup-wizard.php:1283
+#: admin/class-setup-wizard.php:1309
 msgid "Cart and checkout state survive the redirect roundtrip"
 msgstr "Warenkorb- und Kassenstatus überstehen die Weiterleitung"
 
 #: admin/class-admin-settings.php:655
-#: admin/class-setup-wizard.php:1284
+#: admin/class-setup-wizard.php:1310
 msgid "WC Blocks Cart / Checkout error redirect listener"
 msgstr "Fehler-Weiterleitungs-Listener für WC-Blocks-Warenkorb und -Kasse"
 
@@ -1386,7 +1383,7 @@ msgid "Standalone protection without API connection. Perfect for privacy-focused
 msgstr "Eigenständiger Schutz ohne API-Verbindung. Perfekt für datenschutzorientierte Websites."
 
 #: admin/class-admin-settings.php:717
-#: admin/class-setup-wizard.php:669
+#: admin/class-setup-wizard.php:683
 msgid "Works offline"
 msgstr "Funktioniert offline"
 
@@ -1399,7 +1396,7 @@ msgid "Local blocking only"
 msgstr "Nur lokale Sperrung"
 
 #: admin/class-admin-settings.php:739
-#: admin/class-setup-wizard.php:689
+#: admin/class-setup-wizard.php:703
 #: includes/class-mode-manager.php:661
 msgid "Community Network"
 msgstr "Community-Netzwerk"
@@ -1417,7 +1414,7 @@ msgid "Community blocklists"
 msgstr "Community-Sperrlisten"
 
 #: admin/class-admin-settings.php:744
-#: admin/class-setup-wizard.php:1874
+#: admin/class-setup-wizard.php:1900
 msgid "GDPR compliant"
 msgstr "DSGVO-konform"
 
@@ -1625,21 +1622,21 @@ msgid "Awaiting fresh quota data — refreshes every 6 hours."
 msgstr "Warten auf aktuelle Kontingentdaten — Aktualisierung alle 6 Stunden."
 
 #: admin/class-admin-settings.php:1246
-#: admin/class-setup-wizard.php:1937
+#: admin/class-setup-wizard.php:1963
 #: includes/class-two-factor-dashboard.php:142
 #: templates/two-factor-onboarding.php:523
 msgid "Security Focused"
 msgstr "Sicherheitsorientiert"
 
 #: admin/class-admin-settings.php:1250
-#: admin/class-setup-wizard.php:1941
+#: admin/class-setup-wizard.php:1967
 #: includes/class-two-factor-dashboard.php:146
 #: templates/two-factor-onboarding.php:527
 msgid "GDPR Compliant"
 msgstr "DSGVO-konform"
 
 #: admin/class-admin-settings.php:1254
-#: admin/class-setup-wizard.php:1945
+#: admin/class-setup-wizard.php:1971
 #: includes/class-two-factor-dashboard.php:150
 #: templates/two-factor-onboarding.php:531
 msgid "Made in Germany"
@@ -1923,13 +1920,13 @@ msgid "Site overrides updated."
 msgstr "Website-Überschreibungen aktualisiert."
 
 #: admin/class-admin-settings.php:2051
-#: admin/class-setup-wizard.php:1272
-#: admin/class-two-factor-admin.php:496
+#: admin/class-setup-wizard.php:1298
+#: admin/class-two-factor-admin.php:509
 msgid "Frontend login for WooCommerce"
 msgstr "Frontend-Anmeldung für WooCommerce"
 
 #: admin/class-admin-settings.php:2055
-#: admin/class-two-factor-admin.php:500
+#: admin/class-two-factor-admin.php:513
 msgid "Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php."
 msgstr "Stellt den zweiten Faktor innerhalb des aktiven Storefront-Themes dar, wenn sich Kunden über Mein Konto, den klassischen Checkout oder die WooCommerce-Blöcke anmelden — anstatt sie zu wp-login.php weiterzuleiten."
 
@@ -2241,21 +2238,21 @@ msgstr "Kritisch"
 
 #: admin/class-admin-settings.php:3883
 #: admin/class-logs-table.php:388
-#: admin/class-setup-wizard.php:812
+#: admin/class-setup-wizard.php:826
 #: reportedip-hive.php:940
 msgid "High"
 msgstr "Hoch"
 
 #: admin/class-admin-settings.php:3884
 #: admin/class-logs-table.php:387
-#: admin/class-setup-wizard.php:805
+#: admin/class-setup-wizard.php:819
 #: reportedip-hive.php:941
 msgid "Medium"
 msgstr "Mittel"
 
 #: admin/class-admin-settings.php:3885
 #: admin/class-logs-table.php:386
-#: admin/class-setup-wizard.php:798
+#: admin/class-setup-wizard.php:812
 #: reportedip-hive.php:942
 msgid "Low"
 msgstr "Niedrig"
@@ -2465,7 +2462,7 @@ msgstr "Anmeldung verbergen"
 #: admin/class-admin-settings.php:4467
 #: admin/class-settings-import-export.php:122
 #: admin/class-setup-wizard.php:52
-#: admin/class-setup-wizard.php:1484
+#: admin/class-setup-wizard.php:1510
 msgid "Notifications"
 msgstr "Benachrichtigungen"
 
@@ -2858,7 +2855,7 @@ msgid "On = ladder (5 min → … → 7 d). Off = the fixed \"Block length\" bel
 msgstr "Ein = Staffelung (5 Min. → … → 7 Tage). Aus = die feste \"Sperrdauer\" unten. Whitelist-Einträge haben immer Vorrang."
 
 #: admin/class-admin-settings.php:5049
-#: admin/class-setup-wizard.php:1840
+#: admin/class-setup-wizard.php:1866
 msgid "Auto-blocking"
 msgstr "Automatische Sperrung"
 
@@ -2879,7 +2876,7 @@ msgid "When community-mode is on, only block IPs the network is at least this co
 msgstr "Wenn der Community-Modus aktiviert ist, werden nur IPs gesperrt, bei denen das Netzwerk mindestens so sicher ist (0–100). Niedriger = aggressiver, aber mehr Fehlalarme."
 
 #: admin/class-admin-settings.php:5071
-#: admin/class-setup-wizard.php:924
+#: admin/class-setup-wizard.php:938
 msgid "Block duration strategy"
 msgstr "Strategie für die Sperrdauer"
 
@@ -2994,7 +2991,7 @@ msgid "Hiding the login URL stops automated scanners but does not replace strong
 msgstr "Das Verstecken der Anmelde-URL stoppt automatisierte Scanner, ersetzt aber keine starken Passwörter, keine 2FA und keine Ratenbegrenzung. Verwenden Sie es als eine Schicht eines mehrstufigen Sicherheitskonzepts."
 
 #: admin/class-admin-settings.php:5250
-#: admin/class-setup-wizard.php:1639
+#: admin/class-setup-wizard.php:1665
 msgid "Enable Hide Login"
 msgstr "Hide Login aktivieren"
 
@@ -3104,7 +3101,7 @@ msgid "Learn more"
 msgstr "Mehr erfahren"
 
 #: admin/class-admin-settings.php:5432
-#: admin/class-setup-wizard.php:1490
+#: admin/class-setup-wizard.php:1516
 msgid "Alert recipients"
 msgstr "Benachrichtigungsempfänger"
 
@@ -3117,27 +3114,27 @@ msgid "Send admin notifications when security events occur"
 msgstr "Administrator-Benachrichtigungen senden, wenn Sicherheitsereignisse auftreten"
 
 #: admin/class-admin-settings.php:5445
-#: admin/class-setup-wizard.php:1500
+#: admin/class-setup-wizard.php:1526
 msgid "Recipients"
 msgstr "Empfänger"
 
 #: admin/class-admin-settings.php:5453
-#: admin/class-setup-wizard.php:1508
+#: admin/class-setup-wizard.php:1534
 msgid "One or more email addresses, separated by commas, spaces or new lines. Invalid entries are dropped on save."
 msgstr "Eine oder mehrere E-Mail-Adressen, getrennt durch Kommas, Leerzeichen oder Zeilenumbrüche. Ungültige Einträge werden beim Speichern verworfen."
 
 #: admin/class-admin-settings.php:5460
-#: admin/class-setup-wizard.php:1517
+#: admin/class-setup-wizard.php:1543
 msgid "Sender (used for all plugin mails)"
 msgstr "Absender (für alle Plugin-Mails verwendet)"
 
 #: admin/class-admin-settings.php:5462
-#: admin/class-setup-wizard.php:1520
+#: admin/class-setup-wizard.php:1546
 msgid "Applies to every plugin mail — security alerts AND 2FA login codes — so both arrive from the same address. Leave both fields empty to use the recommended defaults: your site name and the WordPress admin email."
 msgstr "Gilt für jede Plugin-Mail — Sicherheitswarnungen UND 2FA-Anmeldecodes — sodass beide von derselben Adresse eintreffen. Lassen Sie beide Felder leer, um die empfohlenen Standardwerte zu verwenden: Ihren Website-Namen und die WordPress-Administrator-E-Mail."
 
 #: admin/class-admin-settings.php:5465
-#: admin/class-setup-wizard.php:1523
+#: admin/class-setup-wizard.php:1549
 msgid "From name"
 msgstr "Absendername"
 
@@ -3148,22 +3145,22 @@ msgid "Display name shown in the recipient's inbox. Leave empty to use your site
 msgstr "Anzeigename, der im Posteingang des Empfängers angezeigt wird. Leer lassen, um Ihren Website-Namen zu verwenden (aktuell: %1$s). Tipp: Fügen Sie \"Security\" oder \"Alerts\" hinzu, um ihn sofort erkennbar zu machen, z. B. \"%2$s Security\"."
 
 #: admin/class-admin-settings.php:5492
-#: admin/class-setup-wizard.php:1549
+#: admin/class-setup-wizard.php:1575
 msgid "From email"
 msgstr "Absender-E-Mail"
 
 #: admin/class-admin-settings.php:5504
-#: admin/class-setup-wizard.php:1561
+#: admin/class-setup-wizard.php:1587
 msgid "Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.de, so any address you enter here is safe to use."
 msgstr "Wird als Reply-To verwendet, damit Antworten direkt in Ihrem Postfach ankommen. Mit dem PRO-Mail-Relay werden E-Mails von noreply@reportedip.de versendet, sodass jede hier eingetragene Adresse unbedenklich ist."
 
 #: admin/class-admin-settings.php:5506
-#: admin/class-setup-wizard.php:1563
+#: admin/class-setup-wizard.php:1589
 msgid "Should match a domain you own, so mail-server checks (SPF/DKIM) do not reject the message."
 msgstr "Sollte zu einer Domain passen, die Ihnen gehört, damit Mailserver-Prüfungen (SPF/DKIM) die Nachricht nicht ablehnen."
 
 #: admin/class-admin-settings.php:5517
-#: admin/class-setup-wizard.php:1575
+#: admin/class-setup-wizard.php:1601
 msgid "Sync with reportedip.de"
 msgstr "Mit reportedip.de synchronisieren"
 
@@ -3176,7 +3173,7 @@ msgid "Recommended on for PRO accounts."
 msgstr "Für PRO-Konten wird die Aktivierung empfohlen."
 
 #: admin/class-admin-settings.php:5530
-#: admin/class-setup-wizard.php:1581
+#: admin/class-setup-wizard.php:1607
 msgid "Mirror this contact set to my reportedip.de account"
 msgstr "Diese Kontaktdaten in mein reportedip.de-Konto spiegeln"
 
@@ -3486,8 +3483,6 @@ msgid "Held"
 msgstr "Gehalten"
 
 #: admin/class-admin-settings.php:5953
-#: includes/class-mode-manager.php:762
-#: includes/class-mode-manager.php:763
 msgid "Free"
 msgstr "Frei"
 
@@ -4059,7 +4054,7 @@ msgstr "Meldungen in der Warteschlange"
 
 #. translators: %d: number of days
 #: admin/class-admin-settings.php:7052
-#: admin/class-setup-wizard.php:1863
+#: admin/class-setup-wizard.php:1889
 #, php-format
 msgid "%d day"
 msgid_plural "%d days"
@@ -4292,7 +4287,7 @@ msgstr "Eine \"contributor\"-Tonalität wird als \"ReportedIP Contributor\" ange
 
 #: admin/class-admin-settings.php:7405
 #: admin/class-admin-settings.php:7605
-#: admin/class-two-factor-admin.php:1530
+#: admin/class-two-factor-admin.php:1543
 #: templates/two-factor-onboarding.php:291
 #: templates/two-factor-onboarding.php:448
 msgid "Copy"
@@ -4349,7 +4344,7 @@ msgstr "Angriffe abgewehrt"
 
 #: admin/class-admin-settings.php:7436
 #: admin/class-admin-settings.php:7440
-#: admin/class-setup-wizard.php:1732
+#: admin/class-setup-wizard.php:1758
 #: includes/class-frontend-shortcodes.php:372
 #: includes/class-frontend-shortcodes.php:415
 msgid "Active threat protection"
@@ -4381,7 +4376,7 @@ msgid "Failed logins blocked (30 days)"
 msgstr "Fehlgeschlagene Anmeldungen gesperrt (30 Tage)"
 
 #: admin/class-admin-settings.php:7452
-#: admin/class-setup-wizard.php:506
+#: admin/class-setup-wizard.php:520
 #: includes/class-frontend-shortcodes.php:396
 msgid "Brute-force protection"
 msgstr "Brute-Force-Schutz"
@@ -4427,7 +4422,7 @@ msgstr "Konfigurieren Sie jedes Attribut. Die Vorschau aktualisiert sich, währe
 
 #: admin/class-admin-settings.php:7492
 #: admin/class-admin-settings.php:7925
-#: admin/class-setup-wizard.php:1741
+#: admin/class-setup-wizard.php:1767
 msgid "Variant"
 msgstr "Variante"
 
@@ -4583,7 +4578,7 @@ msgid "Drop the shortcode into any post, page, widget, or template. The banner w
 msgstr "Fügen Sie den Shortcode in einen beliebigen Beitrag, eine Seite, ein Widget oder ein Template ein. Das Banner wird mit genau diesen Einstellungen dargestellt."
 
 #: admin/class-admin-settings.php:7630
-#: admin/class-two-factor-admin.php:1519
+#: admin/class-two-factor-admin.php:1532
 #: includes/class-two-factor-onboarding.php:403
 msgid "Copied!"
 msgstr "Kopiert!"
@@ -4661,7 +4656,7 @@ msgid "Shield icon"
 msgstr "Schild-Symbol"
 
 #: admin/class-admin-settings.php:7937
-#: admin/class-setup-wizard.php:1753
+#: admin/class-setup-wizard.php:1779
 msgid "Position"
 msgstr "Position"
 
@@ -4744,7 +4739,7 @@ msgid "Reported to community"
 msgstr "An die Community gemeldet"
 
 #: admin/class-admin-settings.php:8122
-#: admin/class-setup-wizard.php:840
+#: admin/class-setup-wizard.php:854
 msgid "Failed logins"
 msgstr "Fehlgeschlagene Anmeldungen"
 
@@ -4924,8 +4919,8 @@ msgid "Attempts"
 msgstr "Versuche"
 
 #: admin/class-api-queue-table.php:56
-#: admin/class-setup-wizard.php:364
-#: admin/class-two-factor-admin.php:1524
+#: admin/class-setup-wizard.php:378
+#: admin/class-two-factor-admin.php:1537
 #: includes/class-two-factor-onboarding.php:326
 #: includes/class-two-factor.php:1748
 #: reportedip-hive.php:822
@@ -5446,10 +5441,10 @@ msgstr "Änderungen in der Vorschau anzeigen"
 #: admin/class-settings-import-export.php:342
 #: admin/class-setup-wizard.php:104
 #: admin/class-setup-wizard.php:160
-#: admin/class-setup-wizard.php:1962
-#: admin/class-setup-wizard.php:1997
-#: admin/class-setup-wizard.php:2137
-#: admin/class-setup-wizard.php:2175
+#: admin/class-setup-wizard.php:1988
+#: admin/class-setup-wizard.php:2023
+#: admin/class-setup-wizard.php:2173
+#: admin/class-setup-wizard.php:2211
 #: includes/class-ajax-handler.php:152
 #: includes/class-ajax-handler.php:439
 #: includes/class-ajax-handler.php:463
@@ -5536,17 +5531,17 @@ msgid "Protection"
 msgstr "Schutz"
 
 #: admin/class-setup-wizard.php:50
-#: admin/class-setup-wizard.php:1846
+#: admin/class-setup-wizard.php:1872
 msgid "2FA"
 msgstr "2FA"
 
 #: admin/class-setup-wizard.php:51
-#: admin/class-setup-wizard.php:1868
+#: admin/class-setup-wizard.php:1894
 msgid "Privacy"
 msgstr "Datenschutz"
 
 #: admin/class-setup-wizard.php:54
-#: admin/class-setup-wizard.php:1895
+#: admin/class-setup-wizard.php:1921
 msgid "Promote"
 msgstr "Weiterempfehlen"
 
@@ -5568,886 +5563,886 @@ msgstr "Der Import von Einstellungen ist nicht verfügbar."
 msgid "Setup Wizard"
 msgstr "Einrichtungsassistent"
 
-#: admin/class-setup-wizard.php:287
+#: admin/class-setup-wizard.php:301
 msgid "ReportedIP Hive Setup"
 msgstr "ReportedIP Hive Einrichtung"
 
-#: admin/class-setup-wizard.php:360
+#: admin/class-setup-wizard.php:374
 msgid "Checking…"
 msgstr "Wird geprüft…"
 
-#: admin/class-setup-wizard.php:361
+#: admin/class-setup-wizard.php:375
 msgid "API key is valid!"
 msgstr "API-Schlüssel ist gültig!"
 
-#: admin/class-setup-wizard.php:362
-#: admin/class-setup-wizard.php:2027
+#: admin/class-setup-wizard.php:376
+#: admin/class-setup-wizard.php:2063
 msgid "Invalid API key."
 msgstr "Ungültiger API-Schlüssel."
 
-#: admin/class-setup-wizard.php:363
+#: admin/class-setup-wizard.php:377
 msgid "Validation failed."
 msgstr "Validierung fehlgeschlagen."
 
-#: admin/class-setup-wizard.php:365
+#: admin/class-setup-wizard.php:379
 msgid "Error. Please try again."
 msgstr "Fehler. Bitte versuchen Sie es erneut."
 
-#: admin/class-setup-wizard.php:366
-#: admin/class-setup-wizard.php:2003
+#: admin/class-setup-wizard.php:380
+#: admin/class-setup-wizard.php:2029
 msgid "Please enter an API key."
 msgstr "Bitte geben Sie einen API-Schlüssel ein."
 
-#: admin/class-setup-wizard.php:367
+#: admin/class-setup-wizard.php:381
 msgid "Saving…"
 msgstr "Wird gespeichert…"
 
-#: admin/class-setup-wizard.php:368
+#: admin/class-setup-wizard.php:382
 msgid "Saved!"
 msgstr "Gespeichert!"
 
-#: admin/class-setup-wizard.php:369
+#: admin/class-setup-wizard.php:383
 msgid "Finishing setup…"
 msgstr "Einrichtung wird abgeschlossen…"
 
-#: admin/class-setup-wizard.php:370
+#: admin/class-setup-wizard.php:384
 msgid "Redirecting to dashboard…"
 msgstr "Weiterleitung zum Dashboard…"
 
-#: admin/class-setup-wizard.php:371
-#: admin/class-setup-wizard.php:902
+#: admin/class-setup-wizard.php:385
+#: admin/class-setup-wizard.php:916
 msgid "No monitoring active — the plugin is effectively disabled."
 msgstr "Keine Überwachung aktiv — das Plugin ist faktisch deaktiviert."
 
-#: admin/class-setup-wizard.php:372
+#: admin/class-setup-wizard.php:386
 msgid "Please choose at least one method when 2FA is active."
 msgstr "Bitte wählen Sie mindestens eine Methode aus, wenn 2FA aktiv ist."
 
-#: admin/class-setup-wizard.php:373
+#: admin/class-setup-wizard.php:387
 msgid "Please pick at least one role to enforce 2FA for. Administrator was re-selected as a safe default."
 msgstr "Bitte wählen Sie mindestens eine Rolle aus, für die 2FA erzwungen werden soll. Administrator wurde als sichere Standardeinstellung erneut ausgewählt."
 
-#: admin/class-setup-wizard.php:374
+#: admin/class-setup-wizard.php:388
 msgid "Really skip setup? You can configure the plugin anytime in Settings."
 msgstr "Einrichtung wirklich überspringen? Sie können das Plugin jederzeit in den Einstellungen konfigurieren."
 
-#: admin/class-setup-wizard.php:403
+#: admin/class-setup-wizard.php:417
 msgid "Skip setup"
 msgstr "Einrichtung überspringen"
 
-#: admin/class-setup-wizard.php:497
+#: admin/class-setup-wizard.php:511
 msgid "Welcome to ReportedIP Hive"
 msgstr "Willkommen bei ReportedIP Hive"
 
-#: admin/class-setup-wizard.php:498
+#: admin/class-setup-wizard.php:512
 msgid "Set up brute-force protection, community reputation and 2FA. Free forever; no account required to start."
 msgstr "Richten Sie Brute-Force-Schutz, Community-Reputation und 2FA ein. Für immer kostenlos; kein Konto erforderlich, um zu starten."
 
-#: admin/class-setup-wizard.php:507
+#: admin/class-setup-wizard.php:521
 msgid "Detect and block login, comment and XMLRPC attacks automatically."
 msgstr "Erkennen und sperren Sie Anmelde-, Kommentar- und XMLRPC-Angriffe automatisch."
 
-#: admin/class-setup-wizard.php:515
+#: admin/class-setup-wizard.php:529
 msgid "Community reputation"
 msgstr "Community-Reputation"
 
-#: admin/class-setup-wizard.php:516
+#: admin/class-setup-wizard.php:530
 msgid "Optional: share and use threat data from thousands of sites in real time."
 msgstr "Optional: Teilen und nutzen Sie Bedrohungsdaten von Tausenden von Websites in Echtzeit."
 
-#: admin/class-setup-wizard.php:524
+#: admin/class-setup-wizard.php:538
 msgid "2FA for admins"
 msgstr "2FA für Administratoren"
 
-#: admin/class-setup-wizard.php:525
+#: admin/class-setup-wizard.php:539
 msgid "TOTP, email, passkeys and SMS — phishing-resistant and user-friendly."
 msgstr "TOTP, E-Mail, Passkeys und SMS — phishingresistent und benutzerfreundlich."
 
-#: admin/class-setup-wizard.php:533
+#: admin/class-setup-wizard.php:547
 msgid "GDPR-compliant"
 msgstr "DSGVO-konform"
 
-#: admin/class-setup-wizard.php:534
+#: admin/class-setup-wizard.php:548
 msgid "Made in Germany, privacy-first defaults, adjustable data retention."
 msgstr "Made in Germany, datenschutzfreundliche Standardeinstellungen, anpassbare Datenspeicherdauer."
 
-#: admin/class-setup-wizard.php:543
+#: admin/class-setup-wizard.php:557
 msgid "WooCommerce login, checkout & frontend 2FA"
 msgstr "WooCommerce-Anmeldung, -Checkout & Frontend-2FA"
 
-#: admin/class-setup-wizard.php:544
+#: admin/class-setup-wizard.php:558
 msgid "Protects shop login, My Account and checkout, with an optional second factor that runs inside your storefront theme."
 msgstr "Schützt Shop-Login, Mein Konto und Kasse, mit einem optionalen zweiten Faktor, der innerhalb Ihres Shop-Themes läuft."
 
-#: admin/class-setup-wizard.php:546
+#: admin/class-setup-wizard.php:560
 msgid "Login monitoring: included"
 msgstr "Anmeldeüberwachung: enthalten"
 
-#: admin/class-setup-wizard.php:547
+#: admin/class-setup-wizard.php:561
 msgid "Frontend 2FA: PRO"
 msgstr "Frontend-2FA: PRO"
 
-#: admin/class-setup-wizard.php:558
+#: admin/class-setup-wizard.php:572
 msgid "Reliable 2FA delivery"
 msgstr "Zuverlässige 2FA-Zustellung"
 
-#: admin/class-setup-wizard.php:561
+#: admin/class-setup-wizard.php:575
 msgid "SMS-2FA: 25/month included (worldwide, anti-fraud capped)"
 msgstr "SMS-2FA: 25/Monat inklusive (weltweit, Betrugsschutz-Limit)"
 
-#: admin/class-setup-wizard.php:562
+#: admin/class-setup-wizard.php:576
 msgid "Mail-2FA: 500/month via SPF/DKIM/DMARC-verified relay"
 msgstr "Mail-2FA: 500/Monat über SPF/DKIM/DMARC-verifiziertes Relay"
 
-#: admin/class-setup-wizard.php:563
+#: admin/class-setup-wizard.php:577
 msgid "3 domains per license · 90 days log retention"
 msgstr "3 Domains pro Lizenz · 90 Tage Log-Aufbewahrung"
 
-#: admin/class-setup-wizard.php:566
-#: admin/class-setup-wizard.php:581
+#: admin/class-setup-wizard.php:580
+#: admin/class-setup-wizard.php:595
 msgid "See plans →"
 msgstr "Tarife ansehen →"
 
-#: admin/class-setup-wizard.php:572
+#: admin/class-setup-wizard.php:586
 msgid "Agencies & WooCommerce"
 msgstr "Agenturen & WooCommerce"
 
-#: admin/class-setup-wizard.php:575
+#: admin/class-setup-wizard.php:589
 msgid "15 domains per licence · whitelabel · WooCommerce integration"
 msgstr "15 Domains pro Lizenz · Whitelabel · WooCommerce-Integration"
 
-#: admin/class-setup-wizard.php:576
+#: admin/class-setup-wizard.php:590
 msgid "SMS-2FA: 75/month + prepaid bundles"
 msgstr "SMS-2FA: 75/Monat + Prepaid-Pakete"
 
-#: admin/class-setup-wizard.php:577
+#: admin/class-setup-wizard.php:591
 msgid "Mail-2FA: 2,500/month + prepaid bundles · GDPR export tool"
 msgstr "Mail-2FA: 2.500/Monat + Prepaid-Pakete · DSGVO-Exporttool"
 
-#: admin/class-setup-wizard.php:578
+#: admin/class-setup-wizard.php:592
 msgid "Bookable x2–x20: scales domains & quota (volume discount)"
 msgstr "Buchbar x2–x20: skaliert Domains & Kontingent (Mengenrabatt)"
 
-#: admin/class-setup-wizard.php:588
+#: admin/class-setup-wizard.php:602
 msgid "Start setup"
 msgstr "Einrichtung starten"
 
-#: admin/class-setup-wizard.php:595
+#: admin/class-setup-wizard.php:609
 msgid "Already have an export file? Import settings from JSON →"
 msgstr "Sie haben bereits eine Exportdatei? Einstellungen aus JSON importieren →"
 
-#: admin/class-setup-wizard.php:600
+#: admin/class-setup-wizard.php:614
 msgid "Upload a JSON exported from another ReportedIP Hive installation. We apply every section, mark setup as complete and skip ahead."
 msgstr "Laden Sie eine JSON-Datei hoch, die aus einer anderen ReportedIP Hive-Installation exportiert wurde. Wir übernehmen jeden Abschnitt, markieren die Einrichtung als abgeschlossen und springen vor."
 
-#: admin/class-setup-wizard.php:602
+#: admin/class-setup-wizard.php:616
 msgid "Import & finish"
 msgstr "Importieren & abschließen"
 
-#: admin/class-setup-wizard.php:619
+#: admin/class-setup-wizard.php:633
 msgid "Wizard configuration missing."
 msgstr "Konfiguration des Assistenten fehlt."
 
-#: admin/class-setup-wizard.php:624
+#: admin/class-setup-wizard.php:638
 msgid "Importing…"
 msgstr "Wird importiert…"
 
-#: admin/class-setup-wizard.php:633
+#: admin/class-setup-wizard.php:647
 msgid "Import failed."
 msgstr "Import fehlgeschlagen."
 
-#: admin/class-setup-wizard.php:636
+#: admin/class-setup-wizard.php:650
 msgid "Network error."
 msgstr "Netzwerkfehler."
 
-#: admin/class-setup-wizard.php:653
+#: admin/class-setup-wizard.php:667
 msgid "Choose your protection mode"
 msgstr "Wählen Sie Ihren Schutzmodus"
 
-#: admin/class-setup-wizard.php:654
+#: admin/class-setup-wizard.php:668
 msgid "Community mode gives you real-time threat intelligence. Local Shield runs without any external connection."
 msgstr "Der Community-Modus bietet Ihnen Bedrohungsdaten in Echtzeit. Der Lokale Schutz läuft ohne jegliche externe Verbindung."
 
-#: admin/class-setup-wizard.php:666
+#: admin/class-setup-wizard.php:680
 #: includes/class-mode-manager.php:651
 msgid "Local Shield"
 msgstr "Lokaler Schutz"
 
-#: admin/class-setup-wizard.php:667
+#: admin/class-setup-wizard.php:681
 msgid "Standalone protection without an external connection. Minimal data use."
 msgstr "Eigenständiger Schutz ohne externe Verbindung. Minimale Datennutzung."
 
-#: admin/class-setup-wizard.php:670
+#: admin/class-setup-wizard.php:684
 msgid "No account needed"
 msgstr "Kein Konto erforderlich"
 
-#: admin/class-setup-wizard.php:671
+#: admin/class-setup-wizard.php:685
 msgid "Full privacy"
 msgstr "Vollständige Privatsphäre"
 
-#: admin/class-setup-wizard.php:672
+#: admin/class-setup-wizard.php:686
 msgid "Baseline protection"
 msgstr "Grundschutz"
 
-#: admin/class-setup-wizard.php:674
+#: admin/class-setup-wizard.php:688
 msgid "Privacy First"
 msgstr "Datenschutz zuerst"
 
-#: admin/class-setup-wizard.php:680
-#: admin/class-setup-wizard.php:805
+#: admin/class-setup-wizard.php:694
+#: admin/class-setup-wizard.php:819
 #: templates/two-factor-onboarding.php:177
 msgid "Recommended"
 msgstr "Empfohlen"
 
-#: admin/class-setup-wizard.php:690
+#: admin/class-setup-wizard.php:704
 msgid "Thousands of sites share threat intelligence in real time. Maximum strength."
 msgstr "Tausende Websites teilen Bedrohungsdaten in Echtzeit. Maximale Stärke."
 
-#: admin/class-setup-wizard.php:692
+#: admin/class-setup-wizard.php:706
 msgid "Everything in Local +"
 msgstr "Alles aus „Lokal“ +"
 
-#: admin/class-setup-wizard.php:693
+#: admin/class-setup-wizard.php:707
 msgid "Reputation-based blocking"
 msgstr "Reputationsbasiertes Sperren"
 
-#: admin/class-setup-wizard.php:694
+#: admin/class-setup-wizard.php:708
 msgid "Global threat blacklist"
 msgstr "Globale Bedrohungs-Blacklist"
 
-#: admin/class-setup-wizard.php:695
+#: admin/class-setup-wizard.php:709
 msgid "GDPR-compliant (Made in Germany)"
 msgstr "DSGVO-konform (Made in Germany)"
 
-#: admin/class-setup-wizard.php:697
+#: admin/class-setup-wizard.php:711
 msgid "Free API-Key"
 msgstr "Kostenloser API-Key"
 
-#: admin/class-setup-wizard.php:707
+#: admin/class-setup-wizard.php:721
 msgid "Community Access Key"
 msgstr "Community-Zugangsschlüssel"
 
-#: admin/class-setup-wizard.php:711
+#: admin/class-setup-wizard.php:725
 msgid "Paste API key…"
 msgstr "API-Key einfügen…"
 
-#: admin/class-setup-wizard.php:713
+#: admin/class-setup-wizard.php:727
 msgid "Validate"
 msgstr "Validieren"
 
-#: admin/class-setup-wizard.php:718
+#: admin/class-setup-wizard.php:732
 msgid "Validate your API key to continue. Without a valid key, Community mode cannot reach the threat-intelligence service."
 msgstr "Validieren Sie Ihren API-Key, um fortzufahren. Ohne gültigen Key kann der Community-Modus den Bedrohungsdaten-Dienst nicht erreichen."
 
-#: admin/class-setup-wizard.php:721
+#: admin/class-setup-wizard.php:735
 msgid "Don't have a key yet?"
 msgstr "Sie haben noch keinen Key?"
 
-#: admin/class-setup-wizard.php:723
+#: admin/class-setup-wizard.php:737
 msgid "Create a free account"
 msgstr "Kostenloses Konto erstellen"
 
-#: admin/class-setup-wizard.php:730
+#: admin/class-setup-wizard.php:744
 msgid "Key name"
 msgstr "Key-Name"
 
-#: admin/class-setup-wizard.php:734
+#: admin/class-setup-wizard.php:748
 msgid "Account tier"
 msgstr "Konto-Tarif"
 
-#: admin/class-setup-wizard.php:738
+#: admin/class-setup-wizard.php:752
 msgid "Daily limit"
 msgstr "Tageslimit"
 
-#: admin/class-setup-wizard.php:742
+#: admin/class-setup-wizard.php:756
 msgid "Remaining today"
 msgstr "Heute verbleibend"
 
-#: admin/class-setup-wizard.php:753
-#: admin/class-setup-wizard.php:949
-#: admin/class-setup-wizard.php:1045
-#: admin/class-setup-wizard.php:1322
-#: admin/class-setup-wizard.php:1433
-#: admin/class-setup-wizard.php:1591
-#: admin/class-setup-wizard.php:1684
-#: admin/class-setup-wizard.php:1784
+#: admin/class-setup-wizard.php:767
+#: admin/class-setup-wizard.php:963
+#: admin/class-setup-wizard.php:1071
+#: admin/class-setup-wizard.php:1348
+#: admin/class-setup-wizard.php:1459
+#: admin/class-setup-wizard.php:1617
+#: admin/class-setup-wizard.php:1710
+#: admin/class-setup-wizard.php:1810
 #: templates/two-factor-onboarding.php:249
 #: templates/two-factor-onboarding.php:415
 #: templates/two-factor-onboarding.php:471
 msgid "Back"
 msgstr "Zurück"
 
-#: admin/class-setup-wizard.php:756
+#: admin/class-setup-wizard.php:770
 #: templates/two-factor-onboarding.php:251
 msgid "Next"
 msgstr "Weiter"
 
-#: admin/class-setup-wizard.php:784
+#: admin/class-setup-wizard.php:798
 msgid "Enable protection features"
 msgstr "Schutzfunktionen aktivieren"
 
-#: admin/class-setup-wizard.php:785
+#: admin/class-setup-wizard.php:799
 msgid "Pick a protection level and decide which attack vectors to monitor. The defaults are a good fit for most sites."
 msgstr "Wählen Sie eine Schutzstufe und entscheiden Sie, welche Angriffsvektoren überwacht werden sollen. Die Standardwerte passen für die meisten Websites."
 
-#: admin/class-setup-wizard.php:791
+#: admin/class-setup-wizard.php:805
 msgid "Protection level"
 msgstr "Schutzstufe"
 
-#: admin/class-setup-wizard.php:799
+#: admin/class-setup-wizard.php:813
 msgid "10 login failures, 1 hour block"
 msgstr "10 fehlgeschlagene Anmeldungen, 1 Stunde Sperre"
 
-#: admin/class-setup-wizard.php:806
+#: admin/class-setup-wizard.php:820
 msgid "5 login failures, 24 hour block"
 msgstr "5 fehlgeschlagene Anmeldungen, 24 Stunden Sperre"
 
-#: admin/class-setup-wizard.php:813
+#: admin/class-setup-wizard.php:827
 msgid "3 login failures, 48 hour block"
 msgstr "3 fehlgeschlagene Anmeldungen, 48 Stunden Sperre"
 
-#: admin/class-setup-wizard.php:819
+#: admin/class-setup-wizard.php:833
 msgid "Paranoid"
 msgstr "Paranoid"
 
-#: admin/class-setup-wizard.php:820
+#: admin/class-setup-wizard.php:834
 msgid "2 login failures, 7 day block"
 msgstr "2 fehlgeschlagene Anmeldungen, 7 Tage Sperre"
 
-#: admin/class-setup-wizard.php:827
+#: admin/class-setup-wizard.php:841
 msgid "The toggles below decide which attack vectors are watched. Leave them on unless you know you don't need a sensor."
 msgstr "Die Schalter unten bestimmen, welche Angriffsvektoren überwacht werden. Lassen Sie sie aktiviert, sofern Sie nicht wissen, dass Sie einen Sensor nicht benötigen."
 
-#: admin/class-setup-wizard.php:833
+#: admin/class-setup-wizard.php:847
 msgid "Authentication"
 msgstr "Authentifizierung"
 
-#: admin/class-setup-wizard.php:836
+#: admin/class-setup-wizard.php:850
 msgid "Stop attackers from guessing passwords or probing usernames."
 msgstr "Hindern Sie Angreifer daran, Passwörter zu erraten oder Benutzernamen auszuspähen."
 
-#: admin/class-setup-wizard.php:845
+#: admin/class-setup-wizard.php:859
 msgid "Application-password abuse (REST/XMLRPC Basic-Auth bypass for 2FA)"
 msgstr "Missbrauch von Anwendungspasswörtern (REST/XMLRPC-Basic-Auth-Umgehung der 2FA)"
 
-#: admin/class-setup-wizard.php:850
+#: admin/class-setup-wizard.php:864
 msgid "User-enumeration defence (?author=, /wp-json/wp/v2/users, login-error masking)"
 msgstr "Abwehr von Benutzer-Enumeration (?author=, /wp-json/wp/v2/users, Maskierung von Anmeldefehlern)"
 
-#: admin/class-setup-wizard.php:859
+#: admin/class-setup-wizard.php:873
 msgid "Content & API abuse"
 msgstr "Content- & API-Missbrauch"
 
-#: admin/class-setup-wizard.php:862
+#: admin/class-setup-wizard.php:876
 msgid "Throttle bots that hammer comment forms or APIs."
 msgstr "Drosseln Sie Bots, die Kommentarformulare oder APIs überlasten."
 
-#: admin/class-setup-wizard.php:866
+#: admin/class-setup-wizard.php:880
 msgid "Spam comments"
 msgstr "Spam-Kommentare"
 
-#: admin/class-setup-wizard.php:871
+#: admin/class-setup-wizard.php:885
 msgid "XMLRPC access (most common attack vector)"
 msgstr "XMLRPC-Zugriff (häufigster Angriffsvektor)"
 
-#: admin/class-setup-wizard.php:876
+#: admin/class-setup-wizard.php:890
 msgid "REST API rate-limit (scrapers, scanners)"
 msgstr "REST-API-Ratenbegrenzung (Scraper, Scanner)"
 
-#: admin/class-setup-wizard.php:885
+#: admin/class-setup-wizard.php:899
 msgid "Behaviour & scanning"
 msgstr "Verhalten & Scannen"
 
-#: admin/class-setup-wizard.php:888
+#: admin/class-setup-wizard.php:902
 msgid "Detect scanners and impossible-travel sign-ins."
 msgstr "Scanner und Anmeldungen mit unmöglichen Reisewegen erkennen."
 
-#: admin/class-setup-wizard.php:892
+#: admin/class-setup-wizard.php:906
 msgid "404 / scanner detection (.env, wp-config.php.bak, /.git/, …)"
 msgstr "404-/Scanner-Erkennung (.env, wp-config.php.bak, /.git/, …)"
 
-#: admin/class-setup-wizard.php:897
+#: admin/class-setup-wizard.php:911
 msgid "Geographic-anomaly detection on successful logins (forces 2FA from new countries)"
 msgstr "Erkennung geografischer Anomalien bei erfolgreichen Anmeldungen (erzwingt 2FA aus neuen Ländern)"
 
-#: admin/class-setup-wizard.php:911
+#: admin/class-setup-wizard.php:925
 msgid "Automation & special rules"
 msgstr "Automatisierung & Sonderregeln"
 
-#: admin/class-setup-wizard.php:914
+#: admin/class-setup-wizard.php:928
 msgid "Auto-blocking decides whether an offender is blocked; the duration strategy decides how long. Report-only below overrides both: when on, the plugin only watches."
 msgstr "Die automatische Sperrung entscheidet, ob ein Angreifer gesperrt wird; die Dauer-Strategie entscheidet, wie lange. Der Nur-Melden-Modus unten setzt beides außer Kraft: Wenn aktiv, beobachtet das Plugin nur."
 
-#: admin/class-setup-wizard.php:919
+#: admin/class-setup-wizard.php:933
 msgid "Auto-blocking — block suspicious IPs automatically"
 msgstr "Automatische Sperrung — verdächtige IPs automatisch sperren"
 
-#: admin/class-setup-wizard.php:930
+#: admin/class-setup-wizard.php:944
 msgid "Progressive ladder (5 min → 15 min → 30 min → 24 h → 48 h → 7 d) — recommended"
 msgstr "Progressive Eskalation (5 Min. → 15 Min. → 30 Min. → 24 Std. → 48 Std. → 7 Tage) — empfohlen"
 
-#: admin/class-setup-wizard.php:932
+#: admin/class-setup-wizard.php:946
 msgid "Repeat offenders within the reset window (default 30 days) move up a ladder step, so first-time trips recover in minutes. Off means a fixed 24 h block for every trigger; edit the ladder later under Settings → Blocking."
 msgstr "Wiederholungstäter innerhalb des Reset-Zeitfensters (Standard 30 Tage) rücken eine Stufe der Staffelung auf, sodass Ersttäter in Minuten wieder frei sind. Aus bedeutet eine feste 24-Stunden-Sperre bei jeder Auslösung; die Staffelung lässt sich später unter Einstellungen → Sperrung bearbeiten."
 
-#: admin/class-setup-wizard.php:940
+#: admin/class-setup-wizard.php:954
 msgid "Report-only mode (observe, do not block)"
 msgstr "Nur-Melden-Modus (beobachten, nicht sperren)"
 
-#: admin/class-setup-wizard.php:942
+#: admin/class-setup-wizard.php:956
 msgid "Great for testing: the plugin collects events but does not block. Turn off in production."
 msgstr "Ideal zum Testen: Das Plugin erfasst Ereignisse, sperrt aber nicht. Im Produktivbetrieb deaktivieren."
 
-#: admin/class-setup-wizard.php:952
+#: admin/class-setup-wizard.php:966
 msgid "Next: Firewall"
 msgstr "Weiter: Firewall"
 
-#: admin/class-setup-wizard.php:978
+#: admin/class-setup-wizard.php:992
 msgid "Set up the firewall"
 msgstr "Firewall einrichten"
 
-#: admin/class-setup-wizard.php:979
+#: admin/class-setup-wizard.php:993
 msgid "The request firewall and the spam sensors ship with safe defaults — review them here. Advanced controls (Paranoia Level, pre-WordPress drop-in) live on the Firewall page."
 msgstr "Die Request-Firewall und die Spam-Sensoren kommen mit sicheren Voreinstellungen — hier prüfen. Erweiterte Optionen (Paranoia-Level, Pre-WordPress-Drop-in) finden sich auf der Firewall-Seite."
 
-#: admin/class-setup-wizard.php:988
+#: admin/class-setup-wizard.php:1002
 msgid "Inspects every request for SQL injection, XSS, path traversal and scanner patterns before they reach your site. The engine and the baseline ruleset are free on every plan."
 msgstr "Prüft jede Anfrage auf SQL-Injection, XSS, Path-Traversal und Scanner-Muster, bevor sie Ihre Website erreicht. Engine und Baseline-Regelsatz sind in jedem Tarif kostenlos."
 
-#: admin/class-setup-wizard.php:992
+#: admin/class-setup-wizard.php:1006
 msgid "Enable the firewall engine"
 msgstr "Firewall-Engine aktivieren"
 
-#: admin/class-setup-wizard.php:997
+#: admin/class-setup-wizard.php:1011
 msgid "Report-only (log matches, do not block)"
 msgstr "Nur melden (Treffer protokollieren, nicht blockieren)"
 
-#: admin/class-setup-wizard.php:999
+#: admin/class-setup-wizard.php:1013
 msgid "Report-only is great for a trial run: matches are logged but never blocked. Turn it off in production."
 msgstr "Der Nur-melden-Modus eignet sich für den Probelauf: Treffer werden protokolliert, aber nie blockiert. Im Produktivbetrieb ausschalten."
 
-#: admin/class-setup-wizard.php:1007
+#: admin/class-setup-wizard.php:1033
 msgid "Verified bots"
 msgstr "Verifizierte Bots"
 
-#: admin/class-setup-wizard.php:1010
+#: admin/class-setup-wizard.php:1036
 msgid "Confirms that a request claiming to be Googlebot or Bingbot genuinely is that crawler. A genuine crawler is never blocked; only confirmed impostors are flagged or rejected."
 msgstr "Bestätigt, dass eine Anfrage, die sich als Googlebot oder Bingbot ausgibt, wirklich von diesem Crawler stammt. Ein echter Crawler wird nie blockiert; nur bestätigte Fälscher werden markiert oder abgewiesen."
 
-#: admin/class-setup-wizard.php:1011
+#: admin/class-setup-wizard.php:1037
 msgid "Action on a confirmed impostor"
 msgstr "Aktion bei einem bestätigten Fälscher"
 
-#: admin/class-setup-wizard.php:1014
+#: admin/class-setup-wizard.php:1040
 msgid "Flag — log impostors only (recommended)"
 msgstr "Markieren — Fälscher nur protokollieren (empfohlen)"
 
-#: admin/class-setup-wizard.php:1015
+#: admin/class-setup-wizard.php:1041
 msgid "Block — reject confirmed impostors"
 msgstr "Blockieren — bestätigte Fälscher abweisen"
 
-#: admin/class-setup-wizard.php:1024
+#: admin/class-setup-wizard.php:1050
 msgid "Spam defence"
 msgstr "Spam-Abwehr"
 
-#: admin/class-setup-wizard.php:1027
+#: admin/class-setup-wizard.php:1053
 msgid "Throwaway e-mail domains at registration and an invisible decoy field in the comment form stop most automated spam without a CAPTCHA."
 msgstr "Wegwerf-E-Mail-Domains bei der Registrierung und ein unsichtbares Köderfeld im Kommentarformular stoppen den meisten automatisierten Spam ohne CAPTCHA."
 
-#: admin/class-setup-wizard.php:1028
+#: admin/class-setup-wizard.php:1054
 msgid "Action on a throwaway e-mail address"
 msgstr "Aktion bei einer Wegwerf-E-Mail-Adresse"
 
-#: admin/class-setup-wizard.php:1037
+#: admin/class-setup-wizard.php:1063
 msgid "Comment honeypot — invisible to visitors, fatal to bots"
 msgstr "Kommentar-Honeypot — unsichtbar für Besucher, fatal für Bots"
 
-#: admin/class-setup-wizard.php:1048
+#: admin/class-setup-wizard.php:1074
 msgid "Next: 2FA"
 msgstr "Weiter: 2FA"
 
-#: admin/class-setup-wizard.php:1100
+#: admin/class-setup-wizard.php:1126
 #: admin/class-two-factor-admin.php:275
-#: admin/class-two-factor-admin.php:1544
+#: admin/class-two-factor-admin.php:1557
 #: templates/two-factor-onboarding.php:64
 msgid "Two-Factor Authentication"
 msgstr "Zwei-Faktor-Authentifizierung"
 
-#: admin/class-setup-wizard.php:1101
+#: admin/class-setup-wizard.php:1127
 msgid "Prevent account takeover even with stolen passwords."
 msgstr "Kontoübernahmen selbst bei gestohlenen Passwörtern verhindern."
 
-#: admin/class-setup-wizard.php:1107
+#: admin/class-setup-wizard.php:1133
 msgid "2FA system"
 msgstr "2FA-System"
 
-#: admin/class-setup-wizard.php:1113
+#: admin/class-setup-wizard.php:1139
 msgid "Enable 2FA (recommended)"
 msgstr "2FA aktivieren (empfohlen)"
 
-#: admin/class-setup-wizard.php:1115
+#: admin/class-setup-wizard.php:1141
 msgid "Enrolment runs in the user profile; admins go through onboarding."
 msgstr "Die Registrierung erfolgt im Benutzerprofil; Administratoren durchlaufen das Onboarding."
 
-#: admin/class-setup-wizard.php:1123
+#: admin/class-setup-wizard.php:1149
 msgid "Allowed methods"
 msgstr "Erlaubte Methoden"
 
-#: admin/class-setup-wizard.php:1126
+#: admin/class-setup-wizard.php:1152
 msgid "Choose which methods users can set up."
 msgstr "Wählen Sie, welche Methoden Benutzer einrichten können."
 
-#: admin/class-setup-wizard.php:1144
-#: admin/class-two-factor-admin.php:1556
+#: admin/class-setup-wizard.php:1170
+#: admin/class-two-factor-admin.php:1569
 #: includes/class-two-factor-onboarding.php:409
 #: templates/frontend-2fa-challenge.php:125
 #: templates/two-factor-challenge.php:115
 msgid "SMS"
 msgstr "SMS"
 
-#: admin/class-setup-wizard.php:1145
+#: admin/class-setup-wizard.php:1171
 msgid "Code via SMS through our managed relay. Professional plan and higher."
 msgstr "Code per SMS über unser verwaltetes Relay. Ab dem Professional-Tarif."
 
-#: admin/class-setup-wizard.php:1153
+#: admin/class-setup-wizard.php:1179
 msgid "TOTP app"
 msgstr "TOTP-App"
 
-#: admin/class-setup-wizard.php:1154
+#: admin/class-setup-wizard.php:1180
 msgid "Google Authenticator, Authy, 1Password — standard, offline."
 msgstr "Google Authenticator, Authy, 1Password — Standard, offline."
 
-#: admin/class-setup-wizard.php:1162
+#: admin/class-setup-wizard.php:1188
 msgid "Passkey / WebAuthn"
 msgstr "Passkey / WebAuthn"
 
-#: admin/class-setup-wizard.php:1163
+#: admin/class-setup-wizard.php:1189
 msgid "Face ID, Touch ID, Windows Hello, YubiKey — phishing-resistant."
 msgstr "Face ID, Touch ID, Windows Hello, YubiKey — phishing-resistent."
 
-#: admin/class-setup-wizard.php:1174
+#: admin/class-setup-wizard.php:1200
 #: templates/frontend-2fa-challenge.php:119
 #: templates/two-factor-challenge.php:107
 msgid "Email"
 msgstr "E-Mail"
 
-#: admin/class-setup-wizard.php:1175
+#: admin/class-setup-wizard.php:1201
 msgid "Code via email, useful as a backup. The PRO mail relay improves delivery."
 msgstr "Code per E-Mail, nützlich als Backup. Das PRO-Mail-Relay verbessert die Zustellung."
 
-#: admin/class-setup-wizard.php:1188
+#: admin/class-setup-wizard.php:1214
 msgid "Enforce 2FA for which roles?"
 msgstr "Für welche Rollen soll 2FA erzwungen werden?"
 
-#: admin/class-setup-wizard.php:1193
+#: admin/class-setup-wizard.php:1219
 msgid "Selected roles must set up 2FA on next sign-in. Use grace period and skip counter to ease rollout."
 msgstr "Ausgewählte Rollen müssen 2FA bei der nächsten Anmeldung einrichten. Nutzen Sie die Übergangsfrist und den Überspring-Zähler, um die Einführung zu erleichtern."
 
-#: admin/class-setup-wizard.php:1208
-#: admin/class-two-factor-admin.php:438
+#: admin/class-setup-wizard.php:1234
+#: admin/class-two-factor-admin.php:451
 msgid "Grace period (days)"
 msgstr "Übergangsfrist (Tage)"
 
-#: admin/class-setup-wizard.php:1212
+#: admin/class-setup-wizard.php:1238
 msgid "Days before enforcement kicks in"
 msgstr "Tage, bis die Erzwingung greift"
 
-#: admin/class-setup-wizard.php:1218
-#: admin/class-two-factor-admin.php:451
+#: admin/class-setup-wizard.php:1244
+#: admin/class-two-factor-admin.php:464
 msgid "Max. skips after the grace period"
 msgstr "Max. Überspringungen nach der Übergangsfrist"
 
-#: admin/class-setup-wizard.php:1222
+#: admin/class-setup-wizard.php:1248
 msgid "How many times users may skip 2FA (0 = never)"
 msgstr "Wie oft Benutzer 2FA überspringen dürfen (0 = nie)"
 
-#: admin/class-setup-wizard.php:1232
+#: admin/class-setup-wizard.php:1258
 msgid "Convenience"
 msgstr "Komfort"
 
-#: admin/class-setup-wizard.php:1238
+#: admin/class-setup-wizard.php:1264
 msgid "Trusted devices (remember for 30 days)"
 msgstr "Vertrauenswürdige Geräte (30 Tage merken)"
 
-#: admin/class-setup-wizard.php:1243
+#: admin/class-setup-wizard.php:1269
 msgid "Onboarding on the frontend too (e.g. WooCommerce account)"
 msgstr "Onboarding auch im Frontend (z. B. WooCommerce-Konto)"
 
-#: admin/class-setup-wizard.php:1248
+#: admin/class-setup-wizard.php:1274
 msgid "Email on sign-in from an unknown device"
 msgstr "E-Mail bei Anmeldung von einem unbekannten Gerät"
 
-#: admin/class-setup-wizard.php:1256
-#: admin/class-two-factor-admin.php:777
+#: admin/class-setup-wizard.php:1282
+#: admin/class-two-factor-admin.php:790
 msgid "Allow XMLRPC only with application passwords"
 msgstr "XMLRPC nur mit Anwendungspasswörtern erlauben"
 
-#: admin/class-setup-wizard.php:1258
+#: admin/class-setup-wizard.php:1284
 msgid "Classic XMLRPC body auth is blocked — prevents XMLRPC brute-force attacks against 2FA users."
 msgstr "Klassische XMLRPC-Body-Authentifizierung wird blockiert — verhindert XMLRPC-Brute-Force-Angriffe gegen 2FA-Benutzer."
 
-#: admin/class-setup-wizard.php:1277
+#: admin/class-setup-wizard.php:1303
 msgid "Shows the second factor inside your storefront theme when a customer signs in via My Account or checkout, instead of redirecting them to wp-login.php."
 msgstr "Zeigt den zweiten Faktor innerhalb Ihres Shop-Themes an, wenn sich ein Kunde über Mein Konto oder die Kasse anmeldet, statt ihn zu wp-login.php weiterzuleiten."
 
-#: admin/class-setup-wizard.php:1295
+#: admin/class-setup-wizard.php:1321
 msgid "Render the 2FA challenge in the storefront theme frame"
 msgstr "Die 2FA-Abfrage im Rahmen des Storefront-Themes darstellen"
 
-#: admin/class-setup-wizard.php:1300
+#: admin/class-setup-wizard.php:1326
 msgid "Available with the Professional plan or higher. Finish the wizard now and unlock this later from 2FA settings → Frontend login."
 msgstr "Verfügbar ab dem Professional-Tarif. Schließen Sie den Assistenten jetzt ab und schalten Sie dies später unter 2FA-Einstellungen → Frontend-Anmeldung frei."
 
-#: admin/class-setup-wizard.php:1310
-#: admin/class-two-factor-admin.php:641
+#: admin/class-setup-wizard.php:1336
+#: admin/class-two-factor-admin.php:654
 msgid "Login reminder for users without 2FA"
 msgstr "Anmelde-Erinnerung für Benutzer ohne 2FA"
 
-#: admin/class-setup-wizard.php:1314
+#: admin/class-setup-wizard.php:1340
 msgid "Users without 2FA see a reminder banner when they sign in. Privileged roles (administrator, editor, shop manager) are sent to 2FA setup after 5 reminders; other roles only see the banner. Adjust this under 2FA settings → Login reminder."
 msgstr "Benutzer ohne 2FA sehen bei der Anmeldung ein Erinnerungs-Banner. Privilegierte Rollen (Administrator, Redakteur, Shop-Manager) werden nach 5 Erinnerungen zur 2FA-Einrichtung geführt; andere Rollen sehen nur das Banner. Anpassbar unter 2FA-Einstellungen → Login-Erinnerung."
 
-#: admin/class-setup-wizard.php:1325
+#: admin/class-setup-wizard.php:1351
 msgid "Next: Privacy"
 msgstr "Weiter: Datenschutz"
 
-#: admin/class-setup-wizard.php:1344
+#: admin/class-setup-wizard.php:1370
 msgid "Privacy & GDPR"
 msgstr "Datenschutz & DSGVO"
 
-#: admin/class-setup-wizard.php:1345
+#: admin/class-setup-wizard.php:1371
 msgid "The defaults are GDPR-compliant. You can adjust retention and logging depth any time."
 msgstr "Die Standardeinstellungen sind DSGVO-konform. Sie können die Aufbewahrung und die Protokollierungstiefe jederzeit anpassen."
 
-#: admin/class-setup-wizard.php:1351
+#: admin/class-setup-wizard.php:1377
 msgid "Data retention"
 msgstr "Datenaufbewahrung"
 
-#: admin/class-setup-wizard.php:1352
+#: admin/class-setup-wizard.php:1378
 msgid "EU GDPR"
 msgstr "EU-DSGVO"
 
-#: admin/class-setup-wizard.php:1358
+#: admin/class-setup-wizard.php:1384
 msgid "Minimal logging — only security-relevant data"
 msgstr "Minimale Protokollierung — nur sicherheitsrelevante Daten"
 
-#: admin/class-setup-wizard.php:1364
+#: admin/class-setup-wizard.php:1390
 msgid "Delete logs after"
 msgstr "Protokolle löschen nach"
 
-#: admin/class-setup-wizard.php:1367
-#: admin/class-setup-wizard.php:1380
+#: admin/class-setup-wizard.php:1393
+#: admin/class-setup-wizard.php:1406
 msgid "7 days"
 msgstr "7 Tagen"
 
-#: admin/class-setup-wizard.php:1368
-#: admin/class-setup-wizard.php:1381
+#: admin/class-setup-wizard.php:1394
+#: admin/class-setup-wizard.php:1407
 msgid "14 days"
 msgstr "14 Tagen"
 
-#: admin/class-setup-wizard.php:1369
+#: admin/class-setup-wizard.php:1395
 msgid "30 days"
 msgstr "30 Tagen"
 
-#: admin/class-setup-wizard.php:1370
+#: admin/class-setup-wizard.php:1396
 msgid "90 days"
 msgstr "90 Tagen"
 
-#: admin/class-setup-wizard.php:1375
+#: admin/class-setup-wizard.php:1401
 msgid "Anonymise personal data after"
 msgstr "Personenbezogene Daten anonymisieren nach"
 
-#: admin/class-setup-wizard.php:1378
+#: admin/class-setup-wizard.php:1404
 msgid "1 day"
 msgstr "1 Tag"
 
-#: admin/class-setup-wizard.php:1379
+#: admin/class-setup-wizard.php:1405
 msgid "3 days"
 msgstr "3 Tagen"
 
-#: admin/class-setup-wizard.php:1388
+#: admin/class-setup-wizard.php:1414
 msgid "Defaults are GDPR-compliant. IP addresses are processed under Art. 6(1)(f) GDPR (legitimate interest)."
 msgstr "Die Standardeinstellungen sind DSGVO-konform. IP-Adressen werden gemäß Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse) verarbeitet."
 
-#: admin/class-setup-wizard.php:1397
+#: admin/class-setup-wizard.php:1423
 msgid "Extended logging"
 msgstr "Erweiterte Protokollierung"
 
-#: admin/class-setup-wizard.php:1403
+#: admin/class-setup-wizard.php:1429
 msgid "Log user agents (for forensic analysis)"
 msgstr "User-Agents protokollieren (für forensische Analyse)"
 
-#: admin/class-setup-wizard.php:1408
+#: admin/class-setup-wizard.php:1434
 msgid "Log referrer domains"
 msgstr "Referrer-Domains protokollieren"
 
-#: admin/class-setup-wizard.php:1410
+#: admin/class-setup-wizard.php:1436
 msgid "Both options are off by default for privacy. Enable them only when deeper threat analysis is required."
 msgstr "Beide Optionen sind aus Datenschutzgründen standardmäßig deaktiviert. Aktivieren Sie sie nur, wenn eine tiefere Bedrohungsanalyse erforderlich ist."
 
-#: admin/class-setup-wizard.php:1418
+#: admin/class-setup-wizard.php:1444
 msgid "Uninstall"
 msgstr "Deinstallieren"
 
-#: admin/class-setup-wizard.php:1424
+#: admin/class-setup-wizard.php:1450
 msgid "Delete all data on uninstall"
 msgstr "Alle Daten bei Deinstallation löschen"
 
-#: admin/class-setup-wizard.php:1426
+#: admin/class-setup-wizard.php:1452
 msgid "Only enable this if there is no retention obligation for security logs. Default: off (conservative)."
 msgstr "Aktivieren Sie dies nur, wenn keine Aufbewahrungspflicht für Sicherheitsprotokolle besteht. Standard: aus (konservativ)."
 
-#: admin/class-setup-wizard.php:1436
+#: admin/class-setup-wizard.php:1462
 msgid "Next: Notifications"
 msgstr "Weiter: Benachrichtigungen"
 
-#: admin/class-setup-wizard.php:1485
+#: admin/class-setup-wizard.php:1511
 msgid "Choose who receives security alerts, and the sender that all plugin mails (alerts and 2FA codes) use."
 msgstr "Legen Sie fest, wer Sicherheitswarnungen erhält und welchen Absender alle Plugin-E-Mails (Warnungen und 2FA-Codes) verwenden."
 
-#: admin/class-setup-wizard.php:1496
+#: admin/class-setup-wizard.php:1522
 msgid "Send email on new blocks and threshold breaches"
 msgstr "E-Mail bei neuen Sperren und Schwellenwertüberschreitungen senden"
 
 #. translators: 1: HTML-wrapped site name, 2: plain site name (Tip example)
-#: admin/class-setup-wizard.php:1538
+#: admin/class-setup-wizard.php:1564
 #, php-format
 msgid "Display name shown in the recipient's inbox. Leave empty to use your site name (currently: %1$s). Tip: add \"Security\" or \"Alerts\", e.g. \"%2$s Security\"."
 msgstr "Anzeigename, der im Posteingang des Empfängers erscheint. Leer lassen, um Ihren Website-Namen zu verwenden (aktuell: %1$s). Tipp: Fügen Sie \"Security\" oder \"Alerts\" hinzu, z. B. \"%2$s Security\"."
 
-#: admin/class-setup-wizard.php:1583
+#: admin/class-setup-wizard.php:1609
 msgid "Optional. When on, recipients and From settings are pushed to the service so the relay and account dashboard show the same configuration. Off by default."
 msgstr "Optional. Wenn aktiviert, werden Empfänger- und Absender-Einstellungen an den Dienst übermittelt, sodass das Relay und das Konto-Dashboard dieselbe Konfiguration anzeigen. Standardmäßig deaktiviert."
 
-#: admin/class-setup-wizard.php:1594
-#: admin/class-setup-wizard.php:1687
+#: admin/class-setup-wizard.php:1620
+#: admin/class-setup-wizard.php:1713
 msgid "Save & continue"
 msgstr "Speichern & fortfahren"
 
-#: admin/class-setup-wizard.php:1622
+#: admin/class-setup-wizard.php:1648
 msgid "Hide your WordPress login"
 msgstr "WordPress-Anmeldung verbergen"
 
-#: admin/class-setup-wizard.php:1623
+#: admin/class-setup-wizard.php:1649
 msgid "Optional: move wp-login.php behind a custom slug so automated scanners cannot find a login form. You can skip this step and configure it later from Settings."
 msgstr "Optional: Verschieben Sie wp-login.php hinter einen benutzerdefinierten Slug, damit automatisierte Scanner kein Anmeldeformular finden können. Sie können diesen Schritt überspringen und ihn später in den Einstellungen konfigurieren."
 
-#: admin/class-setup-wizard.php:1628
+#: admin/class-setup-wizard.php:1654
 msgid "Activate Hide Login"
 msgstr "Anmeldung verbergen aktivieren"
 
-#: admin/class-setup-wizard.php:1633
+#: admin/class-setup-wizard.php:1659
 msgid "Hiding the URL stops automated scanners — it does not replace strong passwords or 2FA. Use it as one extra layer."
 msgstr "Das Verbergen der URL stoppt automatisierte Scanner — es ersetzt keine starken Passwörter oder 2FA. Nutzen Sie es als zusätzliche Schutzebene."
 
-#: admin/class-setup-wizard.php:1643
+#: admin/class-setup-wizard.php:1669
 msgid "Custom slug"
 msgstr "Benutzerdefinierter Slug"
 
-#: admin/class-setup-wizard.php:1648
+#: admin/class-setup-wizard.php:1674
 msgid "3–50 characters: lowercase letters, digits, dashes or underscores. We will reject reserved WordPress paths and existing post/page slugs when you save."
 msgstr "3–50 Zeichen: Kleinbuchstaben, Ziffern, Bindestriche oder Unterstriche. Reservierte WordPress-Pfade sowie vorhandene Beitrags-/Seiten-Slugs werden beim Speichern abgelehnt."
 
-#: admin/class-setup-wizard.php:1658
+#: admin/class-setup-wizard.php:1684
 msgid "When someone hits the old wp-login.php directly:"
 msgstr "Wenn jemand die alte wp-login.php direkt aufruft:"
 
-#: admin/class-setup-wizard.php:1661
+#: admin/class-setup-wizard.php:1687
 msgid "Show the Hive block page (recommended)."
 msgstr "Die Hive-Sperrseite anzeigen (empfohlen)."
 
-#: admin/class-setup-wizard.php:1665
+#: admin/class-setup-wizard.php:1691
 msgid "Show the theme’s 404 page (no plugin fingerprint)."
 msgstr "Die 404-Seite des Themes anzeigen (kein Plugin-Fingerabdruck)."
 
-#: admin/class-setup-wizard.php:1673
+#: admin/class-setup-wizard.php:1699
 msgid "Recovery if you ever lose the slug"
 msgstr "Wiederherstellung, falls Sie den Slug verlieren"
 
-#: admin/class-setup-wizard.php:1676
+#: admin/class-setup-wizard.php:1702
 msgid "Add this constant to wp-config.php to temporarily disable Hide Login and reach the original wp-login.php again:"
 msgstr "Fügen Sie diese Konstante zu wp-config.php hinzu, um Anmeldung verbergen vorübergehend zu deaktivieren und wieder auf die ursprüngliche wp-login.php zuzugreifen:"
 
-#: admin/class-setup-wizard.php:1718
+#: admin/class-setup-wizard.php:1744
 msgid "You're protected. Help others stay protected too."
 msgstr "Sie sind geschützt. Helfen Sie auch anderen, geschützt zu bleiben."
 
-#: admin/class-setup-wizard.php:1719
+#: admin/class-setup-wizard.php:1745
 msgid "Your site can show a small badge that links back to ReportedIP and strengthens the community network. Optional, GDPR-friendly, and you can change it any time."
 msgstr "Ihre Website kann ein kleines Badge anzeigen, das auf ReportedIP zurückverlinkt und das Community-Netzwerk stärkt. Optional, DSGVO-freundlich und jederzeit änderbar."
 
-#: admin/class-setup-wizard.php:1724
+#: admin/class-setup-wizard.php:1750
 msgid "Live preview"
 msgstr "Live-Vorschau"
 
-#: admin/class-setup-wizard.php:1744
+#: admin/class-setup-wizard.php:1770
 msgid "Footer badge — compact pill with logo and label."
 msgstr "Footer-Badge — kompaktes Pill mit Logo und Beschriftung."
 
-#: admin/class-setup-wizard.php:1748
+#: admin/class-setup-wizard.php:1774
 msgid "Shield icon — discreet circle with the shield logo only."
 msgstr "Schild-Symbol — dezenter Kreis nur mit dem Schild-Logo."
 
-#: admin/class-setup-wizard.php:1756
+#: admin/class-setup-wizard.php:1782
 msgid "Left edge of the footer"
 msgstr "Linker Rand des Footers"
 
-#: admin/class-setup-wizard.php:1760
+#: admin/class-setup-wizard.php:1786
 msgid "Centered in the footer"
 msgstr "Zentriert im Footer"
 
-#: admin/class-setup-wizard.php:1764
+#: admin/class-setup-wizard.php:1790
 msgid "Right edge of the footer"
 msgstr "Rechter Rand des Footers"
 
-#: admin/class-setup-wizard.php:1768
+#: admin/class-setup-wizard.php:1794
 msgid "Below the theme footer (own row, full width)"
 msgstr "Unter dem Theme-Footer (eigene Zeile, volle Breite)"
 
-#: admin/class-setup-wizard.php:1775
+#: admin/class-setup-wizard.php:1801
 msgid "Show this badge automatically on my site"
 msgstr "Dieses Badge automatisch auf meiner Website anzeigen"
 
-#: admin/class-setup-wizard.php:1777
+#: admin/class-setup-wizard.php:1803
 msgid "Renders in an isolated container (Shadow DOM), so your theme cannot break its layout. The link itself is regular HTML, so search engines pick it up."
 msgstr "Wird in einem isolierten Container (Shadow DOM) dargestellt, sodass Ihr Theme das Layout nicht zerstören kann. Der Link selbst ist normales HTML und wird daher von Suchmaschinen erfasst."
 
-#: admin/class-setup-wizard.php:1787
+#: admin/class-setup-wizard.php:1813
 msgid "Skip this step"
 msgstr "Diesen Schritt überspringen"
 
-#: admin/class-setup-wizard.php:1790
+#: admin/class-setup-wizard.php:1816
 msgid "Save & finish"
 msgstr "Speichern & abschließen"
 
-#: admin/class-setup-wizard.php:1829
+#: admin/class-setup-wizard.php:1855
 msgid "Setup complete!"
 msgstr "Einrichtung abgeschlossen!"
 
-#: admin/class-setup-wizard.php:1830
+#: admin/class-setup-wizard.php:1856
 msgid "Your WordPress site is now protected. You can fine-tune all settings any time from the admin menu."
 msgstr "Ihre WordPress-Website ist nun geschützt. Sie können alle Einstellungen jederzeit über das Admin-Menü feinabstimmen."
 
 #. translators: %d: number of enforced roles
-#: admin/class-setup-wizard.php:1851
+#: admin/class-setup-wizard.php:1877
 #, php-format
 msgid "Active (%d roles enforced)"
 msgstr "Aktiv (%d Rollen erzwungen)"
 
-#: admin/class-setup-wizard.php:1859
+#: admin/class-setup-wizard.php:1885
 msgid "Retention"
 msgstr "Aufbewahrung"
 
-#: admin/class-setup-wizard.php:1872
+#: admin/class-setup-wizard.php:1898
 msgid "GDPR Minimal"
 msgstr "DSGVO Minimal"
 
-#: admin/class-setup-wizard.php:1880
+#: admin/class-setup-wizard.php:1906
 msgid "Email alerts"
 msgstr "E-Mail-Warnungen"
 
 #. translators: %d: number of notification recipients
-#: admin/class-setup-wizard.php:1885
+#: admin/class-setup-wizard.php:1911
 #, php-format
 msgid "On (%d recipient)"
 msgid_plural "On (%d recipients)"
@@ -6455,46 +6450,46 @@ msgstr[0] "Ein (%d Empfänger)"
 msgstr[1] "Ein (%d Empfänger)"
 
 #. translators: %s: badge variant name
-#: admin/class-setup-wizard.php:1901
+#: admin/class-setup-wizard.php:1927
 #, php-format
 msgid "Active (%s)"
 msgstr "Aktiv (%s)"
 
-#: admin/class-setup-wizard.php:1902
+#: admin/class-setup-wizard.php:1928
 msgid "shield"
 msgstr "Schild"
 
-#: admin/class-setup-wizard.php:1902
+#: admin/class-setup-wizard.php:1928
 msgid "badge"
 msgstr "Badge"
 
-#: admin/class-setup-wizard.php:1916
+#: admin/class-setup-wizard.php:1942
 msgid "Set up 2FA for my account now"
 msgstr "2FA für mein Konto jetzt einrichten"
 
-#: admin/class-setup-wizard.php:1920
+#: admin/class-setup-wizard.php:1946
 #: includes/class-two-factor-onboarding.php:332
 #: templates/two-factor-onboarding.php:499
 msgid "Go to dashboard"
 msgstr "Zum Dashboard"
 
-#: admin/class-setup-wizard.php:1968
+#: admin/class-setup-wizard.php:1994
 msgid "Invalid mode selected."
 msgstr "Ungültiger Modus ausgewählt."
 
-#: admin/class-setup-wizard.php:1987
+#: admin/class-setup-wizard.php:2013
 msgid "Failed to save mode."
 msgstr "Modus konnte nicht gespeichert werden."
 
-#: admin/class-setup-wizard.php:2141
+#: admin/class-setup-wizard.php:2177
 msgid "Hide Login is unavailable."
 msgstr "Anmeldung verbergen ist nicht verfügbar."
 
-#: admin/class-setup-wizard.php:2157
+#: admin/class-setup-wizard.php:2193
 msgid "That slug cannot be used."
 msgstr "Dieser Slug kann nicht verwendet werden."
 
-#: admin/class-setup-wizard.php:2188
+#: admin/class-setup-wizard.php:2224
 msgid "Setup skipped."
 msgstr "Einrichtung übersprungen."
 
@@ -6511,8 +6506,8 @@ msgid "Invalid user ID."
 msgstr "Ungültige Benutzer-ID."
 
 #: admin/class-two-factor-admin.php:128
-#: admin/class-two-factor-admin.php:1730
-#: admin/class-two-factor-admin.php:1976
+#: admin/class-two-factor-admin.php:1743
+#: admin/class-two-factor-admin.php:1989
 #: includes/class-two-factor-dashboard.php:43
 #: includes/class-two-factor-dashboard.php:159
 #: includes/class-two-factor-webauthn.php:55
@@ -6599,7 +6594,7 @@ msgid "Google Authenticator, Microsoft Authenticator, Authy, etc."
 msgstr "Google Authenticator, Microsoft Authenticator, Authy usw."
 
 #: admin/class-two-factor-admin.php:349
-#: admin/class-two-factor-admin.php:1554
+#: admin/class-two-factor-admin.php:1567
 #: includes/class-two-factor-onboarding.php:407
 #: templates/frontend-2fa-challenge.php:222
 #: templates/two-factor-challenge.php:232
@@ -6616,23 +6611,19 @@ msgstr "Sendet einen 6-stelligen Code an die E-Mail-Adresse des Benutzers."
 msgid "Delivered via the managed reportedip.de relay."
 msgstr "Zustellung über das verwaltete reportedip.de-Relay."
 
-#: admin/class-two-factor-admin.php:361
-msgid "Delivered via wp_mail() on this server."
-msgstr "Zustellung über wp_mail() auf diesem Server."
-
-#: admin/class-two-factor-admin.php:366
+#: admin/class-two-factor-admin.php:368
 msgid "Upgrade for managed delivery"
 msgstr "Upgrade für verwaltete Zustellung"
 
-#: admin/class-two-factor-admin.php:383
+#: admin/class-two-factor-admin.php:385
 msgid "Passkey / WebAuthn / FIDO2"
 msgstr "Passkey / WebAuthn / FIDO2"
 
-#: admin/class-two-factor-admin.php:386
+#: admin/class-two-factor-admin.php:388
 msgid "Phishing-resistant sign-in via Face ID, Touch ID, Windows Hello or a hardware key (YubiKey)."
 msgstr "Phishing-resistente Anmeldung über Face ID, Touch ID, Windows Hello oder einen Hardware-Schlüssel (YubiKey)."
 
-#: admin/class-two-factor-admin.php:403
+#: admin/class-two-factor-admin.php:405
 #: includes/class-two-factor-reset-gate.php:1452
 #: templates/frontend-2fa-challenge.php:298
 #: templates/two-factor-challenge.php:312
@@ -6640,345 +6631,341 @@ msgstr "Phishing-resistente Anmeldung über Face ID, Touch ID, Windows Hello ode
 msgid "SMS code"
 msgstr "SMS-Code"
 
-#: admin/class-two-factor-admin.php:408
-msgid "Delivered through the managed reportedip.de relay (Professional plan and higher). Less secure than Authenticator or Passkey, so use it only as a fallback."
-msgstr "Wird über das verwaltete reportedip.de-Relay zugestellt (ab Professional-Tarif). Weniger sicher als Authenticator oder Passkey, daher nur als Fallback verwenden."
-
-#: admin/class-two-factor-admin.php:417
+#: admin/class-two-factor-admin.php:430
 msgid "Enforcement"
 msgstr "Durchsetzung"
 
-#: admin/class-two-factor-admin.php:421
+#: admin/class-two-factor-admin.php:434
 msgid "2FA required for roles"
 msgstr "2FA erforderlich für Rollen"
 
-#: admin/class-two-factor-admin.php:434
+#: admin/class-two-factor-admin.php:447
 msgid "Users with these roles must set up 2FA, otherwise sign-in is blocked."
 msgstr "Benutzer mit diesen Rollen müssen die 2FA einrichten, andernfalls wird die Anmeldung blockiert."
 
-#: admin/class-two-factor-admin.php:447
+#: admin/class-two-factor-admin.php:460
 msgid "Required users see the onboarding after sign-in. During the grace period the \"Later\" button is unlimited. Afterwards the skip cap applies. 0 = immediate."
 msgstr "Erforderliche Benutzer sehen das Onboarding nach der Anmeldung. Während der Schonfrist ist die Schaltfläche „Später“ unbegrenzt. Danach gilt die Überspringen-Obergrenze. 0 = sofort."
 
-#: admin/class-two-factor-admin.php:460
+#: admin/class-two-factor-admin.php:473
 msgid "How many times required users may skip the onboarding after the grace period ends. 0 = enforced immediately."
 msgstr "Wie oft erforderliche Benutzer das Onboarding nach Ablauf der Schonfrist überspringen dürfen. 0 = sofort durchgesetzt."
 
-#: admin/class-two-factor-admin.php:472
+#: admin/class-two-factor-admin.php:485
 msgid "Enforce onboarding on the frontend too"
 msgstr "Onboarding auch im Frontend durchsetzen"
 
-#: admin/class-two-factor-admin.php:475
+#: admin/class-two-factor-admin.php:488
 msgid "Also redirects required users to onboarding when they land on frontend pages after sign-in (e.g. WooCommerce account)."
 msgstr "Leitet erforderliche Benutzer auch zum Onboarding weiter, wenn sie nach der Anmeldung auf Frontend-Seiten gelangen (z. B. WooCommerce-Konto)."
 
-#: admin/class-two-factor-admin.php:507
+#: admin/class-two-factor-admin.php:520
 msgid "WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA."
 msgstr "WooCommerce ist auf dieser Website nicht aktiv. Aktivieren Sie WooCommerce, um die Frontend-Anmelde-2FA zu nutzen."
 
-#: admin/class-two-factor-admin.php:511
+#: admin/class-two-factor-admin.php:524
 msgid "Frontend 2FA is paused because the current ReportedIP plan no longer includes it. Existing customer secrets stay valid; new onboardings are blocked until the plan is restored."
 msgstr "Die Frontend-2FA ist pausiert, weil der aktuelle ReportedIP-Tarif sie nicht mehr enthält. Bestehende Kunden-Secrets bleiben gültig; neue Onboardings werden blockiert, bis der Tarif wiederhergestellt ist."
 
-#: admin/class-two-factor-admin.php:521
+#: admin/class-two-factor-admin.php:534
 msgid "Other 2FA / login plugins detected"
 msgstr "Andere 2FA-/Anmelde-Plugins erkannt"
 
-#: admin/class-two-factor-admin.php:535
+#: admin/class-two-factor-admin.php:548
 msgid "Frontend 2FA configuration"
 msgstr "Frontend-2FA-Konfiguration"
 
-#: admin/class-two-factor-admin.php:546
+#: admin/class-two-factor-admin.php:559
 msgid "Render the 2FA challenge inside the storefront theme"
 msgstr "Die 2FA-Abfrage innerhalb des Storefront-Themes darstellen"
 
-#: admin/class-two-factor-admin.php:550
+#: admin/class-two-factor-admin.php:563
 msgid "When off, WooCommerce frontend logins still get challenged — but the challenge falls back to wp-login.php."
 msgstr "Wenn deaktiviert, werden WooCommerce-Frontend-Anmeldungen weiterhin abgefragt — die Abfrage greift jedoch auf wp-login.php zurück."
 
-#: admin/class-two-factor-admin.php:563
+#: admin/class-two-factor-admin.php:576
 msgid "Let customers opt in to 2FA from My Account"
 msgstr "Kunden ermöglichen, die 2FA über „Mein Konto“ zu aktivieren"
 
-#: admin/class-two-factor-admin.php:567
+#: admin/class-two-factor-admin.php:580
 msgid "When enabled, Customer / Subscriber roles see the same self-service setup wizard as administrators. Role-based enforcement above still applies on top."
 msgstr "Wenn aktiviert, sehen die Rollen Kunde / Abonnent denselben Self-Service-Einrichtungsassistenten wie Administratoren. Die oben festgelegte rollenbasierte Durchsetzung gilt zusätzlich."
 
-#: admin/class-two-factor-admin.php:572
+#: admin/class-two-factor-admin.php:585
 msgid "Challenge page slug"
 msgstr "Slug der Abfrageseite"
 
 #. translators: %s: absolute URL of the configured challenge slug
-#: admin/class-two-factor-admin.php:590
+#: admin/class-two-factor-admin.php:603
 #, php-format
 msgid "Where logged-in customers land for the second factor. Current URL: %s"
 msgstr "Wohin angemeldete Kunden für den zweiten Faktor gelangen. Aktuelle URL: %s"
 
-#: admin/class-two-factor-admin.php:598
+#: admin/class-two-factor-admin.php:611
 msgid "Setup page slug (onboarding)"
 msgstr "Slug der Einrichtungsseite (Onboarding)"
 
 #. translators: %s: absolute URL of the setup slug
-#: admin/class-two-factor-admin.php:616
+#: admin/class-two-factor-admin.php:629
 #, php-format
 msgid "Customer onboarding wizard. Current URL: %s"
 msgstr "Kunden-Onboarding-Assistent. Aktuelle URL: %s"
 
-#: admin/class-two-factor-admin.php:653
+#: admin/class-two-factor-admin.php:666
 msgid "Show a reminder banner at login until 2FA is set up"
 msgstr "Ein Erinnerungsbanner bei der Anmeldung anzeigen, bis die 2FA eingerichtet ist"
 
-#: admin/class-two-factor-admin.php:656
+#: admin/class-two-factor-admin.php:669
 msgid "On every login of a user without any 2FA method, a banner appears across all admin pages. The banner is dismissable per session but reappears on the next login."
 msgstr "Bei jeder Anmeldung eines Benutzers ohne 2FA-Methode erscheint auf allen Admin-Seiten ein Banner. Das Banner kann pro Sitzung ausgeblendet werden, erscheint jedoch bei der nächsten Anmeldung erneut."
 
-#: admin/class-two-factor-admin.php:661
+#: admin/class-two-factor-admin.php:674
 msgid "Hard-block threshold"
 msgstr "Schwellenwert für harte Blockierung"
 
-#: admin/class-two-factor-admin.php:671
+#: admin/class-two-factor-admin.php:684
 msgid "After this many login reminders, users in the roles selected below are forced into the 2FA onboarding wizard before they can continue. Recommended: 5."
 msgstr "Nach dieser Anzahl von Anmelde-Erinnerungen werden Benutzer in den unten ausgewählten Rollen in den 2FA-Onboarding-Assistenten gezwungen, bevor sie fortfahren können. Empfohlen: 5."
 
-#: admin/class-two-factor-admin.php:675
+#: admin/class-two-factor-admin.php:688
 msgid "Hard-block roles"
 msgstr "Rollen mit harter Blockierung"
 
-#: admin/class-two-factor-admin.php:688
+#: admin/class-two-factor-admin.php:701
 msgid "Users in these roles get hard-blocked once the threshold is reached. All other roles only see the reminder banner — no lock-out (recommended for Customer / Subscriber / Author so a missing phone never breaks WooCommerce)."
 msgstr "Benutzer in diesen Rollen werden hart blockiert, sobald der Schwellenwert erreicht ist. Alle anderen Rollen sehen nur das Erinnerungsbanner — keine Aussperrung (empfohlen für Kunde / Abonnent / Autor, damit ein fehlendes Telefon WooCommerce nie lahmlegt)."
 
-#: admin/class-two-factor-admin.php:696
+#: admin/class-two-factor-admin.php:709
 msgid "IP allowlist (2FA bypass)"
 msgstr "IP-Erlaubnisliste (2FA-Umgehung)"
 
-#: admin/class-two-factor-admin.php:699
+#: admin/class-two-factor-admin.php:712
 msgid "Trusted IPs / CIDR ranges"
 msgstr "Vertrauenswürdige IPs / CIDR-Bereiche"
 
-#: admin/class-two-factor-admin.php:718
+#: admin/class-two-factor-admin.php:731
 msgid "Add my IP"
 msgstr "Meine IP hinzufügen"
 
 #. translators: %s: detected client IP address
-#: admin/class-two-factor-admin.php:724
+#: admin/class-two-factor-admin.php:737
 #, php-format
 msgid "Detected: %s"
 msgstr "Erkannt: %s"
 
-#: admin/class-two-factor-admin.php:732
+#: admin/class-two-factor-admin.php:745
 msgid "Users from these IPs sign in without 2FA. Enable only on trusted networks (office VPN, corporate network), NOT on co-working spaces or open Wi-Fi. Lines starting with # are treated as comments."
 msgstr "Benutzer von diesen IPs melden sich ohne 2FA an. Aktivieren Sie dies nur in vertrauenswürdigen Netzwerken (Büro-VPN, Unternehmensnetzwerk), NICHT in Co-Working-Spaces oder offenem WLAN. Zeilen, die mit # beginnen, werden als Kommentare behandelt."
 
-#: admin/class-two-factor-admin.php:766
+#: admin/class-two-factor-admin.php:779
 msgid "XMLRPC protection"
 msgstr "XMLRPC-Schutz"
 
-#: admin/class-two-factor-admin.php:780
+#: admin/class-two-factor-admin.php:793
 msgid "Blocks basic auth over XMLRPC (commonly used by bot attacks) but still allows application passwords. No 2FA prompt on XMLRPC — the API client must use a separate application password."
 msgstr "Blockiert Basic-Auth über XMLRPC (häufig von Bot-Angriffen genutzt), erlaubt jedoch weiterhin Anwendungspasswörter. Keine 2FA-Abfrage bei XMLRPC — der API-Client muss ein separates Anwendungspasswort verwenden."
 
-#: admin/class-two-factor-admin.php:788
-#: admin/class-two-factor-admin.php:1663
+#: admin/class-two-factor-admin.php:801
+#: admin/class-two-factor-admin.php:1676
 msgid "Trusted devices"
 msgstr "Vertrauenswürdige Geräte"
 
-#: admin/class-two-factor-admin.php:800
+#: admin/class-two-factor-admin.php:813
 msgid "Enable \"remember device\""
 msgstr "„Gerät merken“ aktivieren"
 
-#: admin/class-two-factor-admin.php:803
+#: admin/class-two-factor-admin.php:816
 msgid "Users can skip 2FA on trusted devices."
 msgstr "Benutzer können die 2FA auf vertrauenswürdigen Geräten überspringen."
 
-#: admin/class-two-factor-admin.php:807
+#: admin/class-two-factor-admin.php:820
 msgid "Trust duration (days)"
 msgstr "Vertrauensdauer (Tage)"
 
-#: admin/class-two-factor-admin.php:827
+#: admin/class-two-factor-admin.php:840
 msgid "Extended session duration (30 days) when \"Remember me\" is used with verified 2FA"
 msgstr "Verlängerte Sitzungsdauer (30 Tage), wenn „Angemeldet bleiben“ mit verifizierter 2FA verwendet wird"
 
-#: admin/class-two-factor-admin.php:830
+#: admin/class-two-factor-admin.php:843
 msgid "Extends the auth cookie from 14 to 30 days when a user signs in with 2FA + \"Remember me\". Stronger authentication justifies the longer session."
 msgstr "Verlängert das Auth-Cookie von 14 auf 30 Tage, wenn sich ein Benutzer mit 2FA + „Angemeldet bleiben“ anmeldet. Stärkere Authentifizierung rechtfertigt die längere Sitzung."
 
-#: admin/class-two-factor-admin.php:842
+#: admin/class-two-factor-admin.php:855
 msgid "Branded login screen (show the plugin logo on the 2FA challenge)"
 msgstr "Gebrandeter Anmeldebildschirm (das Plugin-Logo bei der 2FA-Abfrage anzeigen)"
 
-#: admin/class-two-factor-admin.php:852
+#: admin/class-two-factor-admin.php:865
 msgid "Password reset gate"
 msgstr "Passwort-Zurücksetzungs-Sperre"
 
-#: admin/class-two-factor-admin.php:855
+#: admin/class-two-factor-admin.php:868
 msgid "Require a second factor before a user can set a new password through the WordPress \"lost password\" flow. This closes the bypass where someone with access to a mailbox could reset the password and receive the email-based 2FA code in the same inbox."
 msgstr "Erfordert einen zweiten Faktor, bevor ein Benutzer über den WordPress-Ablauf „Passwort vergessen“ ein neues Passwort festlegen kann. Dies schließt die Umgehung, bei der jemand mit Zugriff auf ein Postfach das Passwort zurücksetzen und den E-Mail-basierten 2FA-Code im selben Postfach empfangen könnte."
 
-#: admin/class-two-factor-admin.php:867
+#: admin/class-two-factor-admin.php:880
 msgid "Require 2FA verification before password reset"
 msgstr "2FA-Verifizierung vor dem Zurücksetzen des Passworts erfordern"
 
-#: admin/class-two-factor-admin.php:870
+#: admin/class-two-factor-admin.php:883
 msgid "Users with any 2FA method must verify a non-email factor (Authenticator, SMS, security key, or recovery code) before the new password is accepted."
 msgstr "Benutzer mit einer beliebigen 2FA-Methode müssen einen Nicht-E-Mail-Faktor (Authenticator, SMS, Sicherheitsschlüssel oder Wiederherstellungscode) bestätigen, bevor das neue Passwort akzeptiert wird."
 
-#: admin/class-two-factor-admin.php:882
+#: admin/class-two-factor-admin.php:895
 msgid "Block resets for accounts that only have email 2FA and no recovery codes"
 msgstr "Zurücksetzungen für Konten blockieren, die nur über E-Mail-2FA und keine Wiederherstellungscodes verfügen"
 
-#: admin/class-two-factor-admin.php:885
+#: admin/class-two-factor-admin.php:898
 msgid "When the only configured factor is email and no recovery codes exist, the password reset is rejected and an alert is sent to all administrators. Unblock manually via WP-CLI: wp user reset-password &lt;id&gt; --skip-email."
 msgstr "Wenn der einzige konfigurierte Faktor E-Mail ist und keine Wiederherstellungscodes vorhanden sind, wird das Zurücksetzen des Passworts abgelehnt und eine Benachrichtigung an alle Administratoren gesendet. Entsperren Sie manuell über WP-CLI: wp user reset-password &lt;id&gt; --skip-email."
 
-#: admin/class-two-factor-admin.php:902
+#: admin/class-two-factor-admin.php:915
 msgid "Save settings"
 msgstr "Einstellungen speichern"
 
-#: admin/class-two-factor-admin.php:1156
+#: admin/class-two-factor-admin.php:1169
 msgid "SMS code (Professional)"
 msgstr "SMS-Code (Professional)"
 
-#: admin/class-two-factor-admin.php:1159
+#: admin/class-two-factor-admin.php:1172
 msgid "SMS-2FA is delivered through the managed reportedip.de relay, included with Professional and Business plans. Phone numbers are stored encrypted and the SMS contains only the code, no site or user data."
 msgstr "SMS-2FA wird über das verwaltete reportedip.de-Relay zugestellt und ist in den Tarifen Professional und Business enthalten. Telefonnummern werden verschlüsselt gespeichert, und die SMS enthält nur den Code — keine Website- oder Benutzerdaten."
 
-#: admin/class-two-factor-admin.php:1164
+#: admin/class-two-factor-admin.php:1177
 msgid "Managed SMS relay active"
 msgstr "Verwaltetes SMS-Relay aktiv"
 
-#: admin/class-two-factor-admin.php:1165
+#: admin/class-two-factor-admin.php:1178
 msgid "SMS-2FA flows through reportedip.de — included with your plan, no separate SMS contract needed."
 msgstr "SMS-2FA läuft über reportedip.de — in Ihrem Tarif enthalten, kein separater SMS-Vertrag nötig."
 
-#: admin/class-two-factor-admin.php:1173
+#: admin/class-two-factor-admin.php:1186
 msgid "Final step: enable “SMS code” in the methods list above to roll it out to your users."
 msgstr "Letzter Schritt: Aktivieren Sie „SMS-Code“ in der Methodenliste oben, um es für Ihre Benutzer auszurollen."
 
-#: admin/class-two-factor-admin.php:1179
+#: admin/class-two-factor-admin.php:1192
 msgid "Test SMS to (E.164):"
 msgstr "Test-SMS an (E.164):"
 
-#: admin/class-two-factor-admin.php:1181
+#: admin/class-two-factor-admin.php:1194
 msgid "Send test SMS"
 msgstr "Test-SMS senden"
 
-#: admin/class-two-factor-admin.php:1186
+#: admin/class-two-factor-admin.php:1199
 msgid "SMS code is a Professional feature"
 msgstr "SMS-Code ist eine Professional-Funktion"
 
-#: admin/class-two-factor-admin.php:1187
+#: admin/class-two-factor-admin.php:1200
 msgid "Professional and Business plans include SMS-2FA via our managed EU gateway — no separate provider contract required. TOTP, Email and Passkeys remain available on every plan."
 msgstr "Die Tarife Professional und Business enthalten SMS-2FA über unser verwaltetes EU-Gateway — kein separater Anbietervertrag nötig. TOTP, E-Mail und Passkeys bleiben in jedem Tarif verfügbar."
 
-#: admin/class-two-factor-admin.php:1204
+#: admin/class-two-factor-admin.php:1217
 #: includes/class-two-factor-sms.php:132
 msgid "Please enter a phone number."
 msgstr "Bitte geben Sie eine Telefonnummer ein."
 
-#: admin/class-two-factor-admin.php:1208
+#: admin/class-two-factor-admin.php:1221
 msgid "Sende…"
 msgstr "Wird gesendet…"
 
-#: admin/class-two-factor-admin.php:1227
-#: admin/class-two-factor-admin.php:1994
+#: admin/class-two-factor-admin.php:1240
+#: admin/class-two-factor-admin.php:2007
 msgid "Test SMS sent."
 msgstr "Test-SMS gesendet."
 
-#: admin/class-two-factor-admin.php:1231
+#: admin/class-two-factor-admin.php:1244
 msgid "Request failed (HTTP"
 msgstr "Anfrage fehlgeschlagen (HTTP"
 
-#: admin/class-two-factor-admin.php:1236
+#: admin/class-two-factor-admin.php:1249
 msgid "Network error — could not reach admin-ajax.php."
 msgstr "Netzwerkfehler — admin-ajax.php konnte nicht erreicht werden."
 
-#: admin/class-two-factor-admin.php:1291
+#: admin/class-two-factor-admin.php:1304
 msgid "Frontend 2FA requires the Professional plan or higher. Toggle reverted."
 msgstr "Frontend-2FA erfordert den Tarif Professional oder höher. Umschalter zurückgesetzt."
 
-#: admin/class-two-factor-admin.php:1336
+#: admin/class-two-factor-admin.php:1349
 msgid "The challenge and setup slugs must differ. Reverted to the previous value."
 msgstr "Die Challenge- und Setup-Slugs müssen sich unterscheiden. Auf den vorherigen Wert zurückgesetzt."
 
-#: admin/class-two-factor-admin.php:1370
+#: admin/class-two-factor-admin.php:1383
 msgid "The setup and challenge slugs must differ. Reverted to the previous value."
 msgstr "Die Setup- und Challenge-Slugs müssen sich unterscheiden. Auf den vorherigen Wert zurückgesetzt."
 
-#: admin/class-two-factor-admin.php:1515
+#: admin/class-two-factor-admin.php:1528
 msgid "Are you sure? This removes all 2FA settings for this account."
 msgstr "Sind Sie sicher? Dadurch werden alle 2FA-Einstellungen für dieses Konto entfernt."
 
-#: admin/class-two-factor-admin.php:1516
+#: admin/class-two-factor-admin.php:1529
 msgid "Existing recovery codes will be invalidated. Continue?"
 msgstr "Vorhandene Wiederherstellungscodes werden ungültig. Fortfahren?"
 
-#: admin/class-two-factor-admin.php:1517
+#: admin/class-two-factor-admin.php:1530
 msgid "Revoke all trusted devices?"
 msgstr "Alle vertrauenswürdigen Geräte widerrufen?"
 
-#: admin/class-two-factor-admin.php:1518
+#: admin/class-two-factor-admin.php:1531
 msgid "Enable email-based 2FA? We will send a test code to your registered email address."
 msgstr "E-Mail-basierte 2FA aktivieren? Wir senden einen Testcode an Ihre registrierte E-Mail-Adresse."
 
-#: admin/class-two-factor-admin.php:1520
+#: admin/class-two-factor-admin.php:1533
 msgid "Scan this QR code with your authenticator app:"
 msgstr "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App:"
 
-#: admin/class-two-factor-admin.php:1521
+#: admin/class-two-factor-admin.php:1534
 msgid "Enter the 6-digit code to confirm setup:"
 msgstr "Geben Sie den 6-stelligen Code ein, um die Einrichtung zu bestätigen:"
 
-#: admin/class-two-factor-admin.php:1522
+#: admin/class-two-factor-admin.php:1535
 msgid "2FA has been set up successfully!"
 msgstr "2FA wurde erfolgreich eingerichtet!"
 
-#: admin/class-two-factor-admin.php:1523
+#: admin/class-two-factor-admin.php:1536
 msgid "Save these recovery codes in a secure place:"
 msgstr "Bewahren Sie diese Wiederherstellungscodes an einem sicheren Ort auf:"
 
-#: admin/class-two-factor-admin.php:1525
+#: admin/class-two-factor-admin.php:1538
 #: templates/two-factor-onboarding.php:299
 #: templates/two-factor-onboarding.php:332
 #: templates/two-factor-onboarding.php:407
 msgid "Confirm"
 msgstr "Bestätigen"
 
-#: admin/class-two-factor-admin.php:1526
+#: admin/class-two-factor-admin.php:1539
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: admin/class-two-factor-admin.php:1527
+#: admin/class-two-factor-admin.php:1540
 msgid "QR code library not loaded."
 msgstr "QR-Code-Bibliothek nicht geladen."
 
-#: admin/class-two-factor-admin.php:1528
+#: admin/class-two-factor-admin.php:1541
 msgid "We will send you a code. Check your inbox…"
 msgstr "Wir senden Ihnen einen Code. Prüfen Sie Ihren Posteingang…"
 
-#: admin/class-two-factor-admin.php:1529
+#: admin/class-two-factor-admin.php:1542
 msgid "000000"
 msgstr "000000"
 
-#: admin/class-two-factor-admin.php:1531
+#: admin/class-two-factor-admin.php:1544
 msgid "Download"
 msgstr "Herunterladen"
 
-#: admin/class-two-factor-admin.php:1532
+#: admin/class-two-factor-admin.php:1545
 msgid "These codes are shown only once!"
 msgstr "Diese Codes werden nur einmal angezeigt!"
 
-#: admin/class-two-factor-admin.php:1533
+#: admin/class-two-factor-admin.php:1546
 msgid "Each code can be used only once."
 msgstr "Jeder Code kann nur einmal verwendet werden."
 
-#: admin/class-two-factor-admin.php:1553
+#: admin/class-two-factor-admin.php:1566
 #: includes/class-two-factor-onboarding.php:406
 #: includes/class-two-factor-reset-gate.php:1450
 msgid "Authenticator app"
 msgstr "Authenticator-App"
 
-#: admin/class-two-factor-admin.php:1555
+#: admin/class-two-factor-admin.php:1568
 #: includes/class-two-factor-onboarding.php:408
 #: includes/class-two-factor-webauthn.php:176
 #: templates/frontend-2fa-challenge.php:113
@@ -6986,241 +6973,241 @@ msgstr "Authenticator-App"
 msgid "Passkey"
 msgstr "Passkey"
 
-#: admin/class-two-factor-admin.php:1564
+#: admin/class-two-factor-admin.php:1577
 msgid "primary"
 msgstr "primär"
 
 #. translators: %d: method count
-#: admin/class-two-factor-admin.php:1577
+#: admin/class-two-factor-admin.php:1590
 #, php-format
 msgid "Active — %d method"
 msgid_plural "Active — %d methods"
 msgstr[0] "Aktiv — %d Methode"
 msgstr[1] "Aktiv — %d Methoden"
 
-#: admin/class-two-factor-admin.php:1587
+#: admin/class-two-factor-admin.php:1600
 msgid "Not set up"
 msgstr "Nicht eingerichtet"
 
-#: admin/class-two-factor-admin.php:1595
+#: admin/class-two-factor-admin.php:1608
 #: includes/class-two-factor-dashboard.php:109
 msgid "Set up"
 msgstr "Einrichten"
 
-#: admin/class-two-factor-admin.php:1600
+#: admin/class-two-factor-admin.php:1613
 #: templates/two-factor-onboarding.php:275
 msgid "Set up authenticator app"
 msgstr "Authenticator-App einrichten"
 
-#: admin/class-two-factor-admin.php:1604
+#: admin/class-two-factor-admin.php:1617
 #: templates/two-factor-onboarding.php:308
 msgid "Set up email code"
 msgstr "E-Mail-Code einrichten"
 
 #. translators: 1: opening link tag, 2: closing link tag
-#: admin/class-two-factor-admin.php:1613
+#: admin/class-two-factor-admin.php:1626
 #, php-format
 msgid "Prefer a step-by-step walkthrough? %1$sSet up 2FA in the guided wizard%2$s."
 msgstr "Lieber Schritt für Schritt? %1$s2FA im geführten Wizard einrichten%2$s."
 
-#: admin/class-two-factor-admin.php:1627
+#: admin/class-two-factor-admin.php:1640
 msgid "Recovery Codes"
 msgstr "Wiederherstellungscodes"
 
-#: admin/class-two-factor-admin.php:1630
+#: admin/class-two-factor-admin.php:1643
 msgid "All codes used — generate new"
 msgstr "Alle Codes verwendet — neue generieren"
 
 #. translators: %d: remaining codes
-#: admin/class-two-factor-admin.php:1636
+#: admin/class-two-factor-admin.php:1649
 #, php-format
 msgid "%d left — generate new"
 msgstr "%d übrig — neue generieren"
 
 #. translators: %d: remaining codes
-#: admin/class-two-factor-admin.php:1646
+#: admin/class-two-factor-admin.php:1659
 #, php-format
 msgid "%d available"
 msgstr "%d verfügbar"
 
-#: admin/class-two-factor-admin.php:1654
+#: admin/class-two-factor-admin.php:1667
 msgid "Generate new recovery codes"
 msgstr "Neue Wiederherstellungscodes generieren"
 
-#: admin/class-two-factor-admin.php:1669
+#: admin/class-two-factor-admin.php:1682
 msgid "Unknown device"
 msgstr "Unbekanntes Gerät"
 
 #. translators: %s: date
-#: admin/class-two-factor-admin.php:1675
+#: admin/class-two-factor-admin.php:1688
 #, php-format
 msgid "Added: %s"
 msgstr "Hinzugefügt: %s"
 
 #. translators: %s: date
-#: admin/class-two-factor-admin.php:1684
+#: admin/class-two-factor-admin.php:1697
 #, php-format
 msgid "Last used: %s"
 msgstr "Zuletzt verwendet: %s"
 
-#: admin/class-two-factor-admin.php:1692
+#: admin/class-two-factor-admin.php:1705
 msgid "Revoke"
 msgstr "Widerrufen"
 
-#: admin/class-two-factor-admin.php:1698
+#: admin/class-two-factor-admin.php:1711
 msgid "Revoke all devices"
 msgstr "Alle Geräte widerrufen"
 
-#: admin/class-two-factor-admin.php:1706
+#: admin/class-two-factor-admin.php:1719
 msgid "Disable"
 msgstr "Deaktivieren"
 
-#: admin/class-two-factor-admin.php:1709
+#: admin/class-two-factor-admin.php:1722
 msgid "Disable 2FA"
 msgstr "2FA deaktivieren"
 
-#: admin/class-two-factor-admin.php:1744
+#: admin/class-two-factor-admin.php:1757
 #: includes/class-two-factor-email.php:90
 #: includes/class-two-factor-webauthn.php:60
 msgid "Invalid user."
 msgstr "Ungültiger Benutzer."
 
-#: admin/class-two-factor-admin.php:1752
+#: admin/class-two-factor-admin.php:1765
 msgid "Encryption failed."
 msgstr "Verschlüsselung fehlgeschlagen."
 
-#: admin/class-two-factor-admin.php:1777
+#: admin/class-two-factor-admin.php:1790
 msgid "No TOTP setup found. Please start again."
 msgstr "Keine TOTP-Einrichtung gefunden. Bitte beginnen Sie erneut."
 
-#: admin/class-two-factor-admin.php:1782
+#: admin/class-two-factor-admin.php:1795
 msgid "Decryption failed."
 msgstr "Entschlüsselung fehlgeschlagen."
 
-#: admin/class-two-factor-admin.php:1786
+#: admin/class-two-factor-admin.php:1799
 msgid "Invalid code. Please check your device clock."
 msgstr "Ungültiger Code. Bitte überprüfen Sie die Uhrzeit Ihres Geräts."
 
-#: admin/class-two-factor-admin.php:1796
+#: admin/class-two-factor-admin.php:1809
 msgid "2FA with authenticator app enabled!"
 msgstr "2FA mit Authenticator-App aktiviert!"
 
-#: admin/class-two-factor-admin.php:1813
+#: admin/class-two-factor-admin.php:1826
 msgid "User has no email address."
 msgstr "Der Benutzer hat keine E-Mail-Adresse."
 
-#: admin/class-two-factor-admin.php:1826
+#: admin/class-two-factor-admin.php:1839
 msgid "Code sent. Please check your inbox."
 msgstr "Code gesendet. Bitte überprüfen Sie Ihren Posteingang."
 
-#: admin/class-two-factor-admin.php:1836
-#: admin/class-two-factor-admin.php:1918
+#: admin/class-two-factor-admin.php:1849
+#: admin/class-two-factor-admin.php:1931
 msgid "Invalid or expired code."
 msgstr "Ungültiger oder abgelaufener Code."
 
-#: admin/class-two-factor-admin.php:1851
+#: admin/class-two-factor-admin.php:1864
 msgid "Email code enabled!"
 msgstr "E-Mail-Code aktiviert!"
 
-#: admin/class-two-factor-admin.php:1858
+#: admin/class-two-factor-admin.php:1871
 msgid "Invalid setup step. Email 2FA requires code verification."
 msgstr "Ungültiger Einrichtungsschritt. E-Mail-2FA erfordert eine Code-Verifizierung."
 
-#: admin/class-two-factor-admin.php:1874
+#: admin/class-two-factor-admin.php:1887
 msgid "SMS module is not loaded."
 msgstr "Das SMS-Modul ist nicht geladen."
 
-#: admin/class-two-factor-admin.php:1877
+#: admin/class-two-factor-admin.php:1890
 #: includes/class-two-factor-sms.php:210
 msgid "SMS sending is not configured. Please contact an administrator."
 msgstr "Der SMS-Versand ist nicht konfiguriert. Bitte wenden Sie sich an einen Administrator."
 
-#: admin/class-two-factor-admin.php:1887
+#: admin/class-two-factor-admin.php:1900
 msgid "Please confirm processing of your phone number by the managed SMS relay."
 msgstr "Bitte bestätigen Sie die Verarbeitung Ihrer Telefonnummer durch das verwaltete SMS-Relay."
 
-#: admin/class-two-factor-admin.php:1898
+#: admin/class-two-factor-admin.php:1911
 msgid "Could not store phone number securely."
 msgstr "Die Telefonnummer konnte nicht sicher gespeichert werden."
 
-#: admin/class-two-factor-admin.php:1908
+#: admin/class-two-factor-admin.php:1921
 msgid "SMS sent. Please enter the code."
 msgstr "SMS gesendet. Bitte geben Sie den Code ein."
 
-#: admin/class-two-factor-admin.php:1933
+#: admin/class-two-factor-admin.php:1946
 msgid "SMS 2FA enabled!"
 msgstr "SMS-2FA aktiviert!"
 
-#: admin/class-two-factor-admin.php:1940
+#: admin/class-two-factor-admin.php:1953
 msgid "Invalid setup step."
 msgstr "Ungültiger Einrichtungsschritt."
 
-#: admin/class-two-factor-admin.php:1954
+#: admin/class-two-factor-admin.php:1967
 msgid "Invalid method."
 msgstr "Ungültige Methode."
 
-#: admin/class-two-factor-admin.php:1957
+#: admin/class-two-factor-admin.php:1970
 msgid "Could not disable method."
 msgstr "Die Methode konnte nicht deaktiviert werden."
 
-#: admin/class-two-factor-admin.php:1962
+#: admin/class-two-factor-admin.php:1975
 msgid "Method disabled."
 msgstr "Methode deaktiviert."
 
-#: admin/class-two-factor-admin.php:1979
+#: admin/class-two-factor-admin.php:1992
 msgid "SMS sending is not available on your current plan."
 msgstr "SMS-Versand ist in Ihrem aktuellen Tarif nicht verfügbar."
 
-#: admin/class-two-factor-admin.php:1989
+#: admin/class-two-factor-admin.php:2002
 msgid "ReportedIP Hive: Test SMS. Setup was successful."
 msgstr "ReportedIP Hive: Test-SMS. Die Einrichtung war erfolgreich."
 
-#: admin/class-two-factor-admin.php:2007
+#: admin/class-two-factor-admin.php:2020
 msgid "2FA has been disabled."
 msgstr "Die 2FA wurde deaktiviert."
 
-#: admin/class-two-factor-admin.php:2022
+#: admin/class-two-factor-admin.php:2035
 msgid "New recovery codes generated."
 msgstr "Neue Wiederherstellungscodes generiert."
 
-#: admin/class-two-factor-admin.php:2039
+#: admin/class-two-factor-admin.php:2052
 msgid "Device revoked."
 msgstr "Gerät widerrufen."
 
-#: admin/class-two-factor-admin.php:2041
+#: admin/class-two-factor-admin.php:2054
 msgid "Device not found."
 msgstr "Gerät nicht gefunden."
 
 #. translators: %d: number of revoked devices
-#: admin/class-two-factor-admin.php:2057
+#: admin/class-two-factor-admin.php:2070
 #, php-format
 msgid "%d device revoked."
 msgid_plural "%d devices revoked."
 msgstr[0] "%d Gerät widerrufen."
 msgstr[1] "%d Geräte widerrufen."
 
-#: admin/class-two-factor-admin.php:2072
-#: admin/class-two-factor-admin.php:2086
+#: admin/class-two-factor-admin.php:2085
+#: admin/class-two-factor-admin.php:2099
 msgid "ReportedIP Hive 2FA-Daten"
 msgstr "ReportedIP Hive 2FA-Daten"
 
-#: admin/class-two-factor-admin.php:2113
+#: admin/class-two-factor-admin.php:2126
 msgid "ReportedIP 2FA"
 msgstr "ReportedIP 2FA"
 
-#: admin/class-two-factor-admin.php:2117
+#: admin/class-two-factor-admin.php:2130
 #: includes/class-two-factor-dashboard.php:33
 #: includes/class-two-factor-dashboard.php:34
 #: includes/class-two-factor-dashboard.php:62
 msgid "2FA Status"
 msgstr "2FA-Status"
 
-#: admin/class-two-factor-admin.php:2121
+#: admin/class-two-factor-admin.php:2134
 #: templates/two-factor-onboarding.php:127
 msgid "Method"
 msgstr "Methode"
 
-#: admin/class-two-factor-admin.php:2125
+#: admin/class-two-factor-admin.php:2138
 msgid "Recovery codes remaining"
 msgstr "Verbleibende Wiederherstellungscodes"
 
@@ -7757,26 +7744,26 @@ msgstr "Ungültige API-Antwort oder Serverfehler."
 msgid "API reports disabled in Local Mode"
 msgstr "API-Meldungen im Lokalen Schutz deaktiviert"
 
-#: includes/class-api-client.php:1392
+#: includes/class-api-client.php:1413
 msgid "Quota status unknown - will attempt API calls"
 msgstr "Kontingentstatus unbekannt - API-Aufrufe werden versucht"
 
-#: includes/class-api-client.php:1416
+#: includes/class-api-client.php:1437
 msgid "Your API key currently has no report permission. Please check your account status or upgrade to Contributor."
 msgstr "Ihr API-Schlüssel verfügt derzeit über keine Berechtigung zum Melden. Bitte überprüfen Sie Ihren Kontostatus oder führen Sie ein Upgrade auf Contributor durch."
 
 #. translators: 1: current usage, 2: daily limit, 3: reset time
-#: includes/class-api-client.php:1437
+#: includes/class-api-client.php:1458
 #, php-format
 msgid "Daily report limit reached (%1$d/%2$d). Resets at %3$s UTC."
 msgstr "Tägliches Meldelimit erreicht (%1$d/%2$d). Wird um %3$s UTC zurückgesetzt."
 
-#: includes/class-api-client.php:1456
+#: includes/class-api-client.php:1477
 msgid "Unlimited reports on this tier."
 msgstr "Unbegrenzte Meldungen in dieser Stufe."
 
 #. translators: %d: remaining reports
-#: includes/class-api-client.php:1459
+#: includes/class-api-client.php:1480
 #, php-format
 msgid "%d reports remaining today."
 msgstr "%d Meldungen heute verbleibend."
@@ -10063,7 +10050,7 @@ msgstr "Diese Seite wird geschützt durch %1$sReportedIP%2$s — Open Threat Int
 msgid "Page-cache compatible: Hive automatically excludes the login URL from caching for WP Rocket, LiteSpeed Cache, W3 Total Cache, WP Super Cache, WP Fastest Cache, Cache Enabler, Comet Cache and Hummingbird. After changing the slug, clear your page cache once so the previous URL is purged."
 msgstr "Mit Seiten-Cache kompatibel: Hive nimmt die Login-URL automatisch vom Caching aus — für WP Rocket, LiteSpeed Cache, W3 Total Cache, WP Super Cache, WP Fastest Cache, Cache Enabler, Comet Cache und Hummingbird. Leere nach dem Ändern des Slugs einmal deinen Seiten-Cache, damit die alte URL entfernt wird."
 
-#: admin/class-setup-wizard.php:1652
+#: admin/class-setup-wizard.php:1678
 msgid "Works with page caches: Hive automatically excludes the login URL from WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache and other caching plugins. After changing the slug, clear your page cache once so the old URL is purged."
 msgstr "Funktioniert mit Seiten-Caches: Hive nimmt die Login-URL automatisch vom Caching durch WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache und andere Cache-Plugins aus. Leere nach dem Ändern des Slugs einmal deinen Seiten-Cache, damit die alte URL entfernt wird."
 
@@ -10084,3 +10071,37 @@ msgstr "Option A — php.ini / PHP-FPM-Pool / Hosting-Panel (empfohlen)"
 #: admin/class-admin-firewall.php:1344
 msgid "Most managed hosts (ISPConfig, Plesk, cPanel) offer a \"custom php.ini settings\" field — paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx."
 msgstr "Die meisten Managed-Hoster (ISPConfig, Plesk, cPanel) bieten ein Feld „eigene php.ini-Einstellungen\" — füge diese eine Zeile dort ein und lade PHP-FPM neu. In einer PHP-FPM-Pool-Konfiguration lautet die entsprechende Zeile php_admin_value[auto_prepend_file] = <derselbe Pfad>. Auf nginx ist das meist der einfachste Weg."
+
+#: includes/class-mode-manager.php:762
+#: includes/class-mode-manager.php:763
+msgctxt "subscription tier name"
+msgid "Free"
+msgstr "Free"
+
+#: admin/class-admin-firewall.php:834
+msgid "Optionally run the firewall before WordPress loads, so a malicious request is rejected earlier and cheaper. Off by default and free on every plan. Turning it on brings a few extra settings with it: Hive generates a guard file, a server-config directive is added on the Server Setup tab (written automatically on Apache and PHP-FPM; one manual step on nginx or via php.ini), and the guard then applies the same rule exceptions and paranoia level as the in-WordPress engine."
+msgstr "Führt die Firewall optional aus, bevor WordPress lädt, sodass schädliche Anfragen früher und ressourcenschonender abgewiesen werden. Standardmäßig aus und in jedem Tarif kostenlos. Beim Aktivieren kommen ein paar zusätzliche Einstellungen hinzu: Hive erzeugt eine Guard-Datei, im Reiter „Server-Setup“ wird eine Server-Konfigurationsdirektive ergänzt (auf Apache und PHP-FPM automatisch geschrieben; auf nginx oder per php.ini ein manueller Schritt), und der Guard wendet anschließend dieselben Regel-Ausnahmen und dieselbe Paranoia-Stufe an wie die WordPress-interne Engine."
+
+#: admin/class-setup-wizard.php:1024
+msgid "An optional layer that runs the firewall before WordPress even loads, so malicious requests are rejected earlier and cheaper. Free on every plan."
+msgstr "Eine optionale Schicht, die die Firewall ausführt, noch bevor WordPress lädt, sodass schädliche Anfragen früher und ressourcenschonender abgewiesen werden. In jedem Tarif kostenlos."
+
+#: admin/class-setup-wizard.php:1025
+msgid "It stays off here on purpose: switching it on brings a few extra settings with it — a generated guard file and a one-time server-config step. Finish the wizard, then enable it under Firewall → Extended Protection, where Hive walks you through the server setup."
+msgstr "Sie bleibt hier bewusst aus: Beim Aktivieren kommen ein paar zusätzliche Einstellungen hinzu — eine erzeugte Guard-Datei und ein einmaliger Server-Konfigurationsschritt. Schließe den Assistenten ab und aktiviere sie anschließend unter Firewall → Erweiterter Schutz, wo Hive dich durch die Server-Einrichtung führt."
+
+#: admin/class-two-factor-admin.php:361
+msgid "On the free plan, codes are sent with wp_mail() straight from this server, so deliverability depends on your host."
+msgstr "Im kostenlosen Tarif werden Codes per wp_mail() direkt von diesem Server versendet; die Zustellbarkeit hängt daher von deinem Hoster ab."
+
+#: admin/class-two-factor-admin.php:364
+msgid "Professional adds our managed relay with maintained SPF/DKIM/DMARC reputation, so 2FA mails reliably reach the inbox (500/month included)."
+msgstr "Professional ergänzt unser verwaltetes Relay mit gepflegter SPF/DKIM/DMARC-Reputation, sodass 2FA-Mails zuverlässig im Postfach ankommen (500/Monat inklusive)."
+
+#: admin/class-two-factor-admin.php:420
+msgid "SMS codes are a Professional-plan feature, delivered through our managed reportedip.de relay — no Twilio account or SMS gateway of your own required (25/month included). The relay runs over the Community Network connection."
+msgstr "SMS-Codes sind ein Feature des Professional-Tarifs und werden über unser verwaltetes reportedip.de-Relay versendet — ein eigener Twilio-Account oder SMS-Gateway ist nicht nötig (25/Monat inklusive). Das Relay läuft über die Community-Netzwerk-Verbindung."
+
+#: admin/class-two-factor-admin.php:421
+msgid "Less secure than Authenticator or Passkey, so use it only as a fallback."
+msgstr "Weniger sicher als Authenticator oder Passkey — daher nur als Rückfalloption verwenden."

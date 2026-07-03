@@ -326,6 +326,7 @@
 
 						ReportedIPWizard._validatedApiKey = apiKey;
 						ReportedIPWizard.tier = (response.data.tier || response.data.user_role || '').toLowerCase();
+						ReportedIPWizard.updateTierBadge(response.data.tier_badge_html);
 						ReportedIPWizard.refreshContinueButton();
 					} else {
 						$input.addClass('rip-input--invalid').removeClass('rip-input--valid');
@@ -533,6 +534,14 @@
 		// ========================================================================
 		// Helpers
 		// ========================================================================
+
+		updateTierBadge: function (html) {
+			if (!html) { return; }
+			var $badge = $('.rip-wizard__header-actions .rip-tier-badge');
+			if ($badge.length) {
+				$badge.replaceWith(html);
+			}
+		},
 
 		formatRole: function (role) {
 			if (!role) return '-';

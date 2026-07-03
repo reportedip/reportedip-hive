@@ -2,6 +2,46 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.21] — 2026-07-03
+
+### Fixed
+
+- **Setup-wizard step indicator no longer overflows.** With ten steps the
+  indicator ran off the page and stacked labels character by character; it now
+  stays on one row with readable single-line labels and scrolls gracefully on
+  narrow screens.
+- **Account-tier badge showed the wrong word in German.** "Free" (the plan) and
+  "Free" (queue-lock available) shared one translation, so the tier rendered as
+  "Frei". The tier noun now carries a translation context and reads correctly,
+  consistent with the other English tier names.
+- **Tier badge updates immediately after validating a Community key in the
+  wizard.** Key validation now persists the resolved tier at once, so the header
+  badge and PRO-gated defaults (e.g. SMS pre-selected as a 2FA method) reflect
+  the new plan without waiting for the next background sync.
+- **Wizard privacy selects were unreadable under some themes.** The standalone
+  wizard renders inside the active front-end theme, whose CSS could collapse or
+  hide the `<select>` controls; their width and colours are now pinned.
+- **Settings tab bar wrapped mid-word in German.** Longer translated labels stay
+  on one line and the bar wraps cleanly; the page header keeps its badges
+  aligned to the right.
+- **Removed spurious admin notices on the standalone wizard and 2FA onboarding
+  pages.** Rendering a front-end-style page inside wp-admin let third-party
+  enqueue callbacks trip WordPress' jQuery-deregister and admin-bar-bump
+  warnings. Both pages now isolate the front-end enqueue phase through a shared
+  `ReportedIP_Hive::isolate_standalone_frontend_page()` helper.
+
+### Changed
+
+- **2FA method descriptions state the plan requirement clearly.** SMS carries a
+  PRO badge and explains it is a Professional-plan feature delivered through the
+  managed relay (no Twilio account required); Email advertises the managed
+  relay's SPF/DKIM/DMARC deliverability and links to upgrade whenever the
+  free-plan `wp_mail()` path is in use.
+- **Setup wizard introduces Extended Protection (pre-WordPress).** The firewall
+  step now describes the optional pre-WordPress guard and notes that enabling it
+  brings additional server-setup settings; the Firewall page's description says
+  the same.
+
 ## [2.1.20] — 2026-06-25
 
 ### Fixed

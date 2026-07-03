@@ -714,6 +714,20 @@ if ( ! function_exists( '__' ) ) {
 	}
 }
 
+if ( ! function_exists( '_x' ) ) {
+	/**
+	 * Retrieves the translation of $text in a given context.
+	 *
+	 * @param string $text    Text to translate.
+	 * @param string $context Disambiguating context.
+	 * @param string $domain  Optional. Text domain.
+	 * @return string
+	 */
+	function _x( $text, $context, $domain = 'default' ) {
+		return $text;
+	}
+}
+
 if ( ! function_exists( '_e' ) ) {
 	/**
 	 * Displays the translation of $text.

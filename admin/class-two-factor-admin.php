@@ -358,14 +358,17 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							esc_html_e( 'Delivered via the managed reportedip.de relay.', 'reportedip-hive' );
 						} else {
 							echo ' ';
-							esc_html_e( 'Delivered via wp_mail() on this server.', 'reportedip-hive' );
-							if ( 'tier' === $mail_relay_status['reason'] ) {
-								echo ' ';
-								ReportedIP_Hive_Admin_Settings::render_tier_lock(
-									$mail_relay_status,
-									array( 'label' => __( 'Upgrade for managed delivery', 'reportedip-hive' ) )
-								);
-							}
+							esc_html_e( 'On the free plan, codes are sent with wp_mail() straight from this server, so deliverability depends on your host.', 'reportedip-hive' );
+							echo ' ';
+							esc_html_e( 'Professional adds our managed relay with maintained SPF/DKIM/DMARC reputation, so 2FA mails reliably reach the inbox (500/month included).', 'reportedip-hive' );
+							echo ' ';
+							ReportedIP_Hive_Admin_Settings::render_tier_lock(
+								$mail_relay_status,
+								array(
+									'label' => __( 'Upgrade for managed delivery', 'reportedip-hive' ),
+									'href'  => ReportedIP_Hive_Admin_Settings::pricing_url(),
+								)
+							);
 						}
 						?>
 					</p>
@@ -403,9 +406,20 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							<?php esc_html_e( 'SMS code', 'reportedip-hive' ); ?>
 						</span>
 					</label>
-					&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $sms_relay_status ); ?>
+					&nbsp;
+					<?php
+					ReportedIP_Hive_Admin_Settings::render_tier_badge(
+						(string) ( $sms_relay_status['min_tier'] ?? 'professional' ),
+						array(
+							'small'  => true,
+							'locked' => $sms_locked,
+							'href'   => $sms_locked ? ReportedIP_Hive_Admin_Settings::pricing_url() : '',
+						)
+					);
+					?>
 					<p class="rip-help-text">
-						<?php esc_html_e( 'Delivered through the managed reportedip.de relay (Professional plan and higher). Less secure than Authenticator or Passkey, so use it only as a fallback.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'SMS codes are a Professional-plan feature, delivered through our managed reportedip.de relay — no Twilio account or SMS gateway of your own required (25/month included). The relay runs over the Community Network connection.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'Less secure than Authenticator or Passkey, so use it only as a fallback.', 'reportedip-hive' ); ?>
 					</p>
 				</div>
 			</div>

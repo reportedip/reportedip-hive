@@ -1227,6 +1227,27 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
+	 * Persist an already-verified status payload from an external caller.
+	 *
+	 * {@see verify_api_key()} intentionally does not cache — it is a pure probe.
+	 * Callers that verify a key interactively (the setup wizard's live
+	 * validation) use this to flip the durable tier immediately, so the tier
+	 * badge and every `tier_at_least()` gate reflect the new plan on the very
+	 * next render instead of waiting for the six-hour quota cron. No-op unless
+	 * the payload is a valid result carrying a `userRole`.
+	 *
+	 * @param array $result A verify-key result (must contain 'valid' and 'userRole').
+	 * @return void
+	 * @since 2.1.21
+	 */
+	public function persist_verified_status( $result ) {
+		if ( ! is_array( $result ) || empty( $result['valid'] ) ) {
+			return;
+		}
+		$this->persist_api_status( $result );
+	}
+
+	/**
 	 * Persist the verified API status and emit the tier-changed action when the
 	 * tier actually flipped.
 	 *

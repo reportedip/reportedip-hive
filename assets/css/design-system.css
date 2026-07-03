@@ -170,6 +170,8 @@
 
 .rip-header__brand {
     display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
     align-items: center;
     gap: var(--rip-space-4);
 }
@@ -207,7 +209,10 @@
 
 .rip-header__actions {
     display: flex;
+    flex-shrink: 0;
+    margin-left: auto;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--rip-space-3);
 }
 
@@ -1312,6 +1317,7 @@ button.rip-tier-lock--mode:hover {
 
 .rip-nav-tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--rip-space-1);
     background: white;
     border: 1px solid var(--rip-gray-200);
@@ -1331,6 +1337,8 @@ button.rip-tier-lock--mode:hover {
     font-family: inherit;
     font-size: var(--rip-text-sm);
     font-weight: 500;
+    line-height: 1.25;
+    white-space: nowrap;
     color: var(--rip-gray-600);
     cursor: pointer;
     text-decoration: none;

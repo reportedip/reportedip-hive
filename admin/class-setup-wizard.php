@@ -270,11 +270,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 */
 	private function render_wizard() {
 		show_admin_bar( false );
-
-		remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
-		remove_action( 'wp_print_styles', 'print_emoji_styles' );
-		remove_action( 'wp_head', 'wp_admin_bar_header' );
-		remove_action( 'wp_footer', 'wp_admin_bar_render', 1000 );
+		ReportedIP_Hive::isolate_standalone_frontend_page();
 
 		$this->enqueue_wizard_assets_direct();
 
@@ -997,6 +993,18 @@ class ReportedIP_Hive_Setup_Wizard {
 						<span class="rip-toggle__label"><?php esc_html_e( 'Report-only (log matches, do not block)', 'reportedip-hive' ); ?></span>
 					</label>
 					<p class="rip-help-block"><?php esc_html_e( 'Report-only is great for a trial run: matches are logged but never blocked. Turn it off in production.', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<!-- Extended Protection (pre-WordPress) — introduced here, configured on the Firewall page -->
+			<div class="rip-config-card rip-config-card--note">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><line x1="6" y1="7" x2="6.01" y2="7"/><line x1="6" y1="17" x2="6.01" y2="17"/></svg>
+					<h3><?php esc_html_e( 'Extended Protection (pre-WordPress)', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'An optional layer that runs the firewall before WordPress even loads, so malicious requests are rejected earlier and cheaper. Free on every plan.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-block"><?php esc_html_e( 'It stays off here on purpose: switching it on brings a few extra settings with it — a generated guard file and a one-time server-config step. Finish the wizard, then enable it under Firewall → Extended Protection, where Hive walks you through the server setup.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
@@ -2010,6 +2018,14 @@ class ReportedIP_Hive_Setup_Wizard {
 		if ( $result && ! empty( $result['valid'] ) ) {
 			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_key', $api_key );
 
+			$api_client->persist_verified_status( $result );
+
+			$tier = ReportedIP_Hive_Mode_Manager::tier_from_role( (string) ( $result['userRole'] ?? '' ) );
+
+			ob_start();
+			ReportedIP_Hive_Admin_Settings::render_tier_badge( $tier );
+			$tier_badge_html = trim( (string) ob_get_clean() );
+
 			wp_send_json_success(
 				array(
 					'valid'           => true,
@@ -2017,6 +2033,8 @@ class ReportedIP_Hive_Setup_Wizard {
 					'user_role'       => $result['userRole'] ?? '',
 					'daily_limit'     => $result['dailyApiLimit'] ?? 0,
 					'remaining_calls' => $result['remainingApiCalls'] ?? 0,
+					'tier'            => $tier,
+					'tier_badge_html' => $tier_badge_html,
 				)
 			);
 		}

@@ -306,10 +306,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 		}
 
 		show_admin_bar( false );
-		remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
-		remove_action( 'wp_print_styles', 'print_emoji_styles' );
-		remove_action( 'wp_head', 'wp_admin_bar_header' );
-		remove_action( 'wp_footer', 'wp_admin_bar_render', 1000 );
+		ReportedIP_Hive::isolate_standalone_frontend_page();
 
 		$this->enqueue_assets();
 
