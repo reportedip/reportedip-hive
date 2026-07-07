@@ -163,6 +163,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_2fa_enforce_roles',
 					'reportedip_hive_2fa_enforce_grace_days',
 					'reportedip_hive_2fa_max_skips',
+					'reportedip_hive_2fa_enforce_action',
 					'reportedip_hive_2fa_trusted_devices',
 					'reportedip_hive_2fa_trusted_device_days',
 					'reportedip_hive_2fa_frontend_onboarding',

@@ -190,6 +190,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_enforce_super_admins'       => true,
 		'reportedip_hive_2fa_enforce_grace_days'         => 7,
 		'reportedip_hive_2fa_max_skips'                  => 3,
+		'reportedip_hive_2fa_enforce_action'             => 'enroll',
 		'reportedip_hive_2fa_trusted_devices'            => true,
 		'reportedip_hive_2fa_trusted_device_days'        => 30,
 		'reportedip_hive_2fa_extended_remember'          => false,

@@ -119,6 +119,7 @@ class SettingsKeysAreStableTest extends TestCase {
 			'reportedip_hive_2fa_allowed_methods',
 			'reportedip_hive_2fa_branded_login',
 			'reportedip_hive_2fa_enabled_global',
+			'reportedip_hive_2fa_enforce_action',
 			'reportedip_hive_2fa_enforce_grace_days',
 			'reportedip_hive_2fa_enforce_roles',
 			'reportedip_hive_2fa_extended_remember',

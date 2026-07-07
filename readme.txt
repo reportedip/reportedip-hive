@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.21
+Stable tag: 2.1.22
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.22 =
+
+Changed: enforced 2FA no longer locks a user out of sign-in. Once the grace period and the skip quota were exhausted, the login used to be rejected outright — leaving the user (and, worst case, the site's only administrator) unable to sign in, recoverable only via WP-CLI. The default now signs the user in and sends them straight into the setup wizard with no skip option, so they can only proceed by enabling a method. A new 2FA policy setting keeps the previous hard-lockout behaviour available for operators who want it.
+
+Changed: administrators and super admins can never be hard-locked out. Even with the block-sign-in policy selected, roles with manage_options and Multisite super admins always take the forced-enrolment path, so a site can never be left without a sign-in-capable administrator.
 
 = 2.1.20 =
 

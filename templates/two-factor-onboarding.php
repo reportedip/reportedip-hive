@@ -115,7 +115,7 @@ if ( $grace_deadline > 0 ) {
 		<?php elseif ( $last_skip ) : ?>
 			<div class="rip-alert rip-alert--warning" role="alert" style="margin-bottom: var(--rip-space-6);">
 				<strong><?php esc_html_e( 'Final skip.', 'reportedip-hive' ); ?></strong>
-				<?php esc_html_e( 'You must set up 2FA on your next sign-in, otherwise login will be blocked.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'You must set up 2FA on your next sign-in — you will not be able to skip again.', 'reportedip-hive' ); ?>
 			</div>
 		<?php endif; ?>
 

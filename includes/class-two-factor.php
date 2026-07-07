@@ -426,6 +426,46 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
+	 * Decide how to handle a login by an enforced user who has no 2FA method
+	 * configured and whose grace period and skip quota are both exhausted.
+	 *
+	 * Returns 'allow' to let the login through (the onboarding redirect and the
+	 * skip-less setup wizard then force enrolment), or 'lockout' to reject the
+	 * login outright. The hard lockout is only returned when the site policy
+	 * option is explicitly set to 'lockout' and the user is not privileged —
+	 * administrators and super admins are never locked out, so a site can never
+	 * be left without a sign-in-capable administrator.
+	 *
+	 * @param \WP_User $user User attempting to sign in.
+	 * @return string 'allow' or 'lockout'.
+	 * @since  2.1.22
+	 */
+	public static function resolve_no_method_action( $user ) {
+		$in_grace = self::is_in_grace_period( $user->ID );
+		if ( $in_grace ) {
+			return 'allow';
+		}
+
+		$skip_count = (int) get_user_meta( $user->ID, self::META_SKIP_COUNT, true );
+		$max_skips  = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );
+		$exhausted  = $max_skips > 0 && $skip_count >= $max_skips;
+		if ( ! $exhausted ) {
+			return 'allow';
+		}
+
+		$action = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_action', 'enroll' );
+		if ( 'lockout' !== $action ) {
+			return 'allow';
+		}
+
+		if ( user_can( $user, 'manage_options' ) || is_super_admin( $user->ID ) ) {
+			return 'allow';
+		}
+
+		return 'lockout';
+	}
+
+	/**
 	 * Return the list of 2FA methods the user has actively configured.
 	 *
 	 * Supports parallel activation (e.g. TOTP + E-Mail + Passkey at once).
@@ -684,11 +724,7 @@ class ReportedIP_Hive_Two_Factor {
 		}
 
 		if ( ! $has_any_method ) {
-			$in_grace   = self::is_in_grace_period( $user->ID );
-			$skip_count = (int) get_user_meta( $user->ID, self::META_SKIP_COUNT, true );
-			$max_skips  = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );
-
-			if ( ! $in_grace && $skip_count >= $max_skips && $max_skips > 0 ) {
+			if ( 'lockout' === self::resolve_no_method_action( $user ) ) {
 				return new \WP_Error(
 					'reportedip_2fa_setup_required',
 					__( '<strong>Two-factor authentication required.</strong> Your skip quota is exhausted. Please contact an administrator to reset 2FA.', 'reportedip-hive' )

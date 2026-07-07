@@ -474,6 +474,20 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					<p class="rip-help-text"><?php esc_html_e( 'How many times required users may skip the onboarding after the grace period ends. 0 = enforced immediately.', 'reportedip-hive' ); ?></p>
 				</div>
 
+				<?php $rip_enforce_action = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_action', 'enroll' ); ?>
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_2fa_enforce_action"><?php esc_html_e( 'When grace period and skips are exhausted', 'reportedip-hive' ); ?></label>
+					<select id="reportedip_2fa_enforce_action" class="rip-input" name="reportedip_hive_2fa_enforce_action">
+						<option value="enroll" <?php selected( $rip_enforce_action, 'enroll' ); ?>>
+							<?php esc_html_e( 'Force setup at next sign-in (recommended)', 'reportedip-hive' ); ?>
+						</option>
+						<option value="lockout" <?php selected( $rip_enforce_action, 'lockout' ); ?>>
+							<?php esc_html_e( 'Block sign-in until an admin resets 2FA', 'reportedip-hive' ); ?>
+						</option>
+					</select>
+					<p class="rip-help-text"><?php esc_html_e( 'Force setup: the user is signed in but sent straight into the setup wizard with no skip option — they can only proceed by enabling a method. Block sign-in: the login is rejected outright (legacy behaviour). Administrators and super admins are never blocked, so the site can never be left without a sign-in-capable admin.', 'reportedip-hive' ); ?></p>
+				</div>
+
 				<div class="rip-form-group">
 					<label class="rip-toggle">
 						<input type="checkbox"
@@ -961,6 +975,14 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		);
 		register_setting(
 			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_enforce_action',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_enforce_action' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
 			'reportedip_hive_2fa_trusted_devices',
 			array(
 				'type'              => 'boolean',
@@ -1266,6 +1288,20 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	public static function sanitize_max_skips( $input ) {
 		$n = absint( $input );
 		return max( 0, min( 20, $n ) );
+	}
+
+	/**
+	 * Sanitize the post-grace enforcement action.
+	 *
+	 * Accepts only the known policy values and falls back to the safe default
+	 * 'enroll' (force setup) for anything unexpected.
+	 *
+	 * @param mixed $input Raw input.
+	 * @return string 'enroll' or 'lockout'.
+	 */
+	public static function sanitize_enforce_action( $input ) {
+		$value = is_string( $input ) ? $input : '';
+		return in_array( $value, array( 'enroll', 'lockout' ), true ) ? $value : 'enroll';
 	}
 
 	/**

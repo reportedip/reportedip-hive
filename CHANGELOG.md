@@ -2,6 +2,24 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.22] — 2026-07-07
+
+### Changed
+
+- **A user who never sets up enforced 2FA is no longer locked out of sign-in.**
+  Previously, once the grace period and the skip quota were both exhausted, the
+  login was rejected outright — leaving the user (and, in the worst case, the
+  site's only administrator) unable to sign in at all, recoverable only via
+  `wp reportedip 2fa reset`. The default now signs the user in and sends them
+  straight into the setup wizard with no skip option, so they can only proceed
+  by enabling a method. A new 2FA policy setting, **"When grace period and skips
+  are exhausted"**, lets operators keep the previous hard-lockout behaviour
+  (`Block sign-in`) if they prefer.
+- **Administrators and super admins can never be hard-locked out.** Even with the
+  `Block sign-in` policy selected, roles with `manage_options` and Multisite
+  super admins always take the forced-enrolment path, so a site can never be left
+  without a sign-in-capable administrator.
+
 ## [2.1.21] — 2026-07-03
 
 ### Fixed
