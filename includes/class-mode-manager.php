@@ -780,7 +780,7 @@ class ReportedIP_Hive_Mode_Manager {
 				'label'       => __( 'Professional', 'reportedip-hive' ),
 				'short_label' => __( 'PRO', 'reportedip-hive' ),
 				'description' => __( 'Up to 3 domains, managed mail and SMS relay, priority sync.', 'reportedip-hive' ),
-				'icon'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.3 7.2 16.9l.9-5.4L4.2 7.7l5.4-.8L12 2z"/></svg>',
+				'icon'        => '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.3 7.2 16.9l.9-5.4L4.2 7.7l5.4-.8L12 2z"/></svg>',
 				'badge_class' => 'rip-tier-badge--professional',
 				'color'       => '#4F46E5',
 			),
