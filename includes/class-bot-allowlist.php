@@ -97,6 +97,7 @@ final class ReportedIP_Hive_Bot_Allowlist {
 		'AhrefsBot',
 		'SemrushBot',
 		'mj12bot',
+		'DotBot',
 		'WordPress',
 		'UptimeRobot',
 		'Pingdom',

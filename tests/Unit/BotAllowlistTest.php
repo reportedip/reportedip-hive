@@ -270,6 +270,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertContains( 'GPTBot', $patterns );
 			$this->assertContains( 'ClaudeBot', $patterns );
 			$this->assertContains( 'PerplexityBot', $patterns );
+			$this->assertContains( 'DotBot', $patterns );
 		}
 	}
 }
