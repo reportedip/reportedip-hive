@@ -16,6 +16,7 @@
  */
 
 .rip-notice.rip-notice {
+    display: block;
     border: 1px solid var(--rip-gray-200, #E5E7EB);
     border-left-width: 1px;
     border-radius: var(--rip-radius-lg, 0.75rem);
