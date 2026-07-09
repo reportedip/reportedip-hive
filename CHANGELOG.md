@@ -2,7 +2,22 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [2.1.22] — 2026-07-07
+## [2.1.23] — 2026-07-09
+
+### Security
+
+- **The WAF now blocks the PHPUnit `eval-stdin.php` remote-code-execution probe
+  (CVE-2017-9841) on every plan.** A new baseline rule (`waf_phpunit_evalstdin`)
+  matches any request to a `…/phpunit/…/eval-stdin.php` path — one of the most
+  heavily scanned WordPress-adjacent endpoints in the wild, and never a
+  legitimate request. The rule is part of the free Paranoia-Level-1 floor, so it
+  protects bundled installs without waiting for a rule sync.
+- **Professional rulesets add two targeted Paranoia-Level-2 signatures.**
+  `waf_xss_handler_ext` covers modern event-handler XSS vectors
+  (`ontoggle`, `onbeforetoggle`, pointer/animation/transition handlers) that the
+  baseline handler rule did not, and `waf_sqli_logic` catches boolean SQL
+  injection smuggled through `||` / `&&` operators. Both are scoped tightly to
+  keep false positives negligible.
 
 ### Changed
 

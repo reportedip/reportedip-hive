@@ -78,6 +78,22 @@ return array(
 			'target'   => 'uri',
 		),
 		array(
+			'id'       => 'waf_phpunit_evalstdin',
+			'group'    => 'file_probe',
+			'pattern'  => '(?i)/phpunit/[\s\S]{0,80}?eval-stdin\.php',
+			'paranoia' => 1,
+			'severity' => 'high',
+			'target'   => 'uri',
+		),
+		array(
+			'id'       => 'waf_phpunit_evalstdin',
+			'group'    => 'file_probe',
+			'pattern'  => '(?i)/phpunit/[\s\S]{0,80}?eval-stdin\.php',
+			'paranoia' => 1,
+			'severity' => 'high',
+			'target'   => 'uri',
+		),
+		array(
 			'id'       => 'waf_cmd_inject',
 			'group'    => 'cmd_injection',
 			'pattern'  => '(?i)[;|`]\s*(?:cat|wget|curl|nc|bash|sh|powershell|whoami|id)\b',
