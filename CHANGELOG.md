@@ -2,6 +2,31 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.24] — 2026-07-15
+
+### Fixed
+
+- **A duplicate submit of the 2FA login challenge no longer strands users on
+  the "session expired" page.** The six-digit auto-submit racing an Enter
+  press or a "Verify" click produced a second POST that consumed the login
+  nonce after the first request had already verified successfully — the code
+  was correct, the auth cookie was issued, the log said "2FA verification
+  successful", yet the browser rendered the duplicate's error page and the
+  user was not signed in. Three layers now prevent this:
+  - The challenge form guards against double submits (submit listener +
+    disabled button; the auto-submit and WebAuthn flows funnel through the
+    same guard via `requestSubmit()`).
+  - A successfully consumed login nonce leaves a 90-second marker behind, so
+    a duplicate POST bearing the same token (same IP) replays the identical
+    sign-in and redirect instead of erroring.
+  - Signed-in visitors who reload or revisit the challenge URL are redirected
+    to the dashboard (storefront account page in the frontend flow) instead
+    of being shown a misleading "session expired" error.
+- Third-party plugins that blanket-override the `login_errors` filter had
+  masked the real explanation on the session-expired page, which made this
+  failure look like a wrong code — the replay/short-circuit paths above never
+  reach that page in the first place.
+
 ## [2.1.23] — 2026-07-09
 
 ### Security

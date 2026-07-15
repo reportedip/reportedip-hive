@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.23
+Stable tag: 2.1.24
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.24 =
+
+Fixed: a duplicate submit of the 2FA login challenge no longer strands users on the "session expired" page. The six-digit auto-submit racing an Enter press or a "Verify" click produced a second POST that consumed the login nonce after the first request had already verified successfully — the code was correct, the sign-in was issued, but the browser rendered the duplicate's error page. The challenge form now guards against double submits, a just-consumed nonce replays the identical sign-in for 90 seconds, and signed-in visitors who reload the challenge URL are redirected to the dashboard instead of seeing an error.
 
 = 2.1.22 =
 
