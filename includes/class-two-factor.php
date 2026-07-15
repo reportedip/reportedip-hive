@@ -54,11 +54,34 @@ class ReportedIP_Hive_Two_Factor {
 	const TABLE_TRUSTED_DEVICES = 'reportedip_hive_trusted_devices';
 
 	/**
-	 * Login nonce TTL in seconds (5 minutes).
+	 * Login nonce TTL in seconds (15 minutes).
 	 *
 	 * @var int
 	 */
 	const NONCE_TTL = 900;
+
+	/**
+	 * Transient prefix for consumed-nonce markers. Written the moment a
+	 * challenge verifies successfully so a duplicate submit of the same
+	 * form (auto-submit racing an Enter press or button click) can be
+	 * replayed into the identical sign-in instead of hitting the
+	 * "session expired" page.
+	 *
+	 * @var string
+	 * @since 2.1.24
+	 */
+	const NONCE_CONSUMED_PREFIX = 'reportedip_2fa_done_';
+
+	/**
+	 * Lifetime of a consumed-nonce marker in seconds. Long enough to
+	 * cover a duplicate POST racing the winning one, short enough that
+	 * the replay window stays negligible next to the just-issued auth
+	 * session it mirrors.
+	 *
+	 * @var int
+	 * @since 2.1.24
+	 */
+	const NONCE_CONSUMED_TTL = 90;
 
 	/**
 	 * User meta keys.
@@ -296,6 +319,10 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	public function cleanup_on_logout( $user_id = 0 ) {
+		if ( isset( $_COOKIE[ self::NONCE_COOKIE ] ) ) {
+			$token = sanitize_text_field( wp_unslash( $_COOKIE[ self::NONCE_COOKIE ] ) );
+			delete_transient( self::NONCE_CONSUMED_PREFIX . hash( 'sha256', $token ) );
+		}
 		$this->cleanup_login_nonce();
 		if ( $user_id && class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) {
 			delete_transient( ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_PREFIX . (int) $user_id );
@@ -932,6 +959,8 @@ class ReportedIP_Hive_Two_Factor {
 		$context    = ( 'theme_frame' === $context ) ? 'theme_frame' : 'wp_login';
 		$nonce_data = $this->validate_login_nonce();
 		if ( false === $nonce_data ) {
+			$this->maybe_replay_consumed_nonce();
+			$this->maybe_redirect_logged_in_user( $context );
 			$this->render_session_expired_page( 'expired', $context );
 			exit;
 		}
@@ -982,16 +1011,14 @@ class ReportedIP_Hive_Two_Factor {
 
 					if ( $verified ) {
 						$this->reset_failed_attempts( $user_id );
+
+						$remember    = ! empty( $nonce_data['remember'] );
+						$redirect_to = self::resolve_post_verify_redirect( $nonce_data, $context );
+
+						$this->mark_login_nonce_consumed( $user_id, $remember, $redirect_to );
 						$this->cleanup_login_nonce();
 
-						$remember = ! empty( $nonce_data['remember'] );
-						if ( $remember && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_extended_remember', false ) ) {
-							add_filter( 'auth_cookie_expiration', array( __CLASS__, 'filter_extended_cookie_expiration' ), 20, 3 );
-						}
-						wp_set_auth_cookie( $user_id, $remember );
-						if ( $remember && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_extended_remember', false ) ) {
-							remove_filter( 'auth_cookie_expiration', array( __CLASS__, 'filter_extended_cookie_expiration' ), 20 );
-						}
+						$this->set_auth_cookie_with_remember( $user_id, $remember );
 						wp_set_current_user( $user_id );
 
 						if ( $trust_device && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) ) {
@@ -1008,7 +1035,6 @@ class ReportedIP_Hive_Two_Factor {
 							)
 						);
 
-						$redirect_to = self::resolve_post_verify_redirect( $nonce_data, $context );
 						wp_safe_redirect( $redirect_to );
 						exit;
 					} else {
@@ -1200,6 +1226,145 @@ class ReportedIP_Hive_Two_Factor {
 		}
 
 		self::set_secure_cookie( self::NONCE_COOKIE, '', time() - YEAR_IN_SECONDS );
+	}
+
+	/**
+	 * Persist a short-lived "consumed" marker for the current login nonce.
+	 *
+	 * Written in the success branch right before {@see cleanup_login_nonce()}
+	 * deletes the nonce transient. A duplicate submit of the same challenge
+	 * form (the auto-submit racing an Enter press or a button click) arrives
+	 * with the same cookie token but finds the nonce gone; the marker lets
+	 * {@see maybe_replay_consumed_nonce()} finish that duplicate with the
+	 * identical sign-in instead of the "session expired" page.
+	 *
+	 * @param int    $user_id     Verified user.
+	 * @param bool   $remember    Remember-me flag captured at password login.
+	 * @param string $redirect_to Resolved post-verify redirect target.
+	 * @return void
+	 * @since  2.1.24
+	 */
+	private function mark_login_nonce_consumed( $user_id, $remember, $redirect_to ) {
+		if ( ! isset( $_COOKIE[ self::NONCE_COOKIE ] ) ) {
+			return;
+		}
+		$token      = sanitize_text_field( wp_unslash( $_COOKIE[ self::NONCE_COOKIE ] ) );
+		$token_hash = hash( 'sha256', $token );
+
+		set_transient(
+			self::NONCE_CONSUMED_PREFIX . $token_hash,
+			array(
+				'user_id'     => (int) $user_id,
+				'remember'    => (bool) $remember,
+				'redirect_to' => (string) $redirect_to,
+				'ip'          => ReportedIP_Hive::get_client_ip(),
+			),
+			self::NONCE_CONSUMED_TTL
+		);
+	}
+
+	/**
+	 * Replay a duplicate challenge request whose nonce was already consumed
+	 * by a successful verification moments ago.
+	 *
+	 * The bearer presents the same 256-bit token (HttpOnly, Secure,
+	 * SameSite=Strict cookie) that just passed the second factor, from the
+	 * same IP, inside a {@see NONCE_CONSUMED_TTL} window — the replay
+	 * therefore re-issues the identical auth cookie and redirect the winning
+	 * request already produced. The marker is left in place so every
+	 * duplicate within the window lands correctly; it expires on its own.
+	 *
+	 * Exits on hit; returns normally when no marker matches.
+	 *
+	 * @return void
+	 * @since  2.1.24
+	 */
+	private function maybe_replay_consumed_nonce() {
+		if ( ! isset( $_COOKIE[ self::NONCE_COOKIE ] ) ) {
+			return;
+		}
+		$token      = sanitize_text_field( wp_unslash( $_COOKIE[ self::NONCE_COOKIE ] ) );
+		$token_hash = hash( 'sha256', $token );
+		$consumed   = get_transient( self::NONCE_CONSUMED_PREFIX . $token_hash );
+
+		if ( ! is_array( $consumed ) || empty( $consumed['user_id'] ) ) {
+			return;
+		}
+		if ( isset( $consumed['ip'] ) && ReportedIP_Hive::get_client_ip() !== $consumed['ip'] ) {
+			return;
+		}
+
+		$user_id = (int) $consumed['user_id'];
+		if ( ! get_userdata( $user_id ) ) {
+			return;
+		}
+
+		$this->set_auth_cookie_with_remember( $user_id, ! empty( $consumed['remember'] ) );
+		wp_set_current_user( $user_id );
+
+		$logger = ReportedIP_Hive_Logger::get_instance();
+		$logger->info(
+			'2FA duplicate submit replayed after successful verification',
+			ReportedIP_Hive::get_client_ip(),
+			array( 'user_id' => $user_id )
+		);
+
+		$redirect_to = ! empty( $consumed['redirect_to'] ) ? (string) $consumed['redirect_to'] : admin_url();
+		wp_safe_redirect( $redirect_to );
+		exit;
+	}
+
+	/**
+	 * Redirect an already-authenticated visitor away from the challenge
+	 * instead of showing the "session expired" page — a stale tab, a reload
+	 * of the challenge URL or a bookmarked challenge link is not an error
+	 * for someone who is signed in.
+	 *
+	 * Exits on hit; returns normally for anonymous visitors.
+	 *
+	 * @param string $context `wp_login` or `theme_frame`.
+	 * @return void
+	 * @since  2.1.24
+	 */
+	private function maybe_redirect_logged_in_user( $context ) {
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
+
+		if ( 'theme_frame' === $context ) {
+			$target = function_exists( 'wc_get_page_permalink' )
+				? (string) wc_get_page_permalink( 'myaccount' )
+				: home_url( '/' );
+		} else {
+			$target = admin_url();
+		}
+
+		wp_safe_redirect( $target );
+		exit;
+	}
+
+	/**
+	 * Set the WordPress auth cookie, honouring the extended-remember option.
+	 *
+	 * Centralises the `auth_cookie_expiration` filter sandwich so the
+	 * success branch and the consumed-nonce replay issue byte-identical
+	 * sessions.
+	 *
+	 * @param int  $user_id  User to sign in.
+	 * @param bool $remember Remember-me flag.
+	 * @return void
+	 * @since  2.1.24
+	 */
+	private function set_auth_cookie_with_remember( $user_id, $remember ) {
+		$extended = $remember && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_extended_remember', false );
+
+		if ( $extended ) {
+			add_filter( 'auth_cookie_expiration', array( __CLASS__, 'filter_extended_cookie_expiration' ), 20, 3 );
+		}
+		wp_set_auth_cookie( $user_id, $remember );
+		if ( $extended ) {
+			remove_filter( 'auth_cookie_expiration', array( __CLASS__, 'filter_extended_cookie_expiration' ), 20 );
+		}
 	}
 
 	/**

@@ -7,6 +7,9 @@
  *     admin-ajax resend endpoint so the user never loses the challenge
  *   – keeps an inline cooldown countdown and aria-live status updates
  *   – blocks auto-submit on paste (outdated clipboard codes used to fail)
+ *   – guards the form against double submits (a duplicate POST used to
+ *     consume the login nonce and render "session expired" after an
+ *     already-successful verification)
  *   – WebAuthn / Passkey assertion flow
  *
  * @package   ReportedIP_Hive
@@ -21,15 +24,67 @@
 
 	var config = ( typeof reportedip2fa !== 'undefined' ) ? reportedip2fa : {};
 
+	var submitting = false;
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		var form = document.getElementById( 'rip-2fa-form' );
 		if ( form ) {
+			initSubmitGuard( form );
 			initMethodTabs();
 			initAutoSubmit();
 			initResendButtons();
 			initWebAuthnLogin();
 		}
 	} );
+
+	/* ------------------------------------------------------------------ *
+	 * Double-submit guard. A second POST (auto-submit racing an Enter
+	 * press or button click) used to consume the just-verified login
+	 * nonce and strand the user on the "session expired" page even
+	 * though the first request had already verified successfully.
+	 * ------------------------------------------------------------------ */
+	function initSubmitGuard( form ) {
+		form.addEventListener( 'submit', function ( e ) {
+			if ( submitting ) {
+				e.preventDefault();
+				return;
+			}
+			markSubmitting( form );
+		} );
+
+		// Restores from the back/forward cache keep JS state alive, so a
+		// user navigating back to the challenge must be able to submit.
+		window.addEventListener( 'pageshow', function ( e ) {
+			if ( e.persisted ) {
+				submitting = false;
+				var btn = form.querySelector( '.rip-2fa-challenge__submit' );
+				if ( btn ) {
+					btn.disabled = false;
+					btn.removeAttribute( 'aria-busy' );
+				}
+			}
+		} );
+	}
+
+	function markSubmitting( form ) {
+		submitting = true;
+		var btn = form.querySelector( '.rip-2fa-challenge__submit' );
+		if ( btn ) {
+			btn.disabled = true;
+			btn.setAttribute( 'aria-busy', 'true' );
+		}
+	}
+
+	function submitFormOnce( form ) {
+		if ( submitting ) { return; }
+		if ( typeof form.requestSubmit === 'function' ) {
+			// Routes through the submit listener above, which sets the flag.
+			form.requestSubmit();
+			return;
+		}
+		markSubmitting( form );
+		form.submit();
+	}
 
 	/* ------------------------------------------------------------------ *
 	 * Tablist — ARIA Authoring Practices. Roving tabindex, arrow keys,
@@ -157,7 +212,7 @@
 			input.addEventListener( 'input', function ( e ) {
 				this.value = this.value.replace( /[^0-9]/g, '' );
 				if ( this.value.length === 6 && ! pastedRecently && e.inputType !== 'insertFromPaste' ) {
-					form.submit();
+					submitFormOnce( form );
 				}
 			} );
 		} );
@@ -361,7 +416,7 @@
 					}
 					if ( methodInput ) { methodInput.value = 'webauthn'; }
 					if ( codeInput ) { codeInput.value = 'webauthn-ok'; }
-					if ( form ) { form.submit(); }
+					if ( form ) { submitFormOnce( form ); }
 				} )
 				.catch( function ( err ) {
 					if ( status ) { status.textContent = err && err.message ? err.message : ( config.strings && config.strings.passkeyCancelled ) || 'Passkey login cancelled.'; }
