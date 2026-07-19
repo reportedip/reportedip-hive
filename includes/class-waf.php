@@ -103,6 +103,7 @@ class ReportedIP_Hive_WAF {
 		'webshell'       => 'waf_webshell',
 		'crlf'           => 'waf_crlf',
 		'ssti'           => 'waf_ssti',
+		'rest_abuse'     => 'waf_rest_abuse',
 	);
 
 	/**
@@ -131,6 +132,7 @@ class ReportedIP_Hive_WAF {
 			'webshell'       => __( 'Web shell', 'reportedip-hive' ),
 			'crlf'           => __( 'CRLF / header injection', 'reportedip-hive' ),
 			'ssti'           => __( 'Server-side template injection (SSTI)', 'reportedip-hive' ),
+			'rest_abuse'     => __( 'REST API abuse', 'reportedip-hive' ),
 		);
 	}
 
@@ -732,6 +734,13 @@ class ReportedIP_Hive_WAF {
 	 * Build the body subject from the parsed parameters and the raw input
 	 * stream (for JSON / non-form bodies), bounded to {@see MAX_BODY_BYTES}.
 	 *
+	 * A once-decoded variant of the raw body is appended when it differs, so a
+	 * percent-encoded payload smuggled inside a JSON body (e.g. a REST batch
+	 * sub-request whose query string carries `SLEEP%283%29`) is visible to the
+	 * same signatures that already see it in the URL — mirroring
+	 * {@see uri_subject()}. `$post` is already url-decoded by PHP, so only the
+	 * raw stream needs the decode pass.
+	 *
 	 * @param array<string,mixed> $post     Unslashed body params.
 	 * @param string|null         $raw_body Raw request body, or null.
 	 * @return string
@@ -743,7 +752,12 @@ class ReportedIP_Hive_WAF {
 			$parts[] = $this->flatten( $post );
 		}
 		if ( is_string( $raw_body ) && '' !== $raw_body ) {
-			$parts[] = substr( $raw_body, 0, self::MAX_BODY_BYTES );
+			$bounded = substr( $raw_body, 0, self::MAX_BODY_BYTES );
+			$parts[] = $bounded;
+			$decoded = rawurldecode( $bounded );
+			if ( $decoded !== $bounded ) {
+				$parts[] = $decoded;
+			}
 		}
 		if ( empty( $parts ) ) {
 			return '';

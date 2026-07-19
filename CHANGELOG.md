@@ -2,6 +2,35 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.25] — 2026-07-19
+
+### Security
+
+- **The WAF now blocks the REST batch route-confusion primitive on every plan.**
+  Two new baseline rules target recent unauthenticated WordPress-core REST batch
+  attacks that desynchronise request validation from dispatch. `waf_rest_batch_desync`
+  matches the whole class of malformed sub-request paths a batch parser rejects
+  (multiple leading slashes, or any scheme with an empty host) — not a fixed token,
+  so changing the primer does not evade it. `waf_rest_batch_nested` matches the
+  structural invariant the attack cannot drop: a sub-request whose body is itself a
+  batch. Both are part of the free Paranoia-Level-1 floor, so bundled installs are
+  protected without waiting for a rule sync, and both are scoped tightly enough that
+  legitimate batch calls, protocol-relative URLs and absolute URLs pass untouched.
+- **The firewall now inspects a decoded copy of the request body.** Percent-encoded
+  payloads smuggled inside a JSON body (for example a batch sub-request whose query
+  string carries `SLEEP%283%29`) were previously invisible to the injection
+  signatures, which only saw the raw stream. The body is now matched both raw and
+  once-decoded, mirroring the URL inspection, closing an encoded-payload bypass
+  class. The pre-WordPress drop-in guard regenerates automatically to match.
+
+### Fixed
+
+- Blocked-page reference codes for the Paranoia-Level-2/3 WAF groups (Log4Shell,
+  SSRF, PHP injection, NoSQL, XXE, web shell, CRLF, SSTI) now render their specific
+  category instead of a generic `BLOCKED` reference, so an administrator can triage
+  the block reason from the code alone. A regression test locks the group→category
+  mapping against future drift. A duplicated baseline rule entry was removed.
+
 ## [2.1.24] — 2026-07-15
 
 ### Fixed

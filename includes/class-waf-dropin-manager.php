@@ -62,7 +62,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 4;
+	const DROPIN_VERSION = 5;
 
 	/**
 	 * Singleton instance.
@@ -749,7 +749,11 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 		if ( ! $skip_body ) {
 			if ( ! empty( $_POST ) ) { $body .= reportedip_hive_dropin_flatten( $_POST ); }
 			$raw = file_get_contents( 'php://input', false, null, 0, 65536 );
-			if ( is_string( $raw ) && '' !== $raw ) { $body .= "\n" . $raw; }
+			if ( is_string( $raw ) && '' !== $raw ) {
+				$body .= "\n" . $raw;
+				$raw_decoded = rawurldecode( $raw );
+				if ( $raw_decoded !== $raw ) { $body .= "\n" . $raw_decoded; }
+			}
 		}
 		$all = $uri_subject . "\n" . $body . "\n" . $ua;
 

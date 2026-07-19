@@ -242,6 +242,21 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( "define( 'REPORTEDIP_HIVE_WAF_DROPIN'", $php );
 			$this->assertStringContainsString( 'reportedip_hive_dropin_ip_match', $php );
 			$this->assertStringContainsString( 'waf_sqli_union', $php, 'The baseline rules must be baked into the guard.' );
+			$this->assertStringContainsString( 'waf_rest_batch_desync', $php, 'The REST batch-desync baseline rule must be baked into the guard.' );
+			$this->assertStringContainsString( 'waf_rest_batch_nested', $php, 'The REST nested-batch baseline rule must be baked into the guard.' );
+		}
+
+		/**
+		 * The pre-WordPress guard must decode the raw body before matching, just
+		 * like the in-WordPress engine, so a percent-encoded payload in a JSON
+		 * body cannot slip past the drop-in (added in 2.1.25). run_guard() cannot
+		 * feed php://input, so the behaviour is locked by the engine test in
+		 * WafTest; here we assert the decode step is present in the generated PHP.
+		 */
+		public function test_generated_guard_decodes_raw_body(): void {
+			$php = $this->call_private( 'generate_prepend', array() );
+			$this->assertStringContainsString( 'rawurldecode( $raw )', $php, 'The guard must append a decoded variant of the raw body.' );
+			$this->assert_valid_php( $php );
 		}
 
 		public function test_generated_guard_is_valid_php(): void {

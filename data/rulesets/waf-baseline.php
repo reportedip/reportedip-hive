@@ -86,14 +86,6 @@ return array(
 			'target'   => 'uri',
 		),
 		array(
-			'id'       => 'waf_phpunit_evalstdin',
-			'group'    => 'file_probe',
-			'pattern'  => '(?i)/phpunit/[\s\S]{0,80}?eval-stdin\.php',
-			'paranoia' => 1,
-			'severity' => 'high',
-			'target'   => 'uri',
-		),
-		array(
 			'id'       => 'waf_cmd_inject',
 			'group'    => 'cmd_injection',
 			'pattern'  => '(?i)[;|`]\s*(?:cat|wget|curl|nc|bash|sh|powershell|whoami|id)\b',
@@ -108,6 +100,22 @@ return array(
 			'paranoia' => 1,
 			'severity' => 'medium',
 			'target'   => 'ua',
+		),
+		array(
+			'id'       => 'waf_rest_batch_desync',
+			'group'    => 'rest_abuse',
+			'pattern'  => '(?i)"path"\s*:\s*"(?:/{2,}(?![a-z0-9])|[a-z][a-z0-9+.\-]*:/{2,}(?:[:/?#]|"))',
+			'paranoia' => 1,
+			'severity' => 'high',
+			'target'   => 'body',
+		),
+		array(
+			'id'       => 'waf_rest_batch_nested',
+			'group'    => 'rest_abuse',
+			'pattern'  => '(?i)"body"\s*:\s*\{[^{}]{0,120}?"requests"\s*:\s*\[',
+			'paranoia' => 1,
+			'severity' => 'high',
+			'target'   => 'body',
 		),
 	),
 );

@@ -23,6 +23,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-rule-store.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-rule-sync.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-block-ref.php';
 
 	/**
 	 * @covers \ReportedIP_Hive_WAF
@@ -116,6 +117,80 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertIsArray( $hit_post );
 			$hit_raw = $this->waf()->evaluate( $rules, array(), array(), '{"q":"1 union select pw"}' );
 			$this->assertIsArray( $hit_raw );
+		}
+
+		/**
+		 * A percent-encoded injection smuggled inside a JSON body (the wp2shell
+		 * blind path encodes `author_exclude` fully, so `SLEEP(` arrives as
+		 * `SLEEP%283%29`) must be caught by the same signature that sees the raw
+		 * form. Locks the decoded-body variant added in 2.1.25 — without it the
+		 * literal `\(` in the timing rule never matches the encoded stream.
+		 */
+		public function test_evaluate_decodes_encoded_sqli_in_json_body(): void {
+			$rules   = array(
+				array( 'id' => 'timing', 'group' => 'sql_injection', 'pattern' => '(?i)\b(?:sleep|benchmark|waitfor\s+delay|pg_sleep)\s*\(', 'paranoia' => 2, 'target' => 'body' ),
+			);
+			$encoded = '{"path":"/wp/v2/posts/999999?author_exclude=0%29%20OR%20SLEEP%283%29--%20-"}';
+			$hit     = $this->waf()->evaluate( $rules, array(), array(), $encoded );
+			$this->assertIsArray( $hit, 'A percent-encoded SLEEP() in a JSON body must be decoded and matched.' );
+			$this->assertSame( 'timing', $hit['id'] );
+		}
+
+		/**
+		 * The REST batch route-confusion primitive (wp2shell / CVE-2026-63030)
+		 * carries a sub-request with a deliberately malformed `path` to desync
+		 * $matches from $validation. The `waf_rest_batch_desync` signature covers
+		 * the whole class of path values `wp_parse_url()` rejects — not two
+		 * literals — so switching the primer token (`///`, `//`, `////`, any
+		 * `scheme://` with an empty host) does not evade it, while legitimate
+		 * routes, protocol-relative URLs and absolute URLs pass.
+		 */
+		public function test_evaluate_matches_rest_batch_desync_primer(): void {
+			$rule  = array( 'id' => 'waf_rest_batch_desync', 'group' => 'rest_abuse', 'pattern' => '(?i)"path"\s*:\s*"(?:/{2,}(?![a-z0-9])|[a-z][a-z0-9+.\-]*:/{2,}(?:[:/?#]|"))', 'paranoia' => 1, 'target' => 'body' );
+			$rules = array( $rule );
+			foreach ( array( '///', '//', '////', 'http://:', 'https://', 'gopher://:' ) as $primer ) {
+				$body = '{"requests":[{"method":"POST","path":"' . $primer . '"},{"method":"POST","path":"/wp/v2/posts"}]}';
+				$this->assertIsArray( $this->waf()->evaluate( $rules, array(), array(), $body ), "Malformed primer '{$primer}' must be blocked." );
+			}
+			foreach ( array( '/wp/v2/posts', '//cdn.example.com/logo.png', 'https://example.com/callback' ) as $ok ) {
+				$body = '{"method":"POST","path":"' . $ok . '"}';
+				$this->assertNull( $this->waf()->evaluate( $rules, array(), array(), $body ), "Legitimate path '{$ok}' must not trip the rule." );
+			}
+		}
+
+		/**
+		 * The structural invariant of the batch route confusion is a sub-request
+		 * whose `body` is itself a batch (`"body":{…"requests":[`). An attacker
+		 * cannot drop that nesting without losing the desync, so
+		 * `waf_rest_batch_nested` catches variants that reorder keys or omit the
+		 * malformed primer, while a normal nested resource body passes.
+		 */
+		public function test_evaluate_matches_rest_batch_nested_body(): void {
+			$rules = array(
+				array( 'id' => 'waf_rest_batch_nested', 'group' => 'rest_abuse', 'pattern' => '(?i)"body"\s*:\s*\{[^{}]{0,120}?"requests"\s*:\s*\[', 'paranoia' => 1, 'target' => 'body' ),
+			);
+			$reordered = '{"requests":[{"method":"POST","path":"/wp/v2/posts","body":{"foo":1,"requests":[{"path":"/x"}]}}]}';
+			$no_primer = '{"requests":[{"method":"POST","path":"/wp/v2/posts","body":{"requests":[{"method":"GET","path":"/wp/v2/posts"}]}}]}';
+			$this->assertIsArray( $this->waf()->evaluate( $rules, array(), array(), $reordered ), 'A batch nested in a sub-request body (reordered keys) must be blocked.' );
+			$this->assertIsArray( $this->waf()->evaluate( $rules, array(), array(), $no_primer ), 'A batch nested in a sub-request body must be blocked even without a malformed primer.' );
+			$legit = '{"requests":[{"method":"POST","path":"/wc/v3/orders","body":{"line_items":[{"product_id":1}]}}]}';
+			$this->assertNull( $this->waf()->evaluate( $rules, array(), array(), $legit ), 'A normal nested resource body must not trip the rule.' );
+		}
+
+		/**
+		 * Every reason key the WAF can emit via GROUP_REASON must resolve to a
+		 * concrete category in Block_Ref::CATEGORY_MAP, or a real block renders as
+		 * a generic `BLOCKED-xxxx` reference the admin cannot triage. Guards the
+		 * group→reason→category chain against future drift.
+		 */
+		public function test_every_waf_reason_key_has_a_block_ref_category(): void {
+			foreach ( \ReportedIP_Hive_WAF::GROUP_REASON as $group => $reason ) {
+				$this->assertArrayHasKey(
+					$reason,
+					\ReportedIP_Hive_Block_Ref::CATEGORY_MAP,
+					"WAF group '{$group}' maps to reason '{$reason}', which is missing from Block_Ref::CATEGORY_MAP."
+				);
+			}
 		}
 
 		public function test_evaluate_returns_null_for_clean_request(): void {
