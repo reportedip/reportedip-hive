@@ -341,6 +341,16 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.1.26 =
+
+Security: a spoofed crawler user-agent no longer buys exemption from the 404-burst, REST-burst and user-enumeration sensors — every crawler claim is cross-checked against reverse DNS and the official IP ranges; a confirmed fake is counted like any other client.
+
+Fixed: a verified search-engine or AI crawler can no longer be auto-blocked, or reported to the community network, by any sensor — WAF escalation and login-path thresholds included. Averted decisions are logged as Verified Bot Block Averted; DNS failures fail open so a resolver hiccup never locks out a real crawler.
+
+Fixed: whitelist entries could not be re-added once removed or expired ("Failed to whitelist IP address."); stale rows are now purged on re-add, for the form and the CSV import alike.
+
+Fixed: on Multisite subsites several read paths targeted per-site table names instead of the shared network tables — the block-escalation ladder silently restarted at step 1 and admin list tables showed no data. All reads now use the network prefix, enforced by a regression test.
+
 = 2.1.25 =
 
 Security: the WAF now blocks the WordPress-core REST batch route-confusion attack class on every plan. Two new baseline rules match the structural invariants of the attack (malformed sub-request paths; a sub-request whose body is itself a batch) rather than a fixed token, so variants do not evade them. Legitimate batch calls pass untouched.

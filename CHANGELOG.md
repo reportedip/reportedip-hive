@@ -2,6 +2,44 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.26] — 2026-07-22
+
+### Security
+
+- **A spoofed crawler user-agent no longer buys exemption from the rate sensors.**
+  The bot allowlist previously trusted the user-agent string alone, so a scanner
+  sending "Googlebot" was skipped by the 404-burst, REST-burst and
+  user-enumeration sensors. The allowlist now cross-checks every crawler claim
+  against the forward-confirmed reverse-DNS / official-IP-range verdict of the
+  bot verifier: a confirmed fake is counted and blocked like any other client.
+
+### Fixed
+
+- **A verified search-engine or AI crawler can no longer be auto-blocked — or
+  reported to the community network — by any sensor.** Previously only three of
+  the twelve blocking sensors consulted the bot allowlist; a genuine Googlebot
+  could still be locked out via WAF escalation, XML-RPC or login-path
+  thresholds (and its IP reported upstream). A central guard now runs before
+  every automatic block decision: a crawler confirmed via official IP ranges or
+  FCrDNS is spared, the decision is logged as `verified_bot_block_averted`, and
+  no API report or admin mail is sent. DNS failures fail open for bot-claiming
+  user-agents by design — a resolver hiccup must never cost a real crawler its
+  access. Requests from the official crawler IP ranges are exempt even when
+  they render pages with a browser-like user-agent (Applebot, Google render
+  fleet).
+- **Whitelist entries could not be re-added once removed or expired.** Removal
+  soft-deletes the row and expired entries stay in place, but both kept
+  occupying the unique IP key — every later attempt to whitelist the same IP
+  failed with "Failed to whitelist IP address." (form and CSV import alike).
+  Stale rows are now purged on re-add, and same-request whitelist reads no
+  longer serve a stale verdict after a write.
+- **Multisite: subsites read the wrong tables.** Nineteen read paths built
+  plugin table names from the per-site prefix instead of the network-wide
+  base prefix, so on every subsite the block-escalation ladder silently
+  restarted at step 1, admin list tables showed no network data and each
+  decision logged a DB error. All access now routes through `Schema::table()`,
+  enforced by a regression test.
+
 ## [2.1.25] — 2026-07-19
 
 ### Security
