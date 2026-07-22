@@ -8,14 +8,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-06-22T09:59:57+00:00\n"
+"PO-Revision-Date: 2026-07-22T18:29:35+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php
+#: reportedip-hive.php:3
 #: admin/class-admin-settings.php:1683
 #: admin/class-admin-settings.php:1684
 #: admin/class-admin-settings.php:1804
@@ -27,17 +27,18 @@ msgstr "ReportedIP Hive"
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php
+#: reportedip-hive.php:4
+#: reportedip-hive.php:9
 msgid "https://reportedip.de"
 msgstr "https://reportedip.de"
 
 #. Description of the plugin
-#: reportedip-hive.php
+#: reportedip-hive.php:5
 msgid "Community-powered WordPress security — real-time threat intelligence"
 msgstr "Community-gestützte WordPress-Sicherheit — Bedrohungsdaten in Echtzeit"
 
 #. Author of the plugin
-#: reportedip-hive.php
+#: reportedip-hive.php:8
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr "Patrick Schlesinger, ReportedIP"
 
@@ -652,6 +653,10 @@ msgstr "Unbekannt"
 msgid "Waiting for server config"
 msgstr "Wartet auf Server-Konfiguration"
 
+#: admin/class-admin-firewall.php:834
+msgid "Optionally run the firewall before WordPress loads, so a malicious request is rejected earlier and cheaper. Off by default and free on every plan. Turning it on brings a few extra settings with it: Hive generates a guard file, a server-config directive is added on the Server Setup tab (written automatically on Apache and PHP-FPM; one manual step on nginx or via php.ini), and the guard then applies the same rule exceptions and paranoia level as the in-WordPress engine."
+msgstr "Führt die Firewall optional aus, bevor WordPress lädt, sodass schädliche Anfragen früher und ressourcenschonender abgewiesen werden. Standardmäßig aus und in jedem Tarif kostenlos. Beim Aktivieren kommen ein paar zusätzliche Einstellungen hinzu: Hive erzeugt eine Guard-Datei, im Reiter „Server-Setup“ wird eine Server-Konfigurationsdirektive ergänzt (auf Apache und PHP-FPM automatisch geschrieben; auf nginx oder per php.ini ein manueller Schritt), und der Guard wendet anschließend dieselben Regel-Ausnahmen und dieselbe Paranoia-Stufe an wie die WordPress-interne Engine."
+
 #: admin/class-admin-firewall.php:847
 #: admin/class-admin-firewall.php:1229
 msgid "Detected server"
@@ -672,6 +677,12 @@ msgstr "Guard-Datei"
 #: admin/class-admin-firewall.php:860
 msgid "Setup complete — the guard executed for this very request, so every request to this site passes the firewall before WordPress loads."
 msgstr "Setup vollständig — der Guard wurde für genau diese Anfrage ausgeführt. Jede Anfrage an diese Website durchläuft die Firewall, bevor WordPress lädt."
+
+#. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
+#: admin/class-admin-firewall.php:865
+#, php-format
+msgid "The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes — reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead."
+msgstr "Die Direktive wurde automatisch geschrieben. PHP-FPM cacht die .user.ini bis zu fünf Minuten — lade die Seite gleich neu. Falls der Status nie auf „Läuft\" springt (häufig bei nginx + PHP-FPM), enthält der %1$sServer-Setup-Tab%2$s eine manuelle nginx-/php.ini-Option, die du stattdessen anwenden kannst."
 
 #. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
 #: admin/class-admin-firewall.php:874
@@ -944,9 +955,21 @@ msgstr "Setup vollständig — der Guard wurde für genau diese Anfrage ausgefü
 msgid "This server is auto-managed — Hive wrote and maintains the directive itself (.htaccess on Apache, .user.ini on PHP-FPM)."
 msgstr "Dieser Server wird automatisch verwaltet — Hive hat die Direktive selbst geschrieben und pflegt sie (.htaccess auf Apache, .user.ini auf PHP-FPM)."
 
+#: admin/class-admin-firewall.php:1335
+msgid "Hive wrote the directive automatically (.htaccess on Apache, .user.ini on PHP-FPM), and PHP-FPM caches .user.ini for up to five minutes — give it a moment. If the status never flips to Running — common on nginx, or when PHP's user_ini.filename is disabled or the document root is not the .user.ini scan path — apply ONE of the manual options below instead."
+msgstr "Hive hat die Direktive automatisch geschrieben (.htaccess bei Apache, .user.ini bei PHP-FPM), und PHP-FPM cacht die .user.ini bis zu fünf Minuten — gib ihr einen Moment. Falls der Status nie auf „Läuft\" springt — häufig bei nginx, oder wenn PHPs user_ini.filename deaktiviert ist oder das Document-Root nicht der .user.ini-Scan-Pfad ist — wende stattdessen EINE der manuellen Optionen unten an."
+
 #: admin/class-admin-firewall.php:1337
 msgid "One manual step: add the directive below. Pick exactly ONE of the two options — whichever your hosting lets you edit. The status above flips to Running automatically once the directive is live."
 msgstr "Ein manueller Schritt: Fügen Sie die untenstehende Direktive hinzu. Wählen Sie genau EINE der beiden Optionen — je nachdem, was Ihr Hosting bearbeiten lässt. Der Status oben springt automatisch auf „Läuft\", sobald die Direktive aktiv ist."
+
+#: admin/class-admin-firewall.php:1342
+msgid "Option A — php.ini / PHP-FPM pool / hosting panel (recommended)"
+msgstr "Option A — php.ini / PHP-FPM-Pool / Hosting-Panel (empfohlen)"
+
+#: admin/class-admin-firewall.php:1344
+msgid "Most managed hosts (ISPConfig, Plesk, cPanel) offer a \"custom php.ini settings\" field — paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx."
+msgstr "Die meisten Managed-Hoster (ISPConfig, Plesk, cPanel) bieten ein Feld „eigene php.ini-Einstellungen\" — füge diese eine Zeile dort ein und lade PHP-FPM neu. In einer PHP-FPM-Pool-Konfiguration lautet die entsprechende Zeile php_admin_value[auto_prepend_file] = <derselbe Pfad>. Auf nginx ist das meist der einfachste Weg."
 
 #: admin/class-admin-firewall.php:1349
 msgid "Option B — nginx server block"
@@ -1879,7 +1902,7 @@ msgstr "Wann"
 #: admin/class-admin-settings.php:1976
 #: admin/class-audit-log-table.php:65
 #: includes/class-privacy.php:220
-#: includes/class-security-monitor.php:1041
+#: includes/class-security-monitor.php:1107
 msgid "Event"
 msgstr "Ereignis"
 
@@ -2681,6 +2704,7 @@ msgid "How many failed auths?"
 msgstr "Wie viele fehlgeschlagene Authentifizierungen?"
 
 #: admin/class-admin-settings.php:4789
+#: includes/class-waf.php:135
 msgid "REST API abuse"
 msgstr "REST-API-Missbrauch"
 
@@ -2741,12 +2765,12 @@ msgid "404 burst threshold"
 msgstr "404-Häufungs-Schwellenwert"
 
 #: admin/class-admin-settings.php:4879
-msgid "Skip burst triggers for verified search engines and AI crawlers (User-Agent based)"
-msgstr "Häufungs-Auslöser für verifizierte Suchmaschinen und KI-Crawler überspringen (User-Agent-basiert)"
+msgid "Never count or auto-block verified search engines and AI crawlers"
+msgstr "Verifizierte Suchmaschinen und KI-Crawler niemals zählen oder automatisch blockieren"
 
 #: admin/class-admin-settings.php:4881
-msgid "Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot and similar crawlers are exempt from the 404 burst trigger and the REST burst trigger. Pattern-based detection (.env, wp-config.php.bak, /phpmyadmin/, …) stays active for all visitors, including spoofed bot User-Agents."
-msgstr "Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot und ähnliche Crawler sind vom 404-Häufungs-Auslöser und vom REST-Häufungs-Auslöser ausgenommen. Die musterbasierte Erkennung (.env, wp-config.php.bak, /phpmyadmin/, …) bleibt für alle Besucher aktiv, einschließlich gefälschter Bot-User-Agents."
+msgid "Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot and similar crawlers are exempt from the burst triggers, and no sensor will ever auto-block a crawler whose identity is confirmed via reverse DNS or the official IP ranges. A spoofed crawler User-Agent fails that check and is treated like any other client. Pattern-based detection (.env, wp-config.php.bak, /phpmyadmin/, …) stays active for all visitors. Averted blocks appear in the log as Verified Bot Block Averted."
+msgstr "Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot und ähnliche Crawler sind von den Burst-Triggern ausgenommen, und kein Sensor blockiert jemals automatisch einen Crawler, dessen Identität per Reverse-DNS oder über die offiziellen IP-Bereiche bestätigt ist. Ein gefälschter Crawler-User-Agent besteht diese Prüfung nicht und wird wie jeder andere Client behandelt. Die musterbasierte Erkennung (.env, wp-config.php.bak, /phpmyadmin/, …) bleibt für alle Besucher aktiv. Abgewendete Blockierungen erscheinen im Protokoll als Verified Bot Block Averted."
 
 #: admin/class-admin-settings.php:4888
 msgid "WooCommerce login"
@@ -3006,6 +3030,10 @@ msgstr "3–50 Zeichen: Kleinbuchstaben, Ziffern, Bindestriche oder Unterstriche
 #: admin/class-admin-settings.php:5268
 msgid "Active login URL:"
 msgstr "Aktive Anmelde-URL:"
+
+#: admin/class-admin-settings.php:5276
+msgid "Page-cache compatible: Hive automatically excludes the login URL from caching for WP Rocket, LiteSpeed Cache, W3 Total Cache, WP Super Cache, WP Fastest Cache, Cache Enabler, Comet Cache and Hummingbird. After changing the slug, clear your page cache once so the previous URL is purged."
+msgstr "Mit Seiten-Cache kompatibel: Hive nimmt die Login-URL automatisch vom Caching aus — für WP Rocket, LiteSpeed Cache, W3 Total Cache, WP Super Cache, WP Fastest Cache, Cache Enabler, Comet Cache und Hummingbird. Leere nach dem Ändern des Slugs einmal deinen Seiten-Cache, damit die alte URL entfernt wird."
 
 #: admin/class-admin-settings.php:5282
 msgid "What visitors see at the old URL"
@@ -4914,7 +4942,7 @@ msgstr "Priorität"
 
 #: admin/class-api-queue-table.php:55
 #: includes/class-privacy.php:158
-#: includes/class-security-monitor.php:1047
+#: includes/class-security-monitor.php:1113
 msgid "Attempts"
 msgstr "Versuche"
 
@@ -4922,7 +4950,7 @@ msgstr "Versuche"
 #: admin/class-setup-wizard.php:360
 #: admin/class-two-factor-admin.php:1574
 #: includes/class-two-factor-onboarding.php:323
-#: includes/class-two-factor.php:1784
+#: includes/class-two-factor.php:1949
 #: reportedip-hive.php:822
 msgid "Error"
 msgstr "Fehler"
@@ -5077,7 +5105,7 @@ msgstr "Audit-Einträge"
 #: includes/class-ajax-handler.php:240
 #: includes/class-ajax-handler.php:276
 #: includes/class-privacy.php:216
-#: includes/class-security-monitor.php:1043
+#: includes/class-security-monitor.php:1109
 #: includes/class-two-factor-notifications.php:202
 #: includes/class-two-factor-notifications.php:216
 msgid "Time"
@@ -5122,7 +5150,7 @@ msgstr "Registrierung"
 #: includes/class-privacy.php:150
 #: includes/class-privacy.php:187
 #: includes/class-privacy.php:228
-#: includes/class-security-monitor.php:1042
+#: includes/class-security-monitor.php:1108
 #: includes/class-two-factor-notifications.php:203
 #: includes/class-two-factor-notifications.php:217
 msgid "IP address"
@@ -6021,6 +6049,14 @@ msgstr "Nur melden (Treffer protokollieren, nicht blockieren)"
 msgid "Report-only is great for a trial run: matches are logged but never blocked. Turn it off in production."
 msgstr "Der Nur-melden-Modus eignet sich für den Probelauf: Treffer werden protokolliert, aber nie blockiert. Im Produktivbetrieb ausschalten."
 
+#: admin/class-setup-wizard.php:1006
+msgid "An optional layer that runs the firewall before WordPress even loads, so malicious requests are rejected earlier and cheaper. Free on every plan."
+msgstr "Eine optionale Schicht, die die Firewall ausführt, noch bevor WordPress lädt, sodass schädliche Anfragen früher und ressourcenschonender abgewiesen werden. In jedem Tarif kostenlos."
+
+#: admin/class-setup-wizard.php:1007
+msgid "It stays off here on purpose: switching it on brings a few extra settings with it — a generated guard file and a one-time server-config step. Finish the wizard, then enable it under Firewall → Extended Protection, where Hive walks you through the server setup."
+msgstr "Sie bleibt hier bewusst aus: Beim Aktivieren kommen ein paar zusätzliche Einstellungen hinzu — eine erzeugte Guard-Datei und ein einmaliger Server-Konfigurationsschritt. Schließe den Assistenten ab und aktiviere sie anschließend unter Firewall → Erweiterter Schutz, wo Hive dich durch die Server-Einrichtung führt."
+
 #: admin/class-setup-wizard.php:1015
 msgid "Verified bots"
 msgstr "Verifizierte Bots"
@@ -6343,6 +6379,10 @@ msgstr "Benutzerdefinierter Slug"
 msgid "3–50 characters: lowercase letters, digits, dashes or underscores. We will reject reserved WordPress paths and existing post/page slugs when you save."
 msgstr "3–50 Zeichen: Kleinbuchstaben, Ziffern, Bindestriche oder Unterstriche. Reservierte WordPress-Pfade sowie vorhandene Beitrags-/Seiten-Slugs werden beim Speichern abgelehnt."
 
+#: admin/class-setup-wizard.php:1660
+msgid "Works with page caches: Hive automatically excludes the login URL from WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache and other caching plugins. After changing the slug, clear your page cache once so the old URL is purged."
+msgstr "Funktioniert mit Seiten-Caches: Hive nimmt die Login-URL automatisch vom Caching durch WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache und andere Cache-Plugins aus. Leere nach dem Ändern des Slugs einmal deinen Seiten-Cache, damit die alte URL entfernt wird."
+
 #: admin/class-setup-wizard.php:1666
 msgid "When someone hits the old wp-login.php directly:"
 msgstr "Wenn jemand die alte wp-login.php direkt aufruft:"
@@ -6611,6 +6651,14 @@ msgstr "Sendet einen 6-stelligen Code an die E-Mail-Adresse des Benutzers."
 msgid "Delivered via the managed reportedip.de relay."
 msgstr "Zustellung über das verwaltete reportedip.de-Relay."
 
+#: admin/class-two-factor-admin.php:361
+msgid "On the free plan, codes are sent with wp_mail() straight from this server, so deliverability depends on your host."
+msgstr "Im kostenlosen Tarif werden Codes per wp_mail() direkt von diesem Server versendet; die Zustellbarkeit hängt daher von deinem Hoster ab."
+
+#: admin/class-two-factor-admin.php:363
+msgid "Professional adds our managed relay with maintained SPF/DKIM/DMARC reputation, so 2FA mails reliably reach the inbox (500/month included)."
+msgstr "Professional ergänzt unser verwaltetes Relay mit gepflegter SPF/DKIM/DMARC-Reputation, sodass 2FA-Mails zuverlässig im Postfach ankommen (500/Monat inklusive)."
+
 #: admin/class-two-factor-admin.php:368
 msgid "Upgrade for managed delivery"
 msgstr "Upgrade für verwaltete Zustellung"
@@ -6631,6 +6679,14 @@ msgstr "Phishing-resistente Anmeldung über Face ID, Touch ID, Windows Hello ode
 msgid "SMS code"
 msgstr "SMS-Code"
 
+#: admin/class-two-factor-admin.php:421
+msgid "SMS codes are a Professional-plan feature, delivered through our managed reportedip.de relay — no Twilio account or SMS gateway of your own required (25/month included). The relay runs over the Community Network connection."
+msgstr "SMS-Codes sind ein Feature des Professional-Tarifs und werden über unser verwaltetes reportedip.de-Relay versendet — ein eigener Twilio-Account oder SMS-Gateway ist nicht nötig (25/Monat inklusive). Das Relay läuft über die Community-Netzwerk-Verbindung."
+
+#: admin/class-two-factor-admin.php:422
+msgid "Less secure than Authenticator or Passkey, so use it only as a fallback."
+msgstr "Weniger sicher als Authenticator oder Passkey — daher nur als Rückfalloption verwenden."
+
 #: admin/class-two-factor-admin.php:431
 msgid "Enforcement"
 msgstr "Durchsetzung"
@@ -6650,6 +6706,22 @@ msgstr "Erforderliche Benutzer sehen das Onboarding nach der Anmeldung. Während
 #: admin/class-two-factor-admin.php:474
 msgid "How many times required users may skip the onboarding after the grace period ends. 0 = enforced immediately."
 msgstr "Wie oft erforderliche Benutzer das Onboarding nach Ablauf der Schonfrist überspringen dürfen. 0 = sofort durchgesetzt."
+
+#: admin/class-two-factor-admin.php:479
+msgid "When grace period and skips are exhausted"
+msgstr "Wenn Übergangsfrist und Überspringungen aufgebraucht sind"
+
+#: admin/class-two-factor-admin.php:482
+msgid "Force setup at next sign-in (recommended)"
+msgstr "Einrichtung bei nächster Anmeldung erzwingen (empfohlen)"
+
+#: admin/class-two-factor-admin.php:485
+msgid "Block sign-in until an admin resets 2FA"
+msgstr "Anmeldung sperren, bis ein Administrator die 2FA zurücksetzt"
+
+#: admin/class-two-factor-admin.php:488
+msgid "Force setup: the user is signed in but sent straight into the setup wizard with no skip option — they can only proceed by enabling a method. Block sign-in: the login is rejected outright (legacy behaviour). Administrators and super admins are never blocked, so the site can never be left without a sign-in-capable admin."
+msgstr "Einrichtung erzwingen: Der Benutzer wird angemeldet, aber direkt in den Einrichtungsassistenten geleitet — ohne Überspringen-Option; er kann nur fortfahren, indem er eine Methode aktiviert. Anmeldung sperren: Die Anmeldung wird direkt abgewiesen (bisheriges Verhalten). Administratoren und Super-Admins werden nie gesperrt, damit die Website nie ohne anmeldefähigen Administrator zurückbleibt."
 
 #: admin/class-two-factor-admin.php:500
 msgid "Enforce onboarding on the frontend too"
@@ -7395,7 +7467,7 @@ msgstr "Die Test-E-Mail konnte nicht gesendet werden. Überprüfen Sie die WordP
 
 #: includes/class-ajax-handler.php:445
 #: includes/class-ajax-handler.php:471
-#: includes/class-database.php:447
+#: includes/class-database.php:470
 msgid "Invalid IP address."
 msgstr "Ungültige IP-Adresse."
 
@@ -7784,19 +7856,19 @@ msgstr "Alle 15 Minuten"
 msgid "Every 6 Hours"
 msgstr "Alle 6 Stunden"
 
-#: includes/class-database.php:412
+#: includes/class-database.php:435
 msgid "Invalid exception scope."
 msgstr "Ungültiger Geltungsbereich der Ausnahme."
 
-#: includes/class-database.php:422
+#: includes/class-database.php:445
 msgid "A whole-engine exception must be scoped to at least a path or an IP address."
 msgstr "Eine Ausnahme für die gesamte Engine muss mindestens auf einen Pfad oder eine IP-Adresse beschränkt sein."
 
-#: includes/class-database.php:429
+#: includes/class-database.php:452
 msgid "A rule or group identifier is required for this exception scope."
 msgstr "Für diesen Geltungsbereich ist eine Regel- oder Gruppenkennung erforderlich."
 
-#: includes/class-database.php:494
+#: includes/class-database.php:517
 msgid "Could not store the exception."
 msgstr "Ausnahme konnte nicht gespeichert werden."
 
@@ -8176,6 +8248,12 @@ msgstr "Eigenständiger Schutz ohne externe Konnektivität"
 msgid "Connected to the community threat intelligence network"
 msgstr "Mit dem Community-Bedrohungsdaten-Netzwerk verbunden"
 
+#: includes/class-mode-manager.php:762
+#: includes/class-mode-manager.php:763
+msgctxt "subscription tier name"
+msgid "Free"
+msgstr "Free"
+
 #: includes/class-mode-manager.php:764
 msgid "Local protection, free forever."
 msgstr "Lokaler Schutz, für immer kostenlos."
@@ -8350,7 +8428,7 @@ msgstr "Kundenportal öffnen"
 msgid "Access denied."
 msgstr "Zugriff verweigert."
 
-#: includes/class-rest-monitor.php:166
+#: includes/class-rest-monitor.php:165
 msgid "Access denied due to suspicious REST API activity."
 msgstr "Zugriff aufgrund verdächtiger REST-API-Aktivität verweigert."
 
@@ -8418,79 +8496,79 @@ msgstr "Härtungsmodus"
 msgid "Disposable-email defence"
 msgstr "Wegwerf-E-Mail-Abwehr"
 
-#: includes/class-security-monitor.php:914
+#: includes/class-security-monitor.php:980
 msgid "Heads-up: a security threshold was reached on your site. ReportedIP Hive has already handled it according to your settings — details below for your records."
 msgstr "Hinweis: Auf Ihrer Website wurde ein Sicherheitsschwellenwert erreicht. ReportedIP Hive hat dies gemäß Ihren Einstellungen bereits bearbeitet — die Details finden Sie unten für Ihre Unterlagen."
 
-#: includes/class-security-monitor.php:921
+#: includes/class-security-monitor.php:987
 msgid "No action required if this matches your expectations. You can fine-tune thresholds and alerts under ReportedIP Hive → Settings → Notifications."
 msgstr "Keine Aktion erforderlich, wenn dies Ihren Erwartungen entspricht. Sie können Schwellenwerte und Benachrichtigungen unter ReportedIP Hive → Einstellungen → Benachrichtigungen feinjustieren."
 
-#: includes/class-security-monitor.php:1051
+#: includes/class-security-monitor.php:1117
 msgid "Timeframe"
 msgstr "Zeitraum"
 
 #. translators: %d: minutes
-#: includes/class-security-monitor.php:1054
+#: includes/class-security-monitor.php:1120
 #, php-format
 msgid "%d minutes"
 msgstr "%d Minuten"
 
-#: includes/class-security-monitor.php:1060
+#: includes/class-security-monitor.php:1126
 msgid "Username"
 msgstr "Benutzername"
 
-#: includes/class-security-monitor.php:1076
+#: includes/class-security-monitor.php:1142
 msgid "Action taken"
 msgstr "Durchgeführte Maßnahme"
 
 #. translators: %d: hours
-#: includes/class-security-monitor.php:1080
+#: includes/class-security-monitor.php:1146
 #, php-format
 msgid "IP address has been automatically blocked for %d hours."
 msgstr "Die IP-Adresse wurde automatisch für %d Stunden gesperrt."
 
-#: includes/class-security-monitor.php:1095
+#: includes/class-security-monitor.php:1161
 msgid "Burst suppression"
 msgstr "Burst-Unterdrückung"
 
 #. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp
-#: includes/class-security-monitor.php:1100
+#: includes/class-security-monitor.php:1166
 #, php-format
 msgid "%1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP)."
 msgid_plural "%1$d additional alerts of this type were suppressed since %3$s (from %2$d distinct IPs)."
 msgstr[0] "%1$d weitere Benachrichtigung dieses Typs wurde seit %3$s unterdrückt (von %2$d eindeutigen IP)."
 msgstr[1] "%1$d weitere Benachrichtigungen dieses Typs wurden seit %3$s unterdrückt (von %2$d eindeutigen IPs)."
 
-#: includes/class-security-monitor.php:1114
-#: includes/class-security-monitor.php:1156
+#: includes/class-security-monitor.php:1180
+#: includes/class-security-monitor.php:1222
 msgid "Top offenders:"
 msgstr "Häufigste Verursacher:"
 
-#: includes/class-security-monitor.php:1120
+#: includes/class-security-monitor.php:1186
 msgid "Optional next steps"
 msgstr "Optionale nächste Schritte"
 
-#: includes/class-security-monitor.php:1122
+#: includes/class-security-monitor.php:1188
 msgid "Open the ReportedIP Hive dashboard if you want a full timeline of recent events."
 msgstr "Öffnen Sie das ReportedIP Hive Dashboard, wenn Sie einen vollständigen zeitlichen Verlauf der jüngsten Ereignisse wünschen."
 
-#: includes/class-security-monitor.php:1123
+#: includes/class-security-monitor.php:1189
 msgid "If this IP belongs to a legitimate user (e.g. office router, monitoring service), add it to your whitelist."
 msgstr "Wenn diese IP zu einem legitimen Nutzer gehört (z. B. Büro-Router, Monitoring-Dienst), setzen Sie sie auf Ihre Whitelist."
 
-#: includes/class-security-monitor.php:1124
+#: includes/class-security-monitor.php:1190
 msgid "No further action is needed if the automatic block above matches your expectations."
 msgstr "Es ist keine weitere Aktion erforderlich, wenn die obige automatische Sperre Ihren Erwartungen entspricht."
 
 #. translators: %d: hours
-#: includes/class-security-monitor.php:1136
+#: includes/class-security-monitor.php:1202
 #, php-format
 msgid "Action: IP has been automatically blocked for %d hours."
 msgstr "Maßnahme: Die IP wurde automatisch für %d Stunden gesperrt."
 
 #. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp
-#: includes/class-security-monitor.php:1145
+#: includes/class-security-monitor.php:1211
 #, php-format
 msgid "Burst suppression: %1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP)."
 msgid_plural "Burst suppression: %1$d additional alerts of this type were suppressed since %3$s (from %2$d distinct IPs)."
@@ -8862,7 +8940,7 @@ msgid "We could not send a verification code. Please try the resend link below o
 msgstr "Wir konnten keinen Bestätigungscode senden. Bitte verwenden Sie den Link zum erneuten Senden unten oder wählen Sie eine andere Methode."
 
 #: includes/class-two-factor-reset-gate.php:479
-#: includes/class-two-factor.php:963
+#: includes/class-two-factor.php:992
 msgid "Security check failed. Please try again."
 msgstr "Sicherheitsprüfung fehlgeschlagen. Bitte versuchen Sie es erneut."
 
@@ -8879,7 +8957,7 @@ msgid "Verification failed. Please double-check the code and try again."
 msgstr "Verifizierung fehlgeschlagen. Bitte überprüfen Sie den Code und versuchen Sie es erneut."
 
 #: includes/class-two-factor-reset-gate.php:565
-#: includes/class-two-factor.php:1269
+#: includes/class-two-factor.php:1434
 #: templates/two-factor-challenge.php:40
 msgid "Two-Factor Verification"
 msgstr "Zwei-Faktor-Verifizierung"
@@ -9216,128 +9294,128 @@ msgstr "Ungültiger RSA-Schlüssel."
 msgid "Unsupported COSE algorithm."
 msgstr "Nicht unterstützter COSE-Algorithmus."
 
-#: includes/class-two-factor.php:185
-#: includes/class-two-factor.php:1338
-#: includes/class-two-factor.php:1740
+#: includes/class-two-factor.php:208
+#: includes/class-two-factor.php:1503
+#: includes/class-two-factor.php:1905
 msgid "Your session has expired. Please sign in again."
 msgstr "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:196
+#: includes/class-two-factor.php:219
 msgid "This method does not support resending."
 msgstr "Diese Methode unterstützt kein erneutes Senden."
 
-#: includes/class-two-factor.php:204
+#: includes/class-two-factor.php:227
 msgid "This method is not active on your account."
 msgstr "Diese Methode ist in Ihrem Konto nicht aktiv."
 
-#: includes/class-two-factor.php:217
+#: includes/class-two-factor.php:240
 msgid "SMS is not available."
 msgstr "SMS ist nicht verfügbar."
 
-#: includes/class-two-factor.php:238
+#: includes/class-two-factor.php:261
 msgid "We have sent you a new code by email."
 msgstr "Wir haben Ihnen einen neuen Code per E-Mail gesendet."
 
-#: includes/class-two-factor.php:239
+#: includes/class-two-factor.php:262
 msgid "We have sent you a new code by SMS."
 msgstr "Wir haben Ihnen einen neuen Code per SMS gesendet."
 
 #. translators: 1: opening link tag, 2: closing link tag
-#: includes/class-two-factor.php:289
+#: includes/class-two-factor.php:312
 #, php-format
 msgid "Secured by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
 msgstr "Geschützt durch %1$sReportedIP%2$s — Offene Bedrohungsdaten für ein sichereres Internet."
 
-#: includes/class-two-factor.php:695
+#: includes/class-two-factor.php:722
 msgid "XMLRPC on this site only allows application passwords. Please create an application password in your profile."
 msgstr "XMLRPC erlaubt auf dieser Website nur Anwendungspasswörter. Bitte erstellen Sie ein Anwendungspasswort in Ihrem Profil."
 
-#: includes/class-two-factor.php:730
+#: includes/class-two-factor.php:757
 msgid "<strong>Two-factor authentication required.</strong> Your skip quota is exhausted. Please contact an administrator to reset 2FA."
 msgstr "<strong>Zwei-Faktor-Authentifizierung (2FA) erforderlich.</strong> Ihr Überspringen-Kontingent ist aufgebraucht. Bitte wenden Sie sich an einen Administrator, um die 2FA zurückzusetzen."
 
-#: includes/class-two-factor.php:782
+#: includes/class-two-factor.php:809
 msgid "Two-factor verification required."
 msgstr "Zwei-Faktor-Verifizierung erforderlich."
 
 #. translators: %d: seconds remaining
-#: includes/class-two-factor.php:972
+#: includes/class-two-factor.php:1001
 #, php-format
 msgid "Too many failed attempts. Please wait %d seconds."
 msgstr "Zu viele fehlgeschlagene Versuche. Bitte warten Sie %d Sekunden."
 
-#: includes/class-two-factor.php:1019
+#: includes/class-two-factor.php:1045
 msgid "No valid code is active — you likely used an older code. Please click \"Resend code\" and use only the most recent code from your inbox."
 msgstr "Es ist kein gültiger Code aktiv — Sie haben wahrscheinlich einen älteren Code verwendet. Bitte klicken Sie auf \"Code erneut senden\" und verwenden Sie ausschließlich den neuesten Code aus Ihrem Posteingang."
 
-#: includes/class-two-factor.php:1021
+#: includes/class-two-factor.php:1047
 msgid "No valid SMS code is active. Please request a new code and use only the most recent SMS."
 msgstr "Es ist kein gültiger SMS-Code aktiv. Bitte fordern Sie einen neuen Code an und verwenden Sie ausschließlich die neueste SMS."
 
-#: includes/class-two-factor.php:1023
+#: includes/class-two-factor.php:1049
 msgid "Invalid verification code. Please make sure you are using the most recent code."
 msgstr "Ungültiger Verifizierungscode. Bitte stellen Sie sicher, dass Sie den neuesten Code verwenden."
 
-#: includes/class-two-factor.php:1225
+#: includes/class-two-factor.php:1390
 msgid "Your two-factor session has expired. This happens after 15 minutes of inactivity, or when the security cookie is missing — for example when the login form is loaded inside an iframe. Please sign in again."
 msgstr "Ihre Zwei-Faktor-Sitzung ist abgelaufen. Dies geschieht nach 15 Minuten Inaktivität oder wenn das Sicherheits-Cookie fehlt — zum Beispiel, wenn das Anmeldeformular in einem iframe geladen wird. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1226
+#: includes/class-two-factor.php:1391
 msgid "The user account from your two-factor session is no longer available. Please sign in again."
 msgstr "Das Benutzerkonto aus Ihrer Zwei-Faktor-Sitzung ist nicht mehr verfügbar. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1254
+#: includes/class-two-factor.php:1419
 msgid "Two-Factor session expired"
 msgstr "Zwei-Faktor-Sitzung abgelaufen"
 
-#: includes/class-two-factor.php:1258
+#: includes/class-two-factor.php:1423
 #: templates/frontend-2fa-challenge.php:385
 msgid "Back to sign in"
 msgstr "Zurück zur Anmeldung"
 
-#: includes/class-two-factor.php:1276
+#: includes/class-two-factor.php:1441
 msgid "Back to login"
 msgstr "Zurück zur Anmeldung"
 
-#: includes/class-two-factor.php:1336
-#: includes/class-two-factor.php:1738
+#: includes/class-two-factor.php:1501
+#: includes/class-two-factor.php:1903
 msgid "New code sent."
 msgstr "Neuer Code gesendet."
 
-#: includes/class-two-factor.php:1337
-#: includes/class-two-factor.php:1739
+#: includes/class-two-factor.php:1502
+#: includes/class-two-factor.php:1904
 msgid "Sending failed."
 msgstr "Senden fehlgeschlagen."
 
-#: includes/class-two-factor.php:1339
-#: includes/class-two-factor.php:1741
+#: includes/class-two-factor.php:1504
+#: includes/class-two-factor.php:1906
 msgid "Passkey request in progress…"
 msgstr "Passkey-Anfrage läuft…"
 
-#: includes/class-two-factor.php:1340
-#: includes/class-two-factor.php:1742
+#: includes/class-two-factor.php:1505
+#: includes/class-two-factor.php:1907
 msgid "Failed to fetch passkey options."
 msgstr "Passkey-Optionen konnten nicht abgerufen werden."
 
-#: includes/class-two-factor.php:1341
-#: includes/class-two-factor.php:1743
+#: includes/class-two-factor.php:1506
+#: includes/class-two-factor.php:1908
 msgid "Verification failed."
 msgstr "Verifizierung fehlgeschlagen."
 
-#: includes/class-two-factor.php:1342
-#: includes/class-two-factor.php:1744
+#: includes/class-two-factor.php:1507
+#: includes/class-two-factor.php:1909
 msgid "Passkey login cancelled."
 msgstr "Passkey-Anmeldung abgebrochen."
 
-#: includes/class-two-factor.php:1445
+#: includes/class-two-factor.php:1610
 msgid "Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again."
 msgstr "Zu viele fehlgeschlagene Verifizierungsversuche. Ihre Zwei-Faktor-Sitzung wurde aus Sicherheitsgründen ungültig gemacht. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1451
+#: includes/class-two-factor.php:1616
 msgid "Your two-factor session expired. Please sign in again."
 msgstr "Ihre Zwei-Faktor-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1783
+#: includes/class-two-factor.php:1948
 msgid "2FA template not found."
 msgstr "2FA-Template nicht gefunden."
 
@@ -9347,59 +9425,59 @@ msgstr "2FA-Template nicht gefunden."
 msgid "Invalid credentials."
 msgstr "Ungültige Anmeldedaten."
 
-#: includes/class-waf.php:120
+#: includes/class-waf.php:121
 msgid "SQL injection"
 msgstr "SQL-Injection"
 
-#: includes/class-waf.php:121
+#: includes/class-waf.php:122
 msgid "Cross-site scripting (XSS)"
 msgstr "Cross-Site-Scripting (XSS)"
 
-#: includes/class-waf.php:122
+#: includes/class-waf.php:123
 msgid "Path traversal"
 msgstr "Path Traversal"
 
-#: includes/class-waf.php:123
+#: includes/class-waf.php:124
 msgid "Command injection"
 msgstr "Command Injection"
 
-#: includes/class-waf.php:124
+#: includes/class-waf.php:125
 msgid "Sensitive-file probing"
 msgstr "Sondieren sensibler Dateien"
 
-#: includes/class-waf.php:125
+#: includes/class-waf.php:126
 msgid "Scanner / tool user-agents"
 msgstr "Scanner-/Tool-User-Agents"
 
-#: includes/class-waf.php:126
+#: includes/class-waf.php:127
 msgid "Log4Shell (JNDI)"
 msgstr "Log4Shell (JNDI)"
 
-#: includes/class-waf.php:127
+#: includes/class-waf.php:128
 msgid "Server-side request forgery (SSRF)"
 msgstr "Server-Side Request Forgery (SSRF)"
 
-#: includes/class-waf.php:128
+#: includes/class-waf.php:129
 msgid "PHP injection"
 msgstr "PHP-Injection"
 
-#: includes/class-waf.php:129
+#: includes/class-waf.php:130
 msgid "NoSQL injection"
 msgstr "NoSQL-Injection"
 
-#: includes/class-waf.php:130
+#: includes/class-waf.php:131
 msgid "XML external entity (XXE)"
 msgstr "XML External Entity (XXE)"
 
-#: includes/class-waf.php:131
+#: includes/class-waf.php:132
 msgid "Web shell"
 msgstr "Webshell"
 
-#: includes/class-waf.php:132
+#: includes/class-waf.php:133
 msgid "CRLF / header injection"
 msgstr "CRLF-/Header-Injection"
 
-#: includes/class-waf.php:133
+#: includes/class-waf.php:134
 msgid "Server-side template injection (SSTI)"
 msgstr "Server-Side Template Injection (SSTI)"
 
@@ -9806,6 +9884,10 @@ msgstr "Sie können bis zum %s beliebig oft überspringen. Danach müssen Sie 2F
 msgid "Final skip."
 msgstr "Letztes Überspringen."
 
+#: templates/two-factor-onboarding.php:118
+msgid "You must set up 2FA on your next sign-in — you will not be able to skip again."
+msgstr "Sie müssen die 2FA bei Ihrer nächsten Anmeldung einrichten — ein weiteres Überspringen ist nicht möglich."
+
 #: templates/two-factor-onboarding.php:128
 msgid "Setup"
 msgstr "Einrichtung"
@@ -10041,83 +10123,3 @@ msgstr "Bei Ihrer nächsten Anmeldung werden Sie nach dem zweiten Faktor gefragt
 #, php-format
 msgid "This page is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
 msgstr "Diese Seite wird geschützt durch %1$sReportedIP%2$s — Open Threat Intelligence für ein sichereres Internet."
-
-#: admin/class-admin-settings.php:5276
-msgid "Page-cache compatible: Hive automatically excludes the login URL from caching for WP Rocket, LiteSpeed Cache, W3 Total Cache, WP Super Cache, WP Fastest Cache, Cache Enabler, Comet Cache and Hummingbird. After changing the slug, clear your page cache once so the previous URL is purged."
-msgstr "Mit Seiten-Cache kompatibel: Hive nimmt die Login-URL automatisch vom Caching aus — für WP Rocket, LiteSpeed Cache, W3 Total Cache, WP Super Cache, WP Fastest Cache, Cache Enabler, Comet Cache und Hummingbird. Leere nach dem Ändern des Slugs einmal deinen Seiten-Cache, damit die alte URL entfernt wird."
-
-#: admin/class-setup-wizard.php:1660
-msgid "Works with page caches: Hive automatically excludes the login URL from WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache and other caching plugins. After changing the slug, clear your page cache once so the old URL is purged."
-msgstr "Funktioniert mit Seiten-Caches: Hive nimmt die Login-URL automatisch vom Caching durch WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache und andere Cache-Plugins aus. Leere nach dem Ändern des Slugs einmal deinen Seiten-Cache, damit die alte URL entfernt wird."
-
-#. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
-#: admin/class-admin-firewall.php:865
-#, php-format
-msgid "The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes — reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead."
-msgstr "Die Direktive wurde automatisch geschrieben. PHP-FPM cacht die .user.ini bis zu fünf Minuten — lade die Seite gleich neu. Falls der Status nie auf „Läuft\" springt (häufig bei nginx + PHP-FPM), enthält der %1$sServer-Setup-Tab%2$s eine manuelle nginx-/php.ini-Option, die du stattdessen anwenden kannst."
-
-#: admin/class-admin-firewall.php:1335
-msgid "Hive wrote the directive automatically (.htaccess on Apache, .user.ini on PHP-FPM), and PHP-FPM caches .user.ini for up to five minutes — give it a moment. If the status never flips to Running — common on nginx, or when PHP's user_ini.filename is disabled or the document root is not the .user.ini scan path — apply ONE of the manual options below instead."
-msgstr "Hive hat die Direktive automatisch geschrieben (.htaccess bei Apache, .user.ini bei PHP-FPM), und PHP-FPM cacht die .user.ini bis zu fünf Minuten — gib ihr einen Moment. Falls der Status nie auf „Läuft\" springt — häufig bei nginx, oder wenn PHPs user_ini.filename deaktiviert ist oder das Document-Root nicht der .user.ini-Scan-Pfad ist — wende stattdessen EINE der manuellen Optionen unten an."
-
-#: admin/class-admin-firewall.php:1342
-msgid "Option A — php.ini / PHP-FPM pool / hosting panel (recommended)"
-msgstr "Option A — php.ini / PHP-FPM-Pool / Hosting-Panel (empfohlen)"
-
-#: admin/class-admin-firewall.php:1344
-msgid "Most managed hosts (ISPConfig, Plesk, cPanel) offer a \"custom php.ini settings\" field — paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx."
-msgstr "Die meisten Managed-Hoster (ISPConfig, Plesk, cPanel) bieten ein Feld „eigene php.ini-Einstellungen\" — füge diese eine Zeile dort ein und lade PHP-FPM neu. In einer PHP-FPM-Pool-Konfiguration lautet die entsprechende Zeile php_admin_value[auto_prepend_file] = <derselbe Pfad>. Auf nginx ist das meist der einfachste Weg."
-
-#: includes/class-mode-manager.php:762
-#: includes/class-mode-manager.php:763
-msgctxt "subscription tier name"
-msgid "Free"
-msgstr "Free"
-
-#: admin/class-admin-firewall.php:834
-msgid "Optionally run the firewall before WordPress loads, so a malicious request is rejected earlier and cheaper. Off by default and free on every plan. Turning it on brings a few extra settings with it: Hive generates a guard file, a server-config directive is added on the Server Setup tab (written automatically on Apache and PHP-FPM; one manual step on nginx or via php.ini), and the guard then applies the same rule exceptions and paranoia level as the in-WordPress engine."
-msgstr "Führt die Firewall optional aus, bevor WordPress lädt, sodass schädliche Anfragen früher und ressourcenschonender abgewiesen werden. Standardmäßig aus und in jedem Tarif kostenlos. Beim Aktivieren kommen ein paar zusätzliche Einstellungen hinzu: Hive erzeugt eine Guard-Datei, im Reiter „Server-Setup“ wird eine Server-Konfigurationsdirektive ergänzt (auf Apache und PHP-FPM automatisch geschrieben; auf nginx oder per php.ini ein manueller Schritt), und der Guard wendet anschließend dieselben Regel-Ausnahmen und dieselbe Paranoia-Stufe an wie die WordPress-interne Engine."
-
-#: admin/class-setup-wizard.php:1006
-msgid "An optional layer that runs the firewall before WordPress even loads, so malicious requests are rejected earlier and cheaper. Free on every plan."
-msgstr "Eine optionale Schicht, die die Firewall ausführt, noch bevor WordPress lädt, sodass schädliche Anfragen früher und ressourcenschonender abgewiesen werden. In jedem Tarif kostenlos."
-
-#: admin/class-setup-wizard.php:1007
-msgid "It stays off here on purpose: switching it on brings a few extra settings with it — a generated guard file and a one-time server-config step. Finish the wizard, then enable it under Firewall → Extended Protection, where Hive walks you through the server setup."
-msgstr "Sie bleibt hier bewusst aus: Beim Aktivieren kommen ein paar zusätzliche Einstellungen hinzu — eine erzeugte Guard-Datei und ein einmaliger Server-Konfigurationsschritt. Schließe den Assistenten ab und aktiviere sie anschließend unter Firewall → Erweiterter Schutz, wo Hive dich durch die Server-Einrichtung führt."
-
-#: admin/class-two-factor-admin.php:361
-msgid "On the free plan, codes are sent with wp_mail() straight from this server, so deliverability depends on your host."
-msgstr "Im kostenlosen Tarif werden Codes per wp_mail() direkt von diesem Server versendet; die Zustellbarkeit hängt daher von deinem Hoster ab."
-
-#: admin/class-two-factor-admin.php:363
-msgid "Professional adds our managed relay with maintained SPF/DKIM/DMARC reputation, so 2FA mails reliably reach the inbox (500/month included)."
-msgstr "Professional ergänzt unser verwaltetes Relay mit gepflegter SPF/DKIM/DMARC-Reputation, sodass 2FA-Mails zuverlässig im Postfach ankommen (500/Monat inklusive)."
-
-#: admin/class-two-factor-admin.php:421
-msgid "SMS codes are a Professional-plan feature, delivered through our managed reportedip.de relay — no Twilio account or SMS gateway of your own required (25/month included). The relay runs over the Community Network connection."
-msgstr "SMS-Codes sind ein Feature des Professional-Tarifs und werden über unser verwaltetes reportedip.de-Relay versendet — ein eigener Twilio-Account oder SMS-Gateway ist nicht nötig (25/Monat inklusive). Das Relay läuft über die Community-Netzwerk-Verbindung."
-
-#: admin/class-two-factor-admin.php:422
-msgid "Less secure than Authenticator or Passkey, so use it only as a fallback."
-msgstr "Weniger sicher als Authenticator oder Passkey — daher nur als Rückfalloption verwenden."
-
-#: admin/class-two-factor-admin.php:479
-msgid "When grace period and skips are exhausted"
-msgstr "Wenn Übergangsfrist und Überspringungen aufgebraucht sind"
-
-#: admin/class-two-factor-admin.php:482
-msgid "Force setup at next sign-in (recommended)"
-msgstr "Einrichtung bei nächster Anmeldung erzwingen (empfohlen)"
-
-#: admin/class-two-factor-admin.php:485
-msgid "Block sign-in until an admin resets 2FA"
-msgstr "Anmeldung sperren, bis ein Administrator die 2FA zurücksetzt"
-
-#: admin/class-two-factor-admin.php:488
-msgid "Force setup: the user is signed in but sent straight into the setup wizard with no skip option — they can only proceed by enabling a method. Block sign-in: the login is rejected outright (legacy behaviour). Administrators and super admins are never blocked, so the site can never be left without a sign-in-capable admin."
-msgstr "Einrichtung erzwingen: Der Benutzer wird angemeldet, aber direkt in den Einrichtungsassistenten geleitet — ohne Überspringen-Option; er kann nur fortfahren, indem er eine Methode aktiviert. Anmeldung sperren: Die Anmeldung wird direkt abgewiesen (bisheriges Verhalten). Administratoren und Super-Admins werden nie gesperrt, damit die Website nie ohne anmeldefähigen Administrator zurückbleibt."
-
-#: templates/two-factor-onboarding.php:118
-msgid "You must set up 2FA on your next sign-in — you will not be able to skip again."
-msgstr "Sie müssen die 2FA bei Ihrer nächsten Anmeldung einrichten — ein weiteres Überspringen ist nicht möglich."

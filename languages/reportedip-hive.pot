@@ -2,20 +2,20 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive 2.1.22\n"
+"Project-Id-Version: ReportedIP Hive 2.1.25\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-07T08:20:11+00:00\n"
+"POT-Creation-Date: 2026-07-22T18:29:34+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php
+#: reportedip-hive.php:3
 #: admin/class-admin-settings.php:1683
 #: admin/class-admin-settings.php:1684
 #: admin/class-admin-settings.php:1804
@@ -27,17 +27,18 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php
+#: reportedip-hive.php:4
+#: reportedip-hive.php:9
 msgid "https://reportedip.de"
 msgstr ""
 
 #. Description of the plugin
-#: reportedip-hive.php
+#: reportedip-hive.php:5
 msgid "Community-powered WordPress security — real-time threat intelligence"
 msgstr ""
 
 #. Author of the plugin
-#: reportedip-hive.php
+#: reportedip-hive.php:8
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr ""
 
@@ -1901,7 +1902,7 @@ msgstr ""
 #: admin/class-admin-settings.php:1976
 #: admin/class-audit-log-table.php:65
 #: includes/class-privacy.php:220
-#: includes/class-security-monitor.php:1041
+#: includes/class-security-monitor.php:1107
 msgid "Event"
 msgstr ""
 
@@ -2703,6 +2704,7 @@ msgid "How many failed auths?"
 msgstr ""
 
 #: admin/class-admin-settings.php:4789
+#: includes/class-waf.php:135
 msgid "REST API abuse"
 msgstr ""
 
@@ -2763,11 +2765,11 @@ msgid "404 burst threshold"
 msgstr ""
 
 #: admin/class-admin-settings.php:4879
-msgid "Skip burst triggers for verified search engines and AI crawlers (User-Agent based)"
+msgid "Never count or auto-block verified search engines and AI crawlers"
 msgstr ""
 
 #: admin/class-admin-settings.php:4881
-msgid "Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot and similar crawlers are exempt from the 404 burst trigger and the REST burst trigger. Pattern-based detection (.env, wp-config.php.bak, /phpmyadmin/, …) stays active for all visitors, including spoofed bot User-Agents."
+msgid "Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot and similar crawlers are exempt from the burst triggers, and no sensor will ever auto-block a crawler whose identity is confirmed via reverse DNS or the official IP ranges. A spoofed crawler User-Agent fails that check and is treated like any other client. Pattern-based detection (.env, wp-config.php.bak, /phpmyadmin/, …) stays active for all visitors. Averted blocks appear in the log as Verified Bot Block Averted."
 msgstr ""
 
 #: admin/class-admin-settings.php:4888
@@ -4940,7 +4942,7 @@ msgstr ""
 
 #: admin/class-api-queue-table.php:55
 #: includes/class-privacy.php:158
-#: includes/class-security-monitor.php:1047
+#: includes/class-security-monitor.php:1113
 msgid "Attempts"
 msgstr ""
 
@@ -4948,7 +4950,7 @@ msgstr ""
 #: admin/class-setup-wizard.php:360
 #: admin/class-two-factor-admin.php:1574
 #: includes/class-two-factor-onboarding.php:323
-#: includes/class-two-factor.php:1784
+#: includes/class-two-factor.php:1949
 #: reportedip-hive.php:822
 msgid "Error"
 msgstr ""
@@ -5103,7 +5105,7 @@ msgstr ""
 #: includes/class-ajax-handler.php:240
 #: includes/class-ajax-handler.php:276
 #: includes/class-privacy.php:216
-#: includes/class-security-monitor.php:1043
+#: includes/class-security-monitor.php:1109
 #: includes/class-two-factor-notifications.php:202
 #: includes/class-two-factor-notifications.php:216
 msgid "Time"
@@ -5148,7 +5150,7 @@ msgstr ""
 #: includes/class-privacy.php:150
 #: includes/class-privacy.php:187
 #: includes/class-privacy.php:228
-#: includes/class-security-monitor.php:1042
+#: includes/class-security-monitor.php:1108
 #: includes/class-two-factor-notifications.php:203
 #: includes/class-two-factor-notifications.php:217
 msgid "IP address"
@@ -7465,7 +7467,7 @@ msgstr ""
 
 #: includes/class-ajax-handler.php:445
 #: includes/class-ajax-handler.php:471
-#: includes/class-database.php:447
+#: includes/class-database.php:470
 msgid "Invalid IP address."
 msgstr ""
 
@@ -7854,19 +7856,19 @@ msgstr ""
 msgid "Every 6 Hours"
 msgstr ""
 
-#: includes/class-database.php:412
+#: includes/class-database.php:435
 msgid "Invalid exception scope."
 msgstr ""
 
-#: includes/class-database.php:422
+#: includes/class-database.php:445
 msgid "A whole-engine exception must be scoped to at least a path or an IP address."
 msgstr ""
 
-#: includes/class-database.php:429
+#: includes/class-database.php:452
 msgid "A rule or group identifier is required for this exception scope."
 msgstr ""
 
-#: includes/class-database.php:494
+#: includes/class-database.php:517
 msgid "Could not store the exception."
 msgstr ""
 
@@ -8426,7 +8428,7 @@ msgstr ""
 msgid "Access denied."
 msgstr ""
 
-#: includes/class-rest-monitor.php:166
+#: includes/class-rest-monitor.php:165
 msgid "Access denied due to suspicious REST API activity."
 msgstr ""
 
@@ -8494,79 +8496,79 @@ msgstr ""
 msgid "Disposable-email defence"
 msgstr ""
 
-#: includes/class-security-monitor.php:914
+#: includes/class-security-monitor.php:980
 msgid "Heads-up: a security threshold was reached on your site. ReportedIP Hive has already handled it according to your settings — details below for your records."
 msgstr ""
 
-#: includes/class-security-monitor.php:921
+#: includes/class-security-monitor.php:987
 msgid "No action required if this matches your expectations. You can fine-tune thresholds and alerts under ReportedIP Hive → Settings → Notifications."
 msgstr ""
 
-#: includes/class-security-monitor.php:1051
+#: includes/class-security-monitor.php:1117
 msgid "Timeframe"
 msgstr ""
 
 #. translators: %d: minutes
-#: includes/class-security-monitor.php:1054
+#: includes/class-security-monitor.php:1120
 #, php-format
 msgid "%d minutes"
 msgstr ""
 
-#: includes/class-security-monitor.php:1060
+#: includes/class-security-monitor.php:1126
 msgid "Username"
 msgstr ""
 
-#: includes/class-security-monitor.php:1076
+#: includes/class-security-monitor.php:1142
 msgid "Action taken"
 msgstr ""
 
 #. translators: %d: hours
-#: includes/class-security-monitor.php:1080
+#: includes/class-security-monitor.php:1146
 #, php-format
 msgid "IP address has been automatically blocked for %d hours."
 msgstr ""
 
-#: includes/class-security-monitor.php:1095
+#: includes/class-security-monitor.php:1161
 msgid "Burst suppression"
 msgstr ""
 
 #. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp
-#: includes/class-security-monitor.php:1100
+#: includes/class-security-monitor.php:1166
 #, php-format
 msgid "%1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP)."
 msgid_plural "%1$d additional alerts of this type were suppressed since %3$s (from %2$d distinct IPs)."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/class-security-monitor.php:1114
-#: includes/class-security-monitor.php:1156
+#: includes/class-security-monitor.php:1180
+#: includes/class-security-monitor.php:1222
 msgid "Top offenders:"
 msgstr ""
 
-#: includes/class-security-monitor.php:1120
+#: includes/class-security-monitor.php:1186
 msgid "Optional next steps"
 msgstr ""
 
-#: includes/class-security-monitor.php:1122
+#: includes/class-security-monitor.php:1188
 msgid "Open the ReportedIP Hive dashboard if you want a full timeline of recent events."
 msgstr ""
 
-#: includes/class-security-monitor.php:1123
+#: includes/class-security-monitor.php:1189
 msgid "If this IP belongs to a legitimate user (e.g. office router, monitoring service), add it to your whitelist."
 msgstr ""
 
-#: includes/class-security-monitor.php:1124
+#: includes/class-security-monitor.php:1190
 msgid "No further action is needed if the automatic block above matches your expectations."
 msgstr ""
 
 #. translators: %d: hours
-#: includes/class-security-monitor.php:1136
+#: includes/class-security-monitor.php:1202
 #, php-format
 msgid "Action: IP has been automatically blocked for %d hours."
 msgstr ""
 
 #. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp
-#: includes/class-security-monitor.php:1145
+#: includes/class-security-monitor.php:1211
 #, php-format
 msgid "Burst suppression: %1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP)."
 msgid_plural "Burst suppression: %1$d additional alerts of this type were suppressed since %3$s (from %2$d distinct IPs)."
@@ -8938,7 +8940,7 @@ msgid "We could not send a verification code. Please try the resend link below o
 msgstr ""
 
 #: includes/class-two-factor-reset-gate.php:479
-#: includes/class-two-factor.php:963
+#: includes/class-two-factor.php:992
 msgid "Security check failed. Please try again."
 msgstr ""
 
@@ -8955,7 +8957,7 @@ msgid "Verification failed. Please double-check the code and try again."
 msgstr ""
 
 #: includes/class-two-factor-reset-gate.php:565
-#: includes/class-two-factor.php:1269
+#: includes/class-two-factor.php:1434
 #: templates/two-factor-challenge.php:40
 msgid "Two-Factor Verification"
 msgstr ""
@@ -9292,128 +9294,128 @@ msgstr ""
 msgid "Unsupported COSE algorithm."
 msgstr ""
 
-#: includes/class-two-factor.php:185
-#: includes/class-two-factor.php:1338
-#: includes/class-two-factor.php:1740
+#: includes/class-two-factor.php:208
+#: includes/class-two-factor.php:1503
+#: includes/class-two-factor.php:1905
 msgid "Your session has expired. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:196
+#: includes/class-two-factor.php:219
 msgid "This method does not support resending."
 msgstr ""
 
-#: includes/class-two-factor.php:204
+#: includes/class-two-factor.php:227
 msgid "This method is not active on your account."
 msgstr ""
 
-#: includes/class-two-factor.php:217
+#: includes/class-two-factor.php:240
 msgid "SMS is not available."
 msgstr ""
 
-#: includes/class-two-factor.php:238
+#: includes/class-two-factor.php:261
 msgid "We have sent you a new code by email."
 msgstr ""
 
-#: includes/class-two-factor.php:239
+#: includes/class-two-factor.php:262
 msgid "We have sent you a new code by SMS."
 msgstr ""
 
 #. translators: 1: opening link tag, 2: closing link tag
-#: includes/class-two-factor.php:289
+#: includes/class-two-factor.php:312
 #, php-format
 msgid "Secured by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
 msgstr ""
 
-#: includes/class-two-factor.php:695
+#: includes/class-two-factor.php:722
 msgid "XMLRPC on this site only allows application passwords. Please create an application password in your profile."
 msgstr ""
 
-#: includes/class-two-factor.php:730
+#: includes/class-two-factor.php:757
 msgid "<strong>Two-factor authentication required.</strong> Your skip quota is exhausted. Please contact an administrator to reset 2FA."
 msgstr ""
 
-#: includes/class-two-factor.php:782
+#: includes/class-two-factor.php:809
 msgid "Two-factor verification required."
 msgstr ""
 
 #. translators: %d: seconds remaining
-#: includes/class-two-factor.php:972
+#: includes/class-two-factor.php:1001
 #, php-format
 msgid "Too many failed attempts. Please wait %d seconds."
 msgstr ""
 
-#: includes/class-two-factor.php:1019
+#: includes/class-two-factor.php:1045
 msgid "No valid code is active — you likely used an older code. Please click \"Resend code\" and use only the most recent code from your inbox."
 msgstr ""
 
-#: includes/class-two-factor.php:1021
+#: includes/class-two-factor.php:1047
 msgid "No valid SMS code is active. Please request a new code and use only the most recent SMS."
 msgstr ""
 
-#: includes/class-two-factor.php:1023
+#: includes/class-two-factor.php:1049
 msgid "Invalid verification code. Please make sure you are using the most recent code."
 msgstr ""
 
-#: includes/class-two-factor.php:1225
+#: includes/class-two-factor.php:1390
 msgid "Your two-factor session has expired. This happens after 15 minutes of inactivity, or when the security cookie is missing — for example when the login form is loaded inside an iframe. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1226
+#: includes/class-two-factor.php:1391
 msgid "The user account from your two-factor session is no longer available. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1254
+#: includes/class-two-factor.php:1419
 msgid "Two-Factor session expired"
 msgstr ""
 
-#: includes/class-two-factor.php:1258
+#: includes/class-two-factor.php:1423
 #: templates/frontend-2fa-challenge.php:385
 msgid "Back to sign in"
 msgstr ""
 
-#: includes/class-two-factor.php:1276
+#: includes/class-two-factor.php:1441
 msgid "Back to login"
 msgstr ""
 
-#: includes/class-two-factor.php:1336
-#: includes/class-two-factor.php:1738
+#: includes/class-two-factor.php:1501
+#: includes/class-two-factor.php:1903
 msgid "New code sent."
 msgstr ""
 
-#: includes/class-two-factor.php:1337
-#: includes/class-two-factor.php:1739
+#: includes/class-two-factor.php:1502
+#: includes/class-two-factor.php:1904
 msgid "Sending failed."
 msgstr ""
 
-#: includes/class-two-factor.php:1339
-#: includes/class-two-factor.php:1741
+#: includes/class-two-factor.php:1504
+#: includes/class-two-factor.php:1906
 msgid "Passkey request in progress…"
 msgstr ""
 
-#: includes/class-two-factor.php:1340
-#: includes/class-two-factor.php:1742
+#: includes/class-two-factor.php:1505
+#: includes/class-two-factor.php:1907
 msgid "Failed to fetch passkey options."
 msgstr ""
 
-#: includes/class-two-factor.php:1341
-#: includes/class-two-factor.php:1743
+#: includes/class-two-factor.php:1506
+#: includes/class-two-factor.php:1908
 msgid "Verification failed."
 msgstr ""
 
-#: includes/class-two-factor.php:1342
-#: includes/class-two-factor.php:1744
+#: includes/class-two-factor.php:1507
+#: includes/class-two-factor.php:1909
 msgid "Passkey login cancelled."
 msgstr ""
 
-#: includes/class-two-factor.php:1445
+#: includes/class-two-factor.php:1610
 msgid "Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1451
+#: includes/class-two-factor.php:1616
 msgid "Your two-factor session expired. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1783
+#: includes/class-two-factor.php:1948
 msgid "2FA template not found."
 msgstr ""
 
@@ -9423,59 +9425,59 @@ msgstr ""
 msgid "Invalid credentials."
 msgstr ""
 
-#: includes/class-waf.php:120
+#: includes/class-waf.php:121
 msgid "SQL injection"
 msgstr ""
 
-#: includes/class-waf.php:121
+#: includes/class-waf.php:122
 msgid "Cross-site scripting (XSS)"
 msgstr ""
 
-#: includes/class-waf.php:122
+#: includes/class-waf.php:123
 msgid "Path traversal"
 msgstr ""
 
-#: includes/class-waf.php:123
+#: includes/class-waf.php:124
 msgid "Command injection"
 msgstr ""
 
-#: includes/class-waf.php:124
+#: includes/class-waf.php:125
 msgid "Sensitive-file probing"
 msgstr ""
 
-#: includes/class-waf.php:125
+#: includes/class-waf.php:126
 msgid "Scanner / tool user-agents"
 msgstr ""
 
-#: includes/class-waf.php:126
+#: includes/class-waf.php:127
 msgid "Log4Shell (JNDI)"
 msgstr ""
 
-#: includes/class-waf.php:127
+#: includes/class-waf.php:128
 msgid "Server-side request forgery (SSRF)"
 msgstr ""
 
-#: includes/class-waf.php:128
+#: includes/class-waf.php:129
 msgid "PHP injection"
 msgstr ""
 
-#: includes/class-waf.php:129
+#: includes/class-waf.php:130
 msgid "NoSQL injection"
 msgstr ""
 
-#: includes/class-waf.php:130
+#: includes/class-waf.php:131
 msgid "XML external entity (XXE)"
 msgstr ""
 
-#: includes/class-waf.php:131
+#: includes/class-waf.php:132
 msgid "Web shell"
 msgstr ""
 
-#: includes/class-waf.php:132
+#: includes/class-waf.php:133
 msgid "CRLF / header injection"
 msgstr ""
 
-#: includes/class-waf.php:133
+#: includes/class-waf.php:134
 msgid "Server-side template injection (SSTI)"
 msgstr ""
 

@@ -4876,9 +4876,9 @@ class ReportedIP_Hive_Admin_Settings {
 					<label class="rip-toggle">
 						<input type="checkbox" name="reportedip_hive_bot_allowlist_enabled" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_allowlist_enabled', true ) ); ?> />
 						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Skip burst triggers for verified search engines and AI crawlers (User-Agent based)', 'reportedip-hive' ); ?></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Never count or auto-block verified search engines and AI crawlers', 'reportedip-hive' ); ?></span>
 					</label>
-					<p class="rip-help-text"><?php esc_html_e( 'Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot and similar crawlers are exempt from the 404 burst trigger and the REST burst trigger. Pattern-based detection (.env, wp-config.php.bak, /phpmyadmin/, …) stays active for all visitors, including spoofed bot User-Agents.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-text"><?php esc_html_e( 'Googlebot, Bingbot, DuckDuckBot, GPTBot, ClaudeBot, PerplexityBot, Amazonbot and similar crawlers are exempt from the burst triggers, and no sensor will ever auto-block a crawler whose identity is confirmed via reverse DNS or the official IP ranges. A spoofed crawler User-Agent fails that check and is treated like any other client. Pattern-based detection (.env, wp-config.php.bak, /phpmyadmin/, …) stays active for all visitors. Averted blocks appear in the log as Verified Bot Block Averted.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
