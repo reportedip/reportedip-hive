@@ -1169,7 +1169,7 @@ class ReportedIP_Hive_Ajax_Handler {
 
 			global $wpdb;
 			$tbl = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
-			$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tbl WHERE id = %d", $report_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->prefix and a hardcoded suffix.
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tbl WHERE id = %d", $report_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from Schema::table() with a hardcoded suffix.
 			if ( ! $row ) {
 				wp_send_json_error( __( 'Queue row not found.', 'reportedip-hive' ) );
 			}

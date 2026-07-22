@@ -315,7 +315,7 @@ class ReportedIP_Hive_Logger {
 
 		$table_name = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->prefix and a hardcoded suffix; safe.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from Schema::table() with a hardcoded suffix; safe.
 		$logs = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM $table_name

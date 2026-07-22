@@ -134,10 +134,10 @@ class ReportedIP_Hive_Block_Escalation {
 		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 		$since = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- security-event log lookup, intentionally uncached; $table is built from $wpdb->prefix and a hardcoded constant, every user-supplied value is bound via prepare().
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- security-event log lookup, intentionally uncached; $table is built from Schema::table() with a hardcoded suffix, every user-supplied value is bound via prepare().
 		$count = $wpdb->get_var(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is a trusted prefix interpolation, all user-supplied values bound via prepare().
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is a trusted Schema::table() interpolation, all user-supplied values bound via prepare().
 				"SELECT COUNT(*) FROM {$table}
                  WHERE ip_address = %s
                  AND event_type = %s

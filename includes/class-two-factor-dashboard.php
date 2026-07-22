@@ -173,7 +173,7 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 			fputcsv( $out, array( 'id', 'when', 'event', 'ip', 'severity', 'details' ) );
 			global $wpdb;
 			$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
-			$rows  = $wpdb->get_results( "SELECT id, created_at, event_type, ip_address, severity, details FROM $table WHERE event_type LIKE '%2fa%' OR details LIKE '%2fa%' ORDER BY id DESC LIMIT 500" ); // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from $wpdb->prefix; literal hardcoded LIKE patterns.
+			$rows  = $wpdb->get_results( "SELECT id, created_at, event_type, ip_address, severity, details FROM $table WHERE event_type LIKE '%2fa%' OR details LIKE '%2fa%' ORDER BY id DESC LIMIT 500" ); // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from Schema::table(); literal hardcoded LIKE patterns.
 			foreach ( (array) $rows as $row ) {
 				fputcsv( $out, array( $row->id, $row->created_at, $row->event_type, $row->ip_address, $row->severity, $row->details ) );
 			}

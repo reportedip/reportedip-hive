@@ -222,8 +222,8 @@ class ReportedIP_Hive_Two_Factor_CLI {
 
 		$sql  = "SELECT id, created_at, event_type, ip_address, severity, details FROM $table WHERE " . implode( ' AND ', $where ) . ' ORDER BY id DESC LIMIT 100';
 		$rows = $params
-			? $wpdb->get_results( $wpdb->prepare( $sql, $params ) ) // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from $wpdb->prefix; placeholders used for params.
-			: $wpdb->get_results( $sql );                            // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from $wpdb->prefix; no user input in SQL.
+			? $wpdb->get_results( $wpdb->prepare( $sql, $params ) ) // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from Schema::table(); placeholders used for params.
+			: $wpdb->get_results( $sql );                            // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from Schema::table(); no user input in SQL.
 
 		$user_filter = isset( $args[0] ) ? absint( $args[0] ) : 0;
 		$formatted   = array();
