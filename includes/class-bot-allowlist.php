@@ -13,9 +13,11 @@
  * class — legit crawlers never request those paths, so a spoofed "Googlebot"
  * UA on `/.env` is itself the attack indicator.
  *
- * No network I/O, no DB access. UA spoofing is accepted as a known limitation;
- * pattern-based sensors catch the cases where it would matter. Future phases
- * may add Forward-Confirmed Reverse DNS (FCrDNS) with a transient cache.
+ * `is_verified_search_or_ai_bot()` is the pure UA matcher (no network I/O).
+ * `is_exempt_crawler()` is the unified decision every rate sensor and the
+ * central auto-block guard consume: it cross-checks a UA match against the
+ * FCrDNS/IP-range verdict of {@see ReportedIP_Hive_Bot_Verifier}, so a spoofed
+ * crawler UA no longer buys an exemption.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.de>
@@ -218,5 +220,65 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	 */
 	public static function reset_cache(): void {
 		self::$cache = array();
+	}
+
+	/**
+	 * Unified crawler-exemption decision for every rate sensor and the central
+	 * never-block-a-good-bot guard. Combines the UA allowlist with the
+	 * FCrDNS/IP-range verifier so a spoofed crawler UA no longer buys an
+	 * exemption while DNS hiccups can never cost a genuine crawler its pass.
+	 *
+	 * Verdict combination:
+	 *
+	 * | UA in allowlist | UA matches bot_signatures rule | Verdict    | Exempt |
+	 * |-----------------|--------------------------------|------------|--------|
+	 * | yes             | yes                            | verified   | yes    |
+	 * | yes             | yes                            | unknown    | yes    |
+	 * | yes             | yes                            | fake       | NO     |
+	 * | yes             | no rule (e.g. UptimeRobot)     | unmatched  | yes    |
+	 * | no              | —                              | official range hit | yes |
+	 * | no              | —                              | no range hit | no   |
+	 * | verifier class unavailable                       | UA match only | UA verdict |
+	 *
+	 * The IP-only branch is the render-fleet catch: Applebot and Google render
+	 * pages with browser-like user-agents from their official ranges, so the IP
+	 * alone can earn the exemption (PRO rulesets; the free baseline carries no
+	 * ranges and degrades to the UA path). `unknown` fails open by design —
+	 * SEO priority, a resolver outage must never get a genuine crawler blocked.
+	 *
+	 * @param string                            $ua       Request User-Agent.
+	 * @param string                            $ip       Client IP ('' when unavailable).
+	 * @param ReportedIP_Hive_Bot_Verifier|null $verifier Verifier override (tests).
+	 * @return bool True when the request must not be counted or auto-blocked.
+	 * @since  2.1.26
+	 */
+	public static function is_exempt_crawler( string $ua, string $ip, ?ReportedIP_Hive_Bot_Verifier $verifier = null ): bool {
+		$exempt = false;
+
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_allowlist_enabled', true ) ) {
+			if ( null === $verifier && class_exists( 'ReportedIP_Hive_Bot_Verifier' ) ) {
+				$verifier = ReportedIP_Hive_Bot_Verifier::get_instance();
+			}
+
+			if ( self::is_verified_search_or_ai_bot( $ua ) ) {
+				$exempt = null === $verifier || '' === $ip
+					|| 'fake' !== $verifier->verdict_for_request( $ua, $ip );
+			} elseif ( null !== $verifier && '' !== $ip ) {
+				$exempt = $verifier->matches_official_ranges( $ip );
+			}
+		}
+
+		/**
+		 * Filters the final crawler-exemption decision.
+		 *
+		 * Escape hatch for operators with a custom monitoring fleet or an edge
+		 * case the combined UA/FCrDNS logic cannot express.
+		 *
+		 * @param bool   $exempt Combined exemption decision.
+		 * @param string $ua     Request User-Agent.
+		 * @param string $ip     Client IP.
+		 * @since 2.1.26
+		 */
+		return (bool) apply_filters( 'reportedip_hive_bot_exempt', $exempt, $ua, $ip );
 	}
 }
