@@ -34,6 +34,18 @@ class ReportedIP_Hive_Database {
 	private static $instance = null;
 
 	/**
+	 * Per-request whitelist memo keyed by IP.
+	 *
+	 * Both the init-priority-1 IP-block gate and the WAF engine check the same
+	 * client IP on every request; without this memo each visitor would cost two
+	 * identical whitelist queries on the hot path. Whitelist writes invalidate
+	 * it so same-request reads never see a stale verdict.
+	 *
+	 * @var array<string,bool>
+	 */
+	private static $whitelist_request_cache = array();
+
+	/**
 	 * Get single instance
 	 */
 	public static function get_instance() {
@@ -187,6 +199,23 @@ class ReportedIP_Hive_Database {
 			$ip_type = 'ipv6';
 		}
 
+		/*
+		 * The table carries UNIQUE KEY unique_ip, but removal soft-deletes
+		 * (is_active = 0) and expired entries stay in place — either would make
+		 * the INSERT below fail with a duplicate-key error and permanently
+		 * prevent re-whitelisting that IP. Purge the stale row first; active,
+		 * unexpired duplicates are still rejected by the unique key.
+		 * `expires_at` is the admin-entered local-time exception, hence NOW().
+		 */
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM $table_name
+				 WHERE ip_address = %s
+				 AND ( is_active = 0 OR ( expires_at IS NOT NULL AND expires_at <= NOW() ) )",
+				$ip_address
+			)
+		);
+
 		$result = $wpdb->insert(
 			$table_name,
 			array(
@@ -201,6 +230,7 @@ class ReportedIP_Hive_Database {
 		);
 
 		wp_cache_delete( 'rip_whitelist_cidrs', 'reportedip' );
+		self::$whitelist_request_cache = array();
 
 		if ( false !== $result ) {
 			/**
@@ -224,16 +254,8 @@ class ReportedIP_Hive_Database {
 	public function is_whitelisted( $ip_address ) {
 		global $wpdb;
 
-		/*
-		 * Per-request memo keyed by IP. Both the init-priority-1 IP-block gate
-		 * and the WAF engine check the same client IP on every request; without
-		 * this memo each visitor would cost two identical whitelist queries on
-		 * the hot path. The result is stable within a request, so a function-
-		 * static cache is safe (whitelist edits take effect on the next request).
-		 */
-		static $request_cache = array();
-		if ( isset( $request_cache[ $ip_address ] ) ) {
-			return $request_cache[ $ip_address ];
+		if ( isset( self::$whitelist_request_cache[ $ip_address ] ) ) {
+			return self::$whitelist_request_cache[ $ip_address ];
 		}
 
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_whitelist';
@@ -249,7 +271,7 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( $exact_match > 0 ) {
-			$request_cache[ $ip_address ] = true;
+			self::$whitelist_request_cache[ $ip_address ] = true;
 			return true;
 		}
 
@@ -266,12 +288,12 @@ class ReportedIP_Hive_Database {
 
 		foreach ( $cidr_ranges as $cidr ) {
 			if ( self::ip_in_cidr( $ip_address, $cidr ) ) {
-				$request_cache[ $ip_address ] = true;
+				self::$whitelist_request_cache[ $ip_address ] = true;
 				return true;
 			}
 		}
 
-		$request_cache[ $ip_address ] = false;
+		self::$whitelist_request_cache[ $ip_address ] = false;
 		return false;
 	}
 
@@ -319,6 +341,7 @@ class ReportedIP_Hive_Database {
 		) !== false;
 
 		wp_cache_delete( 'rip_whitelist_cidrs', 'reportedip' );
+		self::$whitelist_request_cache = array();
 
 		if ( $result ) {
 			/** This action is documented in includes/class-database.php (add_to_whitelist). */
