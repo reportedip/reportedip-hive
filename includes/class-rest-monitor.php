@@ -124,12 +124,11 @@ class ReportedIP_Hive_REST_Monitor {
 		 * via /wp/v2/users — are guarded by a dedicated sensor that
 		 * intentionally does not consult this allowlist.
 		 */
-		if ( class_exists( 'ReportedIP_Hive_Bot_Allowlist' )
-			&& ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_allowlist_enabled', true ) ) {
+		if ( class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
 			$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
 				? sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_USER_AGENT'] ) )
 				: '';
-			if ( ReportedIP_Hive_Bot_Allowlist::is_verified_search_or_ai_bot( $ua ) ) {
+			if ( ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( $ua, $ip ) ) {
 				return $result;
 			}
 		}

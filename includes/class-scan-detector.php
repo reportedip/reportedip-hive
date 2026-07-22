@@ -218,12 +218,11 @@ class ReportedIP_Hive_Scan_Detector {
 		 * definition a spoofed UA — the honeypot path is the attack indicator.
 		 */
 		if ( ! $is_scan_hit
-			&& class_exists( 'ReportedIP_Hive_Bot_Allowlist' )
-			&& ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_allowlist_enabled', true ) ) {
+			&& class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
 			$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
 				? sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_USER_AGENT'] ) )
 				: '';
-			if ( ReportedIP_Hive_Bot_Allowlist::is_verified_search_or_ai_bot( $ua ) ) {
+			if ( ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( $ua, $ip ) ) {
 				return;
 			}
 		}

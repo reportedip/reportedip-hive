@@ -39,21 +39,23 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_rest_monitor_consults_bot_allowlist() {
 			$source = $this->source();
 			$this->assertStringContainsString(
-				'ReportedIP_Hive_Bot_Allowlist::is_verified_search_or_ai_bot',
+				'ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler',
 				$source,
-				'REST monitor must call the bot allowlist verifier'
+				'REST monitor must call the unified crawler exemption'
 			);
+
+			$allowlist = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-bot-allowlist.php' );
 			$this->assertStringContainsString(
 				"'reportedip_hive_bot_allowlist_enabled'",
-				$source,
-				'REST monitor must respect the master toggle option'
+				$allowlist,
+				'The master toggle lives inside is_exempt_crawler() so every consumer respects it'
 			);
 		}
 
 		public function test_bot_check_runs_before_track_generic_attempt() {
 			$source = $this->source();
 
-			$bot_check_pos  = strpos( $source, 'is_verified_search_or_ai_bot' );
+			$bot_check_pos  = strpos( $source, 'is_exempt_crawler' );
 			$track_call_pos = strpos( $source, 'track_generic_attempt' );
 
 			$this->assertNotFalse( $bot_check_pos );
@@ -69,7 +71,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$source = $this->source();
 
 			$whitelist_pos = strpos( $source, 'is_whitelisted' );
-			$bot_check_pos = strpos( $source, 'is_verified_search_or_ai_bot' );
+			$bot_check_pos = strpos( $source, 'is_exempt_crawler' );
 
 			$this->assertNotFalse( $whitelist_pos );
 			$this->assertNotFalse( $bot_check_pos );

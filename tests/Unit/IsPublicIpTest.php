@@ -75,7 +75,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_user_enumeration_exempts_verified_crawlers() {
 			$this->assertMatchesRegularExpression(
-				'/function record_probe\(.*?is_verified_search_or_ai_bot\(.*?return;/s',
+				'/function record_probe\(.*?is_exempt_crawler\(.*?return;/s',
 				$this->user_enum_file(),
 				'record_probe() must exempt verified crawlers from the probe ladder'
 			);

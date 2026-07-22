@@ -376,6 +376,10 @@ class ReportedIP_Hive_Security_Monitor {
 	 * @since  1.0.0
 	 */
 	public function handle_threshold_exceeded( $ip_address, $event_type, $details ) {
+		if ( $this->should_spare_verified_bot( $ip_address, $event_type, $details ) ) {
+			return;
+		}
+
 		$this->logger->log_security_event( $event_type . '_threshold_exceeded', $ip_address, $details, 'high' );
 
 		$this->database->update_daily_stats( $this->get_stat_type_for_event( $event_type ) );
@@ -389,6 +393,58 @@ class ReportedIP_Hive_Security_Monitor {
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_admin', true ) ) {
 			$this->send_admin_notification( $ip_address, $event_type, $details );
 		}
+	}
+
+	/**
+	 * Last line of the never-block-a-good-bot defence.
+	 *
+	 * Every automatic IP block funnels through `handle_threshold_exceeded()`;
+	 * this check runs there before anything happens — no block, no community
+	 * API report, no admin mail — for a request that comes from a verified
+	 * (or DNS-undecidable) crawler. Sensors with their own allowlist call
+	 * consult the same combined decision earlier; this guard covers every
+	 * sensor that does not (WAF escalation, XML-RPC, comment spam, …).
+	 *
+	 * Averted decisions are logged as `verified_bot_block_averted` so an
+	 * operator can see both the coverage and any suspicious pattern riding
+	 * the fail-open path.
+	 *
+	 * @param string $ip_address Client IP that tripped a threshold.
+	 * @param string $event_type Sensor event slug.
+	 * @param array  $details    Sensor event metadata.
+	 * @return bool  True when the IP belongs to an exempt crawler.
+	 * @since  2.1.26
+	 */
+	private function should_spare_verified_bot( $ip_address, $event_type, $details ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
+			return false;
+		}
+
+		$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
+			? (string) wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Matched as an opaque token; truncated before logging.
+			: '';
+
+		if ( ! ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( $ua, (string) $ip_address ) ) {
+			return false;
+		}
+
+		$reason = class_exists( 'ReportedIP_Hive_Bot_Verifier' )
+			? ReportedIP_Hive_Bot_Verifier::get_instance()->last_reason()
+			: 'ua_allowlist';
+
+		$this->logger->log_security_event(
+			'verified_bot_block_averted',
+			$ip_address,
+			array(
+				'event_type' => $event_type,
+				'reason'     => $reason,
+				'user_agent' => substr( $ua, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ),
+				'details'    => $details,
+			),
+			'medium'
+		);
+
+		return true;
 	}
 
 	/**
@@ -407,6 +463,16 @@ class ReportedIP_Hive_Security_Monitor {
 				),
 				'medium'
 			);
+			return false;
+		}
+
+		/*
+		 * Defensive re-check for direct callers (the admin test button, custom
+		 * integrations) — the regular threshold path is already guarded in
+		 * handle_threshold_exceeded(). Near-free: both verifier verdicts are
+		 * transient-cached.
+		 */
+		if ( $this->should_spare_verified_bot( $ip_address, $event_type, $details ) ) {
 			return false;
 		}
 

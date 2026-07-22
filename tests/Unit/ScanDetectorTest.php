@@ -131,13 +131,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'Scan-Detector must gate the bot-allowlist bypass on !$is_scan_hit'
 			);
 			$this->assertStringContainsString(
-				'ReportedIP_Hive_Bot_Allowlist::is_verified_search_or_ai_bot',
+				'ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler',
 				$source,
-				'Scan-Detector must consult the bot allowlist for the burst trigger'
+				'Scan-Detector must consult the unified crawler exemption for the burst trigger'
 			);
 
 			$pattern_check_pos = strpos( $source, 'is_known_scan_path' );
-			$bot_check_pos     = strpos( $source, 'is_verified_search_or_ai_bot' );
+			$bot_check_pos     = strpos( $source, 'is_exempt_crawler' );
 			$track_call_pos    = strpos( $source, 'track_generic_attempt' );
 
 			$this->assertLessThan(
