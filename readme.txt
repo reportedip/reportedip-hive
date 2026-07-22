@@ -10,7 +10,7 @@ License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
 
-Community-powered WordPress security: 12 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
+Community-powered WordPress security: 16 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
 
 == Description ==
 
@@ -340,6 +340,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.25 =
+
+Security: the WAF now blocks the WordPress-core REST batch route-confusion attack class on every plan. Two new baseline rules match the structural invariants of the attack (malformed sub-request paths; a sub-request whose body is itself a batch) rather than a fixed token, so variants do not evade them. Legitimate batch calls pass untouched.
+
+Security: the firewall inspects a decoded copy of the request body. Percent-encoded payloads smuggled inside a JSON body were previously invisible to the injection signatures; the body is now matched both raw and once-decoded, and the pre-WordPress drop-in guard regenerates automatically to match.
+
+Fixed: blocked-page reference codes for the Paranoia-Level-2/3 WAF groups (Log4Shell, SSRF, PHP injection, NoSQL, XXE, web shell, CRLF, SSTI) now render their specific category instead of a generic BLOCKED reference.
 
 = 2.1.24 =
 
