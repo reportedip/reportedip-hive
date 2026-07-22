@@ -276,6 +276,9 @@ class ReportedIP_Hive_Bot_Verifier {
 		$key    = self::CACHE_IP_PREFIX . md5( $ip . '|' . $version );
 		$cached = get_transient( $key );
 		if ( '1' === $cached || '0' === $cached ) {
+			if ( '1' === $cached ) {
+				$this->last_reason = 'official_range_match';
+			}
 			return '1' === $cached;
 		}
 
@@ -290,6 +293,10 @@ class ReportedIP_Hive_Bot_Verifier {
 					break 2;
 				}
 			}
+		}
+
+		if ( $match ) {
+			$this->last_reason = 'official_range_match';
 		}
 
 		set_transient( $key, $match ? '1' : '0', $match ? self::CACHE_VERIFIED : self::CACHE_UNKNOWN );
