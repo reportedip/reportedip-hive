@@ -861,7 +861,7 @@ class ReportedIP_Hive_Ajax_Handler {
 				wp_send_json_error( __( 'Basic database connection failed.', 'reportedip-hive' ) );
 			}
 
-			$table_name = $wpdb->prefix . 'reportedip_hive_logs';
+			$table_name = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema introspection.
 			$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
 
@@ -1168,7 +1168,7 @@ class ReportedIP_Hive_Ajax_Handler {
 			$this->database->reset_report_for_retry( $report_id );
 
 			global $wpdb;
-			$tbl = $wpdb->prefix . 'reportedip_hive_api_queue';
+			$tbl = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
 			$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $tbl WHERE id = %d", $report_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->prefix and a hardcoded suffix.
 			if ( ! $row ) {
 				wp_send_json_error( __( 'Queue row not found.', 'reportedip-hive' ) );

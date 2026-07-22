@@ -150,7 +150,7 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 	private function get_whitelist_data( $per_page, $current_page ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_whitelist';
+		$table_name = ReportedIP_Hive_Schema::table( 'reportedip_hive_whitelist' );
 		$orderby    = isset( $_REQUEST['orderby'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at';
 		$order_raw  = isset( $_REQUEST['order'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
 		$order      = in_array( strtoupper( $order_raw ), array( 'ASC', 'DESC' ), true ) ? strtoupper( $order_raw ) : 'DESC';

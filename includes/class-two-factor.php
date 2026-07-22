@@ -1673,7 +1673,7 @@ class ReportedIP_Hive_Two_Factor {
 		global $wpdb;
 		$table = self::get_trusted_table();
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from Schema::table() with a hardcoded suffix; safe.
 		$device = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM $table WHERE token_hash = %s AND user_id = %d AND expires_at > UTC_TIMESTAMP()",
@@ -2049,7 +2049,7 @@ class ReportedIP_Hive_Two_Factor {
 		global $wpdb;
 		$table = self::get_trusted_table();
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from Schema::table() with a hardcoded suffix; safe.
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM $table WHERE user_id = %d ORDER BY created_at DESC",
@@ -2069,7 +2069,7 @@ class ReportedIP_Hive_Two_Factor {
 		global $wpdb;
 		$table = self::get_trusted_table();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from $wpdb->prefix; no user input in SQL.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from Schema::table(); no user input in SQL.
 		return (int) $wpdb->query( "DELETE FROM $table WHERE expires_at < UTC_TIMESTAMP()" );
 	}
 

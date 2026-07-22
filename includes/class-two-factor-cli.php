@@ -208,7 +208,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 	 */
 	public function audit( $args, $assoc ) {
 		global $wpdb;
-		$table = $wpdb->prefix . 'reportedip_hive_logs';
+		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 
 		$where  = array( "event_type LIKE '%2fa%' OR details LIKE '%2fa%'" );
 		$params = array();

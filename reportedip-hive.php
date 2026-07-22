@@ -1262,7 +1262,7 @@ class ReportedIP_Hive {
 
 		$user_id = get_current_user_id();
 
-		$table = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe table name composed from $wpdb->prefix and a hardcoded suffix.
 		$table_exists = $wpdb->get_var( "SHOW TABLES LIKE '$table'" ) === $table;
 		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter

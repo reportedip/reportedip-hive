@@ -131,7 +131,7 @@ class ReportedIP_Hive_Block_Escalation {
 			return 0;
 		}
 
-		$table = $wpdb->prefix . 'reportedip_hive_logs';
+		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 		$since = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- security-event log lookup, intentionally uncached; $table is built from $wpdb->prefix and a hardcoded constant, every user-supplied value is bound via prepare().

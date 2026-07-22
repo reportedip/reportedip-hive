@@ -207,7 +207,7 @@ class ReportedIP_Hive_Geo_Anomaly {
 			return;
 		}
 		global $wpdb;
-		$table = $wpdb->prefix . 'reportedip_hive_trusted_devices';
+		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_trusted_devices' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->delete( $table, array( 'user_id' => $user_id ), array( '%d' ) );
 	}

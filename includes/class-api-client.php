@@ -548,7 +548,7 @@ class ReportedIP_Hive_API {
 
 					if ( $is_rate_limited ) {
 						$wpdb       = $GLOBALS['wpdb'];
-						$table_name = $wpdb->prefix . 'reportedip_hive_api_queue';
+						$table_name = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
 						// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Rate limit status update.
 						$wpdb->update(
 							$table_name,

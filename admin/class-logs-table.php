@@ -213,7 +213,7 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 	private function get_logs_data( $per_page, $current_page ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_logs';
+		$table_name = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 		$orderby    = isset( $_REQUEST['orderby'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at';
 		$order_raw  = isset( $_REQUEST['order'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
 		$order      = in_array( strtoupper( $order_raw ), array( 'ASC', 'DESC' ), true ) ? strtoupper( $order_raw ) : 'DESC';
@@ -306,7 +306,7 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 
 		if ( $action === 'delete' ) {
 			global $wpdb;
-			$table_name      = $wpdb->prefix . 'reportedip_hive_logs';
+			$table_name      = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 			$ids_placeholder = implode( ',', array_fill( 0, count( $log_ids ), '%d' ) );
 			// phpcs:disable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Dynamic placeholder count; table name composed from $wpdb->prefix and a hardcoded suffix.
 			$wpdb->query(
@@ -320,7 +320,7 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 
 		if ( $action === 'block' || $action === 'whitelist' ) {
 			global $wpdb;
-			$table_name      = $wpdb->prefix . 'reportedip_hive_logs';
+			$table_name      = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 			$ids_placeholder = implode( ',', array_fill( 0, count( $log_ids ), '%d' ) );
 			// phpcs:disable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Dynamic placeholder count; table name composed from $wpdb->prefix and a hardcoded suffix.
 			$ips = $wpdb->get_col(

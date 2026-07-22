@@ -1549,7 +1549,7 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 		}
 
-		$table = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe table name composed from $wpdb->prefix and a hardcoded suffix.
 		$table_exists = $wpdb->get_var( "SHOW TABLES LIKE '$table'" ) === $table;
 
@@ -6532,7 +6532,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		try {
 			global $wpdb;
-			$table_name = $wpdb->prefix . 'reportedip_hive_logs';
+			$table_name = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 			// phpcs:disable WordPress.DB.DirectDatabaseQuery -- One-time health probe on a plugin table; name from $wpdb->prefix plus a hardcoded suffix.
 			$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
 			// phpcs:enable WordPress.DB.DirectDatabaseQuery
@@ -6592,7 +6592,7 @@ class ReportedIP_Hive_Admin_Settings {
 		global $wpdb;
 
 		$ip_stats   = $this->database->get_ip_management_stats();
-		$logs_table = $wpdb->prefix . 'reportedip_hive_logs';
+		$logs_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 
 		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
 
@@ -6606,7 +6606,7 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
-		$queue_table = $wpdb->prefix . 'reportedip_hive_api_queue';
+		$queue_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from $wpdb->prefix and a hardcoded constant; safe.
 		$queue_count = (int) $wpdb->get_var(
 			"SELECT COUNT(*) FROM $queue_table WHERE status IN ('pending', 'failed')"

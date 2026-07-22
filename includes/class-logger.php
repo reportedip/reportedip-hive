@@ -313,7 +313,7 @@ class ReportedIP_Hive_Logger {
 	public function get_logs_for_ip( $ip_address, $days = 30, $limit = 100 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'reportedip_hive_logs';
+		$table_name = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->prefix and a hardcoded suffix; safe.
 		$logs = $wpdb->get_results(

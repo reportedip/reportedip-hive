@@ -421,7 +421,7 @@ class ReportedIP_Hive_IP_Manager {
 
 		$cleaned = 0;
 
-		$whitelist_table = $wpdb->prefix . 'reportedip_hive_whitelist';
+		$whitelist_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_whitelist' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->prefix and a hardcoded suffix; safe.
 		$expired_whitelist = $wpdb->query(
 			"UPDATE $whitelist_table
@@ -435,7 +435,7 @@ class ReportedIP_Hive_IP_Manager {
 			$cleaned += $expired_whitelist;
 		}
 
-		$blocked_table = $wpdb->prefix . 'reportedip_hive_blocked';
+		$blocked_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_blocked' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->prefix and a hardcoded suffix; safe.
 		$expired_blocks = $wpdb->query(
 			"UPDATE $blocked_table
