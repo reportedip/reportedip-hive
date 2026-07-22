@@ -64,6 +64,11 @@ class ReportedIP_Hive_Bot_Verifier {
 	const CACHE_PREFIX = 'reportedip_hive_botverify_';
 
 	/**
+	 * Transient key prefix for cached IP-only official-range checks.
+	 */
+	const CACHE_IP_PREFIX = 'reportedip_hive_botip_';
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_Bot_Verifier|null
@@ -198,6 +203,97 @@ class ReportedIP_Hive_Bot_Verifier {
 		}
 		$ruleset = ReportedIP_Hive_Rule_Sync::get_instance()->get_ruleset( 'bot_signatures' );
 		return isset( $ruleset['rules'] ) && is_array( $ruleset['rules'] ) ? $ruleset['rules'] : array();
+	}
+
+	/**
+	 * Why the most recent verdict was reached. Companion to
+	 * {@see verdict_for_request()} so callers can log an explanation next to a
+	 * verdict without re-running the classification.
+	 *
+	 * @return string
+	 * @since  2.1.26
+	 */
+	public function last_reason(): string {
+		return '' !== $this->last_reason ? $this->last_reason : 'unspecified';
+	}
+
+	/**
+	 * Verdict for an arbitrary request, independent of the sensor's own
+	 * enable/action options: those govern the spoofer *sensor*, while this
+	 * method serves the protective never-block-a-good-bot guard and must keep
+	 * working even when the operator switched the sensor off.
+	 *
+	 * Returns `unmatched` when the user-agent claims no known crawler,
+	 * otherwise the (transient-cached) `verified` / `fake` / `unknown`
+	 * classification. `$ptr` / `$forward` inject the DNS layer for tests and
+	 * bypass the cache when provided.
+	 *
+	 * @param string        $ua      Request user-agent.
+	 * @param string        $ip      Client IP.
+	 * @param callable|null $ptr     PTR resolver override (tests only).
+	 * @param callable|null $forward Forward resolver override (tests only).
+	 * @return string `verified` | `fake` | `unknown` | `unmatched`.
+	 * @since  2.1.26
+	 */
+	public function verdict_for_request( string $ua, string $ip, $ptr = null, $forward = null ): string {
+		$bot = $this->match_bot( $this->get_bot_rules(), $ua );
+		if ( null === $bot ) {
+			$this->last_reason = 'no_signature_match';
+			return 'unmatched';
+		}
+		if ( null !== $ptr || null !== $forward ) {
+			$reason            = '';
+			$verdict           = $this->classify( $bot, $ip, $ptr, $forward, $reason );
+			$this->last_reason = '' !== $reason ? $reason : 'unspecified';
+			return $verdict;
+		}
+		return $this->cached_verdict( $bot, $ip );
+	}
+
+	/**
+	 * Whether the IP falls inside any crawler's published official ranges —
+	 * Stage A only, no DNS ever. This is the render-fleet catch: Applebot and
+	 * Google render pages with browser-like user-agents from their official
+	 * ranges, so the IP alone must be able to earn the exemption. The result
+	 * is cached per IP with the ruleset version baked into the key, so a
+	 * ruleset sync self-invalidates the cache.
+	 *
+	 * @param string $ip Client IP.
+	 * @return bool
+	 * @since  2.1.26
+	 */
+	public function matches_official_ranges( string $ip ): bool {
+		if ( '' === $ip ) {
+			return false;
+		}
+
+		$ruleset = class_exists( 'ReportedIP_Hive_Rule_Sync' )
+			? ReportedIP_Hive_Rule_Sync::get_instance()->get_ruleset( 'bot_signatures' )
+			: array();
+		$version = isset( $ruleset['version'] ) ? (int) $ruleset['version'] : 0;
+		$rules   = isset( $ruleset['rules'] ) && is_array( $ruleset['rules'] ) ? $ruleset['rules'] : array();
+
+		$key    = self::CACHE_IP_PREFIX . md5( $ip . '|' . $version );
+		$cached = get_transient( $key );
+		if ( '1' === $cached || '0' === $cached ) {
+			return '1' === $cached;
+		}
+
+		$match = false;
+		foreach ( $rules as $rule ) {
+			if ( ! is_array( $rule ) || empty( $rule['ranges'] ) || ! is_array( $rule['ranges'] ) ) {
+				continue;
+			}
+			foreach ( $rule['ranges'] as $cidr ) {
+				if ( ReportedIP_Hive_Database::ip_in_cidr( $ip, (string) $cidr ) ) {
+					$match = true;
+					break 2;
+				}
+			}
+		}
+
+		set_transient( $key, $match ? '1' : '0', $match ? self::CACHE_VERIFIED : self::CACHE_UNKNOWN );
+		return $match;
 	}
 
 	/**

@@ -204,5 +204,117 @@ namespace ReportedIP\Hive\Tests\Unit {
 			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_Bot_Verifier::OPT_ACTION, 'nonsense' );
 			$this->assertSame( 'flag', $this->verifier()->action() );
 		}
+
+		/**
+		 * Seed a stored bot_signatures ruleset so verdict/range checks run against
+		 * deterministic rules instead of the bundled baseline.
+		 *
+		 * @param array $rules   Bot rules.
+		 * @param int   $version Ruleset version.
+		 */
+		private function seed_ruleset( array $rules, int $version = 7 ): void {
+			\ReportedIP_Hive_Rule_Store::set(
+				'bot_signatures',
+				array(
+					'key'     => 'bot_signatures',
+					'version' => $version,
+					'rules'   => $rules,
+				)
+			);
+		}
+
+		public function test_verdict_for_request_unmatched_for_browser_ua(): void {
+			$this->assertSame(
+				'unmatched',
+				$this->verifier()->verdict_for_request( 'Mozilla/5.0 (Windows NT 10.0) Chrome/120', '203.0.113.9' )
+			);
+			$this->assertSame( 'no_signature_match', $this->verifier()->last_reason() );
+		}
+
+		public function test_verdict_for_request_verified_via_injected_dns(): void {
+			$ptr     = static function ( $ip ) {
+				return 'crawl-66-249-66-1.googlebot.com';
+			};
+			$forward = static function ( $host ) {
+				return '66.249.66.1';
+			};
+			$this->assertSame(
+				'verified',
+				$this->verifier()->verdict_for_request( 'Mozilla/5.0 (compatible; Googlebot/2.1)', '66.249.66.1', $ptr, $forward )
+			);
+			$this->assertSame( 'fcrdns_confirmed', $this->verifier()->last_reason() );
+		}
+
+		public function test_verdict_for_request_fake_via_injected_dns(): void {
+			$ptr = static function ( $ip ) {
+				return 'vm.customer.cloud.example';
+			};
+			$this->assertSame(
+				'fake',
+				$this->verifier()->verdict_for_request( 'Mozilla/5.0 (compatible; Googlebot/2.1)', '203.0.113.9', $ptr )
+			);
+		}
+
+		public function test_verdict_for_request_uses_transient_cache(): void {
+			global $wp_transients;
+			$wp_transients = array();
+
+			$key                   = \ReportedIP_Hive_Bot_Verifier::CACHE_PREFIX . md5( '198.51.100.4|googlebot' );
+			$wp_transients[ $key ] = array(
+				'value'   => 'verified',
+				'expires' => 0,
+			);
+			$this->assertSame(
+				'verified',
+				$this->verifier()->verdict_for_request( 'Mozilla/5.0 (compatible; Googlebot/2.1)', '198.51.100.4' )
+			);
+			$this->assertSame( 'cached', $this->verifier()->last_reason() );
+		}
+
+		public function test_matches_official_ranges_hit_and_miss(): void {
+			global $wp_transients;
+			$wp_transients = array();
+			$this->seed_ruleset(
+				array(
+					array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array( '66.249.64.0/19' ) ),
+					array( 'ua' => 'applebot', 'domains' => array( '.applebot.apple.com' ), 'ranges' => array( '17.246.0.0/16' ) ),
+				)
+			);
+
+			$this->assertTrue( $this->verifier()->matches_official_ranges( '17.246.23.10' ), 'Render-fleet IP inside official ranges must match without any UA.' );
+			$this->assertFalse( $this->verifier()->matches_official_ranges( '203.0.113.9' ) );
+		}
+
+		public function test_matches_official_ranges_caches_by_ruleset_version(): void {
+			global $wp_transients;
+			$wp_transients = array();
+			$this->seed_ruleset(
+				array( array( 'ua' => 'googlebot', 'domains' => array(), 'ranges' => array( '66.249.64.0/19' ) ) ),
+				7
+			);
+
+			$this->assertTrue( $this->verifier()->matches_official_ranges( '66.249.66.1' ) );
+			$key = \ReportedIP_Hive_Bot_Verifier::CACHE_IP_PREFIX . md5( '66.249.66.1|7' );
+			$this->assertArrayHasKey( $key, $wp_transients, 'Range verdict must be cached under the versioned key.' );
+			$this->assertSame( '1', $wp_transients[ $key ]['value'] );
+
+			$this->seed_ruleset(
+				array( array( 'ua' => 'googlebot', 'domains' => array(), 'ranges' => array() ) ),
+				8
+			);
+			$this->assertFalse(
+				$this->verifier()->matches_official_ranges( '66.249.66.1' ),
+				'A new ruleset version must bypass the verdict cached for the old version.'
+			);
+		}
+
+		public function test_matches_official_ranges_false_on_baseline_without_ranges(): void {
+			global $wp_transients;
+			$wp_transients = array();
+			$this->assertFalse(
+				$this->verifier()->matches_official_ranges( '66.249.66.1' ),
+				'The bundled baseline carries no ranges; the IP-only check must degrade to false.'
+			);
+		}
 	}
 }
