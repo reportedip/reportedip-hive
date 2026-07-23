@@ -251,6 +251,143 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 1, $this->calls(), 'A positive cache must serve the second call without HTTP.' );
 		}
 
+		/**
+		 * Seed a realistic cached /relay-quota payload as the quota cron would.
+		 */
+		private function seed_quota_cache(): void {
+			set_transient(
+				'reportedip_hive_relay_quota',
+				array(
+					'tier'                => 'professional',
+					'mail'                => array(
+						'queued_total'   => 250,
+						'limit'          => 500,
+						'bundle_balance' => 556,
+					),
+					'sms'                 => array(
+						'queued_total'   => 10,
+						'limit'          => 25,
+						'bundle_balance' => 31,
+					),
+					'mail_bundle_balance' => 556,
+					'sms_bundle_balance'  => 31,
+					'fetched_at'          => time() - 7200,
+				),
+				12 * HOUR_IN_SECONDS
+			);
+		}
+
+		public function test_relay_mail_success_patches_quota_cache_instead_of_deleting() {
+			$this->pretend_tier( 'reportedip_professional' );
+			$this->seed_quota_cache();
+			$this->set_http(
+				200,
+				array(
+					'queue_id'        => 77,
+					'remaining_quota' => array(
+						'queued_total'   => 251,
+						'limit'          => 500,
+						'bundle_balance' => 555,
+					),
+				)
+			);
+
+			$result = $this->api()->relay_mail(
+				array(
+					'recipient' => 'user@example.test',
+					'subject'   => 'Code',
+					'body_text' => 'Body',
+					'site_url'  => 'https://example.test',
+				)
+			);
+
+			$this->assertTrue( $result['ok'] );
+
+			$cached = get_transient( 'reportedip_hive_relay_quota' );
+			$this->assertIsArray( $cached, 'A send with remaining_quota must keep the quota cache alive.' );
+			$this->assertSame( 251, $cached['mail']['queued_total'] );
+			$this->assertSame( 555, $cached['mail_bundle_balance'] );
+			$this->assertSame( 10, $cached['sms']['queued_total'], 'The untouched channel must survive the patch.' );
+			$this->assertGreaterThan( time() - 60, $cached['fetched_at'], 'The fetch timestamp must be renewed.' );
+		}
+
+		public function test_relay_sms_success_patches_sms_channel() {
+			$this->pretend_tier( 'reportedip_professional' );
+			$this->seed_quota_cache();
+			$this->set_http(
+				200,
+				array(
+					'queue_id'        => 78,
+					'remaining_quota' => array(
+						'queued_total'   => 11,
+						'limit'          => 25,
+						'bundle_balance' => 31,
+					),
+				)
+			);
+
+			$result = $this->api()->relay_sms(
+				array(
+					'recipient_phone' => '+491701234567',
+					'message'         => 'Code 123456',
+					'site_url'        => 'https://example.test',
+				)
+			);
+
+			$this->assertTrue( $result['ok'] );
+
+			$cached = get_transient( 'reportedip_hive_relay_quota' );
+			$this->assertIsArray( $cached );
+			$this->assertSame( 11, $cached['sms']['queued_total'] );
+			$this->assertSame( 250, $cached['mail']['queued_total'], 'The untouched channel must survive the patch.' );
+		}
+
+		public function test_relay_send_without_remaining_quota_deletes_cache() {
+			$this->pretend_tier( 'reportedip_professional' );
+			$this->seed_quota_cache();
+			$this->set_http( 200, array( 'queue_id' => 79 ) );
+
+			$result = $this->api()->relay_mail(
+				array(
+					'recipient' => 'user@example.test',
+					'site_url'  => 'https://example.test',
+				)
+			);
+
+			$this->assertTrue( $result['ok'] );
+			$this->assertFalse(
+				get_transient( 'reportedip_hive_relay_quota' ),
+				'Without fresh counters the stale cache must be invalidated as before.'
+			);
+		}
+
+		public function test_relay_send_with_remaining_quota_but_no_cache_stays_empty() {
+			$this->pretend_tier( 'reportedip_professional' );
+			$this->set_http(
+				200,
+				array(
+					'queue_id'        => 80,
+					'remaining_quota' => array(
+						'queued_total' => 1,
+						'limit'        => 500,
+					),
+				)
+			);
+
+			$result = $this->api()->relay_mail(
+				array(
+					'recipient' => 'user@example.test',
+					'site_url'  => 'https://example.test',
+				)
+			);
+
+			$this->assertTrue( $result['ok'] );
+			$this->assertFalse(
+				get_transient( 'reportedip_hive_relay_quota' ),
+				'A partial one-channel payload must not fabricate a full snapshot from nothing.'
+			);
+		}
+
 		public function test_success_clears_a_stale_cooldown() {
 			$this->pretend_tier( 'reportedip_professional' );
 			set_transient(

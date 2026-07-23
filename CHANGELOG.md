@@ -2,6 +2,19 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.27] — unreleased
+
+### Fixed
+
+- **Relay quota dashboard no longer falls back to "Awaiting fresh quota data"
+  after every relay send.** Each successful mail/SMS relay dispatch deleted the
+  cached `/relay-quota` payload, leaving the dashboard without counters until
+  the next six-hour quota cron — on sites with steady 2FA relay traffic the
+  quota cards were effectively always stale. The send response's
+  `remaining_quota` counters now patch the cached channel in place (fetch
+  timestamp renewed); the cache is only invalidated when no fresh counters are
+  returned.
+
 ## [2.1.26] — 2026-07-22
 
 ### Security

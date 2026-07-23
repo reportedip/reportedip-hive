@@ -896,13 +896,16 @@ class ReportedIP_Hive_API {
 			if ( '' !== $cooldown_key ) {
 				delete_site_transient( $cooldown_key );
 			}
-			delete_transient( 'reportedip_hive_relay_quota' );
+			$remaining_quota = is_array( $json ) && isset( $json['remaining_quota'] ) && is_array( $json['remaining_quota'] )
+				? $json['remaining_quota']
+				: null;
+			$this->patch_relay_quota_cache( $endpoint, $remaining_quota );
 			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
 			return array(
 				'ok'              => true,
 				'status_code'     => $code,
 				'queue_id'        => is_array( $json ) ? (int) ( $json['queue_id'] ?? 0 ) : 0,
-				'remaining_quota' => is_array( $json ) ? ( $json['remaining_quota'] ?? null ) : null,
+				'remaining_quota' => $remaining_quota,
 			);
 		}
 
@@ -940,6 +943,43 @@ class ReportedIP_Hive_API {
 			'error'       => is_array( $json ) ? (string) ( $json['code'] ?? 'http_' . $code ) : 'http_' . $code,
 			'retryable'   => $code >= 500,
 		);
+	}
+
+	/**
+	 * Update the cached /relay-quota payload in place after a successful relay send.
+	 *
+	 * Every send moves the counters, so the cache must not survive unchanged — but
+	 * deleting it outright left the dashboard without data until the next six-hour
+	 * quota cron, which on sites with steady relay traffic rendered the quota cards
+	 * permanently stale ("Awaiting fresh quota data"). The relay endpoints return
+	 * the affected channel's fresh counters in `remaining_quota` (same shape as one
+	 * channel of GET /relay-quota), so the cached channel entry is replaced and the
+	 * fetch timestamp renewed. Without a usable payload or an existing cache the
+	 * entry is deleted as before and the next cron run repopulates it.
+	 *
+	 * @param string     $endpoint        Relay slug ('relay-mail' or 'relay-sms').
+	 * @param array|null $remaining_quota `remaining_quota` member of the send response.
+	 * @return void
+	 * @since 2.1.27
+	 */
+	private function patch_relay_quota_cache( $endpoint, $remaining_quota ) {
+		$cache_key = 'reportedip_hive_relay_quota';
+		$cached    = get_transient( $cache_key );
+
+		if ( ! is_array( $remaining_quota ) || ! is_array( $cached ) ) {
+			delete_transient( $cache_key );
+			return;
+		}
+
+		$channel = ( 'relay-sms' === $endpoint ) ? 'sms' : 'mail';
+
+		$cached[ $channel ]   = $remaining_quota;
+		$cached['fetched_at'] = time();
+		if ( array_key_exists( 'bundle_balance', $remaining_quota ) ) {
+			$cached[ $channel . '_bundle_balance' ] = (int) $remaining_quota['bundle_balance'];
+		}
+
+		set_transient( $cache_key, $cached, 12 * HOUR_IN_SECONDS );
 	}
 
 	/**
