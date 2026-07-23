@@ -34,8 +34,34 @@
 			initAutoSubmit();
 			initResendButtons();
 			initWebAuthnLogin();
+			initTrustPreference( form );
 		}
 	} );
+
+	/* ------------------------------------------------------------------ *
+	 * Trust-device checkbox preference. The 6th-digit auto-submit fires
+	 * before most users reach the checkbox below the code input, so their
+	 * "trust this device" wish silently never made it into the POST. The
+	 * last explicit choice is remembered per browser and pre-applied on
+	 * the next challenge render — matching the per-device semantics of
+	 * the trust cookie itself.
+	 * ------------------------------------------------------------------ */
+	function initTrustPreference( form ) {
+		var box = form.querySelector( 'input[name="reportedip_2fa_trust_device"]' );
+		if ( ! box ) {
+			return;
+		}
+		try {
+			if ( ! box.checked && window.localStorage.getItem( 'rip2faTrustDevice' ) === '1' ) {
+				box.checked = true;
+			}
+			box.addEventListener( 'change', function () {
+				window.localStorage.setItem( 'rip2faTrustDevice', box.checked ? '1' : '0' );
+			} );
+		} catch ( e ) {
+			// Storage unavailable (private mode) — the checkbox still works manually.
+		}
+	}
 
 	/* ------------------------------------------------------------------ *
 	 * Double-submit guard. A second POST (auto-submit racing an Enter

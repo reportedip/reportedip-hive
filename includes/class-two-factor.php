@@ -1021,7 +1021,14 @@ class ReportedIP_Hive_Two_Factor {
 						$this->set_auth_cookie_with_remember( $user_id, $remember );
 						wp_set_current_user( $user_id );
 
-						if ( $trust_device && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) ) {
+						/*
+						 * A trust wish ticked on an earlier (failed) attempt of this same
+						 * challenge session still counts: the re-rendered form used to lose
+						 * the checkbox state, silently dropping the "trust this device"
+						 * choice the user had already made.
+						 */
+						$trust_requested = $trust_device || ! empty( $nonce_data['trust_wanted'] );
+						if ( $trust_requested && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) ) {
 							$this->create_trusted_device( $user_id );
 						}
 
@@ -1038,6 +1045,11 @@ class ReportedIP_Hive_Two_Factor {
 						wp_safe_redirect( $redirect_to );
 						exit;
 					} else {
+						if ( $trust_device && empty( $nonce_data['trust_wanted'] ) ) {
+							$nonce_data['trust_wanted'] = 1;
+							$this->refresh_login_nonce( $nonce_data );
+						}
+
 						$failed = $this->increment_failed_attempts( $user_id );
 						$this->increment_ip_failed_attempts( ReportedIP_Hive::get_client_ip() );
 

@@ -6,6 +6,16 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixed
 
+- **"Trust this device for 30 days" no longer gets silently lost.** The
+  6th-digit auto-submit fired before most users reached the checkbox below
+  the code input, and a failed attempt re-rendered the form with the
+  checkbox cleared — so the trust wish rarely made it into the verifying
+  POST and users faced the full 2FA challenge on every login. Three-part
+  fix: the checkbox state survives failed-attempt re-renders, a trust wish
+  ticked on an earlier attempt of the same challenge session is honoured
+  when a later attempt verifies, and the last explicit choice is remembered
+  per browser and pre-applied on the next challenge.
+
 - **Skipping the 2FA onboarding wizard now actually postpones it.** The skip
   only deleted the pending flag, but every `wp_login` firing re-created it —
   and SSO/support tools that sign users in programmatically fire that hook

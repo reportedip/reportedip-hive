@@ -359,7 +359,8 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 			<?php if ( $trust_enabled ) : ?>
 				<div class="rip-2fa-challenge__trust">
 					<label class="rip-2fa-challenge__trust-label">
-						<input type="checkbox" name="reportedip_2fa_trust_device" value="1" />
+						<?php // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Display-only restore of the checkbox state after a failed attempt; the value is only acted upon once verify_form_nonce() passes. ?>
+						<input type="checkbox" name="reportedip_2fa_trust_device" value="1" <?php checked( ! empty( $_POST['reportedip_2fa_trust_device'] ) ); ?> />
 						<span>
 							<?php
 							$trust_days = (int) get_option( 'reportedip_hive_2fa_trusted_device_days', 30 );
