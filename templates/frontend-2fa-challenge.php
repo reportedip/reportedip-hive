@@ -363,7 +363,7 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 						<input type="checkbox" name="reportedip_2fa_trust_device" value="1" <?php checked( ! empty( $_POST['reportedip_2fa_trust_device'] ) ); ?> />
 						<span>
 							<?php
-							$trust_days = (int) get_option( 'reportedip_hive_2fa_trusted_device_days', 30 );
+							$trust_days = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_device_days', 30 );
 							printf(
 								/* translators: %d: number of days */
 								esc_html__( 'Trust this device for %d days', 'reportedip-hive' ),
