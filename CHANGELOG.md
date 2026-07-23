@@ -6,6 +6,14 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixed
 
+- **Skipping the 2FA onboarding wizard now actually postpones it.** The skip
+  only deleted the pending flag, but every `wp_login` firing re-created it —
+  and SSO/support tools that sign users in programmatically fire that hook
+  repeatedly, so affected users were bounced back into the wizard on the very
+  next click no matter how often they skipped. A skip now records a 24-hour
+  snooze that both login-side flagging paths (role enforcement and the
+  reminder hard-block) respect; enforcement resumes after the snooze expires,
+  and the skip quota outside the grace period is unchanged.
 - **Relay quota dashboard no longer falls back to "Awaiting fresh quota data"
   after every relay send.** Each successful mail/SMS relay dispatch deleted the
   cached `/relay-quota` payload, leaving the dashboard without counters until

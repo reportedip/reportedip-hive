@@ -51,6 +51,22 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	const PAGE_SLUG = 'reportedip-hive-2fa-onboarding';
 
 	/**
+	 * User-meta key — timestamp until which a skip suppresses re-flagging.
+	 *
+	 * Deleting the pending transient alone is not enough: SSO/support tools
+	 * that sign users in programmatically fire `wp_login` repeatedly, and each
+	 * firing re-set the transient, so a skipped wizard reappeared on the very
+	 * next click. The skip therefore records a snooze deadline that every
+	 * login-side flagging path must respect.
+	 */
+	const META_SKIP_UNTIL = 'reportedip_hive_2fa_skip_until';
+
+	/**
+	 * Snooze duration after a skip, in seconds (24 hours).
+	 */
+	const SKIP_SNOOZE_SECONDS = DAY_IN_SECONDS;
+
+	/**
 	 * Constructor — register hooks.
 	 */
 	public function __construct() {
@@ -157,7 +173,22 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			update_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_ENFORCEMENT_START, time() );
 		}
 
+		if ( self::is_skip_snoozed( $user->ID ) ) {
+			return;
+		}
+
 		set_transient( self::TRANSIENT_PREFIX . $user->ID, 1, self::TRANSIENT_TTL );
+	}
+
+	/**
+	 * Whether a recent skip still suppresses the login-side onboarding flag.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return bool
+	 * @since 2.1.27
+	 */
+	public static function is_skip_snoozed( $user_id ) {
+		return (int) get_user_meta( (int) $user_id, self::META_SKIP_UNTIL, true ) > time();
 	}
 
 	/**
@@ -467,6 +498,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SKIP_COUNT, $skip_count + 1 );
 		}
 
+		update_user_meta( $user_id, self::META_SKIP_UNTIL, time() + self::SKIP_SNOOZE_SECONDS );
 		delete_transient( self::TRANSIENT_PREFIX . $user_id );
 
 		$logger = ReportedIP_Hive_Logger::get_instance();

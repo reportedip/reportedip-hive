@@ -142,6 +142,9 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		update_user_meta( $user->ID, self::META_LAST_SEEN, time() );
 
 		if ( self::should_hard_block( $user ) && class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) {
+			if ( ReportedIP_Hive_Two_Factor_Onboarding::is_skip_snoozed( $user->ID ) ) {
+				return;
+			}
 			$ttl = defined( 'ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_TTL' )
 				? ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_TTL
 				: 30 * MINUTE_IN_SECONDS;

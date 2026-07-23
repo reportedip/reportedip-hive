@@ -83,6 +83,11 @@ namespace {
 		class ReportedIP_Hive_Two_Factor_Onboarding {
 			const TRANSIENT_PREFIX = 'reportedip_2fa_onboarding_pending_';
 			const TRANSIENT_TTL    = 1800;
+			const META_SKIP_UNTIL  = 'reportedip_hive_2fa_skip_until';
+
+			public static function is_skip_snoozed( $user_id ) {
+				return (int) get_user_meta( (int) $user_id, self::META_SKIP_UNTIL, true ) > time();
+			}
 		}
 	}
 
@@ -183,6 +188,38 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_on_login_skips_for_non_wp_user() {
 			\ReportedIP_Hive_Two_Factor_Recommend::on_login( 'somebody', null );
 			$this->assertSame( array(), $GLOBALS['wp_user_meta'] );
+		}
+
+		public function test_on_login_hard_block_sets_onboarding_transient() {
+			$GLOBALS['wp_user_meta'][1]['reportedip_hive_2fa_reminder_count'] = 4;
+			\ReportedIP_Hive_Two_Factor_Recommend::on_login( 'admin', $GLOBALS['wp_users'][1] );
+			$this->assertArrayHasKey(
+				'reportedip_2fa_onboarding_pending_1',
+				$GLOBALS['wp_transients'],
+				'Crossing the hard threshold must flag the user for onboarding.'
+			);
+		}
+
+		public function test_on_login_hard_block_respects_skip_snooze() {
+			$GLOBALS['wp_user_meta'][1]['reportedip_hive_2fa_reminder_count'] = 4;
+			$GLOBALS['wp_user_meta'][1]['reportedip_hive_2fa_skip_until']     = time() + 3600;
+			\ReportedIP_Hive_Two_Factor_Recommend::on_login( 'admin', $GLOBALS['wp_users'][1] );
+			$this->assertArrayNotHasKey(
+				'reportedip_2fa_onboarding_pending_1',
+				$GLOBALS['wp_transients'],
+				'A recent skip must suppress re-flagging even when wp_login fires again.'
+			);
+		}
+
+		public function test_on_login_hard_block_flags_again_after_snooze_expired() {
+			$GLOBALS['wp_user_meta'][1]['reportedip_hive_2fa_reminder_count'] = 4;
+			$GLOBALS['wp_user_meta'][1]['reportedip_hive_2fa_skip_until']     = time() - 5;
+			\ReportedIP_Hive_Two_Factor_Recommend::on_login( 'admin', $GLOBALS['wp_users'][1] );
+			$this->assertArrayHasKey(
+				'reportedip_2fa_onboarding_pending_1',
+				$GLOBALS['wp_transients'],
+				'An expired snooze must not suppress the onboarding flag.'
+			);
 		}
 
 		public function test_should_hard_block_false_below_threshold() {
