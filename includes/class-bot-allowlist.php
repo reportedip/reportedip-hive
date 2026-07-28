@@ -49,6 +49,15 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	 *  - the token is unique enough to not collide with a browser UA, and
 	 *  - the bot publishes a stable UA across its crawl fleet.
 	 *
+	 * Deliberately absent: `WordPress` / `Jetpack`. Any attacker can put
+	 * those strings into a user-agent (every pingback client does), there is
+	 * no verification signature for them, and the unmatched-fails-open rule
+	 * would turn the token into a free pass — botnets spoofing
+	 * "Jetpack by WordPress.com" exploited exactly that for unblockable
+	 * login brute-force before the token was removed in 2.1.27. Genuine
+	 * WordPress.com/Jetpack traffic is XML-RPC from Automattic ranges and
+	 * needs no UA exemption.
+	 *
 	 * @var string[]
 	 */
 	private const DEFAULT_PATTERNS = array(
@@ -100,7 +109,6 @@ final class ReportedIP_Hive_Bot_Allowlist {
 		'SemrushBot',
 		'mj12bot',
 		'DotBot',
-		'WordPress',
 		'UptimeRobot',
 		'Pingdom',
 		'Site24x7',

@@ -2,10 +2,12 @@
 /**
  * Multisite smoke test for the central never-block-a-good-bot guard.
  *
- * Confirms that a threshold trip from a subsite context spares an IP inside
- * the official crawler ranges: no block row is written and the averted
- * decision lands as `verified_bot_block_averted` in the shared network logs
- * table.
+ * Confirms that a crawlable-surface threshold trip from a subsite context
+ * spares an IP inside the official crawler ranges: no block row is written
+ * and the averted decision lands as `verified_bot_block_averted` in the
+ * shared network logs table. Credential-bearing events are the deliberate
+ * exception — no genuine crawler submits credentials, so those must block
+ * even a ranged crawler IP.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Multisite
@@ -63,8 +65,9 @@ class ReportedIP_Hive_Bot_Guard_Multisite_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A threshold trip from a subsite must spare the ranged crawler IP and
-	 * log the averted decision into the shared network logs table.
+	 * A crawlable-surface threshold trip from a subsite must spare the ranged
+	 * crawler IP and log the averted decision into the shared network logs
+	 * table.
 	 */
 	public function test_threshold_trip_spares_ranged_crawler_ip_from_subsite() {
 		global $wpdb;
@@ -73,14 +76,14 @@ class ReportedIP_Hive_Bot_Guard_Multisite_Test extends WP_UnitTestCase {
 		$monitor = new ReportedIP_Hive_Security_Monitor();
 
 		switch_to_blog( $blog_id );
-		$monitor->handle_threshold_exceeded( self::CRAWLER_IP, 'failed_login', array( 'attempts' => 99 ) );
+		$monitor->handle_threshold_exceeded( self::CRAWLER_IP, 'scan_404', array( 'attempts' => 99 ) );
 		restore_current_blog();
 
 		$blocked = ReportedIP_Hive_Schema::table( 'reportedip_hive_blocked' );
 		$this->assertSame(
 			'0',
 			(string) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $blocked WHERE ip_address = %s AND is_active = 1", self::CRAWLER_IP ) ),
-			'An IP inside the official crawler ranges must never be auto-blocked.'
+			'An IP inside the official crawler ranges must never be auto-blocked for a crawlable-surface event.'
 		);
 
 		$logs = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
@@ -88,6 +91,40 @@ class ReportedIP_Hive_Bot_Guard_Multisite_Test extends WP_UnitTestCase {
 			0,
 			(int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $logs WHERE ip_address = %s AND event_type = %s", self::CRAWLER_IP, 'verified_bot_block_averted' ) ),
 			'The averted decision must land in the shared network logs table.'
+		);
+	}
+
+	/**
+	 * A credential-bearing threshold trip must block even a ranged crawler
+	 * IP — genuine crawlers never submit login credentials, so the guard
+	 * does not apply.
+	 */
+	public function test_failed_login_blocks_even_ranged_crawler_ip() {
+		global $wpdb;
+
+		$monitor = new ReportedIP_Hive_Security_Monitor();
+		$monitor->handle_threshold_exceeded(
+			self::CRAWLER_IP,
+			'failed_login',
+			array(
+				'attempts'  => 99,
+				'threshold' => 5,
+				'timeframe' => 15,
+			)
+		);
+
+		$blocked = ReportedIP_Hive_Schema::table( 'reportedip_hive_blocked' );
+		$this->assertGreaterThan(
+			0,
+			(int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $blocked WHERE ip_address = %s AND is_active = 1", self::CRAWLER_IP ) ),
+			'Login brute-force must auto-block regardless of any crawler exemption.'
+		);
+
+		$logs = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
+		$this->assertSame(
+			'0',
+			(string) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $logs WHERE ip_address = %s AND event_type = %s", self::CRAWLER_IP, 'verified_bot_block_averted' ) ),
+			'A credential event must never produce an averted decision.'
 		);
 	}
 }

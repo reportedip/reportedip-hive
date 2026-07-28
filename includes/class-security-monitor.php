@@ -396,6 +396,26 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
+	 * Event slugs whose trigger is a submitted credential.
+	 *
+	 * Genuine crawlers never POST credentials, so the never-block-a-good-bot
+	 * guard must not spare these events: a crawler-claiming user-agent on a
+	 * login surface is itself an attack indicator. Observed in the wild —
+	 * botnets spoofing Jetpack/WordPress.com user-agents rode the guard's
+	 * fail-open path to brute-force wp-login without ever being blocked.
+	 *
+	 * @var string[]
+	 * @since 2.1.27
+	 */
+	private const CREDENTIAL_EVENTS = array(
+		'failed_login',
+		'password_spray',
+		'2fa_brute_force',
+		'app_password_abuse',
+		'wc_login_failed',
+	);
+
+	/**
 	 * Last line of the never-block-a-good-bot defence.
 	 *
 	 * Every automatic IP block funnels through `handle_threshold_exceeded()`;
@@ -404,6 +424,10 @@ class ReportedIP_Hive_Security_Monitor {
 	 * (or DNS-undecidable) crawler. Sensors with their own allowlist call
 	 * consult the same combined decision earlier; this guard covers every
 	 * sensor that does not (WAF escalation, XML-RPC, comment spam, …).
+	 *
+	 * Credential-bearing events ({@see self::CREDENTIAL_EVENTS}) are never
+	 * spared — the same reasoning that keeps the honeypot-path sensors off
+	 * the allowlist: no legitimate crawler submits login credentials.
 	 *
 	 * Averted decisions are logged as `verified_bot_block_averted` so an
 	 * operator can see both the coverage and any suspicious pattern riding
@@ -416,6 +440,10 @@ class ReportedIP_Hive_Security_Monitor {
 	 * @since  2.1.26
 	 */
 	private function should_spare_verified_bot( $ip_address, $event_type, $details ) {
+		if ( in_array( (string) $event_type, self::CREDENTIAL_EVENTS, true ) ) {
+			return false;
+		}
+
 		if ( ! class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
 			return false;
 		}

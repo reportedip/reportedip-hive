@@ -88,6 +88,36 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_credential_events_are_never_spared() {
+			$source = $this->source();
+
+			$const_pos = strpos( $source, 'CREDENTIAL_EVENTS' );
+			$this->assertNotFalse( $const_pos, 'Credential-bearing event slugs must be enumerated in CREDENTIAL_EVENTS' );
+
+			foreach ( array( 'failed_login', 'password_spray', '2fa_brute_force', 'app_password_abuse', 'wc_login_failed' ) as $slug ) {
+				$this->assertStringContainsString(
+					"'" . $slug . "'",
+					substr( $source, $const_pos, 400 ),
+					"Credential event '$slug' must be excluded from the bot guard — no genuine crawler submits credentials"
+				);
+			}
+
+			$guard_fn_pos = strpos( $source, 'function should_spare_verified_bot' );
+			$this->assertNotFalse( $guard_fn_pos );
+
+			$body          = substr( $source, $guard_fn_pos );
+			$exclusion_pos = strpos( $body, 'CREDENTIAL_EVENTS' );
+			$allowlist_pos = strpos( $body, 'is_exempt_crawler' );
+
+			$this->assertNotFalse( $exclusion_pos, 'The guard must check the credential-event exclusion' );
+			$this->assertNotFalse( $allowlist_pos );
+			$this->assertLessThan(
+				$allowlist_pos,
+				$exclusion_pos,
+				'The credential-event exclusion must run before the crawler allowlist is consulted'
+			);
+		}
+
 		public function test_guard_survives_missing_user_agent() {
 			$source = $this->source();
 

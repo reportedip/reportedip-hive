@@ -4,6 +4,25 @@ All changes to ReportedIP Hive are documented here.
 
 ## [2.1.27] — unreleased
 
+### Security
+
+- **A crawler-claiming user-agent no longer shields login brute-force from
+  auto-blocking.** The central never-block-a-good-bot guard spared any IP
+  whose user-agent matched an allowlist token without a verification
+  signature (the deliberate UptimeRobot fail-open), and the allowlist
+  carried a `WordPress` token — so botnets sending spoofed
+  "Jetpack by WordPress.com" user-agents could hammer wp-login indefinitely:
+  every threshold trip was averted, no block, no community report, no admin
+  mail. Two-part fix: credential-bearing events (`failed_login`,
+  `password_spray`, `2fa_brute_force`, `app_password_abuse`,
+  `wc_login_failed`) now bypass the guard entirely — genuine crawlers never
+  submit credentials, the same reasoning that keeps honeypot paths off the
+  allowlist — and the `WordPress` token was removed from the default UA
+  patterns (any pingback client can claim it, and genuine
+  WordPress.com/Jetpack traffic needs no UA exemption). Rate sensors for
+  crawlable surfaces (404, REST, author archives) keep the full
+  verified-bot protection.
+
 ### Fixed
 
 - **"Trust this device for 30 days" no longer gets silently lost.** The

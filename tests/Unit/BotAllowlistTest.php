@@ -130,10 +130,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'Slackbot 1.0 (+https://api.slack.com/robots)',
 					'Slackbot',
 				),
-				'wordpress-core'    => array(
-					'WordPress/6.5.2; http://example.com',
-					'WordPress',
-				),
 				'uptimerobot'       => array(
 					'Mozilla/5.0 (compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)',
 					'UptimeRobot',
@@ -193,7 +189,35 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'Mozilla/5.0 (made-up generic ua string)',
 					'generic',
 				),
+				'wordpress-core' => array(
+					'WordPress/6.5.2; http://example.com',
+					'WordPress core loopback/pingback',
+				),
+				'jetpack-spoof' => array(
+					'Jetpack by WordPress.com (Jetpack 13.0; WordPress 6.4)',
+					'Jetpack spoof',
+				),
+				'wpcom-spoof'   => array(
+					'WordPress.com; https://wordpress.com',
+					'WordPress.com spoof',
+				),
 			);
+		}
+
+		public function test_wordpress_token_is_not_a_default_pattern() {
+			$patterns = ReportedIP_Hive_Bot_Allowlist::default_patterns();
+			foreach ( $patterns as $pattern ) {
+				$this->assertStringNotContainsStringIgnoringCase(
+					'wordpress',
+					$pattern,
+					'The WordPress token is a free pass any attacker can claim — it must never return to the allowlist (exploited in the wild for unblockable login brute-force)'
+				);
+				$this->assertStringNotContainsStringIgnoringCase(
+					'jetpack',
+					$pattern,
+					'The Jetpack token is a free pass any attacker can claim — it must never enter the allowlist'
+				);
+			}
 		}
 
 		public function test_empty_ua_is_not_verified() {
