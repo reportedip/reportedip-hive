@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.28
+Stable tag: 2.1.29
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -43,7 +43,7 @@ Two ways to run:
 * **XMLRPC abuse** — default 10 / 60 min
 * **Application-password abuse** — REST/XMLRPC Basic-Auth bypass for 2FA, default 5 / 15 min
 * **REST API rate-limit** — global cap, default 240 / 5 min (sensitive routes 20 / 5 min)
-* **User enumeration defence** — `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking
+* **User enumeration defence** — `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking, default 5 / 5 min. Author archive pages can be kept public for sites that link to them
 * **404 / scanner detection** — default 12 / 2 min, plus instant block on known-bad paths (`.env`, `wp-config.bak`, `/.git/`)
 * **Web Application Firewall** — request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
 * **Verified bot detection** — confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
@@ -340,6 +340,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.29 =
+
+New: author archive pages can be kept public. The user-enumeration sensor treated ?author=5 and the pretty /author/<slug>/ archive as the same attack, so on a site that links to author pages a regular reader clicking five of them was blocked and, in Community mode, reported. A new switch under Protection → Detection (off by default) serves the archive normally and stops counting it, while ?author=5 keeps its 404 and keeps counting — that redirect is the part that maps a user ID to a login name. REST /wp/v2/users, the oEmbed author fields and login-error masking are unaffected.
 
 = 2.1.28 =
 

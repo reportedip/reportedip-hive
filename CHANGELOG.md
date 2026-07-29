@@ -2,6 +2,25 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.29] — 2026-07-29
+
+### New
+
+- **Author archive pages can be kept public.** The user-enumeration sensor
+  treated `?author=5` and the pretty `/author/<slug>/` archive as the same
+  attack: both were answered with a 404 and both counted toward the auto-block
+  ladder (default 5 probes in 5 minutes). Only logged-in users, whitelisted IPs
+  and verified crawlers were exempt, so on a site that links to author pages a
+  regular reader clicking five of them was blocked and, in Community mode,
+  reported. The new **Keep author archive pages public** switch
+  (Protection → Detection, off by default so nothing changes on update)
+  separates the two: the archive renders normally and stops counting, while
+  `?author=5` keeps its 404 and keeps counting. The numeric form is the actual
+  leak — it maps a user ID to a login name — and the archive URL contains the
+  public slug either way. Guessing slugs instead still produces ordinary 404s,
+  which the scanner sensor keeps watching. REST `/wp/v2/users`, the oEmbed
+  author fields and login-error masking are unaffected by the switch.
+
 ## [2.1.28] — 2026-07-29
 
 ### Changed
