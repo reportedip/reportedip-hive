@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.26
+Stable tag: 2.1.27
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,16 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.27 =
+
+Security: a crawler-claiming user-agent no longer shields login brute-force from auto-blocking. Credential-bearing events (failed logins, password spray, 2FA brute force, application-password abuse, WooCommerce logins) now bypass the verified-bot guard entirely — no genuine crawler ever submits credentials — and the overly broad WordPress token was removed from the crawler allowlist, closing a fail-open path that botnets spoofing Jetpack user-agents were exploiting for unblockable wp-login brute-force. Crawlable surfaces (404 bursts, REST bursts, author archives) keep the full verified-bot protection.
+
+Fixed: "Trust this device for 30 days" no longer gets silently lost — the checkbox state survives failed-attempt re-renders, an earlier tick in the same challenge session is honoured, and the last explicit choice is remembered per browser.
+
+Fixed: skipping the 2FA onboarding wizard now actually postpones it. A skip records a 24-hour snooze that both login-side flagging paths respect, so SSO and support tools that fire the login hook repeatedly no longer bounce users straight back into the wizard.
+
+Fixed: the relay quota dashboard no longer falls back to "Awaiting fresh quota data" after every relay send — the send response's remaining-quota counters now patch the cached snapshot in place.
 
 = 2.1.26 =
 
