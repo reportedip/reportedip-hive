@@ -2,9 +2,16 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [2.1.28] — unreleased
+## [2.1.28] — 2026-07-29
 
 ### Changed
+
+- **Minimum supported WordPress raised from 5.0 to 5.9.** The plugin has long
+  relied on `wp_date()` (WordPress 5.3) and the `str_contains()` /
+  `str_starts_with()` polyfills (WordPress 5.9), so the 5.0 claim was never
+  accurate — and with PHP 8.1 as the minimum, no supported install runs an
+  older WordPress anyway. The declaration now matches reality; no code
+  changed.
 
 - **A community-reputation hit now blocks the IP everywhere, not just on the
   login form.** When the network reports an IP above the block threshold

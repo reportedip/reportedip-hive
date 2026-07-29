@@ -287,8 +287,11 @@ jobs:
       - name: Run Plugin Check (errors are blocking)
         run: |
           cd /tmp/wordpress
+          # plugin_updater_detected: wordpress.org-hosting rule; this plugin is
+          # distributed via GitHub Releases with plugin-update-checker by design.
           wp plugin check reportedip-hive \
             --exclude-directories=bin,scripts,tests,node_modules,build,vendor,.github \
+            --exclude-checks=plugin_updater \
             --exclude-files=.gitattributes,.gitignore,.distignore,.editorconfig,phpcs.xml,phpstan.neon,phpstan-baseline.neon,phpunit.xml,phpunit-multisite.xml,grumphp.yml,phpstan-bootstrap.php,.phpcs.cache,.phpunit.result.cache \
             --format=table --severity=error
 

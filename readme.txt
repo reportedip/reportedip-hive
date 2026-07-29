@@ -2,10 +2,10 @@
 Contributors: reportedip, patrickschlesinger
 Donate link: https://reportedip.de
 Tags: security, firewall, brute-force, two-factor, multisite
-Requires at least: 5.0
+Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.27
+Stable tag: 2.1.28
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.28 =
+
+Changed: minimum supported WordPress raised from 5.0 to 5.9 — the plugin has long relied on wp_date() and the str_contains()/str_starts_with() polyfills, so the 5.0 claim was never accurate; no code changed.
+
+Changed: a community-reputation hit now blocks the IP everywhere, not just on the login form. The verdict writes a temporary block row (24 hours by default, filterable), so the IP is short-circuited on every surface — front-end, XML-RPC, REST — appears in the Blocked IPs list as "Community Reputation" with its own filter, and the daily reputation-block statistic finally counts. Whitelisted IPs are never reputation-blocked; after the window expires the next login attempt re-evaluates the fresh reputation.
 
 = 2.1.27 =
 
