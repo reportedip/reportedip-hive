@@ -36,7 +36,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | XMLRPC abuse | 10 / 60 min | `system.multicall` watched separately |
 | App-password abuse | 5 / 15 min | REST/XMLRPC Basic-Auth bypass for 2FA |
 | REST API rate-limit | 240 / 5 min global, 20 / 5 min on sensitive routes | Logged-in users skipped |
-| User-enumeration defence | first probe blocks | `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking |
+| User-enumeration defence | 5 / 5 min | `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking; author archives can stay public |
 | 404 / scanner | 12 / 2 min, plus instant block on known-bad paths | `.env`, `wp-config.bak`, `/.git/` |
 | Geographic anomaly | first occurrence triggers fresh 2FA | Optionally revokes trusted-device cookies |
 | Password policy | min length, character classes, optional HIBP k-anonymity | |

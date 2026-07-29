@@ -5,7 +5,9 @@
  * Closes the four classic WordPress username-leak vectors and rate-limits
  * the bots that probe them:
  *
- *  1. `?author=<n>` permalink redirect → 404 (or block).
+ *  1. `?author=<n>` permalink redirect → 404 (or block). The pretty author
+ *     archive (`/author/<slug>/`) shares that fate unless
+ *     `reportedip_hive_allow_author_archives` is on.
  *  2. `/wp-json/wp/v2/users` and `/wp-json/wp/v2/users/<id>` for unauth users.
  *  3. `/wp-json/oembed/1.0/embed?url=<post>` author leak.
  *  4. Generic login-error message so "user not found" and "wrong password"
@@ -136,21 +138,25 @@ class ReportedIP_Hive_User_Enumeration {
 	}
 
 	/**
-	 * Trap requests that probe `?author=<n>` (or the pretty `/author/<slug>`)
-	 * before WordPress can redirect to the slug-based archive (which leaks
-	 * the username). Bots that hammer this endpoint accumulate
-	 * `user_enumeration` attempts and eventually trip the threshold.
+	 * Trap requests that probe `?author=<n>` before WordPress can redirect to
+	 * the slug-based archive (which leaks the username). Bots that hammer this
+	 * endpoint accumulate `user_enumeration` attempts and eventually trip the
+	 * threshold.
+	 *
+	 * The pretty archive (`/author/<slug>/`) is covered by the same 404 unless
+	 * `reportedip_hive_allow_author_archives` is enabled: that URL already
+	 * carries the public slug, so serving it leaks nothing the theme does not
+	 * print anyway, while counting genuine readers as probes locks them out of
+	 * the site. The numeric form stays blocked either way — the ID-to-name
+	 * mapping is the part worth hiding. Probing slugs instead still produces
+	 * ordinary 404s, which the scan detector keeps counting.
 	 */
 	public function block_author_param(): void {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only probe detection on a public route; presence-only check, no value used.
-		$author_param    = isset( $_GET['author'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['author'] ) ) : '';
-		$is_author_query = '' !== $author_param;
-
-		if ( ! $is_author_query && ! ( is_author() && ! is_user_logged_in() ) ) {
+		if ( ! $this->is_author_probe() ) {
 			return;
 		}
 
@@ -168,6 +174,32 @@ class ReportedIP_Hive_User_Enumeration {
 			exit;
 		}
 		wp_die( esc_html__( 'Not found.', 'reportedip-hive' ), '', array( 'response' => 404 ) );
+	}
+
+	/**
+	 * Decide whether the current request is an author-enumeration probe.
+	 *
+	 * `?author=<n>` always counts. The pretty archive only counts while
+	 * `reportedip_hive_allow_author_archives` is off, and never for logged-in
+	 * users. Split out of block_author_param() so the decision is verifiable
+	 * without a full request context.
+	 *
+	 * @return bool True when the request should be answered with a 404 and counted.
+	 * @since  2.1.29
+	 */
+	public function is_author_probe(): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only probe detection on a public route; presence-only check, no value used.
+		$author_param = isset( $_GET['author'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['author'] ) ) : '';
+
+		if ( '' !== $author_param ) {
+			return true;
+		}
+
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_allow_author_archives', false ) ) {
+			return false;
+		}
+
+		return is_author() && ! is_user_logged_in();
 	}
 
 	/**

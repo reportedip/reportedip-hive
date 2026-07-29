@@ -142,6 +142,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_block_user_enumeration'         => true,
 		'reportedip_hive_user_enum_threshold'            => 5,
 		'reportedip_hive_user_enum_timeframe'            => 5,
+		'reportedip_hive_allow_author_archives'          => false,
 
 		'reportedip_hive_monitor_404_scans'              => true,
 		'reportedip_hive_scan_404_threshold'             => 12,

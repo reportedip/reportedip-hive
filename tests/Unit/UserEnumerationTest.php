@@ -1,10 +1,11 @@
 <?php
 /**
- * Unit Tests for User-Enumeration login-error normalisation.
+ * Unit Tests for User-Enumeration login-error normalisation and probe detection.
  *
- * Login-error filtering is the only path in ReportedIP_Hive_User_Enumeration
- * that runs without WordPress runtime context — the rest hooks into REST
- * dispatch / template_redirect and is exercised by integration tests.
+ * Login-error filtering and is_author_probe() are the paths in
+ * ReportedIP_Hive_User_Enumeration that run without WordPress runtime context.
+ * The 404 response itself, REST dispatch and the probe ladder need a real
+ * request and are exercised by integration tests.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -53,6 +54,11 @@ namespace {
 			return false;
 		}
 	}
+	if ( ! function_exists( 'is_author' ) ) {
+		function is_author() {
+			return ! empty( $GLOBALS['rip_test_is_author'] );
+		}
+	}
 	if ( ! function_exists( 'str_starts_with' ) ) {
 		function str_starts_with( $haystack, $needle ) {
 			return '' === $needle || 0 === strncmp( (string) $haystack, (string) $needle, strlen( (string) $needle ) );
@@ -96,6 +102,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['wp_options'] = array(
 				'reportedip_hive_block_user_enumeration' => true,
 			);
+			$GLOBALS['rip_test_is_author'] = false;
+			unset( $_GET['author'] );
+		}
+
+		protected function tearDown(): void {
+			unset( $GLOBALS['rip_test_is_author'], $_GET['author'] );
+			parent::tearDown();
 		}
 
 		public function test_invalid_username_error_is_masked() {
@@ -158,6 +171,38 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$err      = new WP_Error( 'invalid_username', 'Verbatim' );
 			$result   = $instance->unify_login_error_codes( $err, 'someone', 'pw' );
 			$this->assertSame( 'invalid_username', $result->get_error_code(), 'When disabled, error codes are unchanged' );
+		}
+
+		public function test_author_archive_counts_as_probe_by_default() {
+			$GLOBALS['rip_test_is_author'] = true;
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$this->assertTrue( $instance->is_author_probe(), 'Without the opt-in, /author/<slug>/ stays a 404 for guests' );
+		}
+
+		public function test_author_archive_is_not_a_probe_when_archives_are_allowed() {
+			$GLOBALS['wp_options']['reportedip_hive_allow_author_archives'] = true;
+			$GLOBALS['rip_test_is_author']                                 = true;
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$this->assertFalse( $instance->is_author_probe(), 'Readers browsing the archive must not accumulate probes' );
+		}
+
+		public function test_numeric_author_query_stays_a_probe_when_archives_are_allowed() {
+			$GLOBALS['wp_options']['reportedip_hive_allow_author_archives'] = true;
+			$GLOBALS['rip_test_is_author']                                 = true;
+			$_GET['author']                                                = '5';
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$this->assertTrue( $instance->is_author_probe(), 'The ID-to-name redirect is the actual leak and stays blocked' );
+		}
+
+		public function test_regular_request_is_never_a_probe() {
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$this->assertFalse( $instance->is_author_probe() );
+		}
+
+		public function test_empty_author_query_is_not_a_probe() {
+			$_GET['author'] = '';
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$this->assertFalse( $instance->is_author_probe(), 'A bare ?author= carries no ID and reveals nothing' );
 		}
 
 		public function test_strip_author_from_oembed_removes_fields() {

@@ -2548,6 +2548,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_app_password_require_2fa',
 			'reportedip_hive_monitor_rest_api',
 			'reportedip_hive_block_user_enumeration',
+			'reportedip_hive_allow_author_archives',
 			'reportedip_hive_monitor_404_scans',
 			'reportedip_hive_bot_allowlist_enabled',
 			'reportedip_hive_monitor_woocommerce',
@@ -4639,6 +4640,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<input type="hidden" name="reportedip_hive_app_password_require_2fa" value="0" />
 			<input type="hidden" name="reportedip_hive_monitor_rest_api" value="0" />
 			<input type="hidden" name="reportedip_hive_block_user_enumeration" value="0" />
+			<input type="hidden" name="reportedip_hive_allow_author_archives" value="0" />
 			<input type="hidden" name="reportedip_hive_monitor_404_scans" value="0" />
 			<input type="hidden" name="reportedip_hive_bot_allowlist_enabled" value="0" />
 			<input type="hidden" name="reportedip_hive_monitor_woocommerce" value="0" />
@@ -4843,6 +4845,15 @@ class ReportedIP_Hive_Admin_Settings {
 						<label class="rip-label" for="reportedip_hive_user_enum_timeframe"><?php esc_html_e( 'Within how many minutes?', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_user_enum_timeframe" name="reportedip_hive_user_enum_timeframe" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_user_enum_timeframe', 5 ) ); ?>" min="1" max="1440" class="rip-input" />
 					</div>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_allow_author_archives" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_allow_author_archives', false ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Keep author archive pages public (/author/<slug>/)', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text"><?php esc_html_e( 'Numeric ?author=5 probes stay blocked and keep counting toward the auto-block, because that redirect is what maps a user ID to a login name. The archive URL already contains the public slug, so serving it reveals nothing the theme does not print anyway. Enable this if your theme links to author pages, otherwise regular readers browsing them are counted as enumeration probes and eventually blocked.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
