@@ -2,6 +2,25 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.28] — unreleased
+
+### Changed
+
+- **A community-reputation hit now blocks the IP everywhere, not just on the
+  login form.** When the network reports an IP above the block threshold
+  during sign-in, the plugin previously rejected that one login attempt and
+  forgot — the IP never appeared in the Blocked IPs list and every other
+  surface (front-end, XML-RPC, REST) stayed open until its own sensors
+  tripped. The reputation verdict now writes a temporary block row
+  (24 hours by default, filterable via
+  `reportedip_hive_reputation_block_hours`), so the IP is short-circuited on
+  every request, shows up in the Blocked IPs list as "Community Reputation",
+  and the daily reputation-block statistic finally counts. Whitelisted IPs
+  are never reputation-blocked. After the window expires the next login
+  attempt re-evaluates the fresh reputation, so a delisted IP recovers on
+  its own. Reputation API responses stay cached per IP (24 h positive /
+  2 h negative, ETag-aware) — unchanged, verified.
+
 ## [2.1.27] — 2026-07-29
 
 ### Security

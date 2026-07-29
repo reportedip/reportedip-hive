@@ -117,8 +117,16 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 
 			case 'block_type':
 				$block_type = $item->block_type ?? 'automatic';
-				$label      = ( $block_type === 'manual' ) ? __( 'Manually Blocked', 'reportedip-hive' ) : __( 'Auto-Blocked', 'reportedip-hive' );
-				$class      = ( $block_type === 'manual' ) ? 'manual' : 'auto';
+				if ( $block_type === 'manual' ) {
+					$label = __( 'Manually Blocked', 'reportedip-hive' );
+					$class = 'manual';
+				} elseif ( $block_type === 'reputation' ) {
+					$label = __( 'Community Reputation', 'reportedip-hive' );
+					$class = 'reputation';
+				} else {
+					$label = __( 'Auto-Blocked', 'reportedip-hive' );
+					$class = 'auto';
+				}
 				return sprintf( '<span class="block-type-badge %s">%s</span>', esc_attr( $class ), esc_html( $label ) );
 
 			case 'blocked_until':
@@ -264,6 +272,7 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 				<option value=""><?php esc_html_e( 'All Block Types', 'reportedip-hive' ); ?></option>
 				<option value="manual" <?php selected( $block_type, 'manual' ); ?>><?php esc_html_e( 'Manually Blocked', 'reportedip-hive' ); ?></option>
 				<option value="automatic" <?php selected( $block_type, 'automatic' ); ?>><?php esc_html_e( 'Auto-Blocked', 'reportedip-hive' ); ?></option>
+				<option value="reputation" <?php selected( $block_type, 'reputation' ); ?>><?php esc_html_e( 'Community Reputation', 'reportedip-hive' ); ?></option>
 			</select>
 
 			<?php submit_button( __( 'Filter', 'reportedip-hive' ), '', 'filter_action', false ); ?>

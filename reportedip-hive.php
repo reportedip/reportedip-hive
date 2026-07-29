@@ -981,7 +981,15 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Pre-authentication check
+	 * Pre-authentication check.
+	 *
+	 * Rejects the sign-in when the IP is locally blocked or the community
+	 * reputation exceeds the block threshold. A reputation hit also writes a
+	 * temporary `reputation` row into the blocked table (default 24 h,
+	 * filterable via `reportedip_hive_reputation_block_hours`), so the IP is
+	 * blocked on every surface — front-end, XML-RPC, REST — and appears in
+	 * the Blocked IPs list instead of only failing the login form.
+	 * Whitelisted IPs are never reputation-blocked.
 	 *
 	 * @param mixed  $user     User object or error.
 	 * @param string $password Password (unused, kept for hook signature).
@@ -1050,17 +1058,40 @@ class ReportedIP_Hive {
 			return new WP_Error( 'ip_blocked', __( 'Your IP address has been blocked due to suspicious activity.', 'reportedip-hive' ) );
 		}
 
-		if ( $exceeds_threshold ) {
-			$confidence = isset( $reputation['abuseConfidencePercentage'] ) ? $reputation['abuseConfidencePercentage'] : 0;
-			$reports    = isset( $reputation['totalReports'] ) ? $reputation['totalReports'] : 0;
+		if ( $exceeds_threshold && ! $this->ip_manager->is_whitelisted( $ip_address ) ) {
+			$confidence = isset( $reputation['abuseConfidencePercentage'] ) ? (int) $reputation['abuseConfidencePercentage'] : 0;
+			$reports    = isset( $reputation['totalReports'] ) ? (int) $reputation['totalReports'] : 0;
+
+			/**
+			 * Filters how long a community-reputation hit stays blocked locally.
+			 *
+			 * A reputation verdict is a point-in-time snapshot, so the local
+			 * block is temporary: after the window expires the next login
+			 * attempt re-evaluates the (re-fetched) reputation.
+			 *
+			 * @param int $hours Block duration in hours (default 24).
+			 * @since 2.1.28
+			 */
+			$block_hours = max( 1, (int) apply_filters( 'reportedip_hive_reputation_block_hours', 24 ) );
+
+			$database = ReportedIP_Hive_Database::get_instance();
+			$database->block_ip(
+				$ip_address,
+				sprintf( 'Community reputation: %d%% confidence (threshold %d%%)', $confidence, $threshold ),
+				'reputation',
+				$block_hours
+			);
+			$database->update_daily_stats( 'reputation_blocks' );
+			$this->mark_ip_blocked( $ip_address );
 
 			$this->logger->log_security_event(
 				'blocked_by_reputation',
 				$ip_address,
 				array(
-					'confidence' => $confidence,
-					'reports'    => $reports,
-					'threshold'  => $threshold,
+					'confidence'  => $confidence,
+					'reports'     => $reports,
+					'threshold'   => $threshold,
+					'block_hours' => $block_hours,
 				),
 				'high'
 			);

@@ -563,6 +563,11 @@
     color: #fd7e14;
 }
 
+.block-type-badge.reputation {
+    background: rgba(79, 70, 229, 0.1);
+    color: #4f46e5;
+}
+
 /* Dashicon heading styles */
 h3 .dashicons {
     vertical-align: middle;
