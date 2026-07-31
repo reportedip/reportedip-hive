@@ -44,7 +44,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		private function can_redirect(): bool {
 			$wizard = ( new \ReflectionClass( \ReportedIP_Hive_Setup_Wizard::class ) )->newInstanceWithoutConstructor();
 			$method = new \ReflectionMethod( \ReportedIP_Hive_Setup_Wizard::class, 'request_can_redirect' );
-			$method->setAccessible( true );
 			return (bool) $method->invoke( $wizard );
 		}
 

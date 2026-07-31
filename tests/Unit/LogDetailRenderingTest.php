@@ -62,7 +62,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			require_once dirname( __DIR__, 2 ) . '/includes/class-logger.php';
 
 			$method = new ReflectionMethod( 'ReportedIP_Hive_Logger', 'format_detail_value' );
-			$method->setAccessible( true );
 
 			return (string) $method->invoke( null, $key, $value );
 		}
