@@ -133,9 +133,18 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Log security event
+	 * Log security event.
+	 *
+	 * @param string      $event_type Event type key.
+	 * @param string      $ip_address Client IP, or 'system'.
+	 * @param array       $details    Structured detail payload.
+	 * @param string      $severity   low|medium|high|critical.
+	 * @param string|null $created_at UTC 'Y-m-d H:i:s' the event actually happened,
+	 *                                for deferred writers such as the pre-WordPress
+	 *                                WAF drop-in. Defaults to now.
+	 * @return int|false Rows inserted, or false on failure.
 	 */
-	public function log_security_event( $event_type, $ip_address, $details = array(), $severity = 'medium' ) {
+	public function log_security_event( $event_type, $ip_address, $details = array(), $severity = 'medium', $created_at = null ) {
 		global $wpdb;
 
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
@@ -148,10 +157,33 @@ class ReportedIP_Hive_Database {
 				'ip_address' => $ip_address,
 				'details'    => wp_json_encode( $details ),
 				'severity'   => $severity,
-				'created_at' => current_time( 'mysql', true ),
+				'created_at' => self::normalize_utc_datetime( $created_at ),
 			),
 			array( '%d', '%s', '%s', '%s', '%s', '%s' )
 		);
+	}
+
+	/**
+	 * Validate a caller-supplied UTC datetime, falling back to now.
+	 *
+	 * Guards against a malformed or future value from the drop-in queue landing
+	 * in `created_at`, which would desynchronise every time-window query.
+	 *
+	 * @param string|null $created_at Candidate UTC 'Y-m-d H:i:s' string.
+	 * @return string UTC 'Y-m-d H:i:s'.
+	 * @since  2.1.30
+	 */
+	private static function normalize_utc_datetime( $created_at ) {
+		$now = current_time( 'mysql', true );
+
+		if ( ! is_string( $created_at ) || '' === $created_at ) {
+			return $now;
+		}
+		if ( 1 !== preg_match( '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $created_at ) ) {
+			return $now;
+		}
+
+		return ( $created_at > $now ) ? $now : $created_at;
 	}
 
 	/**
@@ -607,7 +639,7 @@ class ReportedIP_Hive_Database {
 			$blocked_until = gmdate( 'Y-m-d H:i:s', time() + ( $duration_hours * 3600 ) );
 		}
 
-		return $wpdb->replace(
+		$result = $wpdb->replace(
 			$table_name,
 			array(
 				'ip_address'    => $ip_address,
@@ -619,6 +651,21 @@ class ReportedIP_Hive_Database {
 			),
 			array( '%s', '%s', '%s', '%s', '%d', '%s' )
 		);
+
+		if ( false !== $result ) {
+			/**
+			 * Fires after an IP was blocked.
+			 *
+			 * @since 2.1.30
+			 *
+			 * @param string      $ip_address    Blocked IP or CIDR range.
+			 * @param string      $reason        Human-readable reason.
+			 * @param string|null $blocked_until UTC expiry, or null for permanent.
+			 */
+			do_action( 'reportedip_hive_ip_blocked', $ip_address, $reason, $blocked_until );
+		}
+
+		return $result;
 	}
 
 	/**
@@ -645,7 +692,7 @@ class ReportedIP_Hive_Database {
 			$blocked_until = gmdate( 'Y-m-d H:i:s', time() + ( $duration_minutes * 60 ) );
 		}
 
-		return $wpdb->replace(
+		$result = $wpdb->replace(
 			$table_name,
 			array(
 				'ip_address'    => $ip_address,
@@ -657,6 +704,13 @@ class ReportedIP_Hive_Database {
 			),
 			array( '%s', '%s', '%s', '%s', '%d', '%s' )
 		);
+
+		if ( false !== $result ) {
+			/** This action is documented in includes/class-database.php */
+			do_action( 'reportedip_hive_ip_blocked', $ip_address, $reason, $blocked_until );
+		}
+
+		return $result;
 	}
 
 	/**
@@ -742,13 +796,26 @@ class ReportedIP_Hive_Database {
 
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
 
-		return $wpdb->update(
+		$result = $wpdb->update(
 			$table_name,
 			array( 'is_active' => 0 ),
 			array( 'ip_address' => $ip_address ),
 			array( '%d' ),
 			array( '%s' )
 		);
+
+		if ( false !== $result ) {
+			/**
+			 * Fires after a block was lifted.
+			 *
+			 * @since 2.1.30
+			 *
+			 * @param string $ip_address Unblocked IP or CIDR range.
+			 */
+			do_action( 'reportedip_hive_ip_unblocked', $ip_address );
+		}
+
+		return $result;
 	}
 
 	/**

@@ -119,7 +119,7 @@ final class ReportedIP_Hive_Admin_Bar {
 							__( '%1$d IPs · %2$d attempts · window %3$s', 'reportedip-hive' ),
 							(int) $reason['unique_ips'],
 							(int) $reason['total_attempts'],
-							(string) ( $reason['time_window'] ?? '' )
+							ReportedIP_Hive_Hardening_Mode::describe_time_window( $reason['time_window'] ?? '' )
 						)
 					),
 					'meta'   => array(

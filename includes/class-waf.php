@@ -925,4 +925,68 @@ class ReportedIP_Hive_WAF {
 			)
 		);
 	}
+
+	/**
+	 * Import a hit the pre-WordPress guard already answered with a 403.
+	 *
+	 * The drop-in runs before WordPress exists, so it can neither log nor
+	 * escalate — it appends the hit to a queue file and exits. This is the
+	 * WordPress side of that bridge: it writes the same `waf_block` row the
+	 * in-WordPress engine would have written, stamped with the time the request
+	 * actually happened rather than the time it was imported, and feeds the
+	 * escalation ladder so a repeat offender still earns an IP block and a
+	 * community report. It never serves a blocked page — the request it
+	 * describes was answered long ago.
+	 *
+	 * @param array<string,mixed> $entry Decoded queue entry.
+	 * @return bool True when the hit was recorded.
+	 * @since  2.1.30
+	 */
+	public function record_dropin_hit( array $entry ) {
+		$ip = isset( $entry['ip'] ) ? (string) $entry['ip'] : '';
+		if ( '' === $ip || false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			return false;
+		}
+		if ( ! class_exists( 'ReportedIP_Hive_Logger' ) || ! is_callable( array( 'ReportedIP_Hive', 'get_instance' ) ) ) {
+			return false;
+		}
+
+		$rule_id  = isset( $entry['rule'] ) ? (string) $entry['rule'] : 'waf_rule';
+		$group    = isset( $entry['group'] ) ? (string) $entry['group'] : '';
+		$target   = isset( $entry['target'] ) ? (string) $entry['target'] : 'all';
+		$severity = isset( $entry['severity'] ) ? (string) $entry['severity'] : 'high';
+		if ( ! in_array( $severity, array( 'low', 'medium', 'high', 'critical' ), true ) ) {
+			$severity = 'high';
+		}
+
+		$occurred = isset( $entry['time'] ) ? (int) $entry['time'] : 0;
+		$occurred = $occurred > 0 ? gmdate( 'Y-m-d H:i:s', $occurred ) : null;
+
+		$details = array(
+			'rule'           => $rule_id,
+			'group'          => $group,
+			'target'         => $target,
+			'report_only'    => false,
+			'paranoia'       => isset( $entry['paranoia'] ) ? (int) $entry['paranoia'] : 1,
+			'matched_target' => $target,
+			'source'         => 'dropin',
+		);
+
+		foreach ( array(
+			'matched'    => 160,
+			'method'     => 10,
+			'uri'        => 256,
+			'user_agent' => 200,
+		) as $key => $limit ) {
+			if ( isset( $entry[ $key ] ) && '' !== (string) $entry[ $key ] ) {
+				$details[ $key ] = ReportedIP_Hive_Logger::truncate( (string) $entry[ $key ], $limit );
+			}
+		}
+
+		ReportedIP_Hive_Logger::get_instance()->log_security_event( 'waf_block', $ip, $details, $severity, $occurred );
+
+		$this->escalate( $ip, $group, $rule_id );
+
+		return true;
+	}
 }

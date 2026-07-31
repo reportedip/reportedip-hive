@@ -1580,6 +1580,20 @@ class ReportedIP_Hive_API {
 	private const RECENT_HEALTH_MIN_RATE = 80;
 
 	/**
+	 * How recent a failure has to be for the window to count as degraded.
+	 *
+	 * The window is sized in calls, not in time. A site that talks to the API
+	 * twice an hour needs more than a day to flush 50 entries, so a four-hour
+	 * outage kept the rate below the threshold long after the API had
+	 * recovered — and the hourly warning kept repeating for a fault that was
+	 * over. Degradation is a statement about now, so it additionally requires
+	 * a failure inside this window.
+	 *
+	 * @since 2.1.30
+	 */
+	private const RECENT_HEALTH_FRESH_HOURS = 3;
+
+	/**
 	 * Check if we're currently rate limited.
 	 *
 	 * @param string|null $bucket One of 'reputation', 'submission', 'meta'. Pass null to
@@ -1760,7 +1774,8 @@ class ReportedIP_Hive_API {
 		}
 
 		if ( $stats['recent_total'] >= self::RECENT_HEALTH_MIN_SAMPLE
-			&& $stats['recent_success_rate'] < self::RECENT_HEALTH_MIN_RATE ) {
+			&& $stats['recent_success_rate'] < self::RECENT_HEALTH_MIN_RATE
+			&& $this->has_fresh_failure( $stats ) ) {
 			$last_health_warning = get_transient( 'reportedip_hive_health_warning_logged' );
 
 			if ( ! $last_health_warning ) {
@@ -1796,6 +1811,27 @@ class ReportedIP_Hive_API {
 	 *                       `recent_success_rate` populated.
 	 * @since 2.1.18
 	 */
+	/**
+	 * Whether the rolling window holds a failure recent enough to act on.
+	 *
+	 * @param array $stats Stats array carrying the `recent` window.
+	 * @return bool        True when a failed call falls inside
+	 *                     {@see self::RECENT_HEALTH_FRESH_HOURS}.
+	 * @since 2.1.30
+	 */
+	private function has_fresh_failure( array $stats ) {
+		$recent = isset( $stats['recent'] ) && is_array( $stats['recent'] ) ? $stats['recent'] : array();
+		$cutoff = time() - ( self::RECENT_HEALTH_FRESH_HOURS * HOUR_IN_SECONDS );
+
+		foreach ( $recent as $entry ) {
+			if ( empty( $entry['ok'] ) && isset( $entry['t'] ) && (int) $entry['t'] >= $cutoff ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private function push_recent_call( array $stats, $success ) {
 		$now    = time();
 		$recent = isset( $stats['recent'] ) && is_array( $stats['recent'] ) ? $stats['recent'] : array();

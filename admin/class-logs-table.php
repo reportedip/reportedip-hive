@@ -369,7 +369,7 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 					<option value="fake_bot" <?php selected( $event_type, 'fake_bot' ); ?>><?php esc_html_e( 'Spoofed Crawler (flagged)', 'reportedip-hive' ); ?></option>
 					<option value="fake_bot_blocked" <?php selected( $event_type, 'fake_bot_blocked' ); ?>><?php esc_html_e( 'Spoofed Crawler (blocked)', 'reportedip-hive' ); ?></option>
 					<option value="decoy_pathblock_hit" <?php selected( $event_type, 'decoy_pathblock_hit' ); ?>><?php esc_html_e( 'Decoy Path Hit', 'reportedip-hive' ); ?></option>
-					<option value="scan_404" <?php selected( $event_type, 'scan_404' ); ?>><?php esc_html_e( 'Scan Detected', 'reportedip-hive' ); ?></option>
+					<option value="scan_404_threshold_exceeded" <?php selected( $event_type, 'scan_404_threshold_exceeded' ); ?>><?php esc_html_e( 'Scan Detected', 'reportedip-hive' ); ?></option>
 					<option value="disposable_email" <?php selected( $event_type, 'disposable_email' ); ?>><?php esc_html_e( 'Disposable Email', 'reportedip-hive' ); ?></option>
 					<option value="rule_sync_signature_fail" <?php selected( $event_type, 'rule_sync_signature_fail' ); ?>><?php esc_html_e( 'Ruleset Signature Failure', 'reportedip-hive' ); ?></option>
 				</optgroup>

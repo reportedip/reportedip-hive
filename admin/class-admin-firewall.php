@@ -32,6 +32,13 @@ class ReportedIP_Hive_Admin_Firewall {
 	/**
 	 * Event types the firewall surfaces own (overview feed + counters).
 	 *
+	 * The scan detector never writes a bare `scan_404` row: it funnels 404s
+	 * through {@see ReportedIP_Hive_Security_Monitor::track_generic_attempt()},
+	 * which only counts attempts and — once the burst threshold is crossed —
+	 * logs the `_threshold_exceeded` variant. Listing the base type here made
+	 * the counter and the feed permanently report zero even while scanners were
+	 * being blocked.
+	 *
 	 * @var string[]
 	 */
 	const FIREWALL_EVENT_TYPES = array(
@@ -40,7 +47,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		'fake_bot',
 		'fake_bot_blocked',
 		'decoy_pathblock_hit',
-		'scan_404',
+		'scan_404_threshold_exceeded',
 		'disposable_email',
 		'rule_sync_signature_fail',
 	);
@@ -190,14 +197,14 @@ class ReportedIP_Hive_Admin_Firewall {
 	 */
 	private static function event_label( $event_type ) {
 		$labels = array(
-			'waf_block'                => __( 'WAF blocked a request', 'reportedip-hive' ),
-			'waf_would_block'          => __( 'WAF match (report-only)', 'reportedip-hive' ),
-			'fake_bot'                 => __( 'Spoofed crawler flagged', 'reportedip-hive' ),
-			'fake_bot_blocked'         => __( 'Spoofed crawler blocked', 'reportedip-hive' ),
-			'decoy_pathblock_hit'      => __( 'Decoy path hit', 'reportedip-hive' ),
-			'scan_404'                 => __( 'Scan detected', 'reportedip-hive' ),
-			'disposable_email'         => __( 'Disposable e-mail address detected', 'reportedip-hive' ),
-			'rule_sync_signature_fail' => __( 'Ruleset signature rejected', 'reportedip-hive' ),
+			'waf_block'                   => __( 'WAF blocked a request', 'reportedip-hive' ),
+			'waf_would_block'             => __( 'WAF match (report-only)', 'reportedip-hive' ),
+			'fake_bot'                    => __( 'Spoofed crawler flagged', 'reportedip-hive' ),
+			'fake_bot_blocked'            => __( 'Spoofed crawler blocked', 'reportedip-hive' ),
+			'decoy_pathblock_hit'         => __( 'Decoy path hit', 'reportedip-hive' ),
+			'scan_404_threshold_exceeded' => __( 'Scan detected', 'reportedip-hive' ),
+			'disposable_email'            => __( 'Disposable e-mail address detected', 'reportedip-hive' ),
+			'rule_sync_signature_fail'    => __( 'Ruleset signature rejected', 'reportedip-hive' ),
 		);
 		return isset( $labels[ $event_type ] ) ? $labels[ $event_type ] : ucwords( str_replace( '_', ' ', $event_type ) );
 	}
@@ -488,7 +495,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		);
 		self::render_stat_card(
 			array(
-				'value' => (string) ( $counts['decoy_pathblock_hit'] + $counts['scan_404'] ),
+				'value' => (string) ( $counts['decoy_pathblock_hit'] + $counts['scan_404_threshold_exceeded'] ),
 				'label' => __( 'Scans & decoy hits', 'reportedip-hive' ),
 			)
 		);
@@ -854,7 +861,25 @@ class ReportedIP_Hive_Admin_Firewall {
 				'label' => __( 'Guard file', 'reportedip-hive' ),
 			)
 		);
+		$queue_ok = $dropin->queue_is_writable();
+		self::render_stat_card(
+			array(
+				'value' => $queue_ok ? __( 'Recording', 'reportedip-hive' ) : __( 'Not writable', 'reportedip-hive' ),
+				'badge' => $queue_ok ? 'rip-badge--success' : 'rip-badge--warning',
+				'label' => __( 'Hit logging', 'reportedip-hive' ),
+			)
+		);
 		echo '</div>';
+
+		if ( $enabled && ! $queue_ok ) {
+			echo '<div class="rip-alert rip-alert--warning">';
+			printf(
+				/* translators: %s: absolute path of the queue directory. */
+				esc_html__( 'The guard cannot write to %s, so blocked requests are stopped but never reach the log, the counters or the escalation ladder. Give the web-server user write access to that directory.', 'reportedip-hive' ),
+				'<code>' . esc_html( dirname( $dropin->queue_path() ) ) . '</code>'
+			);
+			echo '</div>';
+		}
 
 		if ( $enabled && $running ) {
 			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Setup complete — the guard executed for this very request, so every request to this site passes the firewall before WordPress loads.', 'reportedip-hive' ) . '</div>';

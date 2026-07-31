@@ -274,6 +274,74 @@ final class ReportedIP_Hive_Hardening_Mode {
 	}
 
 	/**
+	 * Resolve a rolling-window label back into the timespan it stands for.
+	 *
+	 * The label is a bucket index, not a date, so printing it through a
+	 * datetime formatter yields the Unix epoch. Admin surfaces call this to
+	 * show the window the detector actually measured.
+	 *
+	 * @param string $time_window Reason `time_window` value.
+	 * @return array{minutes:int,start:int,end:int}|null Null when the label is not a rolling one.
+	 * @since  2.1.30
+	 */
+	public static function parse_rolling_window_label( $time_window ) {
+		if ( ! preg_match( '/^rolling-(\d+)m-(\d+)$/', (string) $time_window, $matches ) ) {
+			return null;
+		}
+
+		$minutes = (int) $matches[1];
+		if ( $minutes < 1 ) {
+			return null;
+		}
+
+		$start = (int) $matches[2] * $minutes * MINUTE_IN_SECONDS;
+
+		return array(
+			'minutes' => $minutes,
+			'start'   => $start,
+			'end'     => $start + ( $minutes * MINUTE_IN_SECONDS ),
+		);
+	}
+
+	/**
+	 * Render a `time_window` value for display in the site timezone.
+	 *
+	 * Handles both shapes the detectors produce: the rolling bucket label and
+	 * the `%Y-%m-%d %H:%i` burst label (stored in UTC like every other plugin
+	 * datetime). Anything unrecognised is returned verbatim rather than being
+	 * pushed through a datetime formatter, which is what used to print the
+	 * Unix epoch.
+	 *
+	 * @param string $time_window Reason `time_window` value.
+	 * @return string             Display-ready label.
+	 * @since  2.1.30
+	 */
+	public static function describe_time_window( $time_window ) {
+		$time_window = (string) $time_window;
+		$window      = self::parse_rolling_window_label( $time_window );
+		$format      = get_option( 'date_format', 'Y-m-d' ) . ' ' . get_option( 'time_format', 'H:i:s' );
+
+		if ( null !== $window ) {
+			return sprintf(
+				/* translators: 1: window start datetime, 2: window end time, 3: window length in minutes */
+				__( '%1$s to %2$s (%3$d min rolling window)', 'reportedip-hive' ),
+				wp_date( $format, $window['start'] ),
+				wp_date( get_option( 'time_format', 'H:i:s' ), $window['end'] ),
+				$window['minutes']
+			);
+		}
+
+		if ( class_exists( 'ReportedIP_Hive' ) ) {
+			$local = ReportedIP_Hive::format_local_datetime( $time_window );
+			if ( '' !== $local ) {
+				return $local;
+			}
+		}
+
+		return $time_window;
+	}
+
+	/**
 	 * Activate the hardening window.
 	 *
 	 * Idempotency rules (the marker stores the canonical strongest reason

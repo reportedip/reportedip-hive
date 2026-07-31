@@ -209,6 +209,64 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNotContains( 'api_health_degraded', $this->spy( $client )->events );
 		}
 
+		/**
+		 * Seed the stored window with an outage that already ended.
+		 *
+		 * Mirrors the shape observed in production: 14 failed calls inside one
+		 * afternoon, then nothing but successes. At two API calls per hour the
+		 * failures stay inside the 50-entry window for more than a day.
+		 *
+		 * @param int $failure_age_hours How long ago the outage stopped.
+		 * @return void
+		 */
+		private function seed_finished_outage( $failure_age_hours ) {
+			$recent = array();
+			for ( $i = 0; $i < 14; $i++ ) {
+				$recent[] = array(
+					't'  => time() - ( $failure_age_hours * HOUR_IN_SECONDS ) - ( $i * 600 ),
+					'ok' => 0,
+				);
+			}
+			for ( $i = 0; $i < 35; $i++ ) {
+				$recent[] = array(
+					't'  => time() - ( ( 35 - $i ) * 600 ),
+					'ok' => 1,
+				);
+			}
+
+			\ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_stats', array( 'recent' => $recent ) );
+		}
+
+		public function test_outage_that_ended_hours_ago_stops_warning() {
+			$client = $this->client();
+			$this->seed_finished_outage( 9 );
+
+			$this->track( $client, true );
+
+			$stats = \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_stats', array() );
+			$this->assertSame( 72.0, $stats['recent_success_rate'], 'the window still carries the old failures' );
+			$this->assertNotContains(
+				'api_health_degraded',
+				$this->spy( $client )->events,
+				'A fault that stopped hours ago must not keep raising the alarm every hour.'
+			);
+		}
+
+		public function test_outage_still_in_progress_keeps_warning() {
+			$client = $this->client();
+			$this->seed_finished_outage( 0 );
+
+			$this->track( $client, true );
+
+			$stats = \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_stats', array() );
+			$this->assertSame( 72.0, $stats['recent_success_rate'] );
+			$this->assertContains(
+				'api_health_degraded',
+				$this->spy( $client )->events,
+				'While failures keep arriving the warning has to fire.'
+			);
+		}
+
 		public function test_migration_resets_poisoned_stats() {
 			\ReportedIP_Hive_Option_Routing::set(
 				'reportedip_hive_api_stats',

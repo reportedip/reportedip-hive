@@ -818,7 +818,7 @@ class ReportedIP_Hive_Ajax_Handler {
 			$test_details = array(
 				'test_type'       => 'logging_test',
 				'severity_tested' => $severity,
-				'timestamp'       => current_time( 'mysql' ),
+				'timestamp'       => current_time( 'mysql', true ),
 				'user_id'         => get_current_user_id(),
 				'test_message'    => sprintf( 'This is a %s severity logging test', $severity ),
 			);
@@ -878,7 +878,7 @@ class ReportedIP_Hive_Ajax_Handler {
 					'details'    => wp_json_encode(
 						array(
 							'test_type' => 'database_connection_test',
-							'timestamp' => current_time( 'mysql' ),
+							'timestamp' => current_time( 'mysql', true ),
 						)
 					),
 					'severity'   => 'low',
@@ -926,7 +926,7 @@ class ReportedIP_Hive_Ajax_Handler {
 				ReportedIP_Hive::get_client_ip(),
 				array(
 					'user_id'   => get_current_user_id(),
-					'timestamp' => current_time( 'mysql' ),
+					'timestamp' => current_time( 'mysql', true ),
 				)
 			);
 
@@ -961,7 +961,7 @@ class ReportedIP_Hive_Ajax_Handler {
 				'attempts'  => 10,
 				'threshold' => 5,
 				'timeframe' => 15,
-				'timestamp' => current_time( 'mysql' ),
+				'timestamp' => current_time( 'mysql', true ),
 				'user_id'   => get_current_user_id(),
 			);
 
@@ -1031,7 +1031,7 @@ class ReportedIP_Hive_Ajax_Handler {
 					'threshold' => $threshold,
 					'timeframe' => $timeframe,
 					'user_id'   => get_current_user_id(),
-					'timestamp' => current_time( 'mysql' ),
+					'timestamp' => current_time( 'mysql', true ),
 				),
 				'medium'
 			);

@@ -8238,7 +8238,7 @@ class ReportedIP_Hive_Admin_Settings {
 								' ' . esc_html__( 'Trigger: %1$d IPs, %2$d attempts in minute %3$s (burst).', 'reportedip-hive' ),
 								(int) $reason['unique_ips'],
 								(int) $reason['total_attempts'],
-								esc_html( (string) ( $reason['time_window'] ?? '' ) )
+								esc_html( ReportedIP_Hive_Hardening_Mode::describe_time_window( $reason['time_window'] ?? '' ) )
 							);
 						}
 					}

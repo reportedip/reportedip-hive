@@ -25,6 +25,22 @@
  * re-applied or the IP whitelist changes; the hourly self-heal is only the
  * fallback.
  *
+ * Two side files carry the state that changes too often to bake into the guard,
+ * both inside `uploads/reportedip-hive/` behind a deny rule and a per-site token:
+ *
+ * - `blocked-<token>.list` — every active exact-IP block as `ip<TAB>unix-expiry`
+ *   (`0` = permanent). Appended in O(1) the moment a block is written, so the
+ *   pre-WordPress layer refuses a known offender within the same request instead
+ *   of at the next self-heal. CIDR blocks cannot be looked up this way and are
+ *   baked into the guard instead.
+ * - `waf-hits-<token>.ndjson` — one line per blocked request. The guard has no
+ *   database and no logger, so without this queue a hit left no trace at all:
+ *   no log row, no counter, no escalation, no community report. WordPress
+ *   imports it on the next admin request or queue cron via {@see drain_queue()}.
+ *
+ * Both layers must stay behaviourally identical — see "The two WAF layers" in
+ * the workspace CLAUDE.md before changing anything here.
+ *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.de>
  * @copyright 2025-2026 Patrick Schlesinger
@@ -62,7 +78,39 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 5;
+	const DROPIN_VERSION = 6;
+
+	/**
+	 * Directory inside uploads that holds the hit queue.
+	 */
+	const QUEUE_DIRNAME = 'reportedip-hive';
+
+	/**
+	 * Hard ceiling for the queue file. The guard stops appending beyond it, so a
+	 * sustained attack can never fill the disk while WordPress is unreachable.
+	 */
+	const QUEUE_MAX_BYTES = 2097152;
+
+	/**
+	 * Hits imported per drain pass; the remainder waits for the next one.
+	 */
+	const QUEUE_BATCH = 200;
+
+	/**
+	 * Drain throttle transient (back-office fast path).
+	 */
+	const DRAIN_LOCK_TRANSIENT = 'reportedip_hive_waf_queue_drain';
+
+	/**
+	 * Most exact IP blocks mirrored into the guard's blocklist file.
+	 */
+	const BLOCKLIST_MAX_ENTRIES = 5000;
+
+	/**
+	 * Size at which an append-grown blocklist is rewritten from the database
+	 * instead of appended to again.
+	 */
+	const BLOCKLIST_MAX_BYTES = 1048576;
 
 	/**
 	 * Singleton instance.
@@ -102,11 +150,23 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		add_action( 'reportedip_hive_ruleset_applied', array( $this, 'on_ruleset_applied' ) );
 		add_action( 'reportedip_hive_whitelist_changed', array( $this, 'queue_resync' ) );
 		add_action( 'reportedip_hive_waf_exceptions_changed', array( $this, 'queue_resync' ) );
-		foreach ( array( ReportedIP_Hive_WAF::OPT_ENABLED, ReportedIP_Hive_WAF::OPT_REPORT_ONLY, ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED ) as $opt ) {
+		add_action( 'reportedip_hive_tier_changed', array( $this, 'queue_resync' ) );
+		add_action( 'reportedip_hive_ip_blocked', array( $this, 'on_ip_blocked' ), 10, 3 );
+		add_action( 'reportedip_hive_ip_unblocked', array( $this, 'on_ip_unblocked' ) );
+		foreach ( array(
+			ReportedIP_Hive_WAF::OPT_ENABLED,
+			ReportedIP_Hive_WAF::OPT_REPORT_ONLY,
+			ReportedIP_Hive_WAF::OPT_PARANOIA,
+			ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED,
+			'reportedip_hive_report_only_mode',
+			'reportedip_hive_trusted_ip_header',
+		) as $opt ) {
 			add_action( 'update_option_' . $opt, array( $this, 'queue_resync' ) );
 			add_action( 'update_site_option_' . $opt, array( $this, 'queue_resync' ) );
 		}
 		add_action( 'admin_init', array( $this, 'maybe_self_heal' ) );
+		add_action( 'admin_init', array( $this, 'maybe_drain_queue' ) );
+		add_action( 'reportedip_hive_process_queue', array( $this, 'run_scheduled_drain' ) );
 	}
 
 	/**
@@ -208,6 +268,9 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			return false;
 		}
 
+		$this->ensure_queue_dir();
+		$this->write_blocklist();
+
 		$content = $this->generate_prepend();
 		if ( false === file_put_contents( $prepend, $content ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Generating a same-host PHP guard outside the plugin dir; WP_Filesystem cannot place an auto_prepend_file target reliably.
 			return false;
@@ -249,6 +312,8 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		if ( ! $this->is_main_site() ) {
 			return false;
 		}
+
+		$this->drain_queue();
 
 		$this->strip_directive( $this->htaccess_path() );
 		$this->strip_directive( $this->user_ini_path() );
@@ -637,7 +702,8 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$version       = self::DROPIN_VERSION;
 
 		$engine_enabled = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_ENABLED, true );
-		$report_only    = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_REPORT_ONLY, false );
+		$report_only    = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_REPORT_ONLY, false )
+			|| (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false );
 		$skip_authed    = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED, true );
 
 		$engine_export = $engine_enabled ? 'true' : 'false';
@@ -704,6 +770,32 @@ if ( ! function_exists( 'reportedip_hive_dropin_excepted' ) ) {
 		return false;
 	}
 }
+if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
+	function reportedip_hive_dropin_is_blocked( $file, $ip ) {
+		if ( '' === $file || '' === $ip ) { return false; }
+		$raw = @file_get_contents( $file );
+		if ( ! is_string( $raw ) || '' === $raw ) { return false; }
+		$found = array();
+		if ( 1 !== @preg_match_all( '/^' . preg_quote( $ip, '/' ) . "\t(\d+)$/m", $raw, $found ) && empty( $found[1] ) ) { return false; }
+		$now = time();
+		foreach ( $found[1] as $stamp ) {
+			$stamp = (int) $stamp;
+			if ( 0 === $stamp || $stamp > $now ) { return true; }
+		}
+		return false;
+	}
+}
+if ( ! function_exists( 'reportedip_hive_dropin_refuse' ) ) {
+	function reportedip_hive_dropin_refuse( $header, $value ) {
+		if ( ! headers_sent() ) {
+			header( 'HTTP/1.1 403 Forbidden' );
+			header( $header . ': ' . $value );
+			header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+		}
+		echo 'Forbidden';
+		exit;
+	}
+}
 if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 	function reportedip_hive_dropin_has_login_cookie( $cookies ) {
 		if ( ! is_array( $cookies ) ) { return false; }
@@ -719,8 +811,9 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 		$rules      = __RIP_RULES__;
 		$whitelist  = __RIP_WHITELIST__;
 		$exceptions = __RIP_EXCEPTIONS__;
-		if ( empty( $rules ) ) { return; }
-		if ( ! __RIP_ENGINE_ENABLED__ || __RIP_REPORT_ONLY__ ) { return; }
+		$block_cidr = __RIP_BLOCKED_CIDR__;
+		$blocklist  = __RIP_BLOCKLIST__;
+		if ( __RIP_REPORT_ONLY__ ) { return; }
 
 		$ip      = '';
 		$trusted = __RIP_TRUSTED_HEADER__;
@@ -735,6 +828,17 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 		foreach ( $whitelist as $entry ) {
 			if ( reportedip_hive_dropin_ip_match( $ip, (string) $entry ) ) { return; }
 		}
+
+		foreach ( $block_cidr as $entry ) {
+			if ( reportedip_hive_dropin_ip_match( $ip, (string) $entry ) ) {
+				reportedip_hive_dropin_refuse( 'X-RIP-BLOCK', 'range' );
+			}
+		}
+		if ( reportedip_hive_dropin_is_blocked( $blocklist, $ip ) ) {
+			reportedip_hive_dropin_refuse( 'X-RIP-BLOCK', 'ip' );
+		}
+
+		if ( ! __RIP_ENGINE_ENABLED__ || empty( $rules ) ) { return; }
 
 		$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
 		$dec = rawurldecode( $uri );
@@ -769,22 +873,46 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 			else { $subject = $all; }
 			if ( '' === $subject ) { continue; }
 			$compiled = '~' . str_replace( '~', '\~', (string) $rule['pattern'] ) . '~';
-			if ( 1 === @preg_match( $compiled, $subject ) ) {
+			$found    = array();
+			if ( 1 === @preg_match( $compiled, $subject, $found ) ) {
 				if ( reportedip_hive_dropin_excepted( $exceptions, $rule, $req_path, $ip ) ) { continue; }
-				$hit = $rule; break;
+				$hit                   = $rule;
+				$hit['matched']        = isset( $found[0] ) ? (string) $found[0] : '';
+				$hit['matched_target'] = $target;
+				break;
 			}
 		}
 		if ( false !== $prev ) { @ini_set( 'pcre.backtrack_limit', (string) $prev ); }
 
 		if ( null !== $hit ) {
-			$group = isset( $hit['group'] ) ? preg_replace( '/[^a-z_]/', '', (string) $hit['group'] ) : 'rule';
-			if ( ! headers_sent() ) {
-				header( 'HTTP/1.1 403 Forbidden' );
-				header( 'X-RIP-WAF: ' . $group );
-				header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+			$queue = __RIP_QUEUE__;
+			if ( '' !== $queue ) {
+				$queued = @filesize( $queue );
+				if ( false === $queued || $queued < __RIP_QUEUE_MAX__ ) {
+					$row = @json_encode(
+						array(
+							'time'       => time(),
+							'ip'         => $ip,
+							'rule'       => isset( $hit['id'] ) ? (string) $hit['id'] : '',
+							'group'      => isset( $hit['group'] ) ? (string) $hit['group'] : '',
+							'target'     => isset( $hit['matched_target'] ) ? (string) $hit['matched_target'] : 'all',
+							'severity'   => isset( $hit['severity'] ) ? (string) $hit['severity'] : 'high',
+							'paranoia'   => isset( $hit['paranoia'] ) ? (int) $hit['paranoia'] : 1,
+							'matched'    => substr( isset( $hit['matched'] ) ? (string) $hit['matched'] : '', 0, 160 ),
+							'method'     => isset( $_SERVER['REQUEST_METHOD'] ) ? substr( (string) $_SERVER['REQUEST_METHOD'], 0, 10 ) : '',
+							'uri'        => substr( $uri, 0, 256 ),
+							'user_agent' => substr( $ua, 0, 200 ),
+						),
+						JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE
+					);
+					if ( is_string( $row ) ) {
+						@file_put_contents( $queue, $row . "\n", FILE_APPEND | LOCK_EX );
+					}
+				}
 			}
-			echo 'Forbidden';
-			exit;
+
+			$group = isset( $hit['group'] ) ? preg_replace( '/[^a-z_]/', '', (string) $hit['group'] ) : 'rule';
+			reportedip_hive_dropin_refuse( 'X-RIP-WAF', $group );
 		}
 	} catch ( \Throwable $e ) {
 		return;
@@ -794,9 +922,14 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 
 PHP;
 
+		$writable     = $this->ensure_queue_dir();
+		$queue_export = var_export( $writable ? $this->queue_path() : '', true );     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the queue path literal into a generated PHP file, not debugging.
+		$block_export = var_export( $writable ? $this->blocklist_path() : '', true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the blocklist path literal into a generated PHP file, not debugging.
+		$cidr_export  = var_export( array_values( $this->blocked_cidr_snapshot() ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the literal CIDR blocklist into a generated PHP file, not debugging.
+
 		return str_replace(
-			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__' ),
-			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $engine_export, $report_export, $skip_export ),
+			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__' ),
+			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $engine_export, $report_export, $skip_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export ),
 			$template
 		);
 	}
@@ -867,6 +1000,362 @@ PHP;
 			return array();
 		}
 		return $out;
+	}
+
+	/**
+	 * Absolute path of the hit queue the guard appends to, or '' when the
+	 * uploads directory is unavailable.
+	 *
+	 * The file lives under uploads (the one directory WordPress guarantees is
+	 * writable) inside its own folder, carries a per-site token in its name and
+	 * is shielded by a deny rule — it holds client IPs and must never be
+	 * fetchable over HTTP.
+	 *
+	 * @return string
+	 * @since  2.1.30
+	 */
+	public function queue_path() {
+		$dir = $this->queue_dir();
+		if ( '' === $dir ) {
+			return '';
+		}
+		return $dir . '/waf-hits-' . substr( hash_hmac( 'sha256', 'waf-hit-queue', wp_salt( 'auth' ) ), 0, 16 ) . '.ndjson';
+	}
+
+	/**
+	 * Absolute path of the blocklist the guard consults, or ''.
+	 *
+	 * Kept separate from the guard itself on purpose: blocks are written all the
+	 * time (every escalation, every reputation verdict), while the guard carries
+	 * the rule set and is expensive to rebake. A small side file can be appended
+	 * to in O(1) the moment a block is written, so the pre-WordPress layer knows
+	 * about an offender within the same request instead of at the next hourly
+	 * self-heal.
+	 *
+	 * @return string
+	 * @since  2.1.30
+	 */
+	public function blocklist_path() {
+		$dir = $this->queue_dir();
+		if ( '' === $dir ) {
+			return '';
+		}
+		return $dir . '/blocked-' . substr( hash_hmac( 'sha256', 'blocklist', wp_salt( 'auth' ) ), 0, 16 ) . '.list';
+	}
+
+	/**
+	 * Mirror a fresh block into the guard's blocklist.
+	 *
+	 * A CIDR range cannot be matched by the file's exact-IP lookup, so those
+	 * (rare, always manual) entries trigger a full guard rebake instead.
+	 *
+	 * @param string      $ip_address    Blocked IP or CIDR.
+	 * @param string      $reason        Unused, kept for the action signature.
+	 * @param string|null $blocked_until UTC expiry, or null for permanent.
+	 * @return void
+	 * @since  2.1.30
+	 */
+	public function on_ip_blocked( $ip_address, $reason = '', $blocked_until = null ) {
+		unset( $reason );
+		if ( ! $this->is_main_site() || ! (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false ) ) {
+			return;
+		}
+
+		$ip_address = (string) $ip_address;
+		if ( '' === $ip_address ) {
+			return;
+		}
+		if ( false !== strpos( $ip_address, '/' ) ) {
+			$this->queue_resync();
+			return;
+		}
+
+		$path = $this->blocklist_path();
+		if ( '' === $path || ! $this->ensure_queue_dir() ) {
+			return;
+		}
+
+		$size = file_exists( $path ) ? filesize( $path ) : 0;
+		if ( false !== $size && $size > self::BLOCKLIST_MAX_BYTES ) {
+			$this->write_blocklist();
+			return;
+		}
+
+		file_put_contents( $path, $ip_address . "\t" . self::expiry_stamp( $blocked_until ) . "\n", FILE_APPEND | LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Appending one line to a same-host lookup file the pre-WordPress guard reads; WP_Filesystem has no append mode.
+	}
+
+	/**
+	 * Rewrite the blocklist after a block was lifted, so the guard stops
+	 * refusing an IP the admin just released.
+	 *
+	 * @return void
+	 * @since  2.1.30
+	 */
+	public function on_ip_unblocked() {
+		if ( ! $this->is_main_site() || ! (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false ) ) {
+			return;
+		}
+		$this->write_blocklist();
+	}
+
+	/**
+	 * Rewrite the blocklist from the database, dropping expired and duplicated
+	 * entries that the append path accumulates.
+	 *
+	 * @return bool True when the file was written.
+	 * @since  2.1.30
+	 */
+	public function write_blocklist() {
+		$path = $this->blocklist_path();
+		if ( '' === $path || ! $this->ensure_queue_dir() ) {
+			return false;
+		}
+
+		$lines = array();
+		foreach ( $this->active_blocks() as $row ) {
+			$ip = is_object( $row ) ? (string) ( $row->ip_address ?? '' ) : '';
+			if ( '' === $ip || false !== strpos( $ip, '/' ) ) {
+				continue;
+			}
+			$lines[] = $ip . "\t" . self::expiry_stamp( $row->blocked_until ?? null );
+			if ( count( $lines ) >= self::BLOCKLIST_MAX_ENTRIES ) {
+				break;
+			}
+		}
+
+		$body = empty( $lines ) ? '' : implode( "\n", $lines ) . "\n";
+		return false !== file_put_contents( $path, $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing the same-host lookup file the pre-WordPress guard reads.
+	}
+
+	/**
+	 * Active block rows, or an empty list when the database is unavailable.
+	 *
+	 * @return array<int, object>
+	 * @since  2.1.30
+	 */
+	private function active_blocks() {
+		if ( ! class_exists( 'ReportedIP_Hive_Database' ) ) {
+			return array();
+		}
+		try {
+			$rows = ReportedIP_Hive_Database::get_instance()->get_blocked_ips( true );
+		} catch ( \Throwable $e ) {
+			return array();
+		}
+		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * Translate a UTC expiry into the guard's unix stamp (0 = permanent).
+	 *
+	 * The guard has no WordPress and no site timezone, so every expiry crosses
+	 * the boundary as an absolute epoch value — the one representation that is
+	 * identical on a German, Brazilian and Japanese install.
+	 *
+	 * @param string|null $blocked_until UTC 'Y-m-d H:i:s', or null.
+	 * @return int
+	 * @since  2.1.30
+	 */
+	private static function expiry_stamp( $blocked_until ) {
+		if ( ! is_string( $blocked_until ) || '' === $blocked_until ) {
+			return 0;
+		}
+		$stamp = strtotime( $blocked_until . ' UTC' );
+		return ( false === $stamp || $stamp < 0 ) ? 0 : (int) $stamp;
+	}
+
+	/**
+	 * Snapshot of active CIDR blocks, baked into the guard because the
+	 * blocklist file only answers exact-IP lookups.
+	 *
+	 * @return string[]
+	 * @since  2.1.30
+	 */
+	private function blocked_cidr_snapshot() {
+		$out = array();
+		foreach ( $this->active_blocks() as $row ) {
+			$ip = is_object( $row ) ? (string) ( $row->ip_address ?? '' ) : '';
+			if ( '' !== $ip && false !== strpos( $ip, '/' ) ) {
+				$out[] = $ip;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Whether the guard can actually append hits.
+	 *
+	 * The guard runs as the web-server user and fails open on a write error, so
+	 * a queue directory it cannot write to would silently swallow every hit —
+	 * blocking would still work, but the log, the counters and the escalation
+	 * ladder would stay empty and look exactly like "no attacks". That happens
+	 * whenever the directory was created by a root WP-CLI run. The admin surface
+	 * therefore reports this state instead of hiding it.
+	 *
+	 * @return bool
+	 * @since  2.1.30
+	 */
+	public function queue_is_writable() {
+		$dir = $this->queue_dir();
+		if ( '' === $dir || ! is_dir( $dir ) ) {
+			return false;
+		}
+		return is_writable( $dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Same-host writability probe for the queue the guard writes to.
+	}
+
+	/**
+	 * Queue directory path, or '' when uploads are unavailable.
+	 *
+	 * @return string
+	 * @since  2.1.30
+	 */
+	private function queue_dir() {
+		$uploads = wp_upload_dir( null, false );
+		if ( ! is_array( $uploads ) || empty( $uploads['basedir'] ) || ! empty( $uploads['error'] ) ) {
+			return '';
+		}
+		return rtrim( (string) $uploads['basedir'], '/\\' ) . '/' . self::QUEUE_DIRNAME;
+	}
+
+	/**
+	 * Create the queue directory with its access guards.
+	 *
+	 * @return bool True when the directory exists and is writable.
+	 * @since  2.1.30
+	 */
+	private function ensure_queue_dir() {
+		$dir = $this->queue_dir();
+		if ( '' === $dir ) {
+			return false;
+		}
+		if ( ! is_dir( $dir ) && ! wp_mkdir_p( $dir ) ) {
+			return false;
+		}
+
+		$guards = array(
+			$dir . '/index.php'  => "<?php\nreturn;\n",
+			$dir . '/.htaccess'  => "Require all denied\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n",
+			$dir . '/web.config' => "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>\n",
+		);
+		foreach ( $guards as $file => $body ) {
+			if ( ! file_exists( $file ) ) {
+				file_put_contents( $file, $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing same-host access guards next to the queue; WP_Filesystem is unavailable on the front end.
+			}
+		}
+
+		return is_writable( $dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Same-host writability probe.
+	}
+
+	/**
+	 * Back-office fast path: drain at most once a minute so a hit shows up in
+	 * the log while the admin is still looking at the page, without turning
+	 * every admin request into file I/O.
+	 *
+	 * @return void
+	 * @since  2.1.30
+	 */
+	public function run_scheduled_drain() {
+		$this->drain_queue();
+	}
+
+	/**
+	 * Back-office fast path: drain at most once a minute so a hit shows up in
+	 * the log while the admin is still looking at the page, without turning
+	 * every admin request into file I/O.
+	 *
+	 * @return void
+	 * @since  2.1.30
+	 */
+	public function maybe_drain_queue() {
+		if ( ! $this->is_main_site() ) {
+			return;
+		}
+		if ( get_site_transient( self::DRAIN_LOCK_TRANSIENT ) ) {
+			return;
+		}
+		set_site_transient( self::DRAIN_LOCK_TRANSIENT, 1, MINUTE_IN_SECONDS );
+		$this->drain_queue();
+	}
+
+	/**
+	 * Import the queued pre-WordPress hits into the log, the escalation ladder
+	 * and the report queue.
+	 *
+	 * The live file is rotated to a `.processing` sibling first: `rename()` is
+	 * atomic, so a hit arriving mid-drain lands in a fresh live file instead of
+	 * being truncated away. A leftover `.processing` file from an interrupted
+	 * run is picked up before a new rotation happens, so nothing is lost.
+	 *
+	 * @return int Number of hits imported.
+	 * @since  2.1.30
+	 */
+	public function drain_queue() {
+		if ( ! $this->is_main_site() ) {
+			return 0;
+		}
+
+		$queue = $this->queue_path();
+		if ( '' === $queue ) {
+			return 0;
+		}
+		$work = $queue . '.processing';
+
+		if ( ! file_exists( $work ) ) {
+			if ( ! file_exists( $queue ) ) {
+				return 0;
+			}
+			if ( ! rename( $queue, $work ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- Atomic same-directory rotation; WP_Filesystem::move() is not atomic, and a non-atomic rotation loses hits arriving mid-drain.
+				return 0;
+			}
+		}
+
+		return $this->import_queue_file( $work );
+	}
+
+	/**
+	 * Import one queue file, keeping any overflow for the next pass.
+	 *
+	 * @param string $file Rotated queue file.
+	 * @return int Number of hits imported.
+	 * @since  2.1.30
+	 */
+	private function import_queue_file( $file ) {
+		$contents = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading a same-host queue file the guard wrote.
+		if ( false === $contents || '' === trim( $contents ) ) {
+			wp_delete_file( $file );
+			return 0;
+		}
+
+		$lines = preg_split( '/\R/', $contents, -1, PREG_SPLIT_NO_EMPTY );
+		$lines = is_array( $lines ) ? $lines : array();
+
+		$waf       = class_exists( 'ReportedIP_Hive_WAF' ) ? ReportedIP_Hive_WAF::get_instance() : null;
+		$imported  = 0;
+		$processed = 0;
+		$overflow  = array();
+
+		foreach ( $lines as $line ) {
+			if ( $processed >= self::QUEUE_BATCH ) {
+				$overflow[] = $line;
+				continue;
+			}
+			++$processed;
+			$entry = json_decode( $line, true );
+			if ( ! is_array( $entry ) || null === $waf ) {
+				continue;
+			}
+			if ( $waf->record_dropin_hit( $entry ) ) {
+				++$imported;
+			}
+		}
+
+		if ( empty( $overflow ) ) {
+			wp_delete_file( $file );
+		} else {
+			file_put_contents( $file, implode( "\n", $overflow ) . "\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing back the unprocessed tail of a same-host queue file.
+		}
+
+		return $imported;
 	}
 
 	/**

@@ -1070,3 +1070,91 @@ if ( ! class_exists( 'WP_Error' ) ) {
 		}
 	}
 }
+
+if ( ! defined( 'MINUTE_IN_SECONDS' ) ) {
+	define( 'MINUTE_IN_SECONDS', 60 );
+}
+if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+	define( 'HOUR_IN_SECONDS', 3600 );
+}
+
+if ( ! function_exists( 'wp_upload_dir' ) ) {
+	/**
+	 * Uploads directory pointing at a throwaway temp path.
+	 *
+	 * @param string|null $time       Unused.
+	 * @param bool        $create_dir Unused.
+	 * @return array<string, mixed>
+	 */
+	function wp_upload_dir( $time = null, $create_dir = true ) {
+		$base = sys_get_temp_dir() . '/rip-uploads';
+		return array(
+			'basedir' => $base,
+			'baseurl' => 'http://example.org/wp-content/uploads',
+			'path'    => $base,
+			'url'     => 'http://example.org/wp-content/uploads',
+			'subdir'  => '',
+			'error'   => false,
+		);
+	}
+}
+
+if ( ! function_exists( 'wp_mkdir_p' ) ) {
+	/**
+	 * Recursively create a directory.
+	 *
+	 * @param string $target Directory path.
+	 * @return bool
+	 */
+	function wp_mkdir_p( $target ) {
+		return is_dir( $target ) || mkdir( $target, 0777, true );
+	}
+}
+
+if ( ! function_exists( 'wp_delete_file' ) ) {
+	/**
+	 * Delete a file.
+	 *
+	 * @param string $file File path.
+	 * @return void
+	 */
+	function wp_delete_file( $file ) {
+		if ( file_exists( $file ) ) {
+			unlink( $file );
+		}
+	}
+}
+
+if ( ! function_exists( 'wp_salt' ) ) {
+	/**
+	 * Deterministic salt so generated queue tokens stay stable across a run.
+	 *
+	 * @param string $scheme Salt scheme.
+	 * @return string
+	 */
+	function wp_salt( $scheme = 'auth' ) {
+		return 'reportedip-hive-test-salt-' . $scheme;
+	}
+}
+
+if ( ! function_exists( 'wp_doing_ajax' ) ) {
+	/**
+	 * Whether the current request is an AJAX request.
+	 *
+	 * @return bool
+	 */
+	function wp_doing_ajax() {
+		return isset( $GLOBALS['rip_test_doing_ajax'] ) ? (bool) $GLOBALS['rip_test_doing_ajax'] : false;
+	}
+}
+
+if ( ! function_exists( 'wp_doing_cron' ) ) {
+	/**
+	 * Whether the current request is a cron request.
+	 *
+	 * @return bool
+	 */
+	function wp_doing_cron() {
+		return isset( $GLOBALS['rip_test_doing_cron'] ) ? (bool) $GLOBALS['rip_test_doing_cron'] : false;
+	}
+}

@@ -145,6 +145,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * Data of the most recent write into the logs table.
+		 *
+		 * @return array<string, mixed>
+		 */
+		private function last_log_write(): array {
+			$writes = array_values(
+				array_filter(
+					$GLOBALS['wpdb']->writes,
+					static function ( $w ) {
+						return false !== strpos( $w['table'], 'reportedip_hive_logs' );
+					}
+				)
+			);
+			$this->assertNotEmpty( $writes, 'A log row must be written.' );
+			return (array) end( $writes )['data'];
+		}
+
+		/**
 		 * The active-block check must compare blocked_until (written in UTC)
 		 * against UTC_TIMESTAMP(), never the session-local NOW().
 		 */
@@ -221,6 +239,61 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * A deferred writer — the pre-WordPress WAF drop-in, whose hits are
+		 * imported minutes after the request — must be able to stamp the row
+		 * with the UTC time the hit actually happened, or every time window and
+		 * "X ago" reading would describe the import instead of the attack.
+		 */
+		public function test_security_log_accepts_an_explicit_utc_created_at(): void {
+			$db       = new \ReportedIP_Hive_Database();
+			$occurred = gmdate( 'Y-m-d H:i:s', time() - 900 );
+			$db->log_security_event( 'waf_block', '1.2.3.4', array(), 'high', $occurred );
+
+			$this->assertSame( $occurred, $this->last_log_write()['created_at'] );
+		}
+
+		/**
+		 * A malformed or future value from the queue file must never reach the
+		 * column: it would push the row outside every window query.
+		 */
+		public function test_security_log_rejects_bogus_created_at(): void {
+			$db = new \ReportedIP_Hive_Database();
+
+			$db->log_security_event( 'waf_block', '1.2.3.4', array(), 'high', 'not-a-datetime' );
+			$this->assertMatchesRegularExpression( '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $this->last_log_write()['created_at'] );
+
+			$future = gmdate( 'Y-m-d H:i:s', time() + 86400 );
+			$db->log_security_event( 'waf_block', '1.2.3.4', array(), 'high', $future );
+			$this->assertLessThan( $future, $this->last_log_write()['created_at'], 'A future timestamp must be clamped to now.' );
+		}
+
+		/**
+		 * Every stored datetime is UTC, so a log detail must never be stamped
+		 * with the site-local clock. Doing so made the failed-login detail read
+		 * two hours ahead of its own row on a German install, because the
+		 * renderer converts stored values from UTC to site time.
+		 */
+		public function test_no_log_detail_is_stamped_in_site_local_time(): void {
+			$root    = dirname( __DIR__, 2 );
+			$offend  = array();
+			$sources = array_merge(
+				glob( $root . '/includes/*.php' ) ?: array(),
+				glob( $root . '/includes/*/*.php' ) ?: array(),
+				glob( $root . '/admin/*.php' ) ?: array(),
+				glob( $root . '/reportedip-hive.php' ) ?: array()
+			);
+
+			foreach ( $sources as $file ) {
+				$body = (string) file_get_contents( $file );
+				if ( 1 === preg_match( "/'(?:timestamp|occurred_at)'\s*=>\s*current_time\(\s*'mysql'\s*\)/", $body ) ) {
+					$offend[] = basename( $file );
+				}
+			}
+
+			$this->assertSame( array(), $offend, 'These files stamp a log detail in site-local time; use current_time( \'mysql\', true ).' );
+		}
+
+		/**
 		 * The logs read window must also measure from UTC_TIMESTAMP() now that
 		 * created_at is written in UTC.
 		 */
@@ -257,6 +330,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$now_utc,
 				$blocked_until,
 				'A 5-minute block must expire in the future on the UTC clock is_blocked() reads.'
+			);
+		}
+
+		public function test_format_local_datetime_rejects_unparseable_input(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/reportedip-hive.php' );
+			$start  = strpos( $source, 'public static function format_local_datetime' );
+			$this->assertNotFalse( $start, 'format_local_datetime() must exist' );
+
+			$body = substr( $source, $start, 700 );
+			$this->assertStringContainsString(
+				'date_create(',
+				$body,
+				'format_local_datetime() must reject unparseable input before get_date_from_gmt(), which returns the Unix epoch for it.'
+			);
+			$this->assertLessThan(
+				strpos( $body, 'get_date_from_gmt' ),
+				strpos( $body, 'date_create(' ),
+				'The parse check has to run before the formatter, not after.'
 			);
 		}
 	}

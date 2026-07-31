@@ -82,6 +82,12 @@ namespace {
 		class_alias( 'ReportedIP_Hive_Logger_Stub_For_Hardening', 'ReportedIP_Hive_Logger' );
 	}
 
+	if ( ! function_exists( 'wp_date' ) ) {
+		function wp_date( $format, $timestamp = null, $timezone = null ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return gmdate( $format, null === $timestamp ? time() : (int) $timestamp );
+		}
+	}
+
 	require_once dirname( __DIR__, 2 ) . '/includes/class-hardening-mode.php';
 }
 
@@ -548,6 +554,40 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( 'rolling-10m-2833333' ) );
 			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( '2026-05-27 12:44' ) );
 			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( '' ) );
+		}
+
+		public function test_parse_rolling_window_label_recovers_the_measured_timespan() {
+			$base   = 1700000000;
+			$label  = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 10, $base );
+			$window = \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( $label );
+
+			$this->assertIsArray( $window );
+			$this->assertSame( 10, $window['minutes'] );
+			$this->assertSame( 600, $window['end'] - $window['start'], 'the span matches the window length' );
+			$this->assertLessThanOrEqual( $base, $window['start'], 'the bucket starts at or before the sampled moment' );
+			$this->assertGreaterThan( $base, $window['end'], 'the sampled moment falls inside the bucket' );
+		}
+
+		public function test_parse_rolling_window_label_rejects_non_rolling_input() {
+			$this->assertNull( \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( '2026-05-27 12:44' ) );
+			$this->assertNull( \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( '' ) );
+			$this->assertNull( \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( 'rolling-0m-500' ) );
+			$this->assertNull( \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( 'rolling-abc-500' ) );
+		}
+
+		public function test_describe_time_window_renders_a_rolling_label_as_a_timespan() {
+			$label  = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 60, 1785312000 );
+			$output = \ReportedIP_Hive_Hardening_Mode::describe_time_window( $label );
+
+			$this->assertStringNotContainsString( 'rolling-', $output, 'the bucket index must not reach the operator' );
+			$this->assertStringNotContainsString( '1970', $output, 'a bucket index must never render as the Unix epoch' );
+			$this->assertStringContainsString( '2026-07-29', $output );
+			$this->assertStringContainsString( '60 min rolling window', $output );
+		}
+
+		public function test_describe_time_window_passes_unparseable_input_through_verbatim() {
+			$this->assertSame( 'not-a-date', \ReportedIP_Hive_Hardening_Mode::describe_time_window( 'not-a-date' ) );
+			$this->assertSame( '', \ReportedIP_Hive_Hardening_Mode::describe_time_window( '' ) );
 		}
 	}
 }

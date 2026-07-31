@@ -23,6 +23,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ReportedIP_Hive_Logger {
 
 	/**
+	 * Detail keys holding a UTC 'Y-m-d H:i:s' string, rendered in site time.
+	 *
+	 * @var string[]
+	 */
+	private const DATETIME_DETAIL_KEYS = array( 'timestamp', 'time_window', 'anonymized_at', 'blocked_until', 'submitted_at' );
+
+	/**
+	 * Detail keys holding a Unix timestamp, rendered in site time.
+	 *
+	 * @var string[]
+	 */
+	private const UNIX_TIME_DETAIL_KEYS = array( 'hardening_expires_at' );
+
+	/**
 	 * Single instance of the class
 	 */
 	private static $instance = null;
@@ -63,15 +77,26 @@ class ReportedIP_Hive_Logger {
 	}
 
 	/**
-	 * Log security event
+	 * Log security event.
+	 *
+	 * @param string      $event_type Event type key.
+	 * @param string      $ip_address Client IP, or 'system'.
+	 * @param array       $details    Structured detail payload.
+	 * @param string      $severity   low|medium|high|critical.
+	 * @param string|null $occurred_at UTC 'Y-m-d H:i:s' the event happened, for
+	 *                                 deferred writers (WAF drop-in queue). The
+	 *                                 stored row and the `timestamp` detail both
+	 *                                 use it, so the log never claims a hit
+	 *                                 happened when it was merely imported.
+	 * @return int|false
 	 */
-	public function log_security_event( $event_type, $ip_address, $details = array(), $severity = 'medium' ) {
+	public function log_security_event( $event_type, $ip_address, $details = array(), $severity = 'medium', $occurred_at = null ) {
 		if ( ! $this->should_log( $severity ) ) {
 			return false;
 		}
 
 		$log_details = array(
-			'timestamp' => current_time( 'mysql', true ),
+			'timestamp' => is_string( $occurred_at ) && '' !== $occurred_at ? $occurred_at : current_time( 'mysql', true ),
 		);
 
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_minimal_logging', true ) ) {
@@ -107,7 +132,7 @@ class ReportedIP_Hive_Logger {
 			$log_details['hardening_expires_at'] = ReportedIP_Hive_Hardening_Mode::expires_at();
 		}
 
-		$result = $this->database->log_security_event( $event_type, $ip_address, $log_details, $severity );
+		$result = $this->database->log_security_event( $event_type, $ip_address, $log_details, $severity, $occurred_at );
 
 		if ( defined( 'REPORTEDIP_DEBUG' ) && REPORTEDIP_DEBUG ) {
 			$log_message = sprintf(
@@ -139,7 +164,16 @@ class ReportedIP_Hive_Logger {
 		if ( is_array( $value ) || is_object( $value ) ) {
 			return (string) wp_json_encode( $value );
 		}
-		if ( in_array( $key, array( 'timestamp', 'time_window' ), true )
+
+		if ( 'time_window' === $key && '' !== (string) $value && class_exists( 'ReportedIP_Hive_Hardening_Mode' ) ) {
+			return ReportedIP_Hive_Hardening_Mode::describe_time_window( (string) $value );
+		}
+
+		if ( in_array( $key, self::UNIX_TIME_DETAIL_KEYS, true ) && is_numeric( $value ) && (int) $value > 0 ) {
+			return (string) wp_date( self::datetime_display_format(), (int) $value );
+		}
+
+		if ( in_array( $key, self::DATETIME_DETAIL_KEYS, true )
 			&& is_string( $value ) && '' !== $value
 			&& class_exists( 'ReportedIP_Hive' ) ) {
 			$local = ReportedIP_Hive::format_local_datetime( $value );
@@ -147,7 +181,18 @@ class ReportedIP_Hive_Logger {
 				return $local;
 			}
 		}
+
 		return (string) $value;
+	}
+
+	/**
+	 * Site date+time format used for every rendered log detail.
+	 *
+	 * @return string
+	 * @since  2.1.30
+	 */
+	private static function datetime_display_format() {
+		return get_option( 'date_format', 'Y-m-d' ) . ' ' . get_option( 'time_format', 'H:i:s' );
 	}
 
 	/**

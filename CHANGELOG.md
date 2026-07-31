@@ -2,6 +2,88 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.30] — 2026-07-30
+
+### New
+
+- **Extended protection now enforces IP blocks too.** The guard knew the WAF
+  rules and the whitelist, but not the block list — so an IP the plugin had
+  just banned still reached WordPress on every request and was only stopped
+  there. Active blocks are now mirrored into a protected side file that the
+  guard consults before any rule runs: a new block takes effect within the same
+  request, an expired or lifted one stops applying immediately, whitelisted IPs
+  still outrank everything, and CIDR ranges are carried in the guard itself.
+  Blocks are enforced even when rule inspection is switched off, because they
+  come from the auto-block ladder rather than from the WAF. The guard also
+  honours the global report-only switch now, which previously stopped at the
+  WordPress layer.
+- **Extended protection now records what it blocks.** The pre-WordPress guard
+  runs before WordPress exists, so it could neither log nor escalate: it
+  answered the request with a 403 and forgot it. Because it evaluates the same
+  rules as the in-WordPress engine, it also intercepted every request that
+  engine would have logged — so a site running extended protection reported
+  zero WAF hits no matter how much it blocked, repeat offenders were never
+  laddered into an IP block, and nothing was shared with the community. The
+  guard now appends each hit (rule, group, matched fragment, path, method,
+  user agent, UTC timestamp) to a queue file under `uploads/reportedip-hive/`,
+  and WordPress imports it on the next admin request or queue cron. Imported
+  hits carry the time the request actually happened, not the time of import.
+  The queue is size-capped, rotated atomically before reading, shielded from
+  HTTP by a deny rule plus a per-site token in its file name, and its
+  writability is reported on the Firewall page — a guard that cannot record
+  would otherwise look exactly like a site under no attack.
+
+### Fixes
+
+- **The setup wizard opens again after activation on busy sites.** The
+  activation marker is consumed exactly once, and any request passing through
+  `admin_init` consumed it — including `admin-ajax.php`, which fires that hook
+  just like a real page. On a WooCommerce store the Action Scheduler queue
+  runner or Heartbeat regularly won that race, swallowed the marker and
+  received a redirect no browser ever followed, so the wizard silently never
+  appeared. Background requests (AJAX, cron, REST, XML-RPC, WP-CLI, non-GET)
+  now leave the marker untouched.
+- **The Firewall page counts detected scans again.** The overview counter and
+  the log filter looked for the event type `scan_404`, which nothing writes:
+  the detector funnels 404s through the shared attempt tracker, which logs
+  `scan_404_threshold_exceeded` once the burst threshold is crossed. Both now
+  read the type that is actually stored, so a blocked scanner shows up instead
+  of a permanent zero.
+- **Failed-login, comment-spam, XML-RPC and successful-login entries show the
+  right time.** Those four writers stamped their `timestamp` detail with the
+  site-local clock while everything else stores UTC. The renderer converts
+  stored values from UTC to site time, so on a German install the detail read
+  two hours ahead of the row it belonged to. The redundant stamps are gone;
+  the logger's UTC one is the single source.
+- **Coordinated-attack logs no longer claim the attack happened in 1970.** The
+  distributed detector labels its window with a bucket index
+  (`rolling-60m-29421`), not a date, and the log table pushed that label
+  through a datetime formatter — `get_date_from_gmt()` answers an unparseable
+  string with the Unix epoch, so every distributed detection printed
+  "1. January 1970 0:00" as its time window. The label is now resolved back
+  into the timespan it stands for ("2026-07-29 09:00 to 10:00 (60 min rolling
+  window)"), and `format_local_datetime()` returns an empty string instead of
+  the epoch for anything it cannot parse, so the raw value is shown rather
+  than a wrong date. The admin-bar node and the hardening banner use the same
+  helper, so all three surfaces now agree.
+- **`Hardening expires at` is a time again, not a raw Unix timestamp.** The
+  value is stamped as an integer and was printed verbatim (`1785314321`). It
+  now renders in the site timezone like every other logged datetime.
+- **`Anonymized at` respects the site timezone.** The retention sweep stamps
+  it in UTC; the log table printed it unconverted, so it read up to a full
+  timezone offset earlier than the event it belonged to.
+- **`API health degraded` stops repeating for an outage that is already
+  over.** The health window is sized in calls (the last 50), not in time. A
+  site that talks to the API twice an hour needs more than a day to flush it,
+  so a four-hour outage held the success rate under the threshold long after
+  the API had recovered, and the warning re-fired every hour against a fault
+  nobody could act on any more. Degradation now additionally requires a
+  failed call within the last three hours: a running outage keeps producing
+  those and still warns on the first sweep, while a finished one goes quiet
+  three hours after its last failure instead of the next day. The measured
+  success rate and the health score are unchanged — only the alarm condition
+  is.
+
 ## [2.1.29] — 2026-07-29
 
 ### New

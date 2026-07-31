@@ -231,8 +231,15 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * skip must therefore not block the redirect, otherwise the first
 	 * redirect after the very first skip would never fire again — the skip
 	 * flag stays persistent, the transient is consumed once.
+	 *
+	 * Because the marker is one-shot, the context check must happen BEFORE it
+	 * is consumed — see {@see request_can_redirect()}.
 	 */
 	public function maybe_redirect_to_wizard() {
+		if ( ! $this->request_can_redirect() ) {
+			return;
+		}
+
 		if ( ! get_site_transient( 'reportedip_hive_activation_redirect' ) ) {
 			return;
 		}
@@ -254,6 +261,42 @@ class ReportedIP_Hive_Setup_Wizard {
 
 		wp_safe_redirect( self::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) );
 		exit;
+	}
+
+	/**
+	 * Whether the current request is one a redirect can actually reach.
+	 *
+	 * `admin-ajax.php` fires `admin_init` exactly like a real admin page, and a
+	 * WooCommerce store keeps that endpoint permanently busy — Action Scheduler
+	 * queue runners, Heartbeat, store-notice polls. Such a background request
+	 * would consume the one-shot activation marker and receive a 302 no browser
+	 * ever follows, so the freshly activated site silently never opens its
+	 * wizard. That is the reported "no redirect after activation, seen on a
+	 * WooCommerce site" failure. Cron, REST, XML-RPC and WP-CLI are excluded for
+	 * the same reason, and a non-GET request is never a navigation either.
+	 *
+	 * @return bool True when a redirect would reach a browser.
+	 * @since  2.1.30
+	 */
+	private function request_can_redirect() {
+		if ( wp_doing_ajax() || wp_doing_cron() ) {
+			return false;
+		}
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			return false;
+		}
+		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+			return false;
+		}
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			return false;
+		}
+
+		$method = isset( $_SERVER['REQUEST_METHOD'] )
+			? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) )
+			: 'GET';
+
+		return 'GET' === $method;
 	}
 
 	/**

@@ -360,7 +360,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_generate_prepend_bakes_engine_report_and_skip_flags(): void {
 			$php = $this->call_private( 'generate_prepend', array() );
-			$this->assertStringContainsString( 'if ( ! true || false ) { return; }', $php, 'Default state bakes engine=enabled, report-only=off.' );
+			$this->assertStringContainsString( 'if ( false ) { return; }', $php, 'Default state bakes report-only=off.' );
+			$this->assertStringContainsString( 'if ( ! true || empty( $rules ) ) { return; }', $php, 'Default state bakes engine=enabled.' );
 			$this->assertStringContainsString( '$skip_body = true &&', $php, 'Authenticated body-skip defaults on.' );
 			$this->assert_valid_php( $php );
 		}
@@ -420,6 +421,267 @@ namespace ReportedIP\Hive\Tests\Unit {
 				array( 'q' => '<script>alert(1)</script>' )
 			);
 			$this->assertSame( 'PASS', $verdict, 'Report-only mode must not block at the pre-WordPress layer.' );
+		}
+
+		/**
+		 * Remove both the live queue and a leftover rotation from earlier runs.
+		 */
+		private function reset_queue(): void {
+			$queue = $this->mgr()->queue_path();
+			foreach ( array( $queue, $queue . '.processing' ) as $file ) {
+				if ( '' !== $queue && file_exists( $file ) ) {
+					unlink( $file );
+				}
+			}
+		}
+
+		/**
+		 * The whole point of the bridge: a block at the pre-WordPress layer must
+		 * leave a record behind, because the guard itself can neither log nor
+		 * escalate. Without this line the firewall counter stays at zero while
+		 * attacks are being blocked, and a repeat offender is never laddered
+		 * into an IP block.
+		 */
+		public function test_guard_appends_blocked_hit_to_queue(): void {
+			$this->reset_queue();
+			$queue = $this->mgr()->queue_path();
+			$this->assertNotSame( '', $queue, 'The queue path must resolve when uploads are available.' );
+
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/?f=../../etc/passwd', 'REMOTE_ADDR' => '198.51.100.7' ) );
+			$this->assertSame( 'Forbidden', $verdict );
+
+			$this->assertFileExists( $queue, 'A blocked request must be queued for import.' );
+			$lines = array_values( array_filter( explode( "\n", (string) file_get_contents( $queue ) ) ) );
+			$this->assertCount( 1, $lines, 'Exactly one hit must be queued.' );
+
+			$entry = json_decode( $lines[0], true );
+			$this->assertIsArray( $entry );
+			$this->assertSame( 'waf_traversal', $entry['rule'] );
+			$this->assertSame( 'path_traversal', $entry['group'] );
+			$this->assertSame( '198.51.100.7', $entry['ip'] );
+			$this->assertStringContainsString( '../', (string) $entry['matched'], 'The matched fragment is what tells a real attack from a false positive.' );
+			$this->assertGreaterThan( 0, (int) $entry['time'] );
+			$this->assertLessThanOrEqual( time() + 1, (int) $entry['time'], 'The hit time must be a UTC unix timestamp, never a site-local clock reading.' );
+		}
+
+		/**
+		 * A request the guard lets through must not grow the queue.
+		 */
+		public function test_guard_queues_nothing_when_request_passes(): void {
+			$this->reset_queue();
+			$this->assertSame( 'PASS', $this->run_guard( array( 'REQUEST_URI' => '/shop/' ) ) );
+			$this->assertFileDoesNotExist( $this->mgr()->queue_path() );
+		}
+
+		/**
+		 * While WordPress is unreachable nothing drains the queue, so the guard
+		 * must stop appending once the file hits its ceiling — otherwise a
+		 * sustained attack fills the disk.
+		 */
+		public function test_guard_stops_queueing_at_the_size_ceiling(): void {
+			$this->reset_queue();
+			$queue = $this->mgr()->queue_path();
+			file_put_contents( $queue, str_repeat( 'x', \ReportedIP_Hive_WAF_Dropin_Manager::QUEUE_MAX_BYTES + 1 ) );
+			$before = filesize( $queue );
+
+			$this->assertSame( 'Forbidden', $this->run_guard( array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) ), 'Blocking must continue even when the queue is full.' );
+			clearstatcache( true, $queue );
+			$this->assertSame( $before, filesize( $queue ), 'A full queue must not grow any further.' );
+
+			$this->reset_queue();
+		}
+
+		/**
+		 * Draining rotates the live file away first, so a hit arriving mid-drain
+		 * lands in a fresh file instead of being truncated into oblivion.
+		 */
+		public function test_drain_rotates_and_consumes_the_queue(): void {
+			$this->reset_queue();
+			$queue = $this->mgr()->queue_path();
+			file_put_contents( $queue, wp_json_encode( array( 'time' => time(), 'ip' => '198.51.100.8', 'rule' => 'waf_traversal', 'group' => 'path_traversal' ) ) . "\n" );
+
+			$this->mgr()->drain_queue();
+
+			$this->assertFileDoesNotExist( $queue, 'The live queue must be rotated away.' );
+			$this->assertFileDoesNotExist( $queue . '.processing', 'A fully drained rotation must be deleted.' );
+		}
+
+		/**
+		 * More hits than one pass imports must survive for the next pass rather
+		 * than being dropped with the file.
+		 */
+		public function test_drain_keeps_overflow_for_the_next_pass(): void {
+			$this->reset_queue();
+			$queue = $this->mgr()->queue_path();
+			$total = \ReportedIP_Hive_WAF_Dropin_Manager::QUEUE_BATCH + 25;
+			$rows  = array();
+			for ( $i = 0; $i < $total; $i++ ) {
+				$rows[] = wp_json_encode( array( 'time' => time(), 'ip' => '198.51.100.9', 'rule' => 'waf_traversal', 'group' => 'path_traversal' ) );
+			}
+			file_put_contents( $queue, implode( "\n", $rows ) . "\n" );
+
+			$this->mgr()->drain_queue();
+
+			$this->assertFileExists( $queue . '.processing', 'The unprocessed tail must be kept.' );
+			$rest = array_values( array_filter( explode( "\n", (string) file_get_contents( $queue . '.processing' ) ) ) );
+			$this->assertCount( 25, $rest, 'Exactly the overflow beyond one batch must remain.' );
+
+			$this->reset_queue();
+		}
+
+		/**
+		 * A malformed line must never abort the import of the rest.
+		 */
+		public function test_drain_survives_corrupt_lines(): void {
+			$this->reset_queue();
+			$queue = $this->mgr()->queue_path();
+			file_put_contents( $queue, "not json\n{\"ip\":\"198.51.100.10\",\"rule\":\"waf_xss_script\"}\n\n" );
+
+			$this->mgr()->drain_queue();
+
+			$this->assertFileDoesNotExist( $queue . '.processing' );
+		}
+
+		/**
+		 * Seed the guard's blocklist file and remove it again after the test.
+		 */
+		private function seed_blocklist( string $body ): void {
+			$this->call_private( 'ensure_queue_dir', array() );
+			file_put_contents( $this->mgr()->blocklist_path(), $body );
+		}
+
+		private function clear_blocklist(): void {
+			$path = $this->mgr()->blocklist_path();
+			if ( '' !== $path && file_exists( $path ) ) {
+				unlink( $path );
+			}
+		}
+
+		/**
+		 * An IP the plugin has blocked must be refused by the pre-WordPress
+		 * layer too. Otherwise "extended protection" stops attack payloads but
+		 * still hands every request of a known offender to WordPress — the gap
+		 * this file exists to close.
+		 */
+		public function test_guard_refuses_a_blocked_ip(): void {
+			$this->seed_blocklist( "198.51.100.20\t" . ( time() + 600 ) . "\n" );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/shop/', 'REMOTE_ADDR' => '198.51.100.20' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'Forbidden', $verdict );
+		}
+
+		public function test_guard_refuses_a_permanently_blocked_ip(): void {
+			$this->seed_blocklist( "198.51.100.21\t0\n" );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/', 'REMOTE_ADDR' => '198.51.100.21' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'Forbidden', $verdict, 'A block without an expiry is permanent.' );
+		}
+
+		/**
+		 * An expired block must stop refusing, or the guard would keep an
+		 * offender out long after WordPress released them.
+		 */
+		public function test_guard_lets_an_expired_block_through(): void {
+			$this->seed_blocklist( "198.51.100.22\t" . ( time() - 60 ) . "\n" );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/', 'REMOTE_ADDR' => '198.51.100.22' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'PASS', $verdict );
+		}
+
+		/**
+		 * A near-miss must not match: the lookup is anchored per line, so a
+		 * longer IP that merely starts with a blocked one stays free.
+		 */
+		public function test_guard_does_not_refuse_a_prefix_lookalike(): void {
+			$this->seed_blocklist( "198.51.100.2\t" . ( time() + 600 ) . "\n" );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/', 'REMOTE_ADDR' => '198.51.100.23' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'PASS', $verdict );
+		}
+
+		/**
+		 * The whitelist is the one thing that outranks a block, exactly as in
+		 * WordPress — otherwise an admin could lock themselves out at a layer
+		 * where no plugin can help them.
+		 */
+		public function test_guard_whitelist_outranks_the_blocklist(): void {
+			$php = $this->call_private( 'generate_prepend', array() );
+
+			$whitelisted = strpos( $php, 'foreach ( $whitelist as $entry )' );
+			$block_range = strpos( $php, 'foreach ( $block_cidr as $entry )' );
+			$block_exact = strpos( $php, 'reportedip_hive_dropin_is_blocked( $blocklist' );
+
+			$this->assertNotFalse( $whitelisted );
+			$this->assertNotFalse( $block_range );
+			$this->assertNotFalse( $block_exact );
+			$this->assertLessThan( $block_range, $whitelisted, 'A whitelisted IP must return before any block is evaluated.' );
+			$this->assertLessThan( $block_exact, $whitelisted );
+		}
+
+		/**
+		 * IP blocks come from the auto-block ladder, not from the WAF engine, so
+		 * switching rule inspection off must not switch blocking off with it.
+		 */
+		public function test_guard_enforces_blocks_with_the_waf_engine_disabled(): void {
+			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_ENABLED ] = false;
+			$this->seed_blocklist( "198.51.100.25\t" . ( time() + 600 ) . "\n" );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/', 'REMOTE_ADDR' => '198.51.100.25' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'Forbidden', $verdict );
+		}
+
+		/**
+		 * Report-only means "observe, never interfere" — for blocks as well.
+		 */
+		public function test_guard_ignores_blocks_in_report_only_mode(): void {
+			$GLOBALS['wp_options']['reportedip_hive_report_only_mode'] = true;
+			$this->seed_blocklist( "198.51.100.26\t" . ( time() + 600 ) . "\n" );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/', 'REMOTE_ADDR' => '198.51.100.26' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'PASS', $verdict, 'The global report-only switch must reach the pre-WordPress layer too.' );
+		}
+
+		/**
+		 * A fresh block must reach the guard within the same request instead of
+		 * waiting for the hourly self-heal.
+		 */
+		public function test_new_block_is_appended_for_the_guard(): void {
+			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED ] = true;
+			$this->clear_blocklist();
+
+			$this->mgr()->on_ip_blocked( '198.51.100.27', 'brute force', gmdate( 'Y-m-d H:i:s', time() + 1800 ) );
+
+			$body = (string) file_get_contents( $this->mgr()->blocklist_path() );
+			$this->clear_blocklist();
+			$this->assertMatchesRegularExpression( '/^198\.51\.100\.27\t\d{10}$/m', $body );
+		}
+
+		/**
+		 * The two WAF layers must evaluate the same rule set. A rule active in
+		 * WordPress but missing from the guard would be a hole an attacker can
+		 * walk through whenever the guard answers first.
+		 */
+		public function test_guard_carries_every_active_engine_rule(): void {
+			$php   = $this->call_private( 'generate_prepend', array() );
+			$rules = \ReportedIP_Hive_WAF::get_instance()->get_active_rules();
+
+			$this->assertNotEmpty( $rules, 'The engine must expose rules for this comparison to mean anything.' );
+			foreach ( $rules as $rule ) {
+				$this->assertStringContainsString( "'" . $rule['id'] . "'", $php, "Rule {$rule['id']} runs in WordPress but is missing from the guard." );
+				$this->assertStringContainsString( var_export( $rule['pattern'], true ), $php, "Rule {$rule['id']} is baked with a different pattern than the engine uses." ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Reproducing the literal the generator bakes, so the comparison sees the same escaping.
+			}
+		}
+
+		/**
+		 * The queue holds client IPs, so it must never be fetchable over HTTP.
+		 */
+		public function test_queue_directory_carries_access_guards(): void {
+			$this->call_private( 'ensure_queue_dir', array() );
+			$dir = dirname( $this->mgr()->queue_path() );
+			$this->assertFileExists( $dir . '/index.php' );
+			$this->assertFileExists( $dir . '/.htaccess' );
+			$this->assertStringContainsString( 'denied', (string) file_get_contents( $dir . '/.htaccess' ) );
+			$this->assertMatchesRegularExpression( '/waf-hits-[0-9a-f]{16}\.ndjson$/', $this->mgr()->queue_path(), 'The file name must carry a per-site token so it cannot be guessed.' );
 		}
 	}
 }

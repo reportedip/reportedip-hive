@@ -4,7 +4,7 @@
  * Plugin URI: https://reportedip.de
  * Description: Community-powered WordPress security — real-time threat intelligence
  * with 5-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.1.29
+ * Version: 2.1.30
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.de
  * License: GPL-2.0-or-later
@@ -55,7 +55,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.1.29' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.1.30' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -962,9 +962,7 @@ class ReportedIP_Hive {
 			return;
 		}
 
-		$log_data = array(
-			'timestamp' => current_time( 'mysql' ),
-		);
+		$log_data = array();
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 			$log_data['username_hash'] = hash( 'sha256', $username . wp_salt() );
@@ -1133,7 +1131,6 @@ class ReportedIP_Hive {
 		if ( $approved === 'spam' || $approved === 0 ) {
 			$log_data = array(
 				'comment_id' => $comment_id,
-				'timestamp'  => current_time( 'mysql' ),
 			);
 
 			if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
@@ -1167,8 +1164,7 @@ class ReportedIP_Hive {
 		}
 
 		$log_data = array(
-			'method'    => $method,
-			'timestamp' => current_time( 'mysql' ),
+			'method' => $method,
 		);
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
@@ -1189,9 +1185,7 @@ class ReportedIP_Hive {
 
 		$this->security_monitor->reset_failed_login_counter( $ip_address );
 
-		$log_data = array(
-			'timestamp' => current_time( 'mysql' ),
-		);
+		$log_data = array();
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 			$log_data['username_hash'] = hash( 'sha256', $user_login . wp_salt() );
@@ -1710,6 +1704,9 @@ class ReportedIP_Hive {
 	public static function format_local_datetime( $utc_mysql ) {
 		$utc_mysql = (string) $utc_mysql;
 		if ( '' === $utc_mysql || 0 === strpos( $utc_mysql, '0000-00-00' ) ) {
+			return '';
+		}
+		if ( false === date_create( $utc_mysql, new DateTimeZone( 'UTC' ) ) ) {
 			return '';
 		}
 		$format = get_option( 'date_format', 'Y-m-d' ) . ' ' . get_option( 'time_format', 'H:i:s' );

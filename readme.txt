@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.29
+Stable tag: 2.1.30
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,24 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.30 =
+
+New: extended protection now enforces IP blocks before WordPress loads. The guard knew the firewall rules and the whitelist but not the block list, so a banned IP still reached WordPress on every request. Active blocks are mirrored into a protected side file the guard reads first — a new block applies within the same request, a lifted one stops applying immediately, whitelisted IPs still win, and blocks hold even when rule inspection is off.
+
+New: extended protection (the pre-WordPress guard) now records what it blocks. It runs before WordPress loads and could previously neither log nor escalate, and because it evaluates the same rules as the in-WordPress engine it also intercepted every hit that engine would have logged — so a site running it reported zero WAF hits no matter how much it blocked, repeat offenders were never escalated to an IP block, and nothing reached the community. Hits are now queued to a protected file under uploads/ and imported on the next admin request or queue cron, stamped with the time the request actually happened. The Firewall page reports whether the queue is writable.
+
+Fix: the setup wizard opens again after activation on busy sites. The one-shot activation marker was consumed by any request passing through admin_init, including admin-ajax.php — on a WooCommerce store the Action Scheduler or Heartbeat regularly won that race and the wizard silently never appeared. Background requests now leave the marker alone.
+
+Fix: the Firewall page counts detected scans again. Counter and log filter looked for an event type the detector never writes; both now read the type that is actually stored.
+
+Fix: failed-login, comment-spam, XML-RPC and successful-login entries show the correct time. Those four stamped their timestamp detail with the site-local clock while everything else stores UTC, so the detail read a full timezone offset ahead of its own row.
+
+Fix: coordinated-attack logs no longer show "1. January 1970" as their time window. The distributed detector labels its window with a bucket index rather than a date, and the log table pushed that through a datetime formatter. The label now resolves back into the timespan it measured, and unparseable values are printed verbatim instead of as the Unix epoch.
+
+Fix: "Hardening expires at" renders as a date in the site timezone instead of a raw Unix timestamp, and "Anonymized at" is converted from UTC like every other logged datetime.
+
+Fix: the "API health degraded" warning no longer repeats every hour for an outage that already ended. The health window holds the last 50 calls, which on a low-traffic site spans more than a day, so a finished fault kept the rate below the threshold. The warning now also requires a failed call within the last three hours.
 
 = 2.1.29 =
 
