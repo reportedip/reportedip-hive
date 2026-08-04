@@ -102,6 +102,51 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		/**
+		 * The ladder counts block events, so an attacker who trips the
+		 * threshold once and then keeps firing used to land on the same rung as
+		 * one who stopped: every later offence hits an already-blocked IP and
+		 * returns early. A bot with 60 rule violations in ten seconds earned
+		 * five minutes. Volume now buys rungs directly.
+		 */
+		public function test_burst_volume_skips_ladder_rungs() {
+			$GLOBALS['rip_test_block_count'] = 0;
+
+			$this->assertSame( 5, \ReportedIP_Hive_Block_Escalation::next_block_minutes( '1.2.3.4', 3, 3 ), 'A burst at the threshold stays on rung 1.' );
+			$this->assertSame( 15, \ReportedIP_Hive_Block_Escalation::next_block_minutes( '1.2.3.4', 15, 3 ), '5x the threshold skips one rung.' );
+			$this->assertSame( 30, \ReportedIP_Hive_Block_Escalation::next_block_minutes( '1.2.3.4', 30, 3 ), '10x the threshold skips two rungs.' );
+			$this->assertSame( 1440, \ReportedIP_Hive_Block_Escalation::next_block_minutes( '1.2.3.4', 75, 3 ), '25x the threshold skips three rungs.' );
+		}
+
+		/**
+		 * The bonus adds to the history instead of replacing it, so a repeat
+		 * offender who also comes in loud is not handed a shorter block than
+		 * their history alone would earn.
+		 */
+		public function test_burst_bonus_stacks_on_prior_blocks() {
+			$GLOBALS['rip_test_block_count'] = 2;
+
+			$this->assertSame( 30, \ReportedIP_Hive_Block_Escalation::next_block_minutes( '1.2.3.4' ), 'Two prior blocks alone means rung 3.' );
+			$this->assertSame( 2880, \ReportedIP_Hive_Block_Escalation::next_block_minutes( '1.2.3.4', 30, 3 ), 'Two prior blocks plus a 10x burst means rung 5.' );
+		}
+
+		public function test_burst_bonus_never_exceeds_the_ladder() {
+			$ladder                          = \ReportedIP_Hive_Block_Escalation::DEFAULT_LADDER_MINUTES;
+			$GLOBALS['rip_test_block_count'] = count( $ladder ) - 1;
+
+			$this->assertSame(
+				end( $ladder ),
+				\ReportedIP_Hive_Block_Escalation::next_block_minutes( '1.2.3.4', 10000, 3 ),
+				'The cap is still the last rung, however loud the burst.'
+			);
+		}
+
+		public function test_burst_rungs_ignores_missing_or_absurd_input() {
+			$this->assertSame( 0, \ReportedIP_Hive_Block_Escalation::burst_rungs( 0, 3 ) );
+			$this->assertSame( 0, \ReportedIP_Hive_Block_Escalation::burst_rungs( 100, 0 ), 'Without a threshold there is no ratio to weigh.' );
+			$this->assertSame( 0, \ReportedIP_Hive_Block_Escalation::burst_rungs( -5, -5 ) );
+		}
+
 		public function test_custom_ladder_option_is_respected() {
 			$GLOBALS['wp_options']['reportedip_hive_block_ladder_minutes'] = '10,60,1440';
 			$GLOBALS['rip_test_block_count']                                = 1;

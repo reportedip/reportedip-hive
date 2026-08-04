@@ -138,6 +138,48 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'apache', $this->mgr()->detect_server( 'apache2handler' ) );
 		}
 
+		public function test_detect_web_server_reports_nginx_behind_php_fpm(): void {
+			$this->assertSame(
+				'nginx',
+				$this->mgr()->detect_web_server( 'fpm-fcgi', 'nginx/1.25.3' ),
+				'The FastCGI SAPI must not be read as Apache — nginx never evaluates .htaccess.'
+			);
+		}
+
+		public function test_detect_web_server_reports_apache_behind_php_fpm(): void {
+			$this->assertSame(
+				'apache',
+				$this->mgr()->detect_web_server( 'fpm-fcgi', 'Apache/2.4.57 (Unix)' ),
+				'Apache with proxy_fcgi still evaluates .htaccess.'
+			);
+		}
+
+		public function test_detect_web_server_reports_mod_php_without_server_software(): void {
+			$this->assertSame( 'apache', $this->mgr()->detect_web_server( 'apache2handler', '' ) );
+		}
+
+		public function test_detect_web_server_reports_litespeed(): void {
+			$this->assertSame( 'litespeed', $this->mgr()->detect_web_server( 'litespeed', 'LiteSpeed' ) );
+		}
+
+		public function test_detect_web_server_unknown_when_unidentifiable(): void {
+			$this->assertSame( 'unknown', $this->mgr()->detect_web_server( 'cli', '' ) );
+		}
+
+		public function test_supports_htaccess_only_for_apache_and_litespeed(): void {
+			$this->assertTrue( $this->mgr()->supports_htaccess( 'fpm-fcgi', 'Apache/2.4.57 (Unix)' ) );
+			$this->assertTrue( $this->mgr()->supports_htaccess( 'apache2handler', '' ) );
+			$this->assertTrue( $this->mgr()->supports_htaccess( 'litespeed', 'LiteSpeed' ) );
+			$this->assertFalse(
+				$this->mgr()->supports_htaccess( 'fpm-fcgi', 'nginx/1.25.3' ),
+				'nginx + PHP-FPM must never be advertised as .htaccess-managed.'
+			);
+			$this->assertFalse(
+				$this->mgr()->supports_htaccess( 'cli', '' ),
+				'An unidentified server must not be claimed as .htaccess-capable.'
+			);
+		}
+
 		public function test_detect_server_bare_nginx_without_fpm_falls_back_to_snippet(): void {
 			$_SERVER['SERVER_SOFTWARE'] = 'nginx/1.25.3';
 			$this->assertSame(
@@ -670,6 +712,112 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertStringContainsString( "'" . $rule['id'] . "'", $php, "Rule {$rule['id']} runs in WordPress but is missing from the guard." );
 				$this->assertStringContainsString( var_export( $rule['pattern'], true ), $php, "Rule {$rule['id']} is baked with a different pattern than the engine uses." ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Reproducing the literal the generator bakes, so the comparison sees the same escaping.
 			}
+		}
+
+		/**
+		 * Fold entries through the private grouper and return the groups.
+		 *
+		 * @param array<int,array<string,mixed>> $entries Queue entries.
+		 * @return array<string,array<string,mixed>>
+		 */
+		private function group( array $entries ): array {
+			$groups = array();
+			$ref    = new \ReflectionMethod( \ReportedIP_Hive_WAF_Dropin_Manager::class, 'group_entry' );
+			foreach ( $entries as $entry ) {
+				$ref->invokeArgs( $this->mgr(), array( &$groups, $entry ) );
+			}
+			return $groups;
+		}
+
+		/**
+		 * A scanner sweeping twenty spellings of one endpoint is a single
+		 * finding. Kept apart, those rows buried every other event on the
+		 * firewall page and let one ten-second burst own the 30-day statistic.
+		 */
+		public function test_repeat_offences_against_one_rule_collapse_into_a_group(): void {
+			$entries = array();
+			foreach ( array( '/wp-json/batch/v1', '/wp-json//batch/v1', '/?rest_route=/batch/v1' ) as $i => $uri ) {
+				$entries[] = array( 'time' => 1785481200 + $i, 'ip' => '198.51.100.30', 'rule' => 'waf_rest_batch_desync', 'uri' => $uri );
+			}
+
+			$groups = $this->group( $entries );
+
+			$this->assertCount( 1, $groups );
+			$group = reset( $groups );
+			$this->assertSame( 3, $group['count'] );
+			$this->assertCount( 3, $group['targets'], 'Each distinct target is kept for diagnosis.' );
+			$this->assertSame( 1785481200, $group['entry']['time'], 'The group inherits the time the sweep started.' );
+		}
+
+		public function test_different_ips_or_rules_stay_separate(): void {
+			$groups = $this->group(
+				array(
+					array( 'time' => 1785481200, 'ip' => '198.51.100.31', 'rule' => 'waf_xss_script', 'uri' => '/a' ),
+					array( 'time' => 1785481201, 'ip' => '198.51.100.31', 'rule' => 'waf_traversal', 'uri' => '/b' ),
+					array( 'time' => 1785481202, 'ip' => '198.51.100.32', 'rule' => 'waf_xss_script', 'uri' => '/c' ),
+				)
+			);
+
+			$this->assertCount( 3, $groups, 'Grouping must never merge separate attackers or separate rules.' );
+		}
+
+		/**
+		 * The sample is bounded so a sweep with thousands of variants cannot
+		 * grow a single log row without limit.
+		 */
+		public function test_target_sample_is_bounded(): void {
+			$entries = array();
+			for ( $i = 0; $i < 40; $i++ ) {
+				$entries[] = array( 'time' => 1785481200, 'ip' => '198.51.100.33', 'rule' => 'waf_traversal', 'uri' => '/probe-' . $i );
+			}
+
+			$groups = $this->group( $entries );
+			$group  = reset( $groups );
+
+			$this->assertSame( 40, $group['count'], 'Every offence still counts toward the ladder.' );
+			$this->assertCount( \ReportedIP_Hive_WAF::AGGREGATE_URI_SAMPLE, $group['targets'] );
+		}
+
+		public function test_duplicate_targets_are_not_sampled_twice(): void {
+			$groups = $this->group(
+				array(
+					array( 'time' => 1785481200, 'ip' => '198.51.100.34', 'rule' => 'waf_traversal', 'uri' => '/same' ),
+					array( 'time' => 1785481201, 'ip' => '198.51.100.34', 'rule' => 'waf_traversal', 'uri' => '/same' ),
+				)
+			);
+			$group  = reset( $groups );
+
+			$this->assertSame( 2, $group['count'] );
+			$this->assertSame( array( '/same' ), $group['targets'] );
+		}
+
+		/**
+		 * The rotation is atomic, the import is not: without a lock the queue
+		 * cron and an admin request can import the same rotated file twice,
+		 * doubling both the log and the offence counter behind the ladder.
+		 */
+		public function test_a_second_drain_backs_off_while_one_is_running(): void {
+			$this->reset_queue();
+			$queue = $this->mgr()->queue_path();
+			file_put_contents( $queue, wp_json_encode( array( 'time' => time(), 'ip' => '198.51.100.35', 'rule' => 'waf_traversal' ) ) . "\n" );
+
+			set_site_transient( \ReportedIP_Hive_WAF_Dropin_Manager::DRAIN_LOCK_TRANSIENT, 1, 300 );
+			$this->mgr()->drain_queue();
+
+			$this->assertFileExists( $queue, 'A locked drain must leave the queue untouched for the running one.' );
+
+			delete_site_transient( \ReportedIP_Hive_WAF_Dropin_Manager::DRAIN_LOCK_TRANSIENT );
+			$this->mgr()->drain_queue();
+			$this->assertFileDoesNotExist( $queue, 'Once the lock clears the queue is drained normally.' );
+
+			$this->reset_queue();
+		}
+
+		public function test_drain_releases_its_lock(): void {
+			$this->reset_queue();
+			$this->mgr()->drain_queue();
+
+			$this->assertFalse( (bool) get_site_transient( \ReportedIP_Hive_WAF_Dropin_Manager::DRAIN_LOCK_TRANSIENT ), 'A finished drain must not leave the lock behind.' );
 		}
 
 		/**

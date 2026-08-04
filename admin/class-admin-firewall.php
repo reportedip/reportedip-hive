@@ -1201,25 +1201,30 @@ class ReportedIP_Hive_Admin_Firewall {
 			$present  = $writer->is_block_present();
 		}
 		$server     = class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
-			? ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->detect_server()
+			? ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->detect_web_server()
 			: 'unknown';
-		$is_apache  = ( 'apache' === $server || 'fpm' === $server );
+		$htaccess   = ( 'apache' === $server || 'litespeed' === $server );
 		$server_lbl = array(
-			'apache'  => 'Apache (.htaccess)',
-			'fpm'     => 'PHP-FPM / Apache',
-			'nginx'   => 'nginx',
-			'unknown' => __( 'Unknown', 'reportedip-hive' ),
+			'apache'    => 'Apache (.htaccess)',
+			'litespeed' => 'LiteSpeed (.htaccess)',
+			'nginx'     => 'nginx',
+			'unknown'   => __( 'Unknown', 'reportedip-hive' ),
 		);
 
 		/**
-		 * Resolve the .htaccess-block status badge: the empty marker skeleton
-		 * that a disabled trap leaves behind must not read as "active", so the
-		 * badge is gated on the trap actually being on.
+		 * Resolve the .htaccess-block status badge. Two things must never read as
+		 * "active": the empty marker skeleton a disabled trap leaves behind, and a
+		 * block written to an .htaccess that the web server never reads. nginx
+		 * ignores the file entirely, so a present block is inert there and the
+		 * badge says so instead of claiming protection.
 		 */
 		if ( ! $decoy_on ) {
 			$block_class = 'rip-badge--neutral';
 			$block_label = __( 'Inactive', 'reportedip-hive' );
-		} elseif ( $present && $is_apache ) {
+		} elseif ( ! $htaccess ) {
+			$block_class = 'rip-badge--info';
+			$block_label = __( 'Not applicable', 'reportedip-hive' );
+		} elseif ( $present ) {
 			$block_class = 'rip-badge--success';
 			$block_label = __( 'Active', 'reportedip-hive' );
 		} elseif ( $writable ) {
@@ -1258,15 +1263,24 @@ class ReportedIP_Hive_Admin_Firewall {
 
 		if ( ! $decoy_on ) {
 			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The decoy trap is off — no rewrite rules are active and no bait-path hits are reported.', 'reportedip-hive' ) . '</div>';
-		} elseif ( $is_apache && $writable && $present ) {
+		} elseif ( ! $htaccess ) {
+			echo '<div class="rip-alert rip-alert--info">';
+			printf(
+				/* translators: 1: opening link tag to the Server Setup tab, 2: closing tag. */
+				esc_html__( 'This web server does not read .htaccess, so no rewrite block can be auto-managed here. The PHP sensor still catches every bait-path request that reaches WordPress. Only a bait file that physically exists on disk is served without touching PHP — the rule on the %1$sServer Setup tab%2$s closes that gap.', 'reportedip-hive' ),
+				'<a href="' . esc_url( self::tab_url( 'server' ) ) . '">',
+				'</a>'
+			);
+			echo '</div>';
+		} elseif ( $writable && $present ) {
 			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Auto-managed — Hive wrote the rewrite block to .htaccess. Real bait files on disk will no longer be served directly.', 'reportedip-hive' ) . '</div>';
-		} elseif ( $is_apache && $writable ) {
+		} elseif ( $writable ) {
 			echo '<div class="rip-alert rip-alert--info">' . esc_html__( '.htaccess is writable but the block is not in place yet. Re-toggle the trap to trigger a sync.', 'reportedip-hive' ) . '</div>';
 		} else {
 			echo '<div class="rip-alert rip-alert--warning">';
 			printf(
 				/* translators: 1: opening link tag to the Server Setup tab, 2: closing tag. */
-				esc_html__( 'This server is not auto-managed (nginx, or a read-only .htaccess). The PHP sensor still catches every bait-path hit; the optional web-server rule on the %1$sServer Setup tab%2$s blocks them one layer earlier.', 'reportedip-hive' ),
+				esc_html__( '.htaccess is not writable, so the rewrite block cannot be auto-managed. The PHP sensor still catches every bait-path hit; the optional web-server rule on the %1$sServer Setup tab%2$s blocks them one layer earlier.', 'reportedip-hive' ),
 				'<a href="' . esc_url( self::tab_url( 'server' ) ) . '">',
 				'</a>'
 			);
@@ -1399,11 +1413,9 @@ class ReportedIP_Hive_Admin_Firewall {
 		if ( ! class_exists( 'ReportedIP_Hive_Decoy_Path_Block' ) ) {
 			return;
 		}
-		$decoy_on  = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_pathblock_enabled', true );
-		$server    = class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
-			? ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->detect_server()
-			: 'unknown';
-		$is_apache = ( 'apache' === $server || 'fpm' === $server );
+		$decoy_on = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_pathblock_enabled', true );
+		$htaccess = class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
+			&& ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->supports_htaccess();
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Decoy Path Block (rewrite rules)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'Blocks the bait paths at the web-server layer so real backup files on disk are never served directly. Every snippet rewrites to /index.php on purpose: the Hive sensor still loads, logs the hit and reports it — a bare return 403 would skip detection entirely.', 'reportedip-hive' ) . '</p>';
@@ -1417,8 +1429,10 @@ class ReportedIP_Hive_Admin_Firewall {
 				'</a>'
 			);
 			echo '</div>';
-		} elseif ( $is_apache ) {
+		} elseif ( $htaccess ) {
 			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'On Apache this block is auto-managed in .htaccess — the snippet below shows verbatim what Hive wrote (or would write). No manual step needed.', 'reportedip-hive' ) . '</div>';
+		} else {
+			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'This web server does not read .htaccess, so the auto-managed block does not apply here. Pick one of the nginx snippets below to cover bait files that exist on disk.', 'reportedip-hive' ) . '</div>';
 		}
 
 		self::render_snippet(

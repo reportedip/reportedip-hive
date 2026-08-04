@@ -99,7 +99,13 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Drain throttle transient (back-office fast path).
 	 */
-	const DRAIN_LOCK_TRANSIENT = 'reportedip_hive_waf_queue_drain';
+	const DRAIN_THROTTLE_TRANSIENT = 'reportedip_hive_waf_queue_drain';
+
+	/**
+	 * Mutual-exclusion lock around a drain, so the queue cron and an admin
+	 * request cannot import the same rotated file twice.
+	 */
+	const DRAIN_LOCK_TRANSIENT = 'reportedip_hive_waf_drain_lock';
 
 	/**
 	 * Most exact IP blocks mirrored into the guard's blocklist file.
@@ -439,6 +445,66 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			return 'apache';
 		}
 		return 'unknown';
+	}
+
+	/**
+	 * The web server that actually answers the request, as PHP sees it
+	 * (apache|litespeed|nginx|unknown).
+	 *
+	 * This is a different question from {@see detect_server()}, which names the
+	 * mechanism used to wire `auto_prepend_file` and therefore keys off the PHP
+	 * SAPI. The SAPI cannot answer "is `.htaccess` read here": both nginx and
+	 * Apache commonly run PHP through FPM, so `fpm-fcgi` covers a stack that
+	 * honours `.htaccess` and one that ignores it entirely. Only the server
+	 * identity settles it, hence `SERVER_SOFTWARE` before the SAPI, with
+	 * `apache2handler` as the one SAPI that is proof on its own.
+	 *
+	 * @param string|null $sapi     Override SAPI (defaults to php_sapi_name()); for tests.
+	 * @param string|null $software Override SERVER_SOFTWARE; for tests.
+	 * @return string
+	 * @since  2.1.31
+	 */
+	public function detect_web_server( $sapi = null, $software = null ) {
+		$sapi = null === $sapi ? php_sapi_name() : (string) $sapi;
+		if ( 'apache2handler' === $sapi ) {
+			return 'apache';
+		}
+
+		if ( null === $software ) {
+			$software = isset( $_SERVER['SERVER_SOFTWARE'] ) ? (string) wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Lower-cased token compare only.
+		}
+		$software = strtolower( (string) $software );
+
+		if ( false !== strpos( $software, 'litespeed' ) ) {
+			return 'litespeed';
+		}
+		if ( false !== strpos( $software, 'nginx' ) ) {
+			return 'nginx';
+		}
+		if ( false !== strpos( $software, 'apache' ) ) {
+			return 'apache';
+		}
+		if ( 'litespeed' === $sapi ) {
+			return 'litespeed';
+		}
+		return 'unknown';
+	}
+
+	/**
+	 * Whether `.htaccess` directives are honoured on this stack.
+	 *
+	 * Apache and LiteSpeed read them, nginx never does, and an unidentified
+	 * server is treated as "no" so the UI cannot advertise a rewrite block that
+	 * may be inert. Any surface that reports an `.htaccess`-based protection as
+	 * active must gate on this, never on the SAPI.
+	 *
+	 * @param string|null $sapi     Override SAPI (defaults to php_sapi_name()); for tests.
+	 * @param string|null $software Override SERVER_SOFTWARE; for tests.
+	 * @return bool
+	 * @since  2.1.31
+	 */
+	public function supports_htaccess( $sapi = null, $software = null ) {
+		return in_array( $this->detect_web_server( $sapi, $software ), array( 'apache', 'litespeed' ), true );
 	}
 
 	/**
@@ -1270,10 +1336,10 @@ PHP;
 		if ( ! $this->is_main_site() ) {
 			return;
 		}
-		if ( get_site_transient( self::DRAIN_LOCK_TRANSIENT ) ) {
+		if ( get_site_transient( self::DRAIN_THROTTLE_TRANSIENT ) ) {
 			return;
 		}
-		set_site_transient( self::DRAIN_LOCK_TRANSIENT, 1, MINUTE_IN_SECONDS );
+		set_site_transient( self::DRAIN_THROTTLE_TRANSIENT, 1, MINUTE_IN_SECONDS );
 		$this->drain_queue();
 	}
 
@@ -1298,18 +1364,35 @@ PHP;
 		if ( '' === $queue ) {
 			return 0;
 		}
+
+		/*
+		 * The rotation is atomic, the import that follows is not: the queue
+		 * cron and an admin page view can reach the same `.processing` file and
+		 * import every hit twice, which doubles both the log and the offence
+		 * counter feeding the block ladder. The API queue worker guards itself
+		 * the same way.
+		 */
+		if ( get_site_transient( self::DRAIN_LOCK_TRANSIENT ) ) {
+			return 0;
+		}
+		set_site_transient( self::DRAIN_LOCK_TRANSIENT, 1, 5 * MINUTE_IN_SECONDS );
+
 		$work = $queue . '.processing';
 
-		if ( ! file_exists( $work ) ) {
-			if ( ! file_exists( $queue ) ) {
-				return 0;
+		try {
+			if ( ! file_exists( $work ) ) {
+				if ( ! file_exists( $queue ) ) {
+					return 0;
+				}
+				if ( ! rename( $queue, $work ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- Atomic same-directory rotation; WP_Filesystem::move() is not atomic, and a non-atomic rotation loses hits arriving mid-drain.
+					return 0;
+				}
 			}
-			if ( ! rename( $queue, $work ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- Atomic same-directory rotation; WP_Filesystem::move() is not atomic, and a non-atomic rotation loses hits arriving mid-drain.
-				return 0;
-			}
-		}
 
-		return $this->import_queue_file( $work );
+			return $this->import_queue_file( $work );
+		} finally {
+			delete_site_transient( self::DRAIN_LOCK_TRANSIENT );
+		}
 	}
 
 	/**
@@ -1333,6 +1416,7 @@ PHP;
 		$imported  = 0;
 		$processed = 0;
 		$overflow  = array();
+		$groups    = array();
 
 		foreach ( $lines as $line ) {
 			if ( $processed >= self::QUEUE_BATCH ) {
@@ -1344,8 +1428,12 @@ PHP;
 			if ( ! is_array( $entry ) || null === $waf ) {
 				continue;
 			}
-			if ( $waf->record_dropin_hit( $entry ) ) {
-				++$imported;
+			$this->group_entry( $groups, $entry );
+		}
+
+		foreach ( $groups as $group ) {
+			if ( $waf->record_dropin_hit( $group['entry'], $group['count'], $group['targets'] ) ) {
+				$imported += $group['count'];
 			}
 		}
 
@@ -1356,6 +1444,47 @@ PHP;
 		}
 
 		return $imported;
+	}
+
+	/**
+	 * Fold one queue entry into its (IP, rule) group.
+	 *
+	 * A scanner sweeping twenty spellings of the same endpoint is one finding,
+	 * not twenty: keeping them apart buried every other event on the firewall
+	 * page and let a single ten-second burst dominate the 30-day statistic. The
+	 * group keeps the earliest hit as its representative, so the imported row
+	 * carries the time the sweep started.
+	 *
+	 * @param array<string,array<string,mixed>> $groups Groups collected so far, by reference.
+	 * @param array<string,mixed>               $entry  Decoded queue entry.
+	 * @return void
+	 * @since  2.1.31
+	 */
+	private function group_entry( array &$groups, array $entry ) {
+		$key = ( isset( $entry['ip'] ) ? (string) $entry['ip'] : '' ) . '|' . ( isset( $entry['rule'] ) ? (string) $entry['rule'] : '' );
+
+		if ( ! isset( $groups[ $key ] ) ) {
+			$groups[ $key ] = array(
+				'entry'   => $entry,
+				'count'   => 0,
+				'targets' => array(),
+			);
+		}
+
+		++$groups[ $key ]['count'];
+
+		$current   = isset( $groups[ $key ]['entry']['time'] ) ? (int) $groups[ $key ]['entry']['time'] : 0;
+		$candidate = isset( $entry['time'] ) ? (int) $entry['time'] : 0;
+		if ( $candidate > 0 && ( 0 === $current || $candidate < $current ) ) {
+			$groups[ $key ]['entry'] = $entry;
+		}
+
+		$uri = isset( $entry['uri'] ) ? (string) $entry['uri'] : '';
+		if ( '' !== $uri
+			&& count( $groups[ $key ]['targets'] ) < ReportedIP_Hive_WAF::AGGREGATE_URI_SAMPLE
+			&& ! in_array( $uri, $groups[ $key ]['targets'], true ) ) {
+			$groups[ $key ]['targets'][] = $uri;
+		}
 	}
 
 	/**

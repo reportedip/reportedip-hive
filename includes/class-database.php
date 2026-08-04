@@ -819,11 +819,22 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Track failed attempt
+	 * Track failed attempt.
+	 *
+	 * @param string      $ip_address   Client IP.
+	 * @param string      $attempt_type Counter bucket.
+	 * @param string|null $username     Optional username.
+	 * @param string|null $user_agent   Optional user agent.
+	 * @param int         $increment    Offences to add at once. Deferred writers —
+	 *                                  the WAF drop-in queue imports a whole burst
+	 *                                  in one pass — must be able to count the real
+	 *                                  number of offences instead of one per call.
+	 * @return int|false
 	 */
-	public function track_attempt( $ip_address, $attempt_type, $username = null, $user_agent = null ) {
+	public function track_attempt( $ip_address, $attempt_type, $username = null, $user_agent = null, $increment = 1 ) {
 		global $wpdb;
 
+		$increment  = max( 1, (int) $increment );
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
 
 		$existing = $wpdb->get_row(
@@ -841,7 +852,7 @@ class ReportedIP_Hive_Database {
 			return $wpdb->update(
 				$table_name,
 				array(
-					'attempt_count' => $existing->attempt_count + 1,
+					'attempt_count' => $existing->attempt_count + $increment,
 					'username'      => $username ?: $existing->username,
 					'user_agent'    => $user_agent ?: $existing->user_agent,
 					'last_attempt'  => current_time( 'mysql', true ),
@@ -859,7 +870,7 @@ class ReportedIP_Hive_Database {
 					'attempt_type'  => $attempt_type,
 					'username'      => $username,
 					'user_agent'    => $user_agent,
-					'attempt_count' => 1,
+					'attempt_count' => $increment,
 					'first_attempt' => $now_utc,
 					'last_attempt'  => $now_utc,
 				),

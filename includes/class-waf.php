@@ -69,6 +69,12 @@ class ReportedIP_Hive_WAF {
 	const ESCALATION_TIMEFRAME_MINUTES = 10;
 
 	/**
+	 * Distinct request targets kept on an aggregated drop-in hit, so a probe
+	 * sweep stays diagnosable without storing every variant it tried.
+	 */
+	const AGGREGATE_URI_SAMPLE = 10;
+
+	/**
 	 * Hard cap on bytes scanned from the request body, so a multi-megabyte
 	 * upload cannot turn rule evaluation into a denial-of-service vector.
 	 */
@@ -895,13 +901,14 @@ class ReportedIP_Hive_WAF {
 	 * threshold defaults to 3 so a single false positive blocks only the
 	 * offending request, not the IP.
 	 *
-	 * @param string $ip      Client IP.
-	 * @param string $group   Rule group.
-	 * @param string $rule_id Rule id.
+	 * @param string $ip        Client IP.
+	 * @param string $group     Rule group.
+	 * @param string $rule_id   Rule id.
+	 * @param int    $increment Offences to count at once (an imported burst).
 	 * @return void
 	 * @since  2.1.2
 	 */
-	private function escalate( $ip, $group, $rule_id ) {
+	private function escalate( $ip, $group, $rule_id, $increment = 1 ) {
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
 			return;
 		}
@@ -922,7 +929,8 @@ class ReportedIP_Hive_WAF {
 			array(
 				'group' => $group,
 				'rule'  => $rule_id,
-			)
+			),
+			max( 1, (int) $increment )
 		);
 	}
 
@@ -938,11 +946,18 @@ class ReportedIP_Hive_WAF {
 	 * community report. It never serves a blocked page — the request it
 	 * describes was answered long ago.
 	 *
-	 * @param array<string,mixed> $entry Decoded queue entry.
+	 * Repeat offences against the same rule arrive as one aggregated call: a
+	 * scanner probing twenty spellings of the same endpoint is one event to a
+	 * human reader, and twenty near-identical rows would bury every other
+	 * finding on the page while inflating the 30-day statistic.
+	 *
+	 * @param array<string,mixed> $entry Decoded queue entry (the earliest of the group).
+	 * @param int                 $count Offences this entry stands for.
+	 * @param array<int,string>   $uris  Distinct request targets seen in the group.
 	 * @return bool True when the hit was recorded.
 	 * @since  2.1.30
 	 */
-	public function record_dropin_hit( array $entry ) {
+	public function record_dropin_hit( array $entry, $count = 1, array $uris = array() ) {
 		$ip = isset( $entry['ip'] ) ? (string) $entry['ip'] : '';
 		if ( '' === $ip || false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
 			return false;
@@ -983,9 +998,22 @@ class ReportedIP_Hive_WAF {
 			}
 		}
 
+		$count = max( 1, (int) $count );
+		if ( $count > 1 ) {
+			$details['count'] = $count;
+			if ( ! empty( $uris ) ) {
+				$details['targets'] = array_map(
+					static function ( $uri ) {
+						return ReportedIP_Hive_Logger::truncate( (string) $uri, 256 );
+					},
+					array_slice( array_values( $uris ), 0, self::AGGREGATE_URI_SAMPLE )
+				);
+			}
+		}
+
 		ReportedIP_Hive_Logger::get_instance()->log_security_event( 'waf_block', $ip, $details, $severity, $occurred );
 
-		$this->escalate( $ip, $group, $rule_id );
+		$this->escalate( $ip, $group, $rule_id, $count );
 
 		return true;
 	}

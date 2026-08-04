@@ -52,6 +52,28 @@ class ReportedIP_Hive_Block_Escalation {
 	public const DEFAULT_RESET_DAYS = 30;
 
 	/**
+	 * Extra ladder rungs granted by the size of the burst that triggered the
+	 * block, keyed by how many times the threshold was exceeded.
+	 *
+	 * The ladder counts block *events*, not offences, so an attacker who trips
+	 * the threshold once and then keeps hammering is punished exactly like one
+	 * who stopped at the threshold: every further offence lands on an IP that
+	 * is already blocked, and the tracker returns early instead of escalating.
+	 * Observed in the field — a bot fired 60 rule violations in ten seconds and
+	 * earned the same five-minute rung as three violations would have.
+	 *
+	 * Sustained volume is therefore weighted directly: 5x the threshold skips
+	 * one rung, 10x skips two, 25x skips three.
+	 *
+	 * @var array<int, int>
+	 */
+	private const BURST_RUNGS = array(
+		25 => 3,
+		10 => 2,
+		5  => 1,
+	);
+
+	/**
 	 * Is progressive escalation enabled?
 	 *
 	 * @return bool
@@ -101,20 +123,44 @@ class ReportedIP_Hive_Block_Escalation {
 	/**
 	 * Pick the next block duration for $ip in minutes.
 	 *
-	 * @param string $ip Client IP.
+	 * @param string $ip        Client IP.
+	 * @param int    $attempts  Offences counted in the window that triggered this block.
+	 * @param int    $threshold Threshold those offences crossed.
 	 * @return int Block duration in minutes (always >= 1).
 	 */
-	public static function next_block_minutes( string $ip ): int {
+	public static function next_block_minutes( string $ip, int $attempts = 0, int $threshold = 0 ): int {
 		$ladder = self::get_ladder();
 		if ( empty( $ladder ) ) {
 			return 1440;
 		}
 
 		$prior = self::count_recent_blocks( $ip, self::get_reset_days() );
-		$index = min( $prior, count( $ladder ) - 1 );
-		$index = max( 0, $index );
+		$index = max( 0, $prior ) + self::burst_rungs( $attempts, $threshold );
+		$index = min( $index, count( $ladder ) - 1 );
 
 		return (int) $ladder[ $index ];
+	}
+
+	/**
+	 * Extra ladder rungs earned by the volume of a single burst.
+	 *
+	 * @param int $attempts  Offences counted in the window.
+	 * @param int $threshold Threshold they crossed.
+	 * @return int Number of rungs to skip (0 when the burst is unremarkable).
+	 */
+	public static function burst_rungs( int $attempts, int $threshold ): int {
+		if ( $attempts < 1 || $threshold < 1 ) {
+			return 0;
+		}
+
+		$ratio = intdiv( $attempts, $threshold );
+		foreach ( self::BURST_RUNGS as $factor => $rungs ) {
+			if ( $ratio >= $factor ) {
+				return $rungs;
+			}
+		}
+
+		return 0;
 	}
 
 	/**
