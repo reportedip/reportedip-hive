@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 11;
+	public const CURRENT_VERSION = 12;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -345,6 +345,35 @@ final class ReportedIP_Hive_Migration_Manager {
 		);
 
 		delete_transient( 'reportedip_hive_health_warning_logged' );
+	}
+
+	/**
+	 * Lifts automatic and reputation blocks that target the server itself.
+	 *
+	 * Until 2.1.31 the burst sensors could auto-block the site's own address:
+	 * cache-preload crawlers and WP-Cron loopbacks arrive with the server's
+	 * public IP as REMOTE_ADDR and look exactly like an attacker to a
+	 * windowed counter. The runtime guard now prevents new self-blocks; this
+	 * migration heals installs already carrying one so the fix does not wait
+	 * for the block to expire. Lifting the block through
+	 * {@see ReportedIP_Hive_Database::unblock_ip()} also rewrites the
+	 * pre-WordPress blocklist file via the `reportedip_hive_ip_unblocked`
+	 * action.
+	 *
+	 * @return void
+	 * @since  2.1.31
+	 */
+	private static function migrate_to_v12() {
+		$database = ReportedIP_Hive_Database::get_instance();
+
+		foreach ( (array) $database->get_blocked_ips( true ) as $row ) {
+			if ( ! in_array( (string) $row->block_type, array( 'automatic', 'reputation' ), true ) ) {
+				continue;
+			}
+			if ( ReportedIP_Hive::is_own_server_ip( (string) $row->ip_address ) ) {
+				$database->unblock_ip( (string) $row->ip_address );
+			}
+		}
 	}
 
 	/**

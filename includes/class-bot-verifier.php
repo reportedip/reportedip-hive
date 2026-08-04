@@ -446,12 +446,15 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * text notations (compressed vs expanded, leading zeros) for the same address
 	 * still match and a plain string compare can never reject a valid IPv6 hit.
 	 *
+	 * Public since 2.1.31 — the own-server-IP guard
+	 * ({@see ReportedIP_Hive::is_own_server_ip()}) reuses the same comparison.
+	 *
 	 * @param string $a First address.
 	 * @param string $b Second address.
 	 * @return bool True when both parse to the same address.
 	 * @since  2.1.3
 	 */
-	private static function ip_equals( $a, $b ) {
+	public static function ip_equals( $a, $b ) {
 		if ( $a === $b ) {
 			return true;
 		}

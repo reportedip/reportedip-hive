@@ -245,7 +245,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * @param array  $extra        Optional extra payload merged into the threshold details.
 	 * @return bool                True if the threshold fired.
 	 */
-	public function track_generic_attempt( $ip_address, $attempt_type, $event_type, $threshold, $timeframe, array $extra = array() ) {
+	public function track_generic_attempt( $ip_address, $attempt_type, $event_type, $threshold, $timeframe, array $extra = array(), $increment = 1 ) {
 		if ( '' === (string) $ip_address || 'unknown' === $ip_address ) {
 			return false;
 		}
@@ -260,7 +260,7 @@ class ReportedIP_Hive_Security_Monitor {
 			$track_user_agent = ! empty( $user_agent ) ? substr( (string) $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ) : '';
 		}
 
-		$this->database->track_attempt( $ip_address, $attempt_type, null, $track_user_agent );
+		$this->database->track_attempt( $ip_address, $attempt_type, null, $track_user_agent, $increment );
 
 		$threshold = max( 1, (int) $threshold );
 		$timeframe = max( 1, (int) $timeframe );
@@ -376,6 +376,10 @@ class ReportedIP_Hive_Security_Monitor {
 	 * @since  1.0.0
 	 */
 	public function handle_threshold_exceeded( $ip_address, $event_type, $details ) {
+		if ( $this->should_spare_own_server_ip( $ip_address, $event_type, $details ) ) {
+			return;
+		}
+
 		if ( $this->should_spare_verified_bot( $ip_address, $event_type, $details ) ) {
 			return;
 		}
@@ -476,6 +480,50 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
+	 * Stand-down guard for the server's own addresses.
+	 *
+	 * Cache-preload crawlers, WP-Cron loopbacks and REST self-requests arrive
+	 * with the site's own public address as REMOTE_ADDR and trip the burst
+	 * sensors exactly like an attacker would. Blocking that address takes
+	 * every loopback down with it — the pre-WordPress guard enforces the
+	 * block before any path exception — and reporting it poisons the site's
+	 * own community reputation. Every automatic consequence therefore stands
+	 * down: no block, no API report, no admin mail.
+	 *
+	 * The averted decision is logged as `own_server_ip_block_averted`, at
+	 * most once per hour per IP/event pair — self-traffic bursts run into
+	 * five digits a day and would bury the log otherwise.
+	 *
+	 * @param string $ip_address Client IP that tripped a threshold.
+	 * @param string $event_type Sensor event slug.
+	 * @param array  $details    Sensor event metadata.
+	 * @return bool  True when the IP belongs to the server itself.
+	 * @since  2.1.31
+	 */
+	private function should_spare_own_server_ip( $ip_address, $event_type, $details ) {
+		if ( ! ReportedIP_Hive::is_own_server_ip( (string) $ip_address ) ) {
+			return false;
+		}
+
+		$log_gate = 'reportedip_hive_own_ip_averted_' . md5( $ip_address . '|' . $event_type );
+		if ( false === get_transient( $log_gate ) ) {
+			set_transient( $log_gate, 1, HOUR_IN_SECONDS );
+			$this->logger->log_security_event(
+				'own_server_ip_block_averted',
+				$ip_address,
+				array(
+					'event_type' => $event_type,
+					'reason'     => 'Request originated from the server\'s own address (loopback, cron, cache preload)',
+					'details'    => $details,
+				),
+				'medium'
+			);
+		}
+
+		return true;
+	}
+
+	/**
 	 * Auto-block IP address
 	 */
 	public function auto_block_ip( $ip_address, $event_type, $details ) {
@@ -495,11 +543,16 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 
 		/*
-		 * Defensive re-check for direct callers (the admin test button, custom
+		 * Defensive re-checks for direct callers (the admin test button, custom
 		 * integrations) — the regular threshold path is already guarded in
-		 * handle_threshold_exceeded(). Near-free: both verifier verdicts are
+		 * handle_threshold_exceeded(). Same order as there: the memoized
+		 * own-server check is near-free, the bot verifier verdicts are
 		 * transient-cached.
 		 */
+		if ( $this->should_spare_own_server_ip( $ip_address, $event_type, $details ) ) {
+			return false;
+		}
+
 		if ( $this->should_spare_verified_bot( $ip_address, $event_type, $details ) ) {
 			return false;
 		}
@@ -538,7 +591,11 @@ class ReportedIP_Hive_Security_Monitor {
 			&& ReportedIP_Hive_Block_Escalation::is_enabled();
 
 		if ( $use_ladder ) {
-			$duration_minutes = ReportedIP_Hive_Block_Escalation::next_block_minutes( $ip_address );
+			$duration_minutes = ReportedIP_Hive_Block_Escalation::next_block_minutes(
+				$ip_address,
+				isset( $details['attempts'] ) ? (int) $details['attempts'] : 0,
+				isset( $details['threshold'] ) ? (int) $details['threshold'] : 0
+			);
 			$duration_hours   = (int) ceil( $duration_minutes / 60 );
 		} else {
 			$duration_hours   = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_duration', 24 );

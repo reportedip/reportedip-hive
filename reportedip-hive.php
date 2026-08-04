@@ -987,7 +987,8 @@ class ReportedIP_Hive {
 	 * filterable via `reportedip_hive_reputation_block_hours`), so the IP is
 	 * blocked on every surface — front-end, XML-RPC, REST — and appears in
 	 * the Blocked IPs list instead of only failing the login form.
-	 * Whitelisted IPs are never reputation-blocked.
+	 * Whitelisted IPs and the server's own addresses are never
+	 * reputation-blocked.
 	 *
 	 * @param mixed  $user     User object or error.
 	 * @param string $password Password (unused, kept for hook signature).
@@ -1056,7 +1057,7 @@ class ReportedIP_Hive {
 			return new WP_Error( 'ip_blocked', __( 'Your IP address has been blocked due to suspicious activity.', 'reportedip-hive' ) );
 		}
 
-		if ( $exceeds_threshold && ! $this->ip_manager->is_whitelisted( $ip_address ) ) {
+		if ( $exceeds_threshold && ! $this->ip_manager->is_whitelisted( $ip_address ) && ! self::is_own_server_ip( $ip_address ) ) {
 			$confidence = isset( $reputation['abuseConfidencePercentage'] ) ? (int) $reputation['abuseConfidencePercentage'] : 0;
 			$reports    = isset( $reputation['totalReports'] ) ? (int) $reputation['totalReports'] : 0;
 
@@ -1687,6 +1688,121 @@ class ReportedIP_Hive {
 			return false;
 		}
 		return false !== filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+	}
+
+	/**
+	 * Whether an address is one of the server's own — a loopback address, the
+	 * interface address the current request arrived on, or an address the
+	 * site's own hostname resolves to.
+	 *
+	 * Self-traffic legitimately hammers the site: cache-preload crawlers,
+	 * WP-Cron loopbacks and REST self-requests all connect back through the
+	 * site's public URL, so their REMOTE_ADDR is the server's own public
+	 * address — which passes {@see is_public_ip()}. Auto-blocking that address
+	 * takes every loopback down with it (the pre-WordPress guard enforces the
+	 * block before any path exception), and reporting it poisons the site's
+	 * own community reputation. The automatic pipeline therefore stands down
+	 * for these addresses; manual blocks remain possible.
+	 *
+	 * @param string $ip Candidate IP address.
+	 * @return bool      True when the address belongs to the server itself.
+	 * @since  2.1.31
+	 */
+	public static function is_own_server_ip( $ip ) {
+		if ( ! is_string( $ip ) || false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+			return false;
+		}
+
+		if ( 0 === strpos( $ip, '127.' ) || ReportedIP_Hive_Bot_Verifier::ip_equals( $ip, '::1' ) ) {
+			return true;
+		}
+
+		foreach ( self::get_own_server_ips() as $candidate ) {
+			if ( ReportedIP_Hive_Bot_Verifier::ip_equals( $ip, (string) $candidate ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * The server's own addresses: the interface address the current request
+	 * arrived on plus every address the site hostname resolves to.
+	 *
+	 * Memoised per request; the list is only consulted when a sensor
+	 * threshold actually trips, never on the hot path.
+	 *
+	 * @return string[] IP addresses considered "the server itself".
+	 * @since  2.1.31
+	 */
+	private static function get_own_server_ips() {
+		static $cache = null;
+		if ( is_array( $cache ) ) {
+			return $cache;
+		}
+
+		$ips = array();
+
+		if ( isset( $_SERVER['SERVER_ADDR'] ) ) {
+			$server_addr = (string) wp_unslash( $_SERVER['SERVER_ADDR'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via filter_var below.
+			if ( false !== filter_var( $server_addr, FILTER_VALIDATE_IP ) ) {
+				$ips[] = $server_addr;
+			}
+		}
+
+		$ips = array_merge( $ips, self::resolve_site_host_ips() );
+
+		/**
+		 * Filters the list of addresses treated as the server's own.
+		 *
+		 * Multi-node setups (a separate cron runner, an internal proxy, a
+		 * second interface the loopbacks leave through) can append addresses
+		 * the automatic block pipeline must never target.
+		 *
+		 * @param string[] $ips Own-server IP addresses.
+		 * @since 2.1.31
+		 */
+		$cache = (array) apply_filters( 'reportedip_hive_own_server_ips', array_values( array_unique( $ips ) ) );
+
+		return $cache;
+	}
+
+	/**
+	 * Resolve the site's own hostname to its addresses.
+	 *
+	 * Loopback requests that enter through a local proxy or a second
+	 * interface do not match SERVER_ADDR, so the addresses the site's DNS
+	 * name points at complete the picture. The lookup itself is the same
+	 * forward resolver the bot verifier uses
+	 * ({@see ReportedIP_Hive_Bot_Verifier::resolve_host_ips()}); results —
+	 * a failed lookup included — are cached network-wide for six hours.
+	 *
+	 * @return string[] Addresses the site hostname resolves to.
+	 * @since  2.1.31
+	 */
+	private static function resolve_site_host_ips() {
+		$host = wp_parse_url( home_url(), PHP_URL_HOST );
+		if ( ! is_string( $host ) || '' === $host ) {
+			return array();
+		}
+
+		$host = strtolower( trim( $host, '[]' ) );
+		if ( false !== filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			return array( $host );
+		}
+
+		$cache_key = 'reportedip_hive_own_host_ips_' . md5( $host );
+		$cached    = get_site_transient( $cache_key );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$resolved = ReportedIP_Hive_Bot_Verifier::resolve_host_ips( $host );
+
+		set_site_transient( $cache_key, $resolved, 6 * HOUR_IN_SECONDS );
+
+		return $resolved;
 	}
 
 	/**
