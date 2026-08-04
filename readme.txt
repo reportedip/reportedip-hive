@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.30
+Stable tag: 2.1.31
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -340,6 +340,16 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.31 =
+
+Changed: a burst now buys ladder rungs. The escalation ladder counted block events rather than offences, so an attacker who tripped the threshold once and kept firing got the same five minutes as one who stopped — every later offence hit an already-blocked IP. A bot with 60 violations in ten seconds is now weighted directly: five times the threshold skips one ladder rung, ten times skips two, twenty-five times skips three.
+
+Changed: repeat offences against the same rule are imported as one event with an offence count and a sample of the targets tried, instead of one row per request. Twenty near-identical rows used to bury every other finding on the Firewall page and skew the 30-day statistic. Enforcement is unchanged — every offence still counts toward the block ladder.
+
+Fix: the hit queue can no longer be imported twice. Rotating the file is atomic, importing it was not, so the queue cron and an admin page view could double both the log and the offence counter. The drain now takes a mutual-exclusion lock.
+
+Fix: the server can no longer block itself. Cache-preload crawlers (WP Rocket and friends), WP-Cron loopbacks and REST self-requests connect back through the site's public URL, so their address is the server's own public IP — and the burst sensors treated it like any attacker: auto-blocked for days, enforced before WordPress loads, and reported to the community against the site's own reputation. The automatic pipeline now stands down for the server's own addresses (loopback, the request's interface address, everything the site hostname resolves to), an upgrade migration lifts self-blocks that are already active, and averted decisions stay visible in the log.
 
 = 2.1.30 =
 

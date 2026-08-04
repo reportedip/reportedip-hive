@@ -2,6 +2,63 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.31] — 2026-08-04
+
+### Changed
+
+- **A burst now buys ladder rungs.** The escalation ladder counts block
+  *events*, not offences, so an attacker who tripped the threshold once and
+  kept firing landed on the same rung as one who stopped: every later offence
+  hit an already-blocked IP and the tracker returned early. Observed in the
+  field — a bot fired 60 rule violations in ten seconds and earned the same
+  five minutes three violations would have, then came back. The volume behind a
+  block is now weighted directly: five times the threshold skips one rung, ten
+  times skips two, twenty-five times skips three. The cap is still the last
+  rung, and the bonus adds to the block history rather than replacing it.
+- **Repeat offences against one rule are imported as a single event.** A
+  scanner sweeping twenty spellings of the same endpoint produced twenty
+  near-identical log rows, which buried every other finding on the Firewall
+  page and let one ten-second burst dominate the 30-day statistic. Hits from
+  the same IP against the same rule now arrive as one row carrying the offence
+  count and a sample of up to ten distinct targets. Every offence still counts
+  toward the ladder, so aggregation costs no enforcement.
+
+### Fixes
+
+- **The server can no longer block itself.** Cache-preload crawlers (WP Rocket
+  and friends), WP-Cron loopbacks and REST self-requests connect back through
+  the site's public URL, so their REMOTE_ADDR is the server's own public
+  address — and the burst sensors treated that address like any attacker.
+  Observed in the field: a Multisite auto-blocked its own IPv6 for seven days
+  over "REST API abuse", the pre-WordPress guard enforced the block before any
+  path exception, and every cache-preload request from that moment answered
+  403 while the address was also reported to the community API against the
+  site's own reputation. The automatic pipeline now stands down for the
+  server's own addresses — loopback, the interface address the request arrived
+  on, and everything the site hostname resolves to (six-hour DNS cache,
+  extensible via the `reportedip_hive_own_server_ips` filter for multi-node
+  setups). Averted decisions are logged as `own_server_ip_block_averted`, rate
+  limited to once per hour per IP/event pair. An upgrade migration lifts
+  self-blocks that are already active, including the pre-WordPress blocklist
+  file. Manual blocks and the whitelist are untouched.
+- **Two drains can no longer import the same hits twice.** Rotating the queue
+  file is atomic, importing it was not: the queue cron and an admin page view
+  could pick up the same rotated file and write every hit — and every offence
+  behind the block ladder — a second time. The drain now takes the same kind of
+  mutual-exclusion lock the API queue worker uses.
+- **The decoy path block no longer claims to be active on nginx.** The status
+  read the PHP SAPI to decide whether `.htaccess` applies, and a FastCGI SAPI
+  was counted as Apache. nginx serves PHP through FPM just as Apache does, so
+  every nginx site was told its rewrite block was "Active" and "auto-managed",
+  and the Server Setup tab even said no manual step was needed — while nginx
+  had never read the file. The check now goes by the web server itself, so
+  Apache and LiteSpeed keep the auto-managed block (including Apache behind
+  php-fpm), and nginx is told plainly that the PHP sensor covers every request
+  reaching WordPress while a bait file sitting on disk needs one of the nginx
+  snippets. Detection of the pre-WordPress guard is untouched: `.user.ini` is
+  read by PHP regardless of the web server, so keying that on the SAPI stays
+  correct.
+
 ## [2.1.30] — 2026-07-30
 
 ### New
