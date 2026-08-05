@@ -2,6 +2,59 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- **One query instead of thirty-six.** On single-site installs WordPress
+  stores every network-routed option with `autoload=no`, so each of the
+  plugin's ~36 option reads on an anonymous front-end request cost its own
+  `SELECT`. All small plugin options are now primed into the request cache
+  with a single query. Measured: 36 → 11 plugin queries per request.
+- **The blocklist answers from an 8 KB header.** The pre-WordPress guard used
+  to read the whole blocklist file (up to 1 MB) on every PHP request just to
+  answer "is this one IP blocked?". The file now carries a fixed-width header
+  with a membership bitmap; a clean request reads only the header, a hit
+  block-reads the affected region. Appends dedupe per IP but still extend a
+  block when the escalation ladder lengthens it. The format is compatible in
+  both directions with older guards and older files.
+- **Request bodies are read only when a rule inspects them.** Both WAF layers
+  skipped straight to a 64 KB `php://input` read on every request, including
+  plain GETs. The read now requires an active body/all rule and an actual
+  request body — baked identically into the guard.
+- **The dashboard stopped doing its analytics twice.** `get_threat_analytics()`
+  is cached for five minutes (plus per-request), WAF hit groups aggregate in
+  SQL instead of decoding up to 5000 longtext rows in PHP, and the cache-info
+  panel lost its unindexable self-join. Dashboard TTFB measured 920 ms → 278 ms
+  on a 500k-row logs table.
+- **Retention cleanup runs in chunks.** The nightly anonymisation selected the
+  whole 7–30-day band with no LIMIT — including rows it had already anonymised
+  on earlier runs — and issued one UPDATE per row. Both the anonymisation and
+  the retention DELETEs now run in bounded chunks under a 20-second budget.
+- **Index set rebalanced (schema v13).** New covering index
+  `logs (event_type, created_at, ip_address)` carries the coordinated-attack
+  window aggregate index-only; new `api_queue (ip_address)` carries the
+  duplicate-report checks. Three write-only indexes on `logs` are dropped.
+- **Feature texts load lazily.** The feature matrix carried 50 `__()` calls
+  that pulled the full translation file into every anonymous front-end request
+  on localised sites. Labels now translate only where they are rendered.
+- The update checker is built only in wp-admin, cron and WP-CLI.
+- The report queue bounds each batch to four minutes and 10-second POSTs so a
+  slow service can no longer outlive the queue lock.
+- `is_blocked()` is memoised per request and the plugin cache group is
+  registered network-wide.
+
+### Fixes
+
+- **Blocked HTTP/1.0 clients no longer hang for five seconds.** The guard's
+  refusal hardcoded `HTTP/1.1` into the status line, which left HTTP/1.0
+  connections waiting for the server's keep-alive timeout. The refusal now
+  mirrors the client protocol and closes the connection.
+- The daily cleanup no longer calls `update_daily_stats()` with a stat type
+  that does not exist.
+- Expired ETag response-cache transients are now removed by the cache cleanup;
+  previously they accumulated in `wp_options` indefinitely.
+
 ## [2.1.31] — 2026-08-04
 
 ### Changed
