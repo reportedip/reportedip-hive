@@ -1236,10 +1236,38 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render unified page footer with trust badges
+	 * Render unified page footer with the secured-by note and trust badges.
 	 */
 	public static function render_page_footer() {
 		?>
+			<div class="rip-secured-by">
+				<div class="rip-secured-by__logo">
+					<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28" aria-hidden="true">
+						<path d="M24 4L8 12v12c0 11 7.7 21.3 16 24 8.3-2.7 16-13 16-24V12L24 4z" fill="currentColor" opacity="0.15"/>
+						<path d="M24 4L8 12v12c0 11 7.7 21.3 16 24 8.3-2.7 16-13 16-24V12L24 4zm0 4.2l12 6v10c0 8.4-6 16.3-12 18.5-6-2.2-12-10.1-12-18.5v-10l12-6z" fill="currentColor"/>
+						<path d="M21 28l-5-5 1.8-1.8 3.2 3.2 7.2-7.2L30 19l-9 9z" fill="currentColor"/>
+					</svg>
+				</div>
+				<div class="rip-secured-by__body">
+					<p class="rip-secured-by__text">
+						<?php
+						printf(
+							/* translators: 1: opening link tag to reportedip.de, 2: closing link tag */
+							esc_html__( 'This site is secured by ReportedIP Hive, part of the %1$sreportedip.de%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one.', 'reportedip-hive' ),
+							'<a href="' . esc_url( REPORTEDIP_HIVE_SITE_URL ) . '" target="_blank" rel="noopener">',
+							'</a>'
+						);
+						?>
+					</p>
+					<p class="rip-secured-by__links">
+						<a href="<?php echo esc_url( REPORTEDIP_HIVE_SITE_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'About the community network', 'reportedip-hive' ); ?></a>
+						<span aria-hidden="true">&middot;</span>
+						<a href="<?php echo esc_url( REPORTEDIP_HIVE_FAQ_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'FAQ', 'reportedip-hive' ); ?></a>
+						<span aria-hidden="true">&middot;</span>
+						<a href="mailto:<?php echo esc_attr( REPORTEDIP_HIVE_CONTACT_MAIL ); ?>"><?php esc_html_e( 'Contact', 'reportedip-hive' ); ?></a>
+					</p>
+				</div>
+			</div>
 			<div class="rip-trust-badges">
 				<div class="rip-trust-badge">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
