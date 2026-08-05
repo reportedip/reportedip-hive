@@ -1867,3 +1867,7 @@ body.rip-2fa-onboarding #rip-2fa-sms-delivery-timer {
 	margin-top: var(--rip-space-3, 0.75rem);
 	min-height: 1.4em;
 }
+
+#rip-2fa-panel-webauthn .rip-2fa-challenge__instruction {
+	margin-bottom: var(--rip-space-4, 1rem);
+}
