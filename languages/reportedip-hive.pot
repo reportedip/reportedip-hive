@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-05T14:17:06+00:00\n"
+"POT-Creation-Date: 2026-08-05T14:32:05+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -4991,7 +4991,7 @@ msgstr ""
 #: admin/class-setup-wizard.php:403
 #: admin/class-two-factor-admin.php:1591
 #: includes/class-two-factor-onboarding.php:354
-#: includes/class-two-factor.php:1992
+#: includes/class-two-factor.php:1994
 #: reportedip-hive.php:837
 msgid "Error"
 msgstr ""
@@ -9527,7 +9527,7 @@ msgstr ""
 
 #: includes/class-two-factor.php:208
 #: includes/class-two-factor.php:1515
-#: includes/class-two-factor.php:1945
+#: includes/class-two-factor.php:1946
 msgid "Your session has expired. Please sign in again."
 msgstr ""
 
@@ -9609,59 +9609,64 @@ msgid "Back to login"
 msgstr ""
 
 #: includes/class-two-factor.php:1513
-#: includes/class-two-factor.php:1943
+#: includes/class-two-factor.php:1944
 msgid "New code sent."
 msgstr ""
 
 #: includes/class-two-factor.php:1514
-#: includes/class-two-factor.php:1944
+#: includes/class-two-factor.php:1945
 msgid "Sending failed."
 msgstr ""
 
 #: includes/class-two-factor.php:1516
-#: includes/class-two-factor.php:1946
+#: includes/class-two-factor.php:1947
 msgid "Passkey request in progress…"
 msgstr ""
 
 #: includes/class-two-factor.php:1517
-#: includes/class-two-factor.php:1947
-msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
+#: includes/class-two-factor.php:1948
+msgid "Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead."
 msgstr ""
 
 #: includes/class-two-factor.php:1518
-#: includes/class-two-factor.php:1948
-msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
+#: includes/class-two-factor.php:1949
+msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
 msgstr ""
 
 #: includes/class-two-factor.php:1519
-#: includes/class-two-factor.php:1949
-msgid "The domain of this page does not match the key registration."
+#: includes/class-two-factor.php:1950
+msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
 msgstr ""
 
 #: includes/class-two-factor.php:1520
-#: includes/class-two-factor.php:1950
-msgid "Failed to fetch passkey options."
+#: includes/class-two-factor.php:1951
+msgid "The domain of this page does not match the key registration."
 msgstr ""
 
 #: includes/class-two-factor.php:1521
-#: includes/class-two-factor.php:1951
-msgid "Verification failed."
+#: includes/class-two-factor.php:1952
+msgid "Failed to fetch passkey options."
 msgstr ""
 
 #: includes/class-two-factor.php:1522
-#: includes/class-two-factor.php:1952
+#: includes/class-two-factor.php:1953
+msgid "Verification failed."
+msgstr ""
+
+#: includes/class-two-factor.php:1523
+#: includes/class-two-factor.php:1954
 msgid "Passkey login cancelled."
 msgstr ""
 
-#: includes/class-two-factor.php:1625
+#: includes/class-two-factor.php:1626
 msgid "Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1631
+#: includes/class-two-factor.php:1632
 msgid "Your two-factor session expired. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1991
+#: includes/class-two-factor.php:1993
 msgid "2FA template not found."
 msgstr ""
 
@@ -10035,7 +10040,7 @@ msgid "Verify"
 msgstr ""
 
 #: templates/partials/webauthn-challenge-panel.php:50
-msgid "Use your passkey or security key: Face ID, Touch ID, Windows Hello, or a hardware key such as a YubiKey. Insert the key and touch it, or hold it to the back of your phone (NFC)."
+msgid "Sign in with your passkey or security key (Face ID, Touch ID, Windows Hello, YubiKey). Click the button below first, then touch the key when your browser asks; on a phone, hold it to the back (NFC)."
 msgstr ""
 
 #: templates/partials/webauthn-challenge-panel.php:55

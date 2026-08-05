@@ -1862,3 +1862,8 @@ body.rip-2fa-onboarding #rip-2fa-sms-delivery-timer {
 	font-size: var(--rip-text-xs, 0.75rem);
 	color: var(--rip-gray-500, #6B7280);
 }
+
+.rip-2fa-challenge__panel #rip-2fa-webauthn-status {
+	margin-top: var(--rip-space-3, 0.75rem);
+	min-height: 1.4em;
+}

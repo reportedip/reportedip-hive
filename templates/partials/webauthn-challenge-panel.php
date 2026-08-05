@@ -47,7 +47,7 @@ $rip_wa_name    = $rip_wa_reset ? 'reportedip_2fa_reset_code' : 'reportedip_2fa_
 	tabindex="0"
 	<?php echo $rip_wa_active ? '' : 'hidden'; ?>>
 	<p class="rip-2fa-challenge__instruction">
-		<?php esc_html_e( 'Use your passkey or security key: Face ID, Touch ID, Windows Hello, or a hardware key such as a YubiKey. Insert the key and touch it, or hold it to the back of your phone (NFC).', 'reportedip-hive' ); ?>
+		<?php esc_html_e( 'Sign in with your passkey or security key (Face ID, Touch ID, Windows Hello, YubiKey). Click the button below first, then touch the key when your browser asks; on a phone, hold it to the back (NFC).', 'reportedip-hive' ); ?>
 	</p>
 	<input type="hidden" name="<?php echo esc_attr( $rip_wa_name ); ?>" id="rip-2fa-code-webauthn" value="" <?php echo $rip_wa_active ? '' : 'disabled'; ?> />
 	<button type="button" class="rip-button rip-button--primary rip-button--full-width" id="rip-2fa-webauthn-login">

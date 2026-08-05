@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-08-05T14:17:08+00:00\n"
+"PO-Revision-Date: 2026-08-05T14:32:06+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
@@ -4991,7 +4991,7 @@ msgstr "Versuche"
 #: admin/class-setup-wizard.php:403
 #: admin/class-two-factor-admin.php:1591
 #: includes/class-two-factor-onboarding.php:354
-#: includes/class-two-factor.php:1992
+#: includes/class-two-factor.php:1994
 #: reportedip-hive.php:837
 msgid "Error"
 msgstr "Fehler"
@@ -9527,7 +9527,7 @@ msgstr "Nicht unterstützter COSE-Algorithmus."
 
 #: includes/class-two-factor.php:208
 #: includes/class-two-factor.php:1515
-#: includes/class-two-factor.php:1945
+#: includes/class-two-factor.php:1946
 msgid "Your session has expired. Please sign in again."
 msgstr "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 
@@ -9609,59 +9609,64 @@ msgid "Back to login"
 msgstr "Zurück zur Anmeldung"
 
 #: includes/class-two-factor.php:1513
-#: includes/class-two-factor.php:1943
+#: includes/class-two-factor.php:1944
 msgid "New code sent."
 msgstr "Neuer Code gesendet."
 
 #: includes/class-two-factor.php:1514
-#: includes/class-two-factor.php:1944
+#: includes/class-two-factor.php:1945
 msgid "Sending failed."
 msgstr "Senden fehlgeschlagen."
 
 #: includes/class-two-factor.php:1516
-#: includes/class-two-factor.php:1946
+#: includes/class-two-factor.php:1947
 msgid "Passkey request in progress…"
 msgstr "Passkey-Anfrage läuft…"
 
 #: includes/class-two-factor.php:1517
-#: includes/class-two-factor.php:1947
+#: includes/class-two-factor.php:1948
+msgid "Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead."
+msgstr "Bitte geben Sie zuerst den Bestätigungscode ein. Wenn Sie Ihren Sicherheitsschlüssel berührt haben, wechseln Sie zum Passkey-Tab und nutzen Sie dort den Button."
+
+#: includes/class-two-factor.php:1518
+#: includes/class-two-factor.php:1949
 msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
 msgstr "Warte auf Ihren Sicherheitsschlüssel. Jetzt einstecken und berühren oder die Passkey-Abfrage bestätigen."
 
-#: includes/class-two-factor.php:1518
-#: includes/class-two-factor.php:1948
+#: includes/class-two-factor.php:1519
+#: includes/class-two-factor.php:1950
 msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
 msgstr "Die Anfrage ist abgelaufen oder wurde abgebrochen. Stecken Sie den Schlüssel ein und berühren Sie ihn (am Telefon für NFC flach an die Rückseite halten), und versuchen Sie es erneut."
 
-#: includes/class-two-factor.php:1519
-#: includes/class-two-factor.php:1949
+#: includes/class-two-factor.php:1520
+#: includes/class-two-factor.php:1951
 msgid "The domain of this page does not match the key registration."
 msgstr "Die Domain dieser Seite passt nicht zur Registrierung des Schlüssels."
 
-#: includes/class-two-factor.php:1520
-#: includes/class-two-factor.php:1950
+#: includes/class-two-factor.php:1521
+#: includes/class-two-factor.php:1952
 msgid "Failed to fetch passkey options."
 msgstr "Passkey-Optionen konnten nicht abgerufen werden."
 
-#: includes/class-two-factor.php:1521
-#: includes/class-two-factor.php:1951
+#: includes/class-two-factor.php:1522
+#: includes/class-two-factor.php:1953
 msgid "Verification failed."
 msgstr "Verifizierung fehlgeschlagen."
 
-#: includes/class-two-factor.php:1522
-#: includes/class-two-factor.php:1952
+#: includes/class-two-factor.php:1523
+#: includes/class-two-factor.php:1954
 msgid "Passkey login cancelled."
 msgstr "Passkey-Anmeldung abgebrochen."
 
-#: includes/class-two-factor.php:1625
+#: includes/class-two-factor.php:1626
 msgid "Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again."
 msgstr "Zu viele fehlgeschlagene Verifizierungsversuche. Ihre Zwei-Faktor-Sitzung wurde aus Sicherheitsgründen ungültig gemacht. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1631
+#: includes/class-two-factor.php:1632
 msgid "Your two-factor session expired. Please sign in again."
 msgstr "Ihre Zwei-Faktor-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1991
+#: includes/class-two-factor.php:1993
 msgid "2FA template not found."
 msgstr "2FA-Template nicht gefunden."
 
@@ -10035,8 +10040,8 @@ msgid "Verify"
 msgstr "Bestätigen"
 
 #: templates/partials/webauthn-challenge-panel.php:50
-msgid "Use your passkey or security key: Face ID, Touch ID, Windows Hello, or a hardware key such as a YubiKey. Insert the key and touch it, or hold it to the back of your phone (NFC)."
-msgstr "Nutzen Sie Ihren Passkey oder Sicherheitsschlüssel: Face ID, Touch ID, Windows Hello oder einen Hardware-Schlüssel wie einen YubiKey. Stecken Sie den Schlüssel ein und berühren Sie ihn, oder halten Sie ihn an die Rückseite Ihres Telefons (NFC)."
+msgid "Sign in with your passkey or security key (Face ID, Touch ID, Windows Hello, YubiKey). Click the button below first, then touch the key when your browser asks; on a phone, hold it to the back (NFC)."
+msgstr "Melden Sie sich mit Ihrem Passkey oder Sicherheitsschlüssel an (Face ID, Touch ID, Windows Hello, YubiKey). Klicken Sie zuerst den Button unten und berühren Sie den Schlüssel, wenn der Browser danach fragt; am Telefon halten Sie ihn an die Rückseite (NFC)."
 
 #: templates/partials/webauthn-challenge-panel.php:55
 msgid "Use passkey or security key"

@@ -75,6 +75,36 @@
 				e.preventDefault();
 				return;
 			}
+
+			// A YubiKey touched outside the ceremony "types" its OTP plus an
+			// Enter keystroke: the letters get stripped by the numeric filter
+			// and the Enter submits an empty code. Catch that instead of
+			// bouncing the user off a generic "invalid code" error. On the
+			// passkey tab the same Enter simply starts the ceremony.
+			var methodInput = document.getElementById( 'rip-2fa-method-input' );
+			var method      = methodInput ? methodInput.value : '';
+			if ( method === 'webauthn' ) {
+				var sentinel = document.getElementById( 'rip-2fa-code-webauthn' );
+				if ( sentinel && sentinel.value !== 'webauthn-ok' ) {
+					e.preventDefault();
+					var passkeyBtn = document.getElementById( 'rip-2fa-webauthn-login' );
+					if ( passkeyBtn ) { passkeyBtn.click(); }
+					return;
+				}
+			} else {
+				var activeCode = document.querySelector( '.rip-2fa-challenge__panel--active input[name="reportedip_2fa_code"]:not([type="hidden"])' );
+				if ( activeCode && activeCode.value.trim() === '' ) {
+					e.preventDefault();
+					setLiveMessage(
+						document.getElementById( 'rip-2fa-live' ),
+						( config.strings && config.strings.enterCodeFirst )
+							|| 'Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead.',
+						'error'
+					);
+					return;
+				}
+			}
+
 			markSubmitting( form );
 		} );
 
@@ -158,6 +188,11 @@
 			} );
 
 			if ( methodInput ) { methodInput.value = method; }
+
+			// The Verify submit button only makes sense for typed codes; on
+			// the passkey tab the ceremony button drives the whole flow.
+			var submitBtn = document.querySelector( '.rip-2fa-challenge__submit' );
+			if ( submitBtn ) { submitBtn.hidden = ( method === 'webauthn' ); }
 
 			if ( opts && opts.focus ) {
 				tab.focus();
@@ -417,6 +452,13 @@
 		var form        = document.getElementById( 'rip-2fa-form' );
 		var methodInput = document.getElementById( 'rip-2fa-method-input' );
 		var codeInput   = document.getElementById( 'rip-2fa-code-webauthn' );
+
+		// Single-method pages have no tablist, so the tab handler never runs:
+		// hide the useless Verify button here when passkey is the active method.
+		if ( methodInput && methodInput.value === 'webauthn' ) {
+			var soleSubmit = document.querySelector( '.rip-2fa-challenge__submit' );
+			if ( soleSubmit ) { soleSubmit.hidden = true; }
+		}
 
 		btn.addEventListener( 'click', function () {
 			if ( status ) { status.textContent = ( config.strings && config.strings.passkeyWaiting ) || 'Waiting for your security key. Insert and touch it now, or approve the passkey prompt.'; }
