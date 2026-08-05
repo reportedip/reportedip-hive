@@ -57,6 +57,17 @@ namespace {
 			 * @param string $method  Method id.
 			 */
 			public static function enable_for_user( $user_id, $method ) {}
+
+			/**
+			 * Register-path helper, unused on the assertion path.
+			 *
+			 * @param int    $user_id User id.
+			 * @param string $method  Method id.
+			 * @return bool
+			 */
+			public static function activate_method( $user_id, $method ) {
+				return true;
+			}
 		}
 	}
 	if ( ! class_exists( 'ReportedIP_Hive_Two_Factor', false ) ) {

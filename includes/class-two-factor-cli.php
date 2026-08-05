@@ -120,7 +120,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 			update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '1' );
 		}
 
-		ReportedIP_Hive_Two_Factor::enable_for_user( $user_id, $method );
+		ReportedIP_Hive_Two_Factor::activate_method( $user_id, $method );
 		WP_CLI::success( sprintf( '2FA method "%s" flagged for user #%d.', $method, $user_id ) );
 	}
 

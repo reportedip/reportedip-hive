@@ -2164,6 +2164,69 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
+	 * Activate a single 2FA method for a user.
+	 *
+	 * Single enrolment path shared by the profile section, the onboarding
+	 * wizard and WebAuthn key registration. The first method a user
+	 * configures activates full 2FA via enable_for_user(); any additional
+	 * method only sets its own flag, so the user's chosen default method
+	 * and existing recovery codes survive.
+	 *
+	 * Callers must not write the method's enabled flag themselves before
+	 * calling this — the first-method detection reads the flags.
+	 *
+	 * @param int    $user_id WordPress user ID.
+	 * @param string $method  Method identifier (totp, email, webauthn, sms).
+	 * @return bool True when the method is active afterwards.
+	 * @since  2.1.36
+	 */
+	public static function activate_method( $user_id, $method ) {
+		$method_key = self::get_method_meta_key( $method );
+		if ( ! $method_key ) {
+			return false;
+		}
+
+		if ( ! self::is_user_enabled( $user_id ) ) {
+			self::enable_for_user( $user_id, $method );
+			return true;
+		}
+
+		update_user_meta( $user_id, $method_key, '1' );
+		unset( self::$methods_cache[ $user_id ] );
+
+		if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
+			ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
+		}
+
+		/** This action is documented in includes/class-two-factor.php */
+		do_action( 'reportedip_hive_2fa_method_enabled', (int) $user_id, (string) $method );
+
+		return true;
+	}
+
+	/**
+	 * Set the user's default (primary) sign-in method.
+	 *
+	 * The method must be one the user has actively configured; the guard
+	 * mirrors the self-healing read in get_user_method() so a stale value
+	 * can never be persisted.
+	 *
+	 * @param int    $user_id WordPress user ID.
+	 * @param string $method  Method identifier (totp, email, webauthn, sms).
+	 * @return bool True when stored, false when the method is not active.
+	 * @since  2.1.36
+	 */
+	public static function set_user_method( $user_id, $method ) {
+		if ( ! in_array( $method, self::get_user_enabled_methods( $user_id ), true ) ) {
+			return false;
+		}
+
+		update_user_meta( $user_id, self::META_METHOD, $method );
+
+		return true;
+	}
+
+	/**
 	 * Disable a single 2FA method for a user.
 	 *
 	 * If no methods remain active, fully disables 2FA for the user.

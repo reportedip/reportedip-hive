@@ -37,6 +37,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		add_action( 'wp_ajax_reportedip_hive_2fa_setup_sms', array( $this, 'ajax_setup_sms' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_disable', array( $this, 'ajax_disable' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_disable_method', array( $this, 'ajax_disable_method' ) );
+		add_action( 'wp_ajax_reportedip_hive_2fa_set_primary_method', array( $this, 'ajax_set_primary_method' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_test_sms', array( $this, 'ajax_admin_test_sms' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_regenerate_recovery', array( $this, 'ajax_regenerate_recovery' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_revoke_device', array( $this, 'ajax_revoke_device' ) );
@@ -1760,7 +1761,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 								?>
 							</span>
 						<?php else : ?>
-							<span class="rip-badge rip-badge--neutral">
+							<span class="rip-badge rip-badge--info">
 								<?php
 								printf(
 									/* translators: %d: remaining codes */
@@ -1865,6 +1866,23 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			wp_send_json_error( array( 'message' => __( 'Invalid user.', 'reportedip-hive' ) ) );
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_user() above.
+		$replace        = ! empty( $_POST['replace'] );
+		$totp_confirmed = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, true );
+		$totp_active    = in_array(
+			ReportedIP_Hive_Two_Factor::METHOD_TOTP,
+			ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user_id ),
+			true
+		);
+		if ( '1' === $totp_confirmed && $totp_active && ! $replace ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'An authenticator app is already connected. Starting a new setup replaces that connection, and codes from the previous app will stop working.', 'reportedip-hive' ),
+					'code'    => 'totp_already_configured',
+				)
+			);
+		}
+
 		$secret = ReportedIP_Hive_Two_Factor_TOTP::generate_secret();
 		$uri    = ReportedIP_Hive_Two_Factor_TOTP::generate_qr_uri( $secret, $user->user_login );
 
@@ -1908,9 +1926,13 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		}
 
 		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '1' );
-		ReportedIP_Hive_Two_Factor::enable_for_user( $user_id, ReportedIP_Hive_Two_Factor::METHOD_TOTP );
 
-		$recovery_codes = ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
+		$recovery_codes = null;
+		if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
+			$recovery_codes = ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
+		}
+
+		ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_TOTP );
 
 		wp_send_json_success(
 			array(
@@ -1957,15 +1979,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				wp_send_json_error( array( 'message' => __( 'Invalid or expired code.', 'reportedip-hive' ) ) );
 			}
 
-			update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_EMAIL_ENABLED, '1' );
-
-			if ( ! ReportedIP_Hive_Two_Factor::is_user_enabled( $user_id ) ) {
-				ReportedIP_Hive_Two_Factor::enable_for_user( $user_id, ReportedIP_Hive_Two_Factor::METHOD_EMAIL );
-			}
-
-			if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
-				ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
-			}
+			ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_EMAIL );
 
 			wp_send_json_success(
 				array(
@@ -2039,15 +2053,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				wp_send_json_error( array( 'message' => __( 'Invalid or expired code.', 'reportedip-hive' ) ) );
 			}
 
-			update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_ENABLED, '1' );
-
-			if ( ! ReportedIP_Hive_Two_Factor::is_user_enabled( $user_id ) ) {
-				ReportedIP_Hive_Two_Factor::enable_for_user( $user_id, ReportedIP_Hive_Two_Factor::METHOD_SMS );
-			}
-
-			if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
-				ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
-			}
+			ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_SMS );
 
 			wp_send_json_success(
 				array(
@@ -2083,6 +2089,33 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				'message'       => __( 'Method disabled.', 'reportedip-hive' ),
 				'remaining'     => ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user_id ),
 				'still_enabled' => ReportedIP_Hive_Two_Factor::is_user_enabled( $user_id ),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: Set the user's default sign-in method.
+	 *
+	 * The default method decides which verification tab the login challenge
+	 * opens with. Only methods the user has actively configured are accepted;
+	 * the guard lives in ReportedIP_Hive_Two_Factor::set_user_method().
+	 *
+	 * @since 2.1.36
+	 */
+	public function ajax_set_primary_method() {
+		$user_id = $this->validate_ajax_user();
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_user() above.
+		$method = isset( $_POST['method'] ) ? sanitize_key( wp_unslash( $_POST['method'] ) ) : '';
+
+		if ( ! ReportedIP_Hive_Two_Factor::set_user_method( $user_id, $method ) ) {
+			wp_send_json_error( array( 'message' => __( 'Only a method you have set up can be your default.', 'reportedip-hive' ) ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Default sign-in method updated.', 'reportedip-hive' ),
+				'method'  => $method,
 			)
 		);
 	}

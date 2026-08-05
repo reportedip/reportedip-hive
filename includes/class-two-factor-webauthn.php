@@ -331,13 +331,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		$creds[] = $record;
 		self::save_user_credentials( $user_id, $creds );
 
-		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_WEBAUTHN_ENABLED, '1' );
-		if ( ! ReportedIP_Hive_Two_Factor::is_user_enabled( $user_id ) ) {
-			ReportedIP_Hive_Two_Factor::enable_for_user( $user_id, ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN );
-		}
-		if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
-			ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
-		}
+		ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN );
 
 		/**
 		 * Fires after a new WebAuthn credential was stored for a user.
