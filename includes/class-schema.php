@@ -146,7 +146,7 @@ final class ReportedIP_Hive_Schema {
 			KEY idx_blog_id (blog_id),
 			KEY idx_ip_address (ip_address),
 			KEY idx_created_at (created_at),
-			KEY idx_logs_event_time (event_type, created_at),
+			KEY idx_logs_event_time (event_type, created_at, ip_address),
 			KEY idx_logs_site_time (blog_id, created_at)
 		) $charset_collate;";
 
