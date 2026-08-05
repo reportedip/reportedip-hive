@@ -80,25 +80,14 @@ class ReportedIP_Hive_Database {
 	 * @return bool True if all tables exist
 	 */
 	public function tables_exist() {
-		global $wpdb;
-
-		$required_tables = array(
-			$wpdb->base_prefix . 'reportedip_hive_logs',
-			$wpdb->base_prefix . 'reportedip_hive_whitelist',
-			$wpdb->base_prefix . 'reportedip_hive_blocked',
-			$wpdb->base_prefix . 'reportedip_hive_attempts',
-			$wpdb->base_prefix . 'reportedip_hive_api_queue',
-			$wpdb->base_prefix . 'reportedip_hive_stats',
-		);
-
-		foreach ( $required_tables as $table ) {
-			$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
-			if ( ! $exists ) {
-				return false;
-			}
-		}
-
-		return true;
+		/*
+		 * Delegates to the schema owner so all nine tables are checked with a
+		 * single information_schema query. The former local list covered only
+		 * six of them, so a missing trusted_devices, audit_log or
+		 * waf_exceptions table read as "schema complete" and the repair path
+		 * never ran.
+		 */
+		return ReportedIP_Hive_Schema::tables_exist();
 	}
 
 	/**
@@ -666,7 +655,7 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( false !== $result ) {
-			self::$blocked_request_cache = array();
+			self::flush_blocked_caches();
 
 			/**
 			 * Fires after an IP was blocked.
@@ -721,7 +710,7 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( false !== $result ) {
-			self::$blocked_request_cache = array();
+			self::flush_blocked_caches();
 
 			/** This action is documented in includes/class-database.php */
 			do_action( 'reportedip_hive_ip_blocked', $ip_address, $reason, $blocked_until );
@@ -731,7 +720,13 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Check if IP is blocked
+	 * Check if IP is blocked.
+	 *
+	 * Exact match first (covered by the UNIQUE index), then active CIDR ranges.
+	 * The range pass mirrors {@see is_whitelisted()}: without it a range block
+	 * was enforced only by the pre-WordPress guard — and that guard is off by
+	 * default, so on a standard install `203.0.113.0/24` blocked nothing at all
+	 * while the admin UI listed it as active.
 	 */
 	public function is_blocked( $ip_address ) {
 		global $wpdb;
@@ -752,9 +747,70 @@ class ReportedIP_Hive_Database {
 			)
 		);
 
-		self::$blocked_request_cache[ $ip_address ] = $count > 0;
+		if ( $count > 0 ) {
+			self::$blocked_request_cache[ $ip_address ] = true;
+			return true;
+		}
 
-		return self::$blocked_request_cache[ $ip_address ];
+		foreach ( $this->active_blocked_cidrs() as $cidr ) {
+			if ( self::ip_in_cidr( $ip_address, $cidr ) ) {
+				self::$blocked_request_cache[ $ip_address ] = true;
+				return true;
+			}
+		}
+
+		self::$blocked_request_cache[ $ip_address ] = false;
+
+		return false;
+	}
+
+	/**
+	 * Active CIDR block ranges, object-cached for five minutes.
+	 *
+	 * Range blocks are rare and always manual, so the list is short and the
+	 * lookup stays a cheap PHP loop. The cache is invalidated by every
+	 * block/unblock write via {@see flush_blocked_caches()}.
+	 *
+	 * @return string[]
+	 * @since  2.1.32
+	 */
+	private function active_blocked_cidrs() {
+		global $wpdb;
+
+		$has_cache = function_exists( 'wp_cache_get' );
+		if ( $has_cache ) {
+			$cached = wp_cache_get( 'rip_blocked_cidrs', 'reportedip' );
+			if ( false !== $cached ) {
+				return (array) $cached;
+			}
+		}
+
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
+		$ranges     = (array) $wpdb->get_col(
+			"SELECT ip_address FROM $table_name
+			 WHERE ip_address LIKE '%/%'
+			 AND is_active = 1
+			 AND (blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP())"
+		);
+
+		if ( $has_cache ) {
+			wp_cache_set( 'rip_blocked_cidrs', $ranges, 'reportedip', 300 );
+		}
+
+		return $ranges;
+	}
+
+	/**
+	 * Drop the per-request block memo and the CIDR range cache.
+	 *
+	 * @return void
+	 * @since  2.1.32
+	 */
+	private static function flush_blocked_caches() {
+		self::$blocked_request_cache = array();
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( 'rip_blocked_cidrs', 'reportedip' );
+		}
 	}
 
 	/**
@@ -828,7 +884,7 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( false !== $result ) {
-			self::$blocked_request_cache = array();
+			self::flush_blocked_caches();
 
 			/**
 			 * Fires after a block was lifted.

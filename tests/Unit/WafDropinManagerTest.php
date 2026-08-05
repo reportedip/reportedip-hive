@@ -119,6 +119,55 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'unknown', $this->mgr()->detect_server( 'cli' ) );
 		}
 
+		/**
+		 * A web request must record how the guard is wired, so that a later
+		 * headless run has something to fall back on.
+		 */
+		public function test_detect_server_remembers_the_web_verdict(): void {
+			$_SERVER['SERVER_SOFTWARE'] = 'nginx/1.25.3';
+			$this->mgr()->detect_server( 'fpm-fcgi' );
+
+			$this->assertSame(
+				'fpm',
+				\ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_SERVER_OPTION, '' )
+			);
+		}
+
+		/**
+		 * WP-CLI has neither a web SAPI nor SERVER_SOFTWARE. Without the
+		 * remembered verdict `sync()` wrote the guard file but never the
+		 * directive that loads it, so a site provisioned entirely over WP-CLI
+		 * (MainWP, deploy scripts) reported the drop-in as enabled while it was
+		 * inert until someone opened wp-admin.
+		 */
+		public function test_detect_server_falls_back_to_the_remembered_verdict_on_cli(): void {
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_SERVER_OPTION, 'apache' );
+			$_SERVER['SERVER_SOFTWARE'] = '';
+
+			$this->assertSame( 'apache', $this->mgr()->detect_server( 'cli' ) );
+		}
+
+		public function test_detect_server_ignores_a_bogus_remembered_verdict(): void {
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_SERVER_OPTION, 'not-a-server' );
+			$_SERVER['SERVER_SOFTWARE'] = '';
+
+			$this->assertSame( 'unknown', $this->mgr()->detect_server( 'cli' ) );
+		}
+
+		/**
+		 * A queue directory that is momentarily unwritable must not be baked as
+		 * an empty path: that turned a transient permission problem into
+		 * permanent silence — the guard kept blocking but could never report a
+		 * hit, while the admin UI (which re-checks writability live) showed
+		 * logging as healthy.
+		 */
+		public function test_guard_always_bakes_the_queue_and_blocklist_paths(): void {
+			$php = $this->call_private( 'generate_prepend', array() );
+
+			$this->assertStringContainsString( 'waf-hits-', $php, 'The hit-queue path must be baked unconditionally.' );
+			$this->assertStringContainsString( 'blocked-', $php, 'The blocklist path must be baked unconditionally.' );
+		}
+
 		public function test_detect_server_prefers_user_ini_under_nginx_fpm(): void {
 			$_SERVER['SERVER_SOFTWARE'] = 'nginx/1.25.3';
 			$this->assertSame(

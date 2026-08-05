@@ -88,6 +88,13 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * last full rewrite. Guards from older releases treat the header as an
 	 * unmatched line and still scan the body correctly.
 	 */
+	/**
+	 * Stores the server verdict seen during real web requests, so a headless
+	 * WP-CLI sync can wire the same directive instead of falling through to
+	 * "unknown" and writing nothing. See {@see detect_server()}.
+	 */
+	const REMEMBER_SERVER_OPTION = 'reportedip_hive_dropin_server';
+
 	const BLOCKLIST_MAGIC = '#rip1 ';
 
 	/**
@@ -457,18 +464,38 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$sapi     = null === $sapi ? php_sapi_name() : (string) $sapi;
 		$software = isset( $_SERVER['SERVER_SOFTWARE'] ) ? strtolower( (string) wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Lower-cased token compare only.
 
+		$detected = 'unknown';
 		if ( 'apache2handler' === $sapi ) {
-			return 'apache';
+			$detected = 'apache';
+		} elseif ( in_array( $sapi, array( 'fpm-fcgi', 'cgi-fcgi', 'litespeed' ), true ) ) {
+			$detected = 'fpm';
+		} elseif ( false !== strpos( $software, 'nginx' ) ) {
+			$detected = 'nginx';
+		} elseif ( false !== strpos( $software, 'apache' ) ) {
+			$detected = 'apache';
 		}
-		if ( in_array( $sapi, array( 'fpm-fcgi', 'cgi-fcgi', 'litespeed' ), true ) ) {
-			return 'fpm';
+
+		/*
+		 * WP-CLI has no SAPI and no SERVER_SOFTWARE, so a headless run always
+		 * fell through to 'unknown' — and sync() then wrote the guard file but
+		 * never the directive that loads it. A site provisioned entirely over
+		 * WP-CLI (MainWP, deployment scripts) therefore reported the drop-in as
+		 * enabled while it was inert until someone opened wp-admin. The verdict
+		 * from real web requests is remembered so a headless sync can wire the
+		 * same directive the web context would have.
+		 */
+		if ( 'unknown' !== $detected ) {
+			if ( $detected !== (string) ReportedIP_Hive_Option_Routing::get( self::REMEMBER_SERVER_OPTION, '' ) ) {
+				ReportedIP_Hive_Option_Routing::set( self::REMEMBER_SERVER_OPTION, $detected );
+			}
+			return $detected;
 		}
-		if ( false !== strpos( $software, 'nginx' ) ) {
-			return 'nginx';
+
+		$remembered = (string) ReportedIP_Hive_Option_Routing::get( self::REMEMBER_SERVER_OPTION, '' );
+		if ( in_array( $remembered, array( 'apache', 'fpm', 'nginx' ), true ) ) {
+			return $remembered;
 		}
-		if ( false !== strpos( $software, 'apache' ) ) {
-			return 'apache';
-		}
+
 		return 'unknown';
 	}
 
@@ -1087,9 +1114,19 @@ if ( ! function_exists( 'reportedip_hive_dropin_request_has_body' ) ) {
 
 PHP;
 
-		$writable     = $this->ensure_queue_dir();
-		$queue_export = var_export( $writable ? $this->queue_path() : '', true );     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the queue path literal into a generated PHP file, not debugging.
-		$block_export = var_export( $writable ? $this->blocklist_path() : '', true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the blocklist path literal into a generated PHP file, not debugging.
+		/*
+		 * Bake the queue path even when the directory is not writable right now.
+		 * Baking '' turned a transient permission problem at sync time into
+		 * permanent silence: the guard kept blocking but could never report a
+		 * hit, so the Firewall page showed zero WAF activity while the admin UI
+		 * — which re-checks writability live — reported logging as healthy. The
+		 * guard's own append is already fail-soft (@file_put_contents), so a
+		 * still-unwritable path simply drops that one hit and recovers the
+		 * moment permissions are fixed, without waiting for a rebake.
+		 */
+		$this->ensure_queue_dir();
+		$queue_export = var_export( $this->queue_path(), true );     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the queue path literal into a generated PHP file, not debugging.
+		$block_export = var_export( $this->blocklist_path(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the blocklist path literal into a generated PHP file, not debugging.
 		$cidr_export  = var_export( array_values( $this->blocked_cidr_snapshot() ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the literal CIDR blocklist into a generated PHP file, not debugging.
 
 		return str_replace(

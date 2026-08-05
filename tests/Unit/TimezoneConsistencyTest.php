@@ -85,6 +85,11 @@ namespace {
 				return null;
 			}
 
+			public function get_col( $sql = null ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+				$this->queries[] = (string) $sql;
+				return array();
+			}
+
 			public function get_results( $sql = null ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 				return array();
 			}

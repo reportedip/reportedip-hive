@@ -46,10 +46,33 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **Range blocks now actually block.** `is_blocked()` compared the client
+  address to the blocklist by equality only, so a CIDR entry such as
+  `203.0.113.0/24` was enforced solely by the pre-WordPress guard — which is
+  off by default. On a standard install the admin UI listed the range as an
+  active block while every address inside it was let through. The engine now
+  matches ranges the same way the whitelist always has.
 - **Blocked HTTP/1.0 clients no longer hang for five seconds.** The guard's
   refusal hardcoded `HTTP/1.1` into the status line, which left HTTP/1.0
   connections waiting for the server's keep-alive timeout. The refusal now
   mirrors the client protocol and closes the connection.
+- **A momentarily unwritable queue directory no longer silences the guard for
+  good.** If the directory could not be written at the moment the guard was
+  generated, an empty queue path was baked in and every later hit was dropped
+  without a trace — the firewall kept blocking but reported zero activity,
+  while the admin page (which re-checks writability live) showed logging as
+  healthy. The paths are now always baked; the guard's own write stays
+  fail-soft and recovers as soon as permissions allow.
+- **Extended protection installed over WP-CLI is no longer inert.** WP-CLI has
+  no web SAPI and no `SERVER_SOFTWARE`, so server detection fell through to
+  "unknown" and `sync()` wrote the guard file but never the directive that
+  loads it. Sites provisioned entirely over the command line (MainWP, deploy
+  scripts) reported the drop-in as enabled while nothing ran until someone
+  opened wp-admin. The verdict from real web requests is now remembered and
+  reused for headless runs.
+- The schema self-check covered only six of the nine plugin tables, so a
+  missing trusted-devices, audit-log or WAF-exceptions table read as "schema
+  complete" and the repair path never ran.
 - The daily cleanup no longer calls `update_daily_stats()` with a stat type
   that does not exist.
 - Expired ETag response-cache transients are now removed by the cache cleanup;
