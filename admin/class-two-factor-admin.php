@@ -1854,6 +1854,9 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							</button>
 						</div>
 					<?php endif; ?>
+					<?php if ( class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) : ?>
+						<?php ReportedIP_Hive_Admin_Settings::render_secured_by(); ?>
+					<?php endif; ?>
 					</div>
 				</td>
 			</tr>

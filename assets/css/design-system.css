@@ -2802,3 +2802,60 @@ button.rip-tier-lock--mode:hover {
     }
 }
 
+
+/* ==========================================================================
+   Secured-by note (admin page footer + profile 2FA section, since 2.1.36)
+   ========================================================================== */
+
+.rip-secured-by {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--rip-space-4);
+    padding: var(--rip-space-4);
+    margin-top: var(--rip-space-6);
+    border-top: 1px solid var(--rip-gray-200);
+}
+
+.rip-secured-by__logo {
+    flex: 0 0 auto;
+    color: var(--rip-primary);
+}
+
+.rip-secured-by__body {
+    flex: 1 1 auto;
+}
+
+.rip-secured-by__text {
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-600);
+    margin: 0 0 var(--rip-space-1);
+    max-width: 720px;
+}
+
+.rip-secured-by__text a {
+    color: var(--rip-primary);
+    text-decoration: none;
+}
+
+.rip-secured-by__text a:hover {
+    text-decoration: underline;
+}
+
+.rip-secured-by__links {
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-400);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-2);
+}
+
+.rip-secured-by__links a {
+    color: var(--rip-gray-500);
+    text-decoration: none;
+}
+
+.rip-secured-by__links a:hover {
+    color: var(--rip-primary);
+    text-decoration: underline;
+}

@@ -74,6 +74,11 @@ test.describe.serial('profile 2FA method management', () => {
 
         const webauthnRow = page.locator('.rip-2fa-method[data-method="webauthn"]');
         await expect(webauthnRow.locator('#rip-webauthn-key-manager')).toBeVisible();
+
+        await expect(
+            page.locator('.rip-2fa-profile .rip-secured-by'),
+            'the secured-by note must close the profile section while protection is active'
+        ).toBeVisible();
     });
 
     test('second method keeps the default, switching and removal work', async ({ page }) => {
