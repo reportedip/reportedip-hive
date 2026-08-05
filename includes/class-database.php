@@ -2103,7 +2103,27 @@ class ReportedIP_Hive_Database {
 	public function get_threat_analytics( $days = 7 ) {
 		global $wpdb;
 
-		$days       = max( 1, min( 90, (int) $days ) );
+		$days = max( 1, min( 90, (int) $days ) );
+
+		/*
+		 * Two-layer cache: a per-request memo (the dashboard page resolves the
+		 * 7-day window during `admin_enqueue_scripts` AND renders a window in
+		 * the page body) plus a 5-minute site transient so chart range clicks
+		 * and page reloads do not re-run four aggregate queries over the logs
+		 * table each time. Keyed by locale because `labels` carries
+		 * `date_i18n()` output.
+		 */
+		static $request_memo = array();
+		$cache_key = 'reportedip_hive_threat_analytics_' . $days . '_' . get_locale();
+		if ( isset( $request_memo[ $cache_key ] ) ) {
+			return $request_memo[ $cache_key ];
+		}
+		$cached = get_site_transient( $cache_key );
+		if ( is_array( $cached ) && isset( $cached['days'] ) ) {
+			$request_memo[ $cache_key ] = $cached;
+			return $cached;
+		}
+
 		$logs_table = $wpdb->base_prefix . 'reportedip_hive_logs';
 		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS );
 
@@ -2178,24 +2198,47 @@ class ReportedIP_Hive_Database {
 			$today_total += $series[ $fkey ][ $last_pos ];
 		}
 
+		/*
+		 * Aggregate WAF hit groups in SQL — the previous implementation pulled
+		 * up to 5000 longtext blobs into PHP just to json_decode one field.
+		 * JSON_UNQUOTE(JSON_EXTRACT()) covers MySQL 5.7+/MariaDB 10.2+; on the
+		 * rare older server the query errors and the PHP path takes over.
+		 */
+		$waf_groups = array();
 		$waf_rows   = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT details FROM $logs_table
+				"SELECT COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(details, '$.group')), ''), 'other') AS g, COUNT(*) AS c
+				 FROM $logs_table
 				 WHERE event_type IN ('waf_block','waf_would_block')
 				   AND ( created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY) )
-				 ORDER BY created_at DESC
-				 LIMIT 5000",
+				 GROUP BY g",
 				$cutoff_utc,
 				$days
 			)
 		);
-		$waf_groups = array();
-		foreach ( (array) $waf_rows as $row ) {
-			$decoded              = json_decode( (string) $row->details, true );
-			$group                = ( is_array( $decoded ) && ! empty( $decoded['group'] ) )
-				? (string) $decoded['group']
-				: 'other';
-			$waf_groups[ $group ] = ( $waf_groups[ $group ] ?? 0 ) + 1;
+		if ( '' === $wpdb->last_error ) {
+			foreach ( (array) $waf_rows as $row ) {
+				$waf_groups[ (string) $row->g ] = (int) $row->c;
+			}
+		} else {
+			$waf_rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT details FROM $logs_table
+					 WHERE event_type IN ('waf_block','waf_would_block')
+					   AND ( created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY) )
+					 ORDER BY created_at DESC
+					 LIMIT 5000",
+					$cutoff_utc,
+					$days
+				)
+			);
+			foreach ( (array) $waf_rows as $row ) {
+				$decoded              = json_decode( (string) $row->details, true );
+				$group                = ( is_array( $decoded ) && ! empty( $decoded['group'] ) )
+					? (string) $decoded['group']
+					: 'other';
+				$waf_groups[ $group ] = ( $waf_groups[ $group ] ?? 0 ) + 1;
+			}
 		}
 		arsort( $waf_groups );
 
@@ -2248,7 +2291,7 @@ class ReportedIP_Hive_Database {
 			}
 		}
 
-		return array(
+		$analytics = array(
 			'days'        => $days,
 			'labels'      => $labels,
 			'families'    => $families,
@@ -2261,5 +2304,10 @@ class ReportedIP_Hive_Database {
 			),
 			'top_ips'     => $top_ips,
 		);
+
+		$request_memo[ $cache_key ] = $analytics;
+		set_site_transient( $cache_key, $analytics, 5 * MINUTE_IN_SECONDS );
+
+		return $analytics;
 	}
 }
