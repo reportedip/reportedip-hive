@@ -119,6 +119,55 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'unknown', $this->mgr()->detect_server( 'cli' ) );
 		}
 
+		/**
+		 * A web request must record how the guard is wired, so that a later
+		 * headless run has something to fall back on.
+		 */
+		public function test_detect_server_remembers_the_web_verdict(): void {
+			$_SERVER['SERVER_SOFTWARE'] = 'nginx/1.25.3';
+			$this->mgr()->detect_server( 'fpm-fcgi' );
+
+			$this->assertSame(
+				'fpm',
+				\ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_SERVER_OPTION, '' )
+			);
+		}
+
+		/**
+		 * WP-CLI has neither a web SAPI nor SERVER_SOFTWARE. Without the
+		 * remembered verdict `sync()` wrote the guard file but never the
+		 * directive that loads it, so a site provisioned entirely over WP-CLI
+		 * (MainWP, deploy scripts) reported the drop-in as enabled while it was
+		 * inert until someone opened wp-admin.
+		 */
+		public function test_detect_server_falls_back_to_the_remembered_verdict_on_cli(): void {
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_SERVER_OPTION, 'apache' );
+			$_SERVER['SERVER_SOFTWARE'] = '';
+
+			$this->assertSame( 'apache', $this->mgr()->detect_server( 'cli' ) );
+		}
+
+		public function test_detect_server_ignores_a_bogus_remembered_verdict(): void {
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_SERVER_OPTION, 'not-a-server' );
+			$_SERVER['SERVER_SOFTWARE'] = '';
+
+			$this->assertSame( 'unknown', $this->mgr()->detect_server( 'cli' ) );
+		}
+
+		/**
+		 * A queue directory that is momentarily unwritable must not be baked as
+		 * an empty path: that turned a transient permission problem into
+		 * permanent silence — the guard kept blocking but could never report a
+		 * hit, while the admin UI (which re-checks writability live) showed
+		 * logging as healthy.
+		 */
+		public function test_guard_always_bakes_the_queue_and_blocklist_paths(): void {
+			$php = $this->call_private( 'generate_prepend', array() );
+
+			$this->assertStringContainsString( 'waf-hits-', $php, 'The hit-queue path must be baked unconditionally.' );
+			$this->assertStringContainsString( 'blocked-', $php, 'The blocklist path must be baked unconditionally.' );
+		}
+
 		public function test_detect_server_prefers_user_ini_under_nginx_fpm(): void {
 			$_SERVER['SERVER_SOFTWARE'] = 'nginx/1.25.3';
 			$this->assertSame(
@@ -696,6 +745,97 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$body = (string) file_get_contents( $this->mgr()->blocklist_path() );
 			$this->clear_blocklist();
 			$this->assertMatchesRegularExpression( '/^198\.51\.100\.27\t\d{10}$/m', $body );
+		}
+
+		/**
+		 * Build a v1-format blocklist (fixed-width bitmap header + body lines)
+		 * from the format spec, independent of the writer, so the guard parser
+		 * is validated against the documented layout.
+		 *
+		 * @param array<string,int> $entries Map ip => expiry stamp.
+		 * @param bool              $dirty   Whether appends happened since the last rewrite.
+		 * @param string            $appended Extra raw lines placed after the base length.
+		 */
+		private function make_v1_blocklist( array $entries, bool $dirty = false, string $appended = '' ): void {
+			$bitmap = str_repeat( "\0", 8192 );
+			$body   = '';
+			foreach ( $entries as $ip => $stamp ) {
+				$body                  .= $ip . "\t" . $stamp . "\n";
+				$bucket                 = crc32( $ip ) % 65536;
+				$bitmap[ $bucket >> 3 ] = chr( ord( $bitmap[ $bucket >> 3 ] ) | ( 1 << ( $bucket & 7 ) ) );
+			}
+			$header = sprintf( '#rip1 D=%d L=%010d %s' . "\n", $dirty ? 1 : 0, 16408 + strlen( $body ), bin2hex( $bitmap ) );
+			$this->seed_blocklist( $header . $body . $appended );
+		}
+
+		public function test_write_blocklist_emits_v1_header(): void {
+			$this->clear_blocklist();
+			$this->assertTrue( $this->mgr()->write_blocklist() );
+
+			$raw = (string) file_get_contents( $this->mgr()->blocklist_path() );
+			$this->clear_blocklist();
+
+			$this->assertStringStartsWith( '#rip1 D=0 L=', $raw );
+			$this->assertSame( "\n", $raw[16407], 'Header must be exactly 16408 bytes including the trailing newline.' );
+		}
+
+		public function test_guard_blocks_listed_ip_through_the_bitmap_path(): void {
+			$this->make_v1_blocklist( array( '198.51.100.30' => time() + 600 ) );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/', 'REMOTE_ADDR' => '198.51.100.30' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'Forbidden', $verdict );
+		}
+
+		public function test_guard_passes_unlisted_ip_on_bitmap_miss(): void {
+			$this->make_v1_blocklist( array( '198.51.100.31' => time() + 600 ) );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/', 'REMOTE_ADDR' => '203.0.113.77' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'PASS', $verdict );
+		}
+
+		/**
+		 * Appends cannot update the bitmap, so the dirty flag makes the guard
+		 * scan the region past the base length — a freshly blocked IP must be
+		 * refused before the next full rewrite recomputes the bitmap.
+		 */
+		public function test_guard_scans_append_region_when_dirty(): void {
+			$this->make_v1_blocklist( array(), true, "198.51.100.32\t" . ( time() + 600 ) . "\n" );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/', 'REMOTE_ADDR' => '198.51.100.32' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'Forbidden', $verdict );
+		}
+
+		/**
+		 * A truncated header must not crash the guard: the file degrades to the
+		 * legacy full scan, so valid body lines are still enforced.
+		 */
+		public function test_guard_survives_corrupt_header_via_legacy_scan(): void {
+			$this->seed_blocklist( "#rip1 D=0 L=0000016408 deadbeef\n198.51.100.33\t" . ( time() + 600 ) . "\n" );
+			$verdict = $this->run_guard( array( 'REQUEST_URI' => '/', 'REMOTE_ADDR' => '198.51.100.33' ) );
+			$this->clear_blocklist();
+			$this->assertSame( 'Forbidden', $verdict );
+		}
+
+		/**
+		 * Same ip + same expiry a second time must not grow the file; a LONGER
+		 * expiry (escalation ladder) must append again — the guard would
+		 * otherwise enforce only the stale shorter block.
+		 */
+		public function test_on_ip_blocked_dedupes_but_extends(): void {
+			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED ] = true;
+			$this->clear_blocklist();
+
+			$until_short = gmdate( 'Y-m-d H:i:s', time() + 600 );
+			$this->mgr()->on_ip_blocked( '198.51.100.34', 'first', $until_short );
+			$this->mgr()->on_ip_blocked( '198.51.100.34', 'repeat', $until_short );
+
+			$body = (string) file_get_contents( $this->mgr()->blocklist_path() );
+			$this->assertSame( 1, substr_count( $body, '198.51.100.34' ), 'An equal re-block must not append a duplicate line.' );
+
+			$this->mgr()->on_ip_blocked( '198.51.100.34', 'escalated', gmdate( 'Y-m-d H:i:s', time() + 3600 ) );
+			$body = (string) file_get_contents( $this->mgr()->blocklist_path() );
+			$this->clear_blocklist();
+			$this->assertSame( 2, substr_count( $body, '198.51.100.34' ), 'A longer expiry must reach the guard.' );
 		}
 
 		/**

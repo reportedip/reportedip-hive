@@ -79,8 +79,12 @@ define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.de/register/' );
 /**
  * Update checker: reads releases from the public GitHub repository.
  * Trigger: tag `vX.Y.Z` → GitHub Action builds ZIP release asset → PUC pulls it.
+ *
+ * Built only where update information is ever consumed — wp-admin, the
+ * `wp_update_plugins` cron and WP-CLI. Anonymous front-end requests used to
+ * construct the whole checker (plus its hooks) for nothing.
  */
-if ( class_exists( PucFactory::class ) ) {
+if ( class_exists( PucFactory::class ) && ( is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) ) ) {
 	$reportedip_update_checker = PucFactory::buildUpdateChecker(
 		'https://github.com/reportedip/reportedip-hive/',
 		__FILE__,
@@ -352,7 +356,17 @@ class ReportedIP_Hive {
 	 * Load plugin dependencies
 	 */
 	private function load_dependencies() {
+		/*
+		 * The 'reportedip' cache group backs base_prefix (network-wide) tables:
+		 * whitelist CIDRs, WAF exceptions and the per-IP access verdict are the
+		 * same for every site in a network. Without this registration a
+		 * persistent object cache would silo those entries per blog — duplicated
+		 * memory and stale cross-site verdicts after a network-wide change.
+		 */
+		wp_cache_add_global_groups( 'reportedip' );
+
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-option-routing.php';
+		ReportedIP_Hive_Option_Routing::prime_cache();
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-schema.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-migration-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-defaults.php';

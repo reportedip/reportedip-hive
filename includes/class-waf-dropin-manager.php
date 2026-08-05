@@ -78,7 +78,39 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 6;
+	const DROPIN_VERSION = 8;
+
+	/**
+	 * Blocklist header magic. Format v1:
+	 * `#rip1 D=<0|1> L=<10-digit base length> <16384 hex chars>\n`
+	 * — a fixed-width 16408-byte header carrying an 8 KB membership bitmap
+	 * (crc32(ip) mod 65536) plus a dirty flag and the file length as of the
+	 * last full rewrite. Guards from older releases treat the header as an
+	 * unmatched line and still scan the body correctly.
+	 */
+	/**
+	 * Stores the server verdict seen during real web requests, so a headless
+	 * WP-CLI sync can wire the same directive instead of falling through to
+	 * "unknown" and writing nothing. See {@see detect_server()}.
+	 */
+	const REMEMBER_SERVER_OPTION = 'reportedip_hive_dropin_server';
+
+	const BLOCKLIST_MAGIC = '#rip1 ';
+
+	/**
+	 * Bits in the blocklist membership bitmap (8 KB payload, 16384 hex chars).
+	 */
+	const BLOCKLIST_BITMAP_BITS = 65536;
+
+	/**
+	 * Byte length of the fixed-width v1 blocklist header including newline.
+	 */
+	const BLOCKLIST_HEADER_LEN = 16408;
+
+	/**
+	 * Byte offset of the dirty-flag digit inside the header ("#rip1 D=x").
+	 */
+	const BLOCKLIST_DIRTY_OFFSET = 8;
 
 	/**
 	 * Directory inside uploads that holds the hit queue.
@@ -432,18 +464,38 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$sapi     = null === $sapi ? php_sapi_name() : (string) $sapi;
 		$software = isset( $_SERVER['SERVER_SOFTWARE'] ) ? strtolower( (string) wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Lower-cased token compare only.
 
+		$detected = 'unknown';
 		if ( 'apache2handler' === $sapi ) {
-			return 'apache';
+			$detected = 'apache';
+		} elseif ( in_array( $sapi, array( 'fpm-fcgi', 'cgi-fcgi', 'litespeed' ), true ) ) {
+			$detected = 'fpm';
+		} elseif ( false !== strpos( $software, 'nginx' ) ) {
+			$detected = 'nginx';
+		} elseif ( false !== strpos( $software, 'apache' ) ) {
+			$detected = 'apache';
 		}
-		if ( in_array( $sapi, array( 'fpm-fcgi', 'cgi-fcgi', 'litespeed' ), true ) ) {
-			return 'fpm';
+
+		/*
+		 * WP-CLI has no SAPI and no SERVER_SOFTWARE, so a headless run always
+		 * fell through to 'unknown' — and sync() then wrote the guard file but
+		 * never the directive that loads it. A site provisioned entirely over
+		 * WP-CLI (MainWP, deployment scripts) therefore reported the drop-in as
+		 * enabled while it was inert until someone opened wp-admin. The verdict
+		 * from real web requests is remembered so a headless sync can wire the
+		 * same directive the web context would have.
+		 */
+		if ( 'unknown' !== $detected ) {
+			if ( $detected !== (string) ReportedIP_Hive_Option_Routing::get( self::REMEMBER_SERVER_OPTION, '' ) ) {
+				ReportedIP_Hive_Option_Routing::set( self::REMEMBER_SERVER_OPTION, $detected );
+			}
+			return $detected;
 		}
-		if ( false !== strpos( $software, 'nginx' ) ) {
-			return 'nginx';
+
+		$remembered = (string) ReportedIP_Hive_Option_Routing::get( self::REMEMBER_SERVER_OPTION, '' );
+		if ( in_array( $remembered, array( 'apache', 'fpm', 'nginx' ), true ) ) {
+			return $remembered;
 		}
-		if ( false !== strpos( $software, 'apache' ) ) {
-			return 'apache';
-		}
+
 		return 'unknown';
 	}
 
@@ -776,6 +828,21 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$report_export = $report_only ? 'true' : 'false';
 		$skip_export   = $skip_authed ? 'true' : 'false';
 
+		/*
+		 * Bake whether any active rule inspects the body at all, mirroring the
+		 * engine's required_targets() gate — a guard whose rules only target
+		 * uri/ua must never pay the 64 KB php://input read.
+		 */
+		$body_needed = false;
+		foreach ( $rules as $rule ) {
+			$target = isset( $rule['target'] ) ? (string) $rule['target'] : 'all';
+			if ( 'body' === $target || 'all' === $target ) {
+				$body_needed = true;
+				break;
+			}
+		}
+		$body_needed_export = $body_needed ? 'true' : 'false';
+
 		$template = <<<'PHP'
 <?php
 /**
@@ -836,13 +903,13 @@ if ( ! function_exists( 'reportedip_hive_dropin_excepted' ) ) {
 		return false;
 	}
 }
-if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
-	function reportedip_hive_dropin_is_blocked( $file, $ip ) {
-		if ( '' === $file || '' === $ip ) { return false; }
-		$raw = @file_get_contents( $file );
+if ( ! function_exists( 'reportedip_hive_dropin_bl_match' ) ) {
+	/* Anchored per-line match over a raw chunk of "ip\tepoch" lines; true on
+	   the first unexpired (or permanent) entry for this IP. */
+	function reportedip_hive_dropin_bl_match( $raw, $ip ) {
 		if ( ! is_string( $raw ) || '' === $raw ) { return false; }
 		$found = array();
-		if ( 1 !== @preg_match_all( '/^' . preg_quote( $ip, '/' ) . "\t(\d+)$/m", $raw, $found ) && empty( $found[1] ) ) { return false; }
+		if ( ! @preg_match_all( '/^' . preg_quote( $ip, '/' ) . "\t(\d+)$/m", $raw, $found ) || empty( $found[1] ) ) { return false; }
 		$now = time();
 		foreach ( $found[1] as $stamp ) {
 			$stamp = (int) $stamp;
@@ -851,12 +918,62 @@ if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
 		return false;
 	}
 }
+if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
+	/*
+	 * Blocklist lookup, O(header) for the common not-blocked case.
+	 *
+	 * File format v1: fixed-width header "#rip1 D=<0|1> L=<10-digit base
+	 * length> <16384 hex chars>\n" (16408 bytes) carrying an 8 KB / 65536-bit
+	 * membership bitmap over crc32(ip), followed by "ip\tepoch" lines. A clean
+	 * request reads only the header. A bitmap hit (or an unreadable bitmap —
+	 * scan-more, never skip) block-reads the base region; D=1 means the append
+	 * path added lines after the base length, so that tail region is also
+	 * matched (a re-block extends an entry whose base line may have expired).
+	 * Headerless files (from older plugin versions) take the legacy full scan.
+	 * Fail-open on any error.
+	 */
+	function reportedip_hive_dropin_is_blocked( $file, $ip ) {
+		if ( '' === $file || '' === $ip ) { return false; }
+		$fh = @fopen( $file, 'rb' );
+		if ( ! $fh ) { return false; }
+		$verdict = false;
+		$head    = @fread( $fh, 16408 );
+		if ( is_string( $head ) && 0 === strncmp( $head, '#rip1 ', 6 ) && strlen( $head ) >= 16408 ) {
+			$bin    = @hex2bin( substr( $head, 23, 16384 ) );
+			$bucket = crc32( $ip ) % 65536;
+			$maybe  = ( is_string( $bin ) && 8192 === strlen( $bin ) )
+				? ( 1 === ( ( ord( $bin[ $bucket >> 3 ] ) >> ( $bucket & 7 ) ) & 1 ) )
+				: true;
+			$dirty   = '1' === substr( $head, 8, 1 );
+			$baselen = (int) substr( $head, 12, 10 );
+			if ( $maybe ) {
+				$base_bytes = $baselen > 16408 ? $baselen - 16408 : PHP_INT_MAX;
+				$verdict    = reportedip_hive_dropin_bl_match( @fread( $fh, $base_bytes ), $ip );
+			}
+			if ( ! $verdict && $dirty && $baselen > 0 && 0 === @fseek( $fh, $baselen ) ) {
+				$verdict = reportedip_hive_dropin_bl_match( @stream_get_contents( $fh ), $ip );
+			}
+		} elseif ( is_string( $head ) && '' !== $head ) {
+			$verdict = reportedip_hive_dropin_bl_match( $head . @stream_get_contents( $fh ), $ip );
+		}
+		@fclose( $fh );
+		return $verdict;
+	}
+}
 if ( ! function_exists( 'reportedip_hive_dropin_refuse' ) ) {
+	/* Status line mirrors the CLIENT protocol and the connection is closed
+	   explicitly: a hardcoded "HTTP/1.1" answer to an HTTP/1.0 client leaves
+	   the connection in keep-alive limbo until the server-side timeout
+	   (measured: 5 s per blocked request under ApacheBench). */
 	function reportedip_hive_dropin_refuse( $header, $value ) {
 		if ( ! headers_sent() ) {
-			header( 'HTTP/1.1 403 Forbidden' );
+			$proto = isset( $_SERVER['SERVER_PROTOCOL'] ) && is_string( $_SERVER['SERVER_PROTOCOL'] ) && 0 === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/' )
+				? $_SERVER['SERVER_PROTOCOL']
+				: 'HTTP/1.0';
+			header( $proto . ' 403 Forbidden' );
 			header( $header . ': ' . $value );
 			header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+			header( 'Connection: close' );
 		}
 		echo 'Forbidden';
 		exit;
@@ -869,6 +986,15 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 			if ( 0 === strncmp( (string) $k, 'wordpress_logged_in_', 20 ) && '' !== (string) $v ) { return true; }
 		}
 		return false;
+	}
+}
+if ( ! function_exists( 'reportedip_hive_dropin_request_has_body' ) ) {
+	/* Mirrors ReportedIP_Hive_WAF::request_has_body() — keep both in sync (parity rule 1). */
+	function reportedip_hive_dropin_request_has_body( $server ) {
+		if ( isset( $server['CONTENT_LENGTH'] ) ) { return (int) $server['CONTENT_LENGTH'] > 0; }
+		if ( isset( $server['HTTP_TRANSFER_ENCODING'] ) ) { return true; }
+		$method = isset( $server['REQUEST_METHOD'] ) ? strtoupper( (string) $server['REQUEST_METHOD'] ) : 'GET';
+		return ! in_array( $method, array( 'GET', 'HEAD', 'OPTIONS' ), true );
 	}
 }
 
@@ -916,7 +1042,7 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 		$ua  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
 		$body = '';
 		$skip_body = __RIP_SKIP_AUTHED__ && reportedip_hive_dropin_has_login_cookie( $_COOKIE );
-		if ( ! $skip_body ) {
+		if ( ! $skip_body && __RIP_BODY_NEEDED__ && ( ! empty( $_POST ) || reportedip_hive_dropin_request_has_body( $_SERVER ) ) ) {
 			if ( ! empty( $_POST ) ) { $body .= reportedip_hive_dropin_flatten( $_POST ); }
 			$raw = file_get_contents( 'php://input', false, null, 0, 65536 );
 			if ( is_string( $raw ) && '' !== $raw ) {
@@ -988,14 +1114,24 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 
 PHP;
 
-		$writable     = $this->ensure_queue_dir();
-		$queue_export = var_export( $writable ? $this->queue_path() : '', true );     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the queue path literal into a generated PHP file, not debugging.
-		$block_export = var_export( $writable ? $this->blocklist_path() : '', true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the blocklist path literal into a generated PHP file, not debugging.
+		/*
+		 * Bake the queue path even when the directory is not writable right now.
+		 * Baking '' turned a transient permission problem at sync time into
+		 * permanent silence: the guard kept blocking but could never report a
+		 * hit, so the Firewall page showed zero WAF activity while the admin UI
+		 * — which re-checks writability live — reported logging as healthy. The
+		 * guard's own append is already fail-soft (@file_put_contents), so a
+		 * still-unwritable path simply drops that one hit and recovers the
+		 * moment permissions are fixed, without waiting for a rebake.
+		 */
+		$this->ensure_queue_dir();
+		$queue_export = var_export( $this->queue_path(), true );     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the queue path literal into a generated PHP file, not debugging.
+		$block_export = var_export( $this->blocklist_path(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the blocklist path literal into a generated PHP file, not debugging.
 		$cidr_export  = var_export( array_values( $this->blocked_cidr_snapshot() ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the literal CIDR blocklist into a generated PHP file, not debugging.
 
 		return str_replace(
-			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__' ),
-			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $engine_export, $report_export, $skip_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export ),
+			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_BODY_NEEDED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__' ),
+			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $engine_export, $report_export, $skip_export, $body_needed_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export ),
 			$template
 		);
 	}
@@ -1147,19 +1283,69 @@ PHP;
 			return;
 		}
 
-		file_put_contents( $path, $ip_address . "\t" . self::expiry_stamp( $blocked_until ) . "\n", FILE_APPEND | LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Appending one line to a same-host lookup file the pre-WordPress guard reads; WP_Filesystem has no append mode.
+		/*
+		 * Dedupe guard: skip the append when the file already carries an
+		 * equal-or-stronger line for this IP (tracked per IP for an hour).
+		 * A longer expiry — the escalation ladder always extends — must
+		 * still append, otherwise the guard would enforce only the stale
+		 * shorter block.
+		 */
+		$stamp         = self::expiry_stamp( $blocked_until );
+		$transient_key = 'reportedip_hive_bl_appended_' . md5( $ip_address );
+		$prev          = get_site_transient( $transient_key );
+		if ( false !== $prev ) {
+			$prev = (int) $prev;
+			if ( 0 === $prev || ( 0 !== $stamp && $stamp <= $prev ) ) {
+				return;
+			}
+		}
+
+		$this->mark_blocklist_dirty( $path );
+
+		file_put_contents( $path, $ip_address . "\t" . $stamp . "\n", FILE_APPEND | LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Appending one line to a same-host lookup file the pre-WordPress guard reads; WP_Filesystem has no append mode.
+		set_site_transient( $transient_key, $stamp, HOUR_IN_SECONDS );
+	}
+
+	/**
+	 * Flip the header's dirty flag so the guard knows the append region past
+	 * the base length must be scanned even on a bitmap miss. No-op for
+	 * headerless (legacy) files — those are always fully scanned anyway.
+	 *
+	 * @param string $path Blocklist path.
+	 * @return void
+	 * @since  2.1.32
+	 */
+	private function mark_blocklist_dirty( $path ) {
+		if ( ! file_exists( $path ) ) {
+			return;
+		}
+		$fh = @fopen( $path, 'r+b' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Single-byte in-place flag update on a same-host lookup file.
+		if ( ! $fh ) {
+			return;
+		}
+		$magic = fread( $fh, strlen( self::BLOCKLIST_MAGIC ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread -- Same-host lookup file.
+		if ( self::BLOCKLIST_MAGIC === $magic && 0 === fseek( $fh, self::BLOCKLIST_DIRTY_OFFSET ) ) {
+			fwrite( $fh, '1' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Same-host lookup file.
+		}
+		fclose( $fh ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Same-host lookup file.
 	}
 
 	/**
 	 * Rewrite the blocklist after a block was lifted, so the guard stops
 	 * refusing an IP the admin just released.
 	 *
+	 * @param string $ip_address Unblocked IP (from the action); clears the
+	 *                           per-IP append-dedupe marker so an immediate
+	 *                           re-block is mirrored again.
 	 * @return void
 	 * @since  2.1.30
 	 */
-	public function on_ip_unblocked() {
+	public function on_ip_unblocked( $ip_address = '' ) {
 		if ( ! $this->is_main_site() || ! (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false ) ) {
 			return;
+		}
+		if ( '' !== (string) $ip_address ) {
+			delete_site_transient( 'reportedip_hive_bl_appended_' . md5( (string) $ip_address ) );
 		}
 		$this->write_blocklist();
 	}
@@ -1177,20 +1363,31 @@ PHP;
 			return false;
 		}
 
-		$lines = array();
+		$lines  = array();
+		$bitmap = str_repeat( "\0", self::BLOCKLIST_BITMAP_BITS / 8 );
 		foreach ( $this->active_blocks() as $row ) {
 			$ip = is_object( $row ) ? (string) ( $row->ip_address ?? '' ) : '';
 			if ( '' === $ip || false !== strpos( $ip, '/' ) ) {
 				continue;
 			}
 			$lines[] = $ip . "\t" . self::expiry_stamp( $row->blocked_until ?? null );
+
+			$bucket                 = crc32( $ip ) % self::BLOCKLIST_BITMAP_BITS;
+			$bitmap[ $bucket >> 3 ] = chr( ord( $bitmap[ $bucket >> 3 ] ) | ( 1 << ( $bucket & 7 ) ) );
+
 			if ( count( $lines ) >= self::BLOCKLIST_MAX_ENTRIES ) {
 				break;
 			}
 		}
 
-		$body = empty( $lines ) ? '' : implode( "\n", $lines ) . "\n";
-		return false !== file_put_contents( $path, $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing the same-host lookup file the pre-WordPress guard reads.
+		$body   = empty( $lines ) ? '' : implode( "\n", $lines ) . "\n";
+		$header = sprintf(
+			'%sD=0 L=%010d %s' . "\n",
+			self::BLOCKLIST_MAGIC,
+			self::BLOCKLIST_HEADER_LEN + strlen( $body ),
+			bin2hex( $bitmap )
+		);
+		return false !== file_put_contents( $path, $header . $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing the same-host lookup file the pre-WordPress guard reads.
 	}
 
 	/**

@@ -46,6 +46,19 @@ class ReportedIP_Hive_Database {
 	private static $whitelist_request_cache = array();
 
 	/**
+	 * Per-request block-status memo keyed by IP.
+	 *
+	 * The init-priority-1 gate, the REST monitor (twice per anonymous REST
+	 * request) and the generic attempt tracker all ask for the same client IP;
+	 * without this memo each of those calls costs an identical COUNT(*) on the
+	 * blocked table. Block/unblock writes invalidate it so a verdict can never
+	 * go stale within the same request.
+	 *
+	 * @var array<string,bool>
+	 */
+	private static $blocked_request_cache = array();
+
+	/**
 	 * Get single instance
 	 */
 	public static function get_instance() {
@@ -67,25 +80,14 @@ class ReportedIP_Hive_Database {
 	 * @return bool True if all tables exist
 	 */
 	public function tables_exist() {
-		global $wpdb;
-
-		$required_tables = array(
-			$wpdb->base_prefix . 'reportedip_hive_logs',
-			$wpdb->base_prefix . 'reportedip_hive_whitelist',
-			$wpdb->base_prefix . 'reportedip_hive_blocked',
-			$wpdb->base_prefix . 'reportedip_hive_attempts',
-			$wpdb->base_prefix . 'reportedip_hive_api_queue',
-			$wpdb->base_prefix . 'reportedip_hive_stats',
-		);
-
-		foreach ( $required_tables as $table ) {
-			$exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
-			if ( ! $exists ) {
-				return false;
-			}
-		}
-
-		return true;
+		/*
+		 * Delegates to the schema owner so all nine tables are checked with a
+		 * single information_schema query. The former local list covered only
+		 * six of them, so a missing trusted_devices, audit_log or
+		 * waf_exceptions table read as "schema complete" and the repair path
+		 * never ran.
+		 */
+		return ReportedIP_Hive_Schema::tables_exist();
 	}
 
 	/**
@@ -653,6 +655,8 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( false !== $result ) {
+			self::flush_blocked_caches();
+
 			/**
 			 * Fires after an IP was blocked.
 			 *
@@ -706,6 +710,8 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( false !== $result ) {
+			self::flush_blocked_caches();
+
 			/** This action is documented in includes/class-database.php */
 			do_action( 'reportedip_hive_ip_blocked', $ip_address, $reason, $blocked_until );
 		}
@@ -714,24 +720,97 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Check if IP is blocked
+	 * Check if IP is blocked.
+	 *
+	 * Exact match first (covered by the UNIQUE index), then active CIDR ranges.
+	 * The range pass mirrors {@see is_whitelisted()}: without it a range block
+	 * was enforced only by the pre-WordPress guard — and that guard is off by
+	 * default, so on a standard install `203.0.113.0/24` blocked nothing at all
+	 * while the admin UI listed it as active.
 	 */
 	public function is_blocked( $ip_address ) {
 		global $wpdb;
+
+		if ( isset( self::$blocked_request_cache[ $ip_address ] ) ) {
+			return self::$blocked_request_cache[ $ip_address ];
+		}
 
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
 
 		$count = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $table_name 
-                 WHERE ip_address = %s 
-                 AND is_active = 1 
+				"SELECT COUNT(*) FROM $table_name
+                 WHERE ip_address = %s
+                 AND is_active = 1
                  AND (blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP())",
 				$ip_address
 			)
 		);
 
-		return $count > 0;
+		if ( $count > 0 ) {
+			self::$blocked_request_cache[ $ip_address ] = true;
+			return true;
+		}
+
+		foreach ( $this->active_blocked_cidrs() as $cidr ) {
+			if ( self::ip_in_cidr( $ip_address, $cidr ) ) {
+				self::$blocked_request_cache[ $ip_address ] = true;
+				return true;
+			}
+		}
+
+		self::$blocked_request_cache[ $ip_address ] = false;
+
+		return false;
+	}
+
+	/**
+	 * Active CIDR block ranges, object-cached for five minutes.
+	 *
+	 * Range blocks are rare and always manual, so the list is short and the
+	 * lookup stays a cheap PHP loop. The cache is invalidated by every
+	 * block/unblock write via {@see flush_blocked_caches()}.
+	 *
+	 * @return string[]
+	 * @since  2.1.32
+	 */
+	private function active_blocked_cidrs() {
+		global $wpdb;
+
+		$has_cache = function_exists( 'wp_cache_get' );
+		if ( $has_cache ) {
+			$cached = wp_cache_get( 'rip_blocked_cidrs', 'reportedip' );
+			if ( false !== $cached ) {
+				return (array) $cached;
+			}
+		}
+
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
+		$ranges     = (array) $wpdb->get_col(
+			"SELECT ip_address FROM $table_name
+			 WHERE ip_address LIKE '%/%'
+			 AND is_active = 1
+			 AND (blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP())"
+		);
+
+		if ( $has_cache ) {
+			wp_cache_set( 'rip_blocked_cidrs', $ranges, 'reportedip', 300 );
+		}
+
+		return $ranges;
+	}
+
+	/**
+	 * Drop the per-request block memo and the CIDR range cache.
+	 *
+	 * @return void
+	 * @since  2.1.32
+	 */
+	private static function flush_blocked_caches() {
+		self::$blocked_request_cache = array();
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( 'rip_blocked_cidrs', 'reportedip' );
+		}
 	}
 
 	/**
@@ -805,6 +884,8 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( false !== $result ) {
+			self::flush_blocked_caches();
+
 			/**
 			 * Fires after a block was lifted.
 			 *
@@ -1223,7 +1304,27 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Anonymize old data for GDPR compliance
+	 * Batch size for the anonymisation sweep — bounds both the row fetch and
+	 * the per-row UPDATE burst of a single loop iteration.
+	 */
+	const ANONYMIZE_BATCH_SIZE = 500;
+
+	/**
+	 * Soft time budget (seconds) for one cron-tick of anonymisation/cleanup.
+	 * Remaining rows are picked up by the next daily run.
+	 */
+	const CLEANUP_TIME_BUDGET = 20;
+
+	/**
+	 * Anonymize old data for GDPR compliance.
+	 *
+	 * Chunked: the previous implementation selected the entire 7–30-day band
+	 * with no LIMIT — including rows anonymised on earlier runs — and issued
+	 * one UPDATE per row, which on a busy site meant tens of thousands of
+	 * UPDATEs inside a single cron tick. Now each pass takes at most
+	 * ANONYMIZE_BATCH_SIZE not-yet-anonymised rows until the time budget is
+	 * spent; already-processed rows are excluded by the marker predicate so
+	 * repeat runs no longer rewrite them.
 	 */
 	public function anonymize_old_data( $days = 7 ) {
 		global $wpdb;
@@ -1231,20 +1332,33 @@ class ReportedIP_Hive_Database {
 		$anonymized = 0;
 
 		$logs_table = $wpdb->base_prefix . 'reportedip_hive_logs';
+		$retention  = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 );
+		$marker     = '%' . $wpdb->esc_like( '"anonymized":true' ) . '%';
+		$deadline   = time() + self::CLEANUP_TIME_BUDGET;
 
-		$old_logs = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT id, details FROM $logs_table 
-                 WHERE created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
-                 AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)",
-				$days,
-				ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 )
-			)
-		);
+		do {
+			$old_logs = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT id, details FROM $logs_table
+	                 WHERE created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
+	                 AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
+	                 AND details IS NOT NULL
+	                 AND details NOT LIKE %s
+	                 LIMIT %d",
+					$days,
+					$retention,
+					$marker,
+					self::ANONYMIZE_BATCH_SIZE
+				)
+			);
 
-		foreach ( $old_logs as $log ) {
-			$details = json_decode( $log->details, true );
-			if ( is_array( $details ) ) {
+			$batch_rows       = count( $old_logs );
+			$updated_in_batch = 0;
+			foreach ( $old_logs as $log ) {
+				$details = json_decode( $log->details, true );
+				if ( ! is_array( $details ) ) {
+					$details = array();
+				}
 				$personal_fields    = array( 'username', 'username_hash', 'author', 'author_hash', 'user_agent', 'referer', 'referer_domain' );
 				$anonymized_details = array_diff_key( $details, array_flip( $personal_fields ) );
 
@@ -1259,9 +1373,10 @@ class ReportedIP_Hive_Database {
 					array( '%d' )
 				);
 
+				++$updated_in_batch;
 				++$anonymized;
 			}
-		}
+		} while ( self::ANONYMIZE_BATCH_SIZE === $batch_rows && $updated_in_batch > 0 && time() < $deadline );
 
 		$attempts_table      = $wpdb->base_prefix . 'reportedip_hive_attempts';
 		$anonymized_attempts = $wpdb->query(
@@ -1282,12 +1397,35 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Clean up old data
+	 * Chunk size for retention DELETEs. An unbounded DELETE over the logs
+	 * table held long row locks (the table is also written on every security
+	 * event); LIMIT-chunks keep each lock window short.
+	 */
+	const CLEANUP_DELETE_CHUNK = 5000;
+
+	/**
+	 * Clean up old data.
+	 *
+	 * Every DELETE runs as a `LIMIT`-chunked loop under the shared
+	 * CLEANUP_TIME_BUDGET so a single daily tick can never hold a
+	 * multi-minute lock on a large table; leftovers wait for the next run.
 	 */
 	public function cleanup_old_data( $days = 30 ) {
 		global $wpdb;
 
-		$deleted = 0;
+		$deleted  = 0;
+		$deadline = time() + self::CLEANUP_TIME_BUDGET;
+
+		$chunked_delete = static function ( $sql ) use ( $wpdb, &$deleted, $deadline ) {
+			do {
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Statements below are prepared before being passed in.
+				$result = $wpdb->query( $sql . ' LIMIT ' . self::CLEANUP_DELETE_CHUNK );
+				if ( false === $result ) {
+					return;
+				}
+				$deleted += $result;
+			} while ( $result === self::CLEANUP_DELETE_CHUNK && time() < $deadline );
+		};
 
 		$tables_to_clean = array(
 			$wpdb->base_prefix . 'reportedip_hive_logs' => 'created_at',
@@ -1296,40 +1434,29 @@ class ReportedIP_Hive_Database {
 		);
 
 		foreach ( $tables_to_clean as $table => $date_column ) {
-			$result = $wpdb->query(
+			$chunked_delete(
 				$wpdb->prepare(
 					"DELETE FROM $table WHERE $date_column < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)",
 					$days
 				)
 			);
-			if ( $result !== false ) {
-				$deleted += $result;
-			}
 		}
 
-		$completed_reports = $wpdb->query(
+		$chunked_delete(
 			"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
              WHERE status = 'completed'
              AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)"
 		);
 
-		if ( $completed_reports !== false ) {
-			$deleted += $completed_reports;
-		}
-
-		$failed_reports = $wpdb->query(
+		$chunked_delete(
 			"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
              WHERE status = 'failed'
              AND attempts >= max_attempts
              AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)"
 		);
 
-		if ( $failed_reports !== false ) {
-			$deleted += $failed_reports;
-		}
-
 		$queue_max_age = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_max_age_days', 7 );
-		$old_pending   = $wpdb->query(
+		$chunked_delete(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
 				 WHERE status IN ('pending', 'failed')
@@ -1337,10 +1464,6 @@ class ReportedIP_Hive_Database {
 				$queue_max_age
 			)
 		);
-
-		if ( $old_pending !== false ) {
-			$deleted += $old_pending;
-		}
 
 		return $deleted;
 	}
@@ -2036,7 +2159,27 @@ class ReportedIP_Hive_Database {
 	public function get_threat_analytics( $days = 7 ) {
 		global $wpdb;
 
-		$days       = max( 1, min( 90, (int) $days ) );
+		$days = max( 1, min( 90, (int) $days ) );
+
+		/*
+		 * Two-layer cache: a per-request memo (the dashboard page resolves the
+		 * 7-day window during `admin_enqueue_scripts` AND renders a window in
+		 * the page body) plus a 5-minute site transient so chart range clicks
+		 * and page reloads do not re-run four aggregate queries over the logs
+		 * table each time. Keyed by locale because `labels` carries
+		 * `date_i18n()` output.
+		 */
+		static $request_memo = array();
+		$cache_key = 'reportedip_hive_threat_analytics_' . $days . '_' . get_locale();
+		if ( isset( $request_memo[ $cache_key ] ) ) {
+			return $request_memo[ $cache_key ];
+		}
+		$cached = get_site_transient( $cache_key );
+		if ( is_array( $cached ) && isset( $cached['days'] ) ) {
+			$request_memo[ $cache_key ] = $cached;
+			return $cached;
+		}
+
 		$logs_table = $wpdb->base_prefix . 'reportedip_hive_logs';
 		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS );
 
@@ -2111,24 +2254,47 @@ class ReportedIP_Hive_Database {
 			$today_total += $series[ $fkey ][ $last_pos ];
 		}
 
+		/*
+		 * Aggregate WAF hit groups in SQL — the previous implementation pulled
+		 * up to 5000 longtext blobs into PHP just to json_decode one field.
+		 * JSON_UNQUOTE(JSON_EXTRACT()) covers MySQL 5.7+/MariaDB 10.2+; on the
+		 * rare older server the query errors and the PHP path takes over.
+		 */
+		$waf_groups = array();
 		$waf_rows   = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT details FROM $logs_table
+				"SELECT COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(details, '$.group')), ''), 'other') AS g, COUNT(*) AS c
+				 FROM $logs_table
 				 WHERE event_type IN ('waf_block','waf_would_block')
 				   AND ( created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY) )
-				 ORDER BY created_at DESC
-				 LIMIT 5000",
+				 GROUP BY g",
 				$cutoff_utc,
 				$days
 			)
 		);
-		$waf_groups = array();
-		foreach ( (array) $waf_rows as $row ) {
-			$decoded              = json_decode( (string) $row->details, true );
-			$group                = ( is_array( $decoded ) && ! empty( $decoded['group'] ) )
-				? (string) $decoded['group']
-				: 'other';
-			$waf_groups[ $group ] = ( $waf_groups[ $group ] ?? 0 ) + 1;
+		if ( '' === $wpdb->last_error ) {
+			foreach ( (array) $waf_rows as $row ) {
+				$waf_groups[ (string) $row->g ] = (int) $row->c;
+			}
+		} else {
+			$waf_rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT details FROM $logs_table
+					 WHERE event_type IN ('waf_block','waf_would_block')
+					   AND ( created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY) )
+					 ORDER BY created_at DESC
+					 LIMIT 5000",
+					$cutoff_utc,
+					$days
+				)
+			);
+			foreach ( (array) $waf_rows as $row ) {
+				$decoded              = json_decode( (string) $row->details, true );
+				$group                = ( is_array( $decoded ) && ! empty( $decoded['group'] ) )
+					? (string) $decoded['group']
+					: 'other';
+				$waf_groups[ $group ] = ( $waf_groups[ $group ] ?? 0 ) + 1;
+			}
 		}
 		arsort( $waf_groups );
 
@@ -2181,7 +2347,7 @@ class ReportedIP_Hive_Database {
 			}
 		}
 
-		return array(
+		$analytics = array(
 			'days'        => $days,
 			'labels'      => $labels,
 			'families'    => $families,
@@ -2194,5 +2360,10 @@ class ReportedIP_Hive_Database {
 			),
 			'top_ips'     => $top_ips,
 		);
+
+		$request_memo[ $cache_key ] = $analytics;
+		set_site_transient( $cache_key, $analytics, 5 * MINUTE_IN_SECONDS );
+
+		return $analytics;
 	}
 }

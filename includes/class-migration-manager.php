@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 12;
+	public const CURRENT_VERSION = 13;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -372,6 +372,45 @@ final class ReportedIP_Hive_Migration_Manager {
 			}
 			if ( ReportedIP_Hive::is_own_server_ip( (string) $row->ip_address ) ) {
 				$database->unblock_ip( (string) $row->ip_address );
+			}
+		}
+	}
+
+	/**
+	 * Migrate to v13: rebalance the logs/api_queue index set for the hot paths.
+	 *
+	 * Adds (idempotent via {@see ReportedIP_Hive_Schema::index_exists()}):
+	 *   - `logs (event_type, created_at, ip_address)` — carries the
+	 *     coordinated-attack window aggregate (index-only, measured 50 ms →
+	 *     34 ms at 20k rows in-window) and `get_event_type_counts()`, both of
+	 *     which had no usable composite before and fell back to scans.
+	 *   - `api_queue (ip_address)` — carries `is_recently_processed()` and the
+	 *     duplicate-report check, which fire on every threshold trip.
+	 *
+	 * Drops dead weight on `logs`: `idx_severity` and `idx_reported_to_api`
+	 * (ultra-low-cardinality, no reader) and `idx_event_type` (fully covered
+	 * by the new composite's leftmost prefix). Every security event pays each
+	 * index tree on INSERT, so the swap is net-neutral at three-for-two.
+	 *
+	 * @return void
+	 * @since  2.1.32
+	 */
+	private static function migrate_to_v13() {
+		global $wpdb;
+
+		$logs  = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_LOGS );
+		$queue = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_API_QUEUE );
+
+		if ( ! ReportedIP_Hive_Schema::index_exists( ReportedIP_Hive_Schema::TABLE_LOGS, 'idx_logs_event_time' ) ) {
+			$wpdb->query( "ALTER TABLE $logs ADD INDEX idx_logs_event_time (event_type, created_at, ip_address)" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
+		}
+		if ( ! ReportedIP_Hive_Schema::index_exists( ReportedIP_Hive_Schema::TABLE_API_QUEUE, 'idx_ip_address' ) ) {
+			$wpdb->query( "ALTER TABLE $queue ADD INDEX idx_ip_address (ip_address)" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
+		}
+
+		foreach ( array( 'idx_severity', 'idx_reported_to_api', 'idx_event_type' ) as $dead_index ) {
+			if ( ReportedIP_Hive_Schema::index_exists( ReportedIP_Hive_Schema::TABLE_LOGS, $dead_index ) ) {
+				$wpdb->query( "ALTER TABLE $logs DROP INDEX $dead_index" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
 			}
 		}
 	}

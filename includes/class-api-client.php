@@ -22,6 +22,23 @@ class ReportedIP_Hive_API {
 	private $api_endpoint;
 	private $timeout;
 	private $timeout_reputation = 5;
+
+	/**
+	 * Timeout for queued report POSTs. The generic 30 s timeout let a worst-case
+	 * batch (20 items × 30 s) outlive both the 5-minute queue lock and the
+	 * 15-minute cron interval, producing overlapping workers. 10 s is generous
+	 * for a small JSON POST and keeps the batch inside its lock even when every
+	 * call times out.
+	 *
+	 * @var int
+	 */
+	private $timeout_report = 10;
+
+	/**
+	 * Wall-clock budget (seconds) for one queue batch — deliberately below the
+	 * 5-minute QUEUE_LOCK_TRANSIENT TTL in the cron handler.
+	 */
+	const QUEUE_TIME_BUDGET = 240;
 	private $cache;
 	private $logger;
 	private $mode_manager;
@@ -322,7 +339,7 @@ class ReportedIP_Hive_API {
 		);
 
 		$start_time    = microtime( true );
-		$response      = $this->make_request( 'POST', 'report', array(), $data );
+		$response      = $this->make_request( 'POST', 'report', array(), $data, $this->timeout_report );
 		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		if ( is_wp_error( $response ) ) {
@@ -521,8 +538,12 @@ class ReportedIP_Hive_API {
 
 		$processed = 0;
 		$errors    = 0;
+		$deadline  = time() + self::QUEUE_TIME_BUDGET;
 
 		foreach ( $pending_reports as $report ) {
+			if ( time() >= $deadline ) {
+				break;
+			}
 			try {
 				$database->update_api_report_status( $report->id, 'processing' );
 				$database->mark_report_submitted( $report->id );

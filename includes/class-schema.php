@@ -144,11 +144,9 @@ final class ReportedIP_Hive_Schema {
 			created_at datetime DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY  (id),
 			KEY idx_blog_id (blog_id),
-			KEY idx_event_type (event_type),
 			KEY idx_ip_address (ip_address),
 			KEY idx_created_at (created_at),
-			KEY idx_severity (severity),
-			KEY idx_reported_to_api (reported_to_api),
+			KEY idx_logs_event_time (event_type, created_at, ip_address),
 			KEY idx_logs_site_time (blog_id, created_at)
 		) $charset_collate;";
 
@@ -228,6 +226,7 @@ final class ReportedIP_Hive_Schema {
 			KEY idx_report_type (report_type),
 			KEY idx_created_at (created_at),
 			KEY idx_submitted_at (submitted_at),
+			KEY idx_ip_address (ip_address),
 			KEY idx_queue_site_status (blog_id, status, priority)
 		) $charset_collate;";
 
@@ -446,6 +445,30 @@ final class ReportedIP_Hive_Schema {
 				'SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND COLUMN_NAME = %s',
 				$table,
 				$column
+			)
+		);
+		return (int) $result > 0;
+	}
+
+	/**
+	 * Whether the given index exists on a plugin table.
+	 *
+	 * Companion to {@see column_exists()} for idempotent index migrations
+	 * (ALTER TABLE … ADD/DROP INDEX must not run twice).
+	 *
+	 * @param string $table_suffix Table suffix, e.g. `reportedip_hive_logs`.
+	 * @param string $index        Index name.
+	 * @return bool
+	 * @since  2.1.32
+	 */
+	public static function index_exists( $table_suffix, $index ) {
+		global $wpdb;
+		$table  = self::table( $table_suffix );
+		$result = $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND INDEX_NAME = %s',
+				$table,
+				$index
 			)
 		);
 		return (int) $result > 0;

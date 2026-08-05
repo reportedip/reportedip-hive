@@ -53,6 +53,14 @@ final class ReportedIP_Hive_Option_Routing {
 	public const DEFAULT_FRONTEND_SLUG = 'reportedip-hive-2fa';
 
 	/**
+	 * Upper value-size bound for {@see prime_cache()}. Large payloads (the
+	 * synced disposable-domains ruleset can exceed 500 KB) are deliberately
+	 * NOT primed — they stay lazy-loaded by their single consumer instead of
+	 * being unserialised into memory on every request.
+	 */
+	private const PRIME_MAX_BYTES = 65536;
+
+	/**
 	 * Per-request cache for the resolve_* helpers. Cleared by `flush()`
 	 * (called from the `update_option_*` / `update_site_option_*` action
 	 * hooks). Hot-path callers (Two_Factor login filter, Password_Strength)
@@ -61,6 +69,70 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @var array<string, mixed>
 	 */
 	private static $resolve_cache = array();
+
+	/**
+	 * Pre-load every small plugin option into the request-level object cache
+	 * with a single query.
+	 *
+	 * Background: on single-site WordPress `update_network_option()` always
+	 * writes with `autoload=no`, so none of the ~150 plugin options ever land
+	 * in `alloptions`. Without a persistent object cache every distinct
+	 * `Option_Routing::get()` key therefore costs one `SELECT option_value …
+	 * LIMIT 1` — measured at 30+ plugin-option queries on a single anonymous
+	 * front-end request. On Multisite the same applies to sitemeta lookups.
+	 *
+	 * This helper replaces those with ONE query per request. Values are stored
+	 * via `wp_cache_add()` in the exact raw form core caches itself, so
+	 * `get_option()` / `get_site_option()` become cache hits and any value the
+	 * current request already cached wins. With a persistent external object
+	 * cache the per-key lookups are already cheap and cross-request, so the
+	 * helper is a no-op there.
+	 *
+	 * @return void
+	 * @since  2.1.32
+	 */
+	public static function prime_cache() {
+		global $wpdb;
+
+		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
+			return;
+		}
+
+		$prefix_like = $wpdb->esc_like( 'reportedip_hive_' ) . '%';
+
+		if ( is_multisite() ) {
+			$network_id = function_exists( 'get_current_network_id' ) ? get_current_network_id() : 1;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Bulk cache prime; the per-key core path would issue one query per option.
+			$rows = (array) $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT meta_key, meta_value FROM {$wpdb->sitemeta}
+					 WHERE site_id = %d AND meta_key LIKE %s
+					   AND LENGTH(meta_value) <= %d",
+					$network_id,
+					$prefix_like,
+					self::PRIME_MAX_BYTES
+				)
+			);
+			foreach ( $rows as $row ) {
+				wp_cache_add( $network_id . ':' . $row->meta_key, $row->meta_value, 'site-options' );
+			}
+			return;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Bulk cache prime; the per-key core path would issue one query per option.
+		$rows = (array) $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT option_name, option_value FROM {$wpdb->options}
+				 WHERE option_name LIKE %s
+				   AND LENGTH(option_value) <= %d",
+				$prefix_like,
+				self::PRIME_MAX_BYTES
+			)
+		);
+		foreach ( $rows as $row ) {
+			wp_cache_add( $row->option_name, $row->option_value, 'options' );
+		}
+	}
 
 	/**
 	 * Get an option, routed to the correct storage.

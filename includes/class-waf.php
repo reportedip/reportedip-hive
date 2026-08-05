@@ -239,8 +239,22 @@ class ReportedIP_Hive_WAF {
 			return;
 		}
 
-		$raw_body = file_get_contents( 'php://input', false, null, 0, self::MAX_BODY_BYTES );
-		$hit      = $this->evaluate(
+		/*
+		 * Read the request body only when (a) an active rule actually inspects
+		 * it and (b) the request carries one. The previous unconditional read
+		 * cost a 64 KB stream read on every GET. The guard bakes the identical
+		 * condition (parity rule 1) via __RIP_BODY_NEEDED__ +
+		 * reportedip_hive_dropin_request_has_body().
+		 */
+		$targets    = $this->required_targets( $rules );
+		$needs_body = isset( $targets['body'] ) || isset( $targets['all'] );
+
+		$raw_body = null;
+		if ( $needs_body && ( ! empty( $_POST ) || self::request_has_body( wp_unslash( $_SERVER ) ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Presence check only; wp_unslash applied; header metadata only.
+			$raw_body = file_get_contents( 'php://input', false, null, 0, self::MAX_BODY_BYTES );
+		}
+
+		$hit = $this->evaluate(
 			$rules,
 			wp_unslash( $_SERVER ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- wp_unslash applied; raw attack surface inspected verbatim, never echoed.
 			wp_unslash( $_POST ),   // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Raw attack surface inspected before any handler; nonce belongs to the real handler.
@@ -668,6 +682,29 @@ class ReportedIP_Hive_WAF {
 	 */
 	public function active_rule_count() {
 		return count( $this->get_active_rules() );
+	}
+
+	/**
+	 * Whether the current request plausibly carries a body worth reading.
+	 *
+	 * Content-Length is authoritative when present. Without it a chunked
+	 * transfer or a non-idempotent method still reads (never skip a body an
+	 * attacker could smuggle); plain GET/HEAD/OPTIONS without either signal
+	 * skips the `php://input` stream read entirely.
+	 *
+	 * @param array<string,mixed> $server Server vars (already unslashed).
+	 * @return bool
+	 * @since  2.1.32
+	 */
+	public static function request_has_body( array $server ) {
+		if ( isset( $server['CONTENT_LENGTH'] ) ) {
+			return (int) $server['CONTENT_LENGTH'] > 0;
+		}
+		if ( isset( $server['HTTP_TRANSFER_ENCODING'] ) ) {
+			return true;
+		}
+		$method = isset( $server['REQUEST_METHOD'] ) ? strtoupper( (string) $server['REQUEST_METHOD'] ) : 'GET';
+		return ! in_array( $method, array( 'GET', 'HEAD', 'OPTIONS' ), true );
 	}
 
 	/**

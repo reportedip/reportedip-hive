@@ -294,81 +294,101 @@ class ReportedIP_Hive_Cache {
 	}
 
 	/**
-	 * Get cache size and entry count
+	 * Get cache size and entry count.
 	 *
-	 * Optimized to use a single query instead of N+1 queries.
+	 * Two prefix-indexed queries instead of the previous self-join whose ON
+	 * clause (`CONCAT`/`SUBSTRING`) could never use an index and scanned
+	 * `wp_options` on both sides. LIKE prefixes are `esc_like()`-escaped —
+	 * an unescaped `_transient_…` pattern treats every underscore as a
+	 * single-char wildcard, which also defeated the `option_name` index.
+	 * Memoised per request: the settings page asks twice per render.
 	 */
 	public function get_cache_info() {
 		global $wpdb;
 
-		$cache_prefix = $this->cache_prefix . 'reputation_';
-		$current_time = time();
+		static $request_memo = null;
+		if ( null !== $request_memo ) {
+			return $request_memo;
+		}
 
-		$results = $wpdb->get_row(
+		$cache_prefix = $this->cache_prefix . 'reputation_';
+
+		$totals = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT
-                    COUNT(o.option_id) as entry_count,
-                    COALESCE(SUM(LENGTH(o.option_value)), 0) as total_size,
-                    SUM(CASE WHEN t.option_value IS NOT NULL AND t.option_value < %d THEN 1 ELSE 0 END) as expired_count
-                 FROM {$wpdb->options} o
-                 LEFT JOIN {$wpdb->options} t
-                    ON t.option_name = CONCAT('_transient_timeout_', SUBSTRING(o.option_name, 12))
-                 WHERE o.option_name LIKE %s
-                 AND o.option_name NOT LIKE %s",
-				$current_time,
-				'_transient_' . $cache_prefix . '%',
-				'_transient_timeout_%'
+				"SELECT COUNT(option_id) AS entry_count, COALESCE(SUM(LENGTH(option_value)), 0) AS total_size
+                 FROM {$wpdb->options}
+                 WHERE option_name LIKE %s",
+				$wpdb->esc_like( '_transient_' . $cache_prefix ) . '%'
 			)
 		);
 
-		if ( ! $results ) {
-			return array(
-				'entry_count'      => 0,
-				'total_size_bytes' => 0,
-				'total_size_mb'    => 0,
-				'expired_count'    => 0,
-				'active_count'     => 0,
-			);
-		}
-
-		$entry_count   = (int) $results->entry_count;
-		$total_size    = (int) $results->total_size;
-		$expired_count = (int) $results->expired_count;
-
-		return array(
-			'entry_count'      => $entry_count,
-			'total_size_bytes' => $total_size,
-			'total_size_mb'    => round( $total_size / 1024 / 1024, 2 ),
-			'expired_count'    => $expired_count,
-			'active_count'     => $entry_count - $expired_count,
-		);
-	}
-
-	/**
-	 * Clean up expired cache entries
-	 */
-	public function cleanup_expired_cache() {
-		global $wpdb;
-
-		$cache_prefix = '_transient_timeout_' . $this->cache_prefix . 'reputation_';
-
-		$expired_timeouts = $wpdb->get_col(
+		$expired_count = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT option_name FROM {$wpdb->options} 
-                 WHERE option_name LIKE %s 
-                 AND option_value < %d",
-				$cache_prefix . '%',
+				"SELECT COUNT(option_id) FROM {$wpdb->options}
+                 WHERE option_name LIKE %s AND option_value < %d",
+				$wpdb->esc_like( '_transient_timeout_' . $cache_prefix ) . '%',
 				time()
 			)
 		);
 
-		$cleaned = 0;
-		foreach ( $expired_timeouts as $timeout_key ) {
-			$transient_key = str_replace( '_transient_timeout_', '_transient_', $timeout_key );
+		$entry_count = $totals ? (int) $totals->entry_count : 0;
+		$total_size  = $totals ? (int) $totals->total_size : 0;
 
-			$wpdb->delete( $wpdb->options, array( 'option_name' => $timeout_key ) );
-			$wpdb->delete( $wpdb->options, array( 'option_name' => $transient_key ) );
+		$request_memo = array(
+			'entry_count'      => $entry_count,
+			'total_size_bytes' => $total_size,
+			'total_size_mb'    => round( $total_size / 1024 / 1024, 2 ),
+			'expired_count'    => $expired_count,
+			'active_count'     => max( 0, $entry_count - $expired_count ),
+		);
+
+		return $request_memo;
+	}
+
+	/**
+	 * Clean up expired cache entries.
+	 *
+	 * Covers the reputation cache AND the ETag response cache — the latter
+	 * (`reportedip_etag_*` + `…_body`) was written by the API client but never
+	 * matched by the old reputation-only prefix, so expired ETag rows
+	 * accumulated in `wp_options` indefinitely. Deletes run as chunked
+	 * `IN (…)` batches instead of two single-row DELETEs per entry.
+	 */
+	public function cleanup_expired_cache() {
+		global $wpdb;
+
+		$prefixes = array(
+			$this->cache_prefix . 'reputation_',
+			$this->cache_prefix . 'etag_',
+		);
+
+		$expired_timeouts = array();
+		foreach ( $prefixes as $prefix ) {
+			$expired_timeouts = array_merge(
+				$expired_timeouts,
+				(array) $wpdb->get_col(
+					$wpdb->prepare(
+						"SELECT option_name FROM {$wpdb->options}
+	                 WHERE option_name LIKE %s
+	                 AND option_value < %d",
+						$wpdb->esc_like( '_transient_timeout_' . $prefix ) . '%',
+						time()
+					)
+				)
+			);
+		}
+
+		$cleaned    = 0;
+		$delete_all = array();
+		foreach ( $expired_timeouts as $timeout_key ) {
+			$delete_all[] = $timeout_key;
+			$delete_all[] = str_replace( '_transient_timeout_', '_transient_', $timeout_key );
 			++$cleaned;
+		}
+		foreach ( array_chunk( $delete_all, 200 ) as $chunk ) {
+			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%s' ) );
+			// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders is a "%s,%s,…" list bound via $chunk.
+			$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name IN ($placeholders)", $chunk ) );
 		}
 
 		if ( $cleaned > 0 ) {

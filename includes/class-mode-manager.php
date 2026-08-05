@@ -69,6 +69,13 @@ class ReportedIP_Hive_Mode_Manager {
 	private $feature_matrix = array();
 
 	/**
+	 * Lazily-built map of translated feature texts (see {@see feature_texts()}).
+	 *
+	 * @var array<string, array{0:string,1:string}>|null
+	 */
+	private $feature_texts_cache = null;
+
+	/**
 	 * Get single instance (Singleton pattern)
 	 *
 	 * @return ReportedIP_Hive_Mode_Manager
@@ -166,7 +173,15 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
-	 * Ensure feature matrix is initialized (lazy loaded to ensure translations are available)
+	 * Ensure the feature matrix is initialised.
+	 *
+	 * Carries ONLY machine-readable gating fields (local/community/requires_tier).
+	 * The translated label/description pairs live in {@see feature_texts()} —
+	 * building them here meant 50 `__()` calls on the first `feature_status()`
+	 * of every request, which on localised sites triggered the just-in-time
+	 * load of the full .mo file on anonymous front-end requests (measured at
+	 * 284 KB per request on a German install) even though nothing on the
+	 * front end ever renders a feature label.
 	 *
 	 * @return void
 	 */
@@ -177,164 +192,185 @@ class ReportedIP_Hive_Mode_Manager {
 
 		$this->feature_matrix = array(
 			'login_monitoring'             => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Login Monitoring', 'reportedip-hive' ),
-				'description' => __( 'Monitor and log failed login attempts', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'comment_monitoring'           => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Comment Spam Monitoring', 'reportedip-hive' ),
-				'description' => __( 'Detect and block spam comments', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'xmlrpc_monitoring'            => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'XMLRPC Monitoring', 'reportedip-hive' ),
-				'description' => __( 'Monitor XMLRPC endpoint for abuse', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'auto_blocking'                => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Automatic IP Blocking', 'reportedip-hive' ),
-				'description' => __( 'Automatically block IPs that exceed thresholds', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'local_blocklist'              => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Local Block/Whitelist', 'reportedip-hive' ),
-				'description' => __( 'Manage local IP block and whitelist', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'local_statistics'             => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Local Statistics', 'reportedip-hive' ),
-				'description' => __( 'View local security statistics', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
-
 			'api_reputation_check'         => array(
-				'local'       => false,
-				'community'   => true,
-				'label'       => __( 'Community Reputation Check', 'reportedip-hive' ),
-				'description' => __( 'Check IP reputation against community database', 'reportedip-hive' ),
+				'local'     => false,
+				'community' => true,
 			),
 			'api_report'                   => array(
-				'local'       => false,
-				'community'   => true,
-				'label'       => __( 'Share Threats with Community', 'reportedip-hive' ),
-				'description' => __( 'Report detected threats to the community network', 'reportedip-hive' ),
+				'local'     => false,
+				'community' => true,
 			),
 			'global_blacklist'             => array(
-				'local'       => false,
-				'community'   => true,
-				'label'       => __( 'Global Blacklist', 'reportedip-hive' ),
-				'description' => __( 'Access and download the global threat blacklist', 'reportedip-hive' ),
+				'local'     => false,
+				'community' => true,
 			),
 			'reputation_blocking'          => array(
-				'local'       => false,
-				'community'   => true,
-				'label'       => __( 'Reputation-based Blocking', 'reportedip-hive' ),
-				'description' => __( 'Block IPs based on community reputation scores', 'reportedip-hive' ),
+				'local'     => false,
+				'community' => true,
 			),
 			'advanced_analytics'           => array(
-				'local'       => false,
-				'community'   => true,
-				'label'       => __( 'Advanced Analytics', 'reportedip-hive' ),
-				'description' => __( 'Access advanced threat analytics and trends', 'reportedip-hive' ),
+				'local'     => false,
+				'community' => true,
 			),
 			'threat_intelligence'          => array(
-				'local'       => false,
-				'community'   => true,
-				'label'       => __( 'Threat Intelligence', 'reportedip-hive' ),
-				'description' => __( 'Receive threat intelligence from the community', 'reportedip-hive' ),
+				'local'     => false,
+				'community' => true,
 			),
 			'coordinated_attack_detection' => array(
-				'local'       => false,
-				'community'   => true,
-				'label'       => __( 'Coordinated Attack Detection', 'reportedip-hive' ),
-				'description' => __( 'Detect coordinated attacks across the network', 'reportedip-hive' ),
+				'local'     => false,
+				'community' => true,
 			),
 			'mail_relay_via_api'           => array(
 				'local'         => false,
 				'community'     => true,
 				'requires_tier' => 'professional',
-				'label'         => __( 'Mail Relay via reportedip.de', 'reportedip-hive' ),
-				'description'   => __( 'Send 2FA mails through our SMTP for guaranteed deliverability — no own SMTP setup needed.', 'reportedip-hive' ),
 			),
 			'sms_relay_via_api'            => array(
 				'local'         => false,
 				'community'     => true,
 				'requires_tier' => 'professional',
-				'label'         => __( 'SMS Relay via reportedip.de', 'reportedip-hive' ),
-				'description'   => __( 'Send 2FA SMS via our managed EU gateway — included with Professional and Business.', 'reportedip-hive' ),
 			),
 			'frontend_2fa'                 => array(
 				'local'         => true,
 				'community'     => true,
 				'requires_tier' => 'professional',
-				'label'         => __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ),
-				'description'   => __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login — kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ),
 			),
 			'decoy_pathblock'              => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Decoy Path Block', 'reportedip-hive' ),
-				'description' => __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...) — distinct from the N-of-Y scan-detector.', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'hardening_mode'               => array(
 				'local'         => true,
 				'community'     => true,
 				'requires_tier' => 'professional',
-				'label'         => __( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ),
-				'description'   => __( 'Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected.', 'reportedip-hive' ),
 			),
 			'waf'                          => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Web Application Firewall', 'reportedip-hive' ),
-				'description' => __( 'Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync.', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'rule_sync_priority'           => array(
 				'local'         => false,
 				'community'     => true,
 				'requires_tier' => 'professional',
-				'label'         => __( 'Priority Rule Sync', 'reportedip-hive' ),
-				'description'   => __( 'Daily, full-ruleset delivery (broader signatures, higher paranoia levels, bot IP-range feeds, live disposable lists) instead of the bundled baseline.', 'reportedip-hive' ),
 			),
 			'bot_verification'             => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Verified Bot Detection', 'reportedip-hive' ),
-				'description' => __( 'Verify search-engine crawlers via IP ranges and forward-confirmed reverse DNS; flag or block user-agent spoofers.', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'disposable_email'             => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Disposable Email Block', 'reportedip-hive' ),
-				'description' => __( 'Block registrations from throwaway-mail providers. Baseline list is free; the live list arrives via Priority Sync.', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'security_headers'             => array(
-				'local'       => true,
-				'community'   => true,
-				'label'       => __( 'Security Headers', 'reportedip-hive' ),
-				'description' => __( 'Site-wide X-Content-Type-Options, X-Frame-Options and Referrer-Policy.', 'reportedip-hive' ),
+				'local'     => true,
+				'community' => true,
 			),
 			'security_headers_advanced'    => array(
 				'local'         => true,
 				'community'     => true,
 				'requires_tier' => 'professional',
-				'label'         => __( 'Advanced Security Headers', 'reportedip-hive' ),
-				'description'   => __( 'CSP builder, HSTS with preload, Permissions-Policy and the Cross-Origin-Opener/Embedder/Resource trio.', 'reportedip-hive' ),
 			),
 			'audit_log'                    => array(
 				'local'         => true,
 				'community'     => true,
 				'requires_tier' => 'business',
-				'label'         => __( 'Audit Event Trail', 'reportedip-hive' ),
-				'description'   => __( 'User-lifecycle audit log (role changes with actor, new-IP alerts) with filtering, CSV/JSON export and long retention.', 'reportedip-hive' ),
 			),
 		);
+	}
+
+	/**
+	 * Translated label/description pair per feature key, built on first use.
+	 *
+	 * Kept apart from the gating matrix so hot-path availability checks never
+	 * pull the textdomain in. Callers that render feature texts (admin pages,
+	 * wizard, AJAX) hit this lazily; the literal `__()` calls keep the strings
+	 * visible to the POT extractor and the translation gate.
+	 *
+	 * @return array<string, array{0:string,1:string}> Map feature => [label, description].
+	 * @since  2.1.32
+	 */
+	private function feature_texts() {
+		if ( null !== $this->feature_texts_cache ) {
+			return $this->feature_texts_cache;
+		}
+
+		$this->feature_texts_cache = array(
+			'login_monitoring'             => array( __( 'Login Monitoring', 'reportedip-hive' ), __( 'Monitor and log failed login attempts', 'reportedip-hive' ) ),
+			'comment_monitoring'           => array( __( 'Comment Spam Monitoring', 'reportedip-hive' ), __( 'Detect and block spam comments', 'reportedip-hive' ) ),
+			'xmlrpc_monitoring'            => array( __( 'XMLRPC Monitoring', 'reportedip-hive' ), __( 'Monitor XMLRPC endpoint for abuse', 'reportedip-hive' ) ),
+			'auto_blocking'                => array( __( 'Automatic IP Blocking', 'reportedip-hive' ), __( 'Automatically block IPs that exceed thresholds', 'reportedip-hive' ) ),
+			'local_blocklist'              => array( __( 'Local Block/Whitelist', 'reportedip-hive' ), __( 'Manage local IP block and whitelist', 'reportedip-hive' ) ),
+			'local_statistics'             => array( __( 'Local Statistics', 'reportedip-hive' ), __( 'View local security statistics', 'reportedip-hive' ) ),
+			'api_reputation_check'         => array( __( 'Community Reputation Check', 'reportedip-hive' ), __( 'Check IP reputation against community database', 'reportedip-hive' ) ),
+			'api_report'                   => array( __( 'Share Threats with Community', 'reportedip-hive' ), __( 'Report detected threats to the community network', 'reportedip-hive' ) ),
+			'global_blacklist'             => array( __( 'Global Blacklist', 'reportedip-hive' ), __( 'Access and download the global threat blacklist', 'reportedip-hive' ) ),
+			'reputation_blocking'          => array( __( 'Reputation-based Blocking', 'reportedip-hive' ), __( 'Block IPs based on community reputation scores', 'reportedip-hive' ) ),
+			'advanced_analytics'           => array( __( 'Advanced Analytics', 'reportedip-hive' ), __( 'Access advanced threat analytics and trends', 'reportedip-hive' ) ),
+			'threat_intelligence'          => array( __( 'Threat Intelligence', 'reportedip-hive' ), __( 'Receive threat intelligence from the community', 'reportedip-hive' ) ),
+			'coordinated_attack_detection' => array( __( 'Coordinated Attack Detection', 'reportedip-hive' ), __( 'Detect coordinated attacks across the network', 'reportedip-hive' ) ),
+			'mail_relay_via_api'           => array( __( 'Mail Relay via reportedip.de', 'reportedip-hive' ), __( 'Send 2FA mails through our SMTP for guaranteed deliverability — no own SMTP setup needed.', 'reportedip-hive' ) ),
+			'sms_relay_via_api'            => array( __( 'SMS Relay via reportedip.de', 'reportedip-hive' ), __( 'Send 2FA SMS via our managed EU gateway — included with Professional and Business.', 'reportedip-hive' ) ),
+			'frontend_2fa'                 => array( __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ), __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login — kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ) ),
+			'decoy_pathblock'              => array( __( 'Decoy Path Block', 'reportedip-hive' ), __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...) — distinct from the N-of-Y scan-detector.', 'reportedip-hive' ) ),
+			'hardening_mode'               => array( __( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ), __( 'Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected.', 'reportedip-hive' ) ),
+			'waf'                          => array( __( 'Web Application Firewall', 'reportedip-hive' ), __( 'Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync.', 'reportedip-hive' ) ),
+			'rule_sync_priority'           => array( __( 'Priority Rule Sync', 'reportedip-hive' ), __( 'Daily, full-ruleset delivery (broader signatures, higher paranoia levels, bot IP-range feeds, live disposable lists) instead of the bundled baseline.', 'reportedip-hive' ) ),
+			'bot_verification'             => array( __( 'Verified Bot Detection', 'reportedip-hive' ), __( 'Verify search-engine crawlers via IP ranges and forward-confirmed reverse DNS; flag or block user-agent spoofers.', 'reportedip-hive' ) ),
+			'disposable_email'             => array( __( 'Disposable Email Block', 'reportedip-hive' ), __( 'Block registrations from throwaway-mail providers. Baseline list is free; the live list arrives via Priority Sync.', 'reportedip-hive' ) ),
+			'security_headers'             => array( __( 'Security Headers', 'reportedip-hive' ), __( 'Site-wide X-Content-Type-Options, X-Frame-Options and Referrer-Policy.', 'reportedip-hive' ) ),
+			'security_headers_advanced'    => array( __( 'Advanced Security Headers', 'reportedip-hive' ), __( 'CSP builder, HSTS with preload, Permissions-Policy and the Cross-Origin-Opener/Embedder/Resource trio.', 'reportedip-hive' ) ),
+			'audit_log'                    => array( __( 'Audit Event Trail', 'reportedip-hive' ), __( 'User-lifecycle audit log (role changes with actor, new-IP alerts) with filtering, CSV/JSON export and long retention.', 'reportedip-hive' ) ),
+		);
+
+		return $this->feature_texts_cache;
+	}
+
+	/**
+	 * Label/description for one feature — empty strings on the front end.
+	 *
+	 * Availability consumers on the hot path (WAF paranoia cap, bot verifier,
+	 * security headers, frontend 2FA) only read `available`/`reason`; loading
+	 * the textdomain for them would be pure waste. Contexts that actually
+	 * render texts (wp-admin including AJAX, cron mails, WP-CLI, REST) get the
+	 * translated pair.
+	 *
+	 * @param string $feature Feature key.
+	 * @return array{0:string,1:string} [label, description].
+	 * @since  2.1.32
+	 */
+	private function feature_text( $feature ) {
+		$translating_context = ( function_exists( 'is_admin' ) && is_admin() )
+			|| ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() )
+			|| ( defined( 'WP_CLI' ) && WP_CLI )
+			|| ( defined( 'REST_REQUEST' ) && REST_REQUEST );
+		if ( ! $translating_context ) {
+			return array( '', '' );
+		}
+		$texts = $this->feature_texts();
+		return isset( $texts[ $feature ] ) ? $texts[ $feature ] : array( '', '' );
 	}
 
 	/**
@@ -511,13 +547,14 @@ class ReportedIP_Hive_Mode_Manager {
 		$this->ensure_feature_matrix_loaded();
 
 		$mode      = $this->get_mode();
+		$texts     = $this->feature_texts();
 		$available = array();
 
 		foreach ( $this->feature_matrix as $key => $feature ) {
 			if ( ! empty( $feature[ $mode ] ) ) {
 				$available[ $key ] = array(
-					'label'       => $feature['label'],
-					'description' => $feature['description'],
+					'label'       => $texts[ $key ][0] ?? '',
+					'description' => $texts[ $key ][1] ?? '',
 				);
 			}
 		}
@@ -534,12 +571,13 @@ class ReportedIP_Hive_Mode_Manager {
 		$this->ensure_feature_matrix_loaded();
 
 		$mode   = $this->get_mode();
+		$texts  = $this->feature_texts();
 		$matrix = array();
 
 		foreach ( $this->feature_matrix as $key => $feature ) {
 			$matrix[ $key ] = array(
-				'label'             => $feature['label'],
-				'description'       => $feature['description'],
+				'label'             => $texts[ $key ][0] ?? '',
+				'description'       => $texts[ $key ][1] ?? '',
 				'available'         => ! empty( $feature[ $mode ] ),
 				'local_support'     => $feature['local'],
 				'community_support' => $feature['community'],
@@ -557,13 +595,14 @@ class ReportedIP_Hive_Mode_Manager {
 	public function get_community_only_features() {
 		$this->ensure_feature_matrix_loaded();
 
+		$texts          = $this->feature_texts();
 		$community_only = array();
 
 		foreach ( $this->feature_matrix as $key => $feature ) {
 			if ( ! $feature['local'] && $feature['community'] ) {
 				$community_only[ $key ] = array(
-					'label'       => $feature['label'],
-					'description' => $feature['description'],
+					'label'       => $texts[ $key ][0] ?? '',
+					'description' => $texts[ $key ][1] ?? '',
 				);
 			}
 		}
@@ -701,6 +740,7 @@ class ReportedIP_Hive_Mode_Manager {
 		$row      = $this->feature_matrix[ $feature ];
 		$mode     = $this->get_mode();
 		$min_tier = isset( $row['requires_tier'] ) ? (string) $row['requires_tier'] : null;
+		$texts    = $this->feature_text( $feature );
 
 		$mode_required = null;
 		if ( empty( $row[ $mode ] ) ) {
@@ -717,8 +757,8 @@ class ReportedIP_Hive_Mode_Manager {
 				'reason'        => 'mode',
 				'min_tier'      => $min_tier,
 				'mode_required' => $mode_required,
-				'label'         => (string) ( $row['label'] ?? '' ),
-				'description'   => (string) ( $row['description'] ?? '' ),
+				'label'         => $texts[0],
+				'description'   => $texts[1],
 			);
 		}
 
@@ -728,8 +768,8 @@ class ReportedIP_Hive_Mode_Manager {
 				'reason'        => 'tier',
 				'min_tier'      => $min_tier,
 				'mode_required' => null,
-				'label'         => (string) ( $row['label'] ?? '' ),
-				'description'   => (string) ( $row['description'] ?? '' ),
+				'label'         => $texts[0],
+				'description'   => $texts[1],
 			);
 		}
 
@@ -738,8 +778,8 @@ class ReportedIP_Hive_Mode_Manager {
 			'reason'        => 'ok',
 			'min_tier'      => $min_tier,
 			'mode_required' => null,
-			'label'         => (string) ( $row['label'] ?? '' ),
-			'description'   => (string) ( $row['description'] ?? '' ),
+			'label'         => $texts[0],
+			'description'   => $texts[1],
 		);
 	}
 
