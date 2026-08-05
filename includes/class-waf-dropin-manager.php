@@ -78,7 +78,32 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 7;
+	const DROPIN_VERSION = 8;
+
+	/**
+	 * Blocklist header magic. Format v1:
+	 * `#rip1 D=<0|1> L=<10-digit base length> <16384 hex chars>\n`
+	 * — a fixed-width 16408-byte header carrying an 8 KB membership bitmap
+	 * (crc32(ip) mod 65536) plus a dirty flag and the file length as of the
+	 * last full rewrite. Guards from older releases treat the header as an
+	 * unmatched line and still scan the body correctly.
+	 */
+	const BLOCKLIST_MAGIC = '#rip1 ';
+
+	/**
+	 * Bits in the blocklist membership bitmap (8 KB payload, 16384 hex chars).
+	 */
+	const BLOCKLIST_BITMAP_BITS = 65536;
+
+	/**
+	 * Byte length of the fixed-width v1 blocklist header including newline.
+	 */
+	const BLOCKLIST_HEADER_LEN = 16408;
+
+	/**
+	 * Byte offset of the dirty-flag digit inside the header ("#rip1 D=x").
+	 */
+	const BLOCKLIST_DIRTY_OFFSET = 8;
 
 	/**
 	 * Directory inside uploads that holds the hit queue.
@@ -851,19 +876,60 @@ if ( ! function_exists( 'reportedip_hive_dropin_excepted' ) ) {
 		return false;
 	}
 }
-if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
-	function reportedip_hive_dropin_is_blocked( $file, $ip ) {
-		if ( '' === $file || '' === $ip ) { return false; }
-		$raw = @file_get_contents( $file );
-		if ( ! is_string( $raw ) || '' === $raw ) { return false; }
-		$found = array();
-		if ( 1 !== @preg_match_all( '/^' . preg_quote( $ip, '/' ) . "\t(\d+)$/m", $raw, $found ) && empty( $found[1] ) ) { return false; }
-		$now = time();
-		foreach ( $found[1] as $stamp ) {
-			$stamp = (int) $stamp;
+if ( ! function_exists( 'reportedip_hive_dropin_bl_scan' ) ) {
+	/* Line-by-line scan from the current file position; early exit on the
+	   first unexpired entry for this IP. Header/comment lines are skipped. */
+	function reportedip_hive_dropin_bl_scan( $fh, $ip ) {
+		$now    = time();
+		$prefix = $ip . "\t";
+		$plen   = strlen( $prefix );
+		while ( false !== ( $line = fgets( $fh, 512 ) ) ) {
+			if ( 0 !== strncmp( $line, $prefix, $plen ) ) { continue; }
+			$stamp = (int) substr( $line, $plen );
 			if ( 0 === $stamp || $stamp > $now ) { return true; }
 		}
 		return false;
+	}
+}
+if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
+	/*
+	 * Blocklist lookup, O(header) for the common not-blocked case.
+	 *
+	 * File format v1: fixed-width header "#rip1 D=<0|1> L=<10-digit base
+	 * length> <16384 hex chars>\n" (16408 bytes) carrying an 8 KB / 65536-bit
+	 * membership bitmap over crc32(ip), followed by "ip\tepoch" lines. A clean
+	 * request reads only the header; a bitmap hit (or an unreadable bitmap —
+	 * scan-more, never skip) falls through to the line scan. D=1 means the
+	 * append path added lines after the last full rewrite, so the region past
+	 * the base length is scanned even on a bitmap miss. Headerless files (from
+	 * older plugin versions) take the legacy full scan. Fail-open on any error.
+	 */
+	function reportedip_hive_dropin_is_blocked( $file, $ip ) {
+		if ( '' === $file || '' === $ip ) { return false; }
+		$fh = @fopen( $file, 'rb' );
+		if ( ! $fh ) { return false; }
+		$verdict = false;
+		$head    = @fread( $fh, 16408 );
+		if ( is_string( $head ) && 0 === strncmp( $head, '#rip1 ', 6 ) && strlen( $head ) >= 16408 ) {
+			$bin    = @hex2bin( substr( $head, 23, 16384 ) );
+			$bucket = crc32( $ip ) % 65536;
+			$maybe  = ( is_string( $bin ) && 8192 === strlen( $bin ) )
+				? ( 1 === ( ( ord( $bin[ $bucket >> 3 ] ) >> ( $bucket & 7 ) ) & 1 ) )
+				: true;
+			if ( $maybe ) {
+				$verdict = reportedip_hive_dropin_bl_scan( $fh, $ip );
+			} elseif ( '1' === substr( $head, 8, 1 ) ) {
+				$baselen = (int) substr( $head, 12, 10 );
+				if ( $baselen > 0 && 0 === @fseek( $fh, $baselen ) ) {
+					$verdict = reportedip_hive_dropin_bl_scan( $fh, $ip );
+				}
+			}
+		} elseif ( is_string( $head ) && '' !== $head ) {
+			@rewind( $fh );
+			$verdict = reportedip_hive_dropin_bl_scan( $fh, $ip );
+		}
+		@fclose( $fh );
+		return $verdict;
 	}
 }
 if ( ! function_exists( 'reportedip_hive_dropin_refuse' ) ) {
@@ -1171,19 +1237,69 @@ PHP;
 			return;
 		}
 
-		file_put_contents( $path, $ip_address . "\t" . self::expiry_stamp( $blocked_until ) . "\n", FILE_APPEND | LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Appending one line to a same-host lookup file the pre-WordPress guard reads; WP_Filesystem has no append mode.
+		/*
+		 * Dedupe guard: skip the append when the file already carries an
+		 * equal-or-stronger line for this IP (tracked per IP for an hour).
+		 * A longer expiry — the escalation ladder always extends — must
+		 * still append, otherwise the guard would enforce only the stale
+		 * shorter block.
+		 */
+		$stamp         = self::expiry_stamp( $blocked_until );
+		$transient_key = 'reportedip_hive_bl_appended_' . md5( $ip_address );
+		$prev          = get_site_transient( $transient_key );
+		if ( false !== $prev ) {
+			$prev = (int) $prev;
+			if ( 0 === $prev || ( 0 !== $stamp && $stamp <= $prev ) ) {
+				return;
+			}
+		}
+
+		$this->mark_blocklist_dirty( $path );
+
+		file_put_contents( $path, $ip_address . "\t" . $stamp . "\n", FILE_APPEND | LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Appending one line to a same-host lookup file the pre-WordPress guard reads; WP_Filesystem has no append mode.
+		set_site_transient( $transient_key, $stamp, HOUR_IN_SECONDS );
+	}
+
+	/**
+	 * Flip the header's dirty flag so the guard knows the append region past
+	 * the base length must be scanned even on a bitmap miss. No-op for
+	 * headerless (legacy) files — those are always fully scanned anyway.
+	 *
+	 * @param string $path Blocklist path.
+	 * @return void
+	 * @since  2.1.32
+	 */
+	private function mark_blocklist_dirty( $path ) {
+		if ( ! file_exists( $path ) ) {
+			return;
+		}
+		$fh = @fopen( $path, 'r+b' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Single-byte in-place flag update on a same-host lookup file.
+		if ( ! $fh ) {
+			return;
+		}
+		$magic = fread( $fh, strlen( self::BLOCKLIST_MAGIC ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread -- Same-host lookup file.
+		if ( self::BLOCKLIST_MAGIC === $magic && 0 === fseek( $fh, self::BLOCKLIST_DIRTY_OFFSET ) ) {
+			fwrite( $fh, '1' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Same-host lookup file.
+		}
+		fclose( $fh ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Same-host lookup file.
 	}
 
 	/**
 	 * Rewrite the blocklist after a block was lifted, so the guard stops
 	 * refusing an IP the admin just released.
 	 *
+	 * @param string $ip_address Unblocked IP (from the action); clears the
+	 *                           per-IP append-dedupe marker so an immediate
+	 *                           re-block is mirrored again.
 	 * @return void
 	 * @since  2.1.30
 	 */
-	public function on_ip_unblocked() {
+	public function on_ip_unblocked( $ip_address = '' ) {
 		if ( ! $this->is_main_site() || ! (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false ) ) {
 			return;
+		}
+		if ( '' !== (string) $ip_address ) {
+			delete_site_transient( 'reportedip_hive_bl_appended_' . md5( (string) $ip_address ) );
 		}
 		$this->write_blocklist();
 	}
@@ -1201,20 +1317,31 @@ PHP;
 			return false;
 		}
 
-		$lines = array();
+		$lines  = array();
+		$bitmap = str_repeat( "\0", self::BLOCKLIST_BITMAP_BITS / 8 );
 		foreach ( $this->active_blocks() as $row ) {
 			$ip = is_object( $row ) ? (string) ( $row->ip_address ?? '' ) : '';
 			if ( '' === $ip || false !== strpos( $ip, '/' ) ) {
 				continue;
 			}
 			$lines[] = $ip . "\t" . self::expiry_stamp( $row->blocked_until ?? null );
+
+			$bucket                 = crc32( $ip ) % self::BLOCKLIST_BITMAP_BITS;
+			$bitmap[ $bucket >> 3 ] = chr( ord( $bitmap[ $bucket >> 3 ] ) | ( 1 << ( $bucket & 7 ) ) );
+
 			if ( count( $lines ) >= self::BLOCKLIST_MAX_ENTRIES ) {
 				break;
 			}
 		}
 
-		$body = empty( $lines ) ? '' : implode( "\n", $lines ) . "\n";
-		return false !== file_put_contents( $path, $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing the same-host lookup file the pre-WordPress guard reads.
+		$body   = empty( $lines ) ? '' : implode( "\n", $lines ) . "\n";
+		$header = sprintf(
+			'%sD=0 L=%010d %s' . "\n",
+			self::BLOCKLIST_MAGIC,
+			self::BLOCKLIST_HEADER_LEN + strlen( $body ),
+			bin2hex( $bitmap )
+		);
+		return false !== file_put_contents( $path, $header . $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing the same-host lookup file the pre-WordPress guard reads.
 	}
 
 	/**
