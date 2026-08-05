@@ -76,7 +76,6 @@ PEM;
 		 */
 		private function call( string $name, ...$args ) {
 			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, $name );
-			$method->setAccessible( true );
 			return $method->invoke( null, ...$args );
 		}
 

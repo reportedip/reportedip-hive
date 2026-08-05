@@ -56,7 +56,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function decode( string $hex ) {
 			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, 'cbor_decode' );
-			$method->setAccessible( true );
 			return $method->invoke( null, (string) hex2bin( $hex ), 0 );
 		}
 

@@ -284,7 +284,6 @@ PEM;
 		 */
 		private function verify( array $assertion ) {
 			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, 'verify_assertion' );
-			$method->setAccessible( true );
 			return $method->invoke( null, self::USER_ID, $assertion );
 		}
 

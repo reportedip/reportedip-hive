@@ -62,7 +62,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function resolve( string $token = '' ): int {
 			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, 'user_id_from_login_token' );
-			$method->setAccessible( true );
 			return (int) $method->invoke( null, $token );
 		}
 

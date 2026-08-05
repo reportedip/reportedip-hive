@@ -124,7 +124,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 
 			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, 'verify_assertion' );
-			$method->setAccessible( true );
 			$this->assertTrue( $method->invoke( null, self::USER_ID, $assertion ) );
 
 			$flipped                            = $assertion;
@@ -141,14 +140,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->markTestSkipped( 'libsodium is unavailable.' );
 			}
 			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, 'pub_key_cred_params' );
-			$method->setAccessible( true );
 			$algs = array_column( $method->invoke( null ), 'alg' );
 			$this->assertSame( array( -8, -7, -257 ), $algs );
 		}
 
 		public function test_authenticator_selection_defaults_and_hints(): void {
 			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, 'authenticator_selection' );
-			$method->setAccessible( true );
 
 			$plain = $method->invoke( null, '' );
 			$this->assertSame( 'discouraged', $plain['residentKey'], 'residentKey must stay discouraged — preferred would consume YubiKey slots and force PIN setup.' );

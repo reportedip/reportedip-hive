@@ -57,7 +57,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function parse( string $bytes, bool $expect_attested = true ) {
 			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, 'parse_authenticator_data' );
-			$method->setAccessible( true );
 			return $method->invoke( null, $bytes, $expect_attested );
 		}
 
