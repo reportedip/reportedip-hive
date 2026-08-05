@@ -78,7 +78,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 6;
+	const DROPIN_VERSION = 7;
 
 	/**
 	 * Directory inside uploads that holds the hit queue.
@@ -776,6 +776,21 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$report_export = $report_only ? 'true' : 'false';
 		$skip_export   = $skip_authed ? 'true' : 'false';
 
+		/*
+		 * Bake whether any active rule inspects the body at all, mirroring the
+		 * engine's required_targets() gate — a guard whose rules only target
+		 * uri/ua must never pay the 64 KB php://input read.
+		 */
+		$body_needed = false;
+		foreach ( $rules as $rule ) {
+			$target = isset( $rule['target'] ) ? (string) $rule['target'] : 'all';
+			if ( 'body' === $target || 'all' === $target ) {
+				$body_needed = true;
+				break;
+			}
+		}
+		$body_needed_export = $body_needed ? 'true' : 'false';
+
 		$template = <<<'PHP'
 <?php
 /**
@@ -871,6 +886,15 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 		return false;
 	}
 }
+if ( ! function_exists( 'reportedip_hive_dropin_request_has_body' ) ) {
+	/* Mirrors ReportedIP_Hive_WAF::request_has_body() — keep both in sync (parity rule 1). */
+	function reportedip_hive_dropin_request_has_body( $server ) {
+		if ( isset( $server['CONTENT_LENGTH'] ) ) { return (int) $server['CONTENT_LENGTH'] > 0; }
+		if ( isset( $server['HTTP_TRANSFER_ENCODING'] ) ) { return true; }
+		$method = isset( $server['REQUEST_METHOD'] ) ? strtoupper( (string) $server['REQUEST_METHOD'] ) : 'GET';
+		return ! in_array( $method, array( 'GET', 'HEAD', 'OPTIONS' ), true );
+	}
+}
 
 (function () {
 	try {
@@ -916,7 +940,7 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 		$ua  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
 		$body = '';
 		$skip_body = __RIP_SKIP_AUTHED__ && reportedip_hive_dropin_has_login_cookie( $_COOKIE );
-		if ( ! $skip_body ) {
+		if ( ! $skip_body && __RIP_BODY_NEEDED__ && ( ! empty( $_POST ) || reportedip_hive_dropin_request_has_body( $_SERVER ) ) ) {
 			if ( ! empty( $_POST ) ) { $body .= reportedip_hive_dropin_flatten( $_POST ); }
 			$raw = file_get_contents( 'php://input', false, null, 0, 65536 );
 			if ( is_string( $raw ) && '' !== $raw ) {
@@ -994,8 +1018,8 @@ PHP;
 		$cidr_export  = var_export( array_values( $this->blocked_cidr_snapshot() ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the literal CIDR blocklist into a generated PHP file, not debugging.
 
 		return str_replace(
-			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__' ),
-			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $engine_export, $report_export, $skip_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export ),
+			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_BODY_NEEDED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__' ),
+			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $engine_export, $report_export, $skip_export, $body_needed_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export ),
 			$template
 		);
 	}
