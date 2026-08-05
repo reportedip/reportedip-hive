@@ -934,11 +934,19 @@ if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
 	}
 }
 if ( ! function_exists( 'reportedip_hive_dropin_refuse' ) ) {
+	/* Status line mirrors the CLIENT protocol and the connection is closed
+	   explicitly: a hardcoded "HTTP/1.1" answer to an HTTP/1.0 client leaves
+	   the connection in keep-alive limbo until the server-side timeout
+	   (measured: 5 s per blocked request under ApacheBench). */
 	function reportedip_hive_dropin_refuse( $header, $value ) {
 		if ( ! headers_sent() ) {
-			header( 'HTTP/1.1 403 Forbidden' );
+			$proto = isset( $_SERVER['SERVER_PROTOCOL'] ) && is_string( $_SERVER['SERVER_PROTOCOL'] ) && 0 === strpos( $_SERVER['SERVER_PROTOCOL'], 'HTTP/' )
+				? $_SERVER['SERVER_PROTOCOL']
+				: 'HTTP/1.0';
+			header( $proto . ' 403 Forbidden' );
 			header( $header . ': ' . $value );
 			header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+			header( 'Connection: close' );
 		}
 		echo 'Forbidden';
 		exit;
