@@ -1,4 +1,5 @@
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
+import { resetAdminBaseline } from '../../fixtures/admin-reset';
 
 /**
  * Smoke test: plugin is network-active on the WPMU stack and the network
@@ -6,6 +7,10 @@ import { test, expect, loginAsAdmin } from '../../fixtures/admin';
  * the plugin via WP-CLI on stack-up; if this test fails, the bootstrap
  * did not complete.
  */
+test.beforeAll(() => {
+    resetAdminBaseline('docker-compose.multisite.yml', 'wordpress-ms');
+});
+
 test('reportedip-hive is network-active on WPMU stack', async ({ page }) => {
     await loginAsAdmin(page);
 

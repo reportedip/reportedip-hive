@@ -1,9 +1,14 @@
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
+import { resetAdminBaseline } from '../../fixtures/admin-reset';
 
 /**
  * Smoke test: plugin is active on the single-site stack and the dashboard
  * loads without fatal errors. Verifies the plugin admin page reachable.
  */
+test.beforeAll(() => {
+    resetAdminBaseline();
+});
+
 test('reportedip-hive admin dashboard renders on single-site', async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto('/wp-admin/admin.php?page=reportedip-hive');
