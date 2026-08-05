@@ -101,6 +101,7 @@ class ReportedIP_Hive_Two_Factor {
 
 	const META_WEBAUTHN_CREDENTIALS = 'reportedip_hive_2fa_webauthn_credentials';
 	const META_SMS_NUMBER           = 'reportedip_hive_2fa_sms_number';
+	const META_SMS_NUMBER_PENDING   = 'reportedip_hive_2fa_sms_number_pending';
 
 	const META_SKIP_COUNT    = 'reportedip_hive_2fa_skip_count';
 	const META_KNOWN_DEVICES = 'reportedip_hive_2fa_known_devices';
@@ -2252,6 +2253,7 @@ class ReportedIP_Hive_Two_Factor {
 				break;
 			case self::METHOD_SMS:
 				delete_user_meta( $user_id, self::META_SMS_NUMBER );
+				delete_user_meta( $user_id, self::META_SMS_NUMBER_PENDING );
 				break;
 		}
 
@@ -2288,6 +2290,7 @@ class ReportedIP_Hive_Two_Factor {
 			self::META_WEBAUTHN_CREDENTIALS,
 			self::META_SMS_ENABLED,
 			self::META_SMS_NUMBER,
+			self::META_SMS_NUMBER_PENDING,
 			self::META_FAILED_ATTEMPTS,
 			self::META_SETUP_DATE,
 			self::META_ENFORCEMENT_START,
@@ -2342,6 +2345,7 @@ class ReportedIP_Hive_Two_Factor {
 			self::META_WEBAUTHN_CREDENTIALS,
 			self::META_SMS_ENABLED,
 			self::META_SMS_NUMBER,
+			self::META_SMS_NUMBER_PENDING,
 			self::META_FAILED_ATTEMPTS,
 			self::META_SETUP_DATE,
 			self::META_ENFORCEMENT_START,

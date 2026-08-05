@@ -62,6 +62,10 @@ delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_WEBAUTHN_CREDENTIA
 delete_user_meta( $user->ID, 'reportedip_hive_2fa_method' );
 delete_user_meta( $user->ID, 'reportedip_hive_2fa_totp_enabled' );
 delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET );
+delete_user_meta( $user->ID, 'reportedip_hive_2fa_email_enabled' );
+delete_user_meta( $user->ID, 'reportedip_hive_2fa_sms_enabled' );
+delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER );
+delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER_PENDING );
 delete_user_meta( $user->ID, 'reportedip_hive_2fa_recovery_codes' );
 delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor_Reset_Gate::META_FAILED_ATTEMPTS );
 

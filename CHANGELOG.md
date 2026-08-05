@@ -4,8 +4,36 @@ All changes to ReportedIP Hive are documented here.
 
 ## [2.1.36] — Unreleased
 
+### New
+
+- **Profile 2FA section rebuilt for end users.** The section on the profile
+  page now renders design-system cards: a plain-language intro, one row per
+  sign-in method (authenticator app, passkey/security key, email code, SMS)
+  with a lay description, an Active/Default badge and inline actions. Methods
+  can be added at any time, not only while 2FA is still off, and every
+  enrolment surface (profile, onboarding wizard, WP-CLI, key manager) now
+  routes through one shared activation path.
+- **Default sign-in method is user-selectable.** Every active method row
+  offers "Make default"; the chosen method is asked for first on the login
+  challenge. New AJAX endpoint `set_primary_method` plus
+  `Two_Factor::set_user_method()` with an active-method guard.
+- **SMS management in the profile.** SMS 2FA can be set up directly on the
+  profile page (number, consent, code verification), and an active number
+  can be changed. A changed number only replaces the verified one after the
+  new number confirmed a code, so a typo can no longer break the method.
+- Single methods can be removed individually ("Remove"), with a clear
+  warning when the last method would turn 2FA off entirely.
+
 ### Fixes
 
+- Adding a second 2FA method no longer overwrites the user's default method
+  and no longer silently regenerates existing recovery codes (previously the
+  TOTP confirm endpoint did both).
+- Starting a TOTP setup no longer silently replaces an already confirmed
+  authenticator secret; re-setup requires the explicit "Set up again" action.
+- The design-system stylesheet now loads on the profile page, so the 2FA
+  section and the security-key manager render styled (buttons, badges,
+  inputs were previously unstyled there).
 - The WAF drop-in sync no longer prints PHP warnings (and breaks admin
   redirects with "headers already sent") when `wp-content` or the config
   files are not writable — every guard/blocklist/directive write now probes

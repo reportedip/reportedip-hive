@@ -1567,9 +1567,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		wp_enqueue_style( 'reportedip-hive-design-system', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/design-system.css', array(), REPORTEDIP_HIVE_VERSION );
 		wp_enqueue_style( 'reportedip-hive-two-factor', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/two-factor.css', array( 'reportedip-hive-design-system' ), REPORTEDIP_HIVE_VERSION );
 
-		$totp_active = in_array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID ), true );
-		$js_deps     = array( 'jquery', 'wp-a11y' );
-		if ( ! $totp_active ) {
+		$js_deps = array( 'jquery', 'wp-a11y' );
+		if ( $can_edit ) {
 			wp_enqueue_script( 'reportedip-hive-qrcode', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/vendor/qrcode.min.js', array(), '1.0.0', true );
 			$js_deps[] = 'reportedip-hive-qrcode';
 		}
@@ -1582,25 +1581,26 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				'nonce'   => wp_create_nonce( 'reportedip_hive_nonce' ),
 				'userId'  => $user->ID,
 				'strings' => array(
-					'confirmDisable'    => __( 'Are you sure? This removes all 2FA settings for this account.', 'reportedip-hive' ),
-					'confirmRegenerate' => __( 'Existing recovery codes will be invalidated. Continue?', 'reportedip-hive' ),
-					'confirmRevokeAll'  => __( 'Revoke all trusted devices?', 'reportedip-hive' ),
-					'confirmEmailSetup' => __( 'Enable email-based 2FA? We will send a test code to your registered email address.', 'reportedip-hive' ),
-					'copied'            => __( 'Copied!', 'reportedip-hive' ),
-					'scanQrCode'        => __( 'Scan this QR code with your authenticator app:', 'reportedip-hive' ),
-					'enterCode'         => __( 'Enter the 6-digit code to confirm setup:', 'reportedip-hive' ),
-					'setupComplete'     => __( '2FA has been set up successfully!', 'reportedip-hive' ),
-					'saveRecoveryCodes' => __( 'Save these recovery codes in a secure place:', 'reportedip-hive' ),
-					'error'             => __( 'Error', 'reportedip-hive' ),
-					'confirm'           => __( 'Confirm', 'reportedip-hive' ),
-					'cancel'            => __( 'Cancel', 'reportedip-hive' ),
-					'qrLibMissing'      => __( 'QR code library not loaded.', 'reportedip-hive' ),
-					'emailSetupIntro'   => __( 'We will send you a code. Check your inbox…', 'reportedip-hive' ),
-					'codePlaceholder'   => __( '000000', 'reportedip-hive' ),
-					'copy'              => __( 'Copy', 'reportedip-hive' ),
-					'download'          => __( 'Download', 'reportedip-hive' ),
-					'recoveryShownOnce' => __( 'These codes are shown only once!', 'reportedip-hive' ),
-					'recoveryOneUse'    => __( 'Each code can be used only once.', 'reportedip-hive' ),
+					'confirmDisable'      => __( 'Turn off two-factor authentication completely? Afterwards your account is protected by your password alone.', 'reportedip-hive' ),
+					'confirmRegenerate'   => __( 'Your existing recovery codes will stop working and you will receive a new set. Continue?', 'reportedip-hive' ),
+					'confirmRevokeAll'    => __( 'Sign out all trusted devices? Every device will be asked for a code on the next sign-in again.', 'reportedip-hive' ),
+					'confirmRemoveMethod' => __( 'Remove this sign-in method? You will no longer be able to use it to confirm your sign-in.', 'reportedip-hive' ),
+					'confirmRemoveLast'   => __( 'This is your last active method. Removing it turns off two-factor authentication for this account completely. Continue?', 'reportedip-hive' ),
+					'confirmReplaceTotp'  => __( 'Set up the authenticator app again? The existing app connection stops working as soon as you finish the new setup.', 'reportedip-hive' ),
+					'copied'              => __( 'Copied!', 'reportedip-hive' ),
+					'setupComplete'       => __( '2FA has been set up successfully!', 'reportedip-hive' ),
+					'saveRecoveryCodes'   => __( 'Save these recovery codes in a secure place:', 'reportedip-hive' ),
+					'error'               => __( 'Error', 'reportedip-hive' ),
+					'confirm'             => __( 'Confirm', 'reportedip-hive' ),
+					'qrLibMissing'        => __( 'QR code library not loaded.', 'reportedip-hive' ),
+					'copy'                => __( 'Copy', 'reportedip-hive' ),
+					'download'            => __( 'Download', 'reportedip-hive' ),
+					'recoveryShownOnce'   => __( 'These codes are shown only once!', 'reportedip-hive' ),
+					'recoveryOneUse'      => __( 'Each code can be used only once.', 'reportedip-hive' ),
+					'codesSaved'          => __( 'I have saved my codes', 'reportedip-hive' ),
+					'phoneRequired'       => __( 'Please enter your mobile number in international format (for example +49 151 23456789).', 'reportedip-hive' ),
+					'consentRequired'     => __( 'Please confirm the processing of your phone number first.', 'reportedip-hive' ),
+					'working'             => __( 'Please wait', 'reportedip-hive' ),
 				),
 			)
 		);
@@ -1651,190 +1651,372 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			);
 		}
 		?>
+		<?php
+		$enabled_methods = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID );
+		$allowed_methods = ReportedIP_Hive_Two_Factor::get_allowed_methods();
+
+		$sms_allowed = in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $allowed_methods, true ) && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' );
+		$sms_ready   = $sms_allowed && ReportedIP_Hive_Two_Factor_SMS::is_ready();
+		$sms_lock    = null;
+		if ( $sms_allowed && ! $sms_ready && class_exists( 'ReportedIP_Hive_Mode_Manager' ) && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
+			$sms_lock = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
+		}
+		$sms_masked = '';
+		if ( $sms_allowed && in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $enabled_methods, true ) ) {
+			$sms_masked = ReportedIP_Hive_Two_Factor_SMS::mask_phone( ReportedIP_Hive_Two_Factor_SMS::get_user_phone( $user->ID ) );
+		}
+
+		$method_rows = array();
+		if ( in_array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, $allowed_methods, true ) ) {
+			$method_rows[ ReportedIP_Hive_Two_Factor::METHOD_TOTP ] = array(
+				'label'       => __( 'Authenticator app', 'reportedip-hive' ),
+				'description' => __( 'An app on your phone, such as Google Authenticator or Microsoft Authenticator, shows a new 6-digit code every 30 seconds. Works even without mobile signal.', 'reportedip-hive' ),
+				'setup'       => true,
+			);
+		}
+		if ( in_array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN, $allowed_methods, true ) ) {
+			$method_rows[ ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN ] = array(
+				'label'       => __( 'Passkey or security key', 'reportedip-hive' ),
+				'description' => __( 'Confirm your sign-in with your fingerprint, your face, or a hardware security key such as a YubiKey. This is the most secure option, because it only works on the real sign-in page.', 'reportedip-hive' ),
+				'setup'       => false,
+				'manager'     => true,
+			);
+		}
+		if ( in_array( ReportedIP_Hive_Two_Factor::METHOD_EMAIL, $allowed_methods, true ) && ! empty( $user->user_email ) ) {
+			$method_rows[ ReportedIP_Hive_Two_Factor::METHOD_EMAIL ] = array(
+				'label'       => __( 'Email code', 'reportedip-hive' ),
+				'description' => sprintf(
+					/* translators: %s: masked email address */
+					__( 'We send a 6-digit code to %s every time you sign in.', 'reportedip-hive' ),
+					ReportedIP_Hive_Two_Factor::mask_email( $user->user_email )
+				),
+				'setup'       => true,
+			);
+		}
+		if ( $sms_allowed ) {
+			$method_rows[ ReportedIP_Hive_Two_Factor::METHOD_SMS ] = array(
+				'label'       => __( 'Text message (SMS)', 'reportedip-hive' ),
+				'description' => __( 'We send a 6-digit code as a text message to your mobile phone every time you sign in.', 'reportedip-hive' ),
+				'setup'       => $sms_ready,
+				'lock'        => $sms_lock,
+				'meta'        => $sms_masked,
+			);
+		}
+		?>
 		<h2 id="reportedip-hive-2fa"><?php esc_html_e( 'Two-Factor Authentication', 'reportedip-hive' ); ?></h2>
 
 		<table class="form-table" role="presentation">
 			<tr>
-				<th scope="row"><?php esc_html_e( 'Status', 'reportedip-hive' ); ?></th>
-				<td>
-					<?php if ( $is_enabled ) : ?>
-						<?php
-						$method_labels   = array(
-							ReportedIP_Hive_Two_Factor::METHOD_TOTP     => __( 'Authenticator app', 'reportedip-hive' ),
-							ReportedIP_Hive_Two_Factor::METHOD_EMAIL    => __( 'Email code', 'reportedip-hive' ),
-							ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN => __( 'Passkey / security key', 'reportedip-hive' ),
-							ReportedIP_Hive_Two_Factor::METHOD_SMS      => __( 'SMS', 'reportedip-hive' ),
-						);
-						$enabled_methods = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID );
-						$primary_label   = isset( $method_labels[ $method ] ) ? $method_labels[ $method ] : $method;
-						$labels_rendered = array();
-						foreach ( $enabled_methods as $m ) {
-							$label = isset( $method_labels[ $m ] ) ? $method_labels[ $m ] : $m;
-							if ( $m === $method ) {
-								$label .= ' (' . __( 'primary', 'reportedip-hive' ) . ')';
-							}
-							$labels_rendered[] = $label;
-						}
-						if ( empty( $labels_rendered ) ) {
-							$labels_rendered[] = $primary_label;
-						}
-						?>
-						<span class="rip-2fa-setup__status rip-2fa-setup__status--enabled">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-							<?php
-							printf(
-								/* translators: %d: method count */
-								esc_html( _n( 'Active — %d method', 'Active — %d methods', count( $labels_rendered ), 'reportedip-hive' ) ),
-								count( $labels_rendered )
-							);
-							?>
-						</span>
-						<p class="description" style="margin-top:6px;">
-							<?php echo esc_html( implode( ' · ', $labels_rendered ) ); ?>
-						</p>
-					<?php else : ?>
-						<span class="rip-2fa-setup__status rip-2fa-setup__status--disabled">
-							<?php esc_html_e( 'Not set up', 'reportedip-hive' ); ?>
-						</span>
-					<?php endif; ?>
-				</td>
-			</tr>
-
-			<?php if ( $can_edit && $webauthn_allowed ) : ?>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Security keys', 'reportedip-hive' ); ?></th>
-					<td>
-						<?php
-						$rip_webauthn_manager = array( 'user_id' => $user->ID );
-						include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/partials/webauthn-key-manager.php';
-						?>
-					</td>
-				</tr>
-			<?php endif; ?>
-
-			<?php if ( $can_edit && ! $is_enabled ) : ?>
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Set up', 'reportedip-hive' ); ?></th>
-					<td>
-						<div id="rip-2fa-setup-container">
-							<button type="button" class="button" id="rip-2fa-setup-totp">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="vertical-align: text-bottom;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-								<?php esc_html_e( 'Set up authenticator app', 'reportedip-hive' ); ?>
-							</button>
-							<button type="button" class="button" id="rip-2fa-setup-email" style="margin-left: 8px;">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="vertical-align: text-bottom;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-								<?php esc_html_e( 'Set up email code', 'reportedip-hive' ); ?>
-							</button>
-						</div>
-						<div id="rip-2fa-setup-flow" style="display: none;"></div>
-						<?php if ( class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) : ?>
-							<p class="description" style="margin-top: 10px;">
-								<?php
-								printf(
-									/* translators: 1: opening link tag, 2: closing link tag */
-									esc_html__( 'Prefer a step-by-step walkthrough? %1$sSet up 2FA in the guided wizard%2$s.', 'reportedip-hive' ),
-									'<a href="' . esc_url( ReportedIP_Hive_Two_Factor_Onboarding::get_onboarding_url() ) . '">',
-									'</a>'
-								);
-								?>
+				<td colspan="2" class="rip-2fa-profile__cell">
+					<div class="rip-2fa-profile">
+						<div class="rip-2fa-setup__section rip-2fa-profile__card">
+							<div class="rip-2fa-profile__status-row">
+								<?php if ( $is_enabled ) : ?>
+									<span class="rip-2fa-setup__status rip-2fa-setup__status--enabled">
+										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+										<?php
+										printf(
+											/* translators: %d: method count */
+											esc_html( _n( 'Active (%d method)', 'Active (%d methods)', count( $enabled_methods ), 'reportedip-hive' ) ),
+											count( $enabled_methods )
+										);
+										?>
+									</span>
+								<?php else : ?>
+									<span class="rip-2fa-setup__status rip-2fa-setup__status--disabled">
+										<?php esc_html_e( 'Not set up', 'reportedip-hive' ); ?>
+									</span>
+								<?php endif; ?>
+							</div>
+							<p class="rip-2fa-profile__lead">
+								<?php esc_html_e( 'Two-factor authentication adds a second check when you sign in. Even if someone finds out your password, they still cannot get into your account without this second step.', 'reportedip-hive' ); ?>
 							</p>
-						<?php endif; ?>
-					</td>
-				</tr>
-			<?php endif; ?>
+							<?php if ( $can_edit && ! $is_enabled && class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) : ?>
+								<p class="description">
+									<?php
+									printf(
+										/* translators: 1: opening link tag, 2: closing link tag */
+										esc_html__( 'Prefer a step-by-step walkthrough? %1$sSet up 2FA in the guided wizard%2$s.', 'reportedip-hive' ),
+										'<a href="' . esc_url( ReportedIP_Hive_Two_Factor_Onboarding::get_onboarding_url() ) . '">',
+										'</a>'
+									);
+									?>
+								</p>
+							<?php endif; ?>
+						</div>
+
+						<div class="rip-2fa-setup__section rip-2fa-profile__card">
+							<h3 class="rip-2fa-setup__section-title"><?php esc_html_e( 'Your sign-in methods', 'reportedip-hive' ); ?></h3>
+							<p class="description rip-2fa-profile__hint">
+								<?php esc_html_e( 'You can set up more than one method. Your default method is asked for first when you sign in; every other active method stays available as an alternative on the sign-in screen.', 'reportedip-hive' ); ?>
+							</p>
+							<ul class="rip-2fa-methods">
+								<?php
+								foreach ( $method_rows as $row_slug => $row_args ) {
+									$row_args['active']   = in_array( $row_slug, $enabled_methods, true );
+									$row_args['default']  = $row_args['active'] && $row_slug === $method;
+									$row_args['can_edit'] = $can_edit;
+									$this->render_profile_method_row( $user, $row_slug, $row_args );
+								}
+								?>
+							</ul>
+							<div id="rip-2fa-method-recovery" class="rip-2fa-profile__recovery-display" hidden></div>
+						</div>
 
 			<?php if ( $can_edit && $is_enabled ) : ?>
-				<!-- Recovery Codes -->
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Recovery Codes', 'reportedip-hive' ); ?></th>
-					<td>
-						<?php if ( ReportedIP_Hive_Two_Factor_Recovery::is_exhausted( $user->ID ) ) : ?>
-							<span class="rip-badge rip-badge--danger"><?php esc_html_e( 'All codes used — generate new', 'reportedip-hive' ); ?></span>
-						<?php elseif ( ReportedIP_Hive_Two_Factor_Recovery::is_low( $user->ID ) ) : ?>
-							<span class="rip-badge rip-badge--warning">
-								<?php
-								printf(
-									/* translators: %d: remaining codes */
-									esc_html__( '%d left — generate new', 'reportedip-hive' ),
-									(int) $recovery_count
-								);
-								?>
-							</span>
-						<?php else : ?>
-							<span class="rip-badge rip-badge--info">
-								<?php
-								printf(
-									/* translators: %d: remaining codes */
-									esc_html__( '%d available', 'reportedip-hive' ),
-									(int) $recovery_count
-								);
-								?>
-							</span>
-						<?php endif; ?>
-						<br>
-						<button type="button" class="button" id="rip-2fa-regenerate-recovery" style="margin-top: 8px;">
-							<?php esc_html_e( 'Generate new recovery codes', 'reportedip-hive' ); ?>
-						</button>
-						<div id="rip-2fa-recovery-display" style="display: none;"></div>
-					</td>
-				</tr>
+						<div class="rip-2fa-setup__section rip-2fa-profile__card">
+							<h3 class="rip-2fa-setup__section-title"><?php esc_html_e( 'Recovery codes', 'reportedip-hive' ); ?></h3>
+							<p class="description rip-2fa-profile__hint">
+								<?php esc_html_e( 'Recovery codes are one-time emergency codes for the case that your phone or security key is lost. Store them in a safe place, for example a password manager. Each code works exactly once.', 'reportedip-hive' ); ?>
+							</p>
+							<div class="rip-2fa-profile__recovery-status">
+								<?php if ( ReportedIP_Hive_Two_Factor_Recovery::is_exhausted( $user->ID ) ) : ?>
+									<span class="rip-badge rip-badge--danger"><?php esc_html_e( 'All codes used. Generate new codes now.', 'reportedip-hive' ); ?></span>
+								<?php elseif ( ReportedIP_Hive_Two_Factor_Recovery::is_low( $user->ID ) ) : ?>
+									<span class="rip-badge rip-badge--warning">
+										<?php
+										printf(
+											/* translators: %d: remaining codes */
+											esc_html__( '%d left. Generate new codes soon.', 'reportedip-hive' ),
+											(int) $recovery_count
+										);
+										?>
+									</span>
+								<?php else : ?>
+									<span class="rip-badge rip-badge--info">
+										<?php
+										printf(
+											/* translators: %d: remaining codes */
+											esc_html__( '%d available', 'reportedip-hive' ),
+											(int) $recovery_count
+										);
+										?>
+									</span>
+								<?php endif; ?>
+							</div>
+							<button type="button" class="rip-button rip-button--secondary rip-button--sm" id="rip-2fa-regenerate-recovery">
+								<?php esc_html_e( 'Generate new recovery codes', 'reportedip-hive' ); ?>
+							</button>
+							<div id="rip-2fa-recovery-display" class="rip-2fa-profile__recovery-display" hidden></div>
+						</div>
 
-				<!-- Trusted Devices -->
-				<?php if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) && ! empty( $devices ) ) : ?>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Trusted devices', 'reportedip-hive' ); ?></th>
-						<td>
-							<ul class="rip-2fa-device-list">
-								<?php foreach ( $devices as $device ) : ?>
-									<li class="rip-2fa-device-list__item" data-device-id="<?php echo esc_attr( $device->id ); ?>">
-										<div class="rip-2fa-device-list__info">
-											<div class="rip-2fa-device-list__name"><?php echo esc_html( $device->device_name ?: __( 'Unknown device', 'reportedip-hive' ) ); ?></div>
-											<div class="rip-2fa-device-list__meta">
-												<?php echo esc_html( $device->ip_address ); ?> &middot;
-												<?php
-												printf(
-													/* translators: %s: date */
-													esc_html__( 'Added: %s', 'reportedip-hive' ),
-													esc_html( date_i18n( get_option( 'date_format' ), strtotime( $device->created_at ) ) )
-												);
-												?>
-												<?php if ( $device->last_used_at ) : ?>
-													&middot;
+						<?php if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true ) && ! empty( $devices ) ) : ?>
+							<div class="rip-2fa-setup__section rip-2fa-profile__card">
+								<h3 class="rip-2fa-setup__section-title"><?php esc_html_e( 'Trusted devices', 'reportedip-hive' ); ?></h3>
+								<p class="description rip-2fa-profile__hint">
+									<?php esc_html_e( 'On these devices you chose to skip the second check for a while. Remove a device here if you no longer use it or do not recognise it.', 'reportedip-hive' ); ?>
+								</p>
+								<ul class="rip-2fa-device-list">
+									<?php foreach ( $devices as $device ) : ?>
+										<li class="rip-2fa-device-list__item" data-device-id="<?php echo esc_attr( $device->id ); ?>">
+											<div class="rip-2fa-device-list__info">
+												<div class="rip-2fa-device-list__name"><?php echo esc_html( $device->device_name ?: __( 'Unknown device', 'reportedip-hive' ) ); ?></div>
+												<div class="rip-2fa-device-list__meta">
+													<?php echo esc_html( $device->ip_address ); ?> &middot;
 													<?php
 													printf(
 														/* translators: %s: date */
-														esc_html__( 'Last used: %s', 'reportedip-hive' ),
-														esc_html( date_i18n( get_option( 'date_format' ), strtotime( $device->last_used_at ) ) )
+														esc_html__( 'Added: %s', 'reportedip-hive' ),
+														esc_html( date_i18n( get_option( 'date_format' ), strtotime( $device->created_at ) ) )
 													);
 													?>
-												<?php endif; ?>
+													<?php if ( $device->last_used_at ) : ?>
+														&middot;
+														<?php
+														printf(
+															/* translators: %s: date */
+															esc_html__( 'Last used: %s', 'reportedip-hive' ),
+															esc_html( date_i18n( get_option( 'date_format' ), strtotime( $device->last_used_at ) ) )
+														);
+														?>
+													<?php endif; ?>
+												</div>
 											</div>
-										</div>
-										<button type="button" class="button button-small rip-2fa-revoke-device" data-device-id="<?php echo esc_attr( $device->id ); ?>">
-											<?php esc_html_e( 'Revoke', 'reportedip-hive' ); ?>
-										</button>
-									</li>
-								<?php endforeach; ?>
-							</ul>
-							<button type="button" class="button" id="rip-2fa-revoke-all" style="margin-top: 8px;">
-								<?php esc_html_e( 'Revoke all devices', 'reportedip-hive' ); ?>
-							</button>
-						</td>
-					</tr>
-				<?php endif; ?>
+											<button type="button" class="rip-button rip-button--ghost rip-button--sm rip-2fa-revoke-device" data-device-id="<?php echo esc_attr( $device->id ); ?>">
+												<?php esc_html_e( 'Revoke', 'reportedip-hive' ); ?>
+											</button>
+										</li>
+									<?php endforeach; ?>
+								</ul>
+								<button type="button" class="rip-button rip-button--secondary rip-button--sm" id="rip-2fa-revoke-all">
+									<?php esc_html_e( 'Revoke all devices', 'reportedip-hive' ); ?>
+								</button>
+							</div>
+						<?php endif; ?>
 
-				<!-- Disable -->
-				<tr>
-					<th scope="row"><?php esc_html_e( 'Disable', 'reportedip-hive' ); ?></th>
-					<td>
-						<button type="button" class="button button-link-delete" id="rip-2fa-disable">
-							<?php esc_html_e( 'Disable 2FA', 'reportedip-hive' ); ?>
-						</button>
-					</td>
-				</tr>
-			<?php endif; ?>
+						<div class="rip-2fa-setup__section rip-2fa-profile__card rip-2fa-profile__card--danger">
+							<h3 class="rip-2fa-setup__section-title"><?php esc_html_e( 'Turn off two-factor authentication', 'reportedip-hive' ); ?></h3>
+							<p class="description rip-2fa-profile__hint">
+								<?php esc_html_e( 'This removes all your sign-in methods, recovery codes and trusted devices. Your account is then protected by your password alone. If your role requires 2FA, you will be asked to set it up again on your next sign-in.', 'reportedip-hive' ); ?>
+							</p>
+							<button type="button" class="rip-button rip-button--danger rip-button--sm" id="rip-2fa-disable">
+								<?php esc_html_e( 'Disable 2FA', 'reportedip-hive' ); ?>
+							</button>
+						</div>
+					<?php endif; ?>
+					</div>
+				</td>
+			</tr>
 		</table>
 		<?php
+	}
+
+	/**
+	 * Render one sign-in method row on the profile page.
+	 *
+	 * @param WP_User $user The user being edited.
+	 * @param string  $slug Method identifier (totp, email, webauthn, sms).
+	 * @param array   $args Row context: label, description, setup (bool),
+	 *                      active (bool), default (bool), can_edit (bool),
+	 *                      lock (feature status array|null), meta (string),
+	 *                      manager (bool).
+	 * @since 2.1.36
+	 */
+	private function render_profile_method_row( $user, $slug, $args ) {
+		$icons = array(
+			ReportedIP_Hive_Two_Factor::METHOD_TOTP     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>',
+			ReportedIP_Hive_Two_Factor::METHOD_EMAIL    => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+			ReportedIP_Hive_Two_Factor::METHOD_SMS      => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+			ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true"><path d="M12 11c1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3 1.3 3 3 3z"/><path d="M6 21v-2c0-2.2 1.8-4 4-4h4c2.2 0 4 1.8 4 4v2"/></svg>',
+		);
+
+		$active     = ! empty( $args['active'] );
+		$is_default = ! empty( $args['default'] );
+		$can_edit   = ! empty( $args['can_edit'] );
+		$has_setup  = ! empty( $args['setup'] );
+		$is_manager = ! empty( $args['manager'] );
+		?>
+		<li class="rip-2fa-method" data-method="<?php echo esc_attr( $slug ); ?>" data-active="<?php echo $active ? '1' : '0'; ?>">
+			<div class="rip-2fa-method__main">
+				<div class="rip-2fa-method__icon"><?php echo $icons[ $slug ]; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static inline SVG from the map above. ?></div>
+				<div class="rip-2fa-method__body">
+					<div class="rip-2fa-method__head">
+						<span class="rip-2fa-method__name"><?php echo esc_html( $args['label'] ); ?></span>
+						<?php if ( $active ) : ?>
+							<span class="rip-badge rip-badge--success"><?php esc_html_e( 'Active', 'reportedip-hive' ); ?></span>
+							<?php if ( $is_default ) : ?>
+								<span class="rip-badge rip-badge--info" title="<?php esc_attr_e( 'This method is asked for first when you sign in.', 'reportedip-hive' ); ?>"><?php esc_html_e( 'Default', 'reportedip-hive' ); ?></span>
+							<?php endif; ?>
+						<?php else : ?>
+							<span class="rip-2fa-method__state"><?php esc_html_e( 'Not set up', 'reportedip-hive' ); ?></span>
+						<?php endif; ?>
+					</div>
+					<p class="rip-2fa-method__desc"><?php echo esc_html( $args['description'] ); ?></p>
+					<?php if ( ! empty( $args['meta'] ) ) : ?>
+						<p class="rip-2fa-method__meta">
+							<?php
+							printf(
+								/* translators: %s: masked phone number */
+								esc_html__( 'Current number: %s', 'reportedip-hive' ),
+								esc_html( $args['meta'] )
+							);
+							?>
+						</p>
+					<?php endif; ?>
+				</div>
+				<?php if ( $can_edit ) : ?>
+					<div class="rip-2fa-method__actions">
+						<?php if ( $active ) : ?>
+							<?php if ( ! $is_default ) : ?>
+								<button type="button" class="rip-button rip-button--ghost rip-button--sm" data-action="make-default"><?php esc_html_e( 'Make default', 'reportedip-hive' ); ?></button>
+							<?php endif; ?>
+							<?php if ( ReportedIP_Hive_Two_Factor::METHOD_TOTP === $slug ) : ?>
+								<button type="button" class="rip-button rip-button--ghost rip-button--sm" data-action="setup" data-replace="1"><?php esc_html_e( 'Set up again', 'reportedip-hive' ); ?></button>
+							<?php elseif ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $slug && $has_setup ) : ?>
+								<button type="button" class="rip-button rip-button--ghost rip-button--sm" data-action="setup"><?php esc_html_e( 'Change number', 'reportedip-hive' ); ?></button>
+							<?php endif; ?>
+							<?php if ( ! $is_manager ) : ?>
+								<button type="button" class="rip-button rip-button--danger rip-button--sm" data-action="remove"><?php esc_html_e( 'Remove', 'reportedip-hive' ); ?></button>
+							<?php endif; ?>
+						<?php elseif ( $has_setup ) : ?>
+							<button type="button" class="rip-button rip-button--secondary rip-button--sm" data-action="setup"><?php esc_html_e( 'Set up', 'reportedip-hive' ); ?></button>
+						<?php elseif ( ! empty( $args['lock'] ) && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) : ?>
+							<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $args['lock'], array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+			</div>
+			<?php if ( $can_edit && ! $is_manager ) : ?>
+				<?php $this->render_profile_method_flow( $slug ); ?>
+			<?php endif; ?>
+			<?php if ( $can_edit && $is_manager ) : ?>
+				<div class="rip-2fa-method__manager">
+					<?php
+					$rip_webauthn_manager = array( 'user_id' => $user->ID );
+					include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/partials/webauthn-key-manager.php';
+					?>
+				</div>
+			<?php endif; ?>
+		</li>
+		<?php
+	}
+
+	/**
+	 * Render the hidden inline setup flow for a profile method row.
+	 *
+	 * All user-facing text is server-rendered here so it flows through the
+	 * normal i18n pipeline; assets/js/two-factor-admin.js only toggles the
+	 * markup and drives the AJAX steps.
+	 *
+	 * @param string $slug Method identifier (totp, email, sms).
+	 * @since 2.1.36
+	 */
+	private function render_profile_method_flow( $slug ) {
+		if ( ReportedIP_Hive_Two_Factor::METHOD_TOTP === $slug ) :
+			?>
+			<div class="rip-2fa-method__flow" data-flow="totp" hidden>
+				<p class="rip-2fa-method__flow-intro"><?php esc_html_e( 'Scan this QR code with your authenticator app, then enter the 6-digit code the app shows to finish the setup. If you cannot scan, type the key below the code into the app instead.', 'reportedip-hive' ); ?></p>
+				<div class="rip-2fa-setup__qr">
+					<div class="rip-2fa-qr-target" data-qr></div>
+					<p class="rip-2fa-setup__secret" data-secret title="<?php esc_attr_e( 'Manual entry key', 'reportedip-hive' ); ?>"></p>
+				</div>
+				<div class="rip-2fa-method__flow-controls">
+					<input type="text" class="rip-input rip-2fa-method__code" data-code inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-label="<?php esc_attr_e( 'Verification code', 'reportedip-hive' ); ?>" />
+					<button type="button" class="rip-button rip-button--primary" data-step="confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
+					<button type="button" class="rip-button rip-button--ghost" data-step="cancel"><?php esc_html_e( 'Cancel', 'reportedip-hive' ); ?></button>
+				</div>
+				<p class="description rip-2fa-method__flow-status" data-status role="status" aria-live="polite"></p>
+			</div>
+			<?php
+		elseif ( ReportedIP_Hive_Two_Factor::METHOD_EMAIL === $slug ) :
+			?>
+			<div class="rip-2fa-method__flow" data-flow="email" hidden>
+				<p class="rip-2fa-method__flow-intro"><?php esc_html_e( 'We are sending a 6-digit code to your email address right now. Enter it below to finish the setup.', 'reportedip-hive' ); ?></p>
+				<div class="rip-2fa-method__flow-controls">
+					<input type="text" class="rip-input rip-2fa-method__code" data-code inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-label="<?php esc_attr_e( 'Verification code', 'reportedip-hive' ); ?>" />
+					<button type="button" class="rip-button rip-button--primary" data-step="confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
+					<button type="button" class="rip-button rip-button--ghost" data-step="cancel"><?php esc_html_e( 'Cancel', 'reportedip-hive' ); ?></button>
+				</div>
+				<p class="description rip-2fa-method__flow-status" data-status role="status" aria-live="polite"></p>
+			</div>
+			<?php
+		elseif ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $slug ) :
+			?>
+			<div class="rip-2fa-method__flow" data-flow="sms" hidden>
+				<div data-sms-step="phone">
+					<label class="rip-form-label" for="rip-2fa-sms-phone"><?php esc_html_e( 'Mobile number', 'reportedip-hive' ); ?></label>
+					<input type="tel" id="rip-2fa-sms-phone" class="rip-input" data-phone placeholder="+49 151 23456789" autocomplete="tel" />
+					<label class="rip-2fa-method__consent">
+						<input type="checkbox" data-consent />
+						<span><?php esc_html_e( 'I agree that my phone number is stored encrypted and processed by the managed ReportedIP SMS service to deliver sign-in codes.', 'reportedip-hive' ); ?></span>
+					</label>
+					<div class="rip-2fa-method__flow-controls">
+						<button type="button" class="rip-button rip-button--primary" data-step="send-sms"><?php esc_html_e( 'Send code', 'reportedip-hive' ); ?></button>
+						<button type="button" class="rip-button rip-button--ghost" data-step="cancel"><?php esc_html_e( 'Cancel', 'reportedip-hive' ); ?></button>
+					</div>
+				</div>
+				<div data-sms-step="code" hidden>
+					<p class="rip-2fa-method__flow-intro" data-sms-sent-note></p>
+					<div class="rip-2fa-method__flow-controls">
+						<input type="text" class="rip-input rip-2fa-method__code" data-code inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-label="<?php esc_attr_e( 'Verification code', 'reportedip-hive' ); ?>" />
+						<button type="button" class="rip-button rip-button--primary" data-step="confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
+						<button type="button" class="rip-button rip-button--ghost" data-step="cancel"><?php esc_html_e( 'Cancel', 'reportedip-hive' ); ?></button>
+					</div>
+				</div>
+				<p class="description rip-2fa-method__flow-status" data-status role="status" aria-live="polite"></p>
+			</div>
+			<?php
+		endif;
 	}
 
 	/**
@@ -1979,11 +2161,17 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				wp_send_json_error( array( 'message' => __( 'Invalid or expired code.', 'reportedip-hive' ) ) );
 			}
 
+			$recovery_codes = null;
+			if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
+				$recovery_codes = ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
+			}
+
 			ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_EMAIL );
 
 			wp_send_json_success(
 				array(
-					'message' => __( 'Email code enabled!', 'reportedip-hive' ),
+					'message'        => __( 'Email code enabled!', 'reportedip-hive' ),
+					'recovery_codes' => $recovery_codes,
 				)
 			);
 		}
@@ -2029,11 +2217,28 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				wp_send_json_error( array( 'message' => $phone->get_error_message() ) );
 			}
 
-			if ( ! ReportedIP_Hive_Two_Factor_SMS::set_user_phone( $user_id, $phone ) ) {
-				wp_send_json_error( array( 'message' => __( 'Could not store phone number securely.', 'reportedip-hive' ) ) );
+			$sms_active = in_array(
+				ReportedIP_Hive_Two_Factor::METHOD_SMS,
+				ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user_id ),
+				true
+			);
+
+			if ( $sms_active ) {
+				$encrypted_pending = ReportedIP_Hive_Two_Factor_Crypto::encrypt( $phone );
+				if ( false === $encrypted_pending ) {
+					wp_send_json_error( array( 'message' => __( 'Could not store phone number securely.', 'reportedip-hive' ) ) );
+				}
+				update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER_PENDING, $encrypted_pending );
+
+				$result = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id, $phone );
+			} else {
+				if ( ! ReportedIP_Hive_Two_Factor_SMS::set_user_phone( $user_id, $phone ) ) {
+					wp_send_json_error( array( 'message' => __( 'Could not store phone number securely.', 'reportedip-hive' ) ) );
+				}
+
+				$result = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id );
 			}
 
-			$result = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id );
 			if ( is_wp_error( $result ) ) {
 				wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 			}
@@ -2053,11 +2258,23 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				wp_send_json_error( array( 'message' => __( 'Invalid or expired code.', 'reportedip-hive' ) ) );
 			}
 
+			$pending = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER_PENDING, true );
+			if ( ! empty( $pending ) ) {
+				update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER, $pending );
+				delete_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER_PENDING );
+			}
+
+			$recovery_codes = null;
+			if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
+				$recovery_codes = ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
+			}
+
 			ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_SMS );
 
 			wp_send_json_success(
 				array(
-					'message' => __( 'SMS 2FA enabled!', 'reportedip-hive' ),
+					'message'        => __( 'SMS 2FA enabled!', 'reportedip-hive' ),
+					'recovery_codes' => $recovery_codes,
 				)
 			);
 		}

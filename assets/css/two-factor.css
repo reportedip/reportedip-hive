@@ -1876,3 +1876,217 @@ body.rip-2fa-onboarding #rip-2fa-sms-delivery-timer {
 	color: var(--rip-danger, #EF4444);
 	font-weight: 600;
 }
+
+/* ==========================================================================
+   Admin - Profile 2FA section (profile.php card layout, since 2.1.36)
+   ========================================================================== */
+
+.rip-2fa-profile__cell {
+	padding: var(--rip-space-2, 0.5rem) 0 !important;
+}
+
+.rip-2fa-profile {
+	max-width: 800px;
+}
+
+.rip-2fa-profile__card {
+	margin-bottom: var(--rip-space-4, 1rem);
+}
+
+.rip-2fa-profile__card--danger {
+	border-color: var(--rip-danger-bg, rgba(239, 68, 68, 0.35));
+}
+
+.rip-2fa-profile__status-row {
+	margin-bottom: var(--rip-space-3, 0.75rem);
+}
+
+.rip-2fa-profile__lead {
+	font-size: var(--rip-text-sm, 0.875rem);
+	color: var(--rip-gray-700, #374151);
+	margin: 0 0 var(--rip-space-2, 0.5rem);
+	max-width: 640px;
+}
+
+.rip-2fa-profile__hint {
+	margin: 0 0 var(--rip-space-4, 1rem);
+	max-width: 640px;
+}
+
+.rip-2fa-profile__recovery-status {
+	margin-bottom: var(--rip-space-3, 0.75rem);
+}
+
+.rip-2fa-profile__recovery-display {
+	margin-top: var(--rip-space-4, 1rem);
+}
+
+.rip-2fa-profile__recovery-display[hidden] {
+	display: none;
+}
+
+.rip-2fa-recovery-codes__warning {
+	color: var(--rip-danger, #EF4444);
+	margin-top: var(--rip-space-2, 0.5rem);
+}
+
+/* Method rows */
+.rip-2fa-methods {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.rip-2fa-method {
+	border-top: 1px solid var(--rip-gray-100, #F3F4F6);
+	padding: var(--rip-space-4, 1rem) 0;
+}
+
+.rip-2fa-method:last-child {
+	padding-bottom: 0;
+}
+
+.rip-2fa-method__main {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--rip-space-4, 1rem);
+}
+
+.rip-2fa-method__icon {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	background: var(--rip-gray-50, #F9FAFB);
+	border: 1px solid var(--rip-gray-200, #E5E7EB);
+	border-radius: var(--rip-radius, 6px);
+	color: var(--rip-primary, #4F46E5);
+}
+
+.rip-2fa-method__body {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.rip-2fa-method__head {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--rip-space-2, 0.5rem);
+	margin-bottom: var(--rip-space-1, 0.25rem);
+}
+
+.rip-2fa-method__name {
+	font-size: var(--rip-text-sm, 0.875rem);
+	font-weight: 600;
+	color: var(--rip-gray-900, #111827);
+}
+
+.rip-2fa-method__state {
+	font-size: var(--rip-text-xs, 0.75rem);
+	color: var(--rip-gray-400, #9CA3AF);
+}
+
+.rip-2fa-method__desc {
+	font-size: var(--rip-text-sm, 0.875rem);
+	color: var(--rip-gray-500, #6B7280);
+	margin: 0;
+	max-width: 560px;
+}
+
+.rip-2fa-method__meta {
+	font-size: var(--rip-text-xs, 0.75rem);
+	color: var(--rip-gray-500, #6B7280);
+	margin: var(--rip-space-1, 0.25rem) 0 0;
+}
+
+.rip-2fa-method__actions {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: var(--rip-space-2, 0.5rem);
+}
+
+.rip-2fa-method__manager {
+	margin-top: var(--rip-space-4, 1rem);
+	padding-left: calc(40px + var(--rip-space-4, 1rem));
+}
+
+/* Inline setup flows */
+.rip-2fa-method__flow {
+	margin-top: var(--rip-space-4, 1rem);
+	padding: var(--rip-space-4, 1rem);
+	background: var(--rip-gray-50, #F9FAFB);
+	border: 1px solid var(--rip-gray-200, #E5E7EB);
+	border-radius: var(--rip-radius, 6px);
+}
+
+.rip-2fa-method__flow[hidden] {
+	display: none;
+}
+
+.rip-2fa-method__flow-intro {
+	font-size: var(--rip-text-sm, 0.875rem);
+	color: var(--rip-gray-700, #374151);
+	margin: 0 0 var(--rip-space-3, 0.75rem);
+	max-width: 560px;
+}
+
+.rip-2fa-method__flow-controls {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--rip-space-2, 0.5rem);
+	margin-top: var(--rip-space-3, 0.75rem);
+}
+
+.rip-2fa-method__code {
+	max-width: 140px;
+	text-align: center;
+	font-family: var(--rip-font-mono, monospace);
+	letter-spacing: 0.2em;
+}
+
+.rip-2fa-method__flow .rip-input[data-phone] {
+	max-width: 260px;
+}
+
+.rip-2fa-method__consent {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--rip-space-2, 0.5rem);
+	font-size: var(--rip-text-xs, 0.75rem);
+	color: var(--rip-gray-500, #6B7280);
+	margin-top: var(--rip-space-3, 0.75rem);
+	max-width: 560px;
+}
+
+.rip-2fa-method__consent input {
+	margin-top: 2px;
+}
+
+.rip-2fa-method__flow-status {
+	margin: var(--rip-space-3, 0.75rem) 0 0;
+	min-height: 1.4em;
+}
+
+@media (max-width: 782px) {
+	.rip-2fa-method__main {
+		flex-wrap: wrap;
+	}
+
+	.rip-2fa-method__actions {
+		flex-direction: row;
+		align-items: center;
+		width: 100%;
+		justify-content: flex-start;
+		padding-left: calc(40px + var(--rip-space-4, 1rem));
+	}
+
+	.rip-2fa-method__manager {
+		padding-left: 0;
+	}
+}

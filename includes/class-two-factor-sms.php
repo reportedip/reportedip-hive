@@ -200,10 +200,14 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	/**
 	 * Dispatch a one-time code to the given user's registered phone number.
 	 *
-	 * @param int $user_id
+	 * @param int    $user_id        WordPress user ID.
+	 * @param string $phone_override Optional E.164 number to use instead of the
+	 *                               stored one. Used by the change-number flow,
+	 *                               which must not overwrite the verified number
+	 *                               before the new one is confirmed.
 	 * @return true|WP_Error
 	 */
-	public static function send_code( $user_id ) {
+	public static function send_code( $user_id, $phone_override = '' ) {
 		if ( ! self::is_ready() ) {
 			return new WP_Error(
 				'reportedip_sms_not_ready',
@@ -211,7 +215,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 			);
 		}
 
-		$phone = self::get_user_phone( $user_id );
+		$phone = '' !== $phone_override ? $phone_override : self::get_user_phone( $user_id );
 		if ( '' === $phone ) {
 			return new WP_Error(
 				'reportedip_sms_no_number',

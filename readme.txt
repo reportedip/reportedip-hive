@@ -66,6 +66,7 @@ Three of the four methods work in **every plan**, including Free and the fully-o
 
 Plus:
 
+* **Self-service method management on the profile page** — plain-language method cards let every user add or remove methods at any time, pick the default method the login challenge opens with, change the SMS number (the verified number is only replaced after the new one confirms a code) and re-set-up the authenticator app
 * **10 single-use recovery codes**, hashed at rest, low-codes warning at 3 remaining
 * **Trusted devices** with configurable expiry (default 30 days), IP + device-name + last-used tracking, auto-revoked on geo anomaly
 * **Password-reset gate** — the WordPress "lost password" flow demands a second factor before the new password is accepted. Email is excluded by design (it is the channel that delivered the reset link), so a stolen mailbox cannot bypass 2FA. Email-only accounts without recovery codes are hard-locked with an admin alert.
