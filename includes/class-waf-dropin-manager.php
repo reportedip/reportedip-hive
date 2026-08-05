@@ -309,8 +309,14 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$this->ensure_queue_dir();
 		$this->write_blocklist();
 
+		$writable = file_exists( $prepend ) ? is_writable( $prepend ) : is_writable( dirname( $prepend ) );
+		if ( ! $writable ) {
+			return false;
+		}
+
 		$content = $this->generate_prepend();
-		if ( false === file_put_contents( $prepend, $content ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Generating a same-host PHP guard outside the plugin dir; WP_Filesystem cannot place an auto_prepend_file target reliably.
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Generating a same-host PHP guard outside the plugin dir; WP_Filesystem cannot place an auto_prepend_file target reliably. Silenced because a permission race after the writability probe must degrade to the fail-open false return, never emit a warning into the response (headers already sent on admin screens).
+		if ( false === @file_put_contents( $prepend, $content ) ) {
 			return false;
 		}
 
@@ -391,7 +397,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			. " * here.\n"
 			. " */\n"
 			. "return;\n";
-		return false !== file_put_contents( $prepend, $stub ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Neutralising a same-host auto_prepend_file target; WP_Filesystem cannot reliably write outside the plugin dir.
+		return false !== @file_put_contents( $prepend, $stub ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Neutralising a same-host auto_prepend_file target; WP_Filesystem cannot reliably write outside the plugin dir. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 	}
 
 	/**
@@ -708,7 +714,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			if ( ! is_writable( dirname( $file ) ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Same-host directory writability probe.
 				return false;
 			}
-			if ( false === file_put_contents( $file, '' ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Creating an empty same-host config file before writing the marker block.
+			if ( false === @file_put_contents( $file, '' ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Creating an empty same-host config file before writing the marker block. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 				return false;
 			}
 		}
@@ -722,7 +728,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$contents = rtrim( $this->remove_marker_block( $contents ), "\r\n" );
 		$block    = '; BEGIN ' . self::MARKER . "\n" . implode( "\n", $lines ) . "\n; END " . self::MARKER . "\n";
 		$contents = ( '' === $contents ) ? $block : $contents . "\n" . $block;
-		return false !== file_put_contents( $file, $contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing back the same-host config file with the refreshed marker block.
+		return false !== @file_put_contents( $file, $contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Writing back the same-host config file with the refreshed marker block. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 	}
 
 	/**
@@ -748,7 +754,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			if ( ! is_writable( dirname( $file ) ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Same-host directory writability probe.
 				return false;
 			}
-			if ( false === file_put_contents( $file, '' ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Creating an empty same-host config file before insert_with_markers().
+			if ( false === @file_put_contents( $file, '' ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Creating an empty same-host config file before insert_with_markers(). Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 				return false;
 			}
 		}
@@ -781,7 +787,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		if ( $stripped === $contents ) {
 			return true;
 		}
-		return false !== file_put_contents( $file, ltrim( $stripped, "\r\n" ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing back the stripped same-host config file.
+		return false !== @file_put_contents( $file, ltrim( $stripped, "\r\n" ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Writing back the stripped same-host config file. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 	}
 
 	/**
@@ -1302,7 +1308,7 @@ PHP;
 
 		$this->mark_blocklist_dirty( $path );
 
-		file_put_contents( $path, $ip_address . "\t" . $stamp . "\n", FILE_APPEND | LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Appending one line to a same-host lookup file the pre-WordPress guard reads; WP_Filesystem has no append mode.
+		@file_put_contents( $path, $ip_address . "\t" . $stamp . "\n", FILE_APPEND | LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Appending one line to a same-host lookup file the pre-WordPress guard reads; WP_Filesystem has no append mode. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 		set_site_transient( $transient_key, $stamp, HOUR_IN_SECONDS );
 	}
 
@@ -1387,7 +1393,7 @@ PHP;
 			self::BLOCKLIST_HEADER_LEN + strlen( $body ),
 			bin2hex( $bitmap )
 		);
-		return false !== file_put_contents( $path, $header . $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing the same-host lookup file the pre-WordPress guard reads.
+		return false !== @file_put_contents( $path, $header . $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Writing the same-host lookup file the pre-WordPress guard reads. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 	}
 
 	/**
@@ -1502,7 +1508,7 @@ PHP;
 		);
 		foreach ( $guards as $file => $body ) {
 			if ( ! file_exists( $file ) ) {
-				file_put_contents( $file, $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing same-host access guards next to the queue; WP_Filesystem is unavailable on the front end.
+				@file_put_contents( $file, $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Writing same-host access guards next to the queue; WP_Filesystem is unavailable on the front end. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 			}
 		}
 
@@ -1637,7 +1643,7 @@ PHP;
 		if ( empty( $overflow ) ) {
 			wp_delete_file( $file );
 		} else {
-			file_put_contents( $file, implode( "\n", $overflow ) . "\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Writing back the unprocessed tail of a same-host queue file.
+			@file_put_contents( $file, implode( "\n", $overflow ) . "\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Writing back the unprocessed tail of a same-host queue file. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 		}
 
 		return $imported;
