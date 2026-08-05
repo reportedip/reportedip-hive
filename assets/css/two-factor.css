@@ -1856,3 +1856,9 @@ body.rip-2fa-onboarding #rip-2fa-sms-delivery-timer {
 	max-width: 220px;
 	margin-right: var(--rip-space-2, 0.5rem);
 }
+
+.rip-webauthn-keys__model {
+	display: block;
+	font-size: var(--rip-text-xs, 0.75rem);
+	color: var(--rip-gray-500, #6B7280);
+}

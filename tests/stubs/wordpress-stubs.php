@@ -915,6 +915,12 @@ if ( ! function_exists( 'home_url' ) ) {
 	}
 }
 
+if ( ! function_exists( 'site_url' ) ) {
+	function site_url( $path = '' ) { // phpcs:ignore
+		return 'https://example.org' . $path;
+	}
+}
+
 if ( ! function_exists( 'wp_specialchars_decode' ) ) {
 	function wp_specialchars_decode( $string, $quote_style = ENT_NOQUOTES ) { // phpcs:ignore
 		return htmlspecialchars_decode( (string) $string, (int) $quote_style );

@@ -419,7 +419,7 @@
 		var codeInput   = document.getElementById( 'rip-2fa-code-webauthn' );
 
 		btn.addEventListener( 'click', function () {
-			if ( status ) { status.textContent = ( config.strings && config.strings.passkeyRequesting ) || 'Passkey request in progress…'; }
+			if ( status ) { status.textContent = ( config.strings && config.strings.passkeyWaiting ) || 'Waiting for your security key — insert and touch it now, or approve the passkey prompt.'; }
 			var data = new FormData();
 			data.append( 'action', 'reportedip_hive_2fa_webauthn_login_options' );
 			appendLoginToken( data );
@@ -447,9 +447,30 @@
 					if ( form ) { submitFormOnce( form ); }
 				} )
 				.catch( function ( err ) {
-					if ( status ) { status.textContent = err && err.message ? err.message : ( config.strings && config.strings.passkeyCancelled ) || 'Passkey login cancelled.'; }
+					if ( status ) { status.textContent = webAuthnErrorMessage( err ); }
+					btn.disabled = false;
+					btn.focus();
 				} );
 		} );
+
+		// Map WebAuthn DOMException names onto actionable guidance — a
+		// YubiKey user on NFC needs "hold it to the back of the phone",
+		// not a raw browser error string.
+		function webAuthnErrorMessage( err ) {
+			var strings = config.strings || {};
+			if ( err && err.name === 'NotAllowedError' ) {
+				return strings.passkeyTimeout
+					|| 'The request timed out or was cancelled. Insert your key and touch it — on a phone, hold the key flat against the back (NFC) — then try again.';
+			}
+			if ( err && err.name === 'SecurityError' ) {
+				return strings.passkeySecurityError
+					|| 'The domain of this page does not match the key registration.';
+			}
+			if ( err && err.name === 'AbortError' ) {
+				return strings.passkeyCancelled || 'Passkey login cancelled.';
+			}
+			return ( err && err.message ) ? err.message : ( strings.passkeyCancelled || 'Passkey login cancelled.' );
+		}
 
 		function ajaxUrl() {
 			return ( config.ajaxUrl || window.ajaxurl || '/wp-admin/admin-ajax.php' );

@@ -111,7 +111,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 						'name' => get_bloginfo( 'name' ),
 					),
 					'user'                   => array(
-						'id'          => self::b64url_encode( sprintf( '%d', $user_id ) ),
+						'id'          => self::user_handle( $user_id ),
 						'name'        => $user->user_email,
 						'displayName' => $user->display_name,
 					),
@@ -119,7 +119,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 					'authenticatorSelection' => self::authenticator_selection( $hint ),
 					'hints'                  => '' !== $hint ? array( $hint ) : array(),
 					'timeout'                => self::CEREMONY_TIMEOUT_MS,
-					'attestation'            => 'none',
+					'attestation'            => 'direct',
 					'excludeCredentials'     => $exclude,
 				),
 			)
@@ -246,7 +246,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		if ( ! hash_equals( $stored_challenge, self::b64url_decode( $client_data['challenge'] ?? '' ) ) ) {
 			wp_send_json_error( array( 'message' => __( 'Challenge mismatch.', 'reportedip-hive' ) ) );
 		}
-		if ( rtrim( ( $client_data['origin'] ?? '' ), '/' ) !== rtrim( self::expected_origin(), '/' ) ) {
+		if ( ! self::origin_allowed( $client_data['origin'] ?? '' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Origin mismatch.', 'reportedip-hive' ) ) );
 		}
 
@@ -276,13 +276,16 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		}
 
 		$record = array(
-			'id'         => self::b64url_encode( $auth_data['credential_id'] ),
-			'public_key' => base64_encode( $auth_data['public_key_cbor'] ),
-			'sign_count' => $auth_data['sign_count'],
-			'created_at' => time(),
-			'transports' => self::sanitize_transports( $credential['transports'] ?? array() ),
-			'uv'         => (bool) ( $auth_data['flags'] & self::FLAG_USER_VERIFIED ),
-			'name'       => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : __( 'Passkey', 'reportedip-hive' ),
+			'id'           => self::b64url_encode( $auth_data['credential_id'] ),
+			'public_key'   => base64_encode( $auth_data['public_key_cbor'] ),
+			'sign_count'   => $auth_data['sign_count'],
+			'created_at'   => time(),
+			'transports'   => self::sanitize_transports( $credential['transports'] ?? array() ),
+			'uv'           => (bool) ( $auth_data['flags'] & self::FLAG_USER_VERIFIED ),
+			'aaguid'       => (string) ( $auth_data['aaguid'] ?? '' ),
+			'att_fmt'      => is_string( $parsed['fmt'] ?? null ) ? $parsed['fmt'] : '',
+			'att_verified' => self::verify_packed_attestation( $parsed, hash( 'sha256', $client_data_json, true ) ),
+			'name'         => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : __( 'Passkey', 'reportedip-hive' ),
 		);
 
 		$creds   = self::get_user_credentials( $user_id );
@@ -351,9 +354,20 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		$format = (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' );
 		$keys   = array();
 		foreach ( self::get_user_credentials( $user_id ) as $cred ) {
+			$model = '';
+			$icon  = '';
+			if ( ! empty( $cred['aaguid'] ) && class_exists( 'ReportedIP_Hive_WebAuthn_Aaguid_Registry' ) ) {
+				$info = ReportedIP_Hive_WebAuthn_Aaguid_Registry::lookup( (string) $cred['aaguid'] );
+				if ( null !== $info ) {
+					$model = $info['label'];
+					$icon  = $info['icon'];
+				}
+			}
 			$keys[] = array(
 				'id'         => (string) ( $cred['id'] ?? '' ),
 				'name'       => (string) ( $cred['name'] ?? __( 'Security key', 'reportedip-hive' ) ),
+				'model'      => $model,
+				'icon'       => $icon,
 				'transports' => is_array( $cred['transports'] ?? null ) ? $cred['transports'] : array(),
 				'created_at' => ! empty( $cred['created_at'] ) ? wp_date( $format, (int) $cred['created_at'] ) : '',
 				'last_used'  => ! empty( $cred['last_used'] ) ? wp_date( $format, (int) $cred['last_used'] ) : '',
@@ -591,7 +605,75 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	public static function rp_id() {
-		return (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		/**
+		 * Filter the WebAuthn Relying-Party ID.
+		 *
+		 * Escape hatch for subdomain multisite / domain-mapped networks: a
+		 * network admin can return the registrable parent domain so one
+		 * enrolment is valid network-wide. Changing the RP ID orphans
+		 * credentials enrolled under the previous value — set it once,
+		 * before rollout.
+		 *
+		 * @param string $rp_id Host derived from home_url().
+		 * @since 2.1.35
+		 */
+		return (string) apply_filters( 'reportedip_hive_webauthn_rp_id', (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+	}
+
+	/**
+	 * Origins accepted for ceremony responses. Covers the home_url() and
+	 * site_url() hosts (they can differ on WP-in-subdirectory installs
+	 * with a separate dashboard host) plus a developer filter.
+	 *
+	 * @return string[] Scheme://host[:port] strings without trailing slash.
+	 * @since 2.1.35
+	 */
+	public static function allowed_origins() {
+		$origins = array( self::expected_origin() );
+		$site    = wp_parse_url( site_url() );
+		if ( is_array( $site ) && ! empty( $site['host'] ) ) {
+			$scheme    = $site['scheme'] ?? 'https';
+			$port      = isset( $site['port'] ) ? ':' . $site['port'] : '';
+			$origins[] = $scheme . '://' . $site['host'] . $port;
+		}
+
+		/**
+		 * Filter the accepted WebAuthn origins.
+		 *
+		 * @param string[] $origins Accepted origins.
+		 * @since 2.1.35
+		 */
+		$origins = apply_filters( 'reportedip_hive_webauthn_allowed_origins', $origins );
+		return array_values( array_unique( array_map( static fn( $o ) => rtrim( (string) $o, '/' ), (array) $origins ) ) );
+	}
+
+	/**
+	 * Whether a client-reported origin is acceptable.
+	 *
+	 * @param string $origin Origin string from clientDataJSON.
+	 * @return bool
+	 * @since 2.1.35
+	 */
+	private static function origin_allowed( $origin ) {
+		return in_array( rtrim( (string) $origin, '/' ), self::allowed_origins(), true );
+	}
+
+	/**
+	 * Opaque per-user WebAuthn user handle (16 random bytes, base64url).
+	 * Created lazily on first use; emitted as user.id so resident
+	 * credentials no longer carry the guessable ASCII decimal WP user id.
+	 *
+	 * @param int $user_id User id.
+	 * @return string base64url handle.
+	 * @since 2.1.35
+	 */
+	public static function user_handle( $user_id ) {
+		$handle = (string) get_user_meta( $user_id, 'reportedip_hive_2fa_webauthn_user_handle', true );
+		if ( '' === $handle ) {
+			$handle = self::b64url_encode( self::random_bytes( 16 ) );
+			update_user_meta( $user_id, 'reportedip_hive_2fa_webauthn_user_handle', $handle );
+		}
+		return $handle;
 	}
 
 	/**
@@ -713,8 +795,14 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		if ( ! hash_equals( $stored_challenge, self::b64url_decode( $client_data['challenge'] ?? '' ) ) ) {
 			return new WP_Error( 'webauthn_challenge', __( 'Challenge mismatch.', 'reportedip-hive' ) );
 		}
-		if ( rtrim( ( $client_data['origin'] ?? '' ), '/' ) !== rtrim( self::expected_origin(), '/' ) ) {
+		if ( ! self::origin_allowed( $client_data['origin'] ?? '' ) ) {
 			return new WP_Error( 'webauthn_origin', __( 'Origin mismatch.', 'reportedip-hive' ) );
+		}
+		$user_handle = (string) ( $assertion['response']['userHandle'] ?? '' );
+		if ( '' !== $user_handle
+			&& ! hash_equals( self::user_handle( $user_id ), $user_handle )
+			&& ! hash_equals( self::b64url_encode( sprintf( '%d', $user_id ) ), $user_handle ) ) {
+			return new WP_Error( 'webauthn_user_handle', __( 'The credential belongs to a different account.', 'reportedip-hive' ) );
 		}
 
 		$authenticator_data = self::b64url_decode( $assertion['response']['authenticatorData'] ?? '' );
@@ -821,6 +909,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			$cred_id                   = substr( $auth_data, 55, $cred_id_len );
 			$pk_start                  = 55 + $cred_id_len;
 			$pk_cbor                   = substr( $auth_data, $pk_start );
+			$result['aaguid']          = self::format_aaguid( substr( $auth_data, 37, 16 ) );
 			$result['credential_id']   = $cred_id;
 			$result['public_key_cbor'] = $pk_cbor;
 		} elseif ( $expect_attested ) {
@@ -828,6 +917,69 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Render raw AAGUID bytes as the canonical dashed lower-case form.
+	 * The all-zero AAGUID (sent when the browser strips attestation)
+	 * renders as an empty string so callers can treat it as absent.
+	 *
+	 * @param string $bytes Raw 16 AAGUID bytes.
+	 * @return string Dashed AAGUID or ''.
+	 * @since 2.1.35
+	 */
+	private static function format_aaguid( $bytes ) {
+		if ( 16 !== strlen( $bytes ) || str_repeat( "\0", 16 ) === $bytes ) {
+			return '';
+		}
+		$hex = bin2hex( $bytes );
+		return substr( $hex, 0, 8 ) . '-' . substr( $hex, 8, 4 ) . '-' . substr( $hex, 12, 4 )
+			. '-' . substr( $hex, 16, 4 ) . '-' . substr( $hex, 20 );
+	}
+
+	/**
+	 * Best-effort verification of a "packed" attestation statement.
+	 *
+	 * Deliberately fail-open: the result only feeds the model label in the
+	 * key manager, never a policy decision (Yubico guidance: request direct
+	 * attestation and store it, but do not require it). x5c path verifies
+	 * the signature with the attestation certificate's public key;
+	 * self-attestation verifies with the credential key itself. No CA-chain
+	 * or MDS validation — that trade-off is documented in the class header.
+	 *
+	 * @param array  $att_map          Decoded attestation object (fmt / attStmt / authData).
+	 * @param string $client_data_hash SHA-256 of clientDataJSON (raw bytes).
+	 * @return bool True when the statement's signature verified.
+	 * @since 2.1.35
+	 */
+	private static function verify_packed_attestation( $att_map, $client_data_hash ) {
+		if ( 'packed' !== ( $att_map['fmt'] ?? '' ) || ! is_array( $att_map['attStmt'] ?? null ) ) {
+			return false;
+		}
+		$stmt = $att_map['attStmt'];
+		$alg  = $stmt['alg'] ?? null;
+		$sig  = $stmt['sig'] ?? '';
+		if ( ! is_string( $sig ) || '' === $sig || ! in_array( $alg, array( -7, -257 ), true ) ) {
+			return false;
+		}
+		$signed = $att_map['authData'] . $client_data_hash;
+
+		if ( isset( $stmt['x5c'][0] ) && is_string( $stmt['x5c'][0] ) && '' !== $stmt['x5c'][0] ) {
+			$pem = "-----BEGIN CERTIFICATE-----\n"
+				. chunk_split( base64_encode( $stmt['x5c'][0] ), 64, "\n" )
+				. "-----END CERTIFICATE-----\n";
+			$key = openssl_pkey_get_public( $pem );
+			if ( false === $key ) {
+				return false;
+			}
+			return 1 === openssl_verify( $signed, $sig, $key, OPENSSL_ALGO_SHA256 );
+		}
+
+		$auth_info = self::parse_authenticator_data( $att_map['authData'] );
+		if ( is_wp_error( $auth_info ) || empty( $auth_info['public_key_cbor'] ) ) {
+			return false;
+		}
+		return true === self::verify_signature( $auth_info['public_key_cbor'], $signed, $sig );
 	}
 
 	/**
@@ -941,22 +1093,56 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	/**
+	 * Maximum nesting depth accepted by the CBOR decoder. Well-formed
+	 * CTAP2 output nests three levels at most; anything deeper is hostile
+	 * or broken input.
+	 *
+	 * @since 2.1.35
+	 */
+	const CBOR_MAX_DEPTH = 8;
+
+	/**
 	 * Minimal CBOR decoder covering the subset used by WebAuthn (maps,
 	 * byte-strings, text-strings, ints, arrays). Returns [value, new-offset].
 	 *
+	 * Hardened against malformed input: every multi-byte read is
+	 * bounds-checked, indefinite-length items, tags and floats are rejected
+	 * explicitly (instead of silently desyncing the stream), and recursion
+	 * is capped at CBOR_MAX_DEPTH.
+	 *
+	 * @param string $data   CBOR bytes.
+	 * @param int    $offset Read position.
+	 * @param int    $depth  Current nesting depth.
 	 * @return array|WP_Error
 	 */
-	private static function cbor_decode( $data, $offset ) {
-		if ( $offset >= strlen( $data ) ) {
+	private static function cbor_decode( $data, $offset, $depth = 0 ) {
+		if ( $depth > self::CBOR_MAX_DEPTH ) {
+			return new WP_Error( 'cbor_depth', 'CBOR nesting too deep' );
+		}
+		$total = strlen( $data );
+		if ( $offset >= $total ) {
 			return new WP_Error( 'cbor_eof', 'CBOR EOF' );
 		}
 		$first = ord( $data[ $offset++ ] );
 		$major = $first >> 5;
 		$add   = $first & 0x1f;
 
-		$read_uint = function ( $add_info ) use ( &$data, &$offset ) {
+		if ( 31 === $add ) {
+			return new WP_Error( 'cbor_indefinite', 'Indefinite-length CBOR items are not supported' );
+		}
+
+		$read_uint = function ( $add_info ) use ( &$data, &$offset, $total ) {
 			if ( $add_info < 24 ) {
 				return $add_info;
+			}
+			$widths = array(
+				24 => 1,
+				25 => 2,
+				26 => 4,
+				27 => 8,
+			);
+			if ( ! isset( $widths[ $add_info ] ) || $offset + $widths[ $add_info ] > $total ) {
+				return null;
 			}
 			if ( 24 === $add_info ) {
 				$v = ord( $data[ $offset ] );
@@ -973,37 +1159,42 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 				$offset += 4;
 				return $v;
 			}
-			if ( 27 === $add_info ) {
-				$high    = unpack( 'N', substr( $data, $offset, 4 ) )[1];
-				$low     = unpack( 'N', substr( $data, $offset + 4, 4 ) )[1];
-				$offset += 8;
-				return $high * 4294967296 + $low;
-			}
-			return 0;
+			$high    = unpack( 'N', substr( $data, $offset, 4 ) )[1];
+			$low     = unpack( 'N', substr( $data, $offset + 4, 4 ) )[1];
+			$offset += 8;
+			return $high * 4294967296 + $low;
 		};
 
 		switch ( $major ) {
 			case 0:
 				$v = $read_uint( $add );
+				if ( null === $v ) {
+					return new WP_Error( 'cbor_truncated', 'Truncated CBOR integer' );
+				}
 				return array( $v, $offset );
 			case 1:
 				$v = $read_uint( $add );
+				if ( null === $v ) {
+					return new WP_Error( 'cbor_truncated', 'Truncated CBOR integer' );
+				}
 				return array( -1 - $v, $offset );
 			case 2:
-				$len     = $read_uint( $add );
-				$bs      = substr( $data, $offset, $len );
-				$offset += $len;
-				return array( $bs, $offset );
 			case 3:
-				$len     = $read_uint( $add );
-				$ts      = substr( $data, $offset, $len );
+				$len = $read_uint( $add );
+				if ( null === $len || $offset + $len > $total ) {
+					return new WP_Error( 'cbor_truncated', 'Truncated CBOR string' );
+				}
+				$s       = substr( $data, $offset, $len );
 				$offset += $len;
-				return array( $ts, $offset );
+				return array( $s, $offset );
 			case 4:
 				$len = $read_uint( $add );
+				if ( null === $len ) {
+					return new WP_Error( 'cbor_truncated', 'Truncated CBOR array header' );
+				}
 				$arr = array();
 				for ( $i = 0; $i < $len; $i++ ) {
-					$res = self::cbor_decode_at( $data, $offset );
+					$res = self::cbor_decode( $data, $offset, $depth + 1 );
 					if ( is_wp_error( $res ) ) {
 						return $res;
 					}
@@ -1013,16 +1204,24 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 				return array( $arr, $offset );
 			case 5:
 				$len = $read_uint( $add );
+				if ( null === $len ) {
+					return new WP_Error( 'cbor_truncated', 'Truncated CBOR map header' );
+				}
 				$map = array();
 				for ( $i = 0; $i < $len; $i++ ) {
-					$k = self::cbor_decode_at( $data, $offset );
+					$k = self::cbor_decode( $data, $offset, $depth + 1 );
 					if ( is_wp_error( $k ) ) {
 						return $k;
-					} $offset = $k[1];
-					$v        = self::cbor_decode_at( $data, $offset );
+					}
+					$offset = $k[1];
+					if ( ! is_int( $k[0] ) && ! is_string( $k[0] ) ) {
+						return new WP_Error( 'cbor_key', 'Unsupported CBOR map key type' );
+					}
+					$v = self::cbor_decode( $data, $offset, $depth + 1 );
 					if ( is_wp_error( $v ) ) {
 						return $v;
-					} $offset     = $v[1];
+					}
+					$offset       = $v[1];
 					$map[ $k[0] ] = $v[0];
 				}
 				return array( $map, $offset );
@@ -1036,14 +1235,10 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 				if ( 22 === $add ) {
 					return array( null, $offset );
 				}
-				return array( null, $offset );
+				return new WP_Error( 'cbor_float', 'CBOR floats and reserved simple values are not supported' );
 			default:
 				return new WP_Error( 'cbor_unsupported', 'Unsupported CBOR major type ' . $major );
 		}
-	}
-
-	private static function cbor_decode_at( $data, $offset ) {
-		return self::cbor_decode( $data, $offset );
 	}
 
 	/* ------------------------------------------------------------------

@@ -81,9 +81,11 @@
 				var tr = document.createElement( 'tr' );
 				tr.setAttribute( 'data-credential-id', key.id );
 
-				var isRoaming = ( key.transports || [] ).some( function ( t ) {
-					return t === 'usb' || t === 'nfc' || t === 'ble' || t === 'smart-card';
-				} );
+				var isRoaming = key.icon
+					? key.icon === 'key'
+					: ( key.transports || [] ).some( function ( t ) {
+						return t === 'usb' || t === 'nfc' || t === 'ble' || t === 'smart-card';
+					} );
 
 				tr.appendChild( nameCell( key ) );
 				tr.appendChild( cellHtml(
@@ -118,6 +120,12 @@
 			span.className   = 'rip-webauthn-keys__name';
 			span.textContent = key.name;
 			td.appendChild( span );
+			if ( key.model ) {
+				var model = document.createElement( 'span' );
+				model.className   = 'rip-webauthn-keys__model';
+				model.textContent = key.model;
+				td.appendChild( model );
+			}
 			return td;
 		}
 

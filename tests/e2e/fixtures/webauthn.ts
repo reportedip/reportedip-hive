@@ -83,14 +83,15 @@ export function teardownWebauthnBaseline(composeFile = 'docker-compose.yml', ser
  * two authenticators attached at once race on excludeCredentials).
  */
 export async function attachVirtualAuthenticator(
-    page: Page
+    page: Page,
+    transport: 'usb' | 'nfc' | 'ble' = 'usb'
 ): Promise<{ cdp: CDPSession; authenticatorId: string }> {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('WebAuthn.enable');
     const { authenticatorId } = (await cdp.send('WebAuthn.addVirtualAuthenticator', {
         options: {
             protocol: 'ctap2',
-            transport: 'usb',
+            transport,
             hasResidentKey: false,
             hasUserVerification: false,
             isUserVerified: false,

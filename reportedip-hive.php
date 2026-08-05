@@ -428,6 +428,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-notifications.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-sms.php';
 		ReportedIP_Hive_Two_Factor_SMS::load_providers();
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-webauthn-aaguid-registry.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-webauthn.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-rest.php';
 

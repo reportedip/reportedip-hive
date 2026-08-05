@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-05T12:03:47+00:00\n"
+"POT-Creation-Date: 2026-08-05T12:33:58+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -1570,7 +1570,7 @@ msgid "IP Address"
 msgstr ""
 
 #: admin/class-admin-settings.php:1004
-#: reportedip-hive.php:952
+#: reportedip-hive.php:953
 msgid "Attacks"
 msgstr ""
 
@@ -1771,27 +1771,27 @@ msgstr ""
 
 #: admin/class-admin-settings.php:1575
 #: admin/class-admin-settings.php:1626
-#: reportedip-hive.php:1326
-#: reportedip-hive.php:1400
-#: reportedip-hive.php:1424
+#: reportedip-hive.php:1327
+#: reportedip-hive.php:1401
+#: reportedip-hive.php:1425
 msgid "ReportedIP Hive:"
 msgstr ""
 
 #. translators: %1$d: number of failed reports, %2$s: link to queue page
 #: admin/class-admin-settings.php:1578
-#: reportedip-hive.php:1329
+#: reportedip-hive.php:1330
 #, php-format
 msgid "%1$d API reports failed. %2$s"
 msgstr ""
 
 #: admin/class-admin-settings.php:1580
-#: reportedip-hive.php:1331
+#: reportedip-hive.php:1332
 msgid "View queue"
 msgstr ""
 
 #: admin/class-admin-settings.php:1590
-#: reportedip-hive.php:1342
-#: reportedip-hive.php:1363
+#: reportedip-hive.php:1343
+#: reportedip-hive.php:1364
 msgid "Retry all"
 msgstr ""
 
@@ -1807,20 +1807,20 @@ msgstr ""
 
 #: admin/class-admin-settings.php:1612
 #: admin/class-admin-settings.php:1631
-#: reportedip-hive.php:1385
-#: reportedip-hive.php:1405
+#: reportedip-hive.php:1386
+#: reportedip-hive.php:1406
 msgid "Upgrade API tier"
 msgstr ""
 
 #: admin/class-admin-settings.php:1613
-#: reportedip-hive.php:1386
+#: reportedip-hive.php:1387
 msgid "Manage queue"
 msgstr ""
 
 #. translators: 1: pending count, 2: upgrade link
 #. translators: %1$d: number of pending reports, %2$s: link to community page
 #: admin/class-admin-settings.php:1629
-#: reportedip-hive.php:1403
+#: reportedip-hive.php:1404
 #, php-format
 msgid "%1$d reports pending processing. %2$s for higher limits."
 msgstr ""
@@ -2287,28 +2287,28 @@ msgstr ""
 
 #: admin/class-admin-settings.php:3883
 #: admin/class-logs-table.php:389
-#: reportedip-hive.php:953
+#: reportedip-hive.php:954
 msgid "Critical"
 msgstr ""
 
 #: admin/class-admin-settings.php:3884
 #: admin/class-logs-table.php:388
 #: admin/class-setup-wizard.php:851
-#: reportedip-hive.php:954
+#: reportedip-hive.php:955
 msgid "High"
 msgstr ""
 
 #: admin/class-admin-settings.php:3885
 #: admin/class-logs-table.php:387
 #: admin/class-setup-wizard.php:844
-#: reportedip-hive.php:955
+#: reportedip-hive.php:956
 msgid "Medium"
 msgstr ""
 
 #: admin/class-admin-settings.php:3886
 #: admin/class-logs-table.php:386
 #: admin/class-setup-wizard.php:837
-#: reportedip-hive.php:956
+#: reportedip-hive.php:957
 msgid "Low"
 msgstr ""
 
@@ -3316,7 +3316,7 @@ msgid "Test email failed."
 msgstr ""
 
 #: admin/class-admin-settings.php:5637
-#: reportedip-hive.php:835
+#: reportedip-hive.php:836
 msgid "Request failed. Check server logs."
 msgstr ""
 
@@ -4991,8 +4991,8 @@ msgstr ""
 #: admin/class-setup-wizard.php:403
 #: admin/class-two-factor-admin.php:1574
 #: includes/class-two-factor-onboarding.php:354
-#: includes/class-two-factor.php:1986
-#: reportedip-hive.php:836
+#: includes/class-two-factor.php:1992
+#: reportedip-hive.php:837
 msgid "Error"
 msgstr ""
 
@@ -6604,7 +6604,7 @@ msgstr ""
 #: includes/class-two-factor-dashboard.php:159
 #: includes/class-two-factor-webauthn.php:75
 #: includes/class-two-factor-webauthn.php:221
-#: includes/class-two-factor-webauthn.php:327
+#: includes/class-two-factor-webauthn.php:330
 msgid "You do not have permission."
 msgstr ""
 
@@ -7087,14 +7087,14 @@ msgstr ""
 
 #: admin/class-two-factor-admin.php:1611
 #: admin/class-two-factor-admin.php:1625
-#: includes/class-two-factor-webauthn.php:356
+#: includes/class-two-factor-webauthn.php:368
 msgid "Security key"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:1612
 #: admin/class-two-factor-admin.php:1645
 #: includes/class-two-factor-onboarding.php:436
-#: includes/class-two-factor-webauthn.php:285
+#: includes/class-two-factor-webauthn.php:288
 #: templates/frontend-2fa-challenge.php:113
 #: templates/two-factor-challenge.php:99
 msgid "Passkey"
@@ -9372,37 +9372,37 @@ msgid "Challenge expired, please start again."
 msgstr ""
 
 #: includes/class-two-factor-webauthn.php:241
-#: includes/class-two-factor-webauthn.php:701
+#: includes/class-two-factor-webauthn.php:783
 msgid "Invalid clientDataJSON."
 msgstr ""
 
 #: includes/class-two-factor-webauthn.php:244
-#: includes/class-two-factor-webauthn.php:704
+#: includes/class-two-factor-webauthn.php:786
 msgid "clientDataJSON.type is wrong."
 msgstr ""
 
 #: includes/class-two-factor-webauthn.php:247
-#: includes/class-two-factor-webauthn.php:714
+#: includes/class-two-factor-webauthn.php:796
 msgid "Challenge mismatch."
 msgstr ""
 
 #: includes/class-two-factor-webauthn.php:250
-#: includes/class-two-factor-webauthn.php:717
+#: includes/class-two-factor-webauthn.php:799
 msgid "Origin mismatch."
 msgstr ""
 
 #: includes/class-two-factor-webauthn.php:266
-#: includes/class-two-factor-webauthn.php:728
+#: includes/class-two-factor-webauthn.php:816
 msgid "RP-ID hash mismatch."
 msgstr ""
 
 #: includes/class-two-factor-webauthn.php:269
-#: includes/class-two-factor-webauthn.php:731
+#: includes/class-two-factor-webauthn.php:819
 msgid "The authenticator did not confirm user presence."
 msgstr ""
 
 #: includes/class-two-factor-webauthn.php:272
-#: includes/class-two-factor-webauthn.php:734
+#: includes/class-two-factor-webauthn.php:822
 msgid "User verification is required but was not performed."
 msgstr ""
 
@@ -9410,98 +9410,102 @@ msgstr ""
 msgid "Credential data incomplete."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:309
+#: includes/class-two-factor-webauthn.php:312
 msgid "Security key registered."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:376
+#: includes/class-two-factor-webauthn.php:390
 msgid "Missing credential ID or name."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:387
-#: includes/class-two-factor-webauthn.php:416
-#: includes/class-two-factor-webauthn.php:695
+#: includes/class-two-factor-webauthn.php:401
+#: includes/class-two-factor-webauthn.php:430
+#: includes/class-two-factor-webauthn.php:777
 msgid "Unknown security key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:404
-#: includes/class-two-factor-webauthn.php:684
+#: includes/class-two-factor-webauthn.php:418
+#: includes/class-two-factor-webauthn.php:766
 msgid "Missing credential ID."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:428
+#: includes/class-two-factor-webauthn.php:442
 msgid "This is your only security key and two-factor authentication is required for your account. Set up another method before removing it."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:472
-#: includes/class-two-factor-webauthn.php:508
+#: includes/class-two-factor-webauthn.php:486
+#: includes/class-two-factor-webauthn.php:522
 msgid "Invalid challenge token."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:515
+#: includes/class-two-factor-webauthn.php:529
 msgid "Invalid assertion data."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:525
+#: includes/class-two-factor-webauthn.php:539
 msgid "Security key verified."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:709
+#: includes/class-two-factor-webauthn.php:791
 msgid "Challenge expired."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:778
+#: includes/class-two-factor-webauthn.php:805
+msgid "The credential belongs to a different account."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:866
 msgid "Signature counter anomaly."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:797
+#: includes/class-two-factor-webauthn.php:885
 msgid "Attestation object is missing authData."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:804
+#: includes/class-two-factor-webauthn.php:892
 msgid "authenticatorData is too short."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:827
+#: includes/class-two-factor-webauthn.php:916
 msgid "Attested credential data is missing."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:851
+#: includes/class-two-factor-webauthn.php:1003
 msgid "COSE key is not parseable."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:856
+#: includes/class-two-factor-webauthn.php:1008
 msgid "Ed25519 verification is not available on this server."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:861
+#: includes/class-two-factor-webauthn.php:1013
 msgid "Invalid Ed25519 key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:864
-#: includes/class-two-factor-webauthn.php:875
+#: includes/class-two-factor-webauthn.php:1016
+#: includes/class-two-factor-webauthn.php:1027
 msgid "Signature could not be verified."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:894
+#: includes/class-two-factor-webauthn.php:1046
 msgid "Unsupported EC curve."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:899
+#: includes/class-two-factor-webauthn.php:1051
 msgid "Invalid EC2 key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:908
+#: includes/class-two-factor-webauthn.php:1060
 msgid "Invalid RSA key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:913
+#: includes/class-two-factor-webauthn.php:1065
 msgid "Unsupported COSE algorithm."
 msgstr ""
 
 #: includes/class-two-factor.php:208
 #: includes/class-two-factor.php:1515
-#: includes/class-two-factor.php:1942
+#: includes/class-two-factor.php:1945
 msgid "Your session has expired. Please sign in again."
 msgstr ""
 
@@ -9583,44 +9587,59 @@ msgid "Back to login"
 msgstr ""
 
 #: includes/class-two-factor.php:1513
-#: includes/class-two-factor.php:1940
+#: includes/class-two-factor.php:1943
 msgid "New code sent."
 msgstr ""
 
 #: includes/class-two-factor.php:1514
-#: includes/class-two-factor.php:1941
+#: includes/class-two-factor.php:1944
 msgid "Sending failed."
 msgstr ""
 
 #: includes/class-two-factor.php:1516
-#: includes/class-two-factor.php:1943
+#: includes/class-two-factor.php:1946
 msgid "Passkey request in progress…"
 msgstr ""
 
 #: includes/class-two-factor.php:1517
-#: includes/class-two-factor.php:1944
-msgid "Failed to fetch passkey options."
+#: includes/class-two-factor.php:1947
+msgid "Waiting for your security key — insert and touch it now, or approve the passkey prompt."
 msgstr ""
 
 #: includes/class-two-factor.php:1518
-#: includes/class-two-factor.php:1945
-msgid "Verification failed."
+#: includes/class-two-factor.php:1948
+msgid "The request timed out or was cancelled. Insert your key and touch it — on a phone, hold the key flat against the back (NFC) — then try again."
 msgstr ""
 
 #: includes/class-two-factor.php:1519
-#: includes/class-two-factor.php:1946
+#: includes/class-two-factor.php:1949
+msgid "The domain of this page does not match the key registration."
+msgstr ""
+
+#: includes/class-two-factor.php:1520
+#: includes/class-two-factor.php:1950
+msgid "Failed to fetch passkey options."
+msgstr ""
+
+#: includes/class-two-factor.php:1521
+#: includes/class-two-factor.php:1951
+msgid "Verification failed."
+msgstr ""
+
+#: includes/class-two-factor.php:1522
+#: includes/class-two-factor.php:1952
 msgid "Passkey login cancelled."
 msgstr ""
 
-#: includes/class-two-factor.php:1622
+#: includes/class-two-factor.php:1625
 msgid "Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1628
+#: includes/class-two-factor.php:1631
 msgid "Your two-factor session expired. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1985
+#: includes/class-two-factor.php:1991
 msgid "2FA template not found."
 msgstr ""
 
@@ -9713,103 +9732,103 @@ msgstr ""
 msgid "SMS relay failed (%s)."
 msgstr ""
 
-#: reportedip-hive.php:821
+#: reportedip-hive.php:822
 msgid "Testing connection..."
 msgstr ""
 
-#: reportedip-hive.php:822
+#: reportedip-hive.php:823
 msgid "Connection successful!"
 msgstr ""
 
-#: reportedip-hive.php:823
+#: reportedip-hive.php:824
 msgid "Connection failed!"
 msgstr ""
 
-#: reportedip-hive.php:824
+#: reportedip-hive.php:825
 msgid "Are you sure you want to unblock this IP?"
 msgstr ""
 
-#: reportedip-hive.php:825
+#: reportedip-hive.php:826
 msgid "Are you sure you want to whitelist this IP?"
 msgstr ""
 
-#: reportedip-hive.php:826
+#: reportedip-hive.php:827
 msgid "Are you sure you want to reset all settings to defaults?"
 msgstr ""
 
-#: reportedip-hive.php:827
+#: reportedip-hive.php:828
 msgid "Reset the API statistics counter? This clears usage history only."
 msgstr ""
 
-#: reportedip-hive.php:828
+#: reportedip-hive.php:829
 msgid "WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!"
 msgstr ""
 
-#: reportedip-hive.php:829
+#: reportedip-hive.php:830
 msgid "Are you absolutely sure?"
 msgstr ""
 
-#: reportedip-hive.php:830
+#: reportedip-hive.php:831
 msgid "Enter reason for whitelisting (optional):"
 msgstr ""
 
-#: reportedip-hive.php:831
+#: reportedip-hive.php:832
 msgid "Enter reason for blocking this IP:"
 msgstr ""
 
-#: reportedip-hive.php:832
+#: reportedip-hive.php:833
 msgid "Blocked from security logs"
 msgstr ""
 
-#: reportedip-hive.php:833
+#: reportedip-hive.php:834
 msgid "Export logs from how many days? (default: 30)"
 msgstr ""
 
-#: reportedip-hive.php:834
+#: reportedip-hive.php:835
 msgid "Database connection successful!"
 msgstr ""
 
-#: reportedip-hive.php:951
+#: reportedip-hive.php:952
 msgid "Events"
 msgstr ""
 
-#: reportedip-hive.php:1071
+#: reportedip-hive.php:1072
 msgid "Your IP address has been blocked due to suspicious activity."
 msgstr ""
 
-#: reportedip-hive.php:1122
+#: reportedip-hive.php:1123
 msgid "Access denied due to IP reputation."
 msgstr ""
 
-#: reportedip-hive.php:1257
+#: reportedip-hive.php:1258
 msgid "Access denied. Your IP address has been blocked due to suspicious activity."
 msgstr ""
 
-#: reportedip-hive.php:1354
+#: reportedip-hive.php:1355
 msgid "Retrying…"
 msgstr ""
 
-#: reportedip-hive.php:1362
+#: reportedip-hive.php:1363
 msgid "Retry failed."
 msgstr ""
 
-#: reportedip-hive.php:1380
+#: reportedip-hive.php:1381
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr ""
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
-#: reportedip-hive.php:1383
+#: reportedip-hive.php:1384
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
 msgstr ""
 
 #. translators: %s: link to settings page
-#: reportedip-hive.php:1427
+#: reportedip-hive.php:1428
 #, php-format
 msgid "No API key configured. %s"
 msgstr ""
 
-#: reportedip-hive.php:1428
+#: reportedip-hive.php:1429
 msgid "Configure now"
 msgstr ""
 

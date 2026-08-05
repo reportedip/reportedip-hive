@@ -62,6 +62,18 @@ test.describe.serial('webauthn security-key ceremonies', () => {
         await page.waitForURL((url) => url.pathname.includes('/wp-admin/'), { timeout: 30_000 });
     });
 
+    test('nfc-transport key enrols and asserts (transports round-trip)', async ({ page }) => {
+        await attachVirtualAuthenticator(page, 'nfc');
+        await enrollAndLogout(page);
+
+        await submitLoginForm(page);
+        await expect(page).toHaveURL(/action=reportedip_2fa/);
+        await expect(page.locator('#rip-2fa-panel-webauthn')).toBeVisible();
+
+        await page.click('#rip-2fa-webauthn-login');
+        await page.waitForURL((url) => url.pathname.includes('/wp-admin/'), { timeout: 30_000 });
+    });
+
     test('password-reset gate runs the assertion ceremony end-to-end', async ({ page }) => {
         await attachVirtualAuthenticator(page);
         await enrollAndLogout(page);

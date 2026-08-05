@@ -2,6 +2,37 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.35] — Unreleased
+
+### New
+
+- **Automatic key-model detection.** Registration now requests direct
+  attestation, extracts the authenticator's AAGUID and shows the detected
+  model ("YubiKey 5 Series with NFC", "Windows Hello", …) under the key name
+  in the security-key manager. The bundled AAGUID registry covers the full
+  Yubico range (from the FIDO Alliance Metadata Service) plus the major
+  passkey platforms. Detection is display-only and fail-open per Yubico
+  guidance: a missing, stripped or unverifiable attestation never blocks
+  registration — the key simply keeps its generic label.
+- Packed attestation statements are signature-verified (x5c certificate or
+  self-attestation) and the result is stored on the credential.
+- New filters `reportedip_hive_webauthn_rp_id` (subdomain-multisite escape
+  hatch — one enrolment valid network-wide) and
+  `reportedip_hive_webauthn_allowed_origins`; the origin check now also
+  accepts the site_url() host for split-host installs.
+
+### Changed
+
+- New registrations emit an opaque random user handle instead of the ASCII
+  WordPress user id; assertions accept both, so existing resident
+  credentials keep working.
+- Security-key error messages now say what to do: timeout/cancel guidance
+  mentions the NFC tap ("hold the key flat against the back of your phone"),
+  wrong-domain and cancelled ceremonies are distinguished, and the button
+  re-arms for a retry.
+- The CBOR decoder rejects truncated, indefinite-length, tagged and float
+  input with clean errors instead of desyncing, and caps nesting depth.
+
 ## [2.1.34] — Unreleased
 
 ### New
