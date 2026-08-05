@@ -876,16 +876,16 @@ if ( ! function_exists( 'reportedip_hive_dropin_excepted' ) ) {
 		return false;
 	}
 }
-if ( ! function_exists( 'reportedip_hive_dropin_bl_scan' ) ) {
-	/* Line-by-line scan from the current file position; early exit on the
-	   first unexpired entry for this IP. Header/comment lines are skipped. */
-	function reportedip_hive_dropin_bl_scan( $fh, $ip ) {
-		$now    = time();
-		$prefix = $ip . "\t";
-		$plen   = strlen( $prefix );
-		while ( false !== ( $line = fgets( $fh, 512 ) ) ) {
-			if ( 0 !== strncmp( $line, $prefix, $plen ) ) { continue; }
-			$stamp = (int) substr( $line, $plen );
+if ( ! function_exists( 'reportedip_hive_dropin_bl_match' ) ) {
+	/* Anchored per-line match over a raw chunk of "ip\tepoch" lines; true on
+	   the first unexpired (or permanent) entry for this IP. */
+	function reportedip_hive_dropin_bl_match( $raw, $ip ) {
+		if ( ! is_string( $raw ) || '' === $raw ) { return false; }
+		$found = array();
+		if ( ! @preg_match_all( '/^' . preg_quote( $ip, '/' ) . "\t(\d+)$/m", $raw, $found ) || empty( $found[1] ) ) { return false; }
+		$now = time();
+		foreach ( $found[1] as $stamp ) {
+			$stamp = (int) $stamp;
 			if ( 0 === $stamp || $stamp > $now ) { return true; }
 		}
 		return false;
@@ -898,11 +898,12 @@ if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
 	 * File format v1: fixed-width header "#rip1 D=<0|1> L=<10-digit base
 	 * length> <16384 hex chars>\n" (16408 bytes) carrying an 8 KB / 65536-bit
 	 * membership bitmap over crc32(ip), followed by "ip\tepoch" lines. A clean
-	 * request reads only the header; a bitmap hit (or an unreadable bitmap —
-	 * scan-more, never skip) falls through to the line scan. D=1 means the
-	 * append path added lines after the last full rewrite, so the region past
-	 * the base length is scanned even on a bitmap miss. Headerless files (from
-	 * older plugin versions) take the legacy full scan. Fail-open on any error.
+	 * request reads only the header. A bitmap hit (or an unreadable bitmap —
+	 * scan-more, never skip) block-reads the base region; D=1 means the append
+	 * path added lines after the base length, so that tail region is also
+	 * matched (a re-block extends an entry whose base line may have expired).
+	 * Headerless files (from older plugin versions) take the legacy full scan.
+	 * Fail-open on any error.
 	 */
 	function reportedip_hive_dropin_is_blocked( $file, $ip ) {
 		if ( '' === $file || '' === $ip ) { return false; }
@@ -916,17 +917,17 @@ if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
 			$maybe  = ( is_string( $bin ) && 8192 === strlen( $bin ) )
 				? ( 1 === ( ( ord( $bin[ $bucket >> 3 ] ) >> ( $bucket & 7 ) ) & 1 ) )
 				: true;
+			$dirty   = '1' === substr( $head, 8, 1 );
+			$baselen = (int) substr( $head, 12, 10 );
 			if ( $maybe ) {
-				$verdict = reportedip_hive_dropin_bl_scan( $fh, $ip );
-			} elseif ( '1' === substr( $head, 8, 1 ) ) {
-				$baselen = (int) substr( $head, 12, 10 );
-				if ( $baselen > 0 && 0 === @fseek( $fh, $baselen ) ) {
-					$verdict = reportedip_hive_dropin_bl_scan( $fh, $ip );
-				}
+				$base_bytes = $baselen > 16408 ? $baselen - 16408 : PHP_INT_MAX;
+				$verdict    = reportedip_hive_dropin_bl_match( @fread( $fh, $base_bytes ), $ip );
+			}
+			if ( ! $verdict && $dirty && $baselen > 0 && 0 === @fseek( $fh, $baselen ) ) {
+				$verdict = reportedip_hive_dropin_bl_match( @stream_get_contents( $fh ), $ip );
 			}
 		} elseif ( is_string( $head ) && '' !== $head ) {
-			@rewind( $fh );
-			$verdict = reportedip_hive_dropin_bl_scan( $fh, $ip );
+			$verdict = reportedip_hive_dropin_bl_match( $head . @stream_get_contents( $fh ), $ip );
 		}
 		@fclose( $fh );
 		return $verdict;
