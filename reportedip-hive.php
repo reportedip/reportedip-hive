@@ -79,8 +79,12 @@ define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.de/register/' );
 /**
  * Update checker: reads releases from the public GitHub repository.
  * Trigger: tag `vX.Y.Z` → GitHub Action builds ZIP release asset → PUC pulls it.
+ *
+ * Built only where update information is ever consumed — wp-admin, the
+ * `wp_update_plugins` cron and WP-CLI. Anonymous front-end requests used to
+ * construct the whole checker (plus its hooks) for nothing.
  */
-if ( class_exists( PucFactory::class ) ) {
+if ( class_exists( PucFactory::class ) && ( is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) ) ) {
 	$reportedip_update_checker = PucFactory::buildUpdateChecker(
 		'https://github.com/reportedip/reportedip-hive/',
 		__FILE__,
