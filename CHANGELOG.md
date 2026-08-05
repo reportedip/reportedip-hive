@@ -2,6 +2,43 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.33] — Unreleased
+
+### Fixes
+
+- **The WooCommerce frontend 2FA challenge can complete a passkey login
+  again.** The storefront challenge rendered a "Passkey" tab whose panel did
+  not exist, so customers whose only second factor is a passkey or security
+  key could not sign in there. All three challenge surfaces (wp-login,
+  storefront, password-reset gate) now render the same shared WebAuthn panel
+  partial.
+- **The password-reset gate can verify a security key.** It offered
+  WebAuthn as an eligible method but rendered only a text input and loaded no
+  ceremony script — passkey-only users could never pass it. The gate now runs
+  the full assertion ceremony; the browser is bound to the reset identity via
+  a short-lived server-minted token, never via URL parameters.
+- A cloned or rolled-back authenticator can no longer reset the signature
+  counter: an assertion whose counter does not advance is rejected and logged
+  (`2fa_webauthn_counter_regression`) instead of overwriting the stored value.
+  Counter-less platform passkeys (0/0) keep working.
+- Assertions and registrations without the user-presence flag are rejected
+  (WebAuthn §7.2) — a hardware key only sets it after a physical touch.
+- The EC2 COSE key path now verifies the curve is P-256 before assembling the
+  DER key, and client-supplied transport hints are whitelist-filtered before
+  they are stored.
+- Three stray German strings in the WebAuthn class are now English and
+  translatable.
+
+### Changed
+
+- WebAuthn ceremony timeout raised from 60 s to 120 s — NFC taps on phones
+  routinely need the extra time.
+- `userVerification` defaults to `discouraged` (Yubico's recommendation for
+  second-factor use): fresh YubiKeys without a FIDO2 PIN no longer trigger a
+  PIN-enrolment prompt mid-login. New filter
+  `reportedip_hive_webauthn_user_verification` can raise the policy to
+  `required`, which is then also enforced server-side via the UV flag.
+
 ## [2.1.32] — 2026-08-05
 
 ### Changed

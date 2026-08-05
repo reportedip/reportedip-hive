@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-08-05T07:16:57+00:00\n"
+"PO-Revision-Date: 2026-08-05T11:30:47+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
@@ -3895,7 +3895,7 @@ msgid "Database error"
 msgstr "Datenbankfehler"
 
 #: admin/class-admin-settings.php:6573
-#: includes/class-api-client.php:303
+#: includes/class-api-client.php:320
 msgid "API not configured"
 msgstr "API nicht konfiguriert"
 
@@ -6595,8 +6595,8 @@ msgstr "Ungültige Benutzer-ID."
 #: admin/class-two-factor-admin.php:2026
 #: includes/class-two-factor-dashboard.php:43
 #: includes/class-two-factor-dashboard.php:159
-#: includes/class-two-factor-webauthn.php:55
-#: includes/class-two-factor-webauthn.php:119
+#: includes/class-two-factor-webauthn.php:72
+#: includes/class-two-factor-webauthn.php:136
 msgid "You do not have permission."
 msgstr "Sie haben keine Berechtigung."
 
@@ -6616,7 +6616,7 @@ msgstr "[%s] Ihre Zwei-Faktor-Authentifizierung wurde zurückgesetzt"
 #: includes/class-ajax-handler.php:265
 #: includes/class-two-factor-email.php:136
 #: includes/class-two-factor-notifications.php:226
-#: includes/class-two-factor-reset-gate.php:1190
+#: includes/class-two-factor-reset-gate.php:1216
 #, php-format
 msgid "Hello %s,"
 msgstr "Hallo %s,"
@@ -6681,7 +6681,7 @@ msgstr "Google Authenticator, Microsoft Authenticator, Authy usw."
 #: admin/class-two-factor-admin.php:349
 #: admin/class-two-factor-admin.php:1604
 #: includes/class-two-factor-onboarding.php:435
-#: templates/frontend-2fa-challenge.php:222
+#: templates/frontend-2fa-challenge.php:232
 #: templates/two-factor-challenge.php:232
 #: templates/two-factor-onboarding.php:217
 #: templates/two-factor-onboarding.php:331
@@ -6717,8 +6717,8 @@ msgid "Phishing-resistant sign-in via Face ID, Touch ID, Windows Hello or a hard
 msgstr "Phishing-resistente Anmeldung über Face ID, Touch ID, Windows Hello oder einen Hardware-Schlüssel (YubiKey)."
 
 #: admin/class-two-factor-admin.php:406
-#: includes/class-two-factor-reset-gate.php:1452
-#: templates/frontend-2fa-challenge.php:298
+#: includes/class-two-factor-reset-gate.php:1478
+#: templates/frontend-2fa-challenge.php:308
 #: templates/two-factor-challenge.php:312
 #: templates/two-factor-onboarding.php:406
 msgid "SMS code"
@@ -7078,13 +7078,13 @@ msgstr "Jeder Code kann nur einmal verwendet werden."
 
 #: admin/class-two-factor-admin.php:1603
 #: includes/class-two-factor-onboarding.php:434
-#: includes/class-two-factor-reset-gate.php:1450
+#: includes/class-two-factor-reset-gate.php:1476
 msgid "Authenticator app"
 msgstr "Authenticator-App"
 
 #: admin/class-two-factor-admin.php:1605
 #: includes/class-two-factor-onboarding.php:436
-#: includes/class-two-factor-webauthn.php:176
+#: includes/class-two-factor-webauthn.php:200
 #: templates/frontend-2fa-challenge.php:113
 #: templates/two-factor-challenge.php:99
 msgid "Passkey"
@@ -7185,7 +7185,7 @@ msgstr "2FA deaktivieren"
 
 #: admin/class-two-factor-admin.php:1794
 #: includes/class-two-factor-email.php:90
-#: includes/class-two-factor-webauthn.php:60
+#: includes/class-two-factor-webauthn.php:77
 msgid "Invalid user."
 msgstr "Ungültiger Benutzer."
 
@@ -7512,7 +7512,7 @@ msgstr "Die Test-E-Mail konnte nicht gesendet werden. Überprüfen Sie die WordP
 
 #: includes/class-ajax-handler.php:445
 #: includes/class-ajax-handler.php:471
-#: includes/class-database.php:515
+#: includes/class-database.php:504
 msgid "Invalid IP address."
 msgstr "Ungültige IP-Adresse."
 
@@ -7829,58 +7829,58 @@ msgstr "Härtungsmodus deaktiviert."
 msgid "Hardening Mode was not active."
 msgstr "Härtungsmodus war nicht aktiv."
 
-#: includes/class-api-client.php:77
+#: includes/class-api-client.php:94
 msgid "API key or endpoint not configured."
 msgstr "API-Schlüssel oder Endpunkt nicht konfiguriert."
 
-#: includes/class-api-client.php:108
+#: includes/class-api-client.php:125
 msgid "API key verified successfully!"
 msgstr "API-Schlüssel erfolgreich verifiziert!"
 
-#: includes/class-api-client.php:121
+#: includes/class-api-client.php:138
 msgid "Your API key currently has no report permission. Security events will be logged locally but not reported to the service. Upgrade to Contributor or higher to enable full reporting."
 msgstr "Ihr API-Schlüssel verfügt derzeit über keine Berechtigung zum Melden. Sicherheitsereignisse werden lokal protokolliert, aber nicht an den Dienst gemeldet. Führen Sie ein Upgrade auf Contributor oder höher durch, um die vollständige Meldefunktion zu aktivieren."
 
-#: includes/class-api-client.php:129
+#: includes/class-api-client.php:146
 msgid "API key is invalid or expired."
 msgstr "API-Schlüssel ist ungültig oder abgelaufen."
 
-#: includes/class-api-client.php:135
+#: includes/class-api-client.php:152
 msgid "API key authentication failed. Please check your API key."
 msgstr "Authentifizierung des API-Schlüssels fehlgeschlagen. Bitte überprüfen Sie Ihren API-Schlüssel."
 
-#: includes/class-api-client.php:140
+#: includes/class-api-client.php:157
 msgid "API rate limit exceeded. Please try again later."
 msgstr "API-Ratenbegrenzung überschritten. Bitte versuchen Sie es später erneut."
 
-#: includes/class-api-client.php:146
+#: includes/class-api-client.php:163
 msgid "Invalid API response or server error."
 msgstr "Ungültige API-Antwort oder Serverfehler."
 
-#: includes/class-api-client.php:297
+#: includes/class-api-client.php:314
 msgid "API reports disabled in Local Mode"
 msgstr "API-Meldungen im Lokalen Schutz deaktiviert"
 
-#: includes/class-api-client.php:1453
+#: includes/class-api-client.php:1474
 msgid "Quota status unknown - will attempt API calls"
 msgstr "Kontingentstatus unbekannt - API-Aufrufe werden versucht"
 
-#: includes/class-api-client.php:1477
+#: includes/class-api-client.php:1498
 msgid "Your API key currently has no report permission. Please check your account status or upgrade to Contributor."
 msgstr "Ihr API-Schlüssel verfügt derzeit über keine Berechtigung zum Melden. Bitte überprüfen Sie Ihren Kontostatus oder führen Sie ein Upgrade auf Contributor durch."
 
 #. translators: 1: current usage, 2: daily limit, 3: reset time
-#: includes/class-api-client.php:1498
+#: includes/class-api-client.php:1519
 #, php-format
 msgid "Daily report limit reached (%1$d/%2$d). Resets at %3$s UTC."
 msgstr "Tägliches Meldelimit erreicht (%1$d/%2$d). Wird um %3$s UTC zurückgesetzt."
 
-#: includes/class-api-client.php:1517
+#: includes/class-api-client.php:1538
 msgid "Unlimited reports on this tier."
 msgstr "Unbegrenzte Meldungen in dieser Stufe."
 
 #. translators: %d: remaining reports
-#: includes/class-api-client.php:1520
+#: includes/class-api-client.php:1541
 #, php-format
 msgid "%d reports remaining today."
 msgstr "%d Meldungen heute verbleibend."
@@ -7901,19 +7901,19 @@ msgstr "Alle 15 Minuten"
 msgid "Every 6 Hours"
 msgstr "Alle 6 Stunden"
 
-#: includes/class-database.php:480
+#: includes/class-database.php:469
 msgid "Invalid exception scope."
 msgstr "Ungültiger Geltungsbereich der Ausnahme."
 
-#: includes/class-database.php:490
+#: includes/class-database.php:479
 msgid "A whole-engine exception must be scoped to at least a path or an IP address."
 msgstr "Eine Ausnahme für die gesamte Engine muss mindestens auf einen Pfad oder eine IP-Adresse beschränkt sein."
 
-#: includes/class-database.php:497
+#: includes/class-database.php:486
 msgid "A rule or group identifier is required for this exception scope."
 msgstr "Für diesen Geltungsbereich ist eine Regel- oder Gruppenkennung erforderlich."
 
-#: includes/class-database.php:562
+#: includes/class-database.php:551
 msgid "Could not store the exception."
 msgstr "Ausnahme konnte nicht gespeichert werden."
 
@@ -9007,174 +9007,174 @@ msgstr "Zu viele fehlgeschlagene Versuche. Bitte warten Sie einen Moment und ver
 msgid "Verification failed. Please double-check the code and try again."
 msgstr "Verifizierung fehlgeschlagen. Bitte überprüfen Sie den Code und versuchen Sie es erneut."
 
-#: includes/class-two-factor-reset-gate.php:565
+#: includes/class-two-factor-reset-gate.php:581
 #: includes/class-two-factor.php:1446
 #: templates/two-factor-challenge.php:40
 msgid "Two-Factor Verification"
 msgstr "Zwei-Faktor-Verifizierung"
 
-#: includes/class-two-factor-reset-gate.php:578
+#: includes/class-two-factor-reset-gate.php:594
 msgid "Confirm your identity to reset your password"
 msgstr "Bestätigen Sie Ihre Identität, um Ihr Passwort zurückzusetzen"
 
 #. translators: %s: user display name
-#: includes/class-two-factor-reset-gate.php:584
+#: includes/class-two-factor-reset-gate.php:600
 #, php-format
 msgid "Hello %s, please verify a second factor before setting a new password. The email channel is intentionally excluded from this step."
 msgstr "Hallo %s, bitte verifizieren Sie einen zweiten Faktor, bevor Sie ein neues Passwort festlegen. Der E-Mail-Kanal ist von diesem Schritt absichtlich ausgeschlossen."
 
-#: includes/class-two-factor-reset-gate.php:608
+#: includes/class-two-factor-reset-gate.php:624
 #: templates/frontend-2fa-challenge.php:101
 #: templates/two-factor-challenge.php:85
 msgid "Choose verification method"
 msgstr "Verifizierungsmethode wählen"
 
-#: includes/class-two-factor-reset-gate.php:646
+#: includes/class-two-factor-reset-gate.php:671
 msgid "Verify and continue"
 msgstr "Verifizieren und fortfahren"
 
 #. translators: %d: seconds remaining
-#: includes/class-two-factor-reset-gate.php:656
+#: includes/class-two-factor-reset-gate.php:682
 #, php-format
 msgid "You can request a new code in %d seconds."
 msgstr "Sie können in %d Sekunden einen neuen Code anfordern."
 
-#: includes/class-two-factor-reset-gate.php:664
+#: includes/class-two-factor-reset-gate.php:690
 msgid "Resend the SMS code"
 msgstr "SMS-Code erneut senden"
 
-#: includes/class-two-factor-reset-gate.php:666
+#: includes/class-two-factor-reset-gate.php:692
 msgid "Resend the email code"
 msgstr "E-Mail-Code erneut senden"
 
-#: includes/class-two-factor-reset-gate.php:676
+#: includes/class-two-factor-reset-gate.php:702
 msgid "Cancel and request a new reset link"
 msgstr "Abbrechen und einen neuen Link zum Zurücksetzen anfordern"
 
 #. translators: %s: site name
-#: includes/class-two-factor-reset-gate.php:1132
+#: includes/class-two-factor-reset-gate.php:1158
 #, php-format
 msgid "[%s] Password reset blocked: no usable 2FA method"
 msgstr "[%s] Zurücksetzen des Passworts gesperrt: keine nutzbare 2FA-Methode"
 
 #. translators: %s: affected user login
-#: includes/class-two-factor-reset-gate.php:1134
+#: includes/class-two-factor-reset-gate.php:1160
 #, php-format
 msgid "A password reset was attempted for the user \"%s\". None of the second-factor methods configured on the account is currently usable (the secret may be missing or unreadable, the SMS provider unavailable, or recovery codes exhausted) — the reset has been blocked."
 msgstr "Für den Benutzer \"%s\" wurde versucht, das Passwort zurückzusetzen. Keine der für das Konto konfigurierten Zweitfaktor-Methoden ist derzeit nutzbar (das Geheimnis fehlt möglicherweise oder ist unlesbar, der SMS-Anbieter ist nicht verfügbar oder die Wiederherstellungscodes sind aufgebraucht) — das Zurücksetzen wurde gesperrt."
 
 #. translators: %s: site name
-#: includes/class-two-factor-reset-gate.php:1139
+#: includes/class-two-factor-reset-gate.php:1165
 #, php-format
 msgid "[%s] Password reset blocked: no eligible 2FA method"
 msgstr "[%s] Zurücksetzen des Passworts gesperrt: keine geeignete 2FA-Methode"
 
 #. translators: %s: affected user login
-#: includes/class-two-factor-reset-gate.php:1141
+#: includes/class-two-factor-reset-gate.php:1167
 #, php-format
 msgid "A password reset was attempted for the user \"%s\". After excluding the email channel (the channel that delivered the reset link itself), no eligible second factor remains — the reset has been blocked."
 msgstr "Für den Benutzer \"%s\" wurde versucht, das Passwort zurückzusetzen. Nach Ausschluss des E-Mail-Kanals (des Kanals, der den Link zum Zurücksetzen selbst übermittelt hat) verbleibt kein geeigneter zweiter Faktor — das Zurücksetzen wurde gesperrt."
 
 #. translators: %s: site name
-#: includes/class-two-factor-reset-gate.php:1147
+#: includes/class-two-factor-reset-gate.php:1173
 #, php-format
 msgid "[%s] Password reset blocked for an account with email-only 2FA"
 msgstr "[%s] Zurücksetzen des Passworts gesperrt für ein Konto mit reiner E-Mail-2FA"
 
 #. translators: %s: affected user login
-#: includes/class-two-factor-reset-gate.php:1149
+#: includes/class-two-factor-reset-gate.php:1175
 #, php-format
 msgid "A password reset was attempted for the user \"%s\". The account currently has only email-based 2FA configured and no recovery codes — for security, the reset has been blocked."
 msgstr "Für den Benutzer \"%s\" wurde versucht, das Passwort zurückzusetzen. Für das Konto ist derzeit nur E-Mail-basierte 2FA und keine Wiederherstellungscodes konfiguriert — aus Sicherheitsgründen wurde das Zurücksetzen gesperrt."
 
-#: includes/class-two-factor-reset-gate.php:1161
-#: includes/class-two-factor-reset-gate.php:1163
+#: includes/class-two-factor-reset-gate.php:1187
+#: includes/class-two-factor-reset-gate.php:1189
 msgid "Method status:"
 msgstr "Methodenstatus:"
 
-#: includes/class-two-factor-reset-gate.php:1175
+#: includes/class-two-factor-reset-gate.php:1201
 msgid "To unblock the user, either reset their password manually via WP-CLI (`wp user reset-password <id> --skip-email`) or enrol an additional 2FA method (Authenticator app, SMS, security key, or recovery codes) on their behalf."
 msgstr "Um den Benutzer zu entsperren, setzen Sie entweder dessen Passwort manuell über WP-CLI zurück (`wp user reset-password <id> --skip-email`) oder richten Sie in dessen Namen eine zusätzliche 2FA-Methode ein (Authenticator-App, SMS, Sicherheitsschlüssel oder Wiederherstellungscodes)."
 
-#: includes/class-two-factor-reset-gate.php:1203
+#: includes/class-two-factor-reset-gate.php:1229
 msgid "This alert was generated automatically by ReportedIP Hive."
 msgstr "Diese Warnung wurde automatisch von ReportedIP Hive erstellt."
 
-#: includes/class-two-factor-reset-gate.php:1297
+#: includes/class-two-factor-reset-gate.php:1323
 msgid "authenticator-app secret is missing"
 msgstr "Geheimnis der Authenticator-App fehlt"
 
-#: includes/class-two-factor-reset-gate.php:1299
+#: includes/class-two-factor-reset-gate.php:1325
 msgid "authenticator-app secret cannot be decrypted"
 msgstr "Geheimnis der Authenticator-App kann nicht entschlüsselt werden"
 
-#: includes/class-two-factor-reset-gate.php:1301
+#: includes/class-two-factor-reset-gate.php:1327
 msgid "SMS module is not loaded"
 msgstr "SMS-Modul ist nicht geladen"
 
-#: includes/class-two-factor-reset-gate.php:1303
+#: includes/class-two-factor-reset-gate.php:1329
 msgid "SMS provider is not configured"
 msgstr "SMS-Anbieter ist nicht konfiguriert"
 
-#: includes/class-two-factor-reset-gate.php:1305
+#: includes/class-two-factor-reset-gate.php:1331
 msgid "no phone number is stored for this user"
 msgstr "für diesen Benutzer ist keine Telefonnummer hinterlegt"
 
-#: includes/class-two-factor-reset-gate.php:1307
+#: includes/class-two-factor-reset-gate.php:1333
 msgid "WebAuthn module is not loaded"
 msgstr "WebAuthn-Modul ist nicht geladen"
 
-#: includes/class-two-factor-reset-gate.php:1334
+#: includes/class-two-factor-reset-gate.php:1360
 msgid "SMS verification is not available on this site."
 msgstr "SMS-Verifizierung ist auf dieser Website nicht verfügbar."
 
-#: includes/class-two-factor-reset-gate.php:1389
+#: includes/class-two-factor-reset-gate.php:1415
 msgid "We have sent a verification code by SMS."
 msgstr "Wir haben einen Verifizierungscode per SMS gesendet."
 
 #. translators: %s: masked phone number
-#: includes/class-two-factor-reset-gate.php:1393
+#: includes/class-two-factor-reset-gate.php:1419
 #, php-format
 msgid "We have sent a verification code by SMS to %s."
 msgstr "Wir haben einen Verifizierungscode per SMS an %s gesendet."
 
-#: includes/class-two-factor-reset-gate.php:1403
+#: includes/class-two-factor-reset-gate.php:1429
 msgid "We have sent a verification code by email."
 msgstr "Wir haben einen Verifizierungscode per E-Mail gesendet."
 
 #. translators: %s: masked email address
-#: includes/class-two-factor-reset-gate.php:1407
+#: includes/class-two-factor-reset-gate.php:1433
 #, php-format
 msgid "We have sent a verification code by email to %s."
 msgstr "Wir haben einen Verifizierungscode per E-Mail an %s gesendet."
 
-#: includes/class-two-factor-reset-gate.php:1454
+#: includes/class-two-factor-reset-gate.php:1480
 msgid "Passkey / security key"
 msgstr "Passkey / Sicherheitsschlüssel"
 
-#: includes/class-two-factor-reset-gate.php:1456
-#: templates/frontend-2fa-challenge.php:344
-#: templates/two-factor-challenge.php:388
+#: includes/class-two-factor-reset-gate.php:1482
+#: templates/frontend-2fa-challenge.php:354
+#: templates/two-factor-challenge.php:375
 msgid "Recovery code"
 msgstr "Wiederherstellungscode"
 
-#: includes/class-two-factor-reset-gate.php:1471
+#: includes/class-two-factor-reset-gate.php:1497
 msgid "Enter the 6-digit code from your authenticator app"
 msgstr "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein"
 
-#: includes/class-two-factor-reset-gate.php:1473
+#: includes/class-two-factor-reset-gate.php:1499
 msgid "Enter the 6-digit code from the SMS we just sent"
 msgstr "Geben Sie den 6-stelligen Code aus der soeben gesendeten SMS ein"
 
-#: includes/class-two-factor-reset-gate.php:1475
+#: includes/class-two-factor-reset-gate.php:1501
 msgid "Confirm your passkey or security key when prompted"
 msgstr "Bestätigen Sie Ihren Passkey oder Sicherheitsschlüssel, wenn Sie dazu aufgefordert werden"
 
-#: includes/class-two-factor-reset-gate.php:1477
+#: includes/class-two-factor-reset-gate.php:1503
 msgid "Enter one of your recovery codes"
 msgstr "Geben Sie einen Ihrer Wiederherstellungscodes ein"
 
-#: includes/class-two-factor-reset-gate.php:1479
+#: includes/class-two-factor-reset-gate.php:1505
 msgid "Enter your verification code"
 msgstr "Geben Sie Ihren Verifizierungscode ein"
 
@@ -9226,7 +9226,7 @@ msgid "Phone number is not in valid international format."
 msgstr "Die Telefonnummer liegt nicht in einem gültigen internationalen Format vor."
 
 #: includes/class-two-factor-sms.php:218
-#: templates/frontend-2fa-challenge.php:266
+#: templates/frontend-2fa-challenge.php:276
 #: templates/two-factor-challenge.php:280
 msgid "No phone number is stored for this user."
 msgstr "Für diesen Benutzer ist keine Telefonnummer hinterlegt."
@@ -9243,105 +9243,119 @@ msgstr "Schützen Sie Ihre WooCommerce-Kunden mit 2FA"
 msgid "Hive Professional extends the second factor to My Account and Checkout — the only WordPress security plugin that keeps customers inside the storefront theme during sign-in. Solid Security and the WordPress Two-Factor plugin only cover the wp-admin login."
 msgstr "Hive Professional erweitert den zweiten Faktor auf Mein Konto und Kasse — das einzige WordPress-Sicherheits-Plugin, das Kunden während der Anmeldung im Theme des Shops hält. Solid Security und das WordPress-Two-Factor-Plugin decken nur die wp-admin-Anmeldung ab."
 
-#: includes/class-two-factor-webauthn.php:126
+#: includes/class-two-factor-webauthn.php:143
 msgid "Invalid credential data."
 msgstr "Ungültige Anmeldedaten."
 
-#: includes/class-two-factor-webauthn.php:131
+#: includes/class-two-factor-webauthn.php:148
 msgid "Challenge expired, please start again."
 msgstr "Challenge abgelaufen, bitte beginnen Sie erneut."
 
-#: includes/class-two-factor-webauthn.php:139
-#: includes/class-two-factor-webauthn.php:349
+#: includes/class-two-factor-webauthn.php:156
+#: includes/class-two-factor-webauthn.php:450
 msgid "Invalid clientDataJSON."
 msgstr "Ungültiges clientDataJSON."
 
-#: includes/class-two-factor-webauthn.php:142
-#: includes/class-two-factor-webauthn.php:352
+#: includes/class-two-factor-webauthn.php:159
+#: includes/class-two-factor-webauthn.php:453
 msgid "clientDataJSON.type is wrong."
 msgstr "clientDataJSON.type ist falsch."
 
-#: includes/class-two-factor-webauthn.php:145
-#: includes/class-two-factor-webauthn.php:362
+#: includes/class-two-factor-webauthn.php:162
+#: includes/class-two-factor-webauthn.php:463
 msgid "Challenge mismatch."
 msgstr "Challenge stimmt nicht überein."
 
-#: includes/class-two-factor-webauthn.php:148
-#: includes/class-two-factor-webauthn.php:365
+#: includes/class-two-factor-webauthn.php:165
+#: includes/class-two-factor-webauthn.php:466
 msgid "Origin mismatch."
 msgstr "Origin stimmt nicht überein."
 
-#: includes/class-two-factor-webauthn.php:164
-#: includes/class-two-factor-webauthn.php:376
+#: includes/class-two-factor-webauthn.php:181
+#: includes/class-two-factor-webauthn.php:477
 msgid "RP-ID hash mismatch."
 msgstr "RP-ID-Hash stimmt nicht überein."
 
-#: includes/class-two-factor-webauthn.php:167
+#: includes/class-two-factor-webauthn.php:184
+#: includes/class-two-factor-webauthn.php:480
+msgid "The authenticator did not confirm user presence."
+msgstr "Der Authenticator hat die Anwesenheit des Nutzers nicht bestätigt."
+
+#: includes/class-two-factor-webauthn.php:187
+#: includes/class-two-factor-webauthn.php:483
+msgid "User verification is required but was not performed."
+msgstr "Nutzerverifizierung ist erforderlich, wurde aber nicht durchgeführt."
+
+#: includes/class-two-factor-webauthn.php:190
 msgid "Credential data incomplete."
 msgstr "Anmeldedaten unvollständig."
 
-#: includes/class-two-factor-webauthn.php:191
-msgid "Passkey registriert."
-msgstr "Passkey registriert."
+#: includes/class-two-factor-webauthn.php:215
+msgid "Security key registered."
+msgstr "Sicherheitsschlüssel registriert."
 
-#: includes/class-two-factor-webauthn.php:203
-#: includes/class-two-factor-webauthn.php:237
+#: includes/class-two-factor-webauthn.php:227
+#: includes/class-two-factor-webauthn.php:261
 msgid "Invalid challenge token."
 msgstr "Ungültiger Challenge-Token."
 
-#: includes/class-two-factor-webauthn.php:244
+#: includes/class-two-factor-webauthn.php:268
 msgid "Invalid assertion data."
 msgstr "Ungültige Assertion-Daten."
 
-#: includes/class-two-factor-webauthn.php:253
-msgid "Passkey verifiziert."
-msgstr "Passkey verifiziert."
+#: includes/class-two-factor-webauthn.php:277
+msgid "Security key verified."
+msgstr "Sicherheitsschlüssel bestätigt."
 
-#: includes/class-two-factor-webauthn.php:332
+#: includes/class-two-factor-webauthn.php:433
 msgid "Missing credential ID."
 msgstr "Fehlende Credential-ID."
 
-#: includes/class-two-factor-webauthn.php:343
-msgid "Unbekannter Passkey."
-msgstr "Unbekannter Passkey."
+#: includes/class-two-factor-webauthn.php:444
+msgid "Unknown security key."
+msgstr "Unbekannter Sicherheitsschlüssel."
 
-#: includes/class-two-factor-webauthn.php:357
+#: includes/class-two-factor-webauthn.php:458
 msgid "Challenge expired."
 msgstr "Challenge abgelaufen."
 
-#: includes/class-two-factor-webauthn.php:390
+#: includes/class-two-factor-webauthn.php:497
 msgid "Signature could not be verified."
 msgstr "Signatur konnte nicht verifiziert werden."
 
-#: includes/class-two-factor-webauthn.php:394
+#: includes/class-two-factor-webauthn.php:516
 msgid "Signature counter anomaly."
 msgstr "Anomalie beim Signaturzähler."
 
-#: includes/class-two-factor-webauthn.php:414
+#: includes/class-two-factor-webauthn.php:535
 msgid "Attestation object is missing authData."
 msgstr "Im Attestation-Objekt fehlt authData."
 
-#: includes/class-two-factor-webauthn.php:421
+#: includes/class-two-factor-webauthn.php:542
 msgid "authenticatorData is too short."
 msgstr "authenticatorData ist zu kurz."
 
-#: includes/class-two-factor-webauthn.php:444
+#: includes/class-two-factor-webauthn.php:565
 msgid "Attested credential data is missing."
 msgstr "Attested-Credential-Daten fehlen."
 
-#: includes/class-two-factor-webauthn.php:462
+#: includes/class-two-factor-webauthn.php:583
 msgid "COSE key is not parseable."
 msgstr "COSE-Schlüssel kann nicht geparst werden."
 
-#: includes/class-two-factor-webauthn.php:471
+#: includes/class-two-factor-webauthn.php:591
+msgid "Unsupported EC curve."
+msgstr "Nicht unterstützte EC-Kurve."
+
+#: includes/class-two-factor-webauthn.php:596
 msgid "Invalid EC2 key."
 msgstr "Ungültiger EC2-Schlüssel."
 
-#: includes/class-two-factor-webauthn.php:480
+#: includes/class-two-factor-webauthn.php:605
 msgid "Invalid RSA key."
 msgstr "Ungültiger RSA-Schlüssel."
 
-#: includes/class-two-factor-webauthn.php:485
+#: includes/class-two-factor-webauthn.php:610
 msgid "Unsupported COSE algorithm."
 msgstr "Nicht unterstützter COSE-Algorithmus."
 
@@ -9420,7 +9434,7 @@ msgid "Two-Factor session expired"
 msgstr "Zwei-Faktor-Sitzung abgelaufen"
 
 #: includes/class-two-factor.php:1435
-#: templates/frontend-2fa-challenge.php:386
+#: templates/frontend-2fa-challenge.php:396
 msgid "Back to sign in"
 msgstr "Zurück zur Anmeldung"
 
@@ -9765,79 +9779,87 @@ msgid "Authenticator code"
 msgstr "Authenticator-Code"
 
 #. translators: %s: masked email
-#: templates/frontend-2fa-challenge.php:198
+#: templates/frontend-2fa-challenge.php:208
 #: templates/two-factor-challenge.php:208
 #, php-format
 msgid "We will send a one-time code to %s."
 msgstr "Wir senden einen Einmalcode an %s."
 
-#: templates/frontend-2fa-challenge.php:207
+#: templates/frontend-2fa-challenge.php:217
 #: templates/two-factor-challenge.php:217
 msgid "Send code by email"
 msgstr "Code per E-Mail senden"
 
 #. translators: %s: masked email
-#: templates/frontend-2fa-challenge.php:216
+#: templates/frontend-2fa-challenge.php:226
 #: templates/two-factor-challenge.php:226
 #, php-format
 msgid "We sent a 6-digit code to %s."
 msgstr "Wir haben einen 6-stelligen Code an %s gesendet."
 
-#: templates/frontend-2fa-challenge.php:241
+#: templates/frontend-2fa-challenge.php:251
 msgid "Did not receive the email?"
 msgstr "Keine E-Mail erhalten?"
 
-#: templates/frontend-2fa-challenge.php:247
+#: templates/frontend-2fa-challenge.php:257
 #: templates/two-factor-challenge.php:256
 msgid "Resend code"
 msgstr "Code erneut senden"
 
 #. translators: %s: masked phone
-#: templates/frontend-2fa-challenge.php:274
+#: templates/frontend-2fa-challenge.php:284
 #: templates/two-factor-challenge.php:288
 #, php-format
 msgid "We will send a one-time code by SMS to %s."
 msgstr "Wir senden einen Einmalcode per SMS an %s."
 
-#: templates/frontend-2fa-challenge.php:283
+#: templates/frontend-2fa-challenge.php:293
 #: templates/two-factor-challenge.php:297
 msgid "Send code by SMS"
 msgstr "Code per SMS senden"
 
 #. translators: %s: masked phone
-#: templates/frontend-2fa-challenge.php:292
+#: templates/frontend-2fa-challenge.php:302
 #: templates/two-factor-challenge.php:306
 #, php-format
 msgid "We sent a 6-digit SMS code to %s."
 msgstr "Wir haben einen 6-stelligen SMS-Code an %s gesendet."
 
-#: templates/frontend-2fa-challenge.php:317
+#: templates/frontend-2fa-challenge.php:327
 msgid "Did not receive the SMS?"
 msgstr "Keine SMS erhalten?"
 
-#: templates/frontend-2fa-challenge.php:322
+#: templates/frontend-2fa-challenge.php:332
 #: templates/two-factor-challenge.php:336
 msgid "Resend SMS"
 msgstr "SMS erneut senden"
 
 #. translators: %d: remaining codes
-#: templates/frontend-2fa-challenge.php:338
-#: templates/two-factor-challenge.php:382
+#: templates/frontend-2fa-challenge.php:348
+#: templates/two-factor-challenge.php:369
 #, php-format
 msgid "Enter one of your recovery codes. (%d remaining)"
 msgstr "Geben Sie einen Ihrer Wiederherstellungscodes ein. (%d verbleibend)"
 
 #. translators: %d: number of days
-#: templates/frontend-2fa-challenge.php:369
-#: templates/two-factor-challenge.php:416
+#: templates/frontend-2fa-challenge.php:379
+#: templates/two-factor-challenge.php:403
 #, php-format
 msgid "Trust this device for %d days"
 msgstr "Diesem Gerät %d Tage lang vertrauen"
 
-#: templates/frontend-2fa-challenge.php:380
-#: templates/two-factor-challenge.php:427
+#: templates/frontend-2fa-challenge.php:390
+#: templates/two-factor-challenge.php:414
 msgid "Verify"
 msgstr "Bestätigen"
+
+#: templates/partials/webauthn-challenge-panel.php:50
+msgid "Use your passkey or security key — Face ID, Touch ID, Windows Hello, or a hardware key such as a YubiKey. Insert the key and touch it, or hold it to the back of your phone (NFC)."
+msgstr "Nutzen Sie Ihren Passkey oder Sicherheitsschlüssel — Face ID, Touch ID, Windows Hello oder einen Hardware-Schlüssel wie einen YubiKey. Stecken Sie den Schlüssel ein und berühren Sie ihn, oder halten Sie ihn an die Rückseite Ihres Telefons (NFC)."
+
+#: templates/partials/webauthn-challenge-panel.php:55
+msgid "Use passkey or security key"
+msgstr "Passkey oder Sicherheitsschlüssel verwenden"
 
 #: templates/two-factor-challenge.php:92
 msgid "6-digit code from your authenticator app"
@@ -9871,19 +9893,11 @@ msgstr "Keine E-Mail erhalten?"
 msgid "Didn't get the SMS?"
 msgstr "Keine SMS erhalten?"
 
-#: templates/two-factor-challenge.php:358
-msgid "Sign in with your passkey — Face ID, Touch ID, Windows Hello or hardware key."
-msgstr "Mit Ihrem Passkey anmelden — Face ID, Touch ID, Windows Hello oder Sicherheitsschlüssel."
-
-#: templates/two-factor-challenge.php:363
-msgid "Sign in with passkey"
-msgstr "Mit Passkey anmelden"
-
-#: templates/two-factor-challenge.php:399
+#: templates/two-factor-challenge.php:386
 msgid "Each recovery code can be used only once."
 msgstr "Jeder Wiederherstellungscode kann nur einmal verwendet werden."
 
-#: templates/two-factor-challenge.php:433
+#: templates/two-factor-challenge.php:420
 msgid "← Back to sign-in"
 msgstr "← Zurück zur Anmeldung"
 

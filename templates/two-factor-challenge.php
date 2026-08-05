@@ -342,29 +342,16 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 			</section>
 		<?php endif; ?>
 
-		<?php /* -------- Passkey panel --------------------------------------- */ ?>
+		<?php /* -------- Passkey / security-key panel ------------------------- */ ?>
 		<?php
 		if ( $has_webauthn ) :
-			$is_active = ( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN === $method );
-			?>
-			<section class="rip-2fa-challenge__panel<?php echo $is_active ? ' rip-2fa-challenge__panel--active' : ''; ?>"
-				role="tabpanel"
-				id="rip-2fa-panel-webauthn"
-				aria-labelledby="rip-2fa-tab-webauthn"
-				data-panel="webauthn"
-				tabindex="0"
-				<?php echo $is_active ? '' : 'hidden'; ?>>
-				<p class="rip-2fa-challenge__instruction">
-					<?php esc_html_e( 'Sign in with your passkey — Face ID, Touch ID, Windows Hello or hardware key.', 'reportedip-hive' ); ?>
-				</p>
-				<input type="hidden" name="reportedip_2fa_code" id="rip-2fa-code-webauthn" value="" <?php echo $is_active ? '' : 'disabled'; ?> />
-				<button type="button" class="rip-button rip-button--primary rip-button--full-width" id="rip-2fa-webauthn-login">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:6px;"><path d="M12 11c1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3 1.3 3 3 3z"/><path d="M6 21v-2c0-2.2 1.8-4 4-4h4c2.2 0 4 1.8 4 4v2"/></svg>
-					<?php esc_html_e( 'Sign in with passkey', 'reportedip-hive' ); ?>
-				</button>
-				<p class="rip-2fa-challenge__hint" id="rip-2fa-webauthn-status" role="status" aria-live="polite"></p>
-			</section>
-		<?php endif; ?>
+			$rip_webauthn_panel = array(
+				'is_active' => ( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN === $method ),
+				'context'   => 'login',
+			);
+			include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/partials/webauthn-challenge-panel.php';
+		endif;
+		?>
 
 		<?php /* -------- Recovery panel -------------------------------------- */ ?>
 		<?php if ( $has_recovery ) : ?>

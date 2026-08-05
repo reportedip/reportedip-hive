@@ -422,6 +422,7 @@
 			if ( status ) { status.textContent = ( config.strings && config.strings.passkeyRequesting ) || 'Passkey request in progress…'; }
 			var data = new FormData();
 			data.append( 'action', 'reportedip_hive_2fa_webauthn_login_options' );
+			appendLoginToken( data );
 			fetch( ajaxUrl(), { method: 'POST', body: data, credentials: 'same-origin' } )
 				.then( function ( r ) { return r.json(); } )
 				.then( function ( res ) {
@@ -434,6 +435,7 @@
 					var payload = new FormData();
 					payload.append( 'action', 'reportedip_hive_2fa_webauthn_login_verify' );
 					payload.append( 'credential', JSON.stringify( serialiseAssertion( assertion ) ) );
+					appendLoginToken( payload );
 					return fetch( ajaxUrl(), { method: 'POST', body: payload, credentials: 'same-origin' } ).then( function ( r ) { return r.json(); } );
 				} )
 				.then( function ( res ) {
@@ -451,6 +453,13 @@
 
 		function ajaxUrl() {
 			return ( config.ajaxUrl || window.ajaxurl || '/wp-admin/admin-ajax.php' );
+		}
+		// Surfaces without the login-nonce cookie (password-reset gate) carry
+		// the ceremony token in the localized config instead.
+		function appendLoginToken( formData ) {
+			if ( config.loginToken ) {
+				formData.append( 'login_token', config.loginToken );
+			}
 		}
 		function buildAssertionOptions( pk ) {
 			return {

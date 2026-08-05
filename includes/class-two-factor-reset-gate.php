@@ -560,6 +560,22 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 			REPORTEDIP_HIVE_VERSION
 		);
 
+		if ( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN === $method ) {
+			wp_enqueue_script(
+				'reportedip-hive-two-factor-login',
+				REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/two-factor-login.js',
+				array(),
+				REPORTEDIP_HIVE_VERSION,
+				true
+			);
+			wp_add_inline_script(
+				'reportedip-hive-two-factor-login',
+				'window.reportedip2fa = window.reportedip2fa || {}; window.reportedip2fa.loginToken = '
+					. wp_json_encode( ReportedIP_Hive_Two_Factor_WebAuthn::mint_login_token( $user->ID ) ) . ';',
+				'before'
+			);
+		}
+
 		ReportedIP_Hive::emit_block_response_headers();
 
 		login_header( __( 'Two-Factor Verification', 'reportedip-hive' ), '', null );
@@ -623,28 +639,38 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 				</nav>
 			<?php endif; ?>
 
-			<form method="post" action="<?php echo esc_url( $action_url ); ?>" class="rip-2fa-challenge__form">
+			<form method="post" action="<?php echo esc_url( $action_url ); ?>" class="rip-2fa-challenge__form" id="rip-2fa-form">
 				<input type="hidden" name="_reportedip_2fa_reset_nonce" value="<?php echo esc_attr( $nonce ); ?>" />
-				<input type="hidden" name="reportedip_2fa_reset_method" value="<?php echo esc_attr( $method ); ?>" />
+				<input type="hidden" name="reportedip_2fa_reset_method" id="rip-2fa-method-input" value="<?php echo esc_attr( $method ); ?>" />
 
-				<div class="rip-form-group">
-					<label class="rip-label" for="reportedip_2fa_reset_code">
-						<?php echo esc_html( $this->method_prompt( $method ) ); ?>
-					</label>
-					<input type="text"
-						id="reportedip_2fa_reset_code"
-						name="reportedip_2fa_reset_code"
-						class="rip-input"
-						autocomplete="one-time-code"
-						inputmode="<?php echo ReportedIP_Hive_Two_Factor::METHOD_RECOVERY === $method ? 'text' : 'numeric'; ?>"
-						spellcheck="false"
-						autocapitalize="none"
-						required />
-				</div>
+				<?php if ( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN === $method ) : ?>
+					<?php
+					$rip_webauthn_panel = array(
+						'is_active' => true,
+						'context'   => 'reset',
+					);
+					include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/partials/webauthn-challenge-panel.php';
+					?>
+				<?php else : ?>
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_2fa_reset_code">
+							<?php echo esc_html( $this->method_prompt( $method ) ); ?>
+						</label>
+						<input type="text"
+							id="reportedip_2fa_reset_code"
+							name="reportedip_2fa_reset_code"
+							class="rip-input"
+							autocomplete="one-time-code"
+							inputmode="<?php echo ReportedIP_Hive_Two_Factor::METHOD_RECOVERY === $method ? 'text' : 'numeric'; ?>"
+							spellcheck="false"
+							autocapitalize="none"
+							required />
+					</div>
 
-				<button type="submit" class="rip-button rip-button--primary rip-button--full-width">
-					<?php esc_html_e( 'Verify and continue', 'reportedip-hive' ); ?>
-				</button>
+					<button type="submit" class="rip-button rip-button--primary rip-button--full-width">
+						<?php esc_html_e( 'Verify and continue', 'reportedip-hive' ); ?>
+					</button>
+				<?php endif; ?>
 			</form>
 
 			<?php if ( $resendable ) : ?>

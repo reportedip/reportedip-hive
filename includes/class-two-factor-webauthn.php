@@ -35,6 +35,23 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	const TRANSIENT_PREFIX = 'reportedip_2fa_webauthn_';
 	const CHALLENGE_TTL    = 300;
 
+	/**
+	 * Ceremony timeout in milliseconds. 120 s instead of the WebAuthn default
+	 * 60 s because NFC-tap flows on phones routinely need the extra time
+	 * (unlock phone, find the key, hold it steady against the reader).
+	 *
+	 * @since 2.1.33
+	 */
+	const CEREMONY_TIMEOUT_MS = 120000;
+
+	/**
+	 * Authenticator-data flag bits (WebAuthn L2 §6.1).
+	 *
+	 * @since 2.1.33
+	 */
+	const FLAG_USER_PRESENT  = 0x01;
+	const FLAG_USER_VERIFIED = 0x04;
+
 	public function __construct() {
 		add_action( 'wp_ajax_reportedip_hive_2fa_webauthn_register_options', array( $this, 'ajax_register_options' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_webauthn_register_verify', array( $this, 'ajax_register_verify' ) );
@@ -100,11 +117,11 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 						),
 					),
 					'authenticatorSelection' => array(
-						'userVerification'   => 'preferred',
+						'userVerification'   => self::user_verification_policy(),
 						'residentKey'        => 'preferred',
 						'requireResidentKey' => false,
 					),
-					'timeout'                => 60000,
+					'timeout'                => self::CEREMONY_TIMEOUT_MS,
 					'attestation'            => 'none',
 					'excludeCredentials'     => $exclude,
 				),
@@ -163,6 +180,12 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		if ( ! hash_equals( $rp_id_hash_expected, $auth_data['rp_id_hash'] ) ) {
 			wp_send_json_error( array( 'message' => __( 'RP-ID hash mismatch.', 'reportedip-hive' ) ) );
 		}
+		if ( ! ( $auth_data['flags'] & self::FLAG_USER_PRESENT ) ) {
+			wp_send_json_error( array( 'message' => __( 'The authenticator did not confirm user presence.', 'reportedip-hive' ) ) );
+		}
+		if ( 'required' === self::user_verification_policy() && ! ( $auth_data['flags'] & self::FLAG_USER_VERIFIED ) ) {
+			wp_send_json_error( array( 'message' => __( 'User verification is required but was not performed.', 'reportedip-hive' ) ) );
+		}
 		if ( empty( $auth_data['credential_id'] ) || empty( $auth_data['public_key_cbor'] ) ) {
 			wp_send_json_error( array( 'message' => __( 'Credential data incomplete.', 'reportedip-hive' ) ) );
 		}
@@ -172,7 +195,8 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			'public_key' => base64_encode( $auth_data['public_key_cbor'] ),
 			'sign_count' => $auth_data['sign_count'],
 			'created_at' => time(),
-			'transports' => $credential['transports'] ?? array(),
+			'transports' => self::sanitize_transports( $credential['transports'] ?? array() ),
+			'uv'         => (bool) ( $auth_data['flags'] & self::FLAG_USER_VERIFIED ),
 			'name'       => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : __( 'Passkey', 'reportedip-hive' ),
 		);
 
@@ -188,7 +212,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
 		}
 
-		wp_send_json_success( array( 'message' => __( 'Passkey registriert.', 'reportedip-hive' ) ) );
+		wp_send_json_success( array( 'message' => __( 'Security key registered.', 'reportedip-hive' ) ) );
 	}
 
 	/* ------------------------------------------------------------------
@@ -222,8 +246,8 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 					'challenge'        => self::b64url_encode( $challenge ),
 					'rpId'             => self::rp_id(),
 					'allowCredentials' => $allow_credentials,
-					'userVerification' => 'preferred',
-					'timeout'          => 60000,
+					'userVerification' => self::user_verification_policy(),
+					'timeout'          => self::CEREMONY_TIMEOUT_MS,
 				),
 			)
 		);
@@ -250,7 +274,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		}
 
 		set_transient( self::TRANSIENT_PREFIX . 'verified_' . $user_id, 1, 60 );
-		wp_send_json_success( array( 'message' => __( 'Passkey verifiziert.', 'reportedip-hive' ) ) );
+		wp_send_json_success( array( 'message' => __( 'Security key verified.', 'reportedip-hive' ) ) );
 	}
 
 	/**
@@ -291,8 +315,56 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_WEBAUTHN_CREDENTIALS, wp_json_encode( $creds ) );
 	}
 
+	/**
+	 * Whitelist-filter client-supplied transport hints. The list is stored
+	 * verbatim on the credential and echoed back into allowCredentials on
+	 * every later ceremony, so it must never carry arbitrary client input.
+	 *
+	 * @param mixed $transports Raw transports value from the browser.
+	 * @return string[] Sanitized transport identifiers.
+	 * @since 2.1.33
+	 */
+	public static function sanitize_transports( $transports ) {
+		if ( ! is_array( $transports ) ) {
+			return array();
+		}
+		$allowed = array( 'usb', 'nfc', 'ble', 'hybrid', 'internal', 'smart-card' );
+		$clean   = array();
+		foreach ( $transports as $transport ) {
+			$transport = sanitize_key( (string) $transport );
+			if ( in_array( $transport, $allowed, true ) ) {
+				$clean[] = $transport;
+			}
+		}
+		return array_values( array_unique( $clean ) );
+	}
+
 	public static function rp_id() {
 		return (string) wp_parse_url( home_url(), PHP_URL_HOST );
+	}
+
+	/**
+	 * User-verification policy for both ceremonies.
+	 *
+	 * Defaults to 'discouraged' — the Yubico-recommended value for pure
+	 * second-factor use: a fresh YubiKey has no FIDO2 PIN set, and
+	 * 'preferred'/'required' would force PIN enrolment mid-login. Platform
+	 * authenticators (Windows Hello, Touch ID) verify the user intrinsically
+	 * regardless of this value. When the filter returns 'required' the
+	 * server additionally enforces the UV flag on every ceremony.
+	 *
+	 * @return string 'discouraged' | 'preferred' | 'required'.
+	 * @since 2.1.33
+	 */
+	public static function user_verification_policy() {
+		/**
+		 * Filter the WebAuthn userVerification requirement.
+		 *
+		 * @param string $policy One of 'discouraged', 'preferred', 'required'.
+		 * @since 2.1.33
+		 */
+		$policy = apply_filters( 'reportedip_hive_webauthn_user_verification', 'discouraged' );
+		return in_array( $policy, array( 'discouraged', 'preferred', 'required' ), true ) ? $policy : 'discouraged';
 	}
 
 	public static function expected_origin() {
@@ -304,21 +376,50 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	/**
-	 * Resolve the user id from the httpOnly login-nonce cookie set by
-	 * filter_authenticate. The JS side never needs to know the token, which
-	 * keeps it shielded from XSS.
+	 * Mint a short-lived ceremony token that binds the assertion endpoints to
+	 * a user on surfaces where the login-nonce cookie does not exist (the
+	 * password-reset gate proves identity via the reset key + resetpass
+	 * cookie before calling this). The token only gates access to the
+	 * assertion ceremony — passing it still requires the credential's
+	 * private key.
 	 *
+	 * @param int $user_id User the ceremony is minted for.
+	 * @return string Opaque token for the browser.
+	 * @since 2.1.33
+	 */
+	public static function mint_login_token( $user_id ) {
+		$token = self::b64url_encode( self::random_bytes( 32 ) );
+		set_transient( self::TRANSIENT_PREFIX . 'token_' . hash( 'sha256', $token ), (int) $user_id, self::CHALLENGE_TTL );
+		return $token;
+	}
+
+	/**
+	 * Resolve the user id for the assertion ceremony. Primary path is the
+	 * httpOnly login-nonce cookie set by filter_authenticate (the JS side
+	 * never needs to know that token, which keeps it shielded from XSS).
+	 * Fallback path is an explicit ceremony token minted via
+	 * {@see mint_login_token()} for cookie-less surfaces such as the
+	 * password-reset gate.
+	 *
+	 * @param string $token Optional ceremony token posted by the browser.
 	 * @return int 0 when invalid.
 	 */
-	private static function user_id_from_login_token( $token_unused = '' ) {
-		unset( $token_unused );
-		if ( empty( $_COOKIE[ ReportedIP_Hive_Two_Factor::NONCE_COOKIE ] ) ) {
-			return 0;
+	private static function user_id_from_login_token( $token = '' ) {
+		if ( ! empty( $_COOKIE[ ReportedIP_Hive_Two_Factor::NONCE_COOKIE ] ) ) {
+			$cookie = sanitize_text_field( wp_unslash( $_COOKIE[ ReportedIP_Hive_Two_Factor::NONCE_COOKIE ] ) );
+			$hash   = hash( 'sha256', $cookie );
+			$data   = get_transient( ReportedIP_Hive_Two_Factor::NONCE_PREFIX . $hash );
+			if ( is_array( $data ) && ! empty( $data['user_id'] ) ) {
+				return (int) $data['user_id'];
+			}
 		}
-		$token = sanitize_text_field( wp_unslash( $_COOKIE[ ReportedIP_Hive_Two_Factor::NONCE_COOKIE ] ) );
-		$hash  = hash( 'sha256', $token );
-		$data  = get_transient( ReportedIP_Hive_Two_Factor::NONCE_PREFIX . $hash );
-		return is_array( $data ) && ! empty( $data['user_id'] ) ? (int) $data['user_id'] : 0;
+		if ( '' !== $token ) {
+			$user_id = (int) get_transient( self::TRANSIENT_PREFIX . 'token_' . hash( 'sha256', $token ) );
+			if ( $user_id > 0 ) {
+				return $user_id;
+			}
+		}
+		return 0;
 	}
 
 	/**
@@ -340,7 +441,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			}
 		}
 		if ( null === $match ) {
-			return new WP_Error( 'webauthn_unknown_cred', __( 'Unbekannter Passkey.', 'reportedip-hive' ) );
+			return new WP_Error( 'webauthn_unknown_cred', __( 'Unknown security key.', 'reportedip-hive' ) );
 		}
 
 		$client_data_json = self::b64url_decode( $assertion['response']['clientDataJSON'] ?? '' );
@@ -375,6 +476,12 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		if ( ! hash_equals( $rp_id_hash_expected, $auth_info['rp_id_hash'] ) ) {
 			return new WP_Error( 'webauthn_rp', __( 'RP-ID hash mismatch.', 'reportedip-hive' ) );
 		}
+		if ( ! ( $auth_info['flags'] & self::FLAG_USER_PRESENT ) ) {
+			return new WP_Error( 'webauthn_no_user_presence', __( 'The authenticator did not confirm user presence.', 'reportedip-hive' ) );
+		}
+		if ( 'required' === self::user_verification_policy() && ! ( $auth_info['flags'] & self::FLAG_USER_VERIFIED ) ) {
+			return new WP_Error( 'webauthn_no_user_verification', __( 'User verification is required but was not performed.', 'reportedip-hive' ) );
+		}
 
 		$client_data_hash = hash( 'sha256', $client_data_json, true );
 		$signed_data      = $authenticator_data . $client_data_hash;
@@ -390,11 +497,25 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			return new WP_Error( 'webauthn_sig', __( 'Signature could not be verified.', 'reportedip-hive' ) );
 		}
 
-		if ( $auth_info['sign_count'] > 0 && $auth_info['sign_count'] <= (int) ( $creds[ $match ]['sign_count'] ?? 0 ) ) {
+		$new_count    = (int) $auth_info['sign_count'];
+		$stored_count = (int) ( $creds[ $match ]['sign_count'] ?? 0 );
+		if ( $new_count > $stored_count ) {
+			$creds[ $match ]['sign_count'] = $new_count;
+		} elseif ( 0 !== $new_count || 0 !== $stored_count ) {
+			ReportedIP_Hive_Logger::get_instance()->log_security_event(
+				'2fa_webauthn_counter_regression',
+				ReportedIP_Hive::get_client_ip(),
+				array(
+					'user_id'       => (int) $user_id,
+					'credential_id' => (string) $creds[ $match ]['id'],
+					'stored_count'  => $stored_count,
+					'asserted'      => $new_count,
+				),
+				'high'
+			);
 			return new WP_Error( 'webauthn_counter', __( 'Signature counter anomaly.', 'reportedip-hive' ) );
 		}
-		$creds[ $match ]['sign_count'] = $auth_info['sign_count'];
-		$creds[ $match ]['last_used']  = time();
+		$creds[ $match ]['last_used'] = time();
 		self::save_user_credentials( $user_id, $creds );
 
 		return true;
@@ -465,6 +586,10 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		$alg = $map[3] ?? null;
 
 		if ( 2 === $kty && -7 === $alg ) {
+			$crv = $map[-1] ?? null;
+			if ( 1 !== $crv ) {
+				return new WP_Error( 'webauthn_cose_crv', __( 'Unsupported EC curve.', 'reportedip-hive' ) );
+			}
 			$x = $map[-2] ?? null;
 			$y = $map[-3] ?? null;
 			if ( ! is_string( $x ) || ! is_string( $y ) || 32 !== strlen( $x ) || 32 !== strlen( $y ) ) {

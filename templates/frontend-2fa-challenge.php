@@ -182,6 +182,16 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 			<?php endif; ?>
 
 			<?php
+			if ( $has_webauthn ) :
+				$rip_webauthn_panel = array(
+					'is_active' => ( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN === $method ),
+					'context'   => 'frontend',
+				);
+				include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/partials/webauthn-challenge-panel.php';
+			endif;
+			?>
+
+			<?php
 			if ( $has_email ) :
 				$is_active = ( ReportedIP_Hive_Two_Factor::METHOD_EMAIL === $method );
 				?>
