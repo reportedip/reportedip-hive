@@ -1248,7 +1248,27 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Anonymize old data for GDPR compliance
+	 * Batch size for the anonymisation sweep — bounds both the row fetch and
+	 * the per-row UPDATE burst of a single loop iteration.
+	 */
+	const ANONYMIZE_BATCH_SIZE = 500;
+
+	/**
+	 * Soft time budget (seconds) for one cron-tick of anonymisation/cleanup.
+	 * Remaining rows are picked up by the next daily run.
+	 */
+	const CLEANUP_TIME_BUDGET = 20;
+
+	/**
+	 * Anonymize old data for GDPR compliance.
+	 *
+	 * Chunked: the previous implementation selected the entire 7–30-day band
+	 * with no LIMIT — including rows anonymised on earlier runs — and issued
+	 * one UPDATE per row, which on a busy site meant tens of thousands of
+	 * UPDATEs inside a single cron tick. Now each pass takes at most
+	 * ANONYMIZE_BATCH_SIZE not-yet-anonymised rows until the time budget is
+	 * spent; already-processed rows are excluded by the marker predicate so
+	 * repeat runs no longer rewrite them.
 	 */
 	public function anonymize_old_data( $days = 7 ) {
 		global $wpdb;
@@ -1256,20 +1276,33 @@ class ReportedIP_Hive_Database {
 		$anonymized = 0;
 
 		$logs_table = $wpdb->base_prefix . 'reportedip_hive_logs';
+		$retention  = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 );
+		$marker     = '%' . $wpdb->esc_like( '"anonymized":true' ) . '%';
+		$deadline   = time() + self::CLEANUP_TIME_BUDGET;
 
-		$old_logs = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT id, details FROM $logs_table 
-                 WHERE created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
-                 AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)",
-				$days,
-				ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 )
-			)
-		);
+		do {
+			$old_logs = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT id, details FROM $logs_table
+	                 WHERE created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
+	                 AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)
+	                 AND details IS NOT NULL
+	                 AND details NOT LIKE %s
+	                 LIMIT %d",
+					$days,
+					$retention,
+					$marker,
+					self::ANONYMIZE_BATCH_SIZE
+				)
+			);
 
-		foreach ( $old_logs as $log ) {
-			$details = json_decode( $log->details, true );
-			if ( is_array( $details ) ) {
+			$batch_rows       = count( $old_logs );
+			$updated_in_batch = 0;
+			foreach ( $old_logs as $log ) {
+				$details = json_decode( $log->details, true );
+				if ( ! is_array( $details ) ) {
+					$details = array();
+				}
 				$personal_fields    = array( 'username', 'username_hash', 'author', 'author_hash', 'user_agent', 'referer', 'referer_domain' );
 				$anonymized_details = array_diff_key( $details, array_flip( $personal_fields ) );
 
@@ -1284,9 +1317,10 @@ class ReportedIP_Hive_Database {
 					array( '%d' )
 				);
 
+				++$updated_in_batch;
 				++$anonymized;
 			}
-		}
+		} while ( self::ANONYMIZE_BATCH_SIZE === $batch_rows && $updated_in_batch > 0 && time() < $deadline );
 
 		$attempts_table      = $wpdb->base_prefix . 'reportedip_hive_attempts';
 		$anonymized_attempts = $wpdb->query(
@@ -1307,12 +1341,35 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Clean up old data
+	 * Chunk size for retention DELETEs. An unbounded DELETE over the logs
+	 * table held long row locks (the table is also written on every security
+	 * event); LIMIT-chunks keep each lock window short.
+	 */
+	const CLEANUP_DELETE_CHUNK = 5000;
+
+	/**
+	 * Clean up old data.
+	 *
+	 * Every DELETE runs as a `LIMIT`-chunked loop under the shared
+	 * CLEANUP_TIME_BUDGET so a single daily tick can never hold a
+	 * multi-minute lock on a large table; leftovers wait for the next run.
 	 */
 	public function cleanup_old_data( $days = 30 ) {
 		global $wpdb;
 
-		$deleted = 0;
+		$deleted  = 0;
+		$deadline = time() + self::CLEANUP_TIME_BUDGET;
+
+		$chunked_delete = static function ( $sql ) use ( $wpdb, &$deleted, $deadline ) {
+			do {
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Statements below are prepared before being passed in.
+				$result = $wpdb->query( $sql . ' LIMIT ' . self::CLEANUP_DELETE_CHUNK );
+				if ( false === $result ) {
+					return;
+				}
+				$deleted += $result;
+			} while ( $result === self::CLEANUP_DELETE_CHUNK && time() < $deadline );
+		};
 
 		$tables_to_clean = array(
 			$wpdb->base_prefix . 'reportedip_hive_logs' => 'created_at',
@@ -1321,40 +1378,29 @@ class ReportedIP_Hive_Database {
 		);
 
 		foreach ( $tables_to_clean as $table => $date_column ) {
-			$result = $wpdb->query(
+			$chunked_delete(
 				$wpdb->prepare(
 					"DELETE FROM $table WHERE $date_column < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)",
 					$days
 				)
 			);
-			if ( $result !== false ) {
-				$deleted += $result;
-			}
 		}
 
-		$completed_reports = $wpdb->query(
+		$chunked_delete(
 			"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
              WHERE status = 'completed'
              AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)"
 		);
 
-		if ( $completed_reports !== false ) {
-			$deleted += $completed_reports;
-		}
-
-		$failed_reports = $wpdb->query(
+		$chunked_delete(
 			"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
              WHERE status = 'failed'
              AND attempts >= max_attempts
              AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)"
 		);
 
-		if ( $failed_reports !== false ) {
-			$deleted += $failed_reports;
-		}
-
 		$queue_max_age = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_max_age_days', 7 );
-		$old_pending   = $wpdb->query(
+		$chunked_delete(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->base_prefix}reportedip_hive_api_queue
 				 WHERE status IN ('pending', 'failed')
@@ -1362,10 +1408,6 @@ class ReportedIP_Hive_Database {
 				$queue_max_age
 			)
 		);
-
-		if ( $old_pending !== false ) {
-			$deleted += $old_pending;
-		}
 
 		return $deleted;
 	}

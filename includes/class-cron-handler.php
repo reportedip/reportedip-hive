@@ -211,9 +211,6 @@ class ReportedIP_Hive_Cron_Handler {
 			if ( class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
 				ReportedIP_Hive_Two_Factor::cleanup_expired_devices();
 			}
-
-			$this->database->update_daily_stats( 'cleanup_runs' );
-
 		} catch ( Exception $e ) {
 			$this->logger->critical( 'Daily cleanup failed: ' . $e->getMessage(), 'system' );
 		}
