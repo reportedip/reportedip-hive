@@ -1563,10 +1563,12 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		$devices        = ReportedIP_Hive_Two_Factor::get_trusted_devices( $user->ID );
 		$can_edit       = current_user_can( 'edit_user', $user->ID );
 
-		wp_enqueue_style( 'reportedip-hive-two-factor', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/two-factor.css', array(), REPORTEDIP_HIVE_VERSION );
+		wp_enqueue_style( 'reportedip-hive-design-system', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/design-system.css', array(), REPORTEDIP_HIVE_VERSION );
+		wp_enqueue_style( 'reportedip-hive-two-factor', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/two-factor.css', array( 'reportedip-hive-design-system' ), REPORTEDIP_HIVE_VERSION );
 
-		$js_deps = array( 'jquery', 'wp-a11y' );
-		if ( ! $is_enabled ) {
+		$totp_active = in_array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID ), true );
+		$js_deps     = array( 'jquery', 'wp-a11y' );
+		if ( ! $totp_active ) {
 			wp_enqueue_script( 'reportedip-hive-qrcode', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/vendor/qrcode.min.js', array(), '1.0.0', true );
 			$js_deps[] = 'reportedip-hive-qrcode';
 		}
