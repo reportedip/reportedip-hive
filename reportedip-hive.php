@@ -352,6 +352,15 @@ class ReportedIP_Hive {
 	 * Load plugin dependencies
 	 */
 	private function load_dependencies() {
+		/*
+		 * The 'reportedip' cache group backs base_prefix (network-wide) tables:
+		 * whitelist CIDRs, WAF exceptions and the per-IP access verdict are the
+		 * same for every site in a network. Without this registration a
+		 * persistent object cache would silo those entries per blog — duplicated
+		 * memory and stale cross-site verdicts after a network-wide change.
+		 */
+		wp_cache_add_global_groups( 'reportedip' );
+
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-option-routing.php';
 		ReportedIP_Hive_Option_Routing::prime_cache();
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-schema.php';

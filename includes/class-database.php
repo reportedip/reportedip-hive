@@ -46,6 +46,19 @@ class ReportedIP_Hive_Database {
 	private static $whitelist_request_cache = array();
 
 	/**
+	 * Per-request block-status memo keyed by IP.
+	 *
+	 * The init-priority-1 gate, the REST monitor (twice per anonymous REST
+	 * request) and the generic attempt tracker all ask for the same client IP;
+	 * without this memo each of those calls costs an identical COUNT(*) on the
+	 * blocked table. Block/unblock writes invalidate it so a verdict can never
+	 * go stale within the same request.
+	 *
+	 * @var array<string,bool>
+	 */
+	private static $blocked_request_cache = array();
+
+	/**
 	 * Get single instance
 	 */
 	public static function get_instance() {
@@ -653,6 +666,8 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( false !== $result ) {
+			self::$blocked_request_cache = array();
+
 			/**
 			 * Fires after an IP was blocked.
 			 *
@@ -706,6 +721,8 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( false !== $result ) {
+			self::$blocked_request_cache = array();
+
 			/** This action is documented in includes/class-database.php */
 			do_action( 'reportedip_hive_ip_blocked', $ip_address, $reason, $blocked_until );
 		}
@@ -719,19 +736,25 @@ class ReportedIP_Hive_Database {
 	public function is_blocked( $ip_address ) {
 		global $wpdb;
 
+		if ( isset( self::$blocked_request_cache[ $ip_address ] ) ) {
+			return self::$blocked_request_cache[ $ip_address ];
+		}
+
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
 
 		$count = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $table_name 
-                 WHERE ip_address = %s 
-                 AND is_active = 1 
+				"SELECT COUNT(*) FROM $table_name
+                 WHERE ip_address = %s
+                 AND is_active = 1
                  AND (blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP())",
 				$ip_address
 			)
 		);
 
-		return $count > 0;
+		self::$blocked_request_cache[ $ip_address ] = $count > 0;
+
+		return self::$blocked_request_cache[ $ip_address ];
 	}
 
 	/**
@@ -805,6 +828,8 @@ class ReportedIP_Hive_Database {
 		);
 
 		if ( false !== $result ) {
+			self::$blocked_request_cache = array();
+
 			/**
 			 * Fires after a block was lifted.
 			 *
