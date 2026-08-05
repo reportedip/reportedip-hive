@@ -67,6 +67,18 @@ delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor_Reset_Gate::META_FAILED_
 
 ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enabled_global', '1' );
 ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_allowed_methods', '["totp","email","webauthn"]' );
+ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_known_tier', 'business' );
+set_transient( 'reportedip_hive_api_status', array( 'userRole' => 'reportedip_business' ), 15 * MINUTE_IN_SECONDS );
+delete_transient( 'reportedip_hive_relay_quota' );
+
+/*
+ * On the Business tier the mailer prefers the reportedip.de relay. Point the
+ * API endpoint at a dead local port for the duration of the spec: the relay
+ * call fails as retryable, the provider falls back to local wp_mail() and
+ * the notification lands in Mailpit — and no request can ever reach the
+ * production service from a test run.
+ */
+ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_endpoint', 'http://127.0.0.1:9/' );
 ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_require_on_password_reset', '1' );
 ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_password_reset_excluded_methods', '["email"]' );
 ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', '0' );

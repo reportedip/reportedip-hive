@@ -188,9 +188,9 @@ if ( $grace_deadline > 0 ) {
 								<path d="M9 6.8a6 6 0 0 1 9 5.2c0 .47 0 1.44-.025 2"/>
 							</svg>
 						</div>
-						<h3 class="rip-mode-card__title"><?php esc_html_e( 'Passkey / biometrics', 'reportedip-hive' ); ?></h3>
+						<h3 class="rip-mode-card__title"><?php esc_html_e( 'Passkey / security key', 'reportedip-hive' ); ?></h3>
 						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Face ID, Touch ID, Windows Hello or hardware key. Phishing-resistant, no app needed.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Face ID, Touch ID, Windows Hello or a hardware key like a YubiKey. Phishing-resistant, no app needed.', 'reportedip-hive' ); ?>
 						</p>
 					</label>
 				<?php endif; ?>

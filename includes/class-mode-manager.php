@@ -258,6 +258,11 @@ class ReportedIP_Hive_Mode_Manager {
 				'community'     => true,
 				'requires_tier' => 'professional',
 			),
+			'webauthn_advanced'            => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'business',
+			),
 			'decoy_pathblock'              => array(
 				'local'     => true,
 				'community' => true,
@@ -334,6 +339,7 @@ class ReportedIP_Hive_Mode_Manager {
 			'mail_relay_via_api'           => array( __( 'Mail Relay via reportedip.de', 'reportedip-hive' ), __( 'Send 2FA mails through our SMTP for guaranteed deliverability — no own SMTP setup needed.', 'reportedip-hive' ) ),
 			'sms_relay_via_api'            => array( __( 'SMS Relay via reportedip.de', 'reportedip-hive' ), __( 'Send 2FA SMS via our managed EU gateway — included with Professional and Business.', 'reportedip-hive' ) ),
 			'frontend_2fa'                 => array( __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ), __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login — kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ) ),
+			'webauthn_advanced'            => array( __( 'Advanced Security Keys', 'reportedip-hive' ), __( 'Multiple security keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts. One security key or passkey per account stays free.', 'reportedip-hive' ) ),
 			'decoy_pathblock'              => array( __( 'Decoy Path Block', 'reportedip-hive' ), __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...) — distinct from the N-of-Y scan-detector.', 'reportedip-hive' ) ),
 			'hardening_mode'               => array( __( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ), __( 'Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected.', 'reportedip-hive' ) ),
 			'waf'                          => array( __( 'Web Application Firewall', 'reportedip-hive' ), __( 'Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync.', 'reportedip-hive' ) ),

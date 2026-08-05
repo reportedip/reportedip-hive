@@ -237,5 +237,57 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'reportedip_hive_2fa_webauthn_key_removed', $source );
 			$this->assertStringContainsString( 'reportedip_hive_2fa_webauthn_counter_regression', $source );
 		}
+
+		public function test_first_key_is_free_and_more_keys_are_gated(): void {
+			$this->assertTrue(
+				ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( self::USER_ID ),
+				'The first key must always be allowed — base 2FA protection is never gated.'
+			);
+
+			update_user_meta(
+				self::USER_ID,
+				\ReportedIP_Hive_Two_Factor::META_WEBAUTHN_CREDENTIALS,
+				wp_json_encode( array( array( 'id' => 'abc' ) ) )
+			);
+			$this->assertFalse(
+				ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( self::USER_ID ),
+				'Without the Business webauthn_advanced feature a second key must be refused (fail-closed when Mode_Manager is absent).'
+			);
+		}
+
+		public function test_webauthn_advanced_is_business_gated_in_the_feature_matrix(): void {
+			$source = $this->source( 'includes/class-mode-manager.php' );
+			$this->assertStringContainsString( "'webauthn_advanced'", $source );
+			$position = strpos( $source, "'webauthn_advanced'" );
+			$window   = substr( $source, $position, 220 );
+			$this->assertStringContainsString(
+				"'requires_tier' => 'business'",
+				$window,
+				'webauthn_advanced must be Business-gated (decision 2026-08-05, PRICING-PLAN.md history 1.9).'
+			);
+		}
+
+		public function test_register_endpoints_enforce_the_key_limit_server_side(): void {
+			$source = $this->source( 'includes/class-two-factor-webauthn.php' );
+			$this->assertSame(
+				2,
+				substr_count( $source, 'self::can_add_key( $user_id )' ),
+				'Both register endpoints (options + verify) must enforce the tier key limit — the UI hint alone is not a gate.'
+			);
+		}
+
+		public function test_lifecycle_mails_are_gated_but_clone_warning_is_not(): void {
+			$source = $this->source( 'includes/class-two-factor-notifications.php' );
+			$registered = substr( $source, strpos( $source, 'function on_key_registered' ), 400 );
+			$removed    = substr( $source, strpos( $source, 'function on_key_removed' ), 400 );
+			$regression = substr( $source, strpos( $source, 'function on_counter_regression' ), 500 );
+			$this->assertStringContainsString( 'advanced_available', $registered );
+			$this->assertStringContainsString( 'advanced_available', $removed );
+			$this->assertStringNotContainsString(
+				'advanced_available',
+				$regression,
+				'The cloned-key warning is protection, not comfort — it must reach every tier.'
+			);
+		}
 	}
 }

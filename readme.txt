@@ -59,7 +59,8 @@ Two ways to run:
 Three of the four methods work in **every plan**, including Free and the fully-offline Local Shield. SMS is the one method that rides the managed relay, so it needs a Professional plan.
 
 * **TOTP** — RFC 6238, works with Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest. *Free.*
-* **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello, YubiKey. In-house implementation, no Composer dependency. Phishing-resistant. *Free.*
+* **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello and hardware security keys (YubiKey 5 series and other FIDO2 keys, USB-C or NFC phone tap). Ed25519 support, clone detection, named key manager. In-house implementation, no Composer dependency. Phishing-resistant. *One key per account free.*
+* **Advanced Security Keys (Business)** — multiple keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts.
 * **Email OTP** — 6-digit code, 10-minute validity, rate-limited (3 sends / 15 min, 60 s cooldown), 5 verify attempts per code. *Free.*
 * **SMS OTP (Professional)** — delivered through the managed reportedip.de relay, included with Professional and Business plans. No own SMS account or carrier contract required. Phone numbers encrypted at rest. Free / Contributor sites use TOTP, Passkey or Email instead.
 
@@ -183,6 +184,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * **2,500 mail/month + 75 SMS/month included**
 * Everything in Professional, plus white-label (logo, copy, mail templates), the WooCommerce complete integration, full WP-CLI surface and role-based login-time restrictions
 * **Audit event trail** — append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export
+* **Advanced Security Keys** — multiple WebAuthn keys per account (primary + backup YubiKey), automatic model detection via attestation, key-lifecycle email alerts
 * 1-year log retention, weekly security PDF report, GDPR data-export tool, priority support (12 h SLA)
 * **Multi-bookable:** book Business x2–x20 to scale domains, API quota and 2FA mail/SMS with the licence count — a volume discount applies automatically
 
@@ -193,7 +195,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 
 **Bundles (PRO+ only, refundable until first use):** 50/200/500-SMS bundles (14.90 / 49.90 / 99.90 €), 1k/5k/25k-mail bundles (4.90 / 14.90 / 49.90 €). All prices VAT-inclusive (Stripe `tax_behavior = inclusive`).
 
-What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, disposable-email blocking, the comment honeypot, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
+What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, disposable-email blocking, the comment honeypot, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys — multiple WebAuthn keys, model detection, key alerts (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
 
@@ -268,6 +270,10 @@ ReportedIP Hive is **not** distributed through wordpress.org. All releases are s
 = Do I need a ReportedIP.de account? =
 
 No. *Local Shield* works completely offline with no account and no external calls. A free account unlocks *Community Network*, which adds shared threat intelligence and coordinated-attack detection.
+
+= Which security keys are supported? =
+
+Every FIDO2/WebAuthn authenticator: hardware keys such as the YubiKey 5 series (USB-A, USB-C, Lightning — including NFC models tapped against a phone) and the Security Key by Yubico line, plus platform passkeys like Face ID, Touch ID and Windows Hello. One key per account is free and can be named, renamed and removed in the profile key manager. The Business plan adds Advanced Security Keys: several keys per account (keep one as a backup), automatic model detection and key-lifecycle email alerts. Older U2F-only keys (CTAP1) are not officially supported.
 
 = How is this different from Wordfence / Sucuri / iThemes Security? =
 

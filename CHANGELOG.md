@@ -2,6 +2,30 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.36] — Unreleased
+
+### Changed
+
+- **Advanced Security Keys are a Business-plan feature.** One security key or
+  passkey per account stays free on every plan — enrolment, login on all
+  three challenge surfaces, rename/delete and the cloned-key warning mail
+  included. The Business plan adds multiple keys per account (primary +
+  backup), automatic model detection via attestation and the key-lifecycle
+  email alerts. Enforced server-side in the registration endpoints
+  (`webauthn_advanced` in the feature matrix); free-tier registrations
+  request `attestation: 'none'` so no consent prompt appears for a feature
+  the tier does not include.
+- Fresh installs now allow all four 2FA methods by default
+  (`totp, email, webauthn, sms` — SMS becomes usable once a relay-capable
+  plan is connected). Existing sites keep their stored selection.
+- User-facing naming unified to "Passkey / Security key"; the setup wizard,
+  onboarding cards and profile labels mention YubiKey (USB-C / NFC)
+  explicitly.
+- README, readme.txt and the FAQ describe the supported hardware keys, the
+  free-vs-Business split and the backup-key recommendation; new hardware
+  test matrix under `docs/webauthn-hardware-test-matrix.md` documents the
+  release gate.
+
 ## [2.1.35] — Unreleased
 
 ### New

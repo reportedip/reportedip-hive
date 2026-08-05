@@ -186,7 +186,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_password_policy_all_users'      => false,
 
 		'reportedip_hive_2fa_enabled_global'             => false,
-		'reportedip_hive_2fa_allowed_methods'            => '["totp","email"]',
+		'reportedip_hive_2fa_allowed_methods'            => '["totp","email","webauthn","sms"]',
 		'reportedip_hive_2fa_enforce_roles'              => '["administrator"]',
 		'reportedip_hive_2fa_enforce_super_admins'       => true,
 		'reportedip_hive_2fa_enforce_grace_days'         => 7,

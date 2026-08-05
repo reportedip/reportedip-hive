@@ -52,7 +52,8 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 Three methods work in **every plan**, including Free and the fully-offline Local Shield; SMS is the one method that rides the managed relay and therefore needs a Professional plan.
 
 - **TOTP** (RFC 6238) — Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest. *Free.*
-- **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello, YubiKey. In-house implementation, phishing-resistant, no Composer dependency. *Free.*
+- **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello and hardware security keys (YubiKey 5 series and other FIDO2 keys, USB-C or NFC phone tap). Ed25519 support, clone detection through signature counters, named key manager. In-house implementation, phishing-resistant, no Composer dependency. *One key per account free.*
+- **Advanced Security Keys — Business plan.** Multiple keys per account (primary + backup), automatic model detection via attestation ("YubiKey 5 Series with NFC" shown in the key manager) and key-lifecycle email alerts.
 - **Email OTP** — 6-digit, 10 min validity, rate-limited (3 sends / 15 min). *Free.*
 - **SMS OTP — Professional plan.** Delivered through the managed reportedip.de relay (included with Professional and Business). No own SMS account or carrier contract required. Free / Contributor sites use TOTP, Passkey or Email instead.
 

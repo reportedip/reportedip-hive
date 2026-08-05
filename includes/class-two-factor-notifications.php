@@ -49,6 +49,9 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	 * @param string $name    User-visible key name.
 	 */
 	public function on_key_registered( $user_id, $name ) {
+		if ( ! ReportedIP_Hive_Two_Factor_WebAuthn::advanced_available() ) {
+			return;
+		}
 		$user = get_userdata( (int) $user_id );
 		if ( ! $user ) {
 			return;
@@ -73,6 +76,9 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	 * @param string $name    User-visible key name.
 	 */
 	public function on_key_removed( $user_id, $name ) {
+		if ( ! ReportedIP_Hive_Two_Factor_WebAuthn::advanced_available() ) {
+			return;
+		}
 		$user = get_userdata( (int) $user_id );
 		if ( ! $user ) {
 			return;

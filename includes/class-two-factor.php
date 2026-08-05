@@ -545,7 +545,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return string[] Method identifiers.
 	 */
 	public static function get_allowed_methods() {
-		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email"]' );
+		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email","webauthn","sms"]' );
 		$decoded = json_decode( $raw, true );
 		if ( ! is_array( $decoded ) || empty( $decoded ) ) {
 			return array( self::METHOD_TOTP, self::METHOD_EMAIL );

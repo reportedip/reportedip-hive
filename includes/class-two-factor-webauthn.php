@@ -75,6 +75,9 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission.', 'reportedip-hive' ) ) );
 		}
 		self::throttle_registration( $user_id );
+		if ( ! self::can_add_key( $user_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Multiple security keys per account require the Business plan. Your first key stays free.', 'reportedip-hive' ) ) );
+		}
 
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
@@ -119,7 +122,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 					'authenticatorSelection' => self::authenticator_selection( $hint ),
 					'hints'                  => '' !== $hint ? array( $hint ) : array(),
 					'timeout'                => self::CEREMONY_TIMEOUT_MS,
-					'attestation'            => 'direct',
+					'attestation'            => self::advanced_available() ? 'direct' : 'none',
 					'excludeCredentials'     => $exclude,
 				),
 			)
@@ -177,6 +180,38 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	/**
+	 * Whether the Business-tier advanced security-key features are active:
+	 * multiple keys per account, attestation-based model detection and the
+	 * key-lifecycle mails. One key per account is free — the base 2FA
+	 * protection is never gated.
+	 *
+	 * @return bool
+	 * @since 2.1.36
+	 */
+	public static function advanced_available() {
+		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+			return false;
+		}
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'webauthn_advanced' );
+		return ! empty( $status['available'] );
+	}
+
+	/**
+	 * Whether the user may register one more credential: always for the
+	 * first key, Business+ beyond that.
+	 *
+	 * @param int $user_id User id.
+	 * @return bool
+	 * @since 2.1.36
+	 */
+	public static function can_add_key( $user_id ) {
+		if ( empty( self::get_user_credentials( $user_id ) ) ) {
+			return true;
+		}
+		return self::advanced_available();
+	}
+
+	/**
 	 * Light per-user throttle for the registration options endpoint so a
 	 * scripted caller cannot churn challenge transients (max 10 per 10
 	 * minutes; the endpoint is priv + capability-checked already).
@@ -226,6 +261,10 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		$credential = json_decode( $raw, true );
 		if ( ! is_array( $credential ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid credential data.', 'reportedip-hive' ) ) );
+		}
+
+		if ( ! self::can_add_key( $user_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Multiple security keys per account require the Business plan. Your first key stays free.', 'reportedip-hive' ) ) );
 		}
 
 		$stored_challenge_b64 = get_transient( self::TRANSIENT_PREFIX . 'register_' . $user_id );
@@ -351,12 +390,13 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * @since 2.1.34
 	 */
 	public static function keys_for_display( $user_id ) {
-		$format = (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' );
-		$keys   = array();
+		$format   = (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' );
+		$advanced = self::advanced_available();
+		$keys     = array();
 		foreach ( self::get_user_credentials( $user_id ) as $cred ) {
 			$model = '';
 			$icon  = '';
-			if ( ! empty( $cred['aaguid'] ) && class_exists( 'ReportedIP_Hive_WebAuthn_Aaguid_Registry' ) ) {
+			if ( $advanced && ! empty( $cred['aaguid'] ) && class_exists( 'ReportedIP_Hive_WebAuthn_Aaguid_Registry' ) ) {
 				$info = ReportedIP_Hive_WebAuthn_Aaguid_Registry::lookup( (string) $cred['aaguid'] );
 				if ( null !== $info ) {
 					$model = $info['label'];

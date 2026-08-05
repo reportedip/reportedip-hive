@@ -383,10 +383,27 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							<?php checked( in_array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN, $allowed_methods, true ) ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label">
-							<?php esc_html_e( 'Passkey / WebAuthn / FIDO2', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Passkey / Security key (WebAuthn / FIDO2)', 'reportedip-hive' ); ?>
 						</span>
 					</label>
-					<p class="rip-help-text"><?php esc_html_e( 'Phishing-resistant sign-in via Face ID, Touch ID, Windows Hello or a hardware key (YubiKey).', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-text"><?php esc_html_e( 'Phishing-resistant sign-in via Face ID, Touch ID, Windows Hello or a hardware security key such as a YubiKey (USB-C or NFC phone tap). One key per account is included on every plan; users manage their keys on their profile page.', 'reportedip-hive' ); ?></p>
+					<?php
+					$webauthn_adv_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'webauthn_advanced' );
+					$webauthn_adv_locked = empty( $webauthn_adv_status['available'] );
+					?>
+					<p class="rip-help-text">
+						<?php
+						ReportedIP_Hive_Admin_Settings::render_tier_badge(
+							(string) ( $webauthn_adv_status['min_tier'] ?? 'business' ),
+							array(
+								'small'  => true,
+								'locked' => $webauthn_adv_locked,
+								'href'   => $webauthn_adv_locked ? ReportedIP_Hive_Admin_Settings::pricing_url() : '',
+							)
+						);
+						?>
+						<?php esc_html_e( 'Advanced Security Keys (Business): multiple keys per account (primary + backup YubiKey), automatic model detection via attestation and key-lifecycle email alerts.', 'reportedip-hive' ); ?>
+					</p>
 				</div>
 
 				<?php
@@ -1642,7 +1659,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						$method_labels   = array(
 							ReportedIP_Hive_Two_Factor::METHOD_TOTP     => __( 'Authenticator app', 'reportedip-hive' ),
 							ReportedIP_Hive_Two_Factor::METHOD_EMAIL    => __( 'Email code', 'reportedip-hive' ),
-							ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN => __( 'Passkey', 'reportedip-hive' ),
+							ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN => __( 'Passkey / security key', 'reportedip-hive' ),
 							ReportedIP_Hive_Two_Factor::METHOD_SMS      => __( 'SMS', 'reportedip-hive' ),
 						);
 						$enabled_methods = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID );

@@ -53,14 +53,16 @@
 	}
 
 	function initKeyManager( root ) {
-		var table     = document.getElementById( 'rip-webauthn-keys-table' );
-		var tbody     = table ? table.querySelector( 'tbody' ) : null;
-		var empty     = document.getElementById( 'rip-webauthn-keys-empty' );
-		var status    = document.getElementById( 'rip-webauthn-keys-status' );
-		var addToggle = document.getElementById( 'rip-webauthn-add-toggle' );
-		var addForm   = document.getElementById( 'rip-webauthn-add-form' );
-		var addStatus = document.getElementById( 'rip-webauthn-add-status' );
-		var nameInput = document.getElementById( 'rip-webauthn-key-name' );
+		var table       = document.getElementById( 'rip-webauthn-keys-table' );
+		var tbody       = table ? table.querySelector( 'tbody' ) : null;
+		var empty       = document.getElementById( 'rip-webauthn-keys-empty' );
+		var status      = document.getElementById( 'rip-webauthn-keys-status' );
+		var addToggle   = document.getElementById( 'rip-webauthn-add-toggle' );
+		var addForm     = document.getElementById( 'rip-webauthn-add-form' );
+		var addStatus   = document.getElementById( 'rip-webauthn-add-status' );
+		var nameInput   = document.getElementById( 'rip-webauthn-key-name' );
+		var upgradeNote = document.getElementById( 'rip-webauthn-upgrade-note' );
+		var advanced    = root.getAttribute( 'data-advanced' ) === '1';
 
 		if ( ! tbody ) { return; }
 
@@ -75,6 +77,13 @@
 			var hasKeys = keys && keys.length > 0;
 			if ( table ) { table.hidden = ! hasKeys; }
 			if ( empty ) { empty.hidden = hasKeys; }
+
+			// Free tier: the first key is included, more keys are Business.
+			var canAdd = advanced || ! hasKeys;
+			if ( addToggle ) { addToggle.hidden = ! canAdd; }
+			if ( ! canAdd && addForm ) { addForm.hidden = true; }
+			if ( upgradeNote ) { upgradeNote.hidden = canAdd; }
+
 			if ( ! hasKeys ) { return; }
 
 			keys.forEach( function ( key ) {

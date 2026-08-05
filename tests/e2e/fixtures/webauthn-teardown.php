@@ -34,6 +34,9 @@ if ( $user instanceof WP_User ) {
 
 ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_2fa_enabled_global' );
 ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_2fa_allowed_methods' );
+ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_known_tier' );
+ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_api_endpoint' );
+delete_transient( 'reportedip_hive_api_status' );
 ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_2fa_require_on_password_reset' );
 ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_2fa_password_reset_excluded_methods' );
 
