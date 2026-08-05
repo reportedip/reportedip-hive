@@ -1214,7 +1214,7 @@ class ReportedIP_Hive_Setup_Wizard {
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h11"/><circle cx="17" cy="17" r="4"/><path d="M19 19l2 2"/></svg>
 							</div>
 							<h4 class="rip-method-card__title"><?php esc_html_e( 'Passkey / Security key', 'reportedip-hive' ); ?></h4>
-							<p class="rip-method-card__desc"><?php esc_html_e( 'Face ID, Touch ID, Windows Hello or a YubiKey (USB-C / NFC) — phishing-resistant. One key free; backup keys and model detection with Business.', 'reportedip-hive' ); ?></p>
+							<p class="rip-method-card__desc"><?php esc_html_e( 'Face ID, Touch ID, Windows Hello or a YubiKey (USB-C / NFC). Phishing-resistant. One key free; backup keys and model detection with Business.', 'reportedip-hive' ); ?></p>
 						</div>
 
 						<div class="rip-method-card<?php echo esc_attr( $method_classes( 'email' ) ); ?>" data-method="email">

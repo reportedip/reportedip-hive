@@ -376,7 +376,7 @@
 			this.value = '';
 			var status = $qs('#rip-2fa-webauthn-status');
 			if (status) {
-				status.textContent = I18N.strings.otpDetected || 'That was the key\'s one-time password — touch the key only when the browser asks for it.';
+				status.textContent = I18N.strings.otpDetected || 'That was the key\'s one-time password. Touch the key only when the browser asks for it.';
 				status.className = 'rip-2fa-inline-status rip-2fa-inline-status--error';
 			}
 		}

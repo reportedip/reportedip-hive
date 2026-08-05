@@ -419,7 +419,7 @@
 		var codeInput   = document.getElementById( 'rip-2fa-code-webauthn' );
 
 		btn.addEventListener( 'click', function () {
-			if ( status ) { status.textContent = ( config.strings && config.strings.passkeyWaiting ) || 'Waiting for your security key — insert and touch it now, or approve the passkey prompt.'; }
+			if ( status ) { status.textContent = ( config.strings && config.strings.passkeyWaiting ) || 'Waiting for your security key. Insert and touch it now, or approve the passkey prompt.'; }
 			var data = new FormData();
 			data.append( 'action', 'reportedip_hive_2fa_webauthn_login_options' );
 			appendLoginToken( data );
@@ -460,7 +460,7 @@
 			var strings = config.strings || {};
 			if ( err && err.name === 'NotAllowedError' ) {
 				return strings.passkeyTimeout
-					|| 'The request timed out or was cancelled. Insert your key and touch it — on a phone, hold the key flat against the back (NFC) — then try again.';
+					|| 'The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again.';
 			}
 			if ( err && err.name === 'SecurityError' ) {
 				return strings.passkeySecurityError

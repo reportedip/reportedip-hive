@@ -42,7 +42,7 @@ $rip_wa_mgr_advanced = ReportedIP_Hive_Two_Factor_WebAuthn::advanced_available()
 	</div>
 
 	<?php if ( $rip_wa_mgr_advanced ) : ?>
-		<p class="description"><?php esc_html_e( 'Register more than one key so a lost or broken key never locks you out — keep a backup key in a safe place.', 'reportedip-hive' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Register more than one key so a lost or broken key never locks you out. Keep a backup key in a safe place.', 'reportedip-hive' ); ?></p>
 	<?php endif; ?>
 
 	<div class="rip-alert rip-alert--info" id="rip-webauthn-upgrade-note" hidden>

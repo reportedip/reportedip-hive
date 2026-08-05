@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-08-05T14:13:11+00:00\n"
+"PO-Revision-Date: 2026-08-05T14:17:08+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
@@ -6205,8 +6205,8 @@ msgid "Passkey / Security key"
 msgstr "Passkey / Sicherheitsschlüssel"
 
 #: admin/class-setup-wizard.php:1217
-msgid "Face ID, Touch ID, Windows Hello or a YubiKey (USB-C / NFC) — phishing-resistant. One key free; backup keys and model detection with Business."
-msgstr "Face ID, Touch ID, Windows Hello oder ein YubiKey (USB-C / NFC) — phishing-resistent. Ein Schlüssel kostenlos; Ersatzschlüssel und Modell-Erkennung mit Business."
+msgid "Face ID, Touch ID, Windows Hello or a YubiKey (USB-C / NFC). Phishing-resistant. One key free; backup keys and model detection with Business."
+msgstr "Face ID, Touch ID, Windows Hello oder ein YubiKey (USB-C / NFC). Phishing-resistent. Ein Schlüssel kostenlos; Ersatzschlüssel und Modell-Erkennung mit Business."
 
 #: admin/class-setup-wizard.php:1228
 #: templates/frontend-2fa-challenge.php:119
@@ -7124,8 +7124,8 @@ msgid "Key removed."
 msgstr "Schlüssel entfernt."
 
 #: admin/class-two-factor-admin.php:1636
-msgid "Last key removed — the passkey method is now disabled for this account."
-msgstr "Letzter Schlüssel entfernt — die Passkey-Methode ist für dieses Konto jetzt deaktiviert."
+msgid "Last key removed. The passkey method is now disabled for this account."
+msgstr "Letzter Schlüssel entfernt. Die Passkey-Methode ist für dieses Konto jetzt deaktiviert."
 
 #: admin/class-two-factor-admin.php:1637
 msgid "Remove this security key? You will no longer be able to sign in with it."
@@ -7136,16 +7136,16 @@ msgid "This browser does not support security keys."
 msgstr "Dieser Browser unterstützt keine Sicherheitsschlüssel."
 
 #: admin/class-two-factor-admin.php:1639
-msgid "Waiting for your security key — insert and touch it now."
-msgstr "Warte auf Ihren Sicherheitsschlüssel — jetzt einstecken und berühren."
+msgid "Waiting for your security key. Insert and touch it now."
+msgstr "Warte auf Ihren Sicherheitsschlüssel. Jetzt einstecken und berühren."
 
 #: admin/class-two-factor-admin.php:1640
 msgid "This key is already registered on this account."
 msgstr "Dieser Schlüssel ist für dieses Konto bereits registriert."
 
 #: admin/class-two-factor-admin.php:1641
-msgid "The request timed out or was cancelled. Insert your key and touch it — on a phone, hold it against the back (NFC)."
-msgstr "Die Anfrage ist abgelaufen oder wurde abgebrochen. Stecken Sie den Schlüssel ein und berühren Sie ihn — am Telefon halten Sie ihn an die Rückseite (NFC)."
+msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold it against the back for NFC)."
+msgstr "Die Anfrage ist abgelaufen oder wurde abgebrochen. Stecken Sie den Schlüssel ein und berühren Sie ihn (am Telefon für NFC an die Rückseite halten)."
 
 #: admin/class-two-factor-admin.php:1643
 msgid "This device"
@@ -8937,8 +8937,8 @@ msgstr "[%1$s] Verdächtige Anmeldung mit Sicherheitsschlüssel blockiert"
 #. translators: %s: key name
 #: includes/class-two-factor-notifications.php:119
 #, php-format
-msgid "A sign-in attempt with the security key \"%s\" was blocked because its usage counter did not advance — this can indicate a cloned key. If your key was recently reset this may be a false alarm; otherwise treat the key as compromised, remove it and enrol a new one."
-msgstr "Ein Anmeldeversuch mit dem Sicherheitsschlüssel \"%s\" wurde blockiert, weil sein Nutzungszähler nicht weitergezählt hat — das kann auf einen geklonten Schlüssel hindeuten. Wurde Ihr Schlüssel kürzlich zurückgesetzt, kann es ein Fehlalarm sein; andernfalls behandeln Sie den Schlüssel als kompromittiert, entfernen Sie ihn und registrieren Sie einen neuen."
+msgid "A sign-in attempt with the security key \"%s\" was blocked because its usage counter did not advance, which can indicate a cloned key. If your key was recently reset this may be a false alarm; otherwise treat the key as compromised, remove it and enrol a new one."
+msgstr "Ein Anmeldeversuch mit dem Sicherheitsschlüssel \"%s\" wurde blockiert, weil sein Nutzungszähler nicht weitergezählt hat, was auf einen geklonten Schlüssel hindeuten kann. Wurde Ihr Schlüssel kürzlich zurückgesetzt, kann es ein Fehlalarm sein; andernfalls behandeln Sie den Schlüssel als kompromittiert, entfernen Sie ihn und registrieren Sie einen neuen."
 
 #: includes/class-two-factor-notifications.php:143
 #: includes/class-two-factor-notifications.php:349
@@ -9021,12 +9021,12 @@ msgid "This passkey is already registered on your account. You can continue with
 msgstr "Dieser Passkey ist bereits in Ihrem Konto registriert. Sie können mit der nächsten Methode fortfahren."
 
 #: includes/class-two-factor-onboarding.php:441
-msgid "The request timed out or was cancelled. Touch your security key only when the browser dialog asks for it (pick \"Security key\" in the Windows dialog if offered), then try again — or choose another method."
-msgstr "Die Anfrage ist abgelaufen oder wurde abgebrochen. Berühren Sie Ihren Sicherheitsschlüssel erst, wenn der Browser-Dialog dazu auffordert (wählen Sie im Windows-Dialog \"Sicherheitsschlüssel\", falls angeboten), und versuchen Sie es erneut — oder wählen Sie eine andere Methode."
+msgid "The request timed out or was cancelled. Touch your security key only when the browser dialog asks for it (pick \"Security key\" in the Windows dialog if offered), then try again or choose another method."
+msgstr "Die Anfrage ist abgelaufen oder wurde abgebrochen. Berühren Sie Ihren Sicherheitsschlüssel erst, wenn der Browser-Dialog dazu auffordert (wählen Sie im Windows-Dialog \"Sicherheitsschlüssel\", falls angeboten), und versuchen Sie es dann erneut oder wählen Sie eine andere Methode."
 
 #: includes/class-two-factor-onboarding.php:442
-msgid "That long string was your YubiKey typing its one-time password — that happens when the key is touched while no browser dialog is waiting for it. The field was cleared; click the register button first and touch the key only when the browser asks."
-msgstr "Die lange Zeichenkette war das Einmalpasswort Ihres YubiKeys — das passiert, wenn der Schlüssel berührt wird, während kein Browser-Dialog darauf wartet. Das Feld wurde geleert; klicken Sie zuerst den Registrieren-Button und berühren Sie den Schlüssel erst auf Aufforderung."
+msgid "That long string was your YubiKey typing its one-time password. That happens when the key is touched while no browser dialog is waiting for it. The field was cleared; click the register button first and touch the key only when the browser asks."
+msgstr "Die lange Zeichenkette war das Einmalpasswort Ihres YubiKeys. Das passiert, wenn der Schlüssel berührt wird, während kein Browser-Dialog darauf wartet. Das Feld wurde geleert; klicken Sie zuerst den Registrieren-Button und berühren Sie den Schlüssel erst auf Aufforderung."
 
 #: includes/class-two-factor-onboarding.php:443
 msgid "Downloaded"
@@ -9625,13 +9625,13 @@ msgstr "Passkey-Anfrage läuft…"
 
 #: includes/class-two-factor.php:1517
 #: includes/class-two-factor.php:1947
-msgid "Waiting for your security key — insert and touch it now, or approve the passkey prompt."
-msgstr "Warte auf Ihren Sicherheitsschlüssel — jetzt einstecken und berühren, oder die Passkey-Abfrage bestätigen."
+msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
+msgstr "Warte auf Ihren Sicherheitsschlüssel. Jetzt einstecken und berühren oder die Passkey-Abfrage bestätigen."
 
 #: includes/class-two-factor.php:1518
 #: includes/class-two-factor.php:1948
-msgid "The request timed out or was cancelled. Insert your key and touch it — on a phone, hold the key flat against the back (NFC) — then try again."
-msgstr "Die Anfrage ist abgelaufen oder wurde abgebrochen. Stecken Sie den Schlüssel ein und berühren Sie ihn — am Telefon halten Sie ihn flach an die Rückseite (NFC) — und versuchen Sie es erneut."
+msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
+msgstr "Die Anfrage ist abgelaufen oder wurde abgebrochen. Stecken Sie den Schlüssel ein und berühren Sie ihn (am Telefon für NFC flach an die Rückseite halten), und versuchen Sie es erneut."
 
 #: includes/class-two-factor.php:1519
 #: includes/class-two-factor.php:1949
@@ -10035,8 +10035,8 @@ msgid "Verify"
 msgstr "Bestätigen"
 
 #: templates/partials/webauthn-challenge-panel.php:50
-msgid "Use your passkey or security key — Face ID, Touch ID, Windows Hello, or a hardware key such as a YubiKey. Insert the key and touch it, or hold it to the back of your phone (NFC)."
-msgstr "Nutzen Sie Ihren Passkey oder Sicherheitsschlüssel — Face ID, Touch ID, Windows Hello oder einen Hardware-Schlüssel wie einen YubiKey. Stecken Sie den Schlüssel ein und berühren Sie ihn, oder halten Sie ihn an die Rückseite Ihres Telefons (NFC)."
+msgid "Use your passkey or security key: Face ID, Touch ID, Windows Hello, or a hardware key such as a YubiKey. Insert the key and touch it, or hold it to the back of your phone (NFC)."
+msgstr "Nutzen Sie Ihren Passkey oder Sicherheitsschlüssel: Face ID, Touch ID, Windows Hello oder einen Hardware-Schlüssel wie einen YubiKey. Stecken Sie den Schlüssel ein und berühren Sie ihn, oder halten Sie ihn an die Rückseite Ihres Telefons (NFC)."
 
 #: templates/partials/webauthn-challenge-panel.php:55
 msgid "Use passkey or security key"
@@ -10051,8 +10051,8 @@ msgid "Add security key"
 msgstr "Sicherheitsschlüssel hinzufügen"
 
 #: templates/partials/webauthn-key-manager.php:45
-msgid "Register more than one key so a lost or broken key never locks you out — keep a backup key in a safe place."
-msgstr "Registrieren Sie mehr als einen Schlüssel, damit ein verlorener oder defekter Schlüssel Sie nie aussperrt — bewahren Sie einen Ersatzschlüssel an einem sicheren Ort auf."
+msgid "Register more than one key so a lost or broken key never locks you out. Keep a backup key in a safe place."
+msgstr "Registrieren Sie mehr als einen Schlüssel, damit ein verlorener oder defekter Schlüssel Sie nie aussperrt. Bewahren Sie einen Ersatzschlüssel an einem sicheren Ort auf."
 
 #. translators: 1: opening link tag, 2: closing link tag
 #: templates/partials/webauthn-key-manager.php:52
@@ -10303,8 +10303,8 @@ msgid "Set up passkey or security key"
 msgstr "Passkey oder Sicherheitsschlüssel einrichten"
 
 #: templates/two-factor-onboarding.php:346
-msgid "Face ID, Touch ID, Windows Hello or a hardware key such as a YubiKey (USB-C or NFC) — biometric data stays on your device."
-msgstr "Face ID, Touch ID, Windows Hello oder ein Hardware-Schlüssel wie ein YubiKey (USB-C oder NFC) — biometrische Daten bleiben auf Ihrem Gerät."
+msgid "Face ID, Touch ID, Windows Hello or a hardware key such as a YubiKey (USB-C or NFC). Biometric data stays on your device."
+msgstr "Face ID, Touch ID, Windows Hello oder ein Hardware-Schlüssel wie ein YubiKey (USB-C oder NFC). Biometrische Daten bleiben auf Ihrem Gerät."
 
 #: templates/two-factor-onboarding.php:349
 msgid "Key name (optional)"
@@ -10319,8 +10319,8 @@ msgid "Create passkey on this device (Face ID / Windows Hello)"
 msgstr "Passkey auf diesem Gerät erstellen (Face ID / Windows Hello)"
 
 #: templates/two-factor-onboarding.php:362
-msgid "Hardware key: click the button, wait for the browser dialog, and touch the key only when asked — touching it earlier makes the key type a one-time code instead. The passkey option stores the credential on this device."
-msgstr "Hardware-Schlüssel: Button klicken, auf den Browser-Dialog warten und den Schlüssel erst auf Aufforderung berühren — früheres Berühren lässt den Schlüssel stattdessen einen Einmalcode tippen. Die Passkey-Option speichert den Schlüssel auf diesem Gerät."
+msgid "Hardware key: click the button, wait for the browser dialog, and touch the key only when asked. Touching it earlier makes the key type a one-time code instead. The passkey option stores the credential on this device."
+msgstr "Hardware-Schlüssel: Button klicken, auf den Browser-Dialog warten und den Schlüssel erst auf Aufforderung berühren. Früheres Berühren lässt den Schlüssel stattdessen einen Einmalcode tippen. Die Passkey-Option speichert den Schlüssel auf diesem Gerät."
 
 #: templates/two-factor-onboarding.php:365
 msgid "Browser without passkey support? Pick another method."

@@ -438,8 +438,8 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 					'qrLibMissing'     => __( 'QR code library is missing. Please reload the page.', 'reportedip-hive' ),
 					'passkeyCreating'  => __( 'Creating passkey…', 'reportedip-hive' ),
 					'passkeyDuplicate' => __( 'This passkey is already registered on your account. You can continue with the next method.', 'reportedip-hive' ),
-					'passkeyCancelled' => __( 'The request timed out or was cancelled. Touch your security key only when the browser dialog asks for it (pick "Security key" in the Windows dialog if offered), then try again — or choose another method.', 'reportedip-hive' ),
-					'otpDetected'      => __( 'That long string was your YubiKey typing its one-time password — that happens when the key is touched while no browser dialog is waiting for it. The field was cleared; click the register button first and touch the key only when the browser asks.', 'reportedip-hive' ),
+					'passkeyCancelled' => __( 'The request timed out or was cancelled. Touch your security key only when the browser dialog asks for it (pick "Security key" in the Windows dialog if offered), then try again or choose another method.', 'reportedip-hive' ),
+					'otpDetected'      => __( 'That long string was your YubiKey typing its one-time password. That happens when the key is touched while no browser dialog is waiting for it. The field was cleared; click the register button first and touch the key only when the browser asks.', 'reportedip-hive' ),
 					'downloaded'       => __( 'Downloaded', 'reportedip-hive' ),
 					/* translators: %d: seconds remaining */
 					'resendIn'         => __( 'Resend in %d s', 'reportedip-hive' ),

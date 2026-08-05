@@ -116,7 +116,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 			__( '[%1$s] Suspicious security-key sign-in blocked', 'reportedip-hive' ),
 			sprintf(
 				/* translators: %s: key name */
-				__( 'A sign-in attempt with the security key "%s" was blocked because its usage counter did not advance — this can indicate a cloned key. If your key was recently reset this may be a false alarm; otherwise treat the key as compromised, remove it and enrol a new one.', 'reportedip-hive' ),
+				__( 'A sign-in attempt with the security key "%s" was blocked because its usage counter did not advance, which can indicate a cloned key. If your key was recently reset this may be a false alarm; otherwise treat the key as compromised, remove it and enrol a new one.', 'reportedip-hive' ),
 				esc_html( $name )
 			),
 			'webauthn_counter_regression'

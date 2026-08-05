@@ -210,7 +210,7 @@
 						setStatus(
 							status,
 							res.data.method_disabled
-								? str( 'methodDisabled', 'Last key removed — the passkey method is now disabled for this account.' )
+								? str( 'methodDisabled', 'Last key removed. The passkey method is now disabled for this account.' )
 								: str( 'removed', 'Key removed.' ),
 							'success'
 						);
@@ -243,7 +243,7 @@
 			nameInput.addEventListener( 'input', function () {
 				if ( this.value.length >= 32 && /[cbdefghijklnrtuv]{32,64}$/.test( this.value.trim() ) ) {
 					this.value = '';
-					setStatus( addStatus, str( 'otpDetected', 'That was the key\'s one-time password — touch the key only when the browser asks for it.' ), 'error' );
+					setStatus( addStatus, str( 'otpDetected', 'That was the key\'s one-time password. Touch the key only when the browser asks for it.' ), 'error' );
 				}
 			} );
 		}
@@ -262,7 +262,7 @@
 			var name = ( nameInput && nameInput.value.trim() )
 				|| ( hint === 'client-device' ? str( 'defaultPasskeyName', 'This device' ) : str( 'defaultKeyName', 'Security key' ) );
 
-			setStatus( addStatus, str( 'waitingForKey', 'Waiting for your security key — insert and touch it now.' ) );
+			setStatus( addStatus, str( 'waitingForKey', 'Waiting for your security key. Insert and touch it now.' ) );
 
 			post( 'reportedip_hive_2fa_webauthn_register_options', { hint: hint } )
 				.then( function ( res ) {
@@ -315,7 +315,7 @@
 					if ( err && err.name === 'InvalidStateError' ) {
 						message = str( 'alreadyRegistered', 'This key is already registered on this account.' );
 					} else if ( err && err.name === 'NotAllowedError' ) {
-						message = str( 'cancelled', 'The request timed out or was cancelled. Insert your key and touch it — on a phone, hold it against the back (NFC).' );
+						message = str( 'cancelled', 'The request timed out or was cancelled. Insert your key and touch it (on a phone, hold it against the back for NFC).' );
 					} else {
 						message = ( err && err.message ) || str( 'error', 'Something went wrong.' );
 					}
