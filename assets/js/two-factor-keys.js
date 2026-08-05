@@ -236,6 +236,18 @@
 			} );
 		}
 
+		// A touched YubiKey with no active WebAuthn dialog "types" its Yubico
+		// OTP (ModHex) into the focused field. Catch it on the name input,
+		// clear it and explain instead of letting it look like a broken key.
+		if ( nameInput ) {
+			nameInput.addEventListener( 'input', function () {
+				if ( this.value.length >= 32 && /[cbdefghijklnrtuv]{32,64}$/.test( this.value.trim() ) ) {
+					this.value = '';
+					setStatus( addStatus, str( 'otpDetected', 'That was the key\'s one-time password — touch the key only when the browser asks for it.' ), 'error' );
+				}
+			} );
+		}
+
 		Array.prototype.forEach.call( document.querySelectorAll( '.rip-webauthn-add-run' ), function ( btn ) {
 			btn.addEventListener( 'click', function () {
 				registerKey( btn.getAttribute( 'data-hint' ) || '' );

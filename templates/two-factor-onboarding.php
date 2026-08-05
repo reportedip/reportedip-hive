@@ -350,9 +350,17 @@ if ( $grace_deadline > 0 ) {
 					<input type="text" id="rip-2fa-webauthn-name" class="rip-input" maxlength="64" placeholder="<?php esc_attr_e( 'e.g. YubiKey office', 'reportedip-hive' ); ?>" />
 				</div>
 				<div class="rip-2fa-webauthn-status" id="rip-2fa-webauthn-status" role="status"></div>
-				<button type="button" class="rip-button rip-button--primary rip-button--lg" id="rip-2fa-webauthn-register">
-					<?php esc_html_e( 'Create passkey or register security key', 'reportedip-hive' ); ?>
-				</button>
+				<div class="rip-webauthn-keys__add-actions">
+					<button type="button" class="rip-button rip-button--primary rip-button--lg" id="rip-2fa-webauthn-register" data-hint="security-key">
+						<?php esc_html_e( 'Register hardware key (YubiKey, USB / NFC)', 'reportedip-hive' ); ?>
+					</button>
+					<button type="button" class="rip-button rip-button--secondary rip-button--lg" id="rip-2fa-webauthn-register-device" data-hint="client-device">
+						<?php esc_html_e( 'Create passkey on this device (Face ID / Windows Hello)', 'reportedip-hive' ); ?>
+					</button>
+				</div>
+				<p class="rip-help-text">
+					<?php esc_html_e( 'Hardware key: click the button, wait for the browser dialog, and touch the key only when asked — touching it earlier makes the key type a one-time code instead. The passkey option stores the credential on this device.', 'reportedip-hive' ); ?>
+				</p>
 				<p class="rip-help-text">
 					<?php esc_html_e( 'Browser without passkey support? Pick another method.', 'reportedip-hive' ); ?>
 				</p>

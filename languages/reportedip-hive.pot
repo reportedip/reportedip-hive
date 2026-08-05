@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-05T13:21:54+00:00\n"
+"POT-Creation-Date: 2026-08-05T14:13:09+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -1679,21 +1679,21 @@ msgstr ""
 #: admin/class-admin-settings.php:1246
 #: admin/class-setup-wizard.php:1991
 #: includes/class-two-factor-dashboard.php:142
-#: templates/two-factor-onboarding.php:527
+#: templates/two-factor-onboarding.php:535
 msgid "Security Focused"
 msgstr ""
 
 #: admin/class-admin-settings.php:1250
 #: admin/class-setup-wizard.php:1995
 #: includes/class-two-factor-dashboard.php:146
-#: templates/two-factor-onboarding.php:531
+#: templates/two-factor-onboarding.php:539
 msgid "GDPR Compliant"
 msgstr ""
 
 #: admin/class-admin-settings.php:1254
 #: admin/class-setup-wizard.php:1999
 #: includes/class-two-factor-dashboard.php:150
-#: templates/two-factor-onboarding.php:535
+#: templates/two-factor-onboarding.php:543
 msgid "Made in Germany"
 msgstr ""
 
@@ -4357,7 +4357,7 @@ msgstr ""
 #: admin/class-admin-settings.php:7616
 #: admin/class-two-factor-admin.php:1597
 #: templates/two-factor-onboarding.php:291
-#: templates/two-factor-onboarding.php:452
+#: templates/two-factor-onboarding.php:460
 msgid "Copy"
 msgstr ""
 
@@ -5947,8 +5947,8 @@ msgstr ""
 #: admin/class-setup-wizard.php:1738
 #: admin/class-setup-wizard.php:1838
 #: templates/two-factor-onboarding.php:249
-#: templates/two-factor-onboarding.php:419
-#: templates/two-factor-onboarding.php:475
+#: templates/two-factor-onboarding.php:427
+#: templates/two-factor-onboarding.php:483
 msgid "Back"
 msgstr ""
 
@@ -6561,7 +6561,7 @@ msgstr ""
 
 #: admin/class-setup-wizard.php:1974
 #: includes/class-two-factor-onboarding.php:360
-#: templates/two-factor-onboarding.php:503
+#: templates/two-factor-onboarding.php:511
 msgid "Go to dashboard"
 msgstr ""
 
@@ -6733,7 +6733,7 @@ msgstr ""
 #: includes/class-two-factor-reset-gate.php:1478
 #: templates/frontend-2fa-challenge.php:308
 #: templates/two-factor-challenge.php:312
-#: templates/two-factor-onboarding.php:410
+#: templates/two-factor-onboarding.php:418
 msgid "SMS code"
 msgstr ""
 
@@ -7057,7 +7057,7 @@ msgstr ""
 #: admin/class-two-factor-admin.php:1592
 #: templates/two-factor-onboarding.php:299
 #: templates/two-factor-onboarding.php:332
-#: templates/two-factor-onboarding.php:411
+#: templates/two-factor-onboarding.php:419
 msgid "Confirm"
 msgstr ""
 
@@ -9021,42 +9021,46 @@ msgid "This passkey is already registered on your account. You can continue with
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:441
-msgid "Passkey creation was cancelled. You can try again or choose another method."
+msgid "The request timed out or was cancelled. Touch your security key only when the browser dialog asks for it (pick \"Security key\" in the Windows dialog if offered), then try again — or choose another method."
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:442
+msgid "That long string was your YubiKey typing its one-time password — that happens when the key is touched while no browser dialog is waiting for it. The field was cleared; click the register button first and touch the key only when the browser asks."
+msgstr ""
+
+#: includes/class-two-factor-onboarding.php:443
 msgid "Downloaded"
 msgstr ""
 
 #. translators: %d: seconds remaining
-#: includes/class-two-factor-onboarding.php:444
+#: includes/class-two-factor-onboarding.php:445
 #, php-format
 msgid "Resend in %d s"
 msgstr ""
 
 #. translators: %d: seconds remaining
-#: includes/class-two-factor-onboarding.php:446
+#: includes/class-two-factor-onboarding.php:447
 #, php-format
 msgid "SMS sent — delivery can take up to 60 s (%d)"
 msgstr ""
 
-#: includes/class-two-factor-onboarding.php:447
+#: includes/class-two-factor-onboarding.php:448
 msgid "Please enter the number with country code, e.g. +49 151 12345678."
 msgstr ""
 
-#: includes/class-two-factor-onboarding.php:470
+#: includes/class-two-factor-onboarding.php:471
 msgid "Not signed in."
 msgstr ""
 
-#: includes/class-two-factor-onboarding.php:477
+#: includes/class-two-factor-onboarding.php:478
 msgid "Onboarding is no longer required."
 msgstr ""
 
-#: includes/class-two-factor-onboarding.php:492
+#: includes/class-two-factor-onboarding.php:493
 msgid "Skip quota exhausted. Please set up 2FA now or contact an administrator."
 msgstr ""
 
-#: includes/class-two-factor-onboarding.php:523
+#: includes/class-two-factor-onboarding.php:524
 msgid "Onboarding postponed."
 msgstr ""
 
@@ -10306,101 +10310,109 @@ msgstr ""
 msgid "Key name (optional)"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:354
-msgid "Create passkey or register security key"
+#: templates/two-factor-onboarding.php:355
+msgid "Register hardware key (YubiKey, USB / NFC)"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:357
+#: templates/two-factor-onboarding.php:358
+msgid "Create passkey on this device (Face ID / Windows Hello)"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:362
+msgid "Hardware key: click the button, wait for the browser dialog, and touch the key only when asked — touching it earlier makes the key type a one-time code instead. The passkey option stores the credential on this device."
+msgstr ""
+
+#: templates/two-factor-onboarding.php:365
 msgid "Browser without passkey support? Pick another method."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:363
+#: templates/two-factor-onboarding.php:371
 msgid "Set up SMS"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:371
+#: templates/two-factor-onboarding.php:379
 msgid "Privacy notice"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:372
+#: templates/two-factor-onboarding.php:380
 msgid "Phone number stored encrypted, delivered worldwide via our managed relay. Use SMS as a backup — SIM-swapping risk."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:379
+#: templates/two-factor-onboarding.php:387
 msgid "Enter your mobile number"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:382
+#: templates/two-factor-onboarding.php:390
 msgid "Mobile number (international, e.g. +49 151 12345678)"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:388
+#: templates/two-factor-onboarding.php:396
 msgid "Format: +49 151 12345678 (country code required)."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:394
+#: templates/two-factor-onboarding.php:402
 msgid "I consent to my phone number being shared with the EU SMS provider for authentication."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:397
-#: templates/two-factor-onboarding.php:398
+#: templates/two-factor-onboarding.php:405
+#: templates/two-factor-onboarding.php:406
 msgid "Send confirmation code by SMS"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:408
+#: templates/two-factor-onboarding.php:416
 msgid "Enter the 6-digit code from the SMS"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:421
+#: templates/two-factor-onboarding.php:429
 msgid "Next: recovery codes"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:428
+#: templates/two-factor-onboarding.php:436
 msgid "Save recovery codes"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:430
+#: templates/two-factor-onboarding.php:438
 msgid "Backup codes for sign-in if you lose access to your methods."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:440
+#: templates/two-factor-onboarding.php:448
 msgid "These codes are your fallback."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:441
+#: templates/two-factor-onboarding.php:449
 msgid "Each code is one-time use. Store them safely — separate from your WordPress password."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:445
+#: templates/two-factor-onboarding.php:453
 msgid "Recovery codes"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:456
+#: templates/two-factor-onboarding.php:464
 msgid "Download as .txt"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:460
+#: templates/two-factor-onboarding.php:468
 msgid "Print"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:467
+#: templates/two-factor-onboarding.php:475
 msgid "I have stored my recovery codes safely."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:470
+#: templates/two-factor-onboarding.php:478
 msgid "Finish"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:496
+#: templates/two-factor-onboarding.php:504
 msgid "Done — your account is now doubly secure"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:498
+#: templates/two-factor-onboarding.php:506
 msgid "You will be asked for the second factor on your next sign-in."
 msgstr ""
 
 #. translators: 1: opening link tag, 2: closing link tag
-#: templates/two-factor-onboarding.php:512
+#: templates/two-factor-onboarding.php:520
 #, php-format
 msgid "This page is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
 msgstr ""

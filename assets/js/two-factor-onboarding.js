@@ -367,6 +367,21 @@
 		});
 	});
 
+	// A touched YubiKey with no active WebAuthn dialog "types" its Yubico OTP
+	// (32-44 ModHex chars) into whatever field has focus. Detect that, clear
+	// the field and explain — otherwise users read it as a broken key.
+	var YUBICO_OTP_RE = /[cbdefghijklnrtuv]{32,64}$/;
+	$(document).on('input', '#rip-2fa-webauthn-name', function () {
+		if (this.value.length >= 32 && YUBICO_OTP_RE.test(this.value.trim())) {
+			this.value = '';
+			var status = $qs('#rip-2fa-webauthn-status');
+			if (status) {
+				status.textContent = I18N.strings.otpDetected || 'That was the key\'s one-time password — touch the key only when the browser asks for it.';
+				status.className = 'rip-2fa-inline-status rip-2fa-inline-status--error';
+			}
+		}
+	});
+
 	// WebAuthn / Passkey — full registration ceremony against the server class.
 	function startWebAuthnSetup() {
 		var status = $qs('#rip-2fa-webauthn-status');
@@ -377,8 +392,9 @@
 		if (status) { status.textContent = ''; }
 	}
 
-	$(document).on('click', '#rip-2fa-webauthn-register', function () {
+	$(document).on('click', '#rip-2fa-webauthn-register, #rip-2fa-webauthn-register-device', function () {
 		var status = $qs('#rip-2fa-webauthn-status');
+		var hint   = this.getAttribute('data-hint') || '';
 		if (!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create)) {
 			if (status) { status.textContent = I18N.strings.passkeyUnsupport; status.className = 'rip-2fa-inline-status rip-2fa-inline-status--error'; }
 			return;
@@ -389,6 +405,7 @@
 			action: 'reportedip_hive_2fa_webauthn_register_options',
 			nonce: I18N.nonce,
 			user_id: I18N.userId,
+			hint: hint,
 		}).done(function (res) {
 			if (!res || !res.success) {
 				if (status) { status.textContent = (res && res.data && res.data.message) || I18N.strings.networkError; status.className = 'rip-2fa-inline-status rip-2fa-inline-status--error'; }
@@ -401,6 +418,7 @@
 				user:      { id: b64urlDecode(pk.user.id), name: pk.user.name, displayName: pk.user.displayName },
 				pubKeyCredParams: pk.pubKeyCredParams,
 				authenticatorSelection: pk.authenticatorSelection,
+				hints: (pk.hints && pk.hints.length) ? pk.hints : undefined,
 				timeout:   pk.timeout,
 				attestation: pk.attestation,
 				excludeCredentials: (pk.excludeCredentials || []).map(function (c) { return { type: c.type, id: b64urlDecode(c.id), transports: c.transports }; }),
