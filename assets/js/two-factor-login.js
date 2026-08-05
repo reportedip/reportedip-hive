@@ -460,8 +460,14 @@
 			if ( soleSubmit ) { soleSubmit.hidden = true; }
 		}
 
+		function setPasskeyStatus( message, tone ) {
+			if ( ! status ) { return; }
+			status.textContent = message;
+			status.className   = 'rip-2fa-challenge__hint rip-2fa-inline-status' + ( tone ? ' rip-2fa-inline-status--' + tone : '' );
+		}
+
 		btn.addEventListener( 'click', function () {
-			if ( status ) { status.textContent = ( config.strings && config.strings.passkeyWaiting ) || 'Waiting for your security key. Insert and touch it now, or approve the passkey prompt.'; }
+			setPasskeyStatus( ( config.strings && config.strings.passkeyWaiting ) || 'Waiting for your security key. Insert and touch it now, or approve the passkey prompt.', '' );
 			var data = new FormData();
 			data.append( 'action', 'reportedip_hive_2fa_webauthn_login_options' );
 			appendLoginToken( data );
@@ -489,7 +495,7 @@
 					if ( form ) { submitFormOnce( form ); }
 				} )
 				.catch( function ( err ) {
-					if ( status ) { status.textContent = webAuthnErrorMessage( err ); }
+					setPasskeyStatus( webAuthnErrorMessage( err ), 'error' );
 					btn.disabled = false;
 					btn.focus();
 				} );

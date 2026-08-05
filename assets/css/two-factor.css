@@ -1871,3 +1871,8 @@ body.rip-2fa-onboarding #rip-2fa-sms-delivery-timer {
 #rip-2fa-panel-webauthn .rip-2fa-challenge__instruction {
 	margin-bottom: var(--rip-space-4, 1rem);
 }
+
+#rip-2fa-webauthn-status.rip-2fa-inline-status--error {
+	color: var(--rip-danger, #EF4444);
+	font-weight: 600;
+}
