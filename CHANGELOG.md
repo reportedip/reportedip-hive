@@ -2,6 +2,40 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.34] — Unreleased
+
+### New
+
+- **Security-key manager on the user profile.** Users can now register
+  multiple WebAuthn keys (primary plus backup — the recommended setup for
+  hardware keys), name each key, rename and remove them individually, and see
+  when a key was added and last used. Removing the last key disables the
+  method through the normal disable path; an enforced user whose only method
+  is the security key is refused and pointed to enrolling another method
+  first.
+- The onboarding wizard asks for an optional key name and the profile flow
+  lets the user pick "Security key (USB / NFC)" or "This device", which is
+  passed to the browser as a WebAuthn hint so Chrome and Edge open the right
+  dialog directly.
+- Ed25519 (EdDSA, COSE -8) is offered and verified when libsodium is
+  available — the preferred algorithm of YubiKey firmware 5.2+.
+- Email notifications for security-key lifecycle events: key registered, key
+  removed, and a sign-in blocked for a non-advancing signature counter
+  (possible cloned key).
+
+### Changed
+
+- Registration no longer requests a discoverable credential
+  (`residentKey: 'discouraged'`): enrolling a YubiKey no longer consumes one
+  of its limited passkey slots and no longer triggers a FIDO2-PIN setup
+  prompt. Existing discoverable credentials keep working.
+- The WebAuthn login AJAX endpoints now sit behind the same per-IP lockout
+  ladder as the challenge form — failed assertions count as failed attempts
+  and graduate to a real block, closing a rate-limit bypass. Registration
+  options are throttled per user.
+- `wp reportedip 2fa enable --method=webauthn` refuses to flag the method for
+  a user without a registered key (lockout footgun); `--force` overrides.
+
 ## [2.1.33] — Unreleased
 
 ### Fixes

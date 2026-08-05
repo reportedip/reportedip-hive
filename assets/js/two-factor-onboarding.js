@@ -417,12 +417,14 @@
 						},
 						transports: cred.response.getTransports ? cred.response.getTransports() : [],
 					};
+					var nameField = $qs('#rip-2fa-webauthn-name');
+					var keyName   = ( nameField && nameField.value.trim() ) || 'Passkey';
 					return $.post(I18N.ajaxUrl, {
 						action: 'reportedip_hive_2fa_webauthn_register_verify',
 						nonce: I18N.nonce,
 						user_id: I18N.userId,
 						credential: JSON.stringify(payload),
-						name: 'Passkey',
+						name: keyName,
 					});
 				})
 				.then(function (res2) {

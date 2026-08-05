@@ -1818,6 +1818,19 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return int
 	 */
 	private function get_ip_lockout_remaining( $ip ) {
+		return self::ip_lockout_remaining( $ip );
+	}
+
+	/**
+	 * Public flavour of the per-IP lockout check so ceremony endpoints
+	 * outside this class (the WebAuthn AJAX handlers) share the same
+	 * ladder as the challenge form instead of bypassing it.
+	 *
+	 * @param string $ip Client IP.
+	 * @return int Seconds remaining, 0 when not locked out.
+	 * @since 2.1.34
+	 */
+	public static function ip_lockout_remaining( $ip ) {
 		if ( empty( $ip ) || 'unknown' === $ip ) {
 			return 0;
 		}
@@ -1835,6 +1848,18 @@ class ReportedIP_Hive_Two_Factor {
 	 * @param string $ip
 	 */
 	private function increment_ip_failed_attempts( $ip ) {
+		self::record_ip_failure( $ip );
+	}
+
+	/**
+	 * Public flavour of the per-IP failure counter — every failed WebAuthn
+	 * AJAX verification feeds the same ladder (and the same DB-block
+	 * graduation) as a wrong code typed into the challenge form.
+	 *
+	 * @param string $ip Client IP.
+	 * @since 2.1.34
+	 */
+	public static function record_ip_failure( $ip ) {
 		if ( empty( $ip ) || 'unknown' === $ip ) {
 			return;
 		}

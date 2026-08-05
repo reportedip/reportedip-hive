@@ -78,13 +78,16 @@ export function teardownWebauthnBaseline(composeFile = 'docker-compose.yml', ser
  * `automaticPresenceSimulation: true` answers every create()/get() prompt
  * as if the user touched the key immediately.
  *
- * Returns the session so callers can tweak the authenticator mid-test
- * (e.g. disable presence simulation to exercise the timeout path).
+ * Returns the session plus the authenticator id so callers can remove or
+ * swap authenticators mid-test (e.g. simulate a second, separate key —
+ * two authenticators attached at once race on excludeCredentials).
  */
-export async function attachVirtualAuthenticator(page: Page): Promise<CDPSession> {
+export async function attachVirtualAuthenticator(
+    page: Page
+): Promise<{ cdp: CDPSession; authenticatorId: string }> {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('WebAuthn.enable');
-    await cdp.send('WebAuthn.addVirtualAuthenticator', {
+    const { authenticatorId } = (await cdp.send('WebAuthn.addVirtualAuthenticator', {
         options: {
             protocol: 'ctap2',
             transport: 'usb',
@@ -93,8 +96,8 @@ export async function attachVirtualAuthenticator(page: Page): Promise<CDPSession
             isUserVerified: false,
             automaticPresenceSimulation: true,
         },
-    });
-    return cdp;
+    })) as { authenticatorId: string };
+    return { cdp, authenticatorId };
 }
 
 /**

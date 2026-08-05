@@ -84,8 +84,13 @@ class ReportedIP_Hive_Two_Factor_CLI {
 	 * : One of: totp, email, webauthn, sms.
 	 *
 	 * [--secret=<secret>]
-	 * : Optional TOTP secret to import (Base32). Skip for email/webauthn/sms setups
-	 *   — those require interactive enrolment; CLI only flags the method.
+	 * : Optional TOTP secret to import (Base32). Skip for email/sms setups —
+	 *   those require interactive enrolment; CLI only flags the method.
+	 *
+	 * [--force]
+	 * : Required to flag webauthn without a registered credential. Without a
+	 *   credential the user cannot complete the challenge — the flag alone is
+	 *   a lockout, so the command refuses unless you know what you are doing.
 	 */
 	public function enable( $args, $assoc ) {
 		$user_id = isset( $args[0] ) ? absint( $args[0] ) : 0;
@@ -95,6 +100,15 @@ class ReportedIP_Hive_Two_Factor_CLI {
 		}
 		if ( ! ReportedIP_Hive_Two_Factor::get_method_meta_key( $method ) ) {
 			WP_CLI::error( 'Unknown method: ' . $method );
+		}
+
+		if ( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN === $method
+			&& empty( $assoc['force'] )
+			&& empty( ReportedIP_Hive_Two_Factor_WebAuthn::get_user_credentials( $user_id ) ) ) {
+			WP_CLI::error(
+				'User #' . $user_id . ' has no registered security key — enabling webauthn now would lock them out. '
+				. 'Enrol a key via the profile page first, or pass --force to flag the method anyway.'
+			);
 		}
 
 		if ( ReportedIP_Hive_Two_Factor::METHOD_TOTP === $method && ! empty( $assoc['secret'] ) ) {

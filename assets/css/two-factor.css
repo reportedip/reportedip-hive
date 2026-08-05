@@ -1794,3 +1794,65 @@ body.rip-2fa-onboarding #rip-2fa-sms-delivery-timer {
 	color: var(--rip-gray-600, #4B5563);
 	font-variant-numeric: tabular-nums;
 }
+
+/* ------------------------------------------------------------------
+ * Security-key / passkey manager (templates/partials/webauthn-key-manager.php)
+ * ------------------------------------------------------------------ */
+
+.rip-webauthn-keys {
+	max-width: 720px;
+	margin-top: var(--rip-space-2, 0.5rem);
+}
+
+.rip-webauthn-keys__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--rip-space-3, 0.75rem);
+	margin-bottom: var(--rip-space-2, 0.5rem);
+}
+
+.rip-webauthn-keys__title {
+	margin: 0;
+	font-size: var(--rip-text-base, 1rem);
+	font-weight: 600;
+	color: var(--rip-gray-900, #111827);
+}
+
+.rip-webauthn-keys__add {
+	margin: var(--rip-space-3, 0.75rem) 0;
+	padding: var(--rip-space-4, 1rem);
+	background: var(--rip-gray-50, #F9FAFB);
+}
+
+.rip-webauthn-keys__add-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--rip-space-2, 0.5rem);
+	margin-top: var(--rip-space-3, 0.75rem);
+}
+
+.rip-webauthn-keys__table {
+	margin-top: var(--rip-space-3, 0.75rem);
+}
+
+.rip-webauthn-keys__type {
+	white-space: nowrap;
+}
+
+.rip-webauthn-keys__type svg {
+	vertical-align: text-bottom;
+	margin-right: var(--rip-space-1, 0.25rem);
+	color: var(--rip-gray-600, #4B5563);
+}
+
+.rip-webauthn-keys__actions {
+	display: flex;
+	gap: var(--rip-space-2, 0.5rem);
+	justify-content: flex-end;
+}
+
+.rip-webauthn-keys__rename-input {
+	max-width: 220px;
+	margin-right: var(--rip-space-2, 0.5rem);
+}

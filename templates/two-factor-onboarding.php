@@ -341,13 +341,17 @@ if ( $grace_deadline > 0 ) {
 
 			<!-- Passkey-Setup-Panel -->
 			<div class="rip-2fa-setup-panel" data-method-panel="webauthn" hidden>
-				<h2><?php esc_html_e( 'Set up passkey', 'reportedip-hive' ); ?></h2>
+				<h2><?php esc_html_e( 'Set up passkey or security key', 'reportedip-hive' ); ?></h2>
 				<p>
-					<?php esc_html_e( 'Face ID, Touch ID, Windows Hello, YubiKey — biometric data stays on your device.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Face ID, Touch ID, Windows Hello or a hardware key such as a YubiKey (USB-C or NFC) — biometric data stays on your device.', 'reportedip-hive' ); ?>
 				</p>
+				<div class="rip-form-group">
+					<label class="rip-label" for="rip-2fa-webauthn-name"><?php esc_html_e( 'Key name (optional)', 'reportedip-hive' ); ?></label>
+					<input type="text" id="rip-2fa-webauthn-name" class="rip-input" maxlength="64" placeholder="<?php esc_attr_e( 'e.g. YubiKey office', 'reportedip-hive' ); ?>" />
+				</div>
 				<div class="rip-2fa-webauthn-status" id="rip-2fa-webauthn-status" role="status"></div>
 				<button type="button" class="rip-button rip-button--primary rip-button--lg" id="rip-2fa-webauthn-register">
-					<?php esc_html_e( 'Create passkey with this device', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Create passkey or register security key', 'reportedip-hive' ); ?>
 				</button>
 				<p class="rip-help-text">
 					<?php esc_html_e( 'Browser without passkey support? Pick another method.', 'reportedip-hive' ); ?>

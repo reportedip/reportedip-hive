@@ -36,6 +36,145 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	 */
 	public function __construct() {
 		add_action( 'wp_login', array( $this, 'on_login' ), 50, 2 );
+		add_action( 'reportedip_hive_2fa_webauthn_key_registered', array( $this, 'on_key_registered' ), 10, 2 );
+		add_action( 'reportedip_hive_2fa_webauthn_key_removed', array( $this, 'on_key_removed' ), 10, 2 );
+		add_action( 'reportedip_hive_2fa_webauthn_counter_regression', array( $this, 'on_counter_regression' ), 10, 3 );
+	}
+
+	/**
+	 * A new security key / passkey was registered — tell the account owner
+	 * so a hijacked session cannot silently add a persistent second factor.
+	 *
+	 * @param int    $user_id User the key was registered for.
+	 * @param string $name    User-visible key name.
+	 */
+	public function on_key_registered( $user_id, $name ) {
+		$user = get_userdata( (int) $user_id );
+		if ( ! $user ) {
+			return;
+		}
+		$this->send_key_event_email(
+			$user,
+			/* translators: 1: site name */
+			__( '[%1$s] A new security key was added to your account', 'reportedip-hive' ),
+			sprintf(
+				/* translators: %s: key name */
+				__( 'A new security key or passkey named "%s" was just registered for your account. If that was you, no further action is needed. If not, remove the key and change your password immediately.', 'reportedip-hive' ),
+				esc_html( $name )
+			),
+			'webauthn_key_registered'
+		);
+	}
+
+	/**
+	 * A security key / passkey was removed.
+	 *
+	 * @param int    $user_id User the key was removed from.
+	 * @param string $name    User-visible key name.
+	 */
+	public function on_key_removed( $user_id, $name ) {
+		$user = get_userdata( (int) $user_id );
+		if ( ! $user ) {
+			return;
+		}
+		$this->send_key_event_email(
+			$user,
+			/* translators: 1: site name */
+			__( '[%1$s] A security key was removed from your account', 'reportedip-hive' ),
+			sprintf(
+				/* translators: %s: key name */
+				__( 'The security key or passkey named "%s" was just removed from your account. If that was not you, review your security settings and change your password immediately.', 'reportedip-hive' ),
+				esc_html( $name )
+			),
+			'webauthn_key_removed'
+		);
+	}
+
+	/**
+	 * A sign-in attempt was rejected because the key's signature counter
+	 * did not advance — the classic cloned-authenticator indicator.
+	 *
+	 * @param int    $user_id       Affected user.
+	 * @param string $credential_id Base64url credential id (unused in the mail body).
+	 * @param string $name          User-visible key name.
+	 */
+	public function on_counter_regression( $user_id, $credential_id, $name ) {
+		unset( $credential_id );
+		$user = get_userdata( (int) $user_id );
+		if ( ! $user ) {
+			return;
+		}
+		$this->send_key_event_email(
+			$user,
+			/* translators: 1: site name */
+			__( '[%1$s] Suspicious security-key sign-in blocked', 'reportedip-hive' ),
+			sprintf(
+				/* translators: %s: key name */
+				__( 'A sign-in attempt with the security key "%s" was blocked because its usage counter did not advance — this can indicate a cloned key. If your key was recently reset this may be a false alarm; otherwise treat the key as compromised, remove it and enrol a new one.', 'reportedip-hive' ),
+				esc_html( $name )
+			),
+			'webauthn_counter_regression'
+		);
+	}
+
+	/**
+	 * Shared sender for the three security-key lifecycle mails, styled like
+	 * the new-device notification.
+	 *
+	 * @param WP_User $user             Recipient.
+	 * @param string  $subject_template Subject with a %1$s site-name placeholder.
+	 * @param string  $intro            Intro paragraph (already escaped).
+	 * @param string  $context_type     Mailer context type slug.
+	 */
+	private function send_key_event_email( $user, $subject_template, $intro, $context_type ) {
+		$site_name = wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES );
+		$ip        = ReportedIP_Hive::get_client_ip();
+		$when      = wp_date( 'd.m.Y H:i', time() );
+
+		$rows = array(
+			array( __( 'Time', 'reportedip-hive' ), $when ),
+			array( __( 'IP address', 'reportedip-hive' ), $ip ),
+			array( __( 'Device / Browser', 'reportedip-hive' ), self::short_ua() ),
+		);
+
+		$main_html = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;border-radius:8px;margin:0 0 24px;">';
+		$main_text = '';
+		foreach ( $rows as $row ) {
+			$main_html .= '<tr>';
+			$main_html .= '<td style="padding:10px 16px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;width:40%;">' . esc_html( $row[0] ) . '</td>';
+			$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;word-break:break-all;">' . esc_html( $row[1] ) . '</td>';
+			$main_html .= '</tr>';
+			$main_text .= sprintf( '%s: %s', $row[0], $row[1] ) . "\n";
+		}
+		$main_html .= '</table>';
+
+		ReportedIP_Hive_Mailer::get_instance()->send(
+			array(
+				'to'              => $user->user_email,
+				'subject'         => sprintf( $subject_template, $site_name ),
+				'greeting'        => sprintf(
+					/* translators: %s: user display name */
+					__( 'Hello %s,', 'reportedip-hive' ),
+					$user->display_name
+				),
+				'intro_text'      => $intro,
+				'main_block_html' => $main_html,
+				'main_block_text' => rtrim( $main_text ),
+				'cta'             => array(
+					'label' => __( 'Review your security settings', 'reportedip-hive' ),
+					'url'   => admin_url( 'profile.php' ),
+				),
+				'security_notice' => array(
+					'ip'        => $ip,
+					'timestamp' => $when,
+				),
+				'disclaimer'      => __( 'You are receiving this from the ReportedIP Hive security monitor because a security-key change touched your account.', 'reportedip-hive' ),
+				'context'         => array(
+					'type'    => $context_type,
+					'user_id' => $user->ID,
+				),
+			)
+		);
 	}
 
 	/**

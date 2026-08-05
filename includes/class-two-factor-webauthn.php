@@ -59,6 +59,9 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		add_action( 'wp_ajax_reportedip_hive_2fa_webauthn_login_options', array( $this, 'ajax_login_options' ) );
 		add_action( 'wp_ajax_nopriv_reportedip_hive_2fa_webauthn_login_verify', array( $this, 'ajax_login_verify' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_webauthn_login_verify', array( $this, 'ajax_login_verify' ) );
+		add_action( 'wp_ajax_reportedip_hive_2fa_webauthn_list_keys', array( $this, 'ajax_list_keys' ) );
+		add_action( 'wp_ajax_reportedip_hive_2fa_webauthn_rename_key', array( $this, 'ajax_rename_key' ) );
+		add_action( 'wp_ajax_reportedip_hive_2fa_webauthn_delete_key', array( $this, 'ajax_delete_key' ) );
 	}
 
 	/* ------------------------------------------------------------------
@@ -71,6 +74,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		if ( ! current_user_can( 'edit_user', $user_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission.', 'reportedip-hive' ) ) );
 		}
+		self::throttle_registration( $user_id );
 
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
@@ -79,6 +83,11 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 
 		$challenge = self::random_bytes( 32 );
 		set_transient( self::TRANSIENT_PREFIX . 'register_' . $user_id, base64_encode( $challenge ), self::CHALLENGE_TTL );
+
+		$hint = isset( $_POST['hint'] ) ? sanitize_key( wp_unslash( $_POST['hint'] ) ) : '';
+		if ( ! in_array( $hint, array( 'security-key', 'client-device', 'hybrid' ), true ) ) {
+			$hint = '';
+		}
 
 		$rp_id    = self::rp_id();
 		$existing = self::get_user_credentials( $user_id );
@@ -106,27 +115,103 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 						'name'        => $user->user_email,
 						'displayName' => $user->display_name,
 					),
-					'pubKeyCredParams'       => array(
-						array(
-							'type' => 'public-key',
-							'alg'  => -7,
-						),
-						array(
-							'type' => 'public-key',
-							'alg'  => -257,
-						),
-					),
-					'authenticatorSelection' => array(
-						'userVerification'   => self::user_verification_policy(),
-						'residentKey'        => 'preferred',
-						'requireResidentKey' => false,
-					),
+					'pubKeyCredParams'       => self::pub_key_cred_params(),
+					'authenticatorSelection' => self::authenticator_selection( $hint ),
+					'hints'                  => '' !== $hint ? array( $hint ) : array(),
 					'timeout'                => self::CEREMONY_TIMEOUT_MS,
 					'attestation'            => 'none',
 					'excludeCredentials'     => $exclude,
 				),
 			)
 		);
+	}
+
+	/**
+	 * COSE algorithms offered at registration, strongest first. Ed25519
+	 * (-8) is offered only while libsodium can verify it later — otherwise
+	 * a key registered today could never assert tomorrow.
+	 *
+	 * @return array<int,array{type:string,alg:int}>
+	 * @since 2.1.34
+	 */
+	private static function pub_key_cred_params() {
+		$algs = array( -7, -257 );
+		if ( function_exists( 'sodium_crypto_sign_verify_detached' ) ) {
+			array_unshift( $algs, -8 );
+		}
+		$params = array();
+		foreach ( $algs as $alg ) {
+			$params[] = array(
+				'type' => 'public-key',
+				'alg'  => $alg,
+			);
+		}
+		return $params;
+	}
+
+	/**
+	 * authenticatorSelection for the registration ceremony.
+	 *
+	 * residentKey stays 'discouraged' for second-factor use: a discoverable
+	 * credential would consume one of a YubiKey's limited credential slots
+	 * and force FIDO2-PIN enrolment mid-setup for no 2FA benefit (the login
+	 * flow always supplies allowCredentials).
+	 *
+	 * @param string $hint Optional UI hint ('security-key'|'client-device'|'hybrid').
+	 * @return array<string,mixed>
+	 * @since 2.1.34
+	 */
+	private static function authenticator_selection( $hint = '' ) {
+		$selection = array(
+			'userVerification'   => self::user_verification_policy(),
+			'residentKey'        => 'discouraged',
+			'requireResidentKey' => false,
+		);
+		if ( 'security-key' === $hint ) {
+			$selection['authenticatorAttachment'] = 'cross-platform';
+		}
+		if ( 'client-device' === $hint ) {
+			$selection['authenticatorAttachment'] = 'platform';
+		}
+		return $selection;
+	}
+
+	/**
+	 * Light per-user throttle for the registration options endpoint so a
+	 * scripted caller cannot churn challenge transients (max 10 per 10
+	 * minutes; the endpoint is priv + capability-checked already).
+	 *
+	 * @param int $user_id User the ceremony is requested for.
+	 * @since 2.1.34
+	 */
+	private static function throttle_registration( $user_id ) {
+		$key   = self::TRANSIENT_PREFIX . 'regthrottle_' . (int) $user_id;
+		$count = (int) get_transient( $key );
+		if ( $count >= 10 ) {
+			wp_send_json_error( array( 'message' => __( 'Too many registration attempts. Please wait a few minutes.', 'reportedip-hive' ) ) );
+		}
+		set_transient( $key, $count + 1, 10 * MINUTE_IN_SECONDS );
+	}
+
+	/**
+	 * Reject a login-ceremony AJAX call while the caller's IP is inside
+	 * the shared 2FA lockout ladder.
+	 *
+	 * @since 2.1.34
+	 */
+	private static function reject_when_ip_locked_out() {
+		$remaining = ReportedIP_Hive_Two_Factor::ip_lockout_remaining( ReportedIP_Hive::get_client_ip() );
+		if ( $remaining > 0 ) {
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						/* translators: %d: seconds remaining */
+						__( 'Too many failed attempts. Try again in %d seconds.', 'reportedip-hive' ),
+						$remaining
+					),
+				)
+			);
+		}
 	}
 
 	public function ajax_register_verify() {
@@ -212,7 +297,165 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
 		}
 
+		/**
+		 * Fires after a new WebAuthn credential was stored for a user.
+		 *
+		 * @param int    $user_id User the key was registered for.
+		 * @param string $name    User-visible key name.
+		 * @since 2.1.34
+		 */
+		do_action( 'reportedip_hive_2fa_webauthn_key_registered', $user_id, $record['name'] );
+
 		wp_send_json_success( array( 'message' => __( 'Security key registered.', 'reportedip-hive' ) ) );
+	}
+
+	/* ------------------------------------------------------------------
+	 * Key management (list / rename / delete individual credentials).
+	 * ------------------------------------------------------------------ */
+
+	/**
+	 * Resolve and authorise the target user for a key-management call.
+	 * Sends a JSON error (and exits) when the caller lacks permission.
+	 *
+	 * @return int Authorised user id.
+	 * @since 2.1.34
+	 */
+	private static function key_management_user() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+		$user_id = isset( $_POST['user_id'] ) ? absint( $_POST['user_id'] ) : get_current_user_id();
+		if ( ! current_user_can( 'edit_user', $user_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission.', 'reportedip-hive' ) ) );
+		}
+		return $user_id;
+	}
+
+	/**
+	 * List the user's credentials for the key-manager UI. The public key
+	 * itself never leaves the server.
+	 *
+	 * @since 2.1.34
+	 */
+	public function ajax_list_keys() {
+		$user_id = self::key_management_user();
+		wp_send_json_success( array( 'keys' => self::keys_for_display( $user_id ) ) );
+	}
+
+	/**
+	 * Build the sanitized key list for UI consumption.
+	 *
+	 * @param int $user_id User id.
+	 * @return array<int,array<string,mixed>>
+	 * @since 2.1.34
+	 */
+	public static function keys_for_display( $user_id ) {
+		$format = (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' );
+		$keys   = array();
+		foreach ( self::get_user_credentials( $user_id ) as $cred ) {
+			$keys[] = array(
+				'id'         => (string) ( $cred['id'] ?? '' ),
+				'name'       => (string) ( $cred['name'] ?? __( 'Security key', 'reportedip-hive' ) ),
+				'transports' => is_array( $cred['transports'] ?? null ) ? $cred['transports'] : array(),
+				'created_at' => ! empty( $cred['created_at'] ) ? wp_date( $format, (int) $cred['created_at'] ) : '',
+				'last_used'  => ! empty( $cred['last_used'] ) ? wp_date( $format, (int) $cred['last_used'] ) : '',
+			);
+		}
+		return $keys;
+	}
+
+	/**
+	 * Rename a single credential.
+	 *
+	 * @since 2.1.34
+	 */
+	public function ajax_rename_key() {
+		$user_id = self::key_management_user();
+		$cred_id = isset( $_POST['credential_id'] ) ? sanitize_text_field( wp_unslash( $_POST['credential_id'] ) ) : '';
+		$name    = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$name    = mb_substr( trim( $name ), 0, 64 );
+		if ( '' === $cred_id || '' === $name ) {
+			wp_send_json_error( array( 'message' => __( 'Missing credential ID or name.', 'reportedip-hive' ) ) );
+		}
+
+		$creds = self::get_user_credentials( $user_id );
+		foreach ( $creds as $idx => $cred ) {
+			if ( hash_equals( (string) ( $cred['id'] ?? '' ), $cred_id ) ) {
+				$creds[ $idx ]['name'] = $name;
+				self::save_user_credentials( $user_id, $creds );
+				wp_send_json_success( array( 'keys' => self::keys_for_display( $user_id ) ) );
+			}
+		}
+		wp_send_json_error( array( 'message' => __( 'Unknown security key.', 'reportedip-hive' ) ) );
+	}
+
+	/**
+	 * Delete a single credential.
+	 *
+	 * Removing the last credential disables the webauthn method through the
+	 * canonical disable path — unless webauthn is the user's only enabled
+	 * method while 2FA is enforced for them; then the delete is refused so
+	 * an enforced user cannot strand themselves without a second factor.
+	 *
+	 * @since 2.1.34
+	 */
+	public function ajax_delete_key() {
+		$user_id = self::key_management_user();
+		$cred_id = isset( $_POST['credential_id'] ) ? sanitize_text_field( wp_unslash( $_POST['credential_id'] ) ) : '';
+		if ( '' === $cred_id ) {
+			wp_send_json_error( array( 'message' => __( 'Missing credential ID.', 'reportedip-hive' ) ) );
+		}
+
+		$creds = self::get_user_credentials( $user_id );
+		$match = null;
+		foreach ( $creds as $idx => $cred ) {
+			if ( hash_equals( (string) ( $cred['id'] ?? '' ), $cred_id ) ) {
+				$match = $idx;
+				break;
+			}
+		}
+		if ( null === $match ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown security key.', 'reportedip-hive' ) ) );
+		}
+
+		$is_last = ( 1 === count( $creds ) );
+		if ( $is_last ) {
+			$enabled     = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user_id );
+			$only_method = ( array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN ) === array_values( $enabled ) );
+			$user        = get_userdata( $user_id );
+			$enforced    = $user && ReportedIP_Hive_Two_Factor::is_enforced_for_user( $user );
+			if ( $only_method && $enforced ) {
+				wp_send_json_error(
+					array(
+						'message' => __( 'This is your only security key and two-factor authentication is required for your account. Set up another method before removing it.', 'reportedip-hive' ),
+					)
+				);
+			}
+		}
+
+		$removed_name = (string) ( $creds[ $match ]['name'] ?? '' );
+		unset( $creds[ $match ] );
+		$creds = array_values( $creds );
+
+		if ( empty( $creds ) ) {
+			ReportedIP_Hive_Two_Factor::disable_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN );
+		} else {
+			self::save_user_credentials( $user_id, $creds );
+		}
+
+		/**
+		 * Fires after a WebAuthn credential was removed from a user.
+		 *
+		 * @param int    $user_id User the key was removed from.
+		 * @param string $name    User-visible key name.
+		 * @since 2.1.34
+		 */
+		do_action( 'reportedip_hive_2fa_webauthn_key_removed', $user_id, $removed_name );
+
+		wp_send_json_success(
+			array(
+				'keys'            => self::keys_for_display( $user_id ),
+				'method_disabled' => empty( $creds ),
+			)
+		);
 	}
 
 	/* ------------------------------------------------------------------
@@ -220,6 +463,8 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * ------------------------------------------------------------------ */
 
 	public function ajax_login_options() {
+		self::reject_when_ip_locked_out();
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WebAuthn assertion flow runs after first-factor auth; identity is bound via the signed reportedip_hive_2fa_nonce cookie verified inside user_id_from_login_token() on the next line. A traditional WP nonce cannot be used here because the user is not yet logged in (nopriv endpoint).
 		$token   = isset( $_POST['login_token'] ) ? sanitize_text_field( wp_unslash( $_POST['login_token'] ) ) : '';
 		$user_id = self::user_id_from_login_token( $token );
@@ -254,6 +499,8 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	public function ajax_login_verify() {
+		self::reject_when_ip_locked_out();
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WebAuthn assertion flow runs after first-factor auth; identity is bound via the signed reportedip_hive_2fa_nonce cookie verified inside user_id_from_login_token() on the next line. A traditional WP nonce cannot be used here because the user is not yet logged in (nopriv endpoint).
 		$token   = isset( $_POST['login_token'] ) ? sanitize_text_field( wp_unslash( $_POST['login_token'] ) ) : '';
 		$user_id = self::user_id_from_login_token( $token );
@@ -270,6 +517,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 
 		$ok = self::verify_assertion( $user_id, $assertion );
 		if ( is_wp_error( $ok ) ) {
+			ReportedIP_Hive_Two_Factor::record_ip_failure( ReportedIP_Hive::get_client_ip() );
 			wp_send_json_error( array( 'message' => $ok->get_error_message() ) );
 		}
 
@@ -331,7 +579,10 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		$allowed = array( 'usb', 'nfc', 'ble', 'hybrid', 'internal', 'smart-card' );
 		$clean   = array();
 		foreach ( $transports as $transport ) {
-			$transport = sanitize_key( (string) $transport );
+			if ( ! is_string( $transport ) ) {
+				continue;
+			}
+			$transport = sanitize_key( $transport );
 			if ( in_array( $transport, $allowed, true ) ) {
 				$clean[] = $transport;
 			}
@@ -487,14 +738,9 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		$signed_data      = $authenticator_data . $client_data_hash;
 
 		$public_key_cbor = base64_decode( $creds[ $match ]['public_key'] );
-		$pem             = self::cose_to_pem( $public_key_cbor );
-		if ( is_wp_error( $pem ) ) {
-			return $pem;
-		}
-
-		$ok = openssl_verify( $signed_data, $signature, $pem, OPENSSL_ALGO_SHA256 );
-		if ( 1 !== $ok ) {
-			return new WP_Error( 'webauthn_sig', __( 'Signature could not be verified.', 'reportedip-hive' ) );
+		$ok              = self::verify_signature( $public_key_cbor, $signed_data, $signature );
+		if ( is_wp_error( $ok ) ) {
+			return $ok;
 		}
 
 		$new_count    = (int) $auth_info['sign_count'];
@@ -512,6 +758,22 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 					'asserted'      => $new_count,
 				),
 				'high'
+			);
+
+			/**
+			 * Fires when an assertion is rejected for a non-advancing
+			 * signature counter — the classic cloned-key indicator.
+			 *
+			 * @param int    $user_id       Affected user.
+			 * @param string $credential_id Base64url credential id.
+			 * @param string $name          User-visible key name.
+			 * @since 2.1.34
+			 */
+			do_action(
+				'reportedip_hive_2fa_webauthn_counter_regression',
+				(int) $user_id,
+				(string) $creds[ $match ]['id'],
+				(string) ( $creds[ $match ]['name'] ?? '' )
 			);
 			return new WP_Error( 'webauthn_counter', __( 'Signature counter anomaly.', 'reportedip-hive' ) );
 		}
@@ -569,12 +831,18 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	/**
-	 * Decode a COSE-formatted public key to PEM so OpenSSL can use it.
+	 * Verify an assertion signature against a stored COSE public key,
+	 * dispatching on the key type: Ed25519 (OKP, -8) verifies through
+	 * libsodium, EC2/RSA through OpenSSL via the PEM path.
 	 *
-	 * @return string|WP_Error PEM-encoded public key.
+	 * @param string $public_key_cbor Stored COSE key bytes.
+	 * @param string $signed_data     authenticatorData . SHA-256(clientDataJSON).
+	 * @param string $signature       Raw signature from the authenticator.
+	 * @return true|WP_Error
+	 * @since 2.1.34
 	 */
-	private static function cose_to_pem( $cbor ) {
-		$decoded = self::cbor_decode( $cbor, 0 );
+	private static function verify_signature( $public_key_cbor, $signed_data, $signature ) {
+		$decoded = self::cbor_decode( $public_key_cbor, 0 );
 		if ( is_wp_error( $decoded ) ) {
 			return $decoded;
 		}
@@ -582,6 +850,41 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		if ( ! is_array( $map ) ) {
 			return new WP_Error( 'webauthn_cose', __( 'COSE key is not parseable.', 'reportedip-hive' ) );
 		}
+
+		if ( 1 === ( $map[1] ?? null ) && -8 === ( $map[3] ?? null ) ) {
+			if ( ! function_exists( 'sodium_crypto_sign_verify_detached' ) ) {
+				return new WP_Error( 'webauthn_eddsa_unavailable', __( 'Ed25519 verification is not available on this server.', 'reportedip-hive' ) );
+			}
+			$crv = $map[-1] ?? null;
+			$x   = $map[-2] ?? null;
+			if ( 6 !== $crv || ! is_string( $x ) || 32 !== strlen( $x ) || 64 !== strlen( $signature ) ) {
+				return new WP_Error( 'webauthn_cose_okp', __( 'Invalid Ed25519 key.', 'reportedip-hive' ) );
+			}
+			if ( ! sodium_crypto_sign_verify_detached( $signature, $signed_data, $x ) ) {
+				return new WP_Error( 'webauthn_sig', __( 'Signature could not be verified.', 'reportedip-hive' ) );
+			}
+			return true;
+		}
+
+		$pem = self::cose_map_to_pem( $map );
+		if ( is_wp_error( $pem ) ) {
+			return $pem;
+		}
+		$ok = openssl_verify( $signed_data, $signature, $pem, OPENSSL_ALGO_SHA256 );
+		if ( 1 !== $ok ) {
+			return new WP_Error( 'webauthn_sig', __( 'Signature could not be verified.', 'reportedip-hive' ) );
+		}
+		return true;
+	}
+
+	/**
+	 * PEM assembly for an already-decoded COSE key map (EC2 P-256 or RSA).
+	 *
+	 * @param array $map Decoded COSE key map.
+	 * @return string|WP_Error PEM-encoded public key.
+	 * @since 2.1.34
+	 */
+	private static function cose_map_to_pem( $map ) {
 		$kty = $map[1] ?? null;
 		$alg = $map[3] ?? null;
 

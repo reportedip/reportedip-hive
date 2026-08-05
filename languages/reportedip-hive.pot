@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-05T11:30:46+00:00\n"
+"POT-Creation-Date: 2026-08-05T12:03:47+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -177,7 +177,7 @@ msgstr ""
 #: admin/class-admin-settings.php:1816
 #: admin/class-admin-settings.php:5921
 #: admin/class-api-queue-table.php:53
-#: admin/class-two-factor-admin.php:1598
+#: admin/class-two-factor-admin.php:1638
 #: includes/class-two-factor-dashboard.php:107
 msgid "Status"
 msgstr ""
@@ -213,7 +213,7 @@ msgstr ""
 #: admin/class-admin-settings.php:6364
 #: admin/class-admin-settings.php:8086
 #: admin/class-setup-wizard.php:1893
-#: admin/class-two-factor-admin.php:2168
+#: admin/class-two-factor-admin.php:2220
 msgid "Active"
 msgstr ""
 
@@ -1679,21 +1679,21 @@ msgstr ""
 #: admin/class-admin-settings.php:1246
 #: admin/class-setup-wizard.php:1988
 #: includes/class-two-factor-dashboard.php:142
-#: templates/two-factor-onboarding.php:523
+#: templates/two-factor-onboarding.php:527
 msgid "Security Focused"
 msgstr ""
 
 #: admin/class-admin-settings.php:1250
 #: admin/class-setup-wizard.php:1992
 #: includes/class-two-factor-dashboard.php:146
-#: templates/two-factor-onboarding.php:527
+#: templates/two-factor-onboarding.php:531
 msgid "GDPR Compliant"
 msgstr ""
 
 #: admin/class-admin-settings.php:1254
 #: admin/class-setup-wizard.php:1996
 #: includes/class-two-factor-dashboard.php:150
-#: templates/two-factor-onboarding.php:531
+#: templates/two-factor-onboarding.php:535
 msgid "Made in Germany"
 msgstr ""
 
@@ -4357,7 +4357,7 @@ msgstr ""
 #: admin/class-admin-settings.php:7616
 #: admin/class-two-factor-admin.php:1580
 #: templates/two-factor-onboarding.php:291
-#: templates/two-factor-onboarding.php:448
+#: templates/two-factor-onboarding.php:452
 msgid "Copy"
 msgstr ""
 
@@ -4737,6 +4737,7 @@ msgid "Below content renders the badge as a full-width row directly below your t
 msgstr ""
 
 #: admin/class-admin-settings.php:7971
+#: admin/class-two-factor-admin.php:1616
 msgid "Save"
 msgstr ""
 
@@ -4990,7 +4991,7 @@ msgstr ""
 #: admin/class-setup-wizard.php:403
 #: admin/class-two-factor-admin.php:1574
 #: includes/class-two-factor-onboarding.php:354
-#: includes/class-two-factor.php:1961
+#: includes/class-two-factor.php:1986
 #: reportedip-hive.php:836
 msgid "Error"
 msgstr ""
@@ -5008,6 +5009,7 @@ msgstr ""
 #: admin/class-logs-table.php:56
 #: admin/class-waf-exceptions-table.php:76
 #: admin/class-whitelist-table.php:56
+#: templates/partials/webauthn-key-manager.php:66
 msgid "Actions"
 msgstr ""
 
@@ -5016,6 +5018,7 @@ msgid "Delete All Failed"
 msgstr ""
 
 #: admin/class-api-queue-table.php:144
+#: admin/class-two-factor-admin.php:1613
 #: admin/class-whitelist-table.php:130
 msgid "Never"
 msgstr ""
@@ -5146,8 +5149,9 @@ msgstr ""
 #: includes/class-ajax-handler.php:276
 #: includes/class-privacy.php:216
 #: includes/class-security-monitor.php:1194
-#: includes/class-two-factor-notifications.php:202
-#: includes/class-two-factor-notifications.php:216
+#: includes/class-two-factor-notifications.php:135
+#: includes/class-two-factor-notifications.php:341
+#: includes/class-two-factor-notifications.php:355
 msgid "Time"
 msgstr ""
 
@@ -5191,8 +5195,9 @@ msgstr ""
 #: includes/class-privacy.php:187
 #: includes/class-privacy.php:228
 #: includes/class-security-monitor.php:1193
-#: includes/class-two-factor-notifications.php:203
-#: includes/class-two-factor-notifications.php:217
+#: includes/class-two-factor-notifications.php:136
+#: includes/class-two-factor-notifications.php:342
+#: includes/class-two-factor-notifications.php:356
 msgid "IP address"
 msgstr ""
 
@@ -5825,6 +5830,7 @@ msgid "Import failed."
 msgstr ""
 
 #: admin/class-setup-wizard.php:675
+#: admin/class-two-factor-admin.php:1628
 msgid "Network error."
 msgstr ""
 
@@ -5916,6 +5922,7 @@ msgid "Create a free account"
 msgstr ""
 
 #: admin/class-setup-wizard.php:769
+#: templates/partials/webauthn-key-manager.php:45
 msgid "Key name"
 msgstr ""
 
@@ -5940,8 +5947,8 @@ msgstr ""
 #: admin/class-setup-wizard.php:1735
 #: admin/class-setup-wizard.php:1835
 #: templates/two-factor-onboarding.php:249
-#: templates/two-factor-onboarding.php:415
-#: templates/two-factor-onboarding.php:471
+#: templates/two-factor-onboarding.php:419
+#: templates/two-factor-onboarding.php:475
 msgid "Back"
 msgstr ""
 
@@ -6144,7 +6151,7 @@ msgstr ""
 
 #: admin/class-setup-wizard.php:1151
 #: admin/class-two-factor-admin.php:275
-#: admin/class-two-factor-admin.php:1594
+#: admin/class-two-factor-admin.php:1634
 #: templates/two-factor-onboarding.php:64
 msgid "Two-Factor Authentication"
 msgstr ""
@@ -6174,7 +6181,7 @@ msgid "Choose which methods users can set up."
 msgstr ""
 
 #: admin/class-setup-wizard.php:1195
-#: admin/class-two-factor-admin.php:1606
+#: admin/class-two-factor-admin.php:1646
 #: includes/class-two-factor-onboarding.php:437
 #: templates/frontend-2fa-challenge.php:125
 #: templates/two-factor-challenge.php:115
@@ -6554,7 +6561,7 @@ msgstr ""
 
 #: admin/class-setup-wizard.php:1971
 #: includes/class-two-factor-onboarding.php:360
-#: templates/two-factor-onboarding.php:499
+#: templates/two-factor-onboarding.php:503
 msgid "Go to dashboard"
 msgstr ""
 
@@ -6591,12 +6598,13 @@ msgid "Invalid user ID."
 msgstr ""
 
 #: admin/class-two-factor-admin.php:128
-#: admin/class-two-factor-admin.php:1780
-#: admin/class-two-factor-admin.php:2026
+#: admin/class-two-factor-admin.php:1832
+#: admin/class-two-factor-admin.php:2078
 #: includes/class-two-factor-dashboard.php:43
 #: includes/class-two-factor-dashboard.php:159
-#: includes/class-two-factor-webauthn.php:72
-#: includes/class-two-factor-webauthn.php:136
+#: includes/class-two-factor-webauthn.php:75
+#: includes/class-two-factor-webauthn.php:221
+#: includes/class-two-factor-webauthn.php:327
 msgid "You do not have permission."
 msgstr ""
 
@@ -6615,7 +6623,8 @@ msgstr ""
 #: admin/class-two-factor-admin.php:161
 #: includes/class-ajax-handler.php:265
 #: includes/class-two-factor-email.php:136
-#: includes/class-two-factor-notifications.php:226
+#: includes/class-two-factor-notifications.php:157
+#: includes/class-two-factor-notifications.php:365
 #: includes/class-two-factor-reset-gate.php:1216
 #, php-format
 msgid "Hello %s,"
@@ -6679,7 +6688,7 @@ msgid "Google Authenticator, Microsoft Authenticator, Authy, etc."
 msgstr ""
 
 #: admin/class-two-factor-admin.php:349
-#: admin/class-two-factor-admin.php:1604
+#: admin/class-two-factor-admin.php:1644
 #: includes/class-two-factor-onboarding.php:435
 #: templates/frontend-2fa-challenge.php:232
 #: templates/two-factor-challenge.php:232
@@ -6720,7 +6729,7 @@ msgstr ""
 #: includes/class-two-factor-reset-gate.php:1478
 #: templates/frontend-2fa-challenge.php:308
 #: templates/two-factor-challenge.php:312
-#: templates/two-factor-onboarding.php:406
+#: templates/two-factor-onboarding.php:410
 msgid "SMS code"
 msgstr ""
 
@@ -6883,7 +6892,7 @@ msgid "Blocks basic auth over XMLRPC (commonly used by bot attacks) but still al
 msgstr ""
 
 #: admin/class-two-factor-admin.php:816
-#: admin/class-two-factor-admin.php:1713
+#: admin/class-two-factor-admin.php:1765
 msgid "Trusted devices"
 msgstr ""
 
@@ -6985,7 +6994,7 @@ msgid "Sende…"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:1263
-#: admin/class-two-factor-admin.php:2044
+#: admin/class-two-factor-admin.php:2096
 msgid "Test SMS sent."
 msgstr ""
 
@@ -7044,7 +7053,7 @@ msgstr ""
 #: admin/class-two-factor-admin.php:1575
 #: templates/two-factor-onboarding.php:299
 #: templates/two-factor-onboarding.php:332
-#: templates/two-factor-onboarding.php:407
+#: templates/two-factor-onboarding.php:411
 msgid "Confirm"
 msgstr ""
 
@@ -7076,255 +7085,318 @@ msgstr ""
 msgid "Each code can be used only once."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1603
-#: includes/class-two-factor-onboarding.php:434
-#: includes/class-two-factor-reset-gate.php:1476
-msgid "Authenticator app"
+#: admin/class-two-factor-admin.php:1611
+#: admin/class-two-factor-admin.php:1625
+#: includes/class-two-factor-webauthn.php:356
+msgid "Security key"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1605
+#: admin/class-two-factor-admin.php:1612
+#: admin/class-two-factor-admin.php:1645
 #: includes/class-two-factor-onboarding.php:436
-#: includes/class-two-factor-webauthn.php:200
+#: includes/class-two-factor-webauthn.php:285
 #: templates/frontend-2fa-challenge.php:113
 #: templates/two-factor-challenge.php:99
 msgid "Passkey"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:1614
+msgid "Rename"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1615
+#: admin/class-waf-exceptions-table.php:88
+#: admin/class-waf-exceptions-table.php:154
+#: admin/class-whitelist-table.php:77
+#: admin/class-whitelist-table.php:139
+msgid "Remove"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1617
+msgid "Key renamed."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1618
+msgid "Key removed."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1619
+msgid "Last key removed — the passkey method is now disabled for this account."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1620
+msgid "Remove this security key? You will no longer be able to sign in with it."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1621
+msgid "This browser does not support security keys."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1622
+msgid "Waiting for your security key — insert and touch it now."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1623
+msgid "This key is already registered on this account."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1624
+msgid "The request timed out or was cancelled. Insert your key and touch it — on a phone, hold it against the back (NFC)."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1626
+msgid "This device"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1627
+msgid "Something went wrong."
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1643
+#: includes/class-two-factor-onboarding.php:434
+#: includes/class-two-factor-reset-gate.php:1476
+msgid "Authenticator app"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1654
 msgid "primary"
 msgstr ""
 
 #. translators: %d: method count
-#: admin/class-two-factor-admin.php:1627
+#: admin/class-two-factor-admin.php:1667
 #, php-format
 msgid "Active — %d method"
 msgid_plural "Active — %d methods"
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-two-factor-admin.php:1637
+#: admin/class-two-factor-admin.php:1677
 msgid "Not set up"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1645
+#: admin/class-two-factor-admin.php:1685
+msgid "Security keys"
+msgstr ""
+
+#: admin/class-two-factor-admin.php:1697
 #: includes/class-two-factor-dashboard.php:109
 msgid "Set up"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1650
+#: admin/class-two-factor-admin.php:1702
 #: templates/two-factor-onboarding.php:275
 msgid "Set up authenticator app"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1654
+#: admin/class-two-factor-admin.php:1706
 #: templates/two-factor-onboarding.php:308
 msgid "Set up email code"
 msgstr ""
 
 #. translators: 1: opening link tag, 2: closing link tag
-#: admin/class-two-factor-admin.php:1663
+#: admin/class-two-factor-admin.php:1715
 #, php-format
 msgid "Prefer a step-by-step walkthrough? %1$sSet up 2FA in the guided wizard%2$s."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1677
+#: admin/class-two-factor-admin.php:1729
 msgid "Recovery Codes"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1680
+#: admin/class-two-factor-admin.php:1732
 msgid "All codes used — generate new"
 msgstr ""
 
 #. translators: %d: remaining codes
-#: admin/class-two-factor-admin.php:1686
+#: admin/class-two-factor-admin.php:1738
 #, php-format
 msgid "%d left — generate new"
 msgstr ""
 
 #. translators: %d: remaining codes
-#: admin/class-two-factor-admin.php:1696
+#: admin/class-two-factor-admin.php:1748
 #, php-format
 msgid "%d available"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1704
+#: admin/class-two-factor-admin.php:1756
 msgid "Generate new recovery codes"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1719
+#: admin/class-two-factor-admin.php:1771
 msgid "Unknown device"
 msgstr ""
 
 #. translators: %s: date
-#: admin/class-two-factor-admin.php:1725
+#: admin/class-two-factor-admin.php:1777
 #, php-format
 msgid "Added: %s"
 msgstr ""
 
 #. translators: %s: date
-#: admin/class-two-factor-admin.php:1734
+#: admin/class-two-factor-admin.php:1786
 #, php-format
 msgid "Last used: %s"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1742
+#: admin/class-two-factor-admin.php:1794
 msgid "Revoke"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1748
+#: admin/class-two-factor-admin.php:1800
 msgid "Revoke all devices"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1756
+#: admin/class-two-factor-admin.php:1808
 msgid "Disable"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1759
+#: admin/class-two-factor-admin.php:1811
 msgid "Disable 2FA"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1794
+#: admin/class-two-factor-admin.php:1846
 #: includes/class-two-factor-email.php:90
-#: includes/class-two-factor-webauthn.php:77
+#: includes/class-two-factor-webauthn.php:81
 msgid "Invalid user."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1802
+#: admin/class-two-factor-admin.php:1854
 msgid "Encryption failed."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1827
+#: admin/class-two-factor-admin.php:1879
 msgid "No TOTP setup found. Please start again."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1832
+#: admin/class-two-factor-admin.php:1884
 msgid "Decryption failed."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1836
+#: admin/class-two-factor-admin.php:1888
 msgid "Invalid code. Please check your device clock."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1846
+#: admin/class-two-factor-admin.php:1898
 msgid "2FA with authenticator app enabled!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1863
+#: admin/class-two-factor-admin.php:1915
 msgid "User has no email address."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1876
+#: admin/class-two-factor-admin.php:1928
 msgid "Code sent. Please check your inbox."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1886
-#: admin/class-two-factor-admin.php:1968
+#: admin/class-two-factor-admin.php:1938
+#: admin/class-two-factor-admin.php:2020
 msgid "Invalid or expired code."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1901
+#: admin/class-two-factor-admin.php:1953
 msgid "Email code enabled!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1908
+#: admin/class-two-factor-admin.php:1960
 msgid "Invalid setup step. Email 2FA requires code verification."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1924
+#: admin/class-two-factor-admin.php:1976
 msgid "SMS module is not loaded."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1927
+#: admin/class-two-factor-admin.php:1979
 #: includes/class-two-factor-sms.php:210
 msgid "SMS sending is not configured. Please contact an administrator."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1937
+#: admin/class-two-factor-admin.php:1989
 msgid "Please confirm processing of your phone number by the managed SMS relay."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1948
+#: admin/class-two-factor-admin.php:2000
 msgid "Could not store phone number securely."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1958
+#: admin/class-two-factor-admin.php:2010
 msgid "SMS sent. Please enter the code."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1983
+#: admin/class-two-factor-admin.php:2035
 msgid "SMS 2FA enabled!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1990
+#: admin/class-two-factor-admin.php:2042
 msgid "Invalid setup step."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2004
+#: admin/class-two-factor-admin.php:2056
 msgid "Invalid method."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2007
+#: admin/class-two-factor-admin.php:2059
 msgid "Could not disable method."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2012
+#: admin/class-two-factor-admin.php:2064
 msgid "Method disabled."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2029
+#: admin/class-two-factor-admin.php:2081
 msgid "SMS sending is not available on your current plan."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2039
+#: admin/class-two-factor-admin.php:2091
 msgid "ReportedIP Hive: Test SMS. Setup was successful."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2057
+#: admin/class-two-factor-admin.php:2109
 msgid "2FA has been disabled."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2072
+#: admin/class-two-factor-admin.php:2124
 msgid "New recovery codes generated."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2089
+#: admin/class-two-factor-admin.php:2141
 msgid "Device revoked."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2091
+#: admin/class-two-factor-admin.php:2143
 msgid "Device not found."
 msgstr ""
 
 #. translators: %d: number of revoked devices
-#: admin/class-two-factor-admin.php:2107
+#: admin/class-two-factor-admin.php:2159
 #, php-format
 msgid "%d device revoked."
 msgid_plural "%d devices revoked."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-two-factor-admin.php:2122
-#: admin/class-two-factor-admin.php:2136
+#: admin/class-two-factor-admin.php:2174
+#: admin/class-two-factor-admin.php:2188
 msgid "ReportedIP Hive 2FA-Daten"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2163
+#: admin/class-two-factor-admin.php:2215
 msgid "ReportedIP 2FA"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2167
+#: admin/class-two-factor-admin.php:2219
 #: includes/class-two-factor-dashboard.php:33
 #: includes/class-two-factor-dashboard.php:34
 #: includes/class-two-factor-dashboard.php:62
 msgid "2FA Status"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2171
+#: admin/class-two-factor-admin.php:2223
 #: templates/two-factor-onboarding.php:127
 msgid "Method"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:2175
+#: admin/class-two-factor-admin.php:2227
 msgid "Recovery codes remaining"
 msgstr ""
 
@@ -7343,14 +7415,8 @@ msgstr ""
 #: admin/class-waf-exceptions-table.php:75
 #: admin/class-whitelist-table.php:54
 #: includes/class-privacy.php:191
+#: templates/partials/webauthn-key-manager.php:64
 msgid "Added"
-msgstr ""
-
-#: admin/class-waf-exceptions-table.php:88
-#: admin/class-waf-exceptions-table.php:154
-#: admin/class-whitelist-table.php:77
-#: admin/class-whitelist-table.php:139
-msgid "Remove"
 msgstr ""
 
 #: admin/class-waf-exceptions-table.php:118
@@ -7390,6 +7456,7 @@ msgstr ""
 
 #: admin/class-whitelist-table.php:52
 #: includes/class-privacy.php:154
+#: templates/partials/webauthn-key-manager.php:63
 msgid "Type"
 msgstr ""
 
@@ -8423,6 +8490,7 @@ msgid "Device name"
 msgstr ""
 
 #: includes/class-privacy.php:199
+#: templates/partials/webauthn-key-manager.php:65
 msgid "Last used"
 msgstr ""
 
@@ -8820,27 +8888,69 @@ msgid "Magic-login links sent by Subscriptions and Memberships intentionally byp
 msgstr ""
 
 #. translators: 1: site name
-#: includes/class-two-factor-notifications.php:191
+#: includes/class-two-factor-notifications.php:59
+#, php-format
+msgid "[%1$s] A new security key was added to your account"
+msgstr ""
+
+#. translators: %s: key name
+#: includes/class-two-factor-notifications.php:62
+#, php-format
+msgid "A new security key or passkey named \"%s\" was just registered for your account. If that was you, no further action is needed. If not, remove the key and change your password immediately."
+msgstr ""
+
+#. translators: 1: site name
+#: includes/class-two-factor-notifications.php:83
+#, php-format
+msgid "[%1$s] A security key was removed from your account"
+msgstr ""
+
+#. translators: %s: key name
+#: includes/class-two-factor-notifications.php:86
+#, php-format
+msgid "The security key or passkey named \"%s\" was just removed from your account. If that was not you, review your security settings and change your password immediately."
+msgstr ""
+
+#. translators: 1: site name
+#: includes/class-two-factor-notifications.php:110
+#, php-format
+msgid "[%1$s] Suspicious security-key sign-in blocked"
+msgstr ""
+
+#. translators: %s: key name
+#: includes/class-two-factor-notifications.php:113
+#, php-format
+msgid "A sign-in attempt with the security key \"%s\" was blocked because its usage counter did not advance — this can indicate a cloned key. If your key was recently reset this may be a false alarm; otherwise treat the key as compromised, remove it and enrol a new one."
+msgstr ""
+
+#: includes/class-two-factor-notifications.php:137
+#: includes/class-two-factor-notifications.php:343
+#: includes/class-two-factor-notifications.php:357
+msgid "Device / Browser"
+msgstr ""
+
+#: includes/class-two-factor-notifications.php:164
+#: includes/class-two-factor-notifications.php:372
+msgid "Review your security settings"
+msgstr ""
+
+#: includes/class-two-factor-notifications.php:171
+msgid "You are receiving this from the ReportedIP Hive security monitor because a security-key change touched your account."
+msgstr ""
+
+#. translators: 1: site name
+#: includes/class-two-factor-notifications.php:330
 #, php-format
 msgid "[%1$s] Sign-in from a new device"
 msgstr ""
 
 #. translators: %s: site name
-#: includes/class-two-factor-notifications.php:197
+#: includes/class-two-factor-notifications.php:336
 #, php-format
 msgid "Just letting you know — your account at %s was just accessed from a device that hasn't signed in here before. If that was you, no further action is needed."
 msgstr ""
 
-#: includes/class-two-factor-notifications.php:204
-#: includes/class-two-factor-notifications.php:218
-msgid "Device / Browser"
-msgstr ""
-
-#: includes/class-two-factor-notifications.php:233
-msgid "Review your security settings"
-msgstr ""
-
-#: includes/class-two-factor-notifications.php:240
+#: includes/class-two-factor-notifications.php:379
 msgid "You are receiving this from the ReportedIP Hive security monitor. You can adjust new-device alerts in the plugin settings at any time."
 msgstr ""
 
@@ -9243,125 +9353,155 @@ msgstr ""
 msgid "Hive Professional extends the second factor to My Account and Checkout — the only WordPress security plugin that keeps customers inside the storefront theme during sign-in. Solid Security and the WordPress Two-Factor plugin only cover the wp-admin login."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:143
+#: includes/class-two-factor-webauthn.php:191
+msgid "Too many registration attempts. Please wait a few minutes."
+msgstr ""
+
+#. translators: %d: seconds remaining
+#: includes/class-two-factor-webauthn.php:209
+#, php-format
+msgid "Too many failed attempts. Try again in %d seconds."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:228
 msgid "Invalid credential data."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:148
+#: includes/class-two-factor-webauthn.php:233
 msgid "Challenge expired, please start again."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:156
-#: includes/class-two-factor-webauthn.php:450
+#: includes/class-two-factor-webauthn.php:241
+#: includes/class-two-factor-webauthn.php:701
 msgid "Invalid clientDataJSON."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:159
-#: includes/class-two-factor-webauthn.php:453
+#: includes/class-two-factor-webauthn.php:244
+#: includes/class-two-factor-webauthn.php:704
 msgid "clientDataJSON.type is wrong."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:162
-#: includes/class-two-factor-webauthn.php:463
+#: includes/class-two-factor-webauthn.php:247
+#: includes/class-two-factor-webauthn.php:714
 msgid "Challenge mismatch."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:165
-#: includes/class-two-factor-webauthn.php:466
+#: includes/class-two-factor-webauthn.php:250
+#: includes/class-two-factor-webauthn.php:717
 msgid "Origin mismatch."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:181
-#: includes/class-two-factor-webauthn.php:477
+#: includes/class-two-factor-webauthn.php:266
+#: includes/class-two-factor-webauthn.php:728
 msgid "RP-ID hash mismatch."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:184
-#: includes/class-two-factor-webauthn.php:480
+#: includes/class-two-factor-webauthn.php:269
+#: includes/class-two-factor-webauthn.php:731
 msgid "The authenticator did not confirm user presence."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:187
-#: includes/class-two-factor-webauthn.php:483
+#: includes/class-two-factor-webauthn.php:272
+#: includes/class-two-factor-webauthn.php:734
 msgid "User verification is required but was not performed."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:190
+#: includes/class-two-factor-webauthn.php:275
 msgid "Credential data incomplete."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:215
+#: includes/class-two-factor-webauthn.php:309
 msgid "Security key registered."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:227
-#: includes/class-two-factor-webauthn.php:261
-msgid "Invalid challenge token."
+#: includes/class-two-factor-webauthn.php:376
+msgid "Missing credential ID or name."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:268
-msgid "Invalid assertion data."
-msgstr ""
-
-#: includes/class-two-factor-webauthn.php:277
-msgid "Security key verified."
-msgstr ""
-
-#: includes/class-two-factor-webauthn.php:433
-msgid "Missing credential ID."
-msgstr ""
-
-#: includes/class-two-factor-webauthn.php:444
+#: includes/class-two-factor-webauthn.php:387
+#: includes/class-two-factor-webauthn.php:416
+#: includes/class-two-factor-webauthn.php:695
 msgid "Unknown security key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:458
+#: includes/class-two-factor-webauthn.php:404
+#: includes/class-two-factor-webauthn.php:684
+msgid "Missing credential ID."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:428
+msgid "This is your only security key and two-factor authentication is required for your account. Set up another method before removing it."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:472
+#: includes/class-two-factor-webauthn.php:508
+msgid "Invalid challenge token."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:515
+msgid "Invalid assertion data."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:525
+msgid "Security key verified."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:709
 msgid "Challenge expired."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:497
-msgid "Signature could not be verified."
-msgstr ""
-
-#: includes/class-two-factor-webauthn.php:516
+#: includes/class-two-factor-webauthn.php:778
 msgid "Signature counter anomaly."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:535
+#: includes/class-two-factor-webauthn.php:797
 msgid "Attestation object is missing authData."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:542
+#: includes/class-two-factor-webauthn.php:804
 msgid "authenticatorData is too short."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:565
+#: includes/class-two-factor-webauthn.php:827
 msgid "Attested credential data is missing."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:583
+#: includes/class-two-factor-webauthn.php:851
 msgid "COSE key is not parseable."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:591
+#: includes/class-two-factor-webauthn.php:856
+msgid "Ed25519 verification is not available on this server."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:861
+msgid "Invalid Ed25519 key."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:864
+#: includes/class-two-factor-webauthn.php:875
+msgid "Signature could not be verified."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:894
 msgid "Unsupported EC curve."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:596
+#: includes/class-two-factor-webauthn.php:899
 msgid "Invalid EC2 key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:605
+#: includes/class-two-factor-webauthn.php:908
 msgid "Invalid RSA key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:610
+#: includes/class-two-factor-webauthn.php:913
 msgid "Unsupported COSE algorithm."
 msgstr ""
 
 #: includes/class-two-factor.php:208
 #: includes/class-two-factor.php:1515
-#: includes/class-two-factor.php:1917
+#: includes/class-two-factor.php:1942
 msgid "Your session has expired. Please sign in again."
 msgstr ""
 
@@ -9443,32 +9583,32 @@ msgid "Back to login"
 msgstr ""
 
 #: includes/class-two-factor.php:1513
-#: includes/class-two-factor.php:1915
+#: includes/class-two-factor.php:1940
 msgid "New code sent."
 msgstr ""
 
 #: includes/class-two-factor.php:1514
-#: includes/class-two-factor.php:1916
+#: includes/class-two-factor.php:1941
 msgid "Sending failed."
 msgstr ""
 
 #: includes/class-two-factor.php:1516
-#: includes/class-two-factor.php:1918
+#: includes/class-two-factor.php:1943
 msgid "Passkey request in progress…"
 msgstr ""
 
 #: includes/class-two-factor.php:1517
-#: includes/class-two-factor.php:1919
+#: includes/class-two-factor.php:1944
 msgid "Failed to fetch passkey options."
 msgstr ""
 
 #: includes/class-two-factor.php:1518
-#: includes/class-two-factor.php:1920
+#: includes/class-two-factor.php:1945
 msgid "Verification failed."
 msgstr ""
 
 #: includes/class-two-factor.php:1519
-#: includes/class-two-factor.php:1921
+#: includes/class-two-factor.php:1946
 msgid "Passkey login cancelled."
 msgstr ""
 
@@ -9480,7 +9620,7 @@ msgstr ""
 msgid "Your two-factor session expired. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1960
+#: includes/class-two-factor.php:1985
 msgid "2FA template not found."
 msgstr ""
 
@@ -9861,6 +10001,39 @@ msgstr ""
 msgid "Use passkey or security key"
 msgstr ""
 
+#: templates/partials/webauthn-key-manager.php:34
+msgid "Security keys & passkeys"
+msgstr ""
+
+#: templates/partials/webauthn-key-manager.php:37
+msgid "Add security key"
+msgstr ""
+
+#: templates/partials/webauthn-key-manager.php:41
+msgid "Register more than one key so a lost or broken key never locks you out — keep a backup key in a safe place."
+msgstr ""
+
+#: templates/partials/webauthn-key-manager.php:46
+#: templates/two-factor-onboarding.php:350
+msgid "e.g. YubiKey office"
+msgstr ""
+
+#: templates/partials/webauthn-key-manager.php:50
+msgid "Security key (USB / NFC)"
+msgstr ""
+
+#: templates/partials/webauthn-key-manager.php:53
+msgid "This device (Face ID / Windows Hello)"
+msgstr ""
+
+#: templates/partials/webauthn-key-manager.php:62
+msgid "Name"
+msgstr ""
+
+#: templates/partials/webauthn-key-manager.php:73
+msgid "No security key registered yet. Add a hardware key (e.g. YubiKey) or a passkey on this device."
+msgstr ""
+
 #: templates/two-factor-challenge.php:92
 msgid "6-digit code from your authenticator app"
 msgstr ""
@@ -10083,108 +10256,112 @@ msgid "Protect your email account with 2FA too."
 msgstr ""
 
 #: templates/two-factor-onboarding.php:344
-msgid "Set up passkey"
+msgid "Set up passkey or security key"
 msgstr ""
 
 #: templates/two-factor-onboarding.php:346
-msgid "Face ID, Touch ID, Windows Hello, YubiKey — biometric data stays on your device."
+msgid "Face ID, Touch ID, Windows Hello or a hardware key such as a YubiKey (USB-C or NFC) — biometric data stays on your device."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:350
-msgid "Create passkey with this device"
+#: templates/two-factor-onboarding.php:349
+msgid "Key name (optional)"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:353
+#: templates/two-factor-onboarding.php:354
+msgid "Create passkey or register security key"
+msgstr ""
+
+#: templates/two-factor-onboarding.php:357
 msgid "Browser without passkey support? Pick another method."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:359
+#: templates/two-factor-onboarding.php:363
 msgid "Set up SMS"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:367
+#: templates/two-factor-onboarding.php:371
 msgid "Privacy notice"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:368
+#: templates/two-factor-onboarding.php:372
 msgid "Phone number stored encrypted, delivered worldwide via our managed relay. Use SMS as a backup — SIM-swapping risk."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:375
+#: templates/two-factor-onboarding.php:379
 msgid "Enter your mobile number"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:378
+#: templates/two-factor-onboarding.php:382
 msgid "Mobile number (international, e.g. +49 151 12345678)"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:384
+#: templates/two-factor-onboarding.php:388
 msgid "Format: +49 151 12345678 (country code required)."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:390
+#: templates/two-factor-onboarding.php:394
 msgid "I consent to my phone number being shared with the EU SMS provider for authentication."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:393
-#: templates/two-factor-onboarding.php:394
+#: templates/two-factor-onboarding.php:397
+#: templates/two-factor-onboarding.php:398
 msgid "Send confirmation code by SMS"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:404
+#: templates/two-factor-onboarding.php:408
 msgid "Enter the 6-digit code from the SMS"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:417
+#: templates/two-factor-onboarding.php:421
 msgid "Next: recovery codes"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:424
+#: templates/two-factor-onboarding.php:428
 msgid "Save recovery codes"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:426
+#: templates/two-factor-onboarding.php:430
 msgid "Backup codes for sign-in if you lose access to your methods."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:436
+#: templates/two-factor-onboarding.php:440
 msgid "These codes are your fallback."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:437
+#: templates/two-factor-onboarding.php:441
 msgid "Each code is one-time use. Store them safely — separate from your WordPress password."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:441
+#: templates/two-factor-onboarding.php:445
 msgid "Recovery codes"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:452
+#: templates/two-factor-onboarding.php:456
 msgid "Download as .txt"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:456
+#: templates/two-factor-onboarding.php:460
 msgid "Print"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:463
+#: templates/two-factor-onboarding.php:467
 msgid "I have stored my recovery codes safely."
 msgstr ""
 
-#: templates/two-factor-onboarding.php:466
+#: templates/two-factor-onboarding.php:470
 msgid "Finish"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:492
+#: templates/two-factor-onboarding.php:496
 msgid "Done — your account is now doubly secure"
 msgstr ""
 
-#: templates/two-factor-onboarding.php:494
+#: templates/two-factor-onboarding.php:498
 msgid "You will be asked for the second factor on your next sign-in."
 msgstr ""
 
 #. translators: 1: opening link tag, 2: closing link tag
-#: templates/two-factor-onboarding.php:508
+#: templates/two-factor-onboarding.php:512
 #, php-format
 msgid "This page is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
 msgstr ""

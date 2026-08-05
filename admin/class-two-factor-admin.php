@@ -1590,6 +1590,46 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip-hive',
 			REPORTEDIP_HIVE_LANGUAGES_DIR
 		);
+
+		$webauthn_allowed = in_array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN, ReportedIP_Hive_Two_Factor::get_allowed_methods(), true );
+		if ( $can_edit && $webauthn_allowed ) {
+			wp_enqueue_script(
+				'reportedip-hive-two-factor-keys',
+				REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/two-factor-keys.js',
+				array(),
+				REPORTEDIP_HIVE_VERSION,
+				true
+			);
+			wp_localize_script(
+				'reportedip-hive-two-factor-keys',
+				'reportedip2faKeys',
+				array(
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'reportedip_hive_nonce' ),
+					'userId'  => $user->ID,
+					'strings' => array(
+						'typeSecurityKey'    => __( 'Security key', 'reportedip-hive' ),
+						'typePasskey'        => __( 'Passkey', 'reportedip-hive' ),
+						'never'              => __( 'Never', 'reportedip-hive' ),
+						'rename'             => __( 'Rename', 'reportedip-hive' ),
+						'remove'             => __( 'Remove', 'reportedip-hive' ),
+						'save'               => __( 'Save', 'reportedip-hive' ),
+						'renamed'            => __( 'Key renamed.', 'reportedip-hive' ),
+						'removed'            => __( 'Key removed.', 'reportedip-hive' ),
+						'methodDisabled'     => __( 'Last key removed — the passkey method is now disabled for this account.', 'reportedip-hive' ),
+						'confirmRemove'      => __( 'Remove this security key? You will no longer be able to sign in with it.', 'reportedip-hive' ),
+						'unsupported'        => __( 'This browser does not support security keys.', 'reportedip-hive' ),
+						'waitingForKey'      => __( 'Waiting for your security key — insert and touch it now.', 'reportedip-hive' ),
+						'alreadyRegistered'  => __( 'This key is already registered on this account.', 'reportedip-hive' ),
+						'cancelled'          => __( 'The request timed out or was cancelled. Insert your key and touch it — on a phone, hold it against the back (NFC).', 'reportedip-hive' ),
+						'defaultKeyName'     => __( 'Security key', 'reportedip-hive' ),
+						'defaultPasskeyName' => __( 'This device', 'reportedip-hive' ),
+						'error'              => __( 'Something went wrong.', 'reportedip-hive' ),
+						'networkError'       => __( 'Network error.', 'reportedip-hive' ),
+					),
+				)
+			);
+		}
 		?>
 		<h2 id="reportedip-hive-2fa"><?php esc_html_e( 'Two-Factor Authentication', 'reportedip-hive' ); ?></h2>
 
@@ -1639,6 +1679,18 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					<?php endif; ?>
 				</td>
 			</tr>
+
+			<?php if ( $can_edit && $webauthn_allowed ) : ?>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Security keys', 'reportedip-hive' ); ?></th>
+					<td>
+						<?php
+						$rip_webauthn_manager = array( 'user_id' => $user->ID );
+						include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/partials/webauthn-key-manager.php';
+						?>
+					</td>
+				</tr>
+			<?php endif; ?>
 
 			<?php if ( $can_edit && ! $is_enabled ) : ?>
 				<tr>

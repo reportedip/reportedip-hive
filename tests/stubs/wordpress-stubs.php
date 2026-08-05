@@ -525,6 +525,21 @@ if ( ! function_exists( 'current_time' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_date' ) ) {
+	/**
+	 * Format a UNIX timestamp. The stub always renders in UTC — timezone
+	 * resolution is WordPress runtime behaviour the unit suite must not
+	 * depend on.
+	 *
+	 * @param string   $format    PHP date format.
+	 * @param int|null $timestamp UNIX timestamp (defaults to now).
+	 * @return string
+	 */
+	function wp_date( $format, $timestamp = null ) {
+		return gmdate( $format, null === $timestamp ? time() : (int) $timestamp );
+	}
+}
+
 // =============================================================================
 // Sanitization Functions
 // =============================================================================
