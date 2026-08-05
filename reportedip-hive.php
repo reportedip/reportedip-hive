@@ -353,6 +353,7 @@ class ReportedIP_Hive {
 	 */
 	private function load_dependencies() {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-option-routing.php';
+		ReportedIP_Hive_Option_Routing::prime_cache();
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-schema.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-migration-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-defaults.php';
