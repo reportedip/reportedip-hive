@@ -69,11 +69,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * ------------------------------------------------------------------ */
 
 	public function ajax_register_options() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-		$user_id = isset( $_POST['user_id'] ) ? absint( $_POST['user_id'] ) : get_current_user_id();
-		if ( ! current_user_can( 'edit_user', $user_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission.', 'reportedip-hive' ) ) );
-		}
+		$user_id = self::key_management_user();
 		self::throttle_registration( $user_id );
 		if ( ! self::can_add_key( $user_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Multiple security keys per account require the Business plan. Your first key stays free.', 'reportedip-hive' ) ) );
@@ -250,11 +246,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	public function ajax_register_verify() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-		$user_id = isset( $_POST['user_id'] ) ? absint( $_POST['user_id'] ) : get_current_user_id();
-		if ( ! current_user_can( 'edit_user', $user_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission.', 'reportedip-hive' ) ) );
-		}
+		$user_id = self::key_management_user();
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified by check_ajax_referer() above; payload is a JSON string parsed via json_decode() with strict array check on the next line — invalid input is rejected before any further use.
 		$raw        = isset( $_POST['credential'] ) ? wp_unslash( $_POST['credential'] ) : '';
@@ -342,7 +334,12 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		 */
 		do_action( 'reportedip_hive_2fa_webauthn_key_registered', $user_id, $record['name'] );
 
-		wp_send_json_success( array( 'message' => __( 'Security key registered.', 'reportedip-hive' ) ) );
+		wp_send_json_success(
+			array(
+				'message' => __( 'Security key registered.', 'reportedip-hive' ),
+				'keys'    => self::keys_for_display( $user_id ),
+			)
+		);
 	}
 
 	/* ------------------------------------------------------------------
@@ -350,8 +347,9 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * ------------------------------------------------------------------ */
 
 	/**
-	 * Resolve and authorise the target user for a key-management call.
-	 * Sends a JSON error (and exits) when the caller lacks permission.
+	 * Resolve and authorise the target user for a registration or
+	 * key-management call. Sends a JSON error (and exits) when the caller
+	 * lacks permission.
 	 *
 	 * @return int Authorised user id.
 	 * @since 2.1.34

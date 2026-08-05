@@ -2,17 +2,46 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [2.1.36] — Unreleased
+## [2.1.36] — 2026-08-05
+
+Consolidates the 2.1.33–2.1.35 development stages into one release: official
+hardware security-key (YubiKey) support and the rebuilt profile 2FA section.
 
 ### New
 
-- **Profile 2FA section rebuilt for end users.** The section on the profile
-  page now renders design-system cards: a plain-language intro, one row per
-  sign-in method (authenticator app, passkey/security key, email code, SMS)
-  with a lay description, an Active/Default badge and inline actions. Methods
-  can be added at any time, not only while 2FA is still off, and every
-  enrolment surface (profile, onboarding wizard, WP-CLI, key manager) now
-  routes through one shared activation path.
+- **Official YubiKey / hardware security-key support.** All three challenge
+  surfaces (wp-login, WooCommerce storefront, password-reset gate) render the
+  same shared WebAuthn panel and can complete a full ceremony. Ed25519
+  (EdDSA, COSE -8) is offered and verified when libsodium is available, the
+  preferred algorithm of YubiKey firmware 5.2+. Ceremony timeout raised to
+  120 s for NFC taps; `userVerification` defaults to `discouraged` per Yubico
+  guidance so fresh keys never trigger a FIDO2-PIN prompt (raise via the
+  `reportedip_hive_webauthn_user_verification` filter, then also enforced
+  server-side).
+- **Security-key manager on the user profile.** Register multiple keys
+  (primary plus backup), name, rename and remove them individually, see when
+  a key was added and last used. The profile flow offers "Security key
+  (USB / NFC)" or "This device" as a WebAuthn hint so Chrome and Edge open
+  the right dialog directly; the onboarding wizard asks for an optional key
+  name. Removing the last key disables the method through the normal disable
+  path.
+- **Automatic key-model detection.** Registration requests direct
+  attestation, extracts the AAGUID and shows the detected model ("YubiKey 5
+  Series with NFC", "Windows Hello", ...) under the key name. The bundled
+  registry covers the full Yubico range plus the major passkey platforms.
+  Display-only and fail-open: a missing or unverifiable attestation never
+  blocks registration. Packed attestation statements are signature-verified
+  and the result stored on the credential.
+- **Email notifications for key lifecycle events**: key registered, key
+  removed, and a sign-in blocked for a non-advancing signature counter
+  (possible cloned key). The clone warning reaches every tier.
+- **Profile 2FA section rebuilt for end users.** Design-system cards with a
+  plain-language intro and one row per sign-in method (authenticator app,
+  passkey/security key, email code, SMS) with a lay description, an
+  Active/Default badge and inline actions. Methods can be added at any time,
+  not only while 2FA is still off, and every enrolment surface (profile,
+  onboarding wizard, WP-CLI, key manager) routes through one shared
+  activation path.
 - **Default sign-in method is user-selectable.** Every active method row
   offers "Make default"; the chosen method is asked for first on the login
   challenge. New AJAX endpoint `set_primary_method` plus
@@ -22,152 +51,83 @@ All changes to ReportedIP Hive are documented here.
   can be changed. A changed number only replaces the verified one after the
   new number confirmed a code, so a typo can no longer break the method.
 - Single methods can be removed individually ("Remove"), with a clear
-  warning when the last method would turn 2FA off entirely.
+  warning when the last method would turn 2FA off entirely. Email setup uses
+  an explicit "Send code" step like SMS.
+- New filters `reportedip_hive_webauthn_rp_id` (subdomain-multisite escape
+  hatch) and `reportedip_hive_webauthn_allowed_origins`; the origin check
+  also accepts the site_url() host for split-host installs.
 
 ### Fixes
 
+- **The WooCommerce frontend 2FA challenge can complete a passkey login
+  again.** The storefront challenge rendered a "Passkey" tab whose panel did
+  not exist, so customers whose only second factor is a passkey could not
+  sign in there.
+- **The password-reset gate can verify a security key.** It offered WebAuthn
+  as an eligible method but rendered only a text input and loaded no ceremony
+  script. The gate now runs the full assertion ceremony; the browser is bound
+  to the reset identity via a short-lived server-minted token, never via URL
+  parameters.
+- A cloned or rolled-back authenticator can no longer reset the signature
+  counter: an assertion whose counter does not advance is rejected and logged
+  (`2fa_webauthn_counter_regression`). Counter-less platform passkeys keep
+  working. Assertions and registrations without the user-presence flag are
+  rejected (WebAuthn section 7.2).
+- The WebAuthn login AJAX endpoints sit behind the same per-IP lockout ladder
+  as the challenge form, closing a rate-limit bypass; registration options
+  are throttled per user. The EC2 COSE path verifies the P-256 curve, client
+  transport hints are whitelist-filtered, and the CBOR decoder rejects
+  truncated, indefinite-length, tagged and float input with clean errors and
+  a nesting-depth cap.
 - Adding a second 2FA method no longer overwrites the user's default method
   and no longer silently regenerates existing recovery codes (previously the
   TOTP confirm endpoint did both).
 - Starting a TOTP setup no longer silently replaces an already confirmed
   authenticator secret; re-setup requires the explicit "Set up again" action.
 - The design-system stylesheet now loads on the profile page, so the 2FA
-  section and the security-key manager render styled (buttons, badges,
-  inputs were previously unstyled there).
+  section and the security-key manager render styled there.
+- Touching a YubiKey outside an active ceremony no longer produces confusing
+  errors: typed Yubico-OTP input is detected and answered with guidance, and
+  an empty challenge submit re-arms instead of failing.
 - The WAF drop-in sync no longer prints PHP warnings (and breaks admin
   redirects with "headers already sent") when `wp-content` or the config
-  files are not writable — every guard/blocklist/directive write now probes
+  files are not writable — every guard/blocklist/directive write probes
   writability first and degrades fail-open, surfacing the state through the
-  existing Firewall-page health check instead of raw warnings.
+  Firewall-page health check.
+- Three stray German strings in the WebAuthn class are now English and
+  translatable.
 
 ### Changed
 
 - **Advanced Security Keys are a Business-plan feature.** One security key or
   passkey per account stays free on every plan — enrolment, login on all
   three challenge surfaces, rename/delete and the cloned-key warning mail
-  included. The Business plan adds multiple keys per account (primary +
-  backup), automatic model detection via attestation and the key-lifecycle
-  email alerts. Enforced server-side in the registration endpoints
-  (`webauthn_advanced` in the feature matrix); free-tier registrations
-  request `attestation: 'none'` so no consent prompt appears for a feature
-  the tier does not include.
+  included. The Business plan adds multiple keys per account, automatic model
+  detection via attestation and the key-lifecycle email alerts. Enforced
+  server-side in the registration endpoints (`webauthn_advanced` in the
+  feature matrix); free-tier registrations request `attestation: 'none'` so
+  no consent prompt appears for a feature the tier does not include.
+- Registration no longer requests a discoverable credential
+  (`residentKey: 'discouraged'`): enrolling a YubiKey no longer consumes one
+  of its limited passkey slots. Existing discoverable credentials keep
+  working. New registrations emit an opaque random user handle; assertions
+  accept both handle formats.
+- `wp reportedip 2fa enable --method=webauthn` refuses to flag the method for
+  a user without a registered key (lockout footgun); `--force` overrides.
 - Fresh installs now allow all four 2FA methods by default
   (`totp, email, webauthn, sms` — SMS becomes usable once a relay-capable
   plan is connected). Existing sites keep their stored selection.
 - User-facing naming unified to "Passkey / Security key"; the setup wizard,
   onboarding cards and profile labels mention YubiKey (USB-C / NFC)
-  explicitly.
-- README, readme.txt and the FAQ describe the supported hardware keys, the
-  free-vs-Business split and the backup-key recommendation; new hardware
-  test matrix under `docs/webauthn-hardware-test-matrix.md` documents the
-  release gate.
-- README rewritten around the current 2.1 feature set: the two-layer
-  firewall, the MainWP bridge, profile 2FA self-service, the measured
-  2.1.32 performance numbers and the raised WordPress 5.9 minimum.
-- Every admin page footer carries a secured-by note linking the
-  reportedip.de community network next to the trust badges.
-
-## [2.1.35] — Unreleased
-
-### New
-
-- **Automatic key-model detection.** Registration now requests direct
-  attestation, extracts the authenticator's AAGUID and shows the detected
-  model ("YubiKey 5 Series with NFC", "Windows Hello", …) under the key name
-  in the security-key manager. The bundled AAGUID registry covers the full
-  Yubico range (from the FIDO Alliance Metadata Service) plus the major
-  passkey platforms. Detection is display-only and fail-open per Yubico
-  guidance: a missing, stripped or unverifiable attestation never blocks
-  registration — the key simply keeps its generic label.
-- Packed attestation statements are signature-verified (x5c certificate or
-  self-attestation) and the result is stored on the credential.
-- New filters `reportedip_hive_webauthn_rp_id` (subdomain-multisite escape
-  hatch — one enrolment valid network-wide) and
-  `reportedip_hive_webauthn_allowed_origins`; the origin check now also
-  accepts the site_url() host for split-host installs.
-
-### Changed
-
-- New registrations emit an opaque random user handle instead of the ASCII
-  WordPress user id; assertions accept both, so existing resident
-  credentials keep working.
-- Security-key error messages now say what to do: timeout/cancel guidance
-  mentions the NFC tap ("hold the key flat against the back of your phone"),
-  wrong-domain and cancelled ceremonies are distinguished, and the button
-  re-arms for a retry.
-- The CBOR decoder rejects truncated, indefinite-length, tagged and float
-  input with clean errors instead of desyncing, and caps nesting depth.
-
-## [2.1.34] — Unreleased
-
-### New
-
-- **Security-key manager on the user profile.** Users can now register
-  multiple WebAuthn keys (primary plus backup — the recommended setup for
-  hardware keys), name each key, rename and remove them individually, and see
-  when a key was added and last used. Removing the last key disables the
-  method through the normal disable path; an enforced user whose only method
-  is the security key is refused and pointed to enrolling another method
-  first.
-- The onboarding wizard asks for an optional key name and the profile flow
-  lets the user pick "Security key (USB / NFC)" or "This device", which is
-  passed to the browser as a WebAuthn hint so Chrome and Edge open the right
-  dialog directly.
-- Ed25519 (EdDSA, COSE -8) is offered and verified when libsodium is
-  available — the preferred algorithm of YubiKey firmware 5.2+.
-- Email notifications for security-key lifecycle events: key registered, key
-  removed, and a sign-in blocked for a non-advancing signature counter
-  (possible cloned key).
-
-### Changed
-
-- Registration no longer requests a discoverable credential
-  (`residentKey: 'discouraged'`): enrolling a YubiKey no longer consumes one
-  of its limited passkey slots and no longer triggers a FIDO2-PIN setup
-  prompt. Existing discoverable credentials keep working.
-- The WebAuthn login AJAX endpoints now sit behind the same per-IP lockout
-  ladder as the challenge form — failed assertions count as failed attempts
-  and graduate to a real block, closing a rate-limit bypass. Registration
-  options are throttled per user.
-- `wp reportedip 2fa enable --method=webauthn` refuses to flag the method for
-  a user without a registered key (lockout footgun); `--force` overrides.
-
-## [2.1.33] — Unreleased
-
-### Fixes
-
-- **The WooCommerce frontend 2FA challenge can complete a passkey login
-  again.** The storefront challenge rendered a "Passkey" tab whose panel did
-  not exist, so customers whose only second factor is a passkey or security
-  key could not sign in there. All three challenge surfaces (wp-login,
-  storefront, password-reset gate) now render the same shared WebAuthn panel
-  partial.
-- **The password-reset gate can verify a security key.** It offered
-  WebAuthn as an eligible method but rendered only a text input and loaded no
-  ceremony script — passkey-only users could never pass it. The gate now runs
-  the full assertion ceremony; the browser is bound to the reset identity via
-  a short-lived server-minted token, never via URL parameters.
-- A cloned or rolled-back authenticator can no longer reset the signature
-  counter: an assertion whose counter does not advance is rejected and logged
-  (`2fa_webauthn_counter_regression`) instead of overwriting the stored value.
-  Counter-less platform passkeys (0/0) keep working.
-- Assertions and registrations without the user-presence flag are rejected
-  (WebAuthn §7.2) — a hardware key only sets it after a physical touch.
-- The EC2 COSE key path now verifies the curve is P-256 before assembling the
-  DER key, and client-supplied transport hints are whitelist-filtered before
-  they are stored.
-- Three stray German strings in the WebAuthn class are now English and
-  translatable.
-
-### Changed
-
-- WebAuthn ceremony timeout raised from 60 s to 120 s — NFC taps on phones
-  routinely need the extra time.
-- `userVerification` defaults to `discouraged` (Yubico's recommendation for
-  second-factor use): fresh YubiKeys without a FIDO2 PIN no longer trigger a
-  PIN-enrolment prompt mid-login. New filter
-  `reportedip_hive_webauthn_user_verification` can raise the policy to
-  `required`, which is then also enforced server-side via the UV flag.
+  explicitly. Security-key error messages now say what to do, including the
+  NFC tap guidance.
+- Every admin page footer and the profile 2FA section carry a secured-by
+  note linking the reportedip.de community network.
+- README rewritten around the current 2.1 feature set (two-layer firewall,
+  MainWP bridge, profile self-service, measured 2.1.32 performance numbers,
+  WordPress 5.9 minimum); readme.txt and the FAQ describe the supported
+  hardware keys and the free-vs-Business split. New hardware test matrix
+  under `docs/webauthn-hardware-test-matrix.md`.
 
 ## [2.1.32] — 2026-08-05
 

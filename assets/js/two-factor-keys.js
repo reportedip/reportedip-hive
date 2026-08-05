@@ -305,7 +305,11 @@
 						setStatus( addStatus, res.data && res.data.message, 'success' );
 						if ( nameInput ) { nameInput.value = ''; }
 						if ( addForm ) { addForm.hidden = true; }
-						load();
+						if ( res.data && res.data.keys ) {
+							render( res.data.keys );
+						} else {
+							load();
+						}
 					} else {
 						setStatus( addStatus, ( res && res.data && res.data.message ) || str( 'error', 'Something went wrong.' ), 'error' );
 					}
@@ -323,7 +327,11 @@
 				} );
 		}
 
-		load();
+		if ( Array.isArray( config.keys ) ) {
+			render( config.keys );
+		} else {
+			load();
+		}
 	}
 
 	function escapeHtml( s ) {

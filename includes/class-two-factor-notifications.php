@@ -105,11 +105,22 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	 * @param string $name          User-visible key name.
 	 */
 	public function on_counter_regression( $user_id, $credential_id, $name ) {
-		unset( $credential_id );
 		$user = get_userdata( (int) $user_id );
 		if ( ! $user ) {
 			return;
 		}
+
+		/*
+		 * Throttle to one mail per credential per hour: a replayed assertion
+		 * triggers this repeatedly on the unauthenticated login AJAX path,
+		 * and each send blocks that request on SMTP/relay I/O.
+		 */
+		$throttle_key = 'reportedip_2fa_clone_mail_' . md5( (int) $user_id . '|' . (string) $credential_id );
+		if ( get_transient( $throttle_key ) ) {
+			return;
+		}
+		set_transient( $throttle_key, 1, HOUR_IN_SECONDS );
+
 		$this->send_key_event_email(
 			$user,
 			/* translators: 1: site name */

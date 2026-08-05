@@ -125,7 +125,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_first_method_activates_full_2fa(): void {
-			\ReportedIP_Hive_Two_Factor::activate_method( self::USER_ID, 'totp' );
+			$codes = \ReportedIP_Hive_Two_Factor::activate_method( self::USER_ID, 'totp' );
+			$this->assertIsArray( $codes, 'The first method must hand the fresh recovery codes back to the caller.' );
 
 			$meta = $GLOBALS['wp_user_meta'][ self::USER_ID ];
 			$this->assertSame( '1', $meta['reportedip_hive_2fa_enabled'] );
@@ -146,7 +147,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$GLOBALS['rip_test_recovery_remaining'][ self::USER_ID ] = 8;
 
-			$this->assertTrue( \ReportedIP_Hive_Two_Factor::activate_method( self::USER_ID, 'totp' ) );
+			$this->assertNull(
+				\ReportedIP_Hive_Two_Factor::activate_method( self::USER_ID, 'totp' ),
+				'No fresh codes may be returned while existing codes survive.'
+			);
 
 			$meta = $GLOBALS['wp_user_meta'][ self::USER_ID ];
 			$this->assertSame( '1', $meta['reportedip_hive_2fa_totp_enabled'] );
@@ -228,11 +232,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$body = $this->method_body( $this->source( 'admin/class-two-factor-admin.php' ), 'ajax_confirm_totp' );
 
 			$this->assertStringContainsString(
-				'0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count',
+				'activate_method',
 				$body,
-				'confirm_totp may only generate recovery codes when the user has none.'
+				'confirm_totp must use the shared activation path, which only mints codes when the user has none.'
 			);
-			$this->assertStringContainsString( 'activate_method', $body );
+			$this->assertStringNotContainsString(
+				'regenerate_codes',
+				$body,
+				'confirm_totp must not regenerate recovery codes itself.'
+			);
 		}
 
 		public function test_setup_totp_refuses_silent_secret_replacement(): void {

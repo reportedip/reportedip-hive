@@ -143,20 +143,27 @@
 	}
 
 	/**
-	 * Show freshly generated recovery codes with copy/download and a
-	 * finish button that reloads the page to re-render the server state.
+	 * Render recovery codes with copy/download actions into a container.
 	 *
 	 * @param {Array}  codes   Recovery code strings.
 	 * @param {jQuery} $target Container to render into.
+	 * @param {Object} opts    heading: success notice + save prompt,
+	 *                         done: reload button for the one-time reveal.
 	 */
-	function showRecoveryCodes( codes, $target ) {
-		var html = '<div class="notice notice-success"><p><strong>' + escapeHtml( str( 'setupComplete', '2FA has been set up successfully!' ) ) + '</strong></p></div>';
-		html += '<p><strong>' + escapeHtml( str( 'saveRecoveryCodes', 'Save these recovery codes in a secure place:' ) ) + '</strong></p>';
+	function showRecoveryCodes( codes, $target, opts ) {
+		opts = opts || {};
+		var html = '';
+		if ( opts.heading ) {
+			html += '<div class="notice notice-success"><p><strong>' + escapeHtml( str( 'setupComplete', '2FA has been set up successfully!' ) ) + '</strong></p></div>';
+			html += '<p><strong>' + escapeHtml( str( 'saveRecoveryCodes', 'Save these recovery codes in a secure place:' ) ) + '</strong></p>';
+		}
 		html += '<div class="rip-2fa-recovery-codes">' + buildRecoveryCodesHtml( codes ) + '</div>';
 		html += '<div class="rip-2fa-recovery-codes__actions">';
 		html += '<button type="button" class="rip-button rip-button--secondary rip-button--sm" data-recovery-copy>' + escapeHtml( str( 'copy', 'Copy' ) ) + '</button>';
 		html += '<button type="button" class="rip-button rip-button--secondary rip-button--sm" data-recovery-download>' + escapeHtml( str( 'download', 'Download' ) ) + '</button>';
-		html += '<button type="button" class="rip-button rip-button--primary rip-button--sm" data-recovery-done>' + escapeHtml( str( 'codesSaved', 'I have saved my codes' ) ) + '</button>';
+		if ( opts.done ) {
+			html += '<button type="button" class="rip-button rip-button--primary rip-button--sm" data-recovery-done>' + escapeHtml( str( 'codesSaved', 'I have saved my codes' ) ) + '</button>';
+		}
 		html += '</div>';
 		html += '<p class="description rip-2fa-recovery-codes__warning">' + escapeHtml( str( 'recoveryShownOnce', 'These codes are shown only once!' ) ) + '</p>';
 
@@ -180,7 +187,7 @@
 		var codes = data && data.recovery_codes;
 		if ( codes && codes.length ) {
 			$( '.rip-2fa-method__flow' ).prop( 'hidden', true );
-			showRecoveryCodes( codes, $( '#rip-2fa-method-recovery' ) );
+			showRecoveryCodes( codes, $( '#rip-2fa-method-recovery' ), { heading: true, done: true } );
 			return;
 		}
 		location.reload();
@@ -555,17 +562,7 @@
 					notifyError( responseMessage( response ) );
 					return;
 				}
-				var codes = response.data.codes;
-				var $display = $( '#rip-2fa-recovery-display' );
-				var html = '<div class="rip-2fa-recovery-codes">' + buildRecoveryCodesHtml( codes ) + '</div>';
-				html += '<div class="rip-2fa-recovery-codes__actions">';
-				html += '<button type="button" class="rip-button rip-button--secondary rip-button--sm" data-recovery-copy>' + escapeHtml( str( 'copy', 'Copy' ) ) + '</button>';
-				html += '<button type="button" class="rip-button rip-button--secondary rip-button--sm" data-recovery-download>' + escapeHtml( str( 'download', 'Download' ) ) + '</button>';
-				html += '</div>';
-				html += '<p class="description rip-2fa-recovery-codes__warning">' + escapeHtml( str( 'recoveryShownOnce', 'These codes are shown only once!' ) ) + '</p>';
-
-				$display.html( html ).prop( 'hidden', false ).show();
-				bindRecoveryActions( $display, codes );
+				showRecoveryCodes( response.data.codes, $( '#rip-2fa-recovery-display' ) );
 			} );
 		} );
 	}

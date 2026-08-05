@@ -994,7 +994,7 @@ class ReportedIP_Hive_Two_Factor {
 			} else {
 				$lockout_remaining = max(
 					$this->get_lockout_remaining( $user_id ),
-					$this->get_ip_lockout_remaining( ReportedIP_Hive::get_client_ip() )
+					self::ip_lockout_remaining( ReportedIP_Hive::get_client_ip() )
 				);
 				if ( $lockout_remaining > 0 ) {
 					$error = sprintf(
@@ -1052,7 +1052,7 @@ class ReportedIP_Hive_Two_Factor {
 						}
 
 						$failed = $this->increment_failed_attempts( $user_id );
-						$this->increment_ip_failed_attempts( ReportedIP_Hive::get_client_ip() );
+						self::record_ip_failure( ReportedIP_Hive::get_client_ip() );
 
 						if ( self::METHOD_EMAIL === $submitted_method && ! get_transient( 'reportedip_2fa_email_' . $user_id ) ) {
 							$error = __( 'No valid code is active — you likely used an older code. Please click "Resend code" and use only the most recent code from your inbox.', 'reportedip-hive' );
@@ -1817,19 +1817,9 @@ class ReportedIP_Hive_Two_Factor {
 	 * Seconds still remaining on the per-IP lockout (0 if none).
 	 *
 	 * Uses the same escalation thresholds as the per-user lockout so admins
-	 * don't have to tune two schemas in parallel.
-	 *
-	 * @param string $ip
-	 * @return int
-	 */
-	private function get_ip_lockout_remaining( $ip ) {
-		return self::ip_lockout_remaining( $ip );
-	}
-
-	/**
-	 * Public flavour of the per-IP lockout check so ceremony endpoints
-	 * outside this class (the WebAuthn AJAX handlers) share the same
-	 * ladder as the challenge form instead of bypassing it.
+	 * don't have to tune two schemas in parallel. Public so ceremony
+	 * endpoints outside this class (the WebAuthn AJAX handlers) share the
+	 * same ladder as the challenge form instead of bypassing it.
 	 *
 	 * @param string $ip Client IP.
 	 * @return int Seconds remaining, 0 when not locked out.
@@ -1850,16 +1840,9 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Increment the per-IP failure counter and set escalating lockout.
 	 *
-	 * @param string $ip
-	 */
-	private function increment_ip_failed_attempts( $ip ) {
-		self::record_ip_failure( $ip );
-	}
-
-	/**
-	 * Public flavour of the per-IP failure counter — every failed WebAuthn
-	 * AJAX verification feeds the same ladder (and the same DB-block
-	 * graduation) as a wrong code typed into the challenge form.
+	 * Public so every failed WebAuthn AJAX verification feeds the same
+	 * ladder (and the same DB-block graduation) as a wrong code typed
+	 * into the challenge form.
 	 *
 	 * @param string $ip Client IP.
 	 * @since 2.1.34
@@ -2178,7 +2161,9 @@ class ReportedIP_Hive_Two_Factor {
 	 *
 	 * @param int    $user_id WordPress user ID.
 	 * @param string $method  Method identifier (totp, email, webauthn, sms).
-	 * @return bool True when the method is active afterwards.
+	 * @return array|null|false Freshly generated recovery codes when the user
+	 *                          had none (show them once!), null when existing
+	 *                          codes survived, false for an unknown method.
 	 * @since  2.1.36
 	 */
 	public static function activate_method( $user_id, $method ) {
@@ -2187,22 +2172,23 @@ class ReportedIP_Hive_Two_Factor {
 			return false;
 		}
 
+		$fresh_codes = null;
+		if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
+			$fresh_codes = ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
+		}
+
 		if ( ! self::is_user_enabled( $user_id ) ) {
 			self::enable_for_user( $user_id, $method );
-			return true;
+			return $fresh_codes;
 		}
 
 		update_user_meta( $user_id, $method_key, '1' );
 		unset( self::$methods_cache[ $user_id ] );
 
-		if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
-			ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
-		}
-
 		/** This action is documented in includes/class-two-factor.php */
 		do_action( 'reportedip_hive_2fa_method_enabled', (int) $user_id, (string) $method );
 
-		return true;
+		return $fresh_codes;
 	}
 
 	/**
@@ -2276,6 +2262,10 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Disable 2FA for a user and clean up all related data.
 	 *
+	 * Also resets the reminder counter and the onboarding skip snooze
+	 * (literal keys — the Recommend/Onboarding classes are not loaded in
+	 * every context this runs in), so a support reset really starts fresh.
+	 *
 	 * @param int $user_id WordPress user ID.
 	 */
 	public static function disable_for_user( $user_id ) {
@@ -2296,6 +2286,9 @@ class ReportedIP_Hive_Two_Factor {
 			self::META_ENFORCEMENT_START,
 			self::META_SKIP_COUNT,
 			self::META_KNOWN_DEVICES,
+			'reportedip_hive_2fa_reminder_count',
+			'reportedip_hive_2fa_reminder_last_seen',
+			'reportedip_hive_2fa_skip_until',
 		);
 
 		foreach ( $meta_keys as $key ) {

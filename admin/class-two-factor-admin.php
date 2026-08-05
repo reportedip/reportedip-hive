@@ -1567,8 +1567,10 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		wp_enqueue_style( 'reportedip-hive-design-system', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/design-system.css', array(), REPORTEDIP_HIVE_VERSION );
 		wp_enqueue_style( 'reportedip-hive-two-factor', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/two-factor.css', array( 'reportedip-hive-design-system' ), REPORTEDIP_HIVE_VERSION );
 
+		$allowed_methods = ReportedIP_Hive_Two_Factor::get_allowed_methods();
+
 		$js_deps = array( 'jquery', 'wp-a11y' );
-		if ( $can_edit ) {
+		if ( $can_edit && in_array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, $allowed_methods, true ) ) {
 			wp_enqueue_script( 'reportedip-hive-qrcode', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/vendor/qrcode.min.js', array(), '1.0.0', true );
 			$js_deps[] = 'reportedip-hive-qrcode';
 		}
@@ -1591,7 +1593,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					'setupComplete'       => __( '2FA has been set up successfully!', 'reportedip-hive' ),
 					'saveRecoveryCodes'   => __( 'Save these recovery codes in a secure place:', 'reportedip-hive' ),
 					'error'               => __( 'Error', 'reportedip-hive' ),
-					'confirm'             => __( 'Confirm', 'reportedip-hive' ),
 					'qrLibMissing'        => __( 'QR code library not loaded.', 'reportedip-hive' ),
 					'copy'                => __( 'Copy', 'reportedip-hive' ),
 					'download'            => __( 'Download', 'reportedip-hive' ),
@@ -1611,7 +1612,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			REPORTEDIP_HIVE_LANGUAGES_DIR
 		);
 
-		$webauthn_allowed = in_array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN, ReportedIP_Hive_Two_Factor::get_allowed_methods(), true );
+		$webauthn_allowed = in_array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN, $allowed_methods, true );
 		if ( $can_edit && $webauthn_allowed ) {
 			wp_enqueue_script(
 				'reportedip-hive-two-factor-keys',
@@ -1627,6 +1628,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 					'nonce'   => wp_create_nonce( 'reportedip_hive_nonce' ),
 					'userId'  => $user->ID,
+					'keys'    => ReportedIP_Hive_Two_Factor_WebAuthn::keys_for_display( $user->ID ),
 					'strings' => array(
 						'typeSecurityKey'    => __( 'Security key', 'reportedip-hive' ),
 						'typePasskey'        => __( 'Passkey', 'reportedip-hive' ),
@@ -1642,6 +1644,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						'waitingForKey'      => __( 'Waiting for your security key. Insert and touch it now.', 'reportedip-hive' ),
 						'alreadyRegistered'  => __( 'This key is already registered on this account.', 'reportedip-hive' ),
 						'cancelled'          => __( 'The request timed out or was cancelled. Insert your key and touch it (on a phone, hold it against the back for NFC).', 'reportedip-hive' ),
+						'otpDetected'        => __( 'That long string was your YubiKey typing its one-time password. That happens when the key is touched while no browser dialog is waiting for it. The field was cleared; click the register button first and touch the key only when the browser asks.', 'reportedip-hive' ),
 						'defaultKeyName'     => __( 'Security key', 'reportedip-hive' ),
 						'defaultPasskeyName' => __( 'This device', 'reportedip-hive' ),
 						'error'              => __( 'Something went wrong.', 'reportedip-hive' ),
@@ -1653,7 +1656,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		?>
 		<?php
 		$enabled_methods = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID );
-		$allowed_methods = ReportedIP_Hive_Two_Factor::get_allowed_methods();
 
 		$sms_allowed = in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $allowed_methods, true ) && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' );
 		$sms_ready   = $sms_allowed && ReportedIP_Hive_Two_Factor_SMS::is_ready();
@@ -2121,17 +2123,12 @@ class ReportedIP_Hive_Two_Factor_Admin {
 
 		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '1' );
 
-		$recovery_codes = null;
-		if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
-			$recovery_codes = ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
-		}
-
-		ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_TOTP );
+		$recovery_codes = ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_TOTP );
 
 		wp_send_json_success(
 			array(
 				'message'        => __( '2FA with authenticator app enabled!', 'reportedip-hive' ),
-				'recovery_codes' => $recovery_codes,
+				'recovery_codes' => is_array( $recovery_codes ) ? $recovery_codes : null,
 			)
 		);
 	}
@@ -2173,17 +2170,12 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				wp_send_json_error( array( 'message' => __( 'Invalid or expired code.', 'reportedip-hive' ) ) );
 			}
 
-			$recovery_codes = null;
-			if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
-				$recovery_codes = ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
-			}
-
-			ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_EMAIL );
+			$recovery_codes = ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_EMAIL );
 
 			wp_send_json_success(
 				array(
 					'message'        => __( 'Email code enabled!', 'reportedip-hive' ),
-					'recovery_codes' => $recovery_codes,
+					'recovery_codes' => is_array( $recovery_codes ) ? $recovery_codes : null,
 				)
 			);
 		}
@@ -2276,17 +2268,12 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				delete_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER_PENDING );
 			}
 
-			$recovery_codes = null;
-			if ( 0 === ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user_id ) ) {
-				$recovery_codes = ReportedIP_Hive_Two_Factor_Recovery::regenerate_codes( $user_id );
-			}
-
-			ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_SMS );
+			$recovery_codes = ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_SMS );
 
 			wp_send_json_success(
 				array(
 					'message'        => __( 'SMS 2FA enabled!', 'reportedip-hive' ),
-					'recovery_codes' => $recovery_codes,
+					'recovery_codes' => is_array( $recovery_codes ) ? $recovery_codes : null,
 				)
 			);
 		}
