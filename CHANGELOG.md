@@ -4,6 +4,14 @@ All changes to ReportedIP Hive are documented here.
 
 ## [2.1.36] — Unreleased
 
+### Fixes
+
+- The WAF drop-in sync no longer prints PHP warnings (and breaks admin
+  redirects with "headers already sent") when `wp-content` or the config
+  files are not writable — every guard/blocklist/directive write now probes
+  writability first and degrades fail-open, surfacing the state through the
+  existing Firewall-page health check instead of raw warnings.
+
 ### Changed
 
 - **Advanced Security Keys are a Business-plan feature.** One security key or
