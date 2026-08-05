@@ -61,6 +61,11 @@ All changes to ReportedIP Hive are documented here.
   free-vs-Business split and the backup-key recommendation; new hardware
   test matrix under `docs/webauthn-hardware-test-matrix.md` documents the
   release gate.
+- README rewritten around the current 2.1 feature set: the two-layer
+  firewall, the MainWP bridge, profile 2FA self-service, the measured
+  2.1.32 performance numbers and the raised WordPress 5.9 minimum.
+- Every admin page footer carries a secured-by note linking the
+  reportedip.de community network next to the trust badges.
 
 ## [2.1.35] — Unreleased
 
