@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.1.32] — 2026-08-05
 
 ### Changed
 
