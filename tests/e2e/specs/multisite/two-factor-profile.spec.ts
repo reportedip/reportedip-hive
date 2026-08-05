@@ -68,6 +68,7 @@ test.describe.serial('profile 2FA method management (multisite)', () => {
         const emailRow = page.locator('.rip-2fa-method[data-method="email"]');
         await emailRow.locator('[data-action="setup"]').click();
         await expect(emailRow.locator('[data-flow="email"]')).toBeVisible();
+        await emailRow.locator('[data-flow="email"] [data-step="send-email"]').click();
 
         const code = await getLatestEmailCode();
         await emailRow.locator('[data-flow="email"] [data-code]').fill(code);

@@ -1981,11 +1981,20 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		elseif ( ReportedIP_Hive_Two_Factor::METHOD_EMAIL === $slug ) :
 			?>
 			<div class="rip-2fa-method__flow" data-flow="email" hidden>
-				<p class="rip-2fa-method__flow-intro"><?php esc_html_e( 'We are sending a 6-digit code to your email address right now. Enter it below to finish the setup.', 'reportedip-hive' ); ?></p>
-				<div class="rip-2fa-method__flow-controls">
-					<input type="text" class="rip-input rip-2fa-method__code" data-code inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-label="<?php esc_attr_e( 'Verification code', 'reportedip-hive' ); ?>" />
-					<button type="button" class="rip-button rip-button--primary" data-step="confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
-					<button type="button" class="rip-button rip-button--ghost" data-step="cancel"><?php esc_html_e( 'Cancel', 'reportedip-hive' ); ?></button>
+				<div data-email-step="send">
+					<p class="rip-2fa-method__flow-intro"><?php esc_html_e( 'We will send a 6-digit code to your email address. Click the button, then check your inbox.', 'reportedip-hive' ); ?></p>
+					<div class="rip-2fa-method__flow-controls">
+						<button type="button" class="rip-button rip-button--primary" data-step="send-email"><?php esc_html_e( 'Send code', 'reportedip-hive' ); ?></button>
+						<button type="button" class="rip-button rip-button--ghost" data-step="cancel"><?php esc_html_e( 'Cancel', 'reportedip-hive' ); ?></button>
+					</div>
+				</div>
+				<div data-email-step="code" hidden>
+					<p class="rip-2fa-method__flow-intro" data-email-sent-note></p>
+					<div class="rip-2fa-method__flow-controls">
+						<input type="text" class="rip-input rip-2fa-method__code" data-code inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-label="<?php esc_attr_e( 'Verification code', 'reportedip-hive' ); ?>" />
+						<button type="button" class="rip-button rip-button--primary" data-step="confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
+						<button type="button" class="rip-button rip-button--ghost" data-step="cancel"><?php esc_html_e( 'Cancel', 'reportedip-hive' ); ?></button>
+					</div>
 				</div>
 				<p class="description rip-2fa-method__flow-status" data-status role="status" aria-live="polite"></p>
 			</div>

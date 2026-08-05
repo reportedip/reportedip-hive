@@ -376,24 +376,35 @@
 	}
 
 	/**
-	 * Email flow: dispatch a code immediately, then verify it.
+	 * Email flow: dispatch a code on explicit request, then verify it.
 	 *
 	 * @param {jQuery} $row Method row.
 	 */
 	function startEmailFlow( $row ) {
 		var $flow = openFlow( $row );
-		flowStatus( $flow, str( 'working', 'Please wait' ) );
+		$flow.find( '[data-email-step="send"]' ).prop( 'hidden', false );
+		$flow.find( '[data-email-step="code"]' ).prop( 'hidden', true );
 
-		$.post( config.ajaxUrl, {
-			action: 'reportedip_hive_2fa_setup_email',
-			nonce: config.nonce,
-			user_id: config.userId,
-			step: 'send',
-		}, function ( response ) {
-			flowStatus( $flow, responseMessage( response ) );
-			if ( response.success ) {
+		$flow.off( 'click.ripEmailSend' ).on( 'click.ripEmailSend', '[data-step="send-email"]', function () {
+			flowStatus( $flow, str( 'working', 'Please wait' ) );
+			$.post( config.ajaxUrl, {
+				action: 'reportedip_hive_2fa_setup_email',
+				nonce: config.nonce,
+				user_id: config.userId,
+				step: 'send',
+			}, function ( response ) {
+				if ( ! response.success ) {
+					flowStatus( $flow, responseMessage( response ) );
+					return;
+				}
+				flowStatus( $flow, '' );
+				$flow.find( '[data-email-step="send"]' ).prop( 'hidden', true );
+				$flow.find( '[data-email-step="code"]' ).prop( 'hidden', false );
+				$flow.find( '[data-email-sent-note]' ).text(
+					responseMessage( response ) + ( response.data.masked ? ' (' + response.data.masked + ')' : '' )
+				);
 				$flow.find( '[data-code]' ).trigger( 'focus' );
-			}
+			} );
 		} );
 
 		bindConfirm( $flow, function ( code, done ) {

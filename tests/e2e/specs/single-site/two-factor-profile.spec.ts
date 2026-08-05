@@ -101,6 +101,7 @@ test.describe.serial('profile 2FA method management', () => {
         await emailRow.locator('[data-action="setup"]').click();
         const emailFlow = emailRow.locator('[data-flow="email"]');
         await expect(emailFlow).toBeVisible();
+        await emailFlow.locator('[data-step="send-email"]').click();
 
         const code = await getLatestEmailCode();
         await emailFlow.locator('[data-code]').fill(code);
