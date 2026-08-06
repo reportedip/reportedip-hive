@@ -6,7 +6,7 @@
  * and AJAX endpoints for 2FA setup/management.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -356,7 +356,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						$mail_relay_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'mail_relay_via_api' );
 						if ( $mail_relay_status['available'] ) {
 							echo ' ';
-							esc_html_e( 'Delivered via the managed reportedip.de relay.', 'reportedip-hive' );
+							esc_html_e( 'Delivered via the managed reportedip.com relay.', 'reportedip-hive' );
 						} else {
 							echo ' ';
 							esc_html_e( 'On the free plan, codes are sent with wp_mail() straight from this server, so deliverability depends on your host.', 'reportedip-hive' );
@@ -436,7 +436,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					);
 					?>
 					<p class="rip-help-text">
-						<?php esc_html_e( 'SMS codes are a Professional-plan feature, delivered through our managed reportedip.de relay — no Twilio account or SMS gateway of your own required (25/month included). The relay runs over the Community Network connection.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'SMS codes are a Professional-plan feature, delivered through our managed reportedip.com relay — no Twilio account or SMS gateway of your own required (25/month included). The relay runs over the Community Network connection.', 'reportedip-hive' ); ?>
 						<?php esc_html_e( 'Less secure than Authenticator or Passkey, so use it only as a fallback.', 'reportedip-hive' ); ?>
 					</p>
 				</div>
@@ -1193,7 +1193,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 
 	/**
 	 * Render the SMS section. SMS-2FA is a Professional-tier feature delivered
-	 * exclusively through the managed reportedip.de relay; this renders either
+	 * exclusively through the managed reportedip.com relay; this renders either
 	 * the active-relay status with a test-dispatch button, or a tier-lock card.
 	 */
 	public static function render_sms_provider_section() {
@@ -1210,13 +1210,13 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				<?php esc_html_e( 'SMS code (Professional)', 'reportedip-hive' ); ?>
 			</h2>
 			<p class="rip-settings-section__desc">
-				<?php esc_html_e( 'SMS-2FA is delivered through the managed reportedip.de relay, included with Professional and Business plans. Phone numbers are stored encrypted and the SMS contains only the code, no site or user data.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'SMS-2FA is delivered through the managed reportedip.com relay, included with Professional and Business plans. Phone numbers are stored encrypted and the SMS contains only the code, no site or user data.', 'reportedip-hive' ); ?>
 			</p>
 
 			<?php if ( ! empty( $relay_status['available'] ) ) : ?>
 				<div class="rip-alert rip-alert--success">
 					<strong><?php esc_html_e( 'Managed SMS relay active', 'reportedip-hive' ); ?>:</strong>
-					<?php esc_html_e( 'SMS-2FA flows through reportedip.de — included with your plan, no separate SMS contract needed.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'SMS-2FA flows through reportedip.com — included with your plan, no separate SMS contract needed.', 'reportedip-hive' ); ?>
 					<?php
 					$allowed_methods_for_hint = class_exists( 'ReportedIP_Hive_Two_Factor' )
 						? ReportedIP_Hive_Two_Factor::get_allowed_methods()

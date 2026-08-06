@@ -13,7 +13,7 @@
  * seconds.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 13;
+	public const CURRENT_VERSION = 14;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -236,7 +236,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * v8 — drop the self-hosted SMS-provider settings. From 2.0.25 SMS-2FA is a
 	 * Professional feature delivered exclusively through the managed
-	 * reportedip.de relay; the third-party provider adapters (Sipgate,
+	 * reportedip.com relay; the third-party provider adapters (Sipgate,
 	 * MessageBird, seven.io), the provider selector, the per-provider
 	 * credentials store and the per-provider AVV flag no longer exist.
 	 *
@@ -412,6 +412,31 @@ final class ReportedIP_Hive_Migration_Manager {
 			if ( ReportedIP_Hive_Schema::index_exists( ReportedIP_Hive_Schema::TABLE_LOGS, $dead_index ) ) {
 				$wpdb->query( "ALTER TABLE $logs DROP INDEX $dead_index" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
 			}
+		}
+	}
+
+	/**
+	 * Migrate to v14: point the stored API endpoint at reportedip.com.
+	 *
+	 * The service moved from reportedip.de to reportedip.com. Installs that
+	 * still carry the old default endpoint in `reportedip_hive_api_endpoint`
+	 * are rewritten to the new default; custom endpoints (self-hosted proxies,
+	 * staging targets) are left untouched. The old domain keeps a permanent
+	 * redirect, so unmigrated installs continue to work either way — this
+	 * just removes the extra hop. Idempotent, no schema change.
+	 *
+	 * @return void
+	 * @since  2.1.37
+	 */
+	private static function migrate_to_v14() {
+		$stored = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', '' );
+
+		if ( '' === $stored ) {
+			return;
+		}
+
+		if ( rtrim( $stored, '/' ) === 'https://reportedip.de/wp-json/reportedip/v2' ) {
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_endpoint', 'https://reportedip.com/wp-json/reportedip/v2/' );
 		}
 	}
 

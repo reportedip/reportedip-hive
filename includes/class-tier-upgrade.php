@@ -4,7 +4,7 @@
  * one-time setup banner shown after a Free/Contributor → PRO+ promotion.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -238,12 +238,12 @@ class ReportedIP_Hive_Tier_Upgrade {
 				$site_name
 			);
 			$intro = __( 'Your subscription was switched back to the Free tier.', 'reportedip-hive' );
-			$body  = __( 'What stays active: all 12 sensors, the full 2FA suite and your local IP/block list. What pauses: managed mail/SMS relay over reportedip.de and cloud backup. You can re-activate any time from the customer portal — your data and settings remain in place.', 'reportedip-hive' );
+			$body  = __( 'What stays active: all 12 sensors, the full 2FA suite and your local IP/block list. What pauses: managed mail/SMS relay over reportedip.com and cloud backup. You can re-activate any time from the customer portal — your data and settings remain in place.', 'reportedip-hive' );
 		}
 
 		$portal_url = defined( 'REPORTEDIP_HIVE_UPGRADE_URL' )
 			? REPORTEDIP_HIVE_UPGRADE_URL
-			: 'https://reportedip.de/dashboard/';
+			: 'https://reportedip.com/dashboard/';
 
 		ReportedIP_Hive_Mailer::get_instance()->send(
 			array(
@@ -306,7 +306,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	/**
 	 * Setup checklist for the post-upgrade banner.
 	 *
-	 * SMS via the managed reportedip.de relay is available automatically with
+	 * SMS via the managed reportedip.com relay is available automatically with
 	 * the paid tier (no provider choice, no per-provider AVV), so the only
 	 * remaining action is the optional rollout of SMS as a 2FA method.
 	 *

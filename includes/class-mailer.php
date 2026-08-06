@@ -12,7 +12,7 @@
  * ReportedIP_Hive_Mail_Provider_Interface.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -272,7 +272,7 @@ class ReportedIP_Hive_Mailer {
 			$args['site_url']
 		);
 		$lines[] = __( 'This message is protected by ReportedIP — Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' );
-		$lines[] = 'https://reportedip.de/';
+		$lines[] = 'https://reportedip.com/';
 
 		return implode( "\n", $lines );
 	}

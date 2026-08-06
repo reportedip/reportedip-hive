@@ -4,7 +4,7 @@
  * rulesets, and exposes them to the sensors.
  *
  * Sensor rules (WAF signatures, bot signatures, disposable domains, UA/scan
- * lists) are NOT hard-coded: reportedip.de serves versioned, Ed25519-signed,
+ * lists) are NOT hard-coded: reportedip.com serves versioned, Ed25519-signed,
  * tier-staggered rulesets; this class downloads them (ETag/304, size-capped),
  * verifies the detached signature against a bundled public-key set, stores the
  * result via {@see ReportedIP_Hive_Rule_Store}, and falls back to the bundled
@@ -17,7 +17,7 @@
  * or tampered ruleset is never applied.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive

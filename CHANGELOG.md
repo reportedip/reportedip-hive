@@ -2,6 +2,18 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- **Domain move to reportedip.com.** All links, the API endpoint default,
+  the relay/rule-API service URLs and the contact addresses now point at
+  reportedip.com instead of reportedip.de. The old domain keeps a permanent
+  redirect, so existing installs continue to work either way.
+- Migration v14 rewrites a stored API endpoint that still equals the old
+  default (`https://reportedip.de/wp-json/reportedip/v2/`) to the new
+  domain; custom endpoints are left untouched.
+
 ## [2.1.36] — 2026-08-05
 
 Consolidates the 2.1.33–2.1.35 development stages into one release: official

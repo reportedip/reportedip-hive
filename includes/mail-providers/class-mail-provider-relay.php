@@ -2,7 +2,7 @@
 /**
  * ReportedIP Relay mail provider.
  *
- * Sends mails through the reportedip.de service-side relay (POST /relay-mail).
+ * Sends mails through the reportedip.com service-side relay (POST /relay-mail).
  * Tier-aware: only chosen by the Mailer when {@see ReportedIP_Hive_Mode_Manager::is_relay_available('mail')}
  * returns true (Community mode + Professional/Business/Enterprise tier).
  *
@@ -11,7 +11,7 @@
  * site daily cap) or any network-level failure — the 2FA flow never breaks.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive

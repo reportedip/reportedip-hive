@@ -11,7 +11,7 @@
  * operator configures the web server in exactly one place.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -455,7 +455,7 @@ class ReportedIP_Hive_Admin_Firewall {
 				'detail' => $synced > 0
 					? sprintf(
 						/* translators: 1: synced ruleset count, 2: total ruleset count. */
-						__( '%1$d of %2$d rulesets delivered by the reportedip.de Rule API.', 'reportedip-hive' ),
+						__( '%1$d of %2$d rulesets delivered by the reportedip.com Rule API.', 'reportedip-hive' ),
 						$synced,
 						$total
 					)
@@ -1007,7 +1007,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		}
 
 		echo '<p class="rip-help-text">' . ( $bot_ver > 0
-			? esc_html__( 'The crawler list is delivered and signed by the reportedip.de Rule API.', 'reportedip-hive' ) . ' (v' . absint( $bot_ver ) . ')'
+			? esc_html__( 'The crawler list is delivered and signed by the reportedip.com Rule API.', 'reportedip-hive' ) . ' (v' . absint( $bot_ver ) . ')'
 			: esc_html__( 'The bundled baseline crawler list is active. Connect the Community Network for the server-delivered list.', 'reportedip-hive' ) ) . '</p>';
 
 		$actions = array(
@@ -1519,7 +1519,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	 * @return void
 	 */
 	private function render_rule_sync_tab() {
-		self::render_tab_intro( __( 'The detection rules behind the WAF, Bot Verification, Spam Defence and Scan Detection are not hard-coded: they are versioned rulesets, maintained on reportedip.de, signed with Ed25519 and delivered through the Rule API. A bundled baseline ships with the plugin, so every install is protected even fully offline.', 'reportedip-hive' ) );
+		self::render_tab_intro( __( 'The detection rules behind the WAF, Bot Verification, Spam Defence and Scan Detection are not hard-coded: they are versioned rulesets, maintained on reportedip.com, signed with Ed25519 and delivered through the Rule API. A bundled baseline ships with the plugin, so every install is protected even fully offline.', 'reportedip-hive' ) );
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$sync         = ReportedIP_Hive_Rule_Sync::get_instance();
@@ -1537,7 +1537,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '</div><div class="rip-card__body">';
 
 		if ( $has_priority ) {
-			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Priority Sync is active on your plan — the rulesets below refresh automatically from the reportedip.de Rule API, signed and verified on every download.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Priority Sync is active on your plan — the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download.', 'reportedip-hive' ) . '</div>';
 		} elseif ( $mode_manager->is_local_mode() ) {
 			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets.', 'reportedip-hive' ) . '</div>';
 		}
@@ -1551,7 +1551,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			$synced     = $version > 0;
 			$badge      = $synced ? 'rip-badge--success' : 'rip-badge--neutral';
 			$source     = $synced
-				? __( 'reportedip.de Rule API', 'reportedip-hive' )
+				? __( 'reportedip.com Rule API', 'reportedip-hive' )
 				: __( 'Bundled baseline', 'reportedip-hive' );
 			$label      = isset( $meta[ $key ] ) ? $meta[ $key ]['label'] : $key;
 			$feeds_lbl  = isset( $meta[ $key ] ) ? $meta[ $key ]['feeds'] : '';

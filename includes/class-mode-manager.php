@@ -5,7 +5,7 @@
  * Manages the dual-mode system (Local Protection vs Community Network).
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -336,8 +336,8 @@ class ReportedIP_Hive_Mode_Manager {
 			'advanced_analytics'           => array( __( 'Advanced Analytics', 'reportedip-hive' ), __( 'Access advanced threat analytics and trends', 'reportedip-hive' ) ),
 			'threat_intelligence'          => array( __( 'Threat Intelligence', 'reportedip-hive' ), __( 'Receive threat intelligence from the community', 'reportedip-hive' ) ),
 			'coordinated_attack_detection' => array( __( 'Coordinated Attack Detection', 'reportedip-hive' ), __( 'Detect coordinated attacks across the network', 'reportedip-hive' ) ),
-			'mail_relay_via_api'           => array( __( 'Mail Relay via reportedip.de', 'reportedip-hive' ), __( 'Send 2FA mails through our SMTP for guaranteed deliverability — no own SMTP setup needed.', 'reportedip-hive' ) ),
-			'sms_relay_via_api'            => array( __( 'SMS Relay via reportedip.de', 'reportedip-hive' ), __( 'Send 2FA SMS via our managed EU gateway — included with Professional and Business.', 'reportedip-hive' ) ),
+			'mail_relay_via_api'           => array( __( 'Mail Relay via reportedip.com', 'reportedip-hive' ), __( 'Send 2FA mails through our SMTP for guaranteed deliverability — no own SMTP setup needed.', 'reportedip-hive' ) ),
+			'sms_relay_via_api'            => array( __( 'SMS Relay via reportedip.com', 'reportedip-hive' ), __( 'Send 2FA SMS via our managed EU gateway — included with Professional and Business.', 'reportedip-hive' ) ),
 			'frontend_2fa'                 => array( __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ), __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login — kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ) ),
 			'webauthn_advanced'            => array( __( 'Advanced Security Keys', 'reportedip-hive' ), __( 'Multiple security keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts. One security key or passkey per account stays free.', 'reportedip-hive' ) ),
 			'decoy_pathblock'              => array( __( 'Decoy Path Block', 'reportedip-hive' ), __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...) — distinct from the N-of-Y scan-detector.', 'reportedip-hive' ) ),
@@ -888,7 +888,7 @@ class ReportedIP_Hive_Mode_Manager {
 	/**
 	 * Extract the count consumed in the current period from a relay subdocument.
 	 *
-	 * The reportedip.de service emits `sent`, `queued`, `queued_total`, `failed`
+	 * The reportedip.com service emits `sent`, `queued`, `queued_total`, `failed`
 	 * (`queued_total` is what counts toward the monthly limit). Older / future
 	 * shapes may also expose a flat `used` field. We accept all variants so the
 	 * dashboard never silently shows zero just because of a contract drift.
@@ -1067,7 +1067,7 @@ class ReportedIP_Hive_Mode_Manager {
 	/**
 	 * Site-transient prefix that stores the last cap-hit for a relay channel
 	 * ('mail' or 'sms'). Site-transient (network-wide on Multisite) because the
-	 * cap is account-wide at reportedip.de — every sub-site needs to see the
+	 * cap is account-wide at reportedip.com — every sub-site needs to see the
 	 * same state, not just whichever site happened to trigger the 402.
 	 */
 	const CAP_STATE_TRANSIENT_PREFIX = 'reportedip_hive_relay_cap_state_';

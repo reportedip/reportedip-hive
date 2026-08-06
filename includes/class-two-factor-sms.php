@@ -1,12 +1,12 @@
 <?php
 /**
- * SMS-OTP orchestration via the managed reportedip.de relay (Professional+).
+ * SMS-OTP orchestration via the managed reportedip.com relay (Professional+).
  *
  * Important design constraints:
  *   - SMS is a Professional-tier feature delivered exclusively through the
- *     managed reportedip.de relay. There is no self-hosted provider option —
+ *     managed reportedip.com relay. There is no self-hosted provider option —
  *     {@see is_ready()} returns true only while the relay is available.
- *   - The relay AVV with reportedip.de is part of the plan subscription, so no
+ *   - The relay AVV with reportedip.com is part of the plan subscription, so no
  *     per-provider DPA confirmation is required on the site.
  *   - Phone numbers are stored encrypted (libsodium / OpenSSL fallback) via
  *     ReportedIP_Hive_Two_Factor_Crypto so a DB dump alone is insufficient.
@@ -16,7 +16,7 @@
  *   - Rate-limits (3 sends / 15 min, 60 s cooldown) mirror the email flow.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Provider contract implemented by the managed reportedip.de relay adapter.
+ * Provider contract implemented by the managed reportedip.com relay adapter.
  */
 interface ReportedIP_Hive_SMS_Provider {
 
@@ -89,12 +89,12 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	const BACKOFF_LADDER = array( 0, 30, 60, 120, 300, 900 );
 
 	/**
-	 * Provider id of the managed reportedip.de SMS relay — the only provider.
+	 * Provider id of the managed reportedip.com SMS relay — the only provider.
 	 */
 	const PROVIDER_RELAY = 'reportedip_relay';
 
 	/**
-	 * Provider registry — the managed reportedip.de relay is the only adapter.
+	 * Provider registry — the managed reportedip.com relay is the only adapter.
 	 *
 	 * @return array<string, class-string<ReportedIP_Hive_SMS_Provider>>
 	 */
@@ -108,7 +108,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	 * Is the plugin in a state where it may dispatch SMS messages?
 	 *
 	 * Hard gate — SMS is a Professional-tier feature delivered through the
-	 * managed reportedip.de relay; returns true only while the relay is
+	 * managed reportedip.com relay; returns true only while the relay is
 	 * available for the current tier and mode.
 	 *
 	 * @return bool
@@ -233,7 +233,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		$expiry_minutes = (int) ( self::CODE_TTL / 60 );
 
 		/*
-		 * The managed reportedip.de relay is the only dispatch path. We transmit
+		 * The managed reportedip.com relay is the only dispatch path. We transmit
 		 * ONLY the code + expiry as template vars — the Service renders the final
 		 * SMS body server-side. The verification code never enters a freshly
 		 * composed string on the customer site, only the API payload.

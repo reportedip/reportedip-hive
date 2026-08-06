@@ -3,7 +3,7 @@
  * Admin Settings Class for ReportedIP Hive.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -494,7 +494,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 2.1.7
 	 */
 	public static function pricing_url() {
-		return 'https://reportedip.de/pricing/';
+		return 'https://reportedip.com/pricing/';
 	}
 
 	/**
@@ -790,11 +790,11 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 			</div>
 			<div class="rip-card__body">
-				<p><?php esc_html_e( 'Upgrade to Professional to route 2FA codes and security alerts through the reportedip.de relay — verified SPF/DKIM/DMARC, anti-fraud routing, no spam folder.', 'reportedip-hive' ); ?></p>
+				<p><?php esc_html_e( 'Upgrade to Professional to route 2FA codes and security alerts through the reportedip.com relay — verified SPF/DKIM/DMARC, anti-fraud routing, no spam folder.', 'reportedip-hive' ); ?></p>
 				<ul class="rip-promo-card__benefits">
 					<li><?php esc_html_e( '500 mails / month included (Business: 2,500)', 'reportedip-hive' ); ?></li>
 					<li><?php esc_html_e( '25 SMS / month included (Business: 75 + add-on bundles)', 'reportedip-hive' ); ?></li>
-					<li><?php esc_html_e( 'No SMTP/SMS provider contract needed — managed by reportedip.de', 'reportedip-hive' ); ?></li>
+					<li><?php esc_html_e( 'No SMTP/SMS provider contract needed — managed by reportedip.com', 'reportedip-hive' ); ?></li>
 				</ul>
 				<div class="rip-flex rip-gap-2 rip-mt-3">
 					<?php self::render_tier_lock( $mail_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
@@ -1107,7 +1107,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php
 				printf(
 					/* translators: 1: tier short label (e.g. PRO), 2: human-readable reset date */
-					esc_html__( 'Your %1$s plan includes managed mail and SMS delivery via reportedip.de. Counters reset on %2$s.', 'reportedip-hive' ),
+					esc_html__( 'Your %1$s plan includes managed mail and SMS delivery via reportedip.com. Counters reset on %2$s.', 'reportedip-hive' ),
 					esc_html( $tier['short_label'] ),
 					esc_html( $reset_label )
 				);
@@ -1256,8 +1256,8 @@ class ReportedIP_Hive_Admin_Settings {
 				<p class="rip-secured-by__text">
 					<?php
 					printf(
-						/* translators: 1: opening link tag to reportedip.de, 2: closing link tag */
-						esc_html__( 'This site is secured by ReportedIP Hive, part of the %1$sreportedip.de%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one.', 'reportedip-hive' ),
+						/* translators: 1: opening link tag to reportedip.com, 2: closing link tag */
+						esc_html__( 'This site is secured by ReportedIP Hive, part of the %1$sreportedip.com%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one.', 'reportedip-hive' ),
 						'<a href="' . esc_url( REPORTEDIP_HIVE_SITE_URL ) . '" target="_blank" rel="noopener">',
 						'</a>'
 					);
@@ -1342,7 +1342,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'variant'           => 'info',
 				'extra_classes'     => 'rip-tier-upgrade-banner',
 				'title'             => $title,
-				'body'              => __( 'Two-factor authentication via the managed reportedip.de relay is now included with your plan. SMS is ready to use — enable it as a method to roll it out:', 'reportedip-hive' ),
+				'body'              => __( 'Two-factor authentication via the managed reportedip.com relay is now included with your plan. SMS is ready to use — enable it as a method to roll it out:', 'reportedip-hive' ),
 				'checklist'         => $checklist,
 				'primary_action'    => array(
 					'label' => __( 'Open 2FA settings', 'reportedip-hive' ),
@@ -3209,7 +3209,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$value = esc_url_raw( $value ?? '' );
 
 		if ( empty( $value ) ) {
-			return 'https://reportedip.de/wp-json/reportedip/v2/';
+			return 'https://reportedip.com/wp-json/reportedip/v2/';
 		}
 
 		if ( ! filter_var( $value, FILTER_VALIDATE_URL ) ) {
@@ -3219,7 +3219,7 @@ class ReportedIP_Hive_Admin_Settings {
 				__( 'API endpoint must be a valid URL.', 'reportedip-hive' ),
 				'error'
 			);
-			return ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.de/wp-json/reportedip/v2/' );
+			return ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.com/wp-json/reportedip/v2/' );
 		}
 
 		if ( strpos( $value, 'https://' ) !== 0 ) {
@@ -3229,7 +3229,7 @@ class ReportedIP_Hive_Admin_Settings {
 				__( 'API endpoint must use HTTPS for security.', 'reportedip-hive' ),
 				'error'
 			);
-			return ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.de/wp-json/reportedip/v2/' );
+			return ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.com/wp-json/reportedip/v2/' );
 		}
 
 		return trailingslashit( $value );
@@ -4610,13 +4610,13 @@ class ReportedIP_Hive_Admin_Settings {
 					<input type="password" id="reportedip_hive_api_key" name="reportedip_hive_api_key" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ); ?>" class="rip-input" />
 					<p class="rip-help-text">
 						<?php esc_html_e( 'Your ReportedIP.de API key.', 'reportedip-hive' ); ?>
-						<a href="https://reportedip.de/dashboard/api-keys" target="_blank"><?php esc_html_e( 'Get API Key', 'reportedip-hive' ); ?></a>
+						<a href="https://reportedip.com/dashboard/api-keys" target="_blank"><?php esc_html_e( 'Get API Key', 'reportedip-hive' ); ?></a>
 					</p>
 				</div>
 
 				<div class="rip-form-group">
 					<label class="rip-label" for="reportedip_hive_api_endpoint"><?php esc_html_e( 'API Endpoint', 'reportedip-hive' ); ?></label>
-					<input type="url" id="reportedip_hive_api_endpoint" name="reportedip_hive_api_endpoint" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.de/wp-json/reportedip/v2/' ) ); ?>" class="rip-input" />
+					<input type="url" id="reportedip_hive_api_endpoint" name="reportedip_hive_api_endpoint" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.com/wp-json/reportedip/v2/' ) ); ?>" class="rip-input" />
 					<p class="rip-help-text"><?php esc_html_e( 'The ReportedIP.de API endpoint URL.', 'reportedip-hive' ); ?></p>
 				</div>
 
@@ -5457,12 +5457,12 @@ class ReportedIP_Hive_Admin_Settings {
 		<?php if ( $tier_pro_or_higher ) : ?>
 		<div class="rip-alert rip-alert--success">
 			<strong><?php esc_html_e( 'PRO mail relay active.', 'reportedip-hive' ); ?></strong>
-			<?php esc_html_e( 'All plugin mails go through the reportedip.de relay so they pass authentication checks and stay out of spam folders. Your "From email" below is used as Reply-To, so replies still reach your inbox.', 'reportedip-hive' ); ?>
+			<?php esc_html_e( 'All plugin mails go through the reportedip.com relay so they pass authentication checks and stay out of spam folders. Your "From email" below is used as Reply-To, so replies still reach your inbox.', 'reportedip-hive' ); ?>
 		</div>
 		<?php else : ?>
 		<div class="rip-alert rip-alert--info">
 			<strong><?php esc_html_e( 'Free tier — mails leave your server directly.', 'reportedip-hive' ); ?></strong>
-			<?php esc_html_e( 'Upgrade to PRO to route mails through the EU-based reportedip.de relay, which handles SPF/DKIM/DMARC so mails are less likely to land in spam.', 'reportedip-hive' ); ?>
+			<?php esc_html_e( 'Upgrade to PRO to route mails through the EU-based reportedip.com relay, which handles SPF/DKIM/DMARC so mails are less likely to land in spam.', 'reportedip-hive' ); ?>
 			<a href="<?php echo esc_url( REPORTEDIP_HIVE_UPGRADE_URL ); ?>" target="_blank" rel="noopener noreferrer" class="rip-alert__cta"><?php esc_html_e( 'Learn more', 'reportedip-hive' ); ?> &rarr;</a>
 		</div>
 		<?php endif; ?>
@@ -5553,7 +5553,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<p class="rip-help-text">
 						<?php
 						if ( $tier_pro_or_higher ) {
-							esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.de, so any address you enter here is safe to use.', 'reportedip-hive' );
+							esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.com, so any address you enter here is safe to use.', 'reportedip-hive' );
 						} else {
 							esc_html_e( 'Should match a domain you own, so mail-server checks (SPF/DKIM) do not reject the message.', 'reportedip-hive' );
 						}
@@ -5566,10 +5566,10 @@ class ReportedIP_Hive_Admin_Settings {
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-					<?php esc_html_e( 'Sync with reportedip.de', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Sync with reportedip.com', 'reportedip-hive' ); ?>
 				</h2>
 				<p class="rip-settings-section__desc">
-					<?php esc_html_e( 'Mirrors the contact set above to your reportedip.de account dashboard so the relay sees the same configuration.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Mirrors the contact set above to your reportedip.com account dashboard so the relay sees the same configuration.', 'reportedip-hive' ); ?>
 					<?php if ( $tier_pro_or_higher ) : ?>
 						<strong><?php esc_html_e( 'Recommended on for PRO accounts.', 'reportedip-hive' ); ?></strong>
 					<?php endif; ?>
@@ -5579,7 +5579,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<label class="rip-toggle">
 						<input type="checkbox" name="reportedip_hive_notify_sync_to_api" value="1" class="rip-toggle__input" <?php checked( $sync_to_api_value ); ?> />
 						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Mirror this contact set to my reportedip.de account', 'reportedip-hive' ); ?></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Mirror this contact set to my reportedip.com account', 'reportedip-hive' ); ?></span>
 					</label>
 				</div>
 			</div>
@@ -5720,7 +5720,7 @@ class ReportedIP_Hive_Admin_Settings {
 						printf(
 							wp_kses(
 								/* translators: %s = privacy-text generator URL */
-								__( 'Need a privacy policy statement for this site? Generate a custom-tailored text (German or English) based on your configuration at <a href="%s" target="_blank" rel="noopener">reportedip.de/dashboard/dsgvo</a>. A draft text is also registered under <strong>Tools &rarr; Privacy</strong>.', 'reportedip-hive' ),
+								__( 'Need a privacy policy statement for this site? Generate a custom-tailored text (German or English) based on your configuration at <a href="%s" target="_blank" rel="noopener">reportedip.com/dashboard/dsgvo</a>. A draft text is also registered under <strong>Tools &rarr; Privacy</strong>.', 'reportedip-hive' ),
 								array(
 									'a'      => array(
 										'href'   => array(),
@@ -5730,7 +5730,7 @@ class ReportedIP_Hive_Admin_Settings {
 									'strong' => array(),
 								)
 							),
-							'https://reportedip.de/dashboard/dsgvo'
+							'https://reportedip.com/dashboard/dsgvo'
 						);
 						?>
 					</div>
@@ -6716,8 +6716,8 @@ class ReportedIP_Hive_Admin_Settings {
 				'sms_per_mo'  => 25,
 				'domains'     => 3,
 				'features'    => array(
-					__( '500 2FA mails / month via reportedip.de SMTP', 'reportedip-hive' ),
-					__( '25 included 2FA SMS per month — managed via reportedip.de', 'reportedip-hive' ),
+					__( '500 2FA mails / month via reportedip.com SMTP', 'reportedip-hive' ),
+					__( '25 included 2FA SMS per month — managed via reportedip.com', 'reportedip-hive' ),
 					__( 'Multi-site licence (3 domains)', 'reportedip-hive' ),
 					__( 'Priority sync (daily blacklist download)', 'reportedip-hive' ),
 					__( '2FA usage reports & per-role policies', 'reportedip-hive' ),
@@ -7206,7 +7206,7 @@ class ReportedIP_Hive_Admin_Settings {
 							<div class="rip-card rip-relay-highlight rip-relay-highlight--mail">
 								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
 									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-									<?php esc_html_e( '100% mail delivery via reportedip.de', 'reportedip-hive' ); ?>
+									<?php esc_html_e( '100% mail delivery via reportedip.com', 'reportedip-hive' ); ?>
 									<?php self::render_tier_marker( $mail_relay_status ); ?>
 								</h3>
 								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
@@ -7419,7 +7419,7 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 			<div class="rip-card__body">
 				<p style="margin-top:0;">
-					<?php esc_html_e( 'Drop any of these shortcodes into a post, page, widget, or theme template. Each one renders a self-contained banner that links back to reportedip.de with UTM tracking.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Drop any of these shortcodes into a post, page, widget, or theme template. Each one renders a self-contained banner that links back to reportedip.com with UTM tracking.', 'reportedip-hive' ); ?>
 				</p>
 
 				<div style="margin:1em 0 1.5em;padding:1em 1.25em;background:linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.08));border:1px solid rgba(79, 70, 229, 0.18);border-radius:var(--rip-radius-lg);">
@@ -7522,7 +7522,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'banner' => 'community',
 				'shield' => 'protect',
 			),
-			'siteUrl'      => defined( 'REPORTEDIP_HIVE_SITE_URL' ) ? REPORTEDIP_HIVE_SITE_URL : 'https://reportedip.de',
+			'siteUrl'      => defined( 'REPORTEDIP_HIVE_SITE_URL' ) ? REPORTEDIP_HIVE_SITE_URL : 'https://reportedip.com',
 		);
 		?>
 
@@ -7767,7 +7767,7 @@ class ReportedIP_Hive_Admin_Settings {
 				banner.setAttribute('data-color', state.color);
 				banner.setAttribute('data-border', state.border);
 				banner.setAttribute('data-live', state.live ? 'true' : 'false');
-				banner.setAttribute('data-href', (data.siteUrl || 'https://reportedip.de') + '/?utm_source=hive&utm_medium=admin-customizer&utm_campaign=protected&utm_content=' + state.variant);
+				banner.setAttribute('data-href', (data.siteUrl || 'https://reportedip.com') + '/?utm_source=hive&utm_medium=admin-customizer&utm_campaign=protected&utm_content=' + state.variant);
 
 				var fallback = document.createElement('a');
 				fallback.href = banner.getAttribute('data-href');

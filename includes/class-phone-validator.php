@@ -4,13 +4,13 @@
  *
  * Pure-function helpers for E.164 normalisation and display formatting.
  *
- * Routing policy lives on the server (the reportedip.de relay enforces an
+ * Routing policy lives on the server (the reportedip.com relay enforces an
  * internal country blacklist). Hive only validates that the input is a
  * well-formed E.164 number and forwards it to the relay; the relay returns
  * HTTP 422 with code "country_not_supported" when a number is rejected.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive

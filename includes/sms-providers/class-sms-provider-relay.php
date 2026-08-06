@@ -2,7 +2,7 @@
 /**
  * ReportedIP Relay SMS provider.
  *
- * Routes SMS through the reportedip.de service-side relay (POST /relay-sms).
+ * Routes SMS through the reportedip.com service-side relay (POST /relay-sms).
  * Activated automatically when the user runs in Community mode and the API key
  * belongs to a Professional/Business/Enterprise tier.
  *
@@ -13,7 +13,7 @@
  * surprise customers who specifically pay for relay routing.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -35,13 +35,13 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 	}
 
 	public static function region() {
-		return 'Worldwide (via reportedip.de)';
+		return 'Worldwide (via reportedip.com)';
 	}
 
 	public static function avv_url() {
 		return defined( 'REPORTEDIP_HIVE_SITE_URL' )
 			? trailingslashit( REPORTEDIP_HIVE_SITE_URL ) . 'legal/avv'
-			: 'https://reportedip.de/legal/avv';
+			: 'https://reportedip.com/legal/avv';
 	}
 
 	public static function config_fields() {

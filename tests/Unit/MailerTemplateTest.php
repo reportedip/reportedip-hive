@@ -11,7 +11,7 @@
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
- * @author     Patrick Schlesinger <1@reportedip.de>
+ * @author     Patrick Schlesinger <1@reportedip.com>
  * @copyright  2025-2026 Patrick Schlesinger
  * @license    GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link       https://github.com/reportedip/reportedip-hive
@@ -112,7 +112,7 @@ class MailerTemplateTest extends TestCase {
 		$this->assertStringContainsString( 'linear-gradient(135deg,#4F46E5,#7C3AED)', $html, 'Header gradient must use brand indigo.' );
 		$this->assertStringContainsString( 'Example Site', $html, 'Site name must appear in header + footer.' );
 		$this->assertStringContainsString( 'Protected by ReportedIP Hive', $html, 'Footer trust line must appear.' );
-		$this->assertStringContainsString( 'https://reportedip.de/', $html, 'Footer must link to the ReportedIP brand site.' );
+		$this->assertStringContainsString( 'https://reportedip.com/', $html, 'Footer must link to the ReportedIP brand site.' );
 
 		$this->assertStringContainsString( 'Hello Patrick,', $html );
 		$this->assertStringContainsString( 'A verification code is required.', $html );
@@ -143,7 +143,7 @@ class MailerTemplateTest extends TestCase {
 		$this->assertStringContainsString( 'Code: 123456', $plain, 'main_block_text should win over the HTML version.' );
 		$this->assertStringContainsString( 'Never share this code.', $plain );
 		$this->assertStringContainsString( 'Protected by ReportedIP Hive', $plain, 'Footer line must be present.' );
-		$this->assertStringContainsString( 'https://reportedip.de/', $plain, 'Plaintext footer must include the brand link.' );
+		$this->assertStringContainsString( 'https://reportedip.com/', $plain, 'Plaintext footer must include the brand link.' );
 	}
 
 	public function test_headers_get_default_content_type_and_from() {

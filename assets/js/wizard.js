@@ -8,7 +8,7 @@
  * sanitisation + mapping lives in ReportedIP_Hive_Wizard_Schema (PHP).
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later
  * @since     1.1.0
@@ -481,7 +481,7 @@
 				el.setAttribute('data-mode', 'local');
 				el.setAttribute('data-theme', 'dark');
 				el.setAttribute('data-align', elementAlign);
-				el.setAttribute('data-href', 'https://reportedip.de/?utm_source=hive&utm_medium=wizard-preview&utm_campaign=protected&utm_content=' + variant);
+				el.setAttribute('data-href', 'https://reportedip.com/?utm_source=hive&utm_medium=wizard-preview&utm_campaign=protected&utm_content=' + variant);
 				preview.appendChild(el);
 			}
 

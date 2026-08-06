@@ -16,7 +16,7 @@
  * }
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -122,7 +122,7 @@ $disclaimer      = isset( $context['disclaimer'] ) ? (string) $context['disclaim
 			printf(
 				/* translators: 1: opening link tag, 2: closing link tag */
 				esc_html__( 'This message is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
-				'<a href="https://reportedip.de/" style="color:#4F46E5;text-decoration:none;" target="_blank" rel="noopener">',
+				'<a href="https://reportedip.com/" style="color:#4F46E5;text-decoration:none;" target="_blank" rel="noopener">',
 				'</a>'
 			);
 			?>

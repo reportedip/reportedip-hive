@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ReportedIP Hive 2.0.19\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
-"Last-Translator: Patrick Schlesinger <1@reportedip.de>\n"
+"Last-Translator: Patrick Schlesinger <1@reportedip.com>\n"
 "Language-Team: German <de@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-08-05T19:03:48+00:00\n"
+"PO-Revision-Date: 2026-08-06T10:43:38+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
@@ -29,8 +29,8 @@ msgstr "ReportedIP Hive"
 #. Author URI of the plugin
 #: reportedip-hive.php:4
 #: reportedip-hive.php:9
-msgid "https://reportedip.de"
-msgstr "https://reportedip.de"
+msgid "https://reportedip.com"
+msgstr "https://reportedip.com"
 
 #. Description of the plugin
 #: reportedip-hive.php:5
@@ -359,8 +359,8 @@ msgstr "Basis"
 #. translators: 1: synced ruleset count, 2: total ruleset count.
 #: admin/class-admin-firewall.php:458
 #, php-format
-msgid "%1$d of %2$d rulesets delivered by the reportedip.de Rule API."
-msgstr "%1$d von %2$d Regelsätzen werden von der reportedip.de-Rule-API geliefert."
+msgid "%1$d of %2$d rulesets delivered by the reportedip.com Rule API."
+msgstr "%1$d von %2$d Regelsätzen werden von der reportedip.com-Rule-API geliefert."
 
 #: admin/class-admin-firewall.php:462
 msgid "The bundled baseline rulesets are active."
@@ -759,8 +759,8 @@ msgid "Green: verified DNS-free against the official IP ranges. Grey: verified v
 msgstr "Grün: DNS-frei gegen die offiziellen IP-Bereiche verifiziert. Grau: per forward-confirmed Reverse-DNS verifiziert. Die häufig aktualisierten Range-Feeds (Google, Bing) kommen mit dem Professional-Regelsatz."
 
 #: admin/class-admin-firewall.php:1010
-msgid "The crawler list is delivered and signed by the reportedip.de Rule API."
-msgstr "Die Crawler-Liste wird von der reportedip.de-Rule-API geliefert und signiert."
+msgid "The crawler list is delivered and signed by the reportedip.com Rule API."
+msgstr "Die Crawler-Liste wird von der reportedip.com-Rule-API geliefert und signiert."
 
 #: admin/class-admin-firewall.php:1011
 msgid "The bundled baseline crawler list is active. Connect the Community Network for the server-delivered list."
@@ -1092,16 +1092,16 @@ msgid "Apache (.htaccess or vhost, requires mod_headers)"
 msgstr "Apache (.htaccess oder vhost, benötigt mod_headers)"
 
 #: admin/class-admin-firewall.php:1522
-msgid "The detection rules behind the WAF, Bot Verification, Spam Defence and Scan Detection are not hard-coded: they are versioned rulesets, maintained on reportedip.de, signed with Ed25519 and delivered through the Rule API. A bundled baseline ships with the plugin, so every install is protected even fully offline."
-msgstr "Die Erkennungsregeln hinter WAF, Bot Verification, Spam Defence und Scan Detection sind nicht hartcodiert: Es sind versionierte Regelsätze, gepflegt auf reportedip.de, signiert mit Ed25519 und ausgeliefert über die Rule-API. Eine mitgelieferte Baseline steckt im Plugin, sodass jede Installation auch komplett offline geschützt ist."
+msgid "The detection rules behind the WAF, Bot Verification, Spam Defence and Scan Detection are not hard-coded: they are versioned rulesets, maintained on reportedip.com, signed with Ed25519 and delivered through the Rule API. A bundled baseline ships with the plugin, so every install is protected even fully offline."
+msgstr "Die Erkennungsregeln hinter WAF, Bot Verification, Spam Defence und Scan Detection sind nicht hartcodiert: Es sind versionierte Regelsätze, gepflegt auf reportedip.com, signiert mit Ed25519 und ausgeliefert über die Rule-API. Eine mitgelieferte Baseline steckt im Plugin, sodass jede Installation auch komplett offline geschützt ist."
 
 #: admin/class-admin-firewall.php:1535
 msgid "Active rulesets"
 msgstr "Aktive Regelsätze"
 
 #: admin/class-admin-firewall.php:1540
-msgid "Priority Sync is active on your plan — the rulesets below refresh automatically from the reportedip.de Rule API, signed and verified on every download."
-msgstr "Priority Sync ist in Ihrem Tarif aktiv — die untenstehenden Regelsätze aktualisieren sich automatisch über die reportedip.de-Rule-API, bei jedem Download signiert und verifiziert."
+msgid "Priority Sync is active on your plan — the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download."
+msgstr "Priority Sync ist in Ihrem Tarif aktiv — die untenstehenden Regelsätze aktualisieren sich automatisch über die reportedip.com-Rule-API, bei jedem Download signiert und verifiziert."
 
 #: admin/class-admin-firewall.php:1542
 msgid "Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets."
@@ -1129,8 +1129,8 @@ msgid "Source"
 msgstr "Quelle"
 
 #: admin/class-admin-firewall.php:1554
-msgid "reportedip.de Rule API"
-msgstr "reportedip.de-Rule-API"
+msgid "reportedip.com Rule API"
+msgstr "reportedip.com-Rule-API"
 
 #: admin/class-admin-firewall.php:1555
 msgid "Bundled baseline"
@@ -1479,8 +1479,8 @@ msgid "Reliable mail & SMS delivery"
 msgstr "Zuverlässige E-Mail- & SMS-Zustellung"
 
 #: admin/class-admin-settings.php:793
-msgid "Upgrade to Professional to route 2FA codes and security alerts through the reportedip.de relay — verified SPF/DKIM/DMARC, anti-fraud routing, no spam folder."
-msgstr "Führen Sie ein Upgrade auf Professional durch, um 2FA-Codes und Sicherheitswarnungen über das reportedip.de-Relay zu leiten — verifiziertes SPF/DKIM/DMARC, Anti-Fraud-Routing, kein Spam-Ordner."
+msgid "Upgrade to Professional to route 2FA codes and security alerts through the reportedip.com relay — verified SPF/DKIM/DMARC, anti-fraud routing, no spam folder."
+msgstr "Führen Sie ein Upgrade auf Professional durch, um 2FA-Codes und Sicherheitswarnungen über das reportedip.com-Relay zu leiten — verifiziertes SPF/DKIM/DMARC, Anti-Fraud-Routing, kein Spam-Ordner."
 
 #: admin/class-admin-settings.php:795
 msgid "500 mails / month included (Business: 2,500)"
@@ -1491,8 +1491,8 @@ msgid "25 SMS / month included (Business: 75 + add-on bundles)"
 msgstr "25 SMS / Monat inklusive (Business: 75 + Add-on-Pakete)"
 
 #: admin/class-admin-settings.php:797
-msgid "No SMTP/SMS provider contract needed — managed by reportedip.de"
-msgstr "Kein SMTP-/SMS-Anbietervertrag erforderlich — verwaltet von reportedip.de"
+msgid "No SMTP/SMS provider contract needed — managed by reportedip.com"
+msgstr "Kein SMTP-/SMS-Anbietervertrag erforderlich — verwaltet von reportedip.com"
 
 #: admin/class-admin-settings.php:831
 msgid "Success rate (recent)"
@@ -1620,8 +1620,8 @@ msgstr "Relay-Kontingent"
 #. translators: 1: tier short label (e.g. PRO), 2: human-readable reset date
 #: admin/class-admin-settings.php:1110
 #, php-format
-msgid "Your %1$s plan includes managed mail and SMS delivery via reportedip.de. Counters reset on %2$s."
-msgstr "Ihr %1$s-Tarif umfasst verwaltete E-Mail- und SMS-Zustellung über reportedip.de. Die Zähler werden am %2$s zurückgesetzt."
+msgid "Your %1$s plan includes managed mail and SMS delivery via reportedip.com. Counters reset on %2$s."
+msgstr "Ihr %1$s-Tarif umfasst verwaltete E-Mail- und SMS-Zustellung über reportedip.com. Die Zähler werden am %2$s zurückgesetzt."
 
 #: admin/class-admin-settings.php:1142
 #: admin/class-admin-settings.php:1411
@@ -1677,11 +1677,11 @@ msgstr "Wird am %s zurückgesetzt"
 msgid "Awaiting fresh quota data — refreshes every 6 hours."
 msgstr "Warten auf aktuelle Kontingentdaten — Aktualisierung alle 6 Stunden."
 
-#. translators: 1: opening link tag to reportedip.de, 2: closing link tag
+#. translators: 1: opening link tag to reportedip.com, 2: closing link tag
 #: admin/class-admin-settings.php:1260
 #, php-format
-msgid "This site is secured by ReportedIP Hive, part of the %1$sreportedip.de%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one."
-msgstr "Diese Website ist abgesichert durch ReportedIP Hive, Teil des %1$sreportedip.de%2$s-Community-Netzwerks. Hier erkannte Angriffe helfen, tausende andere WordPress-Websites zu schützen, und deren Meldungen schützen diese Website."
+msgid "This site is secured by ReportedIP Hive, part of the %1$sreportedip.com%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one."
+msgstr "Diese Website ist abgesichert durch ReportedIP Hive, Teil des %1$sreportedip.com%2$s-Community-Netzwerks. Hier erkannte Angriffe helfen, tausende andere WordPress-Websites zu schützen, und deren Meldungen schützen diese Website."
 
 #: admin/class-admin-settings.php:1267
 msgid "About the community network"
@@ -1727,8 +1727,8 @@ msgid "Your %s plan is active — finish 2FA setup"
 msgstr "Ihr %s-Tarif ist aktiv — schließen Sie die 2FA-Einrichtung ab"
 
 #: admin/class-admin-settings.php:1345
-msgid "Two-factor authentication via the managed reportedip.de relay is now included with your plan. SMS is ready to use — enable it as a method to roll it out:"
-msgstr "Die Zwei-Faktor-Authentifizierung über das verwaltete reportedip.de-Relay ist jetzt in Ihrem Tarif enthalten. SMS ist einsatzbereit — aktivieren Sie es als Methode, um es auszurollen:"
+msgid "Two-factor authentication via the managed reportedip.com relay is now included with your plan. SMS is ready to use — enable it as a method to roll it out:"
+msgstr "Die Zwei-Faktor-Authentifizierung über das verwaltete reportedip.com-Relay ist jetzt in Ihrem Tarif enthalten. SMS ist einsatzbereit — aktivieren Sie es als Methode, um es auszurollen:"
 
 #: admin/class-admin-settings.php:1348
 msgid "Open 2FA settings"
@@ -3171,16 +3171,16 @@ msgid "PRO mail relay active."
 msgstr "PRO-Mail-Relay aktiv."
 
 #: admin/class-admin-settings.php:5460
-msgid "All plugin mails go through the reportedip.de relay so they pass authentication checks and stay out of spam folders. Your \"From email\" below is used as Reply-To, so replies still reach your inbox."
-msgstr "Alle Plugin-E-Mails laufen über das reportedip.de-Relay, sodass sie Authentifizierungsprüfungen bestehen und nicht im Spam-Ordner landen. Ihre \"Absender-E-Mail\" unten wird als Reply-To gesetzt, damit Antworten weiterhin in Ihrem Postfach ankommen."
+msgid "All plugin mails go through the reportedip.com relay so they pass authentication checks and stay out of spam folders. Your \"From email\" below is used as Reply-To, so replies still reach your inbox."
+msgstr "Alle Plugin-E-Mails laufen über das reportedip.com-Relay, sodass sie Authentifizierungsprüfungen bestehen und nicht im Spam-Ordner landen. Ihre \"Absender-E-Mail\" unten wird als Reply-To gesetzt, damit Antworten weiterhin in Ihrem Postfach ankommen."
 
 #: admin/class-admin-settings.php:5464
 msgid "Free tier — mails leave your server directly."
 msgstr "Free-Stufe — Mails verlassen Ihren Server direkt."
 
 #: admin/class-admin-settings.php:5465
-msgid "Upgrade to PRO to route mails through the EU-based reportedip.de relay, which handles SPF/DKIM/DMARC so mails are less likely to land in spam."
-msgstr "Wechseln Sie zu PRO, um E-Mails über das in der EU gehostete reportedip.de-Relay zu versenden, das SPF/DKIM/DMARC übernimmt, sodass E-Mails seltener im Spam landen."
+msgid "Upgrade to PRO to route mails through the EU-based reportedip.com relay, which handles SPF/DKIM/DMARC so mails are less likely to land in spam."
+msgstr "Wechseln Sie zu PRO, um E-Mails über das in der EU gehostete reportedip.com-Relay zu versenden, das SPF/DKIM/DMARC übernimmt, sodass E-Mails seltener im Spam landen."
 
 #: admin/class-admin-settings.php:5466
 #: admin/class-admin-settings.php:8107
@@ -3238,8 +3238,8 @@ msgstr "Absender-E-Mail"
 
 #: admin/class-admin-settings.php:5556
 #: admin/class-setup-wizard.php:1615
-msgid "Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.de, so any address you enter here is safe to use."
-msgstr "Wird als Reply-To verwendet, damit Antworten direkt in Ihrem Postfach ankommen. Mit dem PRO-Mail-Relay werden E-Mails von noreply@reportedip.de versendet, sodass jede hier eingetragene Adresse unbedenklich ist."
+msgid "Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.com, so any address you enter here is safe to use."
+msgstr "Wird als Reply-To verwendet, damit Antworten direkt in Ihrem Postfach ankommen. Mit dem PRO-Mail-Relay werden E-Mails von noreply@reportedip.com versendet, sodass jede hier eingetragene Adresse unbedenklich ist."
 
 #: admin/class-admin-settings.php:5558
 #: admin/class-setup-wizard.php:1617
@@ -3248,12 +3248,12 @@ msgstr "Sollte zu einer Domain passen, die Ihnen gehört, damit Mailserver-Prüf
 
 #: admin/class-admin-settings.php:5569
 #: admin/class-setup-wizard.php:1629
-msgid "Sync with reportedip.de"
-msgstr "Mit reportedip.de synchronisieren"
+msgid "Sync with reportedip.com"
+msgstr "Mit reportedip.com synchronisieren"
 
 #: admin/class-admin-settings.php:5572
-msgid "Mirrors the contact set above to your reportedip.de account dashboard so the relay sees the same configuration."
-msgstr "Spiegelt die oben festgelegten Kontaktdaten in das Dashboard Ihres reportedip.de-Kontos, damit das Relay dieselbe Konfiguration sieht."
+msgid "Mirrors the contact set above to your reportedip.com account dashboard so the relay sees the same configuration."
+msgstr "Spiegelt die oben festgelegten Kontaktdaten in das Dashboard Ihres reportedip.com-Kontos, damit das Relay dieselbe Konfiguration sieht."
 
 #: admin/class-admin-settings.php:5574
 msgid "Recommended on for PRO accounts."
@@ -3261,8 +3261,8 @@ msgstr "Für PRO-Konten wird die Aktivierung empfohlen."
 
 #: admin/class-admin-settings.php:5582
 #: admin/class-setup-wizard.php:1635
-msgid "Mirror this contact set to my reportedip.de account"
-msgstr "Diese Kontaktdaten in mein reportedip.de-Konto spiegeln"
+msgid "Mirror this contact set to my reportedip.com account"
+msgstr "Diese Kontaktdaten in mein reportedip.com-Konto spiegeln"
 
 #: admin/class-admin-settings.php:5591
 msgid "Sign-in notifications"
@@ -3342,8 +3342,8 @@ msgstr "Anfrage fehlgeschlagen. Prüfen Sie die Server-Logs."
 #. translators: %s = privacy-text generator URL
 #: admin/class-admin-settings.php:5723
 #, php-format
-msgid "Need a privacy policy statement for this site? Generate a custom-tailored text (German or English) based on your configuration at <a href=\"%s\" target=\"_blank\" rel=\"noopener\">reportedip.de/dashboard/dsgvo</a>. A draft text is also registered under <strong>Tools &rarr; Privacy</strong>."
-msgstr "Benötigen Sie eine Datenschutzerklärung für diese Website? Erzeugen Sie einen individuell angepassten Text (Deutsch oder Englisch) basierend auf Ihrer Konfiguration unter <a href=\"%s\" target=\"_blank\" rel=\"noopener\">reportedip.de/dashboard/dsgvo</a>. Ein Textentwurf ist außerdem unter <strong>Werkzeuge &rarr; Datenschutz</strong> hinterlegt."
+msgid "Need a privacy policy statement for this site? Generate a custom-tailored text (German or English) based on your configuration at <a href=\"%s\" target=\"_blank\" rel=\"noopener\">reportedip.com/dashboard/dsgvo</a>. A draft text is also registered under <strong>Tools &rarr; Privacy</strong>."
+msgstr "Benötigen Sie eine Datenschutzerklärung für diese Website? Erzeugen Sie einen individuell angepassten Text (Deutsch oder Englisch) basierend auf Ihrer Konfiguration unter <a href=\"%s\" target=\"_blank\" rel=\"noopener\">reportedip.com/dashboard/dsgvo</a>. Ein Textentwurf ist außerdem unter <strong>Werkzeuge &rarr; Datenschutz</strong> hinterlegt."
 
 #: admin/class-admin-settings.php:5743
 msgid "Logging profile"
@@ -3969,12 +3969,12 @@ msgid "Email support"
 msgstr "E-Mail-Support"
 
 #: admin/class-admin-settings.php:6719
-msgid "500 2FA mails / month via reportedip.de SMTP"
-msgstr "500 2FA-Mails / Monat über reportedip.de SMTP"
+msgid "500 2FA mails / month via reportedip.com SMTP"
+msgstr "500 2FA-Mails / Monat über reportedip.com SMTP"
 
 #: admin/class-admin-settings.php:6720
-msgid "25 included 2FA SMS per month — managed via reportedip.de"
-msgstr "25 inkludierte 2FA-SMS pro Monat — verwaltet über reportedip.de"
+msgid "25 included 2FA SMS per month — managed via reportedip.com"
+msgstr "25 inkludierte 2FA-SMS pro Monat — verwaltet über reportedip.com"
 
 #: admin/class-admin-settings.php:6721
 msgid "Multi-site licence (3 domains)"
@@ -4217,8 +4217,8 @@ msgid "Unlimited"
 msgstr "Unbegrenzt"
 
 #: admin/class-admin-settings.php:7209
-msgid "100% mail delivery via reportedip.de"
-msgstr "100% E-Mail-Zustellung über reportedip.de"
+msgid "100% mail delivery via reportedip.com"
+msgstr "100% E-Mail-Zustellung über reportedip.com"
 
 #: admin/class-admin-settings.php:7213
 msgid "Clean SPF / DKIM / DMARC reputation — no more spam folders"
@@ -4361,8 +4361,8 @@ msgid "Manual shortcodes"
 msgstr "Manuelle Shortcodes"
 
 #: admin/class-admin-settings.php:7422
-msgid "Drop any of these shortcodes into a post, page, widget, or theme template. Each one renders a self-contained banner that links back to reportedip.de with UTM tracking."
-msgstr "Fügen Sie einen dieser Shortcodes in einen Beitrag, eine Seite, ein Widget oder ein Theme-Template ein. Jeder rendert ein eigenständiges Banner, das mit UTM-Tracking auf reportedip.de zurückverweist."
+msgid "Drop any of these shortcodes into a post, page, widget, or theme template. Each one renders a self-contained banner that links back to reportedip.com with UTM tracking."
+msgstr "Fügen Sie einen dieser Shortcodes in einen Beitrag, eine Seite, ein Widget oder ein Theme-Template ein. Jeder rendert ein eigenständiges Banner, das mit UTM-Tracking auf reportedip.com zurückverweist."
 
 #: admin/class-admin-settings.php:7426
 msgid "Featured: show your contribution to the community"
@@ -6718,8 +6718,8 @@ msgid "Sends a 6-digit code to the user's email address."
 msgstr "Sendet einen 6-stelligen Code an die E-Mail-Adresse des Benutzers."
 
 #: admin/class-two-factor-admin.php:359
-msgid "Delivered via the managed reportedip.de relay."
-msgstr "Zustellung über das verwaltete reportedip.de-Relay."
+msgid "Delivered via the managed reportedip.com relay."
+msgstr "Zustellung über das verwaltete reportedip.com-Relay."
 
 #: admin/class-two-factor-admin.php:362
 msgid "On the free plan, codes are sent with wp_mail() straight from this server, so deliverability depends on your host."
@@ -6754,8 +6754,8 @@ msgid "SMS code"
 msgstr "SMS-Code"
 
 #: admin/class-two-factor-admin.php:439
-msgid "SMS codes are a Professional-plan feature, delivered through our managed reportedip.de relay — no Twilio account or SMS gateway of your own required (25/month included). The relay runs over the Community Network connection."
-msgstr "SMS-Codes sind ein Feature des Professional-Tarifs und werden über unser verwaltetes reportedip.de-Relay versendet — ein eigener Twilio-Account oder SMS-Gateway ist nicht nötig (25/Monat inklusive). Das Relay läuft über die Community-Netzwerk-Verbindung."
+msgid "SMS codes are a Professional-plan feature, delivered through our managed reportedip.com relay — no Twilio account or SMS gateway of your own required (25/month included). The relay runs over the Community Network connection."
+msgstr "SMS-Codes sind ein Feature des Professional-Tarifs und werden über unser verwaltetes reportedip.com-Relay versendet — ein eigener Twilio-Account oder SMS-Gateway ist nicht nötig (25/Monat inklusive). Das Relay läuft über die Community-Netzwerk-Verbindung."
 
 #: admin/class-two-factor-admin.php:440
 msgid "Less secure than Authenticator or Passkey, so use it only as a fallback."
@@ -6973,16 +6973,16 @@ msgid "SMS code (Professional)"
 msgstr "SMS-Code (Professional)"
 
 #: admin/class-two-factor-admin.php:1213
-msgid "SMS-2FA is delivered through the managed reportedip.de relay, included with Professional and Business plans. Phone numbers are stored encrypted and the SMS contains only the code, no site or user data."
-msgstr "SMS-2FA wird über das verwaltete reportedip.de-Relay zugestellt und ist in den Tarifen Professional und Business enthalten. Telefonnummern werden verschlüsselt gespeichert, und die SMS enthält nur den Code — keine Website- oder Benutzerdaten."
+msgid "SMS-2FA is delivered through the managed reportedip.com relay, included with Professional and Business plans. Phone numbers are stored encrypted and the SMS contains only the code, no site or user data."
+msgstr "SMS-2FA wird über das verwaltete reportedip.com-Relay zugestellt und ist in den Tarifen Professional und Business enthalten. Telefonnummern werden verschlüsselt gespeichert, und die SMS enthält nur den Code — keine Website- oder Benutzerdaten."
 
 #: admin/class-two-factor-admin.php:1218
 msgid "Managed SMS relay active"
 msgstr "Verwaltetes SMS-Relay aktiv"
 
 #: admin/class-two-factor-admin.php:1219
-msgid "SMS-2FA flows through reportedip.de — included with your plan, no separate SMS contract needed."
-msgstr "SMS-2FA läuft über reportedip.de — in Ihrem Tarif enthalten, kein separater SMS-Vertrag nötig."
+msgid "SMS-2FA flows through reportedip.com — included with your plan, no separate SMS contract needed."
+msgstr "SMS-2FA läuft über reportedip.com — in Ihrem Tarif enthalten, kein separater SMS-Vertrag nötig."
 
 #: admin/class-two-factor-admin.php:1227
 msgid "Final step: enable “SMS code” in the methods list above to roll it out to your users."
@@ -8422,16 +8422,16 @@ msgid "Detect coordinated attacks across the network"
 msgstr "Koordinierte Angriffe netzwerkweit erkennen"
 
 #: includes/class-mode-manager.php:339
-msgid "Mail Relay via reportedip.de"
-msgstr "Mail-Relay über reportedip.de"
+msgid "Mail Relay via reportedip.com"
+msgstr "Mail-Relay über reportedip.com"
 
 #: includes/class-mode-manager.php:339
 msgid "Send 2FA mails through our SMTP for guaranteed deliverability — no own SMTP setup needed."
 msgstr "2FA-Mails über unser SMTP versenden für garantierte Zustellbarkeit — keine eigene SMTP-Einrichtung nötig."
 
 #: includes/class-mode-manager.php:340
-msgid "SMS Relay via reportedip.de"
-msgstr "SMS-Relay über reportedip.de"
+msgid "SMS Relay via reportedip.com"
+msgstr "SMS-Relay über reportedip.com"
 
 #: includes/class-mode-manager.php:340
 msgid "Send 2FA SMS via our managed EU gateway — included with Professional and Business."
@@ -8606,8 +8606,8 @@ msgid "This data is stored locally on this site, deleted automatically after the
 msgstr "Diese Daten werden lokal auf dieser Website gespeichert, nach der konfigurierten Aufbewahrungsfrist (standardmäßig 30 Tage) automatisch gelöscht und standardmäßig nach 7 Tagen anonymisiert. Rechtsgrundlage ist das berechtigte Interesse des Betreibers an der Sicherheit und am ungestörten Betrieb der Website (Art. 6 Abs. 1 lit. f DSGVO, Erwägungsgrund 49). User-Agents werden nicht gespeichert, sofern die detaillierte Protokollierung nicht ausdrücklich aktiviert ist."
 
 #: includes/class-privacy.php:79
-msgid "If \"Community Network\" mode is enabled (off by default), the IP address of login/access attempts and detected attacks is also transmitted to ReportedIP (reportedip.de) for community threat intelligence. No visitor usernames, comment content, full user agents or other personal data of regular visitors are transmitted."
-msgstr "Wenn der Modus \"Community Network\" aktiviert ist (standardmäßig deaktiviert), wird die IP-Adresse von Anmelde-/Zugriffsversuchen und erkannten Angriffen zusätzlich an ReportedIP (reportedip.de) zur gemeinschaftlichen Bedrohungsanalyse übermittelt. Es werden keine Benutzernamen von Besuchern, keine Kommentarinhalte, keine vollständigen User-Agents und keine sonstigen personenbezogenen Daten regulärer Besucher übermittelt."
+msgid "If \"Community Network\" mode is enabled (off by default), the IP address of login/access attempts and detected attacks is also transmitted to ReportedIP (reportedip.com) for community threat intelligence. No visitor usernames, comment content, full user agents or other personal data of regular visitors are transmitted."
+msgstr "Wenn der Modus \"Community Network\" aktiviert ist (standardmäßig deaktiviert), wird die IP-Adresse von Anmelde-/Zugriffsversuchen und erkannten Angriffen zusätzlich an ReportedIP (reportedip.com) zur gemeinschaftlichen Bedrohungsanalyse übermittelt. Es werden keine Benutzernamen von Besuchern, keine Kommentarinhalte, keine vollständigen User-Agents und keine sonstigen personenbezogenen Daten regulärer Besucher übermittelt."
 
 #. translators: 1: privacy generator URL, 2: ReportedIP privacy policy URL
 #: includes/class-privacy.php:82
@@ -8872,8 +8872,8 @@ msgid "Your subscription was switched back to the Free tier."
 msgstr "Ihr Abonnement wurde auf den Free-Tarif zurückgestuft."
 
 #: includes/class-tier-upgrade.php:241
-msgid "What stays active: all 12 sensors, the full 2FA suite and your local IP/block list. What pauses: managed mail/SMS relay over reportedip.de and cloud backup. You can re-activate any time from the customer portal — your data and settings remain in place."
-msgstr "Was aktiv bleibt: alle 12 Sensoren, die vollständige 2FA-Suite und Ihre lokale IP-/Sperrliste. Was pausiert: verwaltetes Mail-/SMS-Relay über reportedip.de und Cloud-Backup. Sie können jederzeit über das Kundenportal reaktivieren — Ihre Daten und Einstellungen bleiben erhalten."
+msgid "What stays active: all 12 sensors, the full 2FA suite and your local IP/block list. What pauses: managed mail/SMS relay over reportedip.com and cloud backup. You can re-activate any time from the customer portal — your data and settings remain in place."
+msgstr "Was aktiv bleibt: alle 12 Sensoren, die vollständige 2FA-Suite und Ihre lokale IP-/Sperrliste. Was pausiert: verwaltetes Mail-/SMS-Relay über reportedip.com und Cloud-Backup. Sie können jederzeit über das Kundenportal reaktivieren — Ihre Daten und Einstellungen bleiben erhalten."
 
 #: includes/class-tier-upgrade.php:257
 msgid "Open Hive dashboard"

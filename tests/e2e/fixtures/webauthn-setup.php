@@ -16,7 +16,7 @@
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\E2E
- * @author     Patrick Schlesinger <1@reportedip.de>
+ * @author     Patrick Schlesinger <1@reportedip.com>
  * @copyright  2025-2026 Patrick Schlesinger
  * @license    GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link       https://github.com/reportedip/reportedip-hive
@@ -76,7 +76,7 @@ set_transient( 'reportedip_hive_api_status', array( 'userRole' => 'reportedip_bu
 delete_transient( 'reportedip_hive_relay_quota' );
 
 /*
- * On the Business tier the mailer prefers the reportedip.de relay. Point the
+ * On the Business tier the mailer prefers the reportedip.com relay. Point the
  * API endpoint at a dead local port for the duration of the spec: the relay
  * call fails as retryable, the provider falls back to local wp_mail() and
  * the notification lands in Mailpit — and no request can ever reach the

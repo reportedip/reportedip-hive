@@ -7,7 +7,7 @@
  * Login → Promote → Done.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -126,7 +126,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
-	 * Mirror the just-saved notification contact set to reportedip.de when the
+	 * Mirror the just-saved notification contact set to reportedip.com when the
 	 * user opted into the sync. No-op otherwise.
 	 *
 	 * @param array<string, mixed> $post Unslashed POST payload.
@@ -390,7 +390,7 @@ class ReportedIP_Hive_Setup_Wizard {
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 				'nonce'         => wp_create_nonce( 'reportedip_wizard_nonce' ),
 				'dashboardUrl'  => self::get_admin_page_url( 'admin.php?page=reportedip-hive' ),
-				'registerUrl'   => 'https://reportedip.de/register/',
+				'registerUrl'   => 'https://reportedip.com/register/',
 				'wizardBaseUrl' => self::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ),
 				'defaults'      => ReportedIP_Hive_Defaults::wizard(),
 				'savedApiKey'   => $saved_key,
@@ -758,7 +758,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					</p>
 					<p class="rip-input-help">
 						<?php esc_html_e( 'Don\'t have a key yet?', 'reportedip-hive' ); ?>
-						<a href="https://reportedip.de/register/" target="_blank" rel="noopener noreferrer">
+						<a href="https://reportedip.com/register/" target="_blank" rel="noopener noreferrer">
 							<?php esc_html_e( 'Create a free account', 'reportedip-hive' ); ?> →
 						</a>
 					</p>
@@ -1500,7 +1500,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 *
 	 * Configurable recipient list (comma- or whitespace-separated), From-name
 	 * and From-email for both security alerts and 2FA mails. The same
-	 * configuration optionally syncs to the reportedip.de service so the
+	 * configuration optionally syncs to the reportedip.com service so the
 	 * managed mail relay can mirror the contact set.
 	 *
 	 * @since 1.5.3
@@ -1612,7 +1612,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<p class="rip-help-text">
 							<?php
 							if ( $tier_pro_or_higher ) {
-								esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.de, so any address you enter here is safe to use.', 'reportedip-hive' );
+								esc_html_e( 'Used as Reply-To so replies reach your inbox directly. With the PRO mail relay, mails are sent from noreply@reportedip.com, so any address you enter here is safe to use.', 'reportedip-hive' );
 							} else {
 								esc_html_e( 'Should match a domain you own, so mail-server checks (SPF/DKIM) do not reject the message.', 'reportedip-hive' );
 							}
@@ -1626,13 +1626,13 @@ class ReportedIP_Hive_Setup_Wizard {
 			<div class="rip-config-card">
 				<div class="rip-config-card__header">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-					<h3><?php esc_html_e( 'Sync with reportedip.de', 'reportedip-hive' ); ?></h3>
+					<h3><?php esc_html_e( 'Sync with reportedip.com', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
 					<label class="rip-toggle">
 						<input type="checkbox" name="sync_to_api" id="rip-notify-sync-api" <?php checked( $sync_to_api ); ?>>
 						<span class="rip-toggle__slider"></span>
-						<span class="rip-toggle__label"><?php esc_html_e( 'Mirror this contact set to my reportedip.de account', 'reportedip-hive' ); ?></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Mirror this contact set to my reportedip.com account', 'reportedip-hive' ); ?></span>
 					</label>
 					<p class="rip-help-text"><?php esc_html_e( 'Optional. When on, recipients and From settings are pushed to the service so the relay and account dashboard show the same configuration. Off by default.', 'reportedip-hive' ); ?></p>
 				</div>
@@ -1750,7 +1750,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * Step 9: Promote (optional auto-footer badge).
 	 *
 	 * Lets the user opt into a small footer badge that links back to
-	 * reportedip.de. Variant + alignment + enabled state save in one AJAX
+	 * reportedip.com. Variant + alignment + enabled state save in one AJAX
 	 * round-trip; the same options are also editable from the Community →
 	 * Promote tab in Settings.
 	 *
@@ -1787,7 +1787,7 @@ class ReportedIP_Hive_Setup_Wizard {
 							data-mode="local"
 							data-theme="dark"
 							data-align="<?php echo esc_attr( $preview_align ); ?>"
-							data-href="https://reportedip.de/?utm_source=hive&utm_medium=wizard-preview&utm_campaign=protected&utm_content=<?php echo esc_attr( $current_variant ); ?>"
+							data-href="https://reportedip.com/?utm_source=hive&utm_medium=wizard-preview&utm_campaign=protected&utm_content=<?php echo esc_attr( $current_variant ); ?>"
 						></rip-hive-banner>
 					</div>
 

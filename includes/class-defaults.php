@@ -4,7 +4,7 @@
  * the wizard PHP form fallbacks and the post-wizard safe-default seed.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -68,7 +68,7 @@ final class ReportedIP_Hive_Defaults {
 	private const SAFE_OPTIONS = array(
 		'reportedip_hive_operation_mode'                 => 'local',
 		'reportedip_hive_api_key'                        => '',
-		'reportedip_hive_api_endpoint'                   => 'https://reportedip.de/wp-json/reportedip/v2/',
+		'reportedip_hive_api_endpoint'                   => 'https://reportedip.com/wp-json/reportedip/v2/',
 		'reportedip_hive_trusted_ip_header'              => '',
 		'reportedip_hive_max_api_calls_per_hour'         => 0,
 		'reportedip_hive_report_cooldown_hours'          => 24,
@@ -332,7 +332,7 @@ final class ReportedIP_Hive_Defaults {
 	 *   - name  → `get_bloginfo('name')` (e.g. "alre.de"), falls back to the
 	 *             brand default if the site has no bloginfo name.
 	 *   - email → WordPress `admin_email`. Note: when the relay is active,
-	 *             the service overrides the envelope-from to noreply@reportedip.de
+	 *             the service overrides the envelope-from to noreply@reportedip.com
 	 *             for SPF/DKIM alignment and only adopts the display name from
 	 *             this header.
 	 *

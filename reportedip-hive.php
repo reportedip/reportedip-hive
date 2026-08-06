@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name: ReportedIP Hive
- * Plugin URI: https://reportedip.de
+ * Plugin URI: https://reportedip.com
  * Description: Community-powered WordPress security — real-time threat intelligence
  * with 5-layer defense and 4-method 2FA. Be part of the hive.
  * Version: 2.1.36
  * Author: Patrick Schlesinger, ReportedIP
- * Author URI: https://reportedip.de
+ * Author URI: https://reportedip.com
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: reportedip-hive
@@ -18,7 +18,7 @@
  * Update URI: https://github.com/reportedip/reportedip-hive
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -69,12 +69,12 @@ define( 'REPORTEDIP_MAX_SETTINGS_UPLOAD_SIZE', 524288 );
 /*
  * External URLs (can be overridden via the 'reportedip_hive_external_url' filter).
  */
-define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.de' );
-define( 'REPORTEDIP_HIVE_UPGRADE_URL', 'https://reportedip.de/dashboard/' );
-define( 'REPORTEDIP_HIVE_CONTACT_MAIL', '1@reportedip.de' );
-define( 'REPORTEDIP_HIVE_HONEYPOT_URL', 'https://reportedip.de/docs/honeypot-server/' );
-define( 'REPORTEDIP_HIVE_FAQ_URL', 'https://reportedip.de/faq/' );
-define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.de/register/' );
+define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.com' );
+define( 'REPORTEDIP_HIVE_UPGRADE_URL', 'https://reportedip.com/dashboard/' );
+define( 'REPORTEDIP_HIVE_CONTACT_MAIL', '1@reportedip.com' );
+define( 'REPORTEDIP_HIVE_HONEYPOT_URL', 'https://reportedip.com/docs/honeypot-server/' );
+define( 'REPORTEDIP_HIVE_FAQ_URL', 'https://reportedip.com/faq/' );
+define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.com/register/' );
 
 /**
  * Update checker: reads releases from the public GitHub repository.

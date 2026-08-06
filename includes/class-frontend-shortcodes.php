@@ -1,10 +1,10 @@
 <?php
 /**
  * Frontend shortcodes that render community-trust banners and stat cards on
- * public-facing pages, each linking back to reportedip.de.
+ * public-facing pages, each linking back to reportedip.com.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Renders four `<rip-hive-banner>` custom-element variants (badge, stat,
  * banner, shield) into the page. Each banner includes a Light-DOM `<a href>`
  * fallback so search engines and no-JavaScript clients still see the
- * backlink to reportedip.de — the Web Component only enhances the visual
+ * backlink to reportedip.com — the Web Component only enhances the visual
  * presentation inside a Shadow Root.
  *
  * @since 1.3.0
@@ -427,7 +427,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	 * @since  1.3.0
 	 */
 	private function build_backlink_url( $medium, $variant, $tone ) {
-		$base = defined( 'REPORTEDIP_HIVE_SITE_URL' ) ? REPORTEDIP_HIVE_SITE_URL : 'https://reportedip.de';
+		$base = defined( 'REPORTEDIP_HIVE_SITE_URL' ) ? REPORTEDIP_HIVE_SITE_URL : 'https://reportedip.com';
 		return add_query_arg(
 			array(
 				'utm_source'   => 'hive',

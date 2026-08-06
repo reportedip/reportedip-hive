@@ -1,6 +1,6 @@
 === ReportedIP Hive ===
 Contributors: reportedip, patrickschlesinger
-Donate link: https://reportedip.de
+Donate link: https://reportedip.com
 Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
@@ -23,7 +23,7 @@ The entire detection and identity core is **free, GPL-2.0 and complete** — eve
 Two ways to run:
 
 * **Local Shield** — works fully offline; nothing ever leaves your site.
-* **Community Network** — free account at [reportedip.de](https://reportedip.de) lights up real-time IP reputation lookups and anonymised threat sharing.
+* **Community Network** — free account at [reportedip.com](https://reportedip.com) lights up real-time IP reputation lookups and anonymised threat sharing.
 
 = Why agencies and serious site owners pick it =
 
@@ -62,7 +62,7 @@ Three of the four methods work in **every plan**, including Free and the fully-o
 * **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello and hardware security keys (YubiKey 5 series and other FIDO2 keys, USB-C or NFC phone tap). Ed25519 support, clone detection, named key manager. In-house implementation, no Composer dependency. Phishing-resistant. *One key per account free.*
 * **Advanced Security Keys (Business)** — multiple keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts.
 * **Email OTP** — 6-digit code, 10-minute validity, rate-limited (3 sends / 15 min, 60 s cooldown), 5 verify attempts per code. *Free.*
-* **SMS OTP (Professional)** — delivered through the managed reportedip.de relay, included with Professional and Business plans. No own SMS account or carrier contract required. Phone numbers encrypted at rest. Free / Contributor sites use TOTP, Passkey or Email instead.
+* **SMS OTP (Professional)** — delivered through the managed reportedip.com relay, included with Professional and Business plans. No own SMS account or carrier contract required. Phone numbers encrypted at rest. Free / Contributor sites use TOTP, Passkey or Email instead.
 
 Plus:
 
@@ -110,7 +110,7 @@ Show the world that your site is part of the hive — and earn community-network
 * **Lawful basis: Art. 6(1)(f) GDPR** (legitimate interest — preventing unauthorised access). Documented in the wizard and admin UI.
 * **Encryption at rest.** All secrets (TOTP seeds, phone numbers) sealed with libsodium (or OpenSSL fallback).
 * **Delete-on-uninstall** opt-in for total removal.
-* **Privacy-policy generator.** A ready-to-paste passage for your own privacy policy (German or English, tailored to the modules you use) is at [reportedip.de/dashboard/dsgvo](https://reportedip.de/dashboard/dsgvo); the plugin also registers a suggested text in the WordPress Privacy Policy Guide (Tools -> Privacy).
+* **Privacy-policy generator.** A ready-to-paste passage for your own privacy policy (German or English, tailored to the modules you use) is at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo); the plugin also registers a suggested text in the WordPress Privacy Policy Guide (Tools -> Privacy).
 
 = Admin UX =
 
@@ -157,7 +157,7 @@ Pair it with a malware scanner if you need that surface — Hive deliberately st
 
 The full **detection and identity core is free, GPL-2.0 and complete** in every operating mode — all 16 sensors, the core 2FA methods (TOTP, Passkey, Email, Recovery codes), progressive block escalation, the password-reset gate, every alert, every dashboard and export. None of that is ever gated.
 
-Paid plans add the **managed relays, multi-site management and a handful of advanced modules** at reportedip.de — useful for sites that don't want to maintain their own SMTP / SMS / multi-site stack, run a WooCommerce storefront, or need network-wide auto-hardening:
+Paid plans add the **managed relays, multi-site management and a handful of advanced modules** at reportedip.com — useful for sites that don't want to maintain their own SMTP / SMS / multi-site stack, run a WooCommerce storefront, or need network-wide auto-hardening:
 
 = Free / Contributor (0 €) =
 
@@ -170,7 +170,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 = Professional (14.90 €/month, 149 €/year — covers up to 3 domains) =
 
 * 25,000 reputation checks/day, 1,000 reports/day
-* **Managed mail relay** — 500 transactional 2FA mails/month routed through reportedip.de's clean SPF/DKIM/DMARC infrastructure (auto-fallback to `wp_mail()` on cap)
+* **Managed mail relay** — 500 transactional 2FA mails/month routed through reportedip.com's clean SPF/DKIM/DMARC infrastructure (auto-fallback to `wp_mail()` on cap)
 * **Managed SMS relay** — 25 worldwide OTP SMS/month with no third-party Twilio account required
 * **WooCommerce frontend 2FA** — the second factor rendered inside the storefront theme on My Account, classic checkout and the WC blocks
 * **Hardening Mode** — auto-tighten failed-login and reputation thresholds network-wide for one hour on a detected coordinated attack
@@ -205,7 +205,7 @@ A short architectural map for evaluators:
 = Two operating modes =
 
 * **Local Shield** — fully offline. Every sensor decision is local; no outbound HTTP. The 2FA-mail-relay and reputation-check endpoints are never touched.
-* **Community Network** — Local Shield plus opt-in IP-reputation lookups against `reportedip.de/wp-json/reportedip/v2/check` and queued threat reports against `/report`. Lookups are cached (24 h positive, 2 h negative); reports are batched by cron.
+* **Community Network** — Local Shield plus opt-in IP-reputation lookups against `reportedip.com/wp-json/reportedip/v2/check` and queued threat reports against `/report`. Lookups are cached (24 h positive, 2 h negative); reports are batched by cron.
 
 = Request lifecycle =
 
@@ -259,7 +259,7 @@ ReportedIP Hive is **not** distributed through wordpress.org. All releases are s
 
 = Configuration =
 
-1. **Pick a mode** — *Local Shield* (offline) or *Community Network* (paste your free API key from [reportedip.de](https://reportedip.de)).
+1. **Pick a mode** — *Local Shield* (offline) or *Community Network* (paste your free API key from [reportedip.com](https://reportedip.com)).
 2. **Tune protection** — adjust thresholds and pick a block-duration strategy (progressive ladder vs. fixed length).
 3. **Enable 2FA** — pick methods and roles to enforce, set the grace period and max-skip counter.
 4. **Set privacy preferences** — retention, anonymisation, detail level. The "GDPR Minimal" preset is one click.
@@ -288,7 +288,7 @@ We don't compete with malware scanners. Run one alongside Hive if your stack nee
 
 = Is the plugin GDPR-compliant? =
 
-Yes. Lawful basis is documented (Art. 6(1)(f) GDPR), processing is minimised, retention is configurable (default 30 days), anonymisation runs daily after 7 days, and Community Network is strictly opt-in. No usernames, comment content or full user-agents leave your site. A ready-to-paste privacy passage for your own site (German or English) is available at [reportedip.de/dashboard/dsgvo](https://reportedip.de/dashboard/dsgvo), and the plugin registers a suggested text under Tools -> Privacy.
+Yes. Lawful basis is documented (Art. 6(1)(f) GDPR), processing is minimised, retention is configurable (default 30 days), anonymisation runs daily after 7 days, and Community Network is strictly opt-in. No usernames, comment content or full user-agents leave your site. A ready-to-paste privacy passage for your own site (German or English) is available at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo), and the plugin registers a suggested text under Tools -> Privacy.
 
 = Will this slow down my site? =
 
@@ -320,9 +320,9 @@ Yes — fully, since 2.0.0. On Multisite the plugin is **network-only** (`Networ
 
 = How do I get support? =
 
-* Documentation: [reportedip.de/docs](https://reportedip.de/docs)
+* Documentation: [reportedip.com/docs](https://reportedip.com/docs)
 * Bug reports: [GitHub Issues](https://github.com/reportedip/reportedip-hive/issues)
-* Security disclosures (do **not** open a public issue): [abuse@reportedip.de](mailto:abuse@reportedip.de)
+* Security disclosures (do **not** open a public issue): [abuse@reportedip.com](mailto:abuse@reportedip.com)
 
 == Cache compatibility ==
 
@@ -468,7 +468,7 @@ Fixed: a fatal "bit shift by negative number" error in the CIDR matcher when a v
 
 = 2.1.4 =
 
-Firewall admin UX overhaul: the Overview tab is now a mini-dashboard (per-module status, 7-day activity counters, recent firewall event stream), every tab opens with a short plain-language intro, and a new Server Setup tab gathers every web-server snippet in one place — the WAF auto_prepend_file directive (with a new php.ini / hosting-panel option next to the nginx snippet), the decoy rewrite rules and a server-level export of the configured security headers. Extended Protection setup is now verifiable: the status reports whether the guard actually executed for the current request. The Bot Verification tab shows the verified crawler list and 7-day spoofer counts; the Rule Sync tab brands synced rulesets as delivered by the reportedip.de Rule API. New: specific WAF block reason codes for SSRF, Log4Shell, PHP object injection, NoSQL, XXE, web-shell, CRLF and template injection. Fixed: the basic security headers can be saved again on free plans.
+Firewall admin UX overhaul: the Overview tab is now a mini-dashboard (per-module status, 7-day activity counters, recent firewall event stream), every tab opens with a short plain-language intro, and a new Server Setup tab gathers every web-server snippet in one place — the WAF auto_prepend_file directive (with a new php.ini / hosting-panel option next to the nginx snippet), the decoy rewrite rules and a server-level export of the configured security headers. Extended Protection setup is now verifiable: the status reports whether the guard actually executed for the current request. The Bot Verification tab shows the verified crawler list and 7-day spoofer counts; the Rule Sync tab brands synced rulesets as delivered by the reportedip.com Rule API. New: specific WAF block reason codes for SSRF, Log4Shell, PHP object injection, NoSQL, XXE, web-shell, CRLF and template injection. Fixed: the basic security headers can be saved again on free plans.
 
 = 2.1.3 =
 
@@ -496,7 +496,7 @@ Multisite Network Admin compatibility: hardcoded `admin_url` references were rep
 
 = 2.0.25 =
 
-Changed: SMS 2FA is now a Professional feature delivered exclusively through the managed reportedip.de relay. The self-hosted SMS provider option and its three third-party adapters were removed, along with the provider selector, the encrypted provider-credentials store and the per-provider AVV confirmation — the relay AVV is part of the plan subscription. Removed: the `reportedip_2fa_sms_providers` extension filter. Breaking: sites on Free / Contributor (or any tier not running the relay) can no longer send 2FA SMS; affected users fall back to TOTP, Email or a passkey. A schema migration (v8) clears the now-orphaned provider options on upgrade. Also in this release: GDPR / privacy integration — a suggested privacy-policy passage in the WordPress Privacy Policy Guide (Tools -> Privacy), a personal-data exporter/eraser for a user's own login attempts and trusted devices, and a configuration-aware privacy-text generator (German / English) at reportedip.de/dashboard/dsgvo. Fixed dead /privacy, /terms and /legal/avv documentation links. Contact addresses updated: security disclosures go to abuse@reportedip.de, general enquiries to 1@reportedip.de.
+Changed: SMS 2FA is now a Professional feature delivered exclusively through the managed reportedip.com relay. The self-hosted SMS provider option and its three third-party adapters were removed, along with the provider selector, the encrypted provider-credentials store and the per-provider AVV confirmation — the relay AVV is part of the plan subscription. Removed: the `reportedip_2fa_sms_providers` extension filter. Breaking: sites on Free / Contributor (or any tier not running the relay) can no longer send 2FA SMS; affected users fall back to TOTP, Email or a passkey. A schema migration (v8) clears the now-orphaned provider options on upgrade. Also in this release: GDPR / privacy integration — a suggested privacy-policy passage in the WordPress Privacy Policy Guide (Tools -> Privacy), a personal-data exporter/eraser for a user's own login attempts and trusted devices, and a configuration-aware privacy-text generator (German / English) at reportedip.com/dashboard/dsgvo. Fixed dead /privacy, /terms and /legal/avv documentation links. Contact addresses updated: security disclosures go to abuse@reportedip.com, general enquiries to 1@reportedip.com.
 
 = 2.0.22 =
 
@@ -534,7 +534,7 @@ Promo-frequency rework: a new central `Promo_Manager` caps Pro upgrade hints at 
 
 = 2.0.15 =
 
-Hotfix for multi-recipient admin notifications. `Security_Monitor::send_admin_alert()` builds the recipient field as `implode(', ', $recipients)` — the standard WP_Mail convention. The Hive Relay endpoint (`POST /relay-mail`) on reportedip.de, however, validates a single address per request via `sanitize_email` + `is_email` and HTTP-422s anything that looks like a list — silently dropping every alert when more than one admin is configured. The mailer now splits comma-lists itself, fan-outs one outbound request per recipient, and logs each delivery separately. The local `wp_mail` fallback keeps working unchanged.
+Hotfix for multi-recipient admin notifications. `Security_Monitor::send_admin_alert()` builds the recipient field as `implode(', ', $recipients)` — the standard WP_Mail convention. The Hive Relay endpoint (`POST /relay-mail`) on reportedip.com, however, validates a single address per request via `sanitize_email` + `is_email` and HTTP-422s anything that looks like a list — silently dropping every alert when more than one admin is configured. The mailer now splits comma-lists itself, fan-outs one outbound request per recipient, and logs each delivery separately. The local `wp_mail` fallback keeps working unchanged.
 
 = 2.0.14 =
 
@@ -617,7 +617,7 @@ Mail bundle balance now visible alongside SMS in the relay-quota panel. The Hive
 
 = 1.6.3 =
 
-Managed mail and SMS relay — Professional / Business / Enterprise plans now route 2FA mails and OTP-SMS through reportedip.de instead of needing their own SMTP / SMS contract. Mail relay falls back transparently to local `wp_mail()` on cap (HTTP 402) or backoff (HTTP 429) so 2FA flows never break. SMS relay surfaces typed `WP_Error`s so the 2FA UI can encourage another method instead of silently switching. New `ReportedIP_Hive_Phone_Validator` validates E.164 format on the client; routing decisions live on the server. Progressive SMS backoff ladder (0s → 2m → 5m → 15m → 30m → 60m) mirrors the service-side rate-limiter. Setup wizard slimmed from 8 to 7 steps. Scan-detector path matcher refactored to a single pass.
+Managed mail and SMS relay — Professional / Business / Enterprise plans now route 2FA mails and OTP-SMS through reportedip.com instead of needing their own SMTP / SMS contract. Mail relay falls back transparently to local `wp_mail()` on cap (HTTP 402) or backoff (HTTP 429) so 2FA flows never break. SMS relay surfaces typed `WP_Error`s so the 2FA UI can encourage another method instead of silently switching. New `ReportedIP_Hive_Phone_Validator` validates E.164 format on the client; routing decisions live on the server. Progressive SMS backoff ladder (0s → 2m → 5m → 15m → 30m → 60m) mirrors the service-side rate-limiter. Setup wizard slimmed from 8 to 7 steps. Scan-detector path matcher refactored to a single pass.
 
 = 1.6.1 =
 
@@ -649,7 +649,7 @@ Wizard UX overhaul. Step 3 protection toggles split into three themed cards (Aut
 
 = 1.3.0 =
 
-Promote tab + frontend banner shortcodes. Four new public shortcodes (`[reportedip_badge]`, `[reportedip_stat]`, `[reportedip_banner]`, `[reportedip_shield]`) render community-trust banners on any post, page, widget or template, each linking back to reportedip.de with UTM tracking. Auto-footer badge with variant + alignment selector. Eight stat types, four tone presets. Banners render as `<rip-hive-banner>` Web Component with Shadow DOM so themes cannot break their styling.
+Promote tab + frontend banner shortcodes. Four new public shortcodes (`[reportedip_badge]`, `[reportedip_stat]`, `[reportedip_banner]`, `[reportedip_shield]`) render community-trust banners on any post, page, widget or template, each linking back to reportedip.com with UTM tracking. Auto-footer badge with variant + alignment selector. Eight stat types, four tone presets. Banners render as `<rip-hive-banner>` Web Component with Shadow DOM so themes cannot break their styling.
 
 = 1.2.x =
 
@@ -676,7 +676,7 @@ Fewer false-positive blocks of legitimate crawlers and asset 404s, Business mult
 Multisite Network Admin URL fixes and language-independent login-error masking (German included). No breaking changes.
 
 = 2.0.25 =
-SMS 2FA is now a Professional feature via the managed reportedip.de relay; the self-hosted SMS providers are removed. Sites that sent SMS via a self-configured provider or on a non-paid plan lose it — users fall back to TOTP, Email or a passkey. A v8 migration removes the old options.
+SMS 2FA is now a Professional feature via the managed reportedip.com relay; the self-hosted SMS providers are removed. Sites that sent SMS via a self-configured provider or on a non-paid plan lose it — users fall back to TOTP, Email or a passkey. A v8 migration removes the old options.
 
 = 2.0.24 =
 Adds GDPR tooling: a WordPress Privacy Policy Guide entry, a personal-data exporter/eraser for login attempts and trusted devices, and a privacy-text generator. Fixes dead legal links in the documentation. No breaking changes.
@@ -709,7 +709,7 @@ German translation (de_DE, formal) added — the admin UI now displays in German
 * Automatic anonymisation (default after 7 days)
 * Manual deletion available from the admin UI; full data wipe on uninstall is opt-in
 
-Full privacy information: [reportedip.de/datenschutzerklaerung/](https://reportedip.de/datenschutzerklaerung/). A ready-to-paste privacy passage for your own site — German or English, tailored to the modules you use — is available at [reportedip.de/dashboard/dsgvo](https://reportedip.de/dashboard/dsgvo).
+Full privacy information: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/). A ready-to-paste privacy passage for your own site — German or English, tailored to the modules you use — is available at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo).
 
 == External Services ==
 
@@ -717,37 +717,37 @@ This plugin connects to external services only when explicitly configured. *Loca
 
 = ReportedIP Community Network API =
 
-* Service URL: `https://reportedip.de/wp-json/reportedip/v2/` (endpoints `verify-key`, `check`, `report`, `whitelist`, `categories`)
+* Service URL: `https://reportedip.com/wp-json/reportedip/v2/` (endpoints `verify-key`, `check`, `report`, `whitelist`, `categories`)
 * Purpose: IP reputation lookups, anonymised threat reporting, whitelist sync, threat-category catalogue
 * Default: off — only active in Community Network mode AND with a configured API key
 * Data transmitted: IP addresses, optional event categories and timestamps, the API key, the site domain
-* Terms: [reportedip.de/nutzungsbedingungen/](https://reportedip.de/nutzungsbedingungen/)
-* Privacy / DPA: [reportedip.de/datenschutzerklaerung/](https://reportedip.de/datenschutzerklaerung/)
+* Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
+* Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
 
 = ReportedIP Managed Mail Relay =
 
-* Service URL: `https://reportedip.de/wp-json/reportedip/v2/relay-mail`
-* Purpose: route 2FA verification mails through the reportedip.de transactional mail infrastructure (clean SPF / DKIM / DMARC)
+* Service URL: `https://reportedip.com/wp-json/reportedip/v2/relay-mail`
+* Purpose: route 2FA verification mails through the reportedip.com transactional mail infrastructure (clean SPF / DKIM / DMARC)
 * Default: off — only available for Professional, Business and Enterprise plans, only when the user enabled the email 2FA factor; on any error (cap reached HTTP 402, recipient backoff HTTP 429, network error) the plugin falls back to the local `wp_mail()` transport so the 2FA flow never breaks
 * Data transmitted: recipient email, subject, HTML and plain-text body, headers, optional Reply-To, the site domain
-* Privacy / DPA: [reportedip.de/legal/avv/](https://reportedip.de/legal/avv/)
+* Privacy / DPA: [reportedip.com/legal/avv/](https://reportedip.com/legal/avv/)
 
 = ReportedIP Managed SMS Relay =
 
-* Service URL: `https://reportedip.de/wp-json/reportedip/v2/relay-sms` (and `relay-quota` for monthly usage display)
+* Service URL: `https://reportedip.com/wp-json/reportedip/v2/relay-sms` (and `relay-quota` for monthly usage display)
 * Purpose: deliver 2FA OTP messages without requiring the site operator to maintain their own SMS-provider contract
 * Default: off — only available for Professional, Business and Enterprise plans, only when a user actively enrolled SMS as a 2FA factor; routing is worldwide except for a small number of high-cost destinations that are unsupported by the managed relay (HTTP 422 with code `country_not_supported` is returned to the plugin in that case)
 * Data transmitted: recipient phone number (E.164), the verification code, expiry minutes, language code, the site domain
-* Privacy / DPA: [reportedip.de/legal/avv/](https://reportedip.de/legal/avv/)
+* Privacy / DPA: [reportedip.com/legal/avv/](https://reportedip.com/legal/avv/)
 
 = ReportedIP Rule Sync =
 
-* Service URL: `https://reportedip.de/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `scan_paths`)
+* Service URL: `https://reportedip.com/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `scan_paths`)
 * Purpose: fetch signed firewall rule updates; the bundled baseline rulesets stay active without any connection, and Professional plans receive the deeper, frequently-updated rulesets through this channel
 * Default: off — only active in Community Network mode AND with a configured API key AND the Rule Sync toggle enabled; runs every six hours via cron, and conditional `If-None-Match` requests return HTTP 304 when nothing changed
 * Data transmitted: the API key, the current ETag and the site domain; each downloaded ruleset carries an Ed25519 signature that the plugin verifies against a bundled public key before applying it
-* Terms: [reportedip.de/nutzungsbedingungen/](https://reportedip.de/nutzungsbedingungen/)
-* Privacy / DPA: [reportedip.de/datenschutzerklaerung/](https://reportedip.de/datenschutzerklaerung/)
+* Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
+* Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
 
 = GitHub Releases API (Plugin Update Checker) =
 
@@ -776,14 +776,14 @@ All JavaScript, CSS, fonts and images shipped with the plugin are loaded from th
 ReportedIP Hive is one piece of an Open-Source ecosystem around community-driven WordPress security. All projects are GPL or compatible licences and live on GitHub:
 
 * **Hive** (this plugin) — [github.com/reportedip/reportedip-hive](https://github.com/reportedip/reportedip-hive). Community-powered WordPress security: IP threat intelligence, brute-force protection and the complete 2FA suite. Be part of the hive.
-* **Honeypot Server** — [github.com/reportedip/honeypot-server](https://github.com/reportedip/honeypot-server). PHP honeypot that emulates WordPress, Drupal and Joomla to detect malicious traffic. 36 threat analyzers, automatic reporting to the reportedip.de API, admin dashboard, AI content generation, bot detection. Zero Composer dependencies, SQLite, Docker-ready. Run one yourself to feed the network and earn the Contributor tier.
+* **Honeypot Server** — [github.com/reportedip/honeypot-server](https://github.com/reportedip/honeypot-server). PHP honeypot that emulates WordPress, Drupal and Joomla to detect malicious traffic. 36 threat analyzers, automatic reporting to the reportedip.com API, admin dashboard, AI content generation, bot detection. Zero Composer dependencies, SQLite, Docker-ready. Run one yourself to feed the network and earn the Contributor tier.
 * **Blacklist** — [github.com/reportedip/reportedip-blacklist](https://github.com/reportedip/reportedip-blacklist). Community-driven IP threat-intelligence feed, updated daily. Free to consume, no account required.
 
-Project home, documentation and the optional managed-relay service: [reportedip.de](https://reportedip.de).
+Project home, documentation and the optional managed-relay service: [reportedip.com](https://reportedip.com).
 
 == Credits ==
 
-* Developed by [ReportedIP](https://reportedip.de)
+* Developed by [ReportedIP](https://reportedip.com)
 * Plugin Update Checker by [YahnisElsts](https://github.com/YahnisElsts/plugin-update-checker) (MIT)
 * WebAuthn / FIDO2 implementation: in-house, no external dependency
 * Charts: [Chart.js](https://www.chartjs.org/) (MIT)
@@ -794,7 +794,7 @@ Project home, documentation and the optional managed-relay service: [reportedip.
 * English (source)
 * German (Deutsch) — included
 
-Want to help translate into more languages? Open an issue on [GitHub](https://github.com/reportedip/reportedip-hive/issues) or contact [1@reportedip.de](mailto:1@reportedip.de).
+Want to help translate into more languages? Open an issue on [GitHub](https://github.com/reportedip/reportedip-hive/issues) or contact [1@reportedip.com](mailto:1@reportedip.com).
 
 == Disclaimer ==
 
@@ -825,11 +825,11 @@ Operating ReportedIP Hive is solely the responsibility of the site operator. The
 * maintaining recovery procedures (recovery codes, alternative second factors, WP-CLI access, server-level access) so that a misconfiguration or an upstream service outage does not cause permanent loss of access to the site;
 * obtaining and maintaining any data-processing agreements, terms of service or end-user disclosures required by applicable law for the SMS, email or threat-intelligence services they choose to use.
 
-To help with that end-user disclosure, a configuration-aware privacy-policy generator (German / English) is provided at [reportedip.de/dashboard/dsgvo](https://reportedip.de/dashboard/dsgvo), and a suggested passage is registered in the WordPress Privacy Policy Guide (Tools -> Privacy). Both are **templates only**, provided without warranty, and do **not** constitute legal advice or replace your own review — the no-warranty and no-liability terms above apply to them in full.
+To help with that end-user disclosure, a configuration-aware privacy-policy generator (German / English) is provided at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo), and a suggested passage is registered in the WordPress Privacy Policy Guide (Tools -> Privacy). Both are **templates only**, provided without warranty, and do **not** constitute legal advice or replace your own review — the no-warranty and no-liability terms above apply to them in full.
 
 = Security disclosures =
 
-If you believe you have discovered a security issue in ReportedIP Hive, **please do not open a public GitHub issue**. Send the details to [abuse@reportedip.de](mailto:abuse@reportedip.de). We will acknowledge receipt within five business days.
+If you believe you have discovered a security issue in ReportedIP Hive, **please do not open a public GitHub issue**. Send the details to [abuse@reportedip.com](mailto:abuse@reportedip.com). We will acknowledge receipt within five business days.
 
 = Recommended posture =
 

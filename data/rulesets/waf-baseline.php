@@ -6,7 +6,7 @@
  * Level 1) so the free WAF blocks the obvious attacks and honours the
  * "protection is free" promise. The real depth and freshness — broader
  * signatures, PL2/PL3, obfuscation/bypass resistance, frequent updates — lives
- * in the PRO+ ruleset delivered by the reportedip.de API
+ * in the PRO+ ruleset delivered by the reportedip.com API
  * ({@see ReportedIP_Hive_Rule_Sync}). The patterns here are anchored and
  * possessive/atomic where possible to stay ReDoS-safe.
  *
@@ -14,7 +14,7 @@
  * target (uri|body|ua|all).
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive

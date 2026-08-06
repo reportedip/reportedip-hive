@@ -5,13 +5,13 @@
 [![WordPress 5.9+](https://img.shields.io/badge/WordPress-5.9%2B-21759B.svg)](https://wordpress.org/)
 [![Multisite](https://img.shields.io/badge/Multisite-network--aware-21759B.svg)](#multisite-support)
 [![Tests](https://img.shields.io/badge/PHPUnit-unit%20%2B%20Multisite-brightgreen.svg)](https://github.com/reportedip/reportedip-hive/actions)
-[![Made in Germany](https://img.shields.io/badge/Made%20in-Germany-black.svg)](https://reportedip.de)
+[![Made in Germany](https://img.shields.io/badge/Made%20in-Germany-black.svg)](https://reportedip.com)
 
 > **Community-powered WordPress security: 16 attack sensors, a two-layer firewall, 4 progressive 2FA methods, herd-immunity threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.**
 
 Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker before the password is even checked. One drop-in replaces brute-force protection, a web application firewall, a multi-method 2FA suite and threat intelligence. The entire detection and identity core is free and GPL-2.0; the paid Professional / Business plans add managed mail/SMS relays, multi-site management and a handful of advanced modules on top. They never gate the core protection.
 
-→ Product: <https://reportedip.de> · Releases: [GitHub](https://github.com/reportedip/reportedip-hive/releases) · Docs: <https://reportedip.de/docs>
+→ Product: <https://reportedip.com> · Releases: [GitHub](https://github.com/reportedip/reportedip-hive/releases) · Docs: <https://reportedip.com/docs>
 
 ---
 
@@ -67,7 +67,7 @@ Three methods work in **every plan**, including Free and the fully-offline Local
 - **Passkey / WebAuthn / FIDO2.** Face ID, Touch ID, Windows Hello and hardware security keys (YubiKey 5 series and other FIDO2 keys, USB-C or NFC phone tap). Ed25519 support, clone detection through signature counters, named key manager. In-house implementation, phishing-resistant, no Composer dependency. *One key per account free.*
 - **Advanced Security Keys (Business plan).** Multiple keys per account (primary + backup), automatic model detection via attestation ("YubiKey 5 Series with NFC" shown in the key manager) and key-lifecycle email alerts.
 - **Email OTP.** 6-digit, 10 min validity, rate-limited (3 sends / 15 min). *Free.*
-- **SMS OTP (Professional plan).** Delivered through the managed reportedip.de relay, included with Professional and Business. No own SMS account or carrier contract required; phone numbers encrypted at rest. Free / Contributor sites use TOTP, Passkey or Email instead.
+- **SMS OTP (Professional plan).** Delivered through the managed reportedip.com relay, included with Professional and Business. No own SMS account or carrier contract required; phone numbers encrypted at rest. Free / Contributor sites use TOTP, Passkey or Email instead.
 
 **Self-service on the profile page.** Every user manages their own 2FA from plain-language method cards: add or remove methods at any time, pick the default method the login challenge opens with, change the SMS number (the verified number is only replaced after the new one confirms a code), re-set-up the authenticator app, and manage security keys, recovery codes and trusted devices. The profile, the guided onboarding wizard and WP-CLI all share one activation path, so an added method never silently overwrites the chosen default or destroys existing recovery codes.
 
@@ -87,11 +87,11 @@ Documented limitation: a blocked attacker visiting a *publicly cached* GET URL s
 
 ### Two operating modes
 
-The two **modes** decide whether the plugin talks to reportedip.de at all. They are independent of the **plan** (Free → Enterprise), which decides the relay quotas and the advanced modules. A Free site can run either mode; SMS 2FA and Hardening Mode additionally need a Professional plan because they ride the managed relay / coordinated-attack infrastructure.
+The two **modes** decide whether the plugin talks to reportedip.com at all. They are independent of the **plan** (Free → Enterprise), which decides the relay quotas and the advanced modules. A Free site can run either mode; SMS 2FA and Hardening Mode additionally need a Professional plan because they ride the managed relay / coordinated-attack infrastructure.
 
 | | Local Shield | Community Network |
 |---|---|---|
-| Account required | No | Free account at reportedip.de |
+| Account required | No | Free account at reportedip.com |
 | External calls | None | Reputation lookups + anonymised reports |
 | All 16 detection sensors + two-layer firewall | ✓ | ✓ |
 | Core 2FA (TOTP, Passkey, Email, Recovery) | ✓ | ✓ |
@@ -121,7 +121,7 @@ What the paid **Professional** (3 domains) and **Business** (15 domains, multi-b
 - **Audit event trail (Business).** Append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export.
 - Higher API quotas, multi-site dashboard, priority blacklist sync, longer log retention, prepaid mail/SMS top-up bundles. Business adds white-label, the full WP-CLI surface, role-based login-time restrictions and a GDPR export tool.
 
-Pricing and the full tier matrix live at <https://reportedip.de>.
+Pricing and the full tier matrix live at <https://reportedip.com>.
 
 ### Remote management (MainWP)
 
@@ -302,7 +302,7 @@ The tag name **must** start with `v` and match the plugin version (`v2.1.32` ↔
 Bug reports, feature requests, and pull requests are welcome.
 
 - Issues: <https://github.com/reportedip/reportedip-hive/issues>
-- Security disclosures (do **not** open a public issue): <abuse@reportedip.de>
+- Security disclosures (do **not** open a public issue): <abuse@reportedip.com>
 - PRs target `main`; CI must be green.
 
 **Language policy:** all code, comments, identifiers, commit messages, and user-facing strings are English.
@@ -311,6 +311,6 @@ Bug reports, feature requests, and pull requests are welcome.
 
 ## Support
 
-- Website & documentation: <https://reportedip.de>
-- Email: <1@reportedip.de>
+- Website & documentation: <https://reportedip.com>
+- Email: <1@reportedip.com>
 - Status: see [GitHub Releases](https://github.com/reportedip/reportedip-hive/releases) for the current version and changelog

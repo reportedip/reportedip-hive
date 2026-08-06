@@ -7,14 +7,14 @@
  *  1. Registers a suggested privacy-policy passage in the WordPress privacy
  *     assistant (Tools -> Privacy / Privacy Policy Guide) so the site operator
  *     can copy/paste it, with a link to the full, configuration-aware generator
- *     at reportedip.de/dashboard/dsgvo.
+ *     at reportedip.com/dashboard/dsgvo.
  *  2. Registers a personal-data exporter and eraser for the security data Hive
  *     stores about a logged-in user — their own login attempts (matched by
  *     username) and trusted devices (matched by user id). The 2FA secrets are
  *     handled separately by ReportedIP_Hive_Two_Factor_Admin.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -76,12 +76,12 @@ class ReportedIP_Hive_Privacy {
 		$content =
 			'<p>' . __( 'This site uses the ReportedIP Hive security plugin. On security-relevant events (failed logins, password spraying, comment spam, XML-RPC and REST-API abuse, application-password abuse, user enumeration, 404/scanner hits, decoy-path hits, geographic login anomalies and WooCommerce logins) it processes the IP address of the request, the username used in failed logins, and the time and type of the event in order to detect attacks and block offending IP addresses.', 'reportedip-hive' ) . '</p>'
 			. '<p>' . __( 'This data is stored locally on this site, deleted automatically after the configured retention period (30 days by default) and anonymised after 7 days by default. The legal basis is the operator\'s legitimate interest in the security and uninterrupted operation of the site (Art. 6(1)(f) GDPR, Recital 49). User agents are not stored unless detailed logging is explicitly enabled.', 'reportedip-hive' ) . '</p>'
-			. '<p>' . __( 'If "Community Network" mode is enabled (off by default), the IP address of login/access attempts and detected attacks is also transmitted to ReportedIP (reportedip.de) for community threat intelligence. No visitor usernames, comment content, full user agents or other personal data of regular visitors are transmitted.', 'reportedip-hive' ) . '</p>'
+			. '<p>' . __( 'If "Community Network" mode is enabled (off by default), the IP address of login/access attempts and detected attacks is also transmitted to ReportedIP (reportedip.com) for community threat intelligence. No visitor usernames, comment content, full user agents or other personal data of regular visitors are transmitted.', 'reportedip-hive' ) . '</p>'
 			. '<p>' . sprintf(
 				/* translators: 1: privacy generator URL, 2: ReportedIP privacy policy URL */
 				__( 'A ready-to-paste privacy passage tailored to your configuration (German or English) is available at %1$s. See also the ReportedIP privacy policy at %2$s. This is suggested text only and not legal advice — adapt it to your site and have it reviewed.', 'reportedip-hive' ),
-				'<a href="https://reportedip.de/dashboard/dsgvo">https://reportedip.de/dashboard/dsgvo</a>',
-				'<a href="https://reportedip.de/datenschutzerklaerung/">https://reportedip.de/datenschutzerklaerung/</a>'
+				'<a href="https://reportedip.com/dashboard/dsgvo">https://reportedip.com/dashboard/dsgvo</a>',
+				'<a href="https://reportedip.com/datenschutzerklaerung/">https://reportedip.com/datenschutzerklaerung/</a>'
 			) . '</p>';
 
 		wp_add_privacy_policy_content( 'ReportedIP Hive', wp_kses_post( $content ) );

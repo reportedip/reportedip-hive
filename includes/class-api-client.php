@@ -3,7 +3,7 @@
  * API Client Class for ReportedIP Service.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -57,7 +57,7 @@ class ReportedIP_Hive_API {
 
 	public function __construct() {
 		$this->api_key      = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
-		$this->api_endpoint = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.de/wp-json/reportedip/v2/' );
+		$this->api_endpoint = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.com/wp-json/reportedip/v2/' );
 		$this->timeout      = 30;
 		$this->cache        = ReportedIP_Hive_Cache::get_instance();
 		$this->logger       = ReportedIP_Hive_Logger::get_instance();
@@ -613,7 +613,7 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Send a 2FA mail via the reportedip.de relay endpoint.
+	 * Send a 2FA mail via the reportedip.com relay endpoint.
 	 *
 	 * @param array $args {
 	 *     Required: recipient. Optional: subject, body_text, body_html, headers, site_url.
@@ -636,7 +636,7 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Send a 2FA SMS via the reportedip.de relay endpoint.
+	 * Send a 2FA SMS via the reportedip.com relay endpoint.
 	 *
 	 * @param array $args {
 	 *     Required: recipient_phone (E.164), message. Optional: site_url.
@@ -660,7 +660,7 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Mirror the local notification-contact configuration to reportedip.de.
+	 * Mirror the local notification-contact configuration to reportedip.com.
 	 *
 	 * Pushes the recipient list, From-name and From-email so the relay/account
 	 * dashboard on the service side reflects the same setup the plugin uses.

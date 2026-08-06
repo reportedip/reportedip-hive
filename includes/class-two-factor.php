@@ -6,7 +6,7 @@
  * Manages login nonces, trusted devices, and brute-force protection.
  *
  * @package   ReportedIP_Hive
- * @author    Patrick Schlesinger <1@reportedip.de>
+ * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
@@ -311,7 +311,7 @@ class ReportedIP_Hive_Two_Factor {
 			printf(
 				/* translators: 1: opening link tag, 2: closing link tag */
 				esc_html__( 'Secured by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
-				'<a href="https://reportedip.de/" target="_blank" rel="noopener">',
+				'<a href="https://reportedip.com/" target="_blank" rel="noopener">',
 				'</a>'
 			);
 			?>

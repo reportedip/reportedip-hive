@@ -8,7 +8,7 @@
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
- * @author     Patrick Schlesinger <1@reportedip.de>
+ * @author     Patrick Schlesinger <1@reportedip.com>
  * @copyright  2025-2026 Patrick Schlesinger
  * @license    GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link       https://github.com/reportedip/reportedip-hive
@@ -38,7 +38,7 @@ namespace {
 		}
 	}
 	if ( ! defined( 'REPORTEDIP_HIVE_SITE_URL' ) ) {
-		define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.de' );
+		define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.com' );
 	}
 
 	if ( ! class_exists( 'WP_Error' ) ) {
@@ -114,7 +114,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_static_metadata() {
 			$this->assertSame( 'reportedip_relay', \ReportedIP_Hive_SMS_Provider_Relay::id() );
 			$this->assertNotEmpty( \ReportedIP_Hive_SMS_Provider_Relay::display_name() );
-			$this->assertSame( 'Worldwide (via reportedip.de)', \ReportedIP_Hive_SMS_Provider_Relay::region() );
+			$this->assertSame( 'Worldwide (via reportedip.com)', \ReportedIP_Hive_SMS_Provider_Relay::region() );
 			$this->assertSame( array(), \ReportedIP_Hive_SMS_Provider_Relay::config_fields() );
 			$this->assertStringStartsWith( 'https://', \ReportedIP_Hive_SMS_Provider_Relay::avv_url() );
 		}
