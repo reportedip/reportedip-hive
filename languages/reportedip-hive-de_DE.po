@@ -15,7 +15,7 @@ msgstr ""
 "X-Domain: reportedip-hive\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php:3
+#: reportedip-hive.php
 #: admin/class-admin-settings.php:1724
 #: admin/class-admin-settings.php:1725
 #: admin/class-admin-settings.php:1845
@@ -27,18 +27,17 @@ msgstr "ReportedIP Hive"
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php:4
-#: reportedip-hive.php:9
+#: reportedip-hive.php
 msgid "https://reportedip.com"
 msgstr "https://reportedip.com"
 
 #. Description of the plugin
-#: reportedip-hive.php:5
+#: reportedip-hive.php
 msgid "Community-powered WordPress security — real-time threat intelligence"
 msgstr "Community-gestützte WordPress-Sicherheit — Bedrohungsdaten in Echtzeit"
 
 #. Author of the plugin
-#: reportedip-hive.php:8
+#: reportedip-hive.php
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr "Patrick Schlesinger, ReportedIP"
 
@@ -5010,7 +5009,7 @@ msgstr "Versuche"
 #: admin/class-setup-wizard.php:403
 #: admin/class-two-factor-admin.php:1595
 #: includes/class-two-factor-onboarding.php:354
-#: includes/class-two-factor.php:1978
+#: includes/class-two-factor.php:1980
 #: reportedip-hive.php:837
 msgid "Error"
 msgstr "Fehler"
@@ -9662,7 +9661,7 @@ msgstr "Nicht unterstützter COSE-Algorithmus."
 
 #: includes/class-two-factor.php:209
 #: includes/class-two-factor.php:1516
-#: includes/class-two-factor.php:1930
+#: includes/class-two-factor.php:1931
 msgid "Your session has expired. Please sign in again."
 msgstr "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 
@@ -9744,64 +9743,64 @@ msgid "Back to login"
 msgstr "Zurück zur Anmeldung"
 
 #: includes/class-two-factor.php:1514
-#: includes/class-two-factor.php:1928
+#: includes/class-two-factor.php:1929
 msgid "New code sent."
 msgstr "Neuer Code gesendet."
 
 #: includes/class-two-factor.php:1515
-#: includes/class-two-factor.php:1929
+#: includes/class-two-factor.php:1930
 msgid "Sending failed."
 msgstr "Senden fehlgeschlagen."
 
 #: includes/class-two-factor.php:1517
-#: includes/class-two-factor.php:1931
+#: includes/class-two-factor.php:1932
 msgid "Passkey request in progress…"
 msgstr "Passkey-Anfrage läuft…"
 
 #: includes/class-two-factor.php:1518
-#: includes/class-two-factor.php:1932
+#: includes/class-two-factor.php:1933
 msgid "Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead."
 msgstr "Bitte geben Sie zuerst den Bestätigungscode ein. Wenn Sie Ihren Sicherheitsschlüssel berührt haben, wechseln Sie zum Passkey-Tab und nutzen Sie dort den Button."
 
-#: includes/class-two-factor.php:1519
-#: includes/class-two-factor.php:1933
+#: includes/class-two-factor.php:1520
+#: includes/class-two-factor.php:1935
 msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
 msgstr "Warte auf Ihren Sicherheitsschlüssel. Jetzt einstecken und berühren oder die Passkey-Abfrage bestätigen."
 
-#: includes/class-two-factor.php:1520
-#: includes/class-two-factor.php:1934
+#: includes/class-two-factor.php:1521
+#: includes/class-two-factor.php:1936
 msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
 msgstr "Die Anfrage ist abgelaufen oder wurde abgebrochen. Stecken Sie den Schlüssel ein und berühren Sie ihn (am Telefon für NFC flach an die Rückseite halten), und versuchen Sie es erneut."
 
-#: includes/class-two-factor.php:1521
-#: includes/class-two-factor.php:1935
+#: includes/class-two-factor.php:1522
+#: includes/class-two-factor.php:1937
 msgid "The domain of this page does not match the key registration."
 msgstr "Die Domain dieser Seite passt nicht zur Registrierung des Schlüssels."
 
-#: includes/class-two-factor.php:1522
-#: includes/class-two-factor.php:1936
+#: includes/class-two-factor.php:1523
+#: includes/class-two-factor.php:1938
 msgid "Failed to fetch passkey options."
 msgstr "Passkey-Optionen konnten nicht abgerufen werden."
 
-#: includes/class-two-factor.php:1523
-#: includes/class-two-factor.php:1937
+#: includes/class-two-factor.php:1524
+#: includes/class-two-factor.php:1939
 msgid "Verification failed."
 msgstr "Verifizierung fehlgeschlagen."
 
-#: includes/class-two-factor.php:1524
-#: includes/class-two-factor.php:1938
+#: includes/class-two-factor.php:1525
+#: includes/class-two-factor.php:1940
 msgid "Passkey login cancelled."
 msgstr "Passkey-Anmeldung abgebrochen."
 
-#: includes/class-two-factor.php:1627
+#: includes/class-two-factor.php:1628
 msgid "Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again."
 msgstr "Zu viele fehlgeschlagene Verifizierungsversuche. Ihre Zwei-Faktor-Sitzung wurde aus Sicherheitsgründen ungültig gemacht. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1633
+#: includes/class-two-factor.php:1634
 msgid "Your two-factor session expired. Please sign in again."
 msgstr "Ihre Zwei-Faktor-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1977
+#: includes/class-two-factor.php:1979
 msgid "2FA template not found."
 msgstr "2FA-Template nicht gefunden."
 
@@ -10560,3 +10559,8 @@ msgstr "Bei Ihrer nächsten Anmeldung werden Sie nach dem zweiten Faktor gefragt
 #, php-format
 msgid "This page is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
 msgstr "Diese Seite wird geschützt durch %1$sReportedIP%2$s — Open Threat Intelligence für ein sichereres Internet."
+
+#: includes/class-two-factor.php:1519
+#: includes/class-two-factor.php:1934
+msgid "Please enter the verification code first."
+msgstr "Bitte geben Sie zuerst den Bestätigungscode ein."

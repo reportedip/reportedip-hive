@@ -92,13 +92,33 @@
 					return;
 				}
 			} else {
+				// Email/SMS panels start on a "request" phase without a code
+				// input. Submitting there means "send me the code", not
+				// "verify" — trigger the send button instead of scolding the
+				// user about a field that is not even visible yet.
+				var activePanel  = document.querySelector( '.rip-2fa-challenge__panel--active' );
+				var requestPhase = activePanel ? activePanel.querySelector( '[data-phase="request"]:not([hidden])' ) : null;
+				if ( requestPhase ) {
+					e.preventDefault();
+					var sendBtn = requestPhase.querySelector( '[data-resend-method]' );
+					if ( sendBtn && ! sendBtn.disabled ) { sendBtn.click(); }
+					return;
+				}
+
 				var activeCode = document.querySelector( '.rip-2fa-challenge__panel--active input[name="reportedip_2fa_code"]:not([type="hidden"])' );
 				if ( activeCode && activeCode.value.trim() === '' ) {
 					e.preventDefault();
+					// The security-key hint only makes sense when a passkey
+					// tab actually exists on this challenge.
+					var hasPasskey = !! document.querySelector( '[data-panel="webauthn"]' );
+					var emptyMsg   = hasPasskey
+						? ( ( config.strings && config.strings.enterCodeFirst )
+							|| 'Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead.' )
+						: ( ( config.strings && config.strings.enterCodeFirstPlain )
+							|| 'Please enter the verification code first.' );
 					setLiveMessage(
 						document.getElementById( 'rip-2fa-live' ),
-						( config.strings && config.strings.enterCodeFirst )
-							|| 'Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead.',
+						emptyMsg,
 						'error'
 					);
 					return;

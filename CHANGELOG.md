@@ -2,6 +2,17 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixes
+
+- 2FA challenge: submitting the email or SMS panel before a code was
+  requested now triggers the code send (the input field then appears)
+  instead of rejecting the submit with an "enter the code first" error
+  that referenced a field which was not visible yet. The security-key
+  hint in the empty-code message is only shown when the account actually
+  has a passkey tab on the challenge.
+
 ## [2.1.37] — 2026-08-06
 
 ### Changed

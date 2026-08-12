@@ -2,20 +2,20 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive 2.1.36\n"
+"Project-Id-Version: ReportedIP Hive 2.1.37\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-06T10:43:34+00:00\n"
+"POT-Creation-Date: 2026-08-12T13:27:49+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php:3
+#: reportedip-hive.php
 #: admin/class-admin-settings.php:1724
 #: admin/class-admin-settings.php:1725
 #: admin/class-admin-settings.php:1845
@@ -27,18 +27,17 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php:4
-#: reportedip-hive.php:9
+#: reportedip-hive.php
 msgid "https://reportedip.com"
 msgstr ""
 
 #. Description of the plugin
-#: reportedip-hive.php:5
+#: reportedip-hive.php
 msgid "Community-powered WordPress security — real-time threat intelligence"
 msgstr ""
 
 #. Author of the plugin
-#: reportedip-hive.php:8
+#: reportedip-hive.php
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr ""
 
@@ -5010,7 +5009,7 @@ msgstr ""
 #: admin/class-setup-wizard.php:403
 #: admin/class-two-factor-admin.php:1595
 #: includes/class-two-factor-onboarding.php:354
-#: includes/class-two-factor.php:1978
+#: includes/class-two-factor.php:1980
 #: reportedip-hive.php:837
 msgid "Error"
 msgstr ""
@@ -9662,7 +9661,7 @@ msgstr ""
 
 #: includes/class-two-factor.php:209
 #: includes/class-two-factor.php:1516
-#: includes/class-two-factor.php:1930
+#: includes/class-two-factor.php:1931
 msgid "Your session has expired. Please sign in again."
 msgstr ""
 
@@ -9744,64 +9743,69 @@ msgid "Back to login"
 msgstr ""
 
 #: includes/class-two-factor.php:1514
-#: includes/class-two-factor.php:1928
+#: includes/class-two-factor.php:1929
 msgid "New code sent."
 msgstr ""
 
 #: includes/class-two-factor.php:1515
-#: includes/class-two-factor.php:1929
+#: includes/class-two-factor.php:1930
 msgid "Sending failed."
 msgstr ""
 
 #: includes/class-two-factor.php:1517
-#: includes/class-two-factor.php:1931
+#: includes/class-two-factor.php:1932
 msgid "Passkey request in progress…"
 msgstr ""
 
 #: includes/class-two-factor.php:1518
-#: includes/class-two-factor.php:1932
+#: includes/class-two-factor.php:1933
 msgid "Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead."
 msgstr ""
 
 #: includes/class-two-factor.php:1519
-#: includes/class-two-factor.php:1933
-msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
+#: includes/class-two-factor.php:1934
+msgid "Please enter the verification code first."
 msgstr ""
 
 #: includes/class-two-factor.php:1520
-#: includes/class-two-factor.php:1934
-msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
+#: includes/class-two-factor.php:1935
+msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
 msgstr ""
 
 #: includes/class-two-factor.php:1521
-#: includes/class-two-factor.php:1935
-msgid "The domain of this page does not match the key registration."
+#: includes/class-two-factor.php:1936
+msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
 msgstr ""
 
 #: includes/class-two-factor.php:1522
-#: includes/class-two-factor.php:1936
-msgid "Failed to fetch passkey options."
+#: includes/class-two-factor.php:1937
+msgid "The domain of this page does not match the key registration."
 msgstr ""
 
 #: includes/class-two-factor.php:1523
-#: includes/class-two-factor.php:1937
-msgid "Verification failed."
+#: includes/class-two-factor.php:1938
+msgid "Failed to fetch passkey options."
 msgstr ""
 
 #: includes/class-two-factor.php:1524
-#: includes/class-two-factor.php:1938
+#: includes/class-two-factor.php:1939
+msgid "Verification failed."
+msgstr ""
+
+#: includes/class-two-factor.php:1525
+#: includes/class-two-factor.php:1940
 msgid "Passkey login cancelled."
 msgstr ""
 
-#: includes/class-two-factor.php:1627
+#: includes/class-two-factor.php:1628
 msgid "Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1633
+#: includes/class-two-factor.php:1634
 msgid "Your two-factor session expired. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1977
+#: includes/class-two-factor.php:1979
 msgid "2FA template not found."
 msgstr ""
 
