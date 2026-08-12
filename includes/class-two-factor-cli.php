@@ -84,8 +84,10 @@ class ReportedIP_Hive_Two_Factor_CLI {
 	 * : One of: totp, email, webauthn, sms.
 	 *
 	 * [--secret=<secret>]
-	 * : Optional TOTP secret to import (Base32). Skip for email/sms setups —
-	 *   those require interactive enrolment; CLI only flags the method.
+	 * : Optional TOTP secret to import (Base32). When omitted for totp and the
+	 *   user has no secret yet, a fresh one is generated and printed together
+	 *   with the otpauth:// URI so it can be imported into the user's
+	 *   authenticator app. Email/sms setups need no secret; CLI only flags them.
 	 *
 	 * [--force]
 	 * : Required to flag webauthn without a registered credential. Without a
@@ -111,13 +113,38 @@ class ReportedIP_Hive_Two_Factor_CLI {
 			);
 		}
 
-		if ( ReportedIP_Hive_Two_Factor::METHOD_TOTP === $method && ! empty( $assoc['secret'] ) ) {
-			$encrypted = ReportedIP_Hive_Two_Factor_Crypto::encrypt( strtoupper( (string) $assoc['secret'] ) );
-			if ( false === $encrypted ) {
-				WP_CLI::error( 'Could not encrypt the TOTP secret — check REPORTEDIP_AUTH_KEY / AUTH_KEY.' );
+		if ( ReportedIP_Hive_Two_Factor::METHOD_TOTP === $method ) {
+			$has_secret = ! empty( get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true ) );
+			$generated  = false;
+
+			if ( ! empty( $assoc['secret'] ) ) {
+				$secret = strtoupper( (string) $assoc['secret'] );
+			} elseif ( ! $has_secret ) {
+				$secret    = ReportedIP_Hive_Two_Factor_TOTP::generate_secret();
+				$generated = true;
+			} else {
+				$secret = '';
 			}
-			update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, $encrypted );
-			update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '1' );
+
+			if ( '' !== $secret ) {
+				if ( false === ReportedIP_Hive_Two_Factor_TOTP::base32_decode( $secret ) ) {
+					WP_CLI::error( 'The TOTP secret is not valid Base32.' );
+				}
+
+				$encrypted = ReportedIP_Hive_Two_Factor_Crypto::encrypt( $secret );
+				if ( false === $encrypted ) {
+					WP_CLI::error( 'Could not encrypt the TOTP secret — check REPORTEDIP_AUTH_KEY / AUTH_KEY.' );
+				}
+				update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, $encrypted );
+				update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '1' );
+
+				if ( $generated ) {
+					$user = get_userdata( $user_id );
+					WP_CLI::log( 'Generated TOTP secret: ' . $secret );
+					WP_CLI::log( 'otpauth URI: ' . ReportedIP_Hive_Two_Factor_TOTP::generate_qr_uri( $secret, $user ? $user->user_login : (string) $user_id ) );
+					WP_CLI::warning( 'Import this secret into the user\'s authenticator app before their next login.' );
+				}
+			}
 		}
 
 		ReportedIP_Hive_Two_Factor::activate_method( $user_id, $method );

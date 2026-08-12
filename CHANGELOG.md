@@ -6,6 +6,11 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- WP-CLI: `wp reportedip 2fa enable --method=totp` without `--secret` used to
+  flag the method without storing a secret, leaving the user with an
+  Authenticator tab that could never verify. It now generates a secret and
+  prints it together with the otpauth:// URI (existing secrets are kept on
+  re-runs), and a supplied `--secret` is validated as Base32 before storage.
 - 2FA challenge: submitting the email or SMS panel before a code was
   requested now triggers the code send (the input field then appears)
   instead of rejecting the submit with an "enter the code first" error
