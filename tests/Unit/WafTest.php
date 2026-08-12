@@ -178,6 +178,134 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * Return the bundled baseline rule with the given id.
+		 *
+		 * @param string $id Rule id.
+		 * @return array<string,mixed> The rule.
+		 */
+		private function baseline_rule( string $id ): array {
+			$baseline = include dirname( __DIR__, 2 ) . '/data/rulesets/waf-baseline.php';
+			foreach ( $baseline['rules'] as $rule ) {
+				if ( $id === $rule['id'] ) {
+					return $rule;
+				}
+			}
+			$this->fail( "Baseline rule '{$id}' is missing." );
+		}
+
+		/**
+		 * The XSS2Shell login primitive (CVE-2026-64638) smuggles markup through
+		 * `sanitize_user()` / `strip_tags()` in the `log` field. `sanitize_user()`
+		 * strips angle brackets, so a login value carrying one is never
+		 * legitimate, which makes this rule false-positive-free by value range
+		 * rather than by pattern luck.
+		 *
+		 * The value scan must stop at BOTH separators: the engine body subject
+		 * concatenates `flatten($_POST)` (space separated) with the raw and
+		 * decoded body (`&` separated). A scan that only stops at `&` runs past
+		 * the username into `pwd=` and blocks every password containing a `<`.
+		 */
+		public function test_evaluate_blocks_login_markup_injection(): void {
+			$rules   = array( $this->baseline_rule( 'waf_xss_login_markup' ) );
+			$payload = '< area id=ajaxurl href=/?rest_route=/&_method=GET&_jsonp=alert>';
+
+			$attacks = array(
+				'flattened post'      => ' log=' . $payload . ' pwd=x wp-submit=Log In',
+				'raw urlencoded body' => 'log=' . $payload . '&pwd=x',
+				'prefixed username'   => ' log=admin< area id=ajaxurl href=/x> pwd=y',
+				'tab separator'       => " log=<\tarea id=ajaxurl> pwd=y",
+				'no space at all'     => ' log=<area id=ajaxurl> pwd=y',
+				'lost-password form'  => ' user_login=< area id=ajaxurl href=/x> redirect_to=',
+			);
+			foreach ( $attacks as $label => $body ) {
+				$this->assertIsArray( $this->waf()->evaluate( $rules, array(), array(), $body ), "Login markup injection ({$label}) must be blocked." );
+			}
+
+			$legit = array(
+				'ordinary login'       => ' log=admin pwd=Str0ng!Pass wp-submit=Log In',
+				'email as username'    => ' log=1@reportedip.com pwd=abc wp-submit=Log In',
+				'username with space'  => ' log=Anna Meier pwd=x wp-submit=Log In',
+				'password holds an <'  => ' log=redakteur pwd=A<b7!xQ#z wp-submit=Log In',
+				'password holds <<>>'  => ' log=shop-admin pwd=<<Sommer2026>> wp-submit=Log In',
+				'raw body, < in pwd'   => 'log=redakteur&pwd=A<b7&wp-submit=Log In',
+				'redirect_to with amp' => ' log=admin pwd=x redirect_to=https://site.de/wp-admin/post.php?post=12&action=edit',
+			);
+			foreach ( $legit as $label => $body ) {
+				$this->assertNull( $this->waf()->evaluate( $rules, array(), array(), $body ), "Legitimate login ({$label}) must not trip the rule." );
+			}
+		}
+
+		/**
+		 * The clobbering primitive is the bug class, not the advisory: an HTML
+		 * element that survived `strip_tags()` because of the whitespace after
+		 * `<`, carrying an `id`/`name` attribute so it can overwrite a JavaScript
+		 * global. Requiring that attribute is what keeps prose, code samples and
+		 * comments explaining HTML out of the match set. A bare `< tag >` cannot
+		 * clobber anything and is not worth a block.
+		 */
+		public function test_evaluate_blocks_clobbering_tag_differential(): void {
+			$rules = array( $this->baseline_rule( 'waf_xss_tag_differential' ) );
+
+			$attacks = array(
+				'area clobbers ajaxurl'   => ' log=< area id=ajaxurl href=/x>',
+				'div clobbers by id'      => ' log=< div id=color-picker class=reset-pass-submit>',
+				'attribute before id'     => ' log=< area href=/x id=ajaxurl>',
+				'name instead of id'      => ' log=< img name=ajaxurl src=/x>',
+				'same trick in a comment' => ' comment=< form id=ajaxurl action=//evil.tld>',
+			);
+			foreach ( $attacks as $label => $body ) {
+				$this->assertIsArray( $this->waf()->evaluate( $rules, array(), array(), $body ), "Clobbering markup ({$label}) must be blocked." );
+			}
+
+			$legit = array(
+				'math in prose'     => ' comment=I think 5 < 6 and 9 > 2 really',
+				'letter comparison' => ' comment=if a < b then c is smaller',
+				'for loop'          => ' comment=for (i = 0; i < n; i++) { doIt(); }',
+				'java generics'     => ' comment=List< String > list = new ArrayList<>();',
+				'ordinary inline'   => ' comment=<a href="https://x.de">Link</a> und <strong>fett</strong>',
+				'explaining html'   => ' comment=Schreib < a href = "url" > fuer einen Link',
+				'talking about br'  => ' message=Ich habe < br > im Editor gesehen, was tun?',
+				'css selector'      => ' comment=Der Selektor div > p gilt, und width < 600px',
+				'json with angles'  => '{"title":"Beitrag","content":"Text mit < und > Zeichen"}',
+			);
+			foreach ( $legit as $label => $body ) {
+				$this->assertNull( $this->waf()->evaluate( $rules, array(), array(), $body ), "Legitimate content ({$label}) must not trip the rule." );
+			}
+		}
+
+		/**
+		 * Same-Origin Method Execution rides the REST JSONP callback, which core
+		 * validates as `[a-zA-Z0-9_.]`, permissive enough for property traversal
+		 * such as `window.opener.approve.click`. A namespaced callback like
+		 * `myApp.render` is ordinary and must survive.
+		 */
+		public function test_evaluate_blocks_jsonp_some_callback(): void {
+			$rules = array(
+				$this->baseline_rule( 'waf_xss_jsonp_some' ),
+				$this->baseline_rule( 'waf_xss_jsonp_sink' ),
+			);
+
+			$attacks = array(
+				'/?rest_route=/&_method=GET&_jsonp=window.opener.approve.click',
+				'/?rest_route=/&_jsonp=parent.document.forms.0.submit',
+				'/wp-json/wp/v2/posts?_jsonp=top.location.assign',
+				'/?rest_route=/&_method=GET&_jsonp=alert',
+			);
+			foreach ( $attacks as $uri ) {
+				$this->assertIsArray( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null ), "SOME callback '{$uri}' must be blocked." );
+			}
+
+			$legit = array(
+				'/?rest_route=/wp/v2/posts&_jsonp=jQuery31004572',
+				'/?rest_route=/wp/v2/posts&_jsonp=myApp.renderPosts',
+				'/wp-json/wp/v2/pages?_jsonp=callback42',
+			);
+			foreach ( $legit as $uri ) {
+				$this->assertNull( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null ), "Ordinary JSONP callback '{$uri}' must not trip the rule." );
+			}
+		}
+
+		/**
 		 * Every reason key the WAF can emit via GROUP_REASON must resolve to a
 		 * concrete category in Block_Ref::CATEGORY_MAP, or a real block renders as
 		 * a generic `BLOCKED-xxxx` reference the admin cannot triage. Guards the

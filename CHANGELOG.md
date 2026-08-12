@@ -2,6 +2,30 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Security
+
+- **WAF: markup-injection signatures (CVE-2026-64638 / XSS2Shell).** The two
+  existing cross-site-scripting rules both look for injected *code*, either a
+  `<script>` tag or an `on…=` event handler. The login-screen chain published
+  on 2026-08-06 needs neither. It smuggles plain HTML past `strip_tags()`
+  through a sanitiser parser differential (`< area` is text to `strip_tags()`
+  but an `<area>` element to KSES) and lets an `id` attribute clobber a
+  JavaScript global, so WordPress' own bundled scripts carry the payload.
+  Four Paranoia-Level-1 rules close that surface on every plan:
+  `waf_xss_login_markup` rejects a `log` / `user_login` value containing an
+  angle bracket (`sanitize_user()` strips those, so such a value is never
+  legitimate), `waf_xss_tag_differential` detects the clobbering primitive
+  itself and therefore covers the whole bug class rather than one advisory,
+  and `waf_xss_jsonp_some` / `waf_xss_jsonp_sink` cover the
+  Same-Origin-Method-Execution escalation through the REST JSONP callback.
+  Measured against 12 attack variants and 34 legitimate requests: 12 blocked,
+  0 false positives. The rules run at both firewall layers, so the
+  pre-WordPress guard rejects the request before WordPress loads.
+  This is defence in depth, not a substitute for the fix. WordPress 7.0.3, or
+  the patched release of the branch in use, remains required.
+
 ## [2.1.38] — 2026-08-12
 
 ### Fixes
