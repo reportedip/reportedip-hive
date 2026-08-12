@@ -2,9 +2,24 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.1.39] — 2026-08-13
 
 ### Security
+
+- **The bundled rulesets were missing from every release build.** The release
+  workflow staged `includes`, `admin`, `assets`, `templates` and `languages`,
+  but not `data`, which is where the four baseline rulesets live. In an
+  installed copy `Rule_Sync::load_baseline()` therefore found no file and
+  returned an empty set, so `WAF::get_active_rules()` was empty and the
+  firewall returned before inspecting anything. The bot signatures and the
+  disposable-domain list were empty for the same reason; the scan detector
+  kept working from its compiled-in path constant and only lost the extra
+  baseline paths. Installs that sync a ruleset from the API were unaffected, because a
+  stored ruleset replaces the baseline rather than merging with it — which is
+  precisely why this stayed invisible: the connected installs that get looked
+  at were fine, while every local-mode and unconnected install ran an inert
+  firewall. Both the release workflow and the local build now stage `data`
+  and abort if any of the four baselines is absent from the staged tree.
 
 - **WAF: markup-injection signatures (CVE-2026-64638 / XSS2Shell).** The two
   existing cross-site-scripting rules both look for injected *code*, either a

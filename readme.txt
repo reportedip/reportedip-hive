@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.38
+Stable tag: 2.1.39
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -347,6 +347,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.39 =
+
+Security: the bundled rule files never made it into the release package. The build copied the plugin's code folders but not the one holding the four baseline rule sets, so an installed copy found no rules on disk and the firewall passed every request through. Bot signatures and the disposable-address list were empty for the same reason. Sites that pull rules from the ReportedIP service were unaffected, since a downloaded set replaces the bundled one, which is why this stayed invisible for so long. Both builds now include the rule files and refuse to package a release without them. Updating puts the free firewall into service for the first time on unconnected installs.
+
+Security: the firewall learned to see injected markup, not just injected code. Both existing cross-site-scripting signatures look for a script tag or an event handler, so a payload made purely of HTML passed untouched. That is the shape of the login-screen chain published in August 2026 (CVE-2026-64638). Four new rules close it on every plan: a login field containing an angle bracket is rejected outright, because WordPress strips those from usernames; a second rule catches the smuggled element itself and so covers the whole class of sanitiser disagreements rather than this one advisory; two more cover the escalation through the REST JSONP callback. Twelve attack variants blocked, no false positives across thirty-four ordinary requests. They run in the pre-WordPress guard too. This is an extra layer, not a replacement for the WordPress fix.
 
 = 2.1.31 =
 

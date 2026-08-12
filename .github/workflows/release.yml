@@ -68,11 +68,22 @@ jobs:
           cp reportedip-hive.php readme.txt LICENSE composer.json composer.lock "${STAGE}/"
 
           # Plugin code directories
-          cp -r includes admin assets templates "${STAGE}/"
+          cp -r includes admin assets templates data "${STAGE}/"
           [ -d languages ] && cp -r languages "${STAGE}/"
 
           # Install production-only vendor (PUC + autoloader)
           (cd "${STAGE}" && composer install --no-dev --optimize-autoloader --no-interaction --quiet)
+
+          # The bundled rulesets are the free-tier detection floor. Without them
+          # load_baseline() returns an empty set and the firewall, scan detector
+          # and bot signatures are inert on every install that does not sync a
+          # ruleset from the API. Fail the release rather than ship that.
+          for RULESET in waf scan-paths bot-signatures disposable-domains; do
+            if [ ! -f "${STAGE}/data/rulesets/${RULESET}-baseline.php" ]; then
+              echo "::error::Missing data/rulesets/${RULESET}-baseline.php in the build"
+              exit 1
+            fi
+          done
 
           # Build the ZIP — top-level directory name is the plugin slug,
           # which is what WordPress uses when extracting an upload.
