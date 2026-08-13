@@ -127,4 +127,40 @@ class ReportedIP_Hive_Bot_Guard_Multisite_Test extends WP_UnitTestCase {
 			'A credential event must never produce an averted decision.'
 		);
 	}
+
+	/**
+	 * A honeypot-path hit blocks even from inside the official crawler ranges:
+	 * nothing links to those paths, so arriving there is the attack indicator
+	 * no matter which crawler the request claims to be.
+	 */
+	public function test_honeypot_hit_blocks_even_ranged_crawler_ip() {
+		global $wpdb;
+
+		$monitor = new ReportedIP_Hive_Security_Monitor();
+		$monitor->handle_threshold_exceeded(
+			self::CRAWLER_IP,
+			'scan_404',
+			array(
+				'attempts'    => 1,
+				'threshold'   => 1,
+				'timeframe'   => 2,
+				'path'        => '/.env',
+				'pattern_hit' => true,
+			)
+		);
+
+		$blocked = ReportedIP_Hive_Schema::table( 'reportedip_hive_blocked' );
+		$this->assertGreaterThan(
+			0,
+			(int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $blocked WHERE ip_address = %s AND is_active = 1", self::CRAWLER_IP ) ),
+			'A honeypot path hit must auto-block regardless of any crawler exemption.'
+		);
+
+		$logs = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
+		$this->assertSame(
+			'0',
+			(string) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $logs WHERE ip_address = %s AND event_type = %s", self::CRAWLER_IP, 'verified_bot_block_averted' ) ),
+			'The exemption must be denied, not averted.'
+		);
+	}
 }

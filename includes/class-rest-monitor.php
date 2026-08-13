@@ -120,11 +120,14 @@ class ReportedIP_Hive_REST_Monitor {
 		 * Verified search engine and AI crawlers (Googlebot, Bingbot, GPTBot,
 		 * ClaudeBot, …) are exempt from the global REST burst trigger so legit
 		 * bots that walk /wp-json/* (e.g. sitemap indexers, AI scrapers) do not
-		 * trip the per-IP threshold. Honeypot-style routes — user enumeration
-		 * via /wp/v2/users — are guarded by a dedicated sensor that
-		 * intentionally does not consult this allowlist.
+		 * trip the per-IP threshold.
+		 *
+		 * The sensitive routes are excluded from that exemption: no crawler
+		 * needs to page through /wp/v2/users, and until 2.1.40 the exemption
+		 * silently covered them too — the opposite of what the surrounding
+		 * documentation promised.
 		 */
-		if ( class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
+		if ( ! $this->is_sensitive_route( $route ) && class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
 			$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
 				? sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_USER_AGENT'] ) )
 				: '';

@@ -46,6 +46,55 @@ namespace ReportedIP\Hive\Tests\Unit {
 			return $ref->invoke( $this->waf(), ...$args );
 		}
 
+		public function test_immediate_block_groups_cover_the_payload_attacks(): void {
+			$groups = $this->call_private( 'immediate_block_groups', array() );
+
+			foreach ( array( 'file_probe', 'path_traversal', 'php_injection', 'webshell', 'cmd_injection', 'log4shell' ) as $group ) {
+				$this->assertContains( $group, $groups, "Group '$group' must block on the first hit" );
+			}
+
+			foreach ( array( 'sql_injection', 'xss', 'scanner_ua', 'rest_abuse' ) as $group ) {
+				$this->assertNotContains(
+					$group,
+					$groups,
+					"Group '$group' has a false-positive surface and must stay on the repeat-offender threshold"
+				);
+			}
+		}
+
+		public function test_immediate_block_groups_are_filterable(): void {
+			add_filter(
+				'reportedip_hive_waf_immediate_block_groups',
+				static function ( $groups ) {
+					$groups[] = 'sql_injection';
+					return $groups;
+				}
+			);
+
+			$this->assertContains( 'sql_injection', $this->call_private( 'immediate_block_groups', array() ) );
+		}
+
+		public function test_escalate_forwards_group_rule_and_severity(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-waf.php' );
+
+			$fn_pos = strpos( $source, 'function escalate' );
+			$this->assertNotFalse( $fn_pos );
+
+			$body = substr( $source, $fn_pos, 1400 );
+			$this->assertStringContainsString( "'severity'", $body, 'The rule severity must reach the threshold details' );
+			$this->assertStringContainsString( 'immediate_block_groups', $body, 'The first-hit groups must be consulted here' );
+
+			foreach ( array( 'handle_hit', 'record_dropin_hit' ) as $caller ) {
+				$caller_pos = strpos( $source, 'function ' . $caller );
+				$this->assertNotFalse( $caller_pos );
+				$this->assertMatchesRegularExpression(
+					'/\$this->escalate\(\s*\$ip,\s*\$group,\s*\$rule_id,\s*[^,]+,\s*\$severity\s*\)/',
+					substr( $source, $caller_pos, 4000 ),
+					"$caller() must pass the severity through"
+				);
+			}
+		}
+
 		public function test_matches_detects_sql_injection(): void {
 			$pattern = '(?i)\bunion\b[\s\S]{0,80}?\bselect\b';
 			$this->assertNotNull( $this->call_private( 'match_fragment', array( $pattern, 'id=1 UNION SELECT pwd FROM users' ) ) );

@@ -373,6 +373,13 @@ class ReportedIP_Hive_User_Enumeration {
 			return;
 		}
 
+		$ip_manager = class_exists( 'ReportedIP_Hive_IP_Manager' )
+			? ReportedIP_Hive_IP_Manager::get_instance()
+			: null;
+		if ( $ip_manager && method_exists( $ip_manager, 'is_whitelisted' ) && $ip_manager->is_whitelisted( $ip ) ) {
+			return;
+		}
+
 		/*
 		 * A verified search/AI crawler fetching the author archive
 		 * (`/author/<slug>/`) is not an enumeration attack — Googlebot indexes
@@ -383,21 +390,18 @@ class ReportedIP_Hive_User_Enumeration {
 		 * the 404-burst and REST-burst sensors use with the FCrDNS/IP-range
 		 * verdict, so a spoofed crawler UA is counted like any other client
 		 * and still only earns a 404, never the data leak.
+		 *
+		 * The exemption is scoped to that one vector. Walking `/wp/v2/users`
+		 * is nobody's indexing job, and until 2.1.40 a crawler user-agent
+		 * bought a pass there as well.
 		 */
-		if ( class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
+		if ( 'author_param' === $vector && class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
 			$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
 				? (string) wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Matched as an opaque token, never stored or echoed.
 				: '';
 			if ( ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( $ua, $ip ) ) {
 				return;
 			}
-		}
-
-		$ip_manager = class_exists( 'ReportedIP_Hive_IP_Manager' )
-			? ReportedIP_Hive_IP_Manager::get_instance()
-			: null;
-		if ( $ip_manager && method_exists( $ip_manager, 'is_whitelisted' ) && $ip_manager->is_whitelisted( $ip ) ) {
-			return;
 		}
 
 		$client  = ReportedIP_Hive::get_instance();

@@ -8,6 +8,13 @@
  * feeds (DNS-free primary verification) and a much broader, frequently-updated
  * bot list. See {@see ReportedIP_Hive_Rule_Sync}.
  *
+ * Only crawlers with a documented, reliable PTR suffix belong here. A rule
+ * whose reverse DNS points somewhere else classifies the genuine crawler as a
+ * spoofer, so operators of feed-only crawlers (OpenAI, Anthropic, Perplexity,
+ * the uptime services) stay out of the baseline and ride the PRO ranges
+ * instead. Crawlers listed nowhere simply earn no exemption — since 2.1.40 an
+ * unverifiable user-agent claim carries no privileges at all.
+ *
  * Each rule: ua (case-insensitive token), domains (valid PTR suffixes),
  * ranges (CIDR list, empty in the baseline — supplied by the API feed).
  *
@@ -50,6 +57,21 @@ return array(
 		array(
 			'ua'      => 'applebot',
 			'domains' => array( '.applebot.apple.com' ),
+			'ranges'  => array(),
+		),
+		array(
+			'ua'      => 'baiduspider',
+			'domains' => array( '.baidu.com', '.baidu.jp' ),
+			'ranges'  => array(),
+		),
+		array(
+			'ua'      => 'linkedinbot',
+			'domains' => array( '.linkedin.com' ),
+			'ranges'  => array(),
+		),
+		array(
+			'ua'      => 'amazonbot',
+			'domains' => array( '.crawl.amazonbot.amazon' ),
 			'ranges'  => array(),
 		),
 	),

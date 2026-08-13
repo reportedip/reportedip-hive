@@ -45,16 +45,23 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	 * normal browser UA will not contain it. Order is irrelevant; lookup is
 	 * O(n) over the (small) list.
 	 *
+	 * This list is a pre-filter, not a grant: since 2.1.40 a token only leads
+	 * to an exemption when the `bot_signatures` ruleset also carries a rule
+	 * with an FCrDNS suffix or an official IP range for it, and that check
+	 * passes ({@see is_exempt_crawler()}). Tokens for crawlers nobody can
+	 * verify — Screaming Frog runs on customer desktops, `facebookexternalhit`
+	 * has neither feed nor reverse DNS — therefore cost nothing to keep, but
+	 * they also buy nothing.
+	 *
 	 * Maintenance: when adding a new bot, check that:
 	 *  - the token is unique enough to not collide with a browser UA, and
 	 *  - the bot publishes a stable UA across its crawl fleet.
 	 *
 	 * Deliberately absent: `WordPress` / `Jetpack`. Any attacker can put
-	 * those strings into a user-agent (every pingback client does), there is
-	 * no verification signature for them, and the unmatched-fails-open rule
-	 * would turn the token into a free pass — botnets spoofing
-	 * "Jetpack by WordPress.com" exploited exactly that for unblockable
-	 * login brute-force before the token was removed in 2.1.27. Genuine
+	 * those strings into a user-agent (every pingback client does) and there
+	 * is no verification signature for them — botnets spoofing "Jetpack by
+	 * WordPress.com" rode the then fail-open path for unblockable login
+	 * brute-force before the token was removed in 2.1.27. Genuine
 	 * WordPress.com/Jetpack traffic is XML-RPC from Automattic ranges and
 	 * needs no UA exemption.
 	 *
@@ -238,21 +245,29 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	 *
 	 * Verdict combination:
 	 *
-	 * | UA in allowlist | UA matches bot_signatures rule | Verdict    | Exempt |
-	 * |-----------------|--------------------------------|------------|--------|
-	 * | yes             | yes                            | verified   | yes    |
-	 * | yes             | yes                            | unknown    | yes    |
-	 * | yes             | yes                            | fake       | NO     |
-	 * | yes             | no rule (e.g. UptimeRobot)     | unmatched  | yes    |
-	 * | no              | —                              | official range hit | yes |
-	 * | no              | —                              | no range hit | no   |
-	 * | verifier class unavailable                       | UA match only | UA verdict |
+	 * | UA in allowlist | Rule carries a verification signal | Verdict   | Exempt |
+	 * |-----------------|------------------------------------|-----------|--------|
+	 * | yes             | yes                                | verified  | yes    |
+	 * | yes             | yes                                | unknown   | yes    |
+	 * | yes             | yes                                | fake      | NO     |
+	 * | yes             | no rule / rule without signal      | unmatched | NO     |
+	 * | yes             | verifier or IP unavailable         | —         | NO     |
+	 * | no              | —                                  | official range hit | yes |
+	 * | no              | —                                  | no range hit | no   |
 	 *
 	 * The IP-only branch is the render-fleet catch: Applebot and Google render
 	 * pages with browser-like user-agents from their official ranges, so the IP
 	 * alone can earn the exemption (PRO rulesets; the free baseline carries no
-	 * ranges and degrades to the UA path). `unknown` fails open by design —
-	 * SEO priority, a resolver outage must never get a genuine crawler blocked.
+	 * ranges and degrades to the FCrDNS path). Those ranges must only ever come
+	 * from the crawler feeds — a cloud-provider range in the ruleset would hand
+	 * every VM on that platform an exemption.
+	 *
+	 * `unknown` still fails open, but only for a bot the ruleset can actually
+	 * verify: a resolver outage must not cost a genuine crawler its pass, while
+	 * a user-agent nobody can check earns nothing. Before 2.1.40 an unverifiable
+	 * claim was treated like a resolver hiccup, which turned every token without
+	 * a rule (GPTBot, Amazonbot, FacebookBot, UptimeRobot, …) into a standing
+	 * exemption from the block ladder and from community reporting.
 	 *
 	 * @param string                            $ua       Request User-Agent.
 	 * @param string                            $ip       Client IP ('' when unavailable).
@@ -269,8 +284,9 @@ final class ReportedIP_Hive_Bot_Allowlist {
 			}
 
 			if ( self::is_verified_search_or_ai_bot( $ua ) ) {
-				$exempt = null === $verifier || '' === $ip
-					|| 'fake' !== $verifier->verdict_for_request( $ua, $ip );
+				if ( null !== $verifier && '' !== $ip && $verifier->is_verifiable( $ua ) ) {
+					$exempt = 'fake' !== $verifier->verdict_for_request( $ua, $ip );
+				}
 			} elseif ( null !== $verifier && '' !== $ip ) {
 				$exempt = $verifier->matches_official_ranges( $ip );
 			}

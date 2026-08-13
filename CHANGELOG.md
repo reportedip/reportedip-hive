@@ -2,6 +2,60 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Security
+
+- **A crawler user-agent nobody can verify no longer buys an exemption.** The
+  allowlist carries 71 user-agent tokens, the `bot_signatures` ruleset carries
+  a handful of rules. For every token in between, the verifier returned
+  `unmatched`, and `is_exempt_crawler()` treated anything short of a confirmed
+  `fake` as a pass. Claiming to be GPTBot, anthropic-ai, Amazonbot,
+  FacebookBot, PerplexityBot or UptimeRobot was therefore enough to sit out
+  the block ladder and stay out of the community reports — the WAF still
+  answered each individual request, but the offender was never laddered and
+  never reported. Observed on a production site: 47 blocks skipped in three
+  days, every one of them for a request probing `/.env`, `/config.php.bak` or
+  `/ssl/server.key` from a cloud range that belongs to nobody the user-agent
+  claimed to be. An exemption now requires a rule that ships an actual
+  verification signal (a reverse-DNS suffix or an official IP range) and a
+  verdict that is not `fake`. A resolver outage still fails open, but only for
+  a crawler the ruleset can genuinely check. Same bug class as the `WordPress`
+  token removed in 2.1.27, one level up.
+
+- **Unambiguously malicious requests revoke the exemption outright.** The
+  central guard knew only one exception — credential events. So a honeypot hit
+  the scan detector had deliberately kept out of the allowlist, and a WAF hit
+  on a traversal or webshell rule, were both waved through one layer below,
+  contradicting the documented design. Honeypot paths, decoy paths and the
+  payload rule groups (path traversal, file probe, command and PHP injection,
+  webshell, Log4Shell, XXE, SSTI, NoSQL, CRLF, SSRF) now deny the exemption and
+  are logged as `bot_exemption_denied`, throttled to one entry per IP and event
+  per hour. SQL-injection and XSS groups deliberately keep the normal ladder:
+  search terms and editor content do trip those patterns, and a customer
+  searching a product code must not be locked out over it.
+
+- **Payload rule groups block on the first hit.** The default WAF threshold of
+  three exists so a false positive costs the offending request and nothing
+  more. The groups above have no false-positive surface worth protecting, so
+  waiting for two more attempts only gave the scanner a head start. Filterable
+  via `reportedip_hive_waf_immediate_block_groups`.
+
+- **Sensitive REST routes and REST user enumeration lost their crawler pass.**
+  The REST monitor's exemption also covered `/wp/v2/users` and
+  `/wp/v2/comments`, and the enumeration sensor exempted every vector rather
+  than the author archive it was written for. Both now match their own
+  documentation.
+
+### Changed
+
+- The bundled bot baseline gained Baiduspider, LinkedInBot and Amazonbot, all
+  verifiable by reverse DNS alone, so free installs keep a meaningful set of
+  checkable crawlers under the stricter rule.
+
+- A cached bot verdict keeps the reason it was reached instead of reporting
+  `cached`, so the audit log stays readable for the full cache lifetime.
+
 ## [2.1.39] — 2026-08-13
 
 ### Security

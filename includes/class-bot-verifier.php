@@ -206,6 +206,34 @@ class ReportedIP_Hive_Bot_Verifier {
 	}
 
 	/**
+	 * Whether a claimed crawler can be checked at all — the precondition for
+	 * granting any exemption.
+	 *
+	 * A user-agent token only earns privileges when the ruleset carries a rule
+	 * for it *and* that rule ships at least one verification signal (an FCrDNS
+	 * domain suffix or an official IP range). Without a signal the verdict can
+	 * never be better than `unknown`, so an exemption would rest on the
+	 * user-agent string alone — exactly the free pass that let spoofed
+	 * `GPTBot` / `Amazonbot` / `FacebookBot` requests probe `/.env` without
+	 * ever hitting the block ladder.
+	 *
+	 * @param string $ua Request user-agent.
+	 * @return bool      True when the claim is verifiable in principle.
+	 * @since  2.1.40
+	 */
+	public function is_verifiable( string $ua ): bool {
+		$bot = $this->match_bot( $this->get_bot_rules(), $ua );
+		if ( null === $bot ) {
+			return false;
+		}
+
+		$domains = isset( $bot['domains'] ) && is_array( $bot['domains'] ) ? array_filter( $bot['domains'] ) : array();
+		$ranges  = isset( $bot['ranges'] ) && is_array( $bot['ranges'] ) ? array_filter( $bot['ranges'] ) : array();
+
+		return array() !== $domains || array() !== $ranges;
+	}
+
+	/**
 	 * Why the most recent verdict was reached. Companion to
 	 * {@see verdict_for_request()} so callers can log an explanation next to a
 	 * verdict without re-running the classification.
@@ -501,9 +529,15 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * a miss (verified 24 h, fake 1 h) so DNS is never hit twice for the same
 	 * visitor inside the window.
 	 *
+	 * The cache entry carries the classification reason alongside the verdict
+	 * (`verdict|reason`) so a cache hit no longer flattens every explanation to
+	 * "cached" — audit logs that quote {@see last_reason()} stay meaningful for
+	 * the full TTL. Entries written before 2.1.40 hold a bare verdict and are
+	 * still honoured.
+	 *
 	 * @param array<string,mixed> $bot Matched bot rule.
 	 * @param string              $ip  Client IP.
-	 * @return string `verified` or `fake`.
+	 * @return string `verified`, `fake` or `unknown`.
 	 * @since  2.1.2
 	 */
 	private function cached_verdict( array $bot, $ip ) {
@@ -511,9 +545,13 @@ class ReportedIP_Hive_Bot_Verifier {
 		$key   = self::CACHE_PREFIX . md5( $ip . '|' . $token );
 
 		$cached = get_transient( $key );
-		if ( 'verified' === $cached || 'fake' === $cached || 'unknown' === $cached ) {
-			$this->last_reason = 'cached';
-			return $cached;
+		if ( is_string( $cached ) && '' !== $cached ) {
+			$parts   = explode( '|', $cached, 2 );
+			$verdict = $parts[0];
+			if ( 'verified' === $verdict || 'fake' === $verdict || 'unknown' === $verdict ) {
+				$this->last_reason = isset( $parts[1] ) && '' !== $parts[1] ? $parts[1] : 'cached';
+				return $verdict;
+			}
 		}
 
 		$reason            = '';
@@ -526,7 +564,7 @@ class ReportedIP_Hive_Bot_Verifier {
 		} else {
 			$ttl = self::CACHE_FAKE;
 		}
-		set_transient( $key, $verdict, $ttl );
+		set_transient( $key, $verdict . '|' . $this->last_reason, $ttl );
 		return $verdict;
 	}
 

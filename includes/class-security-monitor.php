@@ -420,6 +420,38 @@ class ReportedIP_Hive_Security_Monitor {
 	);
 
 	/**
+	 * WAF rule groups whose hits carry no benign reading.
+	 *
+	 * A search engine follows links and sitemaps; it does not send `php://input`
+	 * wrappers, traverse to `/etc/passwd`, request `/.aws/credentials` or post a
+	 * webshell. A crawler-claiming user-agent on top of such a request is the
+	 * attack indicator, not a mitigating circumstance, so these groups revoke
+	 * the crawler exemption outright.
+	 *
+	 * Deliberately absent: `xss` and `sql_injection` (editor content, form and
+	 * search input produce genuine false positives — a customer searching for
+	 * a product code must never be locked out over it), `scanner_ua` (the
+	 * user-agent is the only evidence and is trivially forged in both
+	 * directions) and `rest_abuse` (volume, not payload).
+	 *
+	 * @var string[]
+	 * @since 2.1.40
+	 */
+	private const MALICIOUS_WAF_GROUPS = array(
+		'cmd_injection',
+		'crlf',
+		'file_probe',
+		'log4shell',
+		'nosql',
+		'path_traversal',
+		'php_injection',
+		'ssrf',
+		'ssti',
+		'webshell',
+		'xxe',
+	);
+
+	/**
 	 * Last line of the never-block-a-good-bot defence.
 	 *
 	 * Every automatic IP block funnels through `handle_threshold_exceeded()`;
@@ -431,11 +463,15 @@ class ReportedIP_Hive_Security_Monitor {
 	 *
 	 * Credential-bearing events ({@see self::CREDENTIAL_EVENTS}) are never
 	 * spared — the same reasoning that keeps the honeypot-path sensors off
-	 * the allowlist: no legitimate crawler submits login credentials.
+	 * the allowlist: no legitimate crawler submits login credentials. Since
+	 * 2.1.40 the same applies to unambiguously malicious requests
+	 * ({@see self::is_unambiguously_malicious()}), which the guard used to
+	 * wave through even after a sensor had deliberately bypassed the allowlist
+	 * on its own level.
 	 *
-	 * Averted decisions are logged as `verified_bot_block_averted` so an
-	 * operator can see both the coverage and any suspicious pattern riding
-	 * the fail-open path.
+	 * Averted decisions are logged as `verified_bot_block_averted`, denied ones
+	 * as `bot_exemption_denied`, so an operator sees both the coverage and the
+	 * impersonation attempts riding it.
 	 *
 	 * @param string $ip_address Client IP that tripped a threshold.
 	 * @param string $event_type Sensor event slug.
@@ -464,6 +500,11 @@ class ReportedIP_Hive_Security_Monitor {
 			? ReportedIP_Hive_Bot_Verifier::get_instance()->last_reason()
 			: 'ua_allowlist';
 
+		if ( $this->is_unambiguously_malicious( $event_type, $details ) ) {
+			$this->log_exemption_denied( $ip_address, $event_type, $details, $ua, $reason );
+			return false;
+		}
+
 		$this->logger->log_security_event(
 			'verified_bot_block_averted',
 			$ip_address,
@@ -477,6 +518,83 @@ class ReportedIP_Hive_Security_Monitor {
 		);
 
 		return true;
+	}
+
+	/**
+	 * Whether the request behind a tripped threshold admits no innocent
+	 * reading, no matter which crawler the user-agent claims to be.
+	 *
+	 * Three signals qualify, all of them produced by a sensor that already
+	 * decided the request has no legitimate use:
+	 *
+	 *  - a honeypot path hit (`scan_404` with `pattern_hit`) — nothing links to
+	 *    `/.env` or `/wp-config.php.bak`, so no crawler can arrive there by
+	 *    following the site;
+	 *  - a WAF hit in one of {@see self::MALICIOUS_WAF_GROUPS};
+	 *  - a decoy-path hit, whose whole purpose is to be unreachable by accident.
+	 *
+	 * @param string $event_type Sensor event slug.
+	 * @param array  $details    Sensor event metadata.
+	 * @return bool  True when the exemption must be revoked.
+	 * @since  2.1.40
+	 */
+	private function is_unambiguously_malicious( $event_type, $details ) {
+		$event_type = (string) $event_type;
+		$details    = is_array( $details ) ? $details : array();
+
+		if ( 'decoy_pathblock_hit' === $event_type ) {
+			return true;
+		}
+
+		if ( 'scan_404' === $event_type && ! empty( $details['pattern_hit'] ) ) {
+			return true;
+		}
+
+		if ( 'waf_block' === $event_type ) {
+			$group = isset( $details['group'] ) ? (string) $details['group'] : '';
+			if ( in_array( $group, self::MALICIOUS_WAF_GROUPS, true ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Audit trail for a revoked crawler exemption.
+	 *
+	 * Throttled per IP and event like the own-server guard: an impersonating
+	 * scanner fires hundreds of these per minute, and the block itself is
+	 * already logged separately. One entry per hour is enough to show that the
+	 * guard held.
+	 *
+	 * @param string $ip_address Client IP.
+	 * @param string $event_type Sensor event slug.
+	 * @param array  $details    Sensor event metadata.
+	 * @param string $ua         Raw request user-agent.
+	 * @param string $reason     Verifier reason behind the (now denied) exemption.
+	 * @return void
+	 * @since  2.1.40
+	 */
+	private function log_exemption_denied( $ip_address, $event_type, $details, $ua, $reason ) {
+		$log_gate = 'reportedip_hive_exempt_denied_' . md5( $ip_address . '|' . $event_type );
+		if ( false !== get_transient( $log_gate ) ) {
+			return;
+		}
+		set_transient( $log_gate, 1, HOUR_IN_SECONDS );
+
+		$this->logger->log_security_event(
+			'bot_exemption_denied',
+			$ip_address,
+			array(
+				'event_type'     => $event_type,
+				'reason'         => 'malicious_request',
+				'claimed_ua'     => substr( $ua, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ),
+				'verifier_state' => $reason,
+				'details'        => $details,
+			),
+			'high'
+		);
 	}
 
 	/**

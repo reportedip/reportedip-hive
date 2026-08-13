@@ -927,25 +927,56 @@ class ReportedIP_Hive_WAF {
 			return;
 		}
 
-		$this->escalate( $ip, $group, $rule_id );
+		$this->escalate( $ip, $group, $rule_id, 1, $severity );
 
 		ReportedIP_Hive::serve_blocked_page( $reason );
 	}
 
 	/**
+	 * Rule groups that graduate to an IP block on the very first hit.
+	 *
+	 * The default threshold of 3 exists so a false positive costs the offending
+	 * request and nothing more. These groups have no false-positive surface to
+	 * protect: a request carrying a path traversal, a PHP wrapper, a webshell
+	 * body or a probe for `/.aws/credentials` is an attack on the first
+	 * attempt, and waiting for two more only hands the scanner a head start.
+	 *
+	 * `sql_injection` and `xss` stay on the normal ladder on purpose — search
+	 * terms, editor content and form payloads do trip those patterns.
+	 *
+	 * @var string[]
+	 * @since 2.1.40
+	 */
+	private const IMMEDIATE_BLOCK_GROUPS = array(
+		'cmd_injection',
+		'crlf',
+		'file_probe',
+		'log4shell',
+		'nosql',
+		'path_traversal',
+		'php_injection',
+		'ssrf',
+		'ssti',
+		'webshell',
+		'xxe',
+	);
+
+	/**
 	 * Feed a confirmed hit into the shared attempt tracker so a repeat offender
 	 * graduates to a laddered IP block via the existing escalation path. The
 	 * threshold defaults to 3 so a single false positive blocks only the
-	 * offending request, not the IP.
+	 * offending request, not the IP; groups in
+	 * {@see self::IMMEDIATE_BLOCK_GROUPS} block on the first hit instead.
 	 *
 	 * @param string $ip        Client IP.
 	 * @param string $group     Rule group.
 	 * @param string $rule_id   Rule id.
 	 * @param int    $increment Offences to count at once (an imported burst).
+	 * @param string $severity  Rule severity, passed on for the block decision.
 	 * @return void
 	 * @since  2.1.2
 	 */
-	private function escalate( $ip, $group, $rule_id, $increment = 1 ) {
+	private function escalate( $ip, $group, $rule_id, $increment = 1, $severity = '' ) {
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
 			return;
 		}
@@ -957,17 +988,43 @@ class ReportedIP_Hive_WAF {
 		if ( $threshold < 1 ) {
 			$threshold = 1;
 		}
+		if ( in_array( (string) $group, $this->immediate_block_groups(), true ) ) {
+			$threshold = 1;
+		}
+		$details = array(
+			'group' => $group,
+			'rule'  => $rule_id,
+		);
+		if ( '' !== (string) $severity ) {
+			$details['severity'] = (string) $severity;
+		}
 		$monitor->track_generic_attempt(
 			$ip,
 			'waf',
 			'waf_block',
 			$threshold,
 			self::ESCALATION_TIMEFRAME_MINUTES,
-			array(
-				'group' => $group,
-				'rule'  => $rule_id,
-			),
+			$details,
 			max( 1, (int) $increment )
+		);
+	}
+
+	/**
+	 * Rule groups that skip the repeat-offender threshold.
+	 *
+	 * @return string[]
+	 * @since  2.1.40
+	 */
+	private function immediate_block_groups(): array {
+		/**
+		 * Filters the rule groups that block on the first hit.
+		 *
+		 * @param string[] $groups Group slugs.
+		 * @since 2.1.40
+		 */
+		return (array) apply_filters(
+			'reportedip_hive_waf_immediate_block_groups',
+			self::IMMEDIATE_BLOCK_GROUPS
 		);
 	}
 
@@ -1050,7 +1107,7 @@ class ReportedIP_Hive_WAF {
 
 		ReportedIP_Hive_Logger::get_instance()->log_security_event( 'waf_block', $ip, $details, $severity, $occurred );
 
-		$this->escalate( $ip, $group, $rule_id, $count );
+		$this->escalate( $ip, $group, $rule_id, $count, $severity );
 
 		return true;
 	}

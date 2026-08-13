@@ -271,6 +271,60 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'cached', $this->verifier()->last_reason() );
 		}
 
+		public function test_cached_verdict_keeps_the_original_reason(): void {
+			global $wp_transients;
+			$wp_transients = array();
+
+			$key                   = \ReportedIP_Hive_Bot_Verifier::CACHE_PREFIX . md5( '198.51.100.5|googlebot' );
+			$wp_transients[ $key ] = array(
+				'value'   => 'verified|fcrdns_confirmed',
+				'expires' => 0,
+			);
+			$this->assertSame(
+				'verified',
+				$this->verifier()->verdict_for_request( 'Mozilla/5.0 (compatible; Googlebot/2.1)', '198.51.100.5' )
+			);
+			$this->assertSame(
+				'fcrdns_confirmed',
+				$this->verifier()->last_reason(),
+				'A cache hit must not flatten every explanation to "cached".'
+			);
+		}
+
+		public function test_is_verifiable_requires_a_rule_with_signals(): void {
+			$this->seed_ruleset(
+				array(
+					array(
+						'ua'      => 'googlebot',
+						'domains' => array( '.googlebot.com' ),
+						'ranges'  => array(),
+					),
+					array(
+						'ua'      => 'gptbot',
+						'domains' => array(),
+						'ranges'  => array( '20.171.0.0/16' ),
+					),
+					array(
+						'ua'      => 'uptimerobot',
+						'domains' => array(),
+						'ranges'  => array(),
+					),
+				)
+			);
+
+			$verifier = $this->verifier();
+			$this->assertTrue( $verifier->is_verifiable( 'Mozilla/5.0 (compatible; Googlebot/2.1)' ) );
+			$this->assertTrue( $verifier->is_verifiable( 'GPTBot/1.2' ) );
+			$this->assertFalse(
+				$verifier->is_verifiable( 'Mozilla/5.0 (compatible; UptimeRobot/2.0)' ),
+				'A rule without a PTR suffix and without ranges verifies nothing.'
+			);
+			$this->assertFalse(
+				$verifier->is_verifiable( 'Mozilla/5.0 (compatible; PerplexityBot/1.0)' ),
+				'A user-agent with no rule at all is not verifiable.'
+			);
+		}
+
 		public function test_matches_official_ranges_hit_and_miss(): void {
 			global $wp_transients;
 			$wp_transients = array();

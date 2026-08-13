@@ -118,6 +118,79 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		/**
+		 * Reflection handle on the private malicious-request predicate.
+		 */
+		private function malicious_check(): \ReflectionMethod {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-security-monitor.php';
+
+			$method = new \ReflectionMethod( \ReportedIP_Hive_Security_Monitor::class, 'is_unambiguously_malicious' );
+			$method->setAccessible( true );
+
+			return $method;
+		}
+
+		/**
+		 * @dataProvider malicious_events
+		 */
+		public function test_malicious_requests_lose_the_exemption( string $event, array $details, bool $expected, string $message ) {
+			$method  = $this->malicious_check();
+			$monitor = ( new \ReflectionClass( \ReportedIP_Hive_Security_Monitor::class ) )->newInstanceWithoutConstructor();
+
+			$this->assertSame( $expected, $method->invoke( $monitor, $event, $details ), $message );
+		}
+
+		public function malicious_events(): array {
+			return array(
+				'honeypot path'      => array( 'scan_404', array( 'pattern_hit' => true, 'path' => '/.env' ), true, 'Nothing links to /.env, so no crawler arrives there by following the site' ),
+				'ordinary 404 burst' => array( 'scan_404', array( 'pattern_hit' => false, 'path' => '/old-page/' ), false, 'A crawl over stale URLs stays sparable' ),
+				'file probe'         => array( 'waf_block', array( 'group' => 'file_probe', 'rule' => 'waf_file_probe' ), true, 'Probing for backup files is an attack on the first attempt' ),
+				'path traversal'     => array( 'waf_block', array( 'group' => 'path_traversal', 'rule' => 'waf_traversal' ), true, 'Traversal payloads have no benign reading' ),
+				'php wrapper'        => array( 'waf_block', array( 'group' => 'php_injection', 'rule' => 'waf_php_wrapper_b64' ), true, 'php:// wrappers are never sent by a crawler' ),
+				'xss'                => array( 'waf_block', array( 'group' => 'xss', 'rule' => 'waf_xss_handler' ), false, 'Editor and form content trips XSS patterns, so it keeps the ladder' ),
+				'sqli'               => array( 'waf_block', array( 'group' => 'sql_injection', 'rule' => 'waf_sqli_bool' ), false, 'A customer searching for a product code must not be locked out' ),
+				'decoy'              => array( 'decoy_pathblock_hit', array( 'path' => '/wp-config.php.bak' ), true, 'A decoy path cannot be reached by accident' ),
+				'rest burst'         => array( 'rest_abuse', array( 'route' => '/wp/v2/posts' ), false, 'Volume alone is not proof of malice' ),
+				'no details'         => array( 'waf_block', array(), false, 'Without a group the guard cannot claim certainty' ),
+			);
+		}
+
+		public function test_denied_exemptions_are_logged_and_throttled() {
+			$source = $this->source();
+
+			$this->assertStringContainsString(
+				"'bot_exemption_denied'",
+				$source,
+				'A revoked exemption must leave an audit trail'
+			);
+
+			$log_fn_pos = strpos( $source, 'function log_exemption_denied' );
+			$this->assertNotFalse( $log_fn_pos );
+
+			$body = substr( $source, $log_fn_pos, 900 );
+			$this->assertStringContainsString( 'get_transient', $body, 'The audit log must be throttled like the own-server guard' );
+			$this->assertStringContainsString( 'HOUR_IN_SECONDS', $body );
+		}
+
+		public function test_malicious_check_precedes_the_averted_log() {
+			$source = $this->source();
+
+			$guard_fn_pos = strpos( $source, 'function should_spare_verified_bot' );
+			$this->assertNotFalse( $guard_fn_pos );
+
+			$body        = substr( $source, $guard_fn_pos );
+			$malicious   = strpos( $body, 'is_unambiguously_malicious' );
+			$averted_log = strpos( $body, "'verified_bot_block_averted'" );
+
+			$this->assertNotFalse( $malicious, 'The guard must consult the malicious-request predicate' );
+			$this->assertNotFalse( $averted_log );
+			$this->assertLessThan(
+				$averted_log,
+				$malicious,
+				'A denied exemption must never be recorded as an averted block'
+			);
+		}
+
 		public function test_guard_survives_missing_user_agent() {
 			$source = $this->source();
 

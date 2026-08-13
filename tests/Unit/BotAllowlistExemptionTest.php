@@ -85,12 +85,33 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertTrue( \ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( self::GOOGLEBOT_UA, '66.249.66.1' ) );
 		}
 
-		public function test_unknown_verdict_fails_open(): void {
+		public function test_unknown_verdict_fails_open_for_a_verifiable_bot(): void {
 			$this->seed_googlebot_rule();
 			$this->cache_verdict( '66.249.66.1', 'unknown' );
 			$this->assertTrue(
 				\ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( self::GOOGLEBOT_UA, '66.249.66.1' ),
-				'A DNS-undecidable crawler must keep its exemption (SEO priority).'
+				'A resolver outage must not cost a verifiable crawler its exemption (SEO priority).'
+			);
+		}
+
+		public function test_rule_without_verification_signals_denies_exemption(): void {
+			\ReportedIP_Hive_Rule_Store::set(
+				'bot_signatures',
+				array(
+					'key'     => 'bot_signatures',
+					'version' => 3,
+					'rules'   => array(
+						array(
+							'ua'      => 'googlebot',
+							'domains' => array(),
+							'ranges'  => array(),
+						),
+					),
+				)
+			);
+			$this->assertFalse(
+				\ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( self::GOOGLEBOT_UA, '203.0.113.9' ),
+				'A rule carrying neither a PTR suffix nor a range can verify nothing and must grant nothing.'
 			);
 		}
 
@@ -103,11 +124,22 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_allowlisted_ua_without_signature_rule_is_exempt(): void {
+		public function test_allowlisted_ua_without_signature_rule_is_not_exempt(): void {
 			$this->seed_googlebot_rule();
-			$this->assertTrue(
+			$this->assertFalse(
 				\ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( 'Mozilla/5.0 (compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)', '203.0.113.9' ),
-				'An allowlisted UA with no verification signals stays exempt (unmatched ≙ unknown).'
+				'A user-agent the ruleset cannot verify must not buy an exemption.'
+			);
+		}
+
+		public function test_spoofed_ai_crawler_on_a_hosting_ip_is_not_exempt(): void {
+			$this->seed_googlebot_rule();
+			$this->assertFalse(
+				\ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler(
+					'Mozilla/5.0 (compatible; Amzn-SearchBot/1.0; +https://developer.amazon.com/support/amazonbot)',
+					'34.156.13.220'
+				),
+				'The observed alre.de spoofers claimed crawlers the ruleset knows nothing about.'
 			);
 		}
 
@@ -138,11 +170,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( \ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( self::GOOGLEBOT_UA, '198.51.100.7', $verifier ) );
 		}
 
-		public function test_empty_ip_with_crawler_ua_falls_back_to_ua_match(): void {
+		public function test_empty_ip_denies_exemption(): void {
 			$this->seed_googlebot_rule();
-			$this->assertTrue(
+			$this->assertFalse(
 				\ReportedIP_Hive_Bot_Allowlist::is_exempt_crawler( self::GOOGLEBOT_UA, '' ),
-				'Without a client IP the decision degrades to the pure UA match.'
+				'Without a client IP nothing can be checked, so nothing is granted.'
 			);
 		}
 
