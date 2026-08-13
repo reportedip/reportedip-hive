@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.39
+Stable tag: 2.1.40
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -347,6 +347,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.40 =
+
+Security: claiming to be a search engine no longer protects an attacker. Hive spares genuine crawlers from its automatic blocking so a Googlebot crawl over stale URLs can never lock the bot out of the site. That protection was granted on the strength of the user-agent alone whenever the crawler could not be checked, and almost none of the crawlers in the list can be checked without the rule set naming them. Anyone sending "GPTBot", "Amazonbot" or "FacebookBot" was therefore exempt from the block ladder and from community reporting. On one production site that meant 47 skipped blocks in three days, each for a request probing for exposed configuration files or private keys from a data-centre address that belonged to none of the companies named. From now on the exemption requires a rule that can actually verify the crawler, by reverse DNS or by an official address list. A name-server outage still gives a checkable crawler the benefit of the doubt.
+
+Security: an attack request now cancels the exemption outright. Requests for bait paths that nothing links to, and firewall hits for traversal, command and code injection, web shells or probes for credential files, are treated as attacks whoever the visitor claims to be. They block, they are reported, and the revoked exemption is recorded in the log. Search-term and editor-content patterns keep the previous three-strike ladder on purpose, so a customer searching your shop is never locked out over a product code. Those same attack patterns now block on the first hit instead of the third, and two crawler exemptions that were broader than documented were narrowed: the REST user list and the REST enumeration route are no longer covered.
+
+Also: the bundled crawler list gained Baiduspider, LinkedInBot and Amazonbot, and the ReportedIP service now delivers official address lists for Google's specialist crawlers, Apple, DuckDuckGo, OpenAI, Perplexity, Ahrefs and the common uptime monitors, so those crawlers keep their exemption.
 
 = 2.1.39 =
 
