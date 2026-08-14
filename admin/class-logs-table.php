@@ -364,6 +364,7 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 				<option value=""><?php esc_html_e( 'All Event Types', 'reportedip-hive' ); ?></option>
 				<optgroup label="<?php esc_attr_e( 'Login &amp; Spam', 'reportedip-hive' ); ?>">
 					<option value="failed_login" <?php selected( $event_type, 'failed_login' ); ?>><?php esc_html_e( 'Failed Login', 'reportedip-hive' ); ?></option>
+					<option value="app_password_failed" <?php selected( $event_type, 'app_password_failed' ); ?>><?php esc_html_e( 'App Password Failed', 'reportedip-hive' ); ?></option>
 					<option value="comment_spam" <?php selected( $event_type, 'comment_spam' ); ?>><?php esc_html_e( 'Comment Spam', 'reportedip-hive' ); ?></option>
 					<option value="xmlrpc_abuse" <?php selected( $event_type, 'xmlrpc_abuse' ); ?>><?php esc_html_e( 'XMLRPC Abuse', 'reportedip-hive' ); ?></option>
 					<option value="ip_blocked" <?php selected( $event_type, 'ip_blocked' ); ?>><?php esc_html_e( 'IP Blocked', 'reportedip-hive' ); ?></option>

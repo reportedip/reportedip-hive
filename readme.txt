@@ -350,6 +350,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.1.42 =
+
+Fixed: failed XML-RPC app-password logins no longer count twice — the application-password sensor claims the wire attempt and the generic failed-login listener stands down for the duplicate row and attempt count; coordinated-attack detection now counts app_password_failed rows alongside failed_login so nothing goes invisible.
+
+Changed: the event-type filter on the Activity tab gained an App Password Failed option.
+
 = 2.1.41 =
 
 New: Tor exit-node blocking (Professional) — an opt-in toggle under Settings → Blocking rejects connections from known Tor exit nodes. The exit-node list arrives as a signed tor_exits ruleset refreshed twice daily; blocks are temporary (24 hours by default, filterable) and are never reported to the community — operating an exit node is not abuse evidence.

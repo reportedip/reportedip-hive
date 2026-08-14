@@ -1040,7 +1040,18 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Handle failed login attempts
+	 * Handle failed login attempts.
+	 *
+	 * On XML-RPC a failed application-password login fires both the
+	 * `application_password_failed_authentication` hook and, afterwards in the
+	 * same request, `wp_login_failed`. The application-password sensor has
+	 * already logged and counted that wire attempt, so this listener consumes
+	 * its claim and stands down for the duplicate row and attempt count while
+	 * still feeding spray and coordinated-attack detection. The audit trail in
+	 * `ReportedIP_Hive_Audit_Logger::on_login_failed()` is a separate
+	 * compliance record and deliberately unaffected.
+	 *
+	 * @param string $username Username the failed attempt used.
 	 */
 	public function handle_failed_login( $username ) {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_failed_logins', true ) ) {
@@ -1068,9 +1079,14 @@ class ReportedIP_Hive {
 			$log_data['user_agent'] = substr( $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH );
 		}
 
-		$this->logger->log_security_event( 'failed_login', $ip_address, $log_data );
+		$deduped = class_exists( 'ReportedIP_Hive_App_Password_Monitor' )
+			&& ReportedIP_Hive_App_Password_Monitor::consume_pending_failure();
 
-		$this->security_monitor->check_failed_login_threshold( $ip_address, $username );
+		if ( ! $deduped ) {
+			$this->logger->log_security_event( 'failed_login', $ip_address, $log_data );
+		}
+
+		$this->security_monitor->check_failed_login_threshold( $ip_address, $username, ! $deduped );
 	}
 
 	/**

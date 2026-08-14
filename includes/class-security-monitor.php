@@ -90,8 +90,20 @@ class ReportedIP_Hive_Security_Monitor {
 	 *  2. Distinct-username password-spray check — fires before the per-IP
 	 *     count threshold when an IP probes many different usernames in a
 	 *     short window, which is a stronger credential-stuffing indicator.
+	 *
+	 * @param string $ip_address    Client IP.
+	 * @param string $username      Username attempted, if known.
+	 * @param bool   $count_attempt False when the application-password sensor
+	 *                              already logged and counted this wire attempt
+	 *                              in the `app_password` bucket: spray-username
+	 *                              recording, the realtime coordinated probe and
+	 *                              the spray threshold still run, but the
+	 *                              `login` bucket and the failed-login threshold
+	 *                              branch are skipped so one attempt is never
+	 *                              counted twice.
+	 * @return bool True when a threshold fired (or the IP is already blocked).
 	 */
-	public function check_failed_login_threshold( $ip_address, $username = '' ) {
+	public function check_failed_login_threshold( $ip_address, $username = '', $count_attempt = true ) {
 		$threshold = ReportedIP_Hive_Hardening_Mode::effective_failed_login_threshold(
 			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', 5 )
 		);
@@ -113,7 +125,9 @@ class ReportedIP_Hive_Security_Monitor {
 
 		$this->record_username_for_spray_detection( $ip_address, $username );
 
-		$this->database->track_attempt( $ip_address, 'login', $track_username, $track_user_agent );
+		if ( $count_attempt ) {
+			$this->database->track_attempt( $ip_address, 'login', $track_username, $track_user_agent );
+		}
 
 		$this->maybe_check_coordinated_realtime();
 
@@ -121,26 +135,28 @@ class ReportedIP_Hive_Security_Monitor {
 			return true;
 		}
 
-		$attempt_count = $this->database->get_attempt_count( $ip_address, 'login', $timeframe );
+		if ( $count_attempt ) {
+			$attempt_count = $this->database->get_attempt_count( $ip_address, 'login', $timeframe );
 
-		if ( $attempt_count >= $threshold ) {
-			if ( $this->database->is_blocked( $ip_address ) ) {
+			if ( $attempt_count >= $threshold ) {
+				if ( $this->database->is_blocked( $ip_address ) ) {
+					return true;
+				}
+
+				$details = array(
+					'attempts'  => $attempt_count,
+					'threshold' => $threshold,
+					'timeframe' => $timeframe,
+				);
+
+				if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
+					$details['username_provided'] = ! empty( $username );
+				}
+
+				$this->handle_threshold_exceeded( $ip_address, 'failed_login', $details );
+
 				return true;
 			}
-
-			$details = array(
-				'attempts'  => $attempt_count,
-				'threshold' => $threshold,
-				'timeframe' => $timeframe,
-			);
-
-			if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
-				$details['username_provided'] = ! empty( $username );
-			}
-
-			$this->handle_threshold_exceeded( $ip_address, 'failed_login', $details );
-
-			return true;
 		}
 
 		return false;
@@ -1520,12 +1536,15 @@ class ReportedIP_Hive_Security_Monitor {
 	 *     several minutes and would otherwise slip under the per-minute burst
 	 *     rule.
 	 *
-	 * Both detectors count individual `failed_login` rows in the `logs` table
-	 * over a real `created_at` window — NOT `SUM(attempt_count)` from the
-	 * aggregated `attempts` table, whose per-IP counter is cumulative (it
-	 * accumulates across a rolling 1 h gap) and would over-count any IP that is
-	 * merely active in the window with its full lifetime total. The logs table
-	 * carries one timestamped row per attempt, so the magnitude reflects real
+	 * Both detectors count individual `failed_login` and `app_password_failed`
+	 * rows in the `logs` table over a real `created_at` window — NOT
+	 * `SUM(attempt_count)` from the aggregated `attempts` table, whose per-IP
+	 * counter is cumulative (it accumulates across a rolling 1 h gap) and would
+	 * over-count any IP that is merely active in the window with its full
+	 * lifetime total. The logs table carries one timestamped row per attempt —
+	 * exactly one of the two event types per wire attempt, because the
+	 * application-password sensor claims XML-RPC app-password failures and the
+	 * generic listener stands down for them — so the magnitude reflects real
 	 * in-window attempts (note: a `failed_login` is logged before an
 	 * already-blocked IP is short-circuited, so a blocked attacker stops adding
 	 * rows — the count tracks the active front line of an attack).
@@ -1549,7 +1568,7 @@ class ReportedIP_Hive_Security_Monitor {
                 COUNT(*) as total_attempts
              FROM $table_name
              WHERE created_at > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 HOUR)
-             AND event_type = 'failed_login'
+             AND event_type IN ('failed_login','app_password_failed')
              GROUP BY time_window
              HAVING unique_ips >= 8 AND total_attempts >= 30
              ORDER BY time_window DESC"
@@ -1632,7 +1651,7 @@ class ReportedIP_Hive_Security_Monitor {
                         COUNT(*) as total_attempts
                  FROM $table_name
                  WHERE created_at > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE)
-                 AND event_type = 'failed_login'",
+                 AND event_type IN ('failed_login','app_password_failed')",
 				$window
 			)
 		);

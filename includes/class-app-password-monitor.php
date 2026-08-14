@@ -9,9 +9,14 @@
  *    them into the security monitor as `app_password_abuse`,
  *  - blocks the creation of new application passwords for users whose role is
  *    listed in `reportedip_hive_2fa_enforce_roles` until they have completed
- *    2FA enrolment, and
+ *    2FA enrolment,
  *  - logs every successful application-password authentication (low severity)
- *    so the timeline shows when API-keyed access happened.
+ *    so the timeline shows when API-keyed access happened, and
+ *  - claims the wire attempt for threat accounting: on XML-RPC one failed
+ *    application-password login fires this sensor first and `wp_login_failed`
+ *    afterwards in the same request, so the generic failed-login listener
+ *    consults {@see self::consume_pending_failure()} and stands down instead
+ *    of writing a duplicate threat row and attempt count.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -34,11 +39,53 @@ class ReportedIP_Hive_App_Password_Monitor {
 	 */
 	private static $instance = null;
 
+	/**
+	 * App-password failures logged in this request whose `wp_login_failed`
+	 * echo is still outstanding.
+	 *
+	 * @var int
+	 */
+	private static $pending_wire_failures = 0;
+
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
 		return self::$instance;
+	}
+
+	/**
+	 * Consume one pending app-password failure claimed by this sensor.
+	 *
+	 * The generic `wp_login_failed` listener calls this before logging: a true
+	 * return means the current failure was already logged and counted as
+	 * `app_password_failed`, so the listener must not write a duplicate
+	 * `failed_login` row or increment the `login` attempt bucket. A counter is
+	 * used instead of a boolean because XML-RPC `system.multicall` can carry
+	 * several independent login attempts in one request — each failure
+	 * increments once and each `wp_login_failed` consumes exactly one unit.
+	 * Unconsumed units (REST Basic-Auth never fires `wp_login_failed`) expire
+	 * with the request.
+	 *
+	 * @return bool True when a pending failure was consumed.
+	 * @since  2.1.42
+	 */
+	public static function consume_pending_failure(): bool {
+		if ( self::$pending_wire_failures < 1 ) {
+			return false;
+		}
+		--self::$pending_wire_failures;
+		return true;
+	}
+
+	/**
+	 * Reset the pending-failure counter. Test helper.
+	 *
+	 * @return void
+	 * @since  2.1.42
+	 */
+	public static function reset_pending_failures(): void {
+		self::$pending_wire_failures = 0;
 	}
 
 	/**
@@ -90,6 +137,8 @@ class ReportedIP_Hive_App_Password_Monitor {
 			),
 			'medium'
 		);
+
+		++self::$pending_wire_failures;
 
 		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_threshold', 5 );
 		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_timeframe', 15 );

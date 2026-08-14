@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-08-14T13:40:48+00:00\n"
+"PO-Revision-Date: 2026-08-14T15:44:23+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
@@ -122,7 +122,7 @@ msgstr "Regelsatz-Signatur abgelehnt"
 #: admin/class-admin-firewall.php:222
 #: admin/class-admin-settings.php:1766
 #: admin/class-admin-settings.php:1767
-#: admin/class-logs-table.php:371
+#: admin/class-logs-table.php:372
 #: admin/class-setup-wizard.php:49
 msgid "Firewall"
 msgstr "Firewall"
@@ -788,7 +788,7 @@ msgid "Stops registration and comment spam at its two favourite doors: throwaway
 msgstr "Stoppt Registrierungs- und Kommentar-Spam an seinen zwei beliebtesten Türen: Wegwerf-E-Mail-Adressen werden bei der Registrierung erkannt (WordPress und WooCommerce), und ein unsichtbares Honeypot-Feld weist Kommentar-Bots ab — kein CAPTCHA, keine Hürde für echte Besucher."
 
 #: admin/class-admin-firewall.php:1056
-#: admin/class-logs-table.php:378
+#: admin/class-logs-table.php:379
 msgid "Disposable Email"
 msgstr "Wegwerf-E-Mail"
 
@@ -1810,27 +1810,27 @@ msgstr "Höhere Stufe für höhere Limits."
 
 #: admin/class-admin-settings.php:1629
 #: admin/class-admin-settings.php:1680
-#: reportedip-hive.php:1577
-#: reportedip-hive.php:1651
-#: reportedip-hive.php:1675
+#: reportedip-hive.php:1593
+#: reportedip-hive.php:1667
+#: reportedip-hive.php:1691
 msgid "ReportedIP Hive:"
 msgstr "ReportedIP Hive:"
 
 #. translators: %1$d: number of failed reports, %2$s: link to queue page
 #: admin/class-admin-settings.php:1632
-#: reportedip-hive.php:1580
+#: reportedip-hive.php:1596
 #, php-format
 msgid "%1$d API reports failed. %2$s"
 msgstr "%1$d API-Meldungen fehlgeschlagen. %2$s"
 
 #: admin/class-admin-settings.php:1634
-#: reportedip-hive.php:1582
+#: reportedip-hive.php:1598
 msgid "View queue"
 msgstr "Warteschlange anzeigen"
 
 #: admin/class-admin-settings.php:1644
-#: reportedip-hive.php:1593
-#: reportedip-hive.php:1614
+#: reportedip-hive.php:1609
+#: reportedip-hive.php:1630
 msgid "Retry all"
 msgstr "Alle erneut versuchen"
 
@@ -1846,20 +1846,20 @@ msgstr "%1$d Meldungen warten auf Verarbeitung. %2$s oder %3$s."
 
 #: admin/class-admin-settings.php:1666
 #: admin/class-admin-settings.php:1685
-#: reportedip-hive.php:1636
-#: reportedip-hive.php:1656
+#: reportedip-hive.php:1652
+#: reportedip-hive.php:1672
 msgid "Upgrade API tier"
 msgstr "API-Stufe upgraden"
 
 #: admin/class-admin-settings.php:1667
-#: reportedip-hive.php:1637
+#: reportedip-hive.php:1653
 msgid "Manage queue"
 msgstr "Warteschlange verwalten"
 
 #. translators: 1: pending count, 2: upgrade link
 #. translators: %1$d: number of pending reports, %2$s: link to community page
 #: admin/class-admin-settings.php:1683
-#: reportedip-hive.php:1654
+#: reportedip-hive.php:1670
 #, php-format
 msgid "%1$d reports pending processing. %2$s for higher limits."
 msgstr "%1$d Meldungen warten auf Verarbeitung. %2$s für höhere Limits."
@@ -1973,7 +1973,7 @@ msgstr "Wann"
 #: admin/class-admin-settings.php:2030
 #: admin/class-audit-log-table.php:65
 #: includes/class-privacy.php:220
-#: includes/class-security-monitor.php:1377
+#: includes/class-security-monitor.php:1393
 #: reportedip-hive.php:904
 msgid "Event"
 msgstr "Ereignis"
@@ -2310,7 +2310,7 @@ msgstr "7 Tage"
 #: admin/class-admin-settings.php:3998
 #: admin/class-admin-settings.php:4475
 #: admin/class-admin-settings.php:4501
-#: admin/class-logs-table.php:413
+#: admin/class-logs-table.php:414
 msgid "30 Days"
 msgstr "30 Tage"
 
@@ -2364,27 +2364,27 @@ msgid "No critical events in the last 24 hours. Your site is secure!"
 msgstr "Keine kritischen Ereignisse in den letzten 24 Stunden. Ihre Website ist sicher!"
 
 #: admin/class-admin-settings.php:4084
-#: admin/class-logs-table.php:394
+#: admin/class-logs-table.php:395
 #: reportedip-hive.php:1034
 msgid "Critical"
 msgstr "Kritisch"
 
 #: admin/class-admin-settings.php:4085
-#: admin/class-logs-table.php:393
+#: admin/class-logs-table.php:394
 #: admin/class-setup-wizard.php:851
 #: reportedip-hive.php:1035
 msgid "High"
 msgstr "Hoch"
 
 #: admin/class-admin-settings.php:4086
-#: admin/class-logs-table.php:392
+#: admin/class-logs-table.php:393
 #: admin/class-setup-wizard.php:844
 #: reportedip-hive.php:1036
 msgid "Medium"
 msgstr "Mittel"
 
 #: admin/class-admin-settings.php:4087
-#: admin/class-logs-table.php:391
+#: admin/class-logs-table.php:392
 #: admin/class-setup-wizard.php:837
 #: reportedip-hive.php:1037
 msgid "Low"
@@ -2501,26 +2501,26 @@ msgstr "IP-Adresse oder CIDR"
 
 #: admin/class-admin-settings.php:4472
 #: admin/class-admin-settings.php:4498
-#: admin/class-logs-table.php:410
+#: admin/class-logs-table.php:411
 msgid "24 Hours"
 msgstr "24 Stunden"
 
 #: admin/class-admin-settings.php:4473
 #: admin/class-admin-settings.php:4499
-#: admin/class-logs-table.php:411
+#: admin/class-logs-table.php:412
 msgid "3 Days"
 msgstr "3 Tage"
 
 #: admin/class-admin-settings.php:4474
 #: admin/class-admin-settings.php:4500
-#: admin/class-logs-table.php:412
+#: admin/class-logs-table.php:413
 msgid "1 Week"
 msgstr "1 Woche"
 
 #: admin/class-admin-settings.php:4476
 #: admin/class-admin-settings.php:4502
 #: admin/class-blocked-ips-table.php:126
-#: admin/class-logs-table.php:414
+#: admin/class-logs-table.php:415
 msgid "Permanent"
 msgstr "Dauerhaft"
 
@@ -2636,7 +2636,7 @@ msgid "Two-Factor Auth"
 msgstr "Zwei-Faktor-Authentifizierung"
 
 #: admin/class-admin-settings.php:4734
-#: admin/class-logs-table.php:381
+#: admin/class-logs-table.php:382
 msgid "Hardening Mode"
 msgstr "Härtungsmodus"
 
@@ -5124,7 +5124,7 @@ msgstr "Priorität"
 
 #: admin/class-api-queue-table.php:55
 #: includes/class-privacy.php:158
-#: includes/class-security-monitor.php:1383
+#: includes/class-security-monitor.php:1399
 msgid "Attempts"
 msgstr "Versuche"
 
@@ -5235,7 +5235,7 @@ msgstr "Fehlgeschlagen (%d)"
 #: admin/class-api-queue-table.php:453
 #: admin/class-audit-log-table.php:188
 #: admin/class-blocked-ips-table.php:270
-#: admin/class-logs-table.php:417
+#: admin/class-logs-table.php:418
 #: admin/class-waf-exceptions-table.php:238
 #: admin/class-whitelist-table.php:251
 msgid "Filter"
@@ -5280,7 +5280,7 @@ msgstr "Audit-Einträge"
 #: includes/class-ajax-handler.php:240
 #: includes/class-ajax-handler.php:276
 #: includes/class-privacy.php:216
-#: includes/class-security-monitor.php:1379
+#: includes/class-security-monitor.php:1395
 #: includes/class-two-factor-notifications.php:152
 #: includes/class-two-factor-notifications.php:358
 #: includes/class-two-factor-notifications.php:372
@@ -5327,7 +5327,7 @@ msgstr "Registrierung"
 #: includes/class-privacy.php:150
 #: includes/class-privacy.php:187
 #: includes/class-privacy.php:228
-#: includes/class-security-monitor.php:1378
+#: includes/class-security-monitor.php:1394
 #: includes/class-two-factor-notifications.php:153
 #: includes/class-two-factor-notifications.php:359
 #: includes/class-two-factor-notifications.php:373
@@ -5496,82 +5496,86 @@ msgid "Failed Login"
 msgstr "Fehlgeschlagene Anmeldung"
 
 #: admin/class-logs-table.php:367
+msgid "App Password Failed"
+msgstr "App-Passwort fehlgeschlagen"
+
+#: admin/class-logs-table.php:368
 msgid "Comment Spam"
 msgstr "Kommentar-Spam"
 
-#: admin/class-logs-table.php:368
+#: admin/class-logs-table.php:369
 msgid "XMLRPC Abuse"
 msgstr "XMLRPC-Missbrauch"
 
-#: admin/class-logs-table.php:369
+#: admin/class-logs-table.php:370
 msgid "IP Blocked"
 msgstr "IP gesperrt"
 
-#: admin/class-logs-table.php:372
+#: admin/class-logs-table.php:373
 msgid "WAF Block"
 msgstr "WAF-Block"
 
-#: admin/class-logs-table.php:373
+#: admin/class-logs-table.php:374
 msgid "WAF Match (report-only)"
 msgstr "WAF-Treffer (nur melden)"
 
-#: admin/class-logs-table.php:374
+#: admin/class-logs-table.php:375
 msgid "Spoofed Crawler (flagged)"
 msgstr "Gefälschter Crawler (markiert)"
 
-#: admin/class-logs-table.php:375
+#: admin/class-logs-table.php:376
 msgid "Spoofed Crawler (blocked)"
 msgstr "Gefälschter Crawler (blockiert)"
 
-#: admin/class-logs-table.php:376
+#: admin/class-logs-table.php:377
 msgid "Decoy Path Hit"
 msgstr "Köder-Pfad-Treffer"
 
-#: admin/class-logs-table.php:377
+#: admin/class-logs-table.php:378
 msgid "Scan Detected"
 msgstr "Scan erkannt"
 
-#: admin/class-logs-table.php:379
+#: admin/class-logs-table.php:380
 msgid "Ruleset Signature Failure"
 msgstr "Ruleset-Signaturfehler"
 
-#: admin/class-logs-table.php:382
+#: admin/class-logs-table.php:383
 msgid "Hardening Mode Activated"
 msgstr "Härtungsmodus aktiviert"
 
-#: admin/class-logs-table.php:383
+#: admin/class-logs-table.php:384
 msgid "Hardening Mode Extended"
 msgstr "Härtungsmodus verlängert"
 
-#: admin/class-logs-table.php:384
+#: admin/class-logs-table.php:385
 msgid "Hardening Mode Deactivated"
 msgstr "Härtungsmodus deaktiviert"
 
-#: admin/class-logs-table.php:385
+#: admin/class-logs-table.php:386
 msgid "Coordinated Attack Detected"
 msgstr "Koordinierter Angriff erkannt"
 
-#: admin/class-logs-table.php:390
+#: admin/class-logs-table.php:391
 msgid "All Severities"
 msgstr "Alle Schweregrade"
 
-#: admin/class-logs-table.php:397
+#: admin/class-logs-table.php:398
 msgid "Show log entries from this date"
 msgstr "Protokolleinträge ab diesem Datum anzeigen"
 
-#: admin/class-logs-table.php:400
+#: admin/class-logs-table.php:401
 msgid "Show log entries up to this date"
 msgstr "Protokolleinträge bis zu diesem Datum anzeigen"
 
-#: admin/class-logs-table.php:405
+#: admin/class-logs-table.php:406
 msgid "During Hardening only"
 msgstr "Nur während der Härtung"
 
-#: admin/class-logs-table.php:408
+#: admin/class-logs-table.php:409
 msgid "Block duration used by the Block IP row action"
 msgstr "Sperrdauer für die Zeilenaktion „IP sperren\""
 
-#: admin/class-logs-table.php:426
+#: admin/class-logs-table.php:427
 msgid "No log entries found."
 msgstr "Keine Protokolleinträge gefunden."
 
@@ -8936,79 +8940,79 @@ msgstr "Härtungsmodus"
 msgid "Disposable-email defence"
 msgstr "Wegwerf-E-Mail-Abwehr"
 
-#: includes/class-security-monitor.php:1250
+#: includes/class-security-monitor.php:1266
 msgid "Heads-up: a security threshold was reached on your site. ReportedIP Hive has already handled it according to your settings — details below for your records."
 msgstr "Hinweis: Auf Ihrer Website wurde ein Sicherheitsschwellenwert erreicht. ReportedIP Hive hat dies gemäß Ihren Einstellungen bereits bearbeitet — die Details finden Sie unten für Ihre Unterlagen."
 
-#: includes/class-security-monitor.php:1257
+#: includes/class-security-monitor.php:1273
 msgid "No action required if this matches your expectations. You can fine-tune thresholds and alerts under ReportedIP Hive → Settings → Notifications."
 msgstr "Keine Aktion erforderlich, wenn dies Ihren Erwartungen entspricht. Sie können Schwellenwerte und Benachrichtigungen unter ReportedIP Hive → Einstellungen → Benachrichtigungen feinjustieren."
 
-#: includes/class-security-monitor.php:1387
+#: includes/class-security-monitor.php:1403
 msgid "Timeframe"
 msgstr "Zeitraum"
 
 #. translators: %d: minutes
-#: includes/class-security-monitor.php:1390
+#: includes/class-security-monitor.php:1406
 #, php-format
 msgid "%d minutes"
 msgstr "%d Minuten"
 
-#: includes/class-security-monitor.php:1396
+#: includes/class-security-monitor.php:1412
 msgid "Username"
 msgstr "Benutzername"
 
-#: includes/class-security-monitor.php:1412
+#: includes/class-security-monitor.php:1428
 msgid "Action taken"
 msgstr "Durchgeführte Maßnahme"
 
 #. translators: %d: hours
-#: includes/class-security-monitor.php:1416
+#: includes/class-security-monitor.php:1432
 #, php-format
 msgid "IP address has been automatically blocked for %d hours."
 msgstr "Die IP-Adresse wurde automatisch für %d Stunden gesperrt."
 
-#: includes/class-security-monitor.php:1431
+#: includes/class-security-monitor.php:1447
 msgid "Burst suppression"
 msgstr "Burst-Unterdrückung"
 
 #. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp
-#: includes/class-security-monitor.php:1436
+#: includes/class-security-monitor.php:1452
 #, php-format
 msgid "%1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP)."
 msgid_plural "%1$d additional alerts of this type were suppressed since %3$s (from %2$d distinct IPs)."
 msgstr[0] "%1$d weitere Benachrichtigung dieses Typs wurde seit %3$s unterdrückt (von %2$d eindeutigen IP)."
 msgstr[1] "%1$d weitere Benachrichtigungen dieses Typs wurden seit %3$s unterdrückt (von %2$d eindeutigen IPs)."
 
-#: includes/class-security-monitor.php:1450
-#: includes/class-security-monitor.php:1492
+#: includes/class-security-monitor.php:1466
+#: includes/class-security-monitor.php:1508
 msgid "Top offenders:"
 msgstr "Häufigste Verursacher:"
 
-#: includes/class-security-monitor.php:1456
+#: includes/class-security-monitor.php:1472
 msgid "Optional next steps"
 msgstr "Optionale nächste Schritte"
 
-#: includes/class-security-monitor.php:1458
+#: includes/class-security-monitor.php:1474
 msgid "Open the ReportedIP Hive dashboard if you want a full timeline of recent events."
 msgstr "Öffnen Sie das ReportedIP Hive Dashboard, wenn Sie einen vollständigen zeitlichen Verlauf der jüngsten Ereignisse wünschen."
 
-#: includes/class-security-monitor.php:1459
+#: includes/class-security-monitor.php:1475
 msgid "If this IP belongs to a legitimate user (e.g. office router, monitoring service), add it to your whitelist."
 msgstr "Wenn diese IP zu einem legitimen Nutzer gehört (z. B. Büro-Router, Monitoring-Dienst), setzen Sie sie auf Ihre Whitelist."
 
-#: includes/class-security-monitor.php:1460
+#: includes/class-security-monitor.php:1476
 msgid "No further action is needed if the automatic block above matches your expectations."
 msgstr "Es ist keine weitere Aktion erforderlich, wenn die obige automatische Sperre Ihren Erwartungen entspricht."
 
 #. translators: %d: hours
-#: includes/class-security-monitor.php:1472
+#: includes/class-security-monitor.php:1488
 #, php-format
 msgid "Action: IP has been automatically blocked for %d hours."
 msgstr "Maßnahme: Die IP wurde automatisch für %d Stunden gesperrt."
 
 #. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp
-#: includes/class-security-monitor.php:1481
+#: includes/class-security-monitor.php:1497
 #, php-format
 msgid "Burst suppression: %1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP)."
 msgid_plural "Burst suppression: %1$d additional alerts of this type were suppressed since %3$s (from %2$d distinct IPs)."
@@ -10387,47 +10391,47 @@ msgstr "Das ist Ihre eigene aktuelle IP-Adresse. Eine Sperrung kann Sie aus wp-a
 msgid "Events"
 msgstr "Ereignisse"
 
-#: reportedip-hive.php:1168
+#: reportedip-hive.php:1184
 msgid "Your IP address has been blocked due to suspicious activity."
 msgstr "Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1223
+#: reportedip-hive.php:1239
 msgid "Access denied due to IP reputation."
 msgstr "Zugriff aufgrund der IP-Reputation verweigert."
 
-#: reportedip-hive.php:1259
+#: reportedip-hive.php:1275
 msgid "Access denied: connections from Tor exit nodes are not allowed on this site."
 msgstr "Zugriff verweigert: Verbindungen von Tor-Exit-Nodes sind auf dieser Website nicht erlaubt."
 
-#: reportedip-hive.php:1508
+#: reportedip-hive.php:1524
 msgid "Access denied. Your IP address has been blocked due to suspicious activity."
 msgstr "Zugriff verweigert. Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1605
+#: reportedip-hive.php:1621
 msgid "Retrying…"
 msgstr "Wird erneut versucht…"
 
-#: reportedip-hive.php:1613
+#: reportedip-hive.php:1629
 msgid "Retry failed."
 msgstr "Erneuter Versuch fehlgeschlagen."
 
-#: reportedip-hive.php:1631
+#: reportedip-hive.php:1647
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr "ReportedIP Hive - Warteschlange kritisch:"
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
-#: reportedip-hive.php:1634
+#: reportedip-hive.php:1650
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
 msgstr "%1$d Meldungen warten auf Verarbeitung. Ihr API-Kontingent ist möglicherweise nicht ausreichend. %2$s oder %3$s."
 
 #. translators: %s: link to settings page
-#: reportedip-hive.php:1678
+#: reportedip-hive.php:1694
 #, php-format
 msgid "No API key configured. %s"
 msgstr "Kein API-Schlüssel konfiguriert. %s"
 
-#: reportedip-hive.php:1679
+#: reportedip-hive.php:1695
 msgid "Configure now"
 msgstr "Jetzt konfigurieren"
 
@@ -10492,24 +10496,24 @@ msgstr "Zurück"
 msgid "If you believe this is an error, please contact the site administrator and quote the reference above."
 msgstr "Falls Sie glauben, dass dies ein Fehler ist, kontaktieren Sie bitte den Website-Administrator und nennen Sie die obige Referenz."
 
-#: templates/emails/base.php:87
+#: templates/emails/base.php:94
 msgid "Security notice"
 msgstr "Sicherheitshinweis"
 
 #. translators: 1: IP address, 2: timestamp
-#: templates/emails/base.php:93
+#: templates/emails/base.php:100
 #, php-format
 msgid "Recorded for your security: IP %1$s at %2$s. If this wasn't you, please update your password and review your recent sessions."
 msgstr "Zu Ihrer Sicherheit erfasst: IP %1$s um %2$s. Falls Sie das nicht waren, aktualisieren Sie bitte Ihr Passwort und überprüfen Sie Ihre letzten Sitzungen."
 
 #. translators: %s: site link
-#: templates/emails/base.php:115
+#: templates/emails/base.php:122
 #, php-format
 msgid "Protected by ReportedIP Hive on %s"
 msgstr "Geschützt durch ReportedIP Hive auf %s"
 
 #. translators: 1: opening link tag, 2: closing link tag
-#: templates/emails/base.php:124
+#: templates/emails/base.php:131
 #, php-format
 msgid "This message is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
 msgstr "Diese Nachricht wird geschützt durch %1$sReportedIP%2$s — Open Threat Intelligence für ein sichereres Internet."

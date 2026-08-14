@@ -2,6 +2,27 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.42] — Unreleased
+
+### Fixes
+
+- **Failed XML-RPC app-password logins no longer count twice.** One wire
+  attempt fired both the application-password sensor and the generic
+  failed-login listener, each writing its own threat row and attempt count —
+  a botnet doing 150 attempts per IP showed as 300 in Top Attackers and all
+  threat analytics. The application-password sensor now claims the attempt
+  (a request-scoped counter, so XML-RPC multicall batches dedup exactly) and
+  the generic listener stands down for the duplicate row and `login` bucket.
+  Password-spray recording keeps running, and both coordinated-attack windows
+  now count `app_password_failed` rows alongside `failed_login`, so deduped
+  floods stay fully visible to hardening detection.
+
+### Changed
+
+- **Logs filter knows App Password Failed.** The event-type dropdown on the
+  Activity tab gained an option for `app_password_failed`, which was
+  previously logged but not filterable.
+
 ## [2.1.41] — 2026-08-14
 
 ### New
