@@ -72,8 +72,8 @@ define( 'REPORTEDIP_MAX_SETTINGS_UPLOAD_SIZE', 524288 );
 define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.com' );
 define( 'REPORTEDIP_HIVE_UPGRADE_URL', 'https://reportedip.com/dashboard/' );
 define( 'REPORTEDIP_HIVE_CONTACT_MAIL', '1@reportedip.com' );
-define( 'REPORTEDIP_HIVE_HONEYPOT_URL', 'https://reportedip.com/docs/honeypot-server/' );
-define( 'REPORTEDIP_HIVE_FAQ_URL', 'https://reportedip.com/faq/' );
+define( 'REPORTEDIP_HIVE_HONEYPOT_URL', 'https://reportedip.com/docs/integrations/honeypot-server/' );
+define( 'REPORTEDIP_HIVE_FAQ_URL', 'https://reportedip.com/docs/support/faq/' );
 define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.com/register/' );
 
 /**

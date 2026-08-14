@@ -6709,7 +6709,7 @@ class ReportedIP_Hive_Admin_Settings {
 			),
 			'professional' => array(
 				'label'       => 'Professional',
-				'price'       => '€14.90 / mo · €149 / yr',
+				'price'       => '€14.90 / mo · billed yearly €149 · incl. VAT',
 				'reports_day' => 1000,
 				'checks_day'  => 25000,
 				'mail_per_mo' => 500,
@@ -6729,7 +6729,7 @@ class ReportedIP_Hive_Admin_Settings {
 			),
 			'business'     => array(
 				'label'       => 'Business',
-				'price'       => '€39 / mo · €389 / yr',
+				'price'       => '€39 / mo · billed yearly €389 · incl. VAT',
 				'reports_day' => 5000,
 				'checks_day'  => 100000,
 				'mail_per_mo' => 2500,
@@ -6752,7 +6752,7 @@ class ReportedIP_Hive_Admin_Settings {
 			),
 			'enterprise'   => array(
 				'label'       => 'Enterprise',
-				'price'       => 'On request',
+				'price'       => 'From €663 / mo · on request',
 				'reports_day' => -1,
 				'checks_day'  => -1,
 				'mail_per_mo' => -1,
