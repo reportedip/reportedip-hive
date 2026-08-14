@@ -310,6 +310,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$this->ensure_queue_dir();
 		$this->write_blocklist();
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Probing the auto_prepend_file target outside the plugin dir; WP_Filesystem abstractions (FTP/SSH credentials) cannot answer whether the PHP engine itself can read/replace the prepend path, and a false probe degrades to the fail-open return below.
 		$writable = file_exists( $prepend ) ? is_writable( $prepend ) : is_writable( dirname( $prepend ) );
 		if ( ! $writable ) {
 			return false;
