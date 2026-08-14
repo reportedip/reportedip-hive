@@ -220,7 +220,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		private function run_get_logs_data(): void {
 			$table  = ( new \ReflectionClass( \ReportedIP_Hive_Logs_Table::class ) )->newInstanceWithoutConstructor();
 			$method = new \ReflectionMethod( \ReportedIP_Hive_Logs_Table::class, 'get_logs_data' );
-			$method->setAccessible( true );
 			$method->invoke( $table, 25, 1 );
 		}
 

@@ -212,7 +212,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			foreach ( $collaborators as $property => $value ) {
 				$prop = new \ReflectionProperty( \ReportedIP_Hive_Security_Monitor::class, $property );
-				$prop->setAccessible( true );
 				$prop->setValue( $monitor, $value );
 			}
 

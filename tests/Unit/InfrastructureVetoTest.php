@@ -110,12 +110,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			foreach ( $collaborators as $property => $value ) {
 				$prop = new \ReflectionProperty( \ReportedIP_Hive_Security_Monitor::class, $property );
-				$prop->setAccessible( true );
 				$prop->setValue( $monitor, $value );
 			}
 
 			$method = new \ReflectionMethod( \ReportedIP_Hive_Security_Monitor::class, 'should_spare_infrastructure_ip' );
-			$method->setAccessible( true );
 
 			return (bool) $method->invoke( $monitor, $ip, $event );
 		}

@@ -138,7 +138,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function patch( $response, string $context ): void {
 			$method = new \ReflectionMethod( \ReportedIP_Hive_API::class, 'patch_api_quota_from_headers' );
-			$method->setAccessible( true );
 			$method->invoke( $this->api(), $response, $context );
 		}
 

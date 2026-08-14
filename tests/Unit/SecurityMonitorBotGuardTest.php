@@ -125,7 +125,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			require_once dirname( __DIR__, 2 ) . '/includes/class-security-monitor.php';
 
 			$method = new \ReflectionMethod( \ReportedIP_Hive_Security_Monitor::class, 'is_unambiguously_malicious' );
-			$method->setAccessible( true );
 
 			return $method;
 		}
