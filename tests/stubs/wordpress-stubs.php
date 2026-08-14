@@ -540,6 +540,26 @@ if ( ! function_exists( 'wp_date' ) ) {
 	}
 }
 
+if ( ! function_exists( 'get_gmt_from_date' ) ) {
+	/**
+	 * Convert a site-local datetime string to UTC. The stub is an identity
+	 * passthrough (site timezone = UTC) so tests can assert the exact value
+	 * that production hands to $wpdb->prepare() without depending on the
+	 * WordPress timezone option.
+	 *
+	 * @param string $date_string Datetime string in site-local time.
+	 * @param string $format      Output format.
+	 * @return string
+	 */
+	function get_gmt_from_date( $date_string, $format = 'Y-m-d H:i:s' ) {
+		$timestamp = strtotime( (string) $date_string );
+		if ( false === $timestamp ) {
+			return gmdate( $format );
+		}
+		return gmdate( $format, $timestamp );
+	}
+}
+
 // =============================================================================
 // Sanitization Functions
 // =============================================================================

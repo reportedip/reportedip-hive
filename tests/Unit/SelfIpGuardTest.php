@@ -107,7 +107,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_reputation_block_skips_own_server_ip() {
 			$this->assertMatchesRegularExpression(
-				'/\$exceeds_threshold\s*&&\s*!\s*\$this->ip_manager->is_whitelisted\([^)]*\)\s*&&\s*!\s*self::is_own_server_ip\(/',
+				'/\$exceeds_threshold\s*&&[^{]*!\s*\$this->ip_manager->is_whitelisted\([^)]*\)\s*&&\s*!\s*self::is_own_server_ip\(/s',
 				$this->main_file(),
 				'the reputation-block path must never target the server itself'
 			);

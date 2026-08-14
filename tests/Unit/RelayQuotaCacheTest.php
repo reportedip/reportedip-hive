@@ -213,16 +213,20 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 0, $this->calls(), 'An exhausted meta bucket must short-circuit before any HTTP call.' );
 		}
 
-		public function test_http_429_seeds_global_rate_limit_reset() {
+		public function test_http_429_seeds_meta_bucket_rate_limit_reset() {
 			$this->pretend_tier( 'reportedip_professional' );
 			$this->set_http( 429, array( 'code' => 'rate_limited' ), array( 'retry-after' => '120' ) );
 
 			$result = $this->api()->get_relay_quota();
 
 			$this->assertSame( 'http_429', $result['error'] );
-			$reset = get_transient( 'reportedip_hive_rate_limit_reset' );
+			$reset = get_transient( 'reportedip_hive_rate_limit_reset_meta' );
 			$this->assertIsInt( $reset );
-			$this->assertGreaterThan( time(), $reset, 'A 429 with Retry-After must seed the global rate-limit reset.' );
+			$this->assertGreaterThan( time(), $reset, 'A 429 with Retry-After must seed the meta-bucket rate-limit reset.' );
+			$this->assertFalse(
+				get_transient( 'reportedip_hive_rate_limit_reset' ),
+				'A relay-quota 429 is a meta-bucket event and must not pause the reputation or submission buckets.'
+			);
 		}
 
 		public function test_success_caches_payload_and_serves_from_cache() {

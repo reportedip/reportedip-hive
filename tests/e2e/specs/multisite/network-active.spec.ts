@@ -27,3 +27,12 @@ test('site admin sees read-only banner on subsite plugin page', async ({ page })
     await page.goto('/site-a/wp-admin/admin.php?page=reportedip-hive-site');
     await expect(page).toHaveURL(/site-a\/wp-admin\/admin\.php\?page=reportedip-hive-site/);
 });
+
+test('security widget on the network dashboard', async ({ page }) => {
+    await loginAsAdmin(page);
+
+    await page.goto('/wp-admin/network/');
+    const widget = page.locator('#reportedip_hive_overview');
+    await expect(widget).toBeVisible();
+    await expect(widget.locator('.rip-dw__meta')).toContainText('Network-wide');
+});

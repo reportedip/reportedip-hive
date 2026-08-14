@@ -31,6 +31,7 @@ Two ways to run:
 * **Progressive blocks that don't burn legitimate users.** A first-time tripping CGNAT visitor or a fat-fingered admin gets a 5-minute timeout — repeat offenders climb the ladder up to 7 days. Nobody pays a 24h block for a typo.
 * **Privacy-first by default.** GDPR-minimal logging mode, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium.
 * **Hardening Mode on coordinated attacks (PRO).** When the plugin spots ≥ 3 IPs / ≥ 20 failed logins in the same minute it tightens the failed-login and reputation thresholds network-wide for one hour. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
+* **Tor exit-node blocking (PRO).** An opt-in toggle rejects connections from known Tor exit nodes, backed by a signed exit-node list refreshed twice daily. Blocks are temporary and never reported to the community — operating an exit node is not abuse evidence.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
 * **Security headers out of the box.** The basic hardening trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is free; HSTS, Permissions-Policy, a report-only-first Content-Security-Policy and the cross-origin isolation trio come with Professional. Headers already sent by your server or another plugin are detected and left untouched.
 * **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan level 5 clean, WPCS-clean (zero warnings), a comprehensive PHPUnit suite (unit + Multisite) running on every commit.
@@ -116,6 +117,7 @@ Show the world that your site is part of the hive — and earn community-network
 
 * **10-step setup wizard** with privacy-first defaults: Welcome → Connect → Protection → Firewall → 2FA → Privacy → Notifications → Login → Promote → Done. Skippable (3 skips, 7-day grace).
 * **Real-time dashboard** with detection & hardening score gauges (0–100 plus an A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines.
+* **Security widget on the WordPress dashboard** — attacks blocked (30 days), blocks today, active IP blocks, protection layers and the detection score on wp-admin's front page, with deep links into the plugin; on Multisite the widget appears on the network dashboard.
 * **Six list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), plus the 2FA admin grid.
 * **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup.
 * **Trust badges** on every admin page: "Security Focused", "GDPR Compliant", "Made in Germany".
@@ -347,6 +349,32 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.41 =
+
+New: Tor exit-node blocking (Professional) — an opt-in toggle under Settings → Blocking rejects connections from known Tor exit nodes. The exit-node list arrives as a signed tor_exits ruleset refreshed twice daily; blocks are temporary (24 hours by default, filterable) and are never reported to the community — operating an exit node is not abuse evidence.
+
+New: trusted-proxy source ranges — the trusted IP header is only honored when the connecting peer is one of the proxy addresses declared under Settings → General (IP/CIDR list), so a direct connection can no longer spoof a whitelisted address or shed a block. An empty list keeps the previous behavior.
+
+New: security widget on the WordPress dashboard — attacks blocked in the last 30 days, blocks today, active IP blocks, protection layers and the detection score, with deep links into the plugin. On Multisite the widget appears on the network dashboard.
+
+New: "What's new" banner — after an update, plugin pages show a one-time dismissible summary of the release highlights.
+
+New: never-block veto for community-verified infrastructure (search-engine crawlers, major CDNs, monitoring fleets) — local blocks are spared and logged as infrastructure_spared; reports still go out.
+
+New: developer hooks — reportedip_hive_threshold_exceeded fires on every confirmed detection, reportedip_hive_report_queued fires once per queued community report, and the block page gained reportedip_hive_access_denied plus a strings filter for white-label overrides.
+
+New: every IP in the admin tables carries copy, internal-lookup and a link to its public reportedip.com profile; the lookup tab shows ISP, ASN, usage type, Tor and infrastructure flags with Block/Whitelist quick actions; also available as wp reportedip lookup (table/json/csv/yaml output).
+
+New: add-my-IP helper on the whitelist form (IPv6 prefills the /64 network), a confirmation before blocking your own current IP, a date-range filter on the event log and a duration choice for the block-from-log action.
+
+Fixed: attempt counters are race-safe — a single atomic upsert per IP and attempt type (schema v15), so parallel failed-login bursts can no longer lose counts.
+
+Fixed: API rate-limit back-off is scoped per endpoint and the report path honors Retry-After; the reputation cache respects verbosity and is invalidated by your own reports; CIDR ranges are accepted in the manual block form; the blocked-page contact URL resolves network-wide on Multisite.
+
+Changed: an API status strip on the Security Dashboard summarizes connection, quota (with reset countdown) and rate-limit state from cached data, and the daily quota display stays fresh between cron runs.
+
+Changed: accessibility pass — forced-colors and reduced-motion support, focus rings that survive Windows High Contrast, 40px touch targets on coarse pointers and a polite live region for AJAX notifications; roughly 90 admin-JS strings became translatable.
 
 = 2.1.40 =
 
@@ -683,6 +711,9 @@ Initial public release as ReportedIP Hive. Three threshold channels, two operati
 
 == Upgrade Notice ==
 
+= 2.1.41 =
+Adds opt-in Tor exit-node blocking (Professional), trusted-proxy source ranges against header spoofing, a WordPress dashboard security widget, richer IP lookups with a WP-CLI command, new developer hooks and race-safe attempt counters (schema v15). No breaking changes.
+
 = 2.0.28 =
 Fewer false-positive blocks of legitimate crawlers and asset 404s, Business multi-bookable tier copy, and a documentation pass correcting the free-vs-paid positioning. No breaking changes.
 
@@ -756,7 +787,7 @@ This plugin connects to external services only when explicitly configured. *Loca
 
 = ReportedIP Rule Sync =
 
-* Service URL: `https://reportedip.com/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `scan_paths`)
+* Service URL: `https://reportedip.com/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `scan_paths`, `tor_exits`)
 * Purpose: fetch signed firewall rule updates; the bundled baseline rulesets stay active without any connection, and Professional plans receive the deeper, frequently-updated rulesets through this channel
 * Default: off — only active in Community Network mode AND with a configured API key AND the Rule Sync toggle enabled; runs every six hours via cron, and conditional `If-None-Match` requests return HTTP 304 when nothing changed
 * Data transmitted: the API key, the current ETag and the site domain; each downloaded ruleset carries an Ed25519 signature that the plugin verifies against a bundled public key before applying it

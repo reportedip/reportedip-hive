@@ -23,6 +23,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-rule-sync.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf-dropin-manager.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
 
 	/**
 	 * @covers \ReportedIP_Hive_WAF_Dropin_Manager
@@ -400,7 +401,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_ruleset_applied_other_keys_do_not_queue(): void {
 			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED ] = true;
-			foreach ( array( 'bot_signatures', 'disposable_domains', 'scan_paths' ) as $key ) {
+			foreach ( array( 'bot_signatures', 'disposable_domains', 'scan_paths', 'tor_exits' ) as $key ) {
 				$this->mgr()->on_ruleset_applied( $key );
 			}
 			$this->assertSame( 0, $this->count_shutdown_syncs(), 'Only the waf ruleset is baked into the guard.' );
@@ -958,6 +959,96 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->mgr()->drain_queue();
 
 			$this->assertFalse( (bool) get_site_transient( \ReportedIP_Hive_WAF_Dropin_Manager::DRAIN_LOCK_TRANSIENT ), 'A finished drain must not leave the lock behind.' );
+		}
+
+		/**
+		 * The configured trusted-proxy ranges must be baked into the guard as a
+		 * literal array, with every template placeholder substituted — a leftover
+		 * placeholder token would be a parse-time constant lookup that fatals the
+		 * fail-open guard.
+		 */
+		public function test_generate_prepend_bakes_trusted_proxy_ranges(): void {
+			$GLOBALS['wp_options']['reportedip_hive_trusted_ip_header']    = 'HTTP_X_FORWARDED_FOR';
+			$GLOBALS['wp_options']['reportedip_hive_trusted_proxy_ranges'] = '198.51.100.0/24';
+
+			$php = $this->call_private( 'generate_prepend', array() );
+
+			$this->assertStringContainsString( "'198.51.100.0/24'", $php, 'The configured proxy range must be baked into the guard.' );
+			$this->assertStringNotContainsString( '__RIP_', $php, 'Every template placeholder must be fully substituted.' );
+			$this->assert_valid_php( $php );
+		}
+
+		public function test_generate_prepend_bakes_empty_proxies_without_ranges(): void {
+			$php = $this->call_private( 'generate_prepend', array() );
+
+			$this->assertStringContainsString( '$proxies = array (' . "\n" . ')', $php, 'Without configured ranges the guard must bake an empty proxies array (trust-every-peer back-compat).' );
+			$this->assertStringNotContainsString( '__RIP_', $php );
+		}
+
+		/**
+		 * A peer inside the trusted-proxy ranges may supply the client IP: the
+		 * public candidate from the configured header becomes the resolved IP, so
+		 * a blocked candidate is refused even though REMOTE_ADDR itself is clean.
+		 */
+		public function test_guard_honours_header_candidate_from_trusted_proxy(): void {
+			$GLOBALS['wp_options']['reportedip_hive_trusted_ip_header']    = 'HTTP_X_FORWARDED_FOR';
+			$GLOBALS['wp_options']['reportedip_hive_trusted_proxy_ranges'] = '198.51.100.0/24';
+			$this->seed_blocklist( "203.0.113.50\t" . ( time() + 600 ) . "\n" );
+
+			$verdict = $this->run_guard(
+				array(
+					'REQUEST_URI'          => '/',
+					'REMOTE_ADDR'          => '198.51.100.7',
+					'HTTP_X_FORWARDED_FOR' => '203.0.113.50',
+				)
+			);
+			$this->clear_blocklist();
+
+			$this->assertSame( 'Forbidden', $verdict, 'A trusted proxy peer must be allowed to supply the (blocked) client IP through the header.' );
+		}
+
+		/**
+		 * A peer OUTSIDE the trusted ranges must never influence the resolved IP:
+		 * the header is ignored and REMOTE_ADDR is used, so the spoofed blocked
+		 * candidate cannot be shed onto — or borrowed from — another identity.
+		 */
+		public function test_guard_ignores_header_from_untrusted_peer(): void {
+			$GLOBALS['wp_options']['reportedip_hive_trusted_ip_header']    = 'HTTP_X_FORWARDED_FOR';
+			$GLOBALS['wp_options']['reportedip_hive_trusted_proxy_ranges'] = '198.51.100.0/24';
+			$this->seed_blocklist( "203.0.113.50\t" . ( time() + 600 ) . "\n" );
+
+			$verdict = $this->run_guard(
+				array(
+					'REQUEST_URI'          => '/',
+					'REMOTE_ADDR'          => '203.0.113.9',
+					'HTTP_X_FORWARDED_FOR' => '203.0.113.50',
+				)
+			);
+			$this->clear_blocklist();
+
+			$this->assertSame( 'PASS', $verdict, 'An untrusted peer spoofing the header must be judged by REMOTE_ADDR, not by the header candidate.' );
+		}
+
+		/**
+		 * Parity fix with the in-WordPress engine: a private or reserved header
+		 * candidate is rejected even when no ranges are configured, so the guard
+		 * falls back to REMOTE_ADDR. The blocked 10.0.0.1 entry proves it — a
+		 * guard that resolved to the private candidate would answer Forbidden.
+		 */
+		public function test_guard_rejects_private_header_candidate(): void {
+			$GLOBALS['wp_options']['reportedip_hive_trusted_ip_header'] = 'HTTP_X_FORWARDED_FOR';
+			$this->seed_blocklist( "10.0.0.1\t" . ( time() + 600 ) . "\n" );
+
+			$verdict = $this->run_guard(
+				array(
+					'REQUEST_URI'          => '/',
+					'REMOTE_ADDR'          => '203.0.113.9',
+					'HTTP_X_FORWARDED_FOR' => '10.0.0.1',
+				)
+			);
+			$this->clear_blocklist();
+
+			$this->assertSame( 'PASS', $verdict, 'A private header candidate must never become the resolved client IP (FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE).' );
 		}
 
 		/**

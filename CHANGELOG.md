@@ -2,6 +2,97 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.41] — Unreleased
+
+### New
+
+- **Tor exit-node blocking (Professional).** An opt-in toggle on the Protection
+  tab rejects login attempts from known Tor exit nodes. The exit-node list
+  arrives as a new signed `tor_exits` ruleset through the regular rule sync and
+  is refreshed twice a day server-side, so it stays current as nodes rotate;
+  the community `isTor` flag covers addresses the list has not caught up with
+  yet. Blocks are temporary (24 hours by default, filter
+  `reportedip_hive_tor_block_hours`) and are never reported to the community —
+  operating an exit node is not abuse evidence.
+- **Trusted-proxy source ranges.** The trusted IP header is now only honored
+  when the connecting peer is one of the proxy addresses you declare
+  (IP/CIDR list under Settings → General). Without the list, anyone connecting
+  directly to the origin could spoof the header and impersonate a whitelisted
+  address or shed a blocked one. Empty list keeps the previous behavior. The
+  same range check is baked into the pre-WordPress guard, which now also
+  applies the public-address requirement to header candidates (closing a
+  parity gap with the in-WordPress resolver).
+- **Security widget on the WordPress dashboard.** Attacks blocked in the last
+  30 days, blocks today, active IP blocks, protection layers and the detection
+  score — right on wp-admin's front page, with deep links into the plugin. On
+  Multisite the widget appears on the network dashboard and, for super admins,
+  on sub-site dashboards with network-wide numbers.
+- **"What's new" banner after updates.** After an update, plugin pages show a
+  one-time dismissible summary of the release highlights, fetched from the
+  reportedip.com release feed. Dismissal is per user; the banner never blocks a
+  page when the feed is unreachable.
+- **Never-block veto for community-verified infrastructure.** When the
+  reputation service marks an address as curated infrastructure (search-engine
+  crawlers, major CDNs, monitoring fleets), Hive no longer writes a local
+  block for it — neither from the reputation path nor from the auto-block
+  ladder — and logs `infrastructure_spared` instead. Reports still go out:
+  blocks are consequences, reports are evidence.
+- **Detection hook for integrators.** `reportedip_hive_threshold_exceeded`
+  fires on every confirmed sensor detection regardless of the auto-block and
+  reporting settings, giving webhook/SIEM/Slack integrations one stable attach
+  point. The documented `reportedip_hive_report_queued` action now actually
+  exists (it fires once per report that enters the API queue), and the block
+  page gained `reportedip_hive_access_denied` plus a
+  `reportedip_hive_blocked_page_strings` filter for white-label text overrides.
+- **IP addresses link to the community.** Every IP in the logs, blocked,
+  whitelist and top-attackers tables now carries copy, internal-lookup and an
+  external link to its public reportedip.com profile page; top attackers
+  gained inline Block/Unblock actions.
+- **Richer IP lookup.** The lookup tab now shows ISP, ASN, usage type, domain,
+  distinct reporters and last-reported time, flags Tor exit nodes and
+  community-verified infrastructure, offers Block/Whitelist quick actions on
+  the result card, and announces results to screen readers.
+- **`wp reportedip lookup <ip>`.** The IP lookup as a WP-CLI command with
+  table/json/csv/yaml output.
+- **Add-my-IP helper on the whitelist form.** One click whitelists your
+  current address — for IPv6 it prefills the /64 network, so rotating
+  residential prefixes stop locking their owners out. Blocking your own
+  current IP now asks for confirmation first.
+- **Log forensics.** The event log gained a date-range filter and a duration
+  choice for the block-from-log row action (previously fixed at 24 hours).
+
+### Fixes
+
+- **Race-safe attempt counters.** `track_attempt()` is now a single atomic
+  upsert on a unique `(ip_address, attempt_type)` key (schema v15, with
+  duplicate-row cleanup), so parallel failed-login bursts can no longer lose
+  counts to read-then-update races.
+- **Rate-limit back-off is scoped per endpoint.** A 429 on the report path no
+  longer pauses reputation lookups (and vice versa); the report path now
+  actually honors Retry-After, which it previously ignored.
+- **Reputation cache respects verbosity and your own reports.** A non-verbose
+  cache entry no longer satisfies a verbose lookup, and a successful own
+  report invalidates the cached reputation for that IP instead of serving
+  up-to-24-hour-old data.
+- **CIDR ranges accepted in the manual block form.** The enforcement layers
+  supported CIDR blocks since 2.1.32; the form's validation now does too.
+- **Multisite: blocked-page contact URL resolves network-wide.** The template
+  read a per-site option on Multisite and came up empty; it now routes through
+  the option router.
+
+### Changed
+
+- **API status strip on the Security Dashboard** summarizes connection, quota
+  (with reset countdown) and rate-limit state in one glance, from cached data
+  only.
+- **Daily quota display stays fresh between cron runs** by reading the
+  X-RateLimit headers the API already sends on every response.
+- **Accessibility.** Focus rings survive Windows High Contrast, a
+  forced-colors and a reduced-motion block cover the admin design system,
+  icon buttons meet 40px touch targets on coarse pointers, and AJAX
+  notifications are announced via a polite live region. Roughly 90 previously
+  hardcoded admin-JS strings are now translatable.
+
 ## [2.1.40] — 2026-08-13
 
 ### Security

@@ -59,6 +59,8 @@ Hive inspects requests in two places that stay behaviourally identical:
 
 Both layers are fail-open: a broken rule, an unreadable file or an unwritable directory lets the request through rather than taking the site down. IP blocks are enforced even with the WAF disabled, because they come from the escalation ladder, not from rule inspection.
 
+Client-IP resolution is spoof-proof at both layers: when a trusted IP header is configured (Cloudflare, nginx, a load balancer), it is only honored for requests that connect from the trusted-proxy addresses (IP/CIDR list) declared under *Settings → General* — anyone hitting the origin directly cannot smuggle a whitelisted address into the header or shed a block. An empty list keeps the previous accept-from-anywhere behavior.
+
 ### Two-Factor Authentication (four methods)
 
 Three methods work in **every plan**, including Free and the fully-offline Local Shield; SMS is the one method that rides the managed relay and therefore needs a Professional plan.
@@ -101,6 +103,7 @@ The two **modes** decide whether the plugin talks to reportedip.com at all. They
 | Coordinated-attack detection | – | ✓ |
 | SMS 2FA (managed relay) | – | Professional+ |
 | Hardening Mode (auto-tighten thresholds on attack) | – | Professional+ |
+| Tor exit-node blocking (signed exit-node list) | – | Professional+ |
 | Privacy | 100 % offline | Strictly opt-in, no usernames or comment content shared |
 
 <a id="free-vs-paid"></a>
@@ -117,6 +120,7 @@ What the paid **Professional** (3 domains) and **Business** (15 domains, multi-b
 - **Hardening Mode.** Automatically tighten failed-login and reputation thresholds network-wide for one hour when a coordinated attack is detected; also drivable via `wp reportedip hardening`.
 - **Advanced security headers.** HSTS, Permissions-Policy, the CSP builder (report-only first) and the cross-origin isolation trio; the basic header trio stays free.
 - **Priority Sync.** The deeper, Ed25519-signed WAF Paranoia-Level-2/3 rulesets plus the live bot-IP-range and disposable-domain feeds; the bundled baselines stay free and work offline.
+- **Tor exit-node blocking.** Opt-in rejection of connections from known Tor exit nodes, backed by a signed `tor_exits` ruleset refreshed twice daily. Blocks are temporary (24 h default, filterable) and never reported to the community — operating an exit node is not abuse evidence.
 - **Advanced Security Keys (Business).** Multiple WebAuthn keys per account, attestation-based model detection, key-lifecycle mails.
 - **Audit event trail (Business).** Append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export.
 - Higher API quotas, multi-site dashboard, priority blacklist sync, longer log retention, prepaid mail/SMS top-up bundles. Business adds white-label, the full WP-CLI surface, role-based login-time restrictions and a GDPR export tool.
@@ -138,6 +142,7 @@ Hive carries its own MainWP child bridge, so agencies can manage every Hive inst
 
 - **10-step setup wizard** (Welcome → Connect → Protection → Firewall → 2FA → Privacy → Notifications → Login → Promote → Done) with privacy-first defaults
 - **Real-time dashboard** with detection & hardening score gauges (0–100, A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines
+- **Security widget on the WordPress dashboard** — attacks blocked (30 days), blocks today, active IP blocks, protection layers and the detection score on wp-admin's front page, with deep links; renders on the network dashboard on Multisite
 - **Firewall area** with an overview mini-dashboard (per-module status, 7-day activity, recent firewall events), per-module tabs that each open with a plain-language intro, and a **Server Setup tab** that gathers every web-server snippet in one place: the WAF `auto_prepend_file` directive with live verification, the decoy rewrite rules and a server-level export of the configured security headers
 - **Six list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), plus the 2FA admin grid
 - **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup
@@ -154,11 +159,110 @@ Hive carries its own MainWP child bridge, so agencies can manage every Hive inst
 ### Developer surface
 
 - **REST API** namespace `reportedip-hive/v1` with `/2fa/challenge`, `/2fa/verify`, `/2fa/methods` for headless flows
-- **WP-CLI** trees `wp reportedip 2fa` (status, enable, disable, reset, enforce, audit, cleanup) and `wp reportedip hardening`
+- **WP-CLI** trees `wp reportedip 2fa` (status, enable, disable, reset, enforce, audit, cleanup), `wp reportedip hardening` and `wp reportedip lookup <ip>` (community IP lookup with table/json/csv/yaml output)
 - **PHP filters**: `reportedip_hive_rest_bypass_routes`, `reportedip_hive_rest_sensitive_routes`, `reportedip_hive_event_category_map`, `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path`, `reportedip_hive_decoy_paths`, `reportedip_hive_bot_allowlist_patterns`, `reportedip_hive_own_server_ips`, `reportedip_hive_webauthn_rp_id`, `reportedip_hive_webauthn_allowed_origins`
 - **Constants**: `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` (emergency override from `wp-config.php`)
 - **9 database tables** (auto-migrated, opt-in delete on uninstall)
 - **Internationalisation-ready** (text domain `reportedip-hive`, English source + complete German translation included)
+
+### Developer hooks
+
+Stable public hooks for webhook, SIEM and white-label integrations.
+
+#### Actions
+
+`reportedip_hive_threshold_exceeded( $ip, $event_type, $details )` — fires once per confirmed sensor detection, regardless of the auto-block and community-reporting settings, so integrations see every detection.
+
+```php
+add_action( 'reportedip_hive_threshold_exceeded', function ( $ip, $event_type, $details ) {
+    wp_remote_post( 'https://siem.example.com/ingest', array( 'body' => wp_json_encode( compact( 'ip', 'event_type', 'details' ) ) ) );
+}, 10, 3 );
+```
+
+`reportedip_hive_ip_blocked( $ip, $reason, $blocked_until )` — fires when an IP is blocked; `$blocked_until` is a UTC MySQL datetime, or `null` for a permanent block.
+
+```php
+add_action( 'reportedip_hive_ip_blocked', function ( $ip, $reason, $blocked_until ) {
+    error_log( sprintf( 'Hive blocked %s (%s) until %s', $ip, $reason, $blocked_until ?? 'forever' ) );
+}, 10, 3 );
+```
+
+`reportedip_hive_ip_unblocked( $ip )` — fires when a block is lifted.
+
+```php
+add_action( 'reportedip_hive_ip_unblocked', function ( $ip ) {
+    error_log( 'Hive unblocked ' . $ip );
+} );
+```
+
+`reportedip_hive_report_queued( $ip, $category_ids, $report_type )` — fires once per report that actually enters the API queue (after the cooldown and dedup checks); `$category_ids` is a comma-separated ID list, `$report_type` is `negative` or `positive`.
+
+```php
+add_action( 'reportedip_hive_report_queued', function ( $ip, $category_ids, $report_type ) {
+    error_log( sprintf( 'Queued %s report for %s (categories %s)', $report_type, $ip, $category_ids ) );
+}, 10, 3 );
+```
+
+`reportedip_hive_access_denied( $ip, $context )` — fires once per denied request, just before the 403 block page renders. Refusals by the pre-WordPress guard terminate earlier and do not reach this hook.
+
+```php
+add_action( 'reportedip_hive_access_denied', function ( $ip, $context ) {
+    error_log( sprintf( 'Denied %s (%s)', $ip, $context ) );
+}, 10, 2 );
+```
+
+#### Filters
+
+`reportedip_hive_reputation_block_hours` — duration in hours (default 24) of the temporary local block written on a community-reputation hit.
+
+```php
+add_filter( 'reportedip_hive_reputation_block_hours', function () {
+    return 48;
+} );
+```
+
+`reportedip_hive_tor_block_hours` — duration in hours (default 24) of the temporary block written for a Tor exit node.
+
+```php
+add_filter( 'reportedip_hive_tor_block_hours', function () {
+    return 6;
+} );
+```
+
+`reportedip_hive_blocked_page_strings( $strings, $context )` — white-label the visitor-facing 403 page. Keys: `doc_title`, `title`, `message`, `reason`; missing keys keep their defaults.
+
+```php
+add_filter( 'reportedip_hive_blocked_page_strings', function ( $strings, $context ) {
+    $strings['message'] = 'Access from your network is currently restricted.';
+    return $strings;
+}, 10, 2 );
+```
+
+`reportedip_hive_external_url( $url, $context )` — override outbound reportedip.com URLs (IP profile links, release feed, upgrade links).
+
+```php
+add_filter( 'reportedip_hive_external_url', function ( $url, $context ) {
+    return 'ip_detail_base' === $context ? 'https://intel.example.com/ip/' : $url;
+}, 10, 2 );
+```
+
+`reportedip_hive_rest_bypass_routes( $routes )` — extend the REST-route prefixes that bypass the burst monitor (cookie-banner integrations).
+
+```php
+add_filter( 'reportedip_hive_rest_bypass_routes', function ( $routes ) {
+    $routes[] = '/my-consent-plugin/v1';
+    return $routes;
+} );
+```
+
+`reportedip_hive_scan_paths( $paths )` — extend the honeypot path list for the scan detector.
+
+```php
+add_filter( 'reportedip_hive_scan_paths', function ( $paths ) {
+    $paths[] = '/.aws/credentials';
+    return $paths;
+} );
+```
 
 ### What this plugin does NOT include
 
