@@ -1555,7 +1555,7 @@ hardware security-key (YubiKey) support and the rebuilt profile 2FA section.
   server, no visitor IP). Behaviour is unchanged; the documentation now matches
   the code default.
 - **Contact addresses rotated.** Security disclosures now use
-  `abuse@reportedip.de`; general and authorship contacts use `1@reportedip.de`.
+  `abuse@reportedip.com`; general and authorship contacts use `1@reportedip.com`.
   `ps@cms-admins.de` is retired from the repository (file headers,
   `composer.json`, `REPORTEDIP_HIVE_CONTACT_MAIL`, readme and issue templates).
 
@@ -3710,7 +3710,7 @@ admin JavaScript layer.
 
 ### Changed
 
-- Author/contact email rotated from `1@reportedip.de` to `ps@cms-admins.de` across all file headers, `composer.json`, `REPORTEDIP_HIVE_CONTACT_MAIL`, and the readme contact links.
+- Author/contact email rotated from `1@reportedip.com` to `ps@cms-admins.de` across all file headers, `composer.json`, `REPORTEDIP_HIVE_CONTACT_MAIL`, and the readme contact links.
 - `release.yml` now copies `composer.lock` unconditionally — a missing lock file fails the build hard instead of silently shipping an unlocked vendor tree.
 
 ---
