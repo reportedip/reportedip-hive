@@ -44,15 +44,19 @@ $disclaimer      = isset( $context['disclaimer'] ) ? (string) $context['disclaim
 <body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:32px 16px;">
 <tr><td align="center">
-<table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1);overflow:hidden;max-width:480px;">
+<table role="presentation" width="480" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="background:#ffffff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);overflow:hidden;max-width:480px;">
 	<!-- Header -->
-	<tr><td style="background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:24px 32px;text-align:center;">
-		<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
-			<td style="padding-right:12px;">
-				<svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 4L8 12v12c0 11 7.7 21.3 16 24 8.3-2.7 16-13 16-24V12L24 4z" fill="white" opacity="0.2"/><path d="M24 4L8 12v12c0 11 7.7 21.3 16 24 8.3-2.7 16-13 16-24V12L24 4zm0 4.2l12 6v10c0 8.4-6 16.3-12 18.5-6-2.2-12-10.1-12-18.5v-10l12-6z" fill="white"/><path d="M21 28l-5-5 1.8-1.8 3.2 3.2 7.2-7.2L30 19l-9 9z" fill="white"/></svg>
-			</td>
-			<td style="color:#ffffff;font-size:18px;font-weight:600;"><?php echo esc_html( $site_name ); ?></td>
-		</tr></table>
+	<?php
+	/*
+	 * Header background: bgcolor attribute + background-color are the only reliable
+	 * carriers. GMX Webmail and Outlook for Android strip `linear-gradient()`, which
+	 * used to leave white text on a white cell (invisible title, and SpamAssassin
+	 * HTML_FONT_LOW_CONTRAST). The gradient stays as a progressive enhancement.
+	 * Inline SVG is not rendered by GMX/Outlook either, so the header is text-only.
+	 */
+	?>
+	<tr><td bgcolor="#4F46E5" style="background-color:#4F46E5;background-image:linear-gradient(135deg,#4F46E5,#7C3AED);padding:24px 32px;text-align:center;">
+		<span style="color:#ffffff;font-size:18px;font-weight:600;"><?php echo esc_html( $site_name ); ?></span>
 	</td></tr>
 	<!-- Body -->
 	<tr><td style="padding:32px;">
@@ -73,11 +77,14 @@ $disclaimer      = isset( $context['disclaimer'] ) ? (string) $context['disclaim
 		<?php endif; ?>
 
 		<?php if ( ! empty( $cta['label'] ) && ! empty( $cta['url'] ) ) : ?>
-		<div style="text-align:center;margin:24px 0;">
-			<a href="<?php echo esc_url( $cta['url'] ); ?>" style="display:inline-block;padding:12px 28px;background:#4F46E5;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">
-				<?php echo esc_html( $cta['label'] ); ?>
-			</a>
-		</div>
+			<?php /* Table + bgcolor, so the button keeps its indigo fill in Outlook/GMX; a white label on a stripped background would be unreadable. */ ?>
+		<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr>
+			<td bgcolor="#4F46E5" style="background-color:#4F46E5;border-radius:6px;">
+				<a href="<?php echo esc_url( $cta['url'] ); ?>" style="display:inline-block;padding:12px 28px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">
+					<?php echo esc_html( $cta['label'] ); ?>
+				</a>
+			</td>
+		</tr></table>
 		<?php endif; ?>
 
 		<?php if ( ! empty( $security_notice ) ) : ?>
@@ -108,7 +115,7 @@ $disclaimer      = isset( $context['disclaimer'] ) ? (string) $context['disclaim
 	</td></tr>
 	<!-- Footer -->
 	<tr><td style="padding:16px 32px;background:#F9FAFB;border-top:1px solid #E5E7EB;text-align:center;">
-		<p style="margin:0 0 6px;font-size:11px;color:#9CA3AF;">
+		<p style="margin:0 0 6px;font-size:11px;color:#6B7280;">
 			<?php
 			printf(
 				/* translators: %s: site link */
@@ -117,7 +124,7 @@ $disclaimer      = isset( $context['disclaimer'] ) ? (string) $context['disclaim
 			);
 			?>
 		</p>
-		<p style="margin:0;font-size:11px;color:#9CA3AF;">
+		<p style="margin:0;font-size:11px;color:#6B7280;">
 			<?php
 			printf(
 				/* translators: 1: opening link tag, 2: closing link tag */

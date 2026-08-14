@@ -374,6 +374,8 @@ Fixed: API rate-limit back-off is scoped per endpoint and the report path honors
 
 Fixed: WooCommerce-only settings (login monitor, storefront-2FA card in the wizard) grey out with an explanatory note when WooCommerce is not installed. Thanks to Benjamin for reporting.
 
+Fixed: 2FA emails stay readable in GMX Webmail and Outlook for Android — header and button carry a solid color fallback for clients that strip CSS gradients, and the footer text meets contrast requirements.
+
 Changed: an API status strip on the Security Dashboard summarizes connection, quota (with reset countdown) and rate-limit state from cached data, and the daily quota display stays fresh between cron runs.
 
 Changed: accessibility pass — forced-colors and reduced-motion support, focus rings that survive Windows High Contrast, 40px touch targets on coarse pointers and a polite live region for AJAX notifications; roughly 90 admin-JS strings became translatable.

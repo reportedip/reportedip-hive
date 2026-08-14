@@ -93,6 +93,11 @@ All changes to ReportedIP Hive are documented here.
   wizard are now disabled with an explanatory note when WooCommerce is not
   installed, instead of presenting a toggle that cannot do anything. Thanks to
   Benjamin for reporting.
+- **2FA emails stay readable in GMX Webmail and Outlook for Android.** Both
+  clients strip CSS gradients and inline SVG, which left the white header
+  title and button label on a white background. Header and button now carry a
+  solid `bgcolor` fallback (the gradient stays as progressive enhancement) and
+  the footer text color meets contrast requirements.
 
 ### Changed
 

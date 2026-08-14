@@ -110,6 +110,8 @@ class MailerTemplateTest extends TestCase {
 		$html = $provider->captured['html_body'];
 
 		$this->assertStringContainsString( 'linear-gradient(135deg,#4F46E5,#7C3AED)', $html, 'Header gradient must use brand indigo.' );
+		$this->assertStringContainsString( 'bgcolor="#4F46E5"', $html, 'Header needs a solid fallback fill: clients that drop the gradient would otherwise show white text on white.' );
+		$this->assertStringNotContainsString( '<svg', $html, 'Inline SVG is not rendered by GMX/Outlook and must stay out of the email template.' );
 		$this->assertStringContainsString( 'Example Site', $html, 'Site name must appear in header + footer.' );
 		$this->assertStringContainsString( 'Protected by ReportedIP Hive', $html, 'Footer trust line must appear.' );
 		$this->assertStringContainsString( 'https://reportedip.com/', $html, 'Footer must link to the ReportedIP brand site.' );
