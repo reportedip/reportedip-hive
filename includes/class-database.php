@@ -917,47 +917,41 @@ class ReportedIP_Hive_Database {
 
 		$increment  = max( 1, (int) $increment );
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
+		$now_utc    = current_time( 'mysql', true );
 
-		$existing = $wpdb->get_row(
+		/*
+		 * Single atomic upsert on UNIQUE (ip_address, attempt_type) — schema
+		 * v15 — so parallel failed-login bursts cannot lose counts the way the
+		 * previous read-then-update did. The IF() conditions re-implement the
+		 * one-hour idle window: a row untouched for over an hour restarts its
+		 * counter and first_attempt instead of accumulating forever.
+		 * `last_attempt` MUST stay the final assignment — MySQL evaluates the
+		 * update list left to right and the IF() conditions read its OLD value.
+		 * Documented drift vs. the pre-v15 behavior: an aggregation window
+		 * longer than 60 minutes spanning an idle gap only sees the restarted
+		 * count (shipped default windows are 15 minutes or less).
+		 */
+		return $wpdb->query(
 			$wpdb->prepare(
-				"SELECT * FROM $table_name 
-                 WHERE ip_address = %s 
-                 AND attempt_type = %s 
-                 AND last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR)",
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is base_prefix + fixed literal.
+				"INSERT INTO $table_name
+					(ip_address, attempt_type, username, user_agent, attempt_count, first_attempt, last_attempt)
+				 VALUES (%s, %s, %s, %s, %d, %s, %s)
+				 ON DUPLICATE KEY UPDATE
+					attempt_count = IF(last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR), attempt_count + VALUES(attempt_count), VALUES(attempt_count)),
+					first_attempt = IF(last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR), first_attempt, VALUES(first_attempt)),
+					username      = COALESCE(NULLIF(VALUES(username), ''), username),
+					user_agent    = COALESCE(NULLIF(VALUES(user_agent), ''), user_agent),
+					last_attempt  = VALUES(last_attempt)",
 				$ip_address,
-				$attempt_type
+				$attempt_type,
+				$username,
+				$user_agent,
+				$increment,
+				$now_utc,
+				$now_utc
 			)
 		);
-
-		if ( $existing ) {
-			return $wpdb->update(
-				$table_name,
-				array(
-					'attempt_count' => $existing->attempt_count + $increment,
-					'username'      => $username ?: $existing->username,
-					'user_agent'    => $user_agent ?: $existing->user_agent,
-					'last_attempt'  => current_time( 'mysql', true ),
-				),
-				array( 'id' => $existing->id ),
-				array( '%d', '%s', '%s', '%s' ),
-				array( '%d' )
-			);
-		} else {
-			$now_utc = current_time( 'mysql', true );
-			return $wpdb->insert(
-				$table_name,
-				array(
-					'ip_address'    => $ip_address,
-					'attempt_type'  => $attempt_type,
-					'username'      => $username,
-					'user_agent'    => $user_agent,
-					'attempt_count' => $increment,
-					'first_attempt' => $now_utc,
-					'last_attempt'  => $now_utc,
-				),
-				array( '%s', '%s', '%s', '%s', '%d', '%s', '%s' )
-			);
-		}
 	}
 
 	/**
@@ -1081,12 +1075,14 @@ class ReportedIP_Hive_Database {
 			return false;
 		}
 
-		return $wpdb->insert(
+		$normalized_categories = is_array( $category_ids ) ? implode( ',', $category_ids ) : (string) $category_ids;
+
+		$inserted = $wpdb->insert(
 			$table_name,
 			array(
 				'blog_id'      => (int) get_current_blog_id(),
 				'ip_address'   => $ip_address,
-				'category_ids' => is_array( $category_ids ) ? implode( ',', $category_ids ) : $category_ids,
+				'category_ids' => $normalized_categories,
 				'comment'      => $comment,
 				'report_type'  => $report_type,
 				'priority'     => $priority,
@@ -1094,6 +1090,24 @@ class ReportedIP_Hive_Database {
 			),
 			array( '%d', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
+
+		if ( $inserted ) {
+			/**
+			 * Fires after a community report actually entered the API queue.
+			 *
+			 * The public-IP drop, cooldown and dedup checks have all passed at
+			 * this point, so the hook fires exactly once per queued report —
+			 * never for suppressed duplicates.
+			 *
+			 * @param string $ip_address            Reported IP.
+			 * @param string $normalized_categories Comma-separated category IDs.
+			 * @param string $report_type           Report type (negative|positive).
+			 * @since 2.1.41
+			 */
+			do_action( 'reportedip_hive_report_queued', $ip_address, $normalized_categories, $report_type );
+		}
+
+		return $inserted;
 	}
 
 	/**

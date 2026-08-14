@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 14;
+	public const CURRENT_VERSION = 15;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -437,6 +437,48 @@ final class ReportedIP_Hive_Migration_Manager {
 
 		if ( rtrim( $stored, '/' ) === 'https://reportedip.de/wp-json/reportedip/v2' ) {
 			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_endpoint', 'https://reportedip.com/wp-json/reportedip/v2/' );
+		}
+	}
+
+	/**
+	 * Migrate to v15: make the attempts counter race-safe.
+	 *
+	 * `track_attempt()` used to read-then-update, which loses increments under
+	 * exactly the burst load the sensors exist for, and its "new row after one
+	 * idle hour" behavior produced duplicate rows per (ip, attempt_type) by
+	 * design. This migration:
+	 *
+	 *   1. Deduplicates: keeps only the freshest row per (ip_address,
+	 *      attempt_type) — losing stale duplicate counters is fail-safe, it can
+	 *      only undercount.
+	 *   2. Adds `UNIQUE KEY unique_ip_type (ip_address, attempt_type)` so the
+	 *      rewritten `track_attempt()` upsert (`INSERT ... ON DUPLICATE KEY
+	 *      UPDATE` with a conditional one-hour window reset) is atomic.
+	 *   3. Drops the now-redundant non-unique `composite_ip_type` index.
+	 *
+	 * @return void
+	 * @since  2.1.41
+	 */
+	private static function migrate_to_v15() {
+		global $wpdb;
+
+		$attempts = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_ATTEMPTS );
+
+		if ( ! ReportedIP_Hive_Schema::index_exists( ReportedIP_Hive_Schema::TABLE_ATTEMPTS, 'unique_ip_type' ) ) {
+			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
+				"DELETE stale FROM $attempts AS stale
+				 INNER JOIN $attempts AS fresh
+				         ON stale.ip_address = fresh.ip_address
+				        AND stale.attempt_type = fresh.attempt_type
+				        AND ( stale.last_attempt < fresh.last_attempt
+				              OR ( stale.last_attempt = fresh.last_attempt AND stale.id < fresh.id ) )"
+			);
+
+			$wpdb->query( "ALTER TABLE $attempts ADD UNIQUE KEY unique_ip_type (ip_address, attempt_type)" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
+		}
+
+		if ( ReportedIP_Hive_Schema::index_exists( ReportedIP_Hive_Schema::TABLE_ATTEMPTS, 'composite_ip_type' ) ) {
+			$wpdb->query( "ALTER TABLE $attempts DROP INDEX composite_ip_type" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
 		}
 	}
 

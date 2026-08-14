@@ -37,7 +37,7 @@ final class ReportedIP_Hive_Rule_Store {
 	 *
 	 * @var string[]
 	 */
-	const VALID_KEYS = array( 'waf', 'bot_signatures', 'disposable_domains', 'scan_paths' );
+	const VALID_KEYS = array( 'waf', 'bot_signatures', 'disposable_domains', 'scan_paths', 'tor_exits' );
 
 	/**
 	 * Per-request decode cache, keyed by ruleset key.

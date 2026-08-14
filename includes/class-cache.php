@@ -98,15 +98,31 @@ class ReportedIP_Hive_Cache {
 	}
 
 	/**
-	 * Get cached reputation data
+	 * Get cached reputation data.
+	 *
+	 * A verbose request must not be satisfied by a non-verbose envelope: the
+	 * verbose API response carries fields (ISP, usage type, Tor flag, …) a
+	 * non-verbose check never fetched. Envelopes written before the marker
+	 * existed carry no `verbose` key and are treated as non-verbose. An
+	 * insufficient envelope is reported as a miss but left in place so
+	 * subsequent non-verbose reads can still use it.
+	 *
+	 * @param string $ip_address      IP address to look up.
+	 * @param bool   $require_verbose Whether only a verbose envelope satisfies the read.
+	 * @return array|false Cache envelope or false on miss.
 	 */
-	public function get_reputation( $ip_address ) {
+	public function get_reputation( $ip_address, $require_verbose = false ) {
 		if ( ! $this->is_caching_enabled() ) {
 			return false;
 		}
 
 		$cache_key   = $this->get_reputation_cache_key( $ip_address );
 		$cached_data = get_transient( $cache_key );
+
+		if ( $cached_data !== false && $require_verbose && empty( $cached_data['verbose'] ) ) {
+			$this->increment_cache_misses();
+			return false;
+		}
 
 		if ( $cached_data !== false ) {
 			$this->increment_cache_hits();
@@ -132,9 +148,15 @@ class ReportedIP_Hive_Cache {
 	}
 
 	/**
-	 * Cache reputation data
+	 * Cache reputation data.
+	 *
+	 * @param string      $ip_address         IP address the data belongs to.
+	 * @param array|false $data               Reputation payload, or false for a negative result.
+	 * @param bool        $is_negative_result Whether this is a negative-cache entry (shorter TTL).
+	 * @param bool        $verbose            Whether the payload came from a verbose API response.
+	 * @return bool True when the transient was written.
 	 */
-	public function set_reputation( $ip_address, $data, $is_negative_result = false ) {
+	public function set_reputation( $ip_address, $data, $is_negative_result = false, $verbose = false ) {
 		if ( ! $this->is_caching_enabled() ) {
 			return false;
 		}
@@ -147,6 +169,7 @@ class ReportedIP_Hive_Cache {
 			'cached_at'   => current_time( 'mysql' ),
 			'ip_address'  => $ip_address,
 			'is_negative' => $is_negative_result,
+			'verbose'     => (bool) $verbose,
 			'ttl'         => $ttl,
 		);
 

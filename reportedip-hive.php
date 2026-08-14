@@ -376,6 +376,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-store.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-sync.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-proxy-trust.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-event-taxonomy.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-logger.php';
@@ -387,6 +388,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-bar.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-notice.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-whats-new.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-htaccess-writer.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ip-manager.php';
@@ -454,10 +456,12 @@ class ReportedIP_Hive {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-hardening-cli.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-lookup-cli.php';
 		}
 
 		if ( is_admin() ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ajax-handler.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-ip-cell.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-settings.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-firewall.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-two-factor-admin.php';
@@ -467,6 +471,8 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-waf-exceptions-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-api-queue-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-settings-import-export.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-dashboard-widget.php';
+			ReportedIP_Hive_Dashboard_Widget::init();
 		}
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-frontend-shortcodes.php';
@@ -816,25 +822,99 @@ class ReportedIP_Hive {
 			'reportedip-hive-admin',
 			'reportedip_hive_ajax',
 			array(
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'reportedip_hive_nonce' ),
-				'strings'  => array(
-					'testing_connection'      => __( 'Testing connection...', 'reportedip-hive' ),
-					'connection_successful'   => __( 'Connection successful!', 'reportedip-hive' ),
-					'connection_failed'       => __( 'Connection failed!', 'reportedip-hive' ),
-					'confirm_unblock'         => __( 'Are you sure you want to unblock this IP?', 'reportedip-hive' ),
-					'confirm_whitelist'       => __( 'Are you sure you want to whitelist this IP?', 'reportedip-hive' ),
-					'confirm_reset_settings'  => __( 'Are you sure you want to reset all settings to defaults?', 'reportedip-hive' ),
-					'confirm_reset_api_stats' => __( 'Reset the API statistics counter? This clears usage history only.', 'reportedip-hive' ),
-					'confirm_uninstall_warn'  => __( 'WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!', 'reportedip-hive' ),
-					'confirm_uninstall_final' => __( 'Are you absolutely sure?', 'reportedip-hive' ),
-					'prompt_whitelist_reason' => __( 'Enter reason for whitelisting (optional):', 'reportedip-hive' ),
-					'prompt_block_reason'     => __( 'Enter reason for blocking this IP:', 'reportedip-hive' ),
-					'prompt_block_default'    => __( 'Blocked from security logs', 'reportedip-hive' ),
-					'prompt_export_days'      => __( 'Export logs from how many days? (default: 30)', 'reportedip-hive' ),
-					'db_connection_ok'        => __( 'Database connection successful!', 'reportedip-hive' ),
-					'request_failed'          => __( 'Request failed. Check server logs.', 'reportedip-hive' ),
-					'generic_error'           => __( 'Error', 'reportedip-hive' ),
+				'ajax_url'       => admin_url( 'admin-ajax.php' ),
+				'nonce'          => wp_create_nonce( 'reportedip_hive_nonce' ),
+				'ip_detail_base' => apply_filters( 'reportedip_hive_external_url', REPORTEDIP_HIVE_SITE_URL . '/ip/', 'ip_detail_base' ),
+				'current_ip'     => (string) self::get_client_ip(),
+				'strings'        => array(
+					'testing_connection'                 => __( 'Testing connection...', 'reportedip-hive' ),
+					'connection_successful'              => __( 'Connection successful!', 'reportedip-hive' ),
+					'connection_failed'                  => __( 'Connection failed!', 'reportedip-hive' ),
+					'confirm_unblock'                    => __( 'Are you sure you want to unblock this IP?', 'reportedip-hive' ),
+					'confirm_whitelist'                  => __( 'Are you sure you want to whitelist this IP?', 'reportedip-hive' ),
+					'confirm_reset_settings'             => __( 'Are you sure you want to reset all settings to defaults?', 'reportedip-hive' ),
+					'confirm_reset_api_stats'            => __( 'Reset the API statistics counter? This clears usage history only.', 'reportedip-hive' ),
+					'confirm_uninstall_warn'             => __( 'WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!', 'reportedip-hive' ),
+					'confirm_uninstall_final'            => __( 'Are you absolutely sure?', 'reportedip-hive' ),
+					'confirm_remove_waf_exception'       => __( 'Remove this WAF exception?', 'reportedip-hive' ),
+					/* translators: %1$s = WAF rule id, %2$s = request path. */
+					'confirm_waf_allow'                  => __( 'Allow rule "%1$s" on path "%2$s"? The WAF stays active everywhere else.', 'reportedip-hive' ),
+					'confirm_remove_whitelist'           => __( 'Are you sure you want to remove this IP from the whitelist?', 'reportedip-hive' ),
+					'confirm_cleanup_logs'               => __( 'Are you sure you want to clean up old logs? This action cannot be undone.', 'reportedip-hive' ),
+					'confirm_anonymize'                  => __( 'Are you sure you want to anonymize old data? This will remove personal information from logs.', 'reportedip-hive' ),
+					'prompt_whitelist_reason'            => __( 'Enter reason for whitelisting (optional):', 'reportedip-hive' ),
+					'prompt_whitelist_default'           => __( 'Manually whitelisted from blocked list', 'reportedip-hive' ),
+					'prompt_block_reason'                => __( 'Enter reason for blocking this IP:', 'reportedip-hive' ),
+					'prompt_block_default'               => __( 'Blocked from security logs', 'reportedip-hive' ),
+					'prompt_export_days'                 => __( 'Export logs from how many days? (default: 30)', 'reportedip-hive' ),
+					'db_connection_ok'                   => __( 'Database connection successful!', 'reportedip-hive' ),
+					'request_failed'                     => __( 'Request failed. Check server logs.', 'reportedip-hive' ),
+					'generic_error'                      => __( 'Error', 'reportedip-hive' ),
+					'notify_request_failed'              => __( 'Request failed.', 'reportedip-hive' ),
+					'notify_network_error'               => __( 'Network error occurred', 'reportedip-hive' ),
+					'notify_network_retry'               => __( 'Network error. Please try again.', 'reportedip-hive' ),
+					'notify_api_stats_reset'             => __( 'API statistics reset.', 'reportedip-hive' ),
+					'notify_api_stats_reset_failed'      => __( 'Failed to reset API statistics.', 'reportedip-hive' ),
+					'notify_cache_cleared'               => __( 'Cache cleared.', 'reportedip-hive' ),
+					'notify_cache_clear_failed'          => __( 'Failed to clear cache.', 'reportedip-hive' ),
+					'notify_cache_expired_cleaned'       => __( 'Expired entries cleaned.', 'reportedip-hive' ),
+					'notify_cache_expired_failed'        => __( 'Failed to clean expired entries.', 'reportedip-hive' ),
+					'notify_mode_changed'                => __( 'Mode changed successfully', 'reportedip-hive' ),
+					'notify_mode_change_failed'          => __( 'Failed to change mode', 'reportedip-hive' ),
+					'notify_whitelist_added'             => __( 'IP address added to whitelist successfully', 'reportedip-hive' ),
+					'notify_whitelist_add_failed'        => __( 'Failed to add IP to whitelist', 'reportedip-hive' ),
+					'notify_whitelist_removed'           => __( 'IP address removed from whitelist', 'reportedip-hive' ),
+					'notify_whitelist_remove_failed'     => __( 'Failed to remove IP from whitelist', 'reportedip-hive' ),
+					'notify_waf_exception_saved'         => __( 'WAF exception saved', 'reportedip-hive' ),
+					'notify_waf_exception_save_failed'   => __( 'Failed to save the exception', 'reportedip-hive' ),
+					'notify_waf_exception_removed'       => __( 'WAF exception removed', 'reportedip-hive' ),
+					'notify_waf_exception_remove_failed' => __( 'Failed to remove the exception', 'reportedip-hive' ),
+					'notify_waf_exception_added'         => __( 'WAF exception added for this rule', 'reportedip-hive' ),
+					'notify_waf_exception_add_failed'    => __( 'Failed to add the exception', 'reportedip-hive' ),
+					'notify_ip_blocked'                  => __( 'IP address blocked successfully', 'reportedip-hive' ),
+					'notify_ip_block_failed'             => __( 'Failed to block IP address', 'reportedip-hive' ),
+					'notify_ip_unblocked'                => __( 'IP address unblocked successfully', 'reportedip-hive' ),
+					'notify_ip_unblock_failed'           => __( 'Failed to unblock IP address', 'reportedip-hive' ),
+					'notify_ip_whitelisted'              => __( 'IP address whitelisted successfully', 'reportedip-hive' ),
+					'notify_ip_whitelist_failed'         => __( 'Failed to whitelist IP address', 'reportedip-hive' ),
+					'notify_no_ip'                       => __( 'No IP address found', 'reportedip-hive' ),
+					'notify_copy_failed'                 => __( 'Failed to copy IP address', 'reportedip-hive' ),
+					'notify_cleanup_failed'              => __( 'Failed to cleanup logs', 'reportedip-hive' ),
+					'notify_anonymize_failed'            => __( 'Failed to anonymize data', 'reportedip-hive' ),
+					'notify_logs_exported'               => __( 'Logs exported successfully', 'reportedip-hive' ),
+					'notify_logs_export_failed'          => __( 'Failed to export logs', 'reportedip-hive' ),
+					'notify_import_completed'            => __( 'Import completed.', 'reportedip-hive' ),
+					'notify_import_failed'               => __( 'Import failed.', 'reportedip-hive' ),
+					'lookup_enter_ip'                    => __( 'Please enter an IP address', 'reportedip-hive' ),
+					'lookup_failed'                      => __( 'Failed to lookup IP address', 'reportedip-hive' ),
+					'label_whitelisted'                  => __( 'Whitelisted', 'reportedip-hive' ),
+					'label_blocked'                      => __( 'Blocked', 'reportedip-hive' ),
+					'label_clean'                        => __( 'Clean', 'reportedip-hive' ),
+					'label_ip_information'               => __( 'IP Information:', 'reportedip-hive' ),
+					'label_valid'                        => __( 'Valid:', 'reportedip-hive' ),
+					'label_private'                      => __( 'Private:', 'reportedip-hive' ),
+					'label_version'                      => __( 'Version:', 'reportedip-hive' ),
+					'label_yes'                          => __( 'Yes', 'reportedip-hive' ),
+					'label_no'                           => __( 'No', 'reportedip-hive' ),
+					'label_country'                      => __( 'Country:', 'reportedip-hive' ),
+					'label_abuse_confidence'             => __( 'Abuse Confidence:', 'reportedip-hive' ),
+					'label_total_reports'                => __( 'Total Reports:', 'reportedip-hive' ),
+					'label_recent_activity'              => __( 'Recent Activity', 'reportedip-hive' ),
+					'label_time'                         => __( 'Time', 'reportedip-hive' ),
+					'label_event'                        => __( 'Event', 'reportedip-hive' ),
+					'label_severity'                     => __( 'Severity', 'reportedip-hive' ),
+					'label_isp'                          => __( 'ISP:', 'reportedip-hive' ),
+					'label_asn'                          => __( 'ASN:', 'reportedip-hive' ),
+					'label_usage_type'                   => __( 'Usage Type:', 'reportedip-hive' ),
+					'label_domain'                       => __( 'Domain:', 'reportedip-hive' ),
+					'label_distinct_reporters'           => __( 'Distinct Reporters:', 'reportedip-hive' ),
+					'label_last_reported'                => __( 'Last Reported:', 'reportedip-hive' ),
+					'label_tor'                          => __( 'Tor exit node', 'reportedip-hive' ),
+					'label_infrastructure'               => __( 'Community-verified infrastructure', 'reportedip-hive' ),
+					'action_block_ip'                    => __( 'Block IP', 'reportedip-hive' ),
+					'action_whitelist_ip'                => __( 'Whitelist IP', 'reportedip-hive' ),
+					'action_view_report'                 => __( 'View community report', 'reportedip-hive' ),
+					'confirm_self_block'                 => __( 'This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?', 'reportedip-hive' ),
 				),
 			)
 		);
@@ -1025,7 +1105,21 @@ class ReportedIP_Hive {
 			}
 		}
 
+		$is_infrastructure = is_array( $reputation ) && ! empty( $reputation['isWhitelisted'] );
+		$tor_candidate     = ! $is_infrastructure && $this->should_block_tor_exit( $ip_address, $reputation );
+
 		if ( $report_only ) {
+			if ( $tor_candidate ) {
+				$this->logger->log_security_event(
+					'would_block_by_tor_exit',
+					$ip_address,
+					array(
+						'reason'           => 'Known Tor exit node (blocking enabled, report-only mode active)',
+						'report_only_mode' => true,
+					),
+					'high'
+				);
+			}
 			if ( $is_blocked ) {
 				$this->logger->log_security_event(
 					'would_block_access',
@@ -1038,7 +1132,9 @@ class ReportedIP_Hive {
 				);
 			}
 
-			if ( $exceeds_threshold ) {
+			if ( $exceeds_threshold && $is_infrastructure ) {
+				$this->log_infrastructure_spared( $ip_address, $reputation, $threshold, true );
+			} elseif ( $exceeds_threshold ) {
 				$confidence = isset( $reputation['abuseConfidencePercentage'] ) ? $reputation['abuseConfidencePercentage'] : 0;
 				$reports    = isset( $reputation['totalReports'] ) ? $reputation['totalReports'] : 0;
 
@@ -1072,7 +1168,11 @@ class ReportedIP_Hive {
 			return new WP_Error( 'ip_blocked', __( 'Your IP address has been blocked due to suspicious activity.', 'reportedip-hive' ) );
 		}
 
-		if ( $exceeds_threshold && ! $this->ip_manager->is_whitelisted( $ip_address ) && ! self::is_own_server_ip( $ip_address ) ) {
+		if ( $exceeds_threshold && $is_infrastructure ) {
+			$this->log_infrastructure_spared( $ip_address, $reputation, $threshold, false );
+		}
+
+		if ( $exceeds_threshold && ! $is_infrastructure && ! $this->ip_manager->is_whitelisted( $ip_address ) && ! self::is_own_server_ip( $ip_address ) ) {
 			$confidence = isset( $reputation['abuseConfidencePercentage'] ) ? (int) $reputation['abuseConfidencePercentage'] : 0;
 			$reports    = isset( $reputation['totalReports'] ) ? (int) $reputation['totalReports'] : 0;
 
@@ -1123,7 +1223,157 @@ class ReportedIP_Hive {
 			return new WP_Error( 'ip_reputation_block', __( 'Access denied due to IP reputation.', 'reportedip-hive' ) );
 		}
 
+		if ( $tor_candidate && ! $this->ip_manager->is_whitelisted( $ip_address ) && ! self::is_own_server_ip( $ip_address ) ) {
+			/**
+			 * Filters how long a Tor exit node stays blocked locally.
+			 *
+			 * Exit nodes rotate quickly, so the block is temporary: after the
+			 * window expires the next login attempt re-evaluates the address
+			 * against the refreshed exit-node list.
+			 *
+			 * @param int $hours Block duration in hours (default 24).
+			 * @since 2.1.41
+			 */
+			$tor_block_hours = max( 1, (int) apply_filters( 'reportedip_hive_tor_block_hours', 24 ) );
+
+			$database = ReportedIP_Hive_Database::get_instance();
+			$database->block_ip(
+				$ip_address,
+				'Tor exit node',
+				'reputation',
+				$tor_block_hours
+			);
+			$database->update_daily_stats( 'reputation_blocks' );
+			$this->mark_ip_blocked( $ip_address );
+
+			$this->logger->log_security_event(
+				'blocked_by_tor_exit',
+				$ip_address,
+				array(
+					'reason'      => 'Known Tor exit node (Tor blocking enabled)',
+					'block_hours' => $tor_block_hours,
+				),
+				'high'
+			);
+
+			return new WP_Error( 'ip_tor_block', __( 'Access denied: connections from Tor exit nodes are not allowed on this site.', 'reportedip-hive' ) );
+		}
+
 		return $user;
+	}
+
+	/**
+	 * Whether the current request should be treated as a blockable Tor exit
+	 * node: the feature must be tier-available (Professional+), the operator
+	 * must have enabled the toggle, and the address must match the synced
+	 * exit-node ruleset or carry the community isTor flag.
+	 *
+	 * Running an exit node is not abuse evidence, so Tor blocks never produce
+	 * a community report — the block row is the only consequence, and it
+	 * reaches the pre-WordPress guard through the regular blocklist bridge.
+	 *
+	 * @param string     $ip_address Client IP.
+	 * @param array|bool $reputation Reputation payload from the check response, or false.
+	 * @return bool
+	 * @since  2.1.41
+	 */
+	private function should_block_tor_exit( $ip_address, $reputation ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_tor', false ) ) {
+			return false;
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'tor_blocking' );
+		if ( empty( $status['available'] ) ) {
+			return false;
+		}
+
+		return self::is_tor_exit( $ip_address, $reputation );
+	}
+
+	/**
+	 * Check an address against the synced `tor_exits` ruleset, falling back
+	 * to the community isTor flag for addresses the (possibly stale) list
+	 * does not carry yet.
+	 *
+	 * The feed delivers flat CIDR strings (`x.x.x.x/32`, IPv6 `/128`), so
+	 * host entries are reduced to a per-request hash set for O(1) lookups;
+	 * genuine ranges (rare) fall back to the CIDR matcher.
+	 *
+	 * @param string     $ip_address Client IP.
+	 * @param array|bool $reputation Reputation payload from the check response, or false.
+	 * @return bool
+	 * @since  2.1.41
+	 */
+	public static function is_tor_exit( $ip_address, $reputation = false ) {
+		static $exact  = null;
+		static $ranges = null;
+
+		if ( null === $exact ) {
+			$exact  = array();
+			$ranges = array();
+
+			$ruleset = ReportedIP_Hive_Rule_Sync::get_instance()->get_ruleset( 'tor_exits' );
+			foreach ( (array) $ruleset['rules'] as $entry ) {
+				if ( ! is_string( $entry ) || '' === $entry ) {
+					continue;
+				}
+				if ( substr( $entry, -3 ) === '/32' || substr( $entry, -4 ) === '/128' ) {
+					$exact[ substr( $entry, 0, (int) strrpos( $entry, '/' ) ) ] = true;
+				} elseif ( false === strpos( $entry, '/' ) ) {
+					$exact[ $entry ] = true;
+				} else {
+					$ranges[] = $entry;
+				}
+			}
+		}
+
+		if ( isset( $exact[ $ip_address ] ) ) {
+			return true;
+		}
+
+		foreach ( $ranges as $range ) {
+			if ( ReportedIP_Hive_Database::ip_in_cidr( $ip_address, $range ) ) {
+				return true;
+			}
+		}
+
+		return is_array( $reputation ) && ! empty( $reputation['isTor'] );
+	}
+
+	/**
+	 * Log that an over-threshold IP was spared because the community marks it
+	 * as curated infrastructure (search engines, major CDNs, monitoring).
+	 *
+	 * The reputation service itself whitelists these addresses, so an
+	 * over-threshold score for one of them is treated as noise: no local
+	 * block is written and no reputation_threat report is sent. Throttled to
+	 * one log line per IP per hour.
+	 *
+	 * @param string $ip_address  Client IP.
+	 * @param array  $reputation  Reputation payload from the check response.
+	 * @param int    $threshold   Effective block threshold.
+	 * @param bool   $report_only Whether report-only mode is active.
+	 * @return void
+	 * @since  2.1.41
+	 */
+	private function log_infrastructure_spared( $ip_address, $reputation, $threshold, $report_only ) {
+		$log_gate = 'reportedip_hive_infra_spared_' . md5( $ip_address . '|reputation' );
+		if ( false !== get_transient( $log_gate ) ) {
+			return;
+		}
+		set_transient( $log_gate, 1, HOUR_IN_SECONDS );
+
+		$this->logger->log_security_event(
+			'infrastructure_spared',
+			$ip_address,
+			array(
+				'confidence'       => isset( $reputation['abuseConfidencePercentage'] ) ? (int) $reputation['abuseConfidencePercentage'] : 0,
+				'threshold'        => $threshold,
+				'reason'           => 'Community reputation marks this IP as curated infrastructure (never-block)',
+				'report_only_mode' => (bool) $report_only,
+			),
+			'medium'
+		);
 	}
 
 	/**
@@ -1524,9 +1774,22 @@ class ReportedIP_Hive {
 	 * @since  2.1.2
 	 */
 	public static function serve_blocked_page( $reason = 'ip_block' ) {
-		self::emit_block_response_headers();
-		status_header( 403 );
 		$reportedip_hive_block_context = is_string( $reason ) && '' !== $reason ? $reason : 'ip_block';
+
+		self::emit_block_response_headers();
+
+		/**
+		 * Fires once per denied request, just before the 403 block page is
+		 * served. Guard-layer (pre-WordPress) refusals never reach this hook —
+		 * they terminate before WordPress loads.
+		 *
+		 * @param string $ip      Client IP the request was attributed to.
+		 * @param string $context Normalized block context (see {@see ReportedIP_Hive_Block_Ref::CATEGORY_MAP}).
+		 * @since 2.1.41
+		 */
+		do_action( 'reportedip_hive_access_denied', self::get_client_ip(), $reportedip_hive_block_context );
+
+		status_header( 403 );
 		include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/blocked.php';
 		exit;
 	}
@@ -1651,19 +1914,33 @@ class ReportedIP_Hive {
 	 * This is the central utility method for IP detection. Other classes should
 	 * call ReportedIP_Hive::get_client_ip() instead of implementing their own.
 	 *
-	 * Only trusts the explicitly configured header (reportedip_hive_trusted_ip_header).
-	 * If no trusted header is configured or the header is absent, falls back to REMOTE_ADDR.
-	 * This prevents IP spoofing via arbitrary proxy headers.
+	 * Only trusts the explicitly configured header (reportedip_hive_trusted_ip_header),
+	 * and only when the connecting peer passes the trusted-proxy source check
+	 * (reportedip_hive_trusted_proxy_ranges — empty list trusts every peer).
+	 * If no trusted header is configured, the header is absent, or the peer is
+	 * not a declared proxy, falls back to REMOTE_ADDR. This prevents IP
+	 * spoofing via arbitrary proxy headers, including direct-to-origin
+	 * requests that carry a forged header past a CDN.
 	 *
 	 * @return string The client IP address or 'unknown' if not determinable
 	 */
 	public static function get_client_ip() {
 		static $trusted_header = null;
+		static $trusted_ranges = null;
 		if ( null === $trusted_header ) {
 			$trusted_header = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' );
+			$trusted_ranges = ReportedIP_Hive_Proxy_Trust::parse_ranges(
+				(string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_proxy_ranges', '' )
+			);
 		}
 
-		if ( ! empty( $trusted_header ) && isset( $_SERVER[ $trusted_header ] ) ) {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via filter_var
+		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) wp_unslash( $_SERVER['REMOTE_ADDR'] ) : '';
+
+		if ( ! empty( $trusted_header )
+			&& isset( $_SERVER[ $trusted_header ] )
+			&& ReportedIP_Hive_Proxy_Trust::source_is_trusted( $remote_addr, $trusted_ranges )
+		) {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via filter_var below
 			$server_value = wp_unslash( $_SERVER[ $trusted_header ] );
 			$ips          = explode( ',', (string) $server_value );
@@ -1681,8 +1958,6 @@ class ReportedIP_Hive {
 			}
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via filter_var
-		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? wp_unslash( $_SERVER['REMOTE_ADDR'] ) : 'unknown';
 		return filter_var( $remote_addr, FILTER_VALIDATE_IP ) ? $remote_addr : 'unknown';
 	}
 

@@ -200,7 +200,7 @@ final class ReportedIP_Hive_Schema {
 			KEY idx_ip_address (ip_address),
 			KEY idx_attempt_type (attempt_type),
 			KEY idx_last_attempt (last_attempt),
-			KEY composite_ip_type (ip_address, attempt_type)
+			UNIQUE KEY unique_ip_type (ip_address, attempt_type)
 		) $charset_collate;";
 
 		$table_queue = $prefix . 'reportedip_hive_api_queue';

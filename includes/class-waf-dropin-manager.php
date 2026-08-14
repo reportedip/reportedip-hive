@@ -78,7 +78,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 8;
+	const DROPIN_VERSION = 9;
 
 	/**
 	 * Blocklist header magic. Format v1:
@@ -198,6 +198,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED,
 			'reportedip_hive_report_only_mode',
 			'reportedip_hive_trusted_ip_header',
+			'reportedip_hive_trusted_proxy_ranges',
 		) as $opt ) {
 			add_action( 'update_option_' . $opt, array( $this, 'queue_resync' ) );
 			add_action( 'update_site_option_' . $opt, array( $this, 'queue_resync' ) );
@@ -823,6 +824,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$wl_export     = var_export( array_values( $whitelist ), true );  // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking a literal whitelist array into a generated PHP file, not debugging.
 		$ex_export     = var_export( array_values( $exceptions ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the literal WAF-exception allowlist into a generated PHP file, not debugging.
 		$header_export = var_export( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the trusted proxy header literal into a generated PHP file, not debugging.
+		$ranges_export = var_export( ReportedIP_Hive_Proxy_Trust::parse_ranges( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_proxy_ranges', '' ) ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the trusted proxy source ranges into a generated PHP file, not debugging.
 		$version       = self::DROPIN_VERSION;
 
 		$engine_enabled = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_ENABLED, true );
@@ -1015,10 +1017,20 @@ if ( ! function_exists( 'reportedip_hive_dropin_request_has_body' ) ) {
 
 		$ip      = '';
 		$trusted = __RIP_TRUSTED_HEADER__;
+		$proxies = __RIP_TRUSTED_RANGES__;
 		if ( '' !== $trusted && isset( $_SERVER[ $trusted ] ) ) {
-			$parts     = explode( ',', (string) $_SERVER[ $trusted ] );
-			$candidate = trim( $parts[0] );
-			if ( false !== filter_var( $candidate, FILTER_VALIDATE_IP ) ) { $ip = $candidate; }
+			$peer_ok = empty( $proxies );
+			if ( ! $peer_ok ) {
+				$peer = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+				foreach ( $proxies as $proxy_entry ) {
+					if ( reportedip_hive_dropin_ip_match( $peer, (string) $proxy_entry ) ) { $peer_ok = true; break; }
+				}
+			}
+			if ( $peer_ok ) {
+				$parts     = explode( ',', (string) $_SERVER[ $trusted ] );
+				$candidate = trim( $parts[0] );
+				if ( false !== filter_var( $candidate, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) { $ip = $candidate; }
+			}
 		}
 		if ( '' === $ip ) {
 			$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
@@ -1136,8 +1148,8 @@ PHP;
 		$cidr_export  = var_export( array_values( $this->blocked_cidr_snapshot() ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the literal CIDR blocklist into a generated PHP file, not debugging.
 
 		return str_replace(
-			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_BODY_NEEDED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__' ),
-			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $engine_export, $report_export, $skip_export, $body_needed_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export ),
+			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_TRUSTED_RANGES__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_BODY_NEEDED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__' ),
+			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $ranges_export, $engine_export, $report_export, $skip_export, $body_needed_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export ),
 			$template
 		);
 	}

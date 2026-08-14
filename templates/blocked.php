@@ -40,12 +40,31 @@ $reportedip_hive_block_strings = 'hide_login' === $reportedip_hive_block_context
 		'reason'    => __( 'Security policy violation', 'reportedip-hive' ),
 	);
 
+/**
+ * Filters the visitor-facing strings on the 403 block page.
+ *
+ * Missing keys fall back to the defaults above, so a filter may override a
+ * single string without re-supplying the full set. All values are escaped
+ * on output.
+ *
+ * @param array{doc_title:string,title:string,message:string,reason:string} $strings Default strings for the current context.
+ * @param string                                                            $context Normalized block context (see ReportedIP_Hive_Block_Ref::CATEGORY_MAP).
+ * @since 2.1.41
+ */
+$reportedip_hive_block_strings = array_merge(
+	$reportedip_hive_block_strings,
+	array_intersect_key(
+		(array) apply_filters( 'reportedip_hive_blocked_page_strings', $reportedip_hive_block_strings, $reportedip_hive_block_context ),
+		$reportedip_hive_block_strings
+	)
+);
+
 $reportedip_hive_ref = ReportedIP_Hive::block_ref_code( $reportedip_hive_block_context );
 if ( ! headers_sent() ) {
 	header( 'X-RIP-Ref: ' . $reportedip_hive_ref );
 }
 
-$reportedip_hive_contact_url = get_option( 'reportedip_hive_blocked_page_contact_url', '' );
+$reportedip_hive_contact_url = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_blocked_page_contact_url', '' );
 ?>
 <!DOCTYPE html>
 <html lang="en">

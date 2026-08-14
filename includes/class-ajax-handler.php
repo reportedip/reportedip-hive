@@ -467,8 +467,8 @@ class ReportedIP_Hive_Ajax_Handler {
 		$reason     = isset( $_POST['reason'] ) ? sanitize_textarea_field( wp_unslash( $_POST['reason'] ) ) : '';
 		$duration   = isset( $_POST['duration'] ) ? intval( $_POST['duration'] ) : 24;
 
-		if ( empty( $ip_address ) || ! filter_var( $ip_address, FILTER_VALIDATE_IP ) ) {
-			wp_send_json_error( __( 'Invalid IP address.', 'reportedip-hive' ) );
+		if ( empty( $ip_address ) || ! $this->ip_manager->validate_ip_address( $ip_address ) ) {
+			wp_send_json_error( __( 'Invalid IP address or CIDR range.', 'reportedip-hive' ) );
 		}
 
 		if ( empty( $reason ) ) {

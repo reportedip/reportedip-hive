@@ -184,7 +184,7 @@ class ReportedIP_Hive_API {
 			return false;
 		}
 
-		$cached_result = $this->cache->get_reputation( $ip_address );
+		$cached_result = $this->cache->get_reputation( $ip_address, (bool) $verbose );
 		if ( $cached_result !== false ) {
 			return isset( $cached_result['data'] ) ? $cached_result['data'] : $cached_result;
 		}
@@ -242,7 +242,7 @@ class ReportedIP_Hive_API {
 		if ( $response_code === 429 ) {
 			$retry_after = wp_remote_retrieve_header( $response, 'retry-after' );
 			$reset_time  = time() + ( $retry_after ? intval( $retry_after ) : 3600 );
-			$this->set_rate_limited( $reset_time );
+			$this->set_rate_limited( $reset_time, 'reputation' );
 
 			$this->track_api_call( false, $response_time, 'rate_limit_429', 'reputation' );
 			$this->logger->log_security_event(
@@ -260,8 +260,9 @@ class ReportedIP_Hive_API {
 
 		if ( $response_code === 200 && isset( $data['data'] ) ) {
 			$this->track_api_call( true, $response_time, null, 'reputation' );
+			$this->patch_api_quota_from_headers( $response, 'check' );
 
-			$this->cache->set_reputation( $ip_address, $data['data'] );
+			$this->cache->set_reputation( $ip_address, $data['data'], false, (bool) $verbose );
 
 			if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 				$this->logger->log_security_event(
@@ -357,17 +358,27 @@ class ReportedIP_Hive_API {
 		if ( $response_code === 200 && isset( $response_data['data'] ) ) {
 			$this->track_api_call( true, $response_time, null, 'submission' );
 			$this->decrement_quota_counter();
+			$this->patch_api_quota_from_headers( $response, 'report' );
+
+			/*
+			 * The cached reputation for this IP predates our own report, so it
+			 * is stale by definition — drop it so the next check reflects the
+			 * report instead of serving up-to-24h-old data.
+			 */
+			$this->cache->clear_ip_cache( $ip_address );
 
 			return array(
 				'success' => true,
 				'data'    => $response_data['data'],
 			);
 		} elseif ( $response_code === 429 ) {
+			$retry_after = wp_remote_retrieve_header( $response, 'retry-after' );
+			$this->set_rate_limited( time() + ( $retry_after ? intval( $retry_after ) : 3600 ), 'submission' );
 			$this->track_api_call( false, $response_time, 'rate_limit_429', 'submission' );
 			return array(
 				'success'     => false,
 				'message'     => 'Rate limit exceeded',
-				'retry_after' => wp_remote_retrieve_header( $response, 'retry-after' ),
+				'retry_after' => $retry_after,
 			);
 		} else {
 			$this->track_api_call( false, $response_time, 'http_' . $response_code, 'submission', substr( (string) $body, 0, 200 ) );
@@ -813,7 +824,7 @@ class ReportedIP_Hive_API {
 
 		$retry_after = $this->parse_retry_after( wp_remote_retrieve_header( $response, 'retry-after' ) );
 		if ( 429 === $code && $retry_after > 0 ) {
-			$this->set_rate_limited( time() + $retry_after );
+			$this->set_rate_limited( time() + $retry_after, 'meta' );
 		}
 		$this->set_relay_quota_cooldown( $code, $retry_after );
 
@@ -1630,14 +1641,30 @@ class ReportedIP_Hive_API {
 
 		if ( null === $bucket ) {
 			foreach ( self::RATE_LIMIT_BUCKETS as $candidate ) {
-				if ( $this->is_local_rate_limited( $candidate ) ) {
+				if ( $this->is_server_rate_limited( $candidate ) || $this->is_local_rate_limited( $candidate ) ) {
 					return true;
 				}
 			}
 			return false;
 		}
 
-		return $this->is_local_rate_limited( $bucket );
+		return $this->is_server_rate_limited( $bucket ) || $this->is_local_rate_limited( $bucket );
+	}
+
+	/**
+	 * Whether the server answered 429 for this specific bucket and the
+	 * back-off window is still open.
+	 *
+	 * Bucket-scoped so a rate-limited report path never pauses reputation
+	 * lookups (each endpoint has its own server-side pool).
+	 *
+	 * @param string $bucket One of 'reputation', 'submission', 'meta'.
+	 * @return bool
+	 * @since  2.1.41
+	 */
+	private function is_server_rate_limited( $bucket ) {
+		$bucket_reset = get_transient( 'reportedip_hive_rate_limit_reset_' . $bucket );
+		return $bucket_reset && $bucket_reset > time();
 	}
 
 	/**
@@ -1710,10 +1737,68 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Set rate limit status
+	 * Set rate limit status.
+	 *
+	 * With a bucket, only that endpoint pool pauses; without one the legacy
+	 * global transient pauses every bucket (safe superset, kept for callers
+	 * that cannot attribute the 429 to a specific endpoint).
+	 *
+	 * @param int         $reset_time UNIX timestamp when the limit lifts.
+	 * @param string|null $bucket     One of 'reputation', 'submission', 'meta', or null for all.
+	 * @return void
 	 */
-	public function set_rate_limited( $reset_time ) {
-		set_transient( 'reportedip_hive_rate_limit_reset', $reset_time, $reset_time - time() );
+	public function set_rate_limited( $reset_time, $bucket = null ) {
+		$ttl = max( 1, (int) $reset_time - time() );
+		if ( null === $bucket || ! in_array( $bucket, self::RATE_LIMIT_BUCKETS, true ) ) {
+			set_transient( 'reportedip_hive_rate_limit_reset', $reset_time, $ttl );
+			return;
+		}
+		set_transient( 'reportedip_hive_rate_limit_reset_' . $bucket, $reset_time, $ttl );
+	}
+
+	/**
+	 * Opportunistically refresh the cached daily quota from the X-RateLimit
+	 * headers the API sends on every response, so the dashboard counter stays
+	 * fresh between the 6-hour cron runs (same pattern as the relay-quota
+	 * patching on each relay send).
+	 *
+	 * Only numeric header values are applied ("unlimited" is skipped), and
+	 * only an EXISTING quota transient is patched — the cron remains the sole
+	 * owner of creating the snapshot and of `reset_time`, whose format the
+	 * headers do not carry.
+	 *
+	 * @param array|WP_Error $response HTTP response from wp_remote_*.
+	 * @param string         $context  'check' patches the API-call counters,
+	 *                                 'report' patches the report counters.
+	 * @return void
+	 * @since  2.1.41
+	 */
+	private function patch_api_quota_from_headers( $response, $context ) {
+		$remaining = wp_remote_retrieve_header( $response, 'x-ratelimit-remaining' );
+		$limit     = wp_remote_retrieve_header( $response, 'x-ratelimit-limit' );
+
+		if ( ! is_numeric( $remaining ) ) {
+			return;
+		}
+
+		$quota = get_transient( 'reportedip_hive_api_quota' );
+		if ( ! is_array( $quota ) ) {
+			return;
+		}
+
+		if ( 'report' === $context ) {
+			$quota['remaining_reports'] = (int) $remaining;
+			if ( is_numeric( $limit ) ) {
+				$quota['daily_report_limit'] = (int) $limit;
+			}
+		} else {
+			$quota['remaining_api_calls'] = (int) $remaining;
+			if ( is_numeric( $limit ) ) {
+				$quota['daily_api_limit'] = (int) $limit;
+			}
+		}
+
+		set_transient( 'reportedip_hive_api_quota', $quota, 6 * HOUR_IN_SECONDS );
 	}
 
 	/**

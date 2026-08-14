@@ -63,12 +63,14 @@ class ReportedIP_Hive_Security_Monitor {
 	private $api_client;
 	private $logger;
 	private $mode_manager;
+	private $cache;
 
 	public function __construct() {
 		$this->database     = ReportedIP_Hive_Database::get_instance();
 		$this->api_client   = ReportedIP_Hive_API::get_instance();
 		$this->logger       = ReportedIP_Hive_Logger::get_instance();
 		$this->mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$this->cache        = ReportedIP_Hive_Cache::get_instance();
 	}
 
 	/**
@@ -384,6 +386,24 @@ class ReportedIP_Hive_Security_Monitor {
 			return;
 		}
 
+		/**
+		 * Fires once per confirmed sensor detection, before any consequence runs.
+		 *
+		 * Unlike `reportedip_hive_ip_blocked` this fires regardless of the
+		 * auto-block and community-reporting settings, so integrations
+		 * (webhooks, SIEM, Slack) see every detection — including ones that
+		 * were detected but never blocked. The own-server and verified-bot
+		 * guards have already passed at this point.
+		 *
+		 * @param string $ip_address Client IP that tripped the threshold.
+		 * @param string $event_type Sensor event slug (e.g. failed_login, scan_404).
+		 * @param array  $details    Sensor metadata verbatim; the eventual block
+		 *                           duration is not included because it is only
+		 *                           decided later inside the auto-block path.
+		 * @since 2.1.41
+		 */
+		do_action( 'reportedip_hive_threshold_exceeded', $ip_address, $event_type, $details );
+
 		$this->logger->log_security_event( $event_type . '_threshold_exceeded', $ip_address, $details, 'high' );
 
 		$this->database->update_daily_stats( $this->get_stat_type_for_event( $event_type ) );
@@ -642,6 +662,49 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
+	 * Never-block veto for community-whitelisted infrastructure (search
+	 * engines, major CDNs, monitoring fleets).
+	 *
+	 * Consults only the LOCAL reputation cache — never a live API call —
+	 * because this runs inside the block path. The veto covers blocks only:
+	 * `report_security_event()` still runs, since local sensor hits are
+	 * evidence the community should see even when the offender is curated
+	 * infrastructure (blocks are consequences, reports are evidence).
+	 *
+	 * @param string $ip_address Client IP that tripped a threshold.
+	 * @param string $event_type Sensor event slug (log context only).
+	 * @return bool  True when the cached reputation flags the IP as
+	 *               community-whitelisted infrastructure.
+	 * @since  2.1.41
+	 */
+	private function should_spare_infrastructure_ip( $ip_address, $event_type ) {
+		$envelope = $this->cache->get_reputation( $ip_address );
+		if ( ! is_array( $envelope ) || empty( $envelope['data'] ) || ! is_array( $envelope['data'] ) ) {
+			return false;
+		}
+
+		if ( empty( $envelope['data']['isWhitelisted'] ) ) {
+			return false;
+		}
+
+		$log_gate = 'reportedip_hive_infra_spared_' . md5( $ip_address . '|' . $event_type );
+		if ( false === get_transient( $log_gate ) ) {
+			set_transient( $log_gate, 1, HOUR_IN_SECONDS );
+			$this->logger->log_security_event(
+				'infrastructure_spared',
+				$ip_address,
+				array(
+					'event_type' => $event_type,
+					'reason'     => 'Community reputation marks this IP as curated infrastructure (never-block)',
+				),
+				'medium'
+			);
+		}
+
+		return true;
+	}
+
+	/**
 	 * Auto-block IP address
 	 */
 	public function auto_block_ip( $ip_address, $event_type, $details ) {
@@ -686,6 +749,10 @@ class ReportedIP_Hive_Security_Monitor {
 				),
 				'low'
 			);
+			return false;
+		}
+
+		if ( $this->should_spare_infrastructure_ip( $ip_address, $event_type ) ) {
 			return false;
 		}
 

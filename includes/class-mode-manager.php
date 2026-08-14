@@ -272,6 +272,11 @@ class ReportedIP_Hive_Mode_Manager {
 				'community'     => true,
 				'requires_tier' => 'professional',
 			),
+			'tor_blocking'                 => array(
+				'local'         => false,
+				'community'     => true,
+				'requires_tier' => 'professional',
+			),
 			'waf'                          => array(
 				'local'     => true,
 				'community' => true,
@@ -342,6 +347,7 @@ class ReportedIP_Hive_Mode_Manager {
 			'webauthn_advanced'            => array( __( 'Advanced Security Keys', 'reportedip-hive' ), __( 'Multiple security keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts. One security key or passkey per account stays free.', 'reportedip-hive' ) ),
 			'decoy_pathblock'              => array( __( 'Decoy Path Block', 'reportedip-hive' ), __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...) — distinct from the N-of-Y scan-detector.', 'reportedip-hive' ) ),
 			'hardening_mode'               => array( __( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ), __( 'Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected.', 'reportedip-hive' ) ),
+			'tor_blocking'                 => array( __( 'Tor Exit Node Blocking', 'reportedip-hive' ), __( 'Block login attempts from known Tor exit nodes using a signed exit-node list that is refreshed twice a day, plus the live community check.', 'reportedip-hive' ) ),
 			'waf'                          => array( __( 'Web Application Firewall', 'reportedip-hive' ), __( 'Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync.', 'reportedip-hive' ) ),
 			'rule_sync_priority'           => array( __( 'Priority Rule Sync', 'reportedip-hive' ), __( 'Daily, full-ruleset delivery (broader signatures, higher paranoia levels, bot IP-range feeds, live disposable lists) instead of the bundled baseline.', 'reportedip-hive' ) ),
 			'bot_verification'             => array( __( 'Verified Bot Detection', 'reportedip-hive' ), __( 'Verify search-engine crawlers via IP ranges and forward-confirmed reverse DNS; flag or block user-agent spoofers.', 'reportedip-hive' ) ),

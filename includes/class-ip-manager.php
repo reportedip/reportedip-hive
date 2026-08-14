@@ -394,6 +394,53 @@ class ReportedIP_Hive_IP_Manager {
 	}
 
 	/**
+	 * Derive the enclosing IPv6 network in CIDR notation for a single address.
+	 *
+	 * Consumer connections rotate the interface identifier inside their
+	 * delegated prefix, so whitelisting a /128 locks the user out on the next
+	 * rotation. This helper zeroes the host bits and returns the canonical
+	 * network (e.g. `2001:db8:abcd:12::/64`) for prefill surfaces.
+	 *
+	 * @param string $ip     Candidate address; must be a plain IPv6 address.
+	 * @param int    $prefix Network prefix length, 1-128.
+	 * @return string|null Network in CIDR notation, or null for IPv4/invalid input.
+	 * @since  2.1.41
+	 */
+	public static function ipv6_network_cidr( $ip, $prefix = 64 ) {
+		if ( ! is_string( $ip ) || false === filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+			return null;
+		}
+
+		$prefix = (int) $prefix;
+		if ( $prefix < 1 || $prefix > 128 ) {
+			return null;
+		}
+
+		$binary = inet_pton( $ip );
+		if ( false === $binary || 16 !== strlen( $binary ) ) {
+			return null;
+		}
+
+		$full_bytes = intdiv( $prefix, 8 );
+		$remainder  = $prefix % 8;
+		$network    = substr( $binary, 0, $full_bytes );
+
+		if ( $remainder > 0 ) {
+			$mask     = chr( ( 0xFF << ( 8 - $remainder ) ) & 0xFF );
+			$network .= $binary[ $full_bytes ] & $mask;
+		}
+
+		$network   = str_pad( $network, 16, "\x00" );
+		$formatted = inet_ntop( $network );
+
+		if ( false === $formatted ) {
+			return null;
+		}
+
+		return $formatted . '/' . $prefix;
+	}
+
+	/**
 	 * Check if IP is private
 	 */
 	public function is_private_ip( $ip_address ) {

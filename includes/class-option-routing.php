@@ -114,7 +114,14 @@ final class ReportedIP_Hive_Option_Routing {
 				)
 			);
 			foreach ( $rows as $row ) {
-				wp_cache_add( $network_id . ':' . $row->meta_key, $row->meta_value, 'site-options' );
+				/*
+				 * Core's get_network_option() unserializes BEFORE caching and
+				 * trusts a cache hit verbatim, so the primed value must already
+				 * be unserialized — a raw serialized string here poisons every
+				 * array-valued network option until the cache expires (fatal
+				 * TypeError in consumers such as the cache-stats counters).
+				 */
+				wp_cache_add( $network_id . ':' . $row->meta_key, maybe_unserialize( $row->meta_value ), 'site-options' );
 			}
 			return;
 		}

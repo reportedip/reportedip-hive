@@ -70,6 +70,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_api_key'                        => '',
 		'reportedip_hive_api_endpoint'                   => 'https://reportedip.com/wp-json/reportedip/v2/',
 		'reportedip_hive_trusted_ip_header'              => '',
+		'reportedip_hive_trusted_proxy_ranges'           => '',
 		'reportedip_hive_max_api_calls_per_hour'         => 0,
 		'reportedip_hive_report_cooldown_hours'          => 24,
 		'reportedip_hive_report_only_mode'               => false,
@@ -80,6 +81,8 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_ruleset_bot_signatures'         => '',
 		'reportedip_hive_ruleset_disposable_domains'     => '',
 		'reportedip_hive_ruleset_scan_paths'             => '',
+		'reportedip_hive_ruleset_tor_exits'              => '',
+		'reportedip_hive_block_tor'                      => false,
 
 		'reportedip_hive_waf_enabled'                    => true,
 		'reportedip_hive_waf_report_only'                => false,
