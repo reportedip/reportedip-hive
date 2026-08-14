@@ -5160,13 +5160,21 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 				<p class="rip-settings-section__desc"><?php esc_html_e( 'Hooks into WooCommerce-specific login failures (my-account form, checkout AJAX login). Uses the same threshold as Failed login attempts.', 'reportedip-hive' ); ?></p>
 
-				<div class="rip-form-group">
+				<?php
+				$wc_installed  = ReportedIP_Hive_WooCommerce_Monitor::is_woocommerce_installed();
+				$wc_monitor_on = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_woocommerce', true );
+				?>
+				<div class="rip-form-group<?php echo $wc_installed ? '' : ' rip-is-disabled'; ?>">
 					<label class="rip-toggle">
-						<input type="checkbox" name="reportedip_hive_monitor_woocommerce" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_woocommerce', true ) ); ?> />
+						<input type="checkbox" name="reportedip_hive_monitor_woocommerce" value="1" class="rip-toggle__input" <?php checked( $wc_monitor_on ); ?> <?php disabled( ! $wc_installed ); ?> />
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Watch WooCommerce login attempts', 'reportedip-hive' ); ?></span>
 					</label>
 				</div>
+				<?php if ( ! $wc_installed ) : ?>
+					<input type="hidden" name="reportedip_hive_monitor_woocommerce" value="<?php echo $wc_monitor_on ? '1' : '0'; ?>" />
+					<p class="rip-help-text"><?php esc_html_e( 'WooCommerce is not installed on this site. The monitor stays dormant; this setting becomes available once WooCommerce is installed.', 'reportedip-hive' ); ?></p>
+				<?php endif; ?>
 			</div>
 
 			<div class="rip-settings-section">

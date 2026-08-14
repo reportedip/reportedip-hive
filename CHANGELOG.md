@@ -63,6 +63,15 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **Notification emails: header title was invisible in several clients.** The
+  header cell carried its color only as a CSS gradient. GMX Webmail and Outlook
+  for Android drop `linear-gradient()`, leaving white header text on a white
+  cell — the site name was unreadable, and spam filters scored the message with
+  `HTML_FONT_LOW_CONTRAST`. The header now sets a solid indigo background
+  (`bgcolor` attribute plus `background-color`) and keeps the gradient as
+  progressive enhancement; the call-to-action button uses the same technique.
+  The inline SVG logo was removed as well — GMX and Outlook do not render inline
+  SVG in email and produced stray artifacts instead. Reported by Benjamin Grösch.
 - **Race-safe attempt counters.** `track_attempt()` is now a single atomic
   upsert on a unique `(ip_address, attempt_type)` key (schema v15, with
   duplicate-row cleanup), so parallel failed-login bursts can no longer lose
@@ -79,6 +88,11 @@ All changes to ReportedIP Hive are documented here.
 - **Multisite: blocked-page contact URL resolves network-wide.** The template
   read a per-site option on Multisite and came up empty; it now routes through
   the option router.
+- **WooCommerce-only settings grey out without WooCommerce.** The WooCommerce
+  login monitor on the Protection tab and the storefront-2FA card in the setup
+  wizard are now disabled with an explanatory note when WooCommerce is not
+  installed, instead of presenting a toggle that cannot do anything. Thanks to
+  Benjamin for reporting.
 
 ### Changed
 

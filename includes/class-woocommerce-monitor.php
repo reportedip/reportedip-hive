@@ -40,6 +40,21 @@ class ReportedIP_Hive_WooCommerce_Monitor {
 	}
 
 	/**
+	 * Whether WooCommerce is installed on this WordPress instance.
+	 *
+	 * An active WooCommerce loads its main class; an installed-but-inactive
+	 * copy is detected by its plugin file. Admin surfaces use this to grey
+	 * out WooCommerce-only settings instead of offering them on sites that
+	 * cannot use them.
+	 *
+	 * @return bool True when WooCommerce is active or at least installed.
+	 * @since  2.1.41
+	 */
+	public static function is_woocommerce_installed(): bool {
+		return class_exists( 'WooCommerce' ) || file_exists( WP_PLUGIN_DIR . '/woocommerce/woocommerce.php' );
+	}
+
+	/**
 	 * Hook on plugins_loaded — WC may not be loaded yet at the time this
 	 * class is instantiated, so we attach via the action with no class_exists
 	 * guard. WC's hooks simply never fire if the plugin is inactive.

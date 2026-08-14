@@ -372,6 +372,8 @@ Fixed: attempt counters are race-safe — a single atomic upsert per IP and atte
 
 Fixed: API rate-limit back-off is scoped per endpoint and the report path honors Retry-After; the reputation cache respects verbosity and is invalidated by your own reports; CIDR ranges are accepted in the manual block form; the blocked-page contact URL resolves network-wide on Multisite.
 
+Fixed: WooCommerce-only settings (login monitor, storefront-2FA card in the wizard) grey out with an explanatory note when WooCommerce is not installed. Thanks to Benjamin for reporting.
+
 Changed: an API status strip on the Security Dashboard summarizes connection, quota (with reset countdown) and rate-limit state from cached data, and the daily quota display stays fresh between cron runs.
 
 Changed: accessibility pass — forced-colors and reduced-motion support, focus rings that survive Windows High Contrast, 40px touch targets on coarse pointers and a polite live region for AJAX notifications; roughly 90 admin-JS strings became translatable.

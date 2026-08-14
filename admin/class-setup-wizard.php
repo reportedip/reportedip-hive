@@ -1314,13 +1314,12 @@ class ReportedIP_Hive_Setup_Wizard {
 			</div>
 
 			<?php
-			$has_woocommerce        = class_exists( 'WooCommerce' );
+			$has_woocommerce        = ReportedIP_Hive_WooCommerce_Monitor::is_woocommerce_installed();
 			$frontend_status        = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
 			$frontend_locked        = ! $frontend_status['available'];
 			$saved_frontend_enabled = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_enabled', false );
 			?>
-			<?php if ( $has_woocommerce ) : ?>
-				<div class="rip-config-card<?php echo $frontend_locked ? ' rip-config-card--disabled' : ''; ?>" id="rip-step4-frontend">
+				<div class="rip-config-card<?php echo ( $frontend_locked || ! $has_woocommerce ) ? ' rip-config-card--disabled' : ''; ?>" id="rip-step4-frontend">
 					<div class="rip-config-card__header">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 						<h3><?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?></h3>
@@ -1330,7 +1329,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<p class="rip-help-block">
 							<?php esc_html_e( 'Shows the second factor inside your storefront theme when a customer signs in via My Account or checkout, instead of redirecting them to wp-login.php.', 'reportedip-hive' ); ?>
 						</p>
-						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
+						<?php if ( $has_woocommerce && $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
 							<ul class="rip-tier-card__list">
 								<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
 								<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
@@ -1343,20 +1342,23 @@ class ReportedIP_Hive_Setup_Wizard {
 								name="2fa_frontend_enabled"
 								id="rip-2fa-frontend-enabled"
 								<?php checked( $saved_frontend_enabled ); ?>
-								<?php echo $frontend_locked ? 'disabled' : ''; ?>>
+								<?php disabled( $frontend_locked || ! $has_woocommerce ); ?>>
 							<span class="rip-toggle__slider"></span>
 							<span class="rip-toggle__label">
 								<?php esc_html_e( 'Render the 2FA challenge in the storefront theme frame', 'reportedip-hive' ); ?>
 							</span>
 						</label>
-						<?php if ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
+						<?php if ( ! $has_woocommerce ) : ?>
+							<p class="rip-help-block">
+								<?php esc_html_e( 'WooCommerce is not installed on this site. This option becomes available once WooCommerce is installed.', 'reportedip-hive' ); ?>
+							</p>
+						<?php elseif ( $frontend_locked && 'tier' === $frontend_status['reason'] ) : ?>
 							<p class="rip-help-block">
 								<?php esc_html_e( 'Available with the Professional plan or higher. Finish the wizard now and unlock this later from 2FA settings → Frontend login.', 'reportedip-hive' ); ?>
 							</p>
 						<?php endif; ?>
 					</div>
 				</div>
-			<?php endif; ?>
 
 			<div class="rip-config-card rip-config-card--note">
 				<div class="rip-config-card__header">
