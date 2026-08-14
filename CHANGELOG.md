@@ -2,6 +2,13 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.43] — 2026-08-14
+
+### Changed
+
+- **Documentation.** Corrected the contact domain in two historical
+  changelog entries (reportedip.de to reportedip.com). No code change.
+
 ## [2.1.42] — 2026-08-14
 
 ### Fixes
