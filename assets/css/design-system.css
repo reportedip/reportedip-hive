@@ -703,8 +703,18 @@ button.rip-tier-lock--mode:hover {
     white-space: nowrap;
 }
 
+/* The transparent outline is invisible in normal mode (the box-shadow draws
+   the visible ring) but is repainted in a system color under forced-colors
+   mode, where box-shadows are stripped. */
 .rip-button:focus {
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+.rip-button:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
 }
 
@@ -810,7 +820,17 @@ button.rip-tier-lock--mode:hover {
 .rip-input:focus,
 .rip-select:focus,
 .rip-textarea:focus {
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--rip-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.rip-input:focus-visible,
+.rip-select:focus-visible,
+.rip-textarea:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     border-color: var(--rip-primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
@@ -1016,6 +1036,14 @@ button.rip-tier-lock--mode:hover {
 }
 
 .rip-toggle__input:focus + .rip-toggle__slider {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+.rip-toggle__input:focus-visible + .rip-toggle__slider {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
 }
 
@@ -2858,4 +2886,55 @@ button.rip-tier-lock--mode:hover {
 .rip-secured-by__links a:hover {
     color: var(--rip-primary);
     text-decoration: underline;
+}
+
+/* ==========================================================================
+   Forced-colors mode (Windows High Contrast)
+
+   The UA strips backgrounds and box-shadows in forced-colors mode, so
+   components whose shape or state is conveyed by background color alone
+   receive an explicit border in the ButtonText system color. Nothing in
+   this block applies outside forced-colors mode.
+   ========================================================================== */
+
+@media (forced-colors: active) {
+    .rip-button,
+    .rip-badge,
+    .rip-tier-badge,
+    .rip-mode-badge,
+    .rip-toggle__slider,
+    .rip-alert {
+        border: 1px solid ButtonText;
+    }
+
+    /* forced-color-adjust: none is justified here and only here: the checked
+       state of the toggle is conveyed exclusively by the track background,
+       which forced-colors mode would strip, leaving the on and off states
+       visually identical. Painting the track in the Highlight system color
+       keeps the state visible while still honouring the user's palette. */
+    .rip-toggle__input:checked + .rip-toggle__slider {
+        forced-color-adjust: none;
+        background: Highlight;
+    }
+}
+
+/* ==========================================================================
+   Reduced motion
+
+   This stylesheet is enqueued only on plugin-rendered screens (plugin admin
+   pages plus the 2FA login/onboarding surfaces), so the universal selector
+   cannot leak into unrelated admin screens or theme output. Durations are
+   shortened to near zero instead of removed so transitionend/animationend
+   handlers keep firing.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
 }

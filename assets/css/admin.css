@@ -289,6 +289,14 @@
     border: 1px solid var(--rip-info-light, #60A5FA);
 }
 
+/* Dismiss button inside JS-generated notifications (was inline style). */
+.reportedip-notification .notice-dismiss {
+    float: right;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
 .ip-info-card {
     background: #fff;
     border: 1px solid var(--rip-gray-300, #ddd);
@@ -667,6 +675,34 @@ code.ip-address {
     color: #00a32a !important;
 }
 
+/* Reusable IP cell (code + copy / lookup / external actions) */
+.rip-ip-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rip-space-1);
+}
+
+.rip-ip-cell .copy-ip {
+    margin-left: 0;
+}
+
+.rip-ip-cell__external {
+    cursor: pointer;
+    vertical-align: middle;
+    color: #787c82 !important;
+    transition: color 0.2s ease;
+}
+
+.rip-ip-cell__external:hover {
+    color: #2271b1 !important;
+}
+
+.rip-ip-cell__external svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
 /* Inline action buttons container */
 .action-buttons-inline {
     display: flex;
@@ -957,8 +993,12 @@ code.ip-address {
     min-width: 0;
 }
 
+/* Transparent outline stays invisible in normal mode (the inset box-shadow
+   draws the ring) but becomes a system-color ring under forced-colors mode.
+   Negative offset keeps it inside the overflow-hidden wrapper. */
 .rip-input-prefix .rip-input:focus {
-    outline: none;
+    outline: 2px solid transparent;
+    outline-offset: -2px;
     box-shadow: inset 0 0 0 2px var(--rip-primary, #4f46e5);
 }
 
@@ -1047,4 +1087,25 @@ code.ip-address {
     border-color: rgba(59, 130, 246, 0.2);
     border-left-color: var(--rip-info-dark, #1D4ED8);
     color: var(--rip-info-dark, #1D4ED8);
+}
+
+/* ==========================================================================
+   Touch targets
+
+   On coarse-pointer (touch) devices the icon-only row actions grow to a
+   40px minimum hit area. Mouse and trackpad layouts are unaffected because
+   the media query never matches there.
+   ========================================================================== */
+
+@media (pointer: coarse) {
+    .copy-ip,
+    .lookup-ip,
+    .rip-ip-cell .button-link,
+    .action-buttons-inline .button-small {
+        min-width: 40px;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 }

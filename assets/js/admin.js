@@ -28,6 +28,13 @@
             .replace(/'/g, '&#39;');
     }
 
+    /**
+     * Resolve a translated string from the PHP-side i18n bridge
+     * (wp_localize_script) with an English fallback for contexts where the
+     * bridge object is unavailable.
+     */
+    function ripT( key, fallback ) { return ( typeof reportedip_hive_ajax !== 'undefined' && reportedip_hive_ajax.strings && reportedip_hive_ajax.strings[ key ] ) || fallback; }
+
     // Main admin object
     const ReportedIPAdmin = {
         
@@ -211,14 +218,14 @@
                 }, function(response) {
                     $btn.prop('disabled', false);
                     if (response.success) {
-                        ReportedIPAdmin.showNotification(escapeHtml(response.data) || 'API statistics reset.', 'success');
+                        ReportedIPAdmin.showNotification(escapeHtml(response.data) || ripT('notify_api_stats_reset', 'API statistics reset.'), 'success');
                         setTimeout(function() { location.reload(); }, 1200);
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to reset API statistics.', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_api_stats_reset_failed', 'Failed to reset API statistics.'), 'error');
                     }
                 }).fail(function() {
                     $btn.prop('disabled', false);
-                    ReportedIPAdmin.showNotification('Request failed', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_request_failed', 'Request failed'), 'error');
                 });
             });
 
@@ -233,14 +240,14 @@
                 }, function(response) {
                     $btn.prop('disabled', false);
                     if (response.success) {
-                        ReportedIPAdmin.showNotification((response.data && response.data.message) || 'Cache cleared.', 'success');
+                        ReportedIPAdmin.showNotification((response.data && response.data.message) || ripT('notify_cache_cleared', 'Cache cleared.'), 'success');
                         setTimeout(function() { location.reload(); }, 1200);
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to clear cache.', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_cache_clear_failed', 'Failed to clear cache.'), 'error');
                     }
                 }).fail(function() {
                     $btn.prop('disabled', false);
-                    ReportedIPAdmin.showNotification('Request failed. Check server logs.', 'error');
+                    ReportedIPAdmin.showNotification(ripT('request_failed', 'Request failed. Check server logs.'), 'error');
                 });
             });
 
@@ -255,14 +262,14 @@
                 }, function(response) {
                     $btn.prop('disabled', false);
                     if (response.success) {
-                        ReportedIPAdmin.showNotification((response.data && response.data.message) || 'Expired entries cleaned.', 'success');
+                        ReportedIPAdmin.showNotification((response.data && response.data.message) || ripT('notify_cache_expired_cleaned', 'Expired entries cleaned.'), 'success');
                         setTimeout(function() { location.reload(); }, 1200);
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to clean expired entries.', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_cache_expired_failed', 'Failed to clean expired entries.'), 'error');
                     }
                 }).fail(function() {
                     $btn.prop('disabled', false);
-                    ReportedIPAdmin.showNotification('Request failed. Check server logs.', 'error');
+                    ReportedIPAdmin.showNotification(ripT('request_failed', 'Request failed. Check server logs.'), 'error');
                 });
             });
         },
@@ -297,7 +304,7 @@
                     if (response.success) {
                         // Show success notification
                         ReportedIPAdmin.showNotification(
-                            response.data.message || 'Mode changed successfully',
+                            response.data.message || ripT('notify_mode_changed', 'Mode changed successfully'),
                             'success'
                         );
 
@@ -307,14 +314,14 @@
                         }, 1000);
                     } else {
                         ReportedIPAdmin.showNotification(
-                            response.data.message || 'Failed to change mode',
+                            response.data.message || ripT('notify_mode_change_failed', 'Failed to change mode'),
                             'error'
                         );
                     }
                 },
                 error: function() {
                     $cards.css('opacity', '1').css('pointer-events', 'auto');
-                    ReportedIPAdmin.showNotification('Network error. Please try again.', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_retry', 'Network error. Please try again.'), 'error');
                 }
             });
         },
@@ -431,15 +438,15 @@
                 data: formData + '&action=reportedip_hive_add_whitelist&nonce=' + reportedip_hive_ajax.nonce,
                 success: function(response) {
                     if (response.success) {
-                        ReportedIPAdmin.showNotification('IP address added to whitelist successfully', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_whitelist_added', 'IP address added to whitelist successfully'), 'success');
                         $form[0].reset();
                         window.location.reload();
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to add IP to whitelist', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_whitelist_add_failed', 'Failed to add IP to whitelist'), 'error');
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                 },
                 complete: function() {
                     ReportedIPAdmin.hideLoading($form);
@@ -480,15 +487,15 @@
                 data: formData + '&action=reportedip_hive_add_waf_exception&nonce=' + reportedip_hive_ajax.nonce,
                 success: function(response) {
                     if (response.success) {
-                        ReportedIPAdmin.showNotification('WAF exception saved', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_waf_exception_saved', 'WAF exception saved'), 'success');
                         $form[0].reset();
                         window.location.reload();
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to save the exception', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_waf_exception_save_failed', 'Failed to save the exception'), 'error');
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                 },
                 complete: function() {
                     ReportedIPAdmin.hideLoading($form);
@@ -499,7 +506,7 @@
         removeWafException: function(e) {
             e.preventDefault();
 
-            if (!confirm('Remove this WAF exception?')) {
+            if (!confirm(ripT('confirm_remove_waf_exception', 'Remove this WAF exception?'))) {
                 return;
             }
 
@@ -517,17 +524,17 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        ReportedIPAdmin.showNotification('WAF exception removed', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_waf_exception_removed', 'WAF exception removed'), 'success');
                         $button.closest('tr').fadeOut(300, function() {
                             $(this).remove();
                         });
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to remove the exception', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_waf_exception_remove_failed', 'Failed to remove the exception'), 'error');
                         $button.prop('disabled', false);
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                     $button.prop('disabled', false);
                 }
             });
@@ -540,7 +547,7 @@
             const rule = $button.data('rule');
             const path = $button.data('path') || '';
 
-            if (!confirm('Allow rule "' + rule + '" on path "' + (path || '/') + '"? The WAF stays active everywhere else.')) {
+            if (!confirm(ripT('confirm_waf_allow', 'Allow rule "%1$s" on path "%2$s"? The WAF stays active everywhere else.').replace('%1$s', rule).replace('%2$s', path || '/'))) {
                 return;
             }
 
@@ -560,14 +567,14 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        ReportedIPAdmin.showNotification('WAF exception added for this rule', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_waf_exception_added', 'WAF exception added for this rule'), 'success');
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to add the exception', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_waf_exception_add_failed', 'Failed to add the exception'), 'error');
                         $button.prop('disabled', false);
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                     $button.prop('disabled', false);
                 }
             });
@@ -576,7 +583,7 @@
         removeFromWhitelist: function(e) {
             e.preventDefault();
 
-            if (!confirm('Are you sure you want to remove this IP from the whitelist?')) {
+            if (!confirm(ripT('confirm_remove_whitelist', 'Are you sure you want to remove this IP from the whitelist?'))) {
                 return;
             }
             
@@ -595,17 +602,17 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        ReportedIPAdmin.showNotification('IP address removed from whitelist', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_whitelist_removed', 'IP address removed from whitelist'), 'success');
                         $button.closest('tr').fadeOut(300, function() {
                             $(this).remove();
                         });
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to remove IP from whitelist', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_whitelist_remove_failed', 'Failed to remove IP from whitelist'), 'error');
                         $button.prop('disabled', false);
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                     $button.prop('disabled', false);
                 }
             });
@@ -613,10 +620,19 @@
 
         blockIP: function(e) {
             e.preventDefault();
-            
+
             const $form = $(this);
+            const targetIp = String($form.find('[name="ip_address"]').val() || '').trim();
+            const currentIp = String($form.data('current-ip') || reportedip_hive_ajax.current_ip || '');
+
+            if (currentIp && targetIp === currentIp) {
+                if (!confirm(ripT('confirm_self_block', 'This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?'))) {
+                    return;
+                }
+            }
+
             const formData = $form.serialize();
-            
+
             ReportedIPAdmin.showLoading($form);
             
             $.ajax({
@@ -625,15 +641,15 @@
                 data: formData + '&action=reportedip_hive_block_ip&nonce=' + reportedip_hive_ajax.nonce,
                 success: function(response) {
                     if (response.success) {
-                        ReportedIPAdmin.showNotification('IP address blocked successfully', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_ip_blocked', 'IP address blocked successfully'), 'success');
                         $form[0].reset();
                         window.location.reload();
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to block IP address', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_ip_block_failed', 'Failed to block IP address'), 'error');
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                 },
                 complete: function() {
                     ReportedIPAdmin.hideLoading($form);
@@ -663,17 +679,17 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        ReportedIPAdmin.showNotification('IP address unblocked successfully', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_ip_unblocked', 'IP address unblocked successfully'), 'success');
                         $button.closest('tr').fadeOut(300, function() {
                             $(this).remove();
                         });
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to unblock IP address', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_ip_unblock_failed', 'Failed to unblock IP address'), 'error');
                         $button.prop('disabled', false);
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                     $button.prop('disabled', false);
                 }
             });
@@ -688,7 +704,7 @@
 
             const $button = $(this);
             const ipAddress = $button.data('ip');
-            const reason = prompt(reportedip_hive_ajax.strings.prompt_whitelist_reason || 'Enter reason for whitelisting (optional):') || 'Manually whitelisted from blocked list';
+            const reason = prompt(reportedip_hive_ajax.strings.prompt_whitelist_reason || 'Enter reason for whitelisting (optional):') || ripT('prompt_whitelist_default', 'Manually whitelisted from blocked list');
 
             $button.prop('disabled', true);
 
@@ -703,17 +719,17 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        ReportedIPAdmin.showNotification('IP address whitelisted successfully', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_ip_whitelisted', 'IP address whitelisted successfully'), 'success');
                         $button.closest('tr').fadeOut(300, function() {
                             $(this).remove();
                         });
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to whitelist IP address', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_ip_whitelist_failed', 'Failed to whitelist IP address'), 'error');
                         $button.prop('disabled', false);
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                     $button.prop('disabled', false);
                 }
             });
@@ -726,13 +742,22 @@
             const ipAddress = $button.data('ip');
 
             if (!ipAddress) {
-                ReportedIPAdmin.showNotification('No IP address found', 'error');
+                ReportedIPAdmin.showNotification(ripT('notify_no_ip', 'No IP address found'), 'error');
                 return;
+            }
+
+            const currentIp = String(reportedip_hive_ajax.current_ip || '');
+            if (currentIp && ipAddress === currentIp) {
+                if (!confirm(ripT('confirm_self_block', 'This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?'))) {
+                    return;
+                }
             }
 
             // Show prompt for reason
             const reason = prompt(reportedip_hive_ajax.strings.prompt_block_reason || 'Enter reason for blocking this IP:', reportedip_hive_ajax.strings.prompt_block_default || 'Blocked from security logs');
             if (reason === null) return; // User cancelled
+
+            const durationValue = parseInt(jQuery('#rip-block-duration').val(), 10);
 
             $button.prop('disabled', true);
             const $icon = $button.find('.dashicons');
@@ -746,18 +771,18 @@
                 data: {
                     action: 'reportedip_hive_block_ip',
                     ip_address: ipAddress,
-                    reason: reason || 'Blocked from security logs',
-                    duration: 24,
+                    reason: reason || ripT('prompt_block_default', 'Blocked from security logs'),
+                    duration: isNaN(durationValue) ? 24 : durationValue,
                     nonce: reportedip_hive_ajax.nonce
                 },
                 success: function(response) {
                     if (response.success) {
-                        ReportedIPAdmin.showNotification('IP address blocked successfully', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_ip_blocked', 'IP address blocked successfully'), 'success');
                         $button.closest('tr').fadeOut(300, function() {
                             $(this).remove();
                         });
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to block IP', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_ip_block_failed', 'Failed to block IP'), 'error');
                         $button.prop('disabled', false);
                         if ($icon.length) {
                             $icon.removeClass('dashicons-update spin').addClass('dashicons-dismiss');
@@ -765,7 +790,7 @@
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Request failed', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_request_failed', 'Request failed'), 'error');
                     $button.prop('disabled', false);
                     if ($icon.length) {
                         $icon.removeClass('dashicons-update spin').addClass('dashicons-dismiss');
@@ -803,7 +828,7 @@
                 document.execCommand('copy');
                 ReportedIPAdmin.showCopySuccess($button);
             } catch (err) {
-                ReportedIPAdmin.showNotification('Failed to copy IP address', 'error');
+                ReportedIPAdmin.showNotification(ripT('notify_copy_failed', 'Failed to copy IP address'), 'error');
             }
             $temp.remove();
         },
@@ -841,7 +866,7 @@
             const $button = $(this);
 
             if (!ipAddress) {
-                ReportedIPAdmin.showNotification('Please enter an IP address', 'warning');
+                ReportedIPAdmin.showNotification(ripT('lookup_enter_ip', 'Please enter an IP address'), 'warning');
                 return;
             }
 
@@ -862,11 +887,11 @@
                         ReportedIPAdmin.displayIPInfo(response.data, $content);
                         $results.removeClass('rip-hidden').show();
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to lookup IP address', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('lookup_failed', 'Failed to lookup IP address'), 'error');
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                 },
                 complete: function() {
                     $button.prop('disabled', false);
@@ -878,32 +903,38 @@
             const statusBadges = [];
             
             if (data.is_whitelisted) {
-                statusBadges.push('<span class="status-badge whitelisted">Whitelisted</span>');
+                statusBadges.push('<span class="status-badge whitelisted">' + escapeHtml(ripT('label_whitelisted', 'Whitelisted')) + '</span>');
             }
             if (data.is_blocked) {
-                statusBadges.push('<span class="status-badge blocked">Blocked</span>');
+                statusBadges.push('<span class="status-badge blocked">' + escapeHtml(ripT('label_blocked', 'Blocked')) + '</span>');
             }
             if (!data.is_whitelisted && !data.is_blocked) {
-                statusBadges.push('<span class="status-badge clean">Clean</span>');
+                statusBadges.push('<span class="status-badge clean">' + escapeHtml(ripT('label_clean', 'Clean')) + '</span>');
             }
-            
+            if (data.reputation && data.reputation.isTor) {
+                statusBadges.push('<span class="status-badge blocked">' + escapeHtml(ripT('label_tor', 'Tor exit node')) + '</span>');
+            }
+            if (data.reputation && data.reputation.isWhitelisted) {
+                statusBadges.push('<span class="status-badge clean">' + escapeHtml(ripT('label_infrastructure', 'Community-verified infrastructure')) + '</span>');
+            }
+
             let html = `
                 <div class="ip-info-card">
                     <div class="ip-info-header">
-                        <h4>IP Information: ${escapeHtml(data.ip_address)}</h4>
+                        <h4>${escapeHtml(ripT('label_ip_information', 'IP Information:'))} ${escapeHtml(data.ip_address)}</h4>
                         <div class="ip-status">${statusBadges.join('')}</div>
                     </div>
                     <div class="ip-details">
                         <div class="detail-item">
-                            <span class="detail-label">Valid:</span>
-                            <span class="detail-value">${data.is_valid ? 'Yes' : 'No'}</span>
+                            <span class="detail-label">${escapeHtml(ripT('label_valid', 'Valid:'))}</span>
+                            <span class="detail-value">${data.is_valid ? escapeHtml(ripT('label_yes', 'Yes')) : escapeHtml(ripT('label_no', 'No'))}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Private:</span>
-                            <span class="detail-value">${data.is_private ? 'Yes' : 'No'}</span>
+                            <span class="detail-label">${escapeHtml(ripT('label_private', 'Private:'))}</span>
+                            <span class="detail-value">${data.is_private ? escapeHtml(ripT('label_yes', 'Yes')) : escapeHtml(ripT('label_no', 'No'))}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Version:</span>
+                            <span class="detail-label">${escapeHtml(ripT('label_version', 'Version:'))}</span>
                             <span class="detail-value">IPv${escapeHtml(data.ip_version || 'Unknown')}</span>
                         </div>
             `;
@@ -911,8 +942,26 @@
             if (data.country) {
                 html += `
                         <div class="detail-item">
-                            <span class="detail-label">Country:</span>
+                            <span class="detail-label">${escapeHtml(ripT('label_country', 'Country:'))}</span>
                             <span class="detail-value">${escapeHtml(data.country)}</span>
+                        </div>
+                `;
+            }
+
+            if (data.isp) {
+                html += `
+                        <div class="detail-item">
+                            <span class="detail-label">${escapeHtml(ripT('label_isp', 'ISP:'))}</span>
+                            <span class="detail-value">${escapeHtml(data.isp)}</span>
+                        </div>
+                `;
+            }
+
+            if (data.asn) {
+                html += `
+                        <div class="detail-item">
+                            <span class="detail-label">${escapeHtml(ripT('label_asn', 'ASN:'))}</span>
+                            <span class="detail-value">${escapeHtml(data.asn)}</span>
                         </div>
                 `;
             }
@@ -920,31 +969,82 @@
             if (data.reputation) {
                 html += `
                         <div class="detail-item">
-                            <span class="detail-label">Abuse Confidence:</span>
+                            <span class="detail-label">${escapeHtml(ripT('label_abuse_confidence', 'Abuse Confidence:'))}</span>
                             <span class="detail-value">${escapeHtml(data.reputation.abuseConfidencePercentage)}%</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Total Reports:</span>
+                            <span class="detail-label">${escapeHtml(ripT('label_total_reports', 'Total Reports:'))}</span>
                             <span class="detail-value">${escapeHtml(data.reputation.totalReports)}</span>
                         </div>
                 `;
+
+                if (data.reputation.usageType) {
+                    html += `
+                        <div class="detail-item">
+                            <span class="detail-label">${escapeHtml(ripT('label_usage_type', 'Usage Type:'))}</span>
+                            <span class="detail-value">${escapeHtml(data.reputation.usageType)}</span>
+                        </div>
+                    `;
+                }
+
+                if (data.reputation.domain) {
+                    html += `
+                        <div class="detail-item">
+                            <span class="detail-label">${escapeHtml(ripT('label_domain', 'Domain:'))}</span>
+                            <span class="detail-value">${escapeHtml(data.reputation.domain)}</span>
+                        </div>
+                    `;
+                }
+
+                if (data.reputation.numDistinctUsers) {
+                    html += `
+                        <div class="detail-item">
+                            <span class="detail-label">${escapeHtml(ripT('label_distinct_reporters', 'Distinct Reporters:'))}</span>
+                            <span class="detail-value">${escapeHtml(data.reputation.numDistinctUsers)}</span>
+                        </div>
+                    `;
+                }
+
+                if (data.reputation.lastReportedAt) {
+                    const lastReported = new Date(data.reputation.lastReportedAt);
+                    if (!isNaN(lastReported.getTime())) {
+                        html += `
+                        <div class="detail-item">
+                            <span class="detail-label">${escapeHtml(ripT('label_last_reported', 'Last Reported:'))}</span>
+                            <span class="detail-value">${escapeHtml(lastReported.toLocaleString())}</span>
+                        </div>
+                        `;
+                    }
+                }
             }
-            
+
+            html += `
+                    </div>
+                    <div class="ip-info-actions rip-mt-2">
+                        <button type="button" class="button block-ip" data-ip="${escapeHtml(data.ip_address)}">${escapeHtml(ripT('action_block_ip', 'Block IP'))}</button>
+                        <button type="button" class="button whitelist-ip" data-ip="${escapeHtml(data.ip_address)}">${escapeHtml(ripT('action_whitelist_ip', 'Whitelist IP'))}</button>
+            `;
+
+            if (reportedip_hive_ajax.ip_detail_base) {
+                const detailUrl = reportedip_hive_ajax.ip_detail_base + encodeURIComponent(data.ip_address) + '/';
+                html += `<a class="button" href="${escapeHtml(detailUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(ripT('action_view_report', 'View community report'))}</a>`;
+            }
+
             html += `
                     </div>
                 </div>
             `;
-            
+
             if (data.recent_logs && data.recent_logs.length > 0) {
                 html += `
                     <div class="ip-info-card">
-                        <h4>Recent Activity</h4>
+                        <h4>${escapeHtml(ripT('label_recent_activity', 'Recent Activity'))}</h4>
                         <table class="wp-list-table widefat fixed striped">
                             <thead>
                                 <tr>
-                                    <th>Time</th>
-                                    <th>Event</th>
-                                    <th>Severity</th>
+                                    <th>${escapeHtml(ripT('label_time', 'Time'))}</th>
+                                    <th>${escapeHtml(ripT('label_event', 'Event'))}</th>
+                                    <th>${escapeHtml(ripT('label_severity', 'Severity'))}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -974,7 +1074,7 @@
         cleanupOldLogs: function(e) {
             e.preventDefault();
             
-            if (!confirm('Are you sure you want to clean up old logs? This action cannot be undone.')) {
+            if (!confirm(ripT('confirm_cleanup_logs', 'Are you sure you want to clean up old logs? This action cannot be undone.'))) {
                 return;
             }
             
@@ -992,11 +1092,11 @@
                     if (response.success) {
                         ReportedIPAdmin.showNotification(response.data.message, 'success');
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to cleanup logs', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_cleanup_failed', 'Failed to cleanup logs'), 'error');
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                 },
                 complete: function() {
                     $button.prop('disabled', false).text('Clean Up Old Logs');
@@ -1007,7 +1107,7 @@
         anonymizeOldData: function(e) {
             e.preventDefault();
             
-            if (!confirm('Are you sure you want to anonymize old data? This will remove personal information from logs.')) {
+            if (!confirm(ripT('confirm_anonymize', 'Are you sure you want to anonymize old data? This will remove personal information from logs.'))) {
                 return;
             }
             
@@ -1025,11 +1125,11 @@
                     if (response.success) {
                         ReportedIPAdmin.showNotification(response.data.message, 'success');
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to anonymize data', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_anonymize_failed', 'Failed to anonymize data'), 'error');
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                 },
                 complete: function() {
                     $button.prop('disabled', false).text('Anonymize Old Data');
@@ -1070,13 +1170,13 @@
                         document.body.removeChild(a);
                         window.URL.revokeObjectURL(url);
                         
-                        ReportedIPAdmin.showNotification('Logs exported successfully', 'success');
+                        ReportedIPAdmin.showNotification(ripT('notify_logs_exported', 'Logs exported successfully'), 'success');
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Failed to export logs', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_logs_export_failed', 'Failed to export logs'), 'error');
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Network error occurred', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
                 },
                 complete: function() {
                     $button.prop('disabled', false);
@@ -1104,16 +1204,16 @@
                 success: function(response) {
                     if (response.success) {
                         var data = response.data;
-                        var msg = data.message || 'Import completed.';
+                        var msg = data.message || ripT('notify_import_completed', 'Import completed.');
                         ReportedIPAdmin.showNotification(msg, 'success');
                         // Reload page after short delay to show updated tables
                         setTimeout(function() { location.reload(); }, 1500);
                     } else {
-                        ReportedIPAdmin.showNotification(response.data || 'Import failed.', 'error');
+                        ReportedIPAdmin.showNotification(response.data || ripT('notify_import_failed', 'Import failed.'), 'error');
                     }
                 },
                 error: function() {
-                    ReportedIPAdmin.showNotification('Request failed.', 'error');
+                    ReportedIPAdmin.showNotification(ripT('notify_request_failed', 'Request failed.'), 'error');
                 },
                 complete: function() {
                     $btn.prop('disabled', false).text(originalText);
@@ -1136,17 +1236,23 @@
             const $notification = $(`
                 <div class="reportedip-notification ${type}">
                     ${message}
-                    <button type="button" class="notice-dismiss" style="float: right; background: none; border: none; cursor: pointer;">&times;</button>
+                    <button type="button" class="notice-dismiss">&times;</button>
                 </div>
             `);
-            
-            // Insert after the first h1 or at the top of .wrap
-            const $target = $('.wrap h1').first();
-            if ($target.length) {
-                $target.after($notification);
-            } else {
-                $('.wrap').prepend($notification);
+
+            // Create-once persistent live region after the first h1 (or at the
+            // top of .wrap) so screen readers announce each notification.
+            let $region = $('.rip-notify-region').first();
+            if (!$region.length) {
+                $region = $('<div class="rip-notify-region" role="status" aria-live="polite"></div>');
+                const $target = $('.wrap h1').first();
+                if ($target.length) {
+                    $target.after($region);
+                } else {
+                    $('.wrap').prepend($region);
+                }
             }
+            $region.append($notification);
             
             // Auto-hide after duration
             setTimeout(function() {

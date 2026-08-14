@@ -88,6 +88,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_operation_mode',
 					'reportedip_hive_api_endpoint',
 					'reportedip_hive_trusted_ip_header',
+					'reportedip_hive_trusted_proxy_ranges',
 				),
 			),
 			'detection'        => array(
@@ -113,6 +114,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_auto_block',
 					'reportedip_hive_block_duration',
 					'reportedip_hive_block_threshold',
+					'reportedip_hive_block_tor',
 					'reportedip_hive_report_only_mode',
 					'reportedip_hive_report_cooldown_hours',
 					'reportedip_hive_blocked_page_contact_url',

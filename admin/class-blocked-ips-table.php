@@ -102,15 +102,7 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 	protected function column_default( $item, $column_name ) {
 		switch ( $column_name ) {
 			case 'ip_address':
-				return sprintf(
-					'<strong><code class="ip-address">%s</code></strong>
-                     <button type="button" class="button-link copy-ip" data-ip="%s" title="%s">
-                         <span class="dashicons dashicons-clipboard"></span>
-                     </button>',
-					esc_html( $item->ip_address ),
-					esc_attr( $item->ip_address ),
-					esc_attr__( 'Copy IP', 'reportedip-hive' )
-				);
+				return ReportedIP_Hive_IP_Cell::render( $item->ip_address, array( 'strong' => true ) );
 
 			case 'reason':
 				return esc_html( $item->reason ?? '' );

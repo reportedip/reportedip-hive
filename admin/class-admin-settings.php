@@ -928,10 +928,13 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Reads the canonical sensor/feature toggles through the option router so the
 	 * "N/M layers active" hero KPI reflects the real configuration network-wide.
 	 *
+	 * Public and static since 2.1.41 so the WP-dashboard widget
+	 * ({@see ReportedIP_Hive_Dashboard_Widget}) can reuse the same counter.
+	 *
 	 * @return array{active:int,total:int}
 	 * @since  2.1.13
 	 */
-	private function get_active_protection_layers() {
+	public static function get_active_protection_layers() {
 		$layers = array(
 			'reportedip_hive_monitor_failed_logins'    => true,
 			'reportedip_hive_monitor_comments'         => true,
@@ -1004,12 +1007,13 @@ class ReportedIP_Hive_Admin_Settings {
 								<th><?php esc_html_e( 'Attacks', 'reportedip-hive' ); ?></th>
 								<th><?php esc_html_e( 'Last Seen', 'reportedip-hive' ); ?></th>
 								<th><?php esc_html_e( 'Status', 'reportedip-hive' ); ?></th>
+								<th><?php esc_html_e( 'Actions', 'reportedip-hive' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<?php foreach ( $top_ips as $row ) : ?>
 								<tr>
-									<td><code><?php echo esc_html( $row['ip'] ); ?></code></td>
+									<td><?php echo ReportedIP_Hive_IP_Cell::render( $row['ip'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render() returns fully escaped markup. ?></td>
 									<td><?php echo esc_html( number_format_i18n( $row['count'] ) ); ?></td>
 									<td>
 										<?php
@@ -1022,6 +1026,13 @@ class ReportedIP_Hive_Admin_Settings {
 											<span class="rip-badge rip-badge--danger"><?php esc_html_e( 'Blocked', 'reportedip-hive' ); ?></span>
 										<?php else : ?>
 											<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'Monitored', 'reportedip-hive' ); ?></span>
+										<?php endif; ?>
+									</td>
+									<td>
+										<?php if ( $row['blocked'] ) : ?>
+											<button type="button" class="button button-small unblock-ip" data-ip="<?php echo esc_attr( $row['ip'] ); ?>"><?php esc_html_e( 'Unblock', 'reportedip-hive' ); ?></button>
+										<?php else : ?>
+											<button type="button" class="button button-small button-danger block-ip" data-ip="<?php echo esc_attr( $row['ip'] ); ?>"><?php esc_html_e( 'Block', 'reportedip-hive' ); ?></button>
 										<?php endif; ?>
 									</td>
 								</tr>
@@ -1589,6 +1600,8 @@ class ReportedIP_Hive_Admin_Settings {
 				)
 			);
 		}
+
+		ReportedIP_Hive_Whats_New::maybe_render();
 
 		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe table name composed from Schema::table() with a hardcoded suffix.
@@ -2901,6 +2914,22 @@ class ReportedIP_Hive_Admin_Settings {
 				'sanitize_callback' => array( $this, 'sanitize_trusted_ip_header' ),
 			)
 		);
+		register_setting(
+			'reportedip_hive_api',
+			'reportedip_hive_trusted_proxy_ranges',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_trusted_proxy_ranges' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_blocking',
+			'reportedip_hive_block_tor',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
 
 		register_setting(
 			'reportedip_hive_protection_blocking',
@@ -3606,6 +3635,45 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Sanitize the trusted-proxy source ranges: keep only valid IP/CIDR lines
+	 * and surface a settings error when entries had to be dropped.
+	 *
+	 * The stored value is the cleaned newline-joined list; parsing at read
+	 * time happens in {@see ReportedIP_Hive_Proxy_Trust::parse_ranges()}.
+	 *
+	 * @param mixed $value Raw textarea submission.
+	 * @return string Cleaned newline-separated range list.
+	 * @since  2.1.41
+	 */
+	public function sanitize_trusted_proxy_ranges( $value ) {
+		$raw   = sanitize_textarea_field( (string) ( $value ?? '' ) );
+		$valid = ReportedIP_Hive_Proxy_Trust::parse_ranges( $raw );
+
+		$submitted = 0;
+		foreach ( preg_split( '/\r\n|\r|\n/', $raw ) as $line ) {
+			$line = trim( $line );
+			if ( '' !== $line && 0 !== strpos( $line, '#' ) ) {
+				$submitted++;
+			}
+		}
+
+		if ( $submitted > count( $valid ) ) {
+			add_settings_error(
+				'reportedip_hive_trusted_proxy_ranges',
+				'invalid_proxy_ranges',
+				sprintf(
+					/* translators: %d: number of rejected lines. */
+					__( '%d trusted-proxy entries were not a valid IP address or CIDR range and were removed.', 'reportedip-hive' ),
+					$submitted - count( $valid )
+				),
+				'warning'
+			);
+		}
+
+		return implode( "\n", $valid );
+	}
+
+	/**
 	 * Render the protection- and hardening-score section on the dashboard.
 	 *
 	 * Two SVG ring gauges (detection / hardening) followed by per-group item
@@ -3758,6 +3826,97 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Render the Community-API status strip at the top of the dashboard.
+	 *
+	 * All state comes from cached or local sources — this method never
+	 * performs an HTTP request. States in priority order: local mode renders
+	 * nothing; missing API key; exhausted quota; active rate limit; healthy.
+	 *
+	 * @return void
+	 * @since  2.1.41
+	 */
+	private function render_api_status_strip() {
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+
+		if ( ! $mode_manager->is_community_mode() ) {
+			return;
+		}
+
+		echo '<div class="rip-api-strip">';
+
+		if ( ! $this->api_client->is_configured() ) {
+			?>
+			<div class="rip-alert rip-alert--warning">
+				<div class="rip-alert__content rip-alert__content--row">
+					<div class="rip-alert__message"><?php esc_html_e( 'Community protection is not connected.', 'reportedip-hive' ); ?></div>
+					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary rip-button--sm">
+						<?php esc_html_e( 'Connect now', 'reportedip-hive' ); ?>
+					</a>
+				</div>
+			</div>
+			<?php
+			echo '</div>';
+			return;
+		}
+
+		$quota = $this->api_client->get_quota_status();
+
+		if ( ! empty( $quota['exhausted'] ) ) {
+			$countdown = '';
+			if ( ! empty( $quota['reset_time'] ) ) {
+				$reset_ts = strtotime( $quota['reset_time'] );
+				if ( $reset_ts && $reset_ts > time() ) {
+					$countdown = sprintf(
+						/* translators: %s: human-readable time span until the daily quota resets */
+						__( 'Resets in %s.', 'reportedip-hive' ),
+						human_time_diff( time(), $reset_ts )
+					);
+				}
+			}
+			?>
+			<div class="rip-alert rip-alert--danger">
+				<?php
+				echo esc_html( (string) ( $quota['message'] ?? '' ) );
+				if ( '' !== $countdown ) {
+					echo ' ' . esc_html( $countdown );
+				}
+				?>
+			</div>
+			<?php
+			echo '</div>';
+			return;
+		}
+
+		if ( $this->api_client->is_rate_limited( null ) ) {
+			?>
+			<div class="rip-alert rip-alert--warning">
+				<?php esc_html_e( 'API temporarily rate-limited — lookups and reports resume automatically.', 'reportedip-hive' ); ?>
+			</div>
+			<?php
+			echo '</div>';
+			return;
+		}
+
+		$summary = __( 'Community API connected.', 'reportedip-hive' );
+		if ( isset( $quota['remaining'], $quota['limit'] )
+			&& is_numeric( $quota['remaining'] )
+			&& is_numeric( $quota['limit'] )
+			&& (int) $quota['remaining'] >= 0
+			&& (int) $quota['limit'] > 0 ) {
+			$summary .= ' ' . sprintf(
+				/* translators: 1: remaining daily reports, 2: daily report limit */
+				__( '%1$s of %2$s reports remaining today.', 'reportedip-hive' ),
+				number_format_i18n( (int) $quota['remaining'] ),
+				number_format_i18n( (int) $quota['limit'] )
+			);
+		}
+		?>
+		<div class="rip-alert rip-alert--success"><?php echo esc_html( $summary ); ?></div>
+		<?php
+		echo '</div>';
+	}
+
+	/**
 	 * Dashboard page
 	 */
 	public function dashboard_page() {
@@ -3767,6 +3926,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 
 		self::render_page_header( __( 'ReportedIP Hive', 'reportedip-hive' ), __( 'Security Dashboard', 'reportedip-hive' ) );
+		$this->render_api_status_strip();
 		?>
 
 			<div class="rip-dashboard">
@@ -4300,9 +4460,9 @@ class ReportedIP_Hive_Admin_Settings {
 				</h3>
 			</div>
 			<div class="rip-card__body">
-				<form id="block-ip-form" method="post" class="rip-form-inline">
+				<form id="block-ip-form" method="post" class="rip-form-inline" data-current-ip="<?php echo esc_attr( class_exists( 'ReportedIP_Hive' ) ? (string) ReportedIP_Hive::get_client_ip() : '' ); ?>">
 					<div class="rip-form-group">
-						<input type="text" id="block-ip-address" name="ip_address" class="rip-input" placeholder="<?php esc_html_e( 'IP Address', 'reportedip-hive' ); ?>" required />
+						<input type="text" id="block-ip-address" name="ip_address" class="rip-input" placeholder="<?php esc_html_e( 'IP Address or CIDR', 'reportedip-hive' ); ?>" required />
 					</div>
 					<div class="rip-form-group">
 						<input type="text" id="block-ip-reason" name="reason" class="rip-input" placeholder="<?php esc_html_e( 'Reason', 'reportedip-hive' ); ?>" required />
@@ -4388,6 +4548,55 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 					<button type="submit" class="rip-button rip-button--success"><?php esc_html_e( 'Add to Whitelist', 'reportedip-hive' ); ?></button>
 				</form>
+				<?php
+				$current_ip = class_exists( 'ReportedIP_Hive' ) ? (string) ReportedIP_Hive::get_client_ip() : '';
+				if ( '' !== $current_ip ) :
+					$whitelist_prefill = ReportedIP_Hive_IP_Manager::ipv6_network_cidr( $current_ip );
+					if ( null === $whitelist_prefill ) {
+						$whitelist_prefill = $current_ip;
+					}
+					?>
+					<div class="rip-form-inline rip-mt-2">
+						<button type="button"
+							class="rip-button rip-button--secondary rip-button--sm"
+							id="rip-whitelist-add-mine"
+							data-target="whitelist-ip-address"
+							data-ip="<?php echo esc_attr( $whitelist_prefill ); ?>">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+							<?php esc_html_e( 'Add my IP', 'reportedip-hive' ); ?>
+						</button>
+						<span class="rip-help-text">
+							<?php
+							printf(
+								/* translators: %s: detected client IP address */
+								esc_html__( 'Detected: %s', 'reportedip-hive' ),
+								'<code>' . esc_html( $current_ip ) . '</code>'
+							);
+							if ( $whitelist_prefill !== $current_ip ) {
+								echo ' ';
+								printf(
+									/* translators: %s: IPv6 network in CIDR notation */
+									esc_html__( 'IPv6 addresses rotate inside their network, so %s is suggested.', 'reportedip-hive' ),
+									'<code>' . esc_html( $whitelist_prefill ) . '</code>'
+								);
+							}
+							?>
+						</span>
+					</div>
+					<script>
+					(function () {
+						var btn = document.getElementById('rip-whitelist-add-mine');
+						if (!btn) { return; }
+						btn.addEventListener('click', function () {
+							var ip = btn.getAttribute('data-ip') || '';
+							var input = document.getElementById(btn.getAttribute('data-target'));
+							if (!input || !ip) { return; }
+							input.value = ip;
+							input.focus();
+						});
+					})();
+					</script>
+				<?php endif; ?>
 			</div>
 		</div>
 
@@ -4449,7 +4658,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 				<div id="lookup-results" class="rip-lookup-results rip-hidden">
 					<h4 class="rip-mb-2"><?php esc_html_e( 'Lookup Results', 'reportedip-hive' ); ?></h4>
-					<div id="lookup-results-content"></div>
+					<div id="lookup-results-content" role="status" aria-live="polite"></div>
 				</div>
 			</div>
 		</div>
@@ -4643,6 +4852,16 @@ class ReportedIP_Hive_Admin_Settings {
 					</select>
 					<p class="rip-help-text">
 						<?php esc_html_e( 'Select which HTTP header to trust for determining the client IP. Use "None" unless your site is behind a reverse proxy.', 'reportedip-hive' ); ?>
+					</p>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_trusted_proxy_ranges">
+						<?php esc_html_e( 'Trusted Proxy Sources', 'reportedip-hive' ); ?>
+					</label>
+					<textarea name="reportedip_hive_trusted_proxy_ranges" id="reportedip_hive_trusted_proxy_ranges" class="rip-textarea" rows="5" placeholder="<?php esc_attr_e( "203.0.113.10\n198.51.100.0/24\n2001:db8::/32", 'reportedip-hive' ); ?>"><?php echo esc_textarea( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_proxy_ranges', '' ) ); ?></textarea>
+					<p class="rip-help-text">
+						<?php esc_html_e( 'One IP address or CIDR range per line. When set, the trusted IP header above is only honored for requests that connect from one of these proxy addresses — anyone else cannot spoof the header. Leave empty to accept the header from any peer (previous behavior). Applies to both firewall layers.', 'reportedip-hive' ); ?>
 					</p>
 				</div>
 
@@ -5059,6 +5278,9 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 1.2.0
 	 */
 	private function render_blocking_tab() {
+		$tor_status    = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'tor_blocking' );
+		$tor_available = ! empty( $tor_status['available'] );
+		$tor_on        = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_tor', false );
 		?>
 		<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
 			<?php settings_fields( 'reportedip_hive_protection_blocking' ); ?>
@@ -5067,6 +5289,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<input type="hidden" name="reportedip_hive_auto_block" value="0" />
 			<input type="hidden" name="reportedip_hive_report_only_mode" value="0" />
 			<input type="hidden" name="reportedip_hive_block_escalation_enabled" value="0" />
+			<input type="hidden" name="reportedip_hive_block_tor" value="0" />
 
 			<div class="rip-card rip-decision-flow rip-mb-4">
 				<h3 class="rip-decision-flow__title"><?php esc_html_e( 'How blocking decides', 'reportedip-hive' ); ?></h3>
@@ -5157,6 +5380,33 @@ class ReportedIP_Hive_Admin_Settings {
 							<p class="rip-help-text"><?php esc_html_e( 'After this many days without a new block, the IP starts again at ladder step 1.', 'reportedip-hive' ); ?></p>
 						</div>
 					</div>
+				</div>
+			</div>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+					<?php esc_html_e( 'Tor exit nodes', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Reject login attempts from known Tor exit nodes. The exit-node list is delivered through the signed rule sync and refreshed twice a day; blocks are temporary (24 hours by default) because exit nodes rotate.', 'reportedip-hive' ); ?></p>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input
+							type="checkbox"
+							name="reportedip_hive_block_tor"
+							value="1"
+							class="rip-toggle__input"
+							<?php checked( $tor_on ); ?>
+							<?php disabled( ! $tor_available && ! $tor_on ); ?>
+						/>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Block Tor exit nodes', 'reportedip-hive' ); ?></span>
+					</label>
+					&nbsp;<?php self::render_tier_marker( $tor_status ); ?>
+					<?php if ( ! $tor_available ) : ?>
+						<p class="rip-help-text"><?php esc_html_e( 'Available on Professional, Business and Enterprise plans and requires Community mode.', 'reportedip-hive' ); ?></p>
+					<?php endif; ?>
 				</div>
 			</div>
 
