@@ -104,6 +104,16 @@ if ( class_exists( PucFactory::class ) && ( is_admin() || wp_doing_cron() || ( d
 class ReportedIP_Hive {
 
 	/**
+	 * Option holding the access-verdict cache epoch.
+	 *
+	 * Advancing it retires every cached verdict at once; see
+	 * {@see self::flush_ip_verdict_cache()}.
+	 *
+	 * @var string
+	 */
+	const OPTION_ACCESS_CACHE_EPOCH = 'reportedip_hive_access_cache_epoch';
+
+	/**
 	 * Single instance of the class
 	 */
 	private static $instance = null;
@@ -186,6 +196,10 @@ class ReportedIP_Hive {
 
 		add_action( 'admin_init', array( $this, 'block_admin_access' ) );
 		add_action( 'admin_notices', array( $this, 'display_api_status_notices' ) );
+
+		add_action( 'reportedip_hive_ip_blocked', array( __CLASS__, 'flush_ip_verdict_cache' ) );
+		add_action( 'reportedip_hive_ip_unblocked', array( __CLASS__, 'flush_ip_verdict_cache' ) );
+		add_action( 'reportedip_hive_whitelist_changed', array( __CLASS__, 'flush_ip_verdict_cache' ) );
 
 		add_action( 'admin_head', array( $this, 'suppress_foreign_notices_on_plugin_pages' ) );
 
@@ -1503,10 +1517,16 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Block admin access for blocked IPs
+	 * Block back-office access for blocked IPs.
+	 *
+	 * Runs on `admin_init`, which `admin-ajax.php` never fires — that surface
+	 * is covered by {@see self::check_ip_access()} on `init` instead.
+	 *
+	 * @return void
+	 * @since  1.0.0
 	 */
 	public function block_admin_access() {
-		if ( ! is_admin() || wp_doing_ajax() ) {
+		if ( ! is_admin() ) {
 			return;
 		}
 
@@ -1706,10 +1726,67 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Check IP access on init
+	 * Object-cache key holding the cached access verdict for one IP.
+	 *
+	 * The key carries an epoch so verdicts that cannot be addressed
+	 * individually — everything decided by a CIDR range or the whitelist —
+	 * can still be dropped in one step by advancing the epoch.
+	 *
+	 * @param string $ip_address Client IP.
+	 * @return string Cache key inside the `reportedip` group.
+	 * @since  2.1.44
+	 */
+	private static function ip_verdict_cache_key( $ip_address ) {
+		$epoch = (int) ReportedIP_Hive_Option_Routing::get( self::OPTION_ACCESS_CACHE_EPOCH, 0 );
+
+		return 'rip_access_' . $epoch . '_' . md5( (string) $ip_address );
+	}
+
+	/**
+	 * Drop cached access verdicts after the block or whitelist state changed.
+	 *
+	 * Without this the 300-second verdict cache outlives the decision that
+	 * produced it: a freshly blocked IP would keep browsing on a warm
+	 * `allowed` entry, and an unblocked visitor would keep receiving the 403
+	 * long after the block was lifted. Only relevant with a persistent object
+	 * cache — otherwise `wp_cache_*` is request-local and expires anyway.
+	 *
+	 * An exact IP invalidates just its own key. A CIDR range (or an empty
+	 * argument) cannot enumerate the addresses it covers, so it advances the
+	 * epoch and retires every cached verdict at once.
+	 *
+	 * @param string $ip_address IP, CIDR range, or '' for a full flush.
+	 * @return void
+	 * @since  2.1.44
+	 */
+	public static function flush_ip_verdict_cache( $ip_address = '' ) {
+		$ip_address = (string) $ip_address;
+
+		if ( '' !== $ip_address && false === strpos( $ip_address, '/' ) ) {
+			wp_cache_delete( self::ip_verdict_cache_key( $ip_address ), 'reportedip' );
+			return;
+		}
+
+		$epoch = (int) ReportedIP_Hive_Option_Routing::get( self::OPTION_ACCESS_CACHE_EPOCH, 0 );
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_ACCESS_CACHE_EPOCH, $epoch + 1 );
+	}
+
+	/**
+	 * Enforce the IP block list on every front-controller request.
+	 *
+	 * `admin-ajax.php` is deliberately included: it is reachable without
+	 * authentication through every `wp_ajax_nopriv_*` action a site has
+	 * registered, so exempting it left blocked IPs a fully unguarded entry
+	 * point. Only WP-Cron stays exempt — its loopback originates from the
+	 * server itself and must never be able to self-block the site.
+	 * Authenticated operators are spared separately by
+	 * {@see self::is_block_exempt_operator()}.
+	 *
+	 * @return void
+	 * @since  1.0.0
 	 */
 	private function check_ip_access() {
-		if ( wp_doing_ajax() || wp_doing_cron() ) {
+		if ( wp_doing_cron() ) {
 			return;
 		}
 
@@ -1719,7 +1796,7 @@ class ReportedIP_Hive {
 
 		$ip_address = $this->get_client_ip();
 
-		$cache_key = 'rip_access_' . md5( $ip_address );
+		$cache_key = self::ip_verdict_cache_key( $ip_address );
 		$cached    = wp_cache_get( $cache_key, 'reportedip' );
 		if ( $cached === 'allowed' ) {
 			return;
@@ -1806,6 +1883,22 @@ class ReportedIP_Hive {
 		do_action( 'reportedip_hive_access_denied', self::get_client_ip(), $reportedip_hive_block_context );
 
 		status_header( 403 );
+
+		/*
+		 * AJAX and REST callers cannot render the themed block page — they
+		 * expect a machine-readable body. Serving the full HTML document there
+		 * would leave the caller parsing markup for a status it already has.
+		 */
+		if ( wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			wp_send_json_error(
+				array(
+					'code'    => 'ip_blocked',
+					'message' => __( 'Access denied. Your IP address has been blocked due to suspicious activity.', 'reportedip-hive' ),
+				),
+				403
+			);
+		}
+
 		include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/blocked.php';
 		exit;
 	}

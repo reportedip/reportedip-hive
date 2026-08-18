@@ -180,13 +180,22 @@ class ReportedIP_Hive_WAF {
 	 */
 	public function inspect() {
 		/*
-		 * Exempt cron, WP-CLI and the authenticated back office. wp-admin and
-		 * admin-ajax (both `is_admin()` at this hook) are backend contexts whose
-		 * payloads come from already-authenticated users; inspecting them only
-		 * manufactures false positives. REST_REQUEST is not yet defined at
-		 * `init` priority 1, so back-office detection rests on is_admin().
+		 * Exempt cron, WP-CLI and the *authenticated* back office. wp-admin and
+		 * admin-ajax are both `is_admin()` at this hook, but only wp-admin is
+		 * reliably authenticated: admin-ajax and admin-post serve every
+		 * `wp_ajax_nopriv_*` / `admin_post_nopriv_*` action to anonymous
+		 * callers. Skipping those on the is_admin() flag alone left their POST
+		 * bodies uninspected by this layer, and the guard skips body inspection
+		 * whenever a (pre-WordPress unverifiable) login cookie is merely
+		 * present — so an anonymous request carrying a forged cookie reached
+		 * the handler unscanned by both layers. Anonymous requests to those two
+		 * endpoints are therefore inspected here. REST_REQUEST is not yet
+		 * defined at `init` priority 1, so detection rests on is_admin().
 		 */
-		if ( wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) || is_admin() ) {
+		$unauthenticated_admin_endpoint = ! is_user_logged_in()
+			&& ( wp_doing_ajax() || self::is_admin_post_request() );
+
+		if ( wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) || ( is_admin() && ! $unauthenticated_admin_endpoint ) ) {
 			return;
 		}
 		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true ) ) {
@@ -258,10 +267,13 @@ class ReportedIP_Hive_WAF {
 			$rules,
 			wp_unslash( $_SERVER ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- wp_unslash applied; raw attack surface inspected verbatim, never echoed.
 			wp_unslash( $_POST ),   // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Raw attack surface inspected before any handler; nonce belongs to the real handler.
-			is_string( $raw_body ) ? $raw_body : null
+			is_string( $raw_body ) ? $raw_body : null,
+			function ( array $candidate ) use ( $exceptions, $route, $path, $ip ): bool {
+				return $this->hit_is_excepted( $exceptions, $route, $path, $ip, $candidate );
+			}
 		);
 
-		if ( null !== $hit && ! $this->hit_is_excepted( $exceptions, $route, $path, $ip, $hit ) ) {
+		if ( null !== $hit ) {
 			$this->handle_hit( $hit, $ip );
 		}
 	}
@@ -546,14 +558,20 @@ class ReportedIP_Hive_WAF {
 	 * unit-testable and reusable. ReDoS is bounded by a temporary PCRE
 	 * backtrack-limit that is always restored.
 	 *
+	 * A rule the caller cancels through `$skip_hit` does not end the scan: the
+	 * loop continues with the remaining rules, matching the guard's `continue`
+	 * (parity rule 1). Stopping at an excepted first match would let a single
+	 * exception mask every rule ordered behind it.
+	 *
 	 * @param array<int,array<string,mixed>> $rules    Active rules.
 	 * @param array<string,mixed>            $server   Request server vars (e.g. $_SERVER), unslashed.
 	 * @param array<string,mixed>            $post     Request body params (e.g. $_POST), unslashed.
 	 * @param string|null                    $raw_body Raw request body for non-form payloads, or null.
+	 * @param callable|null                  $skip_hit Receives the enriched hit; return true to keep scanning.
 	 * @return array<string,mixed>|null The matched rule, or null when nothing matches.
 	 * @since  2.1.2
 	 */
-	public function evaluate( array $rules, array $server, array $post, $raw_body ) {
+	public function evaluate( array $rules, array $server, array $post, $raw_body, ?callable $skip_hit = null ) {
 		if ( empty( $rules ) ) {
 			return null;
 		}
@@ -580,9 +598,15 @@ class ReportedIP_Hive_WAF {
 			}
 			$fragment = $this->match_fragment( (string) $rule['pattern'], $subject );
 			if ( null !== $fragment ) {
-				$hit                   = $rule;
-				$hit['matched']        = $fragment;
-				$hit['matched_target'] = $target;
+				$candidate                   = $rule;
+				$candidate['matched']        = $fragment;
+				$candidate['matched_target'] = $target;
+
+				if ( null !== $skip_hit && $skip_hit( $candidate ) ) {
+					continue;
+				}
+
+				$hit = $candidate;
 				break;
 			}
 		}
@@ -682,6 +706,20 @@ class ReportedIP_Hive_WAF {
 	 */
 	public function active_rule_count() {
 		return count( $this->get_active_rules() );
+	}
+
+	/**
+	 * Whether the current request targets `admin-post.php`.
+	 *
+	 * WordPress exposes no flag for it the way `wp_doing_ajax()` covers
+	 * admin-ajax, so the script name is the only signal available at `init`.
+	 *
+	 * @return bool
+	 * @since  2.1.44
+	 */
+	private static function is_admin_post_request(): bool {
+		$script = isset( $_SERVER['SCRIPT_NAME'] ) ? (string) wp_unslash( $_SERVER['SCRIPT_NAME'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Compared against a literal basename, never stored or echoed.
+		return 'admin-post.php' === basename( $script );
 	}
 
 	/**

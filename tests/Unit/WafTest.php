@@ -387,6 +387,74 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'first', $hit['id'] );
 		}
 
+		/**
+		 * An excepted match must not end the scan.
+		 *
+		 * Stopping at the first hit and only then testing it against the
+		 * exceptions let a single rule exception mask every rule ordered
+		 * behind it: an attacker appended a fragment matching the excepted
+		 * rule and the payload rule was never reached. The guard always used
+		 * `continue` here — the engine now matches it (parity rule 1).
+		 */
+		public function test_evaluate_keeps_scanning_past_an_excepted_hit(): void {
+			$rules = array(
+				array( 'id' => 'excepted', 'group' => 'xss', 'pattern' => '(?i)<script', 'paranoia' => 1, 'target' => 'all' ),
+				array( 'id' => 'payload', 'group' => 'sql_injection', 'pattern' => '(?i)\bunion\b[\s\S]{0,80}?\bselect\b', 'paranoia' => 1, 'target' => 'all' ),
+			);
+
+			$hit = $this->waf()->evaluate(
+				$rules,
+				array( 'REQUEST_URI' => '/?a=<script>&b=union+select+1' ),
+				array(),
+				null,
+				static function ( array $candidate ): bool {
+					return 'excepted' === $candidate['id'];
+				}
+			);
+
+			$this->assertNotNull( $hit, 'The non-excepted rule behind the excepted one must still be found' );
+			$this->assertSame( 'payload', $hit['id'] );
+		}
+
+		public function test_evaluate_returns_null_when_every_hit_is_excepted(): void {
+			$rules = array(
+				array( 'id' => 'excepted', 'group' => 'xss', 'pattern' => '(?i)<script', 'paranoia' => 1, 'target' => 'all' ),
+			);
+
+			$hit = $this->waf()->evaluate(
+				$rules,
+				array( 'REQUEST_URI' => '/?a=<script>' ),
+				array(),
+				null,
+				static fn( array $candidate ): bool => true
+			);
+
+			$this->assertNull( $hit );
+		}
+
+		public function test_evaluate_hands_the_enriched_hit_to_the_exception_check(): void {
+			$rules = array(
+				array( 'id' => 'sqli', 'group' => 'sql_injection', 'pattern' => '(?i)\bunion\b[\s\S]{0,80}?\bselect\b', 'paranoia' => 1, 'target' => 'all' ),
+			);
+
+			$seen = null;
+			$this->waf()->evaluate(
+				$rules,
+				array( 'REQUEST_URI' => '/?b=union+select+1' ),
+				array(),
+				null,
+				static function ( array $candidate ) use ( &$seen ): bool {
+					$seen = $candidate;
+					return false;
+				}
+			);
+
+			$this->assertIsArray( $seen, 'The exception check must receive the candidate' );
+			$this->assertSame( 'sqli', $seen['id'] );
+			$this->assertArrayHasKey( 'matched', $seen, 'Exception scoping needs the matched fragment' );
+			$this->assertArrayHasKey( 'matched_target', $seen );
+		}
+
 		public function test_paranoia_cap_is_one_without_priority(): void {
 			$this->assertSame( 1, $this->waf()->paranoia_cap() );
 		}
