@@ -270,12 +270,22 @@ class ReportedIP_Hive_Scan_Detector {
 
 	/**
 	 * Lower-case, query-stripped request path.
+	 *
+	 * Parsed raw and decoded explicitly: `sanitize_text_field()` removes every
+	 * `%XX` sequence, so a probe for `/%2Eenv` reached the signature list as
+	 * `/env` and never matched the `.env` honeypot — while the web server
+	 * happily served the real file.
 	 */
 	private function get_request_path(): string {
-		$raw  = isset( $_SERVER['REQUEST_URI'] )
-			? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) )
+		$raw = isset( $_SERVER['REQUEST_URI'] )
+			? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw path required: sanitising drops percent-encoding and hides scanner probes; value is matched against signatures, control chars stripped below.
 			: '';
+
+		$raw  = '/' . ltrim( $raw, '/' );
 		$path = (string) wp_parse_url( $raw, PHP_URL_PATH );
+		$path = rawurldecode( $path );
+		$path = (string) preg_replace( '/[\x00-\x1F\x7F]/', '', $path );
+
 		return strtolower( $path );
 	}
 

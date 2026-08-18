@@ -168,10 +168,18 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		if ( ! is_string( $path ) || '' === $path ) {
 			return false;
 		}
-		$only_path = wp_parse_url( $path, PHP_URL_PATH );
+		$only_path = wp_parse_url( '/' . ltrim( $path, '/' ), PHP_URL_PATH );
 		if ( ! is_string( $only_path ) || '' === $only_path ) {
 			return false;
 		}
+
+		/*
+		 * Decode once so a percent-escaped probe (`/%2Eenv.backup`) matches the
+		 * same bait the web server would resolve it to. Control characters are
+		 * dropped afterwards: the value reaches the log.
+		 */
+		$only_path = rawurldecode( $only_path );
+		$only_path = (string) preg_replace( '/[\x00-\x1F\x7F]/', '', $only_path );
 		$only_path = strtolower( rtrim( $only_path, '/' ) );
 		if ( '' === $only_path ) {
 			return false;
@@ -216,7 +224,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		}
 
 		$uri = isset( $_SERVER['REQUEST_URI'] )
-			? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) )
+			? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw URI required: sanitising strips percent-encoding and hides escaped probes; is_decoy_path() decodes and cleans it.
 			: '';
 		if ( '' === $uri || ! self::is_decoy_path( $uri ) ) {
 			return;
@@ -232,8 +240,10 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 			return;
 		}
 
-		$path_only = wp_parse_url( $uri, PHP_URL_PATH );
-		$path_only = is_string( $path_only ) ? strtolower( rtrim( $path_only, '/' ) ) : '';
+		$path_only = wp_parse_url( '/' . ltrim( $uri, '/' ), PHP_URL_PATH );
+		$path_only = is_string( $path_only ) ? rawurldecode( $path_only ) : '';
+		$path_only = (string) preg_replace( '/[\x00-\x1F\x7F]/', '', $path_only );
+		$path_only = strtolower( rtrim( $path_only, '/' ) );
 
 		$htaccess_handled = class_exists( 'ReportedIP_Hive_Decoy_Htaccess_Writer' )
 			&& ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->is_block_present();

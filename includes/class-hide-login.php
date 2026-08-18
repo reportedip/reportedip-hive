@@ -218,6 +218,12 @@ class ReportedIP_Hive_Hide_Login {
 
 	/**
 	 * Lower-cased, query-stripped request path with leading slash, no trailing slash.
+	 *
+	 * The URI must be parsed raw and decoded explicitly. `sanitize_text_field()`
+	 * strips every `%XX` sequence outright, so `/wp-login%2Ephp` — which the web
+	 * server still resolves to wp-login.php — arrived here as `/wp-loginphp` and
+	 * slipped past the comparison, handing out the hidden login form. The WAF
+	 * engine reads the raw URI for the same reason.
 	 */
 	private function get_request_path(): string {
 		if ( null !== $this->request_path ) {
@@ -225,10 +231,19 @@ class ReportedIP_Hive_Hide_Login {
 		}
 
 		$raw = isset( $_SERVER['REQUEST_URI'] )
-			? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) )
+			? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw path required: sanitising drops percent-encoding and reopens the %2E bypass; value is only compared, never echoed or stored.
 			: '';
 
+		/*
+		 * Collapse repeated leading slashes first: `//wp-login.php` parses as a
+		 * protocol-relative URL whose host is `wp-login.php` and whose path is
+		 * empty, which the server still serves as the login script.
+		 */
+		$raw = '/' . ltrim( $raw, '/' );
+
 		$path = (string) wp_parse_url( $raw, PHP_URL_PATH );
+		$path = rawurldecode( $path );
+		$path = (string) preg_replace( '/[\x00-\x1F\x7F]/', '', $path );
 
 		$home = (string) wp_parse_url( home_url(), PHP_URL_PATH );
 		if ( '' !== $home && '/' !== $home && str_starts_with( $path, $home ) ) {

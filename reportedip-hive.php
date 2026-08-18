@@ -1407,14 +1407,27 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Handle comment posts
+	 * Handle comment posts.
+	 *
+	 * The IP comes from `get_client_ip()`, not from `comment_author_IP`:
+	 * WordPress fills that field from REMOTE_ADDR and ignores the configured
+	 * client-IP header, so behind a reverse proxy every visitor's spam
+	 * aggregated onto the edge address. That both reported infrastructure to
+	 * the community feed and left the actual spammer untouched, because
+	 * enforcement resolves the client IP the canonical way.
+	 *
+	 * @param int    $comment_id  Comment ID.
+	 * @param mixed  $approved    Approval state, or 'spam'.
+	 * @param array  $commentdata Comment data.
+	 * @return void
+	 * @since  1.0.0
 	 */
 	public function handle_comment_post( $comment_id, $approved, $commentdata ) {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_comments', true ) ) {
 			return;
 		}
 
-		$ip_address = $commentdata['comment_author_IP'];
+		$ip_address = $this->get_client_ip();
 
 		if ( $this->ip_manager->is_whitelisted( $ip_address ) ) {
 			return;
