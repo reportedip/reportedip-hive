@@ -141,18 +141,38 @@ class ReportedIP_Hive_Ajax_Handler {
 	}
 
 	/**
+	 * Enforce the administrator capability, or terminate with a JSON error.
+	 *
+	 * Every handler in this class repeated this check, and the payloads had
+	 * drifted into three shapes — a bare string, an array, and one saying
+	 * "Unauthorized" instead of "Insufficient permissions". One entry point
+	 * keeps the answer identical everywhere.
+	 *
+	 * The nonce check deliberately stays inline in each handler: PHPCS only
+	 * recognises `check_ajax_referer()` within the same function scope, and
+	 * moving it here would suppress the very warnings that catch a handler
+	 * which forgot it.
+	 *
+	 * The payload is a plain string because that is what the admin scripts
+	 * render; callers reading `data.message` fall back to their own default
+	 * text rather than printing an object.
+	 *
+	 * @return void
+	 * @since  2.1.44
+	 */
+	private function require_admin_capability() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
+		}
+	}
+
+	/**
 	 * AJAX: Set operation mode (local/community)
 	 */
 	public function ajax_set_mode() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				array(
-					'message' => __( 'Insufficient permissions.', 'reportedip-hive' ),
-				)
-			);
-		}
+		$this->require_admin_capability();
 
 		$mode = isset( $_POST['mode'] ) ? sanitize_text_field( wp_unslash( $_POST['mode'] ) ) : '';
 
@@ -195,9 +215,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_test_connection() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$result = $this->api_client->test_connection();
 		wp_send_json( $result );
@@ -213,9 +231,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_send_test_mail() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$current_user = wp_get_current_user();
 		$default_to   = ! empty( $current_user->user_email )
@@ -316,9 +332,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_unblock_ip() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$ip_address = isset( $_POST['ip_address'] ) ? sanitize_text_field( wp_unslash( $_POST['ip_address'] ) ) : '';
 
@@ -350,9 +364,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_export_logs() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$format = isset( $_REQUEST['format'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['format'] ) ) : 'csv';
 		$days   = isset( $_REQUEST['days'] ) ? absint( wp_unslash( $_REQUEST['days'] ) ) : 30;
@@ -435,9 +447,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_lookup_ip() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$ip_address = isset( $_POST['ip_address'] ) ? sanitize_text_field( wp_unslash( $_POST['ip_address'] ) ) : '';
 
@@ -459,9 +469,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_block_ip() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$ip_address = isset( $_POST['ip_address'] ) ? sanitize_text_field( wp_unslash( $_POST['ip_address'] ) ) : '';
 		$reason     = isset( $_POST['reason'] ) ? sanitize_textarea_field( wp_unslash( $_POST['reason'] ) ) : '';
@@ -494,9 +502,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_add_whitelist() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$ip_address = isset( $_POST['ip_address'] ) ? sanitize_text_field( wp_unslash( $_POST['ip_address'] ) ) : '';
 		$reason     = isset( $_POST['reason'] ) ? sanitize_textarea_field( wp_unslash( $_POST['reason'] ) ) : '';
@@ -533,9 +539,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_remove_whitelist() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$ip_address = isset( $_POST['ip_address'] ) ? sanitize_text_field( wp_unslash( $_POST['ip_address'] ) ) : '';
 
@@ -568,9 +572,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_add_waf_exception() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$args = array(
 			'scope'               => isset( $_POST['scope'] ) ? sanitize_key( wp_unslash( $_POST['scope'] ) ) : 'rule',
@@ -605,9 +607,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_remove_waf_exception() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
 		if ( $id <= 0 ) {
@@ -627,9 +627,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_cleanup_logs() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$retention_days = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 );
@@ -659,9 +657,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_anonymize_data() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$anonymize_days = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_anonymize_days', 7 );
@@ -691,9 +687,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_import_blocked_csv() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$content  = $this->validate_csv_upload();
 		$duration = isset( $_POST['duration'] ) ? intval( $_POST['duration'] ) : 720;
@@ -769,9 +763,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_import_whitelist_csv() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$content = $this->validate_csv_upload();
 
@@ -807,9 +799,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_test_logging() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$severity = isset( $_POST['severity'] ) ? sanitize_text_field( wp_unslash( $_POST['severity'] ) ) : 'medium';
 
@@ -847,9 +837,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_test_database() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			global $wpdb;
@@ -916,9 +904,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_trigger_cron() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$this->logger->info(
@@ -950,9 +936,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_test_auto_block() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$test_ip      = '192.0.2.1';
@@ -1014,9 +998,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_simulate_failed_login() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$test_ip   = '192.0.2.2';
@@ -1094,9 +1076,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_clear_cache() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$cache   = ReportedIP_Hive_Cache::get_instance();
@@ -1124,9 +1104,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_cleanup_cache() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$cache   = ReportedIP_Hive_Cache::get_instance();
@@ -1154,9 +1132,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_retry_report() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$report_id = intval( $_POST['report_id'] ?? 0 );
 
@@ -1231,9 +1207,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_retry_all_failed() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$reset_count = $this->database->reset_all_failed_reports();
@@ -1291,9 +1265,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_delete_report() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$report_id = intval( $_POST['report_id'] ?? 0 );
 
@@ -1335,9 +1307,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_reset_settings() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$defaults = ReportedIP_Hive::get_default_options();
@@ -1383,9 +1353,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_reset_api_stats() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$this->api_client->reset_api_statistics();
@@ -1415,9 +1383,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_reset_all_data() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			ReportedIP_Hive_Schema::truncate_all_tables();
@@ -1441,9 +1407,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_dismiss_notice() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$notice_id = isset( $_POST['notice_id'] ) ? sanitize_key( $_POST['notice_id'] ) : '';
 		if ( empty( $notice_id ) ) {
@@ -1462,9 +1426,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_dashboard_stats() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
-		}
+		$this->require_admin_capability();
 
 		$stats = array(
 			'blocked_ips'     => $this->database->count_blocked_ips(),
@@ -1537,9 +1499,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_run_queue_now() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		try {
 			$cron_handler = $this->plugin->get_cron_handler();
@@ -1568,9 +1528,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_rule_sync_now() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
 		if ( empty( $status['available'] ) ) {
@@ -1597,9 +1555,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_waf_toggle() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
 		$map   = array(
@@ -1640,9 +1596,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_waf_set_paranoia() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
 		if ( empty( $status['available'] ) ) {
@@ -1672,9 +1626,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_waf_dropin_toggle() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
 			wp_send_json_error( array( 'message' => __( 'The drop-in manager is unavailable.', 'reportedip-hive' ) ) );
 		}
@@ -1713,9 +1665,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_bot_action() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'bot_verification' );
 		if ( empty( $status['available'] ) ) {
@@ -1740,9 +1690,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_disposable_action() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'disposable_email' );
 		if ( empty( $status['available'] ) ) {
@@ -1768,9 +1716,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_spam_toggle() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
 		$map   = array(
@@ -1797,9 +1743,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_scan_toggle() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
 		$map   = array(
@@ -1831,9 +1775,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_headers_save() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$raw  = isset( $_POST['payload'] ) ? wp_unslash( $_POST['payload'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON blob; decoded below and each field sanitised per typed allowlist in sanitize_header_value().
 		$data = json_decode( (string) $raw, true );
@@ -1925,9 +1867,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_clear_queue_lock() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$held = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
 		delete_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
