@@ -801,6 +801,25 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
+	 * Drop every cached derivative of the IP state — the per-request memos and
+	 * the CIDR range caches for both the block list and the whitelist.
+	 *
+	 * Needed wherever rows change outside the add/remove paths, e.g. when the
+	 * cleanup cron deactivates expired entries.
+	 *
+	 * @return void
+	 * @since  2.1.44
+	 */
+	public static function flush_ip_state_caches() {
+		self::$blocked_request_cache   = array();
+		self::$whitelist_request_cache = array();
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( 'rip_blocked_cidrs', 'reportedip' );
+			wp_cache_delete( 'rip_whitelist_cidrs', 'reportedip' );
+		}
+	}
+
+	/**
 	 * Drop the per-request block memo and the CIDR range cache.
 	 *
 	 * @return void

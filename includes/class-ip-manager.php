@@ -461,7 +461,16 @@ class ReportedIP_Hive_IP_Manager {
 	}
 
 	/**
-	 * Clean up expired entries
+	 * Deactivate whitelist and block rows whose expiry has passed.
+	 *
+	 * Expiry is enforced live by the in-WordPress read path, but the
+	 * pre-WordPress guard holds a baked snapshot with no notion of time. So
+	 * whenever a row actually expires the caches must be dropped and the guard
+	 * rebaked — otherwise it keeps honouring a whitelist entry the site has
+	 * already retired, which is a hole rather than merely stale data.
+	 *
+	 * @return int Number of rows deactivated.
+	 * @since  1.0.0
 	 */
 	public function cleanup_expired_entries() {
 		global $wpdb;
@@ -497,6 +506,12 @@ class ReportedIP_Hive_IP_Manager {
 		}
 
 		if ( $cleaned > 0 ) {
+			ReportedIP_Hive_Database::flush_ip_state_caches();
+			ReportedIP_Hive::flush_ip_verdict_cache();
+
+			/** Rebakes the guard so it stops honouring the expired entries. */
+			do_action( 'reportedip_hive_whitelist_changed', '' );
+
 			$this->logger->info( "Cleaned up $cleaned expired IP entries" );
 		}
 

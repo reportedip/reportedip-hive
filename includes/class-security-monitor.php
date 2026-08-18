@@ -825,8 +825,7 @@ class ReportedIP_Hive_Security_Monitor {
 			$client = ReportedIP_Hive::get_instance();
 			$client->mark_ip_blocked( $ip_address );
 
-			$cache_key = 'rip_access_' . md5( $ip_address );
-			wp_cache_delete( $cache_key, 'reportedip' );
+			ReportedIP_Hive::flush_ip_verdict_cache( $ip_address );
 
 			$this->logger->log_security_event(
 				'ip_blocked',

@@ -1353,8 +1353,14 @@ PHP;
 	 * Rewrite the blocklist after a block was lifted, so the guard stops
 	 * refusing an IP the admin just released.
 	 *
-	 * @param string $ip_address Unblocked IP (from the action); clears the
-	 *                           per-IP append-dedupe marker so an immediate
+	 * A CIDR range lives in the baked `$block_cidr` array rather than in the
+	 * blocklist file, so rewriting the file cannot release it — that needs a
+	 * rebake, mirroring what {@see self::on_ip_blocked()} does for ranges.
+	 * Without it the guard keeps refusing every address in a range the admin
+	 * already lifted, until an unrelated resync or the hourly self-heal runs.
+	 *
+	 * @param string $ip_address Unblocked IP or CIDR (from the action); clears
+	 *                           the per-IP append-dedupe marker so an immediate
 	 *                           re-block is mirrored again.
 	 * @return void
 	 * @since  2.1.30
@@ -1363,9 +1369,17 @@ PHP;
 		if ( ! $this->is_main_site() || ! (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false ) ) {
 			return;
 		}
-		if ( '' !== (string) $ip_address ) {
-			delete_site_transient( 'reportedip_hive_bl_appended_' . md5( (string) $ip_address ) );
+
+		$ip_address = (string) $ip_address;
+		if ( '' !== $ip_address ) {
+			delete_site_transient( 'reportedip_hive_bl_appended_' . md5( $ip_address ) );
 		}
+
+		if ( false !== strpos( $ip_address, '/' ) ) {
+			$this->queue_resync();
+			return;
+		}
+
 		$this->write_blocklist();
 	}
 
