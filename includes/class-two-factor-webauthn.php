@@ -209,8 +209,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			return;
 		}
 
-		$allowed = ReportedIP_Hive_Two_Factor::get_allowed_methods();
-		if ( in_array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN, $allowed, true ) ) {
+		if ( ReportedIP_Hive_Two_Factor::is_method_allowed( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN ) ) {
 			return;
 		}
 

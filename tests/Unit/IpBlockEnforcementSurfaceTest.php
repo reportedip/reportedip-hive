@@ -72,10 +72,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_admin_gate_no_longer_exempts_ajax_requests() {
+		/**
+		 * The back-office backstop must not carry its own AJAX exemption.
+		 *
+		 * admin-ajax.php does fire admin_init, so an exemption here would be a
+		 * second, divergent copy of the policy `check_ip_access()` already
+		 * applied on `init` — and that one answers AJAX callers in JSON.
+		 */
+		public function test_admin_gate_defers_to_the_init_gate_for_ajax() {
 			$body = $this->method_body( 'public function block_admin_access()' );
 
 			$this->assertStringNotContainsString( 'wp_doing_ajax()', $body );
+			$this->assertStringContainsString( 'is_block_exempt_operator()', $body, 'Operators stay exempt on both gates' );
 		}
 
 		public function test_blocked_ajax_requests_get_a_machine_readable_body() {
@@ -111,8 +119,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$flush_body = $this->method_body( 'public static function flush_ip_verdict_cache', 900 );
 
 			$this->assertStringContainsString( 'wp_cache_delete', $flush_body, 'An exact IP must invalidate just its own entry' );
-			$this->assertStringContainsString( "strpos( \$ip_address, '/' )", $flush_body, 'A CIDR range cannot enumerate its addresses and must bump the epoch' );
-			$this->assertStringContainsString( '$epoch + 1', $flush_body );
+			$this->assertStringContainsString( "strpos( \$ip_address, '/' )", $flush_body, 'A CIDR range cannot enumerate its addresses and must advance the epoch' );
+			$this->assertStringContainsString(
+				'time()',
+				$flush_body,
+				'The generation is written blind as a timestamp; incrementing would lose one of two concurrent flushes'
+			);
+			$this->assertStringNotContainsString( '+ 1', $flush_body, 'A read-then-increment reintroduces the lost-update race' );
 		}
 
 		public function test_auto_block_path_leaves_invalidation_to_the_hook() {

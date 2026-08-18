@@ -87,9 +87,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_shared_enrolment_path_refuses_disallowed_methods() {
 			$body = $this->method_body( 'includes/class-two-factor.php', 'public static function activate_method(' );
 
-			$this->assertStringContainsString( 'get_allowed_methods()', $body, 'activate_method() is the single enrolment path and must enforce the policy' );
+			$this->assertStringContainsString( 'is_method_allowed(', $body, 'activate_method() is the single enrolment path and must enforce the policy' );
 
-			$guard_pos  = strpos( $body, 'get_allowed_methods()' );
+			$guard_pos  = strpos( $body, 'is_method_allowed(' );
 			$enable_pos = strpos( $body, 'enable_for_user(' );
 			$this->assertNotFalse( $enable_pos );
 			$this->assertLessThan( $enable_pos, $guard_pos, 'The policy check must precede activation' );

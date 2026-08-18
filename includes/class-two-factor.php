@@ -516,6 +516,22 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
+	 * Whether the site policy currently permits a verification method.
+	 *
+	 * The enrolment surfaces each need to refuse a disallowed method in their
+	 * own idiom (JSON, WP-CLI), so they share the predicate rather than the
+	 * response. {@see self::activate_method()} enforces the same rule as the
+	 * last line of defence.
+	 *
+	 * @param string $method Method identifier.
+	 * @return bool
+	 * @since  2.1.44
+	 */
+	public static function is_method_allowed( $method ) {
+		return in_array( (string) $method, self::get_allowed_methods(), true );
+	}
+
+	/**
 	 * Methods the user configured, before the site policy is applied.
 	 *
 	 * {@see self::get_user_enabled_methods()} intersects this with the allowed
@@ -2258,7 +2274,7 @@ class ReportedIP_Hive_Two_Factor {
 			return false;
 		}
 
-		if ( ! in_array( (string) $method, self::get_allowed_methods(), true ) ) {
+		if ( ! self::is_method_allowed( $method ) ) {
 			return false;
 		}
 

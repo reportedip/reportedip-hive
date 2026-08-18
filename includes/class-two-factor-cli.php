@@ -119,7 +119,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 		 * stored a confirmed secret that would go live the moment the policy
 		 * changed.
 		 */
-		if ( ! in_array( $method, ReportedIP_Hive_Two_Factor::get_allowed_methods(), true ) ) {
+		if ( ! ReportedIP_Hive_Two_Factor::is_method_allowed( $method ) ) {
 			WP_CLI::error(
 				sprintf(
 					'The site policy does not permit "%s". Add it under Settings > 2FA before enabling it for a user.',
@@ -175,15 +175,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 			}
 		}
 
-		if ( false === ReportedIP_Hive_Two_Factor::activate_method( $user_id, $method ) ) {
-			WP_CLI::error(
-				sprintf(
-					'The site policy does not permit "%s". Add it under Settings > 2FA before enabling it for a user.',
-					$method
-				)
-			);
-		}
-
+		ReportedIP_Hive_Two_Factor::activate_method( $user_id, $method );
 		WP_CLI::success( sprintf( '2FA method "%s" flagged for user #%d.', $method, $user_id ) );
 	}
 

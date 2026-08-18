@@ -1533,8 +1533,10 @@ class ReportedIP_Hive {
 	/**
 	 * Block back-office access for blocked IPs.
 	 *
-	 * Runs on `admin_init`, which `admin-ajax.php` never fires — that surface
-	 * is covered by {@see self::check_ip_access()} on `init` instead.
+	 * `admin-ajax.php` does fire `admin_init`, but it never reaches this
+	 * handler: {@see self::check_ip_access()} runs on `init` and has already
+	 * ended the request there, with a JSON body an AJAX caller can read rather
+	 * than the `wp_die()` page below. This is the backstop for wp-admin screens.
 	 *
 	 * @return void
 	 * @since  1.0.0
@@ -1781,8 +1783,14 @@ class ReportedIP_Hive {
 			return;
 		}
 
-		$epoch = (int) ReportedIP_Hive_Option_Routing::get( self::OPTION_ACCESS_CACHE_EPOCH, 0 );
-		ReportedIP_Hive_Option_Routing::set( self::OPTION_ACCESS_CACHE_EPOCH, $epoch + 1 );
+		/*
+		 * The generation is the time of the flush, not a counter: incrementing
+		 * means read-then-write, and two flushes racing (an admin clearing the
+		 * cache while the cleanup cron expires a whitelist row) would both read
+		 * the same value and one invalidation would be lost. A timestamp is
+		 * safe to write blind — concurrent flushes want the same outcome.
+		 */
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_ACCESS_CACHE_EPOCH, time() );
 	}
 
 	/**

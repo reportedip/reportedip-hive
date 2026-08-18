@@ -2064,7 +2064,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 * @since  2.1.44
 	 */
 	private function require_allowed_method( $method ) {
-		if ( in_array( (string) $method, ReportedIP_Hive_Two_Factor::get_allowed_methods(), true ) ) {
+		if ( ReportedIP_Hive_Two_Factor::is_method_allowed( $method ) ) {
 			return;
 		}
 
