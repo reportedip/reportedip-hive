@@ -556,7 +556,17 @@ class ReportedIP_Hive_API {
 				break;
 			}
 			try {
-				$database->update_api_report_status( $report->id, 'processing' );
+				/*
+				 * Skip rows another worker claimed between our select and now:
+				 * the status transition only matches while the row is still
+				 * pending or failed, so zero affected rows means we lost the
+				 * race and sending would duplicate the report.
+				 */
+				$claimed = $database->update_api_report_status( $report->id, 'processing' );
+				if ( ! $claimed ) {
+					continue;
+				}
+
 				$database->mark_report_submitted( $report->id );
 
 				if ( $report->report_type === 'positive' ) {

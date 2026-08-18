@@ -1173,11 +1173,19 @@ class ReportedIP_Hive_Database {
 		}
 
 		if ( $status === 'processing' ) {
+			/*
+			 * Claiming a row is a competitive write: two workers can select
+			 * the same pending rows before either marks them. Restricting the
+			 * transition to rows still pending or failed makes the claim
+			 * atomic, so the affected-row count tells the caller whether it
+			 * won — without it the same report went out twice, spending the
+			 * quota twice.
+			 */
 			return $wpdb->query(
 				$wpdb->prepare(
 					"UPDATE $table_name
                      SET status = %s, attempts = attempts + 1, last_attempt = %s, error_message = %s
-                     WHERE id = %d",
+                     WHERE id = %d AND status IN ('pending', 'failed')",
 					$status,
 					$data['last_attempt'],
 					$error_message,
@@ -1398,13 +1406,25 @@ class ReportedIP_Hive_Database {
 				$anonymized_details['anonymized']    = true;
 				$anonymized_details['anonymized_at'] = current_time( 'mysql', true );
 
-				$wpdb->update(
+				/*
+				 * Only count rows the database actually accepted. The loop
+				 * re-selects rows that lack the marker, and the marker is
+				 * written by this very update — counting attempts instead of
+				 * successes meant a persistently failing write (read-only
+				 * replica, disk full) re-fetched the same batch until the time
+				 * budget ran out, every cron tick, anonymising nothing.
+				 */
+				$updated = $wpdb->update(
 					$logs_table,
 					array( 'details' => wp_json_encode( $anonymized_details ) ),
 					array( 'id' => $log->id ),
 					array( '%s' ),
 					array( '%d' )
 				);
+
+				if ( false === $updated ) {
+					continue;
+				}
 
 				++$updated_in_batch;
 				++$anonymized;
@@ -1684,19 +1704,26 @@ class ReportedIP_Hive_Database {
 		$where_clause = implode( ' AND ', $where );
 
 		$allowed_orderby = array( 'id', 'ip_address', 'status', 'priority', 'attempts', 'created_at', 'last_attempt' );
-		$orderby         = in_array( $args['orderby'] ?? '', $allowed_orderby ) ? $args['orderby'] : 'created_at';
+		$orderby         = in_array( $args['orderby'] ?? '', $allowed_orderby, true ) ? $args['orderby'] : 'created_at';
 		$order           = strtoupper( $args['order'] ?? 'DESC' ) === 'ASC' ? 'ASC' : 'DESC';
 
-		$sql = $wpdb->prepare(
+		/*
+		 * The WHERE fragments are already prepared, so LIMIT/OFFSET are
+		 * prepared separately and concatenated. Running the assembled clause
+		 * through prepare() a second time made it read the `%` of a LIKE
+		 * pattern as a placeholder: searching for anything starting with s, d
+		 * or f produced a placeholder/argument mismatch, and the query came
+		 * back empty. count_api_queue_items() has always built it this way.
+		 */
+		$limit_sql = $wpdb->prepare( 'LIMIT %d OFFSET %d', $args['limit'], $args['offset'] );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Every dynamic part is prepared above; orderby/order come from allow-lists.
+		return $wpdb->get_results(
 			"SELECT * FROM $table_name
              WHERE $where_clause
              ORDER BY $orderby $order
-             LIMIT %d OFFSET %d",
-			$args['limit'],
-			$args['offset']
+             $limit_sql"
 		);
-
-		return $wpdb->get_results( $sql );
 	}
 
 	/**

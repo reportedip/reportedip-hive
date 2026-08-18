@@ -511,7 +511,16 @@ class ReportedIP_Hive_WAF {
 		// Plain permalinks: ?rest_route=/ns/route — only on the REST entry script.
 		if ( null !== $rest_route && '' !== (string) $rest_route ) {
 			$script = strtolower( basename( $path ) );
-			if ( '' === $script || 'index.php' === $script ) {
+
+			/*
+			 * A directory path is the entry script too, but only when it is
+			 * the site root: in a subdirectory install `/blog/` has a basename
+			 * of `blog`, which used to fail the check and left every
+			 * route-scoped exception inert on plain permalinks. Comparing
+			 * against the real home path keeps the decoy case out — a token
+			 * smuggled onto `/xmlrpc.php` still resolves to nothing.
+			 */
+			if ( 'index.php' === $script || $this->path_is_site_root( $path ) ) {
 				return '/' . ltrim( (string) $rest_route, '/' );
 			}
 			return '';
@@ -527,6 +536,24 @@ class ReportedIP_Hive_WAF {
 			return '';
 		}
 		return substr( $path, $pos + strlen( $prefix ) - 1 );
+	}
+
+	/**
+	 * Whether a request path addresses the site root, subdirectory included.
+	 *
+	 * @param string $path Request path.
+	 * @return bool
+	 * @since  2.1.44
+	 */
+	private function path_is_site_root( string $path ): bool {
+		$candidate = rtrim( $path, '/' );
+		$home      = '';
+
+		if ( function_exists( 'home_url' ) ) {
+			$home = (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+		}
+
+		return $candidate === rtrim( $home, '/' );
 	}
 
 	/**
