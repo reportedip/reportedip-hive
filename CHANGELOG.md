@@ -36,7 +36,12 @@ a regression test.
   check as `/wp-loginphp` and the login form was served anyway, while
   `/%2Eenv` missed the honeypot signature as the server delivered the file.
   The hidden login, the scan detector and the decoy paths now read the raw URI
-  and decode it once, as the firewall engine always did.
+  and decode it once. The firewall engine resolved its own path bare, so
+  `//shop/checkout` reached the exception check as `/checkout` — an exception
+  scoped to that prefix would have skipped inspection entirely for a request
+  the server sends elsewhere. All of them share one resolver now, which
+  collapses repeated leading slashes before parsing and never after: folding a
+  decoded `%2F` would merge segments the web server keeps apart.
 - **A submitted 2FA method was never checked against the user's factors.** The
   login challenge passed it straight to the verifier, so a method the site
   policy no longer permitted still signed the user in whenever its secret had
@@ -92,6 +97,10 @@ a regression test.
 
 - Inline option fallbacks that contradicted the canonical defaults registry
   are aligned, and a test now fails when a literal drifts from it again.
+- Cache generations are stamped with the time of the flush instead of being
+  incremented, so two concurrent flushes can no longer lose one another's
+  invalidation, and both generation options are seeded — an unseeded one cost
+  a database query on every request.
 - The 42 AJAX handlers shared one permission guard instead of repeating it
   with three different error payloads.
 
