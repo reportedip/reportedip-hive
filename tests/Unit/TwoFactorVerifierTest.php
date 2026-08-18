@@ -48,7 +48,8 @@ namespace {
 			const METHOD_WEBAUTHN = 'webauthn';
 			const METHOD_RECOVERY = 'recovery';
 
-			const META_TOTP_SECRET = 'reportedip_hive_2fa_totp_secret';
+			const META_TOTP_SECRET    = 'reportedip_hive_2fa_totp_secret';
+			const META_TOTP_LAST_STEP = 'reportedip_hive_2fa_totp_last_step';
 		}
 	}
 

@@ -90,6 +90,28 @@ class ReportedIP_Hive_Two_Factor {
 	const META_METHOD            = 'reportedip_hive_2fa_method';
 	const META_TOTP_SECRET       = 'reportedip_hive_2fa_totp_secret';
 	const META_TOTP_CONFIRMED    = 'reportedip_hive_2fa_totp_confirmed';
+
+	/**
+	 * Secret of an authenticator setup that has not been confirmed yet.
+	 *
+	 * Held separately so an abandoned re-enrolment cannot destroy the working
+	 * secret, and so an unconfirmed secret is never a valid second factor:
+	 * the verifier only ever reads META_TOTP_SECRET.
+	 *
+	 * @var string
+	 */
+	const META_TOTP_SECRET_PENDING = 'reportedip_hive_2fa_totp_secret_pending';
+
+	/**
+	 * Highest TOTP time step already accepted for this user.
+	 *
+	 * Enforces single use of a code (RFC 6238 §5.2): every step up to and
+	 * including this one is spent, so a captured code cannot be replayed for
+	 * the rest of its validity window in another session.
+	 *
+	 * @var string
+	 */
+	const META_TOTP_LAST_STEP = 'reportedip_hive_2fa_totp_last_step';
 	const META_FAILED_ATTEMPTS   = 'reportedip_hive_2fa_failed_attempts';
 	const META_SETUP_DATE        = 'reportedip_hive_2fa_setup_date';
 	const META_ENFORCEMENT_START = 'reportedip_hive_2fa_enforcement_start';
@@ -1189,12 +1211,28 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Verify a 2FA code based on the method.
 	 *
+	 * The method arrives from the challenge form, so it is checked against the
+	 * factors actually live for this user before any credential material is
+	 * touched. Without that, a method the site policy no longer permits — or
+	 * one the user disabled — still authenticated as long as its stored secret
+	 * was left behind, because the verifier is a pure per-method switch. The
+	 * REST and password-reset surfaces have always gated their input this way.
+	 *
+	 * Recovery codes are deliberately always eligible: they are the way back
+	 * in when every configured factor is unavailable.
+	 *
 	 * @param int    $user_id WordPress user ID.
 	 * @param string $code    Submitted verification code.
 	 * @param string $method  Verification method (totp, email, recovery).
 	 * @return bool True if verified.
 	 */
 	private function verify_2fa_code( $user_id, $code, $method ) {
+		$eligible = array_merge( self::get_user_enabled_methods( (int) $user_id ), array( self::METHOD_RECOVERY ) );
+
+		if ( ! in_array( (string) $method, $eligible, true ) ) {
+			return false;
+		}
+
 		return ReportedIP_Hive_Two_Factor_Verifier::verify_method(
 			(int) $user_id,
 			(string) $method,
@@ -2161,16 +2199,26 @@ class ReportedIP_Hive_Two_Factor {
 	 * Callers must not write the method's enabled flag themselves before
 	 * calling this — the first-method detection reads the flags.
 	 *
+	 * A method the site policy does not permit is refused here rather than
+	 * only hidden in the profile UI: the enrolment endpoints are reachable
+	 * directly, and a flag written for a disallowed method goes live the
+	 * moment an administrator re-enables it.
+	 *
 	 * @param int    $user_id WordPress user ID.
 	 * @param string $method  Method identifier (totp, email, webauthn, sms).
 	 * @return array|null|false Freshly generated recovery codes when the user
 	 *                          had none (show them once!), null when existing
-	 *                          codes survived, false for an unknown method.
+	 *                          codes survived, false for an unknown or
+	 *                          disallowed method.
 	 * @since  2.1.36
 	 */
 	public static function activate_method( $user_id, $method ) {
 		$method_key = self::get_method_meta_key( $method );
 		if ( ! $method_key ) {
+			return false;
+		}
+
+		if ( ! in_array( (string) $method, self::get_allowed_methods(), true ) ) {
 			return false;
 		}
 
@@ -2234,7 +2282,9 @@ class ReportedIP_Hive_Two_Factor {
 		switch ( $method ) {
 			case self::METHOD_TOTP:
 				delete_user_meta( $user_id, self::META_TOTP_SECRET );
+				delete_user_meta( $user_id, self::META_TOTP_SECRET_PENDING );
 				delete_user_meta( $user_id, self::META_TOTP_CONFIRMED );
+				delete_user_meta( $user_id, self::META_TOTP_LAST_STEP );
 				break;
 			case self::METHOD_WEBAUTHN:
 				delete_user_meta( $user_id, self::META_WEBAUTHN_CREDENTIALS );
@@ -2275,7 +2325,9 @@ class ReportedIP_Hive_Two_Factor {
 			self::META_ENABLED,
 			self::META_METHOD,
 			self::META_TOTP_SECRET,
+			self::META_TOTP_SECRET_PENDING,
 			self::META_TOTP_CONFIRMED,
+			self::META_TOTP_LAST_STEP,
 			self::META_TOTP_ENABLED,
 			self::META_EMAIL_ENABLED,
 			self::META_WEBAUTHN_ENABLED,
@@ -2333,7 +2385,9 @@ class ReportedIP_Hive_Two_Factor {
 			self::META_ENABLED,
 			self::META_METHOD,
 			self::META_TOTP_SECRET,
+			self::META_TOTP_SECRET_PENDING,
 			self::META_TOTP_CONFIRMED,
+			self::META_TOTP_LAST_STEP,
 			self::META_TOTP_ENABLED,
 			self::META_EMAIL_ENABLED,
 			self::META_WEBAUTHN_ENABLED,

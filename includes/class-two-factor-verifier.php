@@ -135,9 +135,26 @@ final class ReportedIP_Hive_Two_Factor_Verifier {
 		 */
 		$window = (int) apply_filters( 'reportedip_2fa_totp_window', 1, $user_id );
 		$window = max( 0, min( 3, $window ) );
-		$result = (bool) ReportedIP_Hive_Two_Factor_TOTP::verify_code( $secret, $code, $window );
+
+		/*
+		 * Single-use enforcement (RFC 6238 §5.2): a code is bound to one time
+		 * step, and every step up to the last accepted one counts as spent.
+		 * The login nonce already prevents a replay inside one challenge, but
+		 * a code captured in transit was otherwise still good for the rest of
+		 * its window in a separate session.
+		 */
+		$last_step = (int) get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_LAST_STEP, true );
+		$step      = ReportedIP_Hive_Two_Factor_TOTP::matching_step( $secret, $code, $window, $last_step );
+
 		ReportedIP_Hive_Two_Factor_Crypto::zero_memory( $secret );
-		return $result;
+
+		if ( null === $step ) {
+			return false;
+		}
+
+		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_LAST_STEP, (string) $step );
+
+		return true;
 	}
 
 	/**

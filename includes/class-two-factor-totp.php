@@ -116,23 +116,47 @@ class ReportedIP_Hive_Two_Factor_TOTP {
 	 * @return bool True if the code is valid.
 	 */
 	public static function verify_code( $secret, $code, $window = 1 ) {
-		if ( ! preg_match( '/^\d{' . self::CODE_LENGTH . '}$/', $code ) ) {
-			return false;
+		return null !== self::matching_step( $secret, $code, $window );
+	}
+
+	/**
+	 * Resolve which time step a code belongs to, or null when none matches.
+	 *
+	 * Callers that persist the returned step can refuse a second use of the
+	 * same code, as RFC 6238 §5.2 requires: without that a code observed in
+	 * transit stays valid for the rest of its window — up to 90 seconds at the
+	 * default tolerance — and replays in a parallel session.
+	 *
+	 * @param string $secret   Base32-encoded TOTP secret.
+	 * @param string $code     6-digit code to verify.
+	 * @param int    $window   Time steps to check in each direction.
+	 * @param int    $min_step Steps at or below this are treated as spent.
+	 * @return int|null Matched time step, or null when the code is invalid.
+	 * @since  2.1.44
+	 */
+	public static function matching_step( $secret, $code, $window = 1, $min_step = 0 ) {
+		if ( ! preg_match( '/^\d{' . self::CODE_LENGTH . '}$/', (string) $code ) ) {
+			return null;
 		}
 
 		$current_step = self::get_time_step();
+		$window       = (int) $window;
 
 		for ( $offset = -$window; $offset <= $window; $offset++ ) {
-			$expected = self::calculate_code( $secret, $current_step + $offset );
+			$step = $current_step + $offset;
+			if ( $min_step > 0 && $step <= $min_step ) {
+				continue;
+			}
+			$expected = self::calculate_code( $secret, $step );
 			if ( false === $expected ) {
 				continue;
 			}
-			if ( hash_equals( $expected, $code ) ) {
-				return true;
+			if ( hash_equals( $expected, (string) $code ) ) {
+				return $step;
 			}
 		}
 
-		return false;
+		return null;
 	}
 
 	/**

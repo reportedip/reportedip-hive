@@ -71,6 +71,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	public function ajax_register_options() {
 		$user_id = self::key_management_user();
 		self::throttle_registration( $user_id );
+		self::require_method_allowed();
 		if ( ! self::can_add_key( $user_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Multiple security keys per account require the Business plan. Your first key stays free.', 'reportedip-hive' ) ) );
 		}
@@ -193,6 +194,35 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	/**
+	 * Refuse the registration ceremony when the site does not allow WebAuthn.
+	 *
+	 * The tier gate governs how many keys an account may hold; this is the
+	 * separate question of whether the method is offered at all. Without it a
+	 * key could be registered while the method was switched off and would sign
+	 * the user in the moment it was switched back on.
+	 *
+	 * @return void
+	 * @since  2.1.44
+	 */
+	private static function require_method_allowed() {
+		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
+			return;
+		}
+
+		$allowed = ReportedIP_Hive_Two_Factor::get_allowed_methods();
+		if ( in_array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN, $allowed, true ) ) {
+			return;
+		}
+
+		wp_send_json_error(
+			array(
+				'message' => __( 'Security keys are not available on this site.', 'reportedip-hive' ),
+				'code'    => 'method_not_allowed',
+			)
+		);
+	}
+
+	/**
 	 * Whether the user may register one more credential: always for the
 	 * first key, Business+ beyond that.
 	 *
@@ -254,6 +284,8 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		if ( ! is_array( $credential ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid credential data.', 'reportedip-hive' ) ) );
 		}
+
+		self::require_method_allowed();
 
 		if ( ! self::can_add_key( $user_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Multiple security keys per account require the Business plan. Your first key stays free.', 'reportedip-hive' ) ) );

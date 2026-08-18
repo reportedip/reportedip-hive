@@ -237,6 +237,15 @@ class ReportedIP_Hive_Two_Factor_REST {
 		$ok = self::verify_for_user( $user_id, $method, $code );
 		if ( ! $ok ) {
 			set_transient( $fail_key, $fails + 1, self::TOKEN_TTL );
+
+			/*
+			 * Feed the shared ladder as well. The per-token and per-IP limits
+			 * above are local to this endpoint, so guessing over REST used to
+			 * leave no trace in the 2FA lockout state and never graduated to
+			 * the IP block the browser path would have triggered.
+			 */
+			ReportedIP_Hive_Two_Factor::record_ip_failure( $ip );
+
 			return new WP_Error( 'reportedip_rest_bad_code', __( 'Invalid code.', 'reportedip-hive' ), array( 'status' => 401 ) );
 		}
 
@@ -270,29 +279,24 @@ class ReportedIP_Hive_Two_Factor_REST {
 	}
 
 	/**
-	 * Shared verify logic mirroring Two_Factor::verify_2fa_code without being
-	 * private. Keeping it local avoids widening that method's visibility.
+	 * Verify a submitted code through the shared verifier.
 	 *
+	 * This used to be a hand-copied switch, which is exactly what extracting
+	 * `Two_Factor_Verifier` was meant to end. It had already drifted: no
+	 * WebAuthn case, the `reportedip_2fa_totp_window` filter ignored, the
+	 * decrypted secret left in memory — and it would have missed the TOTP
+	 * single-use enforcement too.
+	 *
+	 * @param int    $user_id User to verify against.
+	 * @param string $method  Method identifier.
+	 * @param string $code    Submitted code.
 	 * @return bool
 	 */
 	private static function verify_for_user( $user_id, $method, $code ) {
-		switch ( $method ) {
-			case ReportedIP_Hive_Two_Factor::METHOD_TOTP:
-				$encrypted = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true );
-				if ( empty( $encrypted ) ) {
-					return false; }
-				$secret = ReportedIP_Hive_Two_Factor_Crypto::decrypt( $encrypted );
-				if ( false === $secret ) {
-					return false; }
-				return ReportedIP_Hive_Two_Factor_TOTP::verify_code( $secret, $code );
-			case ReportedIP_Hive_Two_Factor::METHOD_EMAIL:
-				return ReportedIP_Hive_Two_Factor_Email::verify_code( $user_id, $code );
-			case ReportedIP_Hive_Two_Factor::METHOD_SMS:
-				return class_exists( 'ReportedIP_Hive_Two_Factor_SMS' )
-					&& ReportedIP_Hive_Two_Factor_SMS::verify_code( $user_id, $code );
-			case ReportedIP_Hive_Two_Factor::METHOD_RECOVERY:
-				return ReportedIP_Hive_Two_Factor_Recovery::verify_code( $user_id, $code );
-		}
-		return false;
+		return ReportedIP_Hive_Two_Factor_Verifier::verify_method(
+			(int) $user_id,
+			(string) $method,
+			(string) $code
+		);
 	}
 }

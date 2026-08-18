@@ -2052,10 +2052,36 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	}
 
 	/**
+	 * Refuse enrolment into a method the site policy does not permit.
+	 *
+	 * The profile UI hides the card for a disallowed method, but the endpoint
+	 * behind it stays reachable. Checked before any work happens so a
+	 * disallowed SMS or email enrolment cannot burn managed relay quota on the
+	 * way to being rejected.
+	 *
+	 * @param string $method Method identifier.
+	 * @return void
+	 * @since  2.1.44
+	 */
+	private function require_allowed_method( $method ) {
+		if ( in_array( (string) $method, ReportedIP_Hive_Two_Factor::get_allowed_methods(), true ) ) {
+			return;
+		}
+
+		wp_send_json_error(
+			array(
+				'message' => __( 'This verification method is not available on this site.', 'reportedip-hive' ),
+				'code'    => 'method_not_allowed',
+			)
+		);
+	}
+
+	/**
 	 * AJAX: Begin TOTP setup — generate secret and return otpauth URI.
 	 */
 	public function ajax_setup_totp() {
 		$user_id = $this->validate_ajax_user();
+		$this->require_allowed_method( ReportedIP_Hive_Two_Factor::METHOD_TOTP );
 
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
@@ -2087,8 +2113,14 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			wp_send_json_error( array( 'message' => __( 'Encryption failed.', 'reportedip-hive' ) ) );
 		}
 
-		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, $encrypted );
-		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '0' );
+		/*
+		 * Park the new secret until a code proves the authenticator holds it.
+		 * Overwriting the live secret here meant a replacement the user
+		 * abandoned — closing the tab before scanning the QR code — left the
+		 * old app producing rejected codes and no way back in, and made the
+		 * unconfirmed secret a working second factor in the meantime.
+		 */
+		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET_PENDING, $encrypted );
 
 		wp_send_json_success(
 			array(
@@ -2107,7 +2139,17 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_user() above.
 		$code = isset( $_POST['code'] ) ? sanitize_text_field( wp_unslash( $_POST['code'] ) ) : '';
 
-		$encrypted_secret = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true );
+		/*
+		 * A pending secret is the setup currently being confirmed. Falling
+		 * back to the live one keeps a setup that was started before this
+		 * release completable.
+		 */
+		$is_pending       = true;
+		$encrypted_secret = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET_PENDING, true );
+		if ( empty( $encrypted_secret ) ) {
+			$is_pending       = false;
+			$encrypted_secret = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true );
+		}
 		if ( empty( $encrypted_secret ) ) {
 			wp_send_json_error( array( 'message' => __( 'No TOTP setup found. Please start again.', 'reportedip-hive' ) ) );
 		}
@@ -2119,6 +2161,11 @@ class ReportedIP_Hive_Two_Factor_Admin {
 
 		if ( ! ReportedIP_Hive_Two_Factor_TOTP::verify_code( $secret, $code ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid code. Please check your device clock.', 'reportedip-hive' ) ) );
+		}
+
+		if ( $is_pending ) {
+			update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, $encrypted_secret );
+			delete_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET_PENDING );
 		}
 
 		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '1' );
@@ -2141,6 +2188,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 */
 	public function ajax_setup_email() {
 		$user_id = $this->validate_ajax_user();
+		$this->require_allowed_method( ReportedIP_Hive_Two_Factor::METHOD_EMAIL );
 
 		$user = get_userdata( $user_id );
 		if ( ! $user || empty( $user->user_email ) ) {
@@ -2196,6 +2244,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 */
 	public function ajax_setup_sms() {
 		$user_id = $this->validate_ajax_user();
+		$this->require_allowed_method( ReportedIP_Hive_Two_Factor::METHOD_SMS );
 
 		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 			wp_send_json_error( array( 'message' => __( 'SMS module is not loaded.', 'reportedip-hive' ) ) );
