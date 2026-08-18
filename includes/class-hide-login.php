@@ -591,7 +591,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * disturb (login_url generates with redirect_to=… which is fine to keep).
 	 */
 	private function maybe_add_token( string $url, string $slug ): string {
-		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_token_in_urls', true ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_token_in_urls', false ) ) {
 			return $url;
 		}
 		if ( '' === $slug ) {

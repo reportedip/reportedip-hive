@@ -5520,7 +5520,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$enabled         = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false );
 		$slug            = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', '' );
 		$response_mode   = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE );
-		$token_in_urls   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_token_in_urls', true );
+		$token_in_urls   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_token_in_urls', false );
 		$probe_enabled   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_hide_login_probe', true );
 		$probe_threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_probe_threshold', 5 );
 		$probe_timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_probe_timeframe', 10 );
@@ -5955,7 +5955,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 1.2.0
 	 */
 	private function render_privacy_logs_tab() {
-		$minimal  = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_minimal_logging', false );
+		$minimal  = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_minimal_logging', true );
 		$detailed = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false );
 		$profile  = $minimal ? 'minimal' : ( $detailed ? 'detailed' : 'standard' );
 		?>

@@ -220,12 +220,21 @@ class ReportedIP_Hive_IP_Manager {
 	}
 
 	/**
-	 * Unblock IP address
+	 * Unblock IP address.
+	 *
+	 * Zero affected rows is success, not failure: the address is not blocked,
+	 * which is exactly what the caller asked for. Only an actual database
+	 * error (false) is reported as a failure — the previous truthiness check
+	 * told admins "Failed to unblock" whenever the block was already gone.
+	 *
+	 * @param string $ip_address IP or CIDR range.
+	 * @return array{success: bool, message: string}
+	 * @since  1.0.0
 	 */
 	public function unblock_ip( $ip_address ) {
 		$result = $this->database->unblock_ip( $ip_address );
 
-		if ( $result ) {
+		if ( false !== $result ) {
 			$this->logger->log_security_event(
 				'ip_unblocked',
 				$ip_address,

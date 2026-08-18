@@ -211,7 +211,7 @@ class ReportedIP_Hive_Cron_Handler {
 			if ( class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
 				ReportedIP_Hive_Two_Factor::cleanup_expired_devices();
 			}
-		} catch ( Exception $e ) {
+		} catch ( \Throwable $e ) {
 			$this->logger->critical( 'Daily cleanup failed: ' . $e->getMessage(), 'system' );
 		}
 	}
@@ -228,7 +228,7 @@ class ReportedIP_Hive_Cron_Handler {
 					ReportedIP_Hive_Hardening_Mode::activate( $reason, 'cron' );
 				}
 			}
-		} catch ( Exception $e ) {
+		} catch ( \Throwable $e ) {
 			$this->logger->critical( 'Reputation sync failed: ' . $e->getMessage(), 'system' );
 		}
 	}
@@ -325,7 +325,7 @@ class ReportedIP_Hive_Cron_Handler {
 					);
 				}
 			}
-		} catch ( Exception $e ) {
+		} catch ( \Throwable $e ) {
 			$this->logger->error( 'Quota refresh failed: ' . $e->getMessage(), 'system' );
 		}
 
@@ -375,7 +375,7 @@ class ReportedIP_Hive_Cron_Handler {
 					array( 'error' => (string) $relay['error'] )
 				);
 			}
-		} catch ( Exception $e ) {
+		} catch ( \Throwable $e ) {
 			$this->logger->error( 'Relay quota refresh failed: ' . $e->getMessage(), 'system' );
 		}
 	}
@@ -396,7 +396,7 @@ class ReportedIP_Hive_Cron_Handler {
 		}
 		try {
 			ReportedIP_Hive_Rule_Sync::get_instance()->sync_all();
-		} catch ( Exception $e ) {
+		} catch ( \Throwable $e ) {
 			$this->logger->error( 'Ruleset sync failed: ' . $e->getMessage(), 'system' );
 		}
 	}

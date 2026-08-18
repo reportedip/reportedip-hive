@@ -1391,7 +1391,7 @@ class ReportedIP_Hive_API {
 				'reset_time'          => $result['resetTime'] ?? null,
 				'user_role'           => $result['userRole'] ?? '',
 				'is_honeypot'         => ! empty( $result['isHoneypotKey'] ),
-				'fetched_at'          => current_time( 'mysql' ),
+				'fetched_at'          => current_time( 'mysql', true ),
 			);
 
 			set_transient( 'reportedip_hive_api_quota', $quota_data, 6 * HOUR_IN_SECONDS );

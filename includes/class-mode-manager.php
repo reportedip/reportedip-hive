@@ -638,7 +638,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 */
 	public function mark_wizard_completed() {
 		ReportedIP_Hive_Option_Routing::set( self::OPTION_WIZARD_COMPLETED, true );
-		ReportedIP_Hive_Option_Routing::set( self::OPTION_WIZARD_COMPLETED_AT, current_time( 'mysql' ) );
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_WIZARD_COMPLETED_AT, current_time( 'mysql', true ) );
 
 		ReportedIP_Hive_Option_Routing::delete( self::OPTION_WIZARD_SKIPPED );
 

@@ -1127,8 +1127,8 @@ class ReportedIP_Hive_Admin_Firewall {
 		self::render_tab_intro( __( 'Catches vulnerability scanners two ways: a burst of 404s in a short window (rate trigger), and a single request to a known bait path like .env or wp-config.php.bak (instant trigger). Both sensors run in PHP and need no server configuration; the optional web-server rules on the Server Setup tab harden the same paths one layer earlier.', 'reportedip-hive' ) );
 
 		$scan_on   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_404_scans', true );
-		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_threshold', 8 );
-		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_timeframe', 1 );
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_threshold', 12 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_timeframe', 2 );
 		$path_ver  = 0;
 		if ( class_exists( 'ReportedIP_Hive_Rule_Sync' ) ) {
 			$ruleset  = ReportedIP_Hive_Rule_Sync::get_instance()->get_ruleset( 'scan_paths' );

@@ -316,7 +316,22 @@ class ReportedIP_Hive_Two_Factor_SMS {
 
 		if ( ! wp_check_password( (string) $code, $data['code_hash'] ) ) {
 			$data['attempts'] = $attempts + 1;
-			set_transient( $key, $data, self::CODE_TTL );
+
+			/*
+			 * Re-store with the time the code has left, not a fresh full TTL —
+			 * otherwise each wrong guess pushed the expiry out and the ten
+			 * minute lifetime stretched with every attempt. The email channel
+			 * has always carried the remaining time forward this way.
+			 */
+			$created   = (int) ( $data['created_at'] ?? 0 );
+			$remaining = $created > 0 ? self::CODE_TTL - ( time() - $created ) : self::CODE_TTL;
+
+			if ( $remaining > 0 ) {
+				set_transient( $key, $data, $remaining );
+			} else {
+				delete_transient( $key );
+			}
+
 			return false;
 		}
 

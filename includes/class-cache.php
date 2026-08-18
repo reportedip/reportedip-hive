@@ -82,7 +82,7 @@ class ReportedIP_Hive_Cache {
 				'misses'     => 0,
 				'sets'       => 0,
 				'clears'     => 0,
-				'last_reset' => current_time( 'mysql' ),
+				'last_reset' => current_time( 'mysql', true ),
 			)
 		);
 
@@ -166,7 +166,7 @@ class ReportedIP_Hive_Cache {
 
 		$cache_data = array(
 			'data'        => $data,
-			'cached_at'   => current_time( 'mysql' ),
+			'cached_at'   => current_time( 'mysql', true ),
 			'ip_address'  => $ip_address,
 			'is_negative' => $is_negative_result,
 			'verbose'     => (bool) $verbose,
@@ -261,12 +261,12 @@ class ReportedIP_Hive_Cache {
 				'misses'     => 0,
 				'sets'       => 0,
 				'clears'     => 0,
-				'last_reset' => current_time( 'mysql' ),
+				'last_reset' => current_time( 'mysql', true ),
 			)
 		);
 
 		if ( ! isset( $stats['last_reset'] ) || empty( $stats['last_reset'] ) ) {
-			$stats['last_reset'] = current_time( 'mysql' );
+			$stats['last_reset'] = current_time( 'mysql', true );
 			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_cache_stats', $stats );
 		}
 
@@ -295,7 +295,7 @@ class ReportedIP_Hive_Cache {
 			);
 		}
 
-		$last_reset      = $stats['last_reset'] ?? current_time( 'mysql' );
+		$last_reset      = $stats['last_reset'] ?? current_time( 'mysql', true );
 		$reset_timestamp = strtotime( $last_reset );
 
 		if ( $reset_timestamp === false ) {
@@ -504,7 +504,7 @@ class ReportedIP_Hive_Cache {
 						'misses'     => 0,
 						'sets'       => 0,
 						'clears'     => 0,
-						'last_reset' => current_time( 'mysql' ),
+						'last_reset' => current_time( 'mysql', true ),
 					)
 				);
 				++$stats['clears'];
@@ -522,7 +522,7 @@ class ReportedIP_Hive_Cache {
 			'misses'     => 0,
 			'sets'       => 0,
 			'clears'     => 0,
-			'last_reset' => current_time( 'mysql' ),
+			'last_reset' => current_time( 'mysql', true ),
 		);
 
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_cache_stats', $stats );

@@ -310,7 +310,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Check comment spam threshold
 	 */
 	public function check_comment_spam_threshold( $ip_address ) {
-		$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 3 );
+		$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 5 );
 		$timeframe = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 60 );
 
 		$track_user_agent = null;

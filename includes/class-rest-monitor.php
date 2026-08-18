@@ -142,7 +142,7 @@ class ReportedIP_Hive_REST_Monitor {
 			return $result;
 		}
 
-		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rest_threshold', 60 );
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rest_threshold', 240 );
 		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rest_timeframe', 5 );
 
 		if ( $this->is_sensitive_route( $route ) ) {

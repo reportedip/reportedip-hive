@@ -4,7 +4,7 @@
  *
  * Two layered triggers:
  *
- *  - High-rate 404s (default ≥ 8 within 60 s) catch any scanner that walks
+ *  - High-rate 404s (default ≥ 12 within 2 min) catch any scanner that walks
  *    a directory list of "common WP paths" hoping for unprotected files.
  *  - Pattern-based instant trigger: a single hit on one of the known-bad
  *    paths (`/.env`, `/wp-config.php.bak`, `/wp-content/debug.log`, …) is
@@ -249,8 +249,8 @@ class ReportedIP_Hive_Scan_Detector {
 
 		$threshold = $is_scan_hit
 			? 1
-			: (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_threshold', 8 );
-		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_timeframe', 1 );
+			: (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_threshold', 12 );
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_timeframe', 2 );
 
 		$monitor->track_generic_attempt(
 			$ip,

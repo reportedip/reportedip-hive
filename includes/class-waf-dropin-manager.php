@@ -956,8 +956,17 @@ if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
 			$dirty   = '1' === substr( $head, 8, 1 );
 			$baselen = (int) substr( $head, 12, 10 );
 			if ( $maybe ) {
-				$base_bytes = $baselen > 16408 ? $baselen - 16408 : PHP_INT_MAX;
-				$verdict    = reportedip_hive_dropin_bl_match( @fread( $fh, $base_bytes ), $ip );
+				/* Never hand fread() an unbounded length: a corrupt header can
+				   reach this with baselen <= 16408, and allocating PHP_INT_MAX
+				   is a memory fatal that no catch can intercept — which would
+				   turn this fail-open guard into a site-wide 500. */
+				$fsz        = @filesize( $file );
+				$base_bytes = $baselen > 16408 ? $baselen - 16408 : 0;
+				if ( false !== $fsz && $fsz > 16408 ) {
+					$remaining  = $fsz - 16408;
+					$base_bytes = ( $base_bytes > 0 && $base_bytes < $remaining ) ? $base_bytes : $remaining;
+				}
+				$verdict = $base_bytes > 0 && reportedip_hive_dropin_bl_match( @fread( $fh, $base_bytes ), $ip );
 			}
 			if ( ! $verdict && $dirty && $baselen > 0 && 0 === @fseek( $fh, $baselen ) ) {
 				$verdict = reportedip_hive_dropin_bl_match( @stream_get_contents( $fh ), $ip );
@@ -1420,7 +1429,13 @@ PHP;
 			self::BLOCKLIST_HEADER_LEN + strlen( $body ),
 			bin2hex( $bitmap )
 		);
-		return false !== @file_put_contents( $path, $header . $body ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Writing the same-host lookup file the pre-WordPress guard reads. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
+		/*
+		 * LOCK_EX serialises this rewrite against the LOCK_EX append in
+		 * on_ip_blocked(). Without it a block appended between the database
+		 * read above and this truncating write was lost, and readers could
+		 * catch a half-written header.
+		 */
+		return false !== @file_put_contents( $path, $header . $body, LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Writing the same-host lookup file the pre-WordPress guard reads. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 	}
 
 	/**
