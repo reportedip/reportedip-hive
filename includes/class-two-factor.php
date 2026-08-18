@@ -518,9 +518,13 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Methods the user configured, before the site policy is applied.
 	 *
-	 * {@see self::get_user_enabled_methods()} intersects with the allowed
-	 * list, so it cannot answer "did this user ever set up a factor?" once the
-	 * policy stopped permitting it.
+	 * {@see self::get_user_enabled_methods()} intersects this with the allowed
+	 * list and therefore cannot answer "did this user ever set up a factor?"
+	 * once the policy stopped permitting it — which is exactly what the
+	 * silent-loss warning on the login path needs to know.
+	 *
+	 * Includes the legacy single-method meta, so accounts that predate the
+	 * per-method flags are not treated as never having configured anything.
 	 *
 	 * @param int $user_id WordPress user ID.
 	 * @return string[] Method identifiers.
@@ -541,18 +545,14 @@ class ReportedIP_Hive_Two_Factor {
 			}
 		}
 
-		return $configured;
-	}
+		if ( empty( $configured ) && get_user_meta( $user_id, self::META_ENABLED, true ) ) {
+			$primary = get_user_meta( $user_id, self::META_METHOD, true );
+			if ( in_array( $primary, array( self::METHOD_TOTP, self::METHOD_EMAIL ), true ) ) {
+				$configured[] = $primary;
+			}
+		}
 
-	/**
-	 * Whether the user has any configured factor, policy aside.
-	 *
-	 * @param int $user_id WordPress user ID.
-	 * @return bool
-	 * @since  2.1.44
-	 */
-	public static function user_has_configured_method( $user_id ) {
-		return ! empty( self::configured_method_flags( $user_id ) );
+		return $configured;
 	}
 
 	/**
@@ -569,27 +569,7 @@ class ReportedIP_Hive_Two_Factor {
 			return self::$methods_cache[ $user_id ];
 		}
 
-		$methods = array();
-
-		if ( get_user_meta( $user_id, self::META_TOTP_ENABLED, true ) ) {
-			$methods[] = self::METHOD_TOTP;
-		}
-		if ( get_user_meta( $user_id, self::META_EMAIL_ENABLED, true ) ) {
-			$methods[] = self::METHOD_EMAIL;
-		}
-		if ( get_user_meta( $user_id, self::META_WEBAUTHN_ENABLED, true ) ) {
-			$methods[] = self::METHOD_WEBAUTHN;
-		}
-		if ( get_user_meta( $user_id, self::META_SMS_ENABLED, true ) ) {
-			$methods[] = self::METHOD_SMS;
-		}
-
-		if ( empty( $methods ) && get_user_meta( $user_id, self::META_ENABLED, true ) ) {
-			$primary = get_user_meta( $user_id, self::META_METHOD, true );
-			if ( in_array( $primary, array( self::METHOD_TOTP, self::METHOD_EMAIL ), true ) ) {
-				$methods[] = $primary;
-			}
-		}
+		$methods = self::configured_method_flags( $user_id );
 
 		$allowed_global = self::get_allowed_methods();
 		if ( ! empty( $allowed_global ) ) {
@@ -798,14 +778,15 @@ class ReportedIP_Hive_Two_Factor {
 			 * goes back to password-only, which nobody involved asked for and
 			 * nothing else would record.
 			 */
-			if ( self::user_has_configured_method( $user->ID ) ) {
+			$configured = self::configured_method_flags( $user->ID );
+			if ( ! empty( $configured ) ) {
 				ReportedIP_Hive_Logger::get_instance()->warning(
 					'2FA inactive: the user\'s only configured method is no longer permitted by the site policy',
 					ReportedIP_Hive::get_client_ip(),
 					array(
 						'user_id'          => $user->ID,
 						'allowed_methods'  => self::get_allowed_methods(),
-						'configured_flags' => self::configured_method_flags( $user->ID ),
+						'configured_flags' => $configured,
 					)
 				);
 			}

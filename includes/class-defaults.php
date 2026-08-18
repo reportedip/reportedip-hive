@@ -238,6 +238,15 @@ final class ReportedIP_Hive_Defaults {
 
 		'reportedip_hive_enable_caching'                 => true,
 		'reportedip_hive_cache_duration'                 => 24,
+
+		/*
+		 * Cache generations. Seeded so the rows exist: both are read on the
+		 * request path, and a missing row misses the primed option cache and
+		 * costs a database query on every request until something bumps it.
+		 */
+		'reportedip_hive_access_cache_epoch'             => 0,
+		'reportedip_hive_cache_epoch'                    => 0,
+
 		'reportedip_hive_negative_cache_duration'        => 2,
 		'reportedip_hive_queue_max_age_days'             => 7,
 		'reportedip_hive_queue_warning_threshold'        => 50,

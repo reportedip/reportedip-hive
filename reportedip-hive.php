@@ -391,6 +391,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-sync.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-proxy-trust.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-request-path.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-event-taxonomy.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-logger.php';

@@ -45,11 +45,6 @@ class ReportedIP_Hive_Two_Factor_REST {
 	}
 
 	/**
-	 * Returns the requester IP, falling back to REMOTE_ADDR.
-	 *
-	 * @return string
-	 */
-	/**
 	 * Refuse a cross-origin call to the unauthenticated endpoints.
 	 *
 	 * Both routes end in `wp_set_auth_cookie()`, and neither can carry a nonce
@@ -81,6 +76,11 @@ class ReportedIP_Hive_Two_Factor_REST {
 		);
 	}
 
+	/**
+	 * Returns the requester IP, falling back to REMOTE_ADDR.
+	 *
+	 * @return string
+	 */
 	private function client_ip() {
 		if ( class_exists( 'ReportedIP_Hive' ) ) {
 			$ip = (string) ReportedIP_Hive::get_client_ip();

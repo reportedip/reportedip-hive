@@ -277,16 +277,7 @@ class ReportedIP_Hive_Scan_Detector {
 	 * happily served the real file.
 	 */
 	private function get_request_path(): string {
-		$raw = isset( $_SERVER['REQUEST_URI'] )
-			? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw path required: sanitising drops percent-encoding and hides scanner probes; value is matched against signatures, control chars stripped below.
-			: '';
-
-		$raw  = '/' . ltrim( $raw, '/' );
-		$path = (string) wp_parse_url( $raw, PHP_URL_PATH );
-		$path = rawurldecode( $path );
-		$path = (string) preg_replace( '/[\x00-\x1F\x7F]/', '', $path );
-
-		return strtolower( $path );
+		return strtolower( ReportedIP_Hive_Request_Path::current() );
 	}
 
 	/**

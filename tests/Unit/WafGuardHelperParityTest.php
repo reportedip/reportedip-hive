@@ -80,16 +80,32 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 *
 		 * @return array<int, bool>
 		 */
+		/**
+		 * Verdicts from the generated guard, resolved once per class.
+		 *
+		 * Spawning a PHP interpreter is the most expensive thing in this file
+		 * and both tests ask the same 25 questions.
+		 *
+		 * @var array<int, bool>|null
+		 */
+		private static $verdict_cache = null;
+
 		private function guard_verdicts(): array {
+			if ( null !== self::$verdict_cache ) {
+				return self::$verdict_cache;
+			}
+
 			$manager = \ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
 			$method  = new ReflectionMethod( \ReportedIP_Hive_WAF_Dropin_Manager::class, 'generate_prepend' );
 			$method->setAccessible( true );
 			$guard_source = (string) $method->invoke( $manager );
 
-			$guard = tempnam( sys_get_temp_dir(), 'rip-parity-guard-' ) . '.php';
+			/* tempnam() creates the file it names; appending an extension would
+			   leave that one behind on every run. */
+			$guard = tempnam( sys_get_temp_dir(), 'rip-parity-guard-' );
 			file_put_contents( $guard, $guard_source );
 
-			$boot = tempnam( sys_get_temp_dir(), 'rip-parity-boot-' ) . '.php';
+			$boot = tempnam( sys_get_temp_dir(), 'rip-parity-boot-' );
 			file_put_contents(
 				$boot,
 				"<?php\n"
@@ -113,7 +129,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$decoded = json_decode( trim( implode( '', $output ) ), true );
 			$this->assertIsArray( $decoded, 'Guard probe must return a JSON verdict list, got: ' . implode( '', $output ) );
 
-			return array_map( 'boolval', $decoded );
+			self::$verdict_cache = array_map( 'boolval', $decoded );
+
+			return self::$verdict_cache;
 		}
 
 		public function test_guard_ip_matcher_agrees_with_the_engine() {

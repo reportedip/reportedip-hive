@@ -115,18 +115,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( '$epoch + 1', $flush_body );
 		}
 
-		public function test_auto_block_path_uses_the_shared_flush_helper() {
+		public function test_auto_block_path_leaves_invalidation_to_the_hook() {
 			$monitor = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-security-monitor.php' );
 
-			$this->assertStringContainsString(
-				'ReportedIP_Hive::flush_ip_verdict_cache( $ip_address )',
-				$monitor,
-				'The auto-block path must route through the shared helper, not rebuild the cache key'
-			);
 			$this->assertStringNotContainsString(
 				"'rip_access_' . md5(",
 				$monitor,
 				'A hand-built key silently misses the epoch and deletes nothing'
+			);
+			$this->assertStringNotContainsString(
+				'flush_ip_verdict_cache',
+				$monitor,
+				'block_ip() already announces the change; a second explicit flush is a copy that will drift'
 			);
 		}
 

@@ -19,6 +19,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 	use ReportedIP\Hive\Tests\TestCase;
 
+	require_once dirname( __DIR__, 2 ) . '/includes/class-request-path.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-rule-store.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-rule-sync.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';

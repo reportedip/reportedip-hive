@@ -39,6 +39,16 @@ class ReportedIP_Hive_Cache {
 	const OPTION_CACHE_EPOCH = 'reportedip_hive_cache_epoch';
 
 	/**
+	 * Request-level memo of the cache generation.
+	 *
+	 * Read for every reputation key; it only changes when this request itself
+	 * flushes, which resets it.
+	 *
+	 * @var int|null
+	 */
+	private static $epoch_memo = null;
+
+	/**
 	 * In-memory counters for batch DB updates
 	 */
 	private static $pending_hits        = 0;
@@ -248,42 +258,27 @@ class ReportedIP_Hive_Cache {
 		/*
 		 * The DELETE above only reaches entries stored in the options table.
 		 * Under a persistent object cache they live in the backend instead and
-		 * the statement matches nothing, so advance the key generation as well
-		 * — that retires the entries there without needing to enumerate keys.
+		 * the statement matches nothing, so advance the key generation — that
+		 * retires those entries without needing to enumerate keys, which the
+		 * backend does not allow. The flush therefore always takes effect, and
+		 * is always worth recording.
 		 */
-		$epoch = (int) ReportedIP_Hive_Option_Routing::get( self::OPTION_CACHE_EPOCH, 0 );
-		ReportedIP_Hive_Option_Routing::set( self::OPTION_CACHE_EPOCH, $epoch + 1 );
+		$epoch            = 1 + (int) ReportedIP_Hive_Option_Routing::get( self::OPTION_CACHE_EPOCH, 0 );
+		self::$epoch_memo = $epoch;
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_CACHE_EPOCH, $epoch );
 
-		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
-			$this->logger->log_security_event(
-				'cache_flush_all',
-				'system',
-				array(
-					'deleted_entries' => $deleted,
-					'cache_epoch'     => $epoch + 1,
-					'reason'          => 'manual_flush_object_cache',
-				),
-				'low'
-			);
+		$this->logger->log_security_event(
+			'cache_flush_all',
+			'system',
+			array(
+				'deleted_entries' => $deleted,
+				'cache_epoch'     => $epoch,
+				'reason'          => 'manual_flush',
+			),
+			'low'
+		);
 
-			$this->reset_cache_statistics();
-
-			return $deleted;
-		}
-
-		if ( $deleted > 0 ) {
-			$this->logger->log_security_event(
-				'cache_flush_all',
-				'system',
-				array(
-					'deleted_entries' => $deleted,
-					'reason'          => 'manual_flush',
-				),
-				'low'
-			);
-
-			$this->reset_cache_statistics();
-		}
+		$this->reset_cache_statistics();
 
 		return $deleted;
 	}
@@ -497,9 +492,11 @@ class ReportedIP_Hive_Cache {
 	 * @since  2.1.44
 	 */
 	private function cache_epoch() {
-		$epoch = (int) ReportedIP_Hive_Option_Routing::get( self::OPTION_CACHE_EPOCH, 0 );
+		if ( null === self::$epoch_memo ) {
+			self::$epoch_memo = (int) ReportedIP_Hive_Option_Routing::get( self::OPTION_CACHE_EPOCH, 0 );
+		}
 
-		return $epoch > 0 ? 'g' . $epoch . '_' : '';
+		return self::$epoch_memo > 0 ? 'g' . self::$epoch_memo . '_' : '';
 	}
 
 	/**

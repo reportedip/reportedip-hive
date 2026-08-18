@@ -961,17 +961,17 @@ if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
 			$dirty   = '1' === substr( $head, 8, 1 );
 			$baselen = (int) substr( $head, 12, 10 );
 			if ( $maybe ) {
-				/* Never hand fread() an unbounded length: a corrupt header can
-				   reach this with baselen <= 16408, and allocating PHP_INT_MAX
-				   is a memory fatal that no catch can intercept — which would
-				   turn this fail-open guard into a site-wide 500. */
-				$fsz        = @filesize( $file );
-				$base_bytes = $baselen > 16408 ? $baselen - 16408 : 0;
-				if ( false !== $fsz && $fsz > 16408 ) {
-					$remaining  = $fsz - 16408;
-					$base_bytes = ( $base_bytes > 0 && $base_bytes < $remaining ) ? $base_bytes : $remaining;
-				}
-				$verdict = $base_bytes > 0 && reportedip_hive_dropin_bl_match( @fread( $fh, $base_bytes ), $ip );
+				/* Never read more than the file actually holds. The header's
+				   length field is 10 digits wide, so a corrupt one asks for
+				   gigabytes; PHP allocates the buffer up front, and that fatal
+				   cannot be caught — it would turn this fail-open guard into a
+				   site-wide 500. The real size wins, and an unreadable size
+				   means read nothing. */
+				$stat       = @fstat( $fh );
+				$available  = is_array( $stat ) && isset( $stat['size'] ) ? max( 0, (int) $stat['size'] - 16408 ) : 0;
+				$declared   = max( 0, $baselen - 16408 );
+				$base_bytes = $declared > 0 ? min( $declared, $available ) : $available;
+				$verdict    = $base_bytes > 0 && reportedip_hive_dropin_bl_match( @fread( $fh, $base_bytes ), $ip );
 			}
 			if ( ! $verdict && $dirty && $baselen > 0 && 0 === @fseek( $fh, $baselen ) ) {
 				$verdict = reportedip_hive_dropin_bl_match( @stream_get_contents( $fh ), $ip );

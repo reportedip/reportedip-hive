@@ -323,13 +323,9 @@ class ReportedIP_Hive_Two_Factor_SMS {
 			 * minute lifetime stretched with every attempt. The email channel
 			 * has always carried the remaining time forward this way.
 			 */
-			$created   = (int) ( $data['created_at'] ?? 0 );
-			$remaining = $created > 0 ? self::CODE_TTL - ( time() - $created ) : self::CODE_TTL;
-
+			$remaining = self::CODE_TTL - ( time() - (int) ( $data['created_at'] ?? 0 ) );
 			if ( $remaining > 0 ) {
 				set_transient( $key, $data, $remaining );
-			} else {
-				delete_transient( $key );
 			}
 
 			return false;

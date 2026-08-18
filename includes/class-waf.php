@@ -192,10 +192,11 @@ class ReportedIP_Hive_WAF {
 		 * endpoints are therefore inspected here. REST_REQUEST is not yet
 		 * defined at `init` priority 1, so detection rests on is_admin().
 		 */
-		$unauthenticated_admin_endpoint = ! is_user_logged_in()
-			&& ( wp_doing_ajax() || self::is_admin_post_request() );
+		if ( wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+			return;
+		}
 
-		if ( wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) || ( is_admin() && ! $unauthenticated_admin_endpoint ) ) {
+		if ( is_admin() && ! self::is_unauthenticated_admin_endpoint() ) {
 			return;
 		}
 		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true ) ) {
@@ -303,15 +304,18 @@ class ReportedIP_Hive_WAF {
 	 * The decoded request path (no query string) for path-prefix matching.
 	 *
 	 * Only the URI path is used — never the query string — so a bypass token
-	 * cannot be smuggled through an unrelated query parameter.
+	 * cannot be smuggled through an unrelated query parameter. Resolution goes
+	 * through the shared helper because this value decides whether a
+	 * `scope='all'` exception skips inspection entirely: parsing `//shop/checkout`
+	 * without collapsing the leading slashes yields `/checkout`, which would let
+	 * an exception scoped to `/checkout` disable the engine for a request the
+	 * server resolves somewhere else.
 	 *
 	 * @return string Leading-slash request path, or '' when unavailable.
 	 * @since  2.1.9
 	 */
 	private function current_request_path(): string {
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Raw URI parsed for its path only, never stored or echoed.
-		$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
-		return (string) wp_parse_url( $uri, PHP_URL_PATH );
+		return ReportedIP_Hive_Request_Path::current();
 	}
 
 	/**
@@ -506,7 +510,7 @@ class ReportedIP_Hive_WAF {
 	 * @since  2.1.9
 	 */
 	private function resolve_rest_route( string $uri, $rest_route, string $rest_prefix ): string {
-		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
+		$path = ReportedIP_Hive_Request_Path::normalize( $uri );
 
 		// Plain permalinks: ?rest_route=/ns/route — only on the REST entry script.
 		if ( null !== $rest_route && '' !== (string) $rest_route ) {
@@ -733,6 +737,20 @@ class ReportedIP_Hive_WAF {
 	 */
 	public function active_rule_count() {
 		return count( $this->get_active_rules() );
+	}
+
+	/**
+	 * Whether this is an anonymous call to admin-ajax or admin-post.
+	 *
+	 * Both are `is_admin()` yet serve every `wp_ajax_nopriv_*` /
+	 * `admin_post_nopriv_*` action to unauthenticated callers, so they cannot
+	 * be exempted on the back-office flag alone.
+	 *
+	 * @return bool
+	 * @since  2.1.44
+	 */
+	private static function is_unauthenticated_admin_endpoint(): bool {
+		return ! is_user_logged_in() && ( wp_doing_ajax() || self::is_admin_post_request() );
 	}
 
 	/**
@@ -973,7 +991,6 @@ class ReportedIP_Hive_WAF {
 		if ( false !== get_transient( $gate ) ) {
 			return;
 		}
-		set_transient( $gate, 1, HOUR_IN_SECONDS );
 
 		$logger = ReportedIP_Hive_Logger::get_instance();
 		if ( ! is_object( $logger ) || ! method_exists( $logger, 'warning' ) ) {
@@ -985,6 +1002,10 @@ class ReportedIP_Hive_WAF {
 			class_exists( 'ReportedIP_Hive' ) ? ReportedIP_Hive::get_client_ip() : '',
 			array( 'pattern' => substr( (string) $pattern, 0, 200 ) )
 		);
+
+		/* Claim the hour only once something was actually written — spending it
+		   ahead of the log would silence the very report this exists to make. */
+		set_transient( $gate, 1, HOUR_IN_SECONDS );
 	}
 
 	/**

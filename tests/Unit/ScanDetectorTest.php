@@ -31,6 +31,7 @@ namespace {
 		}
 	}
 
+	require_once dirname( __DIR__, 2 ) . '/includes/class-request-path.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-scan-detector.php';
 }
 

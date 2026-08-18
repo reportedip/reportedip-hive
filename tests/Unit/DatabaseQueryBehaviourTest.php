@@ -99,10 +99,18 @@ namespace {
 				return $this->query_result;
 			}
 
+			/** @var array<int, array<int, object>>|null Successive batches to serve, or null for a fixed set. */
+			public ?array $batches = null;
+
 			public function get_results( $sql = null ) {
 				$this->statements[] = (string) $sql;
 				++$this->result_calls;
-				return $this->rows;
+
+				if ( null === $this->batches ) {
+					return $this->rows;
+				}
+
+				return array_shift( $this->batches ) ?? array();
 			}
 
 			public function get_var( $sql = null ) {
@@ -277,17 +285,25 @@ namespace ReportedIP\Hive\Tests\Unit {
 				);
 			}
 
-			$this->wpdb()->rows          = $rows;
+			/*
+			 * One full batch, then a short one. Serving the same full batch
+			 * forever would leave only the 20-second budget to end the loop,
+			 * turning this assertion into the slowest test in the suite.
+			 */
+			$this->wpdb()->batches       = array( $rows, array_slice( $rows, 0, 3 ) );
 			$this->wpdb()->update_result = 1;
 
-			$db = new \ReportedIP_Hive_Database();
+			$db      = new \ReportedIP_Hive_Database();
+			$started = microtime( true );
 			$db->anonymize_old_data( 30 );
+			$elapsed = microtime( true ) - $started;
 
 			$this->assertGreaterThan(
 				1,
 				$this->wpdb()->result_calls,
 				'A full batch that wrote successfully must be followed by another fetch'
 			);
+			$this->assertLessThan( 5.0, $elapsed, 'A short batch must end the loop, not the time budget' );
 		}
 	}
 }

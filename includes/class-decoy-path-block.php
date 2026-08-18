@@ -164,23 +164,26 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	 * @param string $path Request path (e.g. `/wp-config.old.php?foo=bar`).
 	 * @return bool
 	 */
+	/**
+	 * Lower-cased, decoded, trailing-slash-free path used for bait matching.
+	 *
+	 * @param string $path Raw path or URI.
+	 * @return string Normalised path, or '' when there is nothing to match.
+	 * @since  2.1.44
+	 */
+	private static function normalize_path( $path ) {
+		if ( ! is_string( $path ) || '' === $path ) {
+			return '';
+		}
+
+		return strtolower( rtrim( ReportedIP_Hive_Request_Path::normalize( $path ), '/' ) );
+	}
+
 	public static function is_decoy_path( $path ) {
 		if ( ! is_string( $path ) || '' === $path ) {
 			return false;
 		}
-		$only_path = wp_parse_url( '/' . ltrim( $path, '/' ), PHP_URL_PATH );
-		if ( ! is_string( $only_path ) || '' === $only_path ) {
-			return false;
-		}
-
-		/*
-		 * Decode once so a percent-escaped probe (`/%2Eenv.backup`) matches the
-		 * same bait the web server would resolve it to. Control characters are
-		 * dropped afterwards: the value reaches the log.
-		 */
-		$only_path = rawurldecode( $only_path );
-		$only_path = (string) preg_replace( '/[\x00-\x1F\x7F]/', '', $only_path );
-		$only_path = strtolower( rtrim( $only_path, '/' ) );
+		$only_path = self::normalize_path( $path );
 		if ( '' === $only_path ) {
 			return false;
 		}
@@ -240,10 +243,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 			return;
 		}
 
-		$path_only = wp_parse_url( '/' . ltrim( $uri, '/' ), PHP_URL_PATH );
-		$path_only = is_string( $path_only ) ? rawurldecode( $path_only ) : '';
-		$path_only = (string) preg_replace( '/[\x00-\x1F\x7F]/', '', $path_only );
-		$path_only = strtolower( rtrim( $path_only, '/' ) );
+		$path_only = self::normalize_path( $uri );
 
 		$htaccess_handled = class_exists( 'ReportedIP_Hive_Decoy_Htaccess_Writer' )
 			&& ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->is_block_present();

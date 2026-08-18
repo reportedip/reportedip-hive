@@ -2144,10 +2144,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		 * back to the live one keeps a setup that was started before this
 		 * release completable.
 		 */
-		$is_pending       = true;
 		$encrypted_secret = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET_PENDING, true );
 		if ( empty( $encrypted_secret ) ) {
-			$is_pending       = false;
 			$encrypted_secret = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true );
 		}
 		if ( empty( $encrypted_secret ) ) {
@@ -2163,11 +2161,11 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			wp_send_json_error( array( 'message' => __( 'Invalid code. Please check your device clock.', 'reportedip-hive' ) ) );
 		}
 
-		if ( $is_pending ) {
-			update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, $encrypted_secret );
-			delete_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET_PENDING );
-		}
-
+		/* Promoting is an identity write when the secret came from the live key
+		   and the delete is a no-op when nothing was pending, so neither needs
+		   a branch. */
+		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, $encrypted_secret );
+		delete_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET_PENDING );
 		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '1' );
 
 		$recovery_codes = ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_TOTP );

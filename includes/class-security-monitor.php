@@ -825,8 +825,6 @@ class ReportedIP_Hive_Security_Monitor {
 			$client = ReportedIP_Hive::get_instance();
 			$client->mark_ip_blocked( $ip_address );
 
-			ReportedIP_Hive::flush_ip_verdict_cache( $ip_address );
-
 			$this->logger->log_security_event(
 				'ip_blocked',
 				$ip_address,

@@ -113,6 +113,21 @@ class ReportedIP_Hive_Two_Factor_CLI {
 			);
 		}
 
+		/*
+		 * Refuse before anything is written. activate_method() rejects a
+		 * disallowed method too, but by then the TOTP branch below has already
+		 * stored a confirmed secret that would go live the moment the policy
+		 * changed.
+		 */
+		if ( ! in_array( $method, ReportedIP_Hive_Two_Factor::get_allowed_methods(), true ) ) {
+			WP_CLI::error(
+				sprintf(
+					'The site policy does not permit "%s". Add it under Settings > 2FA before enabling it for a user.',
+					$method
+				)
+			);
+		}
+
 		if ( ReportedIP_Hive_Two_Factor::METHOD_TOTP === $method ) {
 			$has_secret = ! empty( get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true ) );
 			$generated  = false;
@@ -160,7 +175,15 @@ class ReportedIP_Hive_Two_Factor_CLI {
 			}
 		}
 
-		ReportedIP_Hive_Two_Factor::activate_method( $user_id, $method );
+		if ( false === ReportedIP_Hive_Two_Factor::activate_method( $user_id, $method ) ) {
+			WP_CLI::error(
+				sprintf(
+					'The site policy does not permit "%s". Add it under Settings > 2FA before enabling it for a user.',
+					$method
+				)
+			);
+		}
+
 		WP_CLI::success( sprintf( '2FA method "%s" flagged for user #%d.', $method, $user_id ) );
 	}
 

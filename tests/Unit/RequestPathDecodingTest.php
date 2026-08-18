@@ -52,6 +52,7 @@ namespace {
 		}
 	}
 
+	require_once dirname( __DIR__, 2 ) . '/includes/class-request-path.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-scan-detector.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-decoy-path-block.php';
 }
@@ -71,6 +72,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function scan_detector_path( string $uri ): string {
 			$_SERVER['REQUEST_URI'] = $uri;
+			\ReportedIP_Hive_Request_Path::flush();
 
 			$instance   = \ReportedIP_Hive_Scan_Detector::get_instance();
 			$reflection = new ReflectionClass( $instance );
@@ -81,6 +83,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		protected function tearDown(): void {
 			unset( $_SERVER['REQUEST_URI'] );
+			\ReportedIP_Hive_Request_Path::flush();
 			parent::tearDown();
 		}
 
@@ -126,19 +129,47 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/wp-login.php' ) );
 		}
 
-		public function test_hide_login_reads_the_raw_uri() {
-			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-hide-login.php' );
-			$start  = strpos( $source, 'private function get_request_path()' );
-			$this->assertNotFalse( $start );
-			$body = substr( $source, $start, 1200 );
+		/**
+		 * The shared normaliser is the contract every sensor now relies on, so
+		 * assert its output rather than grepping each caller for the steps.
+		 */
+		public function test_normalizer_resolves_the_path_the_server_would() {
+			$this->assertSame( '/wp-login.php', \ReportedIP_Hive_Request_Path::normalize( '/wp-login%2Ephp' ) );
+			$this->assertSame( '/wp-login.php', \ReportedIP_Hive_Request_Path::normalize( '//wp-login.php' ) );
+			$this->assertSame( '/wp-login.php', \ReportedIP_Hive_Request_Path::normalize( '///wp-login.php' ) );
+			$this->assertSame( '/wp-login.php', \ReportedIP_Hive_Request_Path::normalize( '/wp-login.php?redirect_to=/x' ) );
+			$this->assertSame( '/.env', \ReportedIP_Hive_Request_Path::normalize( '/%2Eenv' ) );
+			$this->assertSame( '/.env', \ReportedIP_Hive_Request_Path::normalize( "/%2Eenv%00" ) );
+			$this->assertSame( '', \ReportedIP_Hive_Request_Path::normalize( '' ) );
+		}
 
-			$this->assertStringNotContainsString(
-				'sanitize_text_field',
-				$body,
-				'Sanitising the URI removes percent-encoding and reopens the /wp-login%2Ephp bypass'
+		/**
+		 * Decoding happens exactly once. A second pass would fold `%252E` into a
+		 * dot and let a path the server keeps separate match a bait or an
+		 * exception prefix.
+		 */
+		public function test_normalizer_decodes_only_once() {
+			$this->assertSame( '/%2Eenv', \ReportedIP_Hive_Request_Path::normalize( '/%252Eenv' ) );
+		}
+
+		/**
+		 * Slashes collapse before parsing, never after: re-collapsing a decoded
+		 * `%2F` would merge segments the web server treats as distinct.
+		 */
+		public function test_normalizer_keeps_decoded_slashes_separate() {
+			$this->assertSame( '///checkout', \ReportedIP_Hive_Request_Path::normalize( '/%2F%2Fcheckout' ) );
+			$this->assertNotSame( '/checkout', \ReportedIP_Hive_Request_Path::normalize( '/%2F%2Fcheckout' ) );
+		}
+
+		public function test_hide_login_matches_an_encoded_login_request() {
+			$_SERVER['REQUEST_URI'] = '/wp-login%2Ephp';
+			\ReportedIP_Hive_Request_Path::flush();
+
+			$this->assertSame(
+				'/wp-login.php',
+				\ReportedIP_Hive_Request_Path::current(),
+				'The hidden-login comparison runs against this value'
 			);
-			$this->assertStringContainsString( 'rawurldecode', $body );
-			$this->assertStringContainsString( "ltrim( \$raw, '/' )", $body, 'Repeated leading slashes must collapse before parsing' );
 		}
 	}
 }
