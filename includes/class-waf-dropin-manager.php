@@ -878,10 +878,15 @@ if ( ! function_exists( 'reportedip_hive_dropin_ip_match' ) ) {
 		if ( $ip === $entry ) { return true; }
 		if ( false === strpos( $entry, '/' ) ) { return false; }
 		list( $subnet, $bits ) = explode( '/', $entry, 2 );
+		if ( '' === $bits || ! ctype_digit( (string) $bits ) ) { return false; }
 		$bits = (int) $bits;
 		$ip_bin = @inet_pton( $ip );
 		$net_bin = @inet_pton( $subnet );
 		if ( false === $ip_bin || false === $net_bin || strlen( $ip_bin ) !== strlen( $net_bin ) ) { return false; }
+		/* An out-of-range prefix is not a wildcard: a negative value produced a
+		   zero mask here and matched every address, so one malformed whitelist
+		   row would have become a guard-wide bypass. */
+		if ( $bits > 8 * strlen( $net_bin ) ) { return false; }
 		$bytes = intdiv( $bits, 8 );
 		$rem   = $bits % 8;
 		if ( $bytes > 0 && 0 !== substr_compare( $ip_bin, $net_bin, 0, $bytes ) ) { return false; }
