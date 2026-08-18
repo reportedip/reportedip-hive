@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.43
+Stable tag: 2.1.44
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -350,7 +350,7 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
-= Unreleased =
+= 2.1.44 =
 
 Security: results of a full-codebase audit. Blocked addresses could still reach admin-ajax.php, and requests there were inspected by neither firewall layer. A single firewall exception could mask every rule ordered behind it. A malformed prefix such as 10.0.0.0/-1 made the pre-WordPress guard match every address. Percent-encoded probes (/wp-login%2Ephp, /%2Eenv) slipped past the hidden login, the scan detector and the decoy paths. A submitted 2FA method was never checked against the factors the user actually has, TOTP codes could be replayed within their window, and the unauthenticated 2FA REST routes accepted cross-origin logins.
 

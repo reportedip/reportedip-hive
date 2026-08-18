@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.1.44] — 2026-08-18
 
 Findings of a full-codebase security and correctness audit. Every item below
 was verified against the running code before it was changed, and each carries
