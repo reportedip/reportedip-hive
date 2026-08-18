@@ -2,6 +2,99 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+Findings of a full-codebase security and correctness audit. Every item below
+was verified against the running code before it was changed, and each carries
+a regression test.
+
+### Security
+
+- **`admin-ajax.php` was outside the block gate and the firewall.** The IP gate
+  stepped aside for any AJAX request and the WAF engine for anything
+  `is_admin()`, which includes `admin-ajax.php` and `admin-post.php`. Both
+  serve every `wp_ajax_nopriv_*` action a site has registered, so a blocked
+  address kept full access and its request body was inspected by neither
+  layer — the pre-WordPress guard skips body inspection whenever a login
+  cookie is merely present, and that cookie cannot be verified before
+  WordPress loads. Only WP-Cron stays exempt now, and anonymous requests to
+  those endpoints are inspected. AJAX callers receive JSON rather than the
+  themed 403 page.
+- **One firewall exception could mask every rule behind it.** The engine
+  stopped at the first matching rule and only then tested it against the
+  exceptions. Appending a fragment that matched an excepted rule therefore
+  carried a payload past the whole scan. The check now runs inside the loop
+  and keeps scanning, matching the guard.
+- **A malformed prefix made the guard match every address.** In the
+  pre-WordPress matcher a range such as `10.0.0.0/-1` produced a zero mask and
+  matched everything, so a single malformed whitelist row would have waved
+  every request through before WordPress loaded. A new differential test now
+  pins the guard's verdict against the engine's across IPv4, IPv6,
+  partial-byte masks, cross-family pairs and malformed input.
+- **Percent-encoded probes bypassed three sensors.** `sanitize_text_field()`
+  deletes every `%XX` sequence, so `/wp-login%2Ephp` reached the hidden-login
+  check as `/wp-loginphp` and the login form was served anyway, while
+  `/%2Eenv` missed the honeypot signature as the server delivered the file.
+  The hidden login, the scan detector and the decoy paths now read the raw URI
+  and decode it once, as the firewall engine always did.
+- **A submitted 2FA method was never checked against the user's factors.** The
+  login challenge passed it straight to the verifier, so a method the site
+  policy no longer permitted still signed the user in whenever its secret had
+  been left behind. Enrolment accepted disallowed methods too, which let a
+  flag be written that went live the moment an administrator re-enabled it,
+  and burned managed relay quota on the way to being refused.
+- **TOTP codes were not single-use.** A code captured in transit stayed valid
+  for the rest of its window and replayed in a parallel session. The accepted
+  time step is now recorded and every step up to it refused (RFC 6238 §5.2).
+- **Cross-origin logins through the 2FA REST routes.** Both endpoints end in
+  `wp_set_auth_cookie()` and cannot carry a nonce, so a cross-site form post
+  could log a visitor's browser into an attacker's account. Cross-origin calls
+  are refused; native and server-side clients are unaffected.
+- **Blocks and unblocks took up to five minutes to apply.** The access-verdict
+  cache was only ever cleared by the auto-block path, so with a persistent
+  object cache a manually blocked address kept browsing and a released visitor
+  kept seeing the 403. Lifting a CIDR block or letting a whitelist entry expire
+  also left the pre-WordPress guard enforcing the old state until an unrelated
+  rebake happened.
+- **A trusted client-IP header without trusted sources** is accepted from any
+  peer, which lets anyone reaching the origin forge their address. The
+  behaviour is unchanged for compatibility, but saving that combination now
+  warns.
+
+### Fixes
+
+- Replacing an authenticator overwrote the working secret before a single code
+  had proved the new one arrived; abandoning that flow locked the user out.
+  The new secret now waits until it is confirmed.
+- Two queue workers could claim the same rows and send a report twice,
+  spending the community quota twice.
+- Searching the API queue for anything starting with s, d or f returned
+  nothing: an already-prepared clause was prepared a second time and the LIKE
+  pattern's `%` was read as a placeholder.
+- Log anonymisation could spin for its full time budget without anonymising
+  anything when the underlying write kept failing.
+- The pre-WordPress guard could hit an uncatchable memory fatal — a site-wide
+  500 from the one component that must always fail open — if its header was
+  corrupt. Rewriting its blocklist took no lock, so a block written at the same
+  moment was lost.
+- Five cron handlers caught `Exception` where a sixth caught `Throwable`; an
+  `Error` escaped them and killed the whole tick.
+- Clearing the reputation cache did nothing at all under Redis or Memcached.
+- SMS codes re-armed their full lifetime on every wrong guess. Comment spam
+  behind a proxy was attributed to the edge address, which both reported
+  infrastructure to the community feed and left the actual spammer uncounted.
+- Removing a method from the site policy silently dropped the second factor of
+  everyone who used only that one; it is now logged.
+- Unblocking an address that carried no active row reported failure for what
+  is the requested state.
+
+### Changed
+
+- Inline option fallbacks that contradicted the canonical defaults registry
+  are aligned, and a test now fails when a literal drifts from it again.
+- The 42 AJAX handlers shared one permission guard instead of repeating it
+  with three different error payloads.
+
 ## [2.1.43] — 2026-08-14
 
 ### Changed

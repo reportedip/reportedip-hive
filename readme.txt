@@ -350,6 +350,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= Unreleased =
+
+Security: results of a full-codebase audit. Blocked addresses could still reach admin-ajax.php, and requests there were inspected by neither firewall layer. A single firewall exception could mask every rule ordered behind it. A malformed prefix such as 10.0.0.0/-1 made the pre-WordPress guard match every address. Percent-encoded probes (/wp-login%2Ephp, /%2Eenv) slipped past the hidden login, the scan detector and the decoy paths. A submitted 2FA method was never checked against the factors the user actually has, TOTP codes could be replayed within their window, and the unauthenticated 2FA REST routes accepted cross-origin logins.
+
+Fixed: blocks and unblocks took up to five minutes to apply on sites with a persistent object cache; lifting a CIDR block or an expiring whitelist entry left the guard enforcing the old state. Replacing an authenticator destroyed the working secret before the new one was confirmed. Two queue workers could send the same report twice. Queue searches beginning with s, d or f returned nothing. Clearing the reputation cache did nothing under Redis or Memcached. Comment spam behind a proxy was attributed to the edge address.
+
 = 2.1.43 =
 
 Changed: corrected the contact domain in two historical changelog entries (reportedip.de to reportedip.com). No code change.
