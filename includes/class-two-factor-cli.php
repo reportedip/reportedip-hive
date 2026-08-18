@@ -124,6 +124,19 @@ class ReportedIP_Hive_Two_Factor_CLI {
 				$generated = true;
 			} else {
 				$secret = '';
+
+				/*
+				 * Reusing a stored secret arms whatever is on file — including
+				 * one left behind by an abandoned setup that the user never
+				 * imported. This path prints nothing, so they would be left
+				 * with recovery codes as the only way in.
+				 */
+				if ( '1' !== get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, true ) ) {
+					WP_CLI::error(
+						'This user has an unconfirmed TOTP secret from an incomplete setup. '
+						. 'Pass --secret=<base32> to set a known one, or let the user enrol from their profile.'
+					);
+				}
 			}
 
 			if ( '' !== $secret ) {

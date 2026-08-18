@@ -516,6 +516,46 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
+	 * Methods the user configured, before the site policy is applied.
+	 *
+	 * {@see self::get_user_enabled_methods()} intersects with the allowed
+	 * list, so it cannot answer "did this user ever set up a factor?" once the
+	 * policy stopped permitting it.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return string[] Method identifiers.
+	 * @since  2.1.44
+	 */
+	public static function configured_method_flags( $user_id ) {
+		$flags = array(
+			self::METHOD_TOTP     => self::META_TOTP_ENABLED,
+			self::METHOD_EMAIL    => self::META_EMAIL_ENABLED,
+			self::METHOD_WEBAUTHN => self::META_WEBAUTHN_ENABLED,
+			self::METHOD_SMS      => self::META_SMS_ENABLED,
+		);
+
+		$configured = array();
+		foreach ( $flags as $method => $meta_key ) {
+			if ( get_user_meta( $user_id, $meta_key, true ) ) {
+				$configured[] = $method;
+			}
+		}
+
+		return $configured;
+	}
+
+	/**
+	 * Whether the user has any configured factor, policy aside.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return bool
+	 * @since  2.1.44
+	 */
+	public static function user_has_configured_method( $user_id ) {
+		return ! empty( self::configured_method_flags( $user_id ) );
+	}
+
+	/**
 	 * Return the list of 2FA methods the user has actively configured.
 	 *
 	 * Supports parallel activation (e.g. TOTP + E-Mail + Passkey at once).
@@ -751,6 +791,25 @@ class ReportedIP_Hive_Two_Factor {
 		$is_enforced     = self::is_enforced_for_user( $user );
 
 		if ( ! $has_any_method && ! $is_enforced ) {
+			/*
+			 * The enabled list is intersected with the site's allowed methods,
+			 * so removing a method from that policy silently drops the second
+			 * factor of everyone who used only that one. Log it: the account
+			 * goes back to password-only, which nobody involved asked for and
+			 * nothing else would record.
+			 */
+			if ( self::user_has_configured_method( $user->ID ) ) {
+				ReportedIP_Hive_Logger::get_instance()->warning(
+					'2FA inactive: the user\'s only configured method is no longer permitted by the site policy',
+					ReportedIP_Hive::get_client_ip(),
+					array(
+						'user_id'          => $user->ID,
+						'allowed_methods'  => self::get_allowed_methods(),
+						'configured_flags' => self::configured_method_flags( $user->ID ),
+					)
+				);
+			}
+
 			return $user;
 		}
 

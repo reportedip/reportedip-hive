@@ -29,6 +29,16 @@ class ReportedIP_Hive_Cache {
 	private static $instance = null;
 
 	/**
+	 * Option holding the reputation-cache key generation.
+	 *
+	 * Advancing it retires every cached entry, including those an external
+	 * object cache holds outside the options table.
+	 *
+	 * @var string
+	 */
+	const OPTION_CACHE_EPOCH = 'reportedip_hive_cache_epoch';
+
+	/**
 	 * In-memory counters for batch DB updates
 	 */
 	private static $pending_hits        = 0;
@@ -232,6 +242,34 @@ class ReportedIP_Hive_Cache {
 				'_transient_timeout_' . $this->cache_prefix . 'reputation_%'
 			)
 		);
+
+		$deleted = is_numeric( $deleted ) ? (int) $deleted : 0;
+
+		/*
+		 * The DELETE above only reaches entries stored in the options table.
+		 * Under a persistent object cache they live in the backend instead and
+		 * the statement matches nothing, so advance the key generation as well
+		 * — that retires the entries there without needing to enumerate keys.
+		 */
+		$epoch = (int) ReportedIP_Hive_Option_Routing::get( self::OPTION_CACHE_EPOCH, 0 );
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_CACHE_EPOCH, $epoch + 1 );
+
+		if ( function_exists( 'wp_using_ext_object_cache' ) && wp_using_ext_object_cache() ) {
+			$this->logger->log_security_event(
+				'cache_flush_all',
+				'system',
+				array(
+					'deleted_entries' => $deleted,
+					'cache_epoch'     => $epoch + 1,
+					'reason'          => 'manual_flush_object_cache',
+				),
+				'low'
+			);
+
+			$this->reset_cache_statistics();
+
+			return $deleted;
+		}
 
 		if ( $deleted > 0 ) {
 			$this->logger->log_security_event(
@@ -440,7 +478,28 @@ class ReportedIP_Hive_Cache {
 	 * Generate cache key for IP reputation
 	 */
 	private function get_reputation_cache_key( $ip_address ) {
-		return $this->cache_prefix . 'reputation_' . hash( 'sha256', $ip_address );
+		return $this->cache_prefix . 'reputation_' . $this->cache_epoch() . hash( 'sha256', $ip_address );
+	}
+
+	/**
+	 * Generation marker mixed into every reputation cache key.
+	 *
+	 * With a persistent object cache, transients live in the cache backend
+	 * rather than in the options table, and its keys cannot be enumerated —
+	 * so the bulk DELETE that "Clear cache" used to run matched nothing at
+	 * all. Advancing this marker retires every entry at once, whichever
+	 * backend stores them.
+	 *
+	 * Epoch 0 keeps the historical key format so existing entries stay
+	 * readable until the first flush.
+	 *
+	 * @return string Key fragment, empty for the initial generation.
+	 * @since  2.1.44
+	 */
+	private function cache_epoch() {
+		$epoch = (int) ReportedIP_Hive_Option_Routing::get( self::OPTION_CACHE_EPOCH, 0 );
+
+		return $epoch > 0 ? 'g' . $epoch . '_' : '';
 	}
 
 	/**

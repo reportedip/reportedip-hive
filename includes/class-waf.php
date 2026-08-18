@@ -942,7 +942,49 @@ class ReportedIP_Hive_WAF {
 		$compiled = '~' . str_replace( '~', '\~', $pattern ) . '~';
 		$matches  = array();
 		$result   = @preg_match( $compiled, $subject, $matches ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- A malformed delivered rule must fail open, not emit a warning into the response.
+
+		/*
+		 * Failing open is right — one bad rule must not break the site — but
+		 * silently is not: a rule that never compiles protects nothing while
+		 * the firewall page keeps counting it as active. Report it once an
+		 * hour so a broken pattern surfaces instead of just going quiet.
+		 */
+		if ( false === $result ) {
+			$this->report_broken_pattern( $pattern );
+			return null;
+		}
+
 		return 1 === $result && isset( $matches[0] ) ? (string) $matches[0] : null;
+	}
+
+	/**
+	 * Log a rule pattern that failed to compile, throttled per pattern.
+	 *
+	 * @param string $pattern The offending pattern.
+	 * @return void
+	 * @since  2.1.44
+	 */
+	private function report_broken_pattern( $pattern ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Logger' ) || ! function_exists( 'get_transient' ) ) {
+			return;
+		}
+
+		$gate = 'reportedip_hive_waf_badre_' . md5( (string) $pattern );
+		if ( false !== get_transient( $gate ) ) {
+			return;
+		}
+		set_transient( $gate, 1, HOUR_IN_SECONDS );
+
+		$logger = ReportedIP_Hive_Logger::get_instance();
+		if ( ! is_object( $logger ) || ! method_exists( $logger, 'warning' ) ) {
+			return;
+		}
+
+		$logger->warning(
+			'WAF rule pattern failed to compile and is inert',
+			class_exists( 'ReportedIP_Hive' ) ? ReportedIP_Hive::get_client_ip() : '',
+			array( 'pattern' => substr( (string) $pattern, 0, 200 ) )
+		);
 	}
 
 	/**

@@ -49,6 +49,38 @@ class ReportedIP_Hive_Two_Factor_REST {
 	 *
 	 * @return string
 	 */
+	/**
+	 * Refuse a cross-origin call to the unauthenticated endpoints.
+	 *
+	 * Both routes end in `wp_set_auth_cookie()`, and neither can carry a nonce
+	 * because the caller is not authenticated yet. Without an origin check a
+	 * cross-site form post logs the visitor's browser into an account of the
+	 * attacker's choosing. A request with no Origin header is left alone —
+	 * that is a native or server-side client, not a browser form post.
+	 *
+	 * @return true|WP_Error True when the request may proceed.
+	 * @since  2.1.44
+	 */
+	private function reject_cross_origin() {
+		$origin = isset( $_SERVER['HTTP_ORIGIN'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) ) : '';
+		if ( '' === $origin ) {
+			return true;
+		}
+
+		$origin_host = (string) wp_parse_url( $origin, PHP_URL_HOST );
+		$site_host   = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+
+		if ( '' !== $origin_host && '' !== $site_host && strtolower( $origin_host ) === strtolower( $site_host ) ) {
+			return true;
+		}
+
+		return new WP_Error(
+			'reportedip_rest_cross_origin',
+			__( 'Cross-origin authentication requests are not allowed.', 'reportedip-hive' ),
+			array( 'status' => 403 )
+		);
+	}
+
 	private function client_ip() {
 		if ( class_exists( 'ReportedIP_Hive' ) ) {
 			$ip = (string) ReportedIP_Hive::get_client_ip();
@@ -146,6 +178,11 @@ class ReportedIP_Hive_Two_Factor_REST {
 	 * "needs 2FA" result for a structured REST response with a challenge token.
 	 */
 	public function handle_challenge( WP_REST_Request $request ) {
+		$cross_origin = $this->reject_cross_origin();
+		if ( is_wp_error( $cross_origin ) ) {
+			return $cross_origin;
+		}
+
 		$ip = $this->client_ip();
 		if ( ! $this->ip_within_limit( $ip, 'challenge', self::IP_CHALLENGE_LIMIT ) ) {
 			return new WP_Error( 'reportedip_rest_throttled', __( 'Too many requests. Please try again later.', 'reportedip-hive' ), array( 'status' => 429 ) );
@@ -204,6 +241,11 @@ class ReportedIP_Hive_Two_Factor_REST {
 	 * Verify step — consume the challenge token and verify the submitted code.
 	 */
 	public function handle_verify( WP_REST_Request $request ) {
+		$cross_origin = $this->reject_cross_origin();
+		if ( is_wp_error( $cross_origin ) ) {
+			return $cross_origin;
+		}
+
 		$ip = $this->client_ip();
 		if ( ! $this->ip_within_limit( $ip, 'verify', self::IP_VERIFY_LIMIT ) ) {
 			return new WP_Error( 'reportedip_rest_throttled', __( 'Too many requests. Please try again later.', 'reportedip-hive' ), array( 'status' => 429 ) );

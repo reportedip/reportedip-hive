@@ -376,9 +376,10 @@ class ReportedIP_Hive_API {
 			$this->set_rate_limited( time() + ( $retry_after ? intval( $retry_after ) : 3600 ), 'submission' );
 			$this->track_api_call( false, $response_time, 'rate_limit_429', 'submission' );
 			return array(
-				'success'     => false,
-				'message'     => 'Rate limit exceeded',
-				'retry_after' => $retry_after,
+				'success'      => false,
+				'message'      => 'Rate limit exceeded',
+				'rate_limited' => true,
+				'retry_after'  => $retry_after,
 			);
 		} else {
 			$this->track_api_call( false, $response_time, 'http_' . $response_code, 'submission', substr( (string) $body, 0, 200 ) );
@@ -583,10 +584,19 @@ class ReportedIP_Hive_API {
 					$database->update_daily_stats( 'api_reports_sent' );
 					++$processed;
 				} else {
-					$error_message   = is_array( $result ) ? ( $result['message'] ?? 'Unknown error' ) : 'Unknown error';
-					$is_rate_limited = is_array( $result ) && isset( $result['message'] ) &&
-						( strpos( strtolower( $result['message'] ), 'rate limit' ) !== false ||
-						strpos( strtolower( $result['message'] ), 'too many requests' ) !== false );
+					$error_message = is_array( $result ) ? ( $result['message'] ?? 'Unknown error' ) : 'Unknown error';
+
+					/*
+					 * Prefer the explicit flag the 429 branch sets. Matching on
+					 * the message text meant renaming that string would quietly
+					 * turn throttled reports into failures that burn a retry.
+					 */
+					$is_rate_limited = is_array( $result ) && (
+						! empty( $result['rate_limited'] ) ||
+						( isset( $result['message'] ) &&
+							( strpos( strtolower( $result['message'] ), 'rate limit' ) !== false ||
+							strpos( strtolower( $result['message'] ), 'too many requests' ) !== false ) )
+					);
 
 					if ( $is_rate_limited ) {
 						$wpdb       = $GLOBALS['wpdb'];

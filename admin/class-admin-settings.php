@@ -3631,7 +3631,30 @@ class ReportedIP_Hive_Admin_Settings {
 	public function sanitize_trusted_ip_header( $value ) {
 		$allowed = array( '', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP' );
 		$value   = sanitize_text_field( $value ?? '' );
-		return in_array( $value, $allowed, true ) ? $value : '';
+		$value   = in_array( $value, $allowed, true ) ? $value : '';
+
+		/*
+		 * A trusted header with no trusted sources is honoured from any peer,
+		 * which lets anyone reaching the origin directly claim a whitelisted
+		 * address or shed a block by rotating the header. It stays permitted
+		 * for backward compatibility, but the operator has to be told.
+		 */
+		if ( '' !== $value ) {
+			$ranges = ReportedIP_Hive_Proxy_Trust::parse_ranges(
+				(string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_proxy_ranges', '' )
+			);
+
+			if ( empty( $ranges ) ) {
+				add_settings_error(
+					'reportedip_hive_trusted_ip_header',
+					'trusted_header_without_sources',
+					__( 'The client-IP header is currently accepted from any source. Anyone able to reach this site directly can forge their IP address. Add the CIDR ranges of your proxy or CDN under Trusted proxy sources.', 'reportedip-hive' ),
+					'warning'
+				);
+			}
+		}
+
+		return $value;
 	}
 
 	/**
