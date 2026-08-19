@@ -65,6 +65,37 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
+	 * Canonical site URL announced to the reportedip.com API.
+	 *
+	 * On Multisite the whole network counts as one licensed domain, so the
+	 * network home URL is announced regardless of the current sub-site. The
+	 * value is used both inside the User-Agent string and as the dedicated
+	 * X-Rip-Site request header.
+	 *
+	 * @return string Site URL without a trailing slash.
+	 * @since  2.1.45
+	 */
+	public static function api_site_url() {
+		$url = is_multisite() ? network_home_url() : home_url();
+
+		return untrailingslashit( (string) $url );
+	}
+
+	/**
+	 * Uniform User-Agent for every request to the reportedip.com API.
+	 *
+	 * Mirrors the wordpress.org update-check format: plugin version, core
+	 * version and the announcing site URL. Third-party services (HIBP) must
+	 * never receive this string — they get the bare product token instead.
+	 *
+	 * @return string User-Agent header value.
+	 * @since  2.1.45
+	 */
+	public static function api_user_agent() {
+		return 'ReportedIP-Hive/' . REPORTEDIP_HIVE_VERSION . ' (WordPress/' . get_bloginfo( 'version' ) . '; ' . self::api_site_url() . ')';
+	}
+
+	/**
 	 * Check if API can be used based on mode and configuration
 	 *
 	 * @return bool
@@ -258,6 +289,13 @@ class ReportedIP_Hive_API {
 			return false;
 		}
 
+		if ( $response_code === 403 && $this->is_domain_limit_error( $data ) ) {
+			$this->handle_domain_limit_rejection( 'check', $ip_address );
+			$this->track_api_call( false, $response_time, 'domain_limit_exceeded', 'reputation' );
+			$this->cache->set_reputation( $ip_address, false, true );
+			return false;
+		}
+
 		if ( $response_code === 200 && isset( $data['data'] ) ) {
 			$this->track_api_call( true, $response_time, null, 'reputation' );
 			$this->patch_api_quota_from_headers( $response, 'check' );
@@ -380,6 +418,14 @@ class ReportedIP_Hive_API {
 				'message'      => 'Rate limit exceeded',
 				'rate_limited' => true,
 				'retry_after'  => $retry_after,
+			);
+		} elseif ( $response_code === 403 && $this->is_domain_limit_error( $response_data ) ) {
+			$this->handle_domain_limit_rejection( 'report', $ip_address );
+			$this->track_api_call( false, $response_time, 'domain_limit_exceeded', 'submission' );
+			return array(
+				'success'       => false,
+				'message'       => 'Domain limit exceeded',
+				'response_code' => 403,
 			);
 		} else {
 			$this->track_api_call( false, $response_time, 'http_' . $response_code, 'submission', substr( (string) $body, 0, 200 ) );
@@ -735,9 +781,10 @@ class ReportedIP_Hive_API {
 				'method'    => 'POST',
 				'headers'   => array(
 					'X-Key'        => $this->api_key,
+					'X-Rip-Site'   => self::api_site_url(),
 					'Content-Type' => 'application/json',
 					'Accept'       => 'application/json',
-					'User-Agent'   => 'ReportedIP-Hive/' . REPORTEDIP_HIVE_VERSION,
+					'User-Agent'   => self::api_user_agent(),
 				),
 				'timeout'   => $this->timeout,
 				'body'      => wp_json_encode( $payload ),
@@ -922,9 +969,10 @@ class ReportedIP_Hive_API {
 			'method'    => 'POST',
 			'headers'   => array(
 				'X-Key'        => $this->api_key,
+				'X-Rip-Site'   => self::api_site_url(),
 				'Content-Type' => 'application/json',
 				'Accept'       => 'application/json',
-				'User-Agent'   => 'ReportedIP-Hive/' . REPORTEDIP_HIVE_VERSION,
+				'User-Agent'   => self::api_user_agent(),
 			),
 			'timeout'   => $this->timeout,
 			'body'      => wp_json_encode( $payload ),
@@ -1128,6 +1176,57 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
+	 * Whether a decoded API error body carries the typed domain-limit code.
+	 *
+	 * @param mixed $data Decoded JSON response body.
+	 * @return bool
+	 * @since  2.1.45
+	 */
+	private function is_domain_limit_error( $data ) {
+		return is_array( $data ) && 'domain_limit_exceeded' === (string) ( $data['code'] ?? '' );
+	}
+
+	/**
+	 * Soft-fail bookkeeping for a domain-limit rejection (staged enforcement,
+	 * server-side Phase 2). Marks the durable domains snapshot as over-limit so
+	 * the dashboard card and the admin notice reflect the state, and logs one
+	 * security event per day instead of one per rejected request. Local
+	 * protection keeps running — only the community round-trip is skipped.
+	 *
+	 * @param string $endpoint   Which endpoint was rejected (check|report).
+	 * @param string $ip_address Affected IP (for the log entry).
+	 * @return void
+	 * @since  2.1.45
+	 */
+	private function handle_domain_limit_rejection( $endpoint, $ip_address ) {
+		$snapshot = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_domains_snapshot', array() );
+		$snapshot = is_array( $snapshot ) ? $snapshot : array();
+
+		if ( 'over_limit' !== (string) ( $snapshot['status'] ?? '' ) ) {
+			$snapshot += array(
+				'used'  => 0,
+				'limit' => 0,
+			);
+			$snapshot['status']     = 'over_limit';
+			$snapshot['fetched_at'] = time();
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_domains_snapshot', $snapshot );
+		}
+
+		if ( false === get_site_transient( 'reportedip_hive_domain_limit_logged' ) ) {
+			set_site_transient( 'reportedip_hive_domain_limit_logged', 1, DAY_IN_SECONDS );
+			$this->logger->log_security_event(
+				'api_domain_limit',
+				$ip_address,
+				array(
+					'endpoint' => $endpoint,
+					'site'     => self::api_site_url(),
+				),
+				'high'
+			);
+		}
+	}
+
+	/**
 	 * Make HTTP request to API
 	 */
 	private function make_request( $method, $endpoint, $params = array(), $body = null, $timeout = null ) {
@@ -1139,7 +1238,8 @@ class ReportedIP_Hive_API {
 
 		$headers = array(
 			'X-Key'      => $this->api_key,
-			'User-Agent' => 'ReportedIP-Hive/' . REPORTEDIP_HIVE_VERSION . ' (WordPress/' . get_bloginfo( 'version' ) . ')',
+			'X-Rip-Site' => self::api_site_url(),
+			'User-Agent' => self::api_user_agent(),
 			'Accept'     => 'application/json',
 		);
 
@@ -1152,11 +1252,10 @@ class ReportedIP_Hive_API {
 		}
 
 		$args = array(
-			'method'     => strtoupper( $method ),
-			'headers'    => $headers,
-			'timeout'    => $timeout ?? $this->timeout,
-			'user-agent' => 'ReportedIP-Hive/' . REPORTEDIP_HIVE_VERSION,
-			'sslverify'  => true,
+			'method'    => strtoupper( $method ),
+			'headers'   => $headers,
+			'timeout'   => $timeout ?? $this->timeout,
+			'sslverify' => true,
 		);
 
 		if ( $body !== null ) {
@@ -1266,6 +1365,7 @@ class ReportedIP_Hive_API {
 				'dailyReportLimit'  => $limits['dailyReportLimit'] ?? 0,
 				'dailyReportUsage'  => $limits['dailyReportUsage'] ?? 0,
 				'resetTime'         => $limits['resetTime'] ?? null,
+				'domains'           => is_array( $data['data']['domains'] ?? null ) ? $data['data']['domains'] : null,
 			);
 		}
 
@@ -1308,6 +1408,7 @@ class ReportedIP_Hive_API {
 				'dailyApiLimit'     => $result['dailyApiLimit'] ?? 0,
 				'keyName'           => $result['keyName'] ?? '',
 				'userRole'          => $result['userRole'] ?? '',
+				'domains'           => $result['domains'] ?? null,
 			);
 
 			$this->persist_api_status( $status );
@@ -1357,6 +1458,18 @@ class ReportedIP_Hive_API {
 	 */
 	private function persist_api_status( $status ) {
 		set_transient( 'reportedip_hive_api_status', $status, 5 * MINUTE_IN_SECONDS );
+
+		if ( isset( $status['domains'] ) && is_array( $status['domains'] ) ) {
+			ReportedIP_Hive_Option_Routing::set(
+				'reportedip_hive_domains_snapshot',
+				array(
+					'used'       => (int) ( $status['domains']['used'] ?? 0 ),
+					'limit'      => (int) ( $status['domains']['limit'] ?? -1 ),
+					'status'     => (string) ( $status['domains']['status'] ?? 'ok' ),
+					'fetched_at' => time(),
+				)
+			);
+		}
 
 		$new_role = (string) ( $status['userRole'] ?? '' );
 		$new_tier = '' !== $new_role ? ReportedIP_Hive_Mode_Manager::tier_from_role( $new_role ) : 'free';
@@ -1413,6 +1526,7 @@ class ReportedIP_Hive_API {
 					'dailyApiLimit'     => $result['dailyApiLimit'] ?? 0,
 					'keyName'           => $result['keyName'] ?? '',
 					'userRole'          => $result['userRole'] ?? '',
+					'domains'           => $result['domains'] ?? null,
 				)
 			);
 

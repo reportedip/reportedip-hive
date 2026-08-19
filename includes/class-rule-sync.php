@@ -298,12 +298,24 @@ final class ReportedIP_Hive_Rule_Sync {
 		if ( '' === $url ) {
 			return null;
 		}
+
+		$has_client = class_exists( 'ReportedIP_Hive_API' );
+		$user_agent = $has_client
+			? ReportedIP_Hive_API::api_user_agent()
+			: 'ReportedIP-Hive/' . ( defined( 'REPORTEDIP_HIVE_VERSION' ) ? REPORTEDIP_HIVE_VERSION : '0' );
+
 		$args = array(
-			'timeout'    => 15,
-			'sslverify'  => true,
-			'headers'    => array( 'X-Key' => (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ),
-			'user-agent' => 'ReportedIP-Hive/' . ( defined( 'REPORTEDIP_HIVE_VERSION' ) ? REPORTEDIP_HIVE_VERSION : '0' ),
+			'timeout'   => 15,
+			'sslverify' => true,
+			'headers'   => array(
+				'X-Key'      => (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ),
+				'User-Agent' => $user_agent,
+				'Accept'     => 'application/json',
+			),
 		);
+		if ( $has_client ) {
+			$args['headers']['X-Rip-Site'] = ReportedIP_Hive_API::api_site_url();
+		}
 		if ( '' !== $etag ) {
 			$args['headers']['If-None-Match'] = $etag;
 		}

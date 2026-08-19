@@ -2,6 +2,45 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.45] — 2026-08-19
+
+### New
+
+- **Every API request now identifies the installation wp.org-style.** All
+  requests to reportedip.com carry a uniform User-Agent
+  (`ReportedIP-Hive/{version} (WordPress/{wp-version}; https://site)`) plus an
+  `X-Rip-Site` header with the announcing site URL — on Multisite the network
+  home URL, since a network counts as one licensed domain. Previously only the
+  relay endpoints sent the site URL and the rule sync sent a bare product
+  token. The service uses this to show "X / Y domains" per plan; nothing else
+  changes and older plugin versions keep working unchanged. Third-party
+  services (the HIBP password check) never receive the site identity.
+- **"Licensed domains" card on the Security Dashboard.** Next to the relay
+  quota cards the dashboard now shows how many domains the Community Access
+  Key is used on versus the plan allowance, based on the snapshot the service
+  returns on key verification. An admin notice appears when the account is
+  over its domain limit, with a link to the reportedip.com dashboard where
+  domains can be released.
+
+### Changed
+
+- **Privacy disclosures updated everywhere the transmission is described.**
+  The mode selector, the setup wizard's connect step, the suggested
+  privacy-policy passage (Tools → Privacy) and the readme now state that
+  Community-mode requests carry the installation identity — and, just as
+  explicitly, that visitor-related data stays limited to the IP address and
+  event type of detected threats.
+
+### Fixed
+
+- **Release highlights stopped mid-sentence.** The banner rendered whatever
+  the feed sent, and a row that had been shortened upstream ended at an
+  arbitrary character with nothing to show for it, so "The IP gate" read like
+  the whole sentence. Over-long rows are now cut at the last sentence end that
+  fits, at a word boundary otherwise, and always close with an ellipsis. The
+  server side of the feed was fixed in the same pass, so highlights arrive as
+  whole sentences again.
+
 ## [2.1.44] — 2026-08-18
 
 Findings of a full-codebase security and correctness audit. Every item below

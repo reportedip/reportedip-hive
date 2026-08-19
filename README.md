@@ -94,7 +94,7 @@ The two **modes** decide whether the plugin talks to reportedip.com at all. They
 | | Local Shield | Community Network |
 |---|---|---|
 | Account required | No | Free account at reportedip.com |
-| External calls | None | Reputation lookups + anonymised reports |
+| External calls | None | Reputation lookups + anonymised reports (each request carries the site address and plugin/WordPress version, wp.org-style) |
 | All 16 detection sensors + two-layer firewall | ✓ | ✓ |
 | Core 2FA (TOTP, Passkey, Email, Recovery) | ✓ | ✓ |
 | Progressive block escalation + password-reset gate | ✓ | ✓ |

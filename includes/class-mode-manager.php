@@ -1279,6 +1279,29 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
+	 * Last known domain usage vs. plan limit, as announced by the service on
+	 * verify-key / quota refreshes. Durable option (survives transient lapses);
+	 * null while the service has not reported a snapshot yet (LOCAL mode,
+	 * pre-2.1.45 server, or no verify since the update).
+	 *
+	 * @return array{used:int,limit:int,status:string,fetched_at:int}|null
+	 * @since  2.1.45
+	 */
+	public function get_domains_snapshot() {
+		$snapshot = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_domains_snapshot', null );
+		if ( ! is_array( $snapshot ) || ! isset( $snapshot['used'], $snapshot['limit'] ) ) {
+			return null;
+		}
+
+		return array(
+			'used'       => (int) $snapshot['used'],
+			'limit'      => (int) $snapshot['limit'],
+			'status'     => (string) ( $snapshot['status'] ?? 'ok' ),
+			'fetched_at' => (int) ( $snapshot['fetched_at'] ?? 0 ),
+		);
+	}
+
+	/**
 	 * Snapshot of the current API rate-limit state across all three buckets.
 	 *
 	 * Used by the admin "API call usage" card and the degraded-banner helper.

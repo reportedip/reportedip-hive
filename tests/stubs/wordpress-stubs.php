@@ -941,6 +941,18 @@ if ( ! function_exists( 'site_url' ) ) {
 	}
 }
 
+if ( ! function_exists( 'network_home_url' ) ) {
+	function network_home_url( $path = '' ) { // phpcs:ignore
+		return 'https://network.example.org' . $path;
+	}
+}
+
+if ( ! function_exists( 'untrailingslashit' ) ) {
+	function untrailingslashit( $value ) { // phpcs:ignore
+		return rtrim( (string) $value, '/' );
+	}
+}
+
 if ( ! function_exists( 'wp_specialchars_decode' ) ) {
 	function wp_specialchars_decode( $string, $quote_style = ENT_NOQUOTES ) { // phpcs:ignore
 		return htmlspecialchars_decode( (string) $string, (int) $quote_style );

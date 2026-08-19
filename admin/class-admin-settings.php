@@ -1128,7 +1128,105 @@ class ReportedIP_Hive_Admin_Settings {
 			<div class="rip-stat-cards">
 				<?php $this->render_quota_card( 'mail', $mail_used, $mail_limit, $reset_label, $snapshot['is_stale'], $mail_bundle ); ?>
 				<?php $this->render_quota_card( 'sms', $sms_used, $sms_limit, $reset_label, $snapshot['is_stale'], $sms_bundle ); ?>
+				<?php $this->render_domains_card( $mode_manager ); ?>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Standalone "Domains" section for Community tiers below Professional.
+	 *
+	 * Free/Contributor accounts have the smallest domain allowances, so they
+	 * need the used/limit view even though the relay quota section (the card's
+	 * PRO+ home) never renders for them. Renders nothing without a snapshot.
+	 *
+	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Mode manager instance.
+	 * @return void
+	 * @since 2.1.45
+	 */
+	private function render_domains_section( $mode_manager ) {
+		if ( null === $mode_manager->get_domains_snapshot() ) {
+			return;
+		}
+		?>
+		<div class="rip-settings-section rip-relay-quota">
+			<h2 class="rip-settings-section__title">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+				<?php esc_html_e( 'Licensed domains', 'reportedip-hive' ); ?>
+			</h2>
+			<div class="rip-stat-cards">
+				<?php $this->render_domains_card( $mode_manager ); ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the "Domains" stat card next to the relay quota cards.
+	 *
+	 * Shows how many distinct site domains the Community Access Key is used on
+	 * versus the plan's domain allowance, based on the last snapshot the
+	 * service returned on verify-key / quota refresh. Renders nothing while no
+	 * snapshot exists (LOCAL mode or the service has not reported yet).
+	 *
+	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Mode manager instance.
+	 * @return void
+	 * @since 2.1.45
+	 */
+	private function render_domains_card( $mode_manager ) {
+		$snapshot = $mode_manager->get_domains_snapshot();
+		if ( null === $snapshot ) {
+			return;
+		}
+
+		$used  = (int) $snapshot['used'];
+		$limit = (int) $snapshot['limit'];
+
+		$pct = 0;
+		if ( $limit > 0 ) {
+			$pct = (int) min( 100, round( $used / $limit * 100 ) );
+		}
+
+		$progress_class = '';
+		if ( $limit > 0 && $used > $limit ) {
+			$progress_class = 'rip-stat-card__progress--crit';
+		} elseif ( $pct >= 70 ) {
+			$progress_class = 'rip-stat-card__progress--warn';
+		}
+
+		$limit_text = ( $limit < 0 )
+			? __( 'unlimited', 'reportedip-hive' )
+			: sprintf( '/ %s', number_format_i18n( $limit ) );
+
+		$icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+		?>
+		<div class="rip-stat-card rip-stat-card--quota">
+			<div class="rip-stat-card__head">
+				<div class="rip-stat-card__icon rip-stat-card__icon--success">
+					<?php echo self::kses_inline_svg( $icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally; the SVG is whitelisted by the helper. ?>
+				</div>
+				<div class="rip-stat-card__content">
+					<div class="rip-stat-card__value">
+						<?php echo esc_html( number_format_i18n( $used ) ); ?>
+						<span class="rip-stat-card__value-limit"><?php echo esc_html( $limit_text ); ?></span>
+					</div>
+					<div class="rip-stat-card__label"><?php esc_html_e( 'Licensed domains', 'reportedip-hive' ); ?></div>
+				</div>
+			</div>
+
+			<?php if ( $limit > 0 ) : ?>
+				<div class="rip-stat-card__progress <?php echo esc_attr( $progress_class ); ?>" style="--quota-pct: <?php echo (int) $pct; ?>;">
+					<div class="rip-stat-card__progress-bar"></div>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( 'over_limit' === $snapshot['status'] ) : ?>
+				<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+					<?php esc_html_e( 'More domains in use than your plan includes — manage them in your reportedip.com dashboard.', 'reportedip-hive' ); ?>
+				</div>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -1578,6 +1676,54 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Render the over-limit domain notice when the last service snapshot says
+	 * the account uses more domains than the plan includes.
+	 *
+	 * Shared between the plugin pages (via {@see render_inline_notices()}) and
+	 * the wp-admin dashboard (via the admin_notices callback in the bootstrap).
+	 * Gated on Community mode + configured key and dismissible per user/day.
+	 *
+	 * @return void
+	 * @since 2.1.45
+	 */
+	public static function maybe_render_domain_limit_notice() {
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$domains      = $mode_manager->get_domains_snapshot();
+		if ( ! is_array( $domains ) || 'over_limit' !== $domains['status'] ) {
+			return;
+		}
+		if ( ! $mode_manager->is_community_mode() ) {
+			return;
+		}
+		if ( '' === (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ) {
+			return;
+		}
+		if ( get_user_meta( get_current_user_id(), 'reportedip_dismissed_domain_limit_' . gmdate( 'Y-m-d' ), true ) ) {
+			return;
+		}
+
+		$body = sprintf(
+			'<strong>%1$s</strong> %2$s',
+			esc_html__( 'ReportedIP Hive - Domain limit:', 'reportedip-hive' ),
+			sprintf(
+				/* translators: 1: domains in use, 2: plan domain limit, 3: link to the reportedip.com dashboard */
+				esc_html__( 'Your Community Access Key is used on %1$d domains, but your plan includes %2$d. Manage domains or upgrade in your %3$s.', 'reportedip-hive' ),
+				(int) $domains['used'],
+				max( 0, (int) $domains['limit'] ),
+				'<a href="' . esc_url( REPORTEDIP_HIVE_SITE_URL . '/dashboard/domains/' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'reportedip.com dashboard', 'reportedip-hive' ) . '</a>'
+			)
+		);
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'        => 'warning',
+				'dismissible'    => true,
+				'data_notice_id' => 'domain_limit_' . gmdate( 'Y-m-d' ),
+				'body'           => $body,
+			)
+		);
+	}
+
+	/**
 	 * Render inline notices within plugin pages (replaces admin_notices)
 	 */
 	public static function render_inline_notices() {
@@ -1602,6 +1748,8 @@ class ReportedIP_Hive_Admin_Settings {
 		}
 
 		ReportedIP_Hive_Whats_New::maybe_render();
+
+		self::maybe_render_domain_limit_notice();
 
 		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe table name composed from Schema::table() with a hardcoded suffix.
@@ -4007,6 +4155,7 @@ class ReportedIP_Hive_Admin_Settings {
 					$this->render_relay_quota_section( $mode_manager );
 				} elseif ( $mode_manager->is_community_mode() ) {
 					$this->render_mail_sms_promo_card( $mode_manager );
+					$this->render_domains_section( $mode_manager );
 				}
 				?>
 
@@ -4820,6 +4969,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php settings_fields( 'reportedip_hive_general' ); ?>
 				<?php self::render_mode_comparison( array( 'interactive' => true ) ); ?>
 				<p class="rip-help-text"><?php esc_html_e( 'Mode changes take effect immediately after saving.', 'reportedip-hive' ); ?></p>
+				<p class="rip-help-text"><?php esc_html_e( 'Privacy note: in Community mode every API request identifies this installation with its site address and plugin/WordPress version (wp.org-style, for licence domain counting and support). Visitor-related data stays limited to the IP address and event type of detected threats — never usernames, comment content or full user agents.', 'reportedip-hive' ); ?></p>
 				<div class="rip-form-actions">
 					<?php submit_button( __( 'Save Mode', 'reportedip-hive' ), 'rip-button rip-button--primary', 'submit', false ); ?>
 				</div>

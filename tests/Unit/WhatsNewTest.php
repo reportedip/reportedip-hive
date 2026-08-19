@@ -215,7 +215,59 @@ class WhatsNewTest extends TestCase {
 
 		$payload = $this->stored_payload();
 		$this->assertSame( 'Bold text', $payload['highlights'][0] );
-		$this->assertSame( 200, strlen( $payload['highlights'][1] ) );
+		$this->assertSame( 200, mb_strlen( $payload['highlights'][1] ) );
+		$this->assertStringEndsWith( '…', $payload['highlights'][1] );
+	}
+
+	public function test_shortened_highlight_prefers_last_sentence_end(): void {
+		$long = 'The gate stepped aside for AJAX. The engine skipped every admin request as well. '
+			. str_repeat( 'Trailing detail that runs past the limit. ', 8 );
+		WhatsNewFetchDouble::$feed = $this->valid_feed( array( 'highlights' => array( $long ) ) );
+
+		$this->run_maybe_render();
+
+		$row = $this->stored_payload()['highlights'][0];
+		$this->assertLessThanOrEqual( 200, mb_strlen( $row ) );
+		$this->assertStringEndsWith( '…', $row );
+		$this->assertStringNotContainsString( '.…', $row );
+		$this->assertMatchesRegularExpression( '/limit…$/', $row );
+	}
+
+	public function test_shortened_highlight_falls_back_to_word_boundary(): void {
+		$long = str_repeat( 'alpha beta gamma delta ', 20 );
+		WhatsNewFetchDouble::$feed = $this->valid_feed( array( 'highlights' => array( $long ) ) );
+
+		$this->run_maybe_render();
+
+		$row = $this->stored_payload()['highlights'][0];
+		$this->assertLessThanOrEqual( 200, mb_strlen( $row ) );
+		$this->assertStringEndsWith( '…', $row );
+		$this->assertMatchesRegularExpression( '/(alpha|beta|gamma|delta)…$/', $row );
+	}
+
+	public function test_highlight_within_limit_is_untouched(): void {
+		WhatsNewFetchDouble::$feed = $this->valid_feed(
+			array( 'highlights' => array( 'Blocks now apply within the same request.' ) )
+		);
+
+		$this->run_maybe_render();
+
+		$this->assertSame(
+			'Blocks now apply within the same request.',
+			$this->stored_payload()['highlights'][0]
+		);
+	}
+
+	public function test_multibyte_highlight_is_not_cut_mid_character(): void {
+		$long = str_repeat( 'Prüfung während Änderung ', 20 );
+		WhatsNewFetchDouble::$feed = $this->valid_feed( array( 'highlights' => array( $long ) ) );
+
+		$this->run_maybe_render();
+
+		$row = $this->stored_payload()['highlights'][0];
+		$this->assertLessThanOrEqual( 200, mb_strlen( $row ) );
+		$this->assertSame( $row, mb_convert_encoding( $row, 'UTF-8', 'UTF-8' ) );
+		$this->assertStringEndsWith( '…', $row );
 	}
 
 	public function test_empty_highlights_dropped(): void {

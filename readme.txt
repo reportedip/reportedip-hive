@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.44
+Stable tag: 2.1.45
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -108,6 +108,7 @@ Show the world that your site is part of the hive — and earn community-network
 * **Minimal data collection.** No usernames, no comment content, no full user-agents in any report; user-agents are truncated to 50 characters even locally.
 * **Configurable retention.** Daily cleanup with a 30-day default; automatic anonymisation after 7 days.
 * **Opt-in sharing.** Local Shield works 100 % offline. Nothing leaves your site unless you switch to Community Network.
+* **Transparent installation identity.** In Community mode each API request identifies the installation itself — site address plus plugin and WordPress version, wp.org-style — for licence domain counting and support. This is data about your installation, never about your visitors.
 * **Lawful basis: Art. 6(1)(f) GDPR** (legitimate interest — preventing unauthorised access). Documented in the wizard and admin UI.
 * **Encryption at rest.** All secrets (TOTP seeds, phone numbers) sealed with libsodium (or OpenSSL fallback).
 * **Delete-on-uninstall** opt-in for total removal.
@@ -198,6 +199,8 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 
 **Bundles (PRO+ only, refundable until first use):** 50/200/500-SMS bundles (14.90 / 49.90 / 99.90 €), 1k/5k/25k-mail bundles (4.90 / 14.90 / 49.90 €). All prices VAT-inclusive (Stripe `tax_behavior = inclusive`).
 
+**How domains are counted:** each Hive installation announces its site address with every API request, and every distinct domain occupies one slot of the plan. A WordPress Multisite network counts as a single domain. Your reportedip.com dashboard shows the used/included domains per licence, lets you release slots of retired or moved sites (up to 3 self-service releases per 30 days), and domains that stop reporting for 60 days free their slot automatically. Currently informational only — nothing is blocked when a plan is over its allowance.
+
 What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, disposable-email blocking, the comment honeypot, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys — multiple WebAuthn keys, model detection, key alerts (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
@@ -207,7 +210,7 @@ A short architectural map for evaluators:
 = Two operating modes =
 
 * **Local Shield** — fully offline. Every sensor decision is local; no outbound HTTP. The 2FA-mail-relay and reputation-check endpoints are never touched.
-* **Community Network** — Local Shield plus opt-in IP-reputation lookups against `reportedip.com/wp-json/reportedip/v2/check` and queued threat reports against `/report`. Lookups are cached (24 h positive, 2 h negative); reports are batched by cron.
+* **Community Network** — Local Shield plus opt-in IP-reputation lookups against `reportedip.com/wp-json/reportedip/v2/check` and queued threat reports against `/report`. Lookups are cached (24 h positive, 2 h negative); reports are batched by cron. Every Community-mode request identifies the installation wp.org-style (site address plus plugin and WordPress version in the User-Agent and an `X-Rip-Site` header) so the service can count the domains per licence.
 
 = Request lifecycle =
 
@@ -290,7 +293,7 @@ We don't compete with malware scanners. Run one alongside Hive if your stack nee
 
 = Is the plugin GDPR-compliant? =
 
-Yes. Lawful basis is documented (Art. 6(1)(f) GDPR), processing is minimised, retention is configurable (default 30 days), anonymisation runs daily after 7 days, and Community Network is strictly opt-in. No usernames, comment content or full user-agents leave your site. A ready-to-paste privacy passage for your own site (German or English) is available at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo), and the plugin registers a suggested text under Tools -> Privacy.
+Yes. Lawful basis is documented (Art. 6(1)(f) GDPR), processing is minimised, retention is configurable (default 30 days), anonymisation runs daily after 7 days, and Community Network is strictly opt-in. No usernames, comment content or full user-agents of your visitors leave your site; in Community mode each API request identifies the installation itself with its site address and plugin/WordPress version (wp.org-style, used for licence and support purposes). A ready-to-paste privacy passage for your own site (German or English) is available at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo), and the plugin registers a suggested text under Tools -> Privacy.
 
 = Will this slow down my site? =
 
@@ -785,7 +788,7 @@ This plugin connects to external services only when explicitly configured. *Loca
 * Service URL: `https://reportedip.com/wp-json/reportedip/v2/` (endpoints `verify-key`, `check`, `report`, `whitelist`, `categories`)
 * Purpose: IP reputation lookups, anonymised threat reporting, whitelist sync, threat-category catalogue
 * Default: off — only active in Community Network mode AND with a configured API key
-* Data transmitted: IP addresses, optional event categories and timestamps, the API key, the site domain
+* Data transmitted: IP addresses, optional event categories and timestamps, the API key, the site domain and the plugin/WordPress version (wp.org-style User-Agent plus an `X-Rip-Site` header, used for licence domain counting and support)
 * Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
 * Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
 
@@ -810,7 +813,16 @@ This plugin connects to external services only when explicitly configured. *Loca
 * Service URL: `https://reportedip.com/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `scan_paths`, `tor_exits`)
 * Purpose: fetch signed firewall rule updates; the bundled baseline rulesets stay active without any connection, and Professional plans receive the deeper, frequently-updated rulesets through this channel
 * Default: off — only active in Community Network mode AND with a configured API key AND the Rule Sync toggle enabled; runs every six hours via cron, and conditional `If-None-Match` requests return HTTP 304 when nothing changed
-* Data transmitted: the API key, the current ETag and the site domain; each downloaded ruleset carries an Ed25519 signature that the plugin verifies against a bundled public key before applying it
+* Data transmitted: the API key, the current ETag, the site domain and the plugin/WordPress version; each downloaded ruleset carries an Ed25519 signature that the plugin verifies against a bundled public key before applying it
+* Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
+* Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
+
+= ReportedIP Release-Notes Feed ("What's new" banner) =
+
+* Service URL: `https://reportedip.com/wp-json/reportedip/v2/hive/whats-new`
+* Purpose: fetch the release highlights shown once per version in the dismissible "What's new" banner on plugin admin pages
+* Default: on — one keyless GET per installed version (with backoff on failure), admin pages only
+* Data transmitted: no API key; the request identifies the installation wp.org-style (site address plus plugin and WordPress version in the User-Agent)
 * Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
 * Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
 

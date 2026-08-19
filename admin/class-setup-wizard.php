@@ -762,6 +762,9 @@ class ReportedIP_Hive_Setup_Wizard {
 							<?php esc_html_e( 'Create a free account', 'reportedip-hive' ); ?> →
 						</a>
 					</p>
+					<p class="rip-input-help">
+						<?php esc_html_e( 'In Community mode every API request identifies this installation with its site address and plugin/WordPress version (for licence domain counting and support). Visitor-related data stays limited to the IP address and event type of detected threats.', 'reportedip-hive' ); ?>
+					</p>
 
 					<div id="rip-api-info" class="rip-help-block rip-help-block--api-info rip-is-hidden">
 						<div class="rip-api-info-grid">

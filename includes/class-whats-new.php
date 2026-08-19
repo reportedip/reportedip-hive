@@ -142,7 +142,14 @@ class ReportedIP_Hive_Whats_New {
 		$base     = untrailingslashit( apply_filters( 'reportedip_hive_external_url', REPORTEDIP_HIVE_SITE_URL, 'whatsnew_feed' ) );
 		$response = wp_remote_get(
 			$base . '/wp-json/reportedip/v2/hive/whats-new',
-			array( 'timeout' => 5 )
+			array(
+				'timeout' => 5,
+				'headers' => array(
+					'User-Agent' => class_exists( 'ReportedIP_Hive_API' )
+						? ReportedIP_Hive_API::api_user_agent()
+						: 'ReportedIP-Hive/' . REPORTEDIP_HIVE_VERSION,
+				),
+			)
 		);
 
 		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
@@ -158,9 +165,9 @@ class ReportedIP_Hive_Whats_New {
 	 * Reduce a raw feed to the stored payload shape.
 	 *
 	 * Highlights are capped at {@see self::MAX_HIGHLIGHTS} rows, stripped of
-	 * markup, truncated to {@see self::MAX_HIGHLIGHT_LENGTH} characters and
-	 * cleared of empty rows. The notes URL passes through
-	 * {@see self::sanitize_notes_url()}.
+	 * markup, shortened to {@see self::MAX_HIGHLIGHT_LENGTH} characters by
+	 * {@see self::shorten()} and cleared of empty rows. The notes URL passes
+	 * through {@see self::sanitize_notes_url()}.
 	 *
 	 * @param array<string,mixed> $feed Decoded feed body.
 	 * @return array{version:string,highlights:array<int,string>,notes_url:string}
@@ -178,7 +185,7 @@ class ReportedIP_Hive_Whats_New {
 			if ( '' === $clean ) {
 				continue;
 			}
-			$highlights[] = mb_substr( $clean, 0, self::MAX_HIGHLIGHT_LENGTH );
+			$highlights[] = self::shorten( $clean, self::MAX_HIGHLIGHT_LENGTH );
 		}
 
 		return array(
@@ -186,6 +193,55 @@ class ReportedIP_Hive_Whats_New {
 			'highlights' => $highlights,
 			'notes_url'  => self::sanitize_notes_url( isset( $feed['notes_url'] ) ? $feed['notes_url'] : '' ),
 		);
+	}
+
+	/**
+	 * Shorten a highlight at a sentence or word boundary.
+	 *
+	 * The feed already shortens its rows; this is the client-side guard for a
+	 * row that still arrives over-long. A cut row ends in an ellipsis so a
+	 * reader can tell the sentence continues in the release notes instead of
+	 * seeing it stop mid-word. The last sentence end inside the limit wins, a
+	 * word boundary is the fallback, a hard cut the last resort; the ellipsis
+	 * counts towards the limit.
+	 *
+	 * @param string $text  Plain-text highlight.
+	 * @param int    $limit Maximum length in characters, ellipsis included.
+	 * @return string Highlight of at most $limit characters.
+	 * @since  2.1.45
+	 */
+	private static function shorten( $text, $limit ) {
+		if ( mb_strlen( $text ) <= $limit ) {
+			return $text;
+		}
+
+		$cut = mb_substr( $text, 0, $limit - 1 );
+
+		if ( preg_match_all( '/[.!?](?=\s|$)/u', $cut, $matches, PREG_OFFSET_CAPTURE ) ) {
+			$last     = end( $matches[0] );
+			$sentence = substr( $cut, 0, $last[1] );
+			if ( mb_strlen( $sentence ) >= (int) round( $limit / 4 ) ) {
+				return self::add_ellipsis( $sentence );
+			}
+		}
+
+		$space = strrpos( $cut, ' ' );
+		if ( false !== $space && mb_strlen( substr( $cut, 0, $space ) ) >= (int) round( $limit / 2 ) ) {
+			$cut = substr( $cut, 0, $space );
+		}
+
+		return self::add_ellipsis( $cut );
+	}
+
+	/**
+	 * Append an ellipsis, replacing any trailing punctuation.
+	 *
+	 * @param string $text Plain text to mark as continued.
+	 * @return string
+	 * @since  2.1.45
+	 */
+	private static function add_ellipsis( $text ) {
+		return rtrim( $text, " \t\n\r\0\x0B.,;:!?-" ) . '…';
 	}
 
 	/**
