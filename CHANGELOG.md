@@ -2,6 +2,20 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- **Network activation no longer fatals when extended protection is on.** The
+  activation hook rebakes the pre-WordPress guard, and the bake reads the
+  trusted-proxy ranges — but the class that parses them was missing from the
+  short require list activation runs with, so activating the plugin died with
+  `Class "ReportedIP_Hive_Proxy_Trust" not found` and left the plugin
+  deactivated. Installs that had extended protection enabled could not be
+  reactivated at all after a manual deactivation. `ActivationDependencyTest`
+  now fails whenever the guard bake reaches for a class activation does not
+  load.
+
 ## [2.1.45] — 2026-08-19
 
 ### New

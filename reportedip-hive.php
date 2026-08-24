@@ -598,6 +598,7 @@ class ReportedIP_Hive {
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_dropin_enabled', false ) ) {
 			foreach ( array(
+				'includes/class-proxy-trust.php',
 				'includes/class-rule-store.php',
 				'includes/class-rule-sync.php',
 				'includes/class-waf.php',
