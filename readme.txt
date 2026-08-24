@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.45
+Stable tag: 2.1.46
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -352,6 +352,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.46 =
+
+Fixed: with extended protection enabled, activating the plugin ended in a fatal error and left it deactivated. Activation rebakes the pre-WordPress guard, and that step reads the trusted-proxy ranges without the class that parses them being loaded. Sites that had deactivated the plugin could not turn it back on.
+
+= 2.1.45 =
+
+New: every request to reportedip.com now identifies the installation with the site address and the plugin and WordPress version, the same way core announces itself to wordpress.org. The Security Dashboard shows how many domains the Community Access Key is used on versus the plan allowance. Third-party services never receive the site identity.
 
 = 2.1.44 =
 
