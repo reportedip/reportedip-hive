@@ -80,11 +80,15 @@ define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.com/register/' );
  * Update checker: reads releases from the public GitHub repository.
  * Trigger: tag `vX.Y.Z` → GitHub Action builds ZIP release asset → PUC pulls it.
  *
- * Built only where update information is ever consumed — wp-admin, the
- * `wp_update_plugins` cron and WP-CLI. Anonymous front-end requests used to
- * construct the whole checker (plus its hooks) for nothing.
+ * Built unconditionally. The checker injects its update entry into the
+ * `update_plugins` transient at read time (`site_transient_update_plugins`
+ * filter), never persistently — so it must exist in every request context
+ * that consumes update information. Restricting it to wp-admin, cron and
+ * WP-CLI (2.1.32 – 2.1.46) made front-end consumers blind: remote-management
+ * dashboards (MainWP, ManageWP, InfiniteWP) sync over front-end requests on
+ * `init` and could neither see nor install plugin updates.
  */
-if ( class_exists( PucFactory::class ) && ( is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) ) ) {
+if ( class_exists( PucFactory::class ) ) {
 	$reportedip_update_checker = PucFactory::buildUpdateChecker(
 		'https://github.com/reportedip/reportedip-hive/',
 		__FILE__,
@@ -93,10 +97,12 @@ if ( class_exists( PucFactory::class ) && ( is_admin() || wp_doing_cron() || ( d
 	$reportedip_update_checker->setBranch( 'main' );
 
 	$reportedip_vcs_api = $reportedip_update_checker->getVcsApi();
-	if ( $reportedip_vcs_api instanceof \YahnisElsts\PluginUpdateChecker\v5p6\Vcs\GitHubApi ) {
+	if ( $reportedip_vcs_api && method_exists( $reportedip_vcs_api, 'enableReleaseAssets' ) ) {
 		$reportedip_vcs_api->enableReleaseAssets( '/reportedip-hive\.zip$/i' );
 	}
 }
+
+add_filter( 'auto_update_plugin', array( 'ReportedIP_Hive', 'force_auto_update' ), 10, 2 );
 
 /**
  * Main ReportedIP Hive Class
@@ -2230,6 +2236,30 @@ class ReportedIP_Hive {
 		set_site_transient( $cache_key, $resolved, 6 * HOUR_IN_SECONDS );
 
 		return $resolved;
+	}
+
+	/**
+	 * Keep WordPress auto-updates switched on for this plugin.
+	 *
+	 * A security plugin that lags behind its own fixes protects nobody, so the
+	 * plugin enforces its own auto-update instead of waiting for an admin to
+	 * opt in. The Plugins screen reflects this as "Auto-updates enabled" via
+	 * core's forced-update detection. Site owners who must pin the version can
+	 * restore manual control with
+	 * `add_filter( 'reportedip_hive_auto_update', '__return_false' )`.
+	 *
+	 * @param bool|null $update Whether to auto-update, as decided so far.
+	 * @param object    $item   Update offer object carrying a `plugin` basename.
+	 * @return bool|null        True for this plugin, the incoming value otherwise.
+	 * @since 2.1.46
+	 */
+	public static function force_auto_update( $update, $item ) {
+		if ( isset( $item->plugin )
+			&& REPORTEDIP_HIVE_PLUGIN_BASENAME === $item->plugin
+			&& apply_filters( 'reportedip_hive_auto_update', true ) ) {
+			return true;
+		}
+		return $update;
 	}
 
 	/**

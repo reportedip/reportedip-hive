@@ -355,6 +355,10 @@ The full structured changelog lives in [CHANGELOG.md](https://github.com/reporte
 
 = 2.1.46 =
 
+Fixed: remote-management dashboards (MainWP, ManageWP and similar) could neither see nor install plugin updates since 2.1.32, because the update checker was skipped on the front-end requests those tools sync over. It now runs in every request context again.
+
+Changed: WordPress auto-updates are always on for this plugin, so security fixes install without a per-plugin opt-in. Pin the version with add_filter( 'reportedip_hive_auto_update', '__return_false' ) if you must.
+
 Fixed: with extended protection enabled, activating the plugin ended in a fatal error and left it deactivated. Activation rebakes the pre-WordPress guard, and that step reads the trusted-proxy ranges without the class that parses them being loaded. Sites that had deactivated the plugin could not turn it back on.
 
 = 2.1.45 =

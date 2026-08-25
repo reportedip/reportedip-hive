@@ -2,9 +2,28 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [2.1.46] — 2026-08-24
+## [2.1.46] — 2026-08-25
 
 ### Fixed
+
+- **Remote-management dashboards see plugin updates again.** Since 2.1.32 the
+  update checker was only built in wp-admin, cron and WP-CLI contexts. Its
+  update entry is injected into the `update_plugins` transient at read time,
+  never stored — so front-end consumers of that transient went blind: MainWP,
+  ManageWP and similar dashboards sync over front-end requests on `init` and
+  could neither list nor install ReportedIP Hive updates. The checker is now
+  built on every request again; the actual version check still runs only on
+  its 12-hour schedule, so the per-request cost is a handful of hook
+  registrations.
+
+### Changed
+
+- **WordPress auto-updates are now always on for this plugin.** A security
+  plugin that lags behind its own fixes protects nobody, so releases install
+  automatically without requiring the per-plugin opt-in on the Plugins
+  screen (shown there as "Auto-updates enabled"). Sites that must pin the
+  version can restore manual control with
+  `add_filter( 'reportedip_hive_auto_update', '__return_false' )`.
 
 - **Network activation no longer fatals when extended protection is on.** The
   activation hook rebakes the pre-WordPress guard, and the bake reads the
