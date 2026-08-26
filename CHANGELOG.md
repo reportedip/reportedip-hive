@@ -2,6 +2,42 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.47] — 2026-08-26
+
+### New
+
+- **Canonical settings registry.** `ReportedIP_Hive_Settings_Registry` is the
+  single declarative source for the plugin's core settings: kind, range,
+  allowed values, tier gate and side effects per option. The Settings API
+  callbacks for those options, the setup wizard's generic field kinds and the
+  settings import now all sanitize through the registry, so every writer
+  behaves identically — including writers outside wp-admin, where the
+  Settings API sanitizers were never registered before.
+- **Remote settings management protocol (schema v1).** Three new MainWP jobs
+  — `reportedip_hive_settings_schema`, `reportedip_hive_settings_get` and
+  `reportedip_hive_settings_apply` — let a management dashboard read the
+  settings schema, read current values and apply a validated batch with a
+  per-key result (`applied`/`unchanged`/`skipped_tier`/`invalid`/
+  `unknown_key`). Every sync response now carries `settings_schema_version`
+  and a `settings_hash` fingerprint for drift detection. The contract is
+  transport-agnostic and documented in `docs/remote-settings-protocol.md`;
+  `ReportedIP_Hive_Settings_Apply` is the shared entry point for MainWP today
+  and the reportedip.com management API later.
+- **Option side effects fire for every writer.** Rewrite-rule flushes for
+  Hide Login and frontend 2FA moved out of the Settings API sanitizers into
+  `ReportedIP_Hive_Settings_Effects`, which watches the options themselves
+  and runs each effect once per request — a remote or CLI write can no longer
+  leave stale rewrite rules behind.
+
+### Changed
+
+- Hide-Login slug validation is now context-free
+  (`ReportedIP_Hive_Hide_Login::validate_slug_value()`); the Settings API
+  sanitizer and the wizard both delegate to it.
+- Registry-managed boolean options are stored canonically as `1`/`0`
+  regardless of the writer (previously raw `true`/`false` could be written by
+  the settings import).
+
 ## [2.1.46] — 2026-08-25
 
 ### Fixed

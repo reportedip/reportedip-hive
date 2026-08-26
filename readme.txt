@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.46
+Stable tag: 2.1.47
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -352,6 +352,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.47 =
+
+New: canonical settings registry. The plugin's core settings now share one declarative source for value kinds, ranges, allowed values, tier gates and side effects — the settings page, the setup wizard and the settings import all sanitize through it, so every writer behaves identically, including writers outside wp-admin.
+
+New: remote settings management protocol (schema v1). Management dashboards can read the settings schema, read current values and apply a validated batch with a per-key result; every sync reports a settings fingerprint for drift detection. Documented in docs/remote-settings-protocol.md; the MainWP extension uses it today and the reportedip.com management API can adopt the same contract later.
+
+Changed: rewrite-rule flushes for Hide Login and frontend 2FA now run for every writer via option watchers, so a remote or CLI write can no longer leave stale rewrite rules behind.
 
 = 2.1.46 =
 
