@@ -45,7 +45,7 @@ final class ReportedIP_Hive_Cloud_Management_REST {
 	 * @var array<string, string>
 	 */
 	const PUBLIC_KEYS = array(
-		'current' => '',
+		'current' => 'nTGFEokvE857PoyV+EY62a3iEHTCVQiagMhfNljyydY=',
 		'next'    => '',
 	);
 
@@ -151,7 +151,6 @@ final class ReportedIP_Hive_Cloud_Management_REST {
 	 * @since  2.1.48
 	 */
 	public static function public_keys() {
-		/* @phpstan-ignore-next-line arrayFilter.alwaysEmpty — the `current` slot is a build-time placeholder; the release ships a real key. */
 		$keys = array_values( array_filter( self::PUBLIC_KEYS ) );
 		/**
 		 * Filter the accepted Ed25519 public keys (base64) for cloud

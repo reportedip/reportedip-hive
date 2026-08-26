@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.47
+Stable tag: 2.1.48
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -352,6 +352,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.48 =
+
+New: cloud fleet management transport (Business plan). reportedip.com can read the settings schema and apply security policies through Ed25519-signed REST requests — verified against a bundled public key, bound to this site and your Community Access Key, replay-protected and strictly opt-in via a new toggle on the General settings tab (off by default). While enabled, API requests announce a settings fingerprint so the fleet dashboard detects drift passively.
+
+Fixed: the "Reset API statistics" button on the security dashboard works again, and the admin pages no longer scroll sideways on phones.
 
 = 2.1.47 =
 
