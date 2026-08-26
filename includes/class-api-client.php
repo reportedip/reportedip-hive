@@ -96,6 +96,40 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
+	 * Identity headers announced on every request to the reportedip.com API.
+	 *
+	 * Always carries the site identity (`X-Rip-Site`). When the site owner
+	 * has enabled cloud management, the current settings schema version and
+	 * fingerprint ride along too — their presence is the opt-in and
+	 * capability signal for the fleet dashboard, and the hash is its passive
+	 * drift channel (no extra request needed). The hash is memoised per
+	 * request; it only covers registry options, which cannot change between
+	 * two outbound API calls of the same request.
+	 *
+	 * @return array<string, string> Header map.
+	 * @since  2.1.48
+	 */
+	public static function identity_headers() {
+		static $settings_headers = null;
+
+		$headers = array( 'X-Rip-Site' => self::api_site_url() );
+
+		if ( null === $settings_headers ) {
+			$settings_headers = array();
+			if ( class_exists( 'ReportedIP_Hive_Cloud_Management_REST' )
+				&& class_exists( 'ReportedIP_Hive_Settings_Registry' )
+				&& ReportedIP_Hive_Cloud_Management_REST::is_enabled() ) {
+				$settings_headers = array(
+					'X-Rip-Settings-Schema' => (string) ReportedIP_Hive_Settings_Registry::SCHEMA_VERSION,
+					'X-Rip-Settings-Hash'   => ReportedIP_Hive_Settings_Registry::settings_hash(),
+				);
+			}
+		}
+
+		return array_merge( $headers, $settings_headers );
+	}
+
+	/**
 	 * Check if API can be used based on mode and configuration
 	 *
 	 * @return bool
@@ -779,12 +813,14 @@ class ReportedIP_Hive_API {
 			$url,
 			array(
 				'method'    => 'POST',
-				'headers'   => array(
-					'X-Key'        => $this->api_key,
-					'X-Rip-Site'   => self::api_site_url(),
-					'Content-Type' => 'application/json',
-					'Accept'       => 'application/json',
-					'User-Agent'   => self::api_user_agent(),
+				'headers'   => array_merge(
+					array(
+						'X-Key'        => $this->api_key,
+						'Content-Type' => 'application/json',
+						'Accept'       => 'application/json',
+						'User-Agent'   => self::api_user_agent(),
+					),
+					self::identity_headers()
 				),
 				'timeout'   => $this->timeout,
 				'body'      => wp_json_encode( $payload ),
@@ -967,12 +1003,14 @@ class ReportedIP_Hive_API {
 
 		$args = array(
 			'method'    => 'POST',
-			'headers'   => array(
-				'X-Key'        => $this->api_key,
-				'X-Rip-Site'   => self::api_site_url(),
-				'Content-Type' => 'application/json',
-				'Accept'       => 'application/json',
-				'User-Agent'   => self::api_user_agent(),
+			'headers'   => array_merge(
+				array(
+					'X-Key'        => $this->api_key,
+					'Content-Type' => 'application/json',
+					'Accept'       => 'application/json',
+					'User-Agent'   => self::api_user_agent(),
+				),
+				self::identity_headers()
 			),
 			'timeout'   => $this->timeout,
 			'body'      => wp_json_encode( $payload ),
@@ -1203,7 +1241,7 @@ class ReportedIP_Hive_API {
 		$snapshot = is_array( $snapshot ) ? $snapshot : array();
 
 		if ( 'over_limit' !== (string) ( $snapshot['status'] ?? '' ) ) {
-			$snapshot += array(
+			$snapshot              += array(
 				'used'  => 0,
 				'limit' => 0,
 			);
@@ -1236,11 +1274,13 @@ class ReportedIP_Hive_API {
 			$url .= '?' . http_build_query( $params );
 		}
 
-		$headers = array(
-			'X-Key'      => $this->api_key,
-			'X-Rip-Site' => self::api_site_url(),
-			'User-Agent' => self::api_user_agent(),
-			'Accept'     => 'application/json',
+		$headers = array_merge(
+			array(
+				'X-Key'      => $this->api_key,
+				'User-Agent' => self::api_user_agent(),
+				'Accept'     => 'application/json',
+			),
+			self::identity_headers()
 		);
 
 		if ( strtoupper( $method ) === 'GET' ) {

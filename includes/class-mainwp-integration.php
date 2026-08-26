@@ -103,13 +103,7 @@ class ReportedIP_Hive_MainWP_Integration {
 		}
 
 		if ( isset( $data['reportedip_hive_settings_get'] ) && class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
-			$payload['settings_values'] = array(
-				'schema_version' => ReportedIP_Hive_Settings_Registry::SCHEMA_VERSION,
-				'values'         => ReportedIP_Hive_Settings_Registry::current_values(),
-				'hash'           => ReportedIP_Hive_Settings_Registry::settings_hash(),
-				'is_main_site'   => is_main_site(),
-				'network_wide'   => is_multisite(),
-			);
+			$payload['settings_values'] = ReportedIP_Hive_Settings_Registry::values_envelope();
 		}
 
 		if ( isset( $data['reportedip_hive_settings_apply']['values_json'] ) && class_exists( 'ReportedIP_Hive_Settings_Apply' ) ) {
@@ -117,15 +111,7 @@ class ReportedIP_Hive_MainWP_Integration {
 			if ( is_array( $decoded ) ) {
 				$payload['settings_apply'] = ReportedIP_Hive_Settings_Apply::apply( $decoded, 'mainwp' );
 			} else {
-				$payload['settings_apply'] = array(
-					'schema_version' => ReportedIP_Hive_Settings_Registry::SCHEMA_VERSION,
-					'results'        => array(),
-					'applied'        => 0,
-					'unchanged'      => 0,
-					'failed'         => 0,
-					'error'          => 'invalid_payload',
-					'hash'           => ReportedIP_Hive_Settings_Registry::settings_hash(),
-				);
+				$payload['settings_apply'] = ReportedIP_Hive_Settings_Apply::invalid_payload_envelope();
 			}
 		}
 

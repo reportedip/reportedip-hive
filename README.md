@@ -127,9 +127,11 @@ What the paid **Professional** (3 domains) and **Business** (15 domains, multi-b
 
 Pricing and the full tier matrix live at <https://reportedip.com>.
 
-### Remote management (MainWP)
+### Remote management (MainWP and reportedip.com)
 
 Hive carries its own MainWP child bridge, so agencies can manage every Hive install from one [MainWP](https://mainwp.com/) dashboard without an extra child plugin: fleet-wide status sync (active blocks, failed logins, queue size, 2FA coverage as aggregate counts), one-click API-key provisioning and centrally managed settings policies (schema-driven, with per-key validation, tier awareness and drift detection via a settings fingerprint — see `docs/remote-settings-protocol.md`). Data-minimised by design: the sync returns counts only, never IP addresses, usernames or secrets. Requires the ReportedIP Hive extension on the MainWP dashboard side.
+
+The same settings protocol powers the cloud fleet dashboard on reportedip.com (Business plan): enable the "Cloud fleet management" toggle on the General settings tab and the site accepts Ed25519-signed policy pushes from the reportedip.com fleet service — verified against a bundled public key, bound to this site and to your Community Access Key, replay-protected and off by default. Both transports go through the same validation pipeline, so a policy behaves identically no matter which dashboard applied it.
 
 ### Promote / community shortcodes
 

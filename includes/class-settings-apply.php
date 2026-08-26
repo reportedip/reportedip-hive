@@ -134,6 +134,26 @@ final class ReportedIP_Hive_Settings_Apply {
 	}
 
 	/**
+	 * Error envelope returned when a transport delivers an undecodable
+	 * `values_json` payload — shared by every transport so the error shape
+	 * cannot drift between MainWP and the cloud API.
+	 *
+	 * @return array{schema_version:int, results:array<string, array<string, string>>, applied:int, unchanged:int, failed:int, error:string, hash:string}
+	 * @since  2.1.48
+	 */
+	public static function invalid_payload_envelope() {
+		return array(
+			'schema_version' => ReportedIP_Hive_Settings_Registry::SCHEMA_VERSION,
+			'results'        => array(),
+			'applied'        => 0,
+			'unchanged'      => 0,
+			'failed'         => 0,
+			'error'          => 'invalid_payload',
+			'hash'           => ReportedIP_Hive_Settings_Registry::settings_hash(),
+		);
+	}
+
+	/**
 	 * Write one security-log event for an apply batch that changed values.
 	 *
 	 * @param string $origin    Transport identifier.

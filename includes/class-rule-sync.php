@@ -314,7 +314,7 @@ final class ReportedIP_Hive_Rule_Sync {
 			),
 		);
 		if ( $has_client ) {
-			$args['headers']['X-Rip-Site'] = ReportedIP_Hive_API::api_site_url();
+			$args['headers'] = array_merge( $args['headers'], ReportedIP_Hive_API::identity_headers() );
 		}
 		if ( '' !== $etag ) {
 			$args['headers']['If-None-Match'] = $etag;

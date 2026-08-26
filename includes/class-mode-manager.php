@@ -308,6 +308,11 @@ class ReportedIP_Hive_Mode_Manager {
 				'community'     => true,
 				'requires_tier' => 'business',
 			),
+			'cloud_management'             => array(
+				'local'         => false,
+				'community'     => true,
+				'requires_tier' => 'business',
+			),
 		);
 	}
 
@@ -355,6 +360,7 @@ class ReportedIP_Hive_Mode_Manager {
 			'security_headers'             => array( __( 'Security Headers', 'reportedip-hive' ), __( 'Site-wide X-Content-Type-Options, X-Frame-Options and Referrer-Policy.', 'reportedip-hive' ) ),
 			'security_headers_advanced'    => array( __( 'Advanced Security Headers', 'reportedip-hive' ), __( 'CSP builder, HSTS with preload, Permissions-Policy and the Cross-Origin-Opener/Embedder/Resource trio.', 'reportedip-hive' ) ),
 			'audit_log'                    => array( __( 'Audit Event Trail', 'reportedip-hive' ), __( 'User-lifecycle audit log (role changes with actor, new-IP alerts) with filtering, CSV/JSON export and long retention.', 'reportedip-hive' ) ),
+			'cloud_management'             => array( __( 'Cloud Fleet Management', 'reportedip-hive' ), __( 'Manage this site remotely from the reportedip.com dashboard: security policies, per-site overrides and drift detection across all your Hive installations.', 'reportedip-hive' ) ),
 		);
 
 		return $this->feature_texts_cache;

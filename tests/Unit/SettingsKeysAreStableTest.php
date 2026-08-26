@@ -56,6 +56,7 @@ class SettingsKeysAreStableTest extends TestCase {
 		return array(
 			'reportedip_hive_api_endpoint',
 			'reportedip_hive_api_key',
+			'reportedip_hive_cloud_management',
 			'reportedip_hive_auto_anonymize_days',
 			'reportedip_hive_auto_block',
 			'reportedip_hive_auto_footer_align',

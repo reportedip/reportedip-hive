@@ -2650,6 +2650,15 @@ class ReportedIP_Hive_Admin_Settings {
 				'sanitize_callback' => array( $this, 'sanitize_api_endpoint' ),
 			)
 		);
+		register_setting(
+			'reportedip_hive_api',
+			'reportedip_hive_cloud_management',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => false,
+			)
+		);
 
 		register_setting(
 			'reportedip_hive_protection_detection',
@@ -4784,6 +4793,25 @@ class ReportedIP_Hive_Admin_Settings {
 					<p class="rip-help-text">
 						<?php esc_html_e( 'One IP address or CIDR range per line. When set, the trusted IP header above is only honored for requests that connect from one of these proxy addresses — anyone else cannot spoof the header. Leave empty to accept the header from any peer (previous behavior). Applies to both firewall layers.', 'reportedip-hive' ); ?>
 					</p>
+				</div>
+
+				<?php $cloud_status = $mode_manager->feature_status( 'cloud_management' ); ?>
+				<div class="rip-form-group">
+					<input type="hidden" name="reportedip_hive_cloud_management" value="0" />
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_cloud_management" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_cloud_management', false ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Cloud fleet management via reportedip.com', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-text">
+						<?php esc_html_e( 'Allow the reportedip.com dashboard to read this site\'s settings schema and apply security policies remotely (Business plan). Requests are Ed25519-signed by the reportedip.com fleet service, bound to this site and to your Community Access Key, and expire after five minutes; nothing is accepted without a valid signature. Off by default.', 'reportedip-hive' ); ?>
+						<a href="https://reportedip.com/dashboard/domains/" target="_blank"><?php esc_html_e( 'Open fleet dashboard', 'reportedip-hive' ); ?></a>
+					</p>
+					<?php
+					if ( ! $cloud_status['available'] ) {
+						self::render_tier_lock( $cloud_status, array( 'label' => __( 'Unlock with Business', 'reportedip-hive' ) ) );
+					}
+					?>
 				</div>
 
 				<div class="rip-form-actions">

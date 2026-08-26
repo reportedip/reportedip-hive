@@ -66,6 +66,36 @@ class ReportedIP_Hive_Settings_Remote_Apply_Multisite_Test extends WP_UnitTestCa
 	}
 
 	/**
+	 * The cloud transport uses the same apply pipeline: an apply with the
+	 * `cloud` origin arriving at a sub-site converges the whole network.
+	 */
+	public function test_cloud_origin_apply_from_sub_site_writes_network_option() {
+		$site_id = self::factory()->blog->create();
+		switch_to_blog( $site_id );
+
+		$result = ReportedIP_Hive_Settings_Apply::apply(
+			array( 'reportedip_hive_failed_login_threshold' => 17 ),
+			'cloud'
+		);
+
+		restore_current_blog();
+
+		$this->assertSame( 'applied', $result['results']['reportedip_hive_failed_login_threshold']['status'] );
+		$this->assertSame( 17, (int) get_site_option( 'reportedip_hive_failed_login_threshold' ) );
+	}
+
+	/**
+	 * The shared values envelope flags multisite so dashboards can warn that
+	 * an apply acts network-wide.
+	 */
+	public function test_values_envelope_flags_network_wide_on_multisite() {
+		$envelope = ReportedIP_Hive_Settings_Registry::values_envelope();
+
+		$this->assertTrue( $envelope['network_wide'] );
+		$this->assertSame( ReportedIP_Hive_Settings_Registry::settings_hash(), $envelope['hash'] );
+	}
+
+	/**
 	 * The per-site override keys must never be remote-manageable.
 	 */
 	public function test_per_site_override_keys_are_not_remote() {

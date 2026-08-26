@@ -4,6 +4,25 @@ All changes to ReportedIP Hive are documented here.
 
 ## [Unreleased]
 
+### New
+
+- **Cloud fleet management transport (Business plan).** The remote-settings
+  protocol gains its second transport: reportedip.com can now read the
+  settings schema, read current values and apply policy batches through
+  three signed REST routes (`reportedip-hive/v1/remote/settings/schema`,
+  `/get`, `/apply`). Every request carries an Ed25519-signed envelope that
+  the site verifies against a bundled public key, plus a freshness window,
+  single-use request ids, an audience binding to this site's host and a
+  proof of the account's Community Access Key. The whole transport is
+  opt-in via a new "Cloud fleet management" toggle on the General settings
+  tab (default off); while enabled, outbound API requests announce the
+  settings schema version and fingerprint (`X-Rip-Settings-Schema`,
+  `X-Rip-Settings-Hash`) so the fleet dashboard can detect drift passively.
+  Both transports now build their envelopes through shared helpers
+  (`values_envelope()`, `invalid_payload_envelope()`), keeping MainWP and
+  cloud responses provably identical, and the protocol document gains a
+  change checklist that spells out what to touch when options change.
+
 ### Fixed
 
 - **The "Reset API statistics" button on the dashboard works again.** Its

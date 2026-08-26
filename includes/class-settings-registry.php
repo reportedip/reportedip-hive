@@ -745,6 +745,24 @@ final class ReportedIP_Hive_Settings_Registry {
 	}
 
 	/**
+	 * Values envelope for management dashboards — the canonical response
+	 * body of the `settings_get` operation, shared by every transport so
+	 * MainWP and the cloud API stay provably identical.
+	 *
+	 * @return array{schema_version:int, values:array<string, mixed>, hash:string, is_main_site:bool, network_wide:bool}
+	 * @since  2.1.48
+	 */
+	public static function values_envelope() {
+		return array(
+			'schema_version' => self::SCHEMA_VERSION,
+			'values'         => self::current_values(),
+			'hash'           => self::settings_hash(),
+			'is_main_site'   => is_main_site(),
+			'network_wide'   => is_multisite(),
+		);
+	}
+
+	/**
 	 * Versioned schema envelope for management dashboards. Labels are
 	 * translated into the site locale at export time.
 	 *

@@ -7,7 +7,7 @@ classes, so behaviour is identical no matter who is asking:
 | Transport | Status | Entry point |
 |---|---|---|
 | MainWP (`mainwp_child_extra_execution` / `mainwp_site_sync_others_data`) | live | `includes/class-mainwp-integration.php` |
-| reportedip.com management API (`reportedip-hive/v1/remote/settings/*`) | planned | same core classes, REST wrapper |
+| reportedip.com management API (`reportedip-hive/v1/remote/settings/*`) | live | `includes/class-cloud-management-rest.php` |
 
 Core classes (all loaded unconditionally, in every request context):
 
@@ -124,6 +124,70 @@ Every `reportedip_hive_sync` response additionally carries:
 - `settings_schema_version` — presence signals protocol support.
 - `settings_hash` — current fingerprint (see below).
 
+The cloud transport has the equivalent passive channel: when cloud
+management is enabled, every outbound request to the reportedip.com API
+carries the request headers `X-Rip-Settings-Schema` (schema version) and
+`X-Rip-Settings-Hash` (current fingerprint). Header presence signals both
+protocol support **and** the owner's opt-in; their absence must be treated
+as "do not push".
+
+## Cloud transport authentication
+
+The MainWP transport inherits its authentication from the MainWP Child
+layer. The cloud transport authenticates every request itself. Routes
+(registered by `ReportedIP_Hive_Cloud_Management_REST`):
+
+```
+POST /wp-json/reportedip-hive/v1/remote/settings/schema
+POST /wp-json/reportedip-hive/v1/remote/settings/get
+POST /wp-json/reportedip-hive/v1/remote/settings/apply
+```
+
+Request body:
+
+```jsonc
+{ "payload": "<exact JSON string, signed as-is>", "signature": "<base64 Ed25519 detached signature>" }
+```
+
+Signed payload fields:
+
+```jsonc
+{
+  "action": "apply",                     // must match the endpoint: schema | get | apply
+  "site": "example.com",                 // audience: lowercased host, leading www. stripped
+  "issued_at": 1756200000,               // unix time, accepted within +/- 300 s
+  "request_id": "5f0f…",                 // unique per request, single-use for 600 s
+  "key_proof": "<sha256(api_key + request_id)>",
+  "schema_version": 1,                   // apply only, informational
+  "values_json": "{…}"                   // apply only, same string contract as MainWP
+}
+```
+
+Verification chain on the site, in order — every step failing rejects the
+request and logs a `cloud_management_auth_fail` security event:
+
+1. Opt-in: option `reportedip_hive_cloud_management` (default off) plus
+   Community mode plus a configured Community Access Key.
+2. Per-IP throttle (30 requests / 5 min).
+3. Ed25519 signature over the **literal** `payload` string against the
+   bundled fleet public keys (`PUBLIC_KEYS`, rotation slot `next`, filter
+   `reportedip_hive_cloud_public_keys`). Decoding happens only after
+   verification. The fleet keypair is separate from the ruleset signing key.
+4. `action` matches the endpoint.
+5. `issued_at` within the freshness window.
+6. `request_id` unused (replay cache, site-transient, 600 s).
+7. `site` equals this installation's announced host
+   (`ReportedIP_Hive_API::api_site_url()`, normalized).
+8. `key_proof` equals `sha256(own_api_key + request_id)` — binds the request
+   to the account that owns this site's key.
+
+Responses are the same envelopes as the MainWP jobs, keyed identically:
+`{"settings_schema": …}`, `{"settings_values": …}`, `{"settings_apply": …}`.
+Both transports build them through the same helpers
+(`ReportedIP_Hive_Settings_Registry::values_envelope()`,
+`ReportedIP_Hive_Settings_Apply::invalid_payload_envelope()`), so the shapes
+cannot drift.
+
 ## Kind vocabulary
 
 | Kind | Wire value | Sanitization |
@@ -216,3 +280,76 @@ Adding a managed option is a two-place change, enforced by unit test:
 The remote key list and kinds are snapshot-locked by
 `tests/Unit/SettingsRegistryTest.php`; changing them forces a conscious
 fixture update and a `SCHEMA_VERSION` decision.
+
+## Change checklist — what to touch when options change
+
+Both dashboards (MainWP extension, reportedip.com fleet) render their forms
+from the exported schema, so most changes are Hive-only:
+
+| Change | Hive (this repo) | MainWP extension | reportedip.com fleet | SCHEMA_VERSION |
+|---|---|---|---|---|
+| Add an option (existing kind) | `Defaults::SAFE_OPTIONS` + `Registry::spec()` (+ i18n); update the snapshot fixture consciously | nothing — reload the schema | nothing — refresh the schema | no |
+| Remove an option / change a kind / change enum semantics | Registry + fixture | reload schema (stored policy/overrides must be re-validated) | schema refresh re-validates stored policy/overrides | **yes** |
+| Introduce a new kind | `Registry::sanitize_kind()` + kind table above | PHP `render_value_input()`, JS `buildValueInput()`/`readFieldValue()`, `sanitize_against_schema()` | fleet JS renderer + server-side `sanitize_against_schema()` | yes |
+| Add a tier gate to an option | `tier` slug in `spec()` (the Mode-Manager feature must exist) | nothing (generic badge) | nothing (generic badge) | no |
+| Add a side-effect token | `spec()` + `Settings_Effects` token handler | nothing | nothing | no |
+| Rotate the cloud signing key | ship the new public key in `PUBLIC_KEYS['next']`, switch the service after fleet adoption, then promote to `current` | — | swap the fleet signer keypair | no |
+| Add a transport | a thin adapter around `export_schema()` / `values_envelope()` / `Settings_Apply::apply()` — never its own validation | — | — | no |
+
+Ground rule: **one new option = exactly two code places in Hive** (default +
+spec). Dashboards pick it up from the schema without a code change.
+
+### Known settings-page exceptions
+
+Two registry keys keep a bespoke sanitizer on the wp-admin settings page —
+and only there: `reportedip_hive_2fa_allowed_methods` and
+`reportedip_hive_2fa_enforce_roles`. Their form posts checkboxes instead of
+the option value, so the page callback must detect the form shape from
+`$_POST` (the 2.0.28 "only TOTP saved / roles wiped" fix), which a generic
+registry callback cannot do. Every remote writer (MainWP, cloud, import)
+sanitizes both keys through the registry's `json_list` kind; the bespoke
+callbacks' direct-write branch is semantically identical. This list may only
+shrink; the consistency check enforces it.
+
+`slug` is an override-only kind: `sanitize_kind()` deliberately has no
+generic slug branch, because the only slug key delegates to
+`ReportedIP_Hive_Hide_Login::validate_slug_value()` (reserved-list and
+permalink-collision checks live there). A second slug option must bring its
+own `sanitize` override.
+
+## Development workflow — changing settings, and how to test it
+
+The end-to-end routine for any settings change, in order:
+
+1. **Edit exactly two places in Hive** (for a new option):
+   `ReportedIP_Hive_Defaults::SAFE_OPTIONS` (default) and
+   `ReportedIP_Hive_Settings_Registry::spec()` (section, kind, ranges,
+   label, optional `tier` / `sanitize` / `side_effects` / `remote`).
+   Consult the change checklist above for every other change type; bump
+   `SCHEMA_VERSION` only when the checklist says so.
+2. **Update the locked snapshots consciously.** `SettingsRegistryTest`
+   (remote key list + kinds) and `SettingsKeysAreStableTest` (registered
+   option keys) fail on any drift; updating their fixtures is the explicit
+   sign-off that the change is intended.
+3. **Translate.** `composer i18n`, translate the new entries in
+   `languages/reportedip-hive-de_DE.po`, `composer i18n:build` — the
+   freshness gate blocks CI otherwise.
+4. **Run the consistency layers:**
+   - `vendor/bin/phpunit --testsuite unit` — includes
+     `SettingsConsistencyTest` (identical apply results and stored state
+     across the `mainwp` / `cloud` / `import` origins, schema
+     renderability, wizard/registry kind agreement, defaults round-trip)
+     and `CloudManagementRestTest` (transport auth chain + envelope parity).
+   - The private workspace additionally runs a static cross-repo check
+     (settings page callbacks, wizard delegation, import routing, shared
+     envelope helpers, service/extension kind and drift-state coverage)
+     before any release.
+5. **Release gates.** The full pre-tag pipeline (lint, static analysis,
+   unit + multisite suites, plugin check, E2E on single-site and multisite)
+   must pass; dashboards need no code change for added options — after the
+   Hive release, reload the schema in the MainWP extension ("Schema neu
+   laden") and in the fleet dashboard ("Reload schema"), which also
+   re-validates stored policies and overrides.
+6. **Verify in production the safe way:** push a no-op policy (the exact
+   current values) to one owned site first — every key must come back
+   `unchanged` before the change is trusted fleet-wide.

@@ -396,6 +396,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-registry.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-apply.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-effects.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ed25519-verifier.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-wizard-schema.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-ref.php';
@@ -555,6 +556,9 @@ class ReportedIP_Hive {
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mainwp-integration.php';
 		ReportedIP_Hive_MainWP_Integration::init();
+
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cloud-management-rest.php';
+		new ReportedIP_Hive_Cloud_Management_REST();
 
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Two_Factor_Admin();

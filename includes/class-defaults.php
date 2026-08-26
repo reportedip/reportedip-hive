@@ -75,6 +75,8 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_report_cooldown_hours'          => 24,
 		'reportedip_hive_report_only_mode'               => false,
 
+		'reportedip_hive_cloud_management'               => false,
+
 		'reportedip_hive_rule_sync_enabled'              => true,
 		'reportedip_hive_rule_sync_last_run'             => 0,
 		'reportedip_hive_ruleset_waf'                    => '',
