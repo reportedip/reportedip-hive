@@ -98,6 +98,37 @@ class ReportedIP_Hive_MainWP_Integration {
 			}
 		}
 
+		if ( isset( $data['reportedip_hive_settings_schema'] ) && class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
+			$payload['settings_schema'] = ReportedIP_Hive_Settings_Registry::export_schema();
+		}
+
+		if ( isset( $data['reportedip_hive_settings_get'] ) && class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
+			$payload['settings_values'] = array(
+				'schema_version' => ReportedIP_Hive_Settings_Registry::SCHEMA_VERSION,
+				'values'         => ReportedIP_Hive_Settings_Registry::current_values(),
+				'hash'           => ReportedIP_Hive_Settings_Registry::settings_hash(),
+				'is_main_site'   => is_main_site(),
+				'network_wide'   => is_multisite(),
+			);
+		}
+
+		if ( isset( $data['reportedip_hive_settings_apply']['values_json'] ) && class_exists( 'ReportedIP_Hive_Settings_Apply' ) ) {
+			$decoded = json_decode( (string) wp_unslash( $data['reportedip_hive_settings_apply']['values_json'] ), true );
+			if ( is_array( $decoded ) ) {
+				$payload['settings_apply'] = ReportedIP_Hive_Settings_Apply::apply( $decoded, 'mainwp' );
+			} else {
+				$payload['settings_apply'] = array(
+					'schema_version' => ReportedIP_Hive_Settings_Registry::SCHEMA_VERSION,
+					'results'        => array(),
+					'applied'        => 0,
+					'unchanged'      => 0,
+					'failed'         => 0,
+					'error'          => 'invalid_payload',
+					'hash'           => ReportedIP_Hive_Settings_Registry::settings_hash(),
+				);
+			}
+		}
+
 		if ( ! empty( $payload ) ) {
 			$existing                       = isset( $information['reportedip_hive'] ) && is_array( $information['reportedip_hive'] ) ? $information['reportedip_hive'] : array();
 			$information['reportedip_hive'] = array_merge( $existing, $payload );
@@ -168,6 +199,11 @@ class ReportedIP_Hive_MainWP_Integration {
 
 		$metrics['critical_24h'] = self::count_critical_events( 24 );
 		$metrics['twofa_users']  = self::count_2fa_users();
+
+		if ( class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
+			$metrics['settings_schema_version'] = ReportedIP_Hive_Settings_Registry::SCHEMA_VERSION;
+			$metrics['settings_hash']           = ReportedIP_Hive_Settings_Registry::settings_hash();
+		}
 
 		$metrics = array_merge( $metrics, self::collect_waf_status() );
 

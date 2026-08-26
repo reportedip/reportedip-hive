@@ -608,14 +608,45 @@ class ReportedIP_Hive_Hide_Login {
 			return $current;
 		}
 
+		$validated = self::validate_slug_value( $raw );
+		if ( is_wp_error( $validated ) ) {
+			if ( function_exists( 'add_settings_error' ) ) {
+				add_settings_error(
+					'reportedip_hive_hide_login_slug',
+					'reportedip_hive_hide_login_slug_' . $validated->get_error_code(),
+					$validated->get_error_message()
+				);
+			}
+			return $current;
+		}
+
+		return $validated;
+	}
+
+	/**
+	 * Context-free slug validation shared by the Settings API sanitizer and
+	 * the remote settings registry. Never touches add_settings_error(), so it
+	 * is safe outside wp-admin.
+	 *
+	 * @param mixed $value Raw slug candidate.
+	 * @return string|WP_Error Sanitized slug (empty string allowed) or a
+	 *                         WP_Error describing why it was rejected.
+	 * @since  2.1.47
+	 */
+	public static function validate_slug_value( $value ) {
+		$raw = is_string( $value ) ? sanitize_title( wp_unslash( $value ) ) : '';
+
+		if ( '' === $raw ) {
+			return '';
+		}
+
 		$inner_min = self::MIN_SLUG_LENGTH - 2;
 		$inner_max = self::MAX_SLUG_LENGTH - 2;
 		$pattern   = '/^[a-z0-9][a-z0-9_-]{' . $inner_min . ',' . $inner_max . '}[a-z0-9]$/';
 
 		if ( ! preg_match( $pattern, $raw ) ) {
-			add_settings_error(
-				'reportedip_hive_hide_login_slug',
-				'reportedip_hive_hide_login_slug_invalid',
+			return new WP_Error(
+				'invalid',
 				sprintf(
 					/* translators: 1: minimum slug length, 2: maximum slug length */
 					__( 'The login slug must be %1$d–%2$d characters of lowercase letters, digits, dashes or underscores, and may not start or end with a dash.', 'reportedip-hive' ),
@@ -623,28 +654,23 @@ class ReportedIP_Hive_Hide_Login {
 					self::MAX_SLUG_LENGTH
 				)
 			);
-			return $current;
 		}
 
 		if ( in_array( $raw, self::RESERVED_SLUGS, true ) ) {
-			add_settings_error(
-				'reportedip_hive_hide_login_slug',
-				'reportedip_hive_hide_login_slug_reserved',
+			return new WP_Error(
+				'reserved',
 				/* translators: %s: rejected slug */
 				sprintf( __( 'The slug "%s" is reserved by WordPress and cannot be used.', 'reportedip-hive' ), esc_html( $raw ) )
 			);
-			return $current;
 		}
 
-		$collision = $this->detect_permalink_collision( $raw );
+		$collision = self::get_instance()->detect_permalink_collision( $raw );
 		if ( '' !== $collision ) {
-			add_settings_error(
-				'reportedip_hive_hide_login_slug',
-				'reportedip_hive_hide_login_slug_collision',
+			return new WP_Error(
+				'collision',
 				/* translators: 1: rejected slug, 2: where it already exists */
 				sprintf( __( 'The slug "%1$s" already exists as %2$s. Pick a different slug.', 'reportedip-hive' ), esc_html( $raw ), esc_html( $collision ) )
 			);
-			return $current;
 		}
 
 		return $raw;

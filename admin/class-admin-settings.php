@@ -2604,6 +2604,22 @@ class ReportedIP_Hive_Admin_Settings {
 		return true;
 	}
 
+
+	/**
+	 * Sanitize callback resolver: registry-managed keys use the canonical
+	 * registry callback, everything else keeps its legacy callback until it
+	 * migrates into the registry.
+	 *
+	 * @param string   $key      Option key.
+	 * @param callable $fallback Legacy sanitize callback.
+	 * @return callable
+	 * @since  2.1.47
+	 */
+	private function registry_callback_or( $key, $fallback ) {
+		$spec = ReportedIP_Hive_Settings_Registry::spec();
+		return isset( $spec[ $key ] ) ? ReportedIP_Hive_Settings_Registry::settings_api_callback( $key ) : $fallback;
+	}
+
 	/**
 	 * Register settings
 	 */
@@ -2640,7 +2656,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_failed_login_threshold',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_failed_login_threshold' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_failed_login_threshold' ),
 			)
 		);
 		register_setting(
@@ -2648,7 +2664,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_failed_login_timeframe',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_timeframe' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_failed_login_timeframe' ),
 			)
 		);
 		register_setting(
@@ -2656,7 +2672,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_comment_spam_threshold',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_spam_threshold' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_comment_spam_threshold' ),
 			)
 		);
 		register_setting(
@@ -2664,7 +2680,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_xmlrpc_threshold',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_xmlrpc_threshold' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_xmlrpc_threshold' ),
 			)
 		);
 		register_setting(
@@ -2672,7 +2688,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_comment_spam_timeframe',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_timeframe' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_comment_spam_timeframe' ),
 			)
 		);
 		register_setting(
@@ -2680,7 +2696,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_xmlrpc_timeframe',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_timeframe' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_xmlrpc_timeframe' ),
 			)
 		);
 		register_setting(
@@ -2688,7 +2704,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_monitor_failed_logins',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_failed_logins' ),
 			)
 		);
 		register_setting(
@@ -2696,7 +2712,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_monitor_comments',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_comments' ),
 			)
 		);
 		register_setting(
@@ -2704,7 +2720,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_monitor_xmlrpc',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_xmlrpc' ),
 			)
 		);
 
@@ -2721,7 +2737,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$threshold_option,
 				array(
 					'type'              => 'integer',
-					'sanitize_callback' => array( $this, 'sanitize_failed_login_threshold' ),
+					'sanitize_callback' => $this->registry_callback_or( $threshold_option, array( $this, 'sanitize_failed_login_threshold' ) ),
 				)
 			);
 		}
@@ -2741,7 +2757,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$integer_option,
 				array(
 					'type'              => 'integer',
-					'sanitize_callback' => array( $this, 'sanitize_timeframe' ),
+					'sanitize_callback' => $this->registry_callback_or( $integer_option, array( $this, 'sanitize_timeframe' ) ),
 				)
 			);
 		}
@@ -2766,7 +2782,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$boolean_option,
 				array(
 					'type'              => 'boolean',
-					'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+					'sanitize_callback' => $this->registry_callback_or( $boolean_option, array( $this, 'sanitize_boolean' ) ),
 				)
 			);
 		}
@@ -2776,7 +2792,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_auto_block',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_block' ),
 			)
 		);
 		register_setting(
@@ -2784,7 +2800,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_block_duration',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_block_duration' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_duration' ),
 			)
 		);
 		register_setting(
@@ -2792,7 +2808,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_block_threshold',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_block_threshold' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_threshold' ),
 			)
 		);
 		register_setting(
@@ -2800,7 +2816,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_notify_admin',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_admin' ),
 			)
 		);
 		register_setting(
@@ -2816,7 +2832,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_notify_recipients',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_notify_recipients' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_recipients' ),
 			)
 		);
 		register_setting(
@@ -2848,7 +2864,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_notify_from_name',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => 'sanitize_text_field',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_from_name' ),
 			)
 		);
 		register_setting(
@@ -2856,7 +2872,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_notify_from_email',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_notify_from_email' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_from_email' ),
 			)
 		);
 		register_setting(
@@ -2872,7 +2888,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_report_only_mode',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_report_only_mode' ),
 			)
 		);
 		register_setting(
@@ -2880,7 +2896,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_block_escalation_enabled',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_escalation_enabled' ),
 			)
 		);
 		register_setting(
@@ -2888,7 +2904,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_block_ladder_minutes',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_block_ladder' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_ladder_minutes' ),
 			)
 		);
 		register_setting(
@@ -2896,7 +2912,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_block_ladder_reset_days',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_ladder_reset_days' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_ladder_reset_days' ),
 			)
 		);
 
@@ -2905,7 +2921,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hide_login_enabled',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_hide_login_enabled' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_enabled' ),
 			)
 		);
 		register_setting(
@@ -2913,7 +2929,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hide_login_slug',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_hide_login_slug' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_slug' ),
 			)
 		);
 		register_setting(
@@ -2921,7 +2937,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hide_login_response_mode',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_hide_login_response_mode' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_response_mode' ),
 			)
 		);
 		register_setting(
@@ -2937,7 +2953,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_monitor_hide_login_probe',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_hide_login_probe' ),
 			)
 		);
 		register_setting(
@@ -2962,7 +2978,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_log_level',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_log_level' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_log_level' ),
 			)
 		);
 		register_setting(
@@ -2978,7 +2994,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_log_user_agents',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_log_user_agents' ),
 			)
 		);
 		register_setting(
@@ -2986,7 +3002,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_minimal_logging',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_minimal_logging' ),
 			)
 		);
 		register_setting(
@@ -3002,7 +3018,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_data_retention_days',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_retention_days' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_data_retention_days' ),
 			)
 		);
 		register_setting(
@@ -3010,7 +3026,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_auto_anonymize_days',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_anonymize_days' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_anonymize_days' ),
 			)
 		);
 
@@ -3075,7 +3091,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_block_tor',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_tor' ),
 			)
 		);
 
@@ -3084,7 +3100,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_blocked_page_contact_url',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_url_nullsafe' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_blocked_page_contact_url' ),
 			)
 		);
 
@@ -3214,7 +3230,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_decoy_pathblock_enabled',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_decoy_pathblock_enabled' ),
 				'default'           => true,
 			)
 		);
@@ -3331,22 +3347,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Null-safe URL sanitiser for settings that point to an external URL.
-	 *
-	 * Coerces null to an empty string before handing off to esc_url_raw(),
-	 * which in turn calls esc_url() — that function's first op is ltrim(),
-	 * and PHP 8.1+ deprecates passing null there. The deprecation output
-	 * breaks the Settings API redirect because headers have already been
-	 * emitted by the time wp_redirect fires.
-	 *
-	 * @param mixed $value Raw option value from $_POST (may be null).
-	 * @return string Sanitised URL or empty string.
-	 */
-	public function sanitize_url_nullsafe( $value ) {
-		return esc_url_raw( (string) ( $value ?? '' ) );
-	}
-
-	/**
 	 * Sanitize API key - validates format
 	 */
 	public function sanitize_api_key( $value ) {
@@ -3440,38 +3440,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Sanitize the comma/whitespace-separated notification recipient list.
-	 *
-	 * Drops invalid addresses, dedupes, and re-emits a comma+space joined
-	 * string so the saved option round-trips cleanly.
-	 *
-	 * @param string $value Raw textarea content.
-	 * @return string
-	 */
-	public function sanitize_notify_recipients( $value ) {
-		$candidates = array_filter( array_map( 'trim', preg_split( '/[\s,;]+/', (string) $value ) ) );
-		$valid      = array();
-		foreach ( $candidates as $candidate ) {
-			$clean = sanitize_email( $candidate );
-			if ( '' !== $clean && is_email( $clean ) ) {
-				$valid[] = $clean;
-			}
-		}
-		return implode( ', ', array_values( array_unique( $valid ) ) );
-	}
-
-	/**
-	 * Sanitize the configurable From-email; empty when invalid.
-	 *
-	 * @param string $value Raw input.
-	 * @return string
-	 */
-	public function sanitize_notify_from_email( $value ) {
-		$clean = sanitize_email( (string) $value );
-		return ( '' !== $clean && is_email( $clean ) ) ? $clean : '';
-	}
-
-	/**
 	 * Sanitize failed login threshold (1-100)
 	 */
 	public function sanitize_failed_login_threshold( $value ) {
@@ -3521,226 +3489,6 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 		}
 		return $result;
-	}
-
-	/**
-	 * Sanitize spam threshold (1-50)
-	 */
-	public function sanitize_spam_threshold( $value ) {
-		$value  = absint( $value );
-		$min    = 1;
-		$max    = 50;
-		$result = max( $min, min( $max, $value ) );
-
-		if ( $value !== $result ) {
-			add_settings_error(
-				'reportedip_hive_spam_threshold',
-				'value_adjusted',
-				sprintf(
-					/* translators: 1: adjusted threshold value, 2: minimum allowed value, 3: maximum allowed value */
-					__( 'Comment spam threshold was adjusted to %1$d (must be between %2$d and %3$d).', 'reportedip-hive' ),
-					$result,
-					$min,
-					$max
-				),
-				'warning'
-			);
-		}
-		return $result;
-	}
-
-	/**
-	 * Sanitize XMLRPC threshold (1-100)
-	 */
-	public function sanitize_xmlrpc_threshold( $value ) {
-		$value  = absint( $value );
-		$min    = 1;
-		$max    = 100;
-		$result = max( $min, min( $max, $value ) );
-
-		if ( $value !== $result ) {
-			add_settings_error(
-				'reportedip_hive_xmlrpc_threshold',
-				'value_adjusted',
-				sprintf(
-					/* translators: 1: adjusted threshold value, 2: minimum allowed value, 3: maximum allowed value */
-					__( 'XMLRPC threshold was adjusted to %1$d (must be between %2$d and %3$d).', 'reportedip-hive' ),
-					$result,
-					$min,
-					$max
-				),
-				'warning'
-			);
-		}
-		return $result;
-	}
-
-	/**
-	 * Sanitize block duration (0-8760 hours = 1 year, 0 = permanent)
-	 */
-	public function sanitize_block_duration( $value ) {
-		$value = absint( $value );
-		return min( 8760, $value );
-	}
-
-	/**
-	 * Sanitize the progressive-block ladder.
-	 *
-	 * Accepts a comma-separated list of minute values. Drops blanks, clamps
-	 * negatives to 1, caps each step at one year (525 600 min), preserves
-	 * order. Empty input falls back to the documented default ladder.
-	 *
-	 * @param mixed $value Raw value from the settings form.
-	 * @return string Cleaned CSV ready for storage.
-	 * @since  1.5.0
-	 */
-	public function sanitize_block_ladder( $value ) {
-		$value = is_string( $value ) ? $value : '';
-		$parts = array_filter(
-			array_map( 'trim', explode( ',', $value ) ),
-			static fn( string $part ): bool => '' !== $part
-		);
-
-		$ladder = array();
-		foreach ( $parts as $part ) {
-			$minutes  = max( 1, min( 525600, (int) $part ) );
-			$ladder[] = $minutes;
-		}
-
-		if ( empty( $ladder ) && class_exists( 'ReportedIP_Hive_Block_Escalation' ) ) {
-			$ladder = ReportedIP_Hive_Block_Escalation::DEFAULT_LADDER_MINUTES;
-		}
-
-		return implode( ',', $ladder );
-	}
-
-	/**
-	 * Sanitize the ladder reset window in days (1-365).
-	 *
-	 * @param mixed $value Raw value.
-	 * @return int Clamped days.
-	 * @since  1.5.0
-	 */
-	public function sanitize_ladder_reset_days( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 365, $value ) );
-	}
-
-	/**
-	 * Sanitize block threshold (0-100 percent)
-	 */
-	public function sanitize_block_threshold( $value ) {
-		$value  = absint( $value );
-		$min    = 0;
-		$max    = 100;
-		$result = max( $min, min( $max, $value ) );
-
-		if ( $value !== $result ) {
-			add_settings_error(
-				'reportedip_hive_block_threshold',
-				'value_adjusted',
-				sprintf(
-					/* translators: 1: adjusted threshold percentage, 2: minimum allowed value, 3: maximum allowed value */
-					__( 'Block threshold was adjusted to %1$d%% (must be between %2$d and %3$d).', 'reportedip-hive' ),
-					$result,
-					$min,
-					$max
-				),
-				'warning'
-			);
-		}
-		return $result;
-	}
-
-	/**
-	 * Sanitize log level
-	 */
-	public function sanitize_log_level( $value ) {
-		$valid_levels = array( 'debug', 'info', 'warning', 'error', 'critical' );
-		$value        = sanitize_text_field( $value ?? '' );
-		return in_array( $value, $valid_levels ) ? $value : 'info';
-	}
-
-	/**
-	 * Sanitize Hide-Login enable toggle.
-	 *
-	 * Refuses to enable when no slug has been configured yet — protects users
-	 * from locking themselves out by toggling the feature on without setting
-	 * a slug first.
-	 *
-	 * @param mixed $value Raw posted value.
-	 * @return bool Effective enabled state.
-	 * @since  1.2.0
-	 */
-	public function sanitize_hide_login_enabled( $value ) {
-		$wants_enabled = $this->sanitize_boolean( $value );
-		if ( ! $wants_enabled ) {
-			return false;
-		}
-
-		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified by Settings API options.php handler before sanitize callbacks fire.
-		$slug_option = isset( $_POST['reportedip_hive_hide_login_slug'] )
-			? sanitize_text_field( wp_unslash( (string) $_POST['reportedip_hive_hide_login_slug'] ) )
-			: (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', '' );
-		// phpcs:enable WordPress.Security.NonceVerification.Missing
-
-		if ( '' === trim( $slug_option ) ) {
-			add_settings_error(
-				'reportedip_hive_hide_login_enabled',
-				'reportedip_hive_hide_login_no_slug',
-				__( 'Set a custom login slug before enabling Hide Login — otherwise the feature has nowhere to send admins.', 'reportedip-hive' )
-			);
-			return false;
-		}
-
-		flush_rewrite_rules( false );
-		return true;
-	}
-
-	/**
-	 * Sanitize the hidden-login slug. Delegates to the Hide_Login class which
-	 * owns the validation rules (reserved slugs, permalink collisions, format).
-	 *
-	 * @param mixed $value Raw posted value.
-	 * @return string Validated slug or the previously-stored value.
-	 * @since  1.2.0
-	 */
-	public function sanitize_hide_login_slug( $value ) {
-		if ( ! class_exists( 'ReportedIP_Hive_Hide_Login' ) ) {
-			return is_string( $value ) ? sanitize_title( $value ) : '';
-		}
-		return ReportedIP_Hive_Hide_Login::get_instance()->sanitize_slug( $value );
-	}
-
-	/**
-	 * Sanitize the hidden-login response mode (block_page | 404).
-	 *
-	 * @param mixed $value Raw posted value.
-	 * @return string A valid response mode.
-	 * @since  1.2.0
-	 */
-	public function sanitize_hide_login_response_mode( $value ) {
-		if ( ! class_exists( 'ReportedIP_Hive_Hide_Login' ) ) {
-			return 'block_page';
-		}
-		return ReportedIP_Hive_Hide_Login::get_instance()->sanitize_response_mode( $value );
-	}
-
-	/**
-	 * Sanitize data retention days (1-365)
-	 */
-	public function sanitize_retention_days( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 365, $value ) );
-	}
-
-	/**
-	 * Sanitize auto anonymize days (1-365, must be <= retention days)
-	 */
-	public function sanitize_anonymize_days( $value ) {
-		$value          = absint( $value );
-		$retention_days = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', 30 );
-		return max( 1, min( $retention_days, min( 365, $value ) ) );
 	}
 
 	/**

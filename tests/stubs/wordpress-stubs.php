@@ -1211,3 +1211,63 @@ if ( ! function_exists( 'wp_doing_cron' ) ) {
 		return isset( $GLOBALS['rip_test_doing_cron'] ) ? (bool) $GLOBALS['rip_test_doing_cron'] : false;
 	}
 }
+
+if ( ! function_exists( 'rest_sanitize_boolean' ) ) {
+	/**
+	 * Mirror of core's REST boolean coercion.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return bool
+	 */
+	function rest_sanitize_boolean( $value ) {
+		if ( is_string( $value ) ) {
+			$value = strtolower( $value );
+			if ( in_array( $value, array( 'false', '0' ), true ) ) {
+				$value = false;
+			}
+		}
+		return (bool) $value;
+	}
+}
+
+if ( ! function_exists( 'sanitize_textarea_field' ) ) {
+	/**
+	 * Simplified multi-line sanitizer.
+	 *
+	 * @param mixed $str Raw value.
+	 * @return string
+	 */
+	function sanitize_textarea_field( $str ) {
+		return trim( (string) preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', (string) $str ) );
+	}
+}
+
+if ( ! function_exists( 'esc_url_raw' ) ) {
+	/**
+	 * Simplified URL sanitizer for DB use.
+	 *
+	 * @param string $url Raw URL.
+	 * @return string
+	 */
+	function esc_url_raw( $url ) {
+		$url = trim( (string) $url );
+		if ( '' === $url ) {
+			return '';
+		}
+		return (string) filter_var( $url, FILTER_SANITIZE_URL );
+	}
+}
+
+if ( ! function_exists( 'sanitize_title' ) ) {
+	/**
+	 * Simplified slug sanitizer.
+	 *
+	 * @param string $title Raw title.
+	 * @return string
+	 */
+	function sanitize_title( $title ) {
+		$title = strtolower( trim( (string) $title ) );
+		$title = (string) preg_replace( '/[^a-z0-9 _-]/', '', $title );
+		return (string) preg_replace( '/[\s]+/', '-', $title );
+	}
+}

@@ -220,6 +220,8 @@ class ReportedIP_Hive {
 			add_action( 'admin_init', array( __CLASS__, 'maybe_seed_on_upgrade' ) );
 		}
 
+		ReportedIP_Hive_Settings_Effects::init();
+
 		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
 		$flush_frontend_memo = array( 'ReportedIP_Hive_Two_Factor_Frontend', 'flush_slug_memo' );
 		foreach (
@@ -391,6 +393,9 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-schema.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-migration-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-defaults.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-registry.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-apply.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-effects.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-wizard-schema.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-ref.php';

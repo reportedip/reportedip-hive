@@ -381,39 +381,29 @@ final class ReportedIP_Hive_Wizard_Schema {
 
 		switch ( $field['kind'] ) {
 			case 'bool':
-				ReportedIP_Hive_Option_Routing::set( $option, empty( $post[ $name ] ) ? 0 : 1 );
+				ReportedIP_Hive_Option_Routing::set( $option, ReportedIP_Hive_Settings_Registry::sanitize_kind( 'bool', ! empty( $post[ $name ] ), $field ) );
 				break;
 
 			case 'int':
-				$value = isset( $post[ $name ] ) ? absint( $post[ $name ] ) : (int) $field['min'];
-				$value = max( (int) $field['min'], min( (int) $field['max'], $value ) );
-				ReportedIP_Hive_Option_Routing::set( $option, $value );
+				$raw = isset( $post[ $name ] ) ? $post[ $name ] : (int) $field['min'];
+				ReportedIP_Hive_Option_Routing::set( $option, ReportedIP_Hive_Settings_Registry::sanitize_kind( 'int', $raw, $field ) );
 				break;
 
 			case 'enum':
-				$value   = isset( $post[ $name ] ) ? sanitize_key( wp_unslash( (string) $post[ $name ] ) ) : '';
-				$allowed = (array) $field['allowed'];
-				if ( ! in_array( $value, $allowed, true ) ) {
-					$value = (string) $allowed[0];
+				$raw   = isset( $post[ $name ] ) ? wp_unslash( (string) $post[ $name ] ) : '';
+				$value = ReportedIP_Hive_Settings_Registry::sanitize_kind( 'enum', $raw, $field );
+				if ( is_wp_error( $value ) ) {
+					$allowed = (array) $field['allowed'];
+					$value   = (string) $allowed[0];
 				}
 				ReportedIP_Hive_Option_Routing::set( $option, $value );
 				break;
 
 			case 'text':
-				$value = isset( $post[ $name ] ) ? sanitize_text_field( wp_unslash( (string) $post[ $name ] ) ) : '';
-				ReportedIP_Hive_Option_Routing::set( $option, $value );
-				break;
-
 			case 'email':
-				$value = isset( $post[ $name ] ) ? sanitize_email( wp_unslash( (string) $post[ $name ] ) ) : '';
-				if ( '' !== $value && ! is_email( $value ) ) {
-					$value = '';
-				}
-				ReportedIP_Hive_Option_Routing::set( $option, $value );
-				break;
-
 			case 'email_list':
-				ReportedIP_Hive_Option_Routing::set( $option, self::sanitize_email_list( isset( $post[ $name ] ) ? (string) $post[ $name ] : '' ) );
+				$raw = isset( $post[ $name ] ) ? wp_unslash( (string) $post[ $name ] ) : '';
+				ReportedIP_Hive_Option_Routing::set( $option, ReportedIP_Hive_Settings_Registry::sanitize_kind( (string) $field['kind'], $raw, $field ) );
 				break;
 
 			case 'methods':
@@ -486,26 +476,6 @@ final class ReportedIP_Hive_Wizard_Schema {
 	}
 
 	/**
-	 * Parse a free-form recipient list (commas, spaces or newlines) into a
-	 * validated, de-duplicated, comma-separated string.
-	 *
-	 * @param string $raw Raw textarea value.
-	 * @return string
-	 */
-	private static function sanitize_email_list( $raw ) {
-		$raw        = sanitize_textarea_field( wp_unslash( (string) $raw ) );
-		$candidates = array_filter( array_map( 'trim', preg_split( '/[\s,;]+/', $raw ) ) );
-		$valid      = array();
-		foreach ( $candidates as $candidate ) {
-			$clean = sanitize_email( $candidate );
-			if ( '' !== $clean && is_email( $clean ) ) {
-				$valid[] = $clean;
-			}
-		}
-		return implode( ', ', array_values( array_unique( $valid ) ) );
-	}
-
-	/**
 	 * Expand a protection-level preset into the four base threshold options.
 	 *
 	 * @param string $level Posted level slug.
@@ -524,7 +494,8 @@ final class ReportedIP_Hive_Wizard_Schema {
 
 	/**
 	 * Persist the WooCommerce Frontend-2FA toggle, refusing to enable it below
-	 * the Professional tier, and flush rewrite rules when the state flips.
+	 * the Professional tier. The rewrite flush and availability-memo reset run
+	 * through {@see ReportedIP_Hive_Settings_Effects}, which watches the option.
 	 *
 	 * @param string $option  Target option key.
 	 * @param bool   $desired Whether the admin asked for it to be on.
@@ -538,16 +509,6 @@ final class ReportedIP_Hive_Wizard_Schema {
 			}
 		}
 
-		$was_on = (bool) ReportedIP_Hive_Option_Routing::get( $option, false );
 		ReportedIP_Hive_Option_Routing::set( $option, $desired ? '1' : '' );
-
-		if ( $was_on !== $desired ) {
-			if ( class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {
-				ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
-			}
-			if ( function_exists( 'flush_rewrite_rules' ) ) {
-				flush_rewrite_rules( false );
-			}
-		}
 	}
 }

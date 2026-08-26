@@ -33,6 +33,9 @@ class SettingsImportExportTest extends TestCase {
 		parent::set_up();
 
 		require_once dirname( __DIR__, 2 ) . '/includes/class-option-routing.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-settings-apply.php';
 
 		$class_path = dirname( __DIR__, 2 ) . '/admin/class-settings-import-export.php';
 		if ( ! class_exists( ReportedIP_Hive_Settings_Import_Export::class ) ) {
@@ -99,7 +102,7 @@ class SettingsImportExportTest extends TestCase {
 			->apply_payload( json_decode( (string) wp_json_encode( $payload ), true ), array( 'firewall', 'headers' ) );
 
 		$this->assertGreaterThanOrEqual( 3, $result['written'] );
-		$this->assertTrue( $GLOBALS['wp_options']['reportedip_hive_waf_report_only'] );
+		$this->assertSame( 1, $GLOBALS['wp_options']['reportedip_hive_waf_report_only'], 'Registry-managed bools are stored canonically as 1/0 since 2.1.47.' );
 		$this->assertSame( 'block', $GLOBALS['wp_options']['reportedip_hive_bot_action'] );
 		$this->assertSame( 'report_only', $GLOBALS['wp_options']['reportedip_hive_csp_mode'] );
 	}

@@ -972,7 +972,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_enabled_global',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_enabled_global' ),
 			)
 		);
 		register_setting(
@@ -980,7 +980,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_enforce_grace_days',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => 'absint',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_enforce_grace_days' ),
 			)
 		);
 		register_setting(
@@ -988,7 +988,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_max_skips',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_max_skips' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_max_skips' ),
 			)
 		);
 		register_setting(
@@ -996,7 +996,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_enforce_action',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_enforce_action' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_enforce_action' ),
 			)
 		);
 		register_setting(
@@ -1004,7 +1004,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_trusted_devices',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_trusted_devices' ),
 			)
 		);
 		register_setting(
@@ -1012,7 +1012,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_trusted_device_days',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => 'absint',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_trusted_device_days' ),
 			)
 		);
 		register_setting(
@@ -1135,7 +1135,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_require_on_password_reset',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_require_on_password_reset' ),
 			)
 		);
 		register_setting(
@@ -1298,31 +1298,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	}
 
 	/**
-	 * Clamp the max-skips option to a safe range.
-	 *
-	 * @param mixed $input Raw input.
-	 * @return int
-	 */
-	public static function sanitize_max_skips( $input ) {
-		$n = absint( $input );
-		return max( 0, min( 20, $n ) );
-	}
-
-	/**
-	 * Sanitize the post-grace enforcement action.
-	 *
-	 * Accepts only the known policy values and falls back to the safe default
-	 * 'enroll' (force setup) for anything unexpected.
-	 *
-	 * @param mixed $input Raw input.
-	 * @return string 'enroll' or 'lockout'.
-	 */
-	public static function sanitize_enforce_action( $input ) {
-		$value = is_string( $input ) ? $input : '';
-		return in_array( $value, array( 'enroll', 'lockout' ), true ) ? $value : 'enroll';
-	}
-
-	/**
 	 * Sanitize the IP allowlist textarea.
 	 *
 	 * Keeps comments (# …), drops invalid entries, normalises line breaks.
@@ -1347,7 +1322,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 */
 	public static function sanitize_frontend_enabled( $input ) {
 		$desired = (bool) rest_sanitize_boolean( $input );
-		$current = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Two_Factor_Frontend::OPT_ENABLED, false );
 
 		if ( $desired ) {
 			$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
@@ -1361,13 +1335,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					);
 				}
 				$desired = false;
-			}
-		}
-
-		if ( $desired !== $current ) {
-			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
-			if ( function_exists( 'flush_rewrite_rules' ) ) {
-				flush_rewrite_rules( false );
 			}
 		}
 
@@ -1408,12 +1375,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			$clean = $current;
 		}
 
-		if ( $clean !== $current ) {
-			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
-			if ( function_exists( 'flush_rewrite_rules' ) ) {
-				flush_rewrite_rules( false );
-			}
-		}
 		return $clean;
 	}
 
@@ -1442,12 +1403,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			$clean = $current;
 		}
 
-		if ( $clean !== $current ) {
-			ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
-			if ( function_exists( 'flush_rewrite_rules' ) ) {
-				flush_rewrite_rules( false );
-			}
-		}
 		return $clean;
 	}
 
@@ -2162,8 +2117,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		}
 
 		/* Promoting is an identity write when the secret came from the live key
-		   and the delete is a no-op when nothing was pending, so neither needs
-		   a branch. */
+			and the delete is a no-op when nothing was pending, so neither needs
+			a branch. */
 		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, $encrypted_secret );
 		delete_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET_PENDING );
 		update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '1' );

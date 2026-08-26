@@ -1,0 +1,145 @@
+<?php
+/**
+ * Option side-effect dispatcher — executes registry-declared side effects
+ * (rewrite flushes, cache flushes) for every writer identically, replacing
+ * the effects that historically lived inside Settings-API sanitizers.
+ *
+ * @package   ReportedIP_Hive
+ * @author    Patrick Schlesinger <1@reportedip.com>
+ * @copyright 2025-2026 Patrick Schlesinger
+ * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
+ * @link      https://github.com/reportedip/reportedip-hive
+ * @since     2.1.47
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Watches option updates for keys with declared side effects and runs each
+ * queued effect exactly once per request on shutdown, regardless of whether
+ * the write came from the settings page, the wizard, an import, WP-CLI or a
+ * remote management channel.
+ *
+ * @since 2.1.47
+ */
+final class ReportedIP_Hive_Settings_Effects {
+
+	/**
+	 * Side-effect tokens for options outside the settings registry whose
+	 * sanitizers previously flushed rewrite rules inline (frontend 2FA).
+	 *
+	 * @var array<string, string[]>
+	 */
+	private const EXTRA_WATCHED = array(
+		'reportedip_hive_2fa_frontend_enabled'    => array( 'flush_rewrite', 'flush_2fa_frontend_memo' ),
+		'reportedip_hive_2fa_frontend_slug'       => array( 'flush_rewrite', 'flush_2fa_frontend_memo' ),
+		'reportedip_hive_2fa_frontend_setup_slug' => array( 'flush_rewrite', 'flush_2fa_frontend_memo' ),
+	);
+
+	/**
+	 * Effect tokens queued for this request.
+	 *
+	 * @var array<string, bool>
+	 */
+	private static $queued = array();
+
+	/**
+	 * Whether the shutdown runner has been hooked for this request.
+	 *
+	 * @var bool
+	 */
+	private static $hooked_shutdown = false;
+
+	/**
+	 * Register option-update watchers for every key that declares side
+	 * effects — both `update_option_*` (single site) and
+	 * `update_site_option_*` (network) fire for any writer.
+	 *
+	 * @return void
+	 */
+	public static function init() {
+		foreach ( self::watched() as $option => $tokens ) {
+			$callback = static function () use ( $tokens ) {
+				foreach ( $tokens as $token ) {
+					self::queue( $token );
+				}
+			};
+			add_action( 'update_option_' . $option, $callback );
+			add_action( 'add_option_' . $option, $callback );
+			add_action( 'update_site_option_' . $option, $callback );
+			add_action( 'add_site_option_' . $option, $callback );
+		}
+	}
+
+	/**
+	 * Watched option => effect-token map: registry-declared side effects
+	 * merged with the non-registry extras.
+	 *
+	 * @return array<string, string[]>
+	 */
+	public static function watched() {
+		$map = self::EXTRA_WATCHED;
+		foreach ( ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
+			if ( empty( $entry['side_effects'] ) ) {
+				continue;
+			}
+			$existing    = isset( $map[ $key ] ) ? $map[ $key ] : array();
+			$map[ $key ] = array_values( array_unique( array_merge( $existing, (array) $entry['side_effects'] ) ) );
+		}
+		return $map;
+	}
+
+	/**
+	 * All effect tokens this dispatcher knows how to run.
+	 *
+	 * @return string[]
+	 */
+	public static function known_tokens() {
+		return array( 'flush_rewrite', 'flush_2fa_frontend_memo' );
+	}
+
+	/**
+	 * Queue one effect token for execution on shutdown. Duplicate tokens
+	 * collapse, so a 60-key batch triggers each effect at most once.
+	 *
+	 * @param string $token Effect token.
+	 * @return void
+	 */
+	public static function queue( $token ) {
+		if ( ! in_array( $token, self::known_tokens(), true ) ) {
+			return;
+		}
+		self::$queued[ $token ] = true;
+
+		if ( ! self::$hooked_shutdown ) {
+			self::$hooked_shutdown = true;
+			add_action( 'shutdown', array( __CLASS__, 'run_queued' ) );
+		}
+	}
+
+	/**
+	 * Execute every queued effect once and reset the queue.
+	 *
+	 * @return void
+	 */
+	public static function run_queued() {
+		$tokens       = array_keys( self::$queued );
+		self::$queued = array();
+
+		foreach ( $tokens as $token ) {
+			switch ( $token ) {
+				case 'flush_rewrite':
+					flush_rewrite_rules( false );
+					break;
+
+				case 'flush_2fa_frontend_memo':
+					if ( class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {
+						ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
+					}
+					break;
+			}
+		}
+	}
+}

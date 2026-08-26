@@ -2179,15 +2179,14 @@ class ReportedIP_Hive_Setup_Wizard {
 			return;
 		}
 
-		$validated = ReportedIP_Hive_Hide_Login::get_instance()->sanitize_slug( $raw_slug );
-		if ( '' === $validated || $validated !== $raw_slug ) {
+		$validated = ReportedIP_Hive_Hide_Login::validate_slug_value( $raw_slug );
+		if ( is_wp_error( $validated ) || '' === $validated ) {
 			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', false );
 			return;
 		}
 
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_slug', $validated );
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', true );
-		flush_rewrite_rules( false );
 	}
 
 	/**

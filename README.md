@@ -129,7 +129,7 @@ Pricing and the full tier matrix live at <https://reportedip.com>.
 
 ### Remote management (MainWP)
 
-Hive carries its own MainWP child bridge, so agencies can manage every Hive install from one [MainWP](https://mainwp.com/) dashboard without an extra child plugin: fleet-wide status sync (active blocks, failed logins, queue size, 2FA coverage as aggregate counts) and one-click API-key provisioning. Data-minimised by design: the sync returns counts only, never IP addresses, usernames or secrets. Requires the ReportedIP Hive extension on the MainWP dashboard side.
+Hive carries its own MainWP child bridge, so agencies can manage every Hive install from one [MainWP](https://mainwp.com/) dashboard without an extra child plugin: fleet-wide status sync (active blocks, failed logins, queue size, 2FA coverage as aggregate counts), one-click API-key provisioning and centrally managed settings policies (schema-driven, with per-key validation, tier awareness and drift detection via a settings fingerprint — see `docs/remote-settings-protocol.md`). Data-minimised by design: the sync returns counts only, never IP addresses, usernames or secrets. Requires the ReportedIP Hive extension on the MainWP dashboard side.
 
 ### Promote / community shortcodes
 
