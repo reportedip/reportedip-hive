@@ -250,13 +250,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_disabled_toggle_rejects_with_403() {
+		public function test_disabled_toggle_is_denied_uniformly() {
 			$GLOBALS['wp_options']['reportedip_hive_cloud_management'] = 0;
 			$rest   = new \ReportedIP_Hive_Cloud_Management_REST();
 			$result = $rest->authorize_request( $this->signed_request( 'schema' ) );
 
 			$this->assertInstanceOf( \WP_Error::class, $result );
-			$this->assertSame( 'reportedip_cloud_disabled', $result->get_error_code() );
+			$this->assertSame( 'reportedip_cloud_denied', $result->get_error_code() );
+			$this->assertSame( 401, $result->get_error_data()['status'] );
 		}
 
 		public function test_valid_schema_request_returns_schema_envelope() {
@@ -314,7 +315,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 
 			$this->assertInstanceOf( \WP_Error::class, $result );
-			$this->assertSame( 'reportedip_cloud_bad_signature', $result->get_error_code() );
+			$this->assertSame( 'reportedip_cloud_denied', $result->get_error_code() );
 		}
 
 		public function test_stale_issued_at_is_rejected() {

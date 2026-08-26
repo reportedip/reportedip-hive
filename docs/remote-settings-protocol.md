@@ -167,7 +167,11 @@ Verification chain on the site, in order — every step failing rejects the
 request and logs a `cloud_management_auth_fail` security event:
 
 1. Opt-in: option `reportedip_hive_cloud_management` (default off) plus
-   Community mode plus a configured Community Access Key.
+   Community mode plus a configured Community Access Key. A request that
+   fails this step and a request that fails the signature check both return
+   the identical generic `reportedip_cloud_denied` (HTTP 401), so an
+   unauthenticated caller cannot fingerprint from the response whether a
+   site has opted in; the real reason is recorded server-side only.
 2. Per-IP throttle (30 requests / 5 min).
 3. Ed25519 signature over the **literal** `payload` string against the
    bundled fleet public keys (`PUBLIC_KEYS`, rotation slot `next`, filter

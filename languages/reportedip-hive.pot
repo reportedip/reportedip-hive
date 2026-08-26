@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive 2.1.48\n"
+"Project-Id-Version: ReportedIP Hive 2.1.49\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-26T16:31:38+00:00\n"
+"POT-Creation-Date: 2026-08-26T18:04:09+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -8256,46 +8256,42 @@ msgstr ""
 msgid "%d reports remaining today."
 msgstr ""
 
-#: includes/class-cloud-management-rest.php:194
-msgid "Cloud management is not enabled on this site."
-msgstr ""
-
-#: includes/class-cloud-management-rest.php:203
+#: includes/class-cloud-management-rest.php:199
 #: includes/class-two-factor-rest.php:188
 #: includes/class-two-factor-rest.php:251
 msgid "Too many requests. Please try again later."
 msgstr ""
 
-#: includes/class-cloud-management-rest.php:213
-#: includes/class-cloud-management-rest.php:222
-#: includes/class-cloud-management-rest.php:238
-#: includes/class-cloud-management-rest.php:273
+#: includes/class-cloud-management-rest.php:209
+#: includes/class-cloud-management-rest.php:219
+#: includes/class-cloud-management-rest.php:235
+#: includes/class-cloud-management-rest.php:270
 msgid "Invalid request payload."
 msgstr ""
 
-#: includes/class-cloud-management-rest.php:217
-msgid "Request signature verification failed."
-msgstr ""
-
-#: includes/class-cloud-management-rest.php:228
-#: includes/class-cloud-management-rest.php:304
+#: includes/class-cloud-management-rest.php:225
+#: includes/class-cloud-management-rest.php:301
 msgid "Request action does not match the endpoint."
 msgstr ""
 
-#: includes/class-cloud-management-rest.php:233
+#: includes/class-cloud-management-rest.php:230
 msgid "Request timestamp is outside the accepted window."
 msgstr ""
 
-#: includes/class-cloud-management-rest.php:242
+#: includes/class-cloud-management-rest.php:239
 msgid "Request has already been processed."
 msgstr ""
 
-#: includes/class-cloud-management-rest.php:248
+#: includes/class-cloud-management-rest.php:245
 msgid "Request is not addressed to this site."
 msgstr ""
 
-#: includes/class-cloud-management-rest.php:254
+#: includes/class-cloud-management-rest.php:251
 msgid "Request account proof verification failed."
+msgstr ""
+
+#: includes/class-cloud-management-rest.php:335
+msgid "The request could not be authenticated."
 msgstr ""
 
 #: includes/class-comment-honeypot.php:142

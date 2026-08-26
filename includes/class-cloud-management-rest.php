@@ -189,11 +189,7 @@ final class ReportedIP_Hive_Cloud_Management_REST {
 	 */
 	private function evaluate_request( $request ) {
 		if ( ! self::is_enabled() ) {
-			return new WP_Error(
-				'reportedip_cloud_disabled',
-				__( 'Cloud management is not enabled on this site.', 'reportedip-hive' ),
-				array( 'status' => 403 )
-			);
+			return self::denied_response();
 		}
 
 		$ip = $this->client_ip();
@@ -214,7 +210,8 @@ final class ReportedIP_Hive_Cloud_Management_REST {
 		}
 
 		if ( ! ReportedIP_Hive_Ed25519_Verifier::verify( $payload, (string) $signature, self::public_keys() ) ) {
-			return $this->reject( 'reportedip_cloud_bad_signature', __( 'Request signature verification failed.', 'reportedip-hive' ), 401, 'signature_invalid' );
+			$this->log_denied( 'signature_invalid' );
+			return self::denied_response();
 		}
 
 		$data = json_decode( $payload, true );
@@ -318,6 +315,45 @@ final class ReportedIP_Hive_Cloud_Management_REST {
 			return $m[1];
 		}
 		return '';
+	}
+
+	/**
+	 * Uniform authentication-denied response.
+	 *
+	 * Returned identically whether cloud management is disabled or the
+	 * signature failed, so an unauthenticated caller cannot use the status
+	 * code to fingerprint whether a site has opted in. The real reason is
+	 * recorded server-side via {@see log_denied()} for signature failures;
+	 * the disabled state is the common default and is not logged as an event.
+	 *
+	 * @return WP_Error
+	 * @since  2.1.49
+	 */
+	private static function denied_response() {
+		return new WP_Error(
+			'reportedip_cloud_denied',
+			__( 'The request could not be authenticated.', 'reportedip-hive' ),
+			array( 'status' => 401 )
+		);
+	}
+
+	/**
+	 * Record a denied request as a security event without leaking the reason
+	 * to the caller.
+	 *
+	 * @param string $reason Machine-readable log reason.
+	 * @return void
+	 * @since  2.1.49
+	 */
+	private function log_denied( $reason ) {
+		if ( class_exists( 'ReportedIP_Hive_Logger' ) ) {
+			ReportedIP_Hive_Logger::get_instance()->log_security_event(
+				'cloud_management_auth_fail',
+				$this->client_ip(),
+				array( 'reason' => $reason ),
+				'high'
+			);
+		}
 	}
 
 	/**

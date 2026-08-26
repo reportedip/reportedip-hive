@@ -2,6 +2,18 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.49] — 2026-08-26
+
+### Security
+
+- **Uniform authentication error on the cloud fleet endpoint.** The signed
+  `remote/settings/*` routes now return one generic `reportedip_cloud_denied`
+  (HTTP 401) whether cloud management is disabled or the request signature is
+  invalid — an unauthenticated caller can no longer use the response to
+  fingerprint whether a site has opted into cloud management. The real reason
+  is still recorded server-side as a security event. Hardening follow-up to
+  the 2.1.48 cloud transport.
+
 ## [2.1.48] — 2026-08-26
 
 ### New

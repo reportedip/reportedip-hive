@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-08-26T16:31:50+00:00\n"
+"PO-Revision-Date: 2026-08-26T18:04:18+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: WP-CLI 2.12.0\n"
@@ -8259,47 +8259,43 @@ msgstr "Unbegrenzte Meldungen in dieser Stufe."
 msgid "%d reports remaining today."
 msgstr "%d Meldungen heute verbleibend."
 
-#: includes/class-cloud-management-rest.php:194
-msgid "Cloud management is not enabled on this site."
-msgstr "Die Cloud-Verwaltung ist auf dieser Website nicht aktiviert."
-
-#: includes/class-cloud-management-rest.php:203
+#: includes/class-cloud-management-rest.php:199
 #: includes/class-two-factor-rest.php:188
 #: includes/class-two-factor-rest.php:251
 msgid "Too many requests. Please try again later."
 msgstr "Zu viele Anfragen. Bitte versuchen Sie es später erneut."
 
-#: includes/class-cloud-management-rest.php:213
-#: includes/class-cloud-management-rest.php:222
-#: includes/class-cloud-management-rest.php:238
-#: includes/class-cloud-management-rest.php:273
+#: includes/class-cloud-management-rest.php:209
+#: includes/class-cloud-management-rest.php:219
+#: includes/class-cloud-management-rest.php:235
+#: includes/class-cloud-management-rest.php:270
 msgid "Invalid request payload."
 msgstr "Ungültige Anfragedaten."
 
-#: includes/class-cloud-management-rest.php:217
-msgid "Request signature verification failed."
-msgstr "Die Signaturprüfung der Anfrage ist fehlgeschlagen."
-
-#: includes/class-cloud-management-rest.php:228
-#: includes/class-cloud-management-rest.php:304
+#: includes/class-cloud-management-rest.php:225
+#: includes/class-cloud-management-rest.php:301
 msgid "Request action does not match the endpoint."
 msgstr "Die Aktion der Anfrage passt nicht zum Endpunkt."
 
-#: includes/class-cloud-management-rest.php:233
+#: includes/class-cloud-management-rest.php:230
 msgid "Request timestamp is outside the accepted window."
 msgstr "Der Zeitstempel der Anfrage liegt außerhalb des zulässigen Fensters."
 
-#: includes/class-cloud-management-rest.php:242
+#: includes/class-cloud-management-rest.php:239
 msgid "Request has already been processed."
 msgstr "Die Anfrage wurde bereits verarbeitet."
 
-#: includes/class-cloud-management-rest.php:248
+#: includes/class-cloud-management-rest.php:245
 msgid "Request is not addressed to this site."
 msgstr "Die Anfrage ist nicht an diese Website adressiert."
 
-#: includes/class-cloud-management-rest.php:254
+#: includes/class-cloud-management-rest.php:251
 msgid "Request account proof verification failed."
 msgstr "Der Konto-Nachweis der Anfrage konnte nicht verifiziert werden."
+
+#: includes/class-cloud-management-rest.php:335
+msgid "The request could not be authenticated."
+msgstr "Die Anfrage konnte nicht authentifiziert werden."
 
 #: includes/class-comment-honeypot.php:142
 msgid "Leave this field empty"

@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.48
+Stable tag: 2.1.49
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -352,6 +352,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.49 =
+
+Security: the cloud fleet management endpoint now returns a single generic authentication error whether the feature is disabled or the request signature is invalid, so an unauthenticated caller can no longer tell from the response whether a site has opted in. Hardening follow-up to the 2.1.48 cloud transport; no configuration change required.
 
 = 2.1.48 =
 
