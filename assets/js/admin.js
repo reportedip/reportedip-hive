@@ -43,10 +43,10 @@
             this.initTooltips();
             this.initWafExceptionForm();
 
-            // Debug / System Status page handlers
-            if ($('#test-api-connection-debug').length || $('#test-database-connection').length) {
-                this.initDebugTests();
-            }
+            // Debug / System Status page handlers. Always bound: the
+            // API-statistics reset button also lives on the dashboard, and the
+            // handlers are document-delegated or target ids absent elsewhere.
+            this.initDebugTests();
         },
 
         bindEvents: function() {
@@ -204,7 +204,7 @@
             });
 
             // Reset API statistics
-            $('#reset-api-stats').on('click', function() {
+            $(document).on('click', '#reset-api-stats', function() {
                 if (!confirm(reportedip_hive_ajax.strings.confirm_reset_api_stats || 'Reset the API statistics counter? This clears usage history only.')) {
                     return;
                 }

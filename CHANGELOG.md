@@ -2,6 +2,20 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- **The "Reset API statistics" button on the dashboard works again.** Its
+  click handler was only wired up on the System-Status page, so on the
+  Security Dashboard — where the button actually lives — clicking it did
+  nothing. The handler is now bound on every plugin page and the button
+  confirms, resets and reloads as intended.
+- **The admin pages no longer scroll sideways on phones.** Data tables
+  become their own horizontal scroll container below 782px, card headers,
+  footers and the chart period selector wrap instead of overflowing, so the
+  dashboard fits a 390px viewport without horizontal body scroll.
+
 ## [2.1.47] — 2026-08-26
 
 ### New

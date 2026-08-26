@@ -1842,6 +1842,25 @@ button.rip-tier-lock--mode:hover {
         padding: var(--rip-space-4);
     }
 
+    /* Tables become their own horizontal scroll container so wide content
+       never forces the page body to scroll sideways on phones. */
+    .rip-table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .rip-card__header,
+    .rip-card__footer {
+        flex-wrap: wrap;
+        gap: var(--rip-space-2);
+    }
+
+    .rip-header__actions {
+        flex-wrap: wrap;
+    }
+
     .rip-header__title {
         font-size: var(--rip-text-xl);
     }

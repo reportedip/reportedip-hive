@@ -630,6 +630,15 @@
    ========================================================================== */
 
 @media (max-width: 782px) {
+    .rip-chart-card__header {
+        flex-wrap: wrap;
+        gap: var(--rip-space-2);
+    }
+
+    .rip-time-selector {
+        flex-wrap: wrap;
+    }
+
     .rip-community-widget__stats {
         grid-template-columns: 1fr;
         gap: var(--rip-space-3);
