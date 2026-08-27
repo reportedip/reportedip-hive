@@ -281,6 +281,10 @@ No. *Local Shield* works completely offline with no account and no external call
 
 Every FIDO2/WebAuthn authenticator: hardware keys such as the YubiKey 5 series (USB-A, USB-C, Lightning — including NFC models tapped against a phone) and the Security Key by Yubico line, plus platform passkeys like Face ID, Touch ID and Windows Hello. One key per account is free and can be named, renamed and removed in the profile key manager. The Business plan adds Advanced Security Keys: several keys per account (keep one as a backup), automatic model detection and key-lifecycle email alerts. Older U2F-only keys (CTAP1) are not officially supported.
 
+= Can I manage settings across many sites at once? =
+
+Yes. Hive carries its own MainWP child bridge, so you can manage every install from one MainWP dashboard with no extra child plugin. On the Business plan you can do the same from the reportedip.com fleet dashboard: define one security policy, override single fields per site, push with one click, and see immediately when a site drifts from the policy. The reportedip.com transport is strictly opt-in per site (a toggle on the General settings tab, off by default) and every push is cryptographically signed, bound to your site and account, and replay-protected. Both dashboards manage the same 63 settings through the same validation pipeline. See the Cloud Fleet Management guide in the plugin's docs folder.
+
 = How is this different from Wordfence / Sucuri / iThemes Security? =
 
 * **Three free 2FA methods** — TOTP, Email and Passkey/WebAuthn work on every plan, including the free tier (SMS is the one method that needs a Professional plan, because it rides our managed relay).
