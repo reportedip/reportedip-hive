@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.49
+Stable tag: 2.1.50
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -380,6 +380,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.50 =
+
+Security: the community reputation block threshold now has a hard floor of 25 % — sub-floor values blocked far more legitimate visitors than attackers. The floor applies everywhere (settings UI, import, cloud and MainWP writes, hardening mode) and a one-time migration lifts already-stored lower values; the wizard's "High" protection preset softens from 50 % to 60 %. Sites can raise the floor further via the reportedip_hive_reputation_threshold_floor filter.
+
+New: full IP management on WP-CLI — wp reportedip whitelist add/remove/list, block, unblock --reset-attempts, blocked list and attempts reset, plus a wp reportedip status overview. All accept CIDR ranges; see the WP-CLI section above.
 
 = 2.1.49 =
 
