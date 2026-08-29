@@ -134,7 +134,7 @@ Show the world that your site is part of the hive — and earn community-network
 = Developer surface =
 
 * **REST API** namespace `reportedip-hive/v1` with three 2FA endpoints (`/2fa/challenge`, `/2fa/verify`, `/2fa/methods`) for headless flows.
-* **WP-CLI** command tree `wp reportedip 2fa` for user 2FA administration.
+* **WP-CLI** command trees for 2FA, hardening, IP lookup and full IP management (see the WP-CLI section below).
 * **PHP filters** to extend the engine without forking:
   * `reportedip_hive_rest_bypass_routes` — whitelist additional REST namespaces
   * `reportedip_hive_rest_sensitive_routes` — flag additional REST routes for the lower threshold
@@ -145,6 +145,26 @@ Show the world that your site is part of the hive — and earn community-network
 * **8 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats, trusted_devices and audit_log.
 * **Internationalisation-ready.** Text domain `reportedip-hive`, English source with German translation included.
 * **Test suite.** A comprehensive PHPUnit suite (unit + Multisite) runs on every commit; PHPStan level 5 (No errors); WPCS-compliant with zero warnings.
+
+= WP-CLI =
+
+Every day-to-day management task is available from the shell. List-style commands accept `--format=<table|json|csv|yaml>`; `<ip>` accepts a single IPv4/IPv6 address or a CIDR range throughout.
+
+IP management:
+
+* `wp reportedip whitelist add <ip> [--reason=<text>] [--expires=<datetime>]` — whitelist an address (lifts an active block automatically)
+* `wp reportedip whitelist remove <ip>` / `wp reportedip whitelist list`
+* `wp reportedip block <ip> [--reason=<text>] [--hours=<n>]` — manual block
+* `wp reportedip unblock <ip> [--reset-attempts]` — release a blocked address; the flag also clears the attempt counters so a still-exceeded threshold cannot re-block it on the next request
+* `wp reportedip blocked list` — active blocks
+* `wp reportedip attempts reset <ip> [--type=<type>]` — clear per-IP counters
+* `wp reportedip lookup <ip>` — local status plus community reputation
+
+Status and administration:
+
+* `wp reportedip status` — version, mode, tier, counters, queue health and protection toggles at a glance
+* `wp reportedip 2fa <status|enable|disable|reset|enforce|audit|cleanup>` — user 2FA administration
+* `wp reportedip hardening <status|activate|deactivate>` — hardening mode
 
 = What this plugin does NOT include =
 
@@ -322,6 +342,10 @@ Nothing breaks. Local blocking and the cached reputation continue working; queue
 = I lost my 2FA device. How do I get back in? =
 
 Use one of the ten recovery codes you saved at setup. Each is single-use. With shell access, `wp reportedip 2fa reset <user>` removes 2FA entirely for the affected account.
+
+= A legitimate visitor got blocked. How do I release the IP from the shell? =
+
+Run `wp reportedip unblock <ip> --reset-attempts`. The flag matters: without it the attempt counters survive the unblock, and a still-exceeded threshold re-blocks the address on the very next request. If the address should never be blocked again, whitelist it instead — `wp reportedip whitelist add <ip> --reason="customer"` lifts the block and wins over every protection layer. For connections with rotating addresses (common with IPv6), whitelist the prefix as a CIDR range (e.g. `2001:db8::/56`) rather than the single address.
 
 = Is multisite supported? =
 

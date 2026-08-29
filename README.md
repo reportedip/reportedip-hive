@@ -167,11 +167,68 @@ Full feature, security and operations guide: [`docs/cloud-fleet-management.md`](
 ### Developer surface
 
 - **REST API** namespace `reportedip-hive/v1` with `/2fa/challenge`, `/2fa/verify`, `/2fa/methods` for headless flows
-- **WP-CLI** trees `wp reportedip 2fa` (status, enable, disable, reset, enforce, audit, cleanup), `wp reportedip hardening` and `wp reportedip lookup <ip>` (community IP lookup with table/json/csv/yaml output)
+- **WP-CLI** command trees for 2FA, hardening, IP lookup and full IP management — see [WP-CLI](#wp-cli) below
 - **PHP filters**: `reportedip_hive_rest_bypass_routes`, `reportedip_hive_rest_sensitive_routes`, `reportedip_hive_event_category_map`, `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path`, `reportedip_hive_decoy_paths`, `reportedip_hive_bot_allowlist_patterns`, `reportedip_hive_own_server_ips`, `reportedip_hive_webauthn_rp_id`, `reportedip_hive_webauthn_allowed_origins`, `reportedip_hive_auto_update`
 - **Constants**: `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` (emergency override from `wp-config.php`)
 - **9 database tables** (auto-migrated, opt-in delete on uninstall)
 - **Internationalisation-ready** (text domain `reportedip-hive`, English source + complete German translation included)
+
+### WP-CLI
+
+Every day-to-day management task is available from the shell. All list-style commands accept `--format=<table|json|csv|yaml>`.
+
+**IP management**
+
+```
+wp reportedip whitelist add <ip> [--reason=<text>] [--expires=<datetime>]
+wp reportedip whitelist remove <ip>
+wp reportedip whitelist list [--format=<format>]
+wp reportedip block <ip> [--reason=<text>] [--hours=<n>]
+wp reportedip unblock <ip> [--reset-attempts]
+wp reportedip blocked list [--format=<format>]
+wp reportedip attempts reset <ip> [--type=<type>]
+wp reportedip lookup <ip> [--format=<format>]
+```
+
+`<ip>` accepts a single IPv4/IPv6 address or a CIDR range throughout. Whitelisting lifts an active block automatically and wins over every protection layer, including the pre-WordPress guard. When releasing a locked-out visitor, prefer `wp reportedip unblock <ip> --reset-attempts` — without the flag, a still-exceeded threshold re-blocks the address on the very next request. `--expires` on the whitelist is the site's local time; every other datetime is UTC.
+
+```bash
+# Release a locked-out customer and clear their counters
+wp reportedip unblock 203.0.113.9 --reset-attempts
+
+# Whitelist a rotating IPv6 prefix instead of a single address
+wp reportedip whitelist add 2001:db8::/56 --reason="customer office"
+
+# Manual block for a week, machine-readable overview afterwards
+wp reportedip block 203.0.113.0/24 --reason="scanner" --hours=168
+wp reportedip blocked list --format=json
+```
+
+**Status overview**
+
+```
+wp reportedip status [--format=<format>]
+```
+
+Prints version, operation mode, tier, report-only state, block/whitelist counters, report-queue health and the main protection toggles (hide-login, firewall, extended protection guard, enforced 2FA roles) as a field/value table.
+
+**Two-factor administration**
+
+```
+wp reportedip 2fa status [--user=<id>]
+wp reportedip 2fa enable <user_id> --method=<totp|email|sms|webauthn> [--secret=<base32>] [--force]
+wp reportedip 2fa disable <user_id> [--method=<method>]
+wp reportedip 2fa reset <user_id>
+wp reportedip 2fa enforce --role=<role> [--remove]
+wp reportedip 2fa audit [--user=<id>] [--since=<date>]
+wp reportedip 2fa cleanup
+```
+
+**Hardening mode**
+
+```
+wp reportedip hardening <status|activate|deactivate>
+```
 
 ### Developer hooks
 

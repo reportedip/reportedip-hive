@@ -485,6 +485,9 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-hardening-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-lookup-cli.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-whitelist-cli.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-cli.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-status-cli.php';
 		}
 
 		if ( is_admin() ) {

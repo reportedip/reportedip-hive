@@ -2,6 +2,27 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.50] — unreleased
+
+### New
+
+- **Full IP management on WP-CLI.** Whitelist, blocks and attempt counters
+  are now first-class shell commands: `wp reportedip whitelist
+  <add|remove|list>`, `wp reportedip block <ip>`, `wp reportedip unblock
+  <ip> [--reset-attempts]`, `wp reportedip blocked list` and `wp reportedip
+  attempts reset <ip>`. Whitelisting lifts an active block automatically,
+  `unblock --reset-attempts` clears the counters that would otherwise
+  re-block a released address on the next request, and `block` warns when
+  report-only mode swallows the enforcement. All accept CIDR ranges and the
+  list commands render table/json/csv/yaml.
+- **`wp reportedip status`.** One-shot overview of version, operation mode,
+  tier, report-only state, block/whitelist counters, report-queue health
+  and the main protection toggles (hide-login, firewall, extended
+  protection guard, enforced 2FA roles).
+- **WP-CLI reference in the readme.** Both readmes gained a dedicated
+  WP-CLI section covering every command tree, plus an FAQ entry on
+  releasing a blocked visitor from the shell.
+
 ## [2.1.49] — 2026-08-26
 
 ### Security
