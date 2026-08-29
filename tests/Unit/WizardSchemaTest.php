@@ -111,7 +111,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 3, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', null ) );
 			$this->assertSame( 15, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_timeframe', null ) );
 			$this->assertSame( 48, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_duration', null ) );
-			$this->assertSame( 50, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', null ) );
+			$this->assertSame( 60, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', null ) );
 
 			$this->assertSame( 1, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_failed_logins', null ) );
 			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_block', null ) );

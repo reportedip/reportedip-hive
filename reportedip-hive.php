@@ -1140,10 +1140,29 @@ class ReportedIP_Hive {
 	 * @param string $password Password (unused, kept for hook signature).
 	 */
 	public function pre_auth_check( $user, $password ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-		$ip_address        = $this->get_client_ip();
-		$report_only       = $this->is_report_only_mode();
-		$threshold         = ReportedIP_Hive_Hardening_Mode::effective_block_threshold(
-			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', 75 )
+		$ip_address  = $this->get_client_ip();
+		$report_only = $this->is_report_only_mode();
+
+		/**
+		 * Filters the lowest confidence the reputation block will act on.
+		 *
+		 * The floor guards against false positives from over-aggressive
+		 * threshold configuration: stored thresholds and the hardening
+		 * clamp cannot push enforcement below it. Raising the floor
+		 * tightens a site further; lowering it below the settings-registry
+		 * minimum has no effect because stored thresholds never go that
+		 * low.
+		 *
+		 * @param int $floor Minimum confidence percentage (default 25).
+		 * @since 2.1.50
+		 */
+		$threshold_floor = max( 1, min( 100, (int) apply_filters( 'reportedip_hive_reputation_threshold_floor', ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD ) ) );
+
+		$threshold         = max(
+			$threshold_floor,
+			ReportedIP_Hive_Hardening_Mode::effective_block_threshold(
+				(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', 75 )
+			)
 		);
 		$is_blocked        = $this->ip_manager->is_blocked( $ip_address );
 		$reputation        = null;

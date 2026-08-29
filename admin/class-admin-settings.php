@@ -3282,7 +3282,10 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Sanitiser: hardening reputation block threshold percentage (10–100).
+	 * Sanitiser: hardening reputation block threshold percentage.
+	 *
+	 * Floored at `ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD` — even under
+	 * hardening the reputation block never acts below that confidence.
 	 *
 	 * @param mixed $value
 	 * @return int
@@ -3290,7 +3293,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	public function sanitize_hardening_block_threshold( $value ) {
 		$value = absint( $value );
-		return max( 10, min( 100, $value > 0 ? $value : 60 ) );
+		return max( ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD, min( 100, $value > 0 ? $value : 60 ) );
 	}
 
 	/**
@@ -5294,8 +5297,8 @@ class ReportedIP_Hive_Admin_Settings {
 					<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
 						<div class="rip-form-group">
 							<label class="rip-label" for="reportedip_hive_block_threshold"><?php esc_html_e( 'Community confidence to block', 'reportedip-hive' ); ?></label>
-							<input type="number" id="reportedip_hive_block_threshold" name="reportedip_hive_block_threshold" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', 75 ) ); ?>" min="0" max="100" class="rip-input" />
-							<p class="rip-help-text"><?php esc_html_e( 'When community-mode is on, only block IPs the network is at least this confident about (0–100). Lower = more aggressive but more false positives.', 'reportedip-hive' ); ?></p>
+							<input type="number" id="reportedip_hive_block_threshold" name="reportedip_hive_block_threshold" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', 75 ) ); ?>" min="<?php echo esc_attr( (string) ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD ); ?>" max="100" class="rip-input" />
+							<p class="rip-help-text"><?php esc_html_e( 'When community-mode is on, only block IPs the network is at least this confident about (25–100). Lower = more aggressive but more false positives; values below 25 are refused because they mostly block legitimate visitors.', 'reportedip-hive' ); ?></p>
 						</div>
 					</div>
 
@@ -8589,7 +8592,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_hardening_block_threshold"><?php esc_html_e( 'Reputation block threshold during hardening (%)', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hardening_block_threshold" name="reportedip_hive_hardening_block_threshold" value="<?php echo esc_attr( (string) $block_thresh ); ?>" min="10" max="100" class="rip-input" style="max-width: 180px;" />
+						<input type="number" id="reportedip_hive_hardening_block_threshold" name="reportedip_hive_hardening_block_threshold" value="<?php echo esc_attr( (string) $block_thresh ); ?>" min="<?php echo esc_attr( (string) ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD ); ?>" max="100" class="rip-input" style="max-width: 180px;" />
 						<p class="rip-help-text"><?php esc_html_e( 'Normal default is 75 %. Hardening tightens to this value (default 60 %). IPs with a community-confidence score above this threshold are blocked before authentication.', 'reportedip-hive' ); ?></p>
 					</div>
 

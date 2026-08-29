@@ -150,6 +150,17 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
+		public function test_block_threshold_min_is_pinned_to_the_false_positive_floor() {
+			$spec = \ReportedIP_Hive_Settings_Registry::spec();
+
+			$this->assertSame(
+				\ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD,
+				$spec['reportedip_hive_block_threshold']['min'],
+				'the reputation threshold minimum guards against false-positive blocks; lowering it needs a deliberate decision'
+			);
+			$this->assertSame( 25, \ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD );
+		}
+
 		public function test_every_side_effect_token_is_known_to_the_dispatcher() {
 			$known = \ReportedIP_Hive_Settings_Effects::known_tokens();
 			foreach ( \ReportedIP_Hive_Settings_Effects::watched() as $key => $tokens ) {

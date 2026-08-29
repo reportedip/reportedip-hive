@@ -38,6 +38,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class ReportedIP_Hive_Defaults {
 
 	/**
+	 * Lowest allowed community-reputation block threshold (percent).
+	 *
+	 * A confidence score is community hearsay, not proof: legitimate
+	 * visitors on rotating residential addresses were blocked when sites
+	 * ran thresholds in the 50s. Anything below this floor blocks far
+	 * more legitimate traffic than attackers, so the settings registry,
+	 * the hardening-mode clamp and the runtime enforcement read all
+	 * refuse to go lower. Raise the effective floor per site via the
+	 * `reportedip_hive_reputation_threshold_floor` filter.
+	 *
+	 * @since 2.1.50
+	 * @var int
+	 */
+	public const MIN_BLOCK_THRESHOLD = 25;
+
+	/**
 	 * Wizard-form fallbacks. Keep keys ASCII-stable and JSON-friendly —
 	 * they are sent to the browser via wp_localize_script.
 	 *

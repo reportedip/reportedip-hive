@@ -4,6 +4,22 @@ All changes to ReportedIP Hive are documented here.
 
 ## [2.1.50] — unreleased
 
+### Security
+
+- **Floor for the reputation block threshold.** The community-confidence
+  threshold can no longer be configured below 25 % — sub-floor thresholds
+  blocked far more legitimate visitors than attackers (a real customer was
+  rejected at 58 % confidence on a site running a lowered threshold). The
+  floor is enforced in the settings registry (UI, import, cloud and MainWP
+  writes all clamp), at the pre-auth enforcement read (covers values stored
+  before the upgrade) and in hardening mode, whose clamp rises from 10 % to
+  the same floor. Migration v16 lifts already-stored sub-floor values so
+  the settings UI shows what is actually enforced. Sites that want an even
+  higher floor can raise it via the new
+  `reportedip_hive_reputation_threshold_floor` filter. The setup wizard's
+  "High" protection preset softens from 50 % to 60 %; "Paranoid" stays on
+  the floor at 25 %.
+
 ### New
 
 - **Full IP management on WP-CLI.** Whitelist, blocks and attempt counters

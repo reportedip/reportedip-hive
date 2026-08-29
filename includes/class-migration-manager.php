@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 15;
+	public const CURRENT_VERSION = 16;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -479,6 +479,29 @@ final class ReportedIP_Hive_Migration_Manager {
 
 		if ( ReportedIP_Hive_Schema::index_exists( ReportedIP_Hive_Schema::TABLE_ATTEMPTS, 'composite_ip_type' ) ) {
 			$wpdb->query( "ALTER TABLE $attempts DROP INDEX composite_ip_type" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
+		}
+	}
+
+	/**
+	 * Lifts stored reputation-block thresholds onto the new floor.
+	 *
+	 * 2.1.50 introduced `ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD` after
+	 * legitimate visitors were blocked by sites running sub-floor thresholds.
+	 * Enforcement clamps at read time regardless; this normalisation keeps
+	 * the value shown in the settings UI equal to the value that is actually
+	 * enforced.
+	 *
+	 * @return void
+	 * @since  2.1.50
+	 */
+	private static function migrate_to_v16() {
+		$floor = ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD;
+
+		foreach ( array( 'reportedip_hive_block_threshold', 'reportedip_hive_hardening_block_threshold' ) as $option ) {
+			$stored = (int) ReportedIP_Hive_Option_Routing::get( $option, $floor );
+			if ( $stored < $floor ) {
+				ReportedIP_Hive_Option_Routing::set( $option, $floor );
+			}
 		}
 	}
 

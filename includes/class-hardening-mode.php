@@ -586,7 +586,7 @@ final class ReportedIP_Hive_Hardening_Mode {
 			return (int) $default;
 		}
 		$hard = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_block_threshold', self::DEFAULT_BLOCK_THRESHOLD );
-		$hard = max( 10, min( 100, $hard ) );
+		$hard = max( ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD, min( 100, $hard ) );
 		return min( (int) $default, $hard );
 	}
 

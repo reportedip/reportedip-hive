@@ -210,7 +210,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			'reportedip_hive_block_threshold'          => array(
 				'section' => 'blocking',
 				'kind'    => 'int',
-				'min'     => 0,
+				'min'     => ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD,
 				'max'     => 100,
 				'remote'  => true,
 				'label'   => __( 'Community block threshold (%)', 'reportedip-hive' ),

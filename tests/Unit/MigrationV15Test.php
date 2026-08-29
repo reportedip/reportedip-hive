@@ -135,8 +135,8 @@ class MigrationV15Test extends TestCase {
 		return $GLOBALS['wpdb']->queries;
 	}
 
-	public function test_current_version_is_fifteen() {
-		$this->assertSame( 15, \ReportedIP_Hive_Migration_Manager::CURRENT_VERSION );
+	public function test_current_version_covers_this_migration() {
+		$this->assertGreaterThanOrEqual( 15, \ReportedIP_Hive_Migration_Manager::CURRENT_VERSION );
 	}
 
 	public function test_missing_unique_index_dedupes_before_adding_the_unique_key() {

@@ -88,6 +88,7 @@ namespace {
 		}
 	}
 
+	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-hardening-mode.php';
 }
 
@@ -209,6 +210,21 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertSame( 1, \ReportedIP_Hive_Hardening_Mode::effective_failed_login_threshold( 1 ) );
 			$this->assertSame( 30, \ReportedIP_Hive_Hardening_Mode::effective_block_threshold( 30 ) );
+		}
+
+		public function test_effective_block_threshold_never_drops_below_floor() {
+			$GLOBALS['wp_transients']['reportedip_hive_hardening_until'] = array(
+				'value'   => time() + 600,
+				'expires' => time() + 600,
+			);
+
+			\ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hardening_block_threshold', 15 );
+
+			$this->assertSame(
+				\ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD,
+				\ReportedIP_Hive_Hardening_Mode::effective_block_threshold( 75 ),
+				'a stored sub-floor hardening threshold must clamp up to the false-positive floor'
+			);
 		}
 
 		public function test_activate_returns_false_when_tier_below_professional() {

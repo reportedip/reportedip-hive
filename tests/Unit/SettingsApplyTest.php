@@ -99,6 +99,19 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 100, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold' ) );
 		}
 
+		public function test_block_threshold_is_clamped_to_the_false_positive_floor() {
+			\ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_block_threshold' => 5 ),
+				'test'
+			);
+
+			$this->assertSame(
+				\ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD,
+				\ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold' ),
+				'sub-floor reputation thresholds mostly block legitimate visitors and must clamp up'
+			);
+		}
+
 		public function test_invalid_enum_is_rejected_without_write() {
 			$result = \ReportedIP_Hive_Settings_Apply::apply(
 				array( 'reportedip_hive_bot_action' => 'nuke' ),

@@ -318,7 +318,7 @@ final class ReportedIP_Hive_Wizard_Schema {
 				'failed_login_threshold' => 3,
 				'failed_login_timeframe' => 15,
 				'block_duration'         => 48,
-				'block_threshold'        => 50,
+				'block_threshold'        => 60,
 			),
 			'paranoid' => array(
 				'failed_login_threshold' => 2,
