@@ -2358,7 +2358,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			wp_send_json_error( array( 'message' => $phone->get_error_message() ) );
 		}
 
-		$result = ReportedIP_Hive_SMS_Provider_Relay::send( $phone, __( 'ReportedIP Hive: Test SMS. Setup was successful.', 'reportedip-hive' ), array() );
+		$result = ReportedIP_Hive_SMS_Provider_Relay::send( $phone, __( 'ReportedIP Hive: Test SMS. Setup was successful.', 'reportedip-hive' ) );
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );

@@ -97,18 +97,6 @@ class ReportedIP_Hive_Event_Taxonomy {
 	}
 
 	/**
-	 * Resolve a single family label.
-	 *
-	 * @param string $key Family key.
-	 * @return string Translated label, or the key itself when unknown.
-	 * @since  2.1.13
-	 */
-	public static function label_for( $key ) {
-		$labels = self::labels();
-		return $labels[ $key ] ?? (string) $key;
-	}
-
-	/**
 	 * All event types that belong to a threat family.
 	 *
 	 * Returns every mapped base type plus its generated `_threshold_exceeded`

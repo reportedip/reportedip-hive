@@ -115,26 +115,6 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Create all database tables.
-	 *
-	 * Thin shim around {@see ReportedIP_Hive_Schema::ensure_tables()}. Kept
-	 * for compatibility with the activation hook and any external caller
-	 * that still reaches into this class.
-	 */
-	public function create_tables() {
-		ReportedIP_Hive_Schema::ensure_tables();
-	}
-
-	/**
-	 * Drop all plugin tables.
-	 *
-	 * Thin shim around {@see ReportedIP_Hive_Schema::drop_all_tables()}.
-	 */
-	public function drop_tables() {
-		ReportedIP_Hive_Schema::drop_all_tables();
-	}
-
-	/**
 	 * Log security event.
 	 *
 	 * @param string      $event_type Event type key.
@@ -421,24 +401,6 @@ class ReportedIP_Hive_Database {
 		wp_cache_set( 'rip_waf_exceptions', $rows, 'reportedip', 300 );
 
 		return $rows;
-	}
-
-	/**
-	 * List WAF exceptions for the admin surface.
-	 *
-	 * @param bool $active_only Only active rows when true.
-	 * @return array<int,object> Exception rows ordered newest first.
-	 * @since  2.1.9
-	 */
-	public function get_waf_exceptions( $active_only = true ) {
-		global $wpdb;
-
-		$table_name   = $wpdb->base_prefix . 'reportedip_hive_waf_exceptions';
-		$where_clause = $active_only ? 'WHERE is_active = 1' : '';
-
-		$rows = $wpdb->get_results( "SELECT * FROM $table_name $where_clause ORDER BY created_at DESC" );
-
-		return is_array( $rows ) ? $rows : array();
 	}
 
 	/**
@@ -1327,24 +1289,6 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Get statistics for date range
-	 */
-	public function get_statistics( $days = 30 ) {
-		global $wpdb;
-
-		$table_name = $wpdb->base_prefix . 'reportedip_hive_stats';
-
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM $table_name 
-                 WHERE stat_date >= DATE_SUB(UTC_DATE(), INTERVAL %d DAY) 
-                 ORDER BY stat_date DESC",
-				$days
-			)
-		);
-	}
-
-	/**
 	 * Batch size for the anonymisation sweep — bounds both the row fetch and
 	 * the per-row UPDATE burst of a single loop iteration.
 	 */
@@ -1519,28 +1463,6 @@ class ReportedIP_Hive_Database {
 		);
 
 		return $deleted;
-	}
-
-	/**
-	 * Get failed API reports
-	 *
-	 * @param int $limit Maximum number of reports to return
-	 * @return array Failed API reports
-	 */
-	public function get_failed_api_reports( $limit = 50 ) {
-		global $wpdb;
-
-		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
-
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM $table_name
-                 WHERE status = 'failed'
-                 ORDER BY created_at DESC
-                 LIMIT %d",
-				$limit
-			)
-		);
 	}
 
 	/**

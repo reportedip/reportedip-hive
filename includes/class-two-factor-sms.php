@@ -28,44 +28,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Provider contract implemented by the managed reportedip.com relay adapter.
- */
-interface ReportedIP_Hive_SMS_Provider {
-
-	/** @return string Short identifier stored in the provider-selector setting. */
-	public static function id();
-
-	/** @return string Human-readable name shown in admin UI. */
-	public static function display_name();
-
-	/** @return string Country/region of the provider for transparency. */
-	public static function region();
-
-	/** @return string Link to the provider's AVV/DPA page. */
-	public static function avv_url();
-
-	/** @return array<string,array> Schema of required config fields (name => [label, type, required]). */
-	public static function config_fields();
-
-	/**
-	 * Dispatch the SMS.
-	 *
-	 * @param string $phone   E.164-formatted phone number (e.g. +49151…).
-	 * @param string $message Plain-text SMS body.
-	 * @param array  $config  Provider-specific config values.
-	 * @return true|WP_Error True on accepted send, WP_Error on failure.
-	 */
-	public static function send( $phone, $message, $config );
-}
-
-/**
  * Orchestrator — called by the 2FA challenge and by the onboarding AJAX flow.
- *
- * Interface + orchestrator ship in the same file because the interface is the
- * contract for the relay adapter registered below; splitting them hurts
- * readability more than it helps.
  */
-// phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
 class ReportedIP_Hive_Two_Factor_SMS {
 
 	const TRANSIENT_CODE_PREFIX = 'reportedip_2fa_sms_';
@@ -73,7 +37,6 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	const CODE_TTL              = 600;
 	const RATE_WINDOW           = 900;
 	const MAX_SENDS_PER_WINDOW  = 6;
-	const COOLDOWN_SECONDS      = 60;
 	const MAX_ATTEMPTS          = 5;
 	const CODE_LENGTH           = 6;
 
@@ -92,17 +55,6 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	 * Provider id of the managed reportedip.com SMS relay — the only provider.
 	 */
 	const PROVIDER_RELAY = 'reportedip_relay';
-
-	/**
-	 * Provider registry — the managed reportedip.com relay is the only adapter.
-	 *
-	 * @return array<string, class-string<ReportedIP_Hive_SMS_Provider>>
-	 */
-	public static function providers() {
-		return array(
-			self::PROVIDER_RELAY => 'ReportedIP_Hive_SMS_Provider_Relay',
-		);
-	}
 
 	/**
 	 * Is the plugin in a state where it may dispatch SMS messages?

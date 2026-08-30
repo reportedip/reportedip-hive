@@ -104,22 +104,6 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	const FOOTER_VARIANTS = array( 'badge', 'shield' );
 
 	/**
-	 * Stat keys accepted via `[…type="…"]`.
-	 *
-	 * @var string[]
-	 */
-	const STAT_KEYS = array(
-		'attacks_30d',
-		'attacks_total',
-		'blocked_active',
-		'whitelist_active',
-		'logins_30d',
-		'spam_30d',
-		'api_reports_30d',
-		'reports_total',
-	);
-
-	/**
 	 * Marketing-tone presets.
 	 *
 	 * @var string[]
@@ -742,18 +726,6 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 
 		if ( $is_below ) {
 			echo "<script>(function(){var n=document.getElementById('rip-hive-auto-footer-below');if(!n)return;function r(){if(document.body&&n.parentNode!==document.body){document.body.appendChild(n);}n.style.visibility='visible';}if(document.readyState==='complete'||document.readyState==='interactive'){r();}else{document.addEventListener('DOMContentLoaded',r);}})();</script>";
-		}
-	}
-
-	/**
-	 * Invalidate the public stats cache.
-	 *
-	 * @since 1.3.0
-	 */
-	public static function flush_stats_cache() {
-		delete_transient( self::STATS_TRANSIENT_KEY );
-		if ( null !== self::$instance ) {
-			self::$instance->stats_memo = null;
 		}
 	}
 }

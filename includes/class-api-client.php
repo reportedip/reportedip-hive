@@ -1425,41 +1425,6 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Get API status including remaining credits
-	 *
-	 * @return array|false API status array or false on failure
-	 */
-	public function get_api_status() {
-		if ( ! $this->is_configured() ) {
-			return false;
-		}
-
-		$cached_status = get_transient( 'reportedip_hive_api_status' );
-		if ( $cached_status !== false ) {
-			return $cached_status;
-		}
-
-		$result = $this->verify_api_key();
-
-		if ( $result && isset( $result['valid'] ) && $result['valid'] ) {
-			$status = array(
-				'valid'             => true,
-				'remainingApiCalls' => $result['remainingApiCalls'] ?? 0,
-				'dailyApiLimit'     => $result['dailyApiLimit'] ?? 0,
-				'keyName'           => $result['keyName'] ?? '',
-				'userRole'          => $result['userRole'] ?? '',
-				'domains'           => $result['domains'] ?? null,
-			);
-
-			$this->persist_api_status( $status );
-
-			return $status;
-		}
-
-		return false;
-	}
-
-	/**
 	 * Persist an already-verified status payload from an external caller.
 	 *
 	 * {@see verify_api_key()} intentionally does not cache — it is a pure probe.

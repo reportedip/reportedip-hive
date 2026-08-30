@@ -44,16 +44,6 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	const QUERY_VAR = 'reportedip_hive_2fa_frontend';
 
 	/**
-	 * Site-option holding the public slug of the challenge page.
-	 */
-	const OPT_CHALLENGE_SLUG = 'reportedip_hive_2fa_frontend_slug';
-
-	/**
-	 * Site-option holding the public slug of the setup / onboarding page.
-	 */
-	const OPT_SETUP_SLUG = 'reportedip_hive_2fa_frontend_setup_slug';
-
-	/**
 	 * Site-option master toggle for the frontend module.
 	 */
 	const OPT_ENABLED = 'reportedip_hive_2fa_frontend_enabled';

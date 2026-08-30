@@ -557,78 +557,6 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
-	 * Get all available features for current mode
-	 *
-	 * @return array Features available in current mode
-	 */
-	public function get_available_features() {
-		$this->ensure_feature_matrix_loaded();
-
-		$mode      = $this->get_mode();
-		$texts     = $this->feature_texts();
-		$available = array();
-
-		foreach ( $this->feature_matrix as $key => $feature ) {
-			if ( ! empty( $feature[ $mode ] ) ) {
-				$available[ $key ] = array(
-					'label'       => $texts[ $key ][0] ?? '',
-					'description' => $texts[ $key ][1] ?? '',
-				);
-			}
-		}
-
-		return $available;
-	}
-
-	/**
-	 * Get all features with their availability status
-	 *
-	 * @return array Complete feature matrix with current status
-	 */
-	public function get_feature_matrix() {
-		$this->ensure_feature_matrix_loaded();
-
-		$mode   = $this->get_mode();
-		$texts  = $this->feature_texts();
-		$matrix = array();
-
-		foreach ( $this->feature_matrix as $key => $feature ) {
-			$matrix[ $key ] = array(
-				'label'             => $texts[ $key ][0] ?? '',
-				'description'       => $texts[ $key ][1] ?? '',
-				'available'         => ! empty( $feature[ $mode ] ),
-				'local_support'     => $feature['local'],
-				'community_support' => $feature['community'],
-			);
-		}
-
-		return $matrix;
-	}
-
-	/**
-	 * Get features that would be available by upgrading to community mode
-	 *
-	 * @return array Features only available in community mode
-	 */
-	public function get_community_only_features() {
-		$this->ensure_feature_matrix_loaded();
-
-		$texts          = $this->feature_texts();
-		$community_only = array();
-
-		foreach ( $this->feature_matrix as $key => $feature ) {
-			if ( ! $feature['local'] && $feature['community'] ) {
-				$community_only[ $key ] = array(
-					'label'       => $texts[ $key ][0] ?? '',
-					'description' => $texts[ $key ][1] ?? '',
-				);
-			}
-		}
-
-		return $community_only;
-	}
-
-	/**
 	 * Check if setup wizard has been completed
 	 *
 	 * @return bool
@@ -667,27 +595,6 @@ class ReportedIP_Hive_Mode_Manager {
 	 */
 	public function skip_wizard() {
 		ReportedIP_Hive_Option_Routing::set( self::OPTION_WIZARD_SKIPPED, true );
-		return true;
-	}
-
-	/**
-	 * Check if wizard should be shown
-	 *
-	 * Shows wizard if:
-	 * - Not completed AND not skipped
-	 * - Plugin was just activated (first time)
-	 *
-	 * @return bool
-	 */
-	public function should_show_wizard() {
-		if ( $this->is_wizard_completed() ) {
-			return false;
-		}
-
-		if ( $this->is_wizard_skipped() ) {
-			return false;
-		}
-
 		return true;
 	}
 

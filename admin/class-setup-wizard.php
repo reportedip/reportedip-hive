@@ -2296,12 +2296,4 @@ class ReportedIP_Hive_Setup_Wizard {
 		}
 		return admin_url( $path );
 	}
-
-	/**
-	 * Check if we're currently on the wizard page
-	 */
-	public static function is_wizard_page() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		return isset( $_GET['page'] ) && $_GET['page'] === self::PAGE_SLUG;
-	}
 }

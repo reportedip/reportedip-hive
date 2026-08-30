@@ -59,17 +59,6 @@ namespace {
 
 	require_once dirname( __DIR__, 2 ) . '/includes/class-phone-validator.php';
 
-	if ( ! interface_exists( 'ReportedIP_Hive_SMS_Provider' ) ) {
-		interface ReportedIP_Hive_SMS_Provider {
-			public static function id();
-			public static function display_name();
-			public static function region();
-			public static function avv_url();
-			public static function config_fields();
-			public static function send( $phone, $message, $config );
-		}
-	}
-
 	if ( ! class_exists( 'ReportedIP_Hive_API' ) ) {
 		class ReportedIP_Hive_API {
 			private static $instance       = null;
@@ -109,14 +98,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			parent::set_up();
 			$GLOBALS['wp_options'] = array();
 			\ReportedIP_Hive_API::reset_instance();
-		}
-
-		public function test_static_metadata() {
-			$this->assertSame( 'reportedip_relay', \ReportedIP_Hive_SMS_Provider_Relay::id() );
-			$this->assertNotEmpty( \ReportedIP_Hive_SMS_Provider_Relay::display_name() );
-			$this->assertSame( 'Worldwide (via reportedip.com)', \ReportedIP_Hive_SMS_Provider_Relay::region() );
-			$this->assertSame( array(), \ReportedIP_Hive_SMS_Provider_Relay::config_fields() );
-			$this->assertStringStartsWith( 'https://', \ReportedIP_Hive_SMS_Provider_Relay::avv_url() );
 		}
 
 		public function test_send_code_forwards_non_eu_number_to_api() {
@@ -202,13 +183,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_send_freeform_rejects_invalid_e164() {
-			$result = \ReportedIP_Hive_SMS_Provider_Relay::send( '0151-1234567', 'hello', array() );
+			$result = \ReportedIP_Hive_SMS_Provider_Relay::send( '0151-1234567', 'hello' );
 			$this->assertInstanceOf( \WP_Error::class, $result );
 			$this->assertSame( 'reportedip_relay_invalid_phone', $result->get_error_code() );
 		}
 
 		public function test_send_freeform_happy_path() {
-			$result = \ReportedIP_Hive_SMS_Provider_Relay::send( '+491511234567', 'plain message', array() );
+			$result = \ReportedIP_Hive_SMS_Provider_Relay::send( '+491511234567', 'plain message' );
 			$this->assertTrue( $result );
 
 			$payload = \ReportedIP_Hive_API::get_instance()->relay_sms_calls[0];

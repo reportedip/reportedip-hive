@@ -6848,42 +6848,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Get dashboard statistics
-	 */
-	public function get_dashboard_stats() {
-		global $wpdb;
-
-		$ip_stats   = $this->database->get_ip_management_stats();
-		$logs_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
-
-		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from Schema::table() with a hardcoded suffix; safe.
-		$events_24h = (int) $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $logs_table
-				 WHERE created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)",
-				$cutoff_utc
-			)
-		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
-
-		$queue_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from Schema::table() with a hardcoded suffix; safe.
-		$queue_count = (int) $wpdb->get_var(
-			"SELECT COUNT(*) FROM $queue_table WHERE status IN ('pending', 'failed')"
-		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
-
-		return array(
-			'events_24h'      => $events_24h,
-			'blocked_ips'     => $ip_stats['active_blocked'] ?? 0,
-			'whitelisted_ips' => $ip_stats['active_whitelist'] ?? 0,
-			'queue_count'     => $queue_count,
-		);
-	}
-
-	/**
 	 * Tier definitions — single source of truth for the Community page.
 	 *
 	 * Mirrors the constants in reportedip-service/includes/class-constants.php.
