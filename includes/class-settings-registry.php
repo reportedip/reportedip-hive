@@ -86,13 +86,13 @@ final class ReportedIP_Hive_Settings_Registry {
 	 */
 	public static function spec() {
 		return array(
-			'reportedip_hive_monitor_failed_logins'    => array(
+			'reportedip_hive_monitor_failed_logins'        => array(
 				'section' => 'detection',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Monitor failed logins', 'reportedip-hive' ),
 			),
-			'reportedip_hive_failed_login_threshold'   => array(
+			'reportedip_hive_failed_login_threshold'       => array(
 				'section' => 'detection',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -100,7 +100,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Failed login threshold', 'reportedip-hive' ),
 			),
-			'reportedip_hive_failed_login_timeframe'   => array(
+			'reportedip_hive_failed_login_timeframe'       => array(
 				'section' => 'detection',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -108,13 +108,13 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Failed login window (minutes)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_monitor_comments'         => array(
+			'reportedip_hive_monitor_comments'             => array(
 				'section' => 'detection',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Monitor comment spam', 'reportedip-hive' ),
 			),
-			'reportedip_hive_comment_spam_threshold'   => array(
+			'reportedip_hive_comment_spam_threshold'       => array(
 				'section' => 'detection',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -122,7 +122,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Comment spam threshold', 'reportedip-hive' ),
 			),
-			'reportedip_hive_comment_spam_timeframe'   => array(
+			'reportedip_hive_comment_spam_timeframe'       => array(
 				'section' => 'detection',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -130,13 +130,13 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Comment spam window (minutes)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_monitor_xmlrpc'           => array(
+			'reportedip_hive_monitor_xmlrpc'               => array(
 				'section' => 'detection',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Monitor XML-RPC abuse', 'reportedip-hive' ),
 			),
-			'reportedip_hive_xmlrpc_threshold'         => array(
+			'reportedip_hive_xmlrpc_threshold'             => array(
 				'section' => 'detection',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -144,7 +144,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'XML-RPC threshold', 'reportedip-hive' ),
 			),
-			'reportedip_hive_xmlrpc_timeframe'         => array(
+			'reportedip_hive_xmlrpc_timeframe'             => array(
 				'section' => 'detection',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -152,31 +152,31 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'XML-RPC window (minutes)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_disable_xmlrpc_multicall' => array(
+			'reportedip_hive_disable_xmlrpc_multicall'     => array(
 				'section' => 'detection',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Disable XML-RPC multicall', 'reportedip-hive' ),
 			),
-			'reportedip_hive_monitor_rest_api'         => array(
+			'reportedip_hive_monitor_rest_api'             => array(
 				'section' => 'detection',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Monitor REST API bursts', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_user_enumeration'   => array(
+			'reportedip_hive_block_user_enumeration'       => array(
 				'section' => 'detection',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Block user enumeration', 'reportedip-hive' ),
 			),
-			'reportedip_hive_monitor_404_scans'        => array(
+			'reportedip_hive_monitor_404_scans'            => array(
 				'section' => 'detection',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Monitor 404 scans', 'reportedip-hive' ),
 			),
-			'reportedip_hive_scan_404_threshold'       => array(
+			'reportedip_hive_scan_404_threshold'           => array(
 				'section' => 'detection',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -184,7 +184,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( '404 scan threshold', 'reportedip-hive' ),
 			),
-			'reportedip_hive_scan_404_timeframe'       => array(
+			'reportedip_hive_scan_404_timeframe'           => array(
 				'section' => 'detection',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -193,13 +193,76 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'   => __( '404 scan window (minutes)', 'reportedip-hive' ),
 			),
 
-			'reportedip_hive_auto_block'               => array(
+			'reportedip_hive_hardening_realtime_detection' => array(
+				'section' => 'detection',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Hardening realtime detection', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hardening_duration_minutes'   => array(
+				'section' => 'detection',
+				'kind'    => 'int',
+				'min'     => 5,
+				'max'     => 360,
+				'remote'  => true,
+				'label'   => __( 'Hardening duration (minutes)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hardening_login_threshold'    => array(
+				'section' => 'detection',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 10,
+				'remote'  => true,
+				'label'   => __( 'Failed-login threshold during hardening', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hardening_login_timeframe'    => array(
+				'section' => 'detection',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 60,
+				'remote'  => true,
+				'label'   => __( 'Failed-login window during hardening (minutes)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hardening_block_threshold'    => array(
+				'section' => 'detection',
+				'kind'    => 'int',
+				'min'     => ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD,
+				'max'     => 100,
+				'remote'  => true,
+				'label'   => __( 'Reputation block threshold during hardening (%)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hardening_detect_window_minutes' => array(
+				'section' => 'detection',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 120,
+				'remote'  => true,
+				'label'   => __( 'Distributed-attack detection window (minutes)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hardening_detect_min_ips'     => array(
+				'section' => 'detection',
+				'kind'    => 'int',
+				'min'     => 2,
+				'max'     => 100,
+				'remote'  => true,
+				'label'   => __( 'Minimum distinct IPs for a distributed attack', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hardening_detect_min_attempts' => array(
+				'section' => 'detection',
+				'kind'    => 'int',
+				'min'     => 3,
+				'max'     => 1000,
+				'remote'  => true,
+				'label'   => __( 'Minimum total attempts for a distributed attack', 'reportedip-hive' ),
+			),
+
+			'reportedip_hive_auto_block'                   => array(
 				'section' => 'blocking',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Automatic blocking', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_duration'           => array(
+			'reportedip_hive_block_duration'               => array(
 				'section' => 'blocking',
 				'kind'    => 'int',
 				'min'     => 0,
@@ -207,7 +270,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Block duration (hours)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_threshold'          => array(
+			'reportedip_hive_block_threshold'              => array(
 				'section' => 'blocking',
 				'kind'    => 'int',
 				'min'     => ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD,
@@ -215,13 +278,13 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Community block threshold (%)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_escalation_enabled' => array(
+			'reportedip_hive_block_escalation_enabled'     => array(
 				'section' => 'blocking',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Escalation ladder', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_ladder_minutes'     => array(
+			'reportedip_hive_block_ladder_minutes'         => array(
 				'section' => 'blocking',
 				'kind'    => 'csv_int_list',
 				'min'     => 1,
@@ -229,7 +292,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Escalation ladder steps (minutes)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_ladder_reset_days'  => array(
+			'reportedip_hive_block_ladder_reset_days'      => array(
 				'section' => 'blocking',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -237,39 +300,39 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Ladder reset window (days)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_report_only_mode'         => array(
+			'reportedip_hive_report_only_mode'             => array(
 				'section' => 'blocking',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Report-only mode', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_tor'                => array(
+			'reportedip_hive_block_tor'                    => array(
 				'section' => 'blocking',
 				'kind'    => 'bool',
 				'tier'    => 'tor_blocking',
 				'remote'  => true,
 				'label'   => __( 'Block Tor exit nodes', 'reportedip-hive' ),
 			),
-			'reportedip_hive_blocked_page_contact_url' => array(
+			'reportedip_hive_blocked_page_contact_url'     => array(
 				'section' => 'blocking',
 				'kind'    => 'url',
 				'remote'  => true,
 				'label'   => __( 'Contact URL on the block page', 'reportedip-hive' ),
 			),
 
-			'reportedip_hive_waf_enabled'              => array(
+			'reportedip_hive_waf_enabled'                  => array(
 				'section' => 'waf',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Firewall enabled', 'reportedip-hive' ),
 			),
-			'reportedip_hive_waf_report_only'          => array(
+			'reportedip_hive_waf_report_only'              => array(
 				'section' => 'waf',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Firewall report-only', 'reportedip-hive' ),
 			),
-			'reportedip_hive_waf_paranoia'             => array(
+			'reportedip_hive_waf_paranoia'                 => array(
 				'section'   => 'waf',
 				'kind'      => 'int',
 				'min'       => 1,
@@ -279,7 +342,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'    => true,
 				'label'     => __( 'Firewall paranoia level', 'reportedip-hive' ),
 			),
-			'reportedip_hive_waf_block_threshold'      => array(
+			'reportedip_hive_waf_block_threshold'          => array(
 				'section' => 'waf',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -287,53 +350,53 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Firewall block threshold (hits)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_rule_sync_enabled'        => array(
+			'reportedip_hive_rule_sync_enabled'            => array(
 				'section' => 'waf',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Rule synchronisation', 'reportedip-hive' ),
 			),
-			'reportedip_hive_monitor_bot_verification' => array(
+			'reportedip_hive_monitor_bot_verification'     => array(
 				'section' => 'waf',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Bot verification', 'reportedip-hive' ),
 			),
-			'reportedip_hive_bot_action'               => array(
+			'reportedip_hive_bot_action'                   => array(
 				'section' => 'waf',
 				'kind'    => 'enum',
 				'allowed' => array( 'flag', 'off', 'block' ),
 				'remote'  => true,
 				'label'   => __( 'Action on failed bot verification', 'reportedip-hive' ),
 			),
-			'reportedip_hive_disposable_email_action'  => array(
+			'reportedip_hive_disposable_email_action'      => array(
 				'section' => 'waf',
 				'kind'    => 'enum',
 				'allowed' => array( 'monitor', 'off', 'block' ),
 				'remote'  => true,
 				'label'   => __( 'Action on disposable email domains', 'reportedip-hive' ),
 			),
-			'reportedip_hive_comment_honeypot_enabled' => array(
+			'reportedip_hive_comment_honeypot_enabled'     => array(
 				'section' => 'waf',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Comment honeypot', 'reportedip-hive' ),
 			),
-			'reportedip_hive_decoy_pathblock_enabled'  => array(
+			'reportedip_hive_decoy_pathblock_enabled'      => array(
 				'section' => 'waf',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Decoy path blocking', 'reportedip-hive' ),
 			),
 
-			'reportedip_hive_hide_login_enabled'       => array(
+			'reportedip_hive_hide_login_enabled'           => array(
 				'section'      => 'hide_login',
 				'kind'         => 'bool',
 				'remote'       => true,
 				'side_effects' => array( 'flush_rewrite' ),
 				'label'        => __( 'Hide login enabled', 'reportedip-hive' ),
 			),
-			'reportedip_hive_hide_login_slug'          => array(
+			'reportedip_hive_hide_login_slug'              => array(
 				'section'      => 'hide_login',
 				'kind'         => 'slug',
 				'sanitize'     => array( 'ReportedIP_Hive_Hide_Login', 'validate_slug_value' ),
@@ -341,27 +404,27 @@ final class ReportedIP_Hive_Settings_Registry {
 				'side_effects' => array( 'flush_rewrite' ),
 				'label'        => __( 'Login slug', 'reportedip-hive' ),
 			),
-			'reportedip_hive_hide_login_response_mode' => array(
+			'reportedip_hive_hide_login_response_mode'     => array(
 				'section' => 'hide_login',
 				'kind'    => 'enum',
 				'allowed' => array( 'block_page', '404' ),
 				'remote'  => true,
 				'label'   => __( 'Response on the default login URL', 'reportedip-hive' ),
 			),
-			'reportedip_hive_monitor_hide_login_probe' => array(
+			'reportedip_hive_monitor_hide_login_probe'     => array(
 				'section' => 'hide_login',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Monitor login probe attempts', 'reportedip-hive' ),
 			),
 
-			'reportedip_hive_2fa_enabled_global'       => array(
+			'reportedip_hive_2fa_enabled_global'           => array(
 				'section' => 'account_security',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Two-factor authentication enabled', 'reportedip-hive' ),
 			),
-			'reportedip_hive_2fa_allowed_methods'      => array(
+			'reportedip_hive_2fa_allowed_methods'          => array(
 				'section'       => 'account_security',
 				'kind'          => 'json_list',
 				'json_filter'   => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_methods' ),
@@ -369,14 +432,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'        => true,
 				'label'         => __( 'Allowed 2FA methods', 'reportedip-hive' ),
 			),
-			'reportedip_hive_2fa_enforce_roles'        => array(
+			'reportedip_hive_2fa_enforce_roles'            => array(
 				'section'     => 'account_security',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_roles' ),
 				'remote'      => true,
 				'label'       => __( 'Roles required to use 2FA', 'reportedip-hive' ),
 			),
-			'reportedip_hive_2fa_enforce_grace_days'   => array(
+			'reportedip_hive_2fa_enforce_grace_days'       => array(
 				'section' => 'account_security',
 				'kind'    => 'int',
 				'min'     => 0,
@@ -384,7 +447,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( '2FA grace period (days)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_2fa_max_skips'            => array(
+			'reportedip_hive_2fa_max_skips'                => array(
 				'section' => 'account_security',
 				'kind'    => 'int',
 				'min'     => 0,
@@ -392,20 +455,20 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Maximum onboarding skips', 'reportedip-hive' ),
 			),
-			'reportedip_hive_2fa_enforce_action'       => array(
+			'reportedip_hive_2fa_enforce_action'           => array(
 				'section' => 'account_security',
 				'kind'    => 'enum',
 				'allowed' => array( 'enroll', 'lockout' ),
 				'remote'  => true,
 				'label'   => __( 'Action when grace period is exhausted', 'reportedip-hive' ),
 			),
-			'reportedip_hive_2fa_trusted_devices'      => array(
+			'reportedip_hive_2fa_trusted_devices'          => array(
 				'section' => 'account_security',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Trusted devices', 'reportedip-hive' ),
 			),
-			'reportedip_hive_2fa_trusted_device_days'  => array(
+			'reportedip_hive_2fa_trusted_device_days'      => array(
 				'section' => 'account_security',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -419,13 +482,13 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Require 2FA on password reset', 'reportedip-hive' ),
 			),
-			'reportedip_hive_password_policy_enabled'  => array(
+			'reportedip_hive_password_policy_enabled'      => array(
 				'section' => 'account_security',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Password policy', 'reportedip-hive' ),
 			),
-			'reportedip_hive_password_min_length'      => array(
+			'reportedip_hive_password_min_length'          => array(
 				'section' => 'account_security',
 				'kind'    => 'int',
 				'min'     => 8,
@@ -433,33 +496,33 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Minimum password length', 'reportedip-hive' ),
 			),
-			'reportedip_hive_password_check_hibp'      => array(
+			'reportedip_hive_password_check_hibp'          => array(
 				'section' => 'account_security',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Check passwords against known breaches', 'reportedip-hive' ),
 			),
 
-			'reportedip_hive_log_level'                => array(
+			'reportedip_hive_log_level'                    => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'enum',
 				'allowed' => array( 'debug', 'info', 'warning', 'error', 'critical' ),
 				'remote'  => true,
 				'label'   => __( 'Log level', 'reportedip-hive' ),
 			),
-			'reportedip_hive_minimal_logging'          => array(
+			'reportedip_hive_minimal_logging'              => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Minimal logging', 'reportedip-hive' ),
 			),
-			'reportedip_hive_log_user_agents'          => array(
+			'reportedip_hive_log_user_agents'              => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Log user agents', 'reportedip-hive' ),
 			),
-			'reportedip_hive_data_retention_days'      => array(
+			'reportedip_hive_data_retention_days'          => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -467,7 +530,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Data retention (days)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_auto_anonymize_days'      => array(
+			'reportedip_hive_auto_anonymize_days'          => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -475,13 +538,13 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Auto-anonymize after (days)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_audit_enabled'            => array(
+			'reportedip_hive_audit_enabled'                => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Audit trail', 'reportedip-hive' ),
 			),
-			'reportedip_hive_audit_retention_days'     => array(
+			'reportedip_hive_audit_retention_days'         => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -489,32 +552,32 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Audit retention (days)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_audit_anonymize_ip'       => array(
+			'reportedip_hive_audit_anonymize_ip'           => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Anonymize IPs in the audit trail', 'reportedip-hive' ),
 			),
 
-			'reportedip_hive_notify_admin'             => array(
+			'reportedip_hive_notify_admin'                 => array(
 				'section' => 'notifications',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Admin notifications', 'reportedip-hive' ),
 			),
-			'reportedip_hive_notify_recipients'        => array(
+			'reportedip_hive_notify_recipients'            => array(
 				'section' => 'notifications',
 				'kind'    => 'email_list',
 				'remote'  => true,
 				'label'   => __( 'Notification recipients', 'reportedip-hive' ),
 			),
-			'reportedip_hive_notify_from_name'         => array(
+			'reportedip_hive_notify_from_name'             => array(
 				'section' => 'notifications',
 				'kind'    => 'text',
 				'remote'  => true,
 				'label'   => __( 'Sender name', 'reportedip-hive' ),
 			),
-			'reportedip_hive_notify_from_email'        => array(
+			'reportedip_hive_notify_from_email'            => array(
 				'section' => 'notifications',
 				'kind'    => 'email',
 				'remote'  => true,

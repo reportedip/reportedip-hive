@@ -30,7 +30,7 @@ Two ways to run:
 * **One plugin instead of three.** Brute-force protection, a four-method 2FA suite and threat intelligence in a single drop-in. The full protection core stays free and Open Source — paid plans add the managed mail/SMS relays, multi-site management, higher API quotas and a few advanced modules (WooCommerce frontend 2FA, Hardening Mode, white-label), never the core protection itself.
 * **Progressive blocks that don't burn legitimate users.** A first-time tripping CGNAT visitor or a fat-fingered admin gets a 5-minute timeout — repeat offenders climb the ladder up to 7 days. Nobody pays a 24h block for a typo.
 * **Privacy-first by default.** GDPR-minimal logging mode, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium.
-* **Hardening Mode on coordinated attacks (PRO).** When the plugin spots ≥ 3 IPs / ≥ 20 failed logins in the same minute it tightens the failed-login and reputation thresholds network-wide for one hour. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
+* **Hardening Mode on coordinated attacks (PRO).** When several IPs hit the login in the same minute, or enough distinct IPs add up across a rolling window (default 10 minutes, 10 IPs, 50 attempts), the plugin tightens the failed-login and reputation thresholds network-wide for one hour — on wp-login, the WooCommerce storefront login and application passwords alike. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
 * **Tor exit-node blocking (PRO).** An opt-in toggle rejects connections from known Tor exit nodes, backed by a signed exit-node list refreshed twice daily. Blocks are temporary and never reported to the community — operating an exit node is not abuse evidence.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
 * **Security headers out of the box.** The basic hardening trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is free; HSTS, Permissions-Policy, a report-only-first Content-Security-Policy and the cross-origin isolation trio come with Professional. Headers already sent by your server or another plugin are detected and left untouched.
@@ -380,6 +380,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= Unreleased =
+
+Security: hardening mode now reaches every login surface. While a coordinated attack tightened the failed-login threshold network-wide, the WooCommerce login monitor (My Account and classic checkout) and the application-password monitor kept using the relaxed values, so an attack on the storefront forms slipped through untouched. Both are now clamped like wp-login. The gap dates back to 2.0.8; sites without WooCommerce and without application passwords were never affected.
+
+Changed: the eight hardening options are part of the remote settings standard, so MainWP and the cloud fleet can manage them. The master toggle stays local because its "no stored value" state is what enables hardening automatically on Professional and higher.
+
+Fixed: the distributed-detection help texts named 5 and 20 as defaults while the code used 10 and 50.
 
 = 2.1.50 =
 

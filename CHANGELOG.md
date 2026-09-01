@@ -2,6 +2,37 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Security
+
+- **Hardening mode now reaches every login surface.** While a coordinated
+  attack tightened the failed-login threshold network-wide, the WooCommerce
+  login monitor (My Account and classic checkout) and the application-password
+  monitor kept reading the relaxed values, so a botnet that attacked the
+  storefront forms slipped through untouched. Both now pass their thresholds
+  through the same clamp as wp-login, as does the admin-side threshold
+  simulation. The gap dates back to 2.0.8, when hardening mode
+  shipped; sites without WooCommerce and without application passwords were
+  never affected. A new source-level parity test fails the build if a future sensor
+  reads a login threshold without the clamp.
+
+### Changed
+
+- **Hardening settings are part of the remote settings standard.** The eight
+  hardening options (duration, the two failed-login clamps, the reputation
+  clamp, realtime detection and the three distributed-detection limits) are
+  now in the settings registry and in the JSON export, so MainWP and the cloud
+  fleet can manage them. The master toggle stays local by design: its "no
+  stored value" state is what turns hardening on automatically for
+  Professional and higher.
+
+### Fixed
+
+- The distributed-detection help texts named 5 and 20 as the defaults while
+  the code used 10 and 50, and the section intro still described the
+  superseded same-minute burst rule.
+
 ## [2.1.50] — 2026-08-29
 
 ### Security

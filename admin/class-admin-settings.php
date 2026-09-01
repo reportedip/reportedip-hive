@@ -3166,7 +3166,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hardening_realtime_detection',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_realtime_detection' ),
 				'default'           => true,
 			)
 		);
@@ -3175,7 +3175,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hardening_duration_minutes',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_duration' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_duration_minutes' ),
 				'default'           => 60,
 			)
 		);
@@ -3184,7 +3184,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hardening_login_threshold',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_login_threshold' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_login_threshold' ),
 				'default'           => 2,
 			)
 		);
@@ -3193,7 +3193,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hardening_login_timeframe',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_login_timeframe' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_login_timeframe' ),
 				'default'           => 5,
 			)
 		);
@@ -3202,7 +3202,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hardening_block_threshold',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_block_threshold' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_block_threshold' ),
 				'default'           => 60,
 			)
 		);
@@ -3211,7 +3211,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hardening_detect_window_minutes',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_detect_window' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_detect_window_minutes' ),
 				'default'           => 10,
 			)
 		);
@@ -3220,8 +3220,8 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hardening_detect_min_ips',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_detect_min_ips' ),
-				'default'           => 5,
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_detect_min_ips' ),
+				'default'           => 10,
 			)
 		);
 		register_setting(
@@ -3229,8 +3229,8 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hardening_detect_min_attempts',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_detect_min_attempts' ),
-				'default'           => 20,
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_detect_min_attempts' ),
+				'default'           => 50,
 			)
 		);
 
@@ -3243,93 +3243,6 @@ class ReportedIP_Hive_Admin_Settings {
 				'default'           => true,
 			)
 		);
-	}
-
-	/**
-	 * Sanitiser: hardening-mode duration in minutes (5–360).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.8
-	 */
-	public function sanitize_hardening_duration( $value ) {
-		$value = absint( $value );
-		return max( 5, min( 360, $value > 0 ? $value : 60 ) );
-	}
-
-	/**
-	 * Sanitiser: hardening login-failure threshold (1–10).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.8
-	 */
-	public function sanitize_hardening_login_threshold( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 10, $value > 0 ? $value : 2 ) );
-	}
-
-	/**
-	 * Sanitiser: hardening login-failure timeframe in minutes (1–60).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.8
-	 */
-	public function sanitize_hardening_login_timeframe( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 60, $value > 0 ? $value : 5 ) );
-	}
-
-	/**
-	 * Sanitiser: hardening reputation block threshold percentage.
-	 *
-	 * Floored at `ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD` — even under
-	 * hardening the reputation block never acts below that confidence.
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.8
-	 */
-	public function sanitize_hardening_block_threshold( $value ) {
-		$value = absint( $value );
-		return max( ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD, min( 100, $value > 0 ? $value : 60 ) );
-	}
-
-	/**
-	 * Sanitiser: distributed-detection window in minutes (1–120).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.29
-	 */
-	public function sanitize_hardening_detect_window( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 120, $value > 0 ? $value : 10 ) );
-	}
-
-	/**
-	 * Sanitiser: distributed-detection minimum distinct IPs (2–100).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.29
-	 */
-	public function sanitize_hardening_detect_min_ips( $value ) {
-		$value = absint( $value );
-		return max( 2, min( 100, $value > 0 ? $value : 5 ) );
-	}
-
-	/**
-	 * Sanitiser: distributed-detection minimum total attempts (3–1000).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.29
-	 */
-	public function sanitize_hardening_detect_min_attempts( $value ) {
-		$value = absint( $value );
-		return max( 3, min( 1000, $value > 0 ? $value : 20 ) );
 	}
 
 	/**
@@ -8425,7 +8338,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php esc_html_e( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ); ?>
 			</h2>
 			<p class="rip-settings-section__desc">
-				<?php esc_html_e( 'When the plugin detects ≥ 3 IPs / ≥ 20 failed logins in the same minute (burst), or many distinct IPs across the rolling detection window below (distributed botnet), it tightens the failed-login and reputation thresholds network-wide for the configured duration. The attack stops mid-flight instead of slipping under the per-IP threshold.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'When several IPs hit the login in the same minute (burst), or enough distinct IPs add up across the rolling detection window below (distributed botnet), the plugin tightens the failed-login and reputation thresholds network-wide for the configured duration. The attack stops mid-flight instead of slipping under the per-IP threshold.', 'reportedip-hive' ); ?>
 			</p>
 
 			<?php if ( $is_active ) : ?>
@@ -8572,13 +8485,13 @@ class ReportedIP_Hive_Admin_Settings {
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_hardening_detect_min_ips"><?php esc_html_e( 'Minimum distinct IPs', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_hardening_detect_min_ips" name="reportedip_hive_hardening_detect_min_ips" value="<?php echo esc_attr( (string) $detect_min_ips ); ?>" min="2" max="100" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'How many different IPs must fail login within the window to count as distributed. Default 5.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text"><?php esc_html_e( 'How many different IPs must fail login within the window to count as distributed. Default 10.', 'reportedip-hive' ); ?></p>
 					</div>
 
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_hardening_detect_min_attempts"><?php esc_html_e( 'Minimum total attempts', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_hardening_detect_min_attempts" name="reportedip_hive_hardening_detect_min_attempts" value="<?php echo esc_attr( (string) $detect_min_attempts ); ?>" min="3" max="1000" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'Total failed logins across all those IPs within the window. Default 20.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text"><?php esc_html_e( 'Total failed logins across all those IPs within the window. Default 50.', 'reportedip-hive' ); ?></p>
 					</div>
 				</fieldset>
 
