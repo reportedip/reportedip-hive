@@ -9,13 +9,13 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-01T10:03:32+00:00\n"
+"POT-Creation-Date: 2026-09-06T08:24:03+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php:3
+#: reportedip-hive.php
 #: admin/class-admin-settings.php:1885
 #: admin/class-admin-settings.php:1886
 #: admin/class-admin-settings.php:2006
@@ -27,18 +27,17 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php:4
-#: reportedip-hive.php:9
+#: reportedip-hive.php
 msgid "https://reportedip.com"
 msgstr ""
 
 #. Description of the plugin
-#: reportedip-hive.php:5
+#: reportedip-hive.php
 msgid "Community-powered WordPress security — real-time threat intelligence"
 msgstr ""
 
 #. Author of the plugin
-#: reportedip-hive.php:8
+#: reportedip-hive.php
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr ""
 
@@ -1394,7 +1393,7 @@ msgid "%s+"
 msgstr ""
 
 #: admin/class-admin-settings.php:649
-msgid "Available with the Professional plan and higher"
+msgid "Your storefront keeps its own look during 2FA. Professional and higher."
 msgstr ""
 
 #: admin/class-admin-settings.php:652
@@ -1479,7 +1478,7 @@ msgid "Reliable mail & SMS delivery"
 msgstr ""
 
 #: admin/class-admin-settings.php:793
-msgid "Upgrade to Professional to route 2FA codes and security alerts through the reportedip.com relay — verified SPF/DKIM/DMARC, anti-fraud routing, no spam folder."
+msgid "Professional routes 2FA codes and security alerts through our EU relay, with verified SPF, DKIM and DMARC, so they stop landing in the spam folder."
 msgstr ""
 
 #: admin/class-admin-settings.php:795
@@ -4093,24 +4092,23 @@ msgid "API system error"
 msgstr ""
 
 #: admin/class-admin-settings.php:6778
-msgid "Local protection included"
+msgid "All 16 sensors and the firewall, nothing held back"
 msgstr ""
 
 #: admin/class-admin-settings.php:6779
-msgid "Community threat checks"
+msgid "Complete 2FA suite including one security key"
 msgstr ""
 
 #: admin/class-admin-settings.php:6780
-msgid "Limited reports"
+msgid "Community threat checks for one domain"
 msgstr ""
 
 #: admin/class-admin-settings.php:6790
-msgid "Full report permission"
+msgid "Everything in Free, with five times the quota"
 msgstr ""
 
 #: admin/class-admin-settings.php:6791
-#: admin/class-admin-settings.php:7258
-msgid "Community recognition"
+msgid "Full report permission and threat feed access"
 msgstr ""
 
 #: admin/class-admin-settings.php:6792
@@ -4119,19 +4117,19 @@ msgid "Email support"
 msgstr ""
 
 #: admin/class-admin-settings.php:6806
-msgid "500 2FA mails / month via reportedip.com SMTP"
+msgid "2FA mail that reaches the inbox: 500 a month via our EU relay"
 msgstr ""
 
 #: admin/class-admin-settings.php:6807
-msgid "25 included 2FA SMS per month — managed via reportedip.com"
+msgid "SMS 2FA without a Twilio account: 25 a month included"
 msgstr ""
 
 #: admin/class-admin-settings.php:6808
-msgid "Multi-site licence (3 domains)"
+msgid "Covers 3 sites on one licence, 4.97 EUR each per month"
 msgstr ""
 
 #: admin/class-admin-settings.php:6809
-msgid "Priority sync (daily blacklist download)"
+msgid "Daily rule and blacklist sync, no delay"
 msgstr ""
 
 #: admin/class-admin-settings.php:6810
@@ -4151,15 +4149,15 @@ msgid "75 2FA SMS / month + prepaid bundles"
 msgstr ""
 
 #: admin/class-admin-settings.php:6828
-msgid "Multi-site licence (15 domains per licence)"
+msgid "Covers 15 client sites on one licence, 2.60 EUR each per month"
 msgstr ""
 
 #: admin/class-admin-settings.php:6829
-msgid "Bookable x2–x20: domains, API quota and 2FA mail/SMS scale with the licence count (volume discount)"
+msgid "Book 2 to 20 licences on one bill, quota and domains scale with a volume discount"
 msgstr ""
 
 #: admin/class-admin-settings.php:6830
-msgid "Whitelabel (wizards, 2FA page, all texts & email templates)"
+msgid "Your brand on the wizard, the 2FA pages and every mail"
 msgstr ""
 
 #: admin/class-admin-settings.php:6831
@@ -4351,6 +4349,10 @@ msgid "Optimised for automated systems"
 msgstr ""
 
 #: admin/class-admin-settings.php:7258
+msgid "Community recognition"
+msgstr ""
+
+#: admin/class-admin-settings.php:7258
 msgid "Visible as an active contributor"
 msgstr ""
 
@@ -4443,7 +4445,7 @@ msgid "Current plan"
 msgstr ""
 
 #: admin/class-admin-settings.php:7388
-msgid "Kontakt aufnehmen"
+msgid "Contact sales"
 msgstr ""
 
 #: admin/class-admin-settings.php:7392
@@ -5944,19 +5946,19 @@ msgid "Frontend 2FA: PRO"
 msgstr ""
 
 #: admin/class-setup-wizard.php:597
-msgid "Reliable 2FA delivery"
+msgid "2FA codes that actually arrive"
 msgstr ""
 
 #: admin/class-setup-wizard.php:600
-msgid "SMS-2FA: 25/month included (worldwide, anti-fraud capped)"
+msgid "SMS 2FA without a Twilio account, 25 a month included"
 msgstr ""
 
 #: admin/class-setup-wizard.php:601
-msgid "Mail-2FA: 500/month via SPF/DKIM/DMARC-verified relay"
+msgid "500 2FA mails a month from our EU relay, not your shared host"
 msgstr ""
 
 #: admin/class-setup-wizard.php:602
-msgid "3 domains per license · 90 days log retention"
+msgid "Covers 3 sites at 4.97 EUR each per month, 90 days of logs"
 msgstr ""
 
 #: admin/class-setup-wizard.php:605
@@ -5965,11 +5967,11 @@ msgid "See plans →"
 msgstr ""
 
 #: admin/class-setup-wizard.php:611
-msgid "Agencies & WooCommerce"
+msgid "One licence, every client site"
 msgstr ""
 
 #: admin/class-setup-wizard.php:614
-msgid "15 domains per licence · whitelabel · WooCommerce integration"
+msgid "15 client sites at 2.60 EUR each, white-labelled with your name"
 msgstr ""
 
 #: admin/class-setup-wizard.php:615
@@ -5981,7 +5983,7 @@ msgid "Mail-2FA: 2,500/month + prepaid bundles · GDPR export tool"
 msgstr ""
 
 #: admin/class-setup-wizard.php:617
-msgid "Bookable x2–x20: scales domains & quota (volume discount)"
+msgid "Book 2 to 20 licences on one bill, up to 300 sites, volume discount"
 msgstr ""
 
 #: admin/class-setup-wizard.php:627
