@@ -594,12 +594,12 @@ class ReportedIP_Hive_Setup_Wizard {
 				<article class="rip-tier-card">
 					<header class="rip-tier-card__header">
 						<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( 'professional' ); ?>
-						<h3 class="rip-tier-card__title"><?php esc_html_e( 'Reliable 2FA delivery', 'reportedip-hive' ); ?></h3>
+						<h3 class="rip-tier-card__title"><?php esc_html_e( '2FA codes that actually arrive', 'reportedip-hive' ); ?></h3>
 					</header>
 					<ul class="rip-tier-card__list">
-						<li><?php esc_html_e( 'SMS-2FA: 25/month included (worldwide, anti-fraud capped)', 'reportedip-hive' ); ?></li>
-						<li><?php esc_html_e( 'Mail-2FA: 500/month via SPF/DKIM/DMARC-verified relay', 'reportedip-hive' ); ?></li>
-						<li><?php esc_html_e( '3 domains per license · 90 days log retention', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'SMS 2FA without a Twilio account, 25 a month included', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( '500 2FA mails a month from our EU relay, not your shared host', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'Covers 3 sites at 4.97 EUR each per month, 90 days of logs', 'reportedip-hive' ); ?></li>
 					</ul>
 					<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="rip-button rip-button--secondary rip-button--sm">
 						<?php esc_html_e( 'See plans →', 'reportedip-hive' ); ?>
@@ -608,13 +608,13 @@ class ReportedIP_Hive_Setup_Wizard {
 				<article class="rip-tier-card">
 					<header class="rip-tier-card__header">
 						<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( 'business' ); ?>
-						<h3 class="rip-tier-card__title"><?php esc_html_e( 'Agencies & WooCommerce', 'reportedip-hive' ); ?></h3>
+						<h3 class="rip-tier-card__title"><?php esc_html_e( 'One licence, every client site', 'reportedip-hive' ); ?></h3>
 					</header>
 					<ul class="rip-tier-card__list">
-						<li><?php esc_html_e( '15 domains per licence · whitelabel · WooCommerce integration', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( '15 client sites at 2.60 EUR each, white-labelled with your name', 'reportedip-hive' ); ?></li>
 						<li><?php esc_html_e( 'SMS-2FA: 75/month + prepaid bundles', 'reportedip-hive' ); ?></li>
 						<li><?php esc_html_e( 'Mail-2FA: 2,500/month + prepaid bundles · GDPR export tool', 'reportedip-hive' ); ?></li>
-						<li><?php esc_html_e( 'Bookable x2–x20: scales domains & quota (volume discount)', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'Book 2 to 20 licences on one bill, up to 300 sites, volume discount', 'reportedip-hive' ); ?></li>
 					</ul>
 					<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="rip-button rip-button--secondary rip-button--sm">
 						<?php esc_html_e( 'See plans →', 'reportedip-hive' ); ?>

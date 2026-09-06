@@ -646,7 +646,7 @@ class ReportedIP_Hive_Admin_Settings {
 		?>
 		<div class="rip-alert rip-alert--info rip-pro-upsell">
 			<p class="rip-pro-upsell__title">
-				<?php esc_html_e( 'Available with the Professional plan and higher', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'Your storefront keeps its own look during 2FA. Professional and higher.', 'reportedip-hive' ); ?>
 			</p>
 			<ul class="rip-pro-upsell__features">
 				<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
@@ -790,7 +790,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 			</div>
 			<div class="rip-card__body">
-				<p><?php esc_html_e( 'Upgrade to Professional to route 2FA codes and security alerts through the reportedip.com relay — verified SPF/DKIM/DMARC, anti-fraud routing, no spam folder.', 'reportedip-hive' ); ?></p>
+				<p><?php esc_html_e( 'Professional routes 2FA codes and security alerts through our EU relay, with verified SPF, DKIM and DMARC, so they stop landing in the spam folder.', 'reportedip-hive' ); ?></p>
 				<ul class="rip-promo-card__benefits">
 					<li><?php esc_html_e( '500 mails / month included (Business: 2,500)', 'reportedip-hive' ); ?></li>
 					<li><?php esc_html_e( '25 SMS / month included (Business: 75 + add-on bundles)', 'reportedip-hive' ); ?></li>
@@ -6775,9 +6775,9 @@ class ReportedIP_Hive_Admin_Settings {
 				'reports_day' => 50,
 				'checks_day'  => 1000,
 				'features'    => array(
-					__( 'Local protection included', 'reportedip-hive' ),
-					__( 'Community threat checks', 'reportedip-hive' ),
-					__( 'Limited reports', 'reportedip-hive' ),
+					__( 'All 16 sensors and the firewall, nothing held back', 'reportedip-hive' ),
+					__( 'Complete 2FA suite including one security key', 'reportedip-hive' ),
+					__( 'Community threat checks for one domain', 'reportedip-hive' ),
 				),
 				'cta_type'    => 'upgrade',
 				'in_pricing'  => true,
@@ -6787,8 +6787,8 @@ class ReportedIP_Hive_Admin_Settings {
 				'reports_day' => 200,
 				'checks_day'  => 5000,
 				'features'    => array(
-					__( 'Full report permission', 'reportedip-hive' ),
-					__( 'Community recognition', 'reportedip-hive' ),
+					__( 'Everything in Free, with five times the quota', 'reportedip-hive' ),
+					__( 'Full report permission and threat feed access', 'reportedip-hive' ),
 					__( 'Email support', 'reportedip-hive' ),
 				),
 				'cta_type'    => 'upgrade',
@@ -6803,10 +6803,10 @@ class ReportedIP_Hive_Admin_Settings {
 				'sms_per_mo'  => 25,
 				'domains'     => 3,
 				'features'    => array(
-					__( '500 2FA mails / month via reportedip.com SMTP', 'reportedip-hive' ),
-					__( '25 included 2FA SMS per month — managed via reportedip.com', 'reportedip-hive' ),
-					__( 'Multi-site licence (3 domains)', 'reportedip-hive' ),
-					__( 'Priority sync (daily blacklist download)', 'reportedip-hive' ),
+					__( '2FA mail that reaches the inbox: 500 a month via our EU relay', 'reportedip-hive' ),
+					__( 'SMS 2FA without a Twilio account: 25 a month included', 'reportedip-hive' ),
+					__( 'Covers 3 sites on one licence, 4.97 EUR each per month', 'reportedip-hive' ),
+					__( 'Daily rule and blacklist sync, no delay', 'reportedip-hive' ),
 					__( '2FA usage reports & per-role policies', 'reportedip-hive' ),
 					__( 'Bulk operations & analytics', 'reportedip-hive' ),
 					__( 'Email support', 'reportedip-hive' ),
@@ -6825,9 +6825,9 @@ class ReportedIP_Hive_Admin_Settings {
 				'features'    => array(
 					__( '2,500 2FA mails / month', 'reportedip-hive' ),
 					__( '75 2FA SMS / month + prepaid bundles', 'reportedip-hive' ),
-					__( 'Multi-site licence (15 domains per licence)', 'reportedip-hive' ),
-					__( 'Bookable x2–x20: domains, API quota and 2FA mail/SMS scale with the licence count (volume discount)', 'reportedip-hive' ),
-					__( 'Whitelabel (wizards, 2FA page, all texts & email templates)', 'reportedip-hive' ),
+					__( 'Covers 15 client sites on one licence, 2.60 EUR each per month', 'reportedip-hive' ),
+					__( 'Book 2 to 20 licences on one bill, quota and domains scale with a volume discount', 'reportedip-hive' ),
+					__( 'Your brand on the wizard, the 2FA pages and every mail', 'reportedip-hive' ),
 					__( 'WooCommerce integration', 'reportedip-hive' ),
 					__( 'Full WP-CLI automation', 'reportedip-hive' ),
 					__( 'Restrict user login times', 'reportedip-hive' ),
@@ -7385,7 +7385,7 @@ class ReportedIP_Hive_Admin_Settings {
 										</span>
 									<?php elseif ( 'contact' === $plan['cta_type'] ) : ?>
 										<a href="<?php echo esc_url( $contact_url ); ?>" class="rip-button rip-button--primary rip-button--full-width">
-											<?php esc_html_e( 'Kontakt aufnehmen', 'reportedip-hive' ); ?>
+											<?php esc_html_e( 'Contact sales', 'reportedip-hive' ); ?>
 										</a>
 									<?php else : ?>
 										<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-button--full-width">
