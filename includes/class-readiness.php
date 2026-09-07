@@ -124,6 +124,11 @@ final class ReportedIP_Hive_Readiness {
 	/**
 	 * The open (non-dismissed) issues, newest state persisted along the way.
 	 *
+	 * Both the cache and the reconciled state are written on the main site
+	 * only. A sub-site skips the guard and cron detectors, so persisting its
+	 * result would prune those keys as resolved and drop their `first_seen`
+	 * and dismissal from the network-wide option.
+	 *
 	 * @param bool $fresh Bypass the cache (System Status page and WP-CLI).
 	 * @return array<int,array<string,mixed>>
 	 * @since  2.1.51
@@ -141,7 +146,7 @@ final class ReportedIP_Hive_Readiness {
 		$state  = self::get_state();
 		$result = self::reconcile( self::compute(), $state, time() );
 
-		if ( $result['state'] !== $state ) {
+		if ( $cacheable && $result['state'] !== $state ) {
 			ReportedIP_Hive_Option_Routing::set( self::OPT_STATE, $result['state'] );
 		}
 

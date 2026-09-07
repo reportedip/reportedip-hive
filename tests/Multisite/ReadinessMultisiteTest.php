@@ -94,6 +94,32 @@ class ReportedIP_Hive_Readiness_Multisite_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The same narrower result must not be persisted either: pruning the
+	 * guard and cron keys would wipe their first-seen timestamp and any
+	 * dismissal a network administrator had taken.
+	 */
+	public function test_subsite_compute_does_not_prune_network_state() {
+		$seed = array(
+			'cron_stalled' => array(
+				'first_seen'      => 1000,
+				'dismissed_until' => 0,
+			),
+		);
+		update_site_option( ReportedIP_Hive_Readiness::OPT_STATE, $seed );
+
+		$blog_id = self::factory()->blog->create();
+		switch_to_blog( $blog_id );
+		ReportedIP_Hive_Readiness::open_issues( true );
+		restore_current_blog();
+
+		$this->assertSame(
+			$seed,
+			get_site_option( ReportedIP_Hive_Readiness::OPT_STATE ),
+			'A sub-site must not rewrite the network-wide readiness state.'
+		);
+	}
+
+	/**
 	 * A sub-site view skips the guard and cron detectors, so it must not
 	 * publish its narrower result as the network-wide cache.
 	 */
