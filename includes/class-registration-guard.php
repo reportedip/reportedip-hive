@@ -59,11 +59,13 @@ final class ReportedIP_Hive_Registration_Guard {
 	const OPT_LIMIT_COUNT = 'reportedip_hive_registration_limit_count';
 
 	/**
-	 * Rate-limit window in minutes, up to a day. Windows beyond an hour are
-	 * approximate: {@see ReportedIP_Hive_Database::track_attempt()} restarts
-	 * the shared counter once a row sat idle for an hour, so a long window
-	 * only counts continuous activity. It errs towards letting a visitor
-	 * register, never towards refusing one.
+	 * Rate-limit window in minutes, up to a day. This is not a sliding window.
+	 * {@see ReportedIP_Hive_Database::track_attempt()} keeps a single counter
+	 * row per address, so the number compared against the limit is the
+	 * address's current run of registrations: it starts over once a whole
+	 * window passed without one ({@see count_source_ip()} drops the stale row)
+	 * and otherwise keeps adding up. A steady drip can therefore reach the
+	 * limit over a longer span than the configured window.
 	 */
 	const OPT_LIMIT_TIMEFRAME = 'reportedip_hive_registration_limit_timeframe';
 
@@ -617,6 +619,11 @@ final class ReportedIP_Hive_Registration_Guard {
 	/**
 	 * Count the current request's source IP as one registration.
 	 *
+	 * A row the window no longer covers is dropped first. The shared attempt
+	 * counter only restarts on its own after a full idle hour, so without this
+	 * a window shorter than that would keep the count of a long-finished burst
+	 * alive and refuse the address after a single further registration.
+	 *
 	 * @return void
 	 * @since  2.1.51
 	 */
@@ -629,6 +636,11 @@ final class ReportedIP_Hive_Registration_Guard {
 		$database = ReportedIP_Hive_Database::get_instance();
 		if ( $database->is_whitelisted( $ip ) ) {
 			return;
+		}
+
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_LIMIT_TIMEFRAME, 60 );
+		if ( 0 === (int) $database->get_attempt_count( $ip, self::ATTEMPT_TYPE, $timeframe ) ) {
+			$database->reset_attempt_counter( $ip, self::ATTEMPT_TYPE );
 		}
 
 		$database->track_attempt( $ip, self::ATTEMPT_TYPE );

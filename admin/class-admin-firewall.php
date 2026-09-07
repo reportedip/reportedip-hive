@@ -1243,7 +1243,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		$limit_win = (int) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Registration_Guard::OPT_LIMIT_TIMEFRAME, 60 );
 
 		echo '<div class="rip-card" id="rip-reg-limit"><div class="rip-card__header"><h2>' . esc_html__( 'Registration rate limit', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Counts completed registrations per visitor address and refuses further ones inside the window. Refusing is the whole consequence: no address is blocked and nothing is reported, because a shared office or campus connection opening a few accounts is not an attacker. Whitelisted addresses are never counted. Windows longer than an hour are approximate: the shared attempt counter starts over once an address has been idle for that long, so a long window only counts continuous activity.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'Counts completed registrations per visitor address and refuses further ones inside the window. Refusing is the whole consequence: no address is blocked and nothing is reported, because a shared office or campus connection opening a few accounts is not an attacker. Whitelisted addresses are never counted. The number compared against the limit is the address\'s current run of registrations, not a sliding window: it starts over once a whole window passes without one, so a steady drip can reach the limit over a longer span than the window.', 'reportedip-hive' ) . '</p>';
 		echo '<div class="rip-grid rip-grid-cols-2">';
 		self::render_stat_card(
 			array(

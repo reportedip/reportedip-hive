@@ -273,6 +273,56 @@ class ReportedIP_Hive_Registration_Guard_Multisite_Test extends WP_UnitTestCase 
 	}
 
 	/**
+	 * A burst that fell out of the window must not keep counting. The shared
+	 * attempt row only restarts by itself after a full idle hour, so a window
+	 * shorter than that would otherwise allow a single registration per window
+	 * for the rest of that hour.
+	 */
+	public function test_rate_limit_forgets_a_burst_the_window_no_longer_covers() {
+		global $wpdb;
+
+		$ip                     = '203.0.113.36';
+		$_SERVER['REMOTE_ADDR'] = $ip;
+
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_registration_limit_enabled', 1 );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_registration_limit_count', 2 );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_registration_limit_timeframe', 10 );
+
+		$database = ReportedIP_Hive_Database::get_instance();
+		$database->track_attempt( $ip, 'registration' );
+		$database->track_attempt( $ip, 'registration' );
+
+		$stale = gmdate( 'Y-m-d H:i:s', time() - ( 15 * MINUTE_IN_SECONDS ) );
+		$wpdb->update(
+			$wpdb->base_prefix . 'reportedip_hive_attempts',
+			array(
+				'first_attempt' => $stale,
+				'last_attempt'  => $stale,
+			),
+			array(
+				'ip_address'   => $ip,
+				'attempt_type' => 'registration',
+			),
+			array( '%s', '%s' ),
+			array( '%s', '%s' )
+		);
+
+		do_action( 'after_signup_user', 'dripuser', 'dripuser@example.org', 'dripkey', array() );
+
+		$this->assertSame(
+			1,
+			$database->get_attempt_count( $ip, 'registration', 10 ),
+			'the counter has to restart at one once the window no longer covers the previous burst'
+		);
+
+		$errors = $this->validate_signup( 'freshuser', 'freshuser@example.org' );
+
+		$this->assertNotContains( 'reportedip_hive_registration_limit', $errors->get_error_codes() );
+
+		$database->reset_attempt_counter( $ip, 'registration' );
+	}
+
+	/**
 	 * A whitelisted address is never counted against the rate limit.
 	 */
 	public function test_whitelisted_address_is_never_rate_limited() {
