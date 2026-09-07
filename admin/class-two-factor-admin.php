@@ -2341,10 +2341,15 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	/**
 	 * AJAX: Admin-only test dispatch of an SMS through the managed relay to an
 	 * arbitrary number to confirm SMS-2FA works before rolling it out to users.
+	 *
+	 * The test spends network-wide relay quota and is rendered on the Network
+	 * Admin settings tab only, so on Multisite it demands
+	 * `manage_network_options`, the same rule the AJAX handler applies to
+	 * every option-writing action.
 	 */
 	public function ajax_admin_test_sms() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( is_multisite() ? 'manage_network_options' : 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission.', 'reportedip-hive' ) ) );
 		}
 		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) || ! ReportedIP_Hive_Two_Factor_SMS::is_ready() ) {

@@ -100,7 +100,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_save_step() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
 		}
 
@@ -156,7 +156,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * @since 1.2.0
 	 */
 	public function ajax_import_settings() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
 		}
 		check_ajax_referer( 'reportedip_hive_settings_import', '_rip_ie_nonce' );
@@ -184,16 +184,32 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
+	 * Whether the current user may render or drive the setup wizard.
+	 *
+	 * Every wizard step writes network-wide options on Multisite and the
+	 * rendered page localizes the stored Community Access Key, so the wizard
+	 * follows the rule of the option-writing AJAX handlers:
+	 * `manage_network_options` on Multisite, `manage_options` on single-site.
+	 * A sub-site administrator can neither open the page nor call its steps.
+	 *
+	 * @return bool
+	 * @since  2.1.51
+	 */
+	private function user_can_run_wizard() {
+		return current_user_can( is_multisite() ? 'manage_network_options' : 'manage_options' );
+	}
+
+	/**
 	 * Add hidden wizard page to admin menu (needed for URL routing).
 	 *
 	 * Wired to both `admin_menu` (single-site) and `network_admin_menu`
 	 * (multisite super admin) so the wizard URL resolves in either
-	 * context. The capability raises to `manage_network_options` when
-	 * registering inside the network admin so a non-super-admin sneaking
-	 * onto the URL still hits a 403.
+	 * context. On Multisite the capability is `manage_network_options` in
+	 * both menus so a sub-site administrator hitting the URL gets a 403
+	 * instead of an empty page.
 	 */
 	public function add_wizard_page() {
-		$cap = is_network_admin() ? 'manage_network_options' : 'manage_options';
+		$cap = is_multisite() ? 'manage_network_options' : 'manage_options';
 		add_submenu_page(
 			'',
 			__( 'Setup Wizard', 'reportedip-hive' ),
@@ -213,9 +229,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			return;
 		}
 
-		$allowed = current_user_can( 'manage_options' )
-			|| ( is_multisite() && current_user_can( 'manage_network_options' ) );
-		if ( ! $allowed ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			return;
 		}
 
@@ -2017,7 +2031,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_save_mode() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
 		}
 
@@ -2052,7 +2066,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_validate_api_key() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
 		}
 
@@ -2201,7 +2215,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_validate_login_slug() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
 		}
 
@@ -2239,7 +2253,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_skip_wizard() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
 		}
 

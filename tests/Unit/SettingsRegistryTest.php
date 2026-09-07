@@ -83,6 +83,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_monitor_bot_verification'      => 'bool',
 				'reportedip_hive_bot_action'                    => 'enum',
 				'reportedip_hive_disposable_email_action'       => 'enum',
+				'reportedip_hive_block_email_relays'            => 'bool',
 				'reportedip_hive_comment_honeypot_enabled'      => 'bool',
 				'reportedip_hive_decoy_pathblock_enabled'       => 'bool',
 				'reportedip_hive_hide_login_enabled'            => 'bool',

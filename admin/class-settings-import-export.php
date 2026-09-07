@@ -346,10 +346,14 @@ class ReportedIP_Hive_Settings_Import_Export {
 	/**
 	 * Verifies admin capability and AJAX nonce. Aborts with HTTP 403 otherwise.
 	 *
+	 * The import writes network-wide options on Multisite, so the capability
+	 * follows the option-writing AJAX handlers: `manage_network_options` on
+	 * Multisite, `manage_options` on single-site.
+	 *
 	 * @since 1.2.0
 	 */
 	private function require_authorised_admin(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( is_multisite() ? 'manage_network_options' : 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
 		}
 		check_ajax_referer( 'reportedip_hive_settings_import', '_rip_ie_nonce' );

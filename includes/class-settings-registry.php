@@ -376,6 +376,12 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Action on disposable email domains', 'reportedip-hive' ),
 			),
+			'reportedip_hive_block_email_relays'           => array(
+				'section' => 'waf',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Block privacy relay addresses', 'reportedip-hive' ),
+			),
 			'reportedip_hive_comment_honeypot_enabled'     => array(
 				'section' => 'waf',
 				'kind'    => 'bool',

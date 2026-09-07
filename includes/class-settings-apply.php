@@ -57,11 +57,18 @@ final class ReportedIP_Hive_Settings_Apply {
 	 * state, write changes via the option router (side effects fire through
 	 * the registered option-update watchers) and log one audit event.
 	 *
+	 * Remote transports run the batch best-effort: every key that passes is
+	 * written and the rejected ones are reported next to it. An admin card
+	 * runs it atomically instead, so a single rejected key (unknown, invalid
+	 * or tier-locked) aborts the batch before anything is written and the
+	 * result map carries only the rejections.
+	 *
 	 * @param array<string, mixed> $values Incoming key => value map.
-	 * @param string               $origin Transport identifier (`mainwp`, `import`, `cloud`).
+	 * @param string               $origin Transport identifier (`mainwp`, `import`, `cloud`, `admin`).
+	 * @param bool                 $atomic Abort the whole batch on the first rejected key.
 	 * @return array{schema_version:int, results:array<string, array<string, string>>, applied:int, unchanged:int, failed:int, hash:string}
 	 */
-	public static function apply( array $values, $origin ) {
+	public static function apply( array $values, $origin, $atomic = false ) {
 		$remote_spec = ReportedIP_Hive_Settings_Registry::remote_spec();
 		$results     = array();
 		$sanitized   = array();
@@ -92,6 +99,10 @@ final class ReportedIP_Hive_Settings_Apply {
 				'message' => $error->get_error_message(),
 			);
 			unset( $sanitized[ $key ] );
+		}
+
+		if ( $atomic && ! empty( $results ) ) {
+			$sanitized = array();
 		}
 
 		$applied   = 0;
@@ -156,6 +167,13 @@ final class ReportedIP_Hive_Settings_Apply {
 	/**
 	 * Write one security-log event for an apply batch that changed values.
 	 *
+	 * Saves made by an administrator on the plugin's own pages (origin
+	 * `admin`) are logged as `settings_admin_apply`; every transport that
+	 * writes from outside the site (MainWP, cloud, import) keeps
+	 * `settings_remote_apply`, so the two cannot be confused in the log.
+	 * The acting user id is recorded for every origin so the trail names
+	 * the administrator (or the MainWP connection user) behind the change.
+	 *
 	 * @param string $origin    Transport identifier.
 	 * @param int    $applied   Keys written.
 	 * @param int    $unchanged Keys already at the target value.
@@ -169,10 +187,11 @@ final class ReportedIP_Hive_Settings_Apply {
 
 		$remote_ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 		ReportedIP_Hive_Logger::get_instance()->log_security_event(
-			'settings_remote_apply',
+			'admin' === $origin ? 'settings_admin_apply' : 'settings_remote_apply',
 			$remote_ip,
 			array(
 				'origin'    => $origin,
+				'user_id'   => (int) get_current_user_id(),
 				'applied'   => $applied,
 				'unchanged' => $unchanged,
 				'failed'    => $failed,
