@@ -131,12 +131,33 @@ class ReportedIP_Hive_Status_CLI {
 				'value' => $this->format_value( $dropin->queue_is_writable() ),
 			),
 			array(
+				'field' => 'issues',
+				'value' => $this->format_value( $this->readiness_summary() ),
+			),
+			array(
 				'field' => '2fa_enforced_roles',
 				'value' => empty( $enforce_roles ) ? '-' : implode( ', ', $enforce_roles ),
 			),
 		);
 
 		\WP_CLI\Utils\format_items( $format, $rows, array( 'field', 'value' ) );
+	}
+
+	/**
+	 * Open readiness issues as `key (severity)`, comma separated.
+	 *
+	 * Raw English on purpose: WP-CLI output is machine-readable plumbing and
+	 * stays out of the translation catalogue.
+	 *
+	 * @return string
+	 */
+	private function readiness_summary() {
+		$parts = array();
+		foreach ( ReportedIP_Hive_Readiness::open_issues( true ) as $issue ) {
+			$parts[] = $issue['key'] . ' (' . $issue['severity'] . ')';
+		}
+
+		return implode( ', ', $parts );
 	}
 
 	/**

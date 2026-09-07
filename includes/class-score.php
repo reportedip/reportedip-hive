@@ -356,15 +356,21 @@ final class ReportedIP_Hive_Score {
 	}
 
 	/**
-	 * Build an admin deep link to a settings/firewall tab.
+	 * Build an admin deep link to a plugin page, optionally to one of its tabs.
+	 *
+	 * Public since 2.1.51 so the readiness register links to the same targets
+	 * instead of growing a second `get_admin_page_url()` fallback.
 	 *
 	 * @param string $page Admin page slug.
-	 * @param string $tab  Tab slug.
+	 * @param string $tab  Tab slug, or '' for the page itself.
 	 * @return string
 	 * @since  2.1.2
 	 */
-	private static function url( $page, $tab ) {
-		$path = 'admin.php?page=' . $page . '&tab=' . $tab;
+	public static function url( $page, $tab = '' ) {
+		$path = 'admin.php?page=' . $page;
+		if ( '' !== (string) $tab ) {
+			$path .= '&tab=' . $tab;
+		}
 		if ( class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
 			return ReportedIP_Hive_Admin_Settings::get_admin_page_url( $path );
 		}

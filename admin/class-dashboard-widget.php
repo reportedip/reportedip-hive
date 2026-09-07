@@ -28,8 +28,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * All values come from existing caches — the 30-day threat-analytics
  * site transient, the public-stats transient, the option-router reads
- * behind the layer counter and the score transient — so rendering the
- * widget issues no new aggregate queries and no HTTP requests.
+ * behind the layer counter, the score transient and the readiness
+ * transient — so rendering the widget issues no HTTP requests. The one
+ * exception is a cold readiness cache: recomputing it costs the queue
+ * `GROUP BY status` aggregate and one `is_writable()` probe, at most
+ * once every five minutes across all viewers.
  *
  * @since 2.1.41
  */
@@ -126,6 +129,9 @@ final class ReportedIP_Hive_Dashboard_Widget {
 			$mode_line .= ' · ' . __( 'Network-wide numbers', 'reportedip-hive' );
 		}
 
+		$attention     = ReportedIP_Hive_Readiness::attention_count();
+		$readiness_url = self::plugin_admin_url( 'admin.php?page=reportedip-hive-debug' ) . '#rip-readiness';
+
 		$dashboard_url = self::plugin_admin_url( 'admin.php?page=reportedip-hive' );
 		$logs_url      = self::plugin_admin_url( 'admin.php?page=reportedip-hive-security&tab=logs' );
 		?>
@@ -161,6 +167,27 @@ final class ReportedIP_Hive_Dashboard_Widget {
 			</ul>
 
 			<p class="rip-dw__meta"><?php echo esc_html( $mode_line ); ?></p>
+
+			<?php if ( $attention > 0 ) : ?>
+				<p class="rip-dw__meta">
+					<a href="<?php echo esc_url( $readiness_url ); ?>">
+						<?php
+						printf(
+							/* translators: %d: number of open readiness issues. */
+							esc_html(
+								_n(
+									'%d readiness issue needs attention',
+									'%d readiness issues need attention',
+									$attention,
+									'reportedip-hive'
+								)
+							),
+							(int) $attention
+						);
+						?>
+					</a>
+				</p>
+			<?php endif; ?>
 
 			<div class="rip-dw__actions">
 				<a class="rip-dw__action" href="<?php echo esc_url( $dashboard_url ); ?>">

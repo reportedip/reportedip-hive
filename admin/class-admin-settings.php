@@ -1724,11 +1724,13 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render inline notices within plugin pages (replaces admin_notices)
+	 * Render inline notices within plugin pages (replaces admin_notices).
+	 *
+	 * `suppress_foreign_notices_on_plugin_pages()` removes every `admin_notices`
+	 * callback on Hive screens, so this is the only funnel through which an
+	 * in-page banner reaches the operator.
 	 */
 	public static function render_inline_notices() {
-		global $wpdb;
-
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		if ( $mode_manager->is_community_layer_degraded() ) {
 			$upgrade_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
@@ -1751,95 +1753,58 @@ class ReportedIP_Hive_Admin_Settings {
 
 		self::maybe_render_domain_limit_notice();
 
-		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe table name composed from Schema::table() with a hardcoded suffix.
-		$table_exists = $wpdb->get_var( "SHOW TABLES LIKE '$table'" ) === $table;
-
-		if ( ! $table_exists ) {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
 			return;
 		}
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from Schema::table() with a hardcoded suffix; safe.
-		$counts = $wpdb->get_row(
-			"SELECT
-				SUM( CASE WHEN status = 'failed' THEN 1 ELSE 0 END ) AS failed_count,
-				SUM( CASE WHEN status = 'pending' THEN 1 ELSE 0 END ) AS pending_count
-			FROM $table"
-		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
-		$failed_count  = (int) ( $counts->failed_count ?? 0 );
-		$pending_count = (int) ( $counts->pending_count ?? 0 );
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( $screen && false !== strpos( (string) $screen->id, 'reportedip-hive-debug' ) ) {
+			return;
+		}
 
-		if ( $failed_count > 0 ) {
-			$queue_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
-			$body      = sprintf(
+		$issues = array();
+		foreach ( ReportedIP_Hive_Readiness::open_issues() as $issue ) {
+			if ( ReportedIP_Hive_Readiness::SEV_ADVISORY !== (string) $issue['severity'] ) {
+				$issues[] = $issue;
+			}
+		}
+		if ( empty( $issues ) ) {
+			return;
+		}
+
+		$has_critical = false;
+		$lines        = array();
+		foreach ( $issues as $issue ) {
+			$has_critical = $has_critical || ReportedIP_Hive_Readiness::SEV_CRITICAL === (string) $issue['severity'];
+			$lines[]      = sprintf(
 				'<strong>%1$s</strong> %2$s',
-				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
-				sprintf(
-					/* translators: %1$d: number of failed reports, %2$s: link to queue page */
-					esc_html__( '%1$d API reports failed. %2$s', 'reportedip-hive' ),
-					intval( $failed_count ),
-					'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'View queue', 'reportedip-hive' ) . '</a>'
-				)
+				esc_html( $issue['label'] ),
+				esc_html( $issue['message'] )
 			);
-			ReportedIP_Hive_Admin_Notice::render(
-				array(
-					'variant'           => 'error',
-					'body'              => $body,
-					'secondary_actions' => array(
-						array(
-							'type'    => 'button',
-							'label'   => __( 'Retry all', 'reportedip-hive' ),
-							'class'   => 'rip-retry-all-failed',
-							'variant' => 'secondary',
-						),
+		}
+
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'        => $has_critical ? 'error' : 'warning',
+				'extra_classes'  => 'rip-readiness-notice',
+				'title'          => sprintf(
+					/* translators: %d: number of open readiness issues. */
+					_n(
+						'%d readiness issue needs attention',
+						'%d readiness issues need attention',
+						count( $issues ),
+						'reportedip-hive'
 					),
-				)
-			);
-		}
-
-		$warning_threshold  = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 );
-		$critical_threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 );
-
-		if ( $pending_count >= $critical_threshold ) {
-			$queue_url     = self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
-			$community_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
-			$body          = sprintf(
-				'<strong>%1$s</strong> %2$s',
-				esc_html__( 'Queue Critical:', 'reportedip-hive' ),
-				sprintf(
-					/* translators: 1: pending count, 2: upgrade link, 3: queue link */
-					esc_html__( '%1$d reports pending processing. %2$s or %3$s.', 'reportedip-hive' ),
-					intval( $pending_count ),
-					'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>',
-					'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'Manage queue', 'reportedip-hive' ) . '</a>'
-				)
-			);
-			ReportedIP_Hive_Admin_Notice::render(
-				array(
-					'variant' => 'error',
-					'body'    => $body,
-				)
-			);
-		} elseif ( $pending_count >= $warning_threshold ) {
-			$community_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
-			$body          = sprintf(
-				'<strong>%1$s</strong> %2$s',
-				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
-				sprintf(
-					/* translators: 1: pending count, 2: upgrade link */
-					esc_html__( '%1$d reports pending processing. %2$s for higher limits.', 'reportedip-hive' ),
-					intval( $pending_count ),
-					'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>'
-				)
-			);
-			ReportedIP_Hive_Admin_Notice::render(
-				array(
-					'variant' => 'warning',
-					'body'    => $body,
-				)
-			);
-		}
+					count( $issues )
+				),
+				'list_items'     => $lines,
+				'primary_action' => array(
+					'label'   => __( 'Open System Status', 'reportedip-hive' ),
+					'url'     => ReportedIP_Hive_Score::url( 'reportedip-hive-debug' ) . '#rip-readiness',
+					'variant' => 'secondary',
+				),
+			)
+		);
 	}
 
 	/**
@@ -3512,35 +3477,24 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Sanitize trusted IP header - only allow known safe values
+	 * Sanitize trusted IP header - only allow known safe values.
+	 *
+	 * A trusted header with no trusted sources is honoured from any peer,
+	 * which lets anyone reaching the origin directly claim a whitelisted
+	 * address or shed a block by rotating the header. It stays permitted for
+	 * backward compatibility; the warning is raised persistently by
+	 * {@see ReportedIP_Hive_Readiness::trusted_header()} instead of once at
+	 * save time, and the option write flushes the readiness cache so it
+	 * appears on the same page load.
+	 *
+	 * @param mixed $value Raw input.
+	 * @return string
 	 */
 	public function sanitize_trusted_ip_header( $value ) {
 		$allowed = array( '', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP' );
 		$value   = sanitize_text_field( $value ?? '' );
-		$value   = in_array( $value, $allowed, true ) ? $value : '';
 
-		/*
-		 * A trusted header with no trusted sources is honoured from any peer,
-		 * which lets anyone reaching the origin directly claim a whitelisted
-		 * address or shed a block by rotating the header. It stays permitted
-		 * for backward compatibility, but the operator has to be told.
-		 */
-		if ( '' !== $value ) {
-			$ranges = ReportedIP_Hive_Proxy_Trust::parse_ranges(
-				(string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_proxy_ranges', '' )
-			);
-
-			if ( empty( $ranges ) ) {
-				add_settings_error(
-					'reportedip_hive_trusted_ip_header',
-					'trusted_header_without_sources',
-					__( 'The client-IP header is currently accepted from any source. Anyone able to reach this site directly can forge their IP address. Add the CIDR ranges of your proxy or CDN under Trusted proxy sources.', 'reportedip-hive' ),
-					'warning'
-				);
-			}
-		}
-
-		return $value;
+		return in_array( $value, $allowed, true ) ? $value : '';
 	}
 
 	/**
@@ -6092,6 +6046,93 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Render the readiness issue register on the System Status page.
+	 *
+	 * One row per open issue: severity badge, label and remediation, how long
+	 * the condition has been standing, and the deep links to the setting that
+	 * fixes it, the documentation and — unless it is critical — the seven-day
+	 * site-wide dismissal.
+	 *
+	 * @param array<int,array<string,mixed>> $issues Output of {@see ReportedIP_Hive_Readiness::open_issues()}.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private function render_readiness_section( array $issues ) {
+		$now           = time();
+		$severity_meta = array(
+			ReportedIP_Hive_Readiness::SEV_CRITICAL => array( 'danger', __( 'Critical', 'reportedip-hive' ) ),
+			ReportedIP_Hive_Readiness::SEV_WARNING  => array( 'warning', __( 'Warning', 'reportedip-hive' ) ),
+			ReportedIP_Hive_Readiness::SEV_ADVISORY => array( 'info', __( 'Advisory', 'reportedip-hive' ) ),
+		);
+		?>
+		<div class="rip-settings-section" id="rip-readiness">
+			<h2 class="rip-settings-section__title">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+				<?php esc_html_e( 'Readiness', 'reportedip-hive' ); ?>
+			</h2>
+			<p class="rip-settings-section__desc">
+				<?php esc_html_e( 'Operational faults that stop a protection layer from doing its job. Warnings can be hidden for seven days; critical entries stay until the cause is gone, and every entry disappears on its own once the condition clears.', 'reportedip-hive' ); ?>
+			</p>
+
+			<div class="rip-card">
+				<div class="rip-card__body">
+					<?php if ( empty( $issues ) ) : ?>
+						<p class="rip-help-text"><?php esc_html_e( 'No open readiness issues.', 'reportedip-hive' ); ?></p>
+					<?php else : ?>
+						<table class="rip-table">
+							<thead>
+								<tr>
+									<th><?php esc_html_e( 'Severity', 'reportedip-hive' ); ?></th>
+									<th><?php esc_html_e( 'Issue', 'reportedip-hive' ); ?></th>
+									<th><?php esc_html_e( 'Since', 'reportedip-hive' ); ?></th>
+									<th><?php esc_html_e( 'Actions', 'reportedip-hive' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php
+								foreach ( $issues as $issue ) :
+									$severity = (string) $issue['severity'];
+									$meta     = $severity_meta[ $severity ] ?? $severity_meta[ ReportedIP_Hive_Readiness::SEV_ADVISORY ];
+									$since    = (int) $issue['first_seen'];
+									?>
+									<tr>
+										<td><span class="rip-badge rip-badge--<?php echo esc_attr( $meta[0] ); ?>"><?php echo esc_html( $meta[1] ); ?></span></td>
+										<td>
+											<strong><?php echo esc_html( $issue['label'] ); ?></strong><br>
+											<span class="rip-help-text"><?php echo esc_html( $issue['message'] ); ?></span>
+										</td>
+										<td>
+											<span title="<?php echo esc_attr( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $since ) ); ?>">
+												<?php echo esc_html( human_time_diff( $since, $now ) ); ?>
+											</span>
+										</td>
+										<td>
+											<a class="rip-button rip-button--secondary rip-button--sm" href="<?php echo esc_url( (string) $issue['settings_url'] ); ?>"><?php esc_html_e( 'Manage', 'reportedip-hive' ); ?></a>
+											<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( (string) $issue['doc_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Documentation', 'reportedip-hive' ); ?></a>
+											<?php if ( ! empty( $issue['dismissable'] ) ) : ?>
+												<?php
+												$dismiss_url = wp_nonce_url(
+													admin_url(
+														'admin-post.php?action=' . ReportedIP_Hive_Readiness::ACTION_DISMISS . '&issue=' . rawurlencode( (string) $issue['key'] )
+													),
+													ReportedIP_Hive_Readiness::ACTION_DISMISS
+												);
+												?>
+												<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( $dismiss_url ); ?>"><?php esc_html_e( 'Dismiss for 7 days', 'reportedip-hive' ); ?></a>
+											<?php endif; ?>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					<?php endif; ?>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Render the Cron status panel on the System Status page.
 	 *
 	 * Surfaces the next scheduled run for each plugin cron hook plus the
@@ -6115,18 +6156,10 @@ class ReportedIP_Hive_Admin_Settings {
 			$hooks[ $hook_name ] = isset( $labels[ $hook_name ] ) ? $labels[ $hook_name ] : $hook_name;
 		}
 
-		$now             = time();
-		$lock_held       = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
-		$nonce           = wp_create_nonce( 'reportedip_hive_nonce' );
-		$datetime_fmt    = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
-		$all_overdue_24h = true;
-		foreach ( array_keys( $hooks ) as $hook ) {
-			$next = wp_next_scheduled( $hook );
-			if ( false === $next || ( $now - $next ) < DAY_IN_SECONDS ) {
-				$all_overdue_24h = false;
-				break;
-			}
-		}
+		$now          = time();
+		$lock_held    = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
+		$nonce        = wp_create_nonce( 'reportedip_hive_nonce' );
+		$datetime_fmt = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
@@ -6136,13 +6169,6 @@ class ReportedIP_Hive_Admin_Settings {
 			<p class="rip-settings-section__desc">
 				<?php esc_html_e( 'WP-Cron processes the report queue and refreshes quota counters. If the next-run times below stay in the past, WP-Cron is not firing — set up a server cron (snippet below) or check your CDN/cache plugin.', 'reportedip-hive' ); ?>
 			</p>
-
-			<?php if ( $all_overdue_24h ) : ?>
-				<div class="rip-alert rip-alert--error" style="margin-bottom: var(--rip-space-3);">
-					<strong><?php esc_html_e( 'WP-Cron has not fired any ReportedIP Hive hook in the last 24 h.', 'reportedip-hive' ); ?></strong>
-					<?php esc_html_e( 'Likely cause: another plugin\'s cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below.', 'reportedip-hive' ); ?>
-				</div>
-			<?php endif; ?>
 
 			<div class="rip-card">
 				<div class="rip-card__body">
@@ -6517,6 +6543,8 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 				<?php endforeach; ?>
 			</div>
+
+			<?php $this->render_readiness_section( ReportedIP_Hive_Readiness::open_issues( true ) ); ?>
 
 			<!-- System Info Section -->
 			<div class="rip-card">

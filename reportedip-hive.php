@@ -434,6 +434,8 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-logger.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-score.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-readiness.php';
+		ReportedIP_Hive_Readiness::init();
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';

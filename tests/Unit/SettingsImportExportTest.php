@@ -96,6 +96,7 @@ class SettingsImportExportTest extends TestCase {
 
 		$this->assertNotContains( 'reportedip_hive_waf_dropin_enabled', $keys, 'Drop-in toggle is host-specific and must stay local.' );
 		$this->assertNotContains( 'reportedip_hive_rule_sync_last_run', $keys, 'Sync timestamps are runtime state.' );
+		$this->assertNotContains( 'reportedip_hive_readiness_state', $keys, 'Readiness state is runtime state.' );
 		$this->assertNotContains( 'reportedip_hive_ruleset_waf', $keys, 'Stored rulesets are runtime state.' );
 	}
 
