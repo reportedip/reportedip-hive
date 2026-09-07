@@ -172,7 +172,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * @since  2.1.44
 	 */
 	private function require_admin_capability() {
-		if ( ! current_user_can( is_multisite() ? 'manage_network_options' : 'manage_options' ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
 		}
 	}

@@ -196,7 +196,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * @since  2.1.51
 	 */
 	private function user_can_run_wizard() {
-		return current_user_can( is_multisite() ? 'manage_network_options' : 'manage_options' );
+		return ReportedIP_Hive_Option_Routing::current_user_can_manage();
 	}
 
 	/**
@@ -209,12 +209,11 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * instead of an empty page.
 	 */
 	public function add_wizard_page() {
-		$cap = is_multisite() ? 'manage_network_options' : 'manage_options';
 		add_submenu_page(
 			'',
 			__( 'Setup Wizard', 'reportedip-hive' ),
 			__( 'Setup Wizard', 'reportedip-hive' ),
-			$cap,
+			ReportedIP_Hive_Option_Routing::manage_capability(),
 			self::PAGE_SLUG,
 			'__return_null'
 		);

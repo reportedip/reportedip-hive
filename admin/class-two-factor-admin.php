@@ -2349,7 +2349,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 */
 	public function ajax_admin_test_sms() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-		if ( ! current_user_can( is_multisite() ? 'manage_network_options' : 'manage_options' ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission.', 'reportedip-hive' ) ) );
 		}
 		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) || ! ReportedIP_Hive_Two_Factor_SMS::is_ready() ) {

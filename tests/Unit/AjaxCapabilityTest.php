@@ -6,7 +6,8 @@
  * settings must demand `manage_network_options`; a sub-site administrator
  * holding only `manage_options` must never reach the option router through
  * admin-ajax.php. The one handler a site administrator legitimately calls
- * (per-user notice dismissal) keeps the site-level check.
+ * (per-user notice dismissal) keeps the site-level check. The rule itself
+ * has exactly one owner, `ReportedIP_Hive_Option_Routing::manage_capability()`.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -45,12 +46,32 @@ class AjaxCapabilityTest extends TestCase {
 	);
 
 	/**
+	 * The one place the Multisite capability rule may be spelled out.
+	 */
+	const RULE = "is_multisite() ? 'manage_network_options' : 'manage_options'";
+
+	/**
 	 * Handler source text.
 	 *
 	 * @return string
 	 */
 	private function handler_source(): string {
 		return (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-ajax-handler.php' );
+	}
+
+	/**
+	 * Every PHP source file under admin/ and includes/.
+	 *
+	 * @return array<string, string> Relative path => source text.
+	 */
+	private function plugin_sources(): array {
+		$root    = dirname( __DIR__, 2 );
+		$sources = array();
+		foreach ( array_merge( (array) glob( $root . '/admin/*.php' ), (array) glob( $root . '/includes/*.php' ) ) as $file ) {
+			$sources[ str_replace( '\\', '/', substr( (string) $file, strlen( $root ) + 1 ) ) ] = (string) file_get_contents( (string) $file );
+		}
+
+		return $sources;
 	}
 
 	/**
@@ -69,9 +90,35 @@ class AjaxCapabilityTest extends TestCase {
 		return $bodies;
 	}
 
+	public function test_capability_rule_has_a_single_owner() {
+		$sources = $this->plugin_sources();
+		$this->assertArrayHasKey( 'includes/class-option-routing.php', $sources );
+
+		foreach ( $sources as $path => $source ) {
+			if ( 'includes/class-option-routing.php' === $path ) {
+				$this->assertMatchesRegularExpression(
+					'/function manage_capability\(\)\s*\{\s*return ' . preg_quote( self::RULE, '/' ) . ';/s',
+					$source,
+					'Option_Routing::manage_capability() must own the Multisite capability rule'
+				);
+				$this->assertMatchesRegularExpression(
+					'/function current_user_can_manage\(\)\s*\{\s*return current_user_can\( self::manage_capability\(\) \);/s',
+					$source
+				);
+				continue;
+			}
+
+			$this->assertStringNotContainsString(
+				self::RULE,
+				$source,
+				"$path must call Option_Routing::current_user_can_manage() instead of restating the capability rule"
+			);
+		}
+	}
+
 	public function test_admin_capability_helper_is_multisite_aware() {
 		$this->assertMatchesRegularExpression(
-			'/function require_admin_capability\(\)\s*\{\s*if \( ! current_user_can\( is_multisite\(\) \? \'manage_network_options\' : \'manage_options\' \) \)/s',
+			'/function require_admin_capability\(\)\s*\{\s*if \( ! ReportedIP_Hive_Option_Routing::current_user_can_manage\(\) \)/s',
 			$this->handler_source(),
 			'require_admin_capability() must demand manage_network_options on Multisite'
 		);
@@ -144,12 +191,16 @@ class AjaxCapabilityTest extends TestCase {
 		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-setup-wizard.php' );
 
 		$this->assertMatchesRegularExpression(
-			'/function user_can_run_wizard\(\)\s*\{\s*return current_user_can\( is_multisite\(\) \? \'manage_network_options\' : \'manage_options\' \);/s',
+			'/function user_can_run_wizard\(\)\s*\{\s*return ReportedIP_Hive_Option_Routing::current_user_can_manage\(\);/s',
 			$source,
 			'the wizard must follow the option-writing capability rule'
 		);
 		$this->assertStringNotContainsString( "current_user_can( 'manage_options' )", $source, 'no wizard path may accept a sub-site administrator' );
-		$this->assertStringContainsString( "\$cap = is_multisite() ? 'manage_network_options' : 'manage_options';", $source, 'the hidden menu entry must 403 sub-site administrators' );
+		$this->assertMatchesRegularExpression(
+			'/function add_wizard_page\(\)\s*\{\s*add_submenu_page\((?:(?!\);).)*?ReportedIP_Hive_Option_Routing::manage_capability\(\),/s',
+			$source,
+			'the hidden menu entry must 403 sub-site administrators'
+		);
 
 		foreach ( array( 'maybe_render_standalone_wizard', 'ajax_save_step', 'ajax_import_settings', 'ajax_save_mode', 'ajax_validate_api_key', 'ajax_validate_login_slug', 'ajax_skip_wizard' ) as $method ) {
 			$this->assertSame( 1, preg_match( '/function ' . $method . '\(\)\s*\{(.*?)\n\t\}/s', $source, $match ), "$method() must exist" );
@@ -161,7 +212,7 @@ class AjaxCapabilityTest extends TestCase {
 		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-settings-import-export.php' );
 
 		$this->assertMatchesRegularExpression(
-			'/function require_authorised_admin\(\): void\s*\{\s*if \( ! current_user_can\( is_multisite\(\) \? \'manage_network_options\' : \'manage_options\' \) \)/s',
+			'/function require_authorised_admin\(\): void\s*\{\s*if \( ! ReportedIP_Hive_Option_Routing::current_user_can_manage\(\) \)/s',
 			$source,
 			'the settings import writes sitemeta and must not be reachable by a sub-site administrator'
 		);
@@ -171,9 +222,19 @@ class AjaxCapabilityTest extends TestCase {
 		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-two-factor-admin.php' );
 
 		$this->assertMatchesRegularExpression(
-			'/function ajax_admin_test_sms\(\)\s*\{\s*check_ajax_referer\( \'reportedip_hive_nonce\', \'nonce\' \);\s*if \( ! current_user_can\( is_multisite\(\) \? \'manage_network_options\' : \'manage_options\' \) \)/s',
+			'/function ajax_admin_test_sms\(\)\s*\{\s*check_ajax_referer\( \'reportedip_hive_nonce\', \'nonce\' \);\s*if \( ! ReportedIP_Hive_Option_Routing::current_user_can_manage\(\) \)/s',
 			$source,
 			'the relay test SMS spends network quota behind the shared nonce and must not be reachable by a sub-site administrator'
+		);
+	}
+
+	public function test_dashboard_widget_uses_the_shared_predicate() {
+		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-dashboard-widget.php' );
+
+		$this->assertMatchesRegularExpression(
+			'/function current_user_can_view\(\)\s*\{\s*return ReportedIP_Hive_Option_Routing::current_user_can_manage\(\);/s',
+			$source,
+			'the dashboard widget visibility must follow the same rule as the settings writers'
 		);
 	}
 }

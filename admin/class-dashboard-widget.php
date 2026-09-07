@@ -201,10 +201,7 @@ final class ReportedIP_Hive_Dashboard_Widget {
 	 * @since  2.1.41
 	 */
 	private static function current_user_can_view() {
-		if ( is_multisite() ) {
-			return current_user_can( 'manage_network_options' );
-		}
-		return current_user_can( 'manage_options' );
+		return ReportedIP_Hive_Option_Routing::current_user_can_manage();
 	}
 
 	/**

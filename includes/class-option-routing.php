@@ -200,6 +200,34 @@ final class ReportedIP_Hive_Option_Routing {
 	}
 
 	/**
+	 * The capability that may change plugin settings.
+	 *
+	 * Every plugin option is sitemeta and every plugin table is network-wide
+	 * on Multisite, so writing settings is a Network Admin decision there
+	 * (`manage_network_options`); on single-site it is `manage_options`.
+	 * This is the single owner of that rule: menus, AJAX handlers, the setup
+	 * wizard, the settings import and the dashboard widget all read it from
+	 * here so the decision cannot drift between call sites.
+	 *
+	 * @return string
+	 * @since  2.1.51
+	 */
+	public static function manage_capability() {
+		return is_multisite() ? 'manage_network_options' : 'manage_options';
+	}
+
+	/**
+	 * Whether the current user may change plugin settings.
+	 *
+	 * @see manage_capability()
+	 * @return bool
+	 * @since  2.1.51
+	 */
+	public static function current_user_can_manage() {
+		return current_user_can( self::manage_capability() );
+	}
+
+	/**
 	 * Drop the per-request resolve cache.
 	 *
 	 * Called from `update_option_*` / `update_site_option_*` hooks so a
