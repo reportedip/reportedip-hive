@@ -165,6 +165,23 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNotContains( '', $list );
 		}
 
+		public function test_allowed_namespaces_fall_back_to_the_seeded_list(): void {
+			$GLOBALS['wp_options'] = array();
+
+			$list = \ReportedIP_Hive_Attack_Surface::allowed_namespaces();
+
+			$this->assertSame(
+				$this->seeded_namespaces(),
+				$list,
+				'A site whose option row was never seeded must still answer oEmbed, Store API and friends.'
+			);
+			$this->assertSame(
+				'allow',
+				\ReportedIP_Hive_Attack_Surface::rest_decision( 'logged_in', '/wc/store/cart', false, array(), false, $list, array( 'administrator' ) ),
+				'The resolved fallback list has to keep the Store API open for anonymous shoppers.'
+			);
+		}
+
 		public function test_default_allowlist_covers_every_rate_limit_bypass_namespace(): void {
 			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-rest-monitor.php' );
 

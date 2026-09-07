@@ -139,6 +139,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertSame( '["administrator"]', $defaults['reportedip_hive_rest_allowed_roles'] );
 
+			$this->assertStringContainsString(
+				'ReportedIP_Hive_Option_Routing::get( self::OPT_REST_NAMESPACES, ReportedIP_Hive_Defaults::all_option_defaults()[ self::OPT_REST_NAMESPACES ] )',
+				$source,
+				'A missing option row must fall back to the seeded allowlist, not to an empty one.'
+			);
+			$this->assertStringContainsString(
+				'ReportedIP_Hive_Option_Routing::get( $as::OPT_REST_NAMESPACES, ReportedIP_Hive_Defaults::all_option_defaults()[ $as::OPT_REST_NAMESPACES ] )',
+				(string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-admin-firewall.php' ),
+				'The textarea must show the same fallback the runtime uses.'
+			);
+			$this->assertStringContainsString( 'wc/store', (string) $defaults['reportedip_hive_rest_allowed_namespaces'] );
+
 			foreach ( array(
 				'reportedip_hive_disable_xmlrpc',
 				'reportedip_hive_disable_feeds',

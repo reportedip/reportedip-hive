@@ -471,11 +471,17 @@ final class ReportedIP_Hive_Attack_Surface {
 	 * Allowlisted namespaces from the option, plus the ones that can never
 	 * be gated.
 	 *
+	 * The fallback is the seeded list, not an empty string: `seed_missing()`
+	 * runs on activation and on `admin_init`, so a site that switched the
+	 * mode on remotely without ever loading wp-admin has no option row yet,
+	 * and an empty fallback would silently refuse oEmbed, WooCommerce Store
+	 * and every other namespace the seed opens.
+	 *
 	 * @return string[]
 	 * @since  2.1.51
 	 */
 	public static function allowed_namespaces() {
-		$raw   = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_REST_NAMESPACES, '' );
+		$raw   = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_REST_NAMESPACES, ReportedIP_Hive_Defaults::all_option_defaults()[ self::OPT_REST_NAMESPACES ] );
 		$lines = preg_split( '/\R/', $raw );
 		$list  = array();
 

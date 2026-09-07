@@ -48,6 +48,15 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 	const DENIED_EXTENSIONS = 'php|phtml|php[0-9]|phps|phar|pl|py|cgi|sh|shtml';
 
 	/**
+	 * Tail of the extension match. A denied extension counts wherever it is
+	 * followed by another dot or ends the name, so the classic double
+	 * extension (`shell.php.jpg`, which an `AddHandler`/`AddType` stack still
+	 * hands to the interpreter) is refused as well. Deliberately not an
+	 * unanchored match: `\.sh` anywhere would also refuse `summer.shirt.jpg`.
+	 */
+	const EXTENSION_TAIL = '(\.|$)';
+
+	/**
 	 * @var self|null
 	 */
 	private static $instance = null;
@@ -116,6 +125,23 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 	 * @since  2.1.51
 	 */
 	public static function uploads_basedir() {
+		$dir = self::main_site_upload_dir();
+
+		if ( ! empty( $dir['error'] ) || empty( $dir['basedir'] ) ) {
+			return '';
+		}
+
+		return rtrim( (string) $dir['basedir'], '/\\' );
+	}
+
+	/**
+	 * `wp_get_upload_dir()` of the main site. Single resolver so path and URL
+	 * can never disagree about which site's uploads directory is meant.
+	 *
+	 * @return array<string,mixed>
+	 * @since  2.1.51
+	 */
+	private static function main_site_upload_dir() {
 		$switched = false;
 
 		if ( is_multisite() && function_exists( 'get_main_site_id' ) && get_current_blog_id() !== get_main_site_id() ) {
@@ -129,11 +155,7 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 			restore_current_blog();
 		}
 
-		if ( ! is_array( $dir ) || ! empty( $dir['error'] ) || empty( $dir['basedir'] ) ) {
-			return '';
-		}
-
-		return rtrim( (string) $dir['basedir'], '/\\' );
+		return is_array( $dir ) ? $dir : array();
 	}
 
 	/**
@@ -144,20 +166,9 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 	 * @since  2.1.51
 	 */
 	public static function uploads_url_path() {
-		$switched = false;
+		$dir = self::main_site_upload_dir();
 
-		if ( is_multisite() && function_exists( 'get_main_site_id' ) && get_current_blog_id() !== get_main_site_id() ) {
-			switch_to_blog( get_main_site_id() );
-			$switched = true;
-		}
-
-		$dir = wp_get_upload_dir();
-
-		if ( $switched ) {
-			restore_current_blog();
-		}
-
-		$baseurl = is_array( $dir ) && ! empty( $dir['baseurl'] ) ? (string) $dir['baseurl'] : '';
+		$baseurl = empty( $dir['baseurl'] ) ? '' : (string) $dir['baseurl'];
 		$path    = '' === $baseurl ? '' : (string) wp_parse_url( $baseurl, PHP_URL_PATH );
 
 		return '' === $path ? '/wp-content/uploads' : rtrim( $path, '/' );
@@ -176,7 +187,7 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 	 */
 	public static function htaccess_block_lines() {
 		return array(
-			'<FilesMatch "(?i)\.(' . self::DENIED_EXTENSIONS . ')$">',
+			'<FilesMatch "(?i)\.(' . self::DENIED_EXTENSIONS . ')' . self::EXTENSION_TAIL . '">',
 			'    <IfModule mod_authz_core.c>',
 			'        Require all denied',
 			'    </IfModule>',
@@ -211,7 +222,7 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 		$lines   = array();
 		$lines[] = '# ReportedIP Hive — no PHP execution in uploads (nginx)';
 		$lines[] = '# Place this ABOVE your "location ~ \.php$" block.';
-		$lines[] = 'location ~* ^' . self::uploads_url_path() . '/.*\.(' . self::DENIED_EXTENSIONS . ')$ {';
+		$lines[] = 'location ~* ^' . self::uploads_url_path() . '/.*\.(' . self::DENIED_EXTENSIONS . ')' . self::EXTENSION_TAIL . ' {';
 		$lines[] = '    deny all;';
 		$lines[] = '}';
 		return implode( "\n", $lines ) . "\n";

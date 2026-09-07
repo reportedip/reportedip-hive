@@ -2152,7 +2152,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	 */
 	private function render_rest_access_card( $mode ) {
 		$as         = 'ReportedIP_Hive_Attack_Surface';
-		$namespaces = (string) ReportedIP_Hive_Option_Routing::get( $as::OPT_REST_NAMESPACES, '' );
+		$namespaces = (string) ReportedIP_Hive_Option_Routing::get( $as::OPT_REST_NAMESPACES, ReportedIP_Hive_Defaults::all_option_defaults()[ $as::OPT_REST_NAMESPACES ] );
 		$roles      = $as::allowed_roles();
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'REST API access', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
