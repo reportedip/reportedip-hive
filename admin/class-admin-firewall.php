@@ -188,7 +188,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			),
 			'tor_exits'          => array(
 				'label' => __( 'Tor exit nodes', 'reportedip-hive' ),
-				'feeds' => __( 'Tor Exit Blocking', 'reportedip-hive' ),
+				'feeds' => __( 'Tor Exit Node Blocking', 'reportedip-hive' ),
 				'tab'   => 'overview',
 				'url'   => ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=blocking' ),
 			),
@@ -1526,7 +1526,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	 * @return void
 	 */
 	private function render_rule_sync_tab() {
-		self::render_tab_intro( __( 'The detection rules behind the WAF, Bot Verification, Spam Defence and Scan Detection are not hard-coded: they are versioned rulesets, maintained on reportedip.com, signed with Ed25519 and delivered through the Rule API. A bundled baseline ships with the plugin, so every install is protected even fully offline.', 'reportedip-hive' ) );
+		self::render_tab_intro( __( 'The detection rules behind the WAF, Bot Verification, Spam Defence, Scan Detection and Tor Exit Node Blocking are not hard-coded: they are versioned rulesets, maintained on reportedip.com, signed with Ed25519 and delivered through the Rule API. A bundled baseline ships with the plugin, so every install is protected even fully offline.', 'reportedip-hive' ) );
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$sync         = ReportedIP_Hive_Rule_Sync::get_instance();
