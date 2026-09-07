@@ -67,7 +67,7 @@ class AjaxCapabilityTest extends TestCase {
 	private function plugin_sources(): array {
 		$root    = dirname( __DIR__, 2 );
 		$sources = array();
-		foreach ( array_merge( (array) glob( $root . '/admin/*.php' ), (array) glob( $root . '/includes/*.php' ) ) as $file ) {
+		foreach ( array_merge( array( $root . '/reportedip-hive.php' ), (array) glob( $root . '/admin/*.php' ), (array) glob( $root . '/includes/*.php' ) ) as $file ) {
 			$sources[ str_replace( '\\', '/', substr( (string) $file, strlen( $root ) + 1 ) ) ] = (string) file_get_contents( (string) $file );
 		}
 

@@ -1918,7 +1918,7 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		$raw    = isset( $_POST['payload'] ) ? wp_unslash( $_POST['payload'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON blob; decoded below and every key sanitised by Settings_Apply through the registry.
 		$values = json_decode( (string) $raw, true );
-		if ( ! is_array( $values ) ) {
+		if ( ! is_array( $values ) || empty( $values ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid payload.', 'reportedip-hive' ) ) );
 		}
 
