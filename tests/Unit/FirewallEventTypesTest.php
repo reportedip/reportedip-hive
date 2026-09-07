@@ -23,6 +23,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 	use ReportedIP\Hive\Tests\TestCase;
 
+	require_once dirname( __DIR__, 2 ) . '/includes/class-rule-store.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-admin-firewall.php';
 
 	/**
@@ -81,6 +82,28 @@ namespace ReportedIP\Hive\Tests\Unit {
 				\ReportedIP_Hive_Admin_Firewall::FIREWALL_EVENT_TYPES,
 				'scan_404 is an attempt-tracker key, not a logged event type.'
 			);
+		}
+
+		/**
+		 * The Rule Sync tab iterates `Rule_Store::VALID_KEYS` and falls back to
+		 * the raw key with an empty "Feeds" cell for anything `ruleset_meta()`
+		 * does not know — which is how `tor_exits` shipped unlabeled.
+		 */
+		public function test_every_ruleset_key_has_display_metadata(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-admin-firewall.php' );
+			$this->assertSame(
+				1,
+				preg_match( '/function ruleset_meta\(\)\s*\{(.*?)\n\t\}/s', $source, $m ),
+				'ruleset_meta() must exist in Admin_Firewall.'
+			);
+
+			foreach ( \ReportedIP_Hive_Rule_Store::VALID_KEYS as $key ) {
+				$this->assertMatchesRegularExpression(
+					'/\'' . preg_quote( $key, '/' ) . '\'\s*=>\s*array\(/',
+					$m[1],
+					"Ruleset '{$key}' has no label/feeds entry in ruleset_meta(); the Rule Sync tab renders it raw."
+				);
+			}
 		}
 	}
 }

@@ -158,9 +158,10 @@ class ReportedIP_Hive_Admin_Firewall {
 	}
 
 	/**
-	 * Display metadata for the four server-delivered ruleset keys.
+	 * Display metadata for every server-delivered ruleset key. `url` wins over
+	 * `tab` when the consuming feature lives outside the Firewall page.
 	 *
-	 * @return array<string,array{label:string,feeds:string,tab:string}>
+	 * @return array<string,array{label:string,feeds:string,tab:string,url?:string}>
 	 * @since  2.1.3
 	 */
 	private static function ruleset_meta() {
@@ -184,6 +185,12 @@ class ReportedIP_Hive_Admin_Firewall {
 				'label' => __( 'Scanner probe paths', 'reportedip-hive' ),
 				'feeds' => __( 'Scan Detection', 'reportedip-hive' ),
 				'tab'   => 'scan',
+			),
+			'tor_exits'          => array(
+				'label' => __( 'Tor exit nodes', 'reportedip-hive' ),
+				'feeds' => __( 'Tor Exit Blocking', 'reportedip-hive' ),
+				'tab'   => 'overview',
+				'url'   => ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=blocking' ),
 			),
 		);
 	}
@@ -1556,11 +1563,12 @@ class ReportedIP_Hive_Admin_Firewall {
 			$label      = isset( $meta[ $key ] ) ? $meta[ $key ]['label'] : $key;
 			$feeds_lbl  = isset( $meta[ $key ] ) ? $meta[ $key ]['feeds'] : '';
 			$feeds_tab  = isset( $meta[ $key ] ) ? $meta[ $key ]['tab'] : 'overview';
+			$feeds_url  = isset( $meta[ $key ]['url'] ) ? $meta[ $key ]['url'] : self::tab_url( $feeds_tab );
 			printf(
 				'<tr><td><strong>%1$s</strong><br /><code>%2$s</code></td><td><a href="%3$s">%4$s</a></td><td>%5$d</td><td>%6$s</td><td><span class="rip-badge %7$s">%8$s</span></td></tr>',
 				esc_html( $label ),
 				esc_html( $key ),
-				esc_url( self::tab_url( $feeds_tab ) ),
+				esc_url( $feeds_url ),
 				esc_html( $feeds_lbl ),
 				absint( $rule_count ),
 				$synced ? 'v' . absint( $version ) : esc_html__( 'bundled', 'reportedip-hive' ),
