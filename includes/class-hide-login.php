@@ -380,9 +380,23 @@ class ReportedIP_Hive_Hide_Login {
 	 * Optional 404 mode: theme's 404 template — gives no plugin fingerprint.
 	 */
 	private function render_block_response(): void {
-		self::render_response(
-			(string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', self::RESPONSE_MODE_BLOCK_PAGE )
+		self::render_response( self::response_mode() );
+	}
+
+	/**
+	 * Sanitised response mode. Single source of truth for Hide Login, the
+	 * wp-admin guest block and the attack-surface switches — one setting
+	 * decides what every closed endpoint answers with.
+	 *
+	 * @return string One of the RESPONSE_MODE_* constants.
+	 * @since  2.1.51
+	 */
+	public static function response_mode(): string {
+		$mode = (string) ReportedIP_Hive_Option_Routing::get(
+			'reportedip_hive_hide_login_response_mode',
+			self::RESPONSE_MODE_BLOCK_PAGE
 		);
+		return self::get_instance()->sanitize_response_mode( $mode );
 	}
 
 	/**

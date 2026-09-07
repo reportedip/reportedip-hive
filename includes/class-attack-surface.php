@@ -305,7 +305,7 @@ final class ReportedIP_Hive_Attack_Surface {
 		}
 
 		self::log_denied( self::EVENT_XMLRPC, array( 'path' => ReportedIP_Hive_Request_Path::current() ) );
-		ReportedIP_Hive_Hide_Login::render_response( self::response_mode() );
+		ReportedIP_Hive_Hide_Login::render_response( ReportedIP_Hive_Hide_Login::response_mode() );
 	}
 
 	/**
@@ -322,21 +322,6 @@ final class ReportedIP_Hive_Attack_Surface {
 
 		self::log_denied( self::EVENT_FEED, array( 'path' => ReportedIP_Hive_Request_Path::current() ) );
 		ReportedIP_Hive_Hide_Login::render_response( ReportedIP_Hive_Hide_Login::RESPONSE_MODE_404 );
-	}
-
-	/**
-	 * Response mode shared with Hide Login — one setting decides what a
-	 * refused endpoint answers with.
-	 *
-	 * @return string
-	 * @since  2.1.51
-	 */
-	public static function response_mode() {
-		$mode = (string) ReportedIP_Hive_Option_Routing::get(
-			'reportedip_hive_hide_login_response_mode',
-			ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE
-		);
-		return ReportedIP_Hive_Hide_Login::get_instance()->sanitize_response_mode( $mode );
 	}
 
 	/**

@@ -508,7 +508,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'REST namespaces always allowed', 'reportedip-hive' ),
 			),
-			'reportedip_hive_rest_allowed_roles'          => array(
+			'reportedip_hive_rest_allowed_roles'           => array(
 				'section'       => 'lockdown',
 				'kind'          => 'json_list',
 				'json_filter'   => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_roles' ),
@@ -516,31 +516,31 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'        => true,
 				'label'         => __( 'Roles allowed to use the REST API', 'reportedip-hive' ),
 			),
-			'reportedip_hive_disable_xmlrpc'              => array(
+			'reportedip_hive_disable_xmlrpc'               => array(
 				'section' => 'lockdown',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Disable XML-RPC', 'reportedip-hive' ),
 			),
-			'reportedip_hive_disable_feeds'               => array(
+			'reportedip_hive_disable_feeds'                => array(
 				'section' => 'lockdown',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Disable RSS and Atom feeds', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_admin_guests'          => array(
+			'reportedip_hive_block_admin_guests'           => array(
 				'section' => 'lockdown',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Close wp-admin for visitors', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_uploads_php'           => array(
+			'reportedip_hive_block_uploads_php'            => array(
 				'section' => 'lockdown',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Block PHP execution in uploads', 'reportedip-hive' ),
 			),
-			'reportedip_hive_hide_software_info'          => array(
+			'reportedip_hive_hide_software_info'           => array(
 				'section' => 'lockdown',
 				'kind'    => 'bool',
 				'remote'  => true,

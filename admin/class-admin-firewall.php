@@ -2103,7 +2103,6 @@ class ReportedIP_Hive_Admin_Firewall {
 			'restricted' => __( 'Restricted to roles', 'reportedip-hive' ),
 		);
 
-		settings_errors();
 		printf(
 			'<form method="post" action="%s" class="rip-form" id="rip-attack-surface-form">',
 			esc_url( ReportedIP_Hive_Admin_Settings::settings_form_action() )
@@ -2240,7 +2239,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	 */
 	private function render_endpoints_card( $xmlrpc, $feeds, $guests, $software, $hide_on ) {
 		$as   = 'ReportedIP_Hive_Attack_Surface';
-		$mode = $as::response_mode();
+		$mode = ReportedIP_Hive_Hide_Login::response_mode();
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Endpoints', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 
