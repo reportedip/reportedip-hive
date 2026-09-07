@@ -59,13 +59,15 @@ final class ReportedIP_Hive_Registration_Guard {
 	const OPT_LIMIT_COUNT = 'reportedip_hive_registration_limit_count';
 
 	/**
-	 * Rate-limit window in minutes, up to a day. This is not a sliding window.
+	 * Rate-limit window in minutes, capped at 60. This is not a sliding window.
 	 * {@see ReportedIP_Hive_Database::track_attempt()} keeps a single counter
 	 * row per address, so the number compared against the limit is the
 	 * address's current run of registrations: it starts over once a whole
 	 * window passed without one ({@see count_source_ip()} drops the stale row)
 	 * and otherwise keeps adding up. A steady drip can therefore reach the
-	 * limit over a longer span than the configured window.
+	 * limit over a longer span than the configured window. The window cannot
+	 * exceed 60 minutes because the counter row restarts itself after an hour
+	 * without a registration, which a longer window could never observe.
 	 */
 	const OPT_LIMIT_TIMEFRAME = 'reportedip_hive_registration_limit_timeframe';
 
@@ -669,13 +671,23 @@ final class ReportedIP_Hive_Registration_Guard {
 	}
 
 	/**
-	 * The controller file handling the current request, or an empty string.
+	 * The script actually executing this request, or an empty string.
+	 *
+	 * Deliberately not `$GLOBALS['pagenow']`: WordPress derives that from
+	 * `PHP_SELF`, which carries `PATH_INFO`, so a request to
+	 * `/index.php/wp-activate.php` would report `wp-activate.php` and let a
+	 * visitor skip the checks keyed on it. `SCRIPT_NAME` names the resolved
+	 * file and cannot be steered that way.
 	 *
 	 * @return string
 	 * @since  2.1.51
 	 */
 	private static function current_page() {
-		return isset( $GLOBALS['pagenow'] ) ? (string) $GLOBALS['pagenow'] : '';
+		if ( ! isset( $_SERVER['SCRIPT_NAME'] ) ) {
+			return '';
+		}
+
+		return basename( sanitize_text_field( wp_unslash( $_SERVER['SCRIPT_NAME'] ) ) );
 	}
 
 	/**

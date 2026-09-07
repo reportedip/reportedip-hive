@@ -1273,7 +1273,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			esc_attr( (string) $limit_max )
 		);
 		printf(
-			'<div class="rip-form-row"><label class="rip-form-label" for="rip-reg-limit-window">%1$s</label><input type="number" id="rip-reg-limit-window" class="rip-input" min="1" max="1440" data-opt="%2$s" value="%3$s" /></div>',
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-reg-limit-window">%1$s</label><input type="number" id="rip-reg-limit-window" class="rip-input" min="1" max="60" data-opt="%2$s" value="%3$s" /></div>',
 			esc_html__( 'Window (minutes)', 'reportedip-hive' ),
 			esc_attr( ReportedIP_Hive_Registration_Guard::OPT_LIMIT_TIMEFRAME ),
 			esc_attr( (string) $limit_win )

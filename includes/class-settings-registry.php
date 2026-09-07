@@ -431,7 +431,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'section' => 'waf',
 				'kind'    => 'int',
 				'min'     => 1,
-				'max'     => 1440,
+				'max'     => 60,
 				'remote'  => true,
 				'label'   => __( 'Registration window (minutes)', 'reportedip-hive' ),
 			),
