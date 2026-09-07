@@ -33,8 +33,6 @@ class ReportedIP_Hive_Hide_Login {
 	private const MIN_SLUG_LENGTH = 3;
 	private const MAX_SLUG_LENGTH = 50;
 
-	private const RECON_LOG_THROTTLE_SECONDS = 5;
-
 	/**
 	 * Singleton instance.
 	 *
@@ -846,11 +844,11 @@ class ReportedIP_Hive_Hide_Login {
 	/**
 	 * Light recon log + threshold sensor on a direct hit of the hidden login URL.
 	 *
-	 * The low-severity `hide_login_block` log is throttled per IP so a hammering
-	 * scanner cannot flood the log. The threshold sensor (maybe_track_probe) runs
-	 * BEFORE that throttle so every hit is counted toward the escalation ladder.
-	 * Whitelisted IPs are skipped entirely so legitimate admin testing is never
-	 * blocked or logged.
+	 * The threshold sensor (maybe_track_probe) runs on every hit so nothing is
+	 * lost to the log throttle. The log line itself goes through the shared
+	 * denial logger, which applies the same per-IP throttle the attack-surface
+	 * switches use. Whitelisted IPs are skipped entirely so legitimate admin
+	 * testing is never blocked or logged.
 	 */
 	private function log_recon_attempt(): void {
 		$ip = ReportedIP_Hive::get_client_ip();
@@ -867,24 +865,11 @@ class ReportedIP_Hive_Hide_Login {
 
 		$this->maybe_track_probe( $ip );
 
-		if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
-			return;
+		if ( class_exists( 'ReportedIP_Hive_Attack_Surface' ) ) {
+			ReportedIP_Hive_Attack_Surface::log_denied(
+				'hide_login_block',
+				array( 'path' => $this->get_request_path() )
+			);
 		}
-
-		$throttle_key = 'rip_hl_recon_' . md5( $ip );
-		if ( get_transient( $throttle_key ) ) {
-			return;
-		}
-		set_transient( $throttle_key, 1, self::RECON_LOG_THROTTLE_SECONDS );
-
-		$logger = ReportedIP_Hive_Logger::get_instance();
-		$logger->log(
-			'hide_login_block',
-			$ip,
-			'low',
-			array(
-				'path' => $this->get_request_path(),
-			)
-		);
 	}
 }

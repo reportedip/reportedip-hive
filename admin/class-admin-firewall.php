@@ -1407,6 +1407,60 @@ class ReportedIP_Hive_Admin_Firewall {
 	}
 
 	/**
+	 * Resolve the status of an auto-managed .htaccess block: the detected web
+	 * server with its display label, whether that server reads .htaccess at
+	 * all, and the badge for the block itself. Two states must never read as
+	 * "Active": the empty marker skeleton a disabled switch leaves behind, and
+	 * a block in an .htaccess the web server never reads — nginx ignores the
+	 * file, so a present block is inert there and the badge says so instead of
+	 * claiming protection.
+	 *
+	 * @param bool $enabled  Whether the owning switch is on.
+	 * @param bool $present  Whether the marker block is currently in the file.
+	 * @param bool $writable Whether the target file is writable.
+	 * @return array<string,mixed> Keys: server, server_label, htaccess, badge, label.
+	 * @since  2.1.51
+	 */
+	private static function htaccess_block_status( $enabled, $present, $writable ) {
+		$manager  = class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
+			? ReportedIP_Hive_WAF_Dropin_Manager::get_instance()
+			: null;
+		$server   = $manager ? $manager->detect_web_server() : 'unknown';
+		$htaccess = $manager ? $manager->supports_htaccess() : false;
+		$labels   = array(
+			'apache'    => 'Apache (.htaccess)',
+			'litespeed' => 'LiteSpeed (.htaccess)',
+			'nginx'     => 'nginx',
+			'unknown'   => __( 'Unknown', 'reportedip-hive' ),
+		);
+
+		if ( ! $enabled ) {
+			$badge = 'rip-badge--neutral';
+			$label = __( 'Inactive', 'reportedip-hive' );
+		} elseif ( ! $htaccess ) {
+			$badge = 'rip-badge--info';
+			$label = __( 'Not applicable', 'reportedip-hive' );
+		} elseif ( $present ) {
+			$badge = 'rip-badge--success';
+			$label = __( 'Active', 'reportedip-hive' );
+		} elseif ( $writable ) {
+			$badge = 'rip-badge--warning';
+			$label = __( 'Pending', 'reportedip-hive' );
+		} else {
+			$badge = 'rip-badge--info';
+			$label = __( 'Manual', 'reportedip-hive' );
+		}
+
+		return array(
+			'server'       => $server,
+			'server_label' => isset( $labels[ $server ] ) ? $labels[ $server ] : $server,
+			'htaccess'     => $htaccess,
+			'badge'        => $badge,
+			'label'        => $label,
+		);
+	}
+
+	/**
 	 * Render the Decoy Path Block surface: the master toggle and the
 	 * auto-managed .htaccess status. A decoy hit is answered with a 403 and
 	 * reported, but the IP is never added to the local block list, so a
@@ -1425,40 +1479,8 @@ class ReportedIP_Hive_Admin_Firewall {
 			$writable = $writer->is_writable_target();
 			$present  = $writer->is_block_present();
 		}
-		$server     = class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
-			? ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->detect_web_server()
-			: 'unknown';
-		$htaccess   = ( 'apache' === $server || 'litespeed' === $server );
-		$server_lbl = array(
-			'apache'    => 'Apache (.htaccess)',
-			'litespeed' => 'LiteSpeed (.htaccess)',
-			'nginx'     => 'nginx',
-			'unknown'   => __( 'Unknown', 'reportedip-hive' ),
-		);
-
-		/**
-		 * Resolve the .htaccess-block status badge. Two things must never read as
-		 * "active": the empty marker skeleton a disabled trap leaves behind, and a
-		 * block written to an .htaccess that the web server never reads. nginx
-		 * ignores the file entirely, so a present block is inert there and the
-		 * badge says so instead of claiming protection.
-		 */
-		if ( ! $decoy_on ) {
-			$block_class = 'rip-badge--neutral';
-			$block_label = __( 'Inactive', 'reportedip-hive' );
-		} elseif ( ! $htaccess ) {
-			$block_class = 'rip-badge--info';
-			$block_label = __( 'Not applicable', 'reportedip-hive' );
-		} elseif ( $present ) {
-			$block_class = 'rip-badge--success';
-			$block_label = __( 'Active', 'reportedip-hive' );
-		} elseif ( $writable ) {
-			$block_class = 'rip-badge--warning';
-			$block_label = __( 'Pending', 'reportedip-hive' );
-		} else {
-			$block_class = 'rip-badge--info';
-			$block_label = __( 'Manual', 'reportedip-hive' );
-		}
+		$status   = self::htaccess_block_status( $decoy_on, $present, $writable );
+		$htaccess = $status['htaccess'];
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Decoy Path Block', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'Detects requests to known bait paths (.env.backup, wp-config.old.php, db-dump-master.sql.php …) that legitimate visitors never request. Each hit is logged, shared with the community network, and answered with a 403, but the IP is not added to your local block list, so a misbehaving backup plugin cannot lock you out.', 'reportedip-hive' ) . '</p>';
@@ -1473,14 +1495,14 @@ class ReportedIP_Hive_Admin_Firewall {
 		);
 		self::render_stat_card(
 			array(
-				'value' => $block_label,
-				'badge' => $block_class,
+				'value' => $status['label'],
+				'badge' => $status['badge'],
 				'label' => __( '.htaccess block', 'reportedip-hive' ),
 			)
 		);
 		self::render_stat_card(
 			array(
-				'value' => $server_lbl[ $server ] ?? $server,
+				'value' => $status['server_label'],
 				'label' => __( 'Detected server', 'reportedip-hive' ),
 			)
 		);
@@ -2305,34 +2327,8 @@ class ReportedIP_Hive_Admin_Firewall {
 			: null;
 		$writable = $writer && $writer->is_writable_target();
 		$present  = $writer && $writer->is_block_present();
-		$server   = class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
-			? ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->detect_web_server()
-			: 'unknown';
-		$htaccess = ( 'apache' === $server || 'litespeed' === $server );
-
-		$server_lbl = array(
-			'apache'    => 'Apache (.htaccess)',
-			'litespeed' => 'LiteSpeed (.htaccess)',
-			'nginx'     => 'nginx',
-			'unknown'   => __( 'Unknown', 'reportedip-hive' ),
-		);
-
-		if ( ! $enabled ) {
-			$badge_class = 'rip-badge--neutral';
-			$badge_label = __( 'Inactive', 'reportedip-hive' );
-		} elseif ( ! $htaccess ) {
-			$badge_class = 'rip-badge--info';
-			$badge_label = __( 'Not applicable', 'reportedip-hive' );
-		} elseif ( $present ) {
-			$badge_class = 'rip-badge--success';
-			$badge_label = __( 'Active', 'reportedip-hive' );
-		} elseif ( $writable ) {
-			$badge_class = 'rip-badge--warning';
-			$badge_label = __( 'Pending', 'reportedip-hive' );
-		} else {
-			$badge_class = 'rip-badge--info';
-			$badge_label = __( 'Manual', 'reportedip-hive' );
-		}
+		$status   = self::htaccess_block_status( $enabled, $present, $writable );
+		$htaccess = $status['htaccess'];
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'PHP execution in uploads', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'The uploads directory holds media, never code. Refusing requests for PHP and other executable file types there turns a successful file-upload exploit into a dead file on disk. Hive writes the rule into the uploads .htaccess on Apache and LiteSpeed; on nginx you paste the matching snippet once.', 'reportedip-hive' ) . '</p>';
@@ -2348,14 +2344,14 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '<div class="rip-grid rip-grid-cols-3">';
 		self::render_stat_card(
 			array(
-				'value' => $badge_label,
-				'badge' => $badge_class,
+				'value' => $status['label'],
+				'badge' => $status['badge'],
 				'label' => __( 'Uploads .htaccess block', 'reportedip-hive' ),
 			)
 		);
 		self::render_stat_card(
 			array(
-				'value' => isset( $server_lbl[ $server ] ) ? $server_lbl[ $server ] : $server,
+				'value' => $status['server_label'],
 				'label' => __( 'Detected server', 'reportedip-hive' ),
 			)
 		);
