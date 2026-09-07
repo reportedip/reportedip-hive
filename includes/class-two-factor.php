@@ -1115,6 +1115,10 @@ class ReportedIP_Hive_Two_Factor {
 						$this->set_auth_cookie_with_remember( $user_id, $remember );
 						wp_set_current_user( $user_id );
 
+						do_action( 'reportedip_hive_2fa_verified', (int) $user_id, (string) $method, (string) $context );
+						// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core login hook re-fired on purpose: wp_signon() never runs for a challenged sign-in.
+						do_action( 'wp_login', $user->user_login, $user );
+
 						/*
 						 * A trust wish ticked on an earlier (failed) attempt of this same
 						 * challenge session still counts: the re-rendered form used to lose
@@ -1135,10 +1139,6 @@ class ReportedIP_Hive_Two_Factor {
 								'method'  => $submitted_method,
 							)
 						);
-
-						do_action( 'reportedip_hive_2fa_verified', (int) $user_id, (string) $method, (string) $context );
-						// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core login hook re-fired on purpose: wp_signon() never runs for a challenged sign-in.
-						do_action( 'wp_login', $user->user_login, $user );
 
 						wp_safe_redirect( $redirect_to );
 						exit;

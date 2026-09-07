@@ -9,7 +9,8 @@
  * new-device mail, 2FA reminder reset) blind to exactly the logins that had
  * proven the most. Both sign-in surfaces must now fire
  * `reportedip_hive_2fa_verified` and then `wp_login`; the consumed-nonce
- * replay must not fire them a second time.
+ * replay must not fire them a second time, and the password-only REST
+ * sign-in must fire `wp_login` as well.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -45,29 +46,35 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * The two sign-in surfaces, keyed by file with the full expected plugin action call.
+		 * The two sign-in surfaces: file, expected plugin action call, expected wp_login count.
 		 *
-		 * @return array<string,array<int,string>>
+		 * @return array<string,array<int,string|int>>
 		 */
 		public static function surfaces(): array {
 			return array(
 				'browser challenge' => array(
 					'class-two-factor.php',
 					'do_action( \'reportedip_hive_2fa_verified\', (int) $user_id, (string) $method, (string) $context );',
+					1,
 				),
 				'rest verify'       => array(
 					'class-two-factor-rest.php',
 					'do_action( \'reportedip_hive_2fa_verified\', (int) $user_id, (string) $method, \'rest\' );',
+					2,
 				),
 			);
 		}
 
 		/**
-		 * Every sign-in surface fires the plugin action first and wp_login second, exactly once.
+		 * Every sign-in surface fires the plugin action first and wp_login right after it.
 		 *
 		 * @dataProvider surfaces
+		 *
+		 * @param string $file          File name below includes/.
+		 * @param string $verified_call Exact plugin action call expected once.
+		 * @param int    $login_calls   Expected number of wp_login calls in the file.
 		 */
-		public function test_surface_fires_verified_then_wp_login_once( string $file, string $verified_call ): void {
+		public function test_surface_fires_verified_then_wp_login( string $file, string $verified_call, int $login_calls ): void {
 			$source = $this->source( $file );
 
 			$this->assertSame(
@@ -76,46 +83,70 @@ namespace ReportedIP\Hive\Tests\Unit {
 				"{$file} must fire reportedip_hive_2fa_verified exactly once with user id, verified method and the surface context (the replay path re-issues the same session and must stay silent)."
 			);
 			$this->assertSame(
-				1,
+				$login_calls,
 				substr_count( $source, self::LOGIN_ACTION ),
-				"{$file} must fire wp_login with the wp_signon() signature exactly once."
+				"{$file} must fire wp_login with the wp_signon() signature on every sign-in path it owns."
 			);
+
+			$verified = strpos( $source, $verified_call );
+			$login    = strpos( $source, self::LOGIN_ACTION, (int) $verified );
+
+			$this->assertNotFalse( $verified );
+			$this->assertNotFalse( $login, "{$file} must fire wp_login after reportedip_hive_2fa_verified." );
 			$this->assertLessThan(
-				strpos( $source, self::LOGIN_ACTION ),
-				strpos( $source, $verified_call ),
-				"{$file} must fire reportedip_hive_2fa_verified before wp_login so listeners can read the verified method first."
+				400,
+				$login - $verified,
+				"{$file} must fire wp_login right after reportedip_hive_2fa_verified so listeners can read the verified method first."
 			);
 		}
 
 		/**
-		 * The browser hooks fire after the session exists and before the browser is sent on.
+		 * The browser hooks fire after the session exists and before the device is trusted.
+		 *
+		 * Geo_Anomaly::on_login() may revoke every trusted device of the user;
+		 * firing wp_login after create_trusted_device() would silently void the
+		 * "trust this device" choice made on this very login.
 		 */
-		public function test_browser_hooks_fire_after_cookie_and_before_redirect(): void {
+		public function test_browser_hooks_fire_after_cookie_and_before_device_trust(): void {
 			$source = $this->source( 'class-two-factor.php' );
 			$login  = strpos( $source, self::LOGIN_ACTION );
 			$cookie = strpos( $source, '$this->set_auth_cookie_with_remember( $user_id, $remember );' );
+			$trust  = strpos( $source, '$this->create_trusted_device( $user_id );' );
 
 			$this->assertNotFalse( $login );
 			$this->assertNotFalse( $cookie );
+			$this->assertNotFalse( $trust );
 			$this->assertLessThan( $login, $cookie, 'wp_login must fire after the auth cookie is set, as wp_signon() does.' );
-			$this->assertStringStartsWith(
-				self::LOGIN_ACTION . "\n\n\t\t\t\t\t\twp_safe_redirect( \$redirect_to );\n\t\t\t\t\t\texit;",
-				substr( $source, $login ),
-				'The success branch must still end in the post-verify redirect right after the hooks fired.'
-			);
+			$this->assertLessThan( $trust, $login, 'wp_login must fire before the trusted-device row is created.' );
 		}
 
 		/**
 		 * The REST surface resolves a WP_User before firing, since only the id is in scope.
 		 */
 		public function test_rest_surface_resolves_user_before_firing(): void {
-			$source = $this->source( 'class-two-factor-rest.php' );
-			$lookup = strpos( $source, '$user = get_userdata( $user_id );' );
-			$login  = strpos( $source, self::LOGIN_ACTION );
+			$source   = $this->source( 'class-two-factor-rest.php' );
+			$lookup   = strpos( $source, '$user = get_userdata( $user_id );' );
+			$verified = strpos( $source, 'do_action( \'reportedip_hive_2fa_verified\'' );
+			$login    = strpos( $source, self::LOGIN_ACTION, (int) $verified );
 
 			$this->assertNotFalse( $lookup );
 			$this->assertNotFalse( $login );
 			$this->assertLessThan( $login, $lookup, 'wp_login needs the WP_User object; the REST verify route only holds the id.' );
+		}
+
+		/**
+		 * The password-only REST sign-in (no second factor configured) fires wp_login as well.
+		 */
+		public function test_rest_password_only_sign_in_fires_wp_login(): void {
+			$source = $this->source( 'class-two-factor-rest.php' );
+			$cookie = strpos( $source, 'wp_set_auth_cookie( $user->ID, false );' );
+			$login  = strpos( $source, self::LOGIN_ACTION, (int) $cookie );
+			$reply  = strpos( $source, "'status'  => 'authenticated'" );
+
+			$this->assertNotFalse( $cookie );
+			$this->assertNotFalse( $login );
+			$this->assertNotFalse( $reply );
+			$this->assertLessThan( $reply, $login, 'The /2fa/challenge password-only branch must fire wp_login before answering.' );
 		}
 	}
 }

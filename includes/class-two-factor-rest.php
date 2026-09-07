@@ -233,6 +233,8 @@ class ReportedIP_Hive_Two_Factor_REST {
 
 		wp_set_auth_cookie( $user->ID, false );
 		wp_set_current_user( $user->ID );
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core login hook fired on purpose: this password-only REST sign-in never runs through wp_signon().
+		do_action( 'wp_login', $user->user_login, $user );
 		return rest_ensure_response(
 			array(
 				'status'  => 'authenticated',
