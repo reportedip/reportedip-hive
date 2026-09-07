@@ -59,6 +59,7 @@ class SettingsImportExportTest extends TestCase {
 		$this->assertContains( 'twofactor_global', $slugs );
 		$this->assertContains( 'firewall', $slugs );
 		$this->assertContains( 'headers', $slugs );
+		$this->assertContains( 'lockdown', $slugs );
 		$this->assertContains( 'audit', $slugs );
 		$this->assertContains( 'ip_lists', $slugs );
 	}

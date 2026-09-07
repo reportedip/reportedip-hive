@@ -230,6 +230,20 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_coep',
 				),
 			),
+			'lockdown'         => array(
+				'label'       => __( 'Hardening', 'reportedip-hive' ),
+				'description' => __( 'Attack-surface switches (REST API access, XML-RPC, feeds, wp-admin for visitors, PHP execution in uploads, software fingerprints).', 'reportedip-hive' ),
+				'options'     => array(
+					'reportedip_hive_rest_access_mode',
+					'reportedip_hive_rest_allowed_namespaces',
+					'reportedip_hive_rest_allowed_roles',
+					'reportedip_hive_disable_xmlrpc',
+					'reportedip_hive_disable_feeds',
+					'reportedip_hive_block_admin_guests',
+					'reportedip_hive_block_uploads_php',
+					'reportedip_hive_hide_software_info',
+				),
+			),
 			'audit'            => array(
 				'label'       => __( 'Audit trail', 'reportedip-hive' ),
 				'description' => __( 'Audit event trail policy (capture, retention, alerts). The recorded events themselves stay site-local.', 'reportedip-hive' ),

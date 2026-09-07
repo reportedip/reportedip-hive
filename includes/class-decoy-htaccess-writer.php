@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 2.0.11
  */
-final class ReportedIP_Hive_Decoy_Htaccess_Writer {
+final class ReportedIP_Hive_Decoy_Htaccess_Writer extends ReportedIP_Hive_Htaccess_Block_Writer {
 
 	/**
 	 * Marker name passed to `insert_with_markers()`. WP wraps it as
@@ -52,114 +52,33 @@ final class ReportedIP_Hive_Decoy_Htaccess_Writer {
 	}
 
 	/**
-	 * Wire activation/deactivation, settings-save and self-heal hooks.
+	 * Option key owning the decoy rewrite block.
 	 *
-	 * @return void
+	 * @return string
+	 * @since  2.1.51
 	 */
-	public function register_hooks() {
-		add_action( 'update_option_reportedip_hive_decoy_pathblock_enabled', array( $this, 'on_settings_changed' ), 10, 0 );
-		add_action( 'update_site_option_reportedip_hive_decoy_pathblock_enabled', array( $this, 'on_settings_changed' ), 10, 0 );
-		add_action( 'admin_init', array( $this, 'maybe_self_heal' ) );
+	protected function option_key() {
+		return 'reportedip_hive_decoy_pathblock_enabled';
 	}
 
 	/**
-	 * Action callback for the option-change hook — discards the boolean
-	 * return value of `sync()` so PHPStan recognises the void contract of
-	 * a WordPress action.
+	 * Canonical default of the decoy master toggle.
 	 *
-	 * @return void
+	 * @return bool
+	 * @since  2.1.51
 	 */
-	public function on_settings_changed() {
-		$this->sync();
-	}
-
-	/**
-	 * Throttled self-heal — re-syncs the marker block at most once per hour
-	 * so manual filter extensions or third-party `.htaccess` rewrites are
-	 * caught without thrashing the disk on every admin page load.
-	 *
-	 * @return void
-	 */
-	public function maybe_self_heal() {
-		if ( get_site_transient( self::HEAL_LOCK_TRANSIENT ) ) {
-			return;
-		}
-		set_site_transient( self::HEAL_LOCK_TRANSIENT, 1, HOUR_IN_SECONDS );
-		$this->sync();
-	}
-
-	/**
-	 * Idempotently write or remove the marker block, depending on the master
-	 * toggle. After writing, ensure the Hive block sits ABOVE
-	 * `# BEGIN WordPress` (otherwise the standard WP rewrite
-	 * `RewriteCond %{REQUEST_FILENAME} -f → [L]` would serve a real bait
-	 * file before our rewrite gets a chance).
-	 *
-	 * @return bool True on a successful write/remove, false on failure
-	 *              (missing file, not writable, WP-Core helpers unavailable).
-	 */
-	public function sync() {
-		if ( ! $this->load_wp_admin_helpers() ) {
-			return false;
-		}
-
-		$enabled = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_decoy_pathblock_enabled', true );
-		$file    = $this->get_target_path();
-		if ( '' === $file ) {
-			return false;
-		}
-
-		if ( ! $this->ensure_file_exists( $file ) ) {
-			return false;
-		}
-
-		if ( ! is_writable( $file ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess; WP_Filesystem is unavailable here and unnecessary.
-			return false;
-		}
-
-		$lines = $enabled ? ReportedIP_Hive_Decoy_Path_Block::htaccess_block_lines() : array();
-		if ( ! insert_with_markers( $file, self::MARKER, $lines ) ) {
-			return false;
-		}
-
-		if ( $enabled ) {
-			$this->ensure_block_position( $file );
-		}
-
+	protected function option_default() {
 		return true;
 	}
 
 	/**
-	 * Remove the marker block unconditionally. Called on deactivation.
+	 * Apache directive lines for the decoy rewrite.
 	 *
-	 * `insert_with_markers( …, [] )` leaves an empty `# BEGIN … # END …`
-	 * skeleton behind which is harmless but ugly. We strip the entire
-	 * marker pair ourselves so deactivation truly restores the original
-	 * `.htaccess`.
-	 *
-	 * @return bool
+	 * @return string[]
+	 * @since  2.1.51
 	 */
-	public function remove() {
-		if ( ! $this->load_wp_admin_helpers() ) {
-			return false;
-		}
-		$file = $this->get_target_path();
-		if ( '' === $file || ! file_exists( $file ) || ! is_writable( $file ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess; WP_Filesystem is unavailable here and unnecessary.
-			return false;
-		}
-
-		$contents = file_get_contents( $file );
-		if ( false === $contents ) {
-			return false;
-		}
-
-		$pattern  = '/# BEGIN ' . preg_quote( self::MARKER, '/' ) . '.*?# END ' . preg_quote( self::MARKER, '/' ) . '\R?/s';
-		$stripped = preg_replace( $pattern, '', $contents );
-		if ( null === $stripped || $stripped === $contents ) {
-			return false;
-		}
-
-		return false !== file_put_contents( $file, ltrim( $stripped, "\r\n" ) );
+	protected function block_lines() {
+		return ReportedIP_Hive_Decoy_Path_Block::htaccess_block_lines();
 	}
 
 	/**
@@ -177,76 +96,17 @@ final class ReportedIP_Hive_Decoy_Htaccess_Writer {
 	}
 
 	/**
-	 * True when the `.htaccess` file exists and is writable by PHP.
-	 *
-	 * @return bool
-	 */
-	public function is_writable_target() {
-		$file = $this->get_target_path();
-		if ( '' === $file ) {
-			return false;
-		}
-		if ( file_exists( $file ) ) {
-			return is_writable( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess; WP_Filesystem is unavailable here and unnecessary.
-		}
-		$dir = dirname( $file );
-		return is_writable( $dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess directory; WP_Filesystem is unavailable here and unnecessary.
-	}
-
-	/**
-	 * True when a `# BEGIN ReportedIP Hive Decoy` marker is present in
-	 * `.htaccess`. Used by the PHP fallback hook to annotate its log entry
-	 * and by the Settings UI status box.
-	 *
-	 * @return bool
-	 */
-	public function is_block_present() {
-		$this->load_wp_admin_helpers();
-		$file = $this->get_target_path();
-		if ( '' === $file || ! file_exists( $file ) || ! is_readable( $file ) ) {
-			return false;
-		}
-		$contents = file_get_contents( $file );
-		if ( false === $contents ) {
-			return false;
-		}
-		return false !== strpos( $contents, '# BEGIN ' . self::MARKER );
-	}
-
-	/**
-	 * Load `wp-admin/includes/file.php` + `misc.php` on demand. They expose
-	 * `get_home_path()` and `insert_with_markers()`, neither of which is
-	 * autoloaded on front-end requests.
-	 *
-	 * @return bool
-	 */
-	private function load_wp_admin_helpers() {
-		if ( ! function_exists( 'get_home_path' ) && defined( 'ABSPATH' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-		}
-		if ( ! function_exists( 'insert_with_markers' ) && defined( 'ABSPATH' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/misc.php';
-		}
-		return function_exists( 'get_home_path' ) && function_exists( 'insert_with_markers' );
-	}
-
-	/**
-	 * Create an empty `.htaccess` if the directory is writable and no file
-	 * exists yet. WordPress itself does the same dance in
-	 * `save_mod_rewrite_rules()`.
+	 * After writing, ensure the Hive block sits ABOVE `# BEGIN WordPress`
+	 * (otherwise the standard WP rewrite `RewriteCond %{REQUEST_FILENAME}
+	 * -f → [L]` would serve a real bait file before our rewrite gets a
+	 * chance).
 	 *
 	 * @param string $file Absolute path to `.htaccess`.
-	 * @return bool True when the file exists after the call.
+	 * @return void
+	 * @since  2.1.51
 	 */
-	private function ensure_file_exists( $file ) {
-		if ( file_exists( $file ) ) {
-			return true;
-		}
-		$dir = dirname( $file );
-		if ( ! is_writable( $dir ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess directory; WP_Filesystem is unavailable here and unnecessary.
-			return false;
-		}
-		return false !== file_put_contents( $file, '' );
+	protected function after_write( $file ) {
+		$this->ensure_block_position( $file );
 	}
 
 	/**

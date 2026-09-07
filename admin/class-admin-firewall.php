@@ -1951,10 +1951,8 @@ class ReportedIP_Hive_Admin_Firewall {
 		if ( ! $adv_ok ) {
 			echo '<p class="rip-help-text">' . esc_html__( 'HSTS, Permissions-Policy, the CSP builder and the Cross-Origin headers unlock with Professional. The basic headers above stay free.', 'reportedip-hive' ) . '</p>';
 			echo '</div></div>';
-			printf(
-				'<p><button type="button" class="rip-button rip-button--primary" id="rip-headers-save">%s</button> <span id="rip-headers-saved" class="rip-help-text"></span></p>',
-				esc_html__( 'Save headers', 'reportedip-hive' )
-			);
+			self::render_headers_save_button();
+			$this->render_attack_surface_section();
 			return;
 		}
 
@@ -2047,6 +2045,370 @@ class ReportedIP_Hive_Admin_Firewall {
 
 		echo '</div></div>';
 
+		self::render_headers_save_button();
+		$this->render_attack_surface_section();
+	}
+
+	/**
+	 * Render the attack-surface section below the security headers: REST
+	 * access control, the endpoint switches and the PHP-execution block for
+	 * the uploads directory.
+	 *
+	 * Saved through the Settings API (not the headers' AJAX bulk save), so the
+	 * inputs carry `name` attributes and deliberately no `data-opt` — the
+	 * Firewall script would otherwise post them a second time.
+	 *
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private function render_attack_surface_section() {
+		if ( ! class_exists( 'ReportedIP_Hive_Attack_Surface' ) ) {
+			return;
+		}
+
+		$as       = 'ReportedIP_Hive_Attack_Surface';
+		$mode     = $as::rest_mode();
+		$xmlrpc   = $as::switch_on( $as::OPT_XMLRPC_OFF );
+		$feeds    = $as::switch_on( $as::OPT_FEEDS_OFF );
+		$guests   = $as::switch_on( $as::OPT_ADMIN_GUESTS );
+		$uploads  = $as::switch_on( $as::OPT_UPLOADS_PHP );
+		$software = $as::switch_on( $as::OPT_HIDE_SOFTWARE );
+		$hide_on  = class_exists( 'ReportedIP_Hive_Hide_Login' ) && ReportedIP_Hive_Hide_Login::get_instance()->is_active();
+		$closed   = (int) $xmlrpc + (int) $feeds + (int) ( $guests || $hide_on ) + (int) $software;
+		$mode_lbl = array(
+			'open'       => __( 'Open', 'reportedip-hive' ),
+			'logged_in'  => __( 'Logged-in only', 'reportedip-hive' ),
+			'restricted' => __( 'Restricted to roles', 'reportedip-hive' ),
+		);
+
+		settings_errors();
+		printf(
+			'<form method="post" action="%s" class="rip-form" id="rip-attack-surface-form">',
+			esc_url( ReportedIP_Hive_Admin_Settings::settings_form_action() )
+		);
+		settings_fields( 'reportedip_hive_attack_surface' );
+		echo '<input type="hidden" name="reportedip_hive_disable_xmlrpc" value="0" />';
+		echo '<input type="hidden" name="reportedip_hive_disable_feeds" value="0" />';
+		echo '<input type="hidden" name="reportedip_hive_block_admin_guests" value="0" />';
+		echo '<input type="hidden" name="reportedip_hive_block_uploads_php" value="0" />';
+		echo '<input type="hidden" name="reportedip_hive_hide_software_info" value="0" />';
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Attack surface', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Every WordPress endpoint you do not use is an endpoint someone else can probe. These switches close the ones most sites never need. They are free, and all of them are off until you turn them on.', 'reportedip-hive' ) . '</p>';
+		echo '<div class="rip-grid rip-grid-cols-3">';
+		self::render_stat_card(
+			array(
+				/* translators: 1: number of closed endpoints, 2: number of available switches */
+				'value' => sprintf( __( '%1$d of %2$d', 'reportedip-hive' ), $closed, 4 ),
+				'badge' => $closed > 0 ? 'rip-badge--success' : 'rip-badge--neutral',
+				'label' => __( 'Endpoints closed', 'reportedip-hive' ),
+			)
+		);
+		self::render_stat_card(
+			array(
+				'value' => isset( $mode_lbl[ $mode ] ) ? $mode_lbl[ $mode ] : $mode,
+				'badge' => 'open' === $mode ? 'rip-badge--neutral' : 'rip-badge--success',
+				'label' => __( 'REST API', 'reportedip-hive' ),
+			)
+		);
+		self::render_stat_card(
+			array(
+				'value' => $uploads ? __( 'On', 'reportedip-hive' ) : __( 'Off', 'reportedip-hive' ),
+				'badge' => $uploads ? 'rip-badge--success' : 'rip-badge--neutral',
+				'label' => __( 'PHP in uploads', 'reportedip-hive' ),
+			)
+		);
+		echo '</div></div></div>';
+
+		$this->render_rest_access_card( $mode );
+		$this->render_endpoints_card( $xmlrpc, $feeds, $guests, $software, $hide_on );
+		$this->render_uploads_php_card( $uploads );
+
+		printf(
+			'<p><button type="submit" class="rip-button rip-button--primary">%s</button></p>',
+			esc_html__( 'Save attack surface', 'reportedip-hive' )
+		);
+		echo '</form>';
+		?>
+		<script>
+		(function () {
+			var select = document.getElementById('rip-rest-access-mode');
+			var deps   = document.getElementById('rip-rest-dependent');
+			if (!select || !deps) { return; }
+			select.addEventListener('change', function () {
+				deps.classList.toggle('rip-is-disabled', select.value === 'open');
+			});
+		})();
+		</script>
+		<?php
+	}
+
+	/**
+	 * REST access-control card: mode, namespace allowlist and role allowlist.
+	 *
+	 * @param string $mode Current REST access mode.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private function render_rest_access_card( $mode ) {
+		$as         = 'ReportedIP_Hive_Attack_Surface';
+		$namespaces = (string) ReportedIP_Hive_Option_Routing::get( $as::OPT_REST_NAMESPACES, '' );
+		$roles      = $as::allowed_roles();
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'REST API access', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'The REST API answers anonymous requests by default. Closing it stops content and metadata scraping, but the block editor, many page builders and every headless frontend depend on it — change this only if you know which of your plugins call it.', 'reportedip-hive' ) . '</p>';
+
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-rest-access-mode">%1$s</label><select id="rip-rest-access-mode" class="rip-select" name="%2$s">',
+			esc_html__( 'Who may use the REST API', 'reportedip-hive' ),
+			esc_attr( $as::OPT_REST_MODE )
+		);
+		foreach ( array(
+			'open'       => __( 'Everyone (WordPress default)', 'reportedip-hive' ),
+			'logged_in'  => __( 'Logged-in users only', 'reportedip-hive' ),
+			'restricted' => __( 'Selected roles only', 'reportedip-hive' ),
+		) as $value => $label ) {
+			printf( '<option value="%1$s"%2$s>%3$s</option>', esc_attr( $value ), selected( $mode, $value, false ), esc_html( $label ) );
+		}
+		echo '</select></div>';
+
+		printf( '<div id="rip-rest-dependent"%s>', 'open' === $mode ? ' class="rip-is-disabled"' : '' );
+
+		echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'In "Selected roles only" mode every role that edits content still needs the REST API for the block editor. Administrators and super admins always keep access, and so does each user on their own application-password page.', 'reportedip-hive' ) . '</div>';
+		echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'A logged-in request without a REST nonce counts as anonymous — that is WordPress own rule, not a bug. Pasting a /wp-json/ URL into the browser therefore answers 401 even while you are signed in. Plugins that sign their REST calls without a WordPress cookie (Jetpack, mobile apps, marketing tools) are anonymous for the same reason: keep their namespace on the allowlist below.', 'reportedip-hive' ) . '</div>';
+
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-rest-namespaces">%1$s</label><textarea id="rip-rest-namespaces" class="rip-textarea" rows="6" name="%2$s">%3$s</textarea></div>',
+			esc_html__( 'Namespaces that always stay open', 'reportedip-hive' ),
+			esc_attr( $as::OPT_REST_NAMESPACES ),
+			esc_textarea( $namespaces )
+		);
+		echo '<p class="rip-help-text">' . esc_html__( 'One namespace or route prefix per line, for example oembed/1.0 or wc/store. The plugin namespace reportedip-hive/v1 is always allowed.', 'reportedip-hive' ) . '</p>';
+
+		echo '<div class="rip-form-group"><label class="rip-label">' . esc_html__( 'Roles allowed in "Selected roles only" mode', 'reportedip-hive' ) . '</label>';
+		foreach ( wp_roles()->get_names() as $role_slug => $role_name ) {
+			$is_admin_role = 'administrator' === $role_slug;
+			printf(
+				'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" name="%1$s[]" value="%2$s"%3$s%4$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%5$s</span></label>',
+				esc_attr( $as::OPT_REST_ROLES ),
+				esc_attr( $role_slug ),
+				checked( $is_admin_role || in_array( $role_slug, $roles, true ), true, false ),
+				disabled( $is_admin_role, true, false ),
+				esc_html( translate_user_role( $role_name ) )
+			);
+		}
+		printf( '<input type="hidden" name="%s[]" value="administrator" />', esc_attr( $as::OPT_REST_ROLES ) );
+		echo '<p class="rip-help-text">' . esc_html__( 'Administrators cannot be removed — locking yourself out of your own REST API is not a setting.', 'reportedip-hive' ) . '</p>';
+		echo '</div>';
+
+		echo '</div></div></div>';
+	}
+
+	/**
+	 * Endpoint switches: XML-RPC, feeds, wp-admin for visitors and the
+	 * software fingerprints.
+	 *
+	 * @param bool $xmlrpc   XML-RPC switched off.
+	 * @param bool $feeds    Feeds switched off.
+	 * @param bool $guests   wp-admin closed for visitors.
+	 * @param bool $software Fingerprints hidden.
+	 * @param bool $hide_on  Hide Login is active.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private function render_endpoints_card( $xmlrpc, $feeds, $guests, $software, $hide_on ) {
+		$as   = 'ReportedIP_Hive_Attack_Surface';
+		$mode = $as::response_mode();
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Endpoints', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+
+		self::render_switch_row(
+			$as::OPT_XMLRPC_OFF,
+			__( 'Disable XML-RPC', 'reportedip-hive' ),
+			__( 'Answers xmlrpc.php with the configured block response and removes the pingback methods, the X-Pingback header and the RSD discovery tags. The WordPress mobile apps, Jetpack and remote-publishing tools stop working — check before you switch it on.', 'reportedip-hive' ),
+			$xmlrpc,
+			false
+		);
+
+		self::render_switch_row(
+			$as::OPT_FEEDS_OFF,
+			__( 'Disable RSS and Atom feeds', 'reportedip-hive' ),
+			__( 'Answers every feed URL with a 404 and removes the feed links from the page head. Comment and podcast feeds are covered too, so a podcast directory or newsletter that pulls your feed stops receiving posts.', 'reportedip-hive' ),
+			$feeds,
+			false
+		);
+
+		self::render_switch_row(
+			$as::OPT_ADMIN_GUESTS,
+			__( 'Close wp-admin for visitors', 'reportedip-hive' ),
+			$hide_on
+				? __( 'Always on while Hide Login is active — a visible wp-admin would redirect straight to the login URL you just hid.', 'reportedip-hive' )
+				: sprintf(
+					/* translators: %s: currently configured response, for example "Block page" */
+					__( 'Logged-out requests to wp-admin are refused instead of redirected to the login form. Answers with the response configured on Settings, Hide Login (currently: %s). admin-ajax.php and admin-post.php stay reachable so front-end forms keep working.', 'reportedip-hive' ),
+					ReportedIP_Hive_Hide_Login::RESPONSE_MODE_404 === $mode ? __( 'Soft 404', 'reportedip-hive' ) : __( 'Block page', 'reportedip-hive' )
+				),
+			$hide_on || $guests,
+			$hide_on
+		);
+
+		self::render_switch_row(
+			$as::OPT_HIDE_SOFTWARE,
+			__( 'Hide software fingerprints', 'reportedip-hive' ),
+			__( 'Removes the WordPress generator tag from pages and feeds and switches PHP error display off. Errors raised before the plugin loads, and a wp-config.php that enables WP_DEBUG_DISPLAY, stay as they are — those are out of reach from here.', 'reportedip-hive' ),
+			$software,
+			false
+		);
+
+		echo '</div></div>';
+	}
+
+	/**
+	 * Render one labelled toggle row of the endpoint card.
+	 *
+	 * @param string $option    Option key used as the field name.
+	 * @param string $label     Toggle label.
+	 * @param string $help      Help text below the toggle.
+	 * @param bool   $checked   Whether the toggle is on.
+	 * @param bool   $locked_on Render checked and disabled, with a hidden "1".
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private static function render_switch_row( $option, $label, $help, $checked, $locked_on ) {
+		echo '<div class="rip-form-group">';
+		if ( $locked_on ) {
+			printf( '<input type="hidden" name="%s" value="1" />', esc_attr( $option ) );
+		}
+		printf(
+			'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" name="%1$s" value="1"%2$s%3$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%4$s</span></label>',
+			esc_attr( $option ),
+			checked( $checked, true, false ),
+			disabled( $locked_on, true, false ),
+			esc_html( $label )
+		);
+		echo '<p class="rip-help-text">' . esc_html( $help ) . '</p>';
+		echo '</div>';
+	}
+
+	/**
+	 * PHP-execution block for the uploads directory: toggle, live status and
+	 * the copy-paste snippets for stacks Hive cannot manage itself.
+	 *
+	 * @param bool $enabled Whether the switch is on.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private function render_uploads_php_card( $enabled ) {
+		$as       = 'ReportedIP_Hive_Attack_Surface';
+		$writer   = class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' )
+			? ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()
+			: null;
+		$writable = $writer && $writer->is_writable_target();
+		$present  = $writer && $writer->is_block_present();
+		$server   = class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
+			? ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->detect_web_server()
+			: 'unknown';
+		$htaccess = ( 'apache' === $server || 'litespeed' === $server );
+
+		$server_lbl = array(
+			'apache'    => 'Apache (.htaccess)',
+			'litespeed' => 'LiteSpeed (.htaccess)',
+			'nginx'     => 'nginx',
+			'unknown'   => __( 'Unknown', 'reportedip-hive' ),
+		);
+
+		if ( ! $enabled ) {
+			$badge_class = 'rip-badge--neutral';
+			$badge_label = __( 'Inactive', 'reportedip-hive' );
+		} elseif ( ! $htaccess ) {
+			$badge_class = 'rip-badge--info';
+			$badge_label = __( 'Not applicable', 'reportedip-hive' );
+		} elseif ( $present ) {
+			$badge_class = 'rip-badge--success';
+			$badge_label = __( 'Active', 'reportedip-hive' );
+		} elseif ( $writable ) {
+			$badge_class = 'rip-badge--warning';
+			$badge_label = __( 'Pending', 'reportedip-hive' );
+		} else {
+			$badge_class = 'rip-badge--info';
+			$badge_label = __( 'Manual', 'reportedip-hive' );
+		}
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'PHP execution in uploads', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'The uploads directory holds media, never code. Refusing requests for PHP and other executable file types there turns a successful file-upload exploit into a dead file on disk. Hive writes the rule into the uploads .htaccess on Apache and LiteSpeed; on nginx you paste the matching snippet once.', 'reportedip-hive' ) . '</p>';
+
+		self::render_switch_row(
+			$as::OPT_UPLOADS_PHP,
+			__( 'Block PHP execution in the uploads directory', 'reportedip-hive' ),
+			__( 'A handful of plugins really do ship PHP inside uploads, mostly caching and gallery tools. If something breaks right after you switch this on, that is where to look first.', 'reportedip-hive' ),
+			$enabled,
+			false
+		);
+
+		echo '<div class="rip-grid rip-grid-cols-3">';
+		self::render_stat_card(
+			array(
+				'value' => $badge_label,
+				'badge' => $badge_class,
+				'label' => __( 'Uploads .htaccess block', 'reportedip-hive' ),
+			)
+		);
+		self::render_stat_card(
+			array(
+				'value' => isset( $server_lbl[ $server ] ) ? $server_lbl[ $server ] : $server,
+				'label' => __( 'Detected server', 'reportedip-hive' ),
+			)
+		);
+		self::render_stat_card(
+			array(
+				'value' => ReportedIP_Hive_Uploads_Htaccess_Writer::uploads_url_path(),
+				'label' => __( 'Covered path', 'reportedip-hive' ),
+			)
+		);
+		echo '</div>';
+
+		if ( ! $enabled ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The switch is off — nothing is written to the uploads directory and executable files there are served as usual.', 'reportedip-hive' ) . '</div>';
+		} elseif ( ! $htaccess ) {
+			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'This web server does not read .htaccess, so the block cannot be auto-managed. Paste the nginx snippet below into your server block once.', 'reportedip-hive' ) . '</div>';
+		} elseif ( $present ) {
+			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Auto-managed — Hive wrote the block into the uploads .htaccess.', 'reportedip-hive' ) . '</div>';
+		} elseif ( $writable ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The uploads .htaccess is writable but the block is not in place yet. Save this page once to trigger a sync.', 'reportedip-hive' ) . '</div>';
+		} else {
+			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'The uploads .htaccess is not writable, so the block cannot be auto-managed. Add the Apache snippet below by hand.', 'reportedip-hive' ) . '</div>';
+		}
+
+		if ( is_multisite() && get_site_option( 'ms_files_rewriting' ) ) {
+			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'This network still uses the legacy blogs.dir upload layout. The single main-site file does not cover those directories — add the snippet there by hand.', 'reportedip-hive' ) . '</div>';
+		}
+
+		if ( ! $htaccess || ! $writable ) {
+			self::render_snippet(
+				'rip-uploads-snip-apache',
+				__( 'Apache (.htaccess in the uploads directory)', 'reportedip-hive' ),
+				ReportedIP_Hive_Uploads_Htaccess_Writer::htaccess_snippet()
+			);
+			self::render_snippet(
+				'rip-uploads-snip-nginx',
+				__( 'nginx (server block)', 'reportedip-hive' ),
+				ReportedIP_Hive_Uploads_Htaccess_Writer::nginx_snippet(),
+				__( 'Place this above your PHP location block — nginx picks the first matching regex location, so the order decides.', 'reportedip-hive' )
+			);
+		}
+
+		echo '</div></div>';
+	}
+
+	/**
+	 * Render the security-headers save button. Extracted so both return paths
+	 * of the Hardening tab (advanced headers locked or unlocked) end with the
+	 * same button and the attack-surface section below it.
+	 *
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private static function render_headers_save_button() {
 		printf(
 			'<p><button type="button" class="rip-button rip-button--primary" id="rip-headers-save">%s</button> <span id="rip-headers-saved" class="rip-help-text"></span></p>',
 			esc_html__( 'Save headers', 'reportedip-hive' )

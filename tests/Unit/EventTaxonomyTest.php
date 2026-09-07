@@ -45,6 +45,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'fake_bot'            => 'bot',
 				'user_enumeration'    => 'recon',
 				'rest_abuse'          => 'recon',
+				'rest_denied'            => 'recon',
+				'xmlrpc_denied'          => 'recon',
+				'admin_guest_denied'     => 'recon',
 				'comment_spam'        => 'spam',
 				'xmlrpc_abuse'           => 'spam',
 				'prohibited_username'    => 'spam',
@@ -77,6 +80,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'categories_cached',
 				'hardening_mode_deactivated',
 				'2fa_reset_challenge_sent',
+				'feed_denied',
 				'totally_unknown_event',
 			);
 			foreach ( $operational as $event ) {

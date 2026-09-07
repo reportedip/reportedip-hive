@@ -213,6 +213,15 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_hide_login_probe_threshold'      => 5,
 		'reportedip_hive_hide_login_probe_timeframe'      => 10,
 
+		'reportedip_hive_rest_access_mode'                => 'open',
+		'reportedip_hive_rest_allowed_namespaces'         => "oembed/1.0\nwp-site-health/v1\ncontact-form-7/v1\nwc/store\nelementor/v1\njetpack/v4\nborlabs-cookie/v1\ncomplianz/v1\ncookie-law-info/v1\nreal-cookie-banner/v1\nsliderrevolution",
+		'reportedip_hive_rest_allowed_roles'              => '["administrator"]',
+		'reportedip_hive_disable_xmlrpc'                  => false,
+		'reportedip_hive_disable_feeds'                   => false,
+		'reportedip_hive_block_admin_guests'              => false,
+		'reportedip_hive_block_uploads_php'               => false,
+		'reportedip_hive_hide_software_info'              => false,
+
 		'reportedip_hive_password_policy_enabled'         => true,
 		'reportedip_hive_password_min_length'             => 12,
 		'reportedip_hive_password_min_classes'            => 3,

@@ -264,6 +264,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Admin_Notice::register_hooks();
 		ReportedIP_Hive_Decoy_Path_Block::get_instance()->register_hooks();
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->register_hooks();
+		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->register_hooks();
 		ReportedIP_Hive_Audit_Logger::get_instance()->register_hooks();
 	}
 
@@ -412,10 +413,13 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-notice.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-whats-new.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-htaccess-block-writer.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-htaccess-writer.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-uploads-htaccess-writer.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ip-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cron-handler.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-hide-login.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-attack-surface.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-app-password-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-bot-allowlist.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rest-monitor.php';
@@ -522,6 +526,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Database::get_instance();
 		$this->api_client = ReportedIP_Hive_API::get_instance();
 		ReportedIP_Hive_Hide_Login::get_instance();
+		ReportedIP_Hive_Attack_Surface::get_instance();
 		$this->security_monitor = new ReportedIP_Hive_Security_Monitor();
 		$this->ip_manager       = ReportedIP_Hive_IP_Manager::get_instance();
 		$this->logger           = ReportedIP_Hive_Logger::get_instance();
@@ -605,10 +610,17 @@ class ReportedIP_Hive {
 		if ( ! class_exists( 'ReportedIP_Hive_Decoy_Path_Block' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
 		}
+		if ( ! class_exists( 'ReportedIP_Hive_Htaccess_Block_Writer' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-htaccess-block-writer.php';
+		}
 		if ( ! class_exists( 'ReportedIP_Hive_Decoy_Htaccess_Writer' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-htaccess-writer.php';
 		}
+		if ( ! class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-uploads-htaccess-writer.php';
+		}
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->sync();
+		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->sync();
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_dropin_enabled', false ) ) {
 			foreach ( array(
@@ -675,10 +687,17 @@ class ReportedIP_Hive {
 		if ( ! class_exists( 'ReportedIP_Hive_Decoy_Path_Block' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
 		}
+		if ( ! class_exists( 'ReportedIP_Hive_Htaccess_Block_Writer' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-htaccess-block-writer.php';
+		}
 		if ( ! class_exists( 'ReportedIP_Hive_Decoy_Htaccess_Writer' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-htaccess-writer.php';
 		}
+		if ( ! class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-uploads-htaccess-writer.php';
+		}
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->remove();
+		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->remove();
 
 		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php';
@@ -710,6 +729,8 @@ class ReportedIP_Hive {
 		foreach ( array(
 			'includes/class-waf.php',
 			'includes/class-waf-dropin-manager.php',
+			'includes/class-htaccess-block-writer.php',
+			'includes/class-uploads-htaccess-writer.php',
 		) as $relative ) {
 			$path = REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
 			if ( file_exists( $path ) ) {
@@ -718,6 +739,9 @@ class ReportedIP_Hive {
 		}
 		if ( class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
 			ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->remove();
+		}
+		if ( class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' ) ) {
+			ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->remove();
 		}
 
 		$delete_requested = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', false );

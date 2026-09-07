@@ -2983,6 +2983,71 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 
 		register_setting(
+			'reportedip_hive_attack_surface',
+			'reportedip_hive_rest_access_mode',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_rest_access_mode' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_attack_surface',
+			'reportedip_hive_rest_allowed_namespaces',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_rest_allowed_namespaces' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_attack_surface',
+			'reportedip_hive_rest_allowed_roles',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_rest_allowed_roles' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_attack_surface',
+			'reportedip_hive_disable_xmlrpc',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_disable_xmlrpc' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_attack_surface',
+			'reportedip_hive_disable_feeds',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_disable_feeds' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_attack_surface',
+			'reportedip_hive_block_admin_guests',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_admin_guests' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_attack_surface',
+			'reportedip_hive_block_uploads_php',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_uploads_php' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_attack_surface',
+			'reportedip_hive_hide_software_info',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_software_info' ),
+			)
+		);
+
+		register_setting(
 			'reportedip_hive_advanced_privacy',
 			'reportedip_hive_log_level',
 			array(
@@ -4853,6 +4918,10 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php esc_html_e( 'XML-RPC abuse', 'reportedip-hive' ); ?>
 				</h2>
 				<p class="rip-settings-section__desc"><?php esc_html_e( 'XML-RPC is an older WordPress remote-control interface that bots often hammer to brute-force passwords. Most modern sites do not actively use it.', 'reportedip-hive' ); ?></p>
+
+				<?php if ( class_exists( 'ReportedIP_Hive_Attack_Surface' ) && ReportedIP_Hive_Attack_Surface::switch_on( ReportedIP_Hive_Attack_Surface::OPT_XMLRPC_OFF ) ) : ?>
+					<div class="rip-alert rip-alert--info"><?php echo esc_html( ReportedIP_Hive_Attack_Surface::xmlrpc_off_notice() ); ?></div>
+				<?php endif; ?>
 
 				<div class="rip-form-group">
 					<label class="rip-toggle">

@@ -54,6 +54,9 @@ class ReportedIP_Hive_Event_Taxonomy {
 
 		'user_enumeration'            => 'recon',
 		'rest_abuse'                  => 'recon',
+		'rest_denied'                 => 'recon',
+		'xmlrpc_denied'               => 'recon',
+		'admin_guest_denied'          => 'recon',
 
 		'comment_spam'                => 'spam',
 		'comment_honeypot'            => 'spam',

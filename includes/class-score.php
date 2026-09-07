@@ -69,13 +69,19 @@ final class ReportedIP_Hive_Score {
 	 * @var array<string,int>
 	 */
 	const HARDENING_WEIGHTS = array(
-		'hide_login'                => 18,
-		'twofa_enforce'             => 22,
-		'security_headers'          => 15,
-		'security_headers_advanced' => 10,
-		'password_hibp'             => 15,
-		'hardening_mode'            => 10,
-		'disposable_block'          => 10,
+		'hide_login'                => 14,
+		'twofa_enforce'             => 18,
+		'security_headers'          => 12,
+		'security_headers_advanced' => 8,
+		'password_hibp'             => 12,
+		'hardening_mode'            => 6,
+		'disposable_block'          => 6,
+		'rest_access'               => 6,
+		'xmlrpc_off'                => 6,
+		'feeds_off'                 => 2,
+		'admin_guest_block'         => 4,
+		'uploads_php_block'         => 4,
+		'hide_software_info'        => 2,
 	);
 
 	/**
@@ -252,6 +258,10 @@ final class ReportedIP_Hive_Score {
 	public static function hardening_items() {
 		$w               = self::HARDENING_WEIGHTS;
 		$headers_present = class_exists( 'ReportedIP_Hive_Security_Headers' );
+		$surface_url     = self::url( 'reportedip-hive-firewall', 'hardening' );
+		$uploads_present = class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' )
+			&& class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
+			&& ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->supports_htaccess();
 
 		return array(
 			self::item( 'hide_login', $w['hide_login'], 'hardening', __( 'Hide login URL', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_hide_login_enabled', false ), self::url( 'reportedip-hive-settings', 'hide_login' ) ),
@@ -261,6 +271,12 @@ final class ReportedIP_Hive_Score {
 			self::item( 'password_hibp', $w['password_hibp'], 'hardening', __( 'Password strength & breach check', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_password_policy_enabled', true ), self::url( 'reportedip-hive-settings', 'detection' ) ),
 			self::item( 'hardening_mode', $w['hardening_mode'], 'hardening', __( 'Hardening mode', 'reportedip-hive' ), class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active(), self::url( 'reportedip-hive-settings', 'hardening_mode' ), 'hardening_mode' ),
 			self::item( 'disposable_block', $w['disposable_block'], 'hardening', __( 'Disposable-email defence', 'reportedip-hive' ), 'off' !== (string) self::opt( 'reportedip_hive_disposable_email_action', 'monitor' ), self::url( 'reportedip-hive-firewall', 'spam' ), 'disposable_email' ),
+			self::item( 'rest_access', $w['rest_access'], 'hardening', __( 'REST API access control', 'reportedip-hive' ), 'open' !== (string) self::opt( 'reportedip_hive_rest_access_mode', 'open' ), $surface_url ),
+			self::item( 'xmlrpc_off', $w['xmlrpc_off'], 'hardening', __( 'XML-RPC disabled', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_disable_xmlrpc', false ), $surface_url ),
+			self::item( 'feeds_off', $w['feeds_off'], 'hardening', __( 'Feeds disabled', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_disable_feeds', false ), $surface_url ),
+			self::item( 'admin_guest_block', $w['admin_guest_block'], 'hardening', __( 'wp-admin closed for visitors', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_hide_login_enabled', false ) || (bool) self::opt( 'reportedip_hive_block_admin_guests', false ), $surface_url ),
+			self::item( 'uploads_php_block', $w['uploads_php_block'], 'hardening', __( 'PHP execution blocked in uploads', 'reportedip-hive' ), $uploads_present && ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->is_effective(), $surface_url, null, $uploads_present ),
+			self::item( 'hide_software_info', $w['hide_software_info'], 'hardening', __( 'Software fingerprints hidden', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_hide_software_info', false ), $surface_url ),
 		);
 	}
 

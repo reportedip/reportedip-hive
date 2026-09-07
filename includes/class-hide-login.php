@@ -160,16 +160,27 @@ class ReportedIP_Hive_Hide_Login {
 	}
 
 	/**
-	 * Decide whether the current request should be left alone.
-	 *
-	 * Bypass conditions are intentionally permissive — false negatives here
-	 * just mean the feature is silently inactive for that request, but a
-	 * false positive (blocking a REST or cron request) breaks the site.
+	 * Whether the wp-admin guest block is in force — either because Hide
+	 * Login is active (it has always closed wp-admin for visitors) or because
+	 * the standalone attack-surface switch is on.
 	 */
-	private function should_bypass(): bool {
-		if ( ! $this->is_active() ) {
+	public function admin_guest_block_active(): bool {
+		if ( $this->is_active() ) {
 			return true;
 		}
+		return class_exists( 'ReportedIP_Hive_Attack_Surface' )
+			&& ReportedIP_Hive_Attack_Surface::switch_on( ReportedIP_Hive_Attack_Surface::OPT_ADMIN_GUESTS );
+	}
+
+	/**
+	 * The request-shape carve-outs shared by every gate in this class: CLI,
+	 * cron, XML-RPC, REST, the 2FA frontend slugs and the two admin entry
+	 * points that legitimately answer logged-in requests.
+	 *
+	 * Deliberately permissive — a false negative just means a gate is
+	 * silently inactive for that request, a false positive breaks the site.
+	 */
+	private function is_environment_bypassed(): bool {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			return true;
 		}
@@ -286,35 +297,55 @@ class ReportedIP_Hive_Hide_Login {
 		if ( $this->serving_login ) {
 			return;
 		}
-		if ( $this->should_bypass() ) {
+		if ( ! $this->admin_guest_block_active() ) {
+			return;
+		}
+		if ( $this->is_environment_bypassed() ) {
 			return;
 		}
 
 		$path = $this->get_request_path();
-		$slug = $this->get_slug();
 
-		if ( '/' . $slug === $path ) {
-			$this->serve_wp_login();
-			return;
-		}
-
-		if ( $this->is_wp_login_request() ) {
-			if ( $this->is_action_whitelisted() ) {
+		if ( $this->is_active() ) {
+			if ( '/' . $this->get_slug() === $path ) {
+				$this->serve_wp_login();
 				return;
 			}
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check; the value is never trusted, just used to skip our block on the WP "interim-login" iframe flow.
-			if ( isset( $_GET['interim-login'] ) ) {
+
+			if ( $this->is_wp_login_request() ) {
+				if ( $this->is_action_whitelisted() ) {
+					return;
+				}
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only check; the value is never trusted, just used to skip our block on the WP "interim-login" iframe flow.
+				if ( isset( $_GET['interim-login'] ) ) {
+					return;
+				}
+				$this->log_recon_attempt();
+				$this->render_block_response();
 				return;
 			}
-			$this->log_recon_attempt();
-			$this->render_block_response();
-			return;
 		}
 
 		if ( $this->is_wp_admin_request( $path ) && ! is_user_logged_in() ) {
-			$this->log_recon_attempt();
-			$this->render_block_response();
+			$this->deny_admin_guest();
 		}
+	}
+
+	/**
+	 * Refuse a logged-out wp-admin request. With Hide Login active the
+	 * existing recon log and probe ladder apply; with only the standalone
+	 * switch on, the refusal is logged once per IP without a ladder.
+	 */
+	private function deny_admin_guest(): void {
+		if ( $this->is_active() ) {
+			$this->log_recon_attempt();
+		} elseif ( class_exists( 'ReportedIP_Hive_Attack_Surface' ) ) {
+			ReportedIP_Hive_Attack_Surface::log_denied(
+				ReportedIP_Hive_Attack_Surface::EVENT_ADMIN_GUEST,
+				array( 'path' => $this->get_request_path() )
+			);
+		}
+		$this->render_block_response();
 	}
 
 	/**
@@ -351,8 +382,27 @@ class ReportedIP_Hive_Hide_Login {
 	 * Optional 404 mode: theme's 404 template — gives no plugin fingerprint.
 	 */
 	private function render_block_response(): void {
-		$mode = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', self::RESPONSE_MODE_BLOCK_PAGE );
+		self::render_response(
+			(string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', self::RESPONSE_MODE_BLOCK_PAGE )
+		);
+	}
 
+	/**
+	 * Render a "this endpoint is closed" response and stop. Shared by Hide
+	 * Login, the wp-admin guest block and the attack-surface switches so one
+	 * setting decides what every closed endpoint answers with.
+	 *
+	 * On a feed request WordPress has already sent
+	 * `Content-Type: application/rss+xml` from `WP::send_headers()`; the 404
+	 * template is HTML, so the header has to be corrected before the include
+	 * or readers see a malformed feed instead of a gone one.
+	 *
+	 * @param string $mode    One of the RESPONSE_MODE_* constants.
+	 * @param string $context Block-page context passed to templates/blocked.php.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	public static function render_response( string $mode, string $context = 'hide_login' ): void {
 		if ( self::RESPONSE_MODE_404 === $mode ) {
 			global $wp_query;
 			if ( $wp_query instanceof WP_Query ) {
@@ -360,6 +410,10 @@ class ReportedIP_Hive_Hide_Login {
 			}
 			status_header( 404 );
 			nocache_headers();
+			if ( function_exists( 'is_feed' ) && is_feed() && ! headers_sent() ) {
+				$charset = (string) get_option( 'blog_charset' );
+				header( 'Content-Type: text/html; charset=' . ( '' === $charset ? 'UTF-8' : $charset ) );
+			}
 			$template = get_404_template();
 			if ( $template && file_exists( $template ) ) {
 				include $template;
@@ -370,7 +424,7 @@ class ReportedIP_Hive_Hide_Login {
 
 		status_header( 403 );
 		nocache_headers();
-		$reportedip_hive_block_context = 'hide_login';
+		$reportedip_hive_block_context = $context;
 		include REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/blocked.php';
 		exit;
 	}
@@ -477,7 +531,10 @@ class ReportedIP_Hive_Hide_Login {
 	 * "you must log in" redirect (which would leak the real wp-login URL).
 	 */
 	public function block_wp_admin_for_logged_out(): void {
-		if ( $this->should_bypass() ) {
+		if ( ! $this->admin_guest_block_active() ) {
+			return;
+		}
+		if ( $this->is_environment_bypassed() ) {
 			return;
 		}
 		if ( wp_doing_ajax() ) {
@@ -486,8 +543,10 @@ class ReportedIP_Hive_Hide_Login {
 		if ( is_user_logged_in() ) {
 			return;
 		}
-		$this->log_recon_attempt();
-		$this->render_block_response();
+		if ( ! $this->is_wp_admin_request( $this->get_request_path() ) ) {
+			return;
+		}
+		$this->deny_admin_guest();
 	}
 
 	/**
@@ -495,7 +554,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * or "/dashboard" to wp-admin — defeats the whole feature. Drop it.
 	 */
 	public function remove_admin_locations_redirect(): void {
-		if ( ! $this->is_active() ) {
+		if ( ! $this->admin_guest_block_active() ) {
 			return;
 		}
 		remove_action( 'template_redirect', 'wp_redirect_admin_locations', 1000 );

@@ -811,6 +811,9 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
 					<?php esc_html_e( 'XMLRPC protection', 'reportedip-hive' ); ?>
 				</h2>
+				<?php if ( class_exists( 'ReportedIP_Hive_Attack_Surface' ) && ReportedIP_Hive_Attack_Surface::switch_on( ReportedIP_Hive_Attack_Surface::OPT_XMLRPC_OFF ) ) : ?>
+					<div class="rip-alert rip-alert--info"><?php echo esc_html( ReportedIP_Hive_Attack_Surface::xmlrpc_off_notice() ); ?></div>
+				<?php endif; ?>
 				<div class="rip-form-group">
 					<label class="rip-toggle">
 						<input type="checkbox"

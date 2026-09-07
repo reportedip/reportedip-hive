@@ -460,6 +460,63 @@ class HideLoginTest extends TestCase {
 			'WP Rocket can serve a cached copy from advanced-cache.php before init, so the slug also needs a URL-level reject rule.'
 		);
 	}
+
+	/**
+	 * The wp-admin guest block is shared with the standalone attack-surface
+	 * switch, so every gate that closes wp-admin must consult one predicate
+	 * rather than Hide-Login's own is_active().
+	 */
+	public function test_admin_guest_gates_use_the_shared_predicate() {
+		$source = $this->hide_login_source();
+
+		foreach ( array( 'handle_request', 'block_wp_admin_for_logged_out', 'remove_admin_locations_redirect' ) as $method ) {
+			$start = strpos( $source, 'function ' . $method );
+			$this->assertNotFalse( $start, "Method {$method} could not be located." );
+			$body = substr( $source, $start, 900 );
+			$this->assertStringContainsString(
+				'admin_guest_block_active()',
+				$body,
+				"{$method}() must gate on the shared wp-admin predicate, not on Hide Login alone."
+			);
+		}
+	}
+
+	/**
+	 * Regression: admin-post.php answers logged-out nopriv handlers, and
+	 * handle_request() has always carved it out. The admin_init gate did not,
+	 * so front-end forms posting to admin-post.php were blocked.
+	 */
+	public function test_admin_init_gate_only_fires_on_wp_admin_paths() {
+		$source = $this->hide_login_source();
+		$start  = strpos( $source, 'function block_wp_admin_for_logged_out' );
+		$this->assertNotFalse( $start );
+
+		$this->assertStringContainsString(
+			'is_wp_admin_request(',
+			substr( $source, $start, 900 ),
+			'Without the path check the gate also blocks nopriv admin-post.php requests.'
+		);
+	}
+
+	/**
+	 * The block response is shared with the attack-surface switches, so the
+	 * renderer has to be reachable statically and fix the feed Content-Type
+	 * WP::send_headers() already sent.
+	 */
+	public function test_response_renderer_is_shared_and_fixes_the_feed_content_type() {
+		$source = $this->hide_login_source();
+
+		$this->assertStringContainsString( 'public static function render_response(', $source );
+		$this->assertStringContainsString( "header( 'Content-Type: text/html; charset='", $source );
+		$this->assertStringContainsString( 'is_feed()', $source );
+	}
+
+	/**
+	 * Source of the Hide-Login class.
+	 */
+	private function hide_login_source(): string {
+		return (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-hide-login.php' );
+	}
 }
 
 }

@@ -177,6 +177,12 @@ class ReportedIP_Hive_REST_Monitor {
 	 * Routes that should never be rate-limited:
 	 *  - the plugin's own 2FA endpoints (which run their own throttling);
 	 *  - the oEmbed discovery endpoint used by legitimate embeds.
+	 *
+	 * The same namespaces seed
+	 * `Defaults::SAFE_OPTIONS['reportedip_hive_rest_allowed_namespaces']` —
+	 * a namespace legitimate enough to skip the rate limit is legitimate
+	 * enough to survive the REST access switch. `AttackSurfaceRestDecisionTest`
+	 * pins the two lists together so neither drifts alone.
 	 */
 	private function is_route_bypassed( string $route ): bool {
 		$bypass = array(
