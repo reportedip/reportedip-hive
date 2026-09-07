@@ -40,6 +40,7 @@ class ReportedIP_Hive_Event_Taxonomy {
 		'app_password_abuse'          => 'login',
 		'app_password_failed'         => 'login',
 		'2fa_brute_force'             => 'login',
+		'unknown_username_probe'      => 'login',
 
 		'waf_block'                   => 'firewall',
 		'waf_would_block'             => 'firewall',
@@ -58,6 +59,9 @@ class ReportedIP_Hive_Event_Taxonomy {
 		'comment_honeypot'            => 'spam',
 		'xmlrpc_abuse'                => 'spam',
 		'disposable_email'            => 'spam',
+		'prohibited_username'         => 'spam',
+		'registration_denied'         => 'spam',
+		'registration_limit'          => 'spam',
 
 		'geo_anomaly'                 => 'anomaly',
 		'hardening_mode_activated'    => 'anomaly',

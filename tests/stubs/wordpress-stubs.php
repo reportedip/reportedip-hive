@@ -1230,6 +1230,26 @@ if ( ! function_exists( 'rest_sanitize_boolean' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_check_invalid_utf8' ) ) {
+	/**
+	 * Rejects a string that is not valid UTF-8, mirroring WordPress core.
+	 *
+	 * @param mixed $text  Raw value.
+	 * @param bool  $strip Whether to strip the invalid bytes instead of rejecting.
+	 * @return string
+	 */
+	function wp_check_invalid_utf8( $text, $strip = false ) {
+		$text = (string) $text;
+		if ( '' === $text || ! function_exists( 'mb_check_encoding' ) || mb_check_encoding( $text, 'UTF-8' ) ) {
+			return $text;
+		}
+		if ( $strip && function_exists( 'iconv' ) ) {
+			return (string) iconv( 'utf-8', 'utf-8//ignore', $text );
+		}
+		return '';
+	}
+}
+
 if ( ! function_exists( 'sanitize_textarea_field' ) ) {
 	/**
 	 * Simplified multi-line sanitizer.

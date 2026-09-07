@@ -75,6 +75,20 @@ class SettingsImportExportTest extends TestCase {
 		$this->assertContains( 'reportedip_hive_bot_action', $keys );
 		$this->assertContains( 'reportedip_hive_disposable_email_action', $keys );
 		$this->assertContains( 'reportedip_hive_comment_honeypot_enabled', $keys );
+		$registration_keys = array(
+			'reportedip_hive_prohibited_usernames',
+			'reportedip_hive_prohibited_usernames_baseline',
+			'reportedip_hive_email_rule_mode',
+			'reportedip_hive_email_rules',
+			'reportedip_hive_registration_limit_enabled',
+			'reportedip_hive_registration_limit_count',
+			'reportedip_hive_registration_limit_timeframe',
+			'reportedip_hive_registration_allowlist',
+			'reportedip_hive_block_unknown_username_login',
+		);
+		foreach ( $registration_keys as $registration_key ) {
+			$this->assertContains( $registration_key, $keys, "Registration key {$registration_key} must be exportable." );
+		}
 		$this->assertContains( 'reportedip_hive_headers_enabled', $keys );
 		$this->assertContains( 'reportedip_hive_csp_policy', $keys );
 		$this->assertContains( 'reportedip_hive_audit_retention_days', $keys );

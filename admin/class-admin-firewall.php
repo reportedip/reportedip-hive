@@ -49,6 +49,10 @@ class ReportedIP_Hive_Admin_Firewall {
 		'decoy_pathblock_hit',
 		'scan_404_threshold_exceeded',
 		'disposable_email',
+		'prohibited_username',
+		'registration_denied',
+		'registration_limit',
+		'unknown_username_probe_threshold_exceeded',
 		'rule_sync_signature_fail',
 	);
 
@@ -109,6 +113,76 @@ class ReportedIP_Hive_Admin_Firewall {
 			printf( '<option value="%s"%s>%s</option>', esc_attr( (string) $value ), selected( (string) $current, (string) $value, false ), esc_html( $choice_label ) );
 		}
 		echo '</select></div>';
+	}
+
+	/**
+	 * Render the primary save button of a settings card. The Firewall page
+	 * script posts every `[data-opt]` field of the surrounding `.rip-card`
+	 * through the generic registry writer.
+	 *
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private static function render_card_save_button() {
+		printf(
+			'<p><button type="button" class="rip-button rip-button--primary" data-rip-save="reportedip_hive_registry_save">%s</button></p>',
+			esc_html__( 'Save', 'reportedip-hive' )
+		);
+	}
+
+	/**
+	 * Render an entry-list card: header with tier marker, help text, optional
+	 * card-specific controls, the textarea, the entry counter and the save
+	 * button.
+	 *
+	 * @param array{id:string,title:string,label:string,option:string,status:array<string,mixed>,help:string,placeholder:string,extra?:callable} $args Card definition.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private static function render_list_card( array $args ) {
+		$option    = (string) $args['option'];
+		$status    = (array) $args['status'];
+		$unlimited = ! empty( $status['available'] );
+		$raw       = (string) ReportedIP_Hive_Option_Routing::get( $option, '' );
+		$stored    = ReportedIP_Hive_Registration_Guard::stored_entries( $raw );
+		$active    = ReportedIP_Hive_Registration_Guard::active_entries( $raw, $unlimited );
+
+		printf(
+			'<div class="rip-card" id="%1$s"><div class="rip-card__header"><h2>%2$s</h2>',
+			esc_attr( (string) $args['id'] ),
+			esc_html( (string) $args['title'] )
+		);
+		ReportedIP_Hive_Admin_Settings::render_tier_marker( $status );
+		echo '</div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html( (string) $args['help'] ) . '</p>';
+
+		if ( isset( $args['extra'] ) && is_callable( $args['extra'] ) ) {
+			call_user_func( $args['extra'] );
+		}
+
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="%1$s">%2$s</label><textarea id="%1$s" class="rip-textarea" rows="6" data-opt="%3$s" placeholder="%4$s">%5$s</textarea></div>',
+			esc_attr( $args['id'] . '-input' ),
+			esc_html( (string) $args['label'] ),
+			esc_attr( $option ),
+			esc_attr( (string) $args['placeholder'] ),
+			esc_textarea( $raw )
+		);
+
+		echo '<p class="rip-help-text">' . esc_html(
+			$unlimited
+				/* translators: %d: number of active entries */
+				? sprintf( __( '%d entries, no limit on your plan', 'reportedip-hive' ), count( $active ) )
+				/* translators: 1: number of active entries, 2: entries allowed by the plan */
+				: sprintf( __( '%1$d / %2$d entries', 'reportedip-hive' ), count( $active ), ReportedIP_Hive_Registration_Guard::FREE_MAX_ENTRIES )
+		) . '</p>';
+
+		if ( count( $stored ) > count( $active ) ) {
+			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'Only the first ten plain entries are in force on your plan. The remaining entries and every regular expression are kept but ignored.', 'reportedip-hive' ) . '</div>';
+		}
+
+		self::render_card_save_button();
+		echo '</div></div>';
 	}
 
 	/**
@@ -178,7 +252,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			),
 			'disposable_domains' => array(
 				'label' => __( 'Disposable e-mail domains', 'reportedip-hive' ),
-				'feeds' => __( 'Spam Defence', 'reportedip-hive' ),
+				'feeds' => __( 'Registration & Spam', 'reportedip-hive' ),
 				'tab'   => 'spam',
 			),
 			'scan_paths'         => array(
@@ -204,14 +278,18 @@ class ReportedIP_Hive_Admin_Firewall {
 	 */
 	private static function event_label( $event_type ) {
 		$labels = array(
-			'waf_block'                   => __( 'WAF blocked a request', 'reportedip-hive' ),
-			'waf_would_block'             => __( 'WAF match (report-only)', 'reportedip-hive' ),
-			'fake_bot'                    => __( 'Spoofed crawler flagged', 'reportedip-hive' ),
-			'fake_bot_blocked'            => __( 'Spoofed crawler blocked', 'reportedip-hive' ),
-			'decoy_pathblock_hit'         => __( 'Decoy path hit', 'reportedip-hive' ),
-			'scan_404_threshold_exceeded' => __( 'Scan detected', 'reportedip-hive' ),
-			'disposable_email'            => __( 'Disposable e-mail address detected', 'reportedip-hive' ),
-			'rule_sync_signature_fail'    => __( 'Ruleset signature rejected', 'reportedip-hive' ),
+			'waf_block'                                 => __( 'WAF blocked a request', 'reportedip-hive' ),
+			'waf_would_block'                           => __( 'WAF match (report-only)', 'reportedip-hive' ),
+			'fake_bot'                                  => __( 'Spoofed crawler flagged', 'reportedip-hive' ),
+			'fake_bot_blocked'                          => __( 'Spoofed crawler blocked', 'reportedip-hive' ),
+			'decoy_pathblock_hit'                       => __( 'Decoy path hit', 'reportedip-hive' ),
+			'scan_404_threshold_exceeded'               => __( 'Scan detected', 'reportedip-hive' ),
+			'disposable_email'                          => __( 'Disposable e-mail address detected', 'reportedip-hive' ),
+			'prohibited_username'                       => __( 'Prohibited username at registration', 'reportedip-hive' ),
+			'registration_denied'                       => __( 'Registration denied', 'reportedip-hive' ),
+			'registration_limit'                        => __( 'Registration rate limit reached', 'reportedip-hive' ),
+			'unknown_username_probe_threshold_exceeded' => __( 'Unknown-username login probe blocked', 'reportedip-hive' ),
+			'rule_sync_signature_fail'                  => __( 'Ruleset signature rejected', 'reportedip-hive' ),
 		);
 		return isset( $labels[ $event_type ] ) ? $labels[ $event_type ] : ucwords( str_replace( '_', ' ', $event_type ) );
 	}
@@ -232,7 +310,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			'overview'  => __( 'Overview', 'reportedip-hive' ),
 			'waf'       => __( 'WAF', 'reportedip-hive' ),
 			'bot'       => __( 'Bot Verification', 'reportedip-hive' ),
-			'spam'      => __( 'Spam Defence', 'reportedip-hive' ),
+			'spam'      => __( 'Registration & Spam', 'reportedip-hive' ),
 			'scan'      => __( 'Scan & Decoy', 'reportedip-hive' ),
 			'server'    => __( 'Server Setup', 'reportedip-hive' ),
 			'rule_sync' => __( 'Rule Sync', 'reportedip-hive' ),
@@ -1046,7 +1124,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	 * @return void
 	 */
 	private function render_spam_tab() {
-		self::render_tab_intro( __( 'Stops registration and comment spam at its two favourite doors: throwaway e-mail addresses are detected at signup (WordPress and WooCommerce), and an invisible honeypot field rejects comment bots — no CAPTCHA, no friction for real visitors.', 'reportedip-hive' ) );
+		self::render_tab_intro( __( 'Decides who may open an account here. Registrations run through one ordered check: allowlisted networks, the rate limit per address, prohibited usernames, your e-mail rules and finally the throwaway-mail list. The comment honeypot at the bottom rejects comment bots without a CAPTCHA.', 'reportedip-hive' ) );
 
 		$disp_action = 'monitor';
 		$disp_ver    = 0;
@@ -1064,6 +1142,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		ReportedIP_Hive_Admin_Settings::render_tier_marker( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' ) );
 		echo '</div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'Inspects the e-mail address at registration (WordPress and WooCommerce) against the throwaway-mail list. Monitor logs a match; Block rejects the registration. The live, frequently-updated list rides the Professional ruleset.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'An e-mail allow rule below overrules this list: an address matching an allow rule is accepted even when its domain is a known throwaway provider.', 'reportedip-hive' ) . '</p>';
 
 		echo '<div class="rip-grid rip-grid-cols-2">';
 		self::render_stat_card(
@@ -1103,6 +1182,145 @@ class ReportedIP_Hive_Admin_Firewall {
 			esc_html( $block_relays ? __( 'Stop blocking privacy relays', 'reportedip-hive' ) : __( 'Also block privacy relays', 'reportedip-hive' ) )
 		);
 
+		echo '</div></div>';
+
+		$status    = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'registration_rules_unlimited' );
+		$unlimited = ! empty( $status['available'] );
+
+		self::render_list_card(
+			array(
+				'id'          => 'rip-reg-usernames',
+				'title'       => __( 'Prohibited usernames', 'reportedip-hive' ),
+				'label'       => __( 'Prohibited usernames', 'reportedip-hive' ),
+				'option'      => ReportedIP_Hive_Registration_Guard::OPT_USERNAMES,
+				'status'      => $status,
+				'help'        => __( 'One entry per line. An entry is compared literally, as a wildcard when it contains an asterisk (admin*), or as a case-insensitive regular expression when it is written between slashes (/^adm[i1]n$/). Regular expressions need the Professional plan. Lines starting with # are notes.', 'reportedip-hive' ),
+				'placeholder' => "shop-admin\nadmin*",
+				'extra'       => static function () {
+					$baseline = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Registration_Guard::OPT_USERNAMES_BASELINE, true );
+					printf(
+						'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" data-opt="%1$s" value="1"%2$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%3$s</span></label>',
+						esc_attr( ReportedIP_Hive_Registration_Guard::OPT_USERNAMES_BASELINE ),
+						checked( $baseline, true, false ),
+						esc_html__( 'Also reject the built-in list (admin, administrator, root, support and six more). It does not count towards the entry allowance.', 'reportedip-hive' )
+					);
+				},
+			)
+		);
+
+		$email_mode = (string) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Registration_Guard::OPT_EMAIL_MODE, 'off' );
+
+		self::render_list_card(
+			array(
+				'id'          => 'rip-reg-emails',
+				'title'       => __( 'E-mail rules', 'reportedip-hive' ),
+				'label'       => __( 'E-mail rules', 'reportedip-hive' ),
+				'option'      => ReportedIP_Hive_Registration_Guard::OPT_EMAIL_RULES,
+				'status'      => $status,
+				'help'        => __( 'One entry per line, compared against the whole address. A bare host name is stored as *@host. Wildcards such as *@*.example.com and, on the Professional plan, regular expressions between slashes are allowed.', 'reportedip-hive' ),
+				'placeholder' => "example.com\n*@*.example.org",
+				'extra'       => static function () use ( $email_mode ) {
+					self::render_select_row(
+						'rip-reg-email-mode',
+						ReportedIP_Hive_Registration_Guard::OPT_EMAIL_MODE,
+						__( 'Rule mode', 'reportedip-hive' ),
+						array(
+							'off'   => __( 'Off — do not check addresses against this list', 'reportedip-hive' ),
+							'block' => __( 'Block list — reject addresses that match', 'reportedip-hive' ),
+							'allow' => __( 'Allow list — accept only addresses that match', 'reportedip-hive' ),
+						),
+						$email_mode
+					);
+					if ( 'allow' === $email_mode ) {
+						echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'Allow-list mode rejects every address that does not match an entry. An empty list is treated as Off, so a plan change cannot close registration by accident.', 'reportedip-hive' ) . '</div>';
+					}
+				},
+			)
+		);
+
+		$limit_on  = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Registration_Guard::OPT_LIMIT_ENABLED, true );
+		$limit_max = (int) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Registration_Guard::OPT_LIMIT_COUNT, 3 );
+		$limit_win = (int) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Registration_Guard::OPT_LIMIT_TIMEFRAME, 60 );
+
+		echo '<div class="rip-card" id="rip-reg-limit"><div class="rip-card__header"><h2>' . esc_html__( 'Registration rate limit', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Counts completed registrations per visitor address and refuses further ones inside the window. Refusing is the whole consequence: no address is blocked and nothing is reported, because a shared office or campus connection opening a few accounts is not an attacker. Whitelisted addresses are never counted. Windows longer than an hour are approximate: the shared attempt counter starts over once an address has been idle for that long, so a long window only counts continuous activity.', 'reportedip-hive' ) . '</p>';
+		echo '<div class="rip-grid rip-grid-cols-2">';
+		self::render_stat_card(
+			array(
+				'value' => $limit_on ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ),
+				'badge' => $limit_on ? 'rip-badge--success' : 'rip-badge--neutral',
+				'label' => __( 'Rate limit', 'reportedip-hive' ),
+			)
+		);
+		self::render_stat_card(
+			array(
+				/* translators: 1: registrations allowed, 2: window length in minutes */
+				'value' => sprintf( __( '%1$d in %2$d min', 'reportedip-hive' ), $limit_max, $limit_win ),
+				'label' => __( 'Current limit', 'reportedip-hive' ),
+			)
+		);
+		echo '</div>';
+		printf(
+			'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" data-opt="%1$s" value="1"%2$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%3$s</span></label>',
+			esc_attr( ReportedIP_Hive_Registration_Guard::OPT_LIMIT_ENABLED ),
+			checked( $limit_on, true, false ),
+			esc_html__( 'Limit registrations per visitor address', 'reportedip-hive' )
+		);
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-reg-limit-count">%1$s</label><input type="number" id="rip-reg-limit-count" class="rip-input" min="1" max="100" data-opt="%2$s" value="%3$s" /></div>',
+			esc_html__( 'Registrations per window', 'reportedip-hive' ),
+			esc_attr( ReportedIP_Hive_Registration_Guard::OPT_LIMIT_COUNT ),
+			esc_attr( (string) $limit_max )
+		);
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-reg-limit-window">%1$s</label><input type="number" id="rip-reg-limit-window" class="rip-input" min="1" max="1440" data-opt="%2$s" value="%3$s" /></div>',
+			esc_html__( 'Window (minutes)', 'reportedip-hive' ),
+			esc_attr( ReportedIP_Hive_Registration_Guard::OPT_LIMIT_TIMEFRAME ),
+			esc_attr( (string) $limit_win )
+		);
+		self::render_card_save_button();
+		echo '</div></div>';
+
+		$allowlist = (string) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Registration_Guard::OPT_ALLOWLIST, '' );
+
+		echo '<div class="rip-card" id="rip-reg-allowlist"><div class="rip-card__header"><h2>' . esc_html__( 'Registration from allowlisted addresses only', 'reportedip-hive' ) . '</h2>';
+		ReportedIP_Hive_Admin_Settings::render_tier_marker( $status );
+		echo '</div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Leave empty to accept registrations from everywhere. With entries, only visitors from those addresses or ranges may register. One IP or CIDR range per line, lines starting with # are notes. Administrators creating accounts in wp-admin are never restricted.', 'reportedip-hive' ) . '</p>';
+		if ( ! $unlimited ) {
+			echo '<p class="rip-help-text">' . esc_html__( 'Restricting registration to an address list needs the Professional plan.', 'reportedip-hive' ) . '</p>';
+		}
+		echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'With a non-empty list every other visitor is told that registration is not available from their network. Add your own address first.', 'reportedip-hive' ) . '</div>';
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-reg-allowlist-input">%1$s</label><textarea id="rip-reg-allowlist-input" class="rip-textarea" rows="4" data-opt="%2$s" placeholder="%3$s"%4$s>%5$s</textarea></div>',
+			esc_html__( 'Allowed addresses', 'reportedip-hive' ),
+			esc_attr( ReportedIP_Hive_Registration_Guard::OPT_ALLOWLIST ),
+			esc_attr( '203.0.113.0/24' ),
+			disabled( $unlimited, false, false ),
+			esc_textarea( $allowlist )
+		);
+		self::render_card_save_button();
+		echo '</div></div>';
+
+		$probe_on = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Registration_Guard::OPT_BLOCK_UNKNOWN_USERNAME, false );
+
+		echo '<div class="rip-card" id="rip-reg-probe"><div class="rip-card__header"><h2>' . esc_html__( 'Instant block on unknown usernames', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'A failed login naming an account nobody owns is usually a credential list being read out loud. With this on, the visitor address is blocked right away and the escalation ladder decides for how long. The login response does not change: it stays the same "Invalid credentials." every failed login gets, and the block appears in the log as an unknown-username login probe.', 'reportedip-hive' ) . '</p>';
+		echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'Two things to accept before switching this on. One typo in the username locks that visitor out until the block expires, and anyone who can observe whether a block follows learns whether an account name exists here. Whitelist your own addresses first.', 'reportedip-hive' ) . '</div>';
+		self::render_stat_card(
+			array(
+				'value' => $probe_on ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ),
+				'badge' => $probe_on ? 'rip-badge--success' : 'rip-badge--neutral',
+				'label' => __( 'Instant block', 'reportedip-hive' ),
+			)
+		);
+		printf(
+			'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" data-opt="%1$s" value="1"%2$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%3$s</span></label>',
+			esc_attr( ReportedIP_Hive_Registration_Guard::OPT_BLOCK_UNKNOWN_USERNAME ),
+			checked( $probe_on, true, false ),
+			esc_html__( 'Block the address after a login with a username no account uses', 'reportedip-hive' )
+		);
+		self::render_card_save_button();
 		echo '</div></div>';
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Comment Honeypot', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';

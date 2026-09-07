@@ -36,7 +36,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_base_event_types_map_to_families() {
 			$expected = array(
 				'failed_login'        => 'login',
-				'2fa_brute_force'     => 'login',
+				'2fa_brute_force'        => 'login',
+				'unknown_username_probe' => 'login',
 				'waf_block'           => 'firewall',
 				'waf_would_block'     => 'firewall',
 				'scan_404'            => 'scanner',
@@ -45,7 +46,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'user_enumeration'    => 'recon',
 				'rest_abuse'          => 'recon',
 				'comment_spam'        => 'spam',
-				'xmlrpc_abuse'        => 'spam',
+				'xmlrpc_abuse'           => 'spam',
+				'prohibited_username'    => 'spam',
+				'registration_denied'    => 'spam',
+				'registration_limit'     => 'spam',
 				'geo_anomaly'         => 'anomaly',
 			);
 			foreach ( $expected as $event => $family ) {

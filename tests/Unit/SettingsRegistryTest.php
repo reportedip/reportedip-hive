@@ -18,6 +18,9 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-effects.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -85,6 +88,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_disposable_email_action'       => 'enum',
 				'reportedip_hive_block_email_relays'            => 'bool',
 				'reportedip_hive_comment_honeypot_enabled'      => 'bool',
+				'reportedip_hive_prohibited_usernames'          => 'textarea',
+				'reportedip_hive_prohibited_usernames_baseline' => 'bool',
+				'reportedip_hive_email_rule_mode'               => 'enum',
+				'reportedip_hive_email_rules'                   => 'textarea',
+				'reportedip_hive_registration_limit_enabled'    => 'bool',
+				'reportedip_hive_registration_limit_count'      => 'int',
+				'reportedip_hive_registration_limit_timeframe'  => 'int',
+				'reportedip_hive_registration_allowlist'        => 'textarea',
+				'reportedip_hive_block_unknown_username_login'  => 'bool',
 				'reportedip_hive_decoy_pathblock_enabled'       => 'bool',
 				'reportedip_hive_hide_login_enabled'            => 'bool',
 				'reportedip_hive_hide_login_slug'               => 'slug',

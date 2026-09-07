@@ -186,7 +186,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 			),
 			'firewall'         => array(
 				'label'       => __( 'Firewall & spam defence', 'reportedip-hive' ),
-				'description' => __( 'WAF engine, bot verification, disposable-email and comment-honeypot settings. The pre-WordPress drop-in toggle is host-specific and stays local.', 'reportedip-hive' ),
+				'description' => __( 'WAF engine, bot verification, registration rules (prohibited usernames, e-mail rules, rate limit, IP allowlist), disposable-email and comment-honeypot settings. The pre-WordPress drop-in toggle is host-specific and stays local.', 'reportedip-hive' ),
 				'options'     => array(
 					'reportedip_hive_waf_enabled',
 					'reportedip_hive_waf_report_only',
@@ -198,6 +198,15 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_disposable_email_action',
 					'reportedip_hive_block_email_relays',
 					'reportedip_hive_comment_honeypot_enabled',
+					'reportedip_hive_prohibited_usernames',
+					'reportedip_hive_prohibited_usernames_baseline',
+					'reportedip_hive_email_rule_mode',
+					'reportedip_hive_email_rules',
+					'reportedip_hive_registration_limit_enabled',
+					'reportedip_hive_registration_limit_count',
+					'reportedip_hive_registration_limit_timeframe',
+					'reportedip_hive_registration_allowlist',
+					'reportedip_hive_block_unknown_username_login',
 				),
 			),
 			'headers'          => array(

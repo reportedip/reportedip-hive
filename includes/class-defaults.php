@@ -114,6 +114,16 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_block_email_relays'              => false,
 		'reportedip_hive_comment_honeypot_enabled'        => true,
 
+		'reportedip_hive_prohibited_usernames'            => '',
+		'reportedip_hive_prohibited_usernames_baseline'   => true,
+		'reportedip_hive_email_rule_mode'                 => 'off',
+		'reportedip_hive_email_rules'                     => '',
+		'reportedip_hive_registration_limit_enabled'      => true,
+		'reportedip_hive_registration_limit_count'        => 3,
+		'reportedip_hive_registration_limit_timeframe'    => 60,
+		'reportedip_hive_registration_allowlist'          => '',
+		'reportedip_hive_block_unknown_username_login'    => false,
+
 		'reportedip_hive_headers_enabled'                 => false,
 		'reportedip_hive_header_xcto'                     => true,
 		'reportedip_hive_header_xfo'                      => 'SAMEORIGIN',

@@ -627,7 +627,7 @@ class ReportedIP_Hive_WAF {
 			if ( '' === $subject ) {
 				continue;
 			}
-			$fragment = $this->match_fragment( (string) $rule['pattern'], $subject );
+			$fragment = self::match_fragment( (string) $rule['pattern'], $subject );
 			if ( null !== $fragment ) {
 				$candidate                   = $rule;
 				$candidate['matched']        = $fragment;
@@ -940,6 +940,22 @@ class ReportedIP_Hive_WAF {
 	}
 
 	/**
+	 * Wrap a raw PCRE body in the engine's delimiter, escaping the delimiter
+	 * inside the body.
+	 *
+	 * The delimiter choice is an engine detail every caller must share:
+	 * a pattern compiled here and re-compiled elsewhere with a different
+	 * delimiter would accept or reject different inputs.
+	 *
+	 * @param string $pattern Raw PCRE body (no delimiters).
+	 * @return string Delimited pattern ready for preg_match().
+	 * @since  2.1.51
+	 */
+	public static function compile_pattern( $pattern ) {
+		return '~' . str_replace( '~', '\~', (string) $pattern ) . '~';
+	}
+
+	/**
 	 * Evaluate a rule pattern and return the substring it matched.
 	 *
 	 * Returns the matched fragment (capture group 0) so a block log can record
@@ -948,16 +964,20 @@ class ReportedIP_Hive_WAF {
 	 * hit returns null (fail-open, treated as a non-match) so a single bad
 	 * delivered rule can never take the site down or hang the request.
 	 *
+	 * Public and static since 2.1.51 so the registration guard can execute
+	 * operator-supplied patterns through the same hardened path instead of
+	 * carrying a second `preg_match` wrapper with its own failure semantics.
+	 *
 	 * @param string $pattern Raw PCRE body (no delimiters).
 	 * @param string $subject Subject to test.
 	 * @return string|null The matched fragment, or null on no match / bad pattern.
 	 * @since  2.1.8
 	 */
-	private function match_fragment( $pattern, $subject ) {
+	public static function match_fragment( $pattern, $subject ) {
 		if ( '' === $pattern ) {
 			return null;
 		}
-		$compiled = '~' . str_replace( '~', '\~', $pattern ) . '~';
+		$compiled = self::compile_pattern( $pattern );
 		$matches  = array();
 		$result   = @preg_match( $compiled, $subject, $matches ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- A malformed delivered rule must fail open, not emit a warning into the response.
 
@@ -968,7 +988,7 @@ class ReportedIP_Hive_WAF {
 		 * hour so a broken pattern surfaces instead of just going quiet.
 		 */
 		if ( false === $result ) {
-			$this->report_broken_pattern( $pattern );
+			self::report_broken_pattern( $pattern );
 			return null;
 		}
 
@@ -982,7 +1002,7 @@ class ReportedIP_Hive_WAF {
 	 * @return void
 	 * @since  2.1.44
 	 */
-	private function report_broken_pattern( $pattern ) {
+	public static function report_broken_pattern( $pattern ) {
 		if ( ! class_exists( 'ReportedIP_Hive_Logger' ) || ! function_exists( 'get_transient' ) ) {
 			return;
 		}
@@ -1004,7 +1024,7 @@ class ReportedIP_Hive_WAF {
 		);
 
 		/* Claim the hour only once something was actually written — spending it
-		   ahead of the log would silence the very report this exists to make. */
+			ahead of the log would silence the very report this exists to make. */
 		set_transient( $gate, 1, HOUR_IN_SECONDS );
 	}
 

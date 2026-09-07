@@ -425,6 +425,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-bot-verifier.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-disposable-email.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-registration-guard.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-logger.php';
@@ -534,6 +535,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
 		ReportedIP_Hive_Bot_Verifier::get_instance();
 		ReportedIP_Hive_Disposable_Email::get_instance();
+		ReportedIP_Hive_Registration_Guard::get_instance();
 		ReportedIP_Hive_Comment_Honeypot::get_instance();
 		ReportedIP_Hive_Security_Headers::get_instance();
 		ReportedIP_Hive_WooCommerce_Monitor::get_instance();

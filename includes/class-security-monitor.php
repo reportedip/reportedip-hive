@@ -453,6 +453,24 @@ class ReportedIP_Hive_Security_Monitor {
 		'2fa_brute_force',
 		'app_password_abuse',
 		'wc_login_failed',
+		'unknown_username_probe',
+	);
+
+	/**
+	 * Event slugs that stay on this site and are never sent to the community.
+	 *
+	 * `unknown_username_probe` fires on a single failed login that named an
+	 * account nobody owns. That is a useful local signal, but on its own it is
+	 * a typo as often as an attack, so it must not put an address on a shared
+	 * blacklist. Listing it here removes both its category ids and the report
+	 * itself, which is stronger than merely leaving it out of the category map:
+	 * unmapped events fall back to category 15 and would be reported anyway.
+	 *
+	 * @var string[]
+	 * @since 2.1.51
+	 */
+	private const LOCAL_ONLY_EVENTS = array(
+		'unknown_username_probe',
 	);
 
 	/**
@@ -885,7 +903,11 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 
 		$category_ids = $this->get_category_ids_for_event( $event_type );
-		$comment      = $this->generate_report_comment( $event_type, $details );
+		if ( empty( $category_ids ) ) {
+			return null;
+		}
+
+		$comment = $this->generate_report_comment( $event_type, $details );
 
 		$report_details = $details;
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
@@ -938,6 +960,10 @@ class ReportedIP_Hive_Security_Monitor {
 	 * @return int[]             Category-id list to send to the service API.
 	 */
 	public function get_category_ids_for_event( $event_type ) {
+		if ( in_array( $event_type, self::LOCAL_ONLY_EVENTS, true ) ) {
+			return array();
+		}
+
 		$category_mapping = self::$default_category_mapping;
 
 		$category_mapping = (array) apply_filters( 'reportedip_hive_event_category_map', $category_mapping );
@@ -1162,6 +1188,9 @@ class ReportedIP_Hive_Security_Monitor {
 			case 'wc_login_failed':
 				return sprintf( 'WooCommerce login attempts: %d in %d minutes', $details['attempts'], $details['timeframe'] );
 
+			case 'unknown_username_probe':
+				return 'Login attempt with a non-existent username';
+
 			default:
 				return 'Suspicious activity detected';
 		}
@@ -1179,17 +1208,18 @@ class ReportedIP_Hive_Security_Monitor {
 	 */
 	private function get_stat_type_for_event( $event_type ) {
 		$stat_mapping = array(
-			'failed_login'       => 'failed_logins',
-			'comment_spam'       => 'comment_spam',
-			'xmlrpc_abuse'       => 'xmlrpc_calls',
-			'admin_scanning'     => 'failed_logins',
-			'password_spray'     => 'failed_logins',
-			'app_password_abuse' => 'failed_logins',
-			'wc_login_failed'    => 'failed_logins',
-			'user_enumeration'   => 'blocked_ips',
-			'rest_abuse'         => 'blocked_ips',
-			'scan_404'           => 'blocked_ips',
-			'2fa_brute_force'    => 'failed_logins',
+			'failed_login'           => 'failed_logins',
+			'comment_spam'           => 'comment_spam',
+			'xmlrpc_abuse'           => 'xmlrpc_calls',
+			'admin_scanning'         => 'failed_logins',
+			'password_spray'         => 'failed_logins',
+			'app_password_abuse'     => 'failed_logins',
+			'wc_login_failed'        => 'failed_logins',
+			'user_enumeration'       => 'blocked_ips',
+			'rest_abuse'             => 'blocked_ips',
+			'scan_404'               => 'blocked_ips',
+			'2fa_brute_force'        => 'failed_logins',
+			'unknown_username_probe' => 'failed_logins',
 		);
 
 		return isset( $stat_mapping[ $event_type ] ) ? $stat_mapping[ $event_type ] : 'failed_logins';
