@@ -303,23 +303,17 @@ class ReportedIP_Hive {
 	 * Remove trusted-device rows for a deleted user.
 	 *
 	 * User meta is cleaned up automatically by WordPress; the plugin's own
-	 * trusted_devices table needs an explicit DELETE because it is not
-	 * tied to user_meta.
+	 * trusted_devices table is not tied to user_meta, so the 2FA engine's
+	 * revocation helper runs explicitly.
 	 *
 	 * @param int $user_id User being deleted.
 	 */
 	public static function on_user_deleted( $user_id ) {
-		global $wpdb;
 		$user_id = (int) $user_id;
 		if ( $user_id <= 0 ) {
 			return;
 		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Single-row DELETE on a plugin-owned table during user-deletion lifecycle hook; no caching layer applies.
-		$wpdb->delete(
-			ReportedIP_Hive_Schema::table( 'reportedip_hive_trusted_devices' ),
-			array( 'user_id' => $user_id ),
-			array( '%d' )
-		);
+		ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user_id );
 	}
 
 	/**

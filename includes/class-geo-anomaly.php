@@ -197,18 +197,15 @@ class ReportedIP_Hive_Geo_Anomaly {
 	}
 
 	/**
-	 * Revoke this user's trusted-device cookies so the next login from this
-	 * new geo forces a full 2FA challenge. We delete every row in the
-	 * trusted_devices table for the user — cheap, safe, and keeps the
-	 * surface tiny. Skipped when 2FA isn't enabled at all.
+	 * Revoke this user's trusted devices so the next login from this new geo
+	 * forces a full 2FA challenge. Delegates to the 2FA engine's helper, the
+	 * single owner of the trusted_devices table. Gated by the
+	 * `reportedip_hive_geo_revoke_trusted_devices` option.
 	 */
 	private function revoke_trusted_devices( int $user_id ): void {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_geo_revoke_trusted_devices', true ) ) {
 			return;
 		}
-		global $wpdb;
-		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_trusted_devices' );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->delete( $table, array( 'user_id' => $user_id ), array( '%d' ) );
+		ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user_id );
 	}
 }

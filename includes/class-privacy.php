@@ -268,9 +268,7 @@ class ReportedIP_Hive_Privacy {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$removed += (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$attempts_table} WHERE username = %s", $user->user_login ) );
 
-		$devices_table = $wpdb->base_prefix . 'reportedip_hive_trusted_devices';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$removed += (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$devices_table} WHERE user_id = %d", $user->ID ) );
+		$removed += ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user->ID );
 
 		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
