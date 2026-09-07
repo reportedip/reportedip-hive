@@ -165,6 +165,23 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNotContains( '', $list );
 		}
 
+		/**
+		 * A dashboard that flattens a multi-line policy into one line must not
+		 * collapse the allowlist into a single bogus namespace.
+		 */
+		public function test_allowed_namespaces_survive_a_flattened_list(): void {
+			$GLOBALS['wp_options'] = array(
+				'reportedip_hive_rest_allowed_namespaces' => 'oembed/1.0 wc/store, jetpack/v4',
+			);
+
+			$list = \ReportedIP_Hive_Attack_Surface::allowed_namespaces();
+
+			$this->assertContains( 'oembed/1.0', $list );
+			$this->assertContains( 'wc/store', $list );
+			$this->assertContains( 'jetpack/v4', $list );
+			$this->assertNotContains( 'oembed/1.0 wc/store, jetpack/v4', $list );
+		}
+
 		public function test_allowed_namespaces_fall_back_to_the_seeded_list(): void {
 			$GLOBALS['wp_options'] = array();
 

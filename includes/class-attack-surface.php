@@ -467,7 +467,7 @@ final class ReportedIP_Hive_Attack_Surface {
 	 */
 	public static function allowed_namespaces() {
 		$raw   = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_REST_NAMESPACES, ReportedIP_Hive_Defaults::all_option_defaults()[ self::OPT_REST_NAMESPACES ] );
-		$lines = preg_split( '/\R/', $raw );
+		$lines = preg_split( '/[\r\n\s,]+/', $raw );
 		$list  = array();
 
 		foreach ( is_array( $lines ) ? $lines : array() as $line ) {

@@ -479,7 +479,7 @@ class HideLoginTest extends TestCase {
 	public function test_admin_guest_gates_use_the_shared_predicate() {
 		$source = $this->hide_login_source();
 
-		foreach ( array( 'handle_request', 'block_wp_admin_for_logged_out', 'remove_admin_locations_redirect' ) as $method ) {
+		foreach ( array( 'handle_request', 'block_wp_admin_for_logged_out' ) as $method ) {
 			$start = strpos( $source, 'function ' . $method );
 			$this->assertNotFalse( $start, "Method {$method} could not be located." );
 			$body = substr( $source, $start, 900 );

@@ -564,9 +564,14 @@ class ReportedIP_Hive_Hide_Login {
 	/**
 	 * WordPress core has a polite redirect that sends visitors of "/login"
 	 * or "/dashboard" to wp-admin — defeats the whole feature. Drop it.
+	 *
+	 * Gated on the hidden login URL alone, not on the shared guest predicate:
+	 * the shortcut only leaks something worth hiding while wp-login.php has
+	 * moved. With the guest block alone the login URL is public anyway, and a
+	 * logged-in editor keeps the convenience of /admin and /dashboard.
 	 */
 	public function remove_admin_locations_redirect(): void {
-		if ( ! $this->admin_guest_block_active() ) {
+		if ( ! $this->is_active() ) {
 			return;
 		}
 		remove_action( 'template_redirect', 'wp_redirect_admin_locations', 1000 );

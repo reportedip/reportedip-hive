@@ -173,6 +173,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_every_option_key_is_registered_and_exportable(): void {
 			require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-attack-surface.php';
 			$spec     = \ReportedIP_Hive_Settings_Registry::spec();
 			$settings = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php' );
 			$export   = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-settings-import-export.php' );
