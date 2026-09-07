@@ -22,6 +22,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Core orchestrator for the 2FA login flow.
  * Hooks into WordPress authentication to add a second factor step.
+ *
+ * A challenged login never passes through `wp_signon()`: the authenticate
+ * filter redirects into the challenge before core reaches its `wp_login`
+ * call. The success branch of {@see self::handle_2fa_challenge()} therefore
+ * fires the hooks itself once the second factor has been verified:
+ *
+ *   - `do_action( 'reportedip_hive_2fa_verified', $user_id, $method, $context )`
+ *     with the verified method and the challenge context (`wp_login` or
+ *     `theme_frame`; `rest` from the REST verify route).
+ *   - `do_action( 'wp_login', $user_login, $user )` exactly as `wp_signon()`
+ *     does, so audit trail, geo anomaly, new-device mail and the 2FA reminder
+ *     see a challenged login like any other.
+ *
+ * The consumed-nonce replay ({@see self::maybe_replay_consumed_nonce()})
+ * re-issues the same session and does not fire either hook again.
  */
 class ReportedIP_Hive_Two_Factor {
 
@@ -1120,6 +1135,10 @@ class ReportedIP_Hive_Two_Factor {
 								'method'  => $submitted_method,
 							)
 						);
+
+						do_action( 'reportedip_hive_2fa_verified', (int) $user_id, (string) $method, (string) $context );
+						// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core login hook re-fired on purpose: wp_signon() never runs for a challenged sign-in.
+						do_action( 'wp_login', $user->user_login, $user );
 
 						wp_safe_redirect( $redirect_to );
 						exit;
