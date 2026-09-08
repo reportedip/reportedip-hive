@@ -26,6 +26,7 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-wizard-schema.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-hide-login.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-frontend.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
 

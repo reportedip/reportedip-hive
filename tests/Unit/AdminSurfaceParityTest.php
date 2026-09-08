@@ -37,6 +37,7 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-frontend.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -87,6 +88,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_audit_retention_days'          => 'Read by the retention cron; the audit page has no policy form yet.',
 			'reportedip_hive_audit_anonymize_ip'            => 'No reader at all, the anonymisation it promises was never built.',
 			'reportedip_hive_notification_cooldown_minutes' => 'Read by the notification throttle; the Notifications tab has no field for it.',
+			'reportedip_hive_2fa_enforce_super_admins'     => 'Decides whether network super admins are exempt from enforcement, and nothing in the 2FA tab says so.',
+			'reportedip_hive_queue_max_age_days'           => 'Report-queue policy, read by cron only.',
+			'reportedip_hive_queue_warning_threshold'      => 'Drives the queue health badge but cannot be tuned.',
+			'reportedip_hive_queue_critical_threshold'     => 'Drives the queue health badge but cannot be tuned.',
+			'reportedip_hive_processing_timeout_minutes'   => 'Recovery window for crashed queue workers, read by cron only.',
+			'reportedip_hive_notify_event_cap_minutes'     => 'Caps repeat notifications per event type, read by the notifier only.',
 		);
 
 		/**
@@ -121,39 +128,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @var array<int, string>
 		 */
 		private const PENDING_REGISTRATION = array(
-			'reportedip_hive_2fa_branded_login',
 			'reportedip_hive_2fa_email_body_code',
 			'reportedip_hive_2fa_email_subject',
 			'reportedip_hive_2fa_email_subject_code',
-			'reportedip_hive_2fa_enforce_super_admins',
-			'reportedip_hive_2fa_extended_remember',
-			'reportedip_hive_2fa_frontend_customer_optional',
-			'reportedip_hive_2fa_frontend_enabled',
-			'reportedip_hive_2fa_frontend_onboarding',
-			'reportedip_hive_2fa_frontend_setup_slug',
-			'reportedip_hive_2fa_frontend_slug',
-			'reportedip_hive_2fa_ip_allowlist',
-			'reportedip_hive_2fa_notify_new_device',
-			'reportedip_hive_2fa_password_reset_block_email_only',
 			'reportedip_hive_2fa_password_reset_excluded_methods',
-			'reportedip_hive_2fa_xmlrpc_app_password_only',
 			'reportedip_hive_audit_new_ip_alert',
-			'reportedip_hive_auto_footer_align',
-			'reportedip_hive_auto_footer_enabled',
-			'reportedip_hive_auto_footer_variant',
-			'reportedip_hive_cache_duration',
-			'reportedip_hive_detailed_logging',
-			'reportedip_hive_enable_caching',
-			'reportedip_hive_log_referer_domains',
-			'reportedip_hive_max_api_calls_per_hour',
-			'reportedip_hive_negative_cache_duration',
-			'reportedip_hive_notify_event_cap_minutes',
-			'reportedip_hive_notify_sync_to_api',
-			'reportedip_hive_processing_timeout_minutes',
-			'reportedip_hive_queue_critical_threshold',
-			'reportedip_hive_queue_max_age_days',
-			'reportedip_hive_queue_warning_threshold',
-			'reportedip_hive_report_cooldown_hours',
 			'reportedip_hive_waf_dropin_enabled',
 			'reportedip_hive_wc2fa_promo_enabled',
 		);
