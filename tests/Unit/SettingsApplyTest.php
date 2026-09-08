@@ -341,6 +341,28 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'applied', $result['results']['reportedip_hive_registration_allowlist']['status'], 'clearing a gated list must always be possible' );
 		}
 
+		public function test_non_empty_policy_role_list_needs_the_paid_plan() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_2fa_policy_new_ip' => '["editor"]' ),
+				'test'
+			);
+
+			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_2fa_policy_new_ip']['status'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_2fa_policy_new_ip', $GLOBALS['wp_options'] );
+		}
+
+		public function test_empty_policy_role_list_is_never_gated() {
+			$GLOBALS['wp_options']['reportedip_hive_2fa_policy_new_ip'] = '["editor"]';
+
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_2fa_policy_new_ip' => '[]' ),
+				'test'
+			);
+
+			$this->assertSame( 'applied', $result['results']['reportedip_hive_2fa_policy_new_ip']['status'], 'emptying a policy row must always be possible' );
+			$this->assertSame( '[]', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_policy_new_ip' ) );
+		}
+
 		public function test_hide_login_cannot_be_enabled_without_slug() {
 			$result = \ReportedIP_Hive_Settings_Apply::apply(
 				array( 'reportedip_hive_hide_login_enabled' => 1 ),

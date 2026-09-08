@@ -5,7 +5,7 @@
  * The history is the only state the adaptive triggers read, and it is
  * personal data, so both halves are pinned here: the LRU caps and counters
  * that make the triggers correct, and the refusal to write anything at all
- * while the feature is not part of the plan.
+ * while the feature is not part of the plan or 2FA is switched off.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -127,6 +127,20 @@ namespace {
 			const META_LOGIN_CONTEXT = 'reportedip_hive_login_context';
 
 			/**
+			 * Whether the 2FA master switch is on.
+			 *
+			 * @var bool
+			 */
+			public static $globally_enabled = true;
+
+			/**
+			 * @return bool
+			 */
+			public static function is_globally_enabled() {
+				return self::$globally_enabled;
+			}
+
+			/**
 			 * @param array<int, mixed> $roles Candidate slugs.
 			 * @return string[]
 			 */
@@ -229,10 +243,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['wp_user_caps']             = array();
 			$GLOBALS['rip_test_super_admins']    = array();
 			$GLOBALS['wp_users']                 = array( 5 => new \WP_User( 5, array( 'editor' ) ) );
-			\ReportedIP_Hive_Mode_Manager::$available = true;
-			\ReportedIP_Hive_Geo_Anomaly::$country    = 'DE';
-			\ReportedIP_Hive::$client_ip              = '203.0.113.10';
-			$_SERVER['HTTP_USER_AGENT']               = 'Mozilla/5.0 (Test Browser)';
+			\ReportedIP_Hive_Mode_Manager::$available      = true;
+			\ReportedIP_Hive_Two_Factor::$globally_enabled = true;
+			\ReportedIP_Hive_Geo_Anomaly::$country         = 'DE';
+			\ReportedIP_Hive::$client_ip                   = '203.0.113.10';
+			$_SERVER['HTTP_USER_AGENT']                    = 'Mozilla/5.0 (Test Browser)';
 			$this->reset_guard();
 		}
 
@@ -316,11 +331,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_unverified_logins_increment_and_a_verification_resets(): void {
 			\ReportedIP_Hive_Login_Context::record( $GLOBALS['wp_users'][5], false );
+			$baseline = $this->stored()['verified_at'];
 			$this->reset_guard();
 			\ReportedIP_Hive_Login_Context::record( $GLOBALS['wp_users'][5], false );
 
 			$this->assertSame( 2, $this->stored()['logins_since_verify'] );
-			$this->assertSame( 0, $this->stored()['verified_at'] );
+			$this->assertSame( $baseline, $this->stored()['verified_at'], 'Only a verification moves the clock forward.' );
 
 			$this->reset_guard();
 			\ReportedIP_Hive_Login_Context::record( $GLOBALS['wp_users'][5], true );
@@ -367,7 +383,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			\ReportedIP_Hive_Login_Context::on_login( 'tester', $GLOBALS['wp_users'][5] );
 
 			$this->assertSame( 1, $this->stored()['logins_since_verify'] );
-			$this->assertSame( 0, $this->stored()['verified_at'] );
+			$this->assertGreaterThan(
+				0,
+				$this->stored()['verified_at'],
+				'The first recorded sign-in seeds the every_n_days baseline instead of firing it.'
+			);
 		}
 
 		public function test_nothing_is_stored_while_the_feature_is_unavailable(): void {
@@ -376,6 +396,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 			\ReportedIP_Hive_Login_Context::record( $GLOBALS['wp_users'][5], false );
 
 			$this->assertArrayNotHasKey( 5, $GLOBALS['wp_user_meta'] );
+		}
+
+		public function test_nothing_is_stored_while_the_2fa_master_switch_is_off(): void {
+			\ReportedIP_Hive_Two_Factor::$globally_enabled = false;
+
+			\ReportedIP_Hive_Login_Context::record( $GLOBALS['wp_users'][5], false );
+
+			$this->assertArrayNotHasKey(
+				5,
+				$GLOBALS['wp_user_meta'],
+				'Without the master switch nothing hooks filter_authenticate, so the profile could never be read.'
+			);
 		}
 
 		public function test_admin_latch_opens_only_for_a_user_who_may_manage_the_site(): void {

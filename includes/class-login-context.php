@@ -23,11 +23,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * lists are LRU-capped, so the row stays small no matter how long an account
  * lives.
  *
- * Nothing is written while `2fa_policies` is unavailable: a site that cannot
- * use the triggers must not accumulate movement profiles for its users. The
- * consequence is that the baseline starts when a site upgrades to
- * Professional — the `new_*` triggers stay quiet until the first sign-in
- * after the upgrade has been recorded.
+ * Nothing is written while `2fa_policies` is unavailable or the 2FA master
+ * switch is off: a site that cannot use the triggers must not accumulate
+ * movement profiles for its users. The consequence is that the baseline
+ * starts when a site upgrades to Professional (or turns 2FA back on) — the
+ * `new_*` triggers stay quiet until the first sign-in after that has been
+ * recorded.
  *
  * @since 2.1.51
  */
@@ -175,6 +176,11 @@ final class ReportedIP_Hive_Login_Context {
 	 * Adds the address to the known-IP list as its last step, so callers must
 	 * run after {@see ReportedIP_Hive_Audit_Logger::on_login()}.
 	 *
+	 * The first recorded sign-in of an account seeds `verified_at` even when
+	 * no second factor was passed, so the `every_n_days` trigger measures from
+	 * the day the history starts instead of challenging every account at once
+	 * on rollout. Only an actual verification resets the sign-in counter.
+	 *
 	 * @param \WP_User|null $user     Authenticated user.
 	 * @param bool          $verified Whether a second factor was passed.
 	 * @return void
@@ -185,7 +191,7 @@ final class ReportedIP_Hive_Login_Context {
 		if ( $user_id <= 0 || isset( self::$recorded[ $user_id ] ) ) {
 			return;
 		}
-		if ( ! ReportedIP_Hive_Two_Factor_Policies::is_available() ) {
+		if ( ! ReportedIP_Hive_Two_Factor_Policies::is_available() || ! ReportedIP_Hive_Two_Factor::is_globally_enabled() ) {
 			return;
 		}
 		self::$recorded[ $user_id ] = true;
@@ -207,8 +213,10 @@ final class ReportedIP_Hive_Login_Context {
 		$context['uas']       = self::push( $context['uas'], $signals['ua'], self::MAX_UAS );
 		$context['countries'] = self::push( $context['countries'], $signals['country'], self::MAX_COUNTRIES );
 
+		if ( $verified || 0 === (int) $context['verified_at'] ) {
+			$context['verified_at'] = $now;
+		}
 		if ( $verified ) {
-			$context['verified_at']         = $now;
 			$context['logins_since_verify'] = 0;
 		} else {
 			++$context['logins_since_verify'];
@@ -282,20 +290,20 @@ final class ReportedIP_Hive_Login_Context {
 	/**
 	 * Append a value to an LRU list, keeping it unique and capped.
 	 *
-	 * @param array<int, string> $list  Existing list.
+	 * @param array<int, string> $known Existing list.
 	 * @param string             $value Value to remember; empty values are ignored.
 	 * @param int                $max   Cap.
 	 * @return array<int, string>
 	 * @since  2.1.51
 	 */
-	private static function push( array $list, $value, $max ) {
+	private static function push( array $known, $value, $max ) {
 		$value = (string) $value;
 		if ( '' === $value ) {
-			return array_values( $list );
+			return array_values( $known );
 		}
-		$list = array_values( array_diff( $list, array( $value ) ) );
-		$list[] = $value;
+		$known   = array_values( array_diff( $known, array( $value ) ) );
+		$known[] = $value;
 
-		return count( $list ) > $max ? array_slice( $list, -$max ) : $list;
+		return count( $known ) > $max ? array_slice( $known, -$max ) : $known;
 	}
 }
