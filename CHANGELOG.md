@@ -182,6 +182,14 @@ All changes to ReportedIP Hive are documented here.
 - Uninstalling with "delete all data" left the account-block record behind in
   user meta. Tables and options went, that one row did not, so a reinstall
   found the affected accounts still blocked.
+- The three health cards on the System Status page and their status pills
+  showed empty icon boxes. Their icons were filtered through `wp_kses_post()`,
+  whose allowlist has no SVG elements at all, so the whole glyph was deleted on
+  the way out. They use the plugin's own inline-SVG filter now.
+- The setup wizard offered the administrator tick for the two adaptive
+  triggers even before an administrator had passed a challenge. The value was
+  dropped on save, as designed, but only after the fact and without a word.
+  The wizard now disables that tick, the way the settings page always has.
 
 ## [2.1.50] — 2026-08-29
 
