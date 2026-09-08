@@ -82,20 +82,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 *
 		 * @var array<string, string>
 		 */
-		private const NO_ADMIN_FORM = array(
-			'reportedip_hive_disable_xmlrpc_multicall'      => 'Overlaps the Access Lockdown switch and needs a form next to it.',
-			'reportedip_hive_waf_block_threshold'           => 'Read by the WAF scoring pass; the Firewall page shows the score but not its threshold.',
-			'reportedip_hive_audit_retention_days'          => 'Read by the retention cron; the audit page has no policy form yet.',
-			'reportedip_hive_audit_anonymize_ip'            => 'Applied on every audit write; the audit page has no policy form yet.',
-			'reportedip_hive_audit_new_ip_alert'           => 'Mails the notification recipients; the audit page has no policy form yet.',
-			'reportedip_hive_notification_cooldown_minutes' => 'Read by the notification throttle; the Notifications tab has no field for it.',
-			'reportedip_hive_2fa_enforce_super_admins'     => 'Decides whether network super admins are exempt from enforcement, and nothing in the 2FA tab says so.',
-			'reportedip_hive_queue_max_age_days'           => 'Report-queue policy, read by cron only.',
-			'reportedip_hive_queue_warning_threshold'      => 'Drives the queue health badge but cannot be tuned.',
-			'reportedip_hive_queue_critical_threshold'     => 'Drives the queue health badge but cannot be tuned.',
-			'reportedip_hive_processing_timeout_minutes'   => 'Recovery window for crashed queue workers, read by cron only.',
-			'reportedip_hive_notify_event_cap_minutes'     => 'Caps repeat notifications per event type, read by the notifier only.',
-		);
+		private const NO_ADMIN_FORM = array();
 
 		/**
 		 * Stored options that must never become remotely manageable.
@@ -152,7 +139,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				if ( isset( self::NO_ADMIN_FORM[ $key ] ) ) {
 					continue;
 				}
-				if ( false !== strpos( $sources, "'" . $key . "'" ) ) {
+				if ( $this->has_write_surface( $key, $sources ) ) {
 					continue;
 				}
 				if ( isset( $via_key[ $key ] ) ) {
@@ -182,7 +169,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$stale   = array();
 
 			foreach ( array_keys( self::NO_ADMIN_FORM ) as $key ) {
-				if ( false !== strpos( $sources, "'" . $key . "'" ) || isset( $via_key[ $key ] ) ) {
+				if ( $this->has_write_surface( $key, $sources ) || isset( $via_key[ $key ] ) ) {
 					$stale[] = $key;
 				}
 			}
@@ -247,6 +234,39 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$done,
 				"These keys are registered now and must leave PENDING_REGISTRATION:\n" . implode( "\n", $done )
 			);
+		}
+
+		/**
+		 * Whether an option key appears somewhere that can actually write it.
+		 *
+		 * Merely naming the key is not enough. The settings page also lists
+		 * keys in read-only places, such as the protection-layer counter, and
+		 * counting those as a form is how an option with no way to change it
+		 * still passes.
+		 *
+		 * @param string $key     Option key.
+		 * @param string $sources Concatenated surface source.
+		 * @return bool
+		 */
+		private function has_write_surface( $key, $sources ): bool {
+			$quoted = preg_quote( $key, '/' );
+
+			$patterns = array(
+				'/name="' . $quoted . '"/',
+				'/register_setting\(\s*\n?\s*\'[a-z_]+\',\s*\n?\s*\'' . $quoted . '\'/',
+				'/\'option\'\s*=> \'' . $quoted . '\'/',
+				'/data-opt="\' \. esc_attr\( \'' . $quoted . '\'/',
+				'/render_select_row\(\s*\n?\s*\'[a-z0-9-]+\',\s*\n?\s*\'' . $quoted . '\'/',
+				'/render_switch_row\(\s*\n?\s*\'' . $quoted . '\'/',
+			);
+
+			foreach ( $patterns as $pattern ) {
+				if ( preg_match( $pattern, $sources ) ) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		/**

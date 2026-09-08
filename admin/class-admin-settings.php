@@ -2848,6 +2848,22 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 		register_setting(
 			'reportedip_hive_protection_notifications',
+			'reportedip_hive_notification_cooldown_minutes',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notification_cooldown_minutes' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_notifications',
+			'reportedip_hive_notify_event_cap_minutes',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_event_cap_minutes' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_protection_notifications',
 			'reportedip_hive_notify_admin',
 			array(
 				'type'              => 'boolean',
@@ -3010,6 +3026,14 @@ class ReportedIP_Hive_Admin_Settings {
 
 		register_setting(
 			'reportedip_hive_attack_surface',
+			'reportedip_hive_disable_xmlrpc_multicall',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_disable_xmlrpc_multicall' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_attack_surface',
 			'reportedip_hive_rest_access_mode',
 			array(
 				'type'              => 'string',
@@ -3075,6 +3099,38 @@ class ReportedIP_Hive_Admin_Settings {
 
 		register_setting(
 			'reportedip_hive_advanced_privacy',
+			'reportedip_hive_audit_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_audit_enabled' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_advanced_privacy',
+			'reportedip_hive_audit_retention_days',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_audit_retention_days' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_advanced_privacy',
+			'reportedip_hive_audit_anonymize_ip',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_audit_anonymize_ip' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_advanced_privacy',
+			'reportedip_hive_audit_new_ip_alert',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_audit_new_ip_alert' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_advanced_privacy',
 			'reportedip_hive_log_level',
 			array(
 				'type'              => 'string',
@@ -3130,6 +3186,38 @@ class ReportedIP_Hive_Admin_Settings {
 			)
 		);
 
+		register_setting(
+			'reportedip_hive_advanced_performance',
+			'reportedip_hive_queue_max_age_days',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_queue_max_age_days' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_advanced_performance',
+			'reportedip_hive_queue_warning_threshold',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_queue_warning_threshold' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_advanced_performance',
+			'reportedip_hive_queue_critical_threshold',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_queue_critical_threshold' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_advanced_performance',
+			'reportedip_hive_processing_timeout_minutes',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_processing_timeout_minutes' ),
+			)
+		);
 		register_setting(
 			'reportedip_hive_advanced_performance',
 			'reportedip_hive_enable_caching',
@@ -5712,6 +5800,19 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 			</div>
 
+			<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_notification_cooldown_minutes"><?php esc_html_e( 'Cooldown per address and event (minutes)', 'reportedip-hive' ); ?></label>
+					<input type="number" id="reportedip_hive_notification_cooldown_minutes" name="reportedip_hive_notification_cooldown_minutes" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notification_cooldown_minutes', 60 ) ); ?>" min="1" max="1440" class="rip-input" />
+					<?php self::render_field_help( 'reportedip_hive_notification_cooldown_minutes' ); ?>
+				</div>
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_notify_event_cap_minutes"><?php esc_html_e( 'Cap per event type (minutes)', 'reportedip-hive' ); ?></label>
+					<input type="number" id="reportedip_hive_notify_event_cap_minutes" name="reportedip_hive_notify_event_cap_minutes" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_event_cap_minutes', 15 ) ); ?>" min="1" max="1440" class="rip-input" />
+					<?php self::render_field_help( 'reportedip_hive_notify_event_cap_minutes' ); ?>
+				</div>
+			</div>
+
 			<?php if ( $is_community_mode ) : ?>
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
@@ -5979,6 +6080,51 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 				</div>
 				<p class="rip-help-text"><?php esc_html_e( 'The "Delete plugin data on uninstall" toggle moved to Performance & Tools. Maintenance buttons (cleanup / anonymise / export) live on the System Status page.', 'reportedip-hive' ); ?></p>
+			</div>
+
+			<input type="hidden" name="reportedip_hive_audit_enabled" value="0" />
+			<input type="hidden" name="reportedip_hive_audit_anonymize_ip" value="0" />
+			<input type="hidden" name="reportedip_hive_audit_new_ip_alert" value="0" />
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+					<?php esc_html_e( 'Audit trail', 'reportedip-hive' ); ?>
+					&nbsp;<?php self::render_tier_marker( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' ) ); ?>
+				</h2>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_audit_enabled" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_enabled', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Record the account lifecycle', 'reportedip-hive' ); ?></span>
+					</label>
+					<?php self::render_field_help( 'reportedip_hive_audit_enabled' ); ?>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_audit_retention_days"><?php esc_html_e( 'Audit retention (days)', 'reportedip-hive' ); ?></label>
+					<input type="number" id="reportedip_hive_audit_retention_days" name="reportedip_hive_audit_retention_days" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_retention_days', 30 ) ); ?>" min="1" max="3650" class="rip-input" />
+					<?php self::render_field_help( 'reportedip_hive_audit_retention_days' ); ?>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_audit_anonymize_ip" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_anonymize_ip', false ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Store only the network part of the address', 'reportedip-hive' ); ?></span>
+					</label>
+					<?php self::render_field_help( 'reportedip_hive_audit_anonymize_ip' ); ?>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_audit_new_ip_alert" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_new_ip_alert', false ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Mail an alert on a sign-in from a new address', 'reportedip-hive' ); ?></span>
+					</label>
+					<?php self::render_field_help( 'reportedip_hive_audit_new_ip_alert' ); ?>
+				</div>
 			</div>
 
 			<div class="rip-alert rip-alert--info">
@@ -6396,6 +6542,37 @@ class ReportedIP_Hive_Admin_Settings {
 						<label class="rip-label" for="reportedip_hive_negative_cache_duration"><?php esc_html_e( 'Cache "unknown IP" for (hours)', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_negative_cache_duration" name="reportedip_hive_negative_cache_duration" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_negative_cache_duration', 2 ) ); ?>" min="1" max="24" class="rip-input" />
 						<p class="rip-help-text"><?php esc_html_e( 'Shorter than the regular cache so a freshly-reported IP gets re-checked sooner.', 'reportedip-hive' ); ?></p>
+					</div>
+				</div>
+			</div>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+					<?php esc_html_e( 'Report queue', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Reports wait here until the cron worker sends them. These values decide when a queue counts as unhealthy and when a crashed worker releases its rows again.', 'reportedip-hive' ); ?></p>
+
+				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_queue_max_age_days"><?php esc_html_e( 'Discard queued reports after (days)', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_queue_max_age_days" name="reportedip_hive_queue_max_age_days" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_max_age_days', 7 ) ); ?>" min="1" max="90" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_queue_max_age_days' ); ?>
+					</div>
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_processing_timeout_minutes"><?php esc_html_e( 'Recover stuck rows after (minutes)', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_processing_timeout_minutes" name="reportedip_hive_processing_timeout_minutes" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_processing_timeout_minutes', 10 ) ); ?>" min="1" max="1440" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_processing_timeout_minutes' ); ?>
+					</div>
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_queue_warning_threshold"><?php esc_html_e( 'Warning threshold', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_queue_warning_threshold" name="reportedip_hive_queue_warning_threshold" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 ) ); ?>" min="1" max="100000" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_queue_warning_threshold' ); ?>
+					</div>
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_queue_critical_threshold"><?php esc_html_e( 'Critical threshold', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_queue_critical_threshold" name="reportedip_hive_queue_critical_threshold" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 ) ); ?>" min="1" max="100000" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_queue_critical_threshold' ); ?>
 					</div>
 				</div>
 			</div>

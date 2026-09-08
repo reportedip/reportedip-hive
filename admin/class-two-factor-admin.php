@@ -260,6 +260,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_frontend_onboarding" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_xmlrpc_app_password_only" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_trusted_devices" value="0" />
+			<input type="hidden" name="reportedip_hive_2fa_enforce_super_admins" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_extended_remember" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_branded_login" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_require_on_password_reset" value="0" />
@@ -982,6 +983,21 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				</div>
 
 				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox"
+							class="rip-toggle__input"
+							name="reportedip_hive_2fa_enforce_super_admins"
+							value="1"
+							<?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_super_admins', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label">
+							<?php esc_html_e( 'Enforce 2FA for super admins', 'reportedip-hive' ); ?>
+						</span>
+					</label>
+					<?php ReportedIP_Hive_Admin_Settings::render_field_help( 'reportedip_hive_2fa_enforce_super_admins' ); ?>
+				</div>
+
+				<div class="rip-form-group">
 					<label class="rip-label" for="reportedip_2fa_trust_days"><?php esc_html_e( 'Trust duration (days)', 'reportedip-hive' ); ?></label>
 					<input type="number"
 						id="reportedip_2fa_trust_days"
@@ -1129,6 +1145,14 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_enforce_action' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_enforce_super_admins',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_enforce_super_admins' ),
 			)
 		);
 		register_setting(
