@@ -73,6 +73,87 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * Event slugs the Logs filter must offer for the features added in
+		 * 2.1.51. Each one is written by a class that shipped with them, so a
+		 * rename that forgets the filter fails here.
+		 */
+		private const NEW_FEATURE_EVENTS = array(
+			'prohibited_username',
+			'registration_denied',
+			'registration_limit',
+			'unknown_username_probe_threshold_exceeded',
+			'rest_denied',
+			'xmlrpc_denied',
+			'feed_denied',
+			'admin_guest_denied',
+			'blocked_user_denied',
+			'2fa_stepup_required',
+			'2fa_stepup_skipped_no_method',
+		);
+
+		/**
+		 * Every non-empty option value of the Logs page event-type filter.
+		 *
+		 * @return string[]
+		 */
+		private function log_filter_event_types(): array {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-logs-table.php' );
+			$this->assertSame(
+				1,
+				preg_match( '/<select name="event_type">(.*?)<\/select>/s', $source, $m ),
+				'The Logs page must render an event_type select.'
+			);
+
+			preg_match_all( '/<option value="([^"]+)"/', $m[1], $options );
+			return $options[1];
+		}
+
+		/**
+		 * The filter offers a fixed vocabulary; an entry nothing writes is a
+		 * dead choice that silently returns an empty result set.
+		 */
+		public function test_every_filterable_event_type_has_a_writer(): void {
+			$sources = $this->sources();
+			$types   = $this->log_filter_event_types();
+			$this->assertNotEmpty( $types, 'The event-type filter must offer choices.' );
+
+			foreach ( $types as $type ) {
+				if ( str_ends_with( $type, '_threshold_exceeded' ) ) {
+					$base = substr( $type, 0, -strlen( '_threshold_exceeded' ) );
+					$this->assertMatchesRegularExpression(
+						'/(?:track_generic_attempt|handle_threshold_exceeded)\((?:[^;]{0,200}?)\'' . preg_quote( $base, '/' ) . '\'/s',
+						$sources,
+						"The Logs filter offers '{$type}', but nothing feeds '{$base}' into the threshold tracker."
+					);
+					continue;
+				}
+
+				$quoted = preg_quote( $type, '/' );
+				$this->assertTrue(
+					1 === preg_match( '/(?:log_security_event|log_event|->log|::log)\((?:[^;]{0,200}?)\'' . $quoted . '\'/s', $sources )
+						|| 1 === preg_match( '/const\s+EVENT_[A-Z_]+\s*=\s*\'' . $quoted . '\'/', $sources ),
+					"The Logs filter offers '{$type}', but no logging call writes it."
+				);
+			}
+		}
+
+		/**
+		 * A new sensor that logs an event nobody can filter for is invisible in
+		 * practice, so the filter has to grow with the writers.
+		 */
+		public function test_every_new_feature_event_is_filterable(): void {
+			$types = $this->log_filter_event_types();
+
+			foreach ( self::NEW_FEATURE_EVENTS as $event ) {
+				$this->assertContains(
+					$event,
+					$types,
+					"Event '{$event}' is logged but missing from the Logs page event-type filter."
+				);
+			}
+		}
+
+		/**
 		 * The bare base type is the trap that caused the bug: it reads plausible
 		 * and is used all over the detector, but it is never a stored event type.
 		 */
