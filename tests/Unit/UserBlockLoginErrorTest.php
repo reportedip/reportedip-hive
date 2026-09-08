@@ -86,12 +86,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_custom_message_inherits_the_needle(): void {
 			$GLOBALS['wp_user_meta'][11][ \ReportedIP_Hive_User_Block::META ] = array(
 				'blocked_at' => '2026-09-08 10:00:00',
-				'message'    => 'Ihr Zugang wurde zum Monatsende beendet.',
+				'message'    => 'Your access ended with your last working day.',
 			);
 
 			$message = \ReportedIP_Hive_User_Block::message_for( 11 );
 
-			$this->assertStringContainsString( 'Ihr Zugang wurde zum Monatsende beendet.', $message );
+			$this->assertStringContainsString( 'Your access ended with your last working day.', $message );
 			$this->assertTrue(
 				$this->passes_unmasked( $message ),
 				'An operator message without a needle would be replaced by "Invalid credentials."'

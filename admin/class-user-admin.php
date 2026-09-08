@@ -680,6 +680,9 @@ class ReportedIP_Hive_User_Admin {
 	 * @since  2.1.51
 	 */
 	public function add_bulk_actions( $actions ) {
+		if ( ! current_user_can( self::page_capability() ) ) {
+			return $actions;
+		}
 		if ( ReportedIP_Hive_User_Block::is_available() ) {
 			$actions['reportedip_block'] = __( 'Block account', 'reportedip-hive' );
 		}
@@ -718,10 +721,11 @@ class ReportedIP_Hive_User_Admin {
 		$user_ids = array_map( 'intval', (array) wp_unslash( $_REQUEST['users'] ) );
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		if ( ! current_user_can( 'edit_users' ) ) {
-			return;
-		}
 		check_admin_referer( 'bulk-users' );
+
+		if ( ! current_user_can( self::page_capability() ) ) {
+			wp_die( esc_html__( 'You are not allowed to block or unblock accounts.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
 
 		$sendback = wp_get_referer();
 		wp_safe_redirect( $this->apply_bulk( $sendback ? $sendback : self_admin_url( 'users.php' ), $action, $user_ids ) );
@@ -734,6 +738,10 @@ class ReportedIP_Hive_User_Admin {
 	 * `wp-admin/network/users.php` runs `check_admin_referer( 'bulk-users-network' )`
 	 * and the `manage_network_users` check before it dispatches this filter.
 	 *
+	 * It reads the action from `$_POST['action']` only, so a choice made in the
+	 * second dropdown below the table arrives here as `-1` — the fallback picks
+	 * `action2` up so the bottom control is not a dead switch.
+	 *
 	 * @param string $sendback Redirect target.
 	 * @param string $action   Bulk action key.
 	 * @param int[]  $user_ids Selected user ids.
@@ -741,10 +749,15 @@ class ReportedIP_Hive_User_Admin {
 	 * @since  2.1.51
 	 */
 	public function handle_bulk_network( $sendback, $action, $user_ids ) {
-		if ( ! in_array( (string) $action, self::BULK_ACTIONS, true ) ) {
+		$action = (string) $action;
+		if ( ! in_array( $action, self::BULK_ACTIONS, true ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified upstream by network/users.php via check_admin_referer( 'bulk-users-network' ).
+			$action = isset( $_POST['action2'] ) ? sanitize_key( wp_unslash( $_POST['action2'] ) ) : '';
+		}
+		if ( ! in_array( $action, self::BULK_ACTIONS, true ) ) {
 			return $sendback;
 		}
-		return $this->apply_bulk( $sendback, (string) $action, (array) $user_ids );
+		return $this->apply_bulk( $sendback, $action, (array) $user_ids );
 	}
 
 	/**
