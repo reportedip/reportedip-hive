@@ -313,6 +313,21 @@ class ReportedIP_Hive_Mode_Manager {
 				'community'     => true,
 				'requires_tier' => 'business',
 			),
+			'registration_rules_unlimited' => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'professional',
+			),
+			'user_management'              => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'business',
+			),
+			'2fa_policies'                 => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'professional',
+			),
 		);
 	}
 
@@ -361,6 +376,9 @@ class ReportedIP_Hive_Mode_Manager {
 			'security_headers_advanced'    => array( __( 'Advanced Security Headers', 'reportedip-hive' ), __( 'CSP builder, HSTS with preload, Permissions-Policy and the Cross-Origin-Opener/Embedder/Resource trio.', 'reportedip-hive' ) ),
 			'audit_log'                    => array( __( 'Audit Event Trail', 'reportedip-hive' ), __( 'User-lifecycle audit log (role changes with actor, new-IP alerts) with filtering, CSV/JSON export and long retention.', 'reportedip-hive' ) ),
 			'cloud_management'             => array( __( 'Cloud Fleet Management', 'reportedip-hive' ), __( 'Manage this site remotely from the reportedip.com dashboard: security policies, per-site overrides and drift detection across all your Hive installations.', 'reportedip-hive' ) ),
+			'registration_rules_unlimited' => array( __( 'Unlimited Registration Rules', 'reportedip-hive' ), __( 'Unlimited prohibited-username and e-mail rule entries, regular-expression patterns and registration restricted to allowlisted IP addresses. Ten plain entries per list stay free.', 'reportedip-hive' ) ),
+			'user_management'              => array( __( 'User Account Control', 'reportedip-hive' ), __( 'Block user accounts with a message and an admin note, end their sessions and password resets, and review or terminate active sessions.', 'reportedip-hive' ) ),
+			'2fa_policies'                 => array( __( 'Configurable 2FA Policies per Role', 'reportedip-hive' ), __( 'Per-role step-up rules that ask for the second factor again on a new device, IP address, network or country, every N days or sign-ins, or above a concurrent-session limit, even on a trusted device.', 'reportedip-hive' ) ),
 		);
 
 		return $this->feature_texts_cache;
@@ -420,11 +438,17 @@ class ReportedIP_Hive_Mode_Manager {
 	/**
 	 * Whether the cached tier (from /verify-key or /relay-quota) is at least $minimum.
 	 *
+	 * The `honeypot` tier is not part of {@see TIER_ORDER}; a honeypot
+	 * operator is a Contributor for every feature gate (see
+	 * {@see get_tier_info()}), so it is aliased before the lookup instead of
+	 * failing every minimum.
+	 *
 	 * @param string $minimum One of TIER_ORDER values.
 	 * @return bool
 	 */
 	public function tier_at_least( $minimum ) {
 		$tier     = $this->get_cached_tier_or_default();
+		$tier     = 'honeypot' === $tier ? 'contributor' : $tier;
 		$ord      = self::TIER_ORDER;
 		$idx_have = array_search( $tier, $ord, true );
 		$idx_need = array_search( $minimum, $ord, true );
@@ -557,78 +581,6 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
-	 * Get all available features for current mode
-	 *
-	 * @return array Features available in current mode
-	 */
-	public function get_available_features() {
-		$this->ensure_feature_matrix_loaded();
-
-		$mode      = $this->get_mode();
-		$texts     = $this->feature_texts();
-		$available = array();
-
-		foreach ( $this->feature_matrix as $key => $feature ) {
-			if ( ! empty( $feature[ $mode ] ) ) {
-				$available[ $key ] = array(
-					'label'       => $texts[ $key ][0] ?? '',
-					'description' => $texts[ $key ][1] ?? '',
-				);
-			}
-		}
-
-		return $available;
-	}
-
-	/**
-	 * Get all features with their availability status
-	 *
-	 * @return array Complete feature matrix with current status
-	 */
-	public function get_feature_matrix() {
-		$this->ensure_feature_matrix_loaded();
-
-		$mode   = $this->get_mode();
-		$texts  = $this->feature_texts();
-		$matrix = array();
-
-		foreach ( $this->feature_matrix as $key => $feature ) {
-			$matrix[ $key ] = array(
-				'label'             => $texts[ $key ][0] ?? '',
-				'description'       => $texts[ $key ][1] ?? '',
-				'available'         => ! empty( $feature[ $mode ] ),
-				'local_support'     => $feature['local'],
-				'community_support' => $feature['community'],
-			);
-		}
-
-		return $matrix;
-	}
-
-	/**
-	 * Get features that would be available by upgrading to community mode
-	 *
-	 * @return array Features only available in community mode
-	 */
-	public function get_community_only_features() {
-		$this->ensure_feature_matrix_loaded();
-
-		$texts          = $this->feature_texts();
-		$community_only = array();
-
-		foreach ( $this->feature_matrix as $key => $feature ) {
-			if ( ! $feature['local'] && $feature['community'] ) {
-				$community_only[ $key ] = array(
-					'label'       => $texts[ $key ][0] ?? '',
-					'description' => $texts[ $key ][1] ?? '',
-				);
-			}
-		}
-
-		return $community_only;
-	}
-
-	/**
 	 * Check if setup wizard has been completed
 	 *
 	 * @return bool
@@ -667,27 +619,6 @@ class ReportedIP_Hive_Mode_Manager {
 	 */
 	public function skip_wizard() {
 		ReportedIP_Hive_Option_Routing::set( self::OPTION_WIZARD_SKIPPED, true );
-		return true;
-	}
-
-	/**
-	 * Check if wizard should be shown
-	 *
-	 * Shows wizard if:
-	 * - Not completed AND not skipped
-	 * - Plugin was just activated (first time)
-	 *
-	 * @return bool
-	 */
-	public function should_show_wizard() {
-		if ( $this->is_wizard_completed() ) {
-			return false;
-		}
-
-		if ( $this->is_wizard_skipped() ) {
-			return false;
-		}
-
 		return true;
 	}
 

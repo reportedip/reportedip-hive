@@ -2,6 +2,186 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### New
+
+- **Registration defence.** The registration sensor grew from a single
+  disposable-mail check into a rule set: prohibited usernames on top of a
+  built-in baseline of ten role names, e-mail allow or block rules, a per-IP
+  registration rate limit (three sign-ups per 60 minutes by default) and an
+  opt-in immediate block for sign-in attempts against usernames that do not
+  exist. Ten plain entries per list are free; Professional lifts the cap,
+  accepts `/regex/` patterns and adds allowlist-only registration, where
+  accounts can only be created from listed IP ranges. Every surface is covered:
+  the WordPress registration form, WooCommerce, Multisite sign-ups and
+  programmatic user creation.
+
+- **Access lockdown switches.** A new section on the Firewall page turns off the
+  parts of WordPress a site does not use: the REST API for signed-out visitors
+  or for everyone outside a chosen set of roles and namespaces, XML-RPC together
+  with pingbacks, feeds, the admin area for signed-out visitors, PHP execution
+  in the uploads folder and the version fingerprints in the page source. The
+  uploads block is written into the uploads `.htaccess` on Apache; nginx and
+  unknown servers get the snippet to paste. Free on every plan.
+
+- **System readiness register.** Twelve detectors watch the parts of the setup
+  that fail quietly: an unwritable pre-WordPress guard queue, stalled or
+  disabled cron, a trusted proxy header without proxy ranges, an outdated
+  database schema, a degraded community layer, exhausted mail or SMS relay
+  quotas, mail delivery failures, a missing encryption extension and the report
+  queue. The System Status page lists every open issue with its severity, when
+  it first appeared, a link to the setting and a link to the documentation;
+  warnings and advisories can be dismissed for seven days, critical issues
+  cannot. The dashboard widget shows the count and `wp reportedip status` gained
+  an `issues` field.
+
+- **Block user accounts and manage sessions (Business).** An account can be
+  blocked from its profile page, from the Users list or with
+  `wp reportedip user block`. A blocked account keeps its content but cannot
+  sign in, authenticate an application password or complete a password reset;
+  all of its sessions and trusted devices are dropped at once. The new
+  Users → Sessions page lists every active session with user, sign-in time,
+  expiry, IP address and device, and terminates single sessions or all sessions
+  of a user. Blocks stay enforced and can always be lifted, even after a plan
+  expires.
+
+- **Adaptive two-factor triggers per role (Professional).** Seven step-up
+  triggers can be enabled per role: a new country, a new IP address, a new
+  network, a new device, every N days, every N sign-ins and more than N
+  concurrent sessions. A user who matches is asked for the second factor again
+  even when the trusted-device cookie is present; the 2FA IP allowlist and the
+  `reportedip_2fa_bypass` filter still bypass. Users without a configured method
+  are never locked out, and the administrator role can only be armed after an
+  administrator has completed one two-factor challenge on the site.
+
+### Security
+
+- **Hardening mode now reaches every login surface.** While a coordinated
+  attack tightened the failed-login threshold network-wide, the WooCommerce
+  login monitor (My Account and classic checkout) and the application-password
+  monitor kept reading the relaxed values, so a botnet that attacked the
+  storefront forms slipped through untouched. Both now pass their thresholds
+  through the same clamp as wp-login, as does the admin-side threshold
+  simulation. The gap dates back to 2.0.8, when hardening mode
+  shipped; sites without WooCommerce and without application passwords were
+  never affected. A new source-level parity test fails the build if a future sensor
+  reads a login threshold without the clamp.
+
+### Changed
+
+- **Every setting is now one setting everywhere.** Seventy options lived
+  outside the settings registry, so MainWP and the cloud fleet could not manage
+  them and the JSON export left them out: the security headers, the
+  trusted-proxy pair, the application-password and REST limits, the
+  geo-anomaly window, the WooCommerce login monitor, the hide-login probe, the
+  password policy, the caching and report-queue settings and the footer badge.
+  All of them are registry options now, which also means one sanitiser instead
+  of several. The export catalogue is derived from the registry rather than
+  kept alongside it, because the two had drifted by fifty-five keys.
+
+- **An imported settings file can no longer write anything unchecked.** The
+  import used to split incoming values in two: known keys went through the
+  sanitiser, everything else went straight to the option store. That raw path
+  is gone. It mattered most for the trusted client-IP header, where an
+  arbitrary value is the precondition for spoofing every sensor, the whitelist
+  and the block list at once.
+
+- **Every setting explains itself, in all three places.** None of them carried
+  a description in the schema, so MainWP and the fleet showed a bare label for
+  every field and remote management meant guessing. All 169 options now carry
+  one sentence in the registry, and the settings page, the MainWP form and the
+  fleet render the same text. German included.
+
+- **Settings are grouped by what they do.** "Firewall & Bots" had become a
+  drawer of twenty-one options, nine of which decide who may register an
+  account. Registration defence, attack response, adaptive step-up and password
+  policy each have their own section now, and the two XML-RPC switches sit side
+  by side with a sentence on which one to use. No option key changed, so stored
+  fleet policies and site overrides are untouched; both dashboards need one
+  schema reload to show the new grouping.
+
+- **Fourteen options gained a form in wp-admin.** They were configurable from a
+  dashboard but not on the site itself, among them the audit trail switch, the
+  report-queue thresholds behind the health badge, and rule synchronisation,
+  which had no off switch at all.
+
+- **The setup wizard offers the new protections.** Step 4 adds the three
+  lockdown switches that suit almost any site and the sign-up rate limit; step
+  5 adds the two adaptive two-factor triggers a person can judge without a
+  manual. No step was inserted, so nothing renumbers.
+
+- **The audit trail's two dormant options do something now.** IP anonymisation
+  and the new-address alert shipped with the trail and had no reader at all.
+  Anonymisation keeps the network and drops the host; the alert mails the
+  notification recipients, rate-limited per account.
+
+- **Hardening settings are part of the remote settings standard.** The eight
+  hardening options (duration, the two failed-login clamps, the reputation
+  clamp, realtime detection and the three distributed-detection limits) are
+  now in the settings registry and in the JSON export, so MainWP and the cloud
+  fleet can manage them. The master toggle stays local by design: its "no
+  stored value" state is what turns hardening on automatically for
+  Professional and higher.
+
+- **Settings cards on the Firewall page write through the settings registry.**
+  The AJAX save path of the Registration, Spam and scan cards now sanitises and
+  tier-checks every value the same way the settings form, the wizard, MainWP and
+  the cloud fleet do, so a plan limit can no longer be bypassed by posting the
+  card directly.
+- **Honeypot operators are treated as Contributor.** The `honeypot` tier was
+  missing from the tier order, so every plan comparison returned false and
+  honeypot sites were locked out of features their tier includes.
+- **The user sitemap disappears while user-enumeration blocking is on.** The
+  option is on by default, so most sites lose `wp-sitemap-users-1.xml` after the
+  update; it was the one remaining published list of usernames while the same
+  defence blocked `?author=` and the REST user route.
+- **The decoy `.htaccess` block is removed completely when switched off.**
+  Turning the decoy paths off used to leave an empty marker skeleton behind;
+  both markers are now stripped.
+- **`wp_login` fires after a passed two-factor challenge.** Until now the action
+  only fired for logins that never saw a challenge, so the geo-anomaly sensor,
+  the new-device mail, the audit trail and the 2FA reminder were blind to every
+  challenged sign-in. The REST verify endpoint fires it as well, and both paths
+  additionally fire `reportedip_hive_2fa_verified`.
+- **The hardening score was re-balanced.** Six lockdown items joined the score,
+  and the existing weights were lowered so the total stays 100; scores shift a
+  few points without any setting having changed.
+- **Registration rate-limit windows are capped at 60 minutes.** The shared
+  per-IP attempt counter restarts every hour, so a longer window could not be
+  honoured.
+- **The trusted-proxy warning became a readiness issue.** Configuring a client
+  IP header without proxy ranges used to be refused once at save time; it is now
+  raised as a standing warning for as long as it applies.
+- **Settings registration is a table now.** The 774-line block of hand-written
+  `register_setting()` calls became a map of option key to settings group, with
+  type and sanitisation read from the settings registry that already owns them.
+  Every registration is byte-identical to before; only the amount of code
+  spelling it out changed.
+- **GrumPHP is gone.** It ran the same PHPCS, PHPStan and PHPUnit gate that CI
+  and the workspace release check already run, installed a Git hook on every
+  `composer install`, and was invoked by neither. One dev dependency less.
+- Four sanitisers on the 2FA settings page, two threshold clamps on the general
+  settings page and the callback resolver between them were left behind when
+  those options moved into the settings registry. Removed, along with three
+  option defaults that were seeded on activation and never read again.
+
+### Fixed
+
+- The distributed-detection help texts named 5 and 20 as the defaults while
+  the code used 10 and 50, and the section intro still described the
+  superseded same-minute burst rule.
+- Hide Login refused logged-out `admin-post.php` requests. Payment callbacks and
+  other unauthenticated endpoints that post to `admin_post_nopriv_*` hit the
+  block page while the feature was active.
+- On Multisite, an administrator of a single site could write network-wide
+  plugin settings through the admin AJAX handlers, which check
+  `manage_options`. The handlers now require `manage_network_options` there.
+- The Rule Sync tab showed the Tor exit-node list as a raw key without a label
+  or feed column.
+- The Logs page offered an `XMLRPC Abuse` filter that never matched a row: the
+  sensor stores the event under its threshold name.
+
 ## [2.1.50] — 2026-08-29
 
 ### Security

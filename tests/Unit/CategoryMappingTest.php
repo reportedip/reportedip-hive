@@ -227,6 +227,26 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
+		public function test_login_probe_is_never_reported_to_the_community() {
+			$mon = $this->monitor();
+			$this->assertSame(
+				array(),
+				$mon->get_category_ids_for_event( 'unknown_username_probe' ),
+				'A single unknown-username login is as often a typo as an attack; it must never put an address on the shared blacklist'
+			);
+		}
+
+		public function test_local_only_events_short_circuit_the_report() {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-security-monitor.php' );
+			$body   = substr( $source, (int) strpos( $source, 'function report_security_event' ) );
+			$guard  = strpos( $body, 'empty( $category_ids )' );
+			$queue  = strpos( $body, 'queue_api_report(' );
+
+			$this->assertNotFalse( $guard, 'An event without categories must abort the report instead of queueing an empty one' );
+			$this->assertNotFalse( $queue );
+			$this->assertLessThan( $queue, $guard, 'The empty-category guard must run before the report is queued' );
+		}
+
 		public function test_unknown_event_falls_back_to_hacking_category() {
 			$mon = $this->monitor();
 			$this->assertSame(

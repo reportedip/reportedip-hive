@@ -273,7 +273,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		if ( self::is_email_only_locked( $user->ID ) ) {
 			$this->log_event( self::EVENT_EMAIL_ONLY_BLOCKED, $user->ID, 'high' );
 			$this->notify_admins_user_locked_out( $user, 'email_only', array() );
-			$this->die_with_lockout(
+			self::die_with_lockout(
 				__( 'Password reset blocked', 'reportedip-hive' ),
 				__( 'For security, this account requires a second factor other than email (Authenticator app, SMS, security key or recovery code) before passwords can be reset. Please contact your administrator.', 'reportedip-hive' )
 			);
@@ -284,7 +284,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		if ( empty( $eligible ) ) {
 			$this->log_event( self::EVENT_NO_ELIGIBLE_METHOD, $user->ID, 'high' );
 			$this->notify_admins_user_locked_out( $user, 'no_eligible_method', array() );
-			$this->die_with_lockout(
+			self::die_with_lockout(
 				__( 'Password reset blocked', 'reportedip-hive' ),
 				__( 'No second factor is available for password reset on this account. Please contact your administrator.', 'reportedip-hive' )
 			);
@@ -302,7 +302,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 				array( 'broken' => $health['broken'] )
 			);
 			$this->notify_admins_user_locked_out( $user, 'no_usable_method', $health['broken'] );
-			$this->die_with_lockout(
+			self::die_with_lockout(
 				__( 'Password reset blocked', 'reportedip-hive' ),
 				__( 'None of the second-factor methods configured on your account is currently usable for password reset (the secret may be missing, the SMS provider unavailable, or recovery codes exhausted). Please contact your administrator.', 'reportedip-hive' )
 			);
@@ -1003,7 +1003,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * @param string $title Short heading shown to the user.
 	 * @param string $body  Longer explanation of why the reset was blocked.
 	 */
-	private function die_with_lockout( string $title, string $body ): void {
+	public static function die_with_lockout( string $title, string $body ): void {
 		ReportedIP_Hive::emit_block_response_headers();
 		wp_die(
 			esc_html( $body ),

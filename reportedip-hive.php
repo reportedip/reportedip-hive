@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.com
  * Description: Community-powered WordPress security — real-time threat intelligence
- * with 5-layer defense and 4-method 2FA. Be part of the hive.
+ * with 6-layer defense and 4-method 2FA. Be part of the hive.
  * Version: 2.1.50
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.com
@@ -194,7 +194,7 @@ class ReportedIP_Hive {
 			add_filter( 'xmlrpc_methods', array( $this, 'disable_xmlrpc_multicall' ) );
 		}
 
-		add_action( 'wp_login_failed', array( $this, 'handle_failed_login' ) );
+		add_action( 'wp_login_failed', array( $this, 'handle_failed_login' ), 10, 2 );
 		add_action( 'wp_authenticate_user', array( $this, 'pre_auth_check' ), 10, 2 );
 		add_action( 'comment_post', array( $this, 'handle_comment_post' ), 10, 3 );
 		add_action( 'xmlrpc_call', array( $this, 'handle_xmlrpc_call' ) );
@@ -264,7 +264,10 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Admin_Notice::register_hooks();
 		ReportedIP_Hive_Decoy_Path_Block::get_instance()->register_hooks();
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->register_hooks();
+		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->register_hooks();
 		ReportedIP_Hive_Audit_Logger::get_instance()->register_hooks();
+		ReportedIP_Hive_User_Block::register_hooks();
+		ReportedIP_Hive_User_Sessions::register_hooks();
 	}
 
 	/**
@@ -303,23 +306,17 @@ class ReportedIP_Hive {
 	 * Remove trusted-device rows for a deleted user.
 	 *
 	 * User meta is cleaned up automatically by WordPress; the plugin's own
-	 * trusted_devices table needs an explicit DELETE because it is not
-	 * tied to user_meta.
+	 * trusted_devices table is not tied to user_meta, so the 2FA engine's
+	 * revocation helper runs explicitly.
 	 *
 	 * @param int $user_id User being deleted.
 	 */
 	public static function on_user_deleted( $user_id ) {
-		global $wpdb;
 		$user_id = (int) $user_id;
 		if ( $user_id <= 0 ) {
 			return;
 		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Single-row DELETE on a plugin-owned table during user-deletion lifecycle hook; no caching layer applies.
-		$wpdb->delete(
-			ReportedIP_Hive_Schema::table( 'reportedip_hive_trusted_devices' ),
-			array( 'user_id' => $user_id ),
-			array( '%d' )
-		);
+		ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user_id );
 	}
 
 	/**
@@ -418,10 +415,13 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-notice.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-whats-new.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-htaccess-block-writer.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-htaccess-writer.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-uploads-htaccess-writer.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ip-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cron-handler.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-hide-login.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-attack-surface.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-app-password-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-bot-allowlist.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rest-monitor.php';
@@ -431,10 +431,15 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-bot-verifier.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-disposable-email.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-registration-guard.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-logger.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-block.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-sessions.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-score.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-readiness.php';
+		ReportedIP_Hive_Readiness::init();
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-woocommerce-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
@@ -456,6 +461,9 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-reset-gate.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-onboarding.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-notifications.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-policies.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-login-context.php';
+		ReportedIP_Hive_Login_Context::init();
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-sms.php';
 		ReportedIP_Hive_Two_Factor_SMS::load_providers();
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-webauthn-aaguid-registry.php';
@@ -488,6 +496,7 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-whitelist-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-status-cli.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-cli.php';
 		}
 
 		if ( is_admin() ) {
@@ -503,6 +512,8 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-api-queue-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-settings-import-export.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-dashboard-widget.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-sessions-table.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-user-admin.php';
 			ReportedIP_Hive_Dashboard_Widget::init();
 		}
 
@@ -527,6 +538,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Database::get_instance();
 		$this->api_client = ReportedIP_Hive_API::get_instance();
 		ReportedIP_Hive_Hide_Login::get_instance();
+		ReportedIP_Hive_Attack_Surface::get_instance();
 		$this->security_monitor = new ReportedIP_Hive_Security_Monitor();
 		$this->ip_manager       = ReportedIP_Hive_IP_Manager::get_instance();
 		$this->logger           = ReportedIP_Hive_Logger::get_instance();
@@ -540,6 +552,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
 		ReportedIP_Hive_Bot_Verifier::get_instance();
 		ReportedIP_Hive_Disposable_Email::get_instance();
+		ReportedIP_Hive_Registration_Guard::get_instance();
 		ReportedIP_Hive_Comment_Honeypot::get_instance();
 		ReportedIP_Hive_Security_Headers::get_instance();
 		ReportedIP_Hive_WooCommerce_Monitor::get_instance();
@@ -566,6 +579,7 @@ class ReportedIP_Hive {
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Two_Factor_Admin();
 			new ReportedIP_Hive_Two_Factor_Dashboard();
+			new ReportedIP_Hive_User_Admin();
 		}
 	}
 
@@ -609,10 +623,17 @@ class ReportedIP_Hive {
 		if ( ! class_exists( 'ReportedIP_Hive_Decoy_Path_Block' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
 		}
+		if ( ! class_exists( 'ReportedIP_Hive_Htaccess_Block_Writer' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-htaccess-block-writer.php';
+		}
 		if ( ! class_exists( 'ReportedIP_Hive_Decoy_Htaccess_Writer' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-htaccess-writer.php';
 		}
+		if ( ! class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-uploads-htaccess-writer.php';
+		}
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->sync();
+		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->sync();
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_dropin_enabled', false ) ) {
 			foreach ( array(
@@ -679,10 +700,17 @@ class ReportedIP_Hive {
 		if ( ! class_exists( 'ReportedIP_Hive_Decoy_Path_Block' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
 		}
+		if ( ! class_exists( 'ReportedIP_Hive_Htaccess_Block_Writer' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-htaccess-block-writer.php';
+		}
 		if ( ! class_exists( 'ReportedIP_Hive_Decoy_Htaccess_Writer' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-htaccess-writer.php';
 		}
+		if ( ! class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-uploads-htaccess-writer.php';
+		}
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->remove();
+		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->remove();
 
 		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php';
@@ -714,6 +742,8 @@ class ReportedIP_Hive {
 		foreach ( array(
 			'includes/class-waf.php',
 			'includes/class-waf-dropin-manager.php',
+			'includes/class-htaccess-block-writer.php',
+			'includes/class-uploads-htaccess-writer.php',
 		) as $relative ) {
 			$path = REPORTEDIP_HIVE_PLUGIN_DIR . $relative;
 			if ( file_exists( $path ) ) {
@@ -722,6 +752,9 @@ class ReportedIP_Hive {
 		}
 		if ( class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
 			ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->remove();
+		}
+		if ( class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' ) ) {
+			ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->remove();
 		}
 
 		$delete_requested = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', false );
@@ -1086,10 +1119,20 @@ class ReportedIP_Hive {
 	 * `ReportedIP_Hive_Audit_Logger::on_login_failed()` is a separate
 	 * compliance record and deliberately unaffected.
 	 *
-	 * @param string $username Username the failed attempt used.
+	 * A refused sign-in of a blocked account is not a credential attack: the
+	 * password was correct. Counting it would let a blocked ex-employee lock
+	 * their whole office network out by retrying.
+	 *
+	 * @param string        $username Username the failed attempt used.
+	 * @param WP_Error|null $error    Authentication error, when core passes one.
 	 */
-	public function handle_failed_login( $username ) {
+	public function handle_failed_login( $username, $error = null ) {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_failed_logins', true ) ) {
+			return;
+		}
+
+		if ( $error instanceof WP_Error
+			&& in_array( ReportedIP_Hive_User_Block::ERROR_CODE, $error->get_error_codes(), true ) ) {
 			return;
 		}
 

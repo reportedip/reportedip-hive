@@ -251,20 +251,38 @@ class ReportedIP_Hive_Security_Headers {
 	}
 
 	/**
-	 * Normalised X-Frame-Options value: SAMEORIGIN | DENY | off.
+	 * Sanitize a submitted X-Frame-Options value.
 	 *
-	 * @return string
-	 * @since  2.1.2
+	 * The header value is case-sensitive in the wire format, so this key
+	 * cannot use the registry's generic enum sanitizer: that one lower-cases
+	 * through `sanitize_key()` and would reject `SAMEORIGIN`. Anything
+	 * unrecognised falls back to the safe default rather than to `off`.
+	 *
+	 * @param mixed $value Raw input.
+	 * @return string SAMEORIGIN | DENY | off.
+	 * @since  2.1.51
 	 */
-	private static function xfo_value() {
-		$value = strtoupper( trim( (string) self::opt( self::OPT_XFO, 'SAMEORIGIN' ) ) );
+	public static function sanitize_xfo( $value ) {
+		$value = strtoupper( trim( is_scalar( $value ) ? (string) $value : '' ) );
+
 		if ( 'DENY' === $value ) {
 			return 'DENY';
 		}
 		if ( 'OFF' === $value || '' === $value ) {
 			return 'off';
 		}
+
 		return 'SAMEORIGIN';
+	}
+
+	/**
+	 * Normalised X-Frame-Options value: SAMEORIGIN | DENY | off.
+	 *
+	 * @return string
+	 * @since  2.1.2
+	 */
+	private static function xfo_value() {
+		return self::sanitize_xfo( self::opt( self::OPT_XFO, 'SAMEORIGIN' ) );
 	}
 
 	/**

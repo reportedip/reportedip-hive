@@ -30,9 +30,11 @@ Two ways to run:
 * **One plugin instead of three.** Brute-force protection, a four-method 2FA suite and threat intelligence in a single drop-in. The full protection core stays free and Open Source — paid plans add the managed mail/SMS relays, multi-site management, higher API quotas and a few advanced modules (WooCommerce frontend 2FA, Hardening Mode, white-label), never the core protection itself.
 * **Progressive blocks that don't burn legitimate users.** A first-time tripping CGNAT visitor or a fat-fingered admin gets a 5-minute timeout — repeat offenders climb the ladder up to 7 days. Nobody pays a 24h block for a typo.
 * **Privacy-first by default.** GDPR-minimal logging mode, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium.
-* **Hardening Mode on coordinated attacks (PRO).** When the plugin spots ≥ 3 IPs / ≥ 20 failed logins in the same minute it tightens the failed-login and reputation thresholds network-wide for one hour. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
+* **Hardening Mode on coordinated attacks (PRO).** When several IPs hit the login in the same minute, or enough distinct IPs add up across a rolling window (default 10 minutes, 10 IPs, 50 attempts), the plugin tightens the failed-login and reputation thresholds network-wide for one hour — on wp-login, the WooCommerce storefront login and application passwords alike. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
 * **Tor exit-node blocking (PRO).** An opt-in toggle rejects connections from known Tor exit nodes, backed by a signed exit-node list refreshed twice daily. Blocks are temporary and never reported to the community — operating an exit node is not abuse evidence.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
+* **Access lockdown switches.** Turn off the parts of WordPress the site does not use: the REST API for signed-in users only or restricted to selected roles and namespaces, XML-RPC including pingbacks, feeds, the admin area for signed-out visitors, PHP execution in the uploads folder and the version fingerprints in the page source. Every switch is off by default, free on every plan and reversible from the same screen.
+* **System readiness register.** Twelve detectors watch what usually fails quietly: an unwritable pre-WordPress guard queue, stalled or disabled cron, a trusted proxy header without proxy ranges, an outdated database schema, a degraded community layer, exhausted relay quotas, failing mail delivery, a missing encryption extension and a growing report queue. Open issues show up on the System Status page with severity, first-seen time and a jump to the responsible setting, and `wp reportedip status` reports them as well. Free on every plan.
 * **Security headers out of the box.** The basic hardening trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is free; HSTS, Permissions-Policy, a report-only-first Content-Security-Policy and the cross-origin isolation trio come with Professional. Headers already sent by your server or another plugin are detected and left untouched.
 * **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan level 5 clean, WPCS-clean (zero warnings), a comprehensive PHPUnit suite (unit + Multisite) running on every commit.
 
@@ -48,7 +50,7 @@ Two ways to run:
 * **404 / scanner detection** — default 12 / 2 min, plus instant block on known-bad paths (`.env`, `wp-config.bak`, `/.git/`)
 * **Web Application Firewall** — request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
 * **Verified bot detection** — confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
-* **Disposable-email blocking** — inspects the address at registration (WordPress + WooCommerce) against the throwaway-mail list (off / monitor / block). Privacy relays (Apple Hide My Email, Firefox Relay, …) pass through by default. Free; the live list rides Priority Sync
+* **Registration defence** — one rule set for every sign-up surface (WordPress, WooCommerce, Multisite sign-ups, programmatic user creation): throwaway-mail domains (off / monitor / block, privacy relays such as Apple Hide My Email and Firefox Relay pass by default), prohibited usernames on top of a baseline of ten role names, e-mail allow or block rules, a per-IP registration rate limit (default 3 / 60 min) and an opt-in immediate block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts `/regex/` patterns and adds registration restricted to allowlisted IP ranges. The live throwaway-mail list rides Priority Sync
 * **Comment honeypot** — invisible, screen-reader-excluded decoy field; spam bots that fill it are rejected with no CAPTCHA friction
 * **Geographic anomaly** — login from a country never seen for the user, optionally revokes trusted-device cookies
 * **Password policy** — minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
@@ -73,6 +75,7 @@ Plus:
 * **Password-reset gate** — the WordPress "lost password" flow demands a second factor before the new password is accepted. Email is excluded by design (it is the channel that delivered the reset link), so a stolen mailbox cannot bypass 2FA. Email-only accounts without recovery codes are hard-locked with an admin alert.
 * **Multi-stage 2FA rate-limit** — 3/5/10/15 fails trigger 30 s/5 m/30 m/1 h delays; the 15th IP-level fail graduates the IP to a real progressive block (so the brute-forcer no longer just times out and tries again hourly)
 * **Role-based enforcement** with grace period (default 7 days) and skip counter
+* **Adaptive step-up triggers (Professional)** — seven per-role rules that ask for the second factor again: new country, new IP address, new network, new device, every N days, every N sign-ins, more than N concurrent sessions. The step-up applies even when a trusted-device cookie is present; the 2FA IP allowlist and the `reportedip_2fa_bypass` filter still bypass it. Users without a configured method are never locked out, and the administrator role can only be armed once an administrator has passed one challenge on the site
 * **Frontend onboarding** — branded 5-step setup wizard for users on the front-end (e.g. WooCommerce account)
 * **WooCommerce frontend 2FA (Professional plan)** — second factor renders inside the active storefront theme on My Account, classic checkout and the WooCommerce blocks, with a themed onboarding page for Customer / Subscriber roles. Cart and checkout state survive the redirect roundtrip; the trusted-device cookie is shared with the wp-login flow so a checkout-side "Trust this device" silences the next backend login as well. Soft-disables on a tier downgrade — existing customer secrets stay valid, only new onboardings are blocked.
 * **Branded login page** option, custom email subject + body, IP allowlist for 2FA bypass
@@ -185,6 +188,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 = Free / Contributor (0 €) =
 
 * Full core functionality — all 16 sensors, progressive blocking, the password-reset gate, every dashboard and export
+* Registration rules (ten entries per list), the access lockdown switches and the system readiness register
 * 1 domain per licence, 1,000 IP-reputation checks/day, 50 reports/day
 * Local-mode `wp_mail()` for 2FA emails; TOTP, Passkey and Email 2FA included (SMS 2FA, WooCommerce frontend 2FA and Hardening Mode require Professional)
 * 30-day log retention, community support
@@ -198,6 +202,8 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * **WooCommerce frontend 2FA** — the second factor rendered inside the storefront theme on My Account, classic checkout and the WC blocks
 * **Hardening Mode** — auto-tighten failed-login and reputation thresholds network-wide for one hour on a detected coordinated attack
 * **Advanced security headers** — HSTS, Permissions-Policy, the Content-Security-Policy builder and the cross-origin isolation trio (the basic header trio stays free)
+* **Adaptive 2FA triggers** — per-role step-up rules on a new device, IP address, network or country, every N days or sign-ins, or above a concurrent-session limit
+* **Unlimited registration rules** — no ten-entry cap on the username and e-mail lists, `/regex/` patterns and registration restricted to allowlisted IP ranges
 * **Priority Sync** — the deeper, frequently-updated, Ed25519-signed WAF Paranoia-Level-2/3 rulesets plus the live bot-IP-range and disposable-domain feeds
 * Multi-site dashboard, priority sync (daily blacklist download), 90-day log retention, e-mail support (48 h SLA)
 * Prepaid top-up bundles (SMS and mail) available for heavy months
@@ -209,6 +215,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * Everything in Professional, plus white-label (logo, copy, mail templates), the WooCommerce complete integration, full WP-CLI surface and role-based login-time restrictions
 * **Audit event trail** — append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export
 * **Advanced Security Keys** — multiple WebAuthn keys per account (primary + backup YubiKey), automatic model detection via attestation, key-lifecycle email alerts
+* **User account control and sessions** — block an account (it keeps its content but cannot sign in, authenticate an application password or complete a password reset), drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions
 * 1-year log retention, weekly security PDF report, GDPR data-export tool, priority support (12 h SLA)
 * **Multi-bookable:** book Business x2–x20 to scale domains, API quota and 2FA mail/SMS with the licence count — a volume discount applies automatically
 
@@ -221,7 +228,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 
 **How domains are counted:** each Hive installation announces its site address with every API request, and every distinct domain occupies one slot of the plan. A WordPress Multisite network counts as a single domain. Your reportedip.com dashboard shows the used/included domains per licence, lets you release slots of retired or moved sites (up to 3 self-service releases per 30 days), and domains that stop reporting for 60 days free their slot automatically. Currently informational only — nothing is blocked when a plan is over its allowance.
 
-What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, disposable-email blocking, the comment honeypot, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys — multiple WebAuthn keys, model detection, key alerts (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
+What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, the registration rule set with ten entries per list, the comment honeypot, the access lockdown switches, the system readiness register, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys — multiple WebAuthn keys, model detection, key alerts (Business), adaptive 2FA triggers (Professional), unlimited registration rules with regular expressions and allowlist-only registration (Professional), blocking user accounts and the session manager (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
 
@@ -380,6 +387,28 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= Unreleased =
+
+New: registration defence. The registration sensor grew from a throwaway-mail check into a rule set with prohibited usernames, e-mail allow or block rules, a per-IP registration rate limit and an opt-in block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts regular expressions and adds registration restricted to allowlisted IP ranges.
+
+New: access lockdown switches. A new section on the Firewall page turns off the REST API for signed-out visitors or for everyone outside chosen roles and namespaces, XML-RPC and pingbacks, feeds, the admin area for signed-out visitors, PHP execution in the uploads folder and the version fingerprints in the page source. Free on every plan.
+
+New: system readiness register. Twelve detectors report an unwritable guard queue, stalled or disabled cron, a trusted proxy header without proxy ranges, an outdated database schema, a degraded community layer, exhausted relay quotas, failing mail delivery, a missing encryption extension and a growing report queue on the System Status page and in `wp reportedip status`.
+
+New: block user accounts and manage sessions (Business). A blocked account keeps its content but cannot sign in, authenticate an application password or complete a password reset, and loses every session and trusted device. The new Users → Sessions page lists and terminates active sessions.
+
+New: adaptive two-factor triggers per role (Professional). Seven step-up rules ask for the second factor again on a new country, IP address, network or device, every N days or sign-ins, or above a concurrent-session limit, even when a trusted-device cookie is present. The 2FA IP allowlist still bypasses.
+
+Changed: the settings cards on the Firewall page write through the settings registry, so plan limits apply to them as well; honeypot sites now count as Contributor; the user sitemap disappears while user-enumeration blocking is on (default on); `wp_login` fires after a passed two-factor challenge and after a REST verify; the hardening score was re-balanced; the trusted-proxy warning became a standing readiness issue.
+
+Fixed: Hide Login blocked logged-out `admin-post.php` requests; on Multisite a sub-site administrator could write network settings through the admin AJAX handlers; the Rule Sync tab showed no label for the Tor exit-node list; the Logs page offered an XMLRPC filter that never matched a row.
+
+Security: hardening mode now reaches every login surface. While a coordinated attack tightened the failed-login threshold network-wide, the WooCommerce login monitor (My Account and classic checkout) and the application-password monitor kept using the relaxed values, so an attack on the storefront forms slipped through untouched. Both are now clamped like wp-login. The gap dates back to 2.0.8; sites without WooCommerce and without application passwords were never affected.
+
+Changed: the eight hardening options are part of the remote settings standard, so MainWP and the cloud fleet can manage them. The master toggle stays local because its "no stored value" state is what enables hardening automatically on Professional and higher.
+
+Fixed: the distributed-detection help texts named 5 and 20 as defaults while the code used 10 and 50.
 
 = 2.1.50 =
 

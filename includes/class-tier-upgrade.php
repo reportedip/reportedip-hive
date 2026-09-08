@@ -333,7 +333,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * @return void
 	 */
 	public static function handle_dismiss() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
 			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( 'reportedip_hive_dismiss_tier_notice' );

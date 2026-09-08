@@ -54,6 +54,18 @@ class SettingsKeysAreStableTest extends TestCase {
 	 */
 	private function expected_keys(): array {
 		return array(
+			'reportedip_hive_2fa_enforce_super_admins',
+			'reportedip_hive_audit_anonymize_ip',
+			'reportedip_hive_audit_enabled',
+			'reportedip_hive_audit_new_ip_alert',
+			'reportedip_hive_audit_retention_days',
+			'reportedip_hive_disable_xmlrpc_multicall',
+			'reportedip_hive_notification_cooldown_minutes',
+			'reportedip_hive_notify_event_cap_minutes',
+			'reportedip_hive_processing_timeout_minutes',
+			'reportedip_hive_queue_critical_threshold',
+			'reportedip_hive_queue_max_age_days',
+			'reportedip_hive_queue_warning_threshold',
 			'reportedip_hive_api_endpoint',
 			'reportedip_hive_api_key',
 			'reportedip_hive_cloud_management',
@@ -95,6 +107,14 @@ class SettingsKeysAreStableTest extends TestCase {
 			'reportedip_hive_hide_login_probe_threshold',
 			'reportedip_hive_hide_login_probe_timeframe',
 			'reportedip_hive_monitor_hide_login_probe',
+			'reportedip_hive_rest_access_mode',
+			'reportedip_hive_rest_allowed_namespaces',
+			'reportedip_hive_rest_allowed_roles',
+			'reportedip_hive_disable_xmlrpc',
+			'reportedip_hive_disable_feeds',
+			'reportedip_hive_block_admin_guests',
+			'reportedip_hive_block_uploads_php',
+			'reportedip_hive_hide_software_info',
 			'reportedip_hive_log_level',
 			'reportedip_hive_log_referer_domains',
 			'reportedip_hive_log_user_agents',
@@ -135,6 +155,16 @@ class SettingsKeysAreStableTest extends TestCase {
 			'reportedip_hive_2fa_max_skips',
 			'reportedip_hive_2fa_notify_new_device',
 			'reportedip_hive_2fa_password_reset_block_email_only',
+			'reportedip_hive_2fa_policy_new_country',
+			'reportedip_hive_2fa_policy_new_ip',
+			'reportedip_hive_2fa_policy_new_subnet',
+			'reportedip_hive_2fa_policy_new_device',
+			'reportedip_hive_2fa_policy_every_n_days',
+			'reportedip_hive_2fa_policy_every_n_logins',
+			'reportedip_hive_2fa_policy_sessions_above_n',
+			'reportedip_hive_2fa_policy_days',
+			'reportedip_hive_2fa_policy_logins',
+			'reportedip_hive_2fa_policy_sessions',
 			'reportedip_hive_2fa_reminder_enabled',
 			'reportedip_hive_2fa_reminder_hard_roles',
 			'reportedip_hive_2fa_reminder_hard_threshold',
@@ -146,7 +176,8 @@ class SettingsKeysAreStableTest extends TestCase {
 	}
 
 	/**
-	 * Extracts every option key from register_setting() blocks.
+	 * Extracts every registered option key: the literal register_setting()
+	 * calls plus the registration map they were folded into.
 	 *
 	 * Matches both single- and double-quoted second arguments, regardless
 	 * of formatting (single- or multi-line, with or without trailing
@@ -156,9 +187,13 @@ class SettingsKeysAreStableTest extends TestCase {
 	 * @return array<int, string>
 	 */
 	private function extract_keys_from_source( string $source ): array {
-		$pattern = '/register_setting\s*\(\s*[\'"][^\'"]+[\'"]\s*,\s*[\'"](reportedip_hive_[a-z0-9_]+)[\'"]/';
-		preg_match_all( $pattern, $source, $matches );
-		return $matches[1];
+		$call = '/register_setting\s*\(\s*[\'"][^\'"]+[\'"]\s*,\s*[\'"](reportedip_hive_[a-z0-9_]+)[\'"]/';
+		$map  = '/[\'"](reportedip_hive_[a-z0-9_]+)[\'"]\s*=> array\( [\'"]reportedip_hive_[a-z_]+[\'"], [\'"][a-z]+[\'"] \)/';
+
+		preg_match_all( $call, $source, $calls );
+		preg_match_all( $map, $source, $mapped );
+
+		return array_merge( $calls[1], $mapped[1] );
 	}
 
 	/**

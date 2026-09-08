@@ -267,6 +267,65 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_window_is_degraded_requires_sample_rate_and_fresh_failure() {
+			$fresh_failure = array(
+				array(
+					't'  => time() - 60,
+					'ok' => 0,
+				),
+			);
+			$old_failure   = array(
+				array(
+					't'  => time() - ( 48 * HOUR_IN_SECONDS ),
+					'ok' => 0,
+				),
+			);
+
+			$this->assertTrue(
+				\ReportedIP_Hive_API::window_is_degraded(
+					array(
+						'recent_total'        => 20,
+						'recent_success_rate' => 50.0,
+						'recent'              => $fresh_failure,
+					)
+				)
+			);
+
+			$this->assertFalse(
+				\ReportedIP_Hive_API::window_is_degraded(
+					array(
+						'recent_total'        => 5,
+						'recent_success_rate' => 0.0,
+						'recent'              => $fresh_failure,
+					)
+				),
+				'Below the minimum sample size the window says nothing.'
+			);
+
+			$this->assertFalse(
+				\ReportedIP_Hive_API::window_is_degraded(
+					array(
+						'recent_total'        => 20,
+						'recent_success_rate' => 95.0,
+						'recent'              => $fresh_failure,
+					)
+				)
+			);
+
+			$this->assertFalse(
+				\ReportedIP_Hive_API::window_is_degraded(
+					array(
+						'recent_total'        => 20,
+						'recent_success_rate' => 50.0,
+						'recent'              => $old_failure,
+					)
+				),
+				'A fault that stopped days ago is not a statement about now.'
+			);
+
+			$this->assertFalse( \ReportedIP_Hive_API::window_is_degraded( array() ) );
+		}
+
 		public function test_migration_resets_poisoned_stats() {
 			\ReportedIP_Hive_Option_Routing::set(
 				'reportedip_hive_api_stats',

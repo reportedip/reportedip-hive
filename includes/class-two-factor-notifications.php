@@ -271,10 +271,13 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	/**
 	 * Reduce an IP to its network block for fingerprinting.
 	 *
+	 * Shared with the adaptive 2FA triggers, which compare the /24 (or /64)
+	 * an account signs in from — there must be exactly one reducer.
+	 *
 	 * @param string $ip IP address.
 	 * @return string Network identifier or '' if invalid.
 	 */
-	private static function ip_to_network( $ip ) {
+	public static function ip_to_network( $ip ) {
 		if ( empty( $ip ) ) {
 			return '';
 		}
@@ -297,13 +300,19 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	}
 
 	/**
-	 * Truncate the User-Agent string for display.
+	 * Truncate a User-Agent string for display.
 	 *
+	 * Shared with the session manager, which passes a stored User-Agent
+	 * instead of reading the current request.
+	 *
+	 * @param string|null $ua User-Agent to shorten; null reads the current request.
 	 * @return string
 	 */
-	private static function short_ua() {
-		$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
-		return substr( $ua, 0, 120 );
+	public static function short_ua( $ua = null ) {
+		if ( null === $ua ) {
+			$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) : '';
+		}
+		return substr( sanitize_text_field( (string) $ua ), 0, 120 );
 	}
 
 	/**

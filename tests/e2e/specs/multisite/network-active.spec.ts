@@ -34,5 +34,22 @@ test('security widget on the network dashboard', async ({ page }) => {
     await page.goto('/wp-admin/network/');
     const widget = page.locator('#reportedip_hive_overview');
     await expect(widget).toBeVisible();
-    await expect(widget.locator('.rip-dw__meta')).toContainText('Network-wide');
+    await expect(widget.locator('.rip-dw__meta').first()).toContainText('Network-wide');
+});
+
+test('system status page in the network admin shows the readiness register', async ({ page }) => {
+    await loginAsAdmin(page);
+
+    await page.goto('/wp-admin/network/admin.php?page=reportedip-hive-debug');
+    const readiness = page.locator('#rip-readiness');
+    await expect(readiness).toBeVisible();
+    await expect(readiness.locator('.rip-settings-section__title')).toContainText('Readiness');
+
+    // The register body renders either the issue table or the empty state; a
+    // section with neither means the network-side compute path bailed out.
+    const body = readiness.locator('.rip-card__body');
+    await expect(body).toBeVisible();
+    const rows = await body.locator('table.rip-table tbody tr').count();
+    const empty = await body.locator('.rip-help-text', { hasText: 'No open readiness issues' }).count();
+    expect(rows + empty).toBeGreaterThan(0);
 });

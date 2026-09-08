@@ -292,7 +292,7 @@ jobs:
           wp plugin check reportedip-hive \
             --exclude-directories=bin,scripts,tests,node_modules,build,vendor,.github \
             --exclude-checks=plugin_updater \
-            --exclude-files=.gitattributes,.gitignore,.distignore,.editorconfig,phpcs.xml,phpstan.neon,phpstan-baseline.neon,phpunit.xml,phpunit-multisite.xml,grumphp.yml,phpstan-bootstrap.php,.phpcs.cache,.phpunit.result.cache \
+            --exclude-files=.gitattributes,.gitignore,.distignore,.editorconfig,phpcs.xml,phpstan.neon,phpstan-baseline.neon,phpunit.xml,phpunit-multisite.xml,phpstan-bootstrap.php,.phpcs.cache,.phpunit.result.cache \
             --format=table --severity=error
 
   # ===========================================================================

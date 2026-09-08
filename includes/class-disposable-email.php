@@ -2,8 +2,8 @@
 /**
  * Disposable-email registration sensor.
  *
- * Inspects the e-mail address on user registration (WordPress core and
- * WooCommerce) against the `disposable_domains` ruleset (bundled baseline,
+ * Inspects the e-mail address on user registration against the
+ * `disposable_domains` ruleset (bundled baseline,
  * free; the live multi-thousand-domain list arrives via Priority Sync). A
  * throwaway-mail domain is logged and — when the operator opts into blocking —
  * rejected with a registration error. Privacy relays (Apple Hide My Email,
@@ -83,45 +83,14 @@ class ReportedIP_Hive_Disposable_Email {
 	}
 
 	/**
-	 * Hook the WordPress and WooCommerce registration validation points.
+	 * Private constructor: the registration surfaces belong to
+	 * {@see ReportedIP_Hive_Registration_Guard}, which calls
+	 * {@see evaluate()} as the last step of its pipeline so an operator's own
+	 * e-mail allow rule can overrule the throwaway list.
 	 *
 	 * @since 2.1.2
 	 */
 	private function __construct() {
-		add_filter( 'registration_errors', array( $this, 'on_registration_errors' ), 10, 3 );
-		add_action( 'woocommerce_register_post', array( $this, 'on_woocommerce_register' ), 10, 3 );
-	}
-
-	/**
-	 * Validate a core WordPress registration.
-	 *
-	 * @param WP_Error $errors Existing registration errors.
-	 * @param string   $login  Sanitised user login (unused).
-	 * @param string   $email  Submitted e-mail address.
-	 * @return WP_Error
-	 * @since  2.1.2
-	 */
-	public function on_registration_errors( $errors, $login, $email ) {
-		if ( $errors instanceof WP_Error ) {
-			$this->evaluate( (string) $email, $errors );
-		}
-		return $errors;
-	}
-
-	/**
-	 * Validate a WooCommerce registration. The validation errors object is
-	 * passed by handle, so adding to it rejects the registration.
-	 *
-	 * @param string   $username Submitted username (unused).
-	 * @param string   $email    Submitted e-mail address.
-	 * @param WP_Error $errors   WooCommerce validation errors.
-	 * @return void
-	 * @since  2.1.2
-	 */
-	public function on_woocommerce_register( $username, $email, $errors ) {
-		if ( $errors instanceof WP_Error ) {
-			$this->evaluate( (string) $email, $errors );
-		}
 	}
 
 	/**
@@ -159,12 +128,15 @@ class ReportedIP_Hive_Disposable_Email {
 	 * (and, unless the operator allows them, a relay), and add a registration
 	 * error when blocking.
 	 *
+	 * Public since 2.1.51: the registration guard owns the hooks and calls
+	 * this as the last pipeline step.
+	 *
 	 * @param string   $email  Submitted e-mail address.
 	 * @param WP_Error $errors Errors object to add to when blocking.
 	 * @return void
 	 * @since  2.1.2
 	 */
-	private function evaluate( $email, WP_Error $errors ) {
+	public function evaluate( $email, WP_Error $errors ) {
 		if ( ! $this->is_enabled() ) {
 			return;
 		}

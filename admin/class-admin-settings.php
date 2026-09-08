@@ -554,6 +554,36 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Echo the registry description of one option as a help paragraph.
+	 *
+	 * The registry description is the canonical one-sentence explanation of an
+	 * option, and it is the only one the MainWP form and the cloud fleet can
+	 * see. Use this helper for any field whose markup does not already carry
+	 * its own guidance; where a page has longer, page-specific guidance it
+	 * keeps it, and the registry sentence stays the short version the
+	 * dashboards render.
+	 *
+	 * Silent when the option carries no description, so a partially described
+	 * section still renders.
+	 *
+	 * @param string $key Option key.
+	 * @return void
+	 * @since 2.1.51
+	 */
+	public static function render_field_help( $key ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
+			return;
+		}
+
+		$spec = ReportedIP_Hive_Settings_Registry::spec();
+		if ( empty( $spec[ $key ]['description'] ) ) {
+			return;
+		}
+
+		printf( '<p class="rip-help-text">%s</p>', esc_html( (string) $spec[ $key ]['description'] ) );
+	}
+
+	/**
 	 * Render an upgrade-affordance chip for tier-gated controls.
 	 *
 	 * @param array $status Output of Mode_Manager::feature_status().
@@ -646,7 +676,7 @@ class ReportedIP_Hive_Admin_Settings {
 		?>
 		<div class="rip-alert rip-alert--info rip-pro-upsell">
 			<p class="rip-pro-upsell__title">
-				<?php esc_html_e( 'Available with the Professional plan and higher', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'Your storefront keeps its own look during 2FA. Professional and higher.', 'reportedip-hive' ); ?>
 			</p>
 			<ul class="rip-pro-upsell__features">
 				<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
@@ -790,7 +820,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 			</div>
 			<div class="rip-card__body">
-				<p><?php esc_html_e( 'Upgrade to Professional to route 2FA codes and security alerts through the reportedip.com relay — verified SPF/DKIM/DMARC, anti-fraud routing, no spam folder.', 'reportedip-hive' ); ?></p>
+				<p><?php esc_html_e( 'Professional routes 2FA codes and security alerts through our EU relay, with verified SPF, DKIM and DMARC, so they stop landing in the spam folder.', 'reportedip-hive' ); ?></p>
 				<ul class="rip-promo-card__benefits">
 					<li><?php esc_html_e( '500 mails / month included (Business: 2,500)', 'reportedip-hive' ); ?></li>
 					<li><?php esc_html_e( '25 SMS / month included (Business: 75 + add-on bundles)', 'reportedip-hive' ); ?></li>
@@ -830,7 +860,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$rate_label     = $has_window
 			? esc_html__( 'Success rate (recent)', 'reportedip-hive' )
 			: esc_html__( 'Success rate', 'reportedip-hive' );
-		$is_degraded    = $has_window && $success < 80;
+		$is_degraded    = ReportedIP_Hive_API::window_is_degraded( $stats_raw );
 		$health_variant = $is_degraded ? 'danger' : 'success';
 		$health_label   = $is_degraded
 			? esc_html__( 'Degraded', 'reportedip-hive' )
@@ -1724,11 +1754,13 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render inline notices within plugin pages (replaces admin_notices)
+	 * Render inline notices within plugin pages (replaces admin_notices).
+	 *
+	 * `suppress_foreign_notices_on_plugin_pages()` removes every `admin_notices`
+	 * callback on Hive screens, so this is the only funnel through which an
+	 * in-page banner reaches the operator.
 	 */
 	public static function render_inline_notices() {
-		global $wpdb;
-
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		if ( $mode_manager->is_community_layer_degraded() ) {
 			$upgrade_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
@@ -1751,95 +1783,58 @@ class ReportedIP_Hive_Admin_Settings {
 
 		self::maybe_render_domain_limit_notice();
 
-		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe table name composed from Schema::table() with a hardcoded suffix.
-		$table_exists = $wpdb->get_var( "SHOW TABLES LIKE '$table'" ) === $table;
-
-		if ( ! $table_exists ) {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
 			return;
 		}
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from Schema::table() with a hardcoded suffix; safe.
-		$counts = $wpdb->get_row(
-			"SELECT
-				SUM( CASE WHEN status = 'failed' THEN 1 ELSE 0 END ) AS failed_count,
-				SUM( CASE WHEN status = 'pending' THEN 1 ELSE 0 END ) AS pending_count
-			FROM $table"
-		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
-		$failed_count  = (int) ( $counts->failed_count ?? 0 );
-		$pending_count = (int) ( $counts->pending_count ?? 0 );
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( $screen && false !== strpos( (string) $screen->id, 'reportedip-hive-debug' ) ) {
+			return;
+		}
 
-		if ( $failed_count > 0 ) {
-			$queue_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
-			$body      = sprintf(
+		$issues = array();
+		foreach ( ReportedIP_Hive_Readiness::open_issues() as $issue ) {
+			if ( ReportedIP_Hive_Readiness::SEV_ADVISORY !== (string) $issue['severity'] ) {
+				$issues[] = $issue;
+			}
+		}
+		if ( empty( $issues ) ) {
+			return;
+		}
+
+		$has_critical = false;
+		$lines        = array();
+		foreach ( $issues as $issue ) {
+			$has_critical = $has_critical || ReportedIP_Hive_Readiness::SEV_CRITICAL === (string) $issue['severity'];
+			$lines[]      = sprintf(
 				'<strong>%1$s</strong> %2$s',
-				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
-				sprintf(
-					/* translators: %1$d: number of failed reports, %2$s: link to queue page */
-					esc_html__( '%1$d API reports failed. %2$s', 'reportedip-hive' ),
-					intval( $failed_count ),
-					'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'View queue', 'reportedip-hive' ) . '</a>'
-				)
+				esc_html( $issue['label'] ),
+				esc_html( $issue['message'] )
 			);
-			ReportedIP_Hive_Admin_Notice::render(
-				array(
-					'variant'           => 'error',
-					'body'              => $body,
-					'secondary_actions' => array(
-						array(
-							'type'    => 'button',
-							'label'   => __( 'Retry all', 'reportedip-hive' ),
-							'class'   => 'rip-retry-all-failed',
-							'variant' => 'secondary',
-						),
+		}
+
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'        => $has_critical ? 'error' : 'warning',
+				'extra_classes'  => 'rip-readiness-notice',
+				'title'          => sprintf(
+					/* translators: %d: number of open readiness issues. */
+					_n(
+						'%d readiness issue needs attention',
+						'%d readiness issues need attention',
+						count( $issues ),
+						'reportedip-hive'
 					),
-				)
-			);
-		}
-
-		$warning_threshold  = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 );
-		$critical_threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 );
-
-		if ( $pending_count >= $critical_threshold ) {
-			$queue_url     = self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
-			$community_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
-			$body          = sprintf(
-				'<strong>%1$s</strong> %2$s',
-				esc_html__( 'Queue Critical:', 'reportedip-hive' ),
-				sprintf(
-					/* translators: 1: pending count, 2: upgrade link, 3: queue link */
-					esc_html__( '%1$d reports pending processing. %2$s or %3$s.', 'reportedip-hive' ),
-					intval( $pending_count ),
-					'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>',
-					'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'Manage queue', 'reportedip-hive' ) . '</a>'
-				)
-			);
-			ReportedIP_Hive_Admin_Notice::render(
-				array(
-					'variant' => 'error',
-					'body'    => $body,
-				)
-			);
-		} elseif ( $pending_count >= $warning_threshold ) {
-			$community_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
-			$body          = sprintf(
-				'<strong>%1$s</strong> %2$s',
-				esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
-				sprintf(
-					/* translators: 1: pending count, 2: upgrade link */
-					esc_html__( '%1$d reports pending processing. %2$s for higher limits.', 'reportedip-hive' ),
-					intval( $pending_count ),
-					'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>'
-				)
-			);
-			ReportedIP_Hive_Admin_Notice::render(
-				array(
-					'variant' => 'warning',
-					'body'    => $body,
-				)
-			);
-		}
+					count( $issues )
+				),
+				'list_items'     => $lines,
+				'primary_action' => array(
+					'label'   => __( 'Open System Status', 'reportedip-hive' ),
+					'url'     => ReportedIP_Hive_Score::url( 'reportedip-hive-debug' ) . '#rip-readiness',
+					'variant' => 'secondary',
+				),
+			)
+		);
 	}
 
 	/**
@@ -2409,6 +2404,37 @@ class ReportedIP_Hive_Admin_Settings {
 					</fieldset>
 				</div>
 
+				<?php
+				$policy_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( '2fa_policies' );
+				$policy_matrix = ReportedIP_Hive_Two_Factor_Policies::matrix();
+				$policy_texts  = ReportedIP_Hive_Two_Factor_Policies::trigger_texts();
+				?>
+				<div class="rip-settings-section">
+					<h2 class="rip-settings-section__title">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+						<?php esc_html_e( 'Adaptive 2FA triggers (network policy)', 'reportedip-hive' ); ?>
+						&nbsp;<?php self::render_tier_marker( $policy_status ); ?>
+					</h2>
+					<p class="rip-settings-section__desc">
+						<?php esc_html_e( 'The Super Admin decides which roles are asked for their second factor again when something about a sign-in changes. The rules apply on this site too and cannot be overridden here.', 'reportedip-hive' ); ?>
+					</p>
+
+					<ul class="rip-network-state">
+						<?php foreach ( ReportedIP_Hive_Two_Factor_Policies::TRIGGERS as $policy_trigger ) : ?>
+							<li>
+								<?php echo esc_html( $policy_texts[ $policy_trigger ]['label'] ); ?>:
+								<?php if ( empty( $policy_matrix[ $policy_trigger ] ) ) : ?>
+									<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'off', 'reportedip-hive' ); ?></span>
+								<?php else : ?>
+									<?php foreach ( $policy_matrix[ $policy_trigger ] as $policy_role ) : ?>
+										<span class="rip-badge rip-badge--info"><?php echo esc_html( $all_roles[ $policy_role ] ?? $policy_role ); ?></span>
+									<?php endforeach; ?>
+								<?php endif; ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+
 				<p class="rip-actions">
 					<?php submit_button( __( 'Save site overrides', 'reportedip-hive' ), 'primary rip-button rip-button--primary', 'submit', false ); ?>
 				</p>
@@ -2606,24 +2632,129 @@ class ReportedIP_Hive_Admin_Settings {
 
 
 	/**
-	 * Sanitize callback resolver: registry-managed keys use the canonical
-	 * registry callback, everything else keeps its legacy callback until it
-	 * migrates into the registry.
+	 * Registry-backed option keys, mapped to the Settings-API group whose
+	 * form saves them and the WordPress type token `register_setting()`
+	 * exposes. Validation and sanitisation come from the registry, so the
+	 * group is the only thing this class still has to know.
 	 *
-	 * @param string   $key      Option key.
-	 * @param callable $fallback Legacy sanitize callback.
-	 * @return callable
-	 * @since  2.1.47
+	 * @var array<string, array{0: string, 1: string}>
+	 * @since 2.1.52
 	 */
-	private function registry_callback_or( $key, $fallback ) {
-		$spec = ReportedIP_Hive_Settings_Registry::spec();
-		return isset( $spec[ $key ] ) ? ReportedIP_Hive_Settings_Registry::settings_api_callback( $key ) : $fallback;
-	}
+	private const REGISTRY_BACKED_SETTINGS = array(
+		'reportedip_hive_failed_login_threshold'          => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_failed_login_timeframe'          => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_comment_spam_threshold'          => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_xmlrpc_threshold'                => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_comment_spam_timeframe'          => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_xmlrpc_timeframe'                => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_monitor_failed_logins'           => array( 'reportedip_hive_protection_detection', 'boolean' ),
+		'reportedip_hive_monitor_comments'                => array( 'reportedip_hive_protection_detection', 'boolean' ),
+		'reportedip_hive_monitor_xmlrpc'                  => array( 'reportedip_hive_protection_detection', 'boolean' ),
+		'reportedip_hive_auto_block'                      => array( 'reportedip_hive_protection_blocking', 'boolean' ),
+		'reportedip_hive_block_duration'                  => array( 'reportedip_hive_protection_blocking', 'integer' ),
+		'reportedip_hive_block_threshold'                 => array( 'reportedip_hive_protection_blocking', 'integer' ),
+		'reportedip_hive_notification_cooldown_minutes'   => array( 'reportedip_hive_protection_notifications', 'integer' ),
+		'reportedip_hive_notify_event_cap_minutes'        => array( 'reportedip_hive_protection_notifications', 'integer' ),
+		'reportedip_hive_notify_admin'                    => array( 'reportedip_hive_protection_notifications', 'boolean' ),
+		'reportedip_hive_2fa_notify_new_device'           => array( 'reportedip_hive_protection_notifications', 'boolean' ),
+		'reportedip_hive_notify_recipients'               => array( 'reportedip_hive_protection_notifications', 'string' ),
+		'reportedip_hive_notify_from_name'                => array( 'reportedip_hive_protection_notifications', 'string' ),
+		'reportedip_hive_notify_from_email'               => array( 'reportedip_hive_protection_notifications', 'string' ),
+		'reportedip_hive_notify_sync_to_api'              => array( 'reportedip_hive_protection_notifications', 'boolean' ),
+		'reportedip_hive_report_only_mode'                => array( 'reportedip_hive_protection_blocking', 'boolean' ),
+		'reportedip_hive_block_escalation_enabled'        => array( 'reportedip_hive_protection_blocking', 'boolean' ),
+		'reportedip_hive_block_ladder_minutes'            => array( 'reportedip_hive_protection_blocking', 'string' ),
+		'reportedip_hive_block_ladder_reset_days'         => array( 'reportedip_hive_protection_blocking', 'integer' ),
+		'reportedip_hive_hide_login_enabled'              => array( 'reportedip_hive_hide_login', 'boolean' ),
+		'reportedip_hive_hide_login_slug'                 => array( 'reportedip_hive_hide_login', 'string' ),
+		'reportedip_hive_hide_login_response_mode'        => array( 'reportedip_hive_hide_login', 'string' ),
+		'reportedip_hive_hide_login_token_in_urls'        => array( 'reportedip_hive_hide_login', 'boolean' ),
+		'reportedip_hive_monitor_hide_login_probe'        => array( 'reportedip_hive_hide_login', 'boolean' ),
+		'reportedip_hive_hide_login_probe_threshold'      => array( 'reportedip_hive_hide_login', 'integer' ),
+		'reportedip_hive_hide_login_probe_timeframe'      => array( 'reportedip_hive_hide_login', 'integer' ),
+		'reportedip_hive_disable_xmlrpc_multicall'        => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_rest_access_mode'                => array( 'reportedip_hive_attack_surface', 'string' ),
+		'reportedip_hive_rest_allowed_namespaces'         => array( 'reportedip_hive_attack_surface', 'string' ),
+		'reportedip_hive_rest_allowed_roles'              => array( 'reportedip_hive_attack_surface', 'string' ),
+		'reportedip_hive_disable_xmlrpc'                  => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_disable_feeds'                   => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_block_admin_guests'              => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_block_uploads_php'               => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_hide_software_info'              => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_audit_enabled'                   => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_audit_retention_days'            => array( 'reportedip_hive_advanced_privacy', 'integer' ),
+		'reportedip_hive_audit_anonymize_ip'              => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_audit_new_ip_alert'              => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_log_level'                       => array( 'reportedip_hive_advanced_privacy', 'string' ),
+		'reportedip_hive_detailed_logging'                => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_log_user_agents'                 => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_minimal_logging'                 => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_log_referer_domains'             => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_data_retention_days'             => array( 'reportedip_hive_advanced_privacy', 'integer' ),
+		'reportedip_hive_auto_anonymize_days'             => array( 'reportedip_hive_advanced_privacy', 'integer' ),
+		'reportedip_hive_queue_max_age_days'              => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_queue_warning_threshold'         => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_queue_critical_threshold'        => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_processing_timeout_minutes'      => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_enable_caching'                  => array( 'reportedip_hive_advanced_performance', 'boolean' ),
+		'reportedip_hive_cache_duration'                  => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_negative_cache_duration'         => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_max_api_calls_per_hour'          => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_trusted_ip_header'               => array( 'reportedip_hive_api', 'string' ),
+		'reportedip_hive_block_tor'                       => array( 'reportedip_hive_protection_blocking', 'boolean' ),
+		'reportedip_hive_blocked_page_contact_url'        => array( 'reportedip_hive_protection_blocking', 'string' ),
+		'reportedip_hive_report_cooldown_hours'           => array( 'reportedip_hive_protection_blocking', 'integer' ),
+		'reportedip_hive_auto_footer_enabled'             => array( 'reportedip_hive_promote', 'boolean' ),
+		'reportedip_hive_auto_footer_variant'             => array( 'reportedip_hive_promote', 'string' ),
+		'reportedip_hive_auto_footer_align'               => array( 'reportedip_hive_promote', 'string' ),
+		'reportedip_hive_hardening_realtime_detection'    => array( 'reportedip_hive_hardening_mode', 'boolean' ),
+		'reportedip_hive_hardening_duration_minutes'      => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_login_threshold'       => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_login_timeframe'       => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_block_threshold'       => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_detect_window_minutes' => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_detect_min_ips'        => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_detect_min_attempts'   => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_decoy_pathblock_enabled'         => array( 'reportedip_hive_protection_detection', 'boolean' ),
+	);
+
+	/**
+	 * Defaults that `register_setting()` must expose for the keys above
+	 * that carry one.
+	 *
+	 * @var array<string, scalar>
+	 * @since 2.1.52
+	 */
+	private const REGISTRY_BACKED_DEFAULTS = array(
+		'reportedip_hive_auto_footer_enabled'             => false,
+		'reportedip_hive_auto_footer_variant'             => 'badge',
+		'reportedip_hive_auto_footer_align'               => 'center',
+		'reportedip_hive_hardening_realtime_detection'    => true,
+		'reportedip_hive_hardening_duration_minutes'      => 60,
+		'reportedip_hive_hardening_login_threshold'       => 2,
+		'reportedip_hive_hardening_login_timeframe'       => 5,
+		'reportedip_hive_hardening_block_threshold'       => 60,
+		'reportedip_hive_hardening_detect_window_minutes' => 10,
+		'reportedip_hive_hardening_detect_min_ips'        => 10,
+		'reportedip_hive_hardening_detect_min_attempts'   => 50,
+		'reportedip_hive_decoy_pathblock_enabled'         => true,
+	);
 
 	/**
 	 * Register settings
 	 */
 	public function register_settings() {
+		foreach ( self::REGISTRY_BACKED_SETTINGS as $option_key => $registration ) {
+			$args = array(
+				'type'              => $registration[1],
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $option_key ),
+			);
+			if ( array_key_exists( $option_key, self::REGISTRY_BACKED_DEFAULTS ) ) {
+				$args['default'] = self::REGISTRY_BACKED_DEFAULTS[ $option_key ];
+			}
+			register_setting( $registration[0], $option_key, $args );
+		}
+
 		register_setting(
 			'reportedip_hive_general',
 			'reportedip_hive_operation_mode',
@@ -2660,79 +2791,6 @@ class ReportedIP_Hive_Admin_Settings {
 			)
 		);
 
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_failed_login_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_failed_login_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_failed_login_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_failed_login_timeframe' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_comment_spam_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_comment_spam_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_xmlrpc_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_xmlrpc_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_comment_spam_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_comment_spam_timeframe' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_xmlrpc_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_xmlrpc_timeframe' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_monitor_failed_logins',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_failed_logins' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_monitor_comments',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_comments' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_monitor_xmlrpc',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_xmlrpc' ),
-			)
-		);
-
 		foreach ( array(
 			'reportedip_hive_password_spray_threshold',
 			'reportedip_hive_app_password_threshold',
@@ -2746,7 +2804,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$threshold_option,
 				array(
 					'type'              => 'integer',
-					'sanitize_callback' => $this->registry_callback_or( $threshold_option, array( $this, 'sanitize_failed_login_threshold' ) ),
+					'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $threshold_option ),
 				)
 			);
 		}
@@ -2766,7 +2824,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$integer_option,
 				array(
 					'type'              => 'integer',
-					'sanitize_callback' => $this->registry_callback_or( $integer_option, array( $this, 'sanitize_timeframe' ) ),
+					'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $integer_option ),
 				)
 			);
 		}
@@ -2791,59 +2849,11 @@ class ReportedIP_Hive_Admin_Settings {
 				$boolean_option,
 				array(
 					'type'              => 'boolean',
-					'sanitize_callback' => $this->registry_callback_or( $boolean_option, array( $this, 'sanitize_boolean' ) ),
+					'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $boolean_option ),
 				)
 			);
 		}
 
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_auto_block',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_block' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_duration',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_duration' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_admin',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_admin' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_2fa_notify_new_device',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_recipients',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_recipients' ),
-			)
-		);
 		register_setting(
 			'reportedip_hive_protection_notifications',
 			'reportedip_hive_promo_enabled',
@@ -2869,222 +2879,11 @@ class ReportedIP_Hive_Admin_Settings {
 			)
 		);
 		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_from_name',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_from_name' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_from_email',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_from_email' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_sync_to_api',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_report_only_mode',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_report_only_mode' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_escalation_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_escalation_enabled' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_ladder_minutes',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_ladder_minutes' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_ladder_reset_days',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_ladder_reset_days' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_enabled' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_slug',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_slug' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_response_mode',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_response_mode' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_token_in_urls',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_monitor_hide_login_probe',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_hide_login_probe' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_probe_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => 'absint',
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_probe_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => 'absint',
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_log_level',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_log_level' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_detailed_logging',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_log_user_agents',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_log_user_agents' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_minimal_logging',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_minimal_logging' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_log_referer_domains',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_data_retention_days',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_data_retention_days' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_auto_anonymize_days',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_anonymize_days' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_enable_caching',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-			)
-		);
-		register_setting(
 			'reportedip_hive_advanced_performance',
 			'reportedip_hive_delete_data_on_uninstall',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_cache_duration',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_cache_duration' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_negative_cache_duration',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_negative_cache_duration' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_max_api_calls_per_hour',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_max_api_calls' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_api',
-			'reportedip_hive_trusted_ip_header',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_trusted_ip_header' ),
 			)
 		);
 		register_setting(
@@ -3096,63 +2895,6 @@ class ReportedIP_Hive_Admin_Settings {
 			)
 		);
 		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_tor',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_tor' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_blocked_page_contact_url',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_blocked_page_contact_url' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_report_cooldown_hours',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => 'absint',
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_promote',
-			'reportedip_hive_auto_footer_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-				'default'           => false,
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_promote',
-			'reportedip_hive_auto_footer_variant',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_auto_footer_variant' ),
-				'default'           => 'badge',
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_promote',
-			'reportedip_hive_auto_footer_align',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_auto_footer_align' ),
-				'default'           => 'center',
-			)
-		);
-
-		register_setting(
 			'reportedip_hive_hardening_mode',
 			'reportedip_hive_hardening_enabled',
 			array(
@@ -3161,190 +2903,8 @@ class ReportedIP_Hive_Admin_Settings {
 				'default'           => false,
 			)
 		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_realtime_detection',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-				'default'           => true,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_duration_minutes',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_duration' ),
-				'default'           => 60,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_login_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_login_threshold' ),
-				'default'           => 2,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_login_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_login_timeframe' ),
-				'default'           => 5,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_block_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_block_threshold' ),
-				'default'           => 60,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_detect_window_minutes',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_detect_window' ),
-				'default'           => 10,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_detect_min_ips',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_detect_min_ips' ),
-				'default'           => 5,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_detect_min_attempts',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_hardening_detect_min_attempts' ),
-				'default'           => 20,
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_decoy_pathblock_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_decoy_pathblock_enabled' ),
-				'default'           => true,
-			)
-		);
 	}
 
-	/**
-	 * Sanitiser: hardening-mode duration in minutes (5–360).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.8
-	 */
-	public function sanitize_hardening_duration( $value ) {
-		$value = absint( $value );
-		return max( 5, min( 360, $value > 0 ? $value : 60 ) );
-	}
-
-	/**
-	 * Sanitiser: hardening login-failure threshold (1–10).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.8
-	 */
-	public function sanitize_hardening_login_threshold( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 10, $value > 0 ? $value : 2 ) );
-	}
-
-	/**
-	 * Sanitiser: hardening login-failure timeframe in minutes (1–60).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.8
-	 */
-	public function sanitize_hardening_login_timeframe( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 60, $value > 0 ? $value : 5 ) );
-	}
-
-	/**
-	 * Sanitiser: hardening reputation block threshold percentage.
-	 *
-	 * Floored at `ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD` — even under
-	 * hardening the reputation block never acts below that confidence.
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.8
-	 */
-	public function sanitize_hardening_block_threshold( $value ) {
-		$value = absint( $value );
-		return max( ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD, min( 100, $value > 0 ? $value : 60 ) );
-	}
-
-	/**
-	 * Sanitiser: distributed-detection window in minutes (1–120).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.29
-	 */
-	public function sanitize_hardening_detect_window( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 120, $value > 0 ? $value : 10 ) );
-	}
-
-	/**
-	 * Sanitiser: distributed-detection minimum distinct IPs (2–100).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.29
-	 */
-	public function sanitize_hardening_detect_min_ips( $value ) {
-		$value = absint( $value );
-		return max( 2, min( 100, $value > 0 ? $value : 5 ) );
-	}
-
-	/**
-	 * Sanitiser: distributed-detection minimum total attempts (3–1000).
-	 *
-	 * @param mixed $value
-	 * @return int
-	 * @since  2.0.29
-	 */
-	public function sanitize_hardening_detect_min_attempts( $value ) {
-		$value = absint( $value );
-		return max( 3, min( 1000, $value > 0 ? $value : 20 ) );
-	}
-
-	/**
-	 * Sanitiser: auto-footer variant must be one of the supported values.
-	 *
-	 * Delegates to the canonical allowlist on `ReportedIP_Hive_Frontend_Shortcodes`
-	 * so the wizard, the Promote tab, and Settings API all share one source of truth.
-	 *
-	 * @param mixed $value Raw value from $_POST.
-	 * @return string Sanitised variant key (`badge` or `shield`).
-	 * @since  1.3.0
-	 */
-	public function sanitize_auto_footer_variant( $value ) {
-		return ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( $value );
-	}
 
 	/**
 	 * Sanitiser: auto-footer alignment must be left, center, or right.
@@ -3452,141 +3012,24 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Sanitize failed login threshold (1-100)
-	 */
-	public function sanitize_failed_login_threshold( $value ) {
-		$value  = absint( $value );
-		$min    = 1;
-		$max    = 100;
-		$result = max( $min, min( $max, $value ) );
-
-		if ( $value !== $result ) {
-			add_settings_error(
-				'reportedip_hive_failed_login_threshold',
-				'value_adjusted',
-				sprintf(
-					/* translators: 1: adjusted threshold value, 2: minimum allowed value, 3: maximum allowed value */
-					__( 'Failed login threshold was adjusted to %1$d (must be between %2$d and %3$d).', 'reportedip-hive' ),
-					$result,
-					$min,
-					$max
-				),
-				'warning'
-			);
-		}
-		return $result;
-	}
-
-	/**
-	 * Sanitize timeframe (1-1440 minutes = 24 hours)
-	 */
-	public function sanitize_timeframe( $value ) {
-		$value  = absint( $value );
-		$min    = 1;
-		$max    = 1440;
-		$result = max( $min, min( $max, $value ) );
-
-		if ( $value !== $result ) {
-			add_settings_error(
-				'reportedip_hive_timeframe',
-				'value_adjusted',
-				sprintf(
-					/* translators: 1: adjusted value in minutes, 2: minimum allowed value, 3: maximum allowed value */
-					__( 'Time window was adjusted to %1$d minutes (must be between %2$d and %3$d).', 'reportedip-hive' ),
-					$result,
-					$min,
-					$max
-				),
-				'warning'
-			);
-		}
-		return $result;
-	}
-
-	/**
-	 * Sanitize cache duration (1-168 hours = 1 week)
-	 */
-	public function sanitize_cache_duration( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 168, $value ) );
-	}
-
-	/**
-	 * Sanitize negative cache duration (1-24 hours)
-	 */
-	public function sanitize_negative_cache_duration( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 24, $value ) );
-	}
-
-	/**
-	 * Sanitize max API calls per hour (0 = auto/tier-bound, otherwise 10–100000).
+	 * Sanitize the trusted-proxy source ranges through the registry and tell
+	 * the operator when entries had to be dropped.
 	 *
-	 * @param mixed $value Raw input.
-	 * @return int
-	 */
-	public function sanitize_max_api_calls( $value ) {
-		$value = absint( $value );
-		if ( 0 === $value ) {
-			return 0;
-		}
-		return max( 10, min( 100000, $value ) );
-	}
-
-	/**
-	 * Sanitize trusted IP header - only allow known safe values
-	 */
-	public function sanitize_trusted_ip_header( $value ) {
-		$allowed = array( '', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP' );
-		$value   = sanitize_text_field( $value ?? '' );
-		$value   = in_array( $value, $allowed, true ) ? $value : '';
-
-		/*
-		 * A trusted header with no trusted sources is honoured from any peer,
-		 * which lets anyone reaching the origin directly claim a whitelisted
-		 * address or shed a block by rotating the header. It stays permitted
-		 * for backward compatibility, but the operator has to be told.
-		 */
-		if ( '' !== $value ) {
-			$ranges = ReportedIP_Hive_Proxy_Trust::parse_ranges(
-				(string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_proxy_ranges', '' )
-			);
-
-			if ( empty( $ranges ) ) {
-				add_settings_error(
-					'reportedip_hive_trusted_ip_header',
-					'trusted_header_without_sources',
-					__( 'The client-IP header is currently accepted from any source. Anyone able to reach this site directly can forge their IP address. Add the CIDR ranges of your proxy or CDN under Trusted proxy sources.', 'reportedip-hive' ),
-					'warning'
-				);
-			}
-		}
-
-		return $value;
-	}
-
-	/**
-	 * Sanitize the trusted-proxy source ranges: keep only valid IP/CIDR lines
-	 * and surface a settings error when entries had to be dropped.
-	 *
-	 * The stored value is the cleaned newline-joined list; parsing at read
-	 * time happens in {@see ReportedIP_Hive_Proxy_Trust::parse_ranges()}.
+	 * The registry callback does the sanitising, so this form saves exactly
+	 * what MainWP, the cloud fleet and an import save. The wrapper exists only
+	 * for the notice: dropping a line someone typed without saying so is how a
+	 * proxy range silently fails to take effect.
 	 *
 	 * @param mixed $value Raw textarea submission.
 	 * @return string Cleaned newline-separated range list.
 	 * @since  2.1.41
 	 */
 	public function sanitize_trusted_proxy_ranges( $value ) {
-		$raw   = sanitize_textarea_field( (string) ( $value ?? '' ) );
-		$valid = ReportedIP_Hive_Proxy_Trust::parse_ranges( $raw );
-
-		$submitted = 0;
-		foreach ( preg_split( '/\r\n|\r|\n/', $raw ) as $line ) {
-			$line = trim( $line );
-			if ( '' !== $line && 0 !== strpos( $line, '#' ) ) {
-				$submitted++;
-			}
-		}
+		$raw       = sanitize_textarea_field( (string) ( $value ?? '' ) );
+		$registry  = ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_trusted_proxy_ranges' );
+		$stored    = (string) $registry( $raw );
+		$valid     = ReportedIP_Hive_Proxy_Trust::parse_ranges( $stored );
+		$submitted = ReportedIP_Hive_Proxy_Trust::count_submitted_ranges( $raw );
 
 		if ( $submitted > count( $valid ) ) {
 			add_settings_error(
@@ -3601,7 +3044,7 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 		}
 
-		return implode( "\n", $valid );
+		return $stored;
 	}
 
 	/**
@@ -4941,6 +4384,10 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 				<p class="rip-settings-section__desc"><?php esc_html_e( 'XML-RPC is an older WordPress remote-control interface that bots often hammer to brute-force passwords. Most modern sites do not actively use it.', 'reportedip-hive' ); ?></p>
 
+				<?php if ( class_exists( 'ReportedIP_Hive_Attack_Surface' ) && ReportedIP_Hive_Attack_Surface::switch_on( ReportedIP_Hive_Attack_Surface::OPT_XMLRPC_OFF ) ) : ?>
+					<div class="rip-alert rip-alert--info"><?php echo esc_html( ReportedIP_Hive_Attack_Surface::xmlrpc_off_notice() ); ?></div>
+				<?php endif; ?>
+
 				<div class="rip-form-group">
 					<label class="rip-toggle">
 						<input type="checkbox" name="reportedip_hive_monitor_xmlrpc" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_xmlrpc', true ) ); ?> />
@@ -4989,10 +4436,12 @@ class ReportedIP_Hive_Admin_Settings {
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_app_password_threshold"><?php esc_html_e( 'How many failed auths?', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_app_password_threshold" name="reportedip_hive_app_password_threshold" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_threshold', 5 ) ); ?>" min="1" max="100" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_app_password_threshold' ); ?>
 					</div>
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_app_password_timeframe"><?php esc_html_e( 'Within how many minutes?', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_app_password_timeframe" name="reportedip_hive_app_password_timeframe" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_timeframe', 15 ) ); ?>" min="1" max="1440" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_app_password_timeframe' ); ?>
 					</div>
 				</div>
 			</div>
@@ -5010,6 +4459,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Watch REST API requests', 'reportedip-hive' ); ?></span>
 					</label>
+					<?php self::render_field_help( 'reportedip_hive_monitor_rest_api' ); ?>
 				</div>
 
 				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
@@ -5191,16 +4641,19 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Apply to all users (default: only 2FA-enforced roles)', 'reportedip-hive' ); ?></span>
 					</label>
+					<?php self::render_field_help( 'reportedip_hive_password_policy_all_users' ); ?>
 				</div>
 
 				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_password_min_length"><?php esc_html_e( 'Minimum length', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_password_min_length" name="reportedip_hive_password_min_length" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_min_length', 12 ) ); ?>" min="8" max="128" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_password_min_length' ); ?>
 					</div>
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_password_min_classes"><?php esc_html_e( 'Required character classes (lower / upper / digit / symbol)', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_password_min_classes" name="reportedip_hive_password_min_classes" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_min_classes', 3 ) ); ?>" min="1" max="4" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_password_min_classes' ); ?>
 					</div>
 				</div>
 			</div>
@@ -5772,6 +5225,19 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 			</div>
 
+			<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_notification_cooldown_minutes"><?php esc_html_e( 'Cooldown per address and event (minutes)', 'reportedip-hive' ); ?></label>
+					<input type="number" id="reportedip_hive_notification_cooldown_minutes" name="reportedip_hive_notification_cooldown_minutes" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notification_cooldown_minutes', 60 ) ); ?>" min="1" max="1440" class="rip-input" />
+					<?php self::render_field_help( 'reportedip_hive_notification_cooldown_minutes' ); ?>
+				</div>
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_notify_event_cap_minutes"><?php esc_html_e( 'Cap per event type (minutes)', 'reportedip-hive' ); ?></label>
+					<input type="number" id="reportedip_hive_notify_event_cap_minutes" name="reportedip_hive_notify_event_cap_minutes" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_notify_event_cap_minutes', 15 ) ); ?>" min="1" max="1440" class="rip-input" />
+					<?php self::render_field_help( 'reportedip_hive_notify_event_cap_minutes' ); ?>
+				</div>
+			</div>
+
 			<?php if ( $is_community_mode ) : ?>
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
@@ -5980,6 +5446,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<option value="warning" <?php selected( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_level', 'info' ), 'warning' ); ?>><?php esc_html_e( 'Warning — only important events', 'reportedip-hive' ); ?></option>
 						<option value="error" <?php selected( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_level', 'info' ), 'error' ); ?>><?php esc_html_e( 'Error — critical events only', 'reportedip-hive' ); ?></option>
 					</select>
+					<?php self::render_field_help( 'reportedip_hive_log_level' ); ?>
 				</div>
 
 				<script>
@@ -6007,6 +5474,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Log browser user-agent strings (truncated to 50 chars to limit fingerprinting)', 'reportedip-hive' ); ?></span>
 					</label>
+					<?php self::render_field_help( 'reportedip_hive_log_user_agents' ); ?>
 				</div>
 				<div class="rip-form-group">
 					<label class="rip-toggle">
@@ -6037,6 +5505,51 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 				</div>
 				<p class="rip-help-text"><?php esc_html_e( 'The "Delete plugin data on uninstall" toggle moved to Performance & Tools. Maintenance buttons (cleanup / anonymise / export) live on the System Status page.', 'reportedip-hive' ); ?></p>
+			</div>
+
+			<input type="hidden" name="reportedip_hive_audit_enabled" value="0" />
+			<input type="hidden" name="reportedip_hive_audit_anonymize_ip" value="0" />
+			<input type="hidden" name="reportedip_hive_audit_new_ip_alert" value="0" />
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+					<?php esc_html_e( 'Audit trail', 'reportedip-hive' ); ?>
+					&nbsp;<?php self::render_tier_marker( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' ) ); ?>
+				</h2>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_audit_enabled" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_enabled', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Record the account lifecycle', 'reportedip-hive' ); ?></span>
+					</label>
+					<?php self::render_field_help( 'reportedip_hive_audit_enabled' ); ?>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_audit_retention_days"><?php esc_html_e( 'Audit retention (days)', 'reportedip-hive' ); ?></label>
+					<input type="number" id="reportedip_hive_audit_retention_days" name="reportedip_hive_audit_retention_days" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_retention_days', 30 ) ); ?>" min="1" max="3650" class="rip-input" />
+					<?php self::render_field_help( 'reportedip_hive_audit_retention_days' ); ?>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_audit_anonymize_ip" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_anonymize_ip', false ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Store only the network part of the address', 'reportedip-hive' ); ?></span>
+					</label>
+					<?php self::render_field_help( 'reportedip_hive_audit_anonymize_ip' ); ?>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox" name="reportedip_hive_audit_new_ip_alert" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_new_ip_alert', false ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Mail an alert on a sign-in from a new address', 'reportedip-hive' ); ?></span>
+					</label>
+					<?php self::render_field_help( 'reportedip_hive_audit_new_ip_alert' ); ?>
+				</div>
 			</div>
 
 			<div class="rip-alert rip-alert--info">
@@ -6110,6 +5623,93 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Render the readiness issue register on the System Status page.
+	 *
+	 * One row per open issue: severity badge, label and remediation, how long
+	 * the condition has been standing, and the deep links to the setting that
+	 * fixes it, the documentation and — unless it is critical — the seven-day
+	 * site-wide dismissal.
+	 *
+	 * @param array<int,array<string,mixed>> $issues Output of {@see ReportedIP_Hive_Readiness::open_issues()}.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private function render_readiness_section( array $issues ) {
+		$now           = time();
+		$severity_meta = array(
+			ReportedIP_Hive_Readiness::SEV_CRITICAL => array( 'danger', __( 'Critical', 'reportedip-hive' ) ),
+			ReportedIP_Hive_Readiness::SEV_WARNING  => array( 'warning', __( 'Warning', 'reportedip-hive' ) ),
+			ReportedIP_Hive_Readiness::SEV_ADVISORY => array( 'info', __( 'Advisory', 'reportedip-hive' ) ),
+		);
+		?>
+		<div class="rip-settings-section" id="rip-readiness">
+			<h2 class="rip-settings-section__title">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+				<?php esc_html_e( 'Readiness', 'reportedip-hive' ); ?>
+			</h2>
+			<p class="rip-settings-section__desc">
+				<?php esc_html_e( 'Operational faults that stop a protection layer from doing its job. Warnings can be hidden for seven days; critical entries stay until the cause is gone, and every entry disappears on its own once the condition clears.', 'reportedip-hive' ); ?>
+			</p>
+
+			<div class="rip-card">
+				<div class="rip-card__body">
+					<?php if ( empty( $issues ) ) : ?>
+						<p class="rip-help-text"><?php esc_html_e( 'No open readiness issues.', 'reportedip-hive' ); ?></p>
+					<?php else : ?>
+						<table class="rip-table">
+							<thead>
+								<tr>
+									<th><?php esc_html_e( 'Severity', 'reportedip-hive' ); ?></th>
+									<th><?php esc_html_e( 'Issue', 'reportedip-hive' ); ?></th>
+									<th><?php esc_html_e( 'Since', 'reportedip-hive' ); ?></th>
+									<th><?php esc_html_e( 'Actions', 'reportedip-hive' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php
+								foreach ( $issues as $issue ) :
+									$severity = (string) $issue['severity'];
+									$meta     = $severity_meta[ $severity ] ?? $severity_meta[ ReportedIP_Hive_Readiness::SEV_ADVISORY ];
+									$since    = (int) $issue['first_seen'];
+									?>
+									<tr>
+										<td><span class="rip-badge rip-badge--<?php echo esc_attr( $meta[0] ); ?>"><?php echo esc_html( $meta[1] ); ?></span></td>
+										<td>
+											<strong><?php echo esc_html( $issue['label'] ); ?></strong><br>
+											<span class="rip-help-text"><?php echo esc_html( $issue['message'] ); ?></span>
+										</td>
+										<td>
+											<span title="<?php echo esc_attr( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $since ) ); ?>">
+												<?php echo esc_html( human_time_diff( $since, $now ) ); ?>
+											</span>
+										</td>
+										<td>
+											<a class="rip-button rip-button--secondary rip-button--sm" href="<?php echo esc_url( (string) $issue['settings_url'] ); ?>"><?php esc_html_e( 'Manage', 'reportedip-hive' ); ?></a>
+											<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( (string) $issue['doc_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Documentation', 'reportedip-hive' ); ?></a>
+											<?php if ( ! empty( $issue['dismissable'] ) ) : ?>
+												<?php
+												$dismiss_url = wp_nonce_url(
+													admin_url(
+														'admin-post.php?action=' . ReportedIP_Hive_Readiness::ACTION_DISMISS . '&issue=' . rawurlencode( (string) $issue['key'] )
+													),
+													ReportedIP_Hive_Readiness::ACTION_DISMISS
+												);
+												?>
+												<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( $dismiss_url ); ?>"><?php esc_html_e( 'Dismiss for 7 days', 'reportedip-hive' ); ?></a>
+											<?php endif; ?>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					<?php endif; ?>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Render the Cron status panel on the System Status page.
 	 *
 	 * Surfaces the next scheduled run for each plugin cron hook plus the
@@ -6133,18 +5733,10 @@ class ReportedIP_Hive_Admin_Settings {
 			$hooks[ $hook_name ] = isset( $labels[ $hook_name ] ) ? $labels[ $hook_name ] : $hook_name;
 		}
 
-		$now             = time();
-		$lock_held       = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
-		$nonce           = wp_create_nonce( 'reportedip_hive_nonce' );
-		$datetime_fmt    = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
-		$all_overdue_24h = true;
-		foreach ( array_keys( $hooks ) as $hook ) {
-			$next = wp_next_scheduled( $hook );
-			if ( false === $next || ( $now - $next ) < DAY_IN_SECONDS ) {
-				$all_overdue_24h = false;
-				break;
-			}
-		}
+		$now          = time();
+		$lock_held    = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
+		$nonce        = wp_create_nonce( 'reportedip_hive_nonce' );
+		$datetime_fmt = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
@@ -6154,13 +5746,6 @@ class ReportedIP_Hive_Admin_Settings {
 			<p class="rip-settings-section__desc">
 				<?php esc_html_e( 'WP-Cron processes the report queue and refreshes quota counters. If the next-run times below stay in the past, WP-Cron is not firing — set up a server cron (snippet below) or check your CDN/cache plugin.', 'reportedip-hive' ); ?>
 			</p>
-
-			<?php if ( $all_overdue_24h ) : ?>
-				<div class="rip-alert rip-alert--error" style="margin-bottom: var(--rip-space-3);">
-					<strong><?php esc_html_e( 'WP-Cron has not fired any ReportedIP Hive hook in the last 24 h.', 'reportedip-hive' ); ?></strong>
-					<?php esc_html_e( 'Likely cause: another plugin\'s cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below.', 'reportedip-hive' ); ?>
-				</div>
-			<?php endif; ?>
 
 			<div class="rip-card">
 				<div class="rip-card__body">
@@ -6388,6 +5973,37 @@ class ReportedIP_Hive_Admin_Settings {
 
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+					<?php esc_html_e( 'Report queue', 'reportedip-hive' ); ?>
+				</h2>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Reports wait here until the cron worker sends them. These values decide when a queue counts as unhealthy and when a crashed worker releases its rows again.', 'reportedip-hive' ); ?></p>
+
+				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_queue_max_age_days"><?php esc_html_e( 'Discard queued reports after (days)', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_queue_max_age_days" name="reportedip_hive_queue_max_age_days" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_max_age_days', 7 ) ); ?>" min="1" max="90" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_queue_max_age_days' ); ?>
+					</div>
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_processing_timeout_minutes"><?php esc_html_e( 'Recover stuck rows after (minutes)', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_processing_timeout_minutes" name="reportedip_hive_processing_timeout_minutes" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_processing_timeout_minutes', 10 ) ); ?>" min="1" max="1440" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_processing_timeout_minutes' ); ?>
+					</div>
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_queue_warning_threshold"><?php esc_html_e( 'Warning threshold', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_queue_warning_threshold" name="reportedip_hive_queue_warning_threshold" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 ) ); ?>" min="1" max="100000" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_queue_warning_threshold' ); ?>
+					</div>
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_queue_critical_threshold"><?php esc_html_e( 'Critical threshold', 'reportedip-hive' ); ?></label>
+						<input type="number" id="reportedip_hive_queue_critical_threshold" name="reportedip_hive_queue_critical_threshold" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 ) ); ?>" min="1" max="100000" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_queue_critical_threshold' ); ?>
+					</div>
+				</div>
+			</div>
+
+			<div class="rip-settings-section">
+				<h2 class="rip-settings-section__title">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 					<?php esc_html_e( 'API rate limit', 'reportedip-hive' ); ?>
 				</h2>
@@ -6535,6 +6151,8 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 				<?php endforeach; ?>
 			</div>
+
+			<?php $this->render_readiness_section( ReportedIP_Hive_Readiness::open_issues( true ) ); ?>
 
 			<!-- System Info Section -->
 			<div class="rip-card">
@@ -6848,42 +6466,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Get dashboard statistics
-	 */
-	public function get_dashboard_stats() {
-		global $wpdb;
-
-		$ip_stats   = $this->database->get_ip_management_stats();
-		$logs_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
-
-		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
-
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from Schema::table() with a hardcoded suffix; safe.
-		$events_24h = (int) $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(*) FROM $logs_table
-				 WHERE created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)",
-				$cutoff_utc
-			)
-		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
-
-		$queue_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' );
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name built from Schema::table() with a hardcoded suffix; safe.
-		$queue_count = (int) $wpdb->get_var(
-			"SELECT COUNT(*) FROM $queue_table WHERE status IN ('pending', 'failed')"
-		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
-
-		return array(
-			'events_24h'      => $events_24h,
-			'blocked_ips'     => $ip_stats['active_blocked'] ?? 0,
-			'whitelisted_ips' => $ip_stats['active_whitelist'] ?? 0,
-			'queue_count'     => $queue_count,
-		);
-	}
-
-	/**
 	 * Tier definitions — single source of truth for the Community page.
 	 *
 	 * Mirrors the constants in reportedip-service/includes/class-constants.php.
@@ -6898,9 +6480,10 @@ class ReportedIP_Hive_Admin_Settings {
 				'reports_day' => 50,
 				'checks_day'  => 1000,
 				'features'    => array(
-					__( 'Local protection included', 'reportedip-hive' ),
-					__( 'Community threat checks', 'reportedip-hive' ),
-					__( 'Limited reports', 'reportedip-hive' ),
+					__( 'All 16 sensors and the firewall, nothing held back', 'reportedip-hive' ),
+					__( 'Complete 2FA suite including one security key', 'reportedip-hive' ),
+					__( 'Community threat checks for one domain', 'reportedip-hive' ),
+					__( 'Registration rules, access lockdown switches and the readiness register', 'reportedip-hive' ),
 				),
 				'cta_type'    => 'upgrade',
 				'in_pricing'  => true,
@@ -6910,8 +6493,8 @@ class ReportedIP_Hive_Admin_Settings {
 				'reports_day' => 200,
 				'checks_day'  => 5000,
 				'features'    => array(
-					__( 'Full report permission', 'reportedip-hive' ),
-					__( 'Community recognition', 'reportedip-hive' ),
+					__( 'Everything in Free, with five times the quota', 'reportedip-hive' ),
+					__( 'Full report permission and threat feed access', 'reportedip-hive' ),
 					__( 'Email support', 'reportedip-hive' ),
 				),
 				'cta_type'    => 'upgrade',
@@ -6926,11 +6509,12 @@ class ReportedIP_Hive_Admin_Settings {
 				'sms_per_mo'  => 25,
 				'domains'     => 3,
 				'features'    => array(
-					__( '500 2FA mails / month via reportedip.com SMTP', 'reportedip-hive' ),
-					__( '25 included 2FA SMS per month — managed via reportedip.com', 'reportedip-hive' ),
-					__( 'Multi-site licence (3 domains)', 'reportedip-hive' ),
-					__( 'Priority sync (daily blacklist download)', 'reportedip-hive' ),
+					__( '2FA mail that reaches the inbox: 500 a month via our EU relay', 'reportedip-hive' ),
+					__( 'SMS 2FA without a Twilio account: 25 a month included', 'reportedip-hive' ),
+					__( 'Covers 3 sites on one licence, 4.97 EUR each per month', 'reportedip-hive' ),
+					__( 'Daily rule and blacklist sync, no delay', 'reportedip-hive' ),
 					__( '2FA usage reports & per-role policies', 'reportedip-hive' ),
+					__( 'Adaptive 2FA triggers per role and unlimited registration rules', 'reportedip-hive' ),
 					__( 'Bulk operations & analytics', 'reportedip-hive' ),
 					__( 'Email support', 'reportedip-hive' ),
 				),
@@ -6948,12 +6532,13 @@ class ReportedIP_Hive_Admin_Settings {
 				'features'    => array(
 					__( '2,500 2FA mails / month', 'reportedip-hive' ),
 					__( '75 2FA SMS / month + prepaid bundles', 'reportedip-hive' ),
-					__( 'Multi-site licence (15 domains per licence)', 'reportedip-hive' ),
-					__( 'Bookable x2–x20: domains, API quota and 2FA mail/SMS scale with the licence count (volume discount)', 'reportedip-hive' ),
-					__( 'Whitelabel (wizards, 2FA page, all texts & email templates)', 'reportedip-hive' ),
+					__( 'Covers 15 client sites on one licence, 2.60 EUR each per month', 'reportedip-hive' ),
+					__( 'Book 2 to 20 licences on one bill, quota and domains scale with a volume discount', 'reportedip-hive' ),
+					__( 'Your brand on the wizard, the 2FA pages and every mail', 'reportedip-hive' ),
 					__( 'WooCommerce integration', 'reportedip-hive' ),
 					__( 'Full WP-CLI automation', 'reportedip-hive' ),
 					__( 'Restrict user login times', 'reportedip-hive' ),
+					__( 'Block user accounts and manage active sessions', 'reportedip-hive' ),
 					__( 'GDPR export tool', 'reportedip-hive' ),
 					__( 'Priority support', 'reportedip-hive' ),
 				),
@@ -7508,7 +7093,7 @@ class ReportedIP_Hive_Admin_Settings {
 										</span>
 									<?php elseif ( 'contact' === $plan['cta_type'] ) : ?>
 										<a href="<?php echo esc_url( $contact_url ); ?>" class="rip-button rip-button--primary rip-button--full-width">
-											<?php esc_html_e( 'Kontakt aufnehmen', 'reportedip-hive' ); ?>
+											<?php esc_html_e( 'Contact sales', 'reportedip-hive' ); ?>
 										</a>
 									<?php else : ?>
 										<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-button--full-width">
@@ -8461,7 +8046,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php esc_html_e( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ); ?>
 			</h2>
 			<p class="rip-settings-section__desc">
-				<?php esc_html_e( 'When the plugin detects ≥ 3 IPs / ≥ 20 failed logins in the same minute (burst), or many distinct IPs across the rolling detection window below (distributed botnet), it tightens the failed-login and reputation thresholds network-wide for the configured duration. The attack stops mid-flight instead of slipping under the per-IP threshold.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'When several IPs hit the login in the same minute (burst), or enough distinct IPs add up across the rolling detection window below (distributed botnet), the plugin tightens the failed-login and reputation thresholds network-wide for the configured duration. The attack stops mid-flight instead of slipping under the per-IP threshold.', 'reportedip-hive' ); ?>
 			</p>
 
 			<?php if ( $is_active ) : ?>
@@ -8608,13 +8193,13 @@ class ReportedIP_Hive_Admin_Settings {
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_hardening_detect_min_ips"><?php esc_html_e( 'Minimum distinct IPs', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_hardening_detect_min_ips" name="reportedip_hive_hardening_detect_min_ips" value="<?php echo esc_attr( (string) $detect_min_ips ); ?>" min="2" max="100" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'How many different IPs must fail login within the window to count as distributed. Default 5.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text"><?php esc_html_e( 'How many different IPs must fail login within the window to count as distributed. Default 10.', 'reportedip-hive' ); ?></p>
 					</div>
 
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_hardening_detect_min_attempts"><?php esc_html_e( 'Minimum total attempts', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_hardening_detect_min_attempts" name="reportedip_hive_hardening_detect_min_attempts" value="<?php echo esc_attr( (string) $detect_min_attempts ); ?>" min="3" max="1000" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'Total failed logins across all those IPs within the window. Default 20.', 'reportedip-hive' ); ?></p>
+						<p class="rip-help-text"><?php esc_html_e( 'Total failed logins across all those IPs within the window. Default 50.', 'reportedip-hive' ); ?></p>
 					</div>
 				</fieldset>
 

@@ -24,30 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider {
-
-	public static function id() {
-		return 'reportedip_relay';
-	}
-
-	public static function display_name() {
-		return __( 'ReportedIP Relay', 'reportedip-hive' );
-	}
-
-	public static function region() {
-		return 'Worldwide (via reportedip.com)';
-	}
-
-	public static function avv_url() {
-		return defined( 'REPORTEDIP_HIVE_SITE_URL' )
-			? trailingslashit( REPORTEDIP_HIVE_SITE_URL ) . 'legal/avv'
-			: 'https://reportedip.com/legal/avv';
-	}
-
-	public static function config_fields() {
-		// No provider-side config: authentication uses the existing API key.
-		return array();
-	}
+class ReportedIP_Hive_SMS_Provider_Relay {
 
 	/**
 	 * Send a 2FA code via template (client never renders the body).
@@ -83,7 +60,14 @@ class ReportedIP_Hive_SMS_Provider_Relay implements ReportedIP_Hive_SMS_Provider
 		return self::interpret_result( $result );
 	}
 
-	public static function send( $phone, $message, $config ) {
+	/**
+	 * Send a freeform plain-text SMS (admin test message path).
+	 *
+	 * @param string $phone   E.164 phone number.
+	 * @param string $message Plain-text SMS body.
+	 * @return true|WP_Error
+	 */
+	public static function send( $phone, $message ) {
 		if ( class_exists( 'ReportedIP_Hive_Phone_Validator' ) && ! ReportedIP_Hive_Phone_Validator::is_valid_e164( $phone ) ) {
 			return new WP_Error( 'reportedip_relay_invalid_phone', __( 'Phone number is not in valid international format.', 'reportedip-hive' ) );
 		}

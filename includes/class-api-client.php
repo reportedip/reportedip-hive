@@ -1425,41 +1425,6 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Get API status including remaining credits
-	 *
-	 * @return array|false API status array or false on failure
-	 */
-	public function get_api_status() {
-		if ( ! $this->is_configured() ) {
-			return false;
-		}
-
-		$cached_status = get_transient( 'reportedip_hive_api_status' );
-		if ( $cached_status !== false ) {
-			return $cached_status;
-		}
-
-		$result = $this->verify_api_key();
-
-		if ( $result && isset( $result['valid'] ) && $result['valid'] ) {
-			$status = array(
-				'valid'             => true,
-				'remainingApiCalls' => $result['remainingApiCalls'] ?? 0,
-				'dailyApiLimit'     => $result['dailyApiLimit'] ?? 0,
-				'keyName'           => $result['keyName'] ?? '',
-				'userRole'          => $result['userRole'] ?? '',
-				'domains'           => $result['domains'] ?? null,
-			);
-
-			$this->persist_api_status( $status );
-
-			return $status;
-		}
-
-		return false;
-	}
-
-	/**
 	 * Persist an already-verified status payload from an external caller.
 	 *
 	 * {@see verify_api_key()} intentionally does not cache — it is a pure probe.
@@ -2053,9 +2018,7 @@ class ReportedIP_Hive_API {
 			}
 		}
 
-		if ( $stats['recent_total'] >= self::RECENT_HEALTH_MIN_SAMPLE
-			&& $stats['recent_success_rate'] < self::RECENT_HEALTH_MIN_RATE
-			&& $this->has_fresh_failure( $stats ) ) {
+		if ( self::window_is_degraded( $stats ) ) {
 			$last_health_warning = get_transient( 'reportedip_hive_health_warning_logged' );
 
 			if ( ! $last_health_warning ) {
@@ -2077,6 +2040,48 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
+	 * Whether the rolling health window currently counts as degraded.
+	 *
+	 * The single owner of the predicate: `track_api_call()` uses it to decide
+	 * whether to log `api_health_degraded`, and the readiness register uses it
+	 * to raise the matching issue, so the two can never disagree.
+	 *
+	 * @param array $stats Stored `reportedip_hive_api_stats` payload.
+	 * @return bool        True while the window is below the health threshold
+	 *                     and a failure is fresh enough to still matter.
+	 * @since 2.1.51
+	 */
+	public static function window_is_degraded( array $stats ) {
+		$total = isset( $stats['recent_total'] ) ? (int) $stats['recent_total'] : 0;
+		$rate  = isset( $stats['recent_success_rate'] ) ? (float) $stats['recent_success_rate'] : 100.0;
+
+		return $total >= self::RECENT_HEALTH_MIN_SAMPLE
+			&& $rate < self::RECENT_HEALTH_MIN_RATE
+			&& self::has_fresh_failure( $stats );
+	}
+
+	/**
+	 * Whether the rolling window holds a failure recent enough to act on.
+	 *
+	 * @param array $stats Stats array carrying the `recent` window.
+	 * @return bool        True when a failed call falls inside
+	 *                     {@see self::RECENT_HEALTH_FRESH_HOURS}.
+	 * @since 2.1.30
+	 */
+	private static function has_fresh_failure( array $stats ) {
+		$recent = isset( $stats['recent'] ) && is_array( $stats['recent'] ) ? $stats['recent'] : array();
+		$cutoff = time() - ( self::RECENT_HEALTH_FRESH_HOURS * HOUR_IN_SECONDS );
+
+		foreach ( $recent as $entry ) {
+			if ( empty( $entry['ok'] ) && isset( $entry['t'] ) && (int) $entry['t'] >= $cutoff ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Append the latest call outcome to the rolling health window and recompute
 	 * the recency-weighted success rate.
 	 *
@@ -2091,27 +2096,6 @@ class ReportedIP_Hive_API {
 	 *                       `recent_success_rate` populated.
 	 * @since 2.1.18
 	 */
-	/**
-	 * Whether the rolling window holds a failure recent enough to act on.
-	 *
-	 * @param array $stats Stats array carrying the `recent` window.
-	 * @return bool        True when a failed call falls inside
-	 *                     {@see self::RECENT_HEALTH_FRESH_HOURS}.
-	 * @since 2.1.30
-	 */
-	private function has_fresh_failure( array $stats ) {
-		$recent = isset( $stats['recent'] ) && is_array( $stats['recent'] ) ? $stats['recent'] : array();
-		$cutoff = time() - ( self::RECENT_HEALTH_FRESH_HOURS * HOUR_IN_SECONDS );
-
-		foreach ( $recent as $entry ) {
-			if ( empty( $entry['ok'] ) && isset( $entry['t'] ) && (int) $entry['t'] >= $cutoff ) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	private function push_recent_call( array $stats, $success ) {
 		$now    = time();
 		$recent = isset( $stats['recent'] ) && is_array( $stats['recent'] ) ? $stats['recent'] : array();

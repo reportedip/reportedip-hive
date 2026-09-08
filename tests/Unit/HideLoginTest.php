@@ -384,10 +384,10 @@ class HideLoginTest extends TestCase {
 	/**
 	 * Architecture invariant: the probe sensor must hand off to the
 	 * Security-Monitor with the 'hide_login_probe' attempt type, gated on the
-	 * monitor toggle, and the counting handoff must happen BEFORE the recon-log
-	 * throttle (set_transient) so the 5-second log throttle never starves the
-	 * attempt counter. Verified by source inspection so a future refactor
-	 * cannot silently break the ordering.
+	 * monitor toggle, and the counting handoff must happen BEFORE the log line
+	 * is handed to the shared denial logger — that one throttles per IP, and a
+	 * throttled log line must never starve the attempt counter. Verified by
+	 * source inspection so a future refactor cannot silently break the order.
 	 */
 	public function test_probe_sensor_counts_before_log_throttle() {
 		$source = file_get_contents(
@@ -399,14 +399,24 @@ class HideLoginTest extends TestCase {
 		$this->assertStringContainsString( "'hide_login_probe'", $source );
 		$this->assertStringContainsString( 'reportedip_hive_monitor_hide_login_probe', $source );
 
-		$track_pos = strpos( $source, 'track_generic_attempt' );
-		$set_trans = strpos( $source, "set_transient( \$throttle_key" );
+		$start = strpos( (string) $source, 'function log_recon_attempt' );
+		$this->assertNotFalse( $start );
+		$body = substr( (string) $source, $start, 900 );
+
+		$track_pos = strpos( $body, 'maybe_track_probe(' );
+		$log_pos   = strpos( $body, 'log_denied(' );
 		$this->assertNotFalse( $track_pos );
-		$this->assertNotFalse( $set_trans );
+		$this->assertNotFalse( $log_pos );
 		$this->assertLessThan(
-			$set_trans,
+			$log_pos,
 			$track_pos,
-			'Probe counting must run before the recon-log throttle is set'
+			'Probe counting must run before the throttled log handoff'
+		);
+
+		$this->assertStringContainsString(
+			'set_transient( $throttle_key, 1, self::LOG_THROTTLE_SECONDS );',
+			(string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-attack-surface.php' ),
+			'The shared denial logger still has to throttle the log line per IP.'
 		);
 	}
 
@@ -459,6 +469,85 @@ class HideLoginTest extends TestCase {
 			$source,
 			'WP Rocket can serve a cached copy from advanced-cache.php before init, so the slug also needs a URL-level reject rule.'
 		);
+	}
+
+	/**
+	 * The wp-admin guest block is shared with the standalone attack-surface
+	 * switch, so every gate that closes wp-admin must consult one predicate
+	 * rather than Hide-Login's own is_active().
+	 */
+	public function test_admin_guest_gates_use_the_shared_predicate() {
+		$source = $this->hide_login_source();
+
+		foreach ( array( 'handle_request', 'block_wp_admin_for_logged_out' ) as $method ) {
+			$start = strpos( $source, 'function ' . $method );
+			$this->assertNotFalse( $start, "Method {$method} could not be located." );
+			$body = substr( $source, $start, 900 );
+			$this->assertStringContainsString(
+				'admin_guest_block_active()',
+				$body,
+				"{$method}() must gate on the shared wp-admin predicate, not on Hide Login alone."
+			);
+		}
+	}
+
+	/**
+	 * Regression: admin-post.php answers logged-out nopriv handlers, and
+	 * handle_request() has always carved it out. The admin_init gate did not,
+	 * so front-end forms posting to admin-post.php were blocked.
+	 */
+	public function test_admin_init_gate_only_fires_on_wp_admin_paths() {
+		$source = $this->hide_login_source();
+		$start  = strpos( $source, 'function block_wp_admin_for_logged_out' );
+		$this->assertNotFalse( $start );
+
+		$this->assertStringContainsString(
+			'is_wp_admin_request(',
+			substr( $source, $start, 900 ),
+			'Without the path check the gate also blocks nopriv admin-post.php requests.'
+		);
+	}
+
+	/**
+	 * The block response is shared with the attack-surface switches, so the
+	 * renderer has to be reachable statically and fix the feed Content-Type
+	 * WP::send_headers() already sent.
+	 */
+	public function test_response_renderer_is_shared_and_fixes_the_feed_content_type() {
+		$source = $this->hide_login_source();
+
+		$this->assertStringContainsString( 'public static function render_response(', $source );
+		$this->assertStringContainsString( "header( 'Content-Type: text/html; charset='", $source );
+		$this->assertStringContainsString( 'is_feed()', $source );
+	}
+
+	/**
+	 * The recon log line goes through the shared denial logger, so the throttle,
+	 * the whitelist skip and the severity live in exactly one place.
+	 */
+	public function test_recon_log_delegates_to_the_shared_denial_logger() {
+		$source = $this->hide_login_source();
+		$start  = strpos( $source, 'function log_recon_attempt' );
+		$this->assertNotFalse( $start );
+		$body = substr( $source, $start, 900 );
+
+		$this->assertStringContainsString(
+			'ReportedIP_Hive_Attack_Surface::log_denied(',
+			$body,
+			'The recon log must reuse the shared denial logger instead of a second copy of it.'
+		);
+		$this->assertStringNotContainsString(
+			'set_transient(',
+			$body,
+			'The per-IP log throttle belongs to log_denied(), not to a private copy here.'
+		);
+	}
+
+	/**
+	 * Source of the Hide-Login class.
+	 */
+	private function hide_login_source(): string {
+		return (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-hide-login.php' );
 	}
 }
 

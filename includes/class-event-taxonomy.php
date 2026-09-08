@@ -40,6 +40,7 @@ class ReportedIP_Hive_Event_Taxonomy {
 		'app_password_abuse'          => 'login',
 		'app_password_failed'         => 'login',
 		'2fa_brute_force'             => 'login',
+		'unknown_username_probe'      => 'login',
 
 		'waf_block'                   => 'firewall',
 		'waf_would_block'             => 'firewall',
@@ -53,11 +54,17 @@ class ReportedIP_Hive_Event_Taxonomy {
 
 		'user_enumeration'            => 'recon',
 		'rest_abuse'                  => 'recon',
+		'rest_denied'                 => 'recon',
+		'xmlrpc_denied'               => 'recon',
+		'admin_guest_denied'          => 'recon',
 
 		'comment_spam'                => 'spam',
 		'comment_honeypot'            => 'spam',
 		'xmlrpc_abuse'                => 'spam',
 		'disposable_email'            => 'spam',
+		'prohibited_username'         => 'spam',
+		'registration_denied'         => 'spam',
+		'registration_limit'          => 'spam',
 
 		'geo_anomaly'                 => 'anomaly',
 		'hardening_mode_activated'    => 'anomaly',
@@ -94,18 +101,6 @@ class ReportedIP_Hive_Event_Taxonomy {
 			$ordered[ $key ] = $labels[ $key ];
 		}
 		return $ordered;
-	}
-
-	/**
-	 * Resolve a single family label.
-	 *
-	 * @param string $key Family key.
-	 * @return string Translated label, or the key itself when unknown.
-	 * @since  2.1.13
-	 */
-	public static function label_for( $key ) {
-		$labels = self::labels();
-		return $labels[ $key ] ?? (string) $key;
 	}
 
 	/**

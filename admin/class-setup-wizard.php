@@ -100,7 +100,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_save_step() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
 		}
 
@@ -156,7 +156,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * @since 1.2.0
 	 */
 	public function ajax_import_settings() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
 		}
 		check_ajax_referer( 'reportedip_hive_settings_import', '_rip_ie_nonce' );
@@ -184,21 +184,36 @@ class ReportedIP_Hive_Setup_Wizard {
 	}
 
 	/**
+	 * Whether the current user may render or drive the setup wizard.
+	 *
+	 * Every wizard step writes network-wide options on Multisite and the
+	 * rendered page localizes the stored Community Access Key, so the wizard
+	 * follows the rule of the option-writing AJAX handlers:
+	 * `manage_network_options` on Multisite, `manage_options` on single-site.
+	 * A sub-site administrator can neither open the page nor call its steps.
+	 *
+	 * @return bool
+	 * @since  2.1.51
+	 */
+	private function user_can_run_wizard() {
+		return ReportedIP_Hive_Option_Routing::current_user_can_manage();
+	}
+
+	/**
 	 * Add hidden wizard page to admin menu (needed for URL routing).
 	 *
 	 * Wired to both `admin_menu` (single-site) and `network_admin_menu`
 	 * (multisite super admin) so the wizard URL resolves in either
-	 * context. The capability raises to `manage_network_options` when
-	 * registering inside the network admin so a non-super-admin sneaking
-	 * onto the URL still hits a 403.
+	 * context. On Multisite the capability is `manage_network_options` in
+	 * both menus so a sub-site administrator hitting the URL gets a 403
+	 * instead of an empty page.
 	 */
 	public function add_wizard_page() {
-		$cap = is_network_admin() ? 'manage_network_options' : 'manage_options';
 		add_submenu_page(
 			'',
 			__( 'Setup Wizard', 'reportedip-hive' ),
 			__( 'Setup Wizard', 'reportedip-hive' ),
-			$cap,
+			ReportedIP_Hive_Option_Routing::manage_capability(),
 			self::PAGE_SLUG,
 			'__return_null'
 		);
@@ -213,9 +228,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			return;
 		}
 
-		$allowed = current_user_can( 'manage_options' )
-			|| ( is_multisite() && current_user_can( 'manage_network_options' ) );
-		if ( ! $allowed ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			return;
 		}
 
@@ -594,12 +607,12 @@ class ReportedIP_Hive_Setup_Wizard {
 				<article class="rip-tier-card">
 					<header class="rip-tier-card__header">
 						<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( 'professional' ); ?>
-						<h3 class="rip-tier-card__title"><?php esc_html_e( 'Reliable 2FA delivery', 'reportedip-hive' ); ?></h3>
+						<h3 class="rip-tier-card__title"><?php esc_html_e( '2FA codes that actually arrive', 'reportedip-hive' ); ?></h3>
 					</header>
 					<ul class="rip-tier-card__list">
-						<li><?php esc_html_e( 'SMS-2FA: 25/month included (worldwide, anti-fraud capped)', 'reportedip-hive' ); ?></li>
-						<li><?php esc_html_e( 'Mail-2FA: 500/month via SPF/DKIM/DMARC-verified relay', 'reportedip-hive' ); ?></li>
-						<li><?php esc_html_e( '3 domains per license · 90 days log retention', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'SMS 2FA without a Twilio account, 25 a month included', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( '500 2FA mails a month from our EU relay, not your shared host', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'Covers 3 sites at 4.97 EUR each per month, 90 days of logs', 'reportedip-hive' ); ?></li>
 					</ul>
 					<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="rip-button rip-button--secondary rip-button--sm">
 						<?php esc_html_e( 'See plans →', 'reportedip-hive' ); ?>
@@ -608,13 +621,13 @@ class ReportedIP_Hive_Setup_Wizard {
 				<article class="rip-tier-card">
 					<header class="rip-tier-card__header">
 						<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( 'business' ); ?>
-						<h3 class="rip-tier-card__title"><?php esc_html_e( 'Agencies & WooCommerce', 'reportedip-hive' ); ?></h3>
+						<h3 class="rip-tier-card__title"><?php esc_html_e( 'One licence, every client site', 'reportedip-hive' ); ?></h3>
 					</header>
 					<ul class="rip-tier-card__list">
-						<li><?php esc_html_e( '15 domains per licence · whitelabel · WooCommerce integration', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( '15 client sites at 2.60 EUR each, white-labelled with your name', 'reportedip-hive' ); ?></li>
 						<li><?php esc_html_e( 'SMS-2FA: 75/month + prepaid bundles', 'reportedip-hive' ); ?></li>
 						<li><?php esc_html_e( 'Mail-2FA: 2,500/month + prepaid bundles · GDPR export tool', 'reportedip-hive' ); ?></li>
-						<li><?php esc_html_e( 'Bookable x2–x20: scales domains & quota (volume discount)', 'reportedip-hive' ); ?></li>
+						<li><?php esc_html_e( 'Book 2 to 20 licences on one bill, up to 300 sites, volume discount', 'reportedip-hive' ); ?></li>
 					</ul>
 					<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="rip-button rip-button--secondary rip-button--sm">
 						<?php esc_html_e( 'See plans →', 'reportedip-hive' ); ?>
@@ -1090,6 +1103,39 @@ class ReportedIP_Hive_Setup_Wizard {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Comment honeypot — invisible to visitors, fatal to bots', 'reportedip-hive' ); ?></span>
 					</label>
+					<label class="rip-toggle">
+						<input type="checkbox" name="registration_limit_enabled" id="rip-registration-limit" <?php checked( $opt( 'registration_limit_enabled' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Limit sign-ups per address — three per hour', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-block"><?php esc_html_e( 'A person opens one account. Anything that opens ten in a row is not a person. The exact numbers are on the Firewall page.', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+					<h3><?php esc_html_e( 'Close unused entrances', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Every WordPress endpoint you do not use is one someone else can probe. These three are safe for almost every site. The riskier switches, such as restricting the REST API, wait for you on the Firewall page where they are explained in full.', 'reportedip-hive' ); ?></p>
+					<label class="rip-toggle">
+						<input type="checkbox" name="disable_xmlrpc" id="rip-lockdown-xmlrpc" <?php checked( $opt( 'disable_xmlrpc' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Switch off XML-RPC and pingbacks', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-block"><?php esc_html_e( 'Leave this off if you use the WordPress mobile app, Jetpack or a remote-publishing tool.', 'reportedip-hive' ); ?></p>
+					<label class="rip-toggle">
+						<input type="checkbox" name="disable_feeds" id="rip-lockdown-feeds" <?php checked( $opt( 'disable_feeds' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Switch off RSS and Atom feeds', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-block"><?php esc_html_e( 'Only if nothing subscribes to your site — a podcast directory or newsletter that pulls your feed would stop receiving posts.', 'reportedip-hive' ); ?></p>
+					<label class="rip-toggle">
+						<input type="checkbox" name="hide_software_info" id="rip-lockdown-fingerprints" <?php checked( $opt( 'hide_software_info' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Hide the version numbers in your pages', 'reportedip-hive' ); ?></span>
+					</label>
 				</div>
 			</div>
 
@@ -1362,6 +1408,51 @@ class ReportedIP_Hive_Setup_Wizard {
 						<?php endif; ?>
 					</div>
 				</div>
+
+			<?php
+			$rip_policy_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( '2fa_policies' );
+			$rip_policy_open   = ! empty( $rip_policy_status['available'] );
+			$rip_policy_roles  = function_exists( 'wp_roles' ) ? wp_roles()->get_names() : array();
+			$rip_saved_country = ReportedIP_Hive_Two_Factor_Policies::roles_for( 'new_country' );
+			$rip_saved_device  = ReportedIP_Hive_Two_Factor_Policies::roles_for( 'new_device' );
+			?>
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+					<h3>
+						<?php esc_html_e( 'Ask again when something changes', 'reportedip-hive' ); ?>
+						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $rip_policy_status ); ?>
+					</h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'A trusted device normally skips the second factor. These two triggers ask for it anyway when the sign-in looks different from the account\'s usual pattern. A user without a second factor is never locked out by them.', 'reportedip-hive' ); ?></p>
+					<?php if ( $rip_policy_open ) : ?>
+						<label class="rip-label"><?php esc_html_e( 'Ask again on a new country', 'reportedip-hive' ); ?></label>
+						<div class="rip-checkbox-row">
+							<?php foreach ( $rip_policy_roles as $rip_slug => $rip_name ) : ?>
+								<label class="rip-checkbox-pill">
+									<input type="checkbox" name="2fa_policy_new_country[]" value="<?php echo esc_attr( $rip_slug ); ?>" <?php checked( in_array( $rip_slug, $rip_saved_country, true ) ); ?>>
+									<?php echo esc_html( translate_user_role( $rip_name ) ); ?>
+								</label>
+							<?php endforeach; ?>
+						</div>
+						<label class="rip-label"><?php esc_html_e( 'Ask again on a new browser or device', 'reportedip-hive' ); ?></label>
+						<div class="rip-checkbox-row">
+							<?php foreach ( $rip_policy_roles as $rip_slug => $rip_name ) : ?>
+								<label class="rip-checkbox-pill">
+									<input type="checkbox" name="2fa_policy_new_device[]" value="<?php echo esc_attr( $rip_slug ); ?>" <?php checked( in_array( $rip_slug, $rip_saved_device, true ) ); ?>>
+									<?php echo esc_html( translate_user_role( $rip_name ) ); ?>
+								</label>
+							<?php endforeach; ?>
+						</div>
+						<p class="rip-help-block"><?php esc_html_e( 'The administrator role stays unselectable until an administrator has passed one challenge on this site. The remaining five triggers live under 2FA settings.', 'reportedip-hive' ); ?></p>
+					<?php else : ?>
+						<p class="rip-help-block">
+							<?php esc_html_e( 'Available with the Professional plan or higher. Finish the wizard now and switch this on later from 2FA settings.', 'reportedip-hive' ); ?>
+						</p>
+					<?php endif; ?>
+				</div>
+			</div>
 
 			<div class="rip-config-card rip-config-card--note">
 				<div class="rip-config-card__header">
@@ -2017,7 +2108,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_save_mode() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
 		}
 
@@ -2052,7 +2143,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_validate_api_key() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
 		}
 
@@ -2201,7 +2292,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_validate_login_slug() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
 		}
 
@@ -2239,7 +2330,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	public function ajax_skip_wizard() {
 		check_ajax_referer( 'reportedip_wizard_nonce', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_run_wizard() ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
 		}
 
@@ -2295,13 +2386,5 @@ class ReportedIP_Hive_Setup_Wizard {
 			return network_admin_url( $path );
 		}
 		return admin_url( $path );
-	}
-
-	/**
-	 * Check if we're currently on the wizard page
-	 */
-	public static function is_wizard_page() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		return isset( $_GET['page'] ) && $_GET['page'] === self::PAGE_SLUG;
 	}
 }

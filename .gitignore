@@ -72,7 +72,6 @@ phpstan.neon.local
 .phpstan-cache/
 
 # GrumPHP
-.grumphp.lock
 
 # =============================================================================
 # Build & Distribution

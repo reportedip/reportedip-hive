@@ -62,38 +62,4 @@ class ReportedIP_Hive_Phone_Validator {
 		}
 		return (bool) preg_match( '/^\+[1-9]\d{6,14}$/', $phone );
 	}
-
-	/**
-	 * Return the country-code prefix as a best-guess (1–3 digits after '+').
-	 *
-	 * The Hive plugin no longer maintains a country list; the server is the
-	 * authority. This helper exists only to format display strings.
-	 *
-	 * @param string $phone Valid E.164 phone number.
-	 * @return string|null
-	 */
-	public static function get_country_code( $phone ) {
-		if ( ! self::is_valid_e164( $phone ) ) {
-			return null;
-		}
-		return '+' . substr( $phone, 1, 3 );
-	}
-
-	/**
-	 * Pretty-print an E.164 number for display.
-	 *
-	 * @param string $phone Phone number.
-	 * @return string
-	 */
-	public static function format_for_display( $phone ) {
-		if ( ! self::is_valid_e164( $phone ) ) {
-			return (string) $phone;
-		}
-		$cc   = self::get_country_code( $phone );
-		$rest = substr( $phone, strlen( $cc ) );
-		$head = substr( $rest, 0, 3 );
-		$tail = substr( $rest, 3 );
-		$tail = trim( chunk_split( $tail, 4, ' ' ) );
-		return trim( $cc . ' ' . $head . ' ' . $tail );
-	}
 }

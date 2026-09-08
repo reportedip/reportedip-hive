@@ -57,12 +57,12 @@ function resetWizard(): void {
 		'reportedip_hive_waf_report_only',
 		'reportedip_hive_bot_action',
 	];
-	for (const key of keys) {
-		try {
-			wp(`option delete ${key}`);
-		} catch {
-			/* already absent */
-		}
+	// One batched call: each `docker exec` costs ~5s on Windows, and twelve of
+	// them ate half of the 120s per-test budget before the browser even started.
+	try {
+		wp(`option delete ${keys.join(' ')}`);
+	} catch {
+		/* already absent */
 	}
 	try {
 		wp('option update reportedip_hive_2fa_enforce_super_admins 0');
@@ -106,6 +106,29 @@ test.describe('setup wizard — per-step server save', () => {
 
 		expect(wpOption('reportedip_hive_waf_report_only')).toBe('1');
 		expect(wpOption('reportedip_hive_bot_action')).toBe('block');
+	});
+
+	/**
+	 * The lockdown switches and the registration rate limit only reached the
+	 * wizard in 2.1.51. Before that a fresh install had to find them on the
+	 * Firewall page, which most operators never opened.
+	 */
+	test('Firewall step persists the lockdown switches and the sign-up limit', async ({ page }) => {
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=4');
+
+		await setToggle(page, '#rip-lockdown-xmlrpc', true);
+		await setToggle(page, '#rip-lockdown-fingerprints', true);
+		await setToggle(page, '#rip-lockdown-feeds', false);
+		await setToggle(page, '#rip-registration-limit', true);
+
+		await page.click('#rip-step4-next');
+		await page.waitForURL((url) => url.searchParams.get('step') === '5');
+
+		expect(wpOption('reportedip_hive_disable_xmlrpc')).toBe('1');
+		expect(wpOption('reportedip_hive_hide_software_info')).toBe('1');
+		expect(wpOption('reportedip_hive_disable_feeds')).toBe('0');
+		expect(wpOption('reportedip_hive_registration_limit_enabled')).toBe('1');
 	});
 
 	test('Privacy step persists toggles + selects, Back re-renders saved state', async ({ page }) => {

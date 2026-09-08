@@ -109,11 +109,11 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 			case 'event_action':
 				$action = (string) $item->event_action;
 				$class  = 'rip-badge--info';
-				if ( in_array( $action, array( 'failed' ), true ) ) {
+				if ( in_array( $action, array( 'failed', 'blocked' ), true ) ) {
 					$class = 'rip-badge--danger';
-				} elseif ( in_array( $action, array( 'new_ip', 'role_changed', 'email_changed' ), true ) ) {
+				} elseif ( in_array( $action, array( 'new_ip', 'role_changed', 'email_changed', 'terminated', 'terminated_all' ), true ) ) {
 					$class = 'rip-badge--warning';
-				} elseif ( in_array( $action, array( 'success', 'completed' ), true ) ) {
+				} elseif ( in_array( $action, array( 'success', 'completed', 'unblocked' ), true ) ) {
 					$class = 'rip-badge--success';
 				}
 				return '<span class="rip-badge ' . esc_attr( $class ) . '">' . esc_html( ucwords( str_replace( '_', ' ', $action ) ) ) . '</span>';
@@ -175,6 +175,8 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 			'password_reset' => __( 'Password reset', 'reportedip-hive' ),
 			'profile_change' => __( 'Profile change', 'reportedip-hive' ),
 			'registration'   => __( 'Registration', 'reportedip-hive' ),
+			'user_block'     => __( 'Account block', 'reportedip-hive' ),
+			'session'        => __( 'Session', 'reportedip-hive' ),
 		);
 		?>
 		<div class="alignleft actions">

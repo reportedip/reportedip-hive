@@ -11,7 +11,9 @@
  *  2. Registers a personal-data exporter and eraser for the security data Hive
  *     stores about a logged-in user — their own login attempts (matched by
  *     username) and trusted devices (matched by user id). The 2FA secrets are
- *     handled separately by ReportedIP_Hive_Two_Factor_Admin.
+ *     handled separately by ReportedIP_Hive_Two_Factor_Admin. The account
+ *     block record and the proxy-aware per-session IP are exported here too;
+ *     core's own session export carries only `REMOTE_ADDR`.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -236,6 +238,98 @@ class ReportedIP_Hive_Privacy {
 			);
 		}
 
+		$block = ReportedIP_Hive_User_Block::get( $user->ID );
+		if ( null !== $block ) {
+			$items[] = array(
+				'group_id'    => 'reportedip-hive-account-block',
+				'group_label' => __( 'ReportedIP Hive — account block', 'reportedip-hive' ),
+				'item_id'     => 'rip-hive-account-block',
+				'data'        => array(
+					array(
+						'name'  => __( 'Blocked since', 'reportedip-hive' ),
+						'value' => $block['blocked_at'],
+					),
+					array(
+						'name'  => __( 'Message shown at sign-in', 'reportedip-hive' ),
+						'value' => $block['message'],
+					),
+					array(
+						'name'  => __( 'Administrator note', 'reportedip-hive' ),
+						'value' => $block['note'],
+					),
+				),
+			);
+		}
+
+		foreach ( ReportedIP_Hive_User_Sessions::for_user( $user->ID ) as $verifier => $session ) {
+			$items[] = array(
+				'group_id'    => 'reportedip-hive-sessions',
+				'group_label' => __( 'ReportedIP Hive — session addresses', 'reportedip-hive' ),
+				'item_id'     => 'rip-hive-session-' . substr( (string) $verifier, 0, 12 ),
+				'data'        => array(
+					array(
+						'name'  => __( 'IP address', 'reportedip-hive' ),
+						'value' => ReportedIP_Hive_User_Sessions::display_ip( $session ),
+					),
+					array(
+						'name'  => __( 'Expires', 'reportedip-hive' ),
+						'value' => isset( $session['expiration'] ) ? gmdate( 'Y-m-d H:i:s', (int) $session['expiration'] ) : '',
+					),
+				),
+			);
+		}
+
+		$login_context = ReportedIP_Hive_Login_Context::get( $user->ID );
+		if ( $login_context['last']['ts'] > 0 || ! empty( $login_context['nets'] ) ) {
+			$items[] = array(
+				'group_id'    => 'reportedip-hive-login-context',
+				'group_label' => __( 'ReportedIP Hive — sign-in history', 'reportedip-hive' ),
+				'item_id'     => 'rip-hive-login-context',
+				'data'        => array(
+					array(
+						'name'  => __( 'Last sign-in', 'reportedip-hive' ),
+						'value' => $login_context['last']['ts'] > 0
+							? ReportedIP_Hive::format_local_datetime( gmdate( 'Y-m-d H:i:s', (int) $login_context['last']['ts'] ) )
+							: '',
+					),
+					array(
+						'name'  => __( 'Last sign-in IP address', 'reportedip-hive' ),
+						'value' => $login_context['last']['ip'],
+					),
+					array(
+						'name'  => __( 'Last sign-in device', 'reportedip-hive' ),
+						'value' => $login_context['last']['ua_short'],
+					),
+					array(
+						'name'  => __( 'Last sign-in country', 'reportedip-hive' ),
+						'value' => $login_context['last']['country'],
+					),
+					array(
+						'name'  => __( 'Last second-factor verification', 'reportedip-hive' ),
+						'value' => $login_context['verified_at'] > 0
+							? ReportedIP_Hive::format_local_datetime( gmdate( 'Y-m-d H:i:s', (int) $login_context['verified_at'] ) )
+							: '',
+					),
+					array(
+						'name'  => __( 'Sign-ins since that verification', 'reportedip-hive' ),
+						'value' => (int) $login_context['logins_since_verify'],
+					),
+					array(
+						'name'  => __( 'Known networks', 'reportedip-hive' ),
+						'value' => implode( ', ', $login_context['nets'] ),
+					),
+					array(
+						'name'  => __( 'Known devices', 'reportedip-hive' ),
+						'value' => implode( ', ', $login_context['uas'] ),
+					),
+					array(
+						'name'  => __( 'Known countries', 'reportedip-hive' ),
+						'value' => implode( ', ', $login_context['countries'] ),
+					),
+				),
+			);
+		}
+
 		return array(
 			'data' => $items,
 			'done' => true,
@@ -268,20 +362,27 @@ class ReportedIP_Hive_Privacy {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$removed += (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$attempts_table} WHERE username = %s", $user->user_login ) );
 
-		$devices_table = $wpdb->base_prefix . 'reportedip_hive_trusted_devices';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$removed += (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$devices_table} WHERE user_id = %d", $user->ID ) );
+		$removed += ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user->ID );
 
 		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$removed += (int) $wpdb->query( $wpdb->prepare( "UPDATE {$audit_table} SET username = '', ip = '', user_id = NULL, event_data = NULL WHERE user_id = %d", $user->ID ) );
 
 		delete_user_meta( $user->ID, '_reportedip_hive_known_ips' );
+		delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_LOGIN_CONTEXT );
+
+		$retained = 0;
+		$messages = array();
+		if ( ReportedIP_Hive_User_Block::is_blocked( $user->ID ) ) {
+			ReportedIP_Hive_User_Block::update_texts( $user->ID, '', '' );
+			$retained   = 1;
+			$messages[] = __( 'The account block itself was retained for security; its free-text fields were cleared.', 'reportedip-hive' );
+		}
 
 		return array(
 			'items_removed'  => $removed,
-			'items_retained' => 0,
-			'messages'       => array(),
+			'items_retained' => $retained,
+			'messages'       => $messages,
 			'done'           => true,
 		);
 	}

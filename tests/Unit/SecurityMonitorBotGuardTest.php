@@ -94,7 +94,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$const_pos = strpos( $source, 'CREDENTIAL_EVENTS' );
 			$this->assertNotFalse( $const_pos, 'Credential-bearing event slugs must be enumerated in CREDENTIAL_EVENTS' );
 
-			foreach ( array( 'failed_login', 'password_spray', '2fa_brute_force', 'app_password_abuse', 'wc_login_failed' ) as $slug ) {
+			foreach ( array( 'failed_login', 'password_spray', '2fa_brute_force', 'app_password_abuse', 'wc_login_failed', 'unknown_username_probe' ) as $slug ) {
 				$this->assertStringContainsString(
 					"'" . $slug . "'",
 					substr( $source, $const_pos, 400 ),

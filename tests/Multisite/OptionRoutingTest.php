@@ -117,4 +117,30 @@ class ReportedIP_Hive_Option_Routing_Multisite_Test extends WP_UnitTestCase {
 		$this->assertSame( array( 'administrator', 'editor', 'shop_manager' ), $resolved );
 		restore_current_blog();
 	}
+
+	/**
+	 * Settings are network state: a sub-site administrator may not manage
+	 * them, a super admin may, on the main site and on a sub-site alike.
+	 */
+	public function test_current_user_can_manage_requires_network_capability() {
+		$this->assertSame( 'manage_network_options', ReportedIP_Hive_Option_Routing::manage_capability() );
+
+		$blog_id    = self::factory()->blog->create();
+		$site_admin = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		add_user_to_blog( $blog_id, $site_admin, 'administrator' );
+		$super_admin = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		grant_super_admin( $super_admin );
+
+		switch_to_blog( $blog_id );
+		wp_set_current_user( $site_admin );
+		$this->assertTrue( current_user_can( 'manage_options' ) );
+		$this->assertFalse( ReportedIP_Hive_Option_Routing::current_user_can_manage() );
+
+		wp_set_current_user( $super_admin );
+		$this->assertTrue( ReportedIP_Hive_Option_Routing::current_user_can_manage() );
+		restore_current_blog();
+
+		wp_set_current_user( $site_admin );
+		$this->assertFalse( ReportedIP_Hive_Option_Routing::current_user_can_manage() );
+	}
 }

@@ -22,6 +22,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Core orchestrator for the 2FA login flow.
  * Hooks into WordPress authentication to add a second factor step.
+ *
+ * A challenged login never passes through `wp_signon()`: the authenticate
+ * filter redirects into the challenge before core reaches its `wp_login`
+ * call. The success branch of {@see self::handle_2fa_challenge()} therefore
+ * fires the hooks itself once the second factor has been verified:
+ *
+ *   - `do_action( 'reportedip_hive_2fa_verified', $user_id, $method, $context )`
+ *     with the verified method and the challenge context (`wp_login` or
+ *     `theme_frame`; `rest` from the REST verify route).
+ *   - `do_action( 'wp_login', $user_login, $user )` exactly as `wp_signon()`
+ *     does, so audit trail, geo anomaly, new-device mail and the 2FA reminder
+ *     see a challenged login like any other.
+ *
+ * The consumed-nonce replay ({@see self::maybe_replay_consumed_nonce()})
+ * re-issues the same session and does not fire either hook again.
  */
 class ReportedIP_Hive_Two_Factor {
 
@@ -127,6 +142,16 @@ class ReportedIP_Hive_Two_Factor {
 
 	const META_SKIP_COUNT    = 'reportedip_hive_2fa_skip_count';
 	const META_KNOWN_DEVICES = 'reportedip_hive_2fa_known_devices';
+
+	/**
+	 * Sign-in history behind the adaptive step-up triggers, as one JSON blob.
+	 *
+	 * Declared here so uninstall and the GDPR paths know the key without
+	 * loading {@see ReportedIP_Hive_Login_Context}.
+	 *
+	 * @var string
+	 */
+	const META_LOGIN_CONTEXT = 'reportedip_hive_login_context';
 
 	/**
 	 * 2FA method identifiers.
@@ -785,6 +810,7 @@ class ReportedIP_Hive_Two_Factor {
 		$enabled_methods = self::get_user_enabled_methods( $user->ID );
 		$has_any_method  = ! empty( $enabled_methods );
 		$is_enforced     = self::is_enforced_for_user( $user );
+		$stepup          = ReportedIP_Hive_Two_Factor_Policies::evaluate( $user, $has_any_method, $is_enforced );
 
 		if ( ! $has_any_method && ! $is_enforced ) {
 			/*
@@ -807,6 +833,18 @@ class ReportedIP_Hive_Two_Factor {
 				);
 			}
 
+			if ( 0 === strpos( $stepup, ReportedIP_Hive_Two_Factor_Policies::NO_METHOD_PREFIX ) ) {
+				ReportedIP_Hive_Logger::get_instance()->log_security_event(
+					'2fa_stepup_skipped_no_method',
+					ReportedIP_Hive::get_client_ip(),
+					array(
+						'user_id' => $user->ID,
+						'trigger' => substr( $stepup, strlen( ReportedIP_Hive_Two_Factor_Policies::NO_METHOD_PREFIX ) ),
+					),
+					'low'
+				);
+			}
+
 			return $user;
 		}
 
@@ -825,7 +863,7 @@ class ReportedIP_Hive_Two_Factor {
 			return $user;
 		}
 
-		if ( $this->verify_trusted_device( $user->ID ) ) {
+		if ( '' === $stepup && $this->verify_trusted_device( $user->ID ) ) {
 			return $user;
 		}
 
@@ -847,10 +885,24 @@ class ReportedIP_Hive_Two_Factor {
 			array(
 				'enabled_methods' => $enabled_methods,
 				'enforced'        => $is_enforced,
+				'stepup'          => $stepup,
 			)
 		);
 		if ( ! $should_challenge ) {
 			return $user;
+		}
+
+		if ( '' !== $stepup ) {
+			ReportedIP_Hive_Logger::get_instance()->log_security_event(
+				'2fa_stepup_required',
+				ReportedIP_Hive::get_client_ip(),
+				array(
+					'user_id' => $user->ID,
+					'trigger' => $stepup,
+					'country' => ReportedIP_Hive_Login_Context::current_signals()['country'],
+				),
+				'low'
+			);
 		}
 
 		$token      = bin2hex( random_bytes( 32 ) );
@@ -1099,6 +1151,10 @@ class ReportedIP_Hive_Two_Factor {
 
 						$this->set_auth_cookie_with_remember( $user_id, $remember );
 						wp_set_current_user( $user_id );
+
+						do_action( 'reportedip_hive_2fa_verified', (int) $user_id, (string) $method, (string) $context );
+						// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core login hook re-fired on purpose: wp_signon() never runs for a challenged sign-in.
+						do_action( 'wp_login', $user->user_login, $user );
 
 						/*
 						 * A trust wish ticked on an earlier (failed) attempt of this same
@@ -2396,6 +2452,7 @@ class ReportedIP_Hive_Two_Factor {
 			self::META_ENFORCEMENT_START,
 			self::META_SKIP_COUNT,
 			self::META_KNOWN_DEVICES,
+			self::META_LOGIN_CONTEXT,
 			'reportedip_hive_2fa_reminder_count',
 			'reportedip_hive_2fa_reminder_last_seen',
 			'reportedip_hive_2fa_skip_until',
@@ -2456,6 +2513,7 @@ class ReportedIP_Hive_Two_Factor {
 			self::META_ENFORCEMENT_START,
 			self::META_SKIP_COUNT,
 			self::META_KNOWN_DEVICES,
+			self::META_LOGIN_CONTEXT,
 			ReportedIP_Hive_Two_Factor_Recovery::META_KEY_CODES,
 			ReportedIP_Hive_Two_Factor_Recovery::META_KEY_REMAINING,
 		);

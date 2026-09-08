@@ -36,7 +36,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_base_event_types_map_to_families() {
 			$expected = array(
 				'failed_login'        => 'login',
-				'2fa_brute_force'     => 'login',
+				'2fa_brute_force'        => 'login',
+				'unknown_username_probe' => 'login',
 				'waf_block'           => 'firewall',
 				'waf_would_block'     => 'firewall',
 				'scan_404'            => 'scanner',
@@ -44,8 +45,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'fake_bot'            => 'bot',
 				'user_enumeration'    => 'recon',
 				'rest_abuse'          => 'recon',
+				'rest_denied'            => 'recon',
+				'xmlrpc_denied'          => 'recon',
+				'admin_guest_denied'     => 'recon',
 				'comment_spam'        => 'spam',
-				'xmlrpc_abuse'        => 'spam',
+				'xmlrpc_abuse'           => 'spam',
+				'prohibited_username'    => 'spam',
+				'registration_denied'    => 'spam',
+				'registration_limit'     => 'spam',
 				'geo_anomaly'         => 'anomaly',
 			);
 			foreach ( $expected as $event => $family ) {
@@ -73,6 +80,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'categories_cached',
 				'hardening_mode_deactivated',
 				'2fa_reset_challenge_sent',
+				'2fa_stepup_required',
+				'2fa_stepup_skipped_no_method',
+				'feed_denied',
+				'blocked_user_denied',
 				'totally_unknown_event',
 			);
 			foreach ( $operational as $event ) {
