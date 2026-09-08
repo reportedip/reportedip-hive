@@ -903,7 +903,7 @@ msgstr "Ein Eintrag pro Zeile. Ein Eintrag wird wörtlich verglichen, als Platzh
 
 #: admin/class-admin-firewall.php:1205
 msgid "Also reject the built-in list (admin, administrator, root, support and six more). It does not count towards the entry allowance."
-msgstr "Zusätzlich die eingebaute Liste ablehnen (admin, administrator, root, support und sechs weitere). Sie zählt nicht auf Ihr Eintragskontingent."
+msgstr "Zusätzlich die eingebaute Liste ablehnen (admin, administrator, root, support und sechs weitere). Sie wird nicht auf Ihr Eintragskontingent angerechnet."
 
 #: admin/class-admin-firewall.php:1216
 #: admin/class-admin-firewall.php:1217
