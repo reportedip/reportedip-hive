@@ -508,10 +508,14 @@ final class ReportedIP_Hive_User_Block {
 	/**
 	 * Tier-lock wording, mirroring the settings registry.
 	 *
+	 * The single source for every surface that gates on {@see self::FEATURE} —
+	 * account blocking and the session manager alike — so the plan name comes
+	 * from `feature_status()` instead of being spelled out three times.
+	 *
 	 * @return string
 	 * @since  2.1.51
 	 */
-	private static function tier_locked_message() {
+	public static function tier_locked_message() {
 		$min_tier = 'business';
 		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
 			$manager  = ReportedIP_Hive_Mode_Manager::get_instance();
@@ -522,7 +526,7 @@ final class ReportedIP_Hive_User_Block {
 
 		return sprintf(
 			/* translators: %s: minimum plan name required for the feature */
-			__( 'Blocking user accounts requires the %s plan.', 'reportedip-hive' ),
+			__( 'User management requires the %s plan.', 'reportedip-hive' ),
 			$min_tier
 		);
 	}

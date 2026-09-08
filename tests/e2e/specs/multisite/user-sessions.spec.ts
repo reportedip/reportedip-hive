@@ -70,6 +70,7 @@ test.describe('network user blocking and sessions', () => {
 
 		await expect(page.locator('.rip-header__title')).toContainText('Sessions');
 		await expect(page.locator('.rip-tier-badge--business')).toBeVisible();
+		await expect(page.locator('#rip-sessions-form')).toHaveCount(0);
 	});
 
 	test('network sessions table renders on Business', async ({ page }) => {

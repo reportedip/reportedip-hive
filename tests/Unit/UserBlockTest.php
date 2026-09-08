@@ -234,5 +234,39 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$source
 			);
 		}
+
+		/**
+		 * The users list posts through a GET form and `wp-admin/users.php`
+		 * redirects to a URL without `_wpnonce` before it dispatches
+		 * `handle_bulk_actions-users`, so a handler hooked there can never pass
+		 * `check_admin_referer( 'bulk-users' )`. The single-site bulk action has
+		 * to run on `load-users.php`, while the request is still intact.
+		 */
+		public function test_single_site_bulk_action_runs_before_the_nonce_is_stripped(): void {
+			$source = $this->source( 'admin/class-user-admin.php' );
+
+			$this->assertStringContainsString(
+				"add_action( 'load-users.php', array( \$this, 'handle_bulk_single_site' ) )",
+				$source
+			);
+			$this->assertStringNotContainsString( "handle_bulk_actions-users'", $source );
+			$this->assertStringContainsString(
+				"add_filter( 'handle_network_bulk_actions-users-network', array( \$this, 'handle_bulk_network' ), 10, 3 )",
+				$source
+			);
+		}
+
+		/**
+		 * Network Admin dispatches `network_admin_notices`, never
+		 * `admin_notices`, so the bulk result would be invisible on multisite.
+		 */
+		public function test_bulk_result_notice_reaches_network_admin(): void {
+			$source = $this->source( 'admin/class-user-admin.php' );
+
+			$this->assertStringContainsString(
+				"add_action( 'all_admin_notices', array( \$this, 'show_users_notice' ) )",
+				$source
+			);
+		}
 	}
 }

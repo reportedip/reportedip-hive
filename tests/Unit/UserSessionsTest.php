@@ -75,8 +75,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( '', \ReportedIP_Hive_User_Sessions::display_ip( array() ) );
 		}
 
-		public function test_ip_like_pattern_matches_the_serialised_value(): void {
-			$this->assertSame( '%"203.0.113.7"%', \ReportedIP_Hive_User_Sessions::ip_like_pattern( '203.0.113.7' ) );
+		public function test_ip_like_pattern_leaves_the_wildcards_to_the_meta_query(): void {
+			$this->assertSame( '"203.0.113.7"', \ReportedIP_Hive_User_Sessions::ip_like_pattern( '203.0.113.7' ) );
 		}
 
 		public function test_users_query_args_probe_the_session_meta(): void {
@@ -104,7 +104,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertSame( 20, $args['offset'] );
 			$this->assertSame( 'LIKE', $args['meta_compare'] );
-			$this->assertSame( '%"203.0.113.7"%', $args['meta_value'] );
+			$this->assertSame( '"203.0.113.7"', $args['meta_value'] );
 			$this->assertSame( '*jdoe*', $args['search'] );
 			$this->assertSame( array( 'user_login', 'user_email', 'display_name' ), $args['search_columns'] );
 		}

@@ -61,9 +61,9 @@ class ReportedIP_Hive_User_Admin {
 		add_action( 'pre_get_users', array( $this, 'filter_blocked_view' ) );
 		add_filter( 'bulk_actions-users', array( $this, 'add_bulk_actions' ) );
 		add_filter( 'bulk_actions-users-network', array( $this, 'add_bulk_actions' ) );
-		add_filter( 'handle_bulk_actions-users', array( $this, 'handle_bulk_single_site' ), 10, 3 );
+		add_action( 'load-users.php', array( $this, 'handle_bulk_single_site' ) );
 		add_filter( 'handle_network_bulk_actions-users-network', array( $this, 'handle_bulk_network' ), 10, 3 );
-		add_action( 'admin_notices', array( $this, 'show_users_notice' ) );
+		add_action( 'all_admin_notices', array( $this, 'show_users_notice' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_styles' ) );
 	}
 
@@ -230,7 +230,7 @@ class ReportedIP_Hive_User_Admin {
 		}
 
 		if ( ! ReportedIP_Hive_User_Block::is_available() ) {
-			wp_die( esc_html__( 'Session management requires the Business plan.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+			wp_die( esc_html( ReportedIP_Hive_User_Block::tier_locked_message() ), '', array( 'response' => 403 ) );
 		}
 
 		$ended   = 0;
@@ -365,7 +365,7 @@ class ReportedIP_Hive_User_Admin {
 		if ( ! $editable ) {
 			$hint = '' !== $refusal
 				? ReportedIP_Hive_User_Block::refusal_message( $refusal )
-				: __( 'Blocking user accounts requires the Business plan.', 'reportedip-hive' );
+				: ReportedIP_Hive_User_Block::tier_locked_message();
 		}
 		?>
 		<h2 id="reportedip-hive-account-access">
@@ -692,21 +692,40 @@ class ReportedIP_Hive_User_Admin {
 	/**
 	 * Single-site bulk handler.
 	 *
-	 * `wp-admin/users.php` dispatches custom bulk actions from its `default:`
-	 * branch without verifying the nonce, so the handler does it.
+	 * The users list posts through a GET form, and the `default:` branch of
+	 * `wp-admin/users.php` redirects to a URL stripped of `_wpnonce` before it
+	 * dispatches `handle_bulk_actions-users` — a handler hooked there can never
+	 * verify the nonce and always dies with "The link you followed has expired".
+	 * `load-users.php` fires from `admin.php` while the original request is
+	 * still intact, so the nonce is verifiable here.
 	 *
-	 * @param string $sendback Redirect target.
-	 * @param string $action   Bulk action key.
-	 * @param int[]  $user_ids Selected user ids.
-	 * @return string
+	 * @return void
 	 * @since  2.1.51
 	 */
-	public function handle_bulk_single_site( $sendback, $action, $user_ids ) {
-		if ( ! in_array( (string) $action, self::BULK_ACTIONS, true ) ) {
-			return $sendback;
+	public function handle_bulk_single_site() {
+		if ( is_network_admin() ) {
+			return;
+		}
+
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Verified by check_admin_referer() once the request is known to be ours.
+		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+		if ( ! in_array( $action, self::BULK_ACTIONS, true ) ) {
+			$action = isset( $_REQUEST['action2'] ) ? sanitize_key( wp_unslash( $_REQUEST['action2'] ) ) : '';
+		}
+		if ( ! in_array( $action, self::BULK_ACTIONS, true ) || empty( $_REQUEST['users'] ) ) {
+			return;
+		}
+		$user_ids = array_map( 'intval', (array) wp_unslash( $_REQUEST['users'] ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		if ( ! current_user_can( 'edit_users' ) ) {
+			return;
 		}
 		check_admin_referer( 'bulk-users' );
-		return $this->apply_bulk( $sendback, (string) $action, (array) $user_ids );
+
+		$sendback = wp_get_referer();
+		wp_safe_redirect( $this->apply_bulk( $sendback ? $sendback : self_admin_url( 'users.php' ), $action, $user_ids ) );
+		exit;
 	}
 
 	/**

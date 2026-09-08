@@ -165,7 +165,11 @@ final class ReportedIP_Hive_User_Sessions {
 	}
 
 	/**
-	 * LIKE pattern matching an IP inside the serialised session blob. Pure.
+	 * LIKE needle matching an IP inside the serialised session blob. Pure.
+	 *
+	 * Returned bare: `WP_Meta_Query` wraps a LIKE value in
+	 * `'%' . $wpdb->esc_like( $value ) . '%'` itself, so pre-wrapped wildcards
+	 * would be escaped into literal percent signs and never match.
 	 *
 	 * ponytail: exact-string LIKE over the serialised meta value. Good enough
 	 * for a filter box on an admin screen; if session volume ever makes this
@@ -176,7 +180,7 @@ final class ReportedIP_Hive_User_Sessions {
 	 * @since  2.1.51
 	 */
 	public static function ip_like_pattern( $ip ) {
-		return '%"' . (string) $ip . '"%';
+		return '"' . (string) $ip . '"';
 	}
 
 	/**
