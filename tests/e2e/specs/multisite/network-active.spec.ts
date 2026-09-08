@@ -44,4 +44,12 @@ test('system status page in the network admin shows the readiness register', asy
     const readiness = page.locator('#rip-readiness');
     await expect(readiness).toBeVisible();
     await expect(readiness.locator('.rip-settings-section__title')).toContainText('Readiness');
+
+    // The register body renders either the issue table or the empty state; a
+    // section with neither means the network-side compute path bailed out.
+    const body = readiness.locator('.rip-card__body');
+    await expect(body).toBeVisible();
+    const rows = await body.locator('table.rip-table tbody tr').count();
+    const empty = await body.locator('.rip-help-text', { hasText: 'No open readiness issues' }).count();
+    expect(rows + empty).toBeGreaterThan(0);
 });

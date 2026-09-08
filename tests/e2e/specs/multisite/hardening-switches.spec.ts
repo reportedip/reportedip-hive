@@ -1,11 +1,11 @@
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
 
 /**
  * The attack-surface switches are network state: one network option closes
- * xmlrpc.php on every sub-site, and the settings section lives on the Network
- * Admin firewall page.
+ * xmlrpc.php and the feeds on every sub-site, and the settings section lives
+ * on the Network Admin firewall page.
  *
  * Serial: the spec mutates shared network state on the long-lived stack.
  */
@@ -26,11 +26,32 @@ function wp(args: string): string {
 		.trim();
 }
 
-function wpTolerant(args: string): string {
+/**
+ * PHP goes through `execFileSync` rather than the string helper above: a
+ * shell-quoted snippet would be parsed by cmd.exe on the Windows host, and
+ * one `docker compose exec` costs about five seconds, so the whole check has
+ * to fit into a single call.
+ */
+function wpEval(php: string): string {
+	return execFileSync(
+		'docker',
+		['compose', '-f', MS_COMPOSE, 'exec', '-T', MS_SERVICE, 'wp', '--allow-root', 'eval', php],
+		{ cwd: resolveWorkspaceRoot(), encoding: 'utf8' }
+	)
+		.toString()
+		.trim();
+}
+
+/**
+ * Drop both sitemeta rows this spec writes, in one call.
+ */
+function resetNetworkOptions(): void {
 	try {
-		return wp(args);
+		wpEval(
+			'delete_site_option( "reportedip_hive_disable_xmlrpc" ); delete_site_option( "reportedip_hive_disable_feeds" ); echo "reset";'
+		);
 	} catch {
-		return '';
+		/* nothing stored */
 	}
 }
 
@@ -39,11 +60,11 @@ test.describe.configure({ mode: 'serial' });
 test.describe('attack surface switches on a network', () => {
 	test.beforeAll(() => {
 		resetAdminBaseline(MS_COMPOSE, MS_SERVICE);
-		wpTolerant('network meta delete 1 reportedip_hive_disable_xmlrpc');
+		resetNetworkOptions();
 	});
 
 	test.afterAll(() => {
-		wpTolerant('network meta delete 1 reportedip_hive_disable_xmlrpc');
+		resetNetworkOptions();
 	});
 
 	/**
@@ -65,6 +86,50 @@ test.describe('attack surface switches on a network', () => {
 		wp('network meta update 1 reportedip_hive_disable_xmlrpc 0');
 		const open = await request.post('/xmlrpc.php', { failOnStatusCode: false });
 		expect(open.status()).toBe(200);
+	});
+
+	/**
+	 * Storage location and effect in one test: the value lives in sitemeta,
+	 * the sub-site has no row of its own, the router still reads it there, and
+	 * the sub-site feed answers as closed while it is on. The feed switch is
+	 * used because it is the one endpoint a sub-site really serves under its
+	 * own path prefix.
+	 */
+	test('the switches are network options and close a sub-site endpoint', async ({ request }) => {
+		const state = JSON.parse(
+			wpEval(
+				[
+					'update_site_option( "reportedip_hive_disable_feeds", 1 );',
+					'$s = get_sites( array( "path" => "/site-a/", "number" => 1 ) );',
+					'$id = $s ? (int) $s[0]->blog_id : 0;',
+					'switch_to_blog( $id );',
+					'$site = get_option( "reportedip_hive_disable_feeds", "ABSENT" );',
+					'$eff = ReportedIP_Hive_Option_Routing::get( "reportedip_hive_disable_feeds", "ABSENT" );',
+					'restore_current_blog();',
+					'echo wp_json_encode( array( "blog" => $id, "site" => $site, "eff" => $eff ) );',
+				].join(' ')
+			)
+		) as { blog: number; site: string; eff: string };
+
+		expect(state.blog).toBeGreaterThan(1);
+		expect(state.site).toBe('ABSENT');
+		expect(String(state.eff)).toBe('1');
+
+		const subFeed = await request.get('/site-a/feed/', { failOnStatusCode: false });
+		expect(subFeed.status()).toBe(404);
+		expect(subFeed.headers()['content-type'] ?? '').toContain('text/html');
+
+		const mainFeed = await request.get('/feed/', { failOnStatusCode: false });
+		expect(mainFeed.status()).toBe(404);
+
+		const subsite = await request.get('/site-a/', { failOnStatusCode: false });
+		expect(subsite.status()).toBe(200);
+
+		wpEval('delete_site_option( "reportedip_hive_disable_feeds" ); echo "off";');
+
+		const restored = await request.get('/site-a/feed/', { failOnStatusCode: false });
+		expect(restored.status()).toBe(200);
+		expect(restored.headers()['content-type'] ?? '').toContain('rss+xml');
 	});
 
 	test('network admin sees the attack-surface section', async ({ page }) => {

@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
 
@@ -22,21 +22,27 @@ function resolveWorkspaceRoot(): string {
 	return new URL('../../../../../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 }
 
-function wp(args: string): string {
-	return execSync(`docker compose -f ${MS_COMPOSE} exec -T ${MS_SERVICE} wp --allow-root ${args}`, {
-		cwd: resolveWorkspaceRoot(),
-		encoding: 'utf8',
-	})
+/**
+ * Run WP-CLI in the multisite container. Arguments travel as argv, never
+ * through a shell: a JSON value like `["editor"]` keeps its quotes on both
+ * cmd.exe and sh.
+ */
+function wp(...args: string[]): string {
+	return execFileSync(
+		'docker',
+		['compose', '-f', MS_COMPOSE, 'exec', '-T', MS_SERVICE, 'wp', '--allow-root', ...args],
+		{ cwd: resolveWorkspaceRoot(), encoding: 'utf8' }
+	)
 		.toString()
 		.trim();
 }
 
-function wpTolerant(args: string): string {
-	try {
-		return wp(args);
-	} catch {
-		return '';
-	}
+/**
+ * Run a PHP snippet in the container. Statements are joined with a space so
+ * the whole batch is one argv entry and one `docker compose exec` call.
+ */
+function wpEval(statements: string[]): string {
+	return wp('eval', statements.join(' '));
 }
 
 test.describe.configure({ mode: 'serial' });
@@ -44,13 +50,21 @@ test.describe.configure({ mode: 'serial' });
 test.describe('network 2fa policies on a site page', () => {
 	test.beforeAll(() => {
 		resetAdminBaseline(MS_COMPOSE, MS_SERVICE);
-		wp('network meta update 1 reportedip_hive_known_tier professional');
-		wp(`network meta update 1 ${POLICY_KEY} '["editor"]'`);
+		wpEval([
+			'foreach (ReportedIP_Hive_Two_Factor_Policies::TRIGGERS as $t) { ReportedIP_Hive_Option_Routing::delete(ReportedIP_Hive_Two_Factor_Policies::option_key($t)); }',
+			"ReportedIP_Hive_Option_Routing::set('reportedip_hive_known_tier', 'professional');",
+			"delete_transient('reportedip_hive_api_status');",
+			`ReportedIP_Hive_Option_Routing::set('${POLICY_KEY}', wp_json_encode(array('editor')));`,
+			"echo 'SEEDED';",
+		]);
 	});
 
 	test.afterAll(() => {
-		wpTolerant(`network meta delete 1 ${POLICY_KEY}`);
-		wpTolerant('network meta delete 1 reportedip_hive_known_tier');
+		wpEval([
+			'foreach (ReportedIP_Hive_Two_Factor_Policies::TRIGGERS as $t) { ReportedIP_Hive_Option_Routing::delete(ReportedIP_Hive_Two_Factor_Policies::option_key($t)); }',
+			"ReportedIP_Hive_Option_Routing::delete('reportedip_hive_known_tier');",
+			"echo 'CLEANED';",
+		]);
 	});
 
 	test('the site 2FA page shows the network policy read-only', async ({ page }) => {
@@ -64,5 +78,21 @@ test.describe('network 2fa policies on a site page', () => {
 		await expect(block).toBeVisible();
 		await expect(block.locator('.rip-network-state li')).toHaveCount(7);
 		await expect(block.locator('input[type="checkbox"]')).toHaveCount(0);
+	});
+
+	test('the block names the armed role and marks the rest off', async ({ page }) => {
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-site-2fa');
+
+		const list = page.locator('.rip-settings-section', {
+			hasText: 'Adaptive 2FA triggers (network policy)',
+		}).locator('.rip-network-state');
+
+		const armed = list.locator('li', { hasText: 'New IP address' });
+		await expect(armed.locator('.rip-badge--info')).toHaveText('Editor');
+		await expect(armed.locator('.rip-badge--neutral')).toHaveCount(0);
+
+		// Every other trigger stays unconfigured, so six rows read "off".
+		await expect(list.locator('li .rip-badge--neutral')).toHaveCount(6);
 	});
 });
