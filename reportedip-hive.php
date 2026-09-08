@@ -3,7 +3,7 @@
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.com
  * Description: Community-powered WordPress security — real-time threat intelligence
- * with 5-layer defense and 4-method 2FA. Be part of the hive.
+ * with 6-layer defense and 4-method 2FA. Be part of the hive.
  * Version: 2.1.50
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.com

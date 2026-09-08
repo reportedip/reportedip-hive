@@ -1,6 +1,6 @@
 {
     "name": "reportedip/reportedip-hive",
-    "description": "Community-powered WordPress security plugin — real-time threat intelligence with 5-layer defense and 4-method 2FA. Part of the ReportedIP.de ecosystem.",
+    "description": "Community-powered WordPress security plugin — real-time threat intelligence with 6-layer defense and 4-method 2FA. Part of the reportedip.com ecosystem.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "authors": [

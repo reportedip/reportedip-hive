@@ -16,6 +16,10 @@ Core classes (all loaded unconditionally, in every request context):
   the settings fingerprint.
 - `ReportedIP_Hive_Settings_Apply` — validates and writes a batch, returns a
   per-key result map. Call `ReportedIP_Hive_Settings_Apply::apply( $values, $origin )`.
+  Four origins exist: `mainwp`, `cloud`, `import` and `admin` (the plugin's own
+  settings pages and their AJAX cards). Only `admin` logs
+  `settings_admin_apply`; the three remote origins log
+  `settings_remote_apply`.
 - `ReportedIP_Hive_Settings_Effects` — executes declared side effects
   (rewrite flushes, cache resets) once per request for any writer.
 
@@ -57,6 +61,12 @@ Response (`$information['reportedip_hive']['settings_schema']`):
 ```
 
 Labels are translated into the site locale at export time.
+
+Sections, in export order: `detection`, `blocking`, `waf`, `hide_login`,
+`lockdown` (attack-surface switches: REST API access, XML-RPC, feeds,
+wp-admin for visitors, PHP execution in uploads, software fingerprints),
+`account_security`, `privacy_logs`, `notifications`. A section is pure
+presentation: dashboards group fields by it and ignore ids they do not know.
 
 ### `reportedip_hive_settings_get`
 
@@ -208,6 +218,12 @@ cannot drift.
 | `slug` | string | via the key's `sanitize` override (Hide-Login slug rules: 3–50 chars, reserved list, permalink-collision check); violations are `invalid` |
 | `json_list` | JSON array string or array | items `sanitize_key`ed, filtered through the key's validity filter, canonically re-encoded `wp_json_encode` |
 
+`export_schema()` does not export a `json_list`'s allowed vocabulary (role
+slugs, method names), so both dashboards render these keys as a raw JSON
+textarea and the child filters unknown items away on apply. `textarea` keys
+carry newline-separated lists and must not be flattened by a dashboard's
+sanitizer.
+
 ## Cross-field rules
 
 Evaluated over the merged view (incoming values over current values):
@@ -223,6 +239,19 @@ only when the target value activates the feature:
 - `reportedip_hive_block_tor` → `tor_blocking` (gate when enabling).
 - `reportedip_hive_waf_paranoia` → `rule_sync_priority` (gate for level ≥ 2;
   level 1 is always allowed).
+- `reportedip_hive_prohibited_usernames`, `reportedip_hive_email_rules` →
+  `registration_rules_unlimited` via `Registration_Guard::list_needs_tier()`
+  (gate above ten entries or on any `/regex/` entry; ten plain entries stay
+  free).
+- `reportedip_hive_registration_allowlist` → `registration_rules_unlimited`
+  (gate on any non-empty list).
+- the seven `reportedip_hive_2fa_policy_*` role lists (`new_country`,
+  `new_ip`, `new_subnet`, `new_device`, `every_n_days`, `every_n_logins`,
+  `sessions_above_n`) → `2fa_policies` via
+  `Settings_Registry::policy_list_needs_tier()` (gate on any non-empty list).
+  Their three companion integers (`reportedip_hive_2fa_policy_days`,
+  `_logins`, `_sessions`) are ungated: without an armed role list they do
+  nothing.
 
 A gated write returns `skipped_tier` and does not touch the stored value.
 Disabling a gated feature is always allowed.
@@ -284,6 +313,12 @@ Adding a managed option is a two-place change, enforced by unit test:
 The remote key list and kinds are snapshot-locked by
 `tests/Unit/SettingsRegistryTest.php`; changing them forces a conscious
 fixture update and a `SCHEMA_VERSION` decision.
+
+Runtime state is not a setting. Options the plugin writes by itself
+(`reportedip_hive_readiness_state`, `reportedip_hive_2fa_policy_admin_verified`,
+`reportedip_hive_api_stats`, …) stay out of `SAFE_OPTIONS`, out of the
+registry and out of the JSON export; a dashboard must never push them. Adding
+a section is a one-place change: `Settings_Registry::sections()`.
 
 ## Change checklist — what to touch when options change
 
