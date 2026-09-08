@@ -20,6 +20,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 - **One plugin instead of four.** Brute-force protection, a two-layer WAF, a multi-method 2FA suite and opt-in community threat intelligence. Single drop-in, GPL-2.0, public on GitHub. The full protection core is free; paid plans only add relays, multi-site and advanced modules (see [Free vs. paid](#free-vs-paid)).
 - **Blocks enforced before WordPress even loads.** The optional pre-WordPress guard (`auto_prepend_file`) refuses blocked IPs and firewall matches before a single WordPress file is included. Fail-open by design: any error lets the request through to the normal in-WordPress engine.
 - **Progressive blocks that don't burn legitimate users.** First-time tripping gets a 5-minute timeout; repeat offenders climb 5 m → 15 m → 30 m → 24 h → 48 h → 7 d, and loud bursts skip rungs (10x the threshold skips two). CGNAT visitors and fat-fingered admins recover in minutes; brute-forcers pay the full price. The server's own addresses are exempt from auto-blocking, so cache preloaders and WP-Cron loopbacks can never lock the site out of itself.
+- **Turn off what you do not use.** Free lockdown switches close the REST API, XML-RPC and pingbacks, feeds, the admin area for signed-out visitors, PHP execution in the uploads folder and the version fingerprints, and a readiness register names the parts of the setup that are failing quietly before they cost you an incident.
 - **Privacy-first by default.** GDPR-minimal logging, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium. Lawful basis (Art. 6(1)(f) GDPR) documented in-product.
 - **Multisite-native.** Network-only activation, single threat decision applies network-wide, Site Admins get a read-only UI with two narrow override fields. Cross-site brute-force aggregates into one central counter, so an attacker pivoting between sub-sites trips the threshold faster, not slower.
 - **Fast and measured.** Option reads primed in one query, an 8 KB header answers the blocklist lookup, dashboard analytics aggregate in SQL. Benchmarked against a 500k-row event table; the numbers live in the changelog, not in marketing copy.
@@ -45,7 +46,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | Cookie-banner consent endpoints | always bypassed | Real Cookie Banner, Complianz, Borlabs, CookieYes baked in |
 | Web Application Firewall | Paranoia Level 1 baseline + backend exceptions | See [Two-layer firewall](#two-layer-firewall) |
 | Verified bot detection | flag (default) or block | Official Google/Bing IP ranges first, FCrDNS fallback; genuine crawlers never blocked |
-| Disposable-email blocking | monitor (default) | Registration (WP + WooCommerce); privacy relays pass through by default |
+| Registration defence | username baseline on (10 role names), rate limit on (3 / 60 min), disposable mail: monitor, custom lists empty | Throwaway-mail domains, prohibited usernames, e-mail allow/block rules, per-IP rate limit (3 / 60 min), opt-in unknown-username block; WP + WooCommerce + Multisite sign-ups. Ten entries per list free, unlimited plus regex on Professional |
 | Comment honeypot | on | Invisible decoy field, no CAPTCHA friction |
 
 <a id="two-layer-firewall"></a>
@@ -104,6 +105,9 @@ The two **modes** decide whether the plugin talks to reportedip.com at all. They
 | SMS 2FA (managed relay) | – | Professional+ |
 | Hardening Mode (auto-tighten thresholds on attack) | – | Professional+ |
 | Tor exit-node blocking (signed exit-node list) | – | Professional+ |
+| Access lockdown switches + system readiness register | ✓ | ✓ |
+| Adaptive 2FA step-up triggers per role | – | Professional+ |
+| User account blocking + session manager | – | Business+ |
 | Privacy | 100 % offline | Strictly opt-in, no usernames or comment content shared |
 
 <a id="free-vs-paid"></a>
@@ -121,7 +125,10 @@ What the paid **Professional** (3 domains) and **Business** (15 domains, multi-b
 - **Advanced security headers.** HSTS, Permissions-Policy, the CSP builder (report-only first) and the cross-origin isolation trio; the basic header trio stays free.
 - **Priority Sync.** The deeper, Ed25519-signed WAF Paranoia-Level-2/3 rulesets plus the live bot-IP-range and disposable-domain feeds; the bundled baselines stay free and work offline.
 - **Tor exit-node blocking.** Opt-in rejection of connections from known Tor exit nodes, backed by a signed `tor_exits` ruleset refreshed twice daily. Blocks are temporary (24 h default, filterable) and never reported to the community — operating an exit node is not abuse evidence.
+- **Adaptive 2FA triggers.** Per-role step-up rules on a new country, IP address, network or device, every N days or sign-ins, or above a concurrent-session limit; they apply even when the trusted-device cookie is present, while the 2FA IP allowlist still bypasses.
+- **Unlimited registration rules.** No ten-entry cap on the username and e-mail lists, `/regex/` patterns and registration restricted to allowlisted IP ranges.
 - **Advanced Security Keys (Business).** Multiple WebAuthn keys per account, attestation-based model detection, key-lifecycle mails.
+- **User account control and sessions (Business).** Block an account so it cannot sign in, use an application password or reset its password, drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions.
 - **Audit event trail (Business).** Append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export.
 - Higher API quotas, multi-site dashboard, priority blacklist sync, longer log retention, prepaid mail/SMS top-up bundles. Business adds white-label, the full WP-CLI surface, role-based login-time restrictions and a GDPR export tool.
 

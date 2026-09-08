@@ -53,6 +53,7 @@ class ModeManagerFeatureStatusTest extends TestCase {
 			'professional' => 'reportedip_professional',
 			'business'     => 'reportedip_business',
 			'enterprise'   => 'reportedip_enterprise',
+			'honeypot'     => 'reportedip_honeypot',
 		);
 		$GLOBALS['wp_transients']['reportedip_hive_api_status'] = array(
 			'value'   => array( 'userRole' => $role_map[ $tier ] ?? 'reportedip_free' ),
@@ -140,6 +141,61 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$this->assertTrue( $mm->tier_at_least( 'professional' ) );
 		$this->assertTrue( $mm->tier_at_least( 'business' ) );
 		$this->assertFalse( $mm->tier_at_least( 'enterprise' ) );
+	}
+
+	public function test_honeypot_tier_counts_as_contributor() {
+		$this->pretend_mode( 'community' );
+		$this->pretend_tier( 'honeypot' );
+
+		$mm = \ReportedIP_Hive_Mode_Manager::get_instance();
+
+		$this->assertSame( 'honeypot', $mm->get_current_tier() );
+		$this->assertTrue( $mm->tier_at_least( 'free' ) );
+		$this->assertTrue( $mm->tier_at_least( 'contributor' ) );
+		$this->assertFalse( $mm->tier_at_least( 'professional' ) );
+	}
+
+	public function test_new_feature_keys_report_their_tiers() {
+		define( 'WP_CLI', true );
+
+		$expected = array(
+			'registration_rules_unlimited' => 'professional',
+			'user_management'              => 'business',
+			'2fa_policies'                 => 'professional',
+		);
+		$mm       = \ReportedIP_Hive_Mode_Manager::get_instance();
+
+		$this->pretend_mode( 'community' );
+		$this->pretend_tier( 'free' );
+		foreach ( $expected as $feature => $min_tier ) {
+			$status = $mm->feature_status( $feature );
+
+			$this->assertFalse( $status['available'], "$feature must be locked on Free" );
+			$this->assertSame( 'tier', $status['reason'] );
+			$this->assertSame( $min_tier, $status['min_tier'] );
+			$this->assertNotSame( '', $status['label'], "$feature needs a label" );
+			$this->assertNotSame( '', $status['description'], "$feature needs a description" );
+		}
+
+		$this->pretend_tier( 'professional' );
+		$this->assertFalse(
+			$mm->feature_status( 'user_management' )['available'],
+			'user_management must stay locked on Professional'
+		);
+		$this->assertTrue(
+			$mm->feature_status( 'registration_rules_unlimited' )['available'],
+			'registration_rules_unlimited must unlock on Professional'
+		);
+
+		$this->pretend_tier( 'business' );
+		foreach ( array_keys( $expected ) as $feature ) {
+			$this->assertSame( 'ok', $mm->feature_status( $feature )['reason'], "$feature must unlock on Business" );
+		}
+
+		$this->pretend_mode( 'local' );
+		foreach ( array_keys( $expected ) as $feature ) {
+			$this->assertTrue( $mm->feature_status( $feature )['available'], "$feature must not depend on Community mode" );
+		}
 	}
 
 	public function test_get_tier_info_returns_display_tokens_for_known_tier() {

@@ -144,7 +144,8 @@ final class ReportedIP_Hive_Rule_Sync {
 
 	/**
 	 * Verify a detached Ed25519 signature over the exact payload string against
-	 * any accepted public key.
+	 * any accepted public key. Delegates to the shared verifier so rulesets and
+	 * cloud management run one implementation.
 	 *
 	 * @param string $payload       The exact signed payload string.
 	 * @param string $signature_b64 Base64-encoded detached signature.
@@ -152,28 +153,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 * @since  2.1.2
 	 */
 	public function verify_signature( $payload, $signature_b64 ) {
-		if ( ! function_exists( 'sodium_crypto_sign_verify_detached' ) ) {
-			return false;
-		}
-		if ( ! is_string( $payload ) || ! is_string( $signature_b64 ) || '' === $signature_b64 ) {
-			return false;
-		}
-		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- Decoding a detached Ed25519 signature, not code.
-		$sig = base64_decode( $signature_b64, true );
-		if ( false === $sig || SODIUM_CRYPTO_SIGN_BYTES !== strlen( $sig ) ) {
-			return false;
-		}
-		foreach ( $this->public_keys() as $pk_b64 ) {
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- Decoding an Ed25519 public key, not code.
-			$pk = base64_decode( (string) $pk_b64, true );
-			if ( false === $pk || SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES !== strlen( $pk ) ) {
-				continue;
-			}
-			if ( sodium_crypto_sign_verify_detached( $sig, $payload, $pk ) ) {
-				return true;
-			}
-		}
-		return false;
+		return ReportedIP_Hive_Ed25519_Verifier::verify( $payload, $signature_b64, $this->public_keys() );
 	}
 
 	/**

@@ -2,7 +2,7 @@
 /**
  * User Enumeration Defence.
  *
- * Closes the four classic WordPress username-leak vectors and rate-limits
+ * Closes the five classic WordPress username-leak vectors and rate-limits
  * the bots that probe them:
  *
  *  1. `?author=<n>` permalink redirect → 404 (or block). The pretty author
@@ -12,6 +12,8 @@
  *  3. `/wp-json/oembed/1.0/embed?url=<post>` author leak.
  *  4. Generic login-error message so "user not found" and "wrong password"
  *     are indistinguishable.
+ *  5. The core users sitemap (`/wp-sitemap-users-1.xml`), which lists every
+ *     author slug in one machine-readable file.
  *
  * Every block-event also feeds the security monitor as `user_enumeration`
  * — repeated probes from the same IP escalate to a real block + report.
@@ -107,6 +109,7 @@ class ReportedIP_Hive_User_Enumeration {
 		add_filter( 'rest_endpoints', array( $this, 'restrict_users_endpoint' ) );
 		add_filter( 'rest_pre_dispatch', array( $this, 'detect_rest_users_probe' ), 4, 3 );
 		add_filter( 'oembed_response_data', array( $this, 'strip_author_from_oembed' ), 99 );
+		add_filter( 'wp_sitemaps_add_provider', array( $this, 'drop_users_sitemap_provider' ), 10, 2 );
 		add_filter( 'login_errors', array( $this, 'normalize_login_errors' ), 99 );
 		add_filter( 'authenticate', array( $this, 'unify_login_error_codes' ), 99, 3 );
 	}
@@ -229,6 +232,31 @@ class ReportedIP_Hive_User_Enumeration {
 			}
 		}
 		return $endpoints;
+	}
+
+	/**
+	 * Drop the core users sitemap provider while user-enumeration defence is
+	 * on. `/wp-sitemap-users-1.xml` publishes every author slug in one file,
+	 * which is the same leak the `?author=<n>` redirect gives — just
+	 * pre-packaged for crawlers.
+	 *
+	 * Not logged and not counted: a sitemap URL is what search engines fetch
+	 * from a stale index, so feeding it to the escalation ladder would block
+	 * legitimate bots.
+	 *
+	 * @param WP_Sitemaps_Provider|mixed $provider Provider about to be registered.
+	 * @param string|mixed               $name     Provider name.
+	 * @return WP_Sitemaps_Provider|false|mixed
+	 * @since  2.1.51
+	 */
+	public function drop_users_sitemap_provider( $provider, $name ) {
+		if ( 'users' !== $name ) {
+			return $provider;
+		}
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_user_enumeration', true ) ) {
+			return $provider;
+		}
+		return false;
 	}
 
 	/**

@@ -182,11 +182,21 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_2fa_extended_remember',
 					'reportedip_hive_2fa_branded_login',
 					'reportedip_hive_2fa_ip_allowlist',
+					'reportedip_hive_2fa_policy_new_country',
+					'reportedip_hive_2fa_policy_new_ip',
+					'reportedip_hive_2fa_policy_new_subnet',
+					'reportedip_hive_2fa_policy_new_device',
+					'reportedip_hive_2fa_policy_every_n_days',
+					'reportedip_hive_2fa_policy_every_n_logins',
+					'reportedip_hive_2fa_policy_sessions_above_n',
+					'reportedip_hive_2fa_policy_days',
+					'reportedip_hive_2fa_policy_logins',
+					'reportedip_hive_2fa_policy_sessions',
 				),
 			),
 			'firewall'         => array(
 				'label'       => __( 'Firewall & spam defence', 'reportedip-hive' ),
-				'description' => __( 'WAF engine, bot verification, disposable-email and comment-honeypot settings. The pre-WordPress drop-in toggle is host-specific and stays local.', 'reportedip-hive' ),
+				'description' => __( 'WAF engine, bot verification, registration rules (prohibited usernames, e-mail rules, rate limit, IP allowlist), disposable-email and comment-honeypot settings. The pre-WordPress drop-in toggle is host-specific and stays local.', 'reportedip-hive' ),
 				'options'     => array(
 					'reportedip_hive_waf_enabled',
 					'reportedip_hive_waf_report_only',
@@ -198,6 +208,15 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_disposable_email_action',
 					'reportedip_hive_block_email_relays',
 					'reportedip_hive_comment_honeypot_enabled',
+					'reportedip_hive_prohibited_usernames',
+					'reportedip_hive_prohibited_usernames_baseline',
+					'reportedip_hive_email_rule_mode',
+					'reportedip_hive_email_rules',
+					'reportedip_hive_registration_limit_enabled',
+					'reportedip_hive_registration_limit_count',
+					'reportedip_hive_registration_limit_timeframe',
+					'reportedip_hive_registration_allowlist',
+					'reportedip_hive_block_unknown_username_login',
 				),
 			),
 			'headers'          => array(
@@ -219,6 +238,20 @@ class ReportedIP_Hive_Settings_Import_Export {
 					'reportedip_hive_coop',
 					'reportedip_hive_corp',
 					'reportedip_hive_coep',
+				),
+			),
+			'lockdown'         => array(
+				'label'       => __( 'Access Lockdown', 'reportedip-hive' ),
+				'description' => __( 'Attack-surface switches (REST API access, XML-RPC, feeds, wp-admin for visitors, PHP execution in uploads, software fingerprints).', 'reportedip-hive' ),
+				'options'     => array(
+					'reportedip_hive_rest_access_mode',
+					'reportedip_hive_rest_allowed_namespaces',
+					'reportedip_hive_rest_allowed_roles',
+					'reportedip_hive_disable_xmlrpc',
+					'reportedip_hive_disable_feeds',
+					'reportedip_hive_block_admin_guests',
+					'reportedip_hive_block_uploads_php',
+					'reportedip_hive_hide_software_info',
 				),
 			),
 			'audit'            => array(
@@ -346,10 +379,14 @@ class ReportedIP_Hive_Settings_Import_Export {
 	/**
 	 * Verifies admin capability and AJAX nonce. Aborts with HTTP 403 otherwise.
 	 *
+	 * The import writes network-wide options on Multisite, so the capability
+	 * follows the option-writing AJAX handlers: `manage_network_options` on
+	 * Multisite, `manage_options` on single-site.
+	 *
 	 * @since 1.2.0
 	 */
 	private function require_authorised_admin(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ), 403 );
 		}
 		check_ajax_referer( 'reportedip_hive_settings_import', '_rip_ie_nonce' );

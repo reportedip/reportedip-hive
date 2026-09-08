@@ -70,13 +70,13 @@ class ReportedIP_Hive_Geo_Anomaly {
 			return;
 		}
 
-		$reputation = $this->fetch_reputation( $ip );
+		$reputation = self::fetch_reputation( $ip );
 		if ( empty( $reputation ) ) {
 			return;
 		}
 
-		$country = $this->extract_country( $reputation );
-		$asn     = $this->extract_asn( $reputation );
+		$country = self::extract_country( $reputation );
+		$asn     = self::extract_asn( $reputation );
 		if ( '' === $country && 0 === $asn ) {
 			return;
 		}
@@ -128,7 +128,7 @@ class ReportedIP_Hive_Geo_Anomaly {
 	 *
 	 * @return array<string,mixed>|array{}
 	 */
-	private function fetch_reputation( string $ip ): array {
+	public static function fetch_reputation( string $ip ): array {
 		if ( ! class_exists( 'ReportedIP_Hive_Cache' ) ) {
 			return array();
 		}
@@ -143,7 +143,14 @@ class ReportedIP_Hive_Geo_Anomaly {
 		return is_array( $cached ) ? $cached : array();
 	}
 
-	private function extract_country( array $reputation ): string {
+	/**
+	 * ISO country code carried by a reputation payload.
+	 *
+	 * @param array<string,mixed> $reputation Cached reputation data.
+	 * @return string Two-letter code, or an empty string when absent.
+	 * @since  2.1.0
+	 */
+	public static function extract_country( array $reputation ): string {
 		foreach ( array( 'countryCode', 'country_code', 'country' ) as $key ) {
 			if ( ! empty( $reputation[ $key ] ) && is_string( $reputation[ $key ] ) ) {
 				return strtoupper( substr( $reputation[ $key ], 0, 2 ) );
@@ -152,7 +159,14 @@ class ReportedIP_Hive_Geo_Anomaly {
 		return '';
 	}
 
-	private function extract_asn( array $reputation ): int {
+	/**
+	 * Autonomous-system number carried by a reputation payload.
+	 *
+	 * @param array<string,mixed> $reputation Cached reputation data.
+	 * @return int ASN, or 0 when absent.
+	 * @since  2.1.0
+	 */
+	public static function extract_asn( array $reputation ): int {
 		foreach ( array( 'asn', 'asNumber' ) as $key ) {
 			if ( isset( $reputation[ $key ] ) && is_numeric( $reputation[ $key ] ) ) {
 				return (int) $reputation[ $key ];
@@ -197,18 +211,15 @@ class ReportedIP_Hive_Geo_Anomaly {
 	}
 
 	/**
-	 * Revoke this user's trusted-device cookies so the next login from this
-	 * new geo forces a full 2FA challenge. We delete every row in the
-	 * trusted_devices table for the user — cheap, safe, and keeps the
-	 * surface tiny. Skipped when 2FA isn't enabled at all.
+	 * Revoke this user's trusted devices so the next login from this new geo
+	 * forces a full 2FA challenge. Delegates to the 2FA engine's helper, the
+	 * single owner of the trusted_devices table. Gated by the
+	 * `reportedip_hive_geo_revoke_trusted_devices` option.
 	 */
 	private function revoke_trusted_devices( int $user_id ): void {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_geo_revoke_trusted_devices', true ) ) {
 			return;
 		}
-		global $wpdb;
-		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_trusted_devices' );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->delete( $table, array( 'user_id' => $user_id ), array( '%d' ) );
+		ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user_id );
 	}
 }

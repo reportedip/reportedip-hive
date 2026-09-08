@@ -55,6 +55,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 100, array_sum( \ReportedIP_Hive_Score::HARDENING_WEIGHTS ) );
 		}
 
+		public function test_hardening_weights_cover_the_attack_surface_switches(): void {
+			$weights = \ReportedIP_Hive_Score::HARDENING_WEIGHTS;
+
+			foreach ( array( 'rest_access', 'xmlrpc_off', 'feeds_off', 'admin_guest_block', 'uploads_php_block', 'hide_software_info' ) as $key ) {
+				$this->assertArrayHasKey( $key, $weights, "Attack-surface item {$key} has no score weight." );
+				$this->assertGreaterThan( 0, $weights[ $key ] );
+			}
+		}
+
 		public function test_all_off_scores_zero(): void {
 			$items = array(
 				$this->item( 60, true, true, false ),

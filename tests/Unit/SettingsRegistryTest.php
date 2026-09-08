@@ -18,6 +18,9 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-effects.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -83,12 +86,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_monitor_bot_verification'      => 'bool',
 				'reportedip_hive_bot_action'                    => 'enum',
 				'reportedip_hive_disposable_email_action'       => 'enum',
+				'reportedip_hive_block_email_relays'            => 'bool',
 				'reportedip_hive_comment_honeypot_enabled'      => 'bool',
+				'reportedip_hive_prohibited_usernames'          => 'textarea',
+				'reportedip_hive_prohibited_usernames_baseline' => 'bool',
+				'reportedip_hive_email_rule_mode'               => 'enum',
+				'reportedip_hive_email_rules'                   => 'textarea',
+				'reportedip_hive_registration_limit_enabled'    => 'bool',
+				'reportedip_hive_registration_limit_count'      => 'int',
+				'reportedip_hive_registration_limit_timeframe'  => 'int',
+				'reportedip_hive_registration_allowlist'        => 'textarea',
+				'reportedip_hive_block_unknown_username_login'  => 'bool',
 				'reportedip_hive_decoy_pathblock_enabled'       => 'bool',
 				'reportedip_hive_hide_login_enabled'            => 'bool',
 				'reportedip_hive_hide_login_slug'               => 'slug',
 				'reportedip_hive_hide_login_response_mode'      => 'enum',
 				'reportedip_hive_monitor_hide_login_probe'      => 'bool',
+				'reportedip_hive_rest_access_mode'              => 'enum',
+				'reportedip_hive_rest_allowed_namespaces'       => 'textarea',
+				'reportedip_hive_rest_allowed_roles'            => 'json_list',
+				'reportedip_hive_disable_xmlrpc'                => 'bool',
+				'reportedip_hive_disable_feeds'                 => 'bool',
+				'reportedip_hive_block_admin_guests'            => 'bool',
+				'reportedip_hive_block_uploads_php'             => 'bool',
+				'reportedip_hive_hide_software_info'            => 'bool',
 				'reportedip_hive_2fa_enabled_global'            => 'bool',
 				'reportedip_hive_2fa_allowed_methods'           => 'json_list',
 				'reportedip_hive_2fa_enforce_roles'             => 'json_list',
@@ -97,6 +118,16 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_2fa_enforce_action'            => 'enum',
 				'reportedip_hive_2fa_trusted_devices'           => 'bool',
 				'reportedip_hive_2fa_trusted_device_days'       => 'int',
+				'reportedip_hive_2fa_policy_new_country' => 'json_list',
+				'reportedip_hive_2fa_policy_new_ip' => 'json_list',
+				'reportedip_hive_2fa_policy_new_subnet' => 'json_list',
+				'reportedip_hive_2fa_policy_new_device' => 'json_list',
+				'reportedip_hive_2fa_policy_every_n_days' => 'json_list',
+				'reportedip_hive_2fa_policy_every_n_logins' => 'json_list',
+				'reportedip_hive_2fa_policy_sessions_above_n' => 'json_list',
+				'reportedip_hive_2fa_policy_days' => 'int',
+				'reportedip_hive_2fa_policy_logins' => 'int',
+				'reportedip_hive_2fa_policy_sessions' => 'int',
 				'reportedip_hive_2fa_require_on_password_reset' => 'bool',
 				'reportedip_hive_password_policy_enabled'       => 'bool',
 				'reportedip_hive_password_min_length'           => 'int',

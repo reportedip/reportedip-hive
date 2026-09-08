@@ -4,6 +4,57 @@ All changes to ReportedIP Hive are documented here.
 
 ## [Unreleased]
 
+### New
+
+- **Registration defence.** The registration sensor grew from a single
+  disposable-mail check into a rule set: prohibited usernames on top of a
+  built-in baseline of ten role names, e-mail allow or block rules, a per-IP
+  registration rate limit (three sign-ups per 60 minutes by default) and an
+  opt-in immediate block for sign-in attempts against usernames that do not
+  exist. Ten plain entries per list are free; Professional lifts the cap,
+  accepts `/regex/` patterns and adds allowlist-only registration, where
+  accounts can only be created from listed IP ranges. Every surface is covered:
+  the WordPress registration form, WooCommerce, Multisite sign-ups and
+  programmatic user creation.
+
+- **Access lockdown switches.** A new section on the Firewall page turns off the
+  parts of WordPress a site does not use: the REST API for signed-out visitors
+  or for everyone outside a chosen set of roles and namespaces, XML-RPC together
+  with pingbacks, feeds, the admin area for signed-out visitors, PHP execution
+  in the uploads folder and the version fingerprints in the page source. The
+  uploads block is written into the uploads `.htaccess` on Apache; nginx and
+  unknown servers get the snippet to paste. Free on every plan.
+
+- **System readiness register.** Twelve detectors watch the parts of the setup
+  that fail quietly: an unwritable pre-WordPress guard queue, stalled or
+  disabled cron, a trusted proxy header without proxy ranges, an outdated
+  database schema, a degraded community layer, exhausted mail or SMS relay
+  quotas, mail delivery failures, a missing encryption extension and the report
+  queue. The System Status page lists every open issue with its severity, when
+  it first appeared, a link to the setting and a link to the documentation;
+  warnings and advisories can be dismissed for seven days, critical issues
+  cannot. The dashboard widget shows the count and `wp reportedip status` gained
+  an `issues` field.
+
+- **Block user accounts and manage sessions (Business).** An account can be
+  blocked from its profile page, from the Users list or with
+  `wp reportedip user block`. A blocked account keeps its content but cannot
+  sign in, authenticate an application password or complete a password reset;
+  all of its sessions and trusted devices are dropped at once. The new
+  Users → Sessions page lists every active session with user, sign-in time,
+  expiry, IP address and device, and terminates single sessions or all sessions
+  of a user. Blocks stay enforced and can always be lifted, even after a plan
+  expires.
+
+- **Adaptive two-factor triggers per role (Professional).** Seven step-up
+  triggers can be enabled per role: a new country, a new IP address, a new
+  network, a new device, every N days, every N sign-ins and more than N
+  concurrent sessions. A user who matches is asked for the second factor again
+  even when the trusted-device cookie is present; the 2FA IP allowlist and the
+  `reportedip_2fa_bypass` filter still bypass. Users without a configured method
+  are never locked out, and the administrator role can only be armed after an
+  administrator has completed one two-factor challenge on the site.
+
 ### Security
 
 - **Hardening mode now reaches every login surface.** While a coordinated
@@ -27,11 +78,51 @@ All changes to ReportedIP Hive are documented here.
   stored value" state is what turns hardening on automatically for
   Professional and higher.
 
+- **Settings cards on the Firewall page write through the settings registry.**
+  The AJAX save path of the Registration, Spam and scan cards now sanitises and
+  tier-checks every value the same way the settings form, the wizard, MainWP and
+  the cloud fleet do, so a plan limit can no longer be bypassed by posting the
+  card directly.
+- **Honeypot operators are treated as Contributor.** The `honeypot` tier was
+  missing from the tier order, so every plan comparison returned false and
+  honeypot sites were locked out of features their tier includes.
+- **The user sitemap disappears while user-enumeration blocking is on.** The
+  option is on by default, so most sites lose `wp-sitemap-users-1.xml` after the
+  update; it was the one remaining published list of usernames while the same
+  defence blocked `?author=` and the REST user route.
+- **The decoy `.htaccess` block is removed completely when switched off.**
+  Turning the decoy paths off used to leave an empty marker skeleton behind;
+  both markers are now stripped.
+- **`wp_login` fires after a passed two-factor challenge.** Until now the action
+  only fired for logins that never saw a challenge, so the geo-anomaly sensor,
+  the new-device mail, the audit trail and the 2FA reminder were blind to every
+  challenged sign-in. The REST verify endpoint fires it as well, and both paths
+  additionally fire `reportedip_hive_2fa_verified`.
+- **The hardening score was re-balanced.** Six lockdown items joined the score,
+  and the existing weights were lowered so the total stays 100; scores shift a
+  few points without any setting having changed.
+- **Registration rate-limit windows are capped at 60 minutes.** The shared
+  per-IP attempt counter restarts every hour, so a longer window could not be
+  honoured.
+- **The trusted-proxy warning became a readiness issue.** Configuring a client
+  IP header without proxy ranges used to be refused once at save time; it is now
+  raised as a standing warning for as long as it applies.
+
 ### Fixed
 
 - The distributed-detection help texts named 5 and 20 as the defaults while
   the code used 10 and 50, and the section intro still described the
   superseded same-minute burst rule.
+- Hide Login refused logged-out `admin-post.php` requests. Payment callbacks and
+  other unauthenticated endpoints that post to `admin_post_nopriv_*` hit the
+  block page while the feature was active.
+- On Multisite, an administrator of a single site could write network-wide
+  plugin settings through the admin AJAX handlers, which check
+  `manage_options`. The handlers now require `manage_network_options` there.
+- The Rule Sync tab showed the Tor exit-node list as a raw key without a label
+  or feed column.
+- The Logs page offered an `XMLRPC Abuse` filter that never matched a row: the
+  sensor stores the event under its threshold name.
 
 ## [2.1.50] — 2026-08-29
 

@@ -17,6 +17,52 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-apply.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
+
+	if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
+		/**
+		 * Recording Logger double: keeps every security event in memory so
+		 * the apply audit event can be asserted.
+		 */
+		class ReportedIP_Hive_Logger {
+			/**
+			 * Recorded events as [type, ip, details, severity] rows.
+			 *
+			 * @var array<int, array<string, mixed>>
+			 */
+			public static $events = array();
+
+			/**
+			 * Singleton accessor.
+			 *
+			 * @return self
+			 */
+			public static function get_instance() {
+				return new self();
+			}
+
+			/**
+			 * Record one event.
+			 *
+			 * @param string $event_type Event type.
+			 * @param string $ip_address IP address.
+			 * @param array  $details    Event details.
+			 * @param string $severity   Severity.
+			 * @return int
+			 */
+			public function log_security_event( $event_type, $ip_address, $details = array(), $severity = 'medium' ) {
+				self::$events[] = array(
+					'type'     => $event_type,
+					'ip'       => $ip_address,
+					'details'  => $details,
+					'severity' => $severity,
+				);
+				return count( self::$events );
+			}
+		}
+	}
 
 	if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
 		/**
@@ -65,7 +111,33 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		protected function set_up() {
 			parent::set_up();
-			$GLOBALS['wp_options'] = array();
+			$GLOBALS['wp_options']            = array();
+			\ReportedIP_Hive_Logger::$events = array();
+		}
+
+		public function test_admin_origin_logs_its_own_event_type() {
+			\ReportedIP_Hive_Settings_Apply::apply( array( 'reportedip_hive_auto_block' => 0 ), 'admin' );
+			\ReportedIP_Hive_Settings_Apply::apply( array( 'reportedip_hive_auto_block' => 1 ), 'mainwp' );
+
+			$this->assertCount( 2, \ReportedIP_Hive_Logger::$events );
+			$this->assertSame( 'settings_admin_apply', \ReportedIP_Hive_Logger::$events[0]['type'] );
+			$this->assertSame( 'admin', \ReportedIP_Hive_Logger::$events[0]['details']['origin'] );
+			$this->assertSame( 'settings_remote_apply', \ReportedIP_Hive_Logger::$events[1]['type'] );
+			$this->assertSame( 'mainwp', \ReportedIP_Hive_Logger::$events[1]['details']['origin'] );
+		}
+
+		public function test_apply_event_names_the_acting_user() {
+			$GLOBALS['wp_current_user_id'] = 42;
+
+			\ReportedIP_Hive_Settings_Apply::apply( array( 'reportedip_hive_auto_block' => 0 ), 'admin' );
+
+			$this->assertSame( 42, \ReportedIP_Hive_Logger::$events[0]['details']['user_id'] );
+		}
+
+		public function test_unchanged_batch_logs_nothing() {
+			\ReportedIP_Hive_Settings_Apply::apply( array( 'reportedip_hive_auto_block' => 1 ), 'admin' );
+
+			$this->assertSame( array(), \ReportedIP_Hive_Logger::$events );
 		}
 
 		public function test_unchanged_value_counts_as_success_without_write() {
@@ -123,6 +195,43 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_action', false ) );
 		}
 
+		public function test_atomic_batch_writes_nothing_when_one_key_is_rejected() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array(
+					'reportedip_hive_auto_block' => 0,
+					'reportedip_hive_block_tor'  => 1,
+					'reportedip_hive_bot_action' => 'nuke',
+				),
+				'admin',
+				true
+			);
+
+			$this->assertSame( 0, $result['applied'] );
+			$this->assertSame( 0, $result['unchanged'] );
+			$this->assertSame( array( 'reportedip_hive_block_tor', 'reportedip_hive_bot_action' ), array_keys( $result['results'] ), 'only the rejections are reported' );
+			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_block_tor']['status'] );
+			$this->assertSame( 'invalid', $result['results']['reportedip_hive_bot_action']['status'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_auto_block', $GLOBALS['wp_options'], 'the passing sibling must not be written' );
+			$this->assertSame( array(), \ReportedIP_Hive_Logger::$events, 'an aborted batch logs nothing' );
+		}
+
+		public function test_atomic_batch_applies_when_every_key_passes() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array(
+					'reportedip_hive_auto_block'             => 0,
+					'reportedip_hive_failed_login_threshold' => 5,
+				),
+				'admin',
+				true
+			);
+
+			$this->assertSame( 1, $result['applied'] );
+			$this->assertSame( 1, $result['unchanged'] );
+			$this->assertSame( 'applied', $result['results']['reportedip_hive_auto_block']['status'] );
+			$this->assertSame( 'unchanged', $result['results']['reportedip_hive_failed_login_threshold']['status'] );
+			$this->assertSame( 'settings_admin_apply', \ReportedIP_Hive_Logger::$events[0]['type'] );
+		}
+
 		public function test_unknown_key_is_reported_and_batch_continues() {
 			$result = \ReportedIP_Hive_Settings_Apply::apply(
 				array(
@@ -172,6 +281,86 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'test'
 			);
 			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_waf_paranoia']['status'] );
+		}
+
+		public function test_free_plan_keeps_ten_plain_entries() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_prohibited_usernames' => implode( "\n", array( 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10' ) ) ),
+				'test'
+			);
+
+			$this->assertSame( 'applied', $result['results']['reportedip_hive_prohibited_usernames']['status'] );
+		}
+
+		public function test_eleventh_entry_needs_the_paid_plan() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_prohibited_usernames' => implode( "\n", array( 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10', 'a11' ) ) ),
+				'test'
+			);
+
+			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_prohibited_usernames']['status'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_prohibited_usernames', $GLOBALS['wp_options'] );
+		}
+
+		public function test_regex_entry_needs_the_paid_plan() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_email_rules' => "example.com\n/^spam[0-9]+@/" ),
+				'test'
+			);
+
+			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_email_rules']['status'] );
+		}
+
+		public function test_plain_email_rules_stay_free() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_email_rules' => 'example.com' ),
+				'test'
+			);
+
+			$this->assertSame( 'applied', $result['results']['reportedip_hive_email_rules']['status'] );
+			$this->assertSame( '*@example.com', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_email_rules' ) );
+		}
+
+		public function test_non_empty_registration_allowlist_needs_the_paid_plan() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_registration_allowlist' => '203.0.113.0/24' ),
+				'test'
+			);
+
+			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_registration_allowlist']['status'] );
+		}
+
+		public function test_empty_registration_allowlist_is_never_gated() {
+			$GLOBALS['wp_options']['reportedip_hive_registration_allowlist'] = '203.0.113.0/24';
+
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_registration_allowlist' => '' ),
+				'test'
+			);
+
+			$this->assertSame( 'applied', $result['results']['reportedip_hive_registration_allowlist']['status'], 'clearing a gated list must always be possible' );
+		}
+
+		public function test_non_empty_policy_role_list_needs_the_paid_plan() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_2fa_policy_new_ip' => '["editor"]' ),
+				'test'
+			);
+
+			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_2fa_policy_new_ip']['status'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_2fa_policy_new_ip', $GLOBALS['wp_options'] );
+		}
+
+		public function test_empty_policy_role_list_is_never_gated() {
+			$GLOBALS['wp_options']['reportedip_hive_2fa_policy_new_ip'] = '["editor"]';
+
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_2fa_policy_new_ip' => '[]' ),
+				'test'
+			);
+
+			$this->assertSame( 'applied', $result['results']['reportedip_hive_2fa_policy_new_ip']['status'], 'emptying a policy row must always be possible' );
+			$this->assertSame( '[]', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_policy_new_ip' ) );
 		}
 
 		public function test_hide_login_cannot_be_enabled_without_slug() {

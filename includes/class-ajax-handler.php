@@ -136,6 +136,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_spam_toggle', array( $this, 'ajax_spam_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_scan_toggle', array( $this, 'ajax_scan_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_headers_save', array( $this, 'ajax_headers_save' ) );
+		add_action( 'wp_ajax_reportedip_hive_registry_save', array( $this, 'ajax_registry_save' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 	}
@@ -157,13 +158,98 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * render; callers reading `data.message` fall back to their own default
 	 * text rather than printing an object.
 	 *
+	 * On Multisite every plugin option lives in sitemeta and every table is
+	 * network-wide, so the required capability follows the menu that renders
+	 * the controls: `manage_network_options` (Network Admin) on Multisite,
+	 * `manage_options` on single-site. A sub-site administrator only holds
+	 * `manage_options` and must not be able to write network state through
+	 * admin-ajax.php, which accepts requests from any blog of the network.
+	 * The read-only Site Admin pages issue no AJAX call at all; the single
+	 * handler a site administrator legitimately reaches (the per-user notice
+	 * dismissal) uses {@see require_site_capability()} instead.
+	 *
 	 * @return void
 	 * @since  2.1.44
 	 */
 	private function require_admin_capability() {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
+			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
+		}
+	}
+
+	/**
+	 * Enforce the site-level administrator capability, or terminate with a
+	 * JSON error.
+	 *
+	 * Reserved for handlers that only touch the acting user's own state (user
+	 * meta) and are triggered from surfaces a sub-site administrator can see,
+	 * such as the dismissible admin notices. Every handler that reads or
+	 * writes plugin options, tables or network state uses
+	 * {@see require_admin_capability()}.
+	 *
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private function require_site_capability() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
 		}
+	}
+
+	/**
+	 * Apply a registry batch from an admin surface atomically, or terminate
+	 * with a JSON error naming the first rejected key.
+	 *
+	 * The batch runs through {@see ReportedIP_Hive_Settings_Apply::apply()}
+	 * in atomic mode with origin `admin`: every key must be a remote registry
+	 * key, pass the kind sanitizer and its tier gate, and the sanitized batch
+	 * must pass the registry's cross-field rules against the stored state,
+	 * otherwise nothing is written. A batch that passes carries the same
+	 * side effects and the same `settings_admin_apply` audit event as MainWP,
+	 * the cloud transport and the settings import.
+	 *
+	 * @param array<string, mixed> $values Raw key => value map.
+	 * @return array{schema_version:int, results:array<string, array<string, string>>, applied:int, unchanged:int, failed:int, hash:string}
+	 * @since  2.1.51
+	 */
+	private function apply_registry_batch( array $values ) {
+		$result = ReportedIP_Hive_Settings_Apply::apply( $values, 'admin', true );
+
+		foreach ( $result['results'] as $key => $outcome ) {
+			if ( in_array( $outcome['status'], array( ReportedIP_Hive_Settings_Apply::STATUS_APPLIED, ReportedIP_Hive_Settings_Apply::STATUS_UNCHANGED ), true ) ) {
+				continue;
+			}
+			wp_send_json_error(
+				array(
+					'message' => isset( $outcome['message'] ) ? $outcome['message'] : __( 'This option is not part of the settings registry.', 'reportedip-hive' ),
+					'code'    => $outcome['status'],
+					'key'     => $key,
+				)
+			);
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Persist one registry-managed option from a single-option card.
+	 *
+	 * Shared by the Firewall page writers ajax_waf_toggle(),
+	 * ajax_waf_set_paranoia(), ajax_bot_action(), ajax_disposable_action(),
+	 * ajax_spam_toggle() and ajax_scan_toggle(). Only the pre-WordPress
+	 * drop-in toggle stays outside: its option is host-specific and not a
+	 * registry key. Wraps {@see apply_registry_batch()} for a single key
+	 * and returns the value the option router holds afterwards.
+	 *
+	 * @param string $key   Registry option key.
+	 * @param mixed  $value Raw target value.
+	 * @return mixed The stored value after the write.
+	 * @since  2.1.51
+	 */
+	private function save_registry_option( $key, $value ) {
+		$this->apply_registry_batch( array( $key => $value ) );
+
+		return ReportedIP_Hive_Option_Routing::get( $key );
 	}
 
 	/**
@@ -1406,12 +1492,16 @@ class ReportedIP_Hive_Ajax_Handler {
 	}
 
 	/**
-	 * AJAX: Dismiss admin notice persistently
+	 * AJAX: Dismiss admin notice persistently.
+	 *
+	 * Writes the acting user's own meta only, and the notices it serves can
+	 * surface on any admin screen of a sub-site, so the site-level capability
+	 * is sufficient here.
 	 */
 	public function ajax_dismiss_notice() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		$this->require_admin_capability();
+		$this->require_site_capability();
 
 		$notice_id = isset( $_POST['notice_id'] ) ? sanitize_key( $_POST['notice_id'] ) : '';
 		if ( empty( $notice_id ) ) {
@@ -1572,27 +1662,17 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		$option = $map[ $field ];
 		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, 'enabled' === $field );
-		ReportedIP_Hive_Option_Routing::set( $option, $new );
+		$new    = (bool) $this->save_registry_option( $option, $new );
 
 		wp_send_json_success( array( 'state' => $new ) );
 	}
 
 	/**
-	 * AJAX: flip the pre-WordPress WAF drop-in on or off.
-	 *
-	 * Flipping the option fires the manager's update_option hook, which writes
-	 * or removes the guard and its server directive. Returns a message that
-	 * reflects what happened (including a writability warning when the target
-	 * cannot be written).
-	 *
-	 * @return void
-	 * @since  2.1.2
-	 */
-	/**
 	 * AJAX: set the WAF Paranoia Level (Professional only, 1-3).
 	 *
 	 * Free tiers are clamped to Level 1 by the engine regardless; this control
-	 * only affects Professional installs that sync the deeper ruleset.
+	 * only affects Professional installs that sync the deeper ruleset. The
+	 * registry clamps the level into its 1-3 range.
 	 *
 	 * @return void
 	 * @since  2.1.2
@@ -1607,12 +1687,9 @@ class ReportedIP_Hive_Ajax_Handler {
 			wp_send_json_error( array( 'message' => __( 'Paranoia Level 2/3 requires a Professional plan.', 'reportedip-hive' ) ) );
 		}
 
-		$level = isset( $_POST['level'] ) ? (int) $_POST['level'] : 1;
-		if ( $level < 1 || $level > 3 ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid level.', 'reportedip-hive' ) ) );
-		}
+		$level = isset( $_POST['level'] ) ? absint( wp_unslash( $_POST['level'] ) ) : 1;
+		$level = (int) $this->save_registry_option( ReportedIP_Hive_WAF::OPT_PARANOIA, $level );
 
-		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_PARANOIA, $level );
 		wp_send_json_success( array( 'level' => $level ) );
 	}
 
@@ -1677,11 +1754,8 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
-		if ( ! in_array( $mode, array( 'off', 'flag', 'block' ), true ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid action.', 'reportedip-hive' ) ) );
-		}
+		$mode = $this->save_registry_option( ReportedIP_Hive_Bot_Verifier::OPT_ACTION, $mode );
 
-		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Bot_Verifier::OPT_ACTION, $mode );
 		wp_send_json_success( array( 'mode' => $mode ) );
 	}
 
@@ -1702,11 +1776,8 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
-		if ( ! in_array( $mode, array( 'off', 'monitor', 'block' ), true ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid action.', 'reportedip-hive' ) ) );
-		}
+		$mode = $this->save_registry_option( ReportedIP_Hive_Disposable_Email::OPT_ACTION, $mode );
 
-		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Disposable_Email::OPT_ACTION, $mode );
 		wp_send_json_success( array( 'mode' => $mode ) );
 	}
 
@@ -1733,7 +1804,7 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		$option = $map[ $field ];
 		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, 'honeypot' === $field );
-		ReportedIP_Hive_Option_Routing::set( $option, $new );
+		$new    = (bool) $this->save_registry_option( $option, $new );
 
 		wp_send_json_success( array( 'state' => $new ) );
 	}
@@ -1760,7 +1831,7 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		$option = $map[ $field ];
 		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, true );
-		ReportedIP_Hive_Option_Routing::set( $option, $new );
+		$new    = (bool) $this->save_registry_option( $option, $new );
 
 		wp_send_json_success( array( 'state' => $new ) );
 	}
@@ -1825,6 +1896,41 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * AJAX: persist a batch of registry-managed options from an admin card.
+	 *
+	 * Generic writer for every settings card that saves through AJAX instead
+	 * of the Settings API. The JSON payload maps option keys to raw values
+	 * and is handed to {@see apply_registry_batch()}, so the whole card is
+	 * validated before anything is written and the first rejection
+	 * terminates with a JSON error naming the key. The per-key result map is
+	 * returned so the page can reload and report what landed.
+	 *
+	 * @return void
+	 * @since  2.1.51
+	 */
+	public function ajax_registry_save() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
+
+		$this->require_admin_capability();
+
+		$raw    = isset( $_POST['payload'] ) ? wp_unslash( $_POST['payload'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON blob; decoded below and every key sanitised by Settings_Apply through the registry.
+		$values = json_decode( (string) $raw, true );
+		if ( ! is_array( $values ) || empty( $values ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid payload.', 'reportedip-hive' ) ) );
+		}
+
+		$result = $this->apply_registry_batch( $values );
+
+		wp_send_json_success(
+			array(
+				'applied'   => $result['applied'],
+				'unchanged' => $result['unchanged'],
+				'results'   => $result['results'],
+			)
+		);
 	}
 
 	/**
@@ -1897,12 +2003,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	public function ajax_hardening_deactivate() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		$can = is_multisite()
-			? ( current_user_can( 'manage_network_options' ) || is_super_admin() )
-			: current_user_can( 'manage_options' );
-		if ( ! $can ) {
-			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'reportedip-hive' ) ) );
-		}
+		$this->require_admin_capability();
 
 		$was_active = ReportedIP_Hive_Hardening_Mode::is_active();
 		ReportedIP_Hive_Hardening_Mode::deactivate( 'admin' );

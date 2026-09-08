@@ -64,6 +64,10 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Hide Login', 'reportedip-hive' ),
 				'description' => __( 'Custom login URL and probe monitoring.', 'reportedip-hive' ),
 			),
+			'lockdown'         => array(
+				'label'       => __( 'Access Lockdown', 'reportedip-hive' ),
+				'description' => __( 'Attack-surface switches: REST API access, XML-RPC, feeds, wp-admin for visitors, PHP execution in uploads and software fingerprints.', 'reportedip-hive' ),
+			),
 			'account_security' => array(
 				'label'       => __( 'Account Security', 'reportedip-hive' ),
 				'description' => __( 'Two-factor authentication and password policy.', 'reportedip-hive' ),
@@ -376,6 +380,79 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Action on disposable email domains', 'reportedip-hive' ),
 			),
+			'reportedip_hive_block_email_relays'           => array(
+				'section' => 'waf',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Block privacy relay addresses', 'reportedip-hive' ),
+			),
+			'reportedip_hive_prohibited_usernames'         => array(
+				'section'   => 'waf',
+				'kind'      => 'textarea',
+				'tier'      => 'registration_rules_unlimited',
+				'tier_gate' => array( 'ReportedIP_Hive_Registration_Guard', 'list_needs_tier' ),
+				'sanitize'  => array( 'ReportedIP_Hive_Registration_Guard', 'sanitize_username_list' ),
+				'remote'    => true,
+				'label'     => __( 'Prohibited usernames', 'reportedip-hive' ),
+			),
+			'reportedip_hive_prohibited_usernames_baseline' => array(
+				'section' => 'waf',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Built-in prohibited usernames', 'reportedip-hive' ),
+			),
+			'reportedip_hive_email_rule_mode'              => array(
+				'section' => 'waf',
+				'kind'    => 'enum',
+				'allowed' => array( 'off', 'block', 'allow' ),
+				'remote'  => true,
+				'label'   => __( 'E-mail rule mode', 'reportedip-hive' ),
+			),
+			'reportedip_hive_email_rules'                  => array(
+				'section'   => 'waf',
+				'kind'      => 'textarea',
+				'tier'      => 'registration_rules_unlimited',
+				'tier_gate' => array( 'ReportedIP_Hive_Registration_Guard', 'list_needs_tier' ),
+				'sanitize'  => array( 'ReportedIP_Hive_Registration_Guard', 'sanitize_email_rule_list' ),
+				'remote'    => true,
+				'label'     => __( 'E-mail rules', 'reportedip-hive' ),
+			),
+			'reportedip_hive_registration_limit_enabled'   => array(
+				'section' => 'waf',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Registration rate limit', 'reportedip-hive' ),
+			),
+			'reportedip_hive_registration_limit_count'     => array(
+				'section' => 'waf',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 100,
+				'remote'  => true,
+				'label'   => __( 'Registrations per window', 'reportedip-hive' ),
+			),
+			'reportedip_hive_registration_limit_timeframe' => array(
+				'section' => 'waf',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 60,
+				'remote'  => true,
+				'label'   => __( 'Registration window (minutes)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_registration_allowlist'       => array(
+				'section'  => 'waf',
+				'kind'     => 'textarea',
+				'tier'     => 'registration_rules_unlimited',
+				'sanitize' => array( 'ReportedIP_Hive_Registration_Guard', 'sanitize_ip_list' ),
+				'remote'   => true,
+				'label'    => __( 'Registration allowlist (IP/CIDR)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_block_unknown_username_login' => array(
+				'section' => 'waf',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Block logins with unknown usernames', 'reportedip-hive' ),
+			),
 			'reportedip_hive_comment_honeypot_enabled'     => array(
 				'section' => 'waf',
 				'kind'    => 'bool',
@@ -416,6 +493,58 @@ final class ReportedIP_Hive_Settings_Registry {
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Monitor login probe attempts', 'reportedip-hive' ),
+			),
+
+			'reportedip_hive_rest_access_mode'             => array(
+				'section' => 'lockdown',
+				'kind'    => 'enum',
+				'allowed' => array( 'open', 'logged_in', 'restricted' ),
+				'remote'  => true,
+				'label'   => __( 'REST API access', 'reportedip-hive' ),
+			),
+			'reportedip_hive_rest_allowed_namespaces'      => array(
+				'section' => 'lockdown',
+				'kind'    => 'textarea',
+				'remote'  => true,
+				'label'   => __( 'REST namespaces always allowed', 'reportedip-hive' ),
+			),
+			'reportedip_hive_rest_allowed_roles'           => array(
+				'section'       => 'lockdown',
+				'kind'          => 'json_list',
+				'json_filter'   => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_roles' ),
+				'json_fallback' => array( 'administrator' ),
+				'remote'        => true,
+				'label'         => __( 'Roles allowed to use the REST API', 'reportedip-hive' ),
+			),
+			'reportedip_hive_disable_xmlrpc'               => array(
+				'section' => 'lockdown',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Disable XML-RPC', 'reportedip-hive' ),
+			),
+			'reportedip_hive_disable_feeds'                => array(
+				'section' => 'lockdown',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Disable RSS and Atom feeds', 'reportedip-hive' ),
+			),
+			'reportedip_hive_block_admin_guests'           => array(
+				'section' => 'lockdown',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Close wp-admin for visitors', 'reportedip-hive' ),
+			),
+			'reportedip_hive_block_uploads_php'            => array(
+				'section' => 'lockdown',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Block PHP execution in uploads', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hide_software_info'           => array(
+				'section' => 'lockdown',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Hide software fingerprints', 'reportedip-hive' ),
 			),
 
 			'reportedip_hive_2fa_enabled_global'           => array(
@@ -475,6 +604,93 @@ final class ReportedIP_Hive_Settings_Registry {
 				'max'     => 365,
 				'remote'  => true,
 				'label'   => __( 'Trusted device lifetime (days)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_new_country'       => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up on a new country', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_new_ip'            => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up on a new IP address', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_new_subnet'        => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up on a new network', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_new_device'        => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up on a new browser or device', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_every_n_days'      => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up every few days', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_every_n_logins'    => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up every few sign-ins', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_sessions_above_n'  => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up above a session count', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_days'              => array(
+				'section' => 'account_security',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 365,
+				'remote'  => true,
+				'label'   => __( 'Step-up interval (days)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_logins'            => array(
+				'section' => 'account_security',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 100,
+				'remote'  => true,
+				'label'   => __( 'Step-up interval (sign-ins)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_sessions'          => array(
+				'section' => 'account_security',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 20,
+				'remote'  => true,
+				'label'   => __( 'Open-session threshold', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_require_on_password_reset' => array(
 				'section' => 'account_security',
@@ -617,6 +833,20 @@ final class ReportedIP_Hive_Settings_Registry {
 	 */
 	public static function paranoia_needs_tier( $value ) {
 		return (int) $value >= 2;
+	}
+
+	/**
+	 * Whether a policy role list activates the adaptive-2FA tier gate. An
+	 * empty list is inert and stays writable on every plan, so a site that
+	 * lost the plan can still clear its matrix.
+	 *
+	 * @param mixed $value Sanitized target value (JSON string or array).
+	 * @return bool
+	 */
+	public static function policy_list_needs_tier( $value ) {
+		$list = is_array( $value ) ? $value : json_decode( (string) $value, true );
+
+		return is_array( $list ) && ! empty( $list );
 	}
 
 	/**

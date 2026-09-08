@@ -128,19 +128,33 @@ ever sees the generic denial.
 
 ## Scope — what is and isn't managed
 
-**Managed (63 keys, both transports):** the detection thresholds and monitor
+**Managed (99 keys, both transports):** the detection thresholds and monitor
 toggles, auto-blocking and escalation, report-only mode, the WAF engine
-level and rule-sync options, hide-login, 2FA enablement/enforcement/policy,
+level and rule-sync options, hide-login, the registration rules, the
+attack-surface lockdown switches, the hardening-mode limits, 2FA
+enablement/enforcement/policy including the per-role step-up triggers,
 password policy, logging and retention, audit options, and notification
 settings.
+
+Some of these are multi-line values: the prohibited-username list, the e-mail
+rules, the registration IP allowlist and the allowed REST namespaces are
+newline-separated `textarea` keys, and the per-role 2FA triggers are JSON
+arrays of role slugs. A dashboard must hand them over unchanged; flattening
+the newlines silently merges every entry into one.
 
 **Deliberately excluded (both transports):**
 
 - `operation_mode` and `api_key` — these define the connection itself and are
   handled through provisioning, not policy.
-- The frontend-2FA rewrite slugs, hardening mode, and the advanced security
-  headers (CSP/HSTS) — these carry site-specific side effects or are a remote
-  footgun, and are managed locally.
+- The frontend-2FA rewrite slugs, the hardening-mode master toggle, and the
+  advanced security headers (CSP/HSTS) — these carry site-specific side
+  effects or are a remote footgun, and are managed locally. The master
+  toggle's "no stored value" state is what enables hardening mode
+  automatically on Professional and higher, so it must not be written
+  remotely.
+- Runtime state the plugin writes itself (readiness issues, the 2FA policy
+  admin latch, API statistics) — not settings, never exported, never
+  pushable.
 - On Multisite, the two per-site override options are network-scoped locally
   and never remote-managed.
 

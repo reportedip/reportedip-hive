@@ -217,5 +217,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayNotHasKey( 'author_name', $result );
 			$this->assertArrayNotHasKey( 'author_url', $result );
 		}
+
+		public function test_users_sitemap_provider_is_dropped_while_the_defence_is_on() {
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$provider = new \stdClass();
+
+			$this->assertFalse(
+				$instance->drop_users_sitemap_provider( $provider, 'users' ),
+				'/wp-sitemap-users-1.xml lists every author slug — the same leak ?author=<n> gives.'
+			);
+		}
+
+		public function test_other_sitemap_providers_are_untouched() {
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$provider = new \stdClass();
+
+			$this->assertSame( $provider, $instance->drop_users_sitemap_provider( $provider, 'posts' ) );
+		}
+
+		public function test_users_sitemap_returns_when_the_defence_is_off() {
+			$GLOBALS['wp_options']['reportedip_hive_block_user_enumeration'] = false;
+			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
+			$provider = new \stdClass();
+
+			$this->assertSame( $provider, $instance->drop_users_sitemap_provider( $provider, 'users' ) );
+		}
 	}
 }

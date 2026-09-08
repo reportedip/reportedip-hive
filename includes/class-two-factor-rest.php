@@ -16,6 +16,10 @@
  * WebAuthn assertion is already handled by admin-ajax endpoints and is not
  * duplicated here (AJAX is the canonical surface for browser flows).
  *
+ * A passed /2fa/verify fires `reportedip_hive_2fa_verified` (context `rest`)
+ * and then `wp_login` exactly as `wp_signon()` would, because no core login
+ * path runs for a token-based sign-in.
+ *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
@@ -229,6 +233,8 @@ class ReportedIP_Hive_Two_Factor_REST {
 
 		wp_set_auth_cookie( $user->ID, false );
 		wp_set_current_user( $user->ID );
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core login hook fired on purpose: this password-only REST sign-in never runs through wp_signon().
+		do_action( 'wp_login', $user->user_login, $user );
 		return rest_ensure_response(
 			array(
 				'status'  => 'authenticated',
@@ -297,6 +303,13 @@ class ReportedIP_Hive_Two_Factor_REST {
 
 		wp_set_auth_cookie( $user_id, false );
 		wp_set_current_user( $user_id );
+
+		$user = get_userdata( $user_id );
+		if ( $user ) {
+			do_action( 'reportedip_hive_2fa_verified', (int) $user_id, (string) $method, 'rest' );
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core login hook re-fired on purpose: wp_signon() never runs for a challenged sign-in.
+			do_action( 'wp_login', $user->user_login, $user );
+		}
 
 		return rest_ensure_response(
 			array(

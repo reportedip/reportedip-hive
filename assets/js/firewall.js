@@ -3,10 +3,12 @@
  *
  * Delegated handlers driven by data attributes replace the per-tab inline
  * scripts: `data-rip-action` buttons and selects post the named AJAX action,
- * `data-rip-copy` buttons copy a target element to the clipboard, and the
- * security-headers bulk save serialises every `[data-opt]` field. On success
- * the page reloads (after surfacing a server message, when present); on
- * failure the error is shown and the page is left untouched.
+ * `data-rip-copy` buttons copy a target element to the clipboard,
+ * `data-rip-save` buttons post every `[data-opt]` field of their own card as
+ * one JSON payload to the named registry writer, and the security-headers
+ * bulk save serialises every `[data-opt]` field on the page. On success the
+ * page reloads (after surfacing a server message, when present); on failure
+ * the error is shown and the page is left untouched.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -75,6 +77,26 @@
 				}, 1200);
 			});
 		}
+	});
+
+	$(document).on('click', 'button[data-rip-save]', function (e) {
+		e.preventDefault();
+		var $button = $(this);
+		var values  = {};
+		$button.closest('.rip-card').find('[data-opt]').each(function () {
+			var $field = $(this);
+			values[$field.data('opt')] = $field.is(':checkbox')
+				? ($field.prop('checked') ? '1' : '0')
+				: $field.val();
+		});
+		postAction(
+			{
+				action: $button.data('rip-save'),
+				payload: JSON.stringify(values),
+				nonce: config.nonce
+			},
+			$button
+		);
 	});
 
 	$(document).on('click', '.rip-csp-preset', function (e) {

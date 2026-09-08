@@ -57,12 +57,12 @@ function resetWizard(): void {
 		'reportedip_hive_waf_report_only',
 		'reportedip_hive_bot_action',
 	];
-	for (const key of keys) {
-		try {
-			wp(`option delete ${key}`);
-		} catch {
-			/* already absent */
-		}
+	// One batched call: each `docker exec` costs ~5s on Windows, and twelve of
+	// them ate half of the 120s per-test budget before the browser even started.
+	try {
+		wp(`option delete ${keys.join(' ')}`);
+	} catch {
+		/* already absent */
 	}
 	try {
 		wp('option update reportedip_hive_2fa_enforce_super_admins 0');

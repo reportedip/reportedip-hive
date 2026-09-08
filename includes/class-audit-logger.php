@@ -145,7 +145,7 @@ class ReportedIP_Hive_Audit_Logger {
 	public function on_login( $user_login, $user ) {
 		$user_id = ( $user instanceof WP_User ) ? (int) $user->ID : 0;
 		$ip      = self::client_ip();
-		$action  = $this->note_ip( $user_id, $ip ) ? 'new_ip' : 'success';
+		$action  = self::note_ip( $user_id, $ip ) ? 'new_ip' : 'success';
 		$this->log_event( 'login', $action, array(), $user_id, (string) $user_login );
 	}
 
@@ -248,6 +248,31 @@ class ReportedIP_Hive_Audit_Logger {
 		$user  = get_userdata( (int) $user_id );
 		$login = $user ? (string) $user->user_login : '';
 		$this->log_event( 'registration', 'success', array(), (int) $user_id, $login );
+	}
+
+	/**
+	 * Public entry point for callers outside the lifecycle listeners.
+	 *
+	 * Honours the same tier and opt-out gate as the automatic listeners, so a
+	 * site that turned the audit trail off does not gain rows through the
+	 * account-block and session surfaces.
+	 *
+	 * @param string              $type     Event type.
+	 * @param string              $action   Event action.
+	 * @param array<string,mixed> $data     Structured event data.
+	 * @param int                 $user_id  Subject user id (0 for none).
+	 * @param string              $username Subject username.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	public function record( $type, $action, array $data, $user_id = 0, $username = '' ) {
+		if ( ! self::is_available() ) {
+			return;
+		}
+		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_enabled', true ) ) {
+			return;
+		}
+		$this->log_event( (string) $type, (string) $action, $data, (int) $user_id, (string) $username );
 	}
 
 	/**
@@ -359,12 +384,17 @@ class ReportedIP_Hive_Audit_Logger {
 	/**
 	 * Record an IP against a user's LRU list, returning whether it was new.
 	 *
+	 * Shared with {@see ReportedIP_Hive_Login_Context}: the list itself is
+	 * plain sign-in history, so it is written on every login. The Business
+	 * gate applies to the audit row this method's return value flags, not to
+	 * the list.
+	 *
 	 * @param int    $user_id User id.
 	 * @param string $ip      Client IP.
 	 * @return bool True when the IP had not been seen for this user.
 	 * @since  2.1.2
 	 */
-	private function note_ip( $user_id, $ip ) {
+	public static function note_ip( $user_id, $ip ) {
 		$user_id = (int) $user_id;
 		if ( $user_id <= 0 || '' === $ip ) {
 			return false;

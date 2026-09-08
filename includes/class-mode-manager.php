@@ -313,6 +313,21 @@ class ReportedIP_Hive_Mode_Manager {
 				'community'     => true,
 				'requires_tier' => 'business',
 			),
+			'registration_rules_unlimited' => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'professional',
+			),
+			'user_management'              => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'business',
+			),
+			'2fa_policies'                 => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'professional',
+			),
 		);
 	}
 
@@ -361,6 +376,9 @@ class ReportedIP_Hive_Mode_Manager {
 			'security_headers_advanced'    => array( __( 'Advanced Security Headers', 'reportedip-hive' ), __( 'CSP builder, HSTS with preload, Permissions-Policy and the Cross-Origin-Opener/Embedder/Resource trio.', 'reportedip-hive' ) ),
 			'audit_log'                    => array( __( 'Audit Event Trail', 'reportedip-hive' ), __( 'User-lifecycle audit log (role changes with actor, new-IP alerts) with filtering, CSV/JSON export and long retention.', 'reportedip-hive' ) ),
 			'cloud_management'             => array( __( 'Cloud Fleet Management', 'reportedip-hive' ), __( 'Manage this site remotely from the reportedip.com dashboard: security policies, per-site overrides and drift detection across all your Hive installations.', 'reportedip-hive' ) ),
+			'registration_rules_unlimited' => array( __( 'Unlimited Registration Rules', 'reportedip-hive' ), __( 'Unlimited prohibited-username and e-mail rule entries, regular-expression patterns and registration restricted to allowlisted IP addresses. Ten plain entries per list stay free.', 'reportedip-hive' ) ),
+			'user_management'              => array( __( 'User Account Control', 'reportedip-hive' ), __( 'Block user accounts with a message and an admin note, end their sessions and password resets, and review or terminate active sessions.', 'reportedip-hive' ) ),
+			'2fa_policies'                 => array( __( 'Configurable 2FA Policies per Role', 'reportedip-hive' ), __( 'Per-role step-up rules that ask for the second factor again on a new device, IP address, network or country, every N days or sign-ins, or above a concurrent-session limit, even on a trusted device.', 'reportedip-hive' ) ),
 		);
 
 		return $this->feature_texts_cache;
@@ -420,11 +438,17 @@ class ReportedIP_Hive_Mode_Manager {
 	/**
 	 * Whether the cached tier (from /verify-key or /relay-quota) is at least $minimum.
 	 *
+	 * The `honeypot` tier is not part of {@see TIER_ORDER}; a honeypot
+	 * operator is a Contributor for every feature gate (see
+	 * {@see get_tier_info()}), so it is aliased before the lookup instead of
+	 * failing every minimum.
+	 *
 	 * @param string $minimum One of TIER_ORDER values.
 	 * @return bool
 	 */
 	public function tier_at_least( $minimum ) {
 		$tier     = $this->get_cached_tier_or_default();
+		$tier     = 'honeypot' === $tier ? 'contributor' : $tier;
 		$ord      = self::TIER_ORDER;
 		$idx_have = array_search( $tier, $ord, true );
 		$idx_need = array_search( $minimum, $ord, true );
