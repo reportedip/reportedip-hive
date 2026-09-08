@@ -774,6 +774,11 @@ class ReportedIP_Hive {
 		}
 
 		delete_metadata( 'user', 0, '_reportedip_hive_known_ips', '', true );
+
+		if ( ! class_exists( 'ReportedIP_Hive_User_Block' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-block.php';
+		}
+		delete_metadata( 'user', 0, ReportedIP_Hive_User_Block::META, '', true );
 	}
 
 	/**

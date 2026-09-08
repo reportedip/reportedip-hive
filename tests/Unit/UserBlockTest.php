@@ -268,5 +268,22 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$source
 			);
 		}
+
+		/**
+		 * The block record is the one piece of plugin-owned user meta that
+		 * lives outside the 2FA key list, so the opt-in "delete everything on
+		 * uninstall" path has to name it explicitly or it survives a removal
+		 * that promised total cleanup.
+		 */
+		public function test_uninstall_deletes_the_account_block_meta(): void {
+			$source    = $this->source( 'reportedip-hive.php' );
+			$uninstall = substr( $source, (int) strpos( $source, 'public static function uninstall(' ) );
+			$uninstall = substr( $uninstall, 0, (int) strpos( $uninstall, "\n\t}" ) );
+
+			$this->assertStringContainsString(
+				"delete_metadata( 'user', 0, ReportedIP_Hive_User_Block::META, '', true )",
+				$uninstall
+			);
+		}
 	}
 }
