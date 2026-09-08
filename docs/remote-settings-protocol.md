@@ -331,12 +331,30 @@ from the exported schema, so most changes are Hive-only:
 | Remove an option / change a kind / change enum semantics | Registry + fixture | reload schema (stored policy/overrides must be re-validated) | schema refresh re-validates stored policy/overrides | **yes** |
 | Introduce a new kind | `Registry::sanitize_kind()` + kind table above | PHP `render_value_input()`, JS `buildValueInput()`/`readFieldValue()`, `sanitize_against_schema()` | fleet JS renderer + server-side `sanitize_against_schema()` | yes |
 | Add a tier gate to an option | `tier` slug in `spec()` (the Mode-Manager feature must exist) | nothing (generic badge) | nothing (generic badge) | no |
+| Add a section, or move a key between sections | `Registry::sections()` and/or the key's `section` | nothing — reload the schema | nothing — refresh the schema | no |
+| Add a field attribute (`description`, and any later one) | `spec()` + `export_schema()` | render it, or ignore it | render it, or ignore it | no |
 | Add a side-effect token | `spec()` + `Settings_Effects` token handler | nothing | nothing | no |
 | Rotate the cloud signing key | ship the new public key in `PUBLIC_KEYS['next']`, switch the service after fleet adoption, then promote to `current` | — | swap the fleet signer keypair | no |
 | Add a transport | a thin adapter around `export_schema()` / `values_envelope()` / `Settings_Apply::apply()` — never its own validation | — | — | no |
 
 Ground rule: **one new option = exactly two code places in Hive** (default +
-spec). Dashboards pick it up from the schema without a code change.
+spec, where the spec carries the label and the description). Dashboards pick it
+up from the schema without a code change, and the JSON export derives its
+catalogue from the registry, so it does too.
+
+Three tests enforce the rest, and each of them exists because the matching gap
+actually shipped:
+
+- `AdminSurfaceParityTest` — every registry key has a form in wp-admin, and
+  every stored option is either remotely manageable or listed as deliberately
+  local with a reason. Ninety options had drifted out of the registry before
+  this test existed, and fourteen were remotely manageable with no local form.
+- `SettingsImportExportTest::test_every_registry_key_is_exportable` — fifty-five
+  keys were missing from the hand-maintained export catalogue.
+- `SettingsRegistryTest::test_every_spec_entry_is_structurally_valid` — every
+  key has a description, and every declared sanitizer is actually callable. An
+  unreachable sanitizer degrades silently to the generic kind sanitizer, which
+  then rejects valid values.
 
 ### Known settings-page exceptions
 
