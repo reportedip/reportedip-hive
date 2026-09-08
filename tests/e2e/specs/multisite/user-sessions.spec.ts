@@ -90,6 +90,7 @@ test.describe('network user blocking and sessions', () => {
 		expect(body).not.toContain('Fatal error');
 		expect(body).not.toContain('Warning:');
 		expect(body).not.toContain('Notice:');
+		await expect(page.locator('th#rip_account, td.rip_account').first()).toBeVisible();
 	});
 
 	test('network user edit screen carries the account access card', async ({ page }) => {
@@ -97,5 +98,6 @@ test.describe('network user blocking and sessions', () => {
 		await page.goto(`/wp-admin/network/user-edit.php?user_id=${userId}`);
 
 		await expect(page.locator('#reportedip-hive-account-access')).toBeVisible();
+		await expect(page.locator('input[name="rip_block_user"]')).toBeVisible();
 	});
 });

@@ -156,6 +156,34 @@ class ReportedIP_Hive_User_Block_Multisite_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The last-administrator guard does not fire on a network: the count would
+	 * answer for whichever blog the screen sits on, and super admins are the
+	 * recovery path that makes the guard unnecessary here.
+	 */
+	public function test_last_administrator_guard_is_single_site_only() {
+		$target = get_userdata( $this->target );
+		$target->set_role( 'administrator' );
+
+		foreach ( (array) get_users(
+			array(
+				'role'   => 'administrator',
+				'fields' => 'ID',
+			)
+		) as $admin_id ) {
+			if ( (int) $admin_id !== $this->target ) {
+				update_user_meta(
+					(int) $admin_id,
+					ReportedIP_Hive_User_Block::META,
+					array( 'blocked_at' => current_time( 'mysql', true ) )
+				);
+			}
+		}
+
+		$this->assertSame( '', ReportedIP_Hive_User_Block::refusal( $this->target ) );
+		$this->assertTrue( ReportedIP_Hive_User_Block::block( $this->target ) );
+	}
+
+	/**
 	 * The session manager never cuts the branch it is sitting on.
 	 */
 	public function test_terminate_refuses_the_callers_own_current_session() {

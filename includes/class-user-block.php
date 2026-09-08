@@ -194,6 +194,14 @@ final class ReportedIP_Hive_User_Block {
 	/**
 	 * Gather the environment and evaluate {@see refusal_reason()}.
 	 *
+	 * The last-unblocked-administrator guard is single-site only. It exists to
+	 * keep a site from locking itself out for good, and on a network that
+	 * outcome cannot happen: super administrators are refused outright, so at
+	 * least one account always keeps its way in and can lift the block. A
+	 * network count would also be wrong: roles and `get_users()` answer for
+	 * whichever blog the current screen sits on, which is the main site while
+	 * an administrator of some other site is being blocked from Network Admin.
+	 *
 	 * @param int $target_id Account to block.
 	 * @return string Refusal token, '' when the block may proceed.
 	 * @since  2.1.51
@@ -206,7 +214,7 @@ final class ReportedIP_Hive_User_Block {
 		$target       = get_userdata( $target_id );
 		$target_roles = $target ? (array) $target->roles : array();
 
-		if ( ! $target_is_super && in_array( 'administrator', $target_roles, true ) ) {
+		if ( ! is_multisite() && in_array( 'administrator', $target_roles, true ) ) {
 			$other_admins = 0;
 			foreach ( (array) get_users(
 				array(
