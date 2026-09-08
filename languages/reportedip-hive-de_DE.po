@@ -5944,7 +5944,7 @@ msgstr "Registrierungslimit"
 
 #: admin/class-logs-table.php:370
 msgid "Unknown Username Probe"
-msgstr "Test mit unbekanntem Benutzernamen"
+msgstr "Login-Versuch mit unbekanntem Benutzernamen"
 
 #: admin/class-logs-table.php:372
 msgid "Login &amp; Spam"
