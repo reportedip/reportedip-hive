@@ -176,18 +176,14 @@ final class ReportedIP_Hive_Dashboard_Widget {
 				<p class="rip-dw__meta">
 					<a href="<?php echo esc_url( $readiness_url ); ?>">
 						<?php
-						printf(
-							/* translators: %d: number of open readiness issues. */
-							esc_html(
-								_n(
-									'%d readiness issue needs attention',
-									'%d readiness issues need attention',
-									$attention,
-									'reportedip-hive'
-								)
-							),
-							(int) $attention
+						/* translators: %d: number of open readiness issues. */
+						$readiness_label = _n(
+							'%d readiness issue needs attention',
+							'%d readiness issues need attention',
+							$attention,
+							'reportedip-hive'
 						);
+						printf( esc_html( $readiness_label ), (int) $attention );
 						?>
 					</a>
 				</p>
