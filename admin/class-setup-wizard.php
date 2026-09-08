@@ -1103,6 +1103,39 @@ class ReportedIP_Hive_Setup_Wizard {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Comment honeypot — invisible to visitors, fatal to bots', 'reportedip-hive' ); ?></span>
 					</label>
+					<label class="rip-toggle">
+						<input type="checkbox" name="registration_limit_enabled" id="rip-registration-limit" <?php checked( $opt( 'registration_limit_enabled' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Limit sign-ups per address — three per hour', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-block"><?php esc_html_e( 'A person opens one account. Anything that opens ten in a row is not a person. The exact numbers are on the Firewall page.', 'reportedip-hive' ); ?></p>
+				</div>
+			</div>
+
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+					<h3><?php esc_html_e( 'Close unused entrances', 'reportedip-hive' ); ?></h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'Every WordPress endpoint you do not use is one someone else can probe. These three are safe for almost every site. The riskier switches, such as restricting the REST API, wait for you on the Firewall page where they are explained in full.', 'reportedip-hive' ); ?></p>
+					<label class="rip-toggle">
+						<input type="checkbox" name="disable_xmlrpc" id="rip-lockdown-xmlrpc" <?php checked( $opt( 'disable_xmlrpc' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Switch off XML-RPC and pingbacks', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-block"><?php esc_html_e( 'Leave this off if you use the WordPress mobile app, Jetpack or a remote-publishing tool.', 'reportedip-hive' ); ?></p>
+					<label class="rip-toggle">
+						<input type="checkbox" name="disable_feeds" id="rip-lockdown-feeds" <?php checked( $opt( 'disable_feeds' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Switch off RSS and Atom feeds', 'reportedip-hive' ); ?></span>
+					</label>
+					<p class="rip-help-block"><?php esc_html_e( 'Only if nothing subscribes to your site — a podcast directory or newsletter that pulls your feed would stop receiving posts.', 'reportedip-hive' ); ?></p>
+					<label class="rip-toggle">
+						<input type="checkbox" name="hide_software_info" id="rip-lockdown-fingerprints" <?php checked( $opt( 'hide_software_info' ) ); ?>>
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label"><?php esc_html_e( 'Hide the version numbers in your pages', 'reportedip-hive' ); ?></span>
+					</label>
 				</div>
 			</div>
 
@@ -1375,6 +1408,51 @@ class ReportedIP_Hive_Setup_Wizard {
 						<?php endif; ?>
 					</div>
 				</div>
+
+			<?php
+			$rip_policy_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( '2fa_policies' );
+			$rip_policy_open   = ! empty( $rip_policy_status['available'] );
+			$rip_policy_roles  = function_exists( 'wp_roles' ) ? wp_roles()->get_names() : array();
+			$rip_saved_country = ReportedIP_Hive_Two_Factor_Policies::roles_for( 'new_country' );
+			$rip_saved_device  = ReportedIP_Hive_Two_Factor_Policies::roles_for( 'new_device' );
+			?>
+			<div class="rip-config-card">
+				<div class="rip-config-card__header">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+					<h3>
+						<?php esc_html_e( 'Ask again when something changes', 'reportedip-hive' ); ?>
+						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $rip_policy_status ); ?>
+					</h3>
+				</div>
+				<div class="rip-config-card__body">
+					<p class="rip-help-block"><?php esc_html_e( 'A trusted device normally skips the second factor. These two triggers ask for it anyway when the sign-in looks different from the account\'s usual pattern. A user without a second factor is never locked out by them.', 'reportedip-hive' ); ?></p>
+					<?php if ( $rip_policy_open ) : ?>
+						<label class="rip-label"><?php esc_html_e( 'Ask again on a new country', 'reportedip-hive' ); ?></label>
+						<div class="rip-checkbox-row">
+							<?php foreach ( $rip_policy_roles as $rip_slug => $rip_name ) : ?>
+								<label class="rip-checkbox-pill">
+									<input type="checkbox" name="2fa_policy_new_country[]" value="<?php echo esc_attr( $rip_slug ); ?>" <?php checked( in_array( $rip_slug, $rip_saved_country, true ) ); ?>>
+									<?php echo esc_html( translate_user_role( $rip_name ) ); ?>
+								</label>
+							<?php endforeach; ?>
+						</div>
+						<label class="rip-label"><?php esc_html_e( 'Ask again on a new browser or device', 'reportedip-hive' ); ?></label>
+						<div class="rip-checkbox-row">
+							<?php foreach ( $rip_policy_roles as $rip_slug => $rip_name ) : ?>
+								<label class="rip-checkbox-pill">
+									<input type="checkbox" name="2fa_policy_new_device[]" value="<?php echo esc_attr( $rip_slug ); ?>" <?php checked( in_array( $rip_slug, $rip_saved_device, true ) ); ?>>
+									<?php echo esc_html( translate_user_role( $rip_name ) ); ?>
+								</label>
+							<?php endforeach; ?>
+						</div>
+						<p class="rip-help-block"><?php esc_html_e( 'The administrator role stays unselectable until an administrator has passed one challenge on this site. The remaining five triggers live under 2FA settings.', 'reportedip-hive' ); ?></p>
+					<?php else : ?>
+						<p class="rip-help-block">
+							<?php esc_html_e( 'Available with the Professional plan or higher. Finish the wizard now and switch this on later from 2FA settings.', 'reportedip-hive' ); ?>
+						</p>
+					<?php endif; ?>
+				</div>
+			</div>
 
 			<div class="rip-config-card rip-config-card--note">
 				<div class="rip-config-card__header">

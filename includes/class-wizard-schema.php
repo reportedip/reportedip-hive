@@ -129,6 +129,26 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'kind'   => 'bool',
 						'option' => 'reportedip_hive_comment_honeypot_enabled',
 					),
+					array(
+						'name'   => 'registration_limit_enabled',
+						'kind'   => 'bool',
+						'option' => 'reportedip_hive_registration_limit_enabled',
+					),
+					array(
+						'name'   => 'disable_xmlrpc',
+						'kind'   => 'bool',
+						'option' => 'reportedip_hive_disable_xmlrpc',
+					),
+					array(
+						'name'   => 'disable_feeds',
+						'kind'   => 'bool',
+						'option' => 'reportedip_hive_disable_feeds',
+					),
+					array(
+						'name'   => 'hide_software_info',
+						'kind'   => 'bool',
+						'option' => 'reportedip_hive_hide_software_info',
+					),
 				);
 			case 5:
 				return array(
@@ -180,6 +200,16 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'name'   => '2fa_xmlrpc_app_password_only',
 						'kind'   => 'bool',
 						'option' => 'reportedip_hive_2fa_xmlrpc_app_password_only',
+					),
+					array(
+						'name'   => '2fa_policy_new_country',
+						'kind'   => 'json_list',
+						'option' => 'reportedip_hive_2fa_policy_new_country',
+					),
+					array(
+						'name'   => '2fa_policy_new_device',
+						'kind'   => 'json_list',
+						'option' => 'reportedip_hive_2fa_policy_new_device',
 					),
 					array(
 						'name'   => '2fa_frontend_enabled',
@@ -412,6 +442,14 @@ final class ReportedIP_Hive_Wizard_Schema {
 
 			case 'roles':
 				ReportedIP_Hive_Option_Routing::set( $option, wp_json_encode( self::sanitize_roles( $post ) ) );
+				break;
+
+			case 'json_list':
+				$raw    = isset( $post[ $name ] ) && is_array( $post[ $name ] ) ? wp_unslash( $post[ $name ] ) : array();
+				$result = ReportedIP_Hive_Settings_Registry::sanitize( $option, $raw );
+				if ( ! is_wp_error( $result ) ) {
+					ReportedIP_Hive_Option_Routing::set( $option, $result );
+				}
 				break;
 
 			case 'preset':
