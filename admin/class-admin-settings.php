@@ -830,7 +830,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$rate_label     = $has_window
 			? esc_html__( 'Success rate (recent)', 'reportedip-hive' )
 			: esc_html__( 'Success rate', 'reportedip-hive' );
-		$is_degraded    = $has_window && $success < 80;
+		$is_degraded    = ReportedIP_Hive_API::window_is_degraded( $stats_raw );
 		$health_variant = $is_degraded ? 'danger' : 'success';
 		$health_label   = $is_degraded
 			? esc_html__( 'Degraded', 'reportedip-hive' )
