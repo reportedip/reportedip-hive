@@ -3522,10 +3522,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @return string
 	 */
 	public function sanitize_trusted_ip_header( $value ) {
-		$allowed = array( '', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP' );
-		$value   = sanitize_text_field( $value ?? '' );
-
-		return in_array( $value, $allowed, true ) ? $value : '';
+		return ReportedIP_Hive_Proxy_Trust::sanitize_header( sanitize_text_field( $value ?? '' ) );
 	}
 
 	/**
@@ -3543,13 +3540,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$raw   = sanitize_textarea_field( (string) ( $value ?? '' ) );
 		$valid = ReportedIP_Hive_Proxy_Trust::parse_ranges( $raw );
 
-		$submitted = 0;
-		foreach ( preg_split( '/\r\n|\r|\n/', $raw ) as $line ) {
-			$line = trim( $line );
-			if ( '' !== $line && 0 !== strpos( $line, '#' ) ) {
-				$submitted++;
-			}
-		}
+		$submitted = ReportedIP_Hive_Proxy_Trust::count_submitted_ranges( $raw );
 
 		if ( $submitted > count( $valid ) ) {
 			add_settings_error(

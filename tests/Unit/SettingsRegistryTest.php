@@ -46,6 +46,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function expected_remote_kinds(): array {
 			return array(
+				'reportedip_hive_trusted_ip_header'             => 'enum',
+				'reportedip_hive_trusted_proxy_ranges'          => 'textarea',
 				'reportedip_hive_monitor_failed_logins'         => 'bool',
 				'reportedip_hive_failed_login_threshold'        => 'int',
 				'reportedip_hive_failed_login_timeframe'        => 'int',

@@ -90,6 +90,21 @@ final class ReportedIP_Hive_Settings_Registry {
 	 */
 	public static function spec() {
 		return array(
+			'reportedip_hive_trusted_ip_header'            => array(
+				'section'  => 'detection',
+				'kind'     => 'enum',
+				'allowed'  => array( '', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP' ),
+				'sanitize' => array( 'ReportedIP_Hive_Proxy_Trust', 'sanitize_header' ),
+				'remote'   => true,
+				'label'    => __( 'Client IP header', 'reportedip-hive' ),
+			),
+			'reportedip_hive_trusted_proxy_ranges'         => array(
+				'section'  => 'detection',
+				'kind'     => 'textarea',
+				'sanitize' => array( 'ReportedIP_Hive_Proxy_Trust', 'sanitize_ranges' ),
+				'remote'   => true,
+				'label'    => __( 'Trusted proxy ranges', 'reportedip-hive' ),
+			),
 			'reportedip_hive_monitor_failed_logins'        => array(
 				'section' => 'detection',
 				'kind'    => 'bool',

@@ -190,8 +190,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_rest_sensitive_timeframe',
 			'reportedip_hive_rest_threshold',
 			'reportedip_hive_rest_timeframe',
-			'reportedip_hive_trusted_ip_header',
-			'reportedip_hive_trusted_proxy_ranges',
 			'reportedip_hive_user_enum_threshold',
 			'reportedip_hive_user_enum_timeframe',
 			'reportedip_hive_waf_dropin_enabled',
