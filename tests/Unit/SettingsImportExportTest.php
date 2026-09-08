@@ -17,6 +17,7 @@ namespace ReportedIP\Hive\Tests\Unit;
 
 use ReportedIP\Hive\Tests\TestCase;
 use ReportedIP_Hive_Settings_Import_Export;
+use ReportedIP_Hive_Settings_Registry;
 
 /**
  * Verifies the export-payload shape and the import allowlist.
@@ -50,22 +51,42 @@ class SettingsImportExportTest extends TestCase {
 	}
 
 	/**
-	 * Catalogue must include every section the plan promised.
+	 * The catalogue mirrors the registry, plus the two areas the registry
+	 * cannot describe.
 	 */
-	public function test_sections_cover_expected_areas(): void {
+	public function test_sections_mirror_the_registry(): void {
 		$slugs = array_keys( ReportedIP_Hive_Settings_Import_Export::sections() );
-		$this->assertContains( 'general', $slugs );
-		$this->assertContains( 'detection', $slugs );
-		$this->assertContains( 'blocking', $slugs );
-		$this->assertContains( 'notifications', $slugs );
-		$this->assertContains( 'privacy_logs', $slugs );
-		$this->assertContains( 'performance', $slugs );
-		$this->assertContains( 'twofactor_global', $slugs );
-		$this->assertContains( 'firewall', $slugs );
-		$this->assertContains( 'headers', $slugs );
-		$this->assertContains( 'lockdown', $slugs );
-		$this->assertContains( 'audit', $slugs );
-		$this->assertContains( 'ip_lists', $slugs );
+
+		$this->assertContains( 'general', $slugs, 'connection identity is not a registry section and must be added by hand' );
+		$this->assertContains( 'ip_lists', $slugs, 'IP lists are rows, not options' );
+
+		foreach ( array_keys( ReportedIP_Hive_Settings_Registry::sections() ) as $registry_slug ) {
+			$this->assertContains(
+				$registry_slug,
+				$slugs,
+				"Registry section {$registry_slug} is missing from the export catalogue."
+			);
+		}
+	}
+
+	/**
+	 * Every remotely manageable option is exportable.
+	 *
+	 * Fifty-five registry keys used to be missing from the hand-maintained
+	 * catalogue, so an export claimed to hold the configuration while leaving
+	 * out the sensor thresholds, the hide-login setup and the password policy.
+	 */
+	public function test_every_registry_key_is_exportable(): void {
+		$exportable = ReportedIP_Hive_Settings_Import_Export::importable_keys();
+		$missing    = array();
+
+		foreach ( array_keys( ReportedIP_Hive_Settings_Registry::remote_spec() ) as $key ) {
+			if ( ! in_array( $key, $exportable, true ) ) {
+				$missing[] = $key;
+			}
+		}
+
+		$this->assertSame( array(), $missing, "These settings cannot be exported:\n" . implode( "\n", $missing ) );
 	}
 
 	/**
@@ -115,12 +136,12 @@ class SettingsImportExportTest extends TestCase {
 		$GLOBALS['wp_options']['reportedip_hive_csp_mode']        = 'report_only';
 
 		$payload = ReportedIP_Hive_Settings_Import_Export::get_instance()
-			->build_export_payload( array( 'firewall', 'headers' ), false );
+			->build_export_payload( array( 'waf', 'headers' ), false );
 
 		$GLOBALS['wp_options'] = array();
 
 		$result = ReportedIP_Hive_Settings_Import_Export::get_instance()
-			->apply_payload( json_decode( (string) wp_json_encode( $payload ), true ), array( 'firewall', 'headers' ) );
+			->apply_payload( json_decode( (string) wp_json_encode( $payload ), true ), array( 'waf', 'headers' ) );
 
 		$this->assertGreaterThanOrEqual( 3, $result['written'] );
 		$this->assertSame( 1, $GLOBALS['wp_options']['reportedip_hive_waf_report_only'], 'Registry-managed bools are stored canonically as 1/0 since 2.1.47.' );

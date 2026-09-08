@@ -57,7 +57,7 @@ final class ReportedIP_Hive_Settings_Registry {
 		return array(
 			'detection'        => array(
 				'label'       => __( 'Detection & Thresholds', 'reportedip-hive' ),
-				'description' => __( 'Attack sensors and their trigger thresholds.', 'reportedip-hive' ),
+				'description' => __( 'The sensors that watch for an attack and the counts at which each one reacts. Also holds the proxy settings, because every sensor depends on resolving the visitor address correctly.', 'reportedip-hive' ),
 			),
 			'blocking'         => array(
 				'label'       => __( 'Blocking & Escalation', 'reportedip-hive' ),
@@ -65,7 +65,15 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 			'waf'              => array(
 				'label'       => __( 'Firewall & Bots', 'reportedip-hive' ),
-				'description' => __( 'Web application firewall, bot verification and honeypots.', 'reportedip-hive' ),
+				'description' => __( 'The request-inspecting firewall, its rule feed and the check that a crawler is really the crawler it claims to be.', 'reportedip-hive' ),
+			),
+			'registration'     => array(
+				'label'       => __( 'Registration & Spam', 'reportedip-hive' ),
+				'description' => __( 'Who may create an account and under which name and address. Also covers throwaway mail domains and the comment honeypot.', 'reportedip-hive' ),
+			),
+			'hardening_mode'   => array(
+				'label'       => __( 'Attack Response', 'reportedip-hive' ),
+				'description' => __( 'What changes while a coordinated attack is running. These thresholds replace the normal ones for the duration and are meant to be stricter than anything you would run permanently.', 'reportedip-hive' ),
 			),
 			'hide_login'       => array(
 				'label'       => __( 'Hide Login', 'reportedip-hive' ),
@@ -80,8 +88,16 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Attack-surface switches: REST API access, XML-RPC, feeds, wp-admin for visitors, PHP execution in uploads and software fingerprints.', 'reportedip-hive' ),
 			),
 			'account_security' => array(
-				'label'       => __( 'Account Security', 'reportedip-hive' ),
-				'description' => __( 'Two-factor authentication and password policy.', 'reportedip-hive' ),
+				'label'       => __( 'Two-Factor Authentication', 'reportedip-hive' ),
+				'description' => __( 'Which methods exist, who has to use one, and how long a device stays trusted. The storefront variant for WooCommerce lives here too.', 'reportedip-hive' ),
+			),
+			'twofa_policies'   => array(
+				'label'       => __( 'Adaptive Step-Up', 'reportedip-hive' ),
+				'description' => __( 'When a user who already passed the second factor is asked for it again. Each trigger is set per role, and a user without a configured method is never locked out by one.', 'reportedip-hive' ),
+			),
+			'account_password' => array(
+				'label'       => __( 'Password Policy', 'reportedip-hive' ),
+				'description' => __( 'What a password has to look like before WordPress accepts it.', 'reportedip-hive' ),
 			),
 			'privacy_logs'     => array(
 				'label'       => __( 'Privacy & Logs', 'reportedip-hive' ),
@@ -198,7 +214,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The window XML-RPC calls are counted in.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_disable_xmlrpc_multicall'     => array(
-				'section'     => 'detection',
+				'section'     => 'lockdown',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Disable XML-RPC multicall', 'reportedip-hive' ),
@@ -400,14 +416,14 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 
 			'reportedip_hive_hardening_realtime_detection' => array(
-				'section'     => 'detection',
+				'section'     => 'hardening_mode',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Hardening realtime detection', 'reportedip-hive' ),
 				'description' => __( 'Notice a coordinated attack while it happens instead of after the fact, and tighten the thresholds below for its duration.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_duration_minutes'   => array(
-				'section'     => 'detection',
+				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 5,
 				'max'         => 360,
@@ -416,7 +432,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How long the tightened thresholds stay in force after an attack is detected.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_login_threshold'    => array(
-				'section'     => 'detection',
+				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 10,
@@ -425,7 +441,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The failed-login threshold that replaces the normal one while hardening is active.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_login_timeframe'    => array(
-				'section'     => 'detection',
+				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 60,
@@ -434,7 +450,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The failed-login window that replaces the normal one while hardening is active.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_block_threshold'    => array(
-				'section'     => 'detection',
+				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD,
 				'max'         => 100,
@@ -443,7 +459,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The community confidence value from which an address is blocked while hardening is active. Lower than normal, so more is caught and more false positives are accepted.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_detect_window_minutes' => array(
-				'section'     => 'detection',
+				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 120,
@@ -452,7 +468,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The window used to decide whether separate attempts belong to one coordinated attack.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_detect_min_ips'     => array(
-				'section'     => 'detection',
+				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 2,
 				'max'         => 100,
@@ -461,7 +477,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How many different addresses must take part before the attempts count as coordinated.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_detect_min_attempts' => array(
-				'section'     => 'detection',
+				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 3,
 				'max'         => 1000,
@@ -600,7 +616,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'What happens to a request whose crawler identity does not hold up.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_disposable_email_action'      => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'enum',
 				'allowed'     => array( 'monitor', 'off', 'block' ),
 				'remote'      => true,
@@ -608,14 +624,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'What happens when a registration uses a throwaway mail domain.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_block_email_relays'           => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Block privacy relay addresses', 'reportedip-hive' ),
 				'description' => __( 'Also reject forwarding services such as Apple and Firefox Relay. These are used by ordinary customers too, so weigh this against your sign-up numbers.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_prohibited_usernames'         => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'textarea',
 				'tier'        => 'registration_rules_unlimited',
 				'tier_gate'   => array( 'ReportedIP_Hive_Registration_Guard', 'list_needs_tier' ),
@@ -625,14 +641,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Names that may not be registered, one per line. An entry matches literally, as a wildcard when it contains an asterisk, or as a regular expression when written between slashes.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_prohibited_usernames_baseline' => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Built-in prohibited usernames', 'reportedip-hive' ),
 				'description' => __( 'Also reject the built-in list of role names such as admin, administrator and root. It does not count towards the free entry allowance.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_email_rule_mode'              => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'enum',
 				'allowed'     => array( 'off', 'block', 'allow' ),
 				'remote'      => true,
@@ -640,7 +656,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Whether the list below rejects matching addresses, accepts only matching addresses, or is ignored.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_email_rules'                  => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'textarea',
 				'tier'        => 'registration_rules_unlimited',
 				'tier_gate'   => array( 'ReportedIP_Hive_Registration_Guard', 'list_needs_tier' ),
@@ -650,14 +666,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Address patterns, one per line. A bare host name is read as every address at that host.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_registration_limit_enabled'   => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Registration rate limit', 'reportedip-hive' ),
 				'description' => __( 'Limit how many accounts one address may create in a row.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_registration_limit_count'     => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 100,
@@ -666,7 +682,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How many sign-ups one address may complete inside the window below.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_registration_limit_timeframe' => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 60,
@@ -675,7 +691,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The window sign-ups are counted in.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_registration_allowlist'       => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'textarea',
 				'tier'        => 'registration_rules_unlimited',
 				'sanitize'    => array( 'ReportedIP_Hive_Registration_Guard', 'sanitize_ip_list' ),
@@ -684,14 +700,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'When filled, accounts can only be created from these addresses or ranges. Leave empty to accept sign-ups from anywhere.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_block_unknown_username_login' => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Block logins with unknown usernames', 'reportedip-hive' ),
 				'description' => __( 'Treat a sign-in attempt for a name that does not exist as an attack straight away. Effective against name guessing, but it also catches a colleague who mistypes their login.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_comment_honeypot_enabled'     => array(
-				'section'     => 'waf',
+				'section'     => 'registration',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Comment honeypot', 'reportedip-hive' ),
@@ -792,7 +808,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Disable XML-RPC', 'reportedip-hive' ),
-				'description' => __( 'Switch off xmlrpc.php and pingbacks completely. Most sites never use it; the Jetpack app and some publishing tools do.', 'reportedip-hive' ),
+				'description' => __( 'Switch off xmlrpc.php and pingbacks completely. Most sites never use it; the Jetpack app and some publishing tools do. If you need XML-RPC, leave this off and use the multicall switch below instead.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_disable_feeds'                => array(
 				'section'     => 'lockdown',
@@ -1103,7 +1119,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How long a trusted device stays trusted before the code is asked for again.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_new_country'       => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
 				'tier'        => '2fa_policies',
@@ -1113,7 +1129,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked for the second factor again when the sign-in comes from a country the account has not used.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_new_ip'            => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
 				'tier'        => '2fa_policies',
@@ -1123,7 +1139,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again when the exact address is new to the account. Fires often on ordinary dynamic connections.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_new_subnet'        => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
 				'tier'        => '2fa_policies',
@@ -1133,7 +1149,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again when the address block is new, which ignores a normal dynamic-IP change.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_new_device'        => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
 				'tier'        => '2fa_policies',
@@ -1143,7 +1159,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again when the browser has not signed this account in before.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_every_n_days'      => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
 				'tier'        => '2fa_policies',
@@ -1153,7 +1169,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again once the last verification is older than the interval below.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_every_n_logins'    => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
 				'tier'        => '2fa_policies',
@@ -1163,7 +1179,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again after the number of sign-ins below.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_sessions_above_n'  => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
 				'tier'        => '2fa_policies',
@@ -1173,7 +1189,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again while the account already has more open sessions than the number below.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_days'              => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 365,
@@ -1182,7 +1198,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The interval for the every-few-days trigger. The clock starts at the first sign-in after you switch it on, so nobody is challenged all at once.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_logins'            => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 100,
@@ -1191,7 +1207,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The number of sign-ins for the every-few-sign-ins trigger.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_sessions'          => array(
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 20,
@@ -1207,14 +1223,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Ask for the second factor during a password reset, so a hijacked mailbox is not enough on its own.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_password_policy_enabled'      => array(
-				'section'     => 'account_security',
+				'section'     => 'account_password',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Password policy', 'reportedip-hive' ),
 				'description' => __( 'Check new passwords against the rules below before accepting them.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_password_min_length'          => array(
-				'section'     => 'account_security',
+				'section'     => 'account_password',
 				'kind'        => 'int',
 				'min'         => 8,
 				'max'         => 64,
@@ -1223,7 +1239,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The shortest password that is accepted. Length helps more than any other single rule.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_password_min_classes'         => array(
-				'section'     => 'account_security',
+				'section'     => 'account_password',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 4,
@@ -1232,14 +1248,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How many of upper case, lower case, digits and symbols a password must mix.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_password_policy_all_users'    => array(
-				'section'     => 'account_security',
+				'section'     => 'account_password',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Apply the password policy to every role', 'reportedip-hive' ),
 				'description' => __( 'Apply the rules to every role rather than to the ones that can change the site.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_password_check_hibp'          => array(
-				'section'     => 'account_security',
+				'section'     => 'account_password',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Check passwords against known breaches', 'reportedip-hive' ),

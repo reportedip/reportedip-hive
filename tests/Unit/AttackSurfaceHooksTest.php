@@ -174,15 +174,19 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_every_option_key_is_registered_and_exportable(): void {
 			require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 			require_once dirname( __DIR__, 2 ) . '/includes/class-attack-surface.php';
-			$spec     = \ReportedIP_Hive_Settings_Registry::spec();
-			$settings = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php' );
-			$export   = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-settings-import-export.php' );
+			require_once dirname( __DIR__, 2 ) . '/includes/class-option-routing.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+			require_once dirname( __DIR__, 2 ) . '/admin/class-settings-import-export.php';
+
+			$spec       = \ReportedIP_Hive_Settings_Registry::spec();
+			$settings   = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php' );
+			$exportable = \ReportedIP_Hive_Settings_Import_Export::importable_keys();
 
 			foreach ( \ReportedIP_Hive_Attack_Surface::OPTION_KEYS as $key ) {
 				$this->assertArrayHasKey( $key, $spec, "{$key} is missing from the settings registry." );
 				$this->assertSame( 'lockdown', $spec[ $key ]['section'], "{$key} belongs in the lockdown section." );
 				$this->assertStringContainsString( "'reportedip_hive_attack_surface',\n\t\t\t'" . $key . "'", $settings, "{$key} is not registered with the Settings API." );
-				$this->assertStringContainsString( "'" . $key . "'", $export, "{$key} is not exportable." );
+				$this->assertContains( $key, $exportable, "{$key} is not exportable." );
 			}
 		}
 	}
