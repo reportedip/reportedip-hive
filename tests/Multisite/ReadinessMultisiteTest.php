@@ -120,6 +120,37 @@ class ReportedIP_Hive_Readiness_Multisite_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Writing is main-site only, reading is not: the cache is network-wide,
+	 * so a sub-site render answers from it instead of paying for three more
+	 * queries, and it sees the guard and cron issues its own detectors skip.
+	 */
+	public function test_subsite_reads_the_network_cache() {
+		set_site_transient(
+			ReportedIP_Hive_Readiness::CACHE_KEY,
+			array(
+				array(
+					'key'         => 'cron_stalled',
+					'severity'    => ReportedIP_Hive_Readiness::SEV_CRITICAL,
+					'label'       => 'WP-Cron is not running',
+					'message'     => 'seeded by the main site',
+					'first_seen'  => 1000,
+					'dismissable' => false,
+				),
+			),
+			ReportedIP_Hive_Readiness::CACHE_TTL
+		);
+
+		$blog_id = self::factory()->blog->create();
+		switch_to_blog( $blog_id );
+		$issues = ReportedIP_Hive_Readiness::open_issues();
+		restore_current_blog();
+
+		$this->assertCount( 1, $issues );
+		$this->assertSame( 'cron_stalled', $issues[0]['key'] );
+		$this->assertArrayHasKey( 'settings_url', $issues[0] );
+	}
+
+	/**
 	 * A sub-site view skips the guard and cron detectors, so it must not
 	 * publish its narrower result as the network-wide cache.
 	 */

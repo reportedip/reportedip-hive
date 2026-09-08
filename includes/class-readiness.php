@@ -52,6 +52,15 @@ final class ReportedIP_Hive_Readiness {
 	const CACHE_TTL = 300;
 
 	/**
+	 * Plugin options that ordinary front-end traffic rewrites, so a cache
+	 * flush on them would leave the register recomputing on every hit.
+	 */
+	const HOT_OPTIONS = array(
+		'reportedip_hive_api_stats',
+		'reportedip_hive_cache_stats',
+	);
+
+	/**
 	 * Site transient holding `{count, last_error, last_at}` for `wp_mail_failed`.
 	 */
 	const MAIL_FAIL_TRANSIENT = 'reportedip_hive_mail_failures';
@@ -127,21 +136,23 @@ final class ReportedIP_Hive_Readiness {
 	 * Both the cache and the reconciled state are written on the main site
 	 * only. A sub-site skips the guard and cron detectors, so persisting its
 	 * result would prune those keys as resolved and drop their `first_seen`
-	 * and dismissal from the network-wide option.
+	 * and dismissal from the network-wide option. Reading is not restricted:
+	 * the cache is network-wide, so a sub-site reusing the main site's list
+	 * saves three queries per render and sees the complete picture.
 	 *
 	 * @param bool $fresh Bypass the cache (System Status page and WP-CLI).
 	 * @return array<int,array<string,mixed>>
 	 * @since  2.1.51
 	 */
 	public static function open_issues( $fresh = false ) {
-		$cacheable = ! is_multisite() || is_main_site();
-
-		if ( ! $fresh && $cacheable ) {
+		if ( ! $fresh ) {
 			$cached = get_site_transient( self::CACHE_KEY );
 			if ( is_array( $cached ) ) {
 				return self::with_links( $cached );
 			}
 		}
+
+		$cacheable = ! is_multisite() || is_main_site();
 
 		$state  = self::get_state();
 		$result = self::reconcile( self::compute(), $state, time() );
@@ -454,9 +465,10 @@ final class ReportedIP_Hive_Readiness {
 	/**
 	 * Flush the cache when a plugin-prefixed option changes.
 	 *
-	 * `reportedip_hive_api_stats` is excluded: it is rewritten on every single
-	 * API call, so watching it would keep the cache permanently cold on a
-	 * Community-mode site.
+	 * {@see self::HOT_OPTIONS} is excluded: those two counters are rewritten
+	 * on ordinary front-end traffic — `api_stats` on every API call,
+	 * `cache_stats` at shutdown of every request that touched the reputation
+	 * cache — so watching them would keep the cache permanently cold.
 	 *
 	 * @param string $option Option name being written.
 	 * @return void
@@ -466,7 +478,7 @@ final class ReportedIP_Hive_Readiness {
 		if ( ! is_string( $option ) || 0 !== strpos( $option, 'reportedip_hive_' ) ) {
 			return;
 		}
-		if ( 'reportedip_hive_api_stats' === $option ) {
+		if ( in_array( $option, self::HOT_OPTIONS, true ) ) {
 			return;
 		}
 		self::flush_cache();

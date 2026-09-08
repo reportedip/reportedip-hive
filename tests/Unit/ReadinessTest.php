@@ -335,12 +335,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( '550', $record['last_error'] );
 		}
 
-		public function test_cache_flush_skips_the_api_stats_option(): void {
+		public function test_cache_flush_skips_the_hot_counter_options(): void {
 			set_site_transient( \ReportedIP_Hive_Readiness::CACHE_KEY, array(), 300 );
 			\ReportedIP_Hive_Readiness::flush_on_option_change( 'reportedip_hive_api_stats' );
 			$this->assertIsArray(
 				get_site_transient( \ReportedIP_Hive_Readiness::CACHE_KEY ),
 				'api_stats is rewritten on every API call and must not keep the cache cold.'
+			);
+
+			\ReportedIP_Hive_Readiness::flush_on_option_change( 'reportedip_hive_cache_stats' );
+			$this->assertIsArray(
+				get_site_transient( \ReportedIP_Hive_Readiness::CACHE_KEY ),
+				'cache_stats is rewritten at shutdown of every cached reputation lookup.'
 			);
 
 			\ReportedIP_Hive_Readiness::flush_on_option_change( 'some_other_plugin_option' );
