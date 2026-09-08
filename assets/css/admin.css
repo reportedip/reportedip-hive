@@ -949,13 +949,17 @@ code.ip-address {
 }
 
 /* Frontend-2FA settings: locked-state, slug input + Pro-feature card. */
-.rip-settings-section--locked .rip-fieldset {
+.rip-settings-section--locked .rip-fieldset,
+.rip-fieldset--locked {
     opacity: 0.55;
 }
 
 .rip-settings-section--locked .rip-fieldset .rip-toggle,
 .rip-settings-section--locked .rip-fieldset .rip-input,
-.rip-settings-section--locked .rip-fieldset .rip-input-prefix {
+.rip-settings-section--locked .rip-fieldset .rip-input-prefix,
+.rip-fieldset--locked .rip-toggle,
+.rip-fieldset--locked .rip-input,
+.rip-fieldset--locked .rip-input-prefix {
     cursor: not-allowed;
 }
 

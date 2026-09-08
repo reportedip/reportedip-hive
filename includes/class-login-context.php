@@ -48,12 +48,19 @@ final class ReportedIP_Hive_Login_Context {
 	const OPT_ADMIN_VERIFIED = 'reportedip_hive_2fa_policy_admin_verified';
 
 	/**
-	 * Users already recorded in this request, so a login that fires both
-	 * `reportedip_hive_2fa_verified` and `wp_login` counts once.
+	 * Users already recorded in this request, so a `wp_login` fired twice for
+	 * the same sign-in counts once.
 	 *
 	 * @var array<int, bool>
 	 */
 	private static $recorded = array();
+
+	/**
+	 * Users who passed a second factor in this request.
+	 *
+	 * @var array<int, bool>
+	 */
+	private static $verified = array();
 
 	/**
 	 * Register the two login listeners.
@@ -70,7 +77,15 @@ final class ReportedIP_Hive_Login_Context {
 	}
 
 	/**
-	 * Sign-in that did not pass a second factor in this request.
+	 * Every sign-in, verified or not — the only place that records.
+	 *
+	 * Both challenge surfaces fire `reportedip_hive_2fa_verified` immediately
+	 * before `wp_login`, so the flag {@see self::on_verified()} left behind is
+	 * available here. Recording from the earlier hook instead would put this
+	 * request's address into the known-IP list before
+	 * {@see ReportedIP_Hive_Audit_Logger::on_login()} (priority 10) reads it,
+	 * and a sign-in from an unfamiliar address would be audited as `success`
+	 * rather than `new_ip`.
 	 *
 	 * @param string        $user_login Login name (unused — hook signature).
 	 * @param \WP_User|null $user       Authenticated user.
@@ -79,15 +94,18 @@ final class ReportedIP_Hive_Login_Context {
 	 */
 	public static function on_login( $user_login, $user = null ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		unset( $user_login );
-		self::record( $user, false );
+
+		$user_id = ( $user instanceof WP_User ) ? (int) $user->ID : 0;
+		self::record( $user, isset( self::$verified[ $user_id ] ) );
 	}
 
 	/**
 	 * Sign-in that passed a second factor.
 	 *
-	 * Also opens the administrator latch: policies may only name the
-	 * administrator role once somebody who can manage the site has proven a
-	 * second factor works for them.
+	 * Only remembers the verification for the `wp_login` listener and opens
+	 * the administrator latch: policies may only name the administrator role
+	 * once somebody who can manage the site has proven a second factor works
+	 * for them.
 	 *
 	 * @param int    $user_id User id.
 	 * @param string $method  Verified method (unused — hook signature).
@@ -103,11 +121,11 @@ final class ReportedIP_Hive_Login_Context {
 			return;
 		}
 
+		self::$verified[ $user_id ] = true;
+
 		if ( ! self::admin_latch_open() && self::may_manage_site( $user_id ) ) {
 			ReportedIP_Hive_Option_Routing::set( self::OPT_ADMIN_VERIFIED, time() );
 		}
-
-		self::record( get_userdata( $user_id ), true );
 	}
 
 	/**
@@ -153,6 +171,9 @@ final class ReportedIP_Hive_Login_Context {
 
 	/**
 	 * Record one sign-in.
+	 *
+	 * Adds the address to the known-IP list as its last step, so callers must
+	 * run after {@see ReportedIP_Hive_Audit_Logger::on_login()}.
 	 *
 	 * @param \WP_User|null $user     Authenticated user.
 	 * @param bool          $verified Whether a second factor was passed.

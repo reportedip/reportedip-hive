@@ -536,7 +536,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				$rip_policy_latch   = ReportedIP_Hive_Login_Context::admin_latch_open();
 				$rip_policy_country = ! empty( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'api_reputation_check' )['available'] );
 				?>
-				<fieldset class="rip-fieldset<?php echo $rip_policy_open ? '' : ' rip-settings-section--locked'; ?>" id="rip-2fa-policies">
+				<fieldset class="rip-fieldset<?php echo $rip_policy_open ? '' : ' rip-fieldset--locked'; ?>" id="rip-2fa-policies">
 					<legend class="rip-label">
 						<?php esc_html_e( 'Adaptive step-up triggers', 'reportedip-hive' ); ?>
 						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $rip_policy_status ); ?>

@@ -248,12 +248,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * Clear the per-request "already recorded" guard.
+		 * Clear the per-request "already recorded" and "verified" flags.
 		 */
 		private function reset_guard(): void {
-			$property = new \ReflectionProperty( \ReportedIP_Hive_Login_Context::class, 'recorded' );
-			$property->setAccessible( true );
-			$property->setValue( null, array() );
+			foreach ( array( 'recorded', 'verified' ) as $name ) {
+				$property = new \ReflectionProperty( \ReportedIP_Hive_Login_Context::class, $name );
+				$property->setAccessible( true );
+				$property->setValue( null, array() );
+			}
 		}
 
 		/**
@@ -334,8 +336,38 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame(
 				0,
 				$this->stored()['logins_since_verify'],
-				'The wp_login listener must not undo what the verification listener recorded.'
+				'A wp_login fired twice for one sign-in must still count once.'
 			);
+		}
+
+		public function test_a_verification_is_recorded_by_the_wp_login_listener(): void {
+			\ReportedIP_Hive_Login_Context::on_verified( 5, 'totp', 'wp_login' );
+
+			$this->assertArrayNotHasKey(
+				\ReportedIP_Hive_Two_Factor::META_LOGIN_CONTEXT,
+				$GLOBALS['wp_user_meta'][5] ?? array(),
+				'Recording before wp_login would hand the audit logger a known IP and cost it the new_ip flag.'
+			);
+			$this->assertArrayNotHasKey(
+				\ReportedIP_Hive_Audit_Logger::KNOWN_IPS_META,
+				$GLOBALS['wp_user_meta'][5] ?? array()
+			);
+
+			\ReportedIP_Hive_Login_Context::on_login( 'tester', $GLOBALS['wp_users'][5] );
+
+			$this->assertGreaterThan( 0, $this->stored()['verified_at'] );
+			$this->assertSame( 0, $this->stored()['logins_since_verify'] );
+			$this->assertSame(
+				array( '203.0.113.10' ),
+				$GLOBALS['wp_user_meta'][5][ \ReportedIP_Hive_Audit_Logger::KNOWN_IPS_META ]
+			);
+		}
+
+		public function test_a_sign_in_without_a_second_factor_counts_up(): void {
+			\ReportedIP_Hive_Login_Context::on_login( 'tester', $GLOBALS['wp_users'][5] );
+
+			$this->assertSame( 1, $this->stored()['logins_since_verify'] );
+			$this->assertSame( 0, $this->stored()['verified_at'] );
 		}
 
 		public function test_nothing_is_stored_while_the_feature_is_unavailable(): void {
