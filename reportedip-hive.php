@@ -194,7 +194,7 @@ class ReportedIP_Hive {
 			add_filter( 'xmlrpc_methods', array( $this, 'disable_xmlrpc_multicall' ) );
 		}
 
-		add_action( 'wp_login_failed', array( $this, 'handle_failed_login' ) );
+		add_action( 'wp_login_failed', array( $this, 'handle_failed_login' ), 10, 2 );
 		add_action( 'wp_authenticate_user', array( $this, 'pre_auth_check' ), 10, 2 );
 		add_action( 'comment_post', array( $this, 'handle_comment_post' ), 10, 3 );
 		add_action( 'xmlrpc_call', array( $this, 'handle_xmlrpc_call' ) );
@@ -266,6 +266,8 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->register_hooks();
 		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->register_hooks();
 		ReportedIP_Hive_Audit_Logger::get_instance()->register_hooks();
+		ReportedIP_Hive_User_Block::register_hooks();
+		ReportedIP_Hive_User_Sessions::register_hooks();
 	}
 
 	/**
@@ -433,6 +435,8 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-logger.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-block.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-sessions.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-score.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-readiness.php';
 		ReportedIP_Hive_Readiness::init();
@@ -489,6 +493,7 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-whitelist-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-status-cli.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-cli.php';
 		}
 
 		if ( is_admin() ) {
@@ -504,6 +509,8 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-api-queue-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-settings-import-export.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-dashboard-widget.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-sessions-table.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-user-admin.php';
 			ReportedIP_Hive_Dashboard_Widget::init();
 		}
 
@@ -569,6 +576,7 @@ class ReportedIP_Hive {
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Two_Factor_Admin();
 			new ReportedIP_Hive_Two_Factor_Dashboard();
+			new ReportedIP_Hive_User_Admin();
 		}
 	}
 
@@ -1108,10 +1116,20 @@ class ReportedIP_Hive {
 	 * `ReportedIP_Hive_Audit_Logger::on_login_failed()` is a separate
 	 * compliance record and deliberately unaffected.
 	 *
-	 * @param string $username Username the failed attempt used.
+	 * A refused sign-in of a blocked account is not a credential attack: the
+	 * password was correct. Counting it would let a blocked ex-employee lock
+	 * their whole office network out by retrying.
+	 *
+	 * @param string        $username Username the failed attempt used.
+	 * @param WP_Error|null $error    Authentication error, when core passes one.
 	 */
-	public function handle_failed_login( $username ) {
+	public function handle_failed_login( $username, $error = null ) {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_failed_logins', true ) ) {
+			return;
+		}
+
+		if ( $error instanceof WP_Error
+			&& in_array( ReportedIP_Hive_User_Block::ERROR_CODE, $error->get_error_codes(), true ) ) {
 			return;
 		}
 

@@ -11,7 +11,9 @@
  *  2. Registers a personal-data exporter and eraser for the security data Hive
  *     stores about a logged-in user — their own login attempts (matched by
  *     username) and trusted devices (matched by user id). The 2FA secrets are
- *     handled separately by ReportedIP_Hive_Two_Factor_Admin.
+ *     handled separately by ReportedIP_Hive_Two_Factor_Admin. The account
+ *     block record and the proxy-aware per-session IP are exported here too;
+ *     core's own session export carries only `REMOTE_ADDR`.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -236,6 +238,47 @@ class ReportedIP_Hive_Privacy {
 			);
 		}
 
+		$block = ReportedIP_Hive_User_Block::get( $user->ID );
+		if ( null !== $block ) {
+			$items[] = array(
+				'group_id'    => 'reportedip-hive-account-block',
+				'group_label' => __( 'ReportedIP Hive — account block', 'reportedip-hive' ),
+				'item_id'     => 'rip-hive-account-block',
+				'data'        => array(
+					array(
+						'name'  => __( 'Blocked since', 'reportedip-hive' ),
+						'value' => $block['blocked_at'],
+					),
+					array(
+						'name'  => __( 'Message shown at sign-in', 'reportedip-hive' ),
+						'value' => $block['message'],
+					),
+					array(
+						'name'  => __( 'Administrator note', 'reportedip-hive' ),
+						'value' => $block['note'],
+					),
+				),
+			);
+		}
+
+		foreach ( ReportedIP_Hive_User_Sessions::for_user( $user->ID ) as $verifier => $session ) {
+			$items[] = array(
+				'group_id'    => 'reportedip-hive-sessions',
+				'group_label' => __( 'ReportedIP Hive — session addresses', 'reportedip-hive' ),
+				'item_id'     => 'rip-hive-session-' . substr( (string) $verifier, 0, 12 ),
+				'data'        => array(
+					array(
+						'name'  => __( 'IP address', 'reportedip-hive' ),
+						'value' => ReportedIP_Hive_User_Sessions::display_ip( $session ),
+					),
+					array(
+						'name'  => __( 'Expires', 'reportedip-hive' ),
+						'value' => isset( $session['expiration'] ) ? gmdate( 'Y-m-d H:i:s', (int) $session['expiration'] ) : '',
+					),
+				),
+			);
+		}
+
 		return array(
 			'data' => $items,
 			'done' => true,
@@ -276,10 +319,18 @@ class ReportedIP_Hive_Privacy {
 
 		delete_user_meta( $user->ID, '_reportedip_hive_known_ips' );
 
+		$retained = 0;
+		$messages = array();
+		if ( ReportedIP_Hive_User_Block::is_blocked( $user->ID ) ) {
+			ReportedIP_Hive_User_Block::update_texts( $user->ID, '', '' );
+			$retained   = 1;
+			$messages[] = __( 'The account block itself was retained for security; its free-text fields were cleared.', 'reportedip-hive' );
+		}
+
 		return array(
 			'items_removed'  => $removed,
-			'items_retained' => 0,
-			'messages'       => array(),
+			'items_retained' => $retained,
+			'messages'       => $messages,
 			'done'           => true,
 		);
 	}

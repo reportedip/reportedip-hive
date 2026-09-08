@@ -251,6 +251,31 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
+	 * Public entry point for callers outside the lifecycle listeners.
+	 *
+	 * Honours the same tier and opt-out gate as the automatic listeners, so a
+	 * site that turned the audit trail off does not gain rows through the
+	 * account-block and session surfaces.
+	 *
+	 * @param string              $type     Event type.
+	 * @param string              $action   Event action.
+	 * @param array<string,mixed> $data     Structured event data.
+	 * @param int                 $user_id  Subject user id (0 for none).
+	 * @param string              $username Subject username.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	public function record( $type, $action, array $data, $user_id = 0, $username = '' ) {
+		if ( ! self::is_available() ) {
+			return;
+		}
+		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_enabled', true ) ) {
+			return;
+		}
+		$this->log_event( (string) $type, (string) $action, $data, (int) $user_id, (string) $username );
+	}
+
+	/**
 	 * Persist one audit row from gathered context.
 	 *
 	 * @param string               $type     Event type.

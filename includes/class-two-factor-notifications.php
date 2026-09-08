@@ -297,13 +297,19 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	}
 
 	/**
-	 * Truncate the User-Agent string for display.
+	 * Truncate a User-Agent string for display.
 	 *
+	 * Shared with the session manager, which passes a stored User-Agent
+	 * instead of reading the current request.
+	 *
+	 * @param string|null $ua User-Agent to shorten; null reads the current request.
 	 * @return string
 	 */
-	private static function short_ua() {
-		$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
-		return substr( $ua, 0, 120 );
+	public static function short_ua( $ua = null ) {
+		if ( null === $ua ) {
+			$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) : '';
+		}
+		return substr( sanitize_text_field( (string) $ua ), 0, 120 );
 	}
 
 	/**

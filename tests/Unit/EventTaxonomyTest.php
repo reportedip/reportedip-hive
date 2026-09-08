@@ -81,6 +81,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'hardening_mode_deactivated',
 				'2fa_reset_challenge_sent',
 				'feed_denied',
+				'blocked_user_denied',
 				'totally_unknown_event',
 			);
 			foreach ( $operational as $event ) {

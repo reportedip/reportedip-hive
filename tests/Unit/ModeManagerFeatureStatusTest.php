@@ -177,6 +177,16 @@ class ModeManagerFeatureStatusTest extends TestCase {
 			$this->assertNotSame( '', $status['description'], "$feature needs a description" );
 		}
 
+		$this->pretend_tier( 'professional' );
+		$this->assertFalse(
+			$mm->feature_status( 'user_management' )['available'],
+			'user_management must stay locked on Professional'
+		);
+		$this->assertTrue(
+			$mm->feature_status( 'registration_rules_unlimited' )['available'],
+			'registration_rules_unlimited must unlock on Professional'
+		);
+
 		$this->pretend_tier( 'business' );
 		foreach ( array_keys( $expected ) as $feature ) {
 			$this->assertSame( 'ok', $mm->feature_status( $feature )['reason'], "$feature must unlock on Business" );
