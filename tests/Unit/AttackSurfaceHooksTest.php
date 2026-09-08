@@ -178,8 +178,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 			require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 			require_once dirname( __DIR__, 2 ) . '/admin/class-settings-import-export.php';
 
-			$spec       = \ReportedIP_Hive_Settings_Registry::spec();
-			$settings   = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php' );
+			$spec = \ReportedIP_Hive_Settings_Registry::spec();
+			/*
+			 * Normalised to LF before the source assertion below: a checkout with
+			 * core.autocrlf writes the file with CRLF, so an assertion spelling
+			 * out "\n" passes in CI and fails on the developer machine.
+			 */
+			$settings   = str_replace( "\r\n", "\n", (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php' ) );
 			$exportable = \ReportedIP_Hive_Settings_Import_Export::importable_keys();
 
 			foreach ( \ReportedIP_Hive_Attack_Surface::OPTION_KEYS as $key ) {
