@@ -46,7 +46,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | Cookie-banner consent endpoints | always bypassed | Real Cookie Banner, Complianz, Borlabs, CookieYes baked in |
 | Web Application Firewall | Paranoia Level 1 baseline + backend exceptions | See [Two-layer firewall](#two-layer-firewall) |
 | Verified bot detection | flag (default) or block | Official Google/Bing IP ranges first, FCrDNS fallback; genuine crawlers never blocked |
-| Registration defence | disposable mail: monitor (default), rules: off | Throwaway-mail domains, prohibited usernames, e-mail allow/block rules, per-IP rate limit (3 / 60 min), opt-in unknown-username block; WP + WooCommerce + Multisite sign-ups. Ten entries per list free, unlimited plus regex on Professional |
+| Registration defence | username baseline on (10 role names), rate limit on (3 / 60 min), disposable mail: monitor, custom lists empty | Throwaway-mail domains, prohibited usernames, e-mail allow/block rules, per-IP rate limit (3 / 60 min), opt-in unknown-username block; WP + WooCommerce + Multisite sign-ups. Ten entries per list free, unlimited plus regex on Professional |
 | Comment honeypot | on | Invisible decoy field, no CAPTCHA friction |
 
 <a id="two-layer-firewall"></a>
