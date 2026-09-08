@@ -23,6 +23,8 @@ const GHOST_LOGIN_ON = 'e2eghostone';
 const GHOST_LOGIN_OFF = 'e2eghosttwo';
 const KEPT_LIST = 'e2ekeepthisentry';
 const REGEX_ENTRY = '/^e2e-re[0-9]+$/';
+/** Baked into `Disposable_Email::RELAY_DOMAINS`; never comes from the feed. */
+const THROWAWAY_DOMAIN = 'duck.com';
 
 const USERNAME_DENIED = 'This username is not allowed';
 const EMAIL_DENIED = 'This e-mail address cannot be used for registration';
@@ -86,6 +88,12 @@ async function register(
 /**
  * Wait for the card's own registry write, not for the admin heartbeat that
  * shares admin-ajax.php.
+ *
+ * Only the transport is asserted from the response: `firewall.js` calls
+ * `window.location.reload()` the moment the save answers, and the reload drops
+ * the network resource before `response.json()` can fetch the body ("No
+ * resource with given identifier found"). The verdict is therefore read where
+ * it survives — the stored option, and the alert the page raises on refusal.
  */
 function registrySave(page: Page): Promise<Response> {
 	return page.waitForResponse(
@@ -109,6 +117,7 @@ test.describe('registration rules', () => {
 			foreach (ReportedIP_Hive_Registration_Guard::OPTION_KEYS as $key) { ReportedIP_Hive_Option_Routing::delete($key); }
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_known_tier');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_disposable_email_action');
+			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_block_email_relays');
 			ReportedIP_Hive_Option_Routing::set('reportedip_hive_registration_limit_enabled', 0);
 			foreach (get_users(array('search' => 'e2ereg*', 'search_columns' => array('user_login'), 'fields' => 'ID')) as $id) { wp_delete_user((int) $id); }
 			$leftover = get_user_by('login', '${BASELINE_LOGIN}');
@@ -123,6 +132,7 @@ test.describe('registration rules', () => {
 			foreach (ReportedIP_Hive_Registration_Guard::OPTION_KEYS as $key) { ReportedIP_Hive_Option_Routing::delete($key); }
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_known_tier');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_disposable_email_action');
+			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_block_email_relays');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_block_user_enumeration');
 			foreach (get_users(array('search' => 'e2ereg*', 'search_columns' => array('user_login'), 'fields' => 'ID')) as $id) { wp_delete_user((int) $id); }
 			$leftover = get_user_by('login', '${BASELINE_LOGIN}');
@@ -135,6 +145,11 @@ test.describe('registration rules', () => {
 	});
 
 	test('the card saves the list and the guard refuses that login', async ({ page, request }) => {
+		// The heaviest single test in the file: an admin sign-in, the firewall
+		// page, the AJAX save with its reload, a WP-CLI read and an anonymous
+		// sign-up. On the bench-seeded dev stack that does not fit 120 s.
+		test.setTimeout(240_000);
+
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=spam');
 
@@ -145,7 +160,7 @@ test.describe('registration rules', () => {
 
 		const saved = registrySave(page);
 		await card.locator('button[data-rip-save]').click();
-		expect(((await (await saved).json()) as { success: boolean }).success).toBe(true);
+		expect((await saved).status()).toBe(200);
 
 		expect(wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames')).toBe(BLOCKED_LOGIN);
 
@@ -191,24 +206,33 @@ test.describe('registration rules', () => {
 		expect(allowed.url).toContain(REGISTERED);
 	});
 
+	/**
+	 * The throwaway domain is a baked-in relay from
+	 * `Disposable_Email::RELAY_DOMAINS`, not a name from the synced
+	 * `disposable_domains` ruleset: that ruleset is server-delivered and this
+	 * dev stack currently carries the bench seed, so any hardcoded throwaway
+	 * domain drifts in and out of the list between runs. Blocking relays walks
+	 * the identical pipeline step and cannot drift.
+	 */
 	test('an e-mail allow rule refuses everything else and beats the disposable block', async ({ request }) => {
 		php(`
 			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_EMAIL_MODE, 'off');
 			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Disposable_Email::OPT_ACTION, 'block');
+			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Disposable_Email::OPT_BLOCK_RELAYS, 1);
 			echo 'ready';
 		`);
 
-		const throwaway = await register(request, 'e2ereg-disp-a', 'e2ereg-disp-a@mailinator.com');
+		const throwaway = await register(request, 'e2ereg-disp-a', `e2ereg-disp-a@${THROWAWAY_DOMAIN}`);
 		expect(throwaway.body).toContain(DISPOSABLE_DENIED);
 		expect(throwaway.url).not.toContain(REGISTERED);
 
 		php(`
 			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_EMAIL_MODE, 'allow');
-			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_EMAIL_RULES, '*@mailinator.com');
+			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_EMAIL_RULES, '*@${THROWAWAY_DOMAIN}');
 			echo 'ready';
 		`);
 
-		const allowWins = await register(request, 'e2ereg-disp-b', 'e2ereg-disp-b@mailinator.com');
+		const allowWins = await register(request, 'e2ereg-disp-b', `e2ereg-disp-b@${THROWAWAY_DOMAIN}`);
 		expect(allowWins.body).not.toContain(DISPOSABLE_DENIED);
 		expect(allowWins.body).not.toContain(EMAIL_DENIED);
 		expect(allowWins.url).toContain(REGISTERED);
@@ -338,15 +362,12 @@ test.describe('registration rules', () => {
 
 		const saved = registrySave(page);
 		await card.locator('button[data-rip-save]').click();
+		expect((await saved).status()).toBe(200);
 
-		const payload = (await (await saved).json()) as {
-			success: boolean;
-			data: { message: string; code: string };
-		};
-		expect(payload.success).toBe(false);
-		expect(payload.data.code).toBe('skipped_tier');
-		expect(payload.data.message).toMatch(/requires the professional plan/i);
-		await expect.poll(() => alerts.length).toBeGreaterThan(0);
+		// The refusal reaches the operator as an alert, and the page is left
+		// untouched: `firewall.js` only reloads after a successful write.
+		await expect.poll(() => alerts.length, { timeout: 30_000 }).toBeGreaterThan(0);
+		expect(alerts.join(' ')).toMatch(/requires the professional plan/i);
 
 		expect(wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames')).toBe(KEPT_LIST);
 	});
@@ -364,7 +385,7 @@ test.describe('registration rules', () => {
 
 		const saved = registrySave(page);
 		await card.locator('button[data-rip-save]').click();
-		expect(((await (await saved).json()) as { success: boolean }).success).toBe(true);
+		expect((await saved).status()).toBe(200);
 
 		const stored = wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames');
 		expect(

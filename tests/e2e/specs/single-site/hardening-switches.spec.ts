@@ -296,6 +296,8 @@ test.describe('attack surface switches', () => {
 	 * clicked through their wrapping label.
 	 */
 	test('the hardening form saves the attack-surface switches', async ({ page }) => {
+		test.setTimeout(240_000);
+
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=hardening');
 
@@ -309,13 +311,21 @@ test.describe('attack surface switches', () => {
 			.click();
 
 		await form.locator('button[type="submit"]').click();
-		await page.waitForURL((url) => 'true' === url.searchParams.get('settings-updated'), {
-			timeout: 30_000,
-		});
+		// The saved notice is the proof the round trip through options.php
+		// completed. `waitForURL` is not used: it did not resolve on this stack
+		// even after the redirect carrying `settings-updated=true` had been
+		// followed and the notice was on screen.
+		await expect(page.locator('body')).toContainText('Settings saved.', { timeout: 90_000 });
 
+		// Each toggle ships a hidden `value="0"` companion under the same name,
+		// so the checkbox has to be addressed by type.
 		await expect(page.locator('#rip-rest-access-mode')).toHaveValue('logged_in');
-		await expect(page.locator('input[name="reportedip_hive_disable_feeds"]')).toBeChecked();
-		await expect(page.locator('input[name="reportedip_hive_hide_software_info"]')).toBeChecked();
+		await expect(
+			page.locator('input[name="reportedip_hive_disable_feeds"][type="checkbox"]')
+		).toBeChecked();
+		await expect(
+			page.locator('input[name="reportedip_hive_hide_software_info"][type="checkbox"]')
+		).toBeChecked();
 
 		const saved = wpEval(
 			'echo get_option( "reportedip_hive_rest_access_mode" ) . "|" . get_option( "reportedip_hive_disable_feeds" ) . "|" . get_option( "reportedip_hive_hide_software_info" );' +

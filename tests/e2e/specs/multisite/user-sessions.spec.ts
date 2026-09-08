@@ -90,6 +90,13 @@ test.describe.configure({ mode: 'serial' });
 test.describe('network user blocking and sessions', () => {
 	let userId = 0;
 
+	// Every test here signs the administrator in from a fresh context and then
+	// loads a network-admin page; on this host that regularly passes the 120 s
+	// default before the first assertion runs.
+	test.beforeEach(() => {
+		test.setTimeout(240_000);
+	});
+
 	test.beforeAll(() => {
 		resetAdminBaseline(MS_COMPOSE, MS_SERVICE);
 		userId = provisionTestUser();
@@ -152,7 +159,10 @@ test.describe('network user blocking and sessions', () => {
 		await setToggle(page, 'input[name="rip_block_user"]', true);
 		await page.fill('#rip_block_message', BLOCK_MESSAGE);
 		await page.click('#submit');
-		await page.waitForURL((url) => url.searchParams.has('updated'));
+		// The core "User updated." notice is the proof the profile POST came
+		// back. `waitForURL` on the `updated` query arg is not used: it did not
+		// resolve on this stack even with the notice already on screen.
+		await expect(page.locator('body')).toContainText('User updated.', { timeout: 90_000 });
 		await expect(page.locator('input[name="rip_block_user"]')).toBeChecked();
 
 		const visitor = await browser.newContext();

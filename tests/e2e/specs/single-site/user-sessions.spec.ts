@@ -118,13 +118,22 @@ async function saveBlockState(page: Page, userId: number, blocked: boolean, mess
 	}
 
 	await page.click('#submit');
-	await page.waitForURL((url) => url.searchParams.has('updated'));
+	// The core "User updated." notice is the proof the profile POST came back;
+	// `waitForURL` on the `updated` query arg proved unreliable on these stacks.
+	await expect(page.locator('body')).toContainText('User updated.', { timeout: 90_000 });
 }
 
 test.describe.configure({ mode: 'serial' });
 
 test.describe('user blocking and sessions', () => {
 	let userId = 0;
+
+	// Every test here signs a user in from a fresh context and then loads a
+	// users or sessions screen; on this host that regularly passes the 120 s
+	// default before the first assertion runs.
+	test.beforeEach(() => {
+		test.setTimeout(240_000);
+	});
 
 	test.beforeAll(() => {
 		resetAdminBaseline();

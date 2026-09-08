@@ -198,7 +198,15 @@ test.describe('adaptive 2fa policies', () => {
 			input.checked = true;
 		});
 		await page.locator('form input[type="submit"], form button[type="submit"]').first().click();
-		await page.waitForURL(/settings-updated=true/, { timeout: 30_000 });
+
+		// The refusal notice is the proof the POST reached the sanitizer and was
+		// rejected there. `waitForURL` is not used: it waits for the `load`
+		// lifecycle event, which the free-tier render does not always reach
+		// inside the timeout on this stack, even though the redirect carrying
+		// `settings-updated=true` has already been followed.
+		await expect(page.locator('body')).toContainText(/requires the professional plan/i, {
+			timeout: 60_000,
+		});
 
 		const stored = wpTolerant('option', 'get', POLICY_KEY);
 		expect(stored).not.toContain('editor');
@@ -219,7 +227,9 @@ test.describe('adaptive 2fa policies', () => {
 		await page.fill('#reportedip_hive_2fa_policy_logins', '7');
 		await page.fill('#reportedip_hive_2fa_policy_sessions', '5');
 		await page.locator('form input[type="submit"], form button[type="submit"]').first().click();
-		await page.waitForURL(/settings-updated=true/, { timeout: 30_000 });
+		// `commit` rather than the default `load`: the post-save render does not
+		// always reach the load event inside the budget on this stack.
+		await page.waitForURL(/settings-updated=true/, { waitUntil: 'commit', timeout: 90_000 });
 
 		const stored = wpEval([
 			"echo 'VALUES|' . ReportedIP_Hive_Option_Routing::get('reportedip_hive_2fa_policy_days', '') . '|' . ReportedIP_Hive_Option_Routing::get('reportedip_hive_2fa_policy_logins', '') . '|' . ReportedIP_Hive_Option_Routing::get('reportedip_hive_2fa_policy_sessions', '');",
