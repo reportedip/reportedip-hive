@@ -1415,6 +1415,7 @@ class ReportedIP_Hive_Setup_Wizard {
 			$rip_policy_roles  = function_exists( 'wp_roles' ) ? wp_roles()->get_names() : array();
 			$rip_saved_country = ReportedIP_Hive_Two_Factor_Policies::roles_for( 'new_country' );
 			$rip_saved_device  = ReportedIP_Hive_Two_Factor_Policies::roles_for( 'new_device' );
+			$rip_policy_latch  = ReportedIP_Hive_Login_Context::admin_latch_open();
 			?>
 			<div class="rip-config-card">
 				<div class="rip-config-card__header">
@@ -1431,7 +1432,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<div class="rip-checkbox-row">
 							<?php foreach ( $rip_policy_roles as $rip_slug => $rip_name ) : ?>
 								<label class="rip-checkbox-pill">
-									<input type="checkbox" name="2fa_policy_new_country[]" value="<?php echo esc_attr( $rip_slug ); ?>" <?php checked( in_array( $rip_slug, $rip_saved_country, true ) ); ?>>
+									<input type="checkbox" name="2fa_policy_new_country[]" value="<?php echo esc_attr( $rip_slug ); ?>" <?php checked( in_array( $rip_slug, $rip_saved_country, true ) ); ?> <?php disabled( 'administrator' === $rip_slug && ! $rip_policy_latch ); ?>>
 									<?php echo esc_html( translate_user_role( $rip_name ) ); ?>
 								</label>
 							<?php endforeach; ?>
@@ -1440,7 +1441,7 @@ class ReportedIP_Hive_Setup_Wizard {
 						<div class="rip-checkbox-row">
 							<?php foreach ( $rip_policy_roles as $rip_slug => $rip_name ) : ?>
 								<label class="rip-checkbox-pill">
-									<input type="checkbox" name="2fa_policy_new_device[]" value="<?php echo esc_attr( $rip_slug ); ?>" <?php checked( in_array( $rip_slug, $rip_saved_device, true ) ); ?>>
+									<input type="checkbox" name="2fa_policy_new_device[]" value="<?php echo esc_attr( $rip_slug ); ?>" <?php checked( in_array( $rip_slug, $rip_saved_device, true ) ); ?> <?php disabled( 'administrator' === $rip_slug && ! $rip_policy_latch ); ?>>
 									<?php echo esc_html( translate_user_role( $rip_name ) ); ?>
 								</label>
 							<?php endforeach; ?>

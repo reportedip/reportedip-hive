@@ -131,5 +131,29 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertSame( array(), $GLOBALS['wp_options'], 'steps outside SAVE_STEPS write nothing here' );
 		}
+
+		/**
+		 * The wizard tells the reader that the administrator role stays
+		 * unselectable until an administrator has passed one challenge, and the
+		 * sanitiser drops the role regardless. Without `disabled()` on the
+		 * input the wizard still offers the tick, so the setting is discarded
+		 * silently after a save. The settings page has always disabled it; the
+		 * two surfaces have to agree.
+		 */
+		public function test_wizard_disables_the_administrator_policy_tick_until_the_latch_opens() {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-setup-wizard.php' );
+
+			foreach ( array( '2fa_policy_new_country[]', '2fa_policy_new_device[]' ) as $field ) {
+				$offset = strpos( $source, $field );
+				$this->assertNotFalse( $offset, "wizard no longer renders {$field}" );
+
+				$input = substr( $source, $offset, 400 );
+				$this->assertStringContainsString(
+					"disabled( 'administrator' === \$rip_slug && ! \$rip_policy_latch )",
+					$input,
+					"the administrator tick for {$field} is offered although the latch may be closed"
+				);
+			}
+		}
 	}
 }

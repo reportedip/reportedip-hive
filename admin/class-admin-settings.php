@@ -6714,12 +6714,12 @@ class ReportedIP_Hive_Admin_Settings {
 					?>
 				<div class="rip-health-card rip-health-card--<?php echo esc_attr( $status_class ); ?>">
 					<div class="rip-health-card-icon">
-						<?php echo wp_kses_post( $item['icon'] ); ?>
+						<?php echo self::kses_inline_svg( $item['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally; the SVG is whitelisted by the helper. ?>
 					</div>
 					<div class="rip-health-card-content">
 						<h3><?php echo esc_html( $item['title'] ); ?></h3>
 						<span class="rip-status-pill rip-status-pill--<?php echo esc_attr( $status_class ); ?>">
-							<?php echo wp_kses_post( $pill_icons[ $status_class ] ); ?>
+							<?php echo self::kses_inline_svg( $pill_icons[ $status_class ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally; the SVG is whitelisted by the helper. ?>
 							<?php echo esc_html( $plugin_health[ $key ]['message'] ); ?>
 						</span>
 					</div>
