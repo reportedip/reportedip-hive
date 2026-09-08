@@ -554,6 +554,36 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Echo the registry description of one option as a help paragraph.
+	 *
+	 * The registry description is the canonical one-sentence explanation of an
+	 * option, and it is the only one the MainWP form and the cloud fleet can
+	 * see. Use this helper for any field whose markup does not already carry
+	 * its own guidance; where a page has longer, page-specific guidance it
+	 * keeps it, and the registry sentence stays the short version the
+	 * dashboards render.
+	 *
+	 * Silent when the option carries no description, so a partially described
+	 * section still renders.
+	 *
+	 * @param string $key Option key.
+	 * @return void
+	 * @since 2.1.51
+	 */
+	public static function render_field_help( $key ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
+			return;
+		}
+
+		$spec = ReportedIP_Hive_Settings_Registry::spec();
+		if ( empty( $spec[ $key ]['description'] ) ) {
+			return;
+		}
+
+		printf( '<p class="rip-help-text">%s</p>', esc_html( (string) $spec[ $key ]['description'] ) );
+	}
+
+	/**
 	 * Render an upgrade-affordance chip for tier-gated controls.
 	 *
 	 * @param array $status Output of Mode_Manager::feature_status().
@@ -4947,10 +4977,12 @@ class ReportedIP_Hive_Admin_Settings {
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_app_password_threshold"><?php esc_html_e( 'How many failed auths?', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_app_password_threshold" name="reportedip_hive_app_password_threshold" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_threshold', 5 ) ); ?>" min="1" max="100" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_app_password_threshold' ); ?>
 					</div>
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_app_password_timeframe"><?php esc_html_e( 'Within how many minutes?', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_app_password_timeframe" name="reportedip_hive_app_password_timeframe" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_timeframe', 15 ) ); ?>" min="1" max="1440" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_app_password_timeframe' ); ?>
 					</div>
 				</div>
 			</div>
@@ -4968,6 +5000,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Watch REST API requests', 'reportedip-hive' ); ?></span>
 					</label>
+					<?php self::render_field_help( 'reportedip_hive_monitor_rest_api' ); ?>
 				</div>
 
 				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
@@ -5149,16 +5182,19 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Apply to all users (default: only 2FA-enforced roles)', 'reportedip-hive' ); ?></span>
 					</label>
+					<?php self::render_field_help( 'reportedip_hive_password_policy_all_users' ); ?>
 				</div>
 
 				<div class="rip-grid rip-grid-cols-2 rip-gap-4 rip-mb-2">
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_password_min_length"><?php esc_html_e( 'Minimum length', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_password_min_length" name="reportedip_hive_password_min_length" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_min_length', 12 ) ); ?>" min="8" max="128" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_password_min_length' ); ?>
 					</div>
 					<div class="rip-form-group">
 						<label class="rip-label" for="reportedip_hive_password_min_classes"><?php esc_html_e( 'Required character classes (lower / upper / digit / symbol)', 'reportedip-hive' ); ?></label>
 						<input type="number" id="reportedip_hive_password_min_classes" name="reportedip_hive_password_min_classes" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_min_classes', 3 ) ); ?>" min="1" max="4" class="rip-input" />
+						<?php self::render_field_help( 'reportedip_hive_password_min_classes' ); ?>
 					</div>
 				</div>
 			</div>
@@ -5938,6 +5974,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<option value="warning" <?php selected( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_level', 'info' ), 'warning' ); ?>><?php esc_html_e( 'Warning — only important events', 'reportedip-hive' ); ?></option>
 						<option value="error" <?php selected( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_level', 'info' ), 'error' ); ?>><?php esc_html_e( 'Error — critical events only', 'reportedip-hive' ); ?></option>
 					</select>
+					<?php self::render_field_help( 'reportedip_hive_log_level' ); ?>
 				</div>
 
 				<script>
@@ -5965,6 +6002,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Log browser user-agent strings (truncated to 50 chars to limit fingerprinting)', 'reportedip-hive' ); ?></span>
 					</label>
+					<?php self::render_field_help( 'reportedip_hive_log_user_agents' ); ?>
 				</div>
 				<div class="rip-form-group">
 					<label class="rip-toggle">

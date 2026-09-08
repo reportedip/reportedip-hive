@@ -112,7 +112,9 @@ class ReportedIP_Hive_Admin_Firewall {
 		foreach ( $choices as $value => $choice_label ) {
 			printf( '<option value="%s"%s>%s</option>', esc_attr( (string) $value ), selected( (string) $current, (string) $value, false ), esc_html( $choice_label ) );
 		}
-		echo '</select></div>';
+		echo '</select>';
+		ReportedIP_Hive_Admin_Settings::render_field_help( $opt_key );
+		echo '</div>';
 	}
 
 	/**

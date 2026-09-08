@@ -268,6 +268,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 				if ( isset( $entry['tier_gate'] ) ) {
 					$this->assertTrue( is_callable( $entry['tier_gate'] ), "The tier gate of {$key} is not callable." );
 				}
+				$this->assertNotEmpty(
+					$entry['description'] ?? '',
+					"Key {$key} has no description. The settings page, the MainWP form and the cloud fleet all render this one sentence, so an option without it is a bare label on three surfaces at once."
+				);
 			}
 		}
 
