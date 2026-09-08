@@ -110,7 +110,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * The filter offers a fixed vocabulary; an entry nothing writes is a
-		 * dead choice that silently returns an empty result set.
+		 * dead choice that silently returns an empty result set. Writers that
+		 * pass an `EVENT_*` constant instead of the literal have to prove the
+		 * constant reaches a logging call, otherwise deleting the last call
+		 * would leave the declaration behind and pass unnoticed.
 		 */
 		public function test_every_filterable_event_type_has_a_writer(): void {
 			$sources = $this->sources();
@@ -129,10 +132,22 @@ namespace ReportedIP\Hive\Tests\Unit {
 				}
 
 				$quoted = preg_quote( $type, '/' );
-				$this->assertTrue(
-					1 === preg_match( '/(?:log_security_event|log_event|->log|::log)\((?:[^;]{0,200}?)\'' . $quoted . '\'/s', $sources )
-						|| 1 === preg_match( '/const\s+EVENT_[A-Z_]+\s*=\s*\'' . $quoted . '\'/', $sources ),
+				$call   = '(?:log_security_event|log_event|log_denied|log_denial|->log|::log)\(';
+
+				if ( 1 === preg_match( '/' . $call . '(?:[^;]{0,200}?)\'' . $quoted . '\'/s', $sources ) ) {
+					continue;
+				}
+
+				$this->assertSame(
+					1,
+					preg_match( '/const\s+(EVENT_[A-Z0-9_]+)\s*=\s*\'' . $quoted . '\';/', $sources, $constant ),
 					"The Logs filter offers '{$type}', but no logging call writes it."
+				);
+
+				$this->assertMatchesRegularExpression(
+					'/' . $call . '(?:[^;]{0,200}?)(?:self|static|parent|[A-Za-z_][A-Za-z0-9_]*)::' . $constant[1] . '\b/s',
+					$sources,
+					"The Logs filter offers '{$type}': the constant {$constant[1]} still holds the slug, but no logging call passes it."
 				);
 			}
 		}

@@ -241,7 +241,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 				),
 			),
 			'lockdown'         => array(
-				'label'       => __( 'Hardening', 'reportedip-hive' ),
+				'label'       => __( 'Access Lockdown', 'reportedip-hive' ),
 				'description' => __( 'Attack-surface switches (REST API access, XML-RPC, feeds, wp-admin for visitors, PHP execution in uploads, software fingerprints).', 'reportedip-hive' ),
 				'options'     => array(
 					'reportedip_hive_rest_access_mode',

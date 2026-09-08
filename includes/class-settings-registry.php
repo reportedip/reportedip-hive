@@ -65,7 +65,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Custom login URL and probe monitoring.', 'reportedip-hive' ),
 			),
 			'lockdown'         => array(
-				'label'       => __( 'Hardening', 'reportedip-hive' ),
+				'label'       => __( 'Access Lockdown', 'reportedip-hive' ),
 				'description' => __( 'Attack-surface switches: REST API access, XML-RPC, feeds, wp-admin for visitors, PHP execution in uploads and software fingerprints.', 'reportedip-hive' ),
 			),
 			'account_security' => array(
