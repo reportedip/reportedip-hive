@@ -2859,7 +2859,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_2fa_notify_new_device',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_notify_new_device' ),
 			)
 		);
 		register_setting(
@@ -2915,7 +2915,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_notify_sync_to_api',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_sync_to_api' ),
 			)
 		);
 		register_setting(
@@ -2980,7 +2980,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hide_login_token_in_urls',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_token_in_urls' ),
 			)
 		);
 		register_setting(
@@ -2996,7 +2996,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hide_login_probe_threshold',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => 'absint',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_probe_threshold' ),
 			)
 		);
 		register_setting(
@@ -3004,7 +3004,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_hide_login_probe_timeframe',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => 'absint',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_probe_timeframe' ),
 			)
 		);
 
@@ -3086,7 +3086,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_detailed_logging',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_detailed_logging' ),
 			)
 		);
 		register_setting(
@@ -3110,7 +3110,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_log_referer_domains',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_log_referer_domains' ),
 			)
 		);
 		register_setting(
@@ -3135,7 +3135,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_enable_caching',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_enable_caching' ),
 			)
 		);
 		register_setting(
@@ -3151,7 +3151,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_cache_duration',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_cache_duration' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_cache_duration' ),
 			)
 		);
 		register_setting(
@@ -3159,7 +3159,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_negative_cache_duration',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_negative_cache_duration' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_negative_cache_duration' ),
 			)
 		);
 		register_setting(
@@ -3167,7 +3167,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_max_api_calls_per_hour',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_max_api_calls' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_max_api_calls_per_hour' ),
 			)
 		);
 		register_setting(
@@ -3175,7 +3175,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_trusted_ip_header',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_trusted_ip_header' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_trusted_ip_header' ),
 			)
 		);
 		register_setting(
@@ -3209,7 +3209,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_report_cooldown_hours',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => 'absint',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_report_cooldown_hours' ),
 			)
 		);
 
@@ -3218,7 +3218,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_auto_footer_enabled',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_footer_enabled' ),
 				'default'           => false,
 			)
 		);
@@ -3228,7 +3228,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_auto_footer_variant',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_auto_footer_variant' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_footer_variant' ),
 				'default'           => 'badge',
 			)
 		);
@@ -3238,7 +3238,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_auto_footer_align',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_auto_footer_align' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_footer_align' ),
 				'default'           => 'center',
 			)
 		);
@@ -3336,19 +3336,6 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 	}
 
-	/**
-	 * Sanitiser: auto-footer variant must be one of the supported values.
-	 *
-	 * Delegates to the canonical allowlist on `ReportedIP_Hive_Frontend_Shortcodes`
-	 * so the wizard, the Promote tab, and Settings API all share one source of truth.
-	 *
-	 * @param mixed $value Raw value from $_POST.
-	 * @return string Sanitised variant key (`badge` or `shield`).
-	 * @since  1.3.0
-	 */
-	public function sanitize_auto_footer_variant( $value ) {
-		return ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( $value );
-	}
 
 	/**
 	 * Sanitiser: auto-footer alignment must be left, center, or right.
@@ -3507,69 +3494,28 @@ class ReportedIP_Hive_Admin_Settings {
 		return $result;
 	}
 
-	/**
-	 * Sanitize cache duration (1-168 hours = 1 week)
-	 */
-	public function sanitize_cache_duration( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 168, $value ) );
-	}
+
+
+
 
 	/**
-	 * Sanitize negative cache duration (1-24 hours)
-	 */
-	public function sanitize_negative_cache_duration( $value ) {
-		$value = absint( $value );
-		return max( 1, min( 24, $value ) );
-	}
-
-	/**
-	 * Sanitize max API calls per hour (0 = auto/tier-bound, otherwise 10–100000).
+	 * Sanitize the trusted-proxy source ranges through the registry and tell
+	 * the operator when entries had to be dropped.
 	 *
-	 * @param mixed $value Raw input.
-	 * @return int
-	 */
-	public function sanitize_max_api_calls( $value ) {
-		$value = absint( $value );
-		if ( 0 === $value ) {
-			return 0;
-		}
-		return max( 10, min( 100000, $value ) );
-	}
-
-	/**
-	 * Sanitize trusted IP header - only allow known safe values.
-	 *
-	 * A trusted header with no trusted sources is honoured from any peer,
-	 * which lets anyone reaching the origin directly claim a whitelisted
-	 * address or shed a block by rotating the header. It stays permitted for
-	 * backward compatibility; the warning is raised persistently by
-	 * {@see ReportedIP_Hive_Readiness::trusted_header()} instead of once at
-	 * save time, and the option write flushes the readiness cache so it
-	 * appears on the same page load.
-	 *
-	 * @param mixed $value Raw input.
-	 * @return string
-	 */
-	public function sanitize_trusted_ip_header( $value ) {
-		return ReportedIP_Hive_Proxy_Trust::sanitize_header( sanitize_text_field( $value ?? '' ) );
-	}
-
-	/**
-	 * Sanitize the trusted-proxy source ranges: keep only valid IP/CIDR lines
-	 * and surface a settings error when entries had to be dropped.
-	 *
-	 * The stored value is the cleaned newline-joined list; parsing at read
-	 * time happens in {@see ReportedIP_Hive_Proxy_Trust::parse_ranges()}.
+	 * The registry callback does the sanitising, so this form saves exactly
+	 * what MainWP, the cloud fleet and an import save. The wrapper exists only
+	 * for the notice: dropping a line someone typed without saying so is how a
+	 * proxy range silently fails to take effect.
 	 *
 	 * @param mixed $value Raw textarea submission.
 	 * @return string Cleaned newline-separated range list.
 	 * @since  2.1.41
 	 */
 	public function sanitize_trusted_proxy_ranges( $value ) {
-		$raw   = sanitize_textarea_field( (string) ( $value ?? '' ) );
-		$valid = ReportedIP_Hive_Proxy_Trust::parse_ranges( $raw );
-
+		$raw       = sanitize_textarea_field( (string) ( $value ?? '' ) );
+		$registry  = ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_trusted_proxy_ranges' );
+		$stored    = (string) $registry( $raw );
+		$valid     = ReportedIP_Hive_Proxy_Trust::parse_ranges( $stored );
 		$submitted = ReportedIP_Hive_Proxy_Trust::count_submitted_ranges( $raw );
 
 		if ( $submitted > count( $valid ) ) {
@@ -3585,7 +3531,7 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 		}
 
-		return implode( "\n", $valid );
+		return $stored;
 	}
 
 	/**
