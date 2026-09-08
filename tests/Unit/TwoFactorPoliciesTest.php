@@ -453,6 +453,16 @@ namespace ReportedIP\Hive\Tests\Unit {
 				array_keys( \ReportedIP_Hive_Two_Factor_Policies::trigger_texts() ),
 				'Every trigger needs a label and a description in the settings matrix.'
 			);
+
+			$triggers = \ReportedIP_Hive_Two_Factor_Policies::TRIGGERS;
+			$order    = \ReportedIP_Hive_Two_Factor_Policies::EVAL_ORDER;
+			sort( $triggers );
+			sort( $order );
+			$this->assertSame(
+				$triggers,
+				$order,
+				'A trigger missing from EVAL_ORDER would render in the matrix but never fire.'
+			);
 		}
 
 		public function test_trusted_device_bypass_is_gated_by_the_stepup_verdict(): void {

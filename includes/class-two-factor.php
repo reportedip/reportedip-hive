@@ -899,6 +899,7 @@ class ReportedIP_Hive_Two_Factor {
 				array(
 					'user_id' => $user->ID,
 					'trigger' => $stepup,
+					'country' => ReportedIP_Hive_Login_Context::current_signals()['country'],
 				),
 				'low'
 			);
