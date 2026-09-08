@@ -997,7 +997,7 @@ msgstr "Sofortsperre bei unbekannten Benutzernamen"
 
 #: admin/class-admin-firewall.php:1308
 msgid "A failed login naming an account nobody owns is usually a credential list being read out loud. With this on, the visitor address is blocked right away and the escalation ladder decides for how long. The login response does not change: it stays the same \"Invalid credentials.\" every failed login gets, and the block appears in the log as an unknown-username login probe."
-msgstr "Ein fehlgeschlagener Login auf ein Konto, das es gar nicht gibt, ist meistens eine Zugangsdatenliste, die jemand durchprobiert. Ist das aktiv, wird die Besucheradresse sofort gesperrt, und die Eskalationsleiter bestimmt die Dauer. Die Antwort am Login ändert sich dabei nicht, sie bleibt dasselbe \"Invalid credentials.\" wie bei jedem anderen Fehlversuch, und die Sperre steht im Protokoll als Login-Versuch mit unbekanntem Benutzernamen."
+msgstr "Ein fehlgeschlagener Login auf ein Konto, das es gar nicht gibt, ist meistens eine Zugangsdatenliste, die jemand durchprobiert. Ist das aktiv, wird die Besucheradresse sofort gesperrt, und die Eskalationsleiter bestimmt die Dauer. Die Antwort am Login ändert sich dabei nicht, sie bleibt dasselbe \"Ungültige Anmeldedaten.\" wie bei jedem anderen Fehlversuch, und die Sperre steht im Protokoll als Login-Versuch mit unbekanntem Benutzernamen."
 
 #: admin/class-admin-firewall.php:1309
 msgid "Two things to accept before switching this on. One typo in the username locks that visitor out until the block expires, and anyone who can observe whether a block follows learns whether an account name exists here. Whitelist your own addresses first."
@@ -2235,8 +2235,8 @@ msgstr "Höhere Stufe für höhere Limits."
 #, php-format
 msgid "%d readiness issue needs attention"
 msgid_plural "%d readiness issues need attention"
-msgstr[0] "%d Meldung zur Systembereitschaft ist offen"
-msgstr[1] "%d Meldungen zur Systembereitschaft sind offen"
+msgstr[0] "%d Betriebsstörung ist offen"
+msgstr[1] "%d Betriebsstörungen sind offen"
 
 #: admin/class-admin-settings.php:1802
 msgid "Open System Status"
@@ -4019,11 +4019,11 @@ msgstr "Betriebsstörungen, die eine Schutzschicht an ihrer Arbeit hindern. Warn
 
 #: admin/class-admin-settings.php:6111
 msgid "No open readiness issues."
-msgstr "Keine offenen Meldungen zur Systembereitschaft."
+msgstr "Keine offenen Störungen."
 
 #: admin/class-admin-settings.php:6117
 msgid "Issue"
-msgstr "Meldung"
+msgstr "Störung"
 
 #: admin/class-admin-settings.php:6118
 msgid "Since"
@@ -7498,7 +7498,7 @@ msgstr "Auslöser für die erneute 2FA-Abfrage"
 
 #: admin/class-two-factor-admin.php:545
 msgid "Users who already have a second factor and whose role is not required above are asked for it again when a ticked condition applies, even on a trusted device. The 2FA IP allowlist still lets a sign-in through, so an office network stays reachable after a policy change. Users without a second factor are never locked out; they are recorded in the log instead."
-msgstr "Benutzer, die bereits einen zweiten Faktor haben und deren Rolle oben nicht verpflichtet ist, werden erneut danach gefragt, sobald eine angehakte Bedingung zutrifft, auch auf einem vertrauenswürdigen Gerät. Die IP-Liste für 2FA lässt eine Anmeldung weiterhin durch, ein Büronetz bleibt nach einer Änderung der Richtlinie also erreichbar. Benutzer ohne zweiten Faktor werden nie ausgesperrt, sie landen stattdessen im Protokoll."
+msgstr "Benutzer, die bereits einen zweiten Faktor haben und deren Rolle oben nicht verpflichtet ist, werden erneut danach gefragt, sobald eine angehakte Bedingung zutrifft, auch auf einem vertrauenswürdigen Gerät. Die IP-Erlaubnisliste (2FA-Umgehung) lässt eine Anmeldung weiterhin durch, ein Büronetz bleibt nach einer Änderung der Richtlinie also erreichbar. Benutzer ohne zweiten Faktor werden nie ausgesperrt, sie landen stattdessen im Protokoll."
 
 #: admin/class-two-factor-admin.php:550
 msgid "Adaptive triggers are part of the Professional plan. Existing rules stay stored and can be cleared here, but nothing is evaluated at sign-in until the plan covers them again."
