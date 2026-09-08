@@ -279,6 +279,57 @@ class ReportedIP_Hive_Privacy {
 			);
 		}
 
+		$login_context = ReportedIP_Hive_Login_Context::get( $user->ID );
+		if ( $login_context['last']['ts'] > 0 || ! empty( $login_context['nets'] ) ) {
+			$items[] = array(
+				'group_id'    => 'reportedip-hive-login-context',
+				'group_label' => __( 'ReportedIP Hive — sign-in history', 'reportedip-hive' ),
+				'item_id'     => 'rip-hive-login-context',
+				'data'        => array(
+					array(
+						'name'  => __( 'Last sign-in', 'reportedip-hive' ),
+						'value' => $login_context['last']['ts'] > 0
+							? ReportedIP_Hive::format_local_datetime( gmdate( 'Y-m-d H:i:s', (int) $login_context['last']['ts'] ) )
+							: '',
+					),
+					array(
+						'name'  => __( 'Last sign-in IP address', 'reportedip-hive' ),
+						'value' => $login_context['last']['ip'],
+					),
+					array(
+						'name'  => __( 'Last sign-in device', 'reportedip-hive' ),
+						'value' => $login_context['last']['ua_short'],
+					),
+					array(
+						'name'  => __( 'Last sign-in country', 'reportedip-hive' ),
+						'value' => $login_context['last']['country'],
+					),
+					array(
+						'name'  => __( 'Last second-factor verification', 'reportedip-hive' ),
+						'value' => $login_context['verified_at'] > 0
+							? ReportedIP_Hive::format_local_datetime( gmdate( 'Y-m-d H:i:s', (int) $login_context['verified_at'] ) )
+							: '',
+					),
+					array(
+						'name'  => __( 'Sign-ins since that verification', 'reportedip-hive' ),
+						'value' => (int) $login_context['logins_since_verify'],
+					),
+					array(
+						'name'  => __( 'Known networks', 'reportedip-hive' ),
+						'value' => implode( ', ', $login_context['nets'] ),
+					),
+					array(
+						'name'  => __( 'Known devices', 'reportedip-hive' ),
+						'value' => implode( ', ', $login_context['uas'] ),
+					),
+					array(
+						'name'  => __( 'Known countries', 'reportedip-hive' ),
+						'value' => implode( ', ', $login_context['countries'] ),
+					),
+				),
+			);
+		}
+
 		return array(
 			'data' => $items,
 			'done' => true,
@@ -318,6 +369,7 @@ class ReportedIP_Hive_Privacy {
 		$removed += (int) $wpdb->query( $wpdb->prepare( "UPDATE {$audit_table} SET username = '', ip = '', user_id = NULL, event_data = NULL WHERE user_id = %d", $user->ID ) );
 
 		delete_user_meta( $user->ID, '_reportedip_hive_known_ips' );
+		delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_LOGIN_CONTEXT );
 
 		$retained = 0;
 		$messages = array();

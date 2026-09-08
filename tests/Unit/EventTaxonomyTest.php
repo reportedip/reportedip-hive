@@ -80,6 +80,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'categories_cached',
 				'hardening_mode_deactivated',
 				'2fa_reset_challenge_sent',
+				'2fa_stepup_required',
+				'2fa_stepup_skipped_no_method',
 				'feed_denied',
 				'blocked_user_denied',
 				'totally_unknown_event',

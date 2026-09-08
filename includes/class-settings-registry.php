@@ -605,6 +605,93 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Trusted device lifetime (days)', 'reportedip-hive' ),
 			),
+			'reportedip_hive_2fa_policy_new_country' => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up on a new country', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_new_ip' => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up on a new IP address', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_new_subnet' => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up on a new network', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_new_device' => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up on a new browser or device', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_every_n_days' => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up every few days', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_every_n_logins' => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up every few sign-ins', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_sessions_above_n' => array(
+				'section'     => 'account_security',
+				'kind'        => 'json_list',
+				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
+				'tier'        => '2fa_policies',
+				'tier_gate'   => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
+				'remote'      => true,
+				'label'       => __( 'Step-up above a session count', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_days' => array(
+				'section' => 'account_security',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 365,
+				'remote'  => true,
+				'label'   => __( 'Step-up interval (days)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_logins' => array(
+				'section' => 'account_security',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 100,
+				'remote'  => true,
+				'label'   => __( 'Step-up interval (sign-ins)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_2fa_policy_sessions' => array(
+				'section' => 'account_security',
+				'kind'    => 'int',
+				'min'     => 1,
+				'max'     => 20,
+				'remote'  => true,
+				'label'   => __( 'Open-session threshold', 'reportedip-hive' ),
+			),
 			'reportedip_hive_2fa_require_on_password_reset' => array(
 				'section' => 'account_security',
 				'kind'    => 'bool',
@@ -746,6 +833,20 @@ final class ReportedIP_Hive_Settings_Registry {
 	 */
 	public static function paranoia_needs_tier( $value ) {
 		return (int) $value >= 2;
+	}
+
+	/**
+	 * Whether a policy role list activates the adaptive-2FA tier gate. An
+	 * empty list is inert and stays writable on every plan, so a site that
+	 * lost the plan can still clear its matrix.
+	 *
+	 * @param mixed $value Sanitized target value (JSON string or array).
+	 * @return bool
+	 */
+	public static function policy_list_needs_tier( $value ) {
+		$list = is_array( $value ) ? $value : json_decode( (string) $value, true );
+
+		return is_array( $list ) && ! empty( $list );
 	}
 
 	/**

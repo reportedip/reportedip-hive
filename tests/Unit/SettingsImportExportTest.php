@@ -145,6 +145,11 @@ class SettingsImportExportTest extends TestCase {
 	public function test_user_meta_secrets_are_never_listed(): void {
 		$keys = ReportedIP_Hive_Settings_Import_Export::importable_keys();
 		$this->assertNotContains( 'reportedip_hive_2fa_totp_secret', $keys );
+		$this->assertNotContains(
+			'reportedip_hive_2fa_policy_admin_verified',
+			$keys,
+			'The administrator latch is runtime state — importing it would unlock the administrator column on another site.'
+		);
 		$this->assertNotContains( 'reportedip_hive_2fa_webauthn_credentials', $keys );
 		$this->assertNotContains( 'reportedip_hive_2fa_sms_number', $keys );
 	}

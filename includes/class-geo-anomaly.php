@@ -70,13 +70,13 @@ class ReportedIP_Hive_Geo_Anomaly {
 			return;
 		}
 
-		$reputation = $this->fetch_reputation( $ip );
+		$reputation = self::fetch_reputation( $ip );
 		if ( empty( $reputation ) ) {
 			return;
 		}
 
-		$country = $this->extract_country( $reputation );
-		$asn     = $this->extract_asn( $reputation );
+		$country = self::extract_country( $reputation );
+		$asn     = self::extract_asn( $reputation );
 		if ( '' === $country && 0 === $asn ) {
 			return;
 		}
@@ -128,7 +128,7 @@ class ReportedIP_Hive_Geo_Anomaly {
 	 *
 	 * @return array<string,mixed>|array{}
 	 */
-	private function fetch_reputation( string $ip ): array {
+	public static function fetch_reputation( string $ip ): array {
 		if ( ! class_exists( 'ReportedIP_Hive_Cache' ) ) {
 			return array();
 		}
@@ -143,7 +143,14 @@ class ReportedIP_Hive_Geo_Anomaly {
 		return is_array( $cached ) ? $cached : array();
 	}
 
-	private function extract_country( array $reputation ): string {
+	/**
+	 * ISO country code carried by a reputation payload.
+	 *
+	 * @param array<string,mixed> $reputation Cached reputation data.
+	 * @return string Two-letter code, or an empty string when absent.
+	 * @since  2.1.0
+	 */
+	public static function extract_country( array $reputation ): string {
 		foreach ( array( 'countryCode', 'country_code', 'country' ) as $key ) {
 			if ( ! empty( $reputation[ $key ] ) && is_string( $reputation[ $key ] ) ) {
 				return strtoupper( substr( $reputation[ $key ], 0, 2 ) );
@@ -152,7 +159,14 @@ class ReportedIP_Hive_Geo_Anomaly {
 		return '';
 	}
 
-	private function extract_asn( array $reputation ): int {
+	/**
+	 * Autonomous-system number carried by a reputation payload.
+	 *
+	 * @param array<string,mixed> $reputation Cached reputation data.
+	 * @return int ASN, or 0 when absent.
+	 * @since  2.1.0
+	 */
+	public static function extract_asn( array $reputation ): int {
 		foreach ( array( 'asn', 'asNumber' ) as $key ) {
 			if ( isset( $reputation[ $key ] ) && is_numeric( $reputation[ $key ] ) ) {
 				return (int) $reputation[ $key ];

@@ -268,6 +268,13 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_frontend_customer_optional" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_frontend_slug" value="" />
 			<input type="hidden" name="reportedip_hive_2fa_frontend_setup_slug" value="" />
+			<input type="hidden" name="reportedip_hive_2fa_policy_new_country" value="[]" />
+			<input type="hidden" name="reportedip_hive_2fa_policy_new_ip" value="[]" />
+			<input type="hidden" name="reportedip_hive_2fa_policy_new_subnet" value="[]" />
+			<input type="hidden" name="reportedip_hive_2fa_policy_new_device" value="[]" />
+			<input type="hidden" name="reportedip_hive_2fa_policy_every_n_days" value="[]" />
+			<input type="hidden" name="reportedip_hive_2fa_policy_every_n_logins" value="[]" />
+			<input type="hidden" name="reportedip_hive_2fa_policy_sessions_above_n" value="[]" />
 
 			<!-- Status Banner -->
 			<div class="rip-settings-section">
@@ -520,6 +527,128 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					</label>
 					<p class="rip-help-text"><?php esc_html_e( 'Also redirects required users to onboarding when they land on frontend pages after sign-in (e.g. WooCommerce account).', 'reportedip-hive' ); ?></p>
 				</div>
+
+				<?php
+				$rip_policy_status  = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( '2fa_policies' );
+				$rip_policy_open    = ! empty( $rip_policy_status['available'] );
+				$rip_policy_matrix  = ReportedIP_Hive_Two_Factor_Policies::matrix();
+				$rip_policy_texts   = ReportedIP_Hive_Two_Factor_Policies::trigger_texts();
+				$rip_policy_latch   = ReportedIP_Hive_Login_Context::admin_latch_open();
+				$rip_policy_country = ! empty( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'api_reputation_check' )['available'] );
+				?>
+				<fieldset class="rip-fieldset<?php echo $rip_policy_open ? '' : ' rip-settings-section--locked'; ?>" id="rip-2fa-policies">
+					<legend class="rip-label">
+						<?php esc_html_e( 'Adaptive step-up triggers', 'reportedip-hive' ); ?>
+						&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $rip_policy_status ); ?>
+					</legend>
+					<p class="rip-help-text">
+						<?php esc_html_e( 'Users who already have a second factor and whose role is not required above are asked for it again when a ticked condition applies, even on a trusted device. The 2FA IP allowlist still lets a sign-in through, so an office network stays reachable after a policy change. Users without a second factor are never locked out; they are recorded in the log instead.', 'reportedip-hive' ); ?>
+					</p>
+
+					<?php if ( ! $rip_policy_open ) : ?>
+						<div class="rip-alert rip-alert--info">
+							<?php esc_html_e( 'Adaptive triggers are part of the Professional plan. Existing rules stay stored and can be cleared here, but nothing is evaluated at sign-in until the plan covers them again.', 'reportedip-hive' ); ?>
+						</div>
+					<?php endif; ?>
+
+					<?php if ( ! $rip_policy_latch ) : ?>
+						<div class="rip-alert rip-alert--info">
+							<?php esc_html_e( 'Triggers for administrators unlock once an administrator has completed one second-factor sign-in on this site. Until then the administrator column stays off, so a policy can never be the reason nobody can get back in.', 'reportedip-hive' ); ?>
+						</div>
+					<?php endif; ?>
+
+					<?php if ( ! $rip_policy_country ) : ?>
+						<div class="rip-alert rip-alert--warning">
+							<?php esc_html_e( 'Country data comes from the Community Network. In Local Shield the country trigger never fires.', 'reportedip-hive' ); ?>
+						</div>
+					<?php endif; ?>
+
+					<div class="rip-policy-matrix">
+						<table class="rip-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Trigger', 'reportedip-hive' ); ?></th>
+								<?php foreach ( $all_roles as $rip_policy_role => $rip_policy_role_name ) : ?>
+									<th><?php echo esc_html( translate_user_role( $rip_policy_role_name ) ); ?></th>
+								<?php endforeach; ?>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( ReportedIP_Hive_Two_Factor_Policies::TRIGGERS as $rip_policy_trigger ) : ?>
+								<?php $rip_policy_key = ReportedIP_Hive_Two_Factor_Policies::option_key( $rip_policy_trigger ); ?>
+								<tr>
+									<td>
+										<strong><?php echo esc_html( $rip_policy_texts[ $rip_policy_trigger ]['label'] ); ?></strong>
+										<p class="rip-help-text"><?php echo esc_html( $rip_policy_texts[ $rip_policy_trigger ]['description'] ); ?></p>
+									</td>
+									<?php foreach ( $all_roles as $rip_policy_role => $rip_policy_role_name ) : ?>
+										<?php
+										$rip_policy_checked = in_array( $rip_policy_role, $rip_policy_matrix[ $rip_policy_trigger ], true );
+										$rip_policy_locked  = ( ! $rip_policy_open && ! $rip_policy_checked )
+											|| ( 'administrator' === $rip_policy_role && ! $rip_policy_latch );
+										?>
+										<td>
+											<label>
+												<span class="screen-reader-text">
+													<?php
+													printf(
+														/* translators: 1: trigger name, 2: role name */
+														esc_html__( '%1$s for %2$s', 'reportedip-hive' ),
+														esc_html( $rip_policy_texts[ $rip_policy_trigger ]['label'] ),
+														esc_html( translate_user_role( $rip_policy_role_name ) )
+													);
+													?>
+												</span>
+												<input type="checkbox"
+													name="<?php echo esc_attr( $rip_policy_key ); ?>[]"
+													value="<?php echo esc_attr( $rip_policy_role ); ?>"
+													<?php checked( $rip_policy_checked ); ?>
+													<?php disabled( $rip_policy_locked ); ?> />
+											</label>
+										</td>
+									<?php endforeach; ?>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+						</table>
+					</div>
+
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_2fa_policy_days"><?php esc_html_e( 'Step-up interval (days)', 'reportedip-hive' ); ?></label>
+						<input type="number"
+							id="reportedip_hive_2fa_policy_days"
+							class="rip-input"
+							name="reportedip_hive_2fa_policy_days"
+							value="<?php echo esc_attr( (string) (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_policy_days', 30 ) ); ?>"
+							min="1"
+							max="365" />
+						<p class="rip-help-text"><?php esc_html_e( 'Used by the "Every few days" trigger.', 'reportedip-hive' ); ?></p>
+					</div>
+
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_2fa_policy_logins"><?php esc_html_e( 'Step-up interval (sign-ins)', 'reportedip-hive' ); ?></label>
+						<input type="number"
+							id="reportedip_hive_2fa_policy_logins"
+							class="rip-input"
+							name="reportedip_hive_2fa_policy_logins"
+							value="<?php echo esc_attr( (string) (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_policy_logins', 10 ) ); ?>"
+							min="1"
+							max="100" />
+						<p class="rip-help-text"><?php esc_html_e( 'Used by the "Every few sign-ins" trigger. Sign-ins that pass a second factor reset the counter.', 'reportedip-hive' ); ?></p>
+					</div>
+
+					<div class="rip-form-group">
+						<label class="rip-label" for="reportedip_hive_2fa_policy_sessions"><?php esc_html_e( 'Open-session threshold', 'reportedip-hive' ); ?></label>
+						<input type="number"
+							id="reportedip_hive_2fa_policy_sessions"
+							class="rip-input"
+							name="reportedip_hive_2fa_policy_sessions"
+							value="<?php echo esc_attr( (string) (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_policy_sessions', 3 ) ); ?>"
+							min="1"
+							max="20" />
+						<p class="rip-help-text"><?php esc_html_e( 'Used by the "Too many open sessions" trigger.', 'reportedip-hive' ); ?></p>
+					</div>
+				</fieldset>
 			</div>
 
 			<?php
@@ -1147,6 +1276,87 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
+
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_new_country',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_new_country' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_new_ip',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_new_ip' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_new_subnet',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_new_subnet' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_new_device',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_new_device' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_every_n_days',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_every_n_days' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_every_n_logins',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_every_n_logins' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_sessions_above_n',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_sessions_above_n' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_days',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_days' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_logins',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_logins' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_policy_sessions',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_sessions' ),
 			)
 		);
 	}

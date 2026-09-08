@@ -1109,3 +1109,10 @@ code.ip-address {
         justify-content: center;
     }
 }
+
+/* Adaptive 2FA policy matrix: the role columns outgrow the card on sites with
+   many roles, so the table scrolls inside its section instead of pushing the
+   page sideways. */
+.rip-policy-matrix {
+    overflow-x: auto;
+}

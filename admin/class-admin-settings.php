@@ -2374,6 +2374,37 @@ class ReportedIP_Hive_Admin_Settings {
 					</fieldset>
 				</div>
 
+				<?php
+				$policy_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( '2fa_policies' );
+				$policy_matrix = ReportedIP_Hive_Two_Factor_Policies::matrix();
+				$policy_texts  = ReportedIP_Hive_Two_Factor_Policies::trigger_texts();
+				?>
+				<div class="rip-settings-section">
+					<h2 class="rip-settings-section__title">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+						<?php esc_html_e( 'Adaptive 2FA triggers (network policy)', 'reportedip-hive' ); ?>
+						&nbsp;<?php self::render_tier_marker( $policy_status ); ?>
+					</h2>
+					<p class="rip-settings-section__desc">
+						<?php esc_html_e( 'The Super Admin decides which roles are asked for their second factor again when something about a sign-in changes. The rules apply on this site too and cannot be overridden here.', 'reportedip-hive' ); ?>
+					</p>
+
+					<ul class="rip-network-state">
+						<?php foreach ( ReportedIP_Hive_Two_Factor_Policies::TRIGGERS as $policy_trigger ) : ?>
+							<li>
+								<?php echo esc_html( $policy_texts[ $policy_trigger ]['label'] ); ?>:
+								<?php if ( empty( $policy_matrix[ $policy_trigger ] ) ) : ?>
+									<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'off', 'reportedip-hive' ); ?></span>
+								<?php else : ?>
+									<?php foreach ( $policy_matrix[ $policy_trigger ] as $policy_role ) : ?>
+										<span class="rip-badge rip-badge--info"><?php echo esc_html( $all_roles[ $policy_role ] ?? $policy_role ); ?></span>
+									<?php endforeach; ?>
+								<?php endif; ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+
 				<p class="rip-actions">
 					<?php submit_button( __( 'Save site overrides', 'reportedip-hive' ), 'primary rip-button rip-button--primary', 'submit', false ); ?>
 				</p>

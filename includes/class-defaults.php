@@ -243,6 +243,17 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_notify_new_device'           => true,
 		'reportedip_hive_2fa_xmlrpc_app_password_only'    => false,
 
+		'reportedip_hive_2fa_policy_new_country'          => '[]',
+		'reportedip_hive_2fa_policy_new_ip'               => '[]',
+		'reportedip_hive_2fa_policy_new_subnet'           => '[]',
+		'reportedip_hive_2fa_policy_new_device'           => '[]',
+		'reportedip_hive_2fa_policy_every_n_days'         => '[]',
+		'reportedip_hive_2fa_policy_every_n_logins'       => '[]',
+		'reportedip_hive_2fa_policy_sessions_above_n'     => '[]',
+		'reportedip_hive_2fa_policy_days'                 => 30,
+		'reportedip_hive_2fa_policy_logins'               => 10,
+		'reportedip_hive_2fa_policy_sessions'             => 3,
+
 		'reportedip_hive_2fa_email_subject'               => '',
 		'reportedip_hive_2fa_email_subject_code'          => '',
 		'reportedip_hive_2fa_email_body_code'             => '',

@@ -461,6 +461,9 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-reset-gate.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-onboarding.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-notifications.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-policies.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-login-context.php';
+		ReportedIP_Hive_Login_Context::init();
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-sms.php';
 		ReportedIP_Hive_Two_Factor_SMS::load_providers();
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-webauthn-aaguid-registry.php';

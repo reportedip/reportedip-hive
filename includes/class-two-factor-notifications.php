@@ -271,10 +271,13 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	/**
 	 * Reduce an IP to its network block for fingerprinting.
 	 *
+	 * Shared with the adaptive 2FA triggers, which compare the /24 (or /64)
+	 * an account signs in from — there must be exactly one reducer.
+	 *
 	 * @param string $ip IP address.
 	 * @return string Network identifier or '' if invalid.
 	 */
-	private static function ip_to_network( $ip ) {
+	public static function ip_to_network( $ip ) {
 		if ( empty( $ip ) ) {
 			return '';
 		}
