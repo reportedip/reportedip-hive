@@ -1079,7 +1079,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Minimum password length', 'reportedip-hive' ),
 			),
-			'reportedip_hive_password_min_classes'        => array(
+			'reportedip_hive_password_min_classes'         => array(
 				'section' => 'account_security',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -1087,7 +1087,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Required character classes', 'reportedip-hive' ),
 			),
-			'reportedip_hive_password_policy_all_users'   => array(
+			'reportedip_hive_password_policy_all_users'    => array(
 				'section' => 'account_security',
 				'kind'    => 'bool',
 				'remote'  => true,
@@ -1155,25 +1155,32 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Anonymize IPs in the audit trail', 'reportedip-hive' ),
 			),
-			'reportedip_hive_detailed_logging'            => array(
+			'reportedip_hive_audit_new_ip_alert'           => array(
+				'section' => 'privacy_logs',
+				'kind'    => 'bool',
+				'tier'    => 'audit_log',
+				'remote'  => true,
+				'label'   => __( 'Mail an alert on a sign-in from a new address', 'reportedip-hive' ),
+			),
+			'reportedip_hive_detailed_logging'             => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Record request details with each event', 'reportedip-hive' ),
 			),
-			'reportedip_hive_log_referer_domains'         => array(
+			'reportedip_hive_log_referer_domains'          => array(
 				'section' => 'privacy_logs',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Record the referring domain', 'reportedip-hive' ),
 			),
-			'reportedip_hive_enable_caching'              => array(
+			'reportedip_hive_enable_caching'               => array(
 				'section' => 'performance',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Cache community lookups', 'reportedip-hive' ),
 			),
-			'reportedip_hive_cache_duration'              => array(
+			'reportedip_hive_cache_duration'               => array(
 				'section' => 'performance',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -1181,7 +1188,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Cache lifetime (hours)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_negative_cache_duration'     => array(
+			'reportedip_hive_negative_cache_duration'      => array(
 				'section' => 'performance',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -1189,7 +1196,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Clean-result cache lifetime (hours)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_max_api_calls_per_hour'      => array(
+			'reportedip_hive_max_api_calls_per_hour'       => array(
 				'section' => 'performance',
 				'kind'    => 'int',
 				'min'     => 0,
@@ -1197,7 +1204,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Community lookups per hour (0 = no local limit)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_report_cooldown_hours'       => array(
+			'reportedip_hive_report_cooldown_hours'        => array(
 				'section' => 'performance',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -1205,7 +1212,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Report cooldown per address (hours)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_queue_max_age_days'          => array(
+			'reportedip_hive_queue_max_age_days'           => array(
 				'section' => 'performance',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -1213,7 +1220,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Discard queued reports after (days)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_queue_warning_threshold'     => array(
+			'reportedip_hive_queue_warning_threshold'      => array(
 				'section' => 'performance',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -1221,7 +1228,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Queue warning threshold', 'reportedip-hive' ),
 			),
-			'reportedip_hive_queue_critical_threshold'    => array(
+			'reportedip_hive_queue_critical_threshold'     => array(
 				'section' => 'performance',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -1229,7 +1236,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Queue critical threshold', 'reportedip-hive' ),
 			),
-			'reportedip_hive_processing_timeout_minutes'  => array(
+			'reportedip_hive_processing_timeout_minutes'   => array(
 				'section' => 'performance',
 				'kind'    => 'int',
 				'min'     => 1,
@@ -1237,33 +1244,33 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Recover stuck queue rows after (minutes)', 'reportedip-hive' ),
 			),
-			'reportedip_hive_auto_footer_enabled'         => array(
+			'reportedip_hive_auto_footer_enabled'          => array(
 				'section' => 'performance',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Show the protection badge in the site footer', 'reportedip-hive' ),
 			),
-			'reportedip_hive_auto_footer_variant'         => array(
+			'reportedip_hive_auto_footer_variant'          => array(
 				'section' => 'performance',
 				'kind'    => 'enum',
 				'allowed' => array( 'badge', 'shield' ),
 				'remote'  => true,
 				'label'   => __( 'Footer badge style', 'reportedip-hive' ),
 			),
-			'reportedip_hive_auto_footer_align'           => array(
+			'reportedip_hive_auto_footer_align'            => array(
 				'section' => 'performance',
 				'kind'    => 'enum',
 				'allowed' => array( 'left', 'center', 'right', 'below' ),
 				'remote'  => true,
 				'label'   => __( 'Footer badge placement', 'reportedip-hive' ),
 			),
-			'reportedip_hive_notify_sync_to_api'          => array(
+			'reportedip_hive_notify_sync_to_api'           => array(
 				'section' => 'notifications',
 				'kind'    => 'bool',
 				'remote'  => true,
 				'label'   => __( 'Send notification preferences to the community server', 'reportedip-hive' ),
 			),
-			'reportedip_hive_notify_event_cap_minutes'    => array(
+			'reportedip_hive_notify_event_cap_minutes'     => array(
 				'section' => 'notifications',
 				'kind'    => 'int',
 				'min'     => 1,

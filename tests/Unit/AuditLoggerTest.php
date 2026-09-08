@@ -97,5 +97,56 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 42, $row['user_id'] );
 			$this->assertStringContainsString( 'changed_by', (string) $row['event_data'] );
 		}
+
+		/**
+		 * The anonymisation option keeps the network and drops the host.
+		 *
+		 * The option shipped in 2.1.2 and had no reader until 2.1.51: it was
+		 * exportable, importable and visible to the cloud fleet while doing
+		 * nothing at all, which is worse than not offering it.
+		 *
+		 * @return void
+		 */
+		public function test_anonymize_ip_keeps_the_network_and_drops_the_host(): void {
+			$this->assertSame( '203.0.113.0', \ReportedIP_Hive_Audit_Logger::anonymize_ip( '203.0.113.42' ) );
+			$this->assertSame( '2001:db8::', \ReportedIP_Hive_Audit_Logger::anonymize_ip( '2001:db8:0:0:1:2:3:4' ) );
+			$this->assertSame( '', \ReportedIP_Hive_Audit_Logger::anonymize_ip( '' ) );
+			$this->assertSame( 'not-an-ip', \ReportedIP_Hive_Audit_Logger::anonymize_ip( 'not-an-ip' ) );
+		}
+
+		/**
+		 * A row built with the flag stores the anonymised address.
+		 *
+		 * @return void
+		 */
+		public function test_build_row_anonymizes_when_asked(): void {
+			$row = \ReportedIP_Hive_Audit_Logger::build_row(
+				array(
+					'ip'           => '198.51.100.77',
+					'event_type'   => 'login',
+					'event_action' => 'success',
+					'anonymize_ip' => true,
+				)
+			);
+
+			$this->assertSame( '198.51.100.0', $row['ip'] );
+		}
+
+		/**
+		 * Without the flag the address is stored in full.
+		 *
+		 * @return void
+		 */
+		public function test_build_row_keeps_the_full_address_by_default(): void {
+			$row = \ReportedIP_Hive_Audit_Logger::build_row(
+				array(
+					'ip'           => '198.51.100.77',
+					'event_type'   => 'login',
+					'event_action' => 'success',
+				)
+			);
+
+			$this->assertSame( '198.51.100.77', $row['ip'] );
+		}
 	}
 }

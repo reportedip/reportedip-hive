@@ -86,7 +86,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_disable_xmlrpc_multicall'      => 'Overlaps the Access Lockdown switch and needs a form next to it.',
 			'reportedip_hive_waf_block_threshold'           => 'Read by the WAF scoring pass; the Firewall page shows the score but not its threshold.',
 			'reportedip_hive_audit_retention_days'          => 'Read by the retention cron; the audit page has no policy form yet.',
-			'reportedip_hive_audit_anonymize_ip'            => 'No reader at all, the anonymisation it promises was never built.',
+			'reportedip_hive_audit_anonymize_ip'            => 'Applied on every audit write; the audit page has no policy form yet.',
+			'reportedip_hive_audit_new_ip_alert'           => 'Mails the notification recipients; the audit page has no policy form yet.',
 			'reportedip_hive_notification_cooldown_minutes' => 'Read by the notification throttle; the Notifications tab has no field for it.',
 			'reportedip_hive_2fa_enforce_super_admins'     => 'Decides whether network super admins are exempt from enforcement, and nothing in the 2FA tab says so.',
 			'reportedip_hive_queue_max_age_days'           => 'Report-queue policy, read by cron only.',
@@ -132,7 +133,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_2fa_email_subject',
 			'reportedip_hive_2fa_email_subject_code',
 			'reportedip_hive_2fa_password_reset_excluded_methods',
-			'reportedip_hive_audit_new_ip_alert',
 			'reportedip_hive_waf_dropin_enabled',
 			'reportedip_hive_wc2fa_promo_enabled',
 		);

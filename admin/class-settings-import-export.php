@@ -694,18 +694,13 @@ class ReportedIP_Hive_Settings_Import_Export {
 
 		$registry_spec  = class_exists( 'ReportedIP_Hive_Settings_Registry' ) ? ReportedIP_Hive_Settings_Registry::remote_spec() : array();
 		$registry_batch = array();
-		$legacy_batch   = array();
 
 		foreach ( $incoming as $key => $value ) {
-			if ( ! is_string( $key ) || ! isset( $allowed_keys[ $key ] ) ) {
+			if ( ! is_string( $key ) || ! isset( $allowed_keys[ $key ] ) || ! isset( $registry_spec[ $key ] ) ) {
 				++$skipped;
 				continue;
 			}
-			if ( isset( $registry_spec[ $key ] ) ) {
-				$registry_batch[ $key ] = $value;
-			} else {
-				$legacy_batch[ $key ] = $value;
-			}
+			$registry_batch[ $key ] = $value;
 		}
 
 		if ( ! empty( $registry_batch ) ) {
@@ -720,16 +715,6 @@ class ReportedIP_Hive_Settings_Import_Export {
 					$errors[] = sprintf( '%s: %s', $key, $result['message'] );
 				}
 			}
-		}
-
-		foreach ( $legacy_batch as $key => $value ) {
-			$ok = ReportedIP_Hive_Option_Routing::set( $key, $value );
-			if ( false === $ok && ReportedIP_Hive_Option_Routing::get( $key ) !== $value ) {
-				$errors[] = sprintf( /* translators: %s: option key */ __( 'Could not write %s.', 'reportedip-hive' ), $key );
-				++$skipped;
-				continue;
-			}
-			++$written;
 		}
 
 		$ip_added   = 0;

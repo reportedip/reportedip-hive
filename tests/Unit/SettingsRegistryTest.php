@@ -116,6 +116,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_auto_footer_align' => 'enum',
 				'reportedip_hive_notify_sync_to_api' => 'bool',
 				'reportedip_hive_notify_event_cap_minutes' => 'int',
+				'reportedip_hive_audit_new_ip_alert' => 'bool',
 				'reportedip_hive_trusted_ip_header'             => 'enum',
 				'reportedip_hive_trusted_proxy_ranges'          => 'textarea',
 				'reportedip_hive_monitor_failed_logins'         => 'bool',
