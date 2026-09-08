@@ -154,6 +154,16 @@ All changes to ReportedIP Hive are documented here.
   IP header without proxy ranges used to be refused once at save time; it is now
   raised as a standing warning for as long as it applies.
 
+- **A privacy request now covers the new account data.** The personal-data
+  exporter gained three groups: the account block with its sign-in message and
+  administrator note, the address and expiry of every active session, and the
+  sign-in history the adaptive two-factor triggers keep. The session addresses
+  are worth exporting separately because WordPress stores `REMOTE_ADDR` there,
+  not the proxy-aware address Hive resolves. An erasure request clears the
+  free-text fields and the sign-in history, keeps the block itself and reports
+  that in the result: an erasure request may not become a way to lift a
+  security block.
+
 ### Fixed
 
 - The distributed-detection help texts named 5 and 20 as the defaults while
@@ -169,6 +179,9 @@ All changes to ReportedIP Hive are documented here.
   or feed column.
 - The Logs page offered an `XMLRPC Abuse` filter that never matched a row: the
   sensor stores the event under its threshold name.
+- Uninstalling with "delete all data" left the account-block record behind in
+  user meta. Tables and options went, that one row did not, so a reinstall
+  found the affected accounts still blocked.
 
 ## [2.1.50] — 2026-08-29
 

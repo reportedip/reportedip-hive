@@ -114,7 +114,8 @@ Show the world that your site is part of the hive — and earn community-network
 * **Transparent installation identity.** In Community mode each API request identifies the installation itself — site address plus plugin and WordPress version, wp.org-style — for licence domain counting and support. This is data about your installation, never about your visitors.
 * **Lawful basis: Art. 6(1)(f) GDPR** (legitimate interest — preventing unauthorised access). Documented in the wizard and admin UI.
 * **Encryption at rest.** All secrets (TOTP seeds, phone numbers) sealed with libsodium (or OpenSSL fallback).
-* **Delete-on-uninstall** opt-in for total removal.
+* **Delete-on-uninstall** opt-in for total removal: tables, options and every piece of user meta the plugin wrote.
+* **Export and erasure requests are wired up.** A personal-data export returns the account's own login attempts, its trusted devices, an account block with its texts, the address and expiry of every open session and the sign-in history behind the adaptive 2FA triggers. An erasure clears the texts and the history but keeps an active account block and reports that as retained, because an erasure request must not become a way to lift a security block.
 * **Privacy-policy generator.** A ready-to-paste passage for your own privacy policy (German or English, tailored to the modules you use) is at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo); the plugin also registers a suggested text in the WordPress Privacy Policy Guide (Tools -> Privacy).
 
 = Admin UX =
@@ -122,7 +123,8 @@ Show the world that your site is part of the hive — and earn community-network
 * **10-step setup wizard** with privacy-first defaults: Welcome → Connect → Protection → Firewall → 2FA → Privacy → Notifications → Login → Promote → Done. Skippable (3 skips, 7-day grace).
 * **Real-time dashboard** with detection & hardening score gauges (0–100 plus an A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines.
 * **Security widget on the WordPress dashboard** — attacks blocked (30 days), blocks today, active IP blocks, protection layers and the detection score on wp-admin's front page, with deep links into the plugin; on Multisite the widget appears on the network dashboard.
-* **Six list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), plus the 2FA admin grid.
+* **Seven list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), the session manager under Users -> Sessions (Business), plus the 2FA admin grid.
+* **System Status page** listing every open readiness issue with its severity, when it first appeared, a jump to the responsible setting and a link to the documentation.
 * **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup.
 * **Trust badges** on every admin page: "Security Focused", "GDPR Compliant", "Made in Germany".
 
@@ -145,7 +147,7 @@ Show the world that your site is part of the hive — and earn community-network
   * `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path` — replace the mailer
 * **Constants** for emergency overrides:
   * `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` — temporarily disable hide-login from `wp-config.php`
-* **8 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats, trusted_devices and audit_log.
+* **9 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats, trusted_devices, audit_log and waf_exceptions.
 * **Internationalisation-ready.** Text domain `reportedip-hive`, English source with German translation included.
 * **Test suite.** A comprehensive PHPUnit suite (unit + Multisite) runs on every commit; PHPStan level 5 (No errors); WPCS-compliant with zero warnings.
 
@@ -165,9 +167,15 @@ IP management:
 
 Status and administration:
 
-* `wp reportedip status` — version, mode, tier, counters, queue health and protection toggles at a glance
+* `wp reportedip status` — version, mode, tier, counters, queue health, protection toggles and the open readiness issues at a glance
 * `wp reportedip 2fa <status|enable|disable|reset|enforce|audit|cleanup>` — user 2FA administration
 * `wp reportedip hardening <status|activate|deactivate>` — hardening mode
+
+User accounts (Business):
+
+* `wp reportedip user block <user> [--message=<text>] [--note=<text>]` — block an account; `<user>` is an id, login or e-mail address. The message is what the person sees at sign-in, the note stays internal
+* `wp reportedip user unblock <user>` — lift the block; never needs a paid plan, so an expired licence can never leave an account locked out
+* `wp reportedip user list` — every blocked account with the time, the administrator and the message
 
 = What this plugin does NOT include =
 
@@ -400,9 +408,15 @@ New: block user accounts and manage sessions (Business). A blocked account keeps
 
 New: adaptive two-factor triggers per role (Professional). Seven step-up rules ask for the second factor again on a new country, IP address, network or device, every N days or sign-ins, or above a concurrent-session limit, even when a trusted-device cookie is present. The 2FA IP allowlist still bypasses.
 
-Changed: the settings cards on the Firewall page write through the settings registry, so plan limits apply to them as well; honeypot sites now count as Contributor; the user sitemap disappears while user-enumeration blocking is on (default on); `wp_login` fires after a passed two-factor challenge and after a REST verify; the hardening score was re-balanced; the trusted-proxy warning became a standing readiness issue.
+Changed: every setting is one setting everywhere. Seventy options lived outside the settings registry, so MainWP and the cloud fleet could not manage them and the JSON export left them out: the security headers, the trusted-proxy pair, the application-password and REST limits, the geo-anomaly window, the WooCommerce login monitor, the hide-login probe, the password policy, the caching and report-queue settings, the audit trail and the eight hardening options. All of them are registry options now, all 169 carry a one-sentence description that the settings page, MainWP and the fleet render alike, fourteen of them gained a form in wp-admin for the first time, and the sections were re-cut along what the options actually do. No option key changed, so stored fleet policies and site overrides are untouched; both dashboards need one schema reload to show the new grouping.
 
-Fixed: Hide Login blocked logged-out `admin-post.php` requests; on Multisite a sub-site administrator could write network settings through the admin AJAX handlers; the Rule Sync tab showed no label for the Tor exit-node list; the Logs page offered an XMLRPC filter that never matched a row.
+Security: an imported settings file can no longer write anything unchecked. The import used to send known keys through the sanitiser and everything else straight to the option store. That raw path is gone. It mattered most for the trusted client-IP header, where an arbitrary value is the precondition for spoofing every sensor, the whitelist and the block list at once.
+
+Changed: the settings cards on the Firewall page write through the settings registry, so plan limits apply to them as well; honeypot sites now count as Contributor; the user sitemap disappears while user-enumeration blocking is on (default on); `wp_login` fires after a passed two-factor challenge and after a REST verify; the hardening score was re-balanced; the trusted-proxy warning became a standing readiness issue; the setup wizard offers the new lockdown switches and two of the adaptive triggers; the audit trail's IP anonymisation and new-address alert do something now.
+
+Changed: a privacy request covers the new account data. The export carries an account block with its texts, the address and expiry of every open session and the sign-in history behind the adaptive triggers; an erasure clears the texts and the history but keeps the block itself and reports it as retained.
+
+Fixed: Hide Login blocked logged-out `admin-post.php` requests; on Multisite a sub-site administrator could write network settings through the admin AJAX handlers; the Rule Sync tab showed no label for the Tor exit-node list; the Logs page offered an XMLRPC filter that never matched a row; the decoy `.htaccess` block is now removed completely when switched off; uninstalling with "delete all data" left the account-block record behind in user meta.
 
 Security: hardening mode now reaches every login surface. While a coordinated attack tightened the failed-login threshold network-wide, the WooCommerce login monitor (My Account and classic checkout) and the application-password monitor kept using the relaxed values, so an attack on the storefront forms slipped through untouched. Both are now clamped like wp-login. The gap dates back to 2.0.8; sites without WooCommerce and without application passwords were never affected.
 

@@ -159,7 +159,8 @@ Full feature, security and operations guide: [`docs/cloud-fleet-management.md`](
 - **Real-time dashboard** with detection & hardening score gauges (0–100, A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines
 - **Security widget on the WordPress dashboard** — attacks blocked (30 days), blocks today, active IP blocks, protection layers and the detection score on wp-admin's front page, with deep links; renders on the network dashboard on Multisite
 - **Firewall area** with an overview mini-dashboard (per-module status, 7-day activity, recent firewall events), per-module tabs that each open with a plain-language intro, and a **Server Setup tab** that gathers every web-server snippet in one place: the WAF `auto_prepend_file` directive with live verification, the decoy rewrite rules and a server-level export of the configured security headers
-- **Six list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), plus the 2FA admin grid
+- **Seven list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), the session manager under Users → Sessions (Business), plus the 2FA admin grid
+- **System Status page** listing every open readiness issue with severity, first-seen time, a jump to the responsible setting and a documentation link; non-critical issues can be dismissed for seven days
 - **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup
 - Trust badges and a secured-by note on every admin page
 
@@ -237,6 +238,16 @@ wp reportedip 2fa cleanup
 wp reportedip hardening <status|activate|deactivate>
 ```
 
+**User accounts (Business)**
+
+```
+wp reportedip user block <user> [--message=<text>] [--note=<text>]
+wp reportedip user unblock <user>
+wp reportedip user list [--format=<format>]
+```
+
+`<user>` is an id, login or e-mail address. `--message` is what the person sees at sign-in, `--note` stays internal. A blocked account keeps its content but cannot sign in, authenticate an application password or complete a password reset, and loses every session and trusted device at once. `unblock` is deliberately never plan-gated, so an expired licence can never leave an account locked out.
+
 ### Developer hooks
 
 Stable public hooks for webhook, SIEM and white-label integrations.
@@ -281,6 +292,14 @@ add_action( 'reportedip_hive_report_queued', function ( $ip, $category_ids, $rep
 add_action( 'reportedip_hive_access_denied', function ( $ip, $context ) {
     error_log( sprintf( 'Denied %s (%s)', $ip, $context ) );
 }, 10, 2 );
+```
+
+`reportedip_hive_2fa_verified( $user_id, $method, $context )` — fires after a passed second-factor challenge, on wp-login, on the WooCommerce frontend and on the REST verify endpoint. Core's own `wp_login` fires in the same place, so a listener on either sees challenged sign-ins as well as unchallenged ones.
+
+```php
+add_action( 'reportedip_hive_2fa_verified', function ( $user_id, $method, $context ) {
+    error_log( sprintf( 'User %d passed %s (%s)', $user_id, $method, $context ) );
+}, 10, 3 );
 ```
 
 #### Filters
