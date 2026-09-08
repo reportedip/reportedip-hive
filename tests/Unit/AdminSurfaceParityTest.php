@@ -36,6 +36,7 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -146,28 +147,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_auto_footer_variant',
 			'reportedip_hive_bot_allowlist_enabled',
 			'reportedip_hive_cache_duration',
-			'reportedip_hive_coep',
-			'reportedip_hive_coop',
-			'reportedip_hive_corp',
-			'reportedip_hive_csp_mode',
-			'reportedip_hive_csp_policy',
-			'reportedip_hive_csp_report_uri',
 			'reportedip_hive_detailed_logging',
 			'reportedip_hive_enable_caching',
 			'reportedip_hive_geo_report_to_api',
 			'reportedip_hive_geo_revoke_trusted_devices',
 			'reportedip_hive_geo_window_days',
-			'reportedip_hive_header_referrer',
-			'reportedip_hive_header_xcto',
-			'reportedip_hive_header_xfo',
-			'reportedip_hive_headers_enabled',
 			'reportedip_hive_hide_login_probe_threshold',
 			'reportedip_hive_hide_login_probe_timeframe',
 			'reportedip_hive_hide_login_token_in_urls',
-			'reportedip_hive_hsts_enabled',
-			'reportedip_hive_hsts_max_age',
-			'reportedip_hive_hsts_preload',
-			'reportedip_hive_hsts_subdomains',
 			'reportedip_hive_log_referer_domains',
 			'reportedip_hive_max_api_calls_per_hour',
 			'reportedip_hive_monitor_app_passwords',
@@ -180,7 +167,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_password_policy_all_users',
 			'reportedip_hive_password_spray_threshold',
 			'reportedip_hive_password_spray_timeframe',
-			'reportedip_hive_permissions_policy',
 			'reportedip_hive_processing_timeout_minutes',
 			'reportedip_hive_queue_critical_threshold',
 			'reportedip_hive_queue_max_age_days',

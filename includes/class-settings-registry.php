@@ -64,6 +64,10 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Hide Login', 'reportedip-hive' ),
 				'description' => __( 'Custom login URL and probe monitoring.', 'reportedip-hive' ),
 			),
+			'headers'          => array(
+				'label'       => __( 'Security Headers', 'reportedip-hive' ),
+				'description' => __( 'Response headers that tell the browser to refuse risky behaviour: MIME sniffing, framing by foreign sites, referrer leaks and downgrades to HTTP. The basic three are free; HSTS, Content-Security-Policy, Permissions-Policy and the Cross-Origin trio are part of advanced hardening.', 'reportedip-hive' ),
+			),
 			'lockdown'         => array(
 				'label'       => __( 'Access Lockdown', 'reportedip-hive' ),
 				'description' => __( 'Attack-surface switches: REST API access, XML-RPC, feeds, wp-admin for visitors, PHP execution in uploads and software fingerprints.', 'reportedip-hive' ),
@@ -561,6 +565,116 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'  => true,
 				'label'   => __( 'Hide software fingerprints', 'reportedip-hive' ),
 			),
+			'reportedip_hive_headers_enabled'              => array(
+				'section' => 'headers',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'Send security headers', 'reportedip-hive' ),
+			),
+			'reportedip_hive_header_xcto'                  => array(
+				'section' => 'headers',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'X-Content-Type-Options', 'reportedip-hive' ),
+			),
+			'reportedip_hive_header_xfo'                   => array(
+				'section'  => 'headers',
+				'kind'     => 'enum',
+				'allowed'  => array( 'SAMEORIGIN', 'DENY', 'off' ),
+				'sanitize' => array( 'ReportedIP_Hive_Security_Headers', 'sanitize_xfo' ),
+				'remote'   => true,
+				'label'    => __( 'X-Frame-Options', 'reportedip-hive' ),
+			),
+			'reportedip_hive_header_referrer'              => array(
+				'section' => 'headers',
+				'kind'    => 'enum',
+				'allowed' => array( 'no-referrer', 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'no-referrer-when-downgrade' ),
+				'remote'  => true,
+				'label'   => __( 'Referrer-Policy', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hsts_enabled'                 => array(
+				'section' => 'headers',
+				'kind'    => 'bool',
+				'tier'    => 'security_headers_advanced',
+				'remote'  => true,
+				'label'   => __( 'HTTP Strict Transport Security', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hsts_max_age'                 => array(
+				'section' => 'headers',
+				'kind'    => 'int',
+				'min'     => 0,
+				'max'     => 63072000,
+				'remote'  => true,
+				'label'   => __( 'HSTS max-age (seconds)', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hsts_subdomains'              => array(
+				'section' => 'headers',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'HSTS includeSubDomains', 'reportedip-hive' ),
+			),
+			'reportedip_hive_hsts_preload'                 => array(
+				'section' => 'headers',
+				'kind'    => 'bool',
+				'remote'  => true,
+				'label'   => __( 'HSTS preload', 'reportedip-hive' ),
+			),
+			'reportedip_hive_permissions_policy'           => array(
+				'section'   => 'headers',
+				'kind'      => 'text',
+				'tier'      => 'security_headers_advanced',
+				'tier_gate' => array( __CLASS__, 'header_text_needs_tier' ),
+				'remote'    => true,
+				'label'     => __( 'Permissions-Policy', 'reportedip-hive' ),
+			),
+			'reportedip_hive_csp_mode'                     => array(
+				'section'   => 'headers',
+				'kind'      => 'enum',
+				'allowed'   => array( 'off', 'report_only', 'enforce' ),
+				'tier'      => 'security_headers_advanced',
+				'tier_gate' => array( __CLASS__, 'header_off_needs_tier' ),
+				'remote'    => true,
+				'label'     => __( 'Content-Security-Policy mode', 'reportedip-hive' ),
+			),
+			'reportedip_hive_csp_policy'                   => array(
+				'section' => 'headers',
+				'kind'    => 'textarea',
+				'remote'  => true,
+				'label'   => __( 'Content-Security-Policy', 'reportedip-hive' ),
+			),
+			'reportedip_hive_csp_report_uri'               => array(
+				'section' => 'headers',
+				'kind'    => 'url',
+				'remote'  => true,
+				'label'   => __( 'CSP report URI', 'reportedip-hive' ),
+			),
+			'reportedip_hive_coop'                         => array(
+				'section'   => 'headers',
+				'kind'      => 'enum',
+				'allowed'   => array( 'off', 'same-origin' ),
+				'tier'      => 'security_headers_advanced',
+				'tier_gate' => array( __CLASS__, 'header_off_needs_tier' ),
+				'remote'    => true,
+				'label'     => __( 'Cross-Origin-Opener-Policy', 'reportedip-hive' ),
+			),
+			'reportedip_hive_corp'                         => array(
+				'section'   => 'headers',
+				'kind'      => 'enum',
+				'allowed'   => array( 'off', 'same-origin' ),
+				'tier'      => 'security_headers_advanced',
+				'tier_gate' => array( __CLASS__, 'header_off_needs_tier' ),
+				'remote'    => true,
+				'label'     => __( 'Cross-Origin-Resource-Policy', 'reportedip-hive' ),
+			),
+			'reportedip_hive_coep'                         => array(
+				'section'   => 'headers',
+				'kind'      => 'enum',
+				'allowed'   => array( 'off', 'require-corp' ),
+				'tier'      => 'security_headers_advanced',
+				'tier_gate' => array( __CLASS__, 'header_off_needs_tier' ),
+				'remote'    => true,
+				'label'     => __( 'Cross-Origin-Embedder-Policy', 'reportedip-hive' ),
+			),
 
 			'reportedip_hive_2fa_enabled_global'           => array(
 				'section' => 'account_security',
@@ -862,6 +976,34 @@ final class ReportedIP_Hive_Settings_Registry {
 		$list = is_array( $value ) ? $value : json_decode( (string) $value, true );
 
 		return is_array( $list ) && ! empty( $list );
+	}
+
+	/**
+	 * Whether a header setting whose "inactive" state is the literal string
+	 * `off` activates the advanced-hardening gate.
+	 *
+	 * Switching such a header back off must stay possible after a plan ends,
+	 * so only a value other than `off` is gated.
+	 *
+	 * @param mixed $value Sanitized target value.
+	 * @return bool
+	 * @since  2.1.51
+	 */
+	public static function header_off_needs_tier( $value ) {
+		return 'off' !== (string) $value;
+	}
+
+	/**
+	 * Whether a free-text header policy activates the advanced-hardening gate.
+	 *
+	 * An empty policy emits nothing, so clearing one is always allowed.
+	 *
+	 * @param mixed $value Sanitized target value.
+	 * @return bool
+	 * @since  2.1.51
+	 */
+	public static function header_text_needs_tier( $value ) {
+		return '' !== trim( (string) $value );
 	}
 
 	/**

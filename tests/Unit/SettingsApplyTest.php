@@ -20,6 +20,7 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
 
 	if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
 		/**

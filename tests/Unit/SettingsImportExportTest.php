@@ -36,6 +36,10 @@ class SettingsImportExportTest extends TestCase {
 		require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 		require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 		require_once dirname( __DIR__, 2 ) . '/includes/class-settings-apply.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-hide-login.php';
 
 		$class_path = dirname( __DIR__, 2 ) . '/admin/class-settings-import-export.php';
 		if ( ! class_exists( ReportedIP_Hive_Settings_Import_Export::class ) ) {
@@ -107,6 +111,7 @@ class SettingsImportExportTest extends TestCase {
 	public function test_firewall_and_headers_round_trip(): void {
 		$GLOBALS['wp_options']['reportedip_hive_waf_report_only'] = true;
 		$GLOBALS['wp_options']['reportedip_hive_bot_action']      = 'block';
+		$GLOBALS['wp_options']['reportedip_hive_headers_enabled'] = true;
 		$GLOBALS['wp_options']['reportedip_hive_csp_mode']        = 'report_only';
 
 		$payload = ReportedIP_Hive_Settings_Import_Export::get_instance()
@@ -120,7 +125,36 @@ class SettingsImportExportTest extends TestCase {
 		$this->assertGreaterThanOrEqual( 3, $result['written'] );
 		$this->assertSame( 1, $GLOBALS['wp_options']['reportedip_hive_waf_report_only'], 'Registry-managed bools are stored canonically as 1/0 since 2.1.47.' );
 		$this->assertSame( 'block', $GLOBALS['wp_options']['reportedip_hive_bot_action'] );
-		$this->assertSame( 'report_only', $GLOBALS['wp_options']['reportedip_hive_csp_mode'] );
+		$this->assertSame( 1, $GLOBALS['wp_options']['reportedip_hive_headers_enabled'], 'the basic header switch is free and must survive the round trip' );
+	}
+
+	/**
+	 * An import cannot hand a site a header its plan does not include.
+	 *
+	 * The header options only joined the registry in 2.1.51; before that the
+	 * import wrote them raw, so a payload from a Business site turned on CSP
+	 * on a Free site and the engine then quietly refused to emit it. Now the
+	 * tier gate answers at write time, which is also what MainWP and the
+	 * cloud fleet already do.
+	 *
+	 * @return void
+	 */
+	public function test_import_skips_advanced_headers_without_the_plan(): void {
+		$GLOBALS['wp_options']['reportedip_hive_csp_mode'] = 'report_only';
+
+		$payload = ReportedIP_Hive_Settings_Import_Export::get_instance()
+			->build_export_payload( array( 'headers' ), false );
+
+		$GLOBALS['wp_options'] = array();
+
+		ReportedIP_Hive_Settings_Import_Export::get_instance()
+			->apply_payload( json_decode( (string) wp_json_encode( $payload ), true ), array( 'headers' ) );
+
+		$this->assertArrayNotHasKey(
+			'reportedip_hive_csp_mode',
+			$GLOBALS['wp_options'],
+			'advanced hardening is gated, so the Content-Security-Policy must not be written on a plan without it'
+		);
 	}
 
 	/**

@@ -21,6 +21,8 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-hide-login.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -46,6 +48,21 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function expected_remote_kinds(): array {
 			return array(
+				'reportedip_hive_headers_enabled'              => 'bool',
+				'reportedip_hive_header_xcto'                  => 'bool',
+				'reportedip_hive_header_xfo'                   => 'enum',
+				'reportedip_hive_header_referrer'              => 'enum',
+				'reportedip_hive_hsts_enabled'                 => 'bool',
+				'reportedip_hive_hsts_max_age'                 => 'int',
+				'reportedip_hive_hsts_subdomains'              => 'bool',
+				'reportedip_hive_hsts_preload'                 => 'bool',
+				'reportedip_hive_permissions_policy'           => 'text',
+				'reportedip_hive_csp_mode'                     => 'enum',
+				'reportedip_hive_csp_policy'                   => 'textarea',
+				'reportedip_hive_csp_report_uri'               => 'url',
+				'reportedip_hive_coop'                         => 'enum',
+				'reportedip_hive_corp'                         => 'enum',
+				'reportedip_hive_coep'                         => 'enum',
 				'reportedip_hive_trusted_ip_header'             => 'enum',
 				'reportedip_hive_trusted_proxy_ranges'          => 'textarea',
 				'reportedip_hive_monitor_failed_logins'         => 'bool',
@@ -187,6 +204,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 				}
 				if ( 'slug' === $entry['kind'] ) {
 					$this->assertTrue( isset( $entry['sanitize'] ), "Slug key {$key} needs a sanitize override." );
+				}
+				if ( isset( $entry['sanitize'] ) ) {
+					$this->assertTrue(
+						is_callable( $entry['sanitize'] ),
+						"Sanitizer for {$key} is not callable. An unreachable override does not fail loudly: sanitize() silently falls back to the generic kind sanitizer, which then rejects perfectly valid values."
+					);
+				}
+				if ( isset( $entry['tier_gate'] ) ) {
+					$this->assertTrue( is_callable( $entry['tier_gate'] ), "The tier gate of {$key} is not callable." );
 				}
 			}
 		}
