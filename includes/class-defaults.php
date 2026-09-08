@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *    retention, mode, protection level, auto-footer alignment). Consumed by
  *    the wizard JS via wp_localize_script and by PHP rendering of the
  *    wizard steps.
- *  - `all_option_defaults()` (alias `safe_options()`) returns the canonical
+ *  - `all_option_defaults()` returns the canonical
  *    option-key => default map. This is the one place option defaults live;
  *    activation seeding, the wizard-skip seed, the settings-reset re-seed and
  *    `ReportedIP_Hive::get_default_options()` all read from it.
@@ -255,8 +255,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_policy_sessions'             => 3,
 
 		'reportedip_hive_2fa_email_subject'               => '',
-		'reportedip_hive_2fa_email_subject_code'          => '',
-		'reportedip_hive_2fa_email_body_code'             => '',
 
 		'reportedip_hive_2fa_require_on_password_reset'   => true,
 		'reportedip_hive_2fa_password_reset_excluded_methods' => '["email"]',
@@ -268,7 +266,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_frontend_setup_slug'         => 'reportedip-hive-2fa-setup',
 		'reportedip_hive_2fa_frontend_customer_optional'  => true,
 		'reportedip_hive_2fa_frontend_soft_disabled'      => 0,
-		'reportedip_hive_wc2fa_promo_enabled'             => true,
 
 		'reportedip_hive_notify_admin'                    => true,
 		'reportedip_hive_notify_recipients'               => '',
@@ -458,16 +455,6 @@ final class ReportedIP_Hive_Defaults {
 	 * @since  2.0.2
 	 */
 	public static function all_option_defaults(): array {
-		return self::SAFE_OPTIONS;
-	}
-
-	/**
-	 * Back-compat alias for {@see all_option_defaults()}.
-	 *
-	 * @return array<string, scalar>
-	 * @since  1.4.0
-	 */
-	public static function safe_options(): array {
 		return self::SAFE_OPTIONS;
 	}
 

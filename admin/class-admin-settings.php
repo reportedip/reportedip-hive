@@ -2632,24 +2632,129 @@ class ReportedIP_Hive_Admin_Settings {
 
 
 	/**
-	 * Sanitize callback resolver: registry-managed keys use the canonical
-	 * registry callback, everything else keeps its legacy callback until it
-	 * migrates into the registry.
+	 * Registry-backed option keys, mapped to the Settings-API group whose
+	 * form saves them and the WordPress type token `register_setting()`
+	 * exposes. Validation and sanitisation come from the registry, so the
+	 * group is the only thing this class still has to know.
 	 *
-	 * @param string   $key      Option key.
-	 * @param callable $fallback Legacy sanitize callback.
-	 * @return callable
-	 * @since  2.1.47
+	 * @var array<string, array{0: string, 1: string}>
+	 * @since 2.1.52
 	 */
-	private function registry_callback_or( $key, $fallback ) {
-		$spec = ReportedIP_Hive_Settings_Registry::spec();
-		return isset( $spec[ $key ] ) ? ReportedIP_Hive_Settings_Registry::settings_api_callback( $key ) : $fallback;
-	}
+	private const REGISTRY_BACKED_SETTINGS = array(
+		'reportedip_hive_failed_login_threshold'          => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_failed_login_timeframe'          => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_comment_spam_threshold'          => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_xmlrpc_threshold'                => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_comment_spam_timeframe'          => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_xmlrpc_timeframe'                => array( 'reportedip_hive_protection_detection', 'integer' ),
+		'reportedip_hive_monitor_failed_logins'           => array( 'reportedip_hive_protection_detection', 'boolean' ),
+		'reportedip_hive_monitor_comments'                => array( 'reportedip_hive_protection_detection', 'boolean' ),
+		'reportedip_hive_monitor_xmlrpc'                  => array( 'reportedip_hive_protection_detection', 'boolean' ),
+		'reportedip_hive_auto_block'                      => array( 'reportedip_hive_protection_blocking', 'boolean' ),
+		'reportedip_hive_block_duration'                  => array( 'reportedip_hive_protection_blocking', 'integer' ),
+		'reportedip_hive_block_threshold'                 => array( 'reportedip_hive_protection_blocking', 'integer' ),
+		'reportedip_hive_notification_cooldown_minutes'   => array( 'reportedip_hive_protection_notifications', 'integer' ),
+		'reportedip_hive_notify_event_cap_minutes'        => array( 'reportedip_hive_protection_notifications', 'integer' ),
+		'reportedip_hive_notify_admin'                    => array( 'reportedip_hive_protection_notifications', 'boolean' ),
+		'reportedip_hive_2fa_notify_new_device'           => array( 'reportedip_hive_protection_notifications', 'boolean' ),
+		'reportedip_hive_notify_recipients'               => array( 'reportedip_hive_protection_notifications', 'string' ),
+		'reportedip_hive_notify_from_name'                => array( 'reportedip_hive_protection_notifications', 'string' ),
+		'reportedip_hive_notify_from_email'               => array( 'reportedip_hive_protection_notifications', 'string' ),
+		'reportedip_hive_notify_sync_to_api'              => array( 'reportedip_hive_protection_notifications', 'boolean' ),
+		'reportedip_hive_report_only_mode'                => array( 'reportedip_hive_protection_blocking', 'boolean' ),
+		'reportedip_hive_block_escalation_enabled'        => array( 'reportedip_hive_protection_blocking', 'boolean' ),
+		'reportedip_hive_block_ladder_minutes'            => array( 'reportedip_hive_protection_blocking', 'string' ),
+		'reportedip_hive_block_ladder_reset_days'         => array( 'reportedip_hive_protection_blocking', 'integer' ),
+		'reportedip_hive_hide_login_enabled'              => array( 'reportedip_hive_hide_login', 'boolean' ),
+		'reportedip_hive_hide_login_slug'                 => array( 'reportedip_hive_hide_login', 'string' ),
+		'reportedip_hive_hide_login_response_mode'        => array( 'reportedip_hive_hide_login', 'string' ),
+		'reportedip_hive_hide_login_token_in_urls'        => array( 'reportedip_hive_hide_login', 'boolean' ),
+		'reportedip_hive_monitor_hide_login_probe'        => array( 'reportedip_hive_hide_login', 'boolean' ),
+		'reportedip_hive_hide_login_probe_threshold'      => array( 'reportedip_hive_hide_login', 'integer' ),
+		'reportedip_hive_hide_login_probe_timeframe'      => array( 'reportedip_hive_hide_login', 'integer' ),
+		'reportedip_hive_disable_xmlrpc_multicall'        => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_rest_access_mode'                => array( 'reportedip_hive_attack_surface', 'string' ),
+		'reportedip_hive_rest_allowed_namespaces'         => array( 'reportedip_hive_attack_surface', 'string' ),
+		'reportedip_hive_rest_allowed_roles'              => array( 'reportedip_hive_attack_surface', 'string' ),
+		'reportedip_hive_disable_xmlrpc'                  => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_disable_feeds'                   => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_block_admin_guests'              => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_block_uploads_php'               => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_hide_software_info'              => array( 'reportedip_hive_attack_surface', 'boolean' ),
+		'reportedip_hive_audit_enabled'                   => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_audit_retention_days'            => array( 'reportedip_hive_advanced_privacy', 'integer' ),
+		'reportedip_hive_audit_anonymize_ip'              => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_audit_new_ip_alert'              => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_log_level'                       => array( 'reportedip_hive_advanced_privacy', 'string' ),
+		'reportedip_hive_detailed_logging'                => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_log_user_agents'                 => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_minimal_logging'                 => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_log_referer_domains'             => array( 'reportedip_hive_advanced_privacy', 'boolean' ),
+		'reportedip_hive_data_retention_days'             => array( 'reportedip_hive_advanced_privacy', 'integer' ),
+		'reportedip_hive_auto_anonymize_days'             => array( 'reportedip_hive_advanced_privacy', 'integer' ),
+		'reportedip_hive_queue_max_age_days'              => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_queue_warning_threshold'         => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_queue_critical_threshold'        => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_processing_timeout_minutes'      => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_enable_caching'                  => array( 'reportedip_hive_advanced_performance', 'boolean' ),
+		'reportedip_hive_cache_duration'                  => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_negative_cache_duration'         => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_max_api_calls_per_hour'          => array( 'reportedip_hive_advanced_performance', 'integer' ),
+		'reportedip_hive_trusted_ip_header'               => array( 'reportedip_hive_api', 'string' ),
+		'reportedip_hive_block_tor'                       => array( 'reportedip_hive_protection_blocking', 'boolean' ),
+		'reportedip_hive_blocked_page_contact_url'        => array( 'reportedip_hive_protection_blocking', 'string' ),
+		'reportedip_hive_report_cooldown_hours'           => array( 'reportedip_hive_protection_blocking', 'integer' ),
+		'reportedip_hive_auto_footer_enabled'             => array( 'reportedip_hive_promote', 'boolean' ),
+		'reportedip_hive_auto_footer_variant'             => array( 'reportedip_hive_promote', 'string' ),
+		'reportedip_hive_auto_footer_align'               => array( 'reportedip_hive_promote', 'string' ),
+		'reportedip_hive_hardening_realtime_detection'    => array( 'reportedip_hive_hardening_mode', 'boolean' ),
+		'reportedip_hive_hardening_duration_minutes'      => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_login_threshold'       => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_login_timeframe'       => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_block_threshold'       => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_detect_window_minutes' => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_detect_min_ips'        => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_hardening_detect_min_attempts'   => array( 'reportedip_hive_hardening_mode', 'integer' ),
+		'reportedip_hive_decoy_pathblock_enabled'         => array( 'reportedip_hive_protection_detection', 'boolean' ),
+	);
+
+	/**
+	 * Defaults that `register_setting()` must expose for the keys above
+	 * that carry one.
+	 *
+	 * @var array<string, scalar>
+	 * @since 2.1.52
+	 */
+	private const REGISTRY_BACKED_DEFAULTS = array(
+		'reportedip_hive_auto_footer_enabled'             => false,
+		'reportedip_hive_auto_footer_variant'             => 'badge',
+		'reportedip_hive_auto_footer_align'               => 'center',
+		'reportedip_hive_hardening_realtime_detection'    => true,
+		'reportedip_hive_hardening_duration_minutes'      => 60,
+		'reportedip_hive_hardening_login_threshold'       => 2,
+		'reportedip_hive_hardening_login_timeframe'       => 5,
+		'reportedip_hive_hardening_block_threshold'       => 60,
+		'reportedip_hive_hardening_detect_window_minutes' => 10,
+		'reportedip_hive_hardening_detect_min_ips'        => 10,
+		'reportedip_hive_hardening_detect_min_attempts'   => 50,
+		'reportedip_hive_decoy_pathblock_enabled'         => true,
+	);
 
 	/**
 	 * Register settings
 	 */
 	public function register_settings() {
+		foreach ( self::REGISTRY_BACKED_SETTINGS as $option_key => $registration ) {
+			$args = array(
+				'type'              => $registration[1],
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $option_key ),
+			);
+			if ( array_key_exists( $option_key, self::REGISTRY_BACKED_DEFAULTS ) ) {
+				$args['default'] = self::REGISTRY_BACKED_DEFAULTS[ $option_key ];
+			}
+			register_setting( $registration[0], $option_key, $args );
+		}
+
 		register_setting(
 			'reportedip_hive_general',
 			'reportedip_hive_operation_mode',
@@ -2686,79 +2791,6 @@ class ReportedIP_Hive_Admin_Settings {
 			)
 		);
 
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_failed_login_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_failed_login_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_failed_login_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_failed_login_timeframe' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_comment_spam_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_comment_spam_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_xmlrpc_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_xmlrpc_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_comment_spam_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_comment_spam_timeframe' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_xmlrpc_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_xmlrpc_timeframe' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_monitor_failed_logins',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_failed_logins' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_monitor_comments',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_comments' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_monitor_xmlrpc',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_xmlrpc' ),
-			)
-		);
-
 		foreach ( array(
 			'reportedip_hive_password_spray_threshold',
 			'reportedip_hive_app_password_threshold',
@@ -2772,7 +2804,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$threshold_option,
 				array(
 					'type'              => 'integer',
-					'sanitize_callback' => $this->registry_callback_or( $threshold_option, array( $this, 'sanitize_failed_login_threshold' ) ),
+					'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $threshold_option ),
 				)
 			);
 		}
@@ -2792,7 +2824,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$integer_option,
 				array(
 					'type'              => 'integer',
-					'sanitize_callback' => $this->registry_callback_or( $integer_option, array( $this, 'sanitize_timeframe' ) ),
+					'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $integer_option ),
 				)
 			);
 		}
@@ -2817,75 +2849,11 @@ class ReportedIP_Hive_Admin_Settings {
 				$boolean_option,
 				array(
 					'type'              => 'boolean',
-					'sanitize_callback' => $this->registry_callback_or( $boolean_option, array( $this, 'sanitize_boolean' ) ),
+					'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $boolean_option ),
 				)
 			);
 		}
 
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_auto_block',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_block' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_duration',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_duration' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notification_cooldown_minutes',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notification_cooldown_minutes' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_event_cap_minutes',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_event_cap_minutes' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_admin',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_admin' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_2fa_notify_new_device',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_notify_new_device' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_recipients',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_recipients' ),
-			)
-		);
 		register_setting(
 			'reportedip_hive_protection_notifications',
 			'reportedip_hive_promo_enabled',
@@ -2911,359 +2879,11 @@ class ReportedIP_Hive_Admin_Settings {
 			)
 		);
 		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_from_name',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_from_name' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_from_email',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_from_email' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_notify_sync_to_api',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_sync_to_api' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_report_only_mode',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_report_only_mode' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_escalation_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_escalation_enabled' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_ladder_minutes',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_ladder_minutes' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_ladder_reset_days',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_ladder_reset_days' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_enabled' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_slug',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_slug' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_response_mode',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_response_mode' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_token_in_urls',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_token_in_urls' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_monitor_hide_login_probe',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_monitor_hide_login_probe' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_probe_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_probe_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_hide_login',
-			'reportedip_hive_hide_login_probe_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_login_probe_timeframe' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_attack_surface',
-			'reportedip_hive_disable_xmlrpc_multicall',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_disable_xmlrpc_multicall' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_attack_surface',
-			'reportedip_hive_rest_access_mode',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_rest_access_mode' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_attack_surface',
-			'reportedip_hive_rest_allowed_namespaces',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_rest_allowed_namespaces' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_attack_surface',
-			'reportedip_hive_rest_allowed_roles',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_rest_allowed_roles' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_attack_surface',
-			'reportedip_hive_disable_xmlrpc',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_disable_xmlrpc' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_attack_surface',
-			'reportedip_hive_disable_feeds',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_disable_feeds' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_attack_surface',
-			'reportedip_hive_block_admin_guests',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_admin_guests' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_attack_surface',
-			'reportedip_hive_block_uploads_php',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_uploads_php' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_attack_surface',
-			'reportedip_hive_hide_software_info',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hide_software_info' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_audit_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_audit_enabled' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_audit_retention_days',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_audit_retention_days' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_audit_anonymize_ip',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_audit_anonymize_ip' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_audit_new_ip_alert',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_audit_new_ip_alert' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_log_level',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_log_level' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_detailed_logging',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_detailed_logging' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_log_user_agents',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_log_user_agents' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_minimal_logging',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_minimal_logging' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_log_referer_domains',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_log_referer_domains' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_data_retention_days',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_data_retention_days' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_privacy',
-			'reportedip_hive_auto_anonymize_days',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_anonymize_days' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_queue_max_age_days',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_queue_max_age_days' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_queue_warning_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_queue_warning_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_queue_critical_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_queue_critical_threshold' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_processing_timeout_minutes',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_processing_timeout_minutes' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_enable_caching',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_enable_caching' ),
-			)
-		);
-		register_setting(
 			'reportedip_hive_advanced_performance',
 			'reportedip_hive_delete_data_on_uninstall',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_cache_duration',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_cache_duration' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_negative_cache_duration',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_negative_cache_duration' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_advanced_performance',
-			'reportedip_hive_max_api_calls_per_hour',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_max_api_calls_per_hour' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_api',
-			'reportedip_hive_trusted_ip_header',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_trusted_ip_header' ),
 			)
 		);
 		register_setting(
@@ -3275,151 +2895,12 @@ class ReportedIP_Hive_Admin_Settings {
 			)
 		);
 		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_tor',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_tor' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_blocked_page_contact_url',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_blocked_page_contact_url' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_protection_blocking',
-			'reportedip_hive_report_cooldown_hours',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_report_cooldown_hours' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_promote',
-			'reportedip_hive_auto_footer_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_footer_enabled' ),
-				'default'           => false,
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_promote',
-			'reportedip_hive_auto_footer_variant',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_footer_variant' ),
-				'default'           => 'badge',
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_promote',
-			'reportedip_hive_auto_footer_align',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_auto_footer_align' ),
-				'default'           => 'center',
-			)
-		);
-
-		register_setting(
 			'reportedip_hive_hardening_mode',
 			'reportedip_hive_hardening_enabled',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
 				'default'           => false,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_realtime_detection',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_realtime_detection' ),
-				'default'           => true,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_duration_minutes',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_duration_minutes' ),
-				'default'           => 60,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_login_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_login_threshold' ),
-				'default'           => 2,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_login_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_login_timeframe' ),
-				'default'           => 5,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_block_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_block_threshold' ),
-				'default'           => 60,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_detect_window_minutes',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_detect_window_minutes' ),
-				'default'           => 10,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_detect_min_ips',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_detect_min_ips' ),
-				'default'           => 10,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_detect_min_attempts',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_detect_min_attempts' ),
-				'default'           => 50,
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_decoy_pathblock_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_decoy_pathblock_enabled' ),
-				'default'           => true,
 			)
 		);
 	}
@@ -3529,62 +3010,6 @@ class ReportedIP_Hive_Admin_Settings {
 		$current = (string) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Mode_Manager::OPTION_MODE, ReportedIP_Hive_Mode_Manager::MODE_LOCAL );
 		return ReportedIP_Hive_Mode_Manager::is_valid_mode( $current ) ? $current : ReportedIP_Hive_Mode_Manager::MODE_LOCAL;
 	}
-
-	/**
-	 * Sanitize failed login threshold (1-100)
-	 */
-	public function sanitize_failed_login_threshold( $value ) {
-		$value  = absint( $value );
-		$min    = 1;
-		$max    = 100;
-		$result = max( $min, min( $max, $value ) );
-
-		if ( $value !== $result ) {
-			add_settings_error(
-				'reportedip_hive_failed_login_threshold',
-				'value_adjusted',
-				sprintf(
-					/* translators: 1: adjusted threshold value, 2: minimum allowed value, 3: maximum allowed value */
-					__( 'Failed login threshold was adjusted to %1$d (must be between %2$d and %3$d).', 'reportedip-hive' ),
-					$result,
-					$min,
-					$max
-				),
-				'warning'
-			);
-		}
-		return $result;
-	}
-
-	/**
-	 * Sanitize timeframe (1-1440 minutes = 24 hours)
-	 */
-	public function sanitize_timeframe( $value ) {
-		$value  = absint( $value );
-		$min    = 1;
-		$max    = 1440;
-		$result = max( $min, min( $max, $value ) );
-
-		if ( $value !== $result ) {
-			add_settings_error(
-				'reportedip_hive_timeframe',
-				'value_adjusted',
-				sprintf(
-					/* translators: 1: adjusted value in minutes, 2: minimum allowed value, 3: maximum allowed value */
-					__( 'Time window was adjusted to %1$d minutes (must be between %2$d and %3$d).', 'reportedip-hive' ),
-					$result,
-					$min,
-					$max
-				),
-				'warning'
-			);
-		}
-		return $result;
-	}
-
-
-
-
 
 	/**
 	 * Sanitize the trusted-proxy source ranges through the registry and tell

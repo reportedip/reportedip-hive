@@ -176,7 +176,8 @@ class SettingsKeysAreStableTest extends TestCase {
 	}
 
 	/**
-	 * Extracts every option key from register_setting() blocks.
+	 * Extracts every registered option key: the literal register_setting()
+	 * calls plus the registration map they were folded into.
 	 *
 	 * Matches both single- and double-quoted second arguments, regardless
 	 * of formatting (single- or multi-line, with or without trailing
@@ -186,9 +187,13 @@ class SettingsKeysAreStableTest extends TestCase {
 	 * @return array<int, string>
 	 */
 	private function extract_keys_from_source( string $source ): array {
-		$pattern = '/register_setting\s*\(\s*[\'"][^\'"]+[\'"]\s*,\s*[\'"](reportedip_hive_[a-z0-9_]+)[\'"]/';
-		preg_match_all( $pattern, $source, $matches );
-		return $matches[1];
+		$call = '/register_setting\s*\(\s*[\'"][^\'"]+[\'"]\s*,\s*[\'"](reportedip_hive_[a-z0-9_]+)[\'"]/';
+		$map  = '/[\'"](reportedip_hive_[a-z0-9_]+)[\'"]\s*=> array\( [\'"]reportedip_hive_[a-z_]+[\'"], [\'"][a-z]+[\'"] \)/';
+
+		preg_match_all( $call, $source, $calls );
+		preg_match_all( $map, $source, $mapped );
+
+		return array_merge( $calls[1], $mapped[1] );
 	}
 
 	/**

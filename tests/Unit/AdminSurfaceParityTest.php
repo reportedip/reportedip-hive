@@ -116,12 +116,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @var array<int, string>
 		 */
 		private const PENDING_REGISTRATION = array(
-			'reportedip_hive_2fa_email_body_code',
 			'reportedip_hive_2fa_email_subject',
-			'reportedip_hive_2fa_email_subject_code',
 			'reportedip_hive_2fa_password_reset_excluded_methods',
 			'reportedip_hive_waf_dropin_enabled',
-			'reportedip_hive_wc2fa_promo_enabled',
 		);
 
 		/**
@@ -194,7 +191,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$registry  = \ReportedIP_Hive_Settings_Registry::spec();
 			$undecided = array();
 
-			foreach ( array_keys( \ReportedIP_Hive_Defaults::safe_options() ) as $key ) {
+			foreach ( array_keys( \ReportedIP_Hive_Defaults::all_option_defaults() ) as $key ) {
 				if ( isset( $registry[ $key ] ) ) {
 					continue;
 				}
@@ -254,6 +251,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$patterns = array(
 				'/name="' . $quoted . '"/',
 				'/register_setting\(\s*\n?\s*\'[a-z_]+\',\s*\n?\s*\'' . $quoted . '\'/',
+				'/\'' . $quoted . '\'\s*=> array\( \'reportedip_hive_[a-z_]+\', \'[a-z]+\' \)/',
 				'/\'option\'\s*=> \'' . $quoted . '\'/',
 				'/data-opt="\' \. esc_attr\( \'' . $quoted . '\'/',
 				'/render_select_row\(\s*\n?\s*\'[a-z0-9-]+\',\s*\n?\s*\'' . $quoted . '\'/',

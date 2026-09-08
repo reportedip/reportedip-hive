@@ -19,7 +19,6 @@
         "dealerdirect/phpcodesniffer-composer-installer": "^1.2",
         "php-parallel-lint/php-parallel-lint": "^1.4",
         "phpcompatibility/phpcompatibility-wp": "^2.1",
-        "phpro/grumphp": "^2.5",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^9.6",
         "szepeviktor/phpstan-wordpress": "^2.0",
@@ -40,8 +39,7 @@
     },
     "config": {
         "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true,
-            "phpro/grumphp": true
+            "dealerdirect/phpcodesniffer-composer-installer": true
         },
         "sort-packages": true,
         "optimize-autoloader": true,
@@ -79,13 +77,6 @@
             "@analyse",
             "@i18n:check",
             "@test:unit"
-        ],
-        "grumphp": "grumphp run",
-        "post-install-cmd": [
-            "vendor/bin/grumphp git:init || true"
-        ],
-        "post-update-cmd": [
-            "vendor/bin/grumphp git:init || true"
         ]
     },
     "scripts-descriptions": {
@@ -103,7 +94,6 @@
         "i18n:build": "Compile every PO into MO plus per-handle JS JSON files",
         "i18n": "Full translation refresh: update PO from source, then compile MO/JSON",
         "i18n:check": "Fail if the POT is stale, the German PO has untranslated/fuzzy entries, or MO/JSON are out of sync",
-        "check-all": "Run all quality checks (lint, analyse, i18n:check, test)",
-        "grumphp": "Run GrumPHP checks manually"
+        "check-all": "Run all quality checks (lint, analyse, i18n:check, test)"
     }
 }

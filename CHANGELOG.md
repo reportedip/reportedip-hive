@@ -153,6 +153,18 @@ All changes to ReportedIP Hive are documented here.
 - **The trusted-proxy warning became a readiness issue.** Configuring a client
   IP header without proxy ranges used to be refused once at save time; it is now
   raised as a standing warning for as long as it applies.
+- **Settings registration is a table now.** The 774-line block of hand-written
+  `register_setting()` calls became a map of option key to settings group, with
+  type and sanitisation read from the settings registry that already owns them.
+  Every registration is byte-identical to before; only the amount of code
+  spelling it out changed.
+- **GrumPHP is gone.** It ran the same PHPCS, PHPStan and PHPUnit gate that CI
+  and the workspace release check already run, installed a Git hook on every
+  `composer install`, and was invoked by neither. One dev dependency less.
+- Four sanitisers on the 2FA settings page, two threshold clamps on the general
+  settings page and the callback resolver between them were left behind when
+  those options moved into the settings registry. Removed, along with three
+  option defaults that were seeded on activation and never read again.
 
 ### Fixed
 

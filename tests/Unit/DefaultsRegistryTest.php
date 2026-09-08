@@ -35,14 +35,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['wp_options'] = array();
 		}
 
-		public function test_all_option_defaults_alias_matches_safe_options() {
-			$this->assertSame(
-				\ReportedIP_Hive_Defaults::all_option_defaults(),
-				\ReportedIP_Hive_Defaults::safe_options(),
-				'safe_options() must alias all_option_defaults() exactly.'
-			);
-		}
-
 		public function test_two_factor_enforce_roles_default_is_resolved_to_administrator() {
 			$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
 			$this->assertArrayHasKey( 'reportedip_hive_2fa_enforce_roles', $defaults );

@@ -190,7 +190,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			foreach ( \ReportedIP_Hive_Attack_Surface::OPTION_KEYS as $key ) {
 				$this->assertArrayHasKey( $key, $spec, "{$key} is missing from the settings registry." );
 				$this->assertSame( 'lockdown', $spec[ $key ]['section'], "{$key} belongs in the lockdown section." );
-				$this->assertStringContainsString( "'reportedip_hive_attack_surface',\n\t\t\t'" . $key . "'", $settings, "{$key} is not registered with the Settings API." );
+				$this->assertMatchesRegularExpression(
+					"/'" . preg_quote( $key, '/' ) . "'\s*=> array\( 'reportedip_hive_attack_surface', '[a-z]+' \),/",
+					$settings,
+					"{$key} is not registered with the Settings API.",
+				);
 				$this->assertContains( $key, $exportable, "{$key} is not exportable." );
 			}
 		}
