@@ -323,6 +323,31 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * @param string $fallback  Returned when the candidate is invalid.
 	 * @return string
 	 */
+	/**
+	 * Registry sanitizer for the challenge slug.
+	 *
+	 * The registry hands its sanitizers one argument, so the two slugs get a
+	 * thin wrapper each rather than a second copy of the slug rules.
+	 *
+	 * @param mixed $value Raw input.
+	 * @return string
+	 * @since  2.1.51
+	 */
+	public static function sanitize_challenge_slug( $value ) {
+		return self::sanitize_slug( $value, self::DEFAULT_CHALLENGE_SLUG );
+	}
+
+	/**
+	 * Registry sanitizer for the setup slug.
+	 *
+	 * @param mixed $value Raw input.
+	 * @return string
+	 * @since  2.1.51
+	 */
+	public static function sanitize_setup_slug( $value ) {
+		return self::sanitize_slug( $value, self::DEFAULT_SETUP_SLUG );
+	}
+
 	public static function sanitize_slug( $candidate, $fallback ) {
 		$candidate = is_string( $candidate ) ? strtolower( trim( $candidate, "/ \t\n\r\0\x0B" ) ) : '';
 		$candidate = preg_replace( '/[^a-z0-9-]/', '', $candidate );

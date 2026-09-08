@@ -260,6 +260,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_frontend_onboarding" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_xmlrpc_app_password_only" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_trusted_devices" value="0" />
+			<input type="hidden" name="reportedip_hive_2fa_enforce_super_admins" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_extended_remember" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_branded_login" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_require_on_password_reset" value="0" />
@@ -982,6 +983,21 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				</div>
 
 				<div class="rip-form-group">
+					<label class="rip-toggle">
+						<input type="checkbox"
+							class="rip-toggle__input"
+							name="reportedip_hive_2fa_enforce_super_admins"
+							value="1"
+							<?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_super_admins', true ) ); ?> />
+						<span class="rip-toggle__slider"></span>
+						<span class="rip-toggle__label">
+							<?php esc_html_e( 'Enforce 2FA for super admins', 'reportedip-hive' ); ?>
+						</span>
+					</label>
+					<?php ReportedIP_Hive_Admin_Settings::render_field_help( 'reportedip_hive_2fa_enforce_super_admins' ); ?>
+				</div>
+
+				<div class="rip-form-group">
 					<label class="rip-label" for="reportedip_2fa_trust_days"><?php esc_html_e( 'Trust duration (days)', 'reportedip-hive' ); ?></label>
 					<input type="number"
 						id="reportedip_2fa_trust_days"
@@ -1133,6 +1149,14 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		);
 		register_setting(
 			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_enforce_super_admins',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_enforce_super_admins' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
 			'reportedip_hive_2fa_trusted_devices',
 			array(
 				'type'              => 'boolean',
@@ -1152,7 +1176,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_frontend_onboarding',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_onboarding' ),
 			)
 		);
 		register_setting(
@@ -1160,7 +1184,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_frontend_enabled',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_frontend_enabled' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_enabled' ),
 			)
 		);
 		register_setting(
@@ -1168,7 +1192,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_frontend_customer_optional',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_customer_optional' ),
 			)
 		);
 		register_setting(
@@ -1176,7 +1200,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_frontend_slug',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_frontend_challenge_slug' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_slug' ),
 			)
 		);
 		register_setting(
@@ -1184,7 +1208,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_frontend_setup_slug',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_frontend_setup_slug' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_setup_slug' ),
 			)
 		);
 		register_setting(
@@ -1192,7 +1216,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_xmlrpc_app_password_only',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_xmlrpc_app_password_only' ),
 			)
 		);
 		register_setting(
@@ -1200,7 +1224,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_ip_allowlist',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_ip_allowlist' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_ip_allowlist' ),
 			)
 		);
 
@@ -1209,7 +1233,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_extended_remember',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_extended_remember' ),
 			)
 		);
 		register_setting(
@@ -1217,7 +1241,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_branded_login',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_branded_login' ),
 			)
 		);
 
@@ -1275,7 +1299,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_password_reset_block_email_only',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_password_reset_block_email_only' ),
 			)
 		);
 

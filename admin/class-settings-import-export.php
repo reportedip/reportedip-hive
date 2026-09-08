@@ -73,203 +73,55 @@ class ReportedIP_Hive_Settings_Import_Export {
 	/**
 	 * Section catalogue mapping each user-facing area to its option keys.
 	 *
-	 * Edit deliberately — adding a key here means it will appear in every
-	 * future export. Removing a key without a migration is a breaking change.
+	 * Derived from the settings registry rather than hand-maintained. The two
+	 * used to drift: fifty-five registry keys were missing from the export,
+	 * some of them since long before the registry existed, so an exported file
+	 * quietly left out half the configuration it claimed to contain.
+	 *
+	 * Only the two entries the registry cannot describe are added here: the
+	 * connection identity, which is deliberately not a setting, and the IP
+	 * lists, which are rows rather than options.
 	 *
 	 * @since  1.2.0
 	 * @return array<string, array{label:string, description:string, options:array<int,string>}>
 	 */
 	public static function sections(): array {
-		return array(
-			'general'          => array(
+		$sections = array(
+			'general' => array(
 				'label'       => __( 'General & connection', 'reportedip-hive' ),
-				'description' => __( 'Operation mode, API endpoint and proxy header.', 'reportedip-hive' ),
+				'description' => __( 'Operation mode, API endpoint and the Community Access Key. Only these travel outside the settings registry.', 'reportedip-hive' ),
 				'options'     => array(
 					'reportedip_hive_operation_mode',
 					'reportedip_hive_api_endpoint',
-					'reportedip_hive_trusted_ip_header',
-					'reportedip_hive_trusted_proxy_ranges',
 				),
-			),
-			'detection'        => array(
-				'label'       => __( 'Detection & thresholds', 'reportedip-hive' ),
-				'description' => __( 'What is monitored and at which limits.', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_monitor_failed_logins',
-					'reportedip_hive_failed_login_threshold',
-					'reportedip_hive_failed_login_timeframe',
-					'reportedip_hive_monitor_comments',
-					'reportedip_hive_comment_spam_threshold',
-					'reportedip_hive_comment_spam_timeframe',
-					'reportedip_hive_monitor_xmlrpc',
-					'reportedip_hive_xmlrpc_threshold',
-					'reportedip_hive_xmlrpc_timeframe',
-					'reportedip_hive_disable_xmlrpc_multicall',
-					'reportedip_hive_hardening_realtime_detection',
-					'reportedip_hive_hardening_duration_minutes',
-					'reportedip_hive_hardening_login_threshold',
-					'reportedip_hive_hardening_login_timeframe',
-					'reportedip_hive_hardening_block_threshold',
-					'reportedip_hive_hardening_detect_window_minutes',
-					'reportedip_hive_hardening_detect_min_ips',
-					'reportedip_hive_hardening_detect_min_attempts',
-				),
-			),
-			'blocking'         => array(
-				'label'       => __( 'Auto-blocking & report-only', 'reportedip-hive' ),
-				'description' => __( 'How offenders are blocked and for how long.', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_auto_block',
-					'reportedip_hive_block_duration',
-					'reportedip_hive_block_threshold',
-					'reportedip_hive_block_tor',
-					'reportedip_hive_report_only_mode',
-					'reportedip_hive_report_cooldown_hours',
-					'reportedip_hive_blocked_page_contact_url',
-				),
-			),
-			'notifications'    => array(
-				'label'       => __( 'Notifications', 'reportedip-hive' ),
-				'description' => __( 'Admin emails, recipients, sender and cool-downs.', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_notify_admin',
-					'reportedip_hive_notify_recipients',
-					'reportedip_hive_notify_from_name',
-					'reportedip_hive_notify_from_email',
-					'reportedip_hive_notify_sync_to_api',
-					'reportedip_hive_notification_cooldown_minutes',
-				),
-			),
-			'privacy_logs'     => array(
-				'label'       => __( 'Privacy & logs', 'reportedip-hive' ),
-				'description' => __( 'What we record and how long we keep it.', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_log_level',
-					'reportedip_hive_minimal_logging',
-					'reportedip_hive_detailed_logging',
-					'reportedip_hive_log_user_agents',
-					'reportedip_hive_log_referer_domains',
-					'reportedip_hive_data_retention_days',
-					'reportedip_hive_auto_anonymize_days',
-					'reportedip_hive_delete_data_on_uninstall',
-				),
-			),
-			'performance'      => array(
-				'label'       => __( 'Performance & caching', 'reportedip-hive' ),
-				'description' => __( 'API caching and rate limits.', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_enable_caching',
-					'reportedip_hive_cache_duration',
-					'reportedip_hive_negative_cache_duration',
-					'reportedip_hive_max_api_calls_per_hour',
-				),
-			),
-			'twofactor_global' => array(
-				'label'       => __( 'Two-Factor — global policy', 'reportedip-hive' ),
-				'description' => __( 'Site-wide 2FA settings (per-user secrets stay local).', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_2fa_enabled_global',
-					'reportedip_hive_2fa_allowed_methods',
-					'reportedip_hive_2fa_enforce_roles',
-					'reportedip_hive_2fa_enforce_grace_days',
-					'reportedip_hive_2fa_max_skips',
-					'reportedip_hive_2fa_enforce_action',
-					'reportedip_hive_2fa_trusted_devices',
-					'reportedip_hive_2fa_trusted_device_days',
-					'reportedip_hive_2fa_frontend_onboarding',
-					'reportedip_hive_2fa_notify_new_device',
-					'reportedip_hive_2fa_xmlrpc_app_password_only',
-					'reportedip_hive_2fa_extended_remember',
-					'reportedip_hive_2fa_branded_login',
-					'reportedip_hive_2fa_ip_allowlist',
-					'reportedip_hive_2fa_policy_new_country',
-					'reportedip_hive_2fa_policy_new_ip',
-					'reportedip_hive_2fa_policy_new_subnet',
-					'reportedip_hive_2fa_policy_new_device',
-					'reportedip_hive_2fa_policy_every_n_days',
-					'reportedip_hive_2fa_policy_every_n_logins',
-					'reportedip_hive_2fa_policy_sessions_above_n',
-					'reportedip_hive_2fa_policy_days',
-					'reportedip_hive_2fa_policy_logins',
-					'reportedip_hive_2fa_policy_sessions',
-				),
-			),
-			'firewall'         => array(
-				'label'       => __( 'Firewall & spam defence', 'reportedip-hive' ),
-				'description' => __( 'WAF engine, bot verification, registration rules (prohibited usernames, e-mail rules, rate limit, IP allowlist), disposable-email and comment-honeypot settings. The pre-WordPress drop-in toggle is host-specific and stays local.', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_waf_enabled',
-					'reportedip_hive_waf_report_only',
-					'reportedip_hive_waf_paranoia',
-					'reportedip_hive_waf_block_threshold',
-					'reportedip_hive_rule_sync_enabled',
-					'reportedip_hive_monitor_bot_verification',
-					'reportedip_hive_bot_action',
-					'reportedip_hive_disposable_email_action',
-					'reportedip_hive_block_email_relays',
-					'reportedip_hive_comment_honeypot_enabled',
-					'reportedip_hive_prohibited_usernames',
-					'reportedip_hive_prohibited_usernames_baseline',
-					'reportedip_hive_email_rule_mode',
-					'reportedip_hive_email_rules',
-					'reportedip_hive_registration_limit_enabled',
-					'reportedip_hive_registration_limit_count',
-					'reportedip_hive_registration_limit_timeframe',
-					'reportedip_hive_registration_allowlist',
-					'reportedip_hive_block_unknown_username_login',
-				),
-			),
-			'headers'          => array(
-				'label'       => __( 'Security headers', 'reportedip-hive' ),
-				'description' => __( 'Basic and advanced HTTP response headers (HSTS, CSP, Permissions-Policy, cross-origin isolation).', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_headers_enabled',
-					'reportedip_hive_header_xcto',
-					'reportedip_hive_header_xfo',
-					'reportedip_hive_header_referrer',
-					'reportedip_hive_hsts_enabled',
-					'reportedip_hive_hsts_max_age',
-					'reportedip_hive_hsts_subdomains',
-					'reportedip_hive_hsts_preload',
-					'reportedip_hive_permissions_policy',
-					'reportedip_hive_csp_mode',
-					'reportedip_hive_csp_policy',
-					'reportedip_hive_csp_report_uri',
-					'reportedip_hive_coop',
-					'reportedip_hive_corp',
-					'reportedip_hive_coep',
-				),
-			),
-			'lockdown'         => array(
-				'label'       => __( 'Access Lockdown', 'reportedip-hive' ),
-				'description' => __( 'Attack-surface switches (REST API access, XML-RPC, feeds, wp-admin for visitors, PHP execution in uploads, software fingerprints).', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_rest_access_mode',
-					'reportedip_hive_rest_allowed_namespaces',
-					'reportedip_hive_rest_allowed_roles',
-					'reportedip_hive_disable_xmlrpc',
-					'reportedip_hive_disable_feeds',
-					'reportedip_hive_block_admin_guests',
-					'reportedip_hive_block_uploads_php',
-					'reportedip_hive_hide_software_info',
-				),
-			),
-			'audit'            => array(
-				'label'       => __( 'Audit trail', 'reportedip-hive' ),
-				'description' => __( 'Audit event trail policy (capture, retention, alerts). The recorded events themselves stay site-local.', 'reportedip-hive' ),
-				'options'     => array(
-					'reportedip_hive_audit_enabled',
-					'reportedip_hive_audit_retention_days',
-					'reportedip_hive_audit_new_ip_alert',
-					'reportedip_hive_audit_anonymize_ip',
-				),
-			),
-			'ip_lists'         => array(
-				'label'       => __( 'IP lists', 'reportedip-hive' ),
-				'description' => __( 'Whitelist + blocked IPs (manual entries only — runtime-blocked IPs stay site-local).', 'reportedip-hive' ),
-				'options'     => array(),
 			),
 		);
+
+		if ( class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
+			$grouped = array();
+			foreach ( ReportedIP_Hive_Settings_Registry::remote_spec() as $key => $entry ) {
+				$grouped[ (string) $entry['section'] ][] = $key;
+			}
+
+			foreach ( ReportedIP_Hive_Settings_Registry::sections() as $slug => $section ) {
+				if ( empty( $grouped[ $slug ] ) ) {
+					continue;
+				}
+				$sections[ $slug ] = array(
+					'label'       => $section['label'],
+					'description' => $section['description'],
+					'options'     => $grouped[ $slug ],
+				);
+			}
+		}
+
+		$sections['ip_lists'] = array(
+			'label'       => __( 'IP lists', 'reportedip-hive' ),
+			'description' => __( 'Whitelist + blocked IPs (manual entries only — runtime-blocked IPs stay site-local).', 'reportedip-hive' ),
+			'options'     => array(),
+		);
+
+		return $sections;
 	}
 
 	/**
@@ -281,6 +133,31 @@ class ReportedIP_Hive_Settings_Import_Export {
 	public static function secret_options(): array {
 		return array(
 			'reportedip_hive_api_key',
+		);
+	}
+
+	/**
+	 * Importable keys that are deliberately outside the settings registry,
+	 * each with the sanitiser it needs.
+	 *
+	 * These three are connection identity rather than settings: they decide
+	 * which account and which endpoint the site talks to. A fleet must never
+	 * push them, which is why they are not registry keys, but a local export
+	 * has always carried them and cloning a site would be pointless without
+	 * them. They get this narrow, typed path instead of the blanket raw write
+	 * the import used to perform for every unknown key.
+	 *
+	 * @since  2.1.51
+	 * @return array<string, callable>
+	 */
+	private static function connection_keys(): array {
+		return array(
+			'reportedip_hive_api_key'        => 'sanitize_text_field',
+			'reportedip_hive_api_endpoint'   => 'esc_url_raw',
+			'reportedip_hive_operation_mode' => static function ( $value ) {
+				$value = sanitize_key( (string) $value );
+				return in_array( $value, array( 'local', 'community' ), true ) ? $value : '';
+			},
 		);
 	}
 
@@ -692,9 +569,10 @@ class ReportedIP_Hive_Settings_Import_Export {
 		$skipped = 0;
 		$errors  = array();
 
-		$registry_spec  = class_exists( 'ReportedIP_Hive_Settings_Registry' ) ? ReportedIP_Hive_Settings_Registry::remote_spec() : array();
-		$registry_batch = array();
-		$legacy_batch   = array();
+		$registry_spec    = class_exists( 'ReportedIP_Hive_Settings_Registry' ) ? ReportedIP_Hive_Settings_Registry::remote_spec() : array();
+		$connection_spec  = self::connection_keys();
+		$registry_batch   = array();
+		$connection_batch = array();
 
 		foreach ( $incoming as $key => $value ) {
 			if ( ! is_string( $key ) || ! isset( $allowed_keys[ $key ] ) ) {
@@ -703,9 +581,13 @@ class ReportedIP_Hive_Settings_Import_Export {
 			}
 			if ( isset( $registry_spec[ $key ] ) ) {
 				$registry_batch[ $key ] = $value;
-			} else {
-				$legacy_batch[ $key ] = $value;
+				continue;
 			}
+			if ( isset( $connection_spec[ $key ] ) ) {
+				$connection_batch[ $key ] = $value;
+				continue;
+			}
+			++$skipped;
 		}
 
 		if ( ! empty( $registry_batch ) ) {
@@ -722,13 +604,13 @@ class ReportedIP_Hive_Settings_Import_Export {
 			}
 		}
 
-		foreach ( $legacy_batch as $key => $value ) {
-			$ok = ReportedIP_Hive_Option_Routing::set( $key, $value );
-			if ( false === $ok && ReportedIP_Hive_Option_Routing::get( $key ) !== $value ) {
-				$errors[] = sprintf( /* translators: %s: option key */ __( 'Could not write %s.', 'reportedip-hive' ), $key );
+		foreach ( $connection_batch as $key => $value ) {
+			$clean = call_user_func( $connection_spec[ $key ], is_scalar( $value ) ? (string) $value : '' );
+			if ( '' === $clean ) {
 				++$skipped;
 				continue;
 			}
+			ReportedIP_Hive_Option_Routing::set( $key, $clean );
 			++$written;
 		}
 

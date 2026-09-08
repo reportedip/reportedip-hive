@@ -59,6 +59,22 @@ class ReportedIP_Hive_Audit_Logger {
 	const REDACT_KEYS = array( 'password', 'pass', 'pwd', 'secret', 'token', 'otp', 'nonce', 'apikey', 'api_key' );
 
 	/**
+	 * Drop the host part of every logged address.
+	 */
+	const OPT_ANONYMIZE_IP = 'reportedip_hive_audit_anonymize_ip';
+
+	/**
+	 * Mail the notification recipients when an account signs in from an
+	 * address it has not used before.
+	 */
+	const OPT_NEW_IP_ALERT = 'reportedip_hive_audit_new_ip_alert';
+
+	/**
+	 * Cooldown between two new-IP alerts for the same account, in seconds.
+	 */
+	const NEW_IP_ALERT_COOLDOWN = 900;
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_Audit_Logger|null
@@ -145,8 +161,75 @@ class ReportedIP_Hive_Audit_Logger {
 	public function on_login( $user_login, $user ) {
 		$user_id = ( $user instanceof WP_User ) ? (int) $user->ID : 0;
 		$ip      = self::client_ip();
-		$action  = self::note_ip( $user_id, $ip ) ? 'new_ip' : 'success';
+		$is_new  = self::note_ip( $user_id, $ip );
+		$action  = $is_new ? 'new_ip' : 'success';
 		$this->log_event( 'login', $action, array(), $user_id, (string) $user_login );
+
+		if ( $is_new ) {
+			$this->alert_new_ip( $user_id, (string) $user_login, $ip );
+		}
+	}
+
+	/**
+	 * Mail the notification recipients about a sign-in from an unfamiliar
+	 * address.
+	 *
+	 * Deliberately quiet by default and rate-limited per account: the trail
+	 * already records every one of these, and an alert that fires on each
+	 * dynamic-IP change trains its readers to ignore it.
+	 *
+	 * @param int    $user_id    Signing-in user.
+	 * @param string $user_login Login name.
+	 * @param string $ip         Client address.
+	 * @return void
+	 * @since  2.1.51
+	 */
+	private function alert_new_ip( $user_id, $user_login, $ip ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( self::OPT_NEW_IP_ALERT, false ) ) {
+			return;
+		}
+		if ( ! class_exists( 'ReportedIP_Hive_Mailer' ) || ! class_exists( 'ReportedIP_Hive_Defaults' ) ) {
+			return;
+		}
+
+		$recipients = ReportedIP_Hive_Defaults::notify_recipients();
+		if ( empty( $recipients ) ) {
+			return;
+		}
+
+		$throttle = 'rip_audit_newip_' . $user_id;
+		if ( get_transient( $throttle ) ) {
+			return;
+		}
+		set_transient( $throttle, 1, self::NEW_IP_ALERT_COOLDOWN );
+
+		if ( ReportedIP_Hive_Option_Routing::get( self::OPT_ANONYMIZE_IP, false ) ) {
+			$ip = self::anonymize_ip( $ip );
+		}
+
+		$body = sprintf(
+			/* translators: 1: login name, 2: IP address, 3: site name */
+			__( 'The account %1$s signed in from %2$s on %3$s. This address has not been used by that account before. If this was expected, no action is needed.', 'reportedip-hive' ),
+			$user_login,
+			$ip,
+			wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES )
+		);
+
+		ReportedIP_Hive_Mailer::get_instance()->send(
+			array(
+				'to'              => implode( ', ', $recipients ),
+				/* translators: %s: login name */
+				'subject'         => sprintf( __( 'New sign-in location for %s', 'reportedip-hive' ), $user_login ),
+				'intro_text'      => __( 'An account signed in from an address it has not used before.', 'reportedip-hive' ),
+				'main_block_html' => '<p>' . esc_html( $body ) . '</p>',
+				'main_block_text' => $body,
+				'security_notice' => array(
+					'ip'        => $ip,
+					'timestamp' => ReportedIP_Hive::format_local_datetime( current_time( 'mysql', true ) ),
+				),
+				'context'         => array( 'source' => 'audit_new_ip' ),
+			)
+		);
 	}
 
 	/**
@@ -305,6 +388,7 @@ class ReportedIP_Hive_Audit_Logger {
 				'event_action' => $action,
 				'data'         => $data,
 				'user_agent'   => $user_agent,
+				'anonymize_ip' => (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_ANONYMIZE_IP, false ),
 			)
 		);
 
@@ -324,11 +408,16 @@ class ReportedIP_Hive_Audit_Logger {
 	 */
 	public static function build_row( array $ctx ) {
 		$data = isset( $ctx['data'] ) && is_array( $ctx['data'] ) ? self::redact( $ctx['data'] ) : array();
+		$ip   = (string) ( $ctx['ip'] ?? '' );
+
+		if ( ! empty( $ctx['anonymize_ip'] ) ) {
+			$ip = self::anonymize_ip( $ip );
+		}
 
 		return array(
 			'blog_id'      => (int) ( $ctx['blog_id'] ?? 0 ),
 			'created_at'   => (string) ( $ctx['created_at'] ?? '' ),
-			'ip'           => substr( (string) ( $ctx['ip'] ?? '' ), 0, 64 ),
+			'ip'           => substr( $ip, 0, 64 ),
 			'user_id'      => empty( $ctx['user_id'] ) ? null : (int) $ctx['user_id'],
 			'username'     => substr( (string) ( $ctx['username'] ?? '' ), 0, 60 ),
 			'event_type'   => substr( (string) ( $ctx['event_type'] ?? '' ), 0, 32 ),
@@ -338,6 +427,39 @@ class ReportedIP_Hive_Audit_Logger {
 			'country_code' => empty( $ctx['country_code'] ) ? null : substr( (string) $ctx['country_code'], 0, 8 ),
 			'user_agent'   => empty( $ctx['user_agent'] ) ? null : substr( (string) $ctx['user_agent'], 0, 255 ),
 		);
+	}
+
+	/**
+	 * Drop the host part of an address so the row keeps its network but
+	 * stops identifying a person.
+	 *
+	 * IPv4 loses the last octet, IPv6 keeps the /64 prefix. Anything that is
+	 * not an address is returned untouched, because an unparsable value is
+	 * not personal data to begin with and silently blanking it would hide a
+	 * bug in whatever produced it.
+	 *
+	 * @param string $ip Raw address.
+	 * @return string
+	 * @since  2.1.51
+	 */
+	public static function anonymize_ip( $ip ) {
+		$ip = trim( (string) $ip );
+
+		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
+			$parts    = explode( '.', $ip );
+			$parts[3] = '0';
+			return implode( '.', $parts );
+		}
+
+		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+			$packed = @inet_pton( $ip ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Validated as IPv6 above; the silence guards against platform builds without IPv6 support.
+			if ( false === $packed ) {
+				return $ip;
+			}
+			return (string) inet_ntop( substr( $packed, 0, 8 ) . str_repeat( "\0", 8 ) );
+		}
+
+		return $ip;
 	}
 
 	/**

@@ -54,6 +54,18 @@ class SettingsKeysAreStableTest extends TestCase {
 	 */
 	private function expected_keys(): array {
 		return array(
+			'reportedip_hive_2fa_enforce_super_admins',
+			'reportedip_hive_audit_anonymize_ip',
+			'reportedip_hive_audit_enabled',
+			'reportedip_hive_audit_new_ip_alert',
+			'reportedip_hive_audit_retention_days',
+			'reportedip_hive_disable_xmlrpc_multicall',
+			'reportedip_hive_notification_cooldown_minutes',
+			'reportedip_hive_notify_event_cap_minutes',
+			'reportedip_hive_processing_timeout_minutes',
+			'reportedip_hive_queue_critical_threshold',
+			'reportedip_hive_queue_max_age_days',
+			'reportedip_hive_queue_warning_threshold',
 			'reportedip_hive_api_endpoint',
 			'reportedip_hive_api_key',
 			'reportedip_hive_cloud_management',

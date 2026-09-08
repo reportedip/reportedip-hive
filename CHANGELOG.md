@@ -70,6 +70,52 @@ All changes to ReportedIP Hive are documented here.
 
 ### Changed
 
+- **Every setting is now one setting everywhere.** Seventy options lived
+  outside the settings registry, so MainWP and the cloud fleet could not manage
+  them and the JSON export left them out: the security headers, the
+  trusted-proxy pair, the application-password and REST limits, the
+  geo-anomaly window, the WooCommerce login monitor, the hide-login probe, the
+  password policy, the caching and report-queue settings and the footer badge.
+  All of them are registry options now, which also means one sanitiser instead
+  of several. The export catalogue is derived from the registry rather than
+  kept alongside it, because the two had drifted by fifty-five keys.
+
+- **An imported settings file can no longer write anything unchecked.** The
+  import used to split incoming values in two: known keys went through the
+  sanitiser, everything else went straight to the option store. That raw path
+  is gone. It mattered most for the trusted client-IP header, where an
+  arbitrary value is the precondition for spoofing every sensor, the whitelist
+  and the block list at once.
+
+- **Every setting explains itself, in all three places.** None of them carried
+  a description in the schema, so MainWP and the fleet showed a bare label for
+  every field and remote management meant guessing. All 169 options now carry
+  one sentence in the registry, and the settings page, the MainWP form and the
+  fleet render the same text. German included.
+
+- **Settings are grouped by what they do.** "Firewall & Bots" had become a
+  drawer of twenty-one options, nine of which decide who may register an
+  account. Registration defence, attack response, adaptive step-up and password
+  policy each have their own section now, and the two XML-RPC switches sit side
+  by side with a sentence on which one to use. No option key changed, so stored
+  fleet policies and site overrides are untouched; both dashboards need one
+  schema reload to show the new grouping.
+
+- **Fourteen options gained a form in wp-admin.** They were configurable from a
+  dashboard but not on the site itself, among them the audit trail switch, the
+  report-queue thresholds behind the health badge, and rule synchronisation,
+  which had no off switch at all.
+
+- **The setup wizard offers the new protections.** Step 4 adds the three
+  lockdown switches that suit almost any site and the sign-up rate limit; step
+  5 adds the two adaptive two-factor triggers a person can judge without a
+  manual. No step was inserted, so nothing renumbers.
+
+- **The audit trail's two dormant options do something now.** IP anonymisation
+  and the new-address alert shipped with the trail and had no reader at all.
+  Anonymisation keeps the network and drops the host; the alert mails the
+  notification recipients, rate-limited per account.
+
 - **Hardening settings are part of the remote settings standard.** The eight
   hardening options (duration, the two failed-login clamps, the reputation
   clamp, realtime detection and the three distributed-detection limits) are

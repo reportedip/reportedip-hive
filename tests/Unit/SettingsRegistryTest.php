@@ -21,6 +21,9 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-frontend.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-hide-login.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -46,6 +49,76 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function expected_remote_kinds(): array {
 			return array(
+				'reportedip_hive_headers_enabled'              => 'bool',
+				'reportedip_hive_header_xcto'                  => 'bool',
+				'reportedip_hive_header_xfo'                   => 'enum',
+				'reportedip_hive_header_referrer'              => 'enum',
+				'reportedip_hive_hsts_enabled'                 => 'bool',
+				'reportedip_hive_hsts_max_age'                 => 'int',
+				'reportedip_hive_hsts_subdomains'              => 'bool',
+				'reportedip_hive_hsts_preload'                 => 'bool',
+				'reportedip_hive_permissions_policy'           => 'text',
+				'reportedip_hive_csp_mode'                     => 'enum',
+				'reportedip_hive_csp_policy'                   => 'textarea',
+				'reportedip_hive_csp_report_uri'               => 'url',
+				'reportedip_hive_coop'                         => 'enum',
+				'reportedip_hive_corp'                         => 'enum',
+				'reportedip_hive_coep'                         => 'enum',
+				'reportedip_hive_monitor_app_passwords' => 'bool',
+				'reportedip_hive_app_password_threshold' => 'int',
+				'reportedip_hive_app_password_timeframe' => 'int',
+				'reportedip_hive_app_password_require_2fa' => 'bool',
+				'reportedip_hive_rest_threshold' => 'int',
+				'reportedip_hive_rest_timeframe' => 'int',
+				'reportedip_hive_rest_sensitive_threshold' => 'int',
+				'reportedip_hive_rest_sensitive_timeframe' => 'int',
+				'reportedip_hive_user_enum_threshold' => 'int',
+				'reportedip_hive_user_enum_timeframe' => 'int',
+				'reportedip_hive_allow_author_archives' => 'bool',
+				'reportedip_hive_monitor_geo_anomaly' => 'bool',
+				'reportedip_hive_geo_window_days' => 'int',
+				'reportedip_hive_geo_revoke_trusted_devices' => 'bool',
+				'reportedip_hive_geo_report_to_api' => 'bool',
+				'reportedip_hive_password_spray_threshold' => 'int',
+				'reportedip_hive_password_spray_timeframe' => 'int',
+				'reportedip_hive_monitor_woocommerce' => 'bool',
+				'reportedip_hive_bot_allowlist_enabled' => 'bool',
+				'reportedip_hive_hide_login_probe_threshold' => 'int',
+				'reportedip_hive_hide_login_probe_timeframe' => 'int',
+				'reportedip_hive_hide_login_token_in_urls' => 'bool',
+				'reportedip_hive_password_min_classes' => 'int',
+				'reportedip_hive_password_policy_all_users' => 'bool',
+				'reportedip_hive_2fa_enforce_super_admins' => 'bool',
+				'reportedip_hive_2fa_extended_remember' => 'bool',
+				'reportedip_hive_2fa_ip_allowlist' => 'textarea',
+				'reportedip_hive_2fa_branded_login' => 'bool',
+				'reportedip_hive_2fa_notify_new_device' => 'bool',
+				'reportedip_hive_2fa_xmlrpc_app_password_only' => 'bool',
+				'reportedip_hive_2fa_password_reset_block_email_only' => 'bool',
+				'reportedip_hive_2fa_frontend_enabled' => 'bool',
+				'reportedip_hive_2fa_frontend_onboarding' => 'bool',
+				'reportedip_hive_2fa_frontend_slug' => 'text',
+				'reportedip_hive_2fa_frontend_setup_slug' => 'text',
+				'reportedip_hive_2fa_frontend_customer_optional' => 'bool',
+				'reportedip_hive_detailed_logging' => 'bool',
+				'reportedip_hive_log_referer_domains' => 'bool',
+				'reportedip_hive_enable_caching' => 'bool',
+				'reportedip_hive_cache_duration' => 'int',
+				'reportedip_hive_negative_cache_duration' => 'int',
+				'reportedip_hive_max_api_calls_per_hour' => 'int',
+				'reportedip_hive_report_cooldown_hours' => 'int',
+				'reportedip_hive_queue_max_age_days' => 'int',
+				'reportedip_hive_queue_warning_threshold' => 'int',
+				'reportedip_hive_queue_critical_threshold' => 'int',
+				'reportedip_hive_processing_timeout_minutes' => 'int',
+				'reportedip_hive_auto_footer_enabled' => 'bool',
+				'reportedip_hive_auto_footer_variant' => 'enum',
+				'reportedip_hive_auto_footer_align' => 'enum',
+				'reportedip_hive_notify_sync_to_api' => 'bool',
+				'reportedip_hive_notify_event_cap_minutes' => 'int',
+				'reportedip_hive_audit_new_ip_alert' => 'bool',
+				'reportedip_hive_trusted_ip_header'             => 'enum',
+				'reportedip_hive_trusted_proxy_ranges'          => 'textarea',
 				'reportedip_hive_monitor_failed_logins'         => 'bool',
 				'reportedip_hive_failed_login_threshold'        => 'int',
 				'reportedip_hive_failed_login_timeframe'        => 'int',
@@ -186,6 +259,19 @@ namespace ReportedIP\Hive\Tests\Unit {
 				if ( 'slug' === $entry['kind'] ) {
 					$this->assertTrue( isset( $entry['sanitize'] ), "Slug key {$key} needs a sanitize override." );
 				}
+				if ( isset( $entry['sanitize'] ) ) {
+					$this->assertTrue(
+						is_callable( $entry['sanitize'] ),
+						"Sanitizer for {$key} is not callable. An unreachable override does not fail loudly: sanitize() silently falls back to the generic kind sanitizer, which then rejects perfectly valid values."
+					);
+				}
+				if ( isset( $entry['tier_gate'] ) ) {
+					$this->assertTrue( is_callable( $entry['tier_gate'] ), "The tier gate of {$key} is not callable." );
+				}
+				$this->assertNotEmpty(
+					$entry['description'] ?? '',
+					"Key {$key} has no description. The settings page, the MainWP form and the cloud fleet all render this one sentence, so an option without it is a bare label on three surfaces at once."
+				);
 			}
 		}
 

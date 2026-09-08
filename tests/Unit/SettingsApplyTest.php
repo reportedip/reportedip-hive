@@ -20,6 +20,8 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-frontend.php';
 
 	if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
 		/**
@@ -193,6 +195,54 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'invalid', $result['results']['reportedip_hive_bot_action']['status'] );
 			$this->assertSame( 1, $result['failed'] );
 			$this->assertFalse( \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_bot_action', false ) );
+		}
+
+		/**
+		 * An imported settings file cannot hand the site an arbitrary
+		 * client-IP header.
+		 *
+		 * Until the trusted-proxy pair joined the registry, the import split
+		 * unknown keys into a legacy batch that went straight to the option
+		 * store with no sanitiser at all. A settings file from a stranger
+		 * could therefore name any header as the source of truth for the
+		 * client IP, which is the precondition for spoofing every sensor,
+		 * the whitelist and the block list at once.
+		 *
+		 * @return void
+		 */
+		public function test_import_cannot_set_an_arbitrary_client_ip_header() {
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_trusted_ip_header' => 'HTTP_X_SPOOFED_BY_ATTACKER' ),
+				'import'
+			);
+
+			$this->assertNotSame(
+				\ReportedIP_Hive_Settings_Apply::STATUS_UNKNOWN,
+				$result['results']['reportedip_hive_trusted_ip_header']['status'],
+				'the key must be known to the registry, or the import falls back to the raw write path'
+			);
+			$this->assertNotSame(
+				'HTTP_X_SPOOFED_BY_ATTACKER',
+				\ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' ),
+				'an unlisted header must never reach the option store'
+			);
+		}
+
+		/**
+		 * Imported proxy ranges keep only entries that are really IP or CIDR.
+		 *
+		 * @return void
+		 */
+		public function test_import_drops_invalid_trusted_proxy_ranges() {
+			\ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_trusted_proxy_ranges' => "10.0.0.0/8\nnot-an-ip\n192.168.1.1" ),
+				'import'
+			);
+
+			$this->assertSame(
+				"10.0.0.0/8\n192.168.1.1",
+				\ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_proxy_ranges', '' )
+			);
 		}
 
 		public function test_atomic_batch_writes_nothing_when_one_key_is_rejected() {

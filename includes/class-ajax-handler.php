@@ -1839,10 +1839,11 @@ class ReportedIP_Hive_Ajax_Handler {
 	/**
 	 * AJAX: persist the security-header configuration from the Hardening tab.
 	 *
-	 * Accepts a JSON payload of option-key => raw-value pairs, validates every
-	 * key against a typed allowlist and sanitises per type. Advanced keys are
-	 * only honoured while the `security_headers_advanced` feature is available,
-	 * so a Free user cannot persist them through a crafted request.
+	 * The header options are registry entries, so the payload goes through
+	 * the same batch writer every other settings card uses. That keeps one
+	 * type table instead of two and lets the registry's tier gate answer for
+	 * the advanced headers: a Free user posting a crafted request now gets a
+	 * named `skipped_tier` rejection rather than a silently dropped key.
 	 *
 	 * @return void
 	 * @since  2.1.2
@@ -1852,48 +1853,13 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		$this->require_admin_capability();
 
-		$raw  = isset( $_POST['payload'] ) ? wp_unslash( $_POST['payload'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON blob; decoded below and each field sanitised per typed allowlist in sanitize_header_value().
+		$raw  = isset( $_POST['payload'] ) ? wp_unslash( $_POST['payload'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON blob; decoded below and every key sanitised by Settings_Apply through the registry.
 		$data = json_decode( (string) $raw, true );
-		if ( ! is_array( $data ) ) {
+		if ( ! is_array( $data ) || empty( $data ) ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid payload.', 'reportedip-hive' ) ) );
 		}
 
-		$h        = 'ReportedIP_Hive_Security_Headers';
-		$basic    = array(
-			$h::OPT_ENABLED  => 'bool',
-			$h::OPT_XCTO     => 'bool',
-			$h::OPT_XFO      => array( 'enum', array( 'SAMEORIGIN', 'DENY', 'off' ) ),
-			$h::OPT_REFERRER => array( 'enum', array( 'no-referrer', 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'no-referrer-when-downgrade' ) ),
-		);
-		$advanced = array(
-			$h::OPT_HSTS_ENABLED    => 'bool',
-			$h::OPT_HSTS_MAX_AGE    => 'int',
-			$h::OPT_HSTS_SUBDOMAINS => 'bool',
-			$h::OPT_HSTS_PRELOAD    => 'bool',
-			$h::OPT_PERMISSIONS     => 'text',
-			$h::OPT_CSP_MODE        => array( 'enum', array( 'off', 'report_only', 'enforce' ) ),
-			$h::OPT_CSP_POLICY      => 'textarea',
-			$h::OPT_CSP_REPORT_URI  => 'url',
-			$h::OPT_COOP            => array( 'enum', array( 'off', 'same-origin' ) ),
-			$h::OPT_CORP            => array( 'enum', array( 'off', 'same-origin' ) ),
-			$h::OPT_COEP            => array( 'enum', array( 'off', 'require-corp' ) ),
-		);
-
-		$allowed = $basic;
-		if ( $h::advanced_available() ) {
-			$allowed += $advanced;
-		}
-
-		foreach ( $allowed as $option => $spec ) {
-			if ( ! array_key_exists( $option, $data ) ) {
-				continue;
-			}
-			$value = $this->sanitize_header_value( $data[ $option ], $spec );
-			if ( null === $value ) {
-				continue;
-			}
-			ReportedIP_Hive_Option_Routing::set( $option, $value );
-		}
+		$this->apply_registry_batch( $data );
 
 		wp_send_json_success();
 	}
@@ -1931,36 +1897,6 @@ class ReportedIP_Hive_Ajax_Handler {
 				'results'   => $result['results'],
 			)
 		);
-	}
-
-	/**
-	 * Sanitise one security-header value against its type spec.
-	 *
-	 * @param mixed                 $value Raw value from the JSON payload.
-	 * @param string|array{0:string,1:string[]} $spec  Type: bool|int|text|textarea|url, or array('enum', $allowed).
-	 * @return mixed Sanitised value, or null when invalid (caller skips it).
-	 * @since  2.1.2
-	 */
-	private function sanitize_header_value( $value, $spec ) {
-		if ( is_array( $spec ) && 'enum' === ( $spec[0] ?? '' ) ) {
-			$value = is_scalar( $value ) ? (string) $value : '';
-			return in_array( $value, $spec[1], true ) ? $value : null;
-		}
-
-		switch ( $spec ) {
-			case 'bool':
-				return (bool) (int) $value;
-			case 'int':
-				return absint( $value );
-			case 'url':
-				$value = is_scalar( $value ) ? (string) $value : '';
-				return '' === $value ? '' : esc_url_raw( $value );
-			case 'textarea':
-				return sanitize_textarea_field( is_scalar( $value ) ? (string) $value : '' );
-			case 'text':
-			default:
-				return sanitize_text_field( is_scalar( $value ) ? (string) $value : '' );
-		}
 	}
 
 	/**

@@ -112,7 +112,9 @@ class ReportedIP_Hive_Admin_Firewall {
 		foreach ( $choices as $value => $choice_label ) {
 			printf( '<option value="%s"%s>%s</option>', esc_attr( (string) $value ), selected( (string) $current, (string) $value, false ), esc_html( $choice_label ) );
 		}
-		echo '</select></div>';
+		echo '</select>';
+		ReportedIP_Hive_Admin_Settings::render_field_help( $opt_key );
+		echo '</div>';
 	}
 
 	/**
@@ -761,6 +763,23 @@ class ReportedIP_Hive_Admin_Firewall {
 
 		echo '</div></div>';
 
+		echo '<div class="rip-card" id="rip-waf-scoring"><div class="rip-card__header"><h2>' . esc_html__( 'Scoring', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		self::render_select_row(
+			'rip-waf-score',
+			ReportedIP_Hive_WAF::OPT_BLOCK_THRESHOLD,
+			__( 'Rule hits before a request is refused', 'reportedip-hive' ),
+			array(
+				'1'  => __( '1 — refuse on the first match', 'reportedip-hive' ),
+				'2'  => __( '2', 'reportedip-hive' ),
+				'3'  => __( '3 — default', 'reportedip-hive' ),
+				'5'  => __( '5', 'reportedip-hive' ),
+				'10' => __( '10 — only obvious attacks', 'reportedip-hive' ),
+			),
+			(string) (int) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_BLOCK_THRESHOLD, 3 )
+		);
+		self::render_card_save_button();
+		echo '</div></div>';
+
 		$this->render_waf_dropin_box();
 		$this->render_waf_exceptions_box();
 	}
@@ -1100,6 +1119,18 @@ class ReportedIP_Hive_Admin_Firewall {
 			'flag'  => __( 'Flag — log spoofers only (recommended)', 'reportedip-hive' ),
 			'block' => __( 'Block — reject confirmed spoofers', 'reportedip-hive' ),
 		);
+		self::render_select_row(
+			'rip-bot-monitor',
+			ReportedIP_Hive_Bot_Verifier::OPT_MONITOR,
+			__( 'Crawler verification sensor', 'reportedip-hive' ),
+			array(
+				'1' => __( 'On', 'reportedip-hive' ),
+				'0' => __( 'Off — do not check crawler identities at all', 'reportedip-hive' ),
+			),
+			ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Bot_Verifier::OPT_MONITOR, true ) ? '1' : '0'
+		);
+		self::render_card_save_button();
+
 		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-bot-action">' . esc_html__( 'Action on a confirmed spoofer', 'reportedip-hive' ) . '</label>';
 		echo '<select id="rip-bot-action" class="rip-select" data-rip-action="reportedip_hive_bot_action" data-rip-param="mode">';
 		foreach ( $actions as $value => $label ) {
@@ -1779,6 +1810,20 @@ class ReportedIP_Hive_Admin_Firewall {
 			$this->render_rule_sync_tiers( false );
 		}
 
+		echo '<div class="rip-card" id="rip-rule-sync-switch"><div class="rip-card__header"><h2>' . esc_html__( 'Rule synchronisation', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		self::render_select_row(
+			'rip-rule-sync-enabled',
+			'reportedip_hive_rule_sync_enabled',
+			__( 'Fetch rules from the community server', 'reportedip-hive' ),
+			array(
+				'1' => __( 'On', 'reportedip-hive' ),
+				'0' => __( 'Off', 'reportedip-hive' ),
+			),
+			ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rule_sync_enabled', true ) ? '1' : '0'
+		);
+		self::render_card_save_button();
+		echo '</div></div>';
+
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Active rulesets', 'reportedip-hive' ) . '</h2>';
 		ReportedIP_Hive_Admin_Settings::render_tier_marker( $priority );
 		echo '</div><div class="rip-card__body">';
@@ -2109,6 +2154,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		);
 		settings_fields( 'reportedip_hive_attack_surface' );
 		echo '<input type="hidden" name="reportedip_hive_disable_xmlrpc" value="0" />';
+		echo '<input type="hidden" name="reportedip_hive_disable_xmlrpc_multicall" value="0" />';
 		echo '<input type="hidden" name="reportedip_hive_disable_feeds" value="0" />';
 		echo '<input type="hidden" name="reportedip_hive_block_admin_guests" value="0" />';
 		echo '<input type="hidden" name="reportedip_hive_block_uploads_php" value="0" />';
@@ -2248,6 +2294,14 @@ class ReportedIP_Hive_Admin_Firewall {
 			__( 'Disable XML-RPC', 'reportedip-hive' ),
 			__( 'Answers xmlrpc.php with the configured block response and removes the pingback methods, the X-Pingback header and the RSD discovery tags. The WordPress mobile apps, Jetpack and remote-publishing tools stop working — check before you switch it on.', 'reportedip-hive' ),
 			$xmlrpc,
+			false
+		);
+
+		self::render_switch_row(
+			'reportedip_hive_disable_xmlrpc_multicall',
+			__( 'Disable XML-RPC multicall only', 'reportedip-hive' ),
+			__( 'The middle ground when you still need XML-RPC. Multicall lets an attacker pack hundreds of password guesses into one request; removing it leaves the rest of the interface working. Redundant while the full switch above is on.', 'reportedip-hive' ),
+			(bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_disable_xmlrpc_multicall', true ),
 			false
 		);
 

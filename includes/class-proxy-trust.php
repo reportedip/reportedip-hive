@@ -62,6 +62,72 @@ final class ReportedIP_Hive_Proxy_Trust {
 	}
 
 	/**
+	 * Client-IP headers a site may be configured to honor.
+	 *
+	 * @var string[]
+	 */
+	const ALLOWED_HEADERS = array(
+		'',
+		'HTTP_CF_CONNECTING_IP',
+		'HTTP_X_REAL_IP',
+		'HTTP_X_FORWARDED_FOR',
+		'HTTP_CLIENT_IP',
+	);
+
+	/**
+	 * Sanitize a submitted client-IP header name.
+	 *
+	 * Anything outside {@see self::ALLOWED_HEADERS} becomes the empty string,
+	 * which means "trust REMOTE_ADDR only". The registry, the settings form
+	 * and every remote transport share this one implementation, because a
+	 * header accepted on one path and rejected on another is exactly how an
+	 * attacker gets to choose their own client IP.
+	 *
+	 * @param mixed $value Raw input.
+	 * @return string One of the allowed header names, or an empty string.
+	 * @since  2.1.51
+	 */
+	public static function sanitize_header( $value ) {
+		$value = is_scalar( $value ) ? trim( (string) $value ) : '';
+
+		return in_array( $value, self::ALLOWED_HEADERS, true ) ? $value : '';
+	}
+
+	/**
+	 * Sanitize a submitted range list down to its valid entries.
+	 *
+	 * @param mixed $value Raw textarea submission.
+	 * @return string Cleaned newline-separated range list.
+	 * @since  2.1.51
+	 */
+	public static function sanitize_ranges( $value ) {
+		return implode( "\n", self::parse_ranges( is_scalar( $value ) ? (string) $value : '' ) );
+	}
+
+	/**
+	 * Number of non-comment, non-blank lines in a raw range submission.
+	 *
+	 * The settings form compares this against the parsed count to tell the
+	 * operator how many entries it had to drop.
+	 *
+	 * @param mixed $value Raw textarea submission.
+	 * @return int
+	 * @since  2.1.51
+	 */
+	public static function count_submitted_ranges( $value ) {
+		$submitted = 0;
+
+		foreach ( preg_split( '/\r\n|\r|\n/', is_scalar( $value ) ? (string) $value : '' ) as $line ) {
+			$line = trim( $line );
+			if ( '' !== $line && 0 !== strpos( $line, '#' ) ) {
+				++$submitted;
+			}
+		}
+
+		return $submitted;
+	}
+
+	/**
 	 * Whether the connecting peer is allowed to supply the client-IP header.
 	 *
 	 * An empty range list means every peer is trusted — that is the
