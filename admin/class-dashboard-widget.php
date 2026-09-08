@@ -31,8 +31,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * behind the layer counter, the score transient and the readiness
  * transient — so rendering the widget issues no HTTP requests. The one
  * exception is a cold readiness cache: recomputing it costs the queue
- * `GROUP BY status` aggregate and one `is_writable()` probe, at most
- * once every five minutes across all viewers.
+ * `GROUP BY status` aggregate and one `is_writable()` probe. On the main
+ * site and in the Network Admin that happens at most once every five
+ * minutes across all viewers. A Multisite sub-site dashboard recomputes
+ * on every render instead: its detector set is narrower (guard and cron
+ * are main-site concerns), so it must never fill the network-wide cache
+ * that the Network Admin reads.
  *
  * @since 2.1.41
  */
