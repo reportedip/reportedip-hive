@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.50
+Stable tag: 2.1.51
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -396,7 +396,7 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
-= Unreleased =
+= 2.1.51 =
 
 New: registration defence. The registration sensor grew from a throwaway-mail check into a rule set with prohibited usernames, e-mail allow or block rules, a per-IP registration rate limit and an opt-in block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts regular expressions and adds registration restricted to allowlisted IP ranges.
 
