@@ -140,7 +140,7 @@ test.describe('user blocking and sessions', () => {
 		resetAdminBaseline();
 		userId = provisionTestUser();
 		wp('option update reportedip_hive_known_tier business');
-		wpTolerant(FORGET_CACHED_TIER_CLI);
+		FORGET_CACHED_TIER_CLI.forEach((cmd) => wpTolerant(cmd));
 		// The spec drives deliberate failed sign-ins; the stock threshold of 5
 		// per 15 minutes is shared with every other spec on this long-lived
 		// stack, and tipping it would IP-block the runner mid-suite.
@@ -150,12 +150,12 @@ test.describe('user blocking and sessions', () => {
 	test.afterAll(() => {
 		wpTolerant(`user delete ${TEST_USER} --yes`);
 		wpTolerant('option delete reportedip_hive_known_tier reportedip_hive_failed_login_threshold');
-		wpTolerant(FORGET_CACHED_TIER_CLI);
+		FORGET_CACHED_TIER_CLI.forEach((cmd) => wpTolerant(cmd));
 	});
 
 	test('sessions page is locked below Business', async ({ page }) => {
 		wpTolerant('option delete reportedip_hive_known_tier');
-		wpTolerant(FORGET_CACHED_TIER_CLI);
+		FORGET_CACHED_TIER_CLI.forEach((cmd) => wpTolerant(cmd));
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/users.php?page=reportedip-hive-sessions');
 
@@ -166,7 +166,7 @@ test.describe('user blocking and sessions', () => {
 
 	test('sessions table renders on Business', async ({ page }) => {
 		wp('option update reportedip_hive_known_tier business');
-		wpTolerant(FORGET_CACHED_TIER_CLI);
+		FORGET_CACHED_TIER_CLI.forEach((cmd) => wpTolerant(cmd));
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/users.php?page=reportedip-hive-sessions');
 

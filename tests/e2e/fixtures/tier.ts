@@ -38,5 +38,14 @@ export function forceTierPhp(tier: string): string {
 	].join(' ');
 }
 
-/** WP-CLI equivalent for specs that drive the plan through `wp`, not `wp eval`. */
-export const FORGET_CACHED_TIER_CLI = 'transient delete reportedip_hive_api_status reportedip_hive_relay_quota';
+/**
+ * WP-CLI equivalent for specs that drive the plan through `wp`, not `wp eval`.
+ *
+ * Two commands, not one: `wp transient delete` takes a single key and answers
+ * a second one with "Too many positional arguments", which a tolerant wrapper
+ * swallows into a silent no-op.
+ */
+export const FORGET_CACHED_TIER_CLI = [
+	'transient delete reportedip_hive_api_status',
+	'transient delete reportedip_hive_relay_quota',
+];
