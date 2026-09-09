@@ -20,7 +20,16 @@ import { clearMailbox, MAILPIT_BASE_URL } from '../../fixtures/reset-flow';
 const MS_COMPOSE = 'docker-compose.multisite.yml';
 const MS_SERVICE = 'wordpress-ms';
 
-async function getLatestEmailCode(timeoutMs = 15_000): Promise<string> {
+/**
+ * Wait for the 2FA mail and read the six-digit code out of it.
+ *
+ * The default spans a whole server-side send on this stack, where a wp-admin
+ * round trip through the Windows bind mount takes forty to sixty seconds
+ * under suite load. A tighter cap does not detect a broken mail path any
+ * earlier, it only turns machine load into a red test: the mail either
+ * arrives or the wait fails either way.
+ */
+async function getLatestEmailCode(timeoutMs = 90_000): Promise<string> {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
         const listRes = await fetch(`${MAILPIT_BASE_URL}/api/v1/messages?limit=1`);
