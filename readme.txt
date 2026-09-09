@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.51
+Stable tag: 2.1.52
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -395,6 +395,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.52 =
+
+Security: a comment waiting for approval is no longer treated as spam. The comment sensor read the approval state WordPress had already decided on and counted "held for moderation" as a spam verdict, so on a site where every comment needs manual approval, ordinary readers were logged as spammers, counted towards the block ladder and reported to the community network.
+
+New: comment spam filter. Every incoming comment is scored on link count, link density, the number of distinct domains, throwaway mail domains, giveaway top-level domains, a domain in the author name and a body that carries no message behind a link. Several signals have to agree before a comment counts. The default action files it as spam for review; rejecting it outright is opt-in. Free on every plan.
+
+Changed: a comment that trips the honeypot now counts towards the per-address comment counter, so a bot walking into the trap repeatedly reaches the block threshold.
 
 = 2.1.51 =
 

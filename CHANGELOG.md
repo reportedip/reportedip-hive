@@ -2,6 +2,39 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.52] — 2026-09-09
+
+### Security
+
+- **A comment waiting for approval is no longer treated as spam.** The comment
+  sensor read the approval state WordPress had already decided on and counted
+  `0` as a spam verdict. On a site with "comment must be manually approved"
+  switched on, that state is what every ordinary reader's comment gets, so
+  regular visitors were logged as comment spam, counted towards the block ladder
+  and reported to the community network. Only an actual spam verdict counts now.
+
+### New
+
+- **Comment spam filter.** Hive forms its own opinion about an incoming comment
+  instead of borrowing WordPress's. A comment is scored on the number of links,
+  the share of the body they take up, how many distinct domains it carries, a
+  throwaway mail domain, giveaway top-level domains, a domain in the author name,
+  a body that carries no message behind a link, and a missing comment-form field.
+  Several signals have to agree before a comment counts, so a reader who leaves
+  their website address behind is not caught by one signal alone. The default
+  action files the comment as spam, where it can be reviewed; rejecting it
+  outright is opt-in, and the filter can be switched off. Free on every plan,
+  configurable on Firewall → Spam Defence.
+
+- The log entry for a spam comment now names the score and the reasons behind
+  it, instead of only the length of the body.
+
+### Changed
+
+- A comment that trips the honeypot now counts towards the per-address comment
+  counter. A bot could previously walk into the trap any number of times without
+  ever reaching the block threshold.
+
 ## [2.1.51] — 2026-09-09
 
 ### New
