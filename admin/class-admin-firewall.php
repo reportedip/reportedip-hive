@@ -475,20 +475,24 @@ class ReportedIP_Hive_Admin_Firewall {
 			);
 		}
 
-		$disp_action = class_exists( 'ReportedIP_Hive_Disposable_Email' )
+		$disp_action   = class_exists( 'ReportedIP_Hive_Disposable_Email' )
 			? ReportedIP_Hive_Disposable_Email::get_instance()->action()
 			: 'off';
-		$honeypot    = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_honeypot_enabled', true );
-		$spam_active = ( 'off' !== $disp_action ) || $honeypot;
-		$rows[]      = array(
+		$honeypot      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_honeypot_enabled', true );
+		$filter_action = class_exists( 'ReportedIP_Hive_Comment_Spam_Filter' )
+			? ReportedIP_Hive_Comment_Spam_Filter::get_instance()->action()
+			: 'off';
+		$spam_active   = ( 'off' !== $disp_action ) || $honeypot || ( 'off' !== $filter_action );
+		$rows[]        = array(
 			'label'  => __( 'Spam Defence', 'reportedip-hive' ),
 			'status' => $spam_active ? __( 'Active', 'reportedip-hive' ) : __( 'Off', 'reportedip-hive' ),
 			'badge'  => $spam_active ? 'rip-badge--success' : 'rip-badge--neutral',
 			'detail' => sprintf(
-				/* translators: 1: disposable-email mode, 2: honeypot state. */
-				__( 'Disposable e-mail: %1$s · Comment honeypot: %2$s', 'reportedip-hive' ),
+				/* translators: 1: disposable-email mode, 2: honeypot state, 3: comment filter mode. */
+				__( 'Disposable e-mail: %1$s · Comment honeypot: %2$s · Comment filter: %3$s', 'reportedip-hive' ),
 				ucfirst( $disp_action ),
-				$honeypot ? __( 'on', 'reportedip-hive' ) : __( 'off', 'reportedip-hive' )
+				$honeypot ? __( 'on', 'reportedip-hive' ) : __( 'off', 'reportedip-hive' ),
+				ucfirst( $filter_action )
 			),
 			'tab'    => 'spam',
 		);
@@ -1367,6 +1371,60 @@ class ReportedIP_Hive_Admin_Firewall {
 			'<p><button type="button" class="rip-button rip-button--secondary" data-rip-action="reportedip_hive_spam_toggle" data-rip-field="honeypot">%s</button></p>',
 			esc_html( $honeypot ? __( 'Disable honeypot', 'reportedip-hive' ) : __( 'Enable honeypot', 'reportedip-hive' ) )
 		);
+		echo '</div></div>';
+
+		$this->render_comment_filter_card();
+	}
+
+	/**
+	 * Render the comment spam filter card: the action selector plus the two
+	 * counter fields that decide when a repeat offender is blocked.
+	 *
+	 * @since 2.1.52
+	 * @return void
+	 */
+	private function render_comment_filter_card() {
+		$action    = class_exists( 'ReportedIP_Hive_Comment_Spam_Filter' )
+			? ReportedIP_Hive_Comment_Spam_Filter::get_instance()->action()
+			: 'spam';
+		$threshold = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 5 );
+		$window    = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 60 );
+
+		echo '<div class="rip-card" id="rip-comment-filter"><div class="rip-card__header"><h2>' . esc_html__( 'Comment Spam Filter', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Reads every incoming comment and scores it on link count, link density, throwaway domains, giveaway top-level domains, a link in the author name and a body that carries no message. A comment needs several of those before it counts, so an ordinary reader who leaves their website address is not caught by one signal alone.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'Filing it as spam is the safe setting, because the comment lands in the spam folder where you can review it. Rejecting refuses the comment outright and leaves the visitor with an error page.', 'reportedip-hive' ) . '</p>';
+
+		$actions = array(
+			'spam'  => __( 'File as spam (recommended)', 'reportedip-hive' ),
+			'block' => __( 'Reject the comment outright', 'reportedip-hive' ),
+			'off'   => __( 'Off, leave the decision to WordPress', 'reportedip-hive' ),
+		);
+		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-comment-spam-action">' . esc_html__( 'Action on a comment scored as spam', 'reportedip-hive' ) . '</label>';
+		printf( '<select id="rip-comment-spam-action" class="rip-select" data-opt="%s">', esc_attr( ReportedIP_Hive_Comment_Spam_Filter::OPT_ACTION ) );
+		foreach ( $actions as $value => $label ) {
+			printf(
+				'<option value="%s"%s>%s</option>',
+				esc_attr( $value ),
+				selected( $action, $value, false ),
+				esc_html( $label )
+			);
+		}
+		echo '</select></div>';
+
+		echo '<p class="rip-help-text">' . esc_html__( 'An address that keeps producing spam comments is blocked once it passes the counter below, and reported to the community network.', 'reportedip-hive' ) . '</p>';
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-comment-threshold">%1$s</label><input type="number" id="rip-comment-threshold" class="rip-input" min="1" max="50" data-opt="%2$s" value="%3$s" /></div>',
+			esc_html__( 'Spam comments per window', 'reportedip-hive' ),
+			esc_attr( 'reportedip_hive_comment_spam_threshold' ),
+			esc_attr( (string) $threshold )
+		);
+		printf(
+			'<div class="rip-form-row"><label class="rip-form-label" for="rip-comment-window">%1$s</label><input type="number" id="rip-comment-window" class="rip-input" min="1" max="1440" data-opt="%2$s" value="%3$s" /></div>',
+			esc_html__( 'Window (minutes)', 'reportedip-hive' ),
+			esc_attr( 'reportedip_hive_comment_spam_timeframe' ),
+			esc_attr( (string) $window )
+		);
+		self::render_card_save_button();
 		echo '</div></div>';
 	}
 

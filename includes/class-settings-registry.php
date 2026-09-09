@@ -713,6 +713,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Comment honeypot', 'reportedip-hive' ),
 				'description' => __( 'Add a field to the comment form that a person never fills in and a bot always does.', 'reportedip-hive' ),
 			),
+			'reportedip_hive_comment_spam_action'          => array(
+				'section'     => 'registration',
+				'kind'        => 'enum',
+				'allowed'     => array( 'spam', 'off', 'block' ),
+				'remote'      => true,
+				'label'       => __( 'Action on a comment scored as spam', 'reportedip-hive' ),
+				'description' => __( 'Whether a comment that trips several spam signals is filed as spam, rejected outright, or left to WordPress.', 'reportedip-hive' ),
+			),
 			'reportedip_hive_decoy_pathblock_enabled'      => array(
 				'section'     => 'waf',
 				'kind'        => 'bool',

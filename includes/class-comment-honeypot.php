@@ -163,10 +163,16 @@ class ReportedIP_Hive_Comment_Honeypot {
 		}
 
 		if ( class_exists( 'ReportedIP_Hive' ) ) {
+			$hive   = ReportedIP_Hive::get_instance();
 			$ip     = ReportedIP_Hive::get_client_ip();
-			$logger = ReportedIP_Hive::get_instance()->get_logger();
+			$logger = $hive->get_logger();
 			if ( $logger instanceof ReportedIP_Hive_Logger ) {
 				$logger->log_security_event( 'comment_honeypot', $ip, array(), 'low' );
+			}
+
+			$monitor = $hive->get_security_monitor();
+			if ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) {
+				$monitor->check_comment_spam_threshold( $ip );
 			}
 		}
 

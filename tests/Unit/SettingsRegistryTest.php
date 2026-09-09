@@ -161,6 +161,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_disposable_email_action'       => 'enum',
 				'reportedip_hive_block_email_relays'            => 'bool',
 				'reportedip_hive_comment_honeypot_enabled'      => 'bool',
+				'reportedip_hive_comment_spam_action'           => 'enum',
 				'reportedip_hive_prohibited_usernames'          => 'textarea',
 				'reportedip_hive_prohibited_usernames_baseline' => 'bool',
 				'reportedip_hive_email_rule_mode'               => 'enum',

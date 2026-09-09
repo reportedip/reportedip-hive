@@ -113,6 +113,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_disposable_email_action'         => 'monitor',
 		'reportedip_hive_block_email_relays'              => false,
 		'reportedip_hive_comment_honeypot_enabled'        => true,
+		'reportedip_hive_comment_spam_action'             => 'spam',
 
 		'reportedip_hive_prohibited_usernames'            => '',
 		'reportedip_hive_prohibited_usernames_baseline'   => true,
