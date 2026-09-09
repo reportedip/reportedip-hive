@@ -268,7 +268,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		private function reset_guard(): void {
 			foreach ( array( 'recorded', 'verified' ) as $name ) {
 				$property = new \ReflectionProperty( \ReportedIP_Hive_Login_Context::class, $name );
-				$property->setAccessible( true );
 				$property->setValue( null, array() );
 			}
 		}

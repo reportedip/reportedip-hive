@@ -97,7 +97,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$manager = \ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
 			$method  = new ReflectionMethod( \ReportedIP_Hive_WAF_Dropin_Manager::class, 'generate_prepend' );
-			$method->setAccessible( true );
 			$guard_source = (string) $method->invoke( $manager );
 
 			/* tempnam() creates the file it names; appending an extension would

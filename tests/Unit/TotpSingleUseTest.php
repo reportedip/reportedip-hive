@@ -50,7 +50,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function code_for_step( int $step ): string {
 			$method = new ReflectionMethod( \ReportedIP_Hive_Two_Factor_TOTP::class, 'calculate_code' );
-			$method->setAccessible( true );
 
 			return (string) $method->invoke( null, self::SECRET, $step );
 		}
@@ -62,7 +61,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function current_step(): int {
 			$method = new ReflectionMethod( \ReportedIP_Hive_Two_Factor_TOTP::class, 'get_time_step' );
-			$method->setAccessible( true );
 
 			return (int) $method->invoke( null );
 		}
