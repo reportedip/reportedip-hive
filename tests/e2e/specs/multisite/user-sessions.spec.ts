@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import type { Page } from '@playwright/test';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
+import { FORGET_CACHED_TIER_CLI } from '../../fixtures/tier';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
 
 /**
@@ -101,6 +102,7 @@ test.describe('network user blocking and sessions', () => {
 		resetAdminBaseline(MS_COMPOSE, MS_SERVICE);
 		userId = provisionTestUser();
 		wpTolerant('network meta delete 1 reportedip_hive_known_tier');
+		wpTolerant(FORGET_CACHED_TIER_CLI);
 		// The spec drives a deliberate failed sign-in; the stock threshold of 5
 		// per 15 minutes is shared with every other spec on this long-lived
 		// stack, and tipping it would IP-block the runner mid-suite.
@@ -110,11 +112,13 @@ test.describe('network user blocking and sessions', () => {
 	test.afterAll(() => {
 		wpTolerant(`user delete ${TEST_USER} --network --yes`);
 		wpTolerant('network meta delete 1 reportedip_hive_known_tier');
+		wpTolerant(FORGET_CACHED_TIER_CLI);
 		wpTolerant('network meta delete 1 reportedip_hive_failed_login_threshold');
 	});
 
 	test('network sessions page is locked below Business', async ({ page }) => {
 		wpTolerant('network meta delete 1 reportedip_hive_known_tier');
+		wpTolerant(FORGET_CACHED_TIER_CLI);
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/network/users.php?page=reportedip-hive-sessions');
 
@@ -125,6 +129,7 @@ test.describe('network user blocking and sessions', () => {
 
 	test('network sessions table renders on Business', async ({ page }) => {
 		wp('network meta update 1 reportedip_hive_known_tier business');
+		wpTolerant(FORGET_CACHED_TIER_CLI);
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/network/users.php?page=reportedip-hive-sessions');
 

@@ -62,11 +62,26 @@ Response (`$information['reportedip_hive']['settings_schema']`):
 
 Labels are translated into the site locale at export time.
 
-Sections, in export order: `detection`, `blocking`, `waf`, `hide_login`,
-`lockdown` (attack-surface switches: REST API access, XML-RPC, feeds,
-wp-admin for visitors, PHP execution in uploads, software fingerprints),
-`account_security`, `privacy_logs`, `notifications`. A section is pure
-presentation: dashboards group fields by it and ignore ids they do not know.
+Sections, in export order: `detection`, `blocking`, `waf`, `registration`,
+`hardening_mode`, `hide_login`, `headers`, `lockdown` (attack-surface
+switches: REST API access, XML-RPC, feeds, wp-admin for visitors, PHP
+execution in uploads, software fingerprints), `account_security`,
+`twofa_policies`, `account_password`, `privacy_logs`, `notifications`,
+`performance`. A section is pure presentation: dashboards group fields by it
+and ignore ids they do not know.
+
+`sections` is a **list**, not a map. Each entry is an object carrying `id`,
+`label`, `description` and `keys`; look a section up by its `id`, not by an
+array key.
+
+A cached schema goes stale silently. Both dashboards fetch the schema once
+and keep it until someone refreshes it, so a site that has since updated
+knows options the cached copy does not, and the form keeps rendering the old
+shape. Detecting that needs no field of its own: the envelope carries
+`plugin_version` and every site reports its own `version` (MainWP sync blob)
+or `hive_version` (fleet domain row). A dashboard that compares the two shows
+a "schema outdated" state and prompts for a refresh; both do since Hive
+2.1.51.
 
 ### `reportedip_hive_settings_get`
 

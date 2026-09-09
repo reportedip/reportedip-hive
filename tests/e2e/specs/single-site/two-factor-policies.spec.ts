@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import type { Page } from '@playwright/test';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
+import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
 
 /**
  * Adaptive 2FA policies (Professional, since 2.1.51): the settings matrix
@@ -95,7 +96,7 @@ test.describe('adaptive 2fa policies', () => {
 			"$old_log = ReportedIP_Hive_Option_Routing::get('reportedip_hive_log_level', 'info');",
 			'foreach (ReportedIP_Hive_Two_Factor_Policies::TRIGGERS as $t) { ReportedIP_Hive_Option_Routing::delete(ReportedIP_Hive_Two_Factor_Policies::option_key($t)); }',
 			"foreach (array('reportedip_hive_2fa_policy_days', 'reportedip_hive_2fa_policy_logins', 'reportedip_hive_2fa_policy_sessions', ReportedIP_Hive_Login_Context::OPT_ADMIN_VERIFIED) as $k) { ReportedIP_Hive_Option_Routing::delete($k); }",
-			"ReportedIP_Hive_Option_Routing::set('reportedip_hive_known_tier', 'professional');",
+			forceTierPhp('professional'),
 			"ReportedIP_Hive_Option_Routing::set('reportedip_hive_2fa_enabled_global', '1');",
 			"ReportedIP_Hive_Option_Routing::set('reportedip_hive_log_level', 'info');",
 			"ReportedIP_Hive_Option_Routing::set('reportedip_hive_hide_login_enabled', '0');",
@@ -128,6 +129,7 @@ test.describe('adaptive 2fa policies', () => {
 		wpEval([
 			'foreach (ReportedIP_Hive_Two_Factor_Policies::TRIGGERS as $t) { ReportedIP_Hive_Option_Routing::delete(ReportedIP_Hive_Two_Factor_Policies::option_key($t)); }',
 			`foreach (array('reportedip_hive_2fa_policy_days', 'reportedip_hive_2fa_policy_logins', 'reportedip_hive_2fa_policy_sessions', 'reportedip_hive_known_tier', '${LATCH_KEY}') as $k) { ReportedIP_Hive_Option_Routing::delete($k); }`,
+			FORCE_FREE_PHP,
 			`ReportedIP_Hive_Option_Routing::set('reportedip_hive_2fa_enabled_global', '${twoFactorWasOn}');`,
 			`ReportedIP_Hive_Option_Routing::set('reportedip_hive_log_level', '${logLevelWas}');`,
 			"require_once ABSPATH . 'wp-admin/includes/user.php';",
@@ -176,9 +178,8 @@ test.describe('adaptive 2fa policies', () => {
 
 	test('the free plan refuses a policy role list', async ({ page }) => {
 		wpEval([
-			"ReportedIP_Hive_Option_Routing::delete('reportedip_hive_known_tier');",
+			FORCE_FREE_PHP,
 			"ReportedIP_Hive_Option_Routing::delete(ReportedIP_Hive_Two_Factor_Policies::option_key('new_ip'));",
-			"delete_transient('reportedip_hive_api_status');",
 			"echo 'FREE';",
 		]);
 
@@ -213,8 +214,7 @@ test.describe('adaptive 2fa policies', () => {
 		expect(['', '[]']).toContain(stored);
 
 		wpEval([
-			"ReportedIP_Hive_Option_Routing::set('reportedip_hive_known_tier', 'professional');",
-			"delete_transient('reportedip_hive_api_status');",
+			forceTierPhp('professional'),
 			"echo 'PRO';",
 		]);
 	});

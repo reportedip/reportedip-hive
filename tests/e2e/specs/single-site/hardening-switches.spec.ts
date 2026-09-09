@@ -314,8 +314,11 @@ test.describe('attack surface switches', () => {
 		// The saved notice is the proof the round trip through options.php
 		// completed. `waitForURL` is not used: it did not resolve on this stack
 		// even after the redirect carrying `settings-updated=true` had been
-		// followed and the notice was on screen.
-		await expect(page.locator('body')).toContainText('Settings saved.', { timeout: 90_000 });
+		// followed and the notice was on screen. The wait gets the test's whole
+		// budget rather than a tighter one of its own: this step takes about
+		// twelve seconds on an idle machine and timed out at ninety during a
+		// full suite run, so a shorter cap only ever reports machine load.
+		await expect(page.locator('body')).toContainText('Settings saved.', { timeout: 200_000 });
 
 		// Each toggle ships a hidden `value="0"` companion under the same name,
 		// so the checkbox has to be addressed by type.

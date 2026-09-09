@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
+import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
 
 /**
@@ -52,7 +53,7 @@ test.describe('network 2fa policies on a site page', () => {
 		resetAdminBaseline(MS_COMPOSE, MS_SERVICE);
 		wpEval([
 			'foreach (ReportedIP_Hive_Two_Factor_Policies::TRIGGERS as $t) { ReportedIP_Hive_Option_Routing::delete(ReportedIP_Hive_Two_Factor_Policies::option_key($t)); }',
-			"ReportedIP_Hive_Option_Routing::set('reportedip_hive_known_tier', 'professional');",
+			forceTierPhp('professional'),
 			"delete_transient('reportedip_hive_api_status');",
 			`ReportedIP_Hive_Option_Routing::set('${POLICY_KEY}', wp_json_encode(array('editor')));`,
 			"echo 'SEEDED';",
@@ -62,7 +63,7 @@ test.describe('network 2fa policies on a site page', () => {
 	test.afterAll(() => {
 		wpEval([
 			'foreach (ReportedIP_Hive_Two_Factor_Policies::TRIGGERS as $t) { ReportedIP_Hive_Option_Routing::delete(ReportedIP_Hive_Two_Factor_Policies::option_key($t)); }',
-			"ReportedIP_Hive_Option_Routing::delete('reportedip_hive_known_tier');",
+			FORCE_FREE_PHP,
 			"echo 'CLEANED';",
 		]);
 	});

@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import type { APIRequestContext, Page, Response } from '@playwright/test';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
+import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
 
 /**
  * Registration rules (since 2.1.51).
@@ -115,7 +116,7 @@ test.describe('registration rules', () => {
 			echo (int) get_option('users_can_register');
 			update_option('users_can_register', 1);
 			foreach (ReportedIP_Hive_Registration_Guard::OPTION_KEYS as $key) { ReportedIP_Hive_Option_Routing::delete($key); }
-			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_known_tier');
+			${FORCE_FREE_PHP}
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_disposable_email_action');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_block_email_relays');
 			ReportedIP_Hive_Option_Routing::set('reportedip_hive_registration_limit_enabled', 0);
@@ -130,7 +131,7 @@ test.describe('registration rules', () => {
 			require_once ABSPATH . 'wp-admin/includes/user.php';
 			update_option('users_can_register', ${registrationWasOpen === '1' ? 1 : 0});
 			foreach (ReportedIP_Hive_Registration_Guard::OPTION_KEYS as $key) { ReportedIP_Hive_Option_Routing::delete($key); }
-			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_known_tier');
+			${FORCE_FREE_PHP}
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_disposable_email_action');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_block_email_relays');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_block_user_enumeration');
@@ -342,7 +343,7 @@ test.describe('registration rules', () => {
 
 	test('the free plan refuses an eleventh entry and keeps the stored list', async ({ page }) => {
 		php(`
-			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_known_tier');
+			${FORCE_FREE_PHP}
 			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_USERNAMES, '${KEPT_LIST}');
 			echo 'ready';
 		`);
@@ -373,7 +374,7 @@ test.describe('registration rules', () => {
 	});
 
 	test('Professional accepts eleven entries and a regular expression', async ({ page }) => {
-		php(`ReportedIP_Hive_Option_Routing::set('reportedip_hive_known_tier', 'professional'); echo 'pro';`);
+		php(`${forceTierPhp('professional')} echo 'pro';`);
 
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=spam');

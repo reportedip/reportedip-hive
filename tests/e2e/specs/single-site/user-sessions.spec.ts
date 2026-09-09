@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import type { Page } from '@playwright/test';
 import { test, expect, loginAsAdmin, ADMIN_USER } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
+import { FORGET_CACHED_TIER_CLI } from '../../fixtures/tier';
 
 /**
  * Account blocking and the session manager (Business, since 2.1.51).
@@ -139,6 +140,7 @@ test.describe('user blocking and sessions', () => {
 		resetAdminBaseline();
 		userId = provisionTestUser();
 		wp('option update reportedip_hive_known_tier business');
+		wpTolerant(FORGET_CACHED_TIER_CLI);
 		// The spec drives deliberate failed sign-ins; the stock threshold of 5
 		// per 15 minutes is shared with every other spec on this long-lived
 		// stack, and tipping it would IP-block the runner mid-suite.
@@ -148,10 +150,12 @@ test.describe('user blocking and sessions', () => {
 	test.afterAll(() => {
 		wpTolerant(`user delete ${TEST_USER} --yes`);
 		wpTolerant('option delete reportedip_hive_known_tier reportedip_hive_failed_login_threshold');
+		wpTolerant(FORGET_CACHED_TIER_CLI);
 	});
 
 	test('sessions page is locked below Business', async ({ page }) => {
 		wpTolerant('option delete reportedip_hive_known_tier');
+		wpTolerant(FORGET_CACHED_TIER_CLI);
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/users.php?page=reportedip-hive-sessions');
 
@@ -162,6 +166,7 @@ test.describe('user blocking and sessions', () => {
 
 	test('sessions table renders on Business', async ({ page }) => {
 		wp('option update reportedip_hive_known_tier business');
+		wpTolerant(FORGET_CACHED_TIER_CLI);
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/users.php?page=reportedip-hive-sessions');
 
