@@ -4,7 +4,7 @@
  * Plugin URI: https://reportedip.com
  * Description: Community-powered WordPress security — real-time threat intelligence
  * with 6-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.1.52
+ * Version: 2.1.53
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.com
  * License: GPL-2.0-or-later
@@ -55,7 +55,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.1.52' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.1.53' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -432,6 +432,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-bot-verifier.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-disposable-email.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-registration-guard.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-form-proof.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-spam-filter.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
@@ -554,6 +555,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Bot_Verifier::get_instance();
 		ReportedIP_Hive_Disposable_Email::get_instance();
 		ReportedIP_Hive_Registration_Guard::get_instance();
+		ReportedIP_Hive_Form_Proof::get_instance();
 		ReportedIP_Hive_Comment_Honeypot::get_instance();
 		ReportedIP_Hive_Comment_Spam_Filter::get_instance();
 		ReportedIP_Hive_Security_Headers::get_instance();
@@ -619,6 +621,11 @@ class ReportedIP_Hive {
 		}
 
 		self::set_default_options_static();
+
+		if ( ! class_exists( 'ReportedIP_Hive_Form_Proof' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-form-proof.php';
+		}
+		ReportedIP_Hive_Form_Proof::get_instance()->ensure_field_name();
 
 		ReportedIP_Hive_Cron_Handler::schedule_cron_jobs_static();
 
@@ -1545,6 +1552,7 @@ class ReportedIP_Hive {
 			$log_data['author_hash'] = hash( 'sha256', $commentdata['comment_author'] . wp_salt() );
 		}
 
+		$verdict = null;
 		if ( class_exists( 'ReportedIP_Hive_Comment_Spam_Filter' ) ) {
 			$verdict = ReportedIP_Hive_Comment_Spam_Filter::get_instance()->last_verdict();
 			if ( is_array( $verdict ) ) {
@@ -1557,7 +1565,10 @@ class ReportedIP_Hive {
 
 		$this->logger->log_security_event( 'comment_spam', $ip_address, $log_data );
 
-		$this->security_monitor->check_comment_spam_threshold( $ip_address );
+		if ( ! class_exists( 'ReportedIP_Hive_Comment_Spam_Filter' )
+			|| ReportedIP_Hive_Comment_Spam_Filter::verdict_may_block( $verdict ) ) {
+			$this->security_monitor->check_comment_spam_threshold( $ip_address );
+		}
 	}
 
 	/**

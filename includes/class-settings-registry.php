@@ -713,6 +713,20 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Comment honeypot', 'reportedip-hive' ),
 				'description' => __( 'Add a field to the comment form that a person never fills in and a bot always does.', 'reportedip-hive' ),
 			),
+			'reportedip_hive_form_proof_enabled'           => array(
+				'section'     => 'registration',
+				'kind'        => 'bool',
+				'remote'      => true,
+				'label'       => __( 'Form execution proof', 'reportedip-hive' ),
+				'description' => __( 'Check whether a comment, sign-up or password reset came from a browser that actually rendered the form, instead of from a script posting straight at the address.', 'reportedip-hive' ),
+			),
+			'reportedip_hive_form_proof_login_forms'       => array(
+				'section'     => 'registration',
+				'kind'        => 'bool',
+				'remote'      => true,
+				'label'       => __( 'Apply the proof to sign-up and password reset', 'reportedip-hive' ),
+				'description' => __( 'A comment that fails the check is filed for review, a sign-up or password reset that fails is refused. Switch this off to keep the comment protection while leaving both login forms untouched.', 'reportedip-hive' ),
+			),
 			'reportedip_hive_comment_spam_action'          => array(
 				'section'     => 'registration',
 				'kind'        => 'enum',

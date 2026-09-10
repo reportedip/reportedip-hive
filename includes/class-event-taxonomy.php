@@ -60,6 +60,7 @@ class ReportedIP_Hive_Event_Taxonomy {
 
 		'comment_spam'                => 'spam',
 		'comment_honeypot'            => 'spam',
+		'form_proof_failed'           => 'spam',
 		'xmlrpc_abuse'                => 'spam',
 		'disposable_email'            => 'spam',
 		'prohibited_username'         => 'spam',

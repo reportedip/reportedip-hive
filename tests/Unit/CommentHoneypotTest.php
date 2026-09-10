@@ -42,12 +42,33 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( \ReportedIP_Hive_Comment_Honeypot::is_sprung( array( 'comment' => 'hello' ) ) );
 		}
 
-		public function test_field_markup_is_accessibility_hidden(): void {
-			$markup = \ReportedIP_Hive_Comment_Honeypot::get_instance()->field_markup();
-			$this->assertStringContainsString( 'aria-hidden="true"', $markup );
-			$this->assertStringContainsString( 'rip-hp-field', $markup );
-			$this->assertStringContainsString( 'reportedip_hive_hp', $markup );
-			$this->assertStringContainsString( 'tabindex="-1"', $markup );
+		/**
+		 * The anchor is rendered on `comment_form`, not on
+		 * `comment_form_after_fields`. WordPress only fires the latter in the
+		 * signed-out branch of `comment_form()`, so an anchor placed there is
+		 * missing for every logged-in subscriber and customer.
+		 */
+		public function test_the_anchor_is_rendered_on_a_hook_that_always_fires(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-comment-honeypot.php' );
+
+			$this->assertStringContainsString( "add_action( 'comment_form', array( \$this, 'render_field' ) )", $source );
+			$this->assertStringNotContainsString( 'comment_form_after_fields', $source );
+		}
+
+		/**
+		 * Since 2.1.53 a filled decoy is scored, not answered with a 403. The
+		 * hard rejection lives in one place, the configured spam action.
+		 */
+		public function test_a_filled_decoy_no_longer_ends_the_request(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-comment-honeypot.php' );
+			$start  = strpos( $source, 'public function check_comment(' );
+
+			$this->assertNotFalse( $start, 'check_comment() not found.' );
+
+			$body = substr( $source, $start );
+
+			$this->assertStringNotContainsString( 'wp_die(', $body );
+			$this->assertStringContainsString( 'return $commentdata;', $body );
 		}
 	}
 }

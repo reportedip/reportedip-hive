@@ -478,7 +478,8 @@ class ReportedIP_Hive_Admin_Firewall {
 		$disp_action   = class_exists( 'ReportedIP_Hive_Disposable_Email' )
 			? ReportedIP_Hive_Disposable_Email::get_instance()->action()
 			: 'off';
-		$honeypot      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_honeypot_enabled', true );
+		$honeypot      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_honeypot_enabled', true )
+			&& ( ! class_exists( 'ReportedIP_Hive_Form_Proof' ) || ReportedIP_Hive_Form_Proof::get_instance()->is_enabled() );
 		$filter_action = class_exists( 'ReportedIP_Hive_Comment_Spam_Filter' )
 			? ReportedIP_Hive_Comment_Spam_Filter::get_instance()->action()
 			: 'off';
@@ -488,8 +489,8 @@ class ReportedIP_Hive_Admin_Firewall {
 			'status' => $spam_active ? __( 'Active', 'reportedip-hive' ) : __( 'Off', 'reportedip-hive' ),
 			'badge'  => $spam_active ? 'rip-badge--success' : 'rip-badge--neutral',
 			'detail' => sprintf(
-				/* translators: 1: disposable-email mode, 2: honeypot state, 3: comment filter mode. */
-				__( 'Disposable e-mail: %1$s · Comment honeypot: %2$s · Comment filter: %3$s', 'reportedip-hive' ),
+				/* translators: 1: disposable-email mode, 2: form-protection state, 3: comment filter mode. */
+				__( 'Disposable e-mail: %1$s · Form protection: %2$s · Comment filter: %3$s', 'reportedip-hive' ),
 				ucfirst( $disp_action ),
 				$honeypot ? __( 'on', 'reportedip-hive' ) : __( 'off', 'reportedip-hive' ),
 				ucfirst( $filter_action )
@@ -1358,19 +1359,53 @@ class ReportedIP_Hive_Admin_Firewall {
 		self::render_card_save_button();
 		echo '</div></div>';
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Comment Honeypot', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Adds an invisible decoy field to the comment form. Spam bots that fill every field trip it and are rejected — no CAPTCHA, no friction for real visitors.', 'reportedip-hive' ) . '</p>';
+		$has_proof      = class_exists( 'ReportedIP_Hive_Form_Proof' );
+		$proof_on       = $has_proof && ReportedIP_Hive_Form_Proof::get_instance()->is_enabled();
+		$login_forms_on = $has_proof && ReportedIP_Hive_Form_Proof::get_instance()->login_forms_enabled();
+		$report_only    = $has_proof && ReportedIP_Hive_Form_Proof::get_instance()->report_only();
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Form Protection', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'Adds an invisible decoy field to the comment form, the sign-up form and the password-reset form. A bot that fills every field trips it, and a script that posts straight at the address without ever loading the form is recognised because it cannot carry the field a browser would have added.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'No CAPTCHA and no extra step for real visitors. Someone browsing without JavaScript can still comment, their comment is filed for review instead; sign-up and password reset do ask for JavaScript and say so.', 'reportedip-hive' ) . '</p>';
+
+		echo '<div class="rip-grid rip-grid-cols-2">';
 		self::render_stat_card(
 			array(
 				'value' => $honeypot ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ),
 				'badge' => $honeypot ? 'rip-badge--success' : 'rip-badge--neutral',
-				'label' => __( 'Honeypot', 'reportedip-hive' ),
+				'label' => __( 'Comment decoy', 'reportedip-hive' ),
 			)
 		);
+		self::render_stat_card(
+			array(
+				'value' => $proof_on ? __( 'Active', 'reportedip-hive' ) : __( 'Disabled', 'reportedip-hive' ),
+				'badge' => $proof_on ? 'rip-badge--success' : 'rip-badge--neutral',
+				'label' => __( 'Execution proof', 'reportedip-hive' ),
+			)
+		);
+		echo '</div>';
+
 		printf(
 			'<p><button type="button" class="rip-button rip-button--secondary" data-rip-action="reportedip_hive_spam_toggle" data-rip-field="honeypot">%s</button></p>',
-			esc_html( $honeypot ? __( 'Disable honeypot', 'reportedip-hive' ) : __( 'Enable honeypot', 'reportedip-hive' ) )
+			esc_html( $honeypot ? __( 'Disable the comment decoy', 'reportedip-hive' ) : __( 'Enable the comment decoy', 'reportedip-hive' ) )
 		);
+		printf(
+			'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" data-opt="%1$s" value="1"%2$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%3$s</span></label>',
+			esc_attr( ReportedIP_Hive_Form_Proof::OPT_ENABLED ),
+			checked( $proof_on, true, false ),
+			esc_html__( 'Require proof that the form was rendered in a browser', 'reportedip-hive' )
+		);
+		printf(
+			'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" data-opt="%1$s" value="1"%2$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%3$s</span></label>',
+			esc_attr( ReportedIP_Hive_Form_Proof::OPT_LOGIN_FORMS ),
+			checked( $login_forms_on, true, false ),
+			esc_html__( 'Apply it to the sign-up and password-reset forms as well', 'reportedip-hive' )
+		);
+		echo '<p class="rip-help-text">' . esc_html__( 'A comment that fails the check is filed for review, a sign-up or password reset that fails is refused outright. Leave the second switch off if you would rather never risk a visitor being unable to recover their password.', 'reportedip-hive' ) . '</p>';
+		if ( $report_only ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Report-only mode is on, so nothing is refused anywhere. Failed checks are written to the log and the sign-up and password-reset forms let every visitor through.', 'reportedip-hive' ) . '</div>';
+		}
+		self::render_card_save_button();
 		echo '</div></div>';
 
 		$this->render_comment_filter_card();

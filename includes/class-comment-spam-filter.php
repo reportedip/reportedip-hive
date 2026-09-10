@@ -167,6 +167,9 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 		if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
 			return $commentdata;
 		}
+		if ( $this->ip_is_exempt() ) {
+			return $commentdata;
+		}
 
 		$verdict = self::score( (array) $commentdata, $this->context() );
 
@@ -217,6 +220,52 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	}
 
 	/**
+	 * Whether the visitor address is one the operator vouched for, or one that
+	 * is already blocked and therefore judged elsewhere. Every other sensor
+	 * makes this its first check; without it a whitelisted address could be
+	 * filed as a spammer and, on the `block` action, blocked and reported.
+	 *
+	 * @return bool
+	 * @since  2.1.53
+	 */
+	private function ip_is_exempt() {
+		if ( ! class_exists( 'ReportedIP_Hive_IP_Manager' ) ) {
+			return false;
+		}
+
+		$ip = class_exists( 'ReportedIP_Hive' ) ? ReportedIP_Hive::get_client_ip() : '';
+
+		if ( '' === $ip || 'unknown' === $ip ) {
+			return false;
+		}
+
+		$manager = ReportedIP_Hive_IP_Manager::get_instance();
+
+		return $manager->is_whitelisted( $ip ) || $manager->is_blocked( $ip );
+	}
+
+	/**
+	 * Whether a verdict may feed the per-address counter.
+	 *
+	 * A missing execution proof is the one reason a genuine reader can produce:
+	 * someone browsing without JavaScript trips it on every comment they write.
+	 * Filing those comments for review is the intended cost, blocking the
+	 * address after five of them is not, so a verdict resting on that reason
+	 * alone stops at the filing.
+	 *
+	 * @param array{score:int, reasons:array<int,string>}|null $verdict Verdict.
+	 * @return bool
+	 * @since  2.1.53
+	 */
+	public static function verdict_may_block( $verdict ) {
+		if ( ! is_array( $verdict ) || empty( $verdict['reasons'] ) ) {
+			return true;
+		}
+
+		return array( 'no_js_proof' ) !== array_values( (array) $verdict['reasons'] );
+	}
+
+	/**
 	 * Build the scoring context from the WordPress configuration.
 	 *
 	 * @return array<string,mixed>
@@ -228,17 +277,21 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 			$rules = ReportedIP_Hive_Disposable_Email::get_instance()->get_disposable_rules();
 		}
 
-		$form_field_present = null;
-		if ( class_exists( 'ReportedIP_Hive_Comment_Honeypot' )
+		$proof   = null;
+		$renders = false;
+		if ( class_exists( 'ReportedIP_Hive_Form_Proof' )
+			&& class_exists( 'ReportedIP_Hive_Comment_Honeypot' )
 			&& ReportedIP_Hive_Comment_Honeypot::get_instance()->is_enabled() ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Presence check on a decoy field, not a state change; the comment form carries its own nonce.
-			$form_field_present = isset( $_POST[ ReportedIP_Hive_Comment_Honeypot::FIELD_NAME ] );
+			$form_proof = ReportedIP_Hive_Form_Proof::get_instance();
+			$proof      = $form_proof->verdict_for_request( 'comment' );
+			$renders    = $form_proof->renders_anchors();
 		}
 
 		return array(
 			'max_links'          => (int) get_option( 'comment_max_links', 2 ),
 			'disposable_domains' => is_array( $rules ) ? $rules : array(),
-			'form_field_present' => $form_field_present,
+			'form_proof'         => $proof,
+			'renders_anchors'    => $renders,
 		);
 	}
 
@@ -273,7 +326,7 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 		}
 
 		$monitor = $hive->get_security_monitor();
-		if ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) {
+		if ( $monitor instanceof ReportedIP_Hive_Security_Monitor && self::verdict_may_block( $this->verdict ) ) {
 			$monitor->check_comment_spam_threshold( $ip );
 		}
 	}
@@ -362,7 +415,18 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 			}
 		}
 
-		if ( isset( $context['form_field_present'] ) && false === $context['form_field_present'] ) {
+		$proof = isset( $context['form_proof'] ) ? (string) $context['form_proof'] : '';
+
+		if ( 'tripped' === $proof ) {
+			$score    += 6;
+			$reasons[] = 'form_decoy_filled';
+		} elseif ( 'failed' === $proof ) {
+			$score    += 4;
+			$reasons[] = 'no_js_proof';
+		} elseif ( 'absent' === $proof && ! empty( $context['renders_anchors'] ) ) {
+			$score    += 4;
+			$reasons[] = 'no_js_proof';
+		} elseif ( 'absent' === $proof ) {
 			++$score;
 			$reasons[] = 'no_form_field';
 		}

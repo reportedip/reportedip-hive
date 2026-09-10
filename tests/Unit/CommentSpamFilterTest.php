@@ -162,29 +162,134 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertLessThan( \ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD, $verdict['score'] );
 		}
 
-		public function test_missing_form_field_alone_is_not_enough(): void {
+		/**
+		 * A plain reader comment on a site that is not known to plant anchors:
+		 * the missing field keeps the lenient weight it had before 2.1.53, so a
+		 * theme with hand-written comment markup is not punished for it.
+		 */
+		public function test_absent_proof_without_render_evidence_stays_lenient(): void {
 			$verdict = $this->score(
 				array(
 					'comment_author'  => 'Tom',
 					'comment_content' => 'Danke für den ausführlichen Bericht, das hat mir sehr geholfen.',
 				),
-				array( 'form_field_present' => false )
+				array( 'form_proof' => 'absent' )
 			);
 
 			$this->assertSame( 1, $verdict['score'] );
+			$this->assertSame( array( 'no_form_field' ), $verdict['reasons'] );
 			$this->assertLessThan( \ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD, $verdict['score'] );
 		}
 
-		public function test_present_form_field_scores_nothing(): void {
+		/**
+		 * The same submission on a site that demonstrably renders anchors: the
+		 * sender never loaded the form, which is the blind direct poster.
+		 */
+		public function test_absent_proof_with_render_evidence_reaches_the_threshold(): void {
 			$verdict = $this->score(
 				array(
 					'comment_author'  => 'Tom',
 					'comment_content' => 'Danke für den ausführlichen Bericht, das hat mir sehr geholfen.',
 				),
-				array( 'form_field_present' => true )
+				array(
+					'form_proof'      => 'absent',
+					'renders_anchors' => true,
+				)
+			);
+
+			$this->assertSame( 4, $verdict['score'] );
+			$this->assertSame( array( 'no_js_proof' ), $verdict['reasons'] );
+		}
+
+		public function test_failed_proof_reaches_the_threshold_on_its_own(): void {
+			$verdict = $this->score(
+				array(
+					'comment_author'  => 'Tom',
+					'comment_content' => 'Danke für den ausführlichen Bericht, das hat mir sehr geholfen.',
+				),
+				array( 'form_proof' => 'failed' )
+			);
+
+			$this->assertSame( 4, $verdict['score'] );
+			$this->assertSame( array( 'no_js_proof' ), $verdict['reasons'] );
+		}
+
+		public function test_tripped_decoy_scores_above_the_threshold(): void {
+			$verdict = $this->score(
+				array(
+					'comment_author'  => 'Tom',
+					'comment_content' => 'Danke für den ausführlichen Bericht, das hat mir sehr geholfen.',
+				),
+				array( 'form_proof' => 'tripped' )
+			);
+
+			$this->assertSame( 6, $verdict['score'] );
+			$this->assertSame( array( 'form_decoy_filled' ), $verdict['reasons'] );
+		}
+
+		public function test_proved_execution_scores_nothing(): void {
+			$verdict = $this->score(
+				array(
+					'comment_author'  => 'Tom',
+					'comment_content' => 'Danke für den ausführlichen Bericht, das hat mir sehr geholfen.',
+				),
+				array( 'form_proof' => 'proved' )
 			);
 
 			$this->assertSame( 0, $verdict['score'] );
+		}
+
+		/**
+		 * Running the script is not absolution. A bot that executes JavaScript
+		 * and then posts link spam is still caught by the content signals.
+		 */
+		public function test_proved_execution_does_not_suppress_content_signals(): void {
+			$verdict = $this->score(
+				array(
+					'comment_author'     => 'dolandirici numaralari',
+					'comment_author_url' => 'https://m.casibombomgirisi.com',
+					'comment_content'    => 'thanks',
+				),
+				array( 'form_proof' => 'proved' )
+			);
+
+			$this->assertGreaterThanOrEqual( \ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD, $verdict['score'] );
+		}
+
+		/**
+		 * A verdict resting on the missing execution proof alone must not feed
+		 * the per-address counter, or a reader browsing without JavaScript is
+		 * blocked after five comments.
+		 */
+		public function test_a_lone_missing_proof_never_feeds_the_block_counter(): void {
+			$this->assertFalse(
+				\ReportedIP_Hive_Comment_Spam_Filter::verdict_may_block(
+					array(
+						'score'   => 4,
+						'reasons' => array( 'no_js_proof' ),
+					)
+				)
+			);
+		}
+
+		public function test_a_corroborated_verdict_feeds_the_block_counter(): void {
+			$this->assertTrue(
+				\ReportedIP_Hive_Comment_Spam_Filter::verdict_may_block(
+					array(
+						'score'   => 6,
+						'reasons' => array( 'no_js_proof', 'risky_tld' ),
+					)
+				)
+			);
+			$this->assertTrue(
+				\ReportedIP_Hive_Comment_Spam_Filter::verdict_may_block(
+					array(
+						'score'   => 6,
+						'reasons' => array( 'form_decoy_filled' ),
+					)
+				)
+			);
+			$this->assertTrue( \ReportedIP_Hive_Comment_Spam_Filter::verdict_may_block( null ) );
 		}
 
 		public function test_links_in_finds_bare_and_prefixed_urls(): void {

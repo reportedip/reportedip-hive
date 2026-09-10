@@ -104,6 +104,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_ruleset_scan_paths'         => 'Runtime state: synced ruleset payload.',
 			'reportedip_hive_ruleset_tor_exits'          => 'Runtime state: synced ruleset payload.',
 			'reportedip_hive_2fa_frontend_soft_disabled' => 'Runtime state: set by the tier-downgrade lifecycle, not by an operator.',
+			'reportedip_hive_form_proof_field'           => 'Runtime state: the per-site proof field name. A fleet-wide push of one name would defeat the point of it being per-site.',
+			'reportedip_hive_form_proof_seen'            => 'Runtime state: when an anchor was last rendered. Measured, not configured.',
 		);
 
 		/**

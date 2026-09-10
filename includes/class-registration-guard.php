@@ -415,6 +415,9 @@ final class ReportedIP_Hive_Registration_Guard {
 		if ( $this->deny_by_allowlist( $errors, $surface ) ) {
 			return;
 		}
+		if ( $this->deny_by_missing_form_proof( $errors, $surface ) ) {
+			return;
+		}
 		if ( $this->deny_by_rate_limit( $errors, $surface ) ) {
 			return;
 		}
@@ -425,6 +428,69 @@ final class ReportedIP_Hive_Registration_Guard {
 			return;
 		}
 		ReportedIP_Hive_Disposable_Email::get_instance()->evaluate( (string) $email, $errors );
+	}
+
+	/**
+	 * Refuse a sign-up that reached a form we rendered without ever running its
+	 * script.
+	 *
+	 * Only the WordPress registration form plants an anchor, so every other
+	 * surface reports `absent` and passes through untouched. `absent` never
+	 * denies: it means we did not render here, not that the sender failed.
+	 *
+	 * @param WP_Error $errors  Errors object.
+	 * @param string   $surface Surface identifier.
+	 * @return bool True when the pipeline must stop.
+	 * @since  2.1.53
+	 */
+	private function deny_by_missing_form_proof( WP_Error $errors, $surface ) {
+		if ( 'wp' !== $surface || ! class_exists( 'ReportedIP_Hive_Form_Proof' ) ) {
+			return false;
+		}
+
+		$proof = ReportedIP_Hive_Form_Proof::get_instance();
+
+		if ( ReportedIP_Hive_Form_Proof::FAILED !== $proof->verdict_for_request( 'register' ) ) {
+			return false;
+		}
+
+		if ( $proof->report_only() ) {
+			$logger = self::logger();
+			if ( $logger instanceof ReportedIP_Hive_Logger ) {
+				$logger->log_security_event(
+					'registration_denied',
+					ReportedIP_Hive::get_client_ip(),
+					array(
+						'reason'           => 'no_js_proof',
+						'surface'          => $surface,
+						'report_only_mode' => true,
+					),
+					'low'
+				);
+			}
+
+			return false;
+		}
+
+		$errors->add(
+			'reportedip_hive_form_proof',
+			__( 'This form needs JavaScript to be submitted. Switch it on and try again.', 'reportedip-hive' )
+		);
+
+		$logger = self::logger();
+		if ( $logger instanceof ReportedIP_Hive_Logger ) {
+			$logger->log_security_event(
+				'registration_denied',
+				ReportedIP_Hive::get_client_ip(),
+				array(
+					'reason'  => 'no_js_proof',
+					'surface' => $surface,
+				),
+				'low'
+			);
+		}
+
+		return true;
 	}
 
 	/**

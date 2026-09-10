@@ -63,29 +63,8 @@ class ReportedIP_Hive_Comment_Honeypot {
 	 * @since 2.1.2
 	 */
 	private function __construct() {
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_style' ) );
-		add_action( 'comment_form_after_fields', array( $this, 'render_field' ) );
+		add_action( 'comment_form', array( $this, 'render_field' ) );
 		add_filter( 'preprocess_comment', array( $this, 'check_comment' ), 1 );
-	}
-
-	/**
-	 * Guarantee the decoy field is hidden on the front end without loading the
-	 * whole design system: a single rule is attached to an own style handle and
-	 * printed only where a comment form can appear.
-	 *
-	 * @return void
-	 * @since  2.1.2
-	 */
-	public function enqueue_style() {
-		if ( ! $this->is_enabled() || ! is_singular() || ! comments_open() ) {
-			return;
-		}
-		wp_register_style( 'reportedip-hive-honeypot', false, array(), REPORTEDIP_HIVE_VERSION );
-		wp_enqueue_style( 'reportedip-hive-honeypot' );
-		wp_add_inline_style(
-			'reportedip-hive-honeypot',
-			'.rip-hp-field{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;}'
-		);
 	}
 
 	/**
@@ -108,44 +87,29 @@ class ReportedIP_Hive_Comment_Honeypot {
 		if ( ! $this->is_enabled() ) {
 			return;
 		}
-		echo wp_kses(
-			$this->field_markup(),
-			array(
-				'div'   => array(
-					'class'       => true,
-					'aria-hidden' => true,
-				),
-				'label' => array( 'for' => true ),
-				'input' => array(
-					'type'         => true,
-					'name'         => true,
-					'id'           => true,
-					'value'        => true,
-					'tabindex'     => true,
-					'autocomplete' => true,
-				),
-			)
-		);
+		echo wp_kses( $this->field_markup(), ReportedIP_Hive_Form_Proof::anchor_kses() );
 	}
 
 	/**
-	 * Build the decoy field markup. A design-system class hides it off-screen
-	 * (no inline style) and `aria-hidden`/`tabindex="-1"`/`autocomplete="off"`
-	 * keep it away from assistive tech and password managers.
+	 * The decoy field markup, owned by {@see ReportedIP_Hive_Form_Proof} since
+	 * 2.1.53: the same element is the decoy, the script's DOM anchor and the
+	 * evidence that we rendered on this page.
 	 *
 	 * @return string
 	 * @since  2.1.2
 	 */
 	public function field_markup() {
-		$name = esc_attr( self::FIELD_NAME );
-		return '<div class="rip-hp-field" aria-hidden="true">'
-			. '<label for="' . $name . '">' . esc_html__( 'Leave this field empty', 'reportedip-hive' ) . '</label>'
-			. '<input type="text" name="' . $name . '" id="' . $name . '" value="" tabindex="-1" autocomplete="off" />'
-			. '</div>';
+		return ReportedIP_Hive_Form_Proof::get_instance()->anchor_html( 'comment' );
 	}
 
 	/**
-	 * Reject a comment whose decoy field was filled.
+	 * Log and count a comment whose decoy field was filled.
+	 *
+	 * Since 2.1.53 this no longer ends the request. The consequence is carried
+	 * by the score instead: {@see ReportedIP_Hive_Comment_Spam_Filter} weights a
+	 * tripped decoy above its threshold, and whether that files the comment as
+	 * spam or refuses it outright is the operator's `comment_spam_action`
+	 * decision. One code path for hard rejection rather than two.
 	 *
 	 * @param array<string,mixed> $commentdata Incoming comment data.
 	 * @return array<string,mixed>
@@ -176,11 +140,7 @@ class ReportedIP_Hive_Comment_Honeypot {
 			}
 		}
 
-		wp_die(
-			esc_html__( 'Your comment could not be processed.', 'reportedip-hive' ),
-			'',
-			array( 'response' => 403 )
-		);
+		return $commentdata;
 	}
 
 	/**
