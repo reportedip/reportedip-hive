@@ -2,6 +2,49 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.53] — 2026-09-10
+
+### New
+
+- **Form execution proof.** Comment, sign-up and password-reset forms now carry
+  a hidden anchor field, and a small script adds a second field whose name is
+  random per installation. A submission that carries neither has never rendered
+  the form, which is what a script posting straight at the address looks like.
+  On the site this was built for, every single spam comment of the previous
+  night arrived that way. Nothing request-specific is emitted, so a full-page
+  cache cannot invalidate the proof. Free on every plan, switchable under
+  Firewall → Spam Defence, and `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in
+  `wp-config.php` turns the whole layer off.
+
+  The verdict is four-way rather than yes/no, because "we rendered here and the
+  script never ran" and "this form was never ours" call for different answers:
+  a theme with hand-written comment markup keeps the lenient reading it had
+  before. The site measures for itself whether it plants anchors, so no
+  configuration is involved.
+
+  For comments the result is a score signal, not a rejection: a reader browsing
+  without JavaScript has their comment filed for review rather than refused, and
+  a verdict resting on that reason alone never counts towards the block ladder.
+  Sign-up and password reset do refuse, and say why, but they can be left out
+  with their own switch, and the global report-only mode stands every refusal
+  down while still writing the detection to the log.
+
+### Security
+
+- The comment filter now skips whitelisted and already-blocked addresses, like
+  every other sensor. Without it a whitelisted address could be filed as a
+  spammer and, with the block action configured, blocked and reported.
+
+### Changed
+
+- The comment decoy is rendered on `comment_form` instead of
+  `comment_form_after_fields`. WordPress only fires the latter for signed-out
+  visitors, so the field was missing for every logged-in subscriber.
+- A filled decoy no longer ends the request with a 403 of its own. It scores
+  above the threshold instead, and whether that files the comment as spam or
+  refuses it is the configured comment action. One path for hard rejection
+  rather than two.
+
 ## [2.1.52] — 2026-09-09
 
 ### Security

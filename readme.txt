@@ -5,12 +5,12 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 2.1.52
+Stable tag: 2.1.53
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
 
-Community-powered WordPress security: 16 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
+Community-powered WordPress security: 17 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
 
 == Description ==
 
@@ -38,7 +38,7 @@ Two ways to run:
 * **Security headers out of the box.** The basic hardening trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is free; HSTS, Permissions-Policy, a report-only-first Content-Security-Policy and the cross-origin isolation trio come with Professional. Headers already sent by your server or another plugin are detected and left untouched.
 * **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan level 5 clean, WPCS-clean (zero warnings), a comprehensive PHPUnit suite (unit + Multisite) running on every commit.
 
-= 16 detection sensors (every one tunable) =
+= 17 detection sensors (every one tunable) =
 
 * **Failed logins** — default 5 fails / 15 min
 * **Password spray** — distinct usernames from same IP, default 5 / 10 min
@@ -51,7 +51,7 @@ Two ways to run:
 * **Web Application Firewall** — request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
 * **Verified bot detection** — confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
 * **Registration defence** — one rule set for every sign-up surface (WordPress, WooCommerce, Multisite sign-ups, programmatic user creation): throwaway-mail domains (off / monitor / block, privacy relays such as Apple Hide My Email and Firefox Relay pass by default), prohibited usernames on top of a baseline of ten role names, e-mail allow or block rules, a per-IP registration rate limit (default 3 / 60 min) and an opt-in immediate block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts `/regex/` patterns and adds registration restricted to allowlisted IP ranges. The live throwaway-mail list rides Priority Sync
-* **Comment honeypot** — invisible, screen-reader-excluded decoy field; spam bots that fill it are rejected with no CAPTCHA friction
+* **Form execution proof** — the comment, sign-up and password-reset forms carry an invisible, screen-reader-excluded decoy field, and a small script adds a second field whose name is random per installation. A bot that fills every field trips the decoy; a script that posts straight at the address without ever loading the form cannot carry the second field. No CAPTCHA, no puzzle and no extra step for real visitors. The verdict is four-way, so a theme with hand-written comment markup is never treated like a bot, and the site measures for itself whether it plants the field. For comments the result is a scoring signal, so a visitor browsing without JavaScript has their comment filed for review instead of refused, and that reason on its own never counts towards a block. Sign-up and password reset can be left out with a separate switch, and the global report-only mode stands the refusals down everywhere while still logging them
 * **Geographic anomaly** — login from a country never seen for the user, optionally revokes trusted-device cookies
 * **Password policy** — minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
 * **WooCommerce login hooks** — checkout + my-account forms tracked separately
@@ -92,6 +92,7 @@ ReportedIP Hive plays nicely with WP Rocket, W3 Total Cache, WP Super Cache, Lit
 
 * The 403 "Access Denied" response sets `DONOTCACHEPAGE`, `DONOTCACHEDB` and `DONOTCACHEOBJECT`, calls `nocache_headers()`, and emits explicit `Cache-Control: no-store` + `Pragma: no-cache`. No cache layer stores the 403 and hands it back to legitimate visitors.
 * Login (`wp-login.php`), admin (`/wp-admin/`), REST (`/wp-json/`), XMLRPC, POST requests and logged-in users are excluded from page caching by every reputable cache plugin out of the box — exactly the paths attackers target. Blocks always take effect there.
+* The form execution proof emits nothing request-specific: the decoy carries no value, the proof field name is a per-site constant and the script is a static file. A page cached under any of these layers stays valid indefinitely, and no page is marked uncacheable for it.
 * **Documented limitation:** a blocked attacker visiting a *publicly cached* GET URL still receives the cached HTML. Their write-path attempts (login, comment, REST, XMLRPC) are blocked normally. For deny-on-cached-public-page, install a server-level rule (Cloudflare WAF, Nginx `deny`, fail2ban).
 
 = Promote / community shortcodes =
@@ -145,8 +146,10 @@ Show the world that your site is part of the hive — and earn community-network
   * `reportedip_hive_rest_sensitive_routes` — flag additional REST routes for the lower threshold
   * `reportedip_hive_event_category_map` — map your custom event types to community-API categories
   * `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path` — replace the mailer
+  * `reportedip_hive_form_proof_adapters` — choose which form surfaces carry the execution proof (`comment`, `register`, `lostpassword`)
 * **Constants** for emergency overrides:
   * `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` — temporarily disable hide-login from `wp-config.php`
+  * `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` — switch off the whole form-proof layer from `wp-config.php`, for the case where a visitor cannot submit and you need the site working before you debug
 * **9 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats, trusted_devices, audit_log and waf_exceptions.
 * **Internationalisation-ready.** Text domain `reportedip-hive`, English source with German translation included.
 * **Test suite.** A comprehensive PHPUnit suite (unit + Multisite) runs on every commit; PHPStan level 5 (No errors); WPCS-compliant with zero warnings.
@@ -342,6 +345,10 @@ No. ETag-based reputation caching, per-request IP cache, queued reports processe
 
 No. The 403 block-page sets `DONOTCACHEPAGE` and the no-store header set respected by WP Rocket, W3TC, WP Super Cache and LiteSpeed. Authentication paths (`wp-login.php`, `wp-admin/`, `wp-json/`, XMLRPC) are excluded from caching by all of these plugins by default — your blocks fire there normally.
 
+= What happens to visitors who browse without JavaScript? =
+
+They can still comment. The form execution proof treats a missing proof as a strong scoring signal, not as a refusal, so the comment is filed as spam for review rather than thrown away, and an address is never blocked over that reason alone. Sign-up and password reset do ask for JavaScript and say so in the error message, because those two surfaces have no review folder to fall back on. If that trade-off does not suit your audience there are three ways out, in increasing order of bluntness: leave the two login forms out with the second switch under Firewall &rarr; Spam Defence, turn on report-only mode to log everything and refuse nothing, or switch the layer off entirely, either on the same card or with `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in `wp-config.php`.
+
 = Can I test thresholds without blocking real users? =
 
 Yes. Enable **Report-Only mode** under *Settings → Blocking*. Every event is logged exactly as it would have been blocked, but no IP is ever rejected. Ideal for tuning thresholds against live traffic before flipping enforcement on.
@@ -395,6 +402,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.53 =
+
+New: form execution proof. Comment, sign-up and password-reset forms carry a hidden anchor field, and a small script adds a second field whose name is random per installation. A submission carrying neither never rendered the form, which is exactly what a script posting straight at the address looks like. Nothing request-specific is emitted, so page caches are unaffected. For comments the result is a score signal, so a reader without JavaScript is filed for review rather than refused; sign-up and password reset do refuse and say why. Free on every plan.
+
+Security: the comment filter now skips whitelisted and already-blocked addresses, like every other sensor.
+
+Changed: the comment decoy moved to a hook that also fires for logged-in visitors, and a filled decoy is scored instead of answered with its own 403.
 
 = 2.1.52 =
 
