@@ -10,7 +10,7 @@ License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
 
-Community-powered WordPress security: 17 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
+Community-powered WordPress security: 18 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
 
 == Description ==
 
@@ -38,7 +38,7 @@ Two ways to run:
 * **Security headers out of the box.** The basic hardening trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is free; HSTS, Permissions-Policy, a report-only-first Content-Security-Policy and the cross-origin isolation trio come with Professional. Headers already sent by your server or another plugin are detected and left untouched.
 * **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan level 5 clean, WPCS-clean (zero warnings), a comprehensive PHPUnit suite (unit + Multisite) running on every commit.
 
-= 17 detection sensors (every one tunable) =
+= 18 detection sensors (every one tunable) =
 
 * **Failed logins** — default 5 fails / 15 min
 * **Password spray** — distinct usernames from same IP, default 5 / 10 min
@@ -52,6 +52,7 @@ Two ways to run:
 * **Verified bot detection** — confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
 * **Registration defence** — one rule set for every sign-up surface (WordPress, WooCommerce, Multisite sign-ups, programmatic user creation): throwaway-mail domains (off / monitor / block, privacy relays such as Apple Hide My Email and Firefox Relay pass by default), prohibited usernames on top of a baseline of ten role names, e-mail allow or block rules, a per-IP registration rate limit (default 3 / 60 min) and an opt-in immediate block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts `/regex/` patterns and adds registration restricted to allowlisted IP ranges. The live throwaway-mail list rides Priority Sync
 * **Form execution proof** — the comment, sign-up and password-reset forms carry an invisible, screen-reader-excluded decoy field, and a small script adds a second field whose name is random per installation. A bot that fills every field trips the decoy; a script that posts straight at the address without ever loading the form cannot carry the second field. No CAPTCHA, no puzzle and no extra step for real visitors. The verdict is four-way, so a theme with hand-written comment markup is never treated like a bot, and the site measures for itself whether it plants the field. For comments the result is a scoring signal, so a visitor browsing without JavaScript has their comment filed for review instead of refused, and that reason on its own never counts towards a block. Sign-up and password reset can be left out with a separate switch, and the global report-only mode stands the refusals down everywhere while still logging them
+* **Community threat check on forms** — when a comment, sign-up or password reset is submitted, the visitor address is checked against the community network at the same protection level the sign-in page enforces. Someone the site would refuse a login to cannot post a comment instead. The visitor is told why, and the address is closed for 24 hours exactly as a refused sign-in closes it. On by default, needs Community Network mode, and honours every exemption the sign-in path honours
 * **Geographic anomaly** — login from a country never seen for the user, optionally revokes trusted-device cookies
 * **Password policy** — minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
 * **WooCommerce login hooks** — checkout + my-account forms tracked separately
@@ -147,6 +148,7 @@ Show the world that your site is part of the hive — and earn community-network
   * `reportedip_hive_event_category_map` — map your custom event types to community-API categories
   * `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path` — replace the mailer
   * `reportedip_hive_form_proof_adapters` — choose which form surfaces carry the execution proof (`comment`, `register`, `lostpassword`)
+  * `reportedip_hive_reputation_form_surfaces` — choose which form surfaces are checked against the community network
 * **Constants** for emergency overrides:
   * `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` — temporarily disable hide-login from `wp-config.php`
   * `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` — switch off the whole form-proof layer from `wp-config.php`, for the case where a visitor cannot submit and you need the site working before you debug
@@ -404,6 +406,8 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
 = 2.1.53 =
+
+New: community threat check on forms. A comment, sign-up or password reset is now checked against the community network at the same protection level the sign-in page enforces, so someone the site would refuse a login to cannot post a comment instead. The visitor is told why, and the address is closed for 24 hours as a refused sign-in closes it. On by default, switchable, dormant without Community Network mode.
 
 New: form execution proof. Comment, sign-up and password-reset forms carry a hidden anchor field, and a small script adds a second field whose name is random per installation. A submission carrying neither never rendered the form, which is exactly what a script posting straight at the address looks like. Nothing request-specific is emitted, so page caches are unaffected. For comments the result is a score signal, so a reader without JavaScript is filed for review rather than refused; sign-up and password reset do refuse and say why. Free on every plan.
 

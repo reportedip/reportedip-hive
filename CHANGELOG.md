@@ -29,6 +29,22 @@ All changes to ReportedIP Hive are documented here.
   with their own switch, and the global report-only mode stands every refusal
   down while still writing the detection to the log.
 
+- **Community threat check on forms.** The sign-in page has asked the community
+  network about a visitor's address since the first release. Comments, sign-ups
+  and password resets did not, so an address the network already knows as
+  abusive could keep posting as long as it stayed under the local score. All
+  three surfaces now ask, at the very protection level the sign-in page
+  enforces, floor and hardening clamp included: a visitor the site would refuse
+  a login to cannot post a comment instead. The check runs when the form is
+  submitted, the visitor is told why, and the address is closed for 24 hours the
+  same way a refused sign-in closes it.
+
+  On by default, switchable next to the other form settings, and dormant without
+  Community Network mode. Every exemption the sign-in path honours applies here
+  too: whitelisted addresses, the site's own server, infrastructure the network
+  flags as such, and report-only mode, which logs the verdict and refuses
+  nothing. A submission the local filter has already judged costs no lookup.
+
 ### Security
 
 - The comment filter now skips whitelisted and already-blocked addresses, like

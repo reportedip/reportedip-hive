@@ -457,6 +457,16 @@ class ReportedIP_Hive_Form_Proof {
 			return;
 		}
 
+		if ( class_exists( 'ReportedIP_Hive_Reputation_Gate' ) ) {
+			$reputation = ReportedIP_Hive_Reputation_Gate::get_instance()->check( 'lostpassword', ReportedIP_Hive::get_client_ip() );
+
+			if ( '' !== $reputation ) {
+				$errors->add( 'reportedip_hive_reputation', $reputation );
+
+				return;
+			}
+		}
+
 		if ( self::FAILED !== $this->verdict_for_request( 'lostpassword' ) ) {
 			return;
 		}

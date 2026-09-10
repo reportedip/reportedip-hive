@@ -727,6 +727,13 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Apply the proof to sign-up and password reset', 'reportedip-hive' ),
 				'description' => __( 'A comment that fails the check is filed for review, a sign-up or password reset that fails is refused. Switch this off to keep the comment protection while leaving both login forms untouched.', 'reportedip-hive' ),
 			),
+			'reportedip_hive_reputation_on_forms'          => array(
+				'section'     => 'registration',
+				'kind'        => 'bool',
+				'remote'      => true,
+				'label'       => __( 'Community threat check on forms', 'reportedip-hive' ),
+				'description' => __( 'Ask the community network about the visitor address when a comment, sign-up or password reset is submitted, using the same protection level the sign-in page enforces. Needs Community Network mode.', 'reportedip-hive' ),
+			),
 			'reportedip_hive_comment_spam_action'          => array(
 				'section'     => 'registration',
 				'kind'        => 'enum',

@@ -163,6 +163,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_comment_honeypot_enabled'      => 'bool',
 				'reportedip_hive_form_proof_enabled'            => 'bool',
 				'reportedip_hive_form_proof_login_forms'        => 'bool',
+				'reportedip_hive_reputation_on_forms'           => 'bool',
 				'reportedip_hive_comment_spam_action'           => 'enum',
 				'reportedip_hive_prohibited_usernames'          => 'textarea',
 				'reportedip_hive_prohibited_usernames_baseline' => 'bool',

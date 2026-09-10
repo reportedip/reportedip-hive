@@ -433,6 +433,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-disposable-email.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-registration-guard.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-form-proof.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-reputation-gate.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-spam-filter.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
@@ -556,6 +557,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Disposable_Email::get_instance();
 		ReportedIP_Hive_Registration_Guard::get_instance();
 		ReportedIP_Hive_Form_Proof::get_instance();
+		ReportedIP_Hive_Reputation_Gate::get_instance();
 		ReportedIP_Hive_Comment_Honeypot::get_instance();
 		ReportedIP_Hive_Comment_Spam_Filter::get_instance();
 		ReportedIP_Hive_Security_Headers::get_instance();
@@ -1200,27 +1202,7 @@ class ReportedIP_Hive {
 		$ip_address  = $this->get_client_ip();
 		$report_only = $this->is_report_only_mode();
 
-		/**
-		 * Filters the lowest confidence the reputation block will act on.
-		 *
-		 * The floor guards against false positives from over-aggressive
-		 * threshold configuration: stored thresholds and the hardening
-		 * clamp cannot push enforcement below it. Raising the floor
-		 * tightens a site further; lowering it below the settings-registry
-		 * minimum has no effect because stored thresholds never go that
-		 * low.
-		 *
-		 * @param int $floor Minimum confidence percentage (default 25).
-		 * @since 2.1.50
-		 */
-		$threshold_floor = max( 1, min( 100, (int) apply_filters( 'reportedip_hive_reputation_threshold_floor', ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD ) ) );
-
-		$threshold         = max(
-			$threshold_floor,
-			ReportedIP_Hive_Hardening_Mode::effective_block_threshold(
-				(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', 75 )
-			)
-		);
+		$threshold         = ReportedIP_Hive_Reputation_Gate::threshold();
 		$is_blocked        = $this->ip_manager->is_blocked( $ip_address );
 		$reputation        = null;
 		$exceeds_threshold = false;

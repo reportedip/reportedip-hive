@@ -1363,6 +1363,10 @@ class ReportedIP_Hive_Admin_Firewall {
 		$proof_on       = $has_proof && ReportedIP_Hive_Form_Proof::get_instance()->is_enabled();
 		$login_forms_on = $has_proof && ReportedIP_Hive_Form_Proof::get_instance()->login_forms_enabled();
 		$report_only    = $has_proof && ReportedIP_Hive_Form_Proof::get_instance()->report_only();
+		$has_gate       = class_exists( 'ReportedIP_Hive_Reputation_Gate' );
+		$gate_on        = $has_gate && ReportedIP_Hive_Reputation_Gate::get_instance()->is_enabled();
+		$gate_threshold = $has_gate ? ReportedIP_Hive_Reputation_Gate::threshold() : 0;
+		$community      = ReportedIP_Hive_Mode_Manager::get_instance()->is_community_mode();
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Form Protection', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'Adds an invisible decoy field to the comment form, the sign-up form and the password-reset form. A bot that fills every field trips it, and a script that posts straight at the address without ever loading the form is recognised because it cannot carry the field a browser would have added.', 'reportedip-hive' ) . '</p>';
@@ -1402,6 +1406,27 @@ class ReportedIP_Hive_Admin_Firewall {
 			esc_html__( 'Apply it to the sign-up and password-reset forms as well', 'reportedip-hive' )
 		);
 		echo '<p class="rip-help-text">' . esc_html__( 'A comment that fails the check is filed for review, a sign-up or password reset that fails is refused outright. Leave the second switch off if you would rather never risk a visitor being unable to recover their password.', 'reportedip-hive' ) . '</p>';
+
+		printf(
+			'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" data-opt="%1$s" value="1"%2$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%3$s</span></label>',
+			esc_attr( ReportedIP_Hive_Reputation_Gate::OPT_ENABLED ),
+			checked( $gate_on, true, false ),
+			esc_html__( 'Run a community threat check when a form is submitted', 'reportedip-hive' )
+		);
+		printf(
+			'<p class="rip-help-text">%s</p>',
+			esc_html(
+				sprintf(
+					/* translators: %d: protection level in percent. */
+					__( 'Asks the community network about the visitor address the moment a comment, sign-up or password reset arrives, at the same protection level the sign-in page uses (currently %d%%). A visitor the site would refuse a login to cannot post a comment instead. Each check spends one lookup from your daily allowance; a submission the local filter has already judged is not looked up.', 'reportedip-hive' ),
+					(int) $gate_threshold
+				)
+			)
+		);
+		if ( ! $community ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The threat check needs Community Network mode with a Community Access Key. Without one it stays dormant and nothing is refused.', 'reportedip-hive' ) . '</div>';
+		}
+
 		if ( $report_only ) {
 			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Report-only mode is on, so nothing is refused anywhere. Failed checks are written to the log and the sign-up and password-reset forms let every visitor through.', 'reportedip-hive' ) . '</div>';
 		}

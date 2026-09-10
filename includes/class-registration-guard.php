@@ -418,6 +418,9 @@ final class ReportedIP_Hive_Registration_Guard {
 		if ( $this->deny_by_missing_form_proof( $errors, $surface ) ) {
 			return;
 		}
+		if ( $this->deny_by_reputation( $errors, $surface ) ) {
+			return;
+		}
 		if ( $this->deny_by_rate_limit( $errors, $surface ) ) {
 			return;
 		}
@@ -428,6 +431,47 @@ final class ReportedIP_Hive_Registration_Guard {
 			return;
 		}
 		ReportedIP_Hive_Disposable_Email::get_instance()->evaluate( (string) $email, $errors );
+	}
+
+	/**
+	 * Refuse a sign-up from an address the community network knows as abusive.
+	 *
+	 * Same threshold, same floor and same consequence the sign-in path uses:
+	 * a visitor the site would refuse a login to must not be able to open an
+	 * account instead.
+	 *
+	 * @param WP_Error $errors  Errors object.
+	 * @param string   $surface Surface identifier.
+	 * @return bool True when the pipeline must stop.
+	 * @since  2.1.53
+	 */
+	private function deny_by_reputation( WP_Error $errors, $surface ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Reputation_Gate' ) ) {
+			return false;
+		}
+
+		$message = ReportedIP_Hive_Reputation_Gate::get_instance()->check( 'register', ReportedIP_Hive::get_client_ip() );
+
+		if ( '' === $message ) {
+			return false;
+		}
+
+		$errors->add( 'reportedip_hive_reputation', $message );
+
+		$logger = self::logger();
+		if ( $logger instanceof ReportedIP_Hive_Logger ) {
+			$logger->log_security_event(
+				'registration_denied',
+				ReportedIP_Hive::get_client_ip(),
+				array(
+					'reason'  => 'community_reputation',
+					'surface' => $surface,
+				),
+				'low'
+			);
+		}
+
+		return true;
 	}
 
 	/**
