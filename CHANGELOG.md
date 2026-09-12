@@ -36,6 +36,13 @@ All changes to ReportedIP Hive are documented here.
   ranges from the registry, and a unit test refuses hard-coded ranges or
   select options the registry does not allow.
 
+### Fixes
+
+- The standalone wizard and 2FA onboarding pages printed a PHP deprecation
+  notice for `the_block_template_skip_link` under `WP_DEBUG_DISPLAY`. Those
+  pages skip the front-end enqueue phase on purpose, which is the only place
+  core unhooks that deprecated footer callback; it is unhooked alongside now.
+
 ### Removed
 
 - Three options nothing read any more (`2fa_email_subject_code`,
