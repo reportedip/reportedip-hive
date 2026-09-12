@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Plugin-wide defaults registry — the single source of truth for every
  * `reportedip_hive_*` option default.
  *
- * Three accessors are exposed:
+ * Four accessors are exposed:
  *
  *  - `protection_presets()` returns the four protection levels (low, medium,
  *    high, paranoid), each a set of the four base threshold values. The
@@ -31,6 +31,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *  - `seed_missing()` writes every default that is not yet present through
  *    `ReportedIP_Hive_Option_Routing`, so network-wide keys land in sitemeta
  *    on Multisite instead of a single blog's options table.
+ *  - `recommended()` returns the tier-staged recommendation map the
+ *    Quickstart and the tier-upgrade listener apply on top of the seed.
  *
  * @since 1.4.0
  */
@@ -393,7 +395,8 @@ final class ReportedIP_Hive_Defaults {
 
 	/**
 	 * Protection-level presets. Each level sets the four base threshold
-	 * options in one move; the medium level is the plain option default.
+	 * options in one move; the medium level is the plain option default and
+	 * the recommendation uses `medium`.
 	 *
 	 * @return array<string, array<string, int>>
 	 * @since  2.1.54
@@ -468,5 +471,79 @@ final class ReportedIP_Hive_Defaults {
 			}
 			ReportedIP_Hive_Option_Routing::set( $option_key, $default_value );
 		}
+	}
+
+	/**
+	 * Recommendation rank per tier. Free and Contributor share one level,
+	 * Business and Enterprise share another; the map only knows three.
+	 *
+	 * @var array<string, int>
+	 */
+	private const RECOMMENDATION_RANK = array(
+		'free'         => 0,
+		'contributor'  => 0,
+		'professional' => 1,
+		'business'     => 2,
+		'enterprise'   => 2,
+	);
+
+	/**
+	 * Recommendation rank of a tier; unknown slugs rank as `free`.
+	 *
+	 * The tier-upgrade listener compares ranks to decide whether a change
+	 * unlocks anything the recommendation should switch on.
+	 *
+	 * @param string $tier Tier slug.
+	 * @return int
+	 * @since  2.1.54
+	 */
+	public static function recommendation_rank( string $tier ): int {
+		return self::RECOMMENDATION_RANK[ $tier ] ?? 0;
+	}
+
+	/**
+	 * The recommended configuration for a tier, as option key => value.
+	 *
+	 * Every key is a registry key so the map can be written through
+	 * `ReportedIP_Hive_Settings_Apply::apply()`. Each rank contains the rank
+	 * below it. Values that the Quickstart asks about explicitly (2FA for
+	 * administrators, the footer badge, alert mails) are deliberately absent:
+	 * a later tier upgrade must not flip them back against the admin's choice.
+	 * The adaptive 2FA policies are absent as well: the registry filter strips
+	 * `administrator` until an administrator has passed one challenge, so a
+	 * recommendation would be a silent no-op on every fresh site.
+	 *
+	 * @param string $tier Tier slug; unknown slugs resolve to `free`.
+	 * @param string $mode `community` or `local`. Local Shield has no
+	 *                     reputation to confirm a bot verdict, so bots stay
+	 *                     on `flag` there.
+	 * @return array<string, mixed>
+	 * @since  2.1.54
+	 */
+	public static function recommended( string $tier, string $mode = 'community' ): array {
+		$rank = self::recommendation_rank( $tier );
+
+		$values = array(
+			'reportedip_hive_headers_enabled'         => 1,
+			'reportedip_hive_bot_action'              => 'community' === $mode ? 'block' : 'flag',
+			'reportedip_hive_disposable_email_action' => 'block',
+		);
+		foreach ( self::protection_presets()['medium'] as $suffix => $value ) {
+			$values[ 'reportedip_hive_' . $suffix ] = $value;
+		}
+
+		if ( $rank >= 1 ) {
+			$values['reportedip_hive_block_tor']           = 1;
+			$values['reportedip_hive_hsts_enabled']        = 1;
+			$values['reportedip_hive_hsts_preload']        = 0;
+			$values['reportedip_hive_data_retention_days'] = 90;
+		}
+
+		if ( $rank >= 2 ) {
+			$values['reportedip_hive_audit_enabled']       = 1;
+			$values['reportedip_hive_data_retention_days'] = 365;
+		}
+
+		return $values;
 	}
 }
