@@ -7,7 +7,7 @@
 [![Tests](https://img.shields.io/badge/PHPUnit-unit%20%2B%20Multisite-brightgreen.svg)](https://github.com/reportedip/reportedip-hive/actions)
 [![Made in Germany](https://img.shields.io/badge/Made%20in-Germany-black.svg)](https://reportedip.com)
 
-> **Community-powered WordPress security: 16 attack sensors, a two-layer firewall, 4 progressive 2FA methods, herd-immunity threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.**
+> **Community-powered WordPress security: 18 attack sensors, a two-layer firewall, 4 progressive 2FA methods, herd-immunity threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.**
 
 Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker before the password is even checked. One drop-in replaces brute-force protection, a web application firewall, a multi-method 2FA suite and threat intelligence. The entire detection and identity core is free and GPL-2.0; the paid Professional / Business plans add managed mail/SMS relays, multi-site management and a handful of advanced modules on top. They never gate the core protection.
 
@@ -28,7 +28,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 
 ## Feature overview
 
-### 16 detection sensors (every one tunable)
+### 18 detection sensors (every one tunable)
 
 | Sensor | Default threshold | Notes |
 |---|---|---|
@@ -47,7 +47,8 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | Web Application Firewall | Paranoia Level 1 baseline + backend exceptions | See [Two-layer firewall](#two-layer-firewall) |
 | Verified bot detection | flag (default) or block | Official Google/Bing IP ranges first, FCrDNS fallback; genuine crawlers never blocked |
 | Registration defence | username baseline on (10 role names), rate limit on (3 / 60 min), disposable mail: monitor, custom lists empty | Throwaway-mail domains, prohibited usernames, e-mail allow/block rules, per-IP rate limit (3 / 60 min), opt-in unknown-username block; WP + WooCommerce + Multisite sign-ups. Ten entries per list free, unlimited plus regex on Professional |
-| Comment honeypot | on | Invisible decoy field, no CAPTCHA friction |
+| Form execution proof | on | Decoy field plus a browser-added proof field on comment, sign-up and password-reset forms; catches scripts that post without ever rendering the form. Four-way verdict, cache-safe. See [Honeypots and decoys](#honeypots-and-decoys) |
+| Community threat check on forms | on, needs Community Network mode | Comment, sign-up and password reset checked at the same protection level as the sign-in page; fail-open when the allowance runs out |
 
 <a id="two-layer-firewall"></a>
 
@@ -78,6 +79,29 @@ Also included in every plan: 10 single-use recovery codes, trusted-device tokens
 
 **WooCommerce frontend 2FA (Professional plan and higher).** Customers signing in through `[woocommerce_my_account]`, the classic checkout, or the WooCommerce Cart / Checkout blocks see the second factor inside the active storefront theme instead of bouncing to wp-login.php. Customer / Subscriber roles get a themed onboarding wizard on a dedicated slug. Cart and checkout state survive the redirect roundtrip; the trusted-device cookie is shared with the wp-login flow. A tier downgrade soft-disables the module; existing customer secrets stay valid.
 
+<a id="honeypots-and-decoys"></a>
+
+### Honeypots and decoys
+
+Four traps run alongside the sensors. None of them needs a CAPTCHA, a puzzle or an extra step; each one is a place a genuine visitor never goes and an automated tool cannot resist.
+
+| Trap | What it catches | Consequence | Plan |
+|---|---|---|---|
+| **Comment decoy field** | A bot that fills every input it finds, including the invisible one on the comment, sign-up and password-reset forms | Scores 6 on the comment filter, above the threshold on its own | Free |
+| **Form execution proof** | A script that posts straight at the endpoint without ever rendering the form, so it cannot carry the field a browser would have added | Comments: scored 4 and filed for review, never a block on that reason alone. Sign-up and password reset: refused, with the reason shown | Free |
+| **Decoy paths** | Anyone requesting one of 45 bait URLs that exist on no real site (`/.env.backup`, `/wp-config.old.php`, `/db-dump-master.sql.php`, ...) | One 403 plus a high-severity community report. Deliberately no local block, so a backup plugin or a curious admin cannot lock the site out | Free |
+| **Scanner honeypot paths** | A request for a known scanner target (`/.env`, `/.git/config`, `/.aws/credentials`, `/.ssh/id_rsa`, ...) | The 404 detector fires at once instead of after 12 misses; the address enters the block ladder and is reported | Baseline free, live list of ~100 targets on Professional |
+
+Details worth knowing:
+
+- The execution proof is four-way: `proved`, `failed`, `tripped`, `absent`. "Absent" stays lenient until the site has seen itself render the field, so a theme with hand-written comment markup is never treated like a bot. Nothing request-specific reaches the HTML, so page caches stay valid. The two login forms can be left out with their own switch, and `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in `wp-config.php` turns the whole layer off.
+- Verified crawlers are exempt from the 404 rate trigger but never from a honeypot hit: a Googlebot that asks for `/.env` is not Googlebot.
+- On Apache the decoy-path trap keeps a marker block in `.htaccess` so a real file at a bait path is routed through WordPress instead of being served; nginx gets a snippet to paste.
+- Every trap honours the whitelist, the site's own server addresses and report-only mode, and logs what it caught with the reason.
+- Filters: `reportedip_hive_decoy_paths`, `reportedip_hive_scan_paths`, `reportedip_hive_scan_prefixes`, `reportedip_hive_form_proof_adapters`.
+
+Not to be confused with the **Honeypot Operator** plan, which is a reportedip.com account tier for people running a dedicated honeypot server that feeds the network, unrelated to the traps above.
+
 ### Progressive block escalation
 
 Default ladder: **5 min → 15 min → 30 min → 24 h → 48 h → 7 d** (cap). After 30 days clean, the IP starts again at step 1. Loud bursts are weighted: five times the threshold behind one block skips a rung, ten times skips two, twenty-five times skips three. Fully editable as a comma-separated minute list under *Settings → Blocking*. Manual blocks (admin / CSV import) honour the chosen duration and never get overridden by the ladder. The server's own addresses (loopback, interface address, everything the site hostname resolves to) are exempt from automatic blocking, extensible via the `reportedip_hive_own_server_ips` filter for multi-node setups.
@@ -96,7 +120,7 @@ The two **modes** decide whether the plugin talks to reportedip.com at all. They
 |---|---|---|
 | Account required | No | Free account at reportedip.com |
 | External calls | None | Reputation lookups + anonymised reports (each request carries the site address and plugin/WordPress version, wp.org-style) |
-| All 16 detection sensors + two-layer firewall | ✓ | ✓ |
+| All 18 detection sensors + two-layer firewall | ✓ | ✓ |
 | Core 2FA (TOTP, Passkey, Email, Recovery) | ✓ | ✓ |
 | Progressive block escalation + password-reset gate | ✓ | ✓ |
 | Pre-auth IP reputation check | – | ✓ |
