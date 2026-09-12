@@ -60,9 +60,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertNotFalse( $start, 'check() not found.' );
 
-			$body = substr( $source, $start, 2600 );
+			$body = substr( $source, $start, 2900 );
 
 			$this->assertStringContainsString( 'is_enabled()', $body );
+			$this->assertStringContainsString( "apply_filters( 'reportedip_hive_reputation_form_surfaces'", $body, 'readme.txt documents this filter.' );
+			$this->assertLessThan(
+				strpos( $body, 'verdict(' ),
+				strpos( $body, 'reputation_form_surfaces' ),
+				'A surface the filter removed must not cost a lookup.'
+			);
 			$this->assertStringContainsString( 'is_whitelisted', $body );
 			$this->assertStringContainsString( 'is_own_server_ip', $body );
 			$this->assertStringContainsString( 'is_blocked', $body );

@@ -106,6 +106,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_2fa_frontend_soft_disabled' => 'Runtime state: set by the tier-downgrade lifecycle, not by an operator.',
 			'reportedip_hive_form_proof_field'           => 'Runtime state: the per-site proof field name. A fleet-wide push of one name would defeat the point of it being per-site.',
 			'reportedip_hive_form_proof_seen'            => 'Runtime state: when an anchor was last rendered. Measured, not configured.',
+			'reportedip_hive_waf_dropin_enabled'         => 'Host-specific. The switch needs a server directive next to it; a fleet push would leave every site at "waiting for server config".',
+			'reportedip_hive_hardening_enabled'          => 'Sentinel. "No stored value" is what turns hardening on automatically from Professional upwards, so it has neither a default nor a registry entry.',
 		);
 
 		/**
@@ -118,12 +120,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @var array<int, string>
 		 */
 		private const PENDING_REGISTRATION = array(
-			'reportedip_hive_2fa_email_body_code',
-			'reportedip_hive_2fa_email_subject',
-			'reportedip_hive_2fa_email_subject_code',
 			'reportedip_hive_2fa_password_reset_excluded_methods',
-			'reportedip_hive_waf_dropin_enabled',
-			'reportedip_hive_wc2fa_promo_enabled',
 		);
 
 		/**
@@ -239,12 +236,95 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * Every option a wp-admin form writes is either a registry key or a
+		 * listed exception.
+		 *
+		 * The SAFE_OPTIONS scan above cannot see an option that was never
+		 * given a default. Six such keys (the promo and quota mails, the 2FA
+		 * reminder trio) lived only in `register_setting()` calls for years:
+		 * editable in wp-admin, invisible to export, import and both fleets.
+		 *
+		 * @return void
+		 */
+		public function test_every_registered_setting_is_a_conscious_decision(): void {
+			$registry  = \ReportedIP_Hive_Settings_Registry::spec();
+			$undecided = array();
+
+			foreach ( $this->registered_setting_keys() as $key ) {
+				if ( isset( $registry[ $key ] ) || isset( self::NOT_REMOTE[ $key ] ) ) {
+					continue;
+				}
+				$undecided[] = $key;
+			}
+
+			$this->assertSame(
+				array(),
+				$undecided,
+				"Options registered with the Settings API must join the settings registry or be listed as deliberately local:
+" . implode( "
+", $undecided )
+			);
+		}
+
+		/**
+		 * Option keys passed to `register_setting()` across the surface files,
+		 * literal or via a class constant.
+		 *
+		 * @return array<int, string>
+		 */
+		private function registered_setting_keys(): array {
+			$sources   = $this->surface_sources();
+			$constants = $this->declared_option_constants();
+			$keys      = array();
+
+			preg_match_all( '/register_setting\(\s*\'[a-z0-9_]+\',\s*(\'reportedip_hive_[a-z0-9_]+\'|[A-Za-z0-9_]+::[A-Z0-9_]+)/', $sources, $matches );
+
+			foreach ( $matches[1] as $token ) {
+				if ( "'" === $token[0] ) {
+					$keys[] = trim( $token, "'" );
+					continue;
+				}
+				$constant = substr( $token, (int) strrpos( $token, ':' ) + 1 );
+				if ( isset( $constants[ $constant ] ) ) {
+					$keys[] = $constants[ $constant ];
+				}
+			}
+
+			return array_values( array_unique( $keys ) );
+		}
+
+		/**
+		 * Constant name => option key for every `const X = 'reportedip_hive_…'`
+		 * declared in the plugin.
+		 *
+		 * @return array<string, string>
+		 */
+		private function declared_option_constants(): array {
+			$root      = dirname( __DIR__, 2 );
+			$files     = array_merge( (array) glob( $root . '/includes/*.php' ), (array) glob( $root . '/admin/*.php' ) );
+			$constants = array();
+
+			foreach ( $files as $file ) {
+				if ( preg_match_all( '/const\s+([A-Z0-9_]+)\s*=\s*\'(reportedip_hive_[a-z0-9_]+)\'/', (string) file_get_contents( $file ), $matches, PREG_SET_ORDER ) ) {
+					foreach ( $matches as $match ) {
+						$constants[ $match[1] ] = $match[2];
+					}
+				}
+			}
+
+			return $constants;
+		}
+
+		/**
 		 * Whether an option key appears somewhere that can actually write it.
 		 *
 		 * Merely naming the key is not enough. The settings page also lists
 		 * keys in read-only places, such as the protection-layer counter, and
 		 * counting those as a form is how an option with no way to change it
 		 * still passes.
+		 *
+		 * The last pattern is the AJAX toggle map (`'decoy' => 'reportedip_…'`),
+		 * the only writer for the decoy switch on the Firewall page.
 		 *
 		 * @param string $key     Option key.
 		 * @param string $sources Concatenated surface source.
@@ -260,6 +340,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'/data-opt="\' \. esc_attr\( \'' . $quoted . '\'/',
 				'/render_select_row\(\s*\n?\s*\'[a-z0-9-]+\',\s*\n?\s*\'' . $quoted . '\'/',
 				'/render_switch_row\(\s*\n?\s*\'' . $quoted . '\'/',
+				'/\'[a-z_]+\'\s*=> \'' . $quoted . '\',/',
 			);
 
 			foreach ( $patterns as $pattern ) {

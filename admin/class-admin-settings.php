@@ -2630,22 +2630,6 @@ class ReportedIP_Hive_Admin_Settings {
 		return true;
 	}
 
-
-	/**
-	 * Sanitize callback resolver: registry-managed keys use the canonical
-	 * registry callback, everything else keeps its legacy callback until it
-	 * migrates into the registry.
-	 *
-	 * @param string   $key      Option key.
-	 * @param callable $fallback Legacy sanitize callback.
-	 * @return callable
-	 * @since  2.1.47
-	 */
-	private function registry_callback_or( $key, $fallback ) {
-		$spec = ReportedIP_Hive_Settings_Registry::spec();
-		return isset( $spec[ $key ] ) ? ReportedIP_Hive_Settings_Registry::settings_api_callback( $key ) : $fallback;
-	}
-
 	/**
 	 * Register settings
 	 */
@@ -2772,7 +2756,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$threshold_option,
 				array(
 					'type'              => 'integer',
-					'sanitize_callback' => $this->registry_callback_or( $threshold_option, array( $this, 'sanitize_failed_login_threshold' ) ),
+					'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $threshold_option ),
 				)
 			);
 		}
@@ -2792,7 +2776,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$integer_option,
 				array(
 					'type'              => 'integer',
-					'sanitize_callback' => $this->registry_callback_or( $integer_option, array( $this, 'sanitize_timeframe' ) ),
+					'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $integer_option ),
 				)
 			);
 		}
@@ -2817,7 +2801,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$boolean_option,
 				array(
 					'type'              => 'boolean',
-					'sanitize_callback' => $this->registry_callback_or( $boolean_option, array( $this, 'sanitize_boolean' ) ),
+					'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( $boolean_option ),
 				)
 			);
 		}
@@ -2891,7 +2875,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_promo_enabled',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_promo_enabled' ),
 			)
 		);
 		register_setting(
@@ -2899,7 +2883,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_quota_notif_enabled',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_quota_notif_enabled' ),
 			)
 		);
 		register_setting(
@@ -2907,7 +2891,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_tier_change_mail_enabled',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_tier_change_mail_enabled' ),
 			)
 		);
 		register_setting(
@@ -3412,16 +3396,6 @@ class ReportedIP_Hive_Admin_Settings {
 				'default'           => 50,
 			)
 		);
-
-		register_setting(
-			'reportedip_hive_protection_detection',
-			'reportedip_hive_decoy_pathblock_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_decoy_pathblock_enabled' ),
-				'default'           => true,
-			)
-		);
 	}
 
 
@@ -3528,58 +3502,6 @@ class ReportedIP_Hive_Admin_Settings {
 		}
 		$current = (string) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Mode_Manager::OPTION_MODE, ReportedIP_Hive_Mode_Manager::MODE_LOCAL );
 		return ReportedIP_Hive_Mode_Manager::is_valid_mode( $current ) ? $current : ReportedIP_Hive_Mode_Manager::MODE_LOCAL;
-	}
-
-	/**
-	 * Sanitize failed login threshold (1-100)
-	 */
-	public function sanitize_failed_login_threshold( $value ) {
-		$value  = absint( $value );
-		$min    = 1;
-		$max    = 100;
-		$result = max( $min, min( $max, $value ) );
-
-		if ( $value !== $result ) {
-			add_settings_error(
-				'reportedip_hive_failed_login_threshold',
-				'value_adjusted',
-				sprintf(
-					/* translators: 1: adjusted threshold value, 2: minimum allowed value, 3: maximum allowed value */
-					__( 'Failed login threshold was adjusted to %1$d (must be between %2$d and %3$d).', 'reportedip-hive' ),
-					$result,
-					$min,
-					$max
-				),
-				'warning'
-			);
-		}
-		return $result;
-	}
-
-	/**
-	 * Sanitize timeframe (1-1440 minutes = 24 hours)
-	 */
-	public function sanitize_timeframe( $value ) {
-		$value  = absint( $value );
-		$min    = 1;
-		$max    = 1440;
-		$result = max( $min, min( $max, $value ) );
-
-		if ( $value !== $result ) {
-			add_settings_error(
-				'reportedip_hive_timeframe',
-				'value_adjusted',
-				sprintf(
-					/* translators: 1: adjusted value in minutes, 2: minimum allowed value, 3: maximum allowed value */
-					__( 'Time window was adjusted to %1$d minutes (must be between %2$d and %3$d).', 'reportedip-hive' ),
-					$result,
-					$min,
-					$max
-				),
-				'warning'
-			);
-		}
-		return $result;
 	}
 
 

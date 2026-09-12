@@ -256,7 +256,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<input type="hidden" name="reportedip_hive_2fa_allowed_methods" value="" />
 			<input type="hidden" name="reportedip_hive_2fa_enforce_roles" value="" />
 			<input type="hidden" name="reportedip_hive_2fa_reminder_enabled" value="0" />
-			<input type="hidden" name="reportedip_hive_2fa_reminder_hard_roles" value="" />
+			<input type="hidden" name="reportedip_hive_2fa_reminder_hard_roles" value="[]" />
 			<input type="hidden" name="reportedip_hive_2fa_frontend_onboarding" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_xmlrpc_app_password_only" value="0" />
 			<input type="hidden" name="reportedip_hive_2fa_trusted_devices" value="0" />
@@ -381,6 +381,19 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						}
 						?>
 					</p>
+				</div>
+
+				<div class="rip-form-group">
+					<label class="rip-label" for="reportedip_hive_2fa_email_subject"><?php esc_html_e( 'Subject of the e-mail code', 'reportedip-hive' ); ?></label>
+					<input
+						type="text"
+						id="reportedip_hive_2fa_email_subject"
+						name="reportedip_hive_2fa_email_subject"
+						class="rip-input"
+						value="<?php echo esc_attr( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_email_subject', '' ) ); ?>"
+						placeholder="<?php echo esc_attr__( '[{site_name}] Your verification code', 'reportedip-hive' ); ?>"
+					/>
+					<?php ReportedIP_Hive_Admin_Settings::render_field_help( 'reportedip_hive_2fa_email_subject' ); ?>
 				</div>
 
 				<div class="rip-form-group">
@@ -1266,7 +1279,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_reminder_enabled',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_reminder_enabled' ),
 			)
 		);
 		register_setting(
@@ -1274,7 +1287,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_reminder_hard_threshold',
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_reminder_threshold' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_reminder_hard_threshold' ),
 			)
 		);
 		register_setting(
@@ -1282,7 +1295,15 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			'reportedip_hive_2fa_reminder_hard_roles',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( __CLASS__, 'sanitize_reminder_hard_roles' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_reminder_hard_roles' ),
+			)
+		);
+		register_setting(
+			'reportedip_hive_2fa_settings',
+			'reportedip_hive_2fa_email_subject',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_email_subject' ),
 			)
 		);
 
@@ -1383,49 +1404,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_policy_sessions' ),
 			)
 		);
-	}
-
-	/**
-	 * Clamp the reminder threshold to a sane range.
-	 *
-	 * @param mixed $input
-	 * @return int 1..10
-	 */
-	public static function sanitize_reminder_threshold( $input ) {
-		$value = (int) $input;
-		if ( $value < 1 ) {
-			$value = 1;
-		}
-		if ( $value > 10 ) {
-			$value = 10;
-		}
-		return $value;
-	}
-
-	/**
-	 * Sanitize the hard-block role list and persist it as a JSON array string,
-	 * mirroring the storage pattern used for `reportedip_hive_2fa_enforce_roles`.
-	 *
-	 * @param mixed $input Either an array of role slugs (POST) or a string.
-	 * @return string JSON-encoded list of sanitised role slugs.
-	 */
-	public static function sanitize_reminder_hard_roles( $input ) {
-		if ( is_string( $input ) ) {
-			$decoded = json_decode( $input, true );
-			$input   = is_array( $decoded ) ? $decoded : array();
-		}
-		if ( ! is_array( $input ) ) {
-			$input = array();
-		}
-		$valid = array_keys( wp_roles()->get_names() );
-		$clean = array();
-		foreach ( $input as $role ) {
-			$role = sanitize_key( (string) $role );
-			if ( '' !== $role && in_array( $role, $valid, true ) ) {
-				$clean[] = $role;
-			}
-		}
-		return wp_json_encode( array_values( array_unique( $clean ) ) );
 	}
 
 	/**

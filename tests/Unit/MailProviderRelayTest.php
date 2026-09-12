@@ -169,14 +169,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'test@example.test', $payload['headers']['From'] );
 		}
 
-		public function test_default_reply_to_option_is_used_when_header_missing() {
-			$GLOBALS['wp_options']['reportedip_hive_mail_reply_to'] = 'support@example.test';
+		public function test_a_missing_reply_to_header_leaves_the_payload_field_out() {
 			list( $provider, , $api ) = $this->make_provider();
 
 			$provider->send( 'a@b.test', 'Subj', '<p>h</p>', 'p', array( 'From: t@example.test' ) );
 
-			$payload = $api->relay_mail_calls[0];
-			$this->assertSame( 'support@example.test', $payload['reply_to'] );
+			$this->assertArrayNotHasKey( 'reply_to', $api->relay_mail_calls[0], 'The mailer sets Reply-To before the provider runs; the provider itself invents none.' );
 		}
 
 		public function test_string_headers_are_split_per_line() {

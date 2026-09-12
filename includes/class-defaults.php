@@ -107,6 +107,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_waf_paranoia'                    => 2,
 		'reportedip_hive_waf_block_threshold'             => 3,
 		'reportedip_hive_waf_dropin_enabled'              => false,
+		'reportedip_hive_waf_dropin_skip_authenticated'   => true,
 
 		'reportedip_hive_monitor_bot_verification'        => true,
 		'reportedip_hive_bot_action'                      => 'flag',
@@ -261,8 +262,10 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_policy_sessions'             => 3,
 
 		'reportedip_hive_2fa_email_subject'               => '',
-		'reportedip_hive_2fa_email_subject_code'          => '',
-		'reportedip_hive_2fa_email_body_code'             => '',
+
+		'reportedip_hive_2fa_reminder_enabled'            => true,
+		'reportedip_hive_2fa_reminder_hard_threshold'     => 5,
+		'reportedip_hive_2fa_reminder_hard_roles'         => '["administrator","editor","shop_manager"]',
 
 		'reportedip_hive_2fa_require_on_password_reset'   => true,
 		'reportedip_hive_2fa_password_reset_excluded_methods' => '["email"]',
@@ -274,7 +277,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_frontend_setup_slug'         => 'reportedip-hive-2fa-setup',
 		'reportedip_hive_2fa_frontend_customer_optional'  => true,
 		'reportedip_hive_2fa_frontend_soft_disabled'      => 0,
-		'reportedip_hive_wc2fa_promo_enabled'             => true,
 
 		'reportedip_hive_notify_admin'                    => true,
 		'reportedip_hive_notify_recipients'               => '',
@@ -283,6 +285,9 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_notify_sync_to_api'              => false,
 		'reportedip_hive_notification_cooldown_minutes'   => 60,
 		'reportedip_hive_notify_event_cap_minutes'        => 15,
+		'reportedip_hive_promo_enabled'                   => true,
+		'reportedip_hive_quota_notif_enabled'             => true,
+		'reportedip_hive_tier_change_mail_enabled'        => true,
 
 		'reportedip_hive_log_level'                       => 'info',
 		'reportedip_hive_detailed_logging'                => false,

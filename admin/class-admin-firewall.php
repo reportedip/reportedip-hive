@@ -1013,6 +1013,15 @@ class ReportedIP_Hive_Admin_Firewall {
 		}
 
 		printf(
+			'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" data-opt="%1$s" value="1"%2$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%3$s</span></label>',
+			esc_attr( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED ),
+			checked( (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED, true ), true, false ),
+			esc_html__( 'Leave the request body of signed-in users alone', 'reportedip-hive' )
+		);
+		ReportedIP_Hive_Admin_Settings::render_field_help( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED );
+		self::render_card_save_button();
+
+		printf(
 			'<p><button type="button" class="rip-button rip-button--primary" data-rip-action="reportedip_hive_waf_dropin_toggle">%s</button> ',
 			esc_html( $enabled ? __( 'Disable extended protection', 'reportedip-hive' ) : __( 'Enable extended protection', 'reportedip-hive' ) )
 		);

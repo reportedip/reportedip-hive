@@ -129,6 +129,11 @@ class ReportedIP_Hive_Reputation_Gate {
 			return '';
 		}
 
+		$surfaces = (array) apply_filters( 'reportedip_hive_reputation_form_surfaces', array( 'comment', 'register', 'lostpassword' ) );
+		if ( ! in_array( (string) $surface, $surfaces, true ) ) {
+			return '';
+		}
+
 		$ip = (string) $ip;
 		if ( '' === $ip || 'unknown' === $ip ) {
 			return '';

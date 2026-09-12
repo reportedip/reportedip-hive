@@ -27,18 +27,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class ReportedIP_Hive_Settings_Effects {
 
 	/**
-	 * Side-effect tokens for options outside the settings registry whose
-	 * sanitizers previously flushed rewrite rules inline (frontend 2FA).
-	 *
-	 * @var array<string, string[]>
-	 */
-	private const EXTRA_WATCHED = array(
-		'reportedip_hive_2fa_frontend_enabled'    => array( 'flush_rewrite', 'flush_2fa_frontend_memo' ),
-		'reportedip_hive_2fa_frontend_slug'       => array( 'flush_rewrite', 'flush_2fa_frontend_memo' ),
-		'reportedip_hive_2fa_frontend_setup_slug' => array( 'flush_rewrite', 'flush_2fa_frontend_memo' ),
-	);
-
-	/**
 	 * Effect tokens queued for this request.
 	 *
 	 * @var array<string, bool>
@@ -80,19 +68,17 @@ final class ReportedIP_Hive_Settings_Effects {
 	}
 
 	/**
-	 * Watched option => effect-token map: registry-declared side effects
-	 * merged with the non-registry extras.
+	 * Watched option => effect-token map, read from the registry's
+	 * `side_effects` declarations.
 	 *
 	 * @return array<string, string[]>
 	 */
 	public static function watched() {
-		$map = self::EXTRA_WATCHED;
+		$map = array();
 		foreach ( ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
-			if ( empty( $entry['side_effects'] ) ) {
-				continue;
+			if ( ! empty( $entry['side_effects'] ) ) {
+				$map[ $key ] = array_values( (array) $entry['side_effects'] );
 			}
-			$existing    = isset( $map[ $key ] ) ? $map[ $key ] : array();
-			$map[ $key ] = array_values( array_unique( array_merge( $existing, (array) $entry['side_effects'] ) ) );
 		}
 		return $map;
 	}
