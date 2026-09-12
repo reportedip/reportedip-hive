@@ -16,6 +16,10 @@
  * @since      2.1.53
  */
 
+namespace {
+	require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
+}
+
 namespace ReportedIP\Hive\Tests\Unit {
 
 	use ReportedIP\Hive\Tests\TestCase;
@@ -122,8 +126,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * means the reader is often not the person who earned the reputation.
 		 */
 		public function test_every_refusal_explains_itself(): void {
-			require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
-
 			foreach ( array( 'comment', 'register', 'lostpassword' ) as $surface ) {
 				$message = \ReportedIP_Hive_Reputation_Gate::message( $surface );
 
@@ -146,8 +148,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @param mixed $answer Lookup answer.
 		 */
 		public function test_a_failed_lookup_never_refuses( $answer ): void {
-			require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
-
 			$verdict = \ReportedIP_Hive_Reputation_Gate::read_response( $answer, 75 );
 
 			$this->assertFalse( $verdict['exceeds'] );
@@ -172,8 +172,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_a_real_answer_is_read_correctly(): void {
-			require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
-
 			$verdict = \ReportedIP_Hive_Reputation_Gate::read_response(
 				array(
 					'abuseConfidencePercentage' => 96,
@@ -189,8 +187,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_the_threshold_is_inclusive(): void {
-			require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
-
 			$this->assertTrue(
 				\ReportedIP_Hive_Reputation_Gate::read_response( array( 'abuseConfidencePercentage' => 75 ), 75 )['exceeds']
 			);
@@ -203,8 +199,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * Infrastructure the network vouches for is read but never refused.
 		 */
 		public function test_infrastructure_is_flagged_rather_than_refused(): void {
-			require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
-
 			$verdict = \ReportedIP_Hive_Reputation_Gate::read_response(
 				array(
 					'abuseConfidencePercentage' => 96,
