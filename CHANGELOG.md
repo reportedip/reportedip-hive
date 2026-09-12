@@ -2,6 +2,45 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- **Every stored setting follows one standard.** Eight options that were
+  editable in wp-admin but lived outside the settings registry (the upgrade
+  hints, the quota and plan-change mails, the three 2FA reminder settings,
+  the Extended Protection body-inspection switch and the subject of the
+  e-mail code) now have a default, a registry entry with a description and
+  a form, so export, import, MainWP and the cloud fleet see them like every
+  other setting. The body-inspection switch and the e-mail subject gained a
+  form for the first time (Firewall > Extended Protection, 2FA tab).
+- **The setup wizard sanitises through the registry.** Ranges, allowed
+  values and plan gates now come from the settings registry instead of a
+  second copy inside the wizard, which had drifted (retention minimum,
+  anonymisation maximum). The storefront 2FA toggle is stored as a plain
+  boolean like everywhere else.
+- **The `reportedip_hive_reputation_form_surfaces` filter exists now.** It
+  was documented but never wired; it limits which forms run the community
+  threat check.
+- The frontend-2FA rewrite flush is declared on the registry entries
+  instead of a side list in the effects dispatcher.
+
+### Removed
+
+- Three options nothing read any more (`2fa_email_subject_code`,
+  `2fa_email_body_code`, `wc2fa_promo_enabled`), the unreachable
+  `mail_reply_to` option and filter in the relay mail provider (the mailer
+  always sets Reply-To itself), the legacy threshold sanitizers on the
+  settings page and a settings registration for the decoy switch that had
+  no form.
+
+### Docs
+
+- The option overview in the maintainer guide and the configuration table
+  on reportedip.com named settings that do not exist (`login_threshold`,
+  `rest_burst_threshold`, `block_duration_hours`, `report_mode`,
+  `2fa_grace_days`); both now point at the registry and use the real keys.
+
 ## [2.1.53] — 2026-09-10
 
 ### New
