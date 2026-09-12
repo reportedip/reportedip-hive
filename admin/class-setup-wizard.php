@@ -92,8 +92,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 * POSTs it here with the step index. Sanitisation + persistence is owned by
 	 * {@see ReportedIP_Hive_Wizard_Schema} so render, collection and save can
 	 * never drift — the root cause of the 1.x bug where the 2FA step silently
-	 * saved nothing. Step 8 (Hide Login) is delegated to the slug-validating
-	 * helper; the optional notification-sync side-effect runs for step 7.
+	 * saved nothing. The optional notification-sync side-effect runs for step 7.
 	 *
 	 * @since 2.0.2
 	 */
@@ -112,11 +111,7 @@ class ReportedIP_Hive_Setup_Wizard {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified above; the schema sanitises every field per its declared type.
 		$post = wp_unslash( $_POST );
 
-		if ( 8 === $step ) {
-			$this->save_hide_login_step();
-		} else {
-			ReportedIP_Hive_Wizard_Schema::save_step( $step, $post );
-		}
+		ReportedIP_Hive_Wizard_Schema::save_step( $step, $post );
 
 		if ( 7 === $step ) {
 			$this->maybe_sync_notifications( $post );
@@ -422,6 +417,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					'redirecting'  => __( 'Redirecting to dashboard…', 'reportedip-hive' ),
 					'noMonitoring' => __( 'No monitoring active — the plugin is effectively disabled.', 'reportedip-hive' ),
 					'no2faMethod'  => __( 'Please choose at least one method when 2FA is active.', 'reportedip-hive' ),
+					'slugRequired' => __( 'Enter a login slug that passes the check, or switch Hide Login off.', 'reportedip-hive' ),
 					'no2faRole'    => __( 'Please pick at least one role to enforce 2FA for. Administrator was re-selected as a safe default.', 'reportedip-hive' ),
 					'confirmSkip'  => __( 'Really skip setup? You can configure the plugin anytime in Settings.', 'reportedip-hive' ),
 				),
@@ -1187,6 +1183,8 @@ class ReportedIP_Hive_Setup_Wizard {
 		$saved_2fa_enabled              = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enabled_global', $tier_pro_or_higher );
 		$saved_grace_days               = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_grace_days', 7 );
 		$saved_max_skips                = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_max_skips', 3 );
+		$grace_limits                   = ReportedIP_Hive_Wizard_Schema::limits( 'reportedip_hive_2fa_enforce_grace_days' );
+		$skip_limits                    = ReportedIP_Hive_Wizard_Schema::limits( 'reportedip_hive_2fa_max_skips' );
 		$saved_trusted_devices          = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_trusted_devices', true );
 		$saved_frontend_onboarding      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_onboarding', true );
 		$saved_notify_new_device        = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_notify_new_device', true );
@@ -1311,7 +1309,7 @@ class ReportedIP_Hive_Setup_Wizard {
 							<?php esc_html_e( 'Grace period (days)', 'reportedip-hive' ); ?>
 						</label>
 						<div class="rip-number-row">
-							<input type="number" id="rip-2fa-grace-days" name="2fa_enforce_grace_days" class="rip-input rip-input--small" value="<?php echo esc_attr( (string) $saved_grace_days ); ?>" min="0" max="60" step="1">
+							<input type="number" id="rip-2fa-grace-days" name="2fa_enforce_grace_days" class="rip-input rip-input--small" value="<?php echo esc_attr( (string) $saved_grace_days ); ?>" min="<?php echo esc_attr( (string) $grace_limits['min'] ); ?>" max="<?php echo esc_attr( (string) $grace_limits['max'] ); ?>" step="1">
 							<span class="rip-number-row__suffix"><?php esc_html_e( 'Days before enforcement kicks in', 'reportedip-hive' ); ?></span>
 						</div>
 					</div>
@@ -1321,7 +1319,7 @@ class ReportedIP_Hive_Setup_Wizard {
 							<?php esc_html_e( 'Max. skips after the grace period', 'reportedip-hive' ); ?>
 						</label>
 						<div class="rip-number-row">
-							<input type="number" id="rip-2fa-max-skips" name="2fa_max_skips" class="rip-input rip-input--small" value="<?php echo esc_attr( (string) $saved_max_skips ); ?>" min="0" max="20" step="1">
+							<input type="number" id="rip-2fa-max-skips" name="2fa_max_skips" class="rip-input rip-input--small" value="<?php echo esc_attr( (string) $saved_max_skips ); ?>" min="<?php echo esc_attr( (string) $skip_limits['min'] ); ?>" max="<?php echo esc_attr( (string) $skip_limits['max'] ); ?>" step="1">
 							<span class="rip-number-row__suffix"><?php esc_html_e( 'How many times users may skip 2FA (0 = never)', 'reportedip-hive' ); ?></span>
 						</div>
 					</div>
@@ -1761,6 +1759,7 @@ class ReportedIP_Hive_Setup_Wizard {
 	 */
 	private function render_step_hide_login() {
 		$existing_slug = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', '' );
+		$existing_on   = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false ) && '' !== $existing_slug;
 		$existing_mode = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE );
 		$home_url      = trailingslashit( home_url() );
 		$suggested     = '' !== $existing_slug
@@ -1785,7 +1784,7 @@ class ReportedIP_Hive_Setup_Wizard {
 					</div>
 
 					<label class="rip-toggle">
-						<input type="checkbox" name="hide_login_enabled" id="rip-hide-login-enabled" <?php checked( '' !== $existing_slug ); ?>>
+						<input type="checkbox" name="hide_login_enabled" id="rip-hide-login-enabled" <?php checked( $existing_on ); ?>>
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><?php esc_html_e( 'Enable Hide Login', 'reportedip-hive' ); ?></span>
 					</label>
@@ -2229,56 +2228,6 @@ class ReportedIP_Hive_Setup_Wizard {
 			1,
 			ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_TTL
 		);
-	}
-
-	/**
-	 * Persist the wizard's Hide-Login step into the regular options.
-	 *
-	 * Validates and stores slug, response mode and the enable toggle. If the
-	 * submitted slug fails validation we do not enable the feature — silently
-	 * skipping protects the user from a broken state on completion. The
-	 * wizard's live AJAX validator is the place to surface error messages.
-	 *
-	 * @since 1.2.0
-	 */
-	private function save_hide_login_step(): void {
-		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce is verified by ajax_save_step() before this private helper is reached.
-		$wants_enabled = isset( $_POST['hide_login_enabled'] ) && (bool) $_POST['hide_login_enabled'];
-
-		if ( isset( $_POST['hide_login_response_mode'] ) ) {
-			$mode        = sanitize_key( wp_unslash( (string) $_POST['hide_login_response_mode'] ) );
-			$valid_modes = array(
-				ReportedIP_Hive_Hide_Login::RESPONSE_MODE_BLOCK_PAGE,
-				ReportedIP_Hive_Hide_Login::RESPONSE_MODE_404,
-			);
-			if ( in_array( $mode, $valid_modes, true ) ) {
-				ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_response_mode', $mode );
-			}
-		}
-
-		if ( ! $wants_enabled ) {
-			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', false );
-			return;
-		}
-
-		$raw_slug = isset( $_POST['hide_login_slug'] )
-			? sanitize_title( wp_unslash( (string) $_POST['hide_login_slug'] ) )
-			: '';
-		// phpcs:enable WordPress.Security.NonceVerification.Missing
-
-		if ( '' === $raw_slug || ! class_exists( 'ReportedIP_Hive_Hide_Login' ) ) {
-			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', false );
-			return;
-		}
-
-		$validated = ReportedIP_Hive_Hide_Login::validate_slug_value( $raw_slug );
-		if ( is_wp_error( $validated ) || '' === $validated ) {
-			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', false );
-			return;
-		}
-
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_slug', $validated );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', true );
 	}
 
 	/**

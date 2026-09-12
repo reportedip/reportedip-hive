@@ -20,6 +20,26 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-wizard-schema.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-hide-login.php';
+
+	if ( ! defined( 'OBJECT' ) ) {
+		define( 'OBJECT', 'OBJECT' );
+	}
+	if ( ! function_exists( 'get_page_by_path' ) ) {
+		function get_page_by_path( $page_path, $output = OBJECT, $post_type = 'page' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return null;
+		}
+	}
+	if ( ! function_exists( 'get_term_by' ) ) {
+		function get_term_by( $field, $value, $taxonomy = '', $output = OBJECT ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return false;
+		}
+	}
+	if ( ! function_exists( 'get_taxonomies' ) ) {
+		function get_taxonomies( $args = array(), $output = 'names' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return array();
+		}
+	}
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -41,8 +61,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			foreach ( \ReportedIP_Hive_Wizard_Schema::SAVE_STEPS as $step ) {
 				$this->assertContains( $step, \ReportedIP_Hive_Wizard_Schema::FIELD_STEPS );
 			}
-			$this->assertContains( 8, \ReportedIP_Hive_Wizard_Schema::FIELD_STEPS, 'Hide Login is a field step…' );
-			$this->assertNotContains( 8, \ReportedIP_Hive_Wizard_Schema::SAVE_STEPS, '…but is saved by the wizard helper, not the schema.' );
+			$this->assertSame( \ReportedIP_Hive_Wizard_Schema::FIELD_STEPS, \ReportedIP_Hive_Wizard_Schema::SAVE_STEPS, 'every field step is saved by the schema, Hide Login included' );
 		}
 
 		public function test_save_step_4_persists_firewall_fields() {
@@ -156,10 +175,133 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_save_step_ignores_non_save_steps() {
-			\ReportedIP_Hive_Wizard_Schema::save_step( 8, array( 'hide_login_enabled' => 1 ) );
+			\ReportedIP_Hive_Wizard_Schema::save_step( 2, array( 'mode' => 'community' ) );
 			\ReportedIP_Hive_Wizard_Schema::save_step( 99, array() );
 
 			$this->assertSame( array(), $GLOBALS['wp_options'], 'steps outside SAVE_STEPS write nothing here' );
+		}
+
+		public function test_save_step_8_enables_hide_login_with_a_valid_slug() {
+			\ReportedIP_Hive_Wizard_Schema::save_step(
+				8,
+				array(
+					'hide_login_enabled'       => 1,
+					'hide_login_slug'          => 'My Secret Door',
+					'hide_login_response_mode' => '404',
+				)
+			);
+
+			$this->assertSame( 1, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', null ) );
+			$this->assertSame( 'my-secret-door', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', null ), 'the registry sanitizer canonicalises the slug' );
+			$this->assertSame( '404', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_response_mode', null ) );
+		}
+
+		/**
+		 * @dataProvider unusable_slugs
+		 * @param string $slug Posted slug.
+		 */
+		public function test_save_step_8_never_enables_hide_login_on_an_unusable_slug( $slug ) {
+			$GLOBALS['wp_options']['reportedip_hive_hide_login_slug'] = 'old-door';
+
+			\ReportedIP_Hive_Wizard_Schema::save_step(
+				8,
+				array(
+					'hide_login_enabled' => 1,
+					'hide_login_slug'    => $slug,
+				)
+			);
+
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', null ), 'a refused slug leaves the feature off' );
+			$this->assertSame( 'old-door', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', null ), 'a refused slug never overwrites the stored one' );
+		}
+
+		/**
+		 * @return array<string, array<int, string>>
+		 */
+		public function unusable_slugs() {
+			return array(
+				'too short' => array( 'ab' ),
+				'reserved'  => array( 'wp-admin' ),
+			);
+		}
+
+		public function test_save_step_8_with_the_switch_off_keeps_the_slug_and_disables() {
+			$GLOBALS['wp_options']['reportedip_hive_hide_login_enabled'] = 1;
+
+			\ReportedIP_Hive_Wizard_Schema::save_step(
+				8,
+				array(
+					'hide_login_slug'          => 'kept-door',
+					'hide_login_response_mode' => 'block_page',
+				)
+			);
+
+			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', null ) );
+			$this->assertSame( 'kept-door', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_slug', null ), 'the slug survives so the wizard can prefill it next time' );
+		}
+
+		/**
+		 * Settings-API sanitizers run on every option write, and the one on the
+		 * hide-login switch refuses "on" while no slug is stored. Writing the
+		 * switch first therefore never enables the feature; the unit stubs
+		 * cannot see that filter, so the order is pinned here.
+		 */
+		public function test_step_8_writes_the_slug_before_the_switch() {
+			$order = array_column( \ReportedIP_Hive_Wizard_Schema::fields( 8 ), 'name' );
+
+			$this->assertLessThan( array_search( 'hide_login_enabled', $order, true ), array_search( 'hide_login_slug', $order, true ) );
+		}
+
+		public function test_protection_presets_respect_the_reputation_floor() {
+			foreach ( \ReportedIP_Hive_Wizard_Schema::protection_presets() as $level => $preset ) {
+				$this->assertGreaterThanOrEqual( \ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD, $preset['block_threshold'], $level );
+				foreach ( $preset as $suffix => $value ) {
+					$clean = \ReportedIP_Hive_Settings_Registry::sanitize( 'reportedip_hive_' . $suffix, $value );
+					$this->assertSame( $value, $clean, "preset {$level}: {$suffix} must survive its registry sanitizer unchanged" );
+				}
+			}
+		}
+
+		/**
+		 * The wizard markup carries no ranges or choices of its own: number
+		 * inputs read min/max from the registry, and every select option is one
+		 * the registry allows. This is what keeps the wizard from drifting away
+		 * from the settings page again.
+		 */
+		public function test_wizard_markup_takes_ranges_and_choices_from_the_registry() {
+			$markup = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-setup-wizard.php' );
+
+			$this->assertDoesNotMatchRegularExpression( '/\b(min|max)="\d+"/', $markup, 'hard-coded number ranges in the wizard markup' );
+
+			$spec = \ReportedIP_Hive_Settings_Registry::spec();
+			foreach ( \ReportedIP_Hive_Wizard_Schema::FIELD_STEPS as $step ) {
+				foreach ( \ReportedIP_Hive_Wizard_Schema::fields( $step ) as $field ) {
+					if ( 'enum' !== $field['kind'] || ! preg_match( '/<select[^>]*name="' . preg_quote( $field['name'], '/' ) . '"(.*?)<\/select>/s', $markup, $select ) ) {
+						continue;
+					}
+					preg_match_all( '/<option value="([^"]*)"/', $select[1], $options );
+					$this->assertNotEmpty( $options[1], $field['name'] );
+					$this->assertSame(
+						array(),
+						array_values( array_diff( $options[1], $spec[ $field['option'] ]['allowed'] ) ),
+						$field['name'] . ' offers a choice the registry does not allow'
+					);
+				}
+			}
+		}
+
+		public function test_wizard_selects_for_integer_options_stay_inside_the_registry_range() {
+			$markup = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-setup-wizard.php' );
+
+			foreach ( array( 'data_retention_days', 'auto_anonymize_days' ) as $name ) {
+				$this->assertTrue( (bool) preg_match( '/<select[^>]*name="' . $name . '"(.*?)<\/select>/s', $markup, $select ), $name );
+				preg_match_all( '/<option value="(\d+)"/', $select[1], $options );
+				$limits = \ReportedIP_Hive_Wizard_Schema::limits( 'reportedip_hive_' . $name );
+				foreach ( $options[1] as $value ) {
+					$this->assertGreaterThanOrEqual( $limits['min'], (int) $value, $name );
+					$this->assertLessThanOrEqual( $limits['max'], (int) $value, $name );
+				}
+			}
 		}
 
 		/**

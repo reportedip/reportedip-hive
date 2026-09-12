@@ -42,12 +42,11 @@ final class ReportedIP_Hive_Wizard_Schema {
 	const FIELD_STEPS = array( 3, 4, 5, 6, 7, 8, 9 );
 
 	/**
-	 * Steps whose fields {@see save_step()} persists generically. Step 8 is
-	 * handled by the wizard itself (slug validation + rewrite flush).
+	 * Steps whose fields {@see save_step()} persists.
 	 *
 	 * @var int[]
 	 */
-	const SAVE_STEPS = array( 3, 4, 5, 6, 7, 9 );
+	const SAVE_STEPS = array( 3, 4, 5, 6, 7, 8, 9 );
 
 	/**
 	 * Whether a step number carries persisted form fields.
@@ -268,12 +267,12 @@ final class ReportedIP_Hive_Wizard_Schema {
 					),
 				);
 			case 8:
+				/*
+				 * The slug is written before the switch on purpose: the
+				 * Settings-API sanitizer on the switch refuses "on" while no
+				 * slug is stored, so the other order silently keeps it off.
+				 */
 				return array(
-					array(
-						'name'   => 'hide_login_enabled',
-						'kind'   => 'bool',
-						'option' => 'reportedip_hive_hide_login_enabled',
-					),
 					array(
 						'name'   => 'hide_login_slug',
 						'kind'   => 'slug',
@@ -283,6 +282,11 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'name'   => 'hide_login_response_mode',
 						'kind'   => 'enum',
 						'option' => 'reportedip_hive_hide_login_response_mode',
+					),
+					array(
+						'name'   => 'hide_login_enabled',
+						'kind'   => 'bool',
+						'option' => 'reportedip_hive_hide_login_enabled',
 					),
 				);
 			case 9:
@@ -362,6 +366,43 @@ final class ReportedIP_Hive_Wizard_Schema {
 		foreach ( self::fields( $step ) as $field ) {
 			self::persist_field( $field, $post );
 		}
+		if ( 8 === $step ) {
+			self::reconcile_hide_login( $post );
+		}
+	}
+
+	/**
+	 * Range of an integer option as declared in the registry, for the
+	 * wizard's number inputs.
+	 *
+	 * @param string $option Option key.
+	 * @return array{min:int, max:int}
+	 */
+	public static function limits( $option ) {
+		$spec = ReportedIP_Hive_Settings_Registry::spec();
+		return array(
+			'min' => isset( $spec[ $option ]['min'] ) ? (int) $spec[ $option ]['min'] : 0,
+			'max' => isset( $spec[ $option ]['max'] ) ? (int) $spec[ $option ]['max'] : PHP_INT_MAX,
+		);
+	}
+
+	/**
+	 * Hide-login only makes sense with a usable slug. When the admin asked
+	 * for it but the posted slug was refused, the switch stays off rather
+	 * than pointing the sign-in page at whatever slug was stored before.
+	 *
+	 * @param array<string, mixed> $post Raw POST payload.
+	 * @return void
+	 */
+	private static function reconcile_hide_login( array $post ) {
+		if ( empty( $post['hide_login_enabled'] ) ) {
+			return;
+		}
+		$posted = isset( $post['hide_login_slug'] ) && is_scalar( $post['hide_login_slug'] ) ? (string) $post['hide_login_slug'] : '';
+		$slug   = ReportedIP_Hive_Settings_Registry::sanitize( 'reportedip_hive_hide_login_slug', $posted );
+		if ( is_wp_error( $slug ) || '' === $slug ) {
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_hide_login_enabled', 0 );
+		}
 	}
 
 	/**
@@ -408,6 +449,7 @@ final class ReportedIP_Hive_Wizard_Schema {
 
 			case 'int':
 			case 'enum':
+			case 'slug':
 			case 'text':
 			case 'email':
 			case 'email_list':
@@ -486,7 +528,8 @@ final class ReportedIP_Hive_Wizard_Schema {
 	}
 
 	/**
-	 * Expand a protection-level preset into the four base threshold options.
+	 * Expand a protection-level preset into the four base threshold options,
+	 * each through its registry sanitizer so the reputation floor applies.
 	 *
 	 * @param string $level Posted level slug.
 	 * @return void
@@ -496,9 +539,12 @@ final class ReportedIP_Hive_Wizard_Schema {
 		$level   = isset( $presets[ $level ] ) ? $level : 'medium';
 		$preset  = $presets[ $level ];
 
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_failed_login_threshold', $preset['failed_login_threshold'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_failed_login_timeframe', $preset['failed_login_timeframe'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_block_duration', $preset['block_duration'] );
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_block_threshold', $preset['block_threshold'] );
+		foreach ( $preset as $suffix => $value ) {
+			$option = 'reportedip_hive_' . $suffix;
+			$clean  = ReportedIP_Hive_Settings_Registry::sanitize( $option, $value );
+			if ( ! is_wp_error( $clean ) ) {
+				ReportedIP_Hive_Option_Routing::set( $option, $clean );
+			}
+		}
 	}
 }

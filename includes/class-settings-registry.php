@@ -1736,6 +1736,9 @@ final class ReportedIP_Hive_Settings_Registry {
 			case 'text':
 				return sanitize_text_field( (string) ( is_scalar( $value ) ? $value : '' ) );
 
+			case 'slug':
+				return sanitize_title( (string) ( is_scalar( $value ) ? $value : '' ) );
+
 			case 'textarea':
 				return sanitize_textarea_field( (string) ( is_scalar( $value ) ? $value : '' ) );
 

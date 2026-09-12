@@ -143,6 +143,28 @@
 			return true;
 		},
 
+		/**
+		 * Hide-Login guard (step 8): with the switch on, the slug must have
+		 * passed the live check. Otherwise the server would save the step
+		 * with the feature off and the admin would only notice at the next
+		 * sign-in. Only enforced when moving forward.
+		 */
+		validateHideLoginStep: function (data, forward) {
+			if (!forward || !data.hide_login_enabled) {
+				return true;
+			}
+			if (this._slugValid === true) {
+				return true;
+			}
+			$('#rip-hide-login-slug').trigger('focus');
+			if (!($('#rip-hide-login-slug').val() || '').trim()) {
+				$('#rip-hide-login-validation').text(reportedipWizard.strings.slugRequired || 'Enter a valid login slug.').css('color', 'var(--rip-danger)');
+			} else if (this._slugValid === null) {
+				this.validateSlug();
+			}
+			return false;
+		},
+
 		saveAndGo: function (target) {
 			var step = this.currentStep();
 			if (FIELD_STEPS.indexOf(step) === -1) {
@@ -153,6 +175,9 @@
 			var data = this.collectStep($('.rip-wizard__step-content'));
 			var forward = this.stepFromUrl(target) > step;
 			if (step === 5 && !this.validate2faStep(data, forward)) {
+				return;
+			}
+			if (step === 8 && !this.validateHideLoginStep(data, forward)) {
 				return;
 			}
 
@@ -394,8 +419,16 @@
 		// Hide-Login step (8): slug validation
 		// ========================================================================
 
+		/**
+		 * Outcome of the last live slug check: true, false, or null while
+		 * no answer has arrived yet. A prefilled slug counts as valid because
+		 * it was validated when it was stored.
+		 */
+		_slugValid: null,
+
 		initHideLoginStep: function () {
 			if (!$('#rip-hide-login-enabled').length) { return; }
+			this._slugValid = ($('#rip-hide-login-slug').val() || '').trim() ? true : null;
 			this.toggleHideLoginFields();
 		},
 
@@ -417,6 +450,7 @@
 			var $slug = $('#rip-hide-login-slug');
 			var $msg = $('#rip-hide-login-validation');
 			var slug = ($slug.val() || '').toLowerCase().trim();
+			this._slugValid = null;
 			if (!slug) {
 				$msg.text('').css('color', '');
 				return;
@@ -433,13 +467,17 @@
 				},
 				success: function (response) {
 					if (response.success && response.data && response.data.full_url) {
+						ReportedIPWizard._slugValid = true;
 						$msg.text('✓ ' + response.data.full_url).css('color', 'var(--rip-success)');
 					} else {
+						ReportedIPWizard._slugValid = false;
 						$msg.text((response.data && response.data.message) || (reportedipWizard.strings.errorGeneric || 'Error')).css('color', 'var(--rip-danger)');
 					}
 				},
-				error: function () {
-					$msg.text(reportedipWizard.strings.errorRetry || 'Error.').css('color', 'var(--rip-danger)');
+				error: function (xhr) {
+					ReportedIPWizard._slugValid = false;
+					var refusal = xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message;
+					$msg.text(refusal || reportedipWizard.strings.errorRetry || 'Error.').css('color', 'var(--rip-danger)');
 				}
 			});
 		},

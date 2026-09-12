@@ -56,6 +56,9 @@ function resetWizard(): void {
 		'reportedip_hive_data_retention_days',
 		'reportedip_hive_waf_report_only',
 		'reportedip_hive_bot_action',
+		'reportedip_hive_hide_login_enabled',
+		'reportedip_hive_hide_login_slug',
+		'reportedip_hive_hide_login_response_mode',
 	];
 	// One batched call: each `docker exec` costs ~5s on Windows, and twelve of
 	// them ate half of the 120s per-test budget before the browser even started.
@@ -176,5 +179,51 @@ test.describe('setup wizard — per-step server save', () => {
 		// The enforce-roles option is written (a JSON array) rather than silently
 		// dropped — the exact role sanitisation is covered by the unit suite.
 		expect(wpOption('reportedip_hive_2fa_enforce_roles')).toMatch(/^\[.*\]$/);
+	});
+
+	/**
+	 * The Login step is saved by the same schema path as every other step
+	 * since the wizard rework; the slug runs through the registry sanitizer
+	 * and a refused slug leaves the feature off instead of pointing the
+	 * sign-in page at whatever was stored before.
+	 */
+	test('Login step persists the slug through the registry and refuses a reserved one', async ({ page }) => {
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=8');
+
+		await setToggle(page, '#rip-hide-login-enabled', true);
+		await page.fill('#rip-hide-login-slug', 'Hive E2E Door');
+		await page.check('input[name="hide_login_response_mode"][value="404"]');
+		await page.click('#rip-save-config');
+		await page.waitForURL((url) => url.searchParams.get('step') === '9');
+
+		expect(wpOption('reportedip_hive_hide_login_enabled')).toBe('1');
+		expect(wpOption('reportedip_hive_hide_login_slug')).toBe('hive-e2e-door');
+		expect(wpOption('reportedip_hive_hide_login_response_mode')).toBe('404');
+
+		// Disarm before the next navigation: the admin session survives, but
+		// every later loginAsAdmin() would hit the hidden wp-login.php.
+		wp('option update reportedip_hive_hide_login_enabled 0');
+
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=8');
+		await setToggle(page, '#rip-hide-login-enabled', true);
+		await page.fill('#rip-hide-login-slug', 'wp-admin');
+		// The live check answers with the server's refusal, and the step
+		// refuses to move on while the switch is on and the slug is unusable.
+		await expect(page.locator('#rip-hide-login-validation')).toContainText(/reserved/i);
+		await page.click('#rip-save-config');
+		await expect(page).toHaveURL(/step=8/);
+
+		expect(wpOption('reportedip_hive_hide_login_enabled')).toBe('0');
+		expect(wpOption('reportedip_hive_hide_login_slug')).toBe('hive-e2e-door');
+
+		// Switching Hide Login off lets the step through even with that slug,
+		// and the server keeps the feature off and the stored slug intact.
+		await setToggle(page, '#rip-hide-login-enabled', false);
+		await page.click('#rip-save-config');
+		await page.waitForURL((url) => url.searchParams.get('step') === '9');
+
+		expect(wpOption('reportedip_hive_hide_login_enabled')).toBe('0');
+		expect(wpOption('reportedip_hive_hide_login_slug')).toBe('hive-e2e-door');
 	});
 });
