@@ -394,8 +394,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-apply.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-effects.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ed25519-verifier.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-wizard-schema.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
+				require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-ref.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-store.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-sync.php';
@@ -532,10 +531,8 @@ class ReportedIP_Hive {
 			new ReportedIP_Hive_Admin_Settings();
 			ReportedIP_Hive_Settings_Import_Export::get_instance();
 
-			if ( file_exists( REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-setup-wizard.php' ) ) {
-				require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-setup-wizard.php';
-				new ReportedIP_Hive_Setup_Wizard( $this->mode_manager );
-			}
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-quickstart.php';
+			new ReportedIP_Hive_Quickstart( $this->mode_manager );
 		}
 
 		ReportedIP_Hive_Database::get_instance();

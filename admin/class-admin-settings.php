@@ -6797,17 +6797,17 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 			</div>
 
-			<!-- Setup wizard restart -->
+			<!-- Quickstart -->
 			<div class="rip-settings-section">
 				<h2 class="rip-settings-section__title">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-					<?php esc_html_e( 'Setup wizard', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Quickstart', 'reportedip-hive' ); ?>
 				</h2>
-				<p class="rip-settings-section__desc"><?php esc_html_e( 'Re-run the guided setup to reconfigure mode, API access, detection thresholds and notifications. Existing settings are pre-filled — you can review and confirm each step.', 'reportedip-hive' ); ?></p>
+				<p class="rip-settings-section__desc"><?php esc_html_e( 'Re-run the quickstart to change mode, Community Access Key and the recommended protection. Existing settings stay in place.', 'reportedip-hive' ); ?></p>
 				<div class="rip-flex rip-gap-2">
-					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-wizard&step=1' ) ); ?>" class="rip-button rip-button--secondary">
+					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-quickstart' ) ); ?>" class="rip-button rip-button--secondary">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-						<?php esc_html_e( 'Restart setup wizard', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'Open quickstart', 'reportedip-hive' ); ?>
 					</a>
 				</div>
 			</div>
