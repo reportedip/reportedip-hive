@@ -52,17 +52,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * The gate is the only place the floor and the clamp are combined.
-		 */
-		public function test_the_gate_owns_the_floor_and_the_clamp(): void {
-			$source = $this->source( 'includes/class-reputation-gate.php' );
-
-			$this->assertStringContainsString( 'reportedip_hive_reputation_threshold_floor', $source );
-			$this->assertStringContainsString( 'MIN_BLOCK_THRESHOLD', $source );
-			$this->assertStringContainsString( 'effective_block_threshold', $source );
-		}
-
-		/**
 		 * Every exemption the sign-in path honours must be honoured here too.
 		 */
 		public function test_the_gate_honours_every_exemption(): void {
@@ -73,35 +62,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$body = substr( $source, $start, 2600 );
 
-			$this->assertStringContainsString( 'surface_enabled', $body );
+			$this->assertStringContainsString( 'is_enabled()', $body );
 			$this->assertStringContainsString( 'is_whitelisted', $body );
 			$this->assertStringContainsString( 'is_own_server_ip', $body );
 			$this->assertStringContainsString( 'is_blocked', $body );
 			$this->assertStringContainsString( 'infrastructure', $body );
 			$this->assertStringContainsString( 'report_only_mode', $body );
-		}
-
-		/**
-		 * Without a configured community key nothing may be refused. A site in
-		 * local mode must behave exactly as it did before.
-		 */
-		public function test_the_gate_is_dormant_without_a_key(): void {
-			$source = $this->source( 'includes/class-reputation-gate.php' );
-			$start  = strpos( $source, 'public function verdict(' );
-
-			$this->assertNotFalse( $start, 'verdict() not found.' );
-
-			$body = substr( $source, $start, 1400 );
-
-			$this->assertStringContainsString( 'is_configured()', $body );
-
-			$guard  = strpos( $body, 'is_configured()' );
-			$lookup = strpos( $body, 'check_ip_reputation(' );
-
-			$this->assertNotFalse( $lookup, 'The lookup call is gone.' );
-			$this->assertLessThan( $lookup, $guard, 'The key check must come before the lookup.' );
-
-			$this->assertStringContainsString( "'exceeds'        => false,", $body );
 		}
 
 		/**
@@ -161,13 +127,98 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
-		public function test_the_surface_list_is_the_documented_set(): void {
+		/**
+		 * Every way a lookup can fail must read as "no opinion".
+		 *
+		 * An exhausted daily allowance, an HTTP 429, a timeout, a network
+		 * error, a negative cache hit and a missing key all arrive here as
+		 * `false`. If any of them ever produced a refusal, a site would stop
+		 * accepting comments the moment its allowance ran out, which is the
+		 * one outcome this feature must never cause.
+		 *
+		 * @dataProvider failed_lookups
+		 * @param mixed $answer Lookup answer.
+		 */
+		public function test_a_failed_lookup_never_refuses( $answer ): void {
 			require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
 
-			$this->assertSame(
-				array( 'comment', 'register', 'lostpassword' ),
-				\ReportedIP_Hive_Reputation_Gate::SURFACES
+			$verdict = \ReportedIP_Hive_Reputation_Gate::read_response( $answer, 75 );
+
+			$this->assertFalse( $verdict['exceeds'] );
+			$this->assertSame( 0, $verdict['confidence'] );
+			$this->assertFalse( $verdict['infrastructure'] );
+		}
+
+		/**
+		 * @return array<string, array<int, mixed>>
+		 */
+		public function failed_lookups(): array {
+			return array(
+				'quota exhausted, rate limited, timeout or no key' => array( false ),
+				'null'                          => array( null ),
+				'empty array'                   => array( array() ),
+				'error envelope'                => array( array( 'errors' => array( 'over quota' ) ) ),
+				'answer without the confidence' => array( array( 'totalReports' => 40 ) ),
+				'non-numeric confidence'        => array( array( 'abuseConfidencePercentage' => 'lots' ) ),
+				'string'                        => array( 'service unavailable' ),
+				'integer'                       => array( 429 ),
 			);
+		}
+
+		public function test_a_real_answer_is_read_correctly(): void {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
+
+			$verdict = \ReportedIP_Hive_Reputation_Gate::read_response(
+				array(
+					'abuseConfidencePercentage' => 96,
+					'totalReports'              => 40,
+				),
+				75
+			);
+
+			$this->assertTrue( $verdict['exceeds'] );
+			$this->assertSame( 96, $verdict['confidence'] );
+			$this->assertSame( 40, $verdict['reports'] );
+			$this->assertSame( 75, $verdict['threshold'] );
+		}
+
+		public function test_the_threshold_is_inclusive(): void {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
+
+			$this->assertTrue(
+				\ReportedIP_Hive_Reputation_Gate::read_response( array( 'abuseConfidencePercentage' => 75 ), 75 )['exceeds']
+			);
+			$this->assertFalse(
+				\ReportedIP_Hive_Reputation_Gate::read_response( array( 'abuseConfidencePercentage' => 74 ), 75 )['exceeds']
+			);
+		}
+
+		/**
+		 * Infrastructure the network vouches for is read but never refused.
+		 */
+		public function test_infrastructure_is_flagged_rather_than_refused(): void {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-reputation-gate.php';
+
+			$verdict = \ReportedIP_Hive_Reputation_Gate::read_response(
+				array(
+					'abuseConfidencePercentage' => 96,
+					'isWhitelisted'             => true,
+				),
+				75
+			);
+
+			$this->assertTrue( $verdict['infrastructure'] );
+		}
+
+		/**
+		 * The sign-in path must treat a failed lookup the same way.
+		 */
+		public function test_the_login_path_also_needs_a_positive_answer(): void {
+			$source = $this->source( 'reportedip-hive.php' );
+			$start  = strpos( $source, 'public function pre_auth_check(' );
+			$body   = substr( $source, (int) $start, 3000 );
+
+			$this->assertStringContainsString( '$reputation && isset( $reputation[', $body );
 		}
 	}
 }

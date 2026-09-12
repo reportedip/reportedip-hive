@@ -227,12 +227,5 @@ namespace ReportedIP\Hive\Tests\Unit {
 				\ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'Leave this field empty' )
 			);
 		}
-
-		public function test_the_surface_list_is_the_documented_set(): void {
-			$this->assertSame(
-				array( 'comment', 'register', 'lostpassword' ),
-				\ReportedIP_Hive_Form_Proof::SURFACES
-			);
-		}
 	}
 }

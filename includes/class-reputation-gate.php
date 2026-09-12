@@ -33,25 +33,11 @@ class ReportedIP_Hive_Reputation_Gate {
 	const OPT_ENABLED = 'reportedip_hive_reputation_on_forms';
 
 	/**
-	 * Surfaces the gate guards.
-	 *
-	 * @var string[]
-	 */
-	const SURFACES = array( 'comment', 'register', 'lostpassword' );
-
-	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_Reputation_Gate|null
 	 */
 	private static $instance = null;
-
-	/**
-	 * Verdicts already reached in this request, keyed by address.
-	 *
-	 * @var array<string, array<string, mixed>>
-	 */
-	private $memo = array();
 
 	/**
 	 * Get the singleton instance.
@@ -88,29 +74,6 @@ class ReportedIP_Hive_Reputation_Gate {
 	 */
 	public function is_enabled() {
 		return (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true );
-	}
-
-	/**
-	 * Whether a surface is guarded.
-	 *
-	 * @param string $surface Surface identifier.
-	 * @return bool
-	 * @since  2.1.53
-	 */
-	public function surface_enabled( $surface ) {
-		if ( ! $this->is_enabled() ) {
-			return false;
-		}
-
-		/**
-		 * Filters which form surfaces are checked against the community network.
-		 *
-		 * @param string[] $surfaces Surface identifiers.
-		 * @since 2.1.53
-		 */
-		$surfaces = (array) apply_filters( 'reportedip_hive_reputation_form_surfaces', self::SURFACES );
-
-		return in_array( (string) $surface, $surfaces, true );
 	}
 
 	/**
@@ -162,7 +125,7 @@ class ReportedIP_Hive_Reputation_Gate {
 	 * @since  2.1.53
 	 */
 	public function check( $surface, $ip ) {
-		if ( ! $this->surface_enabled( $surface ) ) {
+		if ( ! $this->is_enabled() ) {
 			return '';
 		}
 
@@ -231,43 +194,64 @@ class ReportedIP_Hive_Reputation_Gate {
 	}
 
 	/**
-	 * Ask the community network about an address, once per request.
+	 * Ask the community network about an address. Repeat lookups inside the
+	 * same window are answered by {@see ReportedIP_Hive_Cache::get_reputation()}.
 	 *
 	 * @param string $ip Client address.
 	 * @return array{exceeds:bool, confidence:int, reports:int, threshold:int, infrastructure:bool}
 	 * @since  2.1.53
 	 */
-	public function verdict( $ip ) {
-		if ( isset( $this->memo[ $ip ] ) ) {
-			return $this->memo[ $ip ];
+	private function verdict( $ip ) {
+		$threshold = self::threshold();
+		$api       = ReportedIP_Hive_API::get_instance();
+
+		if ( ! $api->is_configured() ) {
+			return self::read_response( false, $threshold );
 		}
 
-		$threshold = self::threshold();
-		$verdict   = array(
+		return self::read_response( $api->check_ip_reputation( $ip ), $threshold );
+	}
+
+	/**
+	 * Turn a lookup answer into a verdict. Pure, so the one guarantee that
+	 * matters here can actually be tested.
+	 *
+	 * Every failure mode of the lookup arrives as `false`: an exhausted daily
+	 * allowance, an HTTP 429, a timeout, a network error, a negative cache hit,
+	 * a missing key. All of them must read as "no opinion", never as a reason
+	 * to refuse a submission. A community verdict is an extra source of
+	 * evidence, and losing it may cost the site that evidence, never its
+	 * ability to accept input. The local score runs before this and is
+	 * unaffected either way.
+	 *
+	 * @param mixed $reputation Answer from the lookup, or false on any failure.
+	 * @param int   $threshold  Confidence the refusal starts at.
+	 * @return array{exceeds:bool, confidence:int, reports:int, threshold:int, infrastructure:bool}
+	 * @since  2.1.53
+	 */
+	public static function read_response( $reputation, $threshold ) {
+		$verdict = array(
 			'exceeds'        => false,
 			'confidence'     => 0,
 			'reports'        => 0,
-			'threshold'      => $threshold,
+			'threshold'      => (int) $threshold,
 			'infrastructure' => false,
 		);
 
-		$api = ReportedIP_Hive_API::get_instance();
-
-		if ( ! $api->is_configured() ) {
-			$this->memo[ $ip ] = $verdict;
+		if ( ! is_array( $reputation ) || ! isset( $reputation['abuseConfidencePercentage'] ) ) {
 			return $verdict;
 		}
 
-		$reputation = $api->check_ip_reputation( $ip );
-
-		if ( is_array( $reputation ) && isset( $reputation['abuseConfidencePercentage'] ) ) {
-			$verdict['confidence']     = (int) $reputation['abuseConfidencePercentage'];
-			$verdict['reports']        = isset( $reputation['totalReports'] ) ? (int) $reputation['totalReports'] : 0;
-			$verdict['infrastructure'] = ! empty( $reputation['isWhitelisted'] );
-			$verdict['exceeds']        = $verdict['confidence'] >= $threshold;
+		if ( ! is_numeric( $reputation['abuseConfidencePercentage'] ) ) {
+			return $verdict;
 		}
 
-		$this->memo[ $ip ] = $verdict;
+		$verdict['confidence']     = (int) $reputation['abuseConfidencePercentage'];
+		$verdict['reports']        = isset( $reputation['totalReports'] ) && is_numeric( $reputation['totalReports'] )
+			? (int) $reputation['totalReports']
+			: 0;
+		$verdict['infrastructure'] = ! empty( $reputation['isWhitelisted'] );
+		$verdict['exceeds']        = $verdict['confidence'] >= (int) $threshold;
 
 		return $verdict;
 	}
@@ -379,7 +363,7 @@ class ReportedIP_Hive_Reputation_Gate {
 	 * @since  2.1.53
 	 */
 	public function check_comment( $commentdata ) {
-		if ( ! $this->surface_enabled( 'comment' ) ) {
+		if ( ! $this->is_enabled() ) {
 			return $commentdata;
 		}
 

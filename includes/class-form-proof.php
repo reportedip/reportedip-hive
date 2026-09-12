@@ -135,9 +135,24 @@ class ReportedIP_Hive_Form_Proof {
 	private function __construct() {
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_script' ) );
 		add_action( 'login_enqueue_scripts', array( $this, 'register_script' ) );
-		add_action( 'admin_init', array( $this, 'ensure_field_name' ) );
-		add_action( 'register_form', array( $this, 'print_register_anchor' ) );
-		add_action( 'lostpassword_form', array( $this, 'print_lostpassword_anchor' ) );
+		add_action(
+			'admin_init',
+			function () {
+				$this->field_name();
+			}
+		);
+		add_action(
+			'register_form',
+			function () {
+				$this->print_anchor( 'register' );
+			}
+		);
+		add_action(
+			'lostpassword_form',
+			function () {
+				$this->print_anchor( 'lostpassword' );
+			}
+		);
 		add_action( 'lostpassword_post', array( $this, 'check_lostpassword' ), 10, 1 );
 	}
 
@@ -239,17 +254,6 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
-	 * Seed the field name outside a front-end request, so a cached page is
-	 * never generated while the name is still being decided.
-	 *
-	 * @return void
-	 * @since  2.1.53
-	 */
-	public function ensure_field_name() {
-		$this->field_name();
-	}
-
-	/**
 	 * Register the proof script. Enqueueing happens in {@see anchor_html()}, so
 	 * a page without a protected form gains no asset.
 	 *
@@ -337,26 +341,6 @@ class ReportedIP_Hive_Form_Proof {
 	 */
 	public function print_anchor( $surface ) {
 		echo wp_kses( $this->anchor_html( $surface ), self::anchor_kses() );
-	}
-
-	/**
-	 * Anchor markup for the WordPress registration form.
-	 *
-	 * @return void
-	 * @since  2.1.53
-	 */
-	public function print_register_anchor() {
-		$this->print_anchor( 'register' );
-	}
-
-	/**
-	 * Anchor markup for the lost-password form.
-	 *
-	 * @return void
-	 * @since  2.1.53
-	 */
-	public function print_lostpassword_anchor() {
-		$this->print_anchor( 'lostpassword' );
 	}
 
 	/**
