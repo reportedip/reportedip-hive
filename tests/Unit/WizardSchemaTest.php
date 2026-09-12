@@ -62,6 +62,36 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_honeypot_enabled', null ), 'absent checkbox = false' );
 		}
 
+		public function test_save_step_9_takes_footer_choices_from_the_registry() {
+			\ReportedIP_Hive_Wizard_Schema::save_step(
+				9,
+				array(
+					'promote_enabled' => 1,
+					'promote_variant' => 'banner',
+					'promote_align'   => 'nonsense',
+				)
+			);
+
+			$this->assertSame( 1, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', null ) );
+			$this->assertSame( 'badge', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_variant', null ), 'a variant the registry does not list falls back to the default' );
+			$this->assertSame( 'center', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_align', null ), 'an alignment the registry does not list falls back to the default' );
+		}
+
+		public function test_wizard_ranges_and_choices_come_from_the_registry() {
+			$spec = \ReportedIP_Hive_Settings_Registry::spec();
+
+			foreach ( \ReportedIP_Hive_Wizard_Schema::FIELD_STEPS as $step ) {
+				foreach ( \ReportedIP_Hive_Wizard_Schema::fields( $step ) as $field ) {
+					$this->assertArrayNotHasKey( 'min', $field, $field['name'] );
+					$this->assertArrayNotHasKey( 'max', $field, $field['name'] );
+					$this->assertArrayNotHasKey( 'allowed', $field, $field['name'] );
+					if ( 'enum' === $field['kind'] ) {
+						$this->assertNotEmpty( $spec[ $field['option'] ]['allowed'], $field['name'] . ' needs registry choices' );
+					}
+				}
+			}
+		}
+
 		public function test_every_option_backed_field_has_a_default() {
 			$defaults = array_keys( \ReportedIP_Hive_Defaults::all_option_defaults() );
 
@@ -84,15 +114,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 				6,
 				array(
 					'minimal_logging'     => 0,
-					'data_retention_days' => 5,
+					'data_retention_days' => 0,
 					'auto_anonymize_days' => 500,
 					'log_user_agents'     => 1,
 				)
 			);
 
 			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_minimal_logging', null ) );
-			$this->assertSame( 7, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', null ), 'clamped to min' );
-			$this->assertSame( 90, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_anonymize_days', null ), 'clamped to max' );
+			$this->assertSame( 1, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_data_retention_days', null ), 'clamped to the registry minimum' );
+			$this->assertSame( 365, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_anonymize_days', null ), 'clamped to the registry maximum' );
 			$this->assertSame( 1, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', null ) );
 			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_referer_domains', null ), 'absent checkbox = false' );
 			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', null ), 'absent checkbox = false' );

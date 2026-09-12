@@ -50,11 +50,6 @@ final class ReportedIP_Hive_Wizard_Schema {
 	const SAVE_STEPS = array( 3, 4, 5, 6, 7, 9 );
 
 	/**
-	 * Option key for the WooCommerce Frontend-2FA master toggle.
-	 */
-	const OPT_FRONTEND_ENABLED = 'reportedip_hive_2fa_frontend_enabled';
-
-	/**
 	 * Whether a step number carries persisted form fields.
 	 *
 	 * @param int $step Wizard step index.
@@ -113,16 +108,14 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'option' => 'reportedip_hive_waf_report_only',
 					),
 					array(
-						'name'    => 'bot_action',
-						'kind'    => 'enum',
-						'option'  => 'reportedip_hive_bot_action',
-						'allowed' => array( 'flag', 'off', 'block' ),
+						'name'   => 'bot_action',
+						'kind'   => 'enum',
+						'option' => 'reportedip_hive_bot_action',
 					),
 					array(
-						'name'    => 'disposable_email_action',
-						'kind'    => 'enum',
-						'option'  => 'reportedip_hive_disposable_email_action',
-						'allowed' => array( 'monitor', 'off', 'block' ),
+						'name'   => 'disposable_email_action',
+						'kind'   => 'enum',
+						'option' => 'reportedip_hive_disposable_email_action',
 					),
 					array(
 						'name'   => 'comment_honeypot_enabled',
@@ -171,15 +164,11 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'name'   => '2fa_enforce_grace_days',
 						'kind'   => 'int',
 						'option' => 'reportedip_hive_2fa_enforce_grace_days',
-						'min'    => 0,
-						'max'    => 60,
 					),
 					array(
 						'name'   => '2fa_max_skips',
 						'kind'   => 'int',
 						'option' => 'reportedip_hive_2fa_max_skips',
-						'min'    => 0,
-						'max'    => 20,
 					),
 					array(
 						'name'   => '2fa_trusted_devices',
@@ -213,8 +202,8 @@ final class ReportedIP_Hive_Wizard_Schema {
 					),
 					array(
 						'name'   => '2fa_frontend_enabled',
-						'kind'   => 'frontend_2fa',
-						'option' => self::OPT_FRONTEND_ENABLED,
+						'kind'   => 'bool',
+						'option' => 'reportedip_hive_2fa_frontend_enabled',
 					),
 				);
 			case 6:
@@ -228,15 +217,11 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'name'   => 'data_retention_days',
 						'kind'   => 'int',
 						'option' => 'reportedip_hive_data_retention_days',
-						'min'    => 7,
-						'max'    => 365,
 					),
 					array(
 						'name'   => 'auto_anonymize_days',
 						'kind'   => 'int',
 						'option' => 'reportedip_hive_auto_anonymize_days',
-						'min'    => 1,
-						'max'    => 90,
 					),
 					array(
 						'name'   => 'log_user_agents',
@@ -295,10 +280,9 @@ final class ReportedIP_Hive_Wizard_Schema {
 						'option' => 'reportedip_hive_hide_login_slug',
 					),
 					array(
-						'name'    => 'hide_login_response_mode',
-						'kind'    => 'enum',
-						'option'  => 'reportedip_hive_hide_login_response_mode',
-						'allowed' => array( 'block_page', '404' ),
+						'name'   => 'hide_login_response_mode',
+						'kind'   => 'enum',
+						'option' => 'reportedip_hive_hide_login_response_mode',
 					),
 				);
 			case 9:
@@ -310,12 +294,12 @@ final class ReportedIP_Hive_Wizard_Schema {
 					),
 					array(
 						'name'   => 'promote_variant',
-						'kind'   => 'footer_variant',
+						'kind'   => 'enum',
 						'option' => 'reportedip_hive_auto_footer_variant',
 					),
 					array(
 						'name'   => 'promote_align',
-						'kind'   => 'footer_align',
+						'kind'   => 'enum',
 						'option' => 'reportedip_hive_auto_footer_align',
 					),
 				);
@@ -401,6 +385,14 @@ final class ReportedIP_Hive_Wizard_Schema {
 	/**
 	 * Sanitise and persist a single field descriptor.
 	 *
+	 * Generic kinds run through {@see ReportedIP_Hive_Settings_Registry::sanitize()},
+	 * so the registry's ranges, allowed values, custom sanitizers and tier
+	 * gates apply to the wizard exactly as they do to the settings page and
+	 * the remote transports. The one wizard field outside the registry
+	 * (`delete_data_on_uninstall`, deliberately never remote) uses the plain
+	 * kind sanitizer. A rejected enum or bool falls back to its default;
+	 * anything else is left untouched.
+	 *
 	 * @param array<string, mixed> $field Descriptor from {@see fields()}.
 	 * @param array<string, mixed> $post  Raw POST payload.
 	 * @return void
@@ -411,69 +403,49 @@ final class ReportedIP_Hive_Wizard_Schema {
 
 		switch ( $field['kind'] ) {
 			case 'bool':
-				ReportedIP_Hive_Option_Routing::set( $option, ReportedIP_Hive_Settings_Registry::sanitize_kind( 'bool', ! empty( $post[ $name ] ), $field ) );
+				$raw = ! empty( $post[ $name ] );
 				break;
 
 			case 'int':
-				$raw = isset( $post[ $name ] ) ? $post[ $name ] : (int) $field['min'];
-				ReportedIP_Hive_Option_Routing::set( $option, ReportedIP_Hive_Settings_Registry::sanitize_kind( 'int', $raw, $field ) );
-				break;
-
 			case 'enum':
-				$raw   = isset( $post[ $name ] ) ? wp_unslash( (string) $post[ $name ] ) : '';
-				$value = ReportedIP_Hive_Settings_Registry::sanitize_kind( 'enum', $raw, $field );
-				if ( is_wp_error( $value ) ) {
-					$allowed = (array) $field['allowed'];
-					$value   = (string) $allowed[0];
-				}
-				ReportedIP_Hive_Option_Routing::set( $option, $value );
-				break;
-
 			case 'text':
 			case 'email':
 			case 'email_list':
-				$raw = isset( $post[ $name ] ) ? wp_unslash( (string) $post[ $name ] ) : '';
-				ReportedIP_Hive_Option_Routing::set( $option, ReportedIP_Hive_Settings_Registry::sanitize_kind( (string) $field['kind'], $raw, $field ) );
+				$raw = isset( $post[ $name ] ) && is_scalar( $post[ $name ] ) ? wp_unslash( (string) $post[ $name ] ) : '';
 				break;
 
 			case 'methods':
 				ReportedIP_Hive_Option_Routing::set( $option, wp_json_encode( self::sanitize_methods( $post ) ) );
-				break;
+				return;
 
 			case 'roles':
 				ReportedIP_Hive_Option_Routing::set( $option, wp_json_encode( self::sanitize_roles( $post ) ) );
-				break;
+				return;
 
 			case 'json_list':
-				$raw    = isset( $post[ $name ] ) && is_array( $post[ $name ] ) ? wp_unslash( $post[ $name ] ) : array();
-				$result = ReportedIP_Hive_Settings_Registry::sanitize( $option, $raw );
-				if ( ! is_wp_error( $result ) ) {
-					ReportedIP_Hive_Option_Routing::set( $option, $result );
-				}
+				$raw = isset( $post[ $name ] ) && is_array( $post[ $name ] ) ? wp_unslash( $post[ $name ] ) : array();
 				break;
 
 			case 'preset':
 				self::apply_protection_preset( isset( $post[ $name ] ) ? (string) $post[ $name ] : 'medium' );
-				break;
+				return;
 
-			case 'footer_variant':
-				$raw   = isset( $post[ $name ] ) ? sanitize_key( wp_unslash( (string) $post[ $name ] ) ) : 'badge';
-				$value = class_exists( 'ReportedIP_Hive_Frontend_Shortcodes' )
-					? ReportedIP_Hive_Frontend_Shortcodes::sanitize_footer_variant( $raw )
-					: ( 'shield' === $raw ? 'shield' : 'badge' );
-				ReportedIP_Hive_Option_Routing::set( $option, $value );
-				break;
-
-			case 'footer_align':
-				$raw   = isset( $post[ $name ] ) ? sanitize_key( wp_unslash( (string) $post[ $name ] ) ) : 'center';
-				$value = in_array( $raw, array( 'left', 'center', 'right', 'below' ), true ) ? $raw : 'center';
-				ReportedIP_Hive_Option_Routing::set( $option, $value );
-				break;
-
-			case 'frontend_2fa':
-				self::persist_frontend_2fa( $option, ! empty( $post[ $name ] ) );
-				break;
+			default:
+				return;
 		}
+
+		$spec  = ReportedIP_Hive_Settings_Registry::spec();
+		$value = isset( $spec[ $option ] )
+			? ReportedIP_Hive_Settings_Registry::sanitize( $option, $raw )
+			: ReportedIP_Hive_Settings_Registry::sanitize_kind( (string) $field['kind'], $raw, $field );
+		if ( is_wp_error( $value ) ) {
+			$defaults = ReportedIP_Hive_Defaults::all_option_defaults();
+			if ( ! in_array( $field['kind'], array( 'enum', 'bool' ), true ) || ! array_key_exists( $option, $defaults ) ) {
+				return;
+			}
+			$value = $defaults[ $option ];
+		}
+		ReportedIP_Hive_Option_Routing::set( $option, $value );
 	}
 
 	/**
@@ -528,25 +500,5 @@ final class ReportedIP_Hive_Wizard_Schema {
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_failed_login_timeframe', $preset['failed_login_timeframe'] );
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_block_duration', $preset['block_duration'] );
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_block_threshold', $preset['block_threshold'] );
-	}
-
-	/**
-	 * Persist the WooCommerce Frontend-2FA toggle, refusing to enable it below
-	 * the Professional tier. The rewrite flush and availability-memo reset run
-	 * through {@see ReportedIP_Hive_Settings_Effects}, which watches the option.
-	 *
-	 * @param string $option  Target option key.
-	 * @param bool   $desired Whether the admin asked for it to be on.
-	 * @return void
-	 */
-	private static function persist_frontend_2fa( $option, $desired ) {
-		if ( $desired && class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
-			if ( empty( $status['available'] ) ) {
-				$desired = false;
-			}
-		}
-
-		ReportedIP_Hive_Option_Routing::set( $option, $desired ? '1' : '' );
 	}
 }
