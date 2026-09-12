@@ -97,6 +97,20 @@ test.describe('setup wizard — per-step server save', () => {
 		resetWizard();
 	});
 
+	/**
+	 * The wizard renders outside the admin chrome and skips the front-end
+	 * enqueue phase, which is also where core unhooks its deprecated footer
+	 * skip-link callback. Under WP_DEBUG_DISPLAY that used to print a PHP
+	 * deprecation notice into the page.
+	 */
+	test('the standalone wizard page prints no PHP notices', async ({ page }) => {
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=1');
+
+		await expect(page.locator('.rip-wizard__step-content')).toBeVisible();
+		expect(await page.content()).not.toMatch(/(Deprecated|Warning|Notice|Fatal error):\s/);
+	});
+
 	test('Firewall step persists toggles + action selects', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=4');

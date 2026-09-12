@@ -2106,6 +2106,12 @@ class ReportedIP_Hive {
 	 * third-party noise here. Callers still hide the bar via
 	 * `show_admin_bar( false )`.
 	 *
+	 * Skipping `wp_enqueue_scripts` also skips
+	 * `wp_enqueue_block_template_skip_link()`, the only place core unhooks
+	 * its deprecated `the_block_template_skip_link` footer callback, so
+	 * that one is unhooked here too or every standalone page prints a
+	 * deprecation notice under WP_DEBUG_DISPLAY.
+	 *
 	 * @since 2.1.21
 	 * @return void
 	 */
@@ -2115,6 +2121,7 @@ class ReportedIP_Hive {
 		remove_action( 'wp_head', 'wp_admin_bar_header' );
 		remove_action( 'wp_footer', 'wp_admin_bar_render', 1000 );
 		remove_action( 'wp_head', 'wp_enqueue_scripts', 1 );
+		remove_action( 'wp_footer', 'the_block_template_skip_link' );
 		remove_action( 'wp_head', 'wp_enqueue_admin_bar_bump_styles' );
 		remove_action( 'wp_head', 'wp_enqueue_admin_bar_header_styles' );
 		remove_action( 'wp_head', '_admin_bar_bump_cb' );
