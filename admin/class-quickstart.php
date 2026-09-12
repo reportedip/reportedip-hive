@@ -83,19 +83,24 @@ class ReportedIP_Hive_Quickstart {
 	}
 
 	/**
-	 * Hidden menu entry so the slug routes; the page itself renders standalone.
+	 * Hidden menu entries so both slugs route; the page itself renders
+	 * standalone. The legacy slug must stay registered because core's
+	 * `user_can_access_admin_page()` dies with 403 before `admin_init`
+	 * for any unregistered `page=` value, so the redirect would never run.
 	 *
 	 * @return void
 	 */
 	public function add_page() {
-		add_submenu_page(
-			'',
-			__( 'Quickstart', 'reportedip-hive' ),
-			__( 'Quickstart', 'reportedip-hive' ),
-			ReportedIP_Hive_Option_Routing::manage_capability(),
-			self::PAGE_SLUG,
-			'__return_null'
-		);
+		foreach ( array( self::PAGE_SLUG, self::LEGACY_SLUG ) as $slug ) {
+			add_submenu_page(
+				'',
+				__( 'Quickstart', 'reportedip-hive' ),
+				__( 'Quickstart', 'reportedip-hive' ),
+				ReportedIP_Hive_Option_Routing::manage_capability(),
+				$slug,
+				'__return_null'
+			);
+		}
 	}
 
 	/**
