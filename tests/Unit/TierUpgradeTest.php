@@ -23,6 +23,9 @@ namespace ReportedIP\Hive\Tests\Unit;
 
 use ReportedIP\Hive\Tests\TestCase;
 
+require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
+require_once dirname( __DIR__, 2 ) . '/includes/class-settings-apply.php';
 require_once dirname( __DIR__, 2 ) . '/includes/class-tier-upgrade.php';
 
 /**
@@ -35,6 +38,9 @@ class TierUpgradeTest extends TestCase {
 		parent::set_up();
 		$GLOBALS['wp_options']    = array();
 		$GLOBALS['wp_transients'] = array();
+		require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-settings-apply.php';
 		require_once dirname( __DIR__, 2 ) . '/includes/class-tier-upgrade.php';
 	}
 

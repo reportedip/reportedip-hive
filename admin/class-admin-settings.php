@@ -1470,6 +1470,23 @@ class ReportedIP_Hive_Admin_Settings {
 		$two_factor_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=two_factor' );
 		$checklist      = ReportedIP_Hive_Tier_Upgrade::get_setup_checklist();
 
+		$activated_labels = array();
+		$spec             = ReportedIP_Hive_Settings_Registry::spec();
+		foreach ( (array) ( $notice['activated'] ?? array() ) as $activated_key ) {
+			if ( isset( $spec[ $activated_key ]['label'] ) ) {
+				$activated_labels[] = (string) $spec[ $activated_key ]['label'];
+			}
+		}
+		$body = __( 'Two-factor authentication via the managed reportedip.com relay is now included with your plan. SMS is ready to use — enable it as a method to roll it out:', 'reportedip-hive' );
+		if ( ! empty( $activated_labels ) ) {
+			$body = sprintf(
+				/* translators: 1: tier label, 2: comma-separated list of setting labels */
+				__( 'Switched on for %1$s: %2$s.', 'reportedip-hive' ),
+				$tier_label,
+				implode( ', ', $activated_labels )
+			) . ' ' . $body;
+		}
+
 		$title = sprintf(
 			/* translators: %s = tier label, e.g. Professional */
 			__( 'Your %s plan is active — finish 2FA setup', 'reportedip-hive' ),
@@ -1481,7 +1498,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'variant'           => 'info',
 				'extra_classes'     => 'rip-tier-upgrade-banner',
 				'title'             => $title,
-				'body'              => __( 'Two-factor authentication via the managed reportedip.com relay is now included with your plan. SMS is ready to use — enable it as a method to roll it out:', 'reportedip-hive' ),
+				'body'              => $body,
 				'checklist'         => $checklist,
 				'primary_action'    => array(
 					'label' => __( 'Open 2FA settings', 'reportedip-hive' ),

@@ -17,10 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Listens on `reportedip_hive_tier_changed`. When the customer crosses from a
- * free tier into a paid plan, prefills the SMS provider with the managed
- * relay (only if no provider was set yet), ensures the email method is in the
- * site-wide allow-list, and stores a notice payload that the admin banner
- * renders until the customer either finishes the setup or dismisses it.
+ * free tier into a paid plan, ensures the email method is in the site-wide
+ * allow-list, enables Hardening Mode, applies the recommendation delta of the
+ * new tier to untouched settings, and stores a notice payload that the admin
+ * banner renders until the customer either finishes the setup or dismisses
+ * it. Every later rank increase (Professional to Business) applies the delta
+ * as well, without a banner.
  *
  * Public API is fully static — no singleton state required.
  *
@@ -31,7 +33,8 @@ class ReportedIP_Hive_Tier_Upgrade {
 	/**
 	 * Option key for the "you've upgraded — finish 2FA setup" notice payload.
 	 *
-	 * Payload shape: `array{from:string,to:string,set_at:int}`.
+	 * Payload shape: `array{from:string,to:string,set_at:int,activated:string[]}`;
+	 * `activated` lists the option keys the recommendation delta wrote.
 	 */
 	const NOTICE_OPT = 'reportedip_hive_tier_upgrade_notice';
 
@@ -70,6 +73,10 @@ class ReportedIP_Hive_Tier_Upgrade {
 	/**
 	 * Hook callback: react to a tier transition.
 	 *
+	 * A rank increase between paid tiers (Professional to Business) applies
+	 * the recommendation delta without a banner; the banner stays reserved
+	 * for the Free/Contributor to paid crossing.
+	 *
 	 * @param string $prev Previous tier slug (free / contributor / professional / …).
 	 * @param string $next New tier slug.
 	 * @return void
@@ -84,6 +91,10 @@ class ReportedIP_Hive_Tier_Upgrade {
 		}
 		if ( self::is_downgrade_from_pro( $prev, $next ) ) {
 			self::handle_downgrade_from_pro( $prev, $next );
+			return;
+		}
+		if ( ReportedIP_Hive_Defaults::recommendation_rank( $next ) > ReportedIP_Hive_Defaults::recommendation_rank( $prev ) ) {
+			self::apply_recommended_diff( $prev, $next );
 		}
 	}
 
@@ -104,13 +115,15 @@ class ReportedIP_Hive_Tier_Upgrade {
 	private static function handle_upgrade_to_pro( $prev, $next ) {
 		self::ensure_email_in_allowed_methods();
 		self::ensure_hardening_enabled_for_pro();
+		$activated = self::apply_recommended_diff( $prev, $next );
 
 		ReportedIP_Hive_Option_Routing::set(
 			self::NOTICE_OPT,
 			array(
-				'from'   => $prev,
-				'to'     => $next,
-				'set_at' => time(),
+				'from'      => $prev,
+				'to'        => $next,
+				'set_at'    => time(),
+				'activated' => $activated,
 			)
 		);
 
@@ -296,7 +309,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	/**
 	 * Read the notice payload (or null when none).
 	 *
-	 * @return array{from:string,to:string,set_at:int}|null
+	 * @return array{from:string,to:string,set_at:int,activated?:string[]}|null
 	 */
 	public static function get_notice() {
 		$raw = ReportedIP_Hive_Option_Routing::get( self::NOTICE_OPT, null );
@@ -384,6 +397,90 @@ class ReportedIP_Hive_Tier_Upgrade {
 			return;
 		}
 		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_Hardening_Mode::OPT_MASTER_ENABLED, 1 );
+	}
+
+	/**
+	 * Which of the new tier's recommended values may be written.
+	 *
+	 * A key is selected when the new recommendation differs from the old one
+	 * and the stored value still equals either the seed default or the old
+	 * recommendation. Anything the admin changed deliberately is left alone.
+	 * Pure: no option reads, so the rule is unit-testable.
+	 *
+	 * @param array<string, mixed> $previous Recommendation of the previous tier.
+	 * @param array<string, mixed> $next     Recommendation of the new tier.
+	 * @param array<string, mixed> $seed     `Defaults::all_option_defaults()`.
+	 * @param array<string, mixed> $current  Stored values, key => value; a missing key counts as untouched.
+	 * @return array<string, mixed> Subset of `$next` to apply, sorted by key.
+	 * @since  2.1.54
+	 */
+	public static function select_upgrade_values( array $previous, array $next, array $seed, array $current ) {
+		$selected = array();
+		foreach ( $next as $key => $value ) {
+			if ( array_key_exists( $key, $previous ) && self::same( $key, $previous[ $key ], $value ) ) {
+				continue;
+			}
+			if ( ! array_key_exists( $key, $current ) ) {
+				$selected[ $key ] = $value;
+				continue;
+			}
+			$stored    = $current[ $key ];
+			$untouched = ( array_key_exists( $key, $seed ) && self::same( $key, $seed[ $key ], $stored ) )
+				|| ( array_key_exists( $key, $previous ) && self::same( $key, $previous[ $key ], $stored ) );
+			if ( $untouched ) {
+				$selected[ $key ] = $value;
+			}
+		}
+		ksort( $selected );
+		return $selected;
+	}
+
+	/**
+	 * Registry-normalised equality, so `true`, `1` and `'1'` compare equal.
+	 *
+	 * @param string $key Option key.
+	 * @param mixed  $a   First value.
+	 * @param mixed  $b   Second value.
+	 * @return bool
+	 */
+	private static function same( $key, $a, $b ) {
+		return ReportedIP_Hive_Settings_Registry::normalize_value( $key, $a )
+			=== ReportedIP_Hive_Settings_Registry::normalize_value( $key, $b );
+	}
+
+	/**
+	 * Apply the recommendation delta between two tiers through the settings
+	 * registry. Returns the keys that were actually written, so the banner
+	 * can tell the admin what changed.
+	 *
+	 * @param string $prev Previous tier slug.
+	 * @param string $next New tier slug.
+	 * @return string[] Applied option keys.
+	 * @since  2.1.54
+	 */
+	public static function apply_recommended_diff( $prev, $next ) {
+		$mode = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_operation_mode', 'local' );
+		$old  = ReportedIP_Hive_Defaults::recommended( (string) $prev, $mode );
+		$new  = ReportedIP_Hive_Defaults::recommended( (string) $next, $mode );
+
+		$values = self::select_upgrade_values(
+			$old,
+			$new,
+			ReportedIP_Hive_Defaults::all_option_defaults(),
+			ReportedIP_Hive_Settings_Registry::current_values( array_keys( $new ) )
+		);
+		if ( empty( $values ) ) {
+			return array();
+		}
+
+		$result  = ReportedIP_Hive_Settings_Apply::apply( $values, 'tier_upgrade' );
+		$applied = array();
+		foreach ( $result['results'] as $key => $row ) {
+			if ( ReportedIP_Hive_Settings_Apply::STATUS_APPLIED === $row['status'] ) {
+				$applied[] = (string) $key;
+			}
+		}
+		return $applied;
 	}
 
 	/**
