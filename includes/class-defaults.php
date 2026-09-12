@@ -1,7 +1,7 @@
 <?php
 /**
- * Centralised plugin defaults — single source of truth for the wizard JS,
- * the wizard PHP form fallbacks and the post-wizard safe-default seed.
+ * Centralised plugin defaults — single source of truth for every option
+ * default, the protection-level presets and the safe-default seed.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -21,10 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Three accessors are exposed:
  *
- *  - `wizard()` returns the small set of wizard-form fallbacks (grace days,
- *    retention, mode, protection level, auto-footer alignment). Consumed by
- *    the wizard JS via wp_localize_script and by PHP rendering of the
- *    wizard steps.
+ *  - `protection_presets()` returns the four protection levels (low, medium,
+ *    high, paranoid), each a set of the four base threshold values. The
+ *    medium level equals the corresponding `all_option_defaults()` entries.
  *  - `all_option_defaults()` (alias `safe_options()`) returns the canonical
  *    option-key => default map. This is the one place option defaults live;
  *    activation seeding, the wizard-skip seed, the settings-reset re-seed and
@@ -52,22 +51,6 @@ final class ReportedIP_Hive_Defaults {
 	 * @var int
 	 */
 	public const MIN_BLOCK_THRESHOLD = 25;
-
-	/**
-	 * Wizard-form fallbacks. Keep keys ASCII-stable and JSON-friendly —
-	 * they are sent to the browser via wp_localize_script.
-	 *
-	 * @var array<string, scalar>
-	 */
-	private const WIZARD = array(
-		'grace_days'        => 7,
-		'max_skips'         => 3,
-		'retention_days'    => 30,
-		'anonymize_days'    => 7,
-		'mode'              => 'local',
-		'protection_level'  => 'medium',
-		'auto_footer_align' => 'center',
-	);
 
 	/**
 	 * Canonical option-key => default map. The single source of truth for
@@ -321,28 +304,6 @@ final class ReportedIP_Hive_Defaults {
 	);
 
 	/**
-	 * Wizard Step-3 detection-toggle keys (without the option prefix).
-	 *
-	 * The default ON/OFF value lives in `SAFE_OPTIONS` — the wizard reads it
-	 * back through `wizard_protection_defaults()` so the two never drift.
-	 *
-	 * @var array<int, string>
-	 */
-	private const WIZARD_PROTECTION_KEYS = array(
-		'monitor_failed_logins',
-		'monitor_comments',
-		'monitor_xmlrpc',
-		'monitor_app_passwords',
-		'monitor_rest_api',
-		'block_user_enumeration',
-		'monitor_404_scans',
-		'monitor_geo_anomaly',
-		'auto_block',
-		'block_escalation_enabled',
-		'report_only_mode',
-	);
-
-	/**
 	 * Resolve the active notification recipient list.
 	 *
 	 * Reads the comma-separated `reportedip_hive_notify_recipients` option and
@@ -431,35 +392,39 @@ final class ReportedIP_Hive_Defaults {
 	}
 
 	/**
-	 * Look up a single wizard-form default.
+	 * Protection-level presets. Each level sets the four base threshold
+	 * options in one move; the medium level is the plain option default.
 	 *
-	 * Throws on an unknown key — defaults must be registered explicitly to
-	 * avoid the "scattered default values" anti-pattern this class exists to
-	 * solve.
-	 *
-	 * @param string $key Wizard default key.
-	 * @return int|string
-	 * @throws \InvalidArgumentException When the key is unknown.
-	 * @since  1.4.0
+	 * @return array<string, array<string, int>>
+	 * @since  2.1.54
 	 */
-	public static function get( string $key ) {
-		if ( ! array_key_exists( $key, self::WIZARD ) ) {
-			throw new \InvalidArgumentException(
-				sprintf( 'Unknown wizard default: %s', esc_html( $key ) )
-			);
-		}
-		return self::WIZARD[ $key ];
-	}
-
-	/**
-	 * Return all wizard-form defaults — used by `wp_localize_script` so the
-	 * JS can read them without bundling a duplicated copy.
-	 *
-	 * @return array<string, scalar>
-	 * @since  1.4.0
-	 */
-	public static function wizard(): array {
-		return self::WIZARD;
+	public static function protection_presets(): array {
+		return array(
+			'low'      => array(
+				'failed_login_threshold' => 10,
+				'failed_login_timeframe' => 30,
+				'block_duration'         => 1,
+				'block_threshold'        => 90,
+			),
+			'medium'   => array(
+				'failed_login_threshold' => 5,
+				'failed_login_timeframe' => 15,
+				'block_duration'         => 24,
+				'block_threshold'        => 75,
+			),
+			'high'     => array(
+				'failed_login_threshold' => 3,
+				'failed_login_timeframe' => 15,
+				'block_duration'         => 48,
+				'block_threshold'        => 60,
+			),
+			'paranoid' => array(
+				'failed_login_threshold' => 2,
+				'failed_login_timeframe' => 10,
+				'block_duration'         => 168,
+				'block_threshold'        => 25,
+			),
+		);
 	}
 
 	/**
@@ -503,21 +468,5 @@ final class ReportedIP_Hive_Defaults {
 			}
 			ReportedIP_Hive_Option_Routing::set( $option_key, $default_value );
 		}
-	}
-
-	/**
-	 * Wizard Step-3 fallback profile, derived from `SAFE_OPTIONS` so detection
-	 * defaults stay in lockstep regardless of which surface a user reaches
-	 * first (wizard, settings, fresh install).
-	 *
-	 * @return array<string, bool>
-	 * @since  1.6.0
-	 */
-	public static function wizard_protection_defaults(): array {
-		$defaults = array();
-		foreach ( self::WIZARD_PROTECTION_KEYS as $key ) {
-			$defaults[ $key ] = (bool) self::SAFE_OPTIONS[ 'reportedip_hive_' . $key ];
-		}
-		return $defaults;
 	}
 }

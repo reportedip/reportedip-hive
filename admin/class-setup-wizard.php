@@ -400,7 +400,6 @@ class ReportedIP_Hive_Setup_Wizard {
 				'dashboardUrl'  => self::get_admin_page_url( 'admin.php?page=reportedip-hive' ),
 				'registerUrl'   => 'https://reportedip.com/register/',
 				'wizardBaseUrl' => self::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ),
-				'defaults'      => ReportedIP_Hive_Defaults::wizard(),
 				'savedApiKey'   => $saved_key,
 				'tier'          => $saved_tier,
 				'strings'       => array(

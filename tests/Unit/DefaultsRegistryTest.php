@@ -68,11 +68,19 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayNotHasKey( 'reportedip_hive_2fa_enforce_roles_extra', $defaults );
 		}
 
-		public function test_wizard_protection_defaults_all_resolve_to_booleans() {
-			$protection = \ReportedIP_Hive_Defaults::wizard_protection_defaults();
-			$this->assertCount( 11, $protection );
-			foreach ( $protection as $key => $value ) {
-				$this->assertIsBool( $value, "wizard_protection default {$key} must be boolean." );
+		public function test_medium_preset_equals_the_option_defaults() {
+			$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
+			$medium   = \ReportedIP_Hive_Defaults::protection_presets()['medium'];
+			$this->assertSame(
+				array( 'failed_login_threshold', 'failed_login_timeframe', 'block_duration', 'block_threshold' ),
+				array_keys( $medium )
+			);
+			foreach ( $medium as $suffix => $value ) {
+				$this->assertSame(
+					$defaults[ 'reportedip_hive_' . $suffix ],
+					$value,
+					"Medium preset and option default for {$suffix} must not drift."
+				);
 			}
 		}
 

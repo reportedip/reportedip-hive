@@ -313,38 +313,13 @@ final class ReportedIP_Hive_Wizard_Schema {
 	}
 
 	/**
-	 * Protection-level presets shared by the wizard. Each level sets four base
-	 * thresholds in one move.
+	 * Protection-level presets shared by the wizard, delegated to
+	 * {@see ReportedIP_Hive_Defaults::protection_presets()}.
 	 *
 	 * @return array<string, array<string, int>>
 	 */
 	public static function protection_presets() {
-		return array(
-			'low'      => array(
-				'failed_login_threshold' => 10,
-				'failed_login_timeframe' => 30,
-				'block_duration'         => 1,
-				'block_threshold'        => 90,
-			),
-			'medium'   => array(
-				'failed_login_threshold' => 5,
-				'failed_login_timeframe' => 15,
-				'block_duration'         => 24,
-				'block_threshold'        => 75,
-			),
-			'high'     => array(
-				'failed_login_threshold' => 3,
-				'failed_login_timeframe' => 15,
-				'block_duration'         => 48,
-				'block_threshold'        => 60,
-			),
-			'paranoid' => array(
-				'failed_login_threshold' => 2,
-				'failed_login_timeframe' => 10,
-				'block_duration'         => 168,
-				'block_threshold'        => 25,
-			),
-		);
+		return ReportedIP_Hive_Defaults::protection_presets();
 	}
 
 	/**
