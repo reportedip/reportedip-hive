@@ -12,7 +12,7 @@
  * Text Domain: reportedip-hive
  * Domain Path: /languages
  * Requires at least: 5.9
- * Tested up to: 7.0
+ * Tested up to: 7.1
  * Requires PHP: 8.1
  * Network: true
  * Update URI: https://github.com/reportedip/reportedip-hive
@@ -220,7 +220,7 @@ class ReportedIP_Hive {
 			add_action( 'admin_init', array( __CLASS__, 'maybe_seed_on_upgrade' ) );
 		}
 
-		ReportedIP_Hive_Settings_Effects::init();
+		add_action( 'init', array( 'ReportedIP_Hive_Settings_Effects', 'init' ), 0 );
 
 		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
 		$flush_frontend_memo = array( 'ReportedIP_Hive_Two_Factor_Frontend', 'flush_slug_memo' );
@@ -627,7 +627,7 @@ class ReportedIP_Hive {
 		if ( ! class_exists( 'ReportedIP_Hive_Form_Proof' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-form-proof.php';
 		}
-		ReportedIP_Hive_Form_Proof::get_instance()->ensure_field_name();
+		ReportedIP_Hive_Form_Proof::get_instance()->field_name();
 
 		ReportedIP_Hive_Cron_Handler::schedule_cron_jobs_static();
 

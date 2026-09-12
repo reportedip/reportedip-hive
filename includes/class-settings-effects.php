@@ -57,6 +57,12 @@ final class ReportedIP_Hive_Settings_Effects {
 	 * effects — both `update_option_*` (single site) and
 	 * `update_site_option_*` (network) fire for any writer.
 	 *
+	 * Runs on `init` at priority 0, not from the plugin constructor: reading
+	 * the registry translates every label, and WordPress 6.7+ refuses to load
+	 * a text domain before `init`. With `WP_DEBUG_DISPLAY` on, that notice is
+	 * printed before any header and kills every front-end request. Nothing
+	 * writes a watched option earlier than `init`, activation included.
+	 *
 	 * @return void
 	 */
 	public static function init() {
