@@ -39,11 +39,25 @@ All changes to ReportedIP Hive are documented here.
   submitted, the visitor is told why, and the address is closed for 24 hours the
   same way a refused sign-in closes it.
 
+  Fail-open throughout: an exhausted daily allowance, a rate limit, a timeout or
+  an unreachable network all read as "no opinion", and the submission is judged
+  by the local signals alone. The same holds on the sign-in page. Losing the
+  community opinion costs a site that evidence, never its ability to accept
+  input.
+
   On by default, switchable next to the other form settings, and dormant without
   Community Network mode. Every exemption the sign-in path honours applies here
   too: whitelisted addresses, the site's own server, infrastructure the network
   flags as such, and report-only mode, which logs the verdict and refuses
   nothing. A submission the local filter has already judged costs no lookup.
+
+### Changed
+
+- Tested up to WordPress 7.1. Both development stacks now run 7.1, so the
+  header describes what the suite actually exercises.
+- The WordPress.org Plugin Check gate in CI now reads the verdict out of the
+  tool's output. `wp plugin check` exits 0 regardless of what it reports, so
+  until now an error there never turned the job red.
 
 ### Security
 
