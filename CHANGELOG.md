@@ -24,6 +24,17 @@ All changes to ReportedIP Hive are documented here.
   threat check.
 - The frontend-2FA rewrite flush is declared on the registry entries
   instead of a side list in the effects dispatcher.
+- **The setup wizard saves every step through one path.** The Login step
+  (Hide Login) used to be the one step with its own save routine; it now
+  runs through the wizard schema like the other six field steps, the slug
+  passes the registry sanitizer, and the switch never ends up on with a
+  refused slug. The wizard also refuses to move on while Hide Login is on
+  and the slug has not passed the live check, and the live check now shows
+  the real reason (reserved slug, too short) instead of a generic error.
+  The protection presets are written through the registry as well, so the
+  reputation floor applies to them. Number inputs in the wizard take their
+  ranges from the registry, and a unit test refuses hard-coded ranges or
+  select options the registry does not allow.
 
 ### Removed
 
