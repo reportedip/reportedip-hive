@@ -229,7 +229,7 @@ test.describe('user blocking and sessions', () => {
 
 		const rows = page.locator('#the-list tr');
 		await expect(rows).toHaveCount(1);
-		await expect(rows.first().locator('td.username')).toContainText(TEST_USER);
+		await expect(rows.first().locator('.column-username')).toContainText(TEST_USER);
 		await expect(rows.first().locator('td.rip_account .rip-badge--danger')).toHaveText('Blocked');
 	});
 
@@ -294,7 +294,7 @@ test.describe('user blocking and sessions', () => {
 		await expect(page.locator('#reportedip-hive-account-access')).toHaveCount(0);
 
 		await page.goto('/wp-admin/users.php');
-		const ownRow = page.locator('#the-list tr').filter({ has: page.locator(`td.username a:text-is("${ADMIN_USER}")`) });
+		const ownRow = page.locator('#the-list tr').filter({ has: page.locator(`.column-username a:text-is("${ADMIN_USER}")`) });
 		await ownRow.locator('input[name="users[]"]').check();
 		await page.selectOption('#bulk-action-selector-top', 'reportedip_block');
 		await page.click('#doaction');

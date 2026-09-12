@@ -3,7 +3,7 @@ Contributors: reportedip, patrickschlesinger
 Donate link: https://reportedip.com
 Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.1
 Stable tag: 2.1.53
 License: GPL-2.0-or-later
@@ -52,7 +52,7 @@ Two ways to run:
 * **Verified bot detection** — confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
 * **Registration defence** — one rule set for every sign-up surface (WordPress, WooCommerce, Multisite sign-ups, programmatic user creation): throwaway-mail domains (off / monitor / block, privacy relays such as Apple Hide My Email and Firefox Relay pass by default), prohibited usernames on top of a baseline of ten role names, e-mail allow or block rules, a per-IP registration rate limit (default 3 / 60 min) and an opt-in immediate block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts `/regex/` patterns and adds registration restricted to allowlisted IP ranges. The live throwaway-mail list rides Priority Sync
 * **Form execution proof** — the comment, sign-up and password-reset forms carry an invisible, screen-reader-excluded decoy field, and a small script adds a second field whose name is random per installation. A bot that fills every field trips the decoy; a script that posts straight at the address without ever loading the form cannot carry the second field. No CAPTCHA, no puzzle and no extra step for real visitors. The verdict is four-way, so a theme with hand-written comment markup is never treated like a bot, and the site measures for itself whether it plants the field. For comments the result is a scoring signal, so a visitor browsing without JavaScript has their comment filed for review instead of refused, and that reason on its own never counts towards a block. Sign-up and password reset can be left out with a separate switch, and the global report-only mode stands the refusals down everywhere while still logging them
-* **Community threat check on forms** — when a comment, sign-up or password reset is submitted, the visitor address is checked against the community network at the same protection level the sign-in page enforces. Someone the site would refuse a login to cannot post a comment instead. The visitor is told why, and the address is closed for 24 hours exactly as a refused sign-in closes it. On by default, needs Community Network mode, and honours every exemption the sign-in path honours
+* **Community threat check on forms** — when a comment, sign-up or password reset is submitted, the visitor address is checked against the community network at the same protection level the sign-in page enforces. Someone the site would refuse a login to cannot post a comment instead. The visitor is told why, and the address is closed for 24 hours exactly as a refused sign-in closes it. On by default, needs Community Network mode, and honours every exemption the sign-in path honours. If the daily allowance runs out, the network is unreachable or the answer never arrives, nothing is refused anywhere: the local scoring carries on exactly as before. Losing the community opinion may cost a site that evidence, never its ability to accept input
 * **Geographic anomaly** — login from a country never seen for the user, optionally revokes trusted-device cookies
 * **Password policy** — minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
 * **WooCommerce login hooks** — checkout + my-account forms tracked separately
@@ -346,6 +346,10 @@ No. ETag-based reputation caching, per-request IP cache, queued reports processe
 = Does it conflict with my page-cache plugin? =
 
 No. The 403 block-page sets `DONOTCACHEPAGE` and the no-store header set respected by WP Rocket, W3TC, WP Super Cache and LiteSpeed. Authentication paths (`wp-login.php`, `wp-admin/`, `wp-json/`, XMLRPC) are excluded from caching by all of these plugins by default — your blocks fire there normally.
+
+= What happens when my daily lookup allowance runs out? =
+
+Nothing is refused. Every failure mode of the community lookup, an exhausted allowance, a rate limit, a timeout, an unreachable network or a missing key, reads as "no opinion", and the submission is judged by the local signals alone, exactly as it was before the check existed. The same holds on the sign-in page. A community verdict is extra evidence; losing it costs a site that evidence, never its ability to accept comments, sign-ups or password resets.
 
 = What happens to visitors who browse without JavaScript? =
 

@@ -289,11 +289,19 @@ jobs:
           cd /tmp/wordpress
           # plugin_updater_detected: wordpress.org-hosting rule; this plugin is
           # distributed via GitHub Releases with plugin-update-checker by design.
+          #
+          # `wp plugin check` exits 0 even when it reports errors, so the verdict
+          # has to be read out of the output. Without this the job passes on a
+          # plugin the WordPress.org review would reject.
           wp plugin check reportedip-hive \
             --exclude-directories=bin,scripts,tests,node_modules,build,vendor,.github \
             --exclude-checks=plugin_updater \
             --exclude-files=.gitattributes,.gitignore,.distignore,.editorconfig,phpcs.xml,phpstan.neon,phpstan-baseline.neon,phpunit.xml,phpunit-multisite.xml,grumphp.yml,phpstan-bootstrap.php,.phpcs.cache,.phpunit.result.cache \
-            --format=table --severity=error
+            --format=table --severity=error | tee /tmp/plugin-check.txt
+          if grep -q "$(printf '	ERROR	')" /tmp/plugin-check.txt; then
+            echo "::error::Plugin Check reported errors"
+            exit 1
+          fi
 
   # ===========================================================================
   # PHPUnit — Multisite suite (separate bootstrap with WP_TESTS_MULTISITE=1)
