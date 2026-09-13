@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.53
+Stable tag: 2.1.54
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -424,6 +424,18 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.54 =
+
+Changed: the setup wizard is gone; a one-page quickstart replaces it. It asks for the operation mode and the Community Access Key, reads the plan from the key check and switches on a plan-aware recommendation through the settings registry. Three switches stay visible (2FA for administrators, the footer badge, alert mails); everything else is preconfigured. The old wizard address redirects to the quickstart.
+
+Changed: the Security Dashboard lost its clutter. API statistics and the licensed-domains card moved to the Community page, the quick-action tiles are gone, the activity list shows the five latest events, and the three latest reportedip.com news items appear at the bottom in the admin's language (Community Network only).
+
+Changed: a plan upgrade switches on what the new plan recommends for every setting the admin has not changed, and the post-upgrade banner lists what changed.
+
+Changed: every stored setting follows one standard; eight options that lived outside the settings registry now have a default, a registry entry and a form.
+
+Removed: three unused options, the unreachable relay mail Reply-To option, and the legacy threshold sanitizers.
 
 = 2.1.53 =
 
