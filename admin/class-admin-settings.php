@@ -1002,6 +1002,52 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * News from reportedip.com in the admin's language. Community Network
+	 * only: Local Shield promises no outbound connection, so nothing is fetched
+	 * there. Renders nothing when the feed is empty or unreachable.
+	 *
+	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Mode manager.
+	 * @return void
+	 * @since  2.1.54
+	 */
+	private function render_news_card( $mode_manager ) {
+		if ( ! $mode_manager->is_community_mode() || ! class_exists( 'ReportedIP_Hive_News_Feed' ) ) {
+			return;
+		}
+		$items = ReportedIP_Hive_News_Feed::items( 3 );
+		if ( empty( $items ) ) {
+			return;
+		}
+		$all_url = (string) apply_filters( 'reportedip_hive_external_url', 'https://reportedip.com/news/', 'news' );
+		?>
+		<div class="rip-dashboard__section rip-news">
+			<div class="rip-dashboard__section-title">
+				<h2>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+					<?php esc_html_e( 'News from reportedip.com', 'reportedip-hive' ); ?>
+				</h2>
+				<a href="<?php echo esc_url( $all_url ); ?>" class="rip-button rip-button--ghost rip-button--sm" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'All news', 'reportedip-hive' ); ?></a>
+			</div>
+			<div class="rip-card">
+				<ul class="rip-news__list">
+					<?php foreach ( $items as $item ) : ?>
+						<li class="rip-news__item">
+							<a class="rip-news__title" href="<?php echo esc_url( $item['link'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $item['title'] ); ?></a>
+							<?php if ( $item['timestamp'] > 0 ) : ?>
+								<span class="rip-news__date"><?php echo esc_html( wp_date( (string) get_option( 'date_format' ), $item['timestamp'] ) ); ?></span>
+							<?php endif; ?>
+							<?php if ( '' !== $item['summary'] ) : ?>
+								<p class="rip-news__summary"><?php echo esc_html( $item['summary'] ); ?></p>
+							<?php endif; ?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Render the most active attacker IPs over the last 30 days.
 	 *
 	 * @param array<int,array{ip:string,count:int,last_seen:string,blocked:bool}> $top_ips Rows from get_threat_analytics().
@@ -3809,7 +3855,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	public function dashboard_page() {
 		$ip_stats      = $this->database->get_ip_management_stats();
-		$recent_events = $this->database->get_recent_events( 24, 10 );
+		$recent_events = $this->database->get_recent_events( 24, 5 );
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 
@@ -3872,11 +3918,9 @@ class ReportedIP_Hive_Admin_Settings {
 					$this->render_relay_quota_section( $mode_manager );
 				} elseif ( $mode_manager->is_community_mode() ) {
 					$this->render_mail_sms_promo_card( $mode_manager );
-					$this->render_domains_section( $mode_manager );
 				}
 				?>
 
-				<?php $this->render_api_usage_card(); ?>
 
 				<div class="rip-charts-grid">
 					<div class="rip-chart-card">
@@ -4014,54 +4058,7 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 				</div>
 
-				<!-- Quick Actions Section -->
-				<div class="rip-dashboard__section">
-					<div class="rip-dashboard__section-title">
-						<h2>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-							<?php esc_html_e( 'Quick Actions', 'reportedip-hive' ); ?>
-						</h2>
-					</div>
-
-					<div class="rip-quick-actions">
-						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings' ) ); ?>" class="rip-quick-action">
-							<div class="rip-quick-action__icon">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-							</div>
-							<span class="rip-quick-action__label"><?php esc_html_e( 'Settings', 'reportedip-hive' ); ?></span>
-						</a>
-
-						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=blocked' ) ); ?>" class="rip-quick-action">
-							<div class="rip-quick-action__icon">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-							</div>
-							<span class="rip-quick-action__label"><?php esc_html_e( 'Blocked IPs', 'reportedip-hive' ); ?></span>
-						</a>
-
-						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=whitelist' ) ); ?>" class="rip-quick-action">
-							<div class="rip-quick-action__icon">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-							</div>
-							<span class="rip-quick-action__label"><?php esc_html_e( 'Whitelist', 'reportedip-hive' ); ?></span>
-						</a>
-
-						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=logs' ) ); ?>" class="rip-quick-action">
-							<div class="rip-quick-action__icon">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-							</div>
-							<span class="rip-quick-action__label"><?php esc_html_e( 'View Logs', 'reportedip-hive' ); ?></span>
-						</a>
-
-						<?php if ( $mode_manager->is_community_mode() ) : ?>
-						<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=lookup' ) ); ?>" class="rip-quick-action">
-							<div class="rip-quick-action__icon">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-							</div>
-							<span class="rip-quick-action__label"><?php esc_html_e( 'IP Lookup', 'reportedip-hive' ); ?></span>
-						</a>
-						<?php endif; ?>
-					</div>
-				</div>
+				<?php $this->render_news_card( $mode_manager ); ?>
 
 			</div><!-- /.rip-dashboard -->
 
@@ -7458,6 +7455,9 @@ class ReportedIP_Hive_Admin_Settings {
 						<?php endif; ?>
 					</div>
 				</div>
+
+					<?php $this->render_domains_section( $mode_manager ); ?>
+					<?php $this->render_api_usage_card(); ?>
 
 				<!-- Honeypot Program -->
 				<div class="rip-highlight-card rip-mb-6">

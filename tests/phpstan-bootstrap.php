@@ -21,6 +21,7 @@ namespace {
 	defined( 'REPORTEDIP_HIVE_PLUGIN_BASENAME' ) || define( 'REPORTEDIP_HIVE_PLUGIN_BASENAME', 'reportedip-hive/reportedip-hive.php' );
 	defined( 'REPORTEDIP_HIVE_LANGUAGES_DIR' ) || define( 'REPORTEDIP_HIVE_LANGUAGES_DIR', dirname( __DIR__ ) . '/languages' );
 	defined( 'REPORTEDIP_USER_AGENT_MAX_LENGTH' ) || define( 'REPORTEDIP_USER_AGENT_MAX_LENGTH', 50 );
+	defined( 'WPINC' ) || define( 'WPINC', 'wp-includes' );
 	defined( 'REPORTEDIP_QUEUE_BATCH_SIZE' ) || define( 'REPORTEDIP_QUEUE_BATCH_SIZE', 20 );
 	defined( 'REPORTEDIP_MAX_CSV_UPLOAD_SIZE' ) || define( 'REPORTEDIP_MAX_CSV_UPLOAD_SIZE', 1048576 );
 

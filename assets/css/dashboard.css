@@ -861,3 +861,42 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* News from reportedip.com */
+.rip-news__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.rip-news__item {
+    padding: var(--rip-space-3) 0;
+    border-bottom: 1px solid var(--rip-gray-100);
+}
+
+.rip-news__item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.rip-news__title {
+    font-weight: 600;
+    color: var(--rip-gray-900);
+    text-decoration: none;
+}
+
+.rip-news__title:hover {
+    color: var(--rip-primary);
+}
+
+.rip-news__date {
+    margin-left: var(--rip-space-2);
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-500);
+}
+
+.rip-news__summary {
+    margin: var(--rip-space-1) 0 0;
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-600);
+}

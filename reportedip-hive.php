@@ -531,6 +531,7 @@ class ReportedIP_Hive {
 			new ReportedIP_Hive_Admin_Settings();
 			ReportedIP_Hive_Settings_Import_Export::get_instance();
 
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-news-feed.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-quickstart.php';
 			new ReportedIP_Hive_Quickstart( $this->mode_manager );
 		}

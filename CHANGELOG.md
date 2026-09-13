@@ -14,6 +14,13 @@ All changes to ReportedIP Hive are documented here.
   footer badge, alert mails); everything else is preconfigured. The expert
   link applies the same recommendation and opens the settings.
   `page=reportedip-hive-wizard` redirects to the quickstart.
+- **The Security Dashboard lost its clutter.** API call statistics and the
+  licensed-domains card moved to the Community page where the quota already
+  lives, the quick-action tiles duplicated the menu and are gone, and the
+  activity list shows the five latest events. New at the bottom: the three
+  latest news items from reportedip.com in the admin's language, fetched
+  through the WordPress feed cache in Community Network only (Local Shield
+  makes no outbound request).
 - **A plan upgrade switches on what the new plan recommends** (Tor blocking,
   HSTS and 90 days of logs on Professional, one year of logs on Business)
   for every setting the admin has not changed. The post-upgrade banner lists
