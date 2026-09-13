@@ -524,8 +524,12 @@ class ReportedIP_Hive_Mode_Manager {
 		}
 
 		$result = ReportedIP_Hive_Option_Routing::set( self::OPTION_MODE, $mode );
+		$saved  = $result || ReportedIP_Hive_Option_Routing::get( self::OPTION_MODE ) === $mode;
+		if ( $saved ) {
+			$this->cached_mode = $mode;
+		}
 
-		return $result || ReportedIP_Hive_Option_Routing::get( self::OPTION_MODE ) === $mode;
+		return $saved;
 	}
 
 	/**

@@ -72,6 +72,14 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$ref->setValue( $mm, null );
 	}
 
+	public function test_set_mode_refreshes_the_memoised_mode_within_the_request() {
+		$manager = \ReportedIP_Hive_Mode_Manager::get_instance();
+		$this->assertSame( 'local', $manager->get_mode(), 'no stored option resolves to Local Shield and is memoised' );
+		$this->assertTrue( $manager->set_mode( 'community' ) );
+		$this->assertSame( 'community', $manager->get_mode(), 'set_mode() must refresh the memo even when the option did not exist before (add_option fires no update hook)' );
+		$this->assertTrue( $manager->is_community_mode() );
+	}
+
 	public function test_feature_available_returns_ok_reason() {
 		$this->pretend_mode( 'community' );
 		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'login_monitoring' );
