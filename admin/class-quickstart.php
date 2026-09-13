@@ -568,7 +568,10 @@ class ReportedIP_Hive_Quickstart {
 	 *
 	 * `persist_verified_status()` stores the known tier and the domain
 	 * snapshot. The recommendation itself is applied in {@see ajax_activate()}
-	 * from the full map, not from a tier-change delta.
+	 * from the full map, not from a tier-change delta. The option write runs
+	 * through the registered settings sanitizer, which keeps the previous
+	 * value on a format error; a key that did not land is reported instead
+	 * of being announced as valid.
 	 *
 	 * @return void
 	 */
@@ -597,6 +600,14 @@ class ReportedIP_Hive_Quickstart {
 		}
 
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_key', $api_key );
+		if ( $api_key !== (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ) {
+			wp_send_json_error(
+				array(
+					'valid'   => false,
+					'message' => __( 'The key was accepted by the service but has an unexpected format and could not be saved. Please paste it exactly as shown in your account.', 'reportedip-hive' ),
+				)
+			);
+		}
 		$api_client->persist_verified_status( $result );
 
 		$tier = ReportedIP_Hive_Mode_Manager::tier_from_role( (string) ( $result['userRole'] ?? '' ) );
