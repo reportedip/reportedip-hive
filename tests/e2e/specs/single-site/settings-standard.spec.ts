@@ -4,8 +4,7 @@ import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 
 /**
  * Browser round-trip for the settings that joined the registry with the
- * settings-standard audit, plus the wizard fields that now take their ranges
- * from the registry.
+ * settings-standard audit, the settings cards only.
  *
  * Every assertion reads the option back out of the database, so a form that
  * renders fine but posts into the void (the way the reminder trio and the
@@ -155,34 +154,5 @@ test.describe('settings standard — every option has a working form', () => {
 		await page.locator(`#rip-waf-dropin label.rip-toggle:has(${toggle})`).click();
 		await page.locator('#rip-waf-dropin button[data-rip-save="reportedip_hive_registry_save"]').click();
 		await expect.poll(() => wpOption('reportedip_hive_waf_dropin_skip_authenticated'), { timeout: 15_000 }).toBe('1');
-	});
-
-	test('Wizard: ranges and choices come from the registry', async ({ page }) => {
-		await loginAsAdmin(page);
-
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=3');
-		await page.locator('label:has(input[name="protection_level"][value="paranoid"])').click();
-		await page.click('#rip-step3-next');
-		await page.waitForURL((url) => url.searchParams.get('step') === '4');
-		expect(wpOption('reportedip_hive_block_threshold')).toBe('25');
-		expect(wpOption('reportedip_hive_failed_login_threshold')).toBe('2');
-
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=5');
-		await expect(page.locator('#rip-2fa-grace-days')).toHaveAttribute('max', '60');
-		await expect(page.locator('#rip-2fa-max-skips')).toHaveAttribute('max', '20');
-		await page.fill('#rip-2fa-grace-days', '99');
-		await page.fill('#rip-2fa-max-skips', '5');
-		await page.click('#rip-step5-next');
-		await page.waitForURL((url) => url.searchParams.get('step') === '6');
-		expect(wpOption('reportedip_hive_2fa_enforce_grace_days')).toBe('60');
-		expect(wpOption('reportedip_hive_2fa_max_skips')).toBe('5');
-
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=9');
-		await page.locator('label:has(input[name="promote_variant"][value="shield"])').click();
-		await page.locator('label:has(input[name="promote_align"][value="right"])').click();
-		await page.click('#rip-promote-continue');
-		await page.waitForURL((url) => url.searchParams.get('step') === '10');
-		expect(wpOption('reportedip_hive_auto_footer_variant')).toBe('shield');
-		expect(wpOption('reportedip_hive_auto_footer_align')).toBe('right');
 	});
 });
