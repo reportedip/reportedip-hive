@@ -241,6 +241,10 @@ class ReportedIP_Hive_Quickstart {
 				'tier'  => 'professional',
 			),
 			array(
+				'label' => __( 'Storefront 2FA for WooCommerce customers', 'reportedip-hive' ),
+				'tier'  => 'professional',
+			),
+			array(
 				'label' => __( '2FA mails and SMS through the EU relay, logs for 90 days', 'reportedip-hive' ),
 				'tier'  => 'professional',
 			),
@@ -467,7 +471,7 @@ class ReportedIP_Hive_Quickstart {
 				<button type="button" id="rip-quickstart-activate" class="rip-button rip-button--primary rip-button--large">
 					<?php esc_html_e( 'Switch protection on', 'reportedip-hive' ); ?>
 				</button>
-				<a href="#" id="rip-quickstart-expert" class="rip-wizard__skip-link"><?php esc_html_e( 'I will set everything up myself (expert mode)', 'reportedip-hive' ); ?> →</a>
+				<button type="button" id="rip-quickstart-expert" class="rip-button rip-button--secondary rip-button--sm"><?php esc_html_e( 'I will set everything up myself (expert mode)', 'reportedip-hive' ); ?></button>
 			</div>
 			<p class="rip-input-help rip-is-hidden" id="rip-quickstart-note"></p>
 

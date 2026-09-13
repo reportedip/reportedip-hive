@@ -71,6 +71,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 1, $pro['reportedip_hive_hsts_enabled'] );
 			$this->assertSame( 0, $pro['reportedip_hive_hsts_preload'] );
 			$this->assertSame( 90, $pro['reportedip_hive_data_retention_days'] );
+			$this->assertSame( 1, $pro['reportedip_hive_2fa_frontend_enabled'] );
 			$this->assertArrayNotHasKey( 'reportedip_hive_audit_enabled', $pro );
 		}
 

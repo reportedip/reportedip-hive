@@ -512,6 +512,9 @@ final class ReportedIP_Hive_Defaults {
 	 * The adaptive 2FA policies are absent as well: the registry filter strips
 	 * `administrator` until an administrator has passed one challenge, so a
 	 * recommendation would be a silent no-op on every fresh site.
+	 * Professional switches on the storefront 2FA module: it only ever
+	 * challenges WooCommerce customers who enrolled or are enforced, so it is
+	 * inert without WooCommerce and safe to recommend.
 	 *
 	 * @param string $tier Tier slug; unknown slugs resolve to `free`.
 	 * @param string $mode `community` or `local`. Local Shield has no
@@ -533,10 +536,11 @@ final class ReportedIP_Hive_Defaults {
 		}
 
 		if ( $rank >= 1 ) {
-			$values['reportedip_hive_block_tor']           = 1;
-			$values['reportedip_hive_hsts_enabled']        = 1;
-			$values['reportedip_hive_hsts_preload']        = 0;
-			$values['reportedip_hive_data_retention_days'] = 90;
+			$values['reportedip_hive_block_tor']            = 1;
+			$values['reportedip_hive_hsts_enabled']         = 1;
+			$values['reportedip_hive_hsts_preload']         = 0;
+			$values['reportedip_hive_data_retention_days']  = 90;
+			$values['reportedip_hive_2fa_frontend_enabled'] = 1;
 		}
 
 		if ( $rank >= 2 ) {

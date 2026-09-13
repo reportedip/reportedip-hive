@@ -109,6 +109,9 @@
 			var mode = this.mode();
 			if (mode === 'community' && !this.validatedKey) {
 				$('#rip-quickstart-note').removeClass('rip-is-hidden').text(s.keyRequired);
+				$('#rip-api-key-status').html('<span class="rip-input-status--error">' + $('<span>').text(s.keyRequired).html() + '</span>');
+				$('#rip-api-key').addClass('rip-input--invalid').removeClass('rip-input--valid');
+				$('#rip-api-key-card')[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
 				$('#rip-api-key').trigger('focus');
 				return;
 			}
