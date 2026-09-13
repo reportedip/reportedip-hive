@@ -4391,10 +4391,6 @@ msgstr "In diesem Monat eingespartes Guthaben"
 msgid "API health"
 msgstr "API-Zustand"
 
-#: admin/class-admin-settings.php:6599
-msgid "Cache management, setup wizard restart, settings import/export and maintenance/exports"
-msgstr "Cache-Verwaltung, Neustart des Einrichtungsassistenten, Import/Export der Einstellungen sowie Wartung/Exporte"
-
 #. translators: %s: link to the System Status page
 #: admin/class-admin-settings.php:6604
 #, php-format
@@ -4689,10 +4685,6 @@ msgstr "Deckt 15 Kundenwebsites mit einer Lizenz ab, 2,60 EUR je Website pro Mon
 #: admin/class-admin-settings.php:7050
 msgid "Book 2 to 20 licences on one bill, quota and domains scale with a volume discount"
 msgstr "Buchen Sie 2 bis 20 Lizenzen auf einer Rechnung, Kontingent und Domains wachsen mit, inklusive Mengenrabatt"
-
-#: admin/class-admin-settings.php:7051
-msgid "Your brand on the wizard, the 2FA pages and every mail"
-msgstr "Ihre Marke im Assistenten, auf den 2FA-Seiten und in jeder Mail"
 
 #: admin/class-admin-settings.php:7052
 msgid "WooCommerce integration"
@@ -12937,3 +12929,11 @@ msgstr "Tarife ansehen"
 #: admin/class-quickstart.php:611
 msgid "The key was accepted by the service but has an unexpected format and could not be saved. Please paste it exactly as shown in your account."
 msgstr "Der Dienst hat den Schlüssel akzeptiert, aber er hat ein unerwartetes Format und konnte nicht gespeichert werden. Bitte fügen Sie ihn genau so ein, wie er in Ihrem Konto angezeigt wird."
+
+#: admin/class-admin-settings.php:6599
+msgid "Cache management, quickstart, settings import/export and maintenance/exports"
+msgstr "Cache-Verwaltung, Schnellstart, Import/Export der Einstellungen sowie Wartung/Exporte"
+
+#: admin/class-admin-settings.php:7051
+msgid "Your brand on the quickstart, the 2FA pages and every mail"
+msgstr "Ihre Marke im Schnellstart, auf den 2FA-Seiten und in jeder Mail"

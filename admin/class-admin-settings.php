@@ -6596,7 +6596,7 @@ class ReportedIP_Hive_Admin_Settings {
 		</div>
 
 		<div class="rip-alert rip-alert--info">
-			<strong><?php esc_html_e( 'Cache management, setup wizard restart, settings import/export and maintenance/exports', 'reportedip-hive' ); ?></strong>
+			<strong><?php esc_html_e( 'Cache management, quickstart, settings import/export and maintenance/exports', 'reportedip-hive' ); ?></strong>
 			—
 			<?php
 			printf(
@@ -7048,7 +7048,7 @@ class ReportedIP_Hive_Admin_Settings {
 					__( '75 2FA SMS / month + prepaid bundles', 'reportedip-hive' ),
 					__( 'Covers 15 client sites on one licence, 2.60 EUR each per month', 'reportedip-hive' ),
 					__( 'Book 2 to 20 licences on one bill, quota and domains scale with a volume discount', 'reportedip-hive' ),
-					__( 'Your brand on the wizard, the 2FA pages and every mail', 'reportedip-hive' ),
+					__( 'Your brand on the quickstart, the 2FA pages and every mail', 'reportedip-hive' ),
 					__( 'WooCommerce integration', 'reportedip-hive' ),
 					__( 'Full WP-CLI automation', 'reportedip-hive' ),
 					__( 'Restrict user login times', 'reportedip-hive' ),

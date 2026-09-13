@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-13T10:34:18+00:00\n"
+"POT-Creation-Date: 2026-09-13T17:39:31+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -4395,7 +4395,7 @@ msgid "API health"
 msgstr ""
 
 #: admin/class-admin-settings.php:6599
-msgid "Cache management, setup wizard restart, settings import/export and maintenance/exports"
+msgid "Cache management, quickstart, settings import/export and maintenance/exports"
 msgstr ""
 
 #. translators: %s: link to the System Status page
@@ -4708,7 +4708,7 @@ msgid "Book 2 to 20 licences on one bill, quota and domains scale with a volume 
 msgstr ""
 
 #: admin/class-admin-settings.php:7051
-msgid "Your brand on the wizard, the 2FA pages and every mail"
+msgid "Your brand on the quickstart, the 2FA pages and every mail"
 msgstr ""
 
 #: admin/class-admin-settings.php:7052
