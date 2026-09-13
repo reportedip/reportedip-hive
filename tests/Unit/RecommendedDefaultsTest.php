@@ -117,6 +117,29 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
+		public function test_every_recommended_value_survives_its_registry_sanitizer(): void {
+			$spec = \ReportedIP_Hive_Settings_Registry::spec();
+			foreach ( self::TIERS as $tier ) {
+				foreach ( array( 'community', 'local' ) as $mode ) {
+					foreach ( \ReportedIP_Hive_Defaults::recommended( $tier, $mode ) as $key => $value ) {
+						$clean = \ReportedIP_Hive_Settings_Registry::sanitize_kind( (string) $spec[ $key ]['kind'], $value, $spec[ $key ] );
+						$this->assertFalse( is_wp_error( $clean ), "$tier/$mode: $key is rejected by its sanitizer." );
+						$this->assertSame(
+							\ReportedIP_Hive_Settings_Registry::normalize_value( $key, $value ),
+							\ReportedIP_Hive_Settings_Registry::normalize_value( $key, $clean ),
+							"$tier/$mode: $key does not survive its sanitizer unchanged."
+						);
+					}
+				}
+			}
+		}
+
+		public function test_every_preset_respects_the_reputation_floor(): void {
+			foreach ( \ReportedIP_Hive_Defaults::protection_presets() as $level => $preset ) {
+				$this->assertGreaterThanOrEqual( \ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD, $preset['block_threshold'], "Preset $level undercuts the reputation floor." );
+			}
+		}
+
 		public function test_preset_map_has_four_levels_with_four_values_each(): void {
 			$presets = \ReportedIP_Hive_Defaults::protection_presets();
 			$this->assertSame( array( 'low', 'medium', 'high', 'paranoid' ), array_keys( $presets ) );
