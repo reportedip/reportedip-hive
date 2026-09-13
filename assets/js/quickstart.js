@@ -27,6 +27,7 @@
 			$(document).on('input', '#rip-api-key', function () {
 				Quickstart.validatedKey = '';
 				$('#rip-api-key-status').empty();
+				$(this).removeClass('rip-input--valid rip-input--invalid');
 			});
 			$(document).on('click', '#rip-quickstart-activate', function (e) { e.preventDefault(); Quickstart.activate(false); });
 			$(document).on('click', '#rip-quickstart-expert', function (e) { e.preventDefault(); Quickstart.activate(true); });
@@ -112,6 +113,7 @@
 				return;
 			}
 			$('#rip-quickstart-note').addClass('rip-is-hidden').text('');
+			var label = $button.text();
 			$button.prop('disabled', true).text(s.activating);
 			$.post(cfg.ajaxUrl, {
 				action: 'reportedip_quickstart_activate',
@@ -126,10 +128,10 @@
 					window.location.href = r.data.redirect_url;
 					return;
 				}
-				$button.prop('disabled', false);
+				$button.prop('disabled', false).text(label);
 				$('#rip-quickstart-note').removeClass('rip-is-hidden').text((r && r.data && r.data.message) || s.error);
 			}).fail(function () {
-				$button.prop('disabled', false);
+				$button.prop('disabled', false).text(label);
 				$('#rip-quickstart-note').removeClass('rip-is-hidden').text(s.error);
 			});
 		},
