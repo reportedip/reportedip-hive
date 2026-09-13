@@ -32,6 +32,9 @@ test.describe.configure({ mode: 'serial' });
 test.describe('IP cell + lookup accessibility', () => {
 	test.beforeAll(() => {
 		resetAdminBaseline();
+		// The lookup sub-tab renders in Community Network only; the API mock answers any key.
+		wp('option', 'update', 'reportedip_hive_api_key', 'e2eprofessionalkey0123456789abcdef012345');
+		wp('option', 'update', 'reportedip_hive_operation_mode', 'community');
 		wp(
 			'eval',
 			`ReportedIP_Hive_IP_Manager::get_instance()->block_ip("${TEST_IP}", "e2e test", 24, "manual");`

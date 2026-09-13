@@ -154,6 +154,26 @@ test.describe('quickstart', () => {
 		expect(wp('user meta get admin reportedip_hive_expert_mode')).toBe('1');
 	});
 
+	test('expert after a first switch-on lands in the settings, not the 2FA onboarding', async ({ page }) => {
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-quickstart');
+		const nonce = await page.evaluate(() => (window as any).reportedipQuickstart.nonce as string);
+		await page.locator('.rip-mode-card[data-mode="local"]').click();
+		await page.locator('#rip-quickstart-activate').click();
+		await page.waitForURL(/page=reportedip-hive-2fa-onboarding/);
+
+		// The quickstart tab is still open in the admin's browser; its expert click is exactly this request.
+		const response = await page.request.post('/wp-admin/admin-ajax.php', {
+			form: { action: 'reportedip_quickstart_activate', nonce, mode: 'local', twofa_admins: '1', expert: '1' },
+		});
+		expect((await response.json()).success).toBe(true);
+
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings');
+		await expect(page).toHaveURL(/page=reportedip-hive-settings/);
+		expect(wp('user meta get admin reportedip_hive_expert_mode')).toBe('1');
+		expect(wpOption('reportedip_hive_2fa_enforce_roles')).toContain('administrator');
+	});
+
 	test('the old wizard slug lands on the quickstart', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-wizard&step=3');

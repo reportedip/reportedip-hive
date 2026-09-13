@@ -692,12 +692,11 @@ class ReportedIP_Hive_Quickstart {
 			}
 		}
 
-		if ( $twofa ) {
-			$this->arm_onboarding();
-		}
-
 		if ( $expert ) {
 			update_user_meta( get_current_user_id(), 'reportedip_hive_expert_mode', 1 );
+			$this->disarm_onboarding();
+		} elseif ( $twofa ) {
+			$this->arm_onboarding();
 		}
 
 		$this->mode_manager->mark_wizard_completed();
@@ -732,6 +731,24 @@ class ReportedIP_Hive_Quickstart {
 			1,
 			ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_TTL
 		);
+	}
+
+	/**
+	 * Drop a pending onboarding flag so the expert lands in the settings.
+	 *
+	 * An admin who first pressed "switch protection on" and then chose the
+	 * expert route still carries the onboarding transient from the first
+	 * click; without this the settings redirect is hijacked by the 2FA
+	 * onboarding. Enforcement stays as chosen, the login-side flag brings
+	 * the onboarding back on the next sign-in, skip and grace period apply.
+	 *
+	 * @return void
+	 */
+	private function disarm_onboarding() {
+		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) {
+			return;
+		}
+		delete_transient( ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_PREFIX . get_current_user_id() );
 	}
 
 	/**
