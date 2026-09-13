@@ -80,6 +80,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 		add_action( 'admin_init', array( $this, 'maybe_render_standalone_page' ), 10 );
 
 		add_action( 'admin_menu', array( $this, 'register_hidden_page' ) );
+		add_action( 'network_admin_menu', array( $this, 'register_hidden_page' ) );
 
 		add_action( 'wp_ajax_reportedip_hive_2fa_onboarding_skip', array( $this, 'ajax_skip' ) );
 
