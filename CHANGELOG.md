@@ -6,6 +6,18 @@ All changes to ReportedIP Hive are documented here.
 
 ### Changed
 
+- **The setup wizard is gone; a one-page quickstart replaces it.** The page
+  asks for the operation mode and the Community Access Key, reads the plan
+  from the key check and switches on a plan-aware recommendation through the
+  settings registry. Community Network needs a checked key; Local Shield is
+  the alternative. Three switches stay visible (2FA for administrators, the
+  footer badge, alert mails); everything else is preconfigured. The expert
+  link applies the same recommendation and opens the settings.
+  `page=reportedip-hive-wizard` redirects to the quickstart.
+- **A plan upgrade switches on what the new plan recommends** (Tor blocking,
+  HSTS and 90 days of logs on Professional, one year of logs on Business)
+  for every setting the admin has not changed. The post-upgrade banner lists
+  what changed.
 - **Every stored setting follows one standard.** Eight options that were
   editable in wp-admin but lived outside the settings registry (the upgrade
   hints, the quota and plan-change mails, the three 2FA reminder settings,
@@ -14,11 +26,8 @@ All changes to ReportedIP Hive are documented here.
   a form, so export, import, MainWP and the cloud fleet see them like every
   other setting. The body-inspection switch and the e-mail subject gained a
   form for the first time (Firewall > Extended Protection, 2FA tab).
-- **The setup wizard sanitises through the registry.** Ranges, allowed
-  values and plan gates now come from the settings registry instead of a
-  second copy inside the wizard, which had drifted (retention minimum,
-  anonymisation maximum). The storefront 2FA toggle is stored as a plain
-  boolean like everywhere else.
+- **The storefront 2FA toggle is stored as a plain boolean** like every
+  other switch; the second sanitiser copy the wizard carried is gone with it.
 - **The `reportedip_hive_reputation_form_surfaces` filter exists now.** It
   was documented but never wired; it limits which forms run the community
   threat check.

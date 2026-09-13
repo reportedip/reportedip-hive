@@ -179,7 +179,7 @@ Full feature, security and operations guide: [`docs/cloud-fleet-management.md`](
 
 ### Admin UX
 
-- **10-step setup wizard** (Welcome → Connect → Protection → Firewall → 2FA → Privacy → Notifications → Login → Promote → Done) with privacy-first defaults
+- **One-page quickstart** (mode, key, switch on) with a plan-aware recommendation
 - **Real-time dashboard** with detection & hardening score gauges (0–100, A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines
 - **Security widget on the WordPress dashboard** — attacks blocked (30 days), blocks today, active IP blocks, protection layers and the detection score on wp-admin's front page, with deep links; renders on the network dashboard on Multisite
 - **Firewall area** with an overview mini-dashboard (per-module status, 7-day activity, recent firewall events), per-module tabs that each open with a plain-language intro, and a **Server Setup tab** that gathers every web-server snippet in one place: the WAF `auto_prepend_file` directive with live verification, the decoy rewrite rules and a server-level export of the configured security headers
@@ -398,7 +398,7 @@ Pair it with a malware scanner if your stack needs that surface. Hive deliberate
    - Direct link (always latest): <https://github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip>
    - Or open the [latest release page](https://github.com/reportedip/reportedip-hive/releases/latest) and grab `reportedip-hive.zip` from the *Assets* section.
 2. WP Admin → *Plugins → Add New → Upload Plugin* → pick `reportedip-hive.zip`.
-3. Activate → run through the 10-step setup wizard.
+3. Activate → switch protection on in the quickstart.
 
 > **Do not use the auto-generated "Source code (zip)" link** or the *Code → Download ZIP* button on the repository page. Those archives have a top-level folder named `reportedip-hive-X.Y.Z` (with the version) instead of `reportedip-hive/`. WordPress installs the plugin under that versioned slug, which breaks in-place updates and creates a duplicate plugin folder on every release. Only the asset `reportedip-hive.zip` is built for installation.
 

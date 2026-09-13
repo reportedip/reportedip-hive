@@ -130,7 +130,7 @@ Show the world that your site is part of the hive — and earn community-network
 * **Configurable retention.** Daily cleanup with a 30-day default; automatic anonymisation after 7 days.
 * **Opt-in sharing.** Local Shield works 100 % offline. Nothing leaves your site unless you switch to Community Network.
 * **Transparent installation identity.** In Community mode each API request identifies the installation itself — site address plus plugin and WordPress version, wp.org-style — for licence domain counting and support. This is data about your installation, never about your visitors.
-* **Lawful basis: Art. 6(1)(f) GDPR** (legitimate interest — preventing unauthorised access). Documented in the wizard and admin UI.
+* **Lawful basis: Art. 6(1)(f) GDPR** (legitimate interest — preventing unauthorised access). Documented in the quickstart and admin UI.
 * **Encryption at rest.** All secrets (TOTP seeds, phone numbers) sealed with libsodium (or OpenSSL fallback).
 * **Delete-on-uninstall** opt-in for total removal: tables, options and every piece of user meta the plugin wrote.
 * **Export and erasure requests are wired up.** A personal-data export returns the account's own login attempts, its trusted devices, an account block with its texts, the address and expiry of every open session and the sign-in history behind the adaptive 2FA triggers. An erasure clears the texts and the history but keeps an active account block and reports that as retained, because an erasure request must not become a way to lift a security block.
@@ -138,7 +138,7 @@ Show the world that your site is part of the hive — and earn community-network
 
 = Admin UX =
 
-* **10-step setup wizard** with privacy-first defaults: Welcome → Connect → Protection → Firewall → 2FA → Privacy → Notifications → Login → Promote → Done. Skippable (3 skips, 7-day grace).
+* **One-page quickstart** with a tier-aware recommendation: pick Community Network or Local Shield, paste the key, switch protection on. Everything else is preconfigured for your plan and adjustable later.
 * **Real-time dashboard** with detection & hardening score gauges (0–100 plus an A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines.
 * **Security widget on the WordPress dashboard** — attacks blocked (30 days), blocks today, active IP blocks, protection layers and the detection score on wp-admin's front page, with deep links into the plugin; on Multisite the widget appears on the network dashboard.
 * **Seven list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), the session manager under Users -> Sessions (Business), plus the 2FA admin grid.
@@ -304,7 +304,7 @@ Every option lives under the `reportedip_hive_` prefix in `wp_options` (tracked 
    * Direct link (always latest): [github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip](https://github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip)
    * Or open the [latest release page](https://github.com/reportedip/reportedip-hive/releases/latest) and grab `reportedip-hive.zip` from the *Assets* section.
 2. WP Admin → *Plugins → Add New → Upload Plugin* → pick `reportedip-hive.zip`.
-3. Activate and follow the 10-step setup wizard.
+3. Activate and switch protection on in the quickstart.
 
 **Do not** use the auto-generated "Source code (zip)" link, nor the *Code → Download ZIP* button on the repository page. Those archives have a top-level folder named `reportedip-hive-X.Y.Z` (with the version) instead of `reportedip-hive/`. WordPress would install the plugin under that versioned slug, breaking in-place updates and producing a duplicate plugin folder on every release. Only the asset `reportedip-hive.zip` is built for installation.
 
@@ -417,7 +417,7 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 4. **Security Event Logs** — Searchable, severity-filterable, JSON / CSV export, bulk delete + bulk block + bulk whitelist actions.
 5. **Settings → Blocking** — How-blocking-decides info card, auto-block toggle, progressive ladder editor with reset window, report-only mode toggle, blocked-page contact link.
 6. **Settings → Two-Factor** — Method enable/disable, role enforcement, grace period, IP allowlist, recovery-code management, trusted-device list.
-7. **Setup Wizard** — 10-step guided configuration with privacy-first defaults and a celebration on the final step.
+7. **Quickstart** — one page, two decisions, a plan-aware recommendation applied through the settings registry.
 8. **API Queue** — Pending and failed report queue with retry, quota status, queue-health indicators.
 9. **Promote** — Auto-footer badge configurator and shortcode showcase with live previews.
 
