@@ -1,10 +1,9 @@
 /**
- * ReportedIP Hive — Setup Wizard Styles (Light Theme).
+ * Quickstart and 2FA onboarding styles (light theme).
  *
- * Light-CI im Stil des 2FA-Onboardings: weißer Hintergrund mit zartem Indigo-
- * Verlauf, Indigo-Akzente, weiße Karten und Inputs. Wird sowohl vom Setup-
- * Wizard als auch vom 2FA-Onboarding genutzt — gemeinsame Basis, die das
- * 2FA-CSS nur noch um seine spezifischen Bausteine ergänzt.
+ * White background with a soft indigo gradient, indigo accents, white cards
+ * and inputs. Shared base for the quickstart page and the 2FA onboarding;
+ * the 2FA stylesheet only adds its own building blocks on top.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
