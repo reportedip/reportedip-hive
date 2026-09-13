@@ -87,10 +87,15 @@ class ReportedIP_Hive_Quickstart {
 	 * standalone. The legacy slug must stay registered because core's
 	 * `user_can_access_admin_page()` dies with 403 before `admin_init`
 	 * for any unregistered `page=` value, so the redirect would never run.
+	 * On Multisite the quickstart exists in the network admin only, so a
+	 * sub-site gets no entry and core answers with its 403 page.
 	 *
 	 * @return void
 	 */
 	public function add_page() {
+		if ( is_multisite() && ! is_network_admin() ) {
+			return;
+		}
 		foreach ( array( self::PAGE_SLUG, self::LEGACY_SLUG ) as $slug ) {
 			add_submenu_page(
 				'',

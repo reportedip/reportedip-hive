@@ -394,7 +394,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-apply.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-effects.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-ed25519-verifier.php';
-				require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-escalation.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-ref.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-store.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-sync.php';
