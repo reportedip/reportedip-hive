@@ -1240,6 +1240,7 @@ body.rip-wizard-page [hidden] {
 .rip-wizard__actions {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 1rem;
     margin-top: 2rem;
     flex-wrap: wrap;
@@ -1308,6 +1309,12 @@ body.rip-wizard-page [hidden] {
 .rip-button--large {
     padding: 1rem 2rem;
     font-size: 1rem;
+}
+
+.rip-button--sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
 }
 
 /* Footer */

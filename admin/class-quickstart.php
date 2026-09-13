@@ -471,7 +471,7 @@ class ReportedIP_Hive_Quickstart {
 				<button type="button" id="rip-quickstart-activate" class="rip-button rip-button--primary rip-button--large">
 					<?php esc_html_e( 'Switch protection on', 'reportedip-hive' ); ?>
 				</button>
-				<button type="button" id="rip-quickstart-expert" class="rip-button rip-button--secondary rip-button--sm"><?php esc_html_e( 'I will set everything up myself (expert mode)', 'reportedip-hive' ); ?></button>
+				<button type="button" id="rip-quickstart-expert" class="rip-button rip-button--ghost rip-button--sm"><?php esc_html_e( 'I will set everything up myself (expert mode)', 'reportedip-hive' ); ?></button>
 			</div>
 			<p class="rip-input-help rip-is-hidden" id="rip-quickstart-note"></p>
 
