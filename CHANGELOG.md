@@ -2,6 +2,18 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.55] — 2026-09-13
+
+### Fixes
+
+- **The expert route no longer ends in the 2FA onboarding.** The expert
+  button sent the 2FA switch along and armed the same onboarding as
+  "switch protection on", and an admin who had pressed that button first
+  still carried its onboarding flag. Both hijacked the settings page the
+  expert had asked for. The expert route now clears the pending flag and
+  never arms it; enforcement stays as chosen and the onboarding returns on
+  the next sign-in with skip and grace period.
+
 ## [2.1.54] — 2026-09-13
 
 ### Changed

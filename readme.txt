@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.54
+Stable tag: 2.1.55
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -424,6 +424,10 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.55 =
+
+Fix: the quickstart's expert route landed in the 2FA onboarding instead of the settings when the 2FA switch was on or "switch protection on" had been pressed before. The expert route now clears the pending onboarding; enforcement stays as chosen and the onboarding returns on the next sign-in.
 
 = 2.1.54 =
 
