@@ -187,24 +187,31 @@ class AjaxCapabilityTest extends TestCase {
 		$this->assertStringNotContainsString( 'Option_Routing::', $bodies['ajax_dismiss_notice'] );
 	}
 
-	public function test_setup_wizard_gates_render_and_every_step_with_the_network_capability() {
-		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-setup-wizard.php' );
+	/**
+	 * The quickstart renders standalone and answers four AJAX handlers, all of
+	 * which write plugin state, so every one of them goes through the same
+	 * network-aware helper. The hidden menu entry is registered in the network
+	 * admin only; a sub-site never gets an entry, so core's own 403 answers
+	 * there before any plugin code runs.
+	 */
+	public function test_quickstart_gates_render_and_every_handler_with_the_network_capability() {
+		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-quickstart.php' );
 
 		$this->assertMatchesRegularExpression(
-			'/function user_can_run_wizard\(\)\s*\{\s*return ReportedIP_Hive_Option_Routing::current_user_can_manage\(\);/s',
+			'/function user_can_run_quickstart\(\)\s*\{\s*return ReportedIP_Hive_Option_Routing::current_user_can_manage\(\);/s',
 			$source,
-			'the wizard must follow the option-writing capability rule'
+			'the quickstart must follow the option-writing capability rule'
 		);
-		$this->assertStringNotContainsString( "current_user_can( 'manage_options' )", $source, 'no wizard path may accept a sub-site administrator' );
+		$this->assertStringNotContainsString( "current_user_can( 'manage_options' )", $source, 'no quickstart path may accept a sub-site administrator' );
 		$this->assertMatchesRegularExpression(
-			'/function add_wizard_page\(\)\s*\{\s*add_submenu_page\((?:(?!\);).)*?ReportedIP_Hive_Option_Routing::manage_capability\(\),/s',
+			'/function add_page\(\)\s*\{\s*if \( is_multisite\(\) && ! is_network_admin\(\) \) \{\s*return;\s*\}\s*foreach \(.*?\) as \$slug \) \{\s*add_submenu_page\((?:(?!\);).)*?ReportedIP_Hive_Option_Routing::manage_capability\(\),/s',
 			$source,
-			'the hidden menu entry must 403 sub-site administrators'
+			'the hidden menu entry must return early on sub-sites and use the network-aware capability'
 		);
 
-		foreach ( array( 'maybe_render_standalone_wizard', 'ajax_save_step', 'ajax_import_settings', 'ajax_save_mode', 'ajax_validate_api_key', 'ajax_validate_login_slug', 'ajax_skip_wizard' ) as $method ) {
+		foreach ( array( 'maybe_render_standalone', 'ajax_validate_api_key', 'ajax_activate', 'ajax_import_settings', 'ajax_validate_login_slug' ) as $method ) {
 			$this->assertSame( 1, preg_match( '/function ' . $method . '\(\)\s*\{(.*?)\n\t\}/s', $source, $match ), "$method() must exist" );
-			$this->assertStringContainsString( '$this->user_can_run_wizard()', $match[1], "$method() must gate on the wizard capability helper" );
+			$this->assertStringContainsString( '$this->user_can_run_quickstart()', $match[1], "$method() must gate on the quickstart capability helper" );
 		}
 	}
 

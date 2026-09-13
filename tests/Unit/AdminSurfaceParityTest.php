@@ -65,10 +65,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'admin/class-admin-settings.php',
 			'admin/class-admin-firewall.php',
 			'admin/class-two-factor-admin.php',
-			'admin/class-setup-wizard.php',
+			'admin/class-quickstart.php',
 			'admin/class-user-admin.php',
 			'includes/class-ajax-handler.php',
-			'includes/class-wizard-schema.php',
 			'includes/class-two-factor-dashboard.php',
 			'includes/class-two-factor-onboarding.php',
 		);
@@ -124,7 +123,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		);
 
 		/**
-		 * Every registry key is reachable from a form, a wizard step or an
+		 * Every registry key is reachable from a form, the quickstart or an
 		 * admin AJAX writer.
 		 *
 		 * @return void

@@ -1,11 +1,11 @@
 <?php
 /**
- * Unit tests for the one-shot activation redirect into the setup wizard.
+ * Unit tests for the one-shot activation redirect into the quickstart.
  *
  * The activation marker is consumed exactly once, so it must never be spent on
  * a request no browser follows. `admin-ajax.php` fires `admin_init` just like a
  * real admin page, and a WooCommerce store keeps that endpoint busy around the
- * clock (Action Scheduler, Heartbeat) — which is why the wizard silently failed
+ * clock (Action Scheduler, Heartbeat) — which is why the setup page silently failed
  * to open on those installs.
  *
  * @package    ReportedIP_Hive
@@ -21,12 +21,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 	use ReportedIP\Hive\Tests\TestCase;
 
-	require_once dirname( __DIR__, 2 ) . '/admin/class-setup-wizard.php';
+	require_once dirname( __DIR__, 2 ) . '/admin/class-quickstart.php';
 
 	/**
-	 * @covers \ReportedIP_Hive_Setup_Wizard
+	 * @covers \ReportedIP_Hive_Quickstart
 	 */
-	class WizardActivationRedirectTest extends TestCase {
+	class QuickstartActivationRedirectTest extends TestCase {
 
 		protected function setUp(): void {
 			parent::setUp();
@@ -42,13 +42,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		private function can_redirect(): bool {
-			$wizard = ( new \ReflectionClass( \ReportedIP_Hive_Setup_Wizard::class ) )->newInstanceWithoutConstructor();
-			$method = new \ReflectionMethod( \ReportedIP_Hive_Setup_Wizard::class, 'request_can_redirect' );
-			return (bool) $method->invoke( $wizard );
+			$quickstart = ( new \ReflectionClass( \ReportedIP_Hive_Quickstart::class ) )->newInstanceWithoutConstructor();
+			$method     = new \ReflectionMethod( \ReportedIP_Hive_Quickstart::class, 'request_can_redirect' );
+			return (bool) $method->invoke( $quickstart );
 		}
 
 		public function test_plain_admin_page_view_may_redirect(): void {
-			$this->assertTrue( $this->can_redirect(), 'A normal admin GET is exactly the request the wizard redirect is meant for.' );
+			$this->assertTrue( $this->can_redirect(), 'A normal admin GET is exactly the request the quickstart redirect is meant for.' );
 		}
 
 		public function test_ajax_request_may_not_redirect(): void {
@@ -72,15 +72,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * burn the redirect on a background request.
 		 */
 		public function test_context_check_runs_before_the_marker_is_consumed(): void {
-			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-setup-wizard.php' );
-			$start  = strpos( $source, 'public function maybe_redirect_to_wizard()' );
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-quickstart.php' );
+			$start  = strpos( $source, 'public function maybe_redirect_after_activation()' );
 			$this->assertNotFalse( $start );
 			$body = substr( $source, $start, 900 );
 
 			$guard    = strpos( $body, 'request_can_redirect' );
 			$consumed = strpos( $body, 'delete_site_transient' );
 
-			$this->assertNotFalse( $guard, 'maybe_redirect_to_wizard() must check the request context.' );
+			$this->assertNotFalse( $guard, 'maybe_redirect_after_activation() must check the request context.' );
 			$this->assertNotFalse( $consumed );
 			$this->assertLessThan( $consumed, $guard, 'The context check must run before the activation marker is deleted.' );
 		}

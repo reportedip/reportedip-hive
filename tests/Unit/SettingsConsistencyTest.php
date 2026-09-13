@@ -3,7 +3,7 @@
  * Cross-writer consistency tests for the settings standard.
  *
  * Guards the invariant behind the remote-settings protocol: every writer —
- * settings page, wizard, import, MainWP, cloud — produces the identical
+ * settings page, quickstart, import, MainWP, cloud — produces the identical
  * stored state for the identical input, because they all validate through
  * the registry. The static cross-repo twin of this test is the workspace
  * script `scripts/settings-consistency-check.php` (not shipped).
@@ -23,7 +23,6 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-apply.php';
-	require_once dirname( __DIR__, 2 ) . '/includes/class-wizard-schema.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-hide-login.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-frontend.php';
@@ -66,7 +65,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 	use ReportedIP\Hive\Tests\TestCase;
 
 	/**
-	 * Origin parity, schema completeness and wizard/registry kind agreement.
+	 * Origin parity and schema completeness.
 	 *
 	 * @runTestsInSeparateProcesses
 	 * @preserveGlobalState disabled
@@ -180,35 +179,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 					$this->assertArrayHasKey( $key, $schema['fields'], "Section {$section['id']} references unknown field $key." );
 				}
 			}
-		}
-
-		public function test_wizard_and_registry_agree_on_field_kinds() {
-			$spec          = \ReportedIP_Hive_Settings_Registry::spec();
-			$wizard_fields = array();
-			foreach ( \ReportedIP_Hive_Wizard_Schema::FIELD_STEPS as $step ) {
-				$wizard_fields = array_merge( $wizard_fields, \ReportedIP_Hive_Wizard_Schema::fields( $step ) );
-			}
-			$generic  = self::PROTOCOL_KINDS;
-			$compared = 0;
-
-			foreach ( $wizard_fields as $field ) {
-				$key = isset( $field['option'] ) ? (string) $field['option'] : '';
-				if ( '' === $key || ! isset( $spec[ $key ] ) ) {
-					continue;
-				}
-				$wizard_kind = isset( $field['kind'] ) ? (string) $field['kind'] : '';
-				if ( ! in_array( $wizard_kind, $generic, true ) ) {
-					continue;
-				}
-				$this->assertSame(
-					(string) $spec[ $key ]['kind'],
-					$wizard_kind,
-					"Wizard and registry disagree on the kind of $key — the two sanitizers would diverge."
-				);
-				$compared++;
-			}
-
-			$this->assertGreaterThan( 5, $compared, 'Kind agreement compared suspiciously few fields — did the wizard schema shape change?' );
 		}
 
 		public function test_every_remote_default_round_trips_unchanged_through_apply() {
