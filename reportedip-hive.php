@@ -484,9 +484,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-frontend.php';
 		ReportedIP_Hive_Two_Factor_Frontend::init();
 
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-wc-notice.php';
-		ReportedIP_Hive_Two_Factor_WC_Notice::init();
-
 		if ( is_admin() ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-dashboard.php';
 		}
@@ -537,6 +534,8 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-protection-page.php';
 			new ReportedIP_Hive_Protection_Page();
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-tools-page.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-dashboard-next-steps.php';
+			new ReportedIP_Hive_Dashboard_Next_Steps();
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-aliases.php';
 			ReportedIP_Hive_Admin_Aliases::init();
 		}

@@ -101,6 +101,20 @@ class ReportedIP_Hive_Promo_Manager {
 	const KEY_ADVANCED_ANALYTICS = 'advanced_analytics';
 
 	/**
+	 * Dashboard card: Business signal on a Professional site.
+	 *
+	 * @var string
+	 */
+	const KEY_BUSINESS_SIGNAL = 'business_signal';
+
+	/**
+	 * Dashboard card: referral programme on Business and Enterprise.
+	 *
+	 * @var string
+	 */
+	const KEY_REFERRAL = 'referral';
+
+	/**
 	 * Whether a promo surface keyed `$key` is allowed to render now for `$user_id`.
 	 *
 	 * @param string $key     One of the KEY_* constants.

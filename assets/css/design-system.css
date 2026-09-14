@@ -3048,3 +3048,55 @@ button.rip-tier-lock--mode:hover {
         scroll-behavior: auto !important;
     }
 }
+
+/* ==========================================================================
+   Dashboard: status banner, next steps, area rows
+   ========================================================================== */
+.rip-status-banner a {
+    font-weight: 600;
+}
+.rip-next-steps__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--rip-space-4);
+}
+.rip-next-steps__card {
+    padding: var(--rip-space-4);
+    border: 1px solid var(--rip-gray-200);
+    display: flex;
+    flex-direction: column;
+    gap: var(--rip-space-2);
+}
+.rip-next-steps__title {
+    margin: 0;
+    font-size: var(--rip-text-base);
+}
+.rip-next-steps__text {
+    margin: 0;
+    color: var(--rip-gray-600);
+    flex: 1;
+}
+.rip-next-steps__form {
+    display: flex;
+    gap: var(--rip-space-2);
+    align-items: center;
+}
+.rip-next-steps__dismiss {
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-500);
+}
+.rip-areas__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.rip-areas__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--rip-space-2) var(--rip-space-5);
+    border-bottom: 1px solid var(--rip-gray-100);
+}
+.rip-areas__row:last-child {
+    border-bottom: 0;
+}

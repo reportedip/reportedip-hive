@@ -820,49 +820,6 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @return void
 	 * @since 1.5.3
 	 */
-	/**
-	 * Render the Mail/SMS upgrade CTA card for Free-tier Community sites.
-	 *
-	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Singleton.
-	 * @return void
-	 * @since 1.6.0
-	 */
-	private function render_mail_sms_promo_card( $mode_manager ) {
-		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' )
-			&& ! ReportedIP_Hive_Promo_Manager::can_show( ReportedIP_Hive_Promo_Manager::KEY_MAIL_SMS_RELAY )
-		) {
-			return;
-		}
-
-		$mail_status = $mode_manager->feature_status( 'mail_relay_via_api' );
-		$sms_status  = $mode_manager->feature_status( 'sms_relay_via_api' );
-		unset( $sms_status );
-		?>
-		<div class="rip-card rip-mb-6 rip-promo-card">
-			<div class="rip-card__header">
-				<h2 class="rip-card__title">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-					<?php esc_html_e( 'Reliable mail & SMS delivery', 'reportedip-hive' ); ?>
-				</h2>
-			</div>
-			<div class="rip-card__body">
-				<p><?php esc_html_e( 'Professional routes 2FA codes and security alerts through our EU relay, with verified SPF, DKIM and DMARC, so they stop landing in the spam folder.', 'reportedip-hive' ); ?></p>
-				<ul class="rip-promo-card__benefits">
-					<li><?php esc_html_e( '500 mails / month included (Business: 2,500)', 'reportedip-hive' ); ?></li>
-					<li><?php esc_html_e( '25 SMS / month included (Business: 75 + add-on bundles)', 'reportedip-hive' ); ?></li>
-					<li><?php esc_html_e( 'No SMTP/SMS provider contract needed — managed by reportedip.com', 'reportedip-hive' ); ?></li>
-				</ul>
-				<div class="rip-flex rip-gap-2 rip-mt-3">
-					<?php self::render_tier_lock( $mail_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-				</div>
-			</div>
-		</div>
-		<?php
-
-		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' ) ) {
-			ReportedIP_Hive_Promo_Manager::mark_shown( ReportedIP_Hive_Promo_Manager::KEY_MAIL_SMS_RELAY );
-		}
-	}
 
 	/**
 	 * Render the API call usage card on the dashboard. Renders nothing
@@ -1147,54 +1104,6 @@ class ReportedIP_Hive_Admin_Settings {
 		<?php
 	}
 
-	/**
-	 * Render the advanced-analytics upsell card for non-Professional tiers.
-	 *
-	 * Deliberately understated: a single frequency-capped card that previews the
-	 * deeper analytics unlocked by higher plans. Falls silent for Professional
-	 * and above, and respects the global promo cap.
-	 *
-	 * @return void
-	 * @since  2.1.13
-	 */
-	private function render_analytics_pro_card() {
-		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' )
-			&& ! ReportedIP_Hive_Promo_Manager::can_show( ReportedIP_Hive_Promo_Manager::KEY_ADVANCED_ANALYTICS )
-		) {
-			return;
-		}
-
-		$status = array(
-			'available' => false,
-			'reason'    => 'tier',
-			'min_tier'  => 'professional',
-		);
-		?>
-		<div class="rip-card rip-mb-6 rip-promo-card">
-			<div class="rip-card__header">
-				<h2 class="rip-card__title">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
-					<?php esc_html_e( 'Go deeper with advanced analytics', 'reportedip-hive' ); ?>
-				</h2>
-			</div>
-			<div class="rip-card__body">
-				<p><?php esc_html_e( 'Professional and Business plans unlock the full picture behind these charts — longer history, attacker geography and a tamper-evident audit trail.', 'reportedip-hive' ); ?></p>
-				<ul class="rip-promo-card__benefits">
-					<li><?php esc_html_e( 'Extended history and longer log retention', 'reportedip-hive' ); ?></li>
-					<li><?php esc_html_e( 'Priority rulesets — broader WAF signatures and live bot / disposable feeds', 'reportedip-hive' ); ?></li>
-					<li><?php esc_html_e( 'Audit event trail with CSV / JSON export (Business)', 'reportedip-hive' ); ?></li>
-				</ul>
-				<div class="rip-flex rip-gap-2 rip-mt-3">
-					<?php self::render_tier_lock( $status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
-				</div>
-			</div>
-		</div>
-		<?php
-
-		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' ) ) {
-			ReportedIP_Hive_Promo_Manager::mark_shown( ReportedIP_Hive_Promo_Manager::KEY_ADVANCED_ANALYTICS );
-		}
-	}
 
 	private function render_relay_quota_section( $mode_manager ) {
 		$snapshot = $mode_manager->get_relay_quota_snapshot();
@@ -3890,11 +3799,11 @@ class ReportedIP_Hive_Admin_Settings {
 
 				<?php $this->render_score_section(); ?>
 
+				<?php ReportedIP_Hive_Dashboard_Next_Steps::instance()->render(); ?>
+
 				<?php
 				if ( $mode_manager->is_community_mode() && $mode_manager->tier_at_least( 'professional' ) ) {
 					$this->render_relay_quota_section( $mode_manager );
-				} elseif ( $mode_manager->is_community_mode() ) {
-					$this->render_mail_sms_promo_card( $mode_manager );
 				}
 				?>
 
@@ -3960,12 +3869,6 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 
 				<?php $this->render_top_attackers_table( $analytics['top_ips'] ); ?>
-
-				<?php
-				if ( ! $mode_manager->tier_at_least( 'professional' ) ) {
-					$this->render_analytics_pro_card();
-				}
-				?>
 
 				<!-- Recent Activity Section -->
 				<div class="rip-dashboard__section">
