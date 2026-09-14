@@ -620,7 +620,9 @@ class ReportedIP_Hive_Quickstart {
 		ReportedIP_Hive_Admin_Settings::render_tier_badge( $tier );
 		$badge = trim( (string) ob_get_clean() );
 
-		$domains = $this->mode_manager->get_domains_snapshot();
+		$domains = is_array( $result['domains'] ?? null ) && isset( $result['domains']['used'], $result['domains']['limit'] )
+			? $result['domains']
+			: $this->mode_manager->get_domains_snapshot();
 
 		wp_send_json_success(
 			array(
