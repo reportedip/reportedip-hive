@@ -106,6 +106,36 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_completed_at_accepts_the_stored_utc_datetime_and_an_epoch(): void {
+			$this->assertSame( 1789200000, ReportedIP_Hive_Dashboard_Next_Steps::completed_at_timestamp( '2026-09-12 08:00:00' ), 'MySQL UTC string' );
+			$this->assertSame( 1789200000, ReportedIP_Hive_Dashboard_Next_Steps::completed_at_timestamp( 1789200000 ), 'epoch int' );
+			$this->assertSame( 1789200000, ReportedIP_Hive_Dashboard_Next_Steps::completed_at_timestamp( '1789200000' ), 'epoch string' );
+			$this->assertSame( 0, ReportedIP_Hive_Dashboard_Next_Steps::completed_at_timestamp( '' ) );
+			$this->assertSame( 0, ReportedIP_Hive_Dashboard_Next_Steps::completed_at_timestamp( false ) );
+			$this->assertSame( 0, ReportedIP_Hive_Dashboard_Next_Steps::completed_at_timestamp( 'not a date' ) );
+		}
+
+		public function test_score_potential_sums_switched_off_items_per_protection_section(): void {
+			$base  = 'https://example.test/wp-admin/admin.php?page=reportedip-hive-protection#';
+			$items = array(
+				array( 'present' => true,  'available' => true,  'enabled' => false, 'weight' => 6, 'settings_url' => $base . 'lockdown' ),
+				array( 'present' => true,  'available' => true,  'enabled' => false, 'weight' => 2, 'settings_url' => $base . 'lockdown' ),
+				array( 'present' => true,  'available' => true,  'enabled' => false, 'weight' => 12, 'settings_url' => $base . 'headers' ),
+				array( 'present' => true,  'available' => true,  'enabled' => true,  'weight' => 14, 'settings_url' => $base . 'hide_login' ),
+				array( 'present' => true,  'available' => false, 'enabled' => false, 'weight' => 6, 'settings_url' => $base . 'hardening_mode' ),
+				array( 'present' => false, 'available' => true,  'enabled' => false, 'weight' => 4, 'settings_url' => $base . 'lockdown' ),
+				array( 'present' => true,  'available' => true,  'enabled' => false, 'weight' => 15, 'settings_url' => 'https://example.test/wp-admin/admin.php?page=reportedip-hive-community' ),
+			);
+			$this->assertSame(
+				array(
+					'lockdown' => 8,
+					'headers'  => 12,
+				),
+				ReportedIP_Hive_Dashboard_Next_Steps::score_potential( $items )
+			);
+			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::score_potential( array() ) );
+		}
+
 		public function test_step_actions_map_every_advisory_key(): void {
 			foreach ( array( 'hide_login_off', 'frontend_2fa_available', 'badge_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing' ) as $key ) {
 				$this->assertArrayHasKey( $key, ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), $key );

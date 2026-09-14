@@ -3653,97 +3653,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render the Community-API status strip at the top of the dashboard.
-	 *
-	 * All state comes from cached or local sources, this method never
-	 * performs an HTTP request. States in priority order: local mode renders
-	 * nothing; missing API key; exhausted quota; active rate limit; healthy.
-	 *
-	 * @return void
-	 * @since  2.1.41
-	 */
-	private function render_api_status_strip() {
-		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
-
-		if ( ! $mode_manager->is_community_mode() ) {
-			return;
-		}
-
-		echo '<div class="rip-api-strip">';
-
-		if ( ! $this->api_client->is_configured() ) {
-			?>
-			<div class="rip-alert rip-alert--warning">
-				<div class="rip-alert__content rip-alert__content--row">
-					<div class="rip-alert__message"><?php esc_html_e( 'Community protection is not connected.', 'reportedip-hive' ); ?></div>
-					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' ) ); ?>" class="rip-button rip-button--primary rip-button--sm">
-						<?php esc_html_e( 'Connect now', 'reportedip-hive' ); ?>
-					</a>
-				</div>
-			</div>
-			<?php
-			echo '</div>';
-			return;
-		}
-
-		$quota = $this->api_client->get_quota_status();
-
-		if ( ! empty( $quota['exhausted'] ) ) {
-			$countdown = '';
-			if ( ! empty( $quota['reset_time'] ) ) {
-				$reset_ts = strtotime( $quota['reset_time'] );
-				if ( $reset_ts && $reset_ts > time() ) {
-					$countdown = sprintf(
-						/* translators: %s: human-readable time span until the daily quota resets */
-						__( 'Resets in %s.', 'reportedip-hive' ),
-						human_time_diff( time(), $reset_ts )
-					);
-				}
-			}
-			?>
-			<div class="rip-alert rip-alert--danger">
-				<?php
-				echo esc_html( (string) ( $quota['message'] ?? '' ) );
-				if ( '' !== $countdown ) {
-					echo ' ' . esc_html( $countdown );
-				}
-				?>
-			</div>
-			<?php
-			echo '</div>';
-			return;
-		}
-
-		if ( $this->api_client->is_rate_limited( null ) ) {
-			?>
-			<div class="rip-alert rip-alert--warning">
-				<?php esc_html_e( 'API temporarily rate-limited, lookups and reports resume automatically.', 'reportedip-hive' ); ?>
-			</div>
-			<?php
-			echo '</div>';
-			return;
-		}
-
-		$summary = __( 'Community API connected.', 'reportedip-hive' );
-		if ( isset( $quota['remaining'], $quota['limit'] )
-			&& is_numeric( $quota['remaining'] )
-			&& is_numeric( $quota['limit'] )
-			&& (int) $quota['remaining'] >= 0
-			&& (int) $quota['limit'] > 0 ) {
-			$summary .= ' ' . sprintf(
-				/* translators: 1: remaining daily reports, 2: daily report limit */
-				__( '%1$s of %2$s reports remaining today.', 'reportedip-hive' ),
-				number_format_i18n( (int) $quota['remaining'] ),
-				number_format_i18n( (int) $quota['limit'] )
-			);
-		}
-		?>
-		<div class="rip-alert rip-alert--success"><?php echo esc_html( $summary ); ?></div>
-		<?php
-		echo '</div>';
-	}
-
-	/**
 	 * Dashboard page
 	 */
 	public function dashboard_page() {
@@ -3753,11 +3662,11 @@ class ReportedIP_Hive_Admin_Settings {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 
 		self::render_page_header( __( 'ReportedIP Hive', 'reportedip-hive' ), __( 'Security Dashboard', 'reportedip-hive' ) );
-		$this->render_api_status_strip();
 		?>
 
 			<div class="rip-dashboard">
 				<?php
+				ReportedIP_Hive_Dashboard_Next_Steps::instance()->render_banner( $this->api_client );
 				$analytics = $this->database->get_threat_analytics( 30 );
 				$layers    = $this->get_active_protection_layers();
 				?>

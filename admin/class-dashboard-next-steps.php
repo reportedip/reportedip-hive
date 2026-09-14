@@ -115,6 +115,54 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	}
 
 	/**
+	 * Timestamp of the quickstart completion, from either storage form.
+	 *
+	 * `Mode_Manager::mark_wizard_completed()` stores a UTC MySQL datetime; an
+	 * epoch number is accepted too. Anything else yields 0.
+	 *
+	 * @param mixed $raw Stored option value.
+	 * @return int
+	 */
+	public static function completed_at_timestamp( $raw ) {
+		if ( is_numeric( $raw ) ) {
+			return max( 0, (int) $raw );
+		}
+		$raw = trim( (string) $raw );
+		if ( '' === $raw ) {
+			return 0;
+		}
+		$ts = strtotime( $raw . ' UTC' );
+		return false === $ts ? 0 : max( 0, $ts );
+	}
+
+	/**
+	 * Points the scores gain per Protection-page section once the section's
+	 * switched-off items are enabled.
+	 *
+	 * Only present, available and disabled items count; plan-locked items and
+	 * items linking elsewhere (the Community page) are ignored.
+	 *
+	 * @param array<int,array<string,mixed>> $items Score item descriptors.
+	 * @return array<string,int> Section id => points.
+	 */
+	public static function score_potential( array $items ) {
+		$potential = array();
+		foreach ( $items as $item ) {
+			if ( empty( $item['present'] ) || empty( $item['available'] ) || ! empty( $item['enabled'] ) ) {
+				continue;
+			}
+			$url = (string) ( $item['settings_url'] ?? '' );
+			$pos = strpos( $url, '#' );
+			if ( false === $pos || false === strpos( $url, 'page=reportedip-hive-protection' ) ) {
+				continue;
+			}
+			$section               = substr( $url, $pos + 1 );
+			$potential[ $section ] = ( $potential[ $section ] ?? 0 ) + (int) ( $item['weight'] ?? 0 );
+		}
+		return $potential;
+	}
+
+	/**
 	 * Whether the site shows a Business signal.
 	 *
 	 * @param array{woocommerce:bool,multisite:bool,users:int} $signals Signals.
@@ -215,41 +263,79 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	}
 
 	/**
-	 * Render banner, next steps, area rows and the upsell card.
+	 * The one status line of the dashboard, rendered above the stat cards.
 	 *
+	 * Green while the site runs on its recommendation. In Community Network
+	 * it turns into a warning when no key is stored or the daily report
+	 * quota is used up; the rate-limit state is already covered by the
+	 * page-wide inline notice. All state comes from cached or local sources,
+	 * nothing here performs an HTTP request.
+	 *
+	 * @param ReportedIP_Hive_API $api API client.
 	 * @return void
 	 */
-	public function render() {
+	public function render_banner( $api ) {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		if ( ! $mode_manager->is_wizard_completed() ) {
 			return;
 		}
-		$info    = $mode_manager->get_tier_info();
-		$tier    = (string) ( $info['key'] ?? 'free' );
-		$mode    = (string) $mode_manager->get_mode();
-		$current = ReportedIP_Hive_Settings_Registry::current_values();
-		$diff    = self::deviations( ReportedIP_Hive_Defaults::recommended( $tier, $mode ), $current );
-		$set_at  = (int) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Mode_Manager::OPTION_WIZARD_COMPLETED_AT, 0 );
-		$user_id = get_current_user_id();
+		$info           = $mode_manager->get_tier_info();
+		$tier           = (string) ( $info['key'] ?? 'free' );
+		$label          = (string) ( $info['label'] ?? $tier );
+		$mode           = (string) $mode_manager->get_mode();
+		$current        = ReportedIP_Hive_Settings_Registry::current_values();
+		$diff           = self::deviations( ReportedIP_Hive_Defaults::recommended( $tier, $mode ), $current );
+		$set_at         = self::completed_at_timestamp( ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Mode_Manager::OPTION_WIZARD_COMPLETED_AT, '' ) );
+		$community      = $mode_manager->is_community_mode();
 		$protection_url = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-protection' );
+		$community_url  = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 
-		$result = get_transient( self::RESULT_TRANSIENT . $user_id );
-		delete_transient( self::RESULT_TRANSIENT . $user_id );
+		if ( $community && ! $api->is_configured() ) {
+			?>
+			<div class="rip-alert rip-alert--warning rip-status-banner">
+				<div class="rip-alert__content rip-alert__content--row">
+					<div class="rip-alert__message"><?php esc_html_e( 'Community protection is not connected.', 'reportedip-hive' ); ?></div>
+					<a href="<?php echo esc_url( $community_url ); ?>" class="rip-button rip-button--primary rip-button--sm"><?php esc_html_e( 'Connect now', 'reportedip-hive' ); ?></a>
+				</div>
+			</div>
+			<?php
+			return;
+		}
+
+		$quota = $community ? $api->get_quota_status() : array();
+		if ( ! empty( $quota['exhausted'] ) ) {
+			$countdown = '';
+			$reset_ts  = empty( $quota['reset_time'] ) ? false : strtotime( (string) $quota['reset_time'] );
+			if ( $reset_ts && $reset_ts > time() ) {
+				/* translators: %s: human-readable time span until the daily quota resets */
+				$countdown = sprintf( __( 'Resets in %s.', 'reportedip-hive' ), human_time_diff( time(), $reset_ts ) );
+			}
+			?>
+			<div class="rip-alert rip-alert--warning rip-status-banner">
+				<?php
+				echo esc_html( trim( (string) ( $quota['message'] ?? '' ) . ' ' . $countdown ) );
+				printf( ' <a href="%1$s">%2$s</a>', esc_url( $community_url ), esc_html__( 'Open the Community page', 'reportedip-hive' ) );
+				?>
+			</div>
+			<?php
+			return;
+		}
 		?>
 		<div class="rip-alert rip-alert--success rip-status-banner">
 			<?php
-			echo esc_html(
-				sprintf(
-					/* translators: 1: plan name, 2: date */
-					__( 'Protection active, recommendation for %1$s, set up on %2$s.', 'reportedip-hive' ),
-					(string) ( $info['label'] ?? $tier ),
-					$set_at > 0 ? wp_date( (string) get_option( 'date_format' ), $set_at ) : __( 'an unknown date', 'reportedip-hive' )
-				)
-			);
+			if ( $set_at > 0 ) {
+				/* translators: 1: plan name, 2: date */
+				echo esc_html( sprintf( __( 'Protection active since %2$s on the %1$s recommendation.', 'reportedip-hive' ), $label, wp_date( (string) get_option( 'date_format' ), $set_at ) ) );
+			} else {
+				/* translators: %s: plan name */
+				echo esc_html( sprintf( __( 'Protection active on the %s recommendation.', 'reportedip-hive' ), $label ) );
+			}
+			if ( $community ) {
+				printf( ' <a href="%1$s">%2$s</a>', esc_url( $community_url ), esc_html__( 'Community Network connected.', 'reportedip-hive' ) );
+			}
 			if ( array() !== $diff ) {
-				echo ' ';
 				printf(
-					'<a href="%1$s">%2$s</a>',
+					' <a href="%1$s">%2$s</a>',
 					esc_url( $protection_url ),
 					/* translators: %d: number of settings that differ from the recommendation */
 					esc_html( sprintf( _n( 'Adjusted (%d setting).', 'Adjusted (%d settings).', count( $diff ), 'reportedip-hive' ), count( $diff ) ) )
@@ -260,6 +346,27 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			}
 			?>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Render the step result, next steps, area rows and the upsell card.
+	 *
+	 * @return void
+	 */
+	public function render() {
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		if ( ! $mode_manager->is_wizard_completed() ) {
+			return;
+		}
+		$tier           = (string) ( $mode_manager->get_tier_info()['key'] ?? 'free' );
+		$current        = ReportedIP_Hive_Settings_Registry::current_values();
+		$user_id        = get_current_user_id();
+		$protection_url = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-protection' );
+
+		$result = get_transient( self::RESULT_TRANSIENT . $user_id );
+		delete_transient( self::RESULT_TRANSIENT . $user_id );
+		?>
 		<?php if ( is_array( $result ) && ! empty( $result['message'] ) ) : ?>
 			<div class="rip-alert <?php echo ! empty( $result['ok'] ) ? 'rip-alert--success' : 'rip-alert--error'; ?>"><?php echo esc_html( (string) $result['message'] ); ?></div>
 		<?php endif; ?>
@@ -341,18 +448,45 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 * @return void
 	 */
 	private function render_area_rows( array $current, $protection_url ) {
+		$potential = array();
+		if ( class_exists( 'ReportedIP_Hive_Score' ) ) {
+			$potential = self::score_potential(
+				array_merge(
+					(array) ( ReportedIP_Hive_Score::detection_score()['items'] ?? array() ),
+					(array) ( ReportedIP_Hive_Score::hardening_score()['items'] ?? array() )
+				)
+			);
+		}
 		?>
-		<div class="rip-card rip-areas">
-			<div class="rip-card__header"><h2><?php esc_html_e( 'Protection areas', 'reportedip-hive' ); ?></h2></div>
+		<details class="rip-card rip-areas">
+			<summary class="rip-areas__summary">
+				<span class="rip-areas__title"><?php esc_html_e( 'Protection areas', 'reportedip-hive' ); ?></span>
+				<span class="rip-areas__intro"><?php esc_html_e( 'Every area of the Protection page with its current state. The points show what the scores gain once an area is switched on.', 'reportedip-hive' ); ?></span>
+			</summary>
 			<ul class="rip-areas__list">
 				<?php foreach ( ReportedIP_Hive_Settings_Registry::sections() as $section => $meta ) : ?>
+					<?php
+					$url  = $protection_url . '#' . $section;
+					$gain = empty( $potential[ $section ] )
+						? ''
+						/* translators: %d: score points the area adds once switched on */
+						: sprintf( __( '+%d pts', 'reportedip-hive' ), (int) $potential[ $section ] );
+					?>
 					<li class="rip-areas__row">
-						<a href="<?php echo esc_url( $protection_url . '#' . $section ); ?>" class="rip-areas__label"><?php echo esc_html( (string) $meta['label'] ); ?></a>
-						<span class="rip-badge rip-badge--neutral"><?php echo esc_html( ReportedIP_Hive_Protection_Page::section_status( $section, $current ) ); ?></span>
+						<div class="rip-areas__text">
+							<a href="<?php echo esc_url( $url ); ?>" class="rip-areas__label"><?php echo esc_html( (string) $meta['label'] ); ?></a>
+							<span class="rip-areas__desc"><?php echo esc_html( (string) ( $meta['description'] ?? '' ) ); ?></span>
+						</div>
+						<span class="rip-areas__state">
+							<?php if ( '' !== $gain ) : ?>
+								<a class="rip-badge rip-badge--info rip-areas__gain" href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $gain ); ?></a>
+							<?php endif; ?>
+							<span class="rip-badge rip-badge--neutral"><?php echo esc_html( ReportedIP_Hive_Protection_Page::section_status( $section, $current ) ); ?></span>
+						</span>
 					</li>
 				<?php endforeach; ?>
 			</ul>
-		</div>
+		</details>
 		<?php
 	}
 
@@ -391,7 +525,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 		);
 		$card = $cards[ $key ];
 		$href = ReportedIP_Hive_Promo_Manager::KEY_REFERRAL === $key
-			? ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-community&tab=promote' )
+			? ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-community&tab=community' )
 			: add_query_arg(
 				array(
 					'utm_source' => 'hive',

@@ -258,7 +258,7 @@ final class ReportedIP_Hive_Score {
 	public static function hardening_items() {
 		$w               = self::HARDENING_WEIGHTS;
 		$headers_present = class_exists( 'ReportedIP_Hive_Security_Headers' );
-		$surface_url     = self::url( 'reportedip-hive-protection', 'headers' );
+		$surface_url     = self::url( 'reportedip-hive-protection', 'lockdown' );
 		$uploads_present = class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' )
 			&& class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
 			&& ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->supports_htaccess();
@@ -268,7 +268,7 @@ final class ReportedIP_Hive_Score {
 			self::item( 'twofa_enforce', $w['twofa_enforce'], 'hardening', __( 'Two-factor enforced for a role', 'reportedip-hive' ), self::twofa_enforced(), self::url( 'reportedip-hive-protection', 'account_security' ) ),
 			self::item( 'security_headers', $w['security_headers'], 'hardening', __( 'Security headers (basic)', 'reportedip-hive' ), $headers_present && ReportedIP_Hive_Security_Headers::basic_active(), self::url( 'reportedip-hive-protection', 'headers' ), 'security_headers', $headers_present ),
 			self::item( 'security_headers_advanced', $w['security_headers_advanced'], 'hardening', __( 'Security headers (advanced)', 'reportedip-hive' ), $headers_present && ReportedIP_Hive_Security_Headers::advanced_active(), self::url( 'reportedip-hive-protection', 'headers' ), 'security_headers_advanced', $headers_present ),
-			self::item( 'password_hibp', $w['password_hibp'], 'hardening', __( 'Password strength & breach check', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_password_policy_enabled', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'password_hibp', $w['password_hibp'], 'hardening', __( 'Password strength & breach check', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_password_policy_enabled', true ), self::url( 'reportedip-hive-protection', 'account_password' ) ),
 			self::item( 'hardening_mode', $w['hardening_mode'], 'hardening', __( 'Hardening mode', 'reportedip-hive' ), class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active(), self::url( 'reportedip-hive-protection', 'hardening_mode' ), 'hardening_mode' ),
 			self::item( 'disposable_block', $w['disposable_block'], 'hardening', __( 'Disposable-email defence', 'reportedip-hive' ), 'off' !== (string) self::opt( 'reportedip_hive_disposable_email_action', 'monitor' ), self::url( 'reportedip-hive-protection', 'registration' ), 'disposable_email' ),
 			self::item( 'rest_access', $w['rest_access'], 'hardening', __( 'REST API access control', 'reportedip-hive' ), 'open' !== (string) self::opt( 'reportedip_hive_rest_access_mode', 'open' ), $surface_url ),

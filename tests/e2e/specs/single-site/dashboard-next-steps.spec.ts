@@ -42,7 +42,11 @@ test.describe('dashboard next steps', () => {
 	test('the banner names the plan and the badge step switches the badge on', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive');
-		await expect(page.locator('.rip-status-banner')).toContainText('recommendation for');
+		await expect(page.locator('.rip-status-banner')).toHaveCount(1);
+		await expect(page.locator('.rip-status-banner')).toContainText('recommendation');
+		await expect(page.locator('.rip-status-banner')).not.toContainText('1970');
+		await expect(page.locator('.rip-dashboard > .rip-status-banner:first-child')).toHaveCount(1);
+		await expect(page.locator('.rip-api-strip')).toHaveCount(0);
 		const card = page.locator('.rip-next-steps__card[data-step="badge_off"]');
 		await expect(card).toBeVisible();
 		await card.locator('button[type="submit"]').click();
@@ -61,11 +65,17 @@ test.describe('dashboard next steps', () => {
 		await expect(page.locator('.rip-next-steps__card[data-step="community_pending"]')).toHaveCount(0);
 	});
 
-	test('area rows link to the protection anchors', async ({ page }) => {
+	test('area rows are collapsed, explained and link to the protection anchors', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive');
+		const areas = page.locator('details.rip-areas');
+		await expect(areas).toHaveCount(1);
+		await expect(areas).not.toHaveAttribute('open', '');
 		await expect(page.locator('.rip-areas__row')).toHaveCount(14);
-		await expect(page.locator('.rip-areas__row a[href$="#blocking"]')).toHaveCount(1);
+		await expect(page.locator('.rip-areas__row a.rip-areas__label[href$="#blocking"]')).toHaveCount(1);
+		await areas.locator('summary').click();
+		await expect(page.locator('.rip-areas__row .rip-areas__desc').first()).toBeVisible();
+		await expect(page.locator('.rip-areas__gain[href$="#hide_login"]')).toBeVisible();
 	});
 
 	test('the header toggle switches expert mode and lists the tools page', async ({ page }) => {

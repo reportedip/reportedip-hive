@@ -17,6 +17,20 @@
  * @since      2.1.2
  */
 
+namespace {
+	if ( ! function_exists( 'is_network_admin' ) ) {
+		function is_network_admin() {
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'admin_url' ) ) {
+		function admin_url( $path = '' ) {
+			return 'https://example.org/wp-admin/' . ltrim( (string) $path, '/' );
+		}
+	}
+}
+
 namespace ReportedIP\Hive\Tests\Unit {
 
 	use ReportedIP\Hive\Tests\TestCase;
@@ -45,6 +59,21 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'available' => $available,
 				'enabled'   => $enabled,
 			);
+		}
+
+		public function test_every_protection_page_link_targets_a_registry_section(): void {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
+			$sections = array_keys( \ReportedIP_Hive_Settings_Registry::sections() );
+			$items    = array_merge( \ReportedIP_Hive_Score::detection_items(), \ReportedIP_Hive_Score::hardening_items() );
+			$this->assertNotEmpty( $items );
+			foreach ( $items as $item ) {
+				$url = (string) $item['settings_url'];
+				if ( false === strpos( $url, 'page=reportedip-hive-protection' ) ) {
+					continue;
+				}
+				$anchor = substr( $url, (int) strpos( $url, '#' ) + 1 );
+				$this->assertContains( $anchor, $sections, $item['key'] . ' links to #' . $anchor );
+			}
 		}
 
 		public function test_detection_weights_sum_to_100(): void {
