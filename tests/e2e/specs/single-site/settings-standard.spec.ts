@@ -57,8 +57,17 @@ test.describe.configure({ mode: 'serial' });
 
 test.use({ video: 'on' });
 
+
+/** Open one protection card so its fields become visible to Playwright. */
+async function openSection(page: Page, id: string): Promise<void> {
+	await page.locator(`#${id}`).evaluate((el) => {
+		(el as HTMLDetailsElement).open = true;
+	});
+}
+
 test.describe('settings standard — every option has a working form', () => {
 	test.beforeAll(() => {
+		wp('user meta update admin reportedip_hive_expert_mode 1');
 		try {
 			wp(`option delete ${RESTORE.join(' ')}`);
 		} catch {
@@ -68,91 +77,98 @@ test.describe('settings standard — every option has a working form', () => {
 
 	test.afterAll(() => {
 		try {
+			wp('user meta delete admin reportedip_hive_expert_mode');
+		} catch {
+			/* absent */
+		}
+		try {
 			wp(`option delete ${RESTORE.join(' ')}`);
 		} catch {
 			/* already absent */
 		}
 	});
 
-	test('Notifications tab: service-notice toggles persist both ways', async ({ page }) => {
+	test('Notifications card: service-notice toggles persist both ways', async ({ page }) => {
+		// The apply service skips a value that equals the stored one, and a
+		// missing row counts as the default (on). Start the mail switch at off
+		// so the round trip to on is an actual write.
+		wp('option update reportedip_hive_tier_change_mail_enabled 0');
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings&tab=notifications');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await openSection(page, 'notifications');
 
 		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_promo_enabled"]', false);
 		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_quota_notif_enabled"]', false);
 		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_tier_change_mail_enabled"]', true);
-		await page.click('form:has(input[type="checkbox"][name="reportedip_hive_promo_enabled"]) input[type="submit"]');
-		await page.waitForURL(/settings-updated=true/);
+		await page.click('#notifications form button[type="submit"]');
+		await page.waitForURL(/page=reportedip-hive-protection#notifications/);
 
 		expect(wpOption('reportedip_hive_promo_enabled')).toBe('0');
 		expect(wpOption('reportedip_hive_quota_notif_enabled')).toBe('0');
 		expect(wpOption('reportedip_hive_tier_change_mail_enabled')).toBe('1');
 
-		await expect(page.locator('input[type="checkbox"][name="reportedip_hive_promo_enabled"]')).not.toBeChecked();
-		await expect(page.locator('input[type="checkbox"][name="reportedip_hive_tier_change_mail_enabled"]')).toBeChecked();
+		await expect(page.locator('#notifications input[type="checkbox"][name="reportedip_hive_promo_enabled"]')).not.toBeChecked();
+		await expect(page.locator('#notifications input[type="checkbox"][name="reportedip_hive_tier_change_mail_enabled"]')).toBeChecked();
 
 		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_promo_enabled"]', true);
-		await page.click('form:has(input[type="checkbox"][name="reportedip_hive_promo_enabled"]) input[type="submit"]');
-		await page.waitForURL(/settings-updated=true/);
+		await page.click('#notifications form button[type="submit"]');
+		await page.waitForURL(/page=reportedip-hive-protection#notifications/);
 		expect(wpOption('reportedip_hive_promo_enabled')).toBe('1');
 	});
 
-	test('2FA tab: reminder trio and the e-mail subject go through the registry', async ({ page }) => {
+	test('2FA card: reminder trio and the e-mail subject go through the registry', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings&tab=two_factor');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await openSection(page, 'account_security');
 
-		await page.fill('input[name="reportedip_hive_2fa_reminder_hard_threshold"]', '7');
-		// The role list sits inside a section the page may keep collapsed, so
-		// the boxes are set directly; the form post is what is under test.
-		await page.locator('input[name="reportedip_hive_2fa_reminder_hard_roles[]"]').evaluateAll((boxes) => {
+		await page.fill('#account_security input[name="reportedip_hive_2fa_reminder_hard_threshold"]', '7');
+		await page.locator('#account_security input[name="reportedip_hive_2fa_reminder_hard_roles[]"]').evaluateAll((boxes) => {
 			for (const box of boxes) {
 				(box as HTMLInputElement).checked = false;
 			}
 		});
-		await page.fill('input[name="reportedip_hive_2fa_email_subject"]', '[{site_name}] Dein Code');
-		await page.click('form:has(input[name="reportedip_hive_2fa_email_subject"]) input[type="submit"]');
-		await page.waitForURL(/settings-updated=true/);
+		await page.fill('#account_security input[name="reportedip_hive_2fa_email_subject"]', '[{site_name}] Dein Code');
+		await page.click('#account_security form button[type="submit"]');
+		await page.waitForURL(/page=reportedip-hive-protection#account_security/);
 
 		expect(wpOption('reportedip_hive_2fa_reminder_hard_threshold')).toBe('7');
 		expect(wpOption('reportedip_hive_2fa_reminder_hard_roles')).toBe('[]');
 		expect(wpOption('reportedip_hive_2fa_email_subject')).toBe('[{site_name}] Dein Code');
-		await expect(page.locator('input[name="reportedip_hive_2fa_email_subject"]')).toHaveValue('[{site_name}] Dein Code');
+		await expect(page.locator('#account_security input[name="reportedip_hive_2fa_email_subject"]')).toHaveValue('[{site_name}] Dein Code');
 
 		// The browser refuses an out-of-range threshold before the post (the
 		// registry clamp behind it is unit-tested); a re-ticked role round-trips.
-		await expect(page.locator('input[name="reportedip_hive_2fa_reminder_hard_threshold"]')).toHaveAttribute('max', '10');
-		await page.fill('input[name="reportedip_hive_2fa_reminder_hard_threshold"]', '99');
-		expect(await page.locator('input[name="reportedip_hive_2fa_reminder_hard_threshold"]').evaluate((el) => (el as HTMLInputElement).checkValidity())).toBe(false);
-		await page.fill('input[name="reportedip_hive_2fa_reminder_hard_threshold"]', '3');
-		await page.locator('input[name="reportedip_hive_2fa_reminder_hard_roles[]"][value="administrator"]').evaluate((box) => {
+		await expect(page.locator('#account_security input[name="reportedip_hive_2fa_reminder_hard_threshold"]')).toHaveAttribute('max', '10');
+		await page.fill('#account_security input[name="reportedip_hive_2fa_reminder_hard_threshold"]', '99');
+		expect(await page.locator('#account_security input[name="reportedip_hive_2fa_reminder_hard_threshold"]').evaluate((el) => (el as HTMLInputElement).checkValidity())).toBe(false);
+		await page.fill('#account_security input[name="reportedip_hive_2fa_reminder_hard_threshold"]', '3');
+		await page.locator('#account_security input[name="reportedip_hive_2fa_reminder_hard_roles[]"][value="administrator"]').evaluate((box) => {
 			(box as HTMLInputElement).checked = true;
 		});
-		await page.click('form:has(input[name="reportedip_hive_2fa_email_subject"]) input[type="submit"]');
-		await page.waitForLoadState('load');
+		await page.click('#account_security form button[type="submit"]');
+		await page.waitForURL(/page=reportedip-hive-protection#account_security/);
 
 		expect(wpOption('reportedip_hive_2fa_reminder_hard_threshold')).toBe('3');
 		expect(wpOption('reportedip_hive_2fa_reminder_hard_roles')).toBe('["administrator"]');
 	});
 
-	test('Firewall page: the Extended Protection body-inspection switch saves through the registry writer', async ({ page }) => {
+	test('Firewall card: the Extended Protection body-inspection switch saves through the registry', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=waf');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await openSection(page, 'waf');
 
-		const card = page.locator('#rip-waf-dropin');
-		const toggle = 'input[data-opt="reportedip_hive_waf_dropin_skip_authenticated"]';
-		await expect(card.locator(toggle)).toBeChecked();
+		const toggle = '#waf input[name="reportedip_hive_waf_dropin_skip_authenticated"]';
+		await expect(page.locator(toggle)).toBeChecked();
 
-		await card.locator(`label.rip-toggle:has(${toggle})`).click();
-		await card.locator('button[data-rip-save="reportedip_hive_registry_save"]').click();
+		await page.locator(`#waf label.rip-toggle:has(input[name="reportedip_hive_waf_dropin_skip_authenticated"])`).click();
+		await page.click('#waf form button[type="submit"]');
+		await page.waitForURL(/page=reportedip-hive-protection#waf/);
 		await expect.poll(() => wpOption('reportedip_hive_waf_dropin_skip_authenticated'), { timeout: 15_000 }).toBe('0');
+		await expect(page.locator(toggle)).not.toBeChecked();
 
-		await page.reload();
-		await expect(page.locator(`#rip-waf-dropin ${toggle}`)).not.toBeChecked();
-
-		await page.locator(`#rip-waf-dropin label.rip-toggle:has(${toggle})`).click();
-		await page.locator('#rip-waf-dropin button[data-rip-save="reportedip_hive_registry_save"]').click();
+		await page.locator(`#waf label.rip-toggle:has(input[name="reportedip_hive_waf_dropin_skip_authenticated"])`).click();
+		await page.click('#waf form button[type="submit"]');
+		await page.waitForURL(/page=reportedip-hive-protection#waf/);
 		await expect.poll(() => wpOption('reportedip_hive_waf_dropin_skip_authenticated'), { timeout: 15_000 }).toBe('1');
 	});
 });

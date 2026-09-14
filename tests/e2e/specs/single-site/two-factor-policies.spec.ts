@@ -85,6 +85,13 @@ async function seedTrustedCookie(page: Page, baseURL: string | undefined): Promi
 let twoFactorWasOn = '0';
 let logLevelWas = 'info';
 
+/** Open the policies card; every field in it is expert-only. */
+async function openPolicies(page: import('@playwright/test').Page): Promise<void> {
+	await page.locator('#twofa_policies').evaluate((el) => {
+		(el as HTMLDetailsElement).open = true;
+	});
+}
+
 test.describe.configure({ mode: 'serial' });
 
 test.describe('adaptive 2fa policies', () => {
@@ -114,6 +121,7 @@ test.describe('adaptive 2fa policies', () => {
 			"global $wpdb; $tbl = $wpdb->base_prefix . 'reportedip_hive_trusted_devices';",
 			"$wpdb->delete($tbl, array('user_id' => $a->ID));",
 			`$wpdb->insert($tbl, array('user_id' => $a->ID, 'token_hash' => hash('sha256', '${TRUSTED_TOKEN}'), 'device_name' => 'e2e-policy', 'ip_address' => '127.0.0.1', 'created_at' => current_time('mysql', true), 'expires_at' => gmdate('Y-m-d H:i:s', time() + 86400)));`,
+			"update_user_meta( 1, 'reportedip_hive_expert_mode', 1 );",
 			"echo 'SEED|' . $old_2fa . '|' . $old_log . '|' . $a->ID . '|' . $b->ID;",
 		]);
 
@@ -135,41 +143,42 @@ test.describe('adaptive 2fa policies', () => {
 			"require_once ABSPATH . 'wp-admin/includes/user.php';",
 			"global $wpdb; $tbl = $wpdb->base_prefix . 'reportedip_hive_trusted_devices';",
 			`foreach (array('${STEPUP_USER}', '${NOMETHOD_USER}') as $login) { $u = get_user_by('login', $login); if ($u instanceof WP_User) { $wpdb->delete($tbl, array('user_id' => $u->ID)); wp_delete_user($u->ID); } }`,
+			"delete_user_meta( 1, 'reportedip_hive_expert_mode' );",
 			"echo 'CLEANED';",
 		]);
 	});
 
-	test('the matrix renders one row per trigger', async ({ page }) => {
+	test('the policies card renders one role list per trigger', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings&tab=two_factor');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await openPolicies(page);
 
-		const matrix = page.locator('#rip-2fa-policies');
-		await expect(matrix).toBeVisible();
-		await expect(matrix.locator('tbody tr')).toHaveCount(7);
-		await expect(matrix.locator('input[name="reportedip_hive_2fa_policy_days"]')).toBeVisible();
+		const card = page.locator('#twofa_policies');
+		await expect(card).toBeVisible();
+		await expect(card.locator('.rip-checkbox-group')).toHaveCount(7);
+		await expect(card.locator('input[name="reportedip_hive_2fa_policy_days"]')).toBeVisible();
 	});
 
-	test('the administrator column stays off while the latch is closed', async ({ page }) => {
+	test('the administrator role is dropped on save while the latch is closed', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings&tab=two_factor');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await openPolicies(page);
 
-		const adminBox = page
-			.locator('#rip-2fa-policies')
-			.locator(`input[name="${POLICY_KEY}[]"][value="administrator"]`);
+		await page.locator(`#twofa_policies input[name="${POLICY_KEY}[]"][value="administrator"]`).check();
+		await page.locator('#twofa_policies form button[type="submit"]').click();
+		await page.waitForURL(/page=reportedip-hive-protection#twofa_policies/);
 
-		await expect(adminBox).toBeDisabled();
+		expect(wpTolerant('option', 'get', POLICY_KEY)).not.toContain('administrator');
 	});
 
 	test('ticking a role saves the policy list', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings&tab=two_factor');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await openPolicies(page);
 
-		await page
-			.locator('#rip-2fa-policies')
-			.locator(`input[name="${POLICY_KEY}[]"][value="editor"]`)
-			.check();
-		await page.locator('#rip-2fa-policies').scrollIntoViewIfNeeded();
-		await page.locator('form input[type="submit"], form button[type="submit"]').first().click();
+		await page.locator(`#twofa_policies input[name="${POLICY_KEY}[]"][value="editor"]`).check();
+		await page.locator('#twofa_policies form button[type="submit"]').click();
+		await page.waitForURL(/page=reportedip-hive-protection#twofa_policies/);
 
 		await expect
 			.poll(() => wpTolerant('option', 'get', POLICY_KEY), { timeout: 30_000 })
@@ -184,28 +193,17 @@ test.describe('adaptive 2fa policies', () => {
 		]);
 
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings&tab=two_factor');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await openPolicies(page);
 
-		await expect(page.locator('#rip-2fa-policies')).toHaveClass(/rip-fieldset--locked/);
+		// An empty list is allowed on every plan, so the boxes stay enabled and
+		// the marker names the plan; the refusal is server-enforced on save.
+		await expect(page.locator('#twofa_policies .rip-protection__field--locked')).toHaveCount(0);
+		await page.locator(`#twofa_policies input[name="${POLICY_KEY}[]"][value="editor"]`).check();
+		await page.locator('#twofa_policies form button[type="submit"]').click();
+		await page.waitForURL(/page=reportedip-hive-protection#twofa_policies/);
 
-		const box = page.locator(`#rip-2fa-policies input[name="${POLICY_KEY}[]"][value="editor"]`);
-		await expect(box).toBeDisabled();
-
-		// The lock is server-enforced, so post the value anyway: re-enable the
-		// input in the DOM and submit the real settings form.
-		await box.evaluate((el) => {
-			const input = el as HTMLInputElement;
-			input.disabled = false;
-			input.checked = true;
-		});
-		await page.locator('form input[type="submit"], form button[type="submit"]').first().click();
-
-		// The refusal notice is the proof the POST reached the sanitizer and was
-		// rejected there. `waitForURL` is not used: it waits for the `load`
-		// lifecycle event, which the free-tier render does not always reach
-		// inside the timeout on this stack, even though the redirect carrying
-		// `settings-updated=true` has already been followed.
-		await expect(page.locator('body')).toContainText(/requires the professional plan/i, {
+		await expect(page.locator(`#twofa_policies .rip-protection__error[data-for="${POLICY_KEY}"]`)).toContainText(/professional plan/i, {
 			timeout: 60_000,
 		});
 
@@ -221,25 +219,25 @@ test.describe('adaptive 2fa policies', () => {
 
 	test('the three interval fields save and survive a reload', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings&tab=two_factor');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await openPolicies(page);
 
-		await page.fill('#reportedip_hive_2fa_policy_days', '12');
-		await page.fill('#reportedip_hive_2fa_policy_logins', '7');
-		await page.fill('#reportedip_hive_2fa_policy_sessions', '5');
-		await page.locator('form input[type="submit"], form button[type="submit"]').first().click();
-		// `commit` rather than the default `load`: the post-save render does not
-		// always reach the load event inside the budget on this stack.
-		await page.waitForURL(/settings-updated=true/, { waitUntil: 'commit', timeout: 90_000 });
+		await page.fill('#rip-field-2fa_policy_days', '12');
+		await page.fill('#rip-field-2fa_policy_logins', '7');
+		await page.fill('#rip-field-2fa_policy_sessions', '5');
+		await page.locator('#twofa_policies form button[type="submit"]').click();
+		await page.waitForURL(/page=reportedip-hive-protection#twofa_policies/, { waitUntil: 'commit', timeout: 90_000 });
 
 		const stored = wpEval([
 			"echo 'VALUES|' . ReportedIP_Hive_Option_Routing::get('reportedip_hive_2fa_policy_days', '') . '|' . ReportedIP_Hive_Option_Routing::get('reportedip_hive_2fa_policy_logins', '') . '|' . ReportedIP_Hive_Option_Routing::get('reportedip_hive_2fa_policy_sessions', '');",
 		]);
 		expect(stored).toContain('VALUES|12|7|5');
 
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings&tab=two_factor');
-		await expect(page.locator('#reportedip_hive_2fa_policy_days')).toHaveValue('12');
-		await expect(page.locator('#reportedip_hive_2fa_policy_logins')).toHaveValue('7');
-		await expect(page.locator('#reportedip_hive_2fa_policy_sessions')).toHaveValue('5');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await openPolicies(page);
+		await expect(page.locator('#rip-field-2fa_policy_days')).toHaveValue('12');
+		await expect(page.locator('#rip-field-2fa_policy_logins')).toHaveValue('7');
+		await expect(page.locator('#rip-field-2fa_policy_sessions')).toHaveValue('5');
 	});
 
 	test('a sign-in from a new IP is challenged despite a trusted device', async ({ page, baseURL }) => {

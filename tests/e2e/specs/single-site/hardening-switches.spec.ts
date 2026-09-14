@@ -295,59 +295,51 @@ test.describe('attack surface switches', () => {
 	 * toggles are `rip-toggle` inputs (opacity 0, zero box), so they are
 	 * clicked through their wrapping label.
 	 */
-	test('the hardening form saves the attack-surface switches', async ({ page }) => {
+	test('the lockdown card saves the attack-surface switches', async ({ page }) => {
 		test.setTimeout(240_000);
+		wpEval('update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo "expert";');
 
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=hardening');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.locator('#lockdown').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
+		});
 
-		const form = page.locator('#rip-attack-surface-form');
+		const form = page.locator('#lockdown form');
 		await expect(form).toBeVisible();
 
-		await page.selectOption('#rip-rest-access-mode', 'logged_in');
+		await form.locator('select[name="reportedip_hive_rest_access_mode"]').selectOption('logged_in');
 		await form.locator('label.rip-toggle:has(input[name="reportedip_hive_disable_feeds"])').click();
-		await form
-			.locator('label.rip-toggle:has(input[name="reportedip_hive_hide_software_info"])')
-			.click();
+		await form.locator('label.rip-toggle:has(input[name="reportedip_hive_hide_software_info"])').click();
 
 		await form.locator('button[type="submit"]').click();
-		// The saved notice is the proof the round trip through options.php
-		// completed. `waitForURL` is not used: it did not resolve on this stack
-		// even after the redirect carrying `settings-updated=true` had been
-		// followed and the notice was on screen. The wait gets the test's whole
-		// budget rather than a tighter one of its own: this step takes about
-		// twelve seconds on an idle machine and timed out at ninety during a
-		// full suite run, so a shorter cap only ever reports machine load.
-		await expect(page.locator('body')).toContainText('Settings saved.', { timeout: 200_000 });
+		await expect(page.locator('.rip-alert--success')).toContainText('saved', { timeout: 200_000 });
 
-		// Each toggle ships a hidden `value="0"` companion under the same name,
-		// so the checkbox has to be addressed by type.
-		await expect(page.locator('#rip-rest-access-mode')).toHaveValue('logged_in');
-		await expect(
-			page.locator('input[name="reportedip_hive_disable_feeds"][type="checkbox"]')
-		).toBeChecked();
-		await expect(
-			page.locator('input[name="reportedip_hive_hide_software_info"][type="checkbox"]')
-		).toBeChecked();
+		await expect(page.locator('#lockdown select[name="reportedip_hive_rest_access_mode"]')).toHaveValue('logged_in');
+		await expect(page.locator('#lockdown input[name="reportedip_hive_disable_feeds"][type="checkbox"]')).toBeChecked();
+		await expect(page.locator('#lockdown input[name="reportedip_hive_hide_software_info"][type="checkbox"]')).toBeChecked();
 
 		const saved = wpEval(
 			'echo get_option( "reportedip_hive_rest_access_mode" ) . "|" . get_option( "reportedip_hive_disable_feeds" ) . "|" . get_option( "reportedip_hive_hide_software_info" );' +
 				'update_option( "reportedip_hive_rest_access_mode", "open" );' +
 				'update_option( "reportedip_hive_disable_feeds", 0 );' +
-				'update_option( "reportedip_hive_hide_software_info", 0 );'
+				'update_option( "reportedip_hive_hide_software_info", 0 );' +
+				'delete_user_meta( 1, "reportedip_hive_expert_mode" );'
 		);
 		expect(saved).toBe('logged_in|1|1');
 	});
 
-	test('the hardening tab renders the attack-surface cards', async ({ page }) => {
+	test('the lockdown card renders the attack-surface fields in expert mode', async ({ page }) => {
+		wpEval('update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo "expert";');
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=hardening');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.locator('#lockdown').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
+		});
 
-		await expect(page.locator('#rip-attack-surface-form')).toBeVisible();
-		await expect(page.locator('#rip-rest-access-mode')).toBeVisible();
-		await expect(page.locator('#rip-rest-namespaces')).toBeVisible();
-		await expect(
-			page.locator('input[name="reportedip_hive_disable_xmlrpc"][type="checkbox"]')
-		).toBeAttached();
+		await expect(page.locator('#lockdown select[name="reportedip_hive_rest_access_mode"]')).toBeVisible();
+		await expect(page.locator('#lockdown textarea[name="reportedip_hive_rest_allowed_namespaces"]')).toBeVisible();
+		await expect(page.locator('#lockdown input[name="reportedip_hive_disable_xmlrpc"][type="checkbox"]')).toBeAttached();
+		wpEval('delete_user_meta( 1, "reportedip_hive_expert_mode" ); echo "simple";');
 	});
 });

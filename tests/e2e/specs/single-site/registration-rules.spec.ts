@@ -146,22 +146,20 @@ test.describe('registration rules', () => {
 	});
 
 	test('the card saves the list and the guard refuses that login', async ({ page, request }) => {
-		// The heaviest single test in the file: an admin sign-in, the firewall
-		// page, the AJAX save with its reload, a WP-CLI read and an anonymous
-		// sign-up. On the bench-seeded dev stack that does not fit 120 s.
 		test.setTimeout(240_000);
+		php('update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo "expert";');
 
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=spam');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.locator('#registration').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
+		});
 
-		const card = page.locator('#rip-reg-usernames');
-		await expect(card).toBeVisible();
-
-		await card.locator('textarea[data-opt="reportedip_hive_prohibited_usernames"]').fill(BLOCKED_LOGIN);
-
-		const saved = registrySave(page);
-		await card.locator('button[data-rip-save]').click();
-		expect((await saved).status()).toBe(200);
+		const field = page.locator('#registration textarea[name="reportedip_hive_prohibited_usernames"]');
+		await expect(field).toBeVisible();
+		await field.fill(BLOCKED_LOGIN);
+		await page.locator('#registration form button[type="submit"]').click();
+		await page.waitForURL(/page=reportedip-hive-protection#registration/);
 
 		expect(wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames')).toBe(BLOCKED_LOGIN);
 
@@ -345,48 +343,40 @@ test.describe('registration rules', () => {
 		php(`
 			${FORCE_FREE_PHP}
 			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_USERNAMES, '${KEPT_LIST}');
+			update_user_meta( 1, "reportedip_hive_expert_mode", 1 );
 			echo 'ready';
 		`);
 
-		const alerts: string[] = [];
-		page.on('dialog', (dialog) => {
-			alerts.push(dialog.message());
-			void dialog.accept();
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.locator('#registration').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
 		});
 
-		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=spam');
-
-		const card = page.locator('#rip-reg-usernames');
 		const eleven = Array.from({ length: 11 }, (unused, index) => `e2ename${index + 1}`).join('\n');
-		await card.locator('textarea[data-opt="reportedip_hive_prohibited_usernames"]').fill(eleven);
+		await page.locator('#registration textarea[name="reportedip_hive_prohibited_usernames"]').fill(eleven);
+		await page.locator('#registration form button[type="submit"]').click();
+		await page.waitForURL(/page=reportedip-hive-protection#registration/);
 
-		const saved = registrySave(page);
-		await card.locator('button[data-rip-save]').click();
-		expect((await saved).status()).toBe(200);
-
-		// The refusal reaches the operator as an alert, and the page is left
-		// untouched: `firewall.js` only reloads after a successful write.
-		await expect.poll(() => alerts.length, { timeout: 30_000 }).toBeGreaterThan(0);
-		expect(alerts.join(' ')).toMatch(/requires the professional plan/i);
-
+		// The refusal is reported at the card and the stored list stays.
+		await expect(page.locator('#registration .rip-protection__error[data-for="reportedip_hive_prohibited_usernames"]')).toContainText(/professional plan/i);
 		expect(wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames')).toBe(KEPT_LIST);
 	});
 
 	test('Professional accepts eleven entries and a regular expression', async ({ page }) => {
-		php(`${forceTierPhp('professional')} echo 'pro';`);
+		php(`${forceTierPhp('professional')} update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo 'pro';`);
 
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=spam');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.locator('#registration').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
+		});
 
-		const card = page.locator('#rip-reg-usernames');
 		const entries = Array.from({ length: 10 }, (unused, index) => `e2ename${index + 1}`);
 		entries.push(REGEX_ENTRY);
-		await card.locator('textarea[data-opt="reportedip_hive_prohibited_usernames"]').fill(entries.join('\n'));
-
-		const saved = registrySave(page);
-		await card.locator('button[data-rip-save]').click();
-		expect((await saved).status()).toBe(200);
+		await page.locator('#registration textarea[name="reportedip_hive_prohibited_usernames"]').fill(entries.join('\n'));
+		await page.locator('#registration form button[type="submit"]').click();
+		await page.waitForURL(/page=reportedip-hive-protection#registration/);
 
 		const stored = wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames');
 		expect(
@@ -398,12 +388,22 @@ test.describe('registration rules', () => {
 		expect(stored).toContain(REGEX_ENTRY);
 	});
 
-	test('the other registration cards render', async ({ page }) => {
+	test('the other registration fields render in expert mode', async ({ page }) => {
+		php('update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo "expert";');
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-firewall&tab=spam');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.locator('#registration').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
+		});
 
-		for (const id of ['#rip-reg-emails', '#rip-reg-limit', '#rip-reg-allowlist', '#rip-reg-probe']) {
-			await expect(page.locator(id)).toBeVisible();
+		for (const name of [
+			'reportedip_hive_email_rules',
+			'reportedip_hive_registration_limit_enabled',
+			'reportedip_hive_registration_allowlist',
+			'reportedip_hive_block_unknown_username_login',
+		]) {
+			await expect(page.locator(`#registration [name="${name}"]`)).toBeAttached();
 		}
+		php('delete_user_meta( 1, "reportedip_hive_expert_mode" ); echo "simple";');
 	});
 });

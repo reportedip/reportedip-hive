@@ -146,7 +146,7 @@ test.describe('system status readiness register', () => {
 	test('the summary notice shows on other plugin pages but not on System Status', async ({ page }) => {
 		await loginAsAdmin(page);
 
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		const notice = page.locator('.rip-readiness-notice');
 		await expect(notice).toBeVisible();
 		await expect(notice.locator('.rip-notice__title')).toContainText(/readiness issue/);

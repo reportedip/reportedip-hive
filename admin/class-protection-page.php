@@ -157,6 +157,9 @@ class ReportedIP_Hive_Protection_Page {
 	 * @return bool
 	 */
 	public static function section_is_expert_only( $section ) {
+		if ( 'detection' === $section ) {
+			return false;
+		}
 		return array() === self::visible_keys( $section, false );
 	}
 
@@ -238,7 +241,8 @@ class ReportedIP_Hive_Protection_Page {
 	 * @return string
 	 */
 	public static function field_markup( $key, array $entry, $value, array $status, array $choices = array() ) {
-		$locked   = empty( $status['available'] );
+		$gated    = empty( $status['available'] );
+		$locked   = $gated && empty( $status['partial'] );
 		$id       = 'rip-field-' . str_replace( 'reportedip_hive_', '', $key );
 		$label    = (string) ( $entry['label'] ?? $key );
 		$desc     = (string) ( $entry['description'] ?? '' );
@@ -317,7 +321,7 @@ class ReportedIP_Hive_Protection_Page {
 		}
 
 		$lock = '';
-		if ( $locked && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
+		if ( $gated && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
 			ob_start();
 			ReportedIP_Hive_Admin_Settings::render_tier_marker( $status );
 			$lock = (string) ob_get_clean();
@@ -334,6 +338,30 @@ class ReportedIP_Hive_Protection_Page {
 			$control,
 			'' !== $desc ? '<p class="rip-help-text">' . esc_html( $desc ) . '</p>' : ''
 		);
+	}
+
+	/**
+	 * Tier status of one field for the current value.
+	 *
+	 * A value-dependent gate (`tier_gate`) locks the field only when the
+	 * stored value already needs the higher plan; otherwise the field stays
+	 * editable with the marker shown and the registry sanitizer refuses a
+	 * value that crosses the line.
+	 *
+	 * @param array<string,mixed>          $entry        Registry entry.
+	 * @param mixed                        $value        Current value.
+	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Mode manager.
+	 * @return array<string,mixed>
+	 */
+	public static function field_status( array $entry, $value, $mode_manager ) {
+		if ( empty( $entry['tier'] ) ) {
+			return array( 'available' => true );
+		}
+		$status = $mode_manager->feature_status( (string) $entry['tier'] );
+		if ( empty( $status['available'] ) && ! empty( $entry['tier_gate'] ) && is_callable( $entry['tier_gate'] ) && ! call_user_func( $entry['tier_gate'], $value ) ) {
+			$status['partial'] = true;
+		}
+		return $status;
 	}
 
 	/**
@@ -574,7 +602,7 @@ class ReportedIP_Hive_Protection_Page {
 			<?php foreach ( ReportedIP_Hive_Settings_Registry::sections() as $section => $meta ) : ?>
 				<?php
 				$keys        = self::visible_keys( $section, $expert );
-				$expert_only = ! $expert && array() === $keys;
+				$expert_only = ! $expert && self::section_is_expert_only( $section );
 				$errors      = ( isset( $result['section'] ) && $result['section'] === $section && ! empty( $result['errors'] ) ) ? $result['errors'] : array();
 				$open        = isset( $result['section'] ) && $result['section'] === $section;
 				?>
@@ -598,7 +626,7 @@ class ReportedIP_Hive_Protection_Page {
 								<?php foreach ( $keys as $key ) : ?>
 									<?php
 									$entry  = $spec[ $key ];
-									$status = ! empty( $entry['tier'] ) ? $mode_manager->feature_status( (string) $entry['tier'] ) : array( 'available' => true );
+									$status = self::field_status( $entry, $current[ $key ] ?? '', $mode_manager );
 									echo self::field_markup( $key, $entry, $current[ $key ] ?? '', $status, self::choices_for( $entry ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside
 									if ( isset( $errors[ $key ] ) ) {
 										echo '<p class="rip-alert rip-alert--error rip-protection__error" data-for="' . esc_attr( $key ) . '">' . esc_html( (string) $errors[ $key ] ) . '</p>';

@@ -71,21 +71,12 @@ test.describe('network registration rules', () => {
 		`);
 	});
 
-	test('network admin sees every registration card', async ({ page }) => {
+	test('network admin sees the registration card', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/network/admin.php?page=reportedip-hive-firewall&tab=spam');
+		await page.goto('/wp-admin/network/admin.php?page=reportedip-hive-protection');
 
-		await expect(page.locator('.rip-card__header h2', { hasText: 'Disposable Email' })).toBeVisible();
-
-		for (const id of [
-			'#rip-reg-usernames',
-			'#rip-reg-emails',
-			'#rip-reg-limit',
-			'#rip-reg-allowlist',
-			'#rip-reg-probe',
-		]) {
-			await expect(page.locator(id)).toBeVisible();
-		}
+		await expect(page.locator('#registration')).toBeVisible();
+		await expect(page.locator('#registration .rip-protection__title')).toContainText('Registration');
 	});
 
 	test('the network sign-up form refuses a prohibited username from sitemeta', async ({ request }) => {

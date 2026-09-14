@@ -132,11 +132,11 @@ test.describe('attack surface switches on a network', () => {
 		expect(restored.headers()['content-type'] ?? '').toContain('rss+xml');
 	});
 
-	test('network admin sees the attack-surface section', async ({ page }) => {
+	test('network admin sees the lockdown card', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/network/admin.php?page=reportedip-hive-firewall&tab=hardening');
+		await page.goto('/wp-admin/network/admin.php?page=reportedip-hive-protection');
 
-		await expect(page.locator('#rip-attack-surface-form')).toBeVisible();
-		await expect(page.locator('#rip-rest-access-mode')).toBeVisible();
+		await expect(page.locator('#lockdown')).toBeVisible();
+		await expect(page.locator('#lockdown .rip-protection__status')).toBeVisible();
 	});
 });

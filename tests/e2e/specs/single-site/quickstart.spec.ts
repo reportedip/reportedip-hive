@@ -142,13 +142,13 @@ test.describe('quickstart', () => {
 		expect(wpOption('reportedip_hive_2fa_enforce_roles')).toContain('administrator');
 	});
 
-	test('expert link applies the recommendation and opens the settings', async ({ page }) => {
+	test('expert link applies the recommendation and opens the protection page', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-quickstart');
 		await page.locator('.rip-mode-card[data-mode="local"]').click();
 		await page.locator('label.rip-toggle:has(#rip-quickstart-2fa)').click();
 		await page.locator('#rip-quickstart-expert').click();
-		await page.waitForURL(/page=reportedip-hive-settings/);
+		await page.waitForURL(/page=reportedip-hive-protection/);
 
 		expect(wpOption('reportedip_hive_wizard_completed')).toBe('1');
 		expect(wp('user meta get admin reportedip_hive_expert_mode')).toBe('1');
@@ -168,8 +168,8 @@ test.describe('quickstart', () => {
 		});
 		expect((await response.json()).success).toBe(true);
 
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-settings');
-		await expect(page).toHaveURL(/page=reportedip-hive-settings/);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await expect(page).toHaveURL(/page=reportedip-hive-protection/);
 		expect(wp('user meta get admin reportedip_hive_expert_mode')).toBe('1');
 		expect(wpOption('reportedip_hive_2fa_enforce_roles')).toContain('administrator');
 	});
