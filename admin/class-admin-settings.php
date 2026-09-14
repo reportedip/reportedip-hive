@@ -3160,7 +3160,7 @@ class ReportedIP_Hive_Admin_Settings {
 			)
 		);
 		register_setting(
-			'reportedip_hive_advanced_performance',
+			'reportedip_hive_uninstall',
 			'reportedip_hive_delete_data_on_uninstall',
 			array(
 				'type'              => 'boolean',
@@ -3265,7 +3265,7 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 
 		register_setting(
-			'reportedip_hive_hardening_mode',
+			'reportedip_hive_hardening_master',
 			'reportedip_hive_hardening_enabled',
 			array(
 				'type'              => 'boolean',
@@ -4554,6 +4554,35 @@ class ReportedIP_Hive_Admin_Settings {
 
 
 
+
+	/**
+	 * Tools › Data: the uninstall data switch (local option, Settings API).
+	 *
+	 * @return void
+	 * @since  2.1.56
+	 */
+	public function render_uninstall_card() {
+		?>
+		<div class="rip-card">
+			<div class="rip-card__header"><h2><?php esc_html_e( 'Uninstall behaviour', 'reportedip-hive' ); ?></h2></div>
+			<div class="rip-card__body">
+				<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>">
+					<?php settings_fields( 'reportedip_hive_uninstall' ); ?>
+					<input type="hidden" name="reportedip_hive_delete_data_on_uninstall" value="0" />
+					<div class="rip-form-group">
+						<label class="rip-toggle">
+							<input type="checkbox" name="reportedip_hive_delete_data_on_uninstall" value="1" class="rip-toggle__input" <?php checked( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', false ) ); ?> />
+							<span class="rip-toggle__slider"></span>
+							<span class="rip-toggle__label"><?php esc_html_e( 'Delete all plugin data on uninstall (logs, settings, IP lists)', 'reportedip-hive' ); ?></span>
+						</label>
+						<p class="rip-help-text"><?php esc_html_e( 'Off by default: uninstalling normally keeps your configuration so reinstalling restores it.', 'reportedip-hive' ); ?></p>
+					</div>
+					<?php submit_button( __( 'Save', 'reportedip-hive' ), 'rip-button rip-button--primary', 'submit', false ); ?>
+				</form>
+			</div>
+		</div>
+		<?php
+	}
 
 	/**
 	 * Diagnostics tab of the Tools page: the branded test mail.
@@ -6900,22 +6929,14 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since  2.0.8
 	 */
 	public function render_hardening_mode_tab() {
-		$mode_manager        = ReportedIP_Hive_Mode_Manager::get_instance();
-		$status              = $mode_manager->feature_status( 'hardening_mode' );
-		$is_available        = ! empty( $status['available'] );
-		$tier_gated          = isset( $status['reason'] ) && 'tier' === $status['reason'];
-		$master_on           = ReportedIP_Hive_Hardening_Mode::is_master_enabled();
-		$is_active           = ReportedIP_Hive_Hardening_Mode::is_active();
-		$expires_at          = ReportedIP_Hive_Hardening_Mode::expires_at();
-		$reason              = ReportedIP_Hive_Hardening_Mode::current_reason();
-		$duration            = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_duration_minutes', 60 );
-		$login_thresh        = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_login_threshold', 2 );
-		$login_window        = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_login_timeframe', 5 );
-		$block_thresh        = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_block_threshold', 60 );
-		$realtime_on         = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_realtime_detection', true );
-		$detect_window       = ReportedIP_Hive_Hardening_Mode::detect_window_minutes();
-		$detect_min_ips      = ReportedIP_Hive_Hardening_Mode::detect_min_ips();
-		$detect_min_attempts = ReportedIP_Hive_Hardening_Mode::detect_min_attempts();
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$status       = $mode_manager->feature_status( 'hardening_mode' );
+		$is_available = ! empty( $status['available'] );
+		$tier_gated   = isset( $status['reason'] ) && 'tier' === $status['reason'];
+		$master_on    = ReportedIP_Hive_Hardening_Mode::is_master_enabled();
+		$is_active    = ReportedIP_Hive_Hardening_Mode::is_active();
+		$expires_at   = ReportedIP_Hive_Hardening_Mode::expires_at();
+		$reason       = ReportedIP_Hive_Hardening_Mode::current_reason();
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
@@ -6995,7 +7016,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php endif; ?>
 
 			<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
-				<?php settings_fields( 'reportedip_hive_hardening_mode' ); ?>
+				<?php settings_fields( 'reportedip_hive_hardening_master' ); ?>
 
 				<div class="rip-form-group">
 					<input type="hidden" name="reportedip_hive_hardening_enabled" value="0" />
@@ -7022,63 +7043,9 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php endif; ?>
 				</div>
 
-				<fieldset id="rip-hardening-sub-fields" class="rip-fieldset" <?php disabled( ! $is_available || ! $master_on ); ?>>
-					<div class="rip-form-group">
-						<label class="rip-toggle">
-							<input type="checkbox" name="reportedip_hive_hardening_realtime_detection" value="1" class="rip-toggle__input" <?php checked( $realtime_on ); ?> />
-							<span class="rip-toggle__slider"></span>
-							<span class="rip-toggle__label">
-								<?php esc_html_e( 'Realtime detection (in addition to the hourly cron sweep)', 'reportedip-hive' ); ?>
-							</span>
-						</label>
-						<p class="rip-help-text"><?php esc_html_e( 'Inspects every failed login at most once per minute (debounced). Cuts reaction time from up to 60 minutes down to under one minute.', 'reportedip-hive' ); ?></p>
-					</div>
-
-					<div class="rip-form-group">
-						<label class="rip-label" for="reportedip_hive_hardening_duration_minutes"><?php esc_html_e( 'Hardening duration (minutes)', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hardening_duration_minutes" name="reportedip_hive_hardening_duration_minutes" value="<?php echo esc_attr( (string) $duration ); ?>" min="5" max="360" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'How long the hardening window stays in effect after a detection. Default 60 minutes.', 'reportedip-hive' ); ?></p>
-					</div>
-
-					<div class="rip-form-group">
-						<label class="rip-label" for="reportedip_hive_hardening_login_threshold"><?php esc_html_e( 'Failed-login threshold during hardening', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hardening_login_threshold" name="reportedip_hive_hardening_login_threshold" value="<?php echo esc_attr( (string) $login_thresh ); ?>" min="1" max="10" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'Normal default is 5. Hardening tightens to this value (default 2). Manual stricter settings outside hardening are never weakened.', 'reportedip-hive' ); ?></p>
-					</div>
-
-					<div class="rip-form-group">
-						<label class="rip-label" for="reportedip_hive_hardening_login_timeframe"><?php esc_html_e( 'Failed-login timeframe during hardening (minutes)', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hardening_login_timeframe" name="reportedip_hive_hardening_login_timeframe" value="<?php echo esc_attr( (string) $login_window ); ?>" min="1" max="60" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'Normal default is 15 minutes. Hardening tightens to this value (default 5).', 'reportedip-hive' ); ?></p>
-					</div>
-
-					<div class="rip-form-group">
-						<label class="rip-label" for="reportedip_hive_hardening_block_threshold"><?php esc_html_e( 'Reputation block threshold during hardening (%)', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hardening_block_threshold" name="reportedip_hive_hardening_block_threshold" value="<?php echo esc_attr( (string) $block_thresh ); ?>" min="<?php echo esc_attr( (string) ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD ); ?>" max="100" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'Normal default is 75 %. Hardening tightens to this value (default 60 %). IPs with a community-confidence score above this threshold are blocked before authentication.', 'reportedip-hive' ); ?></p>
-					</div>
-
-					<h3 class="rip-settings-subsection__title" style="margin-top: var(--rip-space-5);"><?php esc_html_e( 'Distributed-attack detection', 'reportedip-hive' ); ?></h3>
-					<p class="rip-help-text" style="margin-top: 0;"><?php esc_html_e( 'Catches botnets that rotate IPs over several minutes — each IP stays under the per-IP block threshold, but together they breach these limits across the rolling window. Defaults are conservative enough that a small site practically never reaches them legitimately.', 'reportedip-hive' ); ?></p>
-
-					<div class="rip-form-group">
-						<label class="rip-label" for="reportedip_hive_hardening_detect_window_minutes"><?php esc_html_e( 'Detection window (minutes)', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hardening_detect_window_minutes" name="reportedip_hive_hardening_detect_window_minutes" value="<?php echo esc_attr( (string) $detect_window ); ?>" min="1" max="120" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'Rolling window over which distinct IPs and failed logins are aggregated. Default 10 minutes.', 'reportedip-hive' ); ?></p>
-					</div>
-
-					<div class="rip-form-group">
-						<label class="rip-label" for="reportedip_hive_hardening_detect_min_ips"><?php esc_html_e( 'Minimum distinct IPs', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hardening_detect_min_ips" name="reportedip_hive_hardening_detect_min_ips" value="<?php echo esc_attr( (string) $detect_min_ips ); ?>" min="2" max="100" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'How many different IPs must fail login within the window to count as distributed. Default 10.', 'reportedip-hive' ); ?></p>
-					</div>
-
-					<div class="rip-form-group">
-						<label class="rip-label" for="reportedip_hive_hardening_detect_min_attempts"><?php esc_html_e( 'Minimum total attempts', 'reportedip-hive' ); ?></label>
-						<input type="number" id="reportedip_hive_hardening_detect_min_attempts" name="reportedip_hive_hardening_detect_min_attempts" value="<?php echo esc_attr( (string) $detect_min_attempts ); ?>" min="3" max="1000" class="rip-input" style="max-width: 180px;" />
-						<p class="rip-help-text"><?php esc_html_e( 'Total failed logins across all those IPs within the window. Default 50.', 'reportedip-hive' ); ?></p>
-					</div>
-				</fieldset>
+				<p class="rip-help-text">
+					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-protection#hardening_mode' ) ); ?>"><?php esc_html_e( 'The detection window, thresholds and duration live on the Protection page (Attack Response).', 'reportedip-hive' ); ?></a>
+				</p>
 
 				<?php submit_button( __( 'Save Hardening Settings', 'reportedip-hive' ) ); ?>
 			</form>

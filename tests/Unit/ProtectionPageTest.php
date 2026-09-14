@@ -202,5 +202,148 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertStringContainsString( 'name="' . $key, $html, $key );
 			}
 		}
+
+		/**
+		 * Mode manager stand-in: every plan feature is unavailable.
+		 */
+		private function locked_manager(): object {
+			return new class() {
+				/**
+				 * @param string $feature Feature key.
+				 * @return array<string,mixed>
+				 */
+				public function feature_status( $feature ) {
+					return array(
+						'available' => false,
+						'reason'    => 'tier',
+						'min_tier'  => 'professional',
+						'label'     => $feature,
+					);
+				}
+			};
+		}
+
+		public function test_a_plan_gated_field_is_locked_unless_flagged_partial_or_switched_on(): void {
+			$manager = $this->locked_manager();
+
+			$tor_off = ReportedIP_Hive_Protection_Page::field_status( array( 'kind' => 'bool', 'tier' => 'tor_blocking' ), 'reportedip_hive_block_tor', '0', $manager );
+			$this->assertFalse( $tor_off['available'] );
+			$this->assertArrayNotHasKey( 'partial', $tor_off, 'a switch that is off stays locked' );
+
+			$tor_on = ReportedIP_Hive_Protection_Page::field_status( array( 'kind' => 'bool', 'tier' => 'tor_blocking' ), 'reportedip_hive_block_tor', '1', $manager );
+			$this->assertTrue( $tor_on['partial'], 'a switch that is on can still be switched off' );
+
+			$gate  = static function ( $value ) {
+				return count( array_filter( explode( "\n", (string) $value ) ) ) > 10;
+			};
+			$short = ReportedIP_Hive_Protection_Page::field_status(
+				array( 'kind' => 'textarea', 'tier' => 'x', 'tier_gate' => $gate, 'partial' => true ),
+				'k',
+				"a\nb",
+				$manager
+			);
+			$this->assertTrue( $short['partial'], 'a partial list inside the free range stays editable' );
+
+			$long = ReportedIP_Hive_Protection_Page::field_status(
+				array( 'kind' => 'textarea', 'tier' => 'x', 'tier_gate' => $gate, 'partial' => true ),
+				'k',
+				implode( "\n", range( 1, 11 ) ),
+				$manager
+			);
+			$this->assertArrayNotHasKey( 'partial', $long, 'a list already over the line is locked' );
+
+			$policy = ReportedIP_Hive_Protection_Page::field_status(
+				array( 'kind' => 'json_list', 'tier' => '2fa_policies', 'tier_gate' => static function () { return false; } ),
+				'reportedip_hive_2fa_policy_new_ip',
+				array(),
+				$manager
+			);
+			$this->assertArrayNotHasKey( 'partial', $policy, 'a gate without the partial flag locks the field' );
+
+			$free = ReportedIP_Hive_Protection_Page::field_status( array( 'kind' => 'int' ), 'reportedip_hive_block_duration', '24', $manager );
+			$this->assertTrue( $free['available'] );
+		}
+
+		public function test_writable_values_drops_hidden_and_locked_keys_and_forces_forced_switches(): void {
+			$values   = array(
+				'reportedip_hive_auto_block'             => '1',
+				'reportedip_hive_block_tor'              => '0',
+				'reportedip_hive_block_duration'         => '48',
+				'reportedip_hive_block_ladder_minutes'   => '',
+				'reportedip_hive_block_admin_guests'     => '0',
+				'reportedip_hive_failed_login_threshold' => 3,
+			);
+			$visible  = array( 'reportedip_hive_auto_block', 'reportedip_hive_block_tor', 'reportedip_hive_block_duration', 'reportedip_hive_block_admin_guests' );
+			$statuses = array(
+				'reportedip_hive_block_tor'          => array( 'available' => false ),
+				'reportedip_hive_block_duration'     => array(
+					'available' => false,
+					'partial'   => true,
+				),
+				'reportedip_hive_block_admin_guests' => array(
+					'available' => false,
+					'forced'    => true,
+				),
+			);
+			$this->assertSame(
+				array(
+					'reportedip_hive_auto_block'             => '1',
+					'reportedip_hive_block_duration'         => '48',
+					'reportedip_hive_block_admin_guests'     => '1',
+					'reportedip_hive_failed_login_threshold' => 3,
+				),
+				ReportedIP_Hive_Protection_Page::writable_values( $values, $visible, $statuses )
+			);
+		}
+
+		public function test_fixed_choices_stay_checked_disabled_and_in_the_post(): void {
+			$html = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_rest_allowed_roles',
+				array(
+					'kind'        => 'json_list',
+					'choices'     => 'roles',
+					'label'       => 'Roles',
+					'description' => '',
+				),
+				array(),
+				array( 'available' => true ),
+				array(
+					'administrator' => array(
+						'label'    => 'Administrator',
+						'disabled' => true,
+						'fixed'    => true,
+					),
+					'editor'        => array(
+						'label'    => 'Editor',
+						'disabled' => false,
+						'fixed'    => false,
+					),
+				)
+			);
+			$this->assertStringContainsString( 'value="administrator" checked disabled', $html );
+			$this->assertStringContainsString( '<input type="hidden" name="reportedip_hive_rest_allowed_roles[]" value="administrator" />', $html );
+			$this->assertStringContainsString( 'value="editor" ', $html );
+			$this->assertStringNotContainsString( 'value="editor" checked', $html );
+		}
+
+		public function test_a_runtime_note_is_rendered_without_a_plan_marker(): void {
+			$html = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_monitor_woocommerce',
+				array(
+					'kind'        => 'bool',
+					'label'       => 'WooCommerce',
+					'description' => 'Watch the shop.',
+				),
+				'0',
+				array(
+					'available' => false,
+					'reason'    => 'runtime',
+					'note'      => 'WooCommerce is not installed on this site.',
+				)
+			);
+			$this->assertStringContainsString( 'disabled', $html );
+			$this->assertStringContainsString( 'WooCommerce is not installed on this site.', $html );
+			$this->assertStringNotContainsString( 'rip-tier', $html );
+		}
 	}
 }

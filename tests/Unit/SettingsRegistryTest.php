@@ -407,5 +407,37 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertContains( $entry['choices'] ?? '', array( 'roles', 'methods' ), "{$key} has no choices source." );
 			}
 		}
+
+		/**
+		 * The plan gates the protection page renders: a partial key has a
+		 * value-dependent gate, and the fields the old tabs locked as a block
+		 * carry the feature of that block as a form-only lock.
+		 */
+		public function test_plan_gates_match_the_former_tab_locks(): void {
+			$spec = \ReportedIP_Hive_Settings_Registry::spec();
+			foreach ( $spec as $key => $entry ) {
+				if ( ! empty( $entry['partial'] ) ) {
+					$this->assertNotEmpty( $entry['tier'], "{$key} is partial without a plan" );
+					$this->assertTrue( is_callable( $entry['tier_gate'] ?? null ), "{$key} is partial without a value gate" );
+				}
+			}
+			$expected = array(
+				'reportedip_hive_2fa_frontend_onboarding'        => 'frontend_2fa',
+				'reportedip_hive_2fa_frontend_slug'              => 'frontend_2fa',
+				'reportedip_hive_2fa_frontend_setup_slug'        => 'frontend_2fa',
+				'reportedip_hive_2fa_frontend_customer_optional' => 'frontend_2fa',
+				'reportedip_hive_hardening_realtime_detection'   => 'hardening_mode',
+				'reportedip_hive_hardening_detect_min_attempts'  => 'hardening_mode',
+				'reportedip_hive_hsts_max_age'                   => 'security_headers_advanced',
+				'reportedip_hive_hsts_preload'                   => 'security_headers_advanced',
+				'reportedip_hive_csp_policy'                     => 'security_headers_advanced',
+				'reportedip_hive_csp_report_uri'                 => 'security_headers_advanced',
+			);
+			foreach ( $expected as $key => $feature ) {
+				$this->assertSame( $feature, $spec[ $key ]['ui_lock'] ?? '', $key );
+				$this->assertArrayNotHasKey( 'tier', $spec[ $key ], "{$key} locks the form only; the sanitizer stays open for remote channels" );
+			}
+			$this->assertSame( array( 'administrator' ), $spec['reportedip_hive_rest_allowed_roles']['choices_fixed'] );
+		}
 	}
 }

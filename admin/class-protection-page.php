@@ -237,7 +237,7 @@ class ReportedIP_Hive_Protection_Page {
 	 * @param array<string,mixed>  $entry   Registry entry.
 	 * @param mixed                $value   Current value.
 	 * @param array<string,mixed>  $status  `feature_status()` result (`available` true when no gate).
-	 * @param array<string,string> $choices Choice map for `json_list` (value => label).
+	 * @param array<string,mixed>  $choices Choice map for `json_list`: value => label, or value => array{label,disabled,fixed}.
 	 * @return string
 	 */
 	public static function field_markup( $key, array $entry, $value, array $status, array $choices = array() ) {
@@ -257,7 +257,7 @@ class ReportedIP_Hive_Protection_Page {
 					'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" id="%1$s" name="%2$s" value="1"%3$s%4$s /><span class="rip-toggle__slider"></span></label>',
 					esc_attr( $id ),
 					esc_attr( $key ),
-					! empty( $value ) ? ' checked' : '',
+					( ! empty( $value ) || ! empty( $status['forced'] ) ) ? ' checked' : '',
 					$disabled
 				);
 				break;
@@ -287,14 +287,17 @@ class ReportedIP_Hive_Protection_Page {
 			case 'json_list':
 				$current = array_map( 'strval', (array) $value );
 				$boxes   = '';
-				foreach ( $choices as $choice => $choice_label ) {
-					$boxes .= sprintf(
-						'<label class="rip-checkbox"><input type="checkbox" name="%1$s[]" value="%2$s" %3$s%4$s /> %5$s</label>',
+				foreach ( $choices as $choice => $choice_def ) {
+					$choice_def = is_array( $choice_def ) ? $choice_def : array( 'label' => (string) $choice_def );
+					$fixed      = ! empty( $choice_def['fixed'] );
+					$boxes     .= sprintf(
+						'<label class="rip-checkbox"><input type="checkbox" name="%1$s[]" value="%2$s" %3$s%4$s /> %5$s</label>%6$s',
 						esc_attr( $key ),
 						esc_attr( (string) $choice ),
-						in_array( (string) $choice, $current, true ) ? 'checked' : '',
-						$disabled,
-						esc_html( (string) $choice_label )
+						$fixed || in_array( (string) $choice, $current, true ) ? 'checked' : '',
+						( $locked || ! empty( $choice_def['disabled'] ) ) ? ' disabled' : '',
+						esc_html( (string) ( $choice_def['label'] ?? $choice ) ),
+						$fixed ? sprintf( '<input type="hidden" name="%1$s[]" value="%2$s" />', esc_attr( $key ), esc_attr( (string) $choice ) ) : ''
 					);
 				}
 				$control = '<div class="rip-checkbox-group" id="' . esc_attr( $id ) . '">' . $boxes . '</div>';
@@ -321,10 +324,14 @@ class ReportedIP_Hive_Protection_Page {
 		}
 
 		$lock = '';
-		if ( $gated && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
+		if ( $gated && 'runtime' !== (string) ( $status['reason'] ?? '' ) && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
 			ob_start();
 			ReportedIP_Hive_Admin_Settings::render_tier_marker( $status );
 			$lock = (string) ob_get_clean();
+		}
+		$note = trim( (string) ( $status['note'] ?? '' ) );
+		if ( '' !== $note ) {
+			$desc = trim( $desc . ' ' . $note );
 		}
 
 		return sprintf(
@@ -341,27 +348,128 @@ class ReportedIP_Hive_Protection_Page {
 	}
 
 	/**
-	 * Tier status of one field for the current value.
+	 * Lock status of one field for the current value.
 	 *
-	 * A value-dependent gate (`tier_gate`) locks the field only when the
-	 * stored value already needs the higher plan; otherwise the field stays
-	 * editable with the marker shown and the registry sanitizer refuses a
-	 * value that crosses the line.
+	 * Three outcomes: available, partial (editable, plan marker shown, the
+	 * registry sanitizer refuses a value that crosses the plan line) and
+	 * locked (disabled, value dropped on save). A plan gate makes a field
+	 * partial only when the registry flags it `partial` and the stored value
+	 * is still inside the free range, or when a switch is currently on, so a
+	 * feature a plan no longer includes can still be switched off. A `ui_lock`
+	 * entry locks the field the same way without gating the sanitizer: the
+	 * value is inert while the feature is unavailable, so remote channels
+	 * may still write it and fleet hashes stay in sync. Runtime
+	 * locks (no crypto, no WooCommerce, the Hide Login constant, wp-admin
+	 * forced closed while Hide Login is on) carry a note instead of a plan.
 	 *
 	 * @param array<string,mixed>          $entry        Registry entry.
+	 * @param string                       $key          Registry key.
 	 * @param mixed                        $value        Current value.
 	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Mode manager.
 	 * @return array<string,mixed>
 	 */
-	public static function field_status( array $entry, $value, $mode_manager ) {
-		if ( empty( $entry['tier'] ) ) {
+	public static function field_status( array $entry, $key, $value, $mode_manager ) {
+		$runtime = self::runtime_lock( (string) $key );
+		if ( null !== $runtime ) {
+			return $runtime;
+		}
+		$feature = (string) ( $entry['tier'] ?? ( $entry['ui_lock'] ?? '' ) );
+		if ( '' === $feature ) {
 			return array( 'available' => true );
 		}
-		$status = $mode_manager->feature_status( (string) $entry['tier'] );
-		if ( empty( $status['available'] ) && ! empty( $entry['tier_gate'] ) && is_callable( $entry['tier_gate'] ) && ! call_user_func( $entry['tier_gate'], $value ) ) {
+		$status = $mode_manager->feature_status( $feature );
+		if ( ! empty( $status['available'] ) ) {
+			return $status;
+		}
+		if ( 'bool' === (string) ( $entry['kind'] ?? '' ) && ! empty( $value ) ) {
+			$status['partial'] = true;
+			return $status;
+		}
+		if ( ! empty( $entry['partial'] ) && ! empty( $entry['tier_gate'] ) && is_callable( $entry['tier_gate'] ) && ! call_user_func( $entry['tier_gate'], $value ) ) {
 			$status['partial'] = true;
 		}
 		return $status;
+	}
+
+	/**
+	 * Locks that do not come from the plan.
+	 *
+	 * @param string $key Registry key.
+	 * @return array<string,mixed>|null Status array, or null when no runtime lock applies.
+	 */
+	private static function runtime_lock( $key ) {
+		switch ( $key ) {
+			case 'reportedip_hive_2fa_enabled_global':
+				if ( class_exists( 'ReportedIP_Hive_Two_Factor_Crypto' ) && ! ReportedIP_Hive_Two_Factor_Crypto::is_available() ) {
+					return self::runtime_status( __( 'Two-factor authentication needs libsodium or OpenSSL to store secrets encrypted; neither is available on this server.', 'reportedip-hive' ) );
+				}
+				return null;
+			case 'reportedip_hive_monitor_woocommerce':
+				if ( ! class_exists( 'WooCommerce' ) ) {
+					return self::runtime_status( __( 'WooCommerce is not installed on this site.', 'reportedip-hive' ) );
+				}
+				return null;
+			case 'reportedip_hive_hide_login_enabled':
+				if ( defined( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN' ) && REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN ) {
+					return self::runtime_status( __( 'The constant REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN is defined as true in wp-config.php; Hide Login stays off until you remove it. This is the recovery path when the slug was lost.', 'reportedip-hive' ) );
+				}
+				return null;
+			case 'reportedip_hive_block_admin_guests':
+				if ( class_exists( 'ReportedIP_Hive_Option_Routing' ) && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false ) ) {
+					$status           = self::runtime_status( __( 'Always on while Hide Login is active; a visible wp-admin would redirect straight to the login URL you just hid.', 'reportedip-hive' ) );
+					$status['forced'] = true;
+					return $status;
+				}
+				return null;
+		}
+		return null;
+	}
+
+	/**
+	 * Status array of a runtime lock.
+	 *
+	 * @param string $note Reason shown under the field.
+	 * @return array<string,mixed>
+	 */
+	private static function runtime_status( $note ) {
+		return array(
+			'available' => false,
+			'reason'    => 'runtime',
+			'note'      => $note,
+		);
+	}
+
+	/**
+	 * The values of one section that the save may write.
+	 *
+	 * Hidden keys (the expert-only fields of the simple view) and locked keys
+	 * are dropped so a posted form cannot reset them to their empty defaults:
+	 * a disabled input is not part of the POST and `collect_values()` would
+	 * otherwise fill in `0` or an empty string. Forced switches are written as
+	 * on. The four preset keys are always accepted.
+	 *
+	 * @param array<string,mixed>              $values   Collected values.
+	 * @param string[]                         $visible  Keys visible in the current view.
+	 * @param array<string,array<string,mixed>> $statuses Key => field status.
+	 * @return array<string,mixed>
+	 */
+	public static function writable_values( array $values, array $visible, array $statuses ) {
+		$out = array();
+		foreach ( $values as $key => $value ) {
+			if ( ! in_array( $key, $visible, true ) && ! in_array( $key, self::PRESET_KEYS, true ) ) {
+				continue;
+			}
+			$status = $statuses[ $key ] ?? array( 'available' => true );
+			if ( ! empty( $status['forced'] ) ) {
+				$out[ $key ] = '1';
+				continue;
+			}
+			if ( empty( $status['available'] ) && empty( $status['partial'] ) ) {
+				continue;
+			}
+			$out[ $key ] = $value;
+		}
+		return $out;
 	}
 
 	/**
@@ -406,22 +514,70 @@ class ReportedIP_Hive_Protection_Page {
 	/**
 	 * Choice map for a `json_list` key.
 	 *
+	 * Each entry is `array{label:string,disabled:bool,fixed:bool}`. A fixed
+	 * choice is always checked, disabled and carried in the POST by a hidden
+	 * input. The SMS method is disabled while the managed relay is not part
+	 * of the plan, and the administrator role stays disabled in the adaptive
+	 * policies until an administrator has passed one challenge.
+	 *
 	 * @param array<string,mixed> $entry Registry entry.
-	 * @return array<string,string>
+	 * @param string              $key   Registry key.
+	 * @return array<string,array{label:string,disabled:bool,fixed:bool}>
 	 */
-	public static function choices_for( array $entry ) {
-		if ( 'methods' === ( $entry['choices'] ?? '' ) ) {
-			return array(
+	public static function choices_for( array $entry, $key = '' ) {
+		$source = (string) ( $entry['choices'] ?? '' );
+		$map    = array();
+		if ( 'methods' === $source ) {
+			$map = array(
 				'totp'     => __( 'Authenticator app (TOTP)', 'reportedip-hive' ),
 				'email'    => __( 'E-mail code', 'reportedip-hive' ),
 				'sms'      => __( 'SMS code', 'reportedip-hive' ),
 				'webauthn' => __( 'Security key / passkey', 'reportedip-hive' ),
 			);
+		} elseif ( 'roles' === $source && function_exists( 'wp_roles' ) ) {
+			$map = array_map( 'strval', wp_roles()->get_names() );
 		}
-		if ( 'roles' === ( $entry['choices'] ?? '' ) && function_exists( 'wp_roles' ) ) {
-			return array_map( 'strval', wp_roles()->get_names() );
+		$fixed   = array_map( 'strval', (array) ( $entry['choices_fixed'] ?? array() ) );
+		$choices = array();
+		foreach ( $map as $value => $label ) {
+			$choices[ (string) $value ] = array(
+				'label'    => (string) $label,
+				'disabled' => in_array( (string) $value, $fixed, true ),
+				'fixed'    => in_array( (string) $value, $fixed, true ),
+			);
 		}
-		return array();
+		if ( 'methods' === $source && isset( $choices['sms'] ) && class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+			$relay = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
+			if ( empty( $relay['available'] ) ) {
+				$choices['sms']['disabled'] = true;
+				/* translators: %s: plan name */
+				$choices['sms']['label'] .= ' ' . sprintf( __( '(%s plan)', 'reportedip-hive' ), ucfirst( (string) ( $relay['min_tier'] ?? 'professional' ) ) );
+			}
+		}
+		if ( 0 === strpos( (string) $key, 'reportedip_hive_2fa_policy_' ) && isset( $choices['administrator'] ) && class_exists( 'ReportedIP_Hive_Login_Context' ) && ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
+			$choices['administrator']['disabled'] = true;
+		}
+		return $choices;
+	}
+
+	/**
+	 * Note shown under a checkbox group.
+	 *
+	 * @param string $key Registry key.
+	 * @return string
+	 */
+	public static function choices_note( $key ) {
+		if ( 0 !== strpos( (string) $key, 'reportedip_hive_2fa_policy_' ) ) {
+			return '';
+		}
+		$notes = array();
+		if ( class_exists( 'ReportedIP_Hive_Login_Context' ) && ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
+			$notes[] = __( 'Triggers for administrators unlock once an administrator has completed one second-factor sign-in on this site.', 'reportedip-hive' );
+		}
+		if ( 'reportedip_hive_2fa_policy_new_country' === $key && class_exists( 'ReportedIP_Hive_Mode_Manager' ) && empty( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'api_reputation_check' )['available'] ) ) {
+			$notes[] = __( 'Country data comes from the Community Network. In Local Shield the country trigger never fires.', 'reportedip-hive' );
+		}
+		return implode( ' ', $notes );
 	}
 
 	/**
@@ -625,9 +781,13 @@ class ReportedIP_Hive_Protection_Page {
 								<?php endif; ?>
 								<?php foreach ( $keys as $key ) : ?>
 									<?php
-									$entry  = $spec[ $key ];
-									$status = self::field_status( $entry, $current[ $key ] ?? '', $mode_manager );
-									echo self::field_markup( $key, $entry, $current[ $key ] ?? '', $status, self::choices_for( $entry ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside
+									$entry      = $spec[ $key ];
+									$status     = self::field_status( $entry, $key, $current[ $key ] ?? '', $mode_manager );
+									$group_note = 'json_list' === $entry['kind'] ? self::choices_note( $key ) : '';
+									if ( '' !== $group_note ) {
+										$status['note'] = trim( (string) ( $status['note'] ?? '' ) . ' ' . $group_note );
+									}
+									echo self::field_markup( $key, $entry, $current[ $key ] ?? '', $status, self::choices_for( $entry, $key ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside
 									if ( isset( $errors[ $key ] ) ) {
 										echo '<p class="rip-alert rip-alert--error rip-protection__error" data-for="' . esc_attr( $key ) . '">' . esc_html( (string) $errors[ $key ] ) . '</p>';
 									}
@@ -705,9 +865,7 @@ class ReportedIP_Hive_Protection_Page {
 	/**
 	 * admin-post handler: save one section through the apply service.
 	 *
-	 * Keys that are hidden in the current view are dropped, so a form from
-	 * the simple view cannot reset expert fields to their empty defaults.
-	 * The four preset keys are always accepted.
+	 * See {@see writable_values()} for which posted keys are written.
 	 *
 	 * @return void
 	 */
@@ -721,13 +879,18 @@ class ReportedIP_Hive_Protection_Page {
 		if ( ! isset( ReportedIP_Hive_Settings_Registry::sections()[ $section ] ) ) {
 			wp_die( esc_html__( 'Unknown section.', 'reportedip-hive' ), '', array( 'response' => 400 ) );
 		}
-		$values  = self::collect_values( (array) $post, $section );
-		$visible = self::visible_keys( $section, self::is_expert() );
+		$values       = self::collect_values( (array) $post, $section );
+		$visible      = self::visible_keys( $section, self::is_expert() );
+		$spec         = ReportedIP_Hive_Settings_Registry::spec();
+		$current      = ReportedIP_Hive_Settings_Registry::current_values();
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$statuses     = array();
 		foreach ( array_keys( $values ) as $key ) {
-			if ( ! in_array( $key, $visible, true ) && ! in_array( $key, self::PRESET_KEYS, true ) ) {
-				unset( $values[ $key ] );
+			if ( isset( $spec[ $key ] ) ) {
+				$statuses[ $key ] = self::field_status( $spec[ $key ], $key, $current[ $key ] ?? '', $mode_manager );
 			}
 		}
+		$values = self::writable_values( $values, $visible, $statuses );
 		$result = ReportedIP_Hive_Settings_Apply::apply( $values, 'admin' );
 		$errors = array();
 		foreach ( $result['results'] as $key => $row ) {

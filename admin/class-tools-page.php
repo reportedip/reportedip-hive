@@ -88,6 +88,7 @@ class ReportedIP_Hive_Tools_Page {
 			case 'data':
 				ReportedIP_Hive_Settings_Import_Export::get_instance()->render_panel();
 				$settings->render_maintenance_panel();
+				$settings->render_uninstall_card();
 				break;
 			case 'diagnose':
 				$settings->render_diagnostics_panel();

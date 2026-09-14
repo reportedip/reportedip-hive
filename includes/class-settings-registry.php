@@ -416,6 +416,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 
 			'reportedip_hive_hardening_realtime_detection' => array(
+				'ui_lock'     => 'hardening_mode',
 				'section'     => 'hardening_mode',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -423,6 +424,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Notice a coordinated attack while it happens instead of after the fact, and tighten the thresholds below for its duration.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_duration_minutes'   => array(
+				'ui_lock'     => 'hardening_mode',
 				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 5,
@@ -432,6 +434,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How long the tightened thresholds stay in force after an attack is detected.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_login_threshold'    => array(
+				'ui_lock'     => 'hardening_mode',
 				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 1,
@@ -441,6 +444,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The failed-login threshold that replaces the normal one while hardening is active.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_login_timeframe'    => array(
+				'ui_lock'     => 'hardening_mode',
 				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 1,
@@ -450,6 +454,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The failed-login window that replaces the normal one while hardening is active.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_block_threshold'    => array(
+				'ui_lock'     => 'hardening_mode',
 				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD,
@@ -459,6 +464,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The community confidence value from which an address is blocked while hardening is active. Lower than normal, so more is caught and more false positives are accepted.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_detect_window_minutes' => array(
+				'ui_lock'     => 'hardening_mode',
 				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 1,
@@ -468,6 +474,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The window used to decide whether separate attempts belong to one coordinated attack.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_detect_min_ips'     => array(
+				'ui_lock'     => 'hardening_mode',
 				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 2,
@@ -477,6 +484,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How many different addresses must take part before the attempts count as coordinated.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hardening_detect_min_attempts' => array(
+				'ui_lock'     => 'hardening_mode',
 				'section'     => 'hardening_mode',
 				'kind'        => 'int',
 				'min'         => 3,
@@ -577,6 +585,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Record what the firewall would have blocked without blocking anything. The right way to try a new rule set on a live site.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_waf_paranoia'                 => array(
+				'partial'     => true,
 				'section'     => 'waf',
 				'kind'        => 'int',
 				'min'         => 1,
@@ -643,6 +652,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Also reject forwarding services such as Apple and Firefox Relay. These are used by ordinary customers too, so weigh this against your sign-up numbers.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_prohibited_usernames'         => array(
+				'partial'     => true,
 				'section'     => 'registration',
 				'kind'        => 'textarea',
 				'tier'        => 'registration_rules_unlimited',
@@ -668,6 +678,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Whether the list below rejects matching addresses, accepts only matching addresses, or is ignored.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_email_rules'                  => array(
+				'partial'     => true,
 				'section'     => 'registration',
 				'kind'        => 'textarea',
 				'tier'        => 'registration_rules_unlimited',
@@ -763,7 +774,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 
 			'reportedip_hive_hide_login_enabled'           => array(
-				'simple'      => true,
+				'simple'       => true,
 				'section'      => 'hide_login',
 				'kind'         => 'bool',
 				'remote'       => true,
@@ -772,7 +783,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'Move the sign-in page away from wp-login.php, so the address that every bot tries first leads nowhere.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hide_login_slug'              => array(
-				'simple'      => true,
+				'simple'       => true,
 				'section'      => 'hide_login',
 				'kind'         => 'slug',
 				'sanitize'     => array( 'ReportedIP_Hive_Hide_Login', 'validate_slug_value' ),
@@ -838,7 +849,8 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Namespaces that stay reachable whatever the mode above says, one per line. This is where a cookie banner or a shop plugin goes.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_rest_allowed_roles'           => array(
-				'choices'     => 'roles',
+				'choices_fixed' => array( 'administrator' ),
+				'choices'       => 'roles',
 				'section'       => 'lockdown',
 				'kind'          => 'json_list',
 				'json_filter'   => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_roles' ),
@@ -922,6 +934,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Tell the browser to reach this site over HTTPS only, from now on. Never turn this on before HTTPS works everywhere, because it cannot be taken back quickly.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hsts_max_age'                 => array(
+				'ui_lock'     => 'security_headers_advanced',
 				'section'     => 'headers',
 				'kind'        => 'int',
 				'min'         => 0,
@@ -931,6 +944,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How long the browser remembers the HTTPS-only instruction. Start short while you are testing.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hsts_subdomains'              => array(
+				'ui_lock'     => 'security_headers_advanced',
 				'section'     => 'headers',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -938,6 +952,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Apply the HTTPS-only instruction to every subdomain as well. Check that all of them really have a certificate first.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hsts_preload'                 => array(
+				'ui_lock'     => 'security_headers_advanced',
 				'section'     => 'headers',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -964,6 +979,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Whether the content policy is enforced or only reported. Always run it in report-only first; an enforced policy that is too strict makes a page look broken.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_csp_policy'                   => array(
+				'ui_lock'     => 'security_headers_advanced',
 				'section'     => 'headers',
 				'kind'        => 'textarea',
 				'remote'      => true,
@@ -971,6 +987,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The policy itself. It decides which scripts, styles and frames may load, and it is the one header that will break your theme if it is wrong.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_csp_report_uri'               => array(
+				'ui_lock'     => 'security_headers_advanced',
 				'section'     => 'headers',
 				'kind'        => 'url',
 				'remote'      => true,
@@ -1017,7 +1034,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Master switch for the second factor. Off, nobody is asked for one, whatever the roles below say.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_allowed_methods'          => array(
-				'choices'     => 'methods',
+				'choices'       => 'methods',
 				'section'       => 'account_security',
 				'kind'          => 'json_list',
 				'json_filter'   => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_methods' ),
@@ -1152,7 +1169,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Refuse a password reset for users whose only second factor is e-mail. Otherwise a stolen mailbox is enough for both steps.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_frontend_enabled'         => array(
-				'simple'      => true,
+				'simple'       => true,
 				'section'      => 'account_security',
 				'kind'         => 'bool',
 				'tier'         => 'frontend_2fa',
@@ -1162,6 +1179,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'Ask for the second factor inside your theme on My Account and at checkout, instead of sending customers to wp-login.php.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_frontend_onboarding'      => array(
+				'ui_lock'     => 'frontend_2fa',
 				'section'     => 'account_security',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -1169,6 +1187,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Also run the setup inside the theme, so a customer never leaves the storefront.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_frontend_slug'            => array(
+				'ui_lock'      => 'frontend_2fa',
 				'section'      => 'account_security',
 				'kind'         => 'text',
 				'sanitize'     => array( 'ReportedIP_Hive_Two_Factor_Frontend', 'sanitize_challenge_slug' ),
@@ -1178,6 +1197,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'The path the themed challenge page lives at.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_frontend_setup_slug'      => array(
+				'ui_lock'      => 'frontend_2fa',
 				'section'      => 'account_security',
 				'kind'         => 'text',
 				'sanitize'     => array( 'ReportedIP_Hive_Two_Factor_Frontend', 'sanitize_setup_slug' ),
@@ -1187,6 +1207,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'The path the themed setup page lives at.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_frontend_customer_optional' => array(
+				'ui_lock'     => 'frontend_2fa',
 				'section'     => 'account_security',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -1943,6 +1964,9 @@ final class ReportedIP_Hive_Settings_Registry {
 			}
 			if ( isset( $entry['allowed'] ) ) {
 				$field['allowed'] = array_values( (array) $entry['allowed'] );
+			}
+			if ( isset( $entry['ui_lock'] ) ) {
+				$field['ui_lock'] = (string) $entry['ui_lock'];
 			}
 			$fields[ $key ] = $field;
 		}
