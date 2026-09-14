@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-09-14T21:18:25+00:00\n"
+"PO-Revision-Date: 2026-09-14T21:48:06+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
@@ -304,7 +304,7 @@ msgstr "Trefferprotokollierung"
 
 #. translators: %s: absolute path of the queue directory.
 #: admin/class-admin-firewall.php:414
-#: includes/class-readiness.php:682
+#: includes/class-readiness.php:680
 #, php-format
 msgid "The guard cannot write to %s, so blocked requests are stopped but never reach the log, the counters or the escalation ladder. Give the web-server user write access to that directory."
 msgstr "Der Guard kann nicht nach %s schreiben. Abgewiesene Anfragen werden zwar gestoppt, erreichen aber weder das Protokoll noch die Zähler oder die Eskalationsstufen. Geben Sie dem Webserver-Benutzer Schreibrechte auf dieses Verzeichnis."
@@ -1018,12 +1018,12 @@ msgid "Dismiss"
 msgstr "Ausblenden"
 
 #: admin/class-admin-settings.php:1557
-#: includes/class-readiness.php:855
+#: includes/class-readiness.php:853
 msgid "Mails are temporarily routed through your local wp_mail() until the relay accepts again."
 msgstr "E-Mails werden vorübergehend über Ihr lokales wp_mail() geleitet, bis das Relay wieder annimmt."
 
 #: admin/class-admin-settings.php:1564
-#: includes/class-readiness.php:847
+#: includes/class-readiness.php:845
 msgid "SMS-based 2FA codes are paused until the relay accepts again, users can still choose TOTP, Email or Passkey."
 msgstr "SMS-basierte 2FA-Codes sind pausiert, bis das Relay wieder annimmt, Benutzer können weiterhin TOTP, E-Mail oder Passkey wählen."
 
@@ -1050,7 +1050,7 @@ msgstr "Das Relay nimmt %s wieder an."
 #: admin/class-dashboard-next-steps.php:558
 #: admin/class-protection-page.php:878
 #: admin/class-protection-page.php:925
-#: includes/class-readiness.php:569
+#: includes/class-readiness.php:567
 #: includes/class-tier-upgrade.php:350
 #: includes/class-two-factor-recommend.php:348
 #: includes/class-two-factor-recommend.php:375
@@ -3325,7 +3325,7 @@ msgstr "Versuche"
 #: admin/class-two-factor-admin.php:867
 #: includes/class-two-factor-onboarding.php:355
 #: includes/class-two-factor.php:2130
-#: reportedip-hive.php:951
+#: reportedip-hive.php:949
 msgid "Error"
 msgstr "Fehler"
 
@@ -6846,100 +6846,100 @@ msgstr "Richten Sie Ihren eigenen zweiten Faktor ein"
 msgid "Two-factor authentication is on for this site, but your account has no method yet. An authenticator app takes two minutes."
 msgstr "Die Zwei-Faktor-Authentifizierung ist für diese Site aktiv, Ihr Konto hat aber noch keine Methode. Eine Authenticator-App dauert zwei Minuten."
 
-#: includes/class-readiness.php:679
+#: includes/class-readiness.php:677
 msgid "Extended protection cannot record hits"
 msgstr "Erweiterter Schutz kann keine Treffer aufzeichnen"
 
-#: includes/class-readiness.php:713
+#: includes/class-readiness.php:711
 msgid "WP-Cron is not running"
 msgstr "WP-Cron läuft nicht"
 
-#: includes/class-readiness.php:714
+#: includes/class-readiness.php:712
 msgid "WP-Cron has not fired any ReportedIP Hive hook in the last 24 h."
 msgstr "WP-Cron hat in den letzten 24 Std. keinen ReportedIP Hive-Hook ausgelöst."
 
-#: includes/class-readiness.php:716
-msgid "Likely causes: the site cannot call its own wp-cron.php (a failing loopback request, listed under Tools, Site Health), or another plugin's cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below."
-msgstr "Wahrscheinliche Ursachen: Die Website kann ihre eigene wp-cron.php nicht aufrufen (ein fehlgeschlagener Loopback-Request, sichtbar unter Werkzeuge, Website-Zustand), oder die Cron-Jobs eines anderen Plugins verbrauchen das Zeitlimit pro Durchlauf (WP_CRON_LOCK_TIMEOUT), bevor unsere Jobs an die Reihe kommen. Richten Sie mit dem Snippet unten einen dedizierten Server-Cron ein."
+#: includes/class-readiness.php:714
+msgid "Likely cause: another plugin's cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below."
+msgstr "Wahrscheinliche Ursache: Die Cron-Jobs eines anderen Plugins verbrauchen das Zeitlimit pro Durchlauf (WP_CRON_LOCK_TIMEOUT), bevor unsere Jobs an die Reihe kommen. Richten Sie mit dem Snippet unten einen dedizierten Server-Cron ein."
 
-#: includes/class-readiness.php:750
+#: includes/class-readiness.php:748
 msgid "WP-Cron is disabled and overdue"
 msgstr "WP-Cron ist abgeschaltet und überfällig"
 
-#: includes/class-readiness.php:751
+#: includes/class-readiness.php:749
 msgid "DISABLE_WP_CRON is set, ALTERNATE_WP_CRON is off and the next scheduled run is more than an hour late. Without a server cron calling wp-cron.php the report queue, the quota refresh and the ruleset sync stop running."
 msgstr "DISABLE_WP_CRON ist gesetzt, ALTERNATE_WP_CRON ist aus, und der nächste geplante Lauf ist mehr als eine Stunde überfällig. Ohne einen Server-Cron, der wp-cron.php aufruft, laufen die Meldungs-Warteschlange, die Kontingent-Aktualisierung und der Abgleich der Regelsätze nicht mehr."
 
-#: includes/class-readiness.php:771
+#: includes/class-readiness.php:769
 msgid "Client-IP header trusted from any source"
 msgstr "Client-IP-Header wird aus jeder Quelle akzeptiert"
 
-#: includes/class-readiness.php:772
+#: includes/class-readiness.php:770
 msgid "The client-IP header is currently accepted from any source. Anyone able to reach this site directly can forge their IP address. Add the CIDR ranges of your proxy or CDN under Trusted proxy sources."
 msgstr "Der Client-IP-Header wird derzeit von jeder Quelle akzeptiert. Wer diese Website direkt erreicht, kann seine IP-Adresse fälschen. Tragen Sie unter Vertrauenswürdige Proxy-Quellen die CIDR-Bereiche Ihres Proxys oder CDNs ein."
 
-#: includes/class-readiness.php:792
+#: includes/class-readiness.php:790
 msgid "Database schema is out of date"
 msgstr "Datenbankschema ist veraltet"
 
 #. translators: 1: stored schema version, 2: schema version this build expects.
-#: includes/class-readiness.php:795
+#: includes/class-readiness.php:793
 #, php-format
 msgid "The plugin tables are at schema version %1$d but this build expects %2$d. Sensors that rely on the newer columns or indexes can behave incorrectly. Open the System Status page to let the migration run again."
 msgstr "Die Plugin-Tabellen stehen auf Schemaversion %1$d, dieser Build erwartet %2$d. Sensoren, die auf den neueren Spalten oder Indizes aufsetzen, können sich falsch verhalten. Öffnen Sie die Seite Systemstatus, damit die Migration erneut läuft."
 
-#: includes/class-readiness.php:819
+#: includes/class-readiness.php:817
 msgid "Community threat checks are failing"
 msgstr "Community-Bedrohungsabfragen schlagen fehl"
 
 #. translators: 1: success rate in percent, 2: number of calls in the rolling window.
-#: includes/class-readiness.php:822
+#: includes/class-readiness.php:820
 #, php-format
 msgid "Only %1$s%% of the last %2$d calls to the community network succeeded. Local protection is unaffected; reputation lookups and report submissions are unreliable until the connection recovers."
 msgstr "Nur %1$s%% der letzten %2$d Aufrufe an das Community-Netzwerk waren erfolgreich. Der lokale Schutz ist davon nicht betroffen, Reputationsabfragen und Meldungsübermittlungen bleiben aber unzuverlässig, bis die Verbindung wieder steht."
 
-#: includes/class-readiness.php:846
+#: includes/class-readiness.php:844
 msgid "SMS relay capacity reached"
 msgstr "Kapazität des SMS-Relays erreicht"
 
-#: includes/class-readiness.php:854
+#: includes/class-readiness.php:852
 msgid "Mail relay capacity reached"
 msgstr "Kapazität des Mail-Relays erreicht"
 
-#: includes/class-readiness.php:874
+#: includes/class-readiness.php:872
 msgid "Outgoing mail is failing"
 msgstr "Ausgehende E-Mails schlagen fehl"
 
 #. translators: 1: number of failed mails, 2: last error message reported by wp_mail().
-#: includes/class-readiness.php:877
+#: includes/class-readiness.php:875
 #, php-format
 msgid "%1$d outgoing mails failed in the last 24 hours. Two-factor codes, lockout alerts and quota warnings may not arrive. Last error: %2$s"
 msgstr "%1$d ausgehende E-Mails sind in den letzten 24 Stunden fehlgeschlagen. Zwei-Faktor-Codes, Sperrmeldungen und Kontingentwarnungen kommen womöglich nicht an. Letzter Fehler: %2$s"
 
-#: includes/class-readiness.php:899
+#: includes/class-readiness.php:897
 msgid "No encryption backend available"
 msgstr "Kein Verschlüsselungs-Backend verfügbar"
 
-#: includes/class-readiness.php:900
+#: includes/class-readiness.php:898
 msgid "Neither libsodium nor OpenSSL is available on this server, so two-factor secrets and phone numbers cannot be encrypted at rest. Ask your host to enable one of the two PHP extensions."
 msgstr "Auf diesem Server ist weder libsodium noch OpenSSL verfügbar, Zwei-Faktor-Geheimnisse und Telefonnummern lassen sich deshalb nicht verschlüsselt speichern. Bitten Sie Ihren Hoster, eine der beiden PHP-Erweiterungen zu aktivieren."
 
-#: includes/class-readiness.php:924
+#: includes/class-readiness.php:917
 msgid "Reports failed to reach the community"
 msgstr "Meldungen haben die Community nicht erreicht"
 
 #. translators: %d: number of failed queue entries.
-#: includes/class-readiness.php:927
+#: includes/class-readiness.php:920
 #, php-format
 msgid "%d queued reports could not be submitted. Retry or clear them on the API queue tab."
 msgstr "%d wartende Meldungen konnten nicht übermittelt werden. Wiederholen oder löschen Sie sie im Reiter API-Warteschlange."
 
-#: includes/class-readiness.php:952
+#: includes/class-readiness.php:944
 msgid "Report queue backlog"
 msgstr "Rückstau in der Meldungs-Warteschlange"
 
 #. translators: %d: number of pending queue entries.
-#: includes/class-readiness.php:955
+#: includes/class-readiness.php:947
 #, php-format
 msgid "%d reports are waiting to be submitted. The queue drains faster on a higher tier, or you can process it manually from the API queue tab."
 msgstr "%d Meldungen warten auf die Übermittlung. In einem höheren Tarif leert sich die Warteschlange schneller, alternativ verarbeiten Sie sie im Reiter API-Warteschlange von Hand."
@@ -9043,7 +9043,7 @@ msgid "Back to My Account"
 msgstr "Zurück zu Mein Konto"
 
 #: includes/class-two-factor-onboarding.php:427
-#: reportedip-hive.php:949
+#: reportedip-hive.php:960
 msgid "Sending..."
 msgstr "Wird gesendet..."
 
@@ -9068,7 +9068,7 @@ msgid "Your browser does not support passkeys. Please choose another method."
 msgstr "Ihr Browser unterstützt keine Passkeys. Bitte wählen Sie eine andere Methode."
 
 #: includes/class-two-factor-onboarding.php:434
-#: reportedip-hive.php:954
+#: reportedip-hive.php:952
 msgid "Network error. Please try again."
 msgstr "Netzwerkfehler. Bitte versuchen Sie es erneut."
 
@@ -10009,44 +10009,44 @@ msgid "Request failed. Check server logs."
 msgstr "Anfrage fehlgeschlagen. Prüfen Sie die Server-Logs."
 
 #: reportedip-hive.php:950
-msgid "Test email failed."
-msgstr "Test-E-Mail fehlgeschlagen."
-
-#: reportedip-hive.php:952
 msgid "Request failed."
 msgstr "Anfrage fehlgeschlagen."
 
-#: reportedip-hive.php:953
+#: reportedip-hive.php:951
 msgid "Network error occurred"
 msgstr "Netzwerkfehler aufgetreten"
 
-#: reportedip-hive.php:955
+#: reportedip-hive.php:953
 msgid "API statistics reset."
 msgstr "API-Statistiken zurückgesetzt."
 
-#: reportedip-hive.php:956
+#: reportedip-hive.php:954
 msgid "Failed to reset API statistics."
 msgstr "API-Statistiken konnten nicht zurückgesetzt werden."
 
-#: reportedip-hive.php:957
+#: reportedip-hive.php:955
 msgid "Cache cleared."
 msgstr "Cache geleert."
 
-#: reportedip-hive.php:958
+#: reportedip-hive.php:956
 msgid "Failed to clear cache."
 msgstr "Cache konnte nicht geleert werden."
 
-#: reportedip-hive.php:959
+#: reportedip-hive.php:957
 msgid "Expired entries cleaned."
 msgstr "Abgelaufene Einträge bereinigt."
 
-#: reportedip-hive.php:960
+#: reportedip-hive.php:958
 msgid "Failed to clean expired entries."
 msgstr "Abgelaufene Einträge konnten nicht bereinigt werden."
 
-#: reportedip-hive.php:961
+#: reportedip-hive.php:959
 msgid "Mode changed successfully"
 msgstr "Modus erfolgreich geändert"
+
+#: reportedip-hive.php:961
+msgid "Test email failed."
+msgstr "Test-E-Mail fehlgeschlagen."
 
 #: reportedip-hive.php:962
 msgid "Failed to change mode"

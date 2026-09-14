@@ -44,6 +44,16 @@ All changes to ReportedIP Hive are documented here.
   but not set up, optional), method and role. The filters live in the URL,
   the user status CSV export honours them, and a short note above the list
   explains what the two exports contain.
+- **The Community page has three tabs.** Settings (operation mode,
+  Community Access Key, client-IP header, fleet management, connection
+  test) opens first, Community holds contribution, quota, domains and the
+  plan overview, and Badges replaces the former backlink tools. The badges
+  tab shows the one-click footer badge with its live preview on top and the
+  banner builder below; the separate shortcode gallery is gone, its
+  examples are now templates inside the builder that set variant, number
+  and wording in one click. Colours, text overrides and the attribute
+  reference sit behind a disclosure. The legacy `subtab=promote` address
+  opens the badges tab.
 
 ### Fixes
 
@@ -90,6 +100,14 @@ All changes to ReportedIP Hive are documented here.
   feeds, wp-admin for visitors, uploads and software fingerprints pointed
   at Security Headers instead of Access Lockdown, the password check at
   Detection instead of Password Policy.
+- The footer-badge preview on the Community page never came alive: the
+  web component behind it only loaded on the backlink-tools sub-tab, so the
+  preview showed a bare link and ignored the variant and position radios.
+  The script now loads on every Community tab.
+- The dashboard's referral card and the "badge off" next step linked to
+  addresses the Community page did not understand (`tab=promote`) or to the
+  wrong page (Protection, performance section); both open the Community
+  page now.
 
 ## [2.1.56] (2026-09-14)
 

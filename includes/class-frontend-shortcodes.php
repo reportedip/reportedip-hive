@@ -243,19 +243,15 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	}
 
 	/**
-	 * Enqueue the frontend Web Component on the Community → Promote tab so
-	 * admins see live banner previews with their actual stats.
+	 * Enqueue the frontend Web Component on the Community page so admins see
+	 * live previews of the footer badge and the banner builder with their
+	 * actual stats.
 	 *
 	 * @param string $hook Current admin page hook suffix.
 	 * @since 1.3.0
 	 */
 	public function maybe_enqueue_admin_preview( $hook ) {
 		if ( strpos( $hook, 'reportedip-hive-community' ) === false ) {
-			return;
-		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- $_GET['subtab'] only switches which read-only view is rendered.
-		$subtab = isset( $_GET['subtab'] ) ? sanitize_key( wp_unslash( $_GET['subtab'] ) ) : 'main';
-		if ( 'promote' !== $subtab ) {
 			return;
 		}
 		$this->enqueue_frontend_script();

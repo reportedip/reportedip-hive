@@ -885,6 +885,16 @@ class ReportedIP_Hive {
 			true
 		);
 
+		if ( str_contains( (string) $hook, 'reportedip-hive-community' ) ) {
+			wp_enqueue_script(
+				'reportedip-hive-badges',
+				REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/badges.js',
+				array( 'reportedip-hive-frontend' ),
+				REPORTEDIP_HIVE_VERSION,
+				true
+			);
+		}
+
 		if ( str_contains( (string) $hook, 'reportedip-hive-tools' ) || str_contains( (string) $hook, 'reportedip-hive-debug' ) ) {
 			wp_enqueue_script(
 				'reportedip-hive-settings-import-export',

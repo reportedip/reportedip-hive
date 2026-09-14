@@ -1120,3 +1120,153 @@ code.ip-address {
 .rip-policy-matrix {
     overflow-x: auto;
 }
+
+/* ==========================================================================
+   Badges tab: footer-badge preview and banner builder
+   ========================================================================== */
+
+.rip-badge-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 90px;
+    padding: var(--rip-space-6) var(--rip-space-4);
+    margin-bottom: var(--rip-space-2);
+    background: var(--rip-gray-50);
+    border: 1px dashed var(--rip-gray-300);
+    border-radius: var(--rip-radius-lg);
+}
+
+.rip-badge-preview--tall {
+    min-height: 160px;
+    margin-bottom: var(--rip-space-4);
+}
+
+.rip-badge-preview[data-align="left"] { justify-content: flex-start; }
+.rip-badge-preview[data-align="right"] { justify-content: flex-end; }
+
+.rip-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rip-space-2);
+    margin-right: var(--rip-space-5);
+    cursor: pointer;
+}
+
+.rip-badge-builder__intro {
+    margin: 0 0 var(--rip-space-4);
+    max-width: 70ch;
+    color: var(--rip-gray-600);
+}
+
+.rip-badge-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--rip-space-2);
+    margin-bottom: var(--rip-space-6);
+}
+
+.rip-badge-preset {
+    padding: var(--rip-space-2) var(--rip-space-4);
+    background: white;
+    border: 1px solid var(--rip-gray-300);
+    border-radius: var(--rip-radius-full);
+    font: inherit;
+    font-size: var(--rip-text-sm);
+    font-weight: 500;
+    color: var(--rip-gray-700);
+    cursor: pointer;
+    transition: var(--rip-transition);
+}
+
+.rip-badge-preset:hover {
+    border-color: var(--rip-primary-light);
+    color: var(--rip-primary);
+}
+
+.rip-badge-preset--active {
+    background: var(--rip-primary);
+    border-color: var(--rip-primary);
+    color: white;
+}
+
+.rip-badge-builder__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--rip-space-8);
+}
+
+.rip-badge-advanced {
+    margin-top: var(--rip-space-2);
+}
+
+.rip-badge-advanced > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--rip-gray-700);
+    margin-bottom: var(--rip-space-4);
+}
+
+.rip-badge-colours {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--rip-space-3);
+    margin-bottom: var(--rip-space-5);
+}
+
+.rip-badge-colour__label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rip-space-2);
+}
+
+.rip-badge-colour {
+    height: 38px;
+    padding: 2px;
+}
+
+.rip-badge-reset {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-500);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.rip-badge-attributes {
+    color: var(--rip-gray-600);
+    font-size: var(--rip-text-sm);
+    line-height: 1.6;
+}
+
+.rip-badge-shortcode {
+    display: flex;
+    gap: var(--rip-space-2);
+    align-items: stretch;
+    margin-top: var(--rip-space-1);
+}
+
+.rip-badge-shortcode code {
+    flex: 1;
+    padding: var(--rip-space-2) var(--rip-space-3);
+    background: white;
+    border: 1px solid var(--rip-gray-200);
+    border-radius: var(--rip-radius-sm);
+    font-size: var(--rip-text-sm);
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+
+@media (max-width: 782px) {
+    .rip-badge-builder__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .rip-badge-builder__grid > div:last-child {
+        order: -1;
+    }
+}
