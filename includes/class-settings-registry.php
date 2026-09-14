@@ -487,6 +487,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 
 			'reportedip_hive_auto_block'                   => array(
+				'simple'      => true,
 				'section'     => 'blocking',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -537,6 +538,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How long an address must behave before it drops back to the first rung.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_report_only_mode'             => array(
+				'simple'      => true,
 				'section'     => 'blocking',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -560,6 +562,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 
 			'reportedip_hive_waf_enabled'                  => array(
+				'simple'      => true,
 				'section'     => 'waf',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -615,6 +618,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Check whether a request that claims to be a known crawler really comes from it. Attackers use the Googlebot name to slip past rate limits.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_bot_action'                   => array(
+				'simple'      => true,
 				'section'     => 'waf',
 				'kind'        => 'enum',
 				'allowed'     => array( 'flag', 'off', 'block' ),
@@ -623,6 +627,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'What happens to a request whose crawler identity does not hold up.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_disposable_email_action'      => array(
+				'simple'      => true,
 				'section'     => 'registration',
 				'kind'        => 'enum',
 				'allowed'     => array( 'monitor', 'off', 'block' ),
@@ -758,6 +763,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 
 			'reportedip_hive_hide_login_enabled'           => array(
+				'simple'      => true,
 				'section'      => 'hide_login',
 				'kind'         => 'bool',
 				'remote'       => true,
@@ -766,6 +772,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'Move the sign-in page away from wp-login.php, so the address that every bot tries first leads nowhere.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hide_login_slug'              => array(
+				'simple'      => true,
 				'section'      => 'hide_login',
 				'kind'         => 'slug',
 				'sanitize'     => array( 'ReportedIP_Hive_Hide_Login', 'validate_slug_value' ),
@@ -831,6 +838,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Namespaces that stay reachable whatever the mode above says, one per line. This is where a cookie banner or a shop plugin goes.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_rest_allowed_roles'           => array(
+				'choices'     => 'roles',
 				'section'       => 'lockdown',
 				'kind'          => 'json_list',
 				'json_filter'   => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_roles' ),
@@ -1001,6 +1009,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 
 			'reportedip_hive_2fa_enabled_global'           => array(
+				'simple'      => true,
 				'section'     => 'account_security',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -1008,6 +1017,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Master switch for the second factor. Off, nobody is asked for one, whatever the roles below say.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_allowed_methods'          => array(
+				'choices'     => 'methods',
 				'section'       => 'account_security',
 				'kind'          => 'json_list',
 				'json_filter'   => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_methods' ),
@@ -1024,6 +1034,8 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Subject line of the mail that carries the sign-in code. Leave empty for the default; {site_name} is replaced with the site title.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_enforce_roles'            => array(
+				'choices'     => 'roles',
+				'simple'      => true,
 				'section'     => 'account_security',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_roles' ),
@@ -1117,6 +1129,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How many sign-ins without a second factor a user in one of the roles below gets before the reminder turns into a hard stop.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_reminder_hard_roles'      => array(
+				'choices'     => 'roles',
 				'section'     => 'account_security',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_roles' ),
@@ -1139,6 +1152,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Refuse a password reset for users whose only second factor is e-mail. Otherwise a stolen mailbox is enough for both steps.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_frontend_enabled'         => array(
+				'simple'      => true,
 				'section'      => 'account_security',
 				'kind'         => 'bool',
 				'tier'         => 'frontend_2fa',
@@ -1189,6 +1203,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How long a trusted device stays trusted before the code is asked for again.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_new_country'       => array(
+				'choices'     => 'roles',
 				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
@@ -1199,6 +1214,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked for the second factor again when the sign-in comes from a country the account has not used.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_new_ip'            => array(
+				'choices'     => 'roles',
 				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
@@ -1209,6 +1225,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again when the exact address is new to the account. Fires often on ordinary dynamic connections.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_new_subnet'        => array(
+				'choices'     => 'roles',
 				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
@@ -1219,6 +1236,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again when the address block is new, which ignores a normal dynamic-IP change.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_new_device'        => array(
+				'choices'     => 'roles',
 				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
@@ -1229,6 +1247,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again when the browser has not signed this account in before.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_every_n_days'      => array(
+				'choices'     => 'roles',
 				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
@@ -1239,6 +1258,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again once the last verification is older than the interval below.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_every_n_logins'    => array(
+				'choices'     => 'roles',
 				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
@@ -1249,6 +1269,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Roles that are asked again after the number of sign-ins below.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_2fa_policy_sessions_above_n'  => array(
+				'choices'     => 'roles',
 				'section'     => 'twofa_policies',
 				'kind'        => 'json_list',
 				'json_filter' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
@@ -1341,6 +1362,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How much detail lands in the security log.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_minimal_logging'              => array(
+				'simple'      => true,
 				'section'     => 'privacy_logs',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -1355,6 +1377,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Record the browser identification with each event. Useful for telling a bot from a customer, and it is personal data.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_data_retention_days'          => array(
+				'simple'      => true,
 				'section'     => 'privacy_logs',
 				'kind'        => 'int',
 				'min'         => 1,
@@ -1497,6 +1520,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'How long a report may stay in processing before it is assumed the worker crashed and the row is picked up again.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_auto_footer_enabled'          => array(
+				'simple'      => true,
 				'section'     => 'performance',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -1504,6 +1528,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Show a small protection badge in your site footer.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_auto_footer_variant'          => array(
+				'simple'      => true,
 				'section'     => 'performance',
 				'kind'        => 'enum',
 				'allowed'     => array( 'badge', 'shield' ),
@@ -1537,6 +1562,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 
 			'reportedip_hive_notify_admin'                 => array(
+				'simple'      => true,
 				'section'     => 'notifications',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -1544,6 +1570,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Mail the recipients below when something needs a person to look at it.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_notify_recipients'            => array(
+				'simple'      => true,
 				'section'     => 'notifications',
 				'kind'        => 'email_list',
 				'remote'      => true,

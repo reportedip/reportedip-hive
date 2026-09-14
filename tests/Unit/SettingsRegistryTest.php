@@ -351,5 +351,61 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( $remote_keys, $section_keys, 'Every remote key must appear in exactly one schema section.' );
 			$this->assertSame( $remote_keys, $field_keys, 'The fields map must carry every remote key.' );
 		}
+
+		/**
+		 * The simple view lists exactly the keys the spec names, and no section
+		 * carries more than six of them.
+		 */
+		public function test_simple_keys_match_the_spec_and_stay_short_per_section(): void {
+			$spec   = \ReportedIP_Hive_Settings_Registry::spec();
+			$simple = array();
+			foreach ( $spec as $key => $entry ) {
+				if ( ! empty( $entry['simple'] ) ) {
+					$simple[] = $key;
+				}
+			}
+			sort( $simple );
+			$expected = array(
+				'reportedip_hive_2fa_enabled_global',
+				'reportedip_hive_2fa_enforce_roles',
+				'reportedip_hive_2fa_frontend_enabled',
+				'reportedip_hive_auto_block',
+				'reportedip_hive_auto_footer_enabled',
+				'reportedip_hive_auto_footer_variant',
+				'reportedip_hive_bot_action',
+				'reportedip_hive_data_retention_days',
+				'reportedip_hive_disposable_email_action',
+				'reportedip_hive_hide_login_enabled',
+				'reportedip_hive_hide_login_slug',
+				'reportedip_hive_minimal_logging',
+				'reportedip_hive_notify_admin',
+				'reportedip_hive_notify_recipients',
+				'reportedip_hive_report_only_mode',
+				'reportedip_hive_waf_enabled',
+			);
+			$this->assertSame( $expected, $simple );
+
+			$per_section = array();
+			foreach ( $simple as $key ) {
+				$section                 = $spec[ $key ]['section'];
+				$per_section[ $section ] = ( $per_section[ $section ] ?? 0 ) + 1;
+			}
+			foreach ( $per_section as $section => $count ) {
+				$this->assertLessThanOrEqual( 6, $count, "Section {$section} carries {$count} simple keys." );
+			}
+		}
+
+		/**
+		 * Every json_list key names its choice source so the generic renderer can
+		 * draw a checkbox group instead of a raw textarea.
+		 */
+		public function test_every_json_list_key_declares_choices(): void {
+			foreach ( \ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
+				if ( 'json_list' !== $entry['kind'] ) {
+					continue;
+				}
+				$this->assertContains( $entry['choices'] ?? '', array( 'roles', 'methods' ), "{$key} has no choices source." );
+			}
+		}
 	}
 }
