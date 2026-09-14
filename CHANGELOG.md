@@ -6,6 +6,18 @@ All changes to ReportedIP Hive are documented here.
 
 ### Changed
 
+- **The Activity page opens on the event log.** The menu entry links to
+  the activity tab, the tab order is Activity, IP Lists, Advanced, and the
+  page is titled Activity. Every tab (event log, IP lookup, audit trail,
+  blocked, whitelist, report queue) starts with a heading and one sentence
+  that says what the list is for. The filters moved out of the table
+  toolbar into a labelled filter bar of their own: search, event type,
+  severity, date range and the hardening toggle, with an "Apply filters"
+  button and a reset link that names how many filters are active. The bar
+  is a GET form, so filters survive paging, sorting and bulk actions and a
+  filtered view can be bookmarked. The block duration that the Block IP
+  row action uses stays next to the bulk actions, labelled as such. The
+  old `tab=logs`, `tab=blocked` and `tab=api_queue` links keep working.
 - The 2FA Status page filters its user list by status (active, required
   but not set up, optional), method and role. The filters live in the URL,
   the user status CSV export honours them, and a short note above the list

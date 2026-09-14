@@ -146,7 +146,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-logs-table.php' );
 			$this->assertSame(
 				1,
-				preg_match( '/<select name="event_type">(.*?)<\/select>/s', $source, $m ),
+				preg_match( '/<select name="event_type"[^>]*>(.*?)<\/select>/s', $source, $m ),
 				'The Logs page must render an event_type select.'
 			);
 

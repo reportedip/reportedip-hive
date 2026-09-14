@@ -339,13 +339,39 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Display extra filter controls
+	 * The block duration the Block IP row action reads; it sits next to the
+	 * bulk actions because it belongs to the row actions, not to the filters.
+	 *
+	 * @param string $which `top` or `bottom`.
+	 * @return void
 	 */
 	protected function extra_tablenav( $which ) {
 		if ( $which !== 'top' ) {
 			return;
 		}
+		?>
+		<div class="alignleft actions rip-row-action-setting">
+			<label for="rip-block-duration"><?php esc_html_e( 'Block IP row action blocks for', 'reportedip-hive' ); ?></label>
+			<select name="rip-block-duration" id="rip-block-duration" class="rip-select">
+				<option value="24"><?php esc_html_e( '24 Hours', 'reportedip-hive' ); ?></option>
+				<option value="72"><?php esc_html_e( '3 Days', 'reportedip-hive' ); ?></option>
+				<option value="168"><?php esc_html_e( '1 Week', 'reportedip-hive' ); ?></option>
+				<option value="720"><?php esc_html_e( '30 Days', 'reportedip-hive' ); ?></option>
+				<option value="0"><?php esc_html_e( 'Permanent', 'reportedip-hive' ); ?></option>
+			</select>
+		</div>
+		<?php
+	}
 
+	/**
+	 * The filter bar above the table: search, event type, severity, date range
+	 * and the hardening toggle, as a GET form of its own.
+	 *
+	 * @return void
+	 * @since  2.1.57
+	 */
+	public function render_filters() {
+		$search         = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 		$event_type     = isset( $_REQUEST['event_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['event_type'] ) ) : '';
 		$severity       = isset( $_REQUEST['severity'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['severity'] ) ) : '';
 		$hardening_only = ! empty( $_REQUEST['hardening_only'] );
@@ -358,9 +384,28 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
 			$date_to = '';
 		}
+
+		ReportedIP_Hive_Filter_Bar::open(
+			array(
+				'page' => 'reportedip-hive-security',
+				'tab'  => 'activity',
+				'sub'  => 'logs',
+			)
+		);
+		ReportedIP_Hive_Filter_Bar::field(
+			'rip-log-search',
+			__( 'Search', 'reportedip-hive' ),
+			sprintf(
+				'<input type="search" id="rip-log-search" name="s" class="rip-input" value="%s" placeholder="%s" />',
+				esc_attr( $search ),
+				esc_attr__( 'IP address or detail text', 'reportedip-hive' )
+			),
+			true
+		);
 		?>
-		<div class="alignleft actions">
-			<select name="event_type">
+		<div class="rip-filter-bar__field">
+			<label class="rip-filter-bar__label" for="rip-log-event-type"><?php esc_html_e( 'Event type', 'reportedip-hive' ); ?></label>
+			<select name="event_type" id="rip-log-event-type" class="rip-select">
 				<option value=""><?php esc_html_e( 'All Event Types', 'reportedip-hive' ); ?></option>
 				<optgroup label="<?php esc_attr_e( 'Registration', 'reportedip-hive' ); ?>">
 					<option value="disposable_email" <?php selected( $event_type, 'disposable_email' ); ?>><?php esc_html_e( 'Disposable Email', 'reportedip-hive' ); ?></option>
@@ -402,38 +447,36 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 					<option value="coordinated_attack_detected" <?php selected( $event_type, 'coordinated_attack_detected' ); ?>><?php esc_html_e( 'Coordinated Attack Detected', 'reportedip-hive' ); ?></option>
 				</optgroup>
 			</select>
+		</div>
 
-			<select name="severity">
+		<div class="rip-filter-bar__field">
+			<label class="rip-filter-bar__label" for="rip-log-severity"><?php esc_html_e( 'Severity', 'reportedip-hive' ); ?></label>
+			<select name="severity" id="rip-log-severity" class="rip-select">
 				<option value=""><?php esc_html_e( 'All Severities', 'reportedip-hive' ); ?></option>
 				<option value="low" <?php selected( $severity, 'low' ); ?>><?php esc_html_e( 'Low', 'reportedip-hive' ); ?></option>
 				<option value="medium" <?php selected( $severity, 'medium' ); ?>><?php esc_html_e( 'Medium', 'reportedip-hive' ); ?></option>
 				<option value="high" <?php selected( $severity, 'high' ); ?>><?php esc_html_e( 'High', 'reportedip-hive' ); ?></option>
 				<option value="critical" <?php selected( $severity, 'critical' ); ?>><?php esc_html_e( 'Critical', 'reportedip-hive' ); ?></option>
 			</select>
-
-			<label class="screen-reader-text" for="rip-date-from"><?php esc_html_e( 'Show log entries from this date', 'reportedip-hive' ); ?></label>
-			<input type="date" id="rip-date-from" name="rip_date_from" class="rip-input" value="<?php echo esc_attr( $date_from ); ?>" />
-
-			<label class="screen-reader-text" for="rip-date-to"><?php esc_html_e( 'Show log entries up to this date', 'reportedip-hive' ); ?></label>
-			<input type="date" id="rip-date-to" name="rip_date_to" class="rip-input" value="<?php echo esc_attr( $date_to ); ?>" />
-
-			<label class="rip-inline-toggle">
-				<input type="checkbox" name="hardening_only" value="1" <?php checked( $hardening_only ); ?> />
-				<?php esc_html_e( 'During Hardening only', 'reportedip-hive' ); ?>
-			</label>
-
-			<label class="screen-reader-text" for="rip-block-duration"><?php esc_html_e( 'Block duration used by the Block IP row action', 'reportedip-hive' ); ?></label>
-			<select name="rip-block-duration" id="rip-block-duration" class="rip-select">
-				<option value="24"><?php esc_html_e( '24 Hours', 'reportedip-hive' ); ?></option>
-				<option value="72"><?php esc_html_e( '3 Days', 'reportedip-hive' ); ?></option>
-				<option value="168"><?php esc_html_e( '1 Week', 'reportedip-hive' ); ?></option>
-				<option value="720"><?php esc_html_e( '30 Days', 'reportedip-hive' ); ?></option>
-				<option value="0"><?php esc_html_e( 'Permanent', 'reportedip-hive' ); ?></option>
-			</select>
-
-			<?php submit_button( __( 'Filter', 'reportedip-hive' ), '', 'filter_action', false ); ?>
 		</div>
 		<?php
+		ReportedIP_Hive_Filter_Bar::field(
+			'rip-date-from',
+			__( 'From', 'reportedip-hive' ),
+			sprintf( '<input type="date" id="rip-date-from" name="rip_date_from" class="rip-input" value="%s" />', esc_attr( $date_from ) )
+		);
+		ReportedIP_Hive_Filter_Bar::field(
+			'rip-date-to',
+			__( 'To', 'reportedip-hive' ),
+			sprintf( '<input type="date" id="rip-date-to" name="rip_date_to" class="rip-input" value="%s" />', esc_attr( $date_to ) )
+		);
+		?>
+		<label class="rip-filter-bar__toggle">
+			<input type="checkbox" name="hardening_only" value="1" <?php checked( $hardening_only ); ?> />
+			<?php esc_html_e( 'During Hardening only', 'reportedip-hive' ); ?>
+		</label>
+		<?php
+		ReportedIP_Hive_Filter_Bar::close( array( 's', 'event_type', 'severity', 'rip_date_from', 'rip_date_to', 'hardening_only' ) );
 	}
 
 	/**

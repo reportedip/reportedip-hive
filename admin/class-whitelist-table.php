@@ -234,23 +234,44 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 	/**
 	 * Display extra filter controls
 	 */
-	protected function extra_tablenav( $which ) {
-		if ( $which !== 'top' ) {
-			return;
-		}
-
+	/**
+	 * The filter bar above the table: search and entry type, as a GET form of its own.
+	 *
+	 * @return void
+	 * @since  2.1.57
+	 */
+	public function render_filters() {
+		$search  = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 		$ip_type = isset( $_REQUEST['ip_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['ip_type'] ) ) : '';
+
+		ReportedIP_Hive_Filter_Bar::open(
+			array(
+				'page' => 'reportedip-hive-security',
+				'tab'  => 'ip_lists',
+				'sub'  => 'whitelist',
+			)
+		);
+		ReportedIP_Hive_Filter_Bar::field(
+			'rip-whitelist-search',
+			__( 'Search', 'reportedip-hive' ),
+			sprintf(
+				'<input type="search" id="rip-whitelist-search" name="s" class="rip-input" value="%s" placeholder="%s" />',
+				esc_attr( $search ),
+				esc_attr__( 'IP address or reason', 'reportedip-hive' )
+			),
+			true
+		);
 		?>
-		<div class="alignleft actions">
-			<select name="ip_type">
+		<div class="rip-filter-bar__field">
+			<label class="rip-filter-bar__label" for="rip-whitelist-type"><?php esc_html_e( 'Entry type', 'reportedip-hive' ); ?></label>
+			<select name="ip_type" id="rip-whitelist-type" class="rip-select">
 				<option value=""><?php esc_html_e( 'All Types', 'reportedip-hive' ); ?></option>
 				<option value="single" <?php selected( $ip_type, 'single' ); ?>><?php esc_html_e( 'Single IP', 'reportedip-hive' ); ?></option>
 				<option value="cidr" <?php selected( $ip_type, 'cidr' ); ?>><?php esc_html_e( 'CIDR Range', 'reportedip-hive' ); ?></option>
 			</select>
-
-			<?php submit_button( __( 'Filter', 'reportedip-hive' ), '', 'filter_action', false ); ?>
 		</div>
 		<?php
+		ReportedIP_Hive_Filter_Bar::close( array( 's', 'ip_type' ) );
 	}
 
 	/**

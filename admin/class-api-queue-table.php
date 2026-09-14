@@ -406,18 +406,36 @@ class ReportedIP_Hive_API_Queue_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Display extra filter controls
+	 * The filter bar above the table: search and status, as a GET form of its own.
+	 *
+	 * @return void
+	 * @since  2.1.57
 	 */
-	protected function extra_tablenav( $which ) {
-		if ( $which !== 'top' ) {
-			return;
-		}
-
+	public function render_filters() {
+		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 		$status = isset( $_REQUEST['status'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['status'] ) ) : '';
 		$stats  = $this->database->get_queue_statistics();
+
+		ReportedIP_Hive_Filter_Bar::open(
+			array(
+				'page' => 'reportedip-hive-security',
+				'tab'  => 'advanced',
+			)
+		);
+		ReportedIP_Hive_Filter_Bar::field(
+			'rip-queue-search',
+			__( 'Search', 'reportedip-hive' ),
+			sprintf(
+				'<input type="search" id="rip-queue-search" name="s" class="rip-input" value="%s" placeholder="%s" />',
+				esc_attr( $search ),
+				esc_attr__( 'IP address', 'reportedip-hive' )
+			),
+			true
+		);
 		?>
-		<div class="alignleft actions">
-			<select name="status">
+		<div class="rip-filter-bar__field">
+			<label class="rip-filter-bar__label" for="rip-queue-status"><?php esc_html_e( 'Status', 'reportedip-hive' ); ?></label>
+			<select name="status" id="rip-queue-status" class="rip-select">
 				<option value="">
 					<?php
 					/* translators: %d: total number of queue items */
@@ -449,10 +467,23 @@ class ReportedIP_Hive_API_Queue_Table extends WP_List_Table {
 					?>
 				</option>
 			</select>
-
-			<?php submit_button( __( 'Filter', 'reportedip-hive' ), '', 'filter_action', false ); ?>
 		</div>
+		<?php
+		ReportedIP_Hive_Filter_Bar::close( array( 's', 'status' ) );
+	}
 
+	/**
+	 * The retry button next to the bulk actions; it acts on rows, so it is not a filter.
+	 *
+	 * @param string $which `top` or `bottom`.
+	 * @return void
+	 */
+	protected function extra_tablenav( $which ) {
+		if ( $which !== 'top' ) {
+			return;
+		}
+		$stats = $this->database->get_queue_statistics();
+		?>
 		<div class="alignleft actions">
 			<button type="button" class="button rip-retry-all-failed" <?php echo $stats['failed'] === 0 ? 'disabled' : ''; ?>>
 				<?php

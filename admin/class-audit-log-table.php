@@ -155,16 +155,12 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Filter controls above the table.
+	 * The filter bar above the table: event type, user and IP, as a GET form of its own.
 	 *
-	 * @param string $which Table position.
 	 * @return void
 	 * @since  2.1.2
 	 */
-	protected function extra_tablenav( $which ) {
-		if ( 'top' !== $which ) {
-			return;
-		}
+	public function render_filters() {
 		$event_type = isset( $_REQUEST['event_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['event_type'] ) ) : '';
 		$audit_user = isset( $_REQUEST['audit_user'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['audit_user'] ) ) : '';
 		$audit_ip   = isset( $_REQUEST['audit_ip'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['audit_ip'] ) ) : '';
@@ -178,18 +174,41 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 			'user_block'     => __( 'Account block', 'reportedip-hive' ),
 			'session'        => __( 'Session', 'reportedip-hive' ),
 		);
+
+		ReportedIP_Hive_Filter_Bar::open(
+			array(
+				'page' => 'reportedip-hive-security',
+				'tab'  => 'activity',
+				'sub'  => 'audit',
+			)
+		);
 		?>
-		<div class="alignleft actions">
-			<select name="event_type">
+		<div class="rip-filter-bar__field">
+			<label class="rip-filter-bar__label" for="rip-audit-event-type"><?php esc_html_e( 'Event type', 'reportedip-hive' ); ?></label>
+			<select name="event_type" id="rip-audit-event-type" class="rip-select">
 				<?php foreach ( $types as $value => $label ) : ?>
 					<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $event_type, $value ); ?>><?php echo esc_html( $label ); ?></option>
 				<?php endforeach; ?>
 			</select>
-			<input type="search" name="audit_user" value="<?php echo esc_attr( $audit_user ); ?>" placeholder="<?php esc_attr_e( 'User', 'reportedip-hive' ); ?>" />
-			<input type="search" name="audit_ip" value="<?php echo esc_attr( $audit_ip ); ?>" placeholder="<?php esc_attr_e( 'IP address', 'reportedip-hive' ); ?>" />
-			<?php submit_button( __( 'Filter', 'reportedip-hive' ), 'button', 'filter_audit', false ); ?>
 		</div>
 		<?php
+		ReportedIP_Hive_Filter_Bar::field(
+			'rip-audit-user',
+			__( 'User', 'reportedip-hive' ),
+			sprintf(
+				'<input type="search" id="rip-audit-user" name="audit_user" class="rip-input" value="%s" placeholder="%s" />',
+				esc_attr( $audit_user ),
+				esc_attr__( 'Login name', 'reportedip-hive' )
+			),
+			true
+		);
+		ReportedIP_Hive_Filter_Bar::field(
+			'rip-audit-ip',
+			__( 'IP address', 'reportedip-hive' ),
+			sprintf( '<input type="search" id="rip-audit-ip" name="audit_ip" class="rip-input" value="%s" />', esc_attr( $audit_ip ) ),
+			true
+		);
+		ReportedIP_Hive_Filter_Bar::close( array( 'event_type', 'audit_user', 'audit_ip' ) );
 	}
 
 	/**

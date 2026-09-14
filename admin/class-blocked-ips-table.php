@@ -252,24 +252,45 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 	/**
 	 * Display extra filter controls
 	 */
-	protected function extra_tablenav( $which ) {
-		if ( $which !== 'top' ) {
-			return;
-		}
-
+	/**
+	 * The filter bar above the table: search and block type, as a GET form of its own.
+	 *
+	 * @return void
+	 * @since  2.1.57
+	 */
+	public function render_filters() {
+		$search     = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 		$block_type = isset( $_REQUEST['block_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['block_type'] ) ) : '';
+
+		ReportedIP_Hive_Filter_Bar::open(
+			array(
+				'page' => 'reportedip-hive-security',
+				'tab'  => 'ip_lists',
+				'sub'  => 'blocked',
+			)
+		);
+		ReportedIP_Hive_Filter_Bar::field(
+			'rip-blocked-search',
+			__( 'Search', 'reportedip-hive' ),
+			sprintf(
+				'<input type="search" id="rip-blocked-search" name="s" class="rip-input" value="%s" placeholder="%s" />',
+				esc_attr( $search ),
+				esc_attr__( 'IP address or reason', 'reportedip-hive' )
+			),
+			true
+		);
 		?>
-		<div class="alignleft actions">
-			<select name="block_type">
+		<div class="rip-filter-bar__field">
+			<label class="rip-filter-bar__label" for="rip-block-type"><?php esc_html_e( 'Block type', 'reportedip-hive' ); ?></label>
+			<select name="block_type" id="rip-block-type" class="rip-select">
 				<option value=""><?php esc_html_e( 'All Block Types', 'reportedip-hive' ); ?></option>
 				<option value="manual" <?php selected( $block_type, 'manual' ); ?>><?php esc_html_e( 'Manually Blocked', 'reportedip-hive' ); ?></option>
 				<option value="automatic" <?php selected( $block_type, 'automatic' ); ?>><?php esc_html_e( 'Auto-Blocked', 'reportedip-hive' ); ?></option>
 				<option value="reputation" <?php selected( $block_type, 'reputation' ); ?>><?php esc_html_e( 'Community Reputation', 'reportedip-hive' ); ?></option>
 			</select>
-
-			<?php submit_button( __( 'Filter', 'reportedip-hive' ), '', 'filter_action', false ); ?>
 		</div>
 		<?php
+		ReportedIP_Hive_Filter_Bar::close( array( 's', 'block_type' ) );
 	}
 
 	/**

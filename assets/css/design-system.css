@@ -1580,6 +1580,7 @@ button.rip-tier-lock--mode:hover {
     align-items: center;
     gap: var(--rip-space-2);
     font-size: var(--rip-text-xs);
+    white-space: nowrap;
     color: var(--rip-gray-600);
 }
 
