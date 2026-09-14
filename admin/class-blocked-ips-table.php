@@ -133,7 +133,7 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 			case 'actions':
 				$actions  = '<div class="action-buttons-inline">';
 				$actions .= sprintf(
-					'<button class="button button-small unblock-ip button-primary" data-ip="%s" title="%s"><span class="dashicons dashicons-unlock"></span> %s</button>',
+					'<button class="button button-small unblock-ip button-primary" data-ip="%s" title="%s"><span class="dashicons dashicons-undo"></span> %s</button>',
 					esc_attr( $item->ip_address ),
 					esc_attr__( 'Unblock this IP', 'reportedip-hive' ),
 					__( 'Unblock', 'reportedip-hive' )
