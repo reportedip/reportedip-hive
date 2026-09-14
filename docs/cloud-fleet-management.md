@@ -56,7 +56,7 @@ result envelope is byte-identical between the two transports.
 3. **MainWP:** connect the site to your MainWP dashboard as usual, no extra
    step, the child bridge ships inside Hive.
 4. **reportedip.com fleet:** switch on **"Cloud fleet management via
-   reportedip.com"** on the Hive *General* settings tab. It is **off by
+   reportedip.com"** on the Hive *Community* page (connection card). It is **off by
    default**. While it is on, each API request the site makes announces its
    settings schema version and fingerprint, which is how the fleet dashboard
    discovers the site and detects drift. Switch it off and the site rejects

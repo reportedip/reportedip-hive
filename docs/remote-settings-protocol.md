@@ -17,7 +17,7 @@ Core classes (all loaded unconditionally, in every request context):
 - `ReportedIP_Hive_Settings_Apply`, validates and writes a batch, returns a
   per-key result map. Call `ReportedIP_Hive_Settings_Apply::apply( $values, $origin )`.
   Four origins exist: `mainwp`, `cloud`, `import` and `admin` (the plugin's own
-  settings pages and their AJAX cards). Only `admin` logs
+  Protection page and the quickstart). Only `admin` logs
   `settings_admin_apply`; the three remote origins log
   `settings_remote_apply`.
 - `ReportedIP_Hive_Settings_Effects`, executes declared side effects
@@ -383,17 +383,14 @@ actually shipped:
   unreachable sanitizer degrades silently to the generic kind sanitizer, which
   then rejects valid values.
 
-### Known settings-page exceptions
+### Checkbox groups
 
-Two registry keys keep a bespoke sanitizer on the wp-admin settings page.
-and only there: `reportedip_hive_2fa_allowed_methods` and
-`reportedip_hive_2fa_enforce_roles`. Their form posts checkboxes instead of
-the option value, so the page callback must detect the form shape from
-`$_POST` (the 2.0.28 "only TOTP saved / roles wiped" fix), which a generic
-registry callback cannot do. Every remote writer (MainWP, cloud, import)
-sanitizes both keys through the registry's `json_list` kind; the bespoke
-callbacks' direct-write branch is semantically identical. This list may only
-shrink; the consistency check enforces it.
+`reportedip_hive_2fa_allowed_methods`, `reportedip_hive_2fa_enforce_roles`
+and the other `json_list` keys with a `choices` flag render as checkbox
+groups on the Protection page. Since 2.1.56 the page collects the checked
+values into the option's list form before `Settings_Apply::apply()`, so every
+writer (wp-admin, MainWP, cloud, import) sanitizes them through the same
+`json_list` kind. No bespoke sanitizer is left on the wp-admin side.
 
 `slug` is an override-only kind: `sanitize_kind()` deliberately has no
 generic slug branch, because the only slug key delegates to
@@ -425,7 +422,7 @@ The end-to-end routine for any settings change, in order:
      renderability, wizard/registry kind agreement, defaults round-trip)
      and `CloudManagementRestTest` (transport auth chain + envelope parity).
    - The private workspace additionally runs a static cross-repo check
-     (settings page callbacks, wizard delegation, import routing, shared
+     (Protection page collection, quickstart delegation, import routing, shared
      envelope helpers, service/extension kind and drift-state coverage)
      before any release.
 5. **Release gates.** The full pre-tag pipeline (lint, static analysis,
