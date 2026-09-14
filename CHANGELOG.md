@@ -15,6 +15,19 @@ All changes to ReportedIP Hive are documented here.
 
 ### Changed
 
+- **One status line on the dashboard.** The green "Community API connected,
+  N of M reports remaining" strip above the stat cards is gone; the daily
+  report quota stays on the Community page where it is explained. The
+  status banner moved to the top of the dashboard and now reads
+  "Protection active since <date> on the <plan> recommendation", with a
+  "Community Network connected" link in Community mode. Without a stored
+  key or with the daily quota used up the same line turns into a warning
+  with the way to fix it; the rate-limit state was already covered by the
+  page-wide notice.
+- **Protection areas are collapsed and explained.** The area list on the
+  dashboard is a closed card, each area carries the one-sentence description
+  from the Protection page, and areas with switched-off score items show the
+  points the Detection or Hardening score gains once they are enabled.
 - **The Activity page opens on the event log.** The menu entry links to
   the activity tab, the tab order is Activity, IP Lists, Advanced, and the
   page is titled Activity. Every tab (event log, IP lookup, audit trail,
@@ -34,6 +47,14 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- The dashboard banner reported the quickstart as "set up on 1 January
+  1970": the completion time is stored as a UTC datetime and was cast to an
+  integer. It is converted properly now.
+- Seven Detection/Hardening score links opened the wrong card on the
+  Protection page since the 2.1.56 section split: REST access, XML-RPC,
+  feeds, wp-admin for visitors, uploads and software fingerprints pointed
+  at Security Headers instead of Access Lockdown, the password check at
+  Detection instead of Password Policy.
 - The audit log CSV on the 2FA Status page is part of the Business plan
   like the audit trail itself: the button gives way to the plan marker on
   lower plans and the export handler answers 403 instead of streaming the
