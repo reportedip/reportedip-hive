@@ -4,6 +4,15 @@ All changes to ReportedIP Hive are documented here.
 
 ## [Unreleased]
 
+### Fixes
+
+- A key the service rejected (HTTP 401 or 403) counted as a failed sample
+  in the rolling API health window. Pasting a wrong Community Access Key
+  twice during the quickstart was enough to raise "Community threat checks
+  are failing" for the next three hours although the network was fine.
+  Auth verdicts now stay out of the window; the lifetime counters and the
+  `api_call_failed` log entry keep them.
+
 ### Changed
 
 - **The Activity page opens on the event log.** The menu entry links to

@@ -210,6 +210,32 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * A key the service rejected is an answer, not an outage.
+		 *
+		 * Mirrors a quickstart in which the admin pasted a wrong key twice:
+		 * the service replied 401 both times, the network was fine. Lifetime
+		 * counters and the error log keep the rejections, the rolling health
+		 * window does not.
+		 */
+		public function test_auth_rejections_stay_out_of_the_health_window() {
+			$client = $this->client();
+			for ( $i = 0; $i < 7; $i++ ) {
+				$this->track( $client, true );
+			}
+			for ( $i = 0; $i < 12; $i++ ) {
+				$this->track( $client, false, 0 === $i % 2 ? 'http_401' : 'http_403' );
+			}
+
+			$stats = \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_stats', array() );
+			$this->assertSame( 7, $stats['recent_total'] );
+			$this->assertSame( 100.0, $stats['recent_success_rate'] );
+			$this->assertSame( 12, $stats['failed_calls'] );
+			$this->assertSame( 6, $stats['error_types']['http_401'] );
+			$this->assertFalse( \ReportedIP_Hive_API::window_is_degraded( $stats ) );
+			$this->assertNotContains( 'api_health_degraded', $this->spy( $client )->events );
+		}
+
+		/**
 		 * Seed the stored window with an outage that already ended.
 		 *
 		 * Mirrors the shape observed in production: 14 failed calls inside one
