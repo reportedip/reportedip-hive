@@ -285,7 +285,7 @@ class ReportedIP_Hive_Protection_Page {
 				$control = sprintf( '<select class="rip-select" id="%1$s" name="%2$s"%3$s>%4$s</select>', esc_attr( $id ), esc_attr( $key ), $disabled, $options );
 				break;
 			case 'json_list':
-				$current = array_map( 'strval', (array) $value );
+				$current = array_map( 'strval', ReportedIP_Hive_Option_Routing::to_array( $value ) );
 				$boxes   = '';
 				foreach ( $choices as $choice => $choice_def ) {
 					$choice_def = is_array( $choice_def ) ? $choice_def : array( 'label' => (string) $choice_def );
@@ -616,7 +616,7 @@ class ReportedIP_Hive_Protection_Page {
 				if ( empty( $current['reportedip_hive_2fa_enabled_global'] ) ) {
 					return $off;
 				}
-				$roles = count( (array) ( $current['reportedip_hive_2fa_enforce_roles'] ?? array() ) );
+				$roles = count( ReportedIP_Hive_Option_Routing::to_array( $current['reportedip_hive_2fa_enforce_roles'] ?? array() ) );
 				/* translators: %d: number of roles */
 				return sprintf( _n( '%d role enforced', '%d roles enforced', $roles, 'reportedip-hive' ), $roles );
 			case 'privacy_logs':

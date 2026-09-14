@@ -72,10 +72,18 @@ final class ReportedIP_Hive_Settings_Apply {
 		$remote_spec = ReportedIP_Hive_Settings_Registry::remote_spec();
 		$results     = array();
 		$sanitized   = array();
+		$current     = ReportedIP_Hive_Settings_Registry::current_values();
+		$unchanged   = 0;
 
 		foreach ( $values as $key => $value ) {
 			if ( ! is_string( $key ) || ! isset( $remote_spec[ $key ] ) ) {
 				$results[ (string) $key ] = array( 'status' => self::STATUS_UNKNOWN );
+				continue;
+			}
+
+			if ( ReportedIP_Hive_Settings_Registry::normalize_value( $key, $value ) === ReportedIP_Hive_Settings_Registry::normalize_value( $key, $current[ $key ] ) ) {
+				$results[ $key ] = array( 'status' => self::STATUS_UNCHANGED );
+				++$unchanged;
 				continue;
 			}
 
@@ -91,7 +99,6 @@ final class ReportedIP_Hive_Settings_Apply {
 			$sanitized[ $key ] = $clean;
 		}
 
-		$current      = ReportedIP_Hive_Settings_Registry::current_values();
 		$batch_errors = ReportedIP_Hive_Settings_Registry::validate_batch( $sanitized, $current );
 		foreach ( $batch_errors as $key => $error ) {
 			$results[ $key ] = array(
@@ -101,12 +108,11 @@ final class ReportedIP_Hive_Settings_Apply {
 			unset( $sanitized[ $key ] );
 		}
 
-		if ( $atomic && ! empty( $results ) ) {
+		if ( $atomic && count( $results ) > $unchanged ) {
 			$sanitized = array();
 		}
 
-		$applied   = 0;
-		$unchanged = 0;
+		$applied = 0;
 
 		foreach ( $sanitized as $key => $value ) {
 			$same = ReportedIP_Hive_Settings_Registry::normalize_value( $key, $value )

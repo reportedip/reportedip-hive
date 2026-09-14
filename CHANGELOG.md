@@ -2,6 +2,19 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixes
+
+- The Protection page never showed a stored role or method list as checked:
+  the renderer cast the stored JSON string to an array instead of decoding
+  it, so "Roles required to use 2FA" looked empty right after the quickstart
+  had set it to administrator, and the card status always counted one role.
+  Saving had worked all along; only the display was wrong.
+- Saving a card no longer reports "1 field was not saved" for a plan-gated
+  switch that is already on: an unchanged value is now recognised before
+  the plan gate runs, so it counts as unchanged instead of being rejected.
+
 ## [2.1.56] (2026-09-14)
 
 ### Changed

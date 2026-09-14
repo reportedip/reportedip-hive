@@ -188,6 +188,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'name="reportedip_hive_2fa_enforce_roles[]"', $list );
 			$this->assertStringContainsString( 'value="editor" checked', $list );
 			$this->assertStringContainsString( 'value="administrator" ', $list );
+
+			$stored = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_2fa_enforce_roles',
+				array(
+					'kind'        => 'json_list',
+					'choices'     => 'roles',
+					'label'       => 'Roles',
+					'description' => '',
+				),
+				'["administrator"]',
+				array( 'available' => true ),
+				array(
+					'administrator' => 'Administrator',
+					'editor'        => 'Editor',
+				)
+			);
+			$this->assertStringContainsString( 'value="administrator" checked', $stored );
+			$this->assertStringNotContainsString( 'value="editor" checked', $stored );
 		}
 
 		public function test_every_registry_kind_renders_an_input_with_its_name(): void {

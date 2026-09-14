@@ -317,6 +317,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'applied', $result['results']['reportedip_hive_block_tor']['status'] );
 		}
 
+		public function test_tier_gated_value_already_stored_is_unchanged_not_skipped() {
+			$GLOBALS['wp_options']['reportedip_hive_block_tor'] = 1;
+
+			$result = \ReportedIP_Hive_Settings_Apply::apply(
+				array( 'reportedip_hive_block_tor' => '1' ),
+				'test'
+			);
+
+			$this->assertSame( 'unchanged', $result['results']['reportedip_hive_block_tor']['status'] );
+			$this->assertSame( 0, $result['applied'] );
+		}
+
 		public function test_paranoia_level_one_passes_gate_but_two_is_skipped() {
 			$GLOBALS['wp_options']['reportedip_hive_waf_paranoia'] = 2;
 
