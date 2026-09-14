@@ -703,7 +703,7 @@ class ReportedIP_Hive_Quickstart {
 
 		wp_send_json_success(
 			array(
-				'redirect_url' => self::get_admin_page_url( $expert ? 'admin.php?page=reportedip-hive-settings' : 'admin.php?page=reportedip-hive' ),
+				'redirect_url' => self::get_admin_page_url( $expert ? 'admin.php?page=reportedip-hive-protection' : 'admin.php?page=reportedip-hive' ),
 				'applied'      => (int) $result['applied'],
 			)
 		);

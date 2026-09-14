@@ -157,7 +157,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$referer = wp_get_referer();
 		if ( ! $referer ) {
-			$referer = network_admin_url( 'admin.php?page=reportedip-hive-settings' );
+			$referer = network_admin_url( 'admin.php?page=reportedip-hive-community' );
 		}
 		$referer = add_query_arg( 'settings-updated', 'true', $referer );
 		wp_safe_redirect( $referer );
@@ -628,7 +628,7 @@ class ReportedIP_Hive_Admin_Settings {
 				? __( 'Community only', 'reportedip-hive' )
 				: __( 'Mode required', 'reportedip-hive' );
 			$label         = $opts['label'] ?? $label_default;
-			$href          = $opts['href'] ?? self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' );
+			$href          = $opts['href'] ?? self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 			?>
 			<a href="<?php echo esc_url( $href ); ?>" class="rip-tier-lock rip-tier-lock--mode">
 				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h.5A1.5 1.5 0 0117 10.5v6A1.5 1.5 0 0115.5 18h-11A1.5 1.5 0 013 16.5v-6A1.5 1.5 0 014.5 9H5zm2 0V7a3 3 0 116 0v2H7z" clip-rule="evenodd"/></svg>
@@ -1534,7 +1534,7 @@ class ReportedIP_Hive_Admin_Settings {
 			? (string) $tier_info['label']
 			: __( 'paid', 'reportedip-hive' );
 
-		$two_factor_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=two_factor' );
+		$two_factor_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-protection#account_security' );
 		$checklist      = ReportedIP_Hive_Tier_Upgrade::get_setup_checklist();
 
 		$activated_labels = array();
@@ -3755,7 +3755,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<div class="rip-alert rip-alert--warning">
 				<div class="rip-alert__content rip-alert__content--row">
 					<div class="rip-alert__message"><?php esc_html_e( 'Community protection is not connected.', 'reportedip-hive' ); ?></div>
-					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary rip-button--sm">
+					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' ) ); ?>" class="rip-button rip-button--primary rip-button--sm">
 						<?php esc_html_e( 'Connect now', 'reportedip-hive' ); ?>
 					</a>
 				</div>
@@ -5723,7 +5723,7 @@ class ReportedIP_Hive_Admin_Settings {
 								<div class="rip-alert__title"><?php esc_html_e( 'Local Shield mode active', 'reportedip-hive' ); ?></div>
 								<div class="rip-alert__message"><?php esc_html_e( 'Running locally — shared reports, quota and tier upgrades are off. Join the Community Network for shared threat intelligence.', 'reportedip-hive' ); ?></div>
 							</div>
-							<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary rip-button--sm">
+							<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' ) ); ?>" class="rip-button rip-button--primary rip-button--sm">
 								<?php esc_html_e( 'Switch to Community', 'reportedip-hive' ); ?>
 							</a>
 						</div>
@@ -5741,7 +5741,7 @@ class ReportedIP_Hive_Admin_Settings {
 								<?php esc_html_e( 'Community mode is active, but no API key is configured. Without a key, neither reports can be sent nor quota/tier can be queried.', 'reportedip-hive' ); ?>
 							</div>
 							<div style="margin-top:12px; display:flex; gap:8px;">
-								<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' ) ); ?>" class="rip-button rip-button--primary">
+								<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' ) ); ?>" class="rip-button rip-button--primary">
 									<?php esc_html_e( 'Add API key', 'reportedip-hive' ); ?>
 								</a>
 								<a href="<?php echo esc_url( REPORTEDIP_HIVE_REGISTER_URL ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--secondary">
@@ -6830,7 +6830,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$security_summary  = is_array( $args['security_summary'] ?? null ) ? $args['security_summary'] : array();
 
 		$reports_active = $is_community_mode && $is_configured;
-		$settings_url   = self::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=general' );
+		$settings_url   = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
 
 		$channels = array(
 			array(

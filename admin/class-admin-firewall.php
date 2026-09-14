@@ -211,7 +211,7 @@ class ReportedIP_Hive_Admin_Firewall {
 				'label' => __( 'Tor exit nodes', 'reportedip-hive' ),
 				'feeds' => __( 'Tor Exit Node Blocking', 'reportedip-hive' ),
 				'tab'   => 'overview',
-				'url'   => ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-settings&tab=blocking' ),
+				'url'   => ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-protection#blocking' ),
 			),
 		);
 	}
@@ -279,8 +279,8 @@ class ReportedIP_Hive_Admin_Firewall {
 		$table->process_bulk_action();
 
 		echo '<form method="post">';
-		printf( '<input type="hidden" name="page" value="%s" />', esc_attr( 'reportedip-hive-firewall' ) );
-		printf( '<input type="hidden" name="tab" value="%s" />', esc_attr( 'waf' ) );
+		printf( '<input type="hidden" name="page" value="%s" />', esc_attr( ReportedIP_Hive_Tools_Page::PAGE_SLUG ) );
+		printf( '<input type="hidden" name="tab" value="%s" />', esc_attr( 'rules' ) );
 		$table->display();
 		echo '</form>';
 

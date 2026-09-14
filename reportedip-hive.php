@@ -885,7 +885,7 @@ class ReportedIP_Hive {
 			true
 		);
 
-		if ( str_contains( (string) $hook, 'reportedip-hive-settings' ) ) {
+		if ( str_contains( (string) $hook, 'reportedip-hive-tools' ) ) {
 			wp_enqueue_script(
 				'reportedip-hive-settings-import-export',
 				REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/settings-import-export.js',

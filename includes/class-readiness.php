@@ -804,16 +804,16 @@ final class ReportedIP_Hive_Readiness {
 	 */
 	private static function links() {
 		return array(
-			'guard_queue_unwritable' => array( 'reportedip-hive-firewall', 'waf' ),
+			'guard_queue_unwritable' => array( 'reportedip-hive-tools', 'server' ),
 			'cron_stalled'           => array( 'reportedip-hive-debug', '' ),
 			'cron_disabled_stale'    => array( 'reportedip-hive-debug', '' ),
-			'trusted_header_open'    => array( 'reportedip-hive-settings', 'general' ),
+			'trusted_header_open'    => array( 'reportedip-hive-protection', 'detection' ),
 			'schema_outdated'        => array( 'reportedip-hive-debug', '' ),
 			'api_degraded'           => array( 'reportedip-hive-community', '' ),
 			'relay_cap_mail'         => array( 'reportedip-hive-community', '' ),
 			'relay_cap_sms'          => array( 'reportedip-hive-community', '' ),
-			'mail_failures'          => array( 'reportedip-hive-settings', 'notifications' ),
-			'crypto_missing'         => array( 'reportedip-hive-settings', 'two_factor' ),
+			'mail_failures'          => array( 'reportedip-hive-protection', 'notifications' ),
+			'crypto_missing'         => array( 'reportedip-hive-protection', 'account_security' ),
 			'queue_failed'           => array( 'reportedip-hive-security', 'api_queue' ),
 			'queue_backlog'          => array( 'reportedip-hive-security', 'api_queue' ),
 		);

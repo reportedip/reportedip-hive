@@ -235,17 +235,17 @@ final class ReportedIP_Hive_Score {
 		$w = self::DETECTION_WEIGHTS;
 
 		return array(
-			self::item( 'failed_login', $w['failed_login'], 'detection', __( 'Failed-login monitor', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_failed_logins', true ), self::url( 'reportedip-hive-settings', 'detection' ) ),
-			self::item( 'waf', $w['waf'], 'detection', __( 'Web Application Firewall', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_waf_enabled', true ), self::url( 'reportedip-hive-firewall', 'waf' ) ),
-			self::item( 'rest_burst', $w['rest_burst'], 'detection', __( 'REST-API burst limit', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_rest_api', true ), self::url( 'reportedip-hive-settings', 'detection' ) ),
-			self::item( 'scan_404', $w['scan_404'], 'detection', __( 'Scan detector', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_404_scans', true ), self::url( 'reportedip-hive-firewall', 'scan' ) ),
-			self::item( 'user_enum', $w['user_enum'], 'detection', __( 'User-enumeration block', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_block_user_enumeration', true ), self::url( 'reportedip-hive-settings', 'detection' ) ),
-			self::item( 'geo_anomaly', $w['geo_anomaly'], 'detection', __( 'Geo-anomaly detection', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_geo_anomaly', true ), self::url( 'reportedip-hive-settings', 'detection' ) ),
-			self::item( 'app_password', $w['app_password'], 'detection', __( 'App-password monitor', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_app_passwords', true ), self::url( 'reportedip-hive-settings', 'detection' ) ),
-			self::item( 'bot_verification', $w['bot_verification'], 'detection', __( 'Verified-bot detection', 'reportedip-hive' ), 'off' !== (string) self::opt( 'reportedip_hive_bot_action', 'flag' ), self::url( 'reportedip-hive-firewall', 'bot' ), 'bot_verification' ),
-			self::item( 'decoy_pathblock', $w['decoy_pathblock'], 'detection', __( 'Decoy-path block', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_decoy_pathblock_enabled', true ), self::url( 'reportedip-hive-firewall', 'scan' ) ),
-			self::item( 'comment_xmlrpc', $w['comment_xmlrpc'], 'detection', __( 'Comment & XML-RPC monitor', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_comments', true ) && (bool) self::opt( 'reportedip_hive_monitor_xmlrpc', true ), self::url( 'reportedip-hive-settings', 'detection' ) ),
-			self::item( 'reputation', $w['reputation'], 'detection', __( 'Community threat blocking', 'reportedip-hive' ), 'community' === (string) self::opt( 'reportedip_hive_operation_mode', 'local' ) && (bool) self::opt( 'reportedip_hive_auto_block', true ), self::url( 'reportedip-hive-settings', 'general' ), 'reputation_blocking' ),
+			self::item( 'failed_login', $w['failed_login'], 'detection', __( 'Failed-login monitor', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_failed_logins', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'waf', $w['waf'], 'detection', __( 'Web Application Firewall', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_waf_enabled', true ), self::url( 'reportedip-hive-protection', 'waf' ) ),
+			self::item( 'rest_burst', $w['rest_burst'], 'detection', __( 'REST-API burst limit', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_rest_api', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'scan_404', $w['scan_404'], 'detection', __( 'Scan detector', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_404_scans', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'user_enum', $w['user_enum'], 'detection', __( 'User-enumeration block', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_block_user_enumeration', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'geo_anomaly', $w['geo_anomaly'], 'detection', __( 'Geo-anomaly detection', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_geo_anomaly', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'app_password', $w['app_password'], 'detection', __( 'App-password monitor', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_app_passwords', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'bot_verification', $w['bot_verification'], 'detection', __( 'Verified-bot detection', 'reportedip-hive' ), 'off' !== (string) self::opt( 'reportedip_hive_bot_action', 'flag' ), self::url( 'reportedip-hive-protection', 'waf' ), 'bot_verification' ),
+			self::item( 'decoy_pathblock', $w['decoy_pathblock'], 'detection', __( 'Decoy-path block', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_decoy_pathblock_enabled', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'comment_xmlrpc', $w['comment_xmlrpc'], 'detection', __( 'Comment & XML-RPC monitor', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_comments', true ) && (bool) self::opt( 'reportedip_hive_monitor_xmlrpc', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'reputation', $w['reputation'], 'detection', __( 'Community threat blocking', 'reportedip-hive' ), 'community' === (string) self::opt( 'reportedip_hive_operation_mode', 'local' ) && (bool) self::opt( 'reportedip_hive_auto_block', true ), self::url( 'reportedip-hive-community', '' ), 'reputation_blocking' ),
 		);
 	}
 
@@ -258,19 +258,19 @@ final class ReportedIP_Hive_Score {
 	public static function hardening_items() {
 		$w               = self::HARDENING_WEIGHTS;
 		$headers_present = class_exists( 'ReportedIP_Hive_Security_Headers' );
-		$surface_url     = self::url( 'reportedip-hive-firewall', 'hardening' );
+		$surface_url     = self::url( 'reportedip-hive-protection', 'headers' );
 		$uploads_present = class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' )
 			&& class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' )
 			&& ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->supports_htaccess();
 
 		return array(
-			self::item( 'hide_login', $w['hide_login'], 'hardening', __( 'Hide login URL', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_hide_login_enabled', false ), self::url( 'reportedip-hive-settings', 'hide_login' ) ),
-			self::item( 'twofa_enforce', $w['twofa_enforce'], 'hardening', __( 'Two-factor enforced for a role', 'reportedip-hive' ), self::twofa_enforced(), self::url( 'reportedip-hive-settings', 'two_factor' ) ),
-			self::item( 'security_headers', $w['security_headers'], 'hardening', __( 'Security headers (basic)', 'reportedip-hive' ), $headers_present && ReportedIP_Hive_Security_Headers::basic_active(), self::url( 'reportedip-hive-firewall', 'hardening' ), 'security_headers', $headers_present ),
-			self::item( 'security_headers_advanced', $w['security_headers_advanced'], 'hardening', __( 'Security headers (advanced)', 'reportedip-hive' ), $headers_present && ReportedIP_Hive_Security_Headers::advanced_active(), self::url( 'reportedip-hive-firewall', 'hardening' ), 'security_headers_advanced', $headers_present ),
-			self::item( 'password_hibp', $w['password_hibp'], 'hardening', __( 'Password strength & breach check', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_password_policy_enabled', true ), self::url( 'reportedip-hive-settings', 'detection' ) ),
-			self::item( 'hardening_mode', $w['hardening_mode'], 'hardening', __( 'Hardening mode', 'reportedip-hive' ), class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active(), self::url( 'reportedip-hive-settings', 'hardening_mode' ), 'hardening_mode' ),
-			self::item( 'disposable_block', $w['disposable_block'], 'hardening', __( 'Disposable-email defence', 'reportedip-hive' ), 'off' !== (string) self::opt( 'reportedip_hive_disposable_email_action', 'monitor' ), self::url( 'reportedip-hive-firewall', 'spam' ), 'disposable_email' ),
+			self::item( 'hide_login', $w['hide_login'], 'hardening', __( 'Hide login URL', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_hide_login_enabled', false ), self::url( 'reportedip-hive-protection', 'hide_login' ) ),
+			self::item( 'twofa_enforce', $w['twofa_enforce'], 'hardening', __( 'Two-factor enforced for a role', 'reportedip-hive' ), self::twofa_enforced(), self::url( 'reportedip-hive-protection', 'account_security' ) ),
+			self::item( 'security_headers', $w['security_headers'], 'hardening', __( 'Security headers (basic)', 'reportedip-hive' ), $headers_present && ReportedIP_Hive_Security_Headers::basic_active(), self::url( 'reportedip-hive-protection', 'headers' ), 'security_headers', $headers_present ),
+			self::item( 'security_headers_advanced', $w['security_headers_advanced'], 'hardening', __( 'Security headers (advanced)', 'reportedip-hive' ), $headers_present && ReportedIP_Hive_Security_Headers::advanced_active(), self::url( 'reportedip-hive-protection', 'headers' ), 'security_headers_advanced', $headers_present ),
+			self::item( 'password_hibp', $w['password_hibp'], 'hardening', __( 'Password strength & breach check', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_password_policy_enabled', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
+			self::item( 'hardening_mode', $w['hardening_mode'], 'hardening', __( 'Hardening mode', 'reportedip-hive' ), class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active(), self::url( 'reportedip-hive-protection', 'hardening_mode' ), 'hardening_mode' ),
+			self::item( 'disposable_block', $w['disposable_block'], 'hardening', __( 'Disposable-email defence', 'reportedip-hive' ), 'off' !== (string) self::opt( 'reportedip_hive_disposable_email_action', 'monitor' ), self::url( 'reportedip-hive-protection', 'registration' ), 'disposable_email' ),
 			self::item( 'rest_access', $w['rest_access'], 'hardening', __( 'REST API access control', 'reportedip-hive' ), 'open' !== (string) self::opt( 'reportedip_hive_rest_access_mode', 'open' ), $surface_url ),
 			self::item( 'xmlrpc_off', $w['xmlrpc_off'], 'hardening', __( 'XML-RPC disabled', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_disable_xmlrpc', false ), $surface_url ),
 			self::item( 'feeds_off', $w['feeds_off'], 'hardening', __( 'Feeds disabled', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_disable_feeds', false ), $surface_url ),
@@ -369,7 +369,7 @@ final class ReportedIP_Hive_Score {
 	public static function url( $page, $tab = '' ) {
 		$path = 'admin.php?page=' . $page;
 		if ( '' !== (string) $tab ) {
-			$path .= '&tab=' . $tab;
+			$path .= 'reportedip-hive-protection' === $page ? '#' . $tab : '&tab=' . $tab;
 		}
 		if ( class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
 			return ReportedIP_Hive_Admin_Settings::get_admin_page_url( $path );
