@@ -165,7 +165,7 @@ test.describe('adaptive 2fa policies', () => {
 		await openPolicies(page);
 
 		await expect(page.locator(`#twofa_policies input[name="${POLICY_KEY}[]"][value="administrator"]`)).toBeDisabled();
-		await expect(page.locator('#twofa_policies')).toContainText('Triggers for administrators unlock');
+		await expect(page.locator('#twofa_policies')).toContainText('Triggers for administrators become available');
 	});
 
 	test('ticking a role saves the policy list', async ({ page }) => {

@@ -47,6 +47,15 @@ test.describe('IP cell + lookup accessibility', () => {
 		} catch {
 			/* best effort */
 		}
+		/* Back to Local Shield on the free plan, and forget the cached Professional answer of the mock. */
+		wp('option', 'update', 'reportedip_hive_operation_mode', 'local');
+		for (const args of [['option', 'delete', 'reportedip_hive_api_key'], ['option', 'delete', 'reportedip_hive_known_tier'], ['transient', 'delete', 'reportedip_hive_api_status'], ['transient', 'delete', 'reportedip_hive_relay_quota']]) {
+			try {
+				wp(...args);
+			} catch {
+				/* absent */
+			}
+		}
 	});
 
 	test('blocked-IP row renders the shared IP cell with copy + external link', async ({ page }) => {

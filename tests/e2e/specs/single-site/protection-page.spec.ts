@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
+import { FORGET_CACHED_TIER_CLI } from '../../fixtures/tier';
 
 /**
  * Protection page: one card per registry section, simple/expert depth,
@@ -26,6 +27,14 @@ test.describe('protection page', () => {
 	test.beforeAll(() => {
 		resetAdminBaseline();
 		forgetExpert();
+		/* The plan assertions need the free plan; forget any cached answer a previous spec left behind. */
+		for (const cmd of ['option delete reportedip_hive_known_tier', ...FORGET_CACHED_TIER_CLI]) {
+			try {
+				wp(cmd);
+			} catch {
+				/* absent */
+			}
+		}
 		wp('option update reportedip_hive_data_retention_days 30');
 	});
 
