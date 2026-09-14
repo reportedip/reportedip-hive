@@ -58,6 +58,12 @@ final class ReportedIP_Hive_Readiness {
 	const HOT_OPTIONS = array(
 		'reportedip_hive_api_stats',
 		'reportedip_hive_cache_stats',
+		'reportedip_hive_hide_login_enabled',
+		'reportedip_hive_2fa_frontend_enabled',
+		'reportedip_hive_auto_footer_enabled',
+		'reportedip_hive_operation_mode',
+		'reportedip_hive_wizard_completed',
+		'reportedip_hive_waf_dropin_enabled',
 	);
 
 	/**
@@ -178,6 +184,156 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
+	 * Advisory issues that depend on the signed-in user.
+	 *
+	 * Not part of the cached register: the answer differs per user, and the
+	 * dismissal lives in user meta for the same reason.
+	 *
+	 * @param int $user_id User id.
+	 * @return array<int,array<string,mixed>>
+	 * @since  2.1.57
+	 */
+	public static function user_issues( $user_id ) {
+		$user_id = (int) $user_id;
+		if ( $user_id <= 0 || ! ReportedIP_Hive_Mode_Manager::get_instance()->is_wizard_completed() ) {
+			return array();
+		}
+		$dismissed_until = (int) get_user_meta( $user_id, 'reportedip_hive_next_step_dismissed_own_2fa_missing', true );
+		if ( $dismissed_until > time() ) {
+			return array();
+		}
+		$issue = self::own_2fa_missing(
+			(bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enabled_global', false ),
+			(array) ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user_id )
+		);
+		if ( null === $issue ) {
+			return array();
+		}
+		$issue['dismissable'] = true;
+		return self::with_links( array( $issue ) );
+	}
+
+	/**
+	 * Advisory: Hide Login is off.
+	 *
+	 * @param bool $enabled Option state.
+	 * @return array<string,mixed>|null
+	 * @since  2.1.57
+	 */
+	public static function hide_login_off( $enabled ) {
+		if ( $enabled ) {
+			return null;
+		}
+		return self::issue(
+			'hide_login_off',
+			self::SEV_ADVISORY,
+			__( 'Hide the sign-in page', 'reportedip-hive' ),
+			__( 'Bots look for wp-login.php first. A custom slug takes the page off that list; the normal address answers with the block page.', 'reportedip-hive' )
+		);
+	}
+
+	/**
+	 * Advisory: storefront 2FA is included in the plan but switched off.
+	 *
+	 * @param bool $woocommerce WooCommerce active.
+	 * @param bool $available   `feature_status('frontend_2fa')['available']`.
+	 * @param bool $enabled     Option state.
+	 * @return array<string,mixed>|null
+	 * @since  2.1.57
+	 */
+	public static function frontend_2fa_available( $woocommerce, $available, $enabled ) {
+		if ( ! $woocommerce || ! $available || $enabled ) {
+			return null;
+		}
+		return self::issue(
+			'frontend_2fa_available',
+			self::SEV_ADVISORY,
+			__( 'Storefront 2FA is included in your plan', 'reportedip-hive' ),
+			__( 'Customers and staff who sign in through My Account get the second factor inside your theme. Nothing changes for visitors who never sign in.', 'reportedip-hive' )
+		);
+	}
+
+	/**
+	 * Advisory: the footer badge is off.
+	 *
+	 * @param bool $enabled Option state.
+	 * @return array<string,mixed>|null
+	 * @since  2.1.57
+	 */
+	public static function badge_off( $enabled ) {
+		if ( $enabled ) {
+			return null;
+		}
+		return self::issue(
+			'badge_off',
+			self::SEV_ADVISORY,
+			__( 'Show the protection badge', 'reportedip-hive' ),
+			__( 'A small footer badge tells visitors the site is protected and links to the community network. It is a text line, no tracking.', 'reportedip-hive' )
+		);
+	}
+
+	/**
+	 * Advisory: the pre-WordPress guard could run here but does not.
+	 *
+	 * @param bool $supported Server can take the drop-in (Apache/FPM).
+	 * @param bool $running   Guard answers requests.
+	 * @return array<string,mixed>|null
+	 * @since  2.1.57
+	 */
+	public static function dropin_not_running( $supported, $running ) {
+		if ( ! $supported || $running ) {
+			return null;
+		}
+		return self::issue(
+			'dropin_not_running',
+			self::SEV_ADVISORY,
+			__( 'Switch on Extended Protection', 'reportedip-hive' ),
+			__( 'The guard rejects known-bad requests before WordPress loads. Your server supports it; one click writes the directive.', 'reportedip-hive' )
+		);
+	}
+
+	/**
+	 * Advisory: the site runs Local Shield.
+	 *
+	 * @param string $mode Operation mode.
+	 * @return array<string,mixed>|null
+	 * @since  2.1.57
+	 */
+	public static function community_pending( $mode ) {
+		if ( 'community' === (string) $mode ) {
+			return null;
+		}
+		return self::issue(
+			'community_pending',
+			self::SEV_ADVISORY,
+			__( 'Join the community network', 'reportedip-hive' ),
+			__( 'Local Shield blocks what it sees itself. With a free Community Access Key the site also refuses addresses the network already knows.', 'reportedip-hive' )
+		);
+	}
+
+	/**
+	 * Per-user advisory: 2FA is on for the site, the admin has no method.
+	 *
+	 * Not part of the cached register: the answer differs per user.
+	 *
+	 * @param bool     $twofa_enabled Global 2FA switch.
+	 * @param string[] $methods       The user's enabled methods.
+	 * @return array<string,mixed>|null
+	 * @since  2.1.57
+	 */
+	public static function own_2fa_missing( $twofa_enabled, array $methods ) {
+		if ( ! $twofa_enabled || array() !== $methods ) {
+			return null;
+		}
+		return self::issue(
+			'own_2fa_missing',
+			self::SEV_ADVISORY,
+			__( 'Set up your own second factor', 'reportedip-hive' ),
+			__( 'Two-factor authentication is on for this site, but your account has no method yet. An authenticator app takes two minutes.', 'reportedip-hive' )
+		);
+	}
+
+	/**
 	 * Attach the deep links to a list of issues.
 	 *
 	 * Resolved on read rather than baked into the cache: the cache is
@@ -196,7 +352,9 @@ final class ReportedIP_Hive_Readiness {
 		foreach ( $issues as $issue ) {
 			$key                   = (string) $issue['key'];
 			$target                = $links[ $key ] ?? array( 'reportedip-hive-debug', '' );
-			$issue['settings_url'] = ReportedIP_Hive_Score::url( $target[0], $target[1] );
+			$issue['settings_url'] = 'profile' === $target[0]
+				? admin_url( 'profile.php#reportedip-hive-2fa' )
+				: ReportedIP_Hive_Score::url( $target[0], $target[1] );
 			$issue['doc_url']      = self::doc_url( $key );
 			$linked[]              = $issue;
 		}
@@ -298,6 +456,21 @@ final class ReportedIP_Hive_Readiness {
 				(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 ),
 				(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 )
 			);
+		}
+
+		if ( $mode->is_wizard_completed() ) {
+			$raised[] = self::hide_login_off( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false ) );
+			$raised[] = self::frontend_2fa_available(
+				class_exists( 'WooCommerce' ),
+				! empty( $mode->feature_status( 'frontend_2fa' )['available'] ),
+				(bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_enabled', false )
+			);
+			$raised[] = self::badge_off( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false ) );
+			if ( $main_site ) {
+				$guard    = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+				$raised[] = self::dropin_not_running( (bool) $guard->supports_htaccess(), (bool) $guard->is_running() );
+			}
+			$raised[] = self::community_pending( (string) $mode->get_mode() );
 		}
 
 		$issues = array();
@@ -816,6 +989,12 @@ final class ReportedIP_Hive_Readiness {
 			'crypto_missing'         => array( 'reportedip-hive-protection', 'account_security' ),
 			'queue_failed'           => array( 'reportedip-hive-security', 'api_queue' ),
 			'queue_backlog'          => array( 'reportedip-hive-security', 'api_queue' ),
+			'hide_login_off'         => array( 'reportedip-hive-protection', 'hide_login' ),
+			'frontend_2fa_available' => array( 'reportedip-hive-protection', 'account_security' ),
+			'badge_off'              => array( 'reportedip-hive-protection', 'performance' ),
+			'dropin_not_running'     => array( 'reportedip-hive-tools', 'server' ),
+			'community_pending'      => array( 'reportedip-hive-community', '' ),
+			'own_2fa_missing'        => array( 'profile', '' ),
 		);
 	}
 

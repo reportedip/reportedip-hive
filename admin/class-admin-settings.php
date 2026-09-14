@@ -310,6 +310,11 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 		?>
 		<div class="rip-header__actions">
+			<?php
+			if ( class_exists( 'ReportedIP_Hive_Protection_Page' ) ) {
+				ReportedIP_Hive_Protection_Page::render_expert_toggle();
+			}
+			?>
 			<?php if ( ! empty( $opts['show_mode'] ) ) : ?>
 				<?php self::render_mode_badge(); ?>
 			<?php endif; ?>
