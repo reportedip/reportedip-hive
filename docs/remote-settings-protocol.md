@@ -271,6 +271,18 @@ only when the target value activates the feature:
 A gated write returns `skipped_tier` and does not touch the stored value.
 Disabling a gated feature is always allowed.
 
+## Form-only locks (`ui_lock`)
+
+Some fields belong to a plan feature without being gated by the sanitizer:
+the storefront-2FA slugs and switches (`frontend_2fa`), the attack-response
+thresholds (`hardening_mode`) and the HSTS/CSP details
+(`security_headers_advanced`). Their value is inert while the feature is
+unavailable, so a remote channel may write them on any plan and the drift
+hash stays in sync; only the wp-admin form disables them. The schema carries
+the feature key as `ui_lock` (added without a schema bump, additive). A
+dashboard should show such a field with a plan hint but must not expect
+`skipped_tier` for it.
+
 ## Side effects
 
 Declared per key as tokens, executed once per request on `shutdown` by

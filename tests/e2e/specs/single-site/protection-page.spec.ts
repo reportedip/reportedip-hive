@@ -75,6 +75,61 @@ test.describe('protection page', () => {
 		await expect(page.locator('#blocking .rip-protection__field--locked')).toHaveCount(1);
 	});
 
+	test('a switched-on plan feature stays editable after a downgrade and a locked value survives a save', async ({ page }) => {
+		wp('user meta update admin reportedip_hive_expert_mode 1');
+		wp('option update reportedip_hive_block_tor 1');
+		wp('option update reportedip_hive_permissions_policy "camera=()"');
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.locator('#blocking summary').click();
+		await expect(page.locator('#blocking input[name="reportedip_hive_block_tor"]')).toBeEnabled();
+		await expect(page.locator('#blocking input[name="reportedip_hive_block_tor"]')).toBeChecked();
+		await page.locator('#blocking form button[type="submit"]').click();
+		await page.waitForURL(/#blocking/);
+		expect(wp('option get reportedip_hive_block_tor')).toBe('1');
+
+		await page.locator('#headers').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
+		});
+		await expect(page.locator('#headers input[name="reportedip_hive_permissions_policy"]')).toBeDisabled();
+		await page.locator('#headers form button[type="submit"]').click();
+		await page.waitForURL(/#headers/);
+		expect(wp('option get reportedip_hive_permissions_policy')).toBe('camera=()');
+		wp('option update reportedip_hive_block_tor 0');
+		wp('option delete reportedip_hive_permissions_policy');
+	});
+
+	test('runtime locks and fixed choices render as the old tabs did', async ({ page }) => {
+		wp('user meta update admin reportedip_hive_expert_mode 1');
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.locator('#detection').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
+		});
+		await expect(page.locator('#detection input[name="reportedip_hive_monitor_woocommerce"]')).toBeDisabled();
+		await page.locator('#lockdown').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
+		});
+		const admin = page.locator('#lockdown input[type="checkbox"][name="reportedip_hive_rest_allowed_roles[]"][value="administrator"]');
+		await expect(admin).toBeChecked();
+		await expect(admin).toBeDisabled();
+		await expect(page.locator('#lockdown input[type="hidden"][name="reportedip_hive_rest_allowed_roles[]"][value="administrator"]')).toHaveCount(1);
+		await page.locator('#account_security').evaluate((el) => {
+			(el as HTMLDetailsElement).open = true;
+		});
+		await expect(page.locator('#account_security input[name="reportedip_hive_2fa_allowed_methods[]"][value="sms"]')).toBeDisabled();
+	});
+
+	test('the uninstall switch lives on the tools page and round-trips', async ({ page }) => {
+		wp('option update reportedip_hive_delete_data_on_uninstall 0');
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-tools&tab=data');
+		await page.locator('label.rip-toggle:has(input[type="checkbox"][name="reportedip_hive_delete_data_on_uninstall"])').click();
+		await page.locator('form:has(input[name="reportedip_hive_delete_data_on_uninstall"]) input[type="submit"]').click();
+		await expect.poll(() => wp('option get reportedip_hive_delete_data_on_uninstall'), { timeout: 30_000 }).toBe('1');
+		wp('option update reportedip_hive_delete_data_on_uninstall 0');
+	});
+
 	test('search finds Tor, opens the card and marks the label', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');

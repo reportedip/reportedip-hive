@@ -41,6 +41,24 @@ All changes to ReportedIP Hive are documented here.
   more than 25 users) and rate-limited by the promo manager.
 - **Expert mode is a switch in the page header.** It is stored per person,
   lists the Tools page and shows every field on the Protection page.
+- **The plan locks of the former tabs are back on the Protection page.**
+  A plan-gated field is disabled with the plan marker unless the stored value
+  is inside the free range (registration lists, firewall paranoia) or the
+  switch is currently on, so a feature a plan no longer includes can still be
+  switched off. The storefront-2FA details, the attack-response thresholds
+  and the HSTS/CSP details lock with their feature in the form only; remote
+  channels may still write them, so fleet hashes stay in sync. Runtime locks
+  carry a note: two-factor without libsodium or OpenSSL, the WooCommerce
+  sensor without WooCommerce, Hide Login under its wp-config constant, and
+  wp-admin forced closed while Hide Login is active. The SMS method stays
+  disabled without the relay, `administrator` is fixed in the REST role list
+  and stays disabled in the adaptive policies until the latch opens.
+- **A locked field is never reset by saving its card.** A disabled input is
+  not part of the POST; the save drops hidden and locked keys instead of
+  writing their empty defaults.
+- The uninstall data switch moved to Tools → Data; the attack-response
+  thresholds are edited on the Protection page only, the Tools tab keeps the
+  master switch, the status and the manual buttons.
 
 ### Removed
 

@@ -159,16 +159,13 @@ test.describe('adaptive 2fa policies', () => {
 		await expect(card.locator('input[name="reportedip_hive_2fa_policy_days"]')).toBeVisible();
 	});
 
-	test('the administrator role is dropped on save while the latch is closed', async ({ page }) => {
+	test('the administrator box stays disabled while the latch is closed', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		await openPolicies(page);
 
-		await page.locator(`#twofa_policies input[name="${POLICY_KEY}[]"][value="administrator"]`).check();
-		await page.locator('#twofa_policies form button[type="submit"]').click();
-		await page.waitForURL(/page=reportedip-hive-protection#twofa_policies/);
-
-		expect(wpTolerant('option', 'get', POLICY_KEY)).not.toContain('administrator');
+		await expect(page.locator(`#twofa_policies input[name="${POLICY_KEY}[]"][value="administrator"]`)).toBeDisabled();
+		await expect(page.locator('#twofa_policies')).toContainText('Triggers for administrators unlock');
 	});
 
 	test('ticking a role saves the policy list', async ({ page }) => {
@@ -185,7 +182,7 @@ test.describe('adaptive 2fa policies', () => {
 			.toBe('["editor"]');
 	});
 
-	test('the free plan refuses a policy role list', async ({ page }) => {
+	test('the free plan locks the policy lists and shows the plan marker', async ({ page }) => {
 		wpEval([
 			FORCE_FREE_PHP,
 			"ReportedIP_Hive_Option_Routing::delete(ReportedIP_Hive_Two_Factor_Policies::option_key('new_ip'));",
@@ -196,19 +193,14 @@ test.describe('adaptive 2fa policies', () => {
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		await openPolicies(page);
 
-		// An empty list is allowed on every plan, so the boxes stay enabled and
-		// the marker names the plan; the refusal is server-enforced on save.
-		await expect(page.locator('#twofa_policies .rip-protection__field--locked')).toHaveCount(0);
-		await page.locator(`#twofa_policies input[name="${POLICY_KEY}[]"][value="editor"]`).check();
+		const field = page.locator(`#twofa_policies .rip-protection__field[data-key="${POLICY_KEY}"]`);
+		await expect(field).toHaveClass(/rip-protection__field--locked/);
+		await expect(field.locator('input[type="checkbox"]').first()).toBeDisabled();
+
+		// A locked list is not part of the POST; saving the card leaves it alone.
 		await page.locator('#twofa_policies form button[type="submit"]').click();
 		await page.waitForURL(/page=reportedip-hive-protection#twofa_policies/);
-
-		await expect(page.locator(`#twofa_policies .rip-protection__error[data-for="${POLICY_KEY}"]`)).toContainText(/professional plan/i, {
-			timeout: 60_000,
-		});
-
 		const stored = wpTolerant('option', 'get', POLICY_KEY);
-		expect(stored).not.toContain('editor');
 		expect(['', '[]']).toContain(stored);
 
 		wpEval([
