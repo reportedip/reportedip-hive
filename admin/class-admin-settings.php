@@ -20,28 +20,7 @@ class ReportedIP_Hive_Admin_Settings {
 	private $api_client;
 	private $logger;
 
-	/**
-	 * The instance the bootstrap created.
-	 *
-	 * @var ReportedIP_Hive_Admin_Settings|null
-	 */
-	private static $instance = null;
-
-	/**
-	 * The bootstrap instance (created on demand outside the bootstrap).
-	 *
-	 * @return ReportedIP_Hive_Admin_Settings
-	 * @since  2.1.56
-	 */
-	public static function get_instance() {
-		if ( null === self::$instance ) {
-			self::$instance = new self();
-		}
-		return self::$instance;
-	}
-
 	public function __construct() {
-		self::$instance   = $this;
 		$this->database   = ReportedIP_Hive_Database::get_instance();
 		$this->api_client = ReportedIP_Hive_API::get_instance();
 		$this->logger     = ReportedIP_Hive_Logger::get_instance();
@@ -311,9 +290,7 @@ class ReportedIP_Hive_Admin_Settings {
 		?>
 		<div class="rip-header__actions">
 			<?php
-			if ( class_exists( 'ReportedIP_Hive_Protection_Page' ) ) {
-				ReportedIP_Hive_Protection_Page::render_expert_toggle();
-			}
+			ReportedIP_Hive_Protection_Page::render_expert_toggle();
 			?>
 			<?php if ( ! empty( $opts['show_mode'] ) ) : ?>
 				<?php self::render_mode_badge(); ?>
@@ -994,7 +971,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since  2.1.54
 	 */
 	private function render_news_card( $mode_manager ) {
-		if ( ! $mode_manager->is_community_mode() || ! class_exists( 'ReportedIP_Hive_News_Feed' ) ) {
+		if ( ! $mode_manager->is_community_mode() ) {
 			return;
 		}
 		$items = ReportedIP_Hive_News_Feed::items( 3 );
@@ -1890,9 +1867,7 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 		add_submenu_page( 'reportedip-hive', __( 'Dashboard', 'reportedip-hive' ), __( 'Dashboard', 'reportedip-hive' ), $cap, 'reportedip-hive', array( $this, 'dashboard_page' ) );
 		add_submenu_page( 'reportedip-hive', __( 'Activity', 'reportedip-hive' ), __( 'Activity', 'reportedip-hive' ), $cap, 'reportedip-hive-security', array( $this, 'security_page' ) );
-		add_action( 'admin_head', array( $this, 'point_activity_menu_to_tab' ) );
-		add_filter( 'submenu_file', array( $this, 'highlight_activity_menu' ) );
-		add_submenu_page( 'reportedip-hive', __( 'Protection', 'reportedip-hive' ), __( 'Protection', 'reportedip-hive' ), $cap, ReportedIP_Hive_Protection_Page::PAGE_SLUG, array( ReportedIP_Hive_Protection_Page::instance(), 'render_page' ) );
+		add_submenu_page( 'reportedip-hive', __( 'Protection', 'reportedip-hive' ), __( 'Protection', 'reportedip-hive' ), $cap, ReportedIP_Hive_Protection_Page::PAGE_SLUG, array( 'ReportedIP_Hive_Protection_Page', 'render_page' ) );
 		$tools_parent = ReportedIP_Hive_Protection_Page::is_expert() ? 'reportedip-hive' : '';
 		add_submenu_page( $tools_parent, __( 'Tools', 'reportedip-hive' ), __( 'Tools', 'reportedip-hive' ), $cap, ReportedIP_Hive_Tools_Page::PAGE_SLUG, array( new ReportedIP_Hive_Tools_Page(), 'render_page' ) );
 		add_submenu_page( 'reportedip-hive', __( 'Community & Quota', 'reportedip-hive' ), __( 'Community', 'reportedip-hive' ), $cap, 'reportedip-hive-community', array( $this, 'community_page' ) );
@@ -3663,7 +3638,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 			<div class="rip-dashboard">
 				<?php
-				ReportedIP_Hive_Dashboard_Next_Steps::instance()->render_banner( $this->api_client );
+				ReportedIP_Hive_Dashboard_Next_Steps::render_banner( $this->api_client );
 				$analytics = $this->database->get_threat_analytics( 30 );
 				$layers    = $this->get_active_protection_layers();
 				?>
@@ -3712,7 +3687,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 				<?php $this->render_score_section(); ?>
 
-				<?php ReportedIP_Hive_Dashboard_Next_Steps::instance()->render(); ?>
+				<?php ReportedIP_Hive_Dashboard_Next_Steps::render(); ?>
 
 				<?php
 				if ( $mode_manager->is_community_mode() && $mode_manager->tier_at_least( 'professional' ) ) {
@@ -3860,13 +3835,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * The URL the Activity menu entry points to, with the tab spelled out.
-	 *
-	 * @since 2.1.57
-	 */
-	const ACTIVITY_MENU_URL = 'admin.php?page=reportedip-hive-security&tab=activity';
-
-	/**
 	 * Resolve the Activity page tab and sub-tab from the request.
 	 *
 	 * The three tabs are `activity` (logs, lookup, audit), `ip_lists`
@@ -3963,41 +3931,6 @@ class ReportedIP_Hive_Admin_Settings {
 			esc_html( $title ),
 			esc_html( $text )
 		);
-	}
-
-	/**
-	 * Point the Activity menu entry at the activity tab and keep it
-	 * highlighted while the page is open.
-	 *
-	 * The slug is rewritten on `admin_head`, after core has resolved the
-	 * page hook and the parent menu from the registered slug; rewriting it
-	 * on `admin_menu` would break that resolution and end in a 403.
-	 *
-	 * @return void
-	 * @since  2.1.57
-	 */
-	public function point_activity_menu_to_tab() {
-		global $submenu;
-		if ( empty( $submenu['reportedip-hive'] ) ) {
-			return;
-		}
-		foreach ( $submenu['reportedip-hive'] as $index => $item ) {
-			if ( 'reportedip-hive-security' === $item[2] ) {
-				// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Rewriting our own submenu entry is the point; the page hook stays registered under the plain slug.
-				$submenu['reportedip-hive'][ $index ][2] = self::ACTIVITY_MENU_URL;
-			}
-		}
-	}
-
-	/**
-	 * Filter for `submenu_file`: mark the rewritten Activity entry as current.
-	 *
-	 * @param string|null $submenu_file The submenu file core would highlight.
-	 * @return string|null
-	 * @since  2.1.57
-	 */
-	public function highlight_activity_menu( $submenu_file ) {
-		return 'reportedip-hive-security' === ( $GLOBALS['plugin_page'] ?? '' ) ? self::ACTIVITY_MENU_URL : $submenu_file;
 	}
 
 	/**
@@ -4593,7 +4526,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @return void
 	 * @since  2.1.56
 	 */
-	public function render_uninstall_card() {
+	public static function render_uninstall_card() {
 		?>
 		<div class="rip-card">
 			<div class="rip-card__header"><h2><?php esc_html_e( 'Uninstall behaviour', 'reportedip-hive' ); ?></h2></div>
@@ -4622,7 +4555,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @return void
 	 * @since  2.1.56
 	 */
-	public function render_diagnostics_panel() {
+	public static function render_diagnostics_panel() {
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
@@ -4647,7 +4580,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 *
 	 * @since 1.6.0
 	 */
-	public function render_maintenance_panel() {
+	public static function render_maintenance_panel() {
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
@@ -6675,7 +6608,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @return void
 	 * @since  2.0.8
 	 */
-	public function render_hardening_mode_tab() {
+	public static function render_hardening_mode_tab() {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$status       = $mode_manager->feature_status( 'hardening_mode' );
 		$is_available = ! empty( $status['available'] );

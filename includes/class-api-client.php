@@ -1991,7 +1991,7 @@ class ReportedIP_Hive_API {
 		$stats['avg_response_time'] = $stats['total_calls'] > 0 ?
 			round( $stats['total_response_time'] / $stats['total_calls'], 2 ) : 0;
 
-		$stats = $this->push_recent_call( $stats, self::is_auth_verdict( $error_type ) ? null : $success );
+		$stats = $this->push_recent_call( $stats, in_array( (string) $error_type, array( 'http_401', 'http_403' ), true ) ? null : $success );
 
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_stats', $stats );
 
@@ -2037,23 +2037,6 @@ class ReportedIP_Hive_API {
 				set_transient( 'reportedip_hive_health_warning_logged', time(), HOUR_IN_SECONDS );
 			}
 		}
-	}
-
-	/**
-	 * Whether a failure category is the service refusing the key.
-	 *
-	 * HTTP 401 and 403 mean the request arrived and was answered; the key
-	 * was wrong, revoked or short of permission. That is a configuration
-	 * verdict, not a connectivity sample. An admin pasting a wrong key twice
-	 * during the quickstart must not raise the "community checks are
-	 * failing" issue for the next three hours.
-	 *
-	 * @param string|null $error_type Failure category from track_api_call().
-	 * @return bool
-	 * @since  2.1.57
-	 */
-	private static function is_auth_verdict( $error_type ) {
-		return in_array( (string) $error_type, array( 'http_401', 'http_403' ), true );
 	}
 
 	/**
@@ -2110,7 +2093,7 @@ class ReportedIP_Hive_API {
 	 * @param array     $stats   Stats array being assembled in track_api_call().
 	 * @param bool|null $success Whether the just-tracked call succeeded; null
 	 *                           recomputes the window without adding a sample
-	 *                           (auth verdicts, see is_auth_verdict()).
+	 *                           (auth verdicts: HTTP 401 and 403).
 	 * @return array             Stats array with `recent`, `recent_total` and
 	 *                           `recent_success_rate` populated.
 	 * @since 2.1.18

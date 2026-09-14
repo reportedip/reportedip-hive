@@ -89,32 +89,12 @@ class ReportedIP_Hive_Protection_Page {
 	);
 
 	/**
-	 * The instance the bootstrap created.
-	 *
-	 * @var ReportedIP_Hive_Protection_Page|null
-	 */
-	private static $instance = null;
-
-	/**
 	 * Wire hooks.
 	 */
 	public function __construct() {
-		self::$instance = $this;
 		add_action( 'admin_post_' . self::ACTION_SAVE, array( $this, 'handle_save' ) );
 		add_action( 'admin_post_' . self::ACTION_EXPERT, array( $this, 'handle_expert_toggle' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
-	}
-
-	/**
-	 * The bootstrap instance.
-	 *
-	 * @return ReportedIP_Hive_Protection_Page
-	 */
-	public static function instance() {
-		if ( null === self::$instance ) {
-			self::$instance = new self();
-		}
-		return self::$instance;
 	}
 
 	/**
@@ -185,16 +165,10 @@ class ReportedIP_Hive_Protection_Page {
 				$values[ $key ] = $post[ $key ];
 				continue;
 			}
-			switch ( $entry['kind'] ) {
-				case 'bool':
-					$values[ $key ] = '0';
-					break;
-				case 'json_list':
-					$values[ $key ] = array();
-					break;
-				default:
-					$values[ $key ] = '';
-			}
+			$values[ $key ] = array(
+				'bool'      => '0',
+				'json_list' => array(),
+			)[ $entry['kind'] ] ?? '';
 		}
 		if ( 'detection' === $section && isset( $post[ self::PRESET_FIELD ] ) ) {
 			$presets = ReportedIP_Hive_Defaults::protection_presets();
@@ -324,7 +298,7 @@ class ReportedIP_Hive_Protection_Page {
 		}
 
 		$lock = '';
-		if ( $gated && 'runtime' !== (string) ( $status['reason'] ?? '' ) && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
+		if ( $gated && 'runtime' !== (string) ( $status['reason'] ?? '' ) ) {
 			ob_start();
 			ReportedIP_Hive_Admin_Settings::render_tier_marker( $status );
 			$lock = (string) ob_get_clean();
@@ -400,7 +374,7 @@ class ReportedIP_Hive_Protection_Page {
 	private static function runtime_lock( $key ) {
 		switch ( $key ) {
 			case 'reportedip_hive_2fa_enabled_global':
-				if ( class_exists( 'ReportedIP_Hive_Two_Factor_Crypto' ) && ! ReportedIP_Hive_Two_Factor_Crypto::is_available() ) {
+				if ( ! ReportedIP_Hive_Two_Factor_Crypto::is_available() ) {
 					return self::runtime_status( __( 'Two-factor authentication needs libsodium or OpenSSL to store secrets encrypted; neither is available on this server.', 'reportedip-hive' ) );
 				}
 				return null;
@@ -415,7 +389,7 @@ class ReportedIP_Hive_Protection_Page {
 				}
 				return null;
 			case 'reportedip_hive_block_admin_guests':
-				if ( class_exists( 'ReportedIP_Hive_Option_Routing' ) && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false ) ) {
+				if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false ) ) {
 					$status           = self::runtime_status( __( 'Always on while Hide Login is active; a visible wp-admin would redirect straight to the login URL you just hid.', 'reportedip-hive' ) );
 					$status['forced'] = true;
 					return $status;
@@ -534,7 +508,7 @@ class ReportedIP_Hive_Protection_Page {
 				'sms'      => __( 'SMS code', 'reportedip-hive' ),
 				'webauthn' => __( 'Security key / passkey', 'reportedip-hive' ),
 			);
-		} elseif ( 'roles' === $source && function_exists( 'wp_roles' ) ) {
+		} elseif ( 'roles' === $source ) {
 			$map = array_map( 'strval', wp_roles()->get_names() );
 		}
 		$fixed   = array_map( 'strval', (array) ( $entry['choices_fixed'] ?? array() ) );
@@ -546,7 +520,7 @@ class ReportedIP_Hive_Protection_Page {
 				'fixed'    => in_array( (string) $value, $fixed, true ),
 			);
 		}
-		if ( 'methods' === $source && isset( $choices['sms'] ) && class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+		if ( 'methods' === $source && isset( $choices['sms'] ) ) {
 			$relay = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
 			if ( empty( $relay['available'] ) ) {
 				$choices['sms']['disabled'] = true;
@@ -554,7 +528,7 @@ class ReportedIP_Hive_Protection_Page {
 				$choices['sms']['label'] .= ' ' . sprintf( __( '(%s plan)', 'reportedip-hive' ), ucfirst( (string) ( $relay['min_tier'] ?? 'professional' ) ) );
 			}
 		}
-		if ( 0 === strpos( (string) $key, 'reportedip_hive_2fa_policy_' ) && isset( $choices['administrator'] ) && class_exists( 'ReportedIP_Hive_Login_Context' ) && ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
+		if ( 0 === strpos( (string) $key, 'reportedip_hive_2fa_policy_' ) && isset( $choices['administrator'] ) && ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
 			$choices['administrator']['disabled'] = true;
 		}
 		return $choices;
@@ -571,10 +545,10 @@ class ReportedIP_Hive_Protection_Page {
 			return '';
 		}
 		$notes = array();
-		if ( class_exists( 'ReportedIP_Hive_Login_Context' ) && ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
+		if ( ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
 			$notes[] = __( 'Triggers for administrators become available once an administrator has completed one second-factor sign-in on this site.', 'reportedip-hive' );
 		}
-		if ( 'reportedip_hive_2fa_policy_new_country' === $key && class_exists( 'ReportedIP_Hive_Mode_Manager' ) && empty( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'api_reputation_check' )['available'] ) ) {
+		if ( 'reportedip_hive_2fa_policy_new_country' === $key && empty( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'api_reputation_check' )['available'] ) ) {
 			$notes[] = __( 'Country data comes from the Community Network. In Local Shield the country trigger never fires.', 'reportedip-hive' );
 		}
 		return implode( ' ', $notes );
@@ -679,16 +653,6 @@ class ReportedIP_Hive_Protection_Page {
 			REPORTEDIP_HIVE_VERSION,
 			true
 		);
-		wp_localize_script(
-			'reportedip-hive-protection',
-			'reportedipProtection',
-			array(
-				'expert'    => self::is_expert(),
-				'noResults' => self::is_expert()
-					? __( 'No setting matches.', 'reportedip-hive' )
-					: __( 'No setting matches. Expert mode shows every field.', 'reportedip-hive' ),
-			)
-		);
 	}
 
 	/**
@@ -712,7 +676,7 @@ class ReportedIP_Hive_Protection_Page {
 				<span class="rip-toggle__label"><?php esc_html_e( 'Expert mode', 'reportedip-hive' ); ?></span>
 			</label>
 			<?php $info = __( 'Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows the sixteen day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only.', 'reportedip-hive' ); ?>
-			<span class="rip-expert-toggle__info" tabindex="0" role="img" data-tip="<?php echo esc_attr( $info ); ?>" aria-label="<?php echo esc_attr( $info ); ?>">
+			<span class="rip-expert-toggle__info" tabindex="0" title="<?php echo esc_attr( $info ); ?>">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
 			</span>
 			<noscript><button type="submit" class="rip-button rip-button--ghost rip-button--sm"><?php esc_html_e( 'Apply', 'reportedip-hive' ); ?></button></noscript>
@@ -725,7 +689,7 @@ class ReportedIP_Hive_Protection_Page {
 	 *
 	 * @return void
 	 */
-	public function render_page() {
+	public static function render_page() {
 		$expert  = self::is_expert();
 		$current = ReportedIP_Hive_Settings_Registry::current_values();
 		$user_id = get_current_user_id();
@@ -741,10 +705,10 @@ class ReportedIP_Hive_Protection_Page {
 			$expert ? __( 'Every setting, grouped by area', 'reportedip-hive' ) : __( 'The settings that matter day to day; everything else runs on the recommendation', 'reportedip-hive' )
 		);
 		?>
-		<div class="rip-content rip-protection" data-expert="<?php echo $expert ? '1' : '0'; ?>">
+		<div class="rip-content rip-protection">
 			<div class="rip-protection__search">
 				<input type="search" id="rip-protection-search" class="rip-input" placeholder="<?php esc_attr_e( 'Search settings, e.g. Tor, HSTS, retention', 'reportedip-hive' ); ?>" autocomplete="off" />
-				<p class="rip-help-text rip-protection__no-results rip-hidden" id="rip-protection-no-results"></p>
+				<p class="rip-help-text rip-protection__no-results rip-hidden" id="rip-protection-no-results"><?php echo esc_html( $expert ? __( 'No setting matches.', 'reportedip-hive' ) : __( 'No setting matches. Expert mode shows every field.', 'reportedip-hive' ) ); ?></p>
 			</div>
 			<?php if ( ! empty( $result['section'] ) && isset( $result['applied'] ) ) : ?>
 				<div class="rip-alert <?php echo empty( $result['errors'] ) ? 'rip-alert--success' : 'rip-alert--warning'; ?>">
@@ -766,7 +730,7 @@ class ReportedIP_Hive_Protection_Page {
 				$errors      = ( isset( $result['section'] ) && $result['section'] === $section && ! empty( $result['errors'] ) ) ? $result['errors'] : array();
 				$open        = isset( $result['section'] ) && $result['section'] === $section;
 				?>
-				<details class="rip-card rip-protection__section" id="<?php echo esc_attr( $section ); ?>" data-section="<?php echo esc_attr( $section ); ?>" <?php echo $open ? 'open' : ''; ?>>
+				<details class="rip-card rip-protection__section" id="<?php echo esc_attr( $section ); ?>" <?php echo $open ? 'open' : ''; ?>>
 					<summary class="rip-protection__summary">
 						<span class="rip-protection__title"><?php echo esc_html( (string) $meta['label'] ); ?></span>
 						<span class="rip-protection__desc"><?php echo esc_html( (string) $meta['description'] ); ?></span>
@@ -781,7 +745,7 @@ class ReportedIP_Hive_Protection_Page {
 								<input type="hidden" name="rip_section" value="<?php echo esc_attr( $section ); ?>" />
 								<?php wp_nonce_field( self::NONCE ); ?>
 								<?php if ( 'detection' === $section ) : ?>
-									<?php $this->render_preset_field( self::current_preset( $current ) ); ?>
+									<?php self::render_preset_field( self::current_preset( $current ) ); ?>
 								<?php endif; ?>
 								<?php foreach ( $keys as $key ) : ?>
 									<?php
@@ -799,7 +763,7 @@ class ReportedIP_Hive_Protection_Page {
 								<?php endforeach; ?>
 								<div class="rip-card__footer rip-protection__footer">
 									<button type="submit" class="rip-button rip-button--primary"><?php esc_html_e( 'Save', 'reportedip-hive' ); ?></button>
-									<?php $this->render_section_tools_link( $section, $tools_url ); ?>
+									<?php self::render_section_tools_link( $section, $tools_url ); ?>
 								</div>
 							</form>
 						<?php endif; ?>
@@ -817,7 +781,7 @@ class ReportedIP_Hive_Protection_Page {
 	 * @param string $current Current preset id.
 	 * @return void
 	 */
-	private function render_preset_field( $current ) {
+	private static function render_preset_field( $current ) {
 		$levels = self::preset_labels();
 		unset( $levels['custom'] );
 		?>
@@ -846,7 +810,7 @@ class ReportedIP_Hive_Protection_Page {
 	 * @param string $tools_url Tools page URL.
 	 * @return void
 	 */
-	private function render_section_tools_link( $section, $tools_url ) {
+	private static function render_section_tools_link( $section, $tools_url ) {
 		$links = array(
 			'waf'            => array( 'rules', __( 'Manage rules and exceptions', 'reportedip-hive' ) ),
 			'headers'        => array( 'server', __( 'Server setup', 'reportedip-hive' ) ),

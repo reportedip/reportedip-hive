@@ -50,30 +50,10 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	const META_DISMISSED_OWN_2FA = 'reportedip_hive_next_step_dismissed_own_2fa_missing';
 
 	/**
-	 * The instance the bootstrap created.
-	 *
-	 * @var ReportedIP_Hive_Dashboard_Next_Steps|null
-	 */
-	private static $instance = null;
-
-	/**
 	 * Wire hooks.
 	 */
 	public function __construct() {
-		self::$instance = $this;
 		add_action( 'admin_post_' . self::ACTION_STEP, array( $this, 'handle_next_step' ) );
-	}
-
-	/**
-	 * The bootstrap instance.
-	 *
-	 * @return ReportedIP_Hive_Dashboard_Next_Steps
-	 */
-	public static function instance() {
-		if ( null === self::$instance ) {
-			self::$instance = new self();
-		}
-		return self::$instance;
 	}
 
 	/**
@@ -254,7 +234,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 * @return array{woocommerce:bool,multisite:bool,users:int}
 	 */
 	public static function signals() {
-		$counts = function_exists( 'count_users' ) ? count_users() : array( 'total_users' => 0 );
+		$counts = count_users();
 		return array(
 			'woocommerce' => class_exists( 'WooCommerce' ),
 			'multisite'   => is_multisite(),
@@ -274,7 +254,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 * @param ReportedIP_Hive_API $api API client.
 	 * @return void
 	 */
-	public function render_banner( $api ) {
+	public static function render_banner( $api ) {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		if ( ! $mode_manager->is_wizard_completed() ) {
 			return;
@@ -354,7 +334,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 *
 	 * @return void
 	 */
-	public function render() {
+	public static function render() {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		if ( ! $mode_manager->is_wizard_completed() ) {
 			return;
@@ -371,9 +351,9 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			<div class="rip-alert <?php echo ! empty( $result['ok'] ) ? 'rip-alert--success' : 'rip-alert--error'; ?>"><?php echo esc_html( (string) $result['message'] ); ?></div>
 		<?php endif; ?>
 		<?php
-		$this->render_next_steps( $current, $user_id );
-		$this->render_area_rows( $current, $protection_url );
-		$this->render_upsell( $tier );
+		self::render_next_steps( $current, $user_id );
+		self::render_area_rows( $current, $protection_url );
+		self::render_upsell( $tier );
 	}
 
 	/**
@@ -383,7 +363,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 * @param int                 $user_id Current user.
 	 * @return void
 	 */
-	private function render_next_steps( array $current, $user_id ) {
+	private static function render_next_steps( array $current, $user_id ) {
 		$actions = self::step_actions();
 		$issues  = ReportedIP_Hive_Readiness::user_issues( $user_id );
 		foreach ( ReportedIP_Hive_Readiness::open_issues() as $issue ) {
@@ -447,16 +427,13 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 * @param string              $protection_url Protection page URL.
 	 * @return void
 	 */
-	private function render_area_rows( array $current, $protection_url ) {
-		$potential = array();
-		if ( class_exists( 'ReportedIP_Hive_Score' ) ) {
-			$potential = self::score_potential(
-				array_merge(
-					(array) ( ReportedIP_Hive_Score::detection_score()['items'] ?? array() ),
-					(array) ( ReportedIP_Hive_Score::hardening_score()['items'] ?? array() )
-				)
-			);
-		}
+	private static function render_area_rows( array $current, $protection_url ) {
+		$potential = self::score_potential(
+			array_merge(
+				(array) ( ReportedIP_Hive_Score::detection_score()['items'] ?? array() ),
+				(array) ( ReportedIP_Hive_Score::hardening_score()['items'] ?? array() )
+			)
+		);
 		?>
 		<details class="rip-card rip-areas">
 			<summary class="rip-areas__summary">
@@ -496,13 +473,13 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 * @param string $tier Tier key.
 	 * @return void
 	 */
-	private function render_upsell( $tier ) {
+	private static function render_upsell( $tier ) {
 		$key = self::choose_upsell( $tier, self::signals() );
 		if ( null === $key || ! ReportedIP_Hive_Promo_Manager::can_show( $key ) ) {
 			return;
 		}
 		$cards = array(
-			ReportedIP_Hive_Promo_Manager::KEY_MAIL_SMS_RELAY  => array(
+			ReportedIP_Hive_Promo_Manager::KEY_MAIL_SMS_RELAY => array(
 				'tier'  => 'professional',
 				'title' => __( '2FA codes that arrive', 'reportedip-hive' ),
 				'text'  => __( 'Professional sends the e-mail and SMS codes through the managed relay: 500 mails and 25 SMS a month, no Twilio account, and a sender reputation we maintain. From 4.97 € per domain for three sites.', 'reportedip-hive' ),
@@ -517,14 +494,14 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 				'title' => __( 'Built for shops, networks and teams', 'reportedip-hive' ),
 				'text'  => __( 'Business adds the audit trail, account blocking with session control, white-label 2FA pages and mails, and 15 domains under one licence.', 'reportedip-hive' ),
 			),
-			ReportedIP_Hive_Promo_Manager::KEY_REFERRAL        => array(
+			ReportedIP_Hive_Promo_Manager::KEY_REFERRAL => array(
 				'tier'  => '',
 				'title' => __( 'Recommend Hive, get a month back', 'reportedip-hive' ),
 				'text'  => __( 'Every customer you refer credits your account with one monthly fee of your plan. The link is on the Community page.', 'reportedip-hive' ),
 			),
 		);
-		$card = $cards[ $key ];
-		$href = ReportedIP_Hive_Promo_Manager::KEY_REFERRAL === $key
+		$card  = $cards[ $key ];
+		$href  = ReportedIP_Hive_Promo_Manager::KEY_REFERRAL === $key
 			? ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-community&tab=community' )
 			: add_query_arg(
 				array(

@@ -12,7 +12,6 @@
 (function () {
 	'use strict';
 
-	var cfg = window.reportedipProtection || {};
 	var input = document.getElementById('rip-protection-search');
 	var empty = document.getElementById('rip-protection-no-results');
 	if (!input) {
@@ -66,7 +65,6 @@
 		});
 		if (empty) {
 			empty.classList.toggle('rip-hidden', !term || hits > 0);
-			empty.textContent = cfg.noResults || '';
 		}
 	}
 

@@ -258,8 +258,7 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 				'<input type="search" id="rip-whitelist-search" name="s" class="rip-input" value="%s" placeholder="%s" />',
 				esc_attr( $search ),
 				esc_attr__( 'IP address or reason', 'reportedip-hive' )
-			),
-			true
+			)
 		);
 		?>
 		<div class="rip-filter-bar__field">

@@ -252,7 +252,7 @@ class ReportedIP_Hive_Option_Routing_Extended_Multisite_Test extends WP_UnitTest
 			'reportedip_hive_2fa_enforce_roles',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => array( 'ReportedIP_Hive_Two_Factor_Admin', 'sanitize_enforce_roles' ),
+				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_enforce_roles' ),
 			)
 		);
 

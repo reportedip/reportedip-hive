@@ -610,32 +610,6 @@ a.rip-2fa-challenge__method-tab:focus {
 	color: var(--rip-gray-400, #9CA3AF);
 }
 
-/* Admin Warnings */
-.rip-2fa-warning {
-	display: flex;
-	align-items: flex-start;
-	gap: var(--rip-space-3, 0.75rem);
-	padding: var(--rip-space-4, 1rem);
-	border-radius: var(--rip-radius, 6px);
-	margin-bottom: var(--rip-space-4, 1rem);
-}
-
-.rip-2fa-warning--low {
-	background: var(--rip-warning-bg, rgba(245, 158, 11, 0.1));
-	color: #92400E;
-}
-
-.rip-2fa-warning--critical {
-	background: var(--rip-danger-bg, rgba(239, 68, 68, 0.1));
-	color: #991B1B;
-}
-
-.rip-2fa-warning__icon {
-	flex-shrink: 0;
-	width: 20px;
-	height: 20px;
-}
-
 /* ==========================================================================
    Responsive
    ========================================================================== */
@@ -1006,71 +980,6 @@ body.rip-2fa-onboarding .rip-wizard__step-connector {
 	background: var(--rip-gray-200, #E5E7EB);
 }
 
-/* Feature cards on the welcome screen. */
-body.rip-2fa-onboarding .rip-wizard__features {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-	gap: var(--rip-space-4, 1rem);
-	align-items: stretch;
-}
-
-body.rip-2fa-onboarding .rip-wizard__feature {
-	background: #fff;
-	border: 1px solid var(--rip-gray-200, #E5E7EB);
-	border-radius: var(--rip-radius-lg, 8px);
-	box-shadow: var(--rip-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
-	display: flex;
-	gap: var(--rip-space-4, 1rem);
-	align-items: flex-start;
-	padding: var(--rip-space-5, 1.25rem);
-	transition: var(--rip-transition, all 0.15s ease);
-}
-
-body.rip-2fa-onboarding .rip-wizard__feature:hover {
-	border-color: var(--rip-primary-light, #818CF8);
-	box-shadow: var(--rip-shadow-md, 0 4px 6px rgba(0, 0, 0, 0.08));
-	transform: translateY(-1px);
-}
-
-body.rip-2fa-onboarding .rip-wizard__feature-icon {
-	flex: 0 0 auto;
-	width: 48px;
-	height: 48px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	background: var(--rip-gradient-primary, linear-gradient(135deg, #4F46E5, #7C3AED));
-	color: #fff;
-	border-radius: var(--rip-radius-lg, 8px);
-	box-shadow: 0 4px 12px var(--rip-primary-100, rgba(79, 70, 229, 0.2));
-}
-
-body.rip-2fa-onboarding .rip-wizard__feature-icon svg {
-	width: 24px;
-	height: 24px;
-	stroke: currentColor;
-}
-
-body.rip-2fa-onboarding .rip-wizard__feature-text {
-	flex: 1 1 auto;
-	min-width: 0;
-}
-
-body.rip-2fa-onboarding .rip-wizard__feature-text h3 {
-	color: var(--rip-gray-900, #111827);
-	margin: 0 0 var(--rip-space-2, 0.5rem);
-	font-size: var(--rip-text-base, 1rem);
-	font-weight: 600;
-	line-height: 1.3;
-}
-
-body.rip-2fa-onboarding .rip-wizard__feature-text p {
-	color: var(--rip-gray-600, #4B5563);
-	margin: 0;
-	font-size: var(--rip-text-sm, 0.875rem);
-	line-height: 1.5;
-}
-
 /* Method selector cards, cheerful white with primary highlight when picked. */
 body.rip-2fa-onboarding .rip-wizard__mode-cards {
 	background: transparent;
@@ -1240,10 +1149,6 @@ body.rip-2fa-onboarding .rip-2fa-setup-panel {
 	box-shadow: var(--rip-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
 }
 
-body.rip-2fa-onboarding .rip-wizard__welcome {
-	background: transparent;
-}
-
 /* Recovery codes stay dark for readability, but the surrounding area is light. */
 body.rip-2fa-onboarding .rip-2fa-recovery-grid {
 	background: var(--rip-gray-900, #111827);
@@ -1409,41 +1314,7 @@ body.rip-2fa-onboarding .rip-button--success {
 	100% { transform: scale(1) rotate(0); }
 }
 
-/* Confetti, CSS-only, no JS. Dezent, 12 Partikel in Primary/Success-Farben. */
-.rip-2fa-confetti {
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-	overflow: hidden;
-}
 
-.rip-2fa-confetti span {
-	position: absolute;
-	top: -20px;
-	width: 10px;
-	height: 14px;
-	opacity: 0;
-	animation: rip-confetti 3s cubic-bezier(0.25, 0.6, 0.75, 1) forwards;
-}
-
-.rip-2fa-confetti span:nth-child(1)  { left:  8%; background: #4F46E5; animation-delay: 0.10s; transform: rotate(15deg); }
-.rip-2fa-confetti span:nth-child(2)  { left: 17%; background: #10B981; animation-delay: 0.25s; border-radius: 50%; }
-.rip-2fa-confetti span:nth-child(3)  { left: 26%; background: #F59E0B; animation-delay: 0.00s; transform: rotate(-20deg); }
-.rip-2fa-confetti span:nth-child(4)  { left: 35%; background: #7C3AED; animation-delay: 0.45s; }
-.rip-2fa-confetti span:nth-child(5)  { left: 44%; background: #818CF8; animation-delay: 0.15s; border-radius: 50%; }
-.rip-2fa-confetti span:nth-child(6)  { left: 53%; background: #10B981; animation-delay: 0.30s; transform: rotate(45deg); }
-.rip-2fa-confetti span:nth-child(7)  { left: 62%; background: #4F46E5; animation-delay: 0.05s; }
-.rip-2fa-confetti span:nth-child(8)  { left: 71%; background: #F59E0B; animation-delay: 0.35s; border-radius: 50%; }
-.rip-2fa-confetti span:nth-child(9)  { left: 80%; background: #7C3AED; animation-delay: 0.20s; transform: rotate(-30deg); }
-.rip-2fa-confetti span:nth-child(10) { left: 89%; background: #14B8A6; animation-delay: 0.40s; }
-.rip-2fa-confetti span:nth-child(11) { left: 48%; background: #EF4444; animation-delay: 0.55s; border-radius: 50%; }
-.rip-2fa-confetti span:nth-child(12) { left: 58%; background: #3B82F6; animation-delay: 0.15s; transform: rotate(-10deg); }
-
-@keyframes rip-confetti {
-	0%   { transform: translateY(0) rotate(0); opacity: 0; }
-	10%  { opacity: 1; }
-	100% { transform: translateY(420px) rotate(540deg); opacity: 0; }
-}
 
 .rip-2fa-celebrate__stats {
 	display: grid;
@@ -1600,8 +1471,7 @@ body.login .rip-2fa-login-attribution a:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.rip-2fa-celebrate__badge,
-	.rip-2fa-confetti span {
+	.rip-2fa-celebrate__badge {
 		animation: none;
 		opacity: 1;
 	}

@@ -869,42 +869,6 @@ button.rip-tier-lock--mode:hover {
     color: var(--rip-gray-700);
 }
 
-.rip-waf-jump {
-    position: sticky;
-    top: var(--rip-space-8);
-    z-index: 20;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--rip-space-2);
-    margin-bottom: var(--rip-space-5);
-    padding: var(--rip-space-2) var(--rip-space-3);
-    background: var(--rip-gray-50);
-    border: 1px solid var(--rip-gray-200);
-}
-
-.rip-waf-jump__label {
-    font-size: var(--rip-text-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--rip-gray-500);
-}
-
-.rip-waf-jump__link {
-    font-size: var(--rip-text-sm);
-    font-weight: 600;
-    color: var(--rip-primary);
-    text-decoration: none;
-    padding: var(--rip-space-1) var(--rip-space-2);
-}
-
-.rip-waf-jump__link:hover,
-.rip-waf-jump__link:focus {
-    color: var(--rip-primary-dark);
-    background: var(--rip-gray-100);
-}
-
 #rip-waf-engine,
 #rip-waf-dropin,
 #rip-waf-exceptions {
@@ -1186,16 +1150,7 @@ button.rip-tier-lock--mode:hover {
     gap: var(--rip-space-2);
 }
 
-/* ==========================================================================
-   Tabs
-   ========================================================================== */
 
-.rip-tabs {
-    display: flex;
-    gap: 0;
-    border-bottom: 2px solid var(--rip-gray-200);
-    margin-bottom: var(--rip-space-5);
-}
 
 .rip-tab {
     display: inline-flex;
@@ -1219,32 +1174,9 @@ button.rip-tier-lock--mode:hover {
     color: var(--rip-gray-700);
 }
 
-.rip-tab--active {
-    color: var(--rip-primary);
-    border-bottom: 2px solid var(--rip-primary);
-}
-
 .rip-tab svg {
     width: 1rem;
     height: 1rem;
-}
-
-.rip-tab__count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    background: var(--rip-gray-100);
-    border-radius: var(--rip-radius-full);
-    font-size: var(--rip-text-xs);
-    font-weight: 600;
-}
-
-.rip-tab--active .rip-tab__count {
-    background: var(--rip-primary-100);
-    color: var(--rip-primary);
 }
 
 /* ==========================================================================
@@ -1744,8 +1676,6 @@ button.rip-tier-lock--mode:hover {
 }
 .rip-toggle--inline .rip-toggle__label {
     margin-left: var(--rip-space-2);
-    font-size: var(--rip-text-sm);
-    color: var(--rip-gray-700);
 }
 .rip-expert-toggle .rip-toggle__label {
     color: #fff;
@@ -1782,52 +1712,6 @@ button.rip-tier-lock--mode:hover {
     color: #fff;
     outline: none;
 }
-.rip-expert-toggle__info::after {
-    content: attr(data-tip);
-    position: absolute;
-    top: calc(100% + 10px);
-    right: -12px;
-    width: 300px;
-    padding: var(--rip-space-3) var(--rip-space-4);
-    background: var(--rip-gray-900);
-    color: #fff;
-    font-size: var(--rip-text-sm);
-    font-weight: 400;
-    line-height: 1.5;
-    text-align: left;
-    text-transform: none;
-    letter-spacing: 0;
-    border-radius: var(--rip-radius);
-    box-shadow: var(--rip-shadow-lg);
-    z-index: var(--rip-z-tooltip);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-4px);
-    transition: var(--rip-transition);
-    pointer-events: none;
-}
-.rip-expert-toggle__info::before {
-    content: '';
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 3px;
-    border: 6px solid transparent;
-    border-bottom-color: var(--rip-gray-900);
-    z-index: var(--rip-z-tooltip);
-    opacity: 0;
-    visibility: hidden;
-    transition: var(--rip-transition);
-}
-.rip-expert-toggle__info:hover::after,
-.rip-expert-toggle__info:hover::before,
-.rip-expert-toggle__info:focus-visible::after,
-.rip-expert-toggle__info:focus-visible::before,
-.rip-expert-toggle__info:focus::after,
-.rip-expert-toggle__info:focus::before {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-}
 
 /* ==========================================================================
    Settings Sections
@@ -1856,19 +1740,6 @@ button.rip-tier-lock--mode:hover {
     width: 20px;
     height: 20px;
     color: var(--rip-primary);
-}
-
-.rip-settings-subsection__title {
-    margin: var(--rip-space-4) 0 var(--rip-space-1);
-    font-size: var(--rip-text-base);
-    font-weight: 600;
-    color: var(--rip-gray-900);
-}
-
-.rip-settings-subsection__title .rip-required {
-    margin-left: var(--rip-space-1);
-    color: var(--rip-warning);
-    font-weight: 700;
 }
 
 .rip-settings-section__desc {
@@ -2168,11 +2039,6 @@ button.rip-tier-lock--mode:hover {
         grid-template-columns: 1fr;
     }
 
-    .rip-tabs {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
     .rip-grid-cols-2,
     .rip-grid-cols-3,
     .rip-grid-cols-4 {
@@ -2304,15 +2170,6 @@ button.rip-tier-lock--mode:hover {
     color: var(--rip-gray-900);
 }
 
-.rip-health-status {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--rip-gray-500);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 /**
  * Inline status pill, used inside health cards next to the message text and
  * anywhere else a short "operational/warning/error" badge is helpful.
@@ -2346,66 +2203,6 @@ button.rip-tier-lock--mode:hover {
 .rip-status-pill--danger {
     background: var(--rip-danger-bg);
     color: var(--rip-danger);
-}
-
-/**
- * Decision-flow card, numbered explanation steps for "How blocking decides"
- * and similar policy-explainer panels.
- */
-.rip-decision-flow {
-    padding: var(--rip-space-4);
-    border-left: 3px solid var(--rip-primary);
-    background: var(--rip-gray-50);
-}
-
-.rip-decision-flow__title {
-    margin: 0 0 var(--rip-space-3) 0;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--rip-gray-900);
-}
-
-.rip-decision-flow__steps {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.rip-decision-flow__steps li {
-    display: flex;
-    gap: var(--rip-space-3);
-    padding: var(--rip-space-3) 0;
-    border-bottom: 1px solid var(--rip-gray-200);
-}
-
-.rip-decision-flow__steps li:last-child {
-    border-bottom: 0;
-}
-
-.rip-decision-flow__num {
-    flex-shrink: 0;
-    width: 26px;
-    height: 26px;
-    border-radius: var(--rip-radius-full);
-    background: var(--rip-primary);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-}
-
-.rip-decision-flow__steps li > div p {
-    margin: 0.25rem 0 0 0;
-    color: var(--rip-gray-600);
-    font-size: 0.85rem;
-    line-height: 1.5;
-}
-
-.rip-decision-flow__steps li > div strong {
-    color: var(--rip-gray-900);
 }
 
 /**
@@ -2479,31 +2276,6 @@ button.rip-tier-lock--mode:hover {
     color: var(--rip-gray-700);
     font-size: 0.9rem;
     line-height: 1.6;
-}
-
-.rip-health-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--rip-radius-full);
-    flex-shrink: 0;
-}
-
-.rip-health-indicator--success {
-    background: var(--rip-success-bg);
-    color: var(--rip-success);
-}
-
-.rip-health-indicator--warning {
-    background: var(--rip-warning-bg);
-    color: var(--rip-warning);
-}
-
-.rip-health-indicator--danger {
-    background: var(--rip-danger-bg);
-    color: var(--rip-danger);
 }
 
 /* Info Grid */
@@ -2736,94 +2508,6 @@ button.rip-tier-lock--mode:hover {
 }
 
 /* ==========================================================================
-   Info Box Component
-   ========================================================================== */
-
-.rip-info-box {
-    background: var(--rip-info-bg);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: var(--rip-radius-lg);
-    padding: var(--rip-space-4);
-    margin-bottom: var(--rip-space-5);
-}
-
-.rip-info-box__header {
-    display: flex;
-    align-items: center;
-    gap: var(--rip-space-2);
-    margin-bottom: var(--rip-space-3);
-}
-
-.rip-info-box__header svg {
-    width: 20px;
-    height: 20px;
-    color: var(--rip-info);
-}
-
-.rip-info-box__header h3 {
-    margin: 0;
-    font-size: var(--rip-text-base);
-    font-weight: 600;
-    color: var(--rip-gray-900);
-}
-
-.rip-info-box__content {
-    color: var(--rip-gray-700);
-    font-size: var(--rip-text-sm);
-}
-
-.rip-info-box__content p {
-    margin: 0 0 var(--rip-space-2) 0;
-}
-
-.rip-info-box__content ul {
-    margin: 0;
-    padding-left: var(--rip-space-5);
-}
-
-.rip-info-box__content li {
-    margin-bottom: var(--rip-space-1);
-}
-
-/* ==========================================================================
-   Tip Cards Grid
-   ========================================================================== */
-
-.rip-tips-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--rip-space-4);
-    margin-top: var(--rip-space-4);
-}
-
-.rip-tip-card {
-    background: var(--rip-gray-50);
-    border: 1px solid var(--rip-gray-200);
-    border-radius: var(--rip-radius-lg);
-    padding: var(--rip-space-4);
-    transition: var(--rip-transition);
-}
-
-.rip-tip-card:hover {
-    border-color: var(--rip-primary-light);
-    box-shadow: var(--rip-shadow-sm);
-}
-
-.rip-tip-card__title {
-    font-size: var(--rip-text-sm);
-    font-weight: 600;
-    color: var(--rip-gray-900);
-    margin: 0 0 var(--rip-space-2) 0;
-}
-
-.rip-tip-card__text {
-    font-size: var(--rip-text-sm);
-    color: var(--rip-gray-600);
-    margin: 0;
-    line-height: 1.5;
-}
-
-/* ==========================================================================
    Cache Info Component
    ========================================================================== */
 
@@ -2853,38 +2537,6 @@ button.rip-tier-lock--mode:hover {
 .rip-cache-info__value {
     color: var(--rip-gray-900);
     font-family: var(--rip-font-mono);
-}
-
-/* ==========================================================================
-   Section Header
-   ========================================================================== */
-
-.rip-section-header {
-    display: flex;
-    align-items: center;
-    gap: var(--rip-space-2);
-    margin: var(--rip-space-6) 0 var(--rip-space-4) 0;
-    padding-bottom: var(--rip-space-3);
-    border-bottom: 1px solid var(--rip-gray-200);
-}
-
-.rip-section-header svg {
-    width: 20px;
-    height: 20px;
-    color: var(--rip-primary);
-}
-
-.rip-section-header h3 {
-    margin: 0;
-    font-size: var(--rip-text-base);
-    font-weight: 600;
-    color: var(--rip-gray-900);
-}
-
-@media (max-width: 782px) {
-    .rip-tips-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* ==========================================================================

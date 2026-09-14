@@ -23,6 +23,15 @@ All changes to ReportedIP Hive are documented here.
 
 ### Changed
 
+- **Leftovers of the retired pages removed.** About 1,300 lines of
+  stylesheet rules for the old Settings, Firewall and wizard screens, the
+  SMS provider section and its test-SMS handler, four unused sanitizers of
+  the 2FA admin, two dead handlers in the firewall script and the
+  activity-menu rewrite that core already handles. The allowed-methods and
+  enforced-roles options now run through the registry sanitizer like every
+  other key instead of reading form checkboxes on every write. The expert
+  switch explains itself through a native tooltip.
+
 - **One status line on the dashboard.** The green "Community API connected,
   N of M reports remaining" strip above the stat cards is gone; the daily
   report quota stays on the Community page where it is explained. The

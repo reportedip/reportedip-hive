@@ -944,7 +944,6 @@ class ReportedIP_Hive {
 					'prompt_block_reason'                => __( 'Enter reason for blocking this IP:', 'reportedip-hive' ),
 					'prompt_block_default'               => __( 'Blocked from security logs', 'reportedip-hive' ),
 					'prompt_export_days'                 => __( 'Export logs from how many days? (default: 30)', 'reportedip-hive' ),
-					'db_connection_ok'                   => __( 'Database connection successful!', 'reportedip-hive' ),
 					'request_failed'                     => __( 'Request failed. Check server logs.', 'reportedip-hive' ),
 					'test_mail_sending'                  => __( 'Sending...', 'reportedip-hive' ),
 					'test_mail_failed'                   => __( 'Test email failed.', 'reportedip-hive' ),

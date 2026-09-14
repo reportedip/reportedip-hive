@@ -256,19 +256,6 @@ class ReportedIP_Hive_Quickstart {
 	}
 
 	/**
-	 * Whether the Business teaser is worth showing to a Professional site.
-	 *
-	 * @return bool
-	 */
-	private function business_signal() {
-		if ( class_exists( 'WooCommerce' ) || is_multisite() ) {
-			return true;
-		}
-		$counts = count_users();
-		return (int) ( $counts['total_users'] ?? 0 ) > 25;
-	}
-
-	/**
 	 * Render the standalone page.
 	 *
 	 * @return void
@@ -511,7 +498,7 @@ class ReportedIP_Hive_Quickstart {
 				__( '500 2FA mails a month from our EU relay, not your shared host', 'reportedip-hive' ),
 				__( 'Covers 3 sites at 4.97 EUR each per month, 90 days of logs', 'reportedip-hive' ),
 			);
-		} elseif ( 'professional' === $tier && $this->business_signal() ) {
+		} elseif ( 'professional' === $tier && ReportedIP_Hive_Dashboard_Next_Steps::business_signal( ReportedIP_Hive_Dashboard_Next_Steps::signals() ) ) {
 			$badge = 'business';
 			$title = __( 'One licence, every client site', 'reportedip-hive' );
 			$items = array(
@@ -747,9 +734,6 @@ class ReportedIP_Hive_Quickstart {
 	 * @return void
 	 */
 	private function disarm_onboarding() {
-		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) {
-			return;
-		}
 		delete_transient( ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_PREFIX . get_current_user_id() );
 	}
 

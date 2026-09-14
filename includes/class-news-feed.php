@@ -65,10 +65,6 @@ class ReportedIP_Hive_News_Feed {
 		if ( get_site_transient( self::ERROR_TRANSIENT ) ) {
 			return array();
 		}
-		if ( ! function_exists( 'fetch_feed' ) ) {
-			include_once ABSPATH . WPINC . '/feed.php';
-		}
-
 		add_action( 'wp_feed_options', array( __CLASS__, 'shorten_timeout' ) );
 		$feed = fetch_feed( self::url_for_locale( get_user_locale() ) );
 		remove_action( 'wp_feed_options', array( __CLASS__, 'shorten_timeout' ) );

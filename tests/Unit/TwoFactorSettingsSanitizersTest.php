@@ -71,65 +71,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 	 */
 	class TwoFactorSettingsSanitizersTest extends TestCase {
 
-		/**
-		 * Reset the POST superglobal so checkbox detection starts clean.
-		 */
-		protected function set_up() {
-			parent::set_up();
-			$_POST = array();
-		}
-
-		/**
-		 * Restore the POST superglobal.
-		 */
-		protected function tear_down() {
-			$_POST = array();
-			parent::tear_down();
-		}
-
-		public function test_wizard_json_methods_pass_through_unchanged() {
-			$out = \ReportedIP_Hive_Two_Factor_Admin::sanitize_allowed_methods( '["totp","webauthn","email"]' );
-			$this->assertSame( array( 'totp', 'webauthn', 'email' ), json_decode( $out, true ) );
-		}
-
-		public function test_array_methods_are_validated_and_kept() {
-			$out = \ReportedIP_Hive_Two_Factor_Admin::sanitize_allowed_methods( array( 'totp', 'sms', 'bogus' ) );
-			$this->assertSame( array( 'totp', 'sms' ), json_decode( $out, true ) );
-		}
-
-		public function test_empty_methods_value_falls_back_to_totp() {
-			$out = \ReportedIP_Hive_Two_Factor_Admin::sanitize_allowed_methods( '[]' );
-			$this->assertSame( array( 'totp' ), json_decode( $out, true ) );
-		}
-
-		public function test_settings_form_checkboxes_remain_authoritative() {
-			$_POST['reportedip_hive_2fa_method_totp']  = '1';
-			$_POST['reportedip_hive_2fa_method_email'] = '1';
-			$out = \ReportedIP_Hive_Two_Factor_Admin::sanitize_allowed_methods( '' );
-			$this->assertSame( array( 'totp', 'email' ), json_decode( $out, true ) );
-		}
-
-		public function test_settings_form_with_one_checkbox_does_not_leak_the_value() {
-			$_POST['reportedip_hive_2fa_method_webauthn'] = '1';
-			$out = \ReportedIP_Hive_Two_Factor_Admin::sanitize_allowed_methods( '["totp","email","sms"]' );
-			$this->assertSame( array( 'webauthn' ), json_decode( $out, true ) );
-		}
-
-		public function test_wizard_json_roles_pass_through_unchanged() {
-			$out = \ReportedIP_Hive_Two_Factor_Admin::sanitize_enforce_roles( '["administrator","editor"]' );
-			$this->assertSame( array( 'administrator', 'editor' ), json_decode( $out, true ) );
-		}
-
-		public function test_settings_form_array_roles_are_validated() {
-			$out = \ReportedIP_Hive_Two_Factor_Admin::sanitize_enforce_roles( array( 'administrator', 'ghost', 'editor' ) );
-			$this->assertSame( array( 'administrator', 'editor' ), json_decode( $out, true ) );
-		}
-
-		public function test_empty_roles_value_yields_empty_array() {
-			$this->assertSame( '[]', \ReportedIP_Hive_Two_Factor_Admin::sanitize_enforce_roles( '' ) );
-			$this->assertSame( '[]', \ReportedIP_Hive_Two_Factor_Admin::sanitize_enforce_roles( '[]' ) );
-		}
-
 		public function test_canonical_valid_methods_is_the_single_source() {
 			$this->assertSame(
 				array( 'totp', 'email', 'webauthn', 'sms' ),

@@ -53,14 +53,12 @@ class ReportedIP_Hive_Filter_Bar {
 	 * @param string $id      Control id, also the label target.
 	 * @param string $label   Visible label.
 	 * @param string $control Escaped control markup.
-	 * @param bool   $grow    Whether the field takes the remaining width.
 	 * @return void
 	 * @since  2.1.57
 	 */
-	public static function field( $id, $label, $control, $grow = false ) {
+	public static function field( $id, $label, $control ) {
 		printf(
-			'<div class="rip-filter-bar__field%s"><label class="rip-filter-bar__label" for="%s">%s</label>%s</div>',
-			$grow ? ' rip-filter-bar__field--grow' : '',
+			'<div class="rip-filter-bar__field rip-filter-bar__field--grow"><label class="rip-filter-bar__label" for="%s">%s</label>%s</div>',
 			esc_attr( $id ),
 			esc_html( $label ),
 			$control // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Control markup is escaped by the caller.
@@ -75,12 +73,7 @@ class ReportedIP_Hive_Filter_Bar {
 	 * @since  2.1.57
 	 */
 	public static function close( array $filter_keys ) {
-		$active = 0;
-		foreach ( $filter_keys as $key ) {
-			if ( ! empty( $_GET[ $key ] ) ) {
-				++$active;
-			}
-		}
+		$active = count( array_filter( $filter_keys, static fn( $key ) => ! empty( $_GET[ $key ] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Presence check for the reset link only.
 		echo '<div class="rip-filter-bar__actions">';
 		if ( $active > 0 ) {
 			printf(

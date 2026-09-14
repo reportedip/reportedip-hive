@@ -99,25 +99,4 @@
 		);
 	});
 
-	$(document).on('click', '.rip-csp-preset', function (e) {
-		e.preventDefault();
-		$('#rip-hdr-csp').val($(this).data('policy'));
-	});
-
-	$(document).on('click', '#rip-headers-save', function (e) {
-		e.preventDefault();
-		var $button = $(this);
-		var values  = {};
-		$('.rip-content [data-opt]').each(function () {
-			values[$(this).data('opt')] = $(this).val();
-		});
-		postAction(
-			{
-				action: 'reportedip_hive_headers_save',
-				payload: JSON.stringify(values),
-				nonce: config.nonce
-			},
-			$button
-		);
-	});
 })(jQuery);

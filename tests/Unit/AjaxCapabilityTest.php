@@ -221,16 +221,6 @@ class AjaxCapabilityTest extends TestCase {
 		);
 	}
 
-	public function test_admin_test_sms_demands_the_network_capability_on_multisite() {
-		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-two-factor-admin.php' );
-
-		$this->assertMatchesRegularExpression(
-			'/function ajax_admin_test_sms\(\)\s*\{\s*check_ajax_referer\( \'reportedip_hive_nonce\', \'nonce\' \);\s*if \( ! ReportedIP_Hive_Option_Routing::current_user_can_manage\(\) \)/s',
-			$source,
-			'the relay test SMS spends network quota behind the shared nonce and must not be reachable by a sub-site administrator'
-		);
-	}
-
 	public function test_dashboard_widget_uses_the_shared_predicate() {
 		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-dashboard-widget.php' );
 

@@ -199,14 +199,12 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 				'<input type="search" id="rip-audit-user" name="audit_user" class="rip-input" value="%s" placeholder="%s" />',
 				esc_attr( $audit_user ),
 				esc_attr__( 'Login name', 'reportedip-hive' )
-			),
-			true
+			)
 		);
 		ReportedIP_Hive_Filter_Bar::field(
 			'rip-audit-ip',
 			__( 'IP address', 'reportedip-hive' ),
-			sprintf( '<input type="search" id="rip-audit-ip" name="audit_ip" class="rip-input" value="%s" />', esc_attr( $audit_ip ) ),
-			true
+			sprintf( '<input type="search" id="rip-audit-ip" name="audit_ip" class="rip-input" value="%s" />', esc_attr( $audit_ip ) )
 		);
 		ReportedIP_Hive_Filter_Bar::close( array( 'event_type', 'audit_user', 'audit_ip' ) );
 	}

@@ -281,90 +281,7 @@ body.rip-wizard-page [hidden] {
     margin-right: auto;
 }
 
-/* Welcome Step */
-.rip-wizard__welcome {
-    text-align: center;
-    background: transparent;
-}
 
-.rip-wizard__welcome-icon {
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 2rem;
-    color: var(--rip-primary);
-    animation: pulse 2s ease infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-}
-
-.rip-wizard__features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1rem;
-    max-width: 800px;
-    margin: 2rem auto;
-    text-align: left;
-    align-items: stretch;
-}
-
-.rip-wizard__feature {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1.25rem;
-    background: #fff;
-    border-radius: var(--rip-radius-lg);
-    border: 1px solid var(--rip-gray-200);
-    box-shadow: var(--rip-shadow-sm);
-    transition: var(--rip-transition);
-}
-
-.rip-wizard__feature:hover {
-    border-color: var(--rip-primary-light);
-    box-shadow: var(--rip-shadow-md);
-    transform: translateY(-1px);
-}
-
-.rip-wizard__feature-icon {
-    flex: 0 0 auto;
-    width: 48px;
-    height: 48px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--rip-radius-lg);
-    background: var(--rip-gradient-primary);
-    color: #fff;
-}
-
-.rip-wizard__feature-icon svg {
-    width: 24px;
-    height: 24px;
-}
-
-.rip-wizard__feature-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.rip-wizard__feature-text strong {
-    color: var(--rip-gray-900);
-    font-weight: 600;
-}
-
-.rip-wizard__feature-text span {
-    color: var(--rip-gray-600);
-    font-size: 0.875rem;
-    line-height: 1.5;
-}
 
 /* Mode Selection */
 .rip-wizard__mode-cards {
@@ -605,23 +522,6 @@ body.rip-wizard-page [hidden] {
     margin-top: 0.875rem;
 }
 
-.rip-help-block {
-    margin: 0.5rem 0 1rem;
-    padding: 0.75rem 1rem;
-    background: var(--rip-gray-50);
-    border-radius: var(--rip-radius);
-    color: var(--rip-gray-700);
-    font-size: 0.8125rem;
-    line-height: 1.5;
-    border-left: 3px solid var(--rip-info);
-}
-
-.rip-help-block--warning {
-    background: rgba(245, 158, 11, 0.08);
-    border-left-color: var(--rip-warning);
-    color: var(--rip-gray-700);
-}
-
 .rip-helper-divider {
     height: 1px;
     background: var(--rip-gray-200);
@@ -708,10 +608,7 @@ body.rip-wizard-page [hidden] {
     pointer-events: none;
 }
 
-/* Account-Info-Block unter dem API-Key-Feld nach Validierung */
-.rip-help-block--api-info {
-    margin-top: 1rem;
-}
+
 
 /* Inline-Number-Field-Row mit Suffix-Label */
 .rip-number-row {
@@ -789,61 +686,6 @@ body.rip-wizard-page [hidden] {
     color: var(--rip-gray-900);
 }
 
-/* Protection Levels */
-.rip-protection-levels {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-}
-
-.rip-protection-level {
-    display: block;
-    cursor: pointer;
-}
-
-.rip-protection-level input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.rip-protection-level__content {
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-    background: #fff;
-    border: 2px solid var(--rip-gray-200);
-    border-radius: var(--rip-radius);
-    transition: var(--rip-transition);
-}
-
-.rip-protection-level:hover .rip-protection-level__content {
-    border-color: var(--rip-primary-light);
-}
-
-.rip-protection-level input:checked + .rip-protection-level__content {
-    border-color: var(--rip-primary);
-    background: var(--rip-primary-50);
-    box-shadow: 0 0 0 3px var(--rip-primary-100);
-}
-
-.rip-protection-level__name {
-    font-weight: 600;
-    color: var(--rip-gray-900);
-    margin-bottom: 0.25rem;
-}
-
-.rip-protection-level__name small {
-    font-weight: 400;
-    color: var(--rip-success-dark);
-}
-
-.rip-protection-level__desc {
-    font-size: 0.75rem;
-    color: var(--rip-gray-600);
-}
-
 /* Toggle Switch */
 .rip-toggle {
     display: flex;
@@ -904,89 +746,6 @@ body.rip-wizard-page [hidden] {
     margin-top: 1rem;
 }
 
-.rip-method-card {
-    position: relative;
-    background: #fff;
-    border: 2px solid var(--rip-gray-200);
-    border-radius: var(--rip-radius-lg);
-    padding: 1.25rem 1.25rem 1.25rem 1.25rem;
-    cursor: pointer;
-    transition: var(--rip-transition);
-    box-shadow: var(--rip-shadow-sm);
-}
-
-.rip-method-card:hover {
-    border-color: var(--rip-primary-light);
-    box-shadow: var(--rip-shadow-md);
-    transform: translateY(-1px);
-}
-
-.rip-method-card--selected {
-    border-color: var(--rip-primary);
-    background: var(--rip-primary-50);
-    box-shadow: 0 0 0 4px var(--rip-primary-100);
-}
-
-.rip-method-card--disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.rip-method-card__check {
-    position: absolute;
-    top: 0.875rem;
-    right: 0.875rem;
-    width: 22px;
-    height: 22px;
-    border-radius: 999px;
-    border: 2px solid var(--rip-gray-300);
-    background: #fff;
-    transition: var(--rip-transition);
-}
-
-.rip-method-card--selected .rip-method-card__check {
-    border-color: var(--rip-primary);
-    background: var(--rip-primary);
-}
-
-.rip-method-card--selected .rip-method-card__check::after {
-    content: '';
-    position: absolute;
-    top: 4px;
-    left: 6px;
-    width: 6px;
-    height: 10px;
-    border-right: 2px solid #fff;
-    border-bottom: 2px solid #fff;
-    transform: rotate(45deg);
-}
-
-.rip-method-card__icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    color: var(--rip-primary);
-    margin-bottom: 0.75rem;
-}
-
-.rip-method-card__icon svg {
-    width: 100%;
-    height: 100%;
-}
-
-.rip-method-card__title {
-    margin: 0 0 0.25rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--rip-gray-900);
-}
-
-.rip-method-card__desc {
-    font-size: 0.8125rem;
-    color: var(--rip-gray-600);
-    line-height: 1.5;
-    margin: 0;
-}
-
 /* Subheading inside a config card, used to delimit "block duration strategy"
    etc. without bumping to a full second card. */
 .rip-config-card__subhead {
@@ -1010,32 +769,6 @@ body.rip-wizard-page [hidden] {
     flex-wrap: wrap;
     gap: 0.75rem;
     margin-top: 0.5rem;
-}
-
-.rip-checkbox-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.875rem;
-    background: var(--rip-gray-100);
-    color: var(--rip-gray-800);
-    border-radius: 999px;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    border: 1px solid var(--rip-gray-200);
-    cursor: pointer;
-    transition: var(--rip-transition);
-}
-
-.rip-checkbox-pill input[type="checkbox"] {
-    margin: 0;
-    accent-color: var(--rip-primary);
-}
-
-.rip-checkbox-pill:has(input:checked) {
-    background: var(--rip-primary-50);
-    color: var(--rip-primary-dark);
-    border-color: var(--rip-primary);
 }
 
 /* Complete Step */
@@ -1086,16 +819,7 @@ body.rip-wizard-page [hidden] {
     100% { transform: scale(1); }
 }
 
-@keyframes fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+
 
 .rip-success-circle {
     animation: circleIn 0.6s ease forwards;
@@ -1124,93 +848,6 @@ body.rip-wizard-page [hidden] {
         opacity: 1;
         transform: scale(1);
     }
-}
-
-.rip-wizard__summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.75rem;
-    max-width: 720px;
-    margin: 2rem auto;
-    padding: 1.5rem;
-    background: #fff;
-    border-radius: var(--rip-radius-lg);
-    border: 1px solid var(--rip-gray-200);
-    box-shadow: var(--rip-shadow-sm);
-}
-
-.rip-wizard__summary-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.75rem;
-    background: var(--rip-gray-50);
-    border-radius: var(--rip-radius);
-    border: 1px solid var(--rip-gray-100);
-    text-align: left;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    .rip-wizard__complete--play .rip-wizard__summary-item {
-        opacity: 0;
-        animation: fadeUp 0.4s ease forwards;
-        animation-delay: calc(0.85s + var(--n, 0) * 0.08s);
-    }
-}
-
-/* "Help others" callout below the summary on the complete step. */
-.rip-wizard__promote-cta {
-    max-width: 720px;
-    margin: 1.5rem auto 0;
-    padding: 1.25rem 1.5rem;
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(124, 58, 237, 0.08));
-    border: 1px solid rgba(79, 70, 229, 0.18);
-    border-radius: var(--rip-radius-lg);
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.rip-wizard__promote-cta__icon {
-    flex: 0 0 auto;
-    color: var(--rip-primary, #4F46E5);
-    width: 32px;
-    height: 32px;
-}
-
-.rip-wizard__promote-cta__body {
-    flex: 1;
-}
-
-.rip-wizard__promote-cta__body h3 {
-    margin: 0 0 0.25rem;
-    font-size: 0.95rem;
-    color: var(--rip-gray-900, #111827);
-}
-
-.rip-wizard__promote-cta__body p {
-    margin: 0;
-    color: var(--rip-gray-600, #4B5563);
-    font-size: 0.85rem;
-}
-
-.rip-wizard__promote-cta__action {
-    flex: 0 0 auto;
-}
-
-.rip-wizard__summary-label {
-    color: var(--rip-gray-600);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-}
-
-.rip-wizard__summary-value {
-    color: var(--rip-gray-900);
-    font-weight: 600;
-    font-size: 0.9375rem;
 }
 
 /* Mode Badge */
@@ -1311,12 +948,6 @@ body.rip-wizard-page [hidden] {
     font-size: 1rem;
 }
 
-.rip-button--sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-}
-
 /* Footer */
 .rip-wizard__footer {
     display: flex;
@@ -1406,30 +1037,6 @@ body.rip-wizard-page [hidden] {
     letter-spacing: 0.08em;
 }
 
-.rip-wizard-page .rip-gdpr-selects {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-top: 1.25rem;
-}
-
-.rip-gdpr-select-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 0;
-}
-
-.rip-config-card__body .rip-gdpr-select-group + .rip-gdpr-select-group {
-    margin-top: 1rem;
-}
-
-.rip-gdpr-select-label {
-    font-size: 0.8125rem;
-    color: var(--rip-gray-700);
-    font-weight: 500;
-}
-
 /*
  * The wizard renders inside the active front-end theme, so its stylesheet can
  * override a bare <select>, collapsing the width or forcing an unreadable
@@ -1478,40 +1085,7 @@ body.rip-wizard-page select.rip-select option {
     -webkit-text-fill-color: var(--rip-gray-900);
 }
 
-.rip-gdpr-notice {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    margin-top: 1.25rem;
-    padding: 0.75rem 1rem;
-    background: rgba(16, 185, 129, 0.08);
-    border-radius: var(--rip-radius);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-}
 
-.rip-gdpr-notice svg {
-    width: 1.125rem;
-    height: 1.125rem;
-    color: var(--rip-success);
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-
-.rip-gdpr-notice span {
-    font-size: 0.8125rem;
-    color: var(--rip-gray-700);
-    line-height: 1.5;
-}
-
-/*
- * Hide-Login step: the GDPR-style notice introduces the slug toggle, so it
- * needs more breathing room before the toggle row sits underneath. The other
- * call sites (privacy step, etc.) keep the original tighter spacing.
- */
-.rip-wizard__step-content[data-step="8"] .rip-gdpr-notice {
-    margin-bottom: var(--rip-space-6, 1.75rem);
-    padding-bottom: 0.95rem;
-}
 
 /* GDPR Badge */
 .rip-mode-badge--gdpr {
@@ -1552,14 +1126,6 @@ body.rip-wizard-page select.rip-select option {
         grid-template-columns: 1fr;
     }
 
-    .rip-wizard__features {
-        grid-template-columns: 1fr;
-    }
-
-    .rip-protection-levels {
-        grid-template-columns: 1fr;
-    }
-
     .rip-method-grid {
         grid-template-columns: 1fr;
     }
@@ -1569,14 +1135,6 @@ body.rip-wizard-page select.rip-select option {
     }
 
     .rip-api-info-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .rip-gdpr-selects {
-        grid-template-columns: 1fr;
-    }
-
-    .rip-wizard__summary {
         grid-template-columns: 1fr;
     }
 
@@ -1737,67 +1295,6 @@ body.rip-wizard-page select.rip-select option {
     align-self: flex-start;
 }
 
-.rip-wizard__feature--woocommerce .rip-wizard__feature-icon {
-    background: var(--rip-woocommerce, #7f54b3);
-    color: #fff;
-}
-
-.rip-wizard__feature--full {
-    grid-column: 1 / -1;
-}
-
-/* Badge row on a method card (e.g. SMS: PRO + "Particularly secure"). */
-.rip-method-card__badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-bottom: var(--rip-space-2, 0.5rem);
-}
-
-/* Promote step: preview frame + variant/position fieldsets. */
-.rip-promote-preview {
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-    border: 1px dashed var(--rip-gray-300, #D1D5DB);
-    border-radius: var(--rip-radius-lg, 0.75rem);
-    padding: var(--rip-space-5, 1.5rem);
-    min-height: 110px;
-    display: flex;
-    align-items: center;
-    margin-bottom: var(--rip-space-4, 1rem);
-}
-
-.rip-promote-preview--left { justify-content: flex-start; }
-.rip-promote-preview--center,
-.rip-promote-preview--below { justify-content: center; }
-.rip-promote-preview--right { justify-content: flex-end; }
-
-.rip-promote-fieldset {
-    border: none;
-    padding: 0;
-    margin: 0 0 var(--rip-space-4, 1rem);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.rip-promote-legend {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--rip-gray-900, #111827);
-    margin-bottom: 0.35rem;
-    padding: 0;
-}
-
-.rip-promote-toggle {
-    margin-top: var(--rip-space-3, 0.75rem);
-}
-
-.rip-promote-hint {
-    margin-top: 0.5rem !important;
-    color: var(--rip-gray-600, #4B5563);
-    font-size: 0.8125rem;
-}
-
 /*
  * Notifications step: the recipient textarea wraps multi-line lists. Keep
  * the size predictable; resize is allowed vertically only.
@@ -1820,47 +1317,6 @@ body.rip-wizard-page select.rip-select option {
     border: 1px solid var(--rip-gray-200, #E5E7EB);
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     font-size: 0.85rem;
-}
-
-/* Feature-list bullets in the onboarding wizard, render an inline SVG
- * checkmark via ::before instead of the Unicode "yes" character that was
- * previously hard-coded in the template. */
-.rip-onboarding-check {
-    list-style: none;
-    position: relative;
-    padding-left: 1.5em;
-}
-.rip-onboarding-check::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.2em;
-    width: 1em;
-    height: 1em;
-    background-color: var(--rip-success, #10B981);
-    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") no-repeat center / contain;
-    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") no-repeat center / contain;
-}
-
-/* Warning marker for caveat list items (SIM-swap, email-only). Uses
- * the design-system warning color and a triangle/exclamation glyph
- * rendered as a CSS mask so the markup stays emoji-free. */
-.rip-onboarding-warning {
-    list-style: none;
-    position: relative;
-    padding-left: 1.5em;
-    color: var(--rip-gray-700);
-}
-.rip-onboarding-warning::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.2em;
-    width: 1em;
-    height: 1em;
-    background-color: var(--rip-warning, #F59E0B);
-    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>") no-repeat center / contain;
-    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>") no-repeat center / contain;
 }
 
 /* Quickstart feature list */
