@@ -1011,20 +1011,27 @@ class ReportedIP_Hive_Admin_Settings {
 				</h2>
 				<a href="<?php echo esc_url( $all_url ); ?>" class="rip-button rip-button--ghost rip-button--sm" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'All news', 'reportedip-hive' ); ?></a>
 			</div>
-			<div class="rip-card">
-				<ul class="rip-news__list">
-					<?php foreach ( $items as $item ) : ?>
-						<li class="rip-news__item">
-							<a class="rip-news__title" href="<?php echo esc_url( $item['link'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $item['title'] ); ?></a>
+			<div class="rip-news__grid">
+				<?php foreach ( $items as $item ) : ?>
+					<article class="rip-card rip-news__card">
+						<div class="rip-news__meta">
+							<?php if ( '' !== (string) ( $item['category'] ?? '' ) ) : ?>
+								<span class="rip-badge rip-badge--info"><?php echo esc_html( (string) $item['category'] ); ?></span>
+							<?php endif; ?>
 							<?php if ( $item['timestamp'] > 0 ) : ?>
-								<span class="rip-news__date"><?php echo esc_html( wp_date( (string) get_option( 'date_format' ), $item['timestamp'] ) ); ?></span>
+								<time class="rip-news__date" datetime="<?php echo esc_attr( gmdate( 'Y-m-d', $item['timestamp'] ) ); ?>"><?php echo esc_html( wp_date( (string) get_option( 'date_format' ), $item['timestamp'] ) ); ?></time>
 							<?php endif; ?>
-							<?php if ( '' !== $item['summary'] ) : ?>
-								<p class="rip-news__summary"><?php echo esc_html( $item['summary'] ); ?></p>
-							<?php endif; ?>
-						</li>
-					<?php endforeach; ?>
-				</ul>
+						</div>
+						<h3 class="rip-news__title"><a href="<?php echo esc_url( $item['link'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $item['title'] ); ?></a></h3>
+						<?php if ( '' !== $item['summary'] ) : ?>
+							<p class="rip-news__summary"><?php echo esc_html( $item['summary'] ); ?></p>
+						<?php endif; ?>
+						<a class="rip-news__more" href="<?php echo esc_url( $item['link'] ); ?>" target="_blank" rel="noopener noreferrer">
+							<?php esc_html_e( 'Read the article', 'reportedip-hive' ); ?>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+						</a>
+					</article>
+				<?php endforeach; ?>
 			</div>
 		</div>
 		<?php

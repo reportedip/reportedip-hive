@@ -1643,21 +1643,68 @@ button.rip-tier-lock--mode:hover {
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
 }
 .rip-expert-toggle__info {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    width: 16px;
-    height: 16px;
-    color: rgba(255, 255, 255, 0.85);
+    width: 18px;
+    height: 18px;
+    color: rgba(255, 255, 255, 0.9);
     cursor: help;
 }
 .rip-expert-toggle__info svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 .rip-expert-toggle__info:hover,
 .rip-expert-toggle__info:focus-visible {
     color: #fff;
     outline: none;
+}
+.rip-expert-toggle__info::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: calc(100% + 10px);
+    right: -12px;
+    width: 300px;
+    padding: var(--rip-space-3) var(--rip-space-4);
+    background: var(--rip-gray-900);
+    color: #fff;
+    font-size: var(--rip-text-sm);
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+    border-radius: var(--rip-radius);
+    box-shadow: var(--rip-shadow-lg);
+    z-index: var(--rip-z-tooltip);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: var(--rip-transition);
+    pointer-events: none;
+}
+.rip-expert-toggle__info::before {
+    content: '';
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 3px;
+    border: 6px solid transparent;
+    border-bottom-color: var(--rip-gray-900);
+    z-index: var(--rip-z-tooltip);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--rip-transition);
+}
+.rip-expert-toggle__info:hover::after,
+.rip-expert-toggle__info:hover::before,
+.rip-expert-toggle__info:focus-visible::after,
+.rip-expert-toggle__info:focus-visible::before,
+.rip-expert-toggle__info:focus::after,
+.rip-expert-toggle__info:focus::before {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
 }
 
 /* ==========================================================================

@@ -58,7 +58,7 @@ class ReportedIP_Hive_News_Feed {
 	 * The newest items, oldest last.
 	 *
 	 * @param int $limit Maximum number of items.
-	 * @return array<int, array{title:string, link:string, timestamp:int, summary:string}>
+	 * @return array<int, array{title:string, link:string, timestamp:int, summary:string, category:string}>
 	 * @since  2.1.54
 	 */
 	public static function items( $limit = 3 ) {
@@ -79,11 +79,13 @@ class ReportedIP_Hive_News_Feed {
 
 		$items = array();
 		foreach ( $feed->get_items( 0, max( 1, (int) $limit ) ) as $item ) {
-			$items[] = array(
+			$category = $item->get_category();
+			$items[]  = array(
 				'title'     => (string) $item->get_title(),
 				'link'      => (string) $item->get_permalink(),
 				'timestamp' => (int) $item->get_date( 'U' ),
 				'summary'   => wp_trim_words( wp_strip_all_tags( (string) $item->get_description() ), 24, '…' ),
+				'category'  => is_object( $category ) && method_exists( $category, 'get_label' ) ? (string) $category->get_label() : '',
 			);
 		}
 

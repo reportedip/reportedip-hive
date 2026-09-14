@@ -863,40 +863,84 @@
 }
 
 /* News from reportedip.com */
-.rip-news__list {
-    list-style: none;
+.rip-news__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--rip-space-4);
+}
+
+.rip-news__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--rip-space-2);
+    padding: var(--rip-space-5);
     margin: 0;
-    padding: 0;
+    transition: var(--rip-transition);
 }
 
-.rip-news__item {
-    padding: var(--rip-space-3) 0;
-    border-bottom: 1px solid var(--rip-gray-100);
+.rip-news__card:hover {
+    border-color: var(--rip-primary-light);
+    box-shadow: var(--rip-shadow-md);
 }
 
-.rip-news__item:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
-}
-
-.rip-news__title {
-    font-weight: 600;
-    color: var(--rip-gray-900);
-    text-decoration: none;
-}
-
-.rip-news__title:hover {
-    color: var(--rip-primary);
-}
-
-.rip-news__date {
-    margin-left: var(--rip-space-2);
+.rip-news__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--rip-space-2);
     font-size: var(--rip-text-xs);
     color: var(--rip-gray-500);
 }
 
+.rip-news__date {
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-500);
+}
+
+.rip-news__title {
+    margin: 0;
+    font-size: var(--rip-text-base);
+    line-height: 1.35;
+}
+
+.rip-news__title a {
+    color: var(--rip-gray-900);
+    text-decoration: none;
+}
+
+.rip-news__title a:hover,
+.rip-news__title a:focus {
+    color: var(--rip-primary);
+}
+
 .rip-news__summary {
-    margin: var(--rip-space-1) 0 0;
+    margin: 0;
     font-size: var(--rip-text-sm);
+    line-height: 1.5;
     color: var(--rip-gray-600);
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.rip-news__more {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rip-space-1);
+    margin-top: var(--rip-space-2);
+    font-size: var(--rip-text-sm);
+    font-weight: 600;
+    color: var(--rip-primary);
+    text-decoration: none;
+}
+
+.rip-news__more svg {
+    width: 14px;
+    height: 14px;
+    transition: var(--rip-transition);
+}
+
+.rip-news__more:hover svg {
+    transform: translateX(3px);
 }
