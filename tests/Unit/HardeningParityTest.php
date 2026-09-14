@@ -7,7 +7,7 @@
  * surface that authenticates credentials reads its threshold through
  * {@see ReportedIP_Hive_Hardening_Mode::effective_failed_login_threshold()} /
  * `effective_failed_login_timeframe()`. A sensor that reads the raw option keeps
- * running on the relaxed value while the rest of the site is hardened — the hole
+ * running on the relaxed value while the rest of the site is hardened, the hole
  * the WooCommerce login monitor carried from 2.0.8 until this test landed.
  *
  * The check is a source scan rather than a behavioural test on purpose: it costs
@@ -82,7 +82,7 @@ class HardeningParityTest extends TestCase {
 			}
 		}
 
-		$this->assertGreaterThan( 0, $scanned, 'No threshold reads found — the scan pattern has drifted from the code.' );
+		$this->assertGreaterThan( 0, $scanned, 'No threshold reads found, the scan pattern has drifted from the code.' );
 		$this->assertSame( array(), $offences, "Hardening Mode is bypassed:\n" . implode( "\n", $offences ) );
 	}
 }

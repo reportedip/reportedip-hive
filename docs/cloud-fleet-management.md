@@ -1,7 +1,7 @@
 # Cloud Fleet Management
 
 Manage the security settings of every ReportedIP Hive installation you own
-from one place — either a self-hosted [MainWP](https://mainwp.com/) dashboard
+from one place, either a self-hosted [MainWP](https://mainwp.com/) dashboard
 or the reportedip.com fleet dashboard (Business plan). Both speak the same
 [remote settings protocol](remote-settings-protocol.md), so a policy behaves
 identically no matter which dashboard applied it.
@@ -15,9 +15,9 @@ see the protocol document; for what to change when settings change see its
 
 ## What it does
 
-- **One policy, many sites.** Define a security policy once — failed-login
+- **One policy, many sites.** Define a security policy once, failed-login
   thresholds, auto-blocking, WAF level, 2FA enforcement, logging, and every
-  other remote-managed option — and push it to any connected site.
+  other remote-managed option, and push it to any connected site.
 - **Per-site overrides.** Any single field can be overridden for one site;
   everything else inherits the global policy.
 - **Drift detection.** Every site reports a settings fingerprint on each API
@@ -27,7 +27,7 @@ see the protocol document; for what to change when settings change see its
   actual value, per field, fetched live from the site.
 - **Schema-driven.** The form is rendered from a schema the site itself
   exports, so new Hive options appear in the dashboard automatically after a
-  schema reload — no dashboard update required.
+  schema reload, no dashboard update required.
 
 The feature manages **63 settings** across seven groups: detection, blocking,
 WAF, hide-login, account security, privacy/logging, and notifications. A small
@@ -53,7 +53,7 @@ result envelope is byte-identical between the two transports.
 1. The site must be in **Community Network mode** with a configured
    Community Access Key.
 2. Update the site to **Hive 2.1.48 or newer**.
-3. **MainWP:** connect the site to your MainWP dashboard as usual — no extra
+3. **MainWP:** connect the site to your MainWP dashboard as usual, no extra
    step, the child bridge ships inside Hive.
 4. **reportedip.com fleet:** switch on **"Cloud fleet management via
    reportedip.com"** on the Hive *General* settings tab. It is **off by
@@ -80,12 +80,12 @@ A site is always in exactly one of five states:
 | **In sync** | The site matches the applied policy. |
 
 "Push all" targets every capable site. "Push drifted only" targets exactly
-the *drifted* and *pending* sites — never *never pushed* ones, so healing
+the *drifted* and *pending* sites, never *never pushed* ones, so healing
 drift can never accidentally configure a site you had not set up yet.
 
 The fingerprint is always computed **on the site**. Dashboards store the hash
 returned by the last successful apply and compare it against the hash the site
-reports later — they never recompute it. This keeps the two sides honest
+reports later, they never recompute it. This keeps the two sides honest
 across PHP/JSON representation differences.
 
 ---
@@ -121,12 +121,12 @@ stored encrypted at rest and never returned in any response.
 
 The whole transport is **fail-closed**: with no valid signature, an expired
 timestamp, a replayed id, a wrong audience, or a bad account proof, the
-request is refused and logged as a security event — while the caller only
+request is refused and logged as a security event, while the caller only
 ever sees the generic denial.
 
 ---
 
-## Scope — what is and isn't managed
+## Scope, what is and isn't managed
 
 **Managed (99 keys, both transports):** the detection thresholds and monitor
 toggles, auto-blocking and escalation, report-only mode, the WAF engine
@@ -144,16 +144,16 @@ the newlines silently merges every entry into one.
 
 **Deliberately excluded (both transports):**
 
-- `operation_mode` and `api_key` — these define the connection itself and are
+- `operation_mode` and `api_key`, these define the connection itself and are
   handled through provisioning, not policy.
 - The frontend-2FA rewrite slugs, the hardening-mode master toggle, and the
-  advanced security headers (CSP/HSTS) — these carry site-specific side
+  advanced security headers (CSP/HSTS), these carry site-specific side
   effects or are a remote footgun, and are managed locally. The master
   toggle's "no stored value" state is what enables hardening mode
   automatically on Professional and higher, so it must not be written
   remotely.
 - Runtime state the plugin writes itself (readiness issues, the 2FA policy
-  admin latch, API statistics) — not settings, never exported, never
+  admin latch, API statistics), not settings, never exported, never
   pushable.
 - On Multisite, the two per-site override options are network-scoped locally
   and never remote-managed.
@@ -194,6 +194,6 @@ surprise.
 
 ## Related documents
 
-- [Remote settings protocol](remote-settings-protocol.md) — the wire format,
+- [Remote settings protocol](remote-settings-protocol.md), the wire format,
   envelopes, kinds, fingerprint algorithm, and the change checklist for when
   options change.

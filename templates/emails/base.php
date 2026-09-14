@@ -128,7 +128,7 @@ $disclaimer      = isset( $context['disclaimer'] ) ? (string) $context['disclaim
 			<?php
 			printf(
 				/* translators: 1: opening link tag, 2: closing link tag */
-				esc_html__( 'This message is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
+				esc_html__( 'This message is protected by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
 				'<a href="https://reportedip.com/" style="color:#4F46E5;text-decoration:none;" target="_blank" rel="noopener">',
 				'</a>'
 			);

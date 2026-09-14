@@ -61,7 +61,7 @@ class ReportedIP_Hive_Admin_Settings {
 	/**
 	 * Form action URL for Settings-API forms.
 	 *
-	 * On the network admin context, options.php cannot persist sitemeta —
+	 * On the network admin context, options.php cannot persist sitemeta.
 	 * we route through edit.php?action=reportedip_hive_save_settings instead,
 	 * which is dispatched to {@see handle_network_admin_save()}. Outside
 	 * network admin we keep the WordPress core options.php endpoint.
@@ -325,7 +325,7 @@ class ReportedIP_Hive_Admin_Settings {
 				if ( in_array( $tier_key, array( 'free', 'contributor' ), true ) && current_user_can( 'manage_options' ) ) {
 					$tier_opts = array(
 						'href'  => self::pricing_url(),
-						'title' => __( 'Compare plans — unlock PRO protection, managed 2FA delivery and priority rulesets', 'reportedip-hive' ),
+						'title' => __( 'Compare plans: PRO protection, managed 2FA delivery and priority rulesets', 'reportedip-hive' ),
 					);
 				}
 				self::render_tier_badge( null, $tier_opts );
@@ -440,12 +440,12 @@ class ReportedIP_Hive_Admin_Settings {
 	 *
 	 * Single entry point that keeps the tier story visible in both directions:
 	 *
-	 *  - feature locked by tier  — compact tier badge with a lock glyph,
+	 *  - feature locked by tier , compact tier badge with a lock glyph,
 	 *    linked to the pricing page so the upgrade path is one click away
-	 *  - feature locked by mode  — delegates to the mode tier-lock chip
-	 *  - feature available       — the same compact tier badge without the
+	 *  - feature locked by mode , delegates to the mode tier-lock chip
+	 *  - feature available      , the same compact tier badge without the
 	 *    lock, so paying customers keep seeing what their plan includes
-	 *  - feature has no tier gate — renders nothing
+	 *  - feature has no tier gate, renders nothing
 	 *
 	 * @param array $status Output of Mode_Manager::feature_status().
 	 * @param array $opts {
@@ -507,7 +507,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'locked' => true,
 				'href'   => $href,
 				/* translators: %s = plan name (e.g. "Professional") */
-				'title'  => sprintf( __( 'Available with the %s plan and higher — compare plans', 'reportedip-hive' ), $tier_label ),
+				'title'  => sprintf( __( 'Available with the %s plan and higher. Compare plans', 'reportedip-hive' ), $tier_label ),
 			)
 		);
 	}
@@ -525,7 +525,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 	/**
 	 * Sanitize inline SVG markup against a permissive allowlist suitable for
-	 * decorative icons. Returns escaped HTML — safe to echo directly.
+	 * decorative icons. Returns escaped HTML, safe to echo directly.
 	 *
 	 * @param string $svg_html Raw SVG markup (typically from a constants table).
 	 * @return string
@@ -676,7 +676,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * the per-site 2FA settings page so feature copy stays in one place.
 	 *
 	 * Renders nothing when the feature is available or when the gate is not
-	 * a tier gate (e.g. mode mismatch — handled by the inline tier-lock chip).
+	 * a tier gate (e.g. mode mismatch, handled by the inline tier-lock chip).
 	 *
 	 * @param array $status Output of Mode_Manager::feature_status('frontend_2fa').
 	 * @return void
@@ -859,9 +859,9 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 
 		$bucket_labels = array(
-			'reputation' => esc_html__( 'This hour — reputation', 'reportedip-hive' ),
-			'submission' => esc_html__( 'This hour — submission', 'reportedip-hive' ),
-			'meta'       => esc_html__( 'This hour — meta', 'reportedip-hive' ),
+			'reputation' => esc_html__( 'This hour: reputation', 'reportedip-hive' ),
+			'submission' => esc_html__( 'This hour: submission', 'reportedip-hive' ),
+			'meta'       => esc_html__( 'This hour: meta', 'reportedip-hive' ),
 		);
 		?>
 		<div class="rip-card rip-mb-6">
@@ -1242,7 +1242,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php if ( 'over_limit' === $snapshot['status'] ) : ?>
 				<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-					<?php esc_html_e( 'More domains in use than your plan includes — manage them in your reportedip.com dashboard.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'More domains in use than your plan includes, manage them in your reportedip.com dashboard.', 'reportedip-hive' ); ?>
 				</div>
 			<?php endif; ?>
 		</div>
@@ -1259,7 +1259,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @param bool     $is_stale    Whether the snapshot is older than 24h.
 	 * @param int      $bundle      Prepaid bundle balance for this type. Signed: a
 	 *                              negative value means a Stripe refund clawed credits
-	 *                              back below zero — sending stays blocked until a new
+	 *                              back below zero, sending stays blocked until a new
 	 *                              bundle is purchased (PRICING-PLAN.md §3d).
 	 * @return void
 	 * @since 1.5.3
@@ -1334,7 +1334,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php
 					printf(
 						/* translators: 1: negative balance (already includes the minus sign), 2: unit (Mail credits / SMS credits) */
-						esc_html__( 'Bundle balance is %1$s %2$s after refund — purchase a new bundle to resume sending once the inclusive quota is exhausted.', 'reportedip-hive' ),
+						esc_html__( 'Bundle balance is %1$s %2$s after refund, purchase a new bundle to resume sending once the inclusive quota is exhausted.', 'reportedip-hive' ),
 						esc_html( number_format_i18n( (int) $bundle ) ),
 						esc_html( $bundle_unit )
 					);
@@ -1355,7 +1355,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php if ( $is_stale ) : ?>
 				<div class="rip-stat-card__hint rip-stat-card__hint--stale">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-					<?php esc_html_e( 'Awaiting fresh quota data — refreshes every 6 hours.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Awaiting fresh quota data, refreshes every 6 hours.', 'reportedip-hive' ); ?>
 				</div>
 			<?php endif; ?>
 		</div>
@@ -1384,7 +1384,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php
 					printf(
 						/* translators: 1: opening link tag to reportedip.com, 2: closing link tag */
-						esc_html__( 'This site is secured by ReportedIP Hive, part of the %1$sreportedip.com%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one.', 'reportedip-hive' ),
+						esc_html__( 'This site is secured by ReportedIP Hive: part of the %1$sreportedip.com%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one.', 'reportedip-hive' ),
 						'<a href="' . esc_url( REPORTEDIP_HIVE_SITE_URL ) . '" target="_blank" rel="noopener">',
 						'</a>'
 					);
@@ -1465,7 +1465,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$activated_labels[] = (string) $spec[ $activated_key ]['label'];
 			}
 		}
-		$body = __( 'Two-factor authentication via the managed reportedip.com relay is now included with your plan. SMS is ready to use — enable it as a method to roll it out:', 'reportedip-hive' );
+		$body = __( 'Two-factor authentication via the managed reportedip.com relay is now included with your plan. SMS is ready to use, enable it as a method to roll it out:', 'reportedip-hive' );
 		if ( ! empty( $activated_labels ) ) {
 			$body = sprintf(
 				/* translators: 1: tier label, 2: comma-separated list of setting labels */
@@ -1477,7 +1477,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$title = sprintf(
 			/* translators: %s = tier label, e.g. Professional */
-			__( 'Your %s plan is active — finish 2FA setup', 'reportedip-hive' ),
+			__( 'Your %s plan is active: finish 2FA setup', 'reportedip-hive' ),
 			$tier_label
 		);
 
@@ -1509,7 +1509,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * is silently in fallback (mail → wp_mail) or paused (SMS → other 2FA
 	 * method).
 	 *
-	 * This is operational information, not a promo — it does NOT participate
+	 * This is operational information, not a promo, it does NOT participate
 	 * in {@see ReportedIP_Hive_Promo_Manager}'s frequency cap. The notice
 	 * stays visible until either the underlying transient expires (relay
 	 * accepts again) or the operator dismisses it for the configured cooldown.
@@ -1561,7 +1561,7 @@ class ReportedIP_Hive_Admin_Settings {
 			$lines[] = self::format_cap_state_line(
 				__( 'SMS relay', 'reportedip-hive' ),
 				$sms_state,
-				__( 'SMS-based 2FA codes are paused until the relay accepts again — users can still choose TOTP, Email or Passkey.', 'reportedip-hive' )
+				__( 'SMS-based 2FA codes are paused until the relay accepts again, users can still choose TOTP, Email or Passkey.', 'reportedip-hive' )
 			);
 		}
 
@@ -1626,7 +1626,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * `admin-post.php?action=reportedip_hive_cap_notice_dismiss` handler.
 	 *
 	 * Hides the cap-status notice for 24 hours on the current user. The
-	 * underlying transient is untouched — when it expires naturally the
+	 * underlying transient is untouched, when it expires naturally the
 	 * notice can return, which is intentional (it is operational information
 	 * that the relay is still in fallback).
 	 *
@@ -1846,7 +1846,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Per-site admin menu entry point.
 	 *
 	 * Multisite: registers a read-only menu (Status, own-site Logs, 2FA Site
-	 * Settings — the only writable section).
+	 * Settings, the only writable section).
 	 * Single-site: registers the full admin menu, identical to v1.x.
 	 *
 	 * @since 1.0.0
@@ -1863,7 +1863,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Network admin menu entry point.
 	 *
 	 * Mounts the full settings UI under the network admin with the
-	 * `manage_network_options` capability — Multisite Super Admins manage
+	 * `manage_network_options` capability, Multisite Super Admins manage
 	 * the whole network's protection in one place.
 	 *
 	 * @since 2.0.0
@@ -1898,7 +1898,7 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render the Audit sub-tab inside the Security page — user-lifecycle audit
+	 * Render the Audit sub-tab inside the Security page, user-lifecycle audit
 	 * trail. Business+ tier-locked scaffold; the event trail lands in a later
 	 * phase.
 	 *
@@ -1909,7 +1909,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
 		if ( empty( $status['available'] ) ) {
 			self::render_tier_marker( $status );
-			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The user-lifecycle audit trail — logins, role changes with the actor, new-IP alerts — unlocks with Business. Your standard security events stay available in the Event Log.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The user-lifecycle audit trail, logins, role changes with the actor, new-IP alerts, unlocks with Business. Your standard security events stay available in the Event Log.', 'reportedip-hive' ) . '</div>';
 			return;
 		}
 
@@ -1942,12 +1942,12 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Site Admin menu on Multisite — read-only with two writable overrides.
+	 * Site Admin menu on Multisite, read-only with two writable overrides.
 	 *
 	 * The Site Admin gets a status page (read-only summary), a logs view
 	 * automatically scoped to the current `blog_id`, and a "Site Settings"
 	 * page where they can override the WooCommerce Frontend-2FA slug and
-	 * extend the 2FA enforcement role list (additive only — they cannot
+	 * extend the 2FA enforcement role list (additive only, they cannot
 	 * remove network-required roles).
 	 *
 	 * @since 2.0.0
@@ -1992,7 +1992,7 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Site-Admin Status page — read-only with per-site stat cards.
+	 * Site-Admin Status page, read-only with per-site stat cards.
 	 *
 	 * @since 2.0.0
 	 */
@@ -2085,7 +2085,7 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Site-Admin Logs page — auto-scoped to the current blog_id.
+	 * Site-Admin Logs page, auto-scoped to the current blog_id.
 	 *
 	 * @since 2.0.0
 	 */
@@ -2149,7 +2149,7 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Site-Admin 2FA Site Settings page — the only writable section.
+	 * Site-Admin 2FA Site Settings page, the only writable section.
 	 *
 	 * Two fields:
 	 *   - reportedip_hive_2fa_frontend_slug_site_override (URL-safe slug)
@@ -2205,14 +2205,14 @@ class ReportedIP_Hive_Admin_Settings {
 						&nbsp;<?php self::render_tier_marker( $frontend_status ); ?>
 					</h2>
 					<p class="rip-settings-section__desc">
-						<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks, instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
 					</p>
 
 					<?php self::render_frontend_2fa_pro_upsell( $frontend_status ); ?>
 
 					<?php if ( ! $has_wc ) : ?>
 						<div class="rip-alert rip-alert--info">
-							<?php esc_html_e( 'WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA — these slug overrides take effect once it is.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA, these slug overrides take effect once it is.', 'reportedip-hive' ); ?>
 						</div>
 					<?php endif; ?>
 
@@ -2241,7 +2241,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 						<div class="rip-form-group">
 							<label class="rip-label" for="rip_2fa_frontend_slug_site_override">
-								<?php esc_html_e( 'Challenge page slug — site override', 'reportedip-hive' ); ?>
+								<?php esc_html_e( 'Challenge page slug (site override)', 'reportedip-hive' ); ?>
 							</label>
 							<div class="rip-input-prefix">
 								<span class="rip-input-prefix__prefix"><?php echo esc_html( $home_prefix ); ?></span>
@@ -2271,7 +2271,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 						<div class="rip-form-group">
 							<label class="rip-label" for="rip_2fa_frontend_setup_slug_site_override">
-								<?php esc_html_e( 'Setup page slug (onboarding) — site override', 'reportedip-hive' ); ?>
+								<?php esc_html_e( 'Setup page slug (onboarding), site override', 'reportedip-hive' ); ?>
 							</label>
 							<div class="rip-input-prefix">
 								<span class="rip-input-prefix__prefix"><?php echo esc_html( $home_prefix ); ?></span>
@@ -2304,10 +2304,10 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-settings-section">
 					<h2 class="rip-settings-section__title">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg>
-						<?php esc_html_e( '2FA enforcement — role overrides for this site', 'reportedip-hive' ); ?>
+						<?php esc_html_e( '2FA enforcement, role overrides for this site', 'reportedip-hive' ); ?>
 					</h2>
 					<p class="rip-settings-section__desc">
-						<?php esc_html_e( 'The Super Admin enforces 2FA on certain roles network-wide. You can add roles on top of that list for this site only — but you cannot remove network-required roles here.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'The Super Admin enforces 2FA on certain roles network-wide. You can add roles on top of that list for this site only, but you cannot remove network-required roles here.', 'reportedip-hive' ); ?>
 					</p>
 
 					<div class="rip-form-group">
@@ -3655,7 +3655,7 @@ class ReportedIP_Hive_Admin_Settings {
 	/**
 	 * Render the Community-API status strip at the top of the dashboard.
 	 *
-	 * All state comes from cached or local sources — this method never
+	 * All state comes from cached or local sources, this method never
 	 * performs an HTTP request. States in priority order: local mode renders
 	 * nothing; missing API key; exhausted quota; active rate limit; healthy.
 	 *
@@ -3717,7 +3717,7 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( $this->api_client->is_rate_limited( null ) ) {
 			?>
 			<div class="rip-alert rip-alert--warning">
-				<?php esc_html_e( 'API temporarily rate-limited — lookups and reports resume automatically.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'API temporarily rate-limited, lookups and reports resume automatically.', 'reportedip-hive' ); ?>
 			</div>
 			<?php
 			echo '</div>';
@@ -3833,7 +3833,7 @@ class ReportedIP_Hive_Admin_Settings {
 										<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
 										<polyline points="9 12 11 14 15 10"/>
 									</svg>
-									<h4><?php esc_html_e( 'No threats detected yet — protection is active.', 'reportedip-hive' ); ?></h4>
+									<h4><?php esc_html_e( 'No threats detected yet, protection is active.', 'reportedip-hive' ); ?></h4>
 									<p><?php esc_html_e( 'Your dashboard will fill up automatically as ReportedIP Hive blocks attempts. We watch:', 'reportedip-hive' ); ?></p>
 									<ul>
 										<li><?php esc_html_e( 'Login brute-force, credential spray and 2FA attacks', 'reportedip-hive' ); ?></li>
@@ -3858,7 +3858,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-charts-grid rip-charts-grid--even">
 					<div class="rip-chart-card">
 						<div class="rip-chart-card__header">
-							<h3 class="rip-chart-card__title"><?php esc_html_e( 'Firewall — Top Attack Types', 'reportedip-hive' ); ?></h3>
+							<h3 class="rip-chart-card__title"><?php esc_html_e( 'Firewall, Top Attack Types', 'reportedip-hive' ); ?></h3>
 						</div>
 						<div class="rip-chart-card__body">
 							<canvas id="rip-waf-groups-chart" class="rip-chart-card__canvas"></canvas>
@@ -4456,7 +4456,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php settings_fields( 'reportedip_hive_general' ); ?>
 				<?php self::render_mode_comparison( array( 'interactive' => true ) ); ?>
 				<p class="rip-help-text"><?php esc_html_e( 'Mode changes take effect immediately after saving.', 'reportedip-hive' ); ?></p>
-				<p class="rip-help-text"><?php esc_html_e( 'Privacy note: in Community mode every API request identifies this installation with its site address and plugin/WordPress version (wp.org-style, for licence domain counting and support). Visitor-related data stays limited to the IP address and event type of detected threats — never usernames, comment content or full user agents.', 'reportedip-hive' ); ?></p>
+				<p class="rip-help-text"><?php esc_html_e( 'Privacy note: in Community mode every API request identifies this installation with its site address and plugin/WordPress version (wp.org-style, for licence domain counting and support). Visitor-related data stays limited to the IP address and event type of detected threats, never usernames, comment content or full user agents.', 'reportedip-hive' ); ?></p>
 				<div class="rip-form-actions">
 					<?php submit_button( __( 'Save Mode', 'reportedip-hive' ), 'rip-button rip-button--primary', 'submit', false ); ?>
 				</div>
@@ -4521,7 +4521,7 @@ class ReportedIP_Hive_Admin_Settings {
 					</label>
 					<textarea name="reportedip_hive_trusted_proxy_ranges" id="reportedip_hive_trusted_proxy_ranges" class="rip-textarea" rows="5" placeholder="<?php esc_attr_e( "203.0.113.10\n198.51.100.0/24\n2001:db8::/32", 'reportedip-hive' ); ?>"><?php echo esc_textarea( (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_proxy_ranges', '' ) ); ?></textarea>
 					<p class="rip-help-text">
-						<?php esc_html_e( 'One IP address or CIDR range per line. When set, the trusted IP header above is only honored for requests that connect from one of these proxy addresses — anyone else cannot spoof the header. Leave empty to accept the header from any peer (previous behavior). Applies to both firewall layers.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'One IP address or CIDR range per line. When set, the trusted IP header above is only honored for requests that connect from one of these proxy addresses, anyone else cannot spoof the header. Leave empty to accept the header from any peer (previous behavior). Applies to both firewall layers.', 'reportedip-hive' ); ?>
 					</p>
 				</div>
 
@@ -4539,7 +4539,7 @@ class ReportedIP_Hive_Admin_Settings {
 					</p>
 					<?php
 					if ( ! $cloud_status['available'] ) {
-						self::render_tier_lock( $cloud_status, array( 'label' => __( 'Unlock with Business', 'reportedip-hive' ) ) );
+						self::render_tier_lock( $cloud_status, array( 'label' => __( 'Included in Business', 'reportedip-hive' ) ) );
 					}
 					?>
 				</div>
@@ -4617,7 +4617,7 @@ class ReportedIP_Hive_Admin_Settings {
 					if (!btn || !window.jQuery || !window.reportedip_hive_ajax) return;
 					var $ = window.jQuery, $btn = $(btn), $status = $('#reportedip-send-test-mail-status');
 					var labelIdle = <?php echo wp_json_encode( __( 'Send test email', 'reportedip-hive' ) ); ?>;
-					var labelBusy = <?php echo wp_json_encode( __( 'Sending…', 'reportedip-hive' ) ); ?>;
+					var labelBusy = <?php echo wp_json_encode( __( 'Sending...', 'reportedip-hive' ) ); ?>;
 					$btn.on('click', function(e){
 						e.preventDefault();
 						$btn.prop('disabled', true).text(labelBusy);
@@ -4708,7 +4708,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 *
 	 * One row per open issue: severity badge, label and remediation, how long
 	 * the condition has been standing, and the deep links to the setting that
-	 * fixes it, the documentation and — unless it is critical — the seven-day
+	 * fixes it, the documentation and, unless it is critical, the seven-day
 	 * site-wide dismissal.
 	 *
 	 * @param array<int,array<string,mixed>> $issues Output of {@see ReportedIP_Hive_Readiness::open_issues()}.
@@ -4825,7 +4825,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php esc_html_e( 'Cron status', 'reportedip-hive' ); ?>
 			</h2>
 			<p class="rip-settings-section__desc">
-				<?php esc_html_e( 'WP-Cron processes the report queue and refreshes quota counters. If the next-run times below stay in the past, WP-Cron is not firing — set up a server cron (snippet below) or check your CDN/cache plugin.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'WP-Cron processes the report queue and refreshes quota counters. If the next-run times below stay in the past, WP-Cron is not firing, set up a server cron (snippet below) or check your CDN/cache plugin.', 'reportedip-hive' ); ?>
 			</p>
 
 			<div class="rip-card">
@@ -4845,7 +4845,7 @@ class ReportedIP_Hive_Admin_Settings {
 								if ( false === $next ) {
 									$status_class = 'danger';
 									$status_text  = __( 'Not scheduled', 'reportedip-hive' );
-									$next_label   = __( '—', 'reportedip-hive' );
+									$next_label   = '-';
 								} else {
 									$delta = $next - $now;
 									if ( $delta < -300 ) {
@@ -4912,7 +4912,7 @@ class ReportedIP_Hive_Admin_Settings {
 				$('#rip-run-queue-now').on('click', function () {
 					const $btn = $(this);
 					$btn.prop('disabled', true);
-					$out.html('<p>' + <?php echo wp_json_encode( __( 'Processing queue…', 'reportedip-hive' ) ); ?> + '</p>');
+					$out.html('<p>' + <?php echo wp_json_encode( __( 'Processing queue...', 'reportedip-hive' ) ); ?> + '</p>');
 					$.post(ajaxurl, { action: 'reportedip_hive_run_queue_now', nonce: nonce })
 						.done(function (resp) {
 							if (resp.success) {
@@ -5375,7 +5375,7 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Tier definitions — single source of truth for the Community page.
+	 * Tier definitions, single source of truth for the Community page.
 	 *
 	 * Mirrors the constants in reportedip-service/includes/class-constants.php.
 	 * Update only this table when the service side changes.
@@ -5638,7 +5638,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'security_summary'  => $security_summary,
 		);
 
-		self::render_page_header( __( 'Community & Quota', 'reportedip-hive' ), __( 'Join the hive — share threats, set a badge, and help every member stay protected', 'reportedip-hive' ) );
+		self::render_page_header( __( 'Community & Quota', 'reportedip-hive' ), __( 'Join the hive, share threats, set a badge, and help every member stay protected', 'reportedip-hive' ) );
 		?>
 
 			<div class="rip-content">
@@ -5665,7 +5665,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<div class="rip-alert__content rip-alert__content--row">
 							<div>
 								<div class="rip-alert__title"><?php esc_html_e( 'Local Shield mode active', 'reportedip-hive' ); ?></div>
-								<div class="rip-alert__message"><?php esc_html_e( 'Running locally — shared reports, quota and tier upgrades are off. Join the Community Network for shared threat intelligence.', 'reportedip-hive' ); ?></div>
+								<div class="rip-alert__message"><?php esc_html_e( 'Running locally, shared reports, quota and tier upgrades are off. Join the Community Network for shared threat intelligence.', 'reportedip-hive' ); ?></div>
 							</div>
 							<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' ) ); ?>" class="rip-button rip-button--primary rip-button--sm">
 								<?php esc_html_e( 'Switch to Community', 'reportedip-hive' ); ?>
@@ -5808,7 +5808,7 @@ class ReportedIP_Hive_Admin_Settings {
 											if ( isset( $queue_summary['age_days'] ) ) {
 												echo esc_html( sprintf( /* translators: %d: number of days */ _n( '%d day', '%d days', (int) $queue_summary['age_days'], 'reportedip-hive' ), (int) $queue_summary['age_days'] ) );
 											} else {
-												echo '—';
+												echo ', ';
 											}
 											?>
 										</div>
@@ -5873,10 +5873,10 @@ class ReportedIP_Hive_Admin_Settings {
 					</p>
 
 					<ul>
-						<li><strong><?php esc_html_e( 'Unlimited reports', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'No daily limits', 'reportedip-hive' ); ?></li>
-						<li><strong><?php esc_html_e( 'Higher weighting', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'Your reports count more', 'reportedip-hive' ); ?></li>
-						<li><strong><?php esc_html_e( 'Special API keys', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'Optimised for automated systems', 'reportedip-hive' ); ?></li>
-						<li><strong><?php esc_html_e( 'Community recognition', 'reportedip-hive' ); ?></strong> — <?php esc_html_e( 'Visible as an active contributor', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Unlimited reports', 'reportedip-hive' ); ?></strong>, <?php esc_html_e( 'No daily limits', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Higher weighting', 'reportedip-hive' ); ?></strong>, <?php esc_html_e( 'Your reports count more', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Special API keys', 'reportedip-hive' ); ?></strong>, <?php esc_html_e( 'Optimised for automated systems', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Community recognition', 'reportedip-hive' ); ?></strong>, <?php esc_html_e( 'Visible as an active contributor', 'reportedip-hive' ); ?></li>
 					</ul>
 
 					<a href="<?php echo esc_url( $honeypot_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-mt-3">
@@ -5918,7 +5918,7 @@ class ReportedIP_Hive_Admin_Settings {
 									<?php self::render_tier_marker( $mail_relay_status ); ?>
 								</h3>
 								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
-									<li><?php esc_html_e( 'Clean SPF / DKIM / DMARC reputation — no more spam folders', 'reportedip-hive' ); ?></li>
+									<li><?php esc_html_e( 'Clean SPF / DKIM / DMARC reputation, no more spam folders', 'reportedip-hive' ); ?></li>
 									<li><?php esc_html_e( 'No SMTP setup on your server, no own credentials to rotate', 'reportedip-hive' ); ?></li>
 									<li><?php esc_html_e( 'Branded sender, optional reply-to override', 'reportedip-hive' ); ?></li>
 								</ul>
@@ -5934,7 +5934,7 @@ class ReportedIP_Hive_Admin_Settings {
 								</h3>
 								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
 									<li><?php esc_html_e( 'No third-party SMS contract, no top-up management', 'reportedip-hive' ); ?></li>
-									<li><?php esc_html_e( 'Anti-fraud routing — high-risk destinations blocked, GDPR-friendly', 'reportedip-hive' ); ?></li>
+									<li><?php esc_html_e( 'Anti-fraud routing, high-risk destinations blocked, GDPR-friendly', 'reportedip-hive' ); ?></li>
 									<li><?php esc_html_e( 'Server-side anti-spam: per-recipient backoff (2/5/15/30/60 min)', 'reportedip-hive' ); ?></li>
 								</ul>
 								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">
@@ -5949,8 +5949,8 @@ class ReportedIP_Hive_Admin_Settings {
 								$is_active   = ( $active_slug === $slug );
 								$reports_txt = $plan['reports_day'] < 0 ? $unlimited : number_format_i18n( $plan['reports_day'] );
 								$checks_txt  = $plan['checks_day'] < 0 ? $unlimited : number_format_i18n( $plan['checks_day'] );
-								$mail_txt    = isset( $plan['mail_per_mo'] ) ? ( $plan['mail_per_mo'] < 0 ? $unlimited : ( $plan['mail_per_mo'] > 0 ? number_format_i18n( $plan['mail_per_mo'] ) . '/mo' : '—' ) ) : '—';
-								$sms_txt     = isset( $plan['sms_per_mo'] ) ? ( $plan['sms_per_mo'] < 0 ? $unlimited : ( $plan['sms_per_mo'] > 0 ? number_format_i18n( $plan['sms_per_mo'] ) . '/mo' : '—' ) ) : '—';
+								$mail_txt    = isset( $plan['mail_per_mo'] ) ? ( $plan['mail_per_mo'] < 0 ? $unlimited : ( $plan['mail_per_mo'] > 0 ? number_format_i18n( $plan['mail_per_mo'] ) . '/mo' : ', ' ) ) : ', ';
+								$sms_txt     = isset( $plan['sms_per_mo'] ) ? ( $plan['sms_per_mo'] < 0 ? $unlimited : ( $plan['sms_per_mo'] > 0 ? number_format_i18n( $plan['sms_per_mo'] ) . '/mo' : ', ' ) ) : ', ';
 								$domains_txt = isset( $plan['domains'] ) ? ( $plan['domains'] < 0 ? $unlimited : (string) $plan['domains'] ) : '1';
 								$price_txt   = isset( $plan['price'] ) ? (string) $plan['price'] : '';
 								?>
@@ -6019,7 +6019,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 						<?php if ( $is_honeypot ) : ?>
 							<div class="rip-alert rip-alert--success rip-mt-4">
-								<strong><?php esc_html_e( 'Honeypot status detected', 'reportedip-hive' ); ?></strong> —
+								<strong><?php esc_html_e( 'Honeypot status detected', 'reportedip-hive' ); ?></strong>.
 								<?php esc_html_e( 'Your key has honeypot privileges: unlimited reports, unlimited API checks, higher weighting.', 'reportedip-hive' ); ?>
 							</div>
 						<?php endif; ?>
@@ -6055,14 +6055,14 @@ class ReportedIP_Hive_Admin_Settings {
 			array(
 				'variant'   => 'badge',
 				'title'     => __( 'Footer Badge', 'reportedip-hive' ),
-				'desc'      => __( 'Compact "Protected by ReportedIP Hive" badge — fits any footer or sidebar.', 'reportedip-hive' ),
+				'desc'      => __( 'Compact "Protected by ReportedIP Hive" badge, fits any footer or sidebar.', 'reportedip-hive' ),
 				'shortcode' => '[reportedip_badge]',
 				'args'      => array(),
 			),
 			array(
 				'variant'   => 'stat',
-				'title'     => __( 'Stat Card — All-Time', 'reportedip-hive' ),
-				'desc'      => __( 'Cumulative threat count since installation — animates up on first scroll into view, with a live indicator dot.', 'reportedip-hive' ),
+				'title'     => __( 'Stat Card: All-Time', 'reportedip-hive' ),
+				'desc'      => __( 'Cumulative threat count since installation, animates up on first scroll into view, with a live indicator dot.', 'reportedip-hive' ),
 				'shortcode' => '[reportedip_stat type="attacks_total" tone="trust"]',
 				'args'      => array(
 					'type' => 'attacks_total',
@@ -6072,7 +6072,7 @@ class ReportedIP_Hive_Admin_Settings {
 			array(
 				'variant'   => 'banner',
 				'title'     => __( 'Community Banner', 'reportedip-hive' ),
-				'desc'      => __( 'Wider banner that pitches community participation — perfect for landing pages or "About" sections.', 'reportedip-hive' ),
+				'desc'      => __( 'Wider banner that pitches community participation, perfect for landing pages or "About" sections.', 'reportedip-hive' ),
 				'shortcode' => '[reportedip_banner type="reports_total" tone="community"]',
 				'args'      => array(
 					'type' => 'reports_total',
@@ -6082,14 +6082,14 @@ class ReportedIP_Hive_Admin_Settings {
 			array(
 				'variant'   => 'shield',
 				'title'     => __( 'Shield Icon', 'reportedip-hive' ),
-				'desc'      => __( 'Discreet icon-only shield — pair with a footer line or a fixed corner widget.', 'reportedip-hive' ),
+				'desc'      => __( 'Discreet icon-only shield, pair with a footer line or a fixed corner widget.', 'reportedip-hive' ),
 				'shortcode' => '[reportedip_shield]',
 				'args'      => array(),
 			),
 			array(
 				'variant'   => 'stat',
 				'title'     => __( 'Login Activity', 'reportedip-hive' ),
-				'desc'      => __( 'Live successful-login counter (30 days) — a quiet confidence signal in a customer dashboard or "About" footer.', 'reportedip-hive' ),
+				'desc'      => __( 'Live successful-login counter (30 days), a quiet confidence signal in a customer dashboard or "About" footer.', 'reportedip-hive' ),
 				'shortcode' => '[reportedip_stat type="logins_30d" tone="trust"]',
 				'args'      => array(
 					'type' => 'logins_30d',
@@ -6108,7 +6108,7 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 			<div class="rip-card__body">
 				<p style="margin-top:0;">
-					<?php esc_html_e( 'These are the advanced placement tools. The one-click footer badge — the easiest way to link back and join the hive — now lives on the Community tab.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'These are the advanced placement tools. The one-click footer badge, the easiest way to link back and join the hive, now lives on the Community tab.', 'reportedip-hive' ); ?>
 				</p>
 				<p>
 					<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' ) ); ?>" class="rip-button rip-button--secondary">
@@ -6171,16 +6171,16 @@ class ReportedIP_Hive_Admin_Settings {
 				<details style="margin-top:1.5em;">
 					<summary style="cursor:pointer;font-weight:600;color:var(--rip-gray-700);"><?php esc_html_e( 'All available attributes', 'reportedip-hive' ); ?></summary>
 					<div style="margin-top:1em;color:var(--rip-gray-600);font-size:.9em;line-height:1.6;">
-						<p><strong><?php esc_html_e( 'type', 'reportedip-hive' ); ?></strong> — <code>attacks_total</code> (lifetime), <code>attacks_30d</code>, <code>reports_total</code>, <code>api_reports_30d</code>, <code>blocked_active</code>, <code>whitelist_active</code>, <code>logins_30d</code>, <code>spam_30d</code></p>
-						<p><strong><?php esc_html_e( 'tone', 'reportedip-hive' ); ?></strong> — <code>protect</code> (default), <code>trust</code> (<em>"Secured by…"</em>), <code>community</code> (<em>"Part of the ReportedIP Hive"</em>), <code>contributor</code> (<em>"ReportedIP Contributor"</em>)</p>
-						<p><strong><?php esc_html_e( 'bg', 'reportedip-hive' ); ?></strong> — Hex colour <code>#RRGGBB</code> or two stops for a gradient: <code>#FF6B00,#FFB800</code></p>
-						<p><strong><?php esc_html_e( 'color', 'reportedip-hive' ); ?></strong> — Foreground hex colour</p>
-						<p><strong><?php esc_html_e( 'border', 'reportedip-hive' ); ?></strong> — Hex colour or <code>none</code> (default)</p>
-						<p><strong><?php esc_html_e( 'intro', 'reportedip-hive' ); ?></strong> — Override the headline text (max 80 chars)</p>
-						<p><strong><?php esc_html_e( 'label', 'reportedip-hive' ); ?></strong> — Override the metric label / noun (max 80 chars)</p>
-						<p><strong><?php esc_html_e( 'live', 'reportedip-hive' ); ?></strong> — <code>true</code> (default) shows a pulsing live dot, <code>false</code> hides it</p>
-						<p><strong><?php esc_html_e( 'theme', 'reportedip-hive' ); ?></strong> — <code>dark</code> (default Indigo) or <code>light</code> (white card)</p>
-						<p><strong><?php esc_html_e( 'align', 'reportedip-hive' ); ?></strong> — <code>left</code>, <code>center</code>, <code>right</code></p>
+						<p><strong><?php esc_html_e( 'type', 'reportedip-hive' ); ?></strong>, <code>attacks_total</code> (lifetime), <code>attacks_30d</code>, <code>reports_total</code>, <code>api_reports_30d</code>, <code>blocked_active</code>, <code>whitelist_active</code>, <code>logins_30d</code>, <code>spam_30d</code></p>
+						<p><strong><?php esc_html_e( 'tone', 'reportedip-hive' ); ?></strong>, <code>protect</code> (default), <code>trust</code> (<em>"Secured by..."</em>), <code>community</code> (<em>"Part of the ReportedIP Hive"</em>), <code>contributor</code> (<em>"ReportedIP Contributor"</em>)</p>
+						<p><strong><?php esc_html_e( 'bg', 'reportedip-hive' ); ?></strong>, Hex colour <code>#RRGGBB</code> or two stops for a gradient: <code>#FF6B00,#FFB800</code></p>
+						<p><strong><?php esc_html_e( 'color', 'reportedip-hive' ); ?></strong>, Foreground hex colour</p>
+						<p><strong><?php esc_html_e( 'border', 'reportedip-hive' ); ?></strong>, Hex colour or <code>none</code> (default)</p>
+						<p><strong><?php esc_html_e( 'intro', 'reportedip-hive' ); ?></strong>, Override the headline text (max 80 chars)</p>
+						<p><strong><?php esc_html_e( 'label', 'reportedip-hive' ); ?></strong>, Override the metric label / noun (max 80 chars)</p>
+						<p><strong><?php esc_html_e( 'live', 'reportedip-hive' ); ?></strong>, <code>true</code> (default) shows a pulsing live dot, <code>false</code> hides it</p>
+						<p><strong><?php esc_html_e( 'theme', 'reportedip-hive' ); ?></strong>, <code>dark</code> (default Indigo) or <code>light</code> (white card)</p>
+						<p><strong><?php esc_html_e( 'align', 'reportedip-hive' ); ?></strong>, <code>left</code>, <code>center</code>, <code>right</code></p>
 					</div>
 				</details>
 			</div>
@@ -6243,7 +6243,7 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 			<div class="rip-card__body">
 				<p style="margin-top:0;color:var(--rip-gray-600);">
-					<?php esc_html_e( 'Configure every attribute. The preview updates as you change values, and the matching shortcode is generated on the right — just copy it into your post or template.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Configure every attribute. The preview updates as you change values, and the matching shortcode is generated on the right, just copy it into your post or template.', 'reportedip-hive' ); ?>
 				</p>
 
 				<div id="rip-customizer" style="display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);gap:1.5em;margin-top:1em;">
@@ -6251,34 +6251,34 @@ class ReportedIP_Hive_Admin_Settings {
 						<div class="rip-form-group">
 							<label class="rip-label" for="rip-cust-variant"><?php esc_html_e( 'Variant', 'reportedip-hive' ); ?></label>
 							<select id="rip-cust-variant" class="rip-input">
-								<option value="badge"><?php esc_html_e( 'Badge — compact pill', 'reportedip-hive' ); ?></option>
-								<option value="stat"><?php esc_html_e( 'Stat — single big number', 'reportedip-hive' ); ?></option>
-								<option value="banner" selected><?php esc_html_e( 'Banner — full marketing block', 'reportedip-hive' ); ?></option>
-								<option value="shield"><?php esc_html_e( 'Shield — icon only', 'reportedip-hive' ); ?></option>
+								<option value="badge"><?php esc_html_e( 'Badge, compact pill', 'reportedip-hive' ); ?></option>
+								<option value="stat"><?php esc_html_e( 'Stat, single big number', 'reportedip-hive' ); ?></option>
+								<option value="banner" selected><?php esc_html_e( 'Banner, full marketing block', 'reportedip-hive' ); ?></option>
+								<option value="shield"><?php esc_html_e( 'Shield, icon only', 'reportedip-hive' ); ?></option>
 							</select>
 						</div>
 
 						<div class="rip-form-group rip-mt-3">
 							<label class="rip-label" for="rip-cust-type"><?php esc_html_e( 'Stat type', 'reportedip-hive' ); ?></label>
 							<select id="rip-cust-type" class="rip-input">
-								<option value="attacks_total" selected><?php esc_html_e( 'attacks_total — Lifetime attacks', 'reportedip-hive' ); ?></option>
-								<option value="attacks_30d"><?php esc_html_e( 'attacks_30d — Last 30 days', 'reportedip-hive' ); ?></option>
-								<option value="reports_total"><?php esc_html_e( 'reports_total — Lifetime reports', 'reportedip-hive' ); ?></option>
-								<option value="api_reports_30d"><?php esc_html_e( 'api_reports_30d — Reports this month', 'reportedip-hive' ); ?></option>
-								<option value="blocked_active"><?php esc_html_e( 'blocked_active — Currently blocked', 'reportedip-hive' ); ?></option>
-								<option value="whitelist_active"><?php esc_html_e( 'whitelist_active — Trusted IPs', 'reportedip-hive' ); ?></option>
-								<option value="logins_30d"><?php esc_html_e( 'logins_30d — Failed logins (30 days)', 'reportedip-hive' ); ?></option>
-								<option value="spam_30d"><?php esc_html_e( 'spam_30d — Spam (30 days)', 'reportedip-hive' ); ?></option>
+								<option value="attacks_total" selected><?php esc_html_e( 'attacks_total, Lifetime attacks', 'reportedip-hive' ); ?></option>
+								<option value="attacks_30d"><?php esc_html_e( 'attacks_30d, Last 30 days', 'reportedip-hive' ); ?></option>
+								<option value="reports_total"><?php esc_html_e( 'reports_total, Lifetime reports', 'reportedip-hive' ); ?></option>
+								<option value="api_reports_30d"><?php esc_html_e( 'api_reports_30d, Reports this month', 'reportedip-hive' ); ?></option>
+								<option value="blocked_active"><?php esc_html_e( 'blocked_active, Currently blocked', 'reportedip-hive' ); ?></option>
+								<option value="whitelist_active"><?php esc_html_e( 'whitelist_active, Trusted IPs', 'reportedip-hive' ); ?></option>
+								<option value="logins_30d"><?php esc_html_e( 'logins_30d, Failed logins (30 days)', 'reportedip-hive' ); ?></option>
+								<option value="spam_30d"><?php esc_html_e( 'spam_30d, Spam (30 days)', 'reportedip-hive' ); ?></option>
 							</select>
 						</div>
 
 						<div class="rip-form-group rip-mt-3">
 							<label class="rip-label" for="rip-cust-tone"><?php esc_html_e( 'Tone', 'reportedip-hive' ); ?></label>
 							<select id="rip-cust-tone" class="rip-input">
-								<option value="protect"><?php esc_html_e( 'protect — "Protected by ReportedIP Hive"', 'reportedip-hive' ); ?></option>
-								<option value="trust"><?php esc_html_e( 'trust — "Secured by ReportedIP Hive"', 'reportedip-hive' ); ?></option>
-								<option value="community" selected><?php esc_html_e( 'community — "Part of the ReportedIP Hive"', 'reportedip-hive' ); ?></option>
-								<option value="contributor"><?php esc_html_e( 'contributor — "ReportedIP Contributor"', 'reportedip-hive' ); ?></option>
+								<option value="protect"><?php esc_html_e( 'protect, "Protected by ReportedIP Hive"', 'reportedip-hive' ); ?></option>
+								<option value="trust"><?php esc_html_e( 'trust, "Secured by ReportedIP Hive"', 'reportedip-hive' ); ?></option>
+								<option value="community" selected><?php esc_html_e( 'community, "Part of the ReportedIP Hive"', 'reportedip-hive' ); ?></option>
+								<option value="contributor"><?php esc_html_e( 'contributor, "ReportedIP Contributor"', 'reportedip-hive' ); ?></option>
 							</select>
 						</div>
 
@@ -6481,7 +6481,7 @@ class ReportedIP_Hive_Admin_Settings {
 				fallback.href = banner.getAttribute('data-href');
 				fallback.rel = 'noopener';
 				fallback.className = 'rip-hive-fallback-link';
-				fallback.textContent = hn.headline + ' — ' + metricText;
+				fallback.textContent = hn.headline + ', ' + metricText;
 				banner.appendChild(fallback);
 
 				wrap.appendChild(banner);
@@ -6566,7 +6566,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php esc_html_e( 'You are part of the hive', 'reportedip-hive' ); ?>
 				</h2>
 				<p style="max-width:65ch;">
-					<?php esc_html_e( 'ReportedIP works like a swarm: every site that shares the threats it sees, and links back to the network, makes all of us faster at spotting the next attack. Two things take a minute and help everyone — share your blocks and set a footer badge.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'ReportedIP works like a swarm: every site that shares the threats it sees, and links back to the network, makes all of us faster at spotting the next attack. Two things take a minute and help everyone, share your blocks and set a footer badge.', 'reportedip-hive' ); ?>
 				</p>
 				<?php if ( $reports_total > 0 ) : ?>
 					<p style="margin-bottom:0;font-size:var(--rip-text-lg,1.125rem);">
@@ -6593,7 +6593,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * The single most important participation action: an inviting, prominent
 	 * card that activates the "Protected by ReportedIP Hive" footer link in one
 	 * click. The badge stays strictly opt-in (default off) per WordPress.org
-	 * guidelines — reach comes from persuasion, not a forced link.
+	 * guidelines, reach comes from persuasion, not a forced link.
 	 *
 	 * @return void
 	 * @since  2.0.26
@@ -6619,7 +6619,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<div class="rip-card__header">
 				<h2 class="rip-card__title">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-					<?php esc_html_e( 'Set your badge — in one click', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Set your badge, in one click', 'reportedip-hive' ); ?>
 				</h2>
 			</div>
 			<div class="rip-card__body">
@@ -6642,12 +6642,12 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php endif; ?>
 
 				<p style="margin-top:0;max-width:65ch;">
-					<?php esc_html_e( 'Show a small "Protected by ReportedIP Hive" badge in your footer. It is the quickest way to support the community — and it puts your site on the map.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Show a small "Protected by ReportedIP Hive" badge in your footer. It is the quickest way to support the community, and it puts your site on the map.', 'reportedip-hive' ); ?>
 				</p>
 				<ul style="margin:0 0 1.25em 18px;padding:0;color:var(--rip-gray-700,#374151);max-width:65ch;">
-					<li><?php esc_html_e( 'Strengthens the network — more links mean more sites discover the shared protection.', 'reportedip-hive' ); ?></li>
+					<li><?php esc_html_e( 'Strengthens the network, more links mean more sites discover the shared protection.', 'reportedip-hive' ); ?></li>
 					<li><?php esc_html_e( 'Makes your site visible as an active contributor, not just a consumer.', 'reportedip-hive' ); ?></li>
-					<li><?php esc_html_e( 'Clean, real HTML link inside Shadow DOM — search engines credit your site and your theme cannot override the design.', 'reportedip-hive' ); ?></li>
+					<li><?php esc_html_e( 'Clean, real HTML link inside Shadow DOM, search engines credit your site and your theme cannot override the design.', 'reportedip-hive' ); ?></li>
 				</ul>
 
 				<div id="rip-auto-footer-preview" style="background:var(--rip-gray-50);border:1px dashed var(--rip-gray-300);border-radius:var(--rip-radius-lg);padding:1.5em;min-height:90px;display:flex;align-items:center;justify-content:<?php echo esc_attr( $preview_justify ); ?>;margin-bottom:.6em;">
@@ -6665,7 +6665,7 @@ class ReportedIP_Hive_Admin_Settings {
 					?>
 				</div>
 				<p style="margin:0 0 1.25em;font-size:.85em;color:var(--rip-gray-600);">
-					<?php esc_html_e( 'Live preview — updates as you change the variant and position below.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Live preview, updates as you change the variant and position below.', 'reportedip-hive' ); ?>
 				</p>
 				<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>">
 					<?php settings_fields( 'reportedip_hive_promote' ); ?>
@@ -6712,7 +6712,7 @@ class ReportedIP_Hive_Admin_Settings {
 							<?php esc_html_e( 'Below content', 'reportedip-hive' ); ?>
 						</label>
 						<span style="display:block;margin-top:.5em;color:var(--rip-gray-600);font-size:.9em;">
-							<?php esc_html_e( 'Below content renders the badge as a full-width row directly below your theme footer — works across classic and block themes.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Below content renders the badge as a full-width row directly below your theme footer, works across classic and block themes.', 'reportedip-hive' ); ?>
 						</span>
 					</fieldset>
 
@@ -6784,8 +6784,8 @@ class ReportedIP_Hive_Admin_Settings {
 					? ( $reports_30d > 0
 						/* translators: %s: number of reports shared in the last 30 days. */
 						? sprintf( __( '%s shared in the last 30 days', 'reportedip-hive' ), number_format_i18n( $reports_30d ) )
-						: __( 'Connected — nothing shared yet', 'reportedip-hive' ) )
-					: __( 'Local mode — not sharing', 'reportedip-hive' ),
+						: __( 'Connected, nothing shared yet', 'reportedip-hive' ) )
+					: __( 'Local mode, not sharing', 'reportedip-hive' ),
 				'action' => $reports_active ? null : array(
 					'url'   => $is_community_mode ? $upgrade_url : $settings_url,
 					'label' => $is_community_mode ? __( 'Upgrade to share more', 'reportedip-hive' ) : __( 'Switch to Community', 'reportedip-hive' ),
@@ -6796,8 +6796,8 @@ class ReportedIP_Hive_Admin_Settings {
 				'title'  => __( 'Footer badge', 'reportedip-hive' ),
 				'active' => $badge_active,
 				'status' => $badge_active
-					? __( 'Live — linking back to the hive', 'reportedip-hive' )
-					: __( 'Not set — one click activates it', 'reportedip-hive' ),
+					? __( 'Live, linking back to the hive', 'reportedip-hive' )
+					: __( 'Not set, one click activates it', 'reportedip-hive' ),
 				'action' => $badge_active ? null : array(
 					'url'   => '#rip-auto-footer-preview',
 					'label' => __( 'Set the badge', 'reportedip-hive' ),
@@ -6808,7 +6808,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'title'  => __( 'Honeypot', 'reportedip-hive' ),
 				'active' => $is_honeypot,
 				'status' => $is_honeypot
-					? __( 'Active — unlimited, higher weighting', 'reportedip-hive' )
+					? __( 'Active, unlimited, higher weighting', 'reportedip-hive' )
 					: __( 'Run a honeypot for extra impact', 'reportedip-hive' ),
 				'action' => $is_honeypot ? null : array(
 					'url'   => $honeypot_url,

@@ -7,7 +7,7 @@
  * generates a plain-text alternative from the same source strings, and routes
  * the final message through a swappable provider.
  *
- * Custom transports (Postmark, SES, SMTP relay, …) plug in by filtering
+ * Custom transports (Postmark, SES, SMTP relay, ...) plug in by filtering
  * `reportedip_hive_mail_provider` and returning an instance of
  * ReportedIP_Hive_Mail_Provider_Interface.
  *
@@ -56,7 +56,7 @@ class ReportedIP_Hive_Mailer {
 	 *   - intro_text      string   Plain-text intro line(s).
 	 *
 	 * Optional keys:
-	 *   - greeting        string   "Hello Name," — omit for impersonal admin alerts.
+	 *   - greeting        string   "Hello Name,", omit for impersonal admin alerts.
 	 *   - main_block_html string   HTML for the main block (caller-controlled, runs through wp_kses_post).
 	 *   - main_block_text string   Plain-text mirror of the main block (used in the text/plain part).
 	 *   - cta             array    ['label' => string, 'url' => string].
@@ -107,7 +107,7 @@ class ReportedIP_Hive_Mailer {
 	 * Split a recipient string into one or more single addresses.
 	 *
 	 * The relay endpoint (`POST /relay-mail`) accepts only one recipient per
-	 * request — `sanitize_email()` + `is_email()` strictly validate a single
+	 * request, `sanitize_email()` + `is_email()` strictly validate a single
 	 * address, so passing a comma-separated list fails 422 and the whole
 	 * mail is dropped. Callers like {@see ReportedIP_Hive_Security_Monitor::send_admin_alert()}
 	 * still pass `implode(', ', $recipients)` because that is the WP_Mail
@@ -271,7 +271,7 @@ class ReportedIP_Hive_Mailer {
 			$args['site_name'],
 			$args['site_url']
 		);
-		$lines[] = __( 'This message is protected by ReportedIP — Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' );
+		$lines[] = __( 'This message is protected by ReportedIP, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' );
 		$lines[] = 'https://reportedip.com/';
 
 		return implode( "\n", $lines );
@@ -317,7 +317,7 @@ class ReportedIP_Hive_Mailer {
 	}
 
 	/**
-	 * Reset the cached provider — useful in tests when a filter is added late.
+	 * Reset the cached provider, useful in tests when a filter is added late.
 	 */
 	public function reset_provider_cache() {
 		$this->resolved_provider = null;

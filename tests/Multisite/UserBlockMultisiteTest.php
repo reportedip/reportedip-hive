@@ -217,7 +217,7 @@ class ReportedIP_Hive_User_Block_Multisite_Test extends WP_UnitTestCase {
 
 	/**
 	 * On a lapsed plan a new block is refused, but an existing one can still
-	 * be lifted — the licence must never hand access back on its own.
+	 * be lifted, the licence must never hand access back on its own.
 	 */
 	public function test_free_tier_locks_blocking_but_never_unblocking() {
 		ReportedIP_Hive_User_Block::block( $this->target );

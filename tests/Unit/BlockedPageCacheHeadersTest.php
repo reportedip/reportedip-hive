@@ -6,7 +6,7 @@
  * served to every legitimate visitor of the same URL until the cache
  * expired. The mitigation is a small static helper that defines the
  * `DONOTCACHE*` family of constants and emits explicit no-store /
- * no-cache headers — this test guards the helper's contract so a future
+ * no-cache headers, this test guards the helper's contract so a future
  * refactor cannot silently strip the cache-prevention.
  *
  * @package    ReportedIP_Hive

@@ -3,7 +3,7 @@
  * Unit Tests for the 404 Scanner pattern matcher.
  *
  * Exercises ReportedIP_Hive_Scan_Detector::is_known_scan_path() via reflection
- * — pure list-comparison, no WordPress, no DB. Locks down both the explicit
+ * - pure list-comparison, no WordPress, no DB. Locks down both the explicit
  * known paths (one-shot triggers) and the prefix-based detection.
  *
  * @package    ReportedIP_Hive
@@ -154,7 +154,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * Pattern-hit honeypot paths must keep firing regardless of the UA —
+		 * Pattern-hit honeypot paths must keep firing regardless of the UA.
 		 * a fake Googlebot crawling /.env IS the attack indicator.
 		 *
 		 * @dataProvider honeypot_paths_for_spoofing_test
@@ -162,7 +162,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_pattern_hit_paths_remain_armed_even_for_bot_uas( string $path ) {
 			$this->assertTrue(
 				$this->call_is_known_scan_path( $path ),
-				"Honeypot path '$path' must stay matched — bot allowlist does not apply"
+				"Honeypot path '$path' must stay matched, bot allowlist does not apply"
 			);
 		}
 
@@ -215,7 +215,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * Real content, broken site assets and honeypot paths must NOT be
-		 * treated as benign — they still feed the trigger. The .php "icon"
+		 * treated as benign, they still feed the trigger. The .php "icon"
 		 * guards against a scanner disguising a probe with an icon-like name.
 		 *
 		 * @dataProvider non_benign_404_paths
@@ -282,7 +282,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * Scanner-relevant extensions and extension-less paths must NOT be
-		 * treated as passive assets — the rate trigger must keep counting them.
+		 * treated as passive assets, the rate trigger must keep counting them.
 		 *
 		 * @dataProvider non_asset_paths
 		 */

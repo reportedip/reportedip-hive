@@ -1,6 +1,6 @@
 <?php
 /**
- * Centralised plugin defaults — single source of truth for every option
+ * Centralised plugin defaults, single source of truth for every option
  * default, the protection-level presets and the safe-default seed.
  *
  * @package   ReportedIP_Hive
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Plugin-wide defaults registry — the single source of truth for every
+ * Plugin-wide defaults registry, the single source of truth for every
  * `reportedip_hive_*` option default.
  *
  * Four accessors are exposed:
@@ -61,7 +61,7 @@ final class ReportedIP_Hive_Defaults {
 	 * all read from here. Values are typed (bool stays bool, int stays int) and
 	 * persisted verbatim through `ReportedIP_Hive_Option_Routing::set()`.
 	 *
-	 * The three per-site override keys are deliberately absent — they are
+	 * The three per-site override keys are deliberately absent, they are
 	 * blog-scoped and resolved on demand by `ReportedIP_Hive_Option_Routing`.
 	 *
 	 * @var array<string, scalar>
@@ -338,14 +338,14 @@ final class ReportedIP_Hive_Defaults {
 	/**
 	 * Brand default for the From-Name when no custom value is configured.
 	 *
-	 * Used as a last-resort fallback only — the regular default is the site's
+	 * Used as a last-resort fallback only, the regular default is the site's
 	 * own bloginfo('name'), which makes the From line read like the user's
 	 * site (e.g. "alre.de" instead of a generic "ReportedIP").
 	 */
 	public const NOTIFY_FROM_NAME_DEFAULT = 'ReportedIP';
 
 	/**
-	 * Computed default for the From-Name field — what the placeholder /
+	 * Computed default for the From-Name field, what the placeholder /
 	 * settings UI should suggest when the user hasn't overridden the option.
 	 *
 	 * Uses the site's bloginfo('name') so plugin mails read like they came
@@ -454,7 +454,7 @@ final class ReportedIP_Hive_Defaults {
 	 * Seed every default that is not yet present, routed through
 	 * `ReportedIP_Hive_Option_Routing` so network-wide keys land in sitemeta on
 	 * Multisite instead of a single blog's options table. Existing values are
-	 * never overwritten — this is the shared seeder for activation, the
+	 * never overwritten, this is the shared seeder for activation, the
 	 * wizard-skip path and the settings-reset re-seed.
 	 *
 	 * @return void

@@ -40,7 +40,7 @@ class HideLoginFrontend2faBypassTest extends TestCase {
 		$this->assertStringContainsString(
 			"ReportedIP_Hive_Two_Factor_Frontend::get_setup_slug()",
 			$source,
-			'should_bypass() must read the configured setup slug from the Frontend module — the onboarding wizard is on its own slug.'
+			'should_bypass() must read the configured setup slug from the Frontend module, the onboarding wizard is on its own slug.'
 		);
 	}
 
@@ -50,7 +50,7 @@ class HideLoginFrontend2faBypassTest extends TestCase {
 		$this->assertMatchesRegularExpression(
 			'/foreach\s*\(\s*\$rip_2fa_slugs\s+as\s+\$rip_slug\s*\)/',
 			$source,
-			'The bypass must iterate both slugs and short-circuit on a match — a single hardcoded slug would break the moment the operator renames either one.'
+			'The bypass must iterate both slugs and short-circuit on a match, a single hardcoded slug would break the moment the operator renames either one.'
 		);
 		$this->assertStringContainsString(
 			"str_starts_with( \$path, '/' . \$rip_slug . '/' )",

@@ -4,8 +4,8 @@
  *
  * Every automatic IP block funnels through
  * `Security_Monitor::handle_threshold_exceeded()`; the guard must run there
- * FIRST — before the threshold log, the block, the community API report and
- * the admin mail — and again defensively inside `auto_block_ip()` for direct
+ * FIRST, before the threshold log, the block, the community API report and
+ * the admin mail, and again defensively inside `auto_block_ip()` for direct
  * callers. The full monitor depends on too many runtime singletons to mock
  * cheaply, so the contract is anchored via source inspection (the established
  * pattern, see RestMonitorBotAllowlistTest); the verdict-combination logic
@@ -98,7 +98,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertStringContainsString(
 					"'" . $slug . "'",
 					substr( $source, $const_pos, 400 ),
-					"Credential event '$slug' must be excluded from the bot guard — no genuine crawler submits credentials"
+					"Credential event '$slug' must be excluded from the bot guard, no genuine crawler submits credentials"
 				);
 			}
 

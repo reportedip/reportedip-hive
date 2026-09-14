@@ -4,7 +4,7 @@
  * {@see ReportedIP_Hive_Two_Factor_Frontend::on_tier_changed()}.
  *
  * The soft-disable contract is the safety net for
- * Free / Contributor → … sequences: customer 2FA secrets are NEVER
+ * Free / Contributor → ... sequences: customer 2FA secrets are NEVER
  * deleted on a downgrade, the module merely parks itself so new
  * onboardings cannot start. A subsequent upgrade automatically
  * clears the marker.

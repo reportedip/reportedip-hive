@@ -3,8 +3,8 @@
  * Tests for the `reportedip_hive_report_queued` hook in queue_api_report().
  *
  * The hook must fire exactly once per report that actually entered the API
- * queue — after the public-IP drop, the cooldown check and the duplicate
- * check have all passed and the INSERT succeeded — and never for suppressed
+ * queue, after the public-IP drop, the cooldown check and the duplicate
+ * check have all passed and the INSERT succeeded, and never for suppressed
  * duplicates. Exercised behaviourally against a recording `$wpdb` double
  * (the TimezoneConsistencyTest idiom) whose get_var() returns are sequenced
  * per test to steer the dedup path. The tests run in separate processes so

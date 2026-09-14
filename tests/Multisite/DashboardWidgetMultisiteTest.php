@@ -66,7 +66,7 @@ class ReportedIP_Hive_Dashboard_Widget_Multisite_Test extends WP_UnitTestCase {
 
 	/**
 	 * A sub-site administrator without network capabilities must not get
-	 * the widget — site admins are read-only by design.
+	 * the widget, site admins are read-only by design.
 	 */
 	public function test_widget_not_registered_for_subsite_admin_without_network_cap() {
 		$blog_id = self::factory()->blog->create();

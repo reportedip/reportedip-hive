@@ -121,7 +121,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * `is_recently_processed()` must only flag the IP as "recently
 		 * reported" when a `completed` row exists. Pending/processing rows
-		 * (which can be stuck) must NOT count, and — fixed in 2.0.13 — a
+		 * (which can be stuck) must NOT count, and, fixed in 2.0.13:a
 		 * recent local auto-block on the same IP must NOT count either
 		 * (otherwise every freshly-blocked IP would be silently excluded
 		 * from the community report, which is exactly what we just blocked

@@ -61,7 +61,7 @@ namespace {
 	if ( ! class_exists( 'ReportedIP_Hive_API' ) ) {
 		/**
 		 * API-client double: only the announced site URL is needed here. The
-		 * `www.` prefix is deliberate — the audience check must strip it the
+		 * `www.` prefix is deliberate, the audience check must strip it the
 		 * same way the service domain registry does.
 		 */
 		class ReportedIP_Hive_API {

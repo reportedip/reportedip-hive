@@ -1,6 +1,6 @@
 <?php
 /**
- * Session list table — who is signed in, from where, and the switch to end it.
+ * Session list table, who is signed in, from where, and the switch to end it.
  *
  * Pagination runs over users that own at least one session; every live session
  * of a listed user becomes one row. Rows come from
@@ -95,7 +95,7 @@ class ReportedIP_Hive_Sessions_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Sortable columns — sorting happens on the user query, not per session.
+	 * Sortable columns, sorting happens on the user query, not per session.
 	 *
 	 * @return array<string,array{0:string,1:bool}>
 	 * @since  2.1.51
@@ -167,12 +167,12 @@ class ReportedIP_Hive_Sessions_Table extends WP_List_Table {
 
 			case 'ip':
 				$ip = ReportedIP_Hive_User_Sessions::display_ip( $item['session'] );
-				return '' !== $ip ? ReportedIP_Hive_IP_Cell::render( $ip ) : '&mdash;';
+				return '' !== $ip ? ReportedIP_Hive_IP_Cell::render( $ip ) : ', ';
 
 			case 'device':
 				$ua = isset( $item['session']['ua'] ) ? (string) $item['session']['ua'] : '';
 				if ( '' === $ua ) {
-					return '&mdash;';
+					return ', ';
 				}
 				return sprintf(
 					'<span title="%s">%s</span>',
@@ -238,7 +238,7 @@ class ReportedIP_Hive_Sessions_Table extends WP_List_Table {
 	 */
 	private function render_actions( array $item ) {
 		if ( ! current_user_can( 'edit_user', $item['user']->ID ) ) {
-			return '&mdash;';
+			return ', ';
 		}
 
 		$buttons = array();
@@ -290,7 +290,7 @@ class ReportedIP_Hive_Sessions_Table extends WP_List_Table {
 	private function format_timestamp( $timestamp ) {
 		$timestamp = (int) $timestamp;
 		if ( $timestamp <= 0 ) {
-			return '—';
+			return ', ';
 		}
 		return ReportedIP_Hive::format_local_datetime( gmdate( 'Y-m-d H:i:s', $timestamp ) );
 	}

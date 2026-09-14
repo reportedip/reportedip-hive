@@ -82,7 +82,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertStringNotContainsString(
 					$token,
 					$key,
-					'The raw token must never appear in a transient key — only its SHA-256.'
+					'The raw token must never appear in a transient key, only its SHA-256.'
 				);
 			}
 			$this->assertSame( 42, $this->resolve( $token ) );

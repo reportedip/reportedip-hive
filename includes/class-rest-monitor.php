@@ -3,7 +3,7 @@
  * REST API Abuse Monitor.
  *
  * Per-IP request-rate detection on `rest_pre_dispatch`. Distinct from the
- * 2FA-specific REST throttle in class-two-factor-rest.php — this one watches
+ * 2FA-specific REST throttle in class-two-factor-rest.php, this one watches
  * the entire REST surface (`/wp-json/*`) and is the layer that catches
  * scrapers, vulnerability scanners, and burst-abuse against expensive
  * endpoints. Two thresholds run in parallel:
@@ -11,7 +11,7 @@
  *  - Global threshold: any IP issuing more than N REST requests within the
  *    window is rate-limited and reported.
  *  - Sensitive-endpoint threshold: lower threshold for routes that leak
- *    user data (`/wp/v2/users`) or grant write access — these warrant a
+ *    user data (`/wp/v2/users`) or grant write access, these warrant a
  *    much faster trigger.
  *
  * Bypass list: REST routes the plugin needs for its own admin AJAX-style
@@ -78,7 +78,7 @@ class ReportedIP_Hive_REST_Monitor {
 		 * autosave, media library, taxonomy / user lookups, block patterns,
 		 * theme.json), which would otherwise trip the default 60/5min threshold
 		 * and lock the admin out of their own backend. Authenticated traffic is
-		 * not the threat model this sensor exists for — the per-route 2FA-REST
+		 * not the threat model this sensor exists for, the per-route 2FA-REST
 		 * throttle and other auth-aware sensors cover that surface.
 		 */
 		if ( is_user_logged_in() ) {
@@ -118,13 +118,13 @@ class ReportedIP_Hive_REST_Monitor {
 
 		/*
 		 * Verified search engine and AI crawlers (Googlebot, Bingbot, GPTBot,
-		 * ClaudeBot, …) are exempt from the global REST burst trigger so legit
+		 * ClaudeBot, ...) are exempt from the global REST burst trigger so legit
 		 * bots that walk /wp-json/* (e.g. sitemap indexers, AI scrapers) do not
 		 * trip the per-IP threshold.
 		 *
 		 * The sensitive routes are excluded from that exemption: no crawler
 		 * needs to page through /wp/v2/users, and until 2.1.40 the exemption
-		 * silently covered them too — the opposite of what the surrounding
+		 * silently covered them too, the opposite of what the surrounding
 		 * documentation promised.
 		 */
 		if ( ! $this->is_sensitive_route( $route ) && class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
@@ -179,7 +179,7 @@ class ReportedIP_Hive_REST_Monitor {
 	 *  - the oEmbed discovery endpoint used by legitimate embeds.
 	 *
 	 * The same namespaces seed
-	 * `Defaults::SAFE_OPTIONS['reportedip_hive_rest_allowed_namespaces']` —
+	 * `Defaults::SAFE_OPTIONS['reportedip_hive_rest_allowed_namespaces']`.
 	 * a namespace legitimate enough to skip the rate limit is legitimate
 	 * enough to survive the REST access switch. `AttackSurfaceRestDecisionTest`
 	 * pins the two lists together so neither drifts alone.
@@ -202,7 +202,7 @@ class ReportedIP_Hive_REST_Monitor {
 			/*
 			 * High-volume first-party content, page-builder and commerce
 			 * namespaces. Their frontends render by fetching from the REST API
-			 * on ordinary page loads — a Slider Revolution re-fetch or a
+			 * on ordinary page loads, a Slider Revolution re-fetch or a
 			 * WooCommerce cart-fragment poll can issue hundreds of anonymous
 			 * requests per visitor in minutes. That is legitimate rendering
 			 * traffic, not scraping; counting it against the global budget

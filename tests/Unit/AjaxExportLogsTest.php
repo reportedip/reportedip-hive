@@ -5,7 +5,7 @@
  * Two export bugs are locked in place here:
  *
  *  1. The export buttons are GET links, so `format`/`days` must be read from
- *     `$_REQUEST` — the old `$_POST` read made the JSON button silently
+ *     `$_REQUEST`, the old `$_POST` read made the JSON button silently
  *     deliver CSV and ignored any custom day range.
  *  2. `Logger::get_logs()` JSON-decodes the `details` column into an array;
  *     handing that array straight to `fputcsv()` cast it to the literal

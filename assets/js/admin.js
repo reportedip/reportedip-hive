@@ -345,7 +345,7 @@
                 success: function(response) {
                     if (response.success) {
                         let html = '<div class="api-key-info">';
-                        html += '<h4><span style="color: #28a745;">✓</span> ' + reportedip_hive_ajax.strings.connection_successful + '</h4>';
+                        html += '<h4><span style="color: #28a745;">yes</span> ' + reportedip_hive_ajax.strings.connection_successful + '</h4>';
                         
                         // Key information
                         if (response.key_name) {
@@ -390,7 +390,7 @@
                             
                             for (const [key, value] of Object.entries(features)) {
                                 const label = featureLabels[key] || key;
-                                const icon = value ? '✓' : '✗';
+                                const icon = value ? 'yes' : '✗';
                                 const color = value ? '#28a745' : '#6c757d';
                                 html += '<div class="feature-item" style="color: ' + color + ';">' + icon + ' ' + escapeHtml(label) + '</div>';
                             }

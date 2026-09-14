@@ -29,7 +29,7 @@ namespace {
 
 	if ( ! class_exists( 'Test_WPDB_Stub' ) ) {
 		/**
-		 * Tiny $wpdb stub — captures the prepare-call args and returns a
+		 * Tiny $wpdb stub, captures the prepare-call args and returns a
 		 * predetermined block-count from the global state.
 		 */
 		class Test_WPDB_Stub {
@@ -98,7 +98,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame(
 				$last,
 				\ReportedIP_Hive_Block_Escalation::next_block_minutes( '1.2.3.4' ),
-				'Past the end of the ladder, the cap is the last entry — never longer, never wraps to step 1.'
+				'Past the end of the ladder, the cap is the last entry, never longer, never wraps to step 1.'
 			);
 		}
 

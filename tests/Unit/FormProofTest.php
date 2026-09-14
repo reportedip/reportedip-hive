@@ -4,7 +4,7 @@
  *
  * Locks the four-way verdict. The two halves that carry the feature are the
  * boundary between "we rendered here and the script did not run" and "this form
- * was never ours" — conflating them is what turns a spam filter into a site
+ * was never ours", conflating them is what turns a spam filter into a site
  * that refuses every comment on a hand-written theme.
  *
  * @package    ReportedIP_Hive

@@ -87,7 +87,7 @@ final class ReportedIP_Hive_Score {
 	/**
 	 * Reduce a list of item descriptors to a scored summary.
 	 *
-	 * Pure function — no WordPress calls. Only items with `present === true`
+	 * Pure function, no WordPress calls. Only items with `present === true`
 	 * participate; the maximum is the sum of their weights (renormalisation
 	 * base). A present item earns its weight when both available and enabled;
 	 * a present-but-unavailable item (tier/mode lock) contributes to the

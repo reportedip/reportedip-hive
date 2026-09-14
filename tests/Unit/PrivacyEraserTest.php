@@ -2,7 +2,7 @@
 /**
  * GDPR wiring for the account block and the per-session IP address.
  *
- * An erasure request may not lift a security block — the account would be
+ * An erasure request may not lift a security block, the account would be
  * back the moment the request completes. The free-text fields go, the block
  * itself is reported as retained. Conversely the export must be complete: the
  * proxy-aware session IP is Hive's own field and is absent from core's
@@ -47,7 +47,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * The sign-in history exists for users who never enabled 2FA, so it
-		 * cannot ride along with the 2FA eraser — that one only runs when a
+		 * cannot ride along with the 2FA eraser, that one only runs when a
 		 * second factor is active.
 		 */
 		public function test_eraser_drops_the_sign_in_history_for_every_user(): void {

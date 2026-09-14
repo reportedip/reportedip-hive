@@ -4,7 +4,7 @@
  *
  * Records login, logout, failed login, password-reset, profile, role-change
  * and registration events into the dedicated `audit_log` table for compliance
- * and forensics — most notably a role change carries the actor (`changed_by`)
+ * and forensics, most notably a role change carries the actor (`changed_by`)
  * for privilege-escalation review, and a login from an address the user has
  * not used before is flagged as `new_ip`. Capture only happens while the
  * `audit_log` feature is available (Business+); on lower tiers the hooks are
@@ -95,7 +95,7 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
-	 * Private constructor — wiring happens in register_hooks().
+	 * Private constructor, wiring happens in register_hooks().
 	 *
 	 * @since 2.1.2
 	 */
@@ -116,7 +116,7 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
-	 * Register the lifecycle hooks — only when capture is available and enabled.
+	 * Register the lifecycle hooks, only when capture is available and enabled.
 	 *
 	 * The tier gate resolves translated feature labels, so checking it before
 	 * `init` would trigger WordPress 6.7's too-early textdomain notice (and
@@ -151,7 +151,7 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
-	 * Successful login — flagged `new_ip` when the address is unfamiliar.
+	 * Successful login, flagged `new_ip` when the address is unfamiliar.
 	 *
 	 * @param string  $user_login Login name.
 	 * @param WP_User $user       Authenticated user.
@@ -281,7 +281,7 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
-	 * Profile update — records an e-mail change explicitly.
+	 * Profile update, records an e-mail change explicitly.
 	 *
 	 * @param int     $user_id       Updated user id.
 	 * @param WP_User $old_user_data Pre-update user object.
@@ -301,7 +301,7 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
-	 * Role change — captures the actor as `changed_by`.
+	 * Role change, captures the actor as `changed_by`.
 	 *
 	 * @param int      $user_id   User whose role changed.
 	 * @param string   $role      New primary role.
@@ -397,7 +397,7 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
-	 * Build a storage-ready audit row from a context array. Pure — no WP calls.
+	 * Build a storage-ready audit row from a context array. Pure, no WP calls.
 	 *
 	 * Redacts sensitive keys, JSON-encodes the data blob and clamps every
 	 * field to its column width. Unit-testable without a database.

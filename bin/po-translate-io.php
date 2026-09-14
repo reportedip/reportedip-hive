@@ -402,7 +402,7 @@ function run_import(string $po, string $outdir, bool $overwrite = false): int
  * Extracts placeholder/markup tokens from a string as a sorted multiset.
  *
  * Covers printf placeholders (%s, %d, %1$s, %%), HTML tags, gettext shortcodes
- * and HTML entities — everything that must survive translation unchanged.
+ * and HTML entities, everything that must survive translation unchanged.
  *
  * @param string $value String to scan.
  * @return string[] Sorted token list.

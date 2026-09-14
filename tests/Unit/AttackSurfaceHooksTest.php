@@ -4,9 +4,9 @@
  *
  * The REST gate runs inside `rest_authentication_errors`, which needs a live
  * WordPress request to exercise end to end. The properties that must never
- * silently change — hook priority, the error pass-through, the CLI/cron
+ * silently change, hook priority, the error pass-through, the CLI/cron
  * carve-out, "log only, never escalate", the `display_errors` guard and the
- * inline option fallbacks — are anchored by source inspection instead (the
+ * inline option fallbacks, are anchored by source inspection instead (the
  * established pattern, see SecurityMonitorBotGuardTest).
  *
  * @package    ReportedIP_Hive
@@ -44,7 +44,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertGreaterThanOrEqual(
 				101,
 				(int) $m[1],
-				'Core checks the application password at 90 and the cookie nonce at 100 — running earlier would judge a request WordPress has not authenticated yet.'
+				'Core checks the application password at 90 and the cookie nonce at 100:running earlier would judge a request WordPress has not authenticated yet.'
 			);
 		}
 
@@ -86,7 +86,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString(
 				'is_exempt_crawler',
 				$this->source(),
-				'An access-control switch has no crawler bypass — the allowlist is the only exemption.'
+				'An access-control switch has no crawler bypass, the allowlist is the only exemption.'
 			);
 		}
 
@@ -103,7 +103,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString(
 				'is_whitelisted',
 				substr( $source, 0, $start ),
-				'The DB whitelist means "never block", not "authorize" — it must not open a closed endpoint.'
+				'The DB whitelist means "never block", not "authorize", it must not open a closed endpoint.'
 			);
 		}
 

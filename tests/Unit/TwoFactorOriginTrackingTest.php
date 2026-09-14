@@ -15,7 +15,7 @@
  *    `wc_session_hash` so the challenge page can preserve the cart and
  *    redirect back to the right WC endpoint.
  *  - `resolve_challenge_url()` falls back to wp-login when the Frontend
- *    Two-Factor module is not yet loaded (Phase 3 dependency) — so
+ *    Two-Factor module is not yet loaded (Phase 3 dependency), so
  *    activating the tracking in isolation never breaks the existing
  *    backend flow.
  *
@@ -54,7 +54,7 @@ class TwoFactorOriginTrackingTest extends TestCase {
 		$this->assertStringContainsString(
 			"'wc_session_hash' => \$wc_session,",
 			$source,
-			'The WooCommerce session customer-id must be captured before the redirect — otherwise the cart silently empties on the way to the challenge.'
+			'The WooCommerce session customer-id must be captured before the redirect, otherwise the cart silently empties on the way to the challenge.'
 		);
 	}
 
@@ -64,7 +64,7 @@ class TwoFactorOriginTrackingTest extends TestCase {
 		$this->assertStringContainsString(
 			'$challenge_url = self::resolve_challenge_url( $origin );',
 			$source,
-			'The challenge URL must be resolved through the origin-aware helper, not the legacy `wp_login_url() . action=...` literal — otherwise WC frontend logins keep bouncing to wp-login.php.'
+			'The challenge URL must be resolved through the origin-aware helper, not the legacy `wp_login_url() . action=...` literal, otherwise WC frontend logins keep bouncing to wp-login.php.'
 		);
 	}
 
@@ -94,7 +94,7 @@ class TwoFactorOriginTrackingTest extends TestCase {
 		$this->assertStringContainsString(
 			"did_action( 'woocommerce_login_form_start' )",
 			$source,
-			'`woocommerce_login_form_start` is dispatched by every WC login template — make sure we honour it so themes that override the form still get tagged.'
+			'`woocommerce_login_form_start` is dispatched by every WC login template, make sure we honour it so themes that override the form still get tagged.'
 		);
 	}
 
@@ -104,7 +104,7 @@ class TwoFactorOriginTrackingTest extends TestCase {
 		$this->assertMatchesRegularExpression(
 			'/\$default\s*=\s*wp_login_url\(\)\s*\.\s*\'\?action=\'\s*\.\s*self::ACTION_CHALLENGE;/',
 			$source,
-			'When the Frontend Two-Factor module is not loaded yet (Phase 3 dep) the helper must hand back the legacy wp-login URL — otherwise enabling Phase 2 alone would 404 every login.'
+			'When the Frontend Two-Factor module is not loaded yet (Phase 3 dep) the helper must hand back the legacy wp-login URL, otherwise enabling Phase 2 alone would 404 every login.'
 		);
 		$this->assertStringContainsString(
 			"if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {",
@@ -114,7 +114,7 @@ class TwoFactorOriginTrackingTest extends TestCase {
 		$this->assertStringContainsString(
 			'ReportedIP_Hive_Two_Factor_Frontend::is_available()',
 			$source,
-			'Even when the Frontend class is loaded, the tier-gate has to be re-checked — otherwise a downgrade leaves customers stranded on a slug that the rewrite layer has stopped serving.'
+			'Even when the Frontend class is loaded, the tier-gate has to be re-checked, otherwise a downgrade leaves customers stranded on a slug that the rewrite layer has stopped serving.'
 		);
 	}
 
@@ -124,7 +124,7 @@ class TwoFactorOriginTrackingTest extends TestCase {
 		$this->assertStringContainsString(
 			"if ( ! function_exists( 'WC' ) ) {",
 			$source,
-			'collect_wc_session_hash() must short-circuit when WC() is not defined — otherwise the helper triggers a fatal on plain WP installs.'
+			'collect_wc_session_hash() must short-circuit when WC() is not defined, otherwise the helper triggers a fatal on plain WP installs.'
 		);
 		$this->assertStringContainsString(
 			"return '';",

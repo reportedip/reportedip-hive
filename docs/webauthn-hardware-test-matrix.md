@@ -19,18 +19,18 @@ fail.
 
 Column notes:
 
-- **Enrol** — profile key manager, "Security key (USB / NFC)" flow with a
+- **Enrol**, profile key manager, "Security key (USB / NFC)" flow with a
   custom name; expect no FIDO2-PIN prompt on a fresh key
   (`residentKey: discouraged` working).
-- **wp-login 2FA** — challenge interstitial, "Use passkey or security key".
-- **WC frontend 2FA** — storefront challenge (requires a PRO-tier staging
+- **wp-login 2FA**, challenge interstitial, "Use passkey or security key".
+- **WC frontend 2FA**, storefront challenge (requires a PRO-tier staging
   site with WooCommerce).
-- **Reset gate** — lost-password flow, WebAuthn tab of the reset challenge.
-- **2nd key** — enrol a second YubiKey as backup; excludeCredentials must
+- **Reset gate**, lost-password flow, WebAuthn tab of the reset challenge.
+- **2nd key**, enrol a second YubiKey as backup; excludeCredentials must
   refuse re-registering the first key on itself.
-- **Foreign key rejected** — assert with a YubiKey never enrolled for the
+- **Foreign key rejected**, assert with a YubiKey never enrolled for the
   account; expect "Unknown security key".
-- **Cancel, then retry** — cancel the browser dialog, confirm the guidance
+- **Cancel, then retry**, cancel the browser dialog, confirm the guidance
   message mentions the NFC tap, retry succeeds without a reload.
 
 Additional checks (once per release):

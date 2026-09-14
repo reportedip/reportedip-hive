@@ -114,7 +114,7 @@ class ReportedIP_Hive_Block_CLI {
 	 *
 	 * The attempt counters survive an unblock; while a threshold is
 	 * still exceeded inside its timeframe, the next request re-blocks
-	 * the address immediately — pass --reset-attempts to clear them in
+	 * the address immediately, pass --reset-attempts to clear them in
 	 * the same call. The escalation ladder keeps counting past
 	 * `ip_blocked` log events, so a future block of the same address
 	 * resumes on the previously reached rung.
@@ -227,7 +227,7 @@ class ReportedIP_Hive_Block_CLI {
 	 *
 	 * Counters feed the auto-block thresholds; clearing them gives the
 	 * address a clean slate inside the current timeframe. This does not
-	 * lift an active block — use `wp reportedip unblock` for that.
+	 * lift an active block, use `wp reportedip unblock` for that.
 	 *
 	 * ## OPTIONS
 	 *

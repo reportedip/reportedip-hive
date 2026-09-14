@@ -1,6 +1,6 @@
 <?php
 /**
- * Firewall admin page — overview dashboard, WAF, bot verification, spam
+ * Firewall admin page, overview dashboard, WAF, bot verification, spam
  * defence, scan & decoy, server setup, rule sync and hardening tabs.
  *
  * Extracted from ReportedIP_Hive_Admin_Settings so the firewall surface owns
@@ -34,7 +34,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	 *
 	 * The scan detector never writes a bare `scan_404` row: it funnels 404s
 	 * through {@see ReportedIP_Hive_Security_Monitor::track_generic_attempt()},
-	 * which only counts attempts and — once the burst threshold is crossed —
+	 * which only counts attempts and, once the burst threshold is crossed.
 	 * logs the `_threshold_exceeded` variant. Listing the base type here made
 	 * the counter and the feed permanently report zero even while scanners were
 	 * being blocked.
@@ -219,8 +219,8 @@ class ReportedIP_Hive_Admin_Firewall {
 	/**
 	 * Render the backend-managed WAF exceptions (allowlist) box: a narrow
 	 * add-form plus the list of active exceptions. Lets an operator relieve a
-	 * false positive — a single rule on a path, or a whole-engine bypass for a
-	 * first-party endpoint that legitimately carries attack-like payloads —
+	 * false positive, a single rule on a path, or a whole-engine bypass for a
+	 * first-party endpoint that legitimately carries attack-like payloads.
 	 * without touching code. Mirrors how ModSecurity exclusions and the
 	 * Wordfence allowlist work: exceptions are data, not shipped rules.
 	 *
@@ -233,17 +233,17 @@ class ReportedIP_Hive_Admin_Firewall {
 		}
 
 		echo '<div class="rip-card" id="rip-waf-exceptions"><div class="rip-card__header"><h2>' . esc_html__( 'WAF Exceptions', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Relieve a false positive without editing code. Scope an exception to a single rule (optionally on one path), a rule group, or — for a first-party endpoint that legitimately receives attack-like payloads — the whole engine on a path. A whole-engine exception must always carry a path or IP.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'Relieve a false positive without editing code. Scope an exception to a single rule (optionally on one path), a rule group, or, for a first-party endpoint that legitimately receives attack-like payloads, the whole engine on a path. A whole-engine exception must always carry a path or IP.', 'reportedip-hive' ) . '</p>';
 
 		echo '<form id="add-waf-exception-form" class="rip-form">';
 
 		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-scope">' . esc_html__( 'Scope', 'reportedip-hive' ) . '</label>';
 		echo '<select id="rip-waf-ex-scope" name="scope" class="rip-select">';
-		echo '<option value="rule">' . esc_html__( 'Single rule — exempt one specific rule', 'reportedip-hive' ) . '</option>';
-		echo '<option value="group">' . esc_html__( 'Rule group — exempt a whole category', 'reportedip-hive' ) . '</option>';
-		echo '<option value="all">' . esc_html__( 'Whole engine — only on a trusted path/IP', 'reportedip-hive' ) . '</option>';
+		echo '<option value="rule">' . esc_html__( 'Single rule: exempt one specific rule', 'reportedip-hive' ) . '</option>';
+		echo '<option value="group">' . esc_html__( 'Rule group: exempt a whole category', 'reportedip-hive' ) . '</option>';
+		echo '<option value="all">' . esc_html__( 'Whole engine: only on a trusted path/IP', 'reportedip-hive' ) . '</option>';
 		echo '</select>';
-		echo '<p class="rip-field-hint">' . esc_html__( 'How broadly the exception applies. Start with "Single rule" — it is the narrowest and the right choice for almost every false positive.', 'reportedip-hive' ) . '</p></div>';
+		echo '<p class="rip-field-hint">' . esc_html__( 'How broadly the exception applies. Start with "Single rule", it is the narrowest and the right choice for almost every false positive.', 'reportedip-hive' ) . '</p></div>';
 
 		echo '<div class="rip-form-row" data-rip-scope="rule"><label class="rip-form-label" for="rip-waf-ex-rule">' . esc_html__( 'Rule ID', 'reportedip-hive' ) . '</label>';
 		echo '<input type="text" id="rip-waf-ex-rule" name="rule_id" class="rip-input" placeholder="waf_sqli_union" />';
@@ -255,9 +255,9 @@ class ReportedIP_Hive_Admin_Firewall {
 			printf( '<option value="%s">%s</option>', esc_attr( $group_key ), esc_html( $group_label ) );
 		}
 		echo '</select>';
-		echo '<p class="rip-field-hint">' . esc_html__( 'Exempts every rule in this category at once — shown in the log as "Group:". Broader than a single rule, so use it only when several rules of the same kind keep misfiring.', 'reportedip-hive' ) . '</p></div>';
+		echo '<p class="rip-field-hint">' . esc_html__( 'Exempts every rule in this category at once, shown in the log as "Group:". Broader than a single rule, so use it only when several rules of the same kind keep misfiring.', 'reportedip-hive' ) . '</p></div>';
 
-		echo '<div class="rip-form-row rip-hidden" data-rip-scope="all"><p class="rip-field-hint">' . esc_html__( 'No rule needed — the WAF skips the path and/or IP below entirely. Use this only for a first-party endpoint you fully trust (e.g. your own API that receives attack samples). A path or IP is required.', 'reportedip-hive' ) . '</p></div>';
+		echo '<div class="rip-form-row rip-hidden" data-rip-scope="all"><p class="rip-field-hint">' . esc_html__( 'No rule needed, the WAF skips the path and/or IP below entirely. Use this only for a first-party endpoint you fully trust (e.g. your own API that receives attack samples). A path or IP is required.', 'reportedip-hive' ) . '</p></div>';
 
 		echo '<div class="rip-form-row"><label class="rip-form-label" for="rip-waf-ex-path">' . esc_html__( 'Path prefix', 'reportedip-hive' ) . '</label>';
 		echo '<input type="text" id="rip-waf-ex-path" name="path_prefix" class="rip-input" placeholder="/wp-json/my-api/v1" />';
@@ -288,25 +288,25 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '<h3 class="rip-faq__title">' . esc_html__( 'Understanding WAF exceptions', 'reportedip-hive' ) . '</h3>';
 
 		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'What is this for, and do I need it?', 'reportedip-hive' ) . '</summary>';
-		echo '<p class="rip-faq__a">' . esc_html__( 'The WAF matches every front-end request against attack signatures (SQL injection, XSS, and so on). Occasionally a legitimate request looks like an attack — for example an API endpoint that receives reported attack samples, or a form that contains code. The rule fires even though nothing malicious is happening: a false positive. An exception tells the WAF to let that specific case through. Most sites never need one — only add an exception when you have confirmed a real false positive in the log.', 'reportedip-hive' ) . '</p></details>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'The WAF matches every front-end request against attack signatures (SQL injection, XSS, and so on). Occasionally a legitimate request looks like an attack, for example an API endpoint that receives reported attack samples, or a form that contains code. The rule fires even though nothing malicious is happening: a false positive. An exception tells the WAF to let that specific case through. Most sites never need one, only add an exception when you have confirmed a real false positive in the log.', 'reportedip-hive' ) . '</p></details>';
 
 		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Where do I get the Rule ID or group? I do not know what to type.', 'reportedip-hive' ) . '</summary>';
 		echo '<p class="rip-faq__a">' . wp_kses(
-			__( 'You normally do not type it at all. Every block is recorded under <strong>Security &rarr; Activity &rarr; WAF Block</strong>, and each entry names the rule that fired (<code>Rule: waf_sqli_union</code>) and its category (<code>Group: sql_injection</code>). The quickest path is the shield <strong>"Allow"</strong> button on that log row: it creates a single-rule exception for exactly that rule and path in one click, so you never have to know rule IDs. The form above is only for adding one by hand — copy the value after <code>Rule:</code> into the Rule ID field, or pick the category in the Rule group dropdown.', 'reportedip-hive' ),
+			__( 'You normally do not type it at all. Every block is recorded under <strong>Security &rarr; Activity &rarr; WAF Block</strong>, and each entry names the rule that fired (<code>Rule: waf_sqli_union</code>) and its category (<code>Group: sql_injection</code>). The quickest path is the shield <strong>"Allow"</strong> button on that log row: it creates a single-rule exception for exactly that rule and path in one click, so you never have to know rule IDs. The form above is only for adding one by hand, copy the value after <code>Rule:</code> into the Rule ID field, or pick the category in the Rule group dropdown.', 'reportedip-hive' ),
 			array(
 				'code'   => array(),
 				'strong' => array(),
 			)
 		) . '</p></details>';
 
-		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Which scope should I choose — rule, group or whole engine?', 'reportedip-hive' ) . '</summary>';
-		echo '<p class="rip-faq__a">' . esc_html__( 'Single rule is the narrowest and the right default: it exempts exactly one rule, optionally only on one path. Rule group exempts a whole category (every XSS rule, say) — broader, only when several related rules keep misfiring. Whole engine skips all inspection and is reserved for a first-party endpoint you fully trust; it always requires a path or IP, so protection is never switched off everywhere by accident. Rule of thumb: pick the smallest scope that stops the false positive.', 'reportedip-hive' ) . '</p></details>';
+		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Which scope should I choose: rule, group or whole engine?', 'reportedip-hive' ) . '</summary>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'Single rule is the narrowest and the right default: it exempts exactly one rule, optionally only on one path. Rule group exempts a whole category (every XSS rule, say), broader, only when several related rules keep misfiring. Whole engine skips all inspection and is reserved for a first-party endpoint you fully trust; it always requires a path or IP, so protection is never switched off everywhere by accident. Rule of thumb: pick the smallest scope that stops the false positive.', 'reportedip-hive' ) . '</p></details>';
 
 		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'How do the path and IP fields work?', 'reportedip-hive' ) . '</summary>';
 		echo '<p class="rip-faq__a">' . esc_html__( 'Both are optional narrowing filters. Path prefix limits the exception to URLs that start with the value you enter (for example /wp-json/my-api/v1, matching every route below it). IP or CIDR limits it to one client address or range. Leave them empty and a single-rule or group exception applies site-wide; set them to make it as tight as possible. For a whole-engine exception at least one of the two is mandatory.', 'reportedip-hive' ) . '</p></details>';
 
 		echo '<details class="rip-faq__item"><summary class="rip-faq__q">' . esc_html__( 'Does this weaken my security, and does it apply to Extended Protection?', 'reportedip-hive' ) . '</summary>';
-		echo '<p class="rip-faq__a">' . esc_html__( 'Only within the scope you pick — a rule-on-path exception leaves every other rule and every other path fully protected, which is why tight scoping matters. Exceptions apply everywhere the engine runs: they are also baked into the pre-WordPress guard, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist.', 'reportedip-hive' ) . '</p></details>';
+		echo '<p class="rip-faq__a">' . esc_html__( 'Only within the scope you pick, a rule-on-path exception leaves every other rule and every other path fully protected, which is why tight scoping matters. Exceptions apply everywhere the engine runs: they are also baked into the pre-WordPress guard, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist.', 'reportedip-hive' ) . '</p></details>';
 
 		echo '</div>';
 
@@ -418,12 +418,12 @@ class ReportedIP_Hive_Admin_Firewall {
 		}
 
 		if ( $enabled && $running ) {
-			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Setup complete — the guard executed for this very request, so every request to this site passes the firewall before WordPress loads.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Setup complete, the guard executed for this very request, so every request to this site passes the firewall before WordPress loads.', 'reportedip-hive' ) . '</div>';
 		} elseif ( $enabled && $auto ) {
 			echo '<div class="rip-alert rip-alert--info">';
 			printf(
 				/* translators: 1: opening link tag to the Server Setup tab, 2: closing tag. */
-				esc_html__( 'The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes — reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead.', 'reportedip-hive' ),
+				esc_html__( 'The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes, reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead.', 'reportedip-hive' ),
 				'<a href="' . esc_url( self::tab_url( 'server' ) ) . '">',
 				'</a>'
 			);
@@ -432,7 +432,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			echo '<div class="rip-alert rip-alert--warning">';
 			printf(
 				/* translators: 1: opening link tag to the Server Setup tab, 2: closing tag. */
-				esc_html__( 'One manual step left: add the directive to your server. The %1$sServer Setup tab%2$s shows both options (nginx snippet or php.ini line) with your live paths — this status flips to Running automatically once it works.', 'reportedip-hive' ),
+				esc_html__( 'One manual step left: add the directive to your server. The %1$sServer Setup tab%2$s shows both options (nginx snippet or php.ini line) with your live paths, this status flips to Running automatically once it works.', 'reportedip-hive' ),
 				'<a href="' . esc_url( self::tab_url( 'server' ) ) . '">',
 				'</a>'
 			);
@@ -467,7 +467,7 @@ class ReportedIP_Hive_Admin_Firewall {
 
 	/**
 	 * Render the Server Setup tab: every web-server-level rule the plugin can
-	 * use, in one place — the WAF drop-in directive (auto or manual), the decoy
+	 * use, in one place, the WAF drop-in directive (auto or manual), the decoy
 	 * rewrite rules and an optional server-level export of the security
 	 * headers. All sections are optional; the PHP sensors work without them.
 	 *
@@ -475,7 +475,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	 * @return void
 	 */
 	public function render_server_tab() {
-		self::render_tab_intro( __( 'All web-server-level rules in one place, with your live paths filled in. Everything here is optional — the PHP sensors work without any of it — but each rule rejects bad requests one layer earlier. Configure your server once, from this tab only.', 'reportedip-hive' ) );
+		self::render_tab_intro( __( 'All web-server-level rules in one place, with your live paths filled in. Everything here is optional, the PHP sensors work without any of it, but each rule rejects bad requests one layer earlier. Configure your server once, from this tab only.', 'reportedip-hive' ) );
 
 		$this->render_server_waf_section();
 		$this->render_server_decoy_section();
@@ -507,7 +507,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			echo '<div class="rip-alert rip-alert--info">';
 			printf(
 				/* translators: 1: opening link tag to the WAF tab, 2: closing tag. */
-				esc_html__( 'Extended Protection is currently off. Enable it on the %1$sWAF tab%2$s first — that generates the guard file this directive points at.', 'reportedip-hive' ),
+				esc_html__( 'Extended Protection is currently off. Enable it on the %1$sWAF tab%2$s first, that generates the guard file this directive points at.', 'reportedip-hive' ),
 				'<a href="' . esc_url( self::tab_url( 'waf' ) ) . '">',
 				'</a>'
 			);
@@ -517,11 +517,11 @@ class ReportedIP_Hive_Admin_Firewall {
 		}
 
 		if ( $running ) {
-			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Setup complete — the guard executed for this very request. No further action needed; Hive keeps the guard file up to date automatically on every rule sync.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Setup complete, the guard executed for this very request. No further action needed; Hive keeps the guard file up to date automatically on every rule sync.', 'reportedip-hive' ) . '</div>';
 		}
 
 		if ( $auto && $running ) {
-			echo '<p class="rip-help-text">' . esc_html__( 'This server is auto-managed — Hive wrote and maintains the directive itself (.htaccess on Apache, .user.ini on PHP-FPM).', 'reportedip-hive' ) . '</p>';
+			echo '<p class="rip-help-text">' . esc_html__( 'This server is auto-managed, Hive wrote and maintains the directive itself (.htaccess on Apache, .user.ini on PHP-FPM).', 'reportedip-hive' ) . '</p>';
 			echo '</div></div>';
 			return;
 		}
@@ -530,34 +530,34 @@ class ReportedIP_Hive_Admin_Firewall {
 		 * `detect_server()` reports the PHP SAPI, so an nginx + PHP-FPM stack is
 		 * classified as `fpm` and Hive writes a `.user.ini`. That file is only
 		 * honoured when PHP's `user_ini.filename` is enabled and the document
-		 * root is the scan path — frequently not the case on nginx. When the
+		 * root is the scan path, frequently not the case on nginx. When the
 		 * auto-written directive has not taken effect we therefore fall through
 		 * to the manual snippets (php.ini / FPM pool + nginx server block) so
 		 * nginx operators are never left without instructions.
 		 */
 		if ( $auto && ! $running ) {
-			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Hive wrote the directive automatically (.htaccess on Apache, .user.ini on PHP-FPM), and PHP-FPM caches .user.ini for up to five minutes — give it a moment. If the status never flips to Running — common on nginx, or when PHP\'s user_ini.filename is disabled or the document root is not the .user.ini scan path — apply ONE of the manual options below instead.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Hive wrote the directive automatically (.htaccess on Apache, .user.ini on PHP-FPM), and PHP-FPM caches .user.ini for up to five minutes, give it a moment. If the status never flips to Running, common on nginx, or when PHP\'s user_ini.filename is disabled or the document root is not the .user.ini scan path, apply ONE of the manual options below instead.', 'reportedip-hive' ) . '</div>';
 		} elseif ( ! $running ) {
-			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'One manual step: add the directive below. Pick exactly ONE of the two options — whichever your hosting lets you edit. The status above flips to Running automatically once the directive is live.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'One manual step: add the directive below. Pick exactly ONE of the two options, whichever your hosting lets you edit. The status above flips to Running automatically once the directive is live.', 'reportedip-hive' ) . '</div>';
 		}
 
 		self::render_snippet(
 			'rip-waf-snip-phpini',
-			__( 'Option A — php.ini / PHP-FPM pool / hosting panel (recommended)', 'reportedip-hive' ),
+			__( 'Option A, php.ini / PHP-FPM pool / hosting panel (recommended)', 'reportedip-hive' ),
 			$dropin->php_ini_snippet(),
-			__( 'Most managed hosts (ISPConfig, Plesk, cPanel) offer a "custom php.ini settings" field — paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx.', 'reportedip-hive' )
+			__( 'Most managed hosts (ISPConfig, Plesk, cPanel) offer a "custom php.ini settings" field, paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx.', 'reportedip-hive' )
 		);
 
 		self::render_snippet(
 			'rip-waf-snip-nginx',
-			__( 'Option B — nginx server block', 'reportedip-hive' ),
+			__( 'Option B: nginx server block', 'reportedip-hive' ),
 			$dropin->nginx_snippet(),
 			__( 'For direct nginx access: merge this into your existing "location ~ \\.php$" block and reload nginx. Do not combine with Option A.', 'reportedip-hive' )
 		);
 
 		echo '<div class="rip-alert rip-alert--warning">';
 		echo '<strong>' . esc_html__( 'Before deactivating or deleting Hive, remove this directive from your php.ini / nginx config first.', 'reportedip-hive' ) . '</strong> ';
-		echo esc_html__( 'Because this directive lives in a file Hive cannot edit, it stays behind when the plugin is removed. Hive now leaves an inert placeholder at the guard path so a leftover directive can no longer crash the site with a 500 error — but the cleanest path is still to remove the line yourself.', 'reportedip-hive' );
+		echo esc_html__( 'Because this directive lives in a file Hive cannot edit, it stays behind when the plugin is removed. Hive now leaves an inert placeholder at the guard path so a leftover directive can no longer crash the site with a 500 error, but the cleanest path is still to remove the line yourself.', 'reportedip-hive' );
 		echo '<br><br>';
 		echo '<strong>' . esc_html__( 'Recovery, if the site ever returns a 500 referencing reportedip-hive-waf.php:', 'reportedip-hive' ) . '</strong> ';
 		echo esc_html__( 'comment out the auto_prepend_file line in your php.ini / nginx config (prefix it with a semicolon, or delete it) and reload PHP-FPM / nginx. No FTP file restore is required.', 'reportedip-hive' );
@@ -567,7 +567,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	}
 
 	/**
-	 * Render the decoy rewrite-rule section of the Server Setup tab — the
+	 * Render the decoy rewrite-rule section of the Server Setup tab, the
 	 * Apache preview and both nginx variants, moved here from the Scan & Decoy
 	 * tab so every server snippet lives on one surface.
 	 *
@@ -583,38 +583,38 @@ class ReportedIP_Hive_Admin_Firewall {
 			&& ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->supports_htaccess();
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Decoy Path Block (rewrite rules)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Blocks the bait paths at the web-server layer so real backup files on disk are never served directly. Every snippet rewrites to /index.php on purpose: the Hive sensor still loads, logs the hit and reports it — a bare return 403 would skip detection entirely.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'Blocks the bait paths at the web-server layer so real backup files on disk are never served directly. Every snippet rewrites to /index.php on purpose: the Hive sensor still loads, logs the hit and reports it, a bare return 403 would skip detection entirely.', 'reportedip-hive' ) . '</p>';
 
 		if ( ! $decoy_on ) {
 			echo '<div class="rip-alert rip-alert--info">';
 			printf(
 				/* translators: 1: opening link tag to the Scan & Decoy tab, 2: closing tag. */
-				esc_html__( 'The decoy trap is currently off — enable it on the %1$sScan & Decoy tab%2$s before adding server rules.', 'reportedip-hive' ),
+				esc_html__( 'The decoy trap is currently off, enable it on the %1$sScan & Decoy tab%2$s before adding server rules.', 'reportedip-hive' ),
 				'<a href="' . esc_url( self::tab_url( 'scan' ) ) . '">',
 				'</a>'
 			);
 			echo '</div>';
 		} elseif ( $htaccess ) {
-			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'On Apache this block is auto-managed in .htaccess — the snippet below shows verbatim what Hive wrote (or would write). No manual step needed.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'On Apache this block is auto-managed in .htaccess, the snippet below shows verbatim what Hive wrote (or would write). No manual step needed.', 'reportedip-hive' ) . '</div>';
 		} else {
 			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'This web server does not read .htaccess, so the auto-managed block does not apply here. Pick one of the nginx snippets below to cover bait files that exist on disk.', 'reportedip-hive' ) . '</div>';
 		}
 
 		self::render_snippet(
 			'rip-decoy-snip-apache',
-			__( 'Apache (.htaccess) — auto-managed', 'reportedip-hive' ),
+			__( 'Apache (.htaccess), auto-managed', 'reportedip-hive' ),
 			ReportedIP_Hive_Decoy_Path_Block::htaccess_snippet()
 		);
 		self::render_snippet(
 			'rip-decoy-snip-nginx',
-			__( 'nginx — regex form (plain nginx)', 'reportedip-hive' ),
+			__( 'nginx: regex form (plain nginx)', 'reportedip-hive' ),
 			ReportedIP_Hive_Decoy_Path_Block::nginx_snippet()
 		);
 		self::render_snippet(
 			'rip-decoy-snip-nginx-exact',
-			__( 'nginx — exact-match form (ISPConfig & managed stacks)', 'reportedip-hive' ),
+			__( 'nginx: exact-match form (ISPConfig & managed stacks)', 'reportedip-hive' ),
 			ReportedIP_Hive_Decoy_Path_Block::nginx_snippet_exact_match(),
-			__( 'Use this variant when your host template ships a "location ~ /\\." dot-file deny rule before your custom directives — exact-match locations have higher priority than any regex location and survive that ordering.', 'reportedip-hive' )
+			__( 'Use this variant when your host template ships a "location ~ /\\." dot-file deny rule before your custom directives, exact-match locations have higher priority than any regex location and survive that ordering.', 'reportedip-hive' )
 		);
 
 		echo '</div></div>';
@@ -635,13 +635,13 @@ class ReportedIP_Hive_Admin_Firewall {
 		$planned = ReportedIP_Hive_Security_Headers::planned_headers();
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Security Headers at the web server (optional)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Hive already sends the configured headers via PHP on every WordPress response — nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror your live configuration from the Hardening tab.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'Hive already sends the configured headers via PHP on every WordPress response, nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror your live configuration from the Hardening tab.', 'reportedip-hive' ) . '</p>';
 
 		if ( empty( $planned ) ) {
 			echo '<div class="rip-alert rip-alert--info">';
 			printf(
 				/* translators: 1: opening link tag to the Hardening tab, 2: closing tag. */
-				esc_html__( 'No headers are configured yet. Enable the header engine on the %1$sHardening tab%2$s first — the snippets here update automatically.', 'reportedip-hive' ),
+				esc_html__( 'No headers are configured yet. Enable the header engine on the %1$sHardening tab%2$s first, the snippets here update automatically.', 'reportedip-hive' ),
 				'<a href="' . esc_url( self::tab_url( 'hardening' ) ) . '">',
 				'</a>'
 			);
@@ -662,7 +662,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			'rip-headers-snip-nginx',
 			__( 'nginx (server block)', 'reportedip-hive' ),
 			implode( "\n", $nginx_lines ),
-			__( 'When a header is set at the server, Hive detects it and stops sending its own copy — no duplicates.', 'reportedip-hive' )
+			__( 'When a header is set at the server, Hive detects it and stops sending its own copy, no duplicates.', 'reportedip-hive' )
 		);
 		self::render_snippet(
 			'rip-headers-snip-apache',
@@ -716,7 +716,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '</div><div class="rip-card__body">';
 
 		if ( $has_priority ) {
-			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Priority Sync is active on your plan — the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Priority Sync is active on your plan, the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download.', 'reportedip-hive' ) . '</div>';
 		} elseif ( $mode_manager->is_local_mode() ) {
 			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets.', 'reportedip-hive' ) . '</div>';
 		}
@@ -753,8 +753,8 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '<p class="rip-help-text">' . esc_html__( 'Sync:', 'reportedip-hive' ) . ' ' . ( $enabled ? esc_html__( 'enabled', 'reportedip-hive' ) : esc_html__( 'disabled', 'reportedip-hive' ) ) . ' &middot; ' . esc_html__( 'Last sync:', 'reportedip-hive' ) . ' ' . ( $last_run ? esc_html( wp_date( 'Y-m-d H:i:s', $last_run ) ) : esc_html__( 'never (baseline only)', 'reportedip-hive' ) ) . '</p>';
 
 		if ( ! $has_priority ) {
-			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active and free on every plan. Priority Sync — deeper coverage and frequent updates — is part of the Professional plan.', 'reportedip-hive' ) . ' ';
-			ReportedIP_Hive_Admin_Settings::render_tier_lock( $priority, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) );
+			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active and free on every plan. Priority Sync, deeper coverage and frequent updates, is part of the Professional plan.', 'reportedip-hive' ) . ' ';
+			ReportedIP_Hive_Admin_Settings::render_tier_lock( $priority, array( 'label' => __( 'Included in Professional', 'reportedip-hive' ) ) );
 			echo '</p>';
 		} else {
 			echo '<button type="button" class="rip-button rip-button--primary" id="rip-rule-sync-now" data-rip-action="reportedip_hive_rule_sync_now">' . esc_html__( 'Sync now', 'reportedip-hive' ) . '</button>';
@@ -775,9 +775,9 @@ class ReportedIP_Hive_Admin_Firewall {
 	 */
 	private function render_rule_sync_tiers( $has_priority ) {
 		$free_features = array(
-			__( 'WAF engine — always on, every plan', 'reportedip-hive' ),
+			__( 'WAF engine, always on, every plan', 'reportedip-hive' ),
 			__( 'Baseline rulesets (OWASP Top 10, Paranoia Level 1)', 'reportedip-hive' ),
-			__( 'Bundled with the plugin — no connection required', 'reportedip-hive' ),
+			__( 'Bundled with the plugin, no connection required', 'reportedip-hive' ),
 		);
 		$pro_features  = array(
 			__( 'Deeper coverage (Paranoia Level 2/3, obfuscation & bypass)', 'reportedip-hive' ),
@@ -787,7 +787,7 @@ class ReportedIP_Hive_Admin_Firewall {
 
 		echo '<div class="rip-grid rip-grid-cols-2">';
 
-		echo '<div class="rip-card"><div class="rip-card__header rip-card__header--icon"><h3 class="rip-card__title">' . esc_html__( 'Included — every plan', 'reportedip-hive' ) . '</h3>';
+		echo '<div class="rip-card"><div class="rip-card__header rip-card__header--icon"><h3 class="rip-card__title">' . esc_html__( 'Included, every plan', 'reportedip-hive' ) . '</h3>';
 		ReportedIP_Hive_Admin_Settings::render_tier_badge( 'free' );
 		echo '</div><div class="rip-card__body"><ul class="rip-pricing-card__features">';
 		foreach ( $free_features as $feature ) {
@@ -807,7 +807,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		} else {
 			ReportedIP_Hive_Admin_Settings::render_tier_lock(
 				ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' ),
-				array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) )
+				array( 'label' => __( 'Included in Professional', 'reportedip-hive' ) )
 			);
 		}
 		echo '</p></div></div>';

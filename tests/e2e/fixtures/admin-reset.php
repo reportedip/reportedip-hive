@@ -27,7 +27,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 }
 
 if ( ! class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
-	WP_CLI::error( 'ReportedIP Hive plugin is not loaded — activate it before running the reset.' );
+	WP_CLI::error( 'ReportedIP Hive plugin is not loaded, activate it before running the reset.' );
 }
 
 $admin = get_user_by( 'login', 'admin' );

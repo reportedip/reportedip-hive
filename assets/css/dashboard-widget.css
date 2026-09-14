@@ -2,7 +2,7 @@
  * Self-contained styling for the WP-dashboard security widget.
  *
  * Loaded only on index.php (site and network dashboard), where the plugin's
- * design-system stylesheet is absent — every token the widget needs is
+ * design-system stylesheet is absent, every token the widget needs is
  * therefore declared locally on the .rip-dw scope with values copied from
  * assets/css/design-system.css. The tier-badge rules are a scoped copy of
  * the design-system component for the same reason.

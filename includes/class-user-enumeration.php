@@ -16,7 +16,7 @@
  *     author slug in one machine-readable file.
  *
  * Every block-event also feeds the security monitor as `user_enumeration`
- * — repeated probes from the same IP escalate to a real block + report.
+ * - repeated probes from the same IP escalate to a real block + report.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -42,8 +42,8 @@ class ReportedIP_Hive_User_Enumeration {
 	private const PASSTHROUGH_ACTIONS = array( 'reportedip_2fa', 'reportedip_2fa_reset' );
 
 	/**
-	 * Substrings that — when an error message contains one of them on the
-	 * `rp` / `resetpass` actions — let the message pass through unmasked.
+	 * Substrings that, when an error message contains one of them on the
+	 * `rp` / `resetpass` actions, let the message pass through unmasked.
 	 * The reset-gate phrasing is stable English; translations should keep
 	 * one of these tokens in place. (The gate itself prefers wp_die() for
 	 * unmask-able lockouts, but the WP_Error path still needs a
@@ -65,7 +65,7 @@ class ReportedIP_Hive_User_Enumeration {
 	 * "Invalid credentials." mask on the default login action. The 2FA
 	 * enforcement block (skip-quota exhausted) and the 2FA challenge both
 	 * fire only *after* the password has validated, so the username is
-	 * already confirmed — surfacing the real reason leaks nothing about
+	 * already confirmed, surfacing the real reason leaks nothing about
 	 * user existence and spares the locked-out admin a pointless password
 	 * reset. The phrasing is stable English; translations should keep the
 	 * "two-factor" token in place.
@@ -116,7 +116,7 @@ class ReportedIP_Hive_User_Enumeration {
 
 	/**
 	 * Detect probes against the `/wp/v2/users` endpoint family on the actual
-	 * request route — rest_endpoints fires on every REST request and would
+	 * request route, rest_endpoints fires on every REST request and would
 	 * otherwise log a probe against unrelated routes too. Runs at priority 4
 	 * so the global REST monitor (priority 5) still sees the request.
 	 *
@@ -150,7 +150,7 @@ class ReportedIP_Hive_User_Enumeration {
 	 * `reportedip_hive_allow_author_archives` is enabled: that URL already
 	 * carries the public slug, so serving it leaks nothing the theme does not
 	 * print anyway, while counting genuine readers as probes locks them out of
-	 * the site. The numeric form stays blocked either way — the ID-to-name
+	 * the site. The numeric form stays blocked either way, the ID-to-name
 	 * mapping is the part worth hiding. Probing slugs instead still produces
 	 * ordinary 404s, which the scan detector keeps counting.
 	 */
@@ -210,7 +210,7 @@ class ReportedIP_Hive_User_Enumeration {
 	 * leave the endpoint registered for logged-in users (so the block-editor
 	 * keeps working), but drop all routes that would otherwise list users.
 	 *
-	 * Probes still flow through rest_pre_dispatch and the REST monitor —
+	 * Probes still flow through rest_pre_dispatch and the REST monitor.
 	 * here we additionally short-circuit the response so the data leak is
 	 * gone even if the IP threshold has not yet fired.
 	 *
@@ -237,7 +237,7 @@ class ReportedIP_Hive_User_Enumeration {
 	/**
 	 * Drop the core users sitemap provider while user-enumeration defence is
 	 * on. `/wp-sitemap-users-1.xml` publishes every author slug in one file,
-	 * which is the same leak the `?author=<n>` redirect gives — just
+	 * which is the same leak the `?author=<n>` redirect gives, just
 	 * pre-packaged for crawlers.
 	 *
 	 * Not logged and not counted: a sitemap URL is what search engines fetch
@@ -280,7 +280,7 @@ class ReportedIP_Hive_User_Enumeration {
 	 *
 	 * Recognises the plugin's own 2FA-flow query flags
 	 * (`?reportedip_2fa_locked=1`, `?reportedip_2fa_expired=1`) and lets
-	 * those messages through unmasked — they reveal nothing about user
+	 * those messages through unmasked, they reveal nothing about user
 	 * existence and would otherwise be replaced with the misleading
 	 * "Invalid credentials." text.
 	 *
@@ -410,7 +410,7 @@ class ReportedIP_Hive_User_Enumeration {
 
 		/*
 		 * A verified search/AI crawler fetching the author archive
-		 * (`/author/<slug>/`) is not an enumeration attack — Googlebot indexes
+		 * (`/author/<slug>/`) is not an enumeration attack, Googlebot indexes
 		 * those pages routinely. The 404 in block_author_param() already
 		 * prevents the username leak, so a genuine crawler must not accumulate
 		 * probes and trip the IP-block ladder, or it gets locked out of the

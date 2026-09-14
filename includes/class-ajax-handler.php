@@ -138,7 +138,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * Enforce the administrator capability, or terminate with a JSON error.
 	 *
 	 * Every handler in this class repeated this check, and the payloads had
-	 * drifted into three shapes — a bare string, an array, and one saying
+	 * drifted into three shapes, a bare string, an array, and one saying
 	 * "Unauthorized" instead of "Insufficient permissions". One entry point
 	 * keeps the answer identical everywhere.
 	 *
@@ -311,7 +311,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		$main_html .= '<tr><td style="padding:10px 16px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;width:40%;">' . esc_html__( 'Test type', 'reportedip-hive' ) . '</td>';
 		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html__( 'Brand template + provider verification', 'reportedip-hive' ) . '</td></tr>';
 		$main_html .= '<tr><td style="padding:10px 16px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;width:40%;">' . esc_html__( 'Triggered by', 'reportedip-hive' ) . '</td>';
-		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html( $current_user->display_name ?? '—' ) . '</td></tr>';
+		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html( $current_user->display_name ?? ', ' ) . '</td></tr>';
 		$main_html .= '<tr><td style="padding:10px 16px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;width:40%;">' . esc_html__( 'Time', 'reportedip-hive' ) . '</td>';
 		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html( $timestamp ) . '</td></tr>';
 		$main_html .= '</table>';
@@ -347,7 +347,7 @@ class ReportedIP_Hive_Ajax_Handler {
 					__( 'Test type', 'reportedip-hive' ),
 					__( 'Brand template + provider verification', 'reportedip-hive' ),
 					__( 'Triggered by', 'reportedip-hive' ),
-					$current_user->display_name ?? '—',
+					$current_user->display_name ?? ', ',
 					__( 'Time', 'reportedip-hive' ),
 					$timestamp
 				),
@@ -366,7 +366,7 @@ class ReportedIP_Hive_Ajax_Handler {
 				$to
 			);
 			if ( $relay_in_backoff ) {
-				$message .= ' ' . __( 'Note: the managed relay is currently in cooldown for this recipient — the mail was delivered through the local wp_mail() fallback. Check the Activity log for the most recent 402/429 entry to see why.', 'reportedip-hive' );
+				$message .= ' ' . __( 'Note: the managed relay is currently in cooldown for this recipient, the mail was delivered through the local wp_mail() fallback. Check the Activity log for the most recent 402/429 entry to see why.', 'reportedip-hive' );
 			}
 			wp_send_json_success(
 				array(
@@ -415,7 +415,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * AJAX: Export logs
 	 *
 	 * The export buttons on the Logs tab are plain GET links, so the
-	 * parameters arrive in the query string — `format` and `days` are read
+	 * parameters arrive in the query string, `format` and `days` are read
 	 * from `$_REQUEST` to support both the links and programmatic POSTs.
 	 * Reading `$_POST` only made every export fall back to the CSV/30-day
 	 * defaults regardless of the requested format.
@@ -464,7 +464,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * Build one CSV export row for a log entry.
 	 *
 	 * `ReportedIP_Hive_Logger::get_logs()` JSON-decodes the `details` column
-	 * into an array, so the value must be re-encoded for the flat CSV cell —
+	 * into an array, so the value must be re-encoded for the flat CSV cell.
 	 * passing the raw array to `fputcsv()` casts it to the literal string
 	 * "Array" and silently loses the entire payload.
 	 *

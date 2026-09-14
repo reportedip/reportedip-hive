@@ -215,7 +215,7 @@ class ReportedIP_Hive_Database {
 
 		/*
 		 * The table carries UNIQUE KEY unique_ip, but removal soft-deletes
-		 * (is_active = 0) and expired entries stay in place — either would make
+		 * (is_active = 0) and expired entries stay in place, either would make
 		 * the INSERT below fail with a duplicate-key error and permanently
 		 * prevent re-whitelisting that IP. Purge the stale row first; active,
 		 * unexpired duplicates are still rejected by the unique key.
@@ -407,7 +407,7 @@ class ReportedIP_Hive_Database {
 	 * Add a WAF exception to the backend allowlist.
 	 *
 	 * A `scope='all'` exception with neither a path prefix nor an IP scope is
-	 * rejected — it would disable the whole engine. Duplicate active rows
+	 * rejected, it would disable the whole engine. Duplicate active rows
 	 * (same scope, rule, path and IP) are not inserted twice.
 	 *
 	 * @param array<string,mixed> $args {
@@ -636,8 +636,8 @@ class ReportedIP_Hive_Database {
 
 	/**
 	 * Block an IP for a sub-hour duration. Used by the progressive-escalation
-	 * ladder where the first ladder step is typically 5 minutes — too short
-	 * to express via `block_ip( …, $duration_hours )` without losing precision.
+	 * ladder where the first ladder step is typically 5 minutes, too short
+	 * to express via `block_ip( ..., $duration_hours )` without losing precision.
 	 *
 	 * @param string $ip_address      IP to block.
 	 * @param string $reason          Human-readable reason.
@@ -686,7 +686,7 @@ class ReportedIP_Hive_Database {
 	 *
 	 * Exact match first (covered by the UNIQUE index), then active CIDR ranges.
 	 * The range pass mirrors {@see is_whitelisted()}: without it a range block
-	 * was enforced only by the pre-WordPress guard — and that guard is off by
+	 * was enforced only by the pre-WordPress guard, and that guard is off by
 	 * default, so on a standard install `203.0.113.0/24` blocked nothing at all
 	 * while the admin UI listed it as active.
 	 */
@@ -763,7 +763,7 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Drop every cached derivative of the IP state — the per-request memos and
+	 * Drop every cached derivative of the IP state, the per-request memos and
 	 * the CIDR range caches for both the block list and the whitelist.
 	 *
 	 * Needed wherever rows change outside the add/remove paths, e.g. when the
@@ -887,9 +887,9 @@ class ReportedIP_Hive_Database {
 	 * @param string      $attempt_type Counter bucket.
 	 * @param string|null $username     Optional username.
 	 * @param string|null $user_agent   Optional user agent.
-	 * @param int         $increment    Offences to add at once. Deferred writers —
+	 * @param int         $increment    Offences to add at once. Deferred writers.
 	 *                                  the WAF drop-in queue imports a whole burst
-	 *                                  in one pass — must be able to count the real
+	 *                                  in one pass, must be able to count the real
 	 *                                  number of offences instead of one per call.
 	 * @return int|false
 	 */
@@ -901,12 +901,12 @@ class ReportedIP_Hive_Database {
 		$now_utc    = current_time( 'mysql', true );
 
 		/*
-		 * Single atomic upsert on UNIQUE (ip_address, attempt_type) — schema
-		 * v15 — so parallel failed-login bursts cannot lose counts the way the
+		 * Single atomic upsert on UNIQUE (ip_address, attempt_type), schema
+		 * v15:so parallel failed-login bursts cannot lose counts the way the
 		 * previous read-then-update did. The IF() conditions re-implement the
 		 * one-hour idle window: a row untouched for over an hour restarts its
 		 * counter and first_attempt instead of accumulating forever.
-		 * `last_attempt` MUST stay the final assignment — MySQL evaluates the
+		 * `last_attempt` MUST stay the final assignment, MySQL evaluates the
 		 * update list left to right and the IF() conditions read its OLD value.
 		 * Documented drift vs. the pre-v15 behavior: an aggregation window
 		 * longer than 60 minutes spanning an idle gap only sees the restarted
@@ -1020,7 +1020,7 @@ class ReportedIP_Hive_Database {
 
 		/*
 		 * Never queue a non-public address. An `unknown`, loopback or private
-		 * IP cannot be a community threat — the remote API rejects it ("invalid
+		 * IP cannot be a community threat, the remote API rejects it ("invalid
 		 * ip" / "whitelisted local") after three wasted retries. Drop it here so
 		 * a mis-detected internal request never reaches the queue at all.
 		 */
@@ -1077,7 +1077,7 @@ class ReportedIP_Hive_Database {
 			 * Fires after a community report actually entered the API queue.
 			 *
 			 * The public-IP drop, cooldown and dedup checks have all passed at
-			 * this point, so the hook fires exactly once per queued report —
+			 * this point, so the hook fires exactly once per queued report.
 			 * never for suppressed duplicates.
 			 *
 			 * @param string $ip_address            Reported IP.
@@ -1140,7 +1140,7 @@ class ReportedIP_Hive_Database {
 			 * the same pending rows before either marks them. Restricting the
 			 * transition to rows still pending or failed makes the claim
 			 * atomic, so the affected-row count tells the caller whether it
-			 * won — without it the same report went out twice, spending the
+			 * won, without it the same report went out twice, spending the
 			 * quota twice.
 			 */
 			return $wpdb->query(
@@ -1200,7 +1200,7 @@ class ReportedIP_Hive_Database {
 	 * silently suppress all reports for that IP for 24 h+.
 	 *
 	 * Rows whose `submitted_at` is recent are assumed to still be in flight
-	 * and are skipped — only rows older than `processing_timeout_minutes`
+	 * and are skipped, only rows older than `processing_timeout_minutes`
 	 * (or with NULL `submitted_at` and a similarly aged `last_attempt`) are
 	 * recovered.
 	 *
@@ -1289,7 +1289,7 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Batch size for the anonymisation sweep — bounds both the row fetch and
+	 * Batch size for the anonymisation sweep, bounds both the row fetch and
 	 * the per-row UPDATE burst of a single loop iteration.
 	 */
 	const ANONYMIZE_BATCH_SIZE = 500;
@@ -1304,7 +1304,7 @@ class ReportedIP_Hive_Database {
 	 * Anonymize old data for GDPR compliance.
 	 *
 	 * Chunked: the previous implementation selected the entire 7–30-day band
-	 * with no LIMIT — including rows anonymised on earlier runs — and issued
+	 * with no LIMIT, including rows anonymised on earlier runs, and issued
 	 * one UPDATE per row, which on a busy site meant tens of thousands of
 	 * UPDATEs inside a single cron tick. Now each pass takes at most
 	 * ANONYMIZE_BATCH_SIZE not-yet-anonymised rows until the time budget is
@@ -1353,7 +1353,7 @@ class ReportedIP_Hive_Database {
 				/*
 				 * Only count rows the database actually accepted. The loop
 				 * re-selects rows that lack the marker, and the marker is
-				 * written by this very update — counting attempts instead of
+				 * written by this very update, counting attempts instead of
 				 * successes meant a persistently failing write (read-only
 				 * replica, disk full) re-fetched the same batch until the time
 				 * budget ran out, every cron tick, anonymising nothing.
@@ -1793,7 +1793,7 @@ class ReportedIP_Hive_Database {
 
 		/*
 		 * The IP and the CIDR must be the same family. A v4 address can never
-		 * fall inside a v6 range (or vice-versa), and — critically — testing a
+		 * fall inside a v6 range (or vice-versa), and, critically, testing a
 		 * v4 IP against a v6 CIDR is exactly what fed a /33..128 mask into the
 		 * 32-bit shift below and raised "bit shift by negative number". Reject
 		 * the mismatch instead of crashing the request.
@@ -2237,7 +2237,7 @@ class ReportedIP_Hive_Database {
 		}
 
 		/*
-		 * Aggregate WAF hit groups in SQL — the previous implementation pulled
+		 * Aggregate WAF hit groups in SQL, the previous implementation pulled
 		 * up to 5000 longtext blobs into PHP just to json_decode one field.
 		 * JSON_UNQUOTE(JSON_EXTRACT()) covers MySQL 5.7+/MariaDB 10.2+; on the
 		 * rare older server the query errors and the PHP path takes over.

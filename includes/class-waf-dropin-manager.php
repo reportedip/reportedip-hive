@@ -4,7 +4,7 @@
  *
  * Optional "extended protection" layer: generates a self-contained PHP guard at
  * `wp-content/reportedip-hive-waf.php` and wires it as an `auto_prepend_file`
- * so the active WAF rules run *before* WordPress loads — stopping a malicious
+ * so the active WAF rules run *before* WordPress loads, stopping a malicious
  * request before any other code executes. Modelled on
  * {@see ReportedIP_Hive_Decoy_Htaccess_Writer}: idempotent marker block,
  * `admin_init` self-heal with an hourly lock, writability probe, clean removal
@@ -12,13 +12,13 @@
  *
  * Server-aware: Apache (mod_php) gets a `.htaccess` `php_value` directive,
  * PHP-FPM/CGI gets a `.user.ini` directive, and nginx gets a copy-paste snippet
- * (never auto-written). The generated guard is fail-open — any error or missing
+ * (never auto-written). The generated guard is fail-open, any error or missing
  * dependency lets the request through so the drop-in can never take the site
  * down. Removal strips every directive the plugin controls (`.htaccess`,
  * `.user.ini`) and then *neutralises* the guard to an inert stub instead of
  * deleting it: a directive the plugin cannot reach (an nginx `fastcgi_param` or
  * a hand-edited `php.ini` `auto_prepend_file`) would otherwise point at a
- * missing file and fatal every request — the classic "waf-drop-in 500" that
+ * missing file and fatal every request, the classic "waf-drop-in 500" that
  * locks the admin out of their own site. An always-present, do-nothing stub
  * makes that failure mode structurally impossible. The guard is rebaked
  * immediately (queued once per request on shutdown) when the `waf` ruleset is
@@ -28,17 +28,17 @@
  * Two side files carry the state that changes too often to bake into the guard,
  * both inside `uploads/reportedip-hive/` behind a deny rule and a per-site token:
  *
- * - `blocked-<token>.list` — every active exact-IP block as `ip<TAB>unix-expiry`
+ * - `blocked-<token>.list`, every active exact-IP block as `ip<TAB>unix-expiry`
  *   (`0` = permanent). Appended in O(1) the moment a block is written, so the
  *   pre-WordPress layer refuses a known offender within the same request instead
  *   of at the next self-heal. CIDR blocks cannot be looked up this way and are
  *   baked into the guard instead.
- * - `waf-hits-<token>.ndjson` — one line per blocked request. The guard has no
+ * - `waf-hits-<token>.ndjson`, one line per blocked request. The guard has no
  *   database and no logger, so without this queue a hit left no trace at all:
  *   no log row, no counter, no escalation, no community report. WordPress
  *   imports it on the next admin request or queue cron via {@see drain_queue()}.
  *
- * Both layers must stay behaviourally identical — see "The two WAF layers" in
+ * Both layers must stay behaviourally identical, see "The two WAF layers" in
  * the workspace CLAUDE.md before changing anything here.
  *
  * @package   ReportedIP_Hive
@@ -83,7 +83,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Blocklist header magic. Format v1:
 	 * `#rip1 D=<0|1> L=<10-digit base length> <16384 hex chars>\n`
-	 * — a fixed-width 16408-byte header carrying an 8 KB membership bitmap
+	 * - a fixed-width 16408-byte header carrying an 8 KB membership bitmap
 	 * (crc32(ip) mod 65536) plus a dirty flag and the file length as of the
 	 * last full rewrite. Guards from older releases treat the header as an
 	 * unmatched line and still scan the body correctly.
@@ -333,7 +333,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 
 		/*
 		 * nginx (and unknown): the guard file exists, but the directive must be
-		 * pasted into the server config by hand — the UI surfaces the snippet.
+		 * pasted into the server config by hand, the UI surfaces the snippet.
 		 */
 		return true;
 	}
@@ -347,7 +347,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * an nginx `fastcgi_param` or a hand-edited `php.ini auto_prepend_file` line
 	 * lives outside everything the plugin can write, so stripping `.htaccess` /
 	 * `.user.ini` leaves that pointer in place. A deleted target then fatals
-	 * every PHP request — including wp-admin — and the site can only be revived
+	 * every PHP request, including wp-admin, and the site can only be revived
 	 * over FTP/SSH. Leaving a do-nothing stub on disk keeps any such orphaned
 	 * pointer harmless: PHP loads an existing file that immediately returns.
 	 *
@@ -372,7 +372,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * the plugin cannot reach (nginx / hand-edited php.ini) can never point at a
 	 * missing file. A do-nothing-but-present file is always safe; a dangling
 	 * pointer is a site-wide 500. Wordfence's `wordfence-waf.php` works the same
-	 * way — the prepend target is engineered to be fail-safe, not deleted.
+	 * way, the prepend target is engineered to be fail-safe, not deleted.
 	 *
 	 * The stub deliberately does NOT define `REPORTEDIP_HIVE_WAF_DROPIN`, so
 	 * {@see is_running()} correctly reports the WAF as inactive afterwards.
@@ -390,7 +390,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		}
 		$stub = "<?php\n"
 			. "/**\n"
-			. " * ReportedIP Hive WAF drop-in — DISABLED.\n"
+			. " * ReportedIP Hive WAF drop-in, DISABLED.\n"
 			. " *\n"
 			. " * This file is intentionally inert. It is left in place (rather than\n"
 			. " * deleted) so a leftover auto_prepend_file directive in php.ini or an\n"
@@ -421,7 +421,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	}
 
 	/**
-	 * Whether the guard actually executed for the current request — the
+	 * Whether the guard actually executed for the current request, the
 	 * definitive "it works" signal. The guard defines the constant on every PHP
 	 * request (including wp-admin), so the admin page itself proves the chain
 	 * end to end, regardless of how the directive was installed (auto-written,
@@ -454,7 +454,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * nginx snippet.
 	 *
 	 * The PHP SAPI is therefore checked BEFORE the SERVER_SOFTWARE string.
-	 * Under PHP-FPM — which is how nginx (and most modern Apache) serve PHP —
+	 * Under PHP-FPM, which is how nginx (and most modern Apache) serve PHP.
 	 * `auto_prepend_file` in a document-root `.user.ini` is honoured for every
 	 * PHP request regardless of the web server's `location` blocks. The manual
 	 * nginx snippet, by contrast, only covers the single `location` it is pasted
@@ -485,7 +485,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 
 		/*
 		 * WP-CLI has no SAPI and no SERVER_SOFTWARE, so a headless run always
-		 * fell through to 'unknown' — and sync() then wrote the guard file but
+		 * fell through to 'unknown', and sync() then wrote the guard file but
 		 * never the directive that loads it. A site provisioned entirely over
 		 * WP-CLI (MainWP, deployment scripts) therefore reported the drop-in as
 		 * enabled while it was inert until someone opened wp-admin. The verdict
@@ -577,7 +577,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	public function nginx_snippet() {
 		$path = $this->prepend_path();
 		return "location ~ \\.php\$ {\n"
-			. "    # ReportedIP Hive WAF — run the guard before PHP handles the request\n"
+			. "    # ReportedIP Hive WAF, run the guard before PHP handles the request\n"
 			. '    fastcgi_param PHP_VALUE "auto_prepend_file=' . $path . "\";\n"
 			. "    # keep your existing fastcgi_pass / include fastcgi_params directives below\n"
 			. '}';
@@ -672,7 +672,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	}
 
 	/**
-	 * The `.htaccess` directive lines (mod_php only — gated by detect_server).
+	 * The `.htaccess` directive lines (mod_php only, gated by detect_server).
 	 *
 	 * @param string $prepend Guard path.
 	 * @return string[]
@@ -697,7 +697,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 * Write an idempotent marker block into a `.user.ini` file, creating it when
 	 * the directory is writable.
 	 *
-	 * The PHP INI parser only accepts `;` comments — `#` was removed in PHP 7,
+	 * The PHP INI parser only accepts `;` comments, `#` was removed in PHP 7,
 	 * and WordPress' insert_with_markers() instruction comment even contains
 	 * parentheses, which abort `.user.ini` parsing with a syntax error BEFORE
 	 * the directive line is reached. The block therefore uses `;` markers and
@@ -839,7 +839,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 
 		/*
 		 * Bake whether any active rule inspects the body at all, mirroring the
-		 * engine's required_targets() gate — a guard whose rules only target
+		 * engine's required_targets() gate, a guard whose rules only target
 		 * uri/ua must never pay the 64 KB php://input read.
 		 */
 		$body_needed = false;
@@ -855,7 +855,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		$template = <<<'PHP'
 <?php
 /**
- * ReportedIP Hive WAF drop-in — AUTO-GENERATED, DO NOT EDIT.
+ * ReportedIP Hive WAF drop-in, AUTO-GENERATED, DO NOT EDIT.
  * Regenerated by ReportedIP_Hive_WAF_Dropin_Manager on rule sync / self-heal.
  * Format version: __RIP_VERSION__. Fail-open: any error lets the request through.
  */
@@ -939,7 +939,7 @@ if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
 	 * File format v1: fixed-width header "#rip1 D=<0|1> L=<10-digit base
 	 * length> <16384 hex chars>\n" (16408 bytes) carrying an 8 KB / 65536-bit
 	 * membership bitmap over crc32(ip), followed by "ip\tepoch" lines. A clean
-	 * request reads only the header. A bitmap hit (or an unreadable bitmap —
+	 * request reads only the header. A bitmap hit (or an unreadable bitmap.
 	 * scan-more, never skip) block-reads the base region; D=1 means the append
 	 * path added lines after the base length, so that tail region is also
 	 * matched (a re-block extends an entry whose base line may have expired).
@@ -964,7 +964,7 @@ if ( ! function_exists( 'reportedip_hive_dropin_is_blocked' ) ) {
 				/* Never read more than the file actually holds. The header's
 				   length field is 10 digits wide, so a corrupt one asks for
 				   gigabytes; PHP allocates the buffer up front, and that fatal
-				   cannot be caught — it would turn this fail-open guard into a
+				   cannot be caught, it would turn this fail-open guard into a
 				   site-wide 500. The real size wins, and an unreadable size
 				   means read nothing. */
 				$stat       = @fstat( $fh );
@@ -1012,7 +1012,7 @@ if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 	}
 }
 if ( ! function_exists( 'reportedip_hive_dropin_request_has_body' ) ) {
-	/* Mirrors ReportedIP_Hive_WAF::request_has_body() — keep both in sync (parity rule 1). */
+	/* Mirrors ReportedIP_Hive_WAF::request_has_body(), keep both in sync (parity rule 1). */
 	function reportedip_hive_dropin_request_has_body( $server ) {
 		if ( isset( $server['CONTENT_LENGTH'] ) ) { return (int) $server['CONTENT_LENGTH'] > 0; }
 		if ( isset( $server['HTTP_TRANSFER_ENCODING'] ) ) { return true; }
@@ -1152,7 +1152,7 @@ PHP;
 		 * Baking '' turned a transient permission problem at sync time into
 		 * permanent silence: the guard kept blocking but could never report a
 		 * hit, so the Firewall page showed zero WAF activity while the admin UI
-		 * — which re-checks writability live — reported logging as healthy. The
+		 * - which re-checks writability live, reported logging as healthy. The
 		 * guard's own append is already fail-soft (@file_put_contents), so a
 		 * still-unwritable path simply drops that one hit and recovers the
 		 * moment permissions are fixed, without waiting for a rebake.
@@ -1243,7 +1243,7 @@ PHP;
 	 *
 	 * The file lives under uploads (the one directory WordPress guarantees is
 	 * writable) inside its own folder, carries a per-site token in its name and
-	 * is shielded by a deny rule — it holds client IPs and must never be
+	 * is shielded by a deny rule, it holds client IPs and must never be
 	 * fetchable over HTTP.
 	 *
 	 * @return string
@@ -1319,7 +1319,7 @@ PHP;
 		/*
 		 * Dedupe guard: skip the append when the file already carries an
 		 * equal-or-stronger line for this IP (tracked per IP for an hour).
-		 * A longer expiry — the escalation ladder always extends — must
+		 * A longer expiry, the escalation ladder always extends, must
 		 * still append, otherwise the guard would enforce only the stale
 		 * shorter block.
 		 */
@@ -1342,7 +1342,7 @@ PHP;
 	/**
 	 * Flip the header's dirty flag so the guard knows the append region past
 	 * the base length must be scanned even on a bitmap miss. No-op for
-	 * headerless (legacy) files — those are always fully scanned anyway.
+	 * headerless (legacy) files, those are always fully scanned anyway.
 	 *
 	 * @param string $path Blocklist path.
 	 * @return void
@@ -1368,7 +1368,7 @@ PHP;
 	 * refusing an IP the admin just released.
 	 *
 	 * A CIDR range lives in the baked `$block_cidr` array rather than in the
-	 * blocklist file, so rewriting the file cannot release it — that needs a
+	 * blocklist file, so rewriting the file cannot release it, that needs a
 	 * rebake, mirroring what {@see self::on_ip_blocked()} does for ranges.
 	 * Without it the guard keeps refusing every address in a range the admin
 	 * already lifted, until an unrelated resync or the hourly self-heal runs.
@@ -1465,7 +1465,7 @@ PHP;
 	 * Translate a UTC expiry into the guard's unix stamp (0 = permanent).
 	 *
 	 * The guard has no WordPress and no site timezone, so every expiry crosses
-	 * the boundary as an absolute epoch value — the one representation that is
+	 * the boundary as an absolute epoch value, the one representation that is
 	 * identical on a German, Brazilian and Japanese install.
 	 *
 	 * @param string|null $blocked_until UTC 'Y-m-d H:i:s', or null.
@@ -1502,7 +1502,7 @@ PHP;
 	 * Whether the guard can actually append hits.
 	 *
 	 * The guard runs as the web-server user and fails open on a write error, so
-	 * a queue directory it cannot write to would silently swallow every hit —
+	 * a queue directory it cannot write to would silently swallow every hit.
 	 * blocking would still work, but the log, the counters and the escalation
 	 * ladder would stay empty and look exactly like "no attacks". That happens
 	 * whenever the directory was created by a root WP-CLI run. The admin surface

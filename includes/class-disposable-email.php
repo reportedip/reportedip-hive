@@ -5,7 +5,7 @@
  * Inspects the e-mail address on user registration against the
  * `disposable_domains` ruleset (bundled baseline,
  * free; the live multi-thousand-domain list arrives via Priority Sync). A
- * throwaway-mail domain is logged and — when the operator opts into blocking —
+ * throwaway-mail domain is logged and, when the operator opts into blocking.
  * rejected with a registration error. Privacy relays (Apple Hide My Email,
  * Firefox Relay, SimpleLogin, Addy.io) are a distinct, legitimate category and
  * pass through unless the operator explicitly opts into blocking them.

@@ -3,7 +3,7 @@
  * The single reader for active WordPress sessions.
  *
  * Core's `WP_Session_Tokens::get_all()` returns `array_values()` and therefore
- * drops the verifier keys — without them a specific session cannot be ended,
+ * drops the verifier keys, without them a specific session cannot be ended,
  * because nobody but the browser holds the raw token. This class reads the
  * `session_tokens` user meta directly, keeps the verifiers, and is the only
  * place in the plugin that does so.

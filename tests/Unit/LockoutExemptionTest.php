@@ -49,7 +49,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame(
 				2,
 				substr_count( $this->source(), '$this->is_block_exempt_operator()' ),
-				'Exactly the two lockout surfaces — check_ip_access() (front-end) and block_admin_access() (wp-admin) — must call the operator exemption.'
+				'Exactly the two lockout surfaces, check_ip_access() (front-end) and block_admin_access() (wp-admin), must call the operator exemption.'
 			);
 		}
 

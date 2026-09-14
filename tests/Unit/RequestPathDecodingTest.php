@@ -9,7 +9,7 @@
  *  - `/wp-login%2Ephp` arrived as `/wp-loginphp`, missed the hidden-login
  *    comparison, and the login form was served anyway.
  *  - `/%2Eenv` arrived as `/env`, missed the `.env` honeypot signature, and
- *    the scan detector fell back to the generic burst threshold — while the
+ *    the scan detector fell back to the generic burst threshold, while the
  *    server delivered the real file.
  *  - the same trick walked past the decoy bait paths.
  *

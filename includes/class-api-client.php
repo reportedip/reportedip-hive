@@ -35,7 +35,7 @@ class ReportedIP_Hive_API {
 	private $timeout_report = 10;
 
 	/**
-	 * Wall-clock budget (seconds) for one queue batch — deliberately below the
+	 * Wall-clock budget (seconds) for one queue batch, deliberately below the
 	 * 5-minute QUEUE_LOCK_TRANSIENT TTL in the cron handler.
 	 */
 	const QUEUE_TIME_BUDGET = 240;
@@ -86,7 +86,7 @@ class ReportedIP_Hive_API {
 	 *
 	 * Mirrors the wordpress.org update-check format: plugin version, core
 	 * version and the announcing site URL. Third-party services (HIBP) must
-	 * never receive this string — they get the bare product token instead.
+	 * never receive this string, they get the bare product token instead.
 	 *
 	 * @return string User-Agent header value.
 	 * @since  2.1.45
@@ -100,7 +100,7 @@ class ReportedIP_Hive_API {
 	 *
 	 * Always carries the site identity (`X-Rip-Site`). When the site owner
 	 * has enabled cloud management, the current settings schema version and
-	 * fingerprint ride along too — their presence is the opt-in and
+	 * fingerprint ride along too, their presence is the opt-in and
 	 * capability signal for the fleet dashboard, and the hash is its passive
 	 * drift channel (no extra request needed). The hash is memoised per
 	 * request; it only covers registry options, which cannot change between
@@ -434,7 +434,7 @@ class ReportedIP_Hive_API {
 
 			/*
 			 * The cached reputation for this IP predates our own report, so it
-			 * is stale by definition — drop it so the next check reflects the
+			 * is stale by definition, drop it so the next check reflects the
 			 * report instead of serving up-to-24h-old data.
 			 */
 			$this->cache->clear_ip_cache( $ip_address );
@@ -604,7 +604,7 @@ class ReportedIP_Hive_API {
 		}
 
 		/*
-		 * Cap the batch size by remaining quota — but only when the service
+		 * Cap the batch size by remaining quota, but only when the service
 		 * actually exposes a finite cap. `remaining` is `-1` on unlimited
 		 * tiers (Enterprise / Honeypot) and a `min( $limit, -1 )` would
 		 * silently turn the batch into "process minus-one items" and trip
@@ -703,7 +703,7 @@ class ReportedIP_Hive_API {
 				$database->update_api_report_status(
 					$report->id,
 					'failed',
-					'Exception: ' . get_class( $e ) . ' — ' . $e->getMessage()
+					'Exception: ' . get_class( $e ) . ', ' . $e->getMessage()
 				);
 				++$errors;
 				continue;
@@ -943,7 +943,7 @@ class ReportedIP_Hive_API {
 	 * without another outbound HTTP call.
 	 *
 	 * Without this negative cache a tier lookup on a cold or error-returning
-	 * install re-polls the service on every request — the runaway that motivated
+	 * install re-polls the service on every request, the runaway that motivated
 	 * the change. Mirrors the per-endpoint backoff in {@see relay_request()}:
 	 * honour an explicit `Retry-After`, otherwise back off 15 minutes, clamped
 	 * to the [60 s, 1 day] window.
@@ -967,7 +967,7 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Internal helper for the two relay endpoints — POSTs JSON, parses the response,
+	 * Internal helper for the two relay endpoints, POSTs JSON, parses the response,
 	 * and translates HTTP 402/429 into structured results so callers can fall back gracefully.
 	 *
 	 * @param string $endpoint Slug under reportedip/v2/.
@@ -1086,7 +1086,7 @@ class ReportedIP_Hive_API {
 	/**
 	 * Update the cached /relay-quota payload in place after a successful relay send.
 	 *
-	 * Every send moves the counters, so the cache must not survive unchanged — but
+	 * Every send moves the counters, so the cache must not survive unchanged, but
 	 * deleting it outright left the dashboard without data until the next six-hour
 	 * quota cron, which on sites with steady relay traffic rendered the quota cards
 	 * permanently stale ("Awaiting fresh quota data"). The relay endpoints return
@@ -1182,7 +1182,7 @@ class ReportedIP_Hive_API {
 	 * per-endpoint key when no recipient information is in the payload.
 	 *
 	 * @param string $endpoint Relay slug (e.g. 'relay-mail' / 'relay-sms').
-	 * @param array  $payload  Outgoing payload — inspected for recipient identifiers.
+	 * @param array  $payload  Outgoing payload, inspected for recipient identifiers.
 	 * @return string Transient key, or empty string to skip caching.
 	 * @since 2.0.16
 	 */
@@ -1229,7 +1229,7 @@ class ReportedIP_Hive_API {
 	 * server-side Phase 2). Marks the durable domains snapshot as over-limit so
 	 * the dashboard card and the admin notice reflect the state, and logs one
 	 * security event per day instead of one per rejected request. Local
-	 * protection keeps running — only the community round-trip is skipped.
+	 * protection keeps running, only the community round-trip is skipped.
 	 *
 	 * @param string $endpoint   Which endpoint was rejected (check|report).
 	 * @param string $ip_address Affected IP (for the log entry).
@@ -1427,7 +1427,7 @@ class ReportedIP_Hive_API {
 	/**
 	 * Persist an already-verified status payload from an external caller.
 	 *
-	 * {@see verify_api_key()} intentionally does not cache — it is a pure probe.
+	 * {@see verify_api_key()} intentionally does not cache, it is a pure probe.
 	 * Callers that verify a key interactively (the setup wizard's live
 	 * validation) use this to flip the durable tier immediately, so the tier
 	 * badge and every `tier_at_least()` gate reflect the new plan on the very
@@ -1629,7 +1629,7 @@ class ReportedIP_Hive_API {
 		/*
 		 * Unlimited tiers (Enterprise / Honeypot) signal a negative or missing
 		 * `daily_report_limit`. The downstream call site in `process_report_queue()`
-		 * uses `remaining >= 0` to decide whether to cap the batch — so unlimited
+		 * uses `remaining >= 0` to decide whether to cap the batch, so unlimited
 		 * MUST be reported back as `remaining = -1`, regardless of what the
 		 * server stamped into `remaining_reports`. A misbehaving server that
 		 * sends `remaining_reports = 0` for an unlimited tier would otherwise
@@ -1756,7 +1756,7 @@ class ReportedIP_Hive_API {
 	 * The window is sized in calls, not in time. A site that talks to the API
 	 * twice an hour needs more than a day to flush 50 entries, so a four-hour
 	 * outage kept the rate below the threshold long after the API had
-	 * recovered — and the hourly warning kept repeating for a fault that was
+	 * recovered, and the hourly warning kept repeating for a fault that was
 	 * over. Degradation is a statement about now, so it additionally requires
 	 * a failure inside this window.
 	 *
@@ -1902,7 +1902,7 @@ class ReportedIP_Hive_API {
 	 * patching on each relay send).
 	 *
 	 * Only numeric header values are applied ("unlimited" is skipped), and
-	 * only an EXISTING quota transient is patched — the cron remains the sole
+	 * only an EXISTING quota transient is patched, the cron remains the sole
 	 * owner of creating the snapshot and of `reset_time`, whose format the
 	 * headers do not carry.
 	 *

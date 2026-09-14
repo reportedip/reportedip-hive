@@ -8,7 +8,7 @@
  *
  * Falls back transparently to {@see ReportedIP_Hive_Mail_Provider_WordPress}
  * when the API replies HTTP 402 (monthly cap), HTTP 429 (recipient backoff or
- * site daily cap) or any network-level failure — the 2FA flow never breaks.
+ * site daily cap) or any network-level failure, the 2FA flow never breaks.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>

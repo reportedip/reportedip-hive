@@ -158,7 +158,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_username_error_still_masked_when_no_two_factor_token() {
 			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
 			$result   = $instance->normalize_login_errors( '<strong>ERROR</strong>: The password you entered is incorrect.' );
-			$this->assertSame( 'Invalid credentials.', $result, 'Genuine credential errors stay masked — only 2FA messages pass through.' );
+			$this->assertSame( 'Invalid credentials.', $result, 'Genuine credential errors stay masked, only 2FA messages pass through.' );
 		}
 		public function test_normalize_login_errors_passes_empty_through() {
 			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
@@ -224,7 +224,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertFalse(
 				$instance->drop_users_sitemap_provider( $provider, 'users' ),
-				'/wp-sitemap-users-1.xml lists every author slug — the same leak ?author=<n> gives.'
+				'/wp-sitemap-users-1.xml lists every author slug, the same leak ?author=<n> gives.'
 			);
 		}
 

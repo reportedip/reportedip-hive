@@ -7,7 +7,7 @@
  * signatures with stdlib OpenSSL. This keeps the plugin slim for distribution
  * but only covers the subset needed for passkey/platform-authenticator 2FA:
  *   - RS256 and ES256 public keys
- *   - packed / none attestations (we do NOT verify attestation-CA chains —
+ *   - packed / none attestations (we do NOT verify attestation-CA chains.
  *     for 2FA that is acceptable; the enrolment ceremony happens after a
  *     valid password auth so attestation adds no meaningful entropy).
  *
@@ -38,7 +38,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	/**
 	 * Ceremony timeout in milliseconds. 120 s instead of the WebAuthn default
 	 * 60 s because NFC-tap flows on phones routinely need the extra time
-	 * (unlock phone, find the key, hold it steady against the reader).
+	 * (open the phone, find the key, hold it steady against the reader).
 	 *
 	 * @since 2.1.33
 	 */
@@ -128,7 +128,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 
 	/**
 	 * COSE algorithms offered at registration, strongest first. Ed25519
-	 * (-8) is offered only while libsodium can verify it later — otherwise
+	 * (-8) is offered only while libsodium can verify it later, otherwise
 	 * a key registered today could never assert tomorrow.
 	 *
 	 * @return array<int,array{type:string,alg:int}>
@@ -179,7 +179,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	/**
 	 * Whether the Business-tier advanced security-key features are active:
 	 * multiple keys per account, attestation-based model detection and the
-	 * key-lifecycle mails. One key per account is free — the base 2FA
+	 * key-lifecycle mails. One key per account is free, the base 2FA
 	 * protection is never gated.
 	 *
 	 * @return bool
@@ -277,7 +277,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	public function ajax_register_verify() {
 		$user_id = self::key_management_user();
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified by check_ajax_referer() above; payload is a JSON string parsed via json_decode() with strict array check on the next line — invalid input is rejected before any further use.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified by check_ajax_referer() above; payload is a JSON string parsed via json_decode() with strict array check on the next line, invalid input is rejected before any further use.
 		$raw        = isset( $_POST['credential'] ) ? wp_unslash( $_POST['credential'] ) : '';
 		$credential = json_decode( $raw, true );
 		if ( ! is_array( $credential ) ) {
@@ -468,7 +468,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * Delete a single credential.
 	 *
 	 * Removing the last credential disables the webauthn method through the
-	 * canonical disable path — unless webauthn is the user's only enabled
+	 * canonical disable path, unless webauthn is the user's only enabled
 	 * method while 2FA is enforced for them; then the delete is refused so
 	 * an enforced user cannot strand themselves without a second factor.
 	 *
@@ -585,7 +585,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			wp_send_json_error( array( 'message' => __( 'Invalid challenge token.', 'reportedip-hive' ) ) );
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Identity verified via signed cookie above; payload is a JSON string parsed via json_decode() with strict array check on the next line — invalid input is rejected before any further use.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Identity verified via signed cookie above; payload is a JSON string parsed via json_decode() with strict array check on the next line, invalid input is rejected before any further use.
 		$raw       = isset( $_POST['credential'] ) ? wp_unslash( $_POST['credential'] ) : '';
 		$assertion = json_decode( $raw, true );
 		if ( ! is_array( $assertion ) ) {
@@ -607,7 +607,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 *
 	 * @param int    $user_id
 	 * @param string $opaque_code The browser submits a literal "webauthn-ok" once
-	 *                            ajax_login_verify succeeded — this handler then
+	 *                            ajax_login_verify succeeded, this handler then
 	 *                            checks the short-lived transient.
 	 * @return bool
 	 */
@@ -674,7 +674,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		 * Escape hatch for subdomain multisite / domain-mapped networks: a
 		 * network admin can return the registrable parent domain so one
 		 * enrolment is valid network-wide. Changing the RP ID orphans
-		 * credentials enrolled under the previous value — set it once,
+		 * credentials enrolled under the previous value, set it once,
 		 * before rollout.
 		 *
 		 * @param string $rp_id Host derived from home_url().
@@ -742,7 +742,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	/**
 	 * User-verification policy for both ceremonies.
 	 *
-	 * Defaults to 'discouraged' — the Yubico-recommended value for pure
+	 * Defaults to 'discouraged', the Yubico-recommended value for pure
 	 * second-factor use: a fresh YubiKey has no FIDO2 PIN set, and
 	 * 'preferred'/'required' would force PIN enrolment mid-login. Platform
 	 * authenticators (Windows Hello, Touch ID) verify the user intrinsically
@@ -776,7 +776,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * a user on surfaces where the login-nonce cookie does not exist (the
 	 * password-reset gate proves identity via the reset key + resetpass
 	 * cookie before calling this). The token only gates access to the
-	 * assertion ceremony — passing it still requires the credential's
+	 * assertion ceremony, passing it still requires the credential's
 	 * private key.
 	 *
 	 * @param int $user_id User the ceremony is minted for.
@@ -913,7 +913,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 
 			/**
 			 * Fires when an assertion is rejected for a non-advancing
-			 * signature counter — the classic cloned-key indicator.
+			 * signature counter, the classic cloned-key indicator.
 			 *
 			 * @param int    $user_id       Affected user.
 			 * @param string $credential_id Base64url credential id.
@@ -1008,7 +1008,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * attestation and store it, but do not require it). x5c path verifies
 	 * the signature with the attestation certificate's public key;
 	 * self-attestation verifies with the credential key itself. No CA-chain
-	 * or MDS validation — that trade-off is documented in the class header.
+	 * or MDS validation, that trade-off is documented in the class header.
 	 *
 	 * @param array  $att_map          Decoded attestation object (fmt / attStmt / authData).
 	 * @param string $client_data_hash SHA-256 of clientDataJSON (raw bytes).

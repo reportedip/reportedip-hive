@@ -224,7 +224,7 @@ class ReportedIP_Hive_IP_Manager {
 	 *
 	 * Zero affected rows is success, not failure: the address is not blocked,
 	 * which is exactly what the caller asked for. Only an actual database
-	 * error (false) is reported as a failure — the previous truthiness check
+	 * error (false) is reported as a failure, the previous truthiness check
 	 * told admins "Failed to unblock" whenever the block was already gone.
 	 *
 	 * @param string $ip_address IP or CIDR range.
@@ -475,7 +475,7 @@ class ReportedIP_Hive_IP_Manager {
 	 * Expiry is enforced live by the in-WordPress read path, but the
 	 * pre-WordPress guard holds a baked snapshot with no notion of time. So
 	 * whenever a row actually expires the caches must be dropped and the guard
-	 * rebaked — otherwise it keeps honouring a whitelist entry the site has
+	 * rebaked, otherwise it keeps honouring a whitelist entry the site has
 	 * already retired, which is a hole rather than merely stale data.
 	 *
 	 * @return int Number of rows deactivated.

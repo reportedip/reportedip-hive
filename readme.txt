@@ -14,24 +14,24 @@ Community-powered WordPress security: 18 attack sensors, 4 2FA methods, threat s
 
 == Description ==
 
-**Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker — before the password is even checked.**
+**Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker, before the password is even checked.**
 
 ReportedIP Hive is a complete security plugin for serious WordPress sites: 18 detection sensors, four 2FA methods (TOTP, Passkey/WebAuthn and email in every plan; SMS on Professional via the managed relay), progressive block escalation, and an opt-in community-intelligence network. Engineered in Germany with privacy as the design principle, not a checkbox.
 
-The entire detection and identity core is **free, GPL-2.0 and complete** — every sensor, the core 2FA methods, progressive blocking, the password-reset gate, every dashboard and export. Paid plans add managed relays, multi-site management and a few advanced modules on top (see *Plans* below); they never gate the core protection.
+The entire detection and identity core is **free, GPL-2.0 and complete**, every sensor, the core 2FA methods, progressive blocking, the password-reset gate, every dashboard and export. Paid plans add managed relays, multi-site management and a few advanced modules on top (see *Plans* below); they never gate the core protection.
 
 Two ways to run:
 
-* **Local Shield** — works fully offline; nothing ever leaves your site.
-* **Community Network** — free account at [reportedip.com](https://reportedip.com) lights up real-time IP reputation lookups and anonymised threat sharing.
+* **Local Shield**, works fully offline; nothing ever leaves your site.
+* **Community Network**, free account at [reportedip.com](https://reportedip.com) lights up real-time IP reputation lookups and anonymised threat sharing.
 
 = Why agencies and serious site owners pick it =
 
-* **One plugin instead of three.** Brute-force protection, a four-method 2FA suite and threat intelligence in a single drop-in. The full protection core stays free and Open Source — paid plans add the managed mail/SMS relays, multi-site management, higher API quotas and a few advanced modules (WooCommerce frontend 2FA, Hardening Mode, white-label), never the core protection itself.
-* **Progressive blocks that don't burn legitimate users.** A first-time tripping CGNAT visitor or a fat-fingered admin gets a 5-minute timeout — repeat offenders climb the ladder up to 7 days. Nobody pays a 24h block for a typo.
+* **One plugin instead of three.** Brute-force protection, a four-method 2FA suite and threat intelligence in a single drop-in. The full protection core stays free and Open Source, paid plans add the managed mail/SMS relays, multi-site management, higher API quotas and a few advanced modules (WooCommerce frontend 2FA, Hardening Mode, white-label), never the core protection itself.
+* **Progressive blocks that don't burn legitimate users.** A first-time tripping CGNAT visitor or a fat-fingered admin gets a 5-minute timeout, repeat offenders climb the ladder up to 7 days. Nobody pays a 24h block for a typo.
 * **Privacy-first by default.** GDPR-minimal logging mode, 30-day retention, anonymisation after 7 days, opt-in community sharing, all secrets encrypted at rest with libsodium.
-* **Hardening Mode on coordinated attacks (PRO).** When several IPs hit the login in the same minute, or enough distinct IPs add up across a rolling window (default 10 minutes, 10 IPs, 50 attempts), the plugin tightens the failed-login and reputation thresholds network-wide for one hour — on wp-login, the WooCommerce storefront login and application passwords alike. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
-* **Tor exit-node blocking (PRO).** An opt-in toggle rejects connections from known Tor exit nodes, backed by a signed exit-node list refreshed twice daily. Blocks are temporary and never reported to the community — operating an exit node is not abuse evidence.
+* **Hardening Mode on coordinated attacks (PRO).** When several IPs hit the login in the same minute, or enough distinct IPs add up across a rolling window (default 10 minutes, 10 IPs, 50 attempts), the plugin tightens the failed-login and reputation thresholds network-wide for one hour, on wp-login, the WooCommerce storefront login and application passwords alike. Distributed brute-force from botnets stops mid-flight instead of slipping under the per-IP threshold. Realtime trigger in the login pipeline plus an hourly cron sweep as fallback. Visible state via the admin bar, configurable from a dedicated Settings tab, controllable via WP-CLI.
+* **Tor exit-node blocking (PRO).** An opt-in toggle rejects connections from known Tor exit nodes, backed by a signed exit-node list refreshed twice daily. Blocks are temporary and never reported to the community, operating an exit node is not abuse evidence.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
 * **Access lockdown switches.** Turn off the parts of WordPress the site does not use: the REST API for signed-in users only or restricted to selected roles and namespaces, XML-RPC including pingbacks, feeds, the admin area for signed-out visitors, PHP execution in the uploads folder and the version fingerprints in the page source. Every switch is off by default, free on every plan and reversible from the same screen.
 * **System readiness register.** Twelve detectors watch what usually fails quietly: an unwritable pre-WordPress guard queue, stalled or disabled cron, a trusted proxy header without proxy ranges, an outdated database schema, a degraded community layer, exhausted relay quotas, failing mail delivery, a missing encryption extension and a growing report queue. Open issues show up on the System Status page with severity, first-seen time and a jump to the responsible setting, and `wp reportedip status` reports them as well. Free on every plan.
@@ -40,45 +40,45 @@ Two ways to run:
 
 = 18 detection sensors (every one tunable) =
 
-* **Failed logins** — default 5 fails / 15 min
-* **Password spray** — distinct usernames from same IP, default 5 / 10 min
-* **Comment spam** — default 5 / 60 min
-* **XMLRPC abuse** — default 10 / 60 min
-* **Application-password abuse** — REST/XMLRPC Basic-Auth bypass for 2FA, default 5 / 15 min
-* **REST API rate-limit** — global cap, default 240 / 5 min (sensitive routes 20 / 5 min)
-* **User enumeration defence** — `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking, default 5 / 5 min. Author archive pages can be kept public for sites that link to them
-* **404 / scanner detection** — default 12 / 2 min, plus instant block on known-bad paths (`.env`, `wp-config.bak`, `/.git/`)
-* **Web Application Firewall** — request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
-* **Verified bot detection** — confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
-* **Registration defence** — one rule set for every sign-up surface (WordPress, WooCommerce, Multisite sign-ups, programmatic user creation): throwaway-mail domains (off / monitor / block, privacy relays such as Apple Hide My Email and Firefox Relay pass by default), prohibited usernames on top of a baseline of ten role names, e-mail allow or block rules, a per-IP registration rate limit (default 3 / 60 min) and an opt-in immediate block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts `/regex/` patterns and adds registration restricted to allowlisted IP ranges. The live throwaway-mail list rides Priority Sync
-* **Form execution proof** — the comment, sign-up and password-reset forms carry an invisible, screen-reader-excluded decoy field, and a small script adds a second field whose name is random per installation. A bot that fills every field trips the decoy; a script that posts straight at the address without ever loading the form cannot carry the second field. No CAPTCHA, no puzzle and no extra step for real visitors. The verdict is four-way, so a theme with hand-written comment markup is never treated like a bot, and the site measures for itself whether it plants the field. For comments the result is a scoring signal, so a visitor browsing without JavaScript has their comment filed for review instead of refused, and that reason on its own never counts towards a block. Sign-up and password reset can be left out with a separate switch, and the global report-only mode stands the refusals down everywhere while still logging them
-* **Community threat check on forms** — when a comment, sign-up or password reset is submitted, the visitor address is checked against the community network at the same protection level the sign-in page enforces. Someone the site would refuse a login to cannot post a comment instead. The visitor is told why, and the address is closed for 24 hours exactly as a refused sign-in closes it. On by default, needs Community Network mode, and honours every exemption the sign-in path honours. If the daily allowance runs out, the network is unreachable or the answer never arrives, nothing is refused anywhere: the local scoring carries on exactly as before. Losing the community opinion may cost a site that evidence, never its ability to accept input
-* **Geographic anomaly** — login from a country never seen for the user, optionally revokes trusted-device cookies
-* **Password policy** — minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
-* **WooCommerce login hooks** — checkout + my-account forms tracked separately
-* **Cookie-banner consent endpoints whitelisted by default** — Real Cookie Banner, Complianz, Borlabs, CookieYes never get rate-limited
+* **Failed logins**, default 5 fails / 15 min
+* **Password spray**, distinct usernames from same IP, default 5 / 10 min
+* **Comment spam**, default 5 / 60 min
+* **XMLRPC abuse**, default 10 / 60 min
+* **Application-password abuse**, REST/XMLRPC Basic-Auth bypass for 2FA, default 5 / 15 min
+* **REST API rate-limit**, global cap, default 240 / 5 min (sensitive routes 20 / 5 min)
+* **User enumeration defence**, `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking, default 5 / 5 min. Author archive pages can be kept public for sites that link to them
+* **404 / scanner detection**, default 12 / 2 min, plus instant block on known-bad paths (`.env`, `wp-config.bak`, `/.git/`)
+* **Web Application Firewall**, request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
+* **Verified bot detection**, confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
+* **Registration defence**, one rule set for every sign-up surface (WordPress, WooCommerce, Multisite sign-ups, programmatic user creation): throwaway-mail domains (off / monitor / block, privacy relays such as Apple Hide My Email and Firefox Relay pass by default), prohibited usernames on top of a baseline of ten role names, e-mail allow or block rules, a per-IP registration rate limit (default 3 / 60 min) and an opt-in immediate block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts `/regex/` patterns and adds registration restricted to allowlisted IP ranges. The live throwaway-mail list rides Priority Sync
+* **Form execution proof**, the comment, sign-up and password-reset forms carry an invisible, screen-reader-excluded decoy field, and a small script adds a second field whose name is random per installation. A bot that fills every field trips the decoy; a script that posts straight at the address without ever loading the form cannot carry the second field. No CAPTCHA, no puzzle and no extra step for real visitors. The verdict is four-way, so a theme with hand-written comment markup is never treated like a bot, and the site measures for itself whether it plants the field. For comments the result is a scoring signal, so a visitor browsing without JavaScript has their comment filed for review instead of refused, and that reason on its own never counts towards a block. Sign-up and password reset can be left out with a separate switch, and the global report-only mode stands the refusals down everywhere while still logging them
+* **Community threat check on forms**, when a comment, sign-up or password reset is submitted, the visitor address is checked against the community network at the same protection level the sign-in page enforces. Someone the site would refuse a login to cannot post a comment instead. The visitor is told why, and the address is closed for 24 hours exactly as a refused sign-in closes it. On by default, needs Community Network mode, and honours every exemption the sign-in path honours. If the daily allowance runs out, the network is unreachable or the answer never arrives, nothing is refused anywhere: the local scoring carries on exactly as before. Losing the community opinion may cost a site that evidence, never its ability to accept input
+* **Geographic anomaly**, login from a country never seen for the user, optionally revokes trusted-device cookies
+* **Password policy**, minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
+* **WooCommerce login hooks**, checkout + my-account forms tracked separately
+* **Cookie-banner consent endpoints whitelisted by default**, Real Cookie Banner, Complianz, Borlabs, CookieYes never get rate-limited
 
 = Two-Factor Authentication (four methods) =
 
 Three of the four methods work in **every plan**, including Free and the fully-offline Local Shield. SMS is the one method that rides the managed relay, so it needs a Professional plan.
 
-* **TOTP** — RFC 6238, works with Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest. *Free.*
-* **Passkey / WebAuthn / FIDO2** — Face ID, Touch ID, Windows Hello and hardware security keys (YubiKey 5 series and other FIDO2 keys, USB-C or NFC phone tap). Ed25519 support, clone detection, named key manager. In-house implementation, no Composer dependency. Phishing-resistant. *One key per account free.*
-* **Advanced Security Keys (Business)** — multiple keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts.
-* **Email OTP** — 6-digit code, 10-minute validity, rate-limited (3 sends / 15 min, 60 s cooldown), 5 verify attempts per code. *Free.*
-* **SMS OTP (Professional)** — delivered through the managed reportedip.com relay, included with Professional and Business plans. No own SMS account or carrier contract required. Phone numbers encrypted at rest. Free / Contributor sites use TOTP, Passkey or Email instead.
+* **TOTP**, RFC 6238, works with Google Authenticator, Authy, 1Password, Microsoft Authenticator. Secrets encrypted at rest. *Free.*
+* **Passkey / WebAuthn / FIDO2**, Face ID, Touch ID, Windows Hello and hardware security keys (YubiKey 5 series and other FIDO2 keys, USB-C or NFC phone tap). Ed25519 support, clone detection, named key manager. In-house implementation, no Composer dependency. Phishing-resistant. *One key per account free.*
+* **Advanced Security Keys (Business)**, multiple keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts.
+* **Email OTP**, 6-digit code, 10-minute validity, rate-limited (3 sends / 15 min, 60 s cooldown), 5 verify attempts per code. *Free.*
+* **SMS OTP (Professional)**, delivered through the managed reportedip.com relay, included with Professional and Business plans. No own SMS account or carrier contract required. Phone numbers encrypted at rest. Free / Contributor sites use TOTP, Passkey or Email instead.
 
 Plus:
 
-* **Self-service method management on the profile page** — plain-language method cards let every user add or remove methods at any time, pick the default method the login challenge opens with, change the SMS number (the verified number is only replaced after the new one confirms a code) and re-set-up the authenticator app
+* **Self-service method management on the profile page**, plain-language method cards let every user add or remove methods at any time, pick the default method the login challenge opens with, change the SMS number (the verified number is only replaced after the new one confirms a code) and re-set-up the authenticator app
 * **10 single-use recovery codes**, hashed at rest, low-codes warning at 3 remaining
 * **Trusted devices** with configurable expiry (default 30 days), IP + device-name + last-used tracking, auto-revoked on geo anomaly
-* **Password-reset gate** — the WordPress "lost password" flow demands a second factor before the new password is accepted. Email is excluded by design (it is the channel that delivered the reset link), so a stolen mailbox cannot bypass 2FA. Email-only accounts without recovery codes are hard-locked with an admin alert.
-* **Multi-stage 2FA rate-limit** — 3/5/10/15 fails trigger 30 s/5 m/30 m/1 h delays; the 15th IP-level fail graduates the IP to a real progressive block (so the brute-forcer no longer just times out and tries again hourly)
+* **Password-reset gate**, the WordPress "lost password" flow demands a second factor before the new password is accepted. Email is excluded by design (it is the channel that delivered the reset link), so a stolen mailbox cannot bypass 2FA. Email-only accounts without recovery codes are hard-locked with an admin alert.
+* **Multi-stage 2FA rate-limit**, 3/5/10/15 fails trigger 30 s/5 m/30 m/1 h delays; the 15th IP-level fail graduates the IP to a real progressive block (so the brute-forcer no longer just times out and tries again hourly)
 * **Role-based enforcement** with grace period (default 7 days) and skip counter
-* **Adaptive step-up triggers (Professional)** — seven per-role rules that ask for the second factor again: new country, new IP address, new network, new device, every N days, every N sign-ins, more than N concurrent sessions. The step-up applies even when a trusted-device cookie is present; the 2FA IP allowlist and the `reportedip_2fa_bypass` filter still bypass it. Users without a configured method are never locked out, and the administrator role can only be armed once an administrator has passed one challenge on the site
-* **Frontend onboarding** — branded 5-step setup wizard for users on the front-end (e.g. WooCommerce account)
-* **WooCommerce frontend 2FA (Professional plan)** — second factor renders inside the active storefront theme on My Account, classic checkout and the WooCommerce blocks, with a themed onboarding page for Customer / Subscriber roles. Cart and checkout state survive the redirect roundtrip; the trusted-device cookie is shared with the wp-login flow so a checkout-side "Trust this device" silences the next backend login as well. Soft-disables on a tier downgrade — existing customer secrets stay valid, only new onboardings are blocked.
+* **Adaptive step-up triggers (Professional)**, seven per-role rules that ask for the second factor again: new country, new IP address, new network, new device, every N days, every N sign-ins, more than N concurrent sessions. The step-up applies even when a trusted-device cookie is present; the 2FA IP allowlist and the `reportedip_2fa_bypass` filter still bypass it. Users without a configured method are never locked out, and the administrator role can only be armed once an administrator has passed one challenge on the site
+* **Frontend onboarding**, branded 5-step setup wizard for users on the front-end (e.g. WooCommerce account)
+* **WooCommerce frontend 2FA (Professional plan)**, second factor renders inside the active storefront theme on My Account, classic checkout and the WooCommerce blocks, with a themed onboarding page for Customer / Subscriber roles. Cart and checkout state survive the redirect roundtrip; the trusted-device cookie is shared with the wp-login flow so a checkout-side "Trust this device" silences the next backend login as well. Soft-disables on a tier downgrade, existing customer secrets stay valid, only new onboardings are blocked.
 * **Branded login page** option, custom email subject + body, IP allowlist for 2FA bypass
 
 = Honeypots and decoys =
@@ -108,20 +108,20 @@ Manual blocks (admin clicks "Block this IP" or imports a CSV) honour the admin's
 ReportedIP Hive plays nicely with WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed Cache and CDNs.
 
 * The 403 "Access Denied" response sets `DONOTCACHEPAGE`, `DONOTCACHEDB` and `DONOTCACHEOBJECT`, calls `nocache_headers()`, and emits explicit `Cache-Control: no-store` + `Pragma: no-cache`. No cache layer stores the 403 and hands it back to legitimate visitors.
-* Login (`wp-login.php`), admin (`/wp-admin/`), REST (`/wp-json/`), XMLRPC, POST requests and logged-in users are excluded from page caching by every reputable cache plugin out of the box — exactly the paths attackers target. Blocks always take effect there.
+* Login (`wp-login.php`), admin (`/wp-admin/`), REST (`/wp-json/`), XMLRPC, POST requests and logged-in users are excluded from page caching by every reputable cache plugin out of the box, exactly the paths attackers target. Blocks always take effect there.
 * The form execution proof emits nothing request-specific: the decoy carries no value, the proof field name is a per-site constant and the script is a static file. A page cached under any of these layers stays valid indefinitely, and no page is marked uncacheable for it.
 * **Documented limitation:** a blocked attacker visiting a *publicly cached* GET URL still receives the cached HTML. Their write-path attempts (login, comment, REST, XMLRPC) are blocked normally. For deny-on-cached-public-page, install a server-level rule (Cloudflare WAF, Nginx `deny`, fail2ban).
 
 = Promote / community shortcodes =
 
-Show the world that your site is part of the hive — and earn community-network credibility:
+Show the world that your site is part of the hive, and earn community-network credibility:
 
-* **Auto-footer badge** — one toggle, four positions (left / center / right / below content), zero shortcode placement needed
-* **Shortcodes** — `[reportedip_badge]`, `[reportedip_stat type="..."]`, `[reportedip_banner]`, `[reportedip_shield]`. Drop into any post, page, widget or template
-* **8 stat types** — `attacks_total`, `attacks_30d`, `reports_total`, `api_reports_30d`, `blocked_active`, `whitelist_active`, `logins_30d`, `spam_30d`
-* **4 tone presets** — `protect`, `trust`, `community`, `contributor`
-* **Web Component with Shadow DOM** — your theme cannot break the layout. The `<a>` link stays in the light DOM, so search engines pick it up.
-* **UTM-tracked** — every click measurable in your analytics
+* **Auto-footer badge**, one toggle, four positions (left / center / right / below content), zero shortcode placement needed
+* **Shortcodes**, `[reportedip_badge]`, `[reportedip_stat type="..."]`, `[reportedip_banner]`, `[reportedip_shield]`. Drop into any post, page, widget or template
+* **8 stat types**, `attacks_total`, `attacks_30d`, `reports_total`, `api_reports_30d`, `blocked_active`, `whitelist_active`, `logins_30d`, `spam_30d`
+* **4 tone presets**, `protect`, `trust`, `community`, `contributor`
+* **Web Component with Shadow DOM**, your theme cannot break the layout. The `<a>` link stays in the light DOM, so search engines pick it up.
+* **UTM-tracked**, every click measurable in your analytics
 
 = Privacy & GDPR =
 
@@ -129,8 +129,8 @@ Show the world that your site is part of the hive — and earn community-network
 * **Minimal data collection.** No usernames, no comment content, no full user-agents in any report; user-agents are truncated to 50 characters even locally.
 * **Configurable retention.** Daily cleanup with a 30-day default; automatic anonymisation after 7 days.
 * **Opt-in sharing.** Local Shield works 100 % offline. Nothing leaves your site unless you switch to Community Network.
-* **Transparent installation identity.** In Community mode each API request identifies the installation itself — site address plus plugin and WordPress version, wp.org-style — for licence domain counting and support. This is data about your installation, never about your visitors.
-* **Lawful basis: Art. 6(1)(f) GDPR** (legitimate interest — preventing unauthorised access). Documented in the quickstart and admin UI.
+* **Transparent installation identity.** In Community mode each API request identifies the installation itself, site address plus plugin and WordPress version, wp.org-style, for licence domain counting and support. This is data about your installation, never about your visitors.
+* **Lawful basis: Art. 6(1)(f) GDPR** (legitimate interest, preventing unauthorised access). Documented in the quickstart and admin UI.
 * **Encryption at rest.** All secrets (TOTP seeds, phone numbers) sealed with libsodium (or OpenSSL fallback).
 * **Delete-on-uninstall** opt-in for total removal: tables, options and every piece of user meta the plugin wrote.
 * **Export and erasure requests are wired up.** A personal-data export returns the account's own login attempts, its trusted devices, an account block with its texts, the address and expiry of every open session and the sign-in history behind the adaptive 2FA triggers. An erasure clears the texts and the history but keeps an active account block and reports that as retained, because an erasure request must not become a way to lift a security block.
@@ -139,8 +139,8 @@ Show the world that your site is part of the hive — and earn community-network
 = Admin UX =
 
 * **One-page quickstart** with a tier-aware recommendation: pick Community Network or Local Shield, paste the key, switch protection on. Everything else is preconfigured for your plan and adjustable later.
-* **Real-time dashboard** with detection & hardening score gauges (0–100 plus an A+–F grade, per-item deep links) and 7- and 30-day Chart.js trend lines.
-* **Security widget on the WordPress dashboard** — attacks blocked (30 days), blocks today, active IP blocks, protection layers and the detection score on wp-admin's front page, with deep links into the plugin; on Multisite the widget appears on the network dashboard.
+* **Real-time dashboard** with detection & hardening score gauges (0–100 plus an A+-F grade, per-item deep links) and 7- and 30-day Chart.js trend lines.
+* **Security widget on the WordPress dashboard**, attacks blocked (30 days), blocks today, active IP blocks, protection layers and the detection score on wp-admin's front page, with deep links into the plugin; on Multisite the widget appears on the network dashboard.
 * **Seven list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), the session manager under Users -> Sessions (Business), plus the 2FA admin grid.
 * **System Status page** listing every open readiness issue with its severity, when it first appeared, a jump to the responsible setting and a link to the documentation.
 * **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup.
@@ -159,15 +159,15 @@ Show the world that your site is part of the hive — and earn community-network
 * **REST API** namespace `reportedip-hive/v1` with three 2FA endpoints (`/2fa/challenge`, `/2fa/verify`, `/2fa/methods`) for headless flows.
 * **WP-CLI** command trees for 2FA, hardening, IP lookup and full IP management (see the WP-CLI section below).
 * **PHP filters** to extend the engine without forking:
-  * `reportedip_hive_rest_bypass_routes` — whitelist additional REST namespaces
-  * `reportedip_hive_rest_sensitive_routes` — flag additional REST routes for the lower threshold
-  * `reportedip_hive_event_category_map` — map your custom event types to community-API categories
-  * `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path` — replace the mailer
-  * `reportedip_hive_form_proof_adapters` — choose which form surfaces carry the execution proof (`comment`, `register`, `lostpassword`)
-  * `reportedip_hive_reputation_form_surfaces` — choose which form surfaces are checked against the community network
+  * `reportedip_hive_rest_bypass_routes`, whitelist additional REST namespaces
+  * `reportedip_hive_rest_sensitive_routes`, flag additional REST routes for the lower threshold
+  * `reportedip_hive_event_category_map`, map your custom event types to community-API categories
+  * `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path`, replace the mailer
+  * `reportedip_hive_form_proof_adapters`, choose which form surfaces carry the execution proof (`comment`, `register`, `lostpassword`)
+  * `reportedip_hive_reputation_form_surfaces`, choose which form surfaces are checked against the community network
 * **Constants** for emergency overrides:
-  * `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` — temporarily disable hide-login from `wp-config.php`
-  * `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` — switch off the whole form-proof layer from `wp-config.php`, for the case where a visitor cannot submit and you need the site working before you debug
+  * `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN`, temporarily disable hide-login from `wp-config.php`
+  * `REPORTEDIP_HIVE_DISABLE_FORM_PROOF`, switch off the whole form-proof layer from `wp-config.php`, for the case where a visitor cannot submit and you need the site working before you debug
 * **9 database tables** (auto-migrated; opt-in delete on uninstall): logs, blocked, whitelist, attempts, api_queue, stats, trusted_devices, audit_log and waf_exceptions.
 * **Internationalisation-ready.** Text domain `reportedip-hive`, English source with German translation included.
 * **Test suite.** A comprehensive PHPUnit suite (unit + Multisite) runs on every commit; PHPStan level 5 (No errors); WPCS-compliant with zero warnings.
@@ -178,25 +178,25 @@ Every day-to-day management task is available from the shell. List-style command
 
 IP management:
 
-* `wp reportedip whitelist add <ip> [--reason=<text>] [--expires=<datetime>]` — whitelist an address (lifts an active block automatically)
+* `wp reportedip whitelist add <ip> [--reason=<text>] [--expires=<datetime>]`, whitelist an address (lifts an active block automatically)
 * `wp reportedip whitelist remove <ip>` / `wp reportedip whitelist list`
-* `wp reportedip block <ip> [--reason=<text>] [--hours=<n>]` — manual block
-* `wp reportedip unblock <ip> [--reset-attempts]` — release a blocked address; the flag also clears the attempt counters so a still-exceeded threshold cannot re-block it on the next request
-* `wp reportedip blocked list` — active blocks
-* `wp reportedip attempts reset <ip> [--type=<type>]` — clear per-IP counters
-* `wp reportedip lookup <ip>` — local status plus community reputation
+* `wp reportedip block <ip> [--reason=<text>] [--hours=<n>]`, manual block
+* `wp reportedip unblock <ip> [--reset-attempts]`, release a blocked address; the flag also clears the attempt counters so a still-exceeded threshold cannot re-block it on the next request
+* `wp reportedip blocked list`, active blocks
+* `wp reportedip attempts reset <ip> [--type=<type>]`, clear per-IP counters
+* `wp reportedip lookup <ip>`, local status plus community reputation
 
 Status and administration:
 
-* `wp reportedip status` — version, mode, tier, counters, queue health, protection toggles and the open readiness issues at a glance
-* `wp reportedip 2fa <status|enable|disable|reset|enforce|audit|cleanup>` — user 2FA administration
-* `wp reportedip hardening <status|activate|deactivate>` — hardening mode
+* `wp reportedip status`, version, mode, tier, counters, queue health, protection toggles and the open readiness issues at a glance
+* `wp reportedip 2fa <status|enable|disable|reset|enforce|audit|cleanup>`, user 2FA administration
+* `wp reportedip hardening <status|activate|deactivate>`, hardening mode
 
 User accounts (Business):
 
-* `wp reportedip user block <user> [--message=<text>] [--note=<text>]` — block an account; `<user>` is an id, login or e-mail address. The message is what the person sees at sign-in, the note stays internal
-* `wp reportedip user unblock <user>` — lift the block; never needs a paid plan, so an expired licence can never leave an account locked out
-* `wp reportedip user list` — every blocked account with the time, the administrator and the message
+* `wp reportedip user block <user> [--message=<text>] [--note=<text>]`, block an account; `<user>` is an id, login or e-mail address. The message is what the person sees at sign-in, the note stays internal
+* `wp reportedip user unblock <user>`, lift the block; never needs a paid plan, so an expired licence can never leave an account locked out
+* `wp reportedip user list`, every blocked account with the time, the administrator and the message
 
 = What this plugin does NOT include =
 
@@ -206,47 +206,47 @@ Honest scope so you can plan around it:
 * No Cloudflare API integration
 * No payment-fraud scoring
 
-Pair it with a malware scanner if you need that surface — Hive deliberately stays focused on identity, brute force and threat intelligence.
+Pair it with a malware scanner if you need that surface, Hive deliberately stays focused on identity, brute force and threat intelligence.
 
 == Plans (optional, comfort only) ==
 
-The full **detection and identity core is free, GPL-2.0 and complete** in every operating mode — all 16 sensors, the core 2FA methods (TOTP, Passkey, Email, Recovery codes), progressive block escalation, the password-reset gate, every alert, every dashboard and export. None of that is ever gated.
+The full **detection and identity core is free, GPL-2.0 and complete** in every operating mode, all 16 sensors, the core 2FA methods (TOTP, Passkey, Email, Recovery codes), progressive block escalation, the password-reset gate, every alert, every dashboard and export. None of that is ever gated.
 
-Paid plans add the **managed relays, multi-site management and a handful of advanced modules** at reportedip.com — useful for sites that don't want to maintain their own SMTP / SMS / multi-site stack, run a WooCommerce storefront, or need network-wide auto-hardening:
+Paid plans add the **managed relays, multi-site management and a handful of advanced modules** at reportedip.com, useful for sites that don't want to maintain their own SMTP / SMS / multi-site stack, run a WooCommerce storefront, or need network-wide auto-hardening:
 
 = Free / Contributor (0 €) =
 
-* Full core functionality — all 16 sensors, progressive blocking, the password-reset gate, every dashboard and export
+* Full core functionality, all 16 sensors, progressive blocking, the password-reset gate, every dashboard and export
 * Registration rules (ten entries per list), the access lockdown switches and the system readiness register
 * 1 domain per licence, 1,000 IP-reputation checks/day, 50 reports/day
 * Local-mode `wp_mail()` for 2FA emails; TOTP, Passkey and Email 2FA included (SMS 2FA, WooCommerce frontend 2FA and Hardening Mode require Professional)
 * 30-day log retention, community support
 * **Contributor tier** is identical to Free but earns threat-feed access for sites that operate a public honeypot
 
-= Professional (14.90 €/month, 149 €/year — covers up to 3 domains) =
+= Professional (14.90 €/month, 149 €/year, covers up to 3 domains) =
 
 * 25,000 reputation checks/day, 1,000 reports/day
-* **Managed mail relay** — 500 transactional 2FA mails/month routed through reportedip.com's clean SPF/DKIM/DMARC infrastructure (auto-fallback to `wp_mail()` on cap)
-* **Managed SMS relay** — 25 worldwide OTP SMS/month with no third-party Twilio account required
-* **WooCommerce frontend 2FA** — the second factor rendered inside the storefront theme on My Account, classic checkout and the WC blocks
-* **Hardening Mode** — auto-tighten failed-login and reputation thresholds network-wide for one hour on a detected coordinated attack
-* **Advanced security headers** — HSTS, Permissions-Policy, the Content-Security-Policy builder and the cross-origin isolation trio (the basic header trio stays free)
-* **Adaptive 2FA triggers** — per-role step-up rules on a new device, IP address, network or country, every N days or sign-ins, or above a concurrent-session limit
-* **Unlimited registration rules** — no ten-entry cap on the username and e-mail lists, `/regex/` patterns and registration restricted to allowlisted IP ranges
-* **Priority Sync** — the deeper, frequently-updated, Ed25519-signed WAF Paranoia-Level-2/3 rulesets plus the live bot-IP-range and disposable-domain feeds
+* **Managed mail relay**, 500 transactional 2FA mails/month routed through reportedip.com's clean SPF/DKIM/DMARC infrastructure (auto-fallback to `wp_mail()` on cap)
+* **Managed SMS relay**, 25 worldwide OTP SMS/month with no third-party Twilio account required
+* **WooCommerce frontend 2FA**, the second factor rendered inside the storefront theme on My Account, classic checkout and the WC blocks
+* **Hardening Mode**, auto-tighten failed-login and reputation thresholds network-wide for one hour on a detected coordinated attack
+* **Advanced security headers**, HSTS, Permissions-Policy, the Content-Security-Policy builder and the cross-origin isolation trio (the basic header trio stays free)
+* **Adaptive 2FA triggers**, per-role step-up rules on a new device, IP address, network or country, every N days or sign-ins, or above a concurrent-session limit
+* **Unlimited registration rules**, no ten-entry cap on the username and e-mail lists, `/regex/` patterns and registration restricted to allowlisted IP ranges
+* **Priority Sync**, the deeper, frequently-updated, Ed25519-signed WAF Paranoia-Level-2/3 rulesets plus the live bot-IP-range and disposable-domain feeds
 * Multi-site dashboard, priority sync (daily blacklist download), 90-day log retention, e-mail support (48 h SLA)
 * Prepaid top-up bundles (SMS and mail) available for heavy months
 
-= Business (39 €/month, 389 €/year — up to 15 domains per licence) =
+= Business (39 €/month, 389 €/year, up to 15 domains per licence) =
 
 * 100,000 checks/day, 5,000 reports/day
 * **2,500 mail/month + 75 SMS/month included**
 * Everything in Professional, plus white-label (logo, copy, mail templates), the WooCommerce complete integration, full WP-CLI surface and role-based login-time restrictions
-* **Audit event trail** — append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export
-* **Advanced Security Keys** — multiple WebAuthn keys per account (primary + backup YubiKey), automatic model detection via attestation, key-lifecycle email alerts
-* **User account control and sessions** — block an account (it keeps its content but cannot sign in, authenticate an application password or complete a password reset), drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions
+* **Audit event trail**, append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export
+* **Advanced Security Keys**, multiple WebAuthn keys per account (primary + backup YubiKey), automatic model detection via attestation, key-lifecycle email alerts
+* **User account control and sessions**, block an account (it keeps its content but cannot sign in, authenticate an application password or complete a password reset), drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions
 * 1-year log retention, weekly security PDF report, GDPR data-export tool, priority support (12 h SLA)
-* **Multi-bookable:** book Business x2–x20 to scale domains, API quota and 2FA mail/SMS with the licence count — a volume discount applies automatically
+* **Multi-bookable:** book Business x2, x20 to scale domains, API quota and 2FA mail/SMS with the licence count, a volume discount applies automatically
 
 = Enterprise (custom, from ~663 €/month) =
 
@@ -255,9 +255,9 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 
 **Bundles (PRO+ only, refundable until first use):** 50/200/500-SMS bundles (14.90 / 49.90 / 99.90 €), 1k/5k/25k-mail bundles (4.90 / 14.90 / 49.90 €). All prices VAT-inclusive (Stripe `tax_behavior = inclusive`).
 
-**How domains are counted:** each Hive installation announces its site address with every API request, and every distinct domain occupies one slot of the plan. A WordPress Multisite network counts as a single domain. Your reportedip.com dashboard shows the used/included domains per licence, lets you release slots of retired or moved sites (up to 3 self-service releases per 30 days), and domains that stop reporting for 60 days free their slot automatically. Currently informational only — nothing is blocked when a plan is over its allowance.
+**How domains are counted:** each Hive installation announces its site address with every API request, and every distinct domain occupies one slot of the plan. A WordPress Multisite network counts as a single domain. Your reportedip.com dashboard shows the used/included domains per licence, lets you release slots of retired or moved sites (up to 3 self-service releases per 30 days), and domains that stop reporting for 60 days free their slot automatically. Currently informational only, nothing is blocked when a plan is over its allowance.
 
-What stays Free regardless of plan: all 18 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, the registration rule set with ten entries per list, the comment decoy, the form execution proof, the community threat check on forms, the access lockdown switches, the system readiness register, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys — multiple WebAuthn keys, model detection, key alerts (Business), adaptive 2FA triggers (Professional), unlimited registration rules with regular expressions and allowlist-only registration (Professional), blocking user accounts and the session manager (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode — no plan, no account, nothing leaves your site.
+What stays Free regardless of plan: all 18 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, the registration rule set with ten entries per list, the comment decoy, the form execution proof, the community threat check on forms, the access lockdown switches, the system readiness register, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys, multiple WebAuthn keys, model detection, key alerts (Business), adaptive 2FA triggers (Professional), unlimited registration rules with regular expressions and allowlist-only registration (Professional), blocking user accounts and the session manager (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode, no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
 
@@ -265,13 +265,13 @@ A short architectural map for evaluators:
 
 = Two operating modes =
 
-* **Local Shield** — fully offline. Every sensor decision is local; no outbound HTTP. The 2FA-mail-relay and reputation-check endpoints are never touched.
-* **Community Network** — Local Shield plus opt-in IP-reputation lookups against `reportedip.com/wp-json/reportedip/v2/check` and queued threat reports against `/report`. Lookups are cached (24 h positive, 2 h negative); reports are batched by cron. Every Community-mode request identifies the installation wp.org-style (site address plus plugin and WordPress version in the User-Agent and an `X-Rip-Site` header) so the service can count the domains per licence.
+* **Local Shield**, fully offline. Every sensor decision is local; no outbound HTTP. The 2FA-mail-relay and reputation-check endpoints are never touched.
+* **Community Network**, Local Shield plus opt-in IP-reputation lookups against `reportedip.com/wp-json/reportedip/v2/check` and queued threat reports against `/report`. Lookups are cached (24 h positive, 2 h negative); reports are batched by cron. Every Community-mode request identifies the installation wp.org-style (site address plus plugin and WordPress version in the User-Agent and an `X-Rip-Site` header) so the service can count the domains per licence.
 
 = Request lifecycle =
 
 1. **`init` priority 1.** The very first thing Hive does on every front-end request is check the IP against the local block table. Blocked IPs receive a 403 with `DONOTCACHEPAGE` + `Cache-Control: no-store` headers and exit before any other plugin's `init` handler runs.
-2. **`wp_authenticate_user` priority 10.** Reputation check (Community-mode only) and IP-block check before the password is verified — failed-but-cheap, blocked attackers never trigger a `wp_login_failed` action.
+2. **`wp_authenticate_user` priority 10.** Reputation check (Community-mode only) and IP-block check before the password is verified, failed-but-cheap, blocked attackers never trigger a `wp_login_failed` action.
 3. **`authenticate` priority 99.** After WordPress core verifies the password, the 2FA orchestrator decides whether a second factor is required, sends an OTP if needed, and intercepts with a session-bound nonce + `wp-login.php?action=reportedip_2fa` redirect.
 4. **`validate_password_reset` priority 5 + `password_reset` priority 5.** Since 1.6.5: a non-email second factor is required before any new password is persisted via the WordPress "lost password" flow. Email is excluded from the eligible methods because it is the channel that delivered the reset link itself.
 
@@ -287,7 +287,7 @@ A single failure-counter ladder is shared by every brute-force-style sensor (fai
 
 = Performance budget =
 
-* **`init` priority-1 IP check**: ~1 indexed SELECT, request-level memoised — under 1 ms for blocked IPs, ~0.2 ms for clean ones.
+* **`init` priority-1 IP check**: ~1 indexed SELECT, request-level memoised, under 1 ms for blocked IPs, ~0.2 ms for clean ones.
 * **REST API monitor**: skips authenticated users entirely so the Block Editor (50+ REST calls per page-open) never trips the rate-limiter.
 * **Reputation cache**: ETag-based, 24 h positive / 2 h negative. Daily API usage stays low even on busy sites.
 * **Reports**: queued, sent in batches of 20 by a 15-minute cron with a 5-minute transient lock against concurrent runs.
@@ -300,7 +300,7 @@ Every option lives under the `reportedip_hive_` prefix in `wp_options` (tracked 
 
 = Manual (recommended) =
 
-1. Download the production ZIP — **always pick the `reportedip-hive.zip` asset**:
+1. Download the production ZIP, **always pick the `reportedip-hive.zip` asset**:
    * Direct link (always latest): [github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip](https://github.com/reportedip/reportedip-hive/releases/latest/download/reportedip-hive.zip)
    * Or open the [latest release page](https://github.com/reportedip/reportedip-hive/releases/latest) and grab `reportedip-hive.zip` from the *Assets* section.
 2. WP Admin → *Plugins → Add New → Upload Plugin* → pick `reportedip-hive.zip`.
@@ -314,16 +314,16 @@ Every option lives under the `reportedip_hive_` prefix in `wp_options` (tracked 
 
 = Updates =
 
-The plugin ships a built-in update checker that polls the GitHub release feed every 12 hours. Updates appear in the standard *Plugins* list and install with a single click — exactly like a wordpress.org plugin, but served directly from the publisher.
+The plugin ships a built-in update checker that polls the GitHub release feed every 12 hours. Updates appear in the standard *Plugins* list and install with a single click, exactly like a wordpress.org plugin, but served directly from the publisher.
 
 ReportedIP Hive is **not** distributed through wordpress.org. All releases are signed and tagged on GitHub: [github.com/reportedip/reportedip-hive/releases](https://github.com/reportedip/reportedip-hive/releases). For instant updates, hit *Plugins → Check for updates*.
 
 = Configuration =
 
-1. **Pick a mode** — *Local Shield* (offline) or *Community Network* (paste your free API key from [reportedip.com](https://reportedip.com)).
-2. **Tune protection** — adjust thresholds and pick a block-duration strategy (progressive ladder vs. fixed length).
-3. **Enable 2FA** — pick methods and roles to enforce, set the grace period and max-skip counter.
-4. **Set privacy preferences** — retention, anonymisation, detail level. The "GDPR Minimal" preset is one click.
+1. **Pick a mode**, *Local Shield* (offline) or *Community Network* (paste your free API key from [reportedip.com](https://reportedip.com)).
+2. **Tune protection**, adjust thresholds and pick a block-duration strategy (progressive ladder vs. fixed length).
+3. **Enable 2FA**, pick methods and roles to enforce, set the grace period and max-skip counter.
+4. **Set privacy preferences**, retention, anonymisation, detail level. The "GDPR Minimal" preset is one click.
 5. **Optionally hide wp-login.php** behind a custom slug.
 6. **Optionally show the community badge** in your footer or via shortcode.
 
@@ -335,7 +335,7 @@ No. *Local Shield* works completely offline with no account and no external call
 
 = Which security keys are supported? =
 
-Every FIDO2/WebAuthn authenticator: hardware keys such as the YubiKey 5 series (USB-A, USB-C, Lightning — including NFC models tapped against a phone) and the Security Key by Yubico line, plus platform passkeys like Face ID, Touch ID and Windows Hello. One key per account is free and can be named, renamed and removed in the profile key manager. The Business plan adds Advanced Security Keys: several keys per account (keep one as a backup), automatic model detection and key-lifecycle email alerts. Older U2F-only keys (CTAP1) are not officially supported.
+Every FIDO2/WebAuthn authenticator: hardware keys such as the YubiKey 5 series (USB-A, USB-C, Lightning, including NFC models tapped against a phone) and the Security Key by Yubico line, plus platform passkeys like Face ID, Touch ID and Windows Hello. One key per account is free and can be named, renamed and removed in the profile key manager. The Business plan adds Advanced Security Keys: several keys per account (keep one as a backup), automatic model detection and key-lifecycle email alerts. Older U2F-only keys (CTAP1) are not officially supported.
 
 = Can I manage settings across many sites at once? =
 
@@ -343,11 +343,11 @@ Yes. Hive carries its own MainWP child bridge, so you can manage every install f
 
 = How is this different from Wordfence / Sucuri / iThemes Security? =
 
-* **Three free 2FA methods** — TOTP, Email and Passkey/WebAuthn work on every plan, including the free tier (SMS is the one method that needs a Professional plan, because it rides our managed relay).
+* **Three free 2FA methods**, TOTP, Email and Passkey/WebAuthn work on every plan, including the free tier (SMS is the one method that needs a Professional plan, because it rides our managed relay).
 * **Progressive block escalation** that adapts to repeat offenders without punishing first-time tripping legitimate users.
-* **Cache-plugin-safe by default** — Wordfence in particular has had repeated cache-coupling issues.
-* **Privacy by default** — minimal data collection, automatic anonymisation, opt-in community sharing, all secrets encrypted at rest.
-* **GPL-2.0, public on GitHub** — read every line, fork it, audit it.
+* **Cache-plugin-safe by default**, Wordfence in particular has had repeated cache-coupling issues.
+* **Privacy by default**, minimal data collection, automatic anonymisation, opt-in community sharing, all secrets encrypted at rest.
+* **GPL-2.0, public on GitHub**, read every line, fork it, audit it.
 
 We don't compete with malware scanners. Run one alongside Hive if your stack needs it.
 
@@ -361,7 +361,7 @@ No. ETag-based reputation caching, per-request IP cache, queued reports processe
 
 = Does it conflict with my page-cache plugin? =
 
-No. The 403 block-page sets `DONOTCACHEPAGE` and the no-store header set respected by WP Rocket, W3TC, WP Super Cache and LiteSpeed. Authentication paths (`wp-login.php`, `wp-admin/`, `wp-json/`, XMLRPC) are excluded from caching by all of these plugins by default — your blocks fire there normally.
+No. The 403 block-page sets `DONOTCACHEPAGE` and the no-store header set respected by WP Rocket, W3TC, WP Super Cache and LiteSpeed. Authentication paths (`wp-login.php`, `wp-admin/`, `wp-json/`, XMLRPC) are excluded from caching by all of these plugins by default, your blocks fire there normally.
 
 = What happens when my daily lookup allowance runs out? =
 
@@ -389,11 +389,11 @@ Use one of the ten recovery codes you saved at setup. Each is single-use. With s
 
 = A legitimate visitor got blocked. How do I release the IP from the shell? =
 
-Run `wp reportedip unblock <ip> --reset-attempts`. The flag matters: without it the attempt counters survive the unblock, and a still-exceeded threshold re-blocks the address on the very next request. If the address should never be blocked again, whitelist it instead — `wp reportedip whitelist add <ip> --reason="customer"` lifts the block and wins over every protection layer. For connections with rotating addresses (common with IPv6), whitelist the prefix as a CIDR range (e.g. `2001:db8::/56`) rather than the single address.
+Run `wp reportedip unblock <ip> --reset-attempts`. The flag matters: without it the attempt counters survive the unblock, and a still-exceeded threshold re-blocks the address on the very next request. If the address should never be blocked again, whitelist it instead, `wp reportedip whitelist add <ip> --reason="customer"` lifts the block and wins over every protection layer. For connections with rotating addresses (common with IPv6), whitelist the prefix as a CIDR range (e.g. `2001:db8::/56`) rather than the single address.
 
 = Is multisite supported? =
 
-Yes — fully, since 2.0.0. On Multisite the plugin is **network-only** (`Network: true`), so per-site activation is hidden by WordPress and the security configuration stays uniform across the network. A single threat decision applies network-wide: cross-site brute-force attempts aggregate into one central counter, and one block locks the IP out of every sub-site. Network Admins get the full settings and an all-sites Logs view; Site Admins on a sub-site get a read-only Status / Logs UI plus two writable per-site overrides (Frontend-2FA slug and additive 2FA-enforcement roles). Cron runs only on the main site. A dedicated PHPUnit-Multisite suite and Playwright projects gate every release against both topologies.
+Yes, fully, since 2.0.0. On Multisite the plugin is **network-only** (`Network: true`), so per-site activation is hidden by WordPress and the security configuration stays uniform across the network. A single threat decision applies network-wide: cross-site brute-force attempts aggregate into one central counter, and one block locks the IP out of every sub-site. Network Admins get the full settings and an all-sites Logs view; Site Admins on a sub-site get a read-only Status / Logs UI plus two writable per-site overrides (Frontend-2FA slug and additive 2FA-enforcement roles). Cron runs only on the main site. A dedicated PHPUnit-Multisite suite and Playwright projects gate every release against both topologies.
 
 = How do I get support? =
 
@@ -406,20 +406,20 @@ Yes — fully, since 2.0.0. On Multisite the plugin is **network-only** (`Networ
 ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed Cache) and CDNs.
 
 * **Blocked-page responses are never cached.** Defines `DONOTCACHEPAGE`, `DONOTCACHEDB`, `DONOTCACHEOBJECT`, calls `nocache_headers()` and emits `Cache-Control: no-store, no-cache, must-revalidate, max-age=0` plus `Pragma: no-cache`.
-* **Sensor-protected paths are never cached** by reputable cache plugins anyway: `wp-login.php`, `/wp-admin/`, `/wp-json/`, XMLRPC, POSTs and logged-in users — exactly where attackers operate.
+* **Sensor-protected paths are never cached** by reputable cache plugins anyway: `wp-login.php`, `/wp-admin/`, `/wp-json/`, XMLRPC, POSTs and logged-in users, exactly where attackers operate.
 * **Documented limitation:** a blocked attacker visiting a *publicly cached* GET URL receives the cached HTML. Their write-path attempts are still blocked. For deny-on-cached-public-page, install a server-level firewall (Cloudflare WAF rule, Nginx `deny`, fail2ban).
 
 == Screenshots ==
 
-1. **Security Dashboard** — Real-time overview of blocked IPs, attacks, sign-ins and spam with 7- and 30-day trend charts.
-2. **Blocked IPs** — Filterable, sortable list with bulk actions, manual unblock, "move to whitelist" and CSV export.
-3. **Whitelist** — Trusted IPs with optional expiry, reason, and CSV import.
-4. **Security Event Logs** — Searchable, severity-filterable, JSON / CSV export, bulk delete + bulk block + bulk whitelist actions.
-5. **Protection → Blocking & Escalation** — auto-block toggle, progressive ladder editor with reset window, report-only mode toggle, blocked-page contact link.
-6. **Protection → Two-Factor Authentication** — method enable/disable, role enforcement, grace period, IP allowlist; recovery codes and trusted devices live on the profile.
-7. **Quickstart** — one page, two decisions, a plan-aware recommendation applied through the settings registry.
-8. **API Queue** — Pending and failed report queue with retry, quota status, queue-health indicators.
-9. **Promote** — Auto-footer badge configurator and shortcode showcase with live previews.
+1. **Security Dashboard**, Real-time overview of blocked IPs, attacks, sign-ins and spam with 7- and 30-day trend charts.
+2. **Blocked IPs**, Filterable, sortable list with bulk actions, manual unblock, "move to whitelist" and CSV export.
+3. **Whitelist**, Trusted IPs with optional expiry, reason, and CSV import.
+4. **Security Event Logs**, Searchable, severity-filterable, JSON / CSV export, bulk delete + bulk block + bulk whitelist actions.
+5. **Protection → Blocking & Escalation**, auto-block toggle, progressive ladder editor with reset window, report-only mode toggle, blocked-page contact link.
+6. **Protection → Two-Factor Authentication**, method enable/disable, role enforcement, grace period, IP allowlist; recovery codes and trusted devices live on the profile.
+7. **Quickstart**, one page, two decisions, a plan-aware recommendation applied through the settings registry.
+8. **API Queue**, Pending and failed report queue with retry, quota status, queue-health indicators.
+9. **Promote**, Auto-footer badge configurator and shortcode showcase with live previews.
 
 == Changelog ==
 
@@ -489,9 +489,9 @@ Fixed: the distributed-detection help texts named 5 and 20 as defaults while the
 
 = 2.1.50 =
 
-Security: the community reputation block threshold now has a hard floor of 25 % — sub-floor values blocked far more legitimate visitors than attackers. The floor applies everywhere (settings UI, import, cloud and MainWP writes, hardening mode) and a one-time migration lifts already-stored lower values; the wizard's "High" protection preset softens from 50 % to 60 %. Sites can raise the floor further via the reportedip_hive_reputation_threshold_floor filter.
+Security: the community reputation block threshold now has a hard floor of 25 %, sub-floor values blocked far more legitimate visitors than attackers. The floor applies everywhere (settings UI, import, cloud and MainWP writes, hardening mode) and a one-time migration lifts already-stored lower values; the wizard's "High" protection preset softens from 50 % to 60 %. Sites can raise the floor further via the reportedip_hive_reputation_threshold_floor filter.
 
-New: full IP management on WP-CLI — wp reportedip whitelist add/remove/list, block, unblock --reset-attempts, blocked list and attempts reset, plus a wp reportedip status overview. All accept CIDR ranges; see the WP-CLI section above.
+New: full IP management on WP-CLI, wp reportedip whitelist add/remove/list, block, unblock --reset-attempts, blocked list and attempts reset, plus a wp reportedip status overview. All accept CIDR ranges; see the WP-CLI section above.
 
 = 2.1.49 =
 
@@ -499,13 +499,13 @@ Security: the cloud fleet management endpoint now returns a single generic authe
 
 = 2.1.48 =
 
-New: cloud fleet management transport (Business plan). reportedip.com can read the settings schema and apply security policies through Ed25519-signed REST requests — verified against a bundled public key, bound to this site and your Community Access Key, replay-protected and strictly opt-in via a new toggle on the General settings tab (off by default). While enabled, API requests announce a settings fingerprint so the fleet dashboard detects drift passively.
+New: cloud fleet management transport (Business plan). reportedip.com can read the settings schema and apply security policies through Ed25519-signed REST requests, verified against a bundled public key, bound to this site and your Community Access Key, replay-protected and strictly opt-in via a new toggle on the General settings tab (off by default). While enabled, API requests announce a settings fingerprint so the fleet dashboard detects drift passively.
 
 Fixed: the "Reset API statistics" button on the security dashboard works again, and the admin pages no longer scroll sideways on phones.
 
 = 2.1.47 =
 
-New: canonical settings registry. The plugin's core settings now share one declarative source for value kinds, ranges, allowed values, tier gates and side effects — the settings page, the setup wizard and the settings import all sanitize through it, so every writer behaves identically, including writers outside wp-admin.
+New: canonical settings registry. The plugin's core settings now share one declarative source for value kinds, ranges, allowed values, tier gates and side effects, the settings page, the setup wizard and the settings import all sanitize through it, so every writer behaves identically, including writers outside wp-admin.
 
 New: remote settings management protocol (schema v1). Management dashboards can read the settings schema, read current values and apply a validated batch with a per-key result; every sync reports a settings fingerprint for drift detection. Documented in docs/remote-settings-protocol.md; the MainWP extension uses it today and the reportedip.com management API can adopt the same contract later.
 
@@ -535,39 +535,39 @@ Changed: corrected the contact domain in two historical changelog entries (repor
 
 = 2.1.42 =
 
-Fixed: failed XML-RPC app-password logins no longer count twice — the application-password sensor claims the wire attempt and the generic failed-login listener stands down for the duplicate row and attempt count; coordinated-attack detection now counts app_password_failed rows alongside failed_login so nothing goes invisible.
+Fixed: failed XML-RPC app-password logins no longer count twice, the application-password sensor claims the wire attempt and the generic failed-login listener stands down for the duplicate row and attempt count; coordinated-attack detection now counts app_password_failed rows alongside failed_login so nothing goes invisible.
 
 Changed: the event-type filter on the Activity tab gained an App Password Failed option.
 
 = 2.1.41 =
 
-New: Tor exit-node blocking (Professional) — an opt-in toggle under Settings → Blocking rejects connections from known Tor exit nodes. The exit-node list arrives as a signed tor_exits ruleset refreshed twice daily; blocks are temporary (24 hours by default, filterable) and are never reported to the community — operating an exit node is not abuse evidence.
+New: Tor exit-node blocking (Professional), an opt-in toggle under Settings → Blocking rejects connections from known Tor exit nodes. The exit-node list arrives as a signed tor_exits ruleset refreshed twice daily; blocks are temporary (24 hours by default, filterable) and are never reported to the community, operating an exit node is not abuse evidence.
 
-New: trusted-proxy source ranges — the trusted IP header is only honored when the connecting peer is one of the proxy addresses declared under Settings → General (IP/CIDR list), so a direct connection can no longer spoof a whitelisted address or shed a block. An empty list keeps the previous behavior.
+New: trusted-proxy source ranges, the trusted IP header is only honored when the connecting peer is one of the proxy addresses declared under Settings → General (IP/CIDR list), so a direct connection can no longer spoof a whitelisted address or shed a block. An empty list keeps the previous behavior.
 
-New: security widget on the WordPress dashboard — attacks blocked in the last 30 days, blocks today, active IP blocks, protection layers and the detection score, with deep links into the plugin. On Multisite the widget appears on the network dashboard.
+New: security widget on the WordPress dashboard, attacks blocked in the last 30 days, blocks today, active IP blocks, protection layers and the detection score, with deep links into the plugin. On Multisite the widget appears on the network dashboard.
 
-New: "What's new" banner — after an update, plugin pages show a one-time dismissible summary of the release highlights.
+New: "What's new" banner, after an update, plugin pages show a one-time dismissible summary of the release highlights.
 
-New: never-block veto for community-verified infrastructure (search-engine crawlers, major CDNs, monitoring fleets) — local blocks are spared and logged as infrastructure_spared; reports still go out.
+New: never-block veto for community-verified infrastructure (search-engine crawlers, major CDNs, monitoring fleets), local blocks are spared and logged as infrastructure_spared; reports still go out.
 
-New: developer hooks — reportedip_hive_threshold_exceeded fires on every confirmed detection, reportedip_hive_report_queued fires once per queued community report, and the block page gained reportedip_hive_access_denied plus a strings filter for white-label overrides.
+New: developer hooks, reportedip_hive_threshold_exceeded fires on every confirmed detection, reportedip_hive_report_queued fires once per queued community report, and the block page gained reportedip_hive_access_denied plus a strings filter for white-label overrides.
 
 New: every IP in the admin tables carries copy, internal-lookup and a link to its public reportedip.com profile; the lookup tab shows ISP, ASN, usage type, Tor and infrastructure flags with Block/Whitelist quick actions; also available as wp reportedip lookup (table/json/csv/yaml output).
 
 New: add-my-IP helper on the whitelist form (IPv6 prefills the /64 network), a confirmation before blocking your own current IP, a date-range filter on the event log and a duration choice for the block-from-log action.
 
-Fixed: attempt counters are race-safe — a single atomic upsert per IP and attempt type (schema v15), so parallel failed-login bursts can no longer lose counts.
+Fixed: attempt counters are race-safe, a single atomic upsert per IP and attempt type (schema v15), so parallel failed-login bursts can no longer lose counts.
 
 Fixed: API rate-limit back-off is scoped per endpoint and the report path honors Retry-After; the reputation cache respects verbosity and is invalidated by your own reports; CIDR ranges are accepted in the manual block form; the blocked-page contact URL resolves network-wide on Multisite.
 
 Fixed: WooCommerce-only settings (login monitor, storefront-2FA card in the wizard) grey out with an explanatory note when WooCommerce is not installed. Thanks to Benjamin for reporting.
 
-Fixed: 2FA emails stay readable in GMX Webmail and Outlook for Android — header and button carry a solid color fallback for clients that strip CSS gradients, and the footer text meets contrast requirements.
+Fixed: 2FA emails stay readable in GMX Webmail and Outlook for Android, header and button carry a solid color fallback for clients that strip CSS gradients, and the footer text meets contrast requirements.
 
 Changed: an API status strip on the Security Dashboard summarizes connection, quota (with reset countdown) and rate-limit state from cached data, and the daily quota display stays fresh between cron runs.
 
-Changed: accessibility pass — forced-colors and reduced-motion support, focus rings that survive Windows High Contrast, 40px touch targets on coarse pointers and a polite live region for AJAX notifications; roughly 90 admin-JS strings became translatable.
+Changed: accessibility pass, forced-colors and reduced-motion support, focus rings that survive Windows High Contrast, 40px touch targets on coarse pointers and a polite live region for AJAX notifications; roughly 90 admin-JS strings became translatable.
 
 = 2.1.40 =
 
@@ -585,21 +585,21 @@ Security: the firewall learned to see injected markup, not just injected code. B
 
 = 2.1.31 =
 
-Changed: a burst now buys ladder rungs. The escalation ladder counted block events rather than offences, so an attacker who tripped the threshold once and kept firing got the same five minutes as one who stopped — every later offence hit an already-blocked IP. A bot with 60 violations in ten seconds is now weighted directly: five times the threshold skips one ladder rung, ten times skips two, twenty-five times skips three.
+Changed: a burst now buys ladder rungs. The escalation ladder counted block events rather than offences, so an attacker who tripped the threshold once and kept firing got the same five minutes as one who stopped, every later offence hit an already-blocked IP. A bot with 60 violations in ten seconds is now weighted directly: five times the threshold skips one ladder rung, ten times skips two, twenty-five times skips three.
 
-Changed: repeat offences against the same rule are imported as one event with an offence count and a sample of the targets tried, instead of one row per request. Twenty near-identical rows used to bury every other finding on the Firewall page and skew the 30-day statistic. Enforcement is unchanged — every offence still counts toward the block ladder.
+Changed: repeat offences against the same rule are imported as one event with an offence count and a sample of the targets tried, instead of one row per request. Twenty near-identical rows used to bury every other finding on the Firewall page and skew the 30-day statistic. Enforcement is unchanged, every offence still counts toward the block ladder.
 
 Fix: the hit queue can no longer be imported twice. Rotating the file is atomic, importing it was not, so the queue cron and an admin page view could double both the log and the offence counter. The drain now takes a mutual-exclusion lock.
 
-Fix: the server can no longer block itself. Cache-preload crawlers (WP Rocket and friends), WP-Cron loopbacks and REST self-requests connect back through the site's public URL, so their address is the server's own public IP — and the burst sensors treated it like any attacker: auto-blocked for days, enforced before WordPress loads, and reported to the community against the site's own reputation. The automatic pipeline now stands down for the server's own addresses (loopback, the request's interface address, everything the site hostname resolves to), an upgrade migration lifts self-blocks that are already active, and averted decisions stay visible in the log.
+Fix: the server can no longer block itself. Cache-preload crawlers (WP Rocket and friends), WP-Cron loopbacks and REST self-requests connect back through the site's public URL, so their address is the server's own public IP, and the burst sensors treated it like any attacker: auto-blocked for days, enforced before WordPress loads, and reported to the community against the site's own reputation. The automatic pipeline now stands down for the server's own addresses (loopback, the request's interface address, everything the site hostname resolves to), an upgrade migration lifts self-blocks that are already active, and averted decisions stay visible in the log.
 
 = 2.1.30 =
 
-New: extended protection now enforces IP blocks before WordPress loads. The guard knew the firewall rules and the whitelist but not the block list, so a banned IP still reached WordPress on every request. Active blocks are mirrored into a protected side file the guard reads first — a new block applies within the same request, a lifted one stops applying immediately, whitelisted IPs still win, and blocks hold even when rule inspection is off.
+New: extended protection now enforces IP blocks before WordPress loads. The guard knew the firewall rules and the whitelist but not the block list, so a banned IP still reached WordPress on every request. Active blocks are mirrored into a protected side file the guard reads first, a new block applies within the same request, a lifted one stops applying immediately, whitelisted IPs still win, and blocks hold even when rule inspection is off.
 
-New: extended protection (the pre-WordPress guard) now records what it blocks. It runs before WordPress loads and could previously neither log nor escalate, and because it evaluates the same rules as the in-WordPress engine it also intercepted every hit that engine would have logged — so a site running it reported zero WAF hits no matter how much it blocked, repeat offenders were never escalated to an IP block, and nothing reached the community. Hits are now queued to a protected file under uploads/ and imported on the next admin request or queue cron, stamped with the time the request actually happened. The Firewall page reports whether the queue is writable.
+New: extended protection (the pre-WordPress guard) now records what it blocks. It runs before WordPress loads and could previously neither log nor escalate, and because it evaluates the same rules as the in-WordPress engine it also intercepted every hit that engine would have logged, so a site running it reported zero WAF hits no matter how much it blocked, repeat offenders were never escalated to an IP block, and nothing reached the community. Hits are now queued to a protected file under uploads/ and imported on the next admin request or queue cron, stamped with the time the request actually happened. The Firewall page reports whether the queue is writable.
 
-Fix: the setup wizard opens again after activation on busy sites. The one-shot activation marker was consumed by any request passing through admin_init, including admin-ajax.php — on a WooCommerce store the Action Scheduler or Heartbeat regularly won that race and the wizard silently never appeared. Background requests now leave the marker alone.
+Fix: the setup wizard opens again after activation on busy sites. The one-shot activation marker was consumed by any request passing through admin_init, including admin-ajax.php, on a WooCommerce store the Action Scheduler or Heartbeat regularly won that race and the wizard silently never appeared. Background requests now leave the marker alone.
 
 Fix: the Firewall page counts detected scans again. Counter and log filter looked for an event type the detector never writes; both now read the type that is actually stored.
 
@@ -613,33 +613,33 @@ Fix: the "API health degraded" warning no longer repeats every hour for an outag
 
 = 2.1.29 =
 
-New: author archive pages can be kept public. The user-enumeration sensor treated ?author=5 and the pretty /author/<slug>/ archive as the same attack, so on a site that links to author pages a regular reader clicking five of them was blocked and, in Community mode, reported. A new switch under Protection → Detection (off by default) serves the archive normally and stops counting it, while ?author=5 keeps its 404 and keeps counting — that redirect is the part that maps a user ID to a login name. REST /wp/v2/users, the oEmbed author fields and login-error masking are unaffected.
+New: author archive pages can be kept public. The user-enumeration sensor treated ?author=5 and the pretty /author/<slug>/ archive as the same attack, so on a site that links to author pages a regular reader clicking five of them was blocked and, in Community mode, reported. A new switch under Protection → Detection (off by default) serves the archive normally and stops counting it, while ?author=5 keeps its 404 and keeps counting, that redirect is the part that maps a user ID to a login name. REST /wp/v2/users, the oEmbed author fields and login-error masking are unaffected.
 
 = 2.1.28 =
 
-Changed: minimum supported WordPress raised from 5.0 to 5.9 — the plugin has long relied on wp_date() and the str_contains()/str_starts_with() polyfills, so the 5.0 claim was never accurate; no code changed.
+Changed: minimum supported WordPress raised from 5.0 to 5.9:the plugin has long relied on wp_date() and the str_contains()/str_starts_with() polyfills, so the 5.0 claim was never accurate; no code changed.
 
-Changed: a community-reputation hit now blocks the IP everywhere, not just on the login form. The verdict writes a temporary block row (24 hours by default, filterable), so the IP is short-circuited on every surface — front-end, XML-RPC, REST — appears in the Blocked IPs list as "Community Reputation" with its own filter, and the daily reputation-block statistic finally counts. Whitelisted IPs are never reputation-blocked; after the window expires the next login attempt re-evaluates the fresh reputation.
+Changed: a community-reputation hit now blocks the IP everywhere, not just on the login form. The verdict writes a temporary block row (24 hours by default, filterable), so the IP is short-circuited on every surface, front-end, XML-RPC, REST, appears in the Blocked IPs list as "Community Reputation" with its own filter, and the daily reputation-block statistic finally counts. Whitelisted IPs are never reputation-blocked; after the window expires the next login attempt re-evaluates the fresh reputation.
 
 = 2.1.27 =
 
-Security: a crawler-claiming user-agent no longer shields login brute-force from auto-blocking. Credential-bearing events (failed logins, password spray, 2FA brute force, application-password abuse, WooCommerce logins) now bypass the verified-bot guard entirely — no genuine crawler ever submits credentials — and the overly broad WordPress token was removed from the crawler allowlist, closing a fail-open path that botnets spoofing Jetpack user-agents were exploiting for unblockable wp-login brute-force. Crawlable surfaces (404 bursts, REST bursts, author archives) keep the full verified-bot protection.
+Security: a crawler-claiming user-agent no longer shields login brute-force from auto-blocking. Credential-bearing events (failed logins, password spray, 2FA brute force, application-password abuse, WooCommerce logins) now bypass the verified-bot guard entirely, no genuine crawler ever submits credentials, and the overly broad WordPress token was removed from the crawler allowlist, closing a fail-open path that botnets spoofing Jetpack user-agents were exploiting for unblockable wp-login brute-force. Crawlable surfaces (404 bursts, REST bursts, author archives) keep the full verified-bot protection.
 
-Fixed: "Trust this device for 30 days" no longer gets silently lost — the checkbox state survives failed-attempt re-renders, an earlier tick in the same challenge session is honoured, and the last explicit choice is remembered per browser.
+Fixed: "Trust this device for 30 days" no longer gets silently lost, the checkbox state survives failed-attempt re-renders, an earlier tick in the same challenge session is honoured, and the last explicit choice is remembered per browser.
 
 Fixed: skipping the 2FA onboarding wizard now actually postpones it. A skip records a 24-hour snooze that both login-side flagging paths respect, so SSO and support tools that fire the login hook repeatedly no longer bounce users straight back into the wizard.
 
-Fixed: the relay quota dashboard no longer falls back to "Awaiting fresh quota data" after every relay send — the send response's remaining-quota counters now patch the cached snapshot in place.
+Fixed: the relay quota dashboard no longer falls back to "Awaiting fresh quota data" after every relay send, the send response's remaining-quota counters now patch the cached snapshot in place.
 
 = 2.1.26 =
 
-Security: a spoofed crawler user-agent no longer buys exemption from the 404-burst, REST-burst and user-enumeration sensors — every crawler claim is cross-checked against reverse DNS and the official IP ranges; a confirmed fake is counted like any other client.
+Security: a spoofed crawler user-agent no longer buys exemption from the 404-burst, REST-burst and user-enumeration sensors, every crawler claim is cross-checked against reverse DNS and the official IP ranges; a confirmed fake is counted like any other client.
 
-Fixed: a verified search-engine or AI crawler can no longer be auto-blocked, or reported to the community network, by any sensor — WAF escalation and login-path thresholds included. Averted decisions are logged as Verified Bot Block Averted; DNS failures fail open so a resolver hiccup never locks out a real crawler.
+Fixed: a verified search-engine or AI crawler can no longer be auto-blocked, or reported to the community network, by any sensor, WAF escalation and login-path thresholds included. Averted decisions are logged as Verified Bot Block Averted; DNS failures fail open so a resolver hiccup never locks out a real crawler.
 
 Fixed: whitelist entries could not be re-added once removed or expired ("Failed to whitelist IP address."); stale rows are now purged on re-add, for the form and the CSV import alike.
 
-Fixed: on Multisite subsites several read paths targeted per-site table names instead of the shared network tables — the block-escalation ladder silently restarted at step 1 and admin list tables showed no data. All reads now use the network prefix, enforced by a regression test.
+Fixed: on Multisite subsites several read paths targeted per-site table names instead of the shared network tables, the block-escalation ladder silently restarted at step 1 and admin list tables showed no data. All reads now use the network prefix, enforced by a regression test.
 
 = 2.1.25 =
 
@@ -651,11 +651,11 @@ Fixed: blocked-page reference codes for the Paranoia-Level-2/3 WAF groups (Log4S
 
 = 2.1.24 =
 
-Fixed: a duplicate submit of the 2FA login challenge no longer strands users on the "session expired" page. The six-digit auto-submit racing an Enter press or a "Verify" click produced a second POST that consumed the login nonce after the first request had already verified successfully — the code was correct, the sign-in was issued, but the browser rendered the duplicate's error page. The challenge form now guards against double submits, a just-consumed nonce replays the identical sign-in for 90 seconds, and signed-in visitors who reload the challenge URL are redirected to the dashboard instead of seeing an error.
+Fixed: a duplicate submit of the 2FA login challenge no longer strands users on the "session expired" page. The six-digit auto-submit racing an Enter press or a "Verify" click produced a second POST that consumed the login nonce after the first request had already verified successfully, the code was correct, the sign-in was issued, but the browser rendered the duplicate's error page. The challenge form now guards against double submits, a just-consumed nonce replays the identical sign-in for 90 seconds, and signed-in visitors who reload the challenge URL are redirected to the dashboard instead of seeing an error.
 
 = 2.1.22 =
 
-Changed: enforced 2FA no longer locks a user out of sign-in. Once the grace period and the skip quota were exhausted, the login used to be rejected outright — leaving the user (and, worst case, the site's only administrator) unable to sign in, recoverable only via WP-CLI. The default now signs the user in and sends them straight into the setup wizard with no skip option, so they can only proceed by enabling a method. A new 2FA policy setting keeps the previous hard-lockout behaviour available for operators who want it.
+Changed: enforced 2FA no longer locks a user out of sign-in. Once the grace period and the skip quota were exhausted, the login used to be rejected outright, leaving the user (and, worst case, the site's only administrator) unable to sign in, recoverable only via WP-CLI. The default now signs the user in and sends them straight into the setup wizard with no skip option, so they can only proceed by enabling a method. A new 2FA policy setting keeps the previous hard-lockout behaviour available for operators who want it.
 
 Changed: administrators and super admins can never be hard-locked out. Even with the block-sign-in policy selected, roles with manage_options and Multisite super admins always take the forced-enrolment path, so a site can never be left without a sign-in-capable administrator.
 
@@ -665,7 +665,7 @@ Fixed: the WAF Extended Protection (auto_prepend_file) screen now shows nginx se
 
 = 2.1.19 =
 
-Fixed: hidden login no longer breaks on trailing-slash sites. The login form action was generated without a trailing slash, so on sites whose server enforces trailing slashes a POST to the login slug was 301-redirected and the credentials were dropped — sign-in appeared to do nothing. The login URL now follows the site's permalink convention. Sites without trailing-slash permalinks are unchanged.
+Fixed: hidden login no longer breaks on trailing-slash sites. The login form action was generated without a trailing slash, so on sites whose server enforces trailing slashes a POST to the login slug was 301-redirected and the credentials were dropped, sign-in appeared to do nothing. The login URL now follows the site's permalink convention. Sites without trailing-slash permalinks are unchanged.
 
 Fixed: hidden login no longer breaks behind a page cache (WP Rocket and others). The custom login slug is an ordinary URL, so cache plugins could store it; a cached login page never sets the cookie that wp-login.php checks, and the next sign-in silently failed. The login page now opts out of every known page cache (WP Rocket, W3 Total Cache, WP Super Cache, WP Fastest Cache, Comet Cache, Cache Enabler, Hummingbird, LiteSpeed) before it renders.
 
@@ -675,7 +675,7 @@ Fixed: the "API health degraded" status no longer sticks forever after a one-off
 
 = 2.1.11 =
 
-Changed: the WAF exception form is now self-explanatory. Every field has an inline hint, the scope selector reveals only the relevant field, and the ambiguous "Rule ID or group" field is split into a Rule ID input and a Rule group dropdown of the engine's known categories — so it is clear what to enter and where to get it (the WAF block log, or the one-click "Allow" button on a blocked event). The exceptions FAQ was rewritten to cover what to configure, where to find a rule ID or group, how to choose a scope, and how the path/IP filters work.
+Changed: the WAF exception form is now self-explanatory. Every field has an inline hint, the scope selector reveals only the relevant field, and the ambiguous "Rule ID or group" field is split into a Rule ID input and a Rule group dropdown of the engine's known categories, so it is clear what to enter and where to get it (the WAF block log, or the one-click "Allow" button on a blocked event). The exceptions FAQ was rewritten to cover what to configure, where to find a rule ID or group, how to choose a scope, and how the path/IP filters work.
 
 = 2.1.10 =
 
@@ -683,27 +683,27 @@ Fixed: Extended Protection (the pre-WordPress guard) now honours WAF exceptions 
 
 = 2.1.9 =
 
-New: backend-managed WAF exceptions (allowlist). Relieve a false positive from the admin instead of in code — the way ModSecurity exclusions and the Wordfence allowlist work. Firewall → WAF gains a "WAF Exceptions" section, and every WAF log row carries an "Allow" action that adds a narrow exception for that rule on that path. An exception is scoped to a single rule, a rule group, or — for a first-party endpoint that legitimately receives attack-like payloads — the whole engine on a path, optionally narrowed to an IP/CIDR; a whole-engine exception must always carry a path or IP. Exceptions are network-wide and available on every plan; the protection engine stays free.
+New: backend-managed WAF exceptions (allowlist). Relieve a false positive from the admin instead of in code, the way ModSecurity exclusions and the Wordfence allowlist work. Firewall → WAF gains a "WAF Exceptions" section, and every WAF log row carries an "Allow" action that adds a narrow exception for that rule on that path. An exception is scoped to a single rule, a rule group, or, for a first-party endpoint that legitimately receives attack-like payloads, the whole engine on a path, optionally narrowed to an IP/CIDR; a whole-engine exception must always carry a path or IP. Exceptions are network-wide and available on every plan; the protection engine stays free.
 
 = 2.1.8 =
 
-Security: the Extended Protection (WAF drop-in) can no longer take a site offline when it is removed. When the auto_prepend_file directive lived in a file Hive cannot edit — an nginx fastcgi_param or a hand-edited php.ini line — deactivating or deleting the plugin used to delete the guard file while that directive stayed behind, leaving PHP pointing at a missing file and crashing every request (including wp-admin) with a 500. Removal now strips the directives Hive controls (.htaccess, .user.ini) and neutralises the guard to an inert placeholder instead of deleting it, so a leftover directive can never reference a missing file. Server Setup now shows a prominent warning plus recovery steps next to the nginx/php.ini snippet.
+Security: the Extended Protection (WAF drop-in) can no longer take a site offline when it is removed. When the auto_prepend_file directive lived in a file Hive cannot edit, an nginx fastcgi_param or a hand-edited php.ini line, deactivating or deleting the plugin used to delete the guard file while that directive stayed behind, leaving PHP pointing at a missing file and crashing every request (including wp-admin) with a 500. Removal now strips the directives Hive controls (.htaccess, .user.ini) and neutralises the guard to an inert placeholder instead of deleting it, so a leftover directive can never reference a missing file. Server Setup now shows a prominent warning plus recovery steps next to the nginx/php.ini snippet.
 
 = 2.1.7 =
 
-Changed: tier-gated features are now marked consistently across the whole admin UI — one compact tier badge everywhere, with a lock glyph linking to the plan comparison while locked and an "included in your plan" marker once unlocked, so the plan boundary stays visible on every page (Bot Verification and Disposable Email card headers included); the Free/Contributor header badge links to the plan comparison for admins. The Logs event-type filter is grouped and now covers all firewall events. Fixed: upgrade chips linked against a non-existent constant and silently fell back; the JSON log export delivered CSV and serialised the details column as "Array"; the WAF .user.ini directive never took effect on PHP-FPM/CGI hosts because the block was written with INI-invalid # comment markers (now ; markers, self-healing on existing installs); firewall tabs lost their vertical spacing.
+Changed: tier-gated features are now marked consistently across the whole admin UI, one compact tier badge everywhere, with a lock glyph linking to the plan comparison while locked and an "included in your plan" marker once unlocked, so the plan boundary stays visible on every page (Bot Verification and Disposable Email card headers included); the Free/Contributor header badge links to the plan comparison for admins. The Logs event-type filter is grouped and now covers all firewall events. Fixed: upgrade chips linked against a non-existent constant and silently fell back; the JSON log export delivered CSV and serialised the details column as "Array"; the WAF .user.ini directive never took effect on PHP-FPM/CGI hosts because the block was written with INI-invalid # comment markers (now ; markers, self-healing on existing installs); firewall tabs lost their vertical spacing.
 
 = 2.1.6 =
 
-Fixed: genuine search crawlers are no longer mislabelled "fake bot". The verified-bot classifier wrongly treated an out-of-range IP as a spoofer and a failed reverse-DNS lookup as proof of forgery, so a real Bing crawler from a /24 missing from the seed (52.167.144.0/24) or any crawler on a host with a flaky resolver was flagged. Classification is now three-state — IP-range match verifies, a foreign-domain PTR is fake, and a missing range or unresolved DNS stays "unknown" and is never flagged; out-of-range IPs fall back to forward-confirmed reverse DNS. New: the MainWP sync reports the WAF drop-in status so a dashboard can flag sites whose extended protection is enabled but not yet running.
+Fixed: genuine search crawlers are no longer mislabelled "fake bot". The verified-bot classifier wrongly treated an out-of-range IP as a spoofer and a failed reverse-DNS lookup as proof of forgery, so a real Bing crawler from a /24 missing from the seed (52.167.144.0/24) or any crawler on a host with a flaky resolver was flagged. Classification is now three-state, IP-range match verifies, a foreign-domain PTR is fake, and a missing range or unresolved DNS stays "unknown" and is never flagged; out-of-range IPs fall back to forward-confirmed reverse DNS. New: the MainWP sync reports the WAF drop-in status so a dashboard can flag sites whose extended protection is enabled but not yet running.
 
 = 2.1.5 =
 
-Fixed: a fatal "bit shift by negative number" error in the CIDR matcher when a v4 address was tested against a v6 range (a v6 whitelist entry or bot IP-range feed) — it now rejects mismatched families and out-of-range masks cleanly. Fixed: genuine search crawlers (Googlebot and friends) are no longer auto-blocked as user enumeration when they index author archives — the sensor now exempts verified-crawler user-agents from the IP-block ladder while still serving the 404 that hides the username, so this is SEO-safe. Fixed: loopback and private addresses (127.0.0.1, ::1, RFC1918, link-local) can no longer be mistaken for the client IP via the trusted proxy header, and the API report queue now drops the "unknown" sentinel and all private/reserved ranges before queueing — no more wasted report retries for internal requests.
+Fixed: a fatal "bit shift by negative number" error in the CIDR matcher when a v4 address was tested against a v6 range (a v6 whitelist entry or bot IP-range feed), it now rejects mismatched families and out-of-range masks cleanly. Fixed: genuine search crawlers (Googlebot and friends) are no longer auto-blocked as user enumeration when they index author archives, the sensor now exempts verified-crawler user-agents from the IP-block ladder while still serving the 404 that hides the username, so this is SEO-safe. Fixed: loopback and private addresses (127.0.0.1, ::1, RFC1918, link-local) can no longer be mistaken for the client IP via the trusted proxy header, and the API report queue now drops the "unknown" sentinel and all private/reserved ranges before queueing, no more wasted report retries for internal requests.
 
 = 2.1.4 =
 
-Firewall admin UX overhaul: the Overview tab is now a mini-dashboard (per-module status, 7-day activity counters, recent firewall event stream), every tab opens with a short plain-language intro, and a new Server Setup tab gathers every web-server snippet in one place — the WAF auto_prepend_file directive (with a new php.ini / hosting-panel option next to the nginx snippet), the decoy rewrite rules and a server-level export of the configured security headers. Extended Protection setup is now verifiable: the status reports whether the guard actually executed for the current request. The Bot Verification tab shows the verified crawler list and 7-day spoofer counts; the Rule Sync tab brands synced rulesets as delivered by the reportedip.com Rule API. New: specific WAF block reason codes for SSRF, Log4Shell, PHP object injection, NoSQL, XXE, web-shell, CRLF and template injection. Fixed: the basic security headers can be saved again on free plans.
+Firewall admin UX overhaul: the Overview tab is now a mini-dashboard (per-module status, 7-day activity counters, recent firewall event stream), every tab opens with a short plain-language intro, and a new Server Setup tab gathers every web-server snippet in one place, the WAF auto_prepend_file directive (with a new php.ini / hosting-panel option next to the nginx snippet), the decoy rewrite rules and a server-level export of the configured security headers. Extended Protection setup is now verifiable: the status reports whether the guard actually executed for the current request. The Bot Verification tab shows the verified crawler list and 7-day spoofer counts; the Rule Sync tab brands synced rulesets as delivered by the reportedip.com Rule API. New: specific WAF block reason codes for SSRF, Log4Shell, PHP object injection, NoSQL, XXE, web-shell, CRLF and template injection. Fixed: the basic security headers can be saved again on free plans.
 
 = 2.1.3 =
 
@@ -711,11 +711,11 @@ Fixed: verified-bot detection no longer flags genuine crawlers that connect over
 
 = 2.1.2 =
 
-New: a complete firewall layer. A request-inspecting Web Application Firewall (engine + OWASP-Top-10 Paranoia-Level-1 baseline free on every plan, Level 2/3 with Professional, ReDoS-hardened and fail-open) fed by server-delivered, versioned, Ed25519-signed rulesets with a bundled offline baseline; an optional pre-WordPress drop-in that blocks before WordPress loads (Apache/PHP-FPM auto-config, nginx snippet, rebaked immediately on rule sync and whitelist changes, trusted-proxy-header aware); verified-bot detection (official IP ranges, then forward-confirmed reverse DNS — genuine crawlers are never blocked); disposable-email blocking with privacy-relay pass-through; an invisible comment honeypot; a Firewall admin area with per-tab controls and a Rule Sync status view. Also new: detection & hardening score gauges on the dashboard (A+–F grade), security response headers (basic trio free, advanced with Professional, conflict detection), the Business audit event trail (user-lifecycle events including role changes with the acting user, CSV/JSON export, GDPR integration), a firewall step in the setup wizard, and settings export/import coverage for the firewall, headers and audit configuration. Schema v9 adds the audit_log table.
+New: a complete firewall layer. A request-inspecting Web Application Firewall (engine + OWASP-Top-10 Paranoia-Level-1 baseline free on every plan, Level 2/3 with Professional, ReDoS-hardened and fail-open) fed by server-delivered, versioned, Ed25519-signed rulesets with a bundled offline baseline; an optional pre-WordPress drop-in that blocks before WordPress loads (Apache/PHP-FPM auto-config, nginx snippet, rebaked immediately on rule sync and whitelist changes, trusted-proxy-header aware); verified-bot detection (official IP ranges, then forward-confirmed reverse DNS, genuine crawlers are never blocked); disposable-email blocking with privacy-relay pass-through; an invisible comment honeypot; a Firewall admin area with per-tab controls and a Rule Sync status view. Also new: detection & hardening score gauges on the dashboard (A+-F grade), security response headers (basic trio free, advanced with Professional, conflict detection), the Business audit event trail (user-lifecycle events including role changes with the acting user, CSV/JSON export, GDPR integration), a firewall step in the setup wizard, and settings export/import coverage for the firewall, headers and audit configuration. Schema v9 adds the audit_log table.
 
 = 2.1.0 =
 
-New: MainWP integration — the plugin is now remote-manageable from a MainWP dashboard (aggregate security metrics sync and API-key provisioning) with no extra child plugin, authenticated through the MainWP Child channel. New: blocked pages now show a correlatable reference code (also sent as the `X-RIP-Ref` header) so a wrongly blocked visitor can quote one short string an admin can match in the logs — no personal data is exposed. The blocked page was rebuilt on the design system (sharp-edged card, inline SVG, no emoji) and fully translated. Fixed: the 2FA allowed-methods and enforced-roles sanitisers ran for every option write (setup wizard, import, WP-CLI), not just the settings form, so a direct write could collapse the methods to TOTP only or wipe the enforced roles; both now detect the form shape and preserve direct writes.
+New: MainWP integration, the plugin is now remote-manageable from a MainWP dashboard (aggregate security metrics sync and API-key provisioning) with no extra child plugin, authenticated through the MainWP Child channel. New: blocked pages now show a correlatable reference code (also sent as the `X-RIP-Ref` header) so a wrongly blocked visitor can quote one short string an admin can match in the logs, no personal data is exposed. The blocked page was rebuilt on the design system (sharp-edged card, inline SVG, no emoji) and fully translated. Fixed: the 2FA allowed-methods and enforced-roles sanitisers ran for every option write (setup wizard, import, WP-CLI), not just the settings form, so a direct write could collapse the methods to TOTP only or wipe the enforced roles; both now detect the form shape and preserve direct writes.
 
 = 2.0.29 =
 
@@ -723,7 +723,7 @@ Security: Hardening Mode now also catches distributed botnets that rotate IPs ov
 
 = 2.0.28 =
 
-Fewer false positives: the bot allowlist now also exempts WordPress core loopback, uptime monitors (UptimeRobot, Pingdom, Site24x7, StatusCake, BetterStack) and a wider set of search / social crawlers from the 404 and REST burst triggers, and the `Pinterest` / `Slackbot` tokens were broadened to match the real user-agent strings. The scan detector no longer counts missing `css`, `js`, `.map` or `.webmanifest` files toward the scanner threshold. Honeypot-path detection stays active for every user-agent. Business tier copy across the settings card, setup wizard and mode descriptor now states the multi-bookable model (15 domains per licence, bookable x2–x20 with a volume discount). Documentation pass: the free-vs-paid positioning was corrected (the protection core is free; SMS 2FA, WooCommerce frontend 2FA and Hardening Mode need a Professional plan), the multisite FAQ now reflects the network-only support shipped in 2.0.0, and several stale facts (schema version, removed SMS-provider filter, table count, wizard step count, Enterprise price floor) were fixed.
+Fewer false positives: the bot allowlist now also exempts WordPress core loopback, uptime monitors (UptimeRobot, Pingdom, Site24x7, StatusCake, BetterStack) and a wider set of search / social crawlers from the 404 and REST burst triggers, and the `Pinterest` / `Slackbot` tokens were broadened to match the real user-agent strings. The scan detector no longer counts missing `css`, `js`, `.map` or `.webmanifest` files toward the scanner threshold. Honeypot-path detection stays active for every user-agent. Business tier copy across the settings card, setup wizard and mode descriptor now states the multi-bookable model (15 domains per licence, bookable x2, x20 with a volume discount). Documentation pass: the free-vs-paid positioning was corrected (the protection core is free; SMS 2FA, WooCommerce frontend 2FA and Hardening Mode need a Professional plan), the multisite FAQ now reflects the network-only support shipped in 2.0.0, and several stale facts (schema version, removed SMS-provider filter, table count, wizard step count, Enterprise price floor) were fixed.
 
 = 2.0.27 =
 
@@ -731,7 +731,7 @@ Multisite Network Admin compatibility: hardcoded `admin_url` references were rep
 
 = 2.0.25 =
 
-Changed: SMS 2FA is now a Professional feature delivered exclusively through the managed reportedip.com relay. The self-hosted SMS provider option and its three third-party adapters were removed, along with the provider selector, the encrypted provider-credentials store and the per-provider AVV confirmation — the relay AVV is part of the plan subscription. Removed: the `reportedip_2fa_sms_providers` extension filter. Breaking: sites on Free / Contributor (or any tier not running the relay) can no longer send 2FA SMS; affected users fall back to TOTP, Email or a passkey. A schema migration (v8) clears the now-orphaned provider options on upgrade. Also in this release: GDPR / privacy integration — a suggested privacy-policy passage in the WordPress Privacy Policy Guide (Tools -> Privacy), a personal-data exporter/eraser for a user's own login attempts and trusted devices, and a configuration-aware privacy-text generator (German / English) at reportedip.com/dashboard/dsgvo. Fixed dead /privacy, /terms and /legal/avv documentation links. Contact addresses updated: security disclosures go to abuse@reportedip.com, general enquiries to 1@reportedip.com.
+Changed: SMS 2FA is now a Professional feature delivered exclusively through the managed reportedip.com relay. The self-hosted SMS provider option and its three third-party adapters were removed, along with the provider selector, the encrypted provider-credentials store and the per-provider AVV confirmation, the relay AVV is part of the plan subscription. Removed: the `reportedip_2fa_sms_providers` extension filter. Breaking: sites on Free / Contributor (or any tier not running the relay) can no longer send 2FA SMS; affected users fall back to TOTP, Email or a passkey. A schema migration (v8) clears the now-orphaned provider options on upgrade. Also in this release: GDPR / privacy integration, a suggested privacy-policy passage in the WordPress Privacy Policy Guide (Tools -> Privacy), a personal-data exporter/eraser for a user's own login attempts and trusted devices, and a configuration-aware privacy-text generator (German / English) at reportedip.com/dashboard/dsgvo. Fixed dead /privacy, /terms and /legal/avv documentation links. Contact addresses updated: security disclosures go to abuse@reportedip.com, general enquiries to 1@reportedip.com.
 
 = 2.0.22 =
 
@@ -739,13 +739,13 @@ Fixed: with several 2FA methods configured, switching from Email to the SMS tab 
 
 = 2.0.21 =
 
-New: Hide-Login probe sensor — when Hide Login is active, repeated direct hits on the old wp-login.php from one IP are blocked on the escalation ladder (and reported to the community), while a single accidental visit stays harmless. Tunable threshold and timeframe on the Login tab. Changed: the 2FA challenge method picker now stacks vertically with full labels on narrow themed login cards instead of truncating to "A…/E…/S…".
+New: Hide-Login probe sensor, when Hide Login is active, repeated direct hits on the old wp-login.php from one IP are blocked on the escalation ladder (and reported to the community), while a single accidental visit stays harmless. Tunable threshold and timeframe on the Login tab. Changed: the 2FA challenge method picker now stacks vertically with full labels on narrow themed login cards instead of truncating to "A.../E.../S...".
 
 = 2.0.20 =
 
 Fixed: tier-change emails ("[Site] <Plan> plan is active") were re-sent on every API refresh of a paid key. The previous tier was read from a 5-minute transient that collapsed to "free" once it lapsed, so each refresh looked like a fresh upgrade. The change baseline is now a durable option, so the mail fires only on a genuine tier change.
 
-Changed: the 2FA login screen no longer auto-sends the email or SMS one-time code. Both delivery methods now start with a "Send code" button, so the user picks a method first — no unsolicited mail/SMS, and no rate limit or relay quota spent on a method the user did not choose. Authenticator app, passkey and recovery codes are unaffected.
+Changed: the 2FA login screen no longer auto-sends the email or SMS one-time code. Both delivery methods now start with a "Send code" button, so the user picks a method first, no unsolicited mail/SMS, and no rate limit or relay quota spent on a method the user did not choose. Authenticator app, passkey and recovery codes are unaffected.
 
 Fixed: the setup wizard silently dropped enforced-2FA roles whose slug was not all-lowercase (e.g. membership-plugin roles like "um_Premium-Member"); every selected role is now kept.
 
@@ -753,11 +753,11 @@ Fixed: admin notices rendered unstyled on non-plugin admin pages and the primary
 
 Changed: all backend admin notices share one consistent renderer, and the 2FA onboarding wizard was streamlined to show less at each step.
 
-New: the guided 2FA wizard is now reachable directly — both the "2FA recommended" reminder banner and the profile 2FA section link straight into it.
+New: the guided 2FA wizard is now reachable directly, both the "2FA recommended" reminder banner and the profile 2FA section link straight into it.
 
 = 2.0.19 =
 
-Fix: a fatal error (PHP 8 TypeError) crashed the 2FA settings tab and the 2FA setup-wizard step when the enforce-roles / allowed-methods options were stored as arrays — reads are now format-tolerant. New: complete German translation (formal address, "Sie"), shipped as de_DE — the plugin now displays in German automatically on German-language sites. Source strings stay English, so other locales are unaffected. A translation-freshness gate was added to the build and CI so the German strings stay in sync with the source on every change.
+Fix: a fatal error (PHP 8 TypeError) crashed the 2FA settings tab and the 2FA setup-wizard step when the enforce-roles / allowed-methods options were stored as arrays, reads are now format-tolerant. New: complete German translation (formal address, "Sie"), shipped as de_DE, the plugin now displays in German automatically on German-language sites. Source strings stay English, so other locales are unaffected. A translation-freshness gate was added to the build and CI so the German strings stay in sync with the source on every change.
 
 = 2.0.17 =
 
@@ -769,31 +769,31 @@ Promo-frequency rework: a new central `Promo_Manager` caps Pro upgrade hints at 
 
 = 2.0.15 =
 
-Hotfix for multi-recipient admin notifications. `Security_Monitor::send_admin_alert()` builds the recipient field as `implode(', ', $recipients)` — the standard WP_Mail convention. The Hive Relay endpoint (`POST /relay-mail`) on reportedip.com, however, validates a single address per request via `sanitize_email` + `is_email` and HTTP-422s anything that looks like a list — silently dropping every alert when more than one admin is configured. The mailer now splits comma-lists itself, fan-outs one outbound request per recipient, and logs each delivery separately. The local `wp_mail` fallback keeps working unchanged.
+Hotfix for multi-recipient admin notifications. `Security_Monitor::send_admin_alert()` builds the recipient field as `implode(', ', $recipients)`, the standard WP_Mail convention. The Hive Relay endpoint (`POST /relay-mail`) on reportedip.com, however, validates a single address per request via `sanitize_email` + `is_email` and HTTP-422s anything that looks like a list, silently dropping every alert when more than one admin is configured. The mailer now splits comma-lists itself, fan-outs one outbound request per recipient, and logs each delivery separately. The local `wp_mail` fallback keeps working unchanged.
 
 = 2.0.14 =
 
-Decoy bait-path list expanded from 16 to 40 entries — adds the full `wp-config.php.*` variant family (`.bak`, `.old`, `.save`, `.orig`, `.swp`, `.txt`, `~`), more `.env*` Backups (`.production.bak`, `.local.bak`), Joomla `configuration.php.bak`, common SQL dumps (`dump.sql`, `database.sql`, `backup.sql`, `db.sql`), `.htpasswd` / `.htaccess.bak`, AWS credentials (`.aws/credentials`, `.aws/config`), SSH keys (`.ssh/id_rsa`, `.ssh/authorized_keys`), private-key files (`id_rsa`, `private.key`, `server.key`). The `.htaccess` rewrite block and both nginx snippets are regenerated from the same list. `is_decoy_path()` learns nested paths (`.aws/credentials`) with the same one-optional-subdir prefix rule the server snippets use, so PHP detection stays consistent with the Apache/nginx rewrite. New nginx exact-match snippet variant added for ISPConfig and managed stacks where the host template emits `location ~ /\.  { deny all; }` before the site's custom directives — exact-match locations have higher nginx priority and survive that ordering.
+Decoy bait-path list expanded from 16 to 40 entries, adds the full `wp-config.php.*` variant family (`.bak`, `.old`, `.save`, `.orig`, `.swp`, `.txt`, `~`), more `.env*` Backups (`.production.bak`, `.local.bak`), Joomla `configuration.php.bak`, common SQL dumps (`dump.sql`, `database.sql`, `backup.sql`, `db.sql`), `.htpasswd` / `.htaccess.bak`, AWS credentials (`.aws/credentials`, `.aws/config`), SSH keys (`.ssh/id_rsa`, `.ssh/authorized_keys`), private-key files (`id_rsa`, `private.key`, `server.key`). The `.htaccess` rewrite block and both nginx snippets are regenerated from the same list. `is_decoy_path()` learns nested paths (`.aws/credentials`) with the same one-optional-subdir prefix rule the server snippets use, so PHP detection stays consistent with the Apache/nginx rewrite. New nginx exact-match snippet variant added for ISPConfig and managed stacks where the host template emits `location ~ /\.  { deny all; }` before the site's custom directives, exact-match locations have higher nginx priority and survive that ordering.
 
 = 2.0.13 =
 
-Hotfix: every locally auto-blocked offender was silently excluded from the community report. `Database::is_recently_processed()` counted the very block that triggered the report — once the IP landed in `wp_reportedip_hive_blocked`, the helper returned `recently_blocked=true` for the next 24 hours and `queue_api_report()` dropped the row before it ever reached the API. The check is removed: only successful past reports (`api_queue.status=completed`) gate the cooldown now, which is the dedup behaviour the helper is supposed to enforce. Combined with the 2.0.12 Decoy fix, `decoy_pathblock_hit`, `user_enumeration`, `failed_login`, `scan_404` and every other sensor now actually reach the Hive API after an auto-block.
+Hotfix: every locally auto-blocked offender was silently excluded from the community report. `Database::is_recently_processed()` counted the very block that triggered the report, once the IP landed in `wp_reportedip_hive_blocked`, the helper returned `recently_blocked=true` for the next 24 hours and `queue_api_report()` dropped the row before it ever reached the API. The check is removed: only successful past reports (`api_queue.status=completed`) gate the cooldown now, which is the dedup behaviour the helper is supposed to enforce. Combined with the 2.0.12 Decoy fix, `decoy_pathblock_hit`, `user_enumeration`, `failed_login`, `scan_404` and every other sensor now actually reach the Hive API after an auto-block.
 
 = 2.0.12 =
 
-Hotfix for the 2.0.11 Decoy Path Block: the sensor logged each hit locally but did not actually push it onto the community-report queue. `Logger::log_security_event()` only writes to the local `logs` table — queueing for the Hive API has to go through `Security_Monitor::report_security_event()` explicitly. The decoy hook now calls both, and the event-to-category mapping in `Security_Monitor::$default_category_mapping` has a new entry `decoy_pathblock_hit => [21, 15]` (admin-scanning + reputation). Sites running 2.0.11 will start populating the API queue immediately after the upgrade; older `decoy_pathblock_hit` rows in `logs` cannot be retro-reported (the API queue dedup window would suppress them anyway).
+Hotfix for the 2.0.11 Decoy Path Block: the sensor logged each hit locally but did not actually push it onto the community-report queue. `Logger::log_security_event()` only writes to the local `logs` table, queueing for the Hive API has to go through `Security_Monitor::report_security_event()` explicitly. The decoy hook now calls both, and the event-to-category mapping in `Security_Monitor::$default_category_mapping` has a new entry `decoy_pathblock_hit => [21, 15]` (admin-scanning + reputation). Sites running 2.0.11 will start populating the API queue immediately after the upgrade; older `decoy_pathblock_hit` rows in `logs` cannot be retro-reported (the API queue dedup window would suppress them anyway).
 
 = 2.0.11 =
 
-Decoy Path Block architecture correction. The sensor no longer adds the source IP to the local block table — a single false-positive (legitimate backup plugin, admin testing on the live site, an old crawler probing stale URLs) would otherwise have locked the site out of its own traffic for 24 hours. Each hit is still logged at severity `high` and forwarded to the community-reputation queue, and the visitor still receives a 403 for that one request. Companion change: the plugin now auto-manages an Apache rewrite block inside `.htaccess` (between `# BEGIN ReportedIP Hive Decoy` / `# END ReportedIP Hive Decoy` markers, placed before WordPress's own block). The rewrite routes hits to `index.php` instead of issuing `[F,L]` — that preserves the detection, while still protecting the site against any real bait file that might sit on disk (`.env.backup` left behind by Composer, etc.). nginx users get an equivalent `rewrite ^ /index.php last;` snippet in the Settings tab. The block-duration option `reportedip_hive_decoy_block_hours` is removed; migration v7 cleans up legacy entries from the 2.0.9-era `blocked` table.
+Decoy Path Block architecture correction. The sensor no longer adds the source IP to the local block table, a single false-positive (legitimate backup plugin, admin testing on the live site, an old crawler probing stale URLs) would otherwise have locked the site out of its own traffic for 24 hours. Each hit is still logged at severity `high` and forwarded to the community-reputation queue, and the visitor still receives a 403 for that one request. Companion change: the plugin now auto-manages an Apache rewrite block inside `.htaccess` (between `# BEGIN ReportedIP Hive Decoy` / `# END ReportedIP Hive Decoy` markers, placed before WordPress's own block). The rewrite routes hits to `index.php` instead of issuing `[F,L]`, that preserves the detection, while still protecting the site against any real bait file that might sit on disk (`.env.backup` left behind by Composer, etc.). nginx users get an equivalent `rewrite ^ /index.php last;` snippet in the Settings tab. The block-duration option `reportedip_hive_decoy_block_hours` is removed; migration v7 cleans up legacy entries from the 2.0.9-era `blocked` table.
 
 = 2.0.10 =
 
-Two fixes to the 2.0.9 Decoy Path Block. Report-only mode is now respected end-to-end: the 403 + `exit` are skipped when the mode is active, so audits keep getting the `decoy_pathblock_hit` log entry without any user-visible block. The path matcher now also recognises bait filenames behind a subdirectory prefix (e.g. `/site-a/.env.backup` on a Multisite subdir install) — the canonical match keeps working unchanged; the basename fallback only triggers when the full path does not already match. New unit-test case covers the Multisite subdir scenario.
+Two fixes to the 2.0.9 Decoy Path Block. Report-only mode is now respected end-to-end: the 403 + `exit` are skipped when the mode is active, so audits keep getting the `decoy_pathblock_hit` log entry without any user-visible block. The path matcher now also recognises bait filenames behind a subdirectory prefix (e.g. `/site-a/.env.backup` on a Multisite subdir install), the canonical match keeps working unchanged; the basename fallback only triggers when the full path does not already match. New unit-test case covers the Multisite subdir scenario.
 
 = 2.0.9 =
 
-Decoy Path Block — new free-tier sensor that bans the source IP on the very first request to a known bait path (`.env.backup`, `wp-config.old.php`, `db-dump-master.sql.php`, `admin-shell-console.php`, `debug-logs-temp.php` and more). Distinct from the existing scan-detector: legitimate visitors never request these paths, so the first hit IS the attack indicator — no N-of-Y window, no waiting. No physical decoy files are dropped on disk; detection lives entirely in the request pipeline. The Settings tab additionally exposes ready-to-paste `.htaccess` and nginx snippets so admins can move the block to the server level (pre-PHP) for extra hardening; the plugin never writes to server configs itself. Extend the bait list via the `reportedip_hive_decoy_paths` filter. New options `reportedip_hive_decoy_pathblock_enabled` (default on) and `reportedip_hive_decoy_block_hours` (1–168, default 24). New event type `decoy_pathblock_hit` (severity `high`); the 2.0.8 Hardening-Mode log decoration applies automatically when an attack hits during an active hardening window.
+Decoy Path Block, new free-tier sensor that bans the source IP on the very first request to a known bait path (`.env.backup`, `wp-config.old.php`, `db-dump-master.sql.php`, `admin-shell-console.php`, `debug-logs-temp.php` and more). Distinct from the existing scan-detector: legitimate visitors never request these paths, so the first hit IS the attack indicator, no N-of-Y window, no waiting. No physical decoy files are dropped on disk; detection lives entirely in the request pipeline. The Settings tab additionally exposes ready-to-paste `.htaccess` and nginx snippets so admins can move the block to the server level (pre-PHP) for extra hardening; the plugin never writes to server configs itself. Extend the bait list via the `reportedip_hive_decoy_paths` filter. New options `reportedip_hive_decoy_pathblock_enabled` (default on) and `reportedip_hive_decoy_block_hours` (1–168, default 24). New event type `decoy_pathblock_hit` (severity `high`); the 2.0.8 Hardening-Mode log decoration applies automatically when an attack hits during an active hardening window.
 
 = 2.0.8 =
 
@@ -801,50 +801,50 @@ Hardening Mode (Professional plan and higher). When the coordinated-attack senso
 
 = 2.0.7 =
 
-Hourly API rate-limit is now split into three independent buckets — reputation lookups, report submissions and meta/quota sync — so a bot-driven reputation scan can no longer freeze the report queue or starve quota sync. Caps scale with the active tier (Free 150/h reputation, Professional 3 000/h, Business 12 000/h, Enterprise unlimited) and follow the daily quota in the PRICING-PLAN with a 3× spike factor. The "Max API calls per hour" setting accepts `0` as "auto (tier-bound)" and is reset to `0` on every install via migration v6. When the community layer is rate-limited, an inline banner makes the fallback explicit — local firewall (sensors, blocks, logs, queue) stays fully active, only outgoing community calls pause until the hourly counter resets. New `Mode_Manager::default_api_rate_limits_for_tier()`, `get_api_rate_limit_snapshot()` and `is_community_layer_degraded()` helpers are the canonical contracts for tier-gated rate-limit behaviour.
+Hourly API rate-limit is now split into three independent buckets, reputation lookups, report submissions and meta/quota sync, so a bot-driven reputation scan can no longer freeze the report queue or starve quota sync. Caps scale with the active tier (Free 150/h reputation, Professional 3 000/h, Business 12 000/h, Enterprise unlimited) and follow the daily quota in the PRICING-PLAN with a 3× spike factor. The "Max API calls per hour" setting accepts `0` as "auto (tier-bound)" and is reset to `0` on every install via migration v6. When the community layer is rate-limited, an inline banner makes the fallback explicit, local firewall (sensors, blocks, logs, queue) stays fully active, only outgoing community calls pause until the hourly counter resets. New `Mode_Manager::default_api_rate_limits_for_tier()`, `get_api_rate_limit_snapshot()` and `is_community_layer_degraded()` helpers are the canonical contracts for tier-gated rate-limit behaviour.
 
 = 2.0.6 =
 
-Setup wizard now opens on a fresh activation again — the activation hook wrote a `set_site_transient()`, the redirect guard consumed it with `get_transient()`, so the read never matched the write on single-site or multisite. Both halves now use `_site_transient_`. Admin-email burst protection: the existing per-(IP × event_type) 60-minute cooldown stays, plus a new global per-event_type cap (default 15 min, option `reportedip_hive_notify_event_cap_minutes`). Distributed brute-force from many IPs no longer floods the operator's inbox — additional alerts of the same type are folded into a "Burst suppression: N additional alerts (M distinct IPs) since …" digest line on the next outgoing mail. Suppressed alerts continue to land in the logs as `notification_event_cap_suppressed`.
+Setup wizard now opens on a fresh activation again, the activation hook wrote a `set_site_transient()`, the redirect guard consumed it with `get_transient()`, so the read never matched the write on single-site or multisite. Both halves now use `_site_transient_`. Admin-email burst protection: the existing per-(IP × event_type) 60-minute cooldown stays, plus a new global per-event_type cap (default 15 min, option `reportedip_hive_notify_event_cap_minutes`). Distributed brute-force from many IPs no longer floods the operator's inbox, additional alerts of the same type are folded into a "Burst suppression: N additional alerts (M distinct IPs) since ..." digest line on the next outgoing mail. Suppressed alerts continue to land in the logs as `notification_event_cap_suppressed`.
 
 = 2.0.5 =
 
-Search engine and AI crawler User-Agents (Googlebot, Bingbot, DuckDuckBot, Applebot, YandexBot, GPTBot, ChatGPT-User, ClaudeBot, PerplexityBot, Amazonbot, CCBot, MetaExternalAgent, …) are now excluded from the 404 burst trigger and the REST burst trigger so legit crawls over stale URLs cannot push the bot into the progressive block ladder. Honeypot-path detection (`.env`, `wp-config.php.bak`, `.git/config`, `/phpmyadmin/`, …) stays active for **all** visitors — a "Googlebot" request to `/.env` IS the attack indicator and still triggers immediately. New `ReportedIP_Hive_Bot_Allowlist` class (extensible via `reportedip_hive_bot_allowlist_patterns` filter), master toggle `reportedip_hive_bot_allowlist_enabled` (default on) in Settings → Protection → 404 / Scanner detection.
+Search engine and AI crawler User-Agents (Googlebot, Bingbot, DuckDuckBot, Applebot, YandexBot, GPTBot, ChatGPT-User, ClaudeBot, PerplexityBot, Amazonbot, CCBot, MetaExternalAgent, ...) are now excluded from the 404 burst trigger and the REST burst trigger so legit crawls over stale URLs cannot push the bot into the progressive block ladder. Honeypot-path detection (`.env`, `wp-config.php.bak`, `.git/config`, `/phpmyadmin/`, ...) stays active for **all** visitors, a "Googlebot" request to `/.env` IS the attack indicator and still triggers immediately. New `ReportedIP_Hive_Bot_Allowlist` class (extensible via `reportedip_hive_bot_allowlist_patterns` filter), master toggle `reportedip_hive_bot_allowlist_enabled` (default on) in Settings → Protection → 404 / Scanner detection.
 
 = 2.0.4 =
 
-SMS-2FA delivery is no longer gated by a client-side EU country-code whitelist. The plugin validates E.164 format and forwards every number to the managed relay, which returns HTTP 422 `country_not_supported` for the few destinations it does not serve — surfaced to the 2FA UI as a typed error so users can pick TOTP, Email or a passkey instead. UI, wizard and docs copy reworded from "EU-only" to "worldwide via managed relay". `Phone_Validator::is_eu()` / `::get_country_code()` kept as no-op shims for any out-of-tree caller; the `DEFAULT_EU_CODES` constant, `get_whitelist()` helper and the `reportedip_hive_eu_phone_country_codes` option/filter are removed.
+SMS-2FA delivery is no longer gated by a client-side EU country-code whitelist. The plugin validates E.164 format and forwards every number to the managed relay, which returns HTTP 422 `country_not_supported` for the few destinations it does not serve, surfaced to the 2FA UI as a typed error so users can pick TOTP, Email or a passkey instead. UI, wizard and docs copy reworded from "EU-only" to "worldwide via managed relay". `Phone_Validator::is_eu()` / `::get_country_code()` kept as no-op shims for any out-of-tree caller; the `DEFAULT_EU_CODES` constant, `get_whitelist()` helper and the `reportedip_hive_eu_phone_country_codes` option/filter are removed.
 
 = 2.0.1 =
 
 **Password-reset 2FA challenge: visible errors, automatic dispatch, shared verifier.** Three real bugs on the reset-flow challenge page (`wp-login.php?action=reportedip_2fa_reset`) and one drift-prevention refactor:
 
 * **Wrong code now shows an error.** The challenge used to render verification failures only via `login_header()`. Plugins that filter `wp_login_errors` would strip the message, and the WP-default `#login_error` block sat outside the card. Errors now render inline as a `rip-alert--danger` banner inside the `.rip-2fa-challenge` card and survive any `wp_login_errors` filter.
-* **Initial SMS / email is dispatched on first land.** The send used to run only when `?method=sms` was already in the URL — which never happened on the first redirect. Users with SMS-only 2FA saw an empty form. Initial dispatch now happens in `on_validate_reset()` before the redirect, mirroring the login flow.
-* **Send-failures surface to the user.** `WP_Error` returned by `Two_Factor_SMS::send_code()` / `Two_Factor_Email::send_code()` is no longer discarded — it lands in the inline error banner with the provider's reason string and is logged under the new `2fa_reset_send_failed` event.
+* **Initial SMS / email is dispatched on first land.** The send used to run only when `?method=sms` was already in the URL, which never happened on the first redirect. Users with SMS-only 2FA saw an empty form. Initial dispatch now happens in `on_validate_reset()` before the redirect, mirroring the login flow.
+* **Send-failures surface to the user.** `WP_Error` returned by `Two_Factor_SMS::send_code()` / `Two_Factor_Email::send_code()` is no longer discarded, it lands in the inline error banner with the provider's reason string and is logged under the new `2fa_reset_send_failed` event.
 * **Server-side resend.** `?resend_sms=1` / `?resend_email=1` URL parameters trigger a fresh OTP without losing the challenge session. The template renders a "Resend the SMS / email code" link with the provider-side cooldown.
-* **Method-health assessment.** `assess_methods_health()` checks each eligible method for usability before render: TOTP secret presence + decryptability, SMS provider readiness + stored phone number, WebAuthn provider class. Methods that fail are removed from the picker. When **none** of the methods is usable the gate hard-stops with a new `2fa_reset_no_usable_method` event, an admin-mail listing what is broken, and a dedicated "contact your administrator" page — instead of dropping the user into an "Invalid code" loop.
+* **Method-health assessment.** `assess_methods_health()` checks each eligible method for usability before render: TOTP secret presence + decryptability, SMS provider readiness + stored phone number, WebAuthn provider class. Methods that fail are removed from the picker. When **none** of the methods is usable the gate hard-stops with a new `2fa_reset_no_usable_method` event, an admin-mail listing what is broken, and a dedicated "contact your administrator" page, instead of dropping the user into an "Invalid code" loop.
 * **Shared verifier.** The per-method verification switch (TOTP / SMS / Email / WebAuthn / Recovery) is extracted into `ReportedIP_Hive_Two_Factor_Verifier::verify_method()`. Both the login and reset surfaces delegate to it so a fix to one cannot silently miss the other. Verified: PHPCS clean, PHPStan level 5 *No errors*, 453/453 single-site PHPUnit.
 
 = 2.0.0 =
 
-**WordPress Multisite support — breaking change.** ReportedIP Hive is now fully network-aware. The plugin can only be network-activated on Multisite (`Network: true`); per-site activation is hidden by WordPress. All seven plugin tables move to `$wpdb->base_prefix` so a single threat decision applies network-wide: cross-site brute-force attempts aggregate into one central `attempts` row, and one `blocked` entry locks the IP out of every sub-site. Site Admins on a sub-site see a read-only Status / Logs UI plus a single 2FA Site Settings page with two writable overrides (Frontend-2FA slug per-site, plus additive 2FA enforcement roles — site admins cannot drop a role the network requires). Super Admins are forced into 2FA setup unconditionally via a new `reportedip_hive_2fa_enforce_super_admins` toggle (default on), and the trust cookie now widens to `SITECOOKIEPATH` so a single trust decision carries across the whole network. Cron is scheduled only on the main site (`is_main_site()`-guarded). New `Schema`, `Migration_Manager` and `Option_Routing` service classes mediate every Multisite-relevant access; 353 plugin option calls were rewired through the routing layer in one sweep. Versioned migration system with atomic site-option lock auto-upgrades single-site v1.x → v5 transparently on the first admin visit (only `ALTER TABLE … ADD COLUMN blog_id` with default 1 — no data movement). Existing Multisite installs that ran Hive on individual sites without `Network: true` get a one-time option-promotion pass into sitemeta. Existing trusted_devices rows have `expires_at` capped at NOW()+24h so users get a smooth re-trust window after the cookie path widens. PHPUnit Multisite suite (`tests/Multisite/` + `phpunit-multisite.xml`) and Playwright E2E projects (`tests/e2e/`, single-site + multisite) plus dedicated CI matrix jobs gate every change against both topologies.
+**WordPress Multisite support, breaking change.** ReportedIP Hive is now fully network-aware. The plugin can only be network-activated on Multisite (`Network: true`); per-site activation is hidden by WordPress. All seven plugin tables move to `$wpdb->base_prefix` so a single threat decision applies network-wide: cross-site brute-force attempts aggregate into one central `attempts` row, and one `blocked` entry locks the IP out of every sub-site. Site Admins on a sub-site see a read-only Status / Logs UI plus a single 2FA Site Settings page with two writable overrides (Frontend-2FA slug per-site, plus additive 2FA enforcement roles, site admins cannot drop a role the network requires). Super Admins are forced into 2FA setup unconditionally via a new `reportedip_hive_2fa_enforce_super_admins` toggle (default on), and the trust cookie now widens to `SITECOOKIEPATH` so a single trust decision carries across the whole network. Cron is scheduled only on the main site (`is_main_site()`-guarded). New `Schema`, `Migration_Manager` and `Option_Routing` service classes mediate every Multisite-relevant access; 353 plugin option calls were rewired through the routing layer in one sweep. Versioned migration system with atomic site-option lock auto-upgrades single-site v1.x → v5 transparently on the first admin visit (only `ALTER TABLE ... ADD COLUMN blog_id` with default 1:no data movement). Existing Multisite installs that ran Hive on individual sites without `Network: true` get a one-time option-promotion pass into sitemeta. Existing trusted_devices rows have `expires_at` capped at NOW()+24h so users get a smooth re-trust window after the cookie path widens. PHPUnit Multisite suite (`tests/Multisite/` + `phpunit-multisite.xml`) and Playwright E2E projects (`tests/e2e/`, single-site + multisite) plus dedicated CI matrix jobs gate every change against both topologies.
 
-**Post-beta-1 hardening.** The Network Admin Settings page now uses a custom `network_admin_edit_*` save handler — Multisite was silently dropping every Settings-API form submission into the main site's wp_options instead of sitemeta, so the API key, 2FA Hard-block roles, WooCommerce frontend toggles and many other options bounced back to their previous value on every save. Shipped with `Option_Routing` rewires for the call sites that the beta-1 sweep missed (Mode_Manager, Two_Factor_Frontend, Two_Factor_Recommend, Two_Factor_SMS, Two_Factor_Reset_Gate, Two_Factor_WC_Notice, Tier_Upgrade, API_Client, Cache, Setup_Wizard, activation hook). Site-2FA UI redesigned in `rip-settings-section` style with a full Network-state read-out and clear "enforced by network" markers on the additional-roles checklist. Per-blog resolve cache isolation (`switch_to_blog()` no longer leaks resolved overrides). Default Frontend-2FA challenge slug pinned at `reportedip-hive-2fa` (was briefly `2fa-login` in beta-1) so existing installs keep their public URL. Tooling: PHPStan bumped to 2.1, `szepeviktor/phpstan-wordpress` to 2.0, twelve newly-flagged errors fixed at the source. Verified: PHPCS clean, PHPStan 2.1 *No errors*, 435/435 single-site PHPUnit, 19/19 multisite PHPUnit, 105/105 option-roundtrip on both Docker stacks.
+**Post-beta-1 hardening.** The Network Admin Settings page now uses a custom `network_admin_edit_*` save handler, Multisite was silently dropping every Settings-API form submission into the main site's wp_options instead of sitemeta, so the API key, 2FA Hard-block roles, WooCommerce frontend toggles and many other options bounced back to their previous value on every save. Shipped with `Option_Routing` rewires for the call sites that the beta-1 sweep missed (Mode_Manager, Two_Factor_Frontend, Two_Factor_Recommend, Two_Factor_SMS, Two_Factor_Reset_Gate, Two_Factor_WC_Notice, Tier_Upgrade, API_Client, Cache, Setup_Wizard, activation hook). Site-2FA UI redesigned in `rip-settings-section` style with a full Network-state read-out and clear "enforced by network" markers on the additional-roles checklist. Per-blog resolve cache isolation (`switch_to_blog()` no longer leaks resolved overrides). Default Frontend-2FA challenge slug pinned at `reportedip-hive-2fa` (was briefly `2fa-login` in beta-1) so existing installs keep their public URL. Tooling: PHPStan bumped to 2.1, `szepeviktor/phpstan-wordpress` to 2.0, twelve newly-flagged errors fixed at the source. Verified: PHPCS clean, PHPStan 2.1 *No errors*, 435/435 single-site PHPUnit, 19/19 multisite PHPUnit, 105/105 option-roundtrip on both Docker stacks.
 
 = 1.6.6 =
 
 **Password-reset gate hardening (E2E coverage).** Three real bugs in the 1.6.5 implementation that were caught while driving the full reset flow against a Docker stack and would have shipped silently otherwise:
 
-* The reset-key resolver only looked at the URL — the WordPress reset cookie (`wp-resetpass-COOKIEHASH`, set during step 2 of the reset flow) and `$_POST['rp_key']` were ignored. The `validate_password_reset` hook fired but bailed out without effect on every standard reset, so the gate was end-to-end bypassable. Resolver now reads URL → POST → cookie.
-* Email-only lockout used `$errors->add()`, but `User_Enumeration::normalize_login_errors()` rewrites every non-2FA login error to "Invalid credentials." for username-probing defence — affected users never saw the real reason. The gate now renders a dedicated 403 page via `wp_die()`, which no `login_errors` filter can rewrite.
+* The reset-key resolver only looked at the URL, the WordPress reset cookie (`wp-resetpass-COOKIEHASH`, set during step 2 of the reset flow) and `$_POST['rp_key']` were ignored. The `validate_password_reset` hook fired but bailed out without effect on every standard reset, so the gate was end-to-end bypassable. Resolver now reads URL → POST → cookie.
+* Email-only lockout used `$errors->add()`, but `User_Enumeration::normalize_login_errors()` rewrites every non-2FA login error to "Invalid credentials." for username-probing defence, affected users never saw the real reason. The gate now renders a dedicated 403 page via `wp_die()`, which no `login_errors` filter can rewrite.
 * `User_Enumeration::normalize_login_errors()` whitelist extended: `?action=reportedip_2fa_reset` pages and any error text containing "reset blocked" or "two-factor" on the `rp` / `resetpass` actions now pass through unmasked.
 
-**Strongly recommended for everyone running 1.6.5** — without this update the reset gate is wired but inactive on the standard reset flow.
+**Strongly recommended for everyone running 1.6.5**, without this update the reset gate is wired but inactive on the standard reset flow.
 
 = 1.6.5 =
 
-**Password-reset 2FA gate.** The WordPress "lost password" flow now demands a non-email second factor (Authenticator app, SMS, passkey, or recovery code) before a new password is accepted. Email is excluded from the eligible methods by design — it is the channel that delivered the reset link itself, so accepting an email OTP as the second factor would collapse to single-factor security if the mailbox is compromised. Hooks `validate_password_reset` (priority 5, gates the form render) and `password_reset` (priority 5, last-mile guard before `wp_set_password`). Failures share the IP-block ladder with login-flow failures via the canonical `2fa_brute_force` event. Accounts whose only enrolled second factor is email and which hold no recovery codes are hard-locked from the reset flow with an admin-mail alert; unblock manually via `wp user reset-password <id> --skip-email`. Two new options under *Settings → Two-Factor → Password reset gate*: `reportedip_hive_2fa_require_on_password_reset` (master toggle, default on) and `reportedip_hive_2fa_password_reset_block_email_only` (default on). The list of methods rejected as second factor in this flow is filterable via `reportedip_hive_2fa_password_reset_excluded_methods` and defaults to `["email"]`. Aligns with NIST SP 800-63B §6.1.2.3 and OWASP ASVS V6.3.
+**Password-reset 2FA gate.** The WordPress "lost password" flow now demands a non-email second factor (Authenticator app, SMS, passkey, or recovery code) before a new password is accepted. Email is excluded from the eligible methods by design, it is the channel that delivered the reset link itself, so accepting an email OTP as the second factor would collapse to single-factor security if the mailbox is compromised. Hooks `validate_password_reset` (priority 5, gates the form render) and `password_reset` (priority 5, last-mile guard before `wp_set_password`). Failures share the IP-block ladder with login-flow failures via the canonical `2fa_brute_force` event. Accounts whose only enrolled second factor is email and which hold no recovery codes are hard-locked from the reset flow with an admin-mail alert; unblock manually via `wp user reset-password <id> --skip-email`. Two new options under *Settings → Two-Factor → Password reset gate*: `reportedip_hive_2fa_require_on_password_reset` (master toggle, default on) and `reportedip_hive_2fa_password_reset_block_email_only` (default on). The list of methods rejected as second factor in this flow is filterable via `reportedip_hive_2fa_password_reset_excluded_methods` and defaults to `["email"]`. Aligns with NIST SP 800-63B §6.1.2.3 and OWASP ASVS V6.3.
 
 = 1.7.0 =
 
@@ -852,23 +852,23 @@ Mail bundle balance now visible alongside SMS in the relay-quota panel. The Hive
 
 = 1.6.3 =
 
-Managed mail and SMS relay — Professional / Business / Enterprise plans now route 2FA mails and OTP-SMS through reportedip.com instead of needing their own SMTP / SMS contract. Mail relay falls back transparently to local `wp_mail()` on cap (HTTP 402) or backoff (HTTP 429) so 2FA flows never break. SMS relay surfaces typed `WP_Error`s so the 2FA UI can encourage another method instead of silently switching. New `ReportedIP_Hive_Phone_Validator` validates E.164 format on the client; routing decisions live on the server. Progressive SMS backoff ladder (0s → 2m → 5m → 15m → 30m → 60m) mirrors the service-side rate-limiter. Setup wizard slimmed from 8 to 7 steps. Scan-detector path matcher refactored to a single pass.
+Managed mail and SMS relay, Professional / Business / Enterprise plans now route 2FA mails and OTP-SMS through reportedip.com instead of needing their own SMTP / SMS contract. Mail relay falls back transparently to local `wp_mail()` on cap (HTTP 402) or backoff (HTTP 429) so 2FA flows never break. SMS relay surfaces typed `WP_Error`s so the 2FA UI can encourage another method instead of silently switching. New `ReportedIP_Hive_Phone_Validator` validates E.164 format on the client; routing decisions live on the server. Progressive SMS backoff ladder (0s → 2m → 5m → 15m → 30m → 60m) mirrors the service-side rate-limiter. Setup wizard slimmed from 8 to 7 steps. Scan-detector path matcher refactored to a single pass.
 
 = 1.6.1 =
 
-Post-upgrade 2FA setup banner appears on every Hive admin page when a customer's plan crosses from Free / Contributor into Professional / Business / Enterprise, with a three-step checklist (provider chosen, AVV confirmed, SMS method enabled). Login-time 2FA reminder for end users — counts logins without a configured method and renders a soft banner across wp-admin; after the configurable threshold (default 5) administrators, editors and shop managers are forced into the existing onboarding wizard, while customers, subscribers and other non-privileged roles only ever see the soft banner so a missing phone never locks anyone out of WooCommerce. AVV / DPA checkbox on the 2FA tab now adapts to the active SMS provider — selecting `reportedip_relay` flips the label to "I have accepted the ReportedIP AVV (signed with my plan subscription)" and auto-checks. New `Login reminder` settings section to toggle the reminder, set the hard-block threshold (1–10), and pick which roles get hard-blocked at threshold.
+Post-upgrade 2FA setup banner appears on every Hive admin page when a customer's plan crosses from Free / Contributor into Professional / Business / Enterprise, with a three-step checklist (provider chosen, AVV confirmed, SMS method enabled). Login-time 2FA reminder for end users, counts logins without a configured method and renders a soft banner across wp-admin; after the configurable threshold (default 5) administrators, editors and shop managers are forced into the existing onboarding wizard, while customers, subscribers and other non-privileged roles only ever see the soft banner so a missing phone never locks anyone out of WooCommerce. AVV / DPA checkbox on the 2FA tab now adapts to the active SMS provider, selecting `reportedip_relay` flips the label to "I have accepted the ReportedIP AVV (signed with my plan subscription)" and auto-checks. New `Login reminder` settings section to toggle the reminder, set the hard-block threshold (1–10), and pick which roles get hard-blocked at threshold.
 
 = 1.6.0 =
 
-Tier-aware UI foundation across admin pages — every page now renders a tier badge next to the operation-mode badge (Free / Contributor / Professional / Business / Enterprise), and PRO+ tiers gain a managed-relay quota panel on the security dashboard with mail and SMS counters, progress bars and reset hints. Setup wizard's first step reuses the same Local-vs-Community comparison cards as the Settings page. SMS-provider selector marks "ReportedIP SMS Relay" as PRO+ when the current tier is too low, with a deep link to the pricing page. New `Mode_Manager::feature_status()`, `get_tier_info()` and `get_relay_quota_snapshot()` are the canonical contracts every future tier-gated control hooks into. New `reportedip_hive_tier_changed` action fires when the upstream `userRole` flips between tiers.
+Tier-aware UI foundation across admin pages, every page now renders a tier badge next to the operation-mode badge (Free / Contributor / Professional / Business / Enterprise), and PRO+ tiers gain a managed-relay quota panel on the security dashboard with mail and SMS counters, progress bars and reset hints. Setup wizard's first step reuses the same Local-vs-Community comparison cards as the Settings page. SMS-provider selector marks "ReportedIP SMS Relay" as PRO+ when the current tier is too low, with a deep link to the pricing page. New `Mode_Manager::feature_status()`, `get_tier_info()` and `get_relay_quota_snapshot()` are the canonical contracts every future tier-gated control hooks into. New `reportedip_hive_tier_changed` action fires when the upstream `userRole` flips between tiers.
 
 = 1.5.3 =
 
-API queue reliability hotfix. A worker that crashed mid-HTTP (PHP fatal, OOM, timeout) used to leave its queue row stuck in `processing` forever — invisible to every later cron run, never cleaned up, and the cooldown check then silently suppressed all further reports for that IP for 24 h. The queue cron now recovers stuck rows on every run, protects in-flight rows via a new `submitted_at` timestamp, runs each row in its own try/catch so one failure can't abort the batch, and serialises concurrent invocations with a transient lock. Schema bumps to v4 (auto-migrated). Strongly recommended for every Community-mode site.
+API queue reliability hotfix. A worker that crashed mid-HTTP (PHP fatal, OOM, timeout) used to leave its queue row stuck in `processing` forever, invisible to every later cron run, never cleaned up, and the cooldown check then silently suppressed all further reports for that IP for 24 h. The queue cron now recovers stuck rows on every run, protects in-flight rows via a new `submitted_at` timestamp, runs each row in its own try/catch so one failure can't abort the batch, and serialises concurrent invocations with a transient lock. Schema bumps to v4 (auto-migrated). Strongly recommended for every Community-mode site.
 
 = 1.5.2 =
 
-Cache plugins (WP Rocket / W3TC / WP Super Cache / LiteSpeed) no longer cache the 403 "Access Denied" page back to legitimate visitors — the response now defines `DONOTCACHEPAGE` + sends `Cache-Control: no-store` and `Pragma: no-cache`. Front-end IP-block hook moved to `init` priority 1. The 2FA per-IP throttle now graduates a brute-forcer to a real progressive block at the 15th wrong code via the canonical `handle_threshold_exceeded()` pipeline — community-mode reporting and admin notification fire correctly. New `2fa_brute_force` event slug registered in both category and stat mappings.
+Cache plugins (WP Rocket / W3TC / WP Super Cache / LiteSpeed) no longer cache the 403 "Access Denied" page back to legitimate visitors, the response now defines `DONOTCACHEPAGE` + sends `Cache-Control: no-store` and `Pragma: no-cache`. Front-end IP-block hook moved to `init` priority 1. The 2FA per-IP throttle now graduates a brute-forcer to a real progressive block at the 15th wrong code via the canonical `handle_threshold_exceeded()` pipeline, community-mode reporting and admin notification fire correctly. New `2fa_brute_force` event slug registered in both category and stat mappings.
 
 = 1.5.1 =
 
@@ -876,7 +876,7 @@ Settings UI clarity. The Blocking tab and the wizard's Protection step now spell
 
 = 1.5.0 =
 
-Progressive block escalation. New `ReportedIP_Hive_Block_Escalation` class with a configurable per-IP ladder (default 5 m → 15 m → 30 m → 24 h → 48 h → 7 d) and a 30-day reset window. Cookie-consent endpoints (Real Cookie Banner, Complianz, Borlabs, CookieYes) baked into the default REST-monitor bypass list — a regression for high-traffic sites where the consent POST counted toward the global rate-limit. 404 default 8/1 min → 12/2 min, comment-spam 3/60 min → 5/60 min (existing installs untouched).
+Progressive block escalation. New `ReportedIP_Hive_Block_Escalation` class with a configurable per-IP ladder (default 5 m → 15 m → 30 m → 24 h → 48 h → 7 d) and a 30-day reset window. Cookie-consent endpoints (Real Cookie Banner, Complianz, Borlabs, CookieYes) baked into the default REST-monitor bypass list, a regression for high-traffic sites where the consent POST counted toward the global rate-limit. 404 default 8/1 min → 12/2 min, comment-spam 3/60 min → 5/60 min (existing installs untouched).
 
 = 1.4.0 =
 
@@ -914,20 +914,20 @@ Fewer false-positive blocks of legitimate crawlers and asset 404s, Business mult
 Multisite Network Admin URL fixes and language-independent login-error masking (German included). No breaking changes.
 
 = 2.0.25 =
-SMS 2FA is now a Professional feature via the managed reportedip.com relay; the self-hosted SMS providers are removed. Sites that sent SMS via a self-configured provider or on a non-paid plan lose it — users fall back to TOTP, Email or a passkey. A v8 migration removes the old options.
+SMS 2FA is now a Professional feature via the managed reportedip.com relay; the self-hosted SMS providers are removed. Sites that sent SMS via a self-configured provider or on a non-paid plan lose it, users fall back to TOTP, Email or a passkey. A v8 migration removes the old options.
 
 = 2.0.24 =
 Adds GDPR tooling: a WordPress Privacy Policy Guide entry, a personal-data exporter/eraser for login attempts and trusted devices, and a privacy-text generator. Fixes dead legal links in the documentation. No breaking changes.
 
 = 2.0.19 =
-German translation (de_DE, formal) added — the admin UI now displays in German on German-language sites. Also fixes a fatal error on the 2FA settings tab. No breaking changes.
+German translation (de_DE, formal) added, the admin UI now displays in German on German-language sites. Also fixes a fatal error on the 2FA settings tab. No breaking changes.
 
 == Privacy Policy ==
 
 **Data stored locally**
 
 * IP addresses of blocked or suspicious visitors
-* Security event timestamps and event types (login failures, spam attempts, XMLRPC abuse, …)
+* Security event timestamps and event types (login failures, spam attempts, XMLRPC abuse, ...)
 * Optional, off by default: truncated user-agent strings (max. 50 characters) and request paths
 * Encrypted at rest: 2FA TOTP seeds and user phone numbers (libsodium with OpenSSL fallback)
 
@@ -939,7 +939,7 @@ German translation (de_DE, formal) added — the admin UI now displays in German
 
 **Lawful basis** (EU GDPR)
 
-* Art. 6(1)(f) GDPR — legitimate interest in preventing unauthorised access and detecting attacks against the controller's site.
+* Art. 6(1)(f) GDPR, legitimate interest in preventing unauthorised access and detecting attacks against the controller's site.
 
 **Retention**
 
@@ -947,17 +947,17 @@ German translation (de_DE, formal) added — the admin UI now displays in German
 * Automatic anonymisation (default after 7 days)
 * Manual deletion available from the admin UI; full data wipe on uninstall is opt-in
 
-Full privacy information: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/). A ready-to-paste privacy passage for your own site — German or English, tailored to the modules you use — is available at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo).
+Full privacy information: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/). A ready-to-paste privacy passage for your own site, German or English, tailored to the modules you use, is available at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo).
 
 == External Services ==
 
-This plugin connects to external services only when explicitly configured. *Local Shield* mode works completely offline — none of the endpoints below are contacted unless the corresponding feature is enabled.
+This plugin connects to external services only when explicitly configured. *Local Shield* mode works completely offline, none of the endpoints below are contacted unless the corresponding feature is enabled.
 
 = ReportedIP Community Network API =
 
 * Service URL: `https://reportedip.com/wp-json/reportedip/v2/` (endpoints `verify-key`, `check`, `report`, `whitelist`, `categories`)
 * Purpose: IP reputation lookups, anonymised threat reporting, whitelist sync, threat-category catalogue
-* Default: off — only active in Community Network mode AND with a configured API key
+* Default: off, only active in Community Network mode AND with a configured API key
 * Data transmitted: IP addresses, optional event categories and timestamps, the API key, the site domain and the plugin/WordPress version (wp.org-style User-Agent plus an `X-Rip-Site` header, used for licence domain counting and support)
 * Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
 * Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
@@ -966,7 +966,7 @@ This plugin connects to external services only when explicitly configured. *Loca
 
 * Service URL: `https://reportedip.com/wp-json/reportedip/v2/relay-mail`
 * Purpose: route 2FA verification mails through the reportedip.com transactional mail infrastructure (clean SPF / DKIM / DMARC)
-* Default: off — only available for Professional, Business and Enterprise plans, only when the user enabled the email 2FA factor; on any error (cap reached HTTP 402, recipient backoff HTTP 429, network error) the plugin falls back to the local `wp_mail()` transport so the 2FA flow never breaks
+* Default: off, only available for Professional, Business and Enterprise plans, only when the user enabled the email 2FA factor; on any error (cap reached HTTP 402, recipient backoff HTTP 429, network error) the plugin falls back to the local `wp_mail()` transport so the 2FA flow never breaks
 * Data transmitted: recipient email, subject, HTML and plain-text body, headers, optional Reply-To, the site domain
 * Privacy / DPA: [reportedip.com/legal/avv/](https://reportedip.com/legal/avv/)
 
@@ -974,7 +974,7 @@ This plugin connects to external services only when explicitly configured. *Loca
 
 * Service URL: `https://reportedip.com/wp-json/reportedip/v2/relay-sms` (and `relay-quota` for monthly usage display)
 * Purpose: deliver 2FA OTP messages without requiring the site operator to maintain their own SMS-provider contract
-* Default: off — only available for Professional, Business and Enterprise plans, only when a user actively enrolled SMS as a 2FA factor; routing is worldwide except for a small number of high-cost destinations that are unsupported by the managed relay (HTTP 422 with code `country_not_supported` is returned to the plugin in that case)
+* Default: off, only available for Professional, Business and Enterprise plans, only when a user actively enrolled SMS as a 2FA factor; routing is worldwide except for a small number of high-cost destinations that are unsupported by the managed relay (HTTP 422 with code `country_not_supported` is returned to the plugin in that case)
 * Data transmitted: recipient phone number (E.164), the verification code, expiry minutes, language code, the site domain
 * Privacy / DPA: [reportedip.com/legal/avv/](https://reportedip.com/legal/avv/)
 
@@ -982,7 +982,7 @@ This plugin connects to external services only when explicitly configured. *Loca
 
 * Service URL: `https://reportedip.com/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `scan_paths`, `tor_exits`)
 * Purpose: fetch signed firewall rule updates; the bundled baseline rulesets stay active without any connection, and Professional plans receive the deeper, frequently-updated rulesets through this channel
-* Default: off — only active in Community Network mode AND with a configured API key AND the Rule Sync toggle enabled; runs every six hours via cron, and conditional `If-None-Match` requests return HTTP 304 when nothing changed
+* Default: off, only active in Community Network mode AND with a configured API key AND the Rule Sync toggle enabled; runs every six hours via cron, and conditional `If-None-Match` requests return HTTP 304 when nothing changed
 * Data transmitted: the API key, the current ETag, the site domain and the plugin/WordPress version; each downloaded ruleset carries an Ed25519 signature that the plugin verifies against a bundled public key before applying it
 * Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
 * Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
@@ -991,7 +991,7 @@ This plugin connects to external services only when explicitly configured. *Loca
 
 * Service URL: `https://reportedip.com/wp-json/reportedip/v2/hive/whats-new`
 * Purpose: fetch the release highlights shown once per version in the dismissible "What's new" banner on plugin admin pages
-* Default: on — one keyless GET per installed version (with backoff on failure), admin pages only
+* Default: on, one keyless GET per installed version (with backoff on failure), admin pages only
 * Data transmitted: no API key; the request identifies the installation wp.org-style (site address plus plugin and WordPress version in the User-Agent)
 * Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
 * Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
@@ -1000,7 +1000,7 @@ This plugin connects to external services only when explicitly configured. *Loca
 
 * Service URL: `https://api.github.com/repos/reportedip/reportedip-hive/releases` (via the [plugin-update-checker](https://github.com/YahnisElsts/plugin-update-checker) library)
 * Purpose: notifies the WordPress plugin updater about new tagged releases (release ZIP is downloaded from GitHub when the admin clicks "Update")
-* Default: on — runs once every 12 hours via the `wp_update_plugins` cron, the same cadence WordPress core uses for its own update checks
+* Default: on, runs once every 12 hours via the `wp_update_plugins` cron, the same cadence WordPress core uses for its own update checks
 * Data transmitted: only plugin metadata (current version, slug); no site identifiers, no user data
 * Terms: [GitHub Terms of Service](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service)
 * Privacy: [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
@@ -1008,8 +1008,8 @@ This plugin connects to external services only when explicitly configured. *Loca
 = HaveIBeenPwned (HIBP) Range API =
 
 * Service URL: `https://api.pwnedpasswords.com/range/{first-5-sha1-hex-chars}`
-* Purpose: optional k-anonymity password-strength check at user password change — flags credentials known from public breach corpora
-* Default: on — the password policy and its HIBP range check are both enabled by default; the check runs server-side at password change for users covered by the policy. Disable via the option `reportedip_hive_password_check_hibp`. (No visitor IP is sent — the WordPress server queries HIBP with only the 5-char hash prefix.)
+* Purpose: optional k-anonymity password-strength check at user password change, flags credentials known from public breach corpora
+* Default: on, the password policy and its HIBP range check are both enabled by default; the check runs server-side at password change for users covered by the policy. Disable via the option `reportedip_hive_password_check_hibp`. (No visitor IP is sent, the WordPress server queries HIBP with only the 5-char hash prefix.)
 * Data transmitted: only the first 5 hex characters of the SHA-1 hash of the proposed password (the password itself is never sent and cannot be reconstructed)
 * Privacy: [haveibeenpwned.com/Privacy](https://haveibeenpwned.com/Privacy)
 * Soft-fail behaviour: a network error never blocks a password change
@@ -1022,9 +1022,9 @@ All JavaScript, CSS, fonts and images shipped with the plugin are loaded from th
 
 ReportedIP Hive is one piece of an Open-Source ecosystem around community-driven WordPress security. All projects are GPL or compatible licences and live on GitHub:
 
-* **Hive** (this plugin) — [github.com/reportedip/reportedip-hive](https://github.com/reportedip/reportedip-hive). Community-powered WordPress security: IP threat intelligence, brute-force protection and the complete 2FA suite. Be part of the hive.
-* **Honeypot Server** — [github.com/reportedip/honeypot-server](https://github.com/reportedip/honeypot-server). PHP honeypot that emulates WordPress, Drupal and Joomla to detect malicious traffic. 36 threat analyzers, automatic reporting to the reportedip.com API, admin dashboard, AI content generation, bot detection. Zero Composer dependencies, SQLite, Docker-ready. Run one yourself to feed the network and earn the Contributor tier.
-* **Blacklist** — [github.com/reportedip/reportedip-blacklist](https://github.com/reportedip/reportedip-blacklist). Community-driven IP threat-intelligence feed, updated daily. Free to consume, no account required.
+* **Hive** (this plugin), [github.com/reportedip/reportedip-hive](https://github.com/reportedip/reportedip-hive). Community-powered WordPress security: IP threat intelligence, brute-force protection and the complete 2FA suite. Be part of the hive.
+* **Honeypot Server**, [github.com/reportedip/honeypot-server](https://github.com/reportedip/honeypot-server). PHP honeypot that emulates WordPress, Drupal and Joomla to detect malicious traffic. 36 threat analyzers, automatic reporting to the reportedip.com API, admin dashboard, AI content generation, bot detection. Zero Composer dependencies, SQLite, Docker-ready. Run one yourself to feed the network and earn the Contributor tier.
+* **Blacklist**, [github.com/reportedip/reportedip-blacklist](https://github.com/reportedip/reportedip-blacklist). Community-driven IP threat-intelligence feed, updated daily. Free to consume, no account required.
 
 Project home, documentation and the optional managed-relay service: [reportedip.com](https://reportedip.com).
 
@@ -1039,7 +1039,7 @@ Project home, documentation and the optional managed-relay service: [reportedip.
 == Translations ==
 
 * English (source)
-* German (Deutsch) — included
+* German (Deutsch), included
 
 Want to help translate into more languages? Open an issue on [GitHub](https://github.com/reportedip/reportedip-hive/issues) or contact [1@reportedip.com](mailto:1@reportedip.com).
 
@@ -1051,7 +1051,7 @@ ReportedIP Hive is provided **"as is"** and **"as available"** under the terms o
 
 There is **no warranty** for the program, to the extent permitted by applicable law. Except when otherwise stated in writing, the copyright holder and other parties provide the program "as is" without warranty of any kind, either expressed or implied, including but not limited to the implied warranties of merchantability and fitness for a particular purpose. The entire risk as to the quality and performance of the program is with you. Should the program prove defective, you assume the cost of all necessary servicing, repair or correction.
 
-This includes — explicitly and without limitation — no warranty of:
+This includes, explicitly and without limitation, no warranty of:
 
 * uninterrupted or error-free operation;
 * fitness for any specific security objective;
@@ -1068,11 +1068,11 @@ In no event will the copyright holder, or any other party who modifies and/or co
 Operating ReportedIP Hive is solely the responsibility of the site operator. The operator is responsible for:
 
 * maintaining backups of WordPress, the database and the plugin configuration before installation, upgrades and configuration changes;
-* understanding the consequences of enabling 2FA enforcement, hide-login, password-reset gating and IP blocking — in particular the documented edge case where an account with only email-2FA and no recovery codes is intentionally locked out of the password-reset flow until an administrator intervenes;
+* understanding the consequences of enabling 2FA enforcement, hide-login, password-reset gating and IP blocking, in particular the documented edge case where an account with only email-2FA and no recovery codes is intentionally locked out of the password-reset flow until an administrator intervenes;
 * maintaining recovery procedures (recovery codes, alternative second factors, WP-CLI access, server-level access) so that a misconfiguration or an upstream service outage does not cause permanent loss of access to the site;
 * obtaining and maintaining any data-processing agreements, terms of service or end-user disclosures required by applicable law for the SMS, email or threat-intelligence services they choose to use.
 
-To help with that end-user disclosure, a configuration-aware privacy-policy generator (German / English) is provided at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo), and a suggested passage is registered in the WordPress Privacy Policy Guide (Tools -> Privacy). Both are **templates only**, provided without warranty, and do **not** constitute legal advice or replace your own review — the no-warranty and no-liability terms above apply to them in full.
+To help with that end-user disclosure, a configuration-aware privacy-policy generator (German / English) is provided at [reportedip.com/dashboard/dsgvo](https://reportedip.com/dashboard/dsgvo), and a suggested passage is registered in the WordPress Privacy Policy Guide (Tools -> Privacy). Both are **templates only**, provided without warranty, and do **not** constitute legal advice or replace your own review, the no-warranty and no-liability terms above apply to them in full.
 
 = Security disclosures =
 
@@ -1083,8 +1083,8 @@ If you believe you have discovered a security issue in ReportedIP Hive, **please
 Treat ReportedIP Hive as one layer in a defence-in-depth setup. Pair it with:
 
 * offsite, versioned backups (database + uploads + plugin configuration);
-* a malware scanner of your choice — Hive deliberately does not include one;
+* a malware scanner of your choice, Hive deliberately does not include one;
 * a server-level firewall (Cloudflare WAF, Nginx `deny`, fail2ban) for blocking on cached public pages, which the plugin cannot reach by design;
-* a reasonable patch cadence — install updates as they are released, run `./run.sh check-all` (or your CI equivalent) before upgrading on production-critical sites.
+* a reasonable patch cadence, install updates as they are released, run `./run.sh check-all` (or your CI equivalent) before upgrading on production-critical sites.
 
 By installing or activating this plugin you confirm that you have read and accepted the terms above and the GPL-2.0-or-later licence under which the plugin is distributed.

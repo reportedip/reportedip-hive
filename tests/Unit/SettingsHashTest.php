@@ -24,7 +24,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 	/**
 	 * The hash must be stable across value representations and blind to
-	 * non-remote keys — otherwise every dashboard shows phantom drift.
+	 * non-remote keys, otherwise every dashboard shows phantom drift.
 	 *
 	 * @runTestsInSeparateProcesses
 	 * @preserveGlobalState disabled

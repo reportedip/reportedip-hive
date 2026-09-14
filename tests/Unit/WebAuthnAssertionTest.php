@@ -7,10 +7,10 @@
  * CBOR) and drives them through the private verify_assertion() pipeline.
  * Locks down:
  *
- *   1. The happy path — valid signature, fresh counter — verifies and
+ *   1. The happy path, valid signature, fresh counter, verifies and
  *      persists the updated sign_count / last_used.
  *   2. Legacy credential records (only the six original fields) keep
- *      verifying — the migration guard for existing installs.
+ *      verifying, the migration guard for existing installs.
  *   3. Challenge, origin and user-presence rejections.
  *   4. The four sign-counter branches per WebAuthn L2 §7.2 step 21,
  *      including the clone-detection regression rejection and its
@@ -155,7 +155,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * Static throwaway P-256 keypair used as the authenticator key in
 		 * fixtures. Embedded instead of generated because openssl_pkey_new()
-		 * needs an openssl.cnf that Windows PHP builds often lack — signing
+		 * needs an openssl.cnf that Windows PHP builds often lack, signing
 		 * and key inspection work everywhere.
 		 */
 		private const FIXTURE_EC_PEM = <<<'PEM'
@@ -344,7 +344,7 @@ PEM;
 			$this->assertSame(
 				'webauthn_no_user_presence',
 				$result->get_error_code(),
-				'WebAuthn §7.2 requires the UP flag on every assertion — a YubiKey only sets it after a physical touch.'
+				'WebAuthn §7.2 requires the UP flag on every assertion, a YubiKey only sets it after a physical touch.'
 			);
 		}
 

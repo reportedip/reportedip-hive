@@ -1,6 +1,6 @@
 <?php
 /**
- * User account blocking — the identity-based counterpart to the IP block list.
+ * User account blocking, the identity-based counterpart to the IP block list.
  *
  * A blocked account keeps its password and its content but cannot sign in,
  * cannot authenticate an application password and cannot complete a password
@@ -72,7 +72,7 @@ final class ReportedIP_Hive_User_Block {
 	 * Register the enforcement hooks.
 	 *
 	 * `authenticate` @ 30 runs after core's credential validators (20) and
-	 * before the 2FA challenge (99), and acts only on a `WP_User` — so the
+	 * before the 2FA challenge (99), and acts only on a `WP_User`, so the
 	 * block message is only ever shown to someone who already proved the
 	 * password. `determine_current_user` @ 99 runs after core's cookie (10)
 	 * and application-password (20) validators; without it a blocked account
@@ -434,7 +434,7 @@ final class ReportedIP_Hive_User_Block {
 	 * Treat a blocked account as anonymous for every already-authenticated
 	 * surface: cookies, application passwords, REST and XML-RPC.
 	 *
-	 * Deliberately silent — application-password clients poll, and one log row
+	 * Deliberately silent, application-password clients poll, and one log row
 	 * per poll would drown the event log.
 	 *
 	 * @param int|false $user_id Resolved user id.
@@ -516,8 +516,8 @@ final class ReportedIP_Hive_User_Block {
 	/**
 	 * Tier-lock wording, mirroring the settings registry.
 	 *
-	 * The single source for every surface that gates on {@see self::FEATURE} —
-	 * account blocking and the session manager alike — so the plan name comes
+	 * The single source for every surface that gates on {@see self::FEATURE}.
+	 * account blocking and the session manager alike, so the plan name comes
 	 * from `feature_status()` instead of being spelled out three times.
 	 *
 	 * @return string

@@ -4,8 +4,8 @@
  *
  * A deliberately narrow, false-positive-averse OWASP-Top-10 floor (CRS Paranoia
  * Level 1) so the free WAF blocks the obvious attacks and honours the
- * "protection is free" promise. The real depth and freshness — broader
- * signatures, PL2/PL3, obfuscation/bypass resistance, frequent updates — lives
+ * "protection is free" promise. The real depth and freshness, broader
+ * signatures, PL2/PL3, obfuscation/bypass resistance, frequent updates, lives
  * in the PRO+ ruleset delivered by the reportedip.com API
  * ({@see ReportedIP_Hive_Rule_Sync}). The patterns here are anchored and
  * possessive/atomic where possible to stay ReDoS-safe.
@@ -18,7 +18,7 @@
  * parser differential (`strip_tags()` accepts `< area`, KSES reads it as an
  * `<area>` element) lets such markup reach the page, where an `id`/`name`
  * attribute clobbers a JavaScript global and turns the site's own bundled
- * scripts into the payload — the CVE-2026-64638 chain. `waf_xss_login_markup`
+ * scripts into the payload, the CVE-2026-64638 chain. `waf_xss_login_markup`
  * closes the login surface by value range: `sanitize_user()` strips angle
  * brackets, so a `log`/`user_login` value containing one is never legitimate.
  * `waf_xss_tag_differential` detects the clobbering primitive itself and

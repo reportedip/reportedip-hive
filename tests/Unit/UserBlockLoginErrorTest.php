@@ -3,8 +3,8 @@
  * The block message must reach the sign-in form unmasked.
  *
  * The anti-enumeration sensor rewrites login errors to "Invalid credentials."
- * unless the error code is outside its masking list and — in the fallback
- * branch, where `global $errors` is not a WP_Error — the text carries one of
+ * unless the error code is outside its masking list and, in the fallback
+ * branch, where `global $errors` is not a WP_Error, the text carries one of
  * its passthrough needles. A block message that gets masked leaves a locked
  * out user chasing a password problem that does not exist.
  *

@@ -173,7 +173,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * A percent-encoded injection smuggled inside a JSON body (the wp2shell
 		 * blind path encodes `author_exclude` fully, so `SLEEP(` arrives as
 		 * `SLEEP%283%29`) must be caught by the same signature that sees the raw
-		 * form. Locks the decoded-body variant added in 2.1.25 — without it the
+		 * form. Locks the decoded-body variant added in 2.1.25:without it the
 		 * literal `\(` in the timing rule never matches the encoded stream.
 		 */
 		public function test_evaluate_decodes_encoded_sqli_in_json_body(): void {
@@ -190,8 +190,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * The REST batch route-confusion primitive (wp2shell / CVE-2026-63030)
 		 * carries a sub-request with a deliberately malformed `path` to desync
 		 * $matches from $validation. The `waf_rest_batch_desync` signature covers
-		 * the whole class of path values `wp_parse_url()` rejects — not two
-		 * literals — so switching the primer token (`///`, `//`, `////`, any
+		 * the whole class of path values `wp_parse_url()` rejects, not two
+		 * literals, so switching the primer token (`///`, `//`, `////`, any
 		 * `scheme://` with an empty host) does not evade it, while legitimate
 		 * routes, protocol-relative URLs and absolute URLs pass.
 		 */
@@ -210,7 +210,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * The structural invariant of the batch route confusion is a sub-request
-		 * whose `body` is itself a batch (`"body":{…"requests":[`). An attacker
+		 * whose `body` is itself a batch (`"body":{..."requests":[`). An attacker
 		 * cannot drop that nesting without losing the desync, so
 		 * `waf_rest_batch_nested` catches variants that reorder keys or omit the
 		 * malformed primer, while a normal nested resource body passes.
@@ -395,7 +395,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * exceptions let a single rule exception mask every rule ordered
 		 * behind it: an attacker appended a fragment matching the excepted
 		 * rule and the payload rule was never reached. The guard always used
-		 * `continue` here — the engine now matches it (parity rule 1).
+		 * `continue` here, the engine now matches it (parity rule 1).
 		 */
 		public function test_evaluate_keeps_scanning_past_an_excepted_hit(): void {
 			$rules = array(

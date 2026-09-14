@@ -101,7 +101,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_send_code_forwards_non_eu_number_to_api() {
-			// US numbers are no longer rejected client-side — routing decisions
+			// US numbers are no longer rejected client-side, routing decisions
 			// belong to the server (which applies the SMS country blacklist).
 			$result = \ReportedIP_Hive_SMS_Provider_Relay::send_code( '+15551234567', '123456' );
 			$this->assertTrue( $result );

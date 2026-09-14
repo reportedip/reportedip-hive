@@ -3,7 +3,7 @@
  * Differential test: the baked guard's IP matcher must agree with the engine's.
  *
  * The two WAF layers must decide identically, but they carry separate
- * implementations of the same primitives — the engine calls
+ * implementations of the same primitives, the engine calls
  * `Database::ip_in_cidr()`, while the pre-WordPress guard ships its own
  * `reportedip_hive_dropin_ip_match()` because it runs before WordPress and can
  * call nothing. Existing coverage pins the *rule* list across both layers and
@@ -145,7 +145,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 				if ( $engine !== $guard[ $index ] ) {
 					$divergences[] = sprintf(
-						'%s in %s — engine=%s guard=%s',
+						'%s in %s, engine=%s guard=%s',
 						'' === $case[0] ? '(empty)' : $case[0],
 						'' === $case[1] ? '(empty)' : $case[1],
 						$engine ? 'match' : 'no match',

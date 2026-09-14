@@ -3,7 +3,7 @@
  * Multisite tests for the attack-surface switches.
  *
  * The switches are network state, and the uploads block is a single file at
- * the main site's basedir — sub-sites inherit it through the directory tree.
+ * the main site's basedir, sub-sites inherit it through the directory tree.
  * Both properties break silently on a network, so they run against a real
  * WordPress rather than a mock.
  *

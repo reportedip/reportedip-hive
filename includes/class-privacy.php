@@ -9,7 +9,7 @@
  *     can copy/paste it, with a link to the full, configuration-aware generator
  *     at reportedip.com/dashboard/dsgvo.
  *  2. Registers a personal-data exporter and eraser for the security data Hive
- *     stores about a logged-in user — their own login attempts (matched by
+ *     stores about a logged-in user, their own login attempts (matched by
  *     username) and trusted devices (matched by user id). The 2FA secrets are
  *     handled separately by ReportedIP_Hive_Two_Factor_Admin. The account
  *     block record and the proxy-aware per-session IP are exported here too;
@@ -81,7 +81,7 @@ class ReportedIP_Hive_Privacy {
 			. '<p>' . __( 'If "Community Network" mode is enabled (off by default), the IP address of login/access attempts and detected attacks is also transmitted to ReportedIP (reportedip.com) for community threat intelligence. Each such request identifies the installation itself with the site address and the plugin/WordPress version (for licensing and support). No visitor usernames, comment content, full user agents or other personal data of regular visitors are transmitted.', 'reportedip-hive' ) . '</p>'
 			. '<p>' . sprintf(
 				/* translators: 1: privacy generator URL, 2: ReportedIP privacy policy URL */
-				__( 'A ready-to-paste privacy passage tailored to your configuration (German or English) is available at %1$s. See also the ReportedIP privacy policy at %2$s. This is suggested text only and not legal advice — adapt it to your site and have it reviewed.', 'reportedip-hive' ),
+				__( 'A ready-to-paste privacy passage tailored to your configuration (German or English) is available at %1$s. See also the ReportedIP privacy policy at %2$s. This is suggested text only and not legal advice, adapt it to your site and have it reviewed.', 'reportedip-hive' ),
 				'<a href="https://reportedip.com/dashboard/dsgvo">https://reportedip.com/dashboard/dsgvo</a>',
 				'<a href="https://reportedip.com/datenschutzerklaerung/">https://reportedip.com/datenschutzerklaerung/</a>'
 			) . '</p>';
@@ -145,7 +145,7 @@ class ReportedIP_Hive_Privacy {
 		foreach ( (array) $attempts as $row ) {
 			$items[] = array(
 				'group_id'    => 'reportedip-hive-attempts',
-				'group_label' => __( 'ReportedIP Hive — login attempts', 'reportedip-hive' ),
+				'group_label' => __( 'ReportedIP Hive: login attempts', 'reportedip-hive' ),
 				'item_id'     => 'rip-hive-attempt-' . (int) $row->id,
 				'data'        => array(
 					array(
@@ -178,7 +178,7 @@ class ReportedIP_Hive_Privacy {
 		foreach ( (array) $devices as $row ) {
 			$items[] = array(
 				'group_id'    => 'reportedip-hive-trusted-devices',
-				'group_label' => __( 'ReportedIP Hive — trusted devices', 'reportedip-hive' ),
+				'group_label' => __( 'ReportedIP Hive: trusted devices', 'reportedip-hive' ),
 				'item_id'     => 'rip-hive-device-' . (int) $row->id,
 				'data'        => array(
 					array(
@@ -211,7 +211,7 @@ class ReportedIP_Hive_Privacy {
 		foreach ( (array) $audit as $row ) {
 			$items[] = array(
 				'group_id'    => 'reportedip-hive-audit',
-				'group_label' => __( 'ReportedIP Hive — audit trail', 'reportedip-hive' ),
+				'group_label' => __( 'ReportedIP Hive: audit trail', 'reportedip-hive' ),
 				'item_id'     => 'rip-hive-audit-' . (int) $row->id,
 				'data'        => array(
 					array(
@@ -242,7 +242,7 @@ class ReportedIP_Hive_Privacy {
 		if ( null !== $block ) {
 			$items[] = array(
 				'group_id'    => 'reportedip-hive-account-block',
-				'group_label' => __( 'ReportedIP Hive — account block', 'reportedip-hive' ),
+				'group_label' => __( 'ReportedIP Hive: account block', 'reportedip-hive' ),
 				'item_id'     => 'rip-hive-account-block',
 				'data'        => array(
 					array(
@@ -264,7 +264,7 @@ class ReportedIP_Hive_Privacy {
 		foreach ( ReportedIP_Hive_User_Sessions::for_user( $user->ID ) as $verifier => $session ) {
 			$items[] = array(
 				'group_id'    => 'reportedip-hive-sessions',
-				'group_label' => __( 'ReportedIP Hive — session addresses', 'reportedip-hive' ),
+				'group_label' => __( 'ReportedIP Hive: session addresses', 'reportedip-hive' ),
 				'item_id'     => 'rip-hive-session-' . substr( (string) $verifier, 0, 12 ),
 				'data'        => array(
 					array(
@@ -283,7 +283,7 @@ class ReportedIP_Hive_Privacy {
 		if ( $login_context['last']['ts'] > 0 || ! empty( $login_context['nets'] ) ) {
 			$items[] = array(
 				'group_id'    => 'reportedip-hive-login-context',
-				'group_label' => __( 'ReportedIP Hive — sign-in history', 'reportedip-hive' ),
+				'group_label' => __( 'ReportedIP Hive: sign-in history', 'reportedip-hive' ),
 				'item_id'     => 'rip-hive-login-context',
 				'data'        => array(
 					array(

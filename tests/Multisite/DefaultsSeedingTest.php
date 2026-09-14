@@ -5,7 +5,7 @@
  * Locks down the Workstream-D fix: activation / wizard-skip seeding goes
  * through ReportedIP_Hive_Defaults::seed_missing(), which must write
  * network-wide keys into sitemeta (visible from every sub-site) instead of a
- * single blog's wp_options — the scope bug the old raw add_option() seeding had.
+ * single blog's wp_options, the scope bug the old raw add_option() seeding had.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Multisite

@@ -165,7 +165,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_uncached_ip_is_not_spared() {
 			$logger = new \Test_IV_Logger_Stub();
-			$this->assertFalse( $this->invoke_veto( '198.51.100.4', 'scan_404', $logger ), 'No cached reputation means no veto — never a live API call' );
+			$this->assertFalse( $this->invoke_veto( '198.51.100.4', 'scan_404', $logger ), 'No cached reputation means no veto, never a live API call' );
 			$this->assertSame( array(), $logger->events );
 			$this->assertFalse( \get_transient( $this->gate_key( '198.51.100.4', 'scan_404' ) ), 'No gate must be set when the veto declines' );
 		}

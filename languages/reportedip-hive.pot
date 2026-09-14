@@ -9,13 +9,13 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-14T07:29:19+00:00\n"
+"POT-Creation-Date: 2026-09-14T07:47:52+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php:5
+#: reportedip-hive.php:3
 #: admin/class-admin-settings.php:1883
 #: admin/class-admin-settings.php:1884
 #: admin/class-admin-settings.php:1957
@@ -27,18 +27,18 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php:7
-#: reportedip-hive.php:17
+#: reportedip-hive.php:4
+#: reportedip-hive.php:9
 msgid "https://reportedip.com"
 msgstr ""
 
 #. Description of the plugin
-#: reportedip-hive.php:9
-msgid "Community-powered WordPress security — real-time threat intelligence"
+#: reportedip-hive.php:5
+msgid "Community-powered WordPress security, real-time threat intelligence"
 msgstr ""
 
 #. Author of the plugin
-#: reportedip-hive.php:15
+#: reportedip-hive.php:8
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr ""
 
@@ -104,7 +104,7 @@ msgid "WAF Exceptions"
 msgstr ""
 
 #: admin/class-admin-firewall.php:236
-msgid "Relieve a false positive without editing code. Scope an exception to a single rule (optionally on one path), a rule group, or — for a first-party endpoint that legitimately receives attack-like payloads — the whole engine on a path. A whole-engine exception must always carry a path or IP."
+msgid "Relieve a false positive without editing code. Scope an exception to a single rule (optionally on one path), a rule group, or, for a first-party endpoint that legitimately receives attack-like payloads, the whole engine on a path. A whole-engine exception must always carry a path or IP."
 msgstr ""
 
 #: admin/class-admin-firewall.php:240
@@ -113,19 +113,19 @@ msgid "Scope"
 msgstr ""
 
 #: admin/class-admin-firewall.php:242
-msgid "Single rule — exempt one specific rule"
+msgid "Single rule: exempt one specific rule"
 msgstr ""
 
 #: admin/class-admin-firewall.php:243
-msgid "Rule group — exempt a whole category"
+msgid "Rule group: exempt a whole category"
 msgstr ""
 
 #: admin/class-admin-firewall.php:244
-msgid "Whole engine — only on a trusted path/IP"
+msgid "Whole engine: only on a trusted path/IP"
 msgstr ""
 
 #: admin/class-admin-firewall.php:246
-msgid "How broadly the exception applies. Start with \"Single rule\" — it is the narrowest and the right choice for almost every false positive."
+msgid "How broadly the exception applies. Start with \"Single rule\", it is the narrowest and the right choice for almost every false positive."
 msgstr ""
 
 #: admin/class-admin-firewall.php:248
@@ -141,11 +141,11 @@ msgid "Rule group"
 msgstr ""
 
 #: admin/class-admin-firewall.php:258
-msgid "Exempts every rule in this category at once — shown in the log as \"Group:\". Broader than a single rule, so use it only when several rules of the same kind keep misfiring."
+msgid "Exempts every rule in this category at once, shown in the log as \"Group:\". Broader than a single rule, so use it only when several rules of the same kind keep misfiring."
 msgstr ""
 
 #: admin/class-admin-firewall.php:260
-msgid "No rule needed — the WAF skips the path and/or IP below entirely. Use this only for a first-party endpoint you fully trust (e.g. your own API that receives attack samples). A path or IP is required."
+msgid "No rule needed, the WAF skips the path and/or IP below entirely. Use this only for a first-party endpoint you fully trust (e.g. your own API that receives attack samples). A path or IP is required."
 msgstr ""
 
 #: admin/class-admin-firewall.php:262
@@ -194,7 +194,7 @@ msgid "What is this for, and do I need it?"
 msgstr ""
 
 #: admin/class-admin-firewall.php:291
-msgid "The WAF matches every front-end request against attack signatures (SQL injection, XSS, and so on). Occasionally a legitimate request looks like an attack — for example an API endpoint that receives reported attack samples, or a form that contains code. The rule fires even though nothing malicious is happening: a false positive. An exception tells the WAF to let that specific case through. Most sites never need one — only add an exception when you have confirmed a real false positive in the log."
+msgid "The WAF matches every front-end request against attack signatures (SQL injection, XSS, and so on). Occasionally a legitimate request looks like an attack, for example an API endpoint that receives reported attack samples, or a form that contains code. The rule fires even though nothing malicious is happening: a false positive. An exception tells the WAF to let that specific case through. Most sites never need one, only add an exception when you have confirmed a real false positive in the log."
 msgstr ""
 
 #: admin/class-admin-firewall.php:293
@@ -202,15 +202,15 @@ msgid "Where do I get the Rule ID or group? I do not know what to type."
 msgstr ""
 
 #: admin/class-admin-firewall.php:295
-msgid "You normally do not type it at all. Every block is recorded under <strong>Security &rarr; Activity &rarr; WAF Block</strong>, and each entry names the rule that fired (<code>Rule: waf_sqli_union</code>) and its category (<code>Group: sql_injection</code>). The quickest path is the shield <strong>\"Allow\"</strong> button on that log row: it creates a single-rule exception for exactly that rule and path in one click, so you never have to know rule IDs. The form above is only for adding one by hand — copy the value after <code>Rule:</code> into the Rule ID field, or pick the category in the Rule group dropdown."
+msgid "You normally do not type it at all. Every block is recorded under <strong>Security &rarr; Activity &rarr; WAF Block</strong>, and each entry names the rule that fired (<code>Rule: waf_sqli_union</code>) and its category (<code>Group: sql_injection</code>). The quickest path is the shield <strong>\"Allow\"</strong> button on that log row: it creates a single-rule exception for exactly that rule and path in one click, so you never have to know rule IDs. The form above is only for adding one by hand, copy the value after <code>Rule:</code> into the Rule ID field, or pick the category in the Rule group dropdown."
 msgstr ""
 
 #: admin/class-admin-firewall.php:302
-msgid "Which scope should I choose — rule, group or whole engine?"
+msgid "Which scope should I choose: rule, group or whole engine?"
 msgstr ""
 
 #: admin/class-admin-firewall.php:303
-msgid "Single rule is the narrowest and the right default: it exempts exactly one rule, optionally only on one path. Rule group exempts a whole category (every XSS rule, say) — broader, only when several related rules keep misfiring. Whole engine skips all inspection and is reserved for a first-party endpoint you fully trust; it always requires a path or IP, so protection is never switched off everywhere by accident. Rule of thumb: pick the smallest scope that stops the false positive."
+msgid "Single rule is the narrowest and the right default: it exempts exactly one rule, optionally only on one path. Rule group exempts a whole category (every XSS rule, say), broader, only when several related rules keep misfiring. Whole engine skips all inspection and is reserved for a first-party endpoint you fully trust; it always requires a path or IP, so protection is never switched off everywhere by accident. Rule of thumb: pick the smallest scope that stops the false positive."
 msgstr ""
 
 #: admin/class-admin-firewall.php:305
@@ -226,7 +226,7 @@ msgid "Does this weaken my security, and does it apply to Extended Protection?"
 msgstr ""
 
 #: admin/class-admin-firewall.php:309
-msgid "Only within the scope you pick — a rule-on-path exception leaves every other rule and every other path fully protected, which is why tight scoping matters. Exceptions apply everywhere the engine runs: they are also baked into the pre-WordPress guard, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist."
+msgid "Only within the scope you pick, a rule-on-path exception leaves every other rule and every other path fully protected, which is why tight scoping matters. Exceptions apply everywhere the engine runs: they are also baked into the pre-WordPress guard, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist."
 msgstr ""
 
 #. translators: 1: human-readable group name, 2: raw group token shown in the log.
@@ -308,19 +308,19 @@ msgid "The guard cannot write to %s, so blocked requests are stopped but never r
 msgstr ""
 
 #: admin/class-admin-firewall.php:421
-msgid "Setup complete — the guard executed for this very request, so every request to this site passes the firewall before WordPress loads."
+msgid "Setup complete, the guard executed for this very request, so every request to this site passes the firewall before WordPress loads."
 msgstr ""
 
 #. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
 #: admin/class-admin-firewall.php:426
 #, php-format
-msgid "The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes — reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead."
+msgid "The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes, reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead."
 msgstr ""
 
 #. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
 #: admin/class-admin-firewall.php:435
 #, php-format
-msgid "One manual step left: add the directive to your server. The %1$sServer Setup tab%2$s shows both options (nginx snippet or php.ini line) with your live paths — this status flips to Running automatically once it works."
+msgid "One manual step left: add the directive to your server. The %1$sServer Setup tab%2$s shows both options (nginx snippet or php.ini line) with your live paths, this status flips to Running automatically once it works."
 msgstr ""
 
 #: admin/class-admin-firewall.php:446
@@ -340,7 +340,7 @@ msgid "Open Server Setup"
 msgstr ""
 
 #: admin/class-admin-firewall.php:478
-msgid "All web-server-level rules in one place, with your live paths filled in. Everything here is optional — the PHP sensors work without any of it — but each rule rejects bad requests one layer earlier. Configure your server once, from this tab only."
+msgid "All web-server-level rules in one place, with your live paths filled in. Everything here is optional, the PHP sensors work without any of it, but each rule rejects bad requests one layer earlier. Configure your server once, from this tab only."
 msgstr ""
 
 #: admin/class-admin-firewall.php:503
@@ -354,35 +354,35 @@ msgstr ""
 #. translators: 1: opening link tag to the WAF tab, 2: closing tag.
 #: admin/class-admin-firewall.php:510
 #, php-format
-msgid "Extended Protection is currently off. Enable it on the %1$sWAF tab%2$s first — that generates the guard file this directive points at."
+msgid "Extended Protection is currently off. Enable it on the %1$sWAF tab%2$s first, that generates the guard file this directive points at."
 msgstr ""
 
 #: admin/class-admin-firewall.php:520
-msgid "Setup complete — the guard executed for this very request. No further action needed; Hive keeps the guard file up to date automatically on every rule sync."
+msgid "Setup complete, the guard executed for this very request. No further action needed; Hive keeps the guard file up to date automatically on every rule sync."
 msgstr ""
 
 #: admin/class-admin-firewall.php:524
-msgid "This server is auto-managed — Hive wrote and maintains the directive itself (.htaccess on Apache, .user.ini on PHP-FPM)."
+msgid "This server is auto-managed, Hive wrote and maintains the directive itself (.htaccess on Apache, .user.ini on PHP-FPM)."
 msgstr ""
 
 #: admin/class-admin-firewall.php:539
-msgid "Hive wrote the directive automatically (.htaccess on Apache, .user.ini on PHP-FPM), and PHP-FPM caches .user.ini for up to five minutes — give it a moment. If the status never flips to Running — common on nginx, or when PHP's user_ini.filename is disabled or the document root is not the .user.ini scan path — apply ONE of the manual options below instead."
+msgid "Hive wrote the directive automatically (.htaccess on Apache, .user.ini on PHP-FPM), and PHP-FPM caches .user.ini for up to five minutes, give it a moment. If the status never flips to Running, common on nginx, or when PHP's user_ini.filename is disabled or the document root is not the .user.ini scan path, apply ONE of the manual options below instead."
 msgstr ""
 
 #: admin/class-admin-firewall.php:541
-msgid "One manual step: add the directive below. Pick exactly ONE of the two options — whichever your hosting lets you edit. The status above flips to Running automatically once the directive is live."
+msgid "One manual step: add the directive below. Pick exactly ONE of the two options, whichever your hosting lets you edit. The status above flips to Running automatically once the directive is live."
 msgstr ""
 
 #: admin/class-admin-firewall.php:546
-msgid "Option A — php.ini / PHP-FPM pool / hosting panel (recommended)"
+msgid "Option A, php.ini / PHP-FPM pool / hosting panel (recommended)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:548
-msgid "Most managed hosts (ISPConfig, Plesk, cPanel) offer a \"custom php.ini settings\" field — paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx."
+msgid "Most managed hosts (ISPConfig, Plesk, cPanel) offer a \"custom php.ini settings\" field, paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx."
 msgstr ""
 
 #: admin/class-admin-firewall.php:553
-msgid "Option B — nginx server block"
+msgid "Option B: nginx server block"
 msgstr ""
 
 #: admin/class-admin-firewall.php:555
@@ -394,7 +394,7 @@ msgid "Before deactivating or deleting Hive, remove this directive from your php
 msgstr ""
 
 #: admin/class-admin-firewall.php:560
-msgid "Because this directive lives in a file Hive cannot edit, it stays behind when the plugin is removed. Hive now leaves an inert placeholder at the guard path so a leftover directive can no longer crash the site with a 500 error — but the cleanest path is still to remove the line yourself."
+msgid "Because this directive lives in a file Hive cannot edit, it stays behind when the plugin is removed. Hive now leaves an inert placeholder at the guard path so a leftover directive can no longer crash the site with a 500 error, but the cleanest path is still to remove the line yourself."
 msgstr ""
 
 #: admin/class-admin-firewall.php:562
@@ -410,17 +410,17 @@ msgid "Decoy Path Block (rewrite rules)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:586
-msgid "Blocks the bait paths at the web-server layer so real backup files on disk are never served directly. Every snippet rewrites to /index.php on purpose: the Hive sensor still loads, logs the hit and reports it — a bare return 403 would skip detection entirely."
+msgid "Blocks the bait paths at the web-server layer so real backup files on disk are never served directly. Every snippet rewrites to /index.php on purpose: the Hive sensor still loads, logs the hit and reports it, a bare return 403 would skip detection entirely."
 msgstr ""
 
 #. translators: 1: opening link tag to the Scan & Decoy tab, 2: closing tag.
 #: admin/class-admin-firewall.php:592
 #, php-format
-msgid "The decoy trap is currently off — enable it on the %1$sScan & Decoy tab%2$s before adding server rules."
+msgid "The decoy trap is currently off, enable it on the %1$sScan & Decoy tab%2$s before adding server rules."
 msgstr ""
 
 #: admin/class-admin-firewall.php:598
-msgid "On Apache this block is auto-managed in .htaccess — the snippet below shows verbatim what Hive wrote (or would write). No manual step needed."
+msgid "On Apache this block is auto-managed in .htaccess, the snippet below shows verbatim what Hive wrote (or would write). No manual step needed."
 msgstr ""
 
 #: admin/class-admin-firewall.php:600
@@ -428,19 +428,19 @@ msgid "This web server does not read .htaccess, so the auto-managed block does n
 msgstr ""
 
 #: admin/class-admin-firewall.php:605
-msgid "Apache (.htaccess) — auto-managed"
+msgid "Apache (.htaccess), auto-managed"
 msgstr ""
 
 #: admin/class-admin-firewall.php:610
-msgid "nginx — regex form (plain nginx)"
+msgid "nginx: regex form (plain nginx)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:615
-msgid "nginx — exact-match form (ISPConfig & managed stacks)"
+msgid "nginx: exact-match form (ISPConfig & managed stacks)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:617
-msgid "Use this variant when your host template ships a \"location ~ /\\.\" dot-file deny rule before your custom directives — exact-match locations have higher priority than any regex location and survive that ordering."
+msgid "Use this variant when your host template ships a \"location ~ /\\.\" dot-file deny rule before your custom directives, exact-match locations have higher priority than any regex location and survive that ordering."
 msgstr ""
 
 #: admin/class-admin-firewall.php:637
@@ -448,13 +448,13 @@ msgid "Security Headers at the web server (optional)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:638
-msgid "Hive already sends the configured headers via PHP on every WordPress response — nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror your live configuration from the Hardening tab."
+msgid "Hive already sends the configured headers via PHP on every WordPress response, nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror your live configuration from the Hardening tab."
 msgstr ""
 
 #. translators: 1: opening link tag to the Hardening tab, 2: closing tag.
 #: admin/class-admin-firewall.php:644
 #, php-format
-msgid "No headers are configured yet. Enable the header engine on the %1$sHardening tab%2$s first — the snippets here update automatically."
+msgid "No headers are configured yet. Enable the header engine on the %1$sHardening tab%2$s first, the snippets here update automatically."
 msgstr ""
 
 #: admin/class-admin-firewall.php:660
@@ -466,7 +466,7 @@ msgid "nginx (server block)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:665
-msgid "When a header is set at the server, Hive detects it and stops sending its own copy — no duplicates."
+msgid "When a header is set at the server, Hive detects it and stops sending its own copy, no duplicates."
 msgstr ""
 
 #: admin/class-admin-firewall.php:669
@@ -495,7 +495,7 @@ msgid "Active rulesets"
 msgstr ""
 
 #: admin/class-admin-firewall.php:719
-msgid "Priority Sync is active on your plan — the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download."
+msgid "Priority Sync is active on your plan, the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download."
 msgstr ""
 
 #: admin/class-admin-firewall.php:721
@@ -560,14 +560,14 @@ msgid "never (baseline only)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:756
-msgid "The bundled baseline rulesets stay active and free on every plan. Priority Sync — deeper coverage and frequent updates — is part of the Professional plan."
+msgid "The bundled baseline rulesets stay active and free on every plan. Priority Sync, deeper coverage and frequent updates, is part of the Professional plan."
 msgstr ""
 
 #: admin/class-admin-firewall.php:757
 #: admin/class-admin-firewall.php:810
 #: admin/class-two-factor-admin.php:561
 #: admin/class-two-factor-admin.php:1211
-msgid "Unlock with Professional"
+msgid "Included in Professional"
 msgstr ""
 
 #: admin/class-admin-firewall.php:760
@@ -575,7 +575,7 @@ msgid "Sync now"
 msgstr ""
 
 #: admin/class-admin-firewall.php:778
-msgid "WAF engine — always on, every plan"
+msgid "WAF engine, always on, every plan"
 msgstr ""
 
 #: admin/class-admin-firewall.php:779
@@ -583,7 +583,7 @@ msgid "Baseline rulesets (OWASP Top 10, Paranoia Level 1)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:780
-msgid "Bundled with the plugin — no connection required"
+msgid "Bundled with the plugin, no connection required"
 msgstr ""
 
 #: admin/class-admin-firewall.php:783
@@ -599,7 +599,7 @@ msgid "Frequent refresh via the Community Network"
 msgstr ""
 
 #: admin/class-admin-firewall.php:790
-msgid "Included — every plan"
+msgid "Included, every plan"
 msgstr ""
 
 #: admin/class-admin-firewall.php:798
@@ -623,7 +623,7 @@ msgid "Settings saved."
 msgstr ""
 
 #: admin/class-admin-settings.php:328
-msgid "Compare plans — unlock PRO protection, managed 2FA delivery and priority rulesets"
+msgid "Compare plans: PRO protection, managed 2FA delivery and priority rulesets"
 msgstr ""
 
 #: admin/class-admin-settings.php:360
@@ -637,7 +637,7 @@ msgstr ""
 #. translators: %s = plan name (e.g. "Professional")
 #: admin/class-admin-settings.php:510
 #, php-format
-msgid "Available with the %s plan and higher — compare plans"
+msgid "Available with the %s plan and higher. Compare plans"
 msgstr ""
 
 #: admin/class-admin-settings.php:633
@@ -755,15 +755,15 @@ msgid "auto · %s tier"
 msgstr ""
 
 #: admin/class-admin-settings.php:862
-msgid "This hour — reputation"
+msgid "This hour: reputation"
 msgstr ""
 
 #: admin/class-admin-settings.php:863
-msgid "This hour — submission"
+msgid "This hour: submission"
 msgstr ""
 
 #: admin/class-admin-settings.php:864
-msgid "This hour — meta"
+msgid "This hour: meta"
 msgstr ""
 
 #: admin/class-admin-settings.php:871
@@ -893,7 +893,7 @@ msgid "unlimited"
 msgstr ""
 
 #: admin/class-admin-settings.php:1245
-msgid "More domains in use than your plan includes — manage them in your reportedip.com dashboard."
+msgid "More domains in use than your plan includes, manage them in your reportedip.com dashboard."
 msgstr ""
 
 #: admin/class-admin-settings.php:1269
@@ -933,7 +933,7 @@ msgstr ""
 #. translators: 1: negative balance (already includes the minus sign), 2: unit (Mail credits / SMS credits)
 #: admin/class-admin-settings.php:1337
 #, php-format
-msgid "Bundle balance is %1$s %2$s after refund — purchase a new bundle to resume sending once the inclusive quota is exhausted."
+msgid "Bundle balance is %1$s %2$s after refund, purchase a new bundle to resume sending once the inclusive quota is exhausted."
 msgstr ""
 
 #. translators: %s = next reset date
@@ -943,13 +943,13 @@ msgid "Resets on %s"
 msgstr ""
 
 #: admin/class-admin-settings.php:1358
-msgid "Awaiting fresh quota data — refreshes every 6 hours."
+msgid "Awaiting fresh quota data, refreshes every 6 hours."
 msgstr ""
 
 #. translators: 1: opening link tag to reportedip.com, 2: closing link tag
 #: admin/class-admin-settings.php:1387
 #, php-format
-msgid "This site is secured by ReportedIP Hive, part of the %1$sreportedip.com%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one."
+msgid "This site is secured by ReportedIP Hive: part of the %1$sreportedip.com%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one."
 msgstr ""
 
 #: admin/class-admin-settings.php:1394
@@ -990,7 +990,7 @@ msgid "paid"
 msgstr ""
 
 #: admin/class-admin-settings.php:1468
-msgid "Two-factor authentication via the managed reportedip.com relay is now included with your plan. SMS is ready to use — enable it as a method to roll it out:"
+msgid "Two-factor authentication via the managed reportedip.com relay is now included with your plan. SMS is ready to use, enable it as a method to roll it out:"
 msgstr ""
 
 #. translators: 1: tier label, 2: comma-separated list of setting labels
@@ -1002,7 +1002,7 @@ msgstr ""
 #. translators: %s = tier label, e.g. Professional
 #: admin/class-admin-settings.php:1480
 #, php-format
-msgid "Your %s plan is active — finish 2FA setup"
+msgid "Your %s plan is active: finish 2FA setup"
 msgstr ""
 
 #: admin/class-admin-settings.php:1492
@@ -1020,7 +1020,7 @@ msgstr ""
 
 #: admin/class-admin-settings.php:1564
 #: includes/class-readiness.php:845
-msgid "SMS-based 2FA codes are paused until the relay accepts again — users can still choose TOTP, Email or Passkey."
+msgid "SMS-based 2FA codes are paused until the relay accepts again, users can still choose TOTP, Email or Passkey."
 msgstr ""
 
 #: admin/class-admin-settings.php:1577
@@ -1132,7 +1132,7 @@ msgid "System Status"
 msgstr ""
 
 #: admin/class-admin-settings.php:1912
-msgid "The user-lifecycle audit trail — logins, role changes with the actor, new-IP alerts — unlocks with Business. Your standard security events stay available in the Event Log."
+msgid "The user-lifecycle audit trail, logins, role changes with the actor, new-IP alerts, unlocks with Business. Your standard security events stay available in the Event Log."
 msgstr ""
 
 #: admin/class-admin-settings.php:1928
@@ -1251,11 +1251,11 @@ msgid "Frontend login for WooCommerce"
 msgstr ""
 
 #: admin/class-admin-settings.php:2208
-msgid "Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks — instead of bouncing them to wp-login.php."
+msgid "Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks, instead of bouncing them to wp-login.php."
 msgstr ""
 
 #: admin/class-admin-settings.php:2215
-msgid "WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA — these slug overrides take effect once it is."
+msgid "WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA, these slug overrides take effect once it is."
 msgstr ""
 
 #: admin/class-admin-settings.php:2220
@@ -1287,7 +1287,7 @@ msgid "Per-site slug overrides"
 msgstr ""
 
 #: admin/class-admin-settings.php:2244
-msgid "Challenge page slug — site override"
+msgid "Challenge page slug (site override)"
 msgstr ""
 
 #. translators: 1: network-default slug, 2: effective URL on this site
@@ -1299,15 +1299,15 @@ msgid "Network default: %1$s. Leave empty to inherit. Effective URL on this site
 msgstr ""
 
 #: admin/class-admin-settings.php:2274
-msgid "Setup page slug (onboarding) — site override"
+msgid "Setup page slug (onboarding), site override"
 msgstr ""
 
 #: admin/class-admin-settings.php:2307
-msgid "2FA enforcement — role overrides for this site"
+msgid "2FA enforcement, role overrides for this site"
 msgstr ""
 
 #: admin/class-admin-settings.php:2310
-msgid "The Super Admin enforces 2FA on certain roles network-wide. You can add roles on top of that list for this site only — but you cannot remove network-required roles here."
+msgid "The Super Admin enforces 2FA on certain roles network-wide. You can add roles on top of that list for this site only, but you cannot remove network-required roles here."
 msgstr ""
 
 #: admin/class-admin-settings.php:2314
@@ -1480,7 +1480,7 @@ msgid "Resets in %s."
 msgstr ""
 
 #: admin/class-admin-settings.php:3720
-msgid "API temporarily rate-limited — lookups and reports resume automatically."
+msgid "API temporarily rate-limited, lookups and reports resume automatically."
 msgstr ""
 
 #: admin/class-admin-settings.php:3727
@@ -1536,7 +1536,7 @@ msgid "90 Days"
 msgstr ""
 
 #: admin/class-admin-settings.php:3836
-msgid "No threats detected yet — protection is active."
+msgid "No threats detected yet, protection is active."
 msgstr ""
 
 #: admin/class-admin-settings.php:3837
@@ -1560,7 +1560,7 @@ msgid "Threat Distribution"
 msgstr ""
 
 #: admin/class-admin-settings.php:3861
-msgid "Firewall — Top Attack Types"
+msgid "Firewall, Top Attack Types"
 msgstr ""
 
 #: admin/class-admin-settings.php:3870
@@ -1659,6 +1659,7 @@ msgid "Search IP"
 msgstr ""
 
 #: admin/class-admin-settings.php:4173
+#: reportedip-hive.php:1757
 msgid "Retrying..."
 msgstr ""
 
@@ -1808,7 +1809,7 @@ msgid "Mode changes take effect immediately after saving."
 msgstr ""
 
 #: admin/class-admin-settings.php:4459
-msgid "Privacy note: in Community mode every API request identifies this installation with its site address and plugin/WordPress version (wp.org-style, for licence domain counting and support). Visitor-related data stays limited to the IP address and event type of detected threats — never usernames, comment content or full user agents."
+msgid "Privacy note: in Community mode every API request identifies this installation with its site address and plugin/WordPress version (wp.org-style, for licence domain counting and support). Visitor-related data stays limited to the IP address and event type of detected threats, never usernames, comment content or full user agents."
 msgstr ""
 
 #: admin/class-admin-settings.php:4461
@@ -1883,7 +1884,7 @@ msgid ""
 msgstr ""
 
 #: admin/class-admin-settings.php:4524
-msgid "One IP address or CIDR range per line. When set, the trusted IP header above is only honored for requests that connect from one of these proxy addresses — anyone else cannot spoof the header. Leave empty to accept the header from any peer (previous behavior). Applies to both firewall layers."
+msgid "One IP address or CIDR range per line. When set, the trusted IP header above is only honored for requests that connect from one of these proxy addresses, anyone else cannot spoof the header. Leave empty to accept the header from any peer (previous behavior). Applies to both firewall layers."
 msgstr ""
 
 #: admin/class-admin-settings.php:4534
@@ -1899,7 +1900,7 @@ msgid "Open fleet dashboard"
 msgstr ""
 
 #: admin/class-admin-settings.php:4542
-msgid "Unlock with Business"
+msgid "Included in Business"
 msgstr ""
 
 #: admin/class-admin-settings.php:4550
@@ -1937,7 +1938,7 @@ msgstr ""
 
 #: admin/class-admin-settings.php:4620
 #: includes/class-two-factor-onboarding.php:427
-msgid "Sending…"
+msgid "Sending..."
 msgstr ""
 
 #: admin/class-admin-settings.php:4632
@@ -2059,7 +2060,7 @@ msgid "Cron status"
 msgstr ""
 
 #: admin/class-admin-settings.php:4828
-msgid "WP-Cron processes the report queue and refreshes quota counters. If the next-run times below stay in the past, WP-Cron is not firing — set up a server cron (snippet below) or check your CDN/cache plugin."
+msgid "WP-Cron processes the report queue and refreshes quota counters. If the next-run times below stay in the past, WP-Cron is not firing, set up a server cron (snippet below) or check your CDN/cache plugin."
 msgstr ""
 
 #: admin/class-admin-settings.php:4836
@@ -2072,10 +2073,6 @@ msgstr ""
 
 #: admin/class-admin-settings.php:4847
 msgid "Not scheduled"
-msgstr ""
-
-#: admin/class-admin-settings.php:4848
-msgid "—"
 msgstr ""
 
 #: admin/class-admin-settings.php:4853
@@ -2116,7 +2113,7 @@ msgid "Clear queue lock"
 msgstr ""
 
 #: admin/class-admin-settings.php:4915
-msgid "Processing queue…"
+msgid "Processing queue..."
 msgstr ""
 
 #: admin/class-admin-settings.php:4979
@@ -2512,7 +2509,7 @@ msgid "Unbegrenzt"
 msgstr ""
 
 #: admin/class-admin-settings.php:5641
-msgid "Join the hive — share threats, set a badge, and help every member stay protected"
+msgid "Join the hive, share threats, set a badge, and help every member stay protected"
 msgstr ""
 
 #: admin/class-admin-settings.php:5647
@@ -2533,7 +2530,7 @@ msgid "Local Shield mode active"
 msgstr ""
 
 #: admin/class-admin-settings.php:5668
-msgid "Running locally — shared reports, quota and tier upgrades are off. Join the Community Network for shared threat intelligence."
+msgid "Running locally, shared reports, quota and tier upgrades are off. Join the Community Network for shared threat intelligence."
 msgstr ""
 
 #: admin/class-admin-settings.php:5671
@@ -2678,7 +2675,7 @@ msgid "100% mail delivery via reportedip.com"
 msgstr ""
 
 #: admin/class-admin-settings.php:5921
-msgid "Clean SPF / DKIM / DMARC reputation — no more spam folders"
+msgid "Clean SPF / DKIM / DMARC reputation, no more spam folders"
 msgstr ""
 
 #: admin/class-admin-settings.php:5922
@@ -2702,7 +2699,7 @@ msgid "No third-party SMS contract, no top-up management"
 msgstr ""
 
 #: admin/class-admin-settings.php:5937
-msgid "Anti-fraud routing — high-risk destinations blocked, GDPR-friendly"
+msgid "Anti-fraud routing, high-risk destinations blocked, GDPR-friendly"
 msgstr ""
 
 #: admin/class-admin-settings.php:5938
@@ -2770,15 +2767,15 @@ msgid "Footer Badge"
 msgstr ""
 
 #: admin/class-admin-settings.php:6058
-msgid "Compact \"Protected by ReportedIP Hive\" badge — fits any footer or sidebar."
+msgid "Compact \"Protected by ReportedIP Hive\" badge, fits any footer or sidebar."
 msgstr ""
 
 #: admin/class-admin-settings.php:6064
-msgid "Stat Card — All-Time"
+msgid "Stat Card: All-Time"
 msgstr ""
 
 #: admin/class-admin-settings.php:6065
-msgid "Cumulative threat count since installation — animates up on first scroll into view, with a live indicator dot."
+msgid "Cumulative threat count since installation, animates up on first scroll into view, with a live indicator dot."
 msgstr ""
 
 #: admin/class-admin-settings.php:6074
@@ -2786,7 +2783,7 @@ msgid "Community Banner"
 msgstr ""
 
 #: admin/class-admin-settings.php:6075
-msgid "Wider banner that pitches community participation — perfect for landing pages or \"About\" sections."
+msgid "Wider banner that pitches community participation, perfect for landing pages or \"About\" sections."
 msgstr ""
 
 #: admin/class-admin-settings.php:6084
@@ -2794,7 +2791,7 @@ msgid "Shield Icon"
 msgstr ""
 
 #: admin/class-admin-settings.php:6085
-msgid "Discreet icon-only shield — pair with a footer line or a fixed corner widget."
+msgid "Discreet icon-only shield, pair with a footer line or a fixed corner widget."
 msgstr ""
 
 #: admin/class-admin-settings.php:6091
@@ -2802,11 +2799,11 @@ msgid "Login Activity"
 msgstr ""
 
 #: admin/class-admin-settings.php:6092
-msgid "Live successful-login counter (30 days) — a quiet confidence signal in a customer dashboard or \"About\" footer."
+msgid "Live successful-login counter (30 days), a quiet confidence signal in a customer dashboard or \"About\" footer."
 msgstr ""
 
 #: admin/class-admin-settings.php:6111
-msgid "These are the advanced placement tools. The one-click footer badge — the easiest way to link back and join the hive — now lives on the Community tab."
+msgid "These are the advanced placement tools. The one-click footer badge, the easiest way to link back and join the hive, now lives on the Community tab."
 msgstr ""
 
 #: admin/class-admin-settings.php:6115
@@ -2959,7 +2956,7 @@ msgid "Build your own banner"
 msgstr ""
 
 #: admin/class-admin-settings.php:6246
-msgid "Configure every attribute. The preview updates as you change values, and the matching shortcode is generated on the right — just copy it into your post or template."
+msgid "Configure every attribute. The preview updates as you change values, and the matching shortcode is generated on the right, just copy it into your post or template."
 msgstr ""
 
 #: admin/class-admin-settings.php:6252
@@ -2968,19 +2965,19 @@ msgid "Variant"
 msgstr ""
 
 #: admin/class-admin-settings.php:6254
-msgid "Badge — compact pill"
+msgid "Badge, compact pill"
 msgstr ""
 
 #: admin/class-admin-settings.php:6255
-msgid "Stat — single big number"
+msgid "Stat, single big number"
 msgstr ""
 
 #: admin/class-admin-settings.php:6256
-msgid "Banner — full marketing block"
+msgid "Banner, full marketing block"
 msgstr ""
 
 #: admin/class-admin-settings.php:6257
-msgid "Shield — icon only"
+msgid "Shield, icon only"
 msgstr ""
 
 #: admin/class-admin-settings.php:6262
@@ -2988,35 +2985,35 @@ msgid "Stat type"
 msgstr ""
 
 #: admin/class-admin-settings.php:6264
-msgid "attacks_total — Lifetime attacks"
+msgid "attacks_total, Lifetime attacks"
 msgstr ""
 
 #: admin/class-admin-settings.php:6265
-msgid "attacks_30d — Last 30 days"
+msgid "attacks_30d, Last 30 days"
 msgstr ""
 
 #: admin/class-admin-settings.php:6266
-msgid "reports_total — Lifetime reports"
+msgid "reports_total, Lifetime reports"
 msgstr ""
 
 #: admin/class-admin-settings.php:6267
-msgid "api_reports_30d — Reports this month"
+msgid "api_reports_30d, Reports this month"
 msgstr ""
 
 #: admin/class-admin-settings.php:6268
-msgid "blocked_active — Currently blocked"
+msgid "blocked_active, Currently blocked"
 msgstr ""
 
 #: admin/class-admin-settings.php:6269
-msgid "whitelist_active — Trusted IPs"
+msgid "whitelist_active, Trusted IPs"
 msgstr ""
 
 #: admin/class-admin-settings.php:6270
-msgid "logins_30d — Failed logins (30 days)"
+msgid "logins_30d, Failed logins (30 days)"
 msgstr ""
 
 #: admin/class-admin-settings.php:6271
-msgid "spam_30d — Spam (30 days)"
+msgid "spam_30d, Spam (30 days)"
 msgstr ""
 
 #: admin/class-admin-settings.php:6276
@@ -3024,19 +3021,19 @@ msgid "Tone"
 msgstr ""
 
 #: admin/class-admin-settings.php:6278
-msgid "protect — \"Protected by ReportedIP Hive\""
+msgid "protect, \"Protected by ReportedIP Hive\""
 msgstr ""
 
 #: admin/class-admin-settings.php:6279
-msgid "trust — \"Secured by ReportedIP Hive\""
+msgid "trust, \"Secured by ReportedIP Hive\""
 msgstr ""
 
 #: admin/class-admin-settings.php:6280
-msgid "community — \"Part of the ReportedIP Hive\""
+msgid "community, \"Part of the ReportedIP Hive\""
 msgstr ""
 
 #: admin/class-admin-settings.php:6281
-msgid "contributor — \"ReportedIP Contributor\""
+msgid "contributor, \"ReportedIP Contributor\""
 msgstr ""
 
 #: admin/class-admin-settings.php:6286
@@ -3136,7 +3133,7 @@ msgid "You are part of the hive"
 msgstr ""
 
 #: admin/class-admin-settings.php:6569
-msgid "ReportedIP works like a swarm: every site that shares the threats it sees, and links back to the network, makes all of us faster at spotting the next attack. Two things take a minute and help everyone — share your blocks and set a footer badge."
+msgid "ReportedIP works like a swarm: every site that shares the threats it sees, and links back to the network, makes all of us faster at spotting the next attack. Two things take a minute and help everyone, share your blocks and set a footer badge."
 msgstr ""
 
 #. translators: %s: formatted number of threats this site has shared.
@@ -3146,7 +3143,7 @@ msgid "So far your site has shared <strong>%s threats</strong> with the communit
 msgstr ""
 
 #: admin/class-admin-settings.php:6622
-msgid "Set your badge — in one click"
+msgid "Set your badge, in one click"
 msgstr ""
 
 #: admin/class-admin-settings.php:6631
@@ -3162,11 +3159,11 @@ msgid "Your site now links back to the network and shows as a community member. 
 msgstr ""
 
 #: admin/class-admin-settings.php:6645
-msgid "Show a small \"Protected by ReportedIP Hive\" badge in your footer. It is the quickest way to support the community — and it puts your site on the map."
+msgid "Show a small \"Protected by ReportedIP Hive\" badge in your footer. It is the quickest way to support the community, and it puts your site on the map."
 msgstr ""
 
 #: admin/class-admin-settings.php:6648
-msgid "Strengthens the network — more links mean more sites discover the shared protection."
+msgid "Strengthens the network, more links mean more sites discover the shared protection."
 msgstr ""
 
 #: admin/class-admin-settings.php:6649
@@ -3174,11 +3171,11 @@ msgid "Makes your site visible as an active contributor, not just a consumer."
 msgstr ""
 
 #: admin/class-admin-settings.php:6650
-msgid "Clean, real HTML link inside Shadow DOM — search engines credit your site and your theme cannot override the design."
+msgid "Clean, real HTML link inside Shadow DOM, search engines credit your site and your theme cannot override the design."
 msgstr ""
 
 #: admin/class-admin-settings.php:6668
-msgid "Live preview — updates as you change the variant and position below."
+msgid "Live preview, updates as you change the variant and position below."
 msgstr ""
 
 #: admin/class-admin-settings.php:6677
@@ -3207,7 +3204,7 @@ msgid "Below content"
 msgstr ""
 
 #: admin/class-admin-settings.php:6715
-msgid "Below content renders the badge as a full-width row directly below your theme footer — works across classic and block themes."
+msgid "Below content renders the badge as a full-width row directly below your theme footer, works across classic and block themes."
 msgstr ""
 
 #: admin/class-admin-settings.php:6721
@@ -3225,11 +3222,11 @@ msgid "%s shared in the last 30 days"
 msgstr ""
 
 #: admin/class-admin-settings.php:6787
-msgid "Connected — nothing shared yet"
+msgid "Connected, nothing shared yet"
 msgstr ""
 
 #: admin/class-admin-settings.php:6788
-msgid "Local mode — not sharing"
+msgid "Local mode, not sharing"
 msgstr ""
 
 #: admin/class-admin-settings.php:6791
@@ -3237,11 +3234,11 @@ msgid "Upgrade to share more"
 msgstr ""
 
 #: admin/class-admin-settings.php:6799
-msgid "Live — linking back to the hive"
+msgid "Live, linking back to the hive"
 msgstr ""
 
 #: admin/class-admin-settings.php:6800
-msgid "Not set — one click activates it"
+msgid "Not set, one click activates it"
 msgstr ""
 
 #: admin/class-admin-settings.php:6803
@@ -3254,7 +3251,7 @@ msgid "Honeypot"
 msgstr ""
 
 #: admin/class-admin-settings.php:6811
-msgid "Active — unlimited, higher weighting"
+msgid "Active, unlimited, higher weighting"
 msgstr ""
 
 #: admin/class-admin-settings.php:6812
@@ -3807,7 +3804,7 @@ msgid "Network-wide numbers"
 msgstr ""
 
 #: admin/class-dashboard-widget.php:149
-msgid "Attacks blocked — last 30 days"
+msgid "Attacks blocked, last 30 days"
 msgstr ""
 
 #: admin/class-dashboard-widget.php:161
@@ -3831,7 +3828,7 @@ msgid "View logs"
 msgstr ""
 
 #: admin/class-dashboard-widget.php:215
-msgid "ReportedIP Hive — Security"
+msgid "ReportedIP Hive: Security"
 msgstr ""
 
 #: admin/class-ip-cell.php:74
@@ -4174,7 +4171,7 @@ msgid "(%s plan)"
 msgstr ""
 
 #: admin/class-protection-page.php:575
-msgid "Triggers for administrators unlock once an administrator has completed one second-factor sign-in on this site."
+msgid "Triggers for administrators become available once an administrator has completed one second-factor sign-in on this site."
 msgstr ""
 
 #: admin/class-protection-page.php:578
@@ -4392,7 +4389,7 @@ msgid "ReportedIP Hive Quickstart"
 msgstr ""
 
 #: admin/class-quickstart.php:328
-msgid "Checking…"
+msgid "Checking..."
 msgstr ""
 
 #: admin/class-quickstart.php:329
@@ -4414,7 +4411,7 @@ msgid "Please enter your Community Access Key."
 msgstr ""
 
 #: admin/class-quickstart.php:333
-msgid "Switching protection on…"
+msgid "Switching protection on..."
 msgstr ""
 
 #. translators: %1$s: used domains, %2$s: domain limit
@@ -4459,7 +4456,7 @@ msgid "Community Access Key"
 msgstr ""
 
 #: admin/class-quickstart.php:413
-msgid "Paste key…"
+msgid "Paste key..."
 msgstr ""
 
 #: admin/class-quickstart.php:414
@@ -4639,7 +4636,7 @@ msgid "IP lists"
 msgstr ""
 
 #: admin/class-settings-import-export.php:120
-msgid "Whitelist + blocked IPs (manual entries only — runtime-blocked IPs stay site-local)."
+msgid "Whitelist + blocked IPs (manual entries only, runtime-blocked IPs stay site-local)."
 msgstr ""
 
 #: admin/class-settings-import-export.php:193
@@ -4663,7 +4660,7 @@ msgid "Include credentials"
 msgstr ""
 
 #: admin/class-settings-import-export.php:224
-msgid "Adds the API key and encrypted SMS-provider config. Treat the resulting file like a password — do not share or email it."
+msgid "Adds the API key and encrypted SMS-provider config. Treat the resulting file like a password, do not share or email it."
 msgstr ""
 
 #: admin/class-settings-import-export.php:229
@@ -4802,7 +4799,7 @@ msgid "Managed SMS relay active"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:536
-msgid "SMS-2FA flows through reportedip.com — included with your plan, no separate SMS contract needed."
+msgid "SMS-2FA flows through reportedip.com, included with your plan, no separate SMS contract needed."
 msgstr ""
 
 #: admin/class-two-factor-admin.php:544
@@ -4822,7 +4819,7 @@ msgid "SMS code is a Professional feature"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:558
-msgid "Professional and Business plans include SMS-2FA via our managed EU gateway — no separate provider contract required. TOTP, Email and Passkeys remain available on every plan."
+msgid "Professional and Business plans include SMS-2FA via our managed EU gateway, no separate provider contract required. TOTP, Email and Passkeys remain available on every plan."
 msgstr ""
 
 #: admin/class-two-factor-admin.php:575
@@ -4831,7 +4828,7 @@ msgid "Please enter a phone number."
 msgstr ""
 
 #: admin/class-two-factor-admin.php:579
-msgid "Sende…"
+msgid "Sende..."
 msgstr ""
 
 #: admin/class-two-factor-admin.php:598
@@ -4844,7 +4841,7 @@ msgid "Request failed (HTTP"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:607
-msgid "Network error — could not reach admin-ajax.php."
+msgid "Network error, could not reach admin-ajax.php."
 msgstr ""
 
 #: admin/class-two-factor-admin.php:650
@@ -5404,11 +5401,11 @@ msgid "You are not allowed to manage sessions."
 msgstr ""
 
 #: admin/class-user-admin.php:137
-msgid "Who is signed in, from where — and the switch to end it."
+msgid "Who is signed in, from where, and the switch to end it."
 msgstr ""
 
 #: admin/class-user-admin.php:146
-msgid "See every active WordPress session — user, sign-in time, IP address and device — and end any of them. Unlocks with Business."
+msgid "See every active WordPress session, user, sign-in time, IP address and device, and end any of them. Unlocks with Business."
 msgstr ""
 
 #: admin/class-user-admin.php:157
@@ -5676,7 +5673,7 @@ msgid "Test email sent to %s."
 msgstr ""
 
 #: includes/class-ajax-handler.php:369
-msgid "Note: the managed relay is currently in cooldown for this recipient — the mail was delivered through the local wp_mail() fallback. Check the Activity log for the most recent 402/429 entry to see why."
+msgid "Note: the managed relay is currently in cooldown for this recipient, the mail was delivered through the local wp_mail() fallback. Check the Activity log for the most recent 402/429 entry to see why."
 msgstr ""
 
 #: includes/class-ajax-handler.php:382
@@ -6206,7 +6203,7 @@ msgstr ""
 #. translators: 1: minimum slug length, 2: maximum slug length
 #: includes/class-hide-login.php:728
 #, php-format
-msgid "The login slug must be %1$d–%2$d characters of lowercase letters, digits, dashes or underscores, and may not start or end with a dash."
+msgid "The login slug must be %1$d-%2$d characters of lowercase letters, digits, dashes or underscores, and may not start or end with a dash."
 msgstr ""
 
 #. translators: %s: rejected slug
@@ -6323,7 +6320,7 @@ msgid "Protected by ReportedIP Hive on %1$s (%2$s)"
 msgstr ""
 
 #: includes/class-mailer.php:274
-msgid "This message is protected by ReportedIP — Open Threat Intelligence for a Safer Internet."
+msgid "This message is protected by ReportedIP, Open Threat Intelligence for a Safer Internet."
 msgstr ""
 
 #: includes/class-mode-manager.php:351
@@ -6435,7 +6432,7 @@ msgid "Mail Relay via reportedip.com"
 msgstr ""
 
 #: includes/class-mode-manager.php:364
-msgid "Send 2FA mails through our SMTP for guaranteed deliverability — no own SMTP setup needed."
+msgid "Send 2FA mails through our SMTP for guaranteed deliverability, no own SMTP setup needed."
 msgstr ""
 
 #: includes/class-mode-manager.php:365
@@ -6443,7 +6440,7 @@ msgid "SMS Relay via reportedip.com"
 msgstr ""
 
 #: includes/class-mode-manager.php:365
-msgid "Send 2FA SMS via our managed EU gateway — included with Professional and Business."
+msgid "Send 2FA SMS via our managed EU gateway, included with Professional and Business."
 msgstr ""
 
 #: includes/class-mode-manager.php:366
@@ -6451,7 +6448,7 @@ msgid "WooCommerce Frontend Login 2FA"
 msgstr ""
 
 #: includes/class-mode-manager.php:366
-msgid "Two-factor verification on My Account, classic checkout and WooCommerce blocks login — kept inside the theme frame instead of bouncing customers to wp-login.php."
+msgid "Two-factor verification on My Account, classic checkout and WooCommerce blocks login, kept inside the theme frame instead of bouncing customers to wp-login.php."
 msgstr ""
 
 #: includes/class-mode-manager.php:367
@@ -6467,7 +6464,7 @@ msgid "Decoy Path Block"
 msgstr ""
 
 #: includes/class-mode-manager.php:368
-msgid "Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...) — distinct from the N-of-Y scan-detector."
+msgid "Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...), distinct from the N-of-Y scan-detector."
 msgstr ""
 
 #: includes/class-mode-manager.php:369
@@ -6594,7 +6591,7 @@ msgid "Contrib."
 msgstr ""
 
 #: includes/class-mode-manager.php:766
-msgid "Honeypot operator — community contributor."
+msgid "Honeypot operator, community contributor."
 msgstr ""
 
 #: includes/class-mode-manager.php:773
@@ -6615,7 +6612,7 @@ msgid "Business"
 msgstr ""
 
 #: includes/class-mode-manager.php:784
-msgid "Agency-grade: 15 domains per licence (bookable x2–x20), whitelabel, WooCommerce, full WP-CLI."
+msgid "Agency-grade: 15 domains per licence (bookable x2, x20), whitelabel, WooCommerce, full WP-CLI."
 msgstr ""
 
 #: includes/class-mode-manager.php:791
@@ -6670,7 +6667,7 @@ msgstr ""
 #. translators: 1: privacy generator URL, 2: ReportedIP privacy policy URL
 #: includes/class-privacy.php:84
 #, php-format
-msgid "A ready-to-paste privacy passage tailored to your configuration (German or English) is available at %1$s. See also the ReportedIP privacy policy at %2$s. This is suggested text only and not legal advice — adapt it to your site and have it reviewed."
+msgid "A ready-to-paste privacy passage tailored to your configuration (German or English) is available at %1$s. See also the ReportedIP privacy policy at %2$s. This is suggested text only and not legal advice, adapt it to your site and have it reviewed."
 msgstr ""
 
 #: includes/class-privacy.php:101
@@ -6679,7 +6676,7 @@ msgid "ReportedIP Hive security data"
 msgstr ""
 
 #: includes/class-privacy.php:148
-msgid "ReportedIP Hive — login attempts"
+msgid "ReportedIP Hive: login attempts"
 msgstr ""
 
 #: includes/class-privacy.php:164
@@ -6691,7 +6688,7 @@ msgid "Last attempt"
 msgstr ""
 
 #: includes/class-privacy.php:181
-msgid "ReportedIP Hive — trusted devices"
+msgid "ReportedIP Hive: trusted devices"
 msgstr ""
 
 #: includes/class-privacy.php:185
@@ -6704,11 +6701,11 @@ msgid "Last used"
 msgstr ""
 
 #: includes/class-privacy.php:214
-msgid "ReportedIP Hive — audit trail"
+msgid "ReportedIP Hive: audit trail"
 msgstr ""
 
 #: includes/class-privacy.php:245
-msgid "ReportedIP Hive — account block"
+msgid "ReportedIP Hive: account block"
 msgstr ""
 
 #: includes/class-privacy.php:249
@@ -6724,11 +6721,11 @@ msgid "Administrator note"
 msgstr ""
 
 #: includes/class-privacy.php:267
-msgid "ReportedIP Hive — session addresses"
+msgid "ReportedIP Hive: session addresses"
 msgstr ""
 
 #: includes/class-privacy.php:286
-msgid "ReportedIP Hive — sign-in history"
+msgid "ReportedIP Hive: sign-in history"
 msgstr ""
 
 #: includes/class-privacy.php:290
@@ -6780,7 +6777,7 @@ msgid "Mails will keep going out through your local wp_mail() until the relay re
 msgstr ""
 
 #: includes/class-quota-notifier.php:254
-msgid "SMS-based 2FA codes are paused — users can still authenticate with TOTP, Email or a Passkey."
+msgid "SMS-based 2FA codes are paused, users can still authenticate with TOTP, Email or a Passkey."
 msgstr ""
 
 #. translators: 1: site name, 2: channel label
@@ -6796,7 +6793,7 @@ msgid "Your %1$s allowance is currently at %2$d of %3$d for this month. Resets o
 msgstr ""
 
 #: includes/class-quota-notifier.php:272
-msgid "No action required — this is an early heads-up so you can buy a bundle in your customer portal if the rest of the month tends to be busier."
+msgid "No action required, this is an early heads-up so you can buy a bundle in your customer portal if the rest of the month tends to be busier."
 msgstr ""
 
 #. translators: 1: site name, 2: channel label
@@ -7099,7 +7096,7 @@ msgid "Software fingerprints hidden"
 msgstr ""
 
 #: includes/class-security-monitor.php:1293
-msgid "Heads-up: a security threshold was reached on your site. ReportedIP Hive has already handled it according to your settings — details below for your records."
+msgid "Heads-up: a security threshold was reached on your site. ReportedIP Hive has already handled it according to your settings, details below for your records."
 msgstr ""
 
 #: includes/class-security-monitor.php:1300
@@ -8724,7 +8721,7 @@ msgid "Unknown value kind."
 msgstr ""
 
 #: includes/class-settings-registry.php:1833
-msgid "Hide Login cannot be enabled without a login slug — set a slug first."
+msgid "Hide Login cannot be enabled without a login slug, set a slug first."
 msgstr ""
 
 #. translators: %s: minimum plan name required for the feature
@@ -8768,7 +8765,7 @@ msgid "Your subscription was switched back to the Free tier."
 msgstr ""
 
 #: includes/class-tier-upgrade.php:254
-msgid "What stays active: all 12 sensors, the full 2FA suite and your local IP/block list. What pauses: managed mail/SMS relay over reportedip.com and cloud backup. You can re-activate any time from the customer portal — your data and settings remain in place."
+msgid "What stays active: all 12 sensors, the full 2FA suite and your local IP/block list. What pauses: managed mail/SMS relay over reportedip.com and cloud backup. You can re-activate any time from the customer portal, your data and settings remain in place."
 msgstr ""
 
 #: includes/class-tier-upgrade.php:270
@@ -8915,7 +8912,7 @@ msgid "WordPress Two-Factor"
 msgstr ""
 
 #: includes/class-two-factor-frontend.php:556
-msgid "The WordPress.org \"Two Factor\" plugin is active. Pick one provider — running both will prompt customers twice."
+msgid "The WordPress.org \"Two Factor\" plugin is active. Pick one provider, running both will prompt customers twice."
 msgstr ""
 
 #: includes/class-two-factor-frontend.php:562
@@ -8923,7 +8920,7 @@ msgid "Wordfence"
 msgstr ""
 
 #: includes/class-two-factor-frontend.php:563
-msgid "Wordfence offers its own 2FA injection — disable it for any role that should be served by Hive Frontend 2FA."
+msgid "Wordfence offers its own 2FA injection, disable it for any role that should be served by Hive Frontend 2FA."
 msgstr ""
 
 #: includes/class-two-factor-frontend.php:569
@@ -8931,7 +8928,7 @@ msgid "WooCommerce Subscriptions / Memberships"
 msgstr ""
 
 #: includes/class-two-factor-frontend.php:570
-msgid "Magic-login links sent by Subscriptions and Memberships intentionally bypass 2FA so renewals do not break — keep the subscription audit log enabled."
+msgid "Magic-login links sent by Subscriptions and Memberships intentionally bypass 2FA so renewals do not break, keep the subscription audit log enabled."
 msgstr ""
 
 #. translators: 1: site name
@@ -8994,7 +8991,7 @@ msgstr ""
 #. translators: %s: site name
 #: includes/class-two-factor-notifications.php:362
 #, php-format
-msgid "Just letting you know — your account at %s was just accessed from a device that hasn't signed in here before. If that was you, no further action is needed."
+msgid "Just letting you know, your account at %s was just accessed from a device that hasn't signed in here before. If that was you, no further action is needed."
 msgstr ""
 
 #: includes/class-two-factor-notifications.php:405
@@ -9024,7 +9021,7 @@ msgid "Code sent!"
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:429
-msgid "Verifying…"
+msgid "Verifying..."
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:430
@@ -9055,7 +9052,7 @@ msgid "QR code library is missing. Please reload the page."
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:440
-msgid "Creating passkey…"
+msgid "Creating passkey..."
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:441
@@ -9079,7 +9076,7 @@ msgstr ""
 #. translators: %d: seconds remaining
 #: includes/class-two-factor-onboarding.php:448
 #, php-format
-msgid "SMS sent — delivery can take up to 60 s (%d)"
+msgid "SMS sent, delivery can take up to 60 s (%d)"
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:449
@@ -9161,7 +9158,7 @@ msgstr ""
 #. translators: 1: current reminder count, 2: hard-block threshold
 #: includes/class-two-factor-recommend.php:306
 #, php-format
-msgid "A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks. Reminder %1$d of %2$d — after that you will need to set 2FA up before continuing."
+msgid "A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks. Reminder %1$d of %2$d, after that you will need to set 2FA up before continuing."
 msgstr ""
 
 #: includes/class-two-factor-recommend.php:311
@@ -9281,7 +9278,7 @@ msgstr ""
 #. translators: %s: affected user login
 #: includes/class-two-factor-reset-gate.php:1160
 #, php-format
-msgid "A password reset was attempted for the user \"%s\". None of the second-factor methods configured on the account is currently usable (the secret may be missing or unreadable, the SMS provider unavailable, or recovery codes exhausted) — the reset has been blocked."
+msgid "A password reset was attempted for the user \"%s\". None of the second-factor methods configured on the account is currently usable (the secret may be missing or unreadable, the SMS provider unavailable, or recovery codes exhausted), the reset has been blocked."
 msgstr ""
 
 #. translators: %s: site name
@@ -9293,7 +9290,7 @@ msgstr ""
 #. translators: %s: affected user login
 #: includes/class-two-factor-reset-gate.php:1167
 #, php-format
-msgid "A password reset was attempted for the user \"%s\". After excluding the email channel (the channel that delivered the reset link itself), no eligible second factor remains — the reset has been blocked."
+msgid "A password reset was attempted for the user \"%s\". After excluding the email channel (the channel that delivered the reset link itself), no eligible second factor remains, the reset has been blocked."
 msgstr ""
 
 #. translators: %s: site name
@@ -9305,7 +9302,7 @@ msgstr ""
 #. translators: %s: affected user login
 #: includes/class-two-factor-reset-gate.php:1175
 #, php-format
-msgid "A password reset was attempted for the user \"%s\". The account currently has only email-based 2FA configured and no recovery codes — for security, the reset has been blocked."
+msgid "A password reset was attempted for the user \"%s\". The account currently has only email-based 2FA configured and no recovery codes, for security, the reset has been blocked."
 msgstr ""
 
 #: includes/class-two-factor-reset-gate.php:1187
@@ -9644,7 +9641,7 @@ msgstr ""
 #. translators: 1: opening link tag, 2: closing link tag
 #: includes/class-two-factor.php:360
 #, php-format
-msgid "Secured by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
+msgid "Secured by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet."
 msgstr ""
 
 #: includes/class-two-factor.php:806
@@ -9666,7 +9663,7 @@ msgid "Too many failed attempts. Please wait %d seconds."
 msgstr ""
 
 #: includes/class-two-factor.php:1192
-msgid "No valid code is active — you likely used an older code. Please click \"Resend code\" and use only the most recent code from your inbox."
+msgid "No valid code is active, you likely used an older code. Please click \"Resend code\" and use only the most recent code from your inbox."
 msgstr ""
 
 #: includes/class-two-factor.php:1194
@@ -9678,7 +9675,7 @@ msgid "Invalid verification code. Please make sure you are using the most recent
 msgstr ""
 
 #: includes/class-two-factor.php:1553
-msgid "Your two-factor session has expired. This happens after 15 minutes of inactivity, or when the security cookie is missing — for example when the login form is loaded inside an iframe. Please sign in again."
+msgid "Your two-factor session has expired. This happens after 15 minutes of inactivity, or when the security cookie is missing, for example when the login form is loaded inside an iframe. Please sign in again."
 msgstr ""
 
 #: includes/class-two-factor.php:1554
@@ -9710,7 +9707,7 @@ msgstr ""
 
 #: includes/class-two-factor.php:1667
 #: includes/class-two-factor.php:2082
-msgid "Passkey request in progress…"
+msgid "Passkey request in progress..."
 msgstr ""
 
 #: includes/class-two-factor.php:1668
@@ -10244,10 +10241,6 @@ msgstr ""
 msgid "Retry all"
 msgstr ""
 
-#: reportedip-hive.php:1757
-msgid "Retrying…"
-msgstr ""
-
 #: reportedip-hive.php:1765
 msgid "Retry failed."
 msgstr ""
@@ -10367,7 +10360,7 @@ msgstr ""
 #. translators: 1: opening link tag, 2: closing link tag
 #: templates/emails/base.php:131
 #, php-format
-msgid "This message is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
+msgid "This message is protected by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet."
 msgstr ""
 
 #. translators: %s: user display name
@@ -10608,7 +10601,7 @@ msgid "Final skip."
 msgstr ""
 
 #: templates/two-factor-onboarding.php:118
-msgid "You must set up 2FA on your next sign-in — you will not be able to skip again."
+msgid "You must set up 2FA on your next sign-in, you will not be able to skip again."
 msgstr ""
 
 #: templates/two-factor-onboarding.php:126
@@ -10646,7 +10639,7 @@ msgid "Which second factor would you like to use when you sign in?"
 msgstr ""
 
 #: templates/two-factor-onboarding.php:173
-msgid "Multi-select — click one or more cards"
+msgid "Multi-select, click one or more cards"
 msgstr ""
 
 #: templates/two-factor-onboarding.php:193
@@ -10668,7 +10661,7 @@ msgid "SMS (worldwide)"
 msgstr ""
 
 #: templates/two-factor-onboarding.php:238
-msgid "Code by SMS via a GDPR-compliant provider. Best as a backup — SIM-swapping risk."
+msgid "Code by SMS via a GDPR-compliant provider. Best as a backup, SIM-swapping risk."
 msgstr ""
 
 #: templates/two-factor-onboarding.php:245
@@ -10795,7 +10788,7 @@ msgid "Privacy notice"
 msgstr ""
 
 #: templates/two-factor-onboarding.php:380
-msgid "Phone number stored encrypted, delivered worldwide via our managed relay. Use SMS as a backup — SIM-swapping risk."
+msgid "Phone number stored encrypted, delivered worldwide via our managed relay. Use SMS as a backup, SIM-swapping risk."
 msgstr ""
 
 #: templates/two-factor-onboarding.php:387
@@ -10840,7 +10833,7 @@ msgid "These codes are your fallback."
 msgstr ""
 
 #: templates/two-factor-onboarding.php:449
-msgid "Each code is one-time use. Store them safely — separate from your WordPress password."
+msgid "Each code is one-time use. Store them safely, separate from your WordPress password."
 msgstr ""
 
 #: templates/two-factor-onboarding.php:464
@@ -10860,7 +10853,7 @@ msgid "Finish"
 msgstr ""
 
 #: templates/two-factor-onboarding.php:504
-msgid "Done — your account is now doubly secure"
+msgid "Done, your account is now doubly secure"
 msgstr ""
 
 #: templates/two-factor-onboarding.php:506
@@ -10870,5 +10863,5 @@ msgstr ""
 #. translators: 1: opening link tag, 2: closing link tag
 #: templates/two-factor-onboarding.php:520
 #, php-format
-msgid "This page is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet."
+msgid "This page is protected by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet."
 msgstr ""

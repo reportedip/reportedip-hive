@@ -1,6 +1,6 @@
 <?php
 /**
- * Default Mail Provider — wp_mail() wrapper.
+ * Default Mail Provider, wp_mail() wrapper.
  *
  * Sends a multipart/alternative message (HTML + plaintext) by hooking into
  * phpmailer_init for the duration of one wp_mail() call. The hook is removed

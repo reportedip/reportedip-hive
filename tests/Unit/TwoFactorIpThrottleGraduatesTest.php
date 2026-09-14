@@ -4,14 +4,14 @@
  *
  * The 2FA per-IP throttle had its own LOCKOUT_THRESHOLDS array (3→30 s,
  * 5→300 s, 10→1800 s, 15→3600 s) that capped at one hour and forgot
- * because the transient TTL was HOUR_IN_SECONDS — a brute-forcer who
+ * because the transient TTL was HOUR_IN_SECONDS, a brute-forcer who
  * paced themselves around that hour was never promoted to a real
  * `wp_reportedip_hive_blocked` row, so the progressive-escalation
  * ladder + community-mode reporting never fired against them.
  *
  * 1.5.2 fix: when the per-IP failure count reaches the top threshold
  * (15), graduate to the central `auto_block_ip()` path. This test
- * locks down the contract via source-pattern matching — a refactor
+ * locks down the contract via source-pattern matching, a refactor
  * that drops the graduation will fail the test.
  *
  * @package    ReportedIP_Hive
@@ -49,7 +49,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'max( array_keys( self::LOCKOUT_THRESHOLDS ) )',
 				$source,
-				'The graduation must read the top threshold from the LOCKOUT_THRESHOLDS array, not a hardcoded 15 — otherwise tuning the ladder later will silently break graduation.'
+				'The graduation must read the top threshold from the LOCKOUT_THRESHOLDS array, not a hardcoded 15:otherwise tuning the ladder later will silently break graduation.'
 			);
 		}
 
@@ -58,7 +58,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'handle_threshold_exceeded(',
 				$source,
-				'increment_ip_failed_attempts() must escalate via the canonical handle_threshold_exceeded() entry point — auto_block_ip() alone bypasses community-mode API reporting and admin notification.'
+				'increment_ip_failed_attempts() must escalate via the canonical handle_threshold_exceeded() entry point, auto_block_ip() alone bypasses community-mode API reporting and admin notification.'
 			);
 			$this->assertDoesNotMatchRegularExpression(
 				'/->\s*auto_block_ip\s*\(/',

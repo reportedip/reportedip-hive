@@ -121,7 +121,7 @@ class ReportedIP_Hive_Cache {
 	 * Get cached reputation data.
 	 *
 	 * A verbose request must not be satisfied by a non-verbose envelope: the
-	 * verbose API response carries fields (ISP, usage type, Tor flag, …) a
+	 * verbose API response carries fields (ISP, usage type, Tor flag, ...) a
 	 * non-verbose check never fetched. Envelopes written before the marker
 	 * existed carry no `verbose` key and are treated as non-verbose. An
 	 * insufficient envelope is reported as a miss but left in place so
@@ -258,7 +258,7 @@ class ReportedIP_Hive_Cache {
 		/*
 		 * The DELETE above only reaches entries stored in the options table.
 		 * Under a persistent object cache they live in the backend instead and
-		 * the statement matches nothing, so advance the key generation — that
+		 * the statement matches nothing, so advance the key generation, that
 		 * retires those entries without needing to enumerate keys, which the
 		 * backend does not allow. The flush therefore always takes effect, and
 		 * is always worth recording.
@@ -356,8 +356,8 @@ class ReportedIP_Hive_Cache {
 	 *
 	 * Two prefix-indexed queries instead of the previous self-join whose ON
 	 * clause (`CONCAT`/`SUBSTRING`) could never use an index and scanned
-	 * `wp_options` on both sides. LIKE prefixes are `esc_like()`-escaped —
-	 * an unescaped `_transient_…` pattern treats every underscore as a
+	 * `wp_options` on both sides. LIKE prefixes are `esc_like()`-escaped.
+	 * an unescaped `_transient_...` pattern treats every underscore as a
 	 * single-char wildcard, which also defeated the `option_name` index.
 	 * Memoised per request: the settings page asks twice per render.
 	 */
@@ -406,11 +406,11 @@ class ReportedIP_Hive_Cache {
 	/**
 	 * Clean up expired cache entries.
 	 *
-	 * Covers the reputation cache AND the ETag response cache — the latter
-	 * (`reportedip_etag_*` + `…_body`) was written by the API client but never
+	 * Covers the reputation cache AND the ETag response cache, the latter
+	 * (`reportedip_etag_*` + `..._body`) was written by the API client but never
 	 * matched by the old reputation-only prefix, so expired ETag rows
 	 * accumulated in `wp_options` indefinitely. Deletes run as chunked
-	 * `IN (…)` batches instead of two single-row DELETEs per entry.
+	 * `IN (...)` batches instead of two single-row DELETEs per entry.
 	 */
 	public function cleanup_expired_cache() {
 		global $wpdb;
@@ -445,7 +445,7 @@ class ReportedIP_Hive_Cache {
 		}
 		foreach ( array_chunk( $delete_all, 200 ) as $chunk ) {
 			$placeholders = implode( ',', array_fill( 0, count( $chunk ), '%s' ) );
-			// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders is a "%s,%s,…" list bound via $chunk.
+			// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders is a "%s,%s,..." list bound via $chunk.
 			$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name IN ($placeholders)", $chunk ) );
 		}
 
@@ -482,7 +482,7 @@ class ReportedIP_Hive_Cache {
 	 * Generation marker mixed into every reputation cache key.
 	 *
 	 * With a persistent object cache, transients live in the cache backend
-	 * rather than in the options table, and its keys cannot be enumerated —
+	 * rather than in the options table, and its keys cannot be enumerated.
 	 * so the bulk DELETE that "Clear cache" used to run matched nothing at
 	 * all. Advancing this marker retires every entry at once, whichever
 	 * backend stores them.

@@ -8,7 +8,7 @@
  *
  * Returns WP_Error when the relay rejects the request (HTTP 402 cap, HTTP 429
  * backoff, validation failure). The 2FA layer responds by encouraging the user
- * to choose another method (TOTP / Email / WebAuthn) — there is no SMS
+ * to choose another method (TOTP / Email / WebAuthn), there is no SMS
  * fallback here, by design: silently switching to a local SMS provider would
  * surprise customers who specifically pay for relay routing.
  *

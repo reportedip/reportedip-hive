@@ -6,7 +6,7 @@
  * spares an IP inside the official crawler ranges: no block row is written
  * and the averted decision lands as `verified_bot_block_averted` in the
  * shared network logs table. Credential-bearing events are the deliberate
- * exception — no genuine crawler submits credentials, so those must block
+ * exception, no genuine crawler submits credentials, so those must block
  * even a ranged crawler IP.
  *
  * @package    ReportedIP_Hive
@@ -96,7 +96,7 @@ class ReportedIP_Hive_Bot_Guard_Multisite_Test extends WP_UnitTestCase {
 
 	/**
 	 * A credential-bearing threshold trip must block even a ranged crawler
-	 * IP — genuine crawlers never submit login credentials, so the guard
+	 * IP, genuine crawlers never submit login credentials, so the guard
 	 * does not apply.
 	 */
 	public function test_failed_login_blocks_even_ranged_crawler_ip() {

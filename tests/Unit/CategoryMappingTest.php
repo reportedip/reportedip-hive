@@ -8,7 +8,7 @@
  * category-id mapping, that the IDs are integers, and that the
  * `reportedip_hive_event_category_map` filter is honoured.
  *
- * Tested without a database — we instantiate the security monitor with
+ * Tested without a database, we instantiate the security monitor with
  * stubbed singleton dependencies (Database, API, Logger, Mode_Manager).
  *
  * @package    ReportedIP_Hive
@@ -84,7 +84,7 @@ namespace {
 
 	/*
 	 * Minimal in-memory stand-ins for the singletons the security monitor
-	 * pulls in via get_instance() — we only need them to exist and not blow
+	 * pulls in via get_instance(), we only need them to exist and not blow
 	 * up; the tests below never call methods on them.
 	 */
 	if ( ! class_exists( 'ReportedIP_Hive_Database' ) ) {
@@ -293,7 +293,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$ids = $mon->get_category_ids_for_event( $event );
 				$this->assertNotEmpty( $ids, "Event $event must map to at least one category" );
 				foreach ( $ids as $id ) {
-					$this->assertIsInt( $id, "Event $event must map to integer IDs only — got " . var_export( $id, true ) );
+					$this->assertIsInt( $id, "Event $event must map to integer IDs only, got " . var_export( $id, true ) );
 					$this->assertGreaterThan( 0, $id, "Category id for $event must be > 0" );
 				}
 			}

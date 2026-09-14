@@ -4,15 +4,15 @@
  *
  * Cache-preload crawlers, WP-Cron loopbacks and REST self-requests connect
  * back through the site's public URL, so their REMOTE_ADDR is the server's
- * own public address — which passes is_public_ip(). Without a guard the
+ * own public address, which passes is_public_ip(). Without a guard the
  * burst sensors auto-blocked that address (enforced by the pre-WordPress
  * drop-in before any path exception, answering every later preload with a
  * 403) and reported the server to the community API against its own
  * reputation. Observed in the field: a Multisite carried a seven-day
  * automatic block of its own IPv6.
  *
- * The heavy classes cannot be instantiated in the unit suite, so — like the
- * other main-file guards — these tests lock the critical source properties:
+ * The heavy classes cannot be instantiated in the unit suite, so, like the
+ * other main-file guards, these tests lock the critical source properties:
  *
  *  1. is_own_server_ip() exists and covers loopback, SERVER_ADDR and the
  *     addresses the site hostname resolves to, extensible via filter.

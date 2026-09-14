@@ -1,6 +1,6 @@
 <?php
 /**
- * Cloud management REST transport — lets reportedip.com read the settings
+ * Cloud management REST transport, lets reportedip.com read the settings
  * schema/values and apply settings batches, in parallel to MainWP.
  *
  * @package   ReportedIP_Hive
@@ -85,7 +85,7 @@ final class ReportedIP_Hive_Cloud_Management_REST {
 	 * WordPress evaluates a route's permission callback twice per request
 	 * (dispatch plus the Allow-header pass). Without a memo the second pass
 	 * would consume the single-use request id and log a bogus replay for
-	 * every successful call. Keyed by spl_object_id — deliberately NOT a
+	 * every successful call. Keyed by spl_object_id, deliberately NOT a
 	 * request param, which a caller could inject through the body.
 	 *
 	 * @var array<int, true|WP_Error>
@@ -379,7 +379,7 @@ final class ReportedIP_Hive_Cloud_Management_REST {
 	}
 
 	/**
-	 * Lowercased host with a leading `www.` stripped — matches the domain
+	 * Lowercased host with a leading `www.` stripped, matches the domain
 	 * normalization the service applies to its domain registry.
 	 *
 	 * @param string $value Host or URL.

@@ -4,7 +4,7 @@
  *
  * `Option_Routing::get()` takes a fallback used only while the option is
  * missing from the database. Several sensors passed a different value than
- * `Defaults::SAFE_OPTIONS` declares — the 404 burst threshold read 8 where the
+ * `Defaults::SAFE_OPTIONS` declares, the 404 burst threshold read 8 where the
  * registry says 12, comment spam 3 against 5, the REST burst cap 60 against
  * 240. Seeding on activation and upgrade means the fallback rarely fires, so
  * the contradiction stayed invisible while quietly making the registry a
@@ -31,7 +31,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * Options whose inline fallback legitimately differs from the registry.
 		 *
-		 * Keep this list short and justified — each entry is a place where the
+		 * Keep this list short and justified, each entry is a place where the
 		 * canonical default deliberately does not apply.
 		 *
 		 * @var array<string, string>

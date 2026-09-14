@@ -2,8 +2,8 @@
 /**
  * Cross-writer consistency tests for the settings standard.
  *
- * Guards the invariant behind the remote-settings protocol: every writer —
- * settings page, quickstart, import, MainWP, cloud — produces the identical
+ * Guards the invariant behind the remote-settings protocol: every writer.
+ * settings page, quickstart, import, MainWP, cloud, produces the identical
  * stored state for the identical input, because they all validate through
  * the registry. The static cross-repo twin of this test is the workspace
  * script `scripts/settings-consistency-check.php` (not shipped).
@@ -167,7 +167,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			foreach ( $schema['fields'] as $key => $field ) {
 				$this->assertContains( $field['kind'], self::PROTOCOL_KINDS, "Field $key uses a kind outside the protocol vocabulary." );
-				$this->assertArrayHasKey( 'default', $field, "Field $key exports no default — dashboards cannot prefill it." );
+				$this->assertArrayHasKey( 'default', $field, "Field $key exports no default, dashboards cannot prefill it." );
 				$this->assertArrayHasKey( 'label', $field );
 				if ( 'enum' === $field['kind'] ) {
 					$this->assertNotEmpty( $field['allowed'], "Enum field $key exports no allowed values." );

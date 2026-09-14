@@ -4,14 +4,14 @@
  *
  * Important design constraints:
  *   - SMS is a Professional-tier feature delivered exclusively through the
- *     managed reportedip.com relay. There is no self-hosted provider option —
+ *     managed reportedip.com relay. There is no self-hosted provider option.
  *     {@see is_ready()} returns true only while the relay is available.
  *   - The relay AVV with reportedip.com is part of the plan subscription, so no
  *     per-provider DPA confirmation is required on the site.
  *   - Phone numbers are stored encrypted (libsodium / OpenSSL fallback) via
  *     ReportedIP_Hive_Two_Factor_Crypto so a DB dump alone is insufficient.
  *   - SMS bodies are rendered server-side; only the code, expiry and locale
- *     leave the site — no site name, user name, IP, device hints or URLs.
+ *     leave the site, no site name, user name, IP, device hints or URLs.
  *   - Audit log entries mask the number to +<country-code> ****<last 2>.
  *   - Rate-limits (3 sends / 15 min, 60 s cooldown) mirror the email flow.
  *
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Orchestrator — called by the 2FA challenge and by the onboarding AJAX flow.
+ * Orchestrator, called by the 2FA challenge and by the onboarding AJAX flow.
  */
 class ReportedIP_Hive_Two_Factor_SMS {
 
@@ -52,14 +52,14 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	const BACKOFF_LADDER = array( 0, 30, 60, 120, 300, 900 );
 
 	/**
-	 * Provider id of the managed reportedip.com SMS relay — the only provider.
+	 * Provider id of the managed reportedip.com SMS relay, the only provider.
 	 */
 	const PROVIDER_RELAY = 'reportedip_relay';
 
 	/**
 	 * Is the plugin in a state where it may dispatch SMS messages?
 	 *
-	 * Hard gate — SMS is a Professional-tier feature delivered through the
+	 * Hard gate, SMS is a Professional-tier feature delivered through the
 	 * managed reportedip.com relay; returns true only while the relay is
 	 * available for the current tier and mode.
 	 *
@@ -76,7 +76,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 	 * Normalise and E.164-check a phone number input.
 	 *
 	 * @param string $input
-	 * @return string|WP_Error E.164 number (+…) or WP_Error.
+	 * @return string|WP_Error E.164 number (+...) or WP_Error.
 	 */
 	public static function normalise_phone( $input ) {
 		$raw = preg_replace( '/[^\d+]/', '', (string) $input );
@@ -186,7 +186,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 
 		/*
 		 * The managed reportedip.com relay is the only dispatch path. We transmit
-		 * ONLY the code + expiry as template vars — the Service renders the final
+		 * ONLY the code + expiry as template vars, the Service renders the final
 		 * SMS body server-side. The verification code never enters a freshly
 		 * composed string on the customer site, only the API payload.
 		 */
@@ -213,7 +213,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 		}
 
 		/*
-		 * Provider accepted the send — only NOW do we persist the code hash
+		 * Provider accepted the send, only NOW do we persist the code hash
 		 * and advance the local backoff ladder. A pre-dispatch write left
 		 * stale code hashes in the transient when the relay short-circuited
 		 * (e.g. client-side cooldown returning a synthetic 429) and let the
@@ -270,7 +270,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 			$data['attempts'] = $attempts + 1;
 
 			/*
-			 * Re-store with the time the code has left, not a fresh full TTL —
+			 * Re-store with the time the code has left, not a fresh full TTL.
 			 * otherwise each wrong guess pushed the expiry out and the ten
 			 * minute lifetime stretched with every attempt. The email channel
 			 * has always carried the remaining time forward this way.
@@ -334,7 +334,7 @@ class ReportedIP_Hive_Two_Factor_SMS {
 
 		$window_start = (int) ( $data['window_start'] ?? $now );
 		if ( $now - $window_start > self::RATE_WINDOW ) {
-			// Window expired — caller will start a fresh count via record_send().
+			// Window expired, caller will start a fresh count via record_send().
 			return true;
 		}
 

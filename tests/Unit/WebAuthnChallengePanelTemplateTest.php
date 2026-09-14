@@ -5,7 +5,7 @@
  * Before 2.1.33 the WooCommerce frontend challenge rendered a "Passkey"
  * tab with no matching panel (aria-controls pointed into the void), and
  * the password-reset gate offered webauthn with nothing but a text input
- * — both surfaces silently locked passkey-only users out. These tests pin
+ * - both surfaces silently locked passkey-only users out. These tests pin
  * every challenge surface to the single shared partial so the panels can
  * never drift apart again.
  *
@@ -61,7 +61,7 @@ class WebAuthnChallengePanelTemplateTest extends TestCase {
 		$this->assertStringContainsString(
 			self::PARTIAL,
 			$template,
-			'The WooCommerce frontend challenge must render the webauthn panel — it shipped a dead tab without one before 2.1.33.'
+			'The WooCommerce frontend challenge must render the webauthn panel, it shipped a dead tab without one before 2.1.33.'
 		);
 		$this->assertStringContainsString(
 			'$has_webauthn',
@@ -80,7 +80,7 @@ class WebAuthnChallengePanelTemplateTest extends TestCase {
 		$this->assertStringContainsString(
 			'mint_login_token',
 			$gate,
-			'The gate must mint the ceremony token — without it the nopriv AJAX endpoints cannot resolve the user (no login-nonce cookie exists on this surface).'
+			'The gate must mint the ceremony token, without it the nopriv AJAX endpoints cannot resolve the user (no login-nonce cookie exists on this surface).'
 		);
 		$this->assertStringContainsString( 'id="rip-2fa-form"', $gate );
 		$this->assertStringContainsString( 'id="rip-2fa-method-input"', $gate );

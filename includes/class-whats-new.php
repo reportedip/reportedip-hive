@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * State keys `reportedip_hive_whatsnew_seen_version` and
  * `reportedip_hive_whatsnew_payload` are deliberately NOT part of
- * `ReportedIP_Hive_Defaults::SAFE_OPTIONS` — like
+ * `ReportedIP_Hive_Defaults::SAFE_OPTIONS`, like
  * `reportedip_hive_seeded_version` they are state markers, not settings, and
  * must never be seeded, exported or imported.
  *
@@ -215,7 +215,7 @@ class ReportedIP_Hive_Whats_New {
 			return $text;
 		}
 
-		$cut = mb_substr( $text, 0, $limit - 1 );
+		$cut = mb_substr( $text, 0, $limit - 3 );
 
 		if ( preg_match_all( '/[.!?](?=\s|$)/u', $cut, $matches, PREG_OFFSET_CAPTURE ) ) {
 			$last     = end( $matches[0] );
@@ -241,7 +241,7 @@ class ReportedIP_Hive_Whats_New {
 	 * @since  2.1.45
 	 */
 	private static function add_ellipsis( $text ) {
-		return rtrim( $text, " \t\n\r\0\x0B.,;:!?-" ) . '…';
+		return rtrim( $text, " \t\n\r\0\x0B.,;:!?-" ) . '...';
 	}
 
 	/**

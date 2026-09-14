@@ -159,7 +159,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * A queue directory that is momentarily unwritable must not be baked as
 		 * an empty path: that turned a transient permission problem into
-		 * permanent silence — the guard kept blocking but could never report a
+		 * permanent silence, the guard kept blocking but could never report a
 		 * hit, while the admin UI (which re-checks writability live) showed
 		 * logging as healthy.
 		 */
@@ -193,7 +193,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame(
 				'nginx',
 				$this->mgr()->detect_web_server( 'fpm-fcgi', 'nginx/1.25.3' ),
-				'The FastCGI SAPI must not be read as Apache — nginx never evaluates .htaccess.'
+				'The FastCGI SAPI must not be read as Apache, nginx never evaluates .htaccess.'
 			);
 		}
 
@@ -433,7 +433,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$ok = $this->call_private( 'neutralize_guard', array() );
 			$this->assertTrue( $ok );
 
-			$this->assertFileExists( $path, 'The guard must be neutralised, never deleted — a dangling auto_prepend_file would 500 the whole site.' );
+			$this->assertFileExists( $path, 'The guard must be neutralised, never deleted, a dangling auto_prepend_file would 500 the whole site.' );
 			$after = (string) file_get_contents( $path );
 			$this->assertStringNotContainsString( "define( 'REPORTEDIP_HIVE_WAF_DROPIN'", $after, 'The inert stub must not define the active marker, so is_running() reports false.' );
 			$this->assertStringContainsString( 'return;', $after );
@@ -568,7 +568,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * While WordPress is unreachable nothing drains the queue, so the guard
-		 * must stop appending once the file hits its ceiling — otherwise a
+		 * must stop appending once the file hits its ceiling, otherwise a
 		 * sustained attack fills the disk.
 		 */
 		public function test_guard_stops_queueing_at_the_size_ceiling(): void {
@@ -653,7 +653,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * An IP the plugin has blocked must be refused by the pre-WordPress
 		 * layer too. Otherwise "extended protection" stops attack payloads but
-		 * still hands every request of a known offender to WordPress — the gap
+		 * still hands every request of a known offender to WordPress, the gap
 		 * this file exists to close.
 		 */
 		public function test_guard_refuses_a_blocked_ip(): void {
@@ -694,7 +694,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * The whitelist is the one thing that outranks a block, exactly as in
-		 * WordPress — otherwise an admin could lock themselves out at a layer
+		 * WordPress, otherwise an admin could lock themselves out at a layer
 		 * where no plugin can help them.
 		 */
 		public function test_guard_whitelist_outranks_the_blocklist(): void {
@@ -724,7 +724,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * Report-only means "observe, never interfere" — for blocks as well.
+		 * Report-only means "observe, never interfere", for blocks as well.
 		 */
 		public function test_guard_ignores_blocks_in_report_only_mode(): void {
 			$GLOBALS['wp_options']['reportedip_hive_report_only_mode'] = true;
@@ -797,7 +797,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * Appends cannot update the bitmap, so the dirty flag makes the guard
-		 * scan the region past the base length — a freshly blocked IP must be
+		 * scan the region past the base length, a freshly blocked IP must be
 		 * refused before the next full rewrite recomputes the bitmap.
 		 */
 		public function test_guard_scans_append_region_when_dirty(): void {
@@ -820,7 +820,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * Same ip + same expiry a second time must not grow the file; a LONGER
-		 * expiry (escalation ladder) must append again — the guard would
+		 * expiry (escalation ladder) must append again, the guard would
 		 * otherwise enforce only the stale shorter block.
 		 */
 		public function test_on_ip_blocked_dedupes_but_extends(): void {
@@ -964,7 +964,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * The configured trusted-proxy ranges must be baked into the guard as a
-		 * literal array, with every template placeholder substituted — a leftover
+		 * literal array, with every template placeholder substituted, a leftover
 		 * placeholder token would be a parse-time constant lookup that fatals the
 		 * fail-open guard.
 		 */
@@ -1011,7 +1011,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * A peer OUTSIDE the trusted ranges must never influence the resolved IP:
 		 * the header is ignored and REMOTE_ADDR is used, so the spoofed blocked
-		 * candidate cannot be shed onto — or borrowed from — another identity.
+		 * candidate cannot be shed onto, or borrowed from, another identity.
 		 */
 		public function test_guard_ignores_header_from_untrusted_peer(): void {
 			$GLOBALS['wp_options']['reportedip_hive_trusted_ip_header']    = 'HTTP_X_FORWARDED_FOR';
@@ -1033,7 +1033,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * Parity fix with the in-WordPress engine: a private or reserved header
 		 * candidate is rejected even when no ranges are configured, so the guard
-		 * falls back to REMOTE_ADDR. The blocked 10.0.0.1 entry proves it — a
+		 * falls back to REMOTE_ADDR. The blocked 10.0.0.1 entry proves it, a
 		 * guard that resolved to the private candidate would answer Forbidden.
 		 */
 		public function test_guard_rejects_private_header_candidate(): void {

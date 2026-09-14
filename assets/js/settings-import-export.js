@@ -105,7 +105,7 @@
 			fd.append('sections[]', this.value);
 		});
 
-		$('#rip-apply-result').html('<em>Applying…</em>');
+		$('#rip-apply-result').html('<em>Applying...</em>');
 
 		$.ajax({
 			url: ajaxUrl,
@@ -156,7 +156,7 @@
 			fd.append('_rip_ie_nonce', $importForm.find('input[name="_rip_ie_nonce"]').val());
 			fd.append('settings_file', file);
 
-			$('#rip-import-preview').html('<em>Reading file…</em>');
+			$('#rip-import-preview').html('<em>Reading file...</em>');
 
 			$.ajax({
 				url: ajaxUrl,

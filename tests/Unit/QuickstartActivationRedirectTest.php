@@ -5,7 +5,7 @@
  * The activation marker is consumed exactly once, so it must never be spent on
  * a request no browser follows. `admin-ajax.php` fires `admin_init` just like a
  * real admin page, and a WooCommerce store keeps that endpoint busy around the
- * clock (Action Scheduler, Heartbeat) — which is why the setup page silently failed
+ * clock (Action Scheduler, Heartbeat), which is why the setup page silently failed
  * to open on those installs.
  *
  * @package    ReportedIP_Hive

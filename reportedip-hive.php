@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ReportedIP Hive
  * Plugin URI: https://reportedip.com
- * Description: Community-powered WordPress security — real-time threat intelligence
+ * Description: Community-powered WordPress security, real-time threat intelligence
  * with 6-layer defense and 4-method 2FA. Be part of the hive.
  * Version: 2.1.55
  * Author: Patrick Schlesinger, ReportedIP
@@ -82,9 +82,9 @@ define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.com/register/' );
  *
  * Built unconditionally. The checker injects its update entry into the
  * `update_plugins` transient at read time (`site_transient_update_plugins`
- * filter), never persistently — so it must exist in every request context
+ * filter), never persistently, so it must exist in every request context
  * that consumes update information. Restricting it to wp-admin, cron and
- * WP-CLI (2.1.32 – 2.1.46) made front-end consumers blind: remote-management
+ * WP-CLI (2.1.32, 2.1.46) made front-end consumers blind: remote-management
  * dashboards (MainWP, ManageWP, InfiniteWP) sync over front-end requests on
  * `init` and could neither see nor install plugin updates.
  */
@@ -274,7 +274,7 @@ class ReportedIP_Hive {
 	 * Run schema migrations on freshly-created network sites.
 	 *
 	 * Because the plugin tables are network-wide there is nothing per-site
-	 * to set up — `Migration_Manager::maybe_run()` is a no-op when the
+	 * to set up, `Migration_Manager::maybe_run()` is a no-op when the
 	 * stored version already matches `CURRENT_VERSION`. The hook is wired
 	 * defensively so future migrations that DO need per-site work have a
 	 * trigger point.
@@ -380,7 +380,7 @@ class ReportedIP_Hive {
 		 * The 'reportedip' cache group backs base_prefix (network-wide) tables:
 		 * whitelist CIDRs, WAF exceptions and the per-IP access verdict are the
 		 * same for every site in a network. Without this registration a
-		 * persistent object cache would silo those entries per blog — duplicated
+		 * persistent object cache would silo those entries per blog, duplicated
 		 * memory and stale cross-site verdicts after a network-wide change.
 		 */
 		wp_cache_add_global_groups( 'reportedip' );
@@ -601,7 +601,7 @@ class ReportedIP_Hive {
 	 * call sets up storage for every site in the network.
 	 *
 	 * @param bool $network_wide True when activated from the network admin.
-	 *                           Currently informational — Schema/Migration
+	 *                           Currently informational, Schema/Migration
 	 *                           handle both cases identically.
 	 */
 	public static function activate_plugin( $network_wide = false ) {
@@ -700,7 +700,7 @@ class ReportedIP_Hive {
 	/**
 	 * Static plugin deactivation (called from register_deactivation_hook).
 	 *
-	 * Clears scheduled cron jobs but leaves data intact — uninstall.php is
+	 * Clears scheduled cron jobs but leaves data intact, uninstall.php is
 	 * the only path that touches user data, and only when the corresponding
 	 * opt-in is set.
 	 */
@@ -1192,7 +1192,7 @@ class ReportedIP_Hive {
 	 * reputation exceeds the block threshold. A reputation hit also writes a
 	 * temporary `reputation` row into the blocked table (default 24 h,
 	 * filterable via `reportedip_hive_reputation_block_hours`), so the IP is
-	 * blocked on every surface — front-end, XML-RPC, REST — and appears in
+	 * blocked on every surface, front-end, XML-RPC, REST, and appears in
 	 * the Blocked IPs list instead of only failing the login form.
 	 * Whitelisted IPs and the server's own addresses are never
 	 * reputation-blocked.
@@ -1380,7 +1380,7 @@ class ReportedIP_Hive {
 	 * exit-node ruleset or carry the community isTor flag.
 	 *
 	 * Running an exit node is not abuse evidence, so Tor blocks never produce
-	 * a community report — the block row is the only consequence, and it
+	 * a community report, the block row is the only consequence, and it
 	 * reaches the pre-WordPress guard through the regular blocklist bridge.
 	 *
 	 * @param string     $ip_address Client IP.
@@ -1615,8 +1615,8 @@ class ReportedIP_Hive {
 	 * never be locked out by an automatic IP block.
 	 *
 	 * A site admin, editor or shop manager (the `edit_others_posts` capability)
-	 * who happens to share an IP that a sensor auto-blocked — e.g. one tripped
-	 * by anonymous front-end plugin traffic from the same network — would
+	 * who happens to share an IP that a sensor auto-blocked, e.g. one tripped
+	 * by anonymous front-end plugin traffic from the same network, would
 	 * otherwise be wp_die()'d out of their own site and backend. The exemption
 	 * is keyed on capability, not merely login: it cannot be abused without
 	 * valid privileged credentials, at which point an IP block is moot anyway.
@@ -1754,7 +1754,7 @@ class ReportedIP_Hive {
                     $("#retry-failed-reports-notice").on("click", function(e) {
                         e.preventDefault();
                         var $btn = $(this);
-                        $btn.prop("disabled", true).text("' . esc_js( __( 'Retrying…', 'reportedip-hive' ) ) . '");
+                        $btn.prop("disabled", true).text("' . esc_js( __( 'Retrying...', 'reportedip-hive' ) ) . '");
                         $.post(ajaxurl, {
                             action: "reportedip_hive_retry_all_failed",
                             nonce: "' . esc_js( wp_create_nonce( 'reportedip_hive_nonce' ) ) . '"
@@ -1849,7 +1849,7 @@ class ReportedIP_Hive {
 	 * Object-cache key holding the cached access verdict for one IP.
 	 *
 	 * The key carries an epoch so verdicts that cannot be addressed
-	 * individually — everything decided by a CIDR range or the whitelist —
+	 * individually, everything decided by a CIDR range or the whitelist.
 	 * can still be dropped in one step by advancing the epoch.
 	 *
 	 * @param string $ip_address Client IP.
@@ -1869,7 +1869,7 @@ class ReportedIP_Hive {
 	 * produced it: a freshly blocked IP would keep browsing on a warm
 	 * `allowed` entry, and an unblocked visitor would keep receiving the 403
 	 * long after the block was lifted. Only relevant with a persistent object
-	 * cache — otherwise `wp_cache_*` is request-local and expires anyway.
+	 * cache, otherwise `wp_cache_*` is request-local and expires anyway.
 	 *
 	 * An exact IP invalidates just its own key. A CIDR range (or an empty
 	 * argument) cannot enumerate the addresses it covers, so it advances the
@@ -1892,7 +1892,7 @@ class ReportedIP_Hive {
 		 * means read-then-write, and two flushes racing (an admin clearing the
 		 * cache while the cleanup cron expires a whitelist row) would both read
 		 * the same value and one invalidation would be lost. A timestamp is
-		 * safe to write blind — concurrent flushes want the same outcome.
+		 * safe to write blind, concurrent flushes want the same outcome.
 		 */
 		ReportedIP_Hive_Option_Routing::set( self::OPTION_ACCESS_CACHE_EPOCH, time() );
 	}
@@ -1903,7 +1903,7 @@ class ReportedIP_Hive {
 	 * `admin-ajax.php` is deliberately included: it is reachable without
 	 * authentication through every `wp_ajax_nopriv_*` action a site has
 	 * registered, so exempting it left blocked IPs a fully unguarded entry
-	 * point. Only WP-Cron stays exempt — its loopback originates from the
+	 * point. Only WP-Cron stays exempt, its loopback originates from the
 	 * server itself and must never be able to self-block the site.
 	 * Authenticated operators are spared separately by
 	 * {@see self::is_block_exempt_operator()}.
@@ -1999,7 +1999,7 @@ class ReportedIP_Hive {
 
 		/**
 		 * Fires once per denied request, just before the 403 block page is
-		 * served. Guard-layer (pre-WordPress) refusals never reach this hook —
+		 * served. Guard-layer (pre-WordPress) refusals never reach this hook.
 		 * they terminate before WordPress loads.
 		 *
 		 * @param string $ip      Client IP the request was attributed to.
@@ -2011,7 +2011,7 @@ class ReportedIP_Hive {
 		status_header( 403 );
 
 		/*
-		 * AJAX and REST callers cannot render the themed block page — they
+		 * AJAX and REST callers cannot render the themed block page, they
 		 * expect a machine-readable body. Serving the full HTML document there
 		 * would leave the caller parsing markup for a status it already has.
 		 */
@@ -2101,7 +2101,7 @@ class ReportedIP_Hive {
 	 *
 	 * Because `is_admin()` is true while `wp_head()`/`wp_footer()` run, the
 	 * front-end `wp_enqueue_scripts` phase would invoke third-party theme /
-	 * optimisation callbacks that deregister core scripts like jQuery — which
+	 * optimisation callbacks that deregister core scripts like jQuery, which
 	 * WordPress rejects in the admin area with a `_doing_it_wrong` notice. These
 	 * pages enqueue their own assets directly, so the whole front-end enqueue
 	 * phase plus the emoji detector and the admin-bar bump styles are pure
@@ -2158,7 +2158,7 @@ class ReportedIP_Hive {
 	 *
 	 * Only trusts the explicitly configured header (reportedip_hive_trusted_ip_header),
 	 * and only when the connecting peer passes the trusted-proxy source check
-	 * (reportedip_hive_trusted_proxy_ranges — empty list trusts every peer).
+	 * (reportedip_hive_trusted_proxy_ranges, empty list trusts every peer).
 	 * If no trusted header is configured, the header is absent, or the peer is
 	 * not a declared proxy, falls back to REMOTE_ADDR. This prevents IP
 	 * spoofing via arbitrary proxy headers, including direct-to-origin
@@ -2223,14 +2223,14 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Whether an address is one of the server's own — a loopback address, the
+	 * Whether an address is one of the server's own, a loopback address, the
 	 * interface address the current request arrived on, or an address the
 	 * site's own hostname resolves to.
 	 *
 	 * Self-traffic legitimately hammers the site: cache-preload crawlers,
 	 * WP-Cron loopbacks and REST self-requests all connect back through the
 	 * site's public URL, so their REMOTE_ADDR is the server's own public
-	 * address — which passes {@see is_public_ip()}. Auto-blocking that address
+	 * address, which passes {@see is_public_ip()}. Auto-blocking that address
 	 * takes every loopback down with it (the pre-WordPress guard enforces the
 	 * block before any path exception), and reporting it poisons the site's
 	 * own community reputation. The automatic pipeline therefore stands down
@@ -2307,8 +2307,8 @@ class ReportedIP_Hive {
 	 * interface do not match SERVER_ADDR, so the addresses the site's DNS
 	 * name points at complete the picture. The lookup itself is the same
 	 * forward resolver the bot verifier uses
-	 * ({@see ReportedIP_Hive_Bot_Verifier::resolve_host_ips()}); results —
-	 * a failed lookup included — are cached network-wide for six hours.
+	 * ({@see ReportedIP_Hive_Bot_Verifier::resolve_host_ips()}); results.
+	 * a failed lookup included, are cached network-wide for six hours.
 	 *
 	 * @return string[] Addresses the site hostname resolves to.
 	 * @since  2.1.31
@@ -2388,7 +2388,7 @@ class ReportedIP_Hive {
 	/**
 	 * Get the canonical option-key => default map.
 	 *
-	 * Delegates to {@see ReportedIP_Hive_Defaults::all_option_defaults()} —
+	 * Delegates to {@see ReportedIP_Hive_Defaults::all_option_defaults()}.
 	 * the single source of truth for every plugin default.
 	 *
 	 * @return array<string, scalar>
@@ -2418,8 +2418,8 @@ class ReportedIP_Hive {
 	 *
 	 * The activation hook only fires on a manual (re)activation, so options
 	 * introduced in a release are missing on a site that auto-updated. A boolean
-	 * default-on option without a stored row cannot be switched off — WordPress
-	 * treats `update_option( $key, false )` on an absent option as a no-op — so
+	 * default-on option without a stored row cannot be switched off, WordPress
+	 * treats `update_option( $key, false )` on an absent option as a no-op, so
 	 * its admin toggle would silently do nothing. Re-seeding once per version
 	 * change (gated by a stored version marker, main-site-only on Multisite so
 	 * the network keys are written once) closes that gap.

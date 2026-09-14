@@ -84,7 +84,7 @@ class ReportedIP_Hive_News_Feed {
 				'title'     => (string) $item->get_title(),
 				'link'      => (string) $item->get_permalink(),
 				'timestamp' => (int) $item->get_date( 'U' ),
-				'summary'   => wp_trim_words( wp_strip_all_tags( (string) $item->get_description() ), 24, '…' ),
+				'summary'   => wp_trim_words( wp_strip_all_tags( (string) $item->get_description() ), 24, '...' ),
 				'category'  => is_object( $category ) && method_exists( $category, 'get_label' ) ? (string) $category->get_label() : '',
 			);
 		}

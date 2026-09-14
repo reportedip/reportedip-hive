@@ -2,18 +2,18 @@
 /**
  * Canonical request-path resolution shared by every path-matching sensor.
  *
- * Each sensor used to parse `REQUEST_URI` itself, and they disagreed — which is
+ * Each sensor used to parse `REQUEST_URI` itself, and they disagreed, which is
  * how a percent-escaped probe walked past the hidden login and the scanner
  * honeypot while the firewall engine saw it. Both traps this closes are subtle
  * enough that no sensor should re-derive them:
  *
  *  - `sanitize_text_field()` deletes every `%XX` sequence, so `/wp-login%2Ephp`
- *    became `/wp-loginphp` — a path the server never resolves and no rule ever
+ *    became `/wp-loginphp`, a path the server never resolves and no rule ever
  *    matches. The URI has to be parsed raw and decoded exactly once.
  *  - `//host/path` is a protocol-relative URL: `parse_url()` reads `host` as the
  *    authority and returns only `/path`. A path-prefix comparison then matches
  *    a prefix the request never had, so leading slashes collapse *before*
- *    parsing, never after — re-collapsing post-decode would let `%2F%2F` fold
+ *    parsing, never after, re-collapsing post-decode would let `%2F%2F` fold
  *    into a prefix the web server keeps separate.
  *
  * The pre-WordPress guard cannot call this (it runs before WordPress loads) and

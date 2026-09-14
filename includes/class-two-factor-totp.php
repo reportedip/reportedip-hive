@@ -3,7 +3,7 @@
  * Two-Factor TOTP Class for ReportedIP Hive.
  *
  * Self-contained RFC 6238 TOTP implementation.
- * No external library required — compatible with PHP 7.4+.
+ * No external library required, compatible with PHP 7.4+.
  * Works with Google Authenticator, Microsoft Authenticator, Authy, etc.
  *
  * @package   ReportedIP_Hive
@@ -124,8 +124,8 @@ class ReportedIP_Hive_Two_Factor_TOTP {
 	 *
 	 * Callers that persist the returned step can refuse a second use of the
 	 * same code, as RFC 6238 §5.2 requires: without that a code observed in
-	 * transit stays valid for the rest of its window — up to 90 seconds at the
-	 * default tolerance — and replays in a parallel session.
+	 * transit stays valid for the rest of its window, up to 90 seconds at the
+	 * default tolerance, and replays in a parallel session.
 	 *
 	 * @param string $secret   Base32-encoded TOTP secret.
 	 * @param string $code     6-digit code to verify.

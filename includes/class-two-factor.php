@@ -190,7 +190,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * Singleton-light handle so the Frontend renderer
 	 * ({@see ReportedIP_Hive_Two_Factor_Frontend::render_challenge()}) can
 	 * dispatch the challenge through the same instance that owns the
-	 * authentication hooks — without re-registering them.
+	 * authentication hooks, without re-registering them.
 	 *
 	 * @var ReportedIP_Hive_Two_Factor|null
 	 * @since 1.7.0
@@ -213,7 +213,7 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
-	 * Constructor — registers authentication hooks.
+	 * Constructor, registers authentication hooks.
 	 *
 	 * 2FA hooks run on every request (not just admin) because wp-login.php
 	 * is not admin context. The authenticate filter runs at priority 99,
@@ -333,7 +333,7 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
-	 * wp_logout callback — clear challenge cookies and transients.
+	 * wp_logout callback, clear challenge cookies and transients.
 	 *
 	 * @param int $user_id Logged-out user ID (0 if unknown).
 	 */
@@ -357,7 +357,7 @@ class ReportedIP_Hive_Two_Factor {
 			<?php
 			printf(
 				/* translators: 1: opening link tag, 2: closing link tag */
-				esc_html__( 'Secured by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
+				esc_html__( 'Secured by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
 				'<a href="https://reportedip.com/" target="_blank" rel="noopener">',
 				'</a>'
 			);
@@ -379,7 +379,7 @@ class ReportedIP_Hive_Two_Factor {
 
 	/**
 	 * Stretch the WP auth cookie lifetime for 2FA-verified remember-me logins
-	 * from 14 days (core default) to 30 days — stronger auth earns longer
+	 * from 14 days (core default) to 30 days, stronger auth earns longer
 	 * sessions. Only active while wp_set_auth_cookie() is running inside
 	 * handle_2fa_challenge after a successful verify.
 	 *
@@ -507,7 +507,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * Returns 'allow' to let the login through (the onboarding redirect and the
 	 * skip-less setup wizard then force enrolment), or 'lockout' to reject the
 	 * login outright. The hard lockout is only returned when the site policy
-	 * option is explicitly set to 'lockout' and the user is not privileged —
+	 * option is explicitly set to 'lockout' and the user is not privileged.
 	 * administrators and super admins are never locked out, so a site can never
 	 * be left without a sign-in-capable administrator.
 	 *
@@ -561,7 +561,7 @@ class ReportedIP_Hive_Two_Factor {
 	 *
 	 * {@see self::get_user_enabled_methods()} intersects this with the allowed
 	 * list and therefore cannot answer "did this user ever set up a factor?"
-	 * once the policy stopped permitting it — which is exactly what the
+	 * once the policy stopped permitting it, which is exactly what the
 	 * silent-loss warning on the login path needs to know.
 	 *
 	 * Includes the legacy single-method meta, so accounts that predate the
@@ -642,7 +642,7 @@ class ReportedIP_Hive_Two_Factor {
 	 *
 	 * Single source of truth for the allowed-method allow-list: the setup wizard,
 	 * the settings-form sanitiser, tier-upgrade and settings import all validate
-	 * against this list. METHOD_RECOVERY is intentionally excluded — recovery
+	 * against this list. METHOD_RECOVERY is intentionally excluded, recovery
 	 * codes are an automatic fallback, not a method an admin opts into.
 	 *
 	 * @return string[] Method identifiers.
@@ -776,7 +776,7 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
-	 * Authenticate filter — intercept login when 2FA is required.
+	 * Authenticate filter, intercept login when 2FA is required.
 	 *
 	 * Runs at priority 99 on the 'authenticate' filter, after password verification.
 	 * If the user has 2FA enabled or enforcement requires it, returns WP_Error
@@ -1189,7 +1189,7 @@ class ReportedIP_Hive_Two_Factor {
 						self::record_ip_failure( ReportedIP_Hive::get_client_ip() );
 
 						if ( self::METHOD_EMAIL === $submitted_method && ! get_transient( 'reportedip_2fa_email_' . $user_id ) ) {
-							$error = __( 'No valid code is active — you likely used an older code. Please click "Resend code" and use only the most recent code from your inbox.', 'reportedip-hive' );
+							$error = __( 'No valid code is active, you likely used an older code. Please click "Resend code" and use only the most recent code from your inbox.', 'reportedip-hive' );
 						} elseif ( self::METHOD_SMS === $submitted_method && ! get_transient( 'reportedip_2fa_sms_' . $user_id ) ) {
 							$error = __( 'No valid SMS code is active. Please request a new code and use only the most recent SMS.', 'reportedip-hive' );
 						} else {
@@ -1200,7 +1200,7 @@ class ReportedIP_Hive_Two_Factor {
 
 							$logger = ReportedIP_Hive_Logger::get_instance();
 							$logger->warning(
-								'2FA brute force detected — session invalidated',
+								'2FA brute force detected, session invalidated',
 								ReportedIP_Hive::get_client_ip(),
 								array(
 									'user_id'  => $user_id,
@@ -1325,8 +1325,8 @@ class ReportedIP_Hive_Two_Factor {
 	 *
 	 * The method arrives from the challenge form, so it is checked against the
 	 * factors actually live for this user before any credential material is
-	 * touched. Without that, a method the site policy no longer permits — or
-	 * one the user disabled — still authenticated as long as its stored secret
+	 * touched. Without that, a method the site policy no longer permits, or
+	 * one the user disabled, still authenticated as long as its stored secret
 	 * was left behind, because the verifier is a pure per-method switch. The
 	 * REST and password-reset surfaces have always gated their input this way.
 	 *
@@ -1432,7 +1432,7 @@ class ReportedIP_Hive_Two_Factor {
 	 *
 	 * The bearer presents the same 256-bit token (HttpOnly, Secure,
 	 * SameSite=Strict cookie) that just passed the second factor, from the
-	 * same IP, inside a {@see NONCE_CONSUMED_TTL} window — the replay
+	 * same IP, inside a {@see NONCE_CONSUMED_TTL} window, the replay
 	 * therefore re-issues the identical auth cookie and redirect the winning
 	 * request already produced. The marker is left in place so every
 	 * duplicate within the window lands correctly; it expires on its own.
@@ -1479,7 +1479,7 @@ class ReportedIP_Hive_Two_Factor {
 
 	/**
 	 * Redirect an already-authenticated visitor away from the challenge
-	 * instead of showing the "session expired" page — a stale tab, a reload
+	 * instead of showing the "session expired" page, a stale tab, a reload
 	 * of the challenge URL or a bookmarked challenge link is not an error
 	 * for someone who is signed in.
 	 *
@@ -1536,7 +1536,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * Replaces the previous silent `wp_safe_redirect( wp_login_url() )` that
 	 * left users staring at a clean login form after the 2FA nonce had timed
 	 * out (NONCE_TTL = 15 min) or after the SameSite=Strict nonce cookie was
-	 * dropped — the latter happens routinely when wp-login.php is loaded
+	 * dropped, the latter happens routinely when wp-login.php is loaded
 	 * inside an iframe, which is what triggered the original bug report.
 	 *
 	 * Mirrors the bypass-the-login_errors-pipeline approach used by
@@ -1550,7 +1550,7 @@ class ReportedIP_Hive_Two_Factor {
 	 */
 	private function render_session_expired_page( $reason = 'expired', $context = 'wp_login' ) {
 		$messages = array(
-			'expired'      => __( 'Your two-factor session has expired. This happens after 15 minutes of inactivity, or when the security cookie is missing — for example when the login form is loaded inside an iframe. Please sign in again.', 'reportedip-hive' ),
+			'expired'      => __( 'Your two-factor session has expired. This happens after 15 minutes of inactivity, or when the security cookie is missing, for example when the login form is loaded inside an iframe. Please sign in again.', 'reportedip-hive' ),
 			'unknown_user' => __( 'The user account from your two-factor session is no longer available. Please sign in again.', 'reportedip-hive' ),
 		);
 		$message  = isset( $messages[ $reason ] ) ? $messages[ $reason ] : $messages['expired'];
@@ -1664,7 +1664,7 @@ class ReportedIP_Hive_Two_Factor {
 					'newCodeSent'          => __( 'New code sent.', 'reportedip-hive' ),
 					'sendingFailed'        => __( 'Sending failed.', 'reportedip-hive' ),
 					'sessionExpired'       => __( 'Your session has expired. Please sign in again.', 'reportedip-hive' ),
-					'passkeyRequesting'    => __( 'Passkey request in progress…', 'reportedip-hive' ),
+					'passkeyRequesting'    => __( 'Passkey request in progress...', 'reportedip-hive' ),
 					'enterCodeFirst'       => __( 'Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead.', 'reportedip-hive' ),
 					'enterCodeFirstPlain'  => __( 'Please enter the verification code first.', 'reportedip-hive' ),
 					'passkeyWaiting'       => __( 'Waiting for your security key. Insert and touch it now, or approve the passkey prompt.', 'reportedip-hive' ),
@@ -1692,10 +1692,10 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Open a minimal HTML frame that loads the active theme's stylesheet
 	 * and emits `wp_head()` so design tokens, fonts and analytics keep
-	 * working — without calling `get_header()`.
+	 * working, without calling `get_header()`.
 	 *
 	 * Using `get_header()` triggers a deprecation notice on Block Themes
-	 * (twentytwentyfive, twentytwentyfour, …) because they ship template
+	 * (twentytwentyfive, twentytwentyfour, ...) because they ship template
 	 * parts under `templates/` instead of a classic `header.php`. Block
 	 * themes also render their full chrome through `block_template_part`
 	 * which is not appropriate for a self-contained interstitial like
@@ -1747,11 +1747,11 @@ class ReportedIP_Hive_Two_Factor {
 	 * Translate ReportedIP-Hive 2FA query flags into wp-login error messages.
 	 *
 	 * Two flags are recognised:
-	 *   - `?reportedip_2fa_locked=1`  — set by {@see handle_2fa_challenge()}
+	 *   - `?reportedip_2fa_locked=1` , set by {@see handle_2fa_challenge()}
 	 *     when the brute-force counter trips SESSION_INVALIDATION_THRESHOLD;
 	 *     before this filter the flag was set but never read, so the user
 	 *     landed on a clean login form with zero feedback.
-	 *   - `?reportedip_2fa_expired=1` — reserved for callers that prefer a
+	 *   - `?reportedip_2fa_expired=1`, reserved for callers that prefer a
 	 *     redirect over the inline `render_session_expired_page()` shell
 	 *     (e.g. integrations that redirect from outside the challenge handler).
 	 *
@@ -2028,7 +2028,7 @@ class ReportedIP_Hive_Two_Factor {
 		/*
 		 * Graduate to a real DB block when the per-IP 2FA throttle reaches
 		 * its top step. 15 wrong codes in a one-hour window is unambiguous
-		 * brute force — the transient lockout was capping the response at
+		 * brute force, the transient lockout was capping the response at
 		 * one hour and forgetting; promoting to wp_reportedip_hive_blocked
 		 * via handle_threshold_exceeded() runs the canonical post-trip
 		 * pipeline (auto-block with progressive escalation, community-mode
@@ -2079,7 +2079,7 @@ class ReportedIP_Hive_Two_Factor {
 					'newCodeSent'          => __( 'New code sent.', 'reportedip-hive' ),
 					'sendingFailed'        => __( 'Sending failed.', 'reportedip-hive' ),
 					'sessionExpired'       => __( 'Your session has expired. Please sign in again.', 'reportedip-hive' ),
-					'passkeyRequesting'    => __( 'Passkey request in progress…', 'reportedip-hive' ),
+					'passkeyRequesting'    => __( 'Passkey request in progress...', 'reportedip-hive' ),
 					'enterCodeFirst'       => __( 'Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead.', 'reportedip-hive' ),
 					'enterCodeFirstPlain'  => __( 'Please enter the verification code first.', 'reportedip-hive' ),
 					'passkeyWaiting'       => __( 'Waiting for your security key. Insert and touch it now, or approve the passkey prompt.', 'reportedip-hive' ),
@@ -2290,7 +2290,7 @@ class ReportedIP_Hive_Two_Factor {
 		 *
 		 * Used by ReportedIP_Hive_Two_Factor_Recommend to clear the login-reminder
 		 * counter; available for any third-party listener that needs to react to
-		 * a method going live (audit log, welcome mail, …).
+		 * a method going live (audit log, welcome mail, ...).
 		 *
 		 * @since 1.6.1
 		 * @param int    $user_id The user whose method became active.
@@ -2309,7 +2309,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * and existing recovery codes survive.
 	 *
 	 * Callers must not write the method's enabled flag themselves before
-	 * calling this — the first-method detection reads the flags.
+	 * calling this, the first-method detection reads the flags.
 	 *
 	 * A method the site policy does not permit is refused here rather than
 	 * only hidden in the profile UI: the enrolment endpoints are reachable
@@ -2427,7 +2427,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * Disable 2FA for a user and clean up all related data.
 	 *
 	 * Also resets the reminder counter and the onboarding skip snooze
-	 * (literal keys — the Recommend/Onboarding classes are not loaded in
+	 * (literal keys, the Recommend/Onboarding classes are not loaded in
 	 * every context this runs in), so a support reset really starts fresh.
 	 *
 	 * @param int $user_id WordPress user ID.

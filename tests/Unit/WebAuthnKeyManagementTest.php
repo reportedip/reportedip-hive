@@ -148,7 +148,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, 'authenticator_selection' );
 
 			$plain = $method->invoke( null, '' );
-			$this->assertSame( 'discouraged', $plain['residentKey'], 'residentKey must stay discouraged — preferred would consume YubiKey slots and force PIN setup.' );
+			$this->assertSame( 'discouraged', $plain['residentKey'], 'residentKey must stay discouraged, preferred would consume YubiKey slots and force PIN setup.' );
 			$this->assertArrayNotHasKey( 'authenticatorAttachment', $plain );
 
 			$hardware = $method->invoke( null, 'security-key' );
@@ -238,7 +238,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_first_key_is_free_and_more_keys_are_gated(): void {
 			$this->assertTrue(
 				ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( self::USER_ID ),
-				'The first key must always be allowed — base 2FA protection is never gated.'
+				'The first key must always be allowed, base 2FA protection is never gated.'
 			);
 
 			update_user_meta(
@@ -269,7 +269,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame(
 				2,
 				substr_count( $source, 'self::can_add_key( $user_id )' ),
-				'Both register endpoints (options + verify) must enforce the tier key limit — the UI hint alone is not a gate.'
+				'Both register endpoints (options + verify) must enforce the tier key limit, the UI hint alone is not a gate.'
 			);
 		}
 
@@ -283,7 +283,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString(
 				'advanced_available',
 				$regression,
-				'The cloned-key warning is protection, not comfort — it must reach every tier.'
+				'The cloned-key warning is protection, not comfort, it must reach every tier.'
 			);
 		}
 	}

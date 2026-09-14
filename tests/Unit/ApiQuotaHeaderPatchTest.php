@@ -4,7 +4,7 @@
  *
  * Locks down two 2.1.41 behaviours on the API client: (1) the private
  * `patch_api_quota_from_headers()` helper only ever patches an EXISTING
- * `reportedip_hive_api_quota` transient from numeric X-RateLimit headers —
+ * `reportedip_hive_api_quota` transient from numeric X-RateLimit headers.
  * context 'check' moves the API-call counters, context 'report' the report
  * counters, "unlimited" is skipped, `reset_time` stays untouched and no
  * transient is conjured up when the cron has not created one yet; and (2) a

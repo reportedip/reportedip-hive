@@ -3,7 +3,7 @@
  * Regression tests for the non-public-IP guards (hotfix 2.1.5).
  *
  * The full ReportedIP_Hive class cannot be instantiated in the unit suite
- * (heavy WordPress dependencies), so — like the other main-file guards — these
+ * (heavy WordPress dependencies), so, like the other main-file guards, these
  * lock the critical source properties in place:
  *
  *  1. is_public_ip() rejects private/reserved ranges via the filter flags.

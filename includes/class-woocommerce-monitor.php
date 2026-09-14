@@ -5,7 +5,7 @@
  * The plugin's `wp_login_failed` listener already covers WC because WooCommerce
  * authenticates through the standard `wp_authenticate` filter. WooCommerce
  * fires *additional* dedicated hooks though, and they fire even on the AJAX
- * checkout login form where `wp_login_failed` does not — so we wire them too,
+ * checkout login form where `wp_login_failed` does not, so we wire them too,
  * tag the events as `wc_login_failed`, and let the security monitor treat them
  * as a separate attempt-type bucket.
  *
@@ -55,7 +55,7 @@ class ReportedIP_Hive_WooCommerce_Monitor {
 	}
 
 	/**
-	 * Hook on plugins_loaded — WC may not be loaded yet at the time this
+	 * Hook on plugins_loaded, WC may not be loaded yet at the time this
 	 * class is instantiated, so we attach via the action with no class_exists
 	 * guard. WC's hooks simply never fire if the plugin is inactive.
 	 */

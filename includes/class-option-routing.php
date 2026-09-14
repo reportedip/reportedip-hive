@@ -4,7 +4,7 @@
  *
  * On Multisite installs the plugin needs to distinguish between
  *   - network-wide options (single source of truth across all sites: API key,
- *     mode, tier, thresholds, sensor toggles, …)
+ *     mode, tier, thresholds, sensor toggles, ...)
  *   - site-specific options (currently only two: per-site WooCommerce
  *     Frontend-2FA slug override and per-site additional 2FA enforcement
  *     roles, both of which strictly extend the network defaults).
@@ -36,7 +36,7 @@ final class ReportedIP_Hive_Option_Routing {
 	 *
 	 * Every key NOT in this map is treated as a network option. Stored as
 	 * a flipped lookup map (key => true) so {@see is_site_option()} is an
-	 * O(1) `isset()` rather than an O(N) `in_array()` — at 350+ call
+	 * O(1) `isset()` rather than an O(N) `in_array()`, at 350+ call
 	 * sites per request the difference is measurable.
 	 *
 	 * @var array<string, true>
@@ -55,7 +55,7 @@ final class ReportedIP_Hive_Option_Routing {
 	/**
 	 * Upper value-size bound for {@see prime_cache()}. Large payloads (the
 	 * synced disposable-domains ruleset can exceed 500 KB) are deliberately
-	 * NOT primed — they stay lazy-loaded by their single consumer instead of
+	 * NOT primed, they stay lazy-loaded by their single consumer instead of
 	 * being unserialised into memory on every request.
 	 */
 	private const PRIME_MAX_BYTES = 65536;
@@ -77,8 +77,8 @@ final class ReportedIP_Hive_Option_Routing {
 	 * Background: on single-site WordPress `update_network_option()` always
 	 * writes with `autoload=no`, so none of the ~150 plugin options ever land
 	 * in `alloptions`. Without a persistent object cache every distinct
-	 * `Option_Routing::get()` key therefore costs one `SELECT option_value …
-	 * LIMIT 1` — measured at 30+ plugin-option queries on a single anonymous
+	 * `Option_Routing::get()` key therefore costs one `SELECT option_value ...
+	 * LIMIT 1`, measured at 30+ plugin-option queries on a single anonymous
 	 * front-end request. On Multisite the same applies to sitemeta lookups.
 	 *
 	 * This helper replaces those with ONE query per request. Values are stored
@@ -117,7 +117,7 @@ final class ReportedIP_Hive_Option_Routing {
 				/*
 				 * Core's get_network_option() unserializes BEFORE caching and
 				 * trusts a cache hit verbatim, so the primed value must already
-				 * be unserialized — a raw serialized string here poisons every
+				 * be unserialized, a raw serialized string here poisons every
 				 * array-valued network option until the cache expires (fatal
 				 * TypeError in consumers such as the cache-stats counters).
 				 */
@@ -310,7 +310,7 @@ final class ReportedIP_Hive_Option_Routing {
 	 * Resolve the effective 2FA enforcement role list for the current site.
 	 *
 	 * Site can ONLY extend the network list (additive). Removing a role
-	 * network-wide is the prerogative of the Network Admin — Site Admins
+	 * network-wide is the prerogative of the Network Admin, Site Admins
 	 * cannot drop roles that the Super Admin requires.
 	 *
 	 * @return string[] Sorted, de-duplicated list of role slugs.
@@ -335,7 +335,7 @@ final class ReportedIP_Hive_Option_Routing {
 	 * Network-only 2FA enforce-roles list (no site-extra merge).
 	 *
 	 * Use this when you need to know which roles are *network-required*
-	 * — e.g. in the Site Admin UI to render the read-only "always
+	 * - e.g. in the Site Admin UI to render the read-only "always
 	 * enforced by network" markers. {@see resolve_2fa_enforce_roles()}
 	 * is the right call when you need the *effective* enforced list for
 	 * the current site.
@@ -365,7 +365,7 @@ final class ReportedIP_Hive_Option_Routing {
 	 *
 	 * Accepts both the legacy JSON-string representation (`'["totp","email"]'`)
 	 * and the modern array form (`['totp','email']`) so call sites can read the
-	 * value either way without ad-hoc decoding — calling `json_decode()` on a
+	 * value either way without ad-hoc decoding, calling `json_decode()` on a
 	 * value that is already an array is a fatal `TypeError` on PHP 8.
 	 *
 	 * @param mixed              $raw     Stored option value (array or JSON string).
@@ -468,10 +468,10 @@ final class ReportedIP_Hive_Option_Routing {
 	 * Delete all plugin options and transients from the current site's `wp_options` table.
 	 *
 	 * The base `LIKE 'reportedip\_hive\_%'` does NOT match transient rows
-	 * (`_transient_…` / `_transient_timeout_…`) — they need their own
-	 * predicates. Without this every Hive transient — including the new
+	 * (`_transient_...` / `_transient_timeout_...`), they need their own
+	 * predicates. Without this every Hive transient, including the new
 	 * `reportedip_hive_hardening_seen_*` and `reportedip_hive_relay_bo_*`
-	 * payloads — survived deactivate/uninstall and could come back to
+	 * payloads, survived deactivate/uninstall and could come back to
 	 * haunt a fresh re-install.
 	 *
 	 * @return void

@@ -7,7 +7,7 @@
  * (2) `api_user_agent()` follows the wp.org shape
  * `ReportedIP-Hive/{v} (WordPress/{wpv}; {site})`; (3) every request built by
  * `make_request()` carries the X-Rip-Site header plus the uniform User-Agent;
- * and (4) the HIBP password check never receives the site identity — neither
+ * and (4) the HIBP password check never receives the site identity, neither
  * in its User-Agent nor as an X-Rip-Site header.
  *
  * @package    ReportedIP_Hive
@@ -144,7 +144,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayNotHasKey(
 				'user-agent',
 				$request['args'],
-				'The dead lowercase user-agent arg must stay removed — the header is the single source.'
+				'The dead lowercase user-agent arg must stay removed, the header is the single source.'
 			);
 		}
 

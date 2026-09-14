@@ -5,7 +5,7 @@
  * `remove_from_whitelist()` soft-deletes (`is_active = 0`) and expired entries
  * stay in the table, but the whitelist carries a UNIQUE KEY on `ip_address`.
  * A plain INSERT therefore failed with a duplicate-key error for every IP that
- * had ever been on the list — surfaced to admins as "Failed to whitelist IP
+ * had ever been on the list, surfaced to admins as "Failed to whitelist IP
  * address." with no way to recover. These tests run against a real
  * WordPress + database.
  *

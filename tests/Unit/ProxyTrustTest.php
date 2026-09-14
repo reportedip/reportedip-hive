@@ -5,7 +5,7 @@
  * Locks the two halves of the anti-spoofing contract: parse_ranges() reduces
  * the raw textarea option to a clean, de-duplicated IP/CIDR list (dropping
  * comments, blanks and garbage), and source_is_trusted() only lets peers
- * inside that list supply the client-IP header — with the empty list keeping
+ * inside that list supply the client-IP header, with the empty list keeping
  * the trust-every-peer pre-2.1.41 behaviour.
  *
  * @package    ReportedIP_Hive
@@ -69,7 +69,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * An empty range list means every peer may supply the header — that is
+		 * An empty range list means every peer may supply the header, that is
 		 * the pre-2.1.41 behaviour and keeps existing configurations working.
 		 */
 		public function test_empty_ranges_trust_every_peer(): void {
@@ -96,7 +96,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * With a non-empty list an unparseable peer address must never be
-		 * trusted — '' and the 'unknown' sentinel are what a broken server
+		 * trusted, '' and the 'unknown' sentinel are what a broken server
 		 * environment hands over, and both would otherwise bypass the check.
 		 */
 		public function test_invalid_remote_addr_is_untrusted(): void {

@@ -13,7 +13,7 @@
  * The whole module is gated by the `frontend_2fa` feature flag in
  * {@see ReportedIP_Hive_Mode_Manager} (PRO+ tier required). When the gate
  * is closed the rewrites are still registered so a downgrade does not
- * 404 stale links — but {@see self::route_request()} simply yields and
+ * 404 stale links, but {@see self::route_request()} simply yields and
  * lets WordPress fall through to its standard 404, while the legacy
  * wp-login.php challenge keeps working for everyone.
  *
@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Routes, gating, cache-headers and conflict-detection for the frontend
- * 2FA module. The public surface is fully static — there is no
+ * 2FA module. The public surface is fully static, there is no
  * per-request state, only WordPress hooks and one tier-gate memo.
  *
  * @since 1.7.0
@@ -55,7 +55,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	const OPT_SOFT_DISABLED = 'reportedip_hive_2fa_frontend_soft_disabled';
 
 	/**
-	 * Default slugs — if you change these in code, also update the
+	 * Default slugs, if you change these in code, also update the
 	 * corresponding entries in {@see ReportedIP_Hive_Defaults}.
 	 */
 	const DEFAULT_CHALLENGE_SLUG = 'reportedip-hive-2fa';
@@ -117,7 +117,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	private static $slug_memo = null;
 
 	/**
-	 * Wire the WordPress hooks. Idempotent — calling twice is safe.
+	 * Wire the WordPress hooks. Idempotent, calling twice is safe.
 	 *
 	 * @return void
 	 */
@@ -365,7 +365,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 
 	/**
 	 * Register the rewrite rules that point both slugs at this
-	 * module's query var. Idempotent — `add_rewrite_rule()` is a
+	 * module's query var. Idempotent, `add_rewrite_rule()` is a
 	 * no-op when the rule already exists in the rules array.
 	 *
 	 * @return void
@@ -493,7 +493,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * `reportedip_hive_tier_changed` callback. Soft-disables the
 	 * module when the customer drops below the PRO requirement so
 	 * existing customer 2FA stays valid but new onboardings stop
-	 * — full implementation lives in Phase 10. For Phase 3 we only
+	 * - full implementation lives in Phase 10. For Phase 3 we only
 	 * flush the memo so {@see self::is_available()} re-evaluates on
 	 * the next request.
 	 *
@@ -553,21 +553,21 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 			$conflicts[] = array(
 				'slug'    => 'wp-two-factor',
 				'label'   => __( 'WordPress Two-Factor', 'reportedip-hive' ),
-				'message' => __( 'The WordPress.org "Two Factor" plugin is active. Pick one provider — running both will prompt customers twice.', 'reportedip-hive' ),
+				'message' => __( 'The WordPress.org "Two Factor" plugin is active. Pick one provider, running both will prompt customers twice.', 'reportedip-hive' ),
 			);
 		}
 		if ( function_exists( 'wfConfig' ) ) {
 			$conflicts[] = array(
 				'slug'    => 'wordfence',
 				'label'   => __( 'Wordfence', 'reportedip-hive' ),
-				'message' => __( 'Wordfence offers its own 2FA injection — disable it for any role that should be served by Hive Frontend 2FA.', 'reportedip-hive' ),
+				'message' => __( 'Wordfence offers its own 2FA injection, disable it for any role that should be served by Hive Frontend 2FA.', 'reportedip-hive' ),
 			);
 		}
 		if ( class_exists( 'WC_Subscriptions' ) || class_exists( 'WC_Memberships' ) ) {
 			$conflicts[] = array(
 				'slug'    => 'wc-subscriptions',
 				'label'   => __( 'WooCommerce Subscriptions / Memberships', 'reportedip-hive' ),
-				'message' => __( 'Magic-login links sent by Subscriptions and Memberships intentionally bypass 2FA so renewals do not break — keep the subscription audit log enabled.', 'reportedip-hive' ),
+				'message' => __( 'Magic-login links sent by Subscriptions and Memberships intentionally bypass 2FA so renewals do not break, keep the subscription audit log enabled.', 'reportedip-hive' ),
 			);
 		}
 

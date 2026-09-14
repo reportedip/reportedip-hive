@@ -3,8 +3,8 @@
  * Unit tests for TOTP verification and its single-use enforcement.
  *
  * RFC 6238 §5.2 requires that a code accepted once is not accepted again.
- * Nothing tracked the consumed time step, so a code captured in transit —
- * phishing proxy, shoulder-surf, plain HTTP — stayed valid for the remainder
+ * Nothing tracked the consumed time step, so a code captured in transit.
+ * phishing proxy, shoulder-surf, plain HTTP, stayed valid for the remainder
  * of its window (90 seconds at the default tolerance, 210 at the widest) and
  * replayed in a second, parallel session. The login nonce is single-use and
  * covered replay inside one challenge only.

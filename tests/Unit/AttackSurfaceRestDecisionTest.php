@@ -3,8 +3,8 @@
  * Unit tests for the pure REST access decision of the attack-surface switches.
  *
  * `rest_decision()` is deliberately free of WordPress calls so the whole
- * allow/deny table — allowlisted namespaces, anonymous visitors, the two
- * modes, the administrator carve-out and the application-password route — is
+ * allow/deny table, allowlisted namespaces, anonymous visitors, the two
+ * modes, the administrator carve-out and the application-password route, is
  * exercised here rather than through a live REST request.
  *
  * @package    ReportedIP_Hive
@@ -207,7 +207,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$body = substr( $source, $start, (int) strpos( $source, 'apply_filters', $start ) - $start );
 
 			preg_match_all( "#'(/[a-z0-9./-]+)'#i", $body, $matches );
-			$this->assertNotEmpty( $matches[1], 'No bypass route literals found — the pin would be vacuous.' );
+			$this->assertNotEmpty( $matches[1], 'No bypass route literals found, the pin would be vacuous.' );
 
 			$seeded = $this->seeded_namespaces();
 

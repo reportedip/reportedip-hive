@@ -3,7 +3,7 @@
  * Multisite tests for the API telemetry site identity (2.1.45).
  *
  * A network counts as ONE licensed domain, so api_site_url() must announce
- * the network home URL from every sub-site — never the per-site home_url().
+ * the network home URL from every sub-site, never the per-site home_url().
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Multisite
@@ -40,7 +40,7 @@ class ReportedIP_Hive_Api_Telemetry_Multisite_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Switching to a sub-site must not change the announced identity —
+	 * Switching to a sub-site must not change the announced identity.
 	 * the whole network occupies one domain slot.
 	 */
 	public function test_api_site_url_is_stable_across_sub_sites() {

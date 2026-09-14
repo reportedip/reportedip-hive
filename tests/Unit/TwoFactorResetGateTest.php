@@ -4,7 +4,7 @@
  *
  * Two layers of testing:
  *   1. Source-pattern matching locks down hook wiring, constants, and the
- *      contract with the central security monitor — refactors that drop
+ *      contract with the central security monitor, refactors that drop
  *      these guarantees fail the test, even if the public API still loads.
  *   2. Pure-logic tests cover the eligibility / lockout decision functions
  *      using lightweight option + user-meta stubs.
@@ -180,7 +180,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				"'[\"email\"]'",
 				$source,
-				'The default excluded-methods option must contain "email" — the recovery channel must not double as the second factor.'
+				'The default excluded-methods option must contain "email", the recovery channel must not double as the second factor.'
 			);
 		}
 
@@ -212,7 +212,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				"hash( 'sha256', \$reset_key )",
 				$source,
-				'Token transient key must include sha256(reset_key) so each reset link gets its own token slot — multiple outstanding links cannot share state.'
+				'Token transient key must include sha256(reset_key) so each reset link gets its own token slot, multiple outstanding links cannot share state.'
 			);
 			$this->assertStringContainsString(
 				'client_fingerprint',
@@ -226,7 +226,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'consume_token',
 				$source,
-				'After a successful reset the token must be deleted (single-use) — otherwise an attacker who briefly knew the key could replay it within the 10-minute window.'
+				'After a successful reset the token must be deleted (single-use), otherwise an attacker who briefly knew the key could replay it within the 10-minute window.'
 			);
 		}
 
@@ -280,7 +280,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['rip_test_user_recovery'][7] = 0;
 			$this->assertFalse(
 				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 ),
-				'A user with no second factor enrolled must not be gated — they would otherwise drop into a recovery-code prompt for codes they never had.'
+				'A user with no second factor enrolled must not be gated, they would otherwise drop into a recovery-code prompt for codes they never had.'
 			);
 		}
 
@@ -289,7 +289,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['rip_test_user_recovery'][7] = 5;
 			$this->assertFalse(
 				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 ),
-				'Email-only-2FA is the same channel as the reset link, so it adds no security to gate on it — a user enrolled in nothing but email must skip the gate even when recovery codes exist.'
+				'Email-only-2FA is the same channel as the reset link, so it adds no security to gate on it, a user enrolled in nothing but email must skip the gate even when recovery codes exist.'
 			);
 		}
 
@@ -298,7 +298,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['rip_test_user_recovery'][7] = 8;
 			$this->assertFalse(
 				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 ),
-				'Recovery codes are a fallback for an inaccessible primary factor — they are not themselves a primary factor that should trigger the gate.'
+				'Recovery codes are a fallback for an inaccessible primary factor, they are not themselves a primary factor that should trigger the gate.'
 			);
 		}
 
@@ -334,7 +334,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertMatchesRegularExpression(
 				'/on_validate_reset.*should_gate_user/s',
 				$source,
-				'on_validate_reset() must bail out via should_gate_user() — using empty($enabled) alone is incorrect because email-only-2FA users with stale recovery codes would still be dragged into the challenge.'
+				'on_validate_reset() must bail out via should_gate_user(), using empty($enabled) alone is incorrect because email-only-2FA users with stale recovery codes would still be dragged into the challenge.'
 			);
 		}
 
@@ -377,7 +377,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['wp_options']['reportedip_hive_2fa_require_on_password_reset'] = true;
 			$this->assertFalse(
 				\ReportedIP_Hive_Two_Factor_Reset_Gate::is_feature_enabled(),
-				'The reset gate must inherit the global 2FA off-switch — otherwise it could fire while users have no way to set up their second factor.'
+				'The reset gate must inherit the global 2FA off-switch, otherwise it could fire while users have no way to set up their second factor.'
 			);
 		}
 
@@ -407,7 +407,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'rip-alert--danger',
 				$source,
-				'Failed verifications must surface inline as rip-alert--danger inside the .rip-2fa-challenge card — relying on login_header() alone hides the error when third-party plugins filter wp_login_errors.'
+				'Failed verifications must surface inline as rip-alert--danger inside the .rip-2fa-challenge card, relying on login_header() alone hides the error when third-party plugins filter wp_login_errors.'
 			);
 		}
 

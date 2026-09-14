@@ -6,8 +6,8 @@
  * show the second factor again, so both directions matter: it must fire when
  * a configured condition holds, and it must stay silent for enforced users,
  * unlisted roles, missing baselines and plans that do not include the
- * feature. The wiring inside `filter_authenticate()` — allowlist before the
- * gate, trusted device only when nothing fired — is anchored by source
+ * feature. The wiring inside `filter_authenticate()`, allowlist before the
+ * gate, trusted device only when nothing fired, is anchored by source
  * inspection, the pattern from SecurityMonitorBotGuardTest.
  *
  * @package    ReportedIP_Hive
@@ -491,7 +491,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles()',
 				$this->source( 'includes/class-password-strength.php' ),
-				'The enforcement list is shared — the policies must not change how it is read.'
+				'The enforcement list is shared, the policies must not change how it is read.'
 			);
 		}
 

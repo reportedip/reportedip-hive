@@ -14,7 +14,7 @@
  *  3. Per-user per-feature cooldown (60 days after a dismiss for that key).
  *
  * Status notices (cap reached, community-layer degraded) are deliberately
- * outside this system — they are operational information, not marketing, and
+ * outside this system, they are operational information, not marketing, and
  * must stay visible regardless of the cap.
  *
  * @package   ReportedIP_Hive
@@ -75,28 +75,28 @@ class ReportedIP_Hive_Promo_Manager {
 	const PER_FEATURE_COOLDOWN_SECS = 5184000;
 
 	/**
-	 * Promo key — WooCommerce Frontend-2FA banner shown on dashboard / plugins
+	 * Promo key, WooCommerce Frontend-2FA banner shown on dashboard / plugins
 	 * to admins of Free / Contributor WooCommerce stores.
 	 */
 	const KEY_WC_FRONTEND_2FA = 'wc_frontend_2fa';
 
 	/**
-	 * Promo key — inline upsell card on the Frontend-2FA settings tab.
+	 * Promo key, inline upsell card on the Frontend-2FA settings tab.
 	 */
 	const KEY_FRONTEND_2FA_INLINE = 'frontend_2fa_inline';
 
 	/**
-	 * Promo key — Mail / SMS managed-relay card on the Security Dashboard.
+	 * Promo key, Mail / SMS managed-relay card on the Security Dashboard.
 	 */
 	const KEY_MAIL_SMS_RELAY = 'mail_sms_relay';
 
 	/**
-	 * Promo key — Hardening Mode upsell on the Hardening tab.
+	 * Promo key, Hardening Mode upsell on the Hardening tab.
 	 */
 	const KEY_HARDENING_MODE = 'hardening_mode';
 
 	/**
-	 * Promo key — advanced threat-analytics card on the Security Dashboard.
+	 * Promo key, advanced threat-analytics card on the Security Dashboard.
 	 */
 	const KEY_ADVANCED_ANALYTICS = 'advanced_analytics';
 
@@ -159,7 +159,7 @@ class ReportedIP_Hive_Promo_Manager {
 	 * Record that a promo surface keyed `$key` actually rendered. Bumps both
 	 * the global and the per-feature timestamps.
 	 *
-	 * Must be called AFTER the surface renders, not before — an eager check
+	 * Must be called AFTER the surface renders, not before, an eager check
 	 * followed by a no-render bug would otherwise silently consume a slot.
 	 *
 	 * @param string $key
@@ -216,7 +216,7 @@ class ReportedIP_Hive_Promo_Manager {
 	 * when the customer upgrades so the post-upgrade banner is not blocked by
 	 * a stale global cap and old per-feature timestamps from a previous
 	 * lifecycle no longer apply. Permanent opt-outs (META_OPTOUT_MAP) are
-	 * preserved — those are explicit user choices, not lifecycle state.
+	 * preserved, those are explicit user choices, not lifecycle state.
 	 *
 	 * @param int $user_id
 	 * @return void

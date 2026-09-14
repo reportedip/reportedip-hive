@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * (rulesets, cloud management) shares one implementation. The signing model
  * mirrors WordPress-core signed updates: the private key lives on the
  * service, only public keys ship in the plugin, and verification always runs
- * over the literal payload string — decoding happens after, never before, so
+ * over the literal payload string, decoding happens after, never before, so
  * re-serialisation differences between client and server cannot bite.
  *
  * @since 2.1.48

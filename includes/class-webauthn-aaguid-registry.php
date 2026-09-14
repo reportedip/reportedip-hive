@@ -5,14 +5,14 @@
  * Maps known authenticator AAGUIDs to a human-readable model label and an
  * icon class ('key' = roaming hardware key, 'device' = platform/synced
  * passkey provider). Used purely for display in the security-key manager
- * — never for policy decisions, so an unknown AAGUID simply renders the
+ * - never for policy decisions, so an unknown AAGUID simply renders the
  * generic label.
  *
  * Sources: Yubico entries from the FIDO Alliance Metadata Service (MDS v3,
  * retrieved 2026-08-05); platform providers from the community
  * passkey-authenticator-aaguids list. Model names are trimmed of MDS
  * profile suffixes. Refresh by regenerating from MDS when new hardware
- * ships — the list is static by design (no runtime fetch, no cron).
+ * ships, the list is static by design (no runtime fetch, no cron).
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>

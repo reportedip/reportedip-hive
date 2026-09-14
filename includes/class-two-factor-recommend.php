@@ -3,8 +3,8 @@
  * Login-time 2FA reminder for users without an active method.
  *
  * Counts how many times a user has logged in without configuring 2FA, renders
- * a soft banner on every admin page until they set it up, and — once a
- * site-configurable threshold is reached — flips a transient that the existing
+ * a soft banner on every admin page until they set it up, and, once a
+ * site-configurable threshold is reached, flips a transient that the existing
  * onboarding wizard ({@see ReportedIP_Hive_Two_Factor_Onboarding}) picks up to
  * hard-block privileged roles. Customer / Subscriber / Author roles only ever
  * see the soft banner so a missing phone never locks anyone out of WooCommerce.
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Hooks the login-reminder lifecycle. Public API is fully static — the class
+ * Hooks the login-reminder lifecycle. Public API is fully static, the class
  * has no per-request state. Counter and last-seen timestamp live in user-meta;
  * the dismiss flag is a short-lived transient that re-arms on the next login.
  *
@@ -58,7 +58,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 	const DISMISS_TRANSIENT_PREFIX = 'rip_hive_2fa_dismiss_';
 
 	/**
-	 * TTL for the dismiss transient. 14 days — enough that the reminder does
+	 * TTL for the dismiss transient. 14 days, enough that the reminder does
 	 * not become daily friction, short enough that a user who lost interest
 	 * in 2FA still gets nudged on a slow cadence.
 	 */
@@ -67,7 +67,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 	/**
 	 * User-meta flag for the permanent opt-out link ("Don't show this again").
 	 * Hard-block for privileged roles still kicks in once the counter reaches
-	 * the threshold — the opt-out only silences the SOFT banner.
+	 * the threshold, the opt-out only silences the SOFT banner.
 	 */
 	const META_OPTOUT = 'reportedip_hive_2fa_reminder_optout';
 
@@ -85,7 +85,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 	const DEFAULT_HARD_ROLES = array( 'administrator', 'editor', 'shop_manager' );
 
 	/**
-	 * Wire the WordPress hooks. Idempotent — calling twice is safe.
+	 * Wire the WordPress hooks. Idempotent, calling twice is safe.
 	 *
 	 * @return void
 	 */
@@ -107,7 +107,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 	}
 
 	/**
-	 * `wp_login` callback — increment the counter and, if the threshold is
+	 * `wp_login` callback, increment the counter and, if the threshold is
 	 * crossed for a privileged role, set the onboarding-wizard transient so
 	 * the existing redirect logic kicks the user into the hard-block flow.
 	 *
@@ -157,7 +157,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 	}
 
 	/**
-	 * Reset the counter — fired by `reportedip_hive_2fa_method_enabled` when
+	 * Reset the counter, fired by `reportedip_hive_2fa_method_enabled` when
 	 * the user activates any method. The signature matches the action so we
 	 * can hook it directly.
 	 *
@@ -277,7 +277,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 	}
 
 	/**
-	 * `admin_notices` callback — render the soft reminder banner.
+	 * `admin_notices` callback, render the soft reminder banner.
 	 *
 	 * @return void
 	 */
@@ -303,7 +303,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		if ( $is_hard_role && $threshold > 0 ) {
 			$body = sprintf(
 				/* translators: 1: current reminder count, 2: hard-block threshold */
-				__( 'A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks. Reminder %1$d of %2$d — after that you will need to set 2FA up before continuing.', 'reportedip-hive' ),
+				__( 'A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks. Reminder %1$d of %2$d, after that you will need to set 2FA up before continuing.', 'reportedip-hive' ),
 				(int) $count,
 				(int) $threshold
 			);
@@ -363,7 +363,7 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 	 * `admin-post.php?action=reportedip_hive_2fa_remind_never` handler.
 	 *
 	 * Sets the permanent per-user opt-out. The hard-block onboarding path
-	 * for privileged roles is not affected — that path is driven by the
+	 * for privileged roles is not affected, that path is driven by the
 	 * login-counter transient set in {@see on_login()}, not by this banner.
 	 *
 	 * @return void

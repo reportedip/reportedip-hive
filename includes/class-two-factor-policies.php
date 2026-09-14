@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Decides whether a sign-in needs the second factor again.
  *
  * Each trigger owns one role list. A user matched by one of those lists is
- * challenged again — even on a trusted device — as soon as the trigger's
+ * challenged again, even on a trusted device, as soon as the trigger's
  * condition holds. Users whose role is required to use 2FA
  * ({@see ReportedIP_Hive_Two_Factor::is_enforced_for_user()}) are excluded:
  * they are challenged on every sign-in anyway.
@@ -62,7 +62,7 @@ final class ReportedIP_Hive_Two_Factor_Policies {
 	);
 
 	/**
-	 * Triggers in evaluation order — cheapest first, the session count last
+	 * Triggers in evaluation order, cheapest first, the session count last
 	 * because it is the only one that reads a second meta row. First match
 	 * wins; the reason is only used for the log row.
 	 *

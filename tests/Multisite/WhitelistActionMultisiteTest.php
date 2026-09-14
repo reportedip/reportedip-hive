@@ -4,7 +4,7 @@
  *
  * The pre-WordPress WAF drop-in bakes the IP whitelist into its guard file, so
  * every whitelist mutation must announce itself via
- * `reportedip_hive_whitelist_changed` — otherwise a freshly whitelisted client
+ * `reportedip_hive_whitelist_changed`, otherwise a freshly whitelisted client
  * would stay blocked by the stale guard until the hourly self-heal. These
  * tests run against a real WordPress + database.
  *

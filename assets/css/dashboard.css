@@ -1,5 +1,5 @@
 /**
- * ReportedIP Hive — Dashboard Styles.
+ * ReportedIP Hive, Dashboard Styles.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -65,7 +65,7 @@
     }
 }
 
-/* Hero KPI accent — emphasises the headline "attacks blocked" card without
+/* Hero KPI accent, emphasises the headline "attacks blocked" card without
    resorting to an accent border (anti-AI-watermark rule). */
 .rip-stat-card--accent {
     background: var(--rip-gray-50);

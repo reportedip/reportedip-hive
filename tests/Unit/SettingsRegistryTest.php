@@ -42,7 +42,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * Frozen remote key => kind snapshot (protocol schema v1). Changing
-		 * this list requires a conscious decision about SCHEMA_VERSION — see
+		 * this list requires a conscious decision about SCHEMA_VERSION, see
 		 * docs/remote-settings-protocol.md.
 		 *
 		 * @return array<string, string>
@@ -244,7 +244,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame(
 				$expected,
 				$actual,
-				'The remote key/kind set changed — update the snapshot deliberately and decide whether SCHEMA_VERSION must bump.'
+				'The remote key/kind set changed, update the snapshot deliberately and decide whether SCHEMA_VERSION must bump.'
 			);
 		}
 

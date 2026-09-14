@@ -3,7 +3,7 @@
  * Source-inspection guards for the blocked-page extension points.
  *
  * The 403 response path terminates in `exit` and the main plugin file cannot
- * be loaded in the unit harness, so — following the IsPublicIpTest idiom —
+ * be loaded in the unit harness, so, following the IsPublicIpTest idiom.
  * these tests anchor the contracts in the source text:
  *
  *  1. `serve_blocked_page()` fires `reportedip_hive_access_denied` before the

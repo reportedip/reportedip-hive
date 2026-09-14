@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Renders four `<rip-hive-banner>` custom-element variants (badge, stat,
  * banner, shield) into the page. Each banner includes a Light-DOM `<a href>`
  * fallback so search engines and no-JavaScript clients still see the
- * backlink to reportedip.com — the Web Component only enhances the visual
+ * backlink to reportedip.com, the Web Component only enhances the visual
  * presentation inside a Shadow Root.
  *
  * @since 1.3.0
@@ -264,9 +264,9 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	/**
 	 * Get aggregated public stats with transient caching.
 	 *
-	 * Sources both 30-day and all-time totals from the daily `stats` table —
+	 * Sources both 30-day and all-time totals from the daily `stats` table.
 	 * `Database::update_daily_stats()` writes there atomically per event via
-	 * `INSERT … ON DUPLICATE KEY UPDATE`, the table is never pruned by
+	 * `INSERT ... ON DUPLICATE KEY UPDATE`, the table is never pruned by
 	 * `cleanup_old_data()`, and that single source avoids the race conditions
 	 * a parallel option-counter write path would introduce.
 	 *
@@ -452,7 +452,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	 * Validate a `border=` value: hex colour or the literal `none`.
 	 *
 	 * @param mixed $value Raw value.
-	 * @return string Normalised value (`#…` or `none`) or '' for invalid input.
+	 * @return string Normalised value (`#...` or `none`) or '' for invalid input.
 	 * @since  1.3.1
 	 */
 	private function clean_border( $value ) {
@@ -544,7 +544,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 		$metric_text   = $show_value
 			? number_format_i18n( $stat['value'] ) . ' ' . $noun
 			: $stat['fallback_text'];
-		$fallback_text = $headline . ' — ' . $metric_text;
+		$fallback_text = $headline . ', ' . $metric_text;
 
 		$wrapper_align = 'left' === $args['align']
 			? 'text-align:left;'
@@ -676,7 +676,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	}
 
 	/**
-	 * Register and enqueue the frontend Web Component script. Idempotent —
+	 * Register and enqueue the frontend Web Component script. Idempotent.
 	 * WordPress deduplicates by handle, so callers can invoke it freely.
 	 *
 	 * @since 1.3.0

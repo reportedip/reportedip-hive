@@ -1,6 +1,6 @@
 <?php
 /**
- * Block-page reference codes — maps a block reason to a stable category code
+ * Block-page reference codes, maps a block reason to a stable category code
  * and a correlatable, non-reversible incident token (Cloudflare "Ray ID"
  * pattern). The category tells the admin *why* a request was blocked; the
  * token lets a wrongly-blocked visitor quote one short string that the admin

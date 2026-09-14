@@ -11,16 +11,16 @@ classes, so behaviour is identical no matter who is asking:
 
 Core classes (all loaded unconditionally, in every request context):
 
-- `ReportedIP_Hive_Settings_Registry` — the declarative option registry:
+- `ReportedIP_Hive_Settings_Registry`, the declarative option registry:
   kinds, ranges, allowed values, tier gates, side effects, schema export,
   the settings fingerprint.
-- `ReportedIP_Hive_Settings_Apply` — validates and writes a batch, returns a
+- `ReportedIP_Hive_Settings_Apply`, validates and writes a batch, returns a
   per-key result map. Call `ReportedIP_Hive_Settings_Apply::apply( $values, $origin )`.
   Four origins exist: `mainwp`, `cloud`, `import` and `admin` (the plugin's own
   settings pages and their AJAX cards). Only `admin` logs
   `settings_admin_apply`; the three remote origins log
   `settings_remote_apply`.
-- `ReportedIP_Hive_Settings_Effects` — executes declared side effects
+- `ReportedIP_Hive_Settings_Effects`, executes declared side effects
   (rewrite flushes, cache resets) once per request for any writer.
 
 ## Versioning
@@ -49,12 +49,12 @@ Response (`$information['reportedip_hive']['settings_schema']`):
   "schema_version": 1,
   "plugin_version": "2.1.47",
   "sections": [
-    { "id": "detection", "label": "…", "description": "…", "keys": [ "reportedip_hive_monitor_failed_logins", "…" ] }
+    { "id": "detection", "label": "...", "description": "...", "keys": [ "reportedip_hive_monitor_failed_logins", "..." ] }
   ],
   "fields": {
     "reportedip_hive_failed_login_threshold": {
       "kind": "int", "min": 1, "max": 100, "default": 5,
-      "label": "…", "tier": null
+      "label": "...", "tier": null
     }
   }
 }
@@ -88,7 +88,7 @@ a "schema outdated" state and prompts for a refresh; both do since Hive
 Request: `{ "reportedip_hive_settings_get": { "want": 1 } }`
 
 Form-encoded transports drop `null` values (`http_build_query`), so the job
-object must always carry at least one non-null member — `want: 1` by
+object must always carry at least one non-null member, `want: 1` by
 convention. The same applies to every job in this protocol.
 
 Response (`settings_values`):
@@ -96,8 +96,8 @@ Response (`settings_values`):
 ```jsonc
 {
   "schema_version": 1,
-  "values": { "reportedip_hive_auto_block": true, "…": "…" },
-  "hash": "sha256:…",
+  "values": { "reportedip_hive_auto_block": true, "...": "..." },
+  "hash": "sha256:...",
   "is_main_site": true,
   "network_wide": false
 }
@@ -121,10 +121,10 @@ Response (`settings_apply`):
   "results": {
     "reportedip_hive_failed_login_threshold": { "status": "applied" },
     "reportedip_hive_auto_block":             { "status": "unchanged" },
-    "reportedip_hive_block_tor":              { "status": "skipped_tier", "message": "…" }
+    "reportedip_hive_block_tor":              { "status": "skipped_tier", "message": "..." }
   },
   "applied": 1, "unchanged": 1, "failed": 0,
-  "hash": "sha256:…"
+  "hash": "sha256:..."
 }
 ```
 
@@ -146,8 +146,8 @@ batch.
 
 Every `reportedip_hive_sync` response additionally carries:
 
-- `settings_schema_version` — presence signals protocol support.
-- `settings_hash` — current fingerprint (see below).
+- `settings_schema_version`, presence signals protocol support.
+- `settings_hash`, current fingerprint (see below).
 
 The cloud transport has the equivalent passive channel: when cloud
 management is enabled, every outbound request to the reportedip.com API
@@ -181,14 +181,14 @@ Signed payload fields:
   "action": "apply",                     // must match the endpoint: schema | get | apply
   "site": "example.com",                 // audience: lowercased host, leading www. stripped
   "issued_at": 1756200000,               // unix time, accepted within +/- 300 s
-  "request_id": "5f0f…",                 // unique per request, single-use for 600 s
+  "request_id": "5f0f...",                 // unique per request, single-use for 600 s
   "key_proof": "<sha256(api_key + request_id)>",
   "schema_version": 1,                   // apply only, informational
-  "values_json": "{…}"                   // apply only, same string contract as MainWP
+  "values_json": "{...}"                   // apply only, same string contract as MainWP
 }
 ```
 
-Verification chain on the site, in order — every step failing rejects the
+Verification chain on the site, in order, every step failing rejects the
 request and logs a `cloud_management_auth_fail` security event:
 
 1. Opt-in: option `reportedip_hive_cloud_management` (default off) plus
@@ -207,11 +207,11 @@ request and logs a `cloud_management_auth_fail` security event:
 6. `request_id` unused (replay cache, site-transient, 600 s).
 7. `site` equals this installation's announced host
    (`ReportedIP_Hive_API::api_site_url()`, normalized).
-8. `key_proof` equals `sha256(own_api_key + request_id)` — binds the request
+8. `key_proof` equals `sha256(own_api_key + request_id)`, binds the request
    to the account that owns this site's key.
 
 Responses are the same envelopes as the MainWP jobs, keyed identically:
-`{"settings_schema": …}`, `{"settings_values": …}`, `{"settings_apply": …}`.
+`{"settings_schema": ...}`, `{"settings_values": ...}`, `{"settings_apply": ...}`.
 Both transports build them through the same helpers
 (`ReportedIP_Hive_Settings_Registry::values_envelope()`,
 `ReportedIP_Hive_Settings_Apply::invalid_payload_envelope()`), so the shapes
@@ -221,7 +221,7 @@ cannot drift.
 
 | Kind | Wire value | Sanitization |
 |---|---|---|
-| `bool` | bool / `"1"` / `"0"` / `"true"` … | `rest_sanitize_boolean()`, stored as `1`/`0` |
+| `bool` | bool / `"1"` / `"0"` / `"true"` ... | `rest_sanitize_boolean()`, stored as `1`/`0` |
 | `int` | number or numeric string | `absint()`, clamped to `min`..`max` |
 | `enum` | string | must be in `allowed`, else `invalid` |
 | `text` | string | `sanitize_text_field()` |
@@ -307,7 +307,7 @@ hash = "sha256:" + sha256( json_encode( { "s": SCHEMA_VERSION, "v": normalized }
 kind (`bool` → true/false, `int` → integer, everything else the stored
 string). The hash is computed **only on the child**. Dashboards store the
 `hash` returned by their last successful apply and compare it against the
-`settings_hash` reported in subsequent syncs — they never recompute it.
+`settings_hash` reported in subsequent syncs, they never recompute it.
 
 `json_list` values are canonically re-encoded on every registry write, so a
 value stored pre-2.1.47 in an equivalent-but-different encoding shows as
@@ -343,26 +343,26 @@ fixture update and a `SCHEMA_VERSION` decision.
 
 Runtime state is not a setting. Options the plugin writes by itself
 (`reportedip_hive_readiness_state`, `reportedip_hive_2fa_policy_admin_verified`,
-`reportedip_hive_api_stats`, …) stay out of `SAFE_OPTIONS`, out of the
+`reportedip_hive_api_stats`, ...) stay out of `SAFE_OPTIONS`, out of the
 registry and out of the JSON export; a dashboard must never push them. Adding
 a section is a one-place change: `Settings_Registry::sections()`.
 
-## Change checklist — what to touch when options change
+## Change checklist, what to touch when options change
 
 Both dashboards (MainWP extension, reportedip.com fleet) render their forms
 from the exported schema, so most changes are Hive-only:
 
 | Change | Hive (this repo) | MainWP extension | reportedip.com fleet | SCHEMA_VERSION |
 |---|---|---|---|---|
-| Add an option (existing kind) | `Defaults::SAFE_OPTIONS` + `Registry::spec()` (+ i18n); update the snapshot fixture consciously | nothing — reload the schema | nothing — refresh the schema | no |
+| Add an option (existing kind) | `Defaults::SAFE_OPTIONS` + `Registry::spec()` (+ i18n); update the snapshot fixture consciously | nothing, reload the schema | nothing, refresh the schema | no |
 | Remove an option / change a kind / change enum semantics | Registry + fixture | reload schema (stored policy/overrides must be re-validated) | schema refresh re-validates stored policy/overrides | **yes** |
 | Introduce a new kind | `Registry::sanitize_kind()` + kind table above | PHP `render_value_input()`, JS `buildValueInput()`/`readFieldValue()`, `sanitize_against_schema()` | fleet JS renderer + server-side `sanitize_against_schema()` | yes |
 | Add a tier gate to an option | `tier` slug in `spec()` (the Mode-Manager feature must exist) | nothing (generic badge) | nothing (generic badge) | no |
-| Add a section, or move a key between sections | `Registry::sections()` and/or the key's `section` | nothing — reload the schema | nothing — refresh the schema | no |
+| Add a section, or move a key between sections | `Registry::sections()` and/or the key's `section` | nothing, reload the schema | nothing, refresh the schema | no |
 | Add a field attribute (`description`, and any later one) | `spec()` + `export_schema()` | render it, or ignore it | render it, or ignore it | no |
 | Add a side-effect token | `spec()` + `Settings_Effects` token handler | nothing | nothing | no |
-| Rotate the cloud signing key | ship the new public key in `PUBLIC_KEYS['next']`, switch the service after fleet adoption, then promote to `current` | — | swap the fleet signer keypair | no |
-| Add a transport | a thin adapter around `export_schema()` / `values_envelope()` / `Settings_Apply::apply()` — never its own validation | — | — | no |
+| Rotate the cloud signing key | ship the new public key in `PUBLIC_KEYS['next']`, switch the service after fleet adoption, then promote to `current` |, | swap the fleet signer keypair | no |
+| Add a transport | a thin adapter around `export_schema()` / `values_envelope()` / `Settings_Apply::apply()`, never its own validation |, |, | no |
 
 Ground rule: **one new option = exactly two code places in Hive** (default +
 spec, where the spec carries the label and the description). Dashboards pick it
@@ -372,20 +372,20 @@ catalogue from the registry, so it does too.
 Three tests enforce the rest, and each of them exists because the matching gap
 actually shipped:
 
-- `AdminSurfaceParityTest` — every registry key has a form in wp-admin, and
+- `AdminSurfaceParityTest`, every registry key has a form in wp-admin, and
   every stored option is either remotely manageable or listed as deliberately
   local with a reason. Ninety options had drifted out of the registry before
   this test existed, and fourteen were remotely manageable with no local form.
-- `SettingsImportExportTest::test_every_registry_key_is_exportable` — fifty-five
+- `SettingsImportExportTest::test_every_registry_key_is_exportable`, fifty-five
   keys were missing from the hand-maintained export catalogue.
-- `SettingsRegistryTest::test_every_spec_entry_is_structurally_valid` — every
+- `SettingsRegistryTest::test_every_spec_entry_is_structurally_valid`, every
   key has a description, and every declared sanitizer is actually callable. An
   unreachable sanitizer degrades silently to the generic kind sanitizer, which
   then rejects valid values.
 
 ### Known settings-page exceptions
 
-Two registry keys keep a bespoke sanitizer on the wp-admin settings page —
+Two registry keys keep a bespoke sanitizer on the wp-admin settings page.
 and only there: `reportedip_hive_2fa_allowed_methods` and
 `reportedip_hive_2fa_enforce_roles`. Their form posts checkboxes instead of
 the option value, so the page callback must detect the form shape from
@@ -401,7 +401,7 @@ generic slug branch, because the only slug key delegates to
 permalink-collision checks live there). A second slug option must bring its
 own `sanitize` override.
 
-## Development workflow — changing settings, and how to test it
+## Development workflow, changing settings, and how to test it
 
 The end-to-end routine for any settings change, in order:
 
@@ -416,10 +416,10 @@ The end-to-end routine for any settings change, in order:
    option keys) fail on any drift; updating their fixtures is the explicit
    sign-off that the change is intended.
 3. **Translate.** `composer i18n`, translate the new entries in
-   `languages/reportedip-hive-de_DE.po`, `composer i18n:build` — the
+   `languages/reportedip-hive-de_DE.po`, `composer i18n:build`, the
    freshness gate blocks CI otherwise.
 4. **Run the consistency layers:**
-   - `vendor/bin/phpunit --testsuite unit` — includes
+   - `vendor/bin/phpunit --testsuite unit`, includes
      `SettingsConsistencyTest` (identical apply results and stored state
      across the `mainwp` / `cloud` / `import` origins, schema
      renderability, wizard/registry kind agreement, defaults round-trip)
@@ -430,10 +430,10 @@ The end-to-end routine for any settings change, in order:
      before any release.
 5. **Release gates.** The full pre-tag pipeline (lint, static analysis,
    unit + multisite suites, plugin check, E2E on single-site and multisite)
-   must pass; dashboards need no code change for added options — after the
+   must pass; dashboards need no code change for added options, after the
    Hive release, reload the schema in the MainWP extension ("Schema neu
    laden") and in the fleet dashboard ("Reload schema"), which also
    re-validates stored policies and overrides.
 6. **Verify in production the safe way:** push a no-op policy (the exact
-   current values) to one owned site first — every key must come back
+   current values) to one owned site first, every key must come back
    `unchanged` before the change is trusted fleet-wide.

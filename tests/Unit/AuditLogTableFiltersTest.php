@@ -3,7 +3,7 @@
  * The audit trail's event filter must offer every type that is written.
  *
  * A type that is recorded but missing from the filter drop-down is invisible
- * to the compliance reader who needs it — the trail is only useful if the
+ * to the compliance reader who needs it, the trail is only useful if the
  * rows can be found again.
  *
  * @package    ReportedIP_Hive

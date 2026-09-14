@@ -2,7 +2,7 @@
 /**
  * Unit Tests for the verified-bot User-Agent allowlist.
  *
- * Pure UA pattern matching — no WordPress, no DB. Locks down the canonical
+ * Pure UA pattern matching, no WordPress, no DB. Locks down the canonical
  * default patterns (search engines, social previews, AI crawlers), the
  * negative cases (browsers, empty UA), the filter extension point and the
  * per-request decision cache.
@@ -210,12 +210,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertStringNotContainsStringIgnoringCase(
 					'wordpress',
 					$pattern,
-					'The WordPress token is a free pass any attacker can claim — it must never return to the allowlist (exploited in the wild for unblockable login brute-force)'
+					'The WordPress token is a free pass any attacker can claim, it must never return to the allowlist (exploited in the wild for unblockable login brute-force)'
 				);
 				$this->assertStringNotContainsStringIgnoringCase(
 					'jetpack',
 					$pattern,
-					'The Jetpack token is a free pass any attacker can claim — it must never enter the allowlist'
+					'The Jetpack token is a free pass any attacker can claim, it must never enter the allowlist'
 				);
 			}
 		}

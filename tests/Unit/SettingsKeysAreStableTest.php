@@ -192,7 +192,7 @@ class SettingsKeysAreStableTest extends TestCase {
 	}
 
 	/**
-	 * Snapshot must match exactly — no missing keys, no surprise additions.
+	 * Snapshot must match exactly, no missing keys, no surprise additions.
 	 */
 	public function test_every_registered_key_matches_snapshot(): void {
 		$sources = array_merge(

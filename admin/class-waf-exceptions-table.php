@@ -125,17 +125,17 @@ class ReportedIP_Hive_WAF_Exceptions_Table extends WP_List_Table {
 			case 'rule_id':
 				return '' !== (string) ( $item->rule_id ?? '' )
 					? '<code>' . esc_html( (string) $item->rule_id ) . '</code>'
-					: '<span aria-hidden="true">—</span>';
+					: '<span aria-hidden="true">-</span>';
 
 			case 'path_prefix':
 				return '' !== (string) ( $item->path_prefix ?? '' )
 					? '<code>' . esc_html( (string) $item->path_prefix ) . '</code>'
-					: '<span aria-hidden="true">—</span>';
+					: '<span aria-hidden="true">-</span>';
 
 			case 'ip_address':
 				return '' !== (string) ( $item->ip_address ?? '' )
 					? '<code>' . esc_html( (string) $item->ip_address ) . '</code>'
-					: '<span aria-hidden="true">—</span>';
+					: '<span aria-hidden="true">-</span>';
 
 			case 'reason':
 				return esc_html( (string) ( $item->reason ?? '' ) );

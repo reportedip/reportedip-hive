@@ -2,7 +2,7 @@
  * Listener that converts a `reportedip_2fa_required` REST-API error
  * coming from the WooCommerce Cart/Checkout block into a hard redirect
  * to the themed challenge slug. The Store-API filter on the server
- * side returns the redirect URL inside the error payload — without
+ * side returns the redirect URL inside the error payload, without
  * this listener the block would just surface the error message.
  *
  * @package   ReportedIP_Hive

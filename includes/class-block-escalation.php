@@ -3,7 +3,7 @@
  * Progressive block-duration escalation.
  *
  * The plugin previously applied a single uniform block duration (default
- * 24 h) to every threshold trip — fine for repeat offenders, but harsh on
+ * 24 h) to every threshold trip, fine for repeat offenders, but harsh on
  * a CGNAT visitor or a backend admin who fat-fingered a password three
  * times in a row. This class derives a progressive ladder instead:
  *
@@ -12,7 +12,7 @@
  *  - quiet for the full reset window: counter resets to step 1
  *
  * History is read from the existing `wp_reportedip_hive_logs` table by
- * counting `ip_blocked` events for the IP — no schema migration needed.
+ * counting `ip_blocked` events for the IP, no schema migration needed.
  * If event logs are pruned more aggressively than the reset window, the
  * effective memory shortens accordingly; documented behaviour rather
  * than a silent regression.
@@ -44,7 +44,7 @@ class ReportedIP_Hive_Block_Escalation {
 	public const DEFAULT_LADDER_MINUTES = array( 5, 15, 30, 1440, 2880, 10080 );
 
 	/**
-	 * Default reset window — number of days an IP must stay blockless to
+	 * Default reset window, number of days an IP must stay blockless to
 	 * fall back to ladder step 1.
 	 *
 	 * @var int
@@ -59,7 +59,7 @@ class ReportedIP_Hive_Block_Escalation {
 	 * the threshold once and then keeps hammering is punished exactly like one
 	 * who stopped at the threshold: every further offence lands on an IP that
 	 * is already blocked, and the tracker returns early instead of escalating.
-	 * Observed in the field — a bot fired 60 rule violations in ten seconds and
+	 * Observed in the field, a bot fired 60 rule violations in ten seconds and
 	 * earned the same five-minute rung as three violations would have.
 	 *
 	 * Sustained volume is therefore weighted directly: 5x the threshold skips

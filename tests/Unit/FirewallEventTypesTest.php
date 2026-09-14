@@ -7,7 +7,7 @@
  * through the shared attempt tracker, which logs only the generated
  * `scan_404_threshold_exceeded` variant. The counter and the log filter
  * therefore reported zero forever while scanners were being blocked and their
- * IPs laddered — a silent, self-consistent lie. This test locks the two lists
+ * IPs laddered, a silent, self-consistent lie. This test locks the two lists
  * together so a new counter cannot drift from the writer again.
  *
  * @package    ReportedIP_Hive
@@ -70,7 +70,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * has to hit one of them: the threshold tracker generates the
 		 * `_threshold_exceeded` variants from a base slug, a logging call takes
 		 * the literal, or a logging call passes an `EVENT_*` constant that holds
-		 * it. The constant fallback still demands a caller — a declaration whose
+		 * it. The constant fallback still demands a caller, a declaration whose
 		 * last call site was deleted would otherwise keep a dead slug alive.
 		 *
 		 * @param string $type    Event slug under test.
@@ -198,7 +198,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * The Rule Sync tab iterates `Rule_Store::VALID_KEYS` and falls back to
 		 * the raw key with an empty "Feeds" cell for anything `ruleset_meta()`
-		 * does not know — which is how `tor_exits` shipped unlabeled.
+		 * does not know, which is how `tor_exits` shipped unlabeled.
 		 */
 		public function test_every_ruleset_key_has_display_metadata(): void {
 			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-admin-firewall.php' );

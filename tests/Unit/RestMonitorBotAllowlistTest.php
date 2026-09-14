@@ -6,7 +6,7 @@
  * ReportedIP_Hive_Bot_Allowlist between the whitelist check and the call to
  * track_generic_attempt(). The full pre_dispatch flow depends on too many
  * runtime singletons to mock cheaply, so we anchor the contract via source
- * inspection — a refactor that breaks the ordering trips the test.
+ * inspection, a refactor that breaks the ordering trips the test.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit

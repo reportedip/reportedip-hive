@@ -5,7 +5,7 @@
  * Validates the event_type → family mapping that drives every dashboard
  * visualisation: threshold-suffix stripping, operational events resolving to
  * null, the ordered family list and the threat-event-type IN() helper. Pure
- * logic — no database.
+ * logic, no database.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit

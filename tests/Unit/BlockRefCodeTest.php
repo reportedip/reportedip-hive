@@ -5,8 +5,8 @@
  * Locks down the contract of ReportedIP_Hive_Block_Ref: stable category codes
  * per reason, a lockout-duration suffix, and a deterministic-yet-non-reversible
  * incident token that never leaks the client IP. The token is what a wrongly
- * blocked visitor quotes, so a regression that made it reveal the IP — or made
- * it non-deterministic so the admin could not correlate it — must fail here.
+ * blocked visitor quotes, so a regression that made it reveal the IP, or made
+ * it non-deterministic so the admin could not correlate it, must fail here.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit

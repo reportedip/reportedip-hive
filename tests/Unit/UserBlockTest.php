@@ -4,9 +4,9 @@
  *
  * The record shape, the text caps and the refusal rules are pure statics and
  * are exercised directly. `block()` itself depends on the plugin's runtime
- * singletons (session tokens, 2FA engine, audit logger), so its contract —
+ * singletons (session tokens, 2FA engine, audit logger), so its contract.
  * the hook priorities that make the deny path safe, and the order in which it
- * revokes access — is anchored by source inspection, the established pattern
+ * revokes access, is anchored by source inspection, the established pattern
  * from SecurityMonitorBotGuardTest.
  *
  * @package    ReportedIP_Hive

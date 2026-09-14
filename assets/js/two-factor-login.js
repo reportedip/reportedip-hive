@@ -1,16 +1,16 @@
 /**
- * ReportedIP Hive — Two-Factor Login Page Script.
+ * ReportedIP Hive, Two-Factor Login Page Script.
  *
  * Progressive-enhancement logic for wp-login.php:
- *   – drives the WAI-ARIA tablist (arrow keys, Home/End, roving tabindex)
- *   – intercepts "Code senden / erneut senden" and routes it through the
+ *   - drives the WAI-ARIA tablist (arrow keys, Home/End, roving tabindex)
+ *   - intercepts "Code senden / erneut senden" and routes it through the
  *     admin-ajax resend endpoint so the user never loses the challenge
- *   – keeps an inline cooldown countdown and aria-live status updates
- *   – blocks auto-submit on paste (outdated clipboard codes used to fail)
- *   – guards the form against double submits (a duplicate POST used to
+ *   - keeps an inline cooldown countdown and aria-live status updates
+ *   - blocks auto-submit on paste (outdated clipboard codes used to fail)
+ *   - guards the form against double submits (a duplicate POST used to
  *     consume the login nonce and render "session expired" after an
  *     already-successful verification)
- *   – WebAuthn / Passkey assertion flow
+ *   - WebAuthn / Passkey assertion flow
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -43,7 +43,7 @@
 	 * before most users reach the checkbox below the code input, so their
 	 * "trust this device" wish silently never made it into the POST. The
 	 * last explicit choice is remembered per browser and pre-applied on
-	 * the next challenge render — matching the per-device semantics of
+	 * the next challenge render, matching the per-device semantics of
 	 * the trust cookie itself.
 	 * ------------------------------------------------------------------ */
 	function initTrustPreference( form ) {
@@ -59,7 +59,7 @@
 				window.localStorage.setItem( 'rip2faTrustDevice', box.checked ? '1' : '0' );
 			} );
 		} catch ( e ) {
-			// Storage unavailable (private mode) — the checkbox still works manually.
+			// Storage unavailable (private mode), the checkbox still works manually.
 		}
 	}
 
@@ -94,7 +94,7 @@
 			} else {
 				// Email/SMS panels start on a "request" phase without a code
 				// input. Submitting there means "send me the code", not
-				// "verify" — trigger the send button instead of scolding the
+				// "verify", trigger the send button instead of scolding the
 				// user about a field that is not even visible yet.
 				var activePanel  = document.querySelector( '.rip-2fa-challenge__panel--active' );
 				var requestPhase = activePanel ? activePanel.querySelector( '[data-phase="request"]:not([hidden])' ) : null;
@@ -163,7 +163,7 @@
 	}
 
 	/* ------------------------------------------------------------------ *
-	 * Tablist — ARIA Authoring Practices. Roving tabindex, arrow keys,
+	 * Tablist, ARIA Authoring Practices. Roving tabindex, arrow keys,
 	 * Home/End, focus forwarded to the panel's first input on activation.
 	 * ------------------------------------------------------------------ */
 	function initMethodTabs() {
@@ -262,7 +262,7 @@
 			} );
 		} );
 
-		// Initial sync — disable non-active panel inputs so the server gets the
+		// Initial sync, disable non-active panel inputs so the server gets the
 		// code from the tab the user is actually on.
 		var currentTab = tabs.find( function ( t ) { return t.getAttribute( 'aria-selected' ) === 'true'; } ) || tabs[ 0 ];
 		if ( currentTab ) { activate( currentTab, {} ); }
@@ -383,7 +383,7 @@
 				return res.json.data || {};
 			}
 			var err = ( res.json && res.json.data ) || {};
-			// 403 = session expired — the user has to restart login.
+			// 403 = session expired, the user has to restart login.
 			if ( res.status === 403 ) {
 				err.fallback = false;
 				err.message = err.message || ( config.strings && config.strings.sessionExpired ) || 'Your session has expired. Please sign in again.';
@@ -521,7 +521,7 @@
 				} );
 		} );
 
-		// Map WebAuthn DOMException names onto actionable guidance — a
+		// Map WebAuthn DOMException names onto actionable guidance, a
 		// YubiKey user on NFC needs "hold it to the back of the phone",
 		// not a raw browser error string.
 		function webAuthnErrorMessage( err ) {

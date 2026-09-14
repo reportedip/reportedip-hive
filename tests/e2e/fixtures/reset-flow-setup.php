@@ -7,7 +7,7 @@
  *
  * Provisions a deterministic recovery-code matrix on the `admin` user so
  * the Playwright spec can submit a known-bad and a known-good code without
- * re-deriving them from the live install. Idempotent — re-running resets
+ * re-deriving them from the live install. Idempotent, re-running resets
  * the user back to the test baseline.
  *
  * The script bails out hard (non-zero `WP_CLI::error`) on any unexpected
@@ -27,7 +27,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 }
 
 if ( ! class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
-	WP_CLI::error( 'ReportedIP Hive plugin is not loaded — activate it before running setup.' );
+	WP_CLI::error( 'ReportedIP Hive plugin is not loaded, activate it before running setup.' );
 }
 
 $test_login = 'e2e-reset-user';

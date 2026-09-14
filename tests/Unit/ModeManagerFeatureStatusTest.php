@@ -192,12 +192,12 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		);
 		$this->assertTrue(
 			$mm->feature_status( 'registration_rules_unlimited' )['available'],
-			'registration_rules_unlimited must unlock on Professional'
+			'registration_rules_unlimited must open on Professional'
 		);
 
 		$this->pretend_tier( 'business' );
 		foreach ( array_keys( $expected ) as $feature ) {
-			$this->assertSame( 'ok', $mm->feature_status( $feature )['reason'], "$feature must unlock on Business" );
+			$this->assertSame( 'ok', $mm->feature_status( $feature )['reason'], "$feature must open on Business" );
 		}
 
 		$this->pretend_mode( 'local' );
@@ -348,7 +348,7 @@ class ModeManagerFeatureStatusTest extends TestCase {
 
 			$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
 
-			$this->assertTrue( $status['available'], "Tier $tier should unlock frontend_2fa" );
+			$this->assertTrue( $status['available'], "Tier $tier should open frontend_2fa" );
 			$this->assertSame( 'ok', $status['reason'] );
 		}
 	}

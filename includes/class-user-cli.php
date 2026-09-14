@@ -8,7 +8,7 @@
  *     unblock <user> → lift a block
  *     list           → list blocked accounts (table/json/csv/yaml)
  *
- * Sessions themselves are not covered here — core already ships
+ * Sessions themselves are not covered here, core already ships
  * `wp user session list|destroy`.
  *
  * @package   ReportedIP_Hive

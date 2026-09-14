@@ -101,7 +101,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 				if ( '' === $name && ! empty( $item->user_id ) ) {
 					$name = '#' . (int) $item->user_id;
 				}
-				return esc_html( '' === $name ? '—' : $name );
+				return esc_html( '' === $name ? ', ' : $name );
 
 			case 'event_type':
 				return '<span class="rip-badge rip-badge--neutral">' . esc_html( ucwords( str_replace( '_', ' ', (string) $item->event_type ) ) ) . '</span>';
@@ -119,7 +119,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 				return '<span class="rip-badge ' . esc_attr( $class ) . '">' . esc_html( ucwords( str_replace( '_', ' ', $action ) ) ) . '</span>';
 
 			case 'ip':
-				return esc_html( '' !== (string) $item->ip ? (string) $item->ip : '—' );
+				return esc_html( '' !== (string) $item->ip ? (string) $item->ip : ', ' );
 
 			case 'event_data':
 				return self::render_data( (string) ( $item->event_data ?? '' ) );
@@ -138,11 +138,11 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	 */
 	private static function render_data( $json ) {
 		if ( '' === $json ) {
-			return '—';
+			return ', ';
 		}
 		$data = json_decode( $json, true );
 		if ( ! is_array( $data ) || empty( $data ) ) {
-			return '—';
+			return ', ';
 		}
 		$lines = array();
 		foreach ( $data as $key => $value ) {

@@ -13,7 +13,7 @@
  *      logging keeps working.
  *
  * The crypto / TOTP / SMS / WebAuthn provider classes themselves are not
- * exercised here — they have their own dedicated test suites.
+ * exercised here, they have their own dedicated test suites.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -83,7 +83,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'final class ReportedIP_Hive_Two_Factor_Verifier',
 				$this->source(),
-				'Verifier must be final — subclassing would defeat the "single source of truth for verify" goal of this extraction.'
+				'Verifier must be final, subclassing would defeat the "single source of truth for verify" goal of this extraction.'
 			);
 		}
 
@@ -110,7 +110,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'max( 0, min( 3, $window ) )',
 				$source,
-				'TOTP path must clamp the reportedip_2fa_totp_window filter to [0, 3] — anything wider erodes brute-force resistance.'
+				'TOTP path must clamp the reportedip_2fa_totp_window filter to [0, 3], anything wider erodes brute-force resistance.'
 			);
 		}
 
@@ -167,7 +167,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertFalse(
 				$result,
-				'verify_method() must work without a callback — many callers do not need surface-specific logging.'
+				'verify_method() must work without a callback, many callers do not need surface-specific logging.'
 			);
 		}
 
@@ -182,7 +182,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertFalse(
 				$result,
-				'A misbehaving logger must not derail verification — exceptions from the callback are swallowed by design.'
+				'A misbehaving logger must not derail verification, exceptions from the callback are swallowed by design.'
 			);
 		}
 	}

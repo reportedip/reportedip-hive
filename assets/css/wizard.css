@@ -12,7 +12,7 @@
  * @since     1.1.0
  */
 
-/* Reset & Base — bulletproof.
+/* Reset & Base, bulletproof.
    The wizards (setup + 2FA onboarding) render as standalone HTML inside the
    admin context. wp_head() loads every admin-side stylesheet, so themes,
    admin-skin plugins and font customizers will leak rules into our markup.
@@ -987,7 +987,7 @@ body.rip-wizard-page [hidden] {
     margin: 0;
 }
 
-/* Subheading inside a config card — used to delimit "block duration strategy"
+/* Subheading inside a config card, used to delimit "block duration strategy"
    etc. without bumping to a full second card. */
 .rip-config-card__subhead {
     margin: var(--rip-space-3, 0.75rem) 0 var(--rip-space-1, 0.25rem);
@@ -996,7 +996,7 @@ body.rip-wizard-page [hidden] {
     color: var(--rip-gray-900, #111827);
 }
 
-/* Required-field marker — sits next to a heading to flag a must-pick group. */
+/* Required-field marker, sits next to a heading to flag a must-pick group. */
 .rip-required {
     display: inline-block;
     margin-left: 0.25rem;
@@ -1432,7 +1432,7 @@ body.rip-wizard-page [hidden] {
 
 /*
  * The wizard renders inside the active front-end theme, so its stylesheet can
- * override a bare <select> — collapsing the width or forcing an unreadable
+ * override a bare <select>, collapsing the width or forcing an unreadable
  * (e.g. white-on-white) text colour. Pin the layout-critical properties with
  * !important so the control stays full-width and legible regardless of theme.
  */
@@ -1618,7 +1618,7 @@ body.rip-wizard-page select.rip-select option {
     width: 100%;
 }
 
-/* Prefixed input group — e.g. "https://example.com/" + slug field. */
+/* Prefixed input group, e.g. "https://example.com/" + slug field. */
 .rip-input-group {
     display: flex;
     align-items: stretch;
@@ -1655,20 +1655,20 @@ body.rip-wizard-page select.rip-select option {
     outline-offset: -2px;
 }
 
-/* Reserved-height validation line — prevents layout jump when message appears. */
+/* Reserved-height validation line, prevents layout jump when message appears. */
 .rip-validation-line {
     min-height: 1.4em;
     margin-top: var(--rip-space-1);
 }
 
-/* Disabled-by-toggle group — visually muted but still in flow. */
+/* Disabled-by-toggle group, visually muted but still in flow. */
 .rip-is-disabled {
     opacity: 0.45;
     pointer-events: none;
     cursor: not-allowed;
 }
 
-/* Tier teaser on the Welcome step — two PRO/Business cards side by side. */
+/* Tier teaser on the Welcome step, two PRO/Business cards side by side. */
 .rip-wizard__tier-teaser {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -1808,7 +1808,7 @@ body.rip-wizard-page select.rip-select option {
     resize: vertical;
 }
 
-/* Inline code block — shipped recovery snippets, etc. */
+/* Inline code block, shipped recovery snippets, etc. */
 .rip-codeblock {
     margin: 0;
     white-space: pre-wrap;
@@ -1822,8 +1822,8 @@ body.rip-wizard-page select.rip-select option {
     font-size: 0.85rem;
 }
 
-/* Feature-list bullets in the onboarding wizard — render an inline SVG
- * checkmark via ::before instead of the Unicode "✓" character that was
+/* Feature-list bullets in the onboarding wizard, render an inline SVG
+ * checkmark via ::before instead of the Unicode "yes" character that was
  * previously hard-coded in the template. */
 .rip-onboarding-check {
     list-style: none;

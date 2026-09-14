@@ -3,8 +3,8 @@
  * Unit tests for {@see ReportedIP_Hive_Readiness}.
  *
  * The detectors are pure predicates, so each one is exercised on both
- * branches without touching WordPress. The stateful half — reconcile,
- * dismissal window, mail-failure counter and cache flush — runs against the
+ * branches without touching WordPress. The stateful half, reconcile,
+ * dismissal window, mail-failure counter and cache flush, runs against the
  * option/transient stubs. Two source assertions pin the wiring that cannot
  * be observed from a unit process.
  *

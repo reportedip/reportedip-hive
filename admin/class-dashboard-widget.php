@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Registers and renders the "ReportedIP Hive — Security" widget on the WP
+ * Registers and renders the "ReportedIP Hive: Security" widget on the WP
  * dashboard (wp-admin/index.php) and the network dashboard.
  *
  * Visibility mirrors the plugin's Multisite capability model: on single
@@ -26,10 +26,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * dashboard registers via `wp_network_dashboard_setup` with the same
  * network capability.
  *
- * All values come from existing caches — the 30-day threat-analytics
+ * All values come from existing caches, the 30-day threat-analytics
  * site transient, the public-stats transient, the option-router reads
  * behind the layer counter, the score transient and the readiness
- * transient — so rendering the widget issues no HTTP requests. The one
+ * transient, so rendering the widget issues no HTTP requests. The one
  * exception is a cold readiness cache: recomputing it costs the queue
  * `GROUP BY status` aggregate and one `is_writable()` probe. On the main
  * site and in the Network Admin that happens at most once every five
@@ -146,7 +146,7 @@ final class ReportedIP_Hive_Dashboard_Widget {
 				</span>
 				<div class="rip-dw__hero-body">
 					<span class="rip-dw__hero-value"><?php echo esc_html( number_format_i18n( $blocked_period ) ); ?></span>
-					<span class="rip-dw__hero-label"><?php esc_html_e( 'Attacks blocked — last 30 days', 'reportedip-hive' ); ?></span>
+					<span class="rip-dw__hero-label"><?php esc_html_e( 'Attacks blocked, last 30 days', 'reportedip-hive' ); ?></span>
 				</div>
 				<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( null, array( 'small' => true ) ); ?>
 			</div>
@@ -212,7 +212,7 @@ final class ReportedIP_Hive_Dashboard_Widget {
 	private static function add_widget() {
 		wp_add_dashboard_widget(
 			self::WIDGET_ID,
-			__( 'ReportedIP Hive — Security', 'reportedip-hive' ),
+			__( 'ReportedIP Hive: Security', 'reportedip-hive' ),
 			array( __CLASS__, 'render' ),
 			null,
 			null,

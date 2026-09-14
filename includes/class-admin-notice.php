@@ -6,7 +6,7 @@
  * raw WordPress `.notice`) into one BEM-classed primitive. The matching
  * stylesheet {@see assets/css/admin-notices.css} is self-contained and is
  * enqueued on every admin page so notices render identically regardless of
- * which screen `admin_notices` fires on — including pages where the heavy
+ * which screen `admin_notices` fires on, including pages where the heavy
  * design-system stylesheet is not loaded.
  *
  * @package   ReportedIP_Hive

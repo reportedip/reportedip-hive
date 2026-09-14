@@ -4,7 +4,7 @@
  *
  * Until 2.1.32 `Database::is_blocked()` compared the client IP against the
  * `ip_address` column by equality only, so a range block was honoured solely
- * by the pre-WordPress guard — which is disabled by default. On a standard
+ * by the pre-WordPress guard, which is disabled by default. On a standard
  * install blocking `203.0.113.0/24` therefore blocked nothing while the admin
  * UI listed the range as an active block. These tests pin the range pass, its
  * cache invalidation and the precedence of the whitelist.

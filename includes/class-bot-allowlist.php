@@ -8,9 +8,9 @@
  * and by the author-archive arm of the user-enumeration sensor (genuine
  * crawlers index `/author/<slug>/` pages, so they must not trip the IP ladder).
  *
- * Honeypot-path sensors (`.env`, `wp-config.php.bak`, `/phpmyadmin/`, …) and
+ * Honeypot-path sensors (`.env`, `wp-config.php.bak`, `/phpmyadmin/`, ...) and
  * the REST `/wp-json/wp/v2/users` lockdown intentionally do NOT consult this
- * class — legit crawlers never request those paths, so a spoofed "Googlebot"
+ * class, legit crawlers never request those paths, so a spoofed "Googlebot"
  * UA on `/.env` is itself the attack indicator.
  *
  * `is_verified_search_or_ai_bot()` is the pure UA matcher (no network I/O).
@@ -49,8 +49,8 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	 * to an exemption when the `bot_signatures` ruleset also carries a rule
 	 * with an FCrDNS suffix or an official IP range for it, and that check
 	 * passes ({@see is_exempt_crawler()}). Tokens for crawlers nobody can
-	 * verify — Screaming Frog runs on customer desktops, `facebookexternalhit`
-	 * has neither feed nor reverse DNS — therefore cost nothing to keep, but
+	 * verify, Screaming Frog runs on customer desktops, `facebookexternalhit`
+	 * has neither feed nor reverse DNS, therefore cost nothing to keep, but
 	 * they also buy nothing.
 	 *
 	 * Maintenance: when adding a new bot, check that:
@@ -59,7 +59,7 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	 *
 	 * Deliberately absent: `WordPress` / `Jetpack`. Any attacker can put
 	 * those strings into a user-agent (every pingback client does) and there
-	 * is no verification signature for them — botnets spoofing "Jetpack by
+	 * is no verification signature for them, botnets spoofing "Jetpack by
 	 * WordPress.com" rode the then fail-open path for unblockable login
 	 * brute-force before the token was removed in 2.1.27. Genuine
 	 * WordPress.com/Jetpack traffic is XML-RPC from Automattic ranges and
@@ -142,7 +142,7 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	/**
 	 * Per-request decision cache keyed by the User-Agent string. Bots hammer
 	 * the same UA across thousands of requests inside a single PHP-FPM worker
-	 * — caching the verdict avoids repeated pattern walks.
+	 * - caching the verdict avoids repeated pattern walks.
 	 *
 	 * @var array<string, bool>
 	 */
@@ -173,7 +173,7 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	/**
 	 * Whether the given User-Agent matches a verified crawler pattern.
 	 *
-	 * Empty / whitespace-only UAs are never verified — bots send a UA.
+	 * Empty / whitespace-only UAs are never verified, bots send a UA.
 	 *
 	 * @param string $user_agent Raw User-Agent header value.
 	 * @return bool              True when the UA matches an allowlist pattern.
@@ -227,7 +227,7 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	 * Reset the per-request decision cache.
 	 *
 	 * Intended for unit tests that need to re-evaluate a UA after applying a
-	 * filter. Production code never calls this — the cache lifetime is the
+	 * filter. Production code never calls this, the cache lifetime is the
 	 * PHP request itself.
 	 *
 	 * @return void
@@ -251,22 +251,22 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	 * | yes             | yes                                | unknown   | yes    |
 	 * | yes             | yes                                | fake      | NO     |
 	 * | yes             | no rule / rule without signal      | unmatched | NO     |
-	 * | yes             | verifier or IP unavailable         | —         | NO     |
-	 * | no              | —                                  | official range hit | yes |
-	 * | no              | —                                  | no range hit | no   |
+	 * | yes             | verifier or IP unavailable         |,         | NO     |
+	 * | no              |,                                  | official range hit | yes |
+	 * | no              |,                                  | no range hit | no   |
 	 *
 	 * The IP-only branch is the render-fleet catch: Applebot and Google render
 	 * pages with browser-like user-agents from their official ranges, so the IP
 	 * alone can earn the exemption (PRO rulesets; the free baseline carries no
 	 * ranges and degrades to the FCrDNS path). Those ranges must only ever come
-	 * from the crawler feeds — a cloud-provider range in the ruleset would hand
+	 * from the crawler feeds, a cloud-provider range in the ruleset would hand
 	 * every VM on that platform an exemption.
 	 *
 	 * `unknown` still fails open, but only for a bot the ruleset can actually
 	 * verify: a resolver outage must not cost a genuine crawler its pass, while
 	 * a user-agent nobody can check earns nothing. Before 2.1.40 an unverifiable
 	 * claim was treated like a resolver hiccup, which turned every token without
-	 * a rule (GPTBot, Amazonbot, FacebookBot, UptimeRobot, …) into a standing
+	 * a rule (GPTBot, Amazonbot, FacebookBot, UptimeRobot, ...) into a standing
 	 * exemption from the block ladder and from community reporting.
 	 *
 	 * @param string                            $ua       Request User-Agent.

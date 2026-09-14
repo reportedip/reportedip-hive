@@ -2,8 +2,8 @@
 /**
  * Multisite + lifecycle tests for the rule delivery framework.
  *
- * Verifies the WPMU contract — rulesets are network-wide (sitemeta) and visible
- * on every sub-site, the sync cron is scheduled only on the main site — and the
+ * Verifies the WPMU contract, rulesets are network-wide (sitemeta) and visible
+ * on every sub-site, the sync cron is scheduled only on the main site, and the
  * lifecycle contract: the sync job is registered on schedule and removed on
  * clear, and the uninstall option sweep removes the stored rulesets and their
  * ETag site-transients.

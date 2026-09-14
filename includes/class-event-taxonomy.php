@@ -1,6 +1,6 @@
 <?php
 /**
- * Security event taxonomy — maps raw event types to display families.
+ * Security event taxonomy, maps raw event types to display families.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>

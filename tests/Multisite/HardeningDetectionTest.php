@@ -3,8 +3,8 @@
  * Multisite tests for the coordinated-attack detectors in Security_Monitor.
  *
  * Verifies that the distributed (rolling-window) detector catches a botnet
- * that rotates IPs across several minutes — the pattern that slips under the
- * legacy same-minute burst rule — and that the aggregate reads the network-wide
+ * that rotates IPs across several minutes, the pattern that slips under the
+ * legacy same-minute burst rule, and that the aggregate reads the network-wide
  * `base_prefix` table even when invoked from a sub-site context.
  *
  * @package    ReportedIP_Hive
@@ -45,7 +45,7 @@ class ReportedIP_Hive_Hardening_Detection_Multisite_Test extends WP_UnitTestCase
 	 * (well under the burst rule) while all rows stay inside the rolling window.
 	 *
 	 * The detectors count individual log rows, so M rows per IP contribute M to
-	 * `total_attempts` — mirroring how `wp_login_failed` logs one row per attempt.
+	 * `total_attempts`, mirroring how `wp_login_failed` logs one row per attempt.
 	 *
 	 * @param int $ip_count        Number of distinct IPs.
 	 * @param int $attempts_per_ip Number of failed_login rows per IP.

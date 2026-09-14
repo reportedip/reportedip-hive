@@ -150,7 +150,7 @@ if ( ! function_exists( 'is_multisite' ) ) {
 if ( ! function_exists( 'get_current_blog_id' ) ) {
 	/**
 	 * Returns the current site ID. On single-site this is always 1.
-	 * Used by INSERTs that carry a `blog_id` column on Multisite — the
+	 * Used by INSERTs that carry a `blog_id` column on Multisite, the
 	 * stub returns the same canonical value the production code defaults
 	 * to so no asserted SQL parameter changes between environments.
 	 *
@@ -413,7 +413,7 @@ if ( ! isset( $wp_user_meta ) ) {
 if ( ! function_exists( 'get_user_meta' ) ) {
 	/**
 	 * Single-value flavour (the third arg defaults to true here for unit-test
-	 * ergonomics — production code in this plugin always calls with `true`).
+	 * ergonomics, production code in this plugin always calls with `true`).
 	 *
 	 * @param int    $user_id User id.
 	 * @param string $key     Meta key.
@@ -527,7 +527,7 @@ if ( ! function_exists( 'current_time' ) ) {
 
 if ( ! function_exists( 'wp_date' ) ) {
 	/**
-	 * Format a UNIX timestamp. The stub always renders in UTC — timezone
+	 * Format a UNIX timestamp. The stub always renders in UTC, timezone
 	 * resolution is WordPress runtime behaviour the unit suite must not
 	 * depend on.
 	 *

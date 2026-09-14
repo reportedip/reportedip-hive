@@ -7,8 +7,8 @@
  *  - High-rate 404s (default ≥ 12 within 2 min) catch any scanner that walks
  *    a directory list of "common WP paths" hoping for unprotected files.
  *  - Pattern-based instant trigger: a single hit on one of the known-bad
- *    paths (`/.env`, `/wp-config.php.bak`, `/wp-content/debug.log`, …) is
- *    enough — these never appear in normal traffic.
+ *    paths (`/.env`, `/wp-config.php.bak`, `/wp-content/debug.log`, ...) is
+ *    enough, these never appear in normal traffic.
  *
  * Sensitive paths are configurable via the `reportedip_hive_scan_paths`
  * filter so site operators can add their own honeypot URLs.
@@ -72,7 +72,7 @@ class ReportedIP_Hive_Scan_Detector {
 	/**
 	 * Paths that browsers, mobile operating systems, PWApps and crawlers
 	 * request on their own. They 404 on any site that has not set a Site Icon,
-	 * shipped a web manifest or published the courtesy file — so counting them
+	 * shipped a web manifest or published the courtesy file, so counting them
 	 * toward the rate-based burst trigger auto-blocks ordinary visitors (a
 	 * single iOS page view alone fires several apple-touch-icon requests).
 	 *
@@ -108,9 +108,9 @@ class ReportedIP_Hive_Scan_Detector {
 	/**
 	 * File extensions for assets a browser fetches to render a page (images,
 	 * fonts, media). A burst of these 404ing from one visitor is a broken page,
-	 * a half-migrated site or a CDN hiccup — not a path-walking scanner, which
+	 * a half-migrated site or a CDN hiccup, not a path-walking scanner, which
 	 * probes for executables, configs and backups (.php, .env, .sql, .zip,
-	 * .bak …). Excluded from the rate trigger only; honeypot pattern hits and
+	 * .bak ...). Excluded from the rate trigger only; honeypot pattern hits and
 	 * non-asset extensions still count. Tunable via the
 	 * `reportedip_hive_scan_404_asset_extensions` filter.
 	 */
@@ -164,7 +164,7 @@ class ReportedIP_Hive_Scan_Detector {
 	}
 
 	/**
-	 * 404 hook. Runs late so theme-level overrides have already executed —
+	 * 404 hook. Runs late so theme-level overrides have already executed.
 	 * we only count the request as a scan candidate if WP itself decided to
 	 * serve a 404.
 	 */
@@ -197,12 +197,12 @@ class ReportedIP_Hive_Scan_Detector {
 		}
 
 		/*
-		 * Authenticated users can legitimately rack up 404s — missing CSS source
+		 * Authenticated users can legitimately rack up 404s, missing CSS source
 		 * maps, deprecated plugin asset URLs after an update, the WordPress
 		 * "page not found" admin search. Don't fire the burst trigger for them.
 		 *
-		 * Pattern hits (.env, wp-config.php.bak, /.git/config, /phpmyadmin/ …)
-		 * stay armed even for logged-in users — those paths have no legitimate
+		 * Pattern hits (.env, wp-config.php.bak, /.git/config, /phpmyadmin/ ...)
+		 * stay armed even for logged-in users, those paths have no legitimate
 		 * use anywhere, including from an admin's browser.
 		 */
 		if ( ! $is_scan_hit && is_user_logged_in() ) {
@@ -211,11 +211,11 @@ class ReportedIP_Hive_Scan_Detector {
 
 		/*
 		 * Verified search engine and AI crawlers (Googlebot, Bingbot, GPTBot,
-		 * ClaudeBot, …) are exempt from the rate-based 404 burst trigger so
+		 * ClaudeBot, ...) are exempt from the rate-based 404 burst trigger so
 		 * legit crawls over stale URLs cannot lock them into the block ladder.
 		 *
 		 * Pattern hits stay scharf: a "Googlebot" UA that goes to /.env is by
-		 * definition a spoofed UA — the honeypot path is the attack indicator.
+		 * definition a spoofed UA, the honeypot path is the attack indicator.
 		 */
 		if ( ! $is_scan_hit
 			&& class_exists( 'ReportedIP_Hive_Bot_Allowlist' ) ) {
@@ -273,7 +273,7 @@ class ReportedIP_Hive_Scan_Detector {
 	 *
 	 * Parsed raw and decoded explicitly: `sanitize_text_field()` removes every
 	 * `%XX` sequence, so a probe for `/%2Eenv` reached the signature list as
-	 * `/env` and never matched the `.env` honeypot — while the web server
+	 * `/env` and never matched the `.env` honeypot, while the web server
 	 * happily served the real file.
 	 */
 	private function get_request_path(): string {
@@ -349,7 +349,7 @@ class ReportedIP_Hive_Scan_Detector {
 	 * media). A burst of these is broken-page or migration noise, not a scan,
 	 * so it is kept out of the rate trigger. Honeypot pattern hits are
 	 * evaluated before this guard and are unaffected; scanner-relevant
-	 * extensions (.php, .env, .sql, .zip, .bak, .old, .log …) are not listed
+	 * extensions (.php, .env, .sql, .zip, .bak, .old, .log ...) are not listed
 	 * and therefore still count.
 	 *
 	 * @param string $path Lower-case, query-stripped request path.

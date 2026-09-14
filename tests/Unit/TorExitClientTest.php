@@ -4,8 +4,8 @@
  *
  * Covers the delivery plumbing (empty bundled baseline, `tor_exits` as a
  * valid Rule_Store key with a stored round-trip), the tier gate
- * (`tor_blocking` requires Community mode and the Professional tier) and —
- * because the main plugin file cannot be loaded under the unit stubs — the
+ * (`tor_blocking` requires Community mode and the Professional tier) and.
+ * because the main plugin file cannot be loaded under the unit stubs, the
  * source-locked properties of `is_tor_exit()` / `should_block_tor_exit()`
  * and the no-community-report guarantee of the Tor block branch.
  *
@@ -99,7 +99,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertIsArray( $baseline );
 			$this->assertSame( 'tor_exits', $baseline['key'] );
 			$this->assertSame( 0, $baseline['version'], 'The baseline must always lose against any synced ruleset.' );
-			$this->assertSame( array(), $baseline['rules'], 'No static exit-node snapshot may ship — it would be stale on arrival.' );
+			$this->assertSame( array(), $baseline['rules'], 'No static exit-node snapshot may ship, it would be stale on arrival.' );
 		}
 
 		public function test_rule_store_recognises_the_tor_exits_key() {

@@ -29,11 +29,11 @@ class ReportedIP_Hive_Security_Monitor {
 	 *
 	 * The service-side taxonomy in `wp_reportedip_threat_categories` covers
 	 * both AbuseIPDB-style legacy categories (1–30: 4 DDoS, 12 Blog Spam,
-	 * 15 Hacking, 18 Brute-Force, 21 Web App Attack, 22 SSH, …) and a
+	 * 15 Hacking, 18 Brute-Force, 21 Web App Attack, 22 SSH, ...) and a
 	 * WordPress-specific extension range (31+: 31 WP Login Brute Force,
 	 * 33 WP XML-RPC Brute Force, 34 WP REST API Abuse, 39 WP Comment Spam,
 	 * 55 WP User Enumeration, 56 WP Version Scanning, 57 WP Plugin Scanning,
-	 * 58 WP Config Exposure, …). The mapping below favours the WP-specific
+	 * 58 WP Config Exposure, ...). The mapping below favours the WP-specific
 	 * IDs for the new 1.2.0 sensors so confidence scoring on the service
 	 * side aggregates them correctly; legacy event types keep their original
 	 * IDs to preserve behaviour for existing 1.x deployments.
@@ -87,7 +87,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 *
 	 * Runs two layered checks:
 	 *  1. Per-IP failed-login count vs. configured threshold.
-	 *  2. Distinct-username password-spray check — fires before the per-IP
+	 *  2. Distinct-username password-spray check, fires before the per-IP
 	 *     count threshold when an IP probes many different usernames in a
 	 *     short window, which is a stronger credential-stuffing indicator.
 	 *
@@ -165,7 +165,7 @@ class ReportedIP_Hive_Security_Monitor {
 	/**
 	 * Record a hashed username sample for the password-spray detector.
 	 *
-	 * We never persist plaintext usernames here — only a salted hash, just
+	 * We never persist plaintext usernames here, only a salted hash, just
 	 * enough to count distinct values without leaking PII. The transient is
 	 * IP-scoped and TTL-bound, so no cleanup pass is needed.
 	 */
@@ -198,7 +198,7 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
-	 * Distinct-username threshold check — fires when the IP has tried a
+	 * Distinct-username threshold check, fires when the IP has tried a
 	 * configurable number of unique usernames within the spray timeframe.
 	 *
 	 * @return bool True if the threshold fired.
@@ -388,7 +388,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * funnel through `track_generic_attempt()`.
 	 *
 	 * @param string $ip_address Client IP.
-	 * @param string $event_type Event slug — must exist in the category and stat mapping tables, otherwise the report rolls up to fallback buckets.
+	 * @param string $event_type Event slug, must exist in the category and stat mapping tables, otherwise the report rolls up to fallback buckets.
 	 * @param array  $details    Event metadata, written to logs and the report comment verbatim.
 	 * @return void
 	 * @since  1.0.0
@@ -407,7 +407,7 @@ class ReportedIP_Hive_Security_Monitor {
 		 *
 		 * Unlike `reportedip_hive_ip_blocked` this fires regardless of the
 		 * auto-block and community-reporting settings, so integrations
-		 * (webhooks, SIEM, Slack) see every detection — including ones that
+		 * (webhooks, SIEM, Slack) see every detection, including ones that
 		 * were detected but never blocked. The own-server and verified-bot
 		 * guards have already passed at this point.
 		 *
@@ -440,7 +440,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 *
 	 * Genuine crawlers never POST credentials, so the never-block-a-good-bot
 	 * guard must not spare these events: a crawler-claiming user-agent on a
-	 * login surface is itself an attack indicator. Observed in the wild —
+	 * login surface is itself an attack indicator. Observed in the wild.
 	 * botnets spoofing Jetpack/WordPress.com user-agents rode the guard's
 	 * fail-open path to brute-force wp-login without ever being blocked.
 	 *
@@ -483,7 +483,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * the crawler exemption outright.
 	 *
 	 * Deliberately absent: `xss` and `sql_injection` (editor content, form and
-	 * search input produce genuine false positives — a customer searching for
+	 * search input produce genuine false positives, a customer searching for
 	 * a product code must never be locked out over it), `scanner_ua` (the
 	 * user-agent is the only evidence and is trivially forged in both
 	 * directions) and `rest_abuse` (volume, not payload).
@@ -509,14 +509,14 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Last line of the never-block-a-good-bot defence.
 	 *
 	 * Every automatic IP block funnels through `handle_threshold_exceeded()`;
-	 * this check runs there before anything happens — no block, no community
-	 * API report, no admin mail — for a request that comes from a verified
+	 * this check runs there before anything happens, no block, no community
+	 * API report, no admin mail, for a request that comes from a verified
 	 * (or DNS-undecidable) crawler. Sensors with their own allowlist call
 	 * consult the same combined decision earlier; this guard covers every
-	 * sensor that does not (WAF escalation, XML-RPC, comment spam, …).
+	 * sensor that does not (WAF escalation, XML-RPC, comment spam, ...).
 	 *
 	 * Credential-bearing events ({@see self::CREDENTIAL_EVENTS}) are never
-	 * spared — the same reasoning that keeps the honeypot-path sensors off
+	 * spared, the same reasoning that keeps the honeypot-path sensors off
 	 * the allowlist: no legitimate crawler submits login credentials. Since
 	 * 2.1.40 the same applies to unambiguously malicious requests
 	 * ({@see self::is_unambiguously_malicious()}), which the guard used to
@@ -581,7 +581,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Three signals qualify, all of them produced by a sensor that already
 	 * decided the request has no legitimate use:
 	 *
-	 *  - a honeypot path hit (`scan_404` with `pattern_hit`) — nothing links to
+	 *  - a honeypot path hit (`scan_404` with `pattern_hit`), nothing links to
 	 *    `/.env` or `/wp-config.php.bak`, so no crawler can arrive there by
 	 *    following the site;
 	 *  - a WAF hit in one of {@see self::MALICIOUS_WAF_GROUPS};
@@ -657,13 +657,13 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Cache-preload crawlers, WP-Cron loopbacks and REST self-requests arrive
 	 * with the site's own public address as REMOTE_ADDR and trip the burst
 	 * sensors exactly like an attacker would. Blocking that address takes
-	 * every loopback down with it — the pre-WordPress guard enforces the
-	 * block before any path exception — and reporting it poisons the site's
+	 * every loopback down with it, the pre-WordPress guard enforces the
+	 * block before any path exception, and reporting it poisons the site's
 	 * own community reputation. Every automatic consequence therefore stands
 	 * down: no block, no API report, no admin mail.
 	 *
 	 * The averted decision is logged as `own_server_ip_block_averted`, at
-	 * most once per hour per IP/event pair — self-traffic bursts run into
+	 * most once per hour per IP/event pair, self-traffic bursts run into
 	 * five digits a day and would bury the log otherwise.
 	 *
 	 * @param string $ip_address Client IP that tripped a threshold.
@@ -699,7 +699,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Never-block veto for community-whitelisted infrastructure (search
 	 * engines, major CDNs, monitoring fleets).
 	 *
-	 * Consults only the LOCAL reputation cache — never a live API call —
+	 * Consults only the LOCAL reputation cache, never a live API call.
 	 * because this runs inside the block path. The veto covers blocks only:
 	 * `report_security_event()` still runs, since local sensor hits are
 	 * evidence the community should see even when the offender is curated
@@ -759,7 +759,7 @@ class ReportedIP_Hive_Security_Monitor {
 
 		/*
 		 * Defensive re-checks for direct callers (the admin test button, custom
-		 * integrations) — the regular threshold path is already guarded in
+		 * integrations), the regular threshold path is already guarded in
 		 * handle_threshold_exceeded(). Same order as there: the memoized
 		 * own-server check is near-free, the bot verifier verdicts are
 		 * transient-cached.
@@ -953,7 +953,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * via the `reportedip_hive_event_category_map` filter; IDs not found in the
 	 * cached service-side category list are filtered out via
 	 * get_validated_category_mapping(). Falls back to category 15 (Hacking) when
-	 * the event type is unknown — keeps reports flowing for new sensors that
+	 * the event type is unknown, keeps reports flowing for new sensors that
 	 * forgot to add a mapping.
 	 *
 	 * @param string $event_type Event-type slug (e.g. failed_login).
@@ -1290,7 +1290,7 @@ class ReportedIP_Hive_Security_Monitor {
 			array(
 				'to'              => implode( ', ', $recipients ),
 				'subject'         => $subject,
-				'intro_text'      => __( 'Heads-up: a security threshold was reached on your site. ReportedIP Hive has already handled it according to your settings — details below for your records.', 'reportedip-hive' ),
+				'intro_text'      => __( 'Heads-up: a security threshold was reached on your site. ReportedIP Hive has already handled it according to your settings, details below for your records.', 'reportedip-hive' ),
 				'main_block_html' => $blocks['html'],
 				'main_block_text' => $blocks['text'],
 				'security_notice' => array(
@@ -1311,7 +1311,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 *
 	 * The legacy `rip_notif_<ip+event>`-cooldown is per-IP, so a distributed
 	 * attack (different IPs trigger the same event type within seconds) used
-	 * to send one mail per IP — the relay throttles them, the fallback drops
+	 * to send one mail per IP, the relay throttles them, the fallback drops
 	 * them into wp_mail(), the admin still drowns. This second gate caps the
 	 * total mail volume per event_type and remembers how many alerts were
 	 * suppressed so the next outgoing mail can carry a digest line.
@@ -1555,29 +1555,29 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Runs two complementary detectors and returns the union of their hits
 	 * (each row carries `time_window`, `unique_ips`, `total_attempts`):
 	 *
-	 *  1. Burst — ≥ 8 distinct IPs AND ≥ 30 attempts inside a single calendar
+	 *  1. Burst, ≥ 8 distinct IPs AND ≥ 30 attempts inside a single calendar
 	 *     minute. Catches sharp simultaneous floods.
-	 *  2. Distributed — ≥ {@see ReportedIP_Hive_Hardening_Mode::detect_min_ips()}
+	 *  2. Distributed, ≥ {@see ReportedIP_Hive_Hardening_Mode::detect_min_ips()}
 	 *     distinct IPs AND ≥ detect_min_attempts() across the rolling
 	 *     detect_window_minutes() window. Catches botnets that rotate IPs over
 	 *     several minutes and would otherwise slip under the per-minute burst
 	 *     rule.
 	 *
 	 * Both detectors count individual `failed_login` and `app_password_failed`
-	 * rows in the `logs` table over a real `created_at` window — NOT
+	 * rows in the `logs` table over a real `created_at` window, NOT
 	 * `SUM(attempt_count)` from the aggregated `attempts` table, whose per-IP
 	 * counter is cumulative (it accumulates across a rolling 1 h gap) and would
 	 * over-count any IP that is merely active in the window with its full
-	 * lifetime total. The logs table carries one timestamped row per attempt —
+	 * lifetime total. The logs table carries one timestamped row per attempt.
 	 * exactly one of the two event types per wire attempt, because the
 	 * application-password sensor claims XML-RPC app-password failures and the
-	 * generic listener stands down for them — so the magnitude reflects real
+	 * generic listener stands down for them, so the magnitude reflects real
 	 * in-window attempts (note: a `failed_login` is logged before an
 	 * already-blocked IP is short-circuited, so a blocked attacker stops adding
-	 * rows — the count tracks the active front line of an attack).
+	 * rows, the count tracks the active front line of an attack).
 	 *
 	 * The table lives under `base_prefix` (network-wide), so on Multisite the
-	 * aggregate spans every site in the network — a distributed attack hitting
+	 * aggregate spans every site in the network, a distributed attack hitting
 	 * many sub-sites is detected as one coordinated pattern.
 	 *
 	 * @return array<int,object>
@@ -1647,7 +1647,7 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
-	 * Distributed-attack detector — rolling-window aggregate.
+	 * Distributed-attack detector, rolling-window aggregate.
 	 *
 	 * Counts distinct IPs and real `failed_login` events over the configurable
 	 * sliding window (default 10 min) and returns a synthetic row when the

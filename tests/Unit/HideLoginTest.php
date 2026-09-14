@@ -385,7 +385,7 @@ class HideLoginTest extends TestCase {
 	 * Architecture invariant: the probe sensor must hand off to the
 	 * Security-Monitor with the 'hide_login_probe' attempt type, gated on the
 	 * monitor toggle, and the counting handoff must happen BEFORE the log line
-	 * is handed to the shared denial logger — that one throttles per IP, and a
+	 * is handed to the shared denial logger, that one throttles per IP, and a
 	 * throttled log line must never starve the attempt counter. Verified by
 	 * source inspection so a future refactor cannot silently break the order.
 	 */

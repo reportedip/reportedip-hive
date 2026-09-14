@@ -3,7 +3,7 @@
  * Baseline Tor exit-node list: deliberately empty.
  *
  * Tor blocking is a Professional feature and the exit-node set rotates by
- * the hour, so no static snapshot ships with the plugin — it would be stale
+ * the hour, so no static snapshot ships with the plugin, it would be stale
  * on arrival and block re-assigned addresses. PRO sites receive the live
  * list through the signed ruleset sync (`tor_exits`, refreshed twice a day
  * server-side); without a synced ruleset the feature simply matches nothing.

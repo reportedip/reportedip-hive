@@ -3,7 +3,7 @@
  * Request-inspecting web application firewall engine.
  *
  * Evaluates the inbound request (URI, query, body, user-agent) against the
- * active `waf` ruleset — the bundled Paranoia-Level-1 baseline (free on every
+ * active `waf` ruleset, the bundled Paranoia-Level-1 baseline (free on every
  * plan) plus, on Professional tiers, the deeper server-delivered ruleset from
  * {@see ReportedIP_Hive_Rule_Sync}. The engine is ReDoS-hardened (bounded
  * PCRE backtracking, fail-open on a pattern that errors), short-circuits on the
@@ -187,7 +187,7 @@ class ReportedIP_Hive_WAF {
 		 * callers. Skipping those on the is_admin() flag alone left their POST
 		 * bodies uninspected by this layer, and the guard skips body inspection
 		 * whenever a (pre-WordPress unverifiable) login cookie is merely
-		 * present — so an anonymous request carrying a forged cookie reached
+		 * present, so an anonymous request carrying a forged cookie reached
 		 * the handler unscanned by both layers. Anonymous requests to those two
 		 * endpoints are therefore inspected here. REST_REQUEST is not yet
 		 * defined at `init` priority 1, so detection rests on is_admin().
@@ -207,8 +207,8 @@ class ReportedIP_Hive_WAF {
 		}
 
 		/*
-		 * Content authors — editors, authors, contributors, including multisite
-		 * editors who lack `unfiltered_html` — legitimately submit markup and
+		 * Content authors, editors, authors, contributors, including multisite
+		 * editors who lack `unfiltered_html`, legitimately submit markup and
 		 * code through the block-editor REST saves and the classic editor. They
 		 * are exempt; the WAF targets the external, unauthenticated front-end
 		 * attack surface.
@@ -237,7 +237,7 @@ class ReportedIP_Hive_WAF {
 		 * Whole-engine exceptions (backend scope='all') and the developer-only
 		 * `reportedip_hive_waf_bypass_routes` opt-in skip inspection for
 		 * first-party endpoints whose body legitimately carries attack-like
-		 * payloads — e.g. a security API that ingests reported attack data —
+		 * payloads, e.g. a security API that ingests reported attack data.
 		 * before the body is even read, so the WAF never bans its own caller.
 		 */
 		if ( $this->request_is_fully_excepted( $exceptions, $route, $path, $ip ) ) {
@@ -303,7 +303,7 @@ class ReportedIP_Hive_WAF {
 	/**
 	 * The decoded request path (no query string) for path-prefix matching.
 	 *
-	 * Only the URI path is used — never the query string — so a bypass token
+	 * Only the URI path is used, never the query string, so a bypass token
 	 * cannot be smuggled through an unrelated query parameter. Resolution goes
 	 * through the shared helper because this value decides whether a
 	 * `scope='all'` exception skips inspection entirely: parsing `//shop/checkout`
@@ -319,7 +319,7 @@ class ReportedIP_Hive_WAF {
 	}
 
 	/**
-	 * Whether the request is exempt from inspection entirely — a backend
+	 * Whether the request is exempt from inspection entirely, a backend
 	 * `scope='all'` exception whose location matches, or the developer-only
 	 * `reportedip_hive_waf_bypass_routes` opt-in.
 	 *
@@ -434,7 +434,7 @@ class ReportedIP_Hive_WAF {
 	/**
 	 * Anchored path-prefix match against the request path and, for REST
 	 * requests, the canonical `/{rest_prefix}{route}` path. Always a
-	 * `str_starts_with` test on the decoded path — never the query string.
+	 * `str_starts_with` test on the decoded path, never the query string.
 	 *
 	 * @param string $prefix Leading-slash path prefix.
 	 * @param string $route  Resolved REST route, or ''.
@@ -495,8 +495,8 @@ class ReportedIP_Hive_WAF {
 	 * Pure REST-route resolver. Extracted so the anti-smuggle behaviour is
 	 * deterministically unit-testable without superglobals.
 	 *
-	 * Only the request PATH and the explicit `rest_route` param are trusted —
-	 * never the wider query string — so an attacker cannot smuggle a bypass
+	 * Only the request PATH and the explicit `rest_route` param are trusted.
+	 * never the wider query string, so an attacker cannot smuggle a bypass
 	 * token through an unrelated query parameter (e.g.
 	 * `POST /xmlrpc.php?x=/my-api/v1`). For plain permalinks the `rest_route`
 	 * param is honoured only when the request actually hits the REST entry
@@ -512,7 +512,7 @@ class ReportedIP_Hive_WAF {
 	private function resolve_rest_route( string $uri, $rest_route, string $rest_prefix ): string {
 		$path = ReportedIP_Hive_Request_Path::normalize( $uri );
 
-		// Plain permalinks: ?rest_route=/ns/route — only on the REST entry script.
+		// Plain permalinks: ?rest_route=/ns/route, only on the REST entry script.
 		if ( null !== $rest_route && '' !== (string) $rest_route ) {
 			$script = strtolower( basename( $path ) );
 
@@ -521,7 +521,7 @@ class ReportedIP_Hive_WAF {
 			 * the site root: in a subdirectory install `/blog/` has a basename
 			 * of `blog`, which used to fail the check and left every
 			 * route-scoped exception inert on plain permalinks. Comparing
-			 * against the real home path keeps the decoy case out — a token
+			 * against the real home path keeps the decoy case out, a token
 			 * smuggled onto `/xmlrpc.php` still resolves to nothing.
 			 */
 			if ( 'index.php' === $script || $this->path_is_site_root( $path ) ) {
@@ -863,7 +863,7 @@ class ReportedIP_Hive_WAF {
 	 * A once-decoded variant of the raw body is appended when it differs, so a
 	 * percent-encoded payload smuggled inside a JSON body (e.g. a REST batch
 	 * sub-request whose query string carries `SLEEP%283%29`) is visible to the
-	 * same signatures that already see it in the URL — mirroring
+	 * same signatures that already see it in the URL, mirroring
 	 * {@see uri_subject()}. `$post` is already url-decoded by PHP, so only the
 	 * raw stream needs the decode pass.
 	 *
@@ -959,7 +959,7 @@ class ReportedIP_Hive_WAF {
 	 * Evaluate a rule pattern and return the substring it matched.
 	 *
 	 * Returns the matched fragment (capture group 0) so a block log can record
-	 * exactly what tripped the rule — the single most useful field for telling a
+	 * exactly what tripped the rule, the single most useful field for telling a
 	 * real attack from a false positive. An invalid pattern or a backtrack-limit
 	 * hit returns null (fail-open, treated as a non-match) so a single bad
 	 * delivered rule can never take the site down or hang the request.
@@ -982,7 +982,7 @@ class ReportedIP_Hive_WAF {
 		$result   = @preg_match( $compiled, $subject, $matches ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- A malformed delivered rule must fail open, not emit a warning into the response.
 
 		/*
-		 * Failing open is right — one bad rule must not break the site — but
+		 * Failing open is right, one bad rule must not break the site, but
 		 * silently is not: a rule that never compiles protects nothing while
 		 * the firewall page keeps counting it as active. Report it once an
 		 * hour so a broken pattern surfaces instead of just going quiet.
@@ -1023,7 +1023,7 @@ class ReportedIP_Hive_WAF {
 			array( 'pattern' => substr( (string) $pattern, 0, 200 ) )
 		);
 
-		/* Claim the hour only once something was actually written — spending it
+		/* Claim the hour only once something was actually written, spending it
 			ahead of the log would silence the very report this exists to make. */
 		set_transient( $gate, 1, HOUR_IN_SECONDS );
 	}
@@ -1089,7 +1089,7 @@ class ReportedIP_Hive_WAF {
 	 * body or a probe for `/.aws/credentials` is an attack on the first
 	 * attempt, and waiting for two more only hands the scanner a head start.
 	 *
-	 * `sql_injection` and `xss` stay on the normal ladder on purpose — search
+	 * `sql_injection` and `xss` stay on the normal ladder on purpose, search
 	 * terms, editor content and form payloads do trip those patterns.
 	 *
 	 * @var string[]
@@ -1180,12 +1180,12 @@ class ReportedIP_Hive_WAF {
 	 * Import a hit the pre-WordPress guard already answered with a 403.
 	 *
 	 * The drop-in runs before WordPress exists, so it can neither log nor
-	 * escalate — it appends the hit to a queue file and exits. This is the
+	 * escalate, it appends the hit to a queue file and exits. This is the
 	 * WordPress side of that bridge: it writes the same `waf_block` row the
 	 * in-WordPress engine would have written, stamped with the time the request
 	 * actually happened rather than the time it was imported, and feeds the
 	 * escalation ladder so a repeat offender still earns an IP block and a
-	 * community report. It never serves a blocked page — the request it
+	 * community report. It never serves a blocked page, the request it
 	 * describes was answered long ago.
 	 *
 	 * Repeat offences against the same rule arrive as one aggregated call: a

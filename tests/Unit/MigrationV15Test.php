@@ -151,7 +151,7 @@ class MigrationV15Test extends TestCase {
 		$this->assertStringContainsString(
 			'ADD UNIQUE KEY unique_ip_type (ip_address, attempt_type)',
 			$queries[1],
-			'The dedupe DELETE must run before the ALTER — the ADD UNIQUE KEY fails on duplicate rows.'
+			'The dedupe DELETE must run before the ALTER, the ADD UNIQUE KEY fails on duplicate rows.'
 		);
 	}
 

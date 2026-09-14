@@ -260,7 +260,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * Constant name => option key for every `const X = 'reportedip_hive_…'`
+		 * Constant name => option key for every `const X = 'reportedip_hive_...'`
 		 * declared in the plugin.
 		 *
 		 * @return array<string, string>
@@ -289,7 +289,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * counting those as a form is how an option with no way to change it
 		 * still passes.
 		 *
-		 * The last pattern is the AJAX toggle map (`'decoy' => 'reportedip_…'`),
+		 * The last pattern is the AJAX toggle map (`'decoy' => 'reportedip_...'`),
 		 * the only writer for the decoy switch on the Firewall page.
 		 *
 		 * @param string $key     Option key.

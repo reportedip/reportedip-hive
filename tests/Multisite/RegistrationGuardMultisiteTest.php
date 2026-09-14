@@ -244,8 +244,8 @@ class ReportedIP_Hive_Registration_Guard_Multisite_Test extends WP_UnitTestCase 
 	}
 
 	/**
-	 * Account creation that never reaches a registration form — WooCommerce
-	 * builds the checkout customer with `wc_create_new_customer()` — is held to
+	 * Account creation that never reaches a registration form, WooCommerce
+	 * builds the checkout customer with `wc_create_new_customer()`, is held to
 	 * the same rate limit.
 	 */
 	public function test_rate_limit_also_refuses_a_registration_without_a_form() {

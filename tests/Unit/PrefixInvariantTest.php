@@ -3,8 +3,8 @@
  * Architecture invariant test for network-wide table prefix usage.
  *
  * All seven plugin tables live under `$wpdb->base_prefix`. On Multisite,
- * `$wpdb->prefix` resolves to the per-blog prefix (`wp_2_…`) and points at a
- * table that never exists — reads silently return nothing and flood the DB
+ * `$wpdb->prefix` resolves to the per-blog prefix (`wp_2_...`) and points at a
+ * table that never exists, reads silently return nothing and flood the DB
  * error log (this disabled block escalation on every subsite in 2.1.25).
  * Outside the data layer the only sanctioned accessor is
  * `ReportedIP_Hive_Schema::table()`; this scan trips on any reintroduction

@@ -31,7 +31,7 @@ class TwoFactorFrontendConflictDetectionTest extends TestCase {
 		$this->assertStringContainsString(
 			"class_exists( 'ITSEC_Core' )",
 			$source,
-			'`ITSEC_Core` is the canonical Solid Security marker — keep it as the conflict trigger so future Solid renames still fingerprint correctly.'
+			'`ITSEC_Core` is the canonical Solid Security marker, keep it as the conflict trigger so future Solid renames still fingerprint correctly.'
 		);
 		$this->assertStringContainsString(
 			"'slug'    => 'solid-security'",
@@ -59,7 +59,7 @@ class TwoFactorFrontendConflictDetectionTest extends TestCase {
 		$this->assertStringContainsString(
 			"function_exists( 'wfConfig' )",
 			$source,
-			'Wordfence is fingerprinted via the `wfConfig` function — class names there shift between versions.'
+			'Wordfence is fingerprinted via the `wfConfig` function, class names there shift between versions.'
 		);
 	}
 
@@ -68,7 +68,7 @@ class TwoFactorFrontendConflictDetectionTest extends TestCase {
 		$this->assertStringContainsString(
 			"class_exists( 'WC_Subscriptions' )",
 			$source,
-			'WC Subscriptions detection is a non-blocking informational note — magic-login bypass intentional.'
+			'WC Subscriptions detection is a non-blocking informational note, magic-login bypass intentional.'
 		);
 		$this->assertStringContainsString(
 			"class_exists( 'WC_Memberships' )",

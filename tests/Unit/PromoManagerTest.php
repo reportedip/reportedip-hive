@@ -2,8 +2,8 @@
 /**
  * Unit tests for {@see ReportedIP_Hive_Promo_Manager}.
  *
- * Locks down the three guard rails — killswitch, 90-day global cap, 60-day
- * per-feature cooldown — plus the permanent-opt-out path and the
+ * Locks down the three guard rails, killswitch, 90-day global cap, 60-day
+ * per-feature cooldown, plus the permanent-opt-out path and the
  * reset-for-user lifecycle hook used by the tier-upgrade flow.
  *
  * @package    ReportedIP_Hive
@@ -56,7 +56,7 @@ class PromoManagerTest extends TestCase {
 			'A render of one promo key consumes a slot for ALL keys via the 90-day global cap.'
 		);
 
-		// Simulate 91 days passing — the global cap should release.
+		// Simulate 91 days passing, the global cap should release.
 		$last = (int) get_user_meta( 42, \ReportedIP_Hive_Promo_Manager::META_LAST_SHOWN, true );
 		$this->assertGreaterThan( 0, $last );
 		update_user_meta(
@@ -116,7 +116,7 @@ class PromoManagerTest extends TestCase {
 
 		\ReportedIP_Hive_Promo_Manager::reset_for_user( 42 );
 
-		// Cap is cleared — the key we just showed becomes visible again.
+		// Cap is cleared, the key we just showed becomes visible again.
 		$this->assertTrue( \ReportedIP_Hive_Promo_Manager::can_show( $this->key(), 42 ) );
 		// Opt-out is explicit user intent and survives the reset.
 		$this->assertFalse(

@@ -140,7 +140,7 @@ final class ReportedIP_Hive_Admin_Bar {
 	}
 
 	/**
-	 * Inline styles for the admin-bar node — scoped, scharfe Kanten, prefers-reduced-motion aware.
+	 * Inline styles for the admin-bar node, scoped, scharfe Kanten, prefers-reduced-motion aware.
 	 *
 	 * @return void
 	 */

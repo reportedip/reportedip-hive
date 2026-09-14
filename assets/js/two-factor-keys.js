@@ -1,14 +1,14 @@
 /**
- * ReportedIP Hive — Security-key / passkey manager.
+ * ReportedIP Hive, Security-key / passkey manager.
  *
  * Drives the key-manager card (templates/partials/webauthn-key-manager.php):
- *   – lists the user's WebAuthn credentials via AJAX
- *   – inline rename and per-key delete (with last-key confirmation)
- *   – "add key" flow: name prompt first, then the registration ceremony
+ *   - lists the user's WebAuthn credentials via AJAX
+ *   - inline rename and per-key delete (with last-key confirmation)
+ *   - "add key" flow: name prompt first, then the registration ceremony
  *     with an authenticator hint (security-key vs. platform)
  *
  * Config arrives via wp_localize_script as `reportedip2faKeys`:
- *   { ajaxUrl, nonce, userId, strings: {…} }
+ *   { ajaxUrl, nonce, userId, strings: {...} }
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>

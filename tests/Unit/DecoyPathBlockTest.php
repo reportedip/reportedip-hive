@@ -78,7 +78,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/site-a/wp-login.php' ) );
 			$this->assertFalse(
 				\ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/deep/nested/sub/admin-shell-console.php' ),
-				'Deep nested paths must NOT match — only one subdir segment is allowed (consistent with the .htaccess/nginx regex).'
+				'Deep nested paths must NOT match, only one subdir segment is allowed (consistent with the .htaccess/nginx regex).'
 			);
 		}
 
@@ -88,11 +88,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertTrue( \ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/.ssh/id_rsa' ) );
 			$this->assertTrue(
 				\ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/wp-content/.aws/credentials' ),
-				'One-segment prefixes count — `wp-content` is itself a valid subdir name.'
+				'One-segment prefixes count, `wp-content` is itself a valid subdir name.'
 			);
 			$this->assertFalse(
 				\ReportedIP_Hive_Decoy_Path_Block::is_decoy_path( '/wp-content/uploads/.ssh/id_rsa' ),
-				'Two-or-more-segment prefixes must not match — the rewrite regex only allows one optional subdir.'
+				'Two-or-more-segment prefixes must not match, the rewrite regex only allows one optional subdir.'
 			);
 		}
 

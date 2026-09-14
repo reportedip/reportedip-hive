@@ -173,7 +173,7 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 	/**
 	 * Whether the given log row was captured while Hardening Mode was active.
 	 *
-	 * Reads `details.hardening_active` — the decoration is set by
+	 * Reads `details.hardening_active`, the decoration is set by
 	 * {@see ReportedIP_Hive_Logger::log_security_event()} on every event during
 	 * an active hardening window.
 	 *

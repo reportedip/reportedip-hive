@@ -1,5 +1,5 @@
 /**
- * ReportedIP Hive — Two-Factor Authentication Styles.
+ * ReportedIP Hive, Two-Factor Authentication Styles.
  *
  * Follows the ReportedIP Design System (rip-* prefix).
  * Used on both the wp-login.php challenge page and admin 2FA settings.
@@ -58,10 +58,10 @@ body.rip-2fa-onboarding a.rip-button--primary:focus-visible {
 
 /*
  * Force white button text on filled variants even when a theme stylesheet
- * gets loaded into the onboarding page (some themes hook `button { color: … }`
+ * gets loaded into the onboarding page (some themes hook `button { color: ... }`
  * via global content selectors that beat our `body.rip-2fa-onboarding` scope
  * on specificity). `!important` is justified here because the contract for
- * these variants — coloured background + white label — is set in the
+ * these variants, coloured background + white label, is set in the
  * design-system and the alternative is unreadable buttons.
  */
 body.rip-2fa-onboarding .rip-button--primary,
@@ -208,7 +208,7 @@ body.login-action-reportedip_2fa_reset #login #login_error {
 	font-weight: 600;
 }
 
-/* Method tabs — segmented-control. Wraps to 2 rows if >3 methods. */
+/* Method tabs, segmented-control. Wraps to 2 rows if >3 methods. */
 .rip-2fa-challenge__methods {
 	display: flex;
 	flex-wrap: wrap;
@@ -317,7 +317,7 @@ a.rip-2fa-challenge__method-tab:focus {
 	line-height: 1.4;
 }
 
-/* Code input — only this element uses the mono font, intentionally. */
+/* Code input, only this element uses the mono font, intentionally. */
 .rip-2fa-challenge__input-wrapper {
 	margin: 0 0 var(--rip-space-3, 0.75rem);
 }
@@ -349,14 +349,14 @@ a.rip-2fa-challenge__method-tab:focus {
 	letter-spacing: 0.18em;
 }
 
-/* Phase-1 CTA (Code senden) — the rip-button classes handle visuals, we only
+/* Phase-1 CTA (Code senden), the rip-button classes handle visuals, we only
  * ensure it stretches full-width inside the compact card. */
 .rip-2fa-challenge__resend-btn {
 	width: 100%;
 	margin-top: var(--rip-space-2, 0.5rem);
 }
 
-/* Phase-2 resend — text link rendered as a <button> for AJAX binding. */
+/* Phase-2 resend, text link rendered as a <button> for AJAX binding. */
 .rip-2fa-challenge__resend {
 	display: flex;
 	flex-wrap: wrap;
@@ -387,7 +387,7 @@ a.rip-2fa-challenge__method-tab:focus {
 }
 
 .rip-2fa-challenge__resend-link[aria-busy="true"]::after {
-	content: "…";
+	content: "...";
 }
 
 .rip-2fa-challenge__resend-link--disabled,
@@ -441,7 +441,7 @@ a.rip-2fa-challenge__method-tab:focus {
 	accent-color: var(--rip-primary, #4F46E5);
 }
 
-/* Actions — rely on rip-button classes from design-system.css. */
+/* Actions, rely on rip-button classes from design-system.css. */
 .rip-2fa-challenge__actions {
 	margin: var(--rip-space-4, 1rem) 0 0;
 }
@@ -664,7 +664,7 @@ a.rip-2fa-challenge__method-tab:focus {
 /*
  * Narrow card: stack the method selector as a vertical, full-label list so the
  * labels never truncate inside a narrow themed login column. Driven by a
- * container query so it responds to the card width, not the viewport — a narrow
+ * container query so it responds to the card width, not the viewport, a narrow
  * login column on a wide desktop collapses too (the bug a viewport media query
  * could not catch). The @media block is the fallback for browsers without
  * container-query support on small viewports; both produce the same layout.
@@ -710,7 +710,7 @@ a.rip-2fa-challenge__method-tab:focus {
 }
 
 /* ==========================================================================
-   Onboarding Wizard — Step 3 Setup Panels
+   Onboarding Wizard, Step 3 Setup Panels
    ========================================================================== */
 
 .rip-2fa-onboarding .rip-wizard__subtitle {
@@ -874,7 +874,7 @@ a.rip-2fa-challenge__method-tab:focus {
 	font-size: var(--rip-text-xs, 0.75rem);
 }
 
-/* Focus states — WCAG AA */
+/* Focus states, WCAG AA */
 .rip-2fa-onboarding :focus-visible {
 	outline: 2px solid var(--rip-primary, #4F46E5);
 	outline-offset: 2px;
@@ -901,7 +901,7 @@ a.rip-2fa-challenge__method-tab:focus {
 }
 
 /* ==========================================================================
-   2FA-Status Dashboard page — light additions to the design system.
+   2FA-Status Dashboard page, light additions to the design system.
    ========================================================================== */
 
 .rip-card__actions {
@@ -919,14 +919,14 @@ a.rip-2fa-challenge__method-tab:focus {
 	margin: 0;
 }
 
-/* Fallback `.rip-badge` (plain neutral variant) — used for "optional" status. */
+/* Fallback `.rip-badge` (plain neutral variant), used for "optional" status. */
 .rip-badge:not([class*="rip-badge--"]) {
 	background: var(--rip-gray-100, #F3F4F6);
 	color: var(--rip-gray-700, #374151);
 }
 
 /* ==========================================================================
-   Onboarding page — light & friendly overrides.
+   Onboarding page, light & friendly overrides.
    Scoped to `.rip-2fa-onboarding` so the existing setup-wizard keeps its dark
    theme and only the 2FA guide feels welcoming.
    ========================================================================== */
@@ -975,7 +975,7 @@ body.rip-2fa-onboarding .rip-wizard__subtitle {
 	color: var(--rip-gray-600, #4B5563);
 }
 
-/* Step indicator — neutrals on the light background. */
+/* Step indicator, neutrals on the light background. */
 body.rip-2fa-onboarding .rip-wizard__step-number {
 	background: var(--rip-gray-200, #E5E7EB);
 	color: var(--rip-gray-600, #4B5563);
@@ -1071,7 +1071,7 @@ body.rip-2fa-onboarding .rip-wizard__feature-text p {
 	line-height: 1.5;
 }
 
-/* Method selector cards — cheerful white with primary highlight when picked. */
+/* Method selector cards, cheerful white with primary highlight when picked. */
 body.rip-2fa-onboarding .rip-wizard__mode-cards {
 	background: transparent;
 }
@@ -1098,7 +1098,7 @@ body.rip-2fa-onboarding .rip-mode-card__description {
 	color: var(--rip-gray-600, #4B5563);
 }
 
-/* Feature bullets — opaque + darker gray for WCAG-AA contrast on white.
+/* Feature bullets, opaque + darker gray for WCAG-AA contrast on white.
  * Default mode-card__features in design-system.css has opacity < 1 which
  * washes them out on a light background. */
 body.rip-2fa-onboarding .rip-mode-card__features,
@@ -1334,14 +1334,14 @@ body.rip-2fa-onboarding .rip-2fa-setup-done__hint {
 	margin: 0;
 }
 
-/* Recovery action buttons — icon + text alignment. */
+/* Recovery action buttons, icon + text alignment. */
 body.rip-2fa-onboarding .rip-2fa-recovery-actions .rip-button {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--rip-space-2, 0.5rem);
 }
 
-/* Secondary buttons on the light onboarding theme need explicit colour —
+/* Secondary buttons on the light onboarding theme need explicit colour.
  * the design-system default is tuned for the dark wizard and renders as
  * white-on-white otherwise. */
 body.rip-2fa-onboarding .rip-button--secondary,
@@ -1383,7 +1383,7 @@ body.rip-2fa-onboarding .rip-button--success {
 }
 
 /* ==========================================================================
-   Celebrate screen (Step 5 — Done)
+   Celebrate screen (Step 5:Done)
    ========================================================================== */
 
 .rip-2fa-celebrate {
@@ -1409,7 +1409,7 @@ body.rip-2fa-onboarding .rip-button--success {
 	100% { transform: scale(1) rotate(0); }
 }
 
-/* Confetti — CSS-only, no JS. Dezent, 12 Partikel in Primary/Success-Farben. */
+/* Confetti, CSS-only, no JS. Dezent, 12 Partikel in Primary/Success-Farben. */
 .rip-2fa-confetti {
 	position: absolute;
 	inset: 0;
@@ -1513,7 +1513,7 @@ body.rip-2fa-onboarding .rip-button--success {
 	color: var(--rip-success, #10B981);
 }
 
-/* Attribution strip — appears on the done screen and on wp-login. */
+/* Attribution strip, appears on the done screen and on wp-login. */
 .rip-2fa-celebrate__attribution,
 .rip-2fa-login-attribution {
 	display: inline-flex;
@@ -1547,7 +1547,7 @@ body.rip-2fa-onboarding .rip-button--success {
 	text-decoration: underline;
 }
 
-/* wp-login.php — centered under the login form, breathing room above. */
+/* wp-login.php, centered under the login form, breathing room above. */
 body.login .rip-2fa-login-attribution {
 	display: flex;
 	align-items: center;
@@ -1608,7 +1608,7 @@ body.login .rip-2fa-login-attribution a:focus {
 }
 
 /* ==========================================================================
-   Onboarding 1.5.3 — site context, numbered substeps, privacy notice,
+   Onboarding 1.5.3:site context, numbered substeps, privacy notice,
    phone-input validity affordance, centred recovery acknowledgement.
    ========================================================================== */
 

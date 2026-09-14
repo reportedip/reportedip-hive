@@ -4,7 +4,7 @@
  * options against the "setup wizard saves only TOTP / drops all enforced roles" bug.
  *
  * {@see register_setting()} installs `sanitize_option_*` filters for these two
- * keys, so the sanitisers run on EVERY write — the settings form, the setup
+ * keys, so the sanitisers run on EVERY write, the settings form, the setup
  * wizard, the tier-upgrade lifecycle, settings import and WP-CLI. The original
  * implementations only understood the settings-form shape:
  *

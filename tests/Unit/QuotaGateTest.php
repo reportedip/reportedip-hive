@@ -9,7 +9,7 @@
  * `daily_report_limit` and `remaining_reports` on unlimited tiers
  * (Enterprise / Honeypot); the gate must treat that as "yes, send".
  *
- * Tested via reflection — has_report_quota() is a public method on a
+ * Tested via reflection, has_report_quota() is a public method on a
  * singleton whose construction touches Cache, Logger and Mode_Manager;
  * we instantiate with stubs.
  *

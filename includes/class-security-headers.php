@@ -8,7 +8,7 @@
  * report-only-first Content-Security-Policy and the Cross-Origin trio) sits
  * behind the `security_headers_advanced` feature gate. Headers already set by
  * the server or another plugin are detected via {@see headers_list()} and
- * never overwritten — the conflict is surfaced in the admin status instead.
+ * never overwritten, the conflict is surfaced in the admin status instead.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>

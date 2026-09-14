@@ -24,14 +24,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * it. Every later rank increase (Professional to Business) applies the delta
  * as well, without a banner.
  *
- * Public API is fully static — no singleton state required.
+ * Public API is fully static, no singleton state required.
  *
  * @since 1.7.0
  */
 class ReportedIP_Hive_Tier_Upgrade {
 
 	/**
-	 * Option key for the "you've upgraded — finish 2FA setup" notice payload.
+	 * Option key for the "you've upgraded, finish 2FA setup" notice payload.
 	 *
 	 * Payload shape: `array{from:string,to:string,set_at:int,activated:string[]}`;
 	 * `activated` lists the option keys the recommendation delta wrote.
@@ -53,7 +53,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	const FREE_TIERS = array( 'free', 'contributor' );
 
 	/**
-	 * Tier slugs that count as "paid" — crossing into one of these from a
+	 * Tier slugs that count as "paid", crossing into one of these from a
 	 * free tier triggers the welcome banner.
 	 *
 	 * @var string[]
@@ -61,7 +61,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	const PAID_TIERS = array( 'professional', 'business', 'enterprise' );
 
 	/**
-	 * Wire the WordPress hooks. Idempotent — safe to call multiple times.
+	 * Wire the WordPress hooks. Idempotent, safe to call multiple times.
 	 *
 	 * @return void
 	 */
@@ -77,7 +77,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * the recommendation delta without a banner; the banner stays reserved
 	 * for the Free/Contributor to paid crossing.
 	 *
-	 * @param string $prev Previous tier slug (free / contributor / professional / …).
+	 * @param string $prev Previous tier slug (free / contributor / professional / ...).
 	 * @param string $next New tier slug.
 	 * @return void
 	 */
@@ -136,12 +136,12 @@ class ReportedIP_Hive_Tier_Upgrade {
 	/**
 	 * Downgrade path: clear the stale post-upgrade banner state, soft-disable
 	 * the WooCommerce Frontend-2FA toggle (the option is preserved so a future
-	 * re-upgrade is seamless — the gate in {@see ReportedIP_Hive_Two_Factor_Frontend}
+	 * re-upgrade is smooth, the gate in {@see ReportedIP_Hive_Two_Factor_Frontend}
 	 * blocks the UI anyway via `feature_status('frontend_2fa')`), and send a
 	 * factual goodbye mail.
 	 *
 	 * Local protection (12 sensors, full 2FA suite, blocked-IP enforcement) is
-	 * deliberately not touched — the Marketing-Story §7 promise holds.
+	 * deliberately not touched, the Marketing-Story §7 promise holds.
 	 *
 	 * @param string $prev
 	 * @param string $next
@@ -159,7 +159,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	/**
 	 * Whether the transition is a Free/Contributor → PRO/Business/Enterprise upgrade.
 	 *
-	 * Pure function — also used by the unit tests.
+	 * Pure function, also used by the unit tests.
 	 *
 	 * @param string $prev Previous tier slug.
 	 * @param string $next New tier slug.
@@ -185,7 +185,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 
 	/**
 	 * Reset {@see ReportedIP_Hive_Promo_Manager} state for every administrator
-	 * — bounded to 200 admins so a large network never trips a timeout. The
+	 * - bounded to 200 admins so a large network never trips a timeout. The
 	 * permanent opt-out map is preserved (explicit user choice).
 	 *
 	 * @return void
@@ -251,7 +251,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 				$site_name
 			);
 			$intro = __( 'Your subscription was switched back to the Free tier.', 'reportedip-hive' );
-			$body  = __( 'What stays active: all 12 sensors, the full 2FA suite and your local IP/block list. What pauses: managed mail/SMS relay over reportedip.com and cloud backup. You can re-activate any time from the customer portal — your data and settings remain in place.', 'reportedip-hive' );
+			$body  = __( 'What stays active: all 12 sensors, the full 2FA suite and your local IP/block list. What pauses: managed mail/SMS relay over reportedip.com and cloud backup. You can re-activate any time from the customer portal, your data and settings remain in place.', 'reportedip-hive' );
 		}
 
 		$portal_url = defined( 'REPORTEDIP_HIVE_UPGRADE_URL' )
@@ -324,7 +324,7 @@ class ReportedIP_Hive_Tier_Upgrade {
 	 * remaining action is the optional rollout of SMS as a 2FA method.
 	 *
 	 * Each entry is `array{key:string,label:string,done:bool}` so the
-	 * renderer can mark ✓/⬜ without re-implementing the conditions.
+	 * renderer can mark done/open without re-implementing the conditions.
 	 *
 	 * @return array<int,array{key:string,label:string,done:bool}>
 	 */

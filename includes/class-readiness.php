@@ -3,10 +3,10 @@
  * System-readiness issue register.
  *
  * Collects the operational faults that are already detectable somewhere in
- * the plugin — an unwritable guard queue, a stalled WP-Cron, a client-IP
+ * the plugin, an unwritable guard queue, a stalled WP-Cron, a client-IP
  * header trusted from any peer, a stuck schema migration, a degraded API
  * window, a relay cap, failing outgoing mail, a missing encryption backend
- * and the report-queue backlog — into one persistent list with a severity,
+ * and the report-queue backlog, into one persistent list with a severity,
  * a first-seen timestamp and a site-wide seven-day dismissal.
  *
  * The detectors are pure static predicates that take their inputs as
@@ -639,9 +639,9 @@ final class ReportedIP_Hive_Readiness {
 	 * Flush the cache when a plugin-prefixed option changes.
 	 *
 	 * {@see self::HOT_OPTIONS} is excluded: those two counters are rewritten
-	 * on ordinary front-end traffic — `api_stats` on every API call,
+	 * on ordinary front-end traffic, `api_stats` on every API call,
 	 * `cache_stats` at shutdown of every request that touched the reputation
-	 * cache — so watching them would keep the cache permanently cold.
+	 * cache, so watching them would keep the cache permanently cold.
 	 *
 	 * @param string $option Option name being written.
 	 * @return void
@@ -686,7 +686,7 @@ final class ReportedIP_Hive_Readiness {
 	/**
 	 * No plugin cron hook has run for a day.
 	 *
-	 * A hook without a schedule is not overdue — that is a different fault
+	 * A hook without a schedule is not overdue, that is a different fault
 	 * and the Cron status panel below already names it.
 	 *
 	 * @param array<string,int|false> $next_runs Hook => next run timestamp or false.
@@ -842,7 +842,7 @@ final class ReportedIP_Hive_Readiness {
 				'relay_cap_sms',
 				self::SEV_WARNING,
 				__( 'SMS relay capacity reached', 'reportedip-hive' ),
-				__( 'SMS-based 2FA codes are paused until the relay accepts again — users can still choose TOTP, Email or Passkey.', 'reportedip-hive' )
+				__( 'SMS-based 2FA codes are paused until the relay accepts again, users can still choose TOTP, Email or Passkey.', 'reportedip-hive' )
 			);
 		}
 

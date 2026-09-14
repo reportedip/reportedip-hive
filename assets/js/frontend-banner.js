@@ -6,7 +6,7 @@
  *
  * Reads `data-headline` and `data-noun` (server-side, already translated)
  * to render tone-aware marketing text. Animates the value up from zero on
- * first viewport intersection and shows a pulsing "live" dot — both effects
+ * first viewport intersection and shows a pulsing "live" dot, both effects
  * respect the user's `prefers-reduced-motion` setting.
  *
  * Custom-theme attributes (`data-bg`, `data-color`, `data-border`) feed CSS
@@ -246,8 +246,8 @@
 			this.applyCustomTheme();
 
 			const aria = hasNumber
-				? `${ headline } — ${ formatNumber( target ) } ${ noun }`
-				: `${ headline } — ${ metricText }`;
+				? `${ headline }, ${ formatNumber( target ) } ${ noun }`
+				: `${ headline }, ${ metricText }`;
 
 			const root = this.attachShadow( { mode: 'open' } );
 			root.innerHTML = `<style>${ BASE_STYLES }</style>`

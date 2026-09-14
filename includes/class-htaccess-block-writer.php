@@ -1,6 +1,6 @@
 <?php
 /**
- * Shared lifecycle for every `.htaccess` marker block the plugin manages —
+ * Shared lifecycle for every `.htaccess` marker block the plugin manages.
  * write on save, remove when the owning toggle goes off, heal once an hour
  * and report writability to the UI. Subclasses supply the marker name, the
  * option that owns the block, the directive lines and the target file.
@@ -45,7 +45,7 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 	abstract protected function option_key();
 
 	/**
-	 * Canonical default of {@see self::option_key()} — must match the value
+	 * Canonical default of {@see self::option_key()}, must match the value
 	 * in `ReportedIP_Hive_Defaults::SAFE_OPTIONS`.
 	 *
 	 * @return bool
@@ -96,7 +96,7 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 	}
 
 	/**
-	 * Action callback for the option-change hook — discards the boolean
+	 * Action callback for the option-change hook, discards the boolean
 	 * return value of `sync()` so PHPStan recognises the void contract of
 	 * a WordPress action.
 	 *
@@ -108,7 +108,7 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 	}
 
 	/**
-	 * Throttled self-heal — re-syncs the marker block at most once per hour
+	 * Throttled self-heal, re-syncs the marker block at most once per hour
 	 * so manual filter extensions or third-party `.htaccess` rewrites are
 	 * caught without thrashing the disk on every admin page load.
 	 *
@@ -125,7 +125,7 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 
 	/**
 	 * Idempotently write or remove the marker block, depending on the owning
-	 * toggle. A disabled block is stripped entirely — an empty
+	 * toggle. A disabled block is stripped entirely, an empty
 	 * `# BEGIN`/`# END` skeleton would read as "managed" to anyone looking at
 	 * the file and to our own `is_block_present()` probe.
 	 *
@@ -170,7 +170,7 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 	/**
 	 * Remove the marker block unconditionally. Called on deactivation.
 	 *
-	 * `insert_with_markers( …, [] )` leaves an empty `# BEGIN … # END …`
+	 * `insert_with_markers( ..., [] )` leaves an empty `# BEGIN ... # END ...`
 	 * skeleton behind which is harmless but ugly. We strip the entire
 	 * marker pair ourselves so deactivation truly restores the original
 	 * `.htaccess`.

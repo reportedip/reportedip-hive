@@ -9,7 +9,7 @@
  * fresh 2FA challenge.
  *
  * Country / ASN data comes from the same reputation lookup the plugin
- * already does in pre-auth — there is no second external call. If the
+ * already does in pre-auth, there is no second external call. If the
  * service has no reputation entry yet (cold IP) the sensor is silent, by
  * design: a brand-new IP without any geo data is not enough signal to act.
  *
@@ -52,7 +52,7 @@ class ReportedIP_Hive_Geo_Anomaly {
 	}
 
 	/**
-	 * @param string  $user_login Login name (unused — kept for hook signature).
+	 * @param string  $user_login Login name (unused, kept for hook signature).
 	 * @param WP_User $user       WP_User object.
 	 */
 	public function on_login( $user_login, $user ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
@@ -124,7 +124,7 @@ class ReportedIP_Hive_Geo_Anomaly {
 
 	/**
 	 * Pull cached reputation from the API client. We never trigger a fresh
-	 * external call here — the cache is populated during pre-auth check.
+	 * external call here, the cache is populated during pre-auth check.
 	 *
 	 * @return array<string,mixed>|array{}
 	 */

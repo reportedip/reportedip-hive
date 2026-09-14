@@ -5,7 +5,7 @@
  * Locks down the security-critical contract: a ruleset is only applied when its
  * detached Ed25519 signature verifies against an accepted public key, the
  * payload is within the size cap and its shape matches the requested key.
- * Anything else falls back to the bundled baseline — a tampered or oversized
+ * Anything else falls back to the bundled baseline, a tampered or oversized
  * feed can never poison the WAF patterns. The bundled baseline is always
  * available offline.
  *

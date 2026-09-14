@@ -1,6 +1,6 @@
 <?php
 /**
- * Transport-agnostic settings apply service — the single entry point every
+ * Transport-agnostic settings apply service, the single entry point every
  * remote management channel (MainWP, the future reportedip.com API) and the
  * settings import use to write registry-managed options.
  *
@@ -146,7 +146,7 @@ final class ReportedIP_Hive_Settings_Apply {
 
 	/**
 	 * Error envelope returned when a transport delivers an undecodable
-	 * `values_json` payload — shared by every transport so the error shape
+	 * `values_json` payload, shared by every transport so the error shape
 	 * cannot drift between MainWP and the cloud API.
 	 *
 	 * @return array{schema_version:int, results:array<string, array<string, string>>, applied:int, unchanged:int, failed:int, error:string, hash:string}

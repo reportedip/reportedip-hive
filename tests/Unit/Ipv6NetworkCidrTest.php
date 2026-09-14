@@ -3,7 +3,7 @@
  * Tests for ReportedIP_Hive_IP_Manager::ipv6_network_cidr().
  *
  * The whitelist "Add my IP" prefill must offer the enclosing /64 network
- * for IPv6 visitors — consumer connections rotate the interface identifier
+ * for IPv6 visitors, consumer connections rotate the interface identifier
  * inside their delegated prefix, so a /128 entry locks the user out on the
  * next rotation (see the schuh-eder.com support case). The helper zeroes
  * the host bits via inet_pton/inet_ntop and must refuse IPv4 and garbage

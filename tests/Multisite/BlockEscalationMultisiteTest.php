@@ -5,7 +5,7 @@
  * On a subsite `$wpdb->prefix` resolves to the per-blog prefix while every
  * plugin table lives under `$wpdb->base_prefix`. In 2.1.25 several read
  * paths built table names from the per-blog prefix and queried tables that
- * do not exist — block escalation silently restarted at ladder step 1 on
+ * do not exist, block escalation silently restarted at ladder step 1 on
  * every subsite and each decision flooded the DB error log. These tests
  * exercise the affected reads under `switch_to_blog()` where the two
  * prefixes genuinely differ.

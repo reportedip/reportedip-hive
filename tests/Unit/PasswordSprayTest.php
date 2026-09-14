@@ -4,7 +4,7 @@
  *
  * Targets ReportedIP_Hive_Security_Monitor::record_username_for_spray_detection()
  * via reflection. The bucket is transient-backed and stores hashed usernames
- * with timestamps — these tests confirm:
+ * with timestamps, these tests confirm:
  *
  *  - distinct usernames accumulate;
  *  - duplicate usernames do not inflate the count;

@@ -4,7 +4,7 @@
  *
  * Each schema bump implements a `migrate_to_v{N}()` method. `maybe_run()`
  * advances `db_version` step by step until it matches `CURRENT_VERSION`,
- * persisting after each successful step. Re-entry is safe — every step
+ * persisting after each successful step. Re-entry is safe, every step
  * checks for already-applied state before touching the schema.
  *
  * Concurrency: `acquire_lock()` uses `add_site_option()` which is atomic on
@@ -134,7 +134,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	 *      Default `1` so single-site rows keep their natural blog id.
 	 *   3. Widen `attempts.attempt_type` from ENUM to VARCHAR(32) if needed.
 	 *   4. Promote per-site network-class options to sitemeta (Multisite only,
-	 *      Pfad B from the spec — installs that previously had Hive activated
+	 *      Pfad B from the spec, installs that previously had Hive activated
 	 *      on individual sites without `Network: true`).
 	 *   5. Shorten existing `trusted_devices.expires_at` to NOW()+24h so users
 	 *      get a smooth re-trust window after the cookie path widens to
@@ -184,7 +184,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * v5 → v6: switch hourly-API-call limit to "auto / tier-bound".
 	 *
 	 * Before 2.0.7 the option `reportedip_hive_max_api_calls_per_hour` carried
-	 * a hard default of 100/h that gated *all* outgoing API calls — reputation
+	 * a hard default of 100/h that gated *all* outgoing API calls, reputation
 	 * lookups, report submissions, quota sync. From 2.0.7 the value `0` means
 	 * "auto: derive caps per bucket from the current tier", which is the
 	 * intended behaviour for every install. Per the upgrade brief this resets
@@ -203,7 +203,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	}
 
 	/**
-	 * v7 — remove the 2.0.9-era local IP blocks set by the decoy-path sensor,
+	 * v7:remove the 2.0.9-era local IP blocks set by the decoy-path sensor,
 	 * and drop the now-defunct `reportedip_hive_decoy_block_hours` option.
 	 *
 	 * From 2.0.11 onwards the sensor only logs + community-reports; it no
@@ -234,7 +234,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	}
 
 	/**
-	 * v8 — drop the self-hosted SMS-provider settings. From 2.0.25 SMS-2FA is a
+	 * v8:drop the self-hosted SMS-provider settings. From 2.0.25 SMS-2FA is a
 	 * Professional feature delivered exclusively through the managed
 	 * reportedip.com relay; the third-party provider adapters (Sipgate,
 	 * MessageBird, seven.io), the provider selector, the per-provider
@@ -308,7 +308,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * rolling health window introduced in 2.1.18 fixes this going forward; this
 	 * migration removes the legacy stuck value so the dashboard recovers on
 	 * upgrade. Only installs that actually look poisoned (enough calls, low
-	 * lifetime rate) are reset — healthy installs keep their usage history.
+	 * lifetime rate) are reset, healthy installs keep their usage history.
 	 *
 	 * @return void
 	 * @since  2.1.18
@@ -380,11 +380,11 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * Migrate to v13: rebalance the logs/api_queue index set for the hot paths.
 	 *
 	 * Adds (idempotent via {@see ReportedIP_Hive_Schema::index_exists()}):
-	 *   - `logs (event_type, created_at, ip_address)` — carries the
+	 *   - `logs (event_type, created_at, ip_address)`, carries the
 	 *     coordinated-attack window aggregate (index-only, measured 50 ms →
 	 *     34 ms at 20k rows in-window) and `get_event_type_counts()`, both of
 	 *     which had no usable composite before and fell back to scans.
-	 *   - `api_queue (ip_address)` — carries `is_recently_processed()` and the
+	 *   - `api_queue (ip_address)`, carries `is_recently_processed()` and the
 	 *     duplicate-report check, which fire on every threshold trip.
 	 *
 	 * Drops dead weight on `logs`: `idx_severity` and `idx_reported_to_api`
@@ -422,7 +422,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * still carry the old default endpoint in `reportedip_hive_api_endpoint`
 	 * are rewritten to the new default; custom endpoints (self-hosted proxies,
 	 * staging targets) are left untouched. The old domain keeps a permanent
-	 * redirect, so unmigrated installs continue to work either way — this
+	 * redirect, so unmigrated installs continue to work either way, this
 	 * just removes the extra hop. Idempotent, no schema change.
 	 *
 	 * @return void
@@ -449,7 +449,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * design. This migration:
 	 *
 	 *   1. Deduplicates: keeps only the freshest row per (ip_address,
-	 *      attempt_type) — losing stale duplicate counters is fail-safe, it can
+	 *      attempt_type), losing stale duplicate counters is fail-safe, it can
 	 *      only undercount.
 	 *   2. Adds `UNIQUE KEY unique_ip_type (ip_address, attempt_type)` so the
 	 *      rewritten `track_attempt()` upsert (`INSERT ... ON DUPLICATE KEY

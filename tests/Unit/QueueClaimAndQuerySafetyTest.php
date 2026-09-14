@@ -9,8 +9,8 @@
  *  2. Claiming a queue row was not atomic: two workers could select the same
  *     pending rows and both send them, spending the API quota twice.
  *  3. `anonymize_old_data()` counted update attempts rather than successes.
- *     Since the loop re-selects rows that still lack the marker — written by
- *     that very update — a persistently failing write span the same batch
+ *     Since the loop re-selects rows that still lack the marker, written by
+ *     that very update, a persistently failing write span the same batch
  *     until the time budget expired, every cron tick, anonymising nothing.
  *
  * @package    ReportedIP_Hive

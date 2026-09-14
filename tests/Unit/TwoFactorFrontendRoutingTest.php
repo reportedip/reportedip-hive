@@ -95,7 +95,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_sanitize_slug_rejects_reserved_slugs(): void {
 			foreach ( array( 'wp-admin', 'wp-login', 'my-account', 'checkout' ) as $reserved ) {
 				$result = \ReportedIP_Hive_Two_Factor_Frontend::sanitize_slug( $reserved, 'safe' );
-				$this->assertSame( 'safe', $result, "Reserved slug '{$reserved}' must be rejected — collision with WC or core paths." );
+				$this->assertSame( 'safe', $result, "Reserved slug '{$reserved}' must be rejected, collision with WC or core paths." );
 			}
 		}
 

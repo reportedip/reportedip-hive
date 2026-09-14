@@ -1,5 +1,5 @@
 /**
- * ReportedIP Hive — Two-Factor Onboarding Wizard.
+ * ReportedIP Hive, Two-Factor Onboarding Wizard.
  *
  * Client-side step navigation + AJAX orchestration for the 5-step onboarding:
  *   1. Welcome  2. Choose method(s)  3. Setup per method  4. Recovery  5. Done
@@ -232,7 +232,7 @@
 					sms:      I18N.strings.methodSms      || 'SMS'
 				})[m] || m.toUpperCase();
 			});
-			list.textContent = labels.length ? ('✓ ' + labels.join('  ·  ✓ ')) : '';
+			list.textContent = labels.length ? ('yes ' + labels.join('  ·  yes ')) : '';
 		}
 
 		var cont = $qs('#rip-2fa-setup-continue');
@@ -369,7 +369,7 @@
 
 	// A touched YubiKey with no active WebAuthn dialog "types" its Yubico OTP
 	// (32-44 ModHex chars) into whatever field has focus. Detect that, clear
-	// the field and explain — otherwise users read it as a broken key.
+	// the field and explain, otherwise users read it as a broken key.
 	var YUBICO_OTP_RE = /[cbdefghijklnrtuv]{32,64}$/;
 	$(document).on('input', '#rip-2fa-webauthn-name', function () {
 		if (this.value.length >= 32 && YUBICO_OTP_RE.test(this.value.trim())) {
@@ -382,7 +382,7 @@
 		}
 	});
 
-	// WebAuthn / Passkey — full registration ceremony against the server class.
+	// WebAuthn / Passkey, full registration ceremony against the server class.
 	function startWebAuthnSetup() {
 		var status = $qs('#rip-2fa-webauthn-status');
 		if (!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create)) {
@@ -399,7 +399,7 @@
 			if (status) { status.textContent = I18N.strings.passkeyUnsupport; status.className = 'rip-2fa-inline-status rip-2fa-inline-status--error'; }
 			return;
 		}
-		if (status) { status.textContent = I18N.strings.passkeyCreating || 'Creating passkey…'; status.className = 'rip-2fa-inline-status'; }
+		if (status) { status.textContent = I18N.strings.passkeyCreating || 'Creating passkey...'; status.className = 'rip-2fa-inline-status'; }
 
 		$.post(I18N.ajaxUrl, {
 			action: 'reportedip_hive_2fa_webauthn_register_options',
@@ -456,8 +456,8 @@
 				})
 				.catch(function (err) {
 					// InvalidStateError = user's authenticator already holds a
-					// credential for this RP. Treat as "already set up" — not a
-					// real error — and move on so the user isn't stuck.
+					// credential for this RP. Treat as "already set up", not a
+					// real error, and move on so the user isn't stuck.
 					if (err && (err.name === 'InvalidStateError' || (err.message || '').indexOf('already registered') !== -1)) {
 						if (state.confirmedMethods.indexOf('webauthn') === -1) { state.confirmedMethods.push('webauthn'); }
 						if (status) {
@@ -493,7 +493,7 @@
 		return out.buffer;
 	}
 
-	// SMS setup — two-step (register phone + dispatch code → verify submitted code).
+	// SMS setup, two-step (register phone + dispatch code → verify submitted code).
 	function resetSmsPanel() {
 		setStatus($qs('#rip-2fa-sms-status'), '');
 		setStatus($qs('#rip-2fa-sms-send-status'), '');
@@ -625,7 +625,7 @@
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
-		flashButton(this, (I18N.strings.downloaded || 'Downloaded') + ' ✓');
+		flashButton(this, (I18N.strings.downloaded || 'Downloaded') + ' yes');
 	});
 
 	function flashButton(btn, tempText) {
@@ -656,7 +656,7 @@
 	$(document).on('click', '#rip-2fa-recovery-continue', function () {
 		var methods = $qs('#rip-2fa-summary-methods');
 		var recovery = $qs('#rip-2fa-summary-recovery');
-		if (methods) { methods.textContent = state.confirmedMethods.join(', ').toUpperCase() || '—'; }
+		if (methods) { methods.textContent = state.confirmedMethods.join(', ').toUpperCase() || ', '; }
 		if (recovery) { recovery.textContent = state.recoveryCodes.length + ' Codes'; }
 		goToStep(5);
 	});

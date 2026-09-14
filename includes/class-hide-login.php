@@ -1,6 +1,6 @@
 <?php
 /**
- * Hide Login — moves wp-login.php behind a custom slug and blocks the original URL.
+ * Hide Login, moves wp-login.php behind a custom slug and blocks the original URL.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -41,7 +41,7 @@ class ReportedIP_Hive_Hide_Login {
 	private static $instance = null;
 
 	/**
-	 * Slugs we never let users pick — they collide with WP core or recognised
+	 * Slugs we never let users pick, they collide with WP core or recognised
 	 * platform paths and would either break the site or de-anonymise the install.
 	 *
 	 * @var string[]
@@ -82,7 +82,7 @@ class ReportedIP_Hive_Hide_Login {
 	private $request_path = null;
 
 	/**
-	 * True after we have intentionally served wp-login.php for the slug —
+	 * True after we have intentionally served wp-login.php for the slug.
 	 * blocks the login_init re-entry from triggering the block-page response.
 	 *
 	 * @var bool
@@ -100,10 +100,10 @@ class ReportedIP_Hive_Hide_Login {
 	}
 
 	/**
-	 * Constructor — registers hooks. The class is instantiated during
+	 * Constructor, registers hooks. The class is instantiated during
 	 * plugins_loaded:10, which is too early to load wp-login.php directly
 	 * (AUTOSAVE_INTERVAL and other functionality constants are defined
-	 * after plugins_loaded). Routing therefore runs on init:1 — late
+	 * after plugins_loaded). Routing therefore runs on init:1:late
 	 * enough that all WP constants exist, early enough that the login
 	 * form has not been rendered yet.
 	 *
@@ -147,7 +147,7 @@ class ReportedIP_Hive_Hide_Login {
 	}
 
 	/**
-	 * Final, fully-qualified hidden login URL — used by settings UI / wizard summary.
+	 * Final, fully-qualified hidden login URL, used by settings UI / wizard summary.
 	 */
 	public function get_login_url(): string {
 		$slug = $this->get_slug();
@@ -158,7 +158,7 @@ class ReportedIP_Hive_Hide_Login {
 	}
 
 	/**
-	 * Whether the wp-admin guest block is in force — either because Hide
+	 * Whether the wp-admin guest block is in force, either because Hide
 	 * Login is active (it has always closed wp-admin for visitors) or because
 	 * the standalone attack-surface switch is on.
 	 */
@@ -175,7 +175,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * cron, XML-RPC, REST, the 2FA frontend slugs and the two admin entry
 	 * points that legitimately answer logged-in requests.
 	 *
-	 * Deliberately permissive — a false negative just means a gate is
+	 * Deliberately permissive, a false negative just means a gate is
 	 * silently inactive for that request, a false positive breaks the site.
 	 */
 	private function is_environment_bypassed(): bool {
@@ -229,8 +229,8 @@ class ReportedIP_Hive_Hide_Login {
 	 * Lower-cased, query-stripped request path with leading slash, no trailing slash.
 	 *
 	 * The URI must be parsed raw and decoded explicitly. `sanitize_text_field()`
-	 * strips every `%XX` sequence outright, so `/wp-login%2Ephp` — which the web
-	 * server still resolves to wp-login.php — arrived here as `/wp-loginphp` and
+	 * strips every `%XX` sequence outright, so `/wp-login%2Ephp`, which the web
+	 * server still resolves to wp-login.php, arrived here as `/wp-loginphp` and
 	 * slipped past the comparison, handing out the hidden login form. The WAF
 	 * engine reads the raw URI for the same reason.
 	 */
@@ -260,7 +260,7 @@ class ReportedIP_Hive_Hide_Login {
 	/**
 	 * The "is this a wp-login page request" check used by several action hooks
 	 * that fire only on the actual /wp-login.php endpoint after WP routes the
-	 * request — kept separate from get_request_path() to handle pretty-permalink
+	 * request, kept separate from get_request_path() to handle pretty-permalink
 	 * edge cases (rewrite rules pointing /wp-login -> wp-login.php).
 	 */
 	private function is_wp_login_request(): bool {
@@ -270,7 +270,7 @@ class ReportedIP_Hive_Hide_Login {
 
 	/**
 	 * Whitelist of wp-login.php actions that must always go through, even when
-	 * the feature is active — otherwise password-resets, logouts and the
+	 * the feature is active, otherwise password-resets, logouts and the
 	 * post-password form break.
 	 *
 	 * @return string[]
@@ -289,7 +289,7 @@ class ReportedIP_Hive_Hide_Login {
 	}
 
 	/**
-	 * Main entry point — runs once on plugins_loaded.
+	 * Main entry point, runs once on plugins_loaded.
 	 */
 	public function handle_request(): void {
 		if ( $this->serving_login ) {
@@ -377,7 +377,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * Render the configured response when wp-login.php is hit directly.
 	 *
 	 * Default mode: Hive block page (403, same look as IP-blocked page).
-	 * Optional 404 mode: theme's 404 template — gives no plugin fingerprint.
+	 * Optional 404 mode: theme's 404 template, gives no plugin fingerprint.
 	 */
 	private function render_block_response(): void {
 		self::render_response( self::response_mode() );
@@ -385,7 +385,7 @@ class ReportedIP_Hive_Hide_Login {
 
 	/**
 	 * Sanitised response mode. Single source of truth for Hide Login, the
-	 * wp-admin guest block and the attack-surface switches — one setting
+	 * wp-admin guest block and the attack-surface switches, one setting
 	 * decides what every closed endpoint answers with.
 	 *
 	 * @return string One of the RESPONSE_MODE_* constants.
@@ -442,7 +442,7 @@ class ReportedIP_Hive_Hide_Login {
 	}
 
 	/**
-	 * Load wp-login.php in place — the custom slug behaves like the original
+	 * Load wp-login.php in place, the custom slug behaves like the original
 	 * URL, query-string and POST data flow through unchanged. We rewrite
 	 * REQUEST_URI so wp-login's own self-referencing form actions stay valid.
 	 *
@@ -483,8 +483,8 @@ class ReportedIP_Hive_Hide_Login {
 	 *
 	 * A cached login page is served as static HTML without PHP running, so
 	 * wp-login.php never gets to set the `wordpress_test_cookie`. The next
-	 * POST then fails the cookie handshake with "Cookies are blocked…" and
-	 * the user can never sign in — the login simply appears to do nothing.
+	 * POST then fails the cookie handshake with "Cookies are blocked..." and
+	 * the user can never sign in, the login simply appears to do nothing.
 	 * Because the slug is an ordinary URL (not `/wp-login.php`), cache plugins
 	 * do not exclude it automatically, so we have to opt out explicitly.
 	 *
@@ -514,7 +514,7 @@ class ReportedIP_Hive_Hide_Login {
 	 *
 	 * WP Rocket can serve a previously cached copy from `advanced-cache.php`
 	 * before our `serve_wp_login()` ever runs, so the constant-based opt-out
-	 * is not enough on its own — the URL has to be rejected at WP Rocket's own
+	 * is not enough on its own, the URL has to be rejected at WP Rocket's own
 	 * cache layer. The pattern is anchored to the slug with an optional
 	 * trailing slash and query string.
 	 *
@@ -563,7 +563,7 @@ class ReportedIP_Hive_Hide_Login {
 
 	/**
 	 * WordPress core has a polite redirect that sends visitors of "/login"
-	 * or "/dashboard" to wp-admin — defeats the whole feature. Drop it.
+	 * or "/dashboard" to wp-admin, defeats the whole feature. Drop it.
 	 *
 	 * Gated on the hidden login URL alone, not on the shared guest predicate:
 	 * the shortcut only leaks something worth hiding while wp-login.php has
@@ -606,9 +606,9 @@ class ReportedIP_Hive_Hide_Login {
 	 * permalink convention.
 	 *
 	 * `str_replace()` inherits wp-login.php's slash-less form, so the login
-	 * form action comes out as `…/<slug>` with no trailing slash. On a site
-	 * whose permalinks use trailing slashes — and whose web server enforces
-	 * them — a POST to `/<slug>` is answered with a 301 redirect to `/<slug>/`,
+	 * form action comes out as `.../<slug>` with no trailing slash. On a site
+	 * whose permalinks use trailing slashes, and whose web server enforces
+	 * them, a POST to `/<slug>` is answered with a 301 redirect to `/<slug>/`,
 	 * which the browser replays as a GET, silently dropping the POST body. The
 	 * sign-in then appears to do nothing. Routing the URL through
 	 * user_trailingslashit() makes the form post straight to `/<slug>/`, so no
@@ -651,7 +651,7 @@ class ReportedIP_Hive_Hide_Login {
 	/**
 	 * Append `?<slug>` token to URLs we generate, if enabled. Skipped when the
 	 * URL already carries the token or has its own query string we shouldn't
-	 * disturb (login_url generates with redirect_to=… which is fine to keep).
+	 * disturb (login_url generates with redirect_to=... which is fine to keep).
 	 */
 	private function maybe_add_token( string $url, string $slug ): string {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_token_in_urls', false ) ) {
@@ -725,7 +725,7 @@ class ReportedIP_Hive_Hide_Login {
 				'invalid',
 				sprintf(
 					/* translators: 1: minimum slug length, 2: maximum slug length */
-					__( 'The login slug must be %1$d–%2$d characters of lowercase letters, digits, dashes or underscores, and may not start or end with a dash.', 'reportedip-hive' ),
+					__( 'The login slug must be %1$d-%2$d characters of lowercase letters, digits, dashes or underscores, and may not start or end with a dash.', 'reportedip-hive' ),
 					self::MIN_SLUG_LENGTH,
 					self::MAX_SLUG_LENGTH
 				)
@@ -837,7 +837,7 @@ class ReportedIP_Hive_Hide_Login {
 	 * ladder and community-report path the other sensors use: nothing happens
 	 * below the threshold; a confirmed scanner pattern is blocked and reported.
 	 *
-	 * @param string $ip Client IP — already non-empty and non-whitelisted.
+	 * @param string $ip Client IP, already non-empty and non-whitelisted.
 	 */
 	private function maybe_track_probe( string $ip ): void {
 		if ( ! $this->probe_sensor_enabled() ) {

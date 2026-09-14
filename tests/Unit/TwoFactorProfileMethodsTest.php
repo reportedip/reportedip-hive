@@ -7,7 +7,7 @@
  *   1. Behaviour tests drive the real ReportedIP_Hive_Two_Factor statics
  *      (activate_method, set_user_method) against the option + user-meta
  *      stubs from the unit bootstrap, with a recovery-code stub that counts
- *      regenerations — adding a second method must never destroy existing
+ *      regenerations, adding a second method must never destroy existing
  *      recovery codes or clobber the user's chosen default method.
  *   2. Source-pattern tests lock down that every enrolment surface routes
  *      through activate_method(), that TOTP setup refuses to silently
@@ -223,7 +223,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString(
 				'enable_for_user(',
 				$admin,
-				'No enrolment endpoint may call enable_for_user directly — it clobbers the default method.'
+				'No enrolment endpoint may call enable_for_user directly, it clobbers the default method.'
 			);
 			$this->assertStringNotContainsString( 'enable_for_user(', $webauthn );
 		}

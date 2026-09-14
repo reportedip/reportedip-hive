@@ -1,19 +1,19 @@
 <?php
 /**
- * Decoy-Path-Block — single-request detection of hits to known bait paths.
+ * Decoy-Path-Block, single-request detection of hits to known bait paths.
  *
  * Distinct from {@see ReportedIP_Hive_Scan_Detector} which counts honeypath
  * 404s in an N-of-Y window: this sensor reacts on the **first** hit to a path
  * that legitimate visitors never request (e.g. `/.env.backup`,
  * `/wp-config.old.php`). The hit is logged at severity `high` and forwarded
  * to the Hive community-reputation queue. The visitor itself sees a 403, but
- * the source IP is NOT added to the local block table — false-positives from
+ * the source IP is NOT added to the local block table, false-positives from
  * legitimate backup plugins / admin tests would otherwise lock the site out
  * of its own traffic for 24 h. The companion class
  * {@see ReportedIP_Hive_Decoy_Htaccess_Writer} keeps an Apache rewrite block
  * in the site's `.htaccess` so that real bait files on disk (`.env.backup`
  * left behind by a developer, etc.) are routed through WordPress instead of
- * being served directly — security and detection in one move.
+ * being served directly, security and detection in one move.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -209,7 +209,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	}
 
 	/**
-	 * `init` priority-1 handler — checks the current request URI against the
+	 * `init` priority-1 handler, checks the current request URI against the
 	 * decoy list, logs the hit (which forwards to the community queue) and
 	 * emits a per-request 403 response. The source IP is NOT added to the
 	 * local block table.
@@ -282,10 +282,10 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 
 	/**
 	 * Build the inner directive lines for the Apache rewrite block (without
-	 * `# BEGIN` / `# END` markers — `insert_with_markers()` supplies those).
+	 * `# BEGIN` / `# END` markers, `insert_with_markers()` supplies those).
 	 *
 	 * The rewrite routes matching requests to `index.php` so WordPress and the
-	 * Hive sensor are loaded — direct `[F,L]` would skip PHP and silence both
+	 * Hive sensor are loaded, direct `[F,L]` would skip PHP and silence both
 	 * the local log and the community report.
 	 *
 	 * @return string[] Apache directive lines.
@@ -308,7 +308,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	 * @return string
 	 */
 	public static function htaccess_snippet() {
-		$lines = array( '# ReportedIP Hive — Decoy path detection (Apache)' );
+		$lines = array( '# ReportedIP Hive: Decoy path detection (Apache)' );
 		$lines = array_merge( $lines, self::htaccess_block_lines() );
 		return implode( "\n", $lines ) . "\n";
 	}
@@ -320,7 +320,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	 * `{custom_directives}` placeholder BEFORE the default `location ~ /\.
 	 * { deny all; }` deny rule. On stacks that emit custom directives AFTER
 	 * the dot-file deny (most ISPConfig templates do), the deny rule wins on
-	 * regex-priority and this snippet is silently shadowed — use
+	 * regex-priority and this snippet is silently shadowed, use
 	 * {@see self::nginx_snippet_exact_match()} there instead.
 	 *
 	 * @return string
@@ -328,7 +328,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	public static function nginx_snippet() {
 		$alternation = self::path_alternation();
 		$lines       = array();
-		$lines[]     = '# ReportedIP Hive — Decoy path detection (nginx, paste into your server { ... } block)';
+		$lines[]     = '# ReportedIP Hive: Decoy path detection (nginx, paste into your server { ... } block)';
 		$lines[]     = 'location ~* ^(/[_0-9a-zA-Z-]+)?/(' . $alternation . ')$ {';
 		$lines[]     = '    rewrite ^ /index.php last;';
 		$lines[]     = '}';
@@ -336,7 +336,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	}
 
 	/**
-	 * nginx exact-match snippet — one `location = /<bait>` line per default
+	 * nginx exact-match snippet, one `location = /<bait>` line per default
 	 * path. Exact-match locations have higher priority than any regex
 	 * location, so this variant survives even when a `location ~ /\. { deny
 	 * all; }` is configured first by the host template (the typical
@@ -347,7 +347,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	 */
 	public static function nginx_snippet_exact_match() {
 		$lines   = array();
-		$lines[] = '# ReportedIP Hive — Decoy path detection (nginx, exact-match form for ISPConfig/managed stacks)';
+		$lines[] = '# ReportedIP Hive: Decoy path detection (nginx, exact-match form for ISPConfig/managed stacks)';
 		foreach ( self::decoy_paths() as $path ) {
 			$lines[] = 'location = ' . $path . ' { rewrite ^ /index.php last; }';
 		}
@@ -355,9 +355,9 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 	}
 
 	/**
-	 * Build the regex alternation `(\.env\.backup|wp-config\.old\.php|…)` used
+	 * Build the regex alternation `(\.env\.backup|wp-config\.old\.php|...)` used
 	 * by the rewrite-block + nginx regex snippets. Forward slashes inside
-	 * nested entries (`.aws/credentials`) are left as-is — they are not
+	 * nested entries (`.aws/credentials`) are left as-is, they are not
 	 * regex metacharacters and apache/nginx parse them literally.
 	 *
 	 * @return string

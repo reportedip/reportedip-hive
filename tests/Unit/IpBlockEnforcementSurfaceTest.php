@@ -5,8 +5,8 @@
  * Two defects this locks down, both found in the 2.1.43 audit:
  *
  *  1. `check_ip_access()` and `block_admin_access()` both bailed out on
- *     `wp_doing_ajax()`, so a blocked IP reached `admin-ajax.php` — and with
- *     it every `wp_ajax_nopriv_*` action on the site — without ever meeting
+ *     `wp_doing_ajax()`, so a blocked IP reached `admin-ajax.php`, and with
+ *     it every `wp_ajax_nopriv_*` action on the site, without ever meeting
  *     the block gate. Only WP-Cron may stay exempt: its loopback comes from
  *     the server itself and must never be able to self-block the site.
  *  2. The 300-second `rip_access_*` verdict cache was invalidated in the
@@ -15,7 +15,7 @@
  *     sites with a persistent object cache.
  *
  * The main plugin file cannot be loaded in the unit harness (it terminates in
- * `exit` and boots WordPress), so — following the BlockedPageHooksTest idiom —
+ * `exit` and boots WordPress), so, following the BlockedPageHooksTest idiom.
  * these contracts are anchored in the source text.
  *
  * @package    ReportedIP_Hive
@@ -77,7 +77,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 *
 		 * admin-ajax.php does fire admin_init, so an exemption here would be a
 		 * second, divergent copy of the policy `check_ip_access()` already
-		 * applied on `init` — and that one answers AJAX callers in JSON.
+		 * applied on `init`, and that one answers AJAX callers in JSON.
 		 */
 		public function test_admin_gate_defers_to_the_init_gate_for_ajax() {
 			$body = $this->method_body( 'public function block_admin_access()' );

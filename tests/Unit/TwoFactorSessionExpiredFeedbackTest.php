@@ -10,7 +10,7 @@
  *
  * The fix has two halves and this test pins both:
  *   1. handle_2fa_challenge() must NOT call `wp_safe_redirect( wp_login_url() )`
- *      with no query parameter — it must call render_session_expired_page()
+ *      with no query parameter, it must call render_session_expired_page()
  *      so the user sees an explicit message.
  *   2. filter_login_errors() must translate the existing
  *      `?reportedip_2fa_locked=1` query flag into a visible WP_Error
@@ -40,7 +40,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertDoesNotMatchRegularExpression(
 				'/wp_safe_redirect\(\s*wp_login_url\(\)\s*\)\s*;\s*\n\s*exit;/',
 				$source,
-				'handle_2fa_challenge() must not silently redirect to wp_login_url() — late SMS / iframe-stripped cookies leave users with no explanation. Call render_session_expired_page() instead.'
+				'handle_2fa_challenge() must not silently redirect to wp_login_url(), late SMS / iframe-stripped cookies leave users with no explanation. Call render_session_expired_page() instead.'
 			);
 		}
 
@@ -78,7 +78,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				"target=\"_top\"",
 				$source,
-				'The "Back to login" link must escape the iframe via target="_top" — without it the recovery link reloads inside the same broken iframe context that caused the failure.'
+				'The "Back to login" link must escape the iframe via target="_top", without it the recovery link reloads inside the same broken iframe context that caused the failure.'
 			);
 		}
 
@@ -96,7 +96,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertMatchesRegularExpression(
 				"/\\\$_GET\\[\\s*'reportedip_2fa_locked'\\s*\\]/",
 				$source,
-				'filter_login_errors() must read the reportedip_2fa_locked query flag — without it, the brute-force-lockout redirect at line 836 stays silent.'
+				'filter_login_errors() must read the reportedip_2fa_locked query flag, without it, the brute-force-lockout redirect at line 836 stays silent.'
 			);
 			$this->assertStringContainsString(
 				"'reportedip_2fa_locked'",
@@ -124,12 +124,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertMatchesRegularExpression(
 				"/normalize_login_errors\\(.*?reportedip_2fa_locked.*?reportedip_2fa_expired/s",
 				$source,
-				'normalize_login_errors() must skip the "Invalid credentials." mask when ?reportedip_2fa_locked=1 or ?reportedip_2fa_expired=1 is present — otherwise the wp_login_errors filter on Two_Factor is silently overwritten and users see a misleading credential-error message instead of the real session/lockout reason.'
+				'normalize_login_errors() must skip the "Invalid credentials." mask when ?reportedip_2fa_locked=1 or ?reportedip_2fa_expired=1 is present, otherwise the wp_login_errors filter on Two_Factor is silently overwritten and users see a misleading credential-error message instead of the real session/lockout reason.'
 			);
 			$this->assertMatchesRegularExpression(
 				"/normalize_login_errors\\(.*?action.*?reportedip_2fa/s",
 				$source,
-				"normalize_login_errors() must also skip the mask when ?action=reportedip_2fa is in the URL — that's the inline render_session_expired_page() path, which routes its message through login_header() and therefore through this same login_errors filter."
+				"normalize_login_errors() must also skip the mask when ?action=reportedip_2fa is in the URL, that's the inline render_session_expired_page() path, which routes its message through login_header() and therefore through this same login_errors filter."
 			);
 		}
 

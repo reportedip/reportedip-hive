@@ -4,14 +4,14 @@
  *
  * Two layered checks for users in roles listed under
  * `reportedip_hive_2fa_enforce_roles` (re-using the same enforce list
- * as 2FA — admins / privileged roles need both):
+ * as 2FA, admins / privileged roles need both):
  *
  *  1. Local heuristic: minimum length, character-class diversity, blocklist
  *     of the most common 1k passwords (kept inline to avoid filesystem reads
  *     during password change). PHP 8.1+, no deps.
  *  2. Optional HaveIBeenPwned k-anonymity range check. Only the first 5
  *     SHA-1 hex chars of the password leave the server, so even the API
- *     provider cannot reconstruct the password — same protocol the major
+ *     provider cannot reconstruct the password, same protocol the major
  *     password managers use.
  *
  * Errors surface through the standard `user_profile_update_errors` and
@@ -40,7 +40,7 @@ class ReportedIP_Hive_Password_Strength {
 	private static $instance = null;
 
 	/**
-	 * Tiny, deliberately small blocklist — the 30 passwords that account for
+	 * Tiny, deliberately small blocklist, the 30 passwords that account for
 	 * the majority of breach hits in published corpuses. The HIBP check
 	 * covers the long tail; this list catches the most common attempts
 	 * without a network round-trip.
@@ -121,7 +121,7 @@ class ReportedIP_Hive_Password_Strength {
 	}
 
 	/**
-	 * Password reset handler. Same logic as the profile update path —
+	 * Password reset handler. Same logic as the profile update path.
 	 * keeping these as separate WP hooks because that is how core spreads
 	 * the password change surface.
 	 *
@@ -133,7 +133,7 @@ class ReportedIP_Hive_Password_Strength {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- WP core verifies the reset key upstream; passwords must NOT be sanitized — the raw string is required to validate length, classes and HIBP hash.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- WP core verifies the reset key upstream; passwords must NOT be sanitized, the raw string is required to validate length, classes and HIBP hash.
 		$pass = isset( $_POST['pass1'] ) ? (string) wp_unslash( $_POST['pass1'] ) : '';
 		if ( '' === $pass ) {
 			return;

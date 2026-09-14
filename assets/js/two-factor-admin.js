@@ -1,5 +1,5 @@
 /**
- * ReportedIP Hive — Two-Factor Admin Script.
+ * ReportedIP Hive, Two-Factor Admin Script.
  *
  * Drives the sign-in method rows on the profile page: inline setup flows
  * (TOTP, email, SMS), default-method selection, single-method removal,

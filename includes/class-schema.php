@@ -98,7 +98,7 @@ final class ReportedIP_Hive_Schema {
 	 * Whether all required plugin tables exist.
 	 *
 	 * Single information_schema query rather than seven SHOW TABLES probes
-	 * — saves six round-trips on activation, lifecycle hooks and the
+	 * - saves six round-trips on activation, lifecycle hooks and the
 	 * trusted-devices update path.
 	 *
 	 * @return bool
@@ -108,7 +108,7 @@ final class ReportedIP_Hive_Schema {
 		global $wpdb;
 		$expected     = array_map( array( __CLASS__, 'table' ), self::TABLE_SUFFIXES );
 		$placeholders = implode( ',', array_fill( 0, count( $expected ), '%s' ) );
-		// phpcs:disable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- $placeholders is a comma-joined "%s,%s,…" string built from a hardcoded const array, then bound via $expected; PHPCS cannot see the inner placeholders.
+		// phpcs:disable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- $placeholders is a comma-joined "%s,%s,..." string built from a hardcoded const array, then bound via $expected; PHPCS cannot see the inner placeholders.
 		$found = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ($placeholders)",
@@ -400,7 +400,7 @@ final class ReportedIP_Hive_Schema {
 	 * Remove all data belonging to a specific blog from `blog_id`-scoped tables.
 	 *
 	 * Hooked from `wp_delete_site`. Network-wide tables (whitelist, blocked,
-	 * attempts, trusted_devices) are intentionally NOT touched — they live
+	 * attempts, trusted_devices) are intentionally NOT touched, they live
 	 * above the site boundary and a deleted site does not invalidate the
 	 * threat data accumulated against an attacker's IP.
 	 *
@@ -454,7 +454,7 @@ final class ReportedIP_Hive_Schema {
 	 * Whether the given index exists on a plugin table.
 	 *
 	 * Companion to {@see column_exists()} for idempotent index migrations
-	 * (ALTER TABLE … ADD/DROP INDEX must not run twice).
+	 * (ALTER TABLE ... ADD/DROP INDEX must not run twice).
 	 *
 	 * @param string $table_suffix Table suffix, e.g. `reportedip_hive_logs`.
 	 * @param string $index        Index name.

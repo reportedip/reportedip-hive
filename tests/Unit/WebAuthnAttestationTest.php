@@ -146,7 +146,7 @@ PEM;
 			$tampered['attStmt']['sig'][8] = chr( ord( $sig[8] ) ^ 0xff );
 			$this->assertFalse(
 				$this->call( 'verify_packed_attestation', $tampered, $client_data_hash ),
-				'A tampered statement must simply read as unverified — never as an error that blocks registration.'
+				'A tampered statement must simply read as unverified, never as an error that blocks registration.'
 			);
 
 			$none = array(

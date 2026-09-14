@@ -1,6 +1,6 @@
 <?php
 /**
- * Attack-surface switches — REST API access control, XML-RPC and feed
+ * Attack-surface switches, REST API access control, XML-RPC and feed
  * shut-off, and software-fingerprint removal. Every switch closes a WordPress
  * endpoint that most sites never use but every scanner tries first.
  *
@@ -109,7 +109,7 @@ final class ReportedIP_Hive_Attack_Surface {
 	const ALWAYS_ALLOWED_NAMESPACES = array( 'reportedip-hive/v1' );
 
 	/**
-	 * Application-password management route — WordPress's own app-password
+	 * Application-password management route, WordPress's own app-password
 	 * UI calls it for the authenticated user, so a role restriction must not
 	 * lock a user out of their own credentials.
 	 */
@@ -157,7 +157,7 @@ final class ReportedIP_Hive_Attack_Surface {
 	}
 
 	/**
-	 * Constructor — registers hooks.
+	 * Constructor, registers hooks.
 	 */
 	private function __construct() {
 		$this->register_hooks();
@@ -213,7 +213,7 @@ final class ReportedIP_Hive_Attack_Surface {
 	 * ponytail: `display_errors` only. Errors raised before this runs
 	 * (mu-plugins, drop-ins, the core bootstrap) and the fatal-error handler's
 	 * own page are out of reach, and a developer running `WP_DEBUG` with
-	 * `WP_DEBUG_DISPLAY` keeps their error output — the wp-config constants
+	 * `WP_DEBUG_DISPLAY` keeps their error output, the wp-config constants
 	 * win on purpose. Upgrade path if that is ever not enough: an
 	 * `auto_prepend_file` directive, which the WAF drop-in already owns.
 	 *
@@ -325,7 +325,7 @@ final class ReportedIP_Hive_Attack_Surface {
 	}
 
 	/**
-	 * Gate REST requests at authentication time — before `rest_pre_dispatch`,
+	 * Gate REST requests at authentication time, before `rest_pre_dispatch`,
 	 * so neither the burst monitor nor the user-enumeration probe sensor sees
 	 * a request that is refused here.
 	 *
@@ -500,10 +500,10 @@ final class ReportedIP_Hive_Attack_Surface {
 	/**
 	 * The REST route of the current request.
 	 *
-	 * WordPress fills `rest_route` for both `/wp-json/…` and `?rest_route=`.
+	 * WordPress fills `rest_route` for both `/wp-json/...` and `?rest_route=`.
 	 * ponytail: a plugin calling `WP_REST_Server::serve_request()` by hand
 	 * without setting the query var lands on `/` and is treated as the index
-	 * route — denied for guests, which is the safe direction.
+	 * route, denied for guests, which is the safe direction.
 	 *
 	 * @return string
 	 * @since  2.1.51
@@ -520,7 +520,7 @@ final class ReportedIP_Hive_Attack_Surface {
 	/**
 	 * Log a refused request. Denials are bookkeeping, not a threat verdict:
 	 * severity `low`, no attempt counter, no escalation ladder and no
-	 * community report — the operator switched the endpoint off, so a hit is
+	 * community report, the operator switched the endpoint off, so a hit is
 	 * expected traffic hitting a closed door.
 	 *
 	 * @param string              $event   One of the EVENT_* constants.

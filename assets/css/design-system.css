@@ -1,5 +1,5 @@
 /**
- * ReportedIP Hive — Design System.
+ * ReportedIP Hive, Design System.
  *
  * Core styles, CSS variables, and reusable components.
  *
@@ -600,7 +600,7 @@ button.rip-tier-lock--mode:hover {
 }
 
 /* ==========================================================================
-   Stat Card — Quota variant
+   Stat Card, Quota variant
    ========================================================================== */
 
 .rip-stat-card--quota {
@@ -1052,7 +1052,7 @@ button.rip-tier-lock--mode:hover {
     color: var(--rip-gray-700);
 }
 
-/* Badge component is defined further down (search for `.rip-badge {`) — that
+/* Badge component is defined further down (search for `.rip-badge {`), that
    block is the canonical version (uppercase, smaller padding, +letter-spacing). */
 
 /* ==========================================================================
@@ -1087,7 +1087,7 @@ button.rip-tier-lock--mode:hover {
     border-bottom: none;
 }
 
-/* Empty-state component lives in dashboard.css — it loads after this file
+/* Empty-state component lives in dashboard.css, it loads after this file
    and uses the .rip-empty-state__text variant that templates emit. */
 
 /* ==========================================================================
@@ -2192,7 +2192,7 @@ button.rip-tier-lock--mode:hover {
 }
 
 /**
- * Inline status pill — used inside health cards next to the message text and
+ * Inline status pill, used inside health cards next to the message text and
  * anywhere else a short "operational/warning/error" badge is helpful.
  */
 .rip-status-pill {
@@ -2227,7 +2227,7 @@ button.rip-tier-lock--mode:hover {
 }
 
 /**
- * Decision-flow card — numbered explanation steps for "How blocking decides"
+ * Decision-flow card, numbered explanation steps for "How blocking decides"
  * and similar policy-explainer panels.
  */
 .rip-decision-flow {

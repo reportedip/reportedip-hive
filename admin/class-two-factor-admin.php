@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ReportedIP_Hive_Two_Factor_Admin {
 
 	/**
-	 * Constructor — registers admin hooks.
+	 * Constructor, registers admin hooks.
 	 */
 	public function __construct() {
 		add_action( 'show_user_profile', array( $this, 'render_user_profile_section' ) );
@@ -533,7 +533,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<?php if ( ! empty( $relay_status['available'] ) ) : ?>
 				<div class="rip-alert rip-alert--success">
 					<strong><?php esc_html_e( 'Managed SMS relay active', 'reportedip-hive' ); ?>:</strong>
-					<?php esc_html_e( 'SMS-2FA flows through reportedip.com — included with your plan, no separate SMS contract needed.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'SMS-2FA flows through reportedip.com, included with your plan, no separate SMS contract needed.', 'reportedip-hive' ); ?>
 					<?php
 					$allowed_methods_for_hint = class_exists( 'ReportedIP_Hive_Two_Factor' )
 						? ReportedIP_Hive_Two_Factor::get_allowed_methods()
@@ -555,10 +555,10 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			<?php else : ?>
 				<div class="rip-alert rip-alert--info">
 					<strong><?php esc_html_e( 'SMS code is a Professional feature', 'reportedip-hive' ); ?>:</strong>
-					<?php esc_html_e( 'Professional and Business plans include SMS-2FA via our managed EU gateway — no separate provider contract required. TOTP, Email and Passkeys remain available on every plan.', 'reportedip-hive' ); ?>
+					<?php esc_html_e( 'Professional and Business plans include SMS-2FA via our managed EU gateway, no separate provider contract required. TOTP, Email and Passkeys remain available on every plan.', 'reportedip-hive' ); ?>
 					<?php
 					if ( 'tier' === ( $relay_status['reason'] ?? '' ) ) {
-						ReportedIP_Hive_Admin_Settings::render_tier_lock( $relay_status, array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) );
+						ReportedIP_Hive_Admin_Settings::render_tier_lock( $relay_status, array( 'label' => __( 'Included in Professional', 'reportedip-hive' ) ) );
 					}
 					?>
 				</div>
@@ -576,7 +576,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							return;
 						}
 						btn.disabled = true;
-						if (status) status.textContent = '<?php echo esc_js( __( 'Sende…', 'reportedip-hive' ) ); ?>';
+						if (status) status.textContent = '<?php echo esc_js( __( 'Sende...', 'reportedip-hive' ) ); ?>';
 						var data = new FormData();
 						data.append('action', 'reportedip_hive_2fa_test_sms');
 						data.append('nonce', '<?php echo esc_js( wp_create_nonce( 'reportedip_hive_nonce' ) ); ?>');
@@ -604,7 +604,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							})
 							.catch(function(){
 								btn.disabled = false;
-								if (status) status.textContent = '<?php echo esc_js( __( 'Network error — could not reach admin-ajax.php.', 'reportedip-hive' ) ); ?>';
+								if (status) status.textContent = '<?php echo esc_js( __( 'Network error, could not reach admin-ajax.php.', 'reportedip-hive' ) ); ?>';
 							});
 					});
 				}
@@ -617,7 +617,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	/**
 	 * Sanitize the IP allowlist textarea.
 	 *
-	 * Keeps comments (# …), drops invalid entries, normalises line breaks.
+	 * Keeps comments (# ...), drops invalid entries, normalises line breaks.
 	 * Blocks the allowlist from being used to bypass 2FA via spoofed IPs by
 	 * validating each entry against filter_var + CIDR parsing.
 	 *
@@ -664,7 +664,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 * Reuses {@see ReportedIP_Hive_Two_Factor_Frontend::sanitize_slug()}
 	 * so the same reserved-list / shape rules that protect the rewrite
 	 * layer also protect the settings save. Empty / invalid input falls
-	 * back to the existing value rather than the hardcoded default — a
+	 * back to the existing value rather than the hardcoded default, a
 	 * site that already personalised the slug should not silently revert
 	 * to `reportedip-hive-2fa` when the admin saves something invalid.
 	 *
@@ -751,18 +751,18 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 * Sanitize the allowed-methods option into a JSON array.
 	 *
 	 * This sanitiser runs for every write to `reportedip_hive_2fa_allowed_methods`
-	 * via the `sanitize_option_*` filter that {@see register_setting()} installs —
+	 * via the `sanitize_option_*` filter that {@see register_setting()} installs.
 	 * not only the settings form. Two write shapes therefore reach it:
 	 *
 	 *  - The settings form posts one checkbox per method
-	 *    (`reportedip_hive_2fa_method_totp` …); the option field itself is an
+	 *    (`reportedip_hive_2fa_method_totp` ...); the option field itself is an
 	 *    empty hidden input, so the value lives in those per-method keys.
 	 *  - Every other writer (setup wizard, tier-upgrade, settings import,
 	 *    WP-CLI) passes the value directly as a JSON array string or array.
 	 *
 	 * Detecting the form by the presence of any per-method checkbox key keeps the
 	 * checkbox path authoritative for the form while letting a direct value pass
-	 * through untouched — previously the direct value was discarded and the option
+	 * through untouched, previously the direct value was discarded and the option
 	 * collapsed to TOTP only (the wizard "only TOTP gets saved" bug).
 	 *
 	 * @param mixed $input JSON array string / array of method slugs (direct writers).
@@ -810,7 +810,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 * `reportedip_hive_2fa_enforce_roles`. The settings form submits an array
 	 * (`reportedip_hive_2fa_enforce_roles[]`); the setup wizard, import and
 	 * WP-CLI pass a JSON array string. {@see ReportedIP_Hive_Option_Routing::to_array()}
-	 * normalises both shapes — the previous `is_array()` guard rejected the JSON
+	 * normalises both shapes, the previous `is_array()` guard rejected the JSON
 	 * string and silently wiped the wizard's enforced roles to an empty list.
 	 *
 	 * @param mixed $input Array (settings form) or JSON array string (other writers).
@@ -1208,7 +1208,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						<?php elseif ( $has_setup ) : ?>
 							<button type="button" class="rip-button rip-button--secondary rip-button--sm" data-action="setup"><?php esc_html_e( 'Set up', 'reportedip-hive' ); ?></button>
 						<?php elseif ( ! empty( $args['lock'] ) && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) : ?>
-							<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $args['lock'], array( 'label' => __( 'Unlock with Professional', 'reportedip-hive' ) ) ); ?>
+							<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $args['lock'], array( 'label' => __( 'Included in Professional', 'reportedip-hive' ) ) ); ?>
 						<?php endif; ?>
 					</div>
 				<?php endif; ?>
@@ -1349,7 +1349,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	}
 
 	/**
-	 * AJAX: Begin TOTP setup — generate secret and return otpauth URI.
+	 * AJAX: Begin TOTP setup, generate secret and return otpauth URI.
 	 */
 	public function ajax_setup_totp() {
 		$user_id = $this->validate_ajax_user();
@@ -1388,7 +1388,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		/*
 		 * Park the new secret until a code proves the authenticator holds it.
 		 * Overwriting the live secret here meant a replacement the user
-		 * abandoned — closing the tab before scanning the QR code — left the
+		 * abandoned, closing the tab before scanning the QR code, left the
 		 * old app producing rejected codes and no way back in, and made the
 		 * unconfirmed secret a working second factor in the meantime.
 		 */
@@ -1509,8 +1509,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 * AJAX: SMS-2FA setup (register number → send test → verify).
 	 *
 	 * Steps:
-	 *   register  — stores encrypted phone number + user consent, dispatches first code
-	 *   verify    — checks the submitted code and activates SMS-2FA
+	 *   register , stores encrypted phone number + user consent, dispatches first code
+	 *   verify   , checks the submitted code and activates SMS-2FA
 	 */
 	public function ajax_setup_sms() {
 		$user_id = $this->validate_ajax_user();

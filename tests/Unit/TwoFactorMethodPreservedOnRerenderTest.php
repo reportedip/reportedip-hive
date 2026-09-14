@@ -5,20 +5,20 @@
  * default method.
  *
  * Bug: a user with several methods (e.g. Email + SMS) switches to the SMS
- * tab, requests a code and submits it. When verification fails — wrong code,
- * expired code, or a soft lockout — handle_2fa_challenge() re-renders the
+ * tab, requests a code and submits it. When verification fails, wrong code,
+ * expired code, or a soft lockout, handle_2fa_challenge() re-renders the
  * challenge. The render method was derived once from get_user_method()
  * (the stored default, usually Email) and the submitted method was only ever
  * read into a local variable, never written back. So the page came back with
- * the Email tab active and the freshly typed SMS code gone — the classic
+ * the Email tab active and the freshly typed SMS code gone, the classic
  * "jumps back to Mail and my input is lost" report.
  *
  * The fix carries the submitted method into $method before the re-render, so
  * the chosen tab survives a failed attempt. The final allowed-methods guard
  * still validates the value, so a forged method falls back safely.
  *
- * Render path calls login_header() / exit, so — like
- * TwoFactorSessionExpiredFeedbackTest — this locks the behaviour down with
+ * Render path calls login_header() / exit, so, like
+ * TwoFactorSessionExpiredFeedbackTest, this locks the behaviour down with
  * source assertions rather than a live request.
  *
  * @package    ReportedIP_Hive
@@ -45,7 +45,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertMatchesRegularExpression(
 				'/\$method\s*=\s*\$submitted_method\s*;/',
 				$source,
-				'handle_2fa_challenge() must assign the submitted method back into $method on a POST re-render — otherwise a failed verify snaps the user back to the stored default method (usually Email) and discards the code they just typed.'
+				'handle_2fa_challenge() must assign the submitted method back into $method on a POST re-render, otherwise a failed verify snaps the user back to the stored default method (usually Email) and discards the code they just typed.'
 			);
 		}
 

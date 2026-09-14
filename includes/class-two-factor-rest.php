@@ -54,7 +54,7 @@ class ReportedIP_Hive_Two_Factor_REST {
 	 * Both routes end in `wp_set_auth_cookie()`, and neither can carry a nonce
 	 * because the caller is not authenticated yet. Without an origin check a
 	 * cross-site form post logs the visitor's browser into an account of the
-	 * attacker's choosing. A request with no Origin header is left alone —
+	 * attacker's choosing. A request with no Origin header is left alone.
 	 * that is a native or server-side client, not a browser form post.
 	 *
 	 * @return true|WP_Error True when the request may proceed.
@@ -175,7 +175,7 @@ class ReportedIP_Hive_Two_Factor_REST {
 	}
 
 	/**
-	 * Challenge step — password auth + challenge-token issuance.
+	 * Challenge step, password auth + challenge-token issuance.
 	 *
 	 * Intentionally uses wp_authenticate() so that IP-block/reputation hooks
 	 * and the 2FA filter stack run as usual; we then swap the WP_Error-based
@@ -244,7 +244,7 @@ class ReportedIP_Hive_Two_Factor_REST {
 	}
 
 	/**
-	 * Verify step — consume the challenge token and verify the submitted code.
+	 * Verify step, consume the challenge token and verify the submitted code.
 	 */
 	public function handle_verify( WP_REST_Request $request ) {
 		$cross_origin = $this->reject_cross_origin();
@@ -339,7 +339,7 @@ class ReportedIP_Hive_Two_Factor_REST {
 	 * This used to be a hand-copied switch, which is exactly what extracting
 	 * `Two_Factor_Verifier` was meant to end. It had already drifted: no
 	 * WebAuthn case, the `reportedip_2fa_totp_window` filter ignored, the
-	 * decrypted secret left in memory — and it would have missed the TOTP
+	 * decrypted secret left in memory, and it would have missed the TOTP
 	 * single-use enforcement too.
 	 *
 	 * @param int    $user_id User to verify against.

@@ -3,7 +3,7 @@
  * Mail Provider Interface for ReportedIP Hive.
  *
  * Implementations may use wp_mail(), an SMTP relay, a transactional API
- * (Postmark, SES, Mailgun, …) or any other transport. The Mailer always
+ * (Postmark, SES, Mailgun, ...) or any other transport. The Mailer always
  * passes a fully rendered HTML body plus a plain-text alternative so the
  * provider can build a multipart/alternative message.
  *
@@ -28,7 +28,7 @@ interface ReportedIP_Hive_Mail_Provider_Interface {
 	 * @param string   $subject    Mail subject (already localized).
 	 * @param string   $html_body  Full HTML body.
 	 * @param string   $plain_body Plain-text alternative.
-	 * @param string[] $headers    Pre-built headers (From, Reply-To, …).
+	 * @param string[] $headers    Pre-built headers (From, Reply-To, ...).
 	 * @return bool True on successful queue / dispatch, false on failure.
 	 */
 	public function send( $to, $subject, $html_body, $plain_body, $headers );

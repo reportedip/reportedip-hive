@@ -64,7 +64,7 @@ final class I18nCheck {
 		$this->check_artifact_sync();
 
 		if ( empty( $this->failures ) ) {
-			fwrite( STDOUT, "[i18n] OK — POT fresh, German translation complete, MO/JSON in sync.\n" );
+			fwrite( STDOUT, "[i18n] OK, POT fresh, German translation complete, MO/JSON in sync.\n" );
 			return 0;
 		}
 
@@ -110,7 +110,7 @@ final class I18nCheck {
 		$removed = array_diff( $committed, $fresh );
 		if ( ! empty( $added ) || ! empty( $removed ) ) {
 			$this->failures[] = sprintf(
-				'%s is stale — %d new and %d removed source string(s). Run "composer i18n:pot".',
+				'%s is stale, %d new and %d removed source string(s). Run "composer i18n:pot".',
 				self::POT,
 				count( $added ),
 				count( $removed )
@@ -126,7 +126,7 @@ final class I18nCheck {
 	private function check_translation_completeness(): void {
 		$po = $this->path( self::PO_DE );
 		if ( ! is_file( $po ) ) {
-			$this->failures[] = self::PO_DE . ' is missing — German translation not initialised.';
+			$this->failures[] = self::PO_DE . ' is missing, German translation not initialised.';
 			return;
 		}
 
@@ -163,11 +163,11 @@ final class I18nCheck {
 
 		$missing = array_diff( array_keys( $fresh ), array_keys( $committed ) );
 		foreach ( $missing as $name ) {
-			$this->failures[] = "Compiled artifact $name is missing — run 'composer i18n:build'.";
+			$this->failures[] = "Compiled artifact $name is missing, run 'composer i18n:build'.";
 		}
 		foreach ( $committed as $name => $hash ) {
 			if ( isset( $fresh[ $name ] ) && $fresh[ $name ] !== $hash ) {
-				$this->failures[] = "Compiled artifact $name is out of sync — run 'composer i18n:build'.";
+				$this->failures[] = "Compiled artifact $name is out of sync, run 'composer i18n:build'.";
 			}
 		}
 
@@ -262,7 +262,7 @@ final class I18nCheck {
 	 * Returns the sorted set of translatable entry keys (context + msgid +
 	 * msgid_plural) in a POT, ignoring order, references, headers and dates.
 	 *
-	 * Comparing this set — rather than the raw file — makes the freshness
+	 * Comparing this set, rather than the raw file, makes the freshness
 	 * check independent of make-pot's file-scan order (which differs between
 	 * Windows and Linux) and of cosmetic reference-line drift. It flags only
 	 * genuine additions or removals of source strings.

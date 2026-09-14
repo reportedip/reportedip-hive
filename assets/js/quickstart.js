@@ -145,7 +145,7 @@
 			var $status = $('#rip-quickstart-import-status');
 			var fd = new FormData(form);
 			fd.append('action', 'reportedip_quickstart_import');
-			$status.text('…');
+			$status.text('...');
 			fetch(cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
 				.then(function (r) { return r.json().catch(function () { return null; }); })
 				.then(function (resp) {

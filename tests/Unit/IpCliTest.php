@@ -80,7 +80,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'WP_CLI::warning',
 				$source,
-				'A report-only "block" is logged but not enforced — the command must warn, not report plain success.'
+				'A report-only "block" is logged but not enforced, the command must warn, not report plain success.'
 			);
 		}
 

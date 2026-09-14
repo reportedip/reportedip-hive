@@ -8,7 +8,7 @@
  * Provisions a dedicated test user with a known password and no 2FA state,
  * and enables the webauthn method site-wide so the Playwright spec can walk
  * the real enrolment ceremony with the Chromium virtual authenticator.
- * Idempotent — re-running resets the user to a credential-free baseline.
+ * Idempotent, re-running resets the user to a credential-free baseline.
  *
  * Options are written through ReportedIP_Hive_Option_Routing so the same
  * fixture works on the single-site and the multisite stack (where these
@@ -28,7 +28,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 }
 
 if ( ! class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
-	WP_CLI::error( 'ReportedIP Hive plugin is not loaded — activate it before running setup.' );
+	WP_CLI::error( 'ReportedIP Hive plugin is not loaded, activate it before running setup.' );
 }
 
 $test_login = 'e2e-webauthn-user';
@@ -79,7 +79,7 @@ delete_transient( 'reportedip_hive_relay_quota' );
  * On the Business tier the mailer prefers the reportedip.com relay. Point the
  * API endpoint at a dead local port for the duration of the spec: the relay
  * call fails as retryable, the provider falls back to local wp_mail() and
- * the notification lands in Mailpit — and no request can ever reach the
+ * the notification lands in Mailpit, and no request can ever reach the
  * production service from a test run.
  */
 ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_api_endpoint', 'http://127.0.0.1:9/' );

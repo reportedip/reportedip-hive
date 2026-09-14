@@ -4,7 +4,7 @@
  *
  * Tests the local-only path of ReportedIP_Hive_Password_Strength::validate_password()
  * (length, character classes, common-password blocklist). The HIBP network
- * branch is exercised separately via integration tests when available — here
+ * branch is exercised separately via integration tests when available, here
  * we set the option `reportedip_hive_password_check_hibp` to false so the
  * test does not make outbound HTTP.
  *
@@ -77,7 +77,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_two_classes_is_rejected_when_three_required() {
 			$this->assertNotNull(
 				$this->validate( 'OnlyLettersHere' ),
-				'Mixed case alone is two classes — must fail when min_classes is 3'
+				'Mixed case alone is two classes, must fail when min_classes is 3'
 			);
 		}
 

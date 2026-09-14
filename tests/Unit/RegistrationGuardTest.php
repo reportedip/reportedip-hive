@@ -5,8 +5,8 @@
  *
  * The matcher and the sanitizers are pure statics, so they are exercised
  * directly. The pipeline itself depends on the plugin's runtime singletons
- * (database, logger, mode manager), so its contract — hook ownership,
- * evaluation order, the silent login-probe path — is anchored via source
+ * (database, logger, mode manager), so its contract, hook ownership,
+ * evaluation order, the silent login-probe path, is anchored via source
  * inspection, the established pattern from SecurityMonitorBotGuardTest.
  *
  * @package    ReportedIP_Hive

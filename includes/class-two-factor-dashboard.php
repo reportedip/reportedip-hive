@@ -114,7 +114,7 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 								<tr>
 									<td><a href="<?php echo esc_url( get_edit_user_link( $row['id'] ) ); ?>"><?php echo esc_html( $row['login'] ); ?></a> <span class="rip-muted">#<?php echo (int) $row['id']; ?></span></td>
 									<td><?php echo esc_html( implode( ', ', $row['roles'] ) ); ?></td>
-									<td><?php echo esc_html( $row['methods'] ?: '—' ); ?></td>
+									<td><?php echo esc_html( $row['methods'] ?: ', ' ); ?></td>
 									<td><?php echo (int) $row['recovery']; ?></td>
 									<td>
 										<?php if ( $row['enabled'] ) : ?>
@@ -294,7 +294,7 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 				'enabled'  => ReportedIP_Hive_Two_Factor::is_user_enabled( $user->ID ),
 				'enforced' => ReportedIP_Hive_Two_Factor::is_enforced_for_user( $user ),
 				'skips'    => (int) get_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_SKIP_COUNT, true ),
-				'setup'    => $ts ? wp_date( 'd.m.Y', (int) $ts ) : '—',
+				'setup'    => $ts ? wp_date( 'd.m.Y', (int) $ts ) : ', ',
 			);
 		}
 		return $rows;

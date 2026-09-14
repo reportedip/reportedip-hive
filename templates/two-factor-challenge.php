@@ -4,11 +4,11 @@
  *
  * Rendered on wp-login.php when a user needs to pass their second factor.
  * Uses the ReportedIP design system and progressively enhances with JS:
- *   – resend-code buttons hit an AJAX endpoint so the user never loses the
+ *   - resend-code buttons hit an AJAX endpoint so the user never loses the
  *     challenge session
- *   – tab navigation follows WAI-ARIA Authoring Practices (arrow keys,
+ *   - tab navigation follows WAI-ARIA Authoring Practices (arrow keys,
  *     aria-controls/labelledby, roving tabindex)
- *   – when the user has only one method configured the tabs collapse and the
+ *   - when the user has only one method configured the tabs collapse and the
  *     method panel is shown immediately
  *
  * @package   ReportedIP_Hive
@@ -137,7 +137,7 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 					aria-controls="rip-2fa-panel-<?php echo esc_attr( $rip_tab['method'] ); ?>"
 					aria-selected="<?php echo $is_active ? 'true' : 'false'; ?>"
 					tabindex="<?php echo $is_active ? '0' : '-1'; ?>"
-					aria-label="<?php echo esc_attr( $rip_tab['label'] . ' — ' . $rip_tab['aria_tip'] ); ?>">
+					aria-label="<?php echo esc_attr( $rip_tab['label'] . ', ' . $rip_tab['aria_tip'] ); ?>">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><?php echo $rip_tab['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></svg>
 					<span class="rip-2fa-challenge__method-tab-label"><?php echo esc_html( $rip_tab['label'] ); ?></span>
 				</button>

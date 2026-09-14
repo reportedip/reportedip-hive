@@ -3,7 +3,7 @@
  * Tests for the `reportedip_hive_threshold_exceeded` integration hook.
  *
  * `Security_Monitor::handle_threshold_exceeded()` fires the hook once per
- * confirmed sensor detection — after the own-server and verified-bot guards
+ * confirmed sensor detection, after the own-server and verified-bot guards
  * have passed, before any consequence (threshold log, stats, auto-block,
  * community report, admin mail) runs. The behavioural cases run the real
  * monitor with stubbed collaborators injected via reflection (the singleton
@@ -153,7 +153,7 @@ namespace {
 
 	if ( ! class_exists( 'Test_TH_Cache_Stub' ) ) {
 		/**
-		 * Cache double — unused on the exercised path, present so the injected
+		 * Cache double, unused on the exercised path, present so the injected
 		 * collaborator set matches the constructor's.
 		 */
 		class Test_TH_Cache_Stub {

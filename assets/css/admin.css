@@ -875,7 +875,7 @@ code.ip-address {
 }
 
 /* ==========================================================================
-   1.0.2 — Settings refactor: radio profile, section picks, helpers
+   1.0.2:Settings refactor: radio profile, section picks, helpers
    ========================================================================== */
 
 .rip-radio {
@@ -933,7 +933,7 @@ code.ip-address {
 
 /* ==========================================================================
    Relay-highlight cards (Settings → Community plans)
-   Flat cards with a subtle tinted background — no left-accent bar.
+   Flat cards with a subtle tinted background, no left-accent bar.
    ========================================================================== */
 
 .rip-relay-highlight {

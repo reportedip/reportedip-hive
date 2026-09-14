@@ -109,7 +109,7 @@ class ReportedIP_Hive_Two_Factor_Recovery {
 	/**
 	 * Verify a recovery code and consume it if valid.
 	 *
-	 * Each code can only be used once — it is removed from storage after verification.
+	 * Each code can only be used once, it is removed from storage after verification.
 	 *
 	 * @param int    $user_id WordPress user ID.
 	 * @param string $code    Recovery code to verify (with or without dash).

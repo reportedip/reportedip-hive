@@ -23,7 +23,7 @@ Thanks for your PR! Please fill in the items below where they apply.
 - [ ] Code follows WordPress Coding Standards (`composer lint:fix` passes)
 - [ ] Translatable strings use `__()`/`esc_html__()` with text domain `reportedip-hive`
 - [ ] Inputs are sanitized, outputs escaped, nonces in place
-- [ ] No hardcoded colors — design system tokens (`--rip-*`) only
+- [ ] No hardcoded colors, design system tokens (`--rip-*`) only
 - [ ] CHANGELOG.md updated (if user-visible)
 - [ ] Documentation/help text updated (for UI changes)
 

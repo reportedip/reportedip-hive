@@ -62,7 +62,7 @@ class ReportedIP_Hive_App_Password_Monitor {
 	 * `app_password_failed`, so the listener must not write a duplicate
 	 * `failed_login` row or increment the `login` attempt bucket. A counter is
 	 * used instead of a boolean because XML-RPC `system.multicall` can carry
-	 * several independent login attempts in one request — each failure
+	 * several independent login attempts in one request, each failure
 	 * increments once and each `wp_login_failed` consumes exactly one unit.
 	 * Unconsumed units (REST Basic-Auth never fires `wp_login_failed`) expire
 	 * with the request.
@@ -156,7 +156,7 @@ class ReportedIP_Hive_App_Password_Monitor {
 
 	/**
 	 * Log every successful application-password authentication. Useful for
-	 * compliance / audit trails — there is otherwise no record of when an API
+	 * compliance / audit trails, there is otherwise no record of when an API
 	 * key actually authenticated.
 	 *
 	 * @param WP_User $user The authenticated user.
@@ -185,7 +185,7 @@ class ReportedIP_Hive_App_Password_Monitor {
 	/**
 	 * Block app-password creation for users whose role is in the 2FA-enforce
 	 * list until they have finished 2FA enrolment. App passwords without 2FA
-	 * defeat the enforcement policy — same threat model as iThemes Pro.
+	 * defeat the enforcement policy, same threat model as iThemes Pro.
 	 *
 	 * @param bool    $available Core's existing decision.
 	 * @param WP_User $user      User the check runs against.

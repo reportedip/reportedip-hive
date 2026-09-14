@@ -18,7 +18,7 @@ use WP_UnitTestCase;
 /**
  * Core's get_network_option() unserializes BEFORE caching and trusts a
  * cache hit verbatim. The bulk prime therefore has to store unserialized
- * values — a raw serialized string turns every array-valued network option
+ * values, a raw serialized string turns every array-valued network option
  * into a PHP-serialization string until the cache expires (observed as a
  * fatal TypeError in the cache-stats counters on shutdown).
  *

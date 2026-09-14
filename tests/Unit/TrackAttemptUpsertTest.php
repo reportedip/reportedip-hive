@@ -7,7 +7,7 @@
  * bursts) to a single `INSERT ... ON DUPLICATE KEY UPDATE` on the schema-v15
  * UNIQUE (ip_address, attempt_type) key. The IF() conditions re-implement the
  * one-hour idle window by reading the OLD `last_attempt`, so `last_attempt`
- * MUST remain the final assignment in the update list — MySQL evaluates the
+ * MUST remain the final assignment in the update list, MySQL evaluates the
  * list left to right and an earlier assignment would make the window
  * conditions compare against the freshly written value.
  *
@@ -171,7 +171,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertCount( 1, $wpdb->queries, 'track_attempt must be a single atomic statement.' );
 			$this->assertCount( 1, $wpdb->prepares );
 			$this->assertSame( array(), $wpdb->reads, 'The old SELECT-then-UPDATE shape must be gone.' );
-			$this->assertSame( array(), $wpdb->writes, 'No insert()/update() helper calls — one raw upsert only.' );
+			$this->assertSame( array(), $wpdb->writes, 'No insert()/update() helper calls, one raw upsert only.' );
 		}
 
 		public function test_upsert_targets_the_unique_key_and_measures_the_window_in_utc() {
@@ -204,7 +204,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertGreaterThan(
 					$position,
 					$last_attempt_at,
-					"last_attempt must be assigned after '{$needle}' — the IF() window conditions read its OLD value."
+					"last_attempt must be assigned after '{$needle}', the IF() window conditions read its OLD value."
 				);
 			}
 		}

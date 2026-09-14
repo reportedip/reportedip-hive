@@ -1,6 +1,6 @@
 <?php
 /**
- * Decoy-Path `.htaccess` writer — autonomously manages a marker block in
+ * Decoy-Path `.htaccess` writer, autonomously manages a marker block in
  * the site's root `.htaccess` so requests to known bait paths are rewritten
  * to WordPress (where the Hive Decoy-Path sensor logs the hit and emits a
  * 403). The rewrite is deliberately NOT `[F,L]` because that would short-
@@ -112,7 +112,7 @@ final class ReportedIP_Hive_Decoy_Htaccess_Writer extends ReportedIP_Hive_Htacce
 	/**
 	 * Move the Hive marker block to the very top of `.htaccess` if it is
 	 * not already there. `insert_with_markers()` appends at the end of the
-	 * file, but our rewrite must run before any existing Apache directive —
+	 * file, but our rewrite must run before any existing Apache directive.
 	 * specifically before WordPress's own `RewriteCond %{REQUEST_FILENAME}
 	 * -f → [L]` short-circuit and the Multisite `RewriteRule
 	 * ^([_0-9a-zA-Z-]+/)?(.*\.php)$ $2 [L]` subdir-prefix stripper, either

@@ -22,7 +22,7 @@ use ReportedIP_Hive_Settings_Registry;
 /**
  * Verifies the export-payload shape and the import allowlist.
  *
- * Pure-PHP tests only — AJAX endpoints are covered separately by the
+ * Pure-PHP tests only, AJAX endpoints are covered separately by the
  * integration suite because they need a live WP request lifecycle.
  */
 class SettingsImportExportTest extends TestCase {
@@ -193,7 +193,7 @@ class SettingsImportExportTest extends TestCase {
 	}
 
 	/**
-	 * Per-user 2FA secrets must NEVER appear in the importable allowlist —
+	 * Per-user 2FA secrets must NEVER appear in the importable allowlist.
 	 * they are encrypted with a site-specific key and would be useless on
 	 * another site even if exported.
 	 */
@@ -203,7 +203,7 @@ class SettingsImportExportTest extends TestCase {
 		$this->assertNotContains(
 			'reportedip_hive_2fa_policy_admin_verified',
 			$keys,
-			'The administrator latch is runtime state — importing it would unlock the administrator column on another site.'
+			'The administrator latch is runtime state, importing it would open the administrator column on another site.'
 		);
 		$this->assertNotContains( 'reportedip_hive_2fa_webauthn_credentials', $keys );
 		$this->assertNotContains( 'reportedip_hive_2fa_sms_number', $keys );
@@ -283,7 +283,7 @@ class SettingsImportExportTest extends TestCase {
 	}
 
 	/**
-	 * Schema version is part of the public contract — bumping it must be a
+	 * Schema version is part of the public contract, bumping it must be a
 	 * deliberate decision (matches the import-side check in the AJAX handler).
 	 */
 	public function test_schema_version_is_one(): void {

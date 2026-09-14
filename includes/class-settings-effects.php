@@ -1,6 +1,6 @@
 <?php
 /**
- * Option side-effect dispatcher — executes registry-declared side effects
+ * Option side-effect dispatcher, executes registry-declared side effects
  * (rewrite flushes, cache flushes) for every writer identically, replacing
  * the effects that historically lived inside Settings-API sanitizers.
  *
@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Settings_Effects {
 
 	/**
 	 * Register option-update watchers for every key that declares side
-	 * effects — both `update_option_*` (single site) and
+	 * effects, both `update_option_*` (single site) and
 	 * `update_site_option_*` (network) fire for any writer.
 	 *
 	 * Runs on `init` at priority 0, not from the plugin constructor: reading

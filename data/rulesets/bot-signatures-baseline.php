@@ -12,11 +12,11 @@
  * whose reverse DNS points somewhere else classifies the genuine crawler as a
  * spoofer, so operators of feed-only crawlers (OpenAI, Anthropic, Perplexity,
  * the uptime services) stay out of the baseline and ride the PRO ranges
- * instead. Crawlers listed nowhere simply earn no exemption — since 2.1.40 an
+ * instead. Crawlers listed nowhere simply earn no exemption, since 2.1.40 an
  * unverifiable user-agent claim carries no privileges at all.
  *
  * Each rule: ua (case-insensitive token), domains (valid PTR suffixes),
- * ranges (CIDR list, empty in the baseline — supplied by the API feed).
+ * ranges (CIDR list, empty in the baseline, supplied by the API feed).
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>

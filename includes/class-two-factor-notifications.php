@@ -4,7 +4,7 @@
  *
  * Sends the user an email when their account is accessed from a previously
  * unseen device (fingerprint = hash of User-Agent + IP /24 block). Does not
- * block the login — only notifies, so the user can react to surprises.
+ * block the login, only notifies, so the user can react to surprises.
  *
  * Stored fingerprints live in a bounded-size per-user meta array (keeps the
  * most recent N devices only) to avoid unbounded meta growth.
@@ -32,7 +32,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	const MAX_DEVICES = 50;
 
 	/**
-	 * Constructor — register the wp_login hook.
+	 * Constructor, register the wp_login hook.
 	 */
 	public function __construct() {
 		add_action( 'wp_login', array( $this, 'on_login' ), 50, 2 );
@@ -42,7 +42,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	}
 
 	/**
-	 * A new security key / passkey was registered — tell the account owner
+	 * A new security key / passkey was registered, tell the account owner
 	 * so a hijacked session cannot silently add a persistent second factor.
 	 *
 	 * @param int    $user_id User the key was registered for.
@@ -98,7 +98,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 
 	/**
 	 * A sign-in attempt was rejected because the key's signature counter
-	 * did not advance — the classic cloned-authenticator indicator.
+	 * did not advance, the classic cloned-authenticator indicator.
 	 *
 	 * @param int    $user_id       Affected user.
 	 * @param string $credential_id Base64url credential id (unused in the mail body).
@@ -195,7 +195,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	}
 
 	/**
-	 * wp_login callback — send a notification if the device fingerprint is new.
+	 * wp_login callback, send a notification if the device fingerprint is new.
 	 *
 	 * @param string  $user_login Username.
 	 * @param WP_User $user       User object.
@@ -272,7 +272,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	 * Reduce an IP to its network block for fingerprinting.
 	 *
 	 * Shared with the adaptive 2FA triggers, which compare the /24 (or /64)
-	 * an account signs in from — there must be exactly one reducer.
+	 * an account signs in from, there must be exactly one reducer.
 	 *
 	 * @param string $ip IP address.
 	 * @return string Network identifier or '' if invalid.
@@ -359,7 +359,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 
 		$intro = sprintf(
 			/* translators: %s: site name */
-			__( 'Just letting you know — your account at %s was just accessed from a device that hasn\'t signed in here before. If that was you, no further action is needed.', 'reportedip-hive' ),
+			__( 'Just letting you know, your account at %s was just accessed from a device that hasn\'t signed in here before. If that was you, no further action is needed.', 'reportedip-hive' ),
 			esc_html( $site_name )
 		);
 

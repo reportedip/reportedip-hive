@@ -4,7 +4,7 @@
  *
  * Locks down the regression introduced in 1.2.0 where the global REST
  * rate-limit (60 / 5min by default) blocked admins out of their own
- * Block-Editor — the editor alone fires 50+ REST calls when an admin
+ * Block-Editor, the editor alone fires 50+ REST calls when an admin
  * opens a page (autosave, media library, taxonomy lookups, block
  * patterns, theme.json), instantly tripping the threshold.
  *
@@ -102,7 +102,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$result                        = $this->dispatch( '/wp/v2/users?search=a' );
 			$this->assertNull(
 				$result,
-				'Logged-in users must never hit the REST monitor — the Block Editor would lock admins out of their own backend otherwise.'
+				'Logged-in users must never hit the REST monitor, the Block Editor would lock admins out of their own backend otherwise.'
 			);
 		}
 
@@ -147,7 +147,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNull(
 				$result,
 				sprintf(
-					'Anonymous POST to %s must bypass the REST monitor — these routes are listed in the default bypass set in is_route_bypassed().',
+					'Anonymous POST to %s must bypass the REST monitor, these routes are listed in the default bypass set in is_route_bypassed().',
 					$route
 				)
 			);

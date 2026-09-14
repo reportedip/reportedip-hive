@@ -74,7 +74,7 @@ class ReportedIP_Hive_Option_Routing_Extended_Multisite_Test extends WP_UnitTest
 	}
 
 	/**
-	 * `get_network_enforce_roles()` returns sitemeta only — no merge with
+	 * `get_network_enforce_roles()` returns sitemeta only, no merge with
 	 * the site-extra list. This matters for the Site-2FA UI, which uses the
 	 * helper to draw the "enforced by network" badge.
 	 */
@@ -92,7 +92,7 @@ class ReportedIP_Hive_Option_Routing_Extended_Multisite_Test extends WP_UnitTest
 	}
 
 	/**
-	 * `get_site_enforce_roles_extra()` returns the local extras only — no
+	 * `get_site_enforce_roles_extra()` returns the local extras only, no
 	 * leakage from the network list.
 	 */
 	public function test_get_site_enforce_roles_extra_returns_wp_options_only() {
@@ -173,7 +173,7 @@ class ReportedIP_Hive_Option_Routing_Extended_Multisite_Test extends WP_UnitTest
 
 	/**
 	 * `Two_Factor_Frontend::resolve_slugs()` reads through Option_Routing now
-	 * — switching the override on a sub-site changes the resolved challenge
+	 * - switching the override on a sub-site changes the resolved challenge
 	 * slug as seen by the frontend module.
 	 */
 	public function test_two_factor_frontend_get_challenge_slug_uses_routing() {
@@ -228,7 +228,7 @@ class ReportedIP_Hive_Option_Routing_Extended_Multisite_Test extends WP_UnitTest
 
 	/**
 	 * Network-admin save handler routes form submissions through Option_Routing
-	 * and DOES NOT pre-sanitize — that prevents the double-sanitize regression
+	 * and DOES NOT pre-sanitize, that prevents the double-sanitize regression
 	 * where complex array sanitizers (enforce_roles, allowed_methods) collapsed
 	 * to `'[]'` because their callback was applied twice.
 	 *
@@ -268,7 +268,7 @@ class ReportedIP_Hive_Option_Routing_Extended_Multisite_Test extends WP_UnitTest
 		$_POST['reportedip_hive_2fa_enforce_roles']   = array( 'editor', 'author' );
 		$_REQUEST['reportedip_hive_2fa_enforce_roles'] = $_POST['reportedip_hive_2fa_enforce_roles'];
 
-		// Suppress the wp_safe_redirect at the end of handle_network_admin_save() —
+		// Suppress the wp_safe_redirect at the end of handle_network_admin_save().
 		// the test harness has already emitted output, so the redirect would error out.
 		add_filter(
 			'wp_redirect',

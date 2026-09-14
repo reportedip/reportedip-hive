@@ -4,7 +4,7 @@
  *
  * Defines plugin and WordPress runtime constants that PHPStan's static scan
  * cannot resolve from `define()` calls in the main plugin file. Values are
- * sentinels — only the symbol existence matters for analysis.
+ * sentinels, only the symbol existence matters for analysis.
  *
  * Lives outside the plugin folder so the WordPress.org Plugin Check does not
  * scan it as production code. Loaded by PHPStan via phpstan.neon's

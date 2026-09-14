@@ -3,7 +3,7 @@
  * Sends factual mail-relay / SMS-relay quota notifications to site
  * administrators when the monthly allowance crosses 80 % or reaches 100 %.
  *
- * Required by PRICING-PLAN.md §8 ("Anti-Abuse-Regeln") — the operator must
+ * Required by PRICING-PLAN.md §8 ("Anti-Abuse-Regeln"), the operator must
  * know about an impending cap before transactional 2FA traffic starts
  * silently bouncing to {@see wp_mail()} (mail) or rejecting (SMS).
  *
@@ -15,7 +15,7 @@
  * period (`period_start` change).
  *
  * This class is deliberately separate from the Promo_Manager frequency
- * cap — quota notifications are operational service info, not marketing.
+ * cap, quota notifications are operational service info, not marketing.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -60,7 +60,7 @@ class ReportedIP_Hive_Quota_Notifier {
 
 	/**
 	 * Minimum seconds between two mails for the same channel + stage within
-	 * the same billing period. 30 days — long enough that a flapping ratio
+	 * the same billing period. 30 days, long enough that a flapping ratio
 	 * cannot spam, short enough that a forgotten state still gets a nudge.
 	 */
 	const COOLDOWN_SECS = 2592000;
@@ -251,7 +251,7 @@ class ReportedIP_Hive_Quota_Notifier {
 			$fallback_hint = __( 'Mails will keep going out through your local wp_mail() until the relay resumes.', 'reportedip-hive' );
 		} else {
 			$channel_label = __( 'SMS relay', 'reportedip-hive' );
-			$fallback_hint = __( 'SMS-based 2FA codes are paused — users can still authenticate with TOTP, Email or a Passkey.', 'reportedip-hive' );
+			$fallback_hint = __( 'SMS-based 2FA codes are paused, users can still authenticate with TOTP, Email or a Passkey.', 'reportedip-hive' );
 		}
 
 		if ( self::STAGE_WARN === $stage ) {
@@ -269,7 +269,7 @@ class ReportedIP_Hive_Quota_Notifier {
 				$limit,
 				$reset_str
 			);
-			$body = __( 'No action required — this is an early heads-up so you can buy a bundle in your customer portal if the rest of the month tends to be busier.', 'reportedip-hive' );
+			$body = __( 'No action required, this is an early heads-up so you can buy a bundle in your customer portal if the rest of the month tends to be busier.', 'reportedip-hive' );
 		} else {
 			$subject = sprintf(
 				/* translators: 1: site name, 2: channel label */

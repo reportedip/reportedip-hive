@@ -5,7 +5,7 @@
  * A short list of the most common throwaway-mail domains. The PRO+ ruleset from
  * the API delivers the live, frequently-updated list (thousands of domains,
  * allowlist-cleaned) plus the privacy-relay classification. Privacy relays
- * (Apple Hide My Email, Firefox Relay, …) are intentionally NOT listed here —
+ * (Apple Hide My Email, Firefox Relay, ...) are intentionally NOT listed here.
  * they are legitimate and must not be blocked. See
  * {@see ReportedIP_Hive_Rule_Sync}.
  *

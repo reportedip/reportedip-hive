@@ -6,7 +6,7 @@
  * auto-submit racing an Enter press or a "Verify" click) stranded users on
  * the "session expired" page even though the winning request had already
  * verified the code, set the auth cookie and logged "2FA verification
- * successful" — the browser discards the winning response in favour of the
+ * successful", the browser discards the winning response in favour of the
  * duplicate navigation, which finds the login nonce consumed.
  *
  * The fix has three halves and this test pins all of them:
@@ -17,7 +17,7 @@
  *   2. handle_2fa_challenge() redirects already-authenticated visitors away
  *      from the challenge instead of rendering the expired page.
  *   3. two-factor-login.js never calls the guard-bypassing `form.submit()`
- *      directly — every submit funnels through the double-submit guard.
+ *      directly, every submit funnels through the double-submit guard.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -61,7 +61,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertMatchesRegularExpression(
 				'/mark_login_nonce_consumed\([^;]*\);\s*\n\s*\$this->cleanup_login_nonce\(\);/',
 				$source,
-				'The consumed marker must be written BEFORE cleanup_login_nonce() deletes the nonce transient — afterwards the cookie token hash is the only remaining link to the duplicate request.'
+				'The consumed marker must be written BEFORE cleanup_login_nonce() deletes the nonce transient, afterwards the cookie token hash is the only remaining link to the duplicate request.'
 			);
 		}
 
@@ -79,7 +79,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertMatchesRegularExpression(
 				'/function maybe_replay_consumed_nonce\(\).*?ReportedIP_Hive::get_client_ip\(\)\s*!==\s*\$consumed\[\'ip\'\]/s',
 				$source,
-				'The replay path must enforce the same IP binding as validate_login_nonce() — the marker mirrors a just-issued session and must not be portable across clients.'
+				'The replay path must enforce the same IP binding as validate_login_nonce(), the marker mirrors a just-issued session and must not be portable across clients.'
 			);
 		}
 
@@ -121,13 +121,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertMatchesRegularExpression(
 				'/if\s*\(\s*submitting\s*\)\s*\{\s*\n\s*e\.preventDefault\(\);/',
 				$js,
-				'A second submit while one is in flight must be prevented — this is the duplicate POST that used to consume the nonce.'
+				'A second submit while one is in flight must be prevented, this is the duplicate POST that used to consume the nonce.'
 			);
 			$guarded = preg_replace( '/function submitFormOnce\(.*?\n\t\}/s', '', $js );
 			$this->assertStringNotContainsString(
 				'form.submit()',
 				(string) $guarded,
-				'No call site outside submitFormOnce() may use form.submit() — it bypasses the submit event and with it the guard.'
+				'No call site outside submitFormOnce() may use form.submit(), it bypasses the submit event and with it the guard.'
 			);
 		}
 	}

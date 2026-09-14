@@ -10,7 +10,7 @@
  *    longer permitted still signed the user in as long as its secret had been
  *    left behind. The REST and password-reset surfaces always gated this.
  *  - The enrolment endpoints accepted any method, so a flag could be written
- *    for a disallowed one — going live the moment an admin re-enabled it —
+ *    for a disallowed one, going live the moment an admin re-enabled it.
  *    and a disallowed SMS or email enrolment burned managed relay quota on
  *    the way to being rejected.
  *
@@ -80,7 +80,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'METHOD_RECOVERY',
 				$body,
-				'Recovery codes must survive the guard — they are the fallback when no factor works'
+				'Recovery codes must survive the guard, they are the fallback when no factor works'
 			);
 		}
 

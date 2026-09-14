@@ -8,7 +8,7 @@
  * configuration out without retyping every field.
  *
  * Sensitive credentials (API key, encrypted SMS provider config) are
- * excluded by default — there is an explicit opt-in checkbox guarded by
+ * excluded by default, there is an explicit opt-in checkbox guarded by
  * a warning. Per-user 2FA secrets (TOTP, WebAuthn, SMS number) are never
  * exported regardless of the toggle, because they are encrypted with a
  * site-specific key and would be useless on the target site anyway.
@@ -117,7 +117,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 
 		$sections['ip_lists'] = array(
 			'label'       => __( 'IP lists', 'reportedip-hive' ),
-			'description' => __( 'Whitelist + blocked IPs (manual entries only — runtime-blocked IPs stay site-local).', 'reportedip-hive' ),
+			'description' => __( 'Whitelist + blocked IPs (manual entries only, runtime-blocked IPs stay site-local).', 'reportedip-hive' ),
 			'options'     => array(),
 		);
 
@@ -221,7 +221,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 								<input type="checkbox" name="include_secrets" value="1" />
 								<span>
 									<strong><?php esc_html_e( 'Include credentials', 'reportedip-hive' ); ?></strong>
-									<span class="rip-help-text"><?php esc_html_e( 'Adds the API key and encrypted SMS-provider config. Treat the resulting file like a password — do not share or email it.', 'reportedip-hive' ); ?></span>
+									<span class="rip-help-text"><?php esc_html_e( 'Adds the API key and encrypted SMS-provider config. Treat the resulting file like a password, do not share or email it.', 'reportedip-hive' ); ?></span>
 								</span>
 							</label>
 

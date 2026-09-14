@@ -1,6 +1,6 @@
 <?php
 /**
- * Uploads `.htaccess` writer — refuses requests for executable file types
+ * Uploads `.htaccess` writer, refuses requests for executable file types
  * inside the uploads directory. A dropped web shell is the standard second
  * stage after an arbitrary-file-upload bug; the directory holds media, never
  * code, so denying the request outright costs nothing.
@@ -36,7 +36,7 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 
 	/**
 	 * Option key owning this block. Mirrors
-	 * `ReportedIP_Hive_Attack_Surface::OPT_UPLOADS_PHP` — the writer stays
+	 * `ReportedIP_Hive_Attack_Surface::OPT_UPLOADS_PHP`, the writer stays
 	 * loadable without the runtime class (activation, uninstall).
 	 */
 	const OPTION = 'reportedip_hive_block_uploads_php';
@@ -119,7 +119,7 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 	 * On a modern network every sub-site stores below
 	 * `wp-content/uploads/sites/<id>/`, so one file at the main-site basedir
 	 * covers the whole network through directory inheritance. Legacy
-	 * `blogs.dir` networks are not covered — the UI warns about that.
+	 * `blogs.dir` networks are not covered, the UI warns about that.
 	 *
 	 * @return string Absolute path without a trailing slash, or empty string.
 	 * @since  2.1.51
@@ -207,7 +207,7 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 	 * @since  2.1.51
 	 */
 	public static function htaccess_snippet() {
-		$lines = array( '# ReportedIP Hive — no PHP execution in uploads (Apache)' );
+		$lines = array( '# ReportedIP Hive: no PHP execution in uploads (Apache)' );
 		$lines = array_merge( $lines, self::htaccess_block_lines() );
 		return implode( "\n", $lines ) . "\n";
 	}
@@ -220,7 +220,7 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 	 */
 	public static function nginx_snippet() {
 		$lines   = array();
-		$lines[] = '# ReportedIP Hive — no PHP execution in uploads (nginx)';
+		$lines[] = '# ReportedIP Hive: no PHP execution in uploads (nginx)';
 		$lines[] = '# Place this ABOVE your "location ~ \.php$" block.';
 		$lines[] = 'location ~* ^' . self::uploads_url_path() . '/.*\.(' . self::DENIED_EXTENSIONS . ')' . self::EXTENSION_TAIL . ' {';
 		$lines[] = '    deny all;';
@@ -231,7 +231,7 @@ final class ReportedIP_Hive_Uploads_Htaccess_Writer extends ReportedIP_Hive_Htac
 	/**
 	 * Whether the block is actually in force: switched on, on a stack that
 	 * reads `.htaccess`, and physically present in the file. nginx never
-	 * reads as effective — the operator has to paste the snippet there.
+	 * reads as effective, the operator has to paste the snippet there.
 	 *
 	 * @return bool
 	 * @since  2.1.51

@@ -115,7 +115,7 @@ if ( $grace_deadline > 0 ) {
 		<?php elseif ( $last_skip ) : ?>
 			<div class="rip-alert rip-alert--warning" role="alert" style="margin-bottom: var(--rip-space-6);">
 				<strong><?php esc_html_e( 'Final skip.', 'reportedip-hive' ); ?></strong>
-				<?php esc_html_e( 'You must set up 2FA on your next sign-in — you will not be able to skip again.', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'You must set up 2FA on your next sign-in, you will not be able to skip again.', 'reportedip-hive' ); ?>
 			</div>
 		<?php endif; ?>
 
@@ -141,7 +141,7 @@ if ( $grace_deadline > 0 ) {
 			<?php endforeach; ?>
 		</div>
 
-		<!-- ==================== STEP 1 – Welcome ==================== -->
+		<!-- ==================== STEP 1:Welcome ==================== -->
 		<section class="rip-wizard__step-content rip-2fa-step" data-step="1" aria-labelledby="rip-2fa-step1-title">
 			<h1 id="rip-2fa-step1-title" class="rip-wizard__title">
 				<?php
@@ -163,14 +163,14 @@ if ( $grace_deadline > 0 ) {
 			</div>
 		</section>
 
-		<!-- ==================== STEP 2 – Choose Method ==================== -->
+		<!-- ==================== STEP 2:Choose Method ==================== -->
 		<section class="rip-wizard__step-content rip-2fa-step" data-step="2" hidden aria-labelledby="rip-2fa-step2-title">
 			<h1 id="rip-2fa-step2-title" class="rip-wizard__title"><?php esc_html_e( 'Choose your method', 'reportedip-hive' ); ?></h1>
 			<p class="rip-wizard__subtitle">
 				<?php esc_html_e( 'Which second factor would you like to use when you sign in?', 'reportedip-hive' ); ?>
 			</p>
 
-			<div class="rip-wizard__mode-cards rip-2fa-methods" data-hint="<?php esc_attr_e( 'Multi-select — click one or more cards', 'reportedip-hive' ); ?>">
+			<div class="rip-wizard__mode-cards rip-2fa-methods" data-hint="<?php esc_attr_e( 'Multi-select, click one or more cards', 'reportedip-hive' ); ?>">
 				<?php if ( $method_webauthn_ok ) : ?>
 					<label class="rip-mode-card rip-mode-card--recommended" data-method="webauthn">
 						<input type="checkbox" class="rip-2fa-method-check" value="webauthn" hidden>
@@ -235,7 +235,7 @@ if ( $grace_deadline > 0 ) {
 						</div>
 						<h3 class="rip-mode-card__title"><?php esc_html_e( 'SMS (worldwide)', 'reportedip-hive' ); ?></h3>
 						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Code by SMS via a GDPR-compliant provider. Best as a backup — SIM-swapping risk.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'Code by SMS via a GDPR-compliant provider. Best as a backup, SIM-swapping risk.', 'reportedip-hive' ); ?>
 						</p>
 					</label>
 				<?php endif; ?>
@@ -253,7 +253,7 @@ if ( $grace_deadline > 0 ) {
 			</div>
 		</section>
 
-		<!-- ==================== STEP 3 – Setup per Method ==================== -->
+		<!-- ==================== STEP 3:Setup per Method ==================== -->
 		<section class="rip-wizard__step-content rip-2fa-step" data-step="3" hidden aria-labelledby="rip-2fa-step3-title">
 			<h1 id="rip-2fa-step3-title" class="rip-wizard__title" data-default-title="<?php esc_attr_e( 'Set up methods', 'reportedip-hive' ); ?>" data-done-title="<?php esc_attr_e( 'All methods active', 'reportedip-hive' ); ?>">
 				<?php esc_html_e( 'Set up methods', 'reportedip-hive' ); ?>
@@ -377,7 +377,7 @@ if ( $grace_deadline > 0 ) {
 					</svg>
 					<div>
 						<strong><?php esc_html_e( 'Privacy notice', 'reportedip-hive' ); ?></strong>
-						<p><?php esc_html_e( 'Phone number stored encrypted, delivered worldwide via our managed relay. Use SMS as a backup — SIM-swapping risk.', 'reportedip-hive' ); ?></p>
+						<p><?php esc_html_e( 'Phone number stored encrypted, delivered worldwide via our managed relay. Use SMS as a backup, SIM-swapping risk.', 'reportedip-hive' ); ?></p>
 					</div>
 				</div>
 
@@ -431,7 +431,7 @@ if ( $grace_deadline > 0 ) {
 			</div>
 		</section>
 
-		<!-- ==================== STEP 4 – Recovery Codes ==================== -->
+		<!-- ==================== STEP 4:Recovery Codes ==================== -->
 		<section class="rip-wizard__step-content rip-2fa-step" data-step="4" hidden aria-labelledby="rip-2fa-step4-title">
 			<h1 id="rip-2fa-step4-title" class="rip-wizard__title"><?php esc_html_e( 'Save recovery codes', 'reportedip-hive' ); ?></h1>
 			<p class="rip-wizard__subtitle">
@@ -446,7 +446,7 @@ if ( $grace_deadline > 0 ) {
 				</svg>
 				<div>
 					<strong><?php esc_html_e( 'These codes are your fallback.', 'reportedip-hive' ); ?></strong>
-					<p><?php esc_html_e( 'Each code is one-time use. Store them safely — separate from your WordPress password.', 'reportedip-hive' ); ?></p>
+					<p><?php esc_html_e( 'Each code is one-time use. Store them safely, separate from your WordPress password.', 'reportedip-hive' ); ?></p>
 				</div>
 			</div>
 
@@ -484,7 +484,7 @@ if ( $grace_deadline > 0 ) {
 			</div>
 		</section>
 
-		<!-- ==================== STEP 5 – Done ==================== -->
+		<!-- ==================== STEP 5:Done ==================== -->
 		<section class="rip-wizard__step-content rip-2fa-step" data-step="5" hidden aria-labelledby="rip-2fa-step5-title">
 			<div class="rip-wizard__complete rip-2fa-celebrate">
 				<div class="rip-2fa-celebrate__badge" aria-hidden="true">
@@ -501,7 +501,7 @@ if ( $grace_deadline > 0 ) {
 					</svg>
 				</div>
 
-				<h1 id="rip-2fa-step5-title" class="rip-wizard__title"><?php esc_html_e( 'Done — your account is now doubly secure', 'reportedip-hive' ); ?></h1>
+				<h1 id="rip-2fa-step5-title" class="rip-wizard__title"><?php esc_html_e( 'Done, your account is now doubly secure', 'reportedip-hive' ); ?></h1>
 				<p class="rip-wizard__subtitle">
 					<?php esc_html_e( 'You will be asked for the second factor on your next sign-in.', 'reportedip-hive' ); ?>
 				</p>
@@ -517,7 +517,7 @@ if ( $grace_deadline > 0 ) {
 					<?php
 					printf(
 						/* translators: 1: opening link tag, 2: closing link tag */
-						esc_html__( 'This page is protected by %1$sReportedIP%2$s — Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
+						esc_html__( 'This page is protected by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
 						'<a href="https://reportedip.com/" target="_blank" rel="noopener">',
 						'</a>'
 					);

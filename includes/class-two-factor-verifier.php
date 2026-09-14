@@ -8,7 +8,7 @@
  * this class was extracted the two callers carried bit-for-bit identical
  * switch statements, so a fix in one would silently miss the other.
  *
- * Logging is intentionally NOT performed here — each surface logs into its
+ * Logging is intentionally NOT performed here, each surface logs into its
  * own event namespace (`2fa_*` for login, `2fa_reset_*` for reset). Callers
  * may pass an `$on_internal_error` callback that receives a stable reason
  * code (`missing_secret`, `decrypt_failed`, `class_missing`, `unknown_method`)
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class ReportedIP_Hive_Two_Factor_Verifier
  *
- * Stateless helper. All methods are static — there is nothing to remember
+ * Stateless helper. All methods are static, there is nothing to remember
  * between two verifications.
  */
 final class ReportedIP_Hive_Two_Factor_Verifier {
@@ -102,7 +102,7 @@ final class ReportedIP_Hive_Two_Factor_Verifier {
 	 * exactly one place. Wraps secret retrieval + libsodium decryption +
 	 * memory-zeroing around the `Two_Factor_TOTP::verify_code()` call.
 	 *
-	 * The `reportedip_2fa_totp_window` filter clamps to [0, 3] — anything
+	 * The `reportedip_2fa_totp_window` filter clamps to [0, 3], anything
 	 * larger would erode brute-force resistance.
 	 *
 	 * @param int           $user_id           User to verify against.
@@ -159,7 +159,7 @@ final class ReportedIP_Hive_Two_Factor_Verifier {
 
 	/**
 	 * Invoke the caller-supplied internal-error callback, if any. Swallowing
-	 * exceptions here is intentional — verification correctness must never
+	 * exceptions here is intentional, verification correctness must never
 	 * be derailed by a misbehaving logger.
 	 *
 	 * @param callable|null $callback Optional callback.

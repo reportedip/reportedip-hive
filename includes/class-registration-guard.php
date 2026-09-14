@@ -230,7 +230,7 @@ final class ReportedIP_Hive_Registration_Guard {
 	/**
 	 * Repeat a denial under the error codes the signup form renders.
 	 *
-	 * `wp-signup.php` prints exactly three codes — `user_name`, `user_email`
+	 * `wp-signup.php` prints exactly three codes, `user_name`, `user_email`
 	 * and `generic`. A denial that only carries one of this class's own codes
 	 * would hand the visitor the form back with no reason at all, so each
 	 * message is copied onto the code that belongs to the field it is about.
@@ -261,13 +261,13 @@ final class ReportedIP_Hive_Registration_Guard {
 	 * Safety net for programmatic account creation (REST, WooCommerce REST,
 	 * membership plugins, importers) that never reaches a registration form.
 	 * Aborting by returning an empty data set makes core answer with its
-	 * generic `empty_data` error — the friendly wording belongs to the three
+	 * generic `empty_data` error, the friendly wording belongs to the three
 	 * form surfaces above.
 	 *
 	 * The whole pipeline runs: WooCommerce creates the account for a checkout
 	 * without firing `woocommerce_register_post`, so this is the only place a
 	 * rate limit or an allowlist can still refuse it. The one carve-out is the
-	 * second half of a Multisite signup — `wp-activate.php` creates the user
+	 * second half of a Multisite signup, `wp-activate.php` creates the user
 	 * long after the visitor passed the form and from the activation link's
 	 * request, not the registration's.
 	 *
@@ -677,7 +677,7 @@ final class ReportedIP_Hive_Registration_Guard {
 
 	/**
 	 * Apply the e-mail rule list. In `allow` mode an empty effective list
-	 * behaves like `off` — otherwise a plan downgrade that drops every entry
+	 * behaves like `off`, otherwise a plan downgrade that drops every entry
 	 * would silently close registration for everybody.
 	 *
 	 * @param string   $email   Submitted e-mail address.
@@ -932,7 +932,7 @@ final class ReportedIP_Hive_Registration_Guard {
 	}
 
 	/**
-	 * Classify one entry: `/…/` is a regular expression, an entry containing
+	 * Classify one entry: `/.../` is a regular expression, an entry containing
 	 * `*` is a wildcard, everything else is compared literally.
 	 *
 	 * @param string $entry List entry.
@@ -1144,7 +1144,7 @@ final class ReportedIP_Hive_Registration_Guard {
 	/**
 	 * Validate one regular-expression entry, or drop it.
 	 *
-	 * @param string $entry Raw `/…/` entry.
+	 * @param string $entry Raw `/.../` entry.
 	 * @return string The entry, or an empty string when it is unusable.
 	 * @since  2.1.51
 	 */

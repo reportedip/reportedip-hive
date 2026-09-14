@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Nothing is written while `2fa_policies` is unavailable or the 2FA master
  * switch is off: a site that cannot use the triggers must not accumulate
  * movement profiles for its users. The consequence is that the baseline
- * starts when a site upgrades to Professional (or turns 2FA back on) — the
+ * starts when a site upgrades to Professional (or turns 2FA back on), the
  * `new_*` triggers stay quiet until the first sign-in after that has been
  * recorded.
  *
@@ -43,7 +43,7 @@ final class ReportedIP_Hive_Login_Context {
 
 	/**
 	 * Runtime latch: unix timestamp of the first second-factor verification by
-	 * a user who may manage the site. Not a setting — never in the registry,
+	 * a user who may manage the site. Not a setting, never in the registry,
 	 * never exported.
 	 */
 	const OPT_ADMIN_VERIFIED = 'reportedip_hive_2fa_policy_admin_verified';
@@ -78,7 +78,7 @@ final class ReportedIP_Hive_Login_Context {
 	}
 
 	/**
-	 * Every sign-in, verified or not — the only place that records.
+	 * Every sign-in, verified or not, the only place that records.
 	 *
 	 * Both challenge surfaces fire `reportedip_hive_2fa_verified` immediately
 	 * before `wp_login`, so the flag {@see self::on_verified()} left behind is
@@ -88,7 +88,7 @@ final class ReportedIP_Hive_Login_Context {
 	 * and a sign-in from an unfamiliar address would be audited as `success`
 	 * rather than `new_ip`.
 	 *
-	 * @param string        $user_login Login name (unused — hook signature).
+	 * @param string        $user_login Login name (unused, hook signature).
 	 * @param \WP_User|null $user       Authenticated user.
 	 * @return void
 	 * @since  2.1.51
@@ -109,8 +109,8 @@ final class ReportedIP_Hive_Login_Context {
 	 * for them.
 	 *
 	 * @param int    $user_id User id.
-	 * @param string $method  Verified method (unused — hook signature).
-	 * @param string $context Verification surface (unused — hook signature).
+	 * @param string $method  Verified method (unused, hook signature).
+	 * @param string $context Verification surface (unused, hook signature).
 	 * @return void
 	 * @since  2.1.51
 	 */
@@ -232,7 +232,7 @@ final class ReportedIP_Hive_Login_Context {
 	 * The User-Agent is stored as a bare SHA-256 hash: it is only ever
 	 * compared against earlier hashes in the same user row, so a salt would
 	 * add nothing. `country` is empty outside Community mode and for
-	 * addresses the reputation cache has not seen — the `new_country` trigger
+	 * addresses the reputation cache has not seen, the `new_country` trigger
 	 * treats that as "no signal" rather than as a new country.
 	 *
 	 * @return array{ip:string,net:string,ua:string,ua_short:string,country:string}

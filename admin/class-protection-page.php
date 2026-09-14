@@ -572,7 +572,7 @@ class ReportedIP_Hive_Protection_Page {
 		}
 		$notes = array();
 		if ( class_exists( 'ReportedIP_Hive_Login_Context' ) && ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
-			$notes[] = __( 'Triggers for administrators unlock once an administrator has completed one second-factor sign-in on this site.', 'reportedip-hive' );
+			$notes[] = __( 'Triggers for administrators become available once an administrator has completed one second-factor sign-in on this site.', 'reportedip-hive' );
 		}
 		if ( 'reportedip_hive_2fa_policy_new_country' === $key && class_exists( 'ReportedIP_Hive_Mode_Manager' ) && empty( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'api_reputation_check' )['available'] ) ) {
 			$notes[] = __( 'Country data comes from the Community Network. In Local Shield the country trigger never fires.', 'reportedip-hive' );

@@ -244,8 +244,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * A deferred writer — the pre-WordPress WAF drop-in, whose hits are
-		 * imported minutes after the request — must be able to stamp the row
+		 * A deferred writer, the pre-WordPress WAF drop-in, whose hits are
+		 * imported minutes after the request, must be able to stamp the row
 		 * with the UTC time the hit actually happened, or every time window and
 		 * "X ago" reading would describe the import instead of the attack.
 		 */
@@ -313,7 +313,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * A sub-hour block must be stamped with a UTC blocked_until that lies in
-		 * the future relative to the UTC clock — the value is_blocked() reads.
+		 * the future relative to the UTC clock, the value is_blocked() reads.
 		 */
 		public function test_block_for_minutes_writes_future_utc(): void {
 			$db = new \ReportedIP_Hive_Database();

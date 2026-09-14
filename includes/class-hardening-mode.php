@@ -1,6 +1,6 @@
 <?php
 /**
- * Hardening Mode — temporary site-wide threshold tightening on coordinated attack.
+ * Hardening Mode, temporary site-wide threshold tightening on coordinated attack.
  *
  * Activated by {@see ReportedIP_Hive_Security_Monitor::check_coordinated_attacks()}
  * (and the new realtime debounce in `check_failed_login_threshold()`) when a
@@ -10,7 +10,7 @@
  * - failed_login_threshold (default 5 / 15 min) → hardening default 2 / 5 min
  * - block_threshold (Reputation, default 75 %) → hardening default 60 %
  *
- * The clamp is always {@code min( admin, hardening )} — administrators who have
+ * The clamp is always {@code min( admin, hardening )}, administrators who have
  * configured stricter thresholds manually do not get them softened during
  * hardening.
  *
@@ -351,7 +351,7 @@ final class ReportedIP_Hive_Hardening_Mode {
 	 *  - When the candidate `time_window` has a live marker AND the candidate
 	 *    is not strictly more severe than what the marker remembers, return
 	 *    false. This is what stops the hourly cron sweep from re-emitting
-	 *    `hardening_mode_activated` for the same detection window — even after
+	 *    `hardening_mode_activated` for the same detection window, even after
 	 *    the hardening window expired naturally and `TRANSIENT_REASON` was
 	 *    deleted.
 	 *  - When the candidate is strictly more severe than the comparison
@@ -480,7 +480,7 @@ final class ReportedIP_Hive_Hardening_Mode {
 	 * Build the per-time-window suppression transient key (state marker).
 	 *
 	 * @param string $time_window Server-formatted DATE_FORMAT(last_attempt, '%Y-%m-%d %H:%i') value.
-	 * @return string Empty string when no usable window — caller must skip the marker write/read.
+	 * @return string Empty string when no usable window, caller must skip the marker write/read.
 	 * @since 2.0.16
 	 */
 	public static function window_marker_key( $time_window ) {
@@ -501,7 +501,7 @@ final class ReportedIP_Hive_Hardening_Mode {
 	 * lookback.
 	 *
 	 * @param string $time_window Server-formatted DATE_FORMAT(last_attempt, '%Y-%m-%d %H:%i') value.
-	 * @return string Empty string when no usable window — caller must skip the marker write/read.
+	 * @return string Empty string when no usable window, caller must skip the marker write/read.
 	 * @since 2.0.16
 	 */
 	public static function log_marker_key( $time_window ) {

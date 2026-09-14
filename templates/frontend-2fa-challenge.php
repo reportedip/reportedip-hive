@@ -1,6 +1,6 @@
 <?php
 /**
- * Two-Factor Authentication Challenge Template — Theme-frame variant.
+ * Two-Factor Authentication Challenge Template, Theme-frame variant.
  *
  * Rendered by {@see ReportedIP_Hive_Two_Factor::render_frontend_challenge_page()}
  * inside the active theme via `get_header()` / `get_footer()`. Used when the
@@ -10,7 +10,7 @@
  *
  * The HTML is intentionally close to `templates/two-factor-challenge.php`
  * so behavior parity is obvious. The differences are scoped:
- *   - no `login_header()` / `login_footer()` — the wrapper supplies the
+ *   - no `login_header()` / `login_footer()`, the wrapper supplies the
  *     theme frame.
  *   - all action URLs target the dedicated frontend slug rather than
  *     `wp-login.php?action=reportedip_2fa`.

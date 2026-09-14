@@ -128,7 +128,7 @@ class ReportedIP_Hive_Mode_Manager {
 
 	/**
 	 * Mirror the `set_mode()` side effects when the option is updated through
-	 * the WordPress Settings API or any other `update_option()` caller — cache
+	 * the WordPress Settings API or any other `update_option()` caller, cache
 	 * reset, `reportedip_hive_mode_changed` action, audit-log entry. Listens
 	 * on `update_option_<OPTION_MODE>`.
 	 *
@@ -176,7 +176,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * Ensure the feature matrix is initialised.
 	 *
 	 * Carries ONLY machine-readable gating fields (local/community/requires_tier).
-	 * The translated label/description pairs live in {@see feature_texts()} —
+	 * The translated label/description pairs live in {@see feature_texts()}.
 	 * building them here meant 50 `__()` calls on the first `feature_status()`
 	 * of every request, which on localised sites triggered the just-in-time
 	 * load of the full .mo file on anonymous front-end requests (measured at
@@ -361,11 +361,11 @@ class ReportedIP_Hive_Mode_Manager {
 			'advanced_analytics'           => array( __( 'Advanced Analytics', 'reportedip-hive' ), __( 'Access advanced threat analytics and trends', 'reportedip-hive' ) ),
 			'threat_intelligence'          => array( __( 'Threat Intelligence', 'reportedip-hive' ), __( 'Receive threat intelligence from the community', 'reportedip-hive' ) ),
 			'coordinated_attack_detection' => array( __( 'Coordinated Attack Detection', 'reportedip-hive' ), __( 'Detect coordinated attacks across the network', 'reportedip-hive' ) ),
-			'mail_relay_via_api'           => array( __( 'Mail Relay via reportedip.com', 'reportedip-hive' ), __( 'Send 2FA mails through our SMTP for guaranteed deliverability — no own SMTP setup needed.', 'reportedip-hive' ) ),
-			'sms_relay_via_api'            => array( __( 'SMS Relay via reportedip.com', 'reportedip-hive' ), __( 'Send 2FA SMS via our managed EU gateway — included with Professional and Business.', 'reportedip-hive' ) ),
-			'frontend_2fa'                 => array( __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ), __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login — kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ) ),
+			'mail_relay_via_api'           => array( __( 'Mail Relay via reportedip.com', 'reportedip-hive' ), __( 'Send 2FA mails through our SMTP for guaranteed deliverability, no own SMTP setup needed.', 'reportedip-hive' ) ),
+			'sms_relay_via_api'            => array( __( 'SMS Relay via reportedip.com', 'reportedip-hive' ), __( 'Send 2FA SMS via our managed EU gateway, included with Professional and Business.', 'reportedip-hive' ) ),
+			'frontend_2fa'                 => array( __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ), __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login, kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ) ),
 			'webauthn_advanced'            => array( __( 'Advanced Security Keys', 'reportedip-hive' ), __( 'Multiple security keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts. One security key or passkey per account stays free.', 'reportedip-hive' ) ),
-			'decoy_pathblock'              => array( __( 'Decoy Path Block', 'reportedip-hive' ), __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...) — distinct from the N-of-Y scan-detector.', 'reportedip-hive' ) ),
+			'decoy_pathblock'              => array( __( 'Decoy Path Block', 'reportedip-hive' ), __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...), distinct from the N-of-Y scan-detector.', 'reportedip-hive' ) ),
 			'hardening_mode'               => array( __( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ), __( 'Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected.', 'reportedip-hive' ) ),
 			'tor_blocking'                 => array( __( 'Tor Exit Node Blocking', 'reportedip-hive' ), __( 'Block login attempts from known Tor exit nodes using a signed exit-node list that is refreshed twice a day, plus the live community check.', 'reportedip-hive' ) ),
 			'waf'                          => array( __( 'Web Application Firewall', 'reportedip-hive' ), __( 'Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync.', 'reportedip-hive' ) ),
@@ -385,7 +385,7 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
-	 * Label/description for one feature — empty strings on the front end.
+	 * Label/description for one feature, empty strings on the front end.
 	 *
 	 * Availability consumers on the hot path (WAF paranoia cap, bot verifier,
 	 * security headers, frontend 2FA) only read `available`/`reason`; loading
@@ -465,7 +465,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * Never performs a live `/relay-quota` call: this method runs on hot,
 	 * per-request paths (WAF, security headers, bot verification via
 	 * {@see feature_status()}), where a synchronous HTTP round-trip would both
-	 * delay the response and — on installs whose cache cannot be populated —
+	 * delay the response and, on installs whose cache cannot be populated.
 	 * stampede the service. Live refresh is owned exclusively by the six-hour
 	 * cron and the API-key-save hook. Delegates to {@see get_cached_tier_or_default()}.
 	 *
@@ -667,10 +667,10 @@ class ReportedIP_Hive_Mode_Manager {
 	 * Determine the gating status for a feature against the current mode and tier.
 	 *
 	 * Reason codes:
-	 *  - 'ok'      — feature is available
-	 *  - 'mode'    — current operation mode does not include the feature
-	 *  - 'tier'    — current tier is below the required minimum tier
-	 *  - 'unknown' — feature key is not present in the matrix
+	 *  - 'ok'     , feature is available
+	 *  - 'mode'   , current operation mode does not include the feature
+	 *  - 'tier'   , current tier is below the required minimum tier
+	 *  - 'unknown', feature key is not present in the matrix
 	 *
 	 * @param string $feature Feature key from the feature matrix.
 	 * @return array{available:bool,reason:string,min_tier:?string,mode_required:?string,label:string,description:string}
@@ -763,7 +763,7 @@ class ReportedIP_Hive_Mode_Manager {
 				'key'         => 'contributor',
 				'label'       => __( 'Contributor', 'reportedip-hive' ),
 				'short_label' => __( 'Contrib.', 'reportedip-hive' ),
-				'description' => __( 'Honeypot operator — community contributor.', 'reportedip-hive' ),
+				'description' => __( 'Honeypot operator, community contributor.', 'reportedip-hive' ),
 				'icon'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-5"/></svg>',
 				'badge_class' => 'rip-tier-badge--contributor',
 				'color'       => '#818CF8',
@@ -781,7 +781,7 @@ class ReportedIP_Hive_Mode_Manager {
 				'key'         => 'business',
 				'label'       => __( 'Business', 'reportedip-hive' ),
 				'short_label' => __( 'Business', 'reportedip-hive' ),
-				'description' => __( 'Agency-grade: 15 domains per licence (bookable x2–x20), whitelabel, WooCommerce, full WP-CLI.', 'reportedip-hive' ),
+				'description' => __( 'Agency-grade: 15 domains per licence (bookable x2, x20), whitelabel, WooCommerce, full WP-CLI.', 'reportedip-hive' ),
 				'icon'        => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>',
 				'badge_class' => 'rip-tier-badge--business',
 				'color'       => '#7C3AED',
@@ -1014,7 +1014,7 @@ class ReportedIP_Hive_Mode_Manager {
 	/**
 	 * Site-transient prefix that stores the last cap-hit for a relay channel
 	 * ('mail' or 'sms'). Site-transient (network-wide on Multisite) because the
-	 * cap is account-wide at reportedip.com — every sub-site needs to see the
+	 * cap is account-wide at reportedip.com, every sub-site needs to see the
 	 * same state, not just whichever site happened to trigger the 402.
 	 */
 	const CAP_STATE_TRANSIENT_PREFIX = 'reportedip_hive_relay_cap_state_';
@@ -1179,9 +1179,9 @@ class ReportedIP_Hive_Mode_Manager {
 	 *
 	 * Lookup order (most-fresh to most-durable):
 	 *   1. per-request memo (`$cached_tier`)
-	 *   2. `reportedip_hive_api_status` transient — `userRole` (5 min)
-	 *   3. `reportedip_hive_relay_quota` transient — `tier` (12 h)
-	 *   4. `reportedip_hive_known_tier` option — durable baseline that survives
+	 *   2. `reportedip_hive_api_status` transient, `userRole` (5 min)
+	 *   3. `reportedip_hive_relay_quota` transient, `tier` (12 h)
+	 *   4. `reportedip_hive_known_tier` option, durable baseline that survives
 	 *      relay-mail/sms cache busting and the gap between six-hour cron runs,
 	 *      so a paid site is never mis-read as `free` mid-window
 	 *   5. `free`
@@ -1294,7 +1294,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * submissions are temporarily silent.
 	 *
 	 * Short-circuits before consulting the tier-cap helper when none of the
-	 * bucket counters has ticked this hour — the snapshot would otherwise
+	 * bucket counters has ticked this hour, the snapshot would otherwise
 	 * trigger a `get_current_tier()` lookup that can fall through to a live
 	 * `/relay-quota` call on installs without a cached tier (30 s timeout
 	 * per admin page load).

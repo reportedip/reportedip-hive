@@ -9,7 +9,7 @@
  * DNS-free CIDR match against the crawler's published IP ranges, then a
  * forward-confirmed reverse-DNS (FCrDNS) fallback for crawlers without
  * published ranges. A genuine crawler is never blocked; a spoofer is logged
- * and — only when the operator opts into it — rejected. The default action is
+ * and, only when the operator opts into it, rejected. The default action is
  * `flag` (log only), so the sensor is SEO-safe out of the box.
  *
  * @package   ReportedIP_Hive
@@ -206,14 +206,14 @@ class ReportedIP_Hive_Bot_Verifier {
 	}
 
 	/**
-	 * Whether a claimed crawler can be checked at all — the precondition for
+	 * Whether a claimed crawler can be checked at all, the precondition for
 	 * granting any exemption.
 	 *
 	 * A user-agent token only earns privileges when the ruleset carries a rule
 	 * for it *and* that rule ships at least one verification signal (an FCrDNS
 	 * domain suffix or an official IP range). Without a signal the verdict can
 	 * never be better than `unknown`, so an exemption would rest on the
-	 * user-agent string alone — exactly the free pass that let spoofed
+	 * user-agent string alone, exactly the free pass that let spoofed
 	 * `GPTBot` / `Amazonbot` / `FacebookBot` requests probe `/.env` without
 	 * ever hitting the block ladder.
 	 *
@@ -279,7 +279,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	}
 
 	/**
-	 * Whether the IP falls inside any crawler's published official ranges —
+	 * Whether the IP falls inside any crawler's published official ranges.
 	 * Stage A only, no DNS ever. This is the render-fleet catch: Applebot and
 	 * Google render pages with browser-like user-agents from their official
 	 * ranges, so the IP alone must be able to earn the exemption. The result
@@ -360,14 +360,14 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * Classify a claimed crawler as `verified` or `fake`. Pure: the DNS lookups
 	 * are injectable so the FCrDNS fallback is testable without real DNS.
 	 *
-	 * Stage A — if the rule carries official IP ranges, a CIDR match is decisive
-	 * (in-range = verified, out-of-range = fake) and no DNS is touched. Stage B —
+	 * Stage A, if the rule carries official IP ranges, a CIDR match is decisive
+	 * (in-range = verified, out-of-range = fake) and no DNS is touched. Stage B.
 	 * for range-less crawlers, the PTR record must resolve to one of the rule's
 	 * valid domain suffixes and forward-confirm back to the same IP.
 	 *
 	 * The forward confirmation compares addresses by their packed binary form, so
 	 * it works for IPv6 (where text notations differ but the address is the same)
-	 * and the default resolver looks up both A and AAAA records — `gethostbyname()`
+	 * and the default resolver looks up both A and AAAA records, `gethostbyname()`
 	 * only ever returned IPv4, which silently failed every IPv6 crawler.
 	 *
 	 * @param array<string,mixed> $bot     Matched bot rule (`ranges`, `domains`).
@@ -382,7 +382,7 @@ class ReportedIP_Hive_Bot_Verifier {
 		$domains = isset( $bot['domains'] ) && is_array( $bot['domains'] ) ? $bot['domains'] : array();
 
 		/*
-		 * Stage A — an official IP-range match is a decisive positive and touches
+		 * Stage A, an official IP-range match is a decisive positive and touches
 		 * no DNS.
 		 */
 		foreach ( $ranges as $cidr ) {
@@ -414,8 +414,8 @@ class ReportedIP_Hive_Bot_Verifier {
 
 		$host = call_user_func( $ptr, $ip );
 		/*
-		 * A failed PTR lookup — gethostbyaddr() returns the IP unchanged on
-		 * failure — is a DNS problem, NOT proof of a spoofer. Stay 'unknown' so a
+		 * A failed PTR lookup, gethostbyaddr() returns the IP unchanged on
+		 * failure, is a DNS problem, NOT proof of a spoofer. Stay 'unknown' so a
 		 * genuine crawler on a host with flaky or rate-limited reverse DNS is
 		 * never flagged (the old code returned 'fake' here and mislabelled real
 		 * crawlers whenever the server's resolver hiccuped).
@@ -438,7 +438,7 @@ class ReportedIP_Hive_Bot_Verifier {
 			}
 		}
 		/*
-		 * The PTR resolved to a foreign domain — this is a confirmed spoofer.
+		 * The PTR resolved to a foreign domain, this is a confirmed spoofer.
 		 */
 		if ( ! $suffix_ok ) {
 			$reason = 'ptr_foreign_domain:' . substr( $host, 0, 80 );
@@ -447,7 +447,7 @@ class ReportedIP_Hive_Bot_Verifier {
 
 		$resolved = call_user_func( $forward, $host );
 		/*
-		 * Right PTR suffix but forward DNS is unavailable — cannot confirm or
+		 * Right PTR suffix but forward DNS is unavailable, cannot confirm or
 		 * deny, so stay 'unknown' rather than flag a probably-genuine crawler.
 		 */
 		if ( empty( $resolved ) ) {
@@ -463,7 +463,7 @@ class ReportedIP_Hive_Bot_Verifier {
 			}
 		}
 		/*
-		 * Right suffix but no forward address confirms the IP — a forged PTR.
+		 * Right suffix but no forward address confirms the IP, a forged PTR.
 		 */
 		$reason = 'ptr_forward_mismatch:' . substr( $host, 0, 80 );
 		return 'fake';
@@ -474,7 +474,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * text notations (compressed vs expanded, leading zeros) for the same address
 	 * still match and a plain string compare can never reject a valid IPv6 hit.
 	 *
-	 * Public since 2.1.31 — the own-server-IP guard
+	 * Public since 2.1.31:the own-server-IP guard
 	 * ({@see ReportedIP_Hive::is_own_server_ip()}) reuses the same comparison.
 	 *
 	 * @param string $a First address.
@@ -531,7 +531,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 *
 	 * The cache entry carries the classification reason alongside the verdict
 	 * (`verdict|reason`) so a cache hit no longer flattens every explanation to
-	 * "cached" — audit logs that quote {@see last_reason()} stay meaningful for
+	 * "cached", audit logs that quote {@see last_reason()} stay meaningful for
 	 * the full TTL. Entries written before 2.1.40 hold a bare verdict and are
 	 * still honoured.
 	 *

@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   - validate_password_reset (priority 5): GET → redirect to challenge page.
  *     POST without a verified token → WP_Error so the reset form re-renders.
  *   - password_reset (priority 5): re-verify the token, consume it (single
- *     use), and wp_die() if it is missing — last-mile guard against direct
+ *     use), and wp_die() if it is missing, last-mile guard against direct
  *     POST against the resetpass form.
  *
  * Token storage: a transient bound to user_id + sha256(reset_key) + hashed
@@ -49,7 +49,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	public const TOKEN_PREFIX = 'reportedip_2fa_reset_pass_';
 
 	/**
-	 * Token lifetime in seconds (10 minutes — same as email OTP).
+	 * Token lifetime in seconds (10 minutes, same as email OTP).
 	 *
 	 * @var int
 	 */
@@ -72,7 +72,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 
 	/**
 	 * JSON list of method ids that may NOT be used as the second factor in
-	 * the reset flow. Default: ["email"] — the recovery channel must never
+	 * the reset flow. Default: ["email"], the recovery channel must never
 	 * double as the second factor.
 	 *
 	 * @var string
@@ -103,7 +103,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	public const EVENT_SEND_FAILED        = '2fa_reset_send_failed';
 
 	/**
-	 * Constructor — registers the password-reset hooks if the feature is on.
+	 * Constructor, registers the password-reset hooks if the feature is on.
 	 *
 	 * Hook priorities:
 	 *   - validate_password_reset @ 5: must run before the reset form renders
@@ -144,8 +144,8 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * reset link into a new password without also clearing a non-email factor.
 	 * It only adds security when the user has enrolled at least one method
 	 * that survives the excluded-methods filter (TOTP, SMS, WebAuthn). Users
-	 * with no second factor at all — or with only the email channel enrolled
-	 * — are not made safer by gating: the reset link itself already travels
+	 * with no second factor at all, or with only the email channel enrolled
+	 * - are not made safer by gating: the reset link itself already travels
 	 * through the email channel, so adding an email-2FA prompt is the same
 	 * channel twice, and falling back to a recovery-code prompt locks out
 	 * legitimate users who never stored their codes.
@@ -167,7 +167,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	/**
 	 * Methods that must NOT be offered as a second factor during password
 	 * reset. The default list excludes the email channel because the reset
-	 * link itself was delivered via that channel — using the same channel
+	 * link itself was delivered via that channel, using the same channel
 	 * for both halves of the recovery flow collapses to a single factor.
 	 *
 	 * @param int $user_id Reset target user ID.
@@ -205,7 +205,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	/**
 	 * Method identifiers a user can challenge with for a password reset.
 	 *
-	 * Recovery codes are always eligible if any remain — they are the
+	 * Recovery codes are always eligible if any remain, they are the
 	 * documented out-of-band channel for users whose only enrolled second
 	 * factor is the now-excluded email channel.
 	 *
@@ -227,7 +227,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 
 	/**
 	 * True when the user has only email-2FA configured and no recovery codes.
-	 * In that case the reset is blocked entirely — there is no eligible
+	 * In that case the reset is blocked entirely, there is no eligible
 	 * method that does not collapse to single-factor security.
 	 *
 	 * @param int $user_id Reset target user ID.
@@ -348,12 +348,12 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 *
 	 * Last-mile guard: re-verify the token before the new password is saved
 	 * and consume it (single use). If the token is missing despite having
-	 * passed validate_password_reset, we wp_die() — that means the request
+	 * passed validate_password_reset, we wp_die(), that means the request
 	 * arrived through a path that bypassed our gate (direct POST to the
 	 * resetpass form) and must not be allowed to set a password.
 	 *
 	 * @param \WP_User $user     Reset target user.
-	 * @param string   $new_pass New password (unused — we only gate, we don't
+	 * @param string   $new_pass New password (unused, we only gate, we don't
 	 *                           inspect the password).
 	 */
 	public function on_password_reset( $user, $new_pass = '' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
@@ -529,7 +529,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 *
 	 * Errors and notices are rendered both via login_header() (for screen
 	 * readers and core fallback rendering) AND inline as rip-alert blocks
-	 * inside the .rip-2fa-challenge card — the inline copy is the canonical
+	 * inside the .rip-2fa-challenge card, the inline copy is the canonical
 	 * surface, since the WP-default #login_error block lives outside our
 	 * card and can be hidden by CSS layout or stripped by hardening plugins
 	 * that filter wp_login_errors.
@@ -814,10 +814,10 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * Read the reset key from whatever surface holds it for the current leg
 	 * of the WordPress reset flow:
 	 *
-	 *   Step 1 — first GET on the reset link: key in $_GET['key'].
-	 *   Step 2 — second GET after WP set the rp cookie: key in
+	 *   Step 1:first GET on the reset link: key in $_GET['key'].
+	 *   Step 2:second GET after WP set the rp cookie: key in
 	 *            $_COOKIE['wp-resetpass-COOKIEHASH'] as "login:key".
-	 *   Step 3 — POST of the new password: key in $_POST['rp_key'].
+	 *   Step 3:POST of the new password: key in $_POST['rp_key'].
 	 *   Our challenge page: key passed back through the URL, so $_GET['key'].
 	 *
 	 * Reading the cookie is necessary because validate_password_reset fires
@@ -835,7 +835,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 
 	/**
 	 * Read the user_login the reset is being attempted for. Mirrors
-	 * get_reset_key() — the rp cookie is the canonical source during
+	 * get_reset_key(), the rp cookie is the canonical source during
 	 * step 2 of the WordPress reset flow.
 	 *
 	 * @return string
@@ -852,7 +852,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * Generic resolver for fields that travel through the WordPress reset
 	 * flow on three surfaces: $_REQUEST keys (URL or POST), then the
 	 * `wp-resetpass-COOKIEHASH` cookie ("login:key"). The reset cookie is
-	 * a WordPress-core internal — its name and "login:key" payload format
+	 * a WordPress-core internal, its name and "login:key" payload format
 	 * mirror what wp-login.php sets in `case 'rp'`. If the WordPress
 	 * version ever changes that contract, this helper is the only spot to
 	 * adjust.
@@ -948,7 +948,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * flow's `?resend_sms=1` / `?resend_email=1` pattern so users have a
 	 * server-side fallback when JS is disabled or the AJAX path is blocked.
 	 *
-	 * Like `build_challenge_url()`, this URL omits `key=` / `login=` —
+	 * Like `build_challenge_url()`, this URL omits `key=` / `login=`.
 	 * including them would trigger wp-login.php's `case 'rp':` cookie
 	 * redirect and lose the resend trigger.
 	 *
@@ -1129,11 +1129,11 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * from the reset flow. Covers two reasons:
 	 *
 	 *   - `email_only`: only email-2FA configured + no recovery codes (the
-	 *     historical case — preserves the existing subject for log-grep parity).
+	 *     historical case, preserves the existing subject for log-grep parity).
 	 *   - `no_eligible_method`: get_eligible_methods() returned empty after
 	 *     applying the excluded-methods filter.
 	 *   - `no_usable_method`: every eligible method failed the health check
-	 *     (TOTP secret missing/decrypt-fail, SMS provider not ready, …).
+	 *     (TOTP secret missing/decrypt-fail, SMS provider not ready, ...).
 	 *
 	 * @param \WP_User              $user   Affected user.
 	 * @param string                $reason Lockout reason key.
@@ -1157,14 +1157,14 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 				/* translators: %s: site name */
 				$subject_tpl = __( '[%s] Password reset blocked: no usable 2FA method', 'reportedip-hive' );
 				/* translators: %s: affected user login */
-				$intro_tpl  = __( 'A password reset was attempted for the user "%s". None of the second-factor methods configured on the account is currently usable (the secret may be missing or unreadable, the SMS provider unavailable, or recovery codes exhausted) — the reset has been blocked.', 'reportedip-hive' );
+				$intro_tpl  = __( 'A password reset was attempted for the user "%s". None of the second-factor methods configured on the account is currently usable (the secret may be missing or unreadable, the SMS provider unavailable, or recovery codes exhausted), the reset has been blocked.', 'reportedip-hive' );
 				$context_id = '2fa_reset_no_usable_method';
 				break;
 			case 'no_eligible_method':
 				/* translators: %s: site name */
 				$subject_tpl = __( '[%s] Password reset blocked: no eligible 2FA method', 'reportedip-hive' );
 				/* translators: %s: affected user login */
-				$intro_tpl  = __( 'A password reset was attempted for the user "%s". After excluding the email channel (the channel that delivered the reset link itself), no eligible second factor remains — the reset has been blocked.', 'reportedip-hive' );
+				$intro_tpl  = __( 'A password reset was attempted for the user "%s". After excluding the email channel (the channel that delivered the reset link itself), no eligible second factor remains, the reset has been blocked.', 'reportedip-hive' );
 				$context_id = '2fa_reset_no_eligible_method';
 				break;
 			case 'email_only':
@@ -1172,7 +1172,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 				/* translators: %s: site name */
 				$subject_tpl = __( '[%s] Password reset blocked for an account with email-only 2FA', 'reportedip-hive' );
 				/* translators: %s: affected user login */
-				$intro_tpl  = __( 'A password reset was attempted for the user "%s". The account currently has only email-based 2FA configured and no recovery codes — for security, the reset has been blocked.', 'reportedip-hive' );
+				$intro_tpl  = __( 'A password reset was attempted for the user "%s". The account currently has only email-based 2FA configured and no recovery codes, for security, the reset has been blocked.', 'reportedip-hive' );
 				$context_id = '2fa_reset_email_only_blocked';
 				break;
 		}
@@ -1242,7 +1242,7 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	 * `on_validate_reset()` to fail loudly with a useful message instead of
 	 * dropping the user into an "Invalid code" loop they cannot escape.
 	 *
-	 * Recovery codes are not health-checked here — `get_eligible_methods()`
+	 * Recovery codes are not health-checked here, `get_eligible_methods()`
 	 * already gates on `get_remaining_count() > 0`, so a recovery entry in the
 	 * eligible list is by construction ready.
 	 *
@@ -1339,11 +1339,11 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 	/**
 	 * Send the initial / resend OTP for the selected method. Wraps the
 	 * provider classes so the caller can simply check `is_wp_error()` and
-	 * surface the message — the caller never has to know which provider was
+	 * surface the message, the caller never has to know which provider was
 	 * involved or which transient flag tracks delivery.
 	 *
 	 * Returns `true` for stateless methods that cannot be "sent" (TOTP,
-	 * WebAuthn, recovery) — in that case there is nothing to dispatch and the
+	 * WebAuthn, recovery), in that case there is nothing to dispatch and the
 	 * caller should not surface a "code sent" notice.
 	 *
 	 * @param int    $user_id User to send the code to.

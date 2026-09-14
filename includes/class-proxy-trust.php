@@ -130,7 +130,7 @@ final class ReportedIP_Hive_Proxy_Trust {
 	/**
 	 * Whether the connecting peer is allowed to supply the client-IP header.
 	 *
-	 * An empty range list means every peer is trusted — that is the
+	 * An empty range list means every peer is trusted, that is the
 	 * pre-2.1.41 behavior and keeps existing configurations working.
 	 *
 	 * @param string   $remote_addr Connecting peer address (REMOTE_ADDR).

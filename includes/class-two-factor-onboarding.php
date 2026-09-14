@@ -36,12 +36,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ReportedIP_Hive_Two_Factor_Onboarding {
 
 	/**
-	 * Transient key prefix — marks a user as needing onboarding.
+	 * Transient key prefix, marks a user as needing onboarding.
 	 */
 	const TRANSIENT_PREFIX = 'reportedip_2fa_onboarding_pending_';
 
 	/**
-	 * Transient TTL in seconds (1 hour — long enough for a multi-step wizard).
+	 * Transient TTL in seconds (1 hour, long enough for a multi-step wizard).
 	 */
 	const TRANSIENT_TTL = HOUR_IN_SECONDS;
 
@@ -51,7 +51,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	const PAGE_SLUG = 'reportedip-hive-2fa-onboarding';
 
 	/**
-	 * User-meta key — timestamp until which a skip suppresses re-flagging.
+	 * User-meta key, timestamp until which a skip suppresses re-flagging.
 	 *
 	 * Deleting the pending transient alone is not enough: SSO/support tools
 	 * that sign users in programmatically fire `wp_login` repeatedly, and each
@@ -67,7 +67,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	const SKIP_SNOOZE_SECONDS = DAY_IN_SECONDS;
 
 	/**
-	 * Constructor — register hooks.
+	 * Constructor, register hooks.
 	 */
 	public function __construct() {
 		if ( ! ReportedIP_Hive_Two_Factor::is_globally_enabled() ) {
@@ -159,7 +159,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	}
 
 	/**
-	 * wp_login callback — flag the user for onboarding if required.
+	 * wp_login callback, flag the user for onboarding if required.
 	 *
 	 * @param string  $user_login Username.
 	 * @param WP_User $user       User object.
@@ -193,7 +193,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	}
 
 	/**
-	 * admin_init callback — redirect to onboarding if pending.
+	 * admin_init callback, redirect to onboarding if pending.
 	 */
 	public function maybe_redirect_to_onboarding() {
 		static $already_ran = false;
@@ -229,7 +229,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 		}
 
 		/**
-		 * Opt-out filter — third-party plugins or conditional logic can skip the redirect.
+		 * Opt-out filter, third-party plugins or conditional logic can skip the redirect.
 		 *
 		 * @param bool $skip    Whether to skip the redirect.
 		 * @param int  $user_id WordPress user ID.
@@ -243,7 +243,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	}
 
 	/**
-	 * template_redirect callback — catch users who land on the frontend after login.
+	 * template_redirect callback, catch users who land on the frontend after login.
 	 *
 	 * Controlled by the "Enforce onboarding on the frontend" setting (default on).
 	 */
@@ -275,7 +275,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	}
 
 	/**
-	 * Register the hidden admin page — only used for URL routing.
+	 * Register the hidden admin page, only used for URL routing.
 	 * Actual rendering happens in admin_init (see maybe_render_standalone_page).
 	 */
 	public function register_hidden_page() {
@@ -290,7 +290,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	}
 
 	/**
-	 * admin_init callback — render the onboarding page standalone before WP emits
+	 * admin_init callback, render the onboarding page standalone before WP emits
 	 * the admin HTML chrome. Mirrors the setup-wizard pattern.
 	 */
 	public function maybe_render_standalone_page() {
@@ -424,9 +424,9 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 				'skipsLeft'     => is_infinite( $skips_left ) ? -1 : (int) $skips_left,
 				'graceDeadline' => (int) $grace_deadline,
 				'strings'       => array(
-					'sending'          => __( 'Sending…', 'reportedip-hive' ),
+					'sending'          => __( 'Sending...', 'reportedip-hive' ),
 					'sent'             => __( 'Code sent!', 'reportedip-hive' ),
-					'verifying'        => __( 'Verifying…', 'reportedip-hive' ),
+					'verifying'        => __( 'Verifying...', 'reportedip-hive' ),
 					'invalid'          => __( 'Invalid code', 'reportedip-hive' ),
 					'confirmSkip'      => __( 'Really set up later?', 'reportedip-hive' ),
 					'copied'           => __( 'Copied!', 'reportedip-hive' ),
@@ -437,7 +437,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 					'methodWebauthn'   => __( 'Passkey', 'reportedip-hive' ),
 					'methodSms'        => __( 'SMS', 'reportedip-hive' ),
 					'qrLibMissing'     => __( 'QR code library is missing. Please reload the page.', 'reportedip-hive' ),
-					'passkeyCreating'  => __( 'Creating passkey…', 'reportedip-hive' ),
+					'passkeyCreating'  => __( 'Creating passkey...', 'reportedip-hive' ),
 					'passkeyDuplicate' => __( 'This passkey is already registered on your account. You can continue with the next method.', 'reportedip-hive' ),
 					'passkeyCancelled' => __( 'The request timed out or was cancelled. Touch your security key only when the browser dialog asks for it (pick "Security key" in the Windows dialog if offered), then try again or choose another method.', 'reportedip-hive' ),
 					'otpDetected'      => __( 'That long string was your YubiKey typing its one-time password. That happens when the key is touched while no browser dialog is waiting for it. The field was cleared; click the register button first and touch the key only when the browser asks.', 'reportedip-hive' ),
@@ -445,7 +445,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 					/* translators: %d: seconds remaining */
 					'resendIn'         => __( 'Resend in %d s', 'reportedip-hive' ),
 					/* translators: %d: seconds remaining */
-					'smsDeliveryWait'  => __( 'SMS sent — delivery can take up to 60 s (%d)', 'reportedip-hive' ),
+					'smsDeliveryWait'  => __( 'SMS sent, delivery can take up to 60 s (%d)', 'reportedip-hive' ),
 					'phoneInvalid'     => __( 'Please enter the number with country code, e.g. +49 151 12345678.', 'reportedip-hive' ),
 				),
 			)
@@ -533,7 +533,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	 *
 	 * Routing matrix:
 	 *  - Frontend module unavailable        -> classic wp-admin onboarding page.
-	 *  - Frontend request (template_redirect, WC-account redirect, …)
+	 *  - Frontend request (template_redirect, WC-account redirect, ...)
 	 *    AND Frontend module available      -> themed setup slug, regardless of
 	 *                                          the user's role. Keeps an admin
 	 *                                          who signed in via My Account on
@@ -567,7 +567,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	 * Customers and Subscribers cannot reach `wp-admin/`, so a hard
 	 * `admin_url()` lands them on a 403/redirect loop. WooCommerce sites
 	 * route them back to My Account; everyone else (administrators,
-	 * editors, …) keeps the wp-admin dashboard.
+	 * editors, ...) keeps the wp-admin dashboard.
 	 *
 	 * @param int $user_id
 	 * @return string

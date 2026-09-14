@@ -2,7 +2,7 @@
 /**
  * WP-CLI commands for the Hardening Mode.
  *
- * Available as `wp reportedip hardening …` once WP-CLI sees the plugin:
+ * Available as `wp reportedip hardening ...` once WP-CLI sees the plugin:
  *   status                       → show active flag, expires_at, reason
  *   activate [--minutes=<int>]   → force-activate the window (manual trigger)
  *   deactivate                   → clear an active window immediately

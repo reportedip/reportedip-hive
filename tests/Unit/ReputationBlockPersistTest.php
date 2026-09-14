@@ -3,7 +3,7 @@
  * Architecture invariant tests for the persistent community-reputation block.
  *
  * A reputation verdict above the block threshold must not only fail the
- * current login — it must write a temporary `reputation` row into the
+ * current login, it must write a temporary `reputation` row into the
  * blocked table so the IP is blocked on every surface (front-end, XML-RPC,
  * REST) and is visible in the Blocked IPs list. The full plugin bootstrap
  * depends on too many runtime singletons to mock cheaply, so the contract

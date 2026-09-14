@@ -1,5 +1,5 @@
 /**
- * ReportedIP Hive — Charts Module.
+ * ReportedIP Hive, Charts Module.
  *
  * Provides chart rendering for the dashboard using Chart.js.
  *

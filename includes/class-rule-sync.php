@@ -1,6 +1,6 @@
 <?php
 /**
- * Rule delivery framework — downloads, verifies and caches server-delivered
+ * Rule delivery framework, downloads, verifies and caches server-delivered
  * rulesets, and exposes them to the sensors.
  *
  * Sensor rules (WAF signatures, bot signatures, disposable domains, UA/scan
@@ -160,7 +160,7 @@ final class ReportedIP_Hive_Rule_Sync {
 	 * Validate a ruleset envelope and, if the signature checks out, store it.
 	 *
 	 * The envelope carries the exact signed `payload` string (canonical JSON of
-	 * `{key, version, rules, …}`) plus its detached `signature`. Verifying the
+	 * `{key, version, rules, ...}`) plus its detached `signature`. Verifying the
 	 * literal string and only then decoding it avoids any re-serialisation
 	 * mismatch between client and server.
 	 *
@@ -233,7 +233,7 @@ final class ReportedIP_Hive_Rule_Sync {
 
 	/**
 	 * Download, verify and store a single ruleset. Honours ETag/304 and never
-	 * throws — any failure leaves the previous/baseline copy in place.
+	 * throws, any failure leaves the previous/baseline copy in place.
 	 *
 	 * @param string $key Ruleset key.
 	 * @return bool True when a fresh ruleset was applied.

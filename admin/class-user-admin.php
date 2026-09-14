@@ -6,8 +6,8 @@
  * edit screen, the Account column with its Blocked view and bulk actions on
  * the users list, and the Users -> Sessions page.
  *
- * Everything posts through forms WordPress already nonces — the user edit form
- * and the list table's own bulk form — so there is no extra admin-post
+ * Everything posts through forms WordPress already nonces, the user edit form
+ * and the list table's own bulk form, so there is no extra admin-post
  * endpoint and no JavaScript.
  *
  * @package   ReportedIP_Hive
@@ -134,7 +134,7 @@ class ReportedIP_Hive_User_Admin {
 
 		ReportedIP_Hive_Admin_Settings::render_page_header(
 			__( 'Sessions', 'reportedip-hive' ),
-			__( 'Who is signed in, from where — and the switch to end it.', 'reportedip-hive' )
+			__( 'Who is signed in, from where, and the switch to end it.', 'reportedip-hive' )
 		);
 
 		$this->render_sessions_notice();
@@ -143,7 +143,7 @@ class ReportedIP_Hive_User_Admin {
 		if ( empty( $status['available'] ) ) {
 			echo '<div class="rip-content">';
 			ReportedIP_Hive_Admin_Settings::render_tier_marker( $status );
-			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'See every active WordPress session — user, sign-in time, IP address and device — and end any of them. Unlocks with Business.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'See every active WordPress session, user, sign-in time, IP address and device, and end any of them. Unlocks with Business.', 'reportedip-hive' ) . '</div>';
 			echo '</div>';
 			ReportedIP_Hive_Admin_Settings::render_page_footer();
 			return;
@@ -436,7 +436,7 @@ class ReportedIP_Hive_User_Admin {
 	}
 
 	/**
-	 * "Why can this user not sign in?" — the three answers that are not the
+	 * "Why can this user not sign in?", the three answers that are not the
 	 * password, gathered from the block record, the IP block list and 2FA.
 	 *
 	 * @param WP_User $user User being edited.
@@ -482,7 +482,7 @@ class ReportedIP_Hive_User_Admin {
 	/**
 	 * Apply the profile card on save.
 	 *
-	 * Runs before `edit_user()`, so a refusal must never `wp_die()` — that
+	 * Runs before `edit_user()`, so a refusal must never `wp_die()`, that
 	 * would discard every other field the administrator changed. Refusals are
 	 * stashed and rendered on the next view of the same profile instead.
 	 *
@@ -697,7 +697,7 @@ class ReportedIP_Hive_User_Admin {
 	 *
 	 * The users list posts through a GET form, and the `default:` branch of
 	 * `wp-admin/users.php` redirects to a URL stripped of `_wpnonce` before it
-	 * dispatches `handle_bulk_actions-users` — a handler hooked there can never
+	 * dispatches `handle_bulk_actions-users`, a handler hooked there can never
 	 * verify the nonce and always dies with "The link you followed has expired".
 	 * `load-users.php` fires from `admin.php` while the original request is
 	 * still intact, so the nonce is verifiable here.
@@ -739,7 +739,7 @@ class ReportedIP_Hive_User_Admin {
 	 * and the `manage_network_users` check before it dispatches this filter.
 	 *
 	 * It reads the action from `$_POST['action']` only, so a choice made in the
-	 * second dropdown below the table arrives here as `-1` — the fallback picks
+	 * second dropdown below the table arrives here as `-1`, the fallback picks
 	 * `action2` up so the bottom control is not a dead switch.
 	 *
 	 * @param string $sendback Redirect target.

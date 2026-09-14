@@ -325,12 +325,12 @@ class ReportedIP_Hive_Quickstart {
 				'savedApiKey' => (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ),
 				'tier'        => $tier,
 				'strings'     => array(
-					'validating'  => __( 'Checking…', 'reportedip-hive' ),
+					'validating'  => __( 'Checking...', 'reportedip-hive' ),
 					'valid'       => __( 'Key is valid.', 'reportedip-hive' ),
 					'invalid'     => __( 'Invalid key.', 'reportedip-hive' ),
 					'error'       => __( 'Check failed. Please try again.', 'reportedip-hive' ),
 					'missingKey'  => __( 'Please enter your Community Access Key.', 'reportedip-hive' ),
-					'activating'  => __( 'Switching protection on…', 'reportedip-hive' ),
+					'activating'  => __( 'Switching protection on...', 'reportedip-hive' ),
 					/* translators: %1$s: used domains, %2$s: domain limit */
 					'domains'     => __( '%1$s of %2$s domains in use', 'reportedip-hive' ),
 					'keyRequired' => __( 'Community Network needs a checked Community Access Key. Check the key above or choose Local Shield.', 'reportedip-hive' ),
@@ -410,7 +410,7 @@ class ReportedIP_Hive_Quickstart {
 				</div>
 				<div class="rip-config-card__body">
 					<div class="rip-input-group">
-						<input type="text" id="rip-api-key" class="rip-input" placeholder="<?php esc_attr_e( 'Paste key…', 'reportedip-hive' ); ?>" value="<?php echo esc_attr( $api_key ); ?>" autocomplete="off">
+						<input type="text" id="rip-api-key" class="rip-input" placeholder="<?php esc_attr_e( 'Paste key...', 'reportedip-hive' ); ?>" value="<?php echo esc_attr( $api_key ); ?>" autocomplete="off">
 						<button type="button" id="rip-validate-key" class="rip-button rip-button--secondary"><?php esc_html_e( 'Check', 'reportedip-hive' ); ?></button>
 					</div>
 					<div id="rip-api-key-status" class="rip-input-status"></div>

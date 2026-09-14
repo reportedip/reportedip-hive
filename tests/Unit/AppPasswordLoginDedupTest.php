@@ -42,7 +42,7 @@ namespace {
 		 * unchanged and the realtime coordinated probe short-circuits on
 		 * `is_available()`, keeping the exercised login path free of database
 		 * access the unit harness cannot provide. Aliased to
-		 * `ReportedIP_Hive_Hardening_Mode` at runtime (never at file load —
+		 * `ReportedIP_Hive_Hardening_Mode` at runtime (never at file load.
 		 * HardeningModeTest loads the real class during discovery in the same
 		 * parent process, and a load-time declaration here would collide).
 		 */

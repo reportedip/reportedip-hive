@@ -1,6 +1,6 @@
 <?php
 /**
- * MainWP integration — exposes the plugin to a MainWP dashboard.
+ * MainWP integration, exposes the plugin to a MainWP dashboard.
  *
  * Makes the plugin remote-manageable from a MainWP dashboard without requiring an
  * extra plugin on the child site. It hooks the `mainwp_child_extra_execution`
@@ -43,9 +43,9 @@ class ReportedIP_Hive_MainWP_Integration {
 	 * Two entry points, both provided by the MainWP Child component and both
 	 * authenticated/signed; without MainWP Child the registrations are inert:
 	 *
-	 *  - `mainwp_child_extra_execution`  — fired by the dedicated `extra_execution`
+	 *  - `mainwp_child_extra_execution` , fired by the dedicated `extra_execution`
 	 *    call (dashboard "fetch now" buttons). $data = full $_POST.
-	 *  - `mainwp_site_sync_others_data`  — fired during every regular sync; lets the
+	 *  - `mainwp_site_sync_others_data` , fired during every regular sync; lets the
 	 *    metrics ride the normal MainWP sync without an extra round-trip.
 	 *    $data = decoded `othersData`.
 	 *
@@ -126,7 +126,7 @@ class ReportedIP_Hive_MainWP_Integration {
 	/**
 	 * Aggregate this site's security metrics for the MainWP dashboard.
 	 *
-	 * No visitor data leaves the site — no IP addresses, usernames or log
+	 * No visitor data leaves the site, no IP addresses, usernames or log
 	 * contents, only aggregate counts. The site's own configured API key and
 	 * operation mode are included so the operator's dashboard can list and
 	 * verify which key and mode are live on each child site; both travel only
@@ -200,7 +200,7 @@ class ReportedIP_Hive_MainWP_Integration {
 	 * Report the WAF engine and pre-WordPress drop-in status.
 	 *
 	 * Mirrors the firewall admin "Extended Protection" box so the MainWP overview
-	 * can flag sites whose drop-in is enabled but not yet running — typically an
+	 * can flag sites whose drop-in is enabled but not yet running, typically an
 	 * nginx host that still needs the manual server snippet. `waf_needs_setup` is
 	 * the derived "needs care" flag: enabled, not running, and on a server MainWP
 	 * cannot auto-configure (nginx/unknown); Apache and PHP-FPM write the directive

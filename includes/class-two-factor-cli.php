@@ -2,7 +2,7 @@
 /**
  * WP-CLI commands for 2FA administration.
  *
- * Available as `wp reportedip 2fa …` once WP-CLI sees the plugin:
+ * Available as `wp reportedip 2fa ...` once WP-CLI sees the plugin:
  *   status [--user=<id>]                  → overview
  *   enable --user=<id> --method=<m>       → flag one method (TOTP setup still needs a secret, see --secret)
  *   disable --user=<id> [--method=<m>]    → drop one or all methods
@@ -91,7 +91,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 	 *
 	 * [--force]
 	 * : Required to flag webauthn without a registered credential. Without a
-	 *   credential the user cannot complete the challenge — the flag alone is
+	 *   credential the user cannot complete the challenge, the flag alone is
 	 *   a lockout, so the command refuses unless you know what you are doing.
 	 */
 	public function enable( $args, $assoc ) {
@@ -108,7 +108,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 			&& empty( $assoc['force'] )
 			&& empty( ReportedIP_Hive_Two_Factor_WebAuthn::get_user_credentials( $user_id ) ) ) {
 			WP_CLI::error(
-				'User #' . $user_id . ' has no registered security key — enabling webauthn now would lock them out. '
+				'User #' . $user_id . ' has no registered security key, enabling webauthn now would lock them out. '
 				. 'Enrol a key via the profile page first, or pass --force to flag the method anyway.'
 			);
 		}
@@ -141,7 +141,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 				$secret = '';
 
 				/*
-				 * Reusing a stored secret arms whatever is on file — including
+				 * Reusing a stored secret arms whatever is on file, including
 				 * one left behind by an abandoned setup that the user never
 				 * imported. This path prints nothing, so they would be left
 				 * with recovery codes as the only way in.
@@ -161,7 +161,7 @@ class ReportedIP_Hive_Two_Factor_CLI {
 
 				$encrypted = ReportedIP_Hive_Two_Factor_Crypto::encrypt( $secret );
 				if ( false === $encrypted ) {
-					WP_CLI::error( 'Could not encrypt the TOTP secret — check REPORTEDIP_AUTH_KEY / AUTH_KEY.' );
+					WP_CLI::error( 'Could not encrypt the TOTP secret, check REPORTEDIP_AUTH_KEY / AUTH_KEY.' );
 				}
 				update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, $encrypted );
 				update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_CONFIRMED, '1' );

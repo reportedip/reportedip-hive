@@ -1,6 +1,6 @@
 <?php
 /**
- * Canonical settings registry — the single declarative source for option
+ * Canonical settings registry, the single declarative source for option
  * kinds, ranges, tier gates and side effects, shared by the Settings API,
  * the setup wizard, settings import/export and every remote transport
  * (MainWP today, the reportedip.com management API later).
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * allowed?:string[], tier?:string, tier_gate?:callable, remote:bool,
  * sanitize?:callable, side_effects?:string[], json_filter?:callable,
  * json_fallback?:string[], label:string, description?:string}`. Defaults are
- * deliberately NOT duplicated here — they live in
+ * deliberately NOT duplicated here, they live in
  * {@see ReportedIP_Hive_Defaults::SAFE_OPTIONS} and are read at runtime; a unit
  * test enforces that every registry key has a default.
  *
@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * dashboards used to show bare labels for every field.
  *
  * The class is loaded unconditionally (never behind `is_admin()`), so its
- * sanitizers exist in every request context — wp-admin, MainWP child calls,
+ * sanitizers exist in every request context, wp-admin, MainWP child calls,
  * WP-CLI and cron alike.
  *
  * @since 2.1.47
@@ -1660,7 +1660,7 @@ final class ReportedIP_Hive_Settings_Registry {
 	}
 
 	/**
-	 * Whether the paranoia tier gate applies for a given target value —
+	 * Whether the paranoia tier gate applies for a given target value.
 	 * level 1 is free, levels 2 and 3 require the Professional ruleset.
 	 *
 	 * @param mixed $value Sanitized target value.
@@ -1830,7 +1830,7 @@ final class ReportedIP_Hive_Settings_Registry {
 		if ( $hide_enabled && '' === $hide_slug && array_key_exists( 'reportedip_hive_hide_login_enabled', $values ) ) {
 			$errors['reportedip_hive_hide_login_enabled'] = new WP_Error(
 				'invalid',
-				__( 'Hide Login cannot be enabled without a login slug — set a slug first.', 'reportedip-hive' )
+				__( 'Hide Login cannot be enabled without a login slug, set a slug first.', 'reportedip-hive' )
 			);
 		}
 
@@ -1881,7 +1881,7 @@ final class ReportedIP_Hive_Settings_Registry {
 
 	/**
 	 * Stable fingerprint over all remote-managed values. Computed exclusively
-	 * on the child — dashboards compare reported hashes, never recompute.
+	 * on the child, dashboards compare reported hashes, never recompute.
 	 *
 	 * @return string `sha256:<hex>`.
 	 */
@@ -1904,7 +1904,7 @@ final class ReportedIP_Hive_Settings_Registry {
 	}
 
 	/**
-	 * Values envelope for management dashboards — the canonical response
+	 * Values envelope for management dashboards, the canonical response
 	 * body of the `settings_get` operation, shared by every transport so
 	 * MainWP and the cloud API stay provably identical.
 	 *

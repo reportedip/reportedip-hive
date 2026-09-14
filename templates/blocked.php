@@ -1,6 +1,6 @@
 <?php
 /**
- * Blocked-page template — rendered when the request is rejected.
+ * Blocked-page template, rendered when the request is rejected.
  *
  * Standalone HTML response (the front-end theme and the design-system
  * stylesheet are not loaded on a short-circuited request), so the styling is
