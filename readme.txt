@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.55
+Stable tag: 2.1.56
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -424,6 +424,16 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.56 =
+
+Changed: the Settings and Firewall pages are gone; one Protection page replaces them. Every area of the settings registry is a collapsible card with a short status and a search box; simple depth shows the sixteen day-to-day settings, expert depth shows every field. A Tools page (expert mode, always reachable by URL) carries the Extended Protection drop-in, rule sync, WAF exceptions, hardening status, import/export and the test mail. Old settings and firewall addresses redirect to their new home.
+
+Changed: the dashboard answers "done, and now?" with a status banner, next-step cards from six new advisory readiness checks (with one-click actions), a row per protection area and at most one upsell card per visit. News from reportedip.com render as a card grid.
+
+Changed: expert mode is a switch in the page header with an info icon; it is stored per person. The plan locks of the former tabs are back on the Protection page, and saving a card never resets a locked field.
+
+Fixed: the quickstart key check showed a stale domain count after the key was replaced.
 
 = 2.1.55 =
 

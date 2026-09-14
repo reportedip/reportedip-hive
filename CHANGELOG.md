@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.1.56] (2026-09-14)
 
 ### Changed
 
@@ -61,6 +61,18 @@ All changes to ReportedIP Hive are documented here.
 - The uninstall data switch moved to Tools → Data; the attack-response
   thresholds are edited on the Protection page only, the Tools tab keeps the
   master switch, the status and the manual buttons.
+- **News from reportedip.com** render as a card grid on the dashboard:
+  category badge, date, title, a three-line summary and a link to the
+  article.
+- Plain punctuation across the plugin: dashes in the middle of sentences,
+  ellipsis characters and check-mark symbols are gone from UI strings, mails,
+  documentation and comments; changelog headings carry the date in
+  parentheses.
+
+### Fixed
+
+- The quickstart key check showed the domain count of the previous check
+  when the key was replaced; it now reads the fresh result.
 
 ### Removed
 
