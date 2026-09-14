@@ -44,9 +44,33 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 		}
 
 		$stats            = self::compute_stats();
-		$users            = self::list_users( 200 );
-		$export_users_url = wp_nonce_url( ( is_network_admin() ? network_admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=users' ) : admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=users' ) ), 'reportedip_hive_2fa_export' );
-		$export_audit_url = wp_nonce_url( ( is_network_admin() ? network_admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=audit' ) : admin_url( 'admin-post.php?action=reportedip_hive_2fa_export&type=audit' ) ), 'reportedip_hive_2fa_export' );
+		$filters          = self::filters();
+		$users            = self::filter_rows( self::list_users( 200 ), $filters );
+		$audit_status     = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
+		$post_url         = is_network_admin() ? network_admin_url( 'admin-post.php' ) : admin_url( 'admin-post.php' );
+		$export_users_url = wp_nonce_url(
+			add_query_arg(
+				array_merge(
+					array(
+						'action' => 'reportedip_hive_2fa_export',
+						'type'   => 'users',
+					),
+					array_filter( $filters )
+				),
+				$post_url
+			),
+			'reportedip_hive_2fa_export'
+		);
+		$export_audit_url = wp_nonce_url(
+			add_query_arg(
+				array(
+					'action' => 'reportedip_hive_2fa_export',
+					'type'   => 'audit',
+				),
+				$post_url
+			),
+			'reportedip_hive_2fa_export'
+		);
 		?>
 		<div class="wrap rip-wrap">
 			<div class="rip-header">
@@ -90,13 +114,54 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
 								<?php esc_html_e( 'User status CSV', 'reportedip-hive' ); ?>
 							</a>
+							<?php if ( ! empty( $audit_status['available'] ) ) : ?>
 							<a href="<?php echo esc_url( $export_audit_url ); ?>" class="rip-button rip-button--secondary rip-button--sm">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
 								<?php esc_html_e( 'Audit log CSV', 'reportedip-hive' ); ?>
 							</a>
+							<?php else : ?>
+								<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $audit_status, array( 'label' => __( 'Audit log CSV: Business', 'reportedip-hive' ) ) ); ?>
+							<?php endif; ?>
 						</div>
 					</div>
 					<div class="rip-card__body">
+						<p class="rip-help-text rip-mb-4">
+							<?php esc_html_e( 'The user status CSV lists every user with roles, methods, recovery codes and enforcement state, filtered like the table below. The audit log CSV holds the 2FA-related security events (challenges, brute force, step-up decisions) and is part of the Business plan.', 'reportedip-hive' ); ?>
+						</p>
+						<form method="get" class="rip-form-inline rip-mb-4">
+							<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
+							<div class="rip-form-group">
+								<label class="rip-form-label" for="rip-2fa-filter-status"><?php esc_html_e( 'Status', 'reportedip-hive' ); ?></label>
+								<select name="status" id="rip-2fa-filter-status" class="rip-select">
+									<option value=""><?php esc_html_e( 'All', 'reportedip-hive' ); ?></option>
+									<?php foreach ( self::status_options() as $value => $label ) : ?>
+										<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $filters['status'], $value ); ?>><?php echo esc_html( $label ); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="rip-form-group">
+								<label class="rip-form-label" for="rip-2fa-filter-method"><?php esc_html_e( 'Method', 'reportedip-hive' ); ?></label>
+								<select name="method" id="rip-2fa-filter-method" class="rip-select">
+									<option value=""><?php esc_html_e( 'All', 'reportedip-hive' ); ?></option>
+									<?php foreach ( self::method_options() as $value => $label ) : ?>
+										<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $filters['method'], $value ); ?>><?php echo esc_html( $label ); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="rip-form-group">
+								<label class="rip-form-label" for="rip-2fa-filter-role"><?php esc_html_e( 'Role', 'reportedip-hive' ); ?></label>
+								<select name="role" id="rip-2fa-filter-role" class="rip-select">
+									<option value=""><?php esc_html_e( 'All', 'reportedip-hive' ); ?></option>
+									<?php foreach ( wp_roles()->get_names() as $slug => $name ) : ?>
+										<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $filters['role'], $slug ); ?>><?php echo esc_html( translate_user_role( $name ) ); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<button type="submit" class="rip-button rip-button--primary rip-button--sm"><?php esc_html_e( 'Filter', 'reportedip-hive' ); ?></button>
+							<?php if ( array_filter( $filters ) ) : ?>
+								<a href="<?php echo esc_url( add_query_arg( 'page', self::PAGE_SLUG, is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' ) ) ); ?>" class="rip-button rip-button--secondary rip-button--sm"><?php esc_html_e( 'Reset', 'reportedip-hive' ); ?></a>
+							<?php endif; ?>
+						</form>
 						<table class="rip-table">
 							<thead>
 								<tr>
@@ -110,11 +175,14 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 								</tr>
 							</thead>
 							<tbody>
+							<?php if ( empty( $users ) ) : ?>
+								<tr><td colspan="7" class="rip-muted"><?php esc_html_e( 'No users match the current filter.', 'reportedip-hive' ); ?></td></tr>
+							<?php endif; ?>
 							<?php foreach ( $users as $row ) : ?>
 								<tr>
 									<td><a href="<?php echo esc_url( get_edit_user_link( $row['id'] ) ); ?>"><?php echo esc_html( $row['login'] ); ?></a> <span class="rip-muted">#<?php echo (int) $row['id']; ?></span></td>
 									<td><?php echo esc_html( implode( ', ', $row['roles'] ) ); ?></td>
-									<td><?php echo esc_html( $row['methods'] ?: ', ' ); ?></td>
+									<td><?php echo esc_html( $row['methods'] ?: '-' ); ?></td>
 									<td><?php echo (int) $row['recovery']; ?></td>
 									<td>
 										<?php if ( $row['enabled'] ) : ?>
@@ -161,15 +229,13 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 		check_admin_referer( 'reportedip_hive_2fa_export' );
 
 		$type = isset( $_GET['type'] ) ? sanitize_key( wp_unslash( $_GET['type'] ) ) : 'users';
-		nocache_headers();
-		header( 'Content-Type: text/csv; charset=utf-8' );
-		header( 'Content-Disposition: attachment; filename=reportedip-2fa-' . $type . '-' . gmdate( 'Ymd-His' ) . '.csv' );
-
-		$out = fopen( 'php://output', 'w' );
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Streaming CSV directly to PHP output buffer; WP_Filesystem is for file paths.
-		fwrite( $out, "\xEF\xBB\xBF" );
 
 		if ( 'audit' === $type ) {
+			$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
+			if ( empty( $status['available'] ) ) {
+				wp_die( esc_html__( 'The audit log is not available on your plan.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+			}
+			$out = self::open_csv( $type );
 			fputcsv( $out, array( 'id', 'when', 'event', 'ip', 'severity', 'details' ) );
 			global $wpdb;
 			$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
@@ -178,8 +244,9 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 				fputcsv( $out, array( $row->id, $row->created_at, $row->event_type, $row->ip_address, $row->severity, $row->details ) );
 			}
 		} else {
+			$out = self::open_csv( $type );
 			fputcsv( $out, array( 'id', 'login', 'email', 'roles', 'methods', 'recovery', 'enabled', 'enforced', 'skips', 'setup_date' ) );
-			foreach ( self::list_users( 10000 ) as $row ) {
+			foreach ( self::filter_rows( self::list_users( 10000 ), self::filters() ) as $row ) {
 				fputcsv(
 					$out,
 					array(
@@ -200,6 +267,113 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Closing the php://output stream; WP_Filesystem is for file paths.
 		fclose( $out );
 		exit;
+	}
+
+	/**
+	 * Send the download headers and open the output stream with a UTF-8 BOM
+	 * so spreadsheets read umlauts correctly.
+	 *
+	 * @param string $type Export type, part of the file name.
+	 * @return resource
+	 */
+	private static function open_csv( $type ) {
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=reportedip-2fa-' . $type . '-' . gmdate( 'Ymd-His' ) . '.csv' );
+		$out = fopen( 'php://output', 'w' );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Streaming CSV directly to PHP output buffer; WP_Filesystem is for file paths.
+		fwrite( $out, "\xEF\xBB\xBF" );
+		return $out;
+	}
+
+	/**
+	 * Read the list filters from the query string.
+	 *
+	 * The page is read-only; the export handler verifies its nonce before
+	 * calling this. Unknown values fall back to "all".
+	 *
+	 * @return array{status:string,method:string,role:string}
+	 */
+	public static function filters() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only list filters.
+		$status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
+		$method = isset( $_GET['method'] ) ? sanitize_key( wp_unslash( $_GET['method'] ) ) : '';
+		$role   = isset( $_GET['role'] ) ? sanitize_key( wp_unslash( $_GET['role'] ) ) : '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+		return array(
+			'status' => isset( self::status_options()[ $status ] ) ? $status : '',
+			'method' => isset( self::method_options()[ $method ] ) ? $method : '',
+			'role'   => $role,
+		);
+	}
+
+	/**
+	 * Status filter values and labels.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function status_options() {
+		return array(
+			'active'   => __( 'Active', 'reportedip-hive' ),
+			'required' => __( 'Required, not set up', 'reportedip-hive' ),
+			'optional' => __( 'Optional', 'reportedip-hive' ),
+		);
+	}
+
+	/**
+	 * Method filter values and labels.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function method_options() {
+		return array(
+			'totp'     => __( 'Authenticator app', 'reportedip-hive' ),
+			'email'    => __( 'Email code', 'reportedip-hive' ),
+			'sms'      => __( 'SMS code', 'reportedip-hive' ),
+			'webauthn' => __( 'Passkey / security key', 'reportedip-hive' ),
+			'none'     => __( 'No method', 'reportedip-hive' ),
+		);
+	}
+
+	/**
+	 * Keep only the rows of {@see list_users()} that match the filters.
+	 *
+	 * @param array $rows    Rows from list_users().
+	 * @param array $filters Output of filters(); empty values mean "all".
+	 * @return array
+	 */
+	public static function filter_rows( array $rows, array $filters ) {
+		$status = (string) ( $filters['status'] ?? '' );
+		$method = (string) ( $filters['method'] ?? '' );
+		$role   = (string) ( $filters['role'] ?? '' );
+
+		return array_values(
+			array_filter(
+				$rows,
+				static function ( $row ) use ( $status, $method, $role ) {
+					if ( 'active' === $status && ! $row['enabled'] ) {
+						return false;
+					}
+					if ( 'required' === $status && ( $row['enabled'] || ! $row['enforced'] ) ) {
+						return false;
+					}
+					if ( 'optional' === $status && ( $row['enabled'] || $row['enforced'] ) ) {
+						return false;
+					}
+					$methods = '' === $row['methods'] ? array() : explode( ',', $row['methods'] );
+					if ( 'none' === $method && ! empty( $methods ) ) {
+						return false;
+					}
+					if ( '' !== $method && 'none' !== $method && ! in_array( $method, $methods, true ) ) {
+						return false;
+					}
+					if ( '' !== $role && ! in_array( $role, (array) ( $row['role_slugs'] ?? array() ), true ) ) {
+						return false;
+					}
+					return true;
+				}
+			)
+		);
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -285,16 +459,17 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 			$methods = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID );
 			$ts      = get_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_SETUP_DATE, true );
 			$rows[]  = array(
-				'id'       => $user->ID,
-				'login'    => $user->user_login,
-				'email'    => $user->user_email,
-				'roles'    => array_map( 'translate_user_role', (array) $user->roles ),
-				'methods'  => implode( ',', $methods ),
-				'recovery' => ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user->ID ),
-				'enabled'  => ReportedIP_Hive_Two_Factor::is_user_enabled( $user->ID ),
-				'enforced' => ReportedIP_Hive_Two_Factor::is_enforced_for_user( $user ),
-				'skips'    => (int) get_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_SKIP_COUNT, true ),
-				'setup'    => $ts ? wp_date( 'd.m.Y', (int) $ts ) : ', ',
+				'id'         => $user->ID,
+				'login'      => $user->user_login,
+				'email'      => $user->user_email,
+				'roles'      => array_map( 'translate_user_role', (array) $user->roles ),
+				'role_slugs' => array_values( (array) $user->roles ),
+				'methods'    => implode( ',', $methods ),
+				'recovery'   => ReportedIP_Hive_Two_Factor_Recovery::get_remaining_count( $user->ID ),
+				'enabled'    => ReportedIP_Hive_Two_Factor::is_user_enabled( $user->ID ),
+				'enforced'   => ReportedIP_Hive_Two_Factor::is_enforced_for_user( $user ),
+				'skips'      => (int) get_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_SKIP_COUNT, true ),
+				'setup'      => $ts ? wp_date( 'd.m.Y', (int) $ts ) : '-',
 			);
 		}
 		return $rows;

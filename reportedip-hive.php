@@ -946,6 +946,8 @@ class ReportedIP_Hive {
 					'notify_cache_expired_cleaned'       => __( 'Expired entries cleaned.', 'reportedip-hive' ),
 					'notify_cache_expired_failed'        => __( 'Failed to clean expired entries.', 'reportedip-hive' ),
 					'notify_mode_changed'                => __( 'Mode changed successfully', 'reportedip-hive' ),
+					'test_mail_sending'                  => __( 'Sending...', 'reportedip-hive' ),
+					'test_mail_failed'                   => __( 'Test email failed.', 'reportedip-hive' ),
 					'notify_mode_change_failed'          => __( 'Failed to change mode', 'reportedip-hive' ),
 					'notify_whitelist_added'             => __( 'IP address added to whitelist successfully', 'reportedip-hive' ),
 					'notify_whitelist_add_failed'        => __( 'Failed to add IP to whitelist', 'reportedip-hive' ),

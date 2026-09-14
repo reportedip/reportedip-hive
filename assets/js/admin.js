@@ -85,6 +85,7 @@
 
             // Maintenance actions
             $(document).on('click', '#cleanup-old-logs', this.cleanupOldLogs);
+            $(document).on('click', '#reportedip-send-test-mail', this.sendTestMail);
             $(document).on('click', '#anonymize-old-data', this.anonymizeOldData);
             $(document).on('click', '#export-logs-csv', this.exportLogs.bind(this, 'csv'));
             $(document).on('click', '#export-logs-json', this.exportLogs.bind(this, 'json'));
@@ -1069,6 +1070,36 @@
             }
             
             $container.html(html);
+        },
+
+        /**
+         * Send a sample mail through the active provider (Tools, Diagnostics).
+         */
+        sendTestMail: function(e) {
+            e.preventDefault();
+
+            const $button = $(this);
+            const $status = $('#reportedip-send-test-mail-status');
+            const labelIdle = $button.text();
+
+            $button.prop('disabled', true).text(ripT('test_mail_sending', 'Sending...'));
+            $status.removeClass('rip-hidden').text('').css('color', '');
+
+            $.post(reportedip_hive_ajax.ajax_url, {
+                action: 'reportedip_hive_send_test_mail',
+                nonce: reportedip_hive_ajax.nonce
+            }).done(function(response) {
+                const message = response && response.data && response.data.message ? response.data.message : '';
+                if (response && response.success) {
+                    $status.text(message).css('color', 'var(--rip-success)');
+                } else {
+                    $status.text(message || ripT('test_mail_failed', 'Test email failed.')).css('color', 'var(--rip-danger)');
+                }
+            }).fail(function() {
+                $status.text(ripT('request_failed', 'Request failed. Check server logs.')).css('color', 'var(--rip-danger)');
+            }).always(function() {
+                $button.prop('disabled', false).text(labelIdle);
+            });
         },
 
         cleanupOldLogs: function(e) {

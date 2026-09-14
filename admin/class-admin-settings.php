@@ -4611,34 +4611,6 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php esc_html_e( 'Send test email', 'reportedip-hive' ); ?>
 				</button>
 				<span id="reportedip-send-test-mail-status" class="rip-help-text rip-ml-3 rip-hidden"></span>
-				<script>
-				(function(){
-					var btn = document.getElementById('reportedip-send-test-mail');
-					if (!btn || !window.jQuery || !window.reportedip_hive_ajax) return;
-					var $ = window.jQuery, $btn = $(btn), $status = $('#reportedip-send-test-mail-status');
-					var labelIdle = <?php echo wp_json_encode( __( 'Send test email', 'reportedip-hive' ) ); ?>;
-					var labelBusy = <?php echo wp_json_encode( __( 'Sending...', 'reportedip-hive' ) ); ?>;
-					$btn.on('click', function(e){
-						e.preventDefault();
-						$btn.prop('disabled', true).text(labelBusy);
-						$status.removeClass('rip-hidden').text('').css('color', '');
-						$.post(window.reportedip_hive_ajax.ajax_url, {
-							action: 'reportedip_hive_send_test_mail',
-							nonce:  window.reportedip_hive_ajax.nonce
-						}).done(function(resp){
-							if (resp && resp.success) {
-								$status.text(resp.data && resp.data.message ? resp.data.message : '').css('color', 'var(--rip-success)');
-							} else {
-								$status.text(resp && resp.data && resp.data.message ? resp.data.message : <?php echo wp_json_encode( __( 'Test email failed.', 'reportedip-hive' ) ); ?>).css('color', 'var(--rip-danger)');
-							}
-						}).fail(function(){
-							$status.text(<?php echo wp_json_encode( __( 'Request failed. Check server logs.', 'reportedip-hive' ) ); ?>).css('color', 'var(--rip-danger)');
-						}).always(function(){
-							$btn.prop('disabled', false).text(labelIdle);
-						});
-					});
-				})();
-				</script>
 			</div>
 		</div>
 		<?php

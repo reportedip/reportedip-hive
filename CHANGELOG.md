@@ -4,8 +4,21 @@ All changes to ReportedIP Hive are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- The 2FA Status page filters its user list by status (active, required
+  but not set up, optional), method and role. The filters live in the URL,
+  the user status CSV export honours them, and a short note above the list
+  explains what the two exports contain.
+
 ### Fixes
 
+- The audit log CSV on the 2FA Status page is part of the Business plan
+  like the audit trail itself: the button gives way to the plan marker on
+  lower plans and the export handler answers 403 instead of streaming the
+  file.
+- Users without a method or a setup date showed a stray comma in the 2FA
+  Status table and CSV; the cell now shows a dash.
 - A settings export from a site still running on its defaults wrote `null`
   for every option that had never been stored, and importing that file
   switched those protections off and clamped the numbers to their minimum
@@ -23,6 +36,18 @@ All changes to ReportedIP Hive are documented here.
 - Saving a card no longer reports "1 field was not saved" for a plan-gated
   switch that is already on: an unchanged value is now recognised before
   the plan gate runs, so it counts as unchanged instead of being rejected.
+- The test-mail button on the Tools page (Diagnostics tab) did nothing:
+  its click handler ran before the footer script it depends on had been
+  printed and quietly gave up. The handler now lives in admin.js with the
+  other page actions.
+- The dashboard banner reported the quickstart as "set up on 1 January
+  1970": the completion time is stored as a UTC datetime and was cast to an
+  integer. It is converted properly now.
+- Seven Detection/Hardening score links opened the wrong card on the
+  Protection page since the 2.1.56 section split: REST access, XML-RPC,
+  feeds, wp-admin for visitors, uploads and software fingerprints pointed
+  at Security Headers instead of Access Lockdown, the password check at
+  Detection instead of Password Policy.
 
 ## [2.1.56] (2026-09-14)
 
