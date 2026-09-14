@@ -534,6 +534,8 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-news-feed.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-quickstart.php';
 			new ReportedIP_Hive_Quickstart( $this->mode_manager );
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-protection-page.php';
+			new ReportedIP_Hive_Protection_Page();
 		}
 
 		ReportedIP_Hive_Database::get_instance();

@@ -681,6 +681,18 @@ if ( ! function_exists( 'absint' ) ) {
 // Escaping Functions
 // =============================================================================
 
+if ( ! function_exists( 'esc_textarea' ) ) {
+	function esc_textarea( $text ) {
+		return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+	}
+}
+
+if ( ! function_exists( '_n' ) ) {
+	function _n( $single, $plural, $number, $domain = 'default' ) {
+		return 1 === (int) $number ? $single : $plural;
+	}
+}
+
 if ( ! function_exists( 'esc_html' ) ) {
 	/**
 	 * Escaping for HTML blocks.
