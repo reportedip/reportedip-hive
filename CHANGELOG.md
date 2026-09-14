@@ -12,6 +12,14 @@ All changes to ReportedIP Hive are documented here.
   are failing" for the next three hours although the network was fine.
   Auth verdicts now stay out of the window; the lifetime counters and the
   `api_call_failed` log entry keep them.
+- **No report-queue warning while nothing can send.** The readiness checks
+  for a pending backlog and for failed reports stay silent in Local Shield
+  and without a Community Access Key. Leftover rows from an earlier
+  Community period raised a critical "2007 reports are waiting" issue whose
+  remedies (a higher plan, manual processing) do not exist in that state.
+- **The stalled-cron issue names the usual cause.** A site that cannot call
+  its own wp-cron.php (a failing loopback request) is listed first; the
+  WP_CRON_LOCK_TIMEOUT explanation stays as the second candidate.
 
 ### Changed
 

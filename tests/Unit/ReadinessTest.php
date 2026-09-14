@@ -225,6 +225,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( \ReportedIP_Hive_Readiness::SEV_CRITICAL, $crit['severity'] );
 		}
 
+		public function test_queue_detectors_stay_silent_while_the_api_cannot_drain_the_queue(): void {
+			$this->assertNull( \ReportedIP_Hive_Readiness::queue_failed( 7, false ) );
+			$this->assertNull( \ReportedIP_Hive_Readiness::queue_backlog( 2007, 50, 200, false ) );
+		}
+
 		public function test_reconcile_sets_first_seen_once_and_prunes_resolved_keys(): void {
 			$now    = 1750000000;
 			$issues = array(

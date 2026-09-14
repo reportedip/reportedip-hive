@@ -449,12 +449,14 @@ final class ReportedIP_Hive_Readiness {
 		$raised[] = self::crypto_missing( ReportedIP_Hive_Two_Factor_Crypto::get_active_method() );
 
 		if ( ReportedIP_Hive_Schema::tables_exist() ) {
-			$queue    = ReportedIP_Hive_Database::get_instance()->get_queue_statistics();
-			$raised[] = self::queue_failed( (int) $queue['failed'] );
-			$raised[] = self::queue_backlog(
+			$queue      = ReportedIP_Hive_Database::get_instance()->get_queue_statistics();
+			$api_usable = $mode->is_community_mode() && ReportedIP_Hive_API::get_instance()->is_configured();
+			$raised[]   = self::queue_failed( (int) $queue['failed'], $api_usable );
+			$raised[]   = self::queue_backlog(
 				(int) $queue['pending'],
 				(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 ),
-				(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 )
+				(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 ),
+				$api_usable
 			);
 		}
 
@@ -711,7 +713,7 @@ final class ReportedIP_Hive_Readiness {
 			__( 'WP-Cron is not running', 'reportedip-hive' ),
 			__( 'WP-Cron has not fired any ReportedIP Hive hook in the last 24 h.', 'reportedip-hive' )
 				. ' '
-				. __( 'Likely cause: another plugin\'s cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below.', 'reportedip-hive' )
+				. __( 'Likely causes: the site cannot call its own wp-cron.php (a failing loopback request, listed under Tools, Site Health), or another plugin\'s cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below.', 'reportedip-hive' )
 		);
 	}
 
@@ -902,12 +904,17 @@ final class ReportedIP_Hive_Readiness {
 	/**
 	 * Reports that could not be submitted.
 	 *
-	 * @param int $failed Number of failed queue rows.
+	 * Silent while the API cannot drain the queue (Local Shield, or no
+	 * Community Access Key): the rows are leftovers nothing will submit, and
+	 * the remediation the message names does not exist in that state.
+	 *
+	 * @param int  $failed     Number of failed queue rows.
+	 * @param bool $api_usable Whether reports can currently be submitted.
 	 * @return array<string,string>|null
 	 * @since  2.1.51
 	 */
-	public static function queue_failed( $failed ) {
-		if ( (int) $failed < 1 ) {
+	public static function queue_failed( $failed, $api_usable = true ) {
+		if ( ! $api_usable || (int) $failed < 1 ) {
 			return null;
 		}
 
@@ -926,15 +933,16 @@ final class ReportedIP_Hive_Readiness {
 	/**
 	 * The pending report queue has grown past its thresholds.
 	 *
-	 * @param int $pending Pending queue rows.
-	 * @param int $warn    Warning threshold.
-	 * @param int $crit    Critical threshold.
+	 * @param int  $pending    Pending queue rows.
+	 * @param int  $warn       Warning threshold.
+	 * @param int  $crit       Critical threshold.
+	 * @param bool $api_usable Whether reports can currently be submitted.
 	 * @return array<string,string>|null
 	 * @since  2.1.51
 	 */
-	public static function queue_backlog( $pending, $warn, $crit ) {
+	public static function queue_backlog( $pending, $warn, $crit, $api_usable = true ) {
 		$pending = (int) $pending;
-		if ( $pending < (int) $warn ) {
+		if ( ! $api_usable || $pending < (int) $warn ) {
 			return null;
 		}
 
