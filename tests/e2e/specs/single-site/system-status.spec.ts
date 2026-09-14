@@ -133,17 +133,33 @@ test.describe('system status readiness register', () => {
 	});
 
 	test('critical rows offer no dismissal', async ({ page }) => {
-		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-debug');
+		// A guard hit queue the web server cannot write to raises the critical
+		// `guard_queue_unwritable` row deterministically. The schema check is
+		// no fixture: the bootstrap migrates a stale version on every request.
+		const queueDir = wpEval('echo dirname(ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->queue_path());');
+		const dropin = wpEval('echo (int) get_option("reportedip_hive_waf_dropin_enabled");');
+		const setWritable = (mode: string) => {
+			execFileSync('docker', ['exec', WP_CONTAINER, 'chmod', mode, queueDir]);
+			wpEval('ReportedIP_Hive_Readiness::flush_cache();echo "ok";');
+		};
+		wpEval('update_option("reportedip_hive_waf_dropin_enabled",1);echo "ok";');
+		setWritable('555');
 
-		// The dev stack keeps WP-Cron stalled and the report queue backed up,
-		// so at least one critical row is always standing here.
-		const criticals = page.locator('#rip-readiness tbody tr:has(.rip-badge--danger)');
-		expect(await criticals.count()).toBeGreaterThan(0);
-		await expect(criticals.locator('a', { hasText: DISMISS_LABEL })).toHaveCount(0);
+		try {
+			await loginAsAdmin(page);
+			await page.goto('/wp-admin/admin.php?page=reportedip-hive-debug');
+
+			const criticals = page.locator('#rip-readiness tbody tr:has(.rip-badge--danger)');
+			expect(await criticals.count()).toBeGreaterThan(0);
+			await expect(criticals.locator('a', { hasText: DISMISS_LABEL })).toHaveCount(0);
+		} finally {
+			setWritable('755');
+			wpEval(`update_option("reportedip_hive_waf_dropin_enabled",${dropin});echo "ok";`);
+		}
 	});
 
 	test('the summary notice shows on other plugin pages but not on System Status', async ({ page }) => {
+		openTrustedHeaderIssue(true);
 		await loginAsAdmin(page);
 
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
@@ -157,6 +173,7 @@ test.describe('system status readiness register', () => {
 	});
 
 	test('the dashboard widget links its issue count to the readiness section', async ({ page }) => {
+		openTrustedHeaderIssue(true);
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/index.php');
 
