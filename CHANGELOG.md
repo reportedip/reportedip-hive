@@ -27,11 +27,27 @@ All changes to ReportedIP Hive are documented here.
   Protection card or Tools tab, so bookmarks, MainWP links and readiness
   issues keep working.
 - The `Security` menu entry is called `Activity` now.
+- **The dashboard answers "done, and now?".** A status banner names the
+  plan the recommendation was applied for, the setup date and how many
+  settings deviate from it. Next-step cards come from six new advisory
+  readiness detectors (Hide Login off, storefront 2FA included but off, badge
+  off, Extended Protection possible but not running, Local Shield instead of
+  the community network, own second factor missing) and carry an inline
+  action: the badge and storefront 2FA switch on with one click, Hide Login
+  takes a slug and switches on, the rest link to the right place. "Not now"
+  hides a card for seven days. A row per protection area shows the short
+  status and jumps to the card. At most one upsell card renders per
+  dashboard visit, chosen by plan and site signals (WooCommerce, Multisite,
+  more than 25 users) and rate-limited by the promo manager.
+- **Expert mode is a switch in the page header.** It is stored per person,
+  lists the Tools page and shows every field on the Protection page.
 
 ### Removed
 
 - The seven single-card firewall AJAX writers; every field saves through
   the protection page and the registry apply service.
+- The WooCommerce frontend-2FA admin notice and the two standalone promo
+  cards on the dashboard; the dashboard's single upsell card covers them.
 
 ## [2.1.55] — 2026-09-13
 
