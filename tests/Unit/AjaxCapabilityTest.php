@@ -37,10 +37,6 @@ class AjaxCapabilityTest extends TestCase {
 	 */
 	const WRITING_HANDLERS = array(
 		'ajax_set_mode',
-		'ajax_disposable_action',
-		'ajax_spam_toggle',
-		'ajax_scan_toggle',
-		'ajax_headers_save',
 		'ajax_registry_save',
 		'ajax_hardening_deactivate',
 	);

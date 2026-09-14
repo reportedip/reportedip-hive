@@ -56,21 +56,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		);
 
 		/**
-		 * Single-option Firewall card handlers that must write through the
-		 * registry helper.
-		 *
-		 * @var string[]
-		 */
-		const RETROFIT_HANDLERS = array(
-			'ajax_waf_toggle',
-			'ajax_waf_set_paranoia',
-			'ajax_bot_action',
-			'ajax_disposable_action',
-			'ajax_spam_toggle',
-			'ajax_scan_toggle',
-		);
-
-		/**
 		 * Handler source text.
 		 *
 		 * @return string
@@ -126,27 +111,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString( 'Settings_Registry::', $body, 'the helper does not re-implement the registry pre-flight' );
 			$this->assertStringNotContainsString( 'Option_Routing::set(', $body, 'the helper must not bypass the apply pipeline' );
 		}
-
-		public function test_single_option_helper_wraps_the_atomic_helper() {
-			$body = $this->method_body( 'save_registry_option' );
-
-			$this->assertStringContainsString( '$this->apply_registry_batch( array( $key => $value ) );', $body );
-			$this->assertStringContainsString( 'return ReportedIP_Hive_Option_Routing::get( $key );', $body, 'callers receive the value the router holds after the write' );
-			$this->assertStringNotContainsString( 'Settings_Registry::', $body );
-			$this->assertStringNotContainsString( 'Option_Routing::set(', $body );
-		}
-
-		public function test_retrofitted_handlers_write_through_the_registry_helper() {
-			foreach ( self::RETROFIT_HANDLERS as $handler ) {
-				$body = $this->method_body( $handler );
-
-				$this->assertStringContainsString( '$this->save_registry_option(', $body, "$handler() must use the registry helper" );
-				$this->assertStringNotContainsString( 'Option_Routing::set(', $body, "$handler() must not write the option directly" );
-				$this->assertStringNotContainsString( 'in_array(', $body, "$handler() must not keep a bespoke value whitelist" );
-				$this->assertStringNotContainsString( '$level < 1', $body, "$handler() must not keep a bespoke range check" );
-			}
-		}
-
 
 		public function test_every_retrofitted_key_is_a_remote_registry_key() {
 			$remote = \ReportedIP_Hive_Settings_Registry::remote_spec();

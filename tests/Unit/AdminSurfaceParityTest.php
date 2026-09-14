@@ -66,22 +66,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'admin/class-admin-firewall.php',
 			'admin/class-two-factor-admin.php',
 			'admin/class-quickstart.php',
+			'admin/class-protection-page.php',
 			'admin/class-user-admin.php',
 			'includes/class-ajax-handler.php',
 			'includes/class-two-factor-dashboard.php',
 			'includes/class-two-factor-onboarding.php',
 		);
-
-		/**
-		 * Registry keys with no wp-admin form, each one a known gap.
-		 *
-		 * Every entry here is remotely manageable but locally invisible, which
-		 * is the wrong way round. The list is meant to reach zero; adding to it
-		 * needs a reason at least as good as the ones below.
-		 *
-		 * @var array<string, string>
-		 */
-		private const NO_ADMIN_FORM = array();
 
 		/**
 		 * Stored options that must never become remotely manageable.
@@ -123,60 +113,37 @@ namespace ReportedIP\Hive\Tests\Unit {
 		);
 
 		/**
-		 * Every registry key is reachable from a form, the quickstart or an
-		 * admin AJAX writer.
+		 * Every registry key is drawn by the generic renderer of the protection
+		 * page: its section exists and the renderer emits an input carrying the
+		 * key. Keys outside the registry are covered by NOT_REMOTE.
 		 *
 		 * @return void
 		 */
 		public function test_every_registry_key_has_an_admin_surface(): void {
-			$sources = $this->surface_sources();
-			$via_key = $this->keys_reachable_via_constant( $sources );
-			$orphans = array();
+			require_once dirname( __DIR__, 2 ) . '/admin/class-protection-page.php';
+			$sections = \ReportedIP_Hive_Settings_Registry::sections();
+			$missing  = array();
 
-			foreach ( array_keys( \ReportedIP_Hive_Settings_Registry::spec() ) as $key ) {
-				if ( isset( self::NO_ADMIN_FORM[ $key ] ) ) {
+			foreach ( \ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
+				if ( ! isset( $sections[ $entry['section'] ] ) ) {
+					$missing[] = "{$key}: unknown section {$entry['section']}";
 					continue;
 				}
-				if ( $this->has_write_surface( $key, $sources ) ) {
-					continue;
-				}
-				if ( isset( $via_key[ $key ] ) ) {
-					continue;
-				}
-				$orphans[] = $key;
-			}
-
-			$this->assertSame(
-				array(),
-				$orphans,
-				"These settings can be changed remotely but have no wp-admin form:\n" . implode( "\n", $orphans )
-			);
-		}
-
-		/**
-		 * The known-gap list only ever shrinks.
-		 *
-		 * A key that gained a form must leave the list, otherwise the list
-		 * decays into a permanent excuse.
-		 *
-		 * @return void
-		 */
-		public function test_the_known_gap_list_holds_no_stale_entries(): void {
-			$sources = $this->surface_sources();
-			$via_key = $this->keys_reachable_via_constant( $sources );
-			$stale   = array();
-
-			foreach ( array_keys( self::NO_ADMIN_FORM ) as $key ) {
-				if ( $this->has_write_surface( $key, $sources ) || isset( $via_key[ $key ] ) ) {
-					$stale[] = $key;
+				$html = \ReportedIP_Hive_Protection_Page::field_markup(
+					$key,
+					$entry,
+					'json_list' === $entry['kind'] ? array() : '',
+					array( 'available' => true ),
+					'json_list' === $entry['kind'] ? array( 'x' => 'X' ) : array()
+				);
+				if ( false === strpos( $html, 'name="' . $key ) ) {
+					$missing[] = "{$key}: renderer emitted no input";
 				}
 			}
 
-			$this->assertSame(
-				array(),
-				$stale,
-				"These keys have a form now and must leave NO_ADMIN_FORM:\n" . implode( "\n", $stale )
-			);
+			$this->assertSame( array(), $missing, "Registry keys without an admin surface:
+" . implode( "
+", $missing ) );
 		}
 
 		/**

@@ -128,14 +128,7 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		add_action( 'wp_ajax_reportedip_hive_run_queue_now', array( $this, 'ajax_run_queue_now' ) );
 		add_action( 'wp_ajax_reportedip_hive_rule_sync_now', array( $this, 'ajax_rule_sync_now' ) );
-		add_action( 'wp_ajax_reportedip_hive_waf_toggle', array( $this, 'ajax_waf_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_waf_dropin_toggle', array( $this, 'ajax_waf_dropin_toggle' ) );
-		add_action( 'wp_ajax_reportedip_hive_waf_set_paranoia', array( $this, 'ajax_waf_set_paranoia' ) );
-		add_action( 'wp_ajax_reportedip_hive_bot_action', array( $this, 'ajax_bot_action' ) );
-		add_action( 'wp_ajax_reportedip_hive_disposable_action', array( $this, 'ajax_disposable_action' ) );
-		add_action( 'wp_ajax_reportedip_hive_spam_toggle', array( $this, 'ajax_spam_toggle' ) );
-		add_action( 'wp_ajax_reportedip_hive_scan_toggle', array( $this, 'ajax_scan_toggle' ) );
-		add_action( 'wp_ajax_reportedip_hive_headers_save', array( $this, 'ajax_headers_save' ) );
 		add_action( 'wp_ajax_reportedip_hive_registry_save', array( $this, 'ajax_registry_save' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
@@ -231,26 +224,6 @@ class ReportedIP_Hive_Ajax_Handler {
 		return $result;
 	}
 
-	/**
-	 * Persist one registry-managed option from a single-option card.
-	 *
-	 * Shared by the Firewall page writers ajax_waf_toggle(),
-	 * ajax_waf_set_paranoia(), ajax_bot_action(), ajax_disposable_action(),
-	 * ajax_spam_toggle() and ajax_scan_toggle(). Only the pre-WordPress
-	 * drop-in toggle stays outside: its option is host-specific and not a
-	 * registry key. Wraps {@see apply_registry_batch()} for a single key
-	 * and returns the value the option router holds afterwards.
-	 *
-	 * @param string $key   Registry option key.
-	 * @param mixed  $value Raw target value.
-	 * @return mixed The stored value after the write.
-	 * @since  2.1.51
-	 */
-	private function save_registry_option( $key, $value ) {
-		$this->apply_registry_batch( array( $key => $value ) );
-
-		return ReportedIP_Hive_Option_Routing::get( $key );
-	}
 
 	/**
 	 * AJAX: Set operation mode (local/community)
@@ -1637,61 +1610,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		}
 	}
 
-	/**
-	 * AJAX: flip a WAF engine toggle (enabled or report-only).
-	 *
-	 * Capability- and nonce-gated. Accepts the `field` parameter and toggles the
-	 * matching option, returning the new boolean state for the UI to reflect.
-	 *
-	 * @return void
-	 * @since  2.1.2
-	 */
-	public function ajax_waf_toggle() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		$this->require_admin_capability();
-
-		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
-		$map   = array(
-			'enabled'     => ReportedIP_Hive_WAF::OPT_ENABLED,
-			'report_only' => ReportedIP_Hive_WAF::OPT_REPORT_ONLY,
-		);
-		if ( ! isset( $map[ $field ] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'reportedip-hive' ) ) );
-		}
-
-		$option = $map[ $field ];
-		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, 'enabled' === $field );
-		$new    = (bool) $this->save_registry_option( $option, $new );
-
-		wp_send_json_success( array( 'state' => $new ) );
-	}
-
-	/**
-	 * AJAX: set the WAF Paranoia Level (Professional only, 1-3).
-	 *
-	 * Free tiers are clamped to Level 1 by the engine regardless; this control
-	 * only affects Professional installs that sync the deeper ruleset. The
-	 * registry clamps the level into its 1-3 range.
-	 *
-	 * @return void
-	 * @since  2.1.2
-	 */
-	public function ajax_waf_set_paranoia() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-
-		$this->require_admin_capability();
-
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
-		if ( empty( $status['available'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Paranoia Level 2/3 requires a Professional plan.', 'reportedip-hive' ) ) );
-		}
-
-		$level = isset( $_POST['level'] ) ? absint( wp_unslash( $_POST['level'] ) ) : 1;
-		$level = (int) $this->save_registry_option( ReportedIP_Hive_WAF::OPT_PARANOIA, $level );
-
-		wp_send_json_success( array( 'level' => $level ) );
-	}
 
 	/**
 	 * AJAX: flip the pre-WordPress WAF drop-in on or off.
@@ -1737,132 +1656,10 @@ class ReportedIP_Hive_Ajax_Handler {
 		);
 	}
 
-	/**
-	 * AJAX: set the verified-bot action (off / flag / block).
-	 *
-	 * @return void
-	 * @since  2.1.2
-	 */
-	public function ajax_bot_action() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		$this->require_admin_capability();
 
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'bot_verification' );
-		if ( empty( $status['available'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Bot verification is unavailable on this plan.', 'reportedip-hive' ) ) );
-		}
 
-		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
-		$mode = $this->save_registry_option( ReportedIP_Hive_Bot_Verifier::OPT_ACTION, $mode );
 
-		wp_send_json_success( array( 'mode' => $mode ) );
-	}
-
-	/**
-	 * AJAX: set the disposable-email action (off / monitor / block).
-	 *
-	 * @return void
-	 * @since  2.1.2
-	 */
-	public function ajax_disposable_action() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-
-		$this->require_admin_capability();
-
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'disposable_email' );
-		if ( empty( $status['available'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Disposable-email blocking is unavailable on this plan.', 'reportedip-hive' ) ) );
-		}
-
-		$mode = isset( $_POST['mode'] ) ? sanitize_key( wp_unslash( $_POST['mode'] ) ) : '';
-		$mode = $this->save_registry_option( ReportedIP_Hive_Disposable_Email::OPT_ACTION, $mode );
-
-		wp_send_json_success( array( 'mode' => $mode ) );
-	}
-
-	/**
-	 * AJAX: flip a boolean spam-defence toggle (privacy-relay block or the
-	 * comment honeypot).
-	 *
-	 * @return void
-	 * @since  2.1.2
-	 */
-	public function ajax_spam_toggle() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-
-		$this->require_admin_capability();
-
-		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
-		$map   = array(
-			'block_relays' => ReportedIP_Hive_Disposable_Email::OPT_BLOCK_RELAYS,
-			'honeypot'     => ReportedIP_Hive_Comment_Honeypot::OPT_ENABLED,
-		);
-		if ( ! isset( $map[ $field ] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'reportedip-hive' ) ) );
-		}
-
-		$option = $map[ $field ];
-		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, 'honeypot' === $field );
-		$new    = (bool) $this->save_registry_option( $option, $new );
-
-		wp_send_json_success( array( 'state' => $new ) );
-	}
-
-	/**
-	 * AJAX: flip the scan detector or the decoy-path trap on or off.
-	 *
-	 * @return void
-	 * @since  2.1.2
-	 */
-	public function ajax_scan_toggle() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-
-		$this->require_admin_capability();
-
-		$field = isset( $_POST['field'] ) ? sanitize_key( wp_unslash( $_POST['field'] ) ) : '';
-		$map   = array(
-			'scan'  => 'reportedip_hive_monitor_404_scans',
-			'decoy' => 'reportedip_hive_decoy_pathblock_enabled',
-		);
-		if ( ! isset( $map[ $field ] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Unknown setting.', 'reportedip-hive' ) ) );
-		}
-
-		$option = $map[ $field ];
-		$new    = ! (bool) ReportedIP_Hive_Option_Routing::get( $option, true );
-		$new    = (bool) $this->save_registry_option( $option, $new );
-
-		wp_send_json_success( array( 'state' => $new ) );
-	}
-
-	/**
-	 * AJAX: persist the security-header configuration from the Hardening tab.
-	 *
-	 * The header options are registry entries, so the payload goes through
-	 * the same batch writer every other settings card uses. That keeps one
-	 * type table instead of two and lets the registry's tier gate answer for
-	 * the advanced headers: a Free user posting a crafted request now gets a
-	 * named `skipped_tier` rejection rather than a silently dropped key.
-	 *
-	 * @return void
-	 * @since  2.1.2
-	 */
-	public function ajax_headers_save() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-
-		$this->require_admin_capability();
-
-		$raw  = isset( $_POST['payload'] ) ? wp_unslash( $_POST['payload'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON blob; decoded below and every key sanitised by Settings_Apply through the registry.
-		$data = json_decode( (string) $raw, true );
-		if ( ! is_array( $data ) || empty( $data ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid payload.', 'reportedip-hive' ) ) );
-		}
-
-		$this->apply_registry_batch( $data );
-
-		wp_send_json_success();
-	}
 
 	/**
 	 * AJAX: persist a batch of registry-managed options from an admin card.

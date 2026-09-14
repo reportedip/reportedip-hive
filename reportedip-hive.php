@@ -536,6 +536,9 @@ class ReportedIP_Hive {
 			new ReportedIP_Hive_Quickstart( $this->mode_manager );
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-protection-page.php';
 			new ReportedIP_Hive_Protection_Page();
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-tools-page.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-aliases.php';
+			ReportedIP_Hive_Admin_Aliases::init();
 		}
 
 		ReportedIP_Hive_Database::get_instance();
@@ -892,7 +895,7 @@ class ReportedIP_Hive {
 			);
 		}
 
-		if ( str_contains( (string) $hook, 'reportedip-hive-firewall' ) ) {
+		if ( str_contains( (string) $hook, 'reportedip-hive-tools' ) ) {
 			wp_enqueue_script(
 				'reportedip-hive-firewall',
 				REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/firewall.js',

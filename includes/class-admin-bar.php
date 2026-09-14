@@ -196,13 +196,10 @@ CSS;
 	 * @return string
 	 */
 	private function settings_tab_url() {
-		$args = array(
-			'page' => 'reportedip-hive-settings',
-			'tab'  => 'hardening_mode',
-		);
+		$path = 'admin.php?page=reportedip-hive-protection#hardening_mode';
 		if ( is_multisite() ) {
-			return add_query_arg( $args, network_admin_url( 'admin.php' ) );
+			return network_admin_url( $path );
 		}
-		return add_query_arg( $args, admin_url( 'admin.php' ) );
+		return admin_url( $path );
 	}
 }
