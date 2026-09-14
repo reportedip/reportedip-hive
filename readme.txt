@@ -373,7 +373,7 @@ They can still comment. The form execution proof treats a missing proof as a str
 
 = Can I test thresholds without blocking real users? =
 
-Yes. Enable **Report-Only mode** under *Settings → Blocking*. Every event is logged exactly as it would have been blocked, but no IP is ever rejected. Ideal for tuning thresholds against live traffic before flipping enforcement on.
+Yes. Enable **Report-Only mode** under *Protection → Blocking & Escalation*. Every event is logged exactly as it would have been blocked, but no IP is ever rejected. Ideal for tuning thresholds against live traffic before flipping enforcement on.
 
 = I'm getting 403s on Real Cookie Banner / Complianz / Borlabs. Is it Hive? =
 
@@ -415,8 +415,8 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 2. **Blocked IPs** — Filterable, sortable list with bulk actions, manual unblock, "move to whitelist" and CSV export.
 3. **Whitelist** — Trusted IPs with optional expiry, reason, and CSV import.
 4. **Security Event Logs** — Searchable, severity-filterable, JSON / CSV export, bulk delete + bulk block + bulk whitelist actions.
-5. **Settings → Blocking** — How-blocking-decides info card, auto-block toggle, progressive ladder editor with reset window, report-only mode toggle, blocked-page contact link.
-6. **Settings → Two-Factor** — Method enable/disable, role enforcement, grace period, IP allowlist, recovery-code management, trusted-device list.
+5. **Protection → Blocking & Escalation** — auto-block toggle, progressive ladder editor with reset window, report-only mode toggle, blocked-page contact link.
+6. **Protection → Two-Factor Authentication** — method enable/disable, role enforcement, grace period, IP allowlist; recovery codes and trusted devices live on the profile.
 7. **Quickstart** — one page, two decisions, a plan-aware recommendation applied through the settings registry.
 8. **API Queue** — Pending and failed report queue with retry, quota status, queue-health indicators.
 9. **Promote** — Auto-footer badge configurator and shortcode showcase with live previews.

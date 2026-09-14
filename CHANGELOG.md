@@ -2,6 +2,37 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- **The Settings and Firewall pages are gone; one Protection page replaces
+  them.** Every area of the settings registry is a collapsible card with a
+  short status, a search box opens the matching card and marks the label,
+  and the page has two depths: simple shows the sixteen settings that matter
+  day to day, expert shows every field. Each card saves through the same
+  apply service MainWP, the cloud fleet and the import use, so validation and
+  plan limits are identical on every path; a rejected value is reported at
+  the card. Fields whose plan gate depends on the value (registration lists,
+  adaptive policies) stay editable with the plan marker shown, and the
+  registry refuses a value that crosses the line.
+- **A Tools page** carries what is not a setting: the Extended Protection
+  drop-in and the server snippets, rule sync and WAF exceptions, the
+  hardening status, import/export and reset, and the test mail. It is listed
+  in the menu in expert mode and always reachable by URL.
+- The connection card (mode, Community Access Key, endpoint, cloud
+  management) moved to the Community page.
+- Old `page=reportedip-hive-settings&tab=…` and
+  `page=reportedip-hive-firewall&tab=…` addresses redirect to the matching
+  Protection card or Tools tab, so bookmarks, MainWP links and readiness
+  issues keep working.
+- The `Security` menu entry is called `Activity` now.
+
+### Removed
+
+- The seven single-card firewall AJAX writers; every field saves through
+  the protection page and the registry apply service.
+
 ## [2.1.55] — 2026-09-13
 
 ### Fixes
