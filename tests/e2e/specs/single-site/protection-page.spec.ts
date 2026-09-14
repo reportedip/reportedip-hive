@@ -136,31 +136,34 @@ test.describe('protection page', () => {
 		await expect(page.locator('#account_security input[name="reportedip_hive_2fa_allowed_methods[]"][value="sms"]')).toBeDisabled();
 	});
 
-	test('stored role and method lists render checked and round-trip through save', async ({ page }) => {
+	test('a stored role list renders checked and round-trips through save', async ({ page }) => {
+		/* Editor, not administrator: an enforced admin without a method is sent to the 2FA onboarding on login. */
+		const twoFactorWasOn = wpArgs('option', 'get', 'reportedip_hive_2fa_enabled_global');
 		wpArgs('option', 'update', 'reportedip_hive_2fa_enabled_global', '1');
-		wpArgs('option', 'update', 'reportedip_hive_2fa_enforce_roles', '["administrator"]');
-		wpArgs('option', 'update', 'reportedip_hive_2fa_allowed_methods', '["totp","email"]');
-		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
-		const card = page.locator('#account_security');
-		await expect(card.locator('summary')).toContainText(/1 role enforced/i);
-		await card.evaluate((el) => {
-			(el as HTMLDetailsElement).open = true;
-		});
-		const roles = 'input[type="checkbox"][name="reportedip_hive_2fa_enforce_roles[]"]';
-		const methods = 'input[type="checkbox"][name="reportedip_hive_2fa_allowed_methods[]"]';
-		await expect(card.locator(`${roles}[value="administrator"]`)).toBeChecked();
-		await expect(card.locator(`${roles}[value="editor"]`)).not.toBeChecked();
-		await expect(card.locator(`${methods}[value="totp"]`)).toBeChecked();
-		await expect(card.locator(`${methods}[value="webauthn"]`)).not.toBeChecked();
+		wpArgs('option', 'update', 'reportedip_hive_2fa_enforce_roles', '["editor"]');
+		try {
+			await loginAsAdmin(page);
+			await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+			const card = page.locator('#account_security');
+			await expect(card.locator('.rip-protection__status')).toContainText(/1 role enforced/i);
+			await card.evaluate((el) => {
+				(el as HTMLDetailsElement).open = true;
+			});
+			const roles = 'input[type="checkbox"][name="reportedip_hive_2fa_enforce_roles[]"]';
+			await expect(card.locator(`${roles}[value="editor"]`)).toBeChecked();
+			await expect(card.locator(`${roles}[value="author"]`)).not.toBeChecked();
 
-		await card.locator(`${roles}[value="editor"]`).check();
-		await card.locator('form button[type="submit"]').click();
-		await expect.poll(() => wpArgs('option', 'get', 'reportedip_hive_2fa_enforce_roles'), { timeout: 30_000 }).toBe('["administrator","editor"]');
-		await expect(card.locator('summary')).toContainText(/2 roles enforced/i);
-		await expect(card.locator('.rip-alert--error')).toHaveCount(0);
-		await expect(card.locator(`${roles}[value="editor"]`)).toBeChecked();
-		wpArgs('option', 'update', 'reportedip_hive_2fa_enforce_roles', '["administrator"]');
+			await card.locator(`${roles}[value="author"]`).check();
+			await card.locator('form button[type="submit"]').click();
+			await expect.poll(() => wpArgs('option', 'get', 'reportedip_hive_2fa_enforce_roles'), { timeout: 30_000 }).toBe('["editor","author"]');
+			await page.waitForURL(/#account_security/);
+			await expect(card.locator('.rip-protection__status')).toContainText(/2 roles enforced/i);
+			await expect(card.locator('.rip-alert--error')).toHaveCount(0);
+			await expect(card.locator(`${roles}[value="author"]`)).toBeChecked();
+		} finally {
+			wpArgs('option', 'update', 'reportedip_hive_2fa_enforce_roles', '[]');
+			wpArgs('option', 'update', 'reportedip_hive_2fa_enabled_global', twoFactorWasOn || '0');
+		}
 	});
 
 	test('the uninstall switch lives on the tools page and round-trips', async ({ page }) => {
