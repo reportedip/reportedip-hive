@@ -6,6 +6,15 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- A settings export from a site still running on its defaults wrote `null`
+  for every option that had never been stored, and importing that file
+  switched those protections off and clamped the numbers to their minimum
+  (failed-login threshold 1, retention 1 day, admin notifications off). The
+  export now writes the value the site actually runs on, and the import
+  skips `null` entries from files written by earlier versions, so a round
+  trip leaves the target site as it was.
+- The settings import on the System Status page did nothing after "Preview
+  changes" because its script only loaded on the Tools page.
 - The Protection page never showed a stored role or method list as checked:
   the renderer cast the stored JSON string to an array instead of decoding
   it, so "Roles required to use 2FA" looked empty right after the quickstart

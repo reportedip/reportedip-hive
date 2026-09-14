@@ -283,6 +283,48 @@ class SettingsImportExportTest extends TestCase {
 	}
 
 	/**
+	 * An option the source site never stored is exported as the default it
+	 * runs on, not as `null`. A file full of `null` used to switch most
+	 * protections off on the target once re-imported.
+	 */
+	public function test_export_reads_the_default_for_an_unset_option(): void {
+		$payload = ReportedIP_Hive_Settings_Import_Export::get_instance()
+			->build_export_payload( array( 'detection', 'privacy_logs' ), false );
+
+		$this->assertSame( 5, $payload['options']['reportedip_hive_failed_login_threshold'] );
+		$this->assertSame( 30, $payload['options']['reportedip_hive_data_retention_days'] );
+		$this->assertNotContains( null, $payload['options'], 'no exported value may be null' );
+	}
+
+	/**
+	 * Files written before 2.1.57 carry `null` for unset options. Such an
+	 * entry leaves the target value alone instead of being sanitized to 0.
+	 */
+	public function test_apply_payload_skips_null_values(): void {
+		$GLOBALS['wp_options']['reportedip_hive_failed_login_threshold'] = 9;
+		$GLOBALS['wp_options']['reportedip_hive_data_retention_days']    = 60;
+
+		$result = ReportedIP_Hive_Settings_Import_Export::get_instance()->apply_payload(
+			array(
+				'_meta'   => array( 'plugin' => 'reportedip-hive', 'schema_version' => 1 ),
+				'options' => array(
+					'reportedip_hive_failed_login_threshold' => null,
+					'reportedip_hive_data_retention_days'    => null,
+					'reportedip_hive_block_user_enumeration' => null,
+				),
+			),
+			array( 'detection', 'privacy_logs', 'lockdown' )
+		);
+
+		$this->assertSame( 9, $GLOBALS['wp_options']['reportedip_hive_failed_login_threshold'] );
+		$this->assertSame( 60, $GLOBALS['wp_options']['reportedip_hive_data_retention_days'] );
+		$this->assertArrayNotHasKey( 'reportedip_hive_block_user_enumeration', $GLOBALS['wp_options'] );
+		$this->assertSame( 0, $result['written'] );
+		$this->assertSame( 3, $result['skipped'] );
+		$this->assertSame( array(), $result['errors'] );
+	}
+
+	/**
 	 * Schema version is part of the public contract, bumping it must be a
 	 * deliberate decision (matches the import-side check in the AJAX handler).
 	 */

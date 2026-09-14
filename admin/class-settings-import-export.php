@@ -295,6 +295,25 @@ class ReportedIP_Hive_Settings_Import_Export {
 	}
 
 	/**
+	 * The value a site actually runs on: the stored option, or the canonical
+	 * default while nothing is stored.
+	 *
+	 * The export used to read unset options as `null`. Re-importing such a
+	 * file then ran `null` through the registry sanitizer, which turns it
+	 * into `0` for switches, the minimum for numbers and a rejection for
+	 * choices and lists, so a site on its defaults became a site with most
+	 * protections switched off.
+	 *
+	 * @param string $key Option key.
+	 * @return mixed
+	 * @since  2.1.57
+	 */
+	private static function effective_value( string $key ) {
+		$defaults = class_exists( 'ReportedIP_Hive_Defaults' ) ? ReportedIP_Hive_Defaults::all_option_defaults() : array();
+		return ReportedIP_Hive_Option_Routing::get( $key, $defaults[ $key ] ?? null );
+	}
+
+	/**
 	 * Builds the export envelope for the requested sections.
 	 *
 	 * @param array<int, string> $requested_sections Section slugs to include.
@@ -309,13 +328,13 @@ class ReportedIP_Hive_Settings_Import_Export {
 		foreach ( $valid_sections as $section_slug ) {
 			$section = self::sections()[ $section_slug ];
 			foreach ( $section['options'] as $key ) {
-				$options[ $key ] = ReportedIP_Hive_Option_Routing::get( $key, null );
+				$options[ $key ] = self::effective_value( $key );
 			}
 		}
 
 		if ( $include_secrets ) {
 			foreach ( self::secret_options() as $key ) {
-				$options[ $key ] = ReportedIP_Hive_Option_Routing::get( $key, null );
+				$options[ $key ] = self::effective_value( $key );
 			}
 		}
 
@@ -484,7 +503,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 				if ( ! array_key_exists( $key, $incoming ) ) {
 					continue;
 				}
-				$current = ReportedIP_Hive_Option_Routing::get( $key, null );
+				$current = self::effective_value( $key );
 				$status  = $this->values_equal( $current, $incoming[ $key ] ) ? 'unchanged' : 'changed';
 				$rows[]  = array(
 					'key'      => $key,
@@ -541,6 +560,11 @@ class ReportedIP_Hive_Settings_Import_Export {
 	/**
 	 * Applies a validated payload, honouring the user's section selection.
 	 *
+	 * A `null` value means the source site had nothing stored for that key.
+	 * Files written before 2.1.57 carry such entries; they are skipped so
+	 * the target keeps its own value instead of the sanitized form of
+	 * nothing.
+	 *
 	 * Public so the setup wizard can re-use the same code path.
 	 *
 	 * @param array<string, mixed> $payload           Decoded JSON envelope.
@@ -575,7 +599,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 		$connection_batch = array();
 
 		foreach ( $incoming as $key => $value ) {
-			if ( ! is_string( $key ) || ! isset( $allowed_keys[ $key ] ) ) {
+			if ( ! is_string( $key ) || ! isset( $allowed_keys[ $key ] ) || null === $value ) {
 				++$skipped;
 				continue;
 			}
