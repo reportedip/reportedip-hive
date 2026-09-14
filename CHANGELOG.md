@@ -40,7 +40,9 @@ All changes to ReportedIP Hive are documented here.
   dashboard visit, chosen by plan and site signals (WooCommerce, Multisite,
   more than 25 users) and rate-limited by the promo manager.
 - **Expert mode is a switch in the page header.** It is stored per person,
-  lists the Tools page and shows every field on the Protection page.
+  lists the Tools page and shows every field on the Protection page. The
+  switch sits in a white pill next to the mode and plan badges and carries
+  an info icon that explains the two depths.
 - **The plan locks of the former tabs are back on the Protection page.**
   A plan-gated field is disabled with the plan marker unless the stored value
   is inside the free range (registration lists, firewall paranoia) or the

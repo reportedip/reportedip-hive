@@ -1611,14 +1611,53 @@ button.rip-tier-lock--mode:hover {
     gap: var(--rip-space-3) var(--rip-space-5);
 }
 .rip-expert-toggle {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    margin-right: var(--rip-space-3);
+    gap: var(--rip-space-2);
+    padding: var(--rip-space-1) var(--rip-space-3);
+    border-radius: var(--rip-radius-full);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
 }
 .rip-toggle--inline .rip-toggle__label {
     margin-left: var(--rip-space-2);
     font-size: var(--rip-text-sm);
     color: var(--rip-gray-700);
+}
+.rip-expert-toggle .rip-toggle__label {
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+.rip-expert-toggle .rip-toggle__slider {
+    background: rgba(255, 255, 255, 0.35);
+}
+.rip-expert-toggle .rip-toggle__slider::after {
+    background: #fff;
+}
+.rip-expert-toggle .rip-toggle__input:checked + .rip-toggle__slider {
+    background: var(--rip-success);
+}
+.rip-expert-toggle .rip-toggle__input:focus-visible + .rip-toggle__slider {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
+}
+.rip-expert-toggle__info {
+    display: inline-flex;
+    align-items: center;
+    width: 16px;
+    height: 16px;
+    color: rgba(255, 255, 255, 0.85);
+    cursor: help;
+}
+.rip-expert-toggle__info svg {
+    width: 16px;
+    height: 16px;
+}
+.rip-expert-toggle__info:hover,
+.rip-expert-toggle__info:focus-visible {
+    color: #fff;
+    outline: none;
 }
 
 /* ==========================================================================

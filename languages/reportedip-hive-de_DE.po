@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: ReportedIP Hive 2.0.19\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-09-14T06:54:28+00:00\n"
+"PO-Revision-Date: 2026-09-14T07:23:53+00:00\n"
 "Last-Translator: Patrick Schlesinger <1@reportedip.com>\n"
 "Language-Team: German <de@li.org>\n"
 "Language: de_DE\n"
@@ -41,7 +41,7 @@ msgid "Patrick Schlesinger, ReportedIP"
 msgstr "Patrick Schlesinger, ReportedIP"
 
 #: admin/class-admin-firewall.php:131 admin/class-admin-settings.php:4580
-#: admin/class-admin-settings.php:6713 admin/class-protection-page.php:797
+#: admin/class-admin-settings.php:6713 admin/class-protection-page.php:801
 #: admin/class-two-factor-admin.php:910
 msgid "Save"
 msgstr "Speichern"
@@ -1367,7 +1367,7 @@ msgstr "Das Relay nimmt %s wieder an."
 
 #: admin/class-admin-settings.php:1631 admin/class-admin-settings.php:1663
 #: admin/class-dashboard-next-steps.php:424
-#: admin/class-protection-page.php:874 admin/class-protection-page.php:921
+#: admin/class-protection-page.php:878 admin/class-protection-page.php:925
 #: includes/class-readiness.php:567 includes/class-tier-upgrade.php:350
 #: includes/class-two-factor-recommend.php:348
 #: includes/class-two-factor-recommend.php:375
@@ -1436,7 +1436,7 @@ msgstr "Dashboard"
 msgid "Activity"
 msgstr "Aktivität"
 
-#: admin/class-admin-settings.php:1886 admin/class-protection-page.php:736
+#: admin/class-admin-settings.php:1886 admin/class-protection-page.php:740
 msgid "Protection"
 msgstr "Schutz"
 
@@ -4401,7 +4401,7 @@ msgid "Open the referral programme"
 msgstr "Empfehlungsprogramm öffnen"
 
 #: admin/class-dashboard-next-steps.php:445
-#: admin/class-protection-page.php:898
+#: admin/class-protection-page.php:902
 msgid "Rejected."
 msgstr "Abgelehnt."
 
@@ -4874,8 +4874,8 @@ msgstr "Streng"
 msgid "Paranoid"
 msgstr "Paranoid"
 
-#: admin/class-protection-page.php:661 admin/class-protection-page.php:824
-#: admin/class-protection-page.php:831
+#: admin/class-protection-page.php:661 admin/class-protection-page.php:828
+#: admin/class-protection-page.php:835
 msgid "Custom"
 msgstr "Angepasst"
 
@@ -4892,14 +4892,25 @@ msgid "Expert mode"
 msgstr "Expertenmodus"
 
 #: admin/class-protection-page.php:714
+msgid ""
+"Expert mode shows every setting on the Protection page and lists the Tools "
+"page. Simple mode shows the sixteen day-to-day settings; everything else "
+"runs on the recommendation. The switch is stored for your user only."
+msgstr ""
+"Der Expertenmodus zeigt jede Einstellung auf der Schutz-Seite und blendet "
+"die Werkzeuge-Seite ein. Der einfache Modus zeigt die sechzehn "
+"Alltagseinstellungen; alles andere läuft mit der Empfehlung. Der Schalter "
+"gilt nur für Ihr Konto."
+
+#: admin/class-protection-page.php:718
 msgid "Apply"
 msgstr "Anwenden"
 
-#: admin/class-protection-page.php:737
+#: admin/class-protection-page.php:741
 msgid "Every setting, grouped by area"
 msgstr "Jede Einstellung, nach Bereich gruppiert"
 
-#: admin/class-protection-page.php:737
+#: admin/class-protection-page.php:741
 msgid ""
 "The settings that matter day to day; everything else runs on the "
 "recommendation"
@@ -4907,12 +4918,12 @@ msgstr ""
 "Die Einstellungen, die im Alltag zählen; alles andere läuft mit der "
 "Empfehlung"
 
-#: admin/class-protection-page.php:742
+#: admin/class-protection-page.php:746
 msgid "Search settings, e.g. Tor, HSTS, retention"
 msgstr "Einstellungen suchen, z. B. Tor, HSTS, Aufbewahrung"
 
 #. translators: %d: number of changed settings
-#: admin/class-protection-page.php:750
+#: admin/class-protection-page.php:754
 #, php-format
 msgid "%d setting saved."
 msgid_plural "%d settings saved."
@@ -4920,29 +4931,29 @@ msgstr[0] "%d Einstellung gespeichert."
 msgstr[1] "%d Einstellungen gespeichert."
 
 #. translators: %d: number of rejected settings
-#: admin/class-protection-page.php:753
+#: admin/class-protection-page.php:757
 #, php-format
 msgid "%d field was not saved, see the card."
 msgid_plural "%d fields were not saved, see the card."
 msgstr[0] "%d Feld wurde nicht gespeichert, siehe Karte."
 msgstr[1] "%d Felder wurden nicht gespeichert, siehe Karte."
 
-#: admin/class-protection-page.php:773
+#: admin/class-protection-page.php:777
 msgid ""
 "Runs on the recommendation. Switch to expert mode to change the details."
 msgstr ""
 "Läuft mit der Empfehlung. Wechseln Sie in den Expertenmodus, um die Details "
 "zu ändern."
 
-#: admin/class-protection-page.php:820
+#: admin/class-protection-page.php:824
 msgid "protection level preset relaxed balanced strict paranoid"
 msgstr "schutzstufe voreinstellung locker ausgewogen streng paranoid"
 
-#: admin/class-protection-page.php:822
+#: admin/class-protection-page.php:826
 msgid "Protection level"
 msgstr "Schutzstufe"
 
-#: admin/class-protection-page.php:833
+#: admin/class-protection-page.php:837
 msgid ""
 "Sets the failed-login threshold and window, the block duration and the "
 "community protection level in one go. Choose Custom to edit them one by one."
@@ -4951,31 +4962,31 @@ msgstr ""
 "Sperrdauer und die Community-Schutzstufe in einem Schritt. Wählen Sie "
 "Angepasst, um die Werte einzeln zu bearbeiten."
 
-#: admin/class-protection-page.php:847
+#: admin/class-protection-page.php:851
 msgid "Manage rules and exceptions"
 msgstr "Regeln und Ausnahmen verwalten"
 
-#: admin/class-protection-page.php:848 admin/class-protection-page.php:849
+#: admin/class-protection-page.php:852 admin/class-protection-page.php:853
 msgid "Server setup"
 msgstr "Server einrichten"
 
-#: admin/class-protection-page.php:850
+#: admin/class-protection-page.php:854
 msgid "Export and reset"
 msgstr "Exportieren und zurücksetzen"
 
-#: admin/class-protection-page.php:851
+#: admin/class-protection-page.php:855
 msgid "Send a test mail"
 msgstr "Test-Mail senden"
 
-#: admin/class-protection-page.php:852
+#: admin/class-protection-page.php:856
 msgid "Cache and queue tools"
 msgstr "Cache- und Queue-Werkzeuge"
 
-#: admin/class-protection-page.php:853
+#: admin/class-protection-page.php:857
 msgid "Hardening status"
 msgstr "Hardening-Status"
 
-#: admin/class-protection-page.php:880
+#: admin/class-protection-page.php:884
 msgid "Unknown section."
 msgstr "Unbekannter Bereich."
 
@@ -5061,7 +5072,7 @@ msgstr "Schutz wird eingeschaltet…"
 msgid "%1$s of %2$s domains in use"
 msgstr "%1$s von %2$s Domains belegt"
 
-#: admin/class-quickstart.php:336 admin/class-quickstart.php:659
+#: admin/class-quickstart.php:336 admin/class-quickstart.php:661
 msgid ""
 "Community Network needs a checked Community Access Key. Check the key above "
 "or choose Local Shield."
@@ -5212,8 +5223,8 @@ msgstr "Audit-Trail, Kontosperrung und Sitzungsverwaltung"
 msgid "Mail-2FA: 2,500/month, SMS-2FA: 75/month, one year of logs"
 msgstr "Mail-2FA: 2.500/Monat, SMS-2FA: 75/Monat, ein Jahr Protokolle"
 
-#: admin/class-quickstart.php:585 admin/class-quickstart.php:646
-#: admin/class-quickstart.php:765 admin/class-quickstart.php:803
+#: admin/class-quickstart.php:585 admin/class-quickstart.php:648
+#: admin/class-quickstart.php:767 admin/class-quickstart.php:805
 #: admin/class-settings-import-export.php:267
 #: includes/class-ajax-handler.php:169 includes/class-ajax-handler.php:188
 msgid "Insufficient permissions."
@@ -5228,15 +5239,15 @@ msgstr ""
 " und konnte nicht gespeichert werden. Bitte fügen Sie ihn genau so ein, wie "
 "er in Ihrem Konto angezeigt wird."
 
-#: admin/class-quickstart.php:769
+#: admin/class-quickstart.php:771
 msgid "Settings import is unavailable."
 msgstr "Der Import von Einstellungen ist nicht verfügbar."
 
-#: admin/class-quickstart.php:807
+#: admin/class-quickstart.php:809
 msgid "Hide Login is unavailable."
 msgstr "Anmeldung verbergen ist nicht verfügbar."
 
-#: admin/class-quickstart.php:823
+#: admin/class-quickstart.php:825
 msgid "That slug cannot be used."
 msgstr "Dieser Slug kann nicht verwendet werden."
 
