@@ -65,6 +65,13 @@ class ReportedIP_Hive_Security_Monitor {
 	private $mode_manager;
 	private $cache;
 
+	/**
+	 * Whether the comment submitted in this request has already been counted.
+	 *
+	 * @var bool
+	 */
+	private $comment_counted = false;
+
 	public function __construct() {
 		$this->database     = ReportedIP_Hive_Database::get_instance();
 		$this->api_client   = ReportedIP_Hive_API::get_instance();
@@ -307,9 +314,23 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
-	 * Check comment spam threshold
+	 * Check comment spam threshold.
+	 *
+	 * One submitted comment counts once. Two layers report the same comment:
+	 * the honeypot at `preprocess_comment` priority 1 and the `comment_post`
+	 * handler once the spam verdict is set. Before 2.1.58 a filled decoy was
+	 * therefore counted twice and an address reached a threshold of five after
+	 * three comments instead of five.
+	 *
+	 * @param string $ip_address Client address.
+	 * @return bool True when the address has crossed the threshold.
 	 */
 	public function check_comment_spam_threshold( $ip_address ) {
+		if ( $this->comment_counted ) {
+			return false;
+		}
+		$this->comment_counted = true;
+
 		$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 5 );
 		$timeframe = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 60 );
 

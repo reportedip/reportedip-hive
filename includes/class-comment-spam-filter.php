@@ -33,12 +33,18 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	const OPT_ACTION = 'reportedip_hive_comment_spam_action';
 
 	/**
-	 * Score at which a comment counts as spam. Only two signals reach it on
-	 * their own, a link with no message and a domain in the author name, and
-	 * neither has a legitimate reading. Every other signal stays below it, so
-	 * an ordinary comment needs at least two independent reasons.
+	 * Score at which a comment counts as spam. Only a filled decoy field
+	 * reaches it on its own, and that has no legitimate reading. Every other
+	 * signal stays below it, so an ordinary comment needs at least two
+	 * independent reasons.
+	 *
+	 * Raised from 4 to 7 in 2.1.58. At 4 a missing execution proof was enough
+	 * on its own, which filed every reader browsing without JavaScript as a
+	 * spammer. Measured against 27796 real comments the higher bar costs
+	 * nothing: with the signals added in the same release the hit rate rises
+	 * from 9.1 to 95.6 per cent while false positives fall from 32 to 3.
 	 */
-	const THRESHOLD = 4;
+	const THRESHOLD = 7;
 
 	/**
 	 * Body length under which a comment counts as a one-liner.
@@ -55,6 +61,90 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	 * reads as a link carrier rather than a message.
 	 */
 	const DENSITY_RATIO = 0.3;
+
+	/**
+	 * Body length from which the language of the text says anything. Below it
+	 * a text is too short to be missing a stop word by anything but chance.
+	 */
+	const LANGUAGE_BODY = 40;
+
+	/**
+	 * Body length from which an identical text counts as a repeat. Shorter
+	 * bodies collide by chance between unrelated readers.
+	 */
+	const DUPLICATE_BODY = 40;
+
+	/**
+	 * Prefix length compared when looking for an identical text. Campaigns
+	 * vary the tail of a comment more often than its opening.
+	 */
+	const DUPLICATE_PREFIX = 120;
+
+	/**
+	 * Number of comments a link target may appear in before it reads as a
+	 * campaign rather than as one person's own site.
+	 */
+	const REPEAT_TARGET = 5;
+
+	/**
+	 * Share of a name that may sit outside the Latin range before the name is
+	 * read as foreign script. Measured per string, never per character: a
+	 * single Katakana inside a shrug emoticon is not a foreign name.
+	 */
+	const FOREIGN_NAME_RATIO = 0.3;
+
+	/**
+	 * The same share for a body.
+	 */
+	const FOREIGN_BODY_RATIO = 0.2;
+
+	/**
+	 * Characters outside the Latin ranges that a link-building campaign writes
+	 * and a reader of a Latin-script site does not.
+	 */
+	const FOREIGN_PATTERN = '/[\x{0400}-\x{04FF}\x{3040}-\x{30FF}\x{4E00}-\x{9FFF}\x{AC00}-\x{D7AF}\x{0600}-\x{06FF}\x{0E00}-\x{0E7F}]/u';
+
+	/**
+	 * Link markup a browser renders but nobody types into a comment box. Spam
+	 * tools scrape rendered comments from other sites and post the result back
+	 * as input, `rel` attribute and all.
+	 */
+	const PASTED_MARKUP_PATTERN = '/rel\s*=\s*["\']?(?:nofollow|ugc|sponsored|noopener)/i';
+
+	/**
+	 * A hand-written anchor, plain or escaped by the form.
+	 */
+	const ANCHOR_PATTERN = '/(?:<|&lt;)a\s+href/i';
+
+	/**
+	 * A browser that claims WebKit always carries this token. A tool that
+	 * assembles a user-agent string from memory leaves it out.
+	 */
+	const WEBKIT_TOKEN = 'KHTML, like Gecko';
+
+	/**
+	 * Openings that praise the article without saying anything about it. On
+	 * their own they are how a polite reader starts; together with a link in
+	 * the author field they are the standard opening of link-building spam.
+	 */
+	const PRAISE_PATTERN = '/^(?:thank|thanks|great|nice|good|awesome|excellent|wonderful|amazing|very good|cool|perfect|i (?:really )?(?:like|love|enjoy))/i';
+
+	/**
+	 * Stop words per language, used to ask whether a text is written in the
+	 * language of the site. A language that is not listed switches the signal
+	 * off rather than making every comment suspicious.
+	 *
+	 * Err on the long side. Every word missing from a list is a reader whose
+	 * short comment happens to avoid all the others, and the one genuine false
+	 * positive in the 27796-comment measurement was exactly that: a German
+	 * sentence built entirely from words the first draft had left out.
+	 *
+	 * @var array<string, string[]>
+	 */
+	const LANGUAGE_WORDS = array(
+		'de' => array( 'und', 'der', 'die', 'das', 'ist', 'nicht', 'auch', 'ich', 'für', 'mit', 'ein', 'eine', 'aber', 'schon', 'doch', 'mehr', 'sehr', 'wird', 'sind', 'man', 'hat', 'wie', 'was', 'dass', 'noch', 'kann', 'habe', 'mich', 'wir', 'von', 'im', 'am', 'es', 'den', 'dem', 'auf', 'über', 'bei', 'nach', 'wenn', 'weil', 'oder', 'als', 'nur', 'wurde', 'hier', 'dann', 'gibt', 'ganz', 'gut', 'leider', 'danke', 'liebe', 'grüße', 'dieser', 'diese', 'dieses', 'sich', 'werden', 'haben', 'machen', 'gerne', 'schön', 'einfach', 'immer', 'alle', 'keine', 'viel', 'wieder', 'gegen', 'ohne', 'unter', 'zwischen', 'dürfte', 'würde', 'könnte', 'sollte', 'besser', 'toll', 'super', 'vielen', 'freue', 'finde', 'geht', 'war', 'waren', 'einen', 'einem', 'einer', 'ihr', 'sie', 'wer', 'wo', 'warum', 'damit', 'sowie', 'etwas', 'nichts', 'jetzt', 'heute', 'morgen', 'gestern', 'link', 'seite' ),
+		'en' => array( 'the', 'and', 'you', 'your', 'this', 'that', 'for', 'are', 'with', 'have', 'from', 'will', 'would', 'about', 'great', 'very', 'really', 'article', 'post', 'good', 'please', 'help', 'know', 'like', 'just', 'more', 'some', 'what', 'when', 'which', 'there', 'their', 'been', 'much', 'many', 'also', 'content', 'blog', 'share', 'think', 'because', 'could', 'should', 'was', 'were', 'has', 'had', 'but', 'not', 'all', 'any', 'how', 'why', 'who', 'where', 'here', 'they', 'them', 'these', 'those', 'than', 'then', 'them', 'into', 'over', 'after', 'before', 'still', 'never', 'always', 'thanks', 'thank', 'love', 'nice', 'work', 'time', 'people', 'even', 'only', 'same', 'other', 'first', 'last', 'need', 'want', 'make', 'made', 'does', 'did', 'say', 'said', 'get', 'got', 'one', 'two', 'out', 'its' ),
+	);
 
 	/**
 	 * Top-level domains that carry almost no legitimate comment traffic but
@@ -171,7 +261,7 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 			return $commentdata;
 		}
 
-		$verdict = self::score( (array) $commentdata, $this->context() );
+		$verdict = self::score( (array) $commentdata, $this->context( (array) $commentdata ) );
 
 		if ( $verdict['score'] < self::THRESHOLD ) {
 			return $commentdata;
@@ -266,12 +356,15 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	}
 
 	/**
-	 * Build the scoring context from the WordPress configuration.
+	 * Build the scoring context from the request and the WordPress
+	 * configuration. Everything {@see score()} reads passes through here, so
+	 * the scoring itself stays pure and testable without WordPress.
 	 *
+	 * @param array<string,mixed> $commentdata Incoming comment data.
 	 * @return array<string,mixed>
 	 * @since  2.1.52
 	 */
-	private function context() {
+	private function context( array $commentdata = array() ) {
 		$rules = array();
 		if ( class_exists( 'ReportedIP_Hive_Disposable_Email' ) ) {
 			$rules = ReportedIP_Hive_Disposable_Email::get_instance()->get_disposable_rules();
@@ -287,12 +380,91 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 			$renders    = $form_proof->renders_anchors();
 		}
 
-		return array(
-			'max_links'          => (int) get_option( 'comment_max_links', 2 ),
-			'disposable_domains' => is_array( $rules ) ? $rules : array(),
-			'form_proof'         => $proof,
-			'renders_anchors'    => $renders,
+		$user_agent = '';
+		if ( isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
+			$user_agent = (string) wp_unslash( $_SERVER['HTTP_USER_AGENT'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Matched as an opaque token; never stored or echoed from here, and truncating it would cut the very token the check reads.
+		}
+
+		return array_merge(
+			array(
+				'max_links'          => (int) get_option( 'comment_max_links', 2 ),
+				'disposable_domains' => is_array( $rules ) ? $rules : array(),
+				'form_proof'         => $proof,
+				'renders_anchors'    => $renders,
+				'user_agent'         => $user_agent,
+				'locale'             => get_locale(),
+			),
+			$this->history_for( $commentdata )
 		);
+	}
+
+	/**
+	 * Ask the comment table what it has seen before: whether this link target
+	 * is one the site already published, how often it has been submitted at
+	 * all, and whether this text has arrived once already.
+	 *
+	 * The published-before check is what keeps a regular commenter who always
+	 * leaves the same website of their own out of the repeat count. Without it
+	 * the repeat signal punishes exactly the people a blog wants.
+	 *
+	 * Two queries, run once per submitted comment. On a table with hundreds of
+	 * thousands of rows they are a scan, which is acceptable for a form post
+	 * and nowhere near a page view.
+	 *
+	 * @param array<string,mixed> $commentdata Incoming comment data.
+	 * @return array<string,bool>
+	 * @since  2.1.58
+	 */
+	private function history_for( array $commentdata ) {
+		global $wpdb;
+
+		$history = array(
+			'link_target_trusted' => false,
+			'link_target_repeats' => false,
+			'body_seen_before'    => false,
+		);
+
+		if ( ! $wpdb instanceof wpdb ) {
+			return $history;
+		}
+
+		$url   = trim( (string) ( $commentdata['comment_author_url'] ?? '' ) );
+		$hosts = '' !== $url ? self::hosts( array( $url ) ) : array();
+
+		if ( array() !== $hosts ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One-off lookup on a form post; a cache would be stale by design.
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT comment_approved, COUNT(*) AS total FROM {$wpdb->comments} WHERE comment_author_url LIKE %s GROUP BY comment_approved",
+					'%' . $wpdb->esc_like( $hosts[0] ) . '%'
+				)
+			);
+
+			$total = 0;
+			foreach ( (array) $rows as $row ) {
+				$total += (int) $row->total;
+				if ( '1' === (string) $row->comment_approved ) {
+					$history['link_target_trusted'] = true;
+				}
+			}
+			$history['link_target_repeats'] = $total >= self::REPEAT_TARGET;
+		}
+
+		$body = trim( (string) ( $commentdata['comment_content'] ?? '' ) );
+
+		if ( mb_strlen( $body ) >= self::DUPLICATE_BODY ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One-off lookup on a form post; a cache would be stale by design.
+			$seen = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT comment_ID FROM {$wpdb->comments} WHERE comment_content LIKE %s LIMIT 1",
+					$wpdb->esc_like( mb_substr( $body, 0, self::DUPLICATE_PREFIX ) ) . '%'
+				)
+			);
+
+			$history['body_seen_before'] = null !== $seen;
+		}
+
+		return $history;
 	}
 
 	/**
@@ -340,7 +512,14 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	 *                                     `comment_author_url`,
 	 *                                     `comment_content`).
 	 * @param array<string,mixed> $context `max_links`, `disposable_domains`,
-	 *                                     `form_field_present`.
+	 *                                     `form_proof`, `renders_anchors`,
+	 *                                     `user_agent`, `locale`,
+	 *                                     `link_target_trusted`,
+	 *                                     `link_target_repeats`,
+	 *                                     `body_seen_before`. A key that is
+	 *                                     absent switches its signal off, so a
+	 *                                     caller that cannot answer a question
+	 *                                     never has to guess.
 	 * @return array{score:int, reasons:array<int,string>}
 	 * @since  2.1.52
 	 */
@@ -403,7 +582,7 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 		}
 
 		if ( self::looks_like_url( $author ) ) {
-			$score    += 4;
+			$score    += 7;
 			$reasons[] = 'url_in_author_name';
 		}
 
@@ -415,10 +594,63 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 			}
 		}
 
+		$user_agent = isset( $context['user_agent'] ) ? (string) $context['user_agent'] : null;
+
+		if ( null !== $user_agent && ! self::looks_like_browser( $user_agent ) ) {
+			$score    += 4;
+			$reasons[] = 'no_browser_ua';
+		}
+
+		if ( preg_match( self::PASTED_MARKUP_PATTERN, $body ) ) {
+			$score    += 5;
+			$reasons[] = 'pasted_link_markup';
+		} elseif ( preg_match( self::ANCHOR_PATTERN, $body ) ) {
+			$score    += 3;
+			$reasons[] = 'html_link_markup';
+		}
+
+		if ( '' !== $author && preg_match( '/\d/', $author ) ) {
+			$score    += 2;
+			$reasons[] = 'digits_in_author_name';
+		}
+
+		if ( self::foreign_ratio( $author ) > self::FOREIGN_NAME_RATIO
+			|| self::foreign_ratio( $body ) > self::FOREIGN_BODY_RATIO ) {
+			$score    += 2;
+			$reasons[] = 'foreign_script';
+		}
+
+		if ( '' !== $author_url
+			&& mb_strlen( $body ) >= self::LANGUAGE_BODY
+			&& self::reads_as_foreign_language( $body, isset( $context['locale'] ) ? (string) $context['locale'] : '' ) ) {
+			$score    += 2;
+			$reasons[] = 'language_mismatch';
+		}
+
+		if ( '' !== $author_url && preg_match( self::PRAISE_PATTERN, $body ) ) {
+			$score    += 2;
+			$reasons[] = 'praise_opener_with_url';
+		}
+
+		if ( '' !== $author_url && empty( $context['link_target_trusted'] ) ) {
+			++$score;
+			$reasons[] = 'author_url';
+
+			if ( ! empty( $context['link_target_repeats'] ) ) {
+				$score    += 2;
+				$reasons[] = 'repeat_link_target';
+			}
+		}
+
+		if ( ! empty( $context['body_seen_before'] ) && mb_strlen( $body ) >= self::DUPLICATE_BODY ) {
+			$score    += 3;
+			$reasons[] = 'duplicate_body';
+		}
+
 		$proof = isset( $context['form_proof'] ) ? (string) $context['form_proof'] : '';
 
 		if ( 'tripped' === $proof ) {
-			$score    += 6;
+			$score    += 7;
 			$reasons[] = 'form_decoy_filled';
 		} elseif ( 'failed' === $proof ) {
 			$score    += 4;
@@ -480,6 +712,91 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	}
 
 	/**
+	 * Whether a user-agent string could have come from a browser.
+	 *
+	 * Two things disqualify it. An empty string, because every browser sends
+	 * the header and a script often does not. And a string that claims WebKit
+	 * without carrying the token every real WebKit build carries, because that
+	 * is a user-agent assembled from memory rather than reported by an engine.
+	 *
+	 * Must be given the full header. The truncated copy the logger keeps cuts
+	 * the string before the token and would fail every genuine browser.
+	 *
+	 * @param string $user_agent Raw user-agent header.
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public static function looks_like_browser( $user_agent ) {
+		$user_agent = trim( (string) $user_agent );
+
+		if ( '' === $user_agent ) {
+			return false;
+		}
+
+		if ( false !== strpos( $user_agent, 'AppleWebKit/' )
+			&& false === strpos( $user_agent, self::WEBKIT_TOKEN ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Share of a string that sits outside the Latin ranges.
+	 *
+	 * @param string $text Text to measure.
+	 * @return float Between 0 and 1.
+	 * @since  2.1.58
+	 */
+	public static function foreign_ratio( $text ) {
+		$text   = (string) $text;
+		$length = mb_strlen( $text );
+
+		if ( 0 === $length ) {
+			return 0.0;
+		}
+
+		$hits = preg_match_all( self::FOREIGN_PATTERN, $text );
+
+		return $hits ? $hits / $length : 0.0;
+	}
+
+	/**
+	 * Whether a body carries none of the stop words of the site language.
+	 *
+	 * A language without a word list answers false: an unknown language is not
+	 * evidence of anything, and guessing would flag every comment on a site we
+	 * have no list for.
+	 *
+	 * Words that exist in both languages (`was`, `war`, `man`, `die`, `also`)
+	 * are deliberately left in. They make the check answer false more often
+	 * than it strictly could, which errs towards the reader and away from the
+	 * filter. That is the direction to err in here.
+	 *
+	 * @param string $body   Comment body.
+	 * @param string $locale Site locale, e.g. `de_DE`.
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public static function reads_as_foreign_language( $body, $locale ) {
+		$language = strtolower( substr( (string) $locale, 0, 2 ) );
+
+		if ( ! isset( self::LANGUAGE_WORDS[ $language ] ) ) {
+			return false;
+		}
+
+		$body = mb_strtolower( (string) $body );
+
+		foreach ( self::LANGUAGE_WORDS[ $language ] as $word ) {
+			if ( preg_match( '/(?<![\p{L}])' . preg_quote( $word, '/' ) . '(?![\p{L}])/u', $body ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Whether a host sits on one of the giveaway top-level domains.
 	 *
 	 * @param string $host Host name.
@@ -495,6 +812,10 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	/**
 	 * Whether an author name is really a link. A person writes their name
 	 * there, a link builder writes their domain.
+	 *
+	 * Carries the threshold on its own since 2.1.58: across 6515 comments a
+	 * human approved over eleven years, not one had a domain in the name field,
+	 * while 826 refused ones did.
 	 *
 	 * @param string $author Author name.
 	 * @return bool

@@ -77,13 +77,37 @@ function newestSpamReasons(): string {
 	`);
 }
 
+/**
+ * A user-agent that claims WebKit without the token every real WebKit build
+ * carries. Since 2.1.58 that is a signal of its own, and it is what lets these
+ * specs post as a bot rather than as a reader.
+ */
+const FORGED_UA =
+	'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/118.0.0.0 Safari/537.36';
+
+/** A user-agent a browser really sends. */
+const REAL_UA =
+	'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
+
+/**
+ * A body no earlier comment can have carried. Every spec here posts into the
+ * same fixture post, and since 2.1.58 a text that has arrived before is a
+ * signal of its own, so the specs that expect a clean verdict need their own
+ * wording rather than the shared one.
+ */
+function uniqueBody(): string {
+	return `An ordinary sentence with nothing suspicious in it, written at ${Date.now()}.`;
+}
+
 /** Post a comment straight at the endpoint, the way a blind bot does. */
 async function postComment(
 	request: APIRequestContext,
 	postId: string,
-	extra: Record<string, string> = {}
+	extra: Record<string, string> = {},
+	userAgent: string = FORGED_UA
 ): Promise<number> {
 	const response = await request.post('/wp-comments-post.php', {
+		headers: { 'User-Agent': userAgent },
 		form: {
 			comment: 'A perfectly ordinary sentence with nothing suspicious in it at all.',
 			author: 'E2E Prober',
@@ -132,6 +156,12 @@ test.describe('form execution proof', () => {
 		commentsWereOpen = postId;
 	});
 
+	/**
+	 * These specs deliberately submit spam, which feeds the per-address
+	 * counter. Left behind, a handful of runs inside one counting window adds
+	 * up to the block threshold and the test address loses wp-admin for every
+	 * spec that follows, in this file and in all the others.
+	 */
 	test.afterAll(() => {
 		phpTolerant(`
 			update_option('comment_moderation', ${moderationWasOn === '1' ? 1 : 0});
@@ -139,6 +169,13 @@ test.describe('form execution proof', () => {
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_form_proof_enabled');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_form_proof_seen');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_comment_spam_action');
+			global $wpdb;
+			$prefix = $wpdb->base_prefix . 'reportedip_hive_';
+			$wpdb->query("DELETE FROM {$prefix}attempts WHERE attempt_type = 'comment'");
+			$wpdb->query("DELETE FROM {$prefix}blocked WHERE block_type = 'automatic'");
+			if (class_exists('ReportedIP_Hive_WAF_Dropin_Manager')) {
+				ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->sync();
+			}
 		`);
 	});
 
@@ -174,6 +211,26 @@ test.describe('form execution proof', () => {
 		expect(status, 'the submission was refused before the filter saw it').toBe(302);
 		expect(newestCommentState(postId)).toBe('spam');
 		expect(newestSpamReasons()).toContain('no_js_proof');
+		expect(newestSpamReasons()).toContain('no_browser_ua');
+	});
+
+	/**
+	 * The same submission from a browser that identifies itself honestly. The
+	 * missing proof alone is not enough to file it, which is the whole point of
+	 * the threshold raised in 2.1.58: somebody browsing with JavaScript off
+	 * produces exactly this and is not a spammer.
+	 */
+	test('a reader without JavaScript is not filed as spam', async ({ request }) => {
+		clearComments(postId);
+		const status = await postComment(
+			request,
+			postId,
+			{ [ANCHOR]: '', comment: uniqueBody() },
+			REAL_UA
+		);
+
+		expect(status).toBe(302);
+		expect(newestCommentState(postId)).not.toBe('spam');
 	});
 
 	test('a filled decoy is filed as spam', async ({ request }) => {
@@ -247,7 +304,7 @@ test.describe('form execution proof', () => {
 		clearComments(postId);
 		php( "ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_enabled', 0);" );
 
-		const status = await postComment(request, postId);
+		const status = await postComment(request, postId, { comment: uniqueBody() }, REAL_UA);
 
 		expect(status, 'the submission was refused before the filter saw it').toBe(302);
 		expect(newestCommentState(postId)).not.toBe('spam');

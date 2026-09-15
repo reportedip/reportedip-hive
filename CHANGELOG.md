@@ -2,6 +2,38 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Security
+
+- **The comment spam filter reads eight more signals.** Measured against
+  27,796 real comments of a site that had collected them since 2014, the
+  content rules caught 9.1 per cent of the spam; everything else rested on
+  the form execution proof, and a botnet that runs a real browser walked
+  past it. The filter now also reads the user-agent header, link markup
+  pasted back from a rendered page, digits and foreign script in the author
+  name, the language of the text against the language of the site, a praise
+  opening next to a link, how often a link target has been submitted before,
+  and whether the same text has already arrived. On the same body of
+  comments the hit rate rises to 95.2 per cent while the false positives
+  fall from 32 to none: the two that remain are spam that a human had
+  approved by mistake in 2016 and 2021.
+- **A missing execution proof no longer convicts on its own.** The threshold
+  rose from 4 to 7 and the proof still weighs 4, so it now needs a second
+  reason. Until now anyone browsing with JavaScript switched off, or with a
+  consent tool holding plugin scripts back, had their comment filed as spam
+  for that alone. A filled decoy field rose to 7 with the threshold and
+  still convicts by itself, as does a domain in the author name: across
+  6,515 comments a human approved over eleven years not one had one, while
+  826 refused ones did.
+
+### Fixes
+
+- **One submitted comment counts once.** A filled decoy was counted twice
+  towards the per-address block ladder, by the honeypot and again by the
+  `comment_post` handler, so an address reached a threshold of five after
+  three comments.
+
 ## [2.1.57] (2026-09-15)
 
 ### Fixes

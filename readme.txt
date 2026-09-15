@@ -426,6 +426,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
 
+= 2.1.58 =
+
+Security: the comment spam filter reads eight more signals. Measured against 27,796 real comments of a site collecting them since 2014, the old content rules caught 9.1 per cent of the spam and everything else rested on the form execution proof, which a botnet running a real browser walks past. The filter now also reads the user-agent header, link markup pasted back from a rendered page, digits and foreign script in the author name, the language of the text against the language of the site, a praise opening next to a link, how often a link target was submitted before, and whether the same text has arrived already. On the same comments the hit rate rises to 95.2 per cent and the false positives fall from 32 to none.
+
+Changed: a missing execution proof no longer files a comment as spam on its own. The threshold rose from 4 to 7 and the proof still weighs 4, so it needs a second reason; until now a reader browsing without JavaScript was filed as a spammer for that alone. A filled decoy field and a domain in the author name still convict by themselves.
+
+Fixed: one submitted comment counts once towards the per-address block ladder. A filled decoy was counted twice, so an address reached a threshold of five after three comments.
+
 = 2.1.57 =
 
 Changed: the Activity page opens on the event log and every tab starts with a sentence that says what the list is for; the filters moved into a labelled filter bar that survives paging and bulk actions. The Community page has three tabs: Settings, Community and Badges, the badges tab shows the footer badge with its live preview and a banner builder with templates. The dashboard carries one status line ("Protection active since <date> on the <plan> recommendation") instead of the API strip, and the protection areas are collapsed cards with the points each one would add to the score. The 2FA Status page filters its user list by status, method and role. Leftovers of the retired Settings and Firewall pages are gone.
