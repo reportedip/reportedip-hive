@@ -10,13 +10,13 @@ License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
 
-Community-powered WordPress security: 18 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
+Community-powered WordPress security: 16 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
 
 == Description ==
 
 **Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker, before the password is even checked.**
 
-ReportedIP Hive is a complete security plugin for serious WordPress sites: 18 detection sensors, four 2FA methods (TOTP, Passkey/WebAuthn and email in every plan; SMS on Professional via the managed relay), progressive block escalation, and an opt-in community-intelligence network. Engineered in Germany with privacy as the design principle, not a checkbox.
+ReportedIP Hive is a complete security plugin for serious WordPress sites: 16 detection sensors, four 2FA methods (TOTP, Passkey/WebAuthn and email in every plan; SMS on Professional via the managed relay), progressive block escalation, and an opt-in community-intelligence network. Engineered in Germany with privacy as the design principle, not a checkbox.
 
 The entire detection and identity core is **free, GPL-2.0 and complete**, every sensor, the core 2FA methods, progressive blocking, the password-reset gate, every dashboard and export. Paid plans add managed relays, multi-site management and a few advanced modules on top (see *Plans* below); they never gate the core protection.
 
@@ -34,11 +34,11 @@ Two ways to run:
 * **Tor exit-node blocking (PRO).** An opt-in toggle rejects connections from known Tor exit nodes, backed by a signed exit-node list refreshed twice daily. Blocks are temporary and never reported to the community, operating an exit node is not abuse evidence.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
 * **Access lockdown switches.** Turn off the parts of WordPress the site does not use: the REST API for signed-in users only or restricted to selected roles and namespaces, XML-RPC including pingbacks, feeds, the admin area for signed-out visitors, PHP execution in the uploads folder and the version fingerprints in the page source. Every switch is off by default, free on every plan and reversible from the same screen.
-* **System readiness register.** Twelve detectors watch what usually fails quietly: an unwritable pre-WordPress guard queue, stalled or disabled cron, a trusted proxy header without proxy ranges, an outdated database schema, a degraded community layer, exhausted relay quotas, failing mail delivery, a missing encryption extension and a growing report queue. Open issues show up on the System Status page with severity, first-seen time and a jump to the responsible setting, and `wp reportedip status` reports them as well. Free on every plan.
+* **System readiness register.** Eighteen detectors watch what usually fails quietly: an unwritable pre-WordPress guard queue, stalled or disabled cron, a trusted proxy header without proxy ranges, an outdated database schema, a degraded community layer, exhausted relay quotas, failing mail delivery, a missing encryption extension and a growing report queue. Six of them are advisory rather than faults and only surface once the quickstart is done: Hide Login switched off, storefront 2FA included in the plan but unused, the footer badge off, the pre-WordPress guard possible but not running, Local Shield instead of the community network, and the signed-in administrator without a second factor of their own. Open issues show up on the System Status page with severity, first-seen time and a jump to the responsible setting, and `wp reportedip status` reports them as well. Free on every plan.
 * **Security headers out of the box.** The basic hardening trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is free; HSTS, Permissions-Policy, a report-only-first Content-Security-Policy and the cross-origin isolation trio come with Professional. Headers already sent by your server or another plugin are detected and left untouched.
 * **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan level 5 clean, WPCS-clean (zero warnings), a comprehensive PHPUnit suite (unit + Multisite) running on every commit.
 
-= 18 detection sensors (every one tunable) =
+= 16 detection sensors (every one tunable) =
 
 * **Failed logins**, default 5 fails / 15 min
 * **Password spray**, distinct usernames from same IP, default 5 / 10 min
@@ -56,7 +56,8 @@ Two ways to run:
 * **Geographic anomaly**, login from a country never seen for the user, optionally revokes trusted-device cookies
 * **Password policy**, minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
 * **WooCommerce login hooks**, checkout + my-account forms tracked separately
-* **Cookie-banner consent endpoints whitelisted by default**, Real Cookie Banner, Complianz, Borlabs, CookieYes never get rate-limited
+
+Not a sensor, but part of the same screen: the consent endpoints of Real Cookie Banner, Complianz, Borlabs and CookieYes are exempt from the rate limit out of the box, because on a compliant site they look like a burst on every single page view.
 
 = Two-Factor Authentication (four methods) =
 
@@ -258,7 +259,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 
 **How domains are counted:** each Hive installation announces its site address with every API request, and every distinct domain occupies one slot of the plan. A WordPress Multisite network counts as a single domain. Your reportedip.com dashboard shows the used/included domains per licence, lets you release slots of retired or moved sites (up to 3 self-service releases per 30 days), and domains that stop reporting for 60 days free their slot automatically. Currently informational only, nothing is blocked when a plan is over its allowance.
 
-What stays Free regardless of plan: all 18 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, the registration rule set with ten entries per list, the comment decoy, the form execution proof, the community threat check on forms, the access lockdown switches, the system readiness register, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys, multiple WebAuthn keys, model detection, key alerts (Business), adaptive 2FA triggers (Professional), unlimited registration rules with regular expressions and allowlist-only registration (Professional), blocking user accounts and the session manager (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode, no plan, no account, nothing leaves your site.
+What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, the registration rule set with ten entries per list, the comment decoy, the form execution proof, the community threat check on forms, the access lockdown switches, the system readiness register, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys, multiple WebAuthn keys, model detection, key alerts (Business), adaptive 2FA triggers (Professional), unlimited registration rules with regular expressions and allowlist-only registration (Professional), blocking user accounts and the session manager (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode, no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
 
@@ -278,8 +279,8 @@ A short architectural map for evaluators:
 
 = Storage =
 
-* **8 dedicated tables** under the `wp_reportedip_hive_` prefix: `logs`, `blocked`, `whitelist`, `attempts`, `api_queue`, `stats`, `trusted_devices`, `audit_log`.
-* **Schema v9**, auto-migrated step-by-step on plugin update; opt-in delete on uninstall.
+* **9 dedicated tables** under the `wp_reportedip_hive_` prefix: `logs`, `blocked`, `whitelist`, `attempts`, `api_queue`, `stats`, `trusted_devices`, `audit_log` and `waf_exceptions`.
+* **Schema v16**, auto-migrated step-by-step on plugin update; opt-in delete on uninstall.
 * All secrets at rest (TOTP seeds, phone numbers) sealed with libsodium (OpenSSL fallback). Plain user-meta storage is never used for credentials.
 
 = Throttle ladder =
