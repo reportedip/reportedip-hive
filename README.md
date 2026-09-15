@@ -170,8 +170,9 @@ The same settings protocol powers the cloud fleet dashboard on reportedip.com (B
 
 Full feature, security and operations guide: [`docs/cloud-fleet-management.md`](docs/cloud-fleet-management.md). Wire format and versioning rules: [`docs/remote-settings-protocol.md`](docs/remote-settings-protocol.md).
 
-### Promote / community shortcodes
+### Badges and community shortcodes
 
+- **Badges tab on the Community page**: the one-click footer badge with its live preview on top, the banner builder below; templates set variant, number and wording in one click
 - **Auto-footer badge** with four position options (left / center / right / below content)
 - **Shortcodes**: `[reportedip_badge]`, `[reportedip_stat type="..."]`, `[reportedip_banner]`, `[reportedip_shield]`
 - **8 stat types** (`attacks_total`, `attacks_30d`, `reports_total`, `api_reports_30d`, `blocked_active`, `whitelist_active`, `logins_30d`, `spam_30d`) and **4 tone presets** (`protect`, `trust`, `community`, `contributor`)
@@ -185,7 +186,9 @@ Full feature, security and operations guide: [`docs/cloud-fleet-management.md`](
 - **One Protection page** rendered from the settings registry: fourteen collapsible cards (one per area) with a short status each, a search box that opens the matching card and marks the label, and a simple/expert depth switch. Simple shows the sixteen settings that matter day to day; expert shows every field. Each card saves on its own through the same apply service MainWP and the cloud fleet use, so plan limits and validation are identical on every path
 - **Next steps on the dashboard**: a status banner with the plan the recommendation was applied for and the number of adjusted settings, advisory cards with an inline action (badge, storefront 2FA and Hide Login switch on from the card; the rest link where they belong), a row per protection area, and at most one plan card per visit. Expert mode is a switch in the page header
 - **Tools page** (expert mode) with four tabs: Server (Extended Protection drop-in, `.htaccess`/nginx/php.ini snippets, decoy rules, header export), Rules (rule sync, WAF exceptions, hardening status), Data (import/export, reset) and Diagnostics (test mail). Old Settings and Firewall URLs redirect to the new home
-- **Seven list-table screens**: Blocked IPs, Whitelist, Security Logs, API Queue, the audit event trail (Business), the session manager under Users → Sessions (Business), plus the 2FA admin grid
+- **Activity page** opening on the event log, with IP lookup, audit trail (Business), blocked and whitelist tabs and the report queue; every tab starts with one sentence that says what the list is for, and the filters live in a labelled GET filter bar (search, event type, severity, date range) that survives paging, sorting and bulk actions
+- **Community page** with three tabs: Settings (operation mode, Community Access Key, client-IP header, fleet management, connection test), Community (contribution, quota, domains, plan overview) and Badges
+- **Seven list-table screens**: Blocked IPs, Whitelist, the event log, API Queue, the audit event trail (Business), the session manager under Users → Sessions (Business), plus the 2FA admin grid, the 2FA Status list filterable by status, method and role
 - **System Status page** listing every open readiness issue with severity, first-seen time, a jump to the responsible setting and a documentation link; non-critical issues can be dismissed for seven days
 - **CSV import** for blocked-IPs and whitelist; **CSV / JSON export** for logs and full settings backup
 - Trust badges and a secured-by note on every admin page

@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.56
+Stable tag: 2.1.57
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -85,7 +85,7 @@ Plus:
 
 Four traps run alongside the sensors. None of them needs a CAPTCHA, a puzzle or an extra step; each one is a place a genuine visitor never goes and an automated tool cannot resist.
 
-**Comment decoy field.** An invisible, screen-reader-excluded text input on the comment, sign-up and password-reset forms. A bot that fills every field it finds fills this one too. A filled decoy scores 6 on the comment filter, above the spam threshold on its own. Free, on by default, switchable under Firewall &rarr; Spam Defence.
+**Comment decoy field.** An invisible, screen-reader-excluded text input on the comment, sign-up and password-reset forms. A bot that fills every field it finds fills this one too. A filled decoy scores 6 on the comment filter, above the spam threshold on its own. Free, on by default, switchable under Protection &rarr; Registration & Spam.
 
 **Form execution proof.** The same decoy field carries a marker, and a small script adds a second field whose name is random per installation. A submission that carries neither never rendered the form: that is what a script posting straight at `wp-comments-post.php` looks like, and on the site this was built for it was every single spam comment. The verdict is four-way: proved, failed, tripped, or absent, and "absent" stays lenient until the site has seen itself render the field, so a theme with hand-written comment markup is never treated like a bot. For comments a failed proof scores 4 and files the comment for review; a reader browsing without JavaScript loses nothing but a moderation step, and that reason alone never counts towards a block. Sign-up and password reset refuse a failed proof outright and say why. Nothing request-specific reaches the HTML, so page caches stay valid. Free, on by default; the two login forms can be left out with their own switch, and `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in `wp-config.php` turns the whole layer off.
 
@@ -112,10 +112,11 @@ ReportedIP Hive plays nicely with WP Rocket, W3 Total Cache, WP Super Cache, Lit
 * The form execution proof emits nothing request-specific: the decoy carries no value, the proof field name is a per-site constant and the script is a static file. A page cached under any of these layers stays valid indefinitely, and no page is marked uncacheable for it.
 * **Documented limitation:** a blocked attacker visiting a *publicly cached* GET URL still receives the cached HTML. Their write-path attempts (login, comment, REST, XMLRPC) are blocked normally. For deny-on-cached-public-page, install a server-level rule (Cloudflare WAF, Nginx `deny`, fail2ban).
 
-= Promote / community shortcodes =
+= Badges and community shortcodes =
 
 Show the world that your site is part of the hive, and earn community-network credibility:
 
+* **Badges tab on the Community page**, the one-click footer badge with its live preview on top, the banner builder below; templates set variant, number and wording in one click, colours and text overrides sit behind a disclosure
 * **Auto-footer badge**, one toggle, four positions (left / center / right / below content), zero shortcode placement needed
 * **Shortcodes**, `[reportedip_badge]`, `[reportedip_stat type="..."]`, `[reportedip_banner]`, `[reportedip_shield]`. Drop into any post, page, widget or template
 * **8 stat types**, `attacks_total`, `attacks_30d`, `reports_total`, `api_reports_30d`, `blocked_active`, `whitelist_active`, `logins_30d`, `spam_30d`
@@ -414,16 +415,22 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 1. **Security Dashboard**, Real-time overview of blocked IPs, attacks, sign-ins and spam with 7- and 30-day trend charts.
 2. **Blocked IPs**, Filterable, sortable list with bulk actions, manual unblock, "move to whitelist" and CSV export.
 3. **Whitelist**, Trusted IPs with optional expiry, reason, and CSV import.
-4. **Security Event Logs**, Searchable, severity-filterable, JSON / CSV export, bulk delete + bulk block + bulk whitelist actions.
+4. **Activity**, event log with a labelled filter bar (search, event type, severity, date range), JSON / CSV export, bulk delete + bulk block + bulk whitelist actions; IP lookup and audit trail on the same page.
 5. **Protection → Blocking & Escalation**, auto-block toggle, progressive ladder editor with reset window, report-only mode toggle, blocked-page contact link.
 6. **Protection → Two-Factor Authentication**, method enable/disable, role enforcement, grace period, IP allowlist; recovery codes and trusted devices live on the profile.
 7. **Quickstart**, one page, two decisions, a plan-aware recommendation applied through the settings registry.
 8. **API Queue**, Pending and failed report queue with retry, quota status, queue-health indicators.
-9. **Promote**, Auto-footer badge configurator and shortcode showcase with live previews.
+9. **Community &rarr; Badges**, one-click footer badge with live preview and the banner builder with templates.
 
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.57 =
+
+Changed: the Activity page opens on the event log and every tab starts with a sentence that says what the list is for; the filters moved into a labelled filter bar that survives paging and bulk actions. The Community page has three tabs: Settings, Community and Badges, the badges tab shows the footer badge with its live preview and a banner builder with templates. The dashboard carries one status line ("Protection active since <date> on the <plan> recommendation") instead of the API strip, and the protection areas are collapsed cards with the points each one would add to the score. The 2FA Status page filters its user list by status, method and role. Leftovers of the retired Settings and Firewall pages are gone.
+
+Fixed: a rejected Community Access Key no longer counts as a failed API sample for three hours; the report-queue readiness issues stay silent in Local Shield; the Protection page shows stored role and method lists as checked; a settings export from a site on its defaults no longer writes null and switches protections off on import; the settings import on the System Status page works again; the test-mail button on the Tools page works again; seven score links opened the wrong Protection card; the audit log CSV is Business-only like the audit trail; the footer-badge preview on the Community page comes alive on every tab.
 
 = 2.1.56 =
 
