@@ -55,7 +55,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				array( 'reportedip-hive-firewall', 'overview', 'admin.php?page=reportedip-hive-protection#waf' ),
 				array( 'reportedip-hive-firewall', 'waf', 'admin.php?page=reportedip-hive-protection#waf' ),
 				array( 'reportedip-hive-firewall', 'bot', 'admin.php?page=reportedip-hive-protection#waf' ),
-				array( 'reportedip-hive-firewall', 'spam', 'admin.php?page=reportedip-hive-protection#registration' ),
+				array( 'reportedip-hive-firewall', 'spam', 'admin.php?page=reportedip-hive-protection#forms' ),
 				array( 'reportedip-hive-firewall', 'scan', 'admin.php?page=reportedip-hive-protection#detection' ),
 				array( 'reportedip-hive-firewall', 'hardening', 'admin.php?page=reportedip-hive-protection#headers' ),
 				array( 'reportedip-hive-firewall', 'rule_sync', 'admin.php?page=reportedip-hive-tools&tab=rules' ),

@@ -632,12 +632,21 @@ body.rip-wizard-page [hidden] {
     gap: 0.5rem;
 }
 
+.rip-input-status .rip-alert {
+    flex: 1;
+    margin: 0;
+}
+
 .rip-input-status--success {
     color: var(--rip-success-dark);
+    font-size: var(--rip-text-base);
+    font-weight: 700;
 }
 
 .rip-input-status--error {
-    color: var(--rip-danger);
+    color: var(--rip-danger-dark);
+    font-size: var(--rip-text-base);
+    font-weight: 700;
 }
 
 .rip-input-status--loading {

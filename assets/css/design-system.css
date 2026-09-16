@@ -1597,8 +1597,8 @@ button.rip-tier-lock--mode:hover {
     list-style: none;
     cursor: pointer;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "title status" "desc status";
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "title status chevron" "desc status chevron";
     gap: var(--rip-space-1) var(--rip-space-4);
     padding: var(--rip-space-4) var(--rip-space-5);
     border-bottom: 1px solid var(--rip-gray-200);
@@ -1624,6 +1624,17 @@ button.rip-tier-lock--mode:hover {
     grid-area: status;
     align-self: center;
 }
+.rip-protection__chevron {
+    grid-area: chevron;
+    align-self: center;
+    width: 18px;
+    height: 18px;
+    color: var(--rip-gray-500);
+    transition: transform var(--rip-transition);
+}
+.rip-protection__section[open] > summary .rip-protection__chevron {
+    transform: rotate(180deg);
+}
 .rip-protection__field {
     padding: var(--rip-space-4) 0;
     border-bottom: 1px solid var(--rip-gray-100);
@@ -1639,6 +1650,27 @@ button.rip-tier-lock--mode:hover {
 }
 .rip-protection__field--locked .rip-protection__control {
     opacity: 0.6;
+}
+.rip-protection__hint {
+    padding: var(--rip-space-4) 0;
+    border-bottom: 1px solid var(--rip-gray-100);
+}
+.rip-protection__hint .rip-help-text {
+    margin: 0 0 var(--rip-space-2);
+}
+.rip-protection__more {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--rip-space-3);
+    margin-top: var(--rip-space-4);
+}
+.rip-tier-included {
+    background: var(--rip-gray-100);
+    color: var(--rip-gray-600);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
 }
 .rip-protection__presets {
     display: flex;
@@ -1711,6 +1743,45 @@ button.rip-tier-lock--mode:hover {
 .rip-expert-toggle__info:focus-visible {
     color: #fff;
     outline: none;
+}
+.rip-tooltip {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: -6px;
+    z-index: 40;
+    width: max-content;
+    max-width: 340px;
+    padding: var(--rip-space-3) var(--rip-space-4);
+    background: var(--rip-gray-900);
+    color: #fff;
+    font-size: var(--rip-text-sm);
+    font-weight: 400;
+    line-height: 1.5;
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: normal;
+    border-radius: var(--rip-radius);
+    box-shadow: var(--rip-shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--rip-transition), visibility var(--rip-transition);
+    cursor: auto;
+}
+.rip-tooltip::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    right: 12px;
+    width: 8px;
+    height: 8px;
+    background: var(--rip-gray-900);
+    transform: rotate(45deg);
+}
+:hover > .rip-tooltip,
+:focus-visible > .rip-tooltip,
+:focus-within > .rip-tooltip {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* ==========================================================================
@@ -2346,6 +2417,11 @@ button.rip-tier-lock--mode:hover {
 .rip-badge--info {
     background: var(--rip-info-bg);
     color: var(--rip-info-dark);
+}
+
+.rip-badge--neutral {
+    background: var(--rip-gray-100);
+    color: var(--rip-gray-600);
 }
 
 .rip-badge--inline {

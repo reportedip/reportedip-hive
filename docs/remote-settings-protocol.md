@@ -63,6 +63,8 @@ Response (`$information['reportedip_hive']['settings_schema']`):
 Labels are translated into the site locale at export time.
 
 Sections, in export order: `detection`, `blocking`, `waf`, `registration`,
+`forms` (the execution proof, the comment honeypot, the comment spam action
+and the adapters for Contact Form 7, Formidable Forms and Elementor),
 `hardening_mode`, `hide_login`, `headers`, `lockdown` (attack-surface
 switches: REST API access, XML-RPC, feeds, wp-admin for visitors, PHP
 execution in uploads, software fingerprints), `account_security`,

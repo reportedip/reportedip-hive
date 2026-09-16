@@ -77,6 +77,14 @@ class ReportedIP_Hive_Protection_Page {
 	const PRESET_FIELD = 'rip_protection_level';
 
 	/**
+	 * DOM id of the expert-mode explanation the info icon points at.
+	 *
+	 * @var string
+	 * @since 2.1.59
+	 */
+	const INFO_ID = 'rip-expert-mode-help';
+
+	/**
 	 * Registry keys the preset pseudo field writes.
 	 *
 	 * @var string[]
@@ -109,38 +117,121 @@ class ReportedIP_Hive_Protection_Page {
 	}
 
 	/**
+	 * Whether one field belongs in the current view.
+	 *
+	 * Three ways in. The expert view shows everything. `simple` marks a
+	 * setting as day-to-day on every site. `simple_form` names the form
+	 * plugin whose presence makes a setting day-to-day here: an operator
+	 * running Formidable Forms should find the Formidable switch without
+	 * learning about expert mode first, and an operator without it should
+	 * never see the switch at all.
+	 *
+	 * A slug rather than a callback, because the registry is compared,
+	 * exported and diffed in several places and a closure survives none of
+	 * that. `export_schema()` copies named fields only, so the flag stays
+	 * local either way.
+	 *
+	 * @param array<string,mixed> $entry    Registry entry.
+	 * @param bool                $expert   Expert view.
+	 * @param string[]            $detected Adapter slugs whose form plugin is active.
+	 * @return bool
+	 * @since  2.1.59
+	 */
+	public static function is_visible( array $entry, $expert, array $detected ) {
+		if ( $expert || ! empty( $entry['simple'] ) ) {
+			return true;
+		}
+		$slug = (string) ( $entry['simple_form'] ?? '' );
+
+		return '' !== $slug && in_array( $slug, $detected, true );
+	}
+
+	/**
+	 * Adapter slugs whose form plugin is active on this site.
+	 *
+	 * @return string[]
+	 * @since  2.1.59
+	 */
+	public static function detected_forms() {
+		if ( ! class_exists( 'ReportedIP_Hive_Form_Adapters' ) ) {
+			return array();
+		}
+		$adapters = ReportedIP_Hive_Form_Adapters::get_instance();
+		$slugs    = array();
+		foreach ( array_keys( ReportedIP_Hive_Form_Adapters::ADAPTERS ) as $slug ) {
+			if ( $adapters->detected( $slug ) ) {
+				$slugs[] = (string) $slug;
+			}
+		}
+
+		return $slugs;
+	}
+
+	/**
 	 * Registry keys of one section in registry order, filtered to the
 	 * simple set unless the expert view is on.
 	 *
-	 * @param string $section Section id.
-	 * @param bool   $expert  Expert view.
+	 * @param string        $section  Section id.
+	 * @param bool          $expert   Expert view.
+	 * @param string[]|null $detected Active form plugins; resolved from the site when null.
 	 * @return string[]
 	 */
-	public static function visible_keys( $section, $expert ) {
-		$keys = array();
+	public static function visible_keys( $section, $expert, $detected = null ) {
+		return self::section_keys( $section, $expert, $detected, true );
+	}
+
+	/**
+	 * Registry keys of one section the simple view does not render.
+	 *
+	 * Empty in the expert view, where nothing is held back.
+	 *
+	 * @param string        $section  Section id.
+	 * @param bool          $expert   Expert view.
+	 * @param string[]|null $detected Active form plugins; resolved from the site when null.
+	 * @return string[]
+	 * @since  2.1.59
+	 */
+	public static function expert_only_keys( $section, $expert, $detected = null ) {
+		return $expert ? array() : self::section_keys( $section, false, $detected, false );
+	}
+
+	/**
+	 * Keys of one section on one side of the visibility line.
+	 *
+	 * @param string        $section  Section id.
+	 * @param bool          $expert   Expert view.
+	 * @param string[]|null $detected Active form plugins; resolved from the site when null.
+	 * @param bool          $visible  Which side to return.
+	 * @return string[]
+	 * @since  2.1.59
+	 */
+	private static function section_keys( $section, $expert, $detected, $visible ) {
+		$detected = null === $detected ? self::detected_forms() : array_map( 'strval', (array) $detected );
+		$keys     = array();
 		foreach ( ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
 			if ( ( $entry['section'] ?? '' ) !== $section ) {
 				continue;
 			}
-			if ( ! $expert && empty( $entry['simple'] ) ) {
-				continue;
+			if ( self::is_visible( $entry, (bool) $expert, $detected ) === (bool) $visible ) {
+				$keys[] = $key;
 			}
-			$keys[] = $key;
 		}
+
 		return $keys;
 	}
 
 	/**
 	 * Whether a section has no simple key at all.
 	 *
-	 * @param string $section Section id.
+	 * @param string        $section  Section id.
+	 * @param string[]|null $detected Active form plugins; resolved from the site when null.
 	 * @return bool
 	 */
-	public static function section_is_expert_only( $section ) {
+	public static function section_is_expert_only( $section, $detected = null ) {
 		if ( 'detection' === $section ) {
 			return false;
 		}
-		return array() === self::visible_keys( $section, false );
+		return array() === self::visible_keys( $section, false, $detected );
 	}
 
 	/**
@@ -217,10 +308,10 @@ class ReportedIP_Hive_Protection_Page {
 	public static function field_markup( $key, array $entry, $value, array $status, array $choices = array() ) {
 		$gated    = empty( $status['available'] );
 		$locked   = $gated && empty( $status['partial'] );
-		$id       = 'rip-field-' . str_replace( 'reportedip_hive_', '', $key );
+		$id       = self::field_id( $key );
 		$label    = (string) ( $entry['label'] ?? $key );
 		$desc     = (string) ( $entry['description'] ?? '' );
-		$search   = strtolower( $label . ' ' . $desc . ' ' . str_replace( array( 'reportedip_hive_', '_' ), array( '', ' ' ), $key ) );
+		$search   = self::search_terms( $key, $entry );
 		$disabled = $locked ? ' disabled' : '';
 		$classes  = 'rip-protection__field' . ( $locked ? ' rip-protection__field--locked' : '' );
 		$kind     = (string) $entry['kind'];
@@ -297,11 +388,16 @@ class ReportedIP_Hive_Protection_Page {
 				);
 		}
 
-		$lock = '';
-		if ( $gated && 'runtime' !== (string) ( $status['reason'] ?? '' ) ) {
+		$marker = '';
+		$state  = self::tier_marker_state( $entry, $status );
+		if ( '' !== $state ) {
 			ob_start();
-			ReportedIP_Hive_Admin_Settings::render_tier_marker( $status );
-			$lock = (string) ob_get_clean();
+			if ( 'locked' === $state ) {
+				ReportedIP_Hive_Admin_Settings::render_tier_marker( $status );
+			} else {
+				ReportedIP_Hive_Admin_Settings::render_tier_included( $status );
+			}
+			$marker = (string) ob_get_clean();
 		}
 		$note = trim( (string) ( $status['note'] ?? '' ) );
 		if ( '' !== $note ) {
@@ -315,9 +411,122 @@ class ReportedIP_Hive_Protection_Page {
 			esc_attr( $key ),
 			esc_attr( $id ),
 			esc_html( $label ),
-			$lock,
+			$marker,
 			$control,
 			'' !== $desc ? '<p class="rip-help-text">' . esc_html( $desc ) . '</p>' : ''
+		);
+	}
+
+	/**
+	 * DOM id of one field, and the anchor the expert-mode link jumps to.
+	 *
+	 * @param string $key Registry key.
+	 * @return string
+	 * @since  2.1.59
+	 */
+	public static function field_id( $key ) {
+		return 'rip-field-' . str_replace( 'reportedip_hive_', '', (string) $key );
+	}
+
+	/**
+	 * The lowercase haystack the page search matches against.
+	 *
+	 * Shared by the rendered field and by the stand-in the simple view draws
+	 * for an expert setting, so a search behaves the same in both views.
+	 *
+	 * @param string              $key   Registry key.
+	 * @param array<string,mixed> $entry Registry entry.
+	 * @return string
+	 * @since  2.1.59
+	 */
+	public static function search_terms( $key, array $entry ) {
+		return strtolower(
+			(string) ( $entry['label'] ?? $key ) . ' '
+			. (string) ( $entry['description'] ?? '' ) . ' '
+			. str_replace( array( 'reportedip_hive_', '_' ), array( '', ' ' ), (string) $key )
+		);
+	}
+
+	/**
+	 * A searchable stand-in for a setting the simple view does not render.
+	 *
+	 * Deliberately without a control. An expert field drawn into the simple
+	 * form and hidden with CSS would travel back with the next save of that
+	 * section: {@see collect_values()} fills every missing switch with `0`,
+	 * and {@see writable_values()} keeps whatever the view declares visible.
+	 * The stored setting would be overwritten with an empty value and nobody
+	 * would see it happen. So this entry carries the label, the same search
+	 * terms a real field carries and a link into the expert view, and nothing
+	 * a browser could ever submit.
+	 *
+	 * @param string              $key      Registry key.
+	 * @param array<string,mixed> $entry    Registry entry.
+	 * @param string              $jump_url Link that turns the expert view on and lands on this setting.
+	 * @return string
+	 * @since  2.1.59
+	 */
+	public static function hint_markup( $key, array $entry, $jump_url ) {
+		return sprintf(
+			'<div class="rip-protection__hint rip-hidden" data-search="%1$s" data-key="%2$s"><div class="rip-protection__field-head"><span class="rip-label">%3$s</span></div><p class="rip-help-text">%4$s</p><a class="rip-button rip-button--ghost rip-button--sm" href="%5$s">%6$s</a></div>',
+			esc_attr( self::search_terms( $key, $entry ) ),
+			esc_attr( (string) $key ),
+			esc_html( (string) ( $entry['label'] ?? $key ) ),
+			esc_html__( 'This setting lives in expert mode.', 'reportedip-hive' ),
+			esc_url( (string) $jump_url ),
+			esc_html__( 'Open in expert mode', 'reportedip-hive' )
+		);
+	}
+
+	/**
+	 * The closing line of a section in the simple view: what the expert view
+	 * holds here.
+	 *
+	 * Names the first few settings and counts the rest, because a section can
+	 * hold thirty and a full list would read as a wall rather than as an
+	 * offer.
+	 *
+	 * @param string[] $labels Labels of the settings the simple view holds back.
+	 * @return string
+	 * @since  2.1.59
+	 */
+	public static function expert_summary( array $labels ) {
+		$labels = array_values( array_filter( array_map( 'strval', $labels ) ) );
+		if ( array() === $labels ) {
+			return '';
+		}
+		$shown = array_slice( $labels, 0, 3 );
+		$rest  = count( $labels ) - count( $shown );
+		if ( $rest > 0 ) {
+			return sprintf(
+				/* translators: 1: comma-separated setting names, 2: number of further settings */
+				_n( 'Expert mode adds %1$s and %2$d more setting here.', 'Expert mode adds %1$s and %2$d more settings here.', $rest, 'reportedip-hive' ),
+				implode( ', ', $shown ),
+				$rest
+			);
+		}
+
+		/* translators: %s: comma-separated setting names */
+		return sprintf( __( 'Expert mode adds %s here.', 'reportedip-hive' ), implode( ', ', $shown ) );
+	}
+
+	/**
+	 * Link that turns the expert view on and lands on one anchor.
+	 *
+	 * @param string $anchor Field id or section id.
+	 * @return string
+	 * @since  2.1.59
+	 */
+	private static function expert_jump_url( $anchor ) {
+		return wp_nonce_url(
+			add_query_arg(
+				array(
+					'action'     => self::ACTION_EXPERT,
+					'expert'     => '1',
+					'rip_anchor' => (string) $anchor,
+				),
+				admin_url( 'admin-post.php' )
+			),
+			self::ACTION_EXPERT
 		);
 	}
 
@@ -360,6 +569,34 @@ class ReportedIP_Hive_Protection_Page {
 			$status['partial'] = true;
 		}
 		return $status;
+	}
+
+	/**
+	 * Which plan marker a field carries.
+	 *
+	 * Every field with a plan entry says which plan it belongs to, in both
+	 * directions: `locked` names the plan that is still missing, `included`
+	 * names the plan the customer already pays for, so a Business operator
+	 * can see what the Business features are instead of a page that looks
+	 * the same as the free one. A field without a plan entry, and a field
+	 * held back by the server rather than by a plan, carries neither. Neither
+	 * does a status without a plan name, because both markers say which plan
+	 * the field belongs to and there is nothing to name.
+	 *
+	 * @param array<string,mixed> $entry  Registry entry.
+	 * @param array<string,mixed> $status Status from {@see field_status()}.
+	 * @return string `locked`, `included` or an empty string.
+	 * @since  2.1.59
+	 */
+	public static function tier_marker_state( array $entry, array $status ) {
+		if ( empty( $entry['tier'] ) && empty( $entry['ui_lock'] ) ) {
+			return '';
+		}
+		if ( empty( $status['min_tier'] ) || 'runtime' === (string) ( $status['reason'] ?? '' ) ) {
+			return '';
+		}
+
+		return empty( $status['available'] ) ? 'locked' : 'included';
 	}
 
 	/**
@@ -586,8 +823,25 @@ class ReportedIP_Hive_Protection_Page {
 	 * @return string
 	 */
 	public static function section_status( $section, array $current ) {
-		$on  = __( 'on', 'reportedip-hive' );
-		$off = __( 'off', 'reportedip-hive' );
+		return (string) self::section_state( $section, $current )['text'];
+	}
+
+	/**
+	 * Short status of one section plus the tint it is shown in.
+	 *
+	 * The tint is decided here rather than read back out of the finished
+	 * text. A section that is on is green, a section that is off is red,
+	 * and a status that says something else ("Balanced, 10 sensors", the
+	 * Hide Login slug, the REST access mode) stays neutral. Guessing the
+	 * tint from the text would break on the first translation, and a
+	 * status such as "off" inside a longer sentence would be read wrong.
+	 *
+	 * @param string              $section Section id.
+	 * @param array<string,mixed> $current Current values.
+	 * @return array{text:string,tone:string} `tone` is `success`, `danger` or `neutral`.
+	 * @since  2.1.59
+	 */
+	public static function section_state( $section, array $current ) {
 		switch ( $section ) {
 			case 'detection':
 				$sensors = 0;
@@ -598,40 +852,49 @@ class ReportedIP_Hive_Protection_Page {
 				}
 				$preset_labels = self::preset_labels();
 				/* translators: 1: preset name, 2: number of active sensors */
-				return sprintf( __( '%1$s · %2$d sensors', 'reportedip-hive' ), $preset_labels[ self::current_preset( $current ) ], $sensors );
+				return self::neutral_state( sprintf( __( '%1$s · %2$d sensors', 'reportedip-hive' ), $preset_labels[ self::current_preset( $current ) ], $sensors ) );
 			case 'blocking':
 				if ( ! empty( $current['reportedip_hive_report_only_mode'] ) ) {
-					return __( 'report only', 'reportedip-hive' );
+					return self::neutral_state( __( 'report only', 'reportedip-hive' ) );
 				}
-				return ! empty( $current['reportedip_hive_auto_block'] ) ? $on : $off;
+				return self::switch_state( ! empty( $current['reportedip_hive_auto_block'] ) );
 			case 'waf':
-				return ! empty( $current['reportedip_hive_waf_enabled'] ) ? $on : $off;
+				return self::switch_state( ! empty( $current['reportedip_hive_waf_enabled'] ) );
 			case 'hide_login':
-				return ! empty( $current['reportedip_hive_hide_login_enabled'] ) ? '/' . (string) ( $current['reportedip_hive_hide_login_slug'] ?? '' ) : $off;
+				if ( empty( $current['reportedip_hive_hide_login_enabled'] ) ) {
+					return self::switch_state( false );
+				}
+				return self::neutral_state( '/' . (string) ( $current['reportedip_hive_hide_login_slug'] ?? '' ) );
 			case 'headers':
-				return ! empty( $current['reportedip_hive_headers_enabled'] ) ? $on : $off;
+				return self::switch_state( ! empty( $current['reportedip_hive_headers_enabled'] ) );
 			case 'account_security':
 				if ( empty( $current['reportedip_hive_2fa_enabled_global'] ) ) {
-					return $off;
+					return self::switch_state( false );
 				}
 				$roles = count( ReportedIP_Hive_Option_Routing::to_array( $current['reportedip_hive_2fa_enforce_roles'] ?? array() ) );
 				/* translators: %d: number of roles */
-				return sprintf( _n( '%d role enforced', '%d roles enforced', $roles, 'reportedip-hive' ), $roles );
+				return self::neutral_state( sprintf( _n( '%d role enforced', '%d roles enforced', $roles, 'reportedip-hive' ), $roles ) );
 			case 'privacy_logs':
 				/* translators: %d: days */
-				return sprintf( __( '%d days', 'reportedip-hive' ), (int) ( $current['reportedip_hive_data_retention_days'] ?? 0 ) );
+				return self::neutral_state( sprintf( __( '%d days', 'reportedip-hive' ), (int) ( $current['reportedip_hive_data_retention_days'] ?? 0 ) ) );
 			case 'notifications':
-				return ! empty( $current['reportedip_hive_notify_admin'] ) ? $on : $off;
+				return self::switch_state( ! empty( $current['reportedip_hive_notify_admin'] ) );
 			case 'performance':
-				return ! empty( $current['reportedip_hive_auto_footer_enabled'] ) ? __( 'badge on', 'reportedip-hive' ) : __( 'badge off', 'reportedip-hive' );
+				$badge = ! empty( $current['reportedip_hive_auto_footer_enabled'] );
+				return array(
+					'text' => $badge ? __( 'badge on', 'reportedip-hive' ) : __( 'badge off', 'reportedip-hive' ),
+					'tone' => $badge ? 'success' : 'danger',
+				);
 			case 'registration':
-				return 'off' === (string) ( $current['reportedip_hive_disposable_email_action'] ?? 'off' ) ? $off : $on;
+				return self::switch_state( 'off' !== (string) ( $current['reportedip_hive_disposable_email_action'] ?? 'off' ) );
+			case 'forms':
+				return self::switch_state( ! empty( $current['reportedip_hive_form_proof_enabled'] ) );
 			case 'lockdown':
-				return self::enum_label( (string) ( $current['reportedip_hive_rest_access_mode'] ?? 'open' ) );
+				return self::neutral_state( self::enum_label( (string) ( $current['reportedip_hive_rest_access_mode'] ?? 'open' ) ) );
 			case 'account_password':
-				return ! empty( $current['reportedip_hive_password_policy_enabled'] ) ? $on : $off;
+				return self::switch_state( ! empty( $current['reportedip_hive_password_policy_enabled'] ) );
 			case 'hardening_mode':
-				return ! empty( $current['reportedip_hive_hardening_realtime_detection'] ) ? $on : $off;
+				return self::switch_state( ! empty( $current['reportedip_hive_hardening_realtime_detection'] ) );
 			case 'twofa_policies':
 				$active = 0;
 				foreach ( $current as $key => $value ) {
@@ -640,9 +903,63 @@ class ReportedIP_Hive_Protection_Page {
 					}
 				}
 				/* translators: %d: number of triggers */
-				return sprintf( __( '%d triggers', 'reportedip-hive' ), $active );
+				return self::neutral_state( sprintf( __( '%d triggers', 'reportedip-hive' ), $active ) );
 		}
-		return '';
+		return self::neutral_state( '' );
+	}
+
+	/**
+	 * State of a section whose status is a plain on or off.
+	 *
+	 * @param bool $on Whether the section is switched on.
+	 * @return array{text:string,tone:string}
+	 * @since  2.1.59
+	 */
+	private static function switch_state( $on ) {
+		return $on
+			? array(
+				'text' => __( 'on', 'reportedip-hive' ),
+				'tone' => 'success',
+			)
+			: array(
+				'text' => __( 'off', 'reportedip-hive' ),
+				'tone' => 'danger',
+			);
+	}
+
+	/**
+	 * State of a section whose status says neither on nor off.
+	 *
+	 * @param string $text Status text.
+	 * @return array{text:string,tone:string}
+	 * @since  2.1.59
+	 */
+	private static function neutral_state( $text ) {
+		return array(
+			'text' => (string) $text,
+			'tone' => 'neutral',
+		);
+	}
+
+	/**
+	 * Markup of one section head: title, description, tinted status, chevron.
+	 *
+	 * The chevron replaces the native `<details>` marker, which the
+	 * stylesheet hides, and turns by 180 degrees while the card is open.
+	 *
+	 * @param array<string,mixed>         $meta  Section meta from the registry.
+	 * @param array{text:string,tone:string} $state Section state.
+	 * @return string
+	 * @since  2.1.59
+	 */
+	public static function summary_markup( array $meta, array $state ) {
+		return sprintf(
+			'<summary class="rip-protection__summary"><span class="rip-protection__title">%1$s</span><span class="rip-protection__desc">%2$s</span><span class="rip-badge rip-badge--%3$s rip-protection__status">%4$s</span><svg class="rip-protection__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="6 9 12 15 18 9"/></svg></summary>',
+			esc_html( (string) ( $meta['label'] ?? '' ) ),
+			esc_html( (string) ( $meta['description'] ?? '' ) ),
+			esc_attr( (string) ( $state['tone'] ?? 'neutral' ) ),
+			esc_html( (string) ( $state['text'] ?? '' ) )
+		);
 	}
 
 	/**
@@ -699,9 +1016,9 @@ class ReportedIP_Hive_Protection_Page {
 				<span class="rip-toggle__slider"></span>
 				<span class="rip-toggle__label"><?php esc_html_e( 'Expert mode', 'reportedip-hive' ); ?></span>
 			</label>
-			<?php $info = __( 'Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows the sixteen day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only.', 'reportedip-hive' ); ?>
-			<span class="rip-expert-toggle__info" tabindex="0" title="<?php echo esc_attr( $info ); ?>">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+			<span class="rip-expert-toggle__info" tabindex="0" aria-describedby="<?php echo esc_attr( self::INFO_ID ); ?>">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+				<span class="rip-tooltip" id="<?php echo esc_attr( self::INFO_ID ); ?>" role="tooltip"><?php esc_html_e( 'Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows the sixteen day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only.', 'reportedip-hive' ); ?></span>
 			</span>
 			<noscript><button type="submit" class="rip-button rip-button--ghost rip-button--sm"><?php esc_html_e( 'Apply', 'reportedip-hive' ); ?></button></noscript>
 		</form>
@@ -722,6 +1039,7 @@ class ReportedIP_Hive_Protection_Page {
 		delete_transient( self::RESULT_TRANSIENT . $user_id );
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$spec         = ReportedIP_Hive_Settings_Registry::spec();
+		$detected     = self::detected_forms();
 		$tools_url    = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-tools' );
 
 		ReportedIP_Hive_Admin_Settings::render_page_header(
@@ -732,7 +1050,7 @@ class ReportedIP_Hive_Protection_Page {
 		<div class="rip-content rip-protection">
 			<div class="rip-protection__search">
 				<input type="search" id="rip-protection-search" class="rip-input" placeholder="<?php esc_attr_e( 'Search settings, e.g. Tor, HSTS, retention', 'reportedip-hive' ); ?>" autocomplete="off" />
-				<p class="rip-help-text rip-protection__no-results rip-hidden" id="rip-protection-no-results"><?php echo esc_html( $expert ? __( 'No setting matches.', 'reportedip-hive' ) : __( 'No setting matches. Expert mode shows every field.', 'reportedip-hive' ) ); ?></p>
+				<p class="rip-help-text rip-protection__no-results rip-hidden" id="rip-protection-no-results"><?php esc_html_e( 'No setting matches.', 'reportedip-hive' ); ?></p>
 			</div>
 			<?php if ( ! empty( $result['section'] ) && isset( $result['applied'] ) ) : ?>
 				<div class="rip-alert <?php echo empty( $result['errors'] ) ? 'rip-alert--success' : 'rip-alert--warning'; ?>">
@@ -749,17 +1067,14 @@ class ReportedIP_Hive_Protection_Page {
 			<?php endif; ?>
 			<?php foreach ( ReportedIP_Hive_Settings_Registry::sections() as $section => $meta ) : ?>
 				<?php
-				$keys        = self::visible_keys( $section, $expert );
-				$expert_only = ! $expert && self::section_is_expert_only( $section );
+				$keys        = self::visible_keys( $section, $expert, $detected );
+				$held_back   = self::expert_only_keys( $section, $expert, $detected );
+				$expert_only = ! $expert && self::section_is_expert_only( $section, $detected );
 				$errors      = ( isset( $result['section'] ) && $result['section'] === $section && ! empty( $result['errors'] ) ) ? $result['errors'] : array();
 				$open        = isset( $result['section'] ) && $result['section'] === $section;
 				?>
 				<details class="rip-card rip-protection__section" id="<?php echo esc_attr( $section ); ?>" <?php echo $open ? 'open' : ''; ?>>
-					<summary class="rip-protection__summary">
-						<span class="rip-protection__title"><?php echo esc_html( (string) $meta['label'] ); ?></span>
-						<span class="rip-protection__desc"><?php echo esc_html( (string) $meta['description'] ); ?></span>
-						<span class="rip-badge rip-badge--neutral rip-protection__status"><?php echo esc_html( self::section_status( $section, $current ) ); ?></span>
-					</summary>
+					<?php echo self::summary_markup( $meta, self::section_state( $section, $current ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside ?>
 					<div class="rip-card__body">
 						<?php if ( $expert_only ) : ?>
 							<p class="rip-help-text"><?php esc_html_e( 'Runs on the recommendation. Switch to expert mode to change the details.', 'reportedip-hive' ); ?></p>
@@ -791,6 +1106,7 @@ class ReportedIP_Hive_Protection_Page {
 								</div>
 							</form>
 						<?php endif; ?>
+						<?php self::render_expert_hints( $section, $held_back, $spec ); ?>
 					</div>
 				</details>
 			<?php endforeach; ?>
@@ -825,6 +1141,33 @@ class ReportedIP_Hive_Protection_Page {
 			<p class="rip-help-text"><?php esc_html_e( 'Sets the failed-login threshold and window, the block duration and the community protection level in one go. Choose Custom to edit them one by one.', 'reportedip-hive' ); ?></p>
 		</div>
 		<?php
+	}
+
+	/**
+	 * The stand-ins and the closing line of a section in the simple view.
+	 *
+	 * @param string                            $section Section id.
+	 * @param string[]                          $keys    Keys the simple view holds back.
+	 * @param array<string,array<string,mixed>> $spec    Registry spec.
+	 * @return void
+	 * @since  2.1.59
+	 */
+	private static function render_expert_hints( $section, array $keys, array $spec ) {
+		if ( array() === $keys ) {
+			return;
+		}
+		$labels = array();
+		foreach ( $keys as $key ) {
+			$entry    = $spec[ $key ];
+			$labels[] = (string) ( $entry['label'] ?? $key );
+			echo self::hint_markup( $key, $entry, self::expert_jump_url( self::field_id( $key ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside
+		}
+		printf(
+			'<p class="rip-help-text rip-protection__more">%1$s <a class="rip-button rip-button--ghost rip-button--sm" href="%2$s">%3$s</a></p>',
+			esc_html( self::expert_summary( $labels ) ),
+			esc_url( self::expert_jump_url( $section ) ),
+			esc_html__( 'Show these', 'reportedip-hive' )
+		);
 	}
 
 	/**
@@ -906,6 +1249,10 @@ class ReportedIP_Hive_Protection_Page {
 	/**
 	 * admin-post handler: flip the expert view for the current user.
 	 *
+	 * Reached from the header toggle as a POST, and from the stand-ins of the
+	 * simple view as a nonce-signed GET. A `rip_anchor` sends the browser to
+	 * the setting that was searched for instead of back to the referer.
+	 *
 	 * @return void
 	 */
 	public function handle_expert_toggle() {
@@ -913,8 +1260,13 @@ class ReportedIP_Hive_Protection_Page {
 			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( self::ACTION_EXPERT );
-		$on = ! empty( $_POST['expert'] );
+		$on = ! empty( $_REQUEST['expert'] );
 		update_user_meta( get_current_user_id(), self::META_EXPERT, $on ? 1 : 0 );
+		$anchor = isset( $_REQUEST['rip_anchor'] ) ? sanitize_key( wp_unslash( $_REQUEST['rip_anchor'] ) ) : '';
+		if ( '' !== $anchor ) {
+			wp_safe_redirect( ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) . '#' . $anchor );
+			exit;
+		}
 		$redirect = wp_get_referer();
 		if ( ! $redirect ) {
 			$redirect = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive' );

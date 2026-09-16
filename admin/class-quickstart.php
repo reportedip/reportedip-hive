@@ -203,54 +203,102 @@ class ReportedIP_Hive_Quickstart {
 	 * @return array<int, array{label:string, tier:string}>
 	 */
 	public static function feature_rows() {
+		return array_merge(
+			array(
+				array(
+					'label' => __( 'Brute-force protection with automatic blocking (Balanced level)', 'reportedip-hive' ),
+					'tier'  => 'free',
+				),
+				array(
+					'label' => __( 'Firewall against injection and scanners', 'reportedip-hive' ),
+					'tier'  => 'free',
+				),
+				array(
+					'label' => __( 'Community reputation, block from 75 % confidence', 'reportedip-hive' ),
+					'tier'  => 'free',
+				),
+				array(
+					'label' => __( 'Bot verification, spam and registration protection', 'reportedip-hive' ),
+					'tier'  => 'free',
+				),
+				array(
+					'label' => __( 'Basic security headers', 'reportedip-hive' ),
+					'tier'  => 'free',
+				),
+				array(
+					'label' => __( 'Logs for 30 days, IP addresses anonymised after 7 days', 'reportedip-hive' ),
+					'tier'  => 'free',
+				),
+				array(
+					'label' => __( 'Hardening Mode during attack waves', 'reportedip-hive' ),
+					'tier'  => 'professional',
+				),
+				array(
+					'label' => __( 'Block Tor exit nodes', 'reportedip-hive' ),
+					'tier'  => 'professional',
+				),
+				array(
+					'label' => __( 'HSTS header', 'reportedip-hive' ),
+					'tier'  => 'professional',
+				),
+				array(
+					'label' => __( 'Storefront 2FA for WooCommerce customers', 'reportedip-hive' ),
+					'tier'  => 'professional',
+				),
+				array(
+					'label' => __( '2FA mails and SMS through the EU relay, logs for 90 days', 'reportedip-hive' ),
+					'tier'  => 'professional',
+				),
+			),
+			self::form_plugin_rows( 'professional' ),
+			array(
+				array(
+					'label' => __( 'Audit trail and account blocking, logs for one year', 'reportedip-hive' ),
+					'tier'  => 'business',
+				),
+			),
+			self::form_plugin_rows( 'business' )
+		);
+	}
+
+	/**
+	 * One feature row naming the third-party form plugins of a plan that are
+	 * active on this site.
+	 *
+	 * Nothing is said when none of them is installed, because a line about a
+	 * form plugin the operator does not run is noise on a setup screen.
+	 *
+	 * @param string $tier Plan the row belongs to.
+	 * @return array<int, array{label:string, tier:string}>
+	 * @since  2.1.59
+	 */
+	private static function form_plugin_rows( $tier ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Form_Adapters' ) ) {
+			return array();
+		}
+
+		$plugins  = array(
+			'cf7'        => array( 'Contact Form 7', 'professional' ),
+			'formidable' => array( 'Formidable Forms', 'business' ),
+			'elementor'  => array( 'Elementor Forms', 'business' ),
+		);
+		$adapters = ReportedIP_Hive_Form_Adapters::get_instance();
+		$names    = array();
+		foreach ( $plugins as $slug => $plugin ) {
+			if ( $plugin[1] === (string) $tier && $adapters->detected( $slug ) ) {
+				$names[] = $plugin[0];
+			}
+		}
+
+		if ( array() === $names ) {
+			return array();
+		}
+
 		return array(
 			array(
-				'label' => __( 'Brute-force protection with automatic blocking (Balanced level)', 'reportedip-hive' ),
-				'tier'  => 'free',
-			),
-			array(
-				'label' => __( 'Firewall against injection and scanners', 'reportedip-hive' ),
-				'tier'  => 'free',
-			),
-			array(
-				'label' => __( 'Community reputation, block from 75 % confidence', 'reportedip-hive' ),
-				'tier'  => 'free',
-			),
-			array(
-				'label' => __( 'Bot verification, spam and registration protection', 'reportedip-hive' ),
-				'tier'  => 'free',
-			),
-			array(
-				'label' => __( 'Basic security headers', 'reportedip-hive' ),
-				'tier'  => 'free',
-			),
-			array(
-				'label' => __( 'Logs for 30 days, IP addresses anonymised after 7 days', 'reportedip-hive' ),
-				'tier'  => 'free',
-			),
-			array(
-				'label' => __( 'Hardening Mode during attack waves', 'reportedip-hive' ),
-				'tier'  => 'professional',
-			),
-			array(
-				'label' => __( 'Block Tor exit nodes', 'reportedip-hive' ),
-				'tier'  => 'professional',
-			),
-			array(
-				'label' => __( 'HSTS header', 'reportedip-hive' ),
-				'tier'  => 'professional',
-			),
-			array(
-				'label' => __( 'Storefront 2FA for WooCommerce customers', 'reportedip-hive' ),
-				'tier'  => 'professional',
-			),
-			array(
-				'label' => __( '2FA mails and SMS through the EU relay, logs for 90 days', 'reportedip-hive' ),
-				'tier'  => 'professional',
-			),
-			array(
-				'label' => __( 'Audit trail and account blocking, logs for one year', 'reportedip-hive' ),
-				'tier'  => 'business',
+				/* translators: %s: names of the form plugins found on this site, comma separated. */
+				'label' => sprintf( __( 'Form protection for %s, active on this site', 'reportedip-hive' ), implode( ', ', $names ) ),
+				'tier'  => (string) $tier,
 			),
 		);
 	}

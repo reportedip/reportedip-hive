@@ -2,6 +2,72 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.59] (2026-09-16)
+
+### Changed
+
+- **The form protection has its own place in the settings.** The Protection
+  page used to hold nine form checks inside "Registration & Spam", next to
+  eleven rules about who may create an account. Anybody looking for the form
+  protection had to know that. There is now a "Form Protection" area holding
+  the comment decoy, the execution proof, the computation check, the three form
+  plugins, the community check on forms and the comment spam action, and
+  "Registration Rules" keeps what its name says.
+- **Every setting says which plan it belongs to.** A plan marker used to appear
+  only on a setting the plan does not cover, so somebody on Business saw
+  nothing at all on the features they were paying for, and somebody on the free
+  plan could not tell how far their own plan reached. A setting that belongs to
+  a plan now says so either way: a locked one keeps the coloured marker with
+  the plan it needs, an included one carries a quiet grey note naming the plan
+  it comes with.
+- **The quickstart names the form plugins it found.** With Contact Form 7,
+  Formidable Forms or Elementor on the site, the feature list says which of
+  them the protection covers. With none of them installed it stays silent.
+
+- **The computation check ships on, and the community check on forms is
+  recommended wherever it can work.** The computation check is gated to
+  Professional, so it stays inert on a lower plan and starts working the moment
+  the plan covers it. The community check needs the network rather than a paid
+  plan, so the quickstart recommends it on every plan that runs in Community
+  Network mode and on none that runs Local Shield.
+
+- **The Protection page looks like it can be opened.** Every area now carries
+  an arrow that turns when it opens, and the state on the right is a coloured
+  pill: green for on, red for off, neutral for everything that is neither, such
+  as a sensor count or a login slug. The colour is decided where the state is
+  built rather than guessed from its wording, which would break with the first
+  translation.
+- **The key check in the quickstart says clearly that it worked.** The answer
+  used to be a thin line of text that was easy to miss. It is a proper notice
+  now, bold and in the success colour, and the error case reads just as
+  clearly.
+
+### Fixes
+
+- **The information symbol was drawn wrong, and so were eleven others.** The
+  dot of the "i" is a line of almost no length, which a browser draws as
+  nothing unless the stroke has round caps. The symbols looked like an upside
+  down exclamation mark. Eleven more icons across the admin pages, the profile
+  and the key manager had the same defect and are fixed with it; a test now
+  refuses any icon that repeats it.
+- **The hint next to the expert switch is a real layer.** It used to be the
+  browser's own tooltip, which waits a second, disappears on its own and never
+  shows up on a phone at all. It is part of the interface now, reachable with
+  the keyboard and announced to a screen reader.
+- **A seeded setting now triggers the same side effects as a written one.**
+  The computation check stamps a grace clock when it is switched on, and the
+  clock is what tells it to start enforcing. A default value is never written
+  by anybody, so the clock stayed at zero and the check was handed out on every
+  form and demanded on none. Seeding runs the declared side effects now, which
+  also covers the form adapters and anything that gets one later.
+- **The audit trail did not say it was a Business feature.** Its switch carried
+  no plan marker although the trail is gated, while the neighbouring alert
+  setting did. Somebody on a lower plan could switch it on and never learn that
+  nothing was being recorded.
+- **A card no longer offers to cover "Formidable Forms forms".** Two of the
+  three form plugins carry the word in their own name, so the wording on the
+  dashboard card doubled it.
+
 ## [2.1.58] (2026-09-16)
 
 ### Security

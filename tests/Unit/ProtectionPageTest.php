@@ -105,17 +105,114 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_visible_keys_in_simple_mode_are_the_simple_keys_of_the_section(): void {
-			$keys = ReportedIP_Hive_Protection_Page::visible_keys( 'blocking', false );
+			$keys = ReportedIP_Hive_Protection_Page::visible_keys( 'blocking', false, array() );
 			$this->assertSame( array( 'reportedip_hive_auto_block', 'reportedip_hive_report_only_mode' ), $keys );
 
-			$all = ReportedIP_Hive_Protection_Page::visible_keys( 'blocking', true );
+			$all = ReportedIP_Hive_Protection_Page::visible_keys( 'blocking', true, array() );
 			$this->assertContains( 'reportedip_hive_block_ladder_minutes', $all );
 			$this->assertContains( 'reportedip_hive_auto_block', $all );
 		}
 
 		public function test_sections_without_a_simple_key_are_reported(): void {
-			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_is_expert_only( 'headers' ) );
-			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_is_expert_only( 'blocking' ) );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_is_expert_only( 'headers', array() ) );
+			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_is_expert_only( 'blocking', array() ) );
+			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_is_expert_only( 'forms', array() ), 'form protection carries its own day-to-day switches' );
+		}
+
+		/**
+		 * The one visibility rule, in every case it has to answer.
+		 */
+		public function test_is_visible_covers_static_conditional_and_expert(): void {
+			$plain      = array( 'kind' => 'bool' );
+			$simple     = array(
+				'kind'   => 'bool',
+				'simple' => true,
+			);
+			$formidable = array(
+				'kind'        => 'bool',
+				'simple_form' => 'formidable',
+			);
+
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::is_visible( $simple, false, array() ) );
+			$this->assertFalse( ReportedIP_Hive_Protection_Page::is_visible( $plain, false, array() ) );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::is_visible( $plain, true, array() ), 'the expert view holds nothing back' );
+
+			$this->assertFalse(
+				ReportedIP_Hive_Protection_Page::is_visible( $formidable, false, array( 'cf7' ) ),
+				'a switch for a plugin this site does not run stays out of the simple view'
+			);
+			$this->assertTrue(
+				ReportedIP_Hive_Protection_Page::is_visible( $formidable, false, array( 'cf7', 'formidable' ) ),
+				'the plugin is here, so its switch is a day-to-day setting'
+			);
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::is_visible( $formidable, true, array() ) );
+		}
+
+		public function test_an_adapter_switch_joins_the_simple_view_with_its_plugin(): void {
+			$without = ReportedIP_Hive_Protection_Page::visible_keys( 'forms', false, array() );
+			$this->assertContains( 'reportedip_hive_form_proof_enabled', $without );
+			$this->assertNotContains( 'reportedip_hive_form_proof_formidable', $without );
+			$this->assertContains( 'reportedip_hive_form_proof_formidable', ReportedIP_Hive_Protection_Page::expert_only_keys( 'forms', false, array() ) );
+
+			$with = ReportedIP_Hive_Protection_Page::visible_keys( 'forms', false, array( 'formidable' ) );
+			$this->assertContains( 'reportedip_hive_form_proof_formidable', $with );
+			$this->assertNotContains( 'reportedip_hive_form_proof_cf7', $with );
+			$this->assertNotContains( 'reportedip_hive_form_proof_formidable', ReportedIP_Hive_Protection_Page::expert_only_keys( 'forms', false, array( 'formidable' ) ) );
+		}
+
+		/**
+		 * The guard against silent data loss: the simple view draws a stand-in
+		 * for every expert setting so the search finds it, and that stand-in
+		 * must never carry anything a browser would post back. A control here
+		 * would reach `collect_values()` empty on the next save of the section
+		 * and overwrite the stored setting without a word.
+		 */
+		public function test_the_simple_view_never_renders_a_control_for_an_expert_setting(): void {
+			$spec    = \ReportedIP_Hive_Settings_Registry::spec();
+			$checked = 0;
+
+			foreach ( array_keys( \ReportedIP_Hive_Settings_Registry::sections() ) as $section ) {
+				$visible = ReportedIP_Hive_Protection_Page::visible_keys( $section, false, array() );
+				$held    = ReportedIP_Hive_Protection_Page::expert_only_keys( $section, false, array() );
+				$this->assertSame(
+					ReportedIP_Hive_Protection_Page::visible_keys( $section, true, array() ),
+					array_values( array_intersect( array_keys( $spec ), array_merge( $visible, $held ) ) ),
+					"Section {$section} loses a key between the two views."
+				);
+
+				foreach ( $held as $key ) {
+					$html = ReportedIP_Hive_Protection_Page::hint_markup( $key, $spec[ $key ], 'https://example.org/jump' );
+					$this->assertStringNotContainsString( 'name=', $html, "{$key} would be posted back from the simple view." );
+					$this->assertStringNotContainsString( '<input', $html, "{$key} renders an input in the simple view." );
+					$this->assertStringNotContainsString( '<select', $html, "{$key} renders a select in the simple view." );
+					$this->assertStringNotContainsString( '<textarea', $html, "{$key} renders a textarea in the simple view." );
+					$this->assertStringContainsString(
+						'data-search="' . htmlspecialchars( ReportedIP_Hive_Protection_Page::search_terms( $key, $spec[ $key ] ), ENT_QUOTES ) . '"',
+						$html,
+						"{$key} is not searchable in the simple view."
+					);
+					++$checked;
+				}
+			}
+
+			$this->assertGreaterThan( 50, $checked, 'the simple view holds back far more than fifty settings' );
+			$this->assertSame( array(), ReportedIP_Hive_Protection_Page::expert_only_keys( 'blocking', true, array() ), 'the expert view holds nothing back' );
+		}
+
+		public function test_expert_summary_names_a_few_settings_and_counts_the_rest(): void {
+			$this->assertSame( '', ReportedIP_Hive_Protection_Page::expert_summary( array() ) );
+			$this->assertSame(
+				'Expert mode adds Tor blocking, HSTS here.',
+				ReportedIP_Hive_Protection_Page::expert_summary( array( 'Tor blocking', 'HSTS' ) )
+			);
+			$this->assertSame(
+				'Expert mode adds A, B, C and 2 more settings here.',
+				ReportedIP_Hive_Protection_Page::expert_summary( array( 'A', 'B', 'C', 'D', 'E' ) )
+			);
+			$this->assertSame(
+				'Expert mode adds A, B, C and 1 more setting here.',
+				ReportedIP_Hive_Protection_Page::expert_summary( array( 'A', 'B', 'C', 'D' ) )
+			);
 		}
 
 		public function test_field_markup_carries_the_registry_name_and_the_lock(): void {
@@ -282,6 +379,64 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertTrue( $free['available'] );
 		}
 
+		public function test_the_plan_marker_names_the_plan_in_both_directions(): void {
+			$this->assertSame(
+				'',
+				ReportedIP_Hive_Protection_Page::tier_marker_state( array( 'kind' => 'int' ), array( 'available' => true ) ),
+				'a field without a plan entry carries no marker'
+			);
+
+			$this->assertSame(
+				'included',
+				ReportedIP_Hive_Protection_Page::tier_marker_state(
+					array( 'kind' => 'bool', 'tier' => 'tor_blocking' ),
+					array( 'available' => true, 'min_tier' => 'professional' )
+				),
+				'a plan feature the customer has says which plan it belongs to'
+			);
+
+			$this->assertSame(
+				'locked',
+				ReportedIP_Hive_Protection_Page::tier_marker_state(
+					array( 'kind' => 'bool', 'tier' => 'tor_blocking' ),
+					array( 'available' => false, 'reason' => 'tier', 'min_tier' => 'professional' )
+				)
+			);
+
+			$this->assertSame(
+				'locked',
+				ReportedIP_Hive_Protection_Page::tier_marker_state(
+					array( 'kind' => 'textarea', 'tier' => 'x', 'partial' => true ),
+					array( 'available' => false, 'reason' => 'tier', 'min_tier' => 'professional', 'partial' => true )
+				),
+				'a partial field is editable but still names the plan its higher range needs'
+			);
+
+			$this->assertSame(
+				'included',
+				ReportedIP_Hive_Protection_Page::tier_marker_state(
+					array( 'kind' => 'bool', 'ui_lock' => 'frontend_2fa' ),
+					array( 'available' => true, 'min_tier' => 'professional' )
+				)
+			);
+			$this->assertSame(
+				'locked',
+				ReportedIP_Hive_Protection_Page::tier_marker_state(
+					array( 'kind' => 'bool', 'ui_lock' => 'frontend_2fa' ),
+					array( 'available' => false, 'reason' => 'tier', 'min_tier' => 'professional' )
+				)
+			);
+
+			$this->assertSame(
+				'',
+				ReportedIP_Hive_Protection_Page::tier_marker_state(
+					array( 'kind' => 'bool', 'tier' => 'form_adapters' ),
+					array( 'available' => false, 'reason' => 'runtime', 'note' => 'Contact Form 7 is not active on this site.' )
+				),
+				'a lock that comes from the server, not from the plan, carries a note instead'
+			);
+		}
+
 		public function test_writable_values_drops_hidden_and_locked_keys_and_forces_forced_switches(): void {
 			$values   = array(
 				'reportedip_hive_auto_block'             => '1',
@@ -342,6 +497,53 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( '<input type="hidden" name="reportedip_hive_rest_allowed_roles[]" value="administrator" />', $html );
 			$this->assertStringContainsString( 'value="editor" ', $html );
 			$this->assertStringNotContainsString( 'value="editor" checked', $html );
+		}
+
+		public function test_section_state_tints_on_green_off_red_and_everything_else_neutral(): void {
+			$this->assertSame(
+				array(
+					'text' => 'on',
+					'tone' => 'success',
+				),
+				ReportedIP_Hive_Protection_Page::section_state( 'waf', array( 'reportedip_hive_waf_enabled' => 1 ) )
+			);
+			$this->assertSame(
+				array(
+					'text' => 'off',
+					'tone' => 'danger',
+				),
+				ReportedIP_Hive_Protection_Page::section_state( 'waf', array( 'reportedip_hive_waf_enabled' => 0 ) )
+			);
+			$this->assertSame(
+				'neutral',
+				ReportedIP_Hive_Protection_Page::section_state( 'lockdown', array( 'reportedip_hive_rest_access_mode' => 'open' ) )['tone'],
+				'a status that says neither on nor off carries no verdict'
+			);
+		}
+
+		public function test_section_status_still_returns_the_plain_text(): void {
+			$this->assertSame( 'on', ReportedIP_Hive_Protection_Page::section_status( 'waf', array( 'reportedip_hive_waf_enabled' => 1 ) ) );
+		}
+
+		public function test_the_section_head_carries_the_chevron_and_the_tinted_status(): void {
+			$html = ReportedIP_Hive_Protection_Page::summary_markup(
+				array(
+					'label'       => 'Firewall',
+					'description' => 'Request inspection.',
+				),
+				array(
+					'text' => 'off',
+					'tone' => 'danger',
+				)
+			);
+			$this->assertStringContainsString( 'class="rip-protection__chevron"', $html );
+			$this->assertStringContainsString( '<polyline points="6 9 12 15 18 9"/>', $html );
+			$this->assertStringContainsString( 'rip-badge--danger', $html );
+
+			$css = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/design-system.css' );
+			$this->assertMatchesRegularExpression( '/\.rip-protection__section > summary \{[^}]*list-style: none;/s', $css, 'the native marker is off' );
+			$this->assertStringContainsString( '.rip-protection__section > summary::-webkit-details-marker', $css );
+			$this->assertStringContainsString( '.rip-protection__section[open] > summary .rip-protection__chevron', $css, 'the chevron turns while the card is open' );
 		}
 
 		public function test_a_runtime_note_is_rendered_without_a_plan_marker(): void {

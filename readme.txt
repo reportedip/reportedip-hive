@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.58
+Stable tag: 2.1.59
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -117,7 +117,7 @@ Hive checks that a submission came from a browser that really rendered the form.
 
 **Fill time.** The script measures how long the form was on screen and sends the seconds along. The starting point comes from the browser and never from the markup, because a value baked into the HTML is already wrong when a page cache serves it. The number is not signed, so a determined attacker writes into it whatever suits them. It is therefore enforced on the comment filter alone, where it weighs 2 of the 7 points a comment needs to count as spam and can never convict on its own. Every other surface measures it and writes it to the log. The threshold is three seconds and `reportedip_hive_form_proof_fast_seconds` changes it.
 
-Everything above sits on the Protection page under Registration & Spam, next to the master switch, a second switch that leaves sign-up and password reset out, and report-only mode, which logs every refusal and refuses nothing. `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in `wp-config.php` switches the whole layer off.
+Everything above sits on the Protection page under Form Protection, next to the master switch, a second switch that leaves sign-up and password reset out, and report-only mode, which logs every refusal and refuses nothing. `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in `wp-config.php` switches the whole layer off.
 
 = Honeypots and decoys =
 
@@ -410,7 +410,7 @@ Nothing is refused. Every failure mode of the community lookup, an exhausted all
 
 = What happens to visitors who browse without JavaScript? =
 
-They can still comment. The form execution proof treats a missing proof as a strong scoring signal, not as a refusal, so the comment is filed as spam for review rather than thrown away, and an address is never blocked over that reason alone. Sign-up and password reset do ask for JavaScript and say so in the error message, because those two surfaces have no review folder to fall back on. If that trade-off does not suit your audience there are three ways out, in increasing order of bluntness: leave the two login forms out with the second switch under Protection → Registration & Spam, turn on report-only mode to log everything and refuse nothing, or switch the layer off entirely, either on the same card or with `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in `wp-config.php`.
+They can still comment. The form execution proof treats a missing proof as a strong scoring signal, not as a refusal, so the comment is filed as spam for review rather than thrown away, and an address is never blocked over that reason alone. Sign-up and password reset do ask for JavaScript and say so in the error message, because those two surfaces have no review folder to fall back on. If that trade-off does not suit your audience there are three ways out, in increasing order of bluntness: leave the two login forms out with the second switch under Protection → Form Protection, turn on report-only mode to log everything and refuse nothing, or switch the layer off entirely, either on the same card or with `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in `wp-config.php`.
 
 = Can I test thresholds without blocking real users? =
 
@@ -465,6 +465,26 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.59 =
+
+Changed: the Protection page looks like it can be opened. Every area carries an arrow that turns when it opens, and the state on the right is a coloured pill: green for on, red for off, neutral for everything that is neither. The colour is decided where the state is built, not guessed from its wording.
+
+Changed: the key check in the quickstart says clearly that it worked. The answer is a proper notice now, bold and in the success colour, and the error case reads just as clearly.
+
+Fix: the information symbol was drawn wrong, and so were eleven others across the admin pages, the profile and the key manager. The dot of the "i" is a line of almost no length, which a browser draws as nothing unless the stroke has round caps, so the symbols looked like an upside down exclamation mark.
+
+Fix: the hint next to the expert switch is a real layer instead of the browser's own tooltip, which waits a second, disappears on its own and never shows up on a phone. It is reachable with the keyboard and announced to a screen reader.
+
+Changed: the form protection has its own area on the Protection page. Nine form checks used to sit inside "Registration & Spam" next to eleven rules about who may create an account, so anybody looking for the form protection had to know where to look. "Form Protection" now holds the comment decoy, the execution proof, the computation check, the three form plugins, the community check on forms and the comment spam action, and "Registration Rules" keeps what its name says.
+
+Changed: every setting says which plan it belongs to. The plan marker used to appear only on a setting the plan does not cover, so somebody on Business saw nothing on the features they were paying for. A locked setting keeps the coloured marker naming the plan it needs; an included one carries a quiet grey note naming the plan it comes with.
+
+Changed: the quickstart names the form plugins it found on the site, and stays silent when none of the three is installed.
+
+Fix: the audit trail switch carried no plan marker although the trail is a Business feature and gated as one. Somebody on a lower plan could switch it on and never learn that nothing was being recorded.
+
+Fix: a dashboard card no longer offers to cover "Formidable Forms forms". Two of the three form plugins carry the word in their own name.
 
 = 2.1.58 =
 

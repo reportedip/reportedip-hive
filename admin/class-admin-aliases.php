@@ -80,7 +80,7 @@ class ReportedIP_Hive_Admin_Aliases {
 				'overview'  => $protection . '#waf',
 				'waf'       => $protection . '#waf',
 				'bot'       => $protection . '#waf',
-				'spam'      => $protection . '#registration',
+				'spam'      => $protection . '#forms',
 				'scan'      => $protection . '#detection',
 				'hardening' => $protection . '#headers',
 				'rule_sync' => $tools . 'rules',

@@ -102,7 +102,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_comment_spam_action'             => 'spam',
 		'reportedip_hive_form_proof_enabled'              => true,
 		'reportedip_hive_form_proof_login_forms'          => true,
-		'reportedip_hive_form_proof_pow'                  => false,
+		'reportedip_hive_form_proof_pow'                  => true,
 		'reportedip_hive_form_proof_pow_since'            => 0,
 		'reportedip_hive_form_proof_cf7'                  => false,
 		'reportedip_hive_form_proof_formidable'           => false,
@@ -468,6 +468,8 @@ final class ReportedIP_Hive_Defaults {
 	 */
 	public static function seed_missing(): void {
 		$sentinel = '__rip_hive_default_unset__';
+		$seeded   = array();
+
 		foreach ( self::SAFE_OPTIONS as $option_key => $default_value ) {
 			if ( $sentinel !== ReportedIP_Hive_Option_Routing::get( $option_key, $sentinel ) ) {
 				continue;
@@ -476,7 +478,65 @@ final class ReportedIP_Hive_Defaults {
 				$default_value = $default_value ? 1 : 0;
 			}
 			ReportedIP_Hive_Option_Routing::set( $option_key, $default_value );
+			$seeded[] = $option_key;
 		}
+
+		self::run_seed_effects( $seeded );
+	}
+
+	/**
+	 * Run the side effects of the settings that were just seeded.
+	 *
+	 * A seeded value has to behave exactly like a written one. The computation
+	 * check is the case that forced this: its grace clock is stamped by the
+	 * `stamp_form_proof_pow` effect, and a default nobody ever writes never
+	 * stamps it. The check would then be handed out on every form and enforced
+	 * on none, which looks like working protection and is none.
+	 *
+	 * @param string[] $seeded Option keys written by {@see seed_missing()}.
+	 * @return void
+	 * @since  2.1.59
+	 */
+	private static function run_seed_effects( array $seeded ) {
+		$tokens = self::seed_effect_tokens( $seeded );
+
+		if ( ! $tokens || ! class_exists( 'ReportedIP_Hive_Settings_Effects' ) ) {
+			return;
+		}
+
+		foreach ( $tokens as $token ) {
+			ReportedIP_Hive_Settings_Effects::queue( $token );
+		}
+
+		ReportedIP_Hive_Settings_Effects::run_queued();
+	}
+
+	/**
+	 * The side-effect tokens a set of seeded settings owes.
+	 *
+	 * Pure, so the contract can be checked without the effect machinery and
+	 * without WordPress: a seeded setting owes exactly the tokens its registry
+	 * entry declares, each one once.
+	 *
+	 * @param string[] $seeded Option keys.
+	 * @return string[]
+	 * @since  2.1.59
+	 */
+	public static function seed_effect_tokens( array $seeded ) {
+		if ( ! $seeded || ! class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
+			return array();
+		}
+
+		$spec   = ReportedIP_Hive_Settings_Registry::spec();
+		$tokens = array();
+
+		foreach ( $seeded as $option_key ) {
+			foreach ( (array) ( $spec[ $option_key ]['side_effects'] ?? array() ) as $token ) {
+				$tokens[ (string) $token ] = true;
+			}
+		}
+
+		return array_keys( $tokens );
 	}
 
 	/**
@@ -537,6 +597,10 @@ final class ReportedIP_Hive_Defaults {
 			'reportedip_hive_bot_action'              => 'community' === $mode ? 'block' : 'flag',
 			'reportedip_hive_disposable_email_action' => 'block',
 		);
+
+		if ( 'community' === $mode ) {
+			$values['reportedip_hive_reputation_on_forms'] = 1;
+		}
 		foreach ( self::protection_presets()['medium'] as $suffix => $value ) {
 			$values[ 'reportedip_hive_' . $suffix ] = $value;
 		}

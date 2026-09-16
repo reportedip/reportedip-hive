@@ -71,7 +71,7 @@ test.describe('dashboard next steps', () => {
 		const areas = page.locator('details.rip-areas');
 		await expect(areas).toHaveCount(1);
 		await expect(areas).not.toHaveAttribute('open', '');
-		await expect(page.locator('.rip-areas__row')).toHaveCount(14);
+		await expect(page.locator('.rip-areas__row')).toHaveCount(15);
 		await expect(page.locator('.rip-areas__row a.rip-areas__label[href$="#blocking"]')).toHaveCount(1);
 		await areas.locator('summary').click();
 		await expect(page.locator('.rip-areas__row .rip-areas__desc').first()).toBeVisible();

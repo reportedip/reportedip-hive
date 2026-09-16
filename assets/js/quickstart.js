@@ -36,6 +36,19 @@
 			this.renderFeatureLocks();
 		},
 
+		/**
+		 * One line of key-check feedback, as a design-system alert so the
+		 * verdict carries weight instead of reading as a hint.
+		 *
+		 * @param {string} state success or error.
+		 * @param {string} html  Already escaped text.
+		 * @return {string} Markup.
+		 */
+		statusHtml: function (state, html) {
+			var alert = state === 'success' ? 'rip-alert--success' : 'rip-alert--danger';
+			return '<div class="rip-alert ' + alert + '"><span class="rip-input-status--' + state + '">' + html + '</span></div>';
+		},
+
 		mode: function () {
 			return $('#rip-selected-mode').val() === 'local' ? 'local' : 'community';
 		},
@@ -71,7 +84,7 @@
 			var s = cfg.strings || {};
 
 			if (!key) {
-				$status.html('<span class="rip-input-status--error">' + s.missingKey + '</span>');
+				$status.html(Quickstart.statusHtml('error', $('<span>').text(s.missingKey).html()));
 				return;
 			}
 			$button.prop('disabled', true);
@@ -86,19 +99,19 @@
 						if (r.data.domains_limit !== null && r.data.domains_limit > 0) {
 							text += ' · ' + s.domains.replace('%1$s', r.data.domains_used).replace('%2$s', r.data.domains_limit);
 						}
-						$status.html('<span class="rip-input-status--success">' + text + '</span>');
+						$status.html(Quickstart.statusHtml('success', text));
 						$input.addClass('rip-input--valid').removeClass('rip-input--invalid');
 						if (r.data.tier_badge_html) { $('#rip-quickstart-tier-badge').html(r.data.tier_badge_html); }
 						Quickstart.renderFeatureLocks();
 						if (RANK[Quickstart.tier] >= 1) { $('#rip-quickstart-teaser').remove(); }
 					} else {
 						var msg = (r && r.data && r.data.message) ? r.data.message : s.invalid;
-						$status.html('<span class="rip-input-status--error">' + $('<span>').text(msg).html() + '</span>');
+						$status.html(Quickstart.statusHtml('error', $('<span>').text(msg).html()));
 						$input.addClass('rip-input--invalid').removeClass('rip-input--valid');
 					}
 				})
 				.fail(function () {
-					$status.html('<span class="rip-input-status--error">' + s.error + '</span>');
+					$status.html(Quickstart.statusHtml('error', $('<span>').text(s.error).html()));
 				})
 				.always(function () { $button.prop('disabled', false); });
 		},
@@ -109,7 +122,7 @@
 			var mode = this.mode();
 			if (mode === 'community' && !this.validatedKey) {
 				$('#rip-quickstart-note').removeClass('rip-is-hidden').text(s.keyRequired);
-				$('#rip-api-key-status').html('<span class="rip-input-status--error">' + $('<span>').text(s.keyRequired).html() + '</span>');
+				$('#rip-api-key-status').html(Quickstart.statusHtml('error', $('<span>').text(s.keyRequired).html()));
 				$('#rip-api-key').addClass('rip-input--invalid').removeClass('rip-input--valid');
 				$('#rip-api-key-card')[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
 				$('#rip-api-key').trigger('focus');

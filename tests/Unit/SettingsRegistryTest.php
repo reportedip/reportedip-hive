@@ -252,6 +252,62 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_form_protection_is_its_own_section_next_to_the_registration_rules() {
+			$sections = \ReportedIP_Hive_Settings_Registry::sections();
+			$order    = array_keys( $sections );
+
+			$this->assertArrayHasKey( 'forms', $sections );
+			$this->assertSame(
+				array_search( 'registration', $order, true ) + 1,
+				array_search( 'forms', $order, true ),
+				'the form section sits directly after the registration rules'
+			);
+
+			$by_section = array(
+				'forms'        => array(),
+				'registration' => array(),
+			);
+			foreach ( \ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
+				if ( isset( $by_section[ $entry['section'] ] ) ) {
+					$by_section[ $entry['section'] ][] = $key;
+				}
+			}
+
+			sort( $by_section['forms'] );
+			$this->assertSame(
+				array(
+					'reportedip_hive_comment_honeypot_enabled',
+					'reportedip_hive_comment_spam_action',
+					'reportedip_hive_form_proof_cf7',
+					'reportedip_hive_form_proof_elementor',
+					'reportedip_hive_form_proof_enabled',
+					'reportedip_hive_form_proof_formidable',
+					'reportedip_hive_form_proof_login_forms',
+					'reportedip_hive_form_proof_pow',
+					'reportedip_hive_reputation_on_forms',
+				),
+				$by_section['forms']
+			);
+
+			sort( $by_section['registration'] );
+			$this->assertSame(
+				array(
+					'reportedip_hive_block_email_relays',
+					'reportedip_hive_block_unknown_username_login',
+					'reportedip_hive_disposable_email_action',
+					'reportedip_hive_email_rule_mode',
+					'reportedip_hive_email_rules',
+					'reportedip_hive_prohibited_usernames',
+					'reportedip_hive_prohibited_usernames_baseline',
+					'reportedip_hive_registration_allowlist',
+					'reportedip_hive_registration_limit_count',
+					'reportedip_hive_registration_limit_enabled',
+					'reportedip_hive_registration_limit_timeframe',
+				),
+				$by_section['registration']
+			);
+		}
+
 		public function test_every_registry_key_has_a_canonical_default() {
 			$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
 			foreach ( array_keys( \ReportedIP_Hive_Settings_Registry::spec() ) as $key ) {
@@ -358,13 +414,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * The simple view lists exactly the keys the spec names, and no section
-		 * carries more than six of them.
+		 * carries more than six of them. A key flagged `simple_form` counts
+		 * against that budget as well: on a site running the form plugin it
+		 * sits in the simple view like any other day-to-day switch.
 		 */
 		public function test_simple_keys_match_the_spec_and_stay_short_per_section(): void {
 			$spec   = \ReportedIP_Hive_Settings_Registry::spec();
 			$simple = array();
 			foreach ( $spec as $key => $entry ) {
-				if ( ! empty( $entry['simple'] ) ) {
+				if ( ! empty( $entry['simple'] ) || ! empty( $entry['simple_form'] ) ) {
 					$simple[] = $key;
 				}
 			}
@@ -377,8 +435,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_auto_footer_enabled',
 				'reportedip_hive_auto_footer_variant',
 				'reportedip_hive_bot_action',
+				'reportedip_hive_comment_honeypot_enabled',
+				'reportedip_hive_comment_spam_action',
 				'reportedip_hive_data_retention_days',
 				'reportedip_hive_disposable_email_action',
+				'reportedip_hive_form_proof_cf7',
+				'reportedip_hive_form_proof_elementor',
+				'reportedip_hive_form_proof_enabled',
+				'reportedip_hive_form_proof_formidable',
 				'reportedip_hive_hide_login_enabled',
 				'reportedip_hive_hide_login_slug',
 				'reportedip_hive_minimal_logging',
@@ -403,6 +467,20 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * Every json_list key names its choice source so the generic renderer can
 		 * draw a checkbox group instead of a raw textarea.
 		 */
+		/**
+		 * Every `simple_form` value names an adapter the form bridge knows, so
+		 * a typo cannot quietly park a switch in the expert view forever.
+		 */
+		public function test_every_conditional_simple_key_names_a_known_form_adapter(): void {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-form-adapters.php';
+			foreach ( \ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
+				if ( empty( $entry['simple_form'] ) ) {
+					continue;
+				}
+				$this->assertArrayHasKey( (string) $entry['simple_form'], \ReportedIP_Hive_Form_Adapters::ADAPTERS, "{$key} names an unknown form adapter." );
+			}
+		}
+
 		public function test_every_json_list_key_declares_choices(): void {
 			foreach ( \ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
 				if ( 'json_list' !== $entry['kind'] ) {

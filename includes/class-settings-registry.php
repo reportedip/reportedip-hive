@@ -68,8 +68,12 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'The request-inspecting firewall, its rule feed and the check that a crawler is really the crawler it claims to be.', 'reportedip-hive' ),
 			),
 			'registration'     => array(
-				'label'       => __( 'Registration & Spam', 'reportedip-hive' ),
-				'description' => __( 'Who may create an account and under which name and address. Also covers throwaway mail domains and the comment honeypot.', 'reportedip-hive' ),
+				'label'       => __( 'Registration Rules', 'reportedip-hive' ),
+				'description' => __( 'Who may create an account, under which name and with which mail address. Throwaway mail domains and the rate limit for sign-ups belong here too.', 'reportedip-hive' ),
+			),
+			'forms'            => array(
+				'label'       => __( 'Form Protection', 'reportedip-hive' ),
+				'description' => __( 'The checks that sit on the comment form, the sign-up form, the password-reset form and the forms of Contact Form 7, Formidable Forms and Elementor. A visitor sees none of it, and nobody has to read a distorted image.', 'reportedip-hive' ),
 			),
 			'hardening_mode'   => array(
 				'label'       => __( 'Attack Response', 'reportedip-hive' ),
@@ -730,14 +734,16 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Treat a sign-in attempt for a name that does not exist as an attack straight away. Effective against name guessing, but it also catches a colleague who mistypes their login.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_comment_honeypot_enabled'     => array(
-				'section'     => 'registration',
+				'simple'      => true,
+				'section'     => 'forms',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Comment honeypot', 'reportedip-hive' ),
 				'description' => __( 'Add a field to the comment form that a person never fills in and a bot always does.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_form_proof_enabled'           => array(
-				'section'      => 'registration',
+				'simple'       => true,
+				'section'      => 'forms',
 				'kind'         => 'bool',
 				'remote'       => true,
 				'side_effects' => array( 'purge_pages_for_form_proof' ),
@@ -745,14 +751,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'Check whether a comment, sign-up or password reset came from a browser that actually rendered the form, instead of from a script posting straight at the address.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_form_proof_login_forms'       => array(
-				'section'     => 'registration',
+				'section'     => 'forms',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Apply the proof to sign-up and password reset', 'reportedip-hive' ),
 				'description' => __( 'A comment that fails the check is filed for review, a sign-up or password reset that fails is refused. Switch this off to keep the comment protection while leaving both login forms untouched.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_form_proof_pow'               => array(
-				'section'      => 'registration',
+				'section'      => 'forms',
 				'kind'         => 'bool',
 				'remote'       => true,
 				'tier'         => 'form_proof_pow',
@@ -761,7 +767,8 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'Give the form a small sum to work out in the background and check the answer on submit. A script that only copies the hidden field out of the page can no longer pass for a visitor, and nobody has to read a distorted image. Needs HTTPS.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_form_proof_cf7'               => array(
-				'section'      => 'registration',
+				'simple_form'  => 'cf7',
+				'section'      => 'forms',
 				'kind'         => 'bool',
 				'remote'       => true,
 				'tier'         => 'form_adapters',
@@ -770,7 +777,8 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'Put the same check on every Contact Form 7 form: the entry has to come from a browser that rendered the page. Visitors notice nothing, and there is no image to decipher.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_form_proof_formidable'        => array(
-				'section'      => 'registration',
+				'simple_form'  => 'formidable',
+				'section'      => 'forms',
 				'kind'         => 'bool',
 				'remote'       => true,
 				'tier'         => 'form_adapters_advanced',
@@ -779,7 +787,8 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'The same check on Formidable Forms and Formidable Forms PRO, including multi-step forms. Visitors notice nothing.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_form_proof_elementor'         => array(
-				'section'      => 'registration',
+				'simple_form'  => 'elementor',
+				'section'      => 'forms',
 				'kind'         => 'bool',
 				'remote'       => true,
 				'tier'         => 'form_adapters_advanced',
@@ -788,14 +797,15 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'The same check on Elementor Pro forms, which are sent in the background. Visitors notice nothing.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_reputation_on_forms'          => array(
-				'section'     => 'registration',
+				'section'     => 'forms',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Community threat check on forms', 'reportedip-hive' ),
 				'description' => __( 'Ask the community network about the visitor address when a comment, sign-up or password reset is submitted, using the same protection level the sign-in page enforces. Needs Community Network mode.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_comment_spam_action'          => array(
-				'section'     => 'registration',
+				'simple'      => true,
+				'section'     => 'forms',
 				'kind'        => 'enum',
 				'allowed'     => array( 'spam', 'off', 'block' ),
 				'remote'      => true,
@@ -1456,6 +1466,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			'reportedip_hive_audit_enabled'                => array(
 				'section'     => 'privacy_logs',
 				'kind'        => 'bool',
+				'tier'        => 'audit_log',
 				'remote'      => true,
 				'label'       => __( 'Audit trail', 'reportedip-hive' ),
 				'description' => __( 'Keep a separate, append-only record of what happened to accounts: sign-ins, resets, role changes and who made them.', 'reportedip-hive' ),

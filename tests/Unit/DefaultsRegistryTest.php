@@ -18,6 +18,8 @@
 
 namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-effects.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -110,5 +112,70 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( '["editor"]', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles', null ) );
 			$this->assertSame( 0, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', '__missing__' ) );
 		}
+
+		/**
+		 * The computation check ships on.
+		 *
+		 * It is gated to Professional, so on a lower plan the switch is inert;
+		 * the point of the default is that a site which never touched the
+		 * setting still gets the check the moment its plan covers it.
+		 */
+		public function test_the_computation_check_is_on_by_default() {
+			$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
+
+			$this->assertTrue( $defaults['reportedip_hive_form_proof_pow'] );
+		}
+
+		/**
+		 * Seeding owes the computation check its grace-clock stamp.
+		 *
+		 * The clock is written by the `stamp_form_proof_pow` side effect, and a
+		 * side effect only ran when a channel wrote the setting. A default that
+		 * nobody writes left the clock at zero, and `pow_required()` reads a
+		 * zero as "never enforce". The check would be planted on every form and
+		 * demanded on none, which is the worst of both: the work of a
+		 * protection without its effect.
+		 */
+		public function test_seeding_owes_the_computation_check_its_stamp() {
+			$tokens = \ReportedIP_Hive_Defaults::seed_effect_tokens( array( 'reportedip_hive_form_proof_pow' ) );
+
+			$this->assertContains( 'stamp_form_proof_pow', $tokens );
+		}
+
+		/**
+		 * A setting without a declared side effect owes nothing, and a token
+		 * declared by two settings is still queued once.
+		 */
+		public function test_seed_effect_tokens_are_declared_and_unique() {
+			$this->assertSame( array(), \ReportedIP_Hive_Defaults::seed_effect_tokens( array( 'reportedip_hive_headers_enabled' ) ) );
+			$this->assertSame( array(), \ReportedIP_Hive_Defaults::seed_effect_tokens( array() ) );
+
+			$adapters = \ReportedIP_Hive_Defaults::seed_effect_tokens(
+				array(
+					'reportedip_hive_form_proof_cf7',
+					'reportedip_hive_form_proof_formidable',
+					'reportedip_hive_form_proof_elementor',
+				)
+			);
+
+			$this->assertSame( array( 'stamp_form_adapters_since' ), $adapters );
+		}
+
+		/**
+		 * The community check on forms is recommended wherever it can work.
+		 *
+		 * It needs the community network, not a paid plan, so the mode decides
+		 * and the tier does not.
+		 */
+		public function test_the_community_check_on_forms_follows_the_mode() {
+			foreach ( array( 'free', 'contributor', 'professional', 'business' ) as $tier ) {
+				$community = \ReportedIP_Hive_Defaults::recommended( $tier, 'community' );
+				$local     = \ReportedIP_Hive_Defaults::recommended( $tier, 'local' );
+
+				$this->assertSame( 1, $community['reportedip_hive_reputation_on_forms'] ?? null, $tier . ' on the community network' );
+				$this->assertArrayNotHasKey( 'reportedip_hive_reputation_on_forms', $local, $tier . ' on Local Shield' );
+			}
+		}
+
 	}
 }

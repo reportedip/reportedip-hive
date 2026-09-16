@@ -123,7 +123,9 @@ final class ReportedIP_Hive_Settings_Effects {
 		foreach ( $tokens as $token ) {
 			switch ( $token ) {
 				case 'flush_rewrite':
-					flush_rewrite_rules( false );
+					if ( function_exists( 'flush_rewrite_rules' ) ) {
+						flush_rewrite_rules( false );
+					}
 					break;
 
 				case 'flush_2fa_frontend_memo':

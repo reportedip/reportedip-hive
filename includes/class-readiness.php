@@ -273,7 +273,7 @@ final class ReportedIP_Hive_Readiness {
 			'form_adapter_' . $slug,
 			self::SEV_ADVISORY,
 			/* translators: %s: name of the form plugin, for example Contact Form 7. */
-			sprintf( __( 'Cover your %s forms', 'reportedip-hive' ), $label ),
+			sprintf( __( '%s is not covered yet', 'reportedip-hive' ), $label ),
 			sprintf(
 				/* translators: %s: name of the form plugin, for example Contact Form 7. */
 				__( '%s is active here and your plan includes the check for it, but the switch is still off. A visitor sees nothing new once it runs, no image to read and no extra step.', 'reportedip-hive' ),
@@ -1068,9 +1068,9 @@ final class ReportedIP_Hive_Readiness {
 			'badge_off'               => array( 'reportedip-hive-community', 'badges' ),
 			'dropin_not_running'      => array( 'reportedip-hive-tools', 'server' ),
 			'community_pending'       => array( 'reportedip-hive-community', 'community' ),
-			'form_adapter_cf7'        => array( 'reportedip-hive-protection', 'registration' ),
-			'form_adapter_formidable' => array( 'reportedip-hive-protection', 'registration' ),
-			'form_adapter_elementor'  => array( 'reportedip-hive-protection', 'registration' ),
+			'form_adapter_cf7'        => array( 'reportedip-hive-protection', 'forms' ),
+			'form_adapter_formidable' => array( 'reportedip-hive-protection', 'forms' ),
+			'form_adapter_elementor'  => array( 'reportedip-hive-protection', 'forms' ),
 			'own_2fa_missing'         => array( 'profile', '' ),
 		);
 	}

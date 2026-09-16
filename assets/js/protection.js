@@ -3,6 +3,10 @@
  * preset radio group. No server roundtrip; everything the filter needs is
  * in `data-search` attributes rendered by the page.
  *
+ * The simple view also carries a stand-in per expert setting. It has no
+ * control of its own and stays out of sight until the search matches it,
+ * which is what keeps a search for a setting from coming back empty.
+ *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
@@ -45,8 +49,10 @@
 		var hits = 0;
 		document.querySelectorAll('.rip-protection__section').forEach(function (section) {
 			var sectionHits = 0;
-			section.querySelectorAll('.rip-protection__field').forEach(function (field) {
-				var match = !term || (field.dataset.search || '').indexOf(term) >= 0;
+			section.querySelectorAll('.rip-protection__field, .rip-protection__hint').forEach(function (field) {
+				var match = term
+					? (field.dataset.search || '').indexOf(term) >= 0
+					: !field.classList.contains('rip-protection__hint');
 				field.classList.toggle('rip-hidden', !match);
 				highlight(field, match ? term : '');
 				if (match) {
@@ -69,6 +75,21 @@
 	}
 
 	input.addEventListener('input', filter);
+
+	function reveal() {
+		var target = location.hash ? document.getElementById(location.hash.slice(1)) : null;
+		if (!target) {
+			return;
+		}
+		var card = target.closest('details');
+		if (card) {
+			card.open = true;
+		}
+		target.scrollIntoView();
+	}
+
+	reveal();
+	window.addEventListener('hashchange', reveal);
 
 	var presets = document.querySelectorAll('input[name="rip_protection_level"]');
 	['failed_login_threshold', 'failed_login_timeframe', 'block_duration', 'block_threshold'].forEach(function (short) {

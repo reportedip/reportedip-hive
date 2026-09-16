@@ -185,6 +185,27 @@ test.describe('protection page', () => {
 		await expect(page.locator('#notifications')).toHaveClass(/rip-hidden/);
 	});
 
+	test('simple mode finds an expert setting through the search and offers the way in', async ({ page }) => {
+		forgetExpert();
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		const field = page.locator('#blocking input[name="reportedip_hive_block_tor"]');
+		await expect(field).toHaveCount(0);
+
+		const hint = page.locator('#blocking .rip-protection__hint[data-key="reportedip_hive_block_tor"]');
+		await expect(hint).toBeHidden();
+		await page.fill('#rip-protection-search', 'tor');
+		await expect(page.locator('#rip-protection-no-results')).toHaveClass(/rip-hidden/);
+		await expect(hint).toBeVisible();
+		/* Nothing in the stand-in may reach the save of that section. */
+		await expect(hint.locator('input, select, textarea')).toHaveCount(0);
+
+		await hint.locator('a.rip-button').click();
+		await page.waitForURL(/page=reportedip-hive-protection#rip-field-block_tor/);
+		await expect(field).toHaveCount(1);
+		await expect(page.locator('#blocking')).toHaveAttribute('open', '');
+	});
+
 	test('expert mode lists the tools page and the legacy urls land on their new home', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive');

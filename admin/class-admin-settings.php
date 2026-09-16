@@ -490,6 +490,34 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Render the quiet counterpart of the locked tier marker: a field whose
+	 * feature the current plan already includes.
+	 *
+	 * It names the plan the feature belongs to and nothing else, so it reads
+	 * as a note rather than as an offer or a restriction. The locked marker
+	 * stays a coloured tier badge with a lock glyph and a link to the pricing
+	 * page, so the two can never be mistaken for one another.
+	 *
+	 * @param array $status Output of Mode_Manager::feature_status().
+	 * @return void
+	 * @since 2.1.59
+	 */
+	public static function render_tier_included( $status ) {
+		if ( empty( $status ) || ! is_array( $status ) || empty( $status['min_tier'] ) ) {
+			return;
+		}
+
+		$tier_label = ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info( (string) $status['min_tier'] )['label'];
+
+		printf(
+			'<span class="rip-badge rip-badge--neutral rip-tier-included" title="%1$s">%2$s</span>',
+			esc_attr__( 'This feature is part of your plan.', 'reportedip-hive' ),
+			/* translators: %s = plan name (e.g. "Professional") */
+			esc_html( sprintf( __( 'Included in %s', 'reportedip-hive' ), $tier_label ) )
+		);
+	}
+
+	/**
 	 * Canonical target for upgrade affordances (locked tier markers, header
 	 * badge): the public pricing page where plans can be compared and booked.
 	 *
@@ -1218,7 +1246,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 			<?php if ( 'over_limit' === $snapshot['status'] ) : ?>
 				<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 					<?php esc_html_e( 'More domains in use than your plan includes, manage them in your reportedip.com dashboard.', 'reportedip-hive' ); ?>
 				</div>
 			<?php endif; ?>
@@ -1307,7 +1335,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 			<?php elseif ( $bundle < 0 ) : ?>
 				<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 					<?php
 					printf(
 						/* translators: 1: negative balance (already includes the minus sign), 2: unit (Mail credits / SMS credits) */
@@ -3798,9 +3826,9 @@ class ReportedIP_Hive_Admin_Settings {
 								<li class="rip-activity-item">
 									<div class="rip-activity-item__icon rip-activity-item__icon--<?php echo esc_attr( $icon_class ); ?>">
 										<?php if ( $icon_class === 'danger' ) : ?>
-											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
 										<?php elseif ( $icon_class === 'warning' ) : ?>
-											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 										<?php else : ?>
 											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
 										<?php endif; ?>
@@ -4655,7 +4683,7 @@ class ReportedIP_Hive_Admin_Settings {
 		?>
 		<div class="rip-settings-section" id="rip-readiness">
 			<h2 class="rip-settings-section__title">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 				<?php esc_html_e( 'Readiness', 'reportedip-hive' ); ?>
 			</h2>
 			<p class="rip-settings-section__desc">
@@ -4969,7 +4997,7 @@ class ReportedIP_Hive_Admin_Settings {
 				);
 				$pill_icons   = array(
 					'success' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="14" height="14" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
-					'warning' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+					'warning' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
 					'danger'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
 				);
 				foreach ( $health_items as $key => $item ) :
@@ -5740,7 +5768,7 @@ class ReportedIP_Hive_Admin_Settings {
 								<!-- Queue Card -->
 								<div class="rip-stat-card">
 									<div class="rip-stat-card__icon <?php echo $queue_size > 50 ? 'rip-stat-card__icon--warning' : 'rip-stat-card__icon--success'; ?>">
-										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 											<line x1="8" y1="6" x2="21" y2="6"/>
 											<line x1="8" y1="12" x2="21" y2="12"/>
 											<line x1="8" y1="18" x2="21" y2="18"/>
@@ -5889,7 +5917,7 @@ class ReportedIP_Hive_Admin_Settings {
 							</div>
 							<div class="rip-card rip-relay-highlight rip-relay-highlight--sms">
 								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
 									<?php esc_html_e( 'Managed SMS-2FA delivery (Professional and above)', 'reportedip-hive' ); ?>
 									<?php self::render_tier_marker( $sms_relay_status ); ?>
 								</h3>
