@@ -254,6 +254,35 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
+	 * Advisory: a third-party form plugin is active, the plan covers the
+	 * execution proof for it and the switch is still off.
+	 *
+	 * @param string $slug      Adapter slug (`cf7`, `formidable`, `elementor`).
+	 * @param string $label     Display name of the form plugin.
+	 * @param bool   $detected  Form plugin is active here.
+	 * @param bool   $available Plan includes the adapter.
+	 * @param bool   $enabled   Option state.
+	 * @return array<string,mixed>|null
+	 * @since  2.1.58
+	 */
+	public static function form_adapter_off( $slug, $label, $detected, $available, $enabled ) {
+		if ( ! $detected || ! $available || $enabled ) {
+			return null;
+		}
+		return self::issue(
+			'form_adapter_' . $slug,
+			self::SEV_ADVISORY,
+			/* translators: %s: name of the form plugin, for example Contact Form 7. */
+			sprintf( __( 'Cover your %s forms', 'reportedip-hive' ), $label ),
+			sprintf(
+				/* translators: %s: name of the form plugin, for example Contact Form 7. */
+				__( '%s is active here and your plan includes the check for it, but the switch is still off. A visitor sees nothing new once it runs, no image to read and no extra step.', 'reportedip-hive' ),
+				$label
+			)
+		);
+	}
+
+	/**
 	 * Advisory: the footer badge is off.
 	 *
 	 * @param bool $enabled Option state.
@@ -473,6 +502,17 @@ final class ReportedIP_Hive_Readiness {
 				$raised[] = self::dropin_not_running( (bool) $guard->supports_htaccess(), (bool) $guard->is_running() );
 			}
 			$raised[] = self::community_pending( (string) $mode->get_mode() );
+
+			$adapters = class_exists( 'ReportedIP_Hive_Form_Adapters' ) ? ReportedIP_Hive_Form_Adapters::get_instance() : null;
+			foreach ( self::form_adapters() as $slug => $row ) {
+				$raised[] = self::form_adapter_off(
+					$slug,
+					$row['label'],
+					null !== $adapters && $adapters->detected( $slug ),
+					! empty( $mode->feature_status( $row['feature'] )['available'] ),
+					(bool) ReportedIP_Hive_Option_Routing::get( $row['option'], false )
+				);
+			}
 		}
 
 		$issues = array();
@@ -978,6 +1018,32 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
+	 * The three shipped form adapters, keyed by slug.
+	 *
+	 * @return array<string,array{label:string,feature:string,option:string}>
+	 * @since  2.1.58
+	 */
+	private static function form_adapters() {
+		return array(
+			'cf7'        => array(
+				'label'   => 'Contact Form 7',
+				'feature' => 'form_adapters',
+				'option'  => 'reportedip_hive_form_proof_cf7',
+			),
+			'formidable' => array(
+				'label'   => 'Formidable Forms',
+				'feature' => 'form_adapters_advanced',
+				'option'  => 'reportedip_hive_form_proof_formidable',
+			),
+			'elementor'  => array(
+				'label'   => 'Elementor Forms',
+				'feature' => 'form_adapters_advanced',
+				'option'  => 'reportedip_hive_form_proof_elementor',
+			),
+		);
+	}
+
+	/**
 	 * Deep-link target per issue key: `[page slug, tab slug]`.
 	 *
 	 * @return array<string,array{0:string,1:string}>
@@ -985,24 +1051,27 @@ final class ReportedIP_Hive_Readiness {
 	 */
 	private static function links() {
 		return array(
-			'guard_queue_unwritable' => array( 'reportedip-hive-tools', 'server' ),
-			'cron_stalled'           => array( 'reportedip-hive-debug', '' ),
-			'cron_disabled_stale'    => array( 'reportedip-hive-debug', '' ),
-			'trusted_header_open'    => array( 'reportedip-hive-protection', 'detection' ),
-			'schema_outdated'        => array( 'reportedip-hive-debug', '' ),
-			'api_degraded'           => array( 'reportedip-hive-community', 'community' ),
-			'relay_cap_mail'         => array( 'reportedip-hive-community', 'community' ),
-			'relay_cap_sms'          => array( 'reportedip-hive-community', 'community' ),
-			'mail_failures'          => array( 'reportedip-hive-protection', 'notifications' ),
-			'crypto_missing'         => array( 'reportedip-hive-protection', 'account_security' ),
-			'queue_failed'           => array( 'reportedip-hive-security', 'api_queue' ),
-			'queue_backlog'          => array( 'reportedip-hive-security', 'api_queue' ),
-			'hide_login_off'         => array( 'reportedip-hive-protection', 'hide_login' ),
-			'frontend_2fa_available' => array( 'reportedip-hive-protection', 'account_security' ),
-			'badge_off'              => array( 'reportedip-hive-community', 'badges' ),
-			'dropin_not_running'     => array( 'reportedip-hive-tools', 'server' ),
-			'community_pending'      => array( 'reportedip-hive-community', 'community' ),
-			'own_2fa_missing'        => array( 'profile', '' ),
+			'guard_queue_unwritable'  => array( 'reportedip-hive-tools', 'server' ),
+			'cron_stalled'            => array( 'reportedip-hive-debug', '' ),
+			'cron_disabled_stale'     => array( 'reportedip-hive-debug', '' ),
+			'trusted_header_open'     => array( 'reportedip-hive-protection', 'detection' ),
+			'schema_outdated'         => array( 'reportedip-hive-debug', '' ),
+			'api_degraded'            => array( 'reportedip-hive-community', 'community' ),
+			'relay_cap_mail'          => array( 'reportedip-hive-community', 'community' ),
+			'relay_cap_sms'           => array( 'reportedip-hive-community', 'community' ),
+			'mail_failures'           => array( 'reportedip-hive-protection', 'notifications' ),
+			'crypto_missing'          => array( 'reportedip-hive-protection', 'account_security' ),
+			'queue_failed'            => array( 'reportedip-hive-security', 'api_queue' ),
+			'queue_backlog'           => array( 'reportedip-hive-security', 'api_queue' ),
+			'hide_login_off'          => array( 'reportedip-hive-protection', 'hide_login' ),
+			'frontend_2fa_available'  => array( 'reportedip-hive-protection', 'account_security' ),
+			'badge_off'               => array( 'reportedip-hive-community', 'badges' ),
+			'dropin_not_running'      => array( 'reportedip-hive-tools', 'server' ),
+			'community_pending'       => array( 'reportedip-hive-community', 'community' ),
+			'form_adapter_cf7'        => array( 'reportedip-hive-protection', 'registration' ),
+			'form_adapter_formidable' => array( 'reportedip-hive-protection', 'registration' ),
+			'form_adapter_elementor'  => array( 'reportedip-hive-protection', 'registration' ),
+			'own_2fa_missing'         => array( 'profile', '' ),
 		);
 	}
 

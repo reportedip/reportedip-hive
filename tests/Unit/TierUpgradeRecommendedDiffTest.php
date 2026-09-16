@@ -70,7 +70,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 1, $selected['reportedip_hive_hsts_enabled'] );
 		}
 
-		public function test_business_over_professional_only_lifts_retention(): void {
+		public function test_business_over_professional_lifts_retention_and_the_advanced_adapters(): void {
 			$selected = \ReportedIP_Hive_Tier_Upgrade::select_upgrade_values(
 				\ReportedIP_Hive_Defaults::recommended( 'professional' ),
 				\ReportedIP_Hive_Defaults::recommended( 'business' ),
@@ -82,8 +82,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertSame(
 				array(
-					'reportedip_hive_audit_enabled'       => 1,
-					'reportedip_hive_data_retention_days' => 365,
+					'reportedip_hive_audit_enabled'         => 1,
+					'reportedip_hive_data_retention_days'   => 365,
+					'reportedip_hive_form_proof_elementor'  => 1,
+					'reportedip_hive_form_proof_formidable' => 1,
 				),
 				$selected
 			);

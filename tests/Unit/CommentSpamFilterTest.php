@@ -333,6 +333,58 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertTrue( \ReportedIP_Hive_Comment_Spam_Filter::verdict_may_block( null ) );
 		}
 
+		/**
+		 * A form filled in faster than a reader can read it is a signal, not a
+		 * verdict: the duration is unsigned and anyone can write one in.
+		 */
+		public function test_a_fast_submission_is_a_signal(): void {
+			$verdict = $this->score(
+				array(
+					'comment_author'  => 'Sabine',
+					'comment_content' => 'Der Beitrag hat mir sehr geholfen, danke dafür.',
+				),
+				array(
+					'form_proof_seconds' => 1,
+					'fast_seconds'       => 3,
+				)
+			);
+
+			$this->assertContains( 'too_fast', $verdict['reasons'] );
+			$this->assertSame( 2, $verdict['score'] );
+			$this->assertLessThan( \ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD, $verdict['score'] );
+		}
+
+		/**
+		 * @dataProvider unremarkable_durations
+		 *
+		 * @param array<string,mixed> $context Duration context.
+		 */
+		public function test_an_unremarkable_duration_scores_nothing( array $context ): void {
+			$verdict = $this->score(
+				array(
+					'comment_author'  => 'Sabine',
+					'comment_content' => 'Der Beitrag hat mir sehr geholfen, danke dafür.',
+				),
+				$context
+			);
+
+			$this->assertNotContains( 'too_fast', $verdict['reasons'] );
+			$this->assertSame( 0, $verdict['score'] );
+		}
+
+		/**
+		 * @return array<string, array{0:array<string,mixed>}>
+		 */
+		public static function unremarkable_durations(): array {
+			return array(
+				'nothing measured'   => array( array( 'form_proof_seconds' => null, 'fast_seconds' => 3 ) ),
+				'no duration key'    => array( array( 'fast_seconds' => 3 ) ),
+				'on the threshold'   => array( array( 'form_proof_seconds' => 3, 'fast_seconds' => 3 ) ),
+				'a leisurely reader' => array( array( 'form_proof_seconds' => 90, 'fast_seconds' => 3 ) ),
+				'threshold switched off' => array( array( 'form_proof_seconds' => 0, 'fast_seconds' => 0 ) ),
+			);
+		}
+
 		public function test_links_in_finds_bare_and_prefixed_urls(): void {
 			$links = \ReportedIP_Hive_Comment_Spam_Filter::links_in( 'see https://a.example and www.b.example for more' );
 

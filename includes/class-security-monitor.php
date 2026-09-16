@@ -45,6 +45,7 @@ class ReportedIP_Hive_Security_Monitor {
 	private static $default_category_mapping = array(
 		'failed_login'        => array( 18 ),
 		'comment_spam'        => array( 12 ),
+		'form_spam'           => array( 12 ),
 		'xmlrpc_abuse'        => array( 21 ),
 		'admin_scanning'      => array( 21, 15 ),
 		'reputation_threat'   => array( 15, 4 ),
@@ -1231,6 +1232,7 @@ class ReportedIP_Hive_Security_Monitor {
 		$stat_mapping = array(
 			'failed_login'           => 'failed_logins',
 			'comment_spam'           => 'comment_spam',
+			'form_spam'              => 'comment_spam',
 			'xmlrpc_abuse'           => 'xmlrpc_calls',
 			'admin_scanning'         => 'failed_logins',
 			'password_spray'         => 'failed_logins',

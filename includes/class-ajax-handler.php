@@ -132,6 +132,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_registry_save', array( $this, 'ajax_registry_save' ) );
 		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
+		add_action( 'wp_ajax_reportedip_hive_form_proof_selftest', array( $this, 'ajax_form_proof_selftest' ) );
 	}
 
 	/**
@@ -380,6 +381,83 @@ class ReportedIP_Hive_Ajax_Handler {
 		wp_send_json_error(
 			array(
 				'message' => __( 'Test email could not be sent. Check the WordPress mail configuration or your active mail provider.', 'reportedip-hive' ),
+			)
+		);
+	}
+
+	/**
+	 * AJAX: judge one self-test pass of the form execution proof.
+	 *
+	 * The three passes run one request each, because a repeated answer is only
+	 * a repeat to a second request: {@see ReportedIP_Hive_Form_Proof::pow_accepts()}
+	 * memoises its answer for the request it runs in, so judging the same
+	 * payload twice in one call would read the memo instead of the single-use
+	 * record and the replay pass would prove nothing.
+	 *
+	 * Nothing is rebuilt here. The verdict comes out of the same pure
+	 * `evaluate()` and `resolve()` every real submission goes through, and the
+	 * single-use record is spent by the same `pow_accepts()`, so a pass that
+	 * comes back green means the enforced path is green.
+	 *
+	 * @return void
+	 * @since  2.1.58
+	 */
+	public function ajax_form_proof_selftest() {
+		check_ajax_referer( 'reportedip_hive_form_selftest', 'nonce' );
+
+		$this->require_admin_capability();
+
+		$run = isset( $_POST['run'] ) ? sanitize_key( wp_unslash( $_POST['run'] ) ) : '';
+
+		if ( ! in_array( $run, ReportedIP_Hive_Tools_Page::SELFTEST_RUNS, true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Unknown self-test pass.', 'reportedip-hive' ) ) );
+		}
+
+		$payload  = isset( $_POST['proof'] ) ? sanitize_text_field( wp_unslash( $_POST['proof'] ) ) : '';
+		$proof    = ReportedIP_Hive_Form_Proof::get_instance();
+		$required = $proof->pow_required();
+		$decoy    = ReportedIP_Hive_Tools_Page::SELFTEST_DECOY;
+		$field    = ReportedIP_Hive_Tools_Page::SELFTEST_FIELD;
+
+		$submission = array(
+			$decoy => 'bot' === $run ? 'https://example.invalid/' : '',
+			$field => $payload,
+		);
+
+		$verdict = ReportedIP_Hive_Form_Proof::evaluate( $submission, $field, $decoy );
+		$solved  = ReportedIP_Hive_Form_Proof::PROVED === $verdict && $required && $proof->pow_accepts( $payload );
+		$actual  = ReportedIP_Hive_Form_Proof::resolve( $verdict, $required, $solved );
+
+		$key          = 'reportedip_hive_selftest_' . get_current_user_id();
+		$seen         = 'visitor' === $run ? array() : (array) get_transient( $key );
+		$seen[ $run ] = $actual;
+		set_transient( $key, $seen, ReportedIP_Hive_Tools_Page::SELFTEST_TTL );
+
+		$outcome  = ReportedIP_Hive_Tools_Page::selftest_outcome( $seen, $required );
+		$expected = ReportedIP_Hive_Tools_Page::selftest_expected( $run, $required );
+		$matched  = ( $expected === $actual );
+		$summary  = null;
+
+		if ( ! empty( $outcome['complete'] ) ) {
+			delete_transient( $key );
+
+			$summary = array(
+				'pass'    => (bool) $outcome['pass'],
+				'message' => ReportedIP_Hive_Tools_Page::selftest_summary( (bool) $outcome['pass'] ),
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'run'            => $run,
+				'label'          => ReportedIP_Hive_Tools_Page::selftest_label( $run ),
+				'expected'       => $expected,
+				'expected_label' => ReportedIP_Hive_Tools_Page::selftest_verdict_label( $expected ),
+				'actual'         => $actual,
+				'actual_label'   => ReportedIP_Hive_Tools_Page::selftest_verdict_label( $actual ),
+				'ok'             => $matched,
+				'meaning'        => ReportedIP_Hive_Tools_Page::selftest_meaning( $run, $matched, $required ),
+				'summary'        => $summary,
 			)
 		);
 	}

@@ -2,9 +2,58 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.1.58] (2026-09-16)
 
 ### Security
+
+- **The form execution proof can demand a computation (Professional).** The
+  proof field carries a name that is readable in the page, so a script that
+  loads the form once could post that field back and pass for a browser. With
+  the new check the field has to carry a solved sum instead of a marker: the
+  server plants a starting value that depends only on the current hour, the
+  browser works out an answer in the background in a few milliseconds, and the
+  server verifies it and refuses a second use of the same answer. Nothing about
+  the request reaches the HTML, so page caches keep working, and answers from
+  the previous twelve hours stay valid for a page served out of one. It needs
+  HTTPS, because the browser hash API only exists in a secure context; without
+  it no challenge is planted and the plain marker keeps working, so nothing
+  changes for a site on plain HTTP. A visitor with JavaScript switched off is
+  judged exactly as before. The difficulty rises while the hardening mode runs and can be
+  set with the `reportedip_hive_form_proof_bits` filter.
+- **Your own forms can use the check instead of a captcha.** Admit the surface
+  through `reportedip_hive_form_proof_adapters`, print the anchor with
+  `ReportedIP_Hive_Form_Proof::field()` and gate the submission with
+  `ReportedIP_Hive_Form_Proof::passes()`. Nobody has to read a distorted image
+  and no third-party service gets to see the visitor.
+- **Three form plugins are covered out of the box.** Contact Form 7 comes with
+  Professional, Formidable Forms together with Formidable Forms PRO and
+  Elementor Forms with Business. Every plugin has its own switch, so you decide
+  which forms take part, and a contact form drops its captcha without any
+  visitor noticing. For 24 hours after a switch goes on, a submission that
+  never carried the proof field is still let through, because a page that left
+  a cache before the switch has no field to carry. Switching an adapter on also
+  clears the common page caches, so a page stored without the field cannot lock
+  anybody out. On these forms a filled decoy field counts towards the
+  per-address block ladder the same way it has always counted on a comment,
+  while a browser with JavaScript switched off never does.
+
+- **A self-test proves the form protection is running.** Tools, tab
+  Diagnostics. The card first lists what is switched on, and why an adapter is
+  inactive when it is, then runs three passes with the browser you are sitting
+  in front of: like a visitor, like the same visitor twice, and like a bot.
+  Each pass is judged by exactly the code that judges a real submission, so a
+  pass that comes back as expected means something. No real form is submitted,
+  no mail goes out and no entry is stored. An invisible protection is otherwise
+  hard to tell apart from no protection at all.
+- **How long the form was on screen is now a signal.** The script measures the
+  seconds between the form coming into view and the submission and sends them
+  along. The starting point is taken in the browser and never written into the
+  markup, because a value baked into the HTML is already wrong by the time a
+  page cache serves it. The number is not signed, so it is enforced on the
+  comment filter alone, where it weighs 2 of the 7 points a comment needs and
+  can never convict on its own. Every other surface measures it and writes it
+  to the log. Threshold three seconds, filter
+  `reportedip_hive_form_proof_fast_seconds`.
 
 - **The comment spam filter reads eight more signals.** Measured against
   27,796 real comments of a site that had collected them since 2014, the
@@ -29,6 +78,31 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **Two forms on one page no longer get in each other's way.** The proof script
+  worked out a single answer and wrote it into every form on the page, and the
+  server accepts an answer only once. The second form, and every step after the
+  first on a multi-step form, therefore looked like a repeat submission. Each
+  form now carries its own answer.
+- **A cached page no longer breaks the computation check.** An answer was
+  accepted for twelve hours after its starting value was planted. A page cache
+  that outlives that span, and LiteSpeed keeps public pages for a week by
+  default, served every visitor a form whose answer the server then refused.
+  The span is a week now, and `reportedip_hive_form_proof_buckets` raises it to
+  thirty days. A shorter span never made an attacker work harder, because the
+  starting value can be formed for any hour and a script takes the current one
+  regardless; it only ever limited how long the single-use records live.
+- **Hiding the software now hides all of it.** The switch took off the
+  generator tag WordPress writes and left every other one standing, so a site
+  running Elementor published the exact build and its feature list although the
+  setting said the software was hidden. The same held for WooCommerce, Yoast
+  and anything else that announces itself. Every generator tag in the document
+  head is removed now, whoever wrote it, and a name that merely starts with the
+  word stays untouched.
+- **Two forms on one page produced the same HTML id twice.** The anchor field
+  carried a fixed `id` and a `label for`, so a page with a comment form and a
+  contact form emitted the pair twice. The label now wraps the field and
+  neither attribute is written. The field stays hidden the same way, and
+  `aria-hidden`, `tabindex` and `autocomplete` are unchanged.
 - **One submitted comment counts once.** A filled decoy was counted twice
   towards the per-address block ladder, by the honeypot and again by the
   `comment_post` handler, so an address reached a threshold of five after

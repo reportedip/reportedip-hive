@@ -228,10 +228,75 @@ final class ReportedIP_Hive_Attack_Surface {
 		remove_action( 'wp_head', 'wp_generator' );
 		add_filter( 'the_generator', '__return_empty_string' );
 
+		add_action( 'wp_head', array( __CLASS__, 'open_head_buffer' ), -99999 );
+		add_action( 'wp_head', array( __CLASS__, 'close_head_buffer' ), 99999 );
+
 		$debug_display = defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY;
 		if ( ! $debug_display && function_exists( 'ini_set' ) ) {
 			ini_set( 'display_errors', '0' ); // phpcs:ignore WordPress.PHP.IniSet.display_errors_Disallowed -- That is the entire point of the switch; the WP_DEBUG_DISPLAY guard above keeps a developer's error output intact.
 		}
+	}
+
+	/**
+	 * Start capturing the document head.
+	 *
+	 * Core's generator tag comes off with `remove_action`, but every plugin
+	 * that announces itself does so on its own `wp_head` hook, and there is no
+	 * shared filter to reach them. Elementor, WooCommerce and Yoast all write
+	 * their version into the markup, and a switch that promises to hide the
+	 * software while the page still names the exact Elementor build is not
+	 * keeping its word. Capturing the head and stripping the tags out of the
+	 * finished markup is plugin-independent and stays correct for whatever
+	 * gets installed next.
+	 *
+	 * @return void
+	 * @since  2.1.58
+	 */
+	public static function open_head_buffer() {
+		ob_start();
+	}
+
+	/**
+	 * Emit the captured head without any generator tag.
+	 *
+	 * ponytail: one buffer over `wp_head`, which is a few kilobytes. A filter
+	 * on the whole page would be the alternative and costs far more, for the
+	 * sake of a place generator tags do not appear anyway.
+	 *
+	 * @return void
+	 * @since  2.1.58
+	 */
+	public static function close_head_buffer() {
+		$head = ob_get_clean();
+
+		if ( false === $head ) {
+			return;
+		}
+
+		echo self::strip_generators( $head ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Captured head markup, already escaped by whoever produced it; this only removes elements.
+	}
+
+	/**
+	 * Remove every generator meta element from a block of markup. Pure, so the
+	 * pattern is testable without a request around it.
+	 *
+	 * Only `meta` elements whose `name` is exactly `generator` are touched. A
+	 * plugin that writes the word into a comment or an attribute of its own
+	 * keeps it, which is deliberate: this removes an announcement, it does not
+	 * scrub the page.
+	 *
+	 * @param string $markup Markup to clean.
+	 * @return string
+	 * @since  2.1.58
+	 */
+	public static function strip_generators( $markup ) {
+		$clean = preg_replace(
+			'#<meta[^>]+name=(["\'])generator\1[^>]*>\s*#i',
+			'',
+			(string) $markup
+		);
+
+		return null === $clean ? (string) $markup : $clean;
 	}
 
 	/**

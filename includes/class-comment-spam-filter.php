@@ -372,12 +372,16 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 
 		$proof   = null;
 		$renders = false;
+		$seconds = null;
+		$fast    = 0;
 		if ( class_exists( 'ReportedIP_Hive_Form_Proof' )
 			&& class_exists( 'ReportedIP_Hive_Comment_Honeypot' )
 			&& ReportedIP_Hive_Comment_Honeypot::get_instance()->is_enabled() ) {
 			$form_proof = ReportedIP_Hive_Form_Proof::get_instance();
 			$proof      = $form_proof->verdict_for_request( 'comment' );
 			$renders    = $form_proof->renders_anchors();
+			$seconds    = $form_proof->last_seconds();
+			$fast       = $form_proof->fast_seconds();
 		}
 
 		$user_agent = '';
@@ -390,6 +394,8 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 				'max_links'          => (int) get_option( 'comment_max_links', 2 ),
 				'disposable_domains' => is_array( $rules ) ? $rules : array(),
 				'form_proof'         => $proof,
+				'form_proof_seconds' => $seconds,
+				'fast_seconds'       => $fast,
 				'renders_anchors'    => $renders,
 				'user_agent'         => $user_agent,
 				'locale'             => get_locale(),
@@ -512,7 +518,8 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	 *                                     `comment_author_url`,
 	 *                                     `comment_content`).
 	 * @param array<string,mixed> $context `max_links`, `disposable_domains`,
-	 *                                     `form_proof`, `renders_anchors`,
+	 *                                     `form_proof`, `form_proof_seconds`,
+	 *                                     `fast_seconds`, `renders_anchors`,
 	 *                                     `user_agent`, `locale`,
 	 *                                     `link_target_trusted`,
 	 *                                     `link_target_repeats`,
@@ -661,6 +668,14 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 		} elseif ( 'absent' === $proof ) {
 			++$score;
 			$reasons[] = 'no_form_field';
+		}
+
+		$seconds = isset( $context['form_proof_seconds'] ) ? $context['form_proof_seconds'] : null;
+		$fast    = isset( $context['fast_seconds'] ) ? (int) $context['fast_seconds'] : 0;
+
+		if ( null !== $seconds && $fast > 0 && (int) $seconds < $fast ) {
+			$score    += 2;
+			$reasons[] = 'too_fast';
 		}
 
 		return array(

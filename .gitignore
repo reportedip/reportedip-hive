@@ -142,3 +142,10 @@ wp-tests-config.php
 # Translation working directory (po-translate-io.php export/import scratch)
 # =============================================================================
 /languages/.work/
+
+# =============================================================================
+# Agent scratch space (worktrees, caches). A worktree checked out in here
+# brings its own vendor/ along, which the anti-AI gate then scans as if it
+# were plugin source.
+# =============================================================================
+/.claude/

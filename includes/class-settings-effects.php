@@ -89,7 +89,7 @@ final class ReportedIP_Hive_Settings_Effects {
 	 * @return string[]
 	 */
 	public static function known_tokens() {
-		return array( 'flush_rewrite', 'flush_2fa_frontend_memo' );
+		return array( 'flush_rewrite', 'flush_2fa_frontend_memo', 'stamp_form_proof_pow', 'stamp_form_adapters_since', 'purge_pages_for_form_proof' );
 	}
 
 	/**
@@ -129,6 +129,24 @@ final class ReportedIP_Hive_Settings_Effects {
 				case 'flush_2fa_frontend_memo':
 					if ( class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {
 						ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
+					}
+					break;
+
+				case 'stamp_form_proof_pow':
+					if ( class_exists( 'ReportedIP_Hive_Form_Proof' ) ) {
+						ReportedIP_Hive_Form_Proof::stamp_pow_since();
+					}
+					break;
+
+				case 'stamp_form_adapters_since':
+					if ( class_exists( 'ReportedIP_Hive_Form_Proof' ) ) {
+						ReportedIP_Hive_Form_Proof::stamp_adapters_since();
+					}
+					break;
+
+				case 'purge_pages_for_form_proof':
+					if ( class_exists( 'ReportedIP_Hive_Form_Proof' ) ) {
+						ReportedIP_Hive_Form_Proof::purge_on_enable();
 					}
 					break;
 			}

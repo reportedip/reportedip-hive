@@ -343,15 +343,12 @@ class ReportedIP_Hive_Protection_Page {
 	 * @return array<string,mixed>
 	 */
 	public static function field_status( array $entry, $key, $value, $mode_manager ) {
-		$runtime = self::runtime_lock( (string) $key );
+		$feature = (string) ( $entry['tier'] ?? ( $entry['ui_lock'] ?? '' ) );
+		$status  = '' === $feature ? array( 'available' => true ) : $mode_manager->feature_status( $feature );
+		$runtime = self::runtime_lock( (string) $key, ! empty( $status['available'] ) );
 		if ( null !== $runtime ) {
 			return $runtime;
 		}
-		$feature = (string) ( $entry['tier'] ?? ( $entry['ui_lock'] ?? '' ) );
-		if ( '' === $feature ) {
-			return array( 'available' => true );
-		}
-		$status = $mode_manager->feature_status( $feature );
 		if ( ! empty( $status['available'] ) ) {
 			return $status;
 		}
@@ -368,11 +365,18 @@ class ReportedIP_Hive_Protection_Page {
 	/**
 	 * Locks that do not come from the plan.
 	 *
-	 * @param string $key Registry key.
+	 * @param string $key     Registry key.
+	 * @param bool   $covered Whether the plan covers the field's feature.
 	 * @return array<string,mixed>|null Status array, or null when no runtime lock applies.
 	 */
-	private static function runtime_lock( $key ) {
+	private static function runtime_lock( $key, $covered = true ) {
 		switch ( $key ) {
+			case 'reportedip_hive_form_proof_cf7':
+				return self::adapter_lock( $covered, 'WPCF7_Submission', __( 'Contact Form 7 is not active on this site.', 'reportedip-hive' ) );
+			case 'reportedip_hive_form_proof_formidable':
+				return self::adapter_lock( $covered, 'FrmAppHelper', __( 'Formidable Forms is not active on this site.', 'reportedip-hive' ) );
+			case 'reportedip_hive_form_proof_elementor':
+				return self::adapter_lock( $covered, 'ElementorPro\\Modules\\Forms\\Module', __( 'Elementor Pro is not active on this site.', 'reportedip-hive' ) );
 			case 'reportedip_hive_2fa_enabled_global':
 				if ( ! ReportedIP_Hive_Two_Factor_Crypto::is_available() ) {
 					return self::runtime_status( __( 'Two-factor authentication needs libsodium or OpenSSL to store secrets encrypted; neither is available on this server.', 'reportedip-hive' ) );
@@ -397,6 +401,26 @@ class ReportedIP_Hive_Protection_Page {
 				return null;
 		}
 		return null;
+	}
+
+	/**
+	 * Lock a form-adapter switch whose plugin is not installed.
+	 *
+	 * Only while the plan covers the adapter. Without the plan the plan marker
+	 * is the honest answer, and replacing it with a note about a missing plugin
+	 * would hide what actually stands between the operator and the switch.
+	 *
+	 * @param bool   $covered   Whether the plan covers the feature.
+	 * @param string $signature Class the target plugin defines.
+	 * @param string $note      Reason shown under the field.
+	 * @return array<string,mixed>|null
+	 */
+	private static function adapter_lock( $covered, $signature, $note ) {
+		if ( ! $covered || class_exists( $signature ) ) {
+			return null;
+		}
+
+		return self::runtime_status( $note );
 	}
 
 	/**

@@ -17,6 +17,12 @@
  */
 
 namespace {
+	if ( ! function_exists( 'wp_salt' ) ) {
+		function wp_salt( $scheme = 'auth' ) {
+			return 'unit-test-salt-' . $scheme;
+		}
+	}
+
 	if ( ! function_exists( 'wp_generate_password' ) ) {
 		function wp_generate_password( $length = 12, $special_chars = true, $extra_special_chars = false ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 			return substr( str_repeat( 'a1b2c3d4e5f6', (int) ceil( $length / 12 ) ), 0, (int) $length );
@@ -218,6 +224,40 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * Two protected forms on one page each render an anchor. A fixed `id`
+		 * would then be in the document twice, and the `for` of both labels
+		 * would point at the first field.
+		 */
+		public function test_anchor_markup_carries_no_identifier(): void {
+			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'Leave this field empty' );
+
+			$this->assertStringNotContainsString( ' id=', $markup );
+			$this->assertStringNotContainsString( ' for=', $markup );
+		}
+
+		/**
+		 * Without an identifier the label has to reach its field through the
+		 * nesting, so the input belongs inside the label element.
+		 */
+		public function test_the_label_wraps_the_field(): void {
+			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'Leave this field empty' );
+
+			$this->assertMatchesRegularExpression( '#<label>[^<]*<input\b[^>]*></label>#', $markup );
+		}
+
+		/**
+		 * A forgotten allowlist entry would strip the label back out in
+		 * `print_anchor()` and leave the field without its description.
+		 */
+		public function test_the_allowlist_admits_the_wrapping_label(): void {
+			$allowed = \ReportedIP_Hive_Form_Proof::anchor_kses();
+
+			$this->assertArrayHasKey( 'label', $allowed );
+			$this->assertArrayNotHasKey( 'for', $allowed['label'] );
+			$this->assertArrayNotHasKey( 'id', $allowed['input'] );
+		}
+
+		/**
 		 * Nothing request-specific may reach the markup, or a full-page cache
 		 * would serve one visitor's token to everyone else.
 		 */
@@ -225,6 +265,467 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame(
 				\ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'Leave this field empty' ),
 				\ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'Leave this field empty' )
+			);
+		}
+		/**
+		 * Solve a challenge the way the browser script does.
+		 *
+		 * @param int $bucket Challenge period.
+		 * @param int $bits   Required leading zero bits.
+		 * @return string
+		 */
+		private function solve( int $bucket, int $bits ): string {
+			$seed = \ReportedIP_Hive_Form_Proof::pow_seed( $bucket );
+
+			for ( $nonce = 0; $nonce < 2000000; $nonce++ ) {
+				$hex = dechex( $nonce );
+
+				if ( \ReportedIP_Hive_Form_Proof::leading_zero_bits( hash( 'sha256', $seed . $hex, true ) ) >= $bits ) {
+					return $bucket . '.' . $hex;
+				}
+			}
+
+			$this->fail( 'No solution found, the difficulty is out of hand.' );
+		}
+
+		/**
+		 * @dataProvider leading_zero_bit_cases
+		 *
+		 * @param string $hex      Digest as hex.
+		 * @param int    $expected Expected leading zero bits.
+		 */
+		public function test_leading_zero_bits_counts_the_digest( string $hex, int $expected ): void {
+			$this->assertSame( $expected, \ReportedIP_Hive_Form_Proof::leading_zero_bits( hex2bin( $hex ) ) );
+		}
+
+		/**
+		 * @return array<string, array{0:string, 1:int}>
+		 */
+		public static function leading_zero_bit_cases(): array {
+			return array(
+				'first bit set'    => array( 'ff', 0 ),
+				'one zero bit'     => array( '7f', 1 ),
+				'four zero bits'   => array( '0f', 4 ),
+				'seven zero bits'  => array( '01', 7 ),
+				'one empty byte'   => array( '00ff', 8 ),
+				'twelve zero bits' => array( '000f', 12 ),
+				'two empty bytes'  => array( '0000ff', 16 ),
+				'all zero'         => array( '0000', 16 ),
+			);
+		}
+
+		public function test_a_solved_challenge_is_accepted(): void {
+			$bucket = 4711;
+
+			$this->assertTrue(
+				\ReportedIP_Hive_Form_Proof::pow_solves( $this->solve( $bucket, 8 ), $bucket, 8 )
+			);
+		}
+
+		/**
+		 * A page may come from a cache filled hours ago, so an older period
+		 * still counts. Older than the window does not.
+		 */
+		public function test_an_older_period_stays_valid_inside_the_window(): void {
+			$bucket  = 4711;
+			$span    = \ReportedIP_Hive_Form_Proof::POW_BUCKETS;
+			$payload = $this->solve( $bucket, 8 );
+
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + $span - 1, 8 ) );
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + $span, 8 ) );
+		}
+
+		/**
+		 * The measure is the page cache in front of the site, and a week is what
+		 * LiteSpeed keeps public pages for out of the box. Every visitor of such
+		 * a site works on the starting value baked into the cached page, so a
+		 * shorter span turns all of them into failed submissions at once.
+		 */
+		public function test_a_week_old_page_is_still_answered(): void {
+			$bucket  = 4711;
+			$payload = $this->solve( $bucket, 8 );
+
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 168 - 1, 8 ) );
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 192, 8 ) );
+		}
+
+		/**
+		 * The span is filtered, so a site behind a month-long CDN cache can buy
+		 * room. A value outside the range the single-use records can carry is
+		 * held at the boundary rather than honoured.
+		 */
+		public function test_the_bucket_span_is_clamped(): void {
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::POW_BUCKETS_MIN,
+				\ReportedIP_Hive_Form_Proof::clamp_buckets( 0 )
+			);
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::POW_BUCKETS_MIN,
+				\ReportedIP_Hive_Form_Proof::clamp_buckets( -50 )
+			);
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::POW_BUCKETS_MAX,
+				\ReportedIP_Hive_Form_Proof::clamp_buckets( PHP_INT_MAX )
+			);
+			$this->assertSame( 24, \ReportedIP_Hive_Form_Proof::clamp_buckets( 24 ) );
+			$this->assertSame( 720, \ReportedIP_Hive_Form_Proof::POW_BUCKETS_MAX );
+		}
+
+		public function test_a_clamped_span_reaches_the_verdict(): void {
+			$bucket  = 4711;
+			$payload = $this->solve( $bucket, 8 );
+
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket, 8, 0 ) );
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 1, 8, 0 ) );
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 719, 8, PHP_INT_MAX ) );
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 720, 8, PHP_INT_MAX ) );
+		}
+
+		public function test_a_period_from_the_future_is_refused(): void {
+			$bucket = 4711;
+
+			$this->assertFalse(
+				\ReportedIP_Hive_Form_Proof::pow_solves( $this->solve( $bucket, 8 ), $bucket - 1, 8 )
+			);
+		}
+
+		/**
+		 * The whole point: the value a bot can copy out of the page does not
+		 * solve anything.
+		 */
+		public function test_the_plain_marker_solves_nothing(): void {
+			$this->assertFalse(
+				\ReportedIP_Hive_Form_Proof::pow_solves( '1', \ReportedIP_Hive_Form_Proof::pow_bucket(), 12 )
+			);
+		}
+
+		/**
+		 * @dataProvider unusable_payloads
+		 *
+		 * @param string $payload Submitted proof value.
+		 */
+		public function test_an_unusable_payload_is_refused( string $payload ): void {
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, 4711, 8 ) );
+		}
+
+		/**
+		 * @return array<string, array{0:string}>
+		 */
+		public static function unusable_payloads(): array {
+			return array(
+				'empty'               => array( '' ),
+				'no separator'        => array( '4711abc' ),
+				'empty nonce'         => array( '4711.' ),
+				'empty period'        => array( '.abc' ),
+				'three parts'         => array( '4711.ab.cd' ),
+				'period not a number' => array( 'abc.def' ),
+				'nonce not hex'       => array( '4711.zzzz' ),
+				'nonce too long'      => array( '4711.' . str_repeat( 'a', 33 ) ),
+				'period too long'     => array( str_repeat( '9', 13 ) . '.ab' ),
+			);
+		}
+
+		public function test_the_starting_value_differs_per_period(): void {
+			$this->assertNotSame(
+				\ReportedIP_Hive_Form_Proof::pow_seed( 4711 ),
+				\ReportedIP_Hive_Form_Proof::pow_seed( 4712 )
+			);
+		}
+
+		public function test_the_starting_value_is_stable_for_one_period(): void {
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::pow_seed( 4711 ),
+				\ReportedIP_Hive_Form_Proof::pow_seed( 4711 )
+			);
+		}
+
+		/**
+		 * The shortcut this whole feature exists to close: the proof field name
+		 * is readable in the page, so a script can post it back and look like a
+		 * browser. With the computation demanded, a value that solves nothing is
+		 * no longer evidence.
+		 */
+		public function test_a_copied_proof_field_no_longer_counts(): void {
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::FAILED,
+				\ReportedIP_Hive_Form_Proof::resolve( \ReportedIP_Hive_Form_Proof::PROVED, true, false )
+			);
+		}
+
+		public function test_a_solved_computation_stays_proved(): void {
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::PROVED,
+				\ReportedIP_Hive_Form_Proof::resolve( \ReportedIP_Hive_Form_Proof::PROVED, true, true )
+			);
+		}
+
+		/**
+		 * Free plans, plain HTTP and the grace after switching on all land here.
+		 * The plain marker has to keep working, or the feature turns every
+		 * cached page into a wave of false positives on the day it is enabled.
+		 */
+		public function test_without_a_demand_the_plain_marker_still_proves(): void {
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::PROVED,
+				\ReportedIP_Hive_Form_Proof::resolve( \ReportedIP_Hive_Form_Proof::PROVED, false, false )
+			);
+		}
+
+		/**
+		 * @dataProvider untouched_verdicts
+		 *
+		 * @param string $verdict Structural verdict.
+		 */
+		public function test_only_proved_can_be_revoked( string $verdict ): void {
+			$this->assertSame( $verdict, \ReportedIP_Hive_Form_Proof::resolve( $verdict, true, false ) );
+			$this->assertSame( $verdict, \ReportedIP_Hive_Form_Proof::resolve( $verdict, true, true ) );
+		}
+
+		/**
+		 * @return array<string, array{0:string}>
+		 */
+		public static function untouched_verdicts(): array {
+			return array(
+				'tripped' => array( \ReportedIP_Hive_Form_Proof::TRIPPED ),
+				'failed'  => array( \ReportedIP_Hive_Form_Proof::FAILED ),
+				'absent'  => array( \ReportedIP_Hive_Form_Proof::ABSENT ),
+			);
+		}
+
+		public function test_the_challenge_reaches_the_markup(): void {
+			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'x', 'abc123', 4711, 12 );
+
+			$this->assertStringContainsString( 'data-s="abc123"', $markup );
+			$this->assertStringContainsString( 'data-b="4711"', $markup );
+			$this->assertStringContainsString( 'data-d="12"', $markup );
+		}
+
+		/**
+		 * Without a challenge the bytes have to match the pre-computation
+		 * markup exactly, or every cached page in the wild changes meaning.
+		 */
+		public function test_markup_without_a_challenge_carries_no_attributes(): void {
+			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'Leave this field empty' );
+
+			$this->assertStringNotContainsString( 'data-s', $markup );
+			$this->assertStringNotContainsString( 'data-b', $markup );
+			$this->assertStringNotContainsString( 'data-d', $markup );
+		}
+
+		/**
+		 * A forgotten allowlist entry would strip the challenge back out again
+		 * in `print_anchor()`, leaving a feature that silently does nothing.
+		 */
+		public function test_the_allowlist_admits_the_challenge_attributes(): void {
+			$allowed = \ReportedIP_Hive_Form_Proof::anchor_kses();
+
+			$this->assertArrayHasKey( 'data-s', $allowed['input'] );
+			$this->assertArrayHasKey( 'data-b', $allowed['input'] );
+			$this->assertArrayHasKey( 'data-d', $allowed['input'] );
+		}
+
+		/**
+		 * The three surfaces this plugin owns must keep their bare field names,
+		 * or every cached page in the wild stops matching what the server reads.
+		 *
+		 * @dataProvider own_surfaces
+		 *
+		 * @param string $surface Surface identifier.
+		 */
+		public function test_an_own_surface_carries_no_prefix( string $surface ): void {
+			$this->assertSame( '', \ReportedIP_Hive_Form_Proof::surface_prefix( $surface ) );
+		}
+
+		/**
+		 * @return array<string, array{0:string}>
+		 */
+		public static function own_surfaces(): array {
+			return array(
+				'comment'      => array( 'comment' ),
+				'register'     => array( 'register' ),
+				'lostpassword' => array( 'lostpassword' ),
+			);
+		}
+
+		/**
+		 * Contact Form 7 copies every posted key without a leading underscore
+		 * into its own posted data, where it reaches the mail, the stored entry
+		 * and the posted-data hash. The prefix is what keeps our two fields out.
+		 */
+		public function test_a_third_party_surface_carries_the_prefix(): void {
+			$this->assertSame( '_', \ReportedIP_Hive_Form_Proof::surface_prefix( 'cf7' ) );
+			$this->assertSame( '_', \ReportedIP_Hive_Form_Proof::surface_prefix( 'elementor' ) );
+			$this->assertSame( '_', \ReportedIP_Hive_Form_Proof::surface_prefix( '' ) );
+		}
+
+		/**
+		 * The verdict reads names it is handed, so the prefixed pair has to
+		 * produce the same four answers as the bare pair.
+		 *
+		 * @dataProvider prefixed_cases
+		 *
+		 * @param array<string,mixed> $post     Request body fields, keyed by suffix.
+		 * @param string              $expected Expected verdict.
+		 */
+		public function test_the_prefixed_names_yield_the_same_verdicts( array $post, string $expected ): void {
+			$prefix = \ReportedIP_Hive_Form_Proof::surface_prefix( 'cf7' );
+			$body   = array();
+
+			foreach ( $post as $name => $value ) {
+				$body[ $prefix . $name ] = $value;
+			}
+
+			$this->assertSame(
+				$expected,
+				\ReportedIP_Hive_Form_Proof::evaluate( $body, $prefix . self::PROOF, $prefix . self::DECOY )
+			);
+		}
+
+		/**
+		 * @return array<string, array{0:array<string,mixed>, 1:string}>
+		 */
+		public static function prefixed_cases(): array {
+			return array(
+				'proved'  => array(
+					array(
+						self::DECOY => '',
+						self::PROOF => '1',
+					),
+					\ReportedIP_Hive_Form_Proof::PROVED,
+				),
+				'tripped' => array(
+					array(
+						self::DECOY => 'http://spam.example',
+						self::PROOF => '1',
+					),
+					\ReportedIP_Hive_Form_Proof::TRIPPED,
+				),
+				'failed'  => array(
+					array( self::DECOY => '' ),
+					\ReportedIP_Hive_Form_Proof::FAILED,
+				),
+				'absent'  => array(
+					array( self::PROOF => '1' ),
+					\ReportedIP_Hive_Form_Proof::ABSENT,
+				),
+			);
+		}
+
+		/**
+		 * An unprefixed body must not be read by a prefixed surface, or a
+		 * comment form and a contact form on one page would answer for each
+		 * other.
+		 */
+		public function test_a_prefixed_surface_ignores_the_bare_fields(): void {
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::ABSENT,
+				\ReportedIP_Hive_Form_Proof::evaluate(
+					array(
+						self::DECOY => '',
+						self::PROOF => '1',
+					),
+					'_' . self::PROOF,
+					'_' . self::DECOY
+				)
+			);
+		}
+
+		public function test_the_adapter_grace_holds_the_strict_reading_back(): void {
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::grace_elapsed( 1000, 1000, 86400 ) );
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::grace_elapsed( 1000, 87399, 86400 ) );
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::grace_elapsed( 1000, 87400, 86400 ) );
+		}
+
+		/**
+		 * Nothing switched on means nothing stamped, and an unstamped start has
+		 * to read as lenient: a switch written by a channel that never ran the
+		 * side effect must not make the site strict behind the operator's back.
+		 */
+		public function test_without_a_stamp_the_lenient_reading_stands(): void {
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::grace_elapsed( 0, 9999999, 86400 ) );
+		}
+
+		/**
+		 * @dataProvider payload_cases
+		 *
+		 * @param string   $raw      Submitted field value.
+		 * @param string   $proof    Expected proof part.
+		 * @param int|null $seconds  Expected duration.
+		 */
+		public function test_a_payload_splits_into_proof_and_duration( string $raw, string $proof, ?int $seconds ): void {
+			$this->assertSame(
+				array(
+					'proof'   => $proof,
+					'seconds' => $seconds,
+				),
+				\ReportedIP_Hive_Form_Proof::split_payload( $raw )
+			);
+		}
+
+		/**
+		 * @return array<string, array{0:string, 1:string, 2:int|null}>
+		 */
+		public static function payload_cases(): array {
+			return array(
+				'plain marker with a duration' => array( '1~7', '1', 7 ),
+				'solved payload with one'      => array( '497086.1a2b~7', '497086.1a2b', 7 ),
+				'no suffix at all'             => array( '497086.1a2b', '497086.1a2b', null ),
+				'plain marker without one'     => array( '1', '1', null ),
+				'empty suffix'                 => array( '1~', '1', null ),
+				'not a number'                 => array( '1~abc', '1', null ),
+				'signed'                       => array( '1~-3', '1', null ),
+				'five digits'                  => array( '1~10000', '1', null ),
+				'four digits'                  => array( '1~9999', '1', 9999 ),
+				'zero'                         => array( '1~0', '1', 0 ),
+				'a second separator'           => array( '1~7~9', '1', null ),
+				'nothing before the separator' => array( '~7', '', 7 ),
+				'empty'                        => array( '', '', null ),
+			);
+		}
+
+		/**
+		 * The suffix has to come off before the computation is looked at: the
+		 * payload carries exactly two dot-separated parts and a trailing
+		 * duration would turn every solved challenge into a refusal.
+		 */
+		public function test_the_split_payload_still_solves_its_challenge(): void {
+			$bucket  = 4711;
+			$payload = $this->solve( $bucket, 8 );
+
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload . '~7', $bucket, 8 ) );
+			$this->assertTrue(
+				\ReportedIP_Hive_Form_Proof::pow_solves(
+					\ReportedIP_Hive_Form_Proof::split_payload( $payload . '~7' )['proof'],
+					$bucket,
+					8
+				)
+			);
+		}
+
+		public function test_the_fast_threshold_is_clamped(): void {
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::FAST_SECONDS_MIN,
+				\ReportedIP_Hive_Form_Proof::clamp_fast_seconds( 0 )
+			);
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::FAST_SECONDS_MIN,
+				\ReportedIP_Hive_Form_Proof::clamp_fast_seconds( -30 )
+			);
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::FAST_SECONDS_MAX,
+				\ReportedIP_Hive_Form_Proof::clamp_fast_seconds( PHP_INT_MAX )
+			);
+			$this->assertSame( 5, \ReportedIP_Hive_Form_Proof::clamp_fast_seconds( 5 ) );
+			$this->assertSame( 3, \ReportedIP_Hive_Form_Proof::clamp_fast_seconds( \ReportedIP_Hive_Form_Proof::FAST_SECONDS ) );
+		}
+
+		public function test_the_grace_filter_value_is_clamped(): void {
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::grace_elapsed( 1000, 1000, -5 ) );
+			$this->assertFalse(
+				\ReportedIP_Hive_Form_Proof::grace_elapsed( 1000, 1000 + \ReportedIP_Hive_Form_Proof::ADAPTER_GRACE_MAX - 1, PHP_INT_MAX )
+			);
+			$this->assertTrue(
+				\ReportedIP_Hive_Form_Proof::grace_elapsed( 1000, 1000 + \ReportedIP_Hive_Form_Proof::ADAPTER_GRACE_MAX, PHP_INT_MAX )
 			);
 		}
 	}

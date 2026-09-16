@@ -95,6 +95,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_2fa_frontend_soft_disabled' => 'Runtime state: set by the tier-downgrade lifecycle, not by an operator.',
 			'reportedip_hive_form_proof_field'           => 'Runtime state: the per-site proof field name. A fleet-wide push of one name would defeat the point of it being per-site.',
 			'reportedip_hive_form_proof_seen'            => 'Runtime state: when an anchor was last rendered. Measured, not configured.',
+			'reportedip_hive_form_proof_pow_since'       => 'Runtime state: when the computation was switched on, so a page cache filled beforehand keeps working through the grace.',
+			'reportedip_hive_form_adapters_since'        => 'Runtime state: when the first third-party form adapter was switched on, so a page cache filled beforehand keeps working through the grace.',
 			'reportedip_hive_waf_dropin_enabled'         => 'Host-specific. The switch needs a server directive next to it; a fleet push would leave every site at "waiting for server config".',
 			'reportedip_hive_hardening_enabled'          => 'Sentinel. "No stored value" is what turns hardening on automatically from Professional upwards, so it has neither a default nor a registry entry.',
 		);

@@ -47,4 +47,18 @@ if ( class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) {
 	delete_user_meta( $admin->ID, ReportedIP_Hive_Two_Factor_Onboarding::META_SKIP_UNTIL );
 }
 
+/**
+ * Put back any setting an earlier run deleted.
+ *
+ * Specs clean up after themselves with `Option_Routing::delete()`, which
+ * leaves the stack without a stored value. A later spec that reads the same
+ * key through `wp option get` then fails with "does it exist", and the run
+ * turns red for a reason that has nothing to do with the code under test.
+ * Seeding the missing defaults here costs one query and makes the suite
+ * repeatable on a long-lived stack.
+ */
+if ( class_exists( 'ReportedIP_Hive_Defaults' ) ) {
+	ReportedIP_Hive_Defaults::seed_missing();
+}
+
 WP_CLI::success( 'Admin 2FA baseline reset for E2E.' );

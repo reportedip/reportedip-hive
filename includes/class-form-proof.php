@@ -98,6 +98,132 @@ class ReportedIP_Hive_Form_Proof {
 	const SURFACES = array( 'comment', 'register', 'lostpassword' );
 
 	/**
+	 * Prefix the field names carry on every surface this plugin does not own.
+	 *
+	 * Contact Form 7 copies every posted key without a leading underscore into
+	 * its own posted data, which then reaches Flamingo records and the posted
+	 * data hash. An underscore keeps our two fields out of the mail, out of the
+	 * stored entry and out of that hash.
+	 */
+	const ADAPTER_PREFIX = '_';
+
+	/**
+	 * The three adapter switches. One list, read by the grace stamp and by
+	 * anything else that needs to know whether a third-party form takes part.
+	 *
+	 * @var string[]
+	 */
+	const ADAPTER_OPTIONS = array(
+		'reportedip_hive_form_proof_cf7',
+		'reportedip_hive_form_proof_formidable',
+		'reportedip_hive_form_proof_elementor',
+	);
+
+	/**
+	 * Unix time the first adapter was switched on, 0 while all three are off.
+	 */
+	const OPT_ADAPTERS_SINCE = 'reportedip_hive_form_adapters_since';
+
+	/**
+	 * Grace after switching an adapter on, during which a submission that never
+	 * carried our anchor still passes. A page served from a cache filled before
+	 * the switch has no anchor to carry.
+	 */
+	const ADAPTER_GRACE = 86400;
+
+	/**
+	 * Longest grace a filter may ask for.
+	 */
+	const ADAPTER_GRACE_MAX = 2592000;
+
+	/**
+	 * Whether the proof field must carry a solved computation.
+	 */
+	const OPT_POW = 'reportedip_hive_form_proof_pow';
+
+	/**
+	 * Unix time the computation was switched on, 0 while it is off.
+	 */
+	const OPT_POW_SINCE = 'reportedip_hive_form_proof_pow_since';
+
+	/**
+	 * Leading zero bits a solution has to produce. Twelve is roughly four
+	 * thousand attempts, a few milliseconds in a browser. The number is
+	 * deliberately small: the barrier is having to run the algorithm at all,
+	 * not the arithmetic itself. An attacker hashes natively and would win any
+	 * contest of raw speed, so buying difficulty past the point a visitor
+	 * notices buys nothing.
+	 */
+	const POW_BITS = 12;
+
+	/**
+	 * Leading zero bits while the hardening mode is active.
+	 */
+	const POW_BITS_HARDENING = 16;
+
+	/**
+	 * Length of one challenge period in seconds.
+	 */
+	const POW_WINDOW = 3600;
+
+	/**
+	 * How many periods back a solution stays acceptable, a week by default.
+	 *
+	 * The number is large on purpose. Freshness buys nothing here: the starting
+	 * value is derived from the authentication salt and the period alone, so an
+	 * attacker computes it for whatever period they like and always works on the
+	 * current one. A tighter limit costs them nothing and costs a real visitor
+	 * everything, because the page they are looking at was served by a cache
+	 * whose lifetime is the actual measure. LiteSpeed keeps public pages for a
+	 * week out of the box, a CDN in front of it longer still. The only thing the
+	 * span pays for is how long the single-use records have to live.
+	 */
+	const POW_BUCKETS = 168;
+
+	/**
+	 * Shortest span a filter may ask for.
+	 */
+	const POW_BUCKETS_MIN = 1;
+
+	/**
+	 * Longest span a filter may ask for, thirty days.
+	 */
+	const POW_BUCKETS_MAX = 720;
+
+	/**
+	 * Grace after switching the computation on, during which a page served
+	 * from a cache filled beforehand still passes on the plain marker.
+	 */
+	const POW_GRACE = 86400;
+
+	/**
+	 * Seconds a form has to be on screen before the submission stops reading
+	 * as automatic.
+	 *
+	 * The duration is measured in the browser and travels as a suffix on the
+	 * proof field. It is not signed, so anyone who reads this code can write
+	 * whatever number they like into it. That is the ceiling of the signal: it
+	 * catches the careless bot, not the determined one, which is why the only
+	 * consequence anywhere is two points on the comment score.
+	 */
+	const FAST_SECONDS = 3;
+
+	/**
+	 * Shortest threshold a filter may ask for.
+	 */
+	const FAST_SECONDS_MIN = 1;
+
+	/**
+	 * Longest threshold a filter may ask for.
+	 */
+	const FAST_SECONDS_MAX = 60;
+
+	/**
+	 * Separator between the proof payload and the measured duration.
+	 */
+	const SECONDS_SEPARATOR = '~';
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_Form_Proof|null
@@ -110,6 +236,21 @@ class ReportedIP_Hive_Form_Proof {
 	 * @var string|null
 	 */
 	private $field = null;
+
+	/**
+	 * Memoised computation results for this request, keyed by payload.
+	 *
+	 * @var array<string, bool>
+	 */
+	private $accepted = array();
+
+	/**
+	 * Measured fill duration of the submission last judged, null when none
+	 * arrived.
+	 *
+	 * @var int|null
+	 */
+	private $seconds = null;
 
 	/**
 	 * Get the singleton instance.
@@ -230,6 +371,458 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
+	 * Whether the plan covers the computation. It is pure local arithmetic and
+	 * makes no request, so it is available in Local Shield too.
+	 *
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public function pow_available() {
+		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
+			return false;
+		}
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'form_proof_pow' );
+
+		return ! empty( $status['available'] );
+	}
+
+	/**
+	 * Whether a challenge is handed out. A site reached over plain HTTP is left
+	 * alone: `crypto.subtle` only exists in a secure context, so the browser
+	 * could not answer and every visitor would look like a script.
+	 *
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public function pow_enabled() {
+		return $this->is_enabled()
+			&& self::connection_is_secure()
+			&& (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_POW, false )
+			&& $this->pow_available();
+	}
+
+	/**
+	 * Whether the visitor reaches this site over a secure connection.
+	 *
+	 * `is_ssl()` describes the connection that reached PHP, which is plain HTTP
+	 * on every site whose TLS ends at a proxy or CDN. Reading it alone would
+	 * switch the check off on a large share of perfectly secure sites without
+	 * saying so, and a protection that quietly does nothing is worse than one
+	 * that is plainly off. The configured home address is the operator's own
+	 * statement about how visitors arrive and survives any number of proxies.
+	 *
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public static function connection_is_secure() {
+		return is_ssl() || 0 === strpos( (string) home_url(), 'https://' );
+	}
+
+	/**
+	 * Whether a solution is demanded rather than merely offered.
+	 *
+	 * During the grace after switching on, a challenge is already planted but
+	 * the plain marker still passes, so a page cache filled before the switch
+	 * cannot turn every reader into a suspect.
+	 *
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public function pow_required() {
+		if ( ! $this->pow_enabled() ) {
+			return false;
+		}
+
+		$since = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_POW_SINCE, 0 );
+
+		return $since > 0 && ( time() - $since ) >= self::POW_GRACE;
+	}
+
+	/**
+	 * Start or clear the grace, called from the option side-effect dispatcher
+	 * whenever {@see OPT_POW} is written by any channel.
+	 *
+	 * @return void
+	 * @since  2.1.58
+	 */
+	public static function stamp_pow_since() {
+		$on    = (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_POW, false );
+		$since = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_POW_SINCE, 0 );
+
+		if ( ! $on ) {
+			if ( 0 !== $since ) {
+				ReportedIP_Hive_Option_Routing::set( self::OPT_POW_SINCE, 0 );
+			}
+
+			return;
+		}
+
+		if ( 0 === $since ) {
+			ReportedIP_Hive_Option_Routing::set( self::OPT_POW_SINCE, time() );
+			self::purge_pages();
+		}
+	}
+
+	/**
+	 * Purge the page caches when the whole layer is switched on, called from the
+	 * option side-effect dispatcher whenever {@see OPT_ENABLED} is written.
+	 *
+	 * Switching off purges nothing. An anchor left in a cached page is read by
+	 * no one once the layer is gone, so the cold cache would buy nothing.
+	 *
+	 * @return void
+	 * @since  2.1.58
+	 */
+	public static function purge_on_enable() {
+		if ( ReportedIP_Hive_Option_Routing::get( self::OPT_ENABLED, true ) ) {
+			self::purge_pages();
+		}
+	}
+
+	/**
+	 * Throw away every cached rendering, so the pages carrying a protected form
+	 * are built again with the anchor in them.
+	 *
+	 * @return void
+	 * @since  2.1.58
+	 */
+	private static function purge_pages() {
+		if ( class_exists( 'ReportedIP_Hive_Cache_Flush' ) ) {
+			ReportedIP_Hive_Cache_Flush::purge_pages();
+		}
+	}
+
+	/**
+	 * Start or clear the adapter grace, called from the option side-effect
+	 * dispatcher whenever one of {@see ADAPTER_OPTIONS} is written.
+	 *
+	 * @return void
+	 * @since  2.1.58
+	 */
+	public static function stamp_adapters_since() {
+		$on = false;
+
+		foreach ( self::ADAPTER_OPTIONS as $option ) {
+			if ( ReportedIP_Hive_Option_Routing::get( $option, false ) ) {
+				$on = true;
+				break;
+			}
+		}
+
+		$since = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_ADAPTERS_SINCE, 0 );
+
+		if ( ! $on ) {
+			if ( 0 !== $since ) {
+				ReportedIP_Hive_Option_Routing::set( self::OPT_ADAPTERS_SINCE, 0 );
+			}
+
+			return;
+		}
+
+		if ( 0 === $since ) {
+			ReportedIP_Hive_Option_Routing::set( self::OPT_ADAPTERS_SINCE, time() );
+			self::purge_pages();
+		}
+	}
+
+	/**
+	 * Whether a submission that never carried our anchor counts against the
+	 * sender on a third-party form.
+	 *
+	 * On a contact form `absent` means either a direct post at the endpoint,
+	 * which is nearly always a script, or a page from a cache filled before the
+	 * adapter was switched on. The first reading is the useful one, the second
+	 * would refuse real visitors, so the harsh reading waits out the grace.
+	 *
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public function adapters_strict() {
+		/**
+		 * Filters the grace after switching a form adapter on.
+		 *
+		 * Sites whose page cache outlives a day can buy more room here.
+		 *
+		 * @param int $seconds Grace in seconds, clamped to 0..30 days afterwards.
+		 * @since 2.1.58
+		 */
+		$grace = (int) apply_filters( 'reportedip_hive_form_adapters_grace', self::ADAPTER_GRACE );
+
+		return self::grace_elapsed(
+			ReportedIP_Hive_Option_Routing::get( self::OPT_ADAPTERS_SINCE, 0 ),
+			time(),
+			$grace
+		);
+	}
+
+	/**
+	 * Whether a grace that started at a given time has run out. Pure, so the
+	 * arithmetic and the clamp are testable without WordPress.
+	 *
+	 * An unstamped start reads as "still in the grace": a switch written by a
+	 * channel that never ran the side effect must not make the site strict
+	 * behind the operator's back.
+	 *
+	 * @param mixed $since Unix time the grace started, 0 for none.
+	 * @param mixed $now   Current Unix time.
+	 * @param mixed $grace Grace in seconds before clamping.
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public static function grace_elapsed( $since, $now, $grace ) {
+		$since = (int) $since;
+		$grace = max( 0, min( self::ADAPTER_GRACE_MAX, (int) $grace ) );
+
+		return $since > 0 && ( (int) $now - $since ) >= $grace;
+	}
+
+	/**
+	 * The field-name prefix for one surface.
+	 *
+	 * Empty on the three surfaces this plugin owns, so their markup stays
+	 * byte-identical, and an underscore everywhere else. Pure.
+	 *
+	 * @param string $surface Surface identifier.
+	 * @return string
+	 * @since  2.1.58
+	 */
+	public static function surface_prefix( $surface ) {
+		return in_array( (string) $surface, self::SURFACES, true ) ? '' : self::ADAPTER_PREFIX;
+	}
+
+	/**
+	 * The anchor field name on one surface.
+	 *
+	 * @param string $surface Surface identifier.
+	 * @return string
+	 * @since  2.1.58
+	 */
+	public function decoy_name( $surface ) {
+		return self::surface_prefix( $surface ) . ReportedIP_Hive_Comment_Honeypot::FIELD_NAME;
+	}
+
+	/**
+	 * The proof field name on one surface.
+	 *
+	 * @param string $surface Surface identifier.
+	 * @return string
+	 * @since  2.1.58
+	 */
+	public function proof_name( $surface ) {
+		return self::surface_prefix( $surface ) . $this->field_name();
+	}
+
+	/**
+	 * The current challenge period.
+	 *
+	 * @return int
+	 * @since  2.1.58
+	 */
+	public static function pow_bucket() {
+		return intdiv( time(), self::POW_WINDOW );
+	}
+
+	/**
+	 * The public starting value for one period.
+	 *
+	 * Derived from the authentication salt, so it differs per install without
+	 * a secret of its own, and it depends on nothing about the request. That
+	 * is what keeps the rendered form cacheable.
+	 *
+	 * @param int $bucket Challenge period.
+	 * @return string
+	 * @since  2.1.58
+	 */
+	public static function pow_seed( $bucket ) {
+		return substr( hash_hmac( 'sha256', (string) (int) $bucket, wp_salt( 'auth' ) ), 0, 16 );
+	}
+
+	/**
+	 * Hold a requested span inside the range the single-use records can carry.
+	 * Pure, so the arithmetic is testable without WordPress.
+	 *
+	 * @param mixed $buckets Requested number of periods.
+	 * @return int
+	 * @since  2.1.58
+	 */
+	public static function clamp_buckets( $buckets ) {
+		return max( self::POW_BUCKETS_MIN, min( self::POW_BUCKETS_MAX, (int) $buckets ) );
+	}
+
+	/**
+	 * How many periods back this site accepts a solution from.
+	 *
+	 * @return int
+	 * @since  2.1.58
+	 */
+	public function pow_buckets() {
+		/**
+		 * Filters how many hourly periods back a solution stays acceptable.
+		 *
+		 * The measure is the lifetime of the page cache in front of the site, so
+		 * a CDN holding pages for a month wants the ceiling here.
+		 *
+		 * @param int $buckets Number of periods, clamped to 1..720 afterwards.
+		 * @since 2.1.58
+		 */
+		$buckets = apply_filters( 'reportedip_hive_form_proof_buckets', self::POW_BUCKETS );
+
+		return self::clamp_buckets( $buckets );
+	}
+
+	/**
+	 * How many leading zero bits a raw digest carries.
+	 *
+	 * @param string $digest Raw binary digest.
+	 * @return int
+	 * @since  2.1.58
+	 */
+	public static function leading_zero_bits( $digest ) {
+		$digest = (string) $digest;
+		$length = strlen( $digest );
+		$bits   = 0;
+
+		for ( $i = 0; $i < $length; $i++ ) {
+			$byte = ord( $digest[ $i ] );
+
+			if ( 0 === $byte ) {
+				$bits += 8;
+				continue;
+			}
+
+			while ( $byte < 128 ) {
+				++$bits;
+				$byte <<= 1;
+			}
+
+			break;
+		}
+
+		return $bits;
+	}
+
+	/**
+	 * Whether a payload solves its own challenge. Pure, so the whole rule is
+	 * testable without WordPress beyond the salt.
+	 *
+	 * The payload is `period.nonce`. The period travels with it because the
+	 * page may have come from a cache and the period may have rolled over
+	 * since; the starting value is recomputed from it rather than trusted.
+	 *
+	 * @param string $payload    Submitted proof value.
+	 * @param int    $now_bucket Current challenge period.
+	 * @param int    $bits       Required leading zero bits.
+	 * @param int    $buckets    How many periods back stay acceptable.
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public static function pow_solves( $payload, $now_bucket, $bits, $buckets = self::POW_BUCKETS ) {
+		$bits = (int) $bits;
+
+		if ( $bits < 1 || $bits > 32 ) {
+			return false;
+		}
+
+		$parts = explode( '.', (string) $payload, 3 );
+
+		if ( 2 !== count( $parts ) ) {
+			return false;
+		}
+
+		if ( ! preg_match( '/^[0-9]{1,12}$/', $parts[0] ) || ! preg_match( '/^[0-9a-f]{1,32}$/', $parts[1] ) ) {
+			return false;
+		}
+
+		$age = (int) $now_bucket - (int) $parts[0];
+
+		if ( $age < 0 || $age >= self::clamp_buckets( $buckets ) ) {
+			return false;
+		}
+
+		$digest = hash( 'sha256', self::pow_seed( (int) $parts[0] ) . $parts[1], true );
+
+		return self::leading_zero_bits( $digest ) >= $bits;
+	}
+
+	/**
+	 * Required difficulty for this request.
+	 *
+	 * @return int
+	 * @since  2.1.58
+	 */
+	public function pow_bits() {
+		$bits = self::POW_BITS;
+
+		if ( class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active() ) {
+			$bits = self::POW_BITS_HARDENING;
+		}
+
+		/**
+		 * Filters the leading zero bits a form computation has to produce.
+		 *
+		 * @param int $bits Required bits, clamped to 4..24 afterwards.
+		 * @since 2.1.58
+		 */
+		$bits = (int) apply_filters( 'reportedip_hive_form_proof_bits', $bits );
+
+		return max( 4, min( 24, $bits ) );
+	}
+
+	/**
+	 * Whether a payload solves its challenge and has not been seen before.
+	 *
+	 * The single-use record is one transient per accepted submission, which is
+	 * the ceiling of this approach: a site taking thousands of submissions an
+	 * hour writes thousands of short-lived rows. Moving the record into the
+	 * object cache is the upgrade path if that ever shows up in a profile.
+	 *
+	 * The per-request memo is not an optimisation. Spending the answer writes
+	 * the single-use record, so a second look at the same submission would read
+	 * its own record and call a good answer a replay.
+	 *
+	 * @param string $payload Submitted proof value.
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public function pow_accepts( $payload ) {
+		$payload = (string) $payload;
+
+		if ( isset( $this->accepted[ $payload ] ) ) {
+			return $this->accepted[ $payload ];
+		}
+
+		$this->accepted[ $payload ] = $this->spend_pow( $payload );
+
+		return $this->accepted[ $payload ];
+	}
+
+	/**
+	 * Verify a payload once and mark its answer as used.
+	 *
+	 * @param string $payload Submitted proof value.
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	private function spend_pow( $payload ) {
+		$buckets = $this->pow_buckets();
+
+		if ( ! self::pow_solves( $payload, self::pow_bucket(), $this->pow_bits(), $buckets ) ) {
+			return false;
+		}
+
+		$key = 'rip_fp_' . hash( 'sha256', $payload );
+
+		if ( false !== get_transient( $key ) ) {
+			return false;
+		}
+
+		set_transient( $key, 1, self::POW_WINDOW * $buckets );
+
+		return true;
+	}
+
+	/**
 	 * The per-install proof field name, generating and persisting one on first
 	 * use.
 	 *
@@ -301,10 +894,23 @@ class ReportedIP_Hive_Form_Proof {
 			$this->note_render();
 		}
 
+		$seed   = '';
+		$bucket = 0;
+		$bits   = 0;
+
+		if ( $this->pow_enabled() ) {
+			$bucket = self::pow_bucket();
+			$seed   = self::pow_seed( $bucket );
+			$bits   = $this->pow_bits();
+		}
+
 		return self::anchor_markup(
-			ReportedIP_Hive_Comment_Honeypot::FIELD_NAME,
-			$this->field_name(),
-			esc_html__( 'Leave this field empty', 'reportedip-hive' )
+			$this->decoy_name( $surface ),
+			$this->proof_name( $surface ),
+			esc_html__( 'Leave this field empty', 'reportedip-hive' ),
+			$seed,
+			$bucket,
+			$bits
 		);
 	}
 
@@ -316,20 +922,42 @@ class ReportedIP_Hive_Form_Proof {
 	 * `autocomplete="off"` keep it away from assistive tech and password
 	 * managers, and `data-n` carries the proof field name for the script.
 	 *
-	 * @param string $decoy Anchor field name.
-	 * @param string $proof Proof field name.
-	 * @param string $label Visually hidden label text.
+	 * The label wraps the input and neither carries an identifier. Two forms on
+	 * one page each get an anchor, and a fixed `id` would be in the document
+	 * twice with the `for` of both labels pointing at the first field. A random
+	 * identifier would fix the markup and break the cache, so the association
+	 * runs through the nesting instead.
+	 *
+	 * With a starting value present, `data-s`, `data-b` and `data-d` carry the
+	 * computation challenge. All three depend only on the current period, not
+	 * on the request, so the markup stays byte-identical for every visitor and
+	 * a page cache keeps working. Without one the output is unchanged.
+	 *
+	 * @param string $decoy  Anchor field name.
+	 * @param string $proof  Proof field name.
+	 * @param string $label  Visually hidden label text.
+	 * @param string $seed   Challenge starting value, empty for none.
+	 * @param int    $bucket Challenge period.
+	 * @param int    $bits   Required leading zero bits.
 	 * @return string
 	 * @since  2.1.53
 	 */
-	public static function anchor_markup( $decoy, $proof, $label ) {
-		$decoy = esc_attr( (string) $decoy );
+	public static function anchor_markup( $decoy, $proof, $label, $seed = '', $bucket = 0, $bits = 0 ) {
+		$decoy     = esc_attr( (string) $decoy );
+		$challenge = '';
+
+		if ( '' !== (string) $seed ) {
+			$challenge = ' data-s="' . esc_attr( (string) $seed ) . '"'
+				. ' data-b="' . esc_attr( (string) (int) $bucket ) . '"'
+				. ' data-d="' . esc_attr( (string) (int) $bits ) . '"';
+		}
 
 		return '<div class="rip-hp-field" aria-hidden="true">'
-			. '<label for="' . $decoy . '">' . esc_html( (string) $label ) . '</label>'
-			. '<input type="text" name="' . $decoy . '" id="' . $decoy . '" value=""'
+			. '<label>' . esc_html( (string) $label )
+			. '<input type="text" name="' . $decoy . '" value=""'
 			. ' class="rip-fp-anchor" data-n="' . esc_attr( (string) $proof ) . '"'
-			. ' tabindex="-1" autocomplete="off" /></div>';
+			. $challenge
+			. ' tabindex="-1" autocomplete="off" /></label></div>';
 	}
 
 	/**
@@ -355,14 +983,16 @@ class ReportedIP_Hive_Form_Proof {
 				'class'       => true,
 				'aria-hidden' => true,
 			),
-			'label' => array( 'for' => true ),
+			'label' => array(),
 			'input' => array(
 				'type'         => true,
 				'name'         => true,
-				'id'           => true,
 				'value'        => true,
 				'class'        => true,
 				'data-n'       => true,
+				'data-s'       => true,
+				'data-b'       => true,
+				'data-d'       => true,
 				'tabindex'     => true,
 				'autocomplete' => true,
 			),
@@ -410,13 +1040,100 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
+	 * Split a submitted field value into its proof payload and the duration
+	 * the browser measured. Pure, so the whole parsing rule is testable.
+	 *
+	 * The duration rides on the existing field rather than a second hidden one,
+	 * which keeps the markup as small and as cacheable as it is today. It is
+	 * stripped here before anything else looks at the value, because
+	 * {@see pow_solves()} expects exactly two dot-separated parts and would
+	 * refuse a payload carrying a suffix.
+	 *
+	 * An unusable suffix never devalues the proof. A client that writes
+	 * nonsense after the separator, or one from a release that knew nothing
+	 * about the suffix, is read as a submission without a measurement.
+	 *
+	 * @param mixed $raw Submitted field value.
+	 * @return array{proof:string, seconds:int|null}
+	 * @since  2.1.58
+	 */
+	public static function split_payload( $raw ): array {
+		$raw = (string) $raw;
+		$cut = strpos( $raw, self::SECONDS_SEPARATOR );
+
+		if ( false === $cut ) {
+			return array(
+				'proof'   => $raw,
+				'seconds' => null,
+			);
+		}
+
+		$suffix = substr( $raw, $cut + 1 );
+
+		return array(
+			'proof'   => substr( $raw, 0, $cut ),
+			'seconds' => preg_match( '/^[0-9]{1,4}$/', $suffix ) ? (int) $suffix : null,
+		);
+	}
+
+	/**
+	 * Hold a requested threshold inside a sane range. Pure, so the arithmetic
+	 * is testable without WordPress.
+	 *
+	 * @param mixed $seconds Requested threshold.
+	 * @return int
+	 * @since  2.1.58
+	 */
+	public static function clamp_fast_seconds( $seconds ) {
+		return max( self::FAST_SECONDS_MIN, min( self::FAST_SECONDS_MAX, (int) $seconds ) );
+	}
+
+	/**
+	 * The duration under which a submission counts as too quick for a reader.
+	 *
+	 * @return int
+	 * @since  2.1.58
+	 */
+	public function fast_seconds() {
+		/**
+		 * Filters the seconds a form has to be on screen before the submission
+		 * stops reading as automatic.
+		 *
+		 * @param int $seconds Threshold in seconds, clamped to 1..60 afterwards.
+		 * @since 2.1.58
+		 */
+		$seconds = apply_filters( 'reportedip_hive_form_proof_fast_seconds', self::FAST_SECONDS );
+
+		return self::clamp_fast_seconds( $seconds );
+	}
+
+	/**
+	 * How long the sender had the form on screen, for the submission last
+	 * judged by {@see verdict_for_request()}.
+	 *
+	 * @return int|null Whole seconds, or null when nothing was measured.
+	 * @since  2.1.58
+	 */
+	public function last_seconds(): ?int {
+		return $this->seconds;
+	}
+
+	/**
 	 * Verdict for the current request on a surface we own.
+	 *
+	 * This is the one place the computation is checked, so every surface
+	 * inherits it together with its own consequence: a comment gains a scoring
+	 * signal, a sign-up or password reset is refused. A field filled with
+	 * anything other than a solved challenge reads as `failed`, which is what
+	 * closes the copy-the-field-name shortcut.
 	 *
 	 * @param string $surface Surface identifier.
 	 * @return string One of the four verdict constants.
 	 * @since  2.1.53
 	 */
 	public function verdict_for_request( $surface ) {
+		$this->seconds = null;
+
 		if ( ! $this->surface_enabled( $surface ) ) {
 			return self::ABSENT;
 		}
@@ -424,7 +1141,103 @@ class ReportedIP_Hive_Form_Proof {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reads two decoy fields, not state; each form carries its own nonce.
 		$post = (array) wp_unslash( $_POST );
 
-		return self::evaluate( $post, $this->field_name(), ReportedIP_Hive_Comment_Honeypot::FIELD_NAME );
+		$field = $this->proof_name( $surface );
+
+		if ( isset( $post[ $field ] ) && is_scalar( $post[ $field ] ) ) {
+			$split          = self::split_payload( $post[ $field ] );
+			$post[ $field ] = $split['proof'];
+			$this->seconds  = $split['seconds'];
+		}
+
+		$verdict = self::evaluate( $post, $field, $this->decoy_name( $surface ) );
+
+		if ( self::PROVED !== $verdict || ! $this->pow_required() ) {
+			return self::resolve( $verdict, false, false );
+		}
+
+		return self::resolve( $verdict, true, $this->pow_accepts( (string) $post[ $field ] ) );
+	}
+
+	/**
+	 * Fold the computation result into a structural verdict. Pure, because this
+	 * is the whole rule and it is worth pinning down on its own.
+	 *
+	 * Only `proved` can be revoked. A filled decoy stays `tripped` no matter how
+	 * well the sender computed, and a submission that never carried our anchor
+	 * stays `absent`, which is the lenient reading the password-reset path
+	 * depends on.
+	 *
+	 * @param string $verdict  Structural verdict from {@see evaluate()}.
+	 * @param bool   $required Whether a solved computation is demanded.
+	 * @param bool   $solved   Whether the payload solved its challenge.
+	 * @return string One of the four verdict constants.
+	 * @since  2.1.58
+	 */
+	public static function resolve( $verdict, $required, $solved ) {
+		if ( self::PROVED !== $verdict || ! $required ) {
+			return $verdict;
+		}
+
+		return $solved ? self::PROVED : self::FAILED;
+	}
+
+	/**
+	 * Print the anchor into a form this plugin does not own.
+	 *
+	 * Together with {@see check()} and {@see passes()} this is the whole
+	 * contract for a third-party or custom form. Admit the surface through the
+	 * `reportedip_hive_form_proof_adapters` filter first, then call this on the
+	 * render hook and one of the other two on the validation hook.
+	 *
+	 * @param string $surface Surface identifier.
+	 * @return void
+	 * @since  2.1.58
+	 */
+	public static function field( $surface ) {
+		self::get_instance()->print_anchor( $surface );
+	}
+
+	/**
+	 * Verdict for the current submission on any surface.
+	 *
+	 * @param string $surface Surface identifier.
+	 * @return string One of the four verdict constants.
+	 * @since  2.1.58
+	 */
+	public static function check( $surface ) {
+		return self::get_instance()->verdict_for_request( $surface );
+	}
+
+	/**
+	 * Whether a submission may proceed.
+	 *
+	 * Strict is the right reading for a contact form, where requiring a browser
+	 * is exactly what a captcha would demand anyway. The lenient reading is for
+	 * surfaces where locking someone out costs more than the spam does: it lets
+	 * a submission through that never carried our field at all, which is how
+	 * the password-reset path behaves.
+	 *
+	 * A third-party form adapter hands {@see adapters_strict()} in here, so a
+	 * page still served from a cache filled before the switch is read leniently
+	 * for the first day.
+	 *
+	 * @param string $surface Surface identifier.
+	 * @param bool   $strict  Whether a missing anchor counts as a refusal.
+	 * @return bool
+	 * @since  2.1.58
+	 */
+	public static function passes( $surface, $strict = true ) {
+		$verdict = self::check( $surface );
+
+		if ( self::PROVED === $verdict ) {
+			return true;
+		}
+
+		if ( self::ABSENT === $verdict ) {
+			return ! $strict;
+		}
+
+		return false;
 	}
 
 	/**
@@ -470,6 +1283,10 @@ class ReportedIP_Hive_Form_Proof {
 	/**
 	 * Log a refused submission so a support case is explainable from the log.
 	 *
+	 * The measured duration rides along when there is one, so the activity view
+	 * shows how the refusals on a surface are distributed before anyone decides
+	 * whether a threshold is worth enforcing there.
+	 *
 	 * @param string $surface Surface identifier.
 	 * @return void
 	 * @since  2.1.53
@@ -481,14 +1298,22 @@ class ReportedIP_Hive_Form_Proof {
 
 		$logger = ReportedIP_Hive::get_instance()->get_logger();
 
-		if ( $logger instanceof ReportedIP_Hive_Logger ) {
-			$logger->log_security_event(
-				'form_proof_failed',
-				ReportedIP_Hive::get_client_ip(),
-				array( 'surface' => (string) $surface ),
-				'low'
-			);
+		if ( ! $logger instanceof ReportedIP_Hive_Logger ) {
+			return;
 		}
+
+		$details = array( 'surface' => (string) $surface );
+
+		if ( null !== $this->seconds ) {
+			$details['seconds'] = $this->seconds;
+		}
+
+		$logger->log_security_event(
+			'form_proof_failed',
+			ReportedIP_Hive::get_client_ip(),
+			$details,
+			'low'
+		);
 	}
 
 	/**

@@ -272,6 +272,21 @@ class ReportedIP_Hive_Mode_Manager {
 				'community'     => true,
 				'requires_tier' => 'professional',
 			),
+			'form_proof_pow'               => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'professional',
+			),
+			'form_adapters'                => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'professional',
+			),
+			'form_adapters_advanced'       => array(
+				'local'         => true,
+				'community'     => true,
+				'requires_tier' => 'business',
+			),
 			'tor_blocking'                 => array(
 				'local'         => false,
 				'community'     => true,
@@ -367,6 +382,9 @@ class ReportedIP_Hive_Mode_Manager {
 			'webauthn_advanced'            => array( __( 'Advanced Security Keys', 'reportedip-hive' ), __( 'Multiple security keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts. One security key or passkey per account stays free.', 'reportedip-hive' ) ),
 			'decoy_pathblock'              => array( __( 'Decoy Path Block', 'reportedip-hive' ), __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...), distinct from the N-of-Y scan-detector.', 'reportedip-hive' ) ),
 			'hardening_mode'               => array( __( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ), __( 'Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected.', 'reportedip-hive' ) ),
+			'form_proof_pow'               => array( __( 'Computation Check on Forms', 'reportedip-hive' ), __( 'Give the form a small sum to work out in the background and check the answer on submit, so a script that copies the hidden field out of the page no longer passes for a visitor.', 'reportedip-hive' ) ),
+			'form_adapters'                => array( __( 'Contact Form Protection', 'reportedip-hive' ), __( 'Carry the execution proof into Contact Form 7, so a contact form is covered by the same check as the comment form and needs no distorted image.', 'reportedip-hive' ) ),
+			'form_adapters_advanced'       => array( __( 'Advanced Form Protection', 'reportedip-hive' ), __( 'The same protection on Formidable Forms, Formidable Forms PRO and Elementor Forms.', 'reportedip-hive' ) ),
 			'tor_blocking'                 => array( __( 'Tor Exit Node Blocking', 'reportedip-hive' ), __( 'Block login attempts from known Tor exit nodes using a signed exit-node list that is refreshed twice a day, plus the live community check.', 'reportedip-hive' ) ),
 			'waf'                          => array( __( 'Web Application Firewall', 'reportedip-hive' ), __( 'Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync.', 'reportedip-hive' ) ),
 			'rule_sync_priority'           => array( __( 'Priority Rule Sync', 'reportedip-hive' ), __( 'Daily, full-ruleset delivery (broader signatures, higher paranoia levels, bot IP-range feeds, live disposable lists) instead of the bundled baseline.', 'reportedip-hive' ) ),

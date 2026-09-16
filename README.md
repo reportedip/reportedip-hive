@@ -7,7 +7,7 @@
 [![Tests](https://img.shields.io/badge/PHPUnit-unit%20%2B%20Multisite-brightgreen.svg)](https://github.com/reportedip/reportedip-hive/actions)
 [![Made in Germany](https://img.shields.io/badge/Made%20in-Germany-black.svg)](https://reportedip.com)
 
-> **Community-powered WordPress security: 18 attack sensors, a two-layer firewall, 4 progressive 2FA methods, herd-immunity threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.**
+> **Community-powered WordPress security: 16 attack sensors, a two-layer firewall, 4 progressive 2FA methods, herd-immunity threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.**
 
 Every protected site becomes a sensor. When one site is attacked, every other site can refuse the same attacker before the password is even checked. One drop-in replaces brute-force protection, a web application firewall, a multi-method 2FA suite and threat intelligence. The entire detection and identity core is free and GPL-2.0; the paid Professional / Business plans add managed mail/SMS relays, multi-site management and a handful of advanced modules on top. They never gate the core protection.
 
@@ -28,7 +28,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 
 ## Feature overview
 
-### 18 detection sensors (every one tunable)
+### 16 detection sensors (every one tunable)
 
 | Sensor | Default threshold | Notes |
 |---|---|---|
@@ -43,12 +43,14 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | Geographic anomaly | first occurrence triggers fresh 2FA | Optionally revokes trusted-device cookies |
 | Password policy | min length, character classes, optional HIBP k-anonymity | |
 | WooCommerce login | checkout + my-account forms tracked separately | Optional themed frontend 2FA on Professional plan |
-| Cookie-banner consent endpoints | always bypassed | Real Cookie Banner, Complianz, Borlabs, CookieYes baked in |
 | Web Application Firewall | Paranoia Level 1 baseline + backend exceptions | See [Two-layer firewall](#two-layer-firewall) |
 | Verified bot detection | flag (default) or block | Official Google/Bing IP ranges first, FCrDNS fallback; genuine crawlers never blocked |
 | Registration defence | username baseline on (10 role names), rate limit on (3 / 60 min), disposable mail: monitor, custom lists empty | Throwaway-mail domains, prohibited usernames, e-mail allow/block rules, per-IP rate limit (3 / 60 min), opt-in unknown-username block; WP + WooCommerce + Multisite sign-ups. Ten entries per list free, unlimited plus regex on Professional |
-| Form execution proof | on | Decoy field plus a browser-added proof field on comment, sign-up and password-reset forms; catches scripts that post without ever rendering the form. Four-way verdict, cache-safe. See [Honeypots and decoys](#honeypots-and-decoys) |
+| Form execution proof | on | Checks that a comment, sign-up or password reset came from a browser that rendered the form. See [Form protection](#form-protection) |
+| Form plugin adapters | off | The same check on Contact Form 7 (Professional) and on Formidable Forms, Formidable Forms PRO and Elementor Forms (Business). See [Form protection](#form-protection) |
 | Community threat check on forms | on, needs Community Network mode | Comment, sign-up and password reset checked at the same protection level as the sign-in page; fail-open when the allowance runs out |
+
+Not a sensor, but part of the same screen: the consent endpoints of Real Cookie Banner, Complianz, Borlabs and CookieYes are exempt from the rate limit out of the box, because on a compliant site they look like a burst on every single page view.
 
 <a id="two-layer-firewall"></a>
 
@@ -79,32 +81,63 @@ Also included in every plan: 10 single-use recovery codes, trusted-device tokens
 
 **WooCommerce frontend 2FA (Professional plan and higher).** Customers signing in through `[woocommerce_my_account]`, the classic checkout, or the WooCommerce Cart / Checkout blocks see the second factor inside the active storefront theme instead of bouncing to wp-login.php. Customer / Subscriber roles get a themed onboarding wizard on a dedicated slug. Cart and checkout state survive the redirect roundtrip; the trusted-device cookie is shared with the wp-login flow. A tier downgrade soft-disables the module; existing customer secrets stay valid.
 
+<a id="form-protection"></a>
+
+### Form protection
+
+Hive checks that a submission came from a browser that really rendered the form. A visitor notices nothing of it, there is no image to decipher and no extra step to take. What the check cannot do is tell a person from a botnet driving a real browser. It tells a browser from a script.
+
+| Form | Plan |
+|---|---|
+| Comment form | Free |
+| Registration (WordPress, WooCommerce, Multisite sign-ups) | Free |
+| Lost password | Free |
+| Your own forms, through `Form_Proof::field()` / `check()` / `passes()` | Free |
+| Contact Form 7 | Professional |
+| Formidable Forms | Business |
+| Formidable Forms PRO | Business |
+| Elementor Forms (needs Elementor PRO, the form widget exists only there) | Business |
+
+Tested against Contact Form 7 in the version published on wordpress.org, Formidable Forms and Formidable Forms PRO 6.35, Elementor and Elementor PRO 3.34.
+
+**How it works.** Every protected form carries an invisible, screen-reader-excluded anchor field, and a bot that fills every input it finds fills that one too. A small script adds a second field whose name is random per installation, so a script posting straight at the endpoint without ever loading the form cannot carry it. The verdict is four-way, `proved`, `failed`, `tripped` or `absent`, and "absent" stays lenient until the site has seen itself render the field, so a theme with hand-written comment markup is never treated like a bot. Nothing request-specific reaches the HTML, so page caches stay valid.
+
+**What a verdict costs.** On the comment form a filled anchor scores 7 and a missing proof scores 4 against a spam threshold of 7, so a reader browsing without JavaScript loses a moderation step rather than the comment, and that reason on its own never counts towards a block. Sign-up, password reset and the three form plugins refuse a failed proof outright and say why. On the form plugins a filled anchor counts towards the per-address block ladder the way it does on a comment, while a client that simply never ran the script never does.
+
+**Computation check (Professional).** The anchor can carry a small sum instead of a plain marker. The server plants a starting value that depends only on the current hour, the browser works the answer out in the background in a few milliseconds, and each answer is accepted once. That closes the one shortcut the plain marker leaves open, reading the field name out of the page and posting it back. It needs HTTPS, because the browser hash API only exists in a secure context; without it no task is planted and the plain marker keeps deciding, so an insecure site behaves exactly as before. Difficulty via `reportedip_hive_form_proof_bits` (12 bits by default, 16 while the hardening mode runs).
+
+**One switch per plugin.** On a plan that does not cover an adapter the switch stays visible and locked, with the plan it needs written next to it. For 24 hours after a switch goes on a submission that never carried the proof is still accepted, and switching it on clears the common page caches, so a page cached without the field cannot lock anybody out. `reportedip_hive_form_adapters_grace` buys more room on a site whose cache outlives a day. On a form this plugin does not own, both field names carry a leading underscore, which keeps them out of the notification mail and out of a stored entry.
+
+**Self-test.** Tools → Diagnostics. The card first lists what is switched on, and why an adapter is inactive when it is, then runs three passes with the browser you are sitting in front of: like a visitor, like the same visitor twice, and like a bot. No real form is submitted, no mail goes out and no entry is stored. An invisible protection is otherwise hard to tell apart from no protection at all, and this card answers that question.
+
+**Fill time.** The script measures how long the form was on screen and sends the seconds along. The starting point comes from the browser and never from the markup, because a value baked into the HTML is already wrong when a page cache serves it. The number is not signed, so a determined attacker writes into it whatever suits them. It is therefore enforced on the comment filter alone, where it weighs 2 of the 7 points a comment needs to count as spam and can never convict on its own. Every other surface measures it and writes it to the log. The threshold is three seconds, changed with `reportedip_hive_form_proof_fast_seconds`.
+
+Everything above sits on the Protection page under Registration & Spam, next to the master switch, a second switch that leaves sign-up and password reset out, and report-only mode, which logs every refusal and refuses nothing. `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in `wp-config.php` switches the whole layer off, and `reportedip_hive_form_proof_adapters` decides which surfaces take part.
+
 <a id="honeypots-and-decoys"></a>
 
 ### Honeypots and decoys
 
-Four traps run alongside the sensors. None of them needs a CAPTCHA, a puzzle or an extra step; each one is a place a genuine visitor never goes and an automated tool cannot resist.
+Two traps sit outside the forms. Neither needs a CAPTCHA, a puzzle or an extra step; each one is a place a genuine visitor never goes and an automated tool cannot resist.
 
 | Trap | What it catches | Consequence | Plan |
 |---|---|---|---|
-| **Comment decoy field** | A bot that fills every input it finds, including the invisible one on the comment, sign-up and password-reset forms | Scores 6 on the comment filter, above the threshold on its own | Free |
-| **Form execution proof** | A script that posts straight at the endpoint without ever rendering the form, so it cannot carry the field a browser would have added | Comments: scored 4 and filed for review, never a block on that reason alone. Sign-up and password reset: refused, with the reason shown | Free |
-| **Decoy paths** | Anyone requesting one of 45 bait URLs that exist on no real site (`/.env.backup`, `/wp-config.old.php`, `/db-dump-master.sql.php`, ...) | One 403 plus a high-severity community report. Deliberately no local block, so a backup plugin or a curious admin cannot lock the site out | Free |
-| **Scanner honeypot paths** | A request for a known scanner target (`/.env`, `/.git/config`, `/.aws/credentials`, `/.ssh/id_rsa`, ...) | The 404 detector fires at once instead of after 12 misses; the address enters the block ladder and is reported | Baseline free, live list of ~100 targets on Professional |
+| **Decoy paths** | Anyone requesting one of 45 bait URLs that exist on no real site (`/.env.backup`, `/wp-config.old.php`, `/db-dump-master.sql.php`) | One 403 plus a high-severity community report. Deliberately no local block, so a backup plugin or a curious admin cannot lock the site out | Free |
+| **Scanner honeypot paths** | A request for a known scanner target (`/.env`, `/.git/config`, `/.aws/credentials`, `/.ssh/id_rsa`) | The 404 detector fires at once instead of after 12 misses; the address enters the block ladder and is reported | Baseline free, live list of ~100 targets on Professional |
 
 Details worth knowing:
 
-- The execution proof is four-way: `proved`, `failed`, `tripped`, `absent`. "Absent" stays lenient until the site has seen itself render the field, so a theme with hand-written comment markup is never treated like a bot. Nothing request-specific reaches the HTML, so page caches stay valid. The two login forms can be left out with their own switch, and `REPORTEDIP_HIVE_DISABLE_FORM_PROOF` in `wp-config.php` turns the whole layer off.
 - Verified crawlers are exempt from the 404 rate trigger but never from a honeypot hit: a Googlebot that asks for `/.env` is not Googlebot.
 - On Apache the decoy-path trap keeps a marker block in `.htaccess` so a real file at a bait path is routed through WordPress instead of being served; nginx gets a snippet to paste.
-- Every trap honours the whitelist, the site's own server addresses and report-only mode, and logs what it caught with the reason.
-- Filters: `reportedip_hive_decoy_paths`, `reportedip_hive_scan_paths`, `reportedip_hive_scan_prefixes`, `reportedip_hive_form_proof_adapters`.
+- Both traps honour the whitelist, the site's own server addresses and report-only mode, and log what they caught with the reason.
+- Filters: `reportedip_hive_decoy_paths`, `reportedip_hive_scan_paths`, `reportedip_hive_scan_prefixes`.
 
 Not to be confused with the **Honeypot Operator** plan, which is a reportedip.com account tier for people running a dedicated honeypot server that feeds the network, unrelated to the traps above.
 
+
 ### Progressive block escalation
 
-Default ladder: **5 min → 15 min → 30 min → 24 h → 48 h → 7 d** (cap). After 30 days clean, the IP starts again at step 1. Loud bursts are weighted: five times the threshold behind one block skips a rung, ten times skips two, twenty-five times skips three. Fully editable as a comma-separated minute list under *Settings → Blocking*. Manual blocks (admin / CSV import) honour the chosen duration and never get overridden by the ladder. The server's own addresses (loopback, interface address, everything the site hostname resolves to) are exempt from automatic blocking, extensible via the `reportedip_hive_own_server_ips` filter for multi-node setups.
+Default ladder: **5 min → 15 min → 30 min → 24 h → 48 h → 7 d** (cap). After 30 days clean, the IP starts again at step 1. Loud bursts are weighted: five times the threshold behind one block skips a rung, ten times skips two, twenty-five times skips three. Fully editable as a comma-separated minute list under *Protection → Blocking & Escalation*. Manual blocks (admin / CSV import) honour the chosen duration and never get overridden by the ladder. The server's own addresses (loopback, interface address, everything the site hostname resolves to) are exempt from automatic blocking, extensible via the `reportedip_hive_own_server_ips` filter for multi-node setups.
 
 ### Cache compatibility
 
@@ -120,7 +153,7 @@ The two **modes** decide whether the plugin talks to reportedip.com at all. They
 |---|---|---|
 | Account required | No | Free account at reportedip.com |
 | External calls | None | Reputation lookups + anonymised reports (each request carries the site address and plugin/WordPress version, wp.org-style) |
-| All 18 detection sensors + two-layer firewall | yes | yes |
+| All 16 detection sensors + two-layer firewall | yes | yes |
 | Core 2FA (TOTP, Passkey, Email, Recovery) | yes | yes |
 | Progressive block escalation + password-reset gate | yes | yes |
 | Pre-auth IP reputation check |, | yes |
@@ -138,7 +171,7 @@ The two **modes** decide whether the plugin talks to reportedip.com at all. They
 
 ### Free vs. paid
 
-The plugin itself is **free, GPL-2.0 and fully functional** in both modes. Everything that detects an attack, blocks an IP, logs an event or verifies a second factor with TOTP / Passkey / Email / Recovery codes works on every plan, including the 100 %-offline Local Shield. No account, nothing held back.
+The plugin itself is **free, GPL-2.0 and fully functional** in both modes. Everything that detects an attack, blocks an IP, logs an event or verifies a second factor with TOTP / Passkey / Email / Recovery codes works on every plan, including the 100 %-offline Local Shield. So does the form protection on the comment, sign-up and password-reset forms, its self-test and the form API for your own forms. No account, nothing held back.
 
 What the paid **Professional** (3 domains) and **Business** (15 domains, multi-bookable) plans add on top:
 
@@ -151,6 +184,7 @@ What the paid **Professional** (3 domains) and **Business** (15 domains, multi-b
 - **Tor exit-node blocking.** Opt-in rejection of connections from known Tor exit nodes, backed by a signed `tor_exits` ruleset refreshed twice daily. Blocks are temporary (24 h default, filterable) and never reported to the community, operating an exit node is not abuse evidence.
 - **Adaptive 2FA triggers.** Per-role step-up rules on a new country, IP address, network or device, every N days or sign-ins, or above a concurrent-session limit; they apply even when the trusted-device cookie is present, while the 2FA IP allowlist still bypasses.
 - **Unlimited registration rules.** No ten-entry cap on the username and e-mail lists, `/regex/` patterns and registration restricted to allowlisted IP ranges.
+- **Form protection on third-party form plugins.** Contact Form 7 with Professional, Formidable Forms, Formidable Forms PRO and Elementor Forms with Business, plus the computation check on every protected form. See [Form protection](#form-protection).
 - **Advanced Security Keys (Business).** Multiple WebAuthn keys per account, attestation-based model detection, key-lifecycle mails.
 - **User account control and sessions (Business).** Block an account so it cannot sign in, use an application password or reset its password, drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions.
 - **Audit event trail (Business).** Append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export.
