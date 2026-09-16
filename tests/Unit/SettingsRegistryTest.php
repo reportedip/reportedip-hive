@@ -436,7 +436,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_auto_footer_variant',
 				'reportedip_hive_bot_action',
 				'reportedip_hive_comment_honeypot_enabled',
-				'reportedip_hive_comment_spam_action',
 				'reportedip_hive_data_retention_days',
 				'reportedip_hive_disposable_email_action',
 				'reportedip_hive_form_proof_cf7',
@@ -449,6 +448,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_notify_admin',
 				'reportedip_hive_notify_recipients',
 				'reportedip_hive_report_only_mode',
+				'reportedip_hive_reputation_on_forms',
 				'reportedip_hive_waf_enabled',
 			);
 			$this->assertSame( $expected, $simple );

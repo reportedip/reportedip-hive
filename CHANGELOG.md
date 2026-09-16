@@ -2,6 +2,16 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.60] (2026-09-16)
+
+### Changed
+
+- **The community check on forms moved into the simple view.** It switches a
+  protection on and off, which is a day-to-day decision. The action taken on a
+  comment that scores as spam took its place among the expert settings: it
+  picks between three ways of handling one, and the default suits nearly every
+  site.
+
 ## [2.1.59] (2026-09-16)
 
 ### Changed

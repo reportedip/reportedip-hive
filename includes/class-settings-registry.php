@@ -797,6 +797,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description'  => __( 'The same check on Elementor Pro forms, which are sent in the background. Visitors notice nothing.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_reputation_on_forms'          => array(
+				'simple'      => true,
 				'section'     => 'forms',
 				'kind'        => 'bool',
 				'remote'      => true,
@@ -804,7 +805,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Ask the community network about the visitor address when a comment, sign-up or password reset is submitted, using the same protection level the sign-in page enforces. Needs Community Network mode.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_comment_spam_action'          => array(
-				'simple'      => true,
 				'section'     => 'forms',
 				'kind'        => 'enum',
 				'allowed'     => array( 'spam', 'off', 'block' ),
