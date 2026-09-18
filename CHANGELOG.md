@@ -2,6 +2,33 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.61] (2026-09-18)
+
+### New
+
+- **Ultimate Member forms are protected.** The sign-in, sign-up and
+  password-reset forms of Ultimate Member now carry the execution proof, and a
+  filled decoy counts towards the block ladder the same way it does on a
+  comment. The switch comes with Professional and the quickstart turns it on.
+- **A sign-up through Ultimate Member runs the registration rules.** Ultimate
+  Member writes the account itself instead of going through the WordPress
+  sign-up, so until now a throwaway address or a reserved name was only caught
+  by the last safety net, moments before the row was written and with nothing
+  but WordPress's own "empty data" wording to show for it. The rules now run
+  where the plugin validates its own form: the refusal names the field it is
+  about, and the account never reaches the database.
+
+### Changed
+
+- **A form setting for a plugin that is not installed says so.** The simple view
+  of the Protection page stands in for every expert setting with a line that
+  carries the label and a way into the expert view. For a form plugin that is
+  not on the site that link led to a switch nobody can use, so the line carries
+  a "Not installed" marker instead.
+- A denial on the Multisite sign-up form that came from the community check or
+  from a missing execution proof used to hand the visitor the form back with no
+  reason on it. Both now carry their message across like every other denial.
+
 ## [2.1.60] (2026-09-16)
 
 ### Changed

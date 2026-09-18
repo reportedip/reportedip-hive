@@ -107,6 +107,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_form_proof_cf7'                  => false,
 		'reportedip_hive_form_proof_formidable'           => false,
 		'reportedip_hive_form_proof_elementor'            => false,
+		'reportedip_hive_form_proof_um'                   => false,
 		'reportedip_hive_form_adapters_since'             => 0,
 		'reportedip_hive_reputation_on_forms'             => true,
 		'reportedip_hive_form_proof_field'                => '',
@@ -613,6 +614,7 @@ final class ReportedIP_Hive_Defaults {
 			$values['reportedip_hive_2fa_frontend_enabled'] = 1;
 			$values['reportedip_hive_form_proof_pow']       = 1;
 			$values['reportedip_hive_form_proof_cf7']       = 1;
+			$values['reportedip_hive_form_proof_um']        = 1;
 		}
 
 		if ( $rank >= 2 ) {

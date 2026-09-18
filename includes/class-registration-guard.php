@@ -228,6 +228,40 @@ final class ReportedIP_Hive_Registration_Guard {
 	}
 
 	/**
+	 * Which part of a form a denial belongs to, keyed by error code.
+	 *
+	 * Two surfaces ask this question. `wp-signup.php` renders three fixed
+	 * codes, and a registration form this plugin does not own hangs the message
+	 * on one of its own fields. One table means a new denial reason cannot
+	 * reach one of them and stay silent on the other.
+	 *
+	 * @var array<string, string>
+	 */
+	const ERROR_TARGETS = array(
+		'reportedip_hive_prohibited_username' => 'login',
+		'reportedip_hive_email_rule'          => 'email',
+		'reportedip_hive_disposable_email'    => 'email',
+		'reportedip_hive_registration_ip'     => 'generic',
+		'reportedip_hive_registration_limit'  => 'generic',
+		'reportedip_hive_reputation'          => 'generic',
+		'reportedip_hive_form_proof'          => 'generic',
+	);
+
+	/**
+	 * Where a denial belongs, as `login`, `email` or `generic`.
+	 *
+	 * @param string $code Error code from this class or from the disposable
+	 *                     e-mail check.
+	 * @return string
+	 * @since  2.1.61
+	 */
+	public static function error_target( $code ) {
+		$code = (string) $code;
+
+		return isset( self::ERROR_TARGETS[ $code ] ) ? self::ERROR_TARGETS[ $code ] : 'generic';
+	}
+
+	/**
 	 * Repeat a denial under the error codes the signup form renders.
 	 *
 	 * `wp-signup.php` prints exactly three codes, `user_name`, `user_email`
@@ -241,18 +275,17 @@ final class ReportedIP_Hive_Registration_Guard {
 	 * @since  2.1.51
 	 */
 	private static function mirror_signup_errors( WP_Error $errors ) {
-		$map = array(
-			'reportedip_hive_prohibited_username' => 'user_name',
-			'reportedip_hive_email_rule'          => 'user_email',
-			'reportedip_hive_disposable_email'    => 'user_email',
-			'reportedip_hive_registration_ip'     => 'generic',
-			'reportedip_hive_registration_limit'  => 'generic',
+		$fields = array(
+			'login'   => 'user_name',
+			'email'   => 'user_email',
+			'generic' => 'generic',
 		);
 
-		foreach ( $map as $code => $target ) {
+		foreach ( self::ERROR_TARGETS as $code => $target ) {
+			$field   = $fields[ $target ];
 			$message = (string) $errors->get_error_message( $code );
-			if ( '' !== $message && '' === (string) $errors->get_error_message( $target ) ) {
-				$errors->add( $target, $message );
+			if ( '' !== $message && '' === (string) $errors->get_error_message( $field ) ) {
+				$errors->add( $field, $message );
 			}
 		}
 	}
@@ -399,6 +432,14 @@ final class ReportedIP_Hive_Registration_Guard {
 	 * Run the registration pipeline. The first denial wins, so a denied
 	 * attempt produces exactly one error and one log row.
 	 *
+	 * This is also the entry point for a registration form this plugin does not
+	 * own. A membership plugin that writes the account itself instead of going
+	 * through `register_new_user()` never fires `registration_errors`, so it
+	 * calls this from its own validation hook with its own surface name and
+	 * translates the codes through {@see error_target()}. The `judged` memo
+	 * then keeps the `wp_pre_insert_user_data` safety net from judging the same
+	 * sign-up a second time.
+	 *
 	 * @param string   $login   Submitted username.
 	 * @param string   $email   Submitted e-mail address.
 	 * @param WP_Error $errors  Errors object to add to.
@@ -406,7 +447,7 @@ final class ReportedIP_Hive_Registration_Guard {
 	 * @return void
 	 * @since  2.1.51
 	 */
-	private function validate( $login, $email, WP_Error $errors, $surface ) {
+	public function validate( $login, $email, WP_Error $errors, $surface ) {
 		if ( ! self::applies() ) {
 			return;
 		}

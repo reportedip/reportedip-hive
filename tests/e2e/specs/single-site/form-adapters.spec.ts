@@ -18,6 +18,8 @@ import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
  *   Contact Form 7   post 700, page /rip-e2e-cf7-page/
  *   Formidable       form_id 2, form_key ripe2efrm, page /rip-e2e-frm-page/
  *   Elementor Pro    widget ripfrm01 on post 703, page /rip-e2e-elementor-page/
+ *   Ultimate Member  default forms, pages /rip-e2e-um-register/ and -login,
+ *                    switched on only while its own cases run
  *
  * Serial: the specs mutate shared plugin state on the long-lived stack.
  */
@@ -31,6 +33,7 @@ const CF7_PAGE = '/rip-e2e-cf7-page/';
 const FRM_PAGE = '/rip-e2e-frm-page/';
 const ELEMENTOR_PAGE = '/rip-e2e-elementor-page/';
 const ELEMENTOR_WIDGET = 'ripfrm01';
+const UM_REGISTER_PAGE = '/rip-e2e-um-register/';
 
 /**
  * Object ids the fixture hands back. Nothing here may be hard-coded: the three
@@ -44,11 +47,13 @@ let ELEMENTOR_POST = '0';
 let FRM_FORM = '0';
 let FRM_NAME_FIELD = '0';
 let FRM_TEXT_FIELD = '0';
+let UM_REGISTER_FORM = '0';
 
 const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_cf7',
 	'reportedip_hive_form_proof_formidable',
 	'reportedip_hive_form_proof_elementor',
+	'reportedip_hive_form_proof_um',
 ];
 
 /**
@@ -101,6 +106,7 @@ function seedForms(): void {
 	FRM_FORM = read('frm');
 	FRM_NAME_FIELD = read('frm_name');
 	FRM_TEXT_FIELD = read('frm_text');
+	UM_REGISTER_FORM = read('um_register');
 
 	const page = php(
 		`$p = get_posts(array('name' => 'rip-e2e-cf7-page', 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => 1)); echo $p ? (int) $p[0]->ID : 0;`
@@ -173,6 +179,83 @@ function clearSpamAttempts(): void {
 		global $wpdb;
 		$wpdb->query("DELETE FROM {$wpdb->base_prefix}reportedip_hive_attempts WHERE attempt_type = 'form_spam'");
 	`);
+}
+
+/**
+ * Switch Ultimate Member on or off.
+ *
+ * An active Ultimate Member takes the core registration form over and sends
+ * `wp-login.php?action=register` to its own page, which is exactly what
+ * `registration-rules.spec.ts` drives. So the plugin is only on while its own
+ * cases run. Returns false when it is not installed on this stack.
+ */
+function umPlugin(on: boolean): boolean {
+	try {
+		wp('plugin', on ? 'activate' : 'deactivate', 'ultimate-member');
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/** How many accounts the Ultimate Member cases have created. */
+function umUserCount(): number {
+	return Number(
+		php(`
+			global $wpdb;
+			echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->users} WHERE user_login LIKE 'ripe2eum%'");
+		`)
+	);
+}
+
+/** Drop every account the Ultimate Member cases created. */
+function clearUmUsers(): void {
+	php(`
+		require_once ABSPATH . 'wp-admin/includes/user.php';
+		global $wpdb;
+		$ids = $wpdb->get_col("SELECT ID FROM {$wpdb->users} WHERE user_login LIKE 'ripe2eum%'");
+		foreach ( $ids as $id ) { wp_delete_user( (int) $id ); }
+	`);
+}
+
+/**
+ * Drop the sign-up counter rows.
+ *
+ * The registration rules hold a rate limit of three sign-ups an hour per
+ * address, and every case in this file arrives from the same one. Without this
+ * an Ultimate Member case is refused by the limit, and the assertion about the
+ * reason it was refused for then reads the wrong field.
+ */
+function clearRegistrationAttempts(): void {
+	php(`
+		global $wpdb;
+		$wpdb->query("DELETE FROM {$wpdb->base_prefix}reportedip_hive_attempts WHERE attempt_type = 'registration'");
+	`);
+}
+
+/**
+ * Post straight at the Ultimate Member sign-up form, the way a blind bot does.
+ *
+ * The plugin reads its own nonce long after the validation hook this adapter
+ * uses, so a body without one still reaches the check. The consequence is read
+ * from the log and from the users table, never from the response.
+ */
+async function postUmRegister(
+	request: APIRequestContext,
+	login: string,
+	extra: Record<string, string> = {}
+): Promise<void> {
+	await request.post(UM_REGISTER_PAGE, {
+		form: {
+			form_id: UM_REGISTER_FORM,
+			[`user_login-${UM_REGISTER_FORM}`]: login,
+			[`user_email-${UM_REGISTER_FORM}`]: `${login}@example.com`,
+			[`user_password-${UM_REGISTER_FORM}`]: 'Str0ngPass!234',
+			[`confirm_user_password-${UM_REGISTER_FORM}`]: 'Str0ngPass!234',
+			...extra,
+		},
+		failOnStatusCode: false,
+	});
 }
 
 /** How many Formidable entries the fixture form holds. */
@@ -611,5 +694,107 @@ test.describe('form adapters', () => {
 		expect(formidableEntryCount(), 'the two proof layers must not refuse each other').toBe(1);
 
 		setFormidableOwnGuards(false);
+	});
+
+	test.describe('Ultimate Member', () => {
+		test.beforeAll(() => {
+			if (!umPlugin(true)) {
+				return;
+			}
+			seedForms();
+		});
+
+		test.afterAll(() => {
+			clearUmUsers();
+			clearRegistrationAttempts();
+			umPlugin(false);
+		});
+
+		/**
+		 * Ultimate Member writes the account itself instead of going through the
+		 * WordPress sign-up, so nothing about this path is covered by the comment
+		 * and sign-up specs. A real browser has to get an account, a blind POST
+		 * must not, and a filled decoy has to cost the address a counter row.
+		 */
+		test('Ultimate Member refuses a blind sign-up and lets a browser through', async ({
+			page,
+			request,
+		}) => {
+			test.skip(UM_REGISTER_FORM === '0', 'Ultimate Member is not installed on this stack');
+
+			setAdapters(true);
+			expireGrace();
+			clearUmUsers();
+			clearSpamAttempts();
+			clearRegistrationAttempts();
+
+			const logsBefore = failureLogCount();
+
+			await postUmRegister(request, 'ripe2eumblind');
+
+			expect(umUserCount(), 'a body that never carried the anchor must not open an account').toBe(0);
+			expect(
+				failureLogCount(),
+				'the refusal must come from our adapter, not from Ultimate Member'
+			).toBeGreaterThan(logsBefore);
+
+			await postUmRegister(request, 'ripe2eumdecoy', { _reportedip_hive_hp: 'filled by a bot' });
+
+			expect(umUserCount()).toBe(0);
+			expect(spamAttemptCount(), 'a filled decoy counts against the address').toBeGreaterThan(0);
+
+			const login = `ripe2eum${Date.now().toString().slice(-6)}`;
+
+			await page.goto(UM_REGISTER_PAGE);
+			await page.waitForLoadState('domcontentloaded');
+			await expect(page.locator('form input.rip-fp-anchor')).toHaveCount(1);
+
+			await page.fill(`input[name="user_login-${UM_REGISTER_FORM}"]`, login);
+			await page.fill(`input[name="user_email-${UM_REGISTER_FORM}"]`, `${login}@example.com`);
+			await page.fill(`input[name="user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
+			await page.fill(`input[name="confirm_user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
+			await page.click('input[type="submit"].um-button');
+			await page.waitForLoadState('domcontentloaded');
+
+			expect(umUserCount(), 'a reader with a browser must get an account').toBe(1);
+
+			clearUmUsers();
+		});
+
+		/**
+		 * The registration rules used to reach an Ultimate Member sign-up only
+		 * through the last safety net, moments before the row was written and with
+		 * WordPress's own wording. This is the spec that would catch that
+		 * regression: the refusal has to name the field it is about.
+		 */
+		test('Ultimate Member runs the registration rules with a readable reason', async ({ page }) => {
+			test.skip(UM_REGISTER_FORM === '0', 'Ultimate Member is not installed on this stack');
+
+			setAdapters(true);
+			clearUmUsers();
+			clearRegistrationAttempts();
+			php("ReportedIP_Hive_Option_Routing::set('reportedip_hive_disposable_email_action', 'block');");
+
+			await page.goto(UM_REGISTER_PAGE);
+			await page.waitForLoadState('domcontentloaded');
+
+			await page.fill(`input[name="user_login-${UM_REGISTER_FORM}"]`, 'ripe2eumthrowaway');
+			await page.fill(
+				`input[name="user_email-${UM_REGISTER_FORM}"]`,
+				'ripe2eumthrowaway@mailinator.com'
+			);
+			await page.fill(`input[name="user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
+			await page.fill(`input[name="confirm_user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
+			await page.click('input[type="submit"].um-button');
+			await page.waitForLoadState('domcontentloaded');
+
+			expect(umUserCount(), 'a throwaway address must not open an account').toBe(0);
+			await expect(page.locator(`#um-error-for-user_email-${UM_REGISTER_FORM}`)).toContainText(
+				'permanent e-mail address'
+			);
+
+			php("ReportedIP_Hive_Option_Routing::set('reportedip_hive_disposable_email_action', 'monitor');");
+			clearUmUsers();
+		});
 	});
 });

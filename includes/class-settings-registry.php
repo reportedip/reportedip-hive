@@ -73,7 +73,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 			'forms'            => array(
 				'label'       => __( 'Form Protection', 'reportedip-hive' ),
-				'description' => __( 'The checks that sit on the comment form, the sign-up form, the password-reset form and the forms of Contact Form 7, Formidable Forms and Elementor. A visitor sees none of it, and nobody has to read a distorted image.', 'reportedip-hive' ),
+				'description' => __( 'The checks that sit on the comment form, the sign-up form, the password-reset form and the forms of Contact Form 7, Formidable Forms, Elementor and Ultimate Member. A visitor sees none of it, and nobody has to read a distorted image.', 'reportedip-hive' ),
 			),
 			'hardening_mode'   => array(
 				'label'       => __( 'Attack Response', 'reportedip-hive' ),
@@ -795,6 +795,16 @@ final class ReportedIP_Hive_Settings_Registry {
 				'side_effects' => array( 'stamp_form_adapters_since' ),
 				'label'        => __( 'Protect Elementor forms', 'reportedip-hive' ),
 				'description'  => __( 'The same check on Elementor Pro forms, which are sent in the background. Visitors notice nothing.', 'reportedip-hive' ),
+			),
+			'reportedip_hive_form_proof_um'                => array(
+				'simple_form'  => 'ultimate_member',
+				'section'      => 'forms',
+				'kind'         => 'bool',
+				'remote'       => true,
+				'tier'         => 'form_adapters',
+				'side_effects' => array( 'stamp_form_adapters_since' ),
+				'label'        => __( 'Protect Ultimate Member forms', 'reportedip-hive' ),
+				'description'  => __( 'The same check on the Ultimate Member sign-in, sign-up and password forms. Sign-ups also run through the registration rules, so a throwaway address or a reserved name is refused before the account exists.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_reputation_on_forms'          => array(
 				'simple'      => true,

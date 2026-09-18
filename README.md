@@ -47,7 +47,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | Verified bot detection | flag (default) or block | Official Google/Bing IP ranges first, FCrDNS fallback; genuine crawlers never blocked |
 | Registration defence | username baseline on (10 role names), rate limit on (3 / 60 min), disposable mail: monitor, custom lists empty | Throwaway-mail domains, prohibited usernames, e-mail allow/block rules, per-IP rate limit (3 / 60 min), opt-in unknown-username block; WP + WooCommerce + Multisite sign-ups. Ten entries per list free, unlimited plus regex on Professional |
 | Form execution proof | on | Checks that a comment, sign-up or password reset came from a browser that rendered the form. See [Form protection](#form-protection) |
-| Form plugin adapters | off | The same check on Contact Form 7 (Professional) and on Formidable Forms, Formidable Forms PRO and Elementor Forms (Business). See [Form protection](#form-protection) |
+| Form plugin adapters | off | The same check on Contact Form 7 and Ultimate Member (Professional) and on Formidable Forms, Formidable Forms PRO and Elementor Forms (Business). See [Form protection](#form-protection) |
 | Community threat check on forms | on, needs Community Network mode | Comment, sign-up and password reset checked at the same protection level as the sign-in page; fail-open when the allowance runs out |
 
 Not a sensor, but part of the same screen: the consent endpoints of Real Cookie Banner, Complianz, Borlabs and CookieYes are exempt from the rate limit out of the box, because on a compliant site they look like a burst on every single page view.
@@ -94,17 +94,20 @@ Hive checks that a submission came from a browser that really rendered the form.
 | Lost password | Free |
 | Your own forms, through `Form_Proof::field()` / `check()` / `passes()` | Free |
 | Contact Form 7 | Professional |
+| Ultimate Member, its sign-in, sign-up and password forms | Professional |
 | Formidable Forms | Business |
 | Formidable Forms PRO | Business |
 | Elementor Forms (needs Elementor PRO, the form widget exists only there) | Business |
 
-Tested against Contact Form 7 in the version published on wordpress.org, Formidable Forms and Formidable Forms PRO 6.35, Elementor and Elementor PRO 3.34.
+Tested against Contact Form 7 in the version published on wordpress.org, Formidable Forms and Formidable Forms PRO 6.35, Elementor and Elementor PRO 3.34, Ultimate Member 2.13.
 
 **How it works.** Every protected form carries an invisible, screen-reader-excluded anchor field, and a bot that fills every input it finds fills that one too. A small script adds a second field whose name is random per installation, so a script posting straight at the endpoint without ever loading the form cannot carry it. The verdict is four-way, `proved`, `failed`, `tripped` or `absent`, and "absent" stays lenient until the site has seen itself render the field, so a theme with hand-written comment markup is never treated like a bot. Nothing request-specific reaches the HTML, so page caches stay valid.
 
-**What a verdict costs.** On the comment form a filled anchor scores 7 and a missing proof scores 4 against a spam threshold of 7, so a reader browsing without JavaScript loses a moderation step rather than the comment, and that reason on its own never counts towards a block. Sign-up, password reset and the three form plugins refuse a failed proof outright and say why. On the form plugins a filled anchor counts towards the per-address block ladder the way it does on a comment, while a client that simply never ran the script never does.
+**What a verdict costs.** On the comment form a filled anchor scores 7 and a missing proof scores 4 against a spam threshold of 7, so a reader browsing without JavaScript loses a moderation step rather than the comment, and that reason on its own never counts towards a block. Sign-up, password reset and the form plugins refuse a failed proof outright and say why. On the form plugins a filled anchor counts towards the per-address block ladder the way it does on a comment, while a client that simply never ran the script never does. The Ultimate Member password form is the one place where a missing anchor never refuses, because that form is what somebody reaches for once they are already locked out.
 
 **Computation check (Professional).** The anchor can carry a small sum instead of a plain marker. The server plants a starting value that depends only on the current hour, the browser works the answer out in the background in a few milliseconds, and each answer is accepted once. That closes the one shortcut the plain marker leaves open, reading the field name out of the page and posting it back. It needs HTTPS, because the browser hash API only exists in a secure context; without it no task is planted and the plain marker keeps deciding, so an insecure site behaves exactly as before. Difficulty via `reportedip_hive_form_proof_bits` (12 bits by default, 16 while the hardening mode runs).
+
+**Ultimate Member.** The plugin writes the account itself instead of going through the WordPress sign-up, so `registration_errors` never fires on it. Its sign-up therefore runs the registration rules from the plugin's own validation hook: the same rate limit, prohibited usernames, e-mail rules and disposable-domain check the WordPress form gets, refused before the account exists and with the reason on the field it is about.
 
 **One switch per plugin.** On a plan that does not cover an adapter the switch stays visible and locked, with the plan it needs written next to it. For 24 hours after a switch goes on a submission that never carried the proof is still accepted, and switching it on clears the common page caches, so a page cached without the field cannot lock anybody out. `reportedip_hive_form_adapters_grace` buys more room on a site whose cache outlives a day. On a form this plugin does not own, both field names carry a leading underscore, which keeps them out of the notification mail and out of a stored entry.
 
@@ -184,7 +187,7 @@ What the paid **Professional** (3 domains) and **Business** (15 domains, multi-b
 - **Tor exit-node blocking.** Opt-in rejection of connections from known Tor exit nodes, backed by a signed `tor_exits` ruleset refreshed twice daily. Blocks are temporary (24 h default, filterable) and never reported to the community, operating an exit node is not abuse evidence.
 - **Adaptive 2FA triggers.** Per-role step-up rules on a new country, IP address, network or device, every N days or sign-ins, or above a concurrent-session limit; they apply even when the trusted-device cookie is present, while the 2FA IP allowlist still bypasses.
 - **Unlimited registration rules.** No ten-entry cap on the username and e-mail lists, `/regex/` patterns and registration restricted to allowlisted IP ranges.
-- **Form protection on third-party form plugins.** Contact Form 7 with Professional, Formidable Forms, Formidable Forms PRO and Elementor Forms with Business, plus the computation check on every protected form. See [Form protection](#form-protection).
+- **Form protection on third-party form plugins.** Contact Form 7 and Ultimate Member with Professional, Formidable Forms, Formidable Forms PRO and Elementor Forms with Business, plus the computation check on every protected form. See [Form protection](#form-protection).
 - **Advanced Security Keys (Business).** Multiple WebAuthn keys per account, attestation-based model detection, key-lifecycle mails.
 - **User account control and sessions (Business).** Block an account so it cannot sign in, use an application password or reset its password, drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions.
 - **Audit event trail (Business).** Append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export.

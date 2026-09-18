@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.60
+Stable tag: 2.1.61
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -51,7 +51,7 @@ Two ways to run:
 * **Web Application Firewall**, request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
 * **Verified bot detection**, confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
 * **Registration defence**, one rule set for every sign-up surface (WordPress, WooCommerce, Multisite sign-ups, programmatic user creation): throwaway-mail domains (off / monitor / block, privacy relays such as Apple Hide My Email and Firefox Relay pass by default), prohibited usernames on top of a baseline of ten role names, e-mail allow or block rules, a per-IP registration rate limit (default 3 / 60 min) and an opt-in immediate block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts `/regex/` patterns and adds registration restricted to allowlisted IP ranges. The live throwaway-mail list rides Priority Sync
-* **Form execution proof**, the comment, sign-up and password-reset forms check that the submission came from a browser that really rendered them, and three form plugins are covered on the paid plans. No CAPTCHA, no puzzle and no extra step for a visitor. Full detail in *Form protection* below
+* **Form execution proof**, the comment, sign-up and password-reset forms check that the submission came from a browser that really rendered them, and four form plugins are covered on the paid plans. No CAPTCHA, no puzzle and no extra step for a visitor. Full detail in *Form protection* below
 * **Community threat check on forms**, when a comment, sign-up or password reset is submitted, the visitor address is checked against the community network at the same protection level the sign-in page enforces. Someone the site would refuse a login to cannot post a comment instead. The visitor is told why, and the address is closed for 24 hours exactly as a refused sign-in closes it. On by default, needs Community Network mode, and honours every exemption the sign-in path honours. If the daily allowance runs out, the network is unreachable or the answer never arrives, nothing is refused anywhere: the local scoring carries on exactly as before. Losing the community opinion may cost a site that evidence, never its ability to accept input
 * **Geographic anomaly**, login from a country never seen for the user, optionally revokes trusted-device cookies
 * **Password policy**, minimum length, character classes, optional Have-I-Been-Pwned k-anonymity check
@@ -96,6 +96,7 @@ Hive checks that a submission came from a browser that really rendered the form.
 **From Professional:**
 
 * **Contact Form 7**
+* **Ultimate Member**, its sign-in, sign-up and password forms. A sign-up also runs through the registration rules, so a throwaway address or a reserved name is refused before the account exists
 
 **From Business:**
 
@@ -103,11 +104,11 @@ Hive checks that a submission came from a browser that really rendered the form.
 * **Formidable Forms PRO**
 * **Elementor Forms**, which needs Elementor PRO, because the form widget exists only there
 
-**Tested against** Contact Form 7 in the version published on wordpress.org, Formidable Forms and Formidable Forms PRO 6.35, Elementor and Elementor PRO 3.34.
+**Tested against** Contact Form 7 in the version published on wordpress.org, Formidable Forms and Formidable Forms PRO 6.35, Elementor and Elementor PRO 3.34, Ultimate Member 2.13.
 
 **How it works.** Every protected form carries an invisible, screen-reader-excluded anchor field. A bot that fills every input it finds fills that one too. A small script adds a second field whose name is random per installation, so a script posting straight at the endpoint without ever loading the form cannot carry it. The verdict is four-way, `proved`, `failed`, `tripped` or `absent`, and "absent" stays lenient until the site has seen itself render the field, so a theme with hand-written comment markup is never treated like a bot. Nothing request-specific reaches the HTML, so page caches stay valid.
 
-**What a verdict costs.** On the comment form a filled anchor scores 7 and a missing proof scores 4 against a spam threshold of 7, so a reader browsing without JavaScript loses a moderation step rather than the comment, and that reason on its own never counts towards a block. Sign-up, password reset and the three form plugins refuse a failed proof outright and say why. On the form plugins a filled anchor counts towards the per-address block ladder the same way it does on a comment, while a client that simply never ran the script never does.
+**What a verdict costs.** On the comment form a filled anchor scores 7 and a missing proof scores 4 against a spam threshold of 7, so a reader browsing without JavaScript loses a moderation step rather than the comment, and that reason on its own never counts towards a block. Sign-up, password reset and the form plugins refuse a failed proof outright and say why. On the form plugins a filled anchor counts towards the per-address block ladder the same way it does on a comment, while a client that simply never ran the script never does. The one exception is the Ultimate Member password form: a page served from a cache filled before the switch went on never refuses there, because that form is what somebody reaches for once they are already locked out.
 
 **Computation check (Professional).** The anchor can carry a small sum instead of a plain marker. The server plants a starting value that depends only on the current hour, the browser works the answer out in the background in a few milliseconds, and each answer is accepted once. That closes the one shortcut the plain marker leaves open, reading the field name out of the page and posting it back. It needs HTTPS, because the browser hash API only exists in a secure context; without it no task is planted and the plain marker keeps deciding, so an insecure site behaves exactly as before.
 
@@ -272,7 +273,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * **Advanced security headers**, HSTS, Permissions-Policy, the Content-Security-Policy builder and the cross-origin isolation trio (the basic header trio stays free)
 * **Adaptive 2FA triggers**, per-role step-up rules on a new device, IP address, network or country, every N days or sign-ins, or above a concurrent-session limit
 * **Unlimited registration rules**, no ten-entry cap on the username and e-mail lists, `/regex/` patterns and registration restricted to allowlisted IP ranges
-* **Form protection on Contact Form 7**, plus the computation check on every protected form (see *Form protection* above)
+* **Form protection on Contact Form 7 and Ultimate Member**, plus the computation check on every protected form (see *Form protection* above)
 * **Priority Sync**, the deeper, frequently-updated, Ed25519-signed WAF Paranoia-Level-2/3 rulesets plus the live bot-IP-range and disposable-domain feeds
 * Multi-site dashboard, priority sync (daily blacklist download), 90-day log retention, e-mail support (48 h SLA)
 * Prepaid top-up bundles (SMS and mail) available for heavy months
@@ -298,7 +299,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 
 **How domains are counted:** each Hive installation announces its site address with every API request, and every distinct domain occupies one slot of the plan. A WordPress Multisite network counts as a single domain. Your reportedip.com dashboard shows the used/included domains per licence, lets you release slots of retired or moved sites (up to 3 self-service releases per 30 days), and domains that stop reporting for 60 days free their slot automatically. Currently informational only, nothing is blocked when a plan is over its allowance.
 
-What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, the registration rule set with ten entries per list, the form protection on the comment, sign-up and password-reset forms together with the form API for your own forms, its self-test on the Tools page and the measured fill time, the community threat check on forms, the access lockdown switches, the system readiness register, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys, multiple WebAuthn keys, model detection, key alerts (Business), adaptive 2FA triggers (Professional), unlimited registration rules with regular expressions and allowlist-only registration (Professional), the computation check on forms and the form protection on Contact Form 7 (Professional), the form protection on Formidable Forms, Formidable Forms PRO and Elementor Forms (Business), blocking user accounts and the session manager (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode, no plan, no account, nothing leaves your site.
+What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, the registration rule set with ten entries per list, the form protection on the comment, sign-up and password-reset forms together with the form API for your own forms, its self-test on the Tools page and the measured fill time, the community threat check on forms, the access lockdown switches, the system readiness register, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys, multiple WebAuthn keys, model detection, key alerts (Business), adaptive 2FA triggers (Professional), unlimited registration rules with regular expressions and allowlist-only registration (Professional), the computation check on forms and the form protection on Contact Form 7 and Ultimate Member (Professional), the form protection on Formidable Forms, Formidable Forms PRO and Elementor Forms (Business), blocking user accounts and the session manager (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode, no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
 
@@ -465,6 +466,14 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.61 =
+
+New: the Ultimate Member sign-in, sign-up and password forms are protected. The switch comes with Professional and the quickstart turns it on.
+
+New: a sign-up through Ultimate Member runs the registration rules. The plugin writes the account itself instead of going through the WordPress sign-up, so a throwaway address or a reserved name used to be caught only by the last safety net, moments before the row was written and with nothing but WordPress's own "empty data" wording. The refusal now names the field it is about and the account never reaches the database.
+
+Changed: a denial on the Multisite sign-up form that came from the community check or from a missing execution proof handed the visitor the form back with no reason on it. Both now carry their message across.
 
 = 2.1.60 =
 

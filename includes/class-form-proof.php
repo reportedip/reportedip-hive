@@ -108,7 +108,7 @@ class ReportedIP_Hive_Form_Proof {
 	const ADAPTER_PREFIX = '_';
 
 	/**
-	 * The three adapter switches. One list, read by the grace stamp and by
+	 * The adapter switches. One list, read by the grace stamp and by
 	 * anything else that needs to know whether a third-party form takes part.
 	 *
 	 * @var string[]
@@ -117,10 +117,11 @@ class ReportedIP_Hive_Form_Proof {
 		'reportedip_hive_form_proof_cf7',
 		'reportedip_hive_form_proof_formidable',
 		'reportedip_hive_form_proof_elementor',
+		'reportedip_hive_form_proof_um',
 	);
 
 	/**
-	 * Unix time the first adapter was switched on, 0 while all three are off.
+	 * Unix time the first adapter was switched on, 0 while they are all off.
 	 */
 	const OPT_ADAPTERS_SINCE = 'reportedip_hive_form_adapters_since';
 

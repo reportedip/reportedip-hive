@@ -371,14 +371,32 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_multisite_signup_denials_use_the_codes_the_form_prints(): void {
+			$expected = array(
+				'reportedip_hive_prohibited_username' => 'login',
+				'reportedip_hive_email_rule'          => 'email',
+				'reportedip_hive_disposable_email'    => 'email',
+				'reportedip_hive_registration_ip'     => 'generic',
+				'reportedip_hive_registration_limit'  => 'generic',
+				'reportedip_hive_reputation'          => 'generic',
+				'reportedip_hive_form_proof'          => 'generic',
+			);
+
+			foreach ( $expected as $code => $target ) {
+				$this->assertSame( $target, \ReportedIP_Hive_Registration_Guard::error_target( $code ) );
+			}
+
+			$this->assertSame(
+				'generic',
+				\ReportedIP_Hive_Registration_Guard::error_target( 'some_other_plugin_code' ),
+				'an unknown code must land somewhere the visitor can read it, not nowhere'
+			);
+
 			$body = $this->guard_method( 'mirror_signup_errors' );
 
 			foreach ( array(
-				"'reportedip_hive_prohibited_username' => 'user_name'",
-				"'reportedip_hive_email_rule'          => 'user_email'",
-				"'reportedip_hive_disposable_email'    => 'user_email'",
-				"'reportedip_hive_registration_ip'     => 'generic'",
-				"'reportedip_hive_registration_limit'  => 'generic'",
+				"'login'   => 'user_name'",
+				"'email'   => 'user_email'",
+				"'generic' => 'generic'",
 			) as $pair ) {
 				$this->assertStringContainsString( $pair, $body );
 			}

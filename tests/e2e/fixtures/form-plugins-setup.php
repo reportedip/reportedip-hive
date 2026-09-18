@@ -2,10 +2,12 @@
 /**
  * Build one form per supported form plugin, plus the page that renders it.
  *
- * The adapter spec needs a Contact Form 7, a Formidable and an Elementor form
- * that exist on every machine the suite runs on, so it creates them here
- * rather than relying on whatever the stack happens to hold. Idempotent: a
- * second run finds what the first one made and changes nothing.
+ * The adapter spec needs a Contact Form 7, a Formidable, an Elementor and an
+ * Ultimate Member form that exist on every machine the suite runs on, so it
+ * creates them here rather than relying on whatever the stack happens to hold.
+ * Idempotent: a second run finds what the first one made and changes nothing.
+ * A plugin that is not installed is skipped and reports an id of zero, which
+ * is how the spec knows to skip its cases.
  *
  * Executed inside the WordPress container through `wp eval-file`, the same way
  * the WebAuthn and reset-flow fixtures are.
@@ -212,8 +214,27 @@ if ( class_exists( '\ElementorPro\Plugin' ) ) {
 	delete_post_meta( $rip_elementor, '_elementor_element_cache' );
 }
 
+$rip_um_register = 0;
+$rip_um_login    = 0;
+
+if ( function_exists( 'UM' ) ) {
+	if ( ! get_option( 'um_is_installed' ) ) {
+		wp_set_current_user( 1 );
+		UM()->setup()->run_setup();
+	}
+
+	$rip_um_register = (int) UM()->query()->find_post_id( 'um_form', '_um_core', 'register' );
+	$rip_um_login    = (int) UM()->query()->find_post_id( 'um_form', '_um_core', 'login' );
+
+	rip_e2e_page( 'rip-e2e-um-register', 'RIP E2E Ultimate Member register', '[ultimatemember form_id="' . $rip_um_register . '"]' );
+	rip_e2e_page( 'rip-e2e-um-login', 'RIP E2E Ultimate Member login', '[ultimatemember form_id="' . $rip_um_login . '"]' );
+	rip_e2e_page( 'rip-e2e-um-password', 'RIP E2E Ultimate Member password', '[ultimatemember_password]' );
+}
+
 echo 'cf7=' . (int) $rip_cf7
 	. ' frm=' . (int) $rip_frm
 	. ' frm_name=' . (int) $rip_name
 	. ' frm_text=' . (int) $rip_text
-	. ' elementor=' . (int) $rip_elementor;
+	. ' elementor=' . (int) $rip_elementor
+	. ' um_register=' . (int) $rip_um_register
+	. ' um_login=' . (int) $rip_um_login;

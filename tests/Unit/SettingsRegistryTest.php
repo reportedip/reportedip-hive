@@ -172,6 +172,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_form_proof_enabled'            => 'bool',
 				'reportedip_hive_form_proof_login_forms'        => 'bool',
 				'reportedip_hive_form_proof_pow'                => 'bool',
+				'reportedip_hive_form_proof_um'                 => 'bool',
 				'reportedip_hive_form_proof_cf7'                => 'bool',
 				'reportedip_hive_form_proof_formidable'         => 'bool',
 				'reportedip_hive_form_proof_elementor'          => 'bool',
@@ -284,6 +285,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'reportedip_hive_form_proof_formidable',
 					'reportedip_hive_form_proof_login_forms',
 					'reportedip_hive_form_proof_pow',
+					'reportedip_hive_form_proof_um',
 					'reportedip_hive_reputation_on_forms',
 				),
 				$by_section['forms']
@@ -414,9 +416,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * The simple view lists exactly the keys the spec names, and no section
-		 * carries more than six of them. A key flagged `simple_form` counts
-		 * against that budget as well: on a site running the form plugin it
-		 * sits in the simple view like any other day-to-day switch.
+		 * carries more than six unconditional ones. A key flagged `simple_form`
+		 * is counted apart: it only shows itself on a site running that form
+		 * plugin, so the four of them are never on screen together, and they
+		 * all belong to the form section.
 		 */
 		public function test_simple_keys_match_the_spec_and_stay_short_per_section(): void {
 			$spec   = \ReportedIP_Hive_Settings_Registry::spec();
@@ -442,6 +445,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_form_proof_elementor',
 				'reportedip_hive_form_proof_enabled',
 				'reportedip_hive_form_proof_formidable',
+				'reportedip_hive_form_proof_um',
 				'reportedip_hive_hide_login_enabled',
 				'reportedip_hive_hide_login_slug',
 				'reportedip_hive_minimal_logging',
@@ -454,13 +458,23 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( $expected, $simple );
 
 			$per_section = array();
+			$conditional = array();
 			foreach ( $simple as $key ) {
-				$section                 = $spec[ $key ]['section'];
+				$section = $spec[ $key ]['section'];
+				if ( ! empty( $spec[ $key ]['simple_form'] ) ) {
+					$conditional[ $section ] = ( $conditional[ $section ] ?? 0 ) + 1;
+					continue;
+				}
 				$per_section[ $section ] = ( $per_section[ $section ] ?? 0 ) + 1;
 			}
 			foreach ( $per_section as $section => $count ) {
 				$this->assertLessThanOrEqual( 6, $count, "Section {$section} carries {$count} simple keys." );
 			}
+			$this->assertSame(
+				array( 'forms' ),
+				array_keys( $conditional ),
+				'an adapter switch belongs next to the other form settings'
+			);
 		}
 
 		/**

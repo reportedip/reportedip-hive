@@ -2,11 +2,15 @@
 /**
  * Execution-proof adapters for third-party form plugins.
  *
- * Contact Form 7, Formidable Forms and Elementor Forms each render their own
- * markup and run their own validation, so the shared anchor from
- * {@see ReportedIP_Hive_Form_Proof} has to be planted and read back on their
- * hooks. Everything plugin-specific lives here; the verdict, the grace and the
- * field names stay where they were.
+ * Contact Form 7, Formidable Forms, Elementor Forms and Ultimate Member each
+ * render their own markup and run their own validation, so the shared anchor
+ * from {@see ReportedIP_Hive_Form_Proof} has to be planted and read back on
+ * their hooks. Everything plugin-specific lives here; the verdict, the grace
+ * and the field names stay where they were.
+ *
+ * Ultimate Member is the one adapter that guards more than a message: its
+ * registration form opens an account, so it also runs the pipeline that
+ * {@see ReportedIP_Hive_Registration_Guard} owns.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -30,27 +34,65 @@ final class ReportedIP_Hive_Form_Adapters {
 	/**
 	 * Every adapter, keyed by surface identifier. One table decides which
 	 * option arms it, which plan covers it and which class proves the plugin
-	 * is there, so adding a fourth form plugin is one entry plus its two hooks.
+	 * is there, so another form plugin is one entry plus its own hooks.
 	 *
 	 * @var array<string, array<string, string>>
 	 */
 	const ADAPTERS = array(
-		'cf7'        => array(
+		'cf7'             => array(
 			'option'  => 'reportedip_hive_form_proof_cf7',
 			'feature' => 'form_adapters',
 			'detect'  => 'WPCF7_Submission',
 		),
-		'formidable' => array(
+		'formidable'      => array(
 			'option'  => 'reportedip_hive_form_proof_formidable',
 			'feature' => 'form_adapters_advanced',
 			'detect'  => 'FrmAppHelper',
 		),
-		'elementor'  => array(
+		'elementor'       => array(
 			'option'  => 'reportedip_hive_form_proof_elementor',
 			'feature' => 'form_adapters_advanced',
 			'detect'  => 'ElementorPro\\Modules\\Forms\\Module',
 		),
+		'ultimate_member' => array(
+			'option'  => 'reportedip_hive_form_proof_um',
+			'feature' => 'form_adapters',
+			'detect'  => 'UM_Functions',
+		),
 	);
+
+	/**
+	 * Ultimate Member form modes this adapter takes part in.
+	 *
+	 * The profile and account forms run on the same render hook and stay out
+	 * on purpose: their sender is signed in, so there is nothing to prove
+	 * about them.
+	 *
+	 * @var string[]
+	 */
+	const UM_MODES = array( 'login', 'register', 'password' );
+
+	/**
+	 * Display names of the supported form plugins, keyed by adapter slug.
+	 *
+	 * One source, because three surfaces name these plugins to the operator:
+	 * the readiness advisory, the quickstart feature list and the hint that
+	 * explains why a setting is not in the simple view. A name that drifts
+	 * apart between them reads as three different products.
+	 *
+	 * Product names, so they are deliberately not translated.
+	 *
+	 * @return array<string, string>
+	 * @since  2.1.61
+	 */
+	public static function names() {
+		return array(
+			'cf7'             => 'Contact Form 7',
+			'formidable'      => 'Formidable Forms',
+			'elementor'       => 'Elementor Forms',
+			'ultimate_member' => 'Ultimate Member',
+		);
+	}
 
 	/**
 	 * Attempt-tracker key a tripped decoy counts against.
@@ -118,6 +160,10 @@ final class ReportedIP_Hive_Form_Adapters {
 
 		add_filter( 'elementor/widget/render_content', array( $this, 'elementor_anchor' ), 10, 2 );
 		add_action( 'elementor_pro/forms/validation', array( $this, 'elementor_validate' ), 10, 2 );
+
+		add_action( 'um_after_form_fields', array( $this, 'um_anchor' ) );
+		add_action( 'um_submit_form_errors_hook', array( $this, 'um_validate' ), 20, 2 );
+		add_action( 'um_reset_password_errors_hook', array( $this, 'um_reset_validate' ), 20 );
 	}
 
 	/**
@@ -433,6 +479,228 @@ final class ReportedIP_Hive_Form_Adapters {
 	}
 
 	/**
+	 * Plant the anchor in an Ultimate Member form.
+	 *
+	 * `um_after_form_fields` is the one hook that sits inside the form element
+	 * of the login, registration and password-reset templates, so all three are
+	 * covered without knowing anything about the fields the operator put on
+	 * them.
+	 *
+	 * @param mixed $args Shortcode arguments of the rendered form.
+	 * @return void
+	 * @since  2.1.61
+	 */
+	public function um_anchor( $args ) {
+		if ( ! $this->active( 'ultimate_member' ) ) {
+			return;
+		}
+
+		if ( ! in_array( self::um_mode( $args ), self::UM_MODES, true ) ) {
+			return;
+		}
+
+		ReportedIP_Hive_Form_Proof::field( 'ultimate_member' );
+	}
+
+	/**
+	 * Judge an Ultimate Member login or registration.
+	 *
+	 * Priority 20 puts this behind the plugin's own validation, the same place
+	 * its reCAPTCHA extension hooks into. An error on any field is enough to
+	 * stop the submission: both handlers return early once the form carries
+	 * one.
+	 *
+	 * @param mixed $submitted_data Sanitised submission.
+	 * @param mixed $form_data      Form row of the submitted form.
+	 * @return void
+	 * @since  2.1.61
+	 */
+	public function um_validate( $submitted_data, $form_data = array() ) {
+		if ( ! $this->active( 'ultimate_member' ) ) {
+			return;
+		}
+
+		$mode = self::um_mode( $form_data );
+
+		if ( 'login' === $mode ) {
+			$this->um_add_error( $submitted_data, $this->refuse( 'ultimate_member' ) );
+			return;
+		}
+
+		if ( 'register' === $mode ) {
+			$this->um_register( $submitted_data );
+		}
+	}
+
+	/**
+	 * Judge an Ultimate Member password-reset request.
+	 *
+	 * A missing anchor never refuses here. The page carrying the reset form is
+	 * the one an operator reaches for when they are already locked out, and a
+	 * copy of it served from a cache filled before this adapter was switched on
+	 * would otherwise close the last door behind them.
+	 *
+	 * @param mixed $args Sanitised submission.
+	 * @return void
+	 * @since  2.1.61
+	 */
+	public function um_reset_validate( $args ) {
+		unset( $args );
+
+		if ( ! $this->active( 'ultimate_member' ) || ! function_exists( 'UM' ) ) {
+			return;
+		}
+
+		$message = $this->judge( 'ultimate_member', false );
+
+		if ( '' === $message ) {
+			return;
+		}
+
+		UM()->form()->add_error( 'username_b', $message );
+	}
+
+	/**
+	 * Judge an Ultimate Member registration.
+	 *
+	 * Ultimate Member never fires `registration_errors`; it calls
+	 * `wp_insert_user()` itself, so without this the registration pipeline
+	 * would only catch the sign-up in the `wp_pre_insert_user_data` safety net,
+	 * after every one of the plugin's own checks and with nothing but the core
+	 * `empty_data` wording to show the visitor. Running it here refuses the
+	 * account before it exists and says why.
+	 *
+	 * The execution proof goes first because it costs nothing, and the
+	 * pipeline owns the community lookup for this surface, so the address is
+	 * looked up once.
+	 *
+	 * @param mixed $submitted_data Sanitised submission.
+	 * @return void
+	 * @since  2.1.61
+	 */
+	private function um_register( $submitted_data ) {
+		$proof = $this->proof_refusal( 'ultimate_member' );
+
+		if ( '' !== $proof ) {
+			$this->um_add_error( $submitted_data, $proof );
+			return;
+		}
+
+		if ( ! class_exists( 'ReportedIP_Hive_Registration_Guard' ) ) {
+			return;
+		}
+
+		$data   = is_array( $submitted_data ) ? $submitted_data : array();
+		$errors = new WP_Error();
+
+		ReportedIP_Hive_Registration_Guard::get_instance()->validate(
+			self::um_value( $data, array( 'user_login', 'username' ) ),
+			self::um_value( $data, array( 'user_email' ) ),
+			$errors,
+			'ultimate_member'
+		);
+
+		foreach ( $errors->get_error_codes() as $code ) {
+			$this->um_add_error(
+				$data,
+				$errors->get_error_message( $code ),
+				self::um_field( $data, ReportedIP_Hive_Registration_Guard::error_target( $code ) )
+			);
+		}
+	}
+
+	/**
+	 * Hang a refusal on an Ultimate Member form.
+	 *
+	 * @param mixed  $submitted_data Sanitised submission.
+	 * @param string $message        Refusal text.
+	 * @param string $field          Field key, empty to pick one.
+	 * @return void
+	 * @since  2.1.61
+	 */
+	private function um_add_error( $submitted_data, $message, $field = '' ) {
+		if ( '' === (string) $message || ! function_exists( 'UM' ) ) {
+			return;
+		}
+
+		if ( '' === (string) $field ) {
+			$field = self::um_field( $submitted_data, 'generic' );
+		}
+
+		UM()->form()->add_error( $field, $message );
+	}
+
+	/**
+	 * The mode of an Ultimate Member form.
+	 *
+	 * The shortcode arguments carry it on render and the form row carries it on
+	 * submit. The live field set is the fallback, because a form rendered
+	 * without the mode in its arguments would otherwise silently skip the
+	 * anchor and then be judged for not carrying one.
+	 *
+	 * @param mixed $args Shortcode arguments or form row.
+	 * @return string
+	 * @since  2.1.61
+	 */
+	private static function um_mode( $args ) {
+		if ( is_array( $args ) && isset( $args['mode'] ) ) {
+			return (string) $args['mode'];
+		}
+
+		if ( function_exists( 'UM' ) && isset( UM()->fields()->set_mode ) ) {
+			return (string) UM()->fields()->set_mode;
+		}
+
+		return '';
+	}
+
+	/**
+	 * First submitted value out of a list of keys.
+	 *
+	 * @param array<string,mixed> $data Sanitised submission.
+	 * @param string[]            $keys Keys to try, in order.
+	 * @return string
+	 * @since  2.1.61
+	 */
+	private static function um_value( array $data, array $keys ) {
+		foreach ( $keys as $key ) {
+			if ( isset( $data[ $key ] ) && is_scalar( $data[ $key ] ) ) {
+				return (string) $data[ $key ];
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * The field a refusal is rendered next to.
+	 *
+	 * Ultimate Member prints an error beside a field that exists on the form,
+	 * so the message goes to the submitted key it is about. The order matters
+	 * more than the exact hit: a form set up to sign people in by e-mail has no
+	 * `user_login` at all.
+	 *
+	 * @param mixed  $submitted_data Sanitised submission.
+	 * @param string $target         Target from the registration guard.
+	 * @return string
+	 * @since  2.1.61
+	 */
+	public static function um_field( $submitted_data, $target ) {
+		$data  = is_array( $submitted_data ) ? $submitted_data : array();
+		$order = 'email' === (string) $target
+			? array( 'user_email', 'username', 'user_login' )
+			: array( 'user_login', 'username', 'user_email' );
+
+		foreach ( $order as $key ) {
+			if ( array_key_exists( $key, $data ) ) {
+				return $key;
+			}
+		}
+
+		return 'user_login';
+	}
+
+	/**
 	 * Decide one submission and produce its refusal, or an empty string when it
 	 * may proceed. Same order as every other surface: plan and switch, then the
 	 * community reputation of the address, then the execution proof.
@@ -454,28 +722,49 @@ final class ReportedIP_Hive_Form_Adapters {
 	/**
 	 * Run the pipeline for one submission.
 	 *
-	 * @param string $slug Surface identifier.
+	 * @param string    $slug   Surface identifier.
+	 * @param bool|null $strict Whether a missing anchor counts as a refusal;
+	 *                          null reads the adapter grace.
 	 * @return string Refusal message, or an empty string to proceed.
 	 * @since  2.1.58
 	 */
-	private function judge( $slug ) {
+	private function judge( $slug, $strict = null ) {
 		if ( ! $this->active( $slug ) ) {
 			return '';
 		}
 
-		$ip = ReportedIP_Hive::get_client_ip();
-
 		if ( class_exists( 'ReportedIP_Hive_Reputation_Gate' ) ) {
-			$reputation = ReportedIP_Hive_Reputation_Gate::get_instance()->check( $slug, $ip );
+			$reputation = ReportedIP_Hive_Reputation_Gate::get_instance()->check( $slug, ReportedIP_Hive::get_client_ip() );
 
 			if ( '' !== $reputation ) {
 				return $reputation;
 			}
 		}
 
+		return $this->proof_refusal( $slug, $strict );
+	}
+
+	/**
+	 * The execution-proof half of the pipeline on its own.
+	 *
+	 * The registration surface needs it separately, because the registration
+	 * pipeline already looks the address up in the community network and the
+	 * same sign-up must not spend that lookup twice.
+	 *
+	 * @param string    $slug   Surface identifier.
+	 * @param bool|null $strict Whether a missing anchor counts as a refusal;
+	 *                          null reads the adapter grace.
+	 * @return string Refusal message, or an empty string to proceed.
+	 * @since  2.1.61
+	 */
+	private function proof_refusal( $slug, $strict = null ) {
+		if ( ! $this->active( $slug ) ) {
+			return '';
+		}
+
 		$proof   = ReportedIP_Hive_Form_Proof::get_instance();
 		$verdict = ReportedIP_Hive_Form_Proof::check( $slug );
-		$outcome = self::consequence( $verdict, $proof->adapters_strict() );
+		$outcome = self::consequence( $verdict, null === $strict ? $proof->adapters_strict() : (bool) $strict );
 
 		if ( ! $outcome['refuse'] ) {
 			return '';
@@ -484,7 +773,7 @@ final class ReportedIP_Hive_Form_Adapters {
 		$proof->log_failure( $slug );
 
 		if ( $outcome['count'] ) {
-			$this->count_attempt( $ip );
+			$this->count_attempt( ReportedIP_Hive::get_client_ip() );
 		}
 
 		if ( $proof->report_only() ) {

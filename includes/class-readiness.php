@@ -1018,29 +1018,32 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
-	 * The three shipped form adapters, keyed by slug.
+	 * The shipped form adapters, keyed by slug.
+	 *
+	 * Read out of the adapter table rather than kept alongside it, so a new
+	 * form plugin cannot arrive with its switch and stay missing from the
+	 * advisory that tells the operator the switch is off.
 	 *
 	 * @return array<string,array{label:string,feature:string,option:string}>
 	 * @since  2.1.58
 	 */
 	private static function form_adapters() {
-		return array(
-			'cf7'        => array(
-				'label'   => 'Contact Form 7',
-				'feature' => 'form_adapters',
-				'option'  => 'reportedip_hive_form_proof_cf7',
-			),
-			'formidable' => array(
-				'label'   => 'Formidable Forms',
-				'feature' => 'form_adapters_advanced',
-				'option'  => 'reportedip_hive_form_proof_formidable',
-			),
-			'elementor'  => array(
-				'label'   => 'Elementor Forms',
-				'feature' => 'form_adapters_advanced',
-				'option'  => 'reportedip_hive_form_proof_elementor',
-			),
-		);
+		if ( ! class_exists( 'ReportedIP_Hive_Form_Adapters' ) ) {
+			return array();
+		}
+
+		$names = ReportedIP_Hive_Form_Adapters::names();
+		$rows  = array();
+
+		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+			$rows[ $slug ] = array(
+				'label'   => isset( $names[ $slug ] ) ? $names[ $slug ] : $slug,
+				'feature' => $adapter['feature'],
+				'option'  => $adapter['option'],
+			);
+		}
+
+		return $rows;
 	}
 
 	/**

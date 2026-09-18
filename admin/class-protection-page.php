@@ -465,15 +465,77 @@ class ReportedIP_Hive_Protection_Page {
 	 * @return string
 	 * @since  2.1.59
 	 */
-	public static function hint_markup( $key, array $entry, $jump_url ) {
+	public static function hint_markup( $key, array $entry, $jump_url, array $detected = array() ) {
+		$missing = self::missing_form_plugin( $entry, $detected );
+		$tail    = sprintf(
+			'<a class="rip-button rip-button--ghost rip-button--sm" href="%1$s">%2$s</a>',
+			esc_url( (string) $jump_url ),
+			esc_html__( 'Open in expert mode', 'reportedip-hive' )
+		);
+
+		if ( '' !== $missing ) {
+			$tail = sprintf(
+				'<span class="rip-badge rip-badge--neutral">%s</span>',
+				esc_html__( 'Not installed', 'reportedip-hive' )
+			);
+		}
+
 		return sprintf(
-			'<div class="rip-protection__hint rip-hidden" data-search="%1$s" data-key="%2$s"><div class="rip-protection__field-head"><span class="rip-label">%3$s</span></div><p class="rip-help-text">%4$s</p><a class="rip-button rip-button--ghost rip-button--sm" href="%5$s">%6$s</a></div>',
+			'<div class="rip-protection__hint rip-hidden" data-search="%1$s" data-key="%2$s"><div class="rip-protection__field-head"><span class="rip-label">%3$s</span></div><p class="rip-help-text">%4$s</p>%5$s</div>',
 			esc_attr( self::search_terms( $key, $entry ) ),
 			esc_attr( (string) $key ),
 			esc_html( (string) ( $entry['label'] ?? $key ) ),
-			esc_html__( 'This setting lives in expert mode.', 'reportedip-hive' ),
-			esc_url( (string) $jump_url ),
-			esc_html__( 'Open in expert mode', 'reportedip-hive' )
+			esc_html( self::hint_reason( $missing ) ),
+			$tail
+		);
+	}
+
+	/**
+	 * The form plugin a setting waits for, when that plugin is not here.
+	 *
+	 * Pure. An empty string means the setting is held back for the ordinary
+	 * reason, which is that the simple view stays short.
+	 *
+	 * @param array<string,mixed> $entry    Registry entry.
+	 * @param string[]            $detected Adapter slugs found on this site.
+	 * @return string Adapter slug, or an empty string.
+	 * @since  2.1.61
+	 */
+	public static function missing_form_plugin( array $entry, array $detected ) {
+		$slug = (string) ( $entry['simple_form'] ?? '' );
+
+		if ( '' === $slug || in_array( $slug, $detected, true ) ) {
+			return '';
+		}
+
+		return $slug;
+	}
+
+	/**
+	 * Why a setting is not in the simple view.
+	 *
+	 * Naming expert mode for a setting that waits for a plugin sends the
+	 * operator to a switch that cannot help them: they turn expert mode on,
+	 * find the setting, and it still does nothing because the form plugin is
+	 * not installed. Say which plugin is missing instead.
+	 *
+	 * @param string $missing Adapter slug from {@see missing_form_plugin()}.
+	 * @return string
+	 * @since  2.1.61
+	 */
+	public static function hint_reason( $missing ) {
+		$missing = (string) $missing;
+
+		if ( '' === $missing ) {
+			return __( 'This setting lives in expert mode.', 'reportedip-hive' );
+		}
+
+		$names = ReportedIP_Hive_Form_Adapters::names();
+
+		return sprintf(
+			/* translators: %s: name of a form plugin, for example Contact Form 7. */
+			__( '%s is not active on this site. The setting appears here as soon as it is.', 'reportedip-hive' ),
+			(string) ( $names[ $missing ] ?? $missing )
 		);
 	}
 
@@ -1156,11 +1218,17 @@ class ReportedIP_Hive_Protection_Page {
 		if ( array() === $keys ) {
 			return;
 		}
-		$labels = array();
+		$detected = self::detected_forms();
+		$labels   = array();
 		foreach ( $keys as $key ) {
-			$entry    = $spec[ $key ];
-			$labels[] = (string) ( $entry['label'] ?? $key );
-			echo self::hint_markup( $key, $entry, self::expert_jump_url( self::field_id( $key ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside
+			$entry = $spec[ $key ];
+			if ( '' === self::missing_form_plugin( $entry, $detected ) ) {
+				$labels[] = (string) ( $entry['label'] ?? $key );
+			}
+			echo self::hint_markup( $key, $entry, self::expert_jump_url( self::field_id( $key ) ), $detected ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside
+		}
+		if ( array() === $labels ) {
+			return;
 		}
 		printf(
 			'<p class="rip-help-text rip-protection__more">%1$s <a class="rip-button rip-button--ghost rip-button--sm" href="%2$s">%3$s</a></p>',

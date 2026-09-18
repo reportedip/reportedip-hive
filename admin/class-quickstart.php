@@ -266,7 +266,9 @@ class ReportedIP_Hive_Quickstart {
 	 * active on this site.
 	 *
 	 * Nothing is said when none of them is installed, because a line about a
-	 * form plugin the operator does not run is noise on a setup screen.
+	 * form plugin the operator does not run is noise on a setup screen. Which
+	 * plan a plugin belongs to comes out of its feature key, so the list cannot
+	 * drift away from what the sanitiser actually allows.
 	 *
 	 * @param string $tier Plan the row belongs to.
 	 * @return array<int, array{label:string, tier:string}>
@@ -277,16 +279,16 @@ class ReportedIP_Hive_Quickstart {
 			return array();
 		}
 
-		$plugins  = array(
-			'cf7'        => array( 'Contact Form 7', 'professional' ),
-			'formidable' => array( 'Formidable Forms', 'business' ),
-			'elementor'  => array( 'Elementor Forms', 'business' ),
-		);
+		$labels   = ReportedIP_Hive_Form_Adapters::names();
 		$adapters = ReportedIP_Hive_Form_Adapters::get_instance();
+		$mode     = ReportedIP_Hive_Mode_Manager::get_instance();
 		$names    = array();
-		foreach ( $plugins as $slug => $plugin ) {
-			if ( $plugin[1] === (string) $tier && $adapters->detected( $slug ) ) {
-				$names[] = $plugin[0];
+		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+			$status = $mode->feature_status( $adapter['feature'] );
+			$plan   = isset( $status['min_tier'] ) ? (string) $status['min_tier'] : '';
+
+			if ( $plan === (string) $tier && $adapters->detected( $slug ) && isset( $labels[ $slug ] ) ) {
+				$names[] = $labels[ $slug ];
 			}
 		}
 

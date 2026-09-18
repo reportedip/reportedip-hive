@@ -62,9 +62,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 			return (string) $buf;
 		}
 
-		public function test_adapter_table_carries_exactly_the_three_supported_plugins(): void {
+		public function test_adapter_table_carries_exactly_the_supported_plugins(): void {
 			$this->assertSame(
-				array( 'cf7', 'formidable', 'elementor' ),
+				array( 'cf7', 'formidable', 'elementor', 'ultimate_member' ),
 				array_keys( \ReportedIP_Hive_Form_Adapters::ADAPTERS )
 			);
 		}
@@ -86,6 +86,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'feature' => 'form_adapters_advanced',
 					'detect'  => 'ElementorPro\\Modules\\Forms\\Module',
 				),
+				'ultimate_member' => array(
+					'option'  => 'reportedip_hive_form_proof_um',
+					'feature' => 'form_adapters',
+					'detect'  => 'UM_Functions',
+				),
 			);
 
 			$this->assertSame( $expected, \ReportedIP_Hive_Form_Adapters::ADAPTERS );
@@ -93,7 +98,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		/**
 		 * The adapter options are the very list the grace stamp watches. A
-		 * fourth adapter added to one table and not the other would never start
+		 * new adapter added to one table and not the other would never start
 		 * its grace and would refuse every cached page on day one.
 		 */
 		public function test_adapter_options_match_the_grace_stamp_list(): void {
@@ -310,6 +315,110 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$other,
 				\ReportedIP_Hive_Form_Adapters::message( \ReportedIP_Hive_Form_Proof::ABSENT ),
 				'a missing anchor and a tripped decoy must be indistinguishable to the sender'
+			);
+		}
+
+		/**
+		 * Ultimate Member renders its own markup and validates on its own
+		 * hooks, so the names are pinned. `um_after_form_fields` is the only
+		 * render hook inside the form element of all three public templates,
+		 * and `um_before_form` fires outside it.
+		 */
+		public function test_the_ultimate_member_hooks_are_the_ones_inside_the_form(): void {
+			$source = $this->source();
+			$self   = '$this';
+
+			$this->assertStringContainsString( "add_action( 'um_after_form_fields', array( {$self}, 'um_anchor' ) );", $source );
+			$this->assertStringContainsString( "add_action( 'um_submit_form_errors_hook', array( {$self}, 'um_validate' ), 20, 2 );", $source );
+			$this->assertStringContainsString( "add_action( 'um_reset_password_errors_hook', array( {$self}, 'um_reset_validate' ), 20 );", $source );
+			$this->assertStringNotContainsString( "add_action( 'um_before_form'", $source );
+		}
+
+		/**
+		 * The profile and the account form fire the same render hook. Judging
+		 * them would refuse a signed-in member for something they cannot fix.
+		 */
+		public function test_only_the_public_ultimate_member_forms_take_part(): void {
+			$this->assertSame(
+				array( 'login', 'register', 'password' ),
+				\ReportedIP_Hive_Form_Adapters::UM_MODES
+			);
+
+			$source = $this->source();
+
+			$this->assertStringNotContainsString( "'profile'", $source );
+			$this->assertStringNotContainsString( "'account'", $source );
+		}
+
+		/**
+		 * A form set up to sign people in by e-mail carries no `user_login` at
+		 * all, so the message has to follow the fields that are actually there.
+		 *
+		 * @dataProvider provide_um_fields
+		 *
+		 * @param array<string,mixed> $data     Submitted keys.
+		 * @param string              $target   Target from the guard.
+		 * @param string              $expected Field the error is hung on.
+		 */
+		public function test_the_refusal_follows_the_fields_the_form_has( array $data, string $target, string $expected ): void {
+			$this->assertSame( $expected, \ReportedIP_Hive_Form_Adapters::um_field( $data, $target ) );
+		}
+
+		/**
+		 * @return array<string, array{0:array<string,mixed>, 1:string, 2:string}>
+		 */
+		public static function provide_um_fields(): array {
+			return array(
+				'username form, name denial'  => array( array( 'user_login' => 'root', 'user_email' => 'a@b.de' ), 'login', 'user_login' ),
+				'username form, mail denial'  => array( array( 'user_login' => 'root', 'user_email' => 'a@b.de' ), 'email', 'user_email' ),
+				'email as username'           => array( array( 'user_email' => 'a@b.de' ), 'login', 'user_email' ),
+				'legacy username key'         => array( array( 'username' => 'root' ), 'generic', 'username' ),
+				'nothing recognisable'        => array( array( 'first_name' => 'x' ), 'generic', 'user_login' ),
+				'not an array'                => array( array(), 'email', 'user_login' ),
+			);
+		}
+
+		/**
+		 * Ultimate Member calls `wp_insert_user()` itself, so the registration
+		 * pipeline has to be invoked here or the sign-up is only caught by the
+		 * safety net, with the core wording and after every one of the
+		 * plugin's own checks.
+		 */
+		public function test_a_sign_up_runs_the_registration_pipeline(): void {
+			$source = $this->source();
+
+			$this->assertStringContainsString( 'ReportedIP_Hive_Registration_Guard::get_instance()->validate(', $source );
+			$this->assertStringContainsString( "ReportedIP_Hive_Registration_Guard::error_target(", $source );
+		}
+
+		/**
+		 * The pipeline already looks the address up in the community network,
+		 * so the sign-up path takes the proof half on its own. One lookup per
+		 * submission, not two.
+		 */
+		public function test_a_sign_up_does_not_spend_the_community_lookup_twice(): void {
+			$source = $this->source();
+			$self   = '$this';
+
+			$this->assertSame(
+				1,
+				substr_count( $source, 'ReportedIP_Hive_Reputation_Gate::get_instance()->check(' ),
+				'the address is looked up in exactly one place'
+			);
+			$this->assertStringContainsString( "{$self}->proof_refusal( 'ultimate_member' )", $source );
+		}
+
+		/**
+		 * The reset form is what somebody reaches for once they are already
+		 * locked out, so a page served from a cache filled before the switch
+		 * must not close that door.
+		 */
+		public function test_the_password_reset_never_refuses_a_missing_anchor(): void {
+			$self = '$this';
+
+			$this->assertStringContainsString(
+				"{$self}->judge( 'ultimate_member', false )",
+				$this->source()
 			);
 		}
 	}
