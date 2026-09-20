@@ -437,7 +437,8 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
-	 * Network-wide user deletion; the embedded per-site `deleted_user` is silenced.
+	 * Network-wide user deletion; the embedded per-site `deleted_user` and the
+	 * `remove_user_from_blog` core fires for every site are silenced.
 	 *
 	 * @param int          $user_id Deleted user id.
 	 * @param WP_User|null $user    Deleted user (WP 5.5+).
@@ -447,6 +448,7 @@ class ReportedIP_Hive_Audit_Logger {
 	public function on_network_user_deleted( $user_id, $user = null ) {
 		self::load_connectors();
 		ReportedIP_Hive_Audit_Connector::suppress( 'deleted_user' );
+		ReportedIP_Hive_Audit_Connector::suppress( 'remove_user_from_blog' );
 		$this->record_actor_event( 'user', 'deleted', array( 'network' => 1 ), self::user_object( $user, (int) $user_id ), 0 );
 	}
 

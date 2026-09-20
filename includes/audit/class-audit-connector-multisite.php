@@ -148,6 +148,9 @@ class ReportedIP_Hive_Audit_Connector_Multisite extends ReportedIP_Hive_Audit_Co
 	 * @since  2.1.62
 	 */
 	public function on_user_removed( $user_id, $blog_id, $reassign = 0 ) {
+		if ( self::suppressed( 'remove_user_from_blog' ) ) {
+			return;
+		}
 		$user = get_userdata( (int) $user_id );
 		$this->log(
 			'site_user',
