@@ -20,6 +20,16 @@ All changes to ReportedIP Hive are documented here.
   `blocked_user_denied`, `blocked_by_tor_exit`, `hide_login_block` and
   `infrastructure_spared` were missing as well.
 
+### New
+
+- **The event-type filter can be searched, and a whole group can be picked.**
+  A box above the list narrows it by label, by slug and by group name, so
+  "firewall" leaves the firewall entries and "form" finds the form events
+  wherever they sit. Each group also has an entry of its own that selects
+  everything in it at once, which the server turns into one query. The box
+  needs no library and stays out of sight when the browser runs no JavaScript,
+  the select then works as before.
+
 ### Changed
 
 - **One registry for every event type.** `ReportedIP_Hive_Event_Taxonomy` now

@@ -806,6 +806,53 @@ class ReportedIP_Hive_Event_Taxonomy {
 	}
 
 	/**
+	 * Prefix that marks a filter value as a whole group.
+	 *
+	 * @var string
+	 */
+	public const GROUP_PREFIX = 'group:';
+
+	/**
+	 * Turn one filter value into the event types it selects.
+	 *
+	 * A plain slug selects itself, `group:<key>` selects every option of that
+	 * group. The list is never empty: an unknown value comes back as itself, so
+	 * the query stays well formed and simply finds nothing.
+	 *
+	 * @param string $value Raw filter value from the request.
+	 * @return string[] Event types for the SQL `IN()` clause.
+	 * @since  2.1.62
+	 */
+	public static function expand_filter_value( $value ) {
+		$value = (string) $value;
+
+		if ( 0 !== strpos( $value, self::GROUP_PREFIX ) ) {
+			return array( $value );
+		}
+
+		$group   = substr( $value, strlen( self::GROUP_PREFIX ) );
+		$options = self::filter_options();
+
+		if ( empty( $options[ $group ] ) ) {
+			return array( $value );
+		}
+
+		return array_keys( $options[ $group ] );
+	}
+
+	/**
+	 * Label of the option that selects a whole group.
+	 *
+	 * @param string $group_label Translated group label.
+	 * @return string Option label.
+	 * @since  2.1.62
+	 */
+	public static function group_option_label( $group_label ) {
+		/* translators: %s: filter group label, for example "Firewall". */
+		return sprintf( __( 'All %s events', 'reportedip-hive' ), $group_label );
+	}
+
+	/**
 	 * Strip the generated threshold suffix.
 	 *
 	 * @param string $event_type Raw event type.

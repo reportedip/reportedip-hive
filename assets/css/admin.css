@@ -777,6 +777,12 @@ code.ip-address {
     letter-spacing: 0.3px;
 }
 
+/* Type-ahead above the event-type select */
+.rip-filter-bar .rip-event-search {
+    width: 100%;
+    font-size: var(--rip-text-xs);
+}
+
 /* One tone per threat family, keys match ReportedIP_Hive_Event_Taxonomy */
 .event-type-badge.rip-event--login {
     background: var(--rip-danger-bg);

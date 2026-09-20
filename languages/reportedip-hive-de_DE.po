@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-09-20T09:59:23+00:00\n"
+"PO-Revision-Date: 2026-09-20T10:59:11+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
@@ -835,7 +835,7 @@ msgid "IP Address"
 msgstr "IP-Adresse"
 
 #: admin/class-admin-settings.php:1078
-#: reportedip-hive.php:1134
+#: reportedip-hive.php:1144
 msgid "Attacks"
 msgstr "Angriffe"
 
@@ -869,7 +869,7 @@ msgstr "vor %s"
 #: admin/class-user-admin.php:383
 #: admin/class-user-admin.php:621
 #: admin/class-user-admin.php:645
-#: reportedip-hive.php:992
+#: reportedip-hive.php:1002
 msgid "Blocked"
 msgstr "Gesperrt"
 
@@ -1226,7 +1226,7 @@ msgstr "Wann"
 #: admin/class-audit-log-table.php:65
 #: includes/class-privacy.php:222
 #: includes/class-security-monitor.php:1443
-#: reportedip-hive.php:1005
+#: reportedip-hive.php:1015
 msgid "Event"
 msgstr "Ereignis"
 
@@ -1240,8 +1240,8 @@ msgstr "IP"
 #: admin/class-admin-settings.php:2131
 #: admin/class-admin-settings.php:4701
 #: admin/class-logs-table.php:54
-#: admin/class-logs-table.php:427
-#: reportedip-hive.php:1006
+#: admin/class-logs-table.php:434
+#: reportedip-hive.php:1016
 msgid "Severity"
 msgstr "Schweregrad"
 
@@ -1527,7 +1527,7 @@ msgstr "7 Tage"
 #: admin/class-admin-settings.php:3733
 #: admin/class-admin-settings.php:4236
 #: admin/class-admin-settings.php:4262
-#: admin/class-logs-table.php:361
+#: admin/class-logs-table.php:363
 msgid "30 Days"
 msgstr "30 Tage"
 
@@ -1568,7 +1568,7 @@ msgid "Severity Breakdown"
 msgstr "Schweregrad-Verteilung"
 
 #: admin/class-admin-settings.php:3794
-#: reportedip-hive.php:1003
+#: reportedip-hive.php:1013
 msgid "Recent Activity"
 msgstr "Letzte Aktivität"
 
@@ -1582,27 +1582,27 @@ msgstr "Keine kritischen Ereignisse in den letzten 24 Stunden. Ihre Website ist 
 
 #: admin/class-admin-settings.php:3813
 #: admin/class-admin-settings.php:4679
-#: admin/class-logs-table.php:433
+#: admin/class-logs-table.php:440
 #: admin/class-protection-page.php:806
-#: reportedip-hive.php:1135
+#: reportedip-hive.php:1145
 msgid "Critical"
 msgstr "Kritisch"
 
 #: admin/class-admin-settings.php:3814
-#: admin/class-logs-table.php:432
-#: reportedip-hive.php:1136
+#: admin/class-logs-table.php:439
+#: reportedip-hive.php:1146
 msgid "High"
 msgstr "Hoch"
 
 #: admin/class-admin-settings.php:3815
-#: admin/class-logs-table.php:431
-#: reportedip-hive.php:1137
+#: admin/class-logs-table.php:438
+#: reportedip-hive.php:1147
 msgid "Medium"
 msgstr "Mittel"
 
 #: admin/class-admin-settings.php:3816
-#: admin/class-logs-table.php:430
-#: reportedip-hive.php:1138
+#: admin/class-logs-table.php:437
+#: reportedip-hive.php:1148
 msgid "Low"
 msgstr "Niedrig"
 
@@ -1676,7 +1676,7 @@ msgid "Advanced"
 msgstr "Erweitert"
 
 #: admin/class-admin-settings.php:4161
-#: reportedip-hive.php:1772
+#: reportedip-hive.php:1782
 msgid "Retrying..."
 msgstr "Wird wiederholt..."
 
@@ -1720,33 +1720,33 @@ msgstr "IP-Adresse oder CIDR"
 
 #: admin/class-admin-settings.php:4233
 #: admin/class-admin-settings.php:4259
-#: admin/class-logs-table.php:358
+#: admin/class-logs-table.php:360
 msgid "24 Hours"
 msgstr "24 Stunden"
 
 #: admin/class-admin-settings.php:4234
 #: admin/class-admin-settings.php:4260
-#: admin/class-logs-table.php:359
+#: admin/class-logs-table.php:361
 msgid "3 Days"
 msgstr "3 Tage"
 
 #: admin/class-admin-settings.php:4235
 #: admin/class-admin-settings.php:4261
-#: admin/class-logs-table.php:360
+#: admin/class-logs-table.php:362
 msgid "1 Week"
 msgstr "1 Woche"
 
 #: admin/class-admin-settings.php:4237
 #: admin/class-admin-settings.php:4263
 #: admin/class-blocked-ips-table.php:126
-#: admin/class-logs-table.php:362
+#: admin/class-logs-table.php:364
 msgid "Permanent"
 msgstr "Dauerhaft"
 
 #: admin/class-admin-settings.php:4240
 #: admin/class-logs-table.php:78
 #: admin/class-logs-table.php:145
-#: reportedip-hive.php:1015
+#: reportedip-hive.php:1025
 msgid "Block IP"
 msgstr "IP sperren"
 
@@ -2186,7 +2186,7 @@ msgid "Your IP Address"
 msgstr "Ihre IP-Adresse"
 
 #: admin/class-admin-settings.php:5049
-#: reportedip-hive.php:991
+#: reportedip-hive.php:1001
 msgid "Whitelisted"
 msgstr "Auf der Whitelist"
 
@@ -3342,7 +3342,7 @@ msgstr "Versuche"
 #: admin/class-two-factor-admin.php:554
 #: includes/class-two-factor-onboarding.php:355
 #: includes/class-two-factor.php:2130
-#: reportedip-hive.php:953
+#: reportedip-hive.php:963
 msgid "Error"
 msgstr "Fehler"
 
@@ -3413,7 +3413,7 @@ msgstr "%d Warteschlangeneinträge gelöscht."
 
 #: admin/class-api-queue-table.php:427
 #: admin/class-blocked-ips-table.php:274
-#: admin/class-logs-table.php:399
+#: admin/class-logs-table.php:401
 #: admin/class-whitelist-table.php:256
 msgid "Search"
 msgstr "Suchen"
@@ -3506,7 +3506,7 @@ msgstr "Audit-Einträge"
 #: includes/class-two-factor-notifications.php:152
 #: includes/class-two-factor-notifications.php:367
 #: includes/class-two-factor-notifications.php:381
-#: reportedip-hive.php:1004
+#: reportedip-hive.php:1014
 msgid "Time"
 msgstr "Zeit"
 
@@ -3562,7 +3562,7 @@ msgid "Session"
 msgstr "Sitzung"
 
 #: admin/class-audit-log-table.php:187
-#: admin/class-logs-table.php:408
+#: admin/class-logs-table.php:410
 msgid "Event type"
 msgstr "Ereignistyp"
 
@@ -3855,7 +3855,7 @@ msgstr "Ereignistyp"
 
 #: admin/class-logs-table.php:79
 #: admin/class-logs-table.php:150
-#: reportedip-hive.php:1016
+#: reportedip-hive.php:1026
 msgid "Whitelist IP"
 msgstr "IP auf die Whitelist setzen"
 
@@ -3871,43 +3871,47 @@ msgstr "Härtung"
 msgid "Allow this rule on this path (WAF exception)"
 msgstr "Diese Regel auf diesem Pfad erlauben (WAF-Ausnahme)"
 
-#: admin/class-logs-table.php:335
+#: admin/class-logs-table.php:337
 msgid "Blocked from bulk action"
 msgstr "Per Sammelaktion gesperrt"
 
-#: admin/class-logs-table.php:337
+#: admin/class-logs-table.php:339
 msgid "Added from bulk action"
 msgstr "Per Sammelaktion hinzugefügt"
 
-#: admin/class-logs-table.php:356
+#: admin/class-logs-table.php:358
 msgid "Block IP row action blocks for"
 msgstr "Die Zeilenaktion „IP sperren“ sperrt für"
 
-#: admin/class-logs-table.php:403
+#: admin/class-logs-table.php:405
 msgid "IP address or detail text"
 msgstr "IP-Adresse oder Detailtext"
 
-#: admin/class-logs-table.php:410
+#: admin/class-logs-table.php:412
+msgid "Search event types and groups"
+msgstr "Ereignistypen und Gruppen durchsuchen"
+
+#: admin/class-logs-table.php:415
 msgid "All Event Types"
 msgstr "Alle Ereignistypen"
 
-#: admin/class-logs-table.php:429
+#: admin/class-logs-table.php:436
 msgid "All Severities"
 msgstr "Alle Schweregrade"
 
-#: admin/class-logs-table.php:439
+#: admin/class-logs-table.php:446
 msgid "From"
 msgstr "Von"
 
-#: admin/class-logs-table.php:444
+#: admin/class-logs-table.php:451
 msgid "To"
 msgstr "Bis"
 
-#: admin/class-logs-table.php:450
+#: admin/class-logs-table.php:457
 msgid "During Hardening only"
 msgstr "Nur während der Härtung"
 
-#: admin/class-logs-table.php:460
+#: admin/class-logs-table.php:467
 msgid "No log entries found."
 msgstr "Keine Protokolleinträge gefunden."
 
@@ -6765,8 +6769,14 @@ msgstr "Betrieb: API und Warteschlange"
 msgid "Operations: System"
 msgstr "Betrieb: System"
 
+#. translators: %s: filter group label, for example "Firewall".
+#: includes/class-event-taxonomy.php:852
+#, php-format
+msgid "All %s events"
+msgstr "Alle Ereignisse aus %s"
+
 #. translators: %s: event type label.
-#: includes/class-event-taxonomy.php:835
+#: includes/class-event-taxonomy.php:882
 #, php-format
 msgid "%s (threshold reached)"
 msgstr "%s (Schwelle erreicht)"
@@ -9761,7 +9771,7 @@ msgid "Back to My Account"
 msgstr "Zurück zu Mein Konto"
 
 #: includes/class-two-factor-onboarding.php:427
-#: reportedip-hive.php:951
+#: reportedip-hive.php:961
 msgid "Sending..."
 msgstr "Wird gesendet..."
 
@@ -9786,7 +9796,7 @@ msgid "Your browser does not support passkeys. Please choose another method."
 msgstr "Ihr Browser unterstützt keine Passkeys. Bitte wählen Sie eine andere Methode."
 
 #: includes/class-two-factor-onboarding.php:434
-#: reportedip-hive.php:956
+#: reportedip-hive.php:966
 msgid "Network error. Please try again."
 msgstr "Netzwerkfehler. Bitte versuchen Sie es erneut."
 
@@ -10644,395 +10654,395 @@ msgstr "Zu viele SMS-Sendungen an diesen Empfänger. Bitte warten Sie, bevor Sie
 msgid "SMS relay failed (%s)."
 msgstr "SMS-Relay fehlgeschlagen (%s)."
 
-#: reportedip-hive.php:930
+#: reportedip-hive.php:940
 msgid "Testing connection..."
 msgstr "Verbindung wird getestet..."
 
-#: reportedip-hive.php:931
+#: reportedip-hive.php:941
 msgid "Connection successful!"
 msgstr "Verbindung erfolgreich!"
 
-#: reportedip-hive.php:932
+#: reportedip-hive.php:942
 msgid "Connection failed!"
 msgstr "Verbindung fehlgeschlagen!"
 
-#: reportedip-hive.php:933
+#: reportedip-hive.php:943
 msgid "Are you sure you want to unblock this IP?"
 msgstr "Möchten Sie diese IP wirklich entsperren?"
 
-#: reportedip-hive.php:934
+#: reportedip-hive.php:944
 msgid "Are you sure you want to whitelist this IP?"
 msgstr "Möchten Sie diese IP wirklich auf die Whitelist setzen?"
 
-#: reportedip-hive.php:935
+#: reportedip-hive.php:945
 msgid "Are you sure you want to reset all settings to defaults?"
 msgstr "Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen?"
 
-#: reportedip-hive.php:936
+#: reportedip-hive.php:946
 msgid "Reset the API statistics counter? This clears usage history only."
 msgstr "Den API-Statistikzähler zurücksetzen? Dies löscht nur die Nutzungshistorie."
 
-#: reportedip-hive.php:937
+#: reportedip-hive.php:947
 msgid "WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!"
 msgstr "WARNUNG: Dadurch werden ALLE Plugin-Daten einschließlich Protokolle, gesperrter IPs und Whitelist-Einträge gelöscht. Dies kann nicht rückgängig gemacht werden!"
 
-#: reportedip-hive.php:938
+#: reportedip-hive.php:948
 msgid "Are you absolutely sure?"
 msgstr "Sind Sie absolut sicher?"
 
-#: reportedip-hive.php:939
+#: reportedip-hive.php:949
 msgid "Remove this WAF exception?"
 msgstr "Diese WAF-Ausnahme entfernen?"
 
 #. translators: %1$s = WAF rule id, %2$s = request path.
-#: reportedip-hive.php:941
+#: reportedip-hive.php:951
 #, php-format
 msgid "Allow rule \"%1$s\" on path \"%2$s\"? The WAF stays active everywhere else."
 msgstr "Regel \"%1$s\" auf Pfad \"%2$s\" erlauben? Die WAF bleibt überall sonst aktiv."
 
-#: reportedip-hive.php:942
+#: reportedip-hive.php:952
 msgid "Are you sure you want to remove this IP from the whitelist?"
 msgstr "Möchten Sie diese IP wirklich von der Whitelist entfernen?"
 
-#: reportedip-hive.php:943
+#: reportedip-hive.php:953
 msgid "Are you sure you want to clean up old logs? This action cannot be undone."
 msgstr "Möchten Sie alte Protokolle wirklich bereinigen? Diese Aktion kann nicht rückgängig gemacht werden."
 
-#: reportedip-hive.php:944
+#: reportedip-hive.php:954
 msgid "Are you sure you want to anonymize old data? This will remove personal information from logs."
 msgstr "Möchten Sie alte Daten wirklich anonymisieren? Dabei werden personenbezogene Informationen aus den Protokollen entfernt."
 
-#: reportedip-hive.php:945
+#: reportedip-hive.php:955
 msgid "Enter reason for whitelisting (optional):"
 msgstr "Grund für das Setzen auf die Whitelist eingeben (optional):"
 
-#: reportedip-hive.php:946
+#: reportedip-hive.php:956
 msgid "Manually whitelisted from blocked list"
 msgstr "Manuell aus der Sperrliste auf die Whitelist gesetzt"
 
-#: reportedip-hive.php:947
+#: reportedip-hive.php:957
 msgid "Enter reason for blocking this IP:"
 msgstr "Grund für das Sperren dieser IP eingeben:"
 
-#: reportedip-hive.php:948
+#: reportedip-hive.php:958
 msgid "Blocked from security logs"
 msgstr "Aus den Sicherheitsprotokollen gesperrt"
 
-#: reportedip-hive.php:949
+#: reportedip-hive.php:959
 msgid "Export logs from how many days? (default: 30)"
 msgstr "Protokolle aus wie vielen Tagen exportieren? (Standard: 30)"
 
-#: reportedip-hive.php:950
+#: reportedip-hive.php:960
 msgid "Request failed. Check server logs."
 msgstr "Anfrage fehlgeschlagen. Prüfen Sie die Server-Logs."
 
-#: reportedip-hive.php:952
+#: reportedip-hive.php:962
 msgid "Test email failed."
 msgstr "Test-E-Mail fehlgeschlagen."
 
-#: reportedip-hive.php:954
+#: reportedip-hive.php:964
 msgid "Request failed."
 msgstr "Anfrage fehlgeschlagen."
 
-#: reportedip-hive.php:955
+#: reportedip-hive.php:965
 msgid "Network error occurred"
 msgstr "Netzwerkfehler aufgetreten"
 
-#: reportedip-hive.php:957
+#: reportedip-hive.php:967
 msgid "API statistics reset."
 msgstr "API-Statistiken zurückgesetzt."
 
-#: reportedip-hive.php:958
+#: reportedip-hive.php:968
 msgid "Failed to reset API statistics."
 msgstr "API-Statistiken konnten nicht zurückgesetzt werden."
 
-#: reportedip-hive.php:959
+#: reportedip-hive.php:969
 msgid "Cache cleared."
 msgstr "Cache geleert."
 
-#: reportedip-hive.php:960
+#: reportedip-hive.php:970
 msgid "Failed to clear cache."
 msgstr "Cache konnte nicht geleert werden."
 
-#: reportedip-hive.php:961
+#: reportedip-hive.php:971
 msgid "Expired entries cleaned."
 msgstr "Abgelaufene Einträge bereinigt."
 
-#: reportedip-hive.php:962
+#: reportedip-hive.php:972
 msgid "Failed to clean expired entries."
 msgstr "Abgelaufene Einträge konnten nicht bereinigt werden."
 
-#: reportedip-hive.php:963
+#: reportedip-hive.php:973
 msgid "Mode changed successfully"
 msgstr "Modus erfolgreich geändert"
 
-#: reportedip-hive.php:964
+#: reportedip-hive.php:974
 msgid "Failed to change mode"
 msgstr "Modus konnte nicht geändert werden"
 
-#: reportedip-hive.php:965
+#: reportedip-hive.php:975
 msgid "IP address added to whitelist successfully"
 msgstr "IP-Adresse erfolgreich zur Whitelist hinzugefügt"
 
-#: reportedip-hive.php:966
+#: reportedip-hive.php:976
 msgid "Failed to add IP to whitelist"
 msgstr "IP konnte nicht zur Whitelist hinzugefügt werden"
 
-#: reportedip-hive.php:967
+#: reportedip-hive.php:977
 msgid "IP address removed from whitelist"
 msgstr "IP-Adresse von der Whitelist entfernt"
 
-#: reportedip-hive.php:968
+#: reportedip-hive.php:978
 msgid "Failed to remove IP from whitelist"
 msgstr "IP konnte nicht von der Whitelist entfernt werden"
 
-#: reportedip-hive.php:969
+#: reportedip-hive.php:979
 msgid "WAF exception saved"
 msgstr "WAF-Ausnahme gespeichert"
 
-#: reportedip-hive.php:970
+#: reportedip-hive.php:980
 msgid "Failed to save the exception"
 msgstr "Die Ausnahme konnte nicht gespeichert werden"
 
-#: reportedip-hive.php:971
+#: reportedip-hive.php:981
 msgid "WAF exception removed"
 msgstr "WAF-Ausnahme entfernt"
 
-#: reportedip-hive.php:972
+#: reportedip-hive.php:982
 msgid "Failed to remove the exception"
 msgstr "Die Ausnahme konnte nicht entfernt werden"
 
-#: reportedip-hive.php:973
+#: reportedip-hive.php:983
 msgid "WAF exception added for this rule"
 msgstr "WAF-Ausnahme für diese Regel hinzugefügt"
 
-#: reportedip-hive.php:974
+#: reportedip-hive.php:984
 msgid "Failed to add the exception"
 msgstr "Die Ausnahme konnte nicht hinzugefügt werden"
 
-#: reportedip-hive.php:975
+#: reportedip-hive.php:985
 msgid "IP address blocked successfully"
 msgstr "IP-Adresse erfolgreich gesperrt"
 
-#: reportedip-hive.php:976
+#: reportedip-hive.php:986
 msgid "Failed to block IP address"
 msgstr "Die IP-Adresse konnte nicht gesperrt werden"
 
-#: reportedip-hive.php:977
+#: reportedip-hive.php:987
 msgid "IP address unblocked successfully"
 msgstr "IP-Adresse erfolgreich entsperrt"
 
-#: reportedip-hive.php:978
+#: reportedip-hive.php:988
 msgid "Failed to unblock IP address"
 msgstr "Die Sperre der IP-Adresse konnte nicht aufgehoben werden"
 
-#: reportedip-hive.php:979
+#: reportedip-hive.php:989
 msgid "IP address whitelisted successfully"
 msgstr "IP-Adresse erfolgreich auf die Whitelist gesetzt"
 
-#: reportedip-hive.php:980
+#: reportedip-hive.php:990
 msgid "Failed to whitelist IP address"
 msgstr "Die IP-Adresse konnte nicht auf die Whitelist gesetzt werden"
 
-#: reportedip-hive.php:981
+#: reportedip-hive.php:991
 msgid "No IP address found"
 msgstr "Keine IP-Adresse gefunden"
 
-#: reportedip-hive.php:982
+#: reportedip-hive.php:992
 msgid "Failed to copy IP address"
 msgstr "IP-Adresse konnte nicht kopiert werden"
 
-#: reportedip-hive.php:983
+#: reportedip-hive.php:993
 msgid "Failed to cleanup logs"
 msgstr "Protokolle konnten nicht bereinigt werden"
 
-#: reportedip-hive.php:984
+#: reportedip-hive.php:994
 msgid "Failed to anonymize data"
 msgstr "Daten konnten nicht anonymisiert werden"
 
-#: reportedip-hive.php:985
+#: reportedip-hive.php:995
 msgid "Logs exported successfully"
 msgstr "Protokolle erfolgreich exportiert"
 
-#: reportedip-hive.php:986
+#: reportedip-hive.php:996
 msgid "Failed to export logs"
 msgstr "Protokolle konnten nicht exportiert werden"
 
-#: reportedip-hive.php:987
+#: reportedip-hive.php:997
 msgid "Import completed."
 msgstr "Import abgeschlossen."
 
-#: reportedip-hive.php:988
+#: reportedip-hive.php:998
 msgid "Import failed."
 msgstr "Import fehlgeschlagen."
 
-#: reportedip-hive.php:989
+#: reportedip-hive.php:999
 msgid "Please enter an IP address"
 msgstr "Bitte geben Sie eine IP-Adresse ein"
 
-#: reportedip-hive.php:990
+#: reportedip-hive.php:1000
 msgid "Failed to lookup IP address"
 msgstr "IP-Adresse konnte nicht abgefragt werden"
 
-#: reportedip-hive.php:993
+#: reportedip-hive.php:1003
 msgid "Clean"
 msgstr "Unauffällig"
 
-#: reportedip-hive.php:994
+#: reportedip-hive.php:1004
 msgid "IP Information:"
 msgstr "IP-Informationen:"
 
-#: reportedip-hive.php:995
+#: reportedip-hive.php:1005
 msgid "Valid:"
 msgstr "Gültig:"
 
-#: reportedip-hive.php:996
+#: reportedip-hive.php:1006
 msgid "Private:"
 msgstr "Privat:"
 
-#: reportedip-hive.php:997
+#: reportedip-hive.php:1007
 msgid "Version:"
 msgstr "Version:"
 
-#: reportedip-hive.php:998
+#: reportedip-hive.php:1008
 msgid "Yes"
 msgstr "Ja"
 
-#: reportedip-hive.php:999
+#: reportedip-hive.php:1009
 msgid "No"
 msgstr "Nein"
 
-#: reportedip-hive.php:1000
+#: reportedip-hive.php:1010
 msgid "Country:"
 msgstr "Land:"
 
-#: reportedip-hive.php:1001
+#: reportedip-hive.php:1011
 msgid "Abuse Confidence:"
 msgstr "Missbrauchs-Konfidenz:"
 
-#: reportedip-hive.php:1002
+#: reportedip-hive.php:1012
 msgid "Total Reports:"
 msgstr "Meldungen gesamt:"
 
-#: reportedip-hive.php:1007
+#: reportedip-hive.php:1017
 msgid "ISP:"
 msgstr "ISP:"
 
-#: reportedip-hive.php:1008
+#: reportedip-hive.php:1018
 msgid "ASN:"
 msgstr "ASN:"
 
-#: reportedip-hive.php:1009
+#: reportedip-hive.php:1019
 msgid "Usage Type:"
 msgstr "Nutzungsart:"
 
-#: reportedip-hive.php:1010
+#: reportedip-hive.php:1020
 #: templates/two-factor-onboarding.php:97
 msgid "Domain:"
 msgstr "Domain:"
 
-#: reportedip-hive.php:1011
+#: reportedip-hive.php:1021
 msgid "Distinct Reporters:"
 msgstr "Verschiedene Melder:"
 
-#: reportedip-hive.php:1012
+#: reportedip-hive.php:1022
 msgid "Last Reported:"
 msgstr "Zuletzt gemeldet:"
 
-#: reportedip-hive.php:1013
+#: reportedip-hive.php:1023
 msgid "Tor exit node"
 msgstr "Tor-Exit-Node"
 
-#: reportedip-hive.php:1014
+#: reportedip-hive.php:1024
 msgid "Community-verified infrastructure"
 msgstr "Community-verifizierte Infrastruktur"
 
-#: reportedip-hive.php:1017
+#: reportedip-hive.php:1027
 msgid "View community report"
 msgstr "Community-Bericht ansehen"
 
-#: reportedip-hive.php:1018
+#: reportedip-hive.php:1028
 msgid "This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?"
 msgstr "Das ist Ihre eigene aktuelle IP-Adresse. Eine Sperrung kann Sie aus wp-admin aussperren. Fortfahren?"
 
-#: reportedip-hive.php:1133
+#: reportedip-hive.php:1143
 msgid "Events"
 msgstr "Ereignisse"
 
-#: reportedip-hive.php:1294
+#: reportedip-hive.php:1304
 msgid "Your IP address has been blocked due to suspicious activity."
 msgstr "Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1349
+#: reportedip-hive.php:1359
 msgid "Access denied due to IP reputation."
 msgstr "Zugriff aufgrund der IP-Reputation verweigert."
 
-#: reportedip-hive.php:1385
+#: reportedip-hive.php:1395
 msgid "Access denied: connections from Tor exit nodes are not allowed on this site."
 msgstr "Zugriff verweigert: Verbindungen von Tor-Exit-Nodes sind auf dieser Website nicht erlaubt."
 
-#: reportedip-hive.php:1675
-#: reportedip-hive.php:2037
+#: reportedip-hive.php:1685
+#: reportedip-hive.php:2047
 msgid "Access denied. Your IP address has been blocked due to suspicious activity."
 msgstr "Zugriff verweigert. Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1744
-#: reportedip-hive.php:1818
-#: reportedip-hive.php:1842
+#: reportedip-hive.php:1754
+#: reportedip-hive.php:1828
+#: reportedip-hive.php:1852
 msgid "ReportedIP Hive:"
 msgstr "ReportedIP Hive:"
 
 #. translators: %1$d: number of failed reports, %2$s: link to queue page
-#: reportedip-hive.php:1747
+#: reportedip-hive.php:1757
 #, php-format
 msgid "%1$d API reports failed. %2$s"
 msgstr "%1$d API-Meldungen fehlgeschlagen. %2$s"
 
-#: reportedip-hive.php:1749
+#: reportedip-hive.php:1759
 msgid "View queue"
 msgstr "Warteschlange anzeigen"
 
-#: reportedip-hive.php:1760
-#: reportedip-hive.php:1781
+#: reportedip-hive.php:1770
+#: reportedip-hive.php:1791
 msgid "Retry all"
 msgstr "Alle erneut versuchen"
 
-#: reportedip-hive.php:1780
+#: reportedip-hive.php:1790
 msgid "Retry failed."
 msgstr "Erneuter Versuch fehlgeschlagen."
 
-#: reportedip-hive.php:1798
+#: reportedip-hive.php:1808
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr "ReportedIP Hive - Warteschlange kritisch:"
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
-#: reportedip-hive.php:1801
+#: reportedip-hive.php:1811
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
 msgstr "%1$d Meldungen warten auf Verarbeitung. Ihr API-Kontingent ist möglicherweise nicht ausreichend. %2$s oder %3$s."
 
-#: reportedip-hive.php:1803
-#: reportedip-hive.php:1823
+#: reportedip-hive.php:1813
+#: reportedip-hive.php:1833
 msgid "Upgrade API tier"
 msgstr "API-Stufe upgraden"
 
-#: reportedip-hive.php:1804
+#: reportedip-hive.php:1814
 msgid "Manage queue"
 msgstr "Warteschlange verwalten"
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page
-#: reportedip-hive.php:1821
+#: reportedip-hive.php:1831
 #, php-format
 msgid "%1$d reports pending processing. %2$s for higher limits."
 msgstr "%1$d Meldungen warten auf Verarbeitung. %2$s für höhere Limits."
 
 #. translators: %s: link to settings page
-#: reportedip-hive.php:1845
+#: reportedip-hive.php:1855
 #, php-format
 msgid "No API key configured. %s"
 msgstr "Kein API-Schlüssel konfiguriert. %s"
 
-#: reportedip-hive.php:1846
+#: reportedip-hive.php:1856
 msgid "Configure now"
 msgstr "Jetzt konfigurieren"
 

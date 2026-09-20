@@ -194,5 +194,51 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertContains( 'comment_spam_threshold_exceeded', $offered );
 			$this->assertSame( $offered, array_values( array_unique( $offered ) ) );
 		}
+
+		/**
+		 * A plain slug selects itself, `group:<key>` selects the whole group.
+		 * The list is never empty, an unknown value comes back as itself so the
+		 * IN() clause stays well formed and simply finds nothing.
+		 */
+		public function test_filter_values_expand_to_event_types() {
+			$this->assertSame(
+				array( 'form_proof_failed' ),
+				\ReportedIP_Hive_Event_Taxonomy::expand_filter_value( 'form_proof_failed' )
+			);
+
+			$forms = \ReportedIP_Hive_Event_Taxonomy::expand_filter_value( 'group:forms' );
+			$this->assertContains( 'form_proof_failed', $forms );
+			$this->assertContains( 'form_spam_threshold_exceeded', $forms );
+			$this->assertContains( 'comment_honeypot', $forms );
+			$this->assertContains( 'comment_spam', $forms );
+			$this->assertNotContains( 'failed_login', $forms );
+
+			$this->assertSame(
+				array( 'group:nope' ),
+				\ReportedIP_Hive_Event_Taxonomy::expand_filter_value( 'group:nope' )
+			);
+			$this->assertSame(
+				array( '' ),
+				\ReportedIP_Hive_Event_Taxonomy::expand_filter_value( '' )
+			);
+		}
+
+		/**
+		 * Every group offered in the select must resolve to at least one type,
+		 * otherwise the option is a choice that can only come back empty.
+		 */
+		public function test_every_group_option_resolves() {
+			foreach ( array_keys( \ReportedIP_Hive_Event_Taxonomy::filter_options() ) as $group ) {
+				$types = \ReportedIP_Hive_Event_Taxonomy::expand_filter_value(
+					\ReportedIP_Hive_Event_Taxonomy::GROUP_PREFIX . $group
+				);
+				$this->assertNotEmpty( $types, "Group $group resolves to nothing" );
+				$this->assertNotSame(
+					array( \ReportedIP_Hive_Event_Taxonomy::GROUP_PREFIX . $group ),
+					$types,
+					"Group $group fell through to the unknown-value path"
+				);
+			}
+		}
 	}
 }

@@ -898,6 +898,16 @@ class ReportedIP_Hive {
 			);
 		}
 
+		if ( str_contains( (string) $hook, 'reportedip-hive-security' ) ) {
+			wp_enqueue_script(
+				'reportedip-hive-logs-filter',
+				REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/logs-filter.js',
+				array(),
+				REPORTEDIP_HIVE_VERSION,
+				true
+			);
+		}
+
 		if ( str_contains( (string) $hook, 'reportedip-hive-tools' ) || str_contains( (string) $hook, 'reportedip-hive-debug' ) ) {
 			wp_enqueue_script(
 				'reportedip-hive-settings-import-export',

@@ -214,8 +214,10 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 		$where = array( '1=1' );
 
 		if ( ! empty( $_REQUEST['event_type'] ) ) {
-			$event_type = sanitize_text_field( wp_unslash( $_REQUEST['event_type'] ) );
-			$where[]    = $wpdb->prepare( 'event_type = %s', $event_type );
+			$event_type   = sanitize_text_field( wp_unslash( $_REQUEST['event_type'] ) );
+			$types        = ReportedIP_Hive_Event_Taxonomy::expand_filter_value( $event_type );
+			$placeholders = implode( ',', array_fill( 0, count( $types ), '%s' ) );
+			$where[]      = $wpdb->prepare( "event_type IN ($placeholders)", $types ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Placeholder list built from a count, every value passed to prepare().
 		}
 
 		if ( ! empty( $_REQUEST['severity'] ) ) {
@@ -406,13 +408,18 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 		?>
 		<div class="rip-filter-bar__field">
 			<label class="rip-filter-bar__label" for="rip-log-event-type"><?php esc_html_e( 'Event type', 'reportedip-hive' ); ?></label>
+			<input type="search" id="rip-log-event-search" class="rip-input rip-event-search" autocomplete="off"
+				placeholder="<?php esc_attr_e( 'Search event types and groups', 'reportedip-hive' ); ?>"
+				aria-controls="rip-log-event-type" hidden />
 			<select name="event_type" id="rip-log-event-type" class="rip-select">
 				<option value=""><?php esc_html_e( 'All Event Types', 'reportedip-hive' ); ?></option>
 				<?php
 				$group_labels = ReportedIP_Hive_Event_Taxonomy::group_labels();
 				foreach ( ReportedIP_Hive_Event_Taxonomy::filter_options() as $group => $options ) :
+					$group_value = ReportedIP_Hive_Event_Taxonomy::GROUP_PREFIX . $group;
 					?>
 					<optgroup label="<?php echo esc_attr( $group_labels[ $group ] ); ?>">
+						<option value="<?php echo esc_attr( $group_value ); ?>" <?php selected( $event_type, $group_value ); ?>><?php echo esc_html( ReportedIP_Hive_Event_Taxonomy::group_option_label( $group_labels[ $group ] ) ); ?></option>
 						<?php foreach ( $options as $slug => $label ) : ?>
 							<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $event_type, $slug ); ?>><?php echo esc_html( $label ); ?></option>
 						<?php endforeach; ?>
