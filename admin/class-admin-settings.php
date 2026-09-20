@@ -2043,6 +2043,15 @@ class ReportedIP_Hive_Admin_Settings {
 
 		add_submenu_page(
 			'reportedip-hive-site',
+			__( 'Audit Trail (this site)', 'reportedip-hive' ),
+			__( 'Audit Trail', 'reportedip-hive' ),
+			'manage_options',
+			'reportedip-hive-site-audit',
+			array( $this, 'render_site_audit_page' )
+		);
+
+		add_submenu_page(
+			'reportedip-hive-site',
 			__( '2FA Site Settings', 'reportedip-hive' ),
 			__( '2FA Site Settings', 'reportedip-hive' ),
 			'manage_options',
@@ -2205,6 +2214,60 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 		</div>
 		<?php
+		$this->render_site_admin_footer();
+	}
+
+	/**
+	 * Site-Admin Audit Trail page: the rows of this site only.
+	 *
+	 * Same table, filters and export as the network view, scoped by
+	 * {@see ReportedIP_Hive_Audit_Log_Table::build_where()} to the current
+	 * blog. Network rows (plugin installs, site changes, super admin grants)
+	 * stay with the Network Admin.
+	 *
+	 * @return void
+	 * @since  2.1.62
+	 */
+	public function render_site_audit_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to view this page.', 'reportedip-hive' ) );
+		}
+
+		$this->render_site_admin_header(
+			__( 'Audit Trail', 'reportedip-hive' ),
+			__( 'Who changed what on this site, from which address and when, with the old and the new value', 'reportedip-hive' )
+		);
+		$this->render_site_readonly_banner();
+
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
+		echo '<div class="rip-content">';
+		if ( empty( $status['available'] ) ) {
+			self::render_tier_marker( $status, array( 'link' => false ) );
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The audit trail is part of the Business plan. Your Network Admin can enable it for the whole network.', 'reportedip-hive' ) . '</div>';
+			echo '</div>';
+			$this->render_site_admin_footer();
+			return;
+		}
+
+		if ( ! class_exists( 'ReportedIP_Hive_Audit_Log_Table' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-audit-log-table.php';
+		}
+		$table = new ReportedIP_Hive_Audit_Log_Table();
+		$table->prepare_items();
+		$table->render_filters( array( 'page' => 'reportedip-hive-site-audit' ) );
+		$table->display();
+
+		$export_args = array_filter( ReportedIP_Hive_Audit_Log_Table::filter_args() );
+		$base        = add_query_arg( array_merge( array( 'action' => 'reportedip_hive_audit_export' ), $export_args ), admin_url( 'admin-post.php' ) );
+		echo '<div class="rip-table-actions">';
+		printf(
+			'<a class="rip-button rip-button--secondary" href="%1$s">%2$s</a> <a class="rip-button rip-button--secondary" href="%3$s">%4$s</a>',
+			esc_url( wp_nonce_url( add_query_arg( 'format', 'csv', $base ), 'reportedip_hive_audit_export' ) ),
+			esc_html__( 'Export CSV', 'reportedip-hive' ),
+			esc_url( wp_nonce_url( add_query_arg( 'format', 'json', $base ), 'reportedip_hive_audit_export' ) ),
+			esc_html__( 'Export JSON', 'reportedip-hive' )
+		);
+		echo '</div></div>';
 		$this->render_site_admin_footer();
 	}
 

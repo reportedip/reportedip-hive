@@ -47,8 +47,9 @@ All changes to ReportedIP Hive are documented here.
   with its group, object and a sentence with old and new value; a filter that
   selects one event or a whole group, the user, the address, the object and a
   date range; and CSV and JSON exports that carry the active filter, the object
-  columns and the sentence. A site administrator on a network sees the site's
-  rows plus the network rows.
+  columns and the sentence. On a network the Network Admin narrows the list to
+  one site or to the network rows, and every site administrator has an Audit
+  Trail page under the site menu that shows that site's rows and nothing else.
 - **Below Business the tab says what it would answer.** The plan marker, four
   support questions the trail settles, a link to the plan and the same table
   over five sample rows; nothing is queried and the export answers 403.

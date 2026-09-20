@@ -357,7 +357,10 @@ class ReportedIP_Hive_Audit_Logger {
 	 * Profile update; an e-mail or password change is named explicitly.
 	 *
 	 * The password is detected by comparing the stored hashes; neither hash
-	 * is written anywhere.
+	 * is written anywhere. In the request that registered the account, or
+	 * changed its role or e-mail, a second generic or password row is
+	 * noise: WP-CLI and the network sign-up write the password in a
+	 * follow-up update, and every role change comes with a profile update.
 	 *
 	 * @param int     $user_id       Updated user id.
 	 * @param WP_User $old_user_data Pre-update user object.
@@ -373,8 +376,11 @@ class ReportedIP_Hive_Audit_Logger {
 		} elseif ( $new && isset( $old_user_data->user_pass ) && (string) $new->user_pass !== (string) $old_user_data->user_pass ) {
 			$action = 'password_changed';
 		}
-		if ( 'updated' === $action && ReportedIP_Hive_Audit_Connector::seen( 'user:' . $user_id . ':specific' ) ) {
+		if ( ReportedIP_Hive_Audit_Connector::seen( 'user:' . $user_id . ':specific' ) && in_array( $action, array( 'updated', 'password_changed' ), true ) ) {
 			return;
+		}
+		if ( 'email_changed' === $action ) {
+			ReportedIP_Hive_Audit_Connector::seen( 'user:' . $user_id . ':specific' );
 		}
 		$this->record_actor_event( 'profile_change', $action, array(), self::user_object( $new, $user_id ) );
 	}
@@ -412,6 +418,7 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @since  2.1.2
 	 */
 	public function on_register( $user_id ) {
+		ReportedIP_Hive_Audit_Connector::seen( 'user:' . (int) $user_id . ':specific' );
 		$this->record_actor_event( 'registration', 'success', array(), self::user_object( get_userdata( (int) $user_id ), (int) $user_id ) );
 	}
 
@@ -497,6 +504,31 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
+	 * How the current request reached WordPress.
+	 *
+	 * @return string One of `cli`, `cron`, `xmlrpc`, `rest`, `ajax`, `web`.
+	 * @since  2.1.62
+	 */
+	public static function agent() {
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			return 'cli';
+		}
+		if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
+			return 'cron';
+		}
+		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+			return 'xmlrpc';
+		}
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			return 'rest';
+		}
+		if ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) {
+			return 'ajax';
+		}
+		return 'web';
+	}
+
+	/**
 	 * Object descriptor of a user account.
 	 *
 	 * @param WP_User|false|null $user     User, when still resolvable.
@@ -536,6 +568,9 @@ class ReportedIP_Hive_Audit_Logger {
 		$user_agent = '';
 		if ( isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
 			$user_agent = sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) );
+		}
+		if ( ! isset( $data['agent'] ) ) {
+			$data['agent'] = self::agent();
 		}
 
 		$row = self::build_row(

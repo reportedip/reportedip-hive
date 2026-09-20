@@ -227,6 +227,9 @@ class ReportedIP_Hive_Audit_Connector_Content extends ReportedIP_Hive_Audit_Conn
 		if ( ! $post instanceof WP_Post || in_array( (string) $post->post_type, self::IGNORED_TYPES, true ) ) {
 			return;
 		}
+		if ( in_array( (string) get_post_meta( $post->ID, '_wp_trash_meta_status', true ), array( 'auto-draft', 'new' ), true ) ) {
+			return;
+		}
 		if ( self::seen( 'content:' . $post->ID . ':' . $action ) ) {
 			return;
 		}

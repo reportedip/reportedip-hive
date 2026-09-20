@@ -5,9 +5,10 @@
  * Read-only WP_List_Table over the `audit_log` table: pagination, sorting and
  * filtering by event or trigger group, user, IP, date range and object. The
  * trail is append-only, so there are no bulk mutation actions. On Multisite
- * a site administrator is automatically scoped to the current blog plus the
- * network rows; a network administrator sees the whole network. The WHERE
- * clause is built in one place and shared with the export.
+ * a site administrator is automatically scoped to the current blog; a
+ * network administrator sees the whole network and can narrow it to one
+ * site or to the network rows. The WHERE clause is built in one place and
+ * shared with the export.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -43,7 +44,12 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	 *
 	 * @var string[]
 	 */
-	public const FILTER_KEYS = array( 'audit_event', 'audit_user', 'audit_ip', 'rip_date_from', 'rip_date_to', 's' );
+	public const FILTER_KEYS = array( 'audit_event', 'audit_site', 'audit_user', 'audit_ip', 'rip_date_from', 'rip_date_to', 's' );
+
+	/**
+	 * Filter value that selects the network rows (`blog_id = 0`).
+	 */
+	public const SITE_NETWORK = 'network';
 
 	/**
 	 * Constructor.
@@ -234,7 +240,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 		if ( '' !== $summary && $summary !== (string) ( $item->object_label ?? '' ) ) {
 			$lines[] = esc_html( $summary );
 		}
-		$skip = array( 'agent', 'old', 'new', 'old_slug', 'new_slug', 'old_status', 'new_status', 'from_version', 'to_version', 'changes', 'added', 'removed', 'caps_changed', 'sidebar', 'old_roles', 'new_role', 'option' );
+		$skip = array( 'agent', 'network', 'network_wide', 'old', 'new', 'old_slug', 'new_slug', 'old_status', 'new_status', 'from_version', 'to_version', 'changes', 'added', 'removed', 'caps_changed', 'sidebar', 'old_roles', 'new_role', 'option' );
 		foreach ( $data as $key => $value ) {
 			if ( in_array( (string) $key, $skip, true ) ) {
 				continue;
@@ -256,18 +262,19 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	/**
 	 * The filter bar above the table, as a GET form of its own.
 	 *
+	 * @param array<string,string> $location Hidden fields naming the page the form posts back to; the Activity tab by default.
 	 * @return void
 	 * @since  2.1.2
 	 */
-	public function render_filters() {
+	public function render_filters( array $location = array() ) {
 		$args = self::filter_args();
 
 		ReportedIP_Hive_Filter_Bar::open(
-			array(
+			empty( $location ) ? array(
 				'page' => 'reportedip-hive-security',
 				'tab'  => 'activity',
 				'sub'  => 'audit',
-			)
+			) : $location
 		);
 		?>
 		<div class="rip-filter-bar__field">
@@ -295,6 +302,20 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 			</select>
 		</div>
 		<?php
+		if ( is_multisite() && is_network_admin() ) :
+			?>
+			<div class="rip-filter-bar__field">
+				<label class="rip-filter-bar__label" for="rip-audit-site"><?php esc_html_e( 'Site', 'reportedip-hive' ); ?></label>
+				<select name="audit_site" id="rip-audit-site" class="rip-select">
+					<option value=""><?php esc_html_e( 'All sites', 'reportedip-hive' ); ?></option>
+					<option value="<?php echo esc_attr( self::SITE_NETWORK ); ?>" <?php selected( $args['audit_site'], self::SITE_NETWORK ); ?>><?php esc_html_e( 'Network', 'reportedip-hive' ); ?></option>
+					<?php foreach ( self::site_choices() as $blog_id => $name ) : ?>
+						<option value="<?php echo esc_attr( (string) $blog_id ); ?>" <?php selected( $args['audit_site'], (string) $blog_id ); ?>><?php echo esc_html( $name ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<?php
+		endif;
 		ReportedIP_Hive_Filter_Bar::field(
 			'rip-audit-user',
 			__( 'User', 'reportedip-hive' ),
@@ -332,6 +353,23 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 	}
 
 	/**
+	 * Sites of the network for the site filter, id to name.
+	 *
+	 * @return array<int,string>
+	 * @since  2.1.62
+	 */
+	private static function site_choices() {
+		$choices = array();
+		if ( ! function_exists( 'get_sites' ) ) {
+			return $choices;
+		}
+		foreach ( get_sites( array( 'number' => 200 ) ) as $site ) {
+			$choices[ (int) $site->blog_id ] = (string) $site->blogname . ' (' . (string) $site->domain . (string) $site->path . ')';
+		}
+		return $choices;
+	}
+
+	/**
 	 * Current filter values from the request, sanitised, every key present.
 	 *
 	 * @return array<string,string>
@@ -362,8 +400,16 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 		$params = array();
 
 		if ( is_multisite() && ! is_network_admin() ) {
-			$where[]  = 'blog_id IN (%d, 0)';
+			$where[]  = 'blog_id = %d';
 			$params[] = get_current_blog_id();
+		} elseif ( is_multisite() ) {
+			$site = (string) ( $args['audit_site'] ?? '' );
+			if ( self::SITE_NETWORK === $site ) {
+				$where[] = 'blog_id = 0';
+			} elseif ( ctype_digit( $site ) && (int) $site > 0 ) {
+				$where[]  = 'blog_id = %d';
+				$params[] = (int) $site;
+			}
 		}
 
 		$event = (string) ( $args['audit_event'] ?? '' );

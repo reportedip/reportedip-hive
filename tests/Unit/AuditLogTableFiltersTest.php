@@ -59,9 +59,25 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
-		public function test_site_scope_includes_network_rows(): void {
+		public function test_site_admin_is_scoped_to_the_current_blog_only(): void {
 			$source = $this->source( 'admin/class-audit-log-table.php' );
-			$this->assertStringContainsString( 'blog_id IN (%d, 0)', $source );
+			$body   = substr( $source, (int) strpos( $source, 'public static function build_where(' ) );
+			$body   = substr( $body, 0, (int) strpos( $body, 'public function prepare_items(' ) );
+
+			$this->assertStringContainsString( 'is_multisite() && ! is_network_admin()', $body );
+			$this->assertStringContainsString( "'blog_id = %d'", $body );
+			$this->assertStringNotContainsString( 'IN (%d, 0)', $body, 'network rows belong to the Network Admin' );
+			$this->assertStringContainsString( "'blog_id = 0'", $body, 'the network filter selects the network rows' );
+		}
+
+		public function test_site_admin_page_reuses_the_table_and_its_scope(): void {
+			$admin = $this->source( 'admin/class-admin-settings.php' );
+			$body  = substr( $admin, (int) strpos( $admin, 'public function render_site_audit_page(' ) );
+			$body  = substr( $body, 0, (int) strpos( $body, 'public function render_site_2fa_settings_page(' ) );
+
+			$this->assertStringContainsString( "feature_status( 'audit_log' )", $body );
+			$this->assertStringContainsString( 'new ReportedIP_Hive_Audit_Log_Table()', $body );
+			$this->assertStringContainsString( "'page' => 'reportedip-hive-site-audit'", $body );
 		}
 
 		/**

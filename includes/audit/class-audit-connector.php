@@ -87,22 +87,7 @@ abstract class ReportedIP_Hive_Audit_Connector {
 	 * @since  2.1.62
 	 */
 	public static function agent() {
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			return 'cli';
-		}
-		if ( function_exists( 'wp_doing_cron' ) && wp_doing_cron() ) {
-			return 'cron';
-		}
-		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
-			return 'xmlrpc';
-		}
-		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
-			return 'rest';
-		}
-		if ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) {
-			return 'ajax';
-		}
-		return 'web';
+		return ReportedIP_Hive_Audit_Logger::agent();
 	}
 
 	/**
