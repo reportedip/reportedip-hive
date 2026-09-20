@@ -64,7 +64,9 @@
                 recon:    this.colors.success,
                 spam:     this.colors.gray,
                 anomaly:  style.getPropertyValue('--rip-primary-light').trim() || '#818CF8',
-                other:    this.colors.gray400
+                // Dark, not another mid grey: spam already owns --rip-gray-500
+                // and two neighbouring greys are unreadable in a legend.
+                other:    style.getPropertyValue('--rip-gray-800').trim() || '#1F2937'
             };
 
             // Severity scale, most-to-least serious
