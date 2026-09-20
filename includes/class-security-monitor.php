@@ -1300,7 +1300,7 @@ class ReportedIP_Hive_Security_Monitor {
 
 		$site_name = wp_specialchars_decode( (string) ( get_bloginfo( 'name' ) ?: 'WordPress Site' ), ENT_QUOTES );
 
-		$event_label = ucwords( str_replace( '_', ' ', $event_type_safe ) );
+		$event_label = ReportedIP_Hive_Event_Taxonomy::label( $event_type_safe );
 		$subject     = sprintf( '[%s] Security Alert: %s', $site_name, $event_label );
 		if ( $burst_summary['suppressed_count'] > 0 ) {
 			$subject .= sprintf( ' (+%d)', (int) $burst_summary['suppressed_count'] );

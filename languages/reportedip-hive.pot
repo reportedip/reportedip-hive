@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive 2.1.60\n"
+"Project-Id-Version: ReportedIP Hive 2.1.61\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-18T15:43:55+00:00\n"
+"POT-Creation-Date: 2026-09-20T09:59:21+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -1240,7 +1240,7 @@ msgstr ""
 #: admin/class-admin-settings.php:2131
 #: admin/class-admin-settings.php:4701
 #: admin/class-logs-table.php:54
-#: admin/class-logs-table.php:452
+#: admin/class-logs-table.php:427
 #: reportedip-hive.php:1006
 msgid "Severity"
 msgstr ""
@@ -1527,7 +1527,7 @@ msgstr ""
 #: admin/class-admin-settings.php:3733
 #: admin/class-admin-settings.php:4236
 #: admin/class-admin-settings.php:4262
-#: admin/class-logs-table.php:359
+#: admin/class-logs-table.php:361
 msgid "30 Days"
 msgstr ""
 
@@ -1582,26 +1582,26 @@ msgstr ""
 
 #: admin/class-admin-settings.php:3813
 #: admin/class-admin-settings.php:4679
-#: admin/class-logs-table.php:458
+#: admin/class-logs-table.php:433
 #: admin/class-protection-page.php:806
 #: reportedip-hive.php:1135
 msgid "Critical"
 msgstr ""
 
 #: admin/class-admin-settings.php:3814
-#: admin/class-logs-table.php:457
+#: admin/class-logs-table.php:432
 #: reportedip-hive.php:1136
 msgid "High"
 msgstr ""
 
 #: admin/class-admin-settings.php:3815
-#: admin/class-logs-table.php:456
+#: admin/class-logs-table.php:431
 #: reportedip-hive.php:1137
 msgid "Medium"
 msgstr ""
 
 #: admin/class-admin-settings.php:3816
-#: admin/class-logs-table.php:455
+#: admin/class-logs-table.php:430
 #: reportedip-hive.php:1138
 msgid "Low"
 msgstr ""
@@ -1720,32 +1720,32 @@ msgstr ""
 
 #: admin/class-admin-settings.php:4233
 #: admin/class-admin-settings.php:4259
-#: admin/class-logs-table.php:356
+#: admin/class-logs-table.php:358
 msgid "24 Hours"
 msgstr ""
 
 #: admin/class-admin-settings.php:4234
 #: admin/class-admin-settings.php:4260
-#: admin/class-logs-table.php:357
+#: admin/class-logs-table.php:359
 msgid "3 Days"
 msgstr ""
 
 #: admin/class-admin-settings.php:4235
 #: admin/class-admin-settings.php:4261
-#: admin/class-logs-table.php:358
+#: admin/class-logs-table.php:360
 msgid "1 Week"
 msgstr ""
 
 #: admin/class-admin-settings.php:4237
 #: admin/class-admin-settings.php:4263
 #: admin/class-blocked-ips-table.php:126
-#: admin/class-logs-table.php:360
+#: admin/class-logs-table.php:362
 msgid "Permanent"
 msgstr ""
 
 #: admin/class-admin-settings.php:4240
 #: admin/class-logs-table.php:78
-#: admin/class-logs-table.php:143
+#: admin/class-logs-table.php:145
 #: reportedip-hive.php:1015
 msgid "Block IP"
 msgstr ""
@@ -3410,7 +3410,7 @@ msgstr ""
 
 #: admin/class-api-queue-table.php:427
 #: admin/class-blocked-ips-table.php:274
-#: admin/class-logs-table.php:397
+#: admin/class-logs-table.php:399
 #: admin/class-whitelist-table.php:256
 msgid "Search"
 msgstr ""
@@ -3546,7 +3546,7 @@ msgid "Profile change"
 msgstr ""
 
 #: admin/class-audit-log-table.php:173
-#: admin/class-logs-table.php:409
+#: includes/class-event-taxonomy.php:676
 msgid "Registration"
 msgstr ""
 
@@ -3559,7 +3559,7 @@ msgid "Session"
 msgstr ""
 
 #: admin/class-audit-log-table.php:187
-#: admin/class-logs-table.php:406
+#: admin/class-logs-table.php:408
 msgid "Event type"
 msgstr ""
 
@@ -3602,6 +3602,7 @@ msgstr ""
 
 #: admin/class-blocked-ips-table.php:116
 #: admin/class-blocked-ips-table.php:288
+#: includes/class-event-taxonomy.php:681
 msgid "Community Reputation"
 msgstr ""
 
@@ -3850,192 +3851,60 @@ msgid "Event Type"
 msgstr ""
 
 #: admin/class-logs-table.php:79
-#: admin/class-logs-table.php:148
+#: admin/class-logs-table.php:150
 #: reportedip-hive.php:1016
 msgid "Whitelist IP"
 msgstr ""
 
-#: admin/class-logs-table.php:119
+#: admin/class-logs-table.php:121
 msgid "Captured while Hardening Mode was active."
 msgstr ""
 
-#: admin/class-logs-table.php:120
+#: admin/class-logs-table.php:122
 msgid "Hardening"
 msgstr ""
 
-#: admin/class-logs-table.php:161
+#: admin/class-logs-table.php:163
 msgid "Allow this rule on this path (WAF exception)"
 msgstr ""
 
-#: admin/class-logs-table.php:333
+#: admin/class-logs-table.php:335
 msgid "Blocked from bulk action"
 msgstr ""
 
-#: admin/class-logs-table.php:335
+#: admin/class-logs-table.php:337
 msgid "Added from bulk action"
 msgstr ""
 
-#: admin/class-logs-table.php:354
+#: admin/class-logs-table.php:356
 msgid "Block IP row action blocks for"
 msgstr ""
 
-#: admin/class-logs-table.php:401
+#: admin/class-logs-table.php:403
 msgid "IP address or detail text"
 msgstr ""
 
-#: admin/class-logs-table.php:408
+#: admin/class-logs-table.php:410
 msgid "All Event Types"
 msgstr ""
 
-#: admin/class-logs-table.php:410
-msgid "Disposable Email"
-msgstr ""
-
-#: admin/class-logs-table.php:411
-msgid "Prohibited Username"
-msgstr ""
-
-#: admin/class-logs-table.php:412
-msgid "Registration Denied"
-msgstr ""
-
-#: admin/class-logs-table.php:413
-msgid "Registration Rate Limit"
-msgstr ""
-
-#: admin/class-logs-table.php:414
-msgid "Unknown Username Probe"
-msgstr ""
-
-#: admin/class-logs-table.php:416
-msgid "Login &amp; Spam"
-msgstr ""
-
-#: admin/class-logs-table.php:417
-msgid "Failed Login"
-msgstr ""
-
-#: admin/class-logs-table.php:418
-msgid "App Password Failed"
-msgstr ""
-
-#: admin/class-logs-table.php:419
-msgid "Blocked Account Sign-in"
-msgstr ""
-
-#: admin/class-logs-table.php:420
-msgid "Comment Spam"
-msgstr ""
-
-#: admin/class-logs-table.php:421
-msgid "XML-RPC Abuse"
-msgstr ""
-
-#: admin/class-logs-table.php:422
-msgid "IP Blocked"
-msgstr ""
-
-#: admin/class-logs-table.php:424
-msgid "Firewall"
-msgstr ""
-
-#: admin/class-logs-table.php:425
-msgid "WAF Block"
-msgstr ""
-
-#: admin/class-logs-table.php:426
-msgid "WAF Match (report-only)"
-msgstr ""
-
-#: admin/class-logs-table.php:427
-msgid "Spoofed Crawler (flagged)"
-msgstr ""
-
-#: admin/class-logs-table.php:428
-msgid "Spoofed Crawler (blocked)"
-msgstr ""
-
 #: admin/class-logs-table.php:429
-msgid "Decoy Path Hit"
-msgstr ""
-
-#: admin/class-logs-table.php:430
-msgid "Scan Detected"
-msgstr ""
-
-#: admin/class-logs-table.php:431
-msgid "REST API Denied"
-msgstr ""
-
-#: admin/class-logs-table.php:432
-msgid "XML-RPC Denied"
-msgstr ""
-
-#: admin/class-logs-table.php:433
-msgid "Feed Denied"
-msgstr ""
-
-#: admin/class-logs-table.php:434
-msgid "Admin Area Denied (signed out)"
-msgstr ""
-
-#: admin/class-logs-table.php:435
-msgid "Ruleset Signature Failure"
-msgstr ""
-
-#: admin/class-logs-table.php:437
-msgid "Two-Factor"
-msgstr ""
-
-#: admin/class-logs-table.php:438
-msgid "Step-Up Challenge Required"
-msgstr ""
-
-#: admin/class-logs-table.php:439
-msgid "Step-Up Skipped (no method)"
-msgstr ""
-
-#: admin/class-logs-table.php:440
-msgid "Two-Factor Brute Force"
-msgstr ""
-
-#: admin/class-logs-table.php:442
-msgid "Hardening Mode"
-msgstr ""
-
-#: admin/class-logs-table.php:443
-msgid "Hardening Mode Activated"
-msgstr ""
-
-#: admin/class-logs-table.php:444
-msgid "Hardening Mode Extended"
-msgstr ""
-
-#: admin/class-logs-table.php:445
-msgid "Hardening Mode Deactivated"
-msgstr ""
-
-#: admin/class-logs-table.php:446
-msgid "Coordinated Attack Detected"
-msgstr ""
-
-#: admin/class-logs-table.php:454
 msgid "All Severities"
 msgstr ""
 
-#: admin/class-logs-table.php:464
+#: admin/class-logs-table.php:439
 msgid "From"
 msgstr ""
 
-#: admin/class-logs-table.php:469
+#: admin/class-logs-table.php:444
 msgid "To"
 msgstr ""
 
-#: admin/class-logs-table.php:475
+#: admin/class-logs-table.php:450
 msgid "During Hardening only"
 msgstr ""
 
-#: admin/class-logs-table.php:485
+#: admin/class-logs-table.php:460
 msgid "No log entries found."
 msgstr ""
 
@@ -6344,32 +6213,559 @@ msgstr ""
 msgid "Please use a permanent e-mail address. Disposable-mail providers are not accepted."
 msgstr ""
 
-#: includes/class-event-taxonomy.php:92
+#: includes/class-event-taxonomy.php:93
+msgid "Failed Login"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:99
+msgid "Password Spray"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:105
+msgid "WooCommerce Login Failed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:111
+msgid "App Password Failed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:116
+msgid "App Password Abuse"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:122
+msgid "Blocked Account Sign-in"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:127
+msgid "App Password Sign-in"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:131
+msgid "Successful Login"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:136
+msgid "Disposable Email"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:141
+msgid "Prohibited Username"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:146
+msgid "Registration Denied"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:151
+msgid "Registration Rate Limit"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:156
+msgid "Unknown Username Probe"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:163
+msgid "Form Proof Failed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:168
+msgid "Form Spam"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:174
+msgid "Comment Spam"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:180
+msgid "Comment Honeypot"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:186
+msgid "WAF Block"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:192
+msgid "WAF Match (report-only)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:197
+msgid "Scan Detected"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:203
+msgid "Decoy Path Hit"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:208
+msgid "Ruleset Signature Failure"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:213
+msgid "Spoofed Crawler (flagged)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:218
+msgid "Spoofed Crawler (blocked)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:223
+msgid "Bot Exemption Denied"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:228
+msgid "Verified Crawler Spared"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:233
+msgid "User Enumeration"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:239
+msgid "REST API Abuse"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:245
+msgid "REST API Denied"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:250
+msgid "XML-RPC Denied"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:255
+msgid "Feed Denied"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:260
+msgid "Admin Area Denied (signed out)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:265
+msgid "XML-RPC Abuse"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:271
+msgid "Hidden Login Probe"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:277
+msgid "Hidden Login Denied"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:282
+msgid "XML-RPC Call"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:287
+msgid "Blocked by Community Reputation"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:292
+msgid "Blocked Tor Exit Node"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:297
+msgid "Infrastructure Spared (forms)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:302
+msgid "Infrastructure Spared"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:308
+msgid "Two-Factor Brute Force"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:314
+msgid "Step-Up Challenge Required"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:318
+msgid "Step-Up Skipped (no method)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:322
+msgid "Security Key Counter Regression"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:327
+msgid "Password Reset Gate Bypass Attempt"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:332
+msgid "Password Reset Challenge Failed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:337
+msgid "Password Reset Challenge Sent"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:341
+msgid "Password Reset Challenge Passed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:345
+msgid "Password Reset Blocked (email only)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:349
+msgid "Password Reset without Eligible Method"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:353
+msgid "Password Reset without Usable Method"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:357
+msgid "Password Reset Challenge Send Failed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:361
+msgid "Password Reset Verification Error"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:366
+msgid "Geo Anomaly"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:371
+msgid "Coordinated Attack Detected"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:376
+msgid "Hardening Mode Activated"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:381
+msgid "Hardening Mode Extended"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:386
+msgid "Hardening Mode Deactivated"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:390
+msgid "Own Server IP Spared"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:395
+msgid "Would Block Access"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:399
+msgid "Would Block IP"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:403
+msgid "Would Block by Reputation"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:407
+msgid "Would Block Tor Exit Node"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:411
+msgid "Would Send Notification"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:416
+msgid "IP Blocked"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:420
+msgid "IP Unblocked"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:424
+msgid "IP Whitelisted"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:428
+msgid "IP Removed from Whitelist"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:432
+msgid "Whitelist Imported"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:436
+msgid "CSV Import (blocked IPs)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:440
+msgid "CSV Import (whitelist)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:444
+msgid "Auto Block Attempted"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:448
+msgid "Auto Block Failed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:452
+msgid "Block Skipped (already blocked)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:456
+msgid "Block Skipped (whitelisted)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:460
+msgid "Local Event Detected"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:465
+msgid "API Call Failed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:469
+msgid "API Domain Limit"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:473
+msgid "API Error"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:477
+msgid "API Health Degraded"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:481
+msgid "API Invalid Response"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:485
+msgid "API Quota Refreshed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:489
+msgid "API Rate Limit Hit"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:493
+msgid "API Rate Limited"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:497
+msgid "Report Queued"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:501
+msgid "Report Skipped"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:505
+msgid "Report Retried"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:509
+msgid "Report Deleted"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:513
+msgid "Reports Retried (bulk)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:517
+msgid "API Success"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:521
+msgid "Queue Processing Skipped"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:525
+msgid "Report Categories Cached"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:529
+msgid "Cloud Management Auth Failed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:534
+msgid "Operation Mode Changed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:538
+msgid "Settings Saved (admin)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:542
+msgid "Settings Saved (remote)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:546
+msgid "Settings Imported"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:550
+msgid "Quickstart Value Rejected"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:554
+msgid "Mail Relay Error"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:558
+msgid "Mail Relay Fallback"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:562
+msgid "Notification Rate Limited"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:566
+msgid "Notification Suppressed (cap)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:570
+msgid "Cache Hit"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:574
+msgid "Cache Set"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:578
+msgid "Cache Cleared"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:582
+msgid "Cache Cleanup"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:586
+msgid "Cache Flushed"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:590
+msgid "Info Message"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:594
+msgid "Warning Message"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:598
+msgid "Error Message"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:602
+msgid "Critical Message"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:606
+msgid "Debug Message"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:610
+msgid "Auto Block Test"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:614
+msgid "Login Simulation Started"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:618
+msgid "Simulated Failed Login"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:622
+msgid "Logging Test (low)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:626
+msgid "Logging Test (medium)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:630
+msgid "Logging Test (high)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:634
+msgid "Logging Test (critical)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:650
 msgid "Login & Credential"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:93
+#: includes/class-event-taxonomy.php:651
 msgid "Firewall (WAF)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:94
+#: includes/class-event-taxonomy.php:652
 msgid "Scanners & Probes"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:95
+#: includes/class-event-taxonomy.php:653
 msgid "Fake Bots"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:96
+#: includes/class-event-taxonomy.php:654
+#: includes/class-event-taxonomy.php:680
 msgid "Recon & Enumeration"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:97
+#: includes/class-event-taxonomy.php:655
 msgid "Spam & Flooding"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:98
+#: includes/class-event-taxonomy.php:656
 msgid "Anomalies"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:657
+msgid "Other"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:675
+msgid "Login & Accounts"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:677
+msgid "Forms & Comments"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:678
+msgid "Firewall"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:679
+msgid "Bots"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:682
+msgid "Two-Factor"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:683
+msgid "Anomalies & Hardening"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:684
+msgid "Report-only Mode"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:685
+msgid "Operations: Blocks & Whitelist"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:686
+msgid "Operations: API & Queue"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:687
+msgid "Operations: System"
+msgstr ""
+
+#. translators: %s: event type label.
+#: includes/class-event-taxonomy.php:835
+#, php-format
+msgid "%s (threshold reached)"
 msgstr ""
 
 #: includes/class-form-adapters.php:874

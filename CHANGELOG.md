@@ -2,6 +2,44 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- **Form spam was missing from the activity filter and from both dashboard
+  charts.** The filter offered a fixed list of 30 event types that had not grown
+  with the sensors, so neither a failed form proof, nor an adapter threshold hit,
+  nor a comment honeypot could be selected, and the search box does not look at
+  the event type at all. In the charts the base type `form_spam` was absent from
+  the taxonomy, which dropped every adapter threshold hit from the threat
+  distribution and the event timeline.
+- **Three taxonomy entries pointed at slugs nobody writes.** `geo_anomaly`
+  (written as `geo_anomaly_detected`), `reputation_threat` (written as
+  `blocked_by_reputation`) and `admin_scanning` (never written) meant geo
+  anomalies and reputation blocks appeared in no chart. `feed_denied`,
+  `blocked_user_denied`, `blocked_by_tor_exit`, `hide_login_block` and
+  `infrastructure_spared` were missing as well.
+
+### Changed
+
+- **One registry for every event type.** `ReportedIP_Hive_Event_Taxonomy` now
+  carries a row per slug with its label, its filter group, its threat family and
+  whether the bare slug, the generated threshold variant or both are written.
+  The activity filter, the charts, the log badges and the activity stream all
+  read from it, and the filter covers every event type the plugin writes,
+  operational ones included, grouped into thirteen sections.
+- **An event type nobody registered now shows up as "Other".** It used to be
+  dropped from the charts without a trace, which is how a new sensor could stay
+  invisible for several releases.
+- **The log badge takes its colour from the threat family**, so every sensor is
+  told apart at a glance instead of the four that happened to have a rule.
+
+### Internal
+
+- `FirewallEventTypesTest` gained the inverse guard: every slug a logging call
+  writes must have a registry row. The old test read the filter out of the
+  rendered markup, it now reads the registry.
+
 ## [2.1.61] (2026-09-18)
 
 ### New

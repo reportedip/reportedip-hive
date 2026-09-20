@@ -29,6 +29,8 @@
     --rip-primary-900: #312E81;
     --rip-primary-light: #818CF8;
     --rip-primary-dark: #3730A3;
+    --rip-primary-bg: rgba(79, 70, 229, 0.1);
+    --rip-primary-light-bg: rgba(129, 140, 248, 0.15);
 
     /* Status Colors */
     --rip-success: #10B981;

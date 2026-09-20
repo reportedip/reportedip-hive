@@ -3836,7 +3836,7 @@ class ReportedIP_Hive_Admin_Settings {
 									<div class="rip-activity-item__content">
 										<div class="rip-activity-item__title">
 											<span class="rip-badge rip-badge--<?php echo esc_attr( $icon_class ); ?>"><?php echo esc_html( $badge_label ); ?></span>
-											<?php echo esc_html( ucwords( str_replace( '_', ' ', $event->event_type ) ) ); ?>
+											<?php echo esc_html( ReportedIP_Hive_Event_Taxonomy::label( $event->event_type ) ); ?>
 											<?php if ( '' !== $family_name ) : ?>
 												<span class="rip-activity-item__family"><?php echo esc_html( $family_name ); ?></span>
 											<?php endif; ?>

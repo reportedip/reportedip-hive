@@ -24,6 +24,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 	use ReportedIP\Hive\Tests\TestCase;
 
 	require_once dirname( __DIR__, 2 ) . '/includes/class-rule-store.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-event-taxonomy.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-admin-firewall.php';
 
 	/**
@@ -80,11 +81,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$sources = $this->sources();
 
 			if ( str_ends_with( $type, '_threshold_exceeded' ) ) {
-				$base = substr( $type, 0, -strlen( '_threshold_exceeded' ) );
-				$this->assertMatchesRegularExpression(
-					'/(?:track_generic_attempt|handle_threshold_exceeded)\((?:[^;]{0,200}?)\'' . preg_quote( $base, '/' ) . '\'/s',
-					$sources,
+				$base    = substr( $type, 0, -strlen( '_threshold_exceeded' ) );
+				$tracker = '(?:track_generic_attempt|handle_threshold_exceeded)\(';
+				$quoted  = preg_quote( $base, '/' );
+
+				if ( 1 === preg_match( '/' . $tracker . '(?:[^;]{0,200}?)\'' . $quoted . '\'/s', $sources ) ) {
+					return;
+				}
+
+				$this->assertSame(
+					1,
+					preg_match( '/const\s+([A-Z][A-Z0-9_]*)\s*=\s*\'' . $quoted . '\';/', $sources, $constant ),
 					"{$context} '{$type}', but nothing feeds '{$base}' into the threshold tracker."
+				);
+
+				$this->assertMatchesRegularExpression(
+					'/' . $tracker . '(?:[^;]{0,200}?)(?:self|static|parent|[A-Za-z_][A-Za-z0-9_]*)::' . $constant[1] . '\b/s',
+					$sources,
+					"{$context} '{$type}': the constant {$constant[1]} holds the slug, but no tracker call passes it."
 				);
 				return;
 			}
@@ -94,6 +108,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			if ( 1 === preg_match( '/' . $call . '(?:[^;]{0,240}?)\'' . $quoted . '\'/s', $sources ) ) {
 				return;
+			}
+
+			preg_match_all( '/' . $call . '(?:[^;]{0,240}?)\'([a-z0-9_]+_)\'\s*\./s', $sources, $prefixes );
+			foreach ( $prefixes[1] as $prefix ) {
+				if ( str_starts_with( $type, $prefix ) ) {
+					return;
+				}
 			}
 
 			$this->assertSame(
@@ -138,20 +159,41 @@ namespace ReportedIP\Hive\Tests\Unit {
 		);
 
 		/**
-		 * Every non-empty option value of the Logs page event-type filter.
+		 * Every option value of the Logs page event-type filter.
+		 *
+		 * Since 2.1.62 the select is rendered from the taxonomy registry, so the
+		 * registry is what this reads. Parsing the markup would only prove the
+		 * renderer loop exists.
 		 *
 		 * @return string[]
 		 */
 		private function log_filter_event_types(): array {
-			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-logs-table.php' );
-			$this->assertSame(
-				1,
-				preg_match( '/<select name="event_type"[^>]*>(.*?)<\/select>/s', $source, $m ),
-				'The Logs page must render an event_type select.'
-			);
+			$types = array();
+			foreach ( \ReportedIP_Hive_Event_Taxonomy::filter_options() as $options ) {
+				foreach ( array_keys( $options ) as $slug ) {
+					$types[] = $slug;
+				}
+			}
+			return $types;
+		}
 
-			preg_match_all( '/<option value="([^"]+)"/', $m[1], $options );
-			return $options[1];
+		/**
+		 * Every literal event slug a logging call writes into the logs table.
+		 *
+		 * Dynamically built slugs do not match and are covered by the threshold
+		 * branch of {@see assert_has_writer()} instead. `Audit_Logger::log_event()`
+		 * is excluded because it writes the separate audit table, which has its
+		 * own small vocabulary and its own filter.
+		 *
+		 * @return string[]
+		 */
+		private function logged_event_types(): array {
+			$audit  = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-audit-logger.php' );
+			$blob   = str_replace( $audit, '', $this->sources() );
+			$call   = '(?<!Audit_Logger::)(?:log_security_event|log_event|log_denied|log_denial)\(\s*\'([a-z0-9_]{3,})\'\s*,';
+			preg_match_all( '/' . $call . '/s', $blob, $matches );
+
+			return array_values( array_unique( $matches[1] ) );
 		}
 
 		/**
@@ -179,6 +221,37 @@ namespace ReportedIP\Hive\Tests\Unit {
 					$event,
 					$types,
 					"Event '{$event}' is logged but missing from the Logs page event-type filter."
+				);
+			}
+		}
+
+		/**
+		 * The inverse guard, and the one that would have caught form spam: a
+		 * slug that reaches the logs table without a registry row is unfilterable
+		 * and invisible in every chart. Register it, operational rows included,
+		 * they simply carry no family.
+		 */
+		public function test_every_logged_event_type_is_registered(): void {
+			$logged = $this->logged_event_types();
+			$this->assertNotEmpty( $logged, 'The plugin must write event types.' );
+
+			foreach ( $logged as $type ) {
+				$this->assertTrue(
+					\ReportedIP_Hive_Event_Taxonomy::is_registered( $type ),
+					"Event '{$type}' is written but has no row in ReportedIP_Hive_Event_Taxonomy."
+				);
+			}
+		}
+
+		/**
+		 * The Firewall page counts a curated subset; curated or not, every slug
+		 * in it has to exist in the registry.
+		 */
+		public function test_every_counted_event_type_is_registered(): void {
+			foreach ( \ReportedIP_Hive_Admin_Firewall::FIREWALL_EVENT_TYPES as $type ) {
+				$this->assertTrue(
+					\ReportedIP_Hive_Event_Taxonomy::is_registered( $type ),
+					"The Firewall page counts '{$type}', which has no registry row."
 				);
 			}
 		}

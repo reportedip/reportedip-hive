@@ -763,7 +763,7 @@ code.ip-address {
 }
 
 .wp-list-table .column-event_type {
-    width: 130px;
+    width: 180px;
 }
 
 /* Event type badges */
@@ -777,24 +777,46 @@ code.ip-address {
     letter-spacing: 0.3px;
 }
 
-.event-type-badge.failed-login {
-    background: rgba(220, 53, 69, 0.1);
-    color: #d63638;
+/* One tone per threat family, keys match ReportedIP_Hive_Event_Taxonomy */
+.event-type-badge.rip-event--login {
+    background: var(--rip-danger-bg);
+    color: var(--rip-danger-dark);
 }
 
-.event-type-badge.comment-spam {
-    background: rgba(255, 193, 7, 0.15);
-    color: #996800;
+.event-type-badge.rip-event--firewall {
+    background: var(--rip-primary-bg);
+    color: var(--rip-primary-dark);
 }
 
-.event-type-badge.xmlrpc-abuse {
-    background: rgba(253, 126, 20, 0.15);
-    color: #bd5c00;
+.event-type-badge.rip-event--scanner {
+    background: var(--rip-warning-bg);
+    color: var(--rip-warning-dark);
 }
 
-.event-type-badge.ip-blocked {
-    background: rgba(0, 115, 170, 0.1);
-    color: #0073aa;
+.event-type-badge.rip-event--bot {
+    background: var(--rip-info-bg);
+    color: var(--rip-info-dark);
+}
+
+.event-type-badge.rip-event--recon {
+    background: var(--rip-success-bg);
+    color: var(--rip-success-dark);
+}
+
+.event-type-badge.rip-event--spam {
+    background: var(--rip-gray-100);
+    color: var(--rip-gray-700);
+}
+
+.event-type-badge.rip-event--anomaly {
+    background: var(--rip-primary-light-bg);
+    color: var(--rip-primary-dark);
+}
+
+.event-type-badge.rip-event--other,
+.event-type-badge.rip-event--ops {
+    background: var(--rip-gray-100);
+    color: var(--rip-gray-500);
 }
 
 /* IP Type badges */

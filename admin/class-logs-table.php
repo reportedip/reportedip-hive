@@ -108,9 +108,11 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 			case 'event_type':
 				$event_type  = $item->event_type ?? '';
 				$event_class = str_replace( '_', '-', $event_type );
-				$event_label = ucwords( str_replace( '_', ' ', $event_type ) );
+				$event_label = ReportedIP_Hive_Event_Taxonomy::label( $event_type );
+				$family      = ReportedIP_Hive_Event_Taxonomy::classify( $event_type );
 				$output      = sprintf(
-					'<span class="event-type-badge %s">%s</span>',
+					'<span class="event-type-badge rip-event--%s %s">%s</span>',
+					esc_attr( null === $family ? 'ops' : $family ),
 					esc_attr( $event_class ),
 					esc_html( $event_label )
 				);
@@ -406,45 +408,18 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 			<label class="rip-filter-bar__label" for="rip-log-event-type"><?php esc_html_e( 'Event type', 'reportedip-hive' ); ?></label>
 			<select name="event_type" id="rip-log-event-type" class="rip-select">
 				<option value=""><?php esc_html_e( 'All Event Types', 'reportedip-hive' ); ?></option>
-				<optgroup label="<?php esc_attr_e( 'Registration', 'reportedip-hive' ); ?>">
-					<option value="disposable_email" <?php selected( $event_type, 'disposable_email' ); ?>><?php esc_html_e( 'Disposable Email', 'reportedip-hive' ); ?></option>
-					<option value="prohibited_username" <?php selected( $event_type, 'prohibited_username' ); ?>><?php esc_html_e( 'Prohibited Username', 'reportedip-hive' ); ?></option>
-					<option value="registration_denied" <?php selected( $event_type, 'registration_denied' ); ?>><?php esc_html_e( 'Registration Denied', 'reportedip-hive' ); ?></option>
-					<option value="registration_limit" <?php selected( $event_type, 'registration_limit' ); ?>><?php esc_html_e( 'Registration Rate Limit', 'reportedip-hive' ); ?></option>
-					<option value="unknown_username_probe_threshold_exceeded" <?php selected( $event_type, 'unknown_username_probe_threshold_exceeded' ); ?>><?php esc_html_e( 'Unknown Username Probe', 'reportedip-hive' ); ?></option>
-				</optgroup>
-				<optgroup label="<?php esc_attr_e( 'Login &amp; Spam', 'reportedip-hive' ); ?>">
-					<option value="failed_login" <?php selected( $event_type, 'failed_login' ); ?>><?php esc_html_e( 'Failed Login', 'reportedip-hive' ); ?></option>
-					<option value="app_password_failed" <?php selected( $event_type, 'app_password_failed' ); ?>><?php esc_html_e( 'App Password Failed', 'reportedip-hive' ); ?></option>
-					<option value="blocked_user_denied" <?php selected( $event_type, 'blocked_user_denied' ); ?>><?php esc_html_e( 'Blocked Account Sign-in', 'reportedip-hive' ); ?></option>
-					<option value="comment_spam" <?php selected( $event_type, 'comment_spam' ); ?>><?php esc_html_e( 'Comment Spam', 'reportedip-hive' ); ?></option>
-					<option value="xmlrpc_abuse_threshold_exceeded" <?php selected( $event_type, 'xmlrpc_abuse_threshold_exceeded' ); ?>><?php esc_html_e( 'XML-RPC Abuse', 'reportedip-hive' ); ?></option>
-					<option value="ip_blocked" <?php selected( $event_type, 'ip_blocked' ); ?>><?php esc_html_e( 'IP Blocked', 'reportedip-hive' ); ?></option>
-				</optgroup>
-				<optgroup label="<?php esc_attr_e( 'Firewall', 'reportedip-hive' ); ?>">
-					<option value="waf_block" <?php selected( $event_type, 'waf_block' ); ?>><?php esc_html_e( 'WAF Block', 'reportedip-hive' ); ?></option>
-					<option value="waf_would_block" <?php selected( $event_type, 'waf_would_block' ); ?>><?php esc_html_e( 'WAF Match (report-only)', 'reportedip-hive' ); ?></option>
-					<option value="fake_bot" <?php selected( $event_type, 'fake_bot' ); ?>><?php esc_html_e( 'Spoofed Crawler (flagged)', 'reportedip-hive' ); ?></option>
-					<option value="fake_bot_blocked" <?php selected( $event_type, 'fake_bot_blocked' ); ?>><?php esc_html_e( 'Spoofed Crawler (blocked)', 'reportedip-hive' ); ?></option>
-					<option value="decoy_pathblock_hit" <?php selected( $event_type, 'decoy_pathblock_hit' ); ?>><?php esc_html_e( 'Decoy Path Hit', 'reportedip-hive' ); ?></option>
-					<option value="scan_404_threshold_exceeded" <?php selected( $event_type, 'scan_404_threshold_exceeded' ); ?>><?php esc_html_e( 'Scan Detected', 'reportedip-hive' ); ?></option>
-					<option value="rest_denied" <?php selected( $event_type, 'rest_denied' ); ?>><?php esc_html_e( 'REST API Denied', 'reportedip-hive' ); ?></option>
-					<option value="xmlrpc_denied" <?php selected( $event_type, 'xmlrpc_denied' ); ?>><?php esc_html_e( 'XML-RPC Denied', 'reportedip-hive' ); ?></option>
-					<option value="feed_denied" <?php selected( $event_type, 'feed_denied' ); ?>><?php esc_html_e( 'Feed Denied', 'reportedip-hive' ); ?></option>
-					<option value="admin_guest_denied" <?php selected( $event_type, 'admin_guest_denied' ); ?>><?php esc_html_e( 'Admin Area Denied (signed out)', 'reportedip-hive' ); ?></option>
-					<option value="rule_sync_signature_fail" <?php selected( $event_type, 'rule_sync_signature_fail' ); ?>><?php esc_html_e( 'Ruleset Signature Failure', 'reportedip-hive' ); ?></option>
-				</optgroup>
-				<optgroup label="<?php esc_attr_e( 'Two-Factor', 'reportedip-hive' ); ?>">
-					<option value="2fa_stepup_required" <?php selected( $event_type, '2fa_stepup_required' ); ?>><?php esc_html_e( 'Step-Up Challenge Required', 'reportedip-hive' ); ?></option>
-					<option value="2fa_stepup_skipped_no_method" <?php selected( $event_type, '2fa_stepup_skipped_no_method' ); ?>><?php esc_html_e( 'Step-Up Skipped (no method)', 'reportedip-hive' ); ?></option>
-					<option value="2fa_brute_force_threshold_exceeded" <?php selected( $event_type, '2fa_brute_force_threshold_exceeded' ); ?>><?php esc_html_e( 'Two-Factor Brute Force', 'reportedip-hive' ); ?></option>
-				</optgroup>
-				<optgroup label="<?php esc_attr_e( 'Hardening Mode', 'reportedip-hive' ); ?>">
-					<option value="hardening_mode_activated" <?php selected( $event_type, 'hardening_mode_activated' ); ?>><?php esc_html_e( 'Hardening Mode Activated', 'reportedip-hive' ); ?></option>
-					<option value="hardening_mode_extended" <?php selected( $event_type, 'hardening_mode_extended' ); ?>><?php esc_html_e( 'Hardening Mode Extended', 'reportedip-hive' ); ?></option>
-					<option value="hardening_mode_deactivated" <?php selected( $event_type, 'hardening_mode_deactivated' ); ?>><?php esc_html_e( 'Hardening Mode Deactivated', 'reportedip-hive' ); ?></option>
-					<option value="coordinated_attack_detected" <?php selected( $event_type, 'coordinated_attack_detected' ); ?>><?php esc_html_e( 'Coordinated Attack Detected', 'reportedip-hive' ); ?></option>
-				</optgroup>
+				<?php
+				$group_labels = ReportedIP_Hive_Event_Taxonomy::group_labels();
+				foreach ( ReportedIP_Hive_Event_Taxonomy::filter_options() as $group => $options ) :
+					?>
+					<optgroup label="<?php echo esc_attr( $group_labels[ $group ] ); ?>">
+						<?php foreach ( $options as $slug => $label ) : ?>
+							<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $event_type, $slug ); ?>><?php echo esc_html( $label ); ?></option>
+						<?php endforeach; ?>
+					</optgroup>
+					<?php
+				endforeach;
+				?>
 			</select>
 		</div>
 

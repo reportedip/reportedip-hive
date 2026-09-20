@@ -63,7 +63,8 @@
                 bot:      this.colors.info,
                 recon:    this.colors.success,
                 spam:     this.colors.gray,
-                anomaly:  style.getPropertyValue('--rip-primary-light').trim() || '#818CF8'
+                anomaly:  style.getPropertyValue('--rip-primary-light').trim() || '#818CF8',
+                other:    this.colors.gray400
             };
 
             // Severity scale, most-to-least serious
