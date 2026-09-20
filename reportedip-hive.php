@@ -438,6 +438,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-spam-filter.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-registry.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-logger.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-block.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-sessions.php';

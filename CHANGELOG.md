@@ -22,6 +22,36 @@ All changes to ReportedIP Hive are documented here.
 
 ### New
 
+- **The audit trail records what a support case needs (Business).** Until now
+  the trail heard eight account hooks. It now covers eight trigger groups:
+  sign-ins, user accounts (with password changes, deletions and edited role
+  capabilities), pages and posts (published, unpublished, trashed, restored,
+  deleted, URL slug changed), plugins, themes and core (installed, updated,
+  activated, deactivated, deleted, switched, with the version before and
+  after), site settings (site address, permalinks, reading, discussion,
+  registration and update settings plus every Hive setting, with the old and
+  the new value), menus and widgets (menus, menu locations, sidebar
+  placement), the built-in file editor (only a save that changed the file) and,
+  on a network, sites, site users and super admin grants. Every row names the
+  acting user, how the request came in (browser, WP-CLI, cron, REST, AJAX) and
+  the affected object with a link while it exists. Autosaves, revisions,
+  auto-drafts, the Customizer's repeated writes and the second hook core fires
+  for the same action are not rows. Secrets are never written: a data key or an
+  option name that names one keeps its values out.
+- **Triggers are settings.** The Protection page's Privacy and Logs card lists
+  the eight groups as switches (`reportedip_hive_audit_triggers`); sign-ins are
+  off by default, everything else on. The retention default moved from 30 to 90
+  days, and the sweep now runs in the same 5000-row chunks under the same time
+  budget as the security log instead of deleting one bounded batch a day.
+- **The audit tab reads like a record.** Columns for user with address, event
+  with its group, object and a sentence with old and new value; a filter that
+  selects one event or a whole group, the user, the address, the object and a
+  date range; and CSV and JSON exports that carry the active filter, the object
+  columns and the sentence. A site administrator on a network sees the site's
+  rows plus the network rows.
+- **Below Business the tab says what it would answer.** The plan marker, four
+  support questions the trail settles, a link to the plan and the same table
+  over five sample rows; nothing is queried and the export answers 403.
 - **The event-type filter can be searched, and a whole group can be picked.**
   A box above the list narrows it by label, by slug and by group name, so
   "firewall" leaves the firewall entries and "form" finds the form events
@@ -32,6 +62,11 @@ All changes to ReportedIP Hive are documented here.
 
 ### Changed
 
+- **Audit rows name the actor, not the subject.** `user_id`/`username` on a
+  new row are the signed-in user who made the change; the account the change
+  was about sits in the new `object_type`/`object_id`/`object_label` columns
+  (schema v17, added by dbDelta on upgrade). Rows from before the upgrade keep
+  their meaning; the GDPR exporter and eraser cover both shapes.
 - **One registry for every event type.** `ReportedIP_Hive_Event_Taxonomy` now
   carries a row per slug with its label, its filter group, its threat family and
   whether the bare slug, the generated threshold variant or both are written.

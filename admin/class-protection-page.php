@@ -35,6 +35,17 @@ class ReportedIP_Hive_Protection_Page {
 	const PAGE_SLUG = 'reportedip-hive-protection';
 
 	/**
+	 * URL of the Protection page opened at one section card.
+	 *
+	 * @param string $section Section id, e.g. `privacy_logs`.
+	 * @return string
+	 * @since  2.1.62
+	 */
+	public static function section_url( $section ) {
+		return ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) . '#' . sanitize_key( (string) $section );
+	}
+
+	/**
 	 * admin-post action of the per-section save.
 	 *
 	 * @var string
@@ -833,6 +844,13 @@ class ReportedIP_Hive_Protection_Page {
 			);
 		} elseif ( 'roles' === $source ) {
 			$map = array_map( 'strval', wp_roles()->get_names() );
+		} elseif ( 'audit_groups' === $source ) {
+			foreach ( ReportedIP_Hive_Audit_Registry::groups() as $slug => $group ) {
+				if ( $group['multisite_only'] && ! is_multisite() ) {
+					continue;
+				}
+				$map[ $slug ] = $group['label'];
+			}
 		}
 		$fixed   = array_map( 'strval', (array) ( $entry['choices_fixed'] ?? array() ) );
 		$choices = array();

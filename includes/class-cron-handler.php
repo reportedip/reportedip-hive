@@ -191,7 +191,7 @@ class ReportedIP_Hive_Cron_Handler {
 
 			$cleaned_audit = 0;
 			if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
-				$audit_retention = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_retention_days', 30 );
+				$audit_retention = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_retention_days', 90 );
 				$cleaned_audit   = ReportedIP_Hive_Audit_Logger::cleanup( $audit_retention );
 			}
 

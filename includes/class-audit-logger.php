@@ -1,16 +1,18 @@
 <?php
 /**
- * User-lifecycle audit event trail (Business+).
+ * Audit event trail (Business+): the one writer of the `audit_log` table.
  *
- * Records login, logout, failed login, password-reset, profile, role-change
- * and registration events into the dedicated `audit_log` table for compliance
- * and forensics, most notably a role change carries the actor (`changed_by`)
- * for privilege-escalation review, and a login from an address the user has
- * not used before is flagged as `new_ip`. Capture only happens while the
- * `audit_log` feature is available (Business+); on lower tiers the hooks are
- * never registered, so there is no database load and the existing security
- * logs remain the record for everyone. The table is treated as append-only;
- * secrets (passwords, tokens, 2FA codes) are never written.
+ * Records who did what on the site into a dedicated, append-only table:
+ * account events (sign-ins, resets, role changes with the acting user,
+ * blocks, sessions) are captured here, everything else by the connectors
+ * in `includes/audit/`, one per trigger group of
+ * {@see ReportedIP_Hive_Audit_Registry}. Capture only happens while the
+ * `audit_log` feature is available (Business+) and the trail is switched
+ * on; on lower tiers no hook is registered, so there is no database load
+ * and the security log remains the record for everyone. Every row names
+ * the acting user in `user_id`/`username` and the affected object in
+ * `object_type`/`object_id`/`object_label`. Secrets (passwords, tokens,
+ * codes) are never written.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -25,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Captures and stores user-lifecycle audit events.
+ * Captures and stores audit events.
  *
  * @since 2.1.2
  */
@@ -40,6 +42,11 @@ class ReportedIP_Hive_Audit_Logger {
 	 * Feature key gating capture.
 	 */
 	const FEATURE = 'audit_log';
+
+	/**
+	 * Schema version that added the object columns.
+	 */
+	const OBJECT_COLUMNS_VERSION = 17;
 
 	/**
 	 * User-meta key holding the per-user known-IP LRU list.
@@ -75,11 +82,32 @@ class ReportedIP_Hive_Audit_Logger {
 	const NEW_IP_ALERT_COOLDOWN = 900;
 
 	/**
+	 * Connector class per trigger group, loaded from `includes/audit/`.
+	 *
+	 * @var array<string, string>
+	 */
+	const CONNECTORS = array(
+		'content'       => 'ReportedIP_Hive_Audit_Connector_Content',
+		'installer'     => 'ReportedIP_Hive_Audit_Connector_Installer',
+		'settings'      => 'ReportedIP_Hive_Audit_Connector_Settings',
+		'menus_widgets' => 'ReportedIP_Hive_Audit_Connector_Menus',
+		'editor'        => 'ReportedIP_Hive_Audit_Connector_Editor',
+		'multisite'     => 'ReportedIP_Hive_Audit_Connector_Multisite',
+	);
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_Audit_Logger|null
 	 */
 	private static $instance = null;
+
+	/**
+	 * Whether the object columns exist, resolved once per request.
+	 *
+	 * @var bool|null
+	 */
+	private static $has_object_columns = null;
 
 	/**
 	 * Get the singleton instance.
@@ -116,14 +144,26 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
-	 * Register the lifecycle hooks, only when capture is available and enabled.
+	 * Whether the trail is available and switched on.
+	 *
+	 * @return bool
+	 * @since  2.1.62
+	 */
+	public static function is_enabled() {
+		if ( ! self::is_available() ) {
+			return false;
+		}
+		return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_enabled', true );
+	}
+
+	/**
+	 * Register the capture hooks of every enabled trigger group.
 	 *
 	 * The tier gate resolves translated feature labels, so checking it before
 	 * `init` would trigger WordPress 6.7's too-early textdomain notice (and
 	 * break cookie headers on debug installs). When called from the plugin
 	 * bootstrap the registration therefore defers itself to `init`; every
-	 * captured event (logins, profile updates, role changes) fires after
-	 * `init`, so nothing is missed.
+	 * captured event fires after `init`, so nothing is missed.
 	 *
 	 * @return void
 	 * @since  2.1.2
@@ -133,21 +173,53 @@ class ReportedIP_Hive_Audit_Logger {
 			add_action( 'init', array( $this, 'register_hooks' ), 1 );
 			return;
 		}
-		if ( ! self::is_available() ) {
-			return;
-		}
-		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_enabled', true ) ) {
+		if ( ! self::is_enabled() ) {
 			return;
 		}
 
-		add_action( 'wp_login', array( $this, 'on_login' ), 10, 2 );
-		add_action( 'wp_login_failed', array( $this, 'on_login_failed' ), 10, 1 );
-		add_action( 'wp_logout', array( $this, 'on_logout' ), 10, 1 );
-		add_action( 'retrieve_password', array( $this, 'on_retrieve_password' ), 10, 1 );
-		add_action( 'after_password_reset', array( $this, 'on_password_reset' ), 10, 2 );
-		add_action( 'profile_update', array( $this, 'on_profile_update' ), 10, 2 );
-		add_action( 'set_user_role', array( $this, 'on_role_change' ), 10, 3 );
-		add_action( 'user_register', array( $this, 'on_register' ), 10, 1 );
+		$groups = ReportedIP_Hive_Audit_Registry::enabled_groups();
+
+		if ( in_array( 'logins', $groups, true ) ) {
+			add_action( 'wp_login', array( $this, 'on_login' ), 10, 2 );
+			add_action( 'wp_login_failed', array( $this, 'on_login_failed' ), 10, 1 );
+			add_action( 'wp_logout', array( $this, 'on_logout' ), 10, 1 );
+		}
+
+		if ( in_array( 'users', $groups, true ) ) {
+			self::load_connectors();
+			add_action( 'retrieve_password', array( $this, 'on_retrieve_password' ), 10, 1 );
+			add_action( 'after_password_reset', array( $this, 'on_password_reset' ), 10, 2 );
+			add_action( 'profile_update', array( $this, 'on_profile_update' ), 10, 2 );
+			add_action( 'set_user_role', array( $this, 'on_role_change' ), 10, 3 );
+			add_action( 'user_register', array( $this, 'on_register' ), 10, 1 );
+			add_action( 'deleted_user', array( $this, 'on_user_deleted' ), 10, 3 );
+			add_action( 'wpmu_delete_user', array( $this, 'on_network_user_deleted' ), 10, 2 );
+		}
+
+		foreach ( self::CONNECTORS as $group => $class ) {
+			if ( ! in_array( $group, $groups, true ) ) {
+				continue;
+			}
+			self::load_connectors();
+			( new $class() )->register();
+		}
+	}
+
+	/**
+	 * Require the connector base class and every connector file once.
+	 *
+	 * @return void
+	 * @since  2.1.62
+	 */
+	public static function load_connectors() {
+		if ( class_exists( 'ReportedIP_Hive_Audit_Connector', false ) ) {
+			return;
+		}
+		$dir = REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/audit/';
+		require_once $dir . 'class-audit-connector.php';
+		foreach ( array( 'content', 'installer', 'settings', 'menus', 'editor', 'multisite' ) as $name ) {
+			require_once $dir . 'class-audit-connector-' . $name . '.php';
+		}
 	}
 
 	/**
@@ -251,18 +323,21 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @since  2.1.2
 	 */
 	public function on_logout( $user_id = 0 ) {
-		$this->log_event( 'logout', 'success', array(), (int) $user_id );
+		$user = get_userdata( (int) $user_id );
+		$this->log_event( 'logout', 'success', array(), (int) $user_id, $user ? (string) $user->user_login : '' );
 	}
 
 	/**
-	 * Password-reset request.
+	 * Password-reset request. Nobody is signed in, so the requested account
+	 * is the object.
 	 *
 	 * @param string $user_login Login name the reset was requested for.
 	 * @return void
 	 * @since  2.1.2
 	 */
 	public function on_retrieve_password( $user_login ) {
-		$this->log_event( 'password_reset', 'requested', array(), 0, (string) $user_login );
+		$user = get_user_by( 'login', (string) $user_login );
+		$this->log_event( 'password_reset', 'requested', array(), 0, '', self::user_object( $user, 0, (string) $user_login ) );
 	}
 
 	/**
@@ -275,13 +350,14 @@ class ReportedIP_Hive_Audit_Logger {
 	 */
 	public function on_password_reset( $user, $new_pass ) {
 		unset( $new_pass );
-		$user_id = (int) $user->ID;
-		$login   = (string) $user->user_login;
-		$this->log_event( 'password_reset', 'completed', array(), $user_id, $login );
+		$this->log_event( 'password_reset', 'completed', array(), 0, '', self::user_object( $user, (int) $user->ID ) );
 	}
 
 	/**
-	 * Profile update, records an e-mail change explicitly.
+	 * Profile update; an e-mail or password change is named explicitly.
+	 *
+	 * The password is detected by comparing the stored hashes; neither hash
+	 * is written anywhere.
 	 *
 	 * @param int     $user_id       Updated user id.
 	 * @param WP_User $old_user_data Pre-update user object.
@@ -292,16 +368,19 @@ class ReportedIP_Hive_Audit_Logger {
 		$user_id = (int) $user_id;
 		$new     = get_userdata( $user_id );
 		$action  = 'updated';
-		$data    = array();
 		if ( $new && isset( $old_user_data->user_email ) && $new->user_email !== $old_user_data->user_email ) {
 			$action = 'email_changed';
+		} elseif ( $new && isset( $old_user_data->user_pass ) && (string) $new->user_pass !== (string) $old_user_data->user_pass ) {
+			$action = 'password_changed';
 		}
-		$login = $new ? (string) $new->user_login : '';
-		$this->log_event( 'profile_change', $action, $data, $user_id, $login );
+		if ( 'updated' === $action && ReportedIP_Hive_Audit_Connector::seen( 'user:' . $user_id . ':specific' ) ) {
+			return;
+		}
+		$this->record_actor_event( 'profile_change', $action, array(), self::user_object( $new, $user_id ) );
 	}
 
 	/**
-	 * Role change, captures the actor as `changed_by`.
+	 * Role change, with the actor in the user column and `changed_by` in the data.
 	 *
 	 * @param int      $user_id   User whose role changed.
 	 * @param string   $role      New primary role.
@@ -310,66 +389,146 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @since  2.1.2
 	 */
 	public function on_role_change( $user_id, $role, $old_roles ) {
-		$data  = array(
+		if ( ReportedIP_Hive_Audit_Connector::suppressed( 'set_user_role' ) ) {
+			return;
+		}
+		if ( empty( $old_roles ) ) {
+			return;
+		}
+		ReportedIP_Hive_Audit_Connector::seen( 'user:' . (int) $user_id . ':specific' );
+		$data = array(
 			'new_role'   => (string) $role,
 			'old_roles'  => is_array( $old_roles ) ? array_values( $old_roles ) : array(),
 			'changed_by' => (int) get_current_user_id(),
 		);
-		$user  = get_userdata( (int) $user_id );
-		$login = $user ? (string) $user->user_login : '';
-		$this->log_event( 'profile_change', 'role_changed', $data, (int) $user_id, $login );
+		$this->record_actor_event( 'profile_change', 'role_changed', $data, self::user_object( get_userdata( (int) $user_id ), (int) $user_id ) );
 	}
 
 	/**
-	 * New user registration.
+	 * New user registration. Self-registrations have no actor.
 	 *
 	 * @param int $user_id Registered user id.
 	 * @return void
 	 * @since  2.1.2
 	 */
 	public function on_register( $user_id ) {
-		$user  = get_userdata( (int) $user_id );
-		$login = $user ? (string) $user->user_login : '';
-		$this->log_event( 'registration', 'success', array(), (int) $user_id, $login );
+		$this->record_actor_event( 'registration', 'success', array(), self::user_object( get_userdata( (int) $user_id ), (int) $user_id ) );
+	}
+
+	/**
+	 * User deleted on a single site, or removed from the network as a whole.
+	 *
+	 * @param int          $user_id  Deleted user id.
+	 * @param int|null     $reassign User the content went to.
+	 * @param WP_User|null $user     Deleted user (WP 5.5+).
+	 * @return void
+	 * @since  2.1.62
+	 */
+	public function on_user_deleted( $user_id, $reassign = null, $user = null ) {
+		if ( ReportedIP_Hive_Audit_Connector::suppressed( 'deleted_user' ) ) {
+			return;
+		}
+		$this->record_actor_event(
+			'user',
+			'deleted',
+			array( 'reassign' => (int) $reassign ),
+			self::user_object( $user, (int) $user_id )
+		);
+	}
+
+	/**
+	 * Network-wide user deletion; the embedded per-site `deleted_user` is silenced.
+	 *
+	 * @param int          $user_id Deleted user id.
+	 * @param WP_User|null $user    Deleted user (WP 5.5+).
+	 * @return void
+	 * @since  2.1.62
+	 */
+	public function on_network_user_deleted( $user_id, $user = null ) {
+		self::load_connectors();
+		ReportedIP_Hive_Audit_Connector::suppress( 'deleted_user' );
+		$this->record_actor_event( 'user', 'deleted', array( 'network' => 1 ), self::user_object( $user, (int) $user_id ), 0 );
 	}
 
 	/**
 	 * Public entry point for callers outside the lifecycle listeners.
 	 *
-	 * Honours the same tier and opt-out gate as the automatic listeners, so a
-	 * site that turned the audit trail off does not gain rows through the
-	 * account-block and session surfaces.
+	 * Honours the same tier and opt-out gate as the automatic listeners, plus
+	 * the trigger group of the event, so a site that switched a group off
+	 * does not gain rows through another surface.
 	 *
 	 * @param string              $type     Event type.
 	 * @param string              $action   Event action.
 	 * @param array<string,mixed> $data     Structured event data.
-	 * @param int                 $user_id  Subject user id (0 for none).
-	 * @param string              $username Subject username.
+	 * @param int                 $user_id  Acting user id (0 for none).
+	 * @param string              $username Acting user's login.
+	 * @param array<string,mixed> $object   `type`, `id`, `label` of the affected object.
+	 * @param int|null            $blog_id  Explicit scope, 0 for network rows, null for the current site.
 	 * @return void
 	 * @since  2.1.51
 	 */
-	public function record( $type, $action, array $data, $user_id = 0, $username = '' ) {
-		if ( ! self::is_available() ) {
+	public function record( $type, $action, array $data, $user_id = 0, $username = '', array $object = array(), $blog_id = null ) {
+		if ( ! self::is_enabled() ) {
 			return;
 		}
-		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_enabled', true ) ) {
+		$event = ReportedIP_Hive_Audit_Registry::event( (string) $type, (string) $action );
+		if ( $event && ! ReportedIP_Hive_Audit_Registry::group_enabled( $event['group'] ) ) {
 			return;
 		}
-		$this->log_event( (string) $type, (string) $action, $data, (int) $user_id, (string) $username );
+		$this->log_event( (string) $type, (string) $action, $data, (int) $user_id, (string) $username, $object, $blog_id );
+	}
+
+	/**
+	 * Row with the signed-in user as the actor.
+	 *
+	 * @param string              $type    Event type.
+	 * @param string              $action  Event action.
+	 * @param array<string,mixed> $data    Structured data.
+	 * @param array<string,mixed> $object  Affected object.
+	 * @param int|null            $blog_id Scope.
+	 * @return void
+	 * @since  2.1.62
+	 */
+	private function record_actor_event( $type, $action, array $data, array $object, $blog_id = null ) {
+		$actor = wp_get_current_user();
+		$this->log_event( $type, $action, $data, (int) $actor->ID, (string) $actor->user_login, $object, $blog_id );
+	}
+
+	/**
+	 * Object descriptor of a user account.
+	 *
+	 * @param WP_User|false|null $user     User, when still resolvable.
+	 * @param int                $user_id  Id fallback.
+	 * @param string             $login    Login fallback.
+	 * @return array{type:string, id:int, label:string}
+	 * @since  2.1.62
+	 */
+	public static function user_object( $user, $user_id, $login = '' ) {
+		if ( $user instanceof WP_User ) {
+			$user_id = (int) $user->ID;
+			$login   = (string) $user->user_login;
+		}
+		return array(
+			'type'  => 'user',
+			'id'    => (int) $user_id,
+			'label' => '' !== $login ? $login : '#' . (int) $user_id,
+		);
 	}
 
 	/**
 	 * Persist one audit row from gathered context.
 	 *
-	 * @param string               $type     Event type.
-	 * @param string               $action   Event action.
-	 * @param array<string,mixed>  $data     Structured event data (redacted before storage).
-	 * @param int                  $user_id  Subject user id (0 for none).
-	 * @param string               $username Subject username.
+	 * @param string              $type     Event type.
+	 * @param string              $action   Event action.
+	 * @param array<string,mixed> $data     Structured event data (redacted before storage).
+	 * @param int                 $user_id  Acting user id (0 for none).
+	 * @param string              $username Acting user's login.
+	 * @param array<string,mixed> $object   Affected object.
+	 * @param int|null            $blog_id  Scope; null means the current site.
 	 * @return void
 	 * @since  2.1.2
 	 */
-	private function log_event( $type, $action, array $data, $user_id = 0, $username = '' ) {
+	private function log_event( $type, $action, array $data, $user_id = 0, $username = '', array $object = array(), $blog_id = null ) {
 		global $wpdb;
 
 		$user_agent = '';
@@ -379,7 +538,7 @@ class ReportedIP_Hive_Audit_Logger {
 
 		$row = self::build_row(
 			array(
-				'blog_id'      => get_current_blog_id(),
+				'blog_id'      => null === $blog_id ? get_current_blog_id() : (int) $blog_id,
 				'created_at'   => current_time( 'mysql', true ),
 				'ip'           => self::client_ip(),
 				'user_id'      => $user_id,
@@ -389,11 +548,32 @@ class ReportedIP_Hive_Audit_Logger {
 				'data'         => $data,
 				'user_agent'   => $user_agent,
 				'anonymize_ip' => (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_ANONYMIZE_IP, false ),
+				'object'       => $object,
 			)
 		);
 
+		if ( ! self::has_object_columns() ) {
+			unset( $row['object_type'], $row['object_id'], $row['object_label'] );
+		}
+
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Append-only audit write; caching is not applicable.
 		$wpdb->insert( $wpdb->base_prefix . self::TABLE, $row );
+	}
+
+	/**
+	 * Whether schema v17 has run. The migration runs on `admin_init`, so a
+	 * plugin update followed by a front-end sign-in would otherwise insert
+	 * with columns the table does not have yet.
+	 *
+	 * @return bool
+	 * @since  2.1.62
+	 */
+	private static function has_object_columns() {
+		if ( null === self::$has_object_columns ) {
+			$version                  = class_exists( 'ReportedIP_Hive_Migration_Manager' ) ? ReportedIP_Hive_Migration_Manager::VERSION_OPTION : 'reportedip_hive_db_version';
+			self::$has_object_columns = (int) get_site_option( $version, 0 ) >= self::OBJECT_COLUMNS_VERSION;
+		}
+		return self::$has_object_columns;
 	}
 
 	/**
@@ -402,16 +582,25 @@ class ReportedIP_Hive_Audit_Logger {
 	 * Redacts sensitive keys, JSON-encodes the data blob and clamps every
 	 * field to its column width. Unit-testable without a database.
 	 *
-	 * @param array<string,mixed> $ctx Context (blog_id, created_at, ip, user_id, username, event_type, event_action, data, risk_score, country_code, user_agent).
+	 * @param array<string,mixed> $ctx Context (blog_id, created_at, ip, user_id, username, event_type, event_action, data, risk_score, country_code, user_agent, object).
 	 * @return array<string,mixed>
 	 * @since  2.1.2
 	 */
 	public static function build_row( array $ctx ) {
-		$data = isset( $ctx['data'] ) && is_array( $ctx['data'] ) ? self::redact( $ctx['data'] ) : array();
-		$ip   = (string) ( $ctx['ip'] ?? '' );
+		$data   = isset( $ctx['data'] ) && is_array( $ctx['data'] ) ? self::redact( $ctx['data'] ) : array();
+		$ip     = (string) ( $ctx['ip'] ?? '' );
+		$object = isset( $ctx['object'] ) && is_array( $ctx['object'] ) ? $ctx['object'] : array();
 
 		if ( ! empty( $ctx['anonymize_ip'] ) ) {
 			$ip = self::anonymize_ip( $ip );
+		}
+
+		$object_type  = substr( (string) ( $object['type'] ?? '' ), 0, 32 );
+		$object_label = (string) ( $object['label'] ?? '' );
+		if ( function_exists( 'mb_substr' ) ) {
+			$object_label = mb_substr( $object_label, 0, 200 );
+		} else {
+			$object_label = substr( $object_label, 0, 200 );
 		}
 
 		return array(
@@ -426,6 +615,9 @@ class ReportedIP_Hive_Audit_Logger {
 			'risk_score'   => isset( $ctx['risk_score'] ) ? (int) $ctx['risk_score'] : null,
 			'country_code' => empty( $ctx['country_code'] ) ? null : substr( (string) $ctx['country_code'], 0, 8 ),
 			'user_agent'   => empty( $ctx['user_agent'] ) ? null : substr( (string) $ctx['user_agent'], 0, 255 ),
+			'object_type'  => '' === $object_type ? null : $object_type,
+			'object_id'    => empty( $object['id'] ) ? null : (int) $object['id'],
+			'object_label' => '' === $object_label ? null : $object_label,
 		);
 	}
 
@@ -535,7 +727,8 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
-	 * Delete audit rows older than the retention window, in one bounded batch.
+	 * Delete audit rows older than the retention window, chunked under the
+	 * shared cleanup time budget like the other tables.
 	 *
 	 * @param int $retention_days Days to keep.
 	 * @return int Rows deleted.
@@ -543,11 +736,12 @@ class ReportedIP_Hive_Audit_Logger {
 	 */
 	public static function cleanup( $retention_days ) {
 		global $wpdb;
-		$days   = max( 1, (int) $retention_days );
-		$cutoff = gmdate( 'Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS );
-		$table  = $wpdb->base_prefix . self::TABLE;
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- $table from base_prefix + class constant; date bound is prepared; retention sweep needs no cache.
-		return (int) $wpdb->query( $wpdb->prepare( "DELETE FROM $table WHERE created_at < %s LIMIT 1000", $cutoff ) );
+		return ReportedIP_Hive_Database::delete_older_than(
+			$wpdb->base_prefix . self::TABLE,
+			'created_at',
+			max( 1, (int) $retention_days ),
+			time() + ReportedIP_Hive_Database::CLEANUP_TIME_BUDGET
+		);
 	}
 
 	/**

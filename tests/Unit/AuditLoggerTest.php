@@ -99,6 +99,35 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * The object columns are clamped and NULL when absent, so a row from
+		 * before 2.1.62 and a row without a target look the same.
+		 *
+		 * @return void
+		 */
+		public function test_build_row_carries_the_object_columns(): void {
+			$row = \ReportedIP_Hive_Audit_Logger::build_row(
+				array(
+					'event_type'   => 'plugin',
+					'event_action' => 'deactivated',
+					'user_id'      => 3,
+					'object'       => array(
+						'type'  => 'plugin',
+						'id'    => 0,
+						'label' => str_repeat( 'w', 260 ),
+					),
+				)
+			);
+			$this->assertSame( 'plugin', $row['object_type'] );
+			$this->assertNull( $row['object_id'] );
+			$this->assertSame( 200, strlen( (string) $row['object_label'] ) );
+
+			$bare = \ReportedIP_Hive_Audit_Logger::build_row( array( 'event_type' => 'login', 'event_action' => 'success' ) );
+			$this->assertNull( $bare['object_type'] );
+			$this->assertNull( $bare['object_id'] );
+			$this->assertNull( $bare['object_label'] );
+		}
+
+		/**
 		 * The anonymisation option keeps the network and drops the host.
 		 *
 		 * The option shipped in 2.1.2 and had no reader until 2.1.51: it was

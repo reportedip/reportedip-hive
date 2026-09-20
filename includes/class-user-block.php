@@ -300,8 +300,9 @@ final class ReportedIP_Hive_User_Block {
 				'has_message' => '' !== $texts['message'] ? 1 : 0,
 				'has_note'    => '' !== $texts['note'] ? 1 : 0,
 			),
-			$user_id,
-			(string) $user->user_login
+			get_current_user_id(),
+			(string) wp_get_current_user()->user_login,
+			ReportedIP_Hive_Audit_Logger::user_object( $user, $user_id )
 		);
 
 		return true;
@@ -352,8 +353,9 @@ final class ReportedIP_Hive_User_Block {
 			'user_block',
 			'unblocked',
 			array( 'by' => get_current_user_id() ),
-			$user_id,
-			(string) $user->user_login
+			get_current_user_id(),
+			(string) wp_get_current_user()->user_login,
+			ReportedIP_Hive_Audit_Logger::user_object( $user, $user_id )
 		);
 
 		return true;

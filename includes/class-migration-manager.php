@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 16;
+	public const CURRENT_VERSION = 17;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -503,6 +503,21 @@ final class ReportedIP_Hive_Migration_Manager {
 				ReportedIP_Hive_Option_Routing::set( $option, $floor );
 			}
 		}
+	}
+
+	/**
+	 * Adds the object columns to the audit trail.
+	 *
+	 * 2.1.62 widened the trail from account events to content, installer,
+	 * settings, menu and network events; every row now names the affected
+	 * object. `ensure_tables()` carries the new DDL and dbDelta adds the
+	 * columns and the index to an existing table.
+	 *
+	 * @return void
+	 * @since  2.1.62
+	 */
+	private static function migrate_to_v17() {
+		ReportedIP_Hive_Schema::ensure_tables();
 	}
 
 	/**

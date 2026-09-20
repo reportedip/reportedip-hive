@@ -1413,15 +1413,8 @@ class ReportedIP_Hive_Database {
 		$deleted  = 0;
 		$deadline = time() + self::CLEANUP_TIME_BUDGET;
 
-		$chunked_delete = static function ( $sql ) use ( $wpdb, &$deleted, $deadline ) {
-			do {
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Statements below are prepared before being passed in.
-				$result = $wpdb->query( $sql . ' LIMIT ' . self::CLEANUP_DELETE_CHUNK );
-				if ( false === $result ) {
-					return;
-				}
-				$deleted += $result;
-			} while ( $result === self::CLEANUP_DELETE_CHUNK && time() < $deadline );
+		$chunked_delete = static function ( $sql ) use ( &$deleted, $deadline ) {
+			$deleted += self::run_chunked_delete( $sql, $deadline );
 		};
 
 		$tables_to_clean = array(
@@ -1431,12 +1424,7 @@ class ReportedIP_Hive_Database {
 		);
 
 		foreach ( $tables_to_clean as $table => $date_column ) {
-			$chunked_delete(
-				$wpdb->prepare(
-					"DELETE FROM $table WHERE $date_column < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)",
-					$days
-				)
-			);
+			$deleted += self::delete_older_than( $table, $date_column, $days, $deadline );
 		}
 
 		$chunked_delete(
@@ -1462,6 +1450,51 @@ class ReportedIP_Hive_Database {
 			)
 		);
 
+		return $deleted;
+	}
+
+	/**
+	 * Delete rows of one table older than a number of days, in chunks.
+	 *
+	 * Shared by the daily cleanup of the security tables and the audit trail
+	 * so every retention sweep has the same lock footprint and time budget.
+	 *
+	 * @param string $table       Fully qualified table name.
+	 * @param string $date_column Datetime column, UTC.
+	 * @param int    $days        Age threshold in days.
+	 * @param int    $deadline    Unix time after which no further chunk starts.
+	 * @return int Rows deleted.
+	 * @since  2.1.62
+	 */
+	public static function delete_older_than( $table, $date_column, $days, $deadline ) {
+		global $wpdb;
+		return self::run_chunked_delete(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table and column come from the caller's constants; the age is bound.
+			$wpdb->prepare( "DELETE FROM $table WHERE $date_column < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)", max( 1, (int) $days ) ),
+			$deadline
+		);
+	}
+
+	/**
+	 * Run one DELETE statement chunk by chunk until a short chunk comes back
+	 * or the deadline passes.
+	 *
+	 * @param string $sql      Prepared DELETE statement without LIMIT.
+	 * @param int    $deadline Unix time after which no further chunk starts.
+	 * @return int Rows deleted.
+	 * @since  2.1.62
+	 */
+	private static function run_chunked_delete( $sql, $deadline ) {
+		global $wpdb;
+		$deleted = 0;
+		do {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Statement is prepared by the caller; retention sweep needs no cache.
+			$result = $wpdb->query( $sql . ' LIMIT ' . self::CLEANUP_DELETE_CHUNK );
+			if ( false === $result ) {
+				return $deleted;
+			}
+			$deleted += (int) $result;
+		} while ( $result === self::CLEANUP_DELETE_CHUNK && time() < $deadline );
 		return $deleted;
 	}
 
@@ -2152,7 +2185,7 @@ class ReportedIP_Hive_Database {
 		 * `date_i18n()` output.
 		 */
 		static $request_memo = array();
-		$cache_key = 'reportedip_hive_threat_analytics_' . $days . '_' . get_locale();
+		$cache_key           = 'reportedip_hive_threat_analytics_' . $days . '_' . get_locale();
 		if ( isset( $request_memo[ $cache_key ] ) ) {
 			return $request_memo[ $cache_key ];
 		}

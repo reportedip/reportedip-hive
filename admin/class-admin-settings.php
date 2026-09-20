@@ -1684,17 +1684,22 @@ class ReportedIP_Hive_Admin_Settings {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified by check_admin_referer() above.
 		$format = ( isset( $_GET['format'] ) && 'json' === sanitize_key( wp_unslash( $_GET['format'] ) ) ) ? 'json' : 'csv';
 
+		if ( ! class_exists( 'ReportedIP_Hive_Audit_Log_Table' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-audit-log-table.php';
+		}
+
 		global $wpdb;
 		$table = $wpdb->base_prefix . ReportedIP_Hive_Audit_Logger::TABLE;
-		$cols  = 'created_at, ip, user_id, username, event_type, event_action, event_data, country_code';
-		if ( is_multisite() && ! is_network_admin() ) {
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name from base_prefix; column list literal; blog id bound.
-			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT $cols FROM $table WHERE blog_id = %d ORDER BY created_at DESC LIMIT 10000", get_current_blog_id() ), ARRAY_A );
-		} else {
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name from base_prefix; column list literal.
-			$rows = $wpdb->get_results( "SELECT $cols FROM $table ORDER BY created_at DESC LIMIT 10000", ARRAY_A );
+		$cols  = 'created_at, blog_id, ip, user_id, username, event_type, event_action, object_type, object_id, object_label, event_data';
+		list( $where_sql, $params ) = ReportedIP_Hive_Audit_Log_Table::build_where( ReportedIP_Hive_Audit_Log_Table::filter_args() );
+		$sql                        = "SELECT $cols FROM $table WHERE $where_sql ORDER BY created_at DESC, id DESC LIMIT 10000";
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name from base_prefix; column list literal; the WHERE fragment binds its own parameters.
+		$rows = (array) $wpdb->get_results( empty( $params ) ? $sql : $wpdb->prepare( $sql, $params ), ARRAY_A );
+		foreach ( $rows as &$row ) {
+			$row['event_label'] = ReportedIP_Hive_Audit_Registry::label( (string) $row['event_type'], (string) $row['event_action'] );
+			$row['summary']     = ReportedIP_Hive_Audit_Registry::summary( (object) $row );
 		}
-		$rows = (array) $rows;
+		unset( $row );
 
 		nocache_headers();
 		if ( 'json' === $format ) {
@@ -1707,7 +1712,7 @@ class ReportedIP_Hive_Admin_Settings {
 		header( 'Content-Type: text/csv; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename="reportedip-hive-audit-' . gmdate( 'Y-m-d' ) . '.csv"' );
 		$output = fopen( 'php://output', 'w' );
-		fputcsv( $output, array( 'created_at', 'ip', 'user_id', 'username', 'event_type', 'event_action', 'event_data', 'country_code' ) );
+		fputcsv( $output, array( 'created_at', 'blog_id', 'ip', 'user_id', 'username', 'event_type', 'event_action', 'object_type', 'object_id', 'object_label', 'event_data', 'event_label', 'summary' ) );
 		foreach ( $rows as $row ) {
 			fputcsv( $output, $row );
 		}
@@ -1903,42 +1908,97 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render the Audit sub-tab inside the Security page, user-lifecycle audit
-	 * trail. Business+ tier-locked scaffold; the event trail lands in a later
-	 * phase.
+	 * Render the Audit sub-tab inside the Security page.
+	 *
+	 * With the trail in the plan: filters, the table and the filtered export.
+	 * Without it: the plan marker, a card that says what the trail answers
+	 * in a support case, and the same table over five sample rows so the
+	 * reader sees the real thing instead of a description of it.
 	 *
 	 * @since 2.1.2
 	 * @return void
 	 */
 	private function render_audit_tab() {
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
-		if ( empty( $status['available'] ) ) {
-			self::render_tier_marker( $status );
-			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'The user-lifecycle audit trail, logins, role changes with the actor, new-IP alerts, unlocks with Business. Your standard security events stay available in the Event Log.', 'reportedip-hive' ) . '</div>';
-			return;
-		}
-
 		if ( ! class_exists( 'ReportedIP_Hive_Audit_Log_Table' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-audit-log-table.php';
 		}
 		$table = new ReportedIP_Hive_Audit_Log_Table();
-		$table->prepare_items();
 
+		if ( empty( $status['available'] ) ) {
+			$this->render_audit_upsell( $status, $table );
+			return;
+		}
+
+		$table->prepare_items();
 		$table->render_filters();
 		$table->display();
 
-		$csv_url  = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_audit_export&format=csv' ), 'reportedip_hive_audit_export' );
-		$json_url = wp_nonce_url( admin_url( 'admin-post.php?action=reportedip_hive_audit_export&format=json' ), 'reportedip_hive_audit_export' );
+		$export_args = array_filter( ReportedIP_Hive_Audit_Log_Table::filter_args() );
+		$base        = add_query_arg( array_merge( array( 'action' => 'reportedip_hive_audit_export' ), $export_args ), admin_url( 'admin-post.php' ) );
+		$csv_url     = wp_nonce_url( add_query_arg( 'format', 'csv', $base ), 'reportedip_hive_audit_export' );
+		$json_url    = wp_nonce_url( add_query_arg( 'format', 'json', $base ), 'reportedip_hive_audit_export' );
+		$settings    = ReportedIP_Hive_Protection_Page::section_url( 'privacy_logs' );
 		echo '<div class="rip-table-actions">';
 		printf(
-			'<a class="rip-button rip-button--secondary" href="%s">%s</a> <a class="rip-button rip-button--secondary" href="%s">%s</a> ',
+			'<a class="rip-button rip-button--secondary" href="%1$s">%2$s</a> <a class="rip-button rip-button--secondary" href="%3$s">%4$s</a> <a class="rip-button rip-button--ghost" href="%5$s">%6$s</a> ',
 			esc_url( $csv_url ),
 			esc_html__( 'Export CSV', 'reportedip-hive' ),
 			esc_url( $json_url ),
-			esc_html__( 'Export JSON', 'reportedip-hive' )
+			esc_html__( 'Export JSON', 'reportedip-hive' ),
+			esc_url( $settings ),
+			esc_html__( 'Triggers and retention', 'reportedip-hive' )
 		);
 		self::render_tier_marker( $status );
 		echo '</div>';
+	}
+
+	/**
+	 * The audit tab on a plan without the trail: what it answers, and a sample.
+	 *
+	 * @param array<string,mixed>               $status Feature status of `audit_log`.
+	 * @param ReportedIP_Hive_Audit_Log_Table $table  Table instance for the sample rows.
+	 * @return void
+	 * @since  2.1.62
+	 */
+	private function render_audit_upsell( array $status, ReportedIP_Hive_Audit_Log_Table $table ) {
+		$arguments = array(
+			__( 'Who changed the permalink structure, and what it was before, when every old link started to fail.', 'reportedip-hive' ),
+			__( 'Who deactivated the shop or form plugin on the evening the orders stopped.', 'reportedip-hive' ),
+			__( 'Who moved the imprint to the trash, with the title so it can be restored.', 'reportedip-hive' ),
+			__( 'Who saved a theme file in the built-in editor right before the white screen.', 'reportedip-hive' ),
+		);
+		$url       = add_query_arg(
+			array(
+				'utm_source' => 'hive',
+				'utm_medium' => 'audit',
+			),
+			self::pricing_url()
+		);
+		?>
+		<div class="rip-card rip-audit-upsell">
+			<div class="rip-card__header">
+				<h2 class="rip-card__title">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+					<?php esc_html_e( 'Know who changed what, before the support ticket asks', 'reportedip-hive' ); ?>
+				</h2>
+				<?php self::render_tier_marker( $status ); ?>
+			</div>
+			<div class="rip-card__body">
+				<p><?php esc_html_e( 'The audit trail records the changes a maintenance case turns on: settings with the old and the new value, plugins and themes, pages and posts, menus, edited files and user accounts, each with the acting user, the address and the time. Kept for as long as you decide, exportable as CSV or JSON.', 'reportedip-hive' ); ?></p>
+				<ul class="rip-mode-card__features">
+					<?php foreach ( $arguments as $argument ) : ?>
+						<li><?php echo esc_html( $argument ); ?></li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+			<div class="rip-card__footer">
+				<a class="rip-button rip-button--primary" href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'See the Business plan', 'reportedip-hive' ); ?></a>
+			</div>
+		</div>
+		<p class="rip-text-muted rip-audit-sample-note"><?php esc_html_e( 'Sample entries. Nothing is recorded on your plan; your security events stay in the Event Log.', 'reportedip-hive' ); ?></p>
+		<?php
+		$table->display_items( ReportedIP_Hive_Audit_Log_Table::sample_items() );
 	}
 
 	/**
@@ -3924,7 +3984,7 @@ class ReportedIP_Hive_Admin_Settings {
 			),
 			'audit'     => array(
 				__( 'Audit Trail', 'reportedip-hive' ),
-				__( 'Who signed in, reset a password, changed a profile or a role, and from which address. Every entry names the acting user, so account changes can be traced after the fact.', 'reportedip-hive' ),
+				__( 'Who changed a setting, a plugin, a page, a menu, a file or an account, from which address and when, with the old and the new value. The record a support case needs after the fact.', 'reportedip-hive' ),
 			),
 			'blocked'   => array(
 				__( 'Blocked', 'reportedip-hive' ),

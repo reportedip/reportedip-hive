@@ -207,7 +207,7 @@ class ReportedIP_Hive_Privacy {
 
 		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$audit = $wpdb->get_results( $wpdb->prepare( "SELECT id, created_at, ip, event_type, event_action, event_data FROM {$audit_table} WHERE user_id = %d", $user->ID ) );
+		$audit = $wpdb->get_results( $wpdb->prepare( "SELECT id, created_at, ip, event_type, event_action, event_data FROM {$audit_table} WHERE user_id = %d OR (object_type = 'user' AND object_id = %d)", $user->ID, $user->ID ) );
 		foreach ( (array) $audit as $row ) {
 			$items[] = array(
 				'group_id'    => 'reportedip-hive-audit',
@@ -367,6 +367,8 @@ class ReportedIP_Hive_Privacy {
 		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$removed += (int) $wpdb->query( $wpdb->prepare( "UPDATE {$audit_table} SET username = '', ip = '', user_id = NULL, event_data = NULL WHERE user_id = %d", $user->ID ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$removed += (int) $wpdb->query( $wpdb->prepare( "UPDATE {$audit_table} SET object_label = NULL, event_data = NULL WHERE object_type = 'user' AND object_id = %d", $user->ID ) );
 
 		delete_user_meta( $user->ID, '_reportedip_hive_known_ips' );
 		delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_LOGIN_CONTEXT );

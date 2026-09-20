@@ -1,10 +1,12 @@
 <?php
 /**
- * The audit trail's event filter must offer every type that is written.
+ * The audit trail's filter, export and gate stay wired to the registry.
  *
  * A type that is recorded but missing from the filter drop-down is invisible
- * to the compliance reader who needs it, the trail is only useful if the
- * rows can be found again.
+ * to the reader who needs it. Since 2.1.62 the filter, the badges and the
+ * sentences come from the audit registry, the export shares the table's
+ * WHERE clause, and the public `record()` wrapper keeps the plan, opt-out
+ * and trigger-group gate of the automatic listeners.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -33,37 +35,61 @@ namespace ReportedIP\Hive\Tests\Unit {
 			return (string) file_get_contents( dirname( __DIR__, 2 ) . '/' . $relative );
 		}
 
-		public function test_filter_offers_the_new_event_types(): void {
+		public function test_filter_badges_and_sentences_come_from_the_registry(): void {
 			$source = $this->source( 'admin/class-audit-log-table.php' );
 
-			$this->assertStringContainsString( "'user_block'     => __( 'Account block'", $source );
-			$this->assertStringContainsString( "'session'        => __( 'Session'", $source );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Audit_Registry::filter_options()', $source );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Audit_Registry::expand_filter_value(', $source );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Audit_Registry::badge(', $source );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Audit_Registry::label(', $source );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Audit_Registry::summary(', $source );
+			$this->assertStringNotContainsString( "'user_block'     => __(", $source, 'no hand-written type list next to the registry' );
 		}
 
-		public function test_new_actions_carry_a_badge_class(): void {
-			$source = $this->source( 'admin/class-audit-log-table.php' );
+		public function test_export_shares_the_table_query_builder(): void {
+			$admin = $this->source( 'admin/class-admin-settings.php' );
+			$body  = substr( $admin, (int) strpos( $admin, 'public function handle_audit_export(' ) );
+			$body  = substr( $body, 0, (int) strpos( $body, 'fclose(' ) );
 
-			foreach ( array( 'blocked', 'unblocked', 'terminated', 'terminated_all' ) as $action ) {
-				$this->assertMatchesRegularExpression(
-					"/in_array\( \\\$action, array\([^)]*'" . preg_quote( $action, '/' ) . "'/",
-					$source,
-					"Audit action $action needs a badge class."
-				);
+			$this->assertStringContainsString( 'ReportedIP_Hive_Audit_Log_Table::build_where(', $body );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Audit_Log_Table::filter_args()', $body );
+			$this->assertStringContainsString( "feature_status( 'audit_log' )", $body, 'the handler keeps its own plan gate' );
+			foreach ( array( 'object_type', 'object_id', 'object_label', 'summary' ) as $column ) {
+				$this->assertStringContainsString( "'{$column}'", $body, "export column {$column}" );
 			}
 		}
 
+		public function test_site_scope_includes_network_rows(): void {
+			$source = $this->source( 'admin/class-audit-log-table.php' );
+			$this->assertStringContainsString( 'blog_id IN (%d, 0)', $source );
+		}
+
 		/**
-		 * The public wrapper must keep the tier and opt-out gate the automatic
-		 * listeners have; `log_event()` itself stays private.
+		 * The public wrapper must keep the plan and opt-out gate the automatic
+		 * listeners have, plus the trigger group; `log_event()` stays private.
 		 */
 		public function test_record_wrapper_keeps_the_gate(): void {
 			$source = $this->source( 'includes/class-audit-logger.php' );
 			$body   = substr( $source, (int) strpos( $source, 'public function record(' ) );
-			$body   = substr( $body, 0, (int) strpos( $body, 'private function log_event(' ) );
+			$body   = substr( $body, 0, (int) strpos( $body, 'private function record_actor_event(' ) );
 
-			$this->assertStringContainsString( 'self::is_available()', $body );
-			$this->assertStringContainsString( 'reportedip_hive_audit_enabled', $body );
+			$this->assertStringContainsString( 'self::is_enabled()', $body );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Audit_Registry::group_enabled(', $body );
 			$this->assertStringContainsString( 'private function log_event(', $source );
+
+			$enabled = substr( $source, (int) strpos( $source, 'public static function is_enabled(' ) );
+			$enabled = substr( $enabled, 0, (int) strpos( $enabled, 'public function register_hooks(' ) );
+			$this->assertStringContainsString( 'self::is_available()', $enabled );
+			$this->assertStringContainsString( 'reportedip_hive_audit_enabled', $enabled );
+		}
+
+		public function test_sample_rows_render_without_the_database(): void {
+			$source = $this->source( 'admin/class-admin-settings.php' );
+			$body   = substr( $source, (int) strpos( $source, 'private function render_audit_upsell(' ) );
+			$body   = substr( $body, 0, (int) strpos( $body, 'sample_items()' ) );
+
+			$this->assertStringNotContainsString( 'prepare_items()', $body, 'the locked tab must not query the trail' );
+			$this->assertStringContainsString( 'pricing_url()', $body );
 		}
 	}
 }

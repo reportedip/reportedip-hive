@@ -1525,6 +1525,30 @@ button.rip-tier-lock--mode:hover {
     margin-top: var(--rip-space-4);
 }
 
+/* Audit trail: secondary lines under the user and event cells, the sample note. */
+.rip-audit-ip {
+    margin-top: var(--rip-space-1);
+}
+
+.rip-audit-group {
+    margin-top: var(--rip-space-1);
+    font-size: var(--rip-text-xs);
+    color: var(--rip-gray-500);
+}
+
+.rip-audit-upsell {
+    margin-bottom: var(--rip-space-4);
+}
+
+.rip-audit-upsell .rip-card__body p {
+    margin-top: 0;
+}
+
+.rip-audit-sample-note {
+    margin: 0 0 var(--rip-space-2);
+    font-size: var(--rip-text-sm);
+}
+
 @media (max-width: 782px) {
     .rip-filter-bar__field,
     .rip-filter-bar__toggle,

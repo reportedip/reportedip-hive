@@ -295,8 +295,9 @@ class ReportedIP_Hive_User_Admin {
 				'target_user_id' => $user_id,
 				'verifier'       => substr( (string) $verifier, 0, 8 ),
 			),
-			$user_id,
-			$user ? (string) $user->user_login : ''
+			get_current_user_id(),
+			(string) wp_get_current_user()->user_login,
+			ReportedIP_Hive_Audit_Logger::user_object( $user, (int) $user_id )
 		);
 	}
 
@@ -327,8 +328,9 @@ class ReportedIP_Hive_User_Admin {
 				'target_user_id' => (int) $user_id,
 				'count'          => $count,
 			),
-			(int) $user_id,
-			$user ? (string) $user->user_login : ''
+			get_current_user_id(),
+			(string) wp_get_current_user()->user_login,
+			ReportedIP_Hive_Audit_Logger::user_object( $user, (int) $user_id )
 		);
 	}
 

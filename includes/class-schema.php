@@ -279,11 +279,15 @@ final class ReportedIP_Hive_Schema {
 			risk_score int(11) DEFAULT NULL,
 			country_code varchar(8) DEFAULT NULL,
 			user_agent text DEFAULT NULL,
+			object_type varchar(32) DEFAULT NULL,
+			object_id bigint(20) unsigned DEFAULT NULL,
+			object_label varchar(200) DEFAULT NULL,
 			PRIMARY KEY  (id),
 			KEY idx_audit_blog_event (blog_id, event_type, created_at),
 			KEY idx_audit_user (user_id),
 			KEY idx_audit_ip (ip),
-			KEY idx_audit_created (created_at)
+			KEY idx_audit_created (created_at),
+			KEY idx_audit_object (object_type, object_id)
 		) $charset_collate;";
 
 		$table_waf_exceptions = $prefix . 'reportedip_hive_waf_exceptions';

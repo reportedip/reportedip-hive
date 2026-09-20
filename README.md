@@ -190,7 +190,7 @@ What the paid **Professional** (3 domains) and **Business** (15 domains, multi-b
 - **Form protection on third-party form plugins.** Contact Form 7 and Ultimate Member with Professional, Formidable Forms, Formidable Forms PRO and Elementor Forms with Business, plus the computation check on every protected form. See [Form protection](#form-protection).
 - **Advanced Security Keys (Business).** Multiple WebAuthn keys per account, attestation-based model detection, key-lifecycle mails.
 - **User account control and sessions (Business).** Block an account so it cannot sign in, use an application password or reset its password, drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions.
-- **Audit event trail (Business).** Append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export.
+- **Audit event trail (Business).** Append-only record of who changed what: settings with the old and the new value, plugins, themes and core, pages and posts, menus and widgets, files saved in the built-in editor, user accounts and, on a network, sites; each row names the acting user, the request agent and the affected object. Eight trigger groups are switches, retention is configurable, the tab filters by group, user, address, object and date and exports the filtered rows as CSV or JSON.
 - Higher API quotas, multi-site dashboard, priority blacklist sync, longer log retention, prepaid mail/SMS top-up bundles. Business adds white-label, the full WP-CLI surface, role-based login-time restrictions and a GDPR export tool.
 
 Pricing and the full tier matrix live at <https://reportedip.com>.

@@ -140,7 +140,8 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_coep'                            => 'off',
 
 		'reportedip_hive_audit_enabled'                   => true,
-		'reportedip_hive_audit_retention_days'            => 30,
+		'reportedip_hive_audit_triggers'                  => '["users","content","installer","settings","menus_widgets","editor","multisite"]',
+		'reportedip_hive_audit_retention_days'            => 90,
 		'reportedip_hive_audit_new_ip_alert'              => false,
 		'reportedip_hive_audit_anonymize_ip'              => false,
 

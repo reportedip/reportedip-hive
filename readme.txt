@@ -283,7 +283,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * 100,000 checks/day, 5,000 reports/day
 * **2,500 mail/month + 75 SMS/month included**
 * Everything in Professional, plus white-label (logo, copy, mail templates), the WooCommerce complete integration, full WP-CLI surface and role-based login-time restrictions
-* **Audit event trail**, append-only user-lifecycle log (logins, password resets, profile updates, role changes including the acting user, new-IP alerts) with filters and CSV/JSON export
+* **Audit event trail**, append-only record of who changed what: settings with old and new value, plugins, themes and core, pages and posts, menus and widgets, edited files and user accounts, each with the acting user and the affected object; eight trigger groups as switches, filters and CSV/JSON export
 * **Form protection on Formidable Forms, Formidable Forms PRO and Elementor Forms**, one switch per plugin
 * **Advanced Security Keys**, multiple WebAuthn keys per account (primary + backup YubiKey), automatic model detection via attestation, key-lifecycle email alerts
 * **User account control and sessions**, block an account (it keeps its content but cannot sign in, authenticate an application password or complete a password reset), drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions

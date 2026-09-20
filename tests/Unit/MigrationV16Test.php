@@ -38,8 +38,8 @@ class MigrationV16Test extends TestCase {
 		$method->invoke( null );
 	}
 
-	public function test_current_version_is_sixteen() {
-		$this->assertSame( 16, \ReportedIP_Hive_Migration_Manager::CURRENT_VERSION );
+	public function test_current_version_is_at_least_sixteen() {
+		$this->assertGreaterThanOrEqual( 16, \ReportedIP_Hive_Migration_Manager::CURRENT_VERSION );
 	}
 
 	public function test_sub_floor_thresholds_are_lifted_onto_the_floor() {
