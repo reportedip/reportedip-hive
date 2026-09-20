@@ -599,6 +599,57 @@ final class ReportedIP_Hive_Audit_Registry {
 	}
 
 	/**
+	 * Display label of a watched option in the reader's language, or null.
+	 *
+	 * The stored `object_label` is the label in the language of the request
+	 * that wrote the row (often a WP-CLI or cron request in English); the
+	 * option name in the data resolves the label again at display time.
+	 *
+	 * @param string $option Option name.
+	 * @return string|null
+	 * @since  2.1.62
+	 */
+	public static function option_label( $option ) {
+		$option = (string) $option;
+		if ( '' === $option ) {
+			return null;
+		}
+		$core = self::core_options();
+		if ( isset( $core[ $option ] ) ) {
+			return $core[ $option ];
+		}
+		$network = self::network_options();
+		if ( isset( $network[ $option ] ) ) {
+			return $network[ $option ];
+		}
+		if ( class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
+			$spec = ReportedIP_Hive_Settings_Registry::spec();
+			if ( isset( $spec[ $option ]['label'] ) ) {
+				return (string) $spec[ $option ]['label'];
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Label of a row's object in the reader's language: a setting row resolves
+	 * its option again, everything else keeps the stored label.
+	 *
+	 * @param object $row Audit row.
+	 * @return string
+	 * @since  2.1.62
+	 */
+	public static function object_label( $row ) {
+		$label = (string) ( $row->object_label ?? '' );
+		if ( 'setting' !== (string) ( $row->event_type ?? '' ) ) {
+			return $label;
+		}
+		$data = json_decode( (string) ( $row->event_data ?? '' ), true );
+		$live = is_array( $data ) ? self::option_label( (string) ( $data['option'] ?? '' ) ) : null;
+		return null === $live ? $label : $live;
+	}
+
+	/**
 	 * Human sentence for one stored row, built at display time from the
 	 * registry and the JSON data so the trail follows the site language.
 	 *
@@ -611,7 +662,7 @@ final class ReportedIP_Hive_Audit_Registry {
 		$data   = is_array( $data ) ? $data : array();
 		$type   = (string) ( $row->event_type ?? '' );
 		$action = (string) ( $row->event_action ?? '' );
-		$label  = (string) ( $row->object_label ?? '' );
+		$label  = self::object_label( $row );
 
 		switch ( $type ) {
 			case 'setting':

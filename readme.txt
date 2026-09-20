@@ -435,7 +435,7 @@ Run `wp reportedip unblock <ip> --reset-attempts`. The flag matters: without it 
 
 = Is multisite supported? =
 
-Yes, fully, since 2.0.0. On Multisite the plugin is **network-only** (`Network: true`), so per-site activation is hidden by WordPress and the security configuration stays uniform across the network. A single threat decision applies network-wide: cross-site brute-force attempts aggregate into one central counter, and one block locks the IP out of every sub-site. Network Admins get the full settings and an all-sites Logs view; Site Admins on a sub-site get a read-only Status / Logs UI plus two writable per-site overrides (Frontend-2FA slug and additive 2FA-enforcement roles). Cron runs only on the main site. A dedicated PHPUnit-Multisite suite and Playwright projects gate every release against both topologies.
+Yes, fully, since 2.0.0. On Multisite the plugin is **network-only** (`Network: true`), so per-site activation is hidden by WordPress and the security configuration stays uniform across the network. A single threat decision applies network-wide: cross-site brute-force attempts aggregate into one central counter, and one block locks the IP out of every sub-site. Network Admins get the full settings, an all-sites Logs view and the audit trail with a site filter; Site Admins on a sub-site get a read-only Status / Logs UI, the audit trail of their own site (Business) plus two writable per-site overrides (Frontend-2FA slug and additive 2FA-enforcement roles). Cron runs only on the main site. A dedicated PHPUnit-Multisite suite and Playwright projects gate every release against both topologies.
 
 = How do I get support? =
 
@@ -466,6 +466,18 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.62 =
+
+New: the audit trail records what a support case needs. Eight trigger groups instead of eight account hooks: sign-ins, user accounts, pages and posts, plugins, themes and core, site settings with the old and the new value, menus and widgets, the built-in file editor and, on a network, sites and super admins. Every row names the acting user, how the request came in and the affected object. The groups are switches on the Protection page, retention defaults to 90 days and the sweep runs in chunks like the security log.
+
+New: the audit tab reads like a record, with the user and address, the event and its group, the object and a sentence with old and new value, a filter by event or group, user, address, object and date, and exports that carry the active filter. Below Business the tab shows what it would answer and five sample rows.
+
+New: on a network every site administrator has an Audit Trail page under the site menu with that site's rows, and the Network Admin narrows the network view to one site or to the network rows.
+
+New: the event-type filter of the event log can be searched and selects whole groups; every event type the plugin writes is in one registry with its label, group and threat family.
+
+Fixed: form spam was missing from the activity filter and from both dashboard charts, and three chart entries pointed at slugs nobody writes.
 
 = 2.1.61 =
 

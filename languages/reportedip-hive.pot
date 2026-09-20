@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-20T13:48:20+00:00\n"
+"POT-Creation-Date: 2026-09-20T14:36:33+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -3625,6 +3625,10 @@ msgstr ""
 msgid "To"
 msgstr ""
 
+#: admin/class-audit-log-table.php:556
+msgid "Imprint"
+msgstr ""
+
 #: admin/class-audit-log-table.php:599
 msgid "No audit events recorded yet."
 msgstr ""
@@ -5730,7 +5734,7 @@ msgid "No whitelisted IPs found."
 msgstr ""
 
 #. translators: %d: entry id
-#: includes/audit/class-audit-connector-content.php:249
+#: includes/audit/class-audit-connector-content.php:252
 #, php-format
 msgid "Entry #%d"
 msgstr ""
@@ -6582,38 +6586,38 @@ msgstr ""
 
 #. translators: 1: entry title, 2: old status, 3: new status
 #. translators: 1: plugin or theme name, 2: old version, 3: new version
-#: includes/class-audit-registry.php:631
-#: includes/class-audit-registry.php:638
+#: includes/class-audit-registry.php:682
+#: includes/class-audit-registry.php:689
 #, php-format
 msgid "%1$s: %2$s to %3$s"
 msgstr ""
 
 #. translators: 1: widget id, 2: sidebar name
-#: includes/class-audit-registry.php:675
+#: includes/class-audit-registry.php:726
 #, php-format
 msgid "%1$s in %2$s"
 msgstr ""
 
 #. translators: %s: comma separated role names
-#: includes/class-audit-registry.php:680
+#: includes/class-audit-registry.php:731
 #, php-format
 msgid "added %s"
 msgstr ""
 
 #. translators: %s: comma separated role names
-#: includes/class-audit-registry.php:684
+#: includes/class-audit-registry.php:735
 #, php-format
 msgid "removed %s"
 msgstr ""
 
 #. translators: %s: comma separated role names
-#: includes/class-audit-registry.php:688
+#: includes/class-audit-registry.php:739
 #, php-format
 msgid "capabilities of %s"
 msgstr ""
 
 #. translators: 1: old value, 2: new value
-#: includes/class-audit-registry.php:732
+#: includes/class-audit-registry.php:783
 #, php-format
 msgid "%1$s to %2$s"
 msgstr ""

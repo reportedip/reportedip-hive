@@ -152,7 +152,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 				);
 
 			case 'object_label':
-				$label = (string) ( $item->object_label ?? '' );
+				$label = ReportedIP_Hive_Audit_Registry::object_label( $item );
 				if ( '' === $label ) {
 					return '<span class="rip-text-muted">-</span>';
 				}
@@ -237,7 +237,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 		$data    = json_decode( (string) ( $item->event_data ?? '' ), true );
 		$data    = is_array( $data ) ? $data : array();
 		$lines   = array();
-		if ( '' !== $summary && $summary !== (string) ( $item->object_label ?? '' ) ) {
+		if ( '' !== $summary && $summary !== ReportedIP_Hive_Audit_Registry::object_label( $item ) ) {
 			$lines[] = esc_html( $summary );
 		}
 		$skip = array( 'agent', 'network', 'network_wide', 'old', 'new', 'old_slug', 'new_slug', 'old_status', 'new_status', 'from_version', 'to_version', 'changes', 'added', 'removed', 'caps_changed', 'sidebar', 'old_roles', 'new_role', 'option' );
@@ -533,7 +533,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 				'setting',
 				'updated',
 				'option',
-				'Permalink structure',
+				(string) ReportedIP_Hive_Audit_Registry::option_label( 'permalink_structure' ),
 				array(
 					'option' => 'permalink_structure',
 					'old'    => '/%postname%/',
@@ -553,7 +553,7 @@ class ReportedIP_Hive_Audit_Log_Table extends WP_List_Table {
 				),
 				5 * HOUR_IN_SECONDS,
 			),
-			array( 'editor', 'content', 'trashed', 'post', 'Imprint', array( 'post_type' => 'page' ), DAY_IN_SECONDS ),
+			array( 'editor', 'content', 'trashed', 'post', __( 'Imprint', 'reportedip-hive' ), array( 'post_type' => 'page' ), DAY_IN_SECONDS ),
 			array( 'admin', 'file', 'edited', 'theme_file', 'twentytwentyfive/functions.php', array( 'kind' => 'theme' ), 2 * DAY_IN_SECONDS ),
 			array(
 				'admin',

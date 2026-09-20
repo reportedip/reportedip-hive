@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-09-20T13:48:22+00:00\n"
+"PO-Revision-Date: 2026-09-20T14:36:35+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
@@ -1075,7 +1075,7 @@ msgstr "Zugriff verweigert."
 #: admin/class-admin-settings.php:1681
 #: includes/class-two-factor-dashboard.php:236
 msgid "The audit log is not available on your plan."
-msgstr "Das Audit-Log ist in deinem Tarif nicht verfügbar."
+msgstr "Der Audit-Trail ist in Ihrem Tarif nicht verfügbar."
 
 #: admin/class-admin-settings.php:1752
 msgid "ReportedIP Hive - Domain limit:"
@@ -3628,6 +3628,10 @@ msgstr "Von"
 msgid "To"
 msgstr "Bis"
 
+#: admin/class-audit-log-table.php:556
+msgid "Imprint"
+msgstr "Impressum"
+
 #: admin/class-audit-log-table.php:599
 msgid "No audit events recorded yet."
 msgstr "Noch keine Audit-Ereignisse erfasst."
@@ -5733,7 +5737,7 @@ msgid "No whitelisted IPs found."
 msgstr "Keine IPs auf der Whitelist gefunden."
 
 #. translators: %d: entry id
-#: includes/audit/class-audit-connector-content.php:249
+#: includes/audit/class-audit-connector-content.php:252
 #, php-format
 msgid "Entry #%d"
 msgstr "Eintrag #%d"
@@ -6585,38 +6589,38 @@ msgstr "Upload-Dateitypen"
 
 #. translators: 1: entry title, 2: old status, 3: new status
 #. translators: 1: plugin or theme name, 2: old version, 3: new version
-#: includes/class-audit-registry.php:631
-#: includes/class-audit-registry.php:638
+#: includes/class-audit-registry.php:682
+#: includes/class-audit-registry.php:689
 #, php-format
 msgid "%1$s: %2$s to %3$s"
 msgstr "%1$s: %2$s zu %3$s"
 
 #. translators: 1: widget id, 2: sidebar name
-#: includes/class-audit-registry.php:675
+#: includes/class-audit-registry.php:726
 #, php-format
 msgid "%1$s in %2$s"
 msgstr "%1$s in %2$s"
 
 #. translators: %s: comma separated role names
-#: includes/class-audit-registry.php:680
+#: includes/class-audit-registry.php:731
 #, php-format
 msgid "added %s"
 msgstr "%s hinzugefügt"
 
 #. translators: %s: comma separated role names
-#: includes/class-audit-registry.php:684
+#: includes/class-audit-registry.php:735
 #, php-format
 msgid "removed %s"
 msgstr "%s entfernt"
 
 #. translators: %s: comma separated role names
-#: includes/class-audit-registry.php:688
+#: includes/class-audit-registry.php:739
 #, php-format
 msgid "capabilities of %s"
 msgstr "Rechte von %s"
 
 #. translators: 1: old value, 2: new value
-#: includes/class-audit-registry.php:732
+#: includes/class-audit-registry.php:783
 #, php-format
 msgid "%1$s to %2$s"
 msgstr "%1$s zu %2$s"
@@ -7654,7 +7658,7 @@ msgstr "CSP-Builder, HSTS mit Preload, Permissions-Policy und das Cross-Origin-O
 
 #: includes/class-mode-manager.php:395
 msgid "Audit Event Trail"
-msgstr "Audit-Ereignisprotokoll"
+msgstr "Audit-Trail"
 
 #: includes/class-mode-manager.php:395
 msgid "Who changed what: settings with old and new value, plugins and themes, pages, menus, edited files and user accounts, with configurable triggers, filtering, CSV/JSON export and long retention."
@@ -9680,7 +9684,7 @@ msgstr "Nach welcher Zeit Adressen in alten Ereignissen gekürzt werden. Die Sta
 
 #: includes/class-settings-registry.php:1481
 msgid "Audit trail"
-msgstr "Audit-Protokoll"
+msgstr "Audit-Trail"
 
 #: includes/class-settings-registry.php:1482
 msgid "Keep a separate, append-only record of who changed what: settings, plugins, pages, menus, files and accounts, each with the acting user."
@@ -9708,7 +9712,7 @@ msgstr "IPs im Audit-Trail anonymisieren"
 
 #: includes/class-settings-registry.php:1509
 msgid "Store only the network part of the address in the audit trail, so the record survives a data-protection review."
-msgstr "Speichert im Audit-Protokoll nur den Netzanteil der Adresse, damit die Aufzeichnung eine Datenschutzprüfung übersteht."
+msgstr "Speichert im Audit-Trail nur den Netzanteil der Adresse, damit die Aufzeichnung eine Datenschutzprüfung übersteht."
 
 #: includes/class-settings-registry.php:1516
 msgid "Mail an alert on a sign-in from a new address"
