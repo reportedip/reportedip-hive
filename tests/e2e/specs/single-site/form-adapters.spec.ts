@@ -209,6 +209,27 @@ function spamAttemptCount(): number {
 	);
 }
 
+/**
+ * Lift every automatic block on the test address.
+ *
+ * The stack is shared with hand testing. Guard hits from a session before
+ * this one sit in the queue file until the cron imports them, and that
+ * import can land a seven-day block on the address the browser uses seconds
+ * before the first page load here. The block page carries no form, so every
+ * anchor count reads zero and nothing points at the real cause.
+ */
+function releaseBlocks(): void {
+	php(`
+		global $wpdb;
+		$prefix = $wpdb->base_prefix . 'reportedip_hive_';
+		$wpdb->query("DELETE FROM {$prefix}attempts WHERE attempt_type = 'form_spam'");
+		$wpdb->query("DELETE FROM {$prefix}blocked WHERE block_type = 'automatic'");
+		if (class_exists('ReportedIP_Hive_WAF_Dropin_Manager')) {
+			ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->sync();
+		}
+	`);
+}
+
 /** Drop the counter rows, so each spec reads its own consequence. */
 function clearSpamAttempts(): void {
 	php(`
@@ -541,6 +562,7 @@ test.describe.configure({ mode: 'serial' });
 test.describe('form adapters', () => {
 	test.beforeAll(() => {
 		resetAdminBaseline();
+		releaseBlocks();
 		seedForms();
 		setJquery(true);
 		php(`
