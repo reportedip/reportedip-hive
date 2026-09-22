@@ -580,6 +580,10 @@ final class ReportedIP_Hive_Defaults {
 	 * The adaptive 2FA policies are absent as well: the registry filter strips
 	 * `administrator` until an administrator has passed one challenge, so a
 	 * recommendation would be a silent no-op on every fresh site.
+	 * The comment spam counter is carried at its shipped value rather than a
+	 * second number of its own: a site that runs the Quickstart again after
+	 * years on the old five-an-hour pair should come out where a fresh
+	 * install does.
 	 * Professional switches on the storefront 2FA module: it only ever
 	 * challenges WooCommerce customers who enrolled or are enforced, so it is
 	 * inert without WooCommerce and safe to recommend.
@@ -598,6 +602,8 @@ final class ReportedIP_Hive_Defaults {
 			'reportedip_hive_headers_enabled'         => 1,
 			'reportedip_hive_bot_action'              => 'community' === $mode ? 'block' : 'flag',
 			'reportedip_hive_disposable_email_action' => 'block',
+			'reportedip_hive_comment_spam_threshold'  => self::SAFE_OPTIONS['reportedip_hive_comment_spam_threshold'],
+			'reportedip_hive_comment_spam_timeframe'  => self::SAFE_OPTIONS['reportedip_hive_comment_spam_timeframe'],
 		);
 
 		if ( 'community' === $mode ) {

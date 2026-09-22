@@ -34,7 +34,9 @@ All changes to ReportedIP Hive are documented here.
   spammer produces, which is why the counter hardly ever reached it. Schema
   migration v18 moves installs that still carry the old pair onto the new
   one; a value an operator set themselves is left alone. The same pair also
-  governs the form adapters.
+  governs the form adapters. The Quickstart carries the pair as well, so a
+  site set up again after years on the old numbers comes out where a fresh
+  install does.
 
 ## [2.1.62] (2026-09-20)
 
