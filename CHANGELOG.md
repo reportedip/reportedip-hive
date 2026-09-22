@@ -27,6 +27,15 @@ All changes to ReportedIP Hive are documented here.
   window to the counter, which keeps the row alive for exactly as long as the
   window it is read with.
 
+### Changed
+
+- **The comment spam counter now stands at three rejected comments a day,
+  down from five an hour.** Five inside sixty minutes is a burst almost no
+  spammer produces, which is why the counter hardly ever reached it. Schema
+  migration v18 moves installs that still carry the old pair onto the new
+  one; a value an operator set themselves is left alone. The same pair also
+  governs the form adapters.
+
 ## [2.1.62] (2026-09-20)
 
 ### Fixed

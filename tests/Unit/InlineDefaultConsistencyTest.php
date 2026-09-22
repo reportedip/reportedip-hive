@@ -133,7 +133,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertSame( 12, $canonical['reportedip_hive_scan_404_threshold'] );
 			$this->assertSame( 2, $canonical['reportedip_hive_scan_404_timeframe'] );
-			$this->assertSame( 5, $canonical['reportedip_hive_comment_spam_threshold'] );
+			$this->assertSame( 3, $canonical['reportedip_hive_comment_spam_threshold'] );
 			$this->assertSame( 240, $canonical['reportedip_hive_rest_threshold'] );
 
 			$detector = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-scan-detector.php' );
@@ -141,7 +141,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( "'reportedip_hive_scan_404_timeframe', 2 )", $detector );
 
 			$monitor = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-security-monitor.php' );
-			$this->assertStringContainsString( "'reportedip_hive_comment_spam_threshold', 5 )", $monitor );
+			$this->assertStringContainsString( "'reportedip_hive_comment_spam_threshold', 3 )", $monitor );
 
 			$rest = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-rest-monitor.php' );
 			$this->assertStringContainsString( "'reportedip_hive_rest_threshold', 240 )", $rest );

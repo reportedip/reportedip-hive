@@ -332,8 +332,8 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 		$this->comment_counted = true;
 
-		$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 5 );
-		$timeframe = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 60 );
+		$threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 3 );
+		$timeframe = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 1440 );
 
 		$track_user_agent = null;
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {

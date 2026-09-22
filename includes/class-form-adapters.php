@@ -852,8 +852,8 @@ final class ReportedIP_Hive_Form_Adapters {
 			$ip,
 			self::ATTEMPT_TYPE,
 			self::ATTEMPT_TYPE,
-			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 5 ),
-			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 60 )
+			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 3 ),
+			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 1440 )
 		);
 	}
 

@@ -152,8 +152,8 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_password_spray_timeframe'        => 10,
 
 		'reportedip_hive_monitor_comments'                => true,
-		'reportedip_hive_comment_spam_threshold'          => 5,
-		'reportedip_hive_comment_spam_timeframe'          => 60,
+		'reportedip_hive_comment_spam_threshold'          => 3,
+		'reportedip_hive_comment_spam_timeframe'          => 1440,
 		'reportedip_hive_monitor_xmlrpc'                  => true,
 		'reportedip_hive_xmlrpc_threshold'                => 10,
 		'reportedip_hive_xmlrpc_timeframe'                => 60,

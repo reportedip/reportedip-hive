@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 17;
+	public const CURRENT_VERSION = 18;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -518,6 +518,34 @@ final class ReportedIP_Hive_Migration_Manager {
 	 */
 	private static function migrate_to_v17() {
 		ReportedIP_Hive_Schema::ensure_tables();
+	}
+
+	/**
+	 * Lowers the comment spam counter from five offences an hour to three a
+	 * day, on installs that never changed it.
+	 *
+	 * Five rejected comments inside sixty minutes is a burst almost no
+	 * spammer produces: measured over thirteen days on a live magazine, 56
+	 * per cent of the spamming addresses posted exactly one comment and only
+	 * five addresses out of 104 could ever have reached the old threshold.
+	 * A stored value that differs from the old default is the operator's own
+	 * decision and stays untouched.
+	 *
+	 * @return void
+	 * @since  2.1.63
+	 */
+	private static function migrate_to_v18() {
+		$pairs = array(
+			'reportedip_hive_comment_spam_threshold' => array( 5, 3 ),
+			'reportedip_hive_comment_spam_timeframe' => array( 60, 1440 ),
+		);
+
+		foreach ( $pairs as $option => $values ) {
+			list( $old, $new ) = $values;
+			if ( (int) ReportedIP_Hive_Option_Routing::get( $option, $old ) === $old ) {
+				ReportedIP_Hive_Option_Routing::set( $option, $new );
+			}
+		}
 	}
 
 	/**
