@@ -2,9 +2,10 @@
 /**
  * Build one form per supported form plugin, plus the page that renders it.
  *
- * The adapter spec needs a Contact Form 7, a Formidable, an Elementor and an
- * Ultimate Member form that exist on every machine the suite runs on, so it
- * creates them here rather than relying on whatever the stack happens to hold.
+ * The adapter spec needs a Contact Form 7, a Formidable, an Elementor, an
+ * Ultimate Member and a Gravity Forms form that exist on every machine the
+ * suite runs on, so it creates them here rather than relying on whatever the
+ * stack happens to hold.
  * Idempotent: a second run finds what the first one made and changes nothing.
  * A plugin that is not installed is skipped and reports an id of zero, which
  * is how the spec knows to skip its cases.
@@ -231,10 +232,52 @@ if ( function_exists( 'UM' ) ) {
 	rip_e2e_page( 'rip-e2e-um-password', 'RIP E2E Ultimate Member password', '[ultimatemember_password]' );
 }
 
+$rip_gravity = 0;
+
+if ( class_exists( 'GFAPI' ) ) {
+	foreach ( GFAPI::get_forms( true, false ) as $rip_form ) {
+		if ( 'RIP E2E Gravity' === rgar( $rip_form, 'title' ) ) {
+			$rip_gravity = (int) $rip_form['id'];
+		}
+	}
+
+	if ( ! $rip_gravity ) {
+		$rip_created = GFAPI::add_form(
+			array(
+				'title'          => 'RIP E2E Gravity',
+				'enableHoneypot' => false,
+				'is_active'      => '1',
+				'button'         => array(
+					'type' => 'text',
+					'text' => 'Send',
+				),
+				'fields'         => array(
+					array(
+						'id'         => 1,
+						'type'       => 'text',
+						'label'      => 'Name',
+						'isRequired' => true,
+					),
+					array(
+						'id'    => 2,
+						'type'  => 'textarea',
+						'label' => 'Message',
+					),
+				),
+			)
+		);
+		$rip_gravity = is_wp_error( $rip_created ) ? 0 : (int) $rip_created;
+	}
+
+	rip_e2e_page( 'rip-e2e-gravity-page', 'RIP E2E Gravity Page', '[gravityform id="' . $rip_gravity . '" ajax="true" title="false" description="false"]' );
+	rip_e2e_page( 'rip-e2e-gravity-ajax-page', 'RIP E2E Gravity AJAX Page', '[gravityform id="' . $rip_gravity . '" title="false" description="false"]' );
+}
+
 echo 'cf7=' . (int) $rip_cf7
 	. ' frm=' . (int) $rip_frm
 	. ' frm_name=' . (int) $rip_name
 	. ' frm_text=' . (int) $rip_text
 	. ' elementor=' . (int) $rip_elementor
 	. ' um_register=' . (int) $rip_um_register
-	. ' um_login=' . (int) $rip_um_login;
+	. ' um_login=' . (int) $rip_um_login
+	. ' gravity=' . (int) $rip_gravity;

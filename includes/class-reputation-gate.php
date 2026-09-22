@@ -354,7 +354,11 @@ class ReportedIP_Hive_Reputation_Gate {
 			return __( 'Registration is not available from your internet address: it is listed for abuse in the community threat network. If you believe this is wrong, contact the site owner.', 'reportedip-hive' );
 		}
 
-		return __( 'A password reset cannot be requested from your internet address: it is listed for abuse in the community threat network. If you believe this is wrong, contact the site owner.', 'reportedip-hive' );
+		if ( 'lostpassword' === $surface ) {
+			return __( 'A password reset cannot be requested from your internet address: it is listed for abuse in the community threat network. If you believe this is wrong, contact the site owner.', 'reportedip-hive' );
+		}
+
+		return __( 'Your submission was not accepted: your internet address is listed for abuse in the community threat network. If you believe this is wrong, contact the site owner.', 'reportedip-hive' );
 	}
 
 	/**

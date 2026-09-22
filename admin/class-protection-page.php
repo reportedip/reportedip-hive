@@ -680,13 +680,21 @@ class ReportedIP_Hive_Protection_Page {
 	 * @return array<string,mixed>|null Status array, or null when no runtime lock applies.
 	 */
 	private static function runtime_lock( $key, $covered = true ) {
+		$adapter = self::adapter_behind( $key );
+
+		if ( array() !== $adapter ) {
+			return self::adapter_lock(
+				$covered,
+				$adapter['detect'],
+				sprintf(
+					/* translators: %s: name of a form plugin, for example Gravity Forms. */
+					__( '%s is not active on this site.', 'reportedip-hive' ),
+					$adapter['name']
+				)
+			);
+		}
+
 		switch ( $key ) {
-			case 'reportedip_hive_form_proof_cf7':
-				return self::adapter_lock( $covered, 'WPCF7_Submission', __( 'Contact Form 7 is not active on this site.', 'reportedip-hive' ) );
-			case 'reportedip_hive_form_proof_formidable':
-				return self::adapter_lock( $covered, 'FrmAppHelper', __( 'Formidable Forms is not active on this site.', 'reportedip-hive' ) );
-			case 'reportedip_hive_form_proof_elementor':
-				return self::adapter_lock( $covered, 'ElementorPro\\Modules\\Forms\\Module', __( 'Elementor Pro is not active on this site.', 'reportedip-hive' ) );
 			case 'reportedip_hive_2fa_enabled_global':
 				if ( ! ReportedIP_Hive_Two_Factor_Crypto::is_available() ) {
 					return self::runtime_status( __( 'Two-factor authentication needs libsodium or OpenSSL to store secrets encrypted; neither is available on this server.', 'reportedip-hive' ) );
@@ -711,6 +719,35 @@ class ReportedIP_Hive_Protection_Page {
 				return null;
 		}
 		return null;
+	}
+
+	/**
+	 * The form adapter a registry key switches, if it switches one.
+	 *
+	 * Read out of the adapter table rather than listed here, so a new form
+	 * plugin never arrives with a switch that cannot say why it is locked.
+	 *
+	 * @param string $key Registry key.
+	 * @return array<string, string> Detection class and plugin name, empty when the key is not an adapter switch.
+	 * @since  2.1.63
+	 */
+	private static function adapter_behind( $key ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Form_Adapters' ) ) {
+			return array();
+		}
+
+		$names = ReportedIP_Hive_Form_Adapters::names();
+
+		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+			if ( $adapter['option'] === (string) $key ) {
+				return array(
+					'detect' => $adapter['detect'],
+					'name'   => isset( $names[ $slug ] ) ? $names[ $slug ] : $slug,
+				);
+			}
+		}
+
+		return array();
 	}
 
 	/**

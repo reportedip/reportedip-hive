@@ -108,6 +108,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_form_proof_formidable'           => false,
 		'reportedip_hive_form_proof_elementor'            => false,
 		'reportedip_hive_form_proof_um'                   => false,
+		'reportedip_hive_form_proof_gravity'              => false,
 		'reportedip_hive_form_adapters_since'             => 0,
 		'reportedip_hive_reputation_on_forms'             => true,
 		'reportedip_hive_form_proof_field'                => '',
@@ -613,6 +614,8 @@ final class ReportedIP_Hive_Defaults {
 			$values[ 'reportedip_hive_' . $suffix ] = $value;
 		}
 
+		$values['reportedip_hive_form_proof_cf7'] = 1;
+
 		if ( $rank >= 1 ) {
 			$values['reportedip_hive_block_tor']            = 1;
 			$values['reportedip_hive_hsts_enabled']         = 1;
@@ -620,8 +623,6 @@ final class ReportedIP_Hive_Defaults {
 			$values['reportedip_hive_data_retention_days']  = 90;
 			$values['reportedip_hive_2fa_frontend_enabled'] = 1;
 			$values['reportedip_hive_form_proof_pow']       = 1;
-			$values['reportedip_hive_form_proof_cf7']       = 1;
-			$values['reportedip_hive_form_proof_um']        = 1;
 		}
 
 		if ( $rank >= 2 ) {
@@ -629,6 +630,8 @@ final class ReportedIP_Hive_Defaults {
 			$values['reportedip_hive_data_retention_days']   = 365;
 			$values['reportedip_hive_form_proof_formidable'] = 1;
 			$values['reportedip_hive_form_proof_elementor']  = 1;
+			$values['reportedip_hive_form_proof_gravity']    = 1;
+			$values['reportedip_hive_form_proof_um']         = 1;
 		}
 
 		return $values;

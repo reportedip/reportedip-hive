@@ -4,7 +4,66 @@ All changes to ReportedIP Hive are documented here.
 
 ## [Unreleased]
 
+### Security
+
+- **Double-encoded directory traversal passed the firewall.** The baseline
+  traversal rule knew `../`, `..%2f` and `%2e%2e/`, but not `%2e%2e%2f` with
+  an encoded slash, not the double-encoded `%252e%252e%252f` and not the
+  overlong UTF-8 form. The double-encoded shape is exactly what the
+  WordPress 7.1.2 template-resolution fix (CVE-2026-87902) is about: PHP
+  decodes the query once, WordPress decoded `pagename` a second time, so
+  the attacker sends `%252e%252e%252f` and the firewall saw nothing it knew.
+  The rule now matches every encoding on the wire, in both firewall layers,
+  and stays quiet on `file..txt` or `per_page=2..5`. Sites in Community
+  Network mode receive the same rule through the next ruleset sync.
+
+### New
+
+- **Form protection on Gravity Forms (Business).** The execution proof now
+  covers Gravity Forms, including forms sent in the background and forms with
+  several pages, with its own switch next to the other form adapters. Gravity
+  Forms submits its forms itself and fires no submit event doing so, so the
+  proof script hooks the filter the plugin publishes for exactly this purpose,
+  the same one its own invisible captcha uses, and takes a form in again after
+  the plugin has rendered it a second time. A refused submission is a
+  form-level validation error, shown above the form on both paths, and no
+  entry is written. The Gravity Forms spam folder was the other option and
+  lost on purpose: an entry filed there is a message the sender was thanked
+  for and the operator never reads. Submissions made through the Gravity
+  Forms API carry no proof and are never judged.
+
+### Changed
+
+- **Contact Form 7 protection is free; Ultimate Member moves to Business.**
+  The form adapters now split the way the plans do: Contact Form 7, the most
+  common contact form, comes with every plan next to the comment, sign-up and
+  password-reset forms, and the quickstart switches it on wherever the plugin
+  is installed. Gravity Forms, Formidable Forms, Formidable Forms PRO,
+  Elementor Forms and Ultimate Member need Business. A site on Professional
+  with the Ultimate Member switch on keeps its stored value and can still
+  switch it off; the adapter simply stands down until the plan covers it
+  again.
+
 ### Fixed
+
+- **A form loaded into the page after the first pass could never pass the
+  computation check.** The proof script read the challenge once, when the
+  page was ready; a form that arrived later, in a popup or rendered again
+  after a failed validation, found no computed answer waiting and was refused
+  as unproven. The script now reads the challenge and starts the clock again
+  whenever a form plugin reports a fresh render.
+- **Three German strings on the Protection page showed garbled umlauts.**
+  The Ultimate Member switch, its description and the description of the
+  form section had been saved through a Latin-1 round trip in 2.1.61, so
+  "schützen" read as two stray characters. The translations are re-entered
+  and the i18n gate now refuses a translation file carrying that pattern.
+- **A community-reputation refusal above a third-party form talked about a
+  password reset.** The message had a sentence for comments, one for sign-ups
+  and a fallback written for the password-reset form, which every form
+  adapter inherited. A refused contact form now says so in its own words.
+- **The Ultimate Member switch had no locked-state note, no readiness deep
+  link and no dashboard action.** Four admin surfaces kept their own list of
+  form adapters and had not grown with the table. They now read the table.
 
 - **Comment spam was detected and filed, but almost never blocked or
   reported.** The consequence hung entirely on a frequency counter: five

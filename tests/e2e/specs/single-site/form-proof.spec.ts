@@ -67,6 +67,25 @@ function clearComments(postId: string): void {
 	`);
 }
 
+/**
+ * Lift the automatic block a certain spam verdict writes.
+ *
+ * A filled decoy blocks the address on the spot since the comment filter
+ * stopped waiting for a second comment, and every spec here arrives from the
+ * same address. Without this the next request reads the block page.
+ */
+function releaseBlocks(): void {
+	php(`
+		global $wpdb;
+		$prefix = $wpdb->base_prefix . 'reportedip_hive_';
+		$wpdb->query("DELETE FROM {$prefix}attempts WHERE attempt_type = 'comment'");
+		$wpdb->query("DELETE FROM {$prefix}blocked WHERE block_type = 'automatic'");
+		if (class_exists('ReportedIP_Hive_WAF_Dropin_Manager')) {
+			ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->sync();
+		}
+	`);
+}
+
 /** Reasons recorded on the newest comment-spam log row. */
 function newestSpamReasons(): string {
 	return php(`
@@ -240,6 +259,8 @@ test.describe('form execution proof', () => {
 		expect(status, 'the submission was refused before the filter saw it').toBe(302);
 		expect(newestCommentState(postId)).toBe('spam');
 		expect(newestSpamReasons()).toContain('form_decoy_filled');
+
+		releaseBlocks();
 	});
 
 	test('a post that never carried the anchor is still caught while the site renders anchors', async ({

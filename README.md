@@ -47,7 +47,7 @@ Every protected site becomes a sensor. When one site is attacked, every other si
 | Verified bot detection | flag (default) or block | Official Google/Bing IP ranges first, FCrDNS fallback; genuine crawlers never blocked |
 | Registration defence | username baseline on (10 role names), rate limit on (3 / 60 min), disposable mail: monitor, custom lists empty | Throwaway-mail domains, prohibited usernames, e-mail allow/block rules, per-IP rate limit (3 / 60 min), opt-in unknown-username block; WP + WooCommerce + Multisite sign-ups. Ten entries per list free, unlimited plus regex on Professional |
 | Form execution proof | on | Checks that a comment, sign-up or password reset came from a browser that rendered the form. See [Form protection](#form-protection) |
-| Form plugin adapters | off | The same check on Contact Form 7 and Ultimate Member (Professional) and on Formidable Forms, Formidable Forms PRO and Elementor Forms (Business). See [Form protection](#form-protection) |
+| Form plugin adapters | off | The same check on Contact Form 7 (every plan) and on Gravity Forms, Formidable Forms, Formidable Forms PRO, Elementor Forms and Ultimate Member (Business). See [Form protection](#form-protection) |
 | Community threat check on forms | on, needs Community Network mode | Comment, sign-up and password reset checked at the same protection level as the sign-in page; fail-open when the allowance runs out |
 
 Not a sensor, but part of the same screen: the consent endpoints of Real Cookie Banner, Complianz, Borlabs and CookieYes are exempt from the rate limit out of the box, because on a compliant site they look like a burst on every single page view.
@@ -93,13 +93,16 @@ Hive checks that a submission came from a browser that really rendered the form.
 | Registration (WordPress, WooCommerce, Multisite sign-ups) | Free |
 | Lost password | Free |
 | Your own forms, through `Form_Proof::field()` / `check()` / `passes()` | Free |
-| Contact Form 7 | Professional |
-| Ultimate Member, its sign-in, sign-up and password forms | Professional |
+| Contact Form 7 | Free |
+| Ultimate Member, its sign-in, sign-up and password forms | Business |
+| Gravity Forms, including forms sent in the background and multi-page forms | Business |
 | Formidable Forms | Business |
 | Formidable Forms PRO | Business |
 | Elementor Forms (needs Elementor PRO, the form widget exists only there) | Business |
 
-Tested against Contact Form 7 in the version published on wordpress.org, Formidable Forms and Formidable Forms PRO 6.35, Elementor and Elementor PRO 3.34, Ultimate Member 2.13.
+Tested against Contact Form 7 in the version published on wordpress.org, Gravity Forms 3.1, Formidable Forms and Formidable Forms PRO 6.35, Elementor and Elementor PRO 3.34, Ultimate Member 2.13.
+
+A refused submission is always told so. Contact Form 7 shows its own "not sent" notice, every other form plugin shows the reason above the form, and no message is ever filed away quietly: the sender either gets through or learns that they did not.
 
 **How it works.** Every protected form carries an invisible, screen-reader-excluded anchor field, and a bot that fills every input it finds fills that one too. A small script adds a second field whose name is random per installation, so a script posting straight at the endpoint without ever loading the form cannot carry it. The verdict is four-way, `proved`, `failed`, `tripped` or `absent`, and "absent" stays lenient until the site has seen itself render the field, so a theme with hand-written comment markup is never treated like a bot. Nothing request-specific reaches the HTML, so page caches stay valid.
 
@@ -187,7 +190,7 @@ What the paid **Professional** (3 domains) and **Business** (15 domains, multi-b
 - **Tor exit-node blocking.** Opt-in rejection of connections from known Tor exit nodes, backed by a signed `tor_exits` ruleset refreshed twice daily. Blocks are temporary (24 h default, filterable) and never reported to the community, operating an exit node is not abuse evidence.
 - **Adaptive 2FA triggers.** Per-role step-up rules on a new country, IP address, network or device, every N days or sign-ins, or above a concurrent-session limit; they apply even when the trusted-device cookie is present, while the 2FA IP allowlist still bypasses.
 - **Unlimited registration rules.** No ten-entry cap on the username and e-mail lists, `/regex/` patterns and registration restricted to allowlisted IP ranges.
-- **Form protection on third-party form plugins.** Contact Form 7 and Ultimate Member with Professional, Formidable Forms, Formidable Forms PRO and Elementor Forms with Business, plus the computation check on every protected form. See [Form protection](#form-protection).
+- **Form protection on third-party form plugins.** Contact Form 7 on every plan, Gravity Forms, Formidable Forms, Formidable Forms PRO, Elementor Forms and Ultimate Member with Business, plus the computation check on every protected form. See [Form protection](#form-protection).
 - **Advanced Security Keys (Business).** Multiple WebAuthn keys per account, attestation-based model detection, key-lifecycle mails.
 - **User account control and sessions (Business).** Block an account so it cannot sign in, use an application password or reset its password, drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions.
 - **Audit event trail (Business).** Append-only record of who changed what: settings with the old and the new value, plugins, themes and core, pages and posts, menus and widgets, files saved in the built-in editor, user accounts and, on a network, sites; each row names the acting user, the request agent and the affected object. Eight trigger groups are switches, retention is configurable, the tab filters by group, user, address, object and date and exports the filtered rows as CSV or JSON.

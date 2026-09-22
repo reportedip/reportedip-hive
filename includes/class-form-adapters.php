@@ -56,8 +56,13 @@ final class ReportedIP_Hive_Form_Adapters {
 		),
 		'ultimate_member' => array(
 			'option'  => 'reportedip_hive_form_proof_um',
-			'feature' => 'form_adapters',
+			'feature' => 'form_adapters_advanced',
 			'detect'  => 'UM_Functions',
+		),
+		'gravity_forms'   => array(
+			'option'  => 'reportedip_hive_form_proof_gravity',
+			'feature' => 'form_adapters_advanced',
+			'detect'  => 'GFCommon',
 		),
 	);
 
@@ -91,6 +96,7 @@ final class ReportedIP_Hive_Form_Adapters {
 			'formidable'      => 'Formidable Forms',
 			'elementor'       => 'Elementor Forms',
 			'ultimate_member' => 'Ultimate Member',
+			'gravity_forms'   => 'Gravity Forms',
 		);
 	}
 
@@ -164,6 +170,9 @@ final class ReportedIP_Hive_Form_Adapters {
 		add_action( 'um_after_form_fields', array( $this, 'um_anchor' ) );
 		add_action( 'um_submit_form_errors_hook', array( $this, 'um_validate' ), 20, 2 );
 		add_action( 'um_reset_password_errors_hook', array( $this, 'um_reset_validate' ), 20 );
+
+		add_filter( 'gform_form_tag', array( $this, 'gravity_anchor' ), 10, 2 );
+		add_filter( 'gform_validation', array( $this, 'gravity_validate' ), 10, 2 );
 	}
 
 	/**
@@ -698,6 +707,113 @@ final class ReportedIP_Hive_Form_Adapters {
 		}
 
 		return 'user_login';
+	}
+
+	/**
+	 * Plant the anchor in a Gravity Forms form.
+	 *
+	 * `gform_form_tag` hands over the opening form tag itself, so appending to
+	 * it puts the anchor inside the form without searching the markup for a
+	 * closing tag. `gform_form_after_open` would be the obvious-looking hook and
+	 * is the wrong one twice over: it fires before the form element exists and
+	 * again on the confirmation page.
+	 *
+	 * @param mixed $tag  Opening form tag.
+	 * @param mixed $form Form object.
+	 * @return string
+	 * @since  2.1.63
+	 */
+	public function gravity_anchor( $tag, $form ) {
+		unset( $form );
+
+		$tag = (string) $tag;
+
+		if ( ! $this->active( 'gravity_forms' ) ) {
+			return $tag;
+		}
+
+		return $tag . ReportedIP_Hive_Form_Proof::get_instance()->anchor_html( 'gravity_forms' );
+	}
+
+	/**
+	 * Judge a Gravity Forms submission on its validation hook.
+	 *
+	 * A refusal is a form-level validation error, the same mechanism the plugin
+	 * uses for its own "at least one field must be filled out". The sender sees
+	 * the message above the form, whether the form was sent in the background
+	 * or with a page load, and no entry is written. The spam folder was the
+	 * other option and lost: an entry filed there is a message the sender was
+	 * thanked for and the operator never reads, and this plugin never loses a
+	 * message without at least telling the sender so.
+	 *
+	 * Only the final page of a form is judged, because only that step is a
+	 * submission; each earlier page is a request of its own and would spend a
+	 * computed answer and a community lookup for nothing.
+	 *
+	 * @param mixed       $result  Validation result with `is_valid` and `form`.
+	 * @param string|null $context Submission context, `form-submit` for a browser.
+	 * @return array
+	 * @since  2.1.63
+	 */
+	public function gravity_validate( $result, $context = null ) {
+		if ( ! is_array( $result ) || empty( $result['form']['id'] ) ) {
+			return $result;
+		}
+
+		if ( ! self::gravity_is_browser_submission( $context ) ) {
+			return $result;
+		}
+
+		$form_id = absint( $result['form']['id'] );
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reads which page is being submitted, Gravity Forms verifies its own nonce.
+		if ( isset( $_POST[ 'gform_target_page_number_' . $form_id ] ) && absint( wp_unslash( $_POST[ 'gform_target_page_number_' . $form_id ] ) ) > 0 ) {
+			return $result;
+		}
+
+		$message = $this->refuse( 'gravity_forms' );
+
+		if ( '' === $message ) {
+			return $result;
+		}
+
+		$result['is_valid'] = false;
+
+		if ( class_exists( 'GFFormDisplay' ) ) {
+			if ( ! isset( GFFormDisplay::$submission[ $form_id ] ) || ! is_array( GFFormDisplay::$submission[ $form_id ] ) ) {
+				GFFormDisplay::$submission[ $form_id ] = array();
+			}
+
+			if ( empty( GFFormDisplay::$submission[ $form_id ]['form_level_error'] ) ) {
+				GFFormDisplay::$submission[ $form_id ]['form_level_error'] = $message;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Whether a Gravity Forms submission came from a browser.
+	 *
+	 * `GFAPI::submit_form()` carries no anchor and no proof field, so without
+	 * this every import, Zapier feed and REST submission would read as a client
+	 * that failed the check. The validation hook says so itself since 2.6.4;
+	 * an older plugin is asked the way its own honeypot asks.
+	 *
+	 * @param string|null $context Submission context handed to the hook.
+	 * @return bool
+	 * @since  2.1.63
+	 */
+	private static function gravity_is_browser_submission( $context ) {
+		if ( null !== $context ) {
+			return 'form-submit' === (string) $context;
+		}
+
+		if ( ! class_exists( 'GFFormDisplay' ) ) {
+			return true;
+		}
+
+		return GFFormDisplay::SUBMISSION_INITIATED_BY_API !== GFFormDisplay::$submission_initiated_by;
 	}
 
 	/**

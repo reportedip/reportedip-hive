@@ -177,45 +177,42 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 * @return array<string,array{label:string,write:bool,field?:string}>
 	 */
 	public static function step_actions() {
-		return array(
-			'hide_login_off'          => array(
+		$actions = array(
+			'hide_login_off'         => array(
 				'label' => __( 'Switch on', 'reportedip-hive' ),
 				'write' => true,
 				'field' => 'slug',
 			),
-			'frontend_2fa_available'  => array(
+			'frontend_2fa_available' => array(
 				'label' => __( 'Switch on', 'reportedip-hive' ),
 				'write' => true,
 			),
-			'badge_off'               => array(
+			'badge_off'              => array(
 				'label' => __( 'Show badge', 'reportedip-hive' ),
 				'write' => true,
 			),
-			'dropin_not_running'      => array(
+			'dropin_not_running'     => array(
 				'label' => __( 'Open server setup', 'reportedip-hive' ),
 				'write' => false,
 			),
-			'community_pending'       => array(
+			'community_pending'      => array(
 				'label' => __( 'Enter a key', 'reportedip-hive' ),
 				'write' => false,
 			),
-			'own_2fa_missing'         => array(
+			'own_2fa_missing'        => array(
 				'label' => __( 'Set up now', 'reportedip-hive' ),
 				'write' => false,
 			),
-			'form_adapter_cf7'        => array(
-				'label' => __( 'Switch on', 'reportedip-hive' ),
-				'write' => true,
-			),
-			'form_adapter_formidable' => array(
-				'label' => __( 'Switch on', 'reportedip-hive' ),
-				'write' => true,
-			),
-			'form_adapter_elementor'  => array(
-				'label' => __( 'Switch on', 'reportedip-hive' ),
-				'write' => true,
-			),
 		);
+
+		foreach ( array_keys( ReportedIP_Hive_Form_Adapters::ADAPTERS ) as $slug ) {
+			$actions[ 'form_adapter_' . $slug ] = array(
+				'label' => __( 'Switch on', 'reportedip-hive' ),
+				'write' => true,
+			);
+		}
+
+		return $actions;
 	}
 
 	/**
@@ -236,13 +233,14 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 					'reportedip_hive_hide_login_slug'    => (string) ( $input['slug'] ?? '' ),
 					'reportedip_hive_hide_login_enabled' => 1,
 				);
-			case 'form_adapter_cf7':
-				return array( 'reportedip_hive_form_proof_cf7' => 1 );
-			case 'form_adapter_formidable':
-				return array( 'reportedip_hive_form_proof_formidable' => 1 );
-			case 'form_adapter_elementor':
-				return array( 'reportedip_hive_form_proof_elementor' => 1 );
 		}
+
+		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+			if ( 'form_adapter_' . $slug === (string) $step ) {
+				return array( $adapter['option'] => 1 );
+			}
+		}
+
 		return array();
 	}
 

@@ -64,7 +64,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_adapter_table_carries_exactly_the_supported_plugins(): void {
 			$this->assertSame(
-				array( 'cf7', 'formidable', 'elementor', 'ultimate_member' ),
+				array( 'cf7', 'formidable', 'elementor', 'ultimate_member', 'gravity_forms' ),
 				array_keys( \ReportedIP_Hive_Form_Adapters::ADAPTERS )
 			);
 		}
@@ -88,8 +88,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 				),
 				'ultimate_member' => array(
 					'option'  => 'reportedip_hive_form_proof_um',
-					'feature' => 'form_adapters',
+					'feature' => 'form_adapters_advanced',
 					'detect'  => 'UM_Functions',
+				),
+				'gravity_forms'   => array(
+					'option'  => 'reportedip_hive_form_proof_gravity',
+					'feature' => 'form_adapters_advanced',
+					'detect'  => 'GFCommon',
 				),
 			);
 
@@ -208,6 +213,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 					"add_action( 'elementor_pro/forms/validation', array( \$this, 'elementor_validate' ), 10, 2 )",
 					'Elementor Pro validation is where its submission is refused',
 				),
+				'gravity render'      => array(
+					"add_filter( 'gform_form_tag', array( \$this, 'gravity_anchor' ), 10, 2 )",
+					'the anchor has to reach the Gravity Forms markup',
+				),
+				'gravity validate'    => array(
+					"add_filter( 'gform_validation', array( \$this, 'gravity_validate' ), 10, 2 )",
+					'Gravity Forms validation is where its submission is refused, in front of the sender',
+				),
+				'gravity api guard'   => array(
+					"'form-submit' === (string) \$context",
+					'a submission through GFAPI carries no anchor and must never be read as a refusal',
+				),
 				'proof surfaces'      => array(
 					"add_filter( 'reportedip_hive_form_proof_adapters', array( \$this, 'add_surfaces' ) )",
 					'without this filter surface_enabled() answers false and nothing renders',
@@ -251,6 +268,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'record field lookup'       => array(
 					'$record->get_field',
 					'Form_Record only knows the fields defined in the editor and never sees our anchor',
+				),
+				'gravity wrapper hook'      => array(
+					"add_filter( 'gform_form_after_open'",
+					'that hook fires before the form element exists and again on the confirmation page',
+				),
+				'gravity spam route'        => array(
+					"add_filter( 'gform_entry_is_spam'",
+					'an entry filed as spam is a message the sender was thanked for and nobody reads',
+				),
+				'gravity silent abort'      => array(
+					"add_filter( 'gform_abort_submission_with_confirmation'",
+					'a confirmation shown for a dropped submission is a lost message without a warning',
 				),
 			);
 		}
@@ -419,6 +448,28 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				"{$self}->judge( 'ultimate_member', false )",
 				$this->source()
+			);
+		}
+
+		/**
+		 * A refused Gravity Forms submission is told so. The refusal travels as
+		 * the plugin's own form-level error, which is what it renders above the
+		 * form on both the page-load and the background path, and the final
+		 * page is the only one judged.
+		 */
+		public function test_a_gravity_refusal_is_a_form_level_error_on_the_final_page(): void {
+			$source = $this->source();
+
+			$this->assertStringContainsString(
+				"GFFormDisplay::\$submission[ \$form_id ]['form_level_error'] = \$message;",
+				$source,
+				'the sender must read why nothing was sent'
+			);
+			$this->assertStringContainsString( "\$result['is_valid'] = false;", $source );
+			$this->assertStringContainsString(
+				"'gform_target_page_number_' . \$form_id",
+				$source,
+				'an earlier page of a multi-page form is a request of its own, not a submission'
 			);
 		}
 	}

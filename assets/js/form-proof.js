@@ -34,6 +34,7 @@
 	var stock = [];
 	var mining = false;
 	var challenge = null;
+	var bound = false;
 
 	function field( form, name ) {
 		var input = form.querySelector( 'input[name="' + name + '"]' );
@@ -366,6 +367,50 @@
 		refill();
 	}
 
+	/**
+	 * Fill the field the way Gravity Forms expects it to be filled.
+	 *
+	 * Gravity Forms submits its forms itself and fires no submit event doing so,
+	 * which is why the listener below never sees one. It publishes a filter for
+	 * exactly this purpose and runs it before it collects the form, the same one
+	 * its own invisible captcha uses.
+	 *
+	 * @since 2.1.63
+	 */
+	function gravity() {
+		if ( bound || ! window.gform || ! window.gform.utils || ! window.gform.utils.addFilter ) {
+			return;
+		}
+
+		bound = true;
+
+		window.gform.utils.addFilter( 'gform/submission/pre_submission', function ( data ) {
+			if ( data && data.form && ! data.abort ) {
+				onSubmit( data.form );
+			}
+
+			return data;
+		} );
+	}
+
+	/**
+	 * Take in a form that reached the page after the first pass.
+	 *
+	 * A form rendered again after a failed validation, or loaded into a popup,
+	 * arrives without a clock and, with a computation in play, without anything
+	 * being computed for it: the first pass found no anchor and never read the
+	 * challenge. The start time is remembered per form, so the clock picks up
+	 * where it left off rather than starting over.
+	 *
+	 * @since 2.1.63
+	 */
+	function rearm() {
+		watch();
+		start();
+		markers();
+		gravity();
+	}
+
 	document.addEventListener(
 		'submit',
 		function ( event ) {
@@ -376,15 +421,12 @@
 		true
 	);
 
+	document.addEventListener( 'gform/theme/scripts_loaded', gravity );
+	document.addEventListener( 'gform/post_render', rearm );
+
 	if ( 'loading' === document.readyState ) {
-		document.addEventListener( 'DOMContentLoaded', function () {
-			watch();
-			start();
-			markers();
-		} );
+		document.addEventListener( 'DOMContentLoaded', rearm );
 	} else {
-		watch();
-		start();
-		markers();
+		rearm();
 	}
 }() );

@@ -229,6 +229,9 @@ class ReportedIP_Hive_Quickstart {
 					'label' => __( 'Logs for 30 days, IP addresses anonymised after 7 days', 'reportedip-hive' ),
 					'tier'  => 'free',
 				),
+			),
+			self::form_plugin_rows( 'free' ),
+			array(
 				array(
 					'label' => __( 'Hardening Mode during attack waves', 'reportedip-hive' ),
 					'tier'  => 'professional',
@@ -250,7 +253,6 @@ class ReportedIP_Hive_Quickstart {
 					'tier'  => 'professional',
 				),
 			),
-			self::form_plugin_rows( 'professional' ),
 			array(
 				array(
 					'label' => __( 'Audit trail and account blocking, logs for one year', 'reportedip-hive' ),
@@ -285,7 +287,7 @@ class ReportedIP_Hive_Quickstart {
 		$names    = array();
 		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
 			$status = $mode->feature_status( $adapter['feature'] );
-			$plan   = isset( $status['min_tier'] ) ? (string) $status['min_tier'] : '';
+			$plan   = isset( $status['min_tier'] ) ? (string) $status['min_tier'] : 'free';
 
 			if ( $plan === (string) $tier && $adapters->detected( $slug ) && isset( $labels[ $slug ] ) ) {
 				$names[] = $labels[ $slug ];

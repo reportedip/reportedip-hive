@@ -118,6 +118,7 @@ class ReportedIP_Hive_Form_Proof {
 		'reportedip_hive_form_proof_formidable',
 		'reportedip_hive_form_proof_elementor',
 		'reportedip_hive_form_proof_um',
+		'reportedip_hive_form_proof_gravity',
 	);
 
 	/**

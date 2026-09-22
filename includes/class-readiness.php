@@ -1053,29 +1053,32 @@ final class ReportedIP_Hive_Readiness {
 	 * @since  2.1.51
 	 */
 	private static function links() {
-		return array(
-			'guard_queue_unwritable'  => array( 'reportedip-hive-tools', 'server' ),
-			'cron_stalled'            => array( 'reportedip-hive-debug', '' ),
-			'cron_disabled_stale'     => array( 'reportedip-hive-debug', '' ),
-			'trusted_header_open'     => array( 'reportedip-hive-protection', 'detection' ),
-			'schema_outdated'         => array( 'reportedip-hive-debug', '' ),
-			'api_degraded'            => array( 'reportedip-hive-community', 'community' ),
-			'relay_cap_mail'          => array( 'reportedip-hive-community', 'community' ),
-			'relay_cap_sms'           => array( 'reportedip-hive-community', 'community' ),
-			'mail_failures'           => array( 'reportedip-hive-protection', 'notifications' ),
-			'crypto_missing'          => array( 'reportedip-hive-protection', 'account_security' ),
-			'queue_failed'            => array( 'reportedip-hive-security', 'api_queue' ),
-			'queue_backlog'           => array( 'reportedip-hive-security', 'api_queue' ),
-			'hide_login_off'          => array( 'reportedip-hive-protection', 'hide_login' ),
-			'frontend_2fa_available'  => array( 'reportedip-hive-protection', 'account_security' ),
-			'badge_off'               => array( 'reportedip-hive-community', 'badges' ),
-			'dropin_not_running'      => array( 'reportedip-hive-tools', 'server' ),
-			'community_pending'       => array( 'reportedip-hive-community', 'community' ),
-			'form_adapter_cf7'        => array( 'reportedip-hive-protection', 'forms' ),
-			'form_adapter_formidable' => array( 'reportedip-hive-protection', 'forms' ),
-			'form_adapter_elementor'  => array( 'reportedip-hive-protection', 'forms' ),
-			'own_2fa_missing'         => array( 'profile', '' ),
+		$links = array(
+			'guard_queue_unwritable' => array( 'reportedip-hive-tools', 'server' ),
+			'cron_stalled'           => array( 'reportedip-hive-debug', '' ),
+			'cron_disabled_stale'    => array( 'reportedip-hive-debug', '' ),
+			'trusted_header_open'    => array( 'reportedip-hive-protection', 'detection' ),
+			'schema_outdated'        => array( 'reportedip-hive-debug', '' ),
+			'api_degraded'           => array( 'reportedip-hive-community', 'community' ),
+			'relay_cap_mail'         => array( 'reportedip-hive-community', 'community' ),
+			'relay_cap_sms'          => array( 'reportedip-hive-community', 'community' ),
+			'mail_failures'          => array( 'reportedip-hive-protection', 'notifications' ),
+			'crypto_missing'         => array( 'reportedip-hive-protection', 'account_security' ),
+			'queue_failed'           => array( 'reportedip-hive-security', 'api_queue' ),
+			'queue_backlog'          => array( 'reportedip-hive-security', 'api_queue' ),
+			'hide_login_off'         => array( 'reportedip-hive-protection', 'hide_login' ),
+			'frontend_2fa_available' => array( 'reportedip-hive-protection', 'account_security' ),
+			'badge_off'              => array( 'reportedip-hive-community', 'badges' ),
+			'dropin_not_running'     => array( 'reportedip-hive-tools', 'server' ),
+			'community_pending'      => array( 'reportedip-hive-community', 'community' ),
+			'own_2fa_missing'        => array( 'profile', '' ),
 		);
+
+		foreach ( array_keys( self::form_adapters() ) as $slug ) {
+			$links[ 'form_adapter_' . $slug ] = array( 'reportedip-hive-protection', 'forms' );
+		}
+
+		return $links;
 	}
 
 	/**

@@ -93,18 +93,19 @@ Hive checks that a submission came from a browser that really rendered the form.
 * **Lost password**, the WordPress password-reset form
 * **Your own forms**, through the open interface `ReportedIP_Hive_Form_Proof::field()`, `check()` and `passes()`, so a hand-built form can drop its captcha
 
-**From Professional:**
+**On every plan:**
 
 * **Contact Form 7**
-* **Ultimate Member**, its sign-in, sign-up and password forms. A sign-up also runs through the registration rules, so a throwaway address or a reserved name is refused before the account exists
 
 **From Business:**
 
+* **Gravity Forms**, including forms sent in the background and forms with several pages
+* **Ultimate Member**, its sign-in, sign-up and password forms. A sign-up also runs through the registration rules, so a throwaway address or a reserved name is refused before the account exists
 * **Formidable Forms**
 * **Formidable Forms PRO**
 * **Elementor Forms**, which needs Elementor PRO, because the form widget exists only there
 
-**Tested against** Contact Form 7 in the version published on wordpress.org, Formidable Forms and Formidable Forms PRO 6.35, Elementor and Elementor PRO 3.34, Ultimate Member 2.13.
+**Tested against** Contact Form 7 in the version published on wordpress.org, Gravity Forms 3.1, Formidable Forms and Formidable Forms PRO 6.35, Elementor and Elementor PRO 3.34, Ultimate Member 2.13.
 
 **How it works.** Every protected form carries an invisible, screen-reader-excluded anchor field. A bot that fills every input it finds fills that one too. A small script adds a second field whose name is random per installation, so a script posting straight at the endpoint without ever loading the form cannot carry it. The verdict is four-way, `proved`, `failed`, `tripped` or `absent`, and "absent" stays lenient until the site has seen itself render the field, so a theme with hand-written comment markup is never treated like a bot. Nothing request-specific reaches the HTML, so page caches stay valid.
 
@@ -273,7 +274,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * **Advanced security headers**, HSTS, Permissions-Policy, the Content-Security-Policy builder and the cross-origin isolation trio (the basic header trio stays free)
 * **Adaptive 2FA triggers**, per-role step-up rules on a new device, IP address, network or country, every N days or sign-ins, or above a concurrent-session limit
 * **Unlimited registration rules**, no ten-entry cap on the username and e-mail lists, `/regex/` patterns and registration restricted to allowlisted IP ranges
-* **Form protection on Contact Form 7 and Ultimate Member**, plus the computation check on every protected form (see *Form protection* above)
+* **The computation check on every protected form** (see *Form protection* above)
 * **Priority Sync**, the deeper, frequently-updated, Ed25519-signed WAF Paranoia-Level-2/3 rulesets plus the live bot-IP-range and disposable-domain feeds
 * Multi-site dashboard, priority sync (daily blacklist download), 90-day log retention, e-mail support (48 h SLA)
 * Prepaid top-up bundles (SMS and mail) available for heavy months
@@ -284,7 +285,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * **2,500 mail/month + 75 SMS/month included**
 * Everything in Professional, plus white-label (logo, copy, mail templates), the WooCommerce complete integration, full WP-CLI surface and role-based login-time restrictions
 * **Audit event trail**, append-only record of who changed what: settings with old and new value, plugins, themes and core, pages and posts, menus and widgets, edited files and user accounts, each with the acting user and the affected object; eight trigger groups as switches, filters and CSV/JSON export
-* **Form protection on Formidable Forms, Formidable Forms PRO and Elementor Forms**, one switch per plugin
+* **Form protection on Gravity Forms, Formidable Forms, Formidable Forms PRO, Elementor Forms and Ultimate Member**, one switch per plugin
 * **Advanced Security Keys**, multiple WebAuthn keys per account (primary + backup YubiKey), automatic model detection via attestation, key-lifecycle email alerts
 * **User account control and sessions**, block an account (it keeps its content but cannot sign in, authenticate an application password or complete a password reset), drop all of its sessions and trusted devices, and review or terminate active sessions from Users → Sessions
 * 1-year log retention, weekly security PDF report, GDPR data-export tool, priority support (12 h SLA)
@@ -299,7 +300,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 
 **How domains are counted:** each Hive installation announces its site address with every API request, and every distinct domain occupies one slot of the plan. A WordPress Multisite network counts as a single domain. Your reportedip.com dashboard shows the used/included domains per licence, lets you release slots of retired or moved sites (up to 3 self-service releases per 30 days), and domains that stop reporting for 60 days free their slot automatically. Currently informational only, nothing is blocked when a plan is over its allowance.
 
-What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, the registration rule set with ten entries per list, the form protection on the comment, sign-up and password-reset forms together with the form API for your own forms, its self-test on the Tools page and the measured fill time, the community threat check on forms, the access lockdown switches, the system readiness register, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys, multiple WebAuthn keys, model detection, key alerts (Business), adaptive 2FA triggers (Professional), unlimited registration rules with regular expressions and allowlist-only registration (Professional), the computation check on forms and the form protection on Contact Form 7 and Ultimate Member (Professional), the form protection on Formidable Forms, Formidable Forms PRO and Elementor Forms (Business), blocking user accounts and the session manager (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode, no plan, no account, nothing leaves your site.
+What stays Free regardless of plan: all 16 detection sensors, the WAF engine with its baseline ruleset, verified-bot detection, the registration rule set with ten entries per list, the form protection on the comment, sign-up and password-reset forms together with the form API for your own forms and the Contact Form 7 adapter, its self-test on the Tools page and the measured fill time, the community threat check on forms, the access lockdown switches, the system readiness register, the basic security headers, the TOTP / Passkey / Email 2FA methods, the password-reset gate, the recovery-code system, progressive block escalation, every dashboard, every export, the entire plugin source. A short, explicit list of what does need a paid plan: SMS 2FA (managed relay), WooCommerce frontend 2FA, Hardening Mode, advanced security headers (HSTS / CSP / cross-origin isolation), Priority Sync (the deeper WAF rulesets and live feeds), the audit event trail (Business), advanced security keys, multiple WebAuthn keys, model detection, key alerts (Business), adaptive 2FA triggers (Professional), unlimited registration rules with regular expressions and allowlist-only registration (Professional), the computation check on forms (Professional), the form protection on Gravity Forms, Formidable Forms, Formidable Forms PRO, Elementor Forms and Ultimate Member (Business), blocking user accounts and the session manager (Business), the managed mail relay quota, higher API quotas, multi-site management, white-label and the GDPR export tool. The plugin works fully offline in Local Shield mode, no plan, no account, nothing leaves your site.
 
 == How Hive actually works ==
 

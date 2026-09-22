@@ -130,6 +130,15 @@ final class I18nCheck {
 			return;
 		}
 
+		$mojibake = $this->double_encoded_lines( $po );
+		if ( array() !== $mojibake ) {
+			$this->failures[] = sprintf(
+				'%s carries double-encoded UTF-8 on line(s) %s (an umlaut written as two Latin-1 characters). Re-enter those translations.',
+				self::PO_DE,
+				implode( ', ', $mojibake )
+			);
+		}
+
 		$stats = $this->po_stats( $po );
 		if ( $stats['untranslated'] > 0 || $stats['fuzzy'] > 0 ) {
 			$this->failures[] = sprintf(
@@ -186,6 +195,27 @@ final class I18nCheck {
 			$map[ basename( $file ) ] = md5_file( $file );
 		}
 		return $map;
+	}
+
+	/**
+	 * Line numbers of translations that carry double-encoded UTF-8.
+	 *
+	 * A German umlaut saved through a Latin-1 round trip arrives as two
+	 * characters, the first of them a capital A with tilde. Such a translation
+	 * compiles and passes every other check, and the settings page then shows
+	 * it exactly that way to the operator (seen live in 2.1.62).
+	 *
+	 * @param string $file PO file path.
+	 * @return int[]
+	 */
+	private function double_encoded_lines( string $file ): array {
+		$hits = array();
+		foreach ( (array) file( $file, FILE_IGNORE_NEW_LINES ) as $index => $line ) {
+			if ( 0 === strpos( (string) $line, 'msgstr' ) && preg_match( '/\x{00C3}[\x{0080}-\x{00BF}]/u', (string) $line ) ) {
+				$hits[] = $index + 1;
+			}
+		}
+		return $hits;
 	}
 
 	/**

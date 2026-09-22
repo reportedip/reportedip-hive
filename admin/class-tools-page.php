@@ -107,20 +107,6 @@ class ReportedIP_Hive_Tools_Page {
 	const SELFTEST_TTL = 300;
 
 	/**
-	 * The form plugins behind the three adapters, keyed by surface.
-	 *
-	 * @return array<string, string>
-	 * @since  2.1.58
-	 */
-	public static function selftest_adapter_names() {
-		return array(
-			'cf7'        => 'Contact Form 7',
-			'formidable' => 'Formidable Forms',
-			'elementor'  => 'Elementor Forms',
-		);
-	}
-
-	/**
 	 * Read the current state of the form protection off the running site.
 	 *
 	 * Everything impure lives here so {@see selftest_inventory()} stays a plain
@@ -132,7 +118,7 @@ class ReportedIP_Hive_Tools_Page {
 	public static function selftest_state() {
 		$proof    = ReportedIP_Hive_Form_Proof::get_instance();
 		$adapters = ReportedIP_Hive_Form_Adapters::get_instance();
-		$names    = self::selftest_adapter_names();
+		$names    = ReportedIP_Hive_Form_Adapters::names();
 		$mode     = ReportedIP_Hive_Mode_Manager::get_instance();
 		$rows     = array();
 

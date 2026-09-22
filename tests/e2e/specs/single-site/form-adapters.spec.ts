@@ -20,6 +20,11 @@ import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
  *   Elementor Pro    widget ripfrm01 on post 703, page /rip-e2e-elementor-page/
  *   Ultimate Member  default forms, pages /rip-e2e-um-register/ and -login,
  *                    switched on only while its own cases run
+ *   Gravity Forms    form "RIP E2E Gravity", page /rip-e2e-gravity-page/
+ *                    (legacy iframe submission) and /rip-e2e-gravity-ajax-page/
+ *                    (true background submission, switched on by the dev-stack
+ *                    mu-plugin rip-gravity-ajax-test.php); skipped when the
+ *                    plugin is not installed (it is paid)
  *
  * Serial: the specs mutate shared plugin state on the long-lived stack.
  */
@@ -34,6 +39,8 @@ const FRM_PAGE = '/rip-e2e-frm-page/';
 const ELEMENTOR_PAGE = '/rip-e2e-elementor-page/';
 const ELEMENTOR_WIDGET = 'ripfrm01';
 const UM_REGISTER_PAGE = '/rip-e2e-um-register/';
+const GRAVITY_PAGE = '/rip-e2e-gravity-page/';
+const GRAVITY_AJAX_PAGE = '/rip-e2e-gravity-ajax-page/';
 
 /**
  * Object ids the fixture hands back. Nothing here may be hard-coded: the three
@@ -48,12 +55,14 @@ let FRM_FORM = '0';
 let FRM_NAME_FIELD = '0';
 let FRM_TEXT_FIELD = '0';
 let UM_REGISTER_FORM = '0';
+let GRAVITY_FORM = '0';
 
 const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_cf7',
 	'reportedip_hive_form_proof_formidable',
 	'reportedip_hive_form_proof_elementor',
 	'reportedip_hive_form_proof_um',
+	'reportedip_hive_form_proof_gravity',
 ];
 
 /**
@@ -107,6 +116,7 @@ function seedForms(): void {
 	FRM_NAME_FIELD = read('frm_name');
 	FRM_TEXT_FIELD = read('frm_text');
 	UM_REGISTER_FORM = read('um_register');
+	GRAVITY_FORM = read('gravity');
 
 	const page = php(
 		`$p = get_posts(array('name' => 'rip-e2e-cf7-page', 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => 1)); echo $p ? (int) $p[0]->ID : 0;`
@@ -131,6 +141,32 @@ function setJquery(on: boolean): void {
 		'-c',
 		on ? 'touch /profiles/jquery-on.txt' : 'rm -f /profiles/jquery-on.txt',
 	]);
+}
+
+/**
+ * Make the stack answer is_ssl() with true, or stop doing so.
+ *
+ * The computation check is only handed out on a secure connection. The stack
+ * speaks plain HTTP, and `docker/mu-plugins/zz-rip-force-https.php` forges the
+ * scheme while this flag file exists. Chrome treats localhost as a secure
+ * context anyway, so the browser side computes.
+ */
+function setForcedHttps(on: boolean): void {
+	execFileSync('docker', [
+		'exec',
+		WP_CONTAINER,
+		'sh',
+		'-c',
+		on ? 'touch /profiles/force-https.txt' : 'rm -f /profiles/force-https.txt',
+	]);
+}
+
+/** Demand a solved computation, with its own grace already run out, or not. */
+function setComputation(on: boolean): void {
+	php(
+		`ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow', ${on ? 1 : 0});` +
+			` ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_since', ${on ? 'time() - 172800' : 0});`
+	);
 }
 
 function setAdapters(on: boolean): void {
@@ -431,6 +467,75 @@ async function postFormidable(
 	return response.status();
 }
 
+/** How many entries the Gravity Forms fixture form holds, spam included. */
+function gravityEntryCount(): number {
+	return Number(
+		php(`
+			global $wpdb;
+			echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_FORM}");
+		`)
+	);
+}
+
+function clearGravityEntries(): void {
+	php(`
+		global $wpdb;
+		$ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_FORM}");
+		foreach ( $ids as $id ) { GFAPI::delete_entry( (int) $id ); }
+	`);
+}
+
+/**
+ * Post straight at the Gravity Forms fixture page, the way a blind bot does.
+ *
+ * The page-load path needs no nonce, only the two hidden inputs the plugin
+ * reads to know a form was submitted. Returns the page body, because the
+ * refusal is rendered into it as a form-level validation error.
+ */
+async function postGravity(
+	request: APIRequestContext,
+	extra: Record<string, string> = {}
+): Promise<string> {
+	const response = await request.post(GRAVITY_PAGE, {
+		form: {
+			gform_submit: GRAVITY_FORM,
+			[`is_submit_${GRAVITY_FORM}`]: '1',
+			[`gform_target_page_number_${GRAVITY_FORM}`]: '0',
+			[`gform_source_page_number_${GRAVITY_FORM}`]: '1',
+			input_1: 'E2E Prober',
+			input_2: `An ordinary enquiry written at ${Date.now()}.`,
+			...extra,
+		},
+		failOnStatusCode: false,
+	});
+
+	return await response.text();
+}
+
+/**
+ * Post at Gravity Forms and insist the refusal is ours and visible.
+ *
+ * Two things are read: no entry was written, and the page carries the
+ * form-level error the sender is shown. The log row names us; Gravity Forms
+ * refuses for reasons of its own too.
+ */
+async function expectGravityRefused(
+	request: APIRequestContext,
+	extra: Record<string, string> = {}
+): Promise<void> {
+	clearGravityEntries();
+	const logsBefore = failureLogCount();
+
+	const body = await postGravity(request, extra);
+
+	expect(gravityEntryCount()).toBe(0);
+	expect(body, 'the sender must be told').toContain('gform_submission_error');
+	expect(
+		failureLogCount(),
+		'the refusal must come from our adapter, not from Gravity Forms'
+	).toBeGreaterThan(logsBefore);
+}
+
 test.describe.configure({ mode: 'serial' });
 
 test.describe('form adapters', () => {
@@ -578,38 +683,33 @@ test.describe('form adapters', () => {
 		expireGrace();
 	});
 
-	/** Case 7: the plan decides which adapters are armed. */
-	test('the free plan leaves all three adapters inert', async ({ request }) => {
-		php(FORCE_FREE_PHP);
+	/**
+	 * Case 7: the plan decides which adapters are armed. Contact Form 7 is
+	 * free, every other form plugin needs Business, so Free and Professional
+	 * look the same here.
+	 */
+	for (const [label, tierPhp] of [
+		['free', FORCE_FREE_PHP],
+		['professional', forceTierPhp('professional')],
+	] as const) {
+		test(`the ${label} plan arms Contact Form 7 and leaves the other two inert`, async ({
+			request,
+		}) => {
+			php(tierPhp);
 
-		const cf7 = await postCf7(request);
-		const elementor = await postElementor(request);
+			await expectCf7Refused(request);
 
-		expect(cf7.status).toBe('mail_sent');
-		expect(elementor.success).toBe(true);
+			const elementor = await postElementor(request);
 
-		clearFormidableEntries();
-		await postFormidable(request);
-		expect(formidableEntryCount()).toBe(1);
+			expect(elementor.success, 'Elementor needs the Business plan').toBe(true);
 
-		php(forceTierPhp('business'));
-	});
+			clearFormidableEntries();
+			await postFormidable(request);
+			expect(formidableEntryCount(), 'Formidable needs the Business plan').toBe(1);
 
-	test('professional arms Contact Form 7 and leaves the other two inert', async ({ request }) => {
-		php(forceTierPhp('professional'));
-
-		await expectCf7Refused(request);
-
-		const elementor = await postElementor(request);
-
-		expect(elementor.success, 'Elementor needs the Business plan').toBe(true);
-
-		clearFormidableEntries();
-		await postFormidable(request);
-		expect(formidableEntryCount(), 'Formidable needs the Business plan').toBe(1);
-
-		php(forceTierPhp('business'));
-	});
+			php(forceTierPhp('business'));
+		});
+	}
 
 	test('business arms all three adapters', async ({ request }) => {
 		await expectCf7Refused(request);
@@ -694,6 +794,183 @@ test.describe('form adapters', () => {
 		expect(formidableEntryCount(), 'the two proof layers must not refuse each other').toBe(1);
 
 		setFormidableOwnGuards(false);
+	});
+
+	/**
+	 * Gravity Forms submits its forms itself and fires no submit event, so a
+	 * real browser is the only proof the script hooked the plugin's own
+	 * submission filter. Every case skips when the plugin is not on the stack:
+	 * it is paid and cannot be installed in CI.
+	 */
+	test.describe('Gravity Forms', () => {
+		test.beforeAll(() => {
+			test.skip(GRAVITY_FORM === '0', 'Gravity Forms is not installed on this stack');
+		});
+
+		test('Gravity Forms renders the anchor exactly once', async ({ page }) => {
+			await page.goto(GRAVITY_PAGE);
+			await page.waitForLoadState('domcontentloaded');
+
+			await expect(page.locator('form input.rip-fp-anchor')).toHaveCount(1);
+			await expect(page.locator(`form input[name="${ANCHOR}"]`)).toHaveCount(1);
+		});
+
+		/**
+		 * Both background paths: the legacy iframe the shortcode switches on
+		 * and the true background request of 2.9 and later. They share the
+		 * submission filter the script hooks, and each renders the form again
+		 * its own way after an error.
+		 */
+		for (const [label, url] of [
+			['iframe', GRAVITY_PAGE],
+			['ajax', GRAVITY_AJAX_PAGE],
+		] as const) {
+			test(`a real browser gets through Gravity Forms (${label})`, async ({ page }) => {
+				clearGravityEntries();
+
+				await page.goto(url);
+				await page.fill('input[name="input_1"]', 'E2E Reader');
+				await page.fill('textarea[name="input_2"]', 'An ordinary enquiry from a reader.');
+				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
+
+				await expect(page.locator('.gform_confirmation_message')).toBeVisible();
+				expect(gravityEntryCount()).toBe(1);
+			});
+
+			/**
+			 * After a failed validation the plugin renders the whole form again
+			 * in place. The second attempt has to carry a fresh proof, which is
+			 * what the re-arm on `gform/post_render` is for.
+			 */
+			test(`a browser gets through Gravity Forms after a validation error (${label})`, async ({
+				page,
+			}) => {
+				clearGravityEntries();
+
+				await page.goto(url);
+				await page.fill('textarea[name="input_2"]', 'An enquiry that forgot the name.');
+				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
+
+				await expect(page.locator('.gform_validation_errors')).toBeVisible();
+				expect(gravityEntryCount()).toBe(0);
+
+				await page.fill('input[name="input_1"]', 'E2E Reader');
+				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
+
+				await expect(page.locator('.gform_confirmation_message')).toBeVisible();
+				expect(gravityEntryCount()).toBe(1);
+			});
+
+			/**
+			 * The one case that must never end in silence: a browser that did
+			 * not run the proof script. The refusal has to come back through
+			 * the plugin's own response and be rendered above the form, or the
+			 * sender is thanked for a message nobody got.
+			 */
+			test(`a browser without our script is told (${label})`, async ({ page }) => {
+				clearGravityEntries();
+				await page.route('**/form-proof.js*', (route) => route.abort());
+
+				await page.goto(url);
+				await page.fill('input[name="input_1"]', 'E2E Reader');
+				await page.fill('textarea[name="input_2"]', 'An enquiry from a browser that blocks scripts.');
+				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
+
+				await expect(page.locator('.gform_validation_errors')).toBeVisible();
+				await expect(page.locator('.gform_submission_error')).toContainText('JavaScript');
+				expect(gravityEntryCount()).toBe(0);
+			});
+		}
+
+		/**
+		 * With a computation in play, a form rendered again after an error is
+		 * the case that used to fail: the script read the challenge once at
+		 * page load, so the re-rendered form found nothing computed and was
+		 * refused as unproven. The re-arm on `gform/post_render` reads it
+		 * again; this is the spec that keeps it.
+		 */
+		test('a browser passes the computation on Gravity Forms after a validation error', async ({
+			page,
+		}) => {
+			setForcedHttps(true);
+			setComputation(true);
+			clearGravityEntries();
+
+			try {
+				await page.goto(GRAVITY_AJAX_PAGE);
+				await expect(page.locator('input.rip-fp-anchor[data-s]')).toHaveCount(1);
+
+				await page.fill('textarea[name="input_2"]', 'An enquiry that forgot the name.');
+				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
+				await expect(page.locator('.gform_validation_errors')).toBeVisible();
+
+				await page.fill('input[name="input_1"]', 'E2E Reader');
+				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
+
+				await expect(page.locator('.gform_confirmation_message')).toBeVisible({ timeout: 60000 });
+				expect(gravityEntryCount()).toBe(1);
+			} finally {
+				setComputation(false);
+				setForcedHttps(false);
+			}
+		});
+
+		test('a bare post without our fields is refused on Gravity Forms, in front of the sender', async ({
+			request,
+		}) => {
+			await expectGravityRefused(request);
+		});
+
+		test('a filled decoy is refused on Gravity Forms and counted', async ({ request }) => {
+			clearSpamAttempts();
+
+			await expectGravityRefused(request, { [ANCHOR]: 'http://spam.example' });
+
+			expect(spamAttemptCount()).toBe(1);
+
+			clearSpamAttempts();
+		});
+
+		test('a post carrying both fields is accepted on Gravity Forms', async ({ request }) => {
+			clearGravityEntries();
+			const field = proofField();
+
+			const body = await postGravity(request, { [ANCHOR]: '', [field]: '1' });
+
+			expect(body).not.toContain('gform_submission_error');
+			expect(gravityEntryCount()).toBe(1);
+		});
+
+		test('a submission through the Gravity Forms API is never judged', async () => {
+			clearGravityEntries();
+
+			const result = php(`
+				$r = GFAPI::submit_form(${GRAVITY_FORM}, array('input_1' => 'API Caller', 'input_2' => 'Sent by an integration.'));
+				echo is_wp_error($r) ? 'error:' . $r->get_error_message() : (empty($r['is_valid']) ? 'invalid' : 'valid');
+			`);
+
+			expect(result).toBe('valid');
+			expect(gravityEntryCount()).toBe(1);
+		});
+
+		test('professional leaves Gravity Forms inert', async ({ request }) => {
+			php(forceTierPhp('professional'));
+			clearGravityEntries();
+
+			await postGravity(request);
+
+			expect(gravityEntryCount(), 'Gravity Forms needs the Business plan').toBe(1);
+
+			php(forceTierPhp('business'));
+		});
+
+		test.afterAll(() => {
+			phpTolerant(`
+				global $wpdb;
+				$ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_FORM}");
+				foreach ( $ids as $id ) { GFAPI::delete_entry( (int) $id ); }
+			`);
+		});
 	});
 
 	test.describe('Ultimate Member', () => {

@@ -122,11 +122,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * All three refusals name the cause and a way forward. A shared address
+		 * Every refusal names the cause and a way forward. A shared address
 		 * means the reader is often not the person who earned the reputation.
+		 * A form adapter is the fourth reader: it must not be handed the
+		 * password-reset sentence above a contact form.
 		 */
 		public function test_every_refusal_explains_itself(): void {
-			foreach ( array( 'comment', 'register', 'lostpassword' ) as $surface ) {
+			$this->assertStringNotContainsString( 'password', \ReportedIP_Hive_Reputation_Gate::message( 'gravity_forms' ) );
+
+			foreach ( array( 'comment', 'register', 'lostpassword', 'gravity_forms' ) as $surface ) {
 				$message = \ReportedIP_Hive_Reputation_Gate::message( $surface );
 
 				$this->assertNotSame( '', $message );
