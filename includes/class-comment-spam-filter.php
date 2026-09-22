@@ -47,6 +47,38 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	const THRESHOLD = 7;
 
 	/**
+	 * Score from which a comment is evidence rather than a suspicion. A
+	 * verdict at or above it, carrying at least one reason a reader of the
+	 * site cannot produce, is acted on immediately instead of waiting for the
+	 * per-address counter to fill.
+	 *
+	 * The counter asks how often one address posted, which is the wrong
+	 * question for comment spam: measured over thirteen days on a live
+	 * magazine, 56 per cent of the addresses posted exactly one comment and
+	 * not one of them could ever reach five in an hour. The spam was caught
+	 * and filed every time, and almost nothing was blocked or reported.
+	 */
+	const CERTAIN = 14;
+
+	/**
+	 * Reasons a reader of the site does not produce. At least one of them has
+	 * to be present before a high score counts as certain, so a comment that
+	 * only adds up out of soft signals (no JavaScript, a link of one's own, a
+	 * friendly opening) keeps going through the counter.
+	 *
+	 * @var string[]
+	 */
+	const HARD_REASONS = array(
+		'form_decoy_filled',
+		'url_in_author_name',
+		'no_browser_ua',
+		'pasted_link_markup',
+		'html_link_markup',
+		'risky_tld',
+		'duplicate_body',
+	);
+
+	/**
 	 * Body length under which a comment counts as a one-liner.
 	 */
 	const SHORT_BODY = 15;
@@ -356,6 +388,33 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	}
 
 	/**
+	 * Whether a verdict stands on its own, without a second comment from the
+	 * same address to confirm it.
+	 *
+	 * A filled decoy needs no score at all: the field is hidden from anyone
+	 * who reads the page, so filling it has no other reading. Everything else
+	 * needs both the score and a reason from {@see HARD_REASONS}.
+	 *
+	 * @param array{score:int, reasons:array<int,string>}|null $verdict Verdict.
+	 * @return bool
+	 * @since  2.1.63
+	 */
+	public static function is_certain( $verdict ) {
+		if ( ! is_array( $verdict ) ) {
+			return false;
+		}
+
+		$reasons = array_values( (array) ( $verdict['reasons'] ?? array() ) );
+
+		if ( in_array( 'form_decoy_filled', $reasons, true ) ) {
+			return true;
+		}
+
+		return (int) ( $verdict['score'] ?? 0 ) >= self::CERTAIN
+			&& array() !== array_intersect( self::HARD_REASONS, $reasons );
+	}
+
+	/**
 	 * Build the scoring context from the request and the WordPress
 	 * configuration. Everything {@see score()} reads passes through here, so
 	 * the scoring itself stays pure and testable without WordPress.
@@ -504,9 +563,26 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 		}
 
 		$monitor = $hive->get_security_monitor();
-		if ( $monitor instanceof ReportedIP_Hive_Security_Monitor && self::verdict_may_block( $this->verdict ) ) {
-			$monitor->check_comment_spam_threshold( $ip );
+		if ( ! $monitor instanceof ReportedIP_Hive_Security_Monitor || ! self::verdict_may_block( $this->verdict ) ) {
+			return;
 		}
+
+		if ( self::is_certain( $this->verdict ) ) {
+			$monitor->handle_threshold_exceeded(
+				$ip,
+				'comment_spam',
+				array(
+					'score'    => $this->verdict['score'],
+					'reasons'  => implode( ', ', $this->verdict['reasons'] ),
+					'certain'  => 1,
+					'attempts' => 1,
+				)
+			);
+
+			return;
+		}
+
+		$monitor->check_comment_spam_threshold( $ip );
 	}
 
 	/**

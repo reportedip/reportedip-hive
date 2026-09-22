@@ -891,12 +891,16 @@ class ReportedIP_Hive_Database {
 	 *                                  the WAF drop-in queue imports a whole burst
 	 *                                  in one pass, must be able to count the real
 	 *                                  number of offences instead of one per call.
+	 * @param int         $idle_minutes Idle span after which the counter restarts.
+	 *                                  Must be at least as long as the window the
+	 *                                  caller aggregates over.
 	 * @return int|false
 	 */
-	public function track_attempt( $ip_address, $attempt_type, $username = null, $user_agent = null, $increment = 1 ) {
+	public function track_attempt( $ip_address, $attempt_type, $username = null, $user_agent = null, $increment = 1, $idle_minutes = 60 ) {
 		global $wpdb;
 
 		$increment  = max( 1, (int) $increment );
+		$idle       = max( 1, (int) $idle_minutes );
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
 		$now_utc    = current_time( 'mysql', true );
 
@@ -904,13 +908,13 @@ class ReportedIP_Hive_Database {
 		 * Single atomic upsert on UNIQUE (ip_address, attempt_type), schema
 		 * v15:so parallel failed-login bursts cannot lose counts the way the
 		 * previous read-then-update did. The IF() conditions re-implement the
-		 * one-hour idle window: a row untouched for over an hour restarts its
-		 * counter and first_attempt instead of accumulating forever.
+		 * idle window: a row untouched for longer than `$idle_minutes` restarts
+		 * its counter and first_attempt instead of accumulating forever.
 		 * `last_attempt` MUST stay the final assignment, MySQL evaluates the
 		 * update list left to right and the IF() conditions read its OLD value.
-		 * Documented drift vs. the pre-v15 behavior: an aggregation window
-		 * longer than 60 minutes spanning an idle gap only sees the restarted
-		 * count (shipped default windows are 15 minutes or less).
+		 * A sensor whose aggregation window is longer than the default hour
+		 * passes that window in, otherwise the counter resets underneath it
+		 * and the configured window can never be reached.
 		 */
 		return $wpdb->query(
 			$wpdb->prepare(
@@ -919,8 +923,8 @@ class ReportedIP_Hive_Database {
 					(ip_address, attempt_type, username, user_agent, attempt_count, first_attempt, last_attempt)
 				 VALUES (%s, %s, %s, %s, %d, %s, %s)
 				 ON DUPLICATE KEY UPDATE
-					attempt_count = IF(last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR), attempt_count + VALUES(attempt_count), VALUES(attempt_count)),
-					first_attempt = IF(last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR), first_attempt, VALUES(first_attempt)),
+					attempt_count = IF(last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE), attempt_count + VALUES(attempt_count), VALUES(attempt_count)),
+					first_attempt = IF(last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE), first_attempt, VALUES(first_attempt)),
 					username      = COALESCE(NULLIF(VALUES(username), ''), username),
 					user_agent    = COALESCE(NULLIF(VALUES(user_agent), ''), user_agent),
 					last_attempt  = VALUES(last_attempt)",
@@ -930,7 +934,9 @@ class ReportedIP_Hive_Database {
 				$user_agent,
 				$increment,
 				$now_utc,
-				$now_utc
+				$now_utc,
+				$idle,
+				$idle
 			)
 		);
 	}

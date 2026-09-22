@@ -2,6 +2,31 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- **Comment spam was detected and filed, but almost never blocked or
+  reported.** The consequence hung entirely on a frequency counter: five
+  rejected comments from one address inside sixty minutes. Measured over
+  thirteen days on a live magazine, 56 per cent of the spamming addresses
+  posted exactly one comment and the rest spread theirs over hours, so 104 of
+  109 addresses could never reach the threshold no matter how obvious the
+  spam was. A verdict that stands on its own no longer waits for a second
+  comment: a filled decoy field, or a score at or above `CERTAIN` carrying at
+  least one reason a reader cannot produce (no browser user-agent, pasted
+  link markup, a hand-typed anchor, a throwaway TLD, a URL as the author
+  name, a body seen before), blocks and reports the address on the spot.
+  Scores built only from soft signals keep going through the counter, so
+  somebody browsing without JavaScript who links their own site is still
+  merely filed for review.
+- **The comment spam window could not exceed an hour, whatever the setting
+  said.** The attempts counter restarts after sixty idle minutes, so an
+  aggregation window of, say, twelve hours only ever saw the restarted count
+  and the configured threshold was unreachable. The sensor now passes its own
+  window to the counter, which keeps the row alive for exactly as long as the
+  window it is read with.
+
 ## [2.1.62] (2026-09-20)
 
 ### Fixed

@@ -340,7 +340,7 @@ class ReportedIP_Hive_Security_Monitor {
 			$user_agent       = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 			$track_user_agent = ! empty( $user_agent ) ? substr( (string) $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ) : '';
 		}
-		$this->database->track_attempt( $ip_address, 'comment', null, $track_user_agent );
+		$this->database->track_attempt( $ip_address, 'comment', null, $track_user_agent, 1, max( 60, (int) $timeframe ) );
 
 		$attempt_count = $this->database->get_attempt_count( $ip_address, 'comment', $timeframe );
 

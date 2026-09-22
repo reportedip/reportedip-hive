@@ -334,6 +334,58 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * A filled decoy is proof on its own: the field is hidden from anyone
+		 * who reads the page.
+		 */
+		public function test_a_filled_decoy_is_certain_at_any_score(): void {
+			$this->assertTrue(
+				\ReportedIP_Hive_Comment_Spam_Filter::is_certain(
+					array(
+						'score'   => 8,
+						'reasons' => array( 'form_decoy_filled', 'author_url' ),
+					)
+				)
+			);
+		}
+
+		/**
+		 * A high score built from signals a reader can produce stays on the
+		 * counter, however high it climbs. Somebody browsing without
+		 * JavaScript who links their own site and opens with a compliment is
+		 * exactly that case.
+		 */
+		public function test_a_soft_verdict_is_never_certain(): void {
+			$this->assertFalse(
+				\ReportedIP_Hive_Comment_Spam_Filter::is_certain(
+					array(
+						'score'   => 20,
+						'reasons' => array( 'no_js_proof', 'author_url', 'praise_opener_with_url', 'language_mismatch', 'foreign_script', 'repeat_link_target' ),
+					)
+				)
+			);
+		}
+
+		public function test_a_hard_reason_above_the_certain_score_stands_alone(): void {
+			$this->assertTrue(
+				\ReportedIP_Hive_Comment_Spam_Filter::is_certain(
+					array(
+						'score'   => \ReportedIP_Hive_Comment_Spam_Filter::CERTAIN,
+						'reasons' => array( 'url_with_no_message', 'filler_body', 'risky_tld', 'no_browser_ua' ),
+					)
+				)
+			);
+			$this->assertFalse(
+				\ReportedIP_Hive_Comment_Spam_Filter::is_certain(
+					array(
+						'score'   => \ReportedIP_Hive_Comment_Spam_Filter::CERTAIN - 1,
+						'reasons' => array( 'no_browser_ua', 'risky_tld' ),
+					)
+				)
+			);
+			$this->assertFalse( \ReportedIP_Hive_Comment_Spam_Filter::is_certain( null ) );
+		}
+
+		/**
 		 * A form filled in faster than a reader can read it is a signal, not a
 		 * verdict: the duration is unsigned and anyone can write one in.
 		 */
