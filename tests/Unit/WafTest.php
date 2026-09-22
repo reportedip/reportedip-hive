@@ -159,6 +159,52 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertIsArray( $hit );
 		}
 
+		/**
+		 * The baseline traversal rule must see every encoding an attacker can put
+		 * on the wire, the double-encoded one included: PHP decodes the query
+		 * once and WordPress decoded `pagename` a second time (CVE-2026-87902),
+		 * so `%252e%252e%252f` is what such a request actually looks like.
+		 *
+		 * @dataProvider provide_traversal_encodings
+		 */
+		public function test_baseline_traversal_rule_sees_every_encoding( string $uri, bool $expect_hit ): void {
+			$baseline = include dirname( __DIR__, 2 ) . '/data/rulesets/waf-baseline.php';
+			$rules    = array();
+			foreach ( $baseline['rules'] as $rule ) {
+				if ( 'waf_traversal' === $rule['id'] ) {
+					$rules[] = $rule;
+				}
+			}
+			$this->assertCount( 1, $rules, 'the baseline carries exactly one traversal rule' );
+
+			$hit = $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null );
+
+			if ( $expect_hit ) {
+				$this->assertIsArray( $hit, "$uri must trip the traversal rule" );
+			} else {
+				$this->assertNull( $hit, "$uri is not a traversal and must pass" );
+			}
+		}
+
+		/**
+		 * @return array<string, array{0:string, 1:bool}>
+		 */
+		public static function provide_traversal_encodings(): array {
+			return array(
+				'plain'                    => array( '/?pagename=../../wp-config', true ),
+				'encoded slash'            => array( '/?pagename=..%2f..%2fwp-config', true ),
+				'encoded dots'             => array( '/?pagename=%2e%2e/wp-config', true ),
+				'encoded dots and slash'   => array( '/?pagename=%2e%2e%2fwp-config', true ),
+				'upper case'               => array( '/?pagename=%2E%2E%2Fwp-config', true ),
+				'double encoded'           => array( '/?pagename=%252e%252e%252f%252e%252e%252fwp-config', true ),
+				'encoded backslash'        => array( '/?pagename=..%5c..%5cwp-config', true ),
+				'overlong utf-8'           => array( '/?pagename=%c0%ae%c0%ae/wp-config', true ),
+				'two dots inside a name'   => array( '/?s=file..txt', false ),
+				'numeric range'            => array( '/wp-json/wp/v2/posts?per_page=2..5', false ),
+				'ordinary page'            => array( '/?pagename=about-us', false ),
+			);
+		}
+
 		public function test_evaluate_matches_body_and_raw(): void {
 			$rules = array(
 				array( 'id' => 'sqli', 'group' => 'sql_injection', 'pattern' => '(?i)\bunion\b[\s\S]{0,80}?\bselect\b', 'paranoia' => 1, 'target' => 'body' ),

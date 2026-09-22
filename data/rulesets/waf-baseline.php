@@ -109,7 +109,7 @@ return array(
 		array(
 			'id'       => 'waf_traversal',
 			'group'    => 'path_traversal',
-			'pattern'  => '(?:\.\./|\.\.\\\\|%2e%2e[/\\\\]|\.\.%2f)',
+			'pattern'  => '(?i)(?:\.\.(?:/|\x5c)|\.\.%(?:2f|5c)|%2e%2e(?:/|\x5c|%(?:2f|5c))|%252e%252e|%c0%ae%c0%ae)',
 			'paranoia' => 1,
 			'severity' => 'high',
 			'target'   => 'all',
