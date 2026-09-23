@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.62
+Stable tag: 2.1.63
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -467,6 +467,16 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.63 =
+
+Security: the firewall's directory-traversal rule now matches every encoding on the wire, including the double-encoded form behind the WordPress 7.1.2 template fix, in both firewall layers.
+
+New: form protection on Gravity Forms (Business), including forms sent in the background and forms with several pages. A refused submission is a validation error the sender sees above the form; nothing lands in a spam folder unread.
+
+Changed: Contact Form 7 protection is included in every plan, Ultimate Member moves to Business next to Gravity Forms, Formidable Forms and Elementor Forms. A switched-on adapter above the plan keeps its stored value and can still be switched off.
+
+Fixed: a form rendered again after a failed validation can pass the computation check; a community-reputation refusal above a third-party form names the form, not the password reset; certain comment spam blocks the address on the spot and the counter stands at three rejected comments a day; three German strings on the Protection page no longer show garbled umlauts.
 
 = 2.1.62 =
 
