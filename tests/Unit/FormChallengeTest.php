@@ -17,6 +17,12 @@ namespace {
 			return 'unit-test-salt-' . $scheme;
 		}
 	}
+
+	if ( ! function_exists( 'wp_generate_password' ) ) {
+		function wp_generate_password( $length = 12, $special_chars = true, $extra_special_chars = false ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return substr( bin2hex( random_bytes( 32 ) ), 0, (int) $length );
+		}
+	}
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -24,6 +30,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 	use ReportedIP\Hive\Tests\TestCase;
 
 	require_once dirname( __DIR__, 2 ) . '/includes/class-form-proof.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-notifications.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-form-challenge.php';
 
 	/**
@@ -133,20 +140,22 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 0, $minted['bits'] );
 		}
 
-		public function test_the_proof_value_splits_into_token_and_nonce(): void {
+		public function test_judge_reads_the_solution_off_the_last_dot(): void {
 			$minted = \ReportedIP_Hive_Form_Challenge::mint( 0, self::NOW );
-			$split  = \ReportedIP_Hive_Form_Challenge::split( $minted['token'] . '.abc' );
 
-			$this->assertSame( $minted['token'], $split['token'] );
-			$this->assertSame( 'abc', $split['nonce'] );
-			$this->assertTrue( \ReportedIP_Hive_Form_Challenge::looks_like_token( $minted['token'] . '.abc' ) );
+			$this->assertSame( 'ok', \ReportedIP_Hive_Form_Challenge::judge( $minted['token'] . '.abc', self::NOW + 5 ) );
+		}
+
+		public function test_networks_share_one_ladder(): void {
+			$this->assertSame( '203.0.113.0/24', \ReportedIP_Hive_Form_Challenge::network( '203.0.113.77' ) );
+			$this->assertSame( \ReportedIP_Hive_Form_Challenge::network( '2001:db8:1:2::1' ), \ReportedIP_Hive_Form_Challenge::network( '2001:db8:1:2:ffff::9' ) );
 		}
 
 		/**
 		 * @dataProvider not_tokens
 		 */
 		public function test_markers_and_old_payloads_are_not_tokens( string $value ): void {
-			$this->assertFalse( \ReportedIP_Hive_Form_Challenge::looks_like_token( $value ) );
+			$this->assertSame( 'marker', \ReportedIP_Hive_Form_Challenge::judge( $value, self::NOW ) );
 		}
 
 		public static function not_tokens(): array {

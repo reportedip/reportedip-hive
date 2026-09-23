@@ -421,14 +421,8 @@ class ReportedIP_Hive_Ajax_Handler {
 		);
 
 		$verdict = ReportedIP_Hive_Form_Proof::evaluate( $submission, $field, $decoy );
-		$solved  = false;
-
-		if ( ReportedIP_Hive_Form_Proof::PROVED === $verdict && $required && ReportedIP_Hive_Form_Challenge::looks_like_token( $payload ) ) {
-			$parts  = ReportedIP_Hive_Form_Challenge::split( $payload );
-			$solved = 'ok' === ReportedIP_Hive_Form_Challenge::verify( $parts['token'], $parts['nonce'] );
-		}
-
-		$actual = ReportedIP_Hive_Form_Proof::resolve( $verdict, $required, $solved );
+		$solved  = ReportedIP_Hive_Form_Proof::PROVED === $verdict && $required && 'ok' === ReportedIP_Hive_Form_Challenge::judge( $payload );
+		$actual  = ReportedIP_Hive_Form_Proof::resolve( $verdict, $required, $solved );
 
 		$key          = 'reportedip_hive_selftest_' . get_current_user_id();
 		$seen         = 'visitor' === $run ? array() : (array) get_transient( $key );

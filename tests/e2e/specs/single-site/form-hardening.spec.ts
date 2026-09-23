@@ -73,6 +73,11 @@ function failureCount(reason?: string): number {
 	);
 }
 
+/**
+ * Encode fields by hand. Playwright's `multipart` option was tried and the
+ * server never saw the proof field through it; the hand-built body is what
+ * a script sends, and it is what the plugin has to judge.
+ */
 function multipartBody(fields: Record<string, string>): { body: Buffer; type: string } {
 	const boundary = `----ripE2E${Date.now()}${Math.random().toString(36).slice(2)}`;
 	const parts = Object.entries(fields).map(
@@ -113,7 +118,6 @@ interface Task {
 	seed: string;
 	bits: number;
 	expires: number;
-	ttl: number;
 }
 
 async function fetchTask(request: APIRequestContext): Promise<{ task: Task; cacheControl: string }> {
@@ -228,8 +232,7 @@ test.describe('bound form challenge', () => {
 
 		expect(first.cacheControl).toContain('no-store');
 		expect(first.task.token).not.toBe(second.task.token);
-		expect(first.task.ttl).toBeGreaterThan(500);
-		expect(first.task.ttl).toBeLessThanOrEqual(600);
+		expect(first.task.expires).toBeGreaterThan(Date.now() / 1000);
 	});
 
 	/** The attacker of 2026-09-23: field names read out of the page, marker posted back. */

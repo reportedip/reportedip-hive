@@ -7,9 +7,8 @@
  *
  * The page carries nothing about the visitor, only the address of the
  * endpoint, so a full-page cache and a CDN may serve it unchanged to everyone.
- * The visitor's own task comes from a POST the caches never store. One task
- * is fetched per page and kept in sessionStorage until it expires, so a
- * second form on the page or a page change costs no second request.
+ * The visitor's own task comes from a POST the caches never store, one per
+ * form on the page, because every answer spends a task of its own.
  *
  * Every form gets its own answer out of a small stock that is topped up in
  * the background. An answer is single-use on the server, so handing the same
@@ -37,11 +36,9 @@
 
 	var CHUNK = 256;
 	var LIMIT = 1 << 24;
-	var STORE = 'ripfc:task';
 
 	var stock = [];
 	var mining = false;
-	var fetching = false;
 	var pausedUntil = 0;
 	var bound = false;
 
@@ -91,14 +88,6 @@
 	function remember( key, value ) {
 		try {
 			window.sessionStorage.setItem( key, value );
-		} catch ( error ) {
-			return;
-		}
-	}
-
-	function forget( key ) {
-		try {
-			window.sessionStorage.removeItem( key );
 		} catch ( error ) {
 			return;
 		}
@@ -295,16 +284,6 @@
 	}
 
 	/**
-	 * Whether a stored task can still be used. The server names the lifetime
-	 * relative to its own clock and the browser turns it into a deadline on
-	 * its own, so a device whose clock is minutes off is never sent to a
-	 * refusal for a task that is perfectly good.
-	 */
-	function fresh( current ) {
-		return !! ( current && current.token && current.until && current.until > Date.now() + 15000 );
-	}
-
-	/**
 	 * The endpoint the first challenged anchor on the page names, on the
 	 * scheme the page itself was loaded with. A site behind a proxy that
 	 * terminates TLS (Cloudflare Flexible SSL, an unconfigured trusted-header
@@ -332,9 +311,8 @@
 	}
 
 	/**
-	 * Fetch a task from this site, or reuse the one kept from an earlier
-	 * page. Resolves to null when none can be had; the field then stays
-	 * empty and the form tells the sender to try again.
+	 * Fetch a task from this site. Resolves to null when none can be had; the
+	 * field then stays empty and the form tells the sender to try again.
 	 *
 	 * A 429 pauses further requests for the time the server names, so a
 	 * throttled network does not hammer the endpoint.
@@ -342,20 +320,6 @@
 	 * @since 2.1.64
 	 */
 	function task() {
-		var kept = null;
-
-		try {
-			kept = JSON.parse( recall( STORE ) || 'null' );
-		} catch ( error ) {
-			kept = null;
-		}
-
-		if ( fresh( kept ) ) {
-			return Promise.resolve( kept );
-		}
-
-		forget( STORE );
-
 		var url = endpoint();
 
 		if ( ! url || ! window.fetch || Date.now() < pausedUntil ) {
@@ -382,17 +346,7 @@
 
 			return response.json();
 		} ).then( function ( got ) {
-			if ( got && got.token ) {
-				got.until = Date.now() + ( parseInt( got.ttl, 10 ) || 0 ) * 1000;
-			}
-
-			if ( ! fresh( got ) ) {
-				return null;
-			}
-
-			remember( STORE, JSON.stringify( got ) );
-
-			return got;
+			return got && got.token ? got : null;
 		} ).catch( function () {
 			return null;
 		} );
@@ -455,10 +409,10 @@
 
 	/**
 	 * Top the stock up. Every answer needs a task of its own, so each round
-	 * fetches, solves, deals, and forgets the task it spent.
+	 * fetches, solves and deals.
 	 */
 	async function refill() {
-		if ( mining || fetching || ! endpoint() ) {
+		if ( mining || ! endpoint() ) {
 			return;
 		}
 
@@ -466,17 +420,13 @@
 
 		try {
 			while ( stock.length < wanted() ) {
-				fetching = true;
 				var current = await task();
-				fetching = false;
 
 				if ( ! current ) {
 					return;
 				}
 
 				var answer = await solve( current );
-
-				forget( STORE );
 
 				if ( ! answer ) {
 					return;
@@ -487,12 +437,7 @@
 			}
 		} finally {
 			mining = false;
-			fetching = false;
 		}
-	}
-
-	function start() {
-		refill();
 	}
 
 	/**
@@ -533,7 +478,7 @@
 	 */
 	function rearm() {
 		watch();
-		start();
+		refill();
 		markers();
 		gravity();
 	}
@@ -565,16 +510,10 @@
 	 */
 	function resubmit( form, submitter ) {
 		if ( form.requestSubmit ) {
-			if ( submitter ) {
-				form.requestSubmit( submitter );
-			} else {
-				form.requestSubmit();
-			}
-
-			return;
+			form.requestSubmit( submitter );
+		} else {
+			form.submit();
 		}
-
-		form.submit();
 	}
 
 	/**

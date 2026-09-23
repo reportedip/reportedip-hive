@@ -977,16 +977,7 @@ class ReportedIP_Hive_Form_Proof {
 			return $verdict;
 		}
 
-		$value = (string) $post[ $field ];
-
-		if ( ! ReportedIP_Hive_Form_Challenge::looks_like_token( $value ) ) {
-			$this->reason = 'marker';
-
-			return self::FAILED;
-		}
-
-		$parts  = ReportedIP_Hive_Form_Challenge::split( $value );
-		$result = ReportedIP_Hive_Form_Challenge::verify( $parts['token'], $parts['nonce'] );
+		$result = ReportedIP_Hive_Form_Challenge::judge( (string) $post[ $field ] );
 
 		if ( 'ok' === $result ) {
 			return self::PROVED;
@@ -995,18 +986,6 @@ class ReportedIP_Hive_Form_Proof {
 		$this->reason = $result;
 
 		return self::FAILED;
-	}
-
-	/**
-	 * Why the submission last judged by {@see verdict_for_request()} was
-	 * refused: `marker` for a plain marker where a task was due, otherwise
-	 * the word {@see ReportedIP_Hive_Form_Challenge::verify()} answered with.
-	 *
-	 * @return string|null
-	 * @since  2.1.64
-	 */
-	public function last_reason(): ?string {
-		return $this->reason;
 	}
 
 	/**

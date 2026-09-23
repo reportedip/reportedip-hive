@@ -561,13 +561,10 @@ class ReportedIP_Hive_Tools_Page {
 		$bits  = 0;
 
 		if ( $proof->pow_enabled() ) {
-			$hardening = class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active();
-			$minted    = ReportedIP_Hive_Form_Challenge::mint(
-				ReportedIP_Hive_Form_Proof::connection_is_secure() ? ReportedIP_Hive_Form_Challenge::bits_for( 1, $hardening ) : 0
-			);
-			$token     = $minted['token'];
-			$seed      = $minted['seed'];
-			$bits      = $minted['bits'];
+			$minted = ReportedIP_Hive_Form_Challenge::issue( 1 );
+			$token  = $minted['token'];
+			$seed   = $minted['seed'];
+			$bits   = $minted['bits'];
 		}
 
 		wp_localize_script(

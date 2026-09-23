@@ -60,7 +60,7 @@ class ReportedIP_Hive_Two_Factor_REST {
 	 * @return true|WP_Error True when the request may proceed.
 	 * @since  2.1.44
 	 */
-	private function reject_cross_origin() {
+	public static function reject_cross_origin() {
 		$origin = isset( $_SERVER['HTTP_ORIGIN'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) ) : '';
 		if ( '' === $origin ) {
 			return true;

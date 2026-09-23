@@ -146,7 +146,7 @@ final class ReportedIP_Hive_Form_Challenge {
 			't' => $now,
 			'e' => $now + self::ttl(),
 			'b' => $bits,
-			'r' => bin2hex( self::random( 8 ) ),
+			'r' => bin2hex( random_bytes( 8 ) ),
 		);
 
 		$payload = self::b64url( (string) wp_json_encode( $claims ) );
@@ -274,12 +274,33 @@ final class ReportedIP_Hive_Form_Challenge {
 	 * @return bool
 	 * @since  2.1.64
 	 */
-	public static function looks_like_token( $value ) {
+	private static function looks_like_token( $value ) {
 		$parts = explode( '.', (string) $value );
 
 		return 3 === count( $parts )
 			&& '' !== $parts[0]
 			&& (bool) preg_match( '/^[0-9a-f]{32}$/', $parts[1] );
+	}
+
+	/**
+	 * Judge a proof field value in one word.
+	 *
+	 * `marker` for a value that is no token at all (the plain marker, or the
+	 * payload of the former hourly task), otherwise what {@see verify()} says.
+	 *
+	 * @param string   $value Raw proof field value, seconds suffix removed.
+	 * @param int|null $now   Current time, injectable for tests.
+	 * @return string `ok`, `marker`, `signature`, `expired`, `pow` or `replay`.
+	 * @since  2.1.64
+	 */
+	public static function judge( $value, $now = null ) {
+		if ( ! self::looks_like_token( $value ) ) {
+			return 'marker';
+		}
+
+		$parts = self::split( $value );
+
+		return self::verify( $parts['token'], $parts['nonce'], $now );
 	}
 
 	/**
@@ -289,7 +310,7 @@ final class ReportedIP_Hive_Form_Challenge {
 	 * @return array{token:string,nonce:string}
 	 * @since  2.1.64
 	 */
-	public static function split( $value ) {
+	private static function split( $value ) {
 		$value = (string) $value;
 		$dot   = strrpos( $value, '.' );
 
@@ -304,6 +325,21 @@ final class ReportedIP_Hive_Form_Challenge {
 			'token' => substr( $value, 0, $dot ),
 			'nonce' => substr( $value, $dot + 1 ),
 		);
+	}
+
+	/**
+	 * Mint a task for a network that has asked `$count` times in the window:
+	 * arithmetic only over a secure connection, harder the more it asked.
+	 *
+	 * @param int $count Mints of this network in the window, this one included.
+	 * @return array{token:string,seed:string,bits:int,expires:int}
+	 * @since  2.1.64
+	 */
+	public static function issue( $count = 1 ) {
+		$hardening = class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active();
+		$bits      = ReportedIP_Hive_Form_Proof::connection_is_secure() ? self::bits_for( $count, $hardening ) : 0;
+
+		return self::mint( $bits );
 	}
 
 	/**
@@ -354,7 +390,7 @@ final class ReportedIP_Hive_Form_Challenge {
 			ReportedIP_Hive::emit_block_response_headers();
 		}
 
-		$cross = $this->reject_cross_origin();
+		$cross = ReportedIP_Hive_Two_Factor_REST::reject_cross_origin();
 
 		if ( is_wp_error( $cross ) ) {
 			return $cross;
@@ -367,10 +403,9 @@ final class ReportedIP_Hive_Form_Challenge {
 				return $this->respond( self::mint( 0 ) );
 			}
 
-			$ip    = $this->client_ip();
-			$count = $this->mint_count( $ip );
+			$count = $this->bump_mint( (string) ReportedIP_Hive::get_client_ip() );
 
-			if ( $count >= self::MINT_LIMIT ) {
+			if ( $count > self::MINT_LIMIT ) {
 				return new WP_Error(
 					'reportedip_form_challenge_throttled',
 					__( 'Too many requests. Please try again in a moment.', 'reportedip-hive' ),
@@ -378,12 +413,7 @@ final class ReportedIP_Hive_Form_Challenge {
 				);
 			}
 
-			$this->bump_mint( $ip );
-
-			$hardening = class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active();
-			$bits      = ReportedIP_Hive_Form_Proof::connection_is_secure() ? self::bits_for( $count + 1, $hardening ) : 0;
-
-			return $this->respond( self::mint( $bits ) );
+			return $this->respond( self::issue( $count ) );
 		} catch ( \Throwable $e ) {
 			return $this->respond( self::mint( 0 ) );
 		}
@@ -396,8 +426,6 @@ final class ReportedIP_Hive_Form_Challenge {
 	 * @return WP_REST_Response
 	 */
 	private function respond( array $minted ) {
-		$minted['ttl'] = max( 0, (int) $minted['expires'] - time() );
-
 		$response = new WP_REST_Response( $minted, 200 );
 		$response->header( 'Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0' );
 		$response->header( 'X-LiteSpeed-Cache-Control', 'no-cache' );
@@ -406,102 +434,32 @@ final class ReportedIP_Hive_Form_Challenge {
 	}
 
 	/**
-	 * Refuse a request whose Origin names another host.
-	 *
-	 * @return true|WP_Error
-	 */
-	private function reject_cross_origin() {
-		$origin = isset( $_SERVER['HTTP_ORIGIN'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_ORIGIN'] ) ) : '';
-
-		if ( '' === $origin ) {
-			return true;
-		}
-
-		$origin_host = (string) wp_parse_url( $origin, PHP_URL_HOST );
-		$site_host   = (string) wp_parse_url( home_url(), PHP_URL_HOST );
-
-		if ( '' !== $origin_host && '' !== $site_host && strtolower( $origin_host ) === strtolower( $site_host ) ) {
-			return true;
-		}
-
-		return new WP_Error(
-			'reportedip_rest_cross_origin',
-			__( 'Cross-origin requests are not allowed.', 'reportedip-hive' ),
-			array( 'status' => 403 )
-		);
-	}
-
-	/**
-	 * Client address as the plugin resolves it, trusted proxy header included.
-	 *
-	 * @return string
-	 */
-	private function client_ip() {
-		if ( class_exists( 'ReportedIP_Hive' ) ) {
-			$ip = (string) ReportedIP_Hive::get_client_ip();
-
-			if ( '' !== $ip ) {
-				return $ip;
-			}
-		}
-
-		return isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-	}
-
-	/**
-	 * Mints this network made in the current window.
+	 * Count one mint for this network and return the count it stands at.
 	 *
 	 * @param string $ip Client address.
 	 * @return int
 	 */
-	private function mint_count( $ip ) {
-		if ( '' === $ip ) {
-			return 0;
-		}
-
-		return (int) get_site_transient( self::MINT_PREFIX . md5( self::network( $ip ) ) );
-	}
-
-	/**
-	 * Count one mint for this network.
-	 *
-	 * @param string $ip Client address.
-	 */
 	private function bump_mint( $ip ) {
-		if ( '' === $ip ) {
-			return;
-		}
+		$key   = self::MINT_PREFIX . md5( self::network( $ip ) );
+		$count = (int) get_site_transient( $key ) + 1;
 
-		$key = self::MINT_PREFIX . md5( self::network( $ip ) );
+		set_site_transient( $key, $count, self::MINT_WINDOW );
 
-		set_site_transient( $key, (int) get_site_transient( $key ) + 1, self::MINT_WINDOW );
+		return $count;
 	}
 
 	/**
-	 * The network an address belongs to, /24 for IPv4 and /56 for IPv6.
-	 *
-	 * The counter is per network, not per address, so a bot rotating
-	 * through one block shares one ladder.
+	 * The network an address belongs to, through the one reducer the plugin
+	 * has (/24 for IPv4, /64 for IPv6). The counter is per network, not per
+	 * address, so a bot rotating through one block shares one ladder.
 	 *
 	 * @param string $ip Client address.
 	 * @return string
 	 */
 	public static function network( $ip ) {
-		$ip = (string) $ip;
+		$network = ReportedIP_Hive_Two_Factor_Notifications::ip_to_network( (string) $ip );
 
-		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
-			return long2ip( ip2long( $ip ) & 0xFFFFFF00 ) . '/24';
-		}
-
-		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
-			$packed = inet_pton( $ip );
-
-			if ( false !== $packed ) {
-				return inet_ntop( substr( $packed, 0, 7 ) . str_repeat( "\0", 9 ) ) . '/56';
-			}
-		}
-
-		return $ip;
+		return '' === $network ? (string) $ip : $network;
 	}
 
 	/**
@@ -534,19 +492,5 @@ final class ReportedIP_Hive_Form_Challenge {
 	private static function b64url_decode( $encoded ) {
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- Inverse of the URL-safe transport above.
 		return base64_decode( strtr( (string) $encoded, '-_', '+/' ), true );
-	}
-
-	/**
-	 * Random bytes, with a fallback that never throws.
-	 *
-	 * @param int $length Byte count.
-	 * @return string
-	 */
-	private static function random( $length ) {
-		try {
-			return random_bytes( (int) $length );
-		} catch ( \Throwable $e ) {
-			return substr( hash( 'sha256', uniqid( (string) wp_rand(), true ), true ), 0, (int) $length );
-		}
 	}
 }
