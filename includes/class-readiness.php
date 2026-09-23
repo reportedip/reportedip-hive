@@ -304,7 +304,11 @@ final class ReportedIP_Hive_Readiness {
 	/**
 	 * Advisory: the pre-WordPress guard could run here but does not.
 	 *
-	 * @param bool $supported Server can take the drop-in (Apache/FPM).
+	 * Skipped under WP-CLI in {@see self::compute()}: the guard constant is
+	 * only defined inside a web request, so a headless run would raise the
+	 * advisory on every wired site and cache that verdict for the dashboard.
+	 *
+	 * @param bool $supported Hive can write the directive itself (mod_php or FPM).
 	 * @param bool $running   Guard answers requests.
 	 * @return array<string,mixed>|null
 	 * @since  2.1.57
@@ -497,9 +501,9 @@ final class ReportedIP_Hive_Readiness {
 				(bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_enabled', false )
 			);
 			$raised[] = self::badge_off( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false ) );
-			if ( $main_site ) {
+			if ( $main_site && 'cli' !== PHP_SAPI ) {
 				$guard    = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
-				$raised[] = self::dropin_not_running( (bool) $guard->supports_htaccess(), (bool) $guard->is_running() );
+				$raised[] = self::dropin_not_running( $guard->supports_auto_install(), $guard->is_running() );
 			}
 			$raised[] = self::community_pending( (string) $mode->get_mode() );
 

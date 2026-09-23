@@ -354,7 +354,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		$enabled    = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
 		$server     = $dropin->detect_server();
 		$running    = $dropin->is_running();
-		$auto       = in_array( $server, array( 'apache', 'fpm' ), true );
+		$auto       = $dropin->supports_auto_install();
 		$server_lbl = array(
 			'apache'  => 'Apache (mod_php, .htaccess)',
 			'fpm'     => 'PHP-FPM / CGI (.user.ini)',
@@ -496,9 +496,8 @@ class ReportedIP_Hive_Admin_Firewall {
 		}
 		$dropin  = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
 		$enabled = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
-		$server  = $dropin->detect_server();
 		$running = $dropin->is_running();
-		$auto    = in_array( $server, array( 'apache', 'fpm' ), true );
+		$auto    = $dropin->supports_auto_install();
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'WAF Extended Protection (auto_prepend_file)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 		echo '<p class="rip-help-text">' . esc_html__( 'Runs the firewall guard before WordPress loads. Hive generates the guard file; the server only needs one auto_prepend_file directive pointing at it.', 'reportedip-hive' ) . '</p>';

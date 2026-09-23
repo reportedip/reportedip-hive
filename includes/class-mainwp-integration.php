@@ -230,7 +230,7 @@ class ReportedIP_Hive_MainWP_Integration {
 			$status['waf_dropin_enabled'] = $dropin_enabled;
 			$status['waf_dropin_running'] = $running;
 			$status['waf_server']         = $server;
-			$status['waf_needs_setup']    = $dropin_enabled && ! $running && ! in_array( $server, array( 'apache', 'fpm' ), true );
+			$status['waf_needs_setup']    = $dropin_enabled && ! $running && ! $dropin->supports_auto_install();
 		}
 
 		return $status;

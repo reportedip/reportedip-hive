@@ -116,6 +116,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'apache', $this->mgr()->detect_server() );
 		}
 
+		public function test_supports_auto_install_follows_the_wiring_mechanism(): void {
+			$_SERVER['SERVER_SOFTWARE'] = '';
+			$this->assertFalse( $this->mgr()->supports_auto_install( 'cli' ), 'nothing known, nothing to write' );
+			$this->assertTrue( $this->mgr()->supports_auto_install( 'apache2handler' ), 'mod_php writes .htaccess' );
+			$this->assertTrue( $this->mgr()->supports_auto_install( 'fpm-fcgi' ), 'FPM writes .user.ini, whatever the web server' );
+			$this->assertTrue( $this->mgr()->supports_auto_install( 'cli' ), 'a headless run inherits the remembered web verdict' );
+		}
+
 		public function test_detect_server_unknown_when_blank(): void {
 			$_SERVER['SERVER_SOFTWARE'] = '';
 			$this->assertSame( 'unknown', $this->mgr()->detect_server( 'cli' ) );

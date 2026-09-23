@@ -568,6 +568,19 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	}
 
 	/**
+	 * Whether Hive can wire `auto_prepend_file` itself on this stack: `.htaccess`
+	 * under mod_php, `.user.ini` under PHP-FPM/CGI/LiteSpeed. A bare nginx stack
+	 * needs the hand-pasted snippet and an unidentified server gets nothing.
+	 *
+	 * @param string|null $sapi Override SAPI (defaults to php_sapi_name()); for tests.
+	 * @return bool
+	 * @since  2.1.65
+	 */
+	public function supports_auto_install( $sapi = null ) {
+		return in_array( $this->detect_server( $sapi ), array( 'apache', 'fpm' ), true );
+	}
+
+	/**
 	 * The nginx server-block snippet the admin pastes by hand, with the live
 	 * resolved guard path.
 	 *

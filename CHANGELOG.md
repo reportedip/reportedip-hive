@@ -2,6 +2,18 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixes
+
+- **The "Switch on Extended Protection" card never appeared on PHP-FPM
+  sites.** The dashboard asked whether the server reads `.htaccess`, but the
+  one-click setup writes `.user.ini` under PHP-FPM, CGI and LiteSpeed, so
+  nginx and most managed hosts never got the suggestion. The card now follows
+  the same detection the Server tab uses, and a WP-CLI run no longer caches a
+  "not running" verdict for the dashboard, because the guard only announces
+  itself inside a web request.
+
 ## [2.1.64] (2026-09-23)
 
 ### Security
