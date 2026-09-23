@@ -41,6 +41,7 @@ const ELEMENTOR_WIDGET = 'ripfrm01';
 const UM_REGISTER_PAGE = '/rip-e2e-um-register/';
 const GRAVITY_PAGE = '/rip-e2e-gravity-page/';
 const GRAVITY_AJAX_PAGE = '/rip-e2e-gravity-ajax-page/';
+const GRAVITY_MULTI_PAGE = '/rip-e2e-gravity-multi-page/';
 
 /**
  * Object ids the fixture hands back. Nothing here may be hard-coded: the three
@@ -56,6 +57,7 @@ let FRM_NAME_FIELD = '0';
 let FRM_TEXT_FIELD = '0';
 let UM_REGISTER_FORM = '0';
 let GRAVITY_FORM = '0';
+let GRAVITY_MULTI_FORM = '0';
 
 const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_cf7',
@@ -117,6 +119,7 @@ function seedForms(): void {
 	FRM_TEXT_FIELD = read('frm_text');
 	UM_REGISTER_FORM = read('um_register');
 	GRAVITY_FORM = read('gravity');
+	GRAVITY_MULTI_FORM = read('gravity_multi');
 
 	const page = php(
 		`$p = get_posts(array('name' => 'rip-e2e-cf7-page', 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => 1)); echo $p ? (int) $p[0]->ID : 0;`
@@ -496,6 +499,23 @@ function gravityEntryCount(): number {
 			echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_FORM}");
 		`)
 	);
+}
+
+function gravityMultiEntryCount(): number {
+	return Number(
+		php(`
+			global $wpdb;
+			echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_MULTI_FORM}");
+		`)
+	);
+}
+
+function clearGravityMultiEntries(): void {
+	php(`
+		global $wpdb;
+		$ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_MULTI_FORM}");
+		foreach ( $ids as $id ) { GFAPI::delete_entry( (int) $id ); }
+	`);
 }
 
 function clearGravityEntries(): void {
@@ -961,6 +981,37 @@ test.describe('form adapters', () => {
 
 			expect(body).not.toContain('gform_submission_error');
 			expect(gravityEntryCount()).toBe(1);
+		});
+
+		/**
+		 * A multi-step form over AJAX: Name on page one, Message on page two,
+		 * submitted without a page reload. The plugin only judges the last
+		 * page, so the Next click must not be refused and the final submit
+		 * must carry a fresh proof, dealt by the re-arm on `gform/post_render`.
+		 */
+		test('a browser gets through the multi-step Gravity Forms form over AJAX', async ({ page }) => {
+			setForcedHttps(true);
+			setComputation(true);
+			clearGravityMultiEntries();
+
+			try {
+				await page.goto(GRAVITY_MULTI_PAGE);
+				await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
+
+				await page.fill(`#input_${GRAVITY_MULTI_FORM}_1`, 'E2E Mehrschritt Leser');
+				await page.click(`#gform_next_button_${GRAVITY_MULTI_FORM}_2`);
+
+				const message = page.locator(`#input_${GRAVITY_MULTI_FORM}_3`);
+				await expect(message).toBeVisible({ timeout: 30000 });
+				await message.fill('Eine echte mehrseitige Nachricht ueber AJAX.');
+				await page.click(`#gform_submit_button_${GRAVITY_MULTI_FORM}`);
+
+				await expect(page.locator('.gform_confirmation_message')).toBeVisible({ timeout: 60000 });
+				expect(gravityMultiEntryCount()).toBe(1);
+			} finally {
+				setComputation(false);
+				setForcedHttps(false);
+			}
 		});
 
 		test('a submission through the Gravity Forms API is never judged', async () => {

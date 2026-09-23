@@ -271,6 +271,64 @@ if ( class_exists( 'GFAPI' ) ) {
 
 	rip_e2e_page( 'rip-e2e-gravity-page', 'RIP E2E Gravity Page', '[gravityform id="' . $rip_gravity . '" ajax="true" title="false" description="false"]' );
 	rip_e2e_page( 'rip-e2e-gravity-ajax-page', 'RIP E2E Gravity AJAX Page', '[gravityform id="' . $rip_gravity . '" title="false" description="false"]' );
+
+	/*
+	 * A second Gravity Forms form with a page break, so the multi-step path
+	 * can be driven: Name on page one, Message on page two, submitted over
+	 * AJAX. The plugin only judges the last page, this proves it lets a real
+	 * multi-step submission through and refuses a bot on the final step.
+	 */
+	$rip_gravity_multi = 0;
+	foreach ( GFAPI::get_forms( true, false ) as $rip_form ) {
+		if ( 'RIP E2E Gravity Multi' === rgar( $rip_form, 'title' ) ) {
+			$rip_gravity_multi = (int) $rip_form['id'];
+		}
+	}
+
+	if ( ! $rip_gravity_multi ) {
+		$rip_multi = GFAPI::add_form(
+			array(
+				'title'          => 'RIP E2E Gravity Multi',
+				'enableHoneypot' => false,
+				'is_active'      => '1',
+				'pagination'     => array(
+					'type'  => 'percentage',
+					'pages' => array( 'Schritt 1', 'Schritt 2' ),
+				),
+				'button'         => array(
+					'type' => 'text',
+					'text' => 'Send',
+				),
+				'fields'         => array(
+					array(
+						'id'         => 1,
+						'type'       => 'text',
+						'label'      => 'Name',
+						'isRequired' => true,
+						'pageNumber' => 1,
+					),
+					array(
+						'id'         => 2,
+						'type'       => 'page',
+						'label'      => 'Seitenumbruch',
+						'nextButton' => array(
+							'type' => 'text',
+							'text' => 'Weiter',
+						),
+					),
+					array(
+						'id'         => 3,
+						'type'       => 'textarea',
+						'label'      => 'Message',
+						'pageNumber' => 2,
+					),
+				),
+			)
+		);
+		$rip_gravity_multi = is_wp_error( $rip_multi ) ? 0 : (int) $rip_multi;
+	}
+
+	rip_e2e_page( 'rip-e2e-gravity-multi-page', 'RIP E2E Gravity Multi Page', '[gravityform id="' . $rip_gravity_multi . '" ajax="true" title="false" description="false"]' );
 }
 
 echo 'cf7=' . (int) $rip_cf7
@@ -280,4 +338,5 @@ echo 'cf7=' . (int) $rip_cf7
 	. ' elementor=' . (int) $rip_elementor
 	. ' um_register=' . (int) $rip_um_register
 	. ' um_login=' . (int) $rip_um_login
-	. ' gravity=' . (int) $rip_gravity;
+	. ' gravity=' . (int) $rip_gravity
+	. ' gravity_multi=' . ( isset( $rip_gravity_multi ) ? (int) $rip_gravity_multi : 0 );
