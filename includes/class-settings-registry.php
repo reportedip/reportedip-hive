@@ -73,7 +73,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 			'forms'            => array(
 				'label'       => __( 'Form Protection', 'reportedip-hive' ),
-				'description' => __( 'The checks that sit on the comment form, the sign-up form, the password-reset form and the forms of Contact Form 7, Gravity Forms, Formidable Forms, Elementor and Ultimate Member. A visitor sees none of it, and nobody has to read a distorted image.', 'reportedip-hive' ),
+				'description' => __( 'The checks that sit on the comment form, the sign-up form, the password-reset form and the forms of Contact Form 7, WPForms, Gravity Forms, Formidable Forms, Elementor and Ultimate Member. A visitor sees none of it, and nobody has to read a distorted image.', 'reportedip-hive' ),
 			),
 			'hardening_mode'   => array(
 				'label'       => __( 'Attack Response', 'reportedip-hive' ),
@@ -814,6 +814,16 @@ final class ReportedIP_Hive_Settings_Registry {
 				'side_effects' => array( 'stamp_form_adapters_since' ),
 				'label'        => __( 'Protect Gravity Forms forms', 'reportedip-hive' ),
 				'description'  => __( 'The same check on Gravity Forms, including forms sent in the background and forms with several pages. Visitors notice nothing.', 'reportedip-hive' ),
+			),
+			'reportedip_hive_form_proof_wpforms'           => array(
+				'simple_form'  => 'wpforms',
+				'section'      => 'forms',
+				'kind'         => 'bool',
+				'remote'       => true,
+				'tier'         => 'form_adapters_advanced',
+				'side_effects' => array( 'stamp_form_adapters_since' ),
+				'label'        => __( 'Protect WPForms forms', 'reportedip-hive' ),
+				'description'  => __( 'The same check on WPForms and WPForms Lite, including forms sent in the background. A refused submission is shown to the sender above the form. Visitors notice nothing.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_reputation_on_forms'          => array(
 				'simple'      => true,

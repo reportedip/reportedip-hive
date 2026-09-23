@@ -3,7 +3,7 @@
  * Build one form per supported form plugin, plus the page that renders it.
  *
  * The adapter spec needs a Contact Form 7, a Formidable, an Elementor, an
- * Ultimate Member and a Gravity Forms form that exist on every machine the
+ * Ultimate Member, a Gravity Forms and a WPForms form that exist on every machine the
  * suite runs on, so it creates them here rather than relying on whatever the
  * stack happens to hold.
  * Idempotent: a second run finds what the first one made and changes nothing.
@@ -331,6 +331,106 @@ if ( class_exists( 'GFAPI' ) ) {
 	rip_e2e_page( 'rip-e2e-gravity-multi-page', 'RIP E2E Gravity Multi Page', '[gravityform id="' . $rip_gravity_multi . '" ajax="true" title="false" description="false"]' );
 }
 
+/**
+ * Two WPForms forms: one on the page-load path with the plugin's own guards
+ * off, so a bare POST reads our verdict and nothing else, and one on the
+ * background path with the plugin's own anti-spam token on, so a browser
+ * proves the two layers do not refuse each other. WPForms Lite is free and
+ * on the stack; the form settings are the same JSON the editor writes.
+ */
+$rip_wpforms      = 0;
+$rip_wpforms_ajax = 0;
+
+if ( class_exists( 'WPForms\WPForms' ) ) {
+	/**
+	 * Create or find one WPForms form.
+	 *
+	 * @param string               $title    Form title.
+	 * @param array<string,string> $settings Settings written next to the fields.
+	 * @return int Form id.
+	 */
+	function rip_e2e_wpforms_form( $title, array $settings ) {
+		$existing = get_posts(
+			array(
+				'post_type'   => 'wpforms',
+				'post_status' => 'any',
+				'title'       => $title,
+				'numberposts' => 1,
+			)
+		);
+
+		if ( $existing ) {
+			return (int) $existing[0]->ID;
+		}
+
+		$id = (int) wp_insert_post(
+			array(
+				'post_type'   => 'wpforms',
+				'post_status' => 'publish',
+				'post_title'  => $title,
+			)
+		);
+
+		if ( ! $id ) {
+			return 0;
+		}
+
+		$content = array(
+			'id'       => $id,
+			'fields'   => array(
+				'1' => array(
+					'id'       => '1',
+					'type'     => 'text',
+					'label'    => 'Name',
+					'required' => '1',
+				),
+				'2' => array(
+					'id'    => '2',
+					'type'  => 'textarea',
+					'label' => 'Message',
+				),
+			),
+			'settings' => array_merge(
+				array(
+					'form_title'  => $title,
+					'submit_text' => 'Send',
+				),
+				$settings
+			),
+		);
+
+		wp_update_post(
+			array(
+				'ID'           => $id,
+				'post_content' => wp_slash( wp_json_encode( $content ) ),
+			)
+		);
+
+		return $id;
+	}
+
+	$rip_wpforms = rip_e2e_wpforms_form(
+		'RIP E2E WPForms',
+		array(
+			'antispam_v3' => '0',
+			'antispam'    => '0',
+			'honeypot'    => '0',
+			'ajax_submit' => '0',
+		)
+	);
+
+	$rip_wpforms_ajax = rip_e2e_wpforms_form(
+		'RIP E2E WPForms AJAX',
+		array(
+			'antispam_v3' => '1',
+			'ajax_submit' => '1',
+		)
+	);
+
+	rip_e2e_page( 'rip-e2e-wpforms-page', 'RIP E2E WPForms Page', '[wpforms id="' . $rip_wpforms . '" title="false"]' );
+	rip_e2e_page( 'rip-e2e-wpforms-ajax-page', 'RIP E2E WPForms AJAX Page', '[wpforms id="' . $rip_wpforms_ajax . '" title="false"]' );
+}
+
 echo 'cf7=' . (int) $rip_cf7
 	. ' frm=' . (int) $rip_frm
 	. ' frm_name=' . (int) $rip_name
@@ -339,4 +439,6 @@ echo 'cf7=' . (int) $rip_cf7
 	. ' um_register=' . (int) $rip_um_register
 	. ' um_login=' . (int) $rip_um_login
 	. ' gravity=' . (int) $rip_gravity
-	. ' gravity_multi=' . ( isset( $rip_gravity_multi ) ? (int) $rip_gravity_multi : 0 );
+	. ' gravity_multi=' . ( isset( $rip_gravity_multi ) ? (int) $rip_gravity_multi : 0 )
+	. ' wpforms=' . (int) $rip_wpforms
+	. ' wpforms_ajax=' . (int) $rip_wpforms_ajax;

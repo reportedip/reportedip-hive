@@ -25,6 +25,10 @@ import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
  *                    (true background submission, switched on by the dev-stack
  *                    mu-plugin rip-gravity-ajax-test.php); skipped when the
  *                    plugin is not installed (it is paid)
+ *   WPForms Lite     forms "RIP E2E WPForms" (page load, own guards off) and
+ *                    "RIP E2E WPForms AJAX" (background path, own anti-spam
+ *                    token on), pages /rip-e2e-wpforms-page/ and
+ *                    /rip-e2e-wpforms-ajax-page/; skipped when not installed
  *
  * Serial: the specs mutate shared plugin state on the long-lived stack.
  */
@@ -42,6 +46,8 @@ const UM_REGISTER_PAGE = '/rip-e2e-um-register/';
 const GRAVITY_PAGE = '/rip-e2e-gravity-page/';
 const GRAVITY_AJAX_PAGE = '/rip-e2e-gravity-ajax-page/';
 const GRAVITY_MULTI_PAGE = '/rip-e2e-gravity-multi-page/';
+const WPFORMS_PAGE = '/rip-e2e-wpforms-page/';
+const WPFORMS_AJAX_PAGE = '/rip-e2e-wpforms-ajax-page/';
 
 /**
  * Object ids the fixture hands back. Nothing here may be hard-coded: the three
@@ -58,6 +64,8 @@ let FRM_TEXT_FIELD = '0';
 let UM_REGISTER_FORM = '0';
 let GRAVITY_FORM = '0';
 let GRAVITY_MULTI_FORM = '0';
+let WPFORMS_FORM = '0';
+let WPFORMS_AJAX_FORM = '0';
 
 const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_cf7',
@@ -65,6 +73,7 @@ const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_elementor',
 	'reportedip_hive_form_proof_um',
 	'reportedip_hive_form_proof_gravity',
+	'reportedip_hive_form_proof_wpforms',
 ];
 
 /**
@@ -120,6 +129,8 @@ function seedForms(): void {
 	UM_REGISTER_FORM = read('um_register');
 	GRAVITY_FORM = read('gravity');
 	GRAVITY_MULTI_FORM = read('gravity_multi');
+	WPFORMS_FORM = read('wpforms');
+	WPFORMS_AJAX_FORM = read('wpforms_ajax');
 
 	const page = php(
 		`$p = get_posts(array('name' => 'rip-e2e-cf7-page', 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => 1)); echo $p ? (int) $p[0]->ID : 0;`
@@ -574,6 +585,54 @@ async function expectGravityRefused(
 	expect(
 		failureLogCount(),
 		'the refusal must come from our adapter, not from Gravity Forms'
+	).toBeGreaterThan(logsBefore);
+}
+
+/**
+ * Post straight at the WPForms fixture page, the way a blind bot does.
+ *
+ * The page-load path reads the form id and the field values out of the
+ * POST and nothing else while the plugin's own guards are off. Returns the
+ * page body, because a refusal is rendered into it as the form's header
+ * error and an accepted submission as the confirmation box.
+ */
+async function postWpforms(
+	request: APIRequestContext,
+	extra: Record<string, string> = {}
+): Promise<string> {
+	const response = await request.post(WPFORMS_PAGE, {
+		form: {
+			'wpforms[id]': WPFORMS_FORM,
+			'wpforms[fields][1]': 'E2E Prober',
+			'wpforms[fields][2]': `An ordinary enquiry written at ${Date.now()}.`,
+			...extra,
+		},
+		failOnStatusCode: false,
+	});
+
+	return await response.text();
+}
+
+/**
+ * Post at WPForms and insist the refusal is ours and visible.
+ *
+ * WPForms Lite keeps no entries, so the consequence is read from the page
+ * and from our own log: the header error the sender is shown, no
+ * confirmation box, and a failure row that names this plugin.
+ */
+async function expectWpformsRefused(
+	request: APIRequestContext,
+	extra: Record<string, string> = {}
+): Promise<void> {
+	const logsBefore = failureLogCount();
+
+	const body = await postWpforms(request, extra);
+
+	expect(body, 'the sender must be told').toContain('wpforms-error-container');
+	expect(body).not.toContain('wpforms-confirmation-container');
+	expect(
+		failureLogCount(),
+		'the refusal must come from our adapter, not from WPForms'
 	).toBeGreaterThan(logsBefore);
 }
 
@@ -1043,6 +1102,144 @@ test.describe('form adapters', () => {
 				$ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_FORM}");
 				foreach ( $ids as $id ) { GFAPI::delete_entry( (int) $id ); }
 			`);
+		});
+	});
+
+	/**
+	 * WPForms validates on the form's submit event and only then sends the
+	 * form itself, so the proof script's own listener sees every submission
+	 * and no plugin hook is needed on the browser side. A second listener on
+	 * the plugin's pre-submit event was tried and refused a held submit: it
+	 * ran the proof twice and the second pass drew from an empty stock. Both
+	 * paths are driven: the page load and the background request, the latter
+	 * with the plugin's own anti-spam token on.
+	 */
+	test.describe('WPForms', () => {
+		test.beforeAll(() => {
+			test.skip(WPFORMS_FORM === '0', 'WPForms is not installed on this stack');
+		});
+
+		/**
+		 * The plugin resets every element inside its container to static
+		 * positioning, which put the decoy on screen for a visitor to fill in.
+		 * The off-screen rule is asserted here, not only the count.
+		 */
+		test('WPForms renders the anchor exactly once, off screen', async ({ page }) => {
+			await page.goto(WPFORMS_PAGE);
+			await page.waitForLoadState('domcontentloaded');
+
+			await expect(page.locator('form input.rip-fp-anchor')).toHaveCount(1);
+			await expect(page.locator(`form input[name="${ANCHOR}"]`)).toHaveCount(1);
+
+			const box = await page.locator('form .rip-hp-field').boundingBox();
+			expect(box, 'the decoy must sit off screen').not.toBeNull();
+			expect(box!.x).toBeLessThan(0);
+		});
+
+		for (const [label, url, form] of [
+			['page load', WPFORMS_PAGE, () => WPFORMS_FORM],
+			['ajax', WPFORMS_AJAX_PAGE, () => WPFORMS_AJAX_FORM],
+		] as const) {
+			test(`a real browser gets through WPForms (${label})`, async ({ page }) => {
+				const logsBefore = failureLogCount();
+
+				await page.goto(url);
+				await page.fill(`#wpforms-${form()}-field_1`, 'E2E Reader');
+				await page.fill(`#wpforms-${form()}-field_2`, 'An ordinary enquiry from a reader.');
+				await page.click(`#wpforms-submit-${form()}`);
+
+				await expect(page.locator('.wpforms-confirmation-container-full')).toBeVisible({
+					timeout: 30000,
+				});
+				expect(failureLogCount()).toBe(logsBefore);
+			});
+
+			/**
+			 * The one case that must never end in silence: a browser that did
+			 * not run the proof script. The refusal has to come back through
+			 * the plugin's own error box above the form, or the sender is
+			 * thanked for a message nobody got.
+			 */
+			test(`a browser without our script is told (${label})`, async ({ page }) => {
+				await page.route('**/form-proof.js*', (route) => route.abort());
+
+				await page.goto(url);
+				await page.fill(`#wpforms-${form()}-field_1`, 'E2E Reader');
+				await page.fill(`#wpforms-${form()}-field_2`, 'An enquiry from a browser that blocks scripts.');
+				await page.click(`#wpforms-submit-${form()}`);
+
+				await expect(page.locator('.wpforms-error-container')).toContainText('JavaScript', {
+					timeout: 30000,
+				});
+				await expect(page.locator('.wpforms-confirmation-container-full')).toHaveCount(0);
+			});
+		}
+
+		/**
+		 * With a computation in play the submit is held until an answer is in
+		 * stock and then re-sent through the form, which runs the plugin's
+		 * validator and its background request as if the visitor had clicked;
+		 * this is the spec that keeps that hand-over working.
+		 */
+		test('a browser passes the computation on WPForms over the background path', async ({
+			page,
+		}) => {
+			setForcedHttps(true);
+			setComputation(true);
+
+			try {
+				const logsBefore = failureLogCount();
+
+				await page.goto(WPFORMS_AJAX_PAGE);
+				await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
+
+				await page.fill(`#wpforms-${WPFORMS_AJAX_FORM}-field_1`, 'E2E Reader');
+				await page.fill(`#wpforms-${WPFORMS_AJAX_FORM}-field_2`, 'A computed enquiry over AJAX.');
+				await page.click(`#wpforms-submit-${WPFORMS_AJAX_FORM}`);
+
+				await expect(page.locator('.wpforms-confirmation-container-full')).toBeVisible({
+					timeout: 60000,
+				});
+				expect(failureLogCount()).toBe(logsBefore);
+			} finally {
+				setComputation(false);
+				setForcedHttps(false);
+			}
+		});
+
+		test('a bare post without our fields is refused on WPForms, in front of the sender', async ({
+			request,
+		}) => {
+			await expectWpformsRefused(request);
+		});
+
+		test('a filled decoy is refused on WPForms and counted', async ({ request }) => {
+			clearSpamAttempts();
+
+			await expectWpformsRefused(request, { [ANCHOR]: 'http://spam.example' });
+
+			expect(spamAttemptCount()).toBe(1);
+
+			clearSpamAttempts();
+		});
+
+		test('a post carrying both fields is accepted on WPForms', async ({ request }) => {
+			const field = proofField();
+
+			const body = await postWpforms(request, { [ANCHOR]: '', [field]: '1' });
+
+			expect(body).not.toContain('wpforms-error-container');
+			expect(body).toContain('wpforms-confirmation-container');
+		});
+
+		test('professional leaves WPForms inert', async ({ request }) => {
+			php(forceTierPhp('professional'));
+
+			const body = await postWpforms(request);
+
+			expect(body, 'WPForms needs the Business plan').toContain('wpforms-confirmation-container');
+
+			php(forceTierPhp('business'));
 		});
 	});
 

@@ -119,6 +119,7 @@ class ReportedIP_Hive_Form_Proof {
 		'reportedip_hive_form_proof_elementor',
 		'reportedip_hive_form_proof_um',
 		'reportedip_hive_form_proof_gravity',
+		'reportedip_hive_form_proof_wpforms',
 	);
 
 	/**
@@ -702,7 +703,7 @@ class ReportedIP_Hive_Form_Proof {
 		wp_register_style( 'reportedip-hive-form-proof', false, array(), REPORTEDIP_HIVE_VERSION );
 		wp_add_inline_style(
 			'reportedip-hive-form-proof',
-			'.rip-hp-field{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;}'
+			'.rip-hp-field{position:absolute!important;left:-9999px!important;top:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important;}'
 		);
 	}
 

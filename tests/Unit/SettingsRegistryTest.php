@@ -177,6 +177,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_form_proof_formidable'         => 'bool',
 				'reportedip_hive_form_proof_elementor'          => 'bool',
 				'reportedip_hive_form_proof_gravity'            => 'bool',
+				'reportedip_hive_form_proof_wpforms'            => 'bool',
 				'reportedip_hive_reputation_on_forms'           => 'bool',
 				'reportedip_hive_comment_spam_action'           => 'enum',
 				'reportedip_hive_prohibited_usernames'          => 'textarea',
@@ -289,6 +290,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'reportedip_hive_form_proof_login_forms',
 					'reportedip_hive_form_proof_pow',
 					'reportedip_hive_form_proof_um',
+					'reportedip_hive_form_proof_wpforms',
 					'reportedip_hive_reputation_on_forms',
 				),
 				$by_section['forms']
@@ -450,6 +452,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_form_proof_formidable',
 				'reportedip_hive_form_proof_gravity',
 				'reportedip_hive_form_proof_um',
+				'reportedip_hive_form_proof_wpforms',
 				'reportedip_hive_hide_login_enabled',
 				'reportedip_hive_hide_login_slug',
 				'reportedip_hive_minimal_logging',

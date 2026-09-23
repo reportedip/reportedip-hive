@@ -64,7 +64,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_adapter_table_carries_exactly_the_supported_plugins(): void {
 			$this->assertSame(
-				array( 'cf7', 'formidable', 'elementor', 'ultimate_member', 'gravity_forms' ),
+				array( 'cf7', 'formidable', 'elementor', 'ultimate_member', 'gravity_forms', 'wpforms' ),
 				array_keys( \ReportedIP_Hive_Form_Adapters::ADAPTERS )
 			);
 		}
@@ -95,6 +95,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'option'  => 'reportedip_hive_form_proof_gravity',
 					'feature' => 'form_adapters_advanced',
 					'detect'  => 'GFCommon',
+				),
+				'wpforms'         => array(
+					'option'  => 'reportedip_hive_form_proof_wpforms',
+					'feature' => 'form_adapters_advanced',
+					'detect'  => 'WPForms\\WPForms',
 				),
 			);
 
@@ -225,6 +230,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 					"'form-submit' === (string) \$context",
 					'a submission through GFAPI carries no anchor and must never be read as a refusal',
 				),
+				'wpforms render'      => array(
+					"add_action( 'wpforms_display_submit_before', array( \$this, 'wpforms_anchor' ) )",
+					'the anchor has to sit inside the WPForms form element',
+				),
+				'wpforms validate'    => array(
+					"add_action( 'wpforms_process', array( \$this, 'wpforms_validate' ), 10, 3 )",
+					'WPForms processing is where its submission is refused, before the entry and the mail',
+				),
 				'proof surfaces'      => array(
 					"add_filter( 'reportedip_hive_form_proof_adapters', array( \$this, 'add_surfaces' ) )",
 					'without this filter surface_enabled() answers false and nothing renders',
@@ -280,6 +293,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'gravity silent abort'      => array(
 					"add_filter( 'gform_abort_submission_with_confirmation'",
 					'a confirmation shown for a dropped submission is a lost message without a warning',
+				),
+				'wpforms honeypot route'    => array(
+					"'wpforms_process_honeypot'",
+					'a submission flagged through the honeypot filter is dropped as spam without a word to the sender',
+				),
+				'wpforms spam entry'        => array(
+					"'wpforms_process_spam_entry'",
+					'an entry filed as spam is a message the sender was thanked for and nobody reads',
 				),
 			);
 		}
@@ -471,6 +492,23 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$source,
 				'an earlier page of a multi-page form is a request of its own, not a submission'
 			);
+		}
+
+		/**
+		 * A refused WPForms submission is told so. The refusal is the plugin's
+		 * own header error, the one it renders above the form and returns in
+		 * the background response; anything in that list stops the entry and
+		 * the mail.
+		 */
+		public function test_a_wpforms_refusal_is_the_processors_header_error(): void {
+			$source = $this->source();
+
+			$this->assertStringContainsString(
+				"\$process->errors[ \$form_id ]['header'] = \$message;",
+				$source,
+				'the sender must read why nothing was sent'
+			);
+			$this->assertStringContainsString( "wpforms()->obj( 'process' )", $source );
 		}
 	}
 }

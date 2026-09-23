@@ -4,6 +4,22 @@ All changes to ReportedIP Hive are documented here.
 
 ## [Unreleased]
 
+### New
+
+- **Form protection on WPForms (Business).** The execution proof and the
+  computation check now cover WPForms and WPForms Lite, on the page-load
+  path and the background path alike. The anchor sits in front of the
+  submit button, the verdict lands on the plugin's processing hook after
+  its own field validation, and a refusal is the form's own header error
+  the sender reads above the form; no entry is written and no mail is
+  sent. The browser side needs no hook of its own: WPForms validates on
+  the form's submit event, which is the one the proof script already
+  listens to, so the held submit and the re-send work unchanged. The
+  off-screen rule of the decoy field now wins against a form plugin's own
+  element reset, which had put it on the page for a visitor to fill in. Switch
+  `reportedip_hive_form_proof_wpforms`, detection `WPForms\WPForms`, on
+  by default from Business through the quickstart recommendation.
+
 ### Fixes
 
 - **The "Switch on Extended Protection" card never appeared on PHP-FPM

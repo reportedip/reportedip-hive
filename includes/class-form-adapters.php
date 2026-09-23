@@ -64,6 +64,11 @@ final class ReportedIP_Hive_Form_Adapters {
 			'feature' => 'form_adapters_advanced',
 			'detect'  => 'GFCommon',
 		),
+		'wpforms'         => array(
+			'option'  => 'reportedip_hive_form_proof_wpforms',
+			'feature' => 'form_adapters_advanced',
+			'detect'  => 'WPForms\\WPForms',
+		),
 	);
 
 	/**
@@ -97,6 +102,7 @@ final class ReportedIP_Hive_Form_Adapters {
 			'elementor'       => 'Elementor Forms',
 			'ultimate_member' => 'Ultimate Member',
 			'gravity_forms'   => 'Gravity Forms',
+			'wpforms'         => 'WPForms',
 		);
 	}
 
@@ -173,6 +179,9 @@ final class ReportedIP_Hive_Form_Adapters {
 
 		add_filter( 'gform_form_tag', array( $this, 'gravity_anchor' ), 10, 2 );
 		add_filter( 'gform_validation', array( $this, 'gravity_validate' ), 10, 2 );
+
+		add_action( 'wpforms_display_submit_before', array( $this, 'wpforms_anchor' ) );
+		add_action( 'wpforms_process', array( $this, 'wpforms_validate' ), 10, 3 );
 	}
 
 	/**
@@ -814,6 +823,76 @@ final class ReportedIP_Hive_Form_Adapters {
 		}
 
 		return GFFormDisplay::SUBMISSION_INITIATED_BY_API !== GFFormDisplay::$submission_initiated_by;
+	}
+
+	/**
+	 * Plant the anchor in a WPForms form.
+	 *
+	 * `wpforms_display_submit_before` runs inside the form element right in
+	 * front of the submit button, on the page-load path and the background
+	 * path alike, and only when the plugin renders a form of its own. The
+	 * confirmation message is rendered elsewhere, so the anchor never lands
+	 * next to a thank-you text.
+	 *
+	 * @param mixed $form_data Form data and settings.
+	 * @return void
+	 * @since  2.1.65
+	 */
+	public function wpforms_anchor( $form_data ) {
+		unset( $form_data );
+
+		if ( ! $this->active( 'wpforms' ) ) {
+			return;
+		}
+
+		echo ReportedIP_Hive_Form_Proof::get_instance()->anchor_html( 'wpforms' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Plugin-built hidden inputs, escaped where they are assembled.
+	}
+
+	/**
+	 * Judge a WPForms submission on its processing hook.
+	 *
+	 * The hook fires after the plugin validated every field and before it
+	 * writes an entry or sends a mail; a refusal placed in the processor's
+	 * error list at that point stops both. The plugin renders that list above
+	 * the form as its own header error, on the page-load path and in the
+	 * background response alike, so the sender always reads why nothing was
+	 * sent. Field errors come first by construction: the hook is not reached
+	 * while any field is invalid, so an incomplete form costs no lookup.
+	 *
+	 * @param mixed $fields    Sanitised field values.
+	 * @param mixed $entry     Raw submission.
+	 * @param mixed $form_data Form data and settings.
+	 * @return void
+	 * @since  2.1.65
+	 */
+	public function wpforms_validate( $fields, $entry, $form_data ) {
+		unset( $fields, $entry );
+
+		if ( ! is_array( $form_data ) || empty( $form_data['id'] ) || ! function_exists( 'wpforms' ) ) {
+			return;
+		}
+
+		$message = $this->refuse( 'wpforms' );
+
+		if ( '' === $message ) {
+			return;
+		}
+
+		$process = method_exists( wpforms(), 'obj' ) ? wpforms()->obj( 'process' ) : wpforms()->process;
+
+		if ( ! is_object( $process ) || ! property_exists( $process, 'errors' ) ) {
+			return;
+		}
+
+		$form_id = absint( $form_data['id'] );
+
+		if ( ! isset( $process->errors[ $form_id ] ) || ! is_array( $process->errors[ $form_id ] ) ) {
+			$process->errors[ $form_id ] = array();
+		}
+
+		if ( empty( $process->errors[ $form_id ]['header'] ) ) {
+			$process->errors[ $form_id ]['header'] = $message;
+		}
 	}
 
 	/**

@@ -110,6 +110,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_form_proof_elementor'            => false,
 		'reportedip_hive_form_proof_um'                   => false,
 		'reportedip_hive_form_proof_gravity'              => false,
+		'reportedip_hive_form_proof_wpforms'              => false,
 		'reportedip_hive_form_adapters_since'             => 0,
 		'reportedip_hive_reputation_on_forms'             => true,
 		'reportedip_hive_form_proof_field'                => '',
@@ -632,6 +633,7 @@ final class ReportedIP_Hive_Defaults {
 			$values['reportedip_hive_form_proof_formidable'] = 1;
 			$values['reportedip_hive_form_proof_elementor']  = 1;
 			$values['reportedip_hive_form_proof_gravity']    = 1;
+			$values['reportedip_hive_form_proof_wpforms']    = 1;
 			$values['reportedip_hive_form_proof_um']         = 1;
 		}
 
