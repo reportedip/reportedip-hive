@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.63
+Stable tag: 2.1.64
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -468,6 +468,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.64 =
+
+Security: a script that reads the hidden field names out of the page can no longer pass the form protection. The computation check now hands the browser a task from this site's own endpoint, signed, good once, expiring in ten minutes and harder the faster one network asks. The page stays fully cacheable. Verified across all eight surfaces (comment, sign-up, password reset, Contact Form 7, Formidable, Elementor, Ultimate Member, Gravity Forms): the field-name bot is refused, a real browser gets through.
+
+Changed: no visitor loses a message to the check. A task the server cannot mint is handed out with zero difficulty, a browser that submits before its task arrives is held for a moment and then sent on, a plugin update restarts the day of grace, and without HTTPS the task keeps its signature and single use. The proof script keeps out of Cloudflare Rocket Loader and WP Rocket combining.
 
 = 2.1.63 =
 
