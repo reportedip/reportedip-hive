@@ -8,14 +8,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-09-22T18:55:10+00:00\n"
+"PO-Revision-Date: 2026-09-23T06:10:49+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
 "X-Generator: WP-CLI 2.12.0\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php:5
+#: reportedip-hive.php:3
 #: admin/class-admin-settings.php:1893
 #: admin/class-admin-settings.php:1894
 #: admin/class-admin-settings.php:2017
@@ -27,18 +27,18 @@ msgstr "ReportedIP Hive"
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php:7
-#: reportedip-hive.php:17
+#: reportedip-hive.php:4
+#: reportedip-hive.php:9
 msgid "https://reportedip.com"
 msgstr "https://reportedip.com"
 
 #. Description of the plugin
-#: reportedip-hive.php:9
+#: reportedip-hive.php:5
 msgid "Community-powered WordPress security, real-time threat intelligence"
 msgstr "Community-gestützte WordPress-Sicherheit, Bedrohungsdaten in Echtzeit"
 
 #. Author of the plugin
-#: reportedip-hive.php:15
+#: reportedip-hive.php:8
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr "Patrick Schlesinger, ReportedIP"
 
@@ -246,7 +246,6 @@ msgstr "Unbekannt"
 #: admin/class-tools-page.php:201
 #: admin/class-tools-page.php:223
 #: admin/class-tools-page.php:227
-#: admin/class-tools-page.php:231
 msgid "Off"
 msgstr "Aus"
 
@@ -834,7 +833,7 @@ msgid "IP Address"
 msgstr "IP-Adresse"
 
 #: admin/class-admin-settings.php:1078
-#: reportedip-hive.php:1145
+#: reportedip-hive.php:1147
 msgid "Attacks"
 msgstr "Angriffe"
 
@@ -868,7 +867,7 @@ msgstr "vor %s"
 #: admin/class-user-admin.php:385
 #: admin/class-user-admin.php:623
 #: admin/class-user-admin.php:647
-#: reportedip-hive.php:1003
+#: reportedip-hive.php:1005
 msgid "Blocked"
 msgstr "Gesperrt"
 
@@ -1272,7 +1271,7 @@ msgstr "Wann"
 #: admin/class-audit-log-table.php:281
 #: includes/class-privacy.php:222
 #: includes/class-security-monitor.php:1443
-#: reportedip-hive.php:1016
+#: reportedip-hive.php:1018
 msgid "Event"
 msgstr "Ereignis"
 
@@ -1287,7 +1286,7 @@ msgstr "IP"
 #: admin/class-admin-settings.php:4824
 #: admin/class-logs-table.php:54
 #: admin/class-logs-table.php:434
-#: reportedip-hive.php:1017
+#: reportedip-hive.php:1019
 msgid "Severity"
 msgstr "Schweregrad"
 
@@ -1622,7 +1621,7 @@ msgid "Severity Breakdown"
 msgstr "Schweregrad-Verteilung"
 
 #: admin/class-admin-settings.php:3917
-#: reportedip-hive.php:1014
+#: reportedip-hive.php:1016
 msgid "Recent Activity"
 msgstr "Letzte Aktivität"
 
@@ -1638,25 +1637,25 @@ msgstr "Keine kritischen Ereignisse in den letzten 24 Stunden. Ihre Website ist 
 #: admin/class-admin-settings.php:4802
 #: admin/class-logs-table.php:440
 #: admin/class-protection-page.php:854
-#: reportedip-hive.php:1146
+#: reportedip-hive.php:1148
 msgid "Critical"
 msgstr "Kritisch"
 
 #: admin/class-admin-settings.php:3937
 #: admin/class-logs-table.php:439
-#: reportedip-hive.php:1147
+#: reportedip-hive.php:1149
 msgid "High"
 msgstr "Hoch"
 
 #: admin/class-admin-settings.php:3938
 #: admin/class-logs-table.php:438
-#: reportedip-hive.php:1148
+#: reportedip-hive.php:1150
 msgid "Medium"
 msgstr "Mittel"
 
 #: admin/class-admin-settings.php:3939
 #: admin/class-logs-table.php:437
-#: reportedip-hive.php:1149
+#: reportedip-hive.php:1151
 msgid "Low"
 msgstr "Niedrig"
 
@@ -1725,7 +1724,7 @@ msgid "Advanced"
 msgstr "Erweitert"
 
 #: admin/class-admin-settings.php:4284
-#: reportedip-hive.php:1783
+#: reportedip-hive.php:1785
 msgid "Retrying..."
 msgstr "Wird wiederholt..."
 
@@ -1795,7 +1794,7 @@ msgstr "Dauerhaft"
 #: admin/class-admin-settings.php:4363
 #: admin/class-logs-table.php:78
 #: admin/class-logs-table.php:145
-#: reportedip-hive.php:1026
+#: reportedip-hive.php:1028
 msgid "Block IP"
 msgstr "IP sperren"
 
@@ -2235,7 +2234,7 @@ msgid "Your IP Address"
 msgstr "Ihre IP-Adresse"
 
 #: admin/class-admin-settings.php:5172
-#: reportedip-hive.php:1002
+#: reportedip-hive.php:1004
 msgid "Whitelisted"
 msgstr "Auf der Whitelist"
 
@@ -3391,7 +3390,7 @@ msgstr "Versuche"
 #: admin/class-two-factor-admin.php:554
 #: includes/class-two-factor-onboarding.php:355
 #: includes/class-two-factor.php:2130
-#: reportedip-hive.php:964
+#: reportedip-hive.php:966
 msgid "Error"
 msgstr "Fehler"
 
@@ -3555,7 +3554,7 @@ msgstr "Audit-Einträge"
 #: includes/class-two-factor-notifications.php:152
 #: includes/class-two-factor-notifications.php:367
 #: includes/class-two-factor-notifications.php:381
-#: reportedip-hive.php:1015
+#: reportedip-hive.php:1017
 msgid "Time"
 msgstr "Zeit"
 
@@ -3915,7 +3914,7 @@ msgstr "Ereignistyp"
 
 #: admin/class-logs-table.php:79
 #: admin/class-logs-table.php:150
-#: reportedip-hive.php:1027
+#: reportedip-hive.php:1029
 msgid "Whitelist IP"
 msgstr "IP auf die Whitelist setzen"
 
@@ -4657,7 +4656,7 @@ msgid "Preview changes"
 msgstr "Änderungen in der Vorschau anzeigen"
 
 #: admin/class-settings-import-export.php:446
-#: includes/class-ajax-handler.php:1596
+#: includes/class-ajax-handler.php:1598
 msgid "No file uploaded."
 msgstr "Keine Datei hochgeladen."
 
@@ -4734,8 +4733,12 @@ msgid "The execution proof is off for the whole site, so no task is handed out e
 msgstr "Der Ausführungsnachweis ist für die ganze Site aus, also wird auch keine Aufgabe ausgegeben."
 
 #: admin/class-tools-page.php:231
-msgid "This site is not reached over a secure connection, so no task is handed out. A browser can only work one out in a secure context, and demanding it here would turn every visitor into a suspect. The plain marker keeps deciding."
-msgstr "Diese Site wird nicht über eine sichere Verbindung erreicht, deshalb wird keine Aufgabe ausgegeben. Ein Browser kann sie nur in einem sicheren Kontext lösen, und sie hier zu verlangen würde jeden Besucher verdächtig machen. Es entscheidet weiter die einfache Markierung."
+msgid "Bound only"
+msgstr "Nur gebunden"
+
+#: admin/class-tools-page.php:231
+msgid "This site is not reached over a secure connection, so the task is handed out with zero difficulty: a browser can only work one out in a secure context, and demanding it here would turn every visitor into a suspect. The task is still signed, expires and is good once, which already refuses a script that only copies the field name out of the page."
+msgstr "Diese Website wird nicht über eine sichere Verbindung erreicht, deshalb wird die Aufgabe ohne Rechenaufwand ausgegeben: ein Browser kann sie nur in einem sicheren Kontext lösen, und sie hier zu verlangen, würde jeden Besucher zum Verdächtigen machen. Die Aufgabe bleibt signiert, läuft ab und gilt einmal, was ein Skript, das nur den Feldnamen aus der Seite kopiert, bereits abweist."
 
 #: admin/class-tools-page.php:235
 msgid "Starting up"
@@ -4746,8 +4749,8 @@ msgid "A task is handed out already, and the plain marker still passes for the f
 msgstr "Eine Aufgabe wird schon ausgegeben, und die einfache Markierung gilt am ersten Tag weiter, damit Seiten aus einem Cache, der vor dem Einschalten gefüllt wurde, nicht abgewiesen werden."
 
 #: admin/class-tools-page.php:238
-msgid "Every protected form hands out a task and each answer is good once."
-msgstr "Jedes geschützte Formular gibt eine Aufgabe aus, und jede Antwort gilt genau einmal."
+msgid "Every protected form fetches a signed task from this site; each answer is good once, expires in ten minutes and gets harder the faster one network asks."
+msgstr "Jedes geschützte Formular holt eine signierte Aufgabe von dieser Website; jede Antwort gilt einmal, läuft nach zehn Minuten ab und wird umso schwerer, je schneller ein Netz danach fragt."
 
 #. translators: %s: name of a form plugin
 #: admin/class-tools-page.php:253
@@ -4910,23 +4913,23 @@ msgstr "Ergebnis"
 msgid "What it means"
 msgstr "Was das heißt"
 
-#: admin/class-tools-page.php:581
+#: admin/class-tools-page.php:585
 msgid "Running the three passes..."
 msgstr "Die drei Durchläufe laufen..."
 
-#: admin/class-tools-page.php:582
+#: admin/class-tools-page.php:586
 msgid "Working out the task the way a visitor browser does..."
 msgstr "Die Aufgabe wird gelöst, so wie es der Browser eines Besuchers tut..."
 
-#: admin/class-tools-page.php:583
+#: admin/class-tools-page.php:587
 msgid "This browser offers no Web Crypto, which usually means the page was not reached over a secure connection. The task cannot be worked out here."
 msgstr "Dieser Browser bietet kein Web Crypto, meist heißt das, die Seite wurde nicht über eine sichere Verbindung aufgerufen. Die Aufgabe lässt sich hier nicht lösen."
 
-#: admin/class-tools-page.php:584
+#: admin/class-tools-page.php:588
 msgid "No answer was found within the attempt budget. Lower the difficulty with the reportedip_hive_form_proof_bits filter and try again."
 msgstr "Innerhalb des Versuchsbudgets wurde keine Antwort gefunden. Senken Sie die Schwierigkeit mit dem Filter reportedip_hive_form_proof_bits und versuchen Sie es erneut."
 
-#: admin/class-tools-page.php:585
+#: admin/class-tools-page.php:589
 msgid "The self-test could not be completed."
 msgstr "Der Selbsttest konnte nicht abgeschlossen werden."
 
@@ -5832,302 +5835,302 @@ msgstr "Hinweis: Das verwaltete Relay befindet sich für diesen Empfänger derze
 msgid "Test email could not be sent. Check the WordPress mail configuration or your active mail provider."
 msgstr "Die Test-E-Mail konnte nicht gesendet werden. Überprüfen Sie die WordPress-E-Mail-Konfiguration oder Ihren aktiven E-Mail-Anbieter."
 
-#: includes/class-ajax-handler.php:413
+#: includes/class-ajax-handler.php:409
 msgid "Unknown self-test pass."
 msgstr "Unbekannter Selbsttest-Durchlauf."
 
-#: includes/class-ajax-handler.php:592
+#: includes/class-ajax-handler.php:594
 #: includes/class-database.php:466
 msgid "Invalid IP address."
 msgstr "Ungültige IP-Adresse."
 
-#: includes/class-ajax-handler.php:616
+#: includes/class-ajax-handler.php:618
 msgid "Invalid IP address or CIDR range."
 msgstr "Ungültige IP-Adresse oder ungültiger CIDR-Bereich."
 
-#: includes/class-ajax-handler.php:620
+#: includes/class-ajax-handler.php:622
 msgid "Reason is required."
 msgstr "Ein Grund ist erforderlich."
 
-#: includes/class-ajax-handler.php:649
-#: includes/class-ajax-handler.php:684
+#: includes/class-ajax-handler.php:651
+#: includes/class-ajax-handler.php:686
 msgid "IP address is required."
 msgstr "Eine IP-Adresse ist erforderlich."
 
-#: includes/class-ajax-handler.php:653
+#: includes/class-ajax-handler.php:655
 msgid "Invalid IP address or CIDR format."
 msgstr "Ungültige IP-Adresse oder ungültiges CIDR-Format."
 
-#: includes/class-ajax-handler.php:657
+#: includes/class-ajax-handler.php:659
 msgid "Invalid expiration date."
 msgstr "Ungültiges Ablaufdatum."
 
-#: includes/class-ajax-handler.php:733
+#: includes/class-ajax-handler.php:735
 msgid "WAF exception saved."
 msgstr "WAF-Ausnahme gespeichert."
 
-#: includes/class-ajax-handler.php:751
+#: includes/class-ajax-handler.php:753
 msgid "A valid exception id is required."
 msgstr "Eine gültige Ausnahme-ID ist erforderlich."
 
-#: includes/class-ajax-handler.php:755
+#: includes/class-ajax-handler.php:757
 msgid "WAF exception removed."
 msgstr "WAF-Ausnahme entfernt."
 
-#: includes/class-ajax-handler.php:758
+#: includes/class-ajax-handler.php:760
 msgid "Could not remove the exception."
 msgstr "Ausnahme konnte nicht entfernt werden."
 
 #. translators: 1: number of old log entries removed, 2: number of expired IP entries removed
-#: includes/class-ajax-handler.php:778
+#: includes/class-ajax-handler.php:780
 #, php-format
 msgid "Cleanup completed. Removed %1$d old log entries and %2$d expired IP entries."
 msgstr "Bereinigung abgeschlossen. %1$d alte Protokolleinträge und %2$d abgelaufene IP-Einträge wurden entfernt."
 
 #. translators: 1: number of anonymized entries, 2: minimum age in days
-#: includes/class-ajax-handler.php:807
+#: includes/class-ajax-handler.php:809
 #, php-format
 msgid "Anonymization completed. Anonymized %1$d entries older than %2$d days."
 msgstr "Anonymisierung abgeschlossen. %1$d Einträge, die älter als %2$d Tage sind, wurden anonymisiert."
 
-#: includes/class-ajax-handler.php:846
+#: includes/class-ajax-handler.php:848
 msgid "Imported from CSV"
 msgstr "Aus CSV importiert"
 
 #. translators: 1: line number in CSV file, 2: invalid IP value found
-#: includes/class-ajax-handler.php:850
+#: includes/class-ajax-handler.php:852
 #, php-format
 msgid "Line %1$d: Invalid IP \"%2$s\""
 msgstr "Zeile %1$d: Ungültige IP \"%2$s\""
 
 #. translators: 1: line number in CSV file, 2: IP address, 3: error message returned by the blocker
-#: includes/class-ajax-handler.php:864
+#: includes/class-ajax-handler.php:866
 #, php-format
 msgid "Line %1$d: Failed to block \"%2$s\" - %3$s"
 msgstr "Zeile %1$d: \"%2$s\" konnte nicht gesperrt werden - %3$s"
 
 #. translators: 1: number of imported IPs, 2: number of skipped IPs, 3: number of errors
-#: includes/class-ajax-handler.php:887
+#: includes/class-ajax-handler.php:889
 #, php-format
 msgid "%1$d IPs imported, %2$d skipped (already blocked), %3$d errors."
 msgstr "%1$d IPs importiert, %2$d übersprungen (bereits gesperrt), %3$d Fehler."
 
 #. translators: 1: number of IPs imported to whitelist, 2: number of errors
-#: includes/class-ajax-handler.php:925
+#: includes/class-ajax-handler.php:927
 #, php-format
 msgid "%1$d IPs imported to whitelist, %2$d errors."
 msgstr "%1$d IPs auf die Whitelist importiert, %2$d Fehler."
 
 #. translators: %s: severity level used in the test event
-#: includes/class-ajax-handler.php:959
+#: includes/class-ajax-handler.php:961
 #, php-format
 msgid "Successfully logged %s severity test event."
 msgstr "Testereignis mit Schweregrad %s erfolgreich protokolliert."
 
-#: includes/class-ajax-handler.php:964
+#: includes/class-ajax-handler.php:966
 msgid "Failed to log test event. Check database connection."
 msgstr "Testereignis konnte nicht protokolliert werden. Überprüfen Sie die Datenbankverbindung."
 
-#: includes/class-ajax-handler.php:986
+#: includes/class-ajax-handler.php:988
 msgid "Basic database connection failed."
 msgstr "Grundlegende Datenbankverbindung fehlgeschlagen."
 
-#: includes/class-ajax-handler.php:994
+#: includes/class-ajax-handler.php:996
 msgid "Plugin database tables are missing. Try deactivating and reactivating the plugin."
 msgstr "Die Datenbanktabellen des Plugins fehlen. Versuchen Sie, das Plugin zu deaktivieren und erneut zu aktivieren."
 
-#: includes/class-ajax-handler.php:1015
+#: includes/class-ajax-handler.php:1017
 msgid "Database insert test failed: "
 msgstr "Datenbank-Einfügetest fehlgeschlagen: "
 
-#: includes/class-ajax-handler.php:1023
+#: includes/class-ajax-handler.php:1025
 msgid "Database connection and functionality test successful."
 msgstr "Test der Datenbankverbindung und Funktionalität erfolgreich."
 
-#: includes/class-ajax-handler.php:1060
+#: includes/class-ajax-handler.php:1062
 msgid "Cron jobs triggered successfully. Check logs for results."
 msgstr "Cron-Jobs erfolgreich ausgelöst. Überprüfen Sie die Protokolle für die Ergebnisse."
 
-#: includes/class-ajax-handler.php:1096
+#: includes/class-ajax-handler.php:1098
 msgid "Auto-block function test successful! Test IP was blocked."
 msgstr "Test der automatischen Sperrfunktion erfolgreich! Test-IP wurde gesperrt."
 
 #. translators: %s: human readable reason why the IP was not blocked
-#: includes/class-ajax-handler.php:1118
+#: includes/class-ajax-handler.php:1120
 #, php-format
 msgid "Auto-block function test completed. IP was not blocked. Reason: %s"
 msgstr "Test der automatischen Sperrfunktion abgeschlossen. IP wurde nicht gesperrt. Grund: %s"
 
 #. translators: 1: number of attempts recorded, 2: configured threshold, 3: "Yes" or "No" indicating threshold exceeded
-#: includes/class-ajax-handler.php:1186
+#: includes/class-ajax-handler.php:1188
 #, php-format
 msgid "Failed login threshold simulation completed. %1$d attempts recorded, threshold is %2$d. Threshold exceeded: %3$s"
 msgstr "Simulation des Schwellenwerts für fehlgeschlagene Anmeldungen abgeschlossen. %1$d Versuche erfasst, der Schwellenwert beträgt %2$d. Schwellenwert überschritten: %3$s"
 
 #. translators: 1: number of attempts that were actually recorded, 2: number of attempts that were expected
-#: includes/class-ajax-handler.php:1203
+#: includes/class-ajax-handler.php:1205
 #, php-format
 msgid "Simulation failed. Only %1$d attempts recorded, but %2$d were expected."
 msgstr "Simulation fehlgeschlagen. Nur %1$d Versuche erfasst, aber %2$d wurden erwartet."
 
 #. translators: %d: number of cache entries that were removed
-#: includes/class-ajax-handler.php:1230
+#: includes/class-ajax-handler.php:1232
 #, php-format
 msgid "Cache cleared successfully. Removed %d cache entries."
 msgstr "Cache erfolgreich geleert. %d Cache-Einträge entfernt."
 
 #. translators: %d: number of expired cache entries that were removed
-#: includes/class-ajax-handler.php:1258
+#: includes/class-ajax-handler.php:1260
 #, php-format
 msgid "Expired cache entries cleaned up. Removed %d expired entries."
 msgstr "Abgelaufene Cache-Einträge bereinigt. %d abgelaufene Einträge entfernt."
 
-#: includes/class-ajax-handler.php:1281
-#: includes/class-ajax-handler.php:1414
+#: includes/class-ajax-handler.php:1283
+#: includes/class-ajax-handler.php:1416
 msgid "Invalid report ID."
 msgstr "Ungültige Bericht-ID."
 
-#: includes/class-ajax-handler.php:1291
+#: includes/class-ajax-handler.php:1293
 msgid "Queue row not found."
 msgstr "Warteschlangeneintrag nicht gefunden."
 
-#: includes/class-ajax-handler.php:1327
+#: includes/class-ajax-handler.php:1329
 msgid "Report sent."
 msgstr "Bericht gesendet."
 
 #. translators: %s: API error message
-#: includes/class-ajax-handler.php:1335
+#: includes/class-ajax-handler.php:1337
 #, php-format
 msgid "Send failed: %s"
 msgstr "Senden fehlgeschlagen: %s"
 
-#: includes/class-ajax-handler.php:1336
+#: includes/class-ajax-handler.php:1338
 msgid "unknown error"
 msgstr "unbekannter Fehler"
 
 #. translators: 1: reset count, 2: processed count, 3: errors count
-#: includes/class-ajax-handler.php:1380
+#: includes/class-ajax-handler.php:1382
 #, php-format
 msgid "%1$d failed reset · %2$d sent · %3$d errors"
 msgstr "%1$d fehlgeschlagene zurückgesetzt · %2$d gesendet · %3$d Fehler"
 
-#: includes/class-ajax-handler.php:1433
+#: includes/class-ajax-handler.php:1435
 msgid "Queue item deleted."
 msgstr "Warteschlangeneintrag gelöscht."
 
-#: includes/class-ajax-handler.php:1438
+#: includes/class-ajax-handler.php:1440
 msgid "Failed to delete queue item."
 msgstr "Warteschlangeneintrag konnte nicht gelöscht werden."
 
-#: includes/class-ajax-handler.php:1478
+#: includes/class-ajax-handler.php:1480
 msgid "All settings have been reset to defaults. The page will reload."
 msgstr "Alle Einstellungen wurden auf die Standardwerte zurückgesetzt. Die Seite wird neu geladen."
 
-#: includes/class-ajax-handler.php:1510
+#: includes/class-ajax-handler.php:1512
 msgid "API statistics have been reset. The page will reload."
 msgstr "Die API-Statistik wurde zurückgesetzt. Die Seite wird neu geladen."
 
-#: includes/class-ajax-handler.php:1539
+#: includes/class-ajax-handler.php:1541
 msgid "All plugin data has been deleted. The page will reload."
 msgstr "Alle Plugin-Daten wurden gelöscht. Die Seite wird neu geladen."
 
-#: includes/class-ajax-handler.php:1559
+#: includes/class-ajax-handler.php:1561
 msgid "Invalid notice ID."
 msgstr "Ungültige Hinweis-ID."
 
-#: includes/class-ajax-handler.php:1604
+#: includes/class-ajax-handler.php:1606
 msgid "File exceeds upload_max_filesize."
 msgstr "Die Datei überschreitet upload_max_filesize."
 
-#: includes/class-ajax-handler.php:1605
+#: includes/class-ajax-handler.php:1607
 msgid "File exceeds MAX_FILE_SIZE."
 msgstr "Die Datei überschreitet MAX_FILE_SIZE."
 
-#: includes/class-ajax-handler.php:1606
+#: includes/class-ajax-handler.php:1608
 msgid "File was only partially uploaded."
 msgstr "Die Datei wurde nur teilweise hochgeladen."
 
-#: includes/class-ajax-handler.php:1607
+#: includes/class-ajax-handler.php:1609
 msgid "No file was uploaded."
 msgstr "Es wurde keine Datei hochgeladen."
 
-#: includes/class-ajax-handler.php:1608
+#: includes/class-ajax-handler.php:1610
 msgid "Missing temporary folder."
 msgstr "Temporärer Ordner fehlt."
 
-#: includes/class-ajax-handler.php:1609
+#: includes/class-ajax-handler.php:1611
 msgid "Failed to write file to disk."
 msgstr "Datei konnte nicht auf den Datenträger geschrieben werden."
 
-#: includes/class-ajax-handler.php:1610
+#: includes/class-ajax-handler.php:1612
 msgid "File upload stopped by extension."
 msgstr "Datei-Upload durch eine Erweiterung gestoppt."
 
-#: includes/class-ajax-handler.php:1612
+#: includes/class-ajax-handler.php:1614
 msgid "Unknown upload error."
 msgstr "Unbekannter Upload-Fehler."
 
-#: includes/class-ajax-handler.php:1617
+#: includes/class-ajax-handler.php:1619
 msgid "File too large. Maximum size is 1 MB."
 msgstr "Datei zu groß. Die maximale Größe beträgt 1 MB."
 
-#: includes/class-ajax-handler.php:1622
+#: includes/class-ajax-handler.php:1624
 msgid "Invalid file type. Only CSV and TXT files are allowed."
 msgstr "Ungültiger Dateityp. Nur CSV- und TXT-Dateien sind erlaubt."
 
-#: includes/class-ajax-handler.php:1628
+#: includes/class-ajax-handler.php:1630
 msgid "Failed to read uploaded file."
 msgstr "Die hochgeladene Datei konnte nicht gelesen werden."
 
-#: includes/class-ajax-handler.php:1658
+#: includes/class-ajax-handler.php:1660
 msgid "Queue processed and quota refreshed. Check Activity log for details."
 msgstr "Warteschlange verarbeitet und Kontingent aktualisiert. Überprüfen Sie das Aktivitätsprotokoll für Details."
 
-#: includes/class-ajax-handler.php:1680
+#: includes/class-ajax-handler.php:1682
 msgid "Priority Sync requires a Professional plan."
 msgstr "Priority-Sync erfordert einen Professional-Tarif."
 
-#: includes/class-ajax-handler.php:1685
+#: includes/class-ajax-handler.php:1687
 msgid "Rulesets synced."
 msgstr "Regelsätze synchronisiert."
 
-#: includes/class-ajax-handler.php:1709
+#: includes/class-ajax-handler.php:1711
 msgid "The drop-in manager is unavailable."
 msgstr "Der Drop-in-Manager ist nicht verfügbar."
 
-#: includes/class-ajax-handler.php:1717
+#: includes/class-ajax-handler.php:1719
 msgid "The server configuration target is not writable. Adjust file permissions and try again."
 msgstr "Das Server-Konfigurationsziel ist nicht beschreibbar. Passen Sie die Dateiberechtigungen an und versuchen Sie es erneut."
 
-#: includes/class-ajax-handler.php:1723
+#: includes/class-ajax-handler.php:1725
 msgid "Extended protection enabled."
 msgstr "Erweiterter Schutz aktiviert."
 
-#: includes/class-ajax-handler.php:1724
+#: includes/class-ajax-handler.php:1726
 msgid "Extended protection disabled."
 msgstr "Erweiterter Schutz deaktiviert."
 
-#: includes/class-ajax-handler.php:1726
+#: includes/class-ajax-handler.php:1728
 msgid "Guard file generated. Paste the nginx snippet into your server block and reload nginx."
 msgstr "Guard-Datei erzeugt. Fügen Sie das nginx-Snippet in Ihren Server-Block ein und laden Sie nginx neu."
 
-#: includes/class-ajax-handler.php:1763
+#: includes/class-ajax-handler.php:1765
 msgid "Invalid payload."
 msgstr "Ungültige Nutzdaten."
 
-#: includes/class-ajax-handler.php:1799
+#: includes/class-ajax-handler.php:1801
 msgid "Queue lock cleared."
 msgstr "Warteschlangensperre aufgehoben."
 
-#: includes/class-ajax-handler.php:1800
+#: includes/class-ajax-handler.php:1802
 msgid "No queue lock was held."
 msgstr "Es war keine Warteschlangensperre aktiv."
 
-#: includes/class-ajax-handler.php:1826
+#: includes/class-ajax-handler.php:1828
 msgid "Hardening Mode deactivated."
 msgstr "Härtungsmodus deaktiviert."
 
-#: includes/class-ajax-handler.php:1827
+#: includes/class-ajax-handler.php:1829
 msgid "Hardening Mode was not active."
 msgstr "Härtungsmodus war nicht aktiv."
 
@@ -7261,11 +7264,19 @@ msgstr "Dieses Formular braucht JavaScript. Bitte einschalten und noch einmal ve
 msgid "Your submission was not accepted. Please reload the page and try again."
 msgstr "Ihre Eingabe wurde nicht angenommen. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 
-#: includes/class-form-proof.php:912
+#: includes/class-form-challenge.php:376
+msgid "Too many requests. Please try again in a moment."
+msgstr "Zu viele Anfragen. Bitte versuchen Sie es gleich noch einmal."
+
+#: includes/class-form-challenge.php:427
+msgid "Cross-origin requests are not allowed."
+msgstr "Anfragen von fremden Websites sind nicht zulässig."
+
+#: includes/class-form-proof.php:739
 msgid "Leave this field empty"
 msgstr "Dieses Feld leer lassen"
 
-#: includes/class-form-proof.php:1281
+#: includes/class-form-proof.php:1130
 msgid "This form needs JavaScript to be submitted. Switch it on and try again. If you cannot, ask another administrator to reset your password, or use WP-CLI on the server."
 msgstr "Dieses Formular braucht JavaScript. Bitte einschalten und noch einmal versuchen. Falls das nicht geht, kann ein anderer Administrator das Passwort zurücksetzen oder es lässt sich per WP-CLI auf dem Server ändern."
 
@@ -9023,8 +9034,8 @@ msgid "Computation check on forms"
 msgstr "Rechenprüfung auf Formularen"
 
 #: includes/class-settings-registry.php:767
-msgid "Give the form a small sum to work out in the background and check the answer on submit. A script that only copies the hidden field out of the page can no longer pass for a visitor, and nobody has to read a distorted image. Needs HTTPS."
-msgstr "Das Formular rechnet im Hintergrund eine kleine Aufgabe, deren Ergebnis beim Absenden geprüft wird. Ein Skript, das nur das versteckte Feld aus der Seite abschreibt, geht damit nicht mehr als Besucher durch, und niemand muss ein verzerrtes Bild entziffern. Setzt HTTPS voraus."
+msgid "Hand the form a small task that the browser fetches from this site and works out in the background. The task is signed, good once, expires in ten minutes and gets harder the faster one network asks for it. A script that only copies the hidden field out of the page can no longer pass for a visitor, and nobody has to read a distorted image. The page stays fully cacheable. Without HTTPS the task carries no arithmetic but keeps its signature and single use."
+msgstr "Gibt dem Formular eine kleine Aufgabe, die der Browser von dieser Website holt und im Hintergrund löst. Die Aufgabe ist signiert, gilt einmal, läuft nach zehn Minuten ab und wird umso schwerer, je schneller ein Netz danach fragt. Ein Skript, das nur das versteckte Feld aus der Seite kopiert, kommt nicht mehr als Besucher durch, und niemand muss ein verzerrtes Bild lesen. Die Seite bleibt vollständig cachebar. Ohne HTTPS trägt die Aufgabe keinen Rechenaufwand, behält aber Signatur und Einmalgebrauch."
 
 #: includes/class-settings-registry.php:775
 msgid "Protect Contact Form 7 forms"
@@ -10266,7 +10277,7 @@ msgid "Back to My Account"
 msgstr "Zurück zu Mein Konto"
 
 #: includes/class-two-factor-onboarding.php:427
-#: reportedip-hive.php:962
+#: reportedip-hive.php:964
 msgid "Sending..."
 msgstr "Wird gesendet..."
 
@@ -10291,7 +10302,7 @@ msgid "Your browser does not support passkeys. Please choose another method."
 msgstr "Ihr Browser unterstützt keine Passkeys. Bitte wählen Sie eine andere Methode."
 
 #: includes/class-two-factor-onboarding.php:434
-#: reportedip-hive.php:967
+#: reportedip-hive.php:969
 msgid "Network error. Please try again."
 msgstr "Netzwerkfehler. Bitte versuchen Sie es erneut."
 
@@ -11149,395 +11160,395 @@ msgstr "Zu viele SMS-Sendungen an diesen Empfänger. Bitte warten Sie, bevor Sie
 msgid "SMS relay failed (%s)."
 msgstr "SMS-Relay fehlgeschlagen (%s)."
 
-#: reportedip-hive.php:941
+#: reportedip-hive.php:943
 msgid "Testing connection..."
 msgstr "Verbindung wird getestet..."
 
-#: reportedip-hive.php:942
+#: reportedip-hive.php:944
 msgid "Connection successful!"
 msgstr "Verbindung erfolgreich!"
 
-#: reportedip-hive.php:943
+#: reportedip-hive.php:945
 msgid "Connection failed!"
 msgstr "Verbindung fehlgeschlagen!"
 
-#: reportedip-hive.php:944
+#: reportedip-hive.php:946
 msgid "Are you sure you want to unblock this IP?"
 msgstr "Möchten Sie diese IP wirklich entsperren?"
 
-#: reportedip-hive.php:945
+#: reportedip-hive.php:947
 msgid "Are you sure you want to whitelist this IP?"
 msgstr "Möchten Sie diese IP wirklich auf die Whitelist setzen?"
 
-#: reportedip-hive.php:946
+#: reportedip-hive.php:948
 msgid "Are you sure you want to reset all settings to defaults?"
 msgstr "Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen?"
 
-#: reportedip-hive.php:947
+#: reportedip-hive.php:949
 msgid "Reset the API statistics counter? This clears usage history only."
 msgstr "Den API-Statistikzähler zurücksetzen? Dies löscht nur die Nutzungshistorie."
 
-#: reportedip-hive.php:948
+#: reportedip-hive.php:950
 msgid "WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!"
 msgstr "WARNUNG: Dadurch werden ALLE Plugin-Daten einschließlich Protokolle, gesperrter IPs und Whitelist-Einträge gelöscht. Dies kann nicht rückgängig gemacht werden!"
 
-#: reportedip-hive.php:949
+#: reportedip-hive.php:951
 msgid "Are you absolutely sure?"
 msgstr "Sind Sie absolut sicher?"
 
-#: reportedip-hive.php:950
+#: reportedip-hive.php:952
 msgid "Remove this WAF exception?"
 msgstr "Diese WAF-Ausnahme entfernen?"
 
 #. translators: %1$s = WAF rule id, %2$s = request path.
-#: reportedip-hive.php:952
+#: reportedip-hive.php:954
 #, php-format
 msgid "Allow rule \"%1$s\" on path \"%2$s\"? The WAF stays active everywhere else."
 msgstr "Regel \"%1$s\" auf Pfad \"%2$s\" erlauben? Die WAF bleibt überall sonst aktiv."
 
-#: reportedip-hive.php:953
+#: reportedip-hive.php:955
 msgid "Are you sure you want to remove this IP from the whitelist?"
 msgstr "Möchten Sie diese IP wirklich von der Whitelist entfernen?"
 
-#: reportedip-hive.php:954
+#: reportedip-hive.php:956
 msgid "Are you sure you want to clean up old logs? This action cannot be undone."
 msgstr "Möchten Sie alte Protokolle wirklich bereinigen? Diese Aktion kann nicht rückgängig gemacht werden."
 
-#: reportedip-hive.php:955
+#: reportedip-hive.php:957
 msgid "Are you sure you want to anonymize old data? This will remove personal information from logs."
 msgstr "Möchten Sie alte Daten wirklich anonymisieren? Dabei werden personenbezogene Informationen aus den Protokollen entfernt."
 
-#: reportedip-hive.php:956
+#: reportedip-hive.php:958
 msgid "Enter reason for whitelisting (optional):"
 msgstr "Grund für das Setzen auf die Whitelist eingeben (optional):"
 
-#: reportedip-hive.php:957
+#: reportedip-hive.php:959
 msgid "Manually whitelisted from blocked list"
 msgstr "Manuell aus der Sperrliste auf die Whitelist gesetzt"
 
-#: reportedip-hive.php:958
+#: reportedip-hive.php:960
 msgid "Enter reason for blocking this IP:"
 msgstr "Grund für das Sperren dieser IP eingeben:"
 
-#: reportedip-hive.php:959
+#: reportedip-hive.php:961
 msgid "Blocked from security logs"
 msgstr "Aus den Sicherheitsprotokollen gesperrt"
 
-#: reportedip-hive.php:960
+#: reportedip-hive.php:962
 msgid "Export logs from how many days? (default: 30)"
 msgstr "Protokolle aus wie vielen Tagen exportieren? (Standard: 30)"
 
-#: reportedip-hive.php:961
+#: reportedip-hive.php:963
 msgid "Request failed. Check server logs."
 msgstr "Anfrage fehlgeschlagen. Prüfen Sie die Server-Logs."
 
-#: reportedip-hive.php:963
+#: reportedip-hive.php:965
 msgid "Test email failed."
 msgstr "Test-E-Mail fehlgeschlagen."
 
-#: reportedip-hive.php:965
+#: reportedip-hive.php:967
 msgid "Request failed."
 msgstr "Anfrage fehlgeschlagen."
 
-#: reportedip-hive.php:966
+#: reportedip-hive.php:968
 msgid "Network error occurred"
 msgstr "Netzwerkfehler aufgetreten"
 
-#: reportedip-hive.php:968
+#: reportedip-hive.php:970
 msgid "API statistics reset."
 msgstr "API-Statistiken zurückgesetzt."
 
-#: reportedip-hive.php:969
+#: reportedip-hive.php:971
 msgid "Failed to reset API statistics."
 msgstr "API-Statistiken konnten nicht zurückgesetzt werden."
 
-#: reportedip-hive.php:970
+#: reportedip-hive.php:972
 msgid "Cache cleared."
 msgstr "Cache geleert."
 
-#: reportedip-hive.php:971
+#: reportedip-hive.php:973
 msgid "Failed to clear cache."
 msgstr "Cache konnte nicht geleert werden."
 
-#: reportedip-hive.php:972
+#: reportedip-hive.php:974
 msgid "Expired entries cleaned."
 msgstr "Abgelaufene Einträge bereinigt."
 
-#: reportedip-hive.php:973
+#: reportedip-hive.php:975
 msgid "Failed to clean expired entries."
 msgstr "Abgelaufene Einträge konnten nicht bereinigt werden."
 
-#: reportedip-hive.php:974
+#: reportedip-hive.php:976
 msgid "Mode changed successfully"
 msgstr "Modus erfolgreich geändert"
 
-#: reportedip-hive.php:975
+#: reportedip-hive.php:977
 msgid "Failed to change mode"
 msgstr "Modus konnte nicht geändert werden"
 
-#: reportedip-hive.php:976
+#: reportedip-hive.php:978
 msgid "IP address added to whitelist successfully"
 msgstr "IP-Adresse erfolgreich zur Whitelist hinzugefügt"
 
-#: reportedip-hive.php:977
+#: reportedip-hive.php:979
 msgid "Failed to add IP to whitelist"
 msgstr "IP konnte nicht zur Whitelist hinzugefügt werden"
 
-#: reportedip-hive.php:978
+#: reportedip-hive.php:980
 msgid "IP address removed from whitelist"
 msgstr "IP-Adresse von der Whitelist entfernt"
 
-#: reportedip-hive.php:979
+#: reportedip-hive.php:981
 msgid "Failed to remove IP from whitelist"
 msgstr "IP konnte nicht von der Whitelist entfernt werden"
 
-#: reportedip-hive.php:980
+#: reportedip-hive.php:982
 msgid "WAF exception saved"
 msgstr "WAF-Ausnahme gespeichert"
 
-#: reportedip-hive.php:981
+#: reportedip-hive.php:983
 msgid "Failed to save the exception"
 msgstr "Die Ausnahme konnte nicht gespeichert werden"
 
-#: reportedip-hive.php:982
+#: reportedip-hive.php:984
 msgid "WAF exception removed"
 msgstr "WAF-Ausnahme entfernt"
 
-#: reportedip-hive.php:983
+#: reportedip-hive.php:985
 msgid "Failed to remove the exception"
 msgstr "Die Ausnahme konnte nicht entfernt werden"
 
-#: reportedip-hive.php:984
+#: reportedip-hive.php:986
 msgid "WAF exception added for this rule"
 msgstr "WAF-Ausnahme für diese Regel hinzugefügt"
 
-#: reportedip-hive.php:985
+#: reportedip-hive.php:987
 msgid "Failed to add the exception"
 msgstr "Die Ausnahme konnte nicht hinzugefügt werden"
 
-#: reportedip-hive.php:986
+#: reportedip-hive.php:988
 msgid "IP address blocked successfully"
 msgstr "IP-Adresse erfolgreich gesperrt"
 
-#: reportedip-hive.php:987
+#: reportedip-hive.php:989
 msgid "Failed to block IP address"
 msgstr "Die IP-Adresse konnte nicht gesperrt werden"
 
-#: reportedip-hive.php:988
+#: reportedip-hive.php:990
 msgid "IP address unblocked successfully"
 msgstr "IP-Adresse erfolgreich entsperrt"
 
-#: reportedip-hive.php:989
+#: reportedip-hive.php:991
 msgid "Failed to unblock IP address"
 msgstr "Die Sperre der IP-Adresse konnte nicht aufgehoben werden"
 
-#: reportedip-hive.php:990
+#: reportedip-hive.php:992
 msgid "IP address whitelisted successfully"
 msgstr "IP-Adresse erfolgreich auf die Whitelist gesetzt"
 
-#: reportedip-hive.php:991
+#: reportedip-hive.php:993
 msgid "Failed to whitelist IP address"
 msgstr "Die IP-Adresse konnte nicht auf die Whitelist gesetzt werden"
 
-#: reportedip-hive.php:992
+#: reportedip-hive.php:994
 msgid "No IP address found"
 msgstr "Keine IP-Adresse gefunden"
 
-#: reportedip-hive.php:993
+#: reportedip-hive.php:995
 msgid "Failed to copy IP address"
 msgstr "IP-Adresse konnte nicht kopiert werden"
 
-#: reportedip-hive.php:994
+#: reportedip-hive.php:996
 msgid "Failed to cleanup logs"
 msgstr "Protokolle konnten nicht bereinigt werden"
 
-#: reportedip-hive.php:995
+#: reportedip-hive.php:997
 msgid "Failed to anonymize data"
 msgstr "Daten konnten nicht anonymisiert werden"
 
-#: reportedip-hive.php:996
+#: reportedip-hive.php:998
 msgid "Logs exported successfully"
 msgstr "Protokolle erfolgreich exportiert"
 
-#: reportedip-hive.php:997
+#: reportedip-hive.php:999
 msgid "Failed to export logs"
 msgstr "Protokolle konnten nicht exportiert werden"
 
-#: reportedip-hive.php:998
+#: reportedip-hive.php:1000
 msgid "Import completed."
 msgstr "Import abgeschlossen."
 
-#: reportedip-hive.php:999
+#: reportedip-hive.php:1001
 msgid "Import failed."
 msgstr "Import fehlgeschlagen."
 
-#: reportedip-hive.php:1000
+#: reportedip-hive.php:1002
 msgid "Please enter an IP address"
 msgstr "Bitte geben Sie eine IP-Adresse ein"
 
-#: reportedip-hive.php:1001
+#: reportedip-hive.php:1003
 msgid "Failed to lookup IP address"
 msgstr "IP-Adresse konnte nicht abgefragt werden"
 
-#: reportedip-hive.php:1004
+#: reportedip-hive.php:1006
 msgid "Clean"
 msgstr "Unauffällig"
 
-#: reportedip-hive.php:1005
+#: reportedip-hive.php:1007
 msgid "IP Information:"
 msgstr "IP-Informationen:"
 
-#: reportedip-hive.php:1006
+#: reportedip-hive.php:1008
 msgid "Valid:"
 msgstr "Gültig:"
 
-#: reportedip-hive.php:1007
+#: reportedip-hive.php:1009
 msgid "Private:"
 msgstr "Privat:"
 
-#: reportedip-hive.php:1008
+#: reportedip-hive.php:1010
 msgid "Version:"
 msgstr "Version:"
 
-#: reportedip-hive.php:1009
+#: reportedip-hive.php:1011
 msgid "Yes"
 msgstr "Ja"
 
-#: reportedip-hive.php:1010
+#: reportedip-hive.php:1012
 msgid "No"
 msgstr "Nein"
 
-#: reportedip-hive.php:1011
+#: reportedip-hive.php:1013
 msgid "Country:"
 msgstr "Land:"
 
-#: reportedip-hive.php:1012
+#: reportedip-hive.php:1014
 msgid "Abuse Confidence:"
 msgstr "Missbrauchs-Konfidenz:"
 
-#: reportedip-hive.php:1013
+#: reportedip-hive.php:1015
 msgid "Total Reports:"
 msgstr "Meldungen gesamt:"
 
-#: reportedip-hive.php:1018
+#: reportedip-hive.php:1020
 msgid "ISP:"
 msgstr "ISP:"
 
-#: reportedip-hive.php:1019
+#: reportedip-hive.php:1021
 msgid "ASN:"
 msgstr "ASN:"
 
-#: reportedip-hive.php:1020
+#: reportedip-hive.php:1022
 msgid "Usage Type:"
 msgstr "Nutzungsart:"
 
-#: reportedip-hive.php:1021
+#: reportedip-hive.php:1023
 #: templates/two-factor-onboarding.php:97
 msgid "Domain:"
 msgstr "Domain:"
 
-#: reportedip-hive.php:1022
+#: reportedip-hive.php:1024
 msgid "Distinct Reporters:"
 msgstr "Verschiedene Melder:"
 
-#: reportedip-hive.php:1023
+#: reportedip-hive.php:1025
 msgid "Last Reported:"
 msgstr "Zuletzt gemeldet:"
 
-#: reportedip-hive.php:1024
+#: reportedip-hive.php:1026
 msgid "Tor exit node"
 msgstr "Tor-Exit-Node"
 
-#: reportedip-hive.php:1025
+#: reportedip-hive.php:1027
 msgid "Community-verified infrastructure"
 msgstr "Community-verifizierte Infrastruktur"
 
-#: reportedip-hive.php:1028
+#: reportedip-hive.php:1030
 msgid "View community report"
 msgstr "Community-Bericht ansehen"
 
-#: reportedip-hive.php:1029
+#: reportedip-hive.php:1031
 msgid "This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?"
 msgstr "Das ist Ihre eigene aktuelle IP-Adresse. Eine Sperrung kann Sie aus wp-admin aussperren. Fortfahren?"
 
-#: reportedip-hive.php:1144
+#: reportedip-hive.php:1146
 msgid "Events"
 msgstr "Ereignisse"
 
-#: reportedip-hive.php:1305
+#: reportedip-hive.php:1307
 msgid "Your IP address has been blocked due to suspicious activity."
 msgstr "Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1360
+#: reportedip-hive.php:1362
 msgid "Access denied due to IP reputation."
 msgstr "Zugriff aufgrund der IP-Reputation verweigert."
 
-#: reportedip-hive.php:1396
+#: reportedip-hive.php:1398
 msgid "Access denied: connections from Tor exit nodes are not allowed on this site."
 msgstr "Zugriff verweigert: Verbindungen von Tor-Exit-Nodes sind auf dieser Website nicht erlaubt."
 
-#: reportedip-hive.php:1686
-#: reportedip-hive.php:2048
+#: reportedip-hive.php:1688
+#: reportedip-hive.php:2050
 msgid "Access denied. Your IP address has been blocked due to suspicious activity."
 msgstr "Zugriff verweigert. Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1755
-#: reportedip-hive.php:1829
-#: reportedip-hive.php:1853
+#: reportedip-hive.php:1757
+#: reportedip-hive.php:1831
+#: reportedip-hive.php:1855
 msgid "ReportedIP Hive:"
 msgstr "ReportedIP Hive:"
 
 #. translators: %1$d: number of failed reports, %2$s: link to queue page
-#: reportedip-hive.php:1758
+#: reportedip-hive.php:1760
 #, php-format
 msgid "%1$d API reports failed. %2$s"
 msgstr "%1$d API-Meldungen fehlgeschlagen. %2$s"
 
-#: reportedip-hive.php:1760
+#: reportedip-hive.php:1762
 msgid "View queue"
 msgstr "Warteschlange anzeigen"
 
-#: reportedip-hive.php:1771
-#: reportedip-hive.php:1792
+#: reportedip-hive.php:1773
+#: reportedip-hive.php:1794
 msgid "Retry all"
 msgstr "Alle erneut versuchen"
 
-#: reportedip-hive.php:1791
+#: reportedip-hive.php:1793
 msgid "Retry failed."
 msgstr "Erneuter Versuch fehlgeschlagen."
 
-#: reportedip-hive.php:1809
+#: reportedip-hive.php:1811
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr "ReportedIP Hive - Warteschlange kritisch:"
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
-#: reportedip-hive.php:1812
+#: reportedip-hive.php:1814
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
 msgstr "%1$d Meldungen warten auf Verarbeitung. Ihr API-Kontingent ist möglicherweise nicht ausreichend. %2$s oder %3$s."
 
-#: reportedip-hive.php:1814
-#: reportedip-hive.php:1834
+#: reportedip-hive.php:1816
+#: reportedip-hive.php:1836
 msgid "Upgrade API tier"
 msgstr "API-Stufe upgraden"
 
-#: reportedip-hive.php:1815
+#: reportedip-hive.php:1817
 msgid "Manage queue"
 msgstr "Warteschlange verwalten"
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page
-#: reportedip-hive.php:1832
+#: reportedip-hive.php:1834
 #, php-format
 msgid "%1$d reports pending processing. %2$s for higher limits."
 msgstr "%1$d Meldungen warten auf Verarbeitung. %2$s für höhere Limits."
 
 #. translators: %s: link to settings page
-#: reportedip-hive.php:1856
+#: reportedip-hive.php:1858
 #, php-format
 msgid "No API key configured. %s"
 msgstr "Kein API-Schlüssel konfiguriert. %s"
 
-#: reportedip-hive.php:1857
+#: reportedip-hive.php:1859
 msgid "Configure now"
 msgstr "Jetzt konfigurieren"
 

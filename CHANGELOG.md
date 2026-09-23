@@ -2,6 +2,46 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Security
+
+- **A script that read the field names out of the page could pass the
+  form protection.** The execution proof planted its computation in the
+  page itself, with a starting value that depended only on the hour, so a
+  script that fetched the page once knew the decoy, the proof field and the
+  task, and solved the task in a few milliseconds. The computation check now
+  hands the browser a task from this site's own endpoint instead: signed with
+  the site salt, good for ten minutes, accepted once, and harder the faster
+  one network asks for tasks. The page carries nothing but the address of the
+  endpoint, identical for every visitor, so a full-page cache, LiteSpeed, WP
+  Rocket or a CDN keeps serving it unchanged, and the task travels in a POST
+  that no cache stores. Verified against the same script: refused without a
+  task, refused with a spent task, refused with a tampered one, through with
+  a fresh one, exactly once. The former hourly task and its
+  `reportedip_hive_form_proof_buckets` filter are gone.
+
+### Changed
+
+- **No visitor loses a message to the computation check.** Every refusal is
+  told to the sender by the form it came from, a task the server cannot mint
+  is handed out with zero difficulty rather than withheld, a verifier fault
+  answers with a pass, a plugin update restarts the day of grace and purges
+  the page cache so a page cached by the previous version keeps working, a
+  browser that submits before its task has come back is held for a moment
+  and then sent on, and the task is not bound to the visitor's address, so a
+  phone that changes networks between page load and submit is not refused.
+  Without HTTPS the task carries no arithmetic but keeps its signature,
+  expiry and single use, where before the plain marker decided alone.
+- **The proof script keeps out of script rewriters.** The tag carries
+  `data-cfasync="false"` for Cloudflare's Rocket Loader and `data-nowprocket`
+  for WP Rocket's combining; the script survives a delayed start on its own.
+  The endpoint is fetched on the scheme of the page, so a site behind a
+  proxy that terminates TLS is not stopped by a mixed-content block.
+- **The self-test on the Tools page works the new task.** The three passes
+  mint a real task, solve it and post it; the replay pass proves the single
+  use.
+
 ## [2.1.63] (2026-09-23)
 
 ### Security
