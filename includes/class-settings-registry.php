@@ -764,7 +764,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'tier'         => 'form_proof_pow',
 				'side_effects' => array( 'stamp_form_proof_pow' ),
 				'label'        => __( 'Computation check on forms', 'reportedip-hive' ),
-				'description'  => __( 'Give the form a small sum to work out in the background and check the answer on submit. A script that only copies the hidden field out of the page can no longer pass for a visitor, and nobody has to read a distorted image. Needs HTTPS.', 'reportedip-hive' ),
+				'description'  => __( 'Hand the form a small task that the browser fetches from this site and works out in the background. The task is signed, good once, expires in ten minutes and gets harder the faster one network asks for it. A script that only copies the hidden field out of the page can no longer pass for a visitor, and nobody has to read a distorted image. The page stays fully cacheable. Without HTTPS the task carries no arithmetic but keeps its signature and single use.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_form_proof_cf7'               => array(
 				'simple_form'  => 'cf7',

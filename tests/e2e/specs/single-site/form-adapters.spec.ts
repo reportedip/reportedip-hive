@@ -920,7 +920,7 @@ test.describe('form adapters', () => {
 
 			try {
 				await page.goto(GRAVITY_AJAX_PAGE);
-				await expect(page.locator('input.rip-fp-anchor[data-s]')).toHaveCount(1);
+				await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
 
 				await page.fill('textarea[name="input_2"]', 'An enquiry that forgot the name.');
 				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);

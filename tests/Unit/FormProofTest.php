@@ -268,27 +268,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 		/**
-		 * Solve a challenge the way the browser script does.
-		 *
-		 * @param int $bucket Challenge period.
-		 * @param int $bits   Required leading zero bits.
-		 * @return string
-		 */
-		private function solve( int $bucket, int $bits ): string {
-			$seed = \ReportedIP_Hive_Form_Proof::pow_seed( $bucket );
-
-			for ( $nonce = 0; $nonce < 2000000; $nonce++ ) {
-				$hex = dechex( $nonce );
-
-				if ( \ReportedIP_Hive_Form_Proof::leading_zero_bits( hash( 'sha256', $seed . $hex, true ) ) >= $bits ) {
-					return $bucket . '.' . $hex;
-				}
-			}
-
-			$this->fail( 'No solution found, the difficulty is out of hand.' );
-		}
-
-		/**
 		 * @dataProvider leading_zero_bit_cases
 		 *
 		 * @param string $hex      Digest as hex.
@@ -311,131 +290,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'twelve zero bits' => array( '000f', 12 ),
 				'two empty bytes'  => array( '0000ff', 16 ),
 				'all zero'         => array( '0000', 16 ),
-			);
-		}
-
-		public function test_a_solved_challenge_is_accepted(): void {
-			$bucket = 4711;
-
-			$this->assertTrue(
-				\ReportedIP_Hive_Form_Proof::pow_solves( $this->solve( $bucket, 8 ), $bucket, 8 )
-			);
-		}
-
-		/**
-		 * A page may come from a cache filled hours ago, so an older period
-		 * still counts. Older than the window does not.
-		 */
-		public function test_an_older_period_stays_valid_inside_the_window(): void {
-			$bucket  = 4711;
-			$span    = \ReportedIP_Hive_Form_Proof::POW_BUCKETS;
-			$payload = $this->solve( $bucket, 8 );
-
-			$this->assertTrue( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + $span - 1, 8 ) );
-			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + $span, 8 ) );
-		}
-
-		/**
-		 * The measure is the page cache in front of the site, and a week is what
-		 * LiteSpeed keeps public pages for out of the box. Every visitor of such
-		 * a site works on the starting value baked into the cached page, so a
-		 * shorter span turns all of them into failed submissions at once.
-		 */
-		public function test_a_week_old_page_is_still_answered(): void {
-			$bucket  = 4711;
-			$payload = $this->solve( $bucket, 8 );
-
-			$this->assertTrue( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 168 - 1, 8 ) );
-			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 192, 8 ) );
-		}
-
-		/**
-		 * The span is filtered, so a site behind a month-long CDN cache can buy
-		 * room. A value outside the range the single-use records can carry is
-		 * held at the boundary rather than honoured.
-		 */
-		public function test_the_bucket_span_is_clamped(): void {
-			$this->assertSame(
-				\ReportedIP_Hive_Form_Proof::POW_BUCKETS_MIN,
-				\ReportedIP_Hive_Form_Proof::clamp_buckets( 0 )
-			);
-			$this->assertSame(
-				\ReportedIP_Hive_Form_Proof::POW_BUCKETS_MIN,
-				\ReportedIP_Hive_Form_Proof::clamp_buckets( -50 )
-			);
-			$this->assertSame(
-				\ReportedIP_Hive_Form_Proof::POW_BUCKETS_MAX,
-				\ReportedIP_Hive_Form_Proof::clamp_buckets( PHP_INT_MAX )
-			);
-			$this->assertSame( 24, \ReportedIP_Hive_Form_Proof::clamp_buckets( 24 ) );
-			$this->assertSame( 720, \ReportedIP_Hive_Form_Proof::POW_BUCKETS_MAX );
-		}
-
-		public function test_a_clamped_span_reaches_the_verdict(): void {
-			$bucket  = 4711;
-			$payload = $this->solve( $bucket, 8 );
-
-			$this->assertTrue( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket, 8, 0 ) );
-			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 1, 8, 0 ) );
-			$this->assertTrue( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 719, 8, PHP_INT_MAX ) );
-			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, $bucket + 720, 8, PHP_INT_MAX ) );
-		}
-
-		public function test_a_period_from_the_future_is_refused(): void {
-			$bucket = 4711;
-
-			$this->assertFalse(
-				\ReportedIP_Hive_Form_Proof::pow_solves( $this->solve( $bucket, 8 ), $bucket - 1, 8 )
-			);
-		}
-
-		/**
-		 * The whole point: the value a bot can copy out of the page does not
-		 * solve anything.
-		 */
-		public function test_the_plain_marker_solves_nothing(): void {
-			$this->assertFalse(
-				\ReportedIP_Hive_Form_Proof::pow_solves( '1', \ReportedIP_Hive_Form_Proof::pow_bucket(), 12 )
-			);
-		}
-
-		/**
-		 * @dataProvider unusable_payloads
-		 *
-		 * @param string $payload Submitted proof value.
-		 */
-		public function test_an_unusable_payload_is_refused( string $payload ): void {
-			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload, 4711, 8 ) );
-		}
-
-		/**
-		 * @return array<string, array{0:string}>
-		 */
-		public static function unusable_payloads(): array {
-			return array(
-				'empty'               => array( '' ),
-				'no separator'        => array( '4711abc' ),
-				'empty nonce'         => array( '4711.' ),
-				'empty period'        => array( '.abc' ),
-				'three parts'         => array( '4711.ab.cd' ),
-				'period not a number' => array( 'abc.def' ),
-				'nonce not hex'       => array( '4711.zzzz' ),
-				'nonce too long'      => array( '4711.' . str_repeat( 'a', 33 ) ),
-				'period too long'     => array( str_repeat( '9', 13 ) . '.ab' ),
-			);
-		}
-
-		public function test_the_starting_value_differs_per_period(): void {
-			$this->assertNotSame(
-				\ReportedIP_Hive_Form_Proof::pow_seed( 4711 ),
-				\ReportedIP_Hive_Form_Proof::pow_seed( 4712 )
-			);
-		}
-
-		public function test_the_starting_value_is_stable_for_one_period(): void {
-			$this->assertSame(
-				\ReportedIP_Hive_Form_Proof::pow_seed( 4711 ),
-				\ReportedIP_Hive_Form_Proof::pow_seed( 4711 )
 			);
 		}
 
@@ -492,12 +346,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_the_challenge_reaches_the_markup(): void {
-			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'x', 'abc123', 4711, 12 );
+		public function test_the_challenge_endpoint_reaches_the_markup(): void {
+			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'x', 'https://example.test/wp-json/reportedip-hive/v1/form/challenge' );
 
-			$this->assertStringContainsString( 'data-s="abc123"', $markup );
-			$this->assertStringContainsString( 'data-b="4711"', $markup );
-			$this->assertStringContainsString( 'data-d="12"', $markup );
+			$this->assertStringContainsString( 'data-e="https://example.test/wp-json/reportedip-hive/v1/form/challenge"', $markup );
+			$this->assertStringNotContainsString( 'data-s', $markup );
 		}
 
 		/**
@@ -507,9 +360,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_markup_without_a_challenge_carries_no_attributes(): void {
 			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'Leave this field empty' );
 
-			$this->assertStringNotContainsString( 'data-s', $markup );
-			$this->assertStringNotContainsString( 'data-b', $markup );
-			$this->assertStringNotContainsString( 'data-d', $markup );
+			$this->assertStringNotContainsString( 'data-e', $markup );
 		}
 
 		/**
@@ -519,9 +370,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_the_allowlist_admits_the_challenge_attributes(): void {
 			$allowed = \ReportedIP_Hive_Form_Proof::anchor_kses();
 
-			$this->assertArrayHasKey( 'data-s', $allowed['input'] );
-			$this->assertArrayHasKey( 'data-b', $allowed['input'] );
-			$this->assertArrayHasKey( 'data-d', $allowed['input'] );
+			$this->assertArrayHasKey( 'data-e', $allowed['input'] );
+			$this->assertArrayNotHasKey( 'data-s', $allowed['input'] );
 		}
 
 		/**
@@ -680,25 +530,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'a second separator'           => array( '1~7~9', '1', null ),
 				'nothing before the separator' => array( '~7', '', 7 ),
 				'empty'                        => array( '', '', null ),
-			);
-		}
-
-		/**
-		 * The suffix has to come off before the computation is looked at: the
-		 * payload carries exactly two dot-separated parts and a trailing
-		 * duration would turn every solved challenge into a refusal.
-		 */
-		public function test_the_split_payload_still_solves_its_challenge(): void {
-			$bucket  = 4711;
-			$payload = $this->solve( $bucket, 8 );
-
-			$this->assertFalse( \ReportedIP_Hive_Form_Proof::pow_solves( $payload . '~7', $bucket, 8 ) );
-			$this->assertTrue(
-				\ReportedIP_Hive_Form_Proof::pow_solves(
-					\ReportedIP_Hive_Form_Proof::split_payload( $payload . '~7' )['proof'],
-					$bucket,
-					8
-				)
 			);
 		}
 

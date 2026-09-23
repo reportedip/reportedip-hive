@@ -388,16 +388,12 @@ class ReportedIP_Hive_Ajax_Handler {
 	/**
 	 * AJAX: judge one self-test pass of the form execution proof.
 	 *
-	 * The three passes run one request each, because a repeated answer is only
-	 * a repeat to a second request: {@see ReportedIP_Hive_Form_Proof::pow_accepts()}
-	 * memoises its answer for the request it runs in, so judging the same
-	 * payload twice in one call would read the memo instead of the single-use
-	 * record and the replay pass would prove nothing.
-	 *
-	 * Nothing is rebuilt here. The verdict comes out of the same pure
-	 * `evaluate()` and `resolve()` every real submission goes through, and the
-	 * single-use record is spent by the same `pow_accepts()`, so a pass that
-	 * comes back green means the enforced path is green.
+	 * The three passes run one request each. Nothing is rebuilt here: the
+	 * verdict comes out of the same pure `evaluate()` and `resolve()` every real
+	 * submission goes through, and the single-use record is spent by the same
+	 * {@see ReportedIP_Hive_Form_Challenge::verify()}, so a pass that comes back
+	 * green means the enforced path is green and the replay pass reads the
+	 * record the visitor pass wrote.
 	 *
 	 * @return void
 	 * @since  2.1.58
@@ -425,8 +421,14 @@ class ReportedIP_Hive_Ajax_Handler {
 		);
 
 		$verdict = ReportedIP_Hive_Form_Proof::evaluate( $submission, $field, $decoy );
-		$solved  = ReportedIP_Hive_Form_Proof::PROVED === $verdict && $required && $proof->pow_accepts( $payload );
-		$actual  = ReportedIP_Hive_Form_Proof::resolve( $verdict, $required, $solved );
+		$solved  = false;
+
+		if ( ReportedIP_Hive_Form_Proof::PROVED === $verdict && $required && ReportedIP_Hive_Form_Challenge::looks_like_token( $payload ) ) {
+			$parts  = ReportedIP_Hive_Form_Challenge::split( $payload );
+			$solved = 'ok' === ReportedIP_Hive_Form_Challenge::verify( $parts['token'], $parts['nonce'] );
+		}
+
+		$actual = ReportedIP_Hive_Form_Proof::resolve( $verdict, $required, $solved );
 
 		$key          = 'reportedip_hive_selftest_' . get_current_user_id();
 		$seen         = 'visitor' === $run ? array() : (array) get_transient( $key );

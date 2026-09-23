@@ -228,14 +228,14 @@ class ReportedIP_Hive_Tools_Page {
 		}
 
 		if ( empty( $state['secure'] ) ) {
-			return self::selftest_row( $label, 'warning', __( 'Off', 'reportedip-hive' ), __( 'This site is not reached over a secure connection, so no task is handed out. A browser can only work one out in a secure context, and demanding it here would turn every visitor into a suspect. The plain marker keeps deciding.', 'reportedip-hive' ) );
+			return self::selftest_row( $label, 'info', __( 'Bound only', 'reportedip-hive' ), __( 'This site is not reached over a secure connection, so the task is handed out with zero difficulty: a browser can only work one out in a secure context, and demanding it here would turn every visitor into a suspect. The task is still signed, expires and is good once, which already refuses a script that only copies the field name out of the page.', 'reportedip-hive' ) );
 		}
 
 		if ( ! empty( $state['pow_grace'] ) ) {
 			return self::selftest_row( $label, 'info', __( 'Starting up', 'reportedip-hive' ), __( 'A task is handed out already, and the plain marker still passes for the first day, so pages served from a cache filled before the switch are not refused.', 'reportedip-hive' ) );
 		}
 
-		return self::selftest_row( $label, 'success', __( 'On', 'reportedip-hive' ), __( 'Every protected form hands out a task and each answer is good once.', 'reportedip-hive' ) );
+		return self::selftest_row( $label, 'success', __( 'On', 'reportedip-hive' ), __( 'Every protected form fetches a signed task from this site; each answer is good once, expires in ten minutes and gets harder the faster one network asks.', 'reportedip-hive' ) );
 	}
 
 	/**
@@ -556,14 +556,18 @@ class ReportedIP_Hive_Tools_Page {
 			true
 		);
 
-		$seed   = '';
-		$bucket = 0;
-		$bits   = 0;
+		$token = '';
+		$seed  = '';
+		$bits  = 0;
 
 		if ( $proof->pow_enabled() ) {
-			$bucket = ReportedIP_Hive_Form_Proof::pow_bucket();
-			$seed   = ReportedIP_Hive_Form_Proof::pow_seed( $bucket );
-			$bits   = $proof->pow_bits();
+			$hardening = class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active();
+			$minted    = ReportedIP_Hive_Form_Challenge::mint(
+				ReportedIP_Hive_Form_Proof::connection_is_secure() ? ReportedIP_Hive_Form_Challenge::bits_for( 1, $hardening ) : 0
+			);
+			$token     = $minted['token'];
+			$seed      = $minted['seed'];
+			$bits      = $minted['bits'];
 		}
 
 		wp_localize_script(
@@ -574,8 +578,8 @@ class ReportedIP_Hive_Tools_Page {
 				'action'  => 'reportedip_hive_form_proof_selftest',
 				'nonce'   => wp_create_nonce( 'reportedip_hive_form_selftest' ),
 				'runs'    => self::SELFTEST_RUNS,
+				'token'   => $token,
 				'seed'    => $seed,
-				'bucket'  => (string) $bucket,
 				'bits'    => $bits,
 				'strings' => array(
 					'running'  => __( 'Running the three passes...', 'reportedip-hive' ),

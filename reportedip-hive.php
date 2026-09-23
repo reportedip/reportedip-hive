@@ -433,6 +433,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-registration-guard.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cache-flush.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-form-proof.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-form-challenge.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-form-adapters.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-reputation-gate.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
@@ -563,6 +564,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Disposable_Email::get_instance();
 		ReportedIP_Hive_Registration_Guard::get_instance();
 		ReportedIP_Hive_Form_Proof::get_instance();
+		ReportedIP_Hive_Form_Challenge::get_instance();
 		ReportedIP_Hive_Form_Adapters::get_instance();
 		ReportedIP_Hive_Reputation_Gate::get_instance();
 		ReportedIP_Hive_Comment_Honeypot::get_instance();

@@ -149,48 +149,11 @@ class ReportedIP_Hive_Form_Proof {
 	const OPT_POW_SINCE = 'reportedip_hive_form_proof_pow_since';
 
 	/**
-	 * Leading zero bits a solution has to produce. Twelve is roughly four
-	 * thousand attempts, a few milliseconds in a browser. The number is
-	 * deliberately small: the barrier is having to run the algorithm at all,
-	 * not the arithmetic itself. An attacker hashes natively and would win any
-	 * contest of raw speed, so buying difficulty past the point a visitor
-	 * notices buys nothing.
+	 * Plugin version the computation was last armed for. A version change
+	 * restarts the grace, because a page cache filled by the previous version
+	 * still carries the previous markup and its readers must not be refused.
 	 */
-	const POW_BITS = 12;
-
-	/**
-	 * Leading zero bits while the hardening mode is active.
-	 */
-	const POW_BITS_HARDENING = 16;
-
-	/**
-	 * Length of one challenge period in seconds.
-	 */
-	const POW_WINDOW = 3600;
-
-	/**
-	 * How many periods back a solution stays acceptable, a week by default.
-	 *
-	 * The number is large on purpose. Freshness buys nothing here: the starting
-	 * value is derived from the authentication salt and the period alone, so an
-	 * attacker computes it for whatever period they like and always works on the
-	 * current one. A tighter limit costs them nothing and costs a real visitor
-	 * everything, because the page they are looking at was served by a cache
-	 * whose lifetime is the actual measure. LiteSpeed keeps public pages for a
-	 * week out of the box, a CDN in front of it longer still. The only thing the
-	 * span pays for is how long the single-use records have to live.
-	 */
-	const POW_BUCKETS = 168;
-
-	/**
-	 * Shortest span a filter may ask for.
-	 */
-	const POW_BUCKETS_MIN = 1;
-
-	/**
-	 * Longest span a filter may ask for, thirty days.
-	 */
-	const POW_BUCKETS_MAX = 720;
+	const OPT_POW_VERSION = 'reportedip_hive_form_proof_pow_version';
 
 	/**
 	 * Grace after switching the computation on, during which a page served
@@ -240,11 +203,11 @@ class ReportedIP_Hive_Form_Proof {
 	private $field = null;
 
 	/**
-	 * Memoised computation results for this request, keyed by payload.
+	 * Why the submission last judged was refused, null when it was not.
 	 *
-	 * @var array<string, bool>
+	 * @var string|null
 	 */
-	private $accepted = array();
+	private $reason = null;
 
 	/**
 	 * Measured fill duration of the submission last judged, null when none
@@ -297,6 +260,53 @@ class ReportedIP_Hive_Form_Proof {
 			}
 		);
 		add_action( 'lostpassword_post', array( $this, 'check_lostpassword' ), 10, 1 );
+		add_action( 'init', array( $this, 'restamp_after_update' ), 5 );
+		add_filter( 'script_loader_tag', array( __CLASS__, 'script_tag' ), 10, 2 );
+	}
+
+	/**
+	 * Restart the grace when the plugin version changes while the computation
+	 * is on.
+	 *
+	 * A page cache filled by the previous version still carries the previous
+	 * markup, and a browser reading it must not be refused for the lifetime
+	 * of that cache. The marker keeps passing for a day, the cache is purged,
+	 * and no visitor loses a message over an update.
+	 *
+	 * @since 2.1.64
+	 */
+	public function restamp_after_update() {
+		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_POW, false ) ) {
+			return;
+		}
+
+		$seen = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_POW_VERSION, '' );
+
+		if ( REPORTEDIP_HIVE_VERSION === $seen ) {
+			return;
+		}
+
+		ReportedIP_Hive_Option_Routing::set( self::OPT_POW_VERSION, REPORTEDIP_HIVE_VERSION );
+		ReportedIP_Hive_Option_Routing::set( self::OPT_POW_SINCE, time() );
+		self::purge_pages();
+	}
+
+	/**
+	 * Keep the proof script out of Cloudflare's Rocket Loader and WP Rocket's
+	 * combining, both of which reorder scripts. The script survives a delayed
+	 * start on its own; this only spares it a rewrite.
+	 *
+	 * @param string $tag    Script tag.
+	 * @param string $handle Script handle.
+	 * @return string
+	 * @since  2.1.64
+	 */
+	public static function script_tag( $tag, $handle ) {
+		if ( 'reportedip-hive-form-proof' !== $handle ) {
+			return $tag;
+		}
+
+		return str_replace( '<script ', '<script data-cfasync="false" data-nowprocket ', (string) $tag );
 	}
 
 	/**
@@ -399,7 +409,6 @@ class ReportedIP_Hive_Form_Proof {
 	 */
 	public function pow_enabled() {
 		return $this->is_enabled()
-			&& self::connection_is_secure()
 			&& (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_POW, false )
 			&& $this->pow_available();
 	}
@@ -616,64 +625,6 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
-	 * The current challenge period.
-	 *
-	 * @return int
-	 * @since  2.1.58
-	 */
-	public static function pow_bucket() {
-		return intdiv( time(), self::POW_WINDOW );
-	}
-
-	/**
-	 * The public starting value for one period.
-	 *
-	 * Derived from the authentication salt, so it differs per install without
-	 * a secret of its own, and it depends on nothing about the request. That
-	 * is what keeps the rendered form cacheable.
-	 *
-	 * @param int $bucket Challenge period.
-	 * @return string
-	 * @since  2.1.58
-	 */
-	public static function pow_seed( $bucket ) {
-		return substr( hash_hmac( 'sha256', (string) (int) $bucket, wp_salt( 'auth' ) ), 0, 16 );
-	}
-
-	/**
-	 * Hold a requested span inside the range the single-use records can carry.
-	 * Pure, so the arithmetic is testable without WordPress.
-	 *
-	 * @param mixed $buckets Requested number of periods.
-	 * @return int
-	 * @since  2.1.58
-	 */
-	public static function clamp_buckets( $buckets ) {
-		return max( self::POW_BUCKETS_MIN, min( self::POW_BUCKETS_MAX, (int) $buckets ) );
-	}
-
-	/**
-	 * How many periods back this site accepts a solution from.
-	 *
-	 * @return int
-	 * @since  2.1.58
-	 */
-	public function pow_buckets() {
-		/**
-		 * Filters how many hourly periods back a solution stays acceptable.
-		 *
-		 * The measure is the lifetime of the page cache in front of the site, so
-		 * a CDN holding pages for a month wants the ceiling here.
-		 *
-		 * @param int $buckets Number of periods, clamped to 1..720 afterwards.
-		 * @since 2.1.58
-		 */
-		$buckets = apply_filters( 'reportedip_hive_form_proof_buckets', self::POW_BUCKETS );
-
-		return self::clamp_buckets( $buckets );
-	}
-
-	/**
 	 * How many leading zero bits a raw digest carries.
 	 *
 	 * @param string $digest Raw binary digest.
@@ -702,126 +653,6 @@ class ReportedIP_Hive_Form_Proof {
 		}
 
 		return $bits;
-	}
-
-	/**
-	 * Whether a payload solves its own challenge. Pure, so the whole rule is
-	 * testable without WordPress beyond the salt.
-	 *
-	 * The payload is `period.nonce`. The period travels with it because the
-	 * page may have come from a cache and the period may have rolled over
-	 * since; the starting value is recomputed from it rather than trusted.
-	 *
-	 * @param string $payload    Submitted proof value.
-	 * @param int    $now_bucket Current challenge period.
-	 * @param int    $bits       Required leading zero bits.
-	 * @param int    $buckets    How many periods back stay acceptable.
-	 * @return bool
-	 * @since  2.1.58
-	 */
-	public static function pow_solves( $payload, $now_bucket, $bits, $buckets = self::POW_BUCKETS ) {
-		$bits = (int) $bits;
-
-		if ( $bits < 1 || $bits > 32 ) {
-			return false;
-		}
-
-		$parts = explode( '.', (string) $payload, 3 );
-
-		if ( 2 !== count( $parts ) ) {
-			return false;
-		}
-
-		if ( ! preg_match( '/^[0-9]{1,12}$/', $parts[0] ) || ! preg_match( '/^[0-9a-f]{1,32}$/', $parts[1] ) ) {
-			return false;
-		}
-
-		$age = (int) $now_bucket - (int) $parts[0];
-
-		if ( $age < 0 || $age >= self::clamp_buckets( $buckets ) ) {
-			return false;
-		}
-
-		$digest = hash( 'sha256', self::pow_seed( (int) $parts[0] ) . $parts[1], true );
-
-		return self::leading_zero_bits( $digest ) >= $bits;
-	}
-
-	/**
-	 * Required difficulty for this request.
-	 *
-	 * @return int
-	 * @since  2.1.58
-	 */
-	public function pow_bits() {
-		$bits = self::POW_BITS;
-
-		if ( class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active() ) {
-			$bits = self::POW_BITS_HARDENING;
-		}
-
-		/**
-		 * Filters the leading zero bits a form computation has to produce.
-		 *
-		 * @param int $bits Required bits, clamped to 4..24 afterwards.
-		 * @since 2.1.58
-		 */
-		$bits = (int) apply_filters( 'reportedip_hive_form_proof_bits', $bits );
-
-		return max( 4, min( 24, $bits ) );
-	}
-
-	/**
-	 * Whether a payload solves its challenge and has not been seen before.
-	 *
-	 * The single-use record is one transient per accepted submission, which is
-	 * the ceiling of this approach: a site taking thousands of submissions an
-	 * hour writes thousands of short-lived rows. Moving the record into the
-	 * object cache is the upgrade path if that ever shows up in a profile.
-	 *
-	 * The per-request memo is not an optimisation. Spending the answer writes
-	 * the single-use record, so a second look at the same submission would read
-	 * its own record and call a good answer a replay.
-	 *
-	 * @param string $payload Submitted proof value.
-	 * @return bool
-	 * @since  2.1.58
-	 */
-	public function pow_accepts( $payload ) {
-		$payload = (string) $payload;
-
-		if ( isset( $this->accepted[ $payload ] ) ) {
-			return $this->accepted[ $payload ];
-		}
-
-		$this->accepted[ $payload ] = $this->spend_pow( $payload );
-
-		return $this->accepted[ $payload ];
-	}
-
-	/**
-	 * Verify a payload once and mark its answer as used.
-	 *
-	 * @param string $payload Submitted proof value.
-	 * @return bool
-	 * @since  2.1.58
-	 */
-	private function spend_pow( $payload ) {
-		$buckets = $this->pow_buckets();
-
-		if ( ! self::pow_solves( $payload, self::pow_bucket(), $this->pow_bits(), $buckets ) ) {
-			return false;
-		}
-
-		$key = 'rip_fp_' . hash( 'sha256', $payload );
-
-		if ( false !== get_transient( $key ) ) {
-			return false;
-		}
-
-		set_transient( $key, 1, self::POW_WINDOW * $buckets );
-
-		return true;
 	}
 
 	/**
@@ -896,23 +727,17 @@ class ReportedIP_Hive_Form_Proof {
 			$this->note_render();
 		}
 
-		$seed   = '';
-		$bucket = 0;
-		$bits   = 0;
+		$endpoint = '';
 
-		if ( $this->pow_enabled() ) {
-			$bucket = self::pow_bucket();
-			$seed   = self::pow_seed( $bucket );
-			$bits   = $this->pow_bits();
+		if ( $this->pow_enabled() && class_exists( 'ReportedIP_Hive_Form_Challenge' ) ) {
+			$endpoint = rest_url( ReportedIP_Hive_Form_Challenge::NAMESPACE_STR . ReportedIP_Hive_Form_Challenge::ROUTE );
 		}
 
 		return self::anchor_markup(
 			$this->decoy_name( $surface ),
 			$this->proof_name( $surface ),
 			esc_html__( 'Leave this field empty', 'reportedip-hive' ),
-			$seed,
-			$bucket,
-			$bits
+			$endpoint
 		);
 	}
 
@@ -930,28 +755,24 @@ class ReportedIP_Hive_Form_Proof {
 	 * identifier would fix the markup and break the cache, so the association
 	 * runs through the nesting instead.
 	 *
-	 * With a starting value present, `data-s`, `data-b` and `data-d` carry the
-	 * computation challenge. All three depend only on the current period, not
-	 * on the request, so the markup stays byte-identical for every visitor and
-	 * a page cache keeps working. Without one the output is unchanged.
+	 * With the computation on, `data-e` names the endpoint the script fetches
+	 * its task from. The address is the same for every visitor, so the markup
+	 * stays byte-identical and a page cache keeps working; the visitor's own
+	 * task never touches the page. Without one the output is unchanged.
 	 *
-	 * @param string $decoy  Anchor field name.
-	 * @param string $proof  Proof field name.
-	 * @param string $label  Visually hidden label text.
-	 * @param string $seed   Challenge starting value, empty for none.
-	 * @param int    $bucket Challenge period.
-	 * @param int    $bits   Required leading zero bits.
+	 * @param string $decoy    Anchor field name.
+	 * @param string $proof    Proof field name.
+	 * @param string $label    Visually hidden label text.
+	 * @param string $endpoint Challenge endpoint URL, empty for none.
 	 * @return string
 	 * @since  2.1.53
 	 */
-	public static function anchor_markup( $decoy, $proof, $label, $seed = '', $bucket = 0, $bits = 0 ) {
+	public static function anchor_markup( $decoy, $proof, $label, $endpoint = '' ) {
 		$decoy     = esc_attr( (string) $decoy );
 		$challenge = '';
 
-		if ( '' !== (string) $seed ) {
-			$challenge = ' data-s="' . esc_attr( (string) $seed ) . '"'
-				. ' data-b="' . esc_attr( (string) (int) $bucket ) . '"'
-				. ' data-d="' . esc_attr( (string) (int) $bits ) . '"';
+		if ( '' !== (string) $endpoint ) {
+			$challenge = ' data-e="' . esc_url( (string) $endpoint ) . '"';
 		}
 
 		return '<div class="rip-hp-field" aria-hidden="true">'
@@ -992,9 +813,7 @@ class ReportedIP_Hive_Form_Proof {
 				'value'        => true,
 				'class'        => true,
 				'data-n'       => true,
-				'data-s'       => true,
-				'data-b'       => true,
-				'data-d'       => true,
+				'data-e'       => true,
 				'tabindex'     => true,
 				'autocomplete' => true,
 			),
@@ -1047,9 +866,9 @@ class ReportedIP_Hive_Form_Proof {
 	 *
 	 * The duration rides on the existing field rather than a second hidden one,
 	 * which keeps the markup as small and as cacheable as it is today. It is
-	 * stripped here before anything else looks at the value, because
-	 * {@see pow_solves()} expects exactly two dot-separated parts and would
-	 * refuse a payload carrying a suffix.
+	 * stripped here before anything else looks at the value, because the
+	 * challenge verifier reads the solution off the last dot and a suffix would
+	 * turn every solved task into a refusal.
 	 *
 	 * An unusable suffix never devalues the proof. A client that writes
 	 * nonsense after the separator, or one from a release that knew nothing
@@ -1135,6 +954,7 @@ class ReportedIP_Hive_Form_Proof {
 	 */
 	public function verdict_for_request( $surface ) {
 		$this->seconds = null;
+		$this->reason  = null;
 
 		if ( ! $this->surface_enabled( $surface ) ) {
 			return self::ABSENT;
@@ -1154,10 +974,39 @@ class ReportedIP_Hive_Form_Proof {
 		$verdict = self::evaluate( $post, $field, $this->decoy_name( $surface ) );
 
 		if ( self::PROVED !== $verdict || ! $this->pow_required() ) {
-			return self::resolve( $verdict, false, false );
+			return $verdict;
 		}
 
-		return self::resolve( $verdict, true, $this->pow_accepts( (string) $post[ $field ] ) );
+		$value = (string) $post[ $field ];
+
+		if ( ! ReportedIP_Hive_Form_Challenge::looks_like_token( $value ) ) {
+			$this->reason = 'marker';
+
+			return self::FAILED;
+		}
+
+		$parts  = ReportedIP_Hive_Form_Challenge::split( $value );
+		$result = ReportedIP_Hive_Form_Challenge::verify( $parts['token'], $parts['nonce'] );
+
+		if ( 'ok' === $result ) {
+			return self::PROVED;
+		}
+
+		$this->reason = $result;
+
+		return self::FAILED;
+	}
+
+	/**
+	 * Why the submission last judged by {@see verdict_for_request()} was
+	 * refused: `marker` for a plain marker where a task was due, otherwise
+	 * the word {@see ReportedIP_Hive_Form_Challenge::verify()} answered with.
+	 *
+	 * @return string|null
+	 * @since  2.1.64
+	 */
+	public function last_reason(): ?string {
+		return $this->reason;
 	}
 
 	/**
@@ -1308,6 +1157,10 @@ class ReportedIP_Hive_Form_Proof {
 
 		if ( null !== $this->seconds ) {
 			$details['seconds'] = $this->seconds;
+		}
+
+		if ( null !== $this->reason ) {
+			$details['reason'] = $this->reason;
 		}
 
 		$logger->log_security_event(

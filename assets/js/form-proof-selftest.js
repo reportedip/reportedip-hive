@@ -72,6 +72,10 @@
 	 * @since 2.1.58
 	 */
 	async function solve() {
+		if ( ! config.bits ) {
+			return config.token + '.0';
+		}
+
 		var encoder = new TextEncoder();
 		var slot = new Uint32Array( 1 );
 
@@ -87,7 +91,7 @@
 			spent++;
 
 			if ( leadingZeroBits( new Uint8Array( digest ) ) >= config.bits ) {
-				return config.bucket + '.' + hex;
+				return config.token + '.' + hex;
 			}
 		}
 
@@ -151,8 +155,8 @@
 
 		var proof = '1';
 
-		if ( config.seed ) {
-			if ( ! window.crypto || ! window.crypto.subtle || 'undefined' === typeof TextEncoder ) {
+		if ( config.token ) {
+			if ( config.bits && ( ! window.crypto || ! window.crypto.subtle || 'undefined' === typeof TextEncoder ) ) {
 				say( config.strings.insecure );
 				button.disabled = false;
 				return;

@@ -104,12 +104,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'REPORTEDIP_HIVE_DISABLE_FORM_PROOF', $rows[0]['note'] );
 		}
 
-		public function test_a_plain_connection_says_why_no_task_is_handed_out(): void {
+		public function test_a_plain_connection_says_the_task_is_bound_only(): void {
 			$rows = ReportedIP_Hive_Tools_Page::selftest_inventory( $this->state( array( 'secure' => false ) ) );
 
-			$this->assertSame( 'warning', $rows[1]['badge'] );
+			$this->assertSame( 'info', $rows[1]['badge'] );
 			$this->assertStringContainsString( 'secure connection', $rows[1]['note'] );
-			$this->assertStringContainsString( 'plain marker', $rows[1]['note'] );
+			$this->assertStringContainsString( 'good once', $rows[1]['note'] );
 		}
 
 		public function test_the_plan_is_named_before_the_switch(): void {
