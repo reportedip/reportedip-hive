@@ -175,11 +175,18 @@ function setForcedHttps(on: boolean): void {
 	]);
 }
 
-/** Demand a solved computation, with its own grace already run out, or not. */
+/**
+ * Demand a solved computation, with its own grace already run out, or not.
+ *
+ * Writing the option directly skips the page purge the settings path runs,
+ * and Elementor keeps rendered widget markup in post meta, so a page seen
+ * earlier in the run would still carry an anchor without the endpoint.
+ */
 function setComputation(on: boolean): void {
 	php(
 		`ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow', ${on ? 1 : 0});` +
-			` ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_since', ${on ? 'time() - 172800' : 0});`
+			` ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_since', ${on ? 'time() - 172800' : 0});` +
+			` ReportedIP_Hive_Cache_Flush::purge_pages();`
 	);
 }
 
@@ -724,6 +731,60 @@ test.describe('form adapters', () => {
 		await page.waitForLoadState('domcontentloaded');
 
 		expect(formidableEntryCount()).toBe(1);
+	});
+
+	/**
+	 * Case 2b: the same two forms with the bound challenge demanded. Elementor
+	 * sends over its own background request and Formidable over a page load,
+	 * and both have to carry a computed answer the way Gravity Forms and
+	 * WPForms do; these are the specs that keep every adapter on one footing.
+	 */
+	test('a browser passes the computation on Elementor', async ({ page }) => {
+		setForcedHttps(true);
+		setComputation(true);
+
+		try {
+			const logsBefore = failureLogCount();
+
+			await page.goto(ELEMENTOR_PAGE);
+			await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
+
+			await page.fill('input[name="form_fields[name]"]', 'E2E Reader');
+			await page.fill('textarea[name="form_fields[message]"]', 'A computed enquiry from a reader.');
+			await page.click('.elementor-button[type="submit"]');
+
+			await expect(page.locator('.elementor-message-success')).toBeVisible({ timeout: 60000 });
+			expect(failureLogCount()).toBe(logsBefore);
+		} finally {
+			setComputation(false);
+			setForcedHttps(false);
+		}
+	});
+
+	test('a browser passes the computation on Formidable', async ({ page }) => {
+		setForcedHttps(true);
+		setComputation(true);
+		clearFormidableEntries();
+
+		try {
+			await page.goto(FRM_PAGE);
+			await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
+
+			await page.fill(`input[name="item_meta[${FRM_NAME_FIELD}]"]`, 'E2E Reader');
+			await page.fill(`textarea[name="item_meta[${FRM_TEXT_FIELD}]"]`, 'A computed enquiry from a reader.');
+
+			const sent = page.waitForResponse(
+				(response) => 'POST' === response.request().method() && response.url().includes(FRM_PAGE),
+				{ timeout: 60000 }
+			);
+			await page.click('.frm_button_submit');
+			await sent;
+
+			expect(formidableEntryCount()).toBe(1);
+		} finally {
+			setComputation(false);
+			setForcedHttps(false);
+		}
 	});
 
 	/** Case 3: a bare POST carrying none of our fields, past the grace. */
@@ -1306,6 +1367,44 @@ test.describe('form adapters', () => {
 			expect(umUserCount(), 'a reader with a browser must get an account').toBe(1);
 
 			clearUmUsers();
+		});
+
+		test('a browser passes the computation on Ultimate Member', async ({ page }) => {
+			test.skip(UM_REGISTER_FORM === '0', 'Ultimate Member is not installed on this stack');
+
+			setAdapters(true);
+			expireGrace();
+			setForcedHttps(true);
+			setComputation(true);
+			clearUmUsers();
+			clearRegistrationAttempts();
+
+			try {
+				const login = `ripe2eumc${Date.now().toString().slice(-6)}`;
+
+				await page.goto(UM_REGISTER_PAGE);
+				await expect(page.locator('form input.rip-fp-anchor[data-e]')).toHaveCount(1);
+
+				await page.fill(`input[name="user_login-${UM_REGISTER_FORM}"]`, login);
+				await page.fill(`input[name="user_email-${UM_REGISTER_FORM}"]`, `${login}@example.com`);
+				await page.fill(`input[name="user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
+				await page.fill(`input[name="confirm_user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
+				await page.click('input[type="submit"].um-button');
+
+				/**
+				 * The script may hold the submit for up to eight seconds while
+				 * the task is still being solved, so the page is only counted
+				 * once Ultimate Member has sent the new account on to its
+				 * profile address.
+				 */
+				await page.waitForURL(new RegExp(login), { timeout: 60000 });
+
+				expect(umUserCount(), 'a computed sign-up must open an account').toBe(1);
+			} finally {
+				setComputation(false);
+				setForcedHttps(false);
+				clearUmUsers();
+			}
 		});
 
 		/**

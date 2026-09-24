@@ -22,6 +22,18 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **Ultimate Member sign-ups failed the computation check.** Ultimate
+  Member sends its forms with a jQuery-triggered submit, which fires no
+  submit event, so the proof script never saw the submission: the answer
+  was not written, the held submit never happened, and a visitor who
+  clicked before the task had come back was refused as unproven. The
+  script now listens to jQuery-triggered submits as well and treats a
+  submission prepared within the last second as the same one, because
+  Gravity Forms triggers the same jQuery submit right after its own
+  pre-submission hook. Every adapter now has a browser spec with the
+  computation demanded: Contact Form 7, Elementor, Formidable, Gravity
+  Forms, WPForms and Ultimate Member.
+
 - **The "Switch on Extended Protection" card never appeared on PHP-FPM
   sites.** The dashboard asked whether the server reads `.htaccess`, but the
   one-click setup writes `.user.ini` under PHP-FPM, CGI and LiteSpeed, so

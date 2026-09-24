@@ -41,6 +41,7 @@
 	var mining = false;
 	var pausedUntil = 0;
 	var bound = false;
+	var jqueryBound = false;
 
 	function field( form, name ) {
 		var input = form.querySelector( 'input[name="' + name + '"]' );
@@ -247,6 +248,7 @@
 			refill();
 		}
 
+		anchor.dataset.s = now();
 		stamp( form, anchor );
 	}
 
@@ -467,6 +469,61 @@
 	}
 
 	/**
+	 * See a submission that jQuery started.
+	 *
+	 * A plugin that sends its form with `jQuery( form ).trigger( 'submit' )`
+	 * (Ultimate Member does, on every button) runs only jQuery's own handlers
+	 * and then calls the form's `submit()` method, which fires no event, so
+	 * the listener below never sees the submission. This handler sees exactly
+	 * those: a native submit reaches jQuery too, but with `isTrigger` unset,
+	 * and is left to the listener so no submission is counted twice.
+	 *
+	 * Gravity Forms triggers the very same jQuery submit right after its own
+	 * `pre_submission` filter has already had the form answered, and a second
+	 * answer would spend the stock and leave the field empty. A submission
+	 * prepared within the last second is therefore the same submission and
+	 * is sent as it is; a real second send of an AJAX form takes longer than
+	 * that, because the sender has to see the first one answered.
+	 *
+	 * @since 2.1.65
+	 */
+	function jquery() {
+		if ( jqueryBound || ! window.jQuery || ! window.jQuery.fn || ! window.jQuery.fn.on ) {
+			return;
+		}
+
+		jqueryBound = true;
+
+		window.jQuery( document ).on( 'submit', 'form', function ( event ) {
+			if ( ! event.isTrigger ) {
+				return;
+			}
+
+			var form = this;
+			var anchor = anchorOf( form );
+
+			if ( ! anchor || ( anchor.dataset.s && now() - parseFloat( anchor.dataset.s ) < 1000 ) ) {
+				return;
+			}
+
+			if ( anchor.dataset.e && 'ready' !== anchor.dataset.u && ! stock.length && ! anchor.dataset.w && endpoint() ) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+
+				anchor.dataset.w = 'held';
+
+				untilReady( anchor, HOLD ).then( function () {
+					resubmit( form, null );
+				} );
+
+				return;
+			}
+
+			onSubmit( form );
+		} );
+	}
+
+	/**
 	 * Take in a form that reached the page after the first pass.
 	 *
 	 * A form rendered again after a failed validation, or loaded into a popup,
@@ -481,6 +538,7 @@
 		refill();
 		markers();
 		gravity();
+		jquery();
 	}
 
 	/**
