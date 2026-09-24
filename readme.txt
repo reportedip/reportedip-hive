@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.65
+Stable tag: 2.1.66
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -470,6 +470,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.66 =
+New: form protection on Forminator (Business), whether the form sits in the page or is loaded afterwards. A refusal is shown to the sender at the form, before the entry is stored and before the mail goes out.
+Security: a filled decoy is blocked and reported on the first try instead of the third, on every protected form. A visitor whose browser never ran the script is untouched and still only refused.
+Security: a whitelisted address can no longer be blocked by a sensor that acts without filling a counter first.
+Fix: the community report now names the form or the spam signals instead of reading "suspicious activity".
 
 = 2.1.65 =
 
