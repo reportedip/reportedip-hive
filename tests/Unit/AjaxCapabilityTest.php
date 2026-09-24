@@ -166,7 +166,15 @@ class AjaxCapabilityTest extends TestCase {
 	}
 
 	public function test_no_handler_checks_a_capability_inline() {
-		foreach ( $this->handler_bodies() as $handler => $body ) {
+		$bodies = $this->handler_bodies();
+
+		$this->assertGreaterThanOrEqual(
+			count( self::WRITING_HANDLERS ),
+			count( $bodies ),
+			'No handler body was extracted, the search pattern has drifted from the code.'
+		);
+
+		foreach ( $bodies as $handler => $body ) {
 			$this->assertStringNotContainsString(
 				'current_user_can(',
 				$body,

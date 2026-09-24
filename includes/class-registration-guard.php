@@ -535,41 +535,34 @@ final class ReportedIP_Hive_Registration_Guard {
 
 		$proof = ReportedIP_Hive_Form_Proof::get_instance();
 
-		if ( ReportedIP_Hive_Form_Proof::FAILED !== $proof->verdict_for_request( 'register' ) ) {
+		/*
+		 * The lenient reading: a sign-up form served from a cache filled
+		 * before the anchor existed must not lock anyone out. A filled decoy
+		 * and a failed proof are refused, which is what every other surface
+		 * does and what this path did not do until 2.1.66.
+		 */
+		$message = $proof->enforce( 'register', false );
+
+		if ( '' === $message ) {
 			return false;
 		}
 
-		if ( $proof->report_only() ) {
-			$logger = self::logger();
-			if ( $logger instanceof ReportedIP_Hive_Logger ) {
-				$logger->log_security_event(
-					'registration_denied',
-					ReportedIP_Hive::get_client_ip(),
-					array(
-						'reason'           => 'no_js_proof',
-						'surface'          => $surface,
-						'report_only_mode' => true,
-					),
-					'low'
-				);
-			}
+		$errors->add( 'reportedip_hive_form_proof', $message );
 
-			return false;
-		}
-
-		$errors->add(
-			'reportedip_hive_form_proof',
-			__( 'This form needs JavaScript to be submitted. Switch it on and try again.', 'reportedip-hive' )
-		);
-
+		/*
+		 * A second row next to the shared `form_proof_failed` one, because the
+		 * registration view is where an operator looks when a sign-up did not
+		 * arrive, and it filters on this event.
+		 */
 		$logger = self::logger();
 		if ( $logger instanceof ReportedIP_Hive_Logger ) {
 			$logger->log_security_event(
 				'registration_denied',
 				ReportedIP_Hive::get_client_ip(),
 				array(
-					'reason'  => 'no_js_proof',
+					'reason'  => 'form_proof',
 					'surface' => $surface,
+					'verdict' => (string) $proof->last_verdict(),
 				),
 				'low'
 			);

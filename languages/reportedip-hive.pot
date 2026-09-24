@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-24T09:56:00+00:00\n"
+"POT-Creation-Date: 2026-09-24T14:51:10+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -7252,24 +7252,23 @@ msgstr ""
 msgid "%s (threshold reached)"
 msgstr ""
 
-#: includes/class-form-adapters.php:1098
-#: includes/class-registration-guard.php:562
-msgid "This form needs JavaScript to be submitted. Switch it on and try again."
-msgstr ""
-
-#: includes/class-form-adapters.php:1101
-msgid "Your submission was not accepted. Please reload the page and try again."
-msgstr ""
-
 #: includes/class-form-challenge.php:411
 msgid "Too many requests. Please try again in a moment."
 msgstr ""
 
-#: includes/class-form-proof.php:740
+#: includes/class-form-proof.php:753
 msgid "Leave this field empty"
 msgstr ""
 
-#: includes/class-form-proof.php:1110
+#: includes/class-form-proof.php:1169
+msgid "This form needs JavaScript to be submitted. Switch it on and try again."
+msgstr ""
+
+#: includes/class-form-proof.php:1172
+msgid "Your submission was not accepted. Please reload the page and try again."
+msgstr ""
+
+#: includes/class-form-proof.php:1273
 msgid "This form needs JavaScript to be submitted. Switch it on and try again. If you cannot, ask another administrator to reset your password, or use WP-CLI on the server."
 msgstr ""
 
@@ -8103,19 +8102,19 @@ msgstr ""
 msgid "%d reports are waiting to be submitted. The queue drains faster on a higher tier, or you can process it manually from the API queue tab."
 msgstr ""
 
-#: includes/class-registration-guard.php:606
+#: includes/class-registration-guard.php:599
 msgid "Registration is not available from your network."
 msgstr ""
 
-#: includes/class-registration-guard.php:661
+#: includes/class-registration-guard.php:654
 msgid "Too many registrations from your network. Please try again later."
 msgstr ""
 
-#: includes/class-registration-guard.php:699
+#: includes/class-registration-guard.php:692
 msgid "This username is not allowed. Please choose another one."
 msgstr ""
 
-#: includes/class-registration-guard.php:751
+#: includes/class-registration-guard.php:744
 msgid "This e-mail address cannot be used for registration."
 msgstr ""
 

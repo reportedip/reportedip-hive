@@ -288,13 +288,17 @@ namespace ReportedIP\Hive\Tests\Unit {
 				glob( $root . '/reportedip-hive.php' ) ?: array()
 			);
 
+			$stamps = 0;
+
 			foreach ( $sources as $file ) {
-				$body = (string) file_get_contents( $file );
+				$body    = (string) file_get_contents( $file );
+				$stamps += preg_match_all( "/'(?:timestamp|occurred_at)'\s*=>/", $body );
 				if ( 1 === preg_match( "/'(?:timestamp|occurred_at)'\s*=>\s*current_time\(\s*'mysql'\s*\)/", $body ) ) {
 					$offend[] = basename( $file );
 				}
 			}
 
+			$this->assertGreaterThan( 0, $stamps, 'No log detail stamp was found, the search pattern has drifted from the code.' );
 			$this->assertSame( array(), $offend, 'These files stamp a log detail in site-local time; use current_time( \'mysql\', true ).' );
 		}
 

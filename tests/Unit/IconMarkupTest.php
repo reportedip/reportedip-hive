@@ -50,9 +50,11 @@ final class IconMarkupTest extends TestCase {
 	 */
 	public function test_no_svg_draws_a_zero_length_line_without_a_stroke_cap(): void {
 		$offenders = array();
+		$scanned   = 0;
 		foreach ( $this->source_files() as $file ) {
 			$source = (string) file_get_contents( $file );
 			preg_match_all( '#<svg\b[^>]*?>.*?</svg>#s', $source, $svgs );
+			$scanned += count( $svgs[0] );
 			foreach ( $svgs[0] as $svg ) {
 				preg_match( '#<svg\b[^>]*?>#', $svg, $tag );
 				if ( false !== strpos( (string) $tag[0], 'stroke-linecap' ) ) {
@@ -67,6 +69,7 @@ final class IconMarkupTest extends TestCase {
 			}
 		}
 
+		$this->assertGreaterThan( 0, $scanned, 'No SVG was scanned, the search pattern has drifted from the markup.' );
 		$this->assertSame( array(), $offenders, 'a zero-length line needs stroke-linecap="round" on the line or its svg' );
 	}
 

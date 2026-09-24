@@ -17,6 +17,31 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
 const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
 const ANCHOR = 'reportedip_hive_hp';
 
+/** The proof field name this installation randomised at activation. */
+function proofField(): string {
+	return php("echo (string) ReportedIP_Hive_Option_Routing::get('reportedip_hive_form_proof_field', '');");
+}
+
+/** Rows the form-spam counter holds for the runner's address. */
+function spamAttemptCount(): number {
+	return Number(
+		php(`
+			global $wpdb;
+			$prefix = $wpdb->base_prefix . 'reportedip_hive_';
+			echo (int) $wpdb->get_var( "SELECT COALESCE(SUM(attempt_count),0) FROM {$prefix}attempts WHERE attempt_type = 'form_spam'" );
+		`)
+	);
+}
+
+function clearSpamAttempts(): void {
+	phpTolerant(`
+		global $wpdb;
+		$prefix = $wpdb->base_prefix . 'reportedip_hive_';
+		$wpdb->query( "DELETE FROM {$prefix}attempts WHERE attempt_type = 'form_spam'" );
+		$wpdb->query( "DELETE FROM {$prefix}blocked WHERE block_type = 'automatic'" );
+	`);
+}
+
 /**
  * Run a WP-CLI command inside the single-site WordPress container. Uses an
  * argument vector so PHP snippets survive the Windows shell unquoted.
@@ -313,6 +338,47 @@ test.describe('form execution proof', () => {
 				$user = get_user_by('login', $login);
 				if ($user instanceof WP_User) { wp_delete_user($user->ID); }
 			}
+			update_option('users_can_register', ${wasOpen === '1' ? 1 : 0});
+		`);
+	});
+
+	/**
+	 * A filled decoy on the sign-up form.
+	 *
+	 * Until 2.1.66 the sign-up read only one of the four verdicts, so a bot
+	 * that filled every field, the hidden one included, was waved through by
+	 * this layer while every third-party adapter refused the same submission.
+	 * The account must not exist afterwards, and the address has to carry the
+	 * same counter row a comment or a contact form would have cost it.
+	 */
+	test('a filled decoy on the sign-up form is refused and counted', async ({ request }) => {
+		const wasOpen = php(`
+			echo (int) get_option('users_can_register');
+			update_option('users_can_register', 1);
+		`);
+
+		clearSpamAttempts();
+
+		const response = await request.post('/wp-login.php?action=register', {
+			form: {
+				user_login: 'e2eproofdecoy',
+				user_email: 'e2eproofdecoy@example.com',
+				redirect_to: '',
+				'wp-submit': 'Register',
+				[ANCHOR]: 'https://spam.example/',
+				[proofField()]: '1',
+			},
+		});
+
+		expect(await response.text(), 'the sender has to be told').toContain('not accepted');
+		expect(php("echo get_user_by('login', 'e2eproofdecoy') ? 'yes' : 'no';")).toBe('no');
+		expect(spamAttemptCount(), 'a filled decoy costs the address its budget').toBeGreaterThan(0);
+
+		clearSpamAttempts();
+		phpTolerant(`
+			require_once ABSPATH . 'wp-admin/includes/user.php';
+			$user = get_user_by('login', 'e2eproofdecoy');
+			if ($user instanceof WP_User) { wp_delete_user($user->ID); }
 			update_option('users_can_register', ${wasOpen === '1' ? 1 : 0});
 		`);
 	});

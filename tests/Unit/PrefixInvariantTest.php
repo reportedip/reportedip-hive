@@ -54,13 +54,16 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_no_per_blog_prefix_reaches_plugin_tables() {
 			$offenders = array();
+			$scanned   = 0;
 			foreach ( $this->shipped_sources() as $path ) {
 				$source = (string) file_get_contents( $path );
+				++$scanned;
 				if ( false !== strpos( $source, "\$wpdb->prefix . 'reportedip_hive" ) ) {
 					$offenders[] = basename( $path );
 				}
 			}
 
+			$this->assertGreaterThan( 0, $scanned, 'No source file was scanned, the file walk has drifted from the tree.' );
 			$this->assertSame(
 				array(),
 				$offenders,

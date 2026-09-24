@@ -2,6 +2,29 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Security
+
+- **Every protected form now reads the same rule.** A filled decoy is the
+  clearest evidence this layer produces, and the WordPress sign-up form and
+  the password reset ignored it: they looked at one of the four verdicts and
+  let a bot that filled every field, the hidden one included, straight
+  through, while all six third-party adapters refused the same submission
+  and counted it. The decision now lives in one place and every surface
+  calls it, so a sign-up with a filled decoy is refused with a sentence the
+  sender reads, and the address spends the same budget a comment or a
+  contact form would have cost it. Nothing changes for a visitor without
+  JavaScript, who is still refused and still never counted.
+
+### Changed
+
+- **Adding a protected form is one call.** The rule, the wording, the log
+  row and the counter sit behind a single entry point, so a new form plugin
+  inherits the whole standard instead of copying a part of it, and
+  extending the rule reaches every surface at once. A test names the file
+  when a new surface starts reading verdicts on its own.
+
 ## [2.1.65] (2026-09-24)
 
 ### New

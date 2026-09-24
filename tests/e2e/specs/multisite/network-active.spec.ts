@@ -21,11 +21,23 @@ test('reportedip-hive is network-active on WPMU stack', async ({ page }) => {
     await expect(row.locator('span.deactivate a')).toContainText(/Network Deactivate/i);
 });
 
-test('site admin sees read-only banner on subsite plugin page', async ({ page }) => {
+/**
+ * The sub-site page is the read-only half of the network split: a site
+ * admin sees their own numbers and nothing they could change. Asserting the
+ * URL alone, which is what this test did until 2.1.65, passed even when the
+ * page rendered nothing at all.
+ */
+test('site admin sees the read-only overview on a subsite', async ({ page }) => {
     await loginAsAdmin(page);
 
     await page.goto('/site-a/wp-admin/admin.php?page=reportedip-hive-site');
-    await expect(page).toHaveURL(/site-a\/wp-admin\/admin\.php\?page=reportedip-hive-site/);
+
+    await expect(page.locator('.rip-header__subtitle')).toContainText(/Site security overview/i);
+    await expect(page.locator('.rip-stat-card').first()).toBeVisible();
+    await expect(
+        page.locator('.rip-content input[type="submit"], .rip-content button[type="submit"]'),
+        'the sub-site overview must not offer a way to write'
+    ).toHaveCount(0);
 });
 
 test('security widget on the network dashboard', async ({ page }) => {

@@ -52,8 +52,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_no_icon_is_filtered_through_wp_kses_post(): void {
 			$offenders = array();
+			$scanned   = 0;
 
 			foreach ( $this->markup_files() as $path ) {
+				++$scanned;
 				foreach ( (array) file( $path ) as $number => $line ) {
 					if ( false === strpos( $line, 'wp_kses_post(' ) ) {
 						continue;
@@ -65,6 +67,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				}
 			}
 
+			$this->assertGreaterThan( 0, $scanned, 'No markup file was scanned, the file walk has drifted from the tree.' );
 			$this->assertSame(
 				array(),
 				$offenders,

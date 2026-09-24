@@ -325,17 +325,34 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * The refusal is decided in one place. A second copy of the pipeline on
 		 * one of the six callbacks is how the surfaces drift apart.
+		 *
+		 * Since 2.1.66 the enforcement itself lives in
+		 * {@see ReportedIP_Hive_Form_Proof::enforce()}, shared with the comment
+		 * form, the sign-up and the password reset, so the adapters must hold
+		 * no copy of it at all.
 		 */
 		public function test_only_the_shared_pipeline_produces_a_refusal(): void {
+			$source = $this->source();
+
 			$this->assertSame(
 				1,
-				substr_count( $this->source(), 'private function judge(' ),
+				substr_count( $source, 'private function judge(' ),
 				'the pipeline exists exactly once'
 			);
 			$this->assertSame(
 				1,
-				substr_count( $this->source(), '$verdict = ReportedIP_Hive_Form_Proof::check(' ),
-				'the verdict is read exactly once'
+				substr_count( $source, '->enforce(' ),
+				'the shared enforcement is called exactly once'
+			);
+			$this->assertStringNotContainsString(
+				'log_failure(',
+				$source,
+				'logging a refusal belongs to the shared path, not to an adapter'
+			);
+			$this->assertStringNotContainsString(
+				'track_generic_attempt(',
+				$source,
+				'counting a refusal belongs to the shared path, not to an adapter'
 			);
 		}
 
@@ -344,12 +361,17 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * fourth threshold nobody would keep in sync.
 		 */
 		public function test_the_counter_reuses_the_comment_spam_budget(): void {
-			$source = $this->source();
+			$shared = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-form-proof.php' );
 
-			$this->assertStringContainsString( 'reportedip_hive_comment_spam_threshold', $source );
-			$this->assertStringContainsString( 'reportedip_hive_comment_spam_timeframe', $source );
-			$this->assertStringContainsString( 'track_generic_attempt(', $source );
-			$this->assertSame( 'form_spam', \ReportedIP_Hive_Form_Adapters::ATTEMPT_TYPE );
+			$this->assertStringContainsString( 'reportedip_hive_comment_spam_threshold', $shared );
+			$this->assertStringContainsString( 'reportedip_hive_comment_spam_timeframe', $shared );
+			$this->assertStringContainsString( 'track_generic_attempt(', $shared );
+			$this->assertSame( 'form_spam', \ReportedIP_Hive_Form_Proof::ATTEMPT_TYPE );
+			$this->assertSame(
+				\ReportedIP_Hive_Form_Proof::ATTEMPT_TYPE,
+				\ReportedIP_Hive_Form_Adapters::ATTEMPT_TYPE,
+				'the adapters must spend the same budget as every other surface'
+			);
 		}
 
 		/**

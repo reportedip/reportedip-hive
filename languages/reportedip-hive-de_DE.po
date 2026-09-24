@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-09-24T09:56:03+00:00\n"
+"PO-Revision-Date: 2026-09-24T14:51:12+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
@@ -7255,24 +7255,23 @@ msgstr "Alle Ereignisse aus %s"
 msgid "%s (threshold reached)"
 msgstr "%s (Schwelle erreicht)"
 
-#: includes/class-form-adapters.php:1098
-#: includes/class-registration-guard.php:562
-msgid "This form needs JavaScript to be submitted. Switch it on and try again."
-msgstr "Dieses Formular braucht JavaScript. Bitte einschalten und noch einmal versuchen."
-
-#: includes/class-form-adapters.php:1101
-msgid "Your submission was not accepted. Please reload the page and try again."
-msgstr "Ihre Eingabe wurde nicht angenommen. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
-
 #: includes/class-form-challenge.php:411
 msgid "Too many requests. Please try again in a moment."
 msgstr "Zu viele Anfragen. Bitte versuchen Sie es gleich noch einmal."
 
-#: includes/class-form-proof.php:740
+#: includes/class-form-proof.php:753
 msgid "Leave this field empty"
 msgstr "Dieses Feld leer lassen"
 
-#: includes/class-form-proof.php:1110
+#: includes/class-form-proof.php:1169
+msgid "This form needs JavaScript to be submitted. Switch it on and try again."
+msgstr "Dieses Formular braucht JavaScript. Bitte einschalten und noch einmal versuchen."
+
+#: includes/class-form-proof.php:1172
+msgid "Your submission was not accepted. Please reload the page and try again."
+msgstr "Ihre Eingabe wurde nicht angenommen. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
+
+#: includes/class-form-proof.php:1273
 msgid "This form needs JavaScript to be submitted. Switch it on and try again. If you cannot, ask another administrator to reset your password, or use WP-CLI on the server."
 msgstr "Dieses Formular braucht JavaScript. Bitte einschalten und noch einmal versuchen. Falls das nicht geht, kann ein anderer Administrator das Passwort zurücksetzen oder es lässt sich per WP-CLI auf dem Server ändern."
 
@@ -8106,19 +8105,19 @@ msgstr "Rückstau in der Meldungs-Warteschlange"
 msgid "%d reports are waiting to be submitted. The queue drains faster on a higher tier, or you can process it manually from the API queue tab."
 msgstr "%d Meldungen warten auf die Übermittlung. In einem höheren Tarif leert sich die Warteschlange schneller, alternativ verarbeiten Sie sie im Reiter API-Warteschlange von Hand."
 
-#: includes/class-registration-guard.php:606
+#: includes/class-registration-guard.php:599
 msgid "Registration is not available from your network."
 msgstr "Aus Ihrem Netz ist keine Registrierung möglich."
 
-#: includes/class-registration-guard.php:661
+#: includes/class-registration-guard.php:654
 msgid "Too many registrations from your network. Please try again later."
 msgstr "Zu viele Registrierungen aus Ihrem Netz. Bitte versuchen Sie es später erneut."
 
-#: includes/class-registration-guard.php:699
+#: includes/class-registration-guard.php:692
 msgid "This username is not allowed. Please choose another one."
 msgstr "Dieser Benutzername ist nicht erlaubt. Bitte wählen Sie einen anderen."
 
-#: includes/class-registration-guard.php:751
+#: includes/class-registration-guard.php:744
 msgid "This e-mail address cannot be used for registration."
 msgstr "Mit dieser E-Mail-Adresse ist keine Registrierung möglich."
 

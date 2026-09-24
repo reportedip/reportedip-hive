@@ -986,37 +986,18 @@ final class ReportedIP_Hive_Form_Adapters {
 			return '';
 		}
 
-		$proof   = ReportedIP_Hive_Form_Proof::get_instance();
-		$verdict = ReportedIP_Hive_Form_Proof::check( $slug );
-		$outcome = self::consequence( $verdict, null === $strict ? $proof->adapters_strict() : (bool) $strict );
+		$proof = ReportedIP_Hive_Form_Proof::get_instance();
 
-		if ( ! $outcome['refuse'] ) {
-			return '';
-		}
-
-		$proof->log_failure( $slug );
-
-		if ( $outcome['count'] ) {
-			$this->count_attempt( ReportedIP_Hive::get_client_ip() );
-		}
-
-		if ( $proof->report_only() ) {
-			return '';
-		}
-
-		return self::message( $verdict );
+		return $proof->enforce( $slug, null === $strict ? $proof->adapters_strict() : (bool) $strict );
 	}
 
 	/**
-	 * What a verdict costs a submission. Pure, because this is the whole
-	 * enforcement rule and it deserves to be pinned down on its own.
+	 * What a verdict costs a submission.
 	 *
-	 * Only a filled decoy is counted against the address. A client that never
-	 * ran the script is refused but never tracked: somebody browsing without
-	 * JavaScript produces exactly that, and locking them out of the site is a
-	 * far worse outcome than the submission they were trying to send. A
-	 * submission that never carried our anchor is refused only once the grace
-	 * after switching the adapter on has run out, and is never counted either.
+	 * The rule itself lives in {@see ReportedIP_Hive_Form_Proof::consequence()}
+	 * since 2.1.66, because the comment form, the sign-up and the password
+	 * reset need exactly the same reading and used to carry their own. This
+	 * stays as the name the adapters and their tests already use.
 	 *
 	 * @param string $verdict Verdict from {@see ReportedIP_Hive_Form_Proof::check()}.
 	 * @param bool   $strict  Whether a missing anchor counts as a refusal.
@@ -1024,80 +1005,20 @@ final class ReportedIP_Hive_Form_Adapters {
 	 * @since  2.1.58
 	 */
 	public static function consequence( $verdict, $strict ) {
-		if ( ReportedIP_Hive_Form_Proof::TRIPPED === $verdict ) {
-			return array(
-				'refuse' => true,
-				'count'  => true,
-			);
-		}
-
-		if ( ReportedIP_Hive_Form_Proof::FAILED === $verdict ) {
-			return array(
-				'refuse' => true,
-				'count'  => false,
-			);
-		}
-
-		if ( ReportedIP_Hive_Form_Proof::ABSENT === $verdict ) {
-			return array(
-				'refuse' => (bool) $strict,
-				'count'  => false,
-			);
-		}
-
-		return array(
-			'refuse' => false,
-			'count'  => false,
-		);
-	}
-
-	/**
-	 * Count one tripped decoy against the source address, on the same threshold
-	 * and window the comment surface uses. Spam arriving through a contact form
-	 * is the same address doing the same thing, so it gets the same budget
-	 * rather than a second set of numbers to keep in sync.
-	 *
-	 * @param string $ip Client address.
-	 * @return void
-	 * @since  2.1.58
-	 */
-	private function count_attempt( $ip ) {
-		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
-			return;
-		}
-
-		$monitor = ReportedIP_Hive::get_instance()->get_security_monitor();
-
-		if ( ! $monitor instanceof ReportedIP_Hive_Security_Monitor ) {
-			return;
-		}
-
-		$monitor->track_generic_attempt(
-			$ip,
-			self::ATTEMPT_TYPE,
-			self::ATTEMPT_TYPE,
-			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 3 ),
-			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 1440 )
-		);
+		return ReportedIP_Hive_Form_Proof::consequence( $verdict, $strict );
 	}
 
 	/**
 	 * The refusal a visitor sees.
 	 *
-	 * A client that never ran the script is told what to do about it, because
-	 * that is a real person with JavaScript switched off often enough to be
-	 * worth the sentence. Every other refusal stays short and says nothing
-	 * about which field gave the sender away.
+	 * Shared with every other surface since 2.1.66; see
+	 * {@see ReportedIP_Hive_Form_Proof::message()}.
 	 *
 	 * @param string $verdict Verdict from {@see ReportedIP_Hive_Form_Proof::check()}.
 	 * @return string
 	 * @since  2.1.58
 	 */
 	public static function message( $verdict ) {
-		if ( ReportedIP_Hive_Form_Proof::FAILED === $verdict ) {
-			return __( 'This form needs JavaScript to be submitted. Switch it on and try again.', 'reportedip-hive' );
-		}
-
-		return __( 'Your submission was not accepted. Please reload the page and try again.', 'reportedip-hive' );
+		return ReportedIP_Hive_Form_Proof::message( $verdict );
 	}
 }

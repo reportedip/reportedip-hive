@@ -61,4 +61,28 @@ if ( class_exists( 'ReportedIP_Hive_Defaults' ) ) {
 	ReportedIP_Hive_Defaults::seed_missing();
 }
 
+/**
+ * Let the runner back in.
+ *
+ * The suite browses hundreds of URLs, a good share of them deliberately
+ * missing, and the scan detector does its job: it blocks the address that
+ * asked. The block outlives the run, so the next run starts behind a 403
+ * and turns red in whichever spec happens to go first. That has cost real
+ * debugging time twice, most recently on the multisite stack, where the
+ * blocked runner made a sub-site admin page look like a plugin bug.
+ *
+ * Only the automatic rungs are lifted. A block a spec set on purpose is
+ * manual and stays.
+ */
+global $wpdb;
+
+$prefix = $wpdb->base_prefix . 'reportedip_hive_';
+
+$wpdb->query( "DELETE FROM {$prefix}blocked WHERE block_type = 'automatic'" );
+$wpdb->query( "DELETE FROM {$prefix}attempts" );
+
+if ( class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+	ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->sync();
+}
+
 WP_CLI::success( 'Admin 2FA baseline reset for E2E.' );

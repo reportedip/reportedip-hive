@@ -108,6 +108,12 @@ class ReportedIP_Hive_Form_Proof {
 	const ADAPTER_PREFIX = '_';
 
 	/**
+	 * Attempt-tracker key a tripped decoy counts against, shared by every
+	 * surface so one address spends one budget.
+	 */
+	const ATTEMPT_TYPE = 'form_spam';
+
+	/**
 	 * The adapter switches. One list, read by the grace stamp and by
 	 * anything else that needs to know whether a third-party form takes part.
 	 *
@@ -217,6 +223,13 @@ class ReportedIP_Hive_Form_Proof {
 	 * @var int|null
 	 */
 	private $seconds = null;
+
+	/**
+	 * The verdict of the submission last judged, null before the first one.
+	 *
+	 * @var string|null
+	 */
+	private $verdict = null;
 
 	/**
 	 * Get the singleton instance.
@@ -954,6 +967,34 @@ class ReportedIP_Hive_Form_Proof {
 	 * @since  2.1.53
 	 */
 	public function verdict_for_request( $surface ) {
+		$this->verdict = $this->compute_verdict( $surface );
+
+		return $this->verdict;
+	}
+
+	/**
+	 * The verdict of the submission last judged.
+	 *
+	 * A caller that wants to word its own refusal reads this rather than
+	 * judging the request a second time, which would spend another one of
+	 * the single-use challenge answers.
+	 *
+	 * @return string|null One of the four verdict constants, null before the
+	 *                     first submission was judged.
+	 * @since  2.1.66
+	 */
+	public function last_verdict() {
+		return $this->verdict;
+	}
+
+	/**
+	 * Work out the verdict for the current request.
+	 *
+	 * @param string $surface Surface identifier.
+	 * @return string One of the four verdict constants.
+	 * @since  2.1.66
+	 */
+	private function compute_verdict( $surface ) {
 		$this->seconds = null;
 		$this->reason  = null;
 
@@ -1058,17 +1099,144 @@ class ReportedIP_Hive_Form_Proof {
 	 * @since  2.1.58
 	 */
 	public static function passes( $surface, $strict = true ) {
-		$verdict = self::check( $surface );
+		return ! self::consequence( self::check( $surface ), $strict )['refuse'];
+	}
 
-		if ( self::PROVED === $verdict ) {
-			return true;
+	/**
+	 * What a verdict costs a submission. Pure, because this is the whole
+	 * enforcement rule and every surface has to read it the same way.
+	 *
+	 * Only a filled decoy is counted against the address. A client that never
+	 * ran the script is refused but never tracked: somebody browsing without
+	 * JavaScript produces exactly that, and locking them out of the site is a
+	 * far worse outcome than the submission they were trying to send. A
+	 * submission that never carried our anchor is refused only in the strict
+	 * reading, which is how a page still served from an older cache stays
+	 * harmless.
+	 *
+	 * This lived in {@see ReportedIP_Hive_Form_Adapters} until 2.1.66, where
+	 * only the third-party surfaces could reach it. The comment form, the
+	 * sign-up and the password reset each had their own reading, and two of
+	 * them let a filled decoy through.
+	 *
+	 * @param string $verdict One of the four verdict constants.
+	 * @param bool   $strict  Whether a missing anchor counts as a refusal.
+	 * @return array{refuse:bool, count:bool}
+	 * @since  2.1.66
+	 */
+	public static function consequence( $verdict, $strict ) {
+		if ( self::TRIPPED === $verdict ) {
+			return array(
+				'refuse' => true,
+				'count'  => true,
+			);
+		}
+
+		if ( self::FAILED === $verdict ) {
+			return array(
+				'refuse' => true,
+				'count'  => false,
+			);
 		}
 
 		if ( self::ABSENT === $verdict ) {
-			return ! $strict;
+			return array(
+				'refuse' => (bool) $strict,
+				'count'  => false,
+			);
 		}
 
-		return false;
+		return array(
+			'refuse' => false,
+			'count'  => false,
+		);
+	}
+
+	/**
+	 * The refusal a visitor sees.
+	 *
+	 * A client that never ran the script is told what to do about it, because
+	 * that is a real person with JavaScript switched off often enough to be
+	 * worth the sentence. Every other refusal stays short and says nothing
+	 * about which field gave the sender away.
+	 *
+	 * @param string $verdict One of the four verdict constants.
+	 * @return string
+	 * @since  2.1.66
+	 */
+	public static function message( $verdict ) {
+		if ( self::FAILED === $verdict ) {
+			return __( 'This form needs JavaScript to be submitted. Switch it on and try again.', 'reportedip-hive' );
+		}
+
+		return __( 'Your submission was not accepted. Please reload the page and try again.', 'reportedip-hive' );
+	}
+
+	/**
+	 * Count one tripped decoy against the source address, on the same threshold
+	 * and window the comment surface uses. Spam arriving through a sign-up form
+	 * is the same address doing the same thing, so it gets the same budget
+	 * rather than a second set of numbers to keep in sync.
+	 *
+	 * @param string $ip Client address.
+	 * @return void
+	 * @since  2.1.66
+	 */
+	public static function count_against( $ip ) {
+		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
+			return;
+		}
+
+		$monitor = ReportedIP_Hive::get_instance()->get_security_monitor();
+
+		if ( ! $monitor instanceof ReportedIP_Hive_Security_Monitor ) {
+			return;
+		}
+
+		$monitor->track_generic_attempt(
+			(string) $ip,
+			self::ATTEMPT_TYPE,
+			self::ATTEMPT_TYPE,
+			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 3 ),
+			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 1440 )
+		);
+	}
+
+	/**
+	 * Judge one submission and carry out the consequence.
+	 *
+	 * This is the single enforcement path: it decides, logs, counts and hands
+	 * back the sentence the sender has to see. Every refusing surface goes
+	 * through here, so a new form inherits the whole standard by calling one
+	 * method, and a change to the rule reaches all of them at once.
+	 *
+	 * The empty string means the submission may proceed, which is also what
+	 * report-only mode returns after logging.
+	 *
+	 * @param string $surface Surface identifier.
+	 * @param bool   $strict  Whether a missing anchor counts as a refusal.
+	 * @return string Refusal text, or an empty string to proceed.
+	 * @since  2.1.66
+	 */
+	public function enforce( $surface, $strict = true ) {
+		$verdict = $this->verdict_for_request( $surface );
+		$outcome = self::consequence( $verdict, $strict );
+
+		if ( ! $outcome['refuse'] ) {
+			return '';
+		}
+
+		$this->log_failure( $surface );
+
+		if ( $outcome['count'] ) {
+			self::count_against( ReportedIP_Hive::get_client_ip() );
+		}
+
+		if ( $this->report_only() ) {
+			return '';
+		}
+
+		return self::message( $verdict );
 	}
 
 	/**
@@ -1095,20 +1263,17 @@ class ReportedIP_Hive_Form_Proof {
 			}
 		}
 
-		if ( self::FAILED !== $this->verdict_for_request( 'lostpassword' ) ) {
+		$message = $this->enforce( 'lostpassword', false );
+
+		if ( '' === $message ) {
 			return;
 		}
 
-		$this->log_failure( 'lostpassword' );
-
-		if ( $this->report_only() ) {
-			return;
+		if ( self::FAILED === $this->last_verdict() ) {
+			$message = esc_html__( 'This form needs JavaScript to be submitted. Switch it on and try again. If you cannot, ask another administrator to reset your password, or use WP-CLI on the server.', 'reportedip-hive' );
 		}
 
-		$errors->add(
-			'reportedip_hive_form_proof',
-			esc_html__( 'This form needs JavaScript to be submitted. Switch it on and try again. If you cannot, ask another administrator to reset your password, or use WP-CLI on the server.', 'reportedip-hive' )
-		);
+		$errors->add( 'reportedip_hive_form_proof', $message );
 	}
 
 	/**
