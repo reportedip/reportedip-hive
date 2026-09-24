@@ -64,7 +64,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_adapter_table_carries_exactly_the_supported_plugins(): void {
 			$this->assertSame(
-				array( 'cf7', 'formidable', 'elementor', 'ultimate_member', 'gravity_forms', 'wpforms' ),
+				array( 'cf7', 'formidable', 'elementor', 'ultimate_member', 'gravity_forms', 'wpforms', 'forminator' ),
 				array_keys( \ReportedIP_Hive_Form_Adapters::ADAPTERS )
 			);
 		}
@@ -101,6 +101,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'feature' => 'form_adapters_advanced',
 					'detect'  => 'WPForms\\WPForms',
 				),
+				'forminator'      => array(
+					'option'  => 'reportedip_hive_form_proof_forminator',
+					'feature' => 'form_adapters_advanced',
+					'detect'  => 'Forminator_API',
+				),
 			);
 
 			$this->assertSame( $expected, \ReportedIP_Hive_Form_Adapters::ADAPTERS );
@@ -130,13 +135,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @param string $verdict Verdict constant.
 		 * @param bool   $strict  Whether the grace has run out.
 		 * @param bool   $refuse  Expected refusal.
-		 * @param bool   $count   Expected counting.
+		 * @param bool   $certain Expected escalation.
 		 */
-		public function test_consequence_table( string $verdict, bool $strict, bool $refuse, bool $count ): void {
+		public function test_consequence_table( string $verdict, bool $strict, bool $refuse, bool $certain ): void {
 			$this->assertSame(
 				array(
-					'refuse' => $refuse,
-					'count'  => $count,
+					'refuse'  => $refuse,
+					'certain' => $certain,
 				),
 				\ReportedIP_Hive_Form_Adapters::consequence( $verdict, $strict )
 			);
@@ -161,15 +166,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * A client without JavaScript is refused but never tracked. This is the
-		 * single assertion that keeps the feature from turning a browser
-		 * setting into a site-wide ban.
+		 * A client without JavaScript is refused but never held against
+		 * anybody. This is the single assertion that keeps the feature from
+		 * turning a browser setting into a site-wide ban.
 		 */
-		public function test_a_client_without_javascript_is_never_counted(): void {
+		public function test_a_client_without_javascript_is_never_escalated(): void {
 			$outcome = \ReportedIP_Hive_Form_Adapters::consequence( \ReportedIP_Hive_Form_Proof::FAILED, true );
 
 			$this->assertTrue( $outcome['refuse'] );
-			$this->assertFalse( $outcome['count'] );
+			$this->assertFalse( $outcome['certain'] );
 		}
 
 		/**
@@ -242,6 +247,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 					"add_action( 'wpforms_process', array( \$this, 'wpforms_validate' ), 10, 3 )",
 					'WPForms processing is where its submission is refused, before the entry and the mail',
 				),
+				'forminator render'   => array(
+					"add_filter( 'forminator_render_form_submit_markup', array( \$this, 'forminator_anchor' ) )",
+					'the anchor has to sit inside the Forminator form element, which the wider markup filter cannot promise',
+				),
+				'forminator validate' => array(
+					"add_filter( 'forminator_custom_form_submit_errors', array( \$this, 'forminator_validate' ), 10, 3 )",
+					'Forminator validation is where its submission is refused, before the entry and the mail',
+				),
 				'proof surfaces'      => array(
 					"add_filter( 'reportedip_hive_form_proof_adapters', array( \$this, 'add_surfaces' ) )",
 					'without this filter surface_enabled() answers false and nothing renders',
@@ -306,6 +319,60 @@ namespace ReportedIP\Hive\Tests\Unit {
 					"'wpforms_process_spam_entry'",
 					'an entry filed as spam is a message the sender was thanked for and nobody reads',
 				),
+				'forminator spam filter'    => array(
+					"'forminator_spam_protection'",
+					'that filter drops the submission into the spam folder and shows the sender a success message',
+				),
+				'forminator honeypot route' => array(
+					"'forminator_honeypot'",
+					'the plugin honeypot path answers with a confirmation and stores nothing',
+				),
+			);
+		}
+
+		/**
+		 * A Forminator refusal has to reach the sender as an error keyed by a
+		 * field of the form, because that is the only shape the plugin renders.
+		 * The hook runs a second time while attachments are handled, so the
+		 * same refusal must not pile up twice.
+		 */
+		public function test_a_forminator_refusal_is_a_field_error_added_once(): void {
+			$source = $this->source();
+
+			$this->assertStringContainsString(
+				'$errors[] = array( self::forminator_first_field( $fields ) => $message );',
+				$source,
+				'the refusal is keyed by a field id, the only shape Forminator renders'
+			);
+			$this->assertStringContainsString(
+				'in_array( $message, $entry, true )',
+				$source,
+				'the validation hook fires twice on a form with an upload, and a doubled refusal reads as two problems'
+			);
+		}
+
+		/**
+		 * The field a Forminator refusal is attached to, in the shape the
+		 * plugin hands over: a list of field descriptors keyed by `name`.
+		 */
+		public function test_the_forminator_target_field_is_the_first_of_the_submission(): void {
+			$this->assertSame(
+				'email-1',
+				\ReportedIP_Hive_Form_Adapters::forminator_first_field(
+					array(
+						array( 'name' => 'email-1' ),
+						array( 'name' => 'name-1' ),
+					)
+				)
+			);
+			$this->assertSame(
+				'reportedip_hive',
+				\ReportedIP_Hive_Form_Adapters::forminator_first_field( array() ),
+				'a submission without a single named field still has to carry the sentence somewhere'
+			);
+			$this->assertSame(
+				'reportedip_hive',
+				\ReportedIP_Hive_Form_Adapters::forminator_first_field( 'not an array' )
 			);
 		}
 
@@ -357,20 +424,32 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * The counter reuses the comment-spam budget rather than inventing a
-		 * fourth threshold nobody would keep in sync.
+		 * A filled decoy escalates at once instead of filling a counter first.
+		 *
+		 * Until 2.1.66 three of them within a day were needed before anything
+		 * happened, so a sender who hit one form once was never blocked and
+		 * never reported. The comment surface has treated the same evidence as
+		 * certain since 2.1.52; this keeps the two readings together.
 		 */
-		public function test_the_counter_reuses_the_comment_spam_budget(): void {
+		public function test_a_filled_decoy_escalates_without_a_counter(): void {
 			$shared = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-form-proof.php' );
 
-			$this->assertStringContainsString( 'reportedip_hive_comment_spam_threshold', $shared );
-			$this->assertStringContainsString( 'reportedip_hive_comment_spam_timeframe', $shared );
-			$this->assertStringContainsString( 'track_generic_attempt(', $shared );
+			$this->assertStringContainsString( 'handle_threshold_exceeded(', $shared );
+			$this->assertStringNotContainsString(
+				'track_generic_attempt(',
+				$shared,
+				'the certain case no longer waits for a threshold'
+			);
+			$this->assertStringNotContainsString(
+				'reportedip_hive_comment_spam_threshold',
+				$shared,
+				'the form surfaces no longer borrow the comment counter'
+			);
 			$this->assertSame( 'form_spam', \ReportedIP_Hive_Form_Proof::ATTEMPT_TYPE );
 			$this->assertSame(
 				\ReportedIP_Hive_Form_Proof::ATTEMPT_TYPE,
 				\ReportedIP_Hive_Form_Adapters::ATTEMPT_TYPE,
-				'the adapters must spend the same budget as every other surface'
+				'the adapters must report under the same sensor slug as every other surface'
 			);
 		}
 

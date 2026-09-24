@@ -47,6 +47,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 	require_once dirname( __DIR__, 2 ) . '/includes/class-form-proof.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-form-adapters.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-readiness.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-promo-manager.php';
+	require_once dirname( __DIR__, 2 ) . '/admin/class-dashboard-next-steps.php';
 
 	/**
 	 * @covers \ReportedIP_Hive_Form_Proof
@@ -89,13 +94,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @param string $verdict Verdict constant.
 		 * @param bool   $strict  Whether a missing anchor counts.
 		 * @param bool   $refuse  Expected refusal.
-		 * @param bool   $count   Expected counting.
+		 * @param bool   $certain Expected escalation.
 		 */
-		public function test_the_rule_is_the_same_for_every_surface( string $verdict, bool $strict, bool $refuse, bool $count ): void {
+		public function test_the_rule_is_the_same_for_every_surface( string $verdict, bool $strict, bool $refuse, bool $certain ): void {
 			$this->assertSame(
 				array(
-					'refuse' => $refuse,
-					'count'  => $count,
+					'refuse'  => $refuse,
+					'certain' => $certain,
 				),
 				\ReportedIP_Hive_Form_Proof::consequence( $verdict, $strict )
 			);
@@ -138,27 +143,72 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * has to cost the sender the same everywhere. The sign-up and the
 		 * password reset ignored it until 2.1.66.
 		 */
-		public function test_a_filled_decoy_always_refuses_and_always_counts(): void {
+		public function test_a_filled_decoy_always_refuses_and_always_escalates(): void {
 			foreach ( array( true, false ) as $strict ) {
 				$outcome = \ReportedIP_Hive_Form_Proof::consequence( \ReportedIP_Hive_Form_Proof::TRIPPED, $strict );
 
 				$this->assertTrue( $outcome['refuse'], 'a filled decoy is never let through' );
-				$this->assertTrue( $outcome['count'], 'a filled decoy always costs the address' );
+				$this->assertTrue( $outcome['certain'], 'a filled decoy always costs the address at once' );
 			}
 		}
 
 		/**
-		 * A visitor without JavaScript is refused but never counted, whatever
-		 * surface they landed on. Getting this backwards turns a browser
-		 * setting into a site-wide ban.
+		 * A visitor without JavaScript is refused but never held against
+		 * anybody, whatever surface they landed on. Getting this backwards
+		 * turns a browser setting into a site-wide ban.
 		 */
-		public function test_a_visitor_without_javascript_is_never_counted(): void {
+		public function test_a_visitor_without_javascript_is_never_escalated(): void {
 			foreach ( array( true, false ) as $strict ) {
 				$outcome = \ReportedIP_Hive_Form_Proof::consequence( \ReportedIP_Hive_Form_Proof::FAILED, $strict );
 
 				$this->assertTrue( $outcome['refuse'] );
-				$this->assertFalse( $outcome['count'] );
+				$this->assertFalse( $outcome['certain'] );
 			}
+		}
+
+		/**
+		 * The certain case skips the attempt counter and goes straight to the
+		 * sensor dispatcher, which is where a tripped threshold goes: block
+		 * ladder, community report, admin mail. Until 2.1.66 a single sender
+		 * filling a decoy paid nothing but one counter tick.
+		 */
+		public function test_a_certain_verdict_reaches_the_sensor_dispatcher(): void {
+			$proof = $this->source( 'class-form-proof.php' );
+
+			$this->assertStringContainsString(
+				'handle_threshold_exceeded(',
+				$proof,
+				'a certain bot has to reach the same consequences a tripped threshold reaches'
+			);
+			$this->assertStringContainsString(
+				"if ( \$outcome['certain'] ) {",
+				$proof,
+				'the escalation is decided by the shared rule, not by a verdict comparison of its own'
+			);
+			$this->assertStringNotContainsString(
+				'track_generic_attempt(',
+				$proof,
+				'the form surfaces no longer wait for a counter to fill up'
+			);
+		}
+
+		/**
+		 * The dispatcher is now reached without the counter that used to guard
+		 * it, so the address has to be looked up in the whitelist there. An
+		 * office address autofilling a hidden field must never be blocked and
+		 * reported, and neither the auto-block path nor the block writer looks
+		 * it up again.
+		 */
+		public function test_the_dispatcher_spares_a_whitelisted_address(): void {
+			$monitor = $this->source( 'class-security-monitor.php' );
+			$body    = substr( $monitor, (int) strpos( $monitor, 'public function handle_threshold_exceeded(' ) );
+			$body    = substr( $body, 0, (int) strpos( $body, 'do_action(' ) );
+
+			$this->assertStringContainsString(
+				'is_whitelisted( $ip_address )',
+				$body,
+				'handle_threshold_exceeded() has to spare a whitelisted address before any consequence runs'
+			);
 		}
 
 		/**
@@ -241,6 +291,126 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$all = array_merge( $own, $adapters );
 
 			$this->assertSame( count( $all ), count( array_unique( $all ) ), 'every surface is named once' );
+		}
+
+		/**
+		 * A new adapter is only half done when its callbacks work: the switch
+		 * has to be a setting, the plan has to switch it on where the plan
+		 * covers it, and the operator has to be told about it while it is off.
+		 * Each of those lives in a different file, and each of them was
+		 * forgotten at least once.
+		 *
+		 * @dataProvider provide_adapters
+		 *
+		 * @param string $slug    Adapter slug.
+		 * @param string $option  Its switch.
+		 * @param string $feature Its plan gate.
+		 */
+		public function test_every_adapter_is_wired_into_the_settings_surfaces( string $slug, string $option, string $feature ): void {
+			$this->assertArrayHasKey(
+				$option,
+				\ReportedIP_Hive_Defaults::all_option_defaults(),
+				$slug . ' needs a default, or an install never seeds the switch'
+			);
+
+			$spec = \ReportedIP_Hive_Settings_Registry::spec();
+
+			$this->assertArrayHasKey( $option, $spec, $slug . ' needs a registry entry, or no form draws it' );
+			$this->assertSame( 'forms', $spec[ $option ]['section'] );
+			$this->assertSame( $slug, $spec[ $option ]['simple_form'], 'the switch shows up on a site that runs this plugin' );
+			if ( 'form_adapters_advanced' === $feature ) {
+				$this->assertSame(
+					$feature,
+					isset( $spec[ $option ]['tier'] ) ? $spec[ $option ]['tier'] : '',
+					'a paid adapter needs its plan gate, or the sanitizer lets the value through below the plan'
+				);
+			} else {
+				$this->assertArrayNotHasKey(
+					'tier',
+					$spec[ $option ],
+					'a free adapter carries no plan gate, which is what made it free in 2.1.63'
+				);
+			}
+			$this->assertContains(
+				'stamp_form_adapters_since',
+				(array) $spec[ $option ]['side_effects'],
+				'without the stamp the grace never starts and every cached page is refused on day one'
+			);
+
+			$step = 'form_adapter_' . $slug;
+
+			$this->assertArrayHasKey(
+				$step,
+				\ReportedIP_Hive_Dashboard_Next_Steps::step_actions(),
+				'the dashboard has to offer the switch while it is off'
+			);
+			$this->assertSame(
+				array( $option => 1 ),
+				\ReportedIP_Hive_Dashboard_Next_Steps::step_values( $step, array() )
+			);
+
+			$this->assertNotNull(
+				\ReportedIP_Hive_Readiness::form_adapter_off( $slug, 'Plugin', true, true, false ),
+				'an installed plugin the plan covers has to be advised while the switch is off'
+			);
+			$this->assertNull(
+				\ReportedIP_Hive_Readiness::form_adapter_off( $slug, 'Plugin', true, true, true ),
+				'nothing to advise once it runs'
+			);
+			$this->assertNull(
+				\ReportedIP_Hive_Readiness::form_adapter_off( $slug, 'Plugin', false, true, false ),
+				'a plugin that is not installed is not a finding'
+			);
+			$this->assertNull(
+				\ReportedIP_Hive_Readiness::form_adapter_off( $slug, 'Plugin', true, false, false ),
+				'a plan that does not cover it is an upsell, not a finding'
+			);
+		}
+
+		/**
+		 * The plan that includes an adapter also switches it on, both in the
+		 * quickstart and in the upgrade delta, which read the same table.
+		 *
+		 * @dataProvider provide_adapters
+		 *
+		 * @param string $slug    Adapter slug.
+		 * @param string $option  Its switch.
+		 * @param string $feature Its plan gate.
+		 */
+		public function test_the_plan_that_covers_an_adapter_switches_it_on( string $slug, string $option, string $feature ): void {
+			$business = \ReportedIP_Hive_Defaults::recommended( 'business', 'community' );
+
+			$this->assertArrayHasKey( $option, $business, $slug . ' is included in Business and has to be recommended there' );
+			$this->assertSame( 1, $business[ $option ] );
+
+			$professional = \ReportedIP_Hive_Defaults::recommended( 'professional', 'community' );
+
+			if ( 'form_adapters_advanced' === $feature ) {
+				$this->assertArrayNotHasKey(
+					$option,
+					$professional,
+					$slug . ' needs Business, so recommending it below that writes a value the sanitizer refuses'
+				);
+
+				return;
+			}
+
+			$this->assertSame( 1, $professional[ $option ] );
+		}
+
+		/**
+		 * Every adapter, as the one table names them.
+		 *
+		 * @return array<string, array{0:string, 1:string, 2:string}>
+		 */
+		public static function provide_adapters(): array {
+			$cases = array();
+
+			foreach ( \ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+				$cases[ $slug ] = array( $slug, $adapter['option'], $adapter['feature'] );
+			}
+
+			return $cases;
 		}
 
 		/**

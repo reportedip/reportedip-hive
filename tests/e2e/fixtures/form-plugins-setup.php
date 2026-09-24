@@ -431,6 +431,85 @@ if ( class_exists( 'WPForms\WPForms' ) ) {
 	rip_e2e_page( 'rip-e2e-wpforms-ajax-page', 'RIP E2E WPForms AJAX Page', '[wpforms id="' . $rip_wpforms_ajax . '" title="false"]' );
 }
 
+/**
+ * Two Forminator forms with the same two fields: one sitting in the page and
+ * one loaded afterwards, because the second path hands the browser a form the
+ * proof script never saw at load time. The plugin's own honeypot stays off on
+ * both, so a refused submission is ours and not its.
+ */
+$rip_forminator      = 0;
+$rip_forminator_ajax = 0;
+
+if ( class_exists( 'Forminator_API' ) ) {
+	/**
+	 * Create or find one Forminator form.
+	 *
+	 * @param string               $title    Form title.
+	 * @param array<string,string> $settings Settings merged over the defaults.
+	 * @return int Form id.
+	 */
+	function rip_e2e_forminator_form( $title, array $settings ) {
+		foreach ( (array) Forminator_API::get_forms( null, 1, 100 ) as $form ) {
+			if ( isset( $form->settings['formName'] ) && $title === $form->settings['formName'] ) {
+				return (int) $form->id;
+			}
+		}
+
+		$wrappers = array(
+			array(
+				'wrapper_id' => 'wrapper-rip-email',
+				'fields'     => array(
+					array(
+						'element_id'  => 'email-1',
+						'type'        => 'email',
+						'cols'        => '12',
+						'required'    => 'true',
+						'field_label' => 'Email Address',
+					),
+				),
+			),
+			array(
+				'wrapper_id' => 'wrapper-rip-message',
+				'fields'     => array(
+					array(
+						'element_id'  => 'textarea-1',
+						'type'        => 'textarea',
+						'cols'        => '12',
+						'required'    => false,
+						'field_label' => 'Message',
+					),
+				),
+			),
+		);
+
+		$id = Forminator_API::add_form(
+			$title,
+			$wrappers,
+			array_merge(
+				array(
+					'formName'             => $title,
+					'form-type'            => 'default',
+					'submission-behaviour' => 'behaviour-thankyou',
+					'thankyou-message'     => 'RIP E2E Forminator accepted',
+					'enable-ajax'          => 'true',
+					'validation-inline'    => true,
+					'honeypot'             => false,
+					'use_ajax_load'        => '0',
+				),
+				$settings
+			)
+		);
+
+		return is_wp_error( $id ) ? 0 : (int) $id;
+	}
+
+	$rip_forminator      = rip_e2e_forminator_form( 'RIP E2E Forminator', array() );
+	$rip_forminator_ajax = rip_e2e_forminator_form( 'RIP E2E Forminator AJAX', array( 'use_ajax_load' => '1' ) );
+
+	rip_e2e_page( 'rip-e2e-forminator-page', 'RIP E2E Forminator Page', '[forminator_form id="' . $rip_forminator . '"]' );
+	rip_e2e_page( 'rip-e2e-forminator-ajax-page', 'RIP E2E Forminator AJAX Page', '[forminator_form id="' . $rip_forminator_ajax . '"]' );
+}
+
 echo 'cf7=' . (int) $rip_cf7
 	. ' frm=' . (int) $rip_frm
 	. ' frm_name=' . (int) $rip_name
@@ -441,4 +520,6 @@ echo 'cf7=' . (int) $rip_cf7
 	. ' gravity=' . (int) $rip_gravity
 	. ' gravity_multi=' . ( isset( $rip_gravity_multi ) ? (int) $rip_gravity_multi : 0 )
 	. ' wpforms=' . (int) $rip_wpforms
-	. ' wpforms_ajax=' . (int) $rip_wpforms_ajax;
+	. ' wpforms_ajax=' . (int) $rip_wpforms_ajax
+	. ' forminator=' . (int) $rip_forminator
+	. ' forminator_ajax=' . (int) $rip_forminator_ajax;

@@ -406,8 +406,16 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Dispatch the post-trip pipeline: log, stats, auto-block, API report, admin email.
 	 *
 	 * Public so sensors that maintain their own counter (e.g. the 2FA per-IP
-	 * transient throttle) can invoke the same consequences as sensors that
+	 * transient throttle) and sensors whose evidence needs no second hit (a
+	 * filled form decoy) can invoke the same consequences as sensors that
 	 * funnel through `track_generic_attempt()`.
+	 *
+	 * The whitelist is checked here rather than only in `track_generic_attempt()`,
+	 * because a direct caller would otherwise sail past it and get a trusted
+	 * address blocked and reported. Neither `auto_block_ip()` nor
+	 * `ReportedIP_Hive_Database::block_ip()` looks the address up again. It
+	 * runs last of the three guards because the other two are memoized and
+	 * this one reads a table.
 	 *
 	 * @param string $ip_address Client IP.
 	 * @param string $event_type Event slug, must exist in the category and stat mapping tables, otherwise the report rolls up to fallback buckets.
@@ -421,6 +429,10 @@ class ReportedIP_Hive_Security_Monitor {
 		}
 
 		if ( $this->should_spare_verified_bot( $ip_address, $event_type, $details ) ) {
+			return;
+		}
+
+		if ( $this->database->is_whitelisted( $ip_address ) ) {
 			return;
 		}
 
@@ -1085,12 +1097,29 @@ class ReportedIP_Hive_Security_Monitor {
 				);
 
 			case 'comment_spam':
+				if ( ! empty( $details['certain'] ) ) {
+					return sprintf(
+						'WordPress comment spam detected on %s (%s): %s',
+						$site_name,
+						$site_url,
+						isset( $details['reasons'] ) ? (string) $details['reasons'] : 'certain spam signals'
+					);
+				}
+
 				return sprintf(
 					'WordPress comment spam detected on %s (%s): %d spam comments in %d minutes',
 					$site_name,
 					$site_url,
-					$details['attempts'],
-					$details['timeframe']
+					(int) ( $details['attempts'] ?? 1 ),
+					(int) ( $details['timeframe'] ?? 0 )
+				);
+
+			case 'form_spam':
+				return sprintf(
+					'WordPress form spam detected on %s (%s): hidden decoy field filled on the %s form',
+					$site_name,
+					$site_url,
+					isset( $details['surface'] ) ? (string) $details['surface'] : 'unknown'
 				);
 
 			case 'xmlrpc_abuse':
@@ -1184,7 +1213,14 @@ class ReportedIP_Hive_Security_Monitor {
 				return sprintf( 'Failed login attempts: %d in %d minutes', $details['attempts'], $details['timeframe'] );
 
 			case 'comment_spam':
-				return sprintf( 'Comment spam: %d attempts in %d minutes', $details['attempts'], $details['timeframe'] );
+				if ( ! empty( $details['certain'] ) ) {
+					return sprintf( 'Comment spam: %s', isset( $details['reasons'] ) ? (string) $details['reasons'] : 'certain spam signals' );
+				}
+
+				return sprintf( 'Comment spam: %d attempts in %d minutes', (int) ( $details['attempts'] ?? 1 ), (int) ( $details['timeframe'] ?? 0 ) );
+
+			case 'form_spam':
+				return sprintf( 'Form spam: hidden decoy field filled on the %s form', isset( $details['surface'] ) ? (string) $details['surface'] : 'unknown' );
 
 			case 'xmlrpc_abuse':
 				return sprintf( 'XMLRPC abuse: %d requests in %d minutes', $details['attempts'], $details['timeframe'] );

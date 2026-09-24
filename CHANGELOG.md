@@ -4,6 +4,15 @@ All changes to ReportedIP Hive are documented here.
 
 ## [Unreleased]
 
+### New
+
+- **Forminator forms are protected too.** The same check the comment form and
+  the other six form plugins run, on Forminator forms whether they sit in the
+  page or are fetched afterwards. A refused submission comes back as an error
+  at the form, before the entry is stored and before the mail goes out, and is
+  never dropped into a spam folder where nobody reads it. The switch sits next
+  to the others under Form Protection and is part of the Business plan.
+
 ### Security
 
 - **Every protected form now reads the same rule.** A filled decoy is the
@@ -16,6 +25,27 @@ All changes to ReportedIP Hive are documented here.
   sender reads, and the address spends the same budget a comment or a
   contact form would have cost it. Nothing changes for a visitor without
   JavaScript, who is still refused and still never counted.
+- **A form bot is blocked and reported on its first try.** Filling a hidden
+  field nobody can see takes a machine, so waiting for a second and a third
+  attempt before doing anything only bought the sender two free runs and
+  left the community without the report. A filled decoy now goes straight
+  to the block ladder and the community report, the way the comment filter
+  has treated the same evidence since 2.1.52. A visitor whose browser
+  simply never ran the script is untouched by this and is still only
+  refused.
+- **A whitelisted address can no longer be blocked by a sensor that skips
+  the counter.** The whitelist was checked while counting attempts, not
+  while acting on them, so any sensor sure enough to act at once walked
+  past it. Both the comment filter and the form layer are sure enough. The
+  lookup now sits in the dispatcher every sensor ends up in.
+
+### Fixed
+
+- The community report for a comment that was certain spam read "1 spam
+  comments in 0 minutes" and raised a PHP notice while building that
+  sentence. It now names the signals that gave the sender away. Form spam
+  had no sentence of its own at all and was reported as "suspicious
+  activity"; it now names the form it came through.
 
 ### Changed
 

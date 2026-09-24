@@ -22,23 +22,37 @@ function proofField(): string {
 	return php("echo (string) ReportedIP_Hive_Option_Routing::get('reportedip_hive_form_proof_field', '');");
 }
 
-/** Rows the form-spam counter holds for the runner's address. */
-function spamAttemptCount(): number {
+/**
+ * Escalations a filled decoy produced. Since 2.1.66 the first one is enough,
+ * so this reads the sensor row rather than a counter that stays empty.
+ */
+function spamEscalationCount(): number {
 	return Number(
 		php(`
 			global $wpdb;
 			$prefix = $wpdb->base_prefix . 'reportedip_hive_';
-			echo (int) $wpdb->get_var( "SELECT COALESCE(SUM(attempt_count),0) FROM {$prefix}attempts WHERE attempt_type = 'form_spam'" );
+			echo (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$prefix}logs WHERE event_type = 'form_spam_threshold_exceeded'" );
 		`)
 	);
 }
 
-function clearSpamAttempts(): void {
+/**
+ * Drop the escalation rows and lift the block the runner just earned.
+ *
+ * The guard outside WordPress keeps its own copy of the block list, and a
+ * plain DELETE does not reach it: the next request is refused before PHP ever
+ * loads the plugin. Re-baking it is the only way back in.
+ */
+function clearSpamEscalations(): void {
 	phpTolerant(`
 		global $wpdb;
 		$prefix = $wpdb->base_prefix . 'reportedip_hive_';
+		$wpdb->query( "DELETE FROM {$prefix}logs WHERE event_type = 'form_spam_threshold_exceeded'" );
 		$wpdb->query( "DELETE FROM {$prefix}attempts WHERE attempt_type = 'form_spam'" );
 		$wpdb->query( "DELETE FROM {$prefix}blocked WHERE block_type = 'automatic'" );
+		if ( class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
+			ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->sync();
+		}
 	`);
 }
 
@@ -351,7 +365,7 @@ test.describe('form execution proof', () => {
 	 * The account must not exist afterwards, and the address has to carry the
 	 * same counter row a comment or a contact form would have cost it.
 	 */
-	test('a filled decoy on the sign-up form is refused and counted', async ({ request }) => {
+	test('a filled decoy on the sign-up form is refused and escalated', async ({ request }) => {
 		const wasOpen = php(`
 			echo (int) get_option('users_can_register');
 			update_option('users_can_register', 1);
@@ -368,7 +382,7 @@ test.describe('form execution proof', () => {
 			$user = get_user_by('login', 'e2eproofdecoy');
 			if ($user instanceof WP_User) { wp_delete_user($user->ID); }
 		`);
-		clearSpamAttempts();
+		clearSpamEscalations();
 
 		const response = await request.post('/wp-login.php?action=register', {
 			form: {
@@ -383,9 +397,9 @@ test.describe('form execution proof', () => {
 
 		expect(await response.text(), 'the sender has to be told').toContain('not accepted');
 		expect(php("echo get_user_by('login', 'e2eproofdecoy') ? 'yes' : 'no';")).toBe('no');
-		expect(spamAttemptCount(), 'a filled decoy costs the address its budget').toBeGreaterThan(0);
+		expect(spamEscalationCount(), 'a filled decoy costs the address at once').toBeGreaterThan(0);
 
-		clearSpamAttempts();
+		clearSpamEscalations();
 		phpTolerant(`
 			require_once ABSPATH . 'wp-admin/includes/user.php';
 			$user = get_user_by('login', 'e2eproofdecoy');

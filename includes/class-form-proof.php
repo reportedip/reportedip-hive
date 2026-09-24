@@ -108,8 +108,8 @@ class ReportedIP_Hive_Form_Proof {
 	const ADAPTER_PREFIX = '_';
 
 	/**
-	 * Attempt-tracker key a tripped decoy counts against, shared by every
-	 * surface so one address spends one budget.
+	 * Sensor slug a tripped decoy is escalated under, shared by every surface
+	 * so one address produces one kind of event wherever it was caught.
 	 */
 	const ATTEMPT_TYPE = 'form_spam';
 
@@ -126,6 +126,7 @@ class ReportedIP_Hive_Form_Proof {
 		'reportedip_hive_form_proof_um',
 		'reportedip_hive_form_proof_gravity',
 		'reportedip_hive_form_proof_wpforms',
+		'reportedip_hive_form_proof_forminator',
 	);
 
 	/**
@@ -1106,8 +1107,10 @@ class ReportedIP_Hive_Form_Proof {
 	 * What a verdict costs a submission. Pure, because this is the whole
 	 * enforcement rule and every surface has to read it the same way.
 	 *
-	 * Only a filled decoy is counted against the address. A client that never
-	 * ran the script is refused but never tracked: somebody browsing without
+	 * Only a filled decoy is certain. Nobody ever sees that field, so filling
+	 * it takes a machine reading the markup, and the address pays for it at
+	 * once instead of after a third try. A client that never ran the script is
+	 * refused but never held against anybody: somebody browsing without
 	 * JavaScript produces exactly that, and locking them out of the site is a
 	 * far worse outcome than the submission they were trying to send. A
 	 * submission that never carried our anchor is refused only in the strict
@@ -1121,34 +1124,34 @@ class ReportedIP_Hive_Form_Proof {
 	 *
 	 * @param string $verdict One of the four verdict constants.
 	 * @param bool   $strict  Whether a missing anchor counts as a refusal.
-	 * @return array{refuse:bool, count:bool}
+	 * @return array{refuse:bool, certain:bool}
 	 * @since  2.1.66
 	 */
 	public static function consequence( $verdict, $strict ) {
 		if ( self::TRIPPED === $verdict ) {
 			return array(
-				'refuse' => true,
-				'count'  => true,
+				'refuse'  => true,
+				'certain' => true,
 			);
 		}
 
 		if ( self::FAILED === $verdict ) {
 			return array(
-				'refuse' => true,
-				'count'  => false,
+				'refuse'  => true,
+				'certain' => false,
 			);
 		}
 
 		if ( self::ABSENT === $verdict ) {
 			return array(
-				'refuse' => (bool) $strict,
-				'count'  => false,
+				'refuse'  => (bool) $strict,
+				'certain' => false,
 			);
 		}
 
 		return array(
-			'refuse' => false,
-			'count'  => false,
+			'refuse'  => false,
+			'certain' => false,
 		);
 	}
 
@@ -1173,16 +1176,21 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
-	 * Count one tripped decoy against the source address, on the same threshold
-	 * and window the comment surface uses. Spam arriving through a sign-up form
-	 * is the same address doing the same thing, so it gets the same budget
-	 * rather than a second set of numbers to keep in sync.
+	 * Hand a certain bot straight to the sensor dispatcher.
 	 *
-	 * @param string $ip Client address.
+	 * A filled decoy needs no corroboration, so it skips the attempt counter
+	 * and goes where a tripped threshold goes: log, block ladder, community
+	 * report and admin mail, each still subject to its own setting. The
+	 * comment surface has treated the same evidence this way since 2.1.52;
+	 * until 2.1.66 every other form waited for a third hit within a day,
+	 * which let a single sender walk away unreported.
+	 *
+	 * @param string $ip      Client address.
+	 * @param string $surface Surface the decoy was filled on.
 	 * @return void
 	 * @since  2.1.66
 	 */
-	public static function count_against( $ip ) {
+	public static function escalate( $ip, $surface ) {
 		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
 			return;
 		}
@@ -1193,20 +1201,21 @@ class ReportedIP_Hive_Form_Proof {
 			return;
 		}
 
-		$monitor->track_generic_attempt(
+		$monitor->handle_threshold_exceeded(
 			(string) $ip,
 			self::ATTEMPT_TYPE,
-			self::ATTEMPT_TYPE,
-			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_threshold', 3 ),
-			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_comment_spam_timeframe', 1440 )
+			array(
+				'surface' => (string) $surface,
+				'certain' => 1,
+			)
 		);
 	}
 
 	/**
 	 * Judge one submission and carry out the consequence.
 	 *
-	 * This is the single enforcement path: it decides, logs, counts and hands
-	 * back the sentence the sender has to see. Every refusing surface goes
+	 * This is the single enforcement path: it decides, logs, escalates a
+	 * certain bot and hands back the sentence the sender has to see. Every refusing surface goes
 	 * through here, so a new form inherits the whole standard by calling one
 	 * method, and a change to the rule reaches all of them at once.
 	 *
@@ -1228,8 +1237,8 @@ class ReportedIP_Hive_Form_Proof {
 
 		$this->log_failure( $surface );
 
-		if ( $outcome['count'] ) {
-			self::count_against( ReportedIP_Hive::get_client_ip() );
+		if ( $outcome['certain'] ) {
+			self::escalate( ReportedIP_Hive::get_client_ip(), $surface );
 		}
 
 		if ( $this->report_only() ) {

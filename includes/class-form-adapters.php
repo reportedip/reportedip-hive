@@ -69,6 +69,11 @@ final class ReportedIP_Hive_Form_Adapters {
 			'feature' => 'form_adapters_advanced',
 			'detect'  => 'WPForms\\WPForms',
 		),
+		'forminator'      => array(
+			'option'  => 'reportedip_hive_form_proof_forminator',
+			'feature' => 'form_adapters_advanced',
+			'detect'  => 'Forminator_API',
+		),
 	);
 
 	/**
@@ -103,6 +108,7 @@ final class ReportedIP_Hive_Form_Adapters {
 			'ultimate_member' => 'Ultimate Member',
 			'gravity_forms'   => 'Gravity Forms',
 			'wpforms'         => 'WPForms',
+			'forminator'      => 'Forminator',
 		);
 	}
 
@@ -182,6 +188,9 @@ final class ReportedIP_Hive_Form_Adapters {
 
 		add_action( 'wpforms_display_submit_before', array( $this, 'wpforms_anchor' ) );
 		add_action( 'wpforms_process', array( $this, 'wpforms_validate' ), 10, 3 );
+
+		add_filter( 'forminator_render_form_submit_markup', array( $this, 'forminator_anchor' ) );
+		add_filter( 'forminator_custom_form_submit_errors', array( $this, 'forminator_validate' ), 10, 3 );
 	}
 
 	/**
@@ -925,6 +934,99 @@ final class ReportedIP_Hive_Form_Adapters {
 	}
 
 	/**
+	 * Plant the anchor in a Forminator form.
+	 *
+	 * `forminator_render_form_submit_markup` is the block that carries the
+	 * nonce and the submit button, and it is always written inside the form
+	 * element, on the page-load path and on the AJAX render alike. Forminator
+	 * hangs its own honeypot there for the same reason. The wider
+	 * `forminator_render_form_markup` would be wrong: its markup reaches past
+	 * the closing form tag, so an appended field would land outside.
+	 *
+	 * @param mixed $html Submit-area markup.
+	 * @return mixed
+	 * @since  2.1.66
+	 */
+	public function forminator_anchor( $html ) {
+		if ( ! is_string( $html ) || ! $this->active( 'forminator' ) ) {
+			return $html;
+		}
+
+		return $html . ReportedIP_Hive_Form_Proof::get_instance()->anchor_html( 'forminator' );
+	}
+
+	/**
+	 * Judge a Forminator submission on its validation hook.
+	 *
+	 * The hook is the second step of the submission handler, before the entry
+	 * object is built, before it is saved and long before the mail is sent. A
+	 * non-empty error list there throws, and the plugin answers with the error
+	 * list the sender reads above the form. Nothing is stored, nothing is
+	 * sent, no add-on runs.
+	 *
+	 * The plugin's own spam filter is deliberately not used: depending on a
+	 * per-form setting it drops the submission into the spam folder and shows
+	 * the sender a success message, which is the one outcome this layer is not
+	 * allowed to produce.
+	 *
+	 * The errors are a list of single-entry arrays keyed by field id, and the
+	 * hook fires a second time while attachments are handled, so a refusal
+	 * that is already in the list is never added twice.
+	 *
+	 * @param mixed $errors  Collected submission errors.
+	 * @param mixed $form_id Form the submission belongs to.
+	 * @param mixed $fields  Field data of the submission.
+	 * @return mixed
+	 * @since  2.1.66
+	 */
+	public function forminator_validate( $errors, $form_id, $fields = array() ) {
+		unset( $form_id );
+
+		if ( ! is_array( $errors ) ) {
+			return $errors;
+		}
+
+		$message = $this->refuse( 'forminator' );
+
+		if ( '' === $message ) {
+			return $errors;
+		}
+
+		foreach ( $errors as $entry ) {
+			if ( is_array( $entry ) && in_array( $message, $entry, true ) ) {
+				return $errors;
+			}
+		}
+
+		$errors[] = array( self::forminator_first_field( $fields ) => $message );
+
+		return $errors;
+	}
+
+	/**
+	 * The field a Forminator refusal is shown at.
+	 *
+	 * Forminator keys every error by a field id and renders the message next
+	 * to that field, so the refusal is attached to the first field of the
+	 * submission rather than to a name the form does not know.
+	 *
+	 * @param mixed $fields Field data of the submission.
+	 * @return string
+	 * @since  2.1.66
+	 */
+	public static function forminator_first_field( $fields ) {
+		if ( is_array( $fields ) ) {
+			foreach ( $fields as $field ) {
+				if ( is_array( $field ) && ! empty( $field['name'] ) ) {
+					return (string) $field['name'];
+				}
+			}
+		}
+
+		return 'reportedip_hive';
+	}
+
+	/**
 	 * Decide one submission and produce its refusal, or an empty string when it
 	 * may proceed. Same order as every other surface: plan and switch, then the
 	 * community reputation of the address, then the execution proof.
@@ -1001,7 +1103,7 @@ final class ReportedIP_Hive_Form_Adapters {
 	 *
 	 * @param string $verdict Verdict from {@see ReportedIP_Hive_Form_Proof::check()}.
 	 * @param bool   $strict  Whether a missing anchor counts as a refusal.
-	 * @return array{refuse:bool, count:bool}
+	 * @return array{refuse:bool, certain:bool}
 	 * @since  2.1.58
 	 */
 	public static function consequence( $verdict, $strict ) {

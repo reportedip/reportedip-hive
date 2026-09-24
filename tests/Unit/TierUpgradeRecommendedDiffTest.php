@@ -86,6 +86,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'reportedip_hive_data_retention_days'   => 365,
 					'reportedip_hive_form_proof_elementor'  => 1,
 					'reportedip_hive_form_proof_formidable' => 1,
+					'reportedip_hive_form_proof_forminator' => 1,
 					'reportedip_hive_form_proof_gravity'    => 1,
 					'reportedip_hive_form_proof_um'         => 1,
 					'reportedip_hive_form_proof_wpforms'    => 1,

@@ -130,6 +130,17 @@ namespace {
 				$this->stat_calls[] = $stat_type;
 				return true;
 			}
+
+			/**
+			 * Whether the address is trusted. Never here, because the point of
+			 * this case is the address that is not.
+			 *
+			 * @param string $ip_address Client IP.
+			 * @return bool
+			 */
+			public function is_whitelisted( $ip_address ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+				return false;
+			}
 		}
 	}
 

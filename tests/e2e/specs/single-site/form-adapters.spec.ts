@@ -57,6 +57,8 @@ const GRAVITY_AJAX_PAGE = '/rip-e2e-gravity-ajax-page/';
 const GRAVITY_MULTI_PAGE = '/rip-e2e-gravity-multi-page/';
 const WPFORMS_PAGE = '/rip-e2e-wpforms-page/';
 const WPFORMS_AJAX_PAGE = '/rip-e2e-wpforms-ajax-page/';
+const FORMINATOR_PAGE = '/rip-e2e-forminator-page/';
+const FORMINATOR_AJAX_PAGE = '/rip-e2e-forminator-ajax-page/';
 
 /**
  * Object ids the fixture hands back. Nothing here may be hard-coded: the three
@@ -75,6 +77,8 @@ let GRAVITY_FORM = '0';
 let GRAVITY_MULTI_FORM = '0';
 let WPFORMS_FORM = '0';
 let WPFORMS_AJAX_FORM = '0';
+let FORMINATOR_FORM = '0';
+let FORMINATOR_AJAX_FORM = '0';
 
 const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_cf7',
@@ -83,6 +87,7 @@ const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_um',
 	'reportedip_hive_form_proof_gravity',
 	'reportedip_hive_form_proof_wpforms',
+	'reportedip_hive_form_proof_forminator',
 ];
 
 /**
@@ -140,6 +145,8 @@ function seedForms(): void {
 	GRAVITY_MULTI_FORM = read('gravity_multi');
 	WPFORMS_FORM = read('wpforms');
 	WPFORMS_AJAX_FORM = read('wpforms_ajax');
+	FORMINATOR_FORM = read('forminator');
+	FORMINATOR_AJAX_FORM = read('forminator_ajax');
 
 	const page = php(
 		`$p = get_posts(array('name' => 'rip-e2e-cf7-page', 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => 1)); echo $p ? (int) $p[0]->ID : 0;`
@@ -229,12 +236,18 @@ function failureLogCount(): number {
 	);
 }
 
-/** How many `form_spam` counter rows exist for any address. */
-function spamAttemptCount(): number {
+/**
+ * How many filled decoys have been escalated.
+ *
+ * A filled decoy is certain evidence and goes straight to the sensor
+ * dispatcher since 2.1.66, so the row to count is the escalation, not an
+ * attempt counter that is never written any more.
+ */
+function spamEscalationCount(): number {
 	return Number(
 		php(`
 			global $wpdb;
-			echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->base_prefix}reportedip_hive_attempts WHERE attempt_type = 'form_spam'");
+			echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->base_prefix}reportedip_hive_logs WHERE event_type = 'form_spam_threshold_exceeded'");
 		`)
 	);
 }
@@ -260,11 +273,24 @@ function releaseBlocks(): void {
 	`);
 }
 
-/** Drop the counter rows, so each spec reads its own consequence. */
-function clearSpamAttempts(): void {
+/**
+ * Drop the escalation rows and lift the block they produced.
+ *
+ * The block matters more than the rows: the first filled decoy now blocks the
+ * address that sent it, and that address is the one this suite runs from. A
+ * case that fills a decoy and then loads a page has to come through here in
+ * between or it reads the refusal page instead of the form.
+ */
+function clearSpamEscalations(): void {
 	php(`
 		global $wpdb;
-		$wpdb->query("DELETE FROM {$wpdb->base_prefix}reportedip_hive_attempts WHERE attempt_type = 'form_spam'");
+		$prefix = $wpdb->base_prefix . 'reportedip_hive_';
+		$wpdb->query("DELETE FROM {$prefix}logs WHERE event_type = 'form_spam_threshold_exceeded'");
+		$wpdb->query("DELETE FROM {$prefix}attempts WHERE attempt_type = 'form_spam'");
+		$wpdb->query("DELETE FROM {$prefix}blocked WHERE block_type = 'automatic'");
+		if (class_exists('ReportedIP_Hive_WAF_Dropin_Manager')) {
+			ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->sync();
+		}
 	`);
 }
 
@@ -821,24 +847,27 @@ test.describe('form adapters', () => {
 		await expectFormidableRefused(request);
 	});
 
-	/** Case 4: a filled decoy is refused, logged and counted. */
-	test('a filled decoy is refused, logged and counted', async ({ request }) => {
-		clearSpamAttempts();
+	/** Case 4: a filled decoy is refused, logged and escalated at once. */
+	test('a filled decoy is refused, logged and escalated', async ({ request }) => {
+		clearSpamEscalations();
 
 		await expectCf7Refused(request, { [ANCHOR]: 'http://spam.example' });
 
-		expect(spamAttemptCount()).toBe(1);
+		expect(spamEscalationCount(), 'one filled decoy is enough').toBe(1);
 
-		clearSpamAttempts();
+		clearSpamEscalations();
 	});
 
-	/** Case 5: an empty anchor without the proof field is refused but never counted. */
-	test('a client that never ran the script is refused but not counted', async ({ request }) => {
-		clearSpamAttempts();
+	/** Case 5: an empty anchor without the proof field is refused but never escalated. */
+	test('a client that never ran the script is refused but not escalated', async ({ request }) => {
+		clearSpamEscalations();
 
 		await expectCf7Refused(request, { [ANCHOR]: '' });
 
-		expect(spamAttemptCount(), 'a browser without JavaScript must never be tracked').toBe(0);
+		expect(
+			spamEscalationCount(),
+			'a browser without JavaScript must never be blocked for it'
+		).toBe(0);
 	});
 
 	/** The proof field alone, spelled correctly, is what lets a post through. */
@@ -1102,14 +1131,14 @@ test.describe('form adapters', () => {
 			await expectGravityRefused(request);
 		});
 
-		test('a filled decoy is refused on Gravity Forms and counted', async ({ request }) => {
-			clearSpamAttempts();
+		test('a filled decoy is refused on Gravity Forms and escalated', async ({ request }) => {
+			clearSpamEscalations();
 
 			await expectGravityRefused(request, { [ANCHOR]: 'http://spam.example' });
 
-			expect(spamAttemptCount()).toBe(1);
+			expect(spamEscalationCount()).toBe(1);
 
-			clearSpamAttempts();
+			clearSpamEscalations();
 		});
 
 		test('a post carrying both fields is accepted on Gravity Forms', async ({ request }) => {
@@ -1293,14 +1322,14 @@ test.describe('form adapters', () => {
 			await expectWpformsRefused(request);
 		});
 
-		test('a filled decoy is refused on WPForms and counted', async ({ request }) => {
-			clearSpamAttempts();
+		test('a filled decoy is refused on WPForms and escalated', async ({ request }) => {
+			clearSpamEscalations();
 
 			await expectWpformsRefused(request, { [ANCHOR]: 'http://spam.example' });
 
-			expect(spamAttemptCount()).toBe(1);
+			expect(spamEscalationCount()).toBe(1);
 
-			clearSpamAttempts();
+			clearSpamEscalations();
 		});
 
 		test('a post carrying both fields is accepted on WPForms', async ({ request }) => {
@@ -1318,6 +1347,210 @@ test.describe('form adapters', () => {
 			const body = await postWpforms(request);
 
 			expect(body, 'WPForms needs the Business plan').toContain('wpforms-confirmation-container');
+
+			php(forceTierPhp('business'));
+		});
+	});
+
+	/**
+	 * Post to Forminator the way its own script does: the submission goes to
+	 * admin-ajax with the nonce the rendered page carries, because the plugin
+	 * refuses anything else before this layer is ever asked.
+	 */
+	async function postForminator(
+		request: APIRequestContext,
+		extra: Record<string, string> = {},
+		formId: string = FORMINATOR_FORM,
+		pageUrl: string = FORMINATOR_PAGE
+	): Promise<string> {
+		/*
+		 * One retry on the first read. A case that counts mail or entries
+		 * first spends seconds in WP-CLI, and the kept-alive connection to
+		 * the site has been closed by the server by the time the request
+		 * goes out: the first attempt then fails with a socket hang up that
+		 * says nothing about the form.
+		 */
+		let markup = '';
+
+		for (let attempt = 0; attempt < 2; attempt++) {
+			try {
+				markup = await (await request.get(pageUrl)).text();
+				break;
+			} catch (error) {
+				if (attempt > 0) {
+					throw error;
+				}
+			}
+		}
+
+		const nonce = /name="forminator_nonce" value="([^"]+)"/.exec(markup)?.[1] ?? '';
+
+		const response = await request.post('/wp-admin/admin-ajax.php', {
+			form: {
+				action: 'forminator_submit_form_custom-forms',
+				form_id: formId,
+				page_id: '1',
+				render_id: '0',
+				forminator_nonce: nonce,
+				'email-1': 'e2e-forminator@example.com',
+				'textarea-1': 'An ordinary enquiry.',
+				...extra,
+			},
+		});
+
+		return response.text();
+	}
+
+	/** A Forminator refusal has to reach the sender and must be ours. */
+	async function expectForminatorRefused(
+		request: APIRequestContext,
+		extra: Record<string, string> = {}
+	): Promise<void> {
+		const logsBefore = failureLogCount();
+		const body = await postForminator(request, extra);
+
+		expect(body, 'the sender has to be told').toContain('not accepted');
+		expect(body).toContain('"success":false');
+		expect(
+			failureLogCount(),
+			'the refusal has to come from this layer, not from Forminator'
+		).toBeGreaterThan(logsBefore);
+	}
+
+	test.describe('Forminator', () => {
+		test.beforeAll(() => {
+			test.skip(FORMINATOR_FORM === '0', 'Forminator is not installed on this stack');
+		});
+
+		test('Forminator renders the anchor exactly once, inside the form', async ({ page }) => {
+			await page.goto(FORMINATOR_PAGE);
+			await page.waitForLoadState('domcontentloaded');
+
+			await expect(page.locator('form input.rip-fp-anchor')).toHaveCount(1);
+			await expect(page.locator(`form input[name="${ANCHOR}"]`)).toHaveCount(1);
+
+			const box = await page.locator('form .rip-hp-field').boundingBox();
+			expect(box, 'the decoy must sit off screen').not.toBeNull();
+			expect(box!.x).toBeLessThan(0);
+		});
+
+		/**
+		 * Both ways a Forminator form reaches the page: written into the
+		 * markup, and fetched afterwards. The second one hands the browser a
+		 * form the proof script never saw at load time, which is the case a
+		 * page cache produces on a live site.
+		 */
+		for (const [label, url] of [
+			['in the page', FORMINATOR_PAGE],
+			['loaded afterwards', FORMINATOR_AJAX_PAGE],
+		] as const) {
+			test(`a real browser gets through Forminator (${label})`, async ({ page }) => {
+				const logsBefore = failureLogCount();
+
+				await page.goto(url);
+				await page.waitForSelector('form input.rip-fp-anchor', { timeout: 30000 });
+				await page.fill('input[name="email-1"]', 'e2e-forminator@example.com');
+				await page.fill('textarea[name="textarea-1"]', 'An ordinary enquiry from a reader.');
+				await page.click('button.forminator-button-submit');
+
+				await expect(page.locator('.forminator-success')).toBeVisible({ timeout: 30000 });
+				expect(failureLogCount()).toBe(logsBefore);
+			});
+
+			test(`a browser without our script is told on Forminator (${label})`, async ({ page }) => {
+				await page.route('**/form-proof.js*', (route) => route.abort());
+
+				await page.goto(url);
+				await page.waitForSelector('form input.rip-fp-anchor', { timeout: 30000 });
+				await page.fill('input[name="email-1"]', 'e2e-forminator@example.com');
+				await page.fill('textarea[name="textarea-1"]', 'An enquiry from a browser that blocks scripts.');
+				await page.click('button.forminator-button-submit');
+
+				await expect(page.locator('.forminator-error-message, .forminator-label--error')).toContainText(
+					'JavaScript',
+					{ timeout: 30000 }
+				);
+				await expect(page.locator('.forminator-success')).toHaveCount(0);
+			});
+		}
+
+		/**
+		 * The computation holds the submit until an answer is in stock and
+		 * then sends the form again, which has to run the plugin's own
+		 * validation and background request as if the visitor had clicked.
+		 */
+		test('a browser passes the computation on Forminator', async ({ page }) => {
+			setForcedHttps(true);
+			setComputation(true);
+
+			try {
+				const logsBefore = failureLogCount();
+
+				await page.goto(FORMINATOR_PAGE);
+				await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
+
+				await page.fill('input[name="email-1"]', 'e2e-forminator@example.com');
+				await page.fill('textarea[name="textarea-1"]', 'A computed enquiry.');
+				await page.click('button.forminator-button-submit');
+
+				await expect(page.locator('.forminator-success')).toBeVisible({ timeout: 60000 });
+				expect(failureLogCount()).toBe(logsBefore);
+			} finally {
+				setComputation(false);
+				setForcedHttps(false);
+			}
+		});
+
+		test('a bare post without our fields is refused on Forminator', async ({ request }) => {
+			await expectForminatorRefused(request);
+		});
+
+		/**
+		 * The refusal must land before the entry is stored and before the mail
+		 * goes out. Elementor shipped a refusal that was read too late and let
+		 * the mail through anyway, which is the failure this pins down.
+		 */
+		test('a refused Forminator submission stores nothing and sends nothing', async ({
+			request,
+		}) => {
+			const mailsBefore = await mailCount();
+			const entriesBefore = Number(
+				php(`global $wpdb; echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}frmt_form_entry");`)
+			);
+
+			await expectForminatorRefused(request);
+
+			expect(
+				Number(
+					php(`global $wpdb; echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}frmt_form_entry");`)
+				),
+				'a refused submission must not be stored'
+			).toBe(entriesBefore);
+			expect(await mailCount(), 'a refused submission must not be mailed').toBe(mailsBefore);
+		});
+
+		test('a filled decoy is refused on Forminator and escalated', async ({ request }) => {
+			clearSpamEscalations();
+
+			await expectForminatorRefused(request, { [ANCHOR]: 'http://spam.example' });
+
+			expect(spamEscalationCount()).toBe(1);
+
+			clearSpamEscalations();
+		});
+
+		test('a post carrying both fields is accepted on Forminator', async ({ request }) => {
+			const body = await postForminator(request, { [ANCHOR]: '', [proofField()]: '1' });
+
+			expect(body).toContain('"success":true');
+		});
+
+		test('professional leaves Forminator inert', async ({ request }) => {
+			php(forceTierPhp('professional'));
+
+			const body = await postForminator(request);
+
+			expect(body, 'Forminator needs the Business plan').toContain('"success":true');
 
 			php(forceTierPhp('business'));
 		});
@@ -1352,7 +1585,7 @@ test.describe('form adapters', () => {
 			setAdapters(true);
 			expireGrace();
 			clearUmUsers();
-			clearSpamAttempts();
+			clearSpamEscalations();
 			clearRegistrationAttempts();
 
 			const logsBefore = failureLogCount();
@@ -1368,7 +1601,12 @@ test.describe('form adapters', () => {
 			await postUmRegister(request, 'ripe2eumdecoy', { _reportedip_hive_hp: 'filled by a bot' });
 
 			expect(umUserCount()).toBe(0);
-			expect(spamAttemptCount(), 'a filled decoy counts against the address').toBeGreaterThan(0);
+			expect(
+				spamEscalationCount(),
+				'a filled decoy costs the address at once'
+			).toBeGreaterThan(0);
+
+			clearSpamEscalations();
 
 			const login = `ripe2eum${Date.now().toString().slice(-6)}`;
 
