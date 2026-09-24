@@ -357,6 +357,17 @@ test.describe('form execution proof', () => {
 			update_option('users_can_register', 1);
 		`);
 
+		/*
+		 * Clear the account first, not only afterwards. A run that fails
+		 * before its own cleanup leaves the login behind, and the next run
+		 * then reads that leftover as "the sign-up went through" and fails
+		 * for a reason that has nothing to do with the code under test.
+		 */
+		phpTolerant(`
+			require_once ABSPATH . 'wp-admin/includes/user.php';
+			$user = get_user_by('login', 'e2eproofdecoy');
+			if ($user instanceof WP_User) { wp_delete_user($user->ID); }
+		`);
 		clearSpamAttempts();
 
 		const response = await request.post('/wp-login.php?action=register', {
