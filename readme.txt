@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.64
+Stable tag: 2.1.65
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -469,6 +469,16 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.65 =
+
+New: form protection on WPForms and WPForms Lite (Business), on the page-load path and the background path alike. A refusal is the form's own error above the form, no entry is written and no mail is sent.
+
+Fixed: a refused Elementor submission still sent the form mail. Elementor stops a submission only when the handler holds a field error, so a refusal given as a message alone let every submit action run first and reported the failure afterwards. The refusal is now a field error as well.
+
+Fixed: sign-ups through Ultimate Member could be refused although a person filled the form in. Ultimate Member submits with a jQuery trigger, which fires no submit event, so the proof script never saw those submissions. It sees them now.
+
+Fixed: the card that offers Extended Protection never appeared on sites running PHP-FPM, nginx or LiteSpeed, because the dashboard asked whether the server reads .htaccess while the one-click setup writes .user.ini there.
 
 = 2.1.64 =
 

@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-09-23T19:31:02+00:00\n"
+"PO-Revision-Date: 2026-09-24T09:56:03+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
@@ -7255,12 +7255,12 @@ msgstr "Alle Ereignisse aus %s"
 msgid "%s (threshold reached)"
 msgstr "%s (Schwelle erreicht)"
 
-#: includes/class-form-adapters.php:1069
+#: includes/class-form-adapters.php:1098
 #: includes/class-registration-guard.php:562
 msgid "This form needs JavaScript to be submitted. Switch it on and try again."
 msgstr "Dieses Formular braucht JavaScript. Bitte einschalten und noch einmal versuchen."
 
-#: includes/class-form-adapters.php:1072
+#: includes/class-form-adapters.php:1101
 msgid "Your submission was not accepted. Please reload the page and try again."
 msgstr "Ihre Eingabe wurde nicht angenommen. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 
