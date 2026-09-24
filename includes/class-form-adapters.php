@@ -473,9 +473,16 @@ final class ReportedIP_Hive_Form_Adapters {
 	/**
 	 * Judge an Elementor Pro form submission.
 	 *
-	 * The record is deliberately not consulted: `Form_Record::set_fields()`
+	 * The record's values are deliberately not consulted: `Form_Record::set_fields()`
 	 * only knows the fields defined in the editor, so our anchor is invisible
 	 * to it. {@see ReportedIP_Hive_Form_Proof::check()} reads the request.
+	 *
+	 * A refusal has to land in the handler's field errors, not only in its
+	 * message list. `Form_Record::validate()` returns whether the field
+	 * errors are empty, and the handler runs every submit action, the mail
+	 * included, as long as they are: a message alone marks the response as
+	 * failed after the mail has already left. The message is kept as well,
+	 * because it is the text the sender reads.
 	 *
 	 * @param mixed $record       Submitted form record.
 	 * @param mixed $ajax_handler Elementor ajax handler.
@@ -483,17 +490,39 @@ final class ReportedIP_Hive_Form_Adapters {
 	 * @since  2.1.58
 	 */
 	public function elementor_validate( $record, $ajax_handler ) {
-		unset( $record );
-
 		$message = $this->refuse( 'elementor' );
 
-		if ( '' === $message ) {
+		if ( '' === $message || ! is_object( $ajax_handler ) ) {
 			return;
 		}
 
-		if ( is_object( $ajax_handler ) && method_exists( $ajax_handler, 'add_error_message' ) ) {
+		if ( method_exists( $ajax_handler, 'add_error' ) ) {
+			$ajax_handler->add_error( self::elementor_first_field( $record ), $message );
+		}
+
+		if ( method_exists( $ajax_handler, 'add_error_message' ) ) {
 			$ajax_handler->add_error_message( $message );
 		}
+	}
+
+	/**
+	 * The id of the first field on an Elementor form, where a form-wide
+	 * refusal is shown; a fixed key when the record carries none.
+	 *
+	 * @param mixed $record Submitted form record.
+	 * @return string
+	 * @since  2.1.65
+	 */
+	public static function elementor_first_field( $record ) {
+		if ( is_object( $record ) && method_exists( $record, 'get' ) ) {
+			$fields = $record->get( 'fields' );
+
+			if ( is_array( $fields ) && ! empty( $fields ) ) {
+				return (string) array_key_first( $fields );
+			}
+		}
+
+		return 'reportedip_hive';
 	}
 
 	/**

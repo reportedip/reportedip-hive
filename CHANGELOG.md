@@ -22,6 +22,16 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **A refused Elementor submission still sent the form mail.** The adapter
+  handed its refusal to Elementor Pro as a message only, and the handler
+  runs every submit action, the mail included, as long as it holds no field
+  error; the sender was told the form had failed after the mail had already
+  left, and the log showed a refused submission that had reached the inbox
+  anyway. The refusal is now a field error as well, which stops the
+  submission before any action runs. The browser spec checks the mail
+  catcher in both directions: a refused bare post sends nothing, a real
+  browser sends exactly one.
+
 - **Ultimate Member sign-ups failed the computation check.** Ultimate
   Member sends its forms with a jQuery-triggered submit, which fires no
   submit event, so the proof script never saw the submission: the answer

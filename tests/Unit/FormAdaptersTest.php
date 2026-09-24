@@ -218,6 +218,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 					"add_action( 'elementor_pro/forms/validation', array( \$this, 'elementor_validate' ), 10, 2 )",
 					'Elementor Pro validation is where its submission is refused',
 				),
+				'elementor field error' => array(
+					'$ajax_handler->add_error( self::elementor_first_field( $record ), $message )',
+					'Form_Record::validate() only reads the field errors; a message alone lets every submit action, the mail included, run first',
+				),
 				'gravity render'      => array(
 					"add_filter( 'gform_form_tag', array( \$this, 'gravity_anchor' ), 10, 2 )",
 					'the anchor has to reach the Gravity Forms markup',

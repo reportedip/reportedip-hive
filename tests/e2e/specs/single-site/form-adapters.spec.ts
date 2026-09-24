@@ -3,6 +3,15 @@ import type { APIRequestContext } from '@playwright/test';
 import { test, expect } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
 import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
+import { MAILPIT_BASE_URL } from '../../fixtures/reset-flow';
+
+/** How many messages the mail catcher holds right now. */
+async function mailCount(): Promise<number> {
+	const response = await fetch(`${MAILPIT_BASE_URL}/api/v1/messages?limit=1`);
+	const body = (await response.json()) as { total?: number };
+
+	return Number(body.total ?? 0);
+}
 
 /**
  * Execution proof on third-party forms (since 2.1.58).
@@ -713,12 +722,15 @@ test.describe('form adapters', () => {
 	});
 
 	test('a real browser gets through Elementor', async ({ page }) => {
+		const mailsBefore = await mailCount();
+
 		await page.goto(ELEMENTOR_PAGE);
 		await page.fill('input[name="form_fields[name]"]', 'E2E Reader');
 		await page.fill('textarea[name="form_fields[message]"]', 'An ordinary enquiry from a reader.');
 		await page.click('.elementor-button[type="submit"]');
 
 		await expect(page.locator('.elementor-message-success')).toBeVisible();
+		await expect.poll(mailCount, { timeout: 15000 }).toBe(mailsBefore + 1);
 	});
 
 	test('a real browser gets through Formidable', async ({ page }) => {
@@ -792,10 +804,17 @@ test.describe('form adapters', () => {
 		await expectCf7Refused(request);
 	});
 
+	/**
+	 * `success: false` alone is not a refusal: Elementor runs its submit
+	 * actions unless the handler holds a field error, so a message-only
+	 * refusal used to report an error after the mail had already left.
+	 */
 	test('a bare post without our fields is refused on Elementor', async ({ request }) => {
+		const mailsBefore = await mailCount();
 		const body = await postElementor(request);
 
 		expect(body.success).toBe(false);
+		expect(await mailCount(), 'a refused submission must not send the form mail').toBe(mailsBefore);
 	});
 
 	test('a bare post without our fields is refused on Formidable', async ({ request }) => {
