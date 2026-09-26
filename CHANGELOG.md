@@ -2,6 +2,23 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Security
+
+- **A link in a comment counts wherever it sits.** Four signals asked whether
+  a comment carries a link and looked only at the website field, so a campaign
+  that left the field empty and put its target into the text bought itself out
+  of all four. That is how a run of Russian insulation adverts reached the
+  moderation queue on a site set to English: one link in the text, no website
+  filled in, no browser behind it. The language check, the praise opener and
+  the link point now read both places, and the repeat check asks the comment
+  table about link targets in the text as well, which also means a domain the
+  site has already published stops costing a regular commenter a point.
+  Measured against 349 real spam comments the hit rate against bots that pass
+  the execution proof rises from 42 to 50 per cent. Nothing changes for a
+  comment without any link.
+
 ## [2.1.66] (2026-09-24)
 
 ### New

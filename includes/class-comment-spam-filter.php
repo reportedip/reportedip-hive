@@ -156,8 +156,9 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 
 	/**
 	 * Openings that praise the article without saying anything about it. On
-	 * their own they are how a polite reader starts; together with a link in
-	 * the author field they are the standard opening of link-building spam.
+	 * their own they are how a polite reader starts; together with a link they
+	 * are the standard opening of link-building spam. The link counts wherever
+	 * it sits, in the website field or in the text.
 	 */
 	const PRAISE_PATTERN = '/^(?:thank|thanks|great|nice|good|awesome|excellent|wonderful|amazing|very good|cool|perfect|i (?:really )?(?:like|love|enjoy))/i';
 
@@ -464,9 +465,13 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	}
 
 	/**
-	 * Ask the comment table what it has seen before: whether this link target
-	 * is one the site already published, how often it has been submitted at
-	 * all, and whether this text has arrived once already.
+	 * Ask the comment table what it has seen before: whether a link target of
+	 * this comment is one the site already published, how often it has been
+	 * submitted at all, and whether this text has arrived once already.
+	 *
+	 * Both places a link can sit are looked up, the website field and the text.
+	 * Reading the field alone let a campaign keep its target out of the count
+	 * by leaving the field empty.
 	 *
 	 * The published-before check is what keeps a regular commenter who always
 	 * leaves the same website of their own out of the repeat count. Without it
@@ -494,14 +499,18 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 		}
 
 		$url   = trim( (string) ( $commentdata['comment_author_url'] ?? '' ) );
-		$hosts = '' !== $url ? self::hosts( array( $url ) ) : array();
+		$body  = trim( (string) ( $commentdata['comment_content'] ?? '' ) );
+		$hosts = self::hosts( array_merge( self::links_in( $body ), '' !== $url ? array( $url ) : array() ) );
 
 		if ( array() !== $hosts ) {
+			$like = '%' . $wpdb->esc_like( $hosts[0] ) . '%';
+
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One-off lookup on a form post; a cache would be stale by design.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT comment_approved, COUNT(*) AS total FROM {$wpdb->comments} WHERE comment_author_url LIKE %s GROUP BY comment_approved",
-					'%' . $wpdb->esc_like( $hosts[0] ) . '%'
+					"SELECT comment_approved, COUNT(*) AS total FROM {$wpdb->comments} WHERE comment_author_url LIKE %s OR comment_content LIKE %s GROUP BY comment_approved",
+					$like,
+					$like
 				)
 			);
 
@@ -514,8 +523,6 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 			}
 			$history['link_target_repeats'] = $total >= self::REPEAT_TARGET;
 		}
-
-		$body = trim( (string) ( $commentdata['comment_content'] ?? '' ) );
 
 		if ( mb_strlen( $body ) >= self::DUPLICATE_BODY ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One-off lookup on a form post; a cache would be stale by design.
@@ -620,6 +627,7 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 		$body_links = self::links_in( $body );
 		$hosts      = self::hosts( array_merge( $body_links, '' !== $author_url ? array( $author_url ) : array() ) );
 		$link_count = count( $body_links ) + ( '' !== $author_url ? 1 : 0 );
+		$has_link   = '' !== $author_url || array() !== $body_links;
 
 		$score   = 0;
 		$reasons = array();
@@ -703,21 +711,21 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 			$reasons[] = 'foreign_script';
 		}
 
-		if ( '' !== $author_url
+		if ( $has_link
 			&& mb_strlen( $body ) >= self::LANGUAGE_BODY
 			&& self::reads_as_foreign_language( $body, isset( $context['locale'] ) ? (string) $context['locale'] : '' ) ) {
 			$score    += 2;
 			$reasons[] = 'language_mismatch';
 		}
 
-		if ( '' !== $author_url && preg_match( self::PRAISE_PATTERN, $body ) ) {
+		if ( $has_link && preg_match( self::PRAISE_PATTERN, $body ) ) {
 			$score    += 2;
-			$reasons[] = 'praise_opener_with_url';
+			$reasons[] = 'praise_opener_with_link';
 		}
 
-		if ( '' !== $author_url && empty( $context['link_target_trusted'] ) ) {
+		if ( $has_link && empty( $context['link_target_trusted'] ) ) {
 			++$score;
-			$reasons[] = 'author_url';
+			$reasons[] = '' !== $author_url ? 'author_url' : 'link_in_body';
 
 			if ( ! empty( $context['link_target_repeats'] ) ) {
 				$score    += 2;

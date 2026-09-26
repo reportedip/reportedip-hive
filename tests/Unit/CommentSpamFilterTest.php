@@ -359,7 +359,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				\ReportedIP_Hive_Comment_Spam_Filter::is_certain(
 					array(
 						'score'   => 20,
-						'reasons' => array( 'no_js_proof', 'author_url', 'praise_opener_with_url', 'language_mismatch', 'foreign_script', 'repeat_link_target' ),
+						'reasons' => array( 'no_js_proof', 'author_url', 'praise_opener_with_link', 'language_mismatch', 'foreign_script', 'repeat_link_target' ),
 					)
 				)
 			);
@@ -633,7 +633,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * The language check needs a link in the author field to fire at all,
+		 * The language check needs a link anywhere in the comment to fire at all,
 		 * enough text to be meaningful, and a locale it has words for.
 		 */
 		public function test_language_mismatch_needs_a_link_text_and_a_known_locale(): void {
@@ -709,14 +709,66 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * The praise opener only counts next to a link. On its own it is how a
+		 * A link in the text is a link. Four signals used to ask for one and
+		 * looked only at the website field, so a campaign that left the field
+		 * empty and put its target into the body bought itself out of all four.
+		 * The comment below is the one from ticket 7614325: Russian body, one
+		 * link in the text, no website, no JavaScript. It scored 6 against a
+		 * threshold of 7 and reached the moderation queue.
+		 */
+		public function test_a_link_in_the_body_counts_like_one_in_the_website_field(): void {
+			$comment = array(
+				'comment_author'       => 'Bawontodo',
+				'comment_author_email' => 'Bawontodo@gmail.com',
+				'comment_author_url'   => '',
+				'comment_content'      => 'Теплоизоляционные материалы выполняет важнейшую задачу в удержании комфортной температуры внутри дома. https://sport-reforma.ru/sport/396-kuda-propala-odri-totu.html',
+			);
+
+			$context = array(
+				'locale'          => 'en_US',
+				'form_proof'      => 'failed',
+				'renders_anchors' => true,
+				'user_agent'      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+			);
+
+			$verdict = $this->score( $comment, $context );
+
+			$this->assertContains( 'link_in_body', $verdict['reasons'] );
+			$this->assertContains( 'language_mismatch', $verdict['reasons'] );
+			$this->assertGreaterThanOrEqual(
+				\ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD,
+				$verdict['score'],
+				'A foreign-language link drop without a browser proof has to reach the threshold.'
+			);
+		}
+
+		/**
+		 * The same reader without a link stays untouched. The language of a
+		 * body says nothing on its own, otherwise every visitor writing in
+		 * their own language would be filed as a spammer.
+		 */
+		public function test_a_foreign_language_comment_without_a_link_is_left_alone(): void {
+			$verdict = $this->score(
+				array(
+					'comment_author'  => 'Dmitri',
+					'comment_content' => 'Очень полезная статья, спасибо за подробное объяснение настроек плагина.',
+				),
+				array( 'locale' => 'en_US' )
+			);
+
+			$this->assertNotContains( 'language_mismatch', $verdict['reasons'] );
+			$this->assertLessThan( \ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD, $verdict['score'] );
+		}
+
+		/**
+		 * The praise opener only counts next to a link, wherever it sits. On its
 		 * polite reader starts a sentence.
 		 */
 		public function test_praise_counts_only_next_to_a_link(): void {
 			$body = 'Thank you for your sharing, I found the whole piece genuinely useful.';
 
 			$this->assertContains(
-				'praise_opener_with_url',
+				'praise_opener_with_link',
 				$this->score(
 					array(
 						'comment_author'     => 'Alex',
@@ -726,7 +778,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				)['reasons']
 			);
 			$this->assertNotContains(
-				'praise_opener_with_url',
+				'praise_opener_with_link',
 				$this->score(
 					array(
 						'comment_author'  => 'Alex',
