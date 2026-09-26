@@ -135,6 +135,24 @@ function newestSpamReasons(): string {
 	`);
 }
 
+/** Surface recorded on the newest refused-proof log row. */
+function newestProofFailure(): string {
+	return php(`
+		global $wpdb;
+		$row = $wpdb->get_var("SELECT details FROM {$wpdb->base_prefix}reportedip_hive_logs WHERE event_type = 'form_proof_failed' ORDER BY id DESC LIMIT 1");
+		$data = $row ? json_decode($row, true) : array();
+		echo isset($data['surface']) ? (string) $data['surface'] : '';
+	`);
+}
+
+/** Whether any address currently carries an automatic block. */
+function automaticBlocks(): string {
+	return php(`
+		global $wpdb;
+		echo (string) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->base_prefix}reportedip_hive_blocked WHERE block_type = 'automatic'");
+	`);
+}
+
 /**
  * A user-agent that claims WebKit without the token every real WebKit build
  * carries. Since 2.1.58 that is a signal of its own, and it is what lets these
@@ -262,24 +280,32 @@ test.describe('form execution proof', () => {
 		await context.close();
 	});
 
-	test('a bare post without the proof field is filed as spam', async ({ request }) => {
+	/**
+	 * Since 2.1.67 the comment form refuses this at the door, the way the
+	 * sign-up form and every form adapter always did. Before that it was worth
+	 * four points on a score, and a bot whose text stayed below the threshold
+	 * reached the moderation queue.
+	 */
+	test('a bare post without the proof field is refused outright', async ({ request }) => {
 		clearComments(postId);
 		const status = await postComment(request, postId, { [ANCHOR]: '' });
 
-		expect(status, 'the submission was refused before the filter saw it').toBe(302);
-		expect(newestCommentState(postId)).toBe('spam');
-		expect(newestSpamReasons()).toContain('no_js_proof');
-		expect(newestSpamReasons()).toContain('no_browser_ua');
+		expect(status, 'the submission is turned away, not stored').toBe(403);
+		expect(newestCommentState(postId)).toBe('none');
+		expect(newestProofFailure()).toBe('comment');
 	});
 
 	/**
-	 * The same submission from a browser that identifies itself honestly. The
-	 * missing proof alone is not enough to file it, which is the whole point of
-	 * the threshold raised in 2.1.58: somebody browsing with JavaScript off
-	 * produces exactly this and is not a spammer.
+	 * The same submission from a browser that identifies itself honestly is
+	 * refused too, and that is the intended cost: the sender reads a sentence
+	 * telling them the form needs JavaScript. What must never happen is the
+	 * address paying for it, because a browser setting would then turn into a
+	 * site-wide ban.
 	 */
-	test('a reader without JavaScript is not filed as spam', async ({ request }) => {
+	test('a reader without JavaScript is refused but never blocked', async ({ request }) => {
 		clearComments(postId);
+		releaseBlocks();
+
 		const status = await postComment(
 			request,
 			postId,
@@ -287,17 +313,23 @@ test.describe('form execution proof', () => {
 			REAL_UA
 		);
 
-		expect(status).toBe(302);
-		expect(newestCommentState(postId)).not.toBe('spam');
+		expect(status).toBe(403);
+		expect(newestCommentState(postId)).toBe('none');
+		expect(automaticBlocks(), 'a visitor without JavaScript is never blocked').toBe('0');
 	});
 
-	test('a filled decoy is filed as spam', async ({ request }) => {
+	test('a filled decoy is refused and costs the address at once', async ({ request }) => {
 		clearComments(postId);
+		releaseBlocks();
+
 		const status = await postComment(request, postId, { [ANCHOR]: 'http://spam.example' });
 
-		expect(status, 'the submission was refused before the filter saw it').toBe(302);
-		expect(newestCommentState(postId)).toBe('spam');
-		expect(newestSpamReasons()).toContain('form_decoy_filled');
+		expect(status, 'the submission is turned away, not stored').toBe(403);
+		expect(newestCommentState(postId)).toBe('none');
+		expect(newestProofFailure()).toBe('comment');
+		expect(automaticBlocks(), 'a machine filling a hidden field pays on its first try').not.toBe(
+			'0'
+		);
 
 		releaseBlocks();
 	});

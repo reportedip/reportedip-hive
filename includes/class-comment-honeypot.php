@@ -105,11 +105,11 @@ class ReportedIP_Hive_Comment_Honeypot {
 	/**
 	 * Log and count a comment whose decoy field was filled.
 	 *
-	 * Since 2.1.53 this no longer ends the request. The consequence is carried
-	 * by the score instead: {@see ReportedIP_Hive_Comment_Spam_Filter} weights a
-	 * tripped decoy above its threshold, and whether that files the comment as
-	 * spam or refuses it outright is the operator's `comment_spam_action`
-	 * decision. One code path for hard rejection rather than two.
+	 * This does not end the request. The refusal belongs to
+	 * {@see ReportedIP_Hive_Form_Proof::enforce()}, which the comment filter
+	 * calls on the same hook at a later priority: one code path for hard
+	 * rejection rather than two, shared with every other protected form. What
+	 * happens here is the log line and the counter tick.
 	 *
 	 * @param array<string,mixed> $commentdata Incoming comment data.
 	 * @return array<string,mixed>

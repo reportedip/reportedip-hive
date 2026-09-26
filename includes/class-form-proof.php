@@ -52,8 +52,10 @@ class ReportedIP_Hive_Form_Proof {
 	const OPT_LOGIN_FORMS = 'reportedip_hive_form_proof_login_forms';
 
 	/**
-	 * Surfaces whose refusal is absolute rather than a scoring signal, and
-	 * which are therefore governed by {@see OPT_LOGIN_FORMS} together.
+	 * Surfaces an operator can lock out of their own site with, and which are
+	 * therefore governed by {@see OPT_LOGIN_FORMS} together. The comment form
+	 * refuses just as absolutely since 2.1.67, but it carries no such risk and
+	 * has a switch of its own.
 	 *
 	 * @var string[]
 	 */
@@ -369,11 +371,11 @@ class ReportedIP_Hive_Form_Proof {
 	/**
 	 * Whether the sign-up and password-reset forms take part.
 	 *
-	 * Comments and login surfaces carry different risk: a comment that fails
-	 * the check is filed for review, a password reset that fails is refused,
-	 * and the reset form is the one an operator reaches for when they are
-	 * already locked out. Keeping the two apart lets a site run the comment
-	 * protection without ever putting its own recovery path at risk.
+	 * Comments and login surfaces carry different risk. A refused comment
+	 * costs a visitor one message, a refused password reset can cost the
+	 * operator their own site, and the reset form is the one they reach for
+	 * when they are already locked out. Keeping the two apart lets a site run
+	 * the comment protection without putting its recovery path at risk.
 	 *
 	 * @return bool
 	 * @since  2.1.53
@@ -958,10 +960,10 @@ class ReportedIP_Hive_Form_Proof {
 	 * Verdict for the current request on a surface we own.
 	 *
 	 * This is the one place the computation is checked, so every surface
-	 * inherits it together with its own consequence: a comment gains a scoring
-	 * signal, a sign-up or password reset is refused. A field filled with
-	 * anything other than a solved challenge reads as `failed`, which is what
-	 * closes the copy-the-field-name shortcut.
+	 * inherits the same reading and, through {@see consequence()}, the same
+	 * consequence. A field filled with anything other than a solved challenge
+	 * reads as `failed`, which is what closes the copy-the-field-name
+	 * shortcut.
 	 *
 	 * @param string $surface Surface identifier.
 	 * @return string One of the four verdict constants.

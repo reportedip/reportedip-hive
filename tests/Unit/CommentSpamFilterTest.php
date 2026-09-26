@@ -213,34 +213,44 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertLessThan( \ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD, $verdict['score'] );
 		}
 
-		public function test_failed_proof_needs_corroboration(): void {
-			$verdict = $this->score(
-				array(
-					'comment_author'  => 'Tom',
-					'comment_content' => 'Danke für den ausführlichen Bericht, das hat mir sehr geholfen.',
-				),
-				array( 'form_proof' => 'failed' )
-			);
+		/**
+		 * Since 2.1.67 a client that ran no script is refused at the door by
+		 * the shared rule, the way it is on every other protected form, so the
+		 * verdict never arrives at the score. See
+		 * FormSurfaceStandardTest::test_the_comment_form_refuses_through_the_shared_rule.
+		 */
+		public function test_a_refusing_verdict_no_longer_reaches_the_score(): void {
+			foreach ( array( 'failed', 'tripped' ) as $proof ) {
+				$verdict = $this->score(
+					array(
+						'comment_author'  => 'Tom',
+						'comment_content' => 'Danke für den ausführlichen Bericht, das hat mir sehr geholfen.',
+					),
+					array(
+						'form_proof'      => $proof,
+						'renders_anchors' => true,
+					)
+				);
 
-			$this->assertSame( 4, $verdict['score'] );
-			$this->assertSame( array( 'no_js_proof' ), $verdict['reasons'] );
-			$this->assertLessThan( \ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD, $verdict['score'] );
+				$this->assertSame( 0, $verdict['score'], $proof . ' is refused, not scored' );
+				$this->assertSame( array(), $verdict['reasons'] );
+			}
 		}
 
 		/**
-		 * The reader without JavaScript, written out in full: a browser that
-		 * identifies itself, a comment in the site language, no link, and a
-		 * missing proof. This must stay clean, and it is the regression test
-		 * for the whole point of raising the threshold.
+		 * The reader whose page came out of a cache older than the anchor: a
+		 * browser that identifies itself, a comment in the site language, no
+		 * link, and no field at all. This must stay clean, and it is the
+		 * regression test for the whole point of raising the threshold.
 		 */
-		public function test_a_reader_without_javascript_stays_clean(): void {
+		public function test_a_reader_whose_page_carried_no_field_stays_clean(): void {
 			$verdict = $this->score(
 				array(
 					'comment_author'  => 'Tom',
 					'comment_content' => 'Danke für den ausführlichen Bericht, das hat mir sehr geholfen.',
 				),
 				array(
-					'form_proof'      => 'failed',
+					'form_proof'      => 'absent',
 					'renders_anchors' => true,
 					'user_agent'      => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
 					'locale'          => 'de_DE',
@@ -248,24 +258,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 
 			$this->assertLessThan( \ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD, $verdict['score'] );
-		}
-
-		/**
-		 * A filled decoy field has no innocent reading, so it carries the
-		 * threshold on its own and must keep doing so whenever the threshold
-		 * moves.
-		 */
-		public function test_tripped_decoy_reaches_the_threshold_on_its_own(): void {
-			$verdict = $this->score(
-				array(
-					'comment_author'  => 'Tom',
-					'comment_content' => 'Danke für den ausführlichen Bericht, das hat mir sehr geholfen.',
-				),
-				array( 'form_proof' => 'tripped' )
-			);
-
-			$this->assertSame( array( 'form_decoy_filled' ), $verdict['reasons'] );
-			$this->assertGreaterThanOrEqual( \ReportedIP_Hive_Comment_Spam_Filter::THRESHOLD, $verdict['score'] );
 		}
 
 		public function test_proved_execution_scores_nothing(): void {
@@ -334,15 +326,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * A filled decoy is proof on its own: the field is hidden from anyone
-		 * who reads the page.
+		 * The score alone is never certain, however high it climbs. The one
+		 * piece of evidence that used to skip the score, a filled decoy, is
+		 * refused before the scoring runs since 2.1.67.
 		 */
-		public function test_a_filled_decoy_is_certain_at_any_score(): void {
+		public function test_a_high_score_without_a_hard_reason_is_not_certain(): void {
+			$this->assertFalse(
+				\ReportedIP_Hive_Comment_Spam_Filter::is_certain(
+					array(
+						'score'   => 20,
+						'reasons' => array( 'author_url', 'language_mismatch', 'no_js_proof' ),
+					)
+				)
+			);
 			$this->assertTrue(
 				\ReportedIP_Hive_Comment_Spam_Filter::is_certain(
 					array(
-						'score'   => 8,
-						'reasons' => array( 'form_decoy_filled', 'author_url' ),
+						'score'   => \ReportedIP_Hive_Comment_Spam_Filter::CERTAIN,
+						'reasons' => array( 'url_in_author_name' ),
 					)
 				)
 			);

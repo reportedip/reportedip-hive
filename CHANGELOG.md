@@ -6,6 +6,20 @@ All changes to ReportedIP Hive are documented here.
 
 ### Security
 
+- **The comment form refuses a bot the same way every other form does.** The
+  execution proof has always seen a client that never ran the script, and on
+  the sign-up form, the password reset and all six form plugins that verdict
+  means the submission is turned away with a sentence the sender reads. The
+  comment form was the one exception: it added four points to a score and let
+  the comment through whenever the rest of the text stayed below the
+  threshold, which is how a run of adverts reached the moderation queue while
+  the same sender was being refused at the sign-up form. A comment is now
+  refused at the door, with the same wording and the same log line. Nothing
+  changes for a page that came out of a cache older than the check: that
+  comment carries no field at all, and it is still only scored, never
+  refused. The comment decoy switch governs the whole layer, so switching it
+  off switches the refusal off with it.
+
 - **A link in a comment counts wherever it sits.** Four signals asked whether
   a comment carries a link and looked only at the website field, so a campaign
   that left the field empty and put its target into the text bought itself out

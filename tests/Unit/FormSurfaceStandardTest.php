@@ -71,7 +71,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		private const READERS = array(
 			'class-form-proof.php'         => 'owns the rule',
 			'class-form-adapters.php'      => 'delegates to it and keeps the old method names',
-			'class-comment-spam-filter.php' => 'scores a comment instead of refusing it, by design',
+			'class-comment-spam-filter.php' => 'refuses through enforce(), and scores the one lenient verdict that is left',
 			'class-ajax-handler.php'       => 'rebuilds a verdict for the Tools self-test, which enforces nothing',
 		);
 
@@ -271,6 +271,34 @@ namespace ReportedIP\Hive\Tests\Unit {
 				"A protected form must hand its verdict to ReportedIP_Hive_Form_Proof::enforce() instead of reading it:\n"
 					. implode( "\n", $offenders )
 			);
+		}
+
+		/**
+		 * The comment form refuses through the shared rule like every other
+		 * surface. It was the last one that did not: a bot without JavaScript
+		 * paid four points there instead of being turned away, and whenever the
+		 * rest of the text stayed under the threshold the comment reached the
+		 * moderation queue. Ticket 7614325 is that case.
+		 *
+		 * Only the lenient verdict may still be scored. A page cache older than
+		 * the anchor sends no field, and a reader is not turned away for that.
+		 */
+		public function test_the_comment_form_refuses_through_the_shared_rule(): void {
+			$body = $this->source( 'class-comment-spam-filter.php' );
+
+			$this->assertStringContainsString(
+				"->enforce( 'comment', false )",
+				$body,
+				'the comment form has to hand its verdict to the shared rule, leniently'
+			);
+
+			foreach ( array( 'tripped', 'failed' ) as $verdict ) {
+				$this->assertStringNotContainsString(
+					"'" . $verdict . "' === ",
+					$body,
+					'a refusing verdict is decided by the shared rule, never scored here'
+				);
+			}
 		}
 
 		/**

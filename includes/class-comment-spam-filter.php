@@ -33,10 +33,13 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	const OPT_ACTION = 'reportedip_hive_comment_spam_action';
 
 	/**
-	 * Score at which a comment counts as spam. Only a filled decoy field
-	 * reaches it on its own, and that has no legitimate reading. Every other
-	 * signal stays below it, so an ordinary comment needs at least two
-	 * independent reasons.
+	 * Score at which a comment counts as spam. No single signal reaches it on
+	 * its own, so an ordinary comment needs at least two independent reasons.
+	 *
+	 * The two verdicts that need no second reason, a filled decoy and a client
+	 * that never ran the script, no longer arrive here at all: since 2.1.67
+	 * they are refused at the door by {@see ReportedIP_Hive_Form_Proof::enforce()},
+	 * the way they are on every other protected form.
 	 *
 	 * Raised from 4 to 7 in 2.1.58. At 4 a missing execution proof was enough
 	 * on its own, which filed every reader browsing without JavaScript as a
@@ -69,7 +72,6 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	 * @var string[]
 	 */
 	const HARD_REASONS = array(
-		'form_decoy_filled',
 		'url_in_author_name',
 		'no_browser_ua',
 		'pasted_link_markup',
@@ -245,10 +247,10 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	}
 
 	/**
-	 * Wire the two comment hooks. Scoring happens on `preprocess_comment`,
-	 * after the honeypot has had its say, and the verdict is applied on
-	 * `pre_comment_approved` so the comment reaches `comment_post` with the
-	 * spam state already set.
+	 * Wire the two comment hooks. The execution proof is enforced and the
+	 * remainder scored on `preprocess_comment`, after the decoy trap has had
+	 * its say, and the verdict is applied on `pre_comment_approved` so the
+	 * comment reaches `comment_post` with the spam state already set.
 	 *
 	 * @since 2.1.52
 	 */
@@ -272,7 +274,12 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	 * Score the incoming comment and remember the verdict.
 	 *
 	 * Trackbacks and pingbacks are left alone, they carry no body to judge.
-	 * Anyone who may edit posts is exempt, as in the honeypot.
+	 * Anyone who may edit posts is exempt, as in the decoy trap.
+	 *
+	 * The execution proof is enforced first and independently of
+	 * {@see OPT_ACTION}: it is its own layer with its own switch, and a
+	 * submission it refuses never becomes a comment to score. The exemptions
+	 * above run before it, so a vouched address is never turned away.
 	 *
 	 * @param array<string,mixed> $commentdata Incoming comment data.
 	 * @return array<string,mixed>
@@ -281,9 +288,6 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	public function inspect_comment( $commentdata ) {
 		$this->verdict = null;
 
-		if ( 'off' === $this->action() ) {
-			return $commentdata;
-		}
 		if ( ! empty( $commentdata['comment_type'] ) && ! in_array( (string) $commentdata['comment_type'], array( '', 'comment' ), true ) ) {
 			return $commentdata;
 		}
@@ -291,6 +295,20 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 			return $commentdata;
 		}
 		if ( $this->ip_is_exempt() ) {
+			return $commentdata;
+		}
+
+		$refusal = $this->refuse_by_proof();
+
+		if ( '' !== $refusal ) {
+			wp_die(
+				esc_html( $refusal ),
+				'',
+				array( 'response' => 403 )
+			);
+		}
+
+		if ( 'off' === $this->action() ) {
 			return $commentdata;
 		}
 
@@ -314,6 +332,37 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 		}
 
 		return $commentdata;
+	}
+
+	/**
+	 * Refuse a submission the execution proof rejects, in the same words and
+	 * with the same consequence every other protected form uses.
+	 *
+	 * Until 2.1.67 the comment form was the one surface that read the proof as
+	 * a score instead of a refusal. A bot without JavaScript therefore paid
+	 * four points and reached the moderation queue whenever the rest of the
+	 * text stayed below the threshold, while the sign-up form and all six
+	 * third-party adapters refused the same submission at the door.
+	 *
+	 * Lenient, so `absent` never refuses: a comment form served from a page
+	 * cache older than the anchor carries no field, and a reader is not to be
+	 * turned away for that. It keeps feeding the score, where it always did.
+	 *
+	 * The comment decoy switch still governs the whole layer here. With the
+	 * decoy off nothing renders the anchor, and a stale cached page that still
+	 * carries one must not start refusing readers.
+	 *
+	 * @return string Refusal text, empty when the submission may proceed.
+	 * @since  2.1.67
+	 */
+	private function refuse_by_proof() {
+		if ( ! class_exists( 'ReportedIP_Hive_Form_Proof' )
+			|| ! class_exists( 'ReportedIP_Hive_Comment_Honeypot' )
+			|| ! ReportedIP_Hive_Comment_Honeypot::get_instance()->is_enabled() ) {
+			return '';
+		}
+
+		return ReportedIP_Hive_Form_Proof::get_instance()->enforce( 'comment', false );
 	}
 
 	/**
@@ -392,9 +441,9 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 	 * Whether a verdict stands on its own, without a second comment from the
 	 * same address to confirm it.
 	 *
-	 * A filled decoy needs no score at all: the field is hidden from anyone
-	 * who reads the page, so filling it has no other reading. Everything else
-	 * needs both the score and a reason from {@see HARD_REASONS}.
+	 * A verdict needs both the score and a reason from {@see HARD_REASONS}.
+	 * The one piece of evidence that used to skip the score, a filled decoy,
+	 * is refused before the scoring runs since 2.1.67 and escalated there.
 	 *
 	 * @param array{score:int, reasons:array<int,string>}|null $verdict Verdict.
 	 * @return bool
@@ -406,10 +455,6 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 		}
 
 		$reasons = array_values( (array) ( $verdict['reasons'] ?? array() ) );
-
-		if ( in_array( 'form_decoy_filled', $reasons, true ) ) {
-			return true;
-		}
 
 		return (int) ( $verdict['score'] ?? 0 ) >= self::CERTAIN
 			&& array() !== array_intersect( self::HARD_REASONS, $reasons );
@@ -438,7 +483,7 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 			&& class_exists( 'ReportedIP_Hive_Comment_Honeypot' )
 			&& ReportedIP_Hive_Comment_Honeypot::get_instance()->is_enabled() ) {
 			$form_proof = ReportedIP_Hive_Form_Proof::get_instance();
-			$proof      = $form_proof->verdict_for_request( 'comment' );
+			$proof      = $form_proof->last_verdict();
 			$renders    = $form_proof->renders_anchors();
 			$seconds    = $form_proof->last_seconds();
 			$fast       = $form_proof->fast_seconds();
@@ -740,13 +785,7 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 
 		$proof = isset( $context['form_proof'] ) ? (string) $context['form_proof'] : '';
 
-		if ( 'tripped' === $proof ) {
-			$score    += 7;
-			$reasons[] = 'form_decoy_filled';
-		} elseif ( 'failed' === $proof ) {
-			$score    += 4;
-			$reasons[] = 'no_js_proof';
-		} elseif ( 'absent' === $proof && ! empty( $context['renders_anchors'] ) ) {
+		if ( 'absent' === $proof && ! empty( $context['renders_anchors'] ) ) {
 			$score    += 4;
 			$reasons[] = 'no_js_proof';
 		} elseif ( 'absent' === $proof ) {
