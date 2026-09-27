@@ -1158,6 +1158,100 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Group membership and the reputation of the site's own address.
+	 *
+	 * Both come from verify-key and live in the options `reportedip_hive_group`
+	 * and `reportedip_hive_reputation`; the group sync refreshes the group
+	 * part every fifteen minutes. Renders nothing while neither is known, so a
+	 * key without a group sees the page exactly as before.
+	 *
+	 * @return void
+	 * @since 2.1.67
+	 */
+	private function render_group_section() {
+		$group      = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_group', null );
+		$reputation = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_reputation', null );
+		$group      = is_array( $group ) && ! empty( $group['name'] ) ? $group : null;
+		$reputation = is_array( $reputation ) && ! empty( $reputation['address'] ) ? $reputation : null;
+		if ( null === $group && null === $reputation ) {
+			return;
+		}
+
+		$group_icon      = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+		$reputation_icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+		$listed          = null !== $reputation && ! empty( $reputation['listed'] );
+		?>
+		<div class="rip-settings-section rip-relay-quota">
+			<h2 class="rip-settings-section__title">
+				<?php echo self::kses_inline_svg( $group_icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally. ?>
+				<?php esc_html_e( 'Group and reputation', 'reportedip-hive' ); ?>
+			</h2>
+			<p class="rip-settings-section__desc"><?php esc_html_e( 'A group shares its bans: every address one member reports is blocked on every other member for the ban window. Groups are managed in the reportedip.com dashboard.', 'reportedip-hive' ); ?></p>
+			<div class="rip-stat-cards">
+				<?php if ( null !== $group ) : ?>
+				<div class="rip-stat-card rip-stat-card--quota">
+					<div class="rip-stat-card__head">
+						<div class="rip-stat-card__icon rip-stat-card__icon--info">
+							<?php echo self::kses_inline_svg( $group_icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally. ?>
+						</div>
+						<div class="rip-stat-card__content">
+							<div class="rip-stat-card__value"><?php echo esc_html( (string) $group['name'] ); ?></div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'Group', 'reportedip-hive' ); ?></div>
+						</div>
+					</div>
+					<div class="rip-stat-card__hint">
+						<?php
+						printf(
+							/* translators: 1: number of members, 2: ban window in hours */
+							esc_html( _n( '%1$s member, bans last %2$s hours.', '%1$s members, bans last %2$s hours.', (int) ( $group['members'] ?? 0 ), 'reportedip-hive' ) ),
+							esc_html( number_format_i18n( (int) ( $group['members'] ?? 0 ) ) ),
+							esc_html( number_format_i18n( (int) ( $group['ban_hours'] ?? 24 ) ) )
+						);
+						?>
+					</div>
+				</div>
+				<?php endif; ?>
+
+				<?php if ( null !== $reputation ) : ?>
+				<div class="rip-stat-card rip-stat-card--quota">
+					<div class="rip-stat-card__head">
+						<div class="rip-stat-card__icon <?php echo $listed ? 'rip-stat-card__icon--danger' : 'rip-stat-card__icon--success'; ?>">
+							<?php echo self::kses_inline_svg( $reputation_icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally. ?>
+						</div>
+						<div class="rip-stat-card__content">
+							<div class="rip-stat-card__value"><?php echo $listed ? esc_html__( 'Listed', 'reportedip-hive' ) : esc_html__( 'Not listed', 'reportedip-hive' ); ?></div>
+							<div class="rip-stat-card__label">
+								<?php
+								/* translators: %s: IP address */
+								printf( esc_html__( 'Reputation of %s', 'reportedip-hive' ), esc_html( (string) $reputation['address'] ) );
+								?>
+							</div>
+						</div>
+					</div>
+					<?php if ( $listed ) : ?>
+					<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+						<?php
+						printf(
+							/* translators: 1: number of reports, 2: confidence score */
+							esc_html__( 'The address this site connects from is in the community database: %1$s reports, confidence %2$s. Check it on reportedip.com under Tools.', 'reportedip-hive' ),
+							esc_html( number_format_i18n( (int) ( $reputation['reports'] ?? 0 ) ) ),
+							esc_html( (string) (int) ( $reputation['confidence'] ?? 0 ) )
+						);
+						?>
+						<a href="<?php echo esc_url( 'https://reportedip.com/tools/' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Open Tools', 'reportedip-hive' ); ?></a>
+					</div>
+					<?php else : ?>
+					<div class="rip-stat-card__hint"><?php esc_html_e( 'No community member has reported this address.', 'reportedip-hive' ); ?></div>
+					<?php endif; ?>
+				</div>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Standalone "Domains" section for Community tiers below Professional.
 	 *
 	 * Free/Contributor accounts have the smallest domain allowances, so they
@@ -1721,6 +1815,79 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
+	 * Warn on the plugin pages when the community says the site's own
+	 * address is listed.
+	 *
+	 * The service answers verify-key with the reputation of the address the
+	 * request came from; a listed address means other members are refusing
+	 * this server. Dismissed per user and per address, so a new listing after
+	 * a clean-up shows up again.
+	 *
+	 * @return void
+	 * @since 2.1.67
+	 */
+	public static function maybe_render_reputation_notice() {
+		$reputation = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_reputation', null );
+		if ( ! is_array( $reputation ) || empty( $reputation['listed'] ) ) {
+			return;
+		}
+		$address   = (string) ( $reputation['address'] ?? '' );
+		$notice_id = 'reputation_listed_' . md5( $address );
+		if ( get_user_meta( get_current_user_id(), 'reportedip_dismissed_' . $notice_id, true ) ) {
+			return;
+		}
+		$body = sprintf(
+			'%1$s <a href="%2$s" target="_blank" rel="noopener">%3$s</a>',
+			sprintf(
+				/* translators: 1: IP address, 2: number of reports, 3: confidence score */
+				esc_html__( 'Other members of the community have reported %1$s, the address this site connects from: %2$s reports, confidence %3$s. A listed address can be refused by other sites and by mail servers. Check the address and the reports behind it on reportedip.com under Tools, then clear the cause on this server.', 'reportedip-hive' ),
+				esc_html( $address ),
+				esc_html( number_format_i18n( (int) ( $reputation['reports'] ?? 0 ) ) ),
+				esc_html( (string) (int) ( $reputation['confidence'] ?? 0 ) )
+			),
+			esc_url( 'https://reportedip.com/tools/' ),
+			esc_html__( 'Check the address', 'reportedip-hive' )
+		);
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'        => 'warning',
+				'title'          => __( 'The address of this site is listed in the community database', 'reportedip-hive' ),
+				'body'           => $body,
+				'dismissible'    => true,
+				'data_notice_id' => $notice_id,
+			)
+		);
+	}
+
+	/**
+	 * Warn once when the service refused the group ban list for the plan.
+	 *
+	 * The sync keeps asking every fifteen minutes, so a plan change picks the
+	 * list up without any action here; the notice only explains why nothing
+	 * arrives in the meantime.
+	 *
+	 * @return void
+	 * @since 2.1.67
+	 */
+	public static function maybe_render_group_tier_notice() {
+		if ( 'group_tier' !== (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_group_error', '' ) ) {
+			return;
+		}
+		if ( get_user_meta( get_current_user_id(), 'reportedip_dismissed_group_tier', true ) ) {
+			return;
+		}
+		ReportedIP_Hive_Admin_Notice::render(
+			array(
+				'variant'        => 'info',
+				'title'          => __( 'Group bans need the Professional plan', 'reportedip-hive' ),
+				'body'           => esc_html__( 'This key belongs to a group on reportedip.com, but the plan behind it does not include group bans. The group list is skipped until the plan changes; every other function keeps running.', 'reportedip-hive' ),
+				'dismissible'    => true,
+				'data_notice_id' => 'group_tier',
+			)
+		);
+	}
+
+	/**
 	 * Render the over-limit domain notice when the last service snapshot says
 	 * the account uses more domains than the plan includes.
 	 *
@@ -1797,6 +1964,8 @@ class ReportedIP_Hive_Admin_Settings {
 		ReportedIP_Hive_Whats_New::maybe_render();
 
 		self::maybe_render_domain_limit_notice();
+		self::maybe_render_reputation_notice();
+		self::maybe_render_group_tier_notice();
 
 		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
 			return;
@@ -5968,6 +6137,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 
 					<?php $this->render_domains_section( $mode_manager ); ?>
+					<?php $this->render_group_section(); ?>
 					<?php $this->render_api_usage_card(); ?>
 
 				<!-- Honeypot Program -->

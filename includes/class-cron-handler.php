@@ -84,6 +84,7 @@ class ReportedIP_Hive_Cron_Handler {
 		add_action( 'reportedip_hive_process_queue', array( $this, 'cron_process_queue' ) );
 		add_action( 'reportedip_hive_refresh_quota', array( $this, 'cron_refresh_quota' ) );
 		add_action( 'reportedip_hive_sync_rulesets', array( $this, 'cron_sync_rulesets' ) );
+		add_action( 'reportedip_hive_sync_group', array( $this, 'cron_sync_group' ) );
 
 		add_filter( 'cron_schedules', array( __CLASS__, 'add_cron_intervals' ) );
 	}
@@ -102,6 +103,7 @@ class ReportedIP_Hive_Cron_Handler {
 		'reportedip_hive_process_queue'   => 'fifteen_minutes',
 		'reportedip_hive_refresh_quota'   => 'six_hours',
 		'reportedip_hive_sync_rulesets'   => 'six_hours',
+		'reportedip_hive_sync_group'      => 'fifteen_minutes',
 	);
 
 	/**
@@ -402,6 +404,27 @@ class ReportedIP_Hive_Cron_Handler {
 	}
 
 	/**
+	 * Cron job: mirror the group ban list (runs every 15 minutes).
+	 *
+	 * Delegates to {@see ReportedIP_Hive_Group_Sync::sync()}, which checks
+	 * community mode, the key and the API back-off itself and never throws
+	 * on a bad answer.
+	 *
+	 * @return void
+	 * @since  2.1.67
+	 */
+	public function cron_sync_group() {
+		if ( ! class_exists( 'ReportedIP_Hive_Group_Sync' ) ) {
+			return;
+		}
+		try {
+			ReportedIP_Hive_Group_Sync::get_instance()->sync();
+		} catch ( \Throwable $e ) {
+			$this->logger->error( 'Group list sync failed: ' . $e->getMessage(), 'system' );
+		}
+	}
+
+	/**
 	 * Manual trigger for cron jobs (for testing)
 	 *
 	 * @param string $job_name Job name to trigger ('cleanup', 'sync', 'queue', 'quota', 'all').
@@ -424,6 +447,9 @@ class ReportedIP_Hive_Cron_Handler {
 				break;
 			case 'quota':
 				$this->cron_refresh_quota();
+				break;
+			case 'group':
+				$this->cron_sync_group();
 				break;
 			case 'all':
 			default:

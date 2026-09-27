@@ -172,7 +172,7 @@ final class ReportedIP_Hive_Schema {
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			ip_address varchar(45) NOT NULL,
 			reason varchar(255) NOT NULL,
-			block_type enum('manual','automatic','reputation') DEFAULT 'automatic',
+			block_type enum('manual','automatic','reputation','group') DEFAULT 'automatic',
 			blocked_until datetime DEFAULT NULL,
 			failed_attempts int(11) DEFAULT 0,
 			last_attempt datetime DEFAULT NULL,

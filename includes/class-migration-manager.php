@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 18;
+	public const CURRENT_VERSION = 19;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -546,6 +546,20 @@ final class ReportedIP_Hive_Migration_Manager {
 				ReportedIP_Hive_Option_Routing::set( $option, $new );
 			}
 		}
+	}
+
+	/**
+	 * Migrate to v19: the `group` block type for the shared group ban list.
+	 *
+	 * `ensure_tables()` carries the widened `blocked.block_type` enum and
+	 * dbDelta alters the column in place; on a strict-mode server an insert
+	 * with the new type would otherwise be refused.
+	 *
+	 * @return void
+	 * @since  2.1.67
+	 */
+	private static function migrate_to_v19() {
+		ReportedIP_Hive_Schema::ensure_tables();
 	}
 
 	/**

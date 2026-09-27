@@ -576,6 +576,11 @@
     color: #4f46e5;
 }
 
+.block-type-badge.group {
+    background: rgba(13, 148, 136, 0.1);
+    color: #0d9488;
+}
+
 /* Dashicon heading styles */
 h3 .dashicons {
     vertical-align: middle;

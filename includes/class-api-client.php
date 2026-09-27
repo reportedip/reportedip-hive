@@ -1406,6 +1406,8 @@ class ReportedIP_Hive_API {
 				'dailyReportUsage'  => $limits['dailyReportUsage'] ?? 0,
 				'resetTime'         => $limits['resetTime'] ?? null,
 				'domains'           => is_array( $data['data']['domains'] ?? null ) ? $data['data']['domains'] : null,
+				'group'             => is_array( $data['data']['agent']['group'] ?? null ) ? $data['data']['agent']['group'] : null,
+				'reputation'        => is_array( $data['data']['agent']['reputation'] ?? null ) ? $data['data']['agent']['reputation'] : null,
 			);
 		}
 
@@ -1476,6 +1478,14 @@ class ReportedIP_Hive_API {
 			);
 		}
 
+		foreach ( array( 'group', 'reputation' ) as $field ) {
+			if ( is_array( $status[ $field ] ?? null ) ) {
+				ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_' . $field, $status[ $field ] );
+			} else {
+				ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_' . $field );
+			}
+		}
+
 		$new_role = (string) ( $status['userRole'] ?? '' );
 		$new_tier = '' !== $new_role ? ReportedIP_Hive_Mode_Manager::tier_from_role( $new_role ) : 'free';
 
@@ -1532,6 +1542,8 @@ class ReportedIP_Hive_API {
 					'keyName'           => $result['keyName'] ?? '',
 					'userRole'          => $result['userRole'] ?? '',
 					'domains'           => $result['domains'] ?? null,
+					'group'             => $result['group'] ?? null,
+					'reputation'        => $result['reputation'] ?? null,
 				)
 			);
 

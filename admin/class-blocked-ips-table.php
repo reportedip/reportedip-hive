@@ -115,6 +115,9 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 				} elseif ( $block_type === 'reputation' ) {
 					$label = __( 'Community Reputation', 'reportedip-hive' );
 					$class = 'reputation';
+				} elseif ( $block_type === 'group' ) {
+					$label = __( 'Group Ban', 'reportedip-hive' );
+					$class = 'group';
 				} else {
 					$label = __( 'Auto-Blocked', 'reportedip-hive' );
 					$class = 'auto';
@@ -286,6 +289,7 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 				<option value="manual" <?php selected( $block_type, 'manual' ); ?>><?php esc_html_e( 'Manually Blocked', 'reportedip-hive' ); ?></option>
 				<option value="automatic" <?php selected( $block_type, 'automatic' ); ?>><?php esc_html_e( 'Auto-Blocked', 'reportedip-hive' ); ?></option>
 				<option value="reputation" <?php selected( $block_type, 'reputation' ); ?>><?php esc_html_e( 'Community Reputation', 'reportedip-hive' ); ?></option>
+				<option value="group" <?php selected( $block_type, 'group' ); ?>><?php esc_html_e( 'Group Ban', 'reportedip-hive' ); ?></option>
 			</select>
 		</div>
 		<?php
