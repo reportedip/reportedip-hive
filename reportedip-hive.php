@@ -4,7 +4,7 @@
  * Plugin URI: https://reportedip.com
  * Description: Community-powered WordPress security, real-time threat intelligence
  * with 6-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.1.66
+ * Version: 2.1.67
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.com
  * License: GPL-2.0-or-later
@@ -55,7 +55,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.1.66' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.1.67' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -398,6 +398,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-ref.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-store.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-sync.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-group-sync.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-proxy-trust.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-request-path.php';

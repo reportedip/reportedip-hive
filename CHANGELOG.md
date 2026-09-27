@@ -2,7 +2,26 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.1.67] (2026-09-27)
+
+### New
+
+- **Group bans.** A Community Access Key can join a group on reportedip.com,
+  and every address one member reports is blocked on every other member for
+  the group's ban window. The plugin fetches the group list every fifteen
+  minutes and mirrors it as blocks of the new type `group`: an entry is
+  blocked until the expiry the service names, an entry that leaves the list
+  is lifted, and a key that leaves its group ends up with no group block at
+  all. The whitelist wins as it always has, a block placed by hand is never
+  touched, and an answer that does not carry the group marker is thrown away
+  so an older server can never hand out the community list under that name.
+  A plan below Professional gets one notice and the sync keeps asking, so a
+  plan change needs no action. A key without a group sees no change.
+- **Group and reputation on the Community page.** The verify-key answer now
+  carries the group the key belongs to and the community reputation of the
+  address this site connects from. Both are shown on the Community page, and
+  a listed address raises a notice on the plugin pages that says where to
+  check it. Nothing is shown while neither is known.
 
 ### Security
 

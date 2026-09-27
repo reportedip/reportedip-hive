@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.66
+Stable tag: 2.1.67
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -470,6 +470,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.67 =
+New: group bans. A Community Access Key can join a group on reportedip.com; every address one member reports is blocked on every other member for the group's ban window, on this site as a block of the new type "Group Ban". The list is fetched every fifteen minutes, the whitelist wins, a manual block is never touched, and a key without a group sees no change at all.
+New: the Community page shows the group and the community reputation of the address this site connects from, with a notice when that address is listed.
+Security: a comment from a browser that never ran the script is refused at the door, the same way every other protected form already refused it.
+Security: a link in the comment text counts like a link in the website field, so a campaign that leaves the field empty no longer buys itself out of four signals.
 
 = 2.1.66 =
 New: form protection on Forminator (Business), whether the form sits in the page or is loaded afterwards. A refusal is shown to the sender at the form, before the entry is stored and before the mail goes out.
