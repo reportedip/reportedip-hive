@@ -1177,6 +1177,15 @@ class ReportedIP_Hive_Admin_Settings {
 			return;
 		}
 
+		$group_whitelist = 0;
+		if ( null !== $group ) {
+			foreach ( (array) ReportedIP_Hive_IP_Manager::get_instance()->get_whitelist( true ) as $row ) {
+				if ( 'group' === (string) ( $row->source ?? 'manual' ) ) {
+					++$group_whitelist;
+				}
+			}
+		}
+
 		$group_icon      = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
 		$reputation_icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
 		$listed          = null !== $reputation && ! empty( $reputation['listed'] );
@@ -1201,14 +1210,28 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 					<div class="rip-stat-card__hint">
 						<?php
+						$members = (int) ( $group['members'] ?? 0 );
+						/* translators: 1: number of members, 2: ban window in hours */
+						$members_text = _n( '%1$s member, bans last %2$s hours.', '%1$s members, bans last %2$s hours.', $members, 'reportedip-hive' );
 						printf(
-							/* translators: 1: number of members, 2: ban window in hours */
-							esc_html( _n( '%1$s member, bans last %2$s hours.', '%1$s members, bans last %2$s hours.', (int) ( $group['members'] ?? 0 ), 'reportedip-hive' ) ),
-							esc_html( number_format_i18n( (int) ( $group['members'] ?? 0 ) ) ),
+							esc_html( $members_text ),
+							esc_html( number_format_i18n( $members ) ),
 							esc_html( number_format_i18n( (int) ( $group['ban_hours'] ?? 24 ) ) )
 						);
 						?>
 					</div>
+				</div>
+				<div class="rip-stat-card rip-stat-card--quota">
+					<div class="rip-stat-card__head">
+						<div class="rip-stat-card__icon rip-stat-card__icon--success">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+						</div>
+						<div class="rip-stat-card__content">
+							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $group_whitelist ) ); ?></div>
+							<div class="rip-stat-card__label"><?php esc_html_e( 'Group whitelist entries', 'reportedip-hive' ); ?></div>
+						</div>
+					</div>
+					<div class="rip-stat-card__hint"><?php esc_html_e( 'Addresses and ranges the group never blocks or reports. Maintained in your reportedip.com account, mirrored into the whitelist of this site.', 'reportedip-hive' ); ?></div>
 				</div>
 				<?php endif; ?>
 

@@ -648,6 +648,17 @@ class ReportedIP_Hive_API {
 					continue;
 				}
 
+				/*
+				 * The whitelist may have grown since the row was queued (an
+				 * operator entry, or the group whitelist of the account). A
+				 * whitelisted address is never reported, so the row is dropped
+				 * instead of sent.
+				 */
+				if ( $report->report_type !== 'positive' && $database->is_whitelisted( $report->ip_address ) ) {
+					$database->delete_api_queue_item( $report->id );
+					continue;
+				}
+
 				$database->mark_report_submitted( $report->id );
 
 				if ( $report->report_type === 'positive' ) {

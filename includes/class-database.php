@@ -193,7 +193,7 @@ class ReportedIP_Hive_Database {
 	/**
 	 * Add IP to whitelist
 	 */
-	public function add_to_whitelist( $ip_address, $reason = '', $added_by = null, $expires_at = null ) {
+	public function add_to_whitelist( $ip_address, $reason = '', $added_by = null, $expires_at = null, $source = 'manual' ) {
 		global $wpdb;
 
 		if ( ! is_string( $ip_address ) || $ip_address === '' ) {
@@ -237,10 +237,11 @@ class ReportedIP_Hive_Database {
 				'ip_type'    => $ip_type,
 				'reason'     => $reason,
 				'added_by'   => $added_by,
+				'source'     => 'group' === $source ? 'group' : 'manual',
 				'expires_at' => $expires_at,
 				'created_at' => current_time( 'mysql', true ),
 			),
-			array( '%s', '%s', '%s', '%d', '%s', '%s' )
+			array( '%s', '%s', '%s', '%d', '%s', '%s', '%s' )
 		);
 
 		wp_cache_delete( 'rip_whitelist_cidrs', 'reportedip' );
@@ -325,6 +326,28 @@ class ReportedIP_Hive_Database {
 		}
 
 		return $wpdb->get_results( "SELECT * FROM $table_name $where_clause ORDER BY created_at DESC" );
+	}
+
+	/**
+	 * The active whitelist row for an exact address or range, or null.
+	 *
+	 * @param string $ip_address IP or CIDR exactly as stored.
+	 * @return object|null
+	 * @since  2.1.67
+	 */
+	public function get_whitelist_entry( $ip_address ) {
+		global $wpdb;
+
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_whitelist';
+
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM $table_name WHERE ip_address = %s AND is_active = 1 AND (expires_at IS NULL OR expires_at > NOW())",
+				$ip_address
+			)
+		);
+
+		return $row ? $row : null;
 	}
 
 	/**

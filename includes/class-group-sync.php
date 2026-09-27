@@ -123,6 +123,7 @@ class ReportedIP_Hive_Group_Sync {
 		ReportedIP_Hive_Option_Routing::delete( self::OPT_ERROR );
 
 		if ( 204 === $code ) {
+			$this->apply_whitelist( array() );
 			$this->apply( array() );
 			ReportedIP_Hive_Option_Routing::delete( self::OPT_GROUP );
 			ReportedIP_Hive_Option_Routing::delete( self::OPT_ETAG );
@@ -135,6 +136,7 @@ class ReportedIP_Hive_Group_Sync {
 			return 'error';
 		}
 
+		$this->apply_whitelist( isset( $data['whitelist'] ) && is_array( $data['whitelist'] ) ? $data['whitelist'] : array() );
 		$this->apply( $data['entries'] );
 
 		if ( isset( $data['group'] ) && is_array( $data['group'] ) ) {
@@ -149,7 +151,52 @@ class ReportedIP_Hive_Group_Sync {
 	}
 
 	/**
+	 * Bring the whitelist rows of source `group` in line with the list.
+	 *
+	 * Rows an operator entered keep their source `manual` and are never
+	 * touched; a group entry that already matches a manual row is left to
+	 * that row.
+	 *
+	 * @param array $entries Entries as the service sends them (`entry`, `note`, `since`).
+	 * @return void
+	 */
+	private function apply_whitelist( array $entries ) {
+		$ip_manager = $this->ip_manager();
+
+		$owned = array();
+		foreach ( (array) $ip_manager->get_whitelist( true ) as $row ) {
+			if ( self::BLOCK_TYPE === (string) ( $row->source ?? 'manual' ) ) {
+				$owned[ (string) $row->ip_address ] = true;
+			}
+		}
+
+		$wanted = array();
+		foreach ( $entries as $entry ) {
+			$address = isset( $entry['entry'] ) ? trim( (string) $entry['entry'] ) : '';
+			if ( '' === $address ) {
+				continue;
+			}
+			$wanted[ $address ] = true;
+			if ( isset( $owned[ $address ] ) ) {
+				continue;
+			}
+			$note = isset( $entry['note'] ) ? sanitize_text_field( (string) $entry['note'] ) : '';
+			$ip_manager->whitelist_ip( $address, 'group: ' . $note, null, self::BLOCK_TYPE );
+		}
+
+		foreach ( array_keys( $owned ) as $address ) {
+			if ( ! isset( $wanted[ $address ] ) ) {
+				$ip_manager->remove_from_whitelist( $address, self::BLOCK_TYPE );
+			}
+		}
+	}
+
+	/**
 	 * Bring the group blocks in line with the list.
+	 *
+	 * A block that is not manual and sits on a whitelisted address (a range
+	 * from the group whitelist included) is lifted here, so the whitelist
+	 * wins over blocks that were placed before it arrived.
 	 *
 	 * @param array $entries Entries as the service sends them (`ip`, `reporter`, `expires`).
 	 * @return void
@@ -160,7 +207,12 @@ class ReportedIP_Hive_Group_Sync {
 
 		$active = array();
 		foreach ( (array) $ip_manager->get_blocked_ips( true ) as $row ) {
-			$active[ (string) $row->ip_address ] = $row;
+			$ip = (string) $row->ip_address;
+			if ( 'manual' !== (string) $row->block_type && $ip_manager->is_whitelisted( $ip ) ) {
+				$ip_manager->unblock_ip( $ip );
+				continue;
+			}
+			$active[ $ip ] = $row;
 		}
 
 		$wanted = array();

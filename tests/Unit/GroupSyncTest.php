@@ -7,7 +7,9 @@
  * 204 lifts every group block and nothing else, an answer without the
  * `X-Rip-List: group` header is thrown away (an older server would hand out
  * the community list under that URL), a whitelisted address is never
- * blocked and a plan refusal leaves a marker for the admin notice.
+ * blocked and a plan refusal leaves a marker for the admin notice. The group
+ * whitelist that rides along is mirrored as rows of source `group`, ranges
+ * match as ranges, and rows an operator entered are never touched.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -23,6 +25,7 @@ namespace {
 		exit;
 	}
 
+	require_once dirname( __DIR__, 2 ) . '/includes/class-database.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-ip-manager.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-group-sync.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-cron-handler.php';
@@ -45,7 +48,67 @@ namespace {
 		/** @var string[] Recorded unblock_ip() calls. */
 		public $unblocked = array();
 
+		/** @var array<int,array<string,string>> Whitelist rows: ip_address, source. */
+		public $whitelist_rows = array();
+
+		/** @var array<int,array<string,mixed>> Recorded whitelist_ip() calls. */
+		public $whitelisted = array();
+
+		/** @var array<int,array<string,string>> Recorded remove_from_whitelist() calls. */
+		public $unwhitelisted = array();
+
 		public function __construct() {
+		}
+
+		public function get_whitelist( $active_only = true ) {
+			return array_map(
+				static function ( $row ) {
+					return (object) $row;
+				},
+				$this->whitelist_rows
+			);
+		}
+
+		public function whitelist_ip( $ip_address, $reason = '', $expires_at = null, $source = 'manual' ) {
+			if ( $this->is_whitelisted( $ip_address ) ) {
+				return array(
+					'success' => false,
+					'message' => 'already',
+				);
+			}
+			$this->whitelist_rows[] = array(
+				'ip_address' => $ip_address,
+				'source'     => $source,
+			);
+			$this->whitelisted[]    = array(
+				'ip'     => $ip_address,
+				'why'    => $reason,
+				'source' => $source,
+			);
+			return array(
+				'success' => true,
+				'message' => '',
+			);
+		}
+
+		public function remove_from_whitelist( $ip_address, $source = 'manual' ) {
+			foreach ( $this->whitelist_rows as $i => $row ) {
+				if ( $row['ip_address'] === $ip_address && $row['source'] === $source ) {
+					unset( $this->whitelist_rows[ $i ] );
+					$this->unwhitelisted[] = array(
+						'ip'     => $ip_address,
+						'source' => $source,
+					);
+					return array(
+						'success' => true,
+						'message' => '',
+					);
+				}
+			}
+			return array(
+				'success' => false,
+				'message' => 'refused',
+			);
 		}
 
 		public function get_blocked_ips( $active_only = true ) {
@@ -58,7 +121,15 @@ namespace {
 		}
 
 		public function is_whitelisted( $ip_address ) {
-			return in_array( $ip_address, $this->whitelist, true );
+			if ( in_array( $ip_address, $this->whitelist, true ) ) {
+				return true;
+			}
+			foreach ( $this->whitelist_rows as $row ) {
+				if ( \ReportedIP_Hive_Database::ip_in_cidr( $ip_address, $row['ip_address'] ) ) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		public function block_ip( $ip_address, $reason = '', $duration_hours = null, $block_type = 'manual' ) {
@@ -152,14 +223,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		private function list_body( array $entries ): array {
+		private function list_body( array $entries, array $whitelist = array() ): array {
 			return array(
-				'group'   => array(
+				'group'     => array(
 					'id'        => 1,
 					'name'      => 'Production',
 					'ban_hours' => 24,
+					'members'   => 5,
 				),
-				'entries' => $entries,
+				'entries'   => $entries,
+				'whitelist' => $whitelist,
+			);
+		}
+
+		private function wl( string $entry, string $note = 'office' ): array {
+			return array(
+				'entry' => $entry,
+				'note'  => $note,
+				'since' => gmdate( 'c', time() - 86400 ),
 			);
 		}
 
@@ -198,6 +279,124 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( '"g1-1-1"', \ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_Group_Sync::OPT_ETAG, '' ) );
 			$group = \ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_Group_Sync::OPT_GROUP, null );
 			$this->assertSame( 'Production', $group['name'] );
+			$this->assertSame( 5, $group['members'] );
+		}
+
+		public function test_the_group_whitelist_is_mirrored_with_the_group_source() {
+			$this->sync->response = $this->answer( 200, $this->list_body( array(), array( $this->wl( '45.33.32.0/24' ), $this->wl( '2001:db8:1::/64', 'lab' ) ) ) );
+
+			$this->assertSame( 'applied', $this->sync->sync() );
+
+			$this->assertSame(
+				array(
+					array( 'ip' => '45.33.32.0/24', 'why' => 'group: office', 'source' => 'group' ),
+					array( 'ip' => '2001:db8:1::/64', 'why' => 'group: lab', 'source' => 'group' ),
+				),
+				$this->sync->manager->whitelisted
+			);
+			$this->assertSame( array(), $this->sync->manager->unwhitelisted );
+		}
+
+		public function test_a_second_sync_does_not_write_the_same_whitelist_row_again() {
+			$this->sync->response = $this->answer( 200, $this->list_body( array(), array( $this->wl( '45.33.32.0/24' ) ) ) );
+			$this->sync->sync();
+			$this->sync->sync();
+
+			$this->assertCount( 1, $this->sync->manager->whitelisted );
+		}
+
+		public function test_a_whitelist_entry_that_left_the_answer_is_removed_and_manual_rows_stay() {
+			$this->sync->manager->whitelist_rows = array(
+				array( 'ip_address' => '45.33.32.0/24', 'source' => 'group' ),
+				array( 'ip_address' => '45.33.32.99', 'source' => 'group' ),
+				array( 'ip_address' => '10.0.0.0/8', 'source' => 'manual' ),
+			);
+			$this->sync->response = $this->answer( 200, $this->list_body( array(), array( $this->wl( '45.33.32.0/24' ) ) ) );
+
+			$this->sync->sync();
+
+			$this->assertSame( array( array( 'ip' => '45.33.32.99', 'source' => 'group' ) ), $this->sync->manager->unwhitelisted );
+			$this->assertSame( array( '45.33.32.0/24', '10.0.0.0/8' ), array_column( array_values( $this->sync->manager->whitelist_rows ), 'ip_address' ) );
+		}
+
+		public function test_a_204_removes_every_group_whitelist_row_and_no_manual_one() {
+			$this->sync->manager->whitelist_rows = array(
+				array( 'ip_address' => '45.33.32.0/24', 'source' => 'group' ),
+				array( 'ip_address' => '10.0.0.0/8', 'source' => 'manual' ),
+			);
+			$this->sync->response = $this->answer( 204 );
+
+			$this->sync->sync();
+
+			$this->assertSame( array( '45.33.32.0/24' ), array_column( $this->sync->manager->unwhitelisted, 'ip' ) );
+			$this->assertSame( array( '10.0.0.0/8' ), array_column( array_values( $this->sync->manager->whitelist_rows ), 'ip_address' ) );
+		}
+
+		public function test_a_304_leaves_the_whitelist_alone() {
+			$this->sync->manager->whitelist_rows = array( array( 'ip_address' => '45.33.32.0/24', 'source' => 'group' ) );
+			$this->sync->response                = $this->answer( 304 );
+
+			$this->sync->sync();
+
+			$this->assertSame( array(), $this->sync->manager->whitelisted );
+			$this->assertSame( array(), $this->sync->manager->unwhitelisted );
+		}
+
+		public function test_an_answer_without_a_whitelist_field_removes_group_rows() {
+			$this->sync->manager->whitelist_rows = array( array( 'ip_address' => '45.33.32.0/24', 'source' => 'group' ) );
+			$body                                = $this->list_body( array() );
+			unset( $body['whitelist'] );
+			$this->sync->response = $this->answer( 200, $body );
+
+			$this->sync->sync();
+
+			$this->assertSame( array( '45.33.32.0/24' ), array_column( $this->sync->manager->unwhitelisted, 'ip' ) );
+		}
+
+		public function test_a_group_range_matches_as_a_range_for_v4_and_v6() {
+			$this->assertTrue( \ReportedIP_Hive_Database::ip_in_cidr( '45.33.32.200', '45.33.32.0/24' ) );
+			$this->assertFalse( \ReportedIP_Hive_Database::ip_in_cidr( '45.33.33.1', '45.33.32.0/24' ) );
+			$this->assertTrue( \ReportedIP_Hive_Database::ip_in_cidr( '2001:db8:1:0:dead:beef::1', '2001:db8:1::/64' ) );
+			$this->assertFalse( \ReportedIP_Hive_Database::ip_in_cidr( '2001:db8:2::1', '2001:db8:1::/64' ) );
+			$this->assertFalse( \ReportedIP_Hive_Database::ip_in_cidr( '45.33.32.200', '2001:db8:1::/64' ) );
+		}
+
+		public function test_an_address_inside_a_group_range_is_neither_blocked_nor_kept_blocked() {
+			$this->sync->manager->rows = array(
+				$this->row( '45.33.32.7', 'automatic', HOUR_IN_SECONDS ),
+				$this->row( '45.33.32.8', 'reputation', HOUR_IN_SECONDS ),
+				$this->row( '45.33.32.9', 'manual', HOUR_IN_SECONDS ),
+				$this->row( '45.33.40.1', 'automatic', HOUR_IN_SECONDS ),
+			);
+			$this->sync->response = $this->answer(
+				200,
+				$this->list_body(
+					array( $this->entry( '45.33.32.10', HOUR_IN_SECONDS ), $this->entry( '45.33.40.2', HOUR_IN_SECONDS ) ),
+					array( $this->wl( '45.33.32.0/24' ) )
+				)
+			);
+
+			$this->sync->sync();
+
+			$this->assertSame( array( '45.33.32.7', '45.33.32.8' ), $this->sync->manager->unblocked, 'Automatic and reputation blocks inside the range are lifted, the manual one and the block outside stay.' );
+			$this->assertSame( array( '45.33.40.2' ), array_column( $this->sync->manager->blocked, 'ip' ), 'The listed address inside the range is refused by the whitelist.' );
+		}
+
+		public function test_a_whitelisted_address_is_dropped_from_the_report_queue_and_cannot_be_removed_by_hand() {
+			$client = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-api-client.php' );
+			$queue  = substr( $client, strpos( $client, 'function process_report_queue' ) );
+			$guard  = strpos( $queue, '$database->is_whitelisted( $report->ip_address )' );
+			$send   = strpos( $queue, '$this->report_ip( $report->ip_address' );
+			$this->assertNotFalse( $guard, 'The queue worker must check the whitelist before sending.' );
+			$this->assertLessThan( $send, $guard );
+
+			$manager = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-ip-manager.php' );
+			$this->assertStringContainsString( "public function remove_from_whitelist( \$ip_address, \$source = 'manual' )", $manager );
+			$this->assertStringContainsString( 'get_whitelist_entry( $ip_address )', $manager );
+
+			$schema = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-schema.php' );
+			$this->assertStringContainsString( "source varchar(16) NOT NULL DEFAULT 'manual'", $schema );
+			$this->assertGreaterThanOrEqual( 20, \ReportedIP_Hive_Migration_Manager::CURRENT_VERSION );
 		}
 
 		public function test_the_stored_etag_is_sent_and_a_304_changes_nothing() {

@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 19;
+	public const CURRENT_VERSION = 20;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -559,6 +559,20 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * @since  2.1.67
 	 */
 	private static function migrate_to_v19() {
+		ReportedIP_Hive_Schema::ensure_tables();
+	}
+
+	/**
+	 * Migrate to v20: `whitelist.source` tells a group entry from a manual one.
+	 *
+	 * The group sync writes whitelist rows with `source = group` and only
+	 * ever removes rows of that source; every existing row keeps the column
+	 * default `manual`, so nothing an operator entered changes hands.
+	 *
+	 * @return void
+	 * @since  2.1.67
+	 */
+	private static function migrate_to_v20() {
 		ReportedIP_Hive_Schema::ensure_tables();
 	}
 

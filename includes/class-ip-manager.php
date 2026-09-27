@@ -67,7 +67,7 @@ class ReportedIP_Hive_IP_Manager {
 	/**
 	 * Whitelist IP address
 	 */
-	public function whitelist_ip( $ip_address, $reason = '', $expires_at = null ) {
+	public function whitelist_ip( $ip_address, $reason = '', $expires_at = null, $source = 'manual' ) {
 		if ( ! $this->validate_ip_address( $ip_address ) ) {
 			return array(
 				'success' => false,
@@ -82,7 +82,7 @@ class ReportedIP_Hive_IP_Manager {
 			);
 		}
 
-		$result = $this->database->add_to_whitelist( $ip_address, $reason, get_current_user_id(), $expires_at );
+		$result = $this->database->add_to_whitelist( $ip_address, $reason, get_current_user_id(), $expires_at, $source );
 
 		if ( $result ) {
 			if ( $this->is_blocked( $ip_address ) ) {
@@ -96,6 +96,7 @@ class ReportedIP_Hive_IP_Manager {
 					'reason'     => $reason,
 					'expires_at' => $expires_at,
 					'added_by'   => get_current_user_id(),
+					'source'     => $source,
 				),
 				'low'
 			);
@@ -113,9 +114,28 @@ class ReportedIP_Hive_IP_Manager {
 	}
 
 	/**
-	 * Remove IP from whitelist
+	 * Remove IP from whitelist.
+	 *
+	 * An entry the group sync placed (`source = group`) is maintained in the
+	 * account on reportedip.com and comes back on the next sync, so a manual
+	 * removal (admin table, AJAX, WP-CLI) is refused with a sentence that says
+	 * where to remove it. Only the sync itself passes `group`.
+	 *
+	 * @param string $ip_address IP or CIDR range.
+	 * @param string $source     Origin the caller may remove: manual|group.
+	 * @return array{success: bool, message: string}
 	 */
-	public function remove_from_whitelist( $ip_address ) {
+	public function remove_from_whitelist( $ip_address, $source = 'manual' ) {
+		$entry = $this->database->get_whitelist_entry( $ip_address );
+		if ( $entry && ( $entry->source ?? 'manual' ) !== $source ) {
+			return array(
+				'success' => false,
+				'message' => 'group' === ( $entry->source ?? '' )
+					? __( 'This entry comes from your group on reportedip.com and is removed there, in your account.', 'reportedip-hive' )
+					: __( 'This entry was added by hand and is not managed by the group.', 'reportedip-hive' ),
+			);
+		}
+
 		$result = $this->database->remove_from_whitelist( $ip_address );
 
 		if ( $result ) {

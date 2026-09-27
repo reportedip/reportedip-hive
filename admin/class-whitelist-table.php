@@ -51,6 +51,7 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 			'ip_address' => __( 'IP Address', 'reportedip-hive' ),
 			'ip_type'    => __( 'Type', 'reportedip-hive' ),
 			'reason'     => __( 'Reason', 'reportedip-hive' ),
+			'source'     => __( 'Origin', 'reportedip-hive' ),
 			'created_at' => __( 'Added', 'reportedip-hive' ),
 			'expires_at' => __( 'Expires', 'reportedip-hive' ),
 			'actions'    => __( 'Actions', 'reportedip-hive' ),
@@ -85,6 +86,9 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 	 * @return string
 	 */
 	protected function column_cb( $item ) {
+		if ( 'group' === (string) ( $item->source ?? 'manual' ) ) {
+			return '<input type="checkbox" disabled="disabled" />';
+		}
 		return sprintf(
 			'<input type="checkbox" name="ip_addresses[]" value="%s" />',
 			esc_attr( $item->ip_address )
@@ -114,6 +118,12 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 			case 'reason':
 				return esc_html( $item->reason ?? '' );
 
+			case 'source':
+				if ( 'group' === (string) ( $item->source ?? 'manual' ) ) {
+					return '<span class="block-type-badge group">' . esc_html__( 'Group', 'reportedip-hive' ) . '</span>';
+				}
+				return '<span class="block-type-badge manual">' . esc_html__( 'Manual', 'reportedip-hive' ) . '</span>';
+
 			case 'created_at':
 				return esc_html( ReportedIP_Hive::format_local_datetime( $item->created_at ) );
 
@@ -124,6 +134,9 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 				return esc_html( $item->expires_at );
 
 			case 'actions':
+				if ( 'group' === (string) ( $item->source ?? 'manual' ) ) {
+					return '<span class="description">' . esc_html__( 'Managed in your reportedip.com account', 'reportedip-hive' ) . '</span>';
+				}
 				return sprintf(
 					'<button class="button button-small remove-whitelist button-danger" data-ip="%s" title="%s"><span class="dashicons dashicons-trash"></span> %s</button>',
 					esc_attr( $item->ip_address ),

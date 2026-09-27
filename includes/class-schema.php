@@ -157,6 +157,7 @@ final class ReportedIP_Hive_Schema {
 			ip_type enum('ipv4','ipv6','cidr') DEFAULT 'ipv4',
 			reason text DEFAULT NULL,
 			added_by bigint(20) unsigned NOT NULL,
+			source varchar(16) NOT NULL DEFAULT 'manual',
 			expires_at datetime DEFAULT NULL,
 			is_active tinyint(1) DEFAULT 1,
 			created_at datetime DEFAULT CURRENT_TIMESTAMP,
