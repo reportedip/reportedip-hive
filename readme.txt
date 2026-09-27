@@ -473,6 +473,7 @@ The full structured changelog lives in [CHANGELOG.md](https://github.com/reporte
 
 = 2.1.67 =
 New: group bans. A Community Access Key can join a group on reportedip.com; every address one member reports is blocked on every other member for the group's ban window, on this site as a block of the new type "Group Ban". The list is fetched every fifteen minutes, the whitelist wins, a manual block is never touched, and a key without a group sees no change at all.
+New: the group whitelist arrives with the list. Its addresses and ranges land in the whitelist of this site with the origin "Group", are neither blocked nor reported here, and are maintained in your reportedip.com account, not on the site.
 New: the Community page shows the group and the community reputation of the address this site connects from, with a notice when that address is listed.
 Security: a comment from a browser that never ran the script is refused at the door, the same way every other protected form already refused it.
 Security: a link in the comment text counts like a link in the website field, so a campaign that leaves the field empty no longer buys itself out of four signals.

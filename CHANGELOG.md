@@ -17,6 +17,15 @@ All changes to ReportedIP Hive are documented here.
   so an older server can never hand out the community list under that name.
   A plan below Professional gets one notice and the sync keeps asking, so a
   plan change needs no action. A key without a group sees no change.
+- **The group whitelist reaches every member.** Addresses and ranges the
+  group whitelists in the account arrive with the same list and land in the
+  whitelist of this site with the origin `Group`, so they are neither blocked
+  nor reported here: a block that already sits on such an address is lifted
+  on the next sync, and a queued report for it is dropped before it is sent.
+  Ranges match as ranges, for IPv4 and IPv6. Entries the group drops
+  disappear again, entries an operator added by hand keep their origin
+  `Manual` and are never touched. A group entry cannot be removed on the
+  site, the table says so and points to the account.
 - **Group and reputation on the Community page.** The verify-key answer now
   carries the group the key belongs to and the community reputation of the
   address this site connects from. Both are shown on the Community page, and
