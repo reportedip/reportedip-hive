@@ -69,7 +69,35 @@ class ReportedIP_Hive_Group_Sync {
 	 * request can arrive before it finished; a write with the new column
 	 * would fail and the stored ETag would freeze the gap.
 	 */
-	const MIN_DB_VERSION = 20;
+	const MIN_DB_VERSION = 21;
+
+	/**
+	 * Option holding what the last run did (`last_run`, `last_result`,
+	 * `http_code`, `entries`, `last_change`, `changes`). Runtime state, never
+	 * a setting.
+	 */
+	const OPT_STATUS = 'reportedip_hive_group_status';
+
+	/**
+	 * What the current run changed, by kind. Reset at the start of sync().
+	 *
+	 * @var array<string,int>
+	 */
+	private $counts = array();
+
+	/**
+	 * HTTP code of the current run, 0 when no request was made.
+	 *
+	 * @var int
+	 */
+	private $http_code = 0;
+
+	/**
+	 * Entries in the last accepted list, null while the run did not read one.
+	 *
+	 * @var int|null
+	 */
+	private $entries = null;
 
 	/**
 	 * Singleton.
@@ -91,11 +119,86 @@ class ReportedIP_Hive_Group_Sync {
 	}
 
 	/**
-	 * Fetch the group list and mirror it into the blocked table.
+	 * Fetch the group list, mirror it into the blocked table and record what
+	 * happened for the Group tab.
 	 *
 	 * @return string What happened: applied|report_only|unchanged|cleared|tier|discarded|released|skipped|error.
 	 */
 	public function sync() {
+		$this->counts    = array_fill_keys( array( 'added', 'extended', 'lifted', 'whitelist_added', 'whitelist_removed', 'skipped_whitelist', 'skipped_own', 'skipped_manual' ), 0 );
+		$this->http_code = 0;
+		$this->entries   = null;
+
+		$result = $this->run();
+		if ( 'skipped' !== $result ) {
+			$this->write_status( $result );
+		}
+		return $result;
+	}
+
+	/**
+	 * The last recorded run, with defaults for a site that never ran one.
+	 *
+	 * @return array{last_run:int,last_result:string,http_code:int,entries:int,last_change:int,changes:array<string,int>}
+	 */
+	public static function status() {
+		$stored = ReportedIP_Hive_Option_Routing::get( self::OPT_STATUS, array() );
+		return array_merge(
+			array(
+				'last_run'    => 0,
+				'last_result' => '',
+				'http_code'   => 0,
+				'entries'     => 0,
+				'last_change' => 0,
+				'changes'     => array(),
+			),
+			is_array( $stored ) ? $stored : array()
+		);
+	}
+
+	/**
+	 * Why this site did or did not block one entry of the group list.
+	 *
+	 * Mirrors the order of the checks in apply() and IP_Manager::block_ip(),
+	 * and is worked out when the tab renders, so it stays true after an
+	 * operator lifted a block or whitelisted an address in between.
+	 *
+	 * @param string      $block_type    Type of the active block on the address, '' for none.
+	 * @param int         $expires       Expiry the service named (Unix time), 0 when unknown.
+	 * @param bool        $whitelisted   Address is on the whitelist.
+	 * @param bool        $own           Address belongs to this server.
+	 * @param bool        $report_only   Report-only mode is on.
+	 * @param int         $now           Unix time.
+	 * @return string group|other|expired|whitelisted|own|report_only|lifted
+	 */
+	public static function local_status( $block_type, $expires, $whitelisted, $own, $report_only, $now ) {
+		if ( self::BLOCK_TYPE === $block_type ) {
+			return 'group';
+		}
+		if ( '' !== (string) $block_type ) {
+			return 'other';
+		}
+		if ( $expires > 0 && $expires <= $now ) {
+			return 'expired';
+		}
+		if ( $whitelisted ) {
+			return 'whitelisted';
+		}
+		if ( $own ) {
+			return 'own';
+		}
+		if ( $report_only ) {
+			return 'report_only';
+		}
+		return 'lifted';
+	}
+
+	/**
+	 * One run of the sync.
+	 *
+	 * @return string See sync().
+	 */
+	private function run() {
 		if ( ! $this->is_connected() ) {
 			if ( '' !== (string) ReportedIP_Hive_Option_Routing::get( self::OPT_ETAG, '' ) ) {
 				$this->release();
@@ -113,7 +216,8 @@ class ReportedIP_Hive_Group_Sync {
 			return 'error';
 		}
 
-		$code = (int) $response['code'];
+		$code            = (int) $response['code'];
+		$this->http_code = $code;
 
 		if ( 304 === $code ) {
 			return 'unchanged';
@@ -153,7 +257,9 @@ class ReportedIP_Hive_Group_Sync {
 			return 'error';
 		}
 
-		$grown = $this->apply_whitelist( isset( $data['whitelist'] ) && is_array( $data['whitelist'] ) ? $data['whitelist'] : array() );
+		$grown         = $this->apply_whitelist( isset( $data['whitelist'] ) && is_array( $data['whitelist'] ) ? $data['whitelist'] : array() );
+		$this->entries = count( $data['entries'] );
+		$this->store()->replace_group_entries( $data['entries'] );
 
 		if ( isset( $data['group'] ) && is_array( $data['group'] ) ) {
 			$known = ReportedIP_Hive_Option_Routing::get( self::OPT_GROUP, array() );
@@ -192,7 +298,48 @@ class ReportedIP_Hive_Group_Sync {
 	private function release() {
 		$this->apply_whitelist( array() );
 		$this->apply( array(), false );
+		$this->store()->clear_group_entries();
+		$this->entries = 0;
 		ReportedIP_Hive_Option_Routing::delete( self::OPT_ETAG );
+	}
+
+	/**
+	 * Record the run in the status option and, when it changed anything,
+	 * one summary line in the event log next to the per-address rows.
+	 *
+	 * @param string $result Result of the run.
+	 * @return void
+	 */
+	private function write_status( $result ) {
+		$previous = self::status();
+		$changed  = array_sum(
+			array_intersect_key(
+				$this->counts,
+				array_flip( array( 'added', 'extended', 'lifted', 'whitelist_added', 'whitelist_removed' ) )
+			)
+		) > 0;
+
+		$status = array(
+			'last_run'    => time(),
+			'last_result' => (string) $result,
+			'http_code'   => $this->http_code,
+			'entries'     => null === $this->entries ? (int) $previous['entries'] : $this->entries,
+			'last_change' => $changed ? time() : (int) $previous['last_change'],
+			'changes'     => $changed ? $this->counts : $previous['changes'],
+		);
+		ReportedIP_Hive_Option_Routing::set( self::OPT_STATUS, $status );
+
+		if ( $changed ) {
+			$this->event(
+				array_merge(
+					array(
+						'result'  => (string) $result,
+						'entries' => $status['entries'],
+					),
+					$this->counts
+				)
+			);
+		}
 	}
 
 	/**
@@ -228,12 +375,18 @@ class ReportedIP_Hive_Group_Sync {
 			}
 			$note   = isset( $entry['note'] ) ? sanitize_text_field( (string) $entry['note'] ) : '';
 			$result = $ip_manager->whitelist_ip( $address, 'group: ' . $note, null, self::BLOCK_TYPE );
-			$grown  = $grown || ! empty( $result['success'] );
+			if ( ! empty( $result['success'] ) ) {
+				$grown = true;
+				$this->count( 'whitelist_added' );
+			}
 		}
 
 		foreach ( array_keys( $owned ) as $address ) {
 			if ( ! isset( $wanted[ $address ] ) ) {
-				$ip_manager->remove_from_whitelist( $address, self::BLOCK_TYPE );
+				$result = $ip_manager->remove_from_whitelist( $address, self::BLOCK_TYPE );
+				if ( ! empty( $result['success'] ) ) {
+					$this->count( 'whitelist_removed' );
+				}
 			}
 		}
 
@@ -267,6 +420,7 @@ class ReportedIP_Hive_Group_Sync {
 			$ip = (string) $row->ip_address;
 			if ( $lift_white && 'manual' !== (string) $row->block_type && $ip_manager->is_whitelisted( $ip ) ) {
 				$ip_manager->unblock_ip( $ip );
+				$this->count( 'lifted' );
 				continue;
 			}
 			$active[ $ip ] = $row;
@@ -286,25 +440,81 @@ class ReportedIP_Hive_Group_Sync {
 
 			$hours = (int) ceil( ( $expires - $now ) / HOUR_IN_SECONDS );
 
+			$kind = 'added';
 			if ( isset( $active[ $ip ] ) ) {
 				$row = $active[ $ip ];
 				if ( 'manual' === (string) $row->block_type || empty( $row->blocked_until ) ) {
+					$this->count( 'skipped_manual' );
 					continue;
 				}
 				$until = strtotime( (string) $row->blocked_until . ' UTC' );
 				if ( false !== $until && $until >= $expires ) {
 					continue;
 				}
+				$kind = 'extended';
+			} elseif ( $ip_manager->is_whitelisted( $ip ) ) {
+				$this->count( 'skipped_whitelist' );
+				continue;
+			} elseif ( $this->is_own( $ip ) ) {
+				$this->count( 'skipped_own' );
+				continue;
 			}
 
 			$reporter = isset( $entry['reporter'] ) ? sanitize_text_field( (string) $entry['reporter'] ) : '';
-			$ip_manager->block_ip( $ip, 'group: ' . $reporter, max( 1, $hours ), self::BLOCK_TYPE );
+			$result   = $ip_manager->block_ip( $ip, 'group: ' . $reporter, max( 1, $hours ), self::BLOCK_TYPE );
+			if ( ! empty( $result['success'] ) ) {
+				$this->count( $kind );
+			}
 		}
 
 		foreach ( $active as $ip => $row ) {
 			if ( self::BLOCK_TYPE === (string) $row->block_type && ! isset( $wanted[ $ip ] ) ) {
 				$ip_manager->unblock_ip( $ip );
+				$this->count( 'lifted' );
 			}
+		}
+	}
+
+	/**
+	 * Add one to a counter of the current run.
+	 *
+	 * @param string $key Counter.
+	 * @return void
+	 */
+	private function count( $key ) {
+		$this->counts[ $key ] = ( $this->counts[ $key ] ?? 0 ) + 1;
+	}
+
+	/**
+	 * Whether an address or range covers this server. Isolated so tests can
+	 * run without the main plugin class.
+	 *
+	 * @param string $ip Address or CIDR.
+	 * @return bool
+	 */
+	protected function is_own( $ip ) {
+		return class_exists( 'ReportedIP_Hive' ) && ReportedIP_Hive::is_own_server_ip( $ip );
+	}
+
+	/**
+	 * Storage of the group list. Isolated so tests can hand in a double; it
+	 * only ever writes the mirror table, blocks go through the IP manager.
+	 *
+	 * @return ReportedIP_Hive_Database
+	 */
+	protected function store() {
+		return ReportedIP_Hive_Database::get_instance();
+	}
+
+	/**
+	 * Write the summary row of a run that changed something.
+	 *
+	 * @param array $details Counters and result.
+	 * @return void
+	 */
+	protected function event( array $details ) {
+		if ( class_exists( 'ReportedIP_Hive_Logger' ) ) {
+			ReportedIP_Hive_Logger::get_instance()->log_security_event( 'group_list_synced', 'system', $details, 'low' );
 		}
 	}
 

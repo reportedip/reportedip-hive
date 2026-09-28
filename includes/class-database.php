@@ -351,6 +351,147 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
+	 * Replace the stored group list with the one the service just sent.
+	 *
+	 * The table is a mirror, not a history: every accepted answer replaces it
+	 * whole, in batches of 500 rows per statement.
+	 *
+	 * @param array $entries Entries as the service sends them (`ip`, `reporter`, `kind`, `categories`, `origin`, `since`, `expires`).
+	 * @return int Rows written.
+	 * @since  2.1.67
+	 */
+	public function replace_group_entries( array $entries ) {
+		global $wpdb;
+
+		$table = $wpdb->base_prefix . 'reportedip_hive_group_entries';
+		$wpdb->query( "DELETE FROM $table" );
+
+		$utc  = static function ( $value ) {
+			$ts = is_string( $value ) && '' !== $value ? strtotime( $value ) : false;
+			return false === $ts ? null : gmdate( 'Y-m-d H:i:s', $ts );
+		};
+		$rows = array();
+		foreach ( $entries as $entry ) {
+			$ip = is_array( $entry ) && isset( $entry['ip'] ) ? trim( (string) $entry['ip'] ) : '';
+			if ( '' === $ip || strlen( $ip ) > 45 ) {
+				continue;
+			}
+			$categories  = isset( $entry['categories'] ) && is_array( $entry['categories'] ) ? implode( ',', array_map( 'intval', $entry['categories'] ) ) : '';
+			$rows[ $ip ] = array(
+				$ip,
+				substr( sanitize_text_field( (string) ( $entry['reporter'] ?? '' ) ), 0, 100 ),
+				substr( sanitize_key( (string) ( $entry['kind'] ?? '' ) ), 0, 16 ),
+				substr( $categories, 0, 255 ),
+				'manual' === ( $entry['origin'] ?? '' ) ? 'manual' : 'report',
+				$utc( $entry['since'] ?? '' ),
+				$utc( $entry['expires'] ?? '' ),
+			);
+		}
+
+		$written = 0;
+		foreach ( array_chunk( array_values( $rows ), 500 ) as $chunk ) {
+			$values = array();
+			$params = array();
+			foreach ( $chunk as $row ) {
+				$values[] = '(%s, %s, %s, %s, %s, %s, %s)';
+				$params   = array_merge( $params, $row );
+			}
+			$sql = "INSERT INTO $table (ip_address, reporter, kind, categories, origin, since, expires) VALUES " . implode( ', ', $values );
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- placeholders built from a fixed pattern, values bound below.
+			$result = $wpdb->query( $wpdb->prepare( $sql, $params ) );
+			if ( false !== $result ) {
+				$written += (int) $result;
+			}
+		}
+
+		return $written;
+	}
+
+	/**
+	 * Empty the stored group list.
+	 *
+	 * @return void
+	 * @since  2.1.67
+	 */
+	public function clear_group_entries() {
+		global $wpdb;
+
+		$table = $wpdb->base_prefix . 'reportedip_hive_group_entries';
+		$wpdb->query( "DELETE FROM $table" );
+	}
+
+	/**
+	 * Stored group entries with the local block they meet, if any.
+	 *
+	 * @param array $args {
+	 *     @type int    $per_page Rows per page.
+	 *     @type int    $offset   Offset.
+	 *     @type string $search   Substring of the address.
+	 *     @type string $reporter Exact reporter name.
+	 *     @type string $status   group|other|none, empty for all.
+	 *     @type bool   $count    Return the row count instead of rows.
+	 * }
+	 * @return array|int Rows (`block_type`, `blocked_until` from the blocked table) or the count.
+	 * @since  2.1.67
+	 */
+	public function get_group_entries( array $args = array() ) {
+		global $wpdb;
+
+		$table   = $wpdb->base_prefix . 'reportedip_hive_group_entries';
+		$blocked = $wpdb->base_prefix . 'reportedip_hive_blocked';
+
+		$where  = array( '1=1' );
+		$params = array();
+		if ( ! empty( $args['search'] ) ) {
+			$where[]  = 'g.ip_address LIKE %s';
+			$params[] = '%' . $wpdb->esc_like( (string) $args['search'] ) . '%';
+		}
+		if ( ! empty( $args['reporter'] ) ) {
+			$where[]  = 'g.reporter = %s';
+			$params[] = (string) $args['reporter'];
+		}
+		$status = (string) ( $args['status'] ?? '' );
+		if ( 'group' === $status ) {
+			$where[] = "b.block_type = 'group'";
+		} elseif ( 'other' === $status ) {
+			$where[] = "b.id IS NOT NULL AND b.block_type <> 'group'";
+		} elseif ( 'none' === $status ) {
+			$where[] = 'b.id IS NULL';
+		}
+
+		$from = "FROM $table g
+			LEFT JOIN $blocked b ON b.ip_address = g.ip_address AND b.is_active = 1
+				AND ( b.blocked_until IS NULL OR b.blocked_until > UTC_TIMESTAMP() )
+			WHERE " . implode( ' AND ', $where );
+
+		if ( ! empty( $args['count'] ) ) {
+			$sql = "SELECT COUNT(*) $from";
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- table names internal, values bound via prepare when present.
+			return (int) $wpdb->get_var( $params ? $wpdb->prepare( $sql, $params ) : $sql );
+		}
+
+		$sql      = "SELECT g.*, b.block_type, b.blocked_until $from ORDER BY g.since DESC, g.ip_address ASC LIMIT %d OFFSET %d";
+		$params[] = max( 1, (int) ( $args['per_page'] ?? 20 ) );
+		$params[] = max( 0, (int) ( $args['offset'] ?? 0 ) );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- table names internal, values bound via prepare.
+		return (array) $wpdb->get_results( $wpdb->prepare( $sql, $params ) );
+	}
+
+	/**
+	 * Members that appear as reporter in the stored group list.
+	 *
+	 * @return string[]
+	 * @since  2.1.67
+	 */
+	public function get_group_reporters() {
+		global $wpdb;
+
+		$table = $wpdb->base_prefix . 'reportedip_hive_group_entries';
+		return array_map( 'strval', (array) $wpdb->get_col( "SELECT DISTINCT reporter FROM $table WHERE reporter <> '' ORDER BY reporter ASC" ) );
+	}
+
+	/**
 	 * Remove from whitelist
 	 */
 	public function remove_from_whitelist( $ip_address ) {

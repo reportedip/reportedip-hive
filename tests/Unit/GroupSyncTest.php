@@ -161,6 +161,24 @@ namespace {
 	}
 
 	/**
+	 * Store double: the mirror table as an array.
+	 */
+	class Rip_Group_Sync_Store_Double {
+
+		/** @var array<int,array>|null Stored entries, null before the first write. */
+		public $entries = null;
+
+		public function replace_group_entries( array $entries ) {
+			$this->entries = $entries;
+			return count( $entries );
+		}
+
+		public function clear_group_entries() {
+			$this->entries = array();
+		}
+	}
+
+	/**
 	 * Sync double: canned HTTP answer, always eligible, injected IP manager.
 	 */
 	class Rip_Group_Sync_Double extends \ReportedIP_Hive_Group_Sync {
@@ -174,8 +192,30 @@ namespace {
 		/** @var Rip_Group_Sync_Ip_Manager_Double */
 		public $manager;
 
+		/** @var Rip_Group_Sync_Store_Double */
+		public $store_double;
+
+		/** @var array<int,array> Recorded summary events. */
+		public $events = array();
+
+		/** @var string[] Addresses that count as this server. */
+		public $own = array();
+
 		public function __construct() {
-			$this->manager = new Rip_Group_Sync_Ip_Manager_Double();
+			$this->manager      = new Rip_Group_Sync_Ip_Manager_Double();
+			$this->store_double = new Rip_Group_Sync_Store_Double();
+		}
+
+		protected function store() {
+			return $this->store_double;
+		}
+
+		protected function event( array $details ) {
+			$this->events[] = $details;
+		}
+
+		protected function is_own( $ip ) {
+			return in_array( $ip, $this->own, true );
 		}
 
 		/** @var bool Answer of is_connected(). */
@@ -459,7 +499,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertStringContainsString( '$ip_manager->block_ip(', $source );
 			$this->assertStringNotContainsString( 'block_ip_for_minutes', $source, 'The whitelist gate lives in IP_Manager::block_ip(); the sync must not bypass it.' );
-			$this->assertStringNotContainsString( 'ReportedIP_Hive_Database', $source );
+			$this->assertStringNotContainsString( '->block_ip_for_minutes(', $source );
+			$this->assertSame( 1, substr_count( $source, '->block_ip(' ), 'Exactly one block call, on the IP manager.' );
+			$this->assertStringContainsString( '$ip_manager->block_ip(', $source );
 		}
 
 		public function test_an_answer_without_the_list_header_is_discarded() {
@@ -674,6 +716,112 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertNotFalse( $range, 'A group list may carry a /24 around this host; block_ip() must see the range as the host address.' );
 			$this->assertLessThan( $single, $range, 'The range check must run before the single-address check refuses a CIDR string.' );
+		}
+
+		public function test_an_accepted_list_is_stored_whole_and_a_304_keeps_it() {
+			$entries              = array( $this->entry( '45.33.32.10', HOUR_IN_SECONDS ), $this->entry( '45.33.32.11', -60 ) );
+			$this->sync->response = $this->answer( 200, $this->list_body( $entries ) );
+
+			$this->sync->sync();
+			$this->assertCount( 2, $this->sync->store_double->entries, 'An expired entry is still shown, the tab explains it.' );
+
+			$this->sync->response = $this->answer( 304 );
+			$this->sync->sync();
+			$this->assertCount( 2, $this->sync->store_double->entries );
+			$this->assertSame( 2, \ReportedIP_Hive_Group_Sync::status()['entries'] );
+			$this->assertSame( 'unchanged', \ReportedIP_Hive_Group_Sync::status()['last_result'] );
+		}
+
+		public function test_a_release_empties_the_stored_list() {
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_Group_Sync::OPT_ETAG, '"g1-9-3"' );
+			$this->sync->store_double->entries = array( $this->entry( '45.33.32.10', HOUR_IN_SECONDS ) );
+			$this->sync->response              = $this->answer( 204 );
+
+			$this->sync->sync();
+
+			$this->assertSame( array(), $this->sync->store_double->entries );
+			$this->assertSame( 0, \ReportedIP_Hive_Group_Sync::status()['entries'] );
+		}
+
+		public function test_the_run_is_counted_by_reason_and_summarised_once() {
+			$this->sync->manager->whitelist = array( '45.33.32.12' );
+			$this->sync->own                = array( '45.33.32.13' );
+			$this->sync->manager->rows      = array(
+				$this->row( '45.33.32.11', 'automatic', MINUTE_IN_SECONDS ),
+				$this->row( '45.33.32.14', 'manual', HOUR_IN_SECONDS ),
+				$this->row( '45.33.32.20', 'group', HOUR_IN_SECONDS ),
+			);
+			$this->sync->response           = $this->answer(
+				200,
+				$this->list_body(
+					array(
+						$this->entry( '45.33.32.10', HOUR_IN_SECONDS ),
+						$this->entry( '45.33.32.11', HOUR_IN_SECONDS ),
+						$this->entry( '45.33.32.12', HOUR_IN_SECONDS ),
+						$this->entry( '45.33.32.13', HOUR_IN_SECONDS ),
+						$this->entry( '45.33.32.14', HOUR_IN_SECONDS ),
+					),
+					array( $this->wl( '10.0.0.0/24' ) )
+				)
+			);
+
+			$this->assertSame( 'applied', $this->sync->sync() );
+
+			$status = \ReportedIP_Hive_Group_Sync::status();
+			$this->assertSame(
+				array(
+					'added'             => 1,
+					'extended'          => 1,
+					'lifted'            => 1,
+					'whitelist_added'   => 1,
+					'whitelist_removed' => 0,
+					'skipped_whitelist' => 1,
+					'skipped_own'       => 1,
+					'skipped_manual'    => 1,
+				),
+				$status['changes']
+			);
+			$this->assertSame( 200, $status['http_code'] );
+			$this->assertSame( 5, $status['entries'] );
+			$this->assertCount( 1, $this->sync->events );
+			$this->assertSame( array( '45.33.32.10', '45.33.32.11' ), array_column( $this->sync->manager->blocked, 'ip' ), 'The own address is never handed to block_ip().' );
+		}
+
+		public function test_a_run_that_changes_nothing_writes_no_event_and_keeps_the_last_change() {
+			$this->sync->manager->rows = array( $this->row( '45.33.32.10', 'group', 3 * HOUR_IN_SECONDS ) );
+			$this->sync->response      = $this->answer( 200, $this->list_body( array( $this->entry( '45.33.32.10', 2 * HOUR_IN_SECONDS ) ) ) );
+
+			$this->sync->sync();
+
+			$this->assertSame( array(), $this->sync->events );
+			$this->assertSame( 0, \ReportedIP_Hive_Group_Sync::status()['last_change'] );
+			$this->assertGreaterThan( 0, \ReportedIP_Hive_Group_Sync::status()['last_run'] );
+		}
+
+		public function test_a_skipped_run_leaves_the_status_alone() {
+			$this->sync->connected = false;
+
+			$this->assertSame( 'skipped', $this->sync->sync() );
+			$this->assertSame( 0, \ReportedIP_Hive_Group_Sync::status()['last_run'] );
+		}
+
+		/**
+		 * @dataProvider local_status_cases
+		 */
+		public function test_the_local_status_names_the_reason( string $expected, string $type, int $expires, bool $white, bool $own, bool $report_only ) {
+			$this->assertSame( $expected, \ReportedIP_Hive_Group_Sync::local_status( $type, $expires, $white, $own, $report_only, 1000 ) );
+		}
+
+		public function local_status_cases(): array {
+			return array(
+				'group block'      => array( 'group', 'group', 2000, true, true, true ),
+				'other block'      => array( 'other', 'automatic', 2000, true, false, false ),
+				'expired'          => array( 'expired', '', 900, true, false, false ),
+				'whitelisted'      => array( 'whitelisted', '', 2000, true, true, true ),
+				'own server'       => array( 'own', '', 2000, false, true, true ),
+				'report only'      => array( 'report_only', '', 2000, false, false, true ),
+				'lifted by hand'   => array( 'lifted', '', 2000, false, false, false ),
+			);
 		}
 
 		public function test_verify_key_hands_group_and_reputation_to_the_options() {

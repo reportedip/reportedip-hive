@@ -513,6 +513,7 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-logs-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-blocked-ips-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-whitelist-table.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-group-entries-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-waf-exceptions-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-api-queue-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-settings-import-export.php';

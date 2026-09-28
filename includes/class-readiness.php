@@ -345,6 +345,27 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
+	 * Advisory: the plan includes group bans and the key is in no group yet.
+	 *
+	 * @param bool $connected   Community mode with a stored key.
+	 * @param bool $tier_allows Plan is Professional or above.
+	 * @param bool $has_group   The key already belongs to a group.
+	 * @return array<string,mixed>|null
+	 * @since  2.1.67
+	 */
+	public static function group_available( $connected, $tier_allows, $has_group ) {
+		if ( ! $connected || ! $tier_allows || $has_group ) {
+			return null;
+		}
+		return self::issue(
+			'group_available',
+			self::SEV_ADVISORY,
+			__( 'Share bans across your sites', 'reportedip-hive' ),
+			__( 'Your plan includes groups. Put the keys of your sites and servers into one group on reportedip.com, and an address one of them reports is blocked on all the others.', 'reportedip-hive' )
+		);
+	}
+
+	/**
 	 * Per-user advisory: 2FA is on for the site, the admin has no method.
 	 *
 	 * Not part of the cached register: the answer differs per user.
@@ -506,6 +527,12 @@ final class ReportedIP_Hive_Readiness {
 				$raised[] = self::dropin_not_running( $guard->supports_auto_install(), $guard->is_running() );
 			}
 			$raised[] = self::community_pending( (string) $mode->get_mode() );
+			$group    = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_group', null );
+			$raised[] = self::group_available(
+				$mode->is_community_mode() && ReportedIP_Hive_API::get_instance()->is_configured(),
+				$mode->tier_at_least( 'professional' ),
+				is_array( $group ) && ! empty( $group['name'] )
+			);
 
 			$adapters = class_exists( 'ReportedIP_Hive_Form_Adapters' ) ? ReportedIP_Hive_Form_Adapters::get_instance() : null;
 			foreach ( self::form_adapters() as $slug => $row ) {
@@ -1075,6 +1102,7 @@ final class ReportedIP_Hive_Readiness {
 			'badge_off'              => array( 'reportedip-hive-community', 'badges' ),
 			'dropin_not_running'     => array( 'reportedip-hive-tools', 'server' ),
 			'community_pending'      => array( 'reportedip-hive-community', 'community' ),
+			'group_available'        => array( 'reportedip-hive-community', 'community' ),
 			'own_2fa_missing'        => array( 'profile', '' ),
 		);
 

@@ -48,6 +48,7 @@ final class ReportedIP_Hive_Schema {
 	public const TABLE_TRUSTED_DEVICES = 'reportedip_hive_trusted_devices';
 	public const TABLE_AUDIT_LOG       = 'reportedip_hive_audit_log';
 	public const TABLE_WAF_EXCEPTIONS  = 'reportedip_hive_waf_exceptions';
+	public const TABLE_GROUP_ENTRIES   = 'reportedip_hive_group_entries';
 
 	/**
 	 * Plugin table suffixes (without prefix).
@@ -68,6 +69,7 @@ final class ReportedIP_Hive_Schema {
 		self::TABLE_TRUSTED_DEVICES,
 		self::TABLE_AUDIT_LOG,
 		self::TABLE_WAF_EXCEPTIONS,
+		self::TABLE_GROUP_ENTRIES,
 	);
 
 	/**
@@ -311,6 +313,22 @@ final class ReportedIP_Hive_Schema {
 			KEY idx_scope (scope)
 		) $charset_collate;";
 
+		$table_group_entries = $prefix . 'reportedip_hive_group_entries';
+		$sql_group_entries   = "CREATE TABLE $table_group_entries (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			ip_address varchar(45) NOT NULL,
+			reporter varchar(100) NOT NULL DEFAULT '',
+			kind varchar(16) NOT NULL DEFAULT '',
+			categories varchar(255) NOT NULL DEFAULT '',
+			origin varchar(16) NOT NULL DEFAULT 'report',
+			since datetime DEFAULT NULL,
+			expires datetime DEFAULT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY unique_ip (ip_address),
+			KEY idx_reporter (reporter),
+			KEY idx_expires (expires)
+		) $charset_collate;";
+
 		dbDelta( $sql_logs );
 		dbDelta( $sql_whitelist );
 		dbDelta( $sql_blocked );
@@ -320,6 +338,7 @@ final class ReportedIP_Hive_Schema {
 		dbDelta( $sql_trusted );
 		dbDelta( $sql_audit );
 		dbDelta( $sql_waf_exceptions );
+		dbDelta( $sql_group_entries );
 
 		self::ensure_additional_indexes();
 	}

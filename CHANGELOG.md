@@ -56,6 +56,27 @@ All changes to ReportedIP Hive are documented here.
   disappear again, entries an operator added by hand keep their origin
   `Manual` and are never touched. A group entry cannot be removed on the
   site, the table says so and points to the account.
+- **The group is visible where you work.** The dashboard carries a group
+  card with the group, its members and ban window, how many entries of the
+  list are blocked here, the last sync and its result. Activity, IP Lists has
+  a new Group tab that shows the list exactly as the service sent it: every
+  address with the member that reported it, the categories, since when and
+  until when it is listed, and what this site made of it. The reason is
+  worked out when the tab renders, so it stays true after an operator
+  stepped in: blocked by the group, already blocked by another rule, on the
+  whitelist, the address of this server, report-only mode, window over, or
+  lifted by hand and back with the next change of the list. The tab filters
+  by that status and by member, lists the group whitelist and has a Sync now
+  button. Every sync that changes something writes one summary line
+  (`group_list_synced`) with what was blocked, extended, lifted and skipped,
+  next to the per-address rows. The list is kept in the new table
+  `group_entries` (schema v21), which the sync replaces on every accepted
+  answer and empties when the group is released.
+- **A next step for an unused group.** When the plan includes groups
+  (Professional and above) and the key is in none, the dashboard's Next steps
+  show "Share bans across your sites" with a button to the Groups section of
+  the reportedip.com account and a link to the group documentation. The card
+  goes away once the key joins a group.
 - **Group and reputation on the Community page.** The verify-key answer now
   carries the group the key belongs to and the community reputation of the
   address this site connects from. Both are shown on the Community page, and

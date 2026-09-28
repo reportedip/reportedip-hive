@@ -42,7 +42,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 20;
+	public const CURRENT_VERSION = 21;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -573,6 +573,18 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * @since  2.1.67
 	 */
 	private static function migrate_to_v20() {
+		ReportedIP_Hive_Schema::ensure_tables();
+	}
+
+	/**
+	 * Migrate to v21: `group_entries` keeps the group list as the service sent
+	 * it, so the Group tab can show every entry with its reporter, categories
+	 * and window, and why this site did or did not block it.
+	 *
+	 * @return void
+	 * @since  2.1.67
+	 */
+	private static function migrate_to_v21() {
 		ReportedIP_Hive_Schema::ensure_tables();
 	}
 

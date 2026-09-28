@@ -120,7 +120,12 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 
 			case 'source':
 				if ( 'group' === (string) ( $item->source ?? 'manual' ) ) {
-					return '<span class="block-type-badge group">' . esc_html__( 'Group', 'reportedip-hive' ) . '</span>';
+					return sprintf(
+						'<a href="%s" title="%s"><span class="block-type-badge group">%s</span></a>',
+						esc_url( admin_url( 'admin.php?page=reportedip-hive-security&tab=ip_lists&sub=group' ) ),
+						esc_attr__( 'Show the group whitelist', 'reportedip-hive' ),
+						esc_html__( 'Group', 'reportedip-hive' )
+					);
 				}
 				return '<span class="block-type-badge manual">' . esc_html__( 'Manual', 'reportedip-hive' ) . '</span>';
 

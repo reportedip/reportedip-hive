@@ -460,6 +460,10 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'label' => __( 'Block Skipped (own server address)', 'reportedip-hive' ),
 				'group' => 'ops_blocks',
 			),
+			'group_list_synced'                 => array(
+				'label' => __( 'Group List Synced', 'reportedip-hive' ),
+				'group' => 'ops_blocks',
+			),
 			'local_event_detected'              => array(
 				'label' => __( 'Local Event Detected', 'reportedip-hive' ),
 				'group' => 'ops_blocks',

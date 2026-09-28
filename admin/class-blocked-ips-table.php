@@ -122,7 +122,11 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 					$label = __( 'Auto-Blocked', 'reportedip-hive' );
 					$class = 'auto';
 				}
-				return sprintf( '<span class="block-type-badge %s">%s</span>', esc_attr( $class ), esc_html( $label ) );
+				$badge = sprintf( '<span class="block-type-badge %s">%s</span>', esc_attr( $class ), esc_html( $label ) );
+				if ( 'group' === $class ) {
+					$badge = sprintf( '<a href="%s" title="%s">%s</a>', esc_url( admin_url( 'admin.php?page=reportedip-hive-security&tab=ip_lists&sub=group&s=' . rawurlencode( (string) $item->ip_address ) ) ), esc_attr__( 'Show this entry in the group list', 'reportedip-hive' ), $badge );
+				}
+				return $badge;
 
 			case 'blocked_until':
 				if ( empty( $item->blocked_until ) ) {

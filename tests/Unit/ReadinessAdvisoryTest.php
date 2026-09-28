@@ -48,6 +48,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNull( ReportedIP_Hive_Readiness::community_pending( 'community' ) );
 		}
 
+		public function test_group_available_only_on_a_connected_plan_without_a_group(): void {
+			$this->assertSame( 'group_available', ReportedIP_Hive_Readiness::group_available( true, true, false )['key'] );
+			$this->assertNull( ReportedIP_Hive_Readiness::group_available( false, true, false ), 'not connected' );
+			$this->assertNull( ReportedIP_Hive_Readiness::group_available( true, false, false ), 'plan without groups' );
+			$this->assertNull( ReportedIP_Hive_Readiness::group_available( true, true, true ), 'already in a group' );
+		}
+
 		public function test_dropin_not_running_only_where_the_server_could_run_it(): void {
 			$this->assertNotNull( ReportedIP_Hive_Readiness::dropin_not_running( true, false ) );
 			$this->assertNull( ReportedIP_Hive_Readiness::dropin_not_running( true, true ), 'running' );

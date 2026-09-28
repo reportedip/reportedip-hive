@@ -137,7 +137,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_step_actions_map_every_advisory_key(): void {
-			foreach ( array( 'hide_login_off', 'frontend_2fa_available', 'badge_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing' ) as $key ) {
+			foreach ( array( 'hide_login_off', 'frontend_2fa_available', 'badge_off', 'dropin_not_running', 'community_pending', 'group_available', 'own_2fa_missing' ) as $key ) {
 				$this->assertArrayHasKey( $key, ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), $key );
 			}
 			$this->assertSame( array( 'reportedip_hive_auto_footer_enabled' => 1 ), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'badge_off', array() ) );
@@ -150,6 +150,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 				ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'hide_login_off', array( 'slug' => 'secret-door' ) )
 			);
 			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'community_pending', array() ), 'link-only steps write nothing' );
+
+			$group = ReportedIP_Hive_Dashboard_Next_Steps::step_actions()['group_available'];
+			$this->assertSame( 'https://reportedip.com/dashboard/groups/', $group['url'], 'The group step opens the portal, not a local page.' );
+			$this->assertSame( 'https://reportedip.com/docs/blocking/groups/', $group['doc'] );
+			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'group_available', array() ) );
 		}
 	}
 }

@@ -174,7 +174,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	/**
 	 * Per-step action definition: button label and whether the step writes.
 	 *
-	 * @return array<string,array{label:string,write:bool,field?:string}>
+	 * @return array<string,array{label:string,write:bool,field?:string,url?:string,doc?:string}>
 	 */
 	public static function step_actions() {
 		$actions = array(
@@ -198,6 +198,12 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			'community_pending'      => array(
 				'label' => __( 'Enter a key', 'reportedip-hive' ),
 				'write' => false,
+			),
+			'group_available'        => array(
+				'label' => __( 'Create a group', 'reportedip-hive' ),
+				'write' => false,
+				'url'   => REPORTEDIP_HIVE_SITE_URL . '/dashboard/groups/',
+				'doc'   => REPORTEDIP_HIVE_SITE_URL . '/docs/blocking/groups/',
 			),
 			'own_2fa_missing'        => array(
 				'label' => __( 'Set up now', 'reportedip-hive' ),
@@ -424,7 +430,14 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 								<button type="submit" class="rip-button rip-button--primary rip-button--sm"><?php echo esc_html( $action['label'] ); ?></button>
 							</form>
 						<?php else : ?>
-							<a class="rip-button rip-button--primary rip-button--sm" href="<?php echo esc_url( (string) $issue['settings_url'] ); ?>"><?php echo esc_html( $action['label'] ); ?></a>
+							<?php if ( ! empty( $action['url'] ) ) : ?>
+								<a class="rip-button rip-button--primary rip-button--sm" href="<?php echo esc_url( (string) $action['url'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $action['label'] ); ?></a>
+							<?php else : ?>
+								<a class="rip-button rip-button--primary rip-button--sm" href="<?php echo esc_url( (string) $issue['settings_url'] ); ?>"><?php echo esc_html( $action['label'] ); ?></a>
+							<?php endif; ?>
+						<?php endif; ?>
+						<?php if ( ! empty( $action['doc'] ) ) : ?>
+							<a class="rip-next-steps__dismiss" href="<?php echo esc_url( (string) $action['doc'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'How groups work', 'reportedip-hive' ); ?></a>
 						<?php endif; ?>
 						<?php if ( ! empty( $issue['dismissable'] ) ) : ?>
 							<a class="rip-next-steps__dismiss" href="<?php echo esc_url( $dismiss_url ); ?>"><?php esc_html_e( 'Not now', 'reportedip-hive' ); ?></a>
