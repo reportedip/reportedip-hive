@@ -38,6 +38,15 @@ All changes to ReportedIP Hive are documented here.
   so an older server can never hand out the community list under that name.
   A plan below Professional gets one notice and the sync keeps asking, so a
   plan change needs no action. A key without a group sees no change.
+  Whatever the group placed goes again when the list stops arriving: on a
+  plan refusal, when the key leaves the group, and when the site drops its
+  key or switches to Local Shield, so no stale list keeps trusting or banning
+  addresses. A shorter automatic or reputation block on a listed address
+  becomes the group ban, otherwise the address would walk free once the short
+  block ran out. Report-only mode blocks nothing from the list and writes no
+  log row per entry. A range from the list that covers this server's own
+  address is never blocked, and the sync waits until the schema migration
+  has run.
 - **The group whitelist reaches every member.** Addresses and ranges the
   group whitelists in the account arrive with the same list and land in the
   whitelist of this site with the origin `Group`, so they are neither blocked

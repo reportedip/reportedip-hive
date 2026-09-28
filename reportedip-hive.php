@@ -2265,11 +2265,24 @@ class ReportedIP_Hive {
 	 * own community reputation. The automatic pipeline therefore stands down
 	 * for these addresses; manual blocks remain possible.
 	 *
-	 * @param string $ip Candidate IP address.
+	 * A CIDR range counts as the server's own when it covers one of these
+	 * addresses (since 2.1.67): a group list may carry a /24 around a member's
+	 * host, and a range block locks the loopbacks out exactly like an exact one.
+	 *
+	 * @param string $ip Candidate IP address or CIDR range.
 	 * @return bool      True when the address belongs to the server itself.
 	 * @since  2.1.31
 	 */
 	public static function is_own_server_ip( $ip ) {
+		if ( is_string( $ip ) && false !== strpos( $ip, '/' ) ) {
+			foreach ( array_merge( array( '127.0.0.1', '::1' ), self::get_own_server_ips() ) as $candidate ) {
+				if ( ReportedIP_Hive_Database::ip_in_cidr( (string) $candidate, $ip ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		if ( ! is_string( $ip ) || false === filter_var( $ip, FILTER_VALIDATE_IP ) ) {
 			return false;
 		}

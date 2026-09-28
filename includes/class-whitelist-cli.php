@@ -134,7 +134,7 @@ class ReportedIP_Hive_Whitelist_CLI {
 		$result = $manager->remove_from_whitelist( $ip );
 
 		if ( empty( $result['success'] ) ) {
-			WP_CLI::error( 'Failed to remove ' . $ip . ' from the whitelist.' );
+			WP_CLI::error( 'Failed to remove ' . $ip . ' from the whitelist. ' . wp_strip_all_tags( (string) ( $result['message'] ?? '' ) ) );
 		}
 
 		WP_CLI::success( 'Removed ' . $ip . ' from the whitelist.' );

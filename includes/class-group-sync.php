@@ -13,7 +13,9 @@
  * The whitelist wins as it always does: a whitelisted address is refused by
  * {@see ReportedIP_Hive_IP_Manager::block_ip()} and simply skipped here. A
  * block the operator placed by hand is never overwritten and never lifted by
- * the sync, only rows carrying the `group` block type belong to it.
+ * the sync. A shorter automatic or reputation block on a listed address
+ * becomes a group block, and only rows carrying the `group` block type are
+ * lifted by it.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -62,6 +64,14 @@ class ReportedIP_Hive_Group_Sync {
 	const LIST_HEADER = 'x-rip-list';
 
 	/**
+	 * Schema version that carries the `group` block type (v19) and
+	 * `whitelist.source` (v20). The migration runs under a lock, so a cron
+	 * request can arrive before it finished; a write with the new column
+	 * would fail and the stored ETag would freeze the gap.
+	 */
+	const MIN_DB_VERSION = 20;
+
+	/**
 	 * Singleton.
 	 *
 	 * @var self|null
@@ -83,9 +93,17 @@ class ReportedIP_Hive_Group_Sync {
 	/**
 	 * Fetch the group list and mirror it into the blocked table.
 	 *
-	 * @return string What happened: applied|unchanged|cleared|tier|discarded|skipped|error.
+	 * @return string What happened: applied|report_only|unchanged|cleared|tier|discarded|released|skipped|error.
 	 */
 	public function sync() {
+		if ( ! $this->is_connected() ) {
+			if ( '' !== (string) ReportedIP_Hive_Option_Routing::get( self::OPT_ETAG, '' ) ) {
+				$this->release();
+				ReportedIP_Hive_Option_Routing::delete( self::OPT_GROUP );
+				return 'released';
+			}
+			return 'skipped';
+		}
 		if ( ! $this->is_eligible() ) {
 			return 'skipped';
 		}
@@ -104,6 +122,7 @@ class ReportedIP_Hive_Group_Sync {
 		if ( 403 === $code ) {
 			$data = json_decode( (string) $response['body'], true );
 			if ( 'group_tier' === (string) ( $data['code'] ?? '' ) ) {
+				$this->release();
 				ReportedIP_Hive_Option_Routing::set( self::OPT_ERROR, 'group_tier' );
 				return 'tier';
 			}
@@ -123,10 +142,8 @@ class ReportedIP_Hive_Group_Sync {
 		ReportedIP_Hive_Option_Routing::delete( self::OPT_ERROR );
 
 		if ( 204 === $code ) {
-			$this->apply_whitelist( array() );
-			$this->apply( array() );
+			$this->release();
 			ReportedIP_Hive_Option_Routing::delete( self::OPT_GROUP );
-			ReportedIP_Hive_Option_Routing::delete( self::OPT_ETAG );
 			return 'cleared';
 		}
 
@@ -136,18 +153,46 @@ class ReportedIP_Hive_Group_Sync {
 			return 'error';
 		}
 
-		$this->apply_whitelist( isset( $data['whitelist'] ) && is_array( $data['whitelist'] ) ? $data['whitelist'] : array() );
-		$this->apply( $data['entries'] );
+		$grown = $this->apply_whitelist( isset( $data['whitelist'] ) && is_array( $data['whitelist'] ) ? $data['whitelist'] : array() );
 
 		if ( isset( $data['group'] ) && is_array( $data['group'] ) ) {
 			$known = ReportedIP_Hive_Option_Routing::get( self::OPT_GROUP, array() );
 			ReportedIP_Hive_Option_Routing::set( self::OPT_GROUP, array_merge( is_array( $known ) ? $known : array(), $data['group'] ) );
 		}
+
+		/*
+		 * Report-only enforces nothing, and block_ip() would log a
+		 * would_block row for every entry on every changed list. The ETag is
+		 * not kept either, so the list is applied in full the first time the
+		 * mode is switched off instead of waiting for the next change.
+		 */
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
+			ReportedIP_Hive_Option_Routing::delete( self::OPT_ETAG );
+			return 'report_only';
+		}
+
+		$this->apply( $data['entries'], $grown );
+
 		if ( '' !== (string) $response['etag'] ) {
 			ReportedIP_Hive_Option_Routing::set( self::OPT_ETAG, (string) $response['etag'] );
 		}
 
 		return 'applied';
+	}
+
+	/**
+	 * Drop everything the sync placed: group whitelist rows, group blocks and
+	 * the ETag. Used when the key leaves the group (204), when the plan no
+	 * longer includes groups (403 group_tier) and when the site stops talking
+	 * to the service (no key, Local Shield). A list nobody refreshes any more
+	 * must not keep trusting or banning addresses.
+	 *
+	 * @return void
+	 */
+	private function release() {
+		$this->apply_whitelist( array() );
+		$this->apply( array(), false );
+		ReportedIP_Hive_Option_Routing::delete( self::OPT_ETAG );
 	}
 
 	/**
@@ -158,10 +203,11 @@ class ReportedIP_Hive_Group_Sync {
 	 * that row.
 	 *
 	 * @param array $entries Entries as the service sends them (`entry`, `note`, `since`).
-	 * @return void
+	 * @return bool True when at least one row was added.
 	 */
 	private function apply_whitelist( array $entries ) {
 		$ip_manager = $this->ip_manager();
+		$grown      = false;
 
 		$owned = array();
 		foreach ( (array) $ip_manager->get_whitelist( true ) as $row ) {
@@ -180,8 +226,9 @@ class ReportedIP_Hive_Group_Sync {
 			if ( isset( $owned[ $address ] ) ) {
 				continue;
 			}
-			$note = isset( $entry['note'] ) ? sanitize_text_field( (string) $entry['note'] ) : '';
-			$ip_manager->whitelist_ip( $address, 'group: ' . $note, null, self::BLOCK_TYPE );
+			$note   = isset( $entry['note'] ) ? sanitize_text_field( (string) $entry['note'] ) : '';
+			$result = $ip_manager->whitelist_ip( $address, 'group: ' . $note, null, self::BLOCK_TYPE );
+			$grown  = $grown || ! empty( $result['success'] );
 		}
 
 		foreach ( array_keys( $owned ) as $address ) {
@@ -189,26 +236,36 @@ class ReportedIP_Hive_Group_Sync {
 				$ip_manager->remove_from_whitelist( $address, self::BLOCK_TYPE );
 			}
 		}
+
+		return $grown;
 	}
 
 	/**
 	 * Bring the group blocks in line with the list.
 	 *
-	 * A block that is not manual and sits on a whitelisted address (a range
-	 * from the group whitelist included) is lifted here, so the whitelist
-	 * wins over blocks that were placed before it arrived.
+	 * When the whitelist just grew, a block that is not manual and sits on a
+	 * whitelisted address (a range from the group whitelist included) is
+	 * lifted here, so the whitelist wins over blocks placed before it
+	 * arrived. The pass costs one lookup per active block, so it only runs
+	 * when there is something new to win with.
 	 *
-	 * @param array $entries Entries as the service sends them (`ip`, `reporter`, `expires`).
+	 * An automatic or reputation block that ends before the group ban is
+	 * replaced by the group ban. Left alone, the address would walk free when
+	 * the shorter block runs out, and a 304 would keep it free until the list
+	 * changes. A manual block is never touched.
+	 *
+	 * @param array $entries    Entries as the service sends them (`ip`, `reporter`, `expires`).
+	 * @param bool  $lift_white Lift non-manual blocks on whitelisted addresses first.
 	 * @return void
 	 */
-	private function apply( array $entries ) {
+	private function apply( array $entries, $lift_white ) {
 		$ip_manager = $this->ip_manager();
 		$now        = time();
 
 		$active = array();
 		foreach ( (array) $ip_manager->get_blocked_ips( true ) as $row ) {
 			$ip = (string) $row->ip_address;
-			if ( 'manual' !== (string) $row->block_type && $ip_manager->is_whitelisted( $ip ) ) {
+			if ( $lift_white && 'manual' !== (string) $row->block_type && $ip_manager->is_whitelisted( $ip ) ) {
 				$ip_manager->unblock_ip( $ip );
 				continue;
 			}
@@ -231,10 +288,10 @@ class ReportedIP_Hive_Group_Sync {
 
 			if ( isset( $active[ $ip ] ) ) {
 				$row = $active[ $ip ];
-				if ( self::BLOCK_TYPE !== (string) $row->block_type ) {
+				if ( 'manual' === (string) $row->block_type || empty( $row->blocked_until ) ) {
 					continue;
 				}
-				$until = ! empty( $row->blocked_until ) ? strtotime( (string) $row->blocked_until . ' UTC' ) : false;
+				$until = strtotime( (string) $row->blocked_until . ' UTC' );
 				if ( false !== $until && $until >= $expires ) {
 					continue;
 				}
@@ -252,16 +309,27 @@ class ReportedIP_Hive_Group_Sync {
 	}
 
 	/**
-	 * True when the sync may run: community mode, a key, and no open
-	 * back-off of the API client.
+	 * True while the site talks to the service at all: community mode and a
+	 * key. False means whatever the sync placed has to go.
+	 *
+	 * @return bool
+	 */
+	protected function is_connected() {
+		if ( '' === (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ) {
+			return false;
+		}
+		return class_exists( 'ReportedIP_Hive_Mode_Manager' ) && ReportedIP_Hive_Mode_Manager::get_instance()->is_community_mode();
+	}
+
+	/**
+	 * True when the sync may run now: the schema carries the group columns
+	 * and the API client has no open back-off. A false here is temporary and
+	 * changes nothing locally.
 	 *
 	 * @return bool
 	 */
 	protected function is_eligible() {
-		if ( '' === (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ) {
-			return false;
-		}
-		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) || ! ReportedIP_Hive_Mode_Manager::get_instance()->is_community_mode() ) {
+		if ( (int) get_site_option( ReportedIP_Hive_Migration_Manager::VERSION_OPTION, 0 ) < self::MIN_DB_VERSION ) {
 			return false;
 		}
 		if ( class_exists( 'ReportedIP_Hive_API' ) && ReportedIP_Hive_API::get_instance()->is_rate_limited( 'meta' ) ) {

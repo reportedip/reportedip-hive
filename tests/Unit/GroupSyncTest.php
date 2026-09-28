@@ -178,6 +178,13 @@ namespace {
 			$this->manager = new Rip_Group_Sync_Ip_Manager_Double();
 		}
 
+		/** @var bool Answer of is_connected(). */
+		public $connected = true;
+
+		protected function is_connected() {
+			return $this->connected;
+		}
+
 		protected function is_eligible() {
 			return true;
 		}
@@ -583,6 +590,90 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( "block_type enum('manual','automatic','reputation','group')", $schema );
 			$this->assertGreaterThanOrEqual( 19, \ReportedIP_Hive_Migration_Manager::CURRENT_VERSION );
 			$this->assertTrue( method_exists( \ReportedIP_Hive_Migration_Manager::class, 'migrate_to_v19' ) );
+		}
+
+		public function test_a_plan_refusal_lifts_what_the_group_placed() {
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_Group_Sync::OPT_ETAG, '"g1-9-3"' );
+			$this->sync->manager->rows           = array(
+				$this->row( '45.33.32.10', 'group', HOUR_IN_SECONDS ),
+				$this->row( '45.33.32.11', 'automatic', HOUR_IN_SECONDS ),
+			);
+			$this->sync->manager->whitelist_rows = array(
+				array( 'ip_address' => '10.0.0.0/24', 'source' => 'group' ),
+				array( 'ip_address' => '10.0.1.1', 'source' => 'manual' ),
+			);
+			$this->sync->response                = $this->answer( 403, array( 'code' => 'group_tier' ), '' );
+
+			$this->assertSame( 'tier', $this->sync->sync() );
+
+			$this->assertSame( array( '45.33.32.10' ), $this->sync->manager->unblocked );
+			$this->assertSame( array( '10.0.0.0/24' ), array_column( $this->sync->manager->unwhitelisted, 'ip' ) );
+			$this->assertSame( '', \ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_Group_Sync::OPT_ETAG, '' ) );
+		}
+
+		public function test_a_shorter_automatic_block_becomes_the_group_ban() {
+			$this->sync->manager->rows = array(
+				$this->row( '45.33.32.10', 'automatic', 5 * MINUTE_IN_SECONDS ),
+				$this->row( '45.33.32.11', 'reputation', 30 * HOUR_IN_SECONDS ),
+			);
+			$this->sync->response      = $this->answer(
+				200,
+				$this->list_body( array( $this->entry( '45.33.32.10', 4 * HOUR_IN_SECONDS ), $this->entry( '45.33.32.11', 4 * HOUR_IN_SECONDS ) ) )
+			);
+
+			$this->sync->sync();
+
+			$this->assertSame( array( '45.33.32.10' ), array_column( $this->sync->manager->blocked, 'ip' ), 'A 304 would otherwise keep the address free once the five minutes run out.' );
+			$this->assertSame( 'group', $this->sync->manager->blocked[0]['type'] );
+			$this->assertSame( array(), $this->sync->manager->unblocked, 'The longer reputation block stays and is never lifted by the sync.' );
+		}
+
+		public function test_report_only_blocks_nothing_and_keeps_no_etag() {
+			\ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_report_only_mode', true );
+			$this->sync->response = $this->answer( 200, $this->list_body( array( $this->entry( '45.33.32.10', HOUR_IN_SECONDS ) ), array( $this->wl( '10.0.0.0/24' ) ) ) );
+
+			$this->assertSame( 'report_only', $this->sync->sync() );
+
+			$this->assertSame( array(), $this->sync->manager->blocked );
+			$this->assertSame( array( '10.0.0.0/24' ), array_column( $this->sync->manager->whitelisted, 'ip' ), 'The whitelist still arrives, it enforces nothing.' );
+			$this->assertSame( '', \ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_Group_Sync::OPT_ETAG, '' ) );
+		}
+
+		public function test_a_disconnected_site_drops_the_group_state_once() {
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_Group_Sync::OPT_ETAG, '"g1-9-3"' );
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_Group_Sync::OPT_GROUP, array( 'name' => 'Production' ) );
+			$this->sync->connected               = false;
+			$this->sync->manager->rows           = array( $this->row( '45.33.32.10', 'group', HOUR_IN_SECONDS ) );
+			$this->sync->manager->whitelist_rows = array( array( 'ip_address' => '10.0.0.0/24', 'source' => 'group' ) );
+
+			$this->assertSame( 'released', $this->sync->sync() );
+			$this->assertSame( array( '45.33.32.10' ), $this->sync->manager->unblocked );
+			$this->assertSame( array(), $this->sync->manager->whitelist_rows );
+			$this->assertNull( \ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_Group_Sync::OPT_GROUP, null ) );
+			$this->assertSame( array(), $this->sync->sent_etags, 'Nothing is fetched while disconnected.' );
+
+			$this->assertSame( 'skipped', $this->sync->sync() );
+		}
+
+		public function test_the_whitelist_lift_pass_only_runs_when_the_whitelist_grew() {
+			$this->sync->manager->whitelist_rows = array( array( 'ip_address' => '45.33.32.0/24', 'source' => 'group' ) );
+			$this->sync->manager->rows           = array( $this->row( '45.33.32.7', 'automatic', HOUR_IN_SECONDS ) );
+			$this->sync->response                = $this->answer( 200, $this->list_body( array(), array( $this->wl( '45.33.32.0/24' ) ) ) );
+
+			$this->sync->sync();
+
+			$this->assertSame( array(), $this->sync->manager->unblocked, 'An unchanged whitelist costs no lookup per active block.' );
+		}
+
+		public function test_a_range_around_the_own_server_counts_as_own() {
+			$main = (string) file_get_contents( dirname( __DIR__, 2 ) . '/reportedip-hive.php' );
+			$body = substr( $main, strpos( $main, 'public static function is_own_server_ip(' ), 900 );
+
+			$range  = strpos( $body, 'ip_in_cidr( (string) $candidate, $ip )' );
+			$single = strpos( $body, 'FILTER_VALIDATE_IP' );
+
+			$this->assertNotFalse( $range, 'A group list may carry a /24 around this host; block_ip() must see the range as the host address.' );
+			$this->assertLessThan( $single, $range, 'The range check must run before the single-address check refuses a CIDR string.' );
 		}
 
 		public function test_verify_key_hands_group_and_reputation_to_the_options() {
