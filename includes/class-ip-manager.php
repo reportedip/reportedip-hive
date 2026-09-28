@@ -171,6 +171,31 @@ class ReportedIP_Hive_IP_Manager {
 			);
 		}
 
+		/*
+		 * The server's own address is never blocked automatically: the
+		 * pre-WordPress guard enforces a block before any path exception, so
+		 * a self-block takes wp-cron, REST self-calls and cache preloads down
+		 * with it. Sits next to the whitelist gate because this is the single
+		 * funnel every block passes. A deliberate manual block still works,
+		 * the operator is allowed to lock their own address out.
+		 */
+		if ( 'manual' !== $block_type && ReportedIP_Hive::is_own_server_ip( $ip_address ) ) {
+			$this->logger->log_security_event(
+				'block_skipped_own_server_ip',
+				$ip_address,
+				array(
+					'reason'     => 'Address belongs to this server (loopback, cron, cache preload)',
+					'block_type' => $block_type,
+				),
+				'medium'
+			);
+
+			return array(
+				'success' => false,
+				'message' => __( 'Cannot block an address that belongs to this server.', 'reportedip-hive' ),
+			);
+		}
+
 		if ( $this->is_whitelisted( $ip_address ) ) {
 			return array(
 				'success' => false,

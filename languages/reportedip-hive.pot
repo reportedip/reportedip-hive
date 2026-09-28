@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-27T19:58:06+00:00\n"
+"POT-Creation-Date: 2026-09-28T05:53:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -3744,7 +3744,7 @@ msgstr ""
 
 #: admin/class-blocked-ips-table.php:116
 #: admin/class-blocked-ips-table.php:291
-#: includes/class-event-taxonomy.php:681
+#: includes/class-event-taxonomy.php:685
 msgid "Community Reputation"
 msgstr ""
 
@@ -7081,266 +7081,270 @@ msgid "Block Skipped (whitelisted)"
 msgstr ""
 
 #: includes/class-event-taxonomy.php:460
+msgid "Block Skipped (own server address)"
+msgstr ""
+
+#: includes/class-event-taxonomy.php:464
 msgid "Local Event Detected"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:465
+#: includes/class-event-taxonomy.php:469
 msgid "API Call Failed"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:469
+#: includes/class-event-taxonomy.php:473
 msgid "API Domain Limit"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:473
+#: includes/class-event-taxonomy.php:477
 msgid "API Error"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:477
+#: includes/class-event-taxonomy.php:481
 msgid "API Health Degraded"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:481
+#: includes/class-event-taxonomy.php:485
 msgid "API Invalid Response"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:485
+#: includes/class-event-taxonomy.php:489
 msgid "API Quota Refreshed"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:489
+#: includes/class-event-taxonomy.php:493
 msgid "API Rate Limit Hit"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:493
+#: includes/class-event-taxonomy.php:497
 msgid "API Rate Limited"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:497
+#: includes/class-event-taxonomy.php:501
 msgid "Report Queued"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:501
+#: includes/class-event-taxonomy.php:505
 msgid "Report Skipped"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:505
+#: includes/class-event-taxonomy.php:509
 msgid "Report Retried"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:509
+#: includes/class-event-taxonomy.php:513
 msgid "Report Deleted"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:513
+#: includes/class-event-taxonomy.php:517
 msgid "Reports Retried (bulk)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:517
+#: includes/class-event-taxonomy.php:521
 msgid "API Success"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:521
+#: includes/class-event-taxonomy.php:525
 msgid "Queue Processing Skipped"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:525
+#: includes/class-event-taxonomy.php:529
 msgid "Report Categories Cached"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:529
+#: includes/class-event-taxonomy.php:533
 msgid "Cloud Management Auth Failed"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:534
+#: includes/class-event-taxonomy.php:538
 msgid "Operation Mode Changed"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:538
+#: includes/class-event-taxonomy.php:542
 msgid "Settings Saved (admin)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:542
+#: includes/class-event-taxonomy.php:546
 msgid "Settings Saved (remote)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:546
+#: includes/class-event-taxonomy.php:550
 msgid "Settings Imported"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:550
+#: includes/class-event-taxonomy.php:554
 msgid "Quickstart Value Rejected"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:554
+#: includes/class-event-taxonomy.php:558
 msgid "Mail Relay Error"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:558
+#: includes/class-event-taxonomy.php:562
 msgid "Mail Relay Fallback"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:562
+#: includes/class-event-taxonomy.php:566
 msgid "Notification Rate Limited"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:566
+#: includes/class-event-taxonomy.php:570
 msgid "Notification Suppressed (cap)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:570
+#: includes/class-event-taxonomy.php:574
 msgid "Cache Hit"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:574
+#: includes/class-event-taxonomy.php:578
 msgid "Cache Set"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:578
+#: includes/class-event-taxonomy.php:582
 msgid "Cache Cleared"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:582
+#: includes/class-event-taxonomy.php:586
 msgid "Cache Cleanup"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:586
+#: includes/class-event-taxonomy.php:590
 msgid "Cache Flushed"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:590
+#: includes/class-event-taxonomy.php:594
 msgid "Info Message"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:594
+#: includes/class-event-taxonomy.php:598
 msgid "Warning Message"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:598
+#: includes/class-event-taxonomy.php:602
 msgid "Error Message"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:602
+#: includes/class-event-taxonomy.php:606
 msgid "Critical Message"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:606
+#: includes/class-event-taxonomy.php:610
 msgid "Debug Message"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:610
+#: includes/class-event-taxonomy.php:614
 msgid "Auto Block Test"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:614
+#: includes/class-event-taxonomy.php:618
 msgid "Login Simulation Started"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:618
+#: includes/class-event-taxonomy.php:622
 msgid "Simulated Failed Login"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:622
+#: includes/class-event-taxonomy.php:626
 msgid "Logging Test (low)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:626
+#: includes/class-event-taxonomy.php:630
 msgid "Logging Test (medium)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:630
+#: includes/class-event-taxonomy.php:634
 msgid "Logging Test (high)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:634
+#: includes/class-event-taxonomy.php:638
 msgid "Logging Test (critical)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:650
+#: includes/class-event-taxonomy.php:654
 msgid "Login & Credential"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:651
+#: includes/class-event-taxonomy.php:655
 msgid "Firewall (WAF)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:652
+#: includes/class-event-taxonomy.php:656
 msgid "Scanners & Probes"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:653
+#: includes/class-event-taxonomy.php:657
 msgid "Fake Bots"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:654
-#: includes/class-event-taxonomy.php:680
+#: includes/class-event-taxonomy.php:658
+#: includes/class-event-taxonomy.php:684
 msgid "Recon & Enumeration"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:655
+#: includes/class-event-taxonomy.php:659
 msgid "Spam & Flooding"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:656
+#: includes/class-event-taxonomy.php:660
 msgid "Anomalies"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:657
+#: includes/class-event-taxonomy.php:661
 msgid "Other"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:675
+#: includes/class-event-taxonomy.php:679
 msgid "Login & Accounts"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:676
+#: includes/class-event-taxonomy.php:680
 msgid "Registration"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:677
+#: includes/class-event-taxonomy.php:681
 msgid "Forms & Comments"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:678
+#: includes/class-event-taxonomy.php:682
 msgid "Firewall"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:679
+#: includes/class-event-taxonomy.php:683
 msgid "Bots"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:682
+#: includes/class-event-taxonomy.php:686
 msgid "Two-Factor"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:683
+#: includes/class-event-taxonomy.php:687
 msgid "Anomalies & Hardening"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:684
+#: includes/class-event-taxonomy.php:688
 msgid "Report-only Mode"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:685
+#: includes/class-event-taxonomy.php:689
 msgid "Operations: Blocks & Whitelist"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:686
+#: includes/class-event-taxonomy.php:690
 msgid "Operations: API & Queue"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:687
+#: includes/class-event-taxonomy.php:691
 msgid "Operations: System"
 msgstr ""
 
 #. translators: %s: filter group label, for example "Firewall".
-#: includes/class-event-taxonomy.php:852
+#: includes/class-event-taxonomy.php:856
 #, php-format
 msgid "All %s events"
 msgstr ""
 
 #. translators: %s: event type label.
-#: includes/class-event-taxonomy.php:882
+#: includes/class-event-taxonomy.php:886
 #, php-format
 msgid "%s (threshold reached)"
 msgstr ""
@@ -7469,48 +7473,52 @@ msgstr ""
 msgid "Failed to remove IP address from whitelist."
 msgstr ""
 
-#: includes/class-ip-manager.php:177
+#: includes/class-ip-manager.php:195
+msgid "Cannot block an address that belongs to this server."
+msgstr ""
+
+#: includes/class-ip-manager.php:202
 msgid "Cannot block whitelisted IP address."
 msgstr ""
 
 #. translators: %d: number of hours the IP would have been blocked
-#: includes/class-ip-manager.php:203
+#: includes/class-ip-manager.php:228
 #, php-format
 msgid "Report-only mode: Would have blocked IP address for %d hours. Event logged for reporting."
 msgstr ""
 
 #. translators: %d: number of hours the IP has been blocked
-#: includes/class-ip-manager.php:230
+#: includes/class-ip-manager.php:255
 #, php-format
 msgid "IP address has been blocked for %d hours."
 msgstr ""
 
-#: includes/class-ip-manager.php:238
+#: includes/class-ip-manager.php:263
 msgid "Failed to block IP address."
 msgstr ""
 
-#: includes/class-ip-manager.php:269
+#: includes/class-ip-manager.php:294
 msgid "IP address has been unblocked."
 msgstr ""
 
-#: includes/class-ip-manager.php:275
+#: includes/class-ip-manager.php:300
 msgid "Failed to unblock IP address."
 msgstr ""
 
 #. translators: 1: line number in CSV file, 2: invalid IP value found
-#: includes/class-ip-manager.php:314
+#: includes/class-ip-manager.php:339
 #, php-format
 msgid "Line %1$d: Invalid IP address \"%2$s\""
 msgstr ""
 
 #. translators: 1: line number in CSV file, 2: invalid expiration date value
-#: includes/class-ip-manager.php:320
+#: includes/class-ip-manager.php:345
 #, php-format
 msgid "Line %1$d: Invalid expiration date \"%2$s\""
 msgstr ""
 
 #. translators: 1: line number in CSV file, 2: IP address that failed to import
-#: includes/class-ip-manager.php:329
+#: includes/class-ip-manager.php:354
 #, php-format
 msgid "Line %1$d: Failed to import IP \"%2$s\""
 msgstr ""

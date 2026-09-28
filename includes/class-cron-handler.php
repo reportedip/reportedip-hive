@@ -190,6 +190,7 @@ class ReportedIP_Hive_Cron_Handler {
 
 			$cleaned_logs    = $this->database->cleanup_old_data( $retention_days );
 			$expired_entries = $this->ip_manager->cleanup_expired_entries();
+			$lifted_self     = $this->lift_own_server_blocks();
 
 			$cleaned_audit = 0;
 			if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
@@ -205,6 +206,7 @@ class ReportedIP_Hive_Cron_Handler {
 					'cleaned_logs'       => $cleaned_logs,
 					'cleaned_audit'      => $cleaned_audit,
 					'expired_entries'    => $expired_entries,
+					'lifted_self_blocks' => $lifted_self,
 					'retention_days'     => $retention_days,
 					'anonymize_days'     => $anonymize_days,
 				)
@@ -216,6 +218,37 @@ class ReportedIP_Hive_Cron_Handler {
 		} catch ( \Throwable $e ) {
 			$this->logger->critical( 'Daily cleanup failed: ' . $e->getMessage(), 'system' );
 		}
+	}
+
+	/**
+	 * Lift automatic blocks that sit on this server's own address.
+	 *
+	 * The runtime guard in {@see ReportedIP_Hive_IP_Manager::block_ip()} stops
+	 * new self-blocks, and migration v12 healed the installs that carried one
+	 * when that guard first shipped. This sweep covers the addresses learned
+	 * afterwards: a host whose second address family only becomes known once
+	 * a request arrives over it may already carry a block from before. A
+	 * manual block is left alone, locking your own address out stays the
+	 * operator's decision.
+	 *
+	 * @return int Number of blocks lifted.
+	 * @since  2.1.67
+	 */
+	private function lift_own_server_blocks() {
+		$lifted = 0;
+
+		foreach ( (array) $this->ip_manager->get_blocked_ips( true ) as $row ) {
+			$ip = (string) ( $row->ip_address ?? '' );
+			if ( '' === $ip || 'manual' === (string) ( $row->block_type ?? '' ) ) {
+				continue;
+			}
+			if ( ReportedIP_Hive::is_own_server_ip( $ip ) ) {
+				$this->ip_manager->unblock_ip( $ip );
+				++$lifted;
+			}
+		}
+
+		return $lifted;
 	}
 
 	/**

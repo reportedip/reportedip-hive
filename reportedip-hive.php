@@ -2312,7 +2312,7 @@ class ReportedIP_Hive {
 			}
 		}
 
-		$ips = array_merge( $ips, self::resolve_site_host_ips() );
+		$ips = array_merge( $ips, self::remembered_server_addrs(), self::resolve_site_host_ips() );
 
 		/**
 		 * Filters the list of addresses treated as the server's own.
@@ -2327,6 +2327,45 @@ class ReportedIP_Hive {
 		$cache = (array) apply_filters( 'reportedip_hive_own_server_ips', array_values( array_unique( $ips ) ) );
 
 		return $cache;
+	}
+
+	/**
+	 * The interface addresses this host has answered on before, one per
+	 * address family.
+	 *
+	 * SERVER_ADDR only ever names the family the current request arrived on:
+	 * a request over IPv4 never reveals the host's public IPv6, and a site
+	 * whose DNS points at a CDN resolves to the proxy rather than the host,
+	 * so neither SERVER_ADDR nor the hostname lookup covers the other family.
+	 * That is the gap a dual-stacked host falls into, its own IPv6 looks
+	 * foreign while it is being served over IPv4. Each family is written
+	 * once, when first seen, and read from the option afterwards, so the
+	 * steady state is a read and never a write.
+	 *
+	 * @return string[] Previously observed own interface addresses.
+	 * @since  2.1.67
+	 */
+	private static function remembered_server_addrs() {
+		$known = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_own_server_addrs', array() );
+		$known = is_array( $known ) ? $known : array();
+
+		$current = isset( $_SERVER['SERVER_ADDR'] ) ? (string) wp_unslash( $_SERVER['SERVER_ADDR'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated via filter_var below.
+		if ( '' !== $current && false !== filter_var( $current, FILTER_VALIDATE_IP ) ) {
+			$family = false !== filter_var( $current, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ? 'v6' : 'v4';
+			if ( ( $known[ $family ] ?? '' ) !== $current ) {
+				$known[ $family ] = $current;
+				ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_own_server_addrs', $known );
+			}
+		}
+
+		return array_values(
+			array_filter(
+				$known,
+				static function ( $candidate ) {
+					return is_string( $candidate ) && false !== filter_var( $candidate, FILTER_VALIDATE_IP );
+				}
+			)
+		);
 	}
 
 	/**

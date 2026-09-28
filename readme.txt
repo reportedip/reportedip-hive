@@ -473,6 +473,7 @@ The full structured changelog lives in [CHANGELOG.md](https://github.com/reporte
 
 = 2.1.67 =
 New: group bans. A Community Access Key can join a group on reportedip.com; every address one member reports is blocked on every other member for the group's ban window, on this site as a block of the new type "Group Ban". The list is fetched every fifteen minutes, the whitelist wins, a manual block is never touched, and a key without a group sees no change at all.
+Security: a site no longer reports or blocks the server it runs on. Traffic a site sends to itself (cron, REST calls, cache preloads) arrives from the host's own address, and five sensors reported it as an attacker. Both address families of the host are now recognised, and an existing automatic block on the own address is lifted.
 New: the group whitelist arrives with the list. Its addresses and ranges land in the whitelist of this site with the origin "Group", are neither blocked nor reported here, and are maintained in your reportedip.com account, not on the site.
 New: the Community page shows the group and the community reputation of the address this site connects from, with a notice when that address is listed.
 Security: a comment from a browser that never ran the script is refused at the door, the same way every other protected form already refused it.

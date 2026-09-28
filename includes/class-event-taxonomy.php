@@ -456,6 +456,10 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'label' => __( 'Block Skipped (whitelisted)', 'reportedip-hive' ),
 				'group' => 'ops_blocks',
 			),
+			'block_skipped_own_server_ip'       => array(
+				'label' => __( 'Block Skipped (own server address)', 'reportedip-hive' ),
+				'group' => 'ops_blocks',
+			),
 			'local_event_detected'              => array(
 				'label' => __( 'Local Event Detected', 'reportedip-hive' ),
 				'group' => 'ops_blocks',

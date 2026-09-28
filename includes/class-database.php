@@ -1057,6 +1057,21 @@ class ReportedIP_Hive_Database {
 			return false;
 		}
 
+		/*
+		 * Never report the server's own address. The public address a host
+		 * answers on passes is_public_ip(), so wp-cron, REST self-calls and
+		 * cache preloads that arrive over the host's own IPv4 or IPv6 look
+		 * like an outside attacker to a windowed sensor. The threshold path
+		 * already stands down for these (handle_threshold_exceeded()), but
+		 * five sensors call report_security_event() directly and reach this
+		 * queue without passing it, which is how a site ends up reporting the
+		 * server it runs on and poisoning its own reputation. This is the one
+		 * funnel every report goes through, so the boundary belongs here.
+		 */
+		if ( class_exists( 'ReportedIP_Hive' ) && ReportedIP_Hive::is_own_server_ip( $ip_address ) ) {
+			return false;
+		}
+
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
 
 		$cooldown_hours = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_cooldown_hours', 24 );

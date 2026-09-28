@@ -4,6 +4,27 @@ All changes to ReportedIP Hive are documented here.
 
 ## [2.1.67] (2026-09-27)
 
+### Security
+
+- **A site no longer reports the server it runs on.** wp-cron, REST
+  self-requests and cache preloads arrive from the host's own public address,
+  which looks like an outside attacker to a windowed sensor. The sensor
+  threshold path has stood down for those addresses since 2.1.31, but five
+  sensors report directly and never pass that check, so a site could report
+  its own host, and did: sites were seen reporting the public IPv6 of the
+  server they run on, which spends the account's report budget on itself and
+  puts the server into the community list other sites read. The boundary now
+  sits in the two places every decision passes, the report queue and the
+  block call, next to the checks for private addresses and the whitelist, so
+  no sensor can route around it. A block placed by hand still works.
+- **A host recognises both of its own address families.** `SERVER_ADDR` only
+  ever names the family the current request came in on, so a server answering
+  over IPv4 did not recognise its own IPv6, and a site behind a CDN resolves
+  to the proxy rather than to the host. The address of each family is
+  remembered the first time the server answers on it, which closes the gap
+  for a dual-stacked host. An automatic block on an address that only became
+  known later is lifted by the daily cleanup.
+
 ### New
 
 - **Group bans.** A Community Access Key can join a group on reportedip.com,

@@ -54,13 +54,20 @@ namespace {
 			}
 
 			/**
-			 * Loopback addresses count as the server's own.
+			 * Loopback plus the two public interface addresses of this host,
+			 * one per address family, which is what the production helper
+			 * returns for a dual-stacked server (SERVER_ADDR, the remembered
+			 * address of the other family, the resolved site host).
 			 *
 			 * @param string $ip Candidate address.
 			 * @return bool
 			 */
 			public static function is_own_server_ip( $ip ) {
-				return in_array( (string) $ip, array( '127.0.0.1', '::1' ), true );
+				return in_array(
+					strtolower( (string) $ip ),
+					array( '127.0.0.1', '::1', '45.33.32.10', '2a01:4f8:1:2::1' ),
+					true
+				);
 			}
 
 			/**
@@ -237,6 +244,52 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( $result, 'A recently completed report must suppress the queue write' );
 			$this->assertSame( array(), $GLOBALS['wpdb']->inserts );
 			$this->assertSame( array(), $captured, 'The hook must never fire inside the report cooldown' );
+		}
+
+		public function test_the_own_public_ipv4_of_the_host_never_reaches_the_queue() {
+			$captured = array();
+			$this->capture_hook( $captured );
+
+			$db     = new \ReportedIP_Hive_Database();
+			$result = $db->queue_api_report( '45.33.32.10', array( 15 ), 'waf_block from wp-cron' );
+
+			$this->assertFalse( $result, 'The public IPv4 the host answers on must never be reported' );
+			$this->assertSame( array(), $GLOBALS['wpdb']->prepares, 'The guard must fire before any query runs' );
+			$this->assertSame( array(), $GLOBALS['wpdb']->inserts );
+			$this->assertSame( array(), $captured );
+		}
+
+		public function test_the_own_public_ipv6_of_the_host_never_reaches_the_queue() {
+			$captured = array();
+			$this->capture_hook( $captured );
+
+			$db = new \ReportedIP_Hive_Database();
+
+			$this->assertFalse(
+				$db->queue_api_report( '2a01:4f8:1:2::1', array( 15 ), 'waf_block over IPv6' ),
+				'The public IPv6 the host answers on must never be reported, this is the address the field reports carried'
+			);
+			$this->assertFalse(
+				$db->queue_api_report( '2A01:4F8:1:2::1', array( 15 ), 'same address, upper case' ),
+				'IPv6 comparison must not depend on notation'
+			);
+			$this->assertSame( array(), $GLOBALS['wpdb']->inserts );
+			$this->assertSame( array(), $captured );
+		}
+
+		public function test_a_foreign_address_is_still_reported_in_both_families() {
+			$captured = array();
+			$this->capture_hook( $captured );
+
+			$GLOBALS['wpdb']->get_var_returns = array( 0, 0 );
+			$db                               = new \ReportedIP_Hive_Database();
+			$this->assertSame( 1, $db->queue_api_report( '45.33.40.7', array( 15 ), 'foreign v4' ), 'A foreign IPv4 must still be reported' );
+
+			$GLOBALS['wpdb']->get_var_returns = array( 0, 0 );
+			$this->assertSame( 1, $db->queue_api_report( '2606:4700:4700::1111', array( 15 ), 'foreign v6' ), 'A foreign IPv6 must still be reported' );
+
+			$this->assertCount( 2, $GLOBALS['wpdb']->inserts );
+			$this->assertSame( array( '45.33.40.7', '2606:4700:4700::1111' ), array_column( $captured, 0 ) );
 		}
 
 		public function test_non_public_ips_never_reach_the_queue_or_the_hook() {
