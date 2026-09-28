@@ -544,6 +544,42 @@ class HideLoginTest extends TestCase {
 	}
 
 	/**
+	 * Regression: wp-login.php loaded from a method keeps its variables local,
+	 * so the login-error normaliser never saw `$errors` and masked every error
+	 * on the hidden slug, the cookie check included. The globals have to be
+	 * declared before the file is required.
+	 */
+	public function test_serve_wp_login_shares_the_login_globals() {
+		$source = $this->hide_login_source();
+		$start  = strpos( $source, 'function serve_wp_login' );
+		$this->assertNotFalse( $start );
+		$body = substr( $source, $start, 2400 );
+
+		$global_pos  = strpos( $body, 'global $errors, $error, $interim_login, $action, $user_login;' );
+		$require_pos = strpos( $body, "require_once ABSPATH . 'wp-login.php'" );
+		$this->assertNotFalse( $global_pos, 'serve_wp_login() must declare the wp-login.php variables global.' );
+		$this->assertNotFalse( $require_pos );
+		$this->assertLessThan( $require_pos, $global_pos );
+	}
+
+	/**
+	 * Regression: a logged-out wp-admin request fed the login-probe ladder, so
+	 * an office behind one address was blocked for a day after a few expired
+	 * sessions. The refusal is logged without a ladder now.
+	 */
+	public function test_admin_guest_refusal_does_not_feed_the_probe_ladder() {
+		$source = $this->hide_login_source();
+		$start  = strpos( $source, 'function deny_admin_guest' );
+		$this->assertNotFalse( $start );
+		$end  = strpos( $source, 'function is_wp_admin_request', $start );
+		$body = substr( $source, $start, (int) $end - $start );
+
+		$this->assertStringNotContainsString( 'log_recon_attempt(', $body );
+		$this->assertStringNotContainsString( 'maybe_track_probe(', $body );
+		$this->assertStringContainsString( 'EVENT_ADMIN_GUEST', $body );
+	}
+
+	/**
 	 * Source of the Hide-Login class.
 	 */
 	private function hide_login_source(): string {

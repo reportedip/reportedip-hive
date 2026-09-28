@@ -330,14 +330,14 @@ class ReportedIP_Hive_Hide_Login {
 	}
 
 	/**
-	 * Refuse a logged-out wp-admin request. With Hide Login active the
-	 * existing recon log and probe ladder apply; with only the standalone
-	 * switch on, the refusal is logged once per IP without a ladder.
+	 * Refuse a logged-out wp-admin request. The refusal is logged once per IP
+	 * without a ladder, also while Hide Login is active: an expired session
+	 * behind a bookmark to wp-admin is the common case, and counting it as a
+	 * login probe locked out whole offices that share one address. Probes of
+	 * wp-login.php itself still count.
 	 */
 	private function deny_admin_guest(): void {
-		if ( $this->is_active() ) {
-			$this->log_recon_attempt();
-		} elseif ( class_exists( 'ReportedIP_Hive_Attack_Surface' ) ) {
+		if ( class_exists( 'ReportedIP_Hive_Attack_Surface' ) ) {
 			ReportedIP_Hive_Attack_Surface::log_denied(
 				ReportedIP_Hive_Attack_Surface::EVENT_ADMIN_GUEST,
 				array( 'path' => $this->get_request_path() )
@@ -446,14 +446,18 @@ class ReportedIP_Hive_Hide_Login {
 	 * URL, query-string and POST data flow through unchanged. We rewrite
 	 * REQUEST_URI so wp-login's own self-referencing form actions stay valid.
 	 *
-	 * wp-login.php's "case 'login'" block initialises some variables only
-	 * conditionally (e.g. `$user_login` is only set when `$_POST['log']`
-	 * exists, even though the form template always reads it). When the file
-	 * is included from a method scope under WP_DEBUG, those reads emit
-	 * "Undefined variable" warnings into the rendered HTML. Pre-declaring
-	 * them here lifts that risk.
+	 * The variables wp-login.php works with are declared global first. Loaded
+	 * from wp-login.php's own URL they are globals, and core as well as the
+	 * plugin read them that way: login_header() reads `$error`,
+	 * `$interim_login` and `$action`, and the login-error normaliser reads
+	 * `$errors` to tell a credential error from a cookie or 2FA error. Left
+	 * method-local, every login error on the hidden slug was reported as
+	 * "Invalid credentials.", including the cookie check. The declaration also
+	 * defines them, so reads under WP_DEBUG raise no "Undefined variable".
 	 */
 	private function serve_wp_login(): void {
+		global $errors, $error, $interim_login, $action, $user_login;
+
 		$this->serving_login = true;
 		$this->request_path  = '/wp-login.php';
 
@@ -467,12 +471,6 @@ class ReportedIP_Hive_Hide_Login {
 		$_SERVER['REQUEST_URI'] = '/wp-login.php' . $query;
 		$_SERVER['SCRIPT_NAME'] = '/wp-login.php';
 		$_SERVER['PHP_SELF']    = '/wp-login.php';
-
-		// phpcs:disable VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable, WordPress.Security.NonceVerification.Recommended -- Pre-declared so wp-login.php (loaded via require) sees defined variables under WP_DEBUG; the interim-login flag is consumed by core.
-		$user_login    = '';
-		$error         = '';
-		$interim_login = isset( $_REQUEST['interim-login'] );
-		// phpcs:enable
 
 		require_once ABSPATH . 'wp-login.php';
 		exit;

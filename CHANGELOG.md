@@ -112,6 +112,27 @@ All changes to ReportedIP Hive are documented here.
   the execution proof rises from 42 to 50 per cent. Nothing changes for a
   comment without any link.
 
+### Fixes
+
+- **The hidden login tells the visitor what went wrong again.** The login
+  error normaliser hides whether a user name exists and has to tell such an
+  error apart from any other. It reads the error list wp-login.php keeps in the
+  global scope, but the hidden login slug loaded wp-login.php from inside a
+  method, where that list stayed local. With no list to read, the normaliser
+  fell back to masking everything, so a blocked cookie, an expired session or
+  any message from another plugin showed up as "Invalid credentials." and
+  looked like a wrong password. The slug now shares those variables with
+  core the way wp-login.php's own address does. Wrong user names and
+  passwords are still reported with the one neutral sentence.
+
+- **An expired session no longer locks out an office.** A logged-out visit to
+  wp-admin was counted as a probe of the hidden login, next to direct hits on
+  wp-login.php. Staff who follow a bookmark to the dashboard after their
+  session ran out share one address behind the office router, so a handful of
+  such visits blocked the whole office, for a day on the second round. The
+  visit is still refused and logged as "Admin Area Denied (signed out)", but
+  it no longer feeds the block ladder. Direct hits on wp-login.php still do.
+
 ## [2.1.66] (2026-09-24)
 
 ### New

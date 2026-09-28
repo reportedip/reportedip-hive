@@ -133,6 +133,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'some_other_error', $result->get_error_code(), 'Codes outside the leaky-set must remain untouched' );
 		}
 
+		/**
+		 * With the login errors in the global scope, as wp-login.php leaves
+		 * them, a cookie error is not a credential error and must reach the
+		 * visitor unchanged.
+		 */
+		public function test_cookie_error_passes_through_when_the_login_errors_are_global() {
+			$GLOBALS['errors'] = new WP_Error( 'test_cookie', 'Cookies are blocked or not supported by your browser.' );
+			$result            = \ReportedIP_Hive_User_Enumeration::get_instance()->normalize_login_errors( 'Cookies are blocked or not supported by your browser.' );
+			unset( $GLOBALS['errors'] );
+
+			$this->assertSame( 'Cookies are blocked or not supported by your browser.', $result );
+		}
+
+		/**
+		 * The global path still masks a credential error.
+		 */
+		public function test_credential_error_is_masked_when_the_login_errors_are_global() {
+			$GLOBALS['errors'] = new WP_Error( 'incorrect_password', 'The password you entered is incorrect.' );
+			$result            = \ReportedIP_Hive_User_Enumeration::get_instance()->normalize_login_errors( 'The password you entered is incorrect.' );
+			unset( $GLOBALS['errors'] );
+
+			$this->assertSame( 'Invalid credentials.', $result );
+		}
+
 		public function test_normalize_login_errors_replaces_message() {
 			$instance = \ReportedIP_Hive_User_Enumeration::get_instance();
 			$result   = $instance->normalize_login_errors( '<strong>ERROR</strong>: The username does not exist.' );
