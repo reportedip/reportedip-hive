@@ -1661,7 +1661,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	}
 
 	/**
-	 * AJAX: trigger an on-demand ruleset sync (Priority Sync, Professional+).
+	 * AJAX: trigger an on-demand ruleset sync (Priority Sync, Contributor+).
 	 *
 	 * @since 2.1.2
 	 * @return void
@@ -1673,7 +1673,7 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
 		if ( empty( $status['available'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Priority Sync requires a Professional plan.', 'reportedip-hive' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Priority Sync requires a Contributor plan.', 'reportedip-hive' ) ) );
 		}
 
 		try {

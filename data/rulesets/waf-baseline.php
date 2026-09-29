@@ -59,6 +59,14 @@ return array(
 			'target'   => 'all',
 		),
 		array(
+			'id'       => 'waf_sqli_errorbased',
+			'group'    => 'sql_injection',
+			'pattern'  => '(?i)\b(?:extractvalue|updatexml)\s*\(',
+			'paranoia' => 1,
+			'severity' => 'high',
+			'target'   => 'all',
+		),
+		array(
 			'id'       => 'waf_xss_script',
 			'group'    => 'xss',
 			'pattern'  => '(?i)<script[\s>]',
@@ -161,6 +169,14 @@ return array(
 			'paranoia' => 1,
 			'severity' => 'high',
 			'target'   => 'body',
+		),
+		array(
+			'id'       => 'waf_sqli_trackback_2nd',
+			'group'    => 'sql_injection',
+			'pattern'  => '(?i)^[^\n]{0,1000}(?:/wp-trackback\.php|/trackback/)[^\n]{0,1000}\n[\s\S]{0,8000}?(?:\bselect\b[\s\S]{0,240}?\bfrom\b|\\\\[\'"])',
+			'paranoia' => 1,
+			'severity' => 'high',
+			'target'   => 'all',
 		),
 	),
 );

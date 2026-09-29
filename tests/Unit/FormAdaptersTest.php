@@ -429,7 +429,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * Until 2.1.66 three of them within a day were needed before anything
 		 * happened, so a sender who hit one form once was never blocked and
 		 * never reported. The comment surface has treated the same evidence as
-		 * certain since 2.1.52; this keeps the two readings together.
+		 * certain since 2.1.63; this keeps the two readings together.
 		 */
 		public function test_a_filled_decoy_escalates_without_a_counter(): void {
 			$shared = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-form-proof.php' );

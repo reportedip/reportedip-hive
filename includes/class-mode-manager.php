@@ -298,7 +298,7 @@ class ReportedIP_Hive_Mode_Manager {
 			'rule_sync_priority'           => array(
 				'local'         => false,
 				'community'     => true,
-				'requires_tier' => 'professional',
+				'requires_tier' => 'contributor',
 			),
 			'bot_verification'             => array(
 				'local'     => true,
@@ -386,7 +386,7 @@ class ReportedIP_Hive_Mode_Manager {
 			'form_adapters_advanced'       => array( __( 'Advanced Form Protection', 'reportedip-hive' ), __( 'The same protection on WPForms, Gravity Forms, Forminator, Formidable Forms, Formidable Forms PRO, Elementor Forms and the Ultimate Member forms. An Ultimate Member sign-up also runs through the registration rules.', 'reportedip-hive' ) ),
 			'tor_blocking'                 => array( __( 'Tor Exit Node Blocking', 'reportedip-hive' ), __( 'Block login attempts from known Tor exit nodes using a signed exit-node list that is refreshed twice a day, plus the live community check.', 'reportedip-hive' ) ),
 			'waf'                          => array( __( 'Web Application Firewall', 'reportedip-hive' ), __( 'Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync.', 'reportedip-hive' ) ),
-			'rule_sync_priority'           => array( __( 'Priority Rule Sync', 'reportedip-hive' ), __( 'Daily, full-ruleset delivery (broader signatures, higher paranoia levels, bot IP-range feeds, live disposable lists) instead of the bundled baseline.', 'reportedip-hive' ) ),
+			'rule_sync_priority'           => array( __( 'Priority Rule Sync', 'reportedip-hive' ), __( 'Server-delivered rulesets instead of the bundled baseline: Paranoia Level 2 signatures and bot IP-range feeds refreshed weekly on Contributor; daily refresh, Paranoia Level 3 and the live disposable list from Professional.', 'reportedip-hive' ) ),
 			'bot_verification'             => array( __( 'Verified Bot Detection', 'reportedip-hive' ), __( 'Verify search-engine crawlers via IP ranges and forward-confirmed reverse DNS; flag or block user-agent spoofers.', 'reportedip-hive' ) ),
 			'disposable_email'             => array( __( 'Disposable Email Block', 'reportedip-hive' ), __( 'Block registrations from throwaway-mail providers. Baseline list is free; the live list arrives via Priority Sync.', 'reportedip-hive' ) ),
 			'security_headers'             => array( __( 'Security Headers', 'reportedip-hive' ), __( 'Site-wide X-Content-Type-Options, X-Frame-Options and Referrer-Policy.', 'reportedip-hive' ) ),

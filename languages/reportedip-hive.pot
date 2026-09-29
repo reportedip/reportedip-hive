@@ -2,20 +2,20 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive 2.1.67\n"
+"Project-Id-Version: ReportedIP Hive 2.1.68\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-28T08:20:34+00:00\n"
+"POT-Creation-Date: 2026-09-29T19:54:28+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php:3
+#: reportedip-hive.php
 #: admin/class-admin-settings.php:2138
 #: admin/class-admin-settings.php:2139
 #: admin/class-admin-settings.php:2262
@@ -27,18 +27,17 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php:4
-#: reportedip-hive.php:9
+#: reportedip-hive.php
 msgid "https://reportedip.com"
 msgstr ""
 
 #. Description of the plugin
-#: reportedip-hive.php:5
+#: reportedip-hive.php
 msgid "Community-powered WordPress security, real-time threat intelligence"
 msgstr ""
 
 #. Author of the plugin
-#: reportedip-hive.php:8
+#: reportedip-hive.php
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr ""
 
@@ -568,13 +567,12 @@ msgid "never (baseline only)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:755
-msgid "The bundled baseline rulesets stay active and free on every plan. Priority Sync, deeper coverage and frequent updates, is part of the Professional plan."
+msgid "The bundled baseline rulesets stay active and free on every plan. Priority Sync, deeper coverage and regular updates, starts with the Contributor plan: weekly with Paranoia Level 2, daily with Level 3 from Professional."
 msgstr ""
 
 #: admin/class-admin-firewall.php:756
 #: admin/class-admin-firewall.php:809
-#: admin/class-two-factor-admin.php:898
-msgid "Included in Professional"
+msgid "Included from Contributor"
 msgstr ""
 
 #: admin/class-admin-firewall.php:759
@@ -595,7 +593,7 @@ msgid "Bundled with the plugin, no connection required"
 msgstr ""
 
 #: admin/class-admin-firewall.php:782
-msgid "Deeper coverage (Paranoia Level 2/3, obfuscation & bypass)"
+msgid "Deeper coverage (Paranoia Level 2, Level 3 from Professional)"
 msgstr ""
 
 #: admin/class-admin-firewall.php:783
@@ -603,7 +601,7 @@ msgid "Server-delivered, Ed25519-signed rule updates"
 msgstr ""
 
 #: admin/class-admin-firewall.php:784
-msgid "Frequent refresh via the Community Network"
+msgid "Weekly refresh on Contributor, daily from Professional"
 msgstr ""
 
 #: admin/class-admin-firewall.php:789
@@ -2165,7 +2163,7 @@ msgid "API Endpoint"
 msgstr ""
 
 #: admin/class-admin-settings.php:5122
-msgid "The ReportedIP.de API endpoint URL."
+msgid "The reportedip.com API endpoint URL."
 msgstr ""
 
 #: admin/class-admin-settings.php:5127
@@ -4556,7 +4554,7 @@ msgid "Expert mode"
 msgstr ""
 
 #: admin/class-protection-page.php:1138
-msgid "Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows the sixteen day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only."
+msgid "Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows only the day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only."
 msgstr ""
 
 #: admin/class-protection-page.php:1140
@@ -5666,6 +5664,10 @@ msgstr ""
 msgid "Set up"
 msgstr ""
 
+#: admin/class-two-factor-admin.php:898
+msgid "Included in Professional"
+msgstr ""
+
 #: admin/class-two-factor-admin.php:932
 msgid "Scan this QR code with your authenticator app, then enter the 6-digit code the app shows to finish the setup. If you cannot scan, type the key below the code into the app instead."
 msgstr ""
@@ -6441,7 +6443,7 @@ msgid "Queue processed and quota refreshed. Check Activity log for details."
 msgstr ""
 
 #: includes/class-ajax-handler.php:1676
-msgid "Priority Sync requires a Professional plan."
+msgid "Priority Sync requires a Contributor plan."
 msgstr ""
 
 #: includes/class-ajax-handler.php:1681
@@ -7673,37 +7675,37 @@ msgid "Not found."
 msgstr ""
 
 #. translators: 1: minimum slug length, 2: maximum slug length
-#: includes/class-hide-login.php:728
+#: includes/class-hide-login.php:726
 #, php-format
 msgid "The login slug must be %1$d-%2$d characters of lowercase letters, digits, dashes or underscores, and may not start or end with a dash."
 msgstr ""
 
 #. translators: %s: rejected slug
-#: includes/class-hide-login.php:739
+#: includes/class-hide-login.php:737
 #, php-format
 msgid "The slug \"%s\" is reserved by WordPress and cannot be used."
 msgstr ""
 
 #. translators: 1: rejected slug, 2: where it already exists
-#: includes/class-hide-login.php:748
+#: includes/class-hide-login.php:746
 #, php-format
 msgid "The slug \"%1$s\" already exists as %2$s. Pick a different slug."
 msgstr ""
 
-#: includes/class-hide-login.php:766
+#: includes/class-hide-login.php:764
 msgid "a published page"
 msgstr ""
 
-#: includes/class-hide-login.php:771
+#: includes/class-hide-login.php:769
 msgid "a published post"
 msgstr ""
 
-#: includes/class-hide-login.php:776
+#: includes/class-hide-login.php:774
 msgid "a user/author archive"
 msgstr ""
 
 #. translators: %s: taxonomy name
-#: includes/class-hide-login.php:783
+#: includes/class-hide-login.php:781
 #, php-format
 msgid "a %s archive"
 msgstr ""
@@ -7992,7 +7994,7 @@ msgid "Priority Rule Sync"
 msgstr ""
 
 #: includes/class-mode-manager.php:389
-msgid "Daily, full-ruleset delivery (broader signatures, higher paranoia levels, bot IP-range feeds, live disposable lists) instead of the bundled baseline."
+msgid "Server-delivered rulesets instead of the bundled baseline: Paranoia Level 2 signatures and bot IP-range feeds refreshed weekly on Contributor; daily refresh, Paranoia Level 3 and the live disposable list from Professional."
 msgstr ""
 
 #: includes/class-mode-manager.php:390
@@ -9255,7 +9257,7 @@ msgid "Firewall paranoia level"
 msgstr ""
 
 #: includes/class-settings-registry.php:601
-msgid "How aggressively the rules are read. Level 1 is the false-positive-poor baseline; higher levels catch obfuscated attacks and need a report-only run first."
+msgid "How aggressively the rules are read. Level 1 is the false-positive-poor baseline; higher levels catch obfuscated attacks and need a report-only run first. Level 2 runs from Contributor, Level 3 from Professional."
 msgstr ""
 
 #: includes/class-settings-registry.php:609
@@ -10071,7 +10073,7 @@ msgid "Log user agents"
 msgstr ""
 
 #: includes/class-settings-registry.php:1484
-msgid "Record the browser identification with each event. Useful for telling a bot from a customer, and it is personal data."
+msgid "Record the browser identification with each security event and audit trail entry. Useful for telling a bot from a customer, and it is personal data."
 msgstr ""
 
 #: includes/class-settings-registry.php:1493

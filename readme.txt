@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.67
+Stable tag: 2.1.68
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -34,7 +34,7 @@ Two ways to run:
 * **Tor exit-node blocking (PRO).** An opt-in toggle rejects connections from known Tor exit nodes, backed by a signed exit-node list refreshed twice daily. Blocks are temporary and never reported to the community, operating an exit node is not abuse evidence.
 * **Cache-plugin-safe.** WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed and Cloudflare cannot store the 403 block page or serve cached HTML to blocked IPs on protected paths (login, admin, REST, XMLRPC).
 * **Access lockdown switches.** Turn off the parts of WordPress the site does not use: the REST API for signed-in users only or restricted to selected roles and namespaces, XML-RPC including pingbacks, feeds, the admin area for signed-out visitors, PHP execution in the uploads folder and the version fingerprints in the page source. Every switch is off by default, free on every plan and reversible from the same screen.
-* **System readiness register.** Eighteen detectors watch what usually fails quietly: an unwritable pre-WordPress guard queue, stalled or disabled cron, a trusted proxy header without proxy ranges, an outdated database schema, a degraded community layer, exhausted relay quotas, failing mail delivery, a missing encryption extension and a growing report queue. Six of them are advisory rather than faults and only surface once the quickstart is done: Hide Login switched off, storefront 2FA included in the plan but unused, the footer badge off, the pre-WordPress guard possible but not running, Local Shield instead of the community network, and the signed-in administrator without a second factor of their own. Open issues show up on the System Status page with severity, first-seen time and a jump to the responsible setting, and `wp reportedip status` reports them as well. Free on every plan.
+* **System readiness register.** Twenty detectors watch what usually fails quietly: an unwritable pre-WordPress guard queue, stalled or disabled cron, a trusted proxy header without proxy ranges, an outdated database schema, a degraded community layer, exhausted relay quotas, failing mail delivery, a missing encryption extension and a growing report queue. Eight of them are advisory rather than faults and only surface once the quickstart is done: Hide Login switched off, storefront 2FA included in the plan but unused, the footer badge off, the pre-WordPress guard possible but not running, Local Shield instead of the community network, a detected form plugin whose included protection is still off, group bans included in the plan but no group joined, and the signed-in administrator without a second factor of their own. Open issues show up on the System Status page with severity, first-seen time and a jump to the responsible setting, and `wp reportedip status` reports them as well. Free on every plan.
 * **Security headers out of the box.** The basic hardening trio (X-Content-Type-Options, X-Frame-Options, Referrer-Policy) is free; HSTS, Permissions-Policy, a report-only-first Content-Security-Policy and the cross-origin isolation trio come with Professional. Headers already sent by your server or another plugin are detected and left untouched.
 * **Code you can read.** Public on GitHub, GPL-2.0-or-later, PHPStan level 5 clean, WPCS-clean (zero warnings), a comprehensive PHPUnit suite (unit + Multisite) running on every commit.
 
@@ -48,7 +48,7 @@ Two ways to run:
 * **REST API rate-limit**, global cap, default 240 / 5 min (sensitive routes 20 / 5 min)
 * **User enumeration defence**, `?author=`, `/wp-json/wp/v2/users`, oEmbed, login-error masking, default 5 / 5 min. Author archive pages can be kept public for sites that link to them
 * **404 / scanner detection**, default 12 / 2 min, plus instant block on known-bad paths (`.env`, `wp-config.bak`, `/.git/`)
-* **Web Application Firewall**, request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Professional adds the deeper, frequently-updated, Ed25519-signed Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
+* **Web Application Firewall**, request-inspecting engine (SQLi, XSS, path traversal, command injection, LFI wrappers, scanner tooling). The engine and the OWASP-Top-10 Paranoia-Level-1 baseline are free on every plan; Contributor adds the Ed25519-signed Level 2 ruleset with a weekly refresh, Professional the daily-updated Level 2/3 ruleset. ReDoS-hardened and fail-open, with an optional pre-WordPress drop-in (Apache / PHP-FPM auto-config, nginx snippet) for blocking before WordPress loads
 * **Verified bot detection**, confirms Googlebot, Bingbot and other crawlers via their official IP ranges (DNS-free) and forward-confirmed reverse DNS. Spoofers are flagged (default) or blocked; genuine crawlers are never blocked. Free on every plan
 * **Registration defence**, one rule set for every sign-up surface (WordPress, WooCommerce, Multisite sign-ups, programmatic user creation): throwaway-mail domains (off / monitor / block, privacy relays such as Apple Hide My Email and Firefox Relay pass by default), prohibited usernames on top of a baseline of ten role names, e-mail allow or block rules, a per-IP registration rate limit (default 3 / 60 min) and an opt-in immediate block for sign-in attempts against usernames that do not exist. Ten plain entries per list are free; Professional lifts the cap, accepts `/regex/` patterns and adds registration restricted to allowlisted IP ranges. The live throwaway-mail list rides Priority Sync
 * **Form execution proof**, the comment, sign-up and password-reset forms check that the submission came from a browser that really rendered them, and four form plugins are covered on the paid plans. No CAPTCHA, no puzzle and no extra step for a visitor. Full detail in *Form protection* below
@@ -265,7 +265,7 @@ Paid plans add the **managed relays, multi-site management and a handful of adva
 * 1 domain per licence, 1,000 IP-reputation checks/day, 50 reports/day
 * Local-mode `wp_mail()` for 2FA emails; TOTP, Passkey and Email 2FA included (SMS 2FA, WooCommerce frontend 2FA and Hardening Mode require Professional)
 * 30-day log retention, community support
-* **Contributor tier** is identical to Free but earns threat-feed access for sites that operate a public honeypot
+* **Contributor tier** is identical to Free but earns threat-feed access for sites that operate a public honeypot, plus Priority Sync with the Paranoia-Level-2 WAF ruleset and the bot-IP-range feeds, refreshed weekly
 
 = Professional (14.90 €/month, 149 €/year, covers up to 3 domains) =
 
@@ -470,6 +470,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.68 =
+Security: the bundled offline ruleset now blocks error-based SQL injection (EXTRACTVALUE, UPDATEXML) and second-order SQL injection through the trackback body, so a site in Local Shield mode or without Rule Sync is covered as well.
+New: Priority Sync starts with the Contributor plan. Contributor receives the Paranoia-Level-2 WAF ruleset and the bot IP-range feeds, refreshed weekly; Level 3 and the daily refresh stay with Professional.
+Privacy: the audit trail stores the browser identification only while "Log user agents" is on, the same switch the security log follows. It is off by default; entries already recorded stay as they are.
+Fix: the expert-mode tooltip no longer names a fixed number of settings, the API endpoint help text names reportedip.com, and the readme counts the twenty readiness detectors.
 
 = 2.1.67 =
 New: group bans. A Community Access Key can join a group on reportedip.com; every address one member reports is blocked on every other member for the group's ban window, on this site as a block of the new type "Group Ban". The list is fetched every fifteen minutes, the whitelist wins, a manual block is never touched, and a key without a group sees no change at all.

@@ -15,7 +15,7 @@ msgstr ""
 "X-Generator: WP-CLI 2.12.0\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php:3
+#: reportedip-hive.php
 #: admin/class-admin-settings.php:2138
 #: admin/class-admin-settings.php:2139
 #: admin/class-admin-settings.php:2262
@@ -27,18 +27,17 @@ msgstr "ReportedIP Hive"
 
 #. Plugin URI of the plugin
 #. Author URI of the plugin
-#: reportedip-hive.php:4
-#: reportedip-hive.php:9
+#: reportedip-hive.php
 msgid "https://reportedip.com"
 msgstr "https://reportedip.com"
 
 #. Description of the plugin
-#: reportedip-hive.php:5
+#: reportedip-hive.php
 msgid "Community-powered WordPress security, real-time threat intelligence"
 msgstr "Community-gestützte WordPress-Sicherheit, Bedrohungsdaten in Echtzeit"
 
 #. Author of the plugin
-#: reportedip-hive.php:8
+#: reportedip-hive.php
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr "Patrick Schlesinger, ReportedIP"
 
@@ -567,12 +566,6 @@ msgstr "Letzter Sync:"
 msgid "never (baseline only)"
 msgstr "nie (nur Baseline)"
 
-#: admin/class-admin-firewall.php:755
-msgid "The bundled baseline rulesets stay active and free on every plan. Priority Sync, deeper coverage and frequent updates, is part of the Professional plan."
-msgstr "Die mitgelieferten Basis-Regelsätze bleiben in jedem Tarif aktiv und kostenlos. Priority-Sync, tiefere Abdeckung und häufige Updates, ist Teil des Professional-Tarifs."
-
-#: admin/class-admin-firewall.php:756
-#: admin/class-admin-firewall.php:809
 #: admin/class-two-factor-admin.php:898
 msgid "Included in Professional"
 msgstr "Mit Professional freischalten"
@@ -594,17 +587,9 @@ msgstr "Basis-Regelsätze (OWASP Top 10, Paranoia Level 1)"
 msgid "Bundled with the plugin, no connection required"
 msgstr "Im Plugin enthalten, keine Verbindung nötig"
 
-#: admin/class-admin-firewall.php:782
-msgid "Deeper coverage (Paranoia Level 2/3, obfuscation & bypass)"
-msgstr "Tiefere Abdeckung (Paranoia Level 2/3, Obfuskation & Bypass)"
-
 #: admin/class-admin-firewall.php:783
 msgid "Server-delivered, Ed25519-signed rule updates"
 msgstr "Servergelieferte, Ed25519-signierte Regel-Updates"
-
-#: admin/class-admin-firewall.php:784
-msgid "Frequent refresh via the Community Network"
-msgstr "Häufige Aktualisierung über das Community-Netzwerk"
 
 #: admin/class-admin-firewall.php:789
 msgid "Included, every plan"
@@ -2163,10 +2148,6 @@ msgstr "API-Schlüssel beziehen"
 #: admin/class-admin-settings.php:5120
 msgid "API Endpoint"
 msgstr "API-Endpunkt"
-
-#: admin/class-admin-settings.php:5122
-msgid "The ReportedIP.de API endpoint URL."
-msgstr "Die URL des ReportedIP.de-API-Endpunkts."
 
 #: admin/class-admin-settings.php:5127
 msgid "Trusted IP Header"
@@ -4558,10 +4539,6 @@ msgstr "Angepasst"
 msgid "Expert mode"
 msgstr "Expertenmodus"
 
-#: admin/class-protection-page.php:1138
-msgid "Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows the sixteen day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only."
-msgstr "Der Expertenmodus zeigt jede Einstellung auf der Schutz-Seite und blendet die Werkzeuge-Seite ein. Der einfache Modus zeigt die sechzehn Alltagseinstellungen; alles andere läuft mit der Empfehlung. Der Schalter gilt nur für Ihr Konto."
-
 #: admin/class-protection-page.php:1140
 msgid "Apply"
 msgstr "Anwenden"
@@ -6443,10 +6420,6 @@ msgstr "Die hochgeladene Datei konnte nicht gelesen werden."
 msgid "Queue processed and quota refreshed. Check Activity log for details."
 msgstr "Warteschlange verarbeitet und Kontingent aktualisiert. Überprüfen Sie das Aktivitätsprotokoll für Details."
 
-#: includes/class-ajax-handler.php:1676
-msgid "Priority Sync requires a Professional plan."
-msgstr "Priority-Sync erfordert einen Professional-Tarif."
-
 #: includes/class-ajax-handler.php:1681
 msgid "Rulesets synced."
 msgstr "Regelsätze synchronisiert."
@@ -7676,37 +7649,37 @@ msgid "Not found."
 msgstr "Nicht gefunden."
 
 #. translators: 1: minimum slug length, 2: maximum slug length
-#: includes/class-hide-login.php:728
+#: includes/class-hide-login.php:726
 #, php-format
 msgid "The login slug must be %1$d-%2$d characters of lowercase letters, digits, dashes or underscores, and may not start or end with a dash."
 msgstr "Der Anmelde-Slug muss %1$d-%2$d Zeichen aus Kleinbuchstaben, Ziffern, Bindestrichen oder Unterstrichen enthalten und darf nicht mit einem Bindestrich beginnen oder enden."
 
 #. translators: %s: rejected slug
-#: includes/class-hide-login.php:739
+#: includes/class-hide-login.php:737
 #, php-format
 msgid "The slug \"%s\" is reserved by WordPress and cannot be used."
 msgstr "Der Slug \"%s\" ist von WordPress reserviert und kann nicht verwendet werden."
 
 #. translators: 1: rejected slug, 2: where it already exists
-#: includes/class-hide-login.php:748
+#: includes/class-hide-login.php:746
 #, php-format
 msgid "The slug \"%1$s\" already exists as %2$s. Pick a different slug."
 msgstr "Der Slug \"%1$s\" existiert bereits als %2$s. Wählen Sie einen anderen Slug."
 
-#: includes/class-hide-login.php:766
+#: includes/class-hide-login.php:764
 msgid "a published page"
 msgstr "eine veröffentlichte Seite"
 
-#: includes/class-hide-login.php:771
+#: includes/class-hide-login.php:769
 msgid "a published post"
 msgstr "ein veröffentlichter Beitrag"
 
-#: includes/class-hide-login.php:776
+#: includes/class-hide-login.php:774
 msgid "a user/author archive"
 msgstr "ein Benutzer-/Autorenarchiv"
 
 #. translators: %s: taxonomy name
-#: includes/class-hide-login.php:783
+#: includes/class-hide-login.php:781
 #, php-format
 msgid "a %s archive"
 msgstr "ein %s-Archiv"
@@ -7993,10 +7966,6 @@ msgstr "Payload-prüfende Request-Firewall. Engine und ein Baseline-Regelsatz si
 #: includes/class-mode-manager.php:389
 msgid "Priority Rule Sync"
 msgstr "Priority-Regel-Sync"
-
-#: includes/class-mode-manager.php:389
-msgid "Daily, full-ruleset delivery (broader signatures, higher paranoia levels, bot IP-range feeds, live disposable lists) instead of the bundled baseline."
-msgstr "Tägliche Auslieferung des vollen Regelsatzes (breitere Signaturen, höhere Paranoia-Level, Bot-IP-Range-Feeds, Live-Wegwerf-Listen) statt der gebündelten Baseline."
 
 #: includes/class-mode-manager.php:390
 msgid "Verified Bot Detection"
@@ -9257,10 +9226,6 @@ msgstr "Zeichnet auf, was die Firewall blockiert hätte, ohne etwas zu blockiere
 msgid "Firewall paranoia level"
 msgstr "Paranoia-Stufe der Firewall"
 
-#: includes/class-settings-registry.php:601
-msgid "How aggressively the rules are read. Level 1 is the false-positive-poor baseline; higher levels catch obfuscated attacks and need a report-only run first."
-msgstr "Wie scharf die Regeln ausgelegt werden. Stufe 1 ist die fehlalarmarme Basis. Höhere Stufen erwischen auch verschleierte Angriffe und brauchen vorher einen Durchlauf im Nur-Melden-Modus."
-
 #: includes/class-settings-registry.php:609
 msgid "Firewall block threshold (hits)"
 msgstr "Sperrschwelle der Firewall (Treffer)"
@@ -10072,10 +10037,6 @@ msgstr "Zeichnet nur auf, was für eine Entscheidung nötig ist, und lässt alle
 #: includes/class-settings-registry.php:1483
 msgid "Log user agents"
 msgstr "User-Agents protokollieren"
-
-#: includes/class-settings-registry.php:1484
-msgid "Record the browser identification with each event. Useful for telling a bot from a customer, and it is personal data."
-msgstr "Zeichnet die Browser-Kennung zu jedem Ereignis auf. Nützlich, um einen Bot von einem Kunden zu unterscheiden, und es sind personenbezogene Daten."
 
 #: includes/class-settings-registry.php:1493
 msgid "Data retention (days)"
@@ -12533,3 +12494,44 @@ msgstr "Bei Ihrer nächsten Anmeldung werden Sie nach dem zweiten Faktor gefragt
 #, php-format
 msgid "This page is protected by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet."
 msgstr "Diese Seite wird geschützt durch %1$sReportedIP%2$s, Open Threat Intelligence für ein sichereres Internet."
+
+#: admin/class-admin-firewall.php:755
+msgid "The bundled baseline rulesets stay active and free on every plan. Priority Sync, deeper coverage and regular updates, starts with the Contributor plan: weekly with Paranoia Level 2, daily with Level 3 from Professional."
+msgstr "Die mitgelieferten Basis-Regelsätze bleiben in jedem Tarif aktiv und kostenlos. Priority-Sync, tiefere Abdeckung und regelmäßige Updates, beginnt mit dem Contributor-Tarif: wöchentlich mit Paranoia Level 2, täglich und mit Level 3 ab Professional."
+
+#: admin/class-admin-firewall.php:756
+#: admin/class-admin-firewall.php:809
+msgid "Included from Contributor"
+msgstr "Enthalten ab Contributor"
+
+#: admin/class-admin-firewall.php:782
+msgid "Deeper coverage (Paranoia Level 2, Level 3 from Professional)"
+msgstr "Tiefere Abdeckung (Paranoia Level 2, Level 3 ab Professional)"
+
+#: admin/class-admin-firewall.php:784
+msgid "Weekly refresh on Contributor, daily from Professional"
+msgstr "Wöchentliche Aktualisierung mit Contributor, tägliche ab Professional"
+
+#: admin/class-admin-settings.php:5122
+msgid "The reportedip.com API endpoint URL."
+msgstr "Die URL des reportedip.com-API-Endpunkts."
+
+#: admin/class-protection-page.php:1138
+msgid "Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows only the day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only."
+msgstr "Der Expertenmodus zeigt jede Einstellung auf der Schutz-Seite und blendet die Werkzeuge-Seite ein. Der einfache Modus zeigt nur die Alltagseinstellungen; alles andere läuft mit der Empfehlung. Der Schalter gilt nur für Ihr Konto."
+
+#: includes/class-ajax-handler.php:1676
+msgid "Priority Sync requires a Contributor plan."
+msgstr "Priority-Sync erfordert mindestens den Contributor-Tarif."
+
+#: includes/class-mode-manager.php:389
+msgid "Server-delivered rulesets instead of the bundled baseline: Paranoia Level 2 signatures and bot IP-range feeds refreshed weekly on Contributor; daily refresh, Paranoia Level 3 and the live disposable list from Professional."
+msgstr "Vom Server gelieferte Regelsätze statt der gebündelten Baseline: Signaturen bis Paranoia Level 2 und Bot-IP-Range-Feeds mit wöchentlicher Aktualisierung ab Contributor; tägliche Aktualisierung, Paranoia Level 3 und die Live-Wegwerf-Liste ab Professional."
+
+#: includes/class-settings-registry.php:601
+msgid "How aggressively the rules are read. Level 1 is the false-positive-poor baseline; higher levels catch obfuscated attacks and need a report-only run first. Level 2 runs from Contributor, Level 3 from Professional."
+msgstr "Wie scharf die Regeln ausgelegt werden. Stufe 1 ist die fehlalarmarme Basis. Höhere Stufen erwischen auch verschleierte Angriffe und brauchen vorher einen Durchlauf im Nur-Melden-Modus. Stufe 2 läuft ab Contributor, Stufe 3 ab Professional."
+
+#: includes/class-settings-registry.php:1484
+msgid "Record the browser identification with each security event and audit trail entry. Useful for telling a bot from a customer, and it is personal data."
+msgstr "Zeichnet die Browser-Kennung zu jedem Sicherheitsereignis und jedem Eintrag im Audit-Trail auf. Nützlich, um einen Bot von einem Kunden zu unterscheiden, und es sind personenbezogene Daten."

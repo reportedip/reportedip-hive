@@ -598,7 +598,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'tier_gate'   => array( __CLASS__, 'paranoia_needs_tier' ),
 				'remote'      => true,
 				'label'       => __( 'Firewall paranoia level', 'reportedip-hive' ),
-				'description' => __( 'How aggressively the rules are read. Level 1 is the false-positive-poor baseline; higher levels catch obfuscated attacks and need a report-only run first.', 'reportedip-hive' ),
+				'description' => __( 'How aggressively the rules are read. Level 1 is the false-positive-poor baseline; higher levels catch obfuscated attacks and need a report-only run first. Level 2 runs from Contributor, Level 3 from Professional.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_waf_block_threshold'          => array(
 				'section'     => 'waf',
@@ -1481,7 +1481,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Log user agents', 'reportedip-hive' ),
-				'description' => __( 'Record the browser identification with each event. Useful for telling a bot from a customer, and it is personal data.', 'reportedip-hive' ),
+				'description' => __( 'Record the browser identification with each security event and audit trail entry. Useful for telling a bot from a customer, and it is personal data.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_data_retention_days'          => array(
 				'simple'      => true,

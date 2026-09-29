@@ -2,6 +2,49 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.68] (2026-09-29)
+
+### Security
+
+- **Two SQL injection rules join the bundled baseline.** Error-based
+  injection reads data out of the database error message through
+  `EXTRACTVALUE()` or `UPDATEXML()`, and a second-order injection rides the
+  trackback body, is stored and fires later. Both rules had only been
+  delivered through Rule Sync, so a site in Local Shield mode or with the
+  sync switched off never had them. They now ship in the offline baseline
+  and reach both firewall layers, the in-WordPress engine and the
+  pre-WordPress guard. The trackback rule only reads requests to a
+  trackback endpoint, so a post or comment that talks about `SELECT ...
+  FROM` is not affected.
+
+### Changed
+
+- **Priority Sync starts with the Contributor plan.** Contributor now
+  receives the server-delivered Paranoia-Level-2 WAF ruleset and the bot
+  IP-range feeds, refreshed weekly. Level 3 and the daily refresh stay with
+  Professional. The engine enforces the ceiling itself: Contributor runs at
+  most Level 2 even when Level 3 is selected, and a downgrade drops back to
+  the baseline level at once.
+
+### Privacy
+
+- **The audit trail follows the "Log user agents" switch.** It stored the
+  full browser identification with every entry, regardless of the privacy
+  setting the security log has honoured all along. Both now follow the same
+  switch, which is off by default. Entries recorded before the update are
+  left untouched.
+
+### Fixed
+
+- The expert-mode tooltip on the Protection page no longer names a fixed
+  number of day-to-day settings, which had drifted from the real count.
+- The API endpoint help text names reportedip.com instead of the old
+  domain. The stored endpoint is not changed.
+- The 2.1.66 notes and a code comment dated the first-try block for
+  comment spam to 2.1.52; it arrived in 2.1.63.
+- The readme counted eighteen readiness detectors; there are twenty since
+  the form plugin and group advisories joined.
+
 ## [2.1.67] (2026-09-28)
 
 ### Security
@@ -161,7 +204,7 @@ All changes to ReportedIP Hive are documented here.
   attempt before doing anything only bought the sender two free runs and
   left the community without the report. A filled decoy now goes straight
   to the block ladder and the community report, the way the comment filter
-  has treated the same evidence since 2.1.52. A visitor whose browser
+  has treated the same evidence since 2.1.63. A visitor whose browser
   simply never ran the script is untouched by this and is still only
   refused.
 - **A whitelisted address can no longer be blocked by a sensor that skips

@@ -402,6 +402,56 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * Error-based SQL injection reads data out of the database error
+		 * message through EXTRACTVALUE() or UPDATEXML(). The offline baseline
+		 * carries the rule, so a Local Shield site without Rule Sync is covered.
+		 */
+		public function test_baseline_blocks_error_based_sqli(): void {
+			$rules = array( $this->baseline_rule( 'waf_sqli_errorbased' ) );
+
+			$attacks = array(
+				'/?id=1 AND extractvalue(1,concat(0x7e,version()))',
+				'/?p=1%20and%20updatexml(1,concat(0x7e,user()),1)',
+				'/?cat=1 AND EXTRACTVALUE (1, 0x7e)',
+			);
+			foreach ( $attacks as $uri ) {
+				$this->assertIsArray( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null ), "Error-based SQLi '{$uri}' must be blocked." );
+			}
+
+			$legit = array( '/?s=extract+value', '/blog/how-to-update-xml-files/', '/?s=updatexml' );
+			foreach ( $legit as $uri ) {
+				$this->assertNull( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null ), "Ordinary request '{$uri}' must not trip the rule." );
+			}
+		}
+
+		/**
+		 * Second-order SQL injection through the trackback body: the payload is
+		 * stored by the trackback handler and fires later. The rule only looks
+		 * at a request whose URI is a trackback endpoint, so a post or comment
+		 * that talks about SELECT ... FROM stays untouched.
+		 */
+		public function test_baseline_blocks_trackback_second_order_sqli(): void {
+			$rules = array( $this->baseline_rule( 'waf_sqli_trackback_2nd' ) );
+
+			$attacks = array(
+				'wp-trackback.php, select from' => array( '/wp-trackback.php?p=12', array( 'title' => 'x', 'excerpt' => '1 AND (SELECT user_pass FROM wp_users LIMIT 1)' ) ),
+				'pretty trackback, quote'       => array( '/2026/09/hello/trackback/', array( 'title' => "it\\'s", 'url' => 'https://x.tld' ) ),
+				'escaped double quote'          => array( '/hello/trackback/', array( 'blog_name' => 'a\\"b' ) ),
+			);
+			foreach ( $attacks as $label => $case ) {
+				$this->assertIsArray( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $case[0] ), $case[1], null ), "Trackback SQLi ({$label}) must be blocked." );
+			}
+
+			$legit = array(
+				'plain trackback'       => array( '/hello/trackback/', array( 'title' => 'Great post', 'url' => 'https://example.com/a', 'excerpt' => 'We linked to you.' ) ),
+				'sql talk in a comment' => array( '/wp-comments-post.php', array( 'comment' => 'Use SELECT id FROM wp_posts and it\\\'s done' ) ),
+			);
+			foreach ( $legit as $label => $case ) {
+				$this->assertNull( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $case[0] ), $case[1], null ), "Legitimate request ({$label}) must not trip the rule." );
+			}
+		}
+
+		/**
 		 * Every reason key the WAF can emit via GROUP_REASON must resolve to a
 		 * concrete category in Block_Ref::CATEGORY_MAP, or a real block renders as
 		 * a generic `BLOCKED-xxxx` reference the admin cannot triage. Guards the

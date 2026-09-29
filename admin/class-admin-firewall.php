@@ -676,7 +676,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	/**
 	 * Render the Rule Sync status surface: per-ruleset version, rule count and
 	 * source, the last sync time and the operation-mode-aware state. The
-	 * Free-vs-Professional comparison appears only while Priority Sync is not
+	 * Free-vs-Contributor comparison appears only while Priority Sync is not
 	 * on the plan; an active plan gets a compact confirmation instead.
 	 *
 	 * @since 2.1.2
@@ -752,8 +752,8 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '<p class="rip-help-text">' . esc_html__( 'Sync:', 'reportedip-hive' ) . ' ' . ( $enabled ? esc_html__( 'enabled', 'reportedip-hive' ) : esc_html__( 'disabled', 'reportedip-hive' ) ) . ' &middot; ' . esc_html__( 'Last sync:', 'reportedip-hive' ) . ' ' . ( $last_run ? esc_html( wp_date( 'Y-m-d H:i:s', $last_run ) ) : esc_html__( 'never (baseline only)', 'reportedip-hive' ) ) . '</p>';
 
 		if ( ! $has_priority ) {
-			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active and free on every plan. Priority Sync, deeper coverage and frequent updates, is part of the Professional plan.', 'reportedip-hive' ) . ' ';
-			ReportedIP_Hive_Admin_Settings::render_tier_lock( $priority, array( 'label' => __( 'Included in Professional', 'reportedip-hive' ) ) );
+			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active and free on every plan. Priority Sync, deeper coverage and regular updates, starts with the Contributor plan: weekly with Paranoia Level 2, daily with Level 3 from Professional.', 'reportedip-hive' ) . ' ';
+			ReportedIP_Hive_Admin_Settings::render_tier_lock( $priority, array( 'label' => __( 'Included from Contributor', 'reportedip-hive' ) ) );
 			echo '</p>';
 		} else {
 			echo '<button type="button" class="rip-button rip-button--primary" id="rip-rule-sync-now" data-rip-action="reportedip_hive_rule_sync_now">' . esc_html__( 'Sync now', 'reportedip-hive' ) . '</button>';
@@ -765,7 +765,7 @@ class ReportedIP_Hive_Admin_Firewall {
 	/**
 	 * Render the two-column Free-vs-Professional coverage comparison for the
 	 * Rule Sync tab so the plan boundary is explicit: the WAF engine and the
-	 * baseline rulesets ship with every plan, Priority Sync is Professional.
+	 * baseline rulesets ship with every plan, Priority Sync starts at Contributor.
 	 * Rendered only while Priority Sync is not on the plan.
 	 *
 	 * @param bool $has_priority Whether the current tier has Priority Sync.
@@ -779,9 +779,9 @@ class ReportedIP_Hive_Admin_Firewall {
 			__( 'Bundled with the plugin, no connection required', 'reportedip-hive' ),
 		);
 		$pro_features  = array(
-			__( 'Deeper coverage (Paranoia Level 2/3, obfuscation & bypass)', 'reportedip-hive' ),
+			__( 'Deeper coverage (Paranoia Level 2, Level 3 from Professional)', 'reportedip-hive' ),
 			__( 'Server-delivered, Ed25519-signed rule updates', 'reportedip-hive' ),
-			__( 'Frequent refresh via the Community Network', 'reportedip-hive' ),
+			__( 'Weekly refresh on Contributor, daily from Professional', 'reportedip-hive' ),
 		);
 
 		echo '<div class="rip-grid rip-grid-cols-2">';
@@ -795,7 +795,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '</ul></div></div>';
 
 		echo '<div class="rip-card"><div class="rip-card__header rip-card__header--icon"><h3 class="rip-card__title">' . esc_html__( 'Priority Sync', 'reportedip-hive' ) . '</h3>';
-		ReportedIP_Hive_Admin_Settings::render_tier_badge( 'professional' );
+		ReportedIP_Hive_Admin_Settings::render_tier_badge( 'contributor' );
 		echo '</div><div class="rip-card__body"><ul class="rip-pricing-card__features">';
 		foreach ( $pro_features as $feature ) {
 			echo '<li>' . esc_html( $feature ) . '</li>';
@@ -806,7 +806,7 @@ class ReportedIP_Hive_Admin_Firewall {
 		} else {
 			ReportedIP_Hive_Admin_Settings::render_tier_lock(
 				ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' ),
-				array( 'label' => __( 'Included in Professional', 'reportedip-hive' ) )
+				array( 'label' => __( 'Included from Contributor', 'reportedip-hive' ) )
 			);
 		}
 		echo '</p></div></div>';

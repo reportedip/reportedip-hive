@@ -504,6 +504,25 @@ class ReportedIP_Hive_Audit_Logger {
 	}
 
 	/**
+	 * The browser identification of the current request, or '' while the
+	 * privacy setting "Log user agents" is off. The audit trail follows the
+	 * same switch as the security log, so a site that keeps user agents out
+	 * of one keeps them out of both.
+	 *
+	 * @return string Sanitized user agent or ''.
+	 * @since  2.1.68
+	 */
+	public static function request_user_agent() {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_log_user_agents', false ) ) {
+			return '';
+		}
+		if ( ! isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
+			return '';
+		}
+		return sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) );
+	}
+
+	/**
 	 * How the current request reached WordPress.
 	 *
 	 * @return string One of `cli`, `cron`, `xmlrpc`, `rest`, `ajax`, `web`.
@@ -565,10 +584,7 @@ class ReportedIP_Hive_Audit_Logger {
 	private function log_event( $type, $action, array $data, $user_id = 0, $username = '', array $object = array(), $blog_id = null ) {
 		global $wpdb;
 
-		$user_agent = '';
-		if ( isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
-			$user_agent = sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) );
-		}
+		$user_agent = self::request_user_agent();
 		if ( ! isset( $data['agent'] ) ) {
 			$data['agent'] = self::agent();
 		}

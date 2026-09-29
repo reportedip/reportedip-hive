@@ -687,23 +687,26 @@ class ReportedIP_Hive_WAF {
 	/**
 	 * The effective Paranoia-Level ceiling for the current tier.
 	 *
-	 * Free tiers are pinned to Level 1; Professional unlocks the operator-chosen
-	 * level (2 or 3) carried in the synced ruleset.
+	 * Free is pinned to Level 1. Contributor runs up to Level 2 and Professional
+	 * up to Level 3, each capped by the operator-chosen level. The server only
+	 * delivers the rules a tier may run, the clamp here keeps a stale synced
+	 * copy from outliving a downgrade.
 	 *
 	 * @return int 1, 2 or 3.
 	 * @since  2.1.2
 	 */
 	public function paranoia_cap() {
-		$priority_available = false;
-		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$status             = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' );
-			$priority_available = ! empty( $status['available'] );
-		}
-		if ( ! $priority_available ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
 			return 1;
 		}
-		$chosen = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_PARANOIA, 1 );
-		return max( 1, min( 3, $chosen ) );
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$status       = $mode_manager->feature_status( 'rule_sync_priority' );
+		if ( empty( $status['available'] ) ) {
+			return 1;
+		}
+		$ceiling = $mode_manager->tier_at_least( 'professional' ) ? 3 : 2;
+		$chosen  = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_PARANOIA, 1 );
+		return max( 1, min( $ceiling, $chosen ) );
 	}
 
 	/**

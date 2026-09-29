@@ -5119,7 +5119,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-form-group">
 					<label class="rip-label" for="reportedip_hive_api_endpoint"><?php esc_html_e( 'API Endpoint', 'reportedip-hive' ); ?></label>
 					<input type="url" id="reportedip_hive_api_endpoint" name="reportedip_hive_api_endpoint" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_endpoint', 'https://reportedip.com/wp-json/reportedip/v2/' ) ); ?>" class="rip-input" />
-					<p class="rip-help-text"><?php esc_html_e( 'The ReportedIP.de API endpoint URL.', 'reportedip-hive' ); ?></p>
+					<p class="rip-help-text"><?php esc_html_e( 'The reportedip.com API endpoint URL.', 'reportedip-hive' ); ?></p>
 				</div>
 
 				<div class="rip-form-group">

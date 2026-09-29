@@ -177,5 +177,31 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertSame( '198.51.100.77', $row['ip'] );
 		}
+
+		/**
+		 * The audit trail keeps the user agent out unless "Log user agents"
+		 * is on, the same switch the security log follows.
+		 *
+		 * @return void
+		 */
+		public function test_user_agent_follows_the_log_user_agents_switch(): void {
+			$saved                      = $_SERVER['HTTP_USER_AGENT'] ?? null;
+			$_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (X11; Linux x86_64) Test/1.0';
+			$GLOBALS['wp_options']      = array();
+
+			try {
+				$this->assertSame( '', \ReportedIP_Hive_Audit_Logger::request_user_agent(), 'Off by default: no user agent is stored.' );
+
+				$GLOBALS['wp_options']['reportedip_hive_log_user_agents'] = true;
+				$this->assertSame( 'Mozilla/5.0 (X11; Linux x86_64) Test/1.0', \ReportedIP_Hive_Audit_Logger::request_user_agent() );
+			} finally {
+				$GLOBALS['wp_options'] = array();
+				if ( null === $saved ) {
+					unset( $_SERVER['HTTP_USER_AGENT'] );
+				} else {
+					$_SERVER['HTTP_USER_AGENT'] = $saved;
+				}
+			}
+		}
 	}
 }

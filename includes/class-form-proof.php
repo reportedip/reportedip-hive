@@ -1183,7 +1183,7 @@ class ReportedIP_Hive_Form_Proof {
 	 * A filled decoy needs no corroboration, so it skips the attempt counter
 	 * and goes where a tripped threshold goes: log, block ladder, community
 	 * report and admin mail, each still subject to its own setting. The
-	 * comment surface has treated the same evidence this way since 2.1.52;
+	 * comment surface has treated the same evidence this way since 2.1.63;
 	 * until 2.1.66 every other form waited for a third hit within a day,
 	 * which let a single sender walk away unreported.
 	 *
