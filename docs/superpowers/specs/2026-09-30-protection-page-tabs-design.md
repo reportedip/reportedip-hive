@@ -70,7 +70,9 @@ block starts open.
 
 ### Tab state
 
-`Protection_Page::tab_state( $tab, array $current, $mode_manager )` returns
+`Protection_Page::tab_state( $tab, array $current, array $statuses )` (the
+statuses come from `field_statuses( $current, $mode_manager )`, computed
+once per page) returns
 `{text, tone}` in the same shape as `section_state()`. It aggregates the
 section states of the tab instead of counting switches, so the pill and the
 dashboard area rows can never disagree:
@@ -176,12 +178,16 @@ label and the marker, a control, a help text). Changes:
   the two strings; the script swaps the text when the toggle changes. The
   span is decorative (`aria-hidden="true"`), the checkbox stays the
   accessible control.
-- A plan-locked field (status `available` false, reason `tier`, and not
-  `partial`, and not a switch that is currently on) renders no control at
-  all. In its place: a `rip-badge` with the plan label from
-  `get_tier_info( $min_tier )` and a `rip-button--secondary rip-button--sm`
-  "Learn more" linking to `Admin_Settings::pricing_url()` with the feature
-  key as the fragment. Because nothing is posted, `collect_values()` fills
+- A plan-locked switch (kind `bool`, status `available` false, reason
+  `tier`, not `partial`, so not a switch that is currently on) renders no
+  control at all. In its place: a `rip-badge` with the plan label and a
+  `rip-button--secondary rip-button--sm` "Learn more" linking to
+  `Admin_Settings::pricing_url()` with the feature key as the fragment.
+  The label and the link travel inside the status (`plan_label`,
+  `plan_url`, added by `field_statuses()` in the page), so
+  `field_markup()` stays free of the mode manager. Locked fields of any
+  other kind keep their disabled control, because a stored list or text
+  must stay readable. Because nothing is posted, `collect_values()` fills
   the empty value and `writable_values()` drops it, which is the existing
   behaviour for a disabled input. The `rip-protection__field--locked` class
   stays on the wrapper.
