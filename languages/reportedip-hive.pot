@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-29T19:54:28+00:00\n"
+"POT-Creation-Date: 2026-09-30T20:57:18+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -44,7 +44,6 @@ msgstr ""
 #: admin/class-admin-firewall.php:131
 #: admin/class-admin-settings.php:5220
 #: admin/class-admin-settings.php:7095
-#: admin/class-protection-page.php:1221
 #: admin/class-two-factor-admin.php:597
 msgid "Save"
 msgstr ""
@@ -240,7 +239,10 @@ msgstr ""
 #: admin/class-admin-firewall.php:366
 #: admin/class-admin-firewall.php:706
 #: admin/class-admin-settings.php:7186
-#: admin/class-protection-page.php:829
+#: admin/class-protection-page.php:406
+#: admin/class-protection-page.php:407
+#: admin/class-protection-page.php:867
+#: admin/class-protection-page.php:1146
 #: admin/class-tools-page.php:197
 #: admin/class-tools-page.php:201
 #: admin/class-tools-page.php:223
@@ -883,7 +885,7 @@ msgid "Unblock"
 msgstr ""
 
 #: admin/class-admin-settings.php:1107
-#: admin/class-protection-page.php:831
+#: admin/class-protection-page.php:869
 msgid "Block"
 msgstr ""
 
@@ -1141,8 +1143,9 @@ msgstr ""
 #: admin/class-admin-settings.php:1844
 #: admin/class-admin-settings.php:4919
 #: admin/class-dashboard-next-steps.php:564
-#: admin/class-protection-page.php:1332
-#: admin/class-protection-page.php:1383
+#: admin/class-protection-page.php:1481
+#: admin/class-protection-page.php:1542
+#: admin/class-protection-page.php:1605
 #: includes/class-readiness.php:640
 #: includes/class-tier-upgrade.php:350
 #: includes/class-two-factor-recommend.php:348
@@ -1221,7 +1224,7 @@ msgid "Activity"
 msgstr ""
 
 #: admin/class-admin-settings.php:2148
-#: admin/class-protection-page.php:1163
+#: admin/class-protection-page.php:1362
 msgid "Protection"
 msgstr ""
 
@@ -1514,7 +1517,7 @@ msgid "The Super Admin decides which roles are asked for their second factor aga
 msgstr ""
 
 #: admin/class-admin-settings.php:2751
-#: admin/class-protection-page.php:1042
+#: admin/class-protection-page.php:1173
 msgid "off"
 msgstr ""
 
@@ -1627,6 +1630,9 @@ msgstr ""
 #: admin/class-admin-settings.php:4006
 #: admin/class-admin-settings.php:5747
 #: admin/class-admin-settings.php:7184
+#: admin/class-protection-page.php:405
+#: admin/class-protection-page.php:407
+#: admin/class-protection-page.php:1139
 #: admin/class-tools-page.php:282
 #: admin/class-two-factor-admin.php:860
 #: admin/class-two-factor-admin.php:1466
@@ -1731,7 +1737,7 @@ msgstr ""
 #: admin/class-admin-settings.php:4187
 #: admin/class-admin-settings.php:5326
 #: admin/class-logs-table.php:440
-#: admin/class-protection-page.php:854
+#: admin/class-protection-page.php:892
 #: reportedip-hive.php:1150
 msgid "Critical"
 msgstr ""
@@ -1819,6 +1825,7 @@ msgid "IP Lists"
 msgstr ""
 
 #: admin/class-admin-settings.php:4374
+#: admin/class-protection-page.php:161
 msgid "Advanced"
 msgstr ""
 
@@ -2302,7 +2309,7 @@ msgid "Download log entries for offline analysis."
 msgstr ""
 
 #: admin/class-admin-settings.php:5327
-#: admin/class-protection-page.php:852
+#: admin/class-protection-page.php:890
 msgid "Warning"
 msgstr ""
 
@@ -3276,7 +3283,7 @@ msgstr ""
 
 #: admin/class-admin-settings.php:6863
 #: admin/class-admin-settings.php:7075
-#: admin/class-protection-page.php:846
+#: admin/class-protection-page.php:884
 msgid "Left"
 msgstr ""
 
@@ -3287,7 +3294,7 @@ msgstr ""
 
 #: admin/class-admin-settings.php:6865
 #: admin/class-admin-settings.php:7083
-#: admin/class-protection-page.php:848
+#: admin/class-protection-page.php:886
 msgid "Right"
 msgstr ""
 
@@ -3493,6 +3500,7 @@ msgid "Run a honeypot for extra impact"
 msgstr ""
 
 #: admin/class-admin-settings.php:7164
+#: admin/class-protection-page.php:515
 msgid "Learn more"
 msgstr ""
 
@@ -3633,7 +3641,7 @@ msgid "Attempts"
 msgstr ""
 
 #: admin/class-api-queue-table.php:56
-#: admin/class-protection-page.php:853
+#: admin/class-protection-page.php:891
 #: admin/class-two-factor-admin.php:554
 #: includes/class-two-factor-onboarding.php:355
 #: includes/class-two-factor.php:2130
@@ -4044,6 +4052,7 @@ msgid "Not now"
 msgstr ""
 
 #: admin/class-dashboard-next-steps.php:469
+#: admin/class-protection-page.php:1402
 msgid "Protection areas"
 msgstr ""
 
@@ -4088,7 +4097,7 @@ msgid "Open the referral programme"
 msgstr ""
 
 #: admin/class-dashboard-next-steps.php:585
-#: admin/class-protection-page.php:1356
+#: admin/class-protection-page.php:1575
 msgid "Rejected."
 msgstr ""
 
@@ -4315,150 +4324,171 @@ msgstr ""
 msgid "No log entries found."
 msgstr ""
 
-#: admin/class-protection-page.php:484
-msgid "Open in expert mode"
+#: admin/class-protection-page.php:143
+msgid "Core protection"
 msgstr ""
 
-#: admin/class-protection-page.php:490
-msgid "Not installed"
+#: admin/class-protection-page.php:146
+msgid "Recommended: keep the defaults on. Change a threshold only when a sign-in or a block does not behave as expected."
 msgstr ""
 
-#: admin/class-protection-page.php:541
+#: admin/class-protection-page.php:149
+msgid "Forms"
+msgstr ""
+
+#: admin/class-protection-page.php:152
+msgid "Recommended: keep the defaults on. Changes are only needed when a form does not work as expected."
+msgstr ""
+
+#: admin/class-protection-page.php:155
+#: includes/class-settings-registry.php:67
+msgid "Firewall & Bots"
+msgstr ""
+
+#: admin/class-protection-page.php:158
+msgid "Recommended: keep the firewall on. Add an exception on the Tools page before switching a rule off."
+msgstr ""
+
+#: admin/class-protection-page.php:164
+msgid "These settings only matter during a coordinated attack or for a second factor asked again. The recommendation covers both."
+msgstr ""
+
+#: admin/class-protection-page.php:167
+msgid "Operations"
+msgstr ""
+
+#: admin/class-protection-page.php:170
+msgid "Logs, mails and the footprint per request. None of it decides what is blocked."
+msgstr ""
+
+#. translators: %s: plan name, for example Professional
+#: admin/class-protection-page.php:513
+#, php-format
+msgid "%s feature"
+msgstr ""
+
+#: admin/class-protection-page.php:585
 msgid "This setting lives in expert mode."
 msgstr ""
 
 #. translators: %s: name of a form plugin, for example Contact Form 7.
-#: admin/class-protection-page.php:548
+#: admin/class-protection-page.php:592
 #, php-format
 msgid "%s is not active on this site. The setting appears here as soon as it is."
 msgstr ""
 
-#. translators: 1: comma-separated setting names, 2: number of further settings
-#: admin/class-protection-page.php:575
-#, php-format
-msgid "Expert mode adds %1$s and %2$d more setting here."
-msgid_plural "Expert mode adds %1$s and %2$d more settings here."
-msgstr[0] ""
-msgstr[1] ""
-
-#. translators: %s: comma-separated setting names
-#: admin/class-protection-page.php:582
-#, php-format
-msgid "Expert mode adds %s here."
-msgstr ""
-
 #. translators: %s: name of a form plugin, for example Gravity Forms.
-#: admin/class-protection-page.php:691
+#: admin/class-protection-page.php:682
 #, php-format
 msgid "%s is not active on this site."
 msgstr ""
 
-#: admin/class-protection-page.php:700
+#: admin/class-protection-page.php:691
 msgid "Two-factor authentication needs libsodium or OpenSSL to store secrets encrypted; neither is available on this server."
 msgstr ""
 
-#: admin/class-protection-page.php:705
+#: admin/class-protection-page.php:696
 msgid "WooCommerce is not installed on this site."
 msgstr ""
 
-#: admin/class-protection-page.php:710
+#: admin/class-protection-page.php:701
 msgid "The constant REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN is defined as true in wp-config.php; Hide Login stays off until you remove it. This is the recovery path when the slug was lost."
 msgstr ""
 
-#: admin/class-protection-page.php:715
+#: admin/class-protection-page.php:706
 msgid "Always on while Hide Login is active; a visible wp-admin would redirect straight to the login URL you just hid."
 msgstr ""
 
-#: admin/class-protection-page.php:828
+#: admin/class-protection-page.php:866
 msgid "None (REMOTE_ADDR)"
 msgstr ""
 
-#: admin/class-protection-page.php:830
+#: admin/class-protection-page.php:868
 msgid "Flag only"
 msgstr ""
 
-#: admin/class-protection-page.php:832
+#: admin/class-protection-page.php:870
 msgid "Monitor"
 msgstr ""
 
-#: admin/class-protection-page.php:833
+#: admin/class-protection-page.php:871
 msgid "Allow list"
 msgstr ""
 
-#: admin/class-protection-page.php:834
+#: admin/class-protection-page.php:872
 msgid "Mark as spam"
 msgstr ""
 
-#: admin/class-protection-page.php:835
+#: admin/class-protection-page.php:873
 msgid "Open"
 msgstr ""
 
-#: admin/class-protection-page.php:836
+#: admin/class-protection-page.php:874
 msgid "Signed-in users only"
 msgstr ""
 
-#: admin/class-protection-page.php:837
+#: admin/class-protection-page.php:875
 msgid "Restricted"
 msgstr ""
 
-#: admin/class-protection-page.php:838
+#: admin/class-protection-page.php:876
 msgid "Block page"
 msgstr ""
 
-#: admin/class-protection-page.php:839
+#: admin/class-protection-page.php:877
 msgid "404"
 msgstr ""
 
-#: admin/class-protection-page.php:840
+#: admin/class-protection-page.php:878
 msgid "Force enrolment"
 msgstr ""
 
-#: admin/class-protection-page.php:841
+#: admin/class-protection-page.php:879
 msgid "Block sign-in"
 msgstr ""
 
-#: admin/class-protection-page.php:842
+#: admin/class-protection-page.php:880
 msgid "Report only"
 msgstr ""
 
-#: admin/class-protection-page.php:843
+#: admin/class-protection-page.php:881
 msgid "Enforce"
 msgstr ""
 
-#: admin/class-protection-page.php:844
+#: admin/class-protection-page.php:882
 msgid "Badge"
 msgstr ""
 
-#: admin/class-protection-page.php:845
+#: admin/class-protection-page.php:883
 msgid "Shield"
 msgstr ""
 
-#: admin/class-protection-page.php:847
+#: admin/class-protection-page.php:885
 msgid "Centre"
 msgstr ""
 
-#: admin/class-protection-page.php:849
+#: admin/class-protection-page.php:887
 msgid "Below"
 msgstr ""
 
-#: admin/class-protection-page.php:850
+#: admin/class-protection-page.php:888
 msgid "Debug"
 msgstr ""
 
-#: admin/class-protection-page.php:851
+#: admin/class-protection-page.php:889
 msgid "Info"
 msgstr ""
 
-#: admin/class-protection-page.php:877
+#: admin/class-protection-page.php:915
 #: templates/two-factor-onboarding.php:204
 msgid "Authenticator app (TOTP)"
 msgstr ""
 
-#: admin/class-protection-page.php:878
+#: admin/class-protection-page.php:916
 msgid "E-mail code"
 msgstr ""
 
-#: admin/class-protection-page.php:879
+#: admin/class-protection-page.php:917
 #: includes/class-two-factor-dashboard.php:332
 #: includes/class-two-factor-reset-gate.php:1478
 #: templates/frontend-2fa-challenge.php:308
@@ -4467,36 +4497,36 @@ msgstr ""
 msgid "SMS code"
 msgstr ""
 
-#: admin/class-protection-page.php:880
+#: admin/class-protection-page.php:918
 msgid "Security key / passkey"
 msgstr ""
 
 #. translators: %s: plan name
-#: admin/class-protection-page.php:906
+#: admin/class-protection-page.php:944
 #, php-format
 msgid "(%s plan)"
 msgstr ""
 
-#: admin/class-protection-page.php:927
+#: admin/class-protection-page.php:965
 msgid "Triggers for administrators become available once an administrator has completed one second-factor sign-in on this site."
 msgstr ""
 
-#: admin/class-protection-page.php:930
+#: admin/class-protection-page.php:968
 msgid "Country data comes from the Community Network. In Local Shield the country trigger never fires."
 msgstr ""
 
 #. translators: 1: preset name, 2: number of active sensors
-#: admin/class-protection-page.php:972
+#: admin/class-protection-page.php:1010
 #, php-format
 msgid "%1$s · %2$d sensors"
 msgstr ""
 
-#: admin/class-protection-page.php:975
+#: admin/class-protection-page.php:1013
 msgid "report only"
 msgstr ""
 
 #. translators: %d: number of roles
-#: admin/class-protection-page.php:993
+#: admin/class-protection-page.php:1031
 #, php-format
 msgid "%d role enforced"
 msgid_plural "%d roles enforced"
@@ -4504,142 +4534,153 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: days
-#: admin/class-protection-page.php:996
+#: admin/class-protection-page.php:1034
 #, php-format
 msgid "%d days"
 msgstr ""
 
-#: admin/class-protection-page.php:1002
+#: admin/class-protection-page.php:1040
 msgid "badge on"
 msgstr ""
 
-#: admin/class-protection-page.php:1002
+#: admin/class-protection-page.php:1040
 msgid "badge off"
 msgstr ""
 
 #. translators: %d: number of triggers
-#: admin/class-protection-page.php:1023
+#: admin/class-protection-page.php:1061
 #, php-format
 msgid "%d triggers"
 msgstr ""
 
-#: admin/class-protection-page.php:1038
-msgid "on"
-msgstr ""
-
-#: admin/class-protection-page.php:1089
-msgid "Relaxed"
-msgstr ""
-
-#: admin/class-protection-page.php:1090
-msgid "Balanced"
-msgstr ""
-
-#: admin/class-protection-page.php:1091
-msgid "Strict"
-msgstr ""
-
-#: admin/class-protection-page.php:1092
-msgid "Paranoid"
-msgstr ""
-
-#: admin/class-protection-page.php:1093
-#: admin/class-protection-page.php:1249
-#: admin/class-protection-page.php:1256
-msgid "Custom"
-msgstr ""
-
-#: admin/class-protection-page.php:1134
-msgid "Expert mode"
-msgstr ""
-
-#: admin/class-protection-page.php:1138
-msgid "Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows only the day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only."
-msgstr ""
-
-#: admin/class-protection-page.php:1140
-msgid "Apply"
-msgstr ""
-
-#: admin/class-protection-page.php:1164
-msgid "Every setting, grouped by area"
-msgstr ""
-
-#: admin/class-protection-page.php:1164
-msgid "The settings that matter day to day; everything else runs on the recommendation"
+#. translators: 1: sections switched on, 2: sections counted
+#: admin/class-protection-page.php:1153
+#, php-format
+msgid "%1$d of %2$d active"
 msgstr ""
 
 #: admin/class-protection-page.php:1169
+msgid "on"
+msgstr ""
+
+#: admin/class-protection-page.php:1199
+msgid "Relaxed"
+msgstr ""
+
+#: admin/class-protection-page.php:1200
+msgid "Balanced"
+msgstr ""
+
+#: admin/class-protection-page.php:1201
+msgid "Strict"
+msgstr ""
+
+#: admin/class-protection-page.php:1202
+msgid "Paranoid"
+msgstr ""
+
+#: admin/class-protection-page.php:1203
+#: admin/class-protection-page.php:1515
+#: admin/class-protection-page.php:1522
+msgid "Custom"
+msgstr ""
+
+#: admin/class-protection-page.php:1244
+msgid "Expert mode"
+msgstr ""
+
+#: admin/class-protection-page.php:1248
+msgid "Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows only the day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only."
+msgstr ""
+
+#: admin/class-protection-page.php:1250
+msgid "Apply"
+msgstr ""
+
+#: admin/class-protection-page.php:1321
+msgid "Show technical details"
+msgstr ""
+
+#: admin/class-protection-page.php:1363
+msgid "Every setting, grouped by area; the technical details fold away"
+msgstr ""
+
+#: admin/class-protection-page.php:1369
 msgid "Search settings, e.g. Tor, HSTS, retention"
 msgstr ""
 
-#: admin/class-protection-page.php:1170
+#: admin/class-protection-page.php:1370
 msgid "No setting matches."
 msgstr ""
 
+#. translators: 1: issues that need attention, 2: advisory hints
+#: admin/class-protection-page.php:1377
+#, php-format
+msgid "Check done: %1$d issues need attention, %2$d hints are open."
+msgstr ""
+
+#: admin/class-protection-page.php:1381
+msgid "See the next steps on the dashboard."
+msgstr ""
+
+#. translators: %d: number of rejected settings
+#: admin/class-protection-page.php:1391
+#, php-format
+msgid "%d field was not saved, see the marked field."
+msgid_plural "%d fields were not saved, see the marked fields."
+msgstr[0] ""
+msgstr[1] ""
+
 #. translators: %d: number of changed settings
-#: admin/class-protection-page.php:1177
+#: admin/class-protection-page.php:1394
+#, php-format
+msgid "%d setting set back to the recommendation."
+msgid_plural "%d settings set back to the recommendation."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of changed settings
+#: admin/class-protection-page.php:1397
 #, php-format
 msgid "%d setting saved."
 msgid_plural "%d settings saved."
 msgstr[0] ""
 msgstr[1] ""
 
-#. translators: %d: number of rejected settings
-#: admin/class-protection-page.php:1180
-#, php-format
-msgid "%d field was not saved, see the card."
-msgid_plural "%d fields were not saved, see the card."
-msgstr[0] ""
-msgstr[1] ""
-
-#: admin/class-protection-page.php:1197
-msgid "Runs on the recommendation. Switch to expert mode to change the details."
+#: admin/class-protection-page.php:1431
+msgid "Set every setting of this tab back to the recommendation for your plan?"
 msgstr ""
 
-#: admin/class-protection-page.php:1245
+#: admin/class-protection-page.php:1431
+msgid "Restore defaults"
+msgstr ""
+
+#: admin/class-protection-page.php:1432
+msgid "Save changes"
+msgstr ""
+
+#: admin/class-protection-page.php:1465
+msgid "Check protection"
+msgstr ""
+
+#: admin/class-protection-page.php:1466
+msgid "Runs the setup check again and reports what still needs attention."
+msgstr ""
+
+#: admin/class-protection-page.php:1511
 msgid "protection level preset relaxed balanced strict paranoid"
 msgstr ""
 
-#: admin/class-protection-page.php:1247
+#: admin/class-protection-page.php:1513
 msgid "Protection level"
 msgstr ""
 
-#: admin/class-protection-page.php:1258
+#: admin/class-protection-page.php:1524
 msgid "Sets the failed-login threshold and window, the block duration and the community protection level in one go. Choose Custom to edit them one by one."
 msgstr ""
 
-#: admin/class-protection-page.php:1292
-msgid "Show these"
-msgstr ""
-
-#: admin/class-protection-page.php:1305
-msgid "Manage rules and exceptions"
-msgstr ""
-
-#: admin/class-protection-page.php:1306
-#: admin/class-protection-page.php:1307
-msgid "Server setup"
-msgstr ""
-
-#: admin/class-protection-page.php:1308
-msgid "Export and reset"
-msgstr ""
-
-#: admin/class-protection-page.php:1309
-msgid "Send a test mail"
-msgstr ""
-
-#: admin/class-protection-page.php:1310
-msgid "Cache and queue tools"
-msgstr ""
-
-#: admin/class-protection-page.php:1311
-msgid "Hardening status"
-msgstr ""
-
-#: admin/class-protection-page.php:1338
-msgid "Unknown section."
+#: admin/class-protection-page.php:1549
+msgid "Unknown tab."
 msgstr ""
 
 #: admin/class-quickstart.php:209
@@ -7623,19 +7664,19 @@ msgstr ""
 msgid "Too many requests. Please try again in a moment."
 msgstr ""
 
-#: includes/class-form-proof.php:756
+#: includes/class-form-proof.php:800
 msgid "Leave this field empty"
 msgstr ""
 
-#: includes/class-form-proof.php:1174
+#: includes/class-form-proof.php:1225
 msgid "This form needs JavaScript to be submitted. Switch it on and try again."
 msgstr ""
 
-#: includes/class-form-proof.php:1177
+#: includes/class-form-proof.php:1228
 msgid "Your submission was not accepted. Please reload the page and try again."
 msgstr ""
 
-#: includes/class-form-proof.php:1284
+#: includes/class-form-proof.php:1335
 msgid "This form needs JavaScript to be submitted. Switch it on and try again. If you cannot, ask another administrator to reset your password, or use WP-CLI on the server."
 msgstr ""
 
@@ -8718,10 +8759,6 @@ msgstr ""
 
 #: includes/class-settings-registry.php:64
 msgid "Automatic blocking, durations and the escalation ladder."
-msgstr ""
-
-#: includes/class-settings-registry.php:67
-msgid "Firewall & Bots"
 msgstr ""
 
 #: includes/class-settings-registry.php:68

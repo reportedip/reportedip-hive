@@ -44,7 +44,6 @@ msgstr "Patrick Schlesinger, ReportedIP"
 #: admin/class-admin-firewall.php:131
 #: admin/class-admin-settings.php:5220
 #: admin/class-admin-settings.php:7095
-#: admin/class-protection-page.php:1221
 #: admin/class-two-factor-admin.php:597
 msgid "Save"
 msgstr "Speichern"
@@ -240,7 +239,10 @@ msgstr "Unbekannt"
 #: admin/class-admin-firewall.php:366
 #: admin/class-admin-firewall.php:706
 #: admin/class-admin-settings.php:7186
-#: admin/class-protection-page.php:829
+#: admin/class-protection-page.php:406
+#: admin/class-protection-page.php:407
+#: admin/class-protection-page.php:867
+#: admin/class-protection-page.php:1146
 #: admin/class-tools-page.php:197
 #: admin/class-tools-page.php:201
 #: admin/class-tools-page.php:223
@@ -870,7 +872,7 @@ msgid "Unblock"
 msgstr "Entsperren"
 
 #: admin/class-admin-settings.php:1107
-#: admin/class-protection-page.php:831
+#: admin/class-protection-page.php:869
 msgid "Block"
 msgstr "Sperren"
 
@@ -1128,8 +1130,9 @@ msgstr "Das Relay nimmt %s wieder an."
 #: admin/class-admin-settings.php:1844
 #: admin/class-admin-settings.php:4919
 #: admin/class-dashboard-next-steps.php:564
-#: admin/class-protection-page.php:1332
-#: admin/class-protection-page.php:1383
+#: admin/class-protection-page.php:1481
+#: admin/class-protection-page.php:1542
+#: admin/class-protection-page.php:1605
 #: includes/class-readiness.php:640
 #: includes/class-tier-upgrade.php:350
 #: includes/class-two-factor-recommend.php:348
@@ -1208,7 +1211,7 @@ msgid "Activity"
 msgstr "Aktivität"
 
 #: admin/class-admin-settings.php:2148
-#: admin/class-protection-page.php:1163
+#: admin/class-protection-page.php:1362
 msgid "Protection"
 msgstr "Schutz"
 
@@ -1501,7 +1504,7 @@ msgid "The Super Admin decides which roles are asked for their second factor aga
 msgstr "Der Super-Admin legt fest, welche Rollen ihren zweiten Faktor erneut zeigen müssen, wenn sich an einer Anmeldung etwas ändert. Die Regeln gelten auch auf dieser Website und lassen sich hier nicht übersteuern."
 
 #: admin/class-admin-settings.php:2751
-#: admin/class-protection-page.php:1042
+#: admin/class-protection-page.php:1173
 msgid "off"
 msgstr "aus"
 
@@ -1614,6 +1617,9 @@ msgstr "+%d Pkt."
 #: admin/class-admin-settings.php:4006
 #: admin/class-admin-settings.php:5747
 #: admin/class-admin-settings.php:7184
+#: admin/class-protection-page.php:405
+#: admin/class-protection-page.php:407
+#: admin/class-protection-page.php:1139
 #: admin/class-tools-page.php:282
 #: admin/class-two-factor-admin.php:860
 #: admin/class-two-factor-admin.php:1466
@@ -1718,7 +1724,7 @@ msgstr "Keine kritischen Ereignisse in den letzten 24 Stunden. Ihre Website ist 
 #: admin/class-admin-settings.php:4187
 #: admin/class-admin-settings.php:5326
 #: admin/class-logs-table.php:440
-#: admin/class-protection-page.php:854
+#: admin/class-protection-page.php:892
 #: reportedip-hive.php:1150
 msgid "Critical"
 msgstr "Kritisch"
@@ -1806,6 +1812,7 @@ msgid "IP Lists"
 msgstr "IP-Listen"
 
 #: admin/class-admin-settings.php:4374
+#: admin/class-protection-page.php:161
 msgid "Advanced"
 msgstr "Erweitert"
 
@@ -2288,7 +2295,7 @@ msgid "Download log entries for offline analysis."
 msgstr "Protokolleinträge zur Offline-Analyse herunterladen."
 
 #: admin/class-admin-settings.php:5327
-#: admin/class-protection-page.php:852
+#: admin/class-protection-page.php:890
 msgid "Warning"
 msgstr "Warnung"
 
@@ -3262,7 +3269,7 @@ msgstr "Ausrichtung"
 
 #: admin/class-admin-settings.php:6863
 #: admin/class-admin-settings.php:7075
-#: admin/class-protection-page.php:846
+#: admin/class-protection-page.php:884
 msgid "Left"
 msgstr "Links"
 
@@ -3273,7 +3280,7 @@ msgstr "Mitte"
 
 #: admin/class-admin-settings.php:6865
 #: admin/class-admin-settings.php:7083
-#: admin/class-protection-page.php:848
+#: admin/class-protection-page.php:886
 msgid "Right"
 msgstr "Rechts"
 
@@ -3479,6 +3486,7 @@ msgid "Run a honeypot for extra impact"
 msgstr "Betreibe einen Honeypot für mehr Wirkung"
 
 #: admin/class-admin-settings.php:7164
+#: admin/class-protection-page.php:515
 msgid "Learn more"
 msgstr "Mehr erfahren"
 
@@ -3619,7 +3627,7 @@ msgid "Attempts"
 msgstr "Versuche"
 
 #: admin/class-api-queue-table.php:56
-#: admin/class-protection-page.php:853
+#: admin/class-protection-page.php:891
 #: admin/class-two-factor-admin.php:554
 #: includes/class-two-factor-onboarding.php:355
 #: includes/class-two-factor.php:2130
@@ -4030,6 +4038,7 @@ msgid "Not now"
 msgstr "Jetzt nicht"
 
 #: admin/class-dashboard-next-steps.php:469
+#: admin/class-protection-page.php:1402
 msgid "Protection areas"
 msgstr "Schutzbereiche"
 
@@ -4074,7 +4083,7 @@ msgid "Open the referral programme"
 msgstr "Empfehlungsprogramm öffnen"
 
 #: admin/class-dashboard-next-steps.php:585
-#: admin/class-protection-page.php:1356
+#: admin/class-protection-page.php:1575
 msgid "Rejected."
 msgstr "Abgelehnt."
 
@@ -4301,150 +4310,128 @@ msgstr "Nur während der Härtung"
 msgid "No log entries found."
 msgstr "Keine Protokolleinträge gefunden."
 
-#: admin/class-protection-page.php:484
-msgid "Open in expert mode"
-msgstr "Im Expertenmodus öffnen"
-
-#: admin/class-protection-page.php:490
-msgid "Not installed"
-msgstr "Nicht installiert"
-
-#: admin/class-protection-page.php:541
+#: admin/class-protection-page.php:585
 msgid "This setting lives in expert mode."
 msgstr "Diese Einstellung liegt im Expertenmodus."
 
 #. translators: %s: name of a form plugin, for example Contact Form 7.
-#: admin/class-protection-page.php:548
+#: admin/class-protection-page.php:592
 #, php-format
 msgid "%s is not active on this site. The setting appears here as soon as it is."
 msgstr "%s ist auf dieser Website nicht aktiv. Die Einstellung erscheint hier, sobald das Plugin aktiv ist."
 
-#. translators: 1: comma-separated setting names, 2: number of further settings
-#: admin/class-protection-page.php:575
-#, php-format
-msgid "Expert mode adds %1$s and %2$d more setting here."
-msgid_plural "Expert mode adds %1$s and %2$d more settings here."
-msgstr[0] "Im Expertenmodus kommen hier %1$s und %2$d weitere Einstellung dazu."
-msgstr[1] "Im Expertenmodus kommen hier %1$s und %2$d weitere Einstellungen dazu."
-
-#. translators: %s: comma-separated setting names
-#: admin/class-protection-page.php:582
-#, php-format
-msgid "Expert mode adds %s here."
-msgstr "Im Expertenmodus kommen hier %s dazu."
-
 #. translators: %s: name of a form plugin, for example Gravity Forms.
-#: admin/class-protection-page.php:691
+#: admin/class-protection-page.php:682
 #, php-format
 msgid "%s is not active on this site."
 msgstr "%s ist auf dieser Website nicht aktiv."
 
-#: admin/class-protection-page.php:700
+#: admin/class-protection-page.php:691
 msgid "Two-factor authentication needs libsodium or OpenSSL to store secrets encrypted; neither is available on this server."
 msgstr "Die Zwei-Faktor-Authentifizierung braucht libsodium oder OpenSSL, um Geheimnisse verschlüsselt zu speichern; auf diesem Server ist keines davon verfügbar."
 
-#: admin/class-protection-page.php:705
+#: admin/class-protection-page.php:696
 msgid "WooCommerce is not installed on this site."
 msgstr "WooCommerce ist auf dieser Site nicht installiert."
 
-#: admin/class-protection-page.php:710
+#: admin/class-protection-page.php:701
 msgid "The constant REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN is defined as true in wp-config.php; Hide Login stays off until you remove it. This is the recovery path when the slug was lost."
 msgstr "Die Konstante REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN ist in der wp-config.php auf true gesetzt; Hide Login bleibt aus, bis Sie sie entfernen. Das ist der Rettungsweg, wenn der Slug verloren ging."
 
-#: admin/class-protection-page.php:715
+#: admin/class-protection-page.php:706
 msgid "Always on while Hide Login is active; a visible wp-admin would redirect straight to the login URL you just hid."
 msgstr "Solange Hide Login aktiv ist, immer an; ein sichtbares wp-admin würde direkt auf die gerade versteckte Anmelde-URL weiterleiten."
 
-#: admin/class-protection-page.php:828
+#: admin/class-protection-page.php:866
 msgid "None (REMOTE_ADDR)"
 msgstr "Keiner (REMOTE_ADDR)"
 
-#: admin/class-protection-page.php:830
+#: admin/class-protection-page.php:868
 msgid "Flag only"
 msgstr "Nur markieren"
 
-#: admin/class-protection-page.php:832
+#: admin/class-protection-page.php:870
 msgid "Monitor"
 msgstr "Beobachten"
 
-#: admin/class-protection-page.php:833
+#: admin/class-protection-page.php:871
 msgid "Allow list"
 msgstr "Erlaubnisliste"
 
-#: admin/class-protection-page.php:834
+#: admin/class-protection-page.php:872
 msgid "Mark as spam"
 msgstr "Als Spam markieren"
 
-#: admin/class-protection-page.php:835
+#: admin/class-protection-page.php:873
 msgid "Open"
 msgstr "Offen"
 
-#: admin/class-protection-page.php:836
+#: admin/class-protection-page.php:874
 msgid "Signed-in users only"
 msgstr "Nur angemeldete Benutzer"
 
-#: admin/class-protection-page.php:837
+#: admin/class-protection-page.php:875
 msgid "Restricted"
 msgstr "Eingeschränkt"
 
-#: admin/class-protection-page.php:838
+#: admin/class-protection-page.php:876
 msgid "Block page"
 msgstr "Sperrseite"
 
-#: admin/class-protection-page.php:839
+#: admin/class-protection-page.php:877
 msgid "404"
 msgstr "404"
 
-#: admin/class-protection-page.php:840
+#: admin/class-protection-page.php:878
 msgid "Force enrolment"
 msgstr "Einrichtung erzwingen"
 
-#: admin/class-protection-page.php:841
+#: admin/class-protection-page.php:879
 msgid "Block sign-in"
 msgstr "Anmeldung sperren"
 
-#: admin/class-protection-page.php:842
+#: admin/class-protection-page.php:880
 msgid "Report only"
 msgstr "Nur Protokollierung"
 
-#: admin/class-protection-page.php:843
+#: admin/class-protection-page.php:881
 msgid "Enforce"
 msgstr "Erzwingen"
 
-#: admin/class-protection-page.php:844
+#: admin/class-protection-page.php:882
 msgid "Badge"
 msgstr "Badge"
 
-#: admin/class-protection-page.php:845
+#: admin/class-protection-page.php:883
 msgid "Shield"
 msgstr "Schild"
 
-#: admin/class-protection-page.php:847
+#: admin/class-protection-page.php:885
 msgid "Centre"
 msgstr "Mitte"
 
-#: admin/class-protection-page.php:849
+#: admin/class-protection-page.php:887
 msgid "Below"
 msgstr "Unterhalb"
 
-#: admin/class-protection-page.php:850
+#: admin/class-protection-page.php:888
 msgid "Debug"
 msgstr "Debug"
 
-#: admin/class-protection-page.php:851
+#: admin/class-protection-page.php:889
 msgid "Info"
 msgstr "Info"
 
-#: admin/class-protection-page.php:877
+#: admin/class-protection-page.php:915
 #: templates/two-factor-onboarding.php:204
 msgid "Authenticator app (TOTP)"
 msgstr "Authenticator-App (TOTP)"
 
-#: admin/class-protection-page.php:878
+#: admin/class-protection-page.php:916
 msgid "E-mail code"
 msgstr "E-Mail-Code"
 
-#: admin/class-protection-page.php:879
+#: admin/class-protection-page.php:917
 #: includes/class-two-factor-dashboard.php:332
 #: includes/class-two-factor-reset-gate.php:1478
 #: templates/frontend-2fa-challenge.php:308
@@ -4453,36 +4440,36 @@ msgstr "E-Mail-Code"
 msgid "SMS code"
 msgstr "SMS-Code"
 
-#: admin/class-protection-page.php:880
+#: admin/class-protection-page.php:918
 msgid "Security key / passkey"
 msgstr "Sicherheitsschlüssel / Passkey"
 
 #. translators: %s: plan name
-#: admin/class-protection-page.php:906
+#: admin/class-protection-page.php:944
 #, php-format
 msgid "(%s plan)"
 msgstr "(Tarif %s)"
 
-#: admin/class-protection-page.php:927
+#: admin/class-protection-page.php:965
 msgid "Triggers for administrators become available once an administrator has completed one second-factor sign-in on this site."
 msgstr "Auslöser für Administratoren werden frei, sobald ein Administrator auf dieser Site einmal eine Anmeldung mit zweitem Faktor abgeschlossen hat."
 
-#: admin/class-protection-page.php:930
+#: admin/class-protection-page.php:968
 msgid "Country data comes from the Community Network. In Local Shield the country trigger never fires."
 msgstr "Länderdaten kommen aus dem Community Network. Im Local Shield löst der Länder-Auslöser nie aus."
 
 #. translators: 1: preset name, 2: number of active sensors
-#: admin/class-protection-page.php:972
+#: admin/class-protection-page.php:1010
 #, php-format
 msgid "%1$s · %2$d sensors"
 msgstr "%1$s · %2$d Sensoren"
 
-#: admin/class-protection-page.php:975
+#: admin/class-protection-page.php:1013
 msgid "report only"
 msgstr "nur melden"
 
 #. translators: %d: number of roles
-#: admin/class-protection-page.php:993
+#: admin/class-protection-page.php:1031
 #, php-format
 msgid "%d role enforced"
 msgid_plural "%d roles enforced"
@@ -4490,139 +4477,86 @@ msgstr[0] "%d Rolle verpflichtet"
 msgstr[1] "%d Rollen verpflichtet"
 
 #. translators: %d: days
-#: admin/class-protection-page.php:996
+#: admin/class-protection-page.php:1034
 #, php-format
 msgid "%d days"
 msgstr "%d Tage"
 
-#: admin/class-protection-page.php:1002
+#: admin/class-protection-page.php:1040
 msgid "badge on"
 msgstr "Badge an"
 
-#: admin/class-protection-page.php:1002
+#: admin/class-protection-page.php:1040
 msgid "badge off"
 msgstr "Badge aus"
 
 #. translators: %d: number of triggers
-#: admin/class-protection-page.php:1023
+#: admin/class-protection-page.php:1061
 #, php-format
 msgid "%d triggers"
 msgstr "%d Auslöser"
 
-#: admin/class-protection-page.php:1038
+#: admin/class-protection-page.php:1169
 msgid "on"
 msgstr "an"
 
-#: admin/class-protection-page.php:1089
+#: admin/class-protection-page.php:1199
 msgid "Relaxed"
 msgstr "Locker"
 
-#: admin/class-protection-page.php:1090
+#: admin/class-protection-page.php:1200
 msgid "Balanced"
 msgstr "Ausgewogen"
 
-#: admin/class-protection-page.php:1091
+#: admin/class-protection-page.php:1201
 msgid "Strict"
 msgstr "Streng"
 
-#: admin/class-protection-page.php:1092
+#: admin/class-protection-page.php:1202
 msgid "Paranoid"
 msgstr "Paranoid"
 
-#: admin/class-protection-page.php:1093
-#: admin/class-protection-page.php:1249
-#: admin/class-protection-page.php:1256
+#: admin/class-protection-page.php:1203
+#: admin/class-protection-page.php:1515
+#: admin/class-protection-page.php:1522
 msgid "Custom"
 msgstr "Angepasst"
 
-#: admin/class-protection-page.php:1134
+#: admin/class-protection-page.php:1244
 msgid "Expert mode"
 msgstr "Expertenmodus"
 
-#: admin/class-protection-page.php:1140
+#: admin/class-protection-page.php:1250
 msgid "Apply"
 msgstr "Anwenden"
 
-#: admin/class-protection-page.php:1164
-msgid "Every setting, grouped by area"
-msgstr "Jede Einstellung, nach Bereich gruppiert"
-
-#: admin/class-protection-page.php:1164
-msgid "The settings that matter day to day; everything else runs on the recommendation"
-msgstr "Die Einstellungen, die im Alltag zählen; alles andere läuft mit der Empfehlung"
-
-#: admin/class-protection-page.php:1169
+#: admin/class-protection-page.php:1369
 msgid "Search settings, e.g. Tor, HSTS, retention"
 msgstr "Einstellungen suchen, z. B. Tor, HSTS, Aufbewahrung"
 
-#: admin/class-protection-page.php:1170
+#: admin/class-protection-page.php:1370
 msgid "No setting matches."
 msgstr "Keine Einstellung passt."
 
 #. translators: %d: number of changed settings
-#: admin/class-protection-page.php:1177
+#: admin/class-protection-page.php:1397
 #, php-format
 msgid "%d setting saved."
 msgid_plural "%d settings saved."
 msgstr[0] "%d Einstellung gespeichert."
 msgstr[1] "%d Einstellungen gespeichert."
 
-#. translators: %d: number of rejected settings
-#: admin/class-protection-page.php:1180
-#, php-format
-msgid "%d field was not saved, see the card."
-msgid_plural "%d fields were not saved, see the card."
-msgstr[0] "%d Feld wurde nicht gespeichert, siehe Karte."
-msgstr[1] "%d Felder wurden nicht gespeichert, siehe Karte."
-
-#: admin/class-protection-page.php:1197
-msgid "Runs on the recommendation. Switch to expert mode to change the details."
-msgstr "Läuft mit der Empfehlung. Wechseln Sie in den Expertenmodus, um die Details zu ändern."
-
-#: admin/class-protection-page.php:1245
+#: admin/class-protection-page.php:1511
 msgid "protection level preset relaxed balanced strict paranoid"
 msgstr "schutzstufe voreinstellung locker ausgewogen streng paranoid"
 
-#: admin/class-protection-page.php:1247
+#: admin/class-protection-page.php:1513
 msgid "Protection level"
 msgstr "Schutzstufe"
 
-#: admin/class-protection-page.php:1258
+#: admin/class-protection-page.php:1524
 msgid "Sets the failed-login threshold and window, the block duration and the community protection level in one go. Choose Custom to edit them one by one."
 msgstr "Setzt Schwelle und Zeitfenster für fehlgeschlagene Anmeldungen, die Sperrdauer und die Community-Schutzstufe in einem Schritt. Wählen Sie Angepasst, um die Werte einzeln zu bearbeiten."
-
-#: admin/class-protection-page.php:1292
-msgid "Show these"
-msgstr "Anzeigen"
-
-#: admin/class-protection-page.php:1305
-msgid "Manage rules and exceptions"
-msgstr "Regeln und Ausnahmen verwalten"
-
-#: admin/class-protection-page.php:1306
-#: admin/class-protection-page.php:1307
-msgid "Server setup"
-msgstr "Server einrichten"
-
-#: admin/class-protection-page.php:1308
-msgid "Export and reset"
-msgstr "Exportieren und zurücksetzen"
-
-#: admin/class-protection-page.php:1309
-msgid "Send a test mail"
-msgstr "Test-Mail senden"
-
-#: admin/class-protection-page.php:1310
-msgid "Cache and queue tools"
-msgstr "Cache- und Queue-Werkzeuge"
-
-#: admin/class-protection-page.php:1311
-msgid "Hardening status"
-msgstr "Hardening-Status"
-
-#: admin/class-protection-page.php:1338
-msgid "Unknown section."
-msgstr "Unbekannter Bereich."
 
 #: admin/class-quickstart.php:209
 msgid "Brute-force protection with automatic blocking (Balanced level)"
@@ -7597,19 +7531,19 @@ msgstr "%s (Schwelle erreicht)"
 msgid "Too many requests. Please try again in a moment."
 msgstr "Zu viele Anfragen. Bitte versuchen Sie es gleich noch einmal."
 
-#: includes/class-form-proof.php:756
+#: includes/class-form-proof.php:800
 msgid "Leave this field empty"
 msgstr "Dieses Feld leer lassen"
 
-#: includes/class-form-proof.php:1174
+#: includes/class-form-proof.php:1225
 msgid "This form needs JavaScript to be submitted. Switch it on and try again."
 msgstr "Dieses Formular braucht JavaScript. Bitte einschalten und noch einmal versuchen."
 
-#: includes/class-form-proof.php:1177
+#: includes/class-form-proof.php:1228
 msgid "Your submission was not accepted. Please reload the page and try again."
 msgstr "Ihre Eingabe wurde nicht angenommen. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 
-#: includes/class-form-proof.php:1284
+#: includes/class-form-proof.php:1335
 msgid "This form needs JavaScript to be submitted. Switch it on and try again. If you cannot, ask another administrator to reset your password, or use WP-CLI on the server."
 msgstr "Dieses Formular braucht JavaScript. Bitte einschalten und noch einmal versuchen. Falls das nicht geht, kann ein anderer Administrator das Passwort zurücksetzen oder es lässt sich per WP-CLI auf dem Server ändern."
 
@@ -8690,6 +8624,7 @@ msgstr "Sperren & Eskalation"
 msgid "Automatic blocking, durations and the escalation ladder."
 msgstr "Automatische Sperren, Sperrdauern und die Eskalationsleiter."
 
+#: admin/class-protection-page.php:155
 #: includes/class-settings-registry.php:67
 msgid "Firewall & Bots"
 msgstr "Firewall & Bots"
@@ -12516,7 +12451,7 @@ msgstr "Wöchentliche Aktualisierung mit Contributor, tägliche ab Professional"
 msgid "The reportedip.com API endpoint URL."
 msgstr "Die URL des reportedip.com-API-Endpunkts."
 
-#: admin/class-protection-page.php:1138
+#: admin/class-protection-page.php:1248
 msgid "Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows only the day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only."
 msgstr "Der Expertenmodus zeigt jede Einstellung auf der Schutz-Seite und blendet die Werkzeuge-Seite ein. Der einfache Modus zeigt nur die Alltagseinstellungen; alles andere läuft mit der Empfehlung. Der Schalter gilt nur für Ihr Konto."
 
@@ -12535,3 +12470,105 @@ msgstr "Wie scharf die Regeln ausgelegt werden. Stufe 1 ist die fehlalarmarme Ba
 #: includes/class-settings-registry.php:1484
 msgid "Record the browser identification with each security event and audit trail entry. Useful for telling a bot from a customer, and it is personal data."
 msgstr "Zeichnet die Browser-Kennung zu jedem Sicherheitsereignis und jedem Eintrag im Audit-Trail auf. Nützlich, um einen Bot von einem Kunden zu unterscheiden, und es sind personenbezogene Daten."
+
+#: admin/class-protection-page.php:143
+msgid "Core protection"
+msgstr "Grundschutz"
+
+#: admin/class-protection-page.php:146
+msgid "Recommended: keep the defaults on. Change a threshold only when a sign-in or a block does not behave as expected."
+msgstr "Empfehlung: Lassen Sie die Standards aktiv. Ändern Sie eine Schwelle nur, wenn sich eine Anmeldung oder eine Sperre nicht wie erwartet verhält."
+
+#: admin/class-protection-page.php:149
+msgid "Forms"
+msgstr "Formulare"
+
+#: admin/class-protection-page.php:152
+msgid "Recommended: keep the defaults on. Changes are only needed when a form does not work as expected."
+msgstr "Empfehlung: Lassen Sie die Standards aktiv. Änderungen sind nur nötig, wenn ein Formular nicht wie erwartet funktioniert."
+
+#: admin/class-protection-page.php:158
+msgid "Recommended: keep the firewall on. Add an exception on the Tools page before switching a rule off."
+msgstr "Empfehlung: Lassen Sie die Firewall an. Legen Sie auf der Werkzeuge-Seite eine Ausnahme an, bevor Sie eine Regel abschalten."
+
+#: admin/class-protection-page.php:164
+msgid "These settings only matter during a coordinated attack or for a second factor asked again. The recommendation covers both."
+msgstr "Diese Einstellungen greifen nur bei einem koordinierten Angriff oder wenn der zweite Faktor erneut verlangt wird. Die Empfehlung deckt beides ab."
+
+#: admin/class-protection-page.php:167
+msgid "Operations"
+msgstr "Betrieb"
+
+#: admin/class-protection-page.php:170
+msgid "Logs, mails and the footprint per request. None of it decides what is blocked."
+msgstr "Protokolle, Mails und der Aufwand je Anfrage. Nichts davon entscheidet, was gesperrt wird."
+
+#. translators: %s: plan name, for example Professional
+#: admin/class-protection-page.php:513
+#, php-format
+msgid "%s feature"
+msgstr "%s-Funktion"
+
+#. translators: 1: sections switched on, 2: sections counted
+#: admin/class-protection-page.php:1153
+#, php-format
+msgid "%1$d of %2$d active"
+msgstr "%1$d von %2$d aktiv"
+
+#: admin/class-protection-page.php:1321
+msgid "Show technical details"
+msgstr "Technische Details anzeigen"
+
+#: admin/class-protection-page.php:1363
+msgid "Every setting, grouped by area; the technical details fold away"
+msgstr "Alle Einstellungen nach Bereich, die technischen Details klappen weg"
+
+#. translators: 1: issues that need attention, 2: advisory hints
+#: admin/class-protection-page.php:1377
+#, php-format
+msgid "Check done: %1$d issues need attention, %2$d hints are open."
+msgstr "Prüfung abgeschlossen: %1$d Punkte brauchen Aufmerksamkeit, %2$d Hinweise sind offen."
+
+#: admin/class-protection-page.php:1381
+msgid "See the next steps on the dashboard."
+msgstr "Die nächsten Schritte stehen auf dem Dashboard."
+
+#. translators: %d: number of rejected settings
+#: admin/class-protection-page.php:1391
+#, php-format
+msgid "%d field was not saved, see the marked field."
+msgid_plural "%d fields were not saved, see the marked fields."
+msgstr[0] "%d Feld wurde nicht gespeichert, siehe das markierte Feld."
+msgstr[1] "%d Felder wurden nicht gespeichert, siehe die markierten Felder."
+
+#. translators: %d: number of changed settings
+#: admin/class-protection-page.php:1394
+#, php-format
+msgid "%d setting set back to the recommendation."
+msgid_plural "%d settings set back to the recommendation."
+msgstr[0] "%d Einstellung auf die Empfehlung zurückgesetzt."
+msgstr[1] "%d Einstellungen auf die Empfehlung zurückgesetzt."
+
+#: admin/class-protection-page.php:1431
+msgid "Set every setting of this tab back to the recommendation for your plan?"
+msgstr "Alle Einstellungen dieses Reiters auf die Empfehlung für Ihren Tarif zurücksetzen?"
+
+#: admin/class-protection-page.php:1431
+msgid "Restore defaults"
+msgstr "Standard wiederherstellen"
+
+#: admin/class-protection-page.php:1432
+msgid "Save changes"
+msgstr "Änderungen speichern"
+
+#: admin/class-protection-page.php:1465
+msgid "Check protection"
+msgstr "Schutz prüfen"
+
+#: admin/class-protection-page.php:1466
+msgid "Runs the setup check again and reports what still needs attention."
+msgstr "Prüft die Einrichtung erneut und meldet, was noch offen ist."
+
+#: admin/class-protection-page.php:1549
+msgid "Unknown tab."
+msgstr "Unbekannter Reiter."
