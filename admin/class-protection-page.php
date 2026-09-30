@@ -1460,9 +1460,10 @@ class ReportedIP_Hive_Protection_Page {
 	}
 
 	/**
-	 * admin-post handler: save one section through the apply service.
+	 * admin-post handler: save or reset one tab through the apply service.
 	 *
-	 * See {@see writable_values()} for which posted keys are written.
+	 * See {@see writable_values()} for which posted keys are written and
+	 * {@see reset_values()} for what a reset writes.
 	 *
 	 * @return void
 	 */
@@ -1471,23 +1472,29 @@ class ReportedIP_Hive_Protection_Page {
 			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( self::NONCE );
-		$post    = wp_unslash( $_POST ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- every value passes the registry sanitizer in Settings_Apply
-		$section = isset( $post['rip_section'] ) ? sanitize_key( $post['rip_section'] ) : '';
-		if ( ! isset( ReportedIP_Hive_Settings_Registry::sections()[ $section ] ) ) {
-			wp_die( esc_html__( 'Unknown section.', 'reportedip-hive' ), '', array( 'response' => 400 ) );
+		$post = wp_unslash( $_POST ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- every value passes the registry sanitizer in Settings_Apply
+		$tab  = isset( $post['rip_tab'] ) ? sanitize_key( $post['rip_tab'] ) : '';
+		$tabs = self::tabs();
+		if ( ! isset( $tabs[ $tab ] ) ) {
+			wp_die( esc_html__( 'Unknown tab.', 'reportedip-hive' ), '', array( 'response' => 400 ) );
 		}
-		$values       = self::collect_values( (array) $post, $section );
-		$visible      = self::visible_keys( $section, self::is_expert() );
-		$spec         = ReportedIP_Hive_Settings_Registry::spec();
-		$current      = ReportedIP_Hive_Settings_Registry::current_values();
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
-		$statuses     = array();
-		foreach ( array_keys( $values ) as $key ) {
-			if ( isset( $spec[ $key ] ) ) {
-				$statuses[ $key ] = self::field_status( $spec[ $key ], $key, $current[ $key ] ?? '', $mode_manager );
+		$current      = ReportedIP_Hive_Settings_Registry::current_values();
+		$statuses     = self::field_statuses( $current, $mode_manager );
+		$reset        = ! empty( $post['rip_reset'] );
+		$values       = array();
+
+		if ( $reset ) {
+			$tier   = (string) ( $mode_manager->get_tier_info()['key'] ?? 'free' );
+			$values = self::reset_values( $tab, $tier, (string) $mode_manager->get_mode() );
+			$values = self::writable_values( $values, array_keys( $values ), $statuses );
+		} else {
+			foreach ( $tabs[ $tab ]['sections'] as $section ) {
+				$all     = self::visible_keys( $section, true, array() );
+				$values += self::writable_values( self::collect_values( (array) $post, $section ), $all, $statuses );
 			}
 		}
-		$values = self::writable_values( $values, $visible, $statuses );
+
 		$result = ReportedIP_Hive_Settings_Apply::apply( $values, 'admin' );
 		$errors = array();
 		foreach ( $result['results'] as $key => $row ) {
@@ -1498,13 +1505,19 @@ class ReportedIP_Hive_Protection_Page {
 		set_transient(
 			self::RESULT_TRANSIENT . get_current_user_id(),
 			array(
-				'section' => $section,
+				'tab'     => $tab,
 				'applied' => (int) $result['applied'],
 				'errors'  => $errors,
+				'reset'   => $reset,
 			),
 			60
 		);
-		wp_safe_redirect( ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) . '#' . $section );
+		$url = add_query_arg( self::TAB_PARAM, $tab, ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+		if ( array() !== $errors ) {
+			$spec = ReportedIP_Hive_Settings_Registry::spec();
+			$url .= '#' . (string) ( $spec[ array_key_first( $errors ) ]['section'] ?? $tab );
+		}
+		wp_safe_redirect( $url );
 		exit;
 	}
 
