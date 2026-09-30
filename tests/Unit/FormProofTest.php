@@ -559,5 +559,25 @@ namespace ReportedIP\Hive\Tests\Unit {
 				\ReportedIP_Hive_Form_Proof::grace_elapsed( 1000, 1000 + \ReportedIP_Hive_Form_Proof::ADAPTER_GRACE_MAX, PHP_INT_MAX )
 			);
 		}
+
+		/** The attacker of 2026-09-30: a headless browser whose user agent arrives in quotes. */
+		public function test_a_quoted_user_agent_is_forged(): void {
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::forged_agent( '"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/142.0.0.0 Safari/537.36"' ) );
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::forged_agent( " 'Mozilla/5.0'" ) );
+		}
+
+		public function test_an_ordinary_user_agent_is_not_forged(): void {
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::forged_agent( 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like "Gecko")' ) );
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::forged_agent( '' ) );
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::forged_agent( array( '"x' ) ) );
+		}
+
+		/** Every release reopened the plain marker for a day; only the protocol change may. */
+		public function test_only_an_update_across_the_protocol_restarts_the_grace(): void {
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::restamp_needed( '' ) );
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::restamp_needed( '2.1.63' ) );
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::restamp_needed( \ReportedIP_Hive_Form_Proof::CHALLENGE_PROTOCOL ) );
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::restamp_needed( '2.1.67' ) );
+		}
 	}
 }

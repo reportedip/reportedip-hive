@@ -166,6 +166,15 @@ class ReportedIP_Hive_Form_Proof {
 	const OPT_POW_VERSION = 'reportedip_hive_form_proof_pow_version';
 
 	/**
+	 * First version whose markup and script speak the current challenge
+	 * protocol. Only an update across this line restarts the grace: a page
+	 * cached by 2.1.64 or later loads today's script and fetches a task like
+	 * any fresh page, so a grace on every release would only reopen the plain
+	 * marker for a day each time.
+	 */
+	const CHALLENGE_PROTOCOL = '2.1.64';
+
+	/**
 	 * Grace after switching the computation on, during which a page served
 	 * from a cache filled beforehand still passes on the plain marker.
 	 */
@@ -282,13 +291,14 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
-	 * Restart the grace when the plugin version changes while the computation
-	 * is on.
+	 * Restart the grace when an update crosses the challenge protocol while
+	 * the computation is on.
 	 *
-	 * A page cache filled by the previous version still carries the previous
-	 * markup, and a browser reading it must not be refused for the lifetime
-	 * of that cache. The marker keeps passing for a day, the cache is purged,
-	 * and no visitor loses a message over an update.
+	 * A page cache filled before the protocol still carries markup the current
+	 * script cannot answer, and a browser reading it must not be refused for
+	 * the lifetime of that cache. The marker keeps passing for a day, the
+	 * cache is purged, and no visitor loses a message over an update. Any
+	 * other update only records the version.
 	 *
 	 * @since 2.1.64
 	 */
@@ -304,8 +314,42 @@ class ReportedIP_Hive_Form_Proof {
 		}
 
 		ReportedIP_Hive_Option_Routing::set( self::OPT_POW_VERSION, REPORTEDIP_HIVE_VERSION );
+
+		if ( ! self::restamp_needed( $seen ) ) {
+			return;
+		}
+
 		ReportedIP_Hive_Option_Routing::set( self::OPT_POW_SINCE, time() );
 		self::purge_pages();
+	}
+
+	/**
+	 * Whether an update from a recorded version needs a fresh grace. Pure.
+	 *
+	 * @param string $seen Version the computation was last armed for, empty
+	 *                     when none was recorded.
+	 * @return bool
+	 * @since  2.1.69
+	 */
+	public static function restamp_needed( $seen ) {
+		$seen = (string) $seen;
+
+		return '' === $seen || version_compare( $seen, self::CHALLENGE_PROTOCOL, '<' );
+	}
+
+	/**
+	 * Whether a user agent was forged by a script. Pure.
+	 *
+	 * No browser sends its user agent wrapped in quotes. A headless client
+	 * whose configuration quotes the string does, and it solves the challenge
+	 * like a real browser, so this is the one trace it leaves on the form.
+	 *
+	 * @param mixed $agent Raw User-Agent header.
+	 * @return bool
+	 * @since  2.1.69
+	 */
+	public static function forged_agent( $agent ) {
+		return is_string( $agent ) && 1 === preg_match( '/^\s*["\']/', $agent );
 	}
 
 	/**
@@ -1003,6 +1047,13 @@ class ReportedIP_Hive_Form_Proof {
 
 		if ( ! $this->surface_enabled( $surface ) ) {
 			return self::ABSENT;
+		}
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only matched against a pattern, never stored or printed.
+		if ( self::forged_agent( isset( $_SERVER['HTTP_USER_AGENT'] ) ? wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) : '' ) ) {
+			$this->reason = 'forged_agent';
+
+			return self::TRIPPED;
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reads two decoy fields, not state; each form carries its own nonce.

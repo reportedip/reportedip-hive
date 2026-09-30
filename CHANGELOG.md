@@ -2,6 +2,24 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Security
+
+- **An update no longer reopens the plain form marker for a day.** Every
+  version change restarted the 24-hour grace of the form computation, so
+  after each release a script that ran the page script but never fetched a
+  task got through every protected form. The grace now restarts only when
+  an update crosses the challenge protocol introduced in 2.1.64; a page
+  cached by a later version loads the current script and fetches a task
+  like any fresh page.
+- **A user agent wrapped in quotes counts as a certain bot.** No browser
+  sends one, but a headless client with a broken configuration does, and it
+  solves the form challenge like a real browser. On every protected form the
+  submission now reads as a filled decoy: it is refused, logged with reason
+  `forged_agent`, blocked and reported at once. The new baseline rule
+  `waf_ua_quoted` stops the same client at both firewall layers.
+
 ## [2.1.68] (2026-09-29)
 
 ### Security

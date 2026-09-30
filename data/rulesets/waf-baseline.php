@@ -155,6 +155,14 @@ return array(
 			'target'   => 'ua',
 		),
 		array(
+			'id'       => 'waf_ua_quoted',
+			'group'    => 'scanner_ua',
+			'pattern'  => '^\s*["\x27]',
+			'paranoia' => 1,
+			'severity' => 'medium',
+			'target'   => 'ua',
+		),
+		array(
 			'id'       => 'waf_rest_batch_desync',
 			'group'    => 'rest_abuse',
 			'pattern'  => '(?i)"path"\s*:\s*"(?:/{2,}(?![a-z0-9])|[a-z][a-z0-9+.\-]*:/{2,}(?:[:/?#]|"))',

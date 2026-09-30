@@ -260,7 +260,7 @@ test.describe('bound form challenge', () => {
 	/** First law: an update must not refuse readers of a cache filled before it. */
 	test('a version change restarts the grace so a cached page keeps working', async ({ request }) => {
 		php(`
-			ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_version', 'older');
+			ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_version', '2.1.63');
 			ReportedIP_Hive_Form_Proof::get_instance()->restamp_after_update();
 		`);
 
