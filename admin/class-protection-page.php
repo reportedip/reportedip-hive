@@ -910,6 +910,53 @@ class ReportedIP_Hive_Protection_Page {
 	}
 
 	/**
+	 * The recommendation for the keys of one tab.
+	 *
+	 * Pure. Keys the recommendation does not name are absent, so a reset
+	 * leaves them where they are.
+	 *
+	 * @param string $tab  Tab slug.
+	 * @param string $tier Tier slug.
+	 * @param string $mode `community` or `local`.
+	 * @return array<string,mixed>
+	 * @since  2.1.69
+	 */
+	public static function reset_values( $tab, $tier, $mode ) {
+		$keys = array();
+		foreach ( self::tabs()[ $tab ]['sections'] ?? array() as $section ) {
+			$keys = array_merge( $keys, self::visible_keys( $section, true, array() ) );
+		}
+		return array_intersect_key( ReportedIP_Hive_Defaults::recommended( (string) $tier, (string) $mode ), array_flip( $keys ) );
+	}
+
+	/**
+	 * Lock status of every registry key for the current values.
+	 *
+	 * A plan lock additionally carries `plan_label` (the plan's display
+	 * name) and `plan_url` (the pricing page with the feature key as the
+	 * fragment), so {@see field_markup()} can draw the plan row without
+	 * reaching for the mode manager itself.
+	 *
+	 * @param array<string,mixed>          $current      Current values.
+	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Mode manager.
+	 * @return array<string,array<string,mixed>>
+	 * @since  2.1.69
+	 */
+	public static function field_statuses( array $current, $mode_manager ) {
+		$statuses = array();
+		foreach ( ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
+			$status = self::field_status( $entry, $key, $current[ $key ] ?? '', $mode_manager );
+			if ( empty( $status['available'] ) && 'tier' === (string) ( $status['reason'] ?? '' ) && ! empty( $status['min_tier'] ) ) {
+				$feature              = (string) ( $entry['tier'] ?? ( $entry['ui_lock'] ?? '' ) );
+				$status['plan_label'] = (string) $mode_manager->get_tier_info( (string) $status['min_tier'] )['label'];
+				$status['plan_url']   = ReportedIP_Hive_Admin_Settings::pricing_url() . ( '' !== $feature ? '#' . rawurlencode( $feature ) : '' );
+			}
+			$statuses[ $key ] = $status;
+		}
+		return $statuses;
+	}
+
+	/**
 	 * Human label for an enum value.
 	 *
 	 * @param string $value Allowed value.
