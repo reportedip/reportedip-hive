@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.68
+Stable tag: 2.1.69
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -470,6 +470,12 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.69 =
+Changed: the Protection page is five tabs (Core protection, Forms, Firewall & Bots, Advanced, Operations) over the fifteen areas. A switch is one row with a plain sentence and its state, a switch outside the plan shows the plan and a link instead of a greyed-out toggle, and the expert settings of every area fold away behind "Show technical details". One "Save changes" and one "Restore defaults" per tab, a "Check protection" button next to the status banner, and every link into the page still lands on its area.
+Security: a user agent wrapped in quotes counts as a certain bot on every protected form; a plugin update no longer reopens the plain form marker for a day.
+Fixed: switching Hide Login on together with its slug no longer fails silently (values are written before switches on every channel); saving the Protection page in the Network Admin lands back in the Network Admin instead of a "not allowed" page; the Adaptive Step-Up area no longer reports "0 triggers" with roles stored; the three step-up intervals are locked with the policies they belong to.
+Changed: the German translation addresses the operator formally throughout.
 
 = 2.1.68 =
 Security: the bundled offline ruleset now blocks error-based SQL injection (EXTRACTVALUE, UPDATEXML) and second-order SQL injection through the trackback body, so a site in Local Shield mode or without Rule Sync is covered as well.
