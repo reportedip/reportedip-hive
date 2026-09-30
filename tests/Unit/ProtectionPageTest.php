@@ -731,5 +731,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 				}
 			}
 		}
+
+		public function test_the_details_summary_hides_the_native_marker_and_turns_the_chevron(): void {
+			$css = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/design-system.css' );
+			$this->assertMatchesRegularExpression( '/\.rip-protection__details > summary \{[^}]*list-style: none;/s', $css );
+			$this->assertStringContainsString( '.rip-protection__details > summary::-webkit-details-marker', $css );
+			$this->assertStringContainsString( '.rip-protection__details[open] > summary .rip-protection__chevron', $css );
+			$this->assertStringNotContainsString( '.rip-protection__hint', $css, 'the stand-ins are gone' );
+		}
 	}
 }
