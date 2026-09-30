@@ -131,7 +131,7 @@ msgstr "Regel-ID"
 
 #: admin/class-admin-firewall.php:250
 msgid "The exact rule that fired. You will find it in the firewall log as <code>Rule:</code> (Security &rarr; Activity &rarr; WAF Block). Easiest of all: click the shield \"Allow\" button on the blocked event there and this is filled in for you."
-msgstr "Die genaue Regel, die ausgelöst hat. Du findest sie im Firewall-Protokoll als <code>Rule:</code> (Sicherheit &rarr; Aktivität &rarr; WAF-Block). Am einfachsten: Klicke dort beim blockierten Ereignis den Schild-Button „Erlauben\", dann wird dies für dich ausgefüllt."
+msgstr "Die genaue Regel, die ausgelöst hat. Sie finden sie im Firewall-Protokoll als <code>Rule:</code> (Sicherheit &rarr; Aktivität &rarr; WAF-Block). Am einfachsten: Klicken Sie dort beim blockierten Ereignis den Schild-Button „Erlauben\", dann wird dies für Sie ausgefüllt."
 
 #: admin/class-admin-firewall.php:252
 msgid "Rule group"
@@ -143,7 +143,7 @@ msgstr "Nimmt alle Regeln dieser Kategorie auf einmal aus, im Protokoll als „G
 
 #: admin/class-admin-firewall.php:260
 msgid "No rule needed, the WAF skips the path and/or IP below entirely. Use this only for a first-party endpoint you fully trust (e.g. your own API that receives attack samples). A path or IP is required."
-msgstr "Keine Regel nötig, die WAF überspringt den unten angegebenen Pfad und/oder die IP vollständig. Nutze das nur für einen First-Party-Endpunkt, dem du voll vertraust (z. B. deine eigene API, die Angriffs-Beispiele empfängt). Ein Pfad oder eine IP ist erforderlich."
+msgstr "Keine Regel nötig, die WAF überspringt den unten angegebenen Pfad und/oder die IP vollständig. Nutzen Sie das nur für einen First-Party-Endpunkt, dem Sie voll vertrauen (z. B. Ihre eigene API, die Angriffs-Beispiele empfängt). Ein Pfad oder eine IP ist erforderlich."
 
 #: admin/class-admin-firewall.php:262
 msgid "Path prefix"
@@ -176,7 +176,7 @@ msgstr "z. B. Report-Ingest-Endpunkt"
 
 #: admin/class-admin-firewall.php:272
 msgid "Optional. Shown in the list below so you remember later why this exception exists."
-msgstr "Optional. Wird in der Liste unten angezeigt, damit du später weißt, warum diese Ausnahme existiert."
+msgstr "Optional. Wird in der Liste unten angezeigt, damit Sie später wissen, warum diese Ausnahme existiert."
 
 #: admin/class-admin-firewall.php:274
 msgid "Add exception"
@@ -192,7 +192,7 @@ msgstr "Wofür ist das, und brauche ich es?"
 
 #: admin/class-admin-firewall.php:291
 msgid "The WAF matches every front-end request against attack signatures (SQL injection, XSS, and so on). Occasionally a legitimate request looks like an attack, for example an API endpoint that receives reported attack samples, or a form that contains code. The rule fires even though nothing malicious is happening: a false positive. An exception tells the WAF to let that specific case through. Most sites never need one, only add an exception when you have confirmed a real false positive in the log."
-msgstr "Die WAF prüft jede Frontend-Anfrage gegen Angriffssignaturen (SQL-Injection, XSS und so weiter). Gelegentlich sieht eine legitime Anfrage wie ein Angriff aus, etwa ein API-Endpunkt, der gemeldete Angriffs-Beispiele empfängt, oder ein Formular mit Code-Inhalt. Die Regel schlägt an, obwohl nichts Bösartiges passiert: ein Fehlalarm. Eine Ausnahme weist die WAF an, genau diesen Fall durchzulassen. Die meisten Seiten brauchen keine, lege eine Ausnahme nur an, wenn du im Protokoll einen echten Fehlalarm bestätigt hast."
+msgstr "Die WAF prüft jede Frontend-Anfrage gegen Angriffssignaturen (SQL-Injection, XSS und so weiter). Gelegentlich sieht eine legitime Anfrage wie ein Angriff aus, etwa ein API-Endpunkt, der gemeldete Angriffs-Beispiele empfängt, oder ein Formular mit Code-Inhalt. Die Regel schlägt an, obwohl nichts Bösartiges passiert: ein Fehlalarm. Eine Ausnahme weist die WAF an, genau diesen Fall durchzulassen. Die meisten Seiten brauchen keine, legen Sie eine Ausnahme nur an, wenn Sie im Protokoll einen echten Fehlalarm bestätigt haben."
 
 #: admin/class-admin-firewall.php:293
 msgid "Where do I get the Rule ID or group? I do not know what to type."
@@ -200,7 +200,7 @@ msgstr "Woher bekomme ich die Regel-ID oder Gruppe? Ich weiß nicht, was ich ein
 
 #: admin/class-admin-firewall.php:295
 msgid "You normally do not type it at all. Every block is recorded under <strong>Security &rarr; Activity &rarr; WAF Block</strong>, and each entry names the rule that fired (<code>Rule: waf_sqli_union</code>) and its category (<code>Group: sql_injection</code>). The quickest path is the shield <strong>\"Allow\"</strong> button on that log row: it creates a single-rule exception for exactly that rule and path in one click, so you never have to know rule IDs. The form above is only for adding one by hand, copy the value after <code>Rule:</code> into the Rule ID field, or pick the category in the Rule group dropdown."
-msgstr "Normalerweise musst du sie gar nicht eingeben. Jede Blockierung wird unter <strong>Sicherheit &rarr; Aktivität &rarr; WAF-Block</strong> protokolliert, und jeder Eintrag nennt die ausgelöste Regel (<code>Rule: waf_sqli_union</code>) und ihre Kategorie (<code>Group: sql_injection</code>). Am schnellsten geht es über den Schild-Button <strong>„Erlauben\"</strong> in dieser Log-Zeile: Er legt mit einem Klick eine Einzelregel-Ausnahme für genau diese Regel und diesen Pfad an, sodass du nie Regel-IDs kennen musst. Das Formular oben dient nur dem manuellen Anlegen, kopiere den Wert hinter <code>Rule:</code> in das Feld Regel-ID oder wähle die Kategorie im Dropdown Regelgruppe."
+msgstr "Normalerweise müssen Sie sie gar nicht eingeben. Jede Blockierung wird unter <strong>Sicherheit &rarr; Aktivität &rarr; WAF-Block</strong> protokolliert, und jeder Eintrag nennt die ausgelöste Regel (<code>Rule: waf_sqli_union</code>) und ihre Kategorie (<code>Group: sql_injection</code>). Am schnellsten geht es über den Schild-Button <strong>„Erlauben\"</strong> in dieser Log-Zeile: Er legt mit einem Klick eine Einzelregel-Ausnahme für genau diese Regel und diesen Pfad an, sodass Sie nie Regel-IDs kennen müssen. Das Formular oben dient nur dem manuellen Anlegen, kopieren Sie den Wert hinter <code>Rule:</code> in das Feld Regel-ID oder wählen Sie die Kategorie im Dropdown Regelgruppe."
 
 #: admin/class-admin-firewall.php:302
 msgid "Which scope should I choose: rule, group or whole engine?"
@@ -208,7 +208,7 @@ msgstr "Welchen Geltungsbereich soll ich wählen, Regel, Gruppe oder gesamte Eng
 
 #: admin/class-admin-firewall.php:303
 msgid "Single rule is the narrowest and the right default: it exempts exactly one rule, optionally only on one path. Rule group exempts a whole category (every XSS rule, say), broader, only when several related rules keep misfiring. Whole engine skips all inspection and is reserved for a first-party endpoint you fully trust; it always requires a path or IP, so protection is never switched off everywhere by accident. Rule of thumb: pick the smallest scope that stops the false positive."
-msgstr "Einzelne Regel ist am engsten und der richtige Standard: Sie nimmt genau eine Regel aus, optional nur auf einem Pfad. Regelgruppe nimmt eine ganze Kategorie aus (z. B. jede XSS-Regel), breiter, nur wenn mehrere verwandte Regeln immer wieder fälschlich anschlagen. Gesamte Engine überspringt jede Prüfung und ist einem First-Party-Endpunkt vorbehalten, dem du voll vertraust; sie erfordert immer einen Pfad oder eine IP, damit der Schutz nie versehentlich überall abgeschaltet wird. Faustregel: Wähle den kleinsten Geltungsbereich, der den Fehlalarm stoppt."
+msgstr "Einzelne Regel ist am engsten und der richtige Standard: Sie nimmt genau eine Regel aus, optional nur auf einem Pfad. Regelgruppe nimmt eine ganze Kategorie aus (z. B. jede XSS-Regel), breiter, nur wenn mehrere verwandte Regeln immer wieder fälschlich anschlagen. Gesamte Engine überspringt jede Prüfung und ist einem First-Party-Endpunkt vorbehalten, dem Sie voll vertrauen; sie erfordert immer einen Pfad oder eine IP, damit der Schutz nie versehentlich überall abgeschaltet wird. Faustregel: Wählen Sie den kleinsten Geltungsbereich, der den Fehlalarm stoppt."
 
 #: admin/class-admin-firewall.php:305
 msgid "How do the path and IP fields work?"
@@ -216,7 +216,7 @@ msgstr "Wie funktionieren die Felder Pfad und IP?"
 
 #: admin/class-admin-firewall.php:306
 msgid "Both are optional narrowing filters. Path prefix limits the exception to URLs that start with the value you enter (for example /wp-json/my-api/v1, matching every route below it). IP or CIDR limits it to one client address or range. Leave them empty and a single-rule or group exception applies site-wide; set them to make it as tight as possible. For a whole-engine exception at least one of the two is mandatory."
-msgstr "Beide sind optionale Eingrenzungsfilter. Pfad-Präfix beschränkt die Ausnahme auf URLs, die mit dem eingegebenen Wert beginnen (z. B. /wp-json/my-api/v1, passend auf jede darunterliegende Route). IP oder CIDR beschränkt sie auf eine Client-Adresse oder einen Bereich. Lässt du sie leer, gilt eine Einzelregel- oder Gruppen-Ausnahme site-weit; setzt du sie, wird sie so eng wie möglich. Für eine Ausnahme der gesamten Engine ist mindestens eines der beiden Pflicht."
+msgstr "Beide sind optionale Eingrenzungsfilter. Pfad-Präfix beschränkt die Ausnahme auf URLs, die mit dem eingegebenen Wert beginnen (z. B. /wp-json/my-api/v1, passend auf jede darunterliegende Route). IP oder CIDR beschränkt sie auf eine Client-Adresse oder einen Bereich. Lassen Sie sie leer, gilt eine Einzelregel- oder Gruppen-Ausnahme site-weit; setzen Sie sie, wird sie so eng wie möglich. Für eine Ausnahme der gesamten Engine ist mindestens eines der beiden Pflicht."
 
 #: admin/class-admin-firewall.php:308
 msgid "Does this weaken my security, and does it apply to Extended Protection?"
@@ -322,7 +322,7 @@ msgstr "Setup vollständig, der Guard wurde für genau diese Anfrage ausgeführt
 #: admin/class-admin-firewall.php:426
 #, php-format
 msgid "The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes, reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead."
-msgstr "Die Direktive wurde automatisch geschrieben. PHP-FPM cacht die .user.ini bis zu fünf Minuten, lade die Seite gleich neu. Falls der Status nie auf „Läuft\" springt (häufig bei nginx + PHP-FPM), enthält der %1$sServer-Setup-Tab%2$s eine manuelle nginx-/php.ini-Option, die du stattdessen anwenden kannst."
+msgstr "Die Direktive wurde automatisch geschrieben. PHP-FPM cacht die .user.ini bis zu fünf Minuten, laden Sie die Seite gleich neu. Falls der Status nie auf „Läuft\" springt (häufig bei nginx + PHP-FPM), enthält der %1$sServer-Setup-Tab%2$s eine manuelle nginx-/php.ini-Option, die Sie stattdessen anwenden können."
 
 #. translators: 1: opening link tag to the Server Setup tab, 2: closing tag.
 #: admin/class-admin-firewall.php:435
@@ -3370,37 +3370,37 @@ msgstr "Fügen Sie ihn in einen Beitrag, eine Seite, ein Widget oder ein Templat
 
 #: admin/class-admin-settings.php:6950
 msgid "You are part of the hive"
-msgstr "Du bist Teil der Hive"
+msgstr "Sie sind Teil der Hive"
 
 #: admin/class-admin-settings.php:6953
 msgid "ReportedIP works like a swarm: every site that shares the threats it sees, and links back to the network, makes all of us faster at spotting the next attack. Two things take a minute and help everyone, share your blocks and set a footer badge."
-msgstr "ReportedIP funktioniert wie ein Schwarm: Jede Site, die die erkannten Bedrohungen teilt und auf das Netzwerk zurückverlinkt, macht uns alle schneller darin, den nächsten Angriff zu erkennen. Zwei Dinge dauern nur eine Minute und helfen allen, teile deine Blockierungen und setze ein Footer-Badge."
+msgstr "ReportedIP funktioniert wie ein Schwarm: Jede Site, die die erkannten Bedrohungen teilt und auf das Netzwerk zurückverlinkt, macht uns alle schneller darin, den nächsten Angriff zu erkennen. Zwei Dinge dauern nur eine Minute und helfen allen, teilen Sie Ihre Blockierungen und setzen Sie ein Footer-Badge."
 
 #. translators: %s: formatted number of threats this site has shared.
 #: admin/class-admin-settings.php:6961
 #, php-format
 msgid "So far your site has shared <strong>%s threats</strong> with the community. Thank you."
-msgstr "Bisher hat deine Site <strong>%s Bedrohungen</strong> mit der Community geteilt. Danke."
+msgstr "Bisher hat Ihre Site <strong>%s Bedrohungen</strong> mit der Community geteilt. Danke."
 
 #: admin/class-admin-settings.php:6997
 msgid "Set your badge, in one click"
-msgstr "Setze dein Badge, mit einem Klick"
+msgstr "Setzen Sie Ihr Badge, mit einem Klick"
 
 #: admin/class-admin-settings.php:7006
 msgid "Saved. Thank you for backing the hive."
-msgstr "Gespeichert. Danke, dass du die Hive unterstützt."
+msgstr "Gespeichert. Danke, dass Sie die Hive unterstützen."
 
 #: admin/class-admin-settings.php:7014
 msgid "Your badge is live."
-msgstr "Dein Badge ist aktiv."
+msgstr "Ihr Badge ist aktiv."
 
 #: admin/class-admin-settings.php:7015
 msgid "Your site now links back to the network and shows as a community member. You can change the look below."
-msgstr "Deine Site verlinkt jetzt zurück auf das Netzwerk und erscheint als Community-Mitglied. Das Aussehen kannst du unten ändern."
+msgstr "Ihre Site verlinkt jetzt zurück auf das Netzwerk und erscheint als Community-Mitglied. Das Aussehen können Sie unten ändern."
 
 #: admin/class-admin-settings.php:7020
 msgid "Show a small \"Protected by ReportedIP Hive\" badge in your footer. It is the quickest way to support the community, and it puts your site on the map."
-msgstr "Zeige ein kleines „Protected by ReportedIP Hive“-Badge in deinem Footer. Es ist der schnellste Weg, die Community zu unterstützen, und bringt deine Site auf die Landkarte."
+msgstr "Zeigen Sie ein kleines „Protected by ReportedIP Hive“-Badge in Ihrem Footer. Es ist der schnellste Weg, die Community zu unterstützen, und bringt Ihre Site auf die Landkarte."
 
 #: admin/class-admin-settings.php:7023
 msgid "Strengthens the network, more links mean more sites discover the shared protection."
@@ -3408,11 +3408,11 @@ msgstr "Stärkt das Netzwerk, mehr Links bedeuten, dass mehr Sites den gemeinsam
 
 #: admin/class-admin-settings.php:7024
 msgid "Makes your site visible as an active contributor, not just a consumer."
-msgstr "Macht deine Site als aktiven Mitwirkenden sichtbar, nicht nur als Nutzer."
+msgstr "Macht Ihre Site als aktiven Mitwirkenden sichtbar, nicht nur als Nutzer."
 
 #: admin/class-admin-settings.php:7025
 msgid "Clean, real HTML link inside Shadow DOM, search engines credit your site and your theme cannot override the design."
-msgstr "Sauberer, echter HTML-Link im Shadow DOM, Suchmaschinen rechnen ihn deiner Site an und dein Theme kann das Design nicht überschreiben."
+msgstr "Sauberer, echter HTML-Link im Shadow DOM, Suchmaschinen rechnen ihn Ihrer Site an und Ihr Theme kann das Design nicht überschreiben."
 
 #: admin/class-admin-settings.php:7043
 msgid "Live preview, updates as you change the variant and position below."
@@ -3492,7 +3492,7 @@ msgstr "Mehr erfahren"
 
 #: admin/class-admin-settings.php:7174
 msgid "Your contribution & activity"
-msgstr "Dein Beitrag & deine Aktivität"
+msgstr "Ihr Beitrag & Ihre Aktivität"
 
 #: admin/class-admin-settings.php:7214
 msgid "Last 30 days"
@@ -8735,7 +8735,7 @@ msgstr "Vertrauenswürdige Proxy-Bereiche"
 
 #: includes/class-settings-registry.php:143
 msgid "Addresses or CIDR ranges of your proxies, one per line. The header above is only believed when the request really comes from one of them. An empty list trusts every peer, which is the old behaviour."
-msgstr "Adressen oder CIDR-Bereiche deiner Proxys, einer pro Zeile. Dem Header oben wird nur geglaubt, wenn die Anfrage wirklich von einem davon kommt. Eine leere Liste vertraut jedem Gegenüber, das ist das alte Verhalten."
+msgstr "Adressen oder CIDR-Bereiche Ihrer Proxys, einer pro Zeile. Dem Header oben wird nur geglaubt, wenn die Anfrage wirklich von einem davon kommt. Eine leere Liste vertraut jedem Gegenüber, das ist das alte Verhalten."
 
 #: includes/class-settings-registry.php:149
 msgid "Monitor failed logins"
@@ -8831,7 +8831,7 @@ msgstr "Benutzer-Enumeration blockieren"
 
 #: includes/class-settings-registry.php:239
 msgid "Stop the routes that hand out a list of your usernames, such as author archives, the users REST route and oEmbed lookups. Knowing the names is half of a password attack."
-msgstr "Schließt die Wege, über die WordPress deine Benutzernamen herausgibt, etwa Autoren-Archive, die Users-REST-Route und oEmbed-Abfragen. Wer die Namen kennt, hat die halbe Arbeit eines Passwort-Angriffs schon hinter sich."
+msgstr "Schließt die Wege, über die WordPress Ihre Benutzernamen herausgibt, etwa Autoren-Archive, die Users-REST-Route und oEmbed-Abfragen. Wer die Namen kennt, hat die halbe Arbeit eines Passwort-Angriffs schon hinter sich."
 
 #: includes/class-settings-registry.php:245
 msgid "Monitor 404 scans"
@@ -8887,7 +8887,7 @@ msgstr "Anwendungspasswörter nur für Konten mit 2FA"
 
 #: includes/class-settings-registry.php:296
 msgid "Only let accounts that have a second factor create application passwords. Without this, an application password is a way around your 2FA policy."
-msgstr "Nur Konten mit zweitem Faktor dürfen Anwendungspasswörter anlegen. Ohne diese Einstellung ist ein Anwendungspasswort ein Weg an deiner 2FA-Pflicht vorbei."
+msgstr "Nur Konten mit zweitem Faktor dürfen Anwendungspasswörter anlegen. Ohne diese Einstellung ist ein Anwendungspasswort ein Weg an Ihrer 2FA-Pflicht vorbei."
 
 #: includes/class-settings-registry.php:304
 msgid "REST burst threshold"
@@ -8943,7 +8943,7 @@ msgstr "Autoren-Archive erreichbar lassen"
 
 #: includes/class-settings-registry.php:357
 msgid "Keep /author/name pages reachable even while enumeration blocking is on. Turn this on only if your theme really uses them, because those pages hand out login names."
-msgstr "Lässt die Seiten unter /author/name erreichbar, auch wenn die Ausspäh-Sperre aktiv ist. Nur einschalten, wenn dein Theme sie wirklich nutzt, denn diese Seiten geben Anmeldenamen preis."
+msgstr "Lässt die Seiten unter /author/name erreichbar, auch wenn die Ausspäh-Sperre aktiv ist. Nur einschalten, wenn Ihr Theme sie wirklich nutzt, denn diese Seiten geben Anmeldenamen preis."
 
 #: includes/class-settings-registry.php:363
 msgid "Monitor country and network changes on login"
@@ -9007,7 +9007,7 @@ msgstr "Bestätigte Crawler vom Auto-Block ausnehmen"
 
 #: includes/class-settings-registry.php:419
 msgid "Never auto-block a crawler whose identity was confirmed by reverse DNS. This protects your search ranking, and a crawler that cannot be confirmed is not exempt."
-msgstr "Sperrt niemals automatisch einen Crawler, dessen Identität per Reverse-DNS bestätigt wurde. Das schützt dein Suchmaschinen-Ranking. Ein Crawler, der sich nicht bestätigen lässt, ist nicht ausgenommen."
+msgstr "Sperrt niemals automatisch einen Crawler, dessen Identität per Reverse-DNS bestätigt wurde. Das schützt Ihr Suchmaschinen-Ranking. Ein Crawler, der sich nicht bestätigen lässt, ist nicht ausgenommen."
 
 #: includes/class-settings-registry.php:427
 msgid "Hardening realtime detection"
@@ -9127,11 +9127,11 @@ msgstr "Nur-Melden-Modus"
 
 #: includes/class-settings-registry.php:558
 msgid "Record every decision without acting on any of it. Use this to see what the settings would do before letting them do it."
-msgstr "Zeichnet jede Entscheidung auf, ohne eine davon auszuführen. Damit siehst du, was die Einstellungen tun würden, bevor du sie tun lässt."
+msgstr "Zeichnet jede Entscheidung auf, ohne eine davon auszuführen. Damit sehen Sie, was die Einstellungen tun würden, bevor Sie sie tun lassen."
 
 #: includes/class-settings-registry.php:566
 msgid "Refuse addresses on the signed Tor exit-node list. Anonymity is not an attack in itself, so this is off unless your site has a reason."
-msgstr "Weist Adressen von der signierten Tor-Exit-Node-Liste ab. Anonymität ist für sich genommen kein Angriff, deshalb ist das aus, solange deine Seite keinen Grund dafür hat."
+msgstr "Weist Adressen von der signierten Tor-Exit-Node-Liste ab. Anonymität ist für sich genommen kein Angriff, deshalb ist das aus, solange Ihre Seite keinen Grund dafür hat."
 
 #: includes/class-settings-registry.php:572
 msgid "Contact URL on the block page"
@@ -9139,7 +9139,7 @@ msgstr "Kontakt-URL auf der Sperrseite"
 
 #: includes/class-settings-registry.php:573
 msgid "Where a wrongly blocked visitor can reach you. Without it the block page is a dead end for a customer."
-msgstr "Wo dich ein zu Unrecht gesperrter Besucher erreichen kann. Ohne diese Angabe ist die Sperrseite für einen Kunden eine Sackgasse."
+msgstr "Wo ein zu Unrecht gesperrter Besucher Sie erreichen kann. Ohne diese Angabe ist die Sperrseite für einen Kunden eine Sackgasse."
 
 #: includes/class-settings-registry.php:581
 msgid "Firewall enabled"
@@ -9147,7 +9147,7 @@ msgstr "Firewall aktiviert"
 
 #: includes/class-settings-registry.php:582
 msgid "Inspect every front-end request against attack signatures before it reaches your site."
-msgstr "Prüft jede Frontend-Anfrage gegen Angriffssignaturen, bevor sie deine Seite erreicht."
+msgstr "Prüft jede Frontend-Anfrage gegen Angriffssignaturen, bevor sie Ihre Seite erreicht."
 
 #: includes/class-settings-registry.php:588
 msgid "Firewall report-only"
@@ -9211,7 +9211,7 @@ msgstr "Adressen von Privacy-Relays sperren"
 
 #: includes/class-settings-registry.php:656
 msgid "Also reject forwarding services such as Apple and Firefox Relay. These are used by ordinary customers too, so weigh this against your sign-up numbers."
-msgstr "Weist auch Weiterleitungsdienste wie Apple und Firefox Relay ab. Die benutzen auch ganz normale Kunden, also wäge das gegen deine Anmeldezahlen ab."
+msgstr "Weist auch Weiterleitungsdienste wie Apple und Firefox Relay ab. Die benutzen auch ganz normale Kunden, also wägen Sie das gegen Ihre Anmeldezahlen ab."
 
 #: includes/class-settings-registry.php:666
 msgid "Prohibited usernames"
@@ -9411,7 +9411,7 @@ msgstr "Login-Slug"
 
 #: includes/class-settings-registry.php:879
 msgid "The path your sign-in page lives at. Note it somewhere before saving, because the old address stops working immediately."
-msgstr "Der Pfad, unter dem deine Anmeldeseite liegt. Vor dem Speichern notieren, denn die alte Adresse funktioniert sofort nicht mehr."
+msgstr "Der Pfad, unter dem Ihre Anmeldeseite liegt. Vor dem Speichern notieren, denn die alte Adresse funktioniert sofort nicht mehr."
 
 #: includes/class-settings-registry.php:886
 msgid "Response on the default login URL"
@@ -9459,7 +9459,7 @@ msgstr "Zugriff auf die REST API"
 
 #: includes/class-settings-registry.php:928
 msgid "Who may use the REST API. Many plugins and the block editor depend on it, so try a restriction before you rely on it."
-msgstr "Wer die REST-API benutzen darf. Viele Plugins und der Block-Editor hängen daran, also probiere eine Einschränkung aus, bevor du dich darauf verlässt."
+msgstr "Wer die REST-API benutzen darf. Viele Plugins und der Block-Editor hängen daran, also probieren Sie eine Einschränkung aus, bevor Sie sich darauf verlassen."
 
 #: includes/class-settings-registry.php:934
 msgid "REST namespaces always allowed"
@@ -9483,7 +9483,7 @@ msgstr "XML-RPC abschalten"
 
 #: includes/class-settings-registry.php:953
 msgid "Switch off xmlrpc.php and pingbacks completely. Most sites never use it; the Jetpack app and some publishing tools do. If you need XML-RPC, leave this off and use the multicall switch below instead."
-msgstr "Schaltet xmlrpc.php und Pingbacks vollständig ab. Die meisten Seiten benutzen das nie, die Jetpack-App und einige Publishing-Werkzeuge schon. Wenn du XML-RPC brauchst, lass das aus und nimm stattdessen den Multicall-Schalter darunter."
+msgstr "Schaltet xmlrpc.php und Pingbacks vollständig ab. Die meisten Seiten benutzen das nie, die Jetpack-App und einige Publishing-Werkzeuge schon. Wenn Sie XML-RPC brauchen, lassen Sie das aus und nehmen Sie stattdessen den Multicall-Schalter darunter."
 
 #: includes/class-settings-registry.php:959
 msgid "Disable RSS and Atom feeds"
@@ -9491,7 +9491,7 @@ msgstr "RSS- und Atom-Feeds abschalten"
 
 #: includes/class-settings-registry.php:960
 msgid "Return a 404 for RSS and Atom feeds. Turn this on only if nothing subscribes to your site."
-msgstr "Liefert für RSS- und Atom-Feeds einen 404. Nur einschalten, wenn niemand deine Seite abonniert hat."
+msgstr "Liefert für RSS- und Atom-Feeds einen 404. Nur einschalten, wenn niemand Ihre Seite abonniert hat."
 
 #: includes/class-settings-registry.php:966
 msgid "Close wp-admin for visitors"
@@ -9515,7 +9515,7 @@ msgstr "Software-Fingerabdrücke verbergen"
 
 #: includes/class-settings-registry.php:981
 msgid "Remove the version numbers WordPress prints into your pages. It does not fix anything, it just stops handing a scanner the list of what to try."
-msgstr "Entfernt die Versionsnummern, die WordPress in deine Seiten schreibt. Das behebt nichts, es hört nur auf, einem Scanner die Liste zu liefern, was er probieren soll."
+msgstr "Entfernt die Versionsnummern, die WordPress in Ihre Seiten schreibt. Das behebt nichts, es hört nur auf, einem Scanner die Liste zu liefern, was er probieren soll."
 
 #: includes/class-settings-registry.php:987
 msgid "Send security headers"
@@ -9523,7 +9523,7 @@ msgstr "Security-Header senden"
 
 #: includes/class-settings-registry.php:988
 msgid "Send hardening response headers on every front-end request. A header your server already sets is left alone."
-msgstr "Sendet Hardening-Antwort-Header bei jeder Frontend-Anfrage. Ein Header, den dein Server schon setzt, bleibt unangetastet."
+msgstr "Sendet Hardening-Antwort-Header bei jeder Frontend-Anfrage. Ein Header, den Ihr Server schon setzt, bleibt unangetastet."
 
 #: includes/class-settings-registry.php:994
 msgid "X-Content-Type-Options"
@@ -9531,7 +9531,7 @@ msgstr "X-Content-Type-Options"
 
 #: includes/class-settings-registry.php:995
 msgid "Stop the browser from guessing a file type against what you declared, which is how an uploaded image gets treated as a script."
-msgstr "Hindert den Browser daran, einen Dateityp entgegen deiner Angabe zu erraten. Genau so wird aus einem hochgeladenen Bild ein ausgeführtes Skript."
+msgstr "Hindert den Browser daran, einen Dateityp entgegen Ihrer Angabe zu erraten. Genau so wird aus einem hochgeladenen Bild ein ausgeführtes Skript."
 
 #: includes/class-settings-registry.php:1003
 msgid "X-Frame-Options"
@@ -9539,7 +9539,7 @@ msgstr "X-Frame-Options"
 
 #: includes/class-settings-registry.php:1004
 msgid "Who may put your pages inside a frame. Same-origin is right for almost every site; deny breaks legitimate embeds."
-msgstr "Wer deine Seiten in einen Frame packen darf. Same-origin passt für fast jede Seite, deny bricht legitime Einbettungen."
+msgstr "Wer Ihre Seiten in einen Frame packen darf. Same-origin passt für fast jede Seite, deny bricht legitime Einbettungen."
 
 #: includes/class-settings-registry.php:1011
 msgid "Referrer-Policy"
@@ -9547,7 +9547,7 @@ msgstr "Referrer-Policy"
 
 #: includes/class-settings-registry.php:1012
 msgid "How much of the current address is passed on when a visitor follows a link away from your site."
-msgstr "Wie viel von der aktuellen Adresse weitergegeben wird, wenn ein Besucher einem Link von deiner Seite weg folgt."
+msgstr "Wie viel von der aktuellen Adresse weitergegeben wird, wenn ein Besucher einem Link von Ihrer Seite weg folgt."
 
 #: includes/class-settings-registry.php:1019
 msgid "HTTP Strict Transport Security"
@@ -9587,7 +9587,7 @@ msgstr "Permissions-Policy"
 
 #: includes/class-settings-registry.php:1055
 msgid "Which browser features your pages are allowed to use. The default switches off camera, microphone, location and payment, which almost no site needs."
-msgstr "Welche Browser-Funktionen deine Seiten benutzen dürfen. Die Voreinstellung schaltet Kamera, Mikrofon, Standort und Bezahlung ab, die fast keine Seite braucht."
+msgstr "Welche Browser-Funktionen Ihre Seiten benutzen dürfen. Die Voreinstellung schaltet Kamera, Mikrofon, Standort und Bezahlung ab, die fast keine Seite braucht."
 
 #: includes/class-settings-registry.php:1064
 msgid "Content-Security-Policy mode"
@@ -9603,7 +9603,7 @@ msgstr "Content-Security-Policy"
 
 #: includes/class-settings-registry.php:1073
 msgid "The policy itself. It decides which scripts, styles and frames may load, and it is the one header that will break your theme if it is wrong."
-msgstr "Die Richtlinie selbst. Sie entscheidet, welche Skripte, Styles und Frames geladen werden dürfen, und sie ist der eine Header, der dein Theme zerlegt, wenn er falsch ist."
+msgstr "Die Richtlinie selbst. Sie entscheidet, welche Skripte, Styles und Frames geladen werden dürfen, und sie ist der eine Header, der Ihr Theme zerlegt, wenn er falsch ist."
 
 #: includes/class-settings-registry.php:1080
 msgid "CSP report URI"
@@ -9611,7 +9611,7 @@ msgstr "CSP-Report-URI"
 
 #: includes/class-settings-registry.php:1081
 msgid "Where the browser sends policy violations while you are tuning the policy."
-msgstr "Wohin der Browser Verstöße meldet, während du die Richtlinie einstellst."
+msgstr "Wohin der Browser Verstöße meldet, während Sie die Richtlinie einstellen."
 
 #: includes/class-settings-registry.php:1090
 msgid "Cross-Origin-Opener-Policy"
@@ -9619,7 +9619,7 @@ msgstr "Cross-Origin-Opener-Policy"
 
 #: includes/class-settings-registry.php:1091
 msgid "Separate your pages from windows they opened, so a foreign page cannot reach back into yours."
-msgstr "Trennt deine Seiten von Fenstern, die sie geöffnet haben, damit eine fremde Seite nicht in deine zurückgreifen kann."
+msgstr "Trennt Ihre Seiten von Fenstern, die sie geöffnet haben, damit eine fremde Seite nicht in Ihre zurückgreifen kann."
 
 #: includes/class-settings-registry.php:1100
 msgid "Cross-Origin-Resource-Policy"
@@ -9627,7 +9627,7 @@ msgstr "Cross-Origin-Resource-Policy"
 
 #: includes/class-settings-registry.php:1101
 msgid "Who may embed your resources such as images and scripts."
-msgstr "Wer deine Ressourcen wie Bilder und Skripte einbetten darf."
+msgstr "Wer Ihre Ressourcen wie Bilder und Skripte einbetten darf."
 
 #: includes/class-settings-registry.php:1110
 msgid "Cross-Origin-Embedder-Policy"
@@ -9719,7 +9719,7 @@ msgstr "IP-Adressen ohne zweiten Faktor"
 
 #: includes/class-settings-registry.php:1202
 msgid "Addresses or ranges that skip the second factor, one per line. This is a way past your own 2FA policy, so keep it to networks you control."
-msgstr "Adressen oder Bereiche, die den zweiten Faktor überspringen, einer pro Zeile. Das ist ein Weg an deiner eigenen 2FA-Pflicht vorbei, also beschränke ihn auf Netze, die du kontrollierst."
+msgstr "Adressen oder Bereiche, die den zweiten Faktor überspringen, einer pro Zeile. Das ist ein Weg an Ihrer eigenen 2FA-Pflicht vorbei, also beschränken Sie ihn auf Netze, die Sie kontrollieren."
 
 #: includes/class-settings-registry.php:1208
 msgid "Brand the login challenge"
@@ -9783,7 +9783,7 @@ msgstr "Zweiter Faktor im Shop-Design"
 
 #: includes/class-settings-registry.php:1265
 msgid "Ask for the second factor inside your theme on My Account and at checkout, instead of sending customers to wp-login.php."
-msgstr "Fragt den zweiten Faktor innerhalb deines Themes unter Mein Konto und an der Kasse ab, statt Kunden zu wp-login.php zu schicken."
+msgstr "Fragt den zweiten Faktor innerhalb Ihres Themes unter Mein Konto und an der Kasse ab, statt Kunden zu wp-login.php zu schicken."
 
 #: includes/class-settings-registry.php:1272
 msgid "Send storefront users to themed onboarding"
@@ -10051,7 +10051,7 @@ msgstr "Community-Abfragen zwischenspeichern"
 
 #: includes/class-settings-registry.php:1567
 msgid "Remember community answers instead of asking again for the same address. This is what keeps the check off your response time."
-msgstr "Merkt sich Community-Antworten, statt für dieselbe Adresse erneut zu fragen. Genau das hält die Prüfung aus deiner Antwortzeit heraus."
+msgstr "Merkt sich Community-Antworten, statt für dieselbe Adresse erneut zu fragen. Genau das hält die Prüfung aus Ihrer Antwortzeit heraus."
 
 #: includes/class-settings-registry.php:1575
 msgid "Cache lifetime (hours)"
@@ -10075,7 +10075,7 @@ msgstr "Community-Abfragen pro Stunde (0 = kein lokales Limit)"
 
 #: includes/class-settings-registry.php:1594
 msgid "A local ceiling on community lookups per hour. Zero means only your plan quota applies."
-msgstr "Eine lokale Obergrenze für Community-Abfragen pro Stunde. Null bedeutet, dass nur dein Tarif-Kontingent gilt."
+msgstr "Eine lokale Obergrenze für Community-Abfragen pro Stunde. Null bedeutet, dass nur Ihr Tarif-Kontingent gilt."
 
 #: includes/class-settings-registry.php:1602
 msgid "Report cooldown per address (hours)"
@@ -10123,7 +10123,7 @@ msgstr "Schutz-Badge im Seitenfuß zeigen"
 
 #: includes/class-settings-registry.php:1647
 msgid "Show a small protection badge in your site footer."
-msgstr "Zeigt ein kleines Schutz-Badge im Fuß deiner Seite."
+msgstr "Zeigt ein kleines Schutz-Badge im Fuß Ihrer Seite."
 
 #: includes/class-settings-registry.php:1655
 msgid "Footer badge style"
@@ -10147,7 +10147,7 @@ msgstr "Benachrichtigungs-Einstellungen an den Community-Server senden"
 
 #: includes/class-settings-registry.php:1671
 msgid "Let the community server know your notification preferences, so it can reach you about your account."
-msgstr "Teilt dem Community-Server deine Benachrichtigungs-Einstellungen mit, damit er dich in Sachen Konto erreichen kann."
+msgstr "Teilt dem Community-Server Ihre Benachrichtigungs-Einstellungen mit, damit er Sie in Sachen Konto erreichen kann."
 
 #: includes/class-settings-registry.php:1679
 msgid "Per-event notification cap (minutes)"
@@ -10187,7 +10187,7 @@ msgstr "Absenderadresse"
 
 #: includes/class-settings-registry.php:1711
 msgid "The sender address. Use one at your own domain, otherwise the mails land in spam."
-msgstr "Die Absenderadresse. Nimm eine auf deiner eigenen Domain, sonst landen die Mails im Spam."
+msgstr "Die Absenderadresse. Nehmen Sie eine auf Ihrer eigenen Domain, sonst landen die Mails im Spam."
 
 #: includes/class-settings-registry.php:1719
 msgid "Notification cooldown (minutes)"
