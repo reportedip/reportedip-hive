@@ -1,7 +1,8 @@
 /**
  * Protection page: tab switching, hash handling, search across tabs, the
- * on/off text next to a switch, the preset coupling and two guards (an
- * invalid field inside a closed details block, the reset confirmation).
+ * on/off text next to a switch, a row that follows another switch
+ * (`data-depends`), the preset coupling and two guards (an invalid field
+ * inside a closed details block, the reset confirmation).
  * No server roundtrip; everything the filter needs is in `data-search`.
  *
  * @package   ReportedIP_Hive
@@ -93,6 +94,13 @@
 			section.querySelectorAll('.rip-protection__field').forEach(function (field) {
 				var match = !term || (field.dataset.search || '').indexOf(term) >= 0;
 				field.classList.toggle('rip-hidden', !match);
+				if (field.dataset.depends) {
+					if (term) {
+						field.classList.remove('rip-protection__field--off');
+					} else {
+						follow(field);
+					}
+				}
 				highlight(field, match && term ? term : '');
 				if (match) {
 					sectionHits += 1;
@@ -128,6 +136,13 @@
 		input.addEventListener('input', filter);
 	}
 
+	function follow(field) {
+		var master = root.querySelector('[name="' + field.dataset.depends + '"]');
+		field.classList.toggle('rip-protection__field--off', !!master && !master.checked);
+	}
+
+	root.querySelectorAll('.rip-protection__field[data-depends]').forEach(follow);
+
 	root.addEventListener('change', function (event) {
 		var box = event.target;
 		if (!box.classList || !box.classList.contains('rip-toggle__input')) {
@@ -138,6 +153,7 @@
 		if (state) {
 			state.textContent = box.checked ? state.dataset.on : state.dataset.off;
 		}
+		root.querySelectorAll('.rip-protection__field[data-depends="' + box.name + '"]').forEach(follow);
 	});
 
 	panels.forEach(function (panel) {

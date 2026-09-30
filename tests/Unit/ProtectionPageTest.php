@@ -705,8 +705,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'a simple key sits before the details'
 			);
 
+			$this->assertStringNotContainsString( 'rip-protection__desc', $closed, 'the registry description is expert text and stays out of the simple view' );
+
 			$open = ReportedIP_Hive_Protection_Page::section_markup( 'blocking', $current, $statuses, true, array(), array(), $choices );
 			$this->assertStringContainsString( '<details class="rip-protection__details" open>', $open );
+			$this->assertStringContainsString( '<span class="rip-protection__desc">Automatic blocking', $open );
+
+			$hide = ReportedIP_Hive_Protection_Page::section_markup( 'hide_login', $current, $statuses, false, array(), array(), $choices );
+			$this->assertStringContainsString( 'data-key="reportedip_hive_hide_login_slug" data-depends="reportedip_hive_hide_login_enabled"', $hide, 'the slug row follows the switch' );
+			$this->assertStringNotContainsString( 'data-key="reportedip_hive_hide_login_enabled" data-depends', $hide );
 
 			$headers = ReportedIP_Hive_Protection_Page::section_markup( 'headers', $current, $statuses, false, array(), array(), $choices );
 			$this->assertLessThan(

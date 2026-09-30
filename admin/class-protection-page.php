@@ -119,6 +119,21 @@ class ReportedIP_Hive_Protection_Page {
 	);
 
 	/**
+	 * Fields that only matter while another switch is on: key => switch.
+	 *
+	 * The row stays in the form (its value still round-trips), the script
+	 * only hides it while the switch is off and shows it the moment the
+	 * switch is flipped, so the operator who never touches Hide Login never
+	 * sees a slug field.
+	 *
+	 * @var array<string,string>
+	 * @since 2.1.69
+	 */
+	const DEPENDS = array(
+		'reportedip_hive_hide_login_slug' => 'reportedip_hive_hide_login_enabled',
+	);
+
+	/**
 	 * Query parameter that names the open tab.
 	 *
 	 * @var string
@@ -485,8 +500,10 @@ class ReportedIP_Hive_Protection_Page {
 			$desc = trim( $desc . ' ' . $note );
 		}
 
+		$depends = isset( self::DEPENDS[ $key ] ) ? ' data-depends="' . esc_attr( self::DEPENDS[ $key ] ) . '"' : '';
+
 		return sprintf(
-			'<div class="%1$s" data-search="%2$s" data-key="%3$s"><div class="rip-protection__field-head"><label class="rip-label" for="%4$s">%5$s</label>%6$s</div><div class="rip-protection__control">%7$s</div>%8$s</div>',
+			'<div class="%1$s" data-search="%2$s" data-key="%3$s"%9$s><div class="rip-protection__field-head"><label class="rip-label" for="%4$s">%5$s</label>%6$s</div><div class="rip-protection__control">%7$s</div>%8$s</div>',
 			esc_attr( $classes ),
 			esc_attr( $search ),
 			esc_attr( $key ),
@@ -494,7 +511,8 @@ class ReportedIP_Hive_Protection_Page {
 			esc_html( $label ),
 			$marker,
 			$control,
-			'' !== $desc ? '<p class="rip-help-text">' . esc_html( $desc ) . '</p>' : ''
+			'' !== $desc ? '<p class="rip-help-text">' . esc_html( $desc ) . '</p>' : '',
+			$depends
 		);
 	}
 
@@ -1261,6 +1279,9 @@ class ReportedIP_Hive_Protection_Page {
 	 *
 	 * Every key of the section is rendered, the day-to-day keys as rows
 	 * and the rest inside a `<details>` that starts open in expert mode.
+	 * The registry description of the section is written for the expert
+	 * and only shown there; the simple view keeps the head to the label
+	 * and the status.
 	 * A closed details block still posts its fields, so nothing here can
 	 * come back empty on the next save; a locked field is still dropped by
 	 * {@see writable_values()}.
@@ -1305,10 +1326,10 @@ class ReportedIP_Hive_Protection_Page {
 		};
 
 		$html = sprintf(
-			'<div class="rip-protection__section" id="%1$s"><div class="rip-protection__section-head"><span class="rip-protection__title">%2$s</span><span class="rip-protection__desc">%3$s</span><span class="rip-badge rip-badge--%4$s rip-protection__status">%5$s</span></div>',
+			'<div class="rip-protection__section" id="%1$s"><div class="rip-protection__section-head"><span class="rip-protection__title">%2$s</span>%3$s<span class="rip-badge rip-badge--%4$s rip-protection__status">%5$s</span></div>',
 			esc_attr( $section ),
 			esc_html( (string) ( $meta['label'] ?? $section ) ),
-			esc_html( (string) ( $meta['description'] ?? '' ) ),
+			$expert ? '<span class="rip-protection__desc">' . esc_html( (string) ( $meta['description'] ?? '' ) ) . '</span>' : '',
 			esc_attr( $state['tone'] ),
 			esc_html( $state['text'] )
 		);

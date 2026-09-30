@@ -1726,6 +1726,9 @@ button.rip-tier-lock--mode:hover {
     align-items: center;
     gap: var(--rip-space-3);
 }
+.rip-protection__field--off {
+    display: none;
+}
 .rip-protection__field--locked .rip-protection__control {
     opacity: 0.6;
 }
