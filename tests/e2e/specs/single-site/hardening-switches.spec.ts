@@ -300,20 +300,17 @@ test.describe('attack surface switches', () => {
 		wpEval('update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo "expert";');
 
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
-		await page.locator('#lockdown').evaluate((el) => {
-			(el as HTMLDetailsElement).open = true;
-		});
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=firewall');
 
-		const form = page.locator('#lockdown form');
+		const form = page.locator('.rip-protection__panel[data-tab="firewall"]');
 		await expect(form).toBeVisible();
 
 		await form.locator('select[name="reportedip_hive_rest_access_mode"]').selectOption('logged_in');
 		await form.locator('label.rip-toggle:has(input[name="reportedip_hive_disable_feeds"])').click();
 		await form.locator('label.rip-toggle:has(input[name="reportedip_hive_hide_software_info"])').click();
 
-		await form.locator('button[type="submit"]').click();
-		await expect(page.locator('.rip-alert--success')).toContainText('saved', { timeout: 200_000 });
+		await form.locator('button.rip-button--primary').click();
+		await expect(page.locator('.rip-alert--success').filter({ hasText: 'saved' })).toHaveCount(1, { timeout: 200_000 });
 
 		await expect(page.locator('#lockdown select[name="reportedip_hive_rest_access_mode"]')).toHaveValue('logged_in');
 		await expect(page.locator('#lockdown input[name="reportedip_hive_disable_feeds"][type="checkbox"]')).toBeChecked();
@@ -332,10 +329,7 @@ test.describe('attack surface switches', () => {
 	test('the lockdown card renders the attack-surface fields in expert mode', async ({ page }) => {
 		wpEval('update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo "expert";');
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
-		await page.locator('#lockdown').evaluate((el) => {
-			(el as HTMLDetailsElement).open = true;
-		});
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=firewall');
 
 		await expect(page.locator('#lockdown select[name="reportedip_hive_rest_access_mode"]')).toBeVisible();
 		await expect(page.locator('#lockdown textarea[name="reportedip_hive_rest_allowed_namespaces"]')).toBeVisible();
