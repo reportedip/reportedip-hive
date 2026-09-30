@@ -150,16 +150,14 @@ test.describe('registration rules', () => {
 		php('update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo "expert";');
 
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
-		await page.locator('#registration').evaluate((el) => {
-			(el as HTMLDetailsElement).open = true;
-		});
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=forms');
+		await page.locator('#registration .rip-protection__details').evaluate((el) => { (el as HTMLDetailsElement).open = true; });
 
 		const field = page.locator('#registration textarea[name="reportedip_hive_prohibited_usernames"]');
 		await expect(field).toBeVisible();
 		await field.fill(BLOCKED_LOGIN);
-		await page.locator('#registration form button[type="submit"]').click();
-		await page.waitForURL(/page=reportedip-hive-protection#registration/);
+		await page.locator('.rip-protection__panel[data-tab="forms"] button.rip-button--primary').click();
+		await page.waitForURL(/page=reportedip-hive-protection.*tab=forms/);
 
 		expect(wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames')).toBe(BLOCKED_LOGIN);
 
@@ -348,15 +346,13 @@ test.describe('registration rules', () => {
 		`);
 
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
-		await page.locator('#registration').evaluate((el) => {
-			(el as HTMLDetailsElement).open = true;
-		});
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=forms');
+		await page.locator('#registration .rip-protection__details').evaluate((el) => { (el as HTMLDetailsElement).open = true; });
 
 		const eleven = Array.from({ length: 11 }, (unused, index) => `e2ename${index + 1}`).join('\n');
 		await page.locator('#registration textarea[name="reportedip_hive_prohibited_usernames"]').fill(eleven);
-		await page.locator('#registration form button[type="submit"]').click();
-		await page.waitForURL(/page=reportedip-hive-protection#registration/);
+		await page.locator('.rip-protection__panel[data-tab="forms"] button.rip-button--primary').click();
+		await page.waitForURL(/page=reportedip-hive-protection.*tab=forms/);
 
 		// The refusal is reported at the card and the stored list stays.
 		await expect(page.locator('#registration .rip-protection__error[data-for="reportedip_hive_prohibited_usernames"]')).toContainText(/professional plan/i);
@@ -367,16 +363,14 @@ test.describe('registration rules', () => {
 		php(`${forceTierPhp('professional')} update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo 'pro';`);
 
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
-		await page.locator('#registration').evaluate((el) => {
-			(el as HTMLDetailsElement).open = true;
-		});
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=forms');
+		await page.locator('#registration .rip-protection__details').evaluate((el) => { (el as HTMLDetailsElement).open = true; });
 
 		const entries = Array.from({ length: 10 }, (unused, index) => `e2ename${index + 1}`);
 		entries.push(REGEX_ENTRY);
 		await page.locator('#registration textarea[name="reportedip_hive_prohibited_usernames"]').fill(entries.join('\n'));
-		await page.locator('#registration form button[type="submit"]').click();
-		await page.waitForURL(/page=reportedip-hive-protection#registration/);
+		await page.locator('.rip-protection__panel[data-tab="forms"] button.rip-button--primary').click();
+		await page.waitForURL(/page=reportedip-hive-protection.*tab=forms/);
 
 		const stored = wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames');
 		expect(
@@ -391,10 +385,8 @@ test.describe('registration rules', () => {
 	test('the other registration fields render in expert mode', async ({ page }) => {
 		php('update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo "expert";');
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
-		await page.locator('#registration').evaluate((el) => {
-			(el as HTMLDetailsElement).open = true;
-		});
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=forms');
+		await page.locator('#registration .rip-protection__details').evaluate((el) => { (el as HTMLDetailsElement).open = true; });
 
 		for (const name of [
 			'reportedip_hive_email_rules',

@@ -150,7 +150,7 @@ test.describe('adaptive 2fa policies', () => {
 
 	test('the policies card renders one role list per trigger', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=advanced');
 		await openPolicies(page);
 
 		const card = page.locator('#twofa_policies');
@@ -161,7 +161,7 @@ test.describe('adaptive 2fa policies', () => {
 
 	test('the administrator box stays disabled while the latch is closed', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=advanced');
 		await openPolicies(page);
 
 		await expect(page.locator(`#twofa_policies input[name="${POLICY_KEY}[]"][value="administrator"]`)).toBeDisabled();
@@ -170,12 +170,12 @@ test.describe('adaptive 2fa policies', () => {
 
 	test('ticking a role saves the policy list', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=advanced');
 		await openPolicies(page);
 
 		await page.locator(`#twofa_policies input[name="${POLICY_KEY}[]"][value="editor"]`).check();
-		await page.locator('#twofa_policies form button[type="submit"]').click();
-		await page.waitForURL(/page=reportedip-hive-protection#twofa_policies/);
+		await page.locator('.rip-protection__panel[data-tab="advanced"] button.rip-button--primary').click();
+		await page.waitForURL(/page=reportedip-hive-protection.*tab=advanced/);
 
 		await expect
 			.poll(() => wpTolerant('option', 'get', POLICY_KEY), { timeout: 30_000 })
@@ -190,7 +190,7 @@ test.describe('adaptive 2fa policies', () => {
 		]);
 
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=advanced');
 		await openPolicies(page);
 
 		const field = page.locator(`#twofa_policies .rip-protection__field[data-key="${POLICY_KEY}"]`);
@@ -198,8 +198,8 @@ test.describe('adaptive 2fa policies', () => {
 		await expect(field.locator('input[type="checkbox"]').first()).toBeDisabled();
 
 		// A locked list is not part of the POST; saving the card leaves it alone.
-		await page.locator('#twofa_policies form button[type="submit"]').click();
-		await page.waitForURL(/page=reportedip-hive-protection#twofa_policies/);
+		await page.locator('.rip-protection__panel[data-tab="advanced"] button.rip-button--primary').click();
+		await page.waitForURL(/page=reportedip-hive-protection.*tab=advanced/);
 		const stored = wpTolerant('option', 'get', POLICY_KEY);
 		expect(['', '[]']).toContain(stored);
 
@@ -211,21 +211,21 @@ test.describe('adaptive 2fa policies', () => {
 
 	test('the three interval fields save and survive a reload', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=advanced');
 		await openPolicies(page);
 
 		await page.fill('#rip-field-2fa_policy_days', '12');
 		await page.fill('#rip-field-2fa_policy_logins', '7');
 		await page.fill('#rip-field-2fa_policy_sessions', '5');
-		await page.locator('#twofa_policies form button[type="submit"]').click();
-		await page.waitForURL(/page=reportedip-hive-protection#twofa_policies/, { waitUntil: 'commit', timeout: 90_000 });
+		await page.locator('.rip-protection__panel[data-tab="advanced"] button.rip-button--primary').click();
+		await page.waitForURL(/page=reportedip-hive-protection.*tab=advanced/, { waitUntil: 'commit', timeout: 90_000 });
 
 		const stored = wpEval([
 			"echo 'VALUES|' . ReportedIP_Hive_Option_Routing::get('reportedip_hive_2fa_policy_days', '') . '|' . ReportedIP_Hive_Option_Routing::get('reportedip_hive_2fa_policy_logins', '') . '|' . ReportedIP_Hive_Option_Routing::get('reportedip_hive_2fa_policy_sessions', '');",
 		]);
 		expect(stored).toContain('VALUES|12|7|5');
 
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=advanced');
 		await openPolicies(page);
 		await expect(page.locator('#rip-field-2fa_policy_days')).toHaveValue('12');
 		await expect(page.locator('#rip-field-2fa_policy_logins')).toHaveValue('7');
