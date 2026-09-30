@@ -1498,8 +1498,28 @@ class ReportedIP_Hive_Protection_Page {
 			60
 		);
 		$tab = isset( $_POST['rip_tab'] ) ? self::active_tab( sanitize_key( wp_unslash( $_POST['rip_tab'] ) ) ) : '';
-		wp_safe_redirect( add_query_arg( self::TAB_PARAM, $tab, ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) ) );
+		wp_safe_redirect( add_query_arg( self::TAB_PARAM, $tab, self::back_url() ) );
 		exit;
+	}
+
+	/**
+	 * The page URL an admin-post handler sends the browser back to.
+	 *
+	 * admin-post.php has no network variant, so on Multisite the handler
+	 * runs outside the Network Admin and `get_admin_page_url()` would build
+	 * the site-admin address, which is not allowed there. The referer
+	 * carries the address the form was rendered on; it is used when it
+	 * points at this page and the plain admin URL is the fallback.
+	 *
+	 * @return string
+	 * @since  2.1.69
+	 */
+	private static function back_url() {
+		$referer = (string) wp_get_referer();
+		if ( '' !== $referer && false !== strpos( $referer, 'page=' . self::PAGE_SLUG ) ) {
+			return remove_query_arg( self::TAB_PARAM, $referer );
+		}
+		return ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG );
 	}
 
 	/**
@@ -1588,7 +1608,7 @@ class ReportedIP_Hive_Protection_Page {
 			),
 			60
 		);
-		$url = add_query_arg( self::TAB_PARAM, $tab, ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+		$url = add_query_arg( self::TAB_PARAM, $tab, self::back_url() );
 		if ( array() !== $errors ) {
 			$spec = ReportedIP_Hive_Settings_Registry::spec();
 			$url .= '#' . (string) ( $spec[ array_key_first( $errors ) ]['section'] ?? $tab );
