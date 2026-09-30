@@ -1267,7 +1267,7 @@ class ReportedIP_Hive_Protection_Page {
 			</label>
 			<span class="rip-expert-toggle__info" tabindex="0" aria-describedby="<?php echo esc_attr( self::INFO_ID ); ?>">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-				<span class="rip-tooltip" id="<?php echo esc_attr( self::INFO_ID ); ?>" role="tooltip"><?php esc_html_e( 'Expert mode shows every setting on the Protection page and lists the Tools page. Simple mode shows only the day-to-day settings; everything else runs on the recommendation. The switch is stored for your user only.', 'reportedip-hive' ); ?></span>
+				<span class="rip-tooltip" id="<?php echo esc_attr( self::INFO_ID ); ?>" role="tooltip"><?php esc_html_e( 'Expert mode opens the technical details of every area by default and lists the Tools page. Simple mode keeps them folded; what sits in them runs on the recommendation. The switch is stored for your user only.', 'reportedip-hive' ); ?></span>
 			</span>
 			<noscript><button type="submit" class="rip-button rip-button--ghost rip-button--sm"><?php esc_html_e( 'Apply', 'reportedip-hive' ); ?></button></noscript>
 		</form>

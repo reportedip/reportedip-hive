@@ -92,7 +92,7 @@ final class ReportedIP_Hive_Form_Adapters {
 	 *
 	 * One source, because three surfaces name these plugins to the operator:
 	 * the readiness advisory, the quickstart feature list and the hint that
-	 * explains why a setting is not in the simple view. A name that drifts
+	 * explains why a switch waits in the technical details. A name that drifts
 	 * apart between them reads as three different products.
 	 *
 	 * Product names, so they are deliberately not translated.
