@@ -73,7 +73,7 @@ test.describe('network registration rules', () => {
 
 	test('network admin sees the registration card', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/network/admin.php?page=reportedip-hive-protection');
+		await page.goto('/wp-admin/network/admin.php?page=reportedip-hive-protection&tab=forms');
 
 		await expect(page.locator('#registration')).toBeVisible();
 		await expect(page.locator('#registration .rip-protection__title')).toContainText('Registration');

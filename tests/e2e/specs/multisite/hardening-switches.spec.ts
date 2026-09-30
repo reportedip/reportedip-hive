@@ -134,7 +134,7 @@ test.describe('attack surface switches on a network', () => {
 
 	test('network admin sees the lockdown card', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/network/admin.php?page=reportedip-hive-protection');
+		await page.goto('/wp-admin/network/admin.php?page=reportedip-hive-protection&tab=firewall');
 
 		await expect(page.locator('#lockdown')).toBeVisible();
 		await expect(page.locator('#lockdown .rip-protection__status')).toBeVisible();
