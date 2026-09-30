@@ -117,12 +117,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertContains( 'reportedip_hive_auto_block', $all );
 		}
 
-		public function test_sections_without_a_simple_key_are_reported(): void {
-			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_is_expert_only( 'headers', array() ) );
-			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_is_expert_only( 'blocking', array() ) );
-			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_is_expert_only( 'forms', array() ), 'form protection carries its own day-to-day switches' );
-		}
-
 		/**
 		 * The one visibility rule, in every case it has to answer.
 		 */
@@ -150,73 +144,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'the plugin is here, so its switch is a day-to-day setting'
 			);
 			$this->assertTrue( ReportedIP_Hive_Protection_Page::is_visible( $formidable, true, array() ) );
-		}
-
-		public function test_an_adapter_switch_joins_the_simple_view_with_its_plugin(): void {
-			$without = ReportedIP_Hive_Protection_Page::visible_keys( 'forms', false, array() );
-			$this->assertContains( 'reportedip_hive_form_proof_enabled', $without );
-			$this->assertNotContains( 'reportedip_hive_form_proof_formidable', $without );
-			$this->assertContains( 'reportedip_hive_form_proof_formidable', ReportedIP_Hive_Protection_Page::expert_only_keys( 'forms', false, array() ) );
-
-			$with = ReportedIP_Hive_Protection_Page::visible_keys( 'forms', false, array( 'formidable' ) );
-			$this->assertContains( 'reportedip_hive_form_proof_formidable', $with );
-			$this->assertNotContains( 'reportedip_hive_form_proof_cf7', $with );
-			$this->assertNotContains( 'reportedip_hive_form_proof_formidable', ReportedIP_Hive_Protection_Page::expert_only_keys( 'forms', false, array( 'formidable' ) ) );
-		}
-
-		/**
-		 * The guard against silent data loss: the simple view draws a stand-in
-		 * for every expert setting so the search finds it, and that stand-in
-		 * must never carry anything a browser would post back. A control here
-		 * would reach `collect_values()` empty on the next save of the section
-		 * and overwrite the stored setting without a word.
-		 */
-		public function test_the_simple_view_never_renders_a_control_for_an_expert_setting(): void {
-			$spec    = \ReportedIP_Hive_Settings_Registry::spec();
-			$checked = 0;
-
-			foreach ( array_keys( \ReportedIP_Hive_Settings_Registry::sections() ) as $section ) {
-				$visible = ReportedIP_Hive_Protection_Page::visible_keys( $section, false, array() );
-				$held    = ReportedIP_Hive_Protection_Page::expert_only_keys( $section, false, array() );
-				$this->assertSame(
-					ReportedIP_Hive_Protection_Page::visible_keys( $section, true, array() ),
-					array_values( array_intersect( array_keys( $spec ), array_merge( $visible, $held ) ) ),
-					"Section {$section} loses a key between the two views."
-				);
-
-				foreach ( $held as $key ) {
-					$html = ReportedIP_Hive_Protection_Page::hint_markup( $key, $spec[ $key ], 'https://example.org/jump' );
-					$this->assertStringNotContainsString( 'name=', $html, "{$key} would be posted back from the simple view." );
-					$this->assertStringNotContainsString( '<input', $html, "{$key} renders an input in the simple view." );
-					$this->assertStringNotContainsString( '<select', $html, "{$key} renders a select in the simple view." );
-					$this->assertStringNotContainsString( '<textarea', $html, "{$key} renders a textarea in the simple view." );
-					$this->assertStringContainsString(
-						'data-search="' . htmlspecialchars( ReportedIP_Hive_Protection_Page::search_terms( $key, $spec[ $key ] ), ENT_QUOTES ) . '"',
-						$html,
-						"{$key} is not searchable in the simple view."
-					);
-					++$checked;
-				}
-			}
-
-			$this->assertGreaterThan( 50, $checked, 'the simple view holds back far more than fifty settings' );
-			$this->assertSame( array(), ReportedIP_Hive_Protection_Page::expert_only_keys( 'blocking', true, array() ), 'the expert view holds nothing back' );
-		}
-
-		public function test_expert_summary_names_a_few_settings_and_counts_the_rest(): void {
-			$this->assertSame( '', ReportedIP_Hive_Protection_Page::expert_summary( array() ) );
-			$this->assertSame(
-				'Expert mode adds Tor blocking, HSTS here.',
-				ReportedIP_Hive_Protection_Page::expert_summary( array( 'Tor blocking', 'HSTS' ) )
-			);
-			$this->assertSame(
-				'Expert mode adds A, B, C and 2 more settings here.',
-				ReportedIP_Hive_Protection_Page::expert_summary( array( 'A', 'B', 'C', 'D', 'E' ) )
-			);
-			$this->assertSame(
-				'Expert mode adds A, B, C and 1 more setting here.',
-				ReportedIP_Hive_Protection_Page::expert_summary( array( 'A', 'B', 'C', 'D' ) )
-			);
 		}
 
 		public function test_field_markup_carries_the_registry_name_and_the_lock(): void {
@@ -536,27 +463,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'on', ReportedIP_Hive_Protection_Page::section_status( 'waf', array( 'reportedip_hive_waf_enabled' => 1 ) ) );
 		}
 
-		public function test_the_section_head_carries_the_chevron_and_the_tinted_status(): void {
-			$html = ReportedIP_Hive_Protection_Page::summary_markup(
-				array(
-					'label'       => 'Firewall',
-					'description' => 'Request inspection.',
-				),
-				array(
-					'text' => 'off',
-					'tone' => 'danger',
-				)
-			);
-			$this->assertStringContainsString( 'class="rip-protection__chevron"', $html );
-			$this->assertStringContainsString( '<polyline points="6 9 12 15 18 9"/>', $html );
-			$this->assertStringContainsString( 'rip-badge--danger', $html );
-
-			$css = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/design-system.css' );
-			$this->assertMatchesRegularExpression( '/\.rip-protection__section > summary \{[^}]*list-style: none;/s', $css, 'the native marker is off' );
-			$this->assertStringContainsString( '.rip-protection__section > summary::-webkit-details-marker', $css );
-			$this->assertStringContainsString( '.rip-protection__section[open] > summary .rip-protection__chevron', $css, 'the chevron turns while the card is open' );
-		}
-
 		public function test_a_runtime_note_is_rendered_without_a_plan_marker(): void {
 			$html = ReportedIP_Hive_Protection_Page::field_markup(
 				'reportedip_hive_monitor_woocommerce',
@@ -757,6 +663,73 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'<span class="rip-protection__plan"><span class="rip-badge rip-badge--warning">Professional feature</span><a class="rip-button rip-button--secondary rip-button--sm" href="https://example.org/p#f" target="_blank" rel="noopener">Learn more</a></span>',
 				$html
 			);
+		}
+
+		/**
+		 * @return array{0:array<string,mixed>,1:array<string,array<string,mixed>>,2:array<string,array<string,string>>}
+		 */
+		private function section_fixture(): array {
+			$current  = \ReportedIP_Hive_Defaults::all_option_defaults();
+			$statuses = array();
+			$choices  = array();
+			foreach ( \ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
+				$statuses[ $key ] = array( 'available' => true );
+				if ( 'json_list' === $entry['kind'] ) {
+					$choices[ $key ] = array( 'x' => 'X' );
+				}
+			}
+			return array( $current, $statuses, $choices );
+		}
+
+		public function test_section_markup_puts_main_rows_first_and_the_rest_behind_details(): void {
+			list( $current, $statuses, $choices ) = $this->section_fixture();
+
+			$closed = ReportedIP_Hive_Protection_Page::section_markup( 'blocking', $current, $statuses, false, array(), array(), $choices );
+			$this->assertStringContainsString( 'id="blocking"', $closed );
+			$this->assertStringContainsString( 'class="rip-protection__section-head"', $closed );
+			$this->assertStringContainsString( 'rip-protection__status', $closed );
+			$this->assertStringContainsString( '<details class="rip-protection__details">', $closed );
+			$this->assertStringContainsString( 'Show technical details', $closed );
+			$this->assertLessThan(
+				strpos( $closed, 'name="reportedip_hive_block_ladder_minutes"' ),
+				strpos( $closed, '<details' ),
+				'an expert key sits inside the details'
+			);
+			$this->assertGreaterThan(
+				strpos( $closed, 'name="reportedip_hive_auto_block"' ),
+				strpos( $closed, '<details' ),
+				'a simple key sits before the details'
+			);
+
+			$open = ReportedIP_Hive_Protection_Page::section_markup( 'blocking', $current, $statuses, true, array(), array(), $choices );
+			$this->assertStringContainsString( '<details class="rip-protection__details" open>', $open );
+
+			$headers = ReportedIP_Hive_Protection_Page::section_markup( 'headers', $current, $statuses, false, array(), array(), $choices );
+			$this->assertLessThan(
+				strpos( $headers, 'name="reportedip_hive_' ),
+				strpos( $headers, '<details' ),
+				'a section without a main row is head plus details: every field sits inside the details'
+			);
+
+			$errors = ReportedIP_Hive_Protection_Page::section_markup( 'blocking', $current, $statuses, false, array(), array( 'reportedip_hive_block_duration' => 'Too long.' ), $choices );
+			$this->assertStringContainsString( 'data-for="reportedip_hive_block_duration">Too long.', $errors );
+
+			$detection = ReportedIP_Hive_Protection_Page::section_markup( 'detection', $current, $statuses, false, array(), array(), $choices );
+			$this->assertStringContainsString( 'name="rip_protection_level"', $detection );
+
+			$forms = ReportedIP_Hive_Protection_Page::section_markup( 'forms', $current, $statuses, false, array( 'cf7' ), array(), $choices );
+			$this->assertLessThan( strpos( $forms, '<details' ), strpos( $forms, 'name="reportedip_hive_form_proof_cf7"' ), 'a detected form plugin makes its switch a main row' );
+			$this->assertStringContainsString( 'Gravity Forms is not active on this site.', $forms, 'a missing form plugin is named in the details' );
+		}
+
+		public function test_section_markup_renders_every_key_of_the_section(): void {
+			list( $current, $statuses, $choices ) = $this->section_fixture();
+			foreach ( array_keys( \ReportedIP_Hive_Settings_Registry::sections() ) as $section ) {
+				$html = ReportedIP_Hive_Protection_Page::section_markup( $section, $current, $statuses, false, array(), array(), $choices );
+				foreach ( ReportedIP_Hive_Protection_Page::visible_keys( $section, true, array() ) as $key ) {
+					$this->assertStringContainsString( 'name="' . $key, $html, "{$section} does not render {$key}" );
+				}
+			}
 		}
 	}
 }
