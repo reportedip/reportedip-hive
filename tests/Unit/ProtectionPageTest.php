@@ -35,7 +35,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_collect_values_turns_the_post_of_one_section_into_registry_values(): void {
 			$post   = array(
-				'rip_section'                          => 'blocking',
 				'reportedip_hive_block_duration'       => '48',
 				'reportedip_hive_block_tor'            => '1',
 				'reportedip_hive_block_ladder_minutes' => '5, 15, 30',
@@ -47,11 +46,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( '0', $values['reportedip_hive_auto_block'], 'an unticked switch of the section is posted as 0' );
 			$this->assertSame( '0', $values['reportedip_hive_report_only_mode'] );
 			$this->assertArrayNotHasKey( 'reportedip_hive_waf_enabled', $values, 'keys of other sections are never touched' );
-			$this->assertArrayNotHasKey( 'rip_section', $values );
 		}
 
 		public function test_collect_values_posts_an_empty_list_for_an_unticked_checkbox_group(): void {
-			$values = ReportedIP_Hive_Protection_Page::collect_values( array( 'rip_section' => 'account_security' ), 'account_security' );
+			$values = ReportedIP_Hive_Protection_Page::collect_values( array(), 'account_security' );
 			$this->assertSame( array(), $values['reportedip_hive_2fa_enforce_roles'] );
 			$this->assertSame( '0', $values['reportedip_hive_2fa_enabled_global'] );
 		}
@@ -59,7 +57,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_collect_values_expands_the_preset_into_the_four_threshold_keys(): void {
 			$values = ReportedIP_Hive_Protection_Page::collect_values(
 				array(
-					'rip_section'          => 'detection',
 					'rip_protection_level' => 'high',
 				),
 				'detection'
@@ -73,7 +70,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_collect_values_ignores_an_unknown_preset_and_a_custom_marker(): void {
 			$values = ReportedIP_Hive_Protection_Page::collect_values(
 				array(
-					'rip_section'                            => 'detection',
 					'rip_protection_level'                   => 'custom',
 					'reportedip_hive_failed_login_threshold' => '9',
 				),

@@ -35,14 +35,17 @@ class ReportedIP_Hive_Protection_Page {
 	const PAGE_SLUG = 'reportedip-hive-protection';
 
 	/**
-	 * URL of the Protection page opened at one section card.
+	 * URL of the Protection page opened at one section, on the tab that holds it.
 	 *
 	 * @param string $section Section id, e.g. `privacy_logs`.
 	 * @return string
 	 * @since  2.1.62
 	 */
 	public static function section_url( $section ) {
-		return ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) . '#' . sanitize_key( (string) $section );
+		$section = sanitize_key( (string) $section );
+		$url     = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG );
+		$tab     = self::tab_of( $section );
+		return ( '' !== $tab ? add_query_arg( self::TAB_PARAM, $tab, $url ) : $url ) . '#' . $section;
 	}
 
 	/**
@@ -220,14 +223,13 @@ class ReportedIP_Hive_Protection_Page {
 	}
 
 	/**
-	 * Whether one field belongs in the current view.
-	 *
-	 * Three ways in. The expert view shows everything. `simple` marks a
-	 * setting as day-to-day on every site. `simple_form` names the form
-	 * plugin whose presence makes a setting day-to-day here: an operator
-	 * running Formidable Forms should find the Formidable switch without
-	 * learning about expert mode first, and an operator without it should
-	 * never see the switch at all.
+	 * Whether one field is a main row of its section. Three ways in. The
+	 * expert flag makes everything a main row (used to list every key of a
+	 * section). `simple` marks a setting as day-to-day on every site.
+	 * `simple_form` names the form plugin whose presence makes a setting
+	 * day-to-day here: an operator running Formidable Forms should find the
+	 * Formidable switch at the top of the section, and an operator without
+	 * it finds it in the technical details with a note.
 	 *
 	 * A slug rather than a callback, because the registry is compared,
 	 * exported and diffed in several places and a closure survives none of
@@ -271,8 +273,8 @@ class ReportedIP_Hive_Protection_Page {
 	}
 
 	/**
-	 * Registry keys of one section in registry order, filtered to the
-	 * simple set unless the expert view is on.
+	 * Registry keys of one section in registry order: every key when
+	 * `$expert` is true, otherwise the main rows only.
 	 *
 	 * @param string        $section  Section id.
 	 * @param bool          $expert   Expert view.
@@ -767,7 +769,7 @@ class ReportedIP_Hive_Protection_Page {
 	/**
 	 * The values of one section that the save may write.
 	 *
-	 * Hidden keys (the expert-only fields of the simple view) and locked keys
+	 * Keys outside the given list and locked keys
 	 * are dropped so a posted form cannot reset them to their empty defaults:
 	 * a disabled input is not part of the POST and `collect_values()` would
 	 * otherwise fill in `0` or an empty string. Forced switches are written as
@@ -1342,7 +1344,8 @@ class ReportedIP_Hive_Protection_Page {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$statuses     = self::field_statuses( $current, $mode_manager );
 		$detected     = self::detected_forms();
-		$active       = self::active_tab( isset( $_GET[ self::TAB_PARAM ] ) ? wp_unslash( $_GET[ self::TAB_PARAM ] ) : '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- read-only tab choice, sanitised in active_tab()
+		$requested    = isset( $_GET[ self::TAB_PARAM ] ) && is_string( $_GET[ self::TAB_PARAM ] ) ? wp_unslash( $_GET[ self::TAB_PARAM ] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- read-only tab choice, whitelisted in active_tab()
+		$active       = self::active_tab( $requested );
 		$page_url     = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG );
 		$errors       = ! empty( $result['errors'] ) && is_array( $result['errors'] ) ? $result['errors'] : array();
 
@@ -1420,7 +1423,7 @@ class ReportedIP_Hive_Protection_Page {
 	 * @since  2.1.69
 	 */
 	private static function render_page_banner() {
-		if ( ! class_exists( 'ReportedIP_Hive_Dashboard_Next_Steps' ) ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Dashboard_Next_Steps' ) || ! ReportedIP_Hive_Mode_Manager::get_instance()->is_wizard_completed() ) {
 			return;
 		}
 		?>
@@ -1463,7 +1466,10 @@ class ReportedIP_Hive_Protection_Page {
 	 * admin-post handler: save or reset one tab through the apply service.
 	 *
 	 * See {@see writable_values()} for which posted keys are written and
-	 * {@see reset_values()} for what a reset writes.
+	 * {@see reset_values()} for what a reset writes. A preset that still
+	 * matches the stored values is dropped from the POST, so a number typed
+	 * into the blocking rows of the same form is not overwritten by the
+	 * preset's copy of it.
 	 *
 	 * @return void
 	 */
@@ -1489,6 +1495,9 @@ class ReportedIP_Hive_Protection_Page {
 			$values = self::reset_values( $tab, $tier, (string) $mode_manager->get_mode() );
 			$values = self::writable_values( $values, array_keys( $values ), $statuses );
 		} else {
+			if ( isset( $post[ self::PRESET_FIELD ] ) && (string) $post[ self::PRESET_FIELD ] === self::current_preset( $current ) ) {
+				unset( $post[ self::PRESET_FIELD ] );
+			}
 			foreach ( $tabs[ $tab ]['sections'] as $section ) {
 				$all     = self::visible_keys( $section, true, array() );
 				$values += self::writable_values( self::collect_values( (array) $post, $section ), $all, $statuses );
@@ -1505,7 +1514,6 @@ class ReportedIP_Hive_Protection_Page {
 		set_transient(
 			self::RESULT_TRANSIENT . get_current_user_id(),
 			array(
-				'tab'     => $tab,
 				'applied' => (int) $result['applied'],
 				'errors'  => $errors,
 				'reset'   => $reset,
