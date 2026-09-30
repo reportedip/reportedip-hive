@@ -1626,6 +1626,11 @@ button.rip-tier-lock--mode:hover {
 .rip-protection__check {
     flex-shrink: 0;
     align-self: center;
+    max-width: 260px;
+    text-align: right;
+}
+.rip-protection__check .rip-help-text {
+    margin: var(--rip-space-1) 0 0;
 }
 .rip-protection__search {
     margin-bottom: var(--rip-space-5);

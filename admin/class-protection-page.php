@@ -63,6 +63,14 @@ class ReportedIP_Hive_Protection_Page {
 	const ACTION_EXPERT = 'reportedip_hive_set_expert_mode';
 
 	/**
+	 * admin-post action of the "Check protection" button.
+	 *
+	 * @var string
+	 * @since 2.1.69
+	 */
+	const ACTION_CHECK = 'reportedip_hive_protection_check';
+
+	/**
 	 * Nonce action.
 	 *
 	 * @var string
@@ -208,6 +216,7 @@ class ReportedIP_Hive_Protection_Page {
 	public function __construct() {
 		add_action( 'admin_post_' . self::ACTION_SAVE, array( $this, 'handle_save' ) );
 		add_action( 'admin_post_' . self::ACTION_EXPERT, array( $this, 'handle_expert_toggle' ) );
+		add_action( 'admin_post_' . self::ACTION_CHECK, array( $this, 'handle_check' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 	}
 
@@ -1355,11 +1364,25 @@ class ReportedIP_Hive_Protection_Page {
 		);
 		?>
 		<div class="rip-content rip-protection">
-			<?php self::render_page_banner(); ?>
+			<?php self::render_page_banner( $active ); ?>
 			<div class="rip-protection__search">
 				<input type="search" id="rip-protection-search" class="rip-input" placeholder="<?php esc_attr_e( 'Search settings, e.g. Tor, HSTS, retention', 'reportedip-hive' ); ?>" autocomplete="off" />
 				<p class="rip-help-text rip-protection__no-results rip-hidden" id="rip-protection-no-results"><?php esc_html_e( 'No setting matches.', 'reportedip-hive' ); ?></p>
 			</div>
+			<?php if ( isset( $result['check'] ) && is_array( $result['check'] ) ) : ?>
+				<?php $attention = (int) ( $result['check']['attention'] ?? 0 ); ?>
+				<div class="rip-alert <?php echo 0 === $attention ? 'rip-alert--success' : 'rip-alert--warning'; ?>">
+					<?php
+					/* translators: 1: issues that need attention, 2: advisory hints */
+					echo esc_html( sprintf( __( 'Check done: %1$d issues need attention, %2$d hints are open.', 'reportedip-hive' ), $attention, (int) ( $result['check']['advisory'] ?? 0 ) ) );
+					printf(
+						' <a href="%1$s">%2$s</a>',
+						esc_url( ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive' ) . '#rip-next-steps' ),
+						esc_html__( 'See the next steps on the dashboard.', 'reportedip-hive' )
+					);
+					?>
+				</div>
+			<?php endif; ?>
 			<?php if ( isset( $result['applied'] ) ) : ?>
 				<div class="rip-alert <?php echo array() === $errors ? 'rip-alert--success' : 'rip-alert--warning'; ?>">
 					<?php
@@ -1417,21 +1440,62 @@ class ReportedIP_Hive_Protection_Page {
 	}
 
 	/**
-	 * The status banner above the tabs, shared with the dashboard.
+	 * The status banner above the tabs, shared with the dashboard, and the
+	 * "Check protection" button next to it.
 	 *
+	 * The button runs the readiness check again, past its cache, and the
+	 * page reports the count; the dashboard holds the list. Only shown once
+	 * the quickstart is done, because the banner is empty before that.
+	 *
+	 * @param string $tab Active tab, so the check lands back on it.
 	 * @return void
 	 * @since  2.1.69
 	 */
-	private static function render_page_banner() {
+	private static function render_page_banner( $tab ) {
 		if ( ! class_exists( 'ReportedIP_Hive_Dashboard_Next_Steps' ) || ! ReportedIP_Hive_Mode_Manager::get_instance()->is_wizard_completed() ) {
 			return;
 		}
 		?>
 		<div class="rip-protection__banner">
 			<?php ReportedIP_Hive_Dashboard_Next_Steps::render_banner( ReportedIP_Hive_API::get_instance() ); ?>
-			<a class="rip-button rip-button--secondary rip-button--sm rip-protection__check" href="<?php echo esc_url( ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive' ) ); ?>"><?php esc_html_e( 'Check protection', 'reportedip-hive' ); ?></a>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="rip-protection__check">
+				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION_CHECK ); ?>" />
+				<input type="hidden" name="rip_tab" value="<?php echo esc_attr( $tab ); ?>" />
+				<?php wp_nonce_field( self::ACTION_CHECK ); ?>
+				<button type="submit" class="rip-button rip-button--secondary rip-button--sm"><?php esc_html_e( 'Check protection', 'reportedip-hive' ); ?></button>
+				<p class="rip-help-text"><?php esc_html_e( 'Runs the setup check again and reports what still needs attention.', 'reportedip-hive' ); ?></p>
+			</form>
 		</div>
 		<?php
+	}
+
+	/**
+	 * admin-post handler: run the readiness check past its cache and
+	 * report the counts on the page.
+	 *
+	 * @return void
+	 * @since  2.1.69
+	 */
+	public function handle_check() {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
+			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( self::ACTION_CHECK );
+		$issues    = ReportedIP_Hive_Readiness::open_issues( true );
+		$attention = ReportedIP_Hive_Readiness::attention_count( $issues );
+		set_transient(
+			self::RESULT_TRANSIENT . get_current_user_id(),
+			array(
+				'check' => array(
+					'attention' => $attention,
+					'advisory'  => count( $issues ) - $attention,
+				),
+			),
+			60
+		);
+		$tab = isset( $_POST['rip_tab'] ) ? self::active_tab( sanitize_key( wp_unslash( $_POST['rip_tab'] ) ) ) : '';
+		wp_safe_redirect( add_query_arg( self::TAB_PARAM, $tab, ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=' . self::PAGE_SLUG ) ) );
+		exit;
 	}
 
 	/**

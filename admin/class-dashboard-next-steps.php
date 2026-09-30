@@ -397,7 +397,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			return;
 		}
 		?>
-		<div class="rip-card rip-next-steps">
+		<div class="rip-card rip-next-steps" id="rip-next-steps">
 			<div class="rip-card__header"><h2><?php esc_html_e( 'Next steps', 'reportedip-hive' ); ?></h2></div>
 			<div class="rip-card__body rip-next-steps__grid">
 				<?php foreach ( $issues as $issue ) : ?>
