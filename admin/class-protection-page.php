@@ -1067,9 +1067,11 @@ class ReportedIP_Hive_Protection_Page {
 	 * Whether every key of a section sits behind the plan.
 	 *
 	 * A plan lock (`reason` `tier`) and a mode lock (`reason` `mode`, the
-	 * feature needs the Community Network) both count, `partial` does not.
-	 * A runtime lock, a partial field or a single open key leaves the
-	 * section open.
+	 * feature needs the Community Network) both count. A `partial` status
+	 * does not open the section: a switch that is still on after a
+	 * downgrade may be switched off, but the feature behind it is not in
+	 * the plan, and the tab pill must not call it active. A runtime lock or
+	 * a single open key leaves the section open.
 	 *
 	 * @param string                            $section  Section id.
 	 * @param array<string,array<string,mixed>> $statuses Key => status from {@see field_status()}.
@@ -1083,7 +1085,7 @@ class ReportedIP_Hive_Protection_Page {
 		}
 		foreach ( $keys as $key ) {
 			$status = $statuses[ $key ] ?? array( 'available' => true );
-			if ( ! empty( $status['available'] ) || ! in_array( (string) ( $status['reason'] ?? '' ), array( 'tier', 'mode' ), true ) || ! empty( $status['partial'] ) ) {
+			if ( ! empty( $status['available'] ) || ! in_array( (string) ( $status['reason'] ?? '' ), array( 'tier', 'mode' ), true ) ) {
 				return false;
 			}
 		}

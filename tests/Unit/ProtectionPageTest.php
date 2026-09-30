@@ -528,7 +528,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $partly ), 'one open key opens the section' );
 
 			$partial = $this->statuses_for( 'hardening_mode', $locked + array( 'partial' => true ) );
-			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $partial ), 'a partial field is editable' );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $partial ), 'a switch left on after a downgrade is editable, but the feature is still not in the plan' );
 
 			$runtime = $this->statuses_for( 'hardening_mode', array( 'available' => false, 'reason' => 'runtime' ) );
 			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $runtime ), 'a runtime lock is not a plan lock' );

@@ -164,6 +164,28 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 9, \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold' ) );
 		}
 
+		/**
+		 * The Settings API sanitizer attached by `register_setting()` checks a
+		 * switch against the stored values on every write; a switch that needs
+		 * a value from the same batch must therefore be written after it.
+		 */
+		public function test_write_order_puts_values_before_switches() {
+			$ordered = \ReportedIP_Hive_Settings_Apply::write_order(
+				array(
+					'reportedip_hive_hide_login_enabled'  => 1,
+					'reportedip_hive_hide_login_slug'     => 'werkstatt',
+					'reportedip_hive_auto_block'          => 1,
+					'reportedip_hive_block_duration'      => 24,
+				)
+			);
+
+			$this->assertSame(
+				array( 'reportedip_hive_hide_login_slug', 'reportedip_hive_block_duration', 'reportedip_hive_hide_login_enabled', 'reportedip_hive_auto_block' ),
+				array_keys( $ordered )
+			);
+			$this->assertSame( 'werkstatt', $ordered['reportedip_hive_hide_login_slug'] );
+		}
+
 		public function test_int_values_are_clamped_to_spec_range() {
 			\ReportedIP_Hive_Settings_Apply::apply(
 				array( 'reportedip_hive_failed_login_threshold' => 5000 ),

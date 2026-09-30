@@ -77,9 +77,12 @@ once per page) returns
 section states of the tab instead of counting switches, so the pill and the
 dashboard area rows can never disagree:
 
-- A section whose every key is plan-locked (status `available` false,
-  reason `tier`, not `partial`; `section_locked()` is the pure helper) is
-  excluded and remembered as locked.
+- A section whose every key is plan-locked or mode-locked (status
+  `available` false, reason `tier` or `mode`; `section_locked()` is the
+  pure helper) is excluded and remembered as locked. A `partial` status
+  does not open the section: a switch left on after a downgrade stays
+  editable, but the feature is not in the plan. Only a `tier` lock names
+  a plan; a mode lock shows no pill.
 - A section with tone `neutral` is excluded.
 - The remaining sections count: `success` is on, `danger` is off.
 

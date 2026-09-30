@@ -50,6 +50,35 @@ final class ReportedIP_Hive_Settings_Apply {
 	const STATUS_UNKNOWN = 'unknown_key';
 
 	/**
+	 * The batch in the order it is written: values first, switches last.
+	 *
+	 * The batch was validated as a whole, but every write also passes the
+	 * Settings API sanitizer that `register_setting()` attached, and that
+	 * one validates the single key against the values already stored. A
+	 * switch that needs a value from the same batch (Hide Login needs its
+	 * slug) would be refused there when written first. Writing the values
+	 * before the switches keeps the batch and the per-key check on the same
+	 * page. Relative order is otherwise kept.
+	 *
+	 * @param array<string, mixed> $sanitized Sanitized key => value map.
+	 * @return array<string, mixed>
+	 * @since  2.1.69
+	 */
+	public static function write_order( array $sanitized ) {
+		$spec     = ReportedIP_Hive_Settings_Registry::spec();
+		$values   = array();
+		$switches = array();
+		foreach ( $sanitized as $key => $value ) {
+			if ( 'bool' === (string) ( $spec[ $key ]['kind'] ?? '' ) ) {
+				$switches[ $key ] = $value;
+			} else {
+				$values[ $key ] = $value;
+			}
+		}
+		return $values + $switches;
+	}
+
+	/**
 	 * Apply a batch of settings values.
 	 *
 	 * Pipeline: filter to remote keys, sanitize each (tier gate included),
@@ -114,7 +143,7 @@ final class ReportedIP_Hive_Settings_Apply {
 
 		$applied = 0;
 
-		foreach ( $sanitized as $key => $value ) {
+		foreach ( self::write_order( $sanitized ) as $key => $value ) {
 			$same = ReportedIP_Hive_Settings_Registry::normalize_value( $key, $value )
 				=== ReportedIP_Hive_Settings_Registry::normalize_value( $key, $current[ $key ] );
 
