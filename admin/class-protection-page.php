@@ -1118,6 +1118,99 @@ class ReportedIP_Hive_Protection_Page {
 	}
 
 	/**
+	 * Whether every key of a section sits behind the plan.
+	 *
+	 * Only a plan lock counts (`reason` `tier`, not `partial`). A runtime
+	 * lock, a partial field or a single open key leaves the section open.
+	 *
+	 * @param string                            $section  Section id.
+	 * @param array<string,array<string,mixed>> $statuses Key => status from {@see field_status()}.
+	 * @return bool
+	 * @since  2.1.69
+	 */
+	public static function section_locked( $section, array $statuses ) {
+		$keys = self::visible_keys( $section, true, array() );
+		if ( array() === $keys ) {
+			return false;
+		}
+		foreach ( $keys as $key ) {
+			$status = $statuses[ $key ] ?? array( 'available' => true );
+			if ( ! empty( $status['available'] ) || 'tier' !== (string) ( $status['reason'] ?? '' ) || ! empty( $status['partial'] ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Short state of one tab, aggregated from its section states.
+	 *
+	 * Counting sections rather than switches keeps the pill and the
+	 * dashboard area rows on the same verdict, and keeps a switch whose
+	 * "on" means less protection (report-only, minimal logging) from being
+	 * read as protection. A locked section is left out and remembered; a
+	 * neutral section is left out. `plan` names the plan a fully locked tab
+	 * waits for, so the renderer can label it without this method needing
+	 * the mode manager.
+	 *
+	 * @param string                            $tab      Tab slug.
+	 * @param array<string,mixed>               $current  Current values.
+	 * @param array<string,array<string,mixed>> $statuses Key => status from {@see field_status()}.
+	 * @return array{text:string,tone:string,plan:string}
+	 * @since  2.1.69
+	 */
+	public static function tab_state( $tab, array $current, array $statuses ) {
+		$sections = self::tabs()[ $tab ]['sections'] ?? array();
+		$counted  = 0;
+		$on       = 0;
+		$plan     = '';
+		foreach ( $sections as $section ) {
+			if ( self::section_locked( $section, $statuses ) ) {
+				if ( '' === $plan ) {
+					$first = self::visible_keys( $section, true, array() )[0];
+					$plan  = (string) ( $statuses[ $first ]['min_tier'] ?? '' );
+				}
+				continue;
+			}
+			$tone = self::section_state( $section, $current )['tone'];
+			if ( 'neutral' === $tone ) {
+				continue;
+			}
+			++$counted;
+			if ( 'success' === $tone ) {
+				++$on;
+			}
+		}
+		if ( 0 === $counted ) {
+			return array(
+				'text' => '',
+				'tone' => 'neutral',
+				'plan' => $plan,
+			);
+		}
+		if ( $on === $counted ) {
+			return array(
+				'text' => __( 'Active', 'reportedip-hive' ),
+				'tone' => 'success',
+				'plan' => '',
+			);
+		}
+		if ( 0 === $on ) {
+			return array(
+				'text' => __( 'Off', 'reportedip-hive' ),
+				'tone' => 'danger',
+				'plan' => '',
+			);
+		}
+		return array(
+			/* translators: 1: sections switched on, 2: sections counted */
+			'text' => sprintf( __( '%1$d of %2$d active', 'reportedip-hive' ), $on, $counted ),
+			'tone' => 'neutral',
+			'plan' => '',
+		);
+	}
+
+	/**
 	 * State of a section whose status is a plain on or off.
 	 *
 	 * @param bool $on Whether the section is switched on.
