@@ -20,6 +20,22 @@ All changes to ReportedIP Hive are documented here.
   `forged_agent`, blocked and reported at once. The new baseline rule
   `waf_ua_quoted` stops the same client at both firewall layers.
 
+### Changed
+
+- **The Protection page is five tabs instead of fifteen cards.** Core
+  protection, Forms, Firewall & Bots, Advanced and Operations, each with a
+  status pill. A switch is one row: name and a plain sentence on the left,
+  the toggle and its state on the right. A switch the plan does not
+  include shows the plan and a link instead of a greyed-out toggle. The
+  expert settings of every area sit behind "Show technical details";
+  expert mode opens them by default, and a closed block still saves its
+  values. One "Save changes" and one "Restore defaults" per tab, the
+  latter writing the recommendation for the plan. Every link into the
+  page still lands on its area, and the settings registry, the remote
+  schema and the apply path are unchanged. A "Check protection" button
+  next to the status banner runs the setup check again and reports how
+  many issues and hints are open.
+
 ## [2.1.68] (2026-09-29)
 
 ### Security
