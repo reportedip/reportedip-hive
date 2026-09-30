@@ -36,6 +36,24 @@ All changes to ReportedIP Hive are documented here.
   next to the status banner runs the setup check again and reports how
   many issues and hints are open.
 
+### Fixes
+
+- **Switching Hide Login on together with its slug no longer fails
+  silently.** The settings service wrote the switch before the slug, and
+  the per-option check that WordPress runs on every write refused the
+  switch because the stored slug was still empty. Values are now written
+  before switches, on every channel: the Protection page, the quickstart,
+  the JSON import, MainWP and the cloud fleet.
+- **Saving the Protection page in the Network Admin lands back in the
+  Network Admin.** The handler used to build the site-admin address,
+  which a network does not allow, so every save on a Multisite ended on
+  "Sorry, you are not allowed to access this page."
+- The trigger count of the Adaptive Step-Up area read the stored role
+  lists as text and always said "0 triggers".
+- The three step-up intervals (days, sign-ins, sessions) are now locked
+  with the adaptive policies they belong to instead of being editable on
+  a plan that has no policies.
+
 ## [2.1.68] (2026-09-29)
 
 ### Security
