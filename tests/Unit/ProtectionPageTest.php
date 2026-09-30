@@ -533,6 +533,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$runtime = $this->statuses_for( 'hardening_mode', array( 'available' => false, 'reason' => 'runtime' ) );
 			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $runtime ), 'a runtime lock is not a plan lock' );
 
+			$mode = $this->statuses_for( 'hardening_mode', array( 'available' => false, 'reason' => 'mode', 'min_tier' => 'professional' ) );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $mode ), 'a mode lock closes the section too' );
+			$this->assertSame(
+				array( 'text' => '', 'tone' => 'neutral', 'plan' => '' ),
+				ReportedIP_Hive_Protection_Page::tab_state( 'advanced', array(), $mode + $this->statuses_for( 'twofa_policies', $mode ) ),
+				'a mode lock names no plan'
+			);
+
 			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'blocking', array() ), 'no status means open' );
 		}
 

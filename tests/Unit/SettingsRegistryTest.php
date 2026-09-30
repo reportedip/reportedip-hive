@@ -540,6 +540,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_csp_report_uri'                 => 'security_headers_advanced',
 				'reportedip_hive_audit_triggers'                 => 'audit_log',
 				'reportedip_hive_audit_retention_days'           => 'audit_log',
+				'reportedip_hive_2fa_policy_days'                => '2fa_policies',
+				'reportedip_hive_2fa_policy_logins'              => '2fa_policies',
+				'reportedip_hive_2fa_policy_sessions'            => '2fa_policies',
 			);
 			foreach ( $expected as $key => $feature ) {
 				$this->assertSame( $feature, $spec[ $key ]['ui_lock'] ?? '', $key );

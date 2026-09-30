@@ -1389,6 +1389,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			'reportedip_hive_2fa_policy_days'              => array(
 				'section'     => 'twofa_policies',
 				'kind'        => 'int',
+				'ui_lock'     => '2fa_policies',
 				'min'         => 1,
 				'max'         => 365,
 				'remote'      => true,
@@ -1398,6 +1399,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			'reportedip_hive_2fa_policy_logins'            => array(
 				'section'     => 'twofa_policies',
 				'kind'        => 'int',
+				'ui_lock'     => '2fa_policies',
 				'min'         => 1,
 				'max'         => 100,
 				'remote'      => true,
@@ -1407,6 +1409,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			'reportedip_hive_2fa_policy_sessions'          => array(
 				'section'     => 'twofa_policies',
 				'kind'        => 'int',
+				'ui_lock'     => '2fa_policies',
 				'min'         => 1,
 				'max'         => 20,
 				'remote'      => true,

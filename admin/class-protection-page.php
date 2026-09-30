@@ -1066,8 +1066,10 @@ class ReportedIP_Hive_Protection_Page {
 	/**
 	 * Whether every key of a section sits behind the plan.
 	 *
-	 * Only a plan lock counts (`reason` `tier`, not `partial`). A runtime
-	 * lock, a partial field or a single open key leaves the section open.
+	 * A plan lock (`reason` `tier`) and a mode lock (`reason` `mode`, the
+	 * feature needs the Community Network) both count, `partial` does not.
+	 * A runtime lock, a partial field or a single open key leaves the
+	 * section open.
 	 *
 	 * @param string                            $section  Section id.
 	 * @param array<string,array<string,mixed>> $statuses Key => status from {@see field_status()}.
@@ -1081,7 +1083,7 @@ class ReportedIP_Hive_Protection_Page {
 		}
 		foreach ( $keys as $key ) {
 			$status = $statuses[ $key ] ?? array( 'available' => true );
-			if ( ! empty( $status['available'] ) || 'tier' !== (string) ( $status['reason'] ?? '' ) || ! empty( $status['partial'] ) ) {
+			if ( ! empty( $status['available'] ) || ! in_array( (string) ( $status['reason'] ?? '' ), array( 'tier', 'mode' ), true ) || ! empty( $status['partial'] ) ) {
 				return false;
 			}
 		}
@@ -1112,9 +1114,9 @@ class ReportedIP_Hive_Protection_Page {
 		$plan     = '';
 		foreach ( $sections as $section ) {
 			if ( self::section_locked( $section, $statuses ) ) {
-				if ( '' === $plan ) {
-					$first = self::visible_keys( $section, true, array() )[0];
-					$plan  = (string) ( $statuses[ $first ]['min_tier'] ?? '' );
+				$first = $statuses[ self::visible_keys( $section, true, array() )[0] ];
+				if ( '' === $plan && 'tier' === (string) ( $first['reason'] ?? '' ) ) {
+					$plan = (string) ( $first['min_tier'] ?? '' );
 				}
 				continue;
 			}
