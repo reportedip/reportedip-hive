@@ -17,6 +17,10 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-protection-page.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-form-adapters.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-login-context.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-mode-manager.php';
+	require_once dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -220,21 +224,28 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_block_tor',
 				array(
 					'kind'        => 'bool',
+					'tier'        => 'tor_blocking',
 					'label'       => 'Block Tor',
 					'description' => 'Refuse Tor.',
 				),
 				'0',
 				array(
-					'available' => false,
-					'min_tier'  => 'professional',
-					'reason'    => 'tier',
-					'label'     => 'Tor',
+					'available'  => false,
+					'min_tier'   => 'professional',
+					'reason'     => 'tier',
+					'label'      => 'Tor',
+					'plan_label' => 'Professional',
+					'plan_url'   => 'https://reportedip.com/pricing/#tor_blocking',
 				)
 			);
-			$this->assertStringContainsString( 'name="reportedip_hive_block_tor"', $html );
-			$this->assertStringContainsString( 'disabled', $html );
+			$this->assertStringNotContainsString( 'name="reportedip_hive_block_tor"', $html, 'a plan-locked switch posts nothing' );
+			$this->assertStringNotContainsString( '<input', $html );
 			$this->assertStringContainsString( 'data-search="', $html );
 			$this->assertStringContainsString( 'rip-protection__field--locked', $html );
+			$this->assertStringContainsString( 'rip-protection__plan', $html );
+			$this->assertStringContainsString( 'href="https://reportedip.com/pricing/#tor_blocking"', $html );
+			$this->assertStringContainsString( 'Learn more', $html );
+			$this->assertStringNotContainsString( 'rip-protection__state', $html, 'no on/off text without a switch' );
 
 			$open = ReportedIP_Hive_Protection_Page::field_markup(
 				'reportedip_hive_block_duration',
@@ -690,6 +701,62 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayNotHasKey( 'reportedip_hive_hsts_enabled', $free );
 
 			$this->assertSame( array(), ReportedIP_Hive_Protection_Page::reset_values( 'nope', 'free', 'local' ) );
+		}
+
+		public function test_switches_numbers_and_choices_render_as_rows(): void {
+			$bool = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_auto_block',
+				array( 'kind' => 'bool', 'label' => 'Auto block', 'description' => 'Block.' ),
+				'1',
+				array( 'available' => true )
+			);
+			$this->assertStringContainsString( 'rip-protection__field--row', $bool );
+			$this->assertStringContainsString( '<span class="rip-protection__state" data-on="Active" data-off="Off" aria-hidden="true">Active</span>', $bool );
+
+			$off = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_auto_block',
+				array( 'kind' => 'bool', 'label' => 'Auto block', 'description' => 'Block.' ),
+				'0',
+				array( 'available' => true )
+			);
+			$this->assertStringContainsString( 'aria-hidden="true">Off</span>', $off );
+
+			$int = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_block_duration',
+				array( 'kind' => 'int', 'min' => 0, 'max' => 10, 'label' => 'Duration', 'description' => '' ),
+				'5',
+				array( 'available' => true )
+			);
+			$this->assertStringContainsString( 'rip-protection__field--row', $int );
+			$this->assertStringNotContainsString( 'rip-protection__state', $int );
+
+			$text = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_trusted_proxy_ranges',
+				array( 'kind' => 'textarea', 'label' => 'Ranges', 'description' => '' ),
+				'',
+				array( 'available' => true )
+			);
+			$this->assertStringNotContainsString( 'rip-protection__field--row', $text );
+		}
+
+		public function test_a_plan_locked_list_keeps_its_disabled_control(): void {
+			$html = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_prohibited_usernames',
+				array( 'kind' => 'textarea', 'tier' => 'registration_rules_unlimited', 'label' => 'Names', 'description' => '' ),
+				"a\nb",
+				array( 'available' => false, 'reason' => 'tier', 'min_tier' => 'professional' )
+			);
+			$this->assertStringContainsString( '<textarea', $html, 'stored text stays readable' );
+			$this->assertStringContainsString( 'disabled', $html );
+			$this->assertStringNotContainsString( 'rip-protection__plan', $html );
+		}
+
+		public function test_plan_row_markup_is_a_badge_and_a_link(): void {
+			$html = ReportedIP_Hive_Protection_Page::plan_row_markup( 'Professional', 'https://example.org/p#f' );
+			$this->assertSame(
+				'<span class="rip-protection__plan"><span class="rip-badge rip-badge--warning">Professional feature</span><a class="rip-button rip-button--secondary rip-button--sm" href="https://example.org/p#f" target="_blank" rel="noopener">Learn more</a></span>',
+				$html
+			);
 		}
 	}
 }

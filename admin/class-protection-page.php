@@ -416,17 +416,31 @@ class ReportedIP_Hive_Protection_Page {
 		$desc     = (string) ( $entry['description'] ?? '' );
 		$search   = self::search_terms( $key, $entry );
 		$disabled = $locked ? ' disabled' : '';
-		$classes  = 'rip-protection__field' . ( $locked ? ' rip-protection__field--locked' : '' );
 		$kind     = (string) $entry['kind'];
+		$row      = in_array( $kind, array( 'bool', 'int', 'enum' ), true );
+		$plan_row = 'bool' === $kind && $locked && ! empty( $status['plan_url'] );
+		$control  = '';
+		$classes  = 'rip-protection__field' . ( $row ? ' rip-protection__field--row' : '' ) . ( $locked ? ' rip-protection__field--locked' : '' );
+
+		if ( $plan_row ) {
+			$control = self::plan_row_markup( (string) ( $status['plan_label'] ?? $status['min_tier'] ), (string) $status['plan_url'] );
+			$kind    = 'plan';
+		}
 
 		switch ( $kind ) {
+			case 'plan':
+				break;
 			case 'bool':
+				$on      = ! empty( $value ) || ! empty( $status['forced'] );
 				$control = sprintf(
-					'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" id="%1$s" name="%2$s" value="1"%3$s%4$s /><span class="rip-toggle__slider"></span></label>',
+					'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" id="%1$s" name="%2$s" value="1"%3$s%4$s /><span class="rip-toggle__slider"></span></label><span class="rip-protection__state" data-on="%5$s" data-off="%6$s" aria-hidden="true">%7$s</span>',
 					esc_attr( $id ),
 					esc_attr( $key ),
-					( ! empty( $value ) || ! empty( $status['forced'] ) ) ? ' checked' : '',
-					$disabled
+					$on ? ' checked' : '',
+					$disabled,
+					esc_attr__( 'Active', 'reportedip-hive' ),
+					esc_attr__( 'Off', 'reportedip-hive' ),
+					$on ? esc_html__( 'Active', 'reportedip-hive' ) : esc_html__( 'Off', 'reportedip-hive' )
 				);
 				break;
 			case 'int':
@@ -492,7 +506,7 @@ class ReportedIP_Hive_Protection_Page {
 		}
 
 		$marker = '';
-		$state  = self::tier_marker_state( $entry, $status );
+		$state  = $plan_row ? '' : self::tier_marker_state( $entry, $status );
 		if ( '' !== $state ) {
 			ob_start();
 			if ( 'locked' === $state ) {
@@ -517,6 +531,24 @@ class ReportedIP_Hive_Protection_Page {
 			$marker,
 			$control,
 			'' !== $desc ? '<p class="rip-help-text">' . esc_html( $desc ) . '</p>' : ''
+		);
+	}
+
+	/**
+	 * What a plan-locked switch shows in place of its toggle.
+	 *
+	 * @param string $plan_label Name of the plan the feature needs.
+	 * @param string $href       Pricing link.
+	 * @return string
+	 * @since  2.1.69
+	 */
+	public static function plan_row_markup( $plan_label, $href ) {
+		return sprintf(
+			'<span class="rip-protection__plan"><span class="rip-badge rip-badge--warning">%1$s</span><a class="rip-button rip-button--secondary rip-button--sm" href="%2$s" target="_blank" rel="noopener">%3$s</a></span>',
+			/* translators: %s: plan name, for example Professional */
+			esc_html( sprintf( __( '%s feature', 'reportedip-hive' ), (string) $plan_label ) ),
+			esc_url( (string) $href ),
+			esc_html__( 'Learn more', 'reportedip-hive' )
 		);
 	}
 
