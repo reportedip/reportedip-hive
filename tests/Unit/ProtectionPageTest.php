@@ -565,5 +565,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'WooCommerce is not installed on this site.', $html );
 			$this->assertStringNotContainsString( 'rip-tier', $html );
 		}
+
+		public function test_tabs_cover_every_registry_section_exactly_once(): void {
+			$seen = array();
+			foreach ( ReportedIP_Hive_Protection_Page::tabs() as $slug => $tab ) {
+				$this->assertMatchesRegularExpression( '/^[a-z]+$/', $slug );
+				$this->assertNotSame( '', (string) $tab['label'] );
+				$this->assertNotSame( '', (string) $tab['advice'] );
+				$this->assertNotSame( '', ReportedIP_Hive_Protection_Page::tab_icon( $tab['icon'] ), "tab {$slug} has no icon" );
+				foreach ( $tab['sections'] as $section ) {
+					$this->assertArrayNotHasKey( $section, $seen, "section {$section} sits in two tabs" );
+					$seen[ $section ] = $slug;
+				}
+			}
+			$this->assertEqualsCanonicalizing(
+				array_keys( \ReportedIP_Hive_Settings_Registry::sections() ),
+				array_keys( $seen ),
+				'the tabs hold exactly the registry sections'
+			);
+		}
+
+		public function test_tab_of_names_the_tab_of_a_section(): void {
+			$this->assertSame( 'firewall', ReportedIP_Hive_Protection_Page::tab_of( 'headers' ) );
+			$this->assertSame( 'basics', ReportedIP_Hive_Protection_Page::tab_of( 'detection' ) );
+			$this->assertSame( '', ReportedIP_Hive_Protection_Page::tab_of( 'nope' ) );
+		}
 	}
 }

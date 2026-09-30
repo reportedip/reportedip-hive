@@ -108,6 +108,98 @@ class ReportedIP_Hive_Protection_Page {
 	);
 
 	/**
+	 * Query parameter that names the open tab.
+	 *
+	 * @var string
+	 * @since 2.1.69
+	 */
+	const TAB_PARAM = 'tab';
+
+	/**
+	 * The five tabs of the page, in display order.
+	 *
+	 * A tab is a group of registry sections and nothing more. The sections
+	 * keep their ids, their order inside a tab is the registry order, and
+	 * nothing outside this class ever needs to know which tab holds which
+	 * section: every link into the page still points at a section id.
+	 *
+	 * @return array<string, array{label:string,icon:string,sections:string[],advice:string}>
+	 * @since  2.1.69
+	 */
+	public static function tabs() {
+		return array(
+			'basics'     => array(
+				'label'    => __( 'Core protection', 'reportedip-hive' ),
+				'icon'     => 'shield',
+				'sections' => array( 'detection', 'blocking', 'hide_login', 'account_security', 'account_password' ),
+				'advice'   => __( 'Recommended: keep the defaults on. Change a threshold only when a sign-in or a block does not behave as expected.', 'reportedip-hive' ),
+			),
+			'forms'      => array(
+				'label'    => __( 'Forms', 'reportedip-hive' ),
+				'icon'     => 'file',
+				'sections' => array( 'forms', 'registration' ),
+				'advice'   => __( 'Recommended: keep the defaults on. Changes are only needed when a form does not work as expected.', 'reportedip-hive' ),
+			),
+			'firewall'   => array(
+				'label'    => __( 'Firewall & Bots', 'reportedip-hive' ),
+				'icon'     => 'users',
+				'sections' => array( 'waf', 'lockdown', 'headers' ),
+				'advice'   => __( 'Recommended: keep the firewall on. Add an exception on the Tools page before switching a rule off.', 'reportedip-hive' ),
+			),
+			'advanced'   => array(
+				'label'    => __( 'Advanced', 'reportedip-hive' ),
+				'icon'     => 'settings',
+				'sections' => array( 'hardening_mode', 'twofa_policies' ),
+				'advice'   => __( 'These settings only matter during a coordinated attack or for a second factor asked again. The recommendation covers both.', 'reportedip-hive' ),
+			),
+			'operations' => array(
+				'label'    => __( 'Operations', 'reportedip-hive' ),
+				'icon'     => 'activity',
+				'sections' => array( 'privacy_logs', 'notifications', 'performance' ),
+				'advice'   => __( 'Logs, mails and the footprint per request. None of it decides what is blocked.', 'reportedip-hive' ),
+			),
+		);
+	}
+
+	/**
+	 * Slug of the tab that holds one section.
+	 *
+	 * @param string $section Section id.
+	 * @return string Tab slug, or an empty string for an unknown section.
+	 * @since  2.1.69
+	 */
+	public static function tab_of( $section ) {
+		foreach ( self::tabs() as $slug => $tab ) {
+			if ( in_array( (string) $section, $tab['sections'], true ) ) {
+				return (string) $slug;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Inline SVG of a tab icon.
+	 *
+	 * @param string $icon Icon key from {@see tabs()}.
+	 * @return string Escaped markup, empty for an unknown key.
+	 * @since  2.1.69
+	 */
+	public static function tab_icon( $icon ) {
+		$open  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">';
+		$paths = array(
+			'shield'   => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+			'file'     => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>',
+			'users'    => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+			'settings' => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+			'activity' => '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+		);
+		if ( ! isset( $paths[ (string) $icon ] ) ) {
+			return '';
+		}
+		return $open . $paths[ (string) $icon ] . '</svg>';
+	}
+
+	/**
 	 * Wire hooks.
 	 */
 	public function __construct() {
