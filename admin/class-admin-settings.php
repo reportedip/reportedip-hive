@@ -60,17 +60,46 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Get the correct admin URL for a plugin page.
 	 *
 	 * Handles Multisite network admin screens properly by routing to
-	 * network_admin_url() when is_network_admin() is true.
+	 * network_admin_url() when is_network_admin() is true. admin-post.php
+	 * is the one exception: WordPress ships no network variant of it, the
+	 * network address answers 404, so a form or link that targets it always
+	 * uses the site address. Its handler then sends the browser back through
+	 * {@see back_url()}.
 	 *
 	 * @param string $path Target path, e.g. admin.php?page=...
 	 * @return string Absolute admin URL.
 	 * @since  2.0.26
 	 */
 	public static function get_admin_page_url( $path ) {
+		if ( 0 === strpos( (string) $path, 'admin-post.php' ) ) {
+			return admin_url( $path );
+		}
 		if ( is_network_admin() ) {
 			return network_admin_url( $path );
 		}
 		return admin_url( $path );
+	}
+
+	/**
+	 * The page an admin-post handler sends the browser back to.
+	 *
+	 * admin-post.php runs outside the Network Admin even when the form was
+	 * rendered there, so `is_network_admin()` is false in a handler and
+	 * {@see get_admin_page_url()} would build the site-admin address, which
+	 * a network refuses with 403. The referer carries the address the form
+	 * came from. Without one, a Multisite falls back to the Network Admin,
+	 * because every writable plugin page lives there.
+	 *
+	 * @param string $fallback_path Path used without a referer, e.g. admin.php?page=reportedip-hive.
+	 * @return string
+	 * @since  2.1.70
+	 */
+	public static function back_url( $fallback_path ) {
+		$referer = (string) wp_get_referer();
+		if ( '' !== $referer && false !== strpos( $referer, '/wp-admin/' ) ) {
+			return $referer;
+		}
+		return is_multisite() ? network_admin_url( $fallback_path ) : admin_url( $fallback_path );
 	}
 
 	/**
@@ -4922,7 +4951,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		ReportedIP_Hive_Group_Sync::get_instance()->sync();
 
-		wp_safe_redirect( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=ip_lists&sub=group' ) );
+		wp_safe_redirect( self::back_url( 'admin.php?page=reportedip-hive-security&tab=ip_lists&sub=group' ) );
 		exit;
 	}
 

@@ -47,7 +47,7 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 		$filters          = self::filters();
 		$users            = self::filter_rows( self::list_users( 200 ), $filters );
 		$audit_status     = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
-		$post_url         = is_network_admin() ? network_admin_url( 'admin-post.php' ) : admin_url( 'admin-post.php' );
+		$post_url         = admin_url( 'admin-post.php' );
 		$export_users_url = wp_nonce_url(
 			add_query_arg(
 				array_merge(

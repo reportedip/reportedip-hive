@@ -102,7 +102,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				if (!window.confirm(a.getAttribute('data-confirm'))) return;
 				var f = document.createElement('form');
 				f.method = 'post';
-				f.action = <?php echo wp_json_encode( is_network_admin() ? network_admin_url( 'admin-post.php' ) : admin_url( 'admin-post.php' ) ); ?>;
+				f.action = <?php echo wp_json_encode( admin_url( 'admin-post.php' ) ); ?>;
 				f.style.display = 'none';
 				['action:reportedip_hive_2fa_admin_reset','user_id:'+a.getAttribute('data-user'),'_wpnonce:'+a.getAttribute('data-nonce')].forEach(function(p){
 					var i = document.createElement('input'); var kv = p.split(':'); i.type='hidden'; i.name=kv[0]; i.value=kv.slice(1).join(':'); f.appendChild(i);
@@ -182,7 +182,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			)
 		);
 
-		wp_safe_redirect( add_query_arg( 'reportedip_2fa_reset', (int) $user_id, is_network_admin() ? network_admin_url( 'users.php' ) : admin_url( 'users.php' ) ) );
+		wp_safe_redirect( add_query_arg( 'reportedip_2fa_reset', (int) $user_id, ReportedIP_Hive_Admin_Settings::back_url( 'users.php' ) ) );
 		exit;
 	}
 

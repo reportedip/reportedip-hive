@@ -2184,6 +2184,7 @@ class ReportedIP_Hive_Database {
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders is a generated %s list; values are bound below.
 		$events = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- the IN() list is a generated %s placeholder string; one value per placeholder is bound below.
 			$wpdb->prepare(
 				"SELECT * FROM $table_name
                  WHERE event_type IN ($placeholders)
@@ -2225,6 +2226,7 @@ class ReportedIP_Hive_Database {
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders is a generated %s list; values are bound below.
 		$rows = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- the IN() list is a generated %s placeholder string; one value per placeholder is bound below.
 			$wpdb->prepare(
 				"SELECT event_type, COUNT(*) AS cnt FROM $table_name
                  WHERE event_type IN ($placeholders)
@@ -2503,6 +2505,7 @@ class ReportedIP_Hive_Database {
 		if ( ! empty( $threat_types ) ) {
 			$placeholders = implode( ',', array_fill( 0, count( $threat_types ), '%s' ) );
 			$top_rows     = $wpdb->get_results(
+				// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- the IN() list is a generated %s placeholder string; one value per placeholder is bound below.
 				$wpdb->prepare(
 					"SELECT ip_address, COUNT(*) AS c, MAX(created_at) AS last_seen
 					 FROM $logs_table

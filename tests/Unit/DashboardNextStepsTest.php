@@ -15,7 +15,11 @@
 declare(strict_types=1);
 
 namespace {
+	if ( ! defined( 'REPORTEDIP_HIVE_SITE_URL' ) ) {
+		define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.com' );
+	}
 	require_once dirname( __DIR__, 2 ) . '/includes/class-promo-manager.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-form-adapters.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-dashboard-next-steps.php';
 }
 

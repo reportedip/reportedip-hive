@@ -2,6 +2,17 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixes
+
+- **Every admin-post form works in the Network Admin.** WordPress ships no
+  `wp-admin/network/admin-post.php`, so the notice dismissals, the group
+  sync, the 2FA dashboard actions and the per-user 2FA reset answered 404 on
+  a Multisite. They post to the site address now, and their handlers send
+  the browser back to the page the form came from instead of building a
+  site-admin address a network refuses.
+
 ## [2.1.69] (2026-09-30)
 
 ### Security

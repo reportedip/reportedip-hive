@@ -602,7 +602,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 				60
 			);
 		}
-		wp_safe_redirect( ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive' ) );
+		wp_safe_redirect( ReportedIP_Hive_Admin_Settings::back_url( 'admin.php?page=reportedip-hive' ) );
 		exit;
 	}
 }
