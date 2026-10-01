@@ -84,5 +84,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertSame( $before, \ReportedIP_Hive_Settings_Registry::settings_hash() );
 		}
+
+		/**
+		 * A value on its default contributes nothing, whatever its stored
+		 * representation. This is what keeps a release that seeds new keys
+		 * from flipping every site to drift.
+		 */
+		public function test_hash_ignores_values_that_sit_on_their_default() {
+			$absent = \ReportedIP_Hive_Settings_Registry::settings_hash();
+
+			$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
+			$GLOBALS['wp_options']['reportedip_hive_failed_login_threshold'] = (string) $defaults['reportedip_hive_failed_login_threshold'];
+			$GLOBALS['wp_options']['reportedip_hive_auto_block']             = (bool) $defaults['reportedip_hive_auto_block'];
+			$GLOBALS['wp_options']['reportedip_hive_rest_allowed_roles']     = json_decode( (string) $defaults['reportedip_hive_rest_allowed_roles'], true );
+
+			$this->assertSame( $absent, \ReportedIP_Hive_Settings_Registry::settings_hash() );
+		}
+
+		public function test_hash_moves_when_a_value_returns_to_its_default() {
+			$GLOBALS['wp_options']['reportedip_hive_failed_login_threshold'] = 42;
+			$changed = \ReportedIP_Hive_Settings_Registry::settings_hash();
+
+			unset( $GLOBALS['wp_options']['reportedip_hive_failed_login_threshold'] );
+
+			$this->assertNotSame( $changed, \ReportedIP_Hive_Settings_Registry::settings_hash() );
+		}
 	}
 }

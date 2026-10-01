@@ -235,11 +235,14 @@ cannot drift.
 | `slug` | string | via the key's `sanitize` override (Hide-Login slug rules: 3–50 chars, reserved list, permalink-collision check); violations are `invalid` |
 | `json_list` | JSON array string or array | items `sanitize_key`ed, filtered through the key's validity filter, canonically re-encoded `wp_json_encode` |
 
-`export_schema()` does not export a `json_list`'s allowed vocabulary (role
-slugs, method names), so both dashboards render these keys as a raw JSON
-textarea and the child filters unknown items away on apply. `textarea` keys
-carry newline-separated lists and must not be flattened by a dashboard's
-sanitizer.
+Since 2.1.70 a `json_list` with a `choices` source (role slugs, 2FA method
+names, audit trigger groups) exports its vocabulary as `allowed`, the same
+list the Protection page offers. A dashboard renders such a key as a checkbox
+group and keeps a raw JSON textarea for a `json_list` without `allowed`. The
+child still filters unknown items away on apply, so a role that exists on the
+schema source but not on a target site is dropped there without an error.
+`textarea` keys carry newline-separated lists and must not be flattened by a
+dashboard's sanitizer.
 
 ## Cross-field rules
 
@@ -305,11 +308,21 @@ the plugin and fire for registry writes automatically.
 hash = "sha256:" + sha256( json_encode( { "s": SCHEMA_VERSION, "v": normalized } ) )
 ```
 
-`normalized` = all remote keys sorted with `ksort`, each value normalized by
-kind (`bool` → true/false, `int` → integer, everything else the stored
-string). The hash is computed **only on the child**. Dashboards store the
-`hash` returned by their last successful apply and compare it against the
-`settings_hash` reported in subsequent syncs, they never recompute it.
+`normalized` = the remote keys whose value differs from the plugin default,
+sorted with `ksort`, each value normalized by kind (`bool` → true/false,
+`int` → integer, everything else the stored string). The hash is computed
+**only on the child**. Dashboards store the `hash` returned by their last
+successful apply and compare it against the `settings_hash` reported in
+subsequent syncs, they never recompute it.
+
+Keys on their default are left out since 2.1.70. Before that the hash ran
+over every remote value, and each release that added a registry key seeded
+that key on every site, moved every hash and showed the whole fleet as
+drifted although nothing a dashboard managed had changed. Leaving defaults
+out loses no signal: a change away from the default adds the key, a change
+back removes it, both move the hash. The one-time cost is that the first
+sync after the 2.1.70 update reports drift once more; the next push (or a
+compare) settles it.
 
 `json_list` values are canonically re-encoded on every registry write, so a
 value stored pre-2.1.47 in an equivalent-but-different encoding shows as
@@ -362,6 +375,7 @@ from the exported schema, so most changes are Hive-only:
 | Add a tier gate to an option | `tier` slug in `spec()` (the Mode-Manager feature must exist) | nothing (generic badge) | nothing (generic badge) | no |
 | Add a section, or move a key between sections | `Registry::sections()` and/or the key's `section` | nothing, reload the schema | nothing, refresh the schema | no |
 | Add a field attribute (`description`, and any later one) | `spec()` + `export_schema()` | render it, or ignore it | render it, or ignore it | no |
+| Add a `choices` source for a `json_list` | `Registry::choice_values()` (the Protection page and `export_schema()` both read it) | nothing, checkbox group from `allowed` | nothing, checkbox group from `allowed` | no |
 | Add a side-effect token | `spec()` + `Settings_Effects` token handler | nothing | nothing | no |
 | Rotate the cloud signing key | ship the new public key in `PUBLIC_KEYS['next']`, switch the service after fleet adoption, then promote to `current` |, | swap the fleet signer keypair | no |
 | Add a transport | a thin adapter around `export_schema()` / `values_envelope()` / `Settings_Apply::apply()`, never its own validation |, |, | no |

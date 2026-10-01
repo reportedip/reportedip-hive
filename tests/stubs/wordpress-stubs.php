@@ -1303,3 +1303,26 @@ if ( ! function_exists( 'sanitize_title' ) ) {
 		return (string) preg_replace( '/[\s]+/', '-', $title );
 	}
 }
+
+if ( ! function_exists( 'wp_roles' ) ) {
+	/**
+	 * Stub role provider with the two roles every site has.
+	 *
+	 * @return object
+	 */
+	function wp_roles() {
+		return new class() {
+			/**
+			 * Role slug => display name map.
+			 *
+			 * @return array<string, string>
+			 */
+			public function get_names() {
+				return array(
+					'administrator' => 'Administrator',
+					'editor'        => 'Editor',
+				);
+			}
+		};
+	}
+}

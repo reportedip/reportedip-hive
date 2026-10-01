@@ -1959,6 +1959,37 @@ final class ReportedIP_Hive_Settings_Registry {
 	}
 
 	/**
+	 * The values a `json_list` key with a `choices` source may hold, as
+	 * value => label. The one list behind the Protection page checkbox groups
+	 * and the `allowed` list of the remote schema, so a dashboard offers the
+	 * same choices the site itself does (since 2.1.70).
+	 *
+	 * @param string $source `roles`, `methods` or `audit_groups`.
+	 * @return array<string,string>
+	 */
+	public static function choice_values( $source ) {
+		$map = array();
+		if ( 'methods' === $source ) {
+			$map = array(
+				'totp'     => __( 'Authenticator app (TOTP)', 'reportedip-hive' ),
+				'email'    => __( 'E-mail code', 'reportedip-hive' ),
+				'sms'      => __( 'SMS code', 'reportedip-hive' ),
+				'webauthn' => __( 'Security key / passkey', 'reportedip-hive' ),
+			);
+		} elseif ( 'roles' === $source ) {
+			$map = array_map( 'strval', wp_roles()->get_names() );
+		} elseif ( 'audit_groups' === $source ) {
+			foreach ( ReportedIP_Hive_Audit_Registry::groups() as $slug => $group ) {
+				if ( $group['multisite_only'] && ! is_multisite() ) {
+					continue;
+				}
+				$map[ $slug ] = $group['label'];
+			}
+		}
+		return $map;
+	}
+
+	/**
 	 * Normalize a stored value for comparison and hashing so representation
 	 * differences ('1' vs 1 vs true) never register as change or drift.
 	 *
@@ -1981,16 +2012,29 @@ final class ReportedIP_Hive_Settings_Registry {
 	}
 
 	/**
-	 * Stable fingerprint over all remote-managed values. Computed exclusively
-	 * on the child, dashboards compare reported hashes, never recompute.
+	 * Stable fingerprint over the remote-managed values that differ from
+	 * their defaults. Computed exclusively on the child, dashboards compare
+	 * reported hashes, never recompute.
+	 *
+	 * A value on its default is left out on purpose: a release that adds a
+	 * registry key seeds that key on every site, and a hash over every value
+	 * flipped the whole fleet to "drift" with each update although nothing a
+	 * dashboard manages had changed (since 2.1.70). Leaving defaults out
+	 * loses nothing, because a change away from the default adds the key and
+	 * a change back to it removes the key, both of which move the hash.
 	 *
 	 * @return string `sha256:<hex>`.
 	 */
 	public static function settings_hash() {
 		$values     = self::current_values();
+		$defaults   = ReportedIP_Hive_Defaults::all_option_defaults();
 		$normalized = array();
 		foreach ( $values as $key => $value ) {
-			$normalized[ $key ] = self::normalize_value( $key, $value );
+			$current = self::normalize_value( $key, $value );
+			if ( array_key_exists( $key, $defaults ) && self::normalize_value( $key, $defaults[ $key ] ) === $current ) {
+				continue;
+			}
+			$normalized[ $key ] = $current;
 		}
 		ksort( $normalized );
 		return 'sha256:' . hash(
@@ -2065,6 +2109,8 @@ final class ReportedIP_Hive_Settings_Registry {
 			}
 			if ( isset( $entry['allowed'] ) ) {
 				$field['allowed'] = array_values( (array) $entry['allowed'] );
+			} elseif ( isset( $entry['choices'] ) ) {
+				$field['allowed'] = array_keys( self::choice_values( (string) $entry['choices'] ) );
 			}
 			if ( isset( $entry['ui_lock'] ) ) {
 				$field['ui_lock'] = (string) $entry['ui_lock'];

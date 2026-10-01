@@ -422,6 +422,27 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * A `json_list` with a `choices` source exports the same vocabulary the
+		 * Protection page offers, so a dashboard renders a checkbox group
+		 * instead of a raw JSON field.
+		 */
+		public function test_export_schema_lists_the_choices_of_every_json_list(): void {
+			$schema = \ReportedIP_Hive_Settings_Registry::export_schema();
+			foreach ( \ReportedIP_Hive_Settings_Registry::remote_spec() as $key => $entry ) {
+				if ( empty( $entry['choices'] ) ) {
+					continue;
+				}
+				$this->assertSame(
+					array_keys( \ReportedIP_Hive_Settings_Registry::choice_values( (string) $entry['choices'] ) ),
+					$schema['fields'][ $key ]['allowed'],
+					$key
+				);
+				$this->assertNotEmpty( $schema['fields'][ $key ]['allowed'], $key );
+			}
+			$this->assertSame( array( 'totp', 'email', 'sms', 'webauthn' ), $schema['fields']['reportedip_hive_2fa_allowed_methods']['allowed'] );
+		}
+
+		/**
 		 * The simple view lists exactly the keys the spec names, and no section
 		 * carries more than six unconditional ones. A key flagged `simple_form`
 		 * is counted apart: it only shows itself on a site running that form

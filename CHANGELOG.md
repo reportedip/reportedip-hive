@@ -4,6 +4,20 @@ All changes to ReportedIP Hive are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **A plugin update no longer shows the whole fleet as drifted.** The
+  settings fingerprint a site reports to MainWP and to the reportedip.com
+  fleet now covers only the values that differ from their defaults. Before,
+  every release that added a setting seeded that setting on every site and
+  moved every fingerprint, so both dashboards marked each site as changed
+  although nothing they manage had moved. The first sync after this update
+  reports that drift one last time; the next push or compare settles it.
+- **Checkbox groups reach the dashboards.** The remote schema lists the
+  roles, 2FA methods and audit trigger groups a list setting may hold, so
+  MainWP and the fleet render the same checkbox groups the Protection page
+  does instead of a raw JSON field.
+
 ### Fixes
 
 - **Every admin-post form works in the Network Admin.** WordPress ships no

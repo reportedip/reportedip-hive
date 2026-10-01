@@ -110,6 +110,7 @@ if ( 'integration' === $suite ) {
 	}
 
 	require_once $plugin_dir . '/includes/class-option-routing.php';
+	require_once $plugin_dir . '/includes/class-audit-registry.php';
 	require_once $plugin_dir . '/includes/class-schema.php';
 	require_once $plugin_dir . '/includes/class-migration-manager.php';
 }

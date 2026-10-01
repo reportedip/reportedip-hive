@@ -926,25 +926,8 @@ class ReportedIP_Hive_Protection_Page {
 	 * @return array<string,array{label:string,disabled:bool,fixed:bool}>
 	 */
 	public static function choices_for( array $entry, $key = '' ) {
-		$source = (string) ( $entry['choices'] ?? '' );
-		$map    = array();
-		if ( 'methods' === $source ) {
-			$map = array(
-				'totp'     => __( 'Authenticator app (TOTP)', 'reportedip-hive' ),
-				'email'    => __( 'E-mail code', 'reportedip-hive' ),
-				'sms'      => __( 'SMS code', 'reportedip-hive' ),
-				'webauthn' => __( 'Security key / passkey', 'reportedip-hive' ),
-			);
-		} elseif ( 'roles' === $source ) {
-			$map = array_map( 'strval', wp_roles()->get_names() );
-		} elseif ( 'audit_groups' === $source ) {
-			foreach ( ReportedIP_Hive_Audit_Registry::groups() as $slug => $group ) {
-				if ( $group['multisite_only'] && ! is_multisite() ) {
-					continue;
-				}
-				$map[ $slug ] = $group['label'];
-			}
-		}
+		$source  = (string) ( $entry['choices'] ?? '' );
+		$map     = ReportedIP_Hive_Settings_Registry::choice_values( $source );
 		$fixed   = array_map( 'strval', (array) ( $entry['choices_fixed'] ?? array() ) );
 		$choices = array();
 		foreach ( $map as $value => $label ) {
