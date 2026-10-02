@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.69
+Stable tag: 2.1.70
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -470,6 +470,11 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.70 =
+Fixed: installations count on wordpress.org again. The update checker had been removing the plugin from the update-check request WordPress sends to api.wordpress.org, so no site running this plugin was ever counted there. Updates keep coming from GitHub only.
+Fixed: every admin-post form works in the Network Admin (WordPress ships no network admin-post.php).
+Changed: the settings fingerprint reported to MainWP and the fleet covers only values that differ from their defaults, so a plugin update no longer marks the whole fleet as drifted; the remote schema lists the choices of every checkbox group.
 
 = 2.1.69 =
 Changed: the Protection page is five tabs (Core protection, Forms, Firewall & Bots, Advanced, Operations) over the fifteen areas. A switch is one row with a plain sentence and its state, a switch outside the plan shows the plan and a link instead of a greyed-out toggle, and the expert settings of every area fold away behind "Show technical details". One "Save changes" and one "Restore defaults" per tab, a "Check protection" button next to the status banner, and every link into the page still lands on its area.
