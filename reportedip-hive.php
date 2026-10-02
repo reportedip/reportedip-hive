@@ -96,6 +96,15 @@ if ( class_exists( PucFactory::class ) ) {
 	);
 	$reportedip_update_checker->setBranch( 'main' );
 
+	/**
+	 * Keep the plugin in the update-check request WordPress core sends to
+	 * api.wordpress.org. The checker strips it by default (since 5.5), which
+	 * also removes every full installation from the install count of the
+	 * reportedip-hive slug on wordpress.org. The response for this plugin is
+	 * ignored by core anyway because of the Update URI header.
+	 */
+	$reportedip_update_checker->addFilter( 'remove_from_default_update_checks', '__return_false' );
+
 	$reportedip_vcs_api = $reportedip_update_checker->getVcsApi();
 	if ( $reportedip_vcs_api && method_exists( $reportedip_vcs_api, 'enableReleaseAssets' ) ) {
 		$reportedip_vcs_api->enableReleaseAssets( '/reportedip-hive\.zip$/i' );

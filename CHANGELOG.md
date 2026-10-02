@@ -20,6 +20,12 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **Installations count on wordpress.org again.** The update checker had
+  been removing the plugin from the update-check request WordPress sends to
+  api.wordpress.org, so no site running this plugin was ever counted for the
+  `reportedip-hive` slug there. The plugin now stays in that request. Core
+  still ignores the wordpress.org answer for it because of the Update URI
+  header, so updates keep coming from GitHub only.
 - **Every admin-post form works in the Network Admin.** WordPress ships no
   `wp-admin/network/admin-post.php`, so the notice dismissals, the group
   sync, the 2FA dashboard actions and the per-user 2FA reset answered 404 on
