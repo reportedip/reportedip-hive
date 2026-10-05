@@ -325,6 +325,23 @@ class HideLoginTest extends TestCase {
 		);
 	}
 
+	public function test_foreign_admin_url_goes_through_that_hosts_login() {
+		$login = \ReportedIP_Hive_Hide_Login::foreign_login_url( 'http://b.test/sub/wp-admin/', 'a.test' );
+
+		$this->assertStringStartsWith(
+			'http://b.test/sub/wp-login.php?redirect_to=',
+			$login,
+			'An admin link to another network domain must lead to the login of that domain, the auth cookie is host-bound.'
+		);
+	}
+
+	public function test_foreign_admin_url_leaves_same_host_and_endpoints_alone() {
+		$this->assertSame( '', \ReportedIP_Hive_Hide_Login::foreign_login_url( 'http://a.test/site-b/wp-admin/', 'A.test' ) );
+		$this->assertSame( '', \ReportedIP_Hive_Hide_Login::foreign_login_url( 'http://a.test:8080/wp-admin/', 'a.test:8080' ) );
+		$this->assertSame( '', \ReportedIP_Hive_Hide_Login::foreign_login_url( 'http://b.test/wp-admin/admin-ajax.php', 'a.test' ) );
+		$this->assertSame( '', \ReportedIP_Hive_Hide_Login::foreign_login_url( 'http://b.test/wp-admin/', '' ) );
+	}
+
 	public function test_kill_switch_constant_disables_feature() {
 		if ( ! defined( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN' ) ) {
 			define( 'REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN', true );

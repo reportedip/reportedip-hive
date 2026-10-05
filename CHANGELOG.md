@@ -2,6 +2,21 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.71] (2026-10-05)
+
+### Fixes
+
+- **Multisite with several domains: the admin is no longer locked out of
+  the other sites.** Login cookies belong to one domain. An admin who signed
+  in on one domain and followed "My Sites" or "Network Admin" to another
+  domain arrived there without a cookie, and with Hide Login (or the wp-admin
+  guest block) on, that domain answered with the block page instead of its
+  login, because a redirect would have revealed the hidden login URL. For a
+  signed-in user, admin links to another domain of the network now point to
+  that domain's login with the admin page as `redirect_to`; a user who
+  already holds a cookie there is forwarded straight on. Visitors who are not
+  signed in see no change.
+
 ## [2.1.70] (2026-10-02)
 
 ### Changed

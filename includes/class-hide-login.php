@@ -120,6 +120,8 @@ class ReportedIP_Hive_Hide_Login {
 		foreach ( array( 'site_url', 'network_site_url', 'admin_url', 'login_url', 'lostpassword_url', 'register_url', 'logout_url', 'wp_redirect' ) as $hook ) {
 			add_filter( $hook, array( $this, 'filter_url' ), 100, 1 );
 		}
+		add_filter( 'admin_url', array( $this, 'route_foreign_admin_url' ), 101, 1 );
+		add_filter( 'network_admin_url', array( $this, 'route_foreign_admin_url' ), 101, 1 );
 
 		add_filter( 'rocket_cache_reject_uri', array( $this, 'exclude_login_from_cache_uri' ) );
 	}
@@ -597,6 +599,59 @@ class ReportedIP_Hive_Hide_Login {
 		$new  = $this->apply_login_trailing_slash( $new, $slug );
 
 		return $this->maybe_add_token( $new, $slug );
+	}
+
+	/**
+	 * Send a signed-in user who follows a wp-admin link to another domain of
+	 * the network through that domain's login first.
+	 *
+	 * Auth cookies are bound to the host. On a Multisite with its own domain
+	 * per site, the admin bar links ("My Sites", "Network Admin") lead to a
+	 * host where the user has no cookie yet. Core answers that with a redirect
+	 * to the login; the guest block answers with the block page, because the
+	 * redirect would reveal the hidden login URL. The admin was therefore
+	 * locked out of every site except the one they signed in on. The links are
+	 * only rewritten for a signed-in user, who knows the login URL anyway;
+	 * wp-login.php forwards a user who already holds a cookie on that host
+	 * straight to `redirect_to`.
+	 *
+	 * @param string $url Admin URL.
+	 * @return string
+	 * @since  2.1.71
+	 */
+	public function route_foreign_admin_url( string $url ): string {
+		if ( ! is_multisite() || ! is_user_logged_in() || ! $this->admin_guest_block_active() ) {
+			return $url;
+		}
+		$host  = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_HOST'] ) ) : '';
+		$login = self::foreign_login_url( $url, $host );
+		return '' === $login ? $url : $this->filter_url( $login );
+	}
+
+	/**
+	 * The wp-login.php URL on the host of a foreign admin URL, with the admin
+	 * URL as `redirect_to`, or an empty string when the URL stays on the
+	 * current host or is no page view (admin-ajax.php, admin-post.php).
+	 *
+	 * @param string $url          Admin URL.
+	 * @param string $current_host Host of the current request, port included.
+	 * @return string
+	 * @since  2.1.71
+	 */
+	public static function foreign_login_url( string $url, string $current_host ): string {
+		$parts = wp_parse_url( $url );
+		if ( '' === $current_host || ! is_array( $parts ) || empty( $parts['host'] ) ) {
+			return '';
+		}
+		$host = $parts['host'] . ( isset( $parts['port'] ) ? ':' . $parts['port'] : '' );
+		if ( strtolower( $host ) === strtolower( $current_host ) ) {
+			return '';
+		}
+		$pos = strpos( $url, '/wp-admin' );
+		if ( false === $pos || preg_match( '#/wp-admin/admin-(ajax|post)\.php#', $url ) ) {
+			return '';
+		}
+		return add_query_arg( 'redirect_to', rawurlencode( $url ), substr( $url, 0, $pos ) . '/wp-login.php' );
 	}
 
 	/**

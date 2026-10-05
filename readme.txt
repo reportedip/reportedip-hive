@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.70
+Stable tag: 2.1.71
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -470,6 +470,9 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.71 =
+Fixed: on a Multisite with its own domain per site, an admin with Hide Login or the wp-admin guest block on could only reach the site they signed in on. Admin links to another domain of the network now lead through that domain's login first.
 
 = 2.1.70 =
 Fixed: installations count on wordpress.org again. The update checker had been removing the plugin from the update-check request WordPress sends to api.wordpress.org, so no site running this plugin was ever counted there. Updates keep coming from GitHub only.
