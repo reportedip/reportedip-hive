@@ -476,6 +476,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( '', \ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_Group_Sync::OPT_ETAG, '' ) );
 		}
 
+		public function test_a_key_without_a_group_waits_an_hour_and_skips_the_cleanup() {
+			$this->sync->response = $this->answer( 204 );
+			$this->assertSame( 'cleared', $this->sync->sync() );
+
+			$this->sync->manager->rows = array( $this->row( '45.33.32.10', 'group', HOUR_IN_SECONDS ) );
+			$this->assertSame( 'skipped', $this->sync->sync(), 'A second run within the hour asks nothing.' );
+			$this->assertCount( 1, $this->sync->sent_etags );
+
+			$this->assertSame( 'cleared', $this->sync->sync( true ), 'The button on the Group tab always asks.' );
+			$this->assertCount( 2, $this->sync->sent_etags );
+			$this->assertSame( array(), $this->sync->manager->unblocked, 'After a clear there is nothing to release, so the tables are not walked again.' );
+		}
+
+		public function test_a_group_from_the_key_check_ends_the_wait() {
+			$this->sync->response = $this->answer( 204 );
+			$this->sync->sync();
+
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_Group_Sync::OPT_GROUP, array( 'name' => 'Production' ) );
+			$this->sync->response = $this->answer( 200, $this->list_body( array( $this->entry( '45.33.32.10', HOUR_IN_SECONDS ) ) ) );
+
+			$this->assertSame( 'applied', $this->sync->sync() );
+			$this->assertSame( 0, (int) \ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_Group_Sync::OPT_IDLE_UNTIL, 0 ) );
+		}
+
 		public function test_a_whitelisted_address_is_never_blocked() {
 			$this->sync->manager->whitelist = array( '45.33.32.10' );
 			$this->sync->response           = $this->answer(

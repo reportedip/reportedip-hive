@@ -4949,7 +4949,7 @@ class ReportedIP_Hive_Admin_Settings {
 		}
 		check_admin_referer( 'reportedip_hive_group_sync_now' );
 
-		ReportedIP_Hive_Group_Sync::get_instance()->sync();
+		ReportedIP_Hive_Group_Sync::get_instance()->sync( true );
 
 		wp_safe_redirect( self::back_url( 'admin.php?page=reportedip-hive-security&tab=ip_lists&sub=group' ) );
 		exit;

@@ -79,6 +79,25 @@ class ReportedIP_Hive_Group_Sync {
 	const OPT_STATUS = 'reportedip_hive_group_status';
 
 	/**
+	 * Option holding the Unix time before which a key without a group is not
+	 * asked again. Set by a 204, dropped by a list. Runtime state.
+	 */
+	const OPT_IDLE_UNTIL = 'reportedip_hive_group_idle_until';
+
+	/**
+	 * Seconds a key without a group waits before it asks again. Joining a
+	 * group shows up sooner through the group the key check stores, and the
+	 * button on the Group tab always asks at once.
+	 */
+	const IDLE_INTERVAL = 3600;
+
+	/**
+	 * Results after which the sync holds nothing: no group block, no group
+	 * whitelist row, no stored entry.
+	 */
+	const EMPTY_RESULTS = array( 'cleared', 'released', 'tier' );
+
+	/**
 	 * What the current run changed, by kind. Reset at the start of sync().
 	 *
 	 * @var array<string,int>
@@ -122,14 +141,15 @@ class ReportedIP_Hive_Group_Sync {
 	 * Fetch the group list, mirror it into the blocked table and record what
 	 * happened for the Group tab.
 	 *
+	 * @param bool $force Ask the service even while a key without a group waits.
 	 * @return string What happened: applied|report_only|unchanged|cleared|tier|discarded|released|skipped|error.
 	 */
-	public function sync() {
+	public function sync( $force = false ) {
 		$this->counts    = array_fill_keys( array( 'added', 'extended', 'lifted', 'whitelist_added', 'whitelist_removed', 'skipped_whitelist', 'skipped_own', 'skipped_manual' ), 0 );
 		$this->http_code = 0;
 		$this->entries   = null;
 
-		$result = $this->run();
+		$result = $this->run( (bool) $force );
 		if ( 'skipped' !== $result ) {
 			$this->write_status( $result );
 		}
@@ -196,9 +216,10 @@ class ReportedIP_Hive_Group_Sync {
 	/**
 	 * One run of the sync.
 	 *
+	 * @param bool $force See sync().
 	 * @return string See sync().
 	 */
-	private function run() {
+	private function run( $force ) {
 		if ( ! $this->is_connected() ) {
 			if ( '' !== (string) ReportedIP_Hive_Option_Routing::get( self::OPT_ETAG, '' ) ) {
 				$this->release();
@@ -208,6 +229,9 @@ class ReportedIP_Hive_Group_Sync {
 			return 'skipped';
 		}
 		if ( ! $this->is_eligible() ) {
+			return 'skipped';
+		}
+		if ( ! $force && $this->is_idle() ) {
 			return 'skipped';
 		}
 
@@ -246,10 +270,17 @@ class ReportedIP_Hive_Group_Sync {
 		ReportedIP_Hive_Option_Routing::delete( self::OPT_ERROR );
 
 		if ( 204 === $code ) {
-			$this->release();
+			if ( in_array( self::status()['last_result'], self::EMPTY_RESULTS, true ) ) {
+				$this->entries = 0;
+			} else {
+				$this->release();
+			}
 			ReportedIP_Hive_Option_Routing::delete( self::OPT_GROUP );
+			ReportedIP_Hive_Option_Routing::set( self::OPT_IDLE_UNTIL, time() + self::IDLE_INTERVAL );
 			return 'cleared';
 		}
+
+		ReportedIP_Hive_Option_Routing::delete( self::OPT_IDLE_UNTIL );
 
 		$data = json_decode( (string) $response['body'], true );
 		if ( ! is_array( $data ) || ! isset( $data['entries'] ) || ! is_array( $data['entries'] ) ) {
@@ -284,6 +315,19 @@ class ReportedIP_Hive_Group_Sync {
 		}
 
 		return 'applied';
+	}
+
+	/**
+	 * True while a key the service reported without a group waits for its
+	 * next turn. A group the key check stored in the meantime ends the wait.
+	 *
+	 * @return bool
+	 */
+	private function is_idle() {
+		if ( null !== ReportedIP_Hive_Option_Routing::get( self::OPT_GROUP, null ) ) {
+			return false;
+		}
+		return (int) ReportedIP_Hive_Option_Routing::get( self::OPT_IDLE_UNTIL, 0 ) > time();
 	}
 
 	/**
