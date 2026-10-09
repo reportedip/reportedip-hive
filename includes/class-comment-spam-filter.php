@@ -300,6 +300,10 @@ class ReportedIP_Hive_Comment_Spam_Filter {
 
 		$refusal = $this->refuse_by_proof();
 
+		if ( '' === $refusal && ! is_user_logged_in() && class_exists( 'ReportedIP_Hive_Disposable_Email' ) ) {
+			$refusal = ReportedIP_Hive_Disposable_Email::get_instance()->check_submission( 'comment', array( (string) ( $commentdata['comment_author_email'] ?? '' ) ) );
+		}
+
 		if ( '' !== $refusal ) {
 			wp_die(
 				esc_html( $refusal ),

@@ -101,10 +101,10 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * User meta keys.
 	 */
-	const META_ENABLED           = 'reportedip_hive_2fa_enabled';
-	const META_METHOD            = 'reportedip_hive_2fa_method';
-	const META_TOTP_SECRET       = 'reportedip_hive_2fa_totp_secret';
-	const META_TOTP_CONFIRMED    = 'reportedip_hive_2fa_totp_confirmed';
+	const META_ENABLED        = 'reportedip_hive_2fa_enabled';
+	const META_METHOD         = 'reportedip_hive_2fa_method';
+	const META_TOTP_SECRET    = 'reportedip_hive_2fa_totp_secret';
+	const META_TOTP_CONFIRMED = 'reportedip_hive_2fa_totp_confirmed';
 
 	/**
 	 * Secret of an authenticator setup that has not been confirmed yet.
@@ -126,7 +126,7 @@ class ReportedIP_Hive_Two_Factor {
 	 *
 	 * @var string
 	 */
-	const META_TOTP_LAST_STEP = 'reportedip_hive_2fa_totp_last_step';
+	const META_TOTP_LAST_STEP    = 'reportedip_hive_2fa_totp_last_step';
 	const META_FAILED_ATTEMPTS   = 'reportedip_hive_2fa_failed_attempts';
 	const META_SETUP_DATE        = 'reportedip_hive_2fa_setup_date';
 	const META_ENFORCEMENT_START = 'reportedip_hive_2fa_enforcement_start';

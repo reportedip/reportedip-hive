@@ -310,7 +310,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	 */
 	public static function short_ua( $ua = null ) {
 		if ( null === $ua ) {
-			$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) : '';
+			$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 		}
 		return substr( sanitize_text_field( (string) $ua ), 0, 120 );
 	}

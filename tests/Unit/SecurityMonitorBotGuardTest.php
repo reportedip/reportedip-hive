@@ -118,6 +118,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_a_proven_crawler_address_keeps_the_exemption_on_a_malicious_path() {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-security-monitor.php';
+
+			$this->assertSame(
+				array( 'ip_range_match', 'fcrdns_confirmed', 'official_range_match' ),
+				\ReportedIP_Hive_Security_Monitor::PROVEN_BOT_REASONS,
+				'Only a network proof may outrank the malicious-path check; a DNS-undecidable or cached verdict must not'
+			);
+
+			$source = $this->source();
+			$body   = substr( $source, (int) strpos( $source, 'function should_spare_verified_bot' ) );
+			$this->assertStringContainsString(
+				'! in_array( $reason, self::PROVEN_BOT_REASONS, true ) && $this->is_unambiguously_malicious(',
+				$body,
+				'OAI-SearchBot from its own range hit /cgi-bin/printenv and was blocked and reported'
+			);
+		}
+
 		/**
 		 * Reflection handle on the private malicious-request predicate.
 		 */

@@ -20,6 +20,12 @@
  * nobody could answer for is honestly unproven, and the form tells the sender
  * so; a reload fetches a fresh task.
  *
+ * An answer is only good for the lifetime of its task (ten minutes by
+ * default). A visitor who takes longer over a form would otherwise send a
+ * spent answer and be refused as `expired`, so an answer that is about to run
+ * out is replaced: once a minute, when the tab comes back into view and at
+ * the moment of sending.
+ *
  * The field also carries how many seconds the form was on screen, appended
  * after a tilde. The clock starts in the browser and never in the markup, so a
  * page served from a cache filled days ago measures the same as a fresh one.
@@ -38,6 +44,7 @@
 	var LIMIT = 1 << 24;
 
 	var stock = [];
+	var MARGIN = 90 * 1000;
 	var mining = false;
 	var pausedUntil = 0;
 	var bound = false;
@@ -189,9 +196,55 @@
 	 * @since 2.1.58
 	 */
 	function give( form, anchor ) {
-		field( form, anchor.dataset.n ).value = stock.shift() || '';
+		while ( stock.length && stale( stock[ 0 ] ) ) {
+			stock.shift();
+		}
+
+		var answer = stock.shift();
+
+		field( form, anchor.dataset.n ).value = answer ? answer.value : '';
 		anchor.dataset.u = 'ready';
+		anchor.dataset.x = answer ? answer.until : '';
 		refill();
+	}
+
+	/**
+	 * Whether an answer runs out before a submission could reach the server.
+	 *
+	 * @since 2.1.72
+	 */
+	function stale( answer ) {
+		return ! answer || Date.now() > answer.until;
+	}
+
+	/**
+	 * Take back every dealt answer that is about to run out and deal fresh
+	 * ones. An answer already sent is left alone, it has been spent anyway.
+	 *
+	 * @since 2.1.72
+	 */
+	function renew() {
+		var anchors = document.querySelectorAll( 'input.rip-fp-anchor[data-e][data-n]' );
+		var expired = false;
+
+		for ( var i = 0; i < anchors.length; i++ ) {
+			var anchor = anchors[ i ];
+
+			if ( 'ready' === anchor.dataset.u && anchor.form && Date.now() > parseFloat( anchor.dataset.x || 0 ) ) {
+				field( anchor.form, anchor.dataset.n ).value = '';
+				delete anchor.dataset.u;
+				delete anchor.dataset.w;
+				expired = true;
+			}
+		}
+
+		stock = stock.filter( function ( answer ) {
+			return ! stale( answer );
+		} );
+
+		if ( expired || stock.length < wanted() ) {
+			refill();
+		}
 	}
 
 	/**
@@ -428,13 +481,18 @@
 					return;
 				}
 
+				var fetched = Date.now();
+				var life = Math.max( 60, parseInt( current.ttl, 10 ) || 600 ) * 1000;
 				var answer = await solve( current );
 
 				if ( ! answer ) {
 					return;
 				}
 
-				stock.push( answer );
+				stock.push( {
+					value: answer,
+					until: fetched + life - Math.min( MARGIN, life / 4 )
+				} );
 				deal();
 			}
 		} finally {
@@ -461,6 +519,7 @@
 
 		window.gform.utils.addFilter( 'gform/submission/pre_submission', function ( data ) {
 			if ( data && data.form && ! data.abort ) {
+				renew();
 				onSubmit( data.form );
 			}
 
@@ -505,6 +564,8 @@
 			if ( ! anchor || ( anchor.dataset.s && now() - parseFloat( anchor.dataset.s ) < 1000 ) ) {
 				return;
 			}
+
+			renew();
 
 			if ( anchor.dataset.e && 'ready' !== anchor.dataset.u && ! stock.length && ! anchor.dataset.w && endpoint() ) {
 				event.preventDefault();
@@ -596,6 +657,8 @@
 
 			var anchor = anchorOf( form );
 
+			renew();
+
 			if ( anchor && anchor.dataset.e && 'ready' !== anchor.dataset.u && ! stock.length && ! anchor.dataset.w && endpoint() ) {
 				event.preventDefault();
 				event.stopImmediatePropagation();
@@ -617,6 +680,14 @@
 	);
 
 	document.addEventListener( 'gform/post_render', rearm );
+
+	window.setInterval( renew, 60 * 1000 );
+
+	document.addEventListener( 'visibilitychange', function () {
+		if ( 'visible' === document.visibilityState ) {
+			renew();
+		}
+	} );
 
 	if ( 'loading' === document.readyState ) {
 		document.addEventListener( 'DOMContentLoaded', rearm );

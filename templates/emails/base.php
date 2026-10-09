@@ -36,10 +36,12 @@ $main_block_html = isset( $context['main_block_html'] ) ? (string) $context['mai
 $cta             = isset( $context['cta'] ) && is_array( $context['cta'] ) ? $context['cta'] : array();
 $security_notice = isset( $context['security_notice'] ) && is_array( $context['security_notice'] ) ? $context['security_notice'] : array();
 $disclaimer      = isset( $context['disclaimer'] ) ? (string) $context['disclaimer'] : '';
+$site_host       = (string) wp_parse_url( $site_url, PHP_URL_HOST );
+$site_host       = '' !== $site_host ? preg_replace( '/^www\./i', '', $site_host ) : $site_name;
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo esc_attr( str_replace( '_', '-', get_locale() ) ); ?>">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:32px 16px;">
@@ -120,7 +122,7 @@ $disclaimer      = isset( $context['disclaimer'] ) ? (string) $context['disclaim
 			printf(
 				/* translators: %s: site link */
 				esc_html__( 'Protected by ReportedIP Hive on %s', 'reportedip-hive' ),
-				'<a href="' . esc_url( $site_url ) . '" style="color:#4F46E5;text-decoration:none;">' . esc_html( $site_name ) . '</a>'
+				'<a href="' . esc_url( $site_url ) . '" style="color:#4F46E5;text-decoration:none;">' . esc_html( $site_host ) . '</a>'
 			);
 			?>
 		</p>

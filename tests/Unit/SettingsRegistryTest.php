@@ -168,6 +168,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_bot_action'                    => 'enum',
 				'reportedip_hive_disposable_email_action'       => 'enum',
 				'reportedip_hive_block_email_relays'            => 'bool',
+				'reportedip_hive_disposable_email_forms'        => 'enum',
 				'reportedip_hive_comment_honeypot_enabled'      => 'bool',
 				'reportedip_hive_form_proof_enabled'            => 'bool',
 				'reportedip_hive_form_proof_login_forms'        => 'bool',
@@ -283,6 +284,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				array(
 					'reportedip_hive_comment_honeypot_enabled',
 					'reportedip_hive_comment_spam_action',
+					'reportedip_hive_disposable_email_forms',
 					'reportedip_hive_form_proof_cf7',
 					'reportedip_hive_form_proof_elementor',
 					'reportedip_hive_form_proof_enabled',

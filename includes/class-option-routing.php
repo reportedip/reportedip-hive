@@ -369,16 +369,16 @@ final class ReportedIP_Hive_Option_Routing {
 	 * value that is already an array is a fatal `TypeError` on PHP 8.
 	 *
 	 * @param mixed              $raw     Stored option value (array or JSON string).
-	 * @param array<int, string> $default Returned when $raw is neither a usable array nor decodable JSON.
+	 * @param array<int, string> $fallback Returned when $raw is neither a usable array nor decodable JSON.
 	 * @return array<int, string>
 	 * @since  2.0.18
 	 */
-	public static function to_array( $raw, array $default = array() ) {
+	public static function to_array( $raw, array $fallback = array() ) {
 		if ( is_string( $raw ) ) {
 			$decoded = json_decode( $raw, true );
-			return is_array( $decoded ) ? array_values( $decoded ) : $default;
+			return is_array( $decoded ) ? array_values( $decoded ) : $fallback;
 		}
-		return is_array( $raw ) ? array_values( $raw ) : $default;
+		return is_array( $raw ) ? array_values( $raw ) : $fallback;
 	}
 
 	/**

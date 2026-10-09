@@ -471,12 +471,12 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param array<string,mixed> $data     Structured event data.
 	 * @param int                 $user_id  Acting user id (0 for none).
 	 * @param string              $username Acting user's login.
-	 * @param array<string,mixed> $object   `type`, `id`, `label` of the affected object.
+	 * @param array<string,mixed> $target   `type`, `id`, `label` of the affected object.
 	 * @param int|null            $blog_id  Explicit scope, 0 for network rows, null for the current site.
 	 * @return void
 	 * @since  2.1.51
 	 */
-	public function record( $type, $action, array $data, $user_id = 0, $username = '', array $object = array(), $blog_id = null ) {
+	public function record( $type, $action, array $data, $user_id = 0, $username = '', array $target = array(), $blog_id = null ) {
 		if ( ! self::is_enabled() ) {
 			return;
 		}
@@ -484,7 +484,7 @@ class ReportedIP_Hive_Audit_Logger {
 		if ( $event && ! ReportedIP_Hive_Audit_Registry::group_enabled( $event['group'] ) ) {
 			return;
 		}
-		$this->log_event( (string) $type, (string) $action, $data, (int) $user_id, (string) $username, $object, $blog_id );
+		$this->log_event( (string) $type, (string) $action, $data, (int) $user_id, (string) $username, $target, $blog_id );
 	}
 
 	/**
@@ -493,14 +493,14 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param string              $type    Event type.
 	 * @param string              $action  Event action.
 	 * @param array<string,mixed> $data    Structured data.
-	 * @param array<string,mixed> $object  Affected object.
+	 * @param array<string,mixed> $target  Affected object.
 	 * @param int|null            $blog_id Scope.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	private function record_actor_event( $type, $action, array $data, array $object, $blog_id = null ) {
+	private function record_actor_event( $type, $action, array $data, array $target, $blog_id = null ) {
 		$actor = wp_get_current_user();
-		$this->log_event( $type, $action, $data, (int) $actor->ID, (string) $actor->user_login, $object, $blog_id );
+		$this->log_event( $type, $action, $data, (int) $actor->ID, (string) $actor->user_login, $target, $blog_id );
 	}
 
 	/**
@@ -576,12 +576,12 @@ class ReportedIP_Hive_Audit_Logger {
 	 * @param array<string,mixed> $data     Structured event data (redacted before storage).
 	 * @param int                 $user_id  Acting user id (0 for none).
 	 * @param string              $username Acting user's login.
-	 * @param array<string,mixed> $object   Affected object.
+	 * @param array<string,mixed> $target   Affected object.
 	 * @param int|null            $blog_id  Scope; null means the current site.
 	 * @return void
 	 * @since  2.1.2
 	 */
-	private function log_event( $type, $action, array $data, $user_id = 0, $username = '', array $object = array(), $blog_id = null ) {
+	private function log_event( $type, $action, array $data, $user_id = 0, $username = '', array $target = array(), $blog_id = null ) {
 		global $wpdb;
 
 		$user_agent = self::request_user_agent();
@@ -601,7 +601,7 @@ class ReportedIP_Hive_Audit_Logger {
 				'data'         => $data,
 				'user_agent'   => $user_agent,
 				'anonymize_ip' => (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_ANONYMIZE_IP, false ),
-				'object'       => $object,
+				'object'       => $target,
 			)
 		);
 

@@ -55,15 +55,15 @@ class ReportedIP_Hive_Audit_Connector_Multisite extends ReportedIP_Hive_Audit_Co
 	 * Pure diff of two site objects over the watched fields.
 	 *
 	 * @param object $old Previous site.
-	 * @param object $new New site.
+	 * @param object $new_value New site.
 	 * @return array<string, array{old:string, new:string}>
 	 * @since  2.1.62
 	 */
-	public static function diff_site( $old, $new ) {
+	public static function diff_site( $old, $new_value ) {
 		$changes = array();
 		foreach ( self::SITE_FIELDS as $field ) {
 			$before = (string) ( $old->$field ?? '' );
-			$after  = (string) ( $new->$field ?? '' );
+			$after  = (string) ( $new_value->$field ?? '' );
 			if ( $before !== $after ) {
 				$changes[ $field ] = array(
 					'old' => $before,
@@ -89,17 +89,17 @@ class ReportedIP_Hive_Audit_Connector_Multisite extends ReportedIP_Hive_Audit_Co
 	/**
 	 * Site fields changed.
 	 *
-	 * @param WP_Site $new New site.
+	 * @param WP_Site $new_value New site.
 	 * @param WP_Site $old Previous site.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	public function on_site_updated( $new, $old ) {
-		$changes = self::diff_site( $old, $new );
+	public function on_site_updated( $new_value, $old ) {
+		$changes = self::diff_site( $old, $new_value );
 		if ( empty( $changes ) ) {
 			return;
 		}
-		$this->log( 'site', 'updated', array( 'changes' => $changes ), self::site_object( $new ), 0 );
+		$this->log( 'site', 'updated', array( 'changes' => $changes ), self::site_object( $new_value ), 0 );
 	}
 
 	/**

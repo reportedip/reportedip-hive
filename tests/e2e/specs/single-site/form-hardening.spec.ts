@@ -252,7 +252,8 @@ test.describe('bound form challenge', () => {
 
 	test('a tampered token is refused', async ({ request }) => {
 		const { task } = await fetchTask(request);
-		const broken = `${task.token.slice(0, -1)}0.0`;
+		const last = task.token.slice(-1);
+		const broken = `${task.token.slice(0, -1)}${'0' === last ? '1' : '0'}.0`;
 
 		await expectRefused(request, { [ANCHOR]: '', [PROOF]: broken }, 'signature');
 	});

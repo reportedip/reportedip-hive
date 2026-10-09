@@ -774,13 +774,13 @@ final class ReportedIP_Hive_Audit_Registry {
 	 * "old to new" fragment.
 	 *
 	 * @param string $old Old value.
-	 * @param string $new New value.
+	 * @param string $new_value New value.
 	 * @return string
 	 * @since  2.1.62
 	 */
-	private static function arrow( $old, $new ) {
+	private static function arrow( $old, $new_value ) {
 		/* translators: 1: old value, 2: new value */
-		return sprintf( __( '%1$s to %2$s', 'reportedip-hive' ), '' === $old ? '(empty)' : $old, '' === $new ? '(empty)' : $new );
+		return sprintf( __( '%1$s to %2$s', 'reportedip-hive' ), '' === $old ? '(empty)' : $old, '' === $new_value ? '(empty)' : $new_value );
 	}
 
 	/**

@@ -1067,7 +1067,15 @@ final class ReportedIP_Hive_Form_Adapters {
 			}
 		}
 
-		return $this->proof_refusal( $slug, $strict );
+		$refusal = $this->proof_refusal( $slug, $strict );
+		if ( '' !== $refusal || 'ultimate_member' === $slug || ! class_exists( 'ReportedIP_Hive_Disposable_Email' ) ) {
+			return $refusal;
+		}
+
+		return ReportedIP_Hive_Disposable_Email::get_instance()->check_submission(
+			$slug,
+			ReportedIP_Hive_Disposable_Email::emails_in( wp_unslash( $_POST ) ) // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only scan for address shapes on a submission the form plugin itself verifies; every value passes is_email().
+		);
 	}
 
 	/**

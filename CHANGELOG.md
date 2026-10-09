@@ -2,6 +2,61 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [2.1.72] (2026-10-09)
+
+### New
+
+- **Disposable addresses are refused on comments and contact forms.** The
+  disposable-domain list used to guard only the sign-up; a comment carrying
+  such an address merely gained two spam points and the form adapters never
+  looked at the address. Comments and every protected form (Contact Form 7,
+  WPForms, Gravity Forms, Forminator, Formidable, Elementor) now ask the
+  sender for a permanent address. Own setting
+  `disposable_email_forms` (block, monitor, off), block by default, with
+  the same relay switch as the sign-up.
+
+### Fixes
+
+- **A verified crawler is no longer blocked and reported for a bait path.**
+  OAI-SearchBot, from OpenAI's published range, asked for
+  `/cgi-bin/printenv`; the crawler exemption was withdrawn because the path
+  only a scanner would know, the address was blocked and reported, and the
+  community network refused the report. An address proven by the published
+  range or by forward-confirmed reverse DNS now keeps the exemption on such a
+  path. A user-agent alone still does not.
+- **A report the network refuses as whitelisted leaves the queue.** It used
+  to stay as a failed row, was retried every fifteen minutes and counted
+  against the API health. It is now dropped with a "Report Skipped" entry.
+- **A form left open longer than ten minutes is no longer refused.** The
+  browser fetched its answer to the form check when the page loaded, and the
+  answer is good for ten minutes. Someone writing a band application or a
+  long message sent a spent answer and saw the refusal (`expired`), on every
+  protected form. The script now replaces an answer before it runs out: once
+  a minute, when the tab comes back into view and at the moment of sending.
+- **Bulk actions work again after a filter.** The filter button put
+  `filter_action=1` into the address, and WordPress ignores every bulk action
+  while that parameter is present, so deleting or retrying queue items,
+  logs, blocks or whitelist entries did nothing after filtering.
+- **Extended Protection reads as one card.** One status badge, one sentence
+  for the state and one button (Turn on, Turn off as a quiet secondary
+  action). Server facts sit under "Technical details", the manual server
+  lines show only while a manual step is open, and the second card that
+  repeated the same status further down the tab is gone.
+- **One header check link on the dashboard.** The score section linked to
+  Mozilla Observatory and securityheaders.com; it now links to the
+  reportedip.com security header check with the site address filled in.
+- **"Delete All Failed" deletes all failed reports**, not only those that
+  had used up their retries.
+- **A key without a group no longer asks for one every few minutes.** When
+  the service answers that the key belongs to no group, the group sync waits
+  an hour before it asks again. Joining a group still shows up at once
+  through the key check, and the button on the Group tab always asks.
+- **Mail footers name the site by its address.** The "Protected by
+  ReportedIP Hive on ..." link showed the site title while pointing at the
+  site URL; a link text that names something other than its target is a
+  phishing signal for Microsoft 365 and Gmail. The mails also carry the site
+  language instead of a fixed `en`.
+
 ## [2.1.71] (2026-10-05)
 
 ### Fixes

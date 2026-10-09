@@ -73,5 +73,39 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertSame( 'disposable', \ReportedIP_Hive_Disposable_Email::classify_domain( 'throwaway.test', $rules ) );
 		}
+
+		public function test_emails_in_finds_nested_addresses_once(): void {
+			$post = array(
+				'your-email' => 'Jane@Mailinator.com',
+				'form_fields' => array( 'email' => 'jane@mailinator.com', 'name' => 'Jane' ),
+				'wpforms'     => array( 'fields' => array( 3 => ' bob@example.org ' ) ),
+				'message'     => 'mail me at no-address',
+				'count'       => 7,
+			);
+			$this->assertSame(
+				array( 'jane@mailinator.com', 'bob@example.org' ),
+				\ReportedIP_Hive_Disposable_Email::emails_in( $post )
+			);
+		}
+
+		public function test_emails_in_ignores_free_text_with_an_at_sign(): void {
+			$this->assertSame( array(), \ReportedIP_Hive_Disposable_Email::emails_in( array( 'message' => 'write to jane@mailinator.com please' ) ) );
+		}
+
+		public function test_forms_action_defaults_to_block(): void {
+			global $wp_options;
+			unset( $wp_options[ \ReportedIP_Hive_Disposable_Email::OPT_FORMS_ACTION ] );
+			$this->assertSame( 'block', \ReportedIP_Hive_Disposable_Email::get_instance()->forms_action() );
+			$wp_options[ \ReportedIP_Hive_Disposable_Email::OPT_FORMS_ACTION ] = 'nonsense';
+			$this->assertSame( 'block', \ReportedIP_Hive_Disposable_Email::get_instance()->forms_action() );
+			unset( $wp_options[ \ReportedIP_Hive_Disposable_Email::OPT_FORMS_ACTION ] );
+		}
+
+		public function test_check_submission_is_silent_when_off(): void {
+			global $wp_options;
+			$wp_options[ \ReportedIP_Hive_Disposable_Email::OPT_FORMS_ACTION ] = 'off';
+			$this->assertSame( '', \ReportedIP_Hive_Disposable_Email::get_instance()->check_submission( 'cf7', array( 'a@mailinator.com' ) ) );
+			unset( $wp_options[ \ReportedIP_Hive_Disposable_Email::OPT_FORMS_ACTION ] );
+		}
 	}
 }

@@ -843,6 +843,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Community threat check on forms', 'reportedip-hive' ),
 				'description' => __( 'Ask the community network about the visitor address when a comment, sign-up or password reset is submitted, using the same protection level the sign-in page enforces. Needs Community Network mode.', 'reportedip-hive' ),
 			),
+			'reportedip_hive_disposable_email_forms'       => array(
+				'section'     => 'forms',
+				'kind'        => 'enum',
+				'allowed'     => array( 'block', 'monitor', 'off' ),
+				'remote'      => true,
+				'label'       => __( 'Disposable email domains on forms and comments', 'reportedip-hive' ),
+				'description' => __( 'What happens when a comment or a protected contact form carries an address from a throwaway mail provider. A refused sender is asked at the form for a permanent address.', 'reportedip-hive' ),
+			),
 			'reportedip_hive_comment_spam_action'          => array(
 				'section'     => 'forms',
 				'kind'        => 'enum',

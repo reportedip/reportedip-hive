@@ -461,6 +461,19 @@ class ReportedIP_Hive_API {
 				'message'       => 'Domain limit exceeded',
 				'response_code' => 403,
 			);
+		} elseif ( $response_code === 400 && is_array( $response_data ) && 'ip_whitelisted' === ( $response_data['code'] ?? '' ) ) {
+			/*
+			 * A refusal, not an outage: the network vouches for this address
+			 * (a verified crawler, a CDN, a monitoring service). Counting it as
+			 * a failed call would degrade the API health for an answer that
+			 * came back fine, and retrying it can only get the same answer.
+			 */
+			$this->track_api_call( true, $response_time, null, 'submission' );
+			return array(
+				'success'     => false,
+				'message'     => (string) ( $response_data['message'] ?? 'ip_whitelisted' ),
+				'whitelisted' => true,
+			);
 		} else {
 			$this->track_api_call( false, $response_time, 'http_' . $response_code, 'submission', substr( (string) $body, 0, 200 ) );
 			$error_message = 'Unknown error';
@@ -668,6 +681,20 @@ class ReportedIP_Hive_API {
 					$category_ids = explode( ',', $report->category_ids ?? '' );
 					$result       = $this->report_ip( $report->ip_address, $category_ids, $report->comment ?? '' );
 					$success      = isset( $result['success'] ) ? (bool) $result['success'] : false;
+				}
+
+				if ( ! $success && is_array( $result ) && ! empty( $result['whitelisted'] ) ) {
+					$database->delete_api_queue_item( $report->id );
+					$this->logger->log_security_event(
+						'api_report_skipped',
+						$report->ip_address,
+						array(
+							'reason'  => 'whitelisted_by_network',
+							'message' => substr( (string) $result['message'], 0, 200 ),
+						),
+						'low'
+					);
+					continue;
 				}
 
 				if ( $success ) {

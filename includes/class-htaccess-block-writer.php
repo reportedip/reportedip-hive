@@ -187,7 +187,7 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 			return false;
 		}
 
-		$contents = file_get_contents( $file );
+		$contents = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- A local .htaccess next to WordPress; WP_Filesystem may ask for FTP credentials here, and core's insert_with_markers() uses plain file calls for the same file.
 		if ( false === $contents ) {
 			return false;
 		}
@@ -198,7 +198,7 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 			return false;
 		}
 
-		return false !== file_put_contents( $file, ltrim( $stripped, "\r\n" ) );
+		return false !== file_put_contents( $file, ltrim( $stripped, "\r\n" ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- A local .htaccess next to WordPress; WP_Filesystem may ask for FTP credentials here, and core's insert_with_markers() uses plain file calls for the same file.
 	}
 
 	/**
@@ -233,7 +233,7 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 		if ( '' === $file || ! file_exists( $file ) || ! is_readable( $file ) ) {
 			return false;
 		}
-		$contents = file_get_contents( $file );
+		$contents = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- A local .htaccess next to WordPress; WP_Filesystem may ask for FTP credentials here, and core's insert_with_markers() uses plain file calls for the same file.
 		if ( false === $contents ) {
 			return false;
 		}
@@ -275,6 +275,6 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 		if ( ! is_writable( $dir ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Writability probe for the same-host .htaccess directory; WP_Filesystem is unavailable here and unnecessary.
 			return false;
 		}
-		return false !== file_put_contents( $file, '' );
+		return false !== file_put_contents( $file, '' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- A local .htaccess next to WordPress; WP_Filesystem may ask for FTP credentials here, and core's insert_with_markers() uses plain file calls for the same file.
 	}
 }

@@ -98,6 +98,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_bot_action'                      => 'flag',
 		'reportedip_hive_disposable_email_action'         => 'monitor',
 		'reportedip_hive_block_email_relays'              => false,
+		'reportedip_hive_disposable_email_forms'          => 'block',
 		'reportedip_hive_comment_honeypot_enabled'        => true,
 		'reportedip_hive_comment_spam_action'             => 'spam',
 		'reportedip_hive_form_proof_enabled'              => true,
@@ -606,6 +607,7 @@ final class ReportedIP_Hive_Defaults {
 			'reportedip_hive_headers_enabled'         => 1,
 			'reportedip_hive_bot_action'              => 'community' === $mode ? 'block' : 'flag',
 			'reportedip_hive_disposable_email_action' => 'block',
+			'reportedip_hive_disposable_email_forms'  => 'block',
 			'reportedip_hive_comment_spam_threshold'  => self::SAFE_OPTIONS['reportedip_hive_comment_spam_threshold'],
 			'reportedip_hive_comment_spam_timeframe'  => self::SAFE_OPTIONS['reportedip_hive_comment_spam_timeframe'],
 		);

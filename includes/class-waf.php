@@ -614,7 +614,7 @@ class ReportedIP_Hive_WAF {
 
 		$previous_limit = ini_get( 'pcre.backtrack_limit' );
 		if ( false !== $previous_limit ) {
-			ini_set( 'pcre.backtrack_limit', (string) self::PCRE_BACKTRACK_LIMIT ); // phpcs:ignore WordPress.PHP.IniSet.Risky -- Bounding PCRE backtracking is a deliberate ReDoS mitigation, restored below.
+			ini_set( 'pcre.backtrack_limit', (string) self::PCRE_BACKTRACK_LIMIT ); // phpcs:ignore WordPress.PHP.IniSet.Risky, Squiz.PHP.DiscouragedFunctions.Discouraged -- Bounding PCRE backtracking is a deliberate ReDoS mitigation, restored below.
 		}
 
 		$hit = null;
@@ -643,7 +643,7 @@ class ReportedIP_Hive_WAF {
 		}
 
 		if ( false !== $previous_limit ) {
-			ini_set( 'pcre.backtrack_limit', (string) $previous_limit ); // phpcs:ignore WordPress.PHP.IniSet.Risky -- Restoring the previous PCRE backtrack limit.
+			ini_set( 'pcre.backtrack_limit', (string) $previous_limit ); // phpcs:ignore WordPress.PHP.IniSet.Risky, Squiz.PHP.DiscouragedFunctions.Discouraged -- Restoring the previous PCRE backtrack limit.
 		}
 
 		return $hit;

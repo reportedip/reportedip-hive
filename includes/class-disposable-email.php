@@ -23,7 +23,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Registration-time disposable-email and privacy-relay classifier.
+ * Disposable-email and privacy-relay classifier for registrations and,
+ * since 2.1.72, comments and protected third-party forms.
  *
  * @since 2.1.2
  */
@@ -38,6 +39,12 @@ class ReportedIP_Hive_Disposable_Email {
 	 * Whether privacy relays are blocked alongside throwaway domains.
 	 */
 	const OPT_BLOCK_RELAYS = 'reportedip_hive_block_email_relays';
+
+	/**
+	 * Action taken on a throwaway address in a comment or a protected
+	 * third-party form: off | monitor | block.
+	 */
+	const OPT_FORMS_ACTION = 'reportedip_hive_disposable_email_forms';
 
 	/**
 	 * Known privacy-relay domains. These are legitimate forwarding services, not
@@ -119,8 +126,20 @@ class ReportedIP_Hive_Disposable_Email {
 	 * @since  2.1.2
 	 */
 	public function action() {
-		$action = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_ACTION, 'monitor' );
-		return in_array( $action, array( 'off', 'monitor', 'block' ), true ) ? $action : 'monitor';
+		return self::read_action( self::OPT_ACTION, 'monitor' );
+	}
+
+	/**
+	 * A stored action, or the fallback when it is not one of the three.
+	 *
+	 * @param string $option   Option key.
+	 * @param string $fallback Action used for a missing or unknown value.
+	 * @return string off | monitor | block.
+	 * @since  2.1.72
+	 */
+	private static function read_action( $option, $fallback ) {
+		$action = (string) ReportedIP_Hive_Option_Routing::get( $option, $fallback );
+		return in_array( $action, array( 'off', 'monitor', 'block' ), true ) ? $action : $fallback;
 	}
 
 	/**
@@ -140,42 +159,137 @@ class ReportedIP_Hive_Disposable_Email {
 		if ( ! $this->is_enabled() ) {
 			return;
 		}
-		$domain = self::domain_of( $email );
-		if ( '' === $domain ) {
-			return;
-		}
-
-		$category = self::classify_domain( $domain, $this->get_disposable_rules() );
+		$category = $this->classify_address( $email );
 		if ( 'clean' === $category ) {
-			return;
-		}
-		if ( 'relay' === $category && ! ReportedIP_Hive_Option_Routing::get( self::OPT_BLOCK_RELAYS, false ) ) {
 			return;
 		}
 
 		$action = $this->action();
-		$ip     = class_exists( 'ReportedIP_Hive' ) ? ReportedIP_Hive::get_client_ip() : '';
-
-		if ( class_exists( 'ReportedIP_Hive' ) ) {
-			$logger = ReportedIP_Hive::get_instance()->get_logger();
-			if ( $logger instanceof ReportedIP_Hive_Logger ) {
-				$logger->log_security_event(
-					'disposable_email',
-					$ip,
-					array(
-						'domain'   => $domain,
-						'category' => $category,
-						'action'   => $action,
-					),
-					'low'
-				);
-			}
-		}
+		$this->log( self::domain_of( $email ), $category, $action, 'register' );
 
 		if ( 'block' === $action ) {
-			$errors->add(
-				'reportedip_hive_disposable_email',
-				__( 'Please use a permanent e-mail address. Disposable-mail providers are not accepted.', 'reportedip-hive' )
+			$errors->add( 'reportedip_hive_disposable_email', self::refusal() );
+		}
+	}
+
+	/**
+	 * The configured action for comments and protected forms.
+	 *
+	 * @return string off | monitor | block.
+	 * @since  2.1.72
+	 */
+	public function forms_action() {
+		return self::read_action( self::OPT_FORMS_ACTION, 'block' );
+	}
+
+	/**
+	 * Check the addresses of a comment or form submission.
+	 *
+	 * Logs the first throwaway (or, when relays are blocked, relay) address
+	 * and returns the refusal the sender sees while the action is `block`.
+	 *
+	 * @param string   $surface Surface identifier (`comment`, adapter slug).
+	 * @param string[] $emails  Addresses found in the submission.
+	 * @return string Refusal message, or an empty string to proceed.
+	 * @since  2.1.72
+	 */
+	public function check_submission( $surface, array $emails ) {
+		$action = $this->forms_action();
+		if ( 'off' === $action || array() === $emails ) {
+			return '';
+		}
+
+		foreach ( $emails as $email ) {
+			$category = $this->classify_address( (string) $email );
+			if ( 'clean' === $category ) {
+				continue;
+			}
+			$this->log( self::domain_of( (string) $email ), $category, $action, (string) $surface );
+			return 'block' === $action ? self::refusal() : '';
+		}
+
+		return '';
+	}
+
+	/**
+	 * Every distinct e-mail address among the scalar values of a submission.
+	 * Pure apart from `is_email()`; recurses into nested field arrays, so it
+	 * reads every form plugin without knowing its field names.
+	 *
+	 * @param array<mixed> $values Submitted values, typically `$_POST`.
+	 * @return string[]
+	 * @since  2.1.72
+	 */
+	public static function emails_in( array $values ) {
+		$found = array();
+		array_walk_recursive(
+			$values,
+			static function ( $value ) use ( &$found ) {
+				$value = is_string( $value ) ? strtolower( trim( $value ) ) : '';
+				if ( is_email( $value ) ) {
+					$found[ $value ] = $value;
+				}
+			}
+		);
+		return array_values( $found );
+	}
+
+	/**
+	 * Classify one address, honouring the relay switch: a relay counts as
+	 * clean unless the operator blocks relays.
+	 *
+	 * @param string $email E-mail address.
+	 * @return string `disposable` | `relay` | `clean`.
+	 * @since  2.1.72
+	 */
+	public function classify_address( $email ) {
+		$domain = self::domain_of( $email );
+		if ( '' === $domain ) {
+			return 'clean';
+		}
+		$category = self::classify_domain( $domain, $this->get_disposable_rules() );
+		if ( 'relay' === $category && ! ReportedIP_Hive_Option_Routing::get( self::OPT_BLOCK_RELAYS, false ) ) {
+			return 'clean';
+		}
+		return $category;
+	}
+
+	/**
+	 * The sentence a refused sender sees.
+	 *
+	 * @return string
+	 * @since  2.1.72
+	 */
+	public static function refusal() {
+		return __( 'Please use a permanent e-mail address. Disposable-mail providers are not accepted.', 'reportedip-hive' );
+	}
+
+	/**
+	 * Write the `disposable_email` event.
+	 *
+	 * @param string $domain   Matched domain.
+	 * @param string $category `disposable` or `relay`.
+	 * @param string $action   Configured action.
+	 * @param string $surface  Where the address was submitted.
+	 * @return void
+	 * @since  2.1.72
+	 */
+	private function log( $domain, $category, $action, $surface ) {
+		if ( ! class_exists( 'ReportedIP_Hive' ) ) {
+			return;
+		}
+		$logger = ReportedIP_Hive::get_instance()->get_logger();
+		if ( $logger instanceof ReportedIP_Hive_Logger ) {
+			$logger->log_security_event(
+				'disposable_email',
+				ReportedIP_Hive::get_client_ip(),
+				array(
+					'domain'   => $domain,
+					'category' => $category,
+					'action'   => $action,
+					'surface'  => $surface,
+				),
+				'low'
 			);
 		}
 	}

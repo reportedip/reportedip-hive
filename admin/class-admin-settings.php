@@ -1891,7 +1891,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$cols                       = 'created_at, blog_id, ip, user_id, username, event_type, event_action, object_type, object_id, object_label, event_data';
 		list( $where_sql, $params ) = ReportedIP_Hive_Audit_Log_Table::build_where( ReportedIP_Hive_Audit_Log_Table::filter_args() );
 		$sql                        = "SELECT $cols FROM $table WHERE $where_sql ORDER BY created_at DESC, id DESC LIMIT 10000";
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name from base_prefix; column list literal; the WHERE fragment binds its own parameters.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix; column list literal; the WHERE fragment binds its own parameters.
 		$rows = (array) $wpdb->get_results( empty( $params ) ? $sql : $wpdb->prepare( $sql, $params ), ARRAY_A );
 		foreach ( $rows as &$row ) {
 			$row['event_label'] = ReportedIP_Hive_Audit_Registry::label( (string) $row['event_type'], (string) $row['event_action'] );
@@ -3931,12 +3931,9 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 			<?php if ( '' !== $host ) : ?>
 			<div class="rip-score-verify">
-				<span class="rip-score-verify__label"><?php esc_html_e( 'Verify independently:', 'reportedip-hive' ); ?></span>
-				<a class="rip-button rip-button--secondary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( 'https://developer.mozilla.org/en-US/observatory/analyze?host=' . rawurlencode( $host ) ); ?>">
-					<?php esc_html_e( 'Mozilla Observatory', 'reportedip-hive' ); ?>
-				</a>
-				<a class="rip-button rip-button--secondary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( 'https://securityheaders.com/?followRedirects=on&q=' . rawurlencode( $host ) ); ?>">
-					<?php esc_html_e( 'securityheaders.com', 'reportedip-hive' ); ?>
+				<span class="rip-score-verify__label"><?php esc_html_e( 'Check from outside:', 'reportedip-hive' ); ?></span>
+				<a class="rip-button rip-button--secondary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( (string) apply_filters( 'reportedip_hive_external_url', REPORTEDIP_HIVE_SITE_URL . '/security-headers/?url=' . rawurlencode( home_url( '/' ) ), 'security_headers' ) ); ?>">
+					<?php esc_html_e( 'Security header check', 'reportedip-hive' ); ?>
 				</a>
 			</div>
 			<?php endif; ?>
@@ -4373,12 +4370,10 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Activity page: event log, IP lookup and audit trail, the IP lists, and the report queue.
 	 */
 	public function security_page() {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Tab navigation only, no data modification
 		list( $active_tab, $sub_tab ) = self::security_tab(
-			sanitize_key( wp_unslash( $_GET['tab'] ?? '' ) ),
-			sanitize_key( wp_unslash( $_GET['sub'] ?? '' ) )
+			sanitize_key( wp_unslash( $_GET['tab'] ?? '' ) ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab navigation only, changes nothing.
+			sanitize_key( wp_unslash( $_GET['sub'] ?? '' ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab navigation only, changes nothing.
 		);
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 
@@ -5068,8 +5063,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Render IP lookup tab
 	 */
 	private function render_lookup_tab() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Pre-fill lookup field from URL, no data modification
-		$lookup_ip = isset( $_GET['lookup_ip'] ) ? sanitize_text_field( wp_unslash( $_GET['lookup_ip'] ) ) : '';
+		$lookup_ip = isset( $_GET['lookup_ip'] ) ? sanitize_text_field( wp_unslash( $_GET['lookup_ip'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Pre-fills the lookup field from the URL, changes nothing.
 		?>
 		<div class="rip-card">
 			<div class="rip-card__header">
@@ -6280,8 +6274,10 @@ class ReportedIP_Hive_Admin_Settings {
 			$this->get_external_url( 'honeypot', REPORTEDIP_HIVE_HONEYPOT_URL )
 		);
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- tab selection only.
-		$tab = self::community_tab( $_GET['tab'] ?? '', $_GET['subtab'] ?? '' );
+		$tab = self::community_tab(
+			sanitize_key( wp_unslash( $_GET['tab'] ?? '' ) ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab selection only, changes nothing.
+			sanitize_key( wp_unslash( $_GET['subtab'] ?? '' ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab selection only, changes nothing.
+		);
 
 		$shortcodes         = ReportedIP_Hive_Frontend_Shortcodes::get_instance();
 		$contribution_stats = $shortcodes->get_cached_stats();

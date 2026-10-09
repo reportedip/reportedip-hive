@@ -233,7 +233,7 @@ final class ReportedIP_Hive_Attack_Surface {
 
 		$debug_display = defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY;
 		if ( ! $debug_display && function_exists( 'ini_set' ) ) {
-			ini_set( 'display_errors', '0' ); // phpcs:ignore WordPress.PHP.IniSet.display_errors_Disallowed -- That is the entire point of the switch; the WP_DEBUG_DISPLAY guard above keeps a developer's error output intact.
+			ini_set( 'display_errors', '0' ); // phpcs:ignore WordPress.PHP.IniSet.display_errors_Disallowed, Squiz.PHP.DiscouragedFunctions.Discouraged -- That is the entire point of the switch; the WP_DEBUG_DISPLAY guard above keeps a developer's error output intact.
 		}
 	}
 

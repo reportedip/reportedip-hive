@@ -97,33 +97,33 @@ class ReportedIP_Hive_Audit_Connector_Settings extends ReportedIP_Hive_Audit_Con
 	 *
 	 * @param string $option Option name.
 	 * @param mixed  $old    Previous value.
-	 * @param mixed  $new    New value.
+	 * @param mixed  $new_value    New value.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	public function on_option( $option, $old, $new ) {
+	public function on_option( $option, $old, $new_value ) {
 		$option = (string) $option;
 		global $wpdb;
 		if ( $wpdb->prefix . 'user_roles' === $option ) {
-			$this->log_roles( $old, $new );
+			$this->log_roles( $old, $new_value );
 			return;
 		}
-		$this->log_change( $option, $old, $new, false );
+		$this->log_change( $option, $old, $new_value, false );
 	}
 
 	/**
 	 * Network option changed. Core passes the new value before the old one here.
 	 *
 	 * @param string $option     Option name.
-	 * @param mixed  $new        New value.
+	 * @param mixed  $new_value        New value.
 	 * @param mixed  $old        Previous value.
 	 * @param int    $network_id Network id.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	public function on_site_option( $option, $new, $old, $network_id = 0 ) {
+	public function on_site_option( $option, $new_value, $old, $network_id = 0 ) {
 		unset( $network_id );
-		$this->log_change( (string) $option, $old, $new, true );
+		$this->log_change( (string) $option, $old, $new_value, true );
 	}
 
 	/**
@@ -131,22 +131,22 @@ class ReportedIP_Hive_Audit_Connector_Settings extends ReportedIP_Hive_Audit_Con
 	 *
 	 * @param string $option  Option name.
 	 * @param mixed  $old     Previous value.
-	 * @param mixed  $new     New value.
+	 * @param mixed  $new_value     New value.
 	 * @param bool   $network Network option.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	private function log_change( $option, $old, $new, $network ) {
+	private function log_change( $option, $old, $new_value, $network ) {
 		$label = self::watched_label( $option, $network );
 		if ( null === $label ) {
 			return;
 		}
 		if ( self::is_secret( $option ) ) {
-			$old = '';
-			$new = '';
+			$old       = '';
+			$new_value = '';
 		}
-		$old_row = self::value_for_row( $old, $new );
-		$new_row = self::value_for_row( $new, $old );
+		$old_row = self::value_for_row( $old, $new_value );
+		$new_row = self::value_for_row( $new_value, $old );
 		if ( $old_row === $new_row ) {
 			return;
 		}
@@ -175,15 +175,15 @@ class ReportedIP_Hive_Audit_Connector_Settings extends ReportedIP_Hive_Audit_Con
 	 * Role table changed: added or removed roles and roles whose capabilities differ.
 	 *
 	 * @param mixed $old Previous `user_roles` blob.
-	 * @param mixed $new New blob.
+	 * @param mixed $new_value New blob.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	private function log_roles( $old, $new ) {
+	private function log_roles( $old, $new_value ) {
 		if ( ! ReportedIP_Hive_Audit_Registry::group_enabled( 'users' ) ) {
 			return;
 		}
-		$diff = self::diff_roles( is_array( $old ) ? $old : array(), is_array( $new ) ? $new : array() );
+		$diff = self::diff_roles( is_array( $old ) ? $old : array(), is_array( $new_value ) ? $new_value : array() );
 		if ( empty( $diff['added'] ) && empty( $diff['removed'] ) && empty( $diff['caps_changed'] ) ) {
 			return;
 		}
@@ -206,17 +206,17 @@ class ReportedIP_Hive_Audit_Connector_Settings extends ReportedIP_Hive_Audit_Con
 	 * Pure diff of two role tables.
 	 *
 	 * @param array<string, array<string,mixed>> $old Old roles.
-	 * @param array<string, array<string,mixed>> $new New roles.
+	 * @param array<string, array<string,mixed>> $new_value New roles.
 	 * @return array{added:string[], removed:string[], caps_changed:string[]}
 	 * @since  2.1.62
 	 */
-	public static function diff_roles( array $old, array $new ) {
-		$added   = array_values( array_diff( array_keys( $new ), array_keys( $old ) ) );
-		$removed = array_values( array_diff( array_keys( $old ), array_keys( $new ) ) );
+	public static function diff_roles( array $old, array $new_value ) {
+		$added   = array_values( array_diff( array_keys( $new_value ), array_keys( $old ) ) );
+		$removed = array_values( array_diff( array_keys( $old ), array_keys( $new_value ) ) );
 		$changed = array();
-		foreach ( array_intersect( array_keys( $old ), array_keys( $new ) ) as $role ) {
+		foreach ( array_intersect( array_keys( $old ), array_keys( $new_value ) ) as $role ) {
 			$old_caps = (array) ( $old[ $role ]['capabilities'] ?? array() );
-			$new_caps = (array) ( $new[ $role ]['capabilities'] ?? array() );
+			$new_caps = (array) ( $new_value[ $role ]['capabilities'] ?? array() );
 			ksort( $old_caps );
 			ksort( $new_caps );
 			if ( $old_caps !== $new_caps ) {

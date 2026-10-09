@@ -548,46 +548,46 @@ final class ReportedIP_Hive_Hardening_Mode {
 	/**
 	 * Effective failed-login threshold during hardening.
 	 *
-	 * @param int $default Admin-configured value.
+	 * @param int $fallback Admin-configured value.
 	 * @return int
 	 */
-	public static function effective_failed_login_threshold( $default ) {
+	public static function effective_failed_login_threshold( $fallback ) {
 		if ( ! self::is_active() ) {
-			return (int) $default;
+			return (int) $fallback;
 		}
 		$hard = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_login_threshold', self::DEFAULT_LOGIN_THRESHOLD );
 		$hard = max( 1, min( 10, $hard ) );
-		return min( (int) $default, $hard );
+		return min( (int) $fallback, $hard );
 	}
 
 	/**
 	 * Effective failed-login timeframe (minutes) during hardening.
 	 *
-	 * @param int $default Admin-configured value (minutes).
+	 * @param int $fallback Admin-configured value (minutes).
 	 * @return int
 	 */
-	public static function effective_failed_login_timeframe( $default ) {
+	public static function effective_failed_login_timeframe( $fallback ) {
 		if ( ! self::is_active() ) {
-			return (int) $default;
+			return (int) $fallback;
 		}
 		$hard = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_login_timeframe', self::DEFAULT_LOGIN_TIMEFRAME );
 		$hard = max( 1, min( 60, $hard ) );
-		return min( (int) $default, $hard );
+		return min( (int) $fallback, $hard );
 	}
 
 	/**
 	 * Effective reputation-block threshold (percentage) during hardening.
 	 *
-	 * @param int $default Admin-configured value.
+	 * @param int $fallback Admin-configured value.
 	 * @return int
 	 */
-	public static function effective_block_threshold( $default ) {
+	public static function effective_block_threshold( $fallback ) {
 		if ( ! self::is_active() ) {
-			return (int) $default;
+			return (int) $fallback;
 		}
 		$hard = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hardening_block_threshold', self::DEFAULT_BLOCK_THRESHOLD );
 		$hard = max( ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD, min( 100, $hard ) );
-		return min( (int) $default, $hard );
+		return min( (int) $fallback, $hard );
 	}
 
 	/**

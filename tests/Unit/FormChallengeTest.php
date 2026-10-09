@@ -68,10 +68,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'ok', \ReportedIP_Hive_Form_Challenge::verify( $minted['token'], $nonce, self::NOW + 5 ) );
 		}
 
-		public function test_mint_returns_the_four_fields(): void {
+		public function test_mint_returns_the_five_fields(): void {
 			$minted = \ReportedIP_Hive_Form_Challenge::mint( 0, self::NOW );
 
-			$this->assertSame( array( 'token', 'seed', 'bits', 'expires' ), array_keys( $minted ) );
+			$this->assertSame( array( 'token', 'seed', 'bits', 'expires', 'ttl' ), array_keys( $minted ) );
+			$this->assertSame( \ReportedIP_Hive_Form_Challenge::TTL, $minted['ttl'], 'the browser replaces an answer before this lifetime runs out' );
 			$this->assertSame( 0, $minted['bits'] );
 			$this->assertSame( self::NOW + \ReportedIP_Hive_Form_Challenge::TTL, $minted['expires'] );
 			$this->assertSame( 16, strlen( $minted['seed'] ) );

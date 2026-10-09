@@ -21,6 +21,7 @@
  * @phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
  * @phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching
  * @phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from base_prefix; ORDER BY column/dir whitelisted.
+ * @phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, WHERE built from bound placeholders only.
  * @phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- Filtered count/select use $wpdb->prepare with bound params; the no-filter count path is a constant query.
  */
 

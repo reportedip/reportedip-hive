@@ -353,7 +353,7 @@ class ReportedIP_Hive_API_Queue_Table extends WP_List_Table {
 				'reportedip_hive_queue',
 				'queue_deleted',
 				/* translators: %d: number of deleted reports */
-				sprintf( __( '%d permanently failed reports deleted.', 'reportedip-hive' ), $deleted ),
+				sprintf( __( '%d failed reports deleted.', 'reportedip-hive' ), $deleted ),
 				'success'
 			);
 			return;

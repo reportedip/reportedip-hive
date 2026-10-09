@@ -252,13 +252,8 @@ class ReportedIP_Hive_MainWP_Integration {
 		$table  = $wpdb->base_prefix . 'reportedip_hive_logs';
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $hours ) * HOUR_IN_SECONDS );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Aggregate count for a remote dashboard sync; table name is internal.
-		$count = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$table} WHERE severity IN ('high', 'critical') AND created_at >= %s",
-				$cutoff
-			)
-		);
+		$sql   = "SELECT COUNT(*) FROM {$table} WHERE severity IN ('high', 'critical') AND created_at >= %s";
+		$count = $wpdb->get_var( $wpdb->prepare( $sql, $cutoff ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Aggregate count for a remote dashboard sync; the table name comes from base_prefix.
 
 		return (int) $count;
 	}
@@ -285,14 +280,8 @@ class ReportedIP_Hive_MainWP_Integration {
 
 		$placeholders = implode( ', ', array_fill( 0, count( $keys ), '%s' ) );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Aggregate count for a remote dashboard sync.
-		$count = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(DISTINCT user_id) FROM {$wpdb->usermeta}
-				 WHERE meta_key IN ($placeholders) AND meta_value IN ('1', 'yes', 'true')",
-				$keys
-			)
-		);
+		$sql   = "SELECT COUNT(DISTINCT user_id) FROM {$wpdb->usermeta} WHERE meta_key IN ($placeholders) AND meta_value IN ('1', 'yes', 'true')";
+		$count = $wpdb->get_var( $wpdb->prepare( $sql, $keys ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Aggregate count for a remote dashboard sync; $placeholders is one %s per meta key.
 
 		return (int) $count;
 	}

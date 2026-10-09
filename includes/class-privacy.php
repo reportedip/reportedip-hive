@@ -140,7 +140,7 @@ class ReportedIP_Hive_Privacy {
 		$items = array();
 
 		$attempts_table = $wpdb->base_prefix . 'reportedip_hive_attempts';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, every value bound through prepare().
 		$attempts = $wpdb->get_results( $wpdb->prepare( "SELECT id, ip_address, attempt_type, attempt_count, first_attempt, last_attempt FROM {$attempts_table} WHERE username = %s", $user->user_login ) );
 		foreach ( (array) $attempts as $row ) {
 			$items[] = array(
@@ -173,7 +173,7 @@ class ReportedIP_Hive_Privacy {
 		}
 
 		$devices_table = $wpdb->base_prefix . 'reportedip_hive_trusted_devices';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, every value bound through prepare().
 		$devices = $wpdb->get_results( $wpdb->prepare( "SELECT id, device_name, ip_address, created_at, expires_at, last_used_at FROM {$devices_table} WHERE user_id = %d", $user->ID ) );
 		foreach ( (array) $devices as $row ) {
 			$items[] = array(
@@ -206,7 +206,7 @@ class ReportedIP_Hive_Privacy {
 		}
 
 		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, every value bound through prepare().
 		$audit = $wpdb->get_results( $wpdb->prepare( "SELECT id, created_at, ip, event_type, event_action, event_data FROM {$audit_table} WHERE user_id = %d OR (object_type = 'user' AND object_id = %d)", $user->ID, $user->ID ) );
 		foreach ( (array) $audit as $row ) {
 			$items[] = array(
@@ -359,15 +359,15 @@ class ReportedIP_Hive_Privacy {
 		$removed = 0;
 
 		$attempts_table = $wpdb->base_prefix . 'reportedip_hive_attempts';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, every value bound through prepare().
 		$removed += (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$attempts_table} WHERE username = %s", $user->user_login ) );
 
 		$removed += ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user->ID );
 
 		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, every value bound through prepare().
 		$removed += (int) $wpdb->query( $wpdb->prepare( "UPDATE {$audit_table} SET username = '', ip = '', user_id = NULL, event_data = NULL WHERE user_id = %d", $user->ID ) );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, every value bound through prepare().
 		$removed += (int) $wpdb->query( $wpdb->prepare( "UPDATE {$audit_table} SET object_label = NULL, event_data = NULL WHERE object_type = 'user' AND object_id = %d", $user->ID ) );
 
 		delete_user_meta( $user->ID, '_reportedip_hive_known_ips' );

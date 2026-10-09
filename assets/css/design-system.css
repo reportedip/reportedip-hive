@@ -3195,3 +3195,19 @@ button.rip-tier-lock--mode:hover {
 .rip-areas__gain {
     text-decoration: none;
 }
+
+/* Extended Protection: technical facts as a label/value list (since 2.1.72). */
+.rip-facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--rip-space-2) var(--rip-space-5);
+    margin: 0 0 var(--rip-space-3);
+    font-size: var(--rip-text-sm);
+}
+.rip-facts dt {
+    color: var(--rip-gray-500);
+}
+.rip-facts dd {
+    margin: 0;
+    color: var(--rip-gray-900);
+}

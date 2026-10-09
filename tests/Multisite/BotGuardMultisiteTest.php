@@ -129,11 +129,14 @@ class ReportedIP_Hive_Bot_Guard_Multisite_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A honeypot-path hit blocks even from inside the official crawler ranges:
-	 * nothing links to those paths, so arriving there is the attack indicator
-	 * no matter which crawler the request claims to be.
+	 * A honeypot-path hit from inside the official crawler ranges is spared
+	 * since 2.1.72. The address proves the crawler operator, and a crawler
+	 * follows any link someone planted: OAI-SearchBot from OpenAI's own range
+	 * asked a live site for `/cgi-bin/printenv`, was blocked and reported, and
+	 * the community network refused the report. A user-agent alone still loses
+	 * the exemption on such a path (unit test of PROVEN_BOT_REASONS).
 	 */
-	public function test_honeypot_hit_blocks_even_ranged_crawler_ip() {
+	public function test_honeypot_hit_spares_a_ranged_crawler_ip() {
 		global $wpdb;
 
 		$monitor = new ReportedIP_Hive_Security_Monitor();
@@ -150,17 +153,17 @@ class ReportedIP_Hive_Bot_Guard_Multisite_Test extends WP_UnitTestCase {
 		);
 
 		$blocked = ReportedIP_Hive_Schema::table( 'reportedip_hive_blocked' );
-		$this->assertGreaterThan(
+		$this->assertSame(
 			0,
 			(int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $blocked WHERE ip_address = %s AND is_active = 1", self::CRAWLER_IP ) ),
-			'A honeypot path hit must auto-block regardless of any crawler exemption.'
+			'A crawler proven by its address range is not blocked for a bait path.'
 		);
 
 		$logs = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
-		$this->assertSame(
-			'0',
-			(string) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $logs WHERE ip_address = %s AND event_type = %s", self::CRAWLER_IP, 'verified_bot_block_averted' ) ),
-			'The exemption must be denied, not averted.'
+		$this->assertGreaterThan(
+			0,
+			(int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $logs WHERE ip_address = %s AND event_type = %s", self::CRAWLER_IP, 'verified_bot_block_averted' ) ),
+			'The spared decision is logged as averted.'
 		);
 	}
 }

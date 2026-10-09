@@ -264,7 +264,7 @@ class ReportedIP_Hive_Cache {
 		 * is always worth recording.
 		 */
 		/* Timestamp rather than counter: a read-then-increment loses one of two
-		   concurrent flushes, and both wanted the same thing. */
+			concurrent flushes, and both wanted the same thing. */
 		$epoch            = time();
 		self::$epoch_memo = $epoch;
 		ReportedIP_Hive_Option_Routing::set( self::OPTION_CACHE_EPOCH, $epoch );

@@ -540,6 +540,21 @@ class ReportedIP_Hive_Security_Monitor {
 	);
 
 	/**
+	 * Verifier results that prove the request came from the crawler operator's
+	 * own network. An impersonator can copy a user-agent but not an address in
+	 * the published range or a matching forward-confirmed reverse DNS, so a
+	 * malicious-looking path from such an address is the crawler following a
+	 * link someone planted, not an attack by the crawler (OAI-SearchBot asking
+	 * for `/cgi-bin/printenv`). The address is spared like any other verified
+	 * crawler hit; blocking it costs the site its search listing, and the
+	 * community network refuses the report anyway.
+	 *
+	 * @var string[]
+	 * @since 2.1.72
+	 */
+	const PROVEN_BOT_REASONS = array( 'ip_range_match', 'fcrdns_confirmed', 'official_range_match' );
+
+	/**
 	 * Last line of the never-block-a-good-bot defence.
 	 *
 	 * Every automatic IP block funnels through `handle_threshold_exceeded()`;
@@ -588,7 +603,7 @@ class ReportedIP_Hive_Security_Monitor {
 			? ReportedIP_Hive_Bot_Verifier::get_instance()->last_reason()
 			: 'ua_allowlist';
 
-		if ( $this->is_unambiguously_malicious( $event_type, $details ) ) {
+		if ( ! in_array( $reason, self::PROVEN_BOT_REASONS, true ) && $this->is_unambiguously_malicious( $event_type, $details ) ) {
 			$this->log_exemption_denied( $ip_address, $event_type, $details, $ua, $reason );
 			return false;
 		}

@@ -157,6 +157,7 @@ final class ReportedIP_Hive_Form_Challenge {
 			'seed'    => self::seed( $token ),
 			'bits'    => $bits,
 			'expires' => (int) $claims['e'],
+			'ttl'     => self::ttl(),
 		);
 	}
 

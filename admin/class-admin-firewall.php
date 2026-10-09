@@ -77,24 +77,6 @@ class ReportedIP_Hive_Admin_Firewall {
 	}
 
 	/**
-	 * Render a single stat card (value or badge plus label).
-	 *
-	 * @param array<string,string> $args {value: string, label: string, badge?: badge modifier class}.
-	 * @return void
-	 * @since  2.1.2
-	 */
-	private static function render_stat_card( array $args ) {
-		$badge = isset( $args['badge'] ) ? (string) $args['badge'] : '';
-		echo '<div class="rip-stat-card"><div class="rip-stat-card__content"><div class="rip-stat-card__value">';
-		if ( '' !== $badge ) {
-			printf( '<span class="rip-badge %s">%s</span>', esc_attr( $badge ), esc_html( (string) $args['value'] ) );
-		} else {
-			echo esc_html( (string) $args['value'] );
-		}
-		echo '</div><div class="rip-stat-card__label">' . esc_html( (string) $args['label'] ) . '</div></div></div>';
-	}
-
-	/**
 	 * Render a labelled select row whose options carry a `data-opt` attribute
 	 * for the bulk-save handler.
 	 *
@@ -338,10 +320,14 @@ class ReportedIP_Hive_Admin_Firewall {
 	}
 
 	/**
-	 * Render the "Extended Protection" box on the WAF tab: live setup state of
-	 * the optional pre-WordPress drop-in. The definitive signal is whether the
-	 * guard executed for the current request; the actual config snippets live on
-	 * the Server Setup tab so the operator configures the server in one place.
+	 * Render the "Extended Protection" card on the Server tab: one state, one
+	 * main action, technical facts folded away.
+	 *
+	 * Until 2.1.72 the card showed four stat tiles, a long paragraph, a primary
+	 * "Disable" button and a link to the tab it already sat on, and a second
+	 * card further down repeated the status. Both are one card now: the state
+	 * decides what the operator reads and which button is offered, and the
+	 * server snippets appear only while a manual step is open.
 	 *
 	 * @since 2.1.2
 	 * @return void
@@ -350,62 +336,44 @@ class ReportedIP_Hive_Admin_Firewall {
 		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
 			return;
 		}
-		$dropin     = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
-		$enabled    = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
-		$server     = $dropin->detect_server();
-		$running    = $dropin->is_running();
-		$auto       = $dropin->supports_auto_install();
-		$server_lbl = array(
-			'apache'  => 'Apache (mod_php, .htaccess)',
-			'fpm'     => 'PHP-FPM / CGI (.user.ini)',
-			'nginx'   => 'nginx (manual setup)',
-			'unknown' => __( 'Unknown', 'reportedip-hive' ),
-		);
+		$dropin   = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+		$enabled  = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
+		$server   = $dropin->detect_server();
+		$running  = $dropin->is_running();
+		$auto     = $dropin->supports_auto_install();
+		$queue_ok = $dropin->queue_is_writable();
 
 		if ( ! $enabled ) {
-			$status_value = __( 'Off', 'reportedip-hive' );
-			$status_badge = 'rip-badge--neutral';
+			$state = array( __( 'Off', 'reportedip-hive' ), 'rip-badge--neutral' );
 		} elseif ( $running ) {
-			$status_value = __( 'Running', 'reportedip-hive' );
-			$status_badge = 'rip-badge--success';
+			$state = array( __( 'Active', 'reportedip-hive' ), 'rip-badge--success' );
+		} elseif ( $auto ) {
+			$state = array( __( 'Setting up', 'reportedip-hive' ), 'rip-badge--warning' );
 		} else {
-			$status_value = __( 'Waiting for server config', 'reportedip-hive' );
-			$status_badge = 'rip-badge--warning';
+			$state = array( __( 'One step left', 'reportedip-hive' ), 'rip-badge--warning' );
 		}
 
-		echo '<div class="rip-card" id="rip-waf-dropin"><div class="rip-card__header"><h2>' . esc_html__( 'Extended Protection (pre-WordPress)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Optionally run the firewall before WordPress loads, so a malicious request is rejected earlier and cheaper. Off by default and free on every plan. Turning it on brings a few extra settings with it: Hive generates a guard file, a server-config directive is added on the Server Setup tab (written automatically on Apache and PHP-FPM; one manual step on nginx or via php.ini), and the guard then applies the same rule exceptions and paranoia level as the in-WordPress engine.', 'reportedip-hive' ) . '</p>';
+		printf(
+			'<div class="rip-card rip-mb-4" id="rip-waf-dropin"><div class="rip-card__header"><h2 class="rip-card__title">%1$s</h2><span class="rip-badge %2$s">%3$s</span></div><div class="rip-card__body">',
+			esc_html__( 'Extended Protection', 'reportedip-hive' ),
+			esc_attr( $state[1] ),
+			esc_html( $state[0] )
+		);
+		echo '<p class="rip-help-text">' . esc_html__( 'Stops attacks before WordPress even starts, so a blocked request costs the server almost nothing. Free on every plan and optional: the firewall inside WordPress protects the site either way.', 'reportedip-hive' ) . '</p>';
 
-		echo '<div class="rip-grid rip-grid-cols-3">';
-		self::render_stat_card(
-			array(
-				'value' => $status_value,
-				'badge' => $status_badge,
-				'label' => __( 'Status', 'reportedip-hive' ),
-			)
-		);
-		self::render_stat_card(
-			array(
-				'value' => $server_lbl[ $server ] ?? $server,
-				'label' => __( 'Detected server', 'reportedip-hive' ),
-			)
-		);
-		self::render_stat_card(
-			array(
-				'value' => $dropin->guard_exists() ? __( 'Generated', 'reportedip-hive' ) : __( 'Not generated', 'reportedip-hive' ),
-				'badge' => $dropin->guard_exists() ? 'rip-badge--success' : 'rip-badge--neutral',
-				'label' => __( 'Guard file', 'reportedip-hive' ),
-			)
-		);
-		$queue_ok = $dropin->queue_is_writable();
-		self::render_stat_card(
-			array(
-				'value' => $queue_ok ? __( 'Recording', 'reportedip-hive' ) : __( 'Not writable', 'reportedip-hive' ),
-				'badge' => $queue_ok ? 'rip-badge--success' : 'rip-badge--warning',
-				'label' => __( 'Hit logging', 'reportedip-hive' ),
-			)
-		);
-		echo '</div>';
+		if ( ! $enabled ) {
+			echo '<p>' . esc_html(
+				$auto
+					? __( 'Hive sets this up by itself on this server. Nothing to copy, nothing to configure.', 'reportedip-hive' )
+					: __( 'On this server it needs one line in the server configuration. Hive shows you the line with your paths filled in right after you turn it on.', 'reportedip-hive' )
+			) . '</p>';
+		} elseif ( $running ) {
+			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Active. Every request to this site passes the firewall before WordPress loads. Hive keeps the guard up to date by itself.', 'reportedip-hive' ) . '</div>';
+		} elseif ( $auto ) {
+			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Hive has written the setting. The server picks it up within five minutes; reload this page then. If it stays on "Setting up", use one of the manual options below.', 'reportedip-hive' ) . '</div>';
+		} else {
+			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'Add one line to your server configuration. Pick one of the two options below, whichever your hosting lets you edit. The status turns to Active by itself once it works.', 'reportedip-hive' ) . '</div>';
+		}
 
 		if ( $enabled && ! $queue_ok ) {
 			echo '<div class="rip-alert rip-alert--warning">';
@@ -417,128 +385,80 @@ class ReportedIP_Hive_Admin_Firewall {
 			echo '</div>';
 		}
 
-		if ( $enabled && $running ) {
-			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Setup complete, the guard executed for this very request, so every request to this site passes the firewall before WordPress loads.', 'reportedip-hive' ) . '</div>';
-		} elseif ( $enabled && $auto ) {
-			echo '<div class="rip-alert rip-alert--info">';
-			printf(
-				/* translators: 1: opening link tag to the Server Setup tab, 2: closing tag. */
-				esc_html__( 'The directive was written automatically. PHP-FPM caches .user.ini for up to five minutes, reload this page shortly. If the status never flips to Running (common on nginx + PHP-FPM), the %1$sServer Setup tab%2$s carries a manual nginx / php.ini option you can apply instead.', 'reportedip-hive' ),
-				'<a href="' . esc_url( self::tab_url( 'server' ) ) . '">',
-				'</a>'
-			);
-			echo '</div>';
-		} elseif ( $enabled ) {
-			echo '<div class="rip-alert rip-alert--warning">';
-			printf(
-				/* translators: 1: opening link tag to the Server Setup tab, 2: closing tag. */
-				esc_html__( 'One manual step left: add the directive to your server. The %1$sServer Setup tab%2$s shows both options (nginx snippet or php.ini line) with your live paths, this status flips to Running automatically once it works.', 'reportedip-hive' ),
-				'<a href="' . esc_url( self::tab_url( 'server' ) ) . '">',
-				'</a>'
-			);
-			echo '</div>';
+		if ( $enabled && ! $running ) {
+			if ( $auto ) {
+				self::render_disclosure( __( 'Manual options', 'reportedip-hive' ), array( $this, 'render_dropin_manual_steps' ) );
+			} else {
+				$this->render_dropin_manual_steps();
+			}
 		}
 
-		printf(
-			'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" data-opt="%1$s" value="1"%2$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%3$s</span></label>',
-			esc_attr( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED ),
-			checked( (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED, true ), true, false ),
-			esc_html__( 'Leave the request body of signed-in users alone', 'reportedip-hive' )
-		);
-		ReportedIP_Hive_Admin_Settings::render_field_help( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED );
-		self::render_card_save_button();
+		if ( $enabled ) {
+			printf(
+				'<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" data-opt="%1$s" value="1"%2$s /><span class="rip-toggle__slider"></span><span class="rip-toggle__label">%3$s</span></label>',
+				esc_attr( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED ),
+				checked( (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED, true ), true, false ),
+				esc_html__( 'Leave the request body of signed-in users alone', 'reportedip-hive' )
+			);
+			ReportedIP_Hive_Admin_Settings::render_field_help( ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED );
+			self::render_card_save_button();
+		}
 
-		printf(
-			'<p><button type="button" class="rip-button rip-button--primary" data-rip-action="reportedip_hive_waf_dropin_toggle">%s</button> ',
-			esc_html( $enabled ? __( 'Disable extended protection', 'reportedip-hive' ) : __( 'Enable extended protection', 'reportedip-hive' ) )
+		$server_lbl = array(
+			'apache'  => 'Apache (.htaccess)',
+			'fpm'     => 'PHP-FPM / CGI (.user.ini)',
+			'nginx'   => 'nginx',
+			'unknown' => __( 'Unknown', 'reportedip-hive' ),
 		);
-		printf(
-			'<a href="%s" class="rip-button rip-button--secondary">%s</a></p>',
-			esc_url( self::tab_url( 'server' ) ),
-			esc_html__( 'Open Server Setup', 'reportedip-hive' )
+		self::render_disclosure(
+			__( 'Technical details', 'reportedip-hive' ),
+			static function () use ( $dropin, $server, $server_lbl, $queue_ok, $auto ) {
+				echo '<dl class="rip-facts">';
+				echo '<dt>' . esc_html__( 'Detected server', 'reportedip-hive' ) . '</dt><dd>' . esc_html( $server_lbl[ $server ] ?? $server ) . '</dd>';
+				echo '<dt>' . esc_html__( 'Setup', 'reportedip-hive' ) . '</dt><dd>' . esc_html( $auto ? __( 'Automatic', 'reportedip-hive' ) : __( 'Manual, one line', 'reportedip-hive' ) ) . '</dd>';
+				echo '<dt>' . esc_html__( 'Guard file', 'reportedip-hive' ) . '</dt><dd>' . esc_html( $dropin->guard_exists() ? __( 'Generated', 'reportedip-hive' ) : __( 'Not generated', 'reportedip-hive' ) ) . '</dd>';
+				echo '<dt>' . esc_html__( 'Hit logging', 'reportedip-hive' ) . '</dt><dd>' . esc_html( $queue_ok ? __( 'Recording', 'reportedip-hive' ) : __( 'Not writable', 'reportedip-hive' ) ) . '</dd>';
+				echo '</dl>';
+				echo '<p class="rip-help-text">' . esc_html__( 'The guard applies the same rules, exceptions, whitelist and IP blocks as the firewall inside WordPress. It fails open: if anything goes wrong, the request simply reaches WordPress.', 'reportedip-hive' ) . '</p>';
+			}
 		);
 
+		echo '</div><div class="rip-card__footer">';
+		printf(
+			'<button type="button" class="rip-button %1$s" data-rip-action="reportedip_hive_waf_dropin_toggle">%2$s</button>',
+			esc_attr( $enabled ? 'rip-button--secondary' : 'rip-button--primary' ),
+			esc_html( $enabled ? __( 'Turn off', 'reportedip-hive' ) : __( 'Turn on', 'reportedip-hive' ) )
+		);
 		echo '</div></div>';
 	}
 
-
-
-
-
 	/**
-	 * Render the Server Setup tab: every web-server-level rule the plugin can
-	 * use, in one place, the WAF drop-in directive (auto or manual), the decoy
-	 * rewrite rules and an optional server-level export of the security
-	 * headers. All sections are optional; the PHP sensors work without them.
+	 * A folded section in the design-system disclosure style.
 	 *
-	 * @since 2.1.3
+	 * @param string   $label  Summary text.
+	 * @param callable $render Renders the folded content.
 	 * @return void
+	 * @since  2.1.72
 	 */
-	public function render_server_tab() {
-		self::render_tab_intro( __( 'All web-server-level rules in one place, with your live paths filled in. Everything here is optional, the PHP sensors work without any of it, but each rule rejects bad requests one layer earlier. Configure your server once, from this tab only.', 'reportedip-hive' ) );
-
-		$this->render_server_waf_section();
-		$this->render_server_decoy_section();
-		$this->render_server_headers_section();
+	private static function render_disclosure( $label, callable $render ) {
+		printf(
+			'<details class="rip-protection__details"><summary><svg class="rip-protection__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="6 9 12 15 18 9"/></svg>%s</summary>',
+			esc_html( $label )
+		);
+		call_user_func( $render );
+		echo '</details>';
 	}
 
 	/**
-	 * Render the WAF drop-in section of the Server Setup tab: the live status,
-	 * the auto-managed state on Apache/FPM, and the two manual options (nginx
-	 * snippet or php.ini line) as an explicit either/or choice.
+	 * The two manual ways to load the guard (php.ini line or nginx block), plus
+	 * what to do before removing Hive, because a directive in a file Hive
+	 * cannot edit stays behind.
 	 *
-	 * @since 2.1.3
+	 * @since 2.1.72
 	 * @return void
 	 */
-	private function render_server_waf_section() {
-		if ( ! class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ) {
-			return;
-		}
-		$dropin  = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
-		$enabled = (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
-		$running = $dropin->is_running();
-		$auto    = $dropin->supports_auto_install();
-
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'WAF Extended Protection (auto_prepend_file)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Runs the firewall guard before WordPress loads. Hive generates the guard file; the server only needs one auto_prepend_file directive pointing at it.', 'reportedip-hive' ) . '</p>';
-
-		if ( ! $enabled ) {
-			echo '<div class="rip-alert rip-alert--info">';
-			printf(
-				/* translators: 1: opening link tag to the WAF tab, 2: closing tag. */
-				esc_html__( 'Extended Protection is currently off. Enable it on the %1$sWAF tab%2$s first, that generates the guard file this directive points at.', 'reportedip-hive' ),
-				'<a href="' . esc_url( self::tab_url( 'waf' ) ) . '">',
-				'</a>'
-			);
-			echo '</div>';
-			echo '</div></div>';
-			return;
-		}
-
-		if ( $running ) {
-			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Setup complete, the guard executed for this very request. No further action needed; Hive keeps the guard file up to date automatically on every rule sync.', 'reportedip-hive' ) . '</div>';
-		}
-
-		if ( $auto && $running ) {
-			echo '<p class="rip-help-text">' . esc_html__( 'This server is auto-managed, Hive wrote and maintains the directive itself (.htaccess on Apache, .user.ini on PHP-FPM).', 'reportedip-hive' ) . '</p>';
-			echo '</div></div>';
-			return;
-		}
-
-		/*
-		 * `detect_server()` reports the PHP SAPI, so an nginx + PHP-FPM stack is
-		 * classified as `fpm` and Hive writes a `.user.ini`. That file is only
-		 * honoured when PHP's `user_ini.filename` is enabled and the document
-		 * root is the scan path, frequently not the case on nginx. When the
-		 * auto-written directive has not taken effect we therefore fall through
-		 * to the manual snippets (php.ini / FPM pool + nginx server block) so
-		 * nginx operators are never left without instructions.
-		 */
-		if ( $auto && ! $running ) {
-			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Hive wrote the directive automatically (.htaccess on Apache, .user.ini on PHP-FPM), and PHP-FPM caches .user.ini for up to five minutes, give it a moment. If the status never flips to Running, common on nginx, or when PHP\'s user_ini.filename is disabled or the document root is not the .user.ini scan path, apply ONE of the manual options below instead.', 'reportedip-hive' ) . '</div>';
-		} elseif ( ! $running ) {
-			echo '<div class="rip-alert rip-alert--warning">' . esc_html__( 'One manual step: add the directive below. Pick exactly ONE of the two options, whichever your hosting lets you edit. The status above flips to Running automatically once the directive is live.', 'reportedip-hive' ) . '</div>';
-		}
+	public function render_dropin_manual_steps() {
+		$dropin = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
 
 		self::render_snippet(
 			'rip-waf-snip-phpini',
@@ -561,8 +481,22 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '<strong>' . esc_html__( 'Recovery, if the site ever returns a 500 referencing reportedip-hive-waf.php:', 'reportedip-hive' ) . '</strong> ';
 		echo esc_html__( 'comment out the auto_prepend_file line in your php.ini / nginx config (prefix it with a semicolon, or delete it) and reload PHP-FPM / nginx. No FTP file restore is required.', 'reportedip-hive' );
 		echo '</div>';
+	}
 
-		echo '</div></div>';
+	/**
+	 * Render the Server Setup tab: every web-server-level rule the plugin can
+	 * use, in one place, the WAF drop-in directive (auto or manual), the decoy
+	 * rewrite rules and an optional server-level export of the security
+	 * headers. All sections are optional; the PHP sensors work without them.
+	 *
+	 * @since 2.1.3
+	 * @return void
+	 */
+	public function render_server_tab() {
+		self::render_tab_intro( __( 'All web-server-level rules in one place, with your live paths filled in. Everything here is optional, the PHP sensors work without any of it, but each rule rejects bad requests one layer earlier. Configure your server once, from this tab only.', 'reportedip-hive' ) );
+
+		$this->render_server_decoy_section();
+		$this->render_server_headers_section();
 	}
 
 	/**
@@ -587,8 +521,8 @@ class ReportedIP_Hive_Admin_Firewall {
 		if ( ! $decoy_on ) {
 			echo '<div class="rip-alert rip-alert--info">';
 			printf(
-				/* translators: 1: opening link tag to the Scan & Decoy tab, 2: closing tag. */
-				esc_html__( 'The decoy trap is currently off, enable it on the %1$sScan & Decoy tab%2$s before adding server rules.', 'reportedip-hive' ),
+				/* translators: 1: opening link tag to the detection settings, 2: closing tag. */
+				esc_html__( 'The decoy trap is currently off, turn it on in the %1$sdetection settings%2$s before adding server rules.', 'reportedip-hive' ),
 				'<a href="' . esc_url( self::tab_url( 'scan' ) ) . '">',
 				'</a>'
 			);
@@ -634,13 +568,13 @@ class ReportedIP_Hive_Admin_Firewall {
 		$planned = ReportedIP_Hive_Security_Headers::planned_headers();
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Security Headers at the web server (optional)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Hive already sends the configured headers via PHP on every WordPress response, nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror your live configuration from the Hardening tab.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'Hive already sends the configured headers via PHP on every WordPress response, nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror the header settings on the Protection page. Optional on Apache and nginx alike: every page WordPress renders is covered without them.', 'reportedip-hive' ) . '</p>';
 
 		if ( empty( $planned ) ) {
 			echo '<div class="rip-alert rip-alert--info">';
 			printf(
-				/* translators: 1: opening link tag to the Hardening tab, 2: closing tag. */
-				esc_html__( 'No headers are configured yet. Enable the header engine on the %1$sHardening tab%2$s first, the snippets here update automatically.', 'reportedip-hive' ),
+				/* translators: 1: opening link tag to the header settings, 2: closing tag. */
+				esc_html__( 'No headers are configured yet. Turn on the security headers on the %1$sProtection page%2$s first, the snippets here update automatically.', 'reportedip-hive' ),
 				'<a href="' . esc_url( self::tab_url( 'hardening' ) ) . '">',
 				'</a>'
 			);

@@ -68,16 +68,16 @@ abstract class ReportedIP_Hive_Audit_Connector {
 	 * @param string              $type    Event type.
 	 * @param string              $action  Event action.
 	 * @param array<string,mixed> $data    Structured data; `agent` is added here.
-	 * @param array<string,mixed> $object  `type`, `id`, `label` of the affected object.
+	 * @param array<string,mixed> $target  `type`, `id`, `label` of the affected object.
 	 * @param int|null            $blog_id Explicit scope, 0 for network rows, null for the current site.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	protected function log( $type, $action, array $data, array $object = array(), $blog_id = null ) {
+	protected function log( $type, $action, array $data, array $target = array(), $blog_id = null ) {
 		$data['agent'] = self::agent();
 		$user          = wp_get_current_user();
 
-		ReportedIP_Hive_Audit_Logger::get_instance()->record( $type, $action, $data, (int) $user->ID, (string) $user->user_login, $object, $blog_id );
+		ReportedIP_Hive_Audit_Logger::get_instance()->record( $type, $action, $data, (int) $user->ID, (string) $user->user_login, $target, $blog_id );
 	}
 
 	/**

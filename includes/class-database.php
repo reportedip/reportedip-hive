@@ -1961,7 +1961,11 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
-	 * Delete all failed reports that exceeded max_attempts
+	 * Delete every failed report.
+	 *
+	 * Until 2.1.72 only rows that had used up their retries were removed, so
+	 * the action the admin labels "Delete All Failed" left every failed row
+	 * still waiting for its next retry and reported zero deletions.
 	 *
 	 * @return int Number of reports deleted
 	 */
@@ -1972,8 +1976,7 @@ class ReportedIP_Hive_Database {
 
 		$result = $wpdb->query(
 			"DELETE FROM $table_name
-             WHERE status = 'failed'
-             AND attempts >= max_attempts"
+             WHERE status = 'failed'"
 		);
 
 		return $result !== false ? $result : 0;
@@ -2178,22 +2181,9 @@ class ReportedIP_Hive_Database {
 			return array();
 		}
 
-		$table_name   = $wpdb->base_prefix . 'reportedip_hive_logs';
-		$cutoff_utc   = gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $hours ) * HOUR_IN_SECONDS );
-		$placeholders = implode( ',', array_fill( 0, count( $event_types ), '%s' ) );
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders is a generated %s list; values are bound below.
-		$events = $wpdb->get_results(
-			// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- the IN() list is a generated %s placeholder string; one value per placeholder is bound below.
-			$wpdb->prepare(
-				"SELECT * FROM $table_name
-                 WHERE event_type IN ($placeholders)
-                   AND (created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d HOUR))
-                 ORDER BY created_at DESC
-                 LIMIT %d",
-				array_merge( $event_types, array( $cutoff_utc, $hours, $limit ) )
-			)
-		);
+		list( $where, $params ) = self::event_window( $event_types, $hours );
+		$sql                    = "SELECT * FROM {$wpdb->base_prefix}reportedip_hive_logs WHERE $where ORDER BY created_at DESC LIMIT %d";
+		$events                 = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $params, array( $limit ) ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- WHERE from event_window(), every value bound.
 
 		foreach ( $events as $event ) {
 			if ( is_string( $event->details ) ) {
@@ -2202,6 +2192,24 @@ class ReportedIP_Hive_Database {
 		}
 
 		return $events;
+	}
+
+	/**
+	 * WHERE clause and bound values for "these event types within the last
+	 * N hours", shared by the event list and the per-type counts.
+	 *
+	 * @param string[] $event_types Event types, not empty.
+	 * @param int      $hours       Lookback window in hours.
+	 * @return array{0:string,1:array<int,mixed>}
+	 * @since  2.1.72
+	 */
+	private static function event_window( array $event_types, $hours ) {
+		$in = implode( ',', array_fill( 0, count( $event_types ), '%s' ) );
+
+		return array(
+			"event_type IN ($in) AND (created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d HOUR))",
+			array_merge( $event_types, array( gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $hours ) * HOUR_IN_SECONDS ), $hours ) ),
+		);
 	}
 
 	/**
@@ -2220,21 +2228,9 @@ class ReportedIP_Hive_Database {
 			return $counts;
 		}
 
-		$table_name   = $wpdb->base_prefix . 'reportedip_hive_logs';
-		$cutoff_utc   = gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $hours ) * HOUR_IN_SECONDS );
-		$placeholders = implode( ',', array_fill( 0, count( $event_types ), '%s' ) );
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $placeholders is a generated %s list; values are bound below.
-		$rows = $wpdb->get_results(
-			// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- the IN() list is a generated %s placeholder string; one value per placeholder is bound below.
-			$wpdb->prepare(
-				"SELECT event_type, COUNT(*) AS cnt FROM $table_name
-                 WHERE event_type IN ($placeholders)
-                   AND (created_at >= %s OR created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d HOUR))
-                 GROUP BY event_type",
-				array_merge( $event_types, array( $cutoff_utc, $hours ) )
-			)
-		);
+		list( $where, $params ) = self::event_window( $event_types, $hours );
+		$sql                    = "SELECT event_type, COUNT(*) AS cnt FROM {$wpdb->base_prefix}reportedip_hive_logs WHERE $where GROUP BY event_type";
+		$rows                   = $wpdb->get_results( $wpdb->prepare( $sql, $params ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- WHERE from event_window(), every value bound.
 
 		foreach ( (array) $rows as $row ) {
 			if ( isset( $counts[ $row->event_type ] ) ) {
@@ -2528,15 +2524,8 @@ class ReportedIP_Hive_Database {
 			if ( ! empty( $ips ) ) {
 				$blocked_table = $wpdb->base_prefix . 'reportedip_hive_blocked';
 				$ip_ph         = implode( ',', array_fill( 0, count( $ips ), '%s' ) );
-				$blocked_rows  = $wpdb->get_col(
-					$wpdb->prepare(
-						"SELECT ip_address FROM $blocked_table
-						 WHERE is_active = 1
-						   AND ip_address IN ($ip_ph)
-						   AND ( blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP() )",
-						$ips
-					)
-				);
+				$blocked_sql   = "SELECT ip_address FROM $blocked_table WHERE is_active = 1 AND ip_address IN ($ip_ph) AND ( blocked_until IS NULL OR blocked_until > UTC_TIMESTAMP() )";
+				$blocked_rows  = $wpdb->get_col( $wpdb->prepare( $blocked_sql, $ips ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix; $ip_ph is one %s per address, every value goes through prepare().
 				$active_blocks = array_flip( array_map( 'strval', (array) $blocked_rows ) );
 			}
 

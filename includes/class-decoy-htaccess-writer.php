@@ -126,7 +126,7 @@ final class ReportedIP_Hive_Decoy_Htaccess_Writer extends ReportedIP_Hive_Htacce
 		if ( ! is_readable( $file ) ) {
 			return;
 		}
-		$contents = file_get_contents( $file );
+		$contents = file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- A local .htaccess next to WordPress; WP_Filesystem may ask for FTP credentials here, and core's insert_with_markers() uses plain file calls for the same file.
 		if ( false === $contents || '' === $contents ) {
 			return;
 		}
@@ -161,6 +161,6 @@ final class ReportedIP_Hive_Decoy_Htaccess_Writer extends ReportedIP_Hive_Htacce
 		if ( $new_contents === $contents ) {
 			return;
 		}
-		file_put_contents( $file, $new_contents );
+		file_put_contents( $file, $new_contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents, WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- A local .htaccess next to WordPress; WP_Filesystem may ask for FTP credentials here, and core's insert_with_markers() uses plain file calls for the same file.
 	}
 }

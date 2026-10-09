@@ -1365,7 +1365,7 @@ PHP;
 		if ( ! file_exists( $path ) ) {
 			return;
 		}
-		$fh = @fopen( $path, 'r+b' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Single-byte in-place flag update on a same-host lookup file.
+		$fh = @fopen( $path, 'r+b' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen, WordPress.PHP.NoSilencedErrors.Discouraged -- Single-byte in-place flag update on a same-host lookup file; a racing delete must fail quietly, the return value is checked.
 		if ( ! $fh ) {
 			return;
 		}

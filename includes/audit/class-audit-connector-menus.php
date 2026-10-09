@@ -111,18 +111,18 @@ class ReportedIP_Hive_Audit_Connector_Menus extends ReportedIP_Hive_Audit_Connec
 	 *
 	 * @param string $option Option name.
 	 * @param mixed  $old    Previous value.
-	 * @param mixed  $new    New value.
+	 * @param mixed  $new_value    New value.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	public function on_option( $option, $old, $new ) {
+	public function on_option( $option, $old, $new_value ) {
 		$option = (string) $option;
 		if ( 'sidebars_widgets' === $option ) {
-			$this->log_widgets( is_array( $old ) ? $old : array(), is_array( $new ) ? $new : array() );
+			$this->log_widgets( is_array( $old ) ? $old : array(), is_array( $new_value ) ? $new_value : array() );
 			return;
 		}
 		if ( 0 === strpos( $option, 'theme_mods_' ) ) {
-			$this->log_locations( is_array( $old ) ? $old : array(), is_array( $new ) ? $new : array() );
+			$this->log_locations( is_array( $old ) ? $old : array(), is_array( $new_value ) ? $new_value : array() );
 		}
 	}
 
@@ -130,13 +130,13 @@ class ReportedIP_Hive_Audit_Connector_Menus extends ReportedIP_Hive_Audit_Connec
 	 * Pure diff of `nav_menu_locations` inside two theme-mod arrays.
 	 *
 	 * @param array<string,mixed> $old Old theme mods.
-	 * @param array<string,mixed> $new New theme mods.
+	 * @param array<string,mixed> $new_value New theme mods.
 	 * @return array<string, array{old:int, new:int}> Location to old/new menu id.
 	 * @since  2.1.62
 	 */
-	public static function diff_locations( array $old, array $new ) {
+	public static function diff_locations( array $old, array $new_value ) {
 		$old_loc = (array) ( $old['nav_menu_locations'] ?? array() );
-		$new_loc = (array) ( $new['nav_menu_locations'] ?? array() );
+		$new_loc = (array) ( $new_value['nav_menu_locations'] ?? array() );
 		$changes = array();
 		foreach ( array_unique( array_merge( array_keys( $old_loc ), array_keys( $new_loc ) ) ) as $location ) {
 			$before = (int) ( $old_loc[ $location ] ?? 0 );
@@ -157,20 +157,20 @@ class ReportedIP_Hive_Audit_Connector_Menus extends ReportedIP_Hive_Audit_Connec
 	 * inactive/orphaned buckets are ignored.
 	 *
 	 * @param array<string,mixed> $old Old sidebars.
-	 * @param array<string,mixed> $new New sidebars.
+	 * @param array<string,mixed> $new_value New sidebars.
 	 * @return array<int, array{sidebar:string, widget:string, action:string}>
 	 * @since  2.1.62
 	 */
-	public static function diff_sidebars( array $old, array $new ) {
+	public static function diff_sidebars( array $old, array $new_value ) {
 		$skip    = array( 'array_version', 'wp_inactive_widgets', 'orphaned_widgets' );
 		$changes = array();
-		foreach ( array_unique( array_merge( array_keys( $old ), array_keys( $new ) ) ) as $sidebar ) {
+		foreach ( array_unique( array_merge( array_keys( $old ), array_keys( $new_value ) ) ) as $sidebar ) {
 			$sidebar = (string) $sidebar;
 			if ( in_array( $sidebar, $skip, true ) || 0 === strpos( $sidebar, 'orphaned_widgets' ) ) {
 				continue;
 			}
 			$before = array_map( 'strval', (array) ( $old[ $sidebar ] ?? array() ) );
-			$after  = array_map( 'strval', (array) ( $new[ $sidebar ] ?? array() ) );
+			$after  = array_map( 'strval', (array) ( $new_value[ $sidebar ] ?? array() ) );
 			foreach ( array_diff( $after, $before ) as $widget ) {
 				$changes[] = array(
 					'sidebar' => $sidebar,
@@ -193,12 +193,12 @@ class ReportedIP_Hive_Audit_Connector_Menus extends ReportedIP_Hive_Audit_Connec
 	 * Menu locations changed.
 	 *
 	 * @param array<string,mixed> $old Old theme mods.
-	 * @param array<string,mixed> $new New theme mods.
+	 * @param array<string,mixed> $new_value New theme mods.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	private function log_locations( array $old, array $new ) {
-		$changes = self::diff_locations( $old, $new );
+	private function log_locations( array $old, array $new_value ) {
+		$changes = self::diff_locations( $old, $new_value );
 		if ( empty( $changes ) || self::seen( 'menu-locations:' . md5( wp_json_encode( $changes ) ) ) ) {
 			return;
 		}
@@ -225,12 +225,12 @@ class ReportedIP_Hive_Audit_Connector_Menus extends ReportedIP_Hive_Audit_Connec
 	 * Widgets added to or removed from sidebars.
 	 *
 	 * @param array<string,mixed> $old Old sidebars.
-	 * @param array<string,mixed> $new New sidebars.
+	 * @param array<string,mixed> $new_value New sidebars.
 	 * @return void
 	 * @since  2.1.62
 	 */
-	private function log_widgets( array $old, array $new ) {
-		foreach ( self::diff_sidebars( $old, $new ) as $change ) {
+	private function log_widgets( array $old, array $new_value ) {
+		foreach ( self::diff_sidebars( $old, $new_value ) as $change ) {
 			if ( self::seen( 'widget:' . $change['sidebar'] . ':' . $change['widget'] . ':' . $change['action'] ) ) {
 				continue;
 			}

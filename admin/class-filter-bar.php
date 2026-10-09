@@ -89,7 +89,7 @@ class ReportedIP_Hive_Filter_Bar {
 			);
 		}
 		printf(
-			'<button type="submit" name="filter_action" value="1" class="rip-button rip-button--primary">%s</button>',
+			'<button type="submit" class="rip-button rip-button--primary">%s</button>',
 			esc_html__( 'Apply filters', 'reportedip-hive' )
 		);
 		echo '</div></form>';

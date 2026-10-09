@@ -69,6 +69,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * ------------------------------------------------------------------ */
 
 	public function ajax_register_options() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 		$user_id = self::key_management_user();
 		self::throttle_registration( $user_id );
 		self::require_method_allowed();
@@ -275,6 +276,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	public function ajax_register_verify() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 		$user_id = self::key_management_user();
 
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified by check_ajax_referer() above; payload is a JSON string parsed via json_decode() with strict array check on the next line, invalid input is rejected before any further use.
@@ -445,6 +447,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * @since 2.1.34
 	 */
 	public function ajax_rename_key() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 		$user_id = self::key_management_user();
 		$cred_id = isset( $_POST['credential_id'] ) ? sanitize_text_field( wp_unslash( $_POST['credential_id'] ) ) : '';
 		$name    = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
@@ -475,6 +478,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * @since 2.1.34
 	 */
 	public function ajax_delete_key() {
+		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 		$user_id = self::key_management_user();
 		$cred_id = isset( $_POST['credential_id'] ) ? sanitize_text_field( wp_unslash( $_POST['credential_id'] ) ) : '';
 		if ( '' === $cred_id ) {
