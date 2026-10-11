@@ -2,6 +2,20 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixes
+
+- **Sensor windows were not windows.** The REST, 404, enumeration,
+  application-password, WooCommerce-login, Hide-Login and WAF counters only
+  restarted after an idle hour. A monitoring service calling the REST API
+  every 15 minutes therefore summed up over days and was reported as
+  "240 requests in 5 minutes" with every further call. The counter now runs
+  on the configured window; the login counter keeps its idle rule.
+- **A report the network refused as whitelisted was sent again.** The
+  `ip_whitelisted` answer is now cached as infrastructure, so the next
+  detection spares the address instead of reporting it once more.
+
 ## [2.1.73] (2026-10-11)
 
 ### New

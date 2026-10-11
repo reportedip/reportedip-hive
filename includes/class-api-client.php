@@ -467,8 +467,19 @@ class ReportedIP_Hive_API {
 			 * (a verified crawler, a CDN, a monitoring service). Counting it as
 			 * a failed call would degrade the API health for an answer that
 			 * came back fine, and retrying it can only get the same answer.
+			 * The answer is cached as reputation, so the infrastructure guard
+			 * in the security monitor spares the address from now on instead
+			 * of sending the same refused report with every new detection.
 			 */
 			$this->track_api_call( true, $response_time, null, 'submission' );
+			$this->cache->set_reputation(
+				$ip_address,
+				array(
+					'ipAddress'                 => $ip_address,
+					'isWhitelisted'             => true,
+					'abuseConfidencePercentage' => 0,
+				)
+			);
 			return array(
 				'success'     => false,
 				'message'     => (string) ( $response_data['message'] ?? 'ip_whitelisted' ),

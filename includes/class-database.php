@@ -1111,14 +1111,27 @@ class ReportedIP_Hive_Database {
 	 * @param int         $idle_minutes Idle span after which the counter restarts.
 	 *                                  Must be at least as long as the window the
 	 *                                  caller aggregates over.
+	 * @param int         $window_minutes Fixed counting window. When above zero the
+	 *                                  counter also restarts once its first attempt
+	 *                                  is older than the window, so a steady trickle
+	 *                                  (an uptime monitor every few minutes) never
+	 *                                  adds up to a burst. 0 keeps the idle-only
+	 *                                  behaviour of the login counter.
 	 * @return int|false
 	 */
-	public function track_attempt( $ip_address, $attempt_type, $username = null, $user_agent = null, $increment = 1, $idle_minutes = 60 ) {
+	public function track_attempt( $ip_address, $attempt_type, $username = null, $user_agent = null, $increment = 1, $idle_minutes = 60, $window_minutes = 0 ) {
 		global $wpdb;
 
 		$increment  = max( 1, (int) $increment );
 		$idle       = max( 1, (int) $idle_minutes );
+		$window     = max( 0, (int) $window_minutes );
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_attempts';
+		$live       = 'last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE)';
+		$args       = array( $idle );
+		if ( $window > 0 ) {
+			$live  .= ' AND first_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE)';
+			$args[] = $window;
+		}
 		$now_utc    = current_time( 'mysql', true );
 
 		/*
@@ -1132,28 +1145,27 @@ class ReportedIP_Hive_Database {
 		 * A sensor whose aggregation window is longer than the default hour
 		 * passes that window in, otherwise the counter resets underneath it
 		 * and the configured window can never be reached.
+		 * The fixed window reads the OLD `first_attempt` in both conditions:
+		 * `attempt_count` comes first in the list, and the `first_attempt`
+		 * assignment evaluates its own condition before it writes.
 		 */
 		return $wpdb->query(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is base_prefix + fixed literal.
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is base_prefix + fixed literal, $live is a fixed literal with placeholders.
 				"INSERT INTO $table_name
 					(ip_address, attempt_type, username, user_agent, attempt_count, first_attempt, last_attempt)
 				 VALUES (%s, %s, %s, %s, %d, %s, %s)
 				 ON DUPLICATE KEY UPDATE
-					attempt_count = IF(last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE), attempt_count + VALUES(attempt_count), VALUES(attempt_count)),
-					first_attempt = IF(last_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE), first_attempt, VALUES(first_attempt)),
+					attempt_count = IF($live, attempt_count + VALUES(attempt_count), VALUES(attempt_count)),
+					first_attempt = IF($live, first_attempt, VALUES(first_attempt)),
 					username      = COALESCE(NULLIF(VALUES(username), ''), username),
 					user_agent    = COALESCE(NULLIF(VALUES(user_agent), ''), user_agent),
 					last_attempt  = VALUES(last_attempt)",
-				$ip_address,
-				$attempt_type,
-				$username,
-				$user_agent,
-				$increment,
-				$now_utc,
-				$now_utc,
-				$idle,
-				$idle
+				array_merge(
+					array( $ip_address, $attempt_type, $username, $user_agent, $increment, $now_utc, $now_utc ),
+					$args,
+					$args
+				)
 			)
 		);
 	}

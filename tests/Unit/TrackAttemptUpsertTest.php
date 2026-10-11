@@ -63,6 +63,9 @@ namespace {
 			public array $writes = array();
 
 			public function prepare( $sql, ...$args ) {
+				if ( 1 === count( $args ) && is_array( $args[0] ) ) {
+					$args = $args[0];
+				}
 				$this->prepares[] = array(
 					'sql'  => (string) $sql,
 					'args' => $args,
@@ -228,6 +231,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'first_attempt must be bound as a UTC MySQL datetime.'
 			);
 			$this->assertSame( $prepare['args'][5], $prepare['args'][6], 'first_attempt and last_attempt share the same UTC stamp.' );
+		}
+
+		public function test_without_a_window_only_the_idle_span_restarts_the_counter() {
+			$wpdb = $this->track();
+			$sql  = $this->normalized_sql( $wpdb );
+
+			$this->assertStringNotContainsString( 'first_attempt >', $sql );
+			$this->assertSame( array( 60, 60 ), array_slice( $wpdb->prepares[0]['args'], 7 ) );
+		}
+
+		public function test_a_window_also_restarts_the_counter_once_the_first_attempt_is_older() {
+			$db = new \ReportedIP_Hive_Database();
+			$db->track_attempt( '203.0.113.5', 'rest_abuse', null, null, 1, 5, 5 );
+			$wpdb = $GLOBALS['wpdb'];
+			$sql  = $this->normalized_sql( $wpdb );
+
+			$this->assertSame( 2, substr_count( $sql, 'AND first_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE)' ) );
+			$this->assertSame( array( 5, 5, 5, 5 ), array_slice( $wpdb->prepares[0]['args'], 7 ) );
 		}
 
 		public function test_increment_is_clamped_to_at_least_one() {

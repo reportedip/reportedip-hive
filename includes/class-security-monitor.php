@@ -263,6 +263,11 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Every sensor uses the same shape so they all look identical in the
 	 * logs and queue, which simplifies dashboarding.
 	 *
+	 * The counter runs on a fixed window of `$timeframe` minutes. Until
+	 * 2.1.74 it only restarted after an idle hour, so a monitoring service
+	 * calling the REST API every 15 minutes summed up over days and was
+	 * reported as "240 requests in 5 minutes".
+	 *
 	 * @param string $ip_address   Client IP.
 	 * @param string $attempt_type Attempt-type slug stored in the attempts table.
 	 * @param string $event_type   Event-type slug used by category mapping / comments.
@@ -286,11 +291,11 @@ class ReportedIP_Hive_Security_Monitor {
 			$track_user_agent = ! empty( $user_agent ) ? substr( (string) $user_agent, 0, REPORTEDIP_USER_AGENT_MAX_LENGTH ) : '';
 		}
 
-		$this->database->track_attempt( $ip_address, $attempt_type, null, $track_user_agent, $increment );
-
 		$threshold = max( 1, (int) $threshold );
 		$timeframe = max( 1, (int) $timeframe );
-		$count     = $this->database->get_attempt_count( $ip_address, $attempt_type, $timeframe );
+
+		$this->database->track_attempt( $ip_address, $attempt_type, null, $track_user_agent, $increment, $timeframe, $timeframe );
+		$count = $this->database->get_attempt_count( $ip_address, $attempt_type, $timeframe );
 
 		if ( $count < $threshold ) {
 			return false;
