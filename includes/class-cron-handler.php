@@ -403,7 +403,7 @@ class ReportedIP_Hive_Cron_Handler {
 						}
 					}
 				}
-			} else {
+			} elseif ( 'not_configured' !== (string) $relay['error'] ) {
 				$this->logger->warning(
 					'Relay quota refresh failed',
 					'system',

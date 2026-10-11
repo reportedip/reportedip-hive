@@ -550,6 +550,10 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'label' => __( 'Settings Saved (remote)', 'reportedip-hive' ),
 				'group' => 'ops_system',
 			),
+			'support_bundle_generated'          => array(
+				'label' => __( 'Support Bundle Generated', 'reportedip-hive' ),
+				'group' => 'ops_system',
+			),
 			'settings_imported'                 => array(
 				'label' => __( 'Settings Imported', 'reportedip-hive' ),
 				'group' => 'ops_system',

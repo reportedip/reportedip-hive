@@ -115,6 +115,17 @@ class ReportedIP_Hive_MainWP_Integration {
 			}
 		}
 
+		if ( isset( $data['reportedip_hive_support_bundle'] ) && class_exists( 'ReportedIP_Hive_Support_Bundle' ) ) {
+			$args                      = is_array( $data['reportedip_hive_support_bundle'] ) ? $data['reportedip_hive_support_bundle'] : array();
+			$payload['support_bundle'] = ReportedIP_Hive_Support_Bundle::build(
+				array(
+					'days'   => isset( $args['days'] ) ? (int) $args['days'] : 7,
+					'events' => isset( $args['events'] ) ? (int) $args['events'] : 300,
+				)
+			);
+			ReportedIP_Hive_Support_Bundle::log_generated( 'mainwp' );
+		}
+
 		if ( ! empty( $payload ) ) {
 			$existing                       = isset( $information['reportedip_hive'] ) && is_array( $information['reportedip_hive'] ) ? $information['reportedip_hive'] : array();
 			$information['reportedip_hive'] = array_merge( $existing, $payload );

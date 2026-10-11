@@ -1362,6 +1362,10 @@ class ReportedIP_Hive_Form_Proof {
 
 		$details = array( 'surface' => (string) $surface );
 
+		if ( null !== $this->last_verdict() ) {
+			$details['verdict'] = (string) $this->last_verdict();
+		}
+
 		if ( null !== $this->seconds ) {
 			$details['seconds'] = $this->seconds;
 		}

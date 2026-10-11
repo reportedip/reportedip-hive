@@ -524,10 +524,10 @@ class ReportedIP_Hive_Ajax_Handler {
 		header( 'Content-Disposition: attachment; filename="reportedip-hive-logs-' . gmdate( 'Y-m-d' ) . '.csv"' );
 
 		$output = fopen( 'php://output', 'w' );
-		fputcsv( $output, array( 'Date', 'Event Type', 'IP Address', 'Severity', 'Details' ) );
+		fputcsv( $output, array( 'Date', 'Event Type', 'IP Address', 'Severity', 'Details' ), ',', '"', '' );
 
 		foreach ( $logs as $log ) {
-			fputcsv( $output, self::csv_export_row( $log ) );
+			fputcsv( $output, self::csv_export_row( $log ), ',', '"', '' );
 		}
 
 		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- php://output stream

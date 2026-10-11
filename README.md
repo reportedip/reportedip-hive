@@ -206,6 +206,8 @@ Pricing and the full tier matrix live at <https://reportedip.com>.
 
 Hive carries its own MainWP child bridge, so agencies can manage every Hive install from one [MainWP](https://mainwp.com/) dashboard without an extra child plugin: fleet-wide status sync (active blocks, failed logins, queue size, 2FA coverage as aggregate counts), one-click API-key provisioning and centrally managed settings policies (schema-driven, with per-key validation, tier awareness and drift detection via a settings fingerprint, see `docs/remote-settings-protocol.md`). Data-minimised by design: the sync returns counts only, never IP addresses, usernames or secrets. Requires the ReportedIP Hive extension on the MainWP dashboard side.
 
+**Support bundle.** System Status has a download for one JSON file with the versions, the settings that differ from the defaults, readiness, cron, API health, the report queue, the events of a chosen period (1, 7, 14 or 30 days) and the active blocks. It carries no access key, passwords, user names, mail addresses or query strings, and addresses are cut to their network unless you ask for full ones. The same bundle comes from `wp reportedip support-bundle` and, on an explicit request, from the MainWP job `reportedip_hive_support_bundle`; the dashboard extension serves it at `/wp-json/reportedip-hive-ext/v1/support-bundle/<site_id>` for dashboard administrators.
+
 The same settings protocol powers the cloud fleet dashboard on reportedip.com (Business plan): enable the "Cloud fleet management" toggle on the Community page and the site accepts Ed25519-signed policy pushes from the reportedip.com fleet service, verified against a bundled public key, bound to this site and to your Community Access Key, replay-protected and off by default. Both transports go through the same validation pipeline, so a policy behaves identically no matter which dashboard applied it.
 
 **What you can manage:** every setting in the plugin's settings registry, grouped into fifteen sections (detection, blocking, firewall and bots, registration rules, form protection, attack response, hide login, security headers, access lockdown, two-factor authentication, adaptive step-up, password policy, privacy and logs, notifications, performance). The only stored options that stay local are the connection identity (`operation_mode`, `api_key`, `api_endpoint`), the remote-management opt-in itself, the uninstall data switch, the hardening master toggle (its "no value" state is what enables hardening automatically on Professional) and the Extended Protection switch (it needs a server directive next to it). Coverage is identical on both dashboards because both render from the same site-exported schema; a new managed option appears in both after a schema reload.
@@ -289,6 +291,7 @@ wp reportedip blocked list --format=json
 
 ```
 wp reportedip status [--format=<format>]
+wp reportedip support-bundle [--days=<1-30>] [--events=<n>] [--full-ips] [--output=<file>]
 ```
 
 Prints version, operation mode, tier, report-only state, block/whitelist counters, report-queue health and the main protection toggles (hide-login, firewall, extended protection guard, enforced 2FA roles) as a field/value table.

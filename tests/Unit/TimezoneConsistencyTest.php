@@ -351,10 +351,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString(
 				'date_create(',
 				$body,
-				'format_local_datetime() must reject unparseable input before get_date_from_gmt(), which returns the Unix epoch for it.'
+				'format_local_datetime() must reject unparseable input before the formatter, which would print the Unix epoch for it.'
 			);
+			$this->assertStringContainsString( 'wp_date(', $body, 'wp_date() localises month and day names; get_date_from_gmt() printed "October" on a German site.' );
 			$this->assertLessThan(
-				strpos( $body, 'get_date_from_gmt' ),
+				strpos( $body, 'wp_date(' ),
 				strpos( $body, 'date_create(' ),
 				'The parse check has to run before the formatter, not after.'
 			);

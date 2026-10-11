@@ -130,6 +130,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['wp_options']         = array(
 				'reportedip_hive_api_key'      => 'test-key',
 				'reportedip_hive_api_endpoint' => 'https://example.test/v2/',
+				'reportedip_hive_operation_mode' => 'community',
 			);
 			$GLOBALS['__relay_http_calls'] = 0;
 			$GLOBALS['__relay_http_next']  = null;
@@ -227,6 +228,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 				get_transient( 'reportedip_hive_rate_limit_reset' ),
 				'A relay-quota 429 is a meta-bucket event and must not pause the reputation or submission buckets.'
 			);
+		}
+
+		public function test_local_shield_never_asks_for_the_relay_quota(): void {
+			$GLOBALS['wp_options']['reportedip_hive_operation_mode'] = 'local';
+
+			$result = $this->api()->get_relay_quota( true );
+
+			$this->assertSame( 'not_configured', $result['error'] );
+			$this->assertSame( 0, $GLOBALS['__relay_http_calls'], 'Local Shield logged a 401 every six hours before 2.1.73' );
 		}
 
 		public function test_success_caches_payload_and_serves_from_cache() {

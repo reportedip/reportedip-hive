@@ -33,6 +33,7 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'admin_notices', array( $this, 'render_cap_status_notice' ), 5 );
 		add_action( 'admin_post_reportedip_hive_cap_notice_dismiss', array( $this, 'handle_cap_notice_dismiss' ) );
 		add_action( 'admin_post_reportedip_hive_audit_export', array( $this, 'handle_audit_export' ) );
+		add_action( 'admin_post_reportedip_hive_support_bundle', array( $this, 'handle_support_bundle' ) );
 		add_action( 'admin_post_reportedip_hive_group_sync_now', array( $this, 'handle_group_sync_now' ) );
 		add_action( 'updated_option', array( $this, 'maybe_sync_notifications_to_api' ), 10, 1 );
 		add_action( 'network_admin_edit_reportedip_hive_save_settings', array( $this, 'handle_network_admin_save' ) );
@@ -1910,12 +1911,77 @@ class ReportedIP_Hive_Admin_Settings {
 		header( 'Content-Type: text/csv; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename="reportedip-hive-audit-' . gmdate( 'Y-m-d' ) . '.csv"' );
 		$output = fopen( 'php://output', 'w' );
-		fputcsv( $output, array( 'created_at', 'blog_id', 'ip', 'user_id', 'username', 'event_type', 'event_action', 'object_type', 'object_id', 'object_label', 'event_data', 'event_label', 'summary' ) );
+		fputcsv( $output, array( 'created_at', 'blog_id', 'ip', 'user_id', 'username', 'event_type', 'event_action', 'object_type', 'object_id', 'object_label', 'event_data', 'event_label', 'summary' ), ',', '"', '' );
 		foreach ( $rows as $row ) {
-			fputcsv( $output, $row );
+			fputcsv( $output, $row, ',', '"', '' );
 		}
 		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- php://output stream
 		exit;
+	}
+
+	/**
+	 * Send the support bundle as a JSON download.
+	 *
+	 * @return void
+	 * @since  2.1.73
+	 */
+	public function handle_support_bundle() {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
+			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( 'reportedip_hive_support_bundle' );
+
+		$days     = isset( $_POST['rip_bundle_days'] ) ? absint( wp_unslash( $_POST['rip_bundle_days'] ) ) : 7;
+		$full_ips = ! empty( $_POST['rip_bundle_full_ips'] );
+		$bundle   = ReportedIP_Hive_Support_Bundle::build(
+			array(
+				'days'     => in_array( $days, ReportedIP_Hive_Support_Bundle::PERIODS, true ) ? $days : 7,
+				'events'   => 1000,
+				'full_ips' => $full_ips,
+			)
+		);
+		ReportedIP_Hive_Support_Bundle::log_generated( 'admin' );
+
+		$host = sanitize_file_name( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+		nocache_headers();
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="hive-support-' . $host . '-' . gmdate( 'Y-m-d-His' ) . '.json"' );
+		echo wp_json_encode( $bundle, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		exit;
+	}
+
+	/**
+	 * The support bundle card on the System Status page.
+	 *
+	 * @return void
+	 * @since  2.1.73
+	 */
+	private static function render_support_bundle_card() {
+		?>
+		<div class="rip-card rip-mb-4" id="rip-support-bundle">
+			<div class="rip-card__header"><h2 class="rip-card__title"><?php esc_html_e( 'Support bundle', 'reportedip-hive' ); ?></h2></div>
+			<div class="rip-card__body">
+				<p class="rip-help-text"><?php esc_html_e( 'One JSON file with what a support check needs: versions, the protection settings that differ from the defaults, health, the report queue, the events of the chosen period and the active blocks. It carries no access key, no passwords, no user names and no mail addresses. Addresses are cut to their network unless you tick the box.', 'reportedip-hive' ); ?></p>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="rip-form-row">
+					<input type="hidden" name="action" value="reportedip_hive_support_bundle" />
+					<?php wp_nonce_field( 'reportedip_hive_support_bundle' ); ?>
+					<label class="rip-form-label" for="rip-bundle-days"><?php esc_html_e( 'Period', 'reportedip-hive' ); ?></label>
+					<select id="rip-bundle-days" name="rip_bundle_days" class="rip-select">
+						<?php foreach ( ReportedIP_Hive_Support_Bundle::PERIODS as $period ) : ?>
+							<option value="<?php echo (int) $period; ?>"<?php selected( 7, $period ); ?>>
+								<?php
+								/* translators: %d: number of days */
+								echo esc_html( sprintf( _n( 'Last %d day', 'Last %d days', $period, 'reportedip-hive' ), $period ) );
+								?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+					<label class="rip-toggle"><input type="checkbox" class="rip-toggle__input" name="rip_bundle_full_ips" value="1" /><span class="rip-toggle__slider"></span><span class="rip-toggle__label"><?php esc_html_e( 'Include full IP addresses', 'reportedip-hive' ); ?></span></label>
+					<p><button type="submit" class="rip-button rip-button--primary"><?php esc_html_e( 'Download support bundle', 'reportedip-hive' ); ?></button></p>
+				</form>
+			</div>
+		</div>
+		<?php
 	}
 
 	/**
@@ -5690,6 +5756,8 @@ class ReportedIP_Hive_Admin_Settings {
 			</div>
 
 			<?php $this->render_readiness_section( ReportedIP_Hive_Readiness::open_issues( true ) ); ?>
+
+			<?php self::render_support_bundle_card(); ?>
 
 			<!-- System Info Section -->
 			<div class="rip-card">

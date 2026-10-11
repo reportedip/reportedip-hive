@@ -236,16 +236,16 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 				wp_die( esc_html__( 'The audit log is not available on your plan.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
 			}
 			$out = self::open_csv( $type );
-			fputcsv( $out, array( 'id', 'when', 'event', 'ip', 'severity', 'details' ) );
+			fputcsv( $out, array( 'id', 'when', 'event', 'ip', 'severity', 'details' ), ',', '"', '' );
 			global $wpdb;
 			$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
 			$rows  = $wpdb->get_results( "SELECT id, created_at, event_type, ip_address, severity, details FROM $table WHERE event_type LIKE '%2fa%' OR details LIKE '%2fa%' ORDER BY id DESC LIMIT 500" ); // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from Schema::table(); literal hardcoded LIKE patterns.
 			foreach ( (array) $rows as $row ) {
-				fputcsv( $out, array( $row->id, $row->created_at, $row->event_type, $row->ip_address, $row->severity, $row->details ) );
+				fputcsv( $out, array( $row->id, $row->created_at, $row->event_type, $row->ip_address, $row->severity, $row->details ), ',', '"', '' );
 			}
 		} else {
 			$out = self::open_csv( $type );
-			fputcsv( $out, array( 'id', 'login', 'email', 'roles', 'methods', 'recovery', 'enabled', 'enforced', 'skips', 'setup_date' ) );
+			fputcsv( $out, array( 'id', 'login', 'email', 'roles', 'methods', 'recovery', 'enabled', 'enforced', 'skips', 'setup_date' ), ',', '"', '' );
 			foreach ( self::filter_rows( self::list_users( 10000 ), self::filters() ) as $row ) {
 				fputcsv(
 					$out,
@@ -260,7 +260,10 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 						$row['enforced'] ? '1' : '0',
 						$row['skips'],
 						$row['setup'],
-					)
+					),
+					',',
+					'"',
+					''
 				);
 			}
 		}

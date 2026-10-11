@@ -1013,6 +1013,59 @@ class ReportedIP_Hive_Database {
 	}
 
 	/**
+	 * Lift a block this plugin set by itself (the escalation ladder or a
+	 * reputation hit), leaving a block an operator set by hand alone.
+	 *
+	 * Used when the community network vouches for the address: a monitoring
+	 * server that polls the front page every second trips the burst sensors,
+	 * and before this its seven-day block outlived the network's verdict.
+	 *
+	 * @param string $ip_address Client IP.
+	 * @return bool True when a block was lifted.
+	 * @since  2.1.73
+	 */
+	public function lift_automatic_block( $ip_address ) {
+		global $wpdb;
+
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_blocked';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix; single-row lookup.
+		$type = $wpdb->get_var( $wpdb->prepare( "SELECT block_type FROM {$table_name} WHERE ip_address = %s AND is_active = 1", $ip_address ) );
+
+		if ( ! in_array( (string) $type, array( 'automatic', 'reputation' ), true ) ) {
+			return false;
+		}
+
+		return false !== $this->unblock_ip( $ip_address );
+	}
+
+	/**
+	 * Drop failed reports the network refused because it vouches for the
+	 * address, and lift the automatic block behind each. Rows like these
+	 * were left behind by releases before 2.1.72, which kept such a refusal
+	 * as a failure; they held the "reports did not reach the community"
+	 * warning open for good.
+	 *
+	 * @return int Rows removed.
+	 * @since  2.1.73
+	 */
+	public function purge_whitelisted_failures() {
+		global $wpdb;
+
+		$table_name = $wpdb->base_prefix . 'reportedip_hive_api_queue';
+		$ips        = (array) $wpdb->get_col( "SELECT DISTINCT ip_address FROM {$table_name} WHERE status = 'failed' AND error_message LIKE '%is whitelisted%'" );
+		if ( array() === $ips ) {
+			return 0;
+		}
+		$removed = (int) $wpdb->query( "DELETE FROM {$table_name} WHERE status = 'failed' AND error_message LIKE '%is whitelisted%'" );
+
+		foreach ( $ips as $ip ) {
+			$this->lift_automatic_block( (string) $ip );
+		}
+
+		return $removed;
+	}
+
+	/**
 	 * Unblock IP address
 	 */
 	public function unblock_ip( $ip_address ) {

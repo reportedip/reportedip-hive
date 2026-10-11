@@ -4,7 +4,7 @@
  * Plugin URI: https://reportedip.com
  * Description: Community-powered WordPress security, real-time threat intelligence
  * with 6-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.1.72
+ * Version: 2.1.73
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.com
  * License: GPL-2.0-or-later
@@ -55,7 +55,7 @@ if ( file_exists( $reportedip_autoload ) ) {
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.1.72' );
+define( 'REPORTEDIP_HIVE_VERSION', '2.1.73' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -509,6 +509,7 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-whitelist-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-status-cli.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-support-bundle-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-cli.php';
 		}
 
@@ -596,6 +597,7 @@ class ReportedIP_Hive {
 
 		new ReportedIP_Hive_Two_Factor_REST();
 
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-support-bundle.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mainwp-integration.php';
 		ReportedIP_Hive_MainWP_Integration::init();
 
@@ -2469,11 +2471,14 @@ class ReportedIP_Hive {
 		if ( '' === $utc_mysql || 0 === strpos( $utc_mysql, '0000-00-00' ) ) {
 			return '';
 		}
-		if ( false === date_create( $utc_mysql, new DateTimeZone( 'UTC' ) ) ) {
+		$date = date_create( $utc_mysql, new DateTimeZone( 'UTC' ) );
+		if ( false === $date ) {
 			return '';
 		}
 		$format = get_option( 'date_format', 'Y-m-d' ) . ' ' . get_option( 'time_format', 'H:i:s' );
-		return get_date_from_gmt( $utc_mysql, $format );
+		$local  = wp_date( $format, $date->getTimestamp() );
+
+		return false === $local ? '' : $local;
 	}
 
 	/**

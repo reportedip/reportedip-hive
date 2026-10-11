@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.72
+Stable tag: 2.1.73
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -265,6 +265,9 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.73 =
+New: a support bundle on System Status, as one JSON file with settings, health, queue, the events of a chosen period and the active blocks, also through WP-CLI and MainWP. Fixed: a Gravity Forms submission the form itself turned down no longer spends the form check; blocked addresses no longer write firewall rows; automatic blocks are lifted when the network vouches for the address; Local Shield no longer asks for the relay quota; CSV exports quote correctly; dates follow the site language.
 
 = 2.1.72 =
 New: disposable mail addresses are refused on comments and on every protected contact form, with a setting of its own (block by default). Fixed: a form left open longer than ten minutes was refused as expired; a verified crawler (OAI-SearchBot) was blocked and reported for a bait path; reports the network refuses as whitelisted stayed in the queue; bulk actions did nothing after a filter; "Delete All Failed" skipped rows with retries left. Extended Protection is one card with one status and one button, and the dashboard links to the reportedip.com security header check.

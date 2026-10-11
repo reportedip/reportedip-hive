@@ -2,7 +2,21 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [Unreleased]
+## [2.1.73] (2026-10-11)
+
+### New
+
+- **Support bundle.** System Status offers one JSON download with what a
+  support check needs: versions, the protection settings that differ from
+  the defaults, readiness, cron, API health, the report queue with its
+  grouped errors, the events of a chosen period (1, 7, 14 or 30 days) with
+  counts per type and day, the latest rows of the types behind a false
+  positive and the active blocks. No access key, passwords, user names,
+  mail addresses or query strings; addresses are cut to their network
+  unless the operator asks for full addresses. Also as
+  `wp reportedip support-bundle --days=7 --output=bundle.json` and as the
+  MainWP job `reportedip_hive_support_bundle`, which the dashboard
+  extension 1.3.6 serves at `GET /wp-json/reportedip-hive-ext/v1/support-bundle/<site_id>`.
 
 ### Fixes
 
@@ -13,6 +27,28 @@ All changes to ReportedIP Hive are documented here.
   single-use answer. The corrected second send of the same answer was then
   refused as a replay. The answer is now handed back whenever Gravity Forms
   writes no entry, and stays single-use for a submission that does.
+- **A blocked address no longer fills the log with firewall rows.** The
+  firewall inspected the request before the IP gate turned it away, both on
+  the same hook, so a blocked scanner wrote a row for every request.
+- **A block the plugin set by itself is lifted when the network vouches for
+  the address.** A monitoring server polling the front page tripped the
+  burst sensors and stayed blocked for seven days although the community
+  network whitelisted it minutes later. Manual blocks stay. Failed reports
+  of this kind left behind by earlier versions are cleared on the next
+  queue run, and their warning closes.
+- **Local Shield no longer asks for the relay quota.** It logged a 401
+  every six hours.
+- **A failed report says why.** The queue now stores the HTTP status and
+  the error code in front of the service message, which on its own read
+  like a quota note.
+- **Refused form submissions log their verdict** (decoy filled, script
+  never ran, anchor missing), so a support check can tell a bot from a
+  person.
+- **CSV exports quote correctly.** Details with a quote in them broke the
+  file for Excel and every RFC 4180 reader, and PHP 8.4 warned about the
+  escape character.
+- **Dates use the site language.** Tables showed "7. October" on German
+  sites.
 
 ## [2.1.72] (2026-10-09)
 

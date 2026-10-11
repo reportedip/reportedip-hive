@@ -229,6 +229,17 @@ class ReportedIP_Hive_WAF {
 			return;
 		}
 
+		/*
+		 * A blocked address is turned away by the IP gate on the same hook.
+		 * Both sit on `init` priority 1 and the engine registers first, so
+		 * without this a blocked scanner wrote a firewall row and counted
+		 * towards the ladder on every request until the gate answered, which
+		 * buried the rows that matter in the activity log.
+		 */
+		if ( $ip_manager && ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) && $ip_manager->is_blocked( $ip ) ) {
+			return;
+		}
+
 		$route      = $this->current_rest_route();
 		$path       = $this->current_request_path();
 		$exceptions = $this->load_exceptions();

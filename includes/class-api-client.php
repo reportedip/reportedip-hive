@@ -483,9 +483,19 @@ class ReportedIP_Hive_API {
 				$error_message = $response_data['code'];
 			}
 
+			/*
+			 * The status and the error code go first: a service message alone
+			 * ("97058 reports left today") read like a quota note, not like
+			 * the reason a report failed.
+			 */
+			$prefix = 'HTTP ' . (int) $response_code;
+			if ( is_array( $response_data ) && ! empty( $response_data['code'] ) && $response_data['code'] !== $error_message ) {
+				$prefix .= ' ' . sanitize_key( (string) $response_data['code'] );
+			}
+
 			return array(
 				'success'       => false,
-				'message'       => $error_message,
+				'message'       => $prefix . ': ' . $error_message,
 				'response_code' => $response_code,
 			);
 		}
@@ -570,6 +580,7 @@ class ReportedIP_Hive_API {
 
 		$timeout_minutes = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_processing_timeout_minutes', 10 );
 		$recovery        = $database->recover_stuck_processing( $timeout_minutes );
+		$database->purge_whitelisted_failures();
 
 		if ( ! $this->can_use_api() ) {
 			return false;
@@ -689,8 +700,9 @@ class ReportedIP_Hive_API {
 						'api_report_skipped',
 						$report->ip_address,
 						array(
-							'reason'  => 'whitelisted_by_network',
-							'message' => substr( (string) $result['message'], 0, 200 ),
+							'reason'       => 'whitelisted_by_network',
+							'message'      => substr( (string) $result['message'], 0, 200 ),
+							'block_lifted' => $database->lift_automatic_block( (string) $report->ip_address ),
 						),
 						'low'
 					);
@@ -911,6 +923,18 @@ class ReportedIP_Hive_API {
 	public function get_relay_quota( $force_refresh = false ) {
 		$cache_key    = 'reportedip_hive_relay_quota';
 		$cooldown_key = 'reportedip_hive_relay_quota_cooldown';
+
+		/*
+		 * Local Shield sends nothing to reportedip.com, and a site without an
+		 * access key has nobody to ask. Both used to call the endpoint every
+		 * six hours anyway and logged a 401 each time.
+		 */
+		if ( ! $this->can_use_api() ) {
+			return array(
+				'error'       => 'not_configured',
+				'status_code' => 0,
+			);
+		}
 
 		if ( ! $force_refresh ) {
 			$cached = get_transient( $cache_key );
