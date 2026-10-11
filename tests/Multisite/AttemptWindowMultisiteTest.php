@@ -162,11 +162,13 @@ class ReportedIP_Hive_Attempt_Window_Multisite_Test extends WP_UnitTestCase {
 			}
 		);
 
-		$result = ( new ReportedIP_Hive_API() )->report_ip( $this->ip, array( 34 ), 'test' );
-
-		ReportedIP_Hive_Option_Routing::delete( ReportedIP_Hive_Mode_Manager::OPTION_MODE );
-		ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_api_key' );
-		$mode->setValue( ReportedIP_Hive_Mode_Manager::get_instance(), null );
+		try {
+			$result = ( new ReportedIP_Hive_API() )->report_ip( $this->ip, array( 34 ), 'test' );
+		} finally {
+			ReportedIP_Hive_Option_Routing::delete( ReportedIP_Hive_Mode_Manager::OPTION_MODE );
+			ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_api_key' );
+			$mode->setValue( ReportedIP_Hive_Mode_Manager::get_instance(), null );
+		}
 
 		$this->assertTrue( $result['whitelisted'] );
 		$envelope = ReportedIP_Hive_Cache::get_instance()->get_reputation( $this->ip );
