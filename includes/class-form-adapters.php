@@ -185,6 +185,7 @@ final class ReportedIP_Hive_Form_Adapters {
 
 		add_filter( 'gform_form_tag', array( $this, 'gravity_anchor' ), 10, 2 );
 		add_filter( 'gform_validation', array( $this, 'gravity_validate' ), 10, 2 );
+		add_filter( 'gform_validation', array( $this, 'gravity_release' ), 999 );
 
 		add_action( 'wpforms_display_submit_before', array( $this, 'wpforms_anchor' ) );
 		add_action( 'wpforms_process', array( $this, 'wpforms_validate' ), 10, 3 );
@@ -834,6 +835,29 @@ final class ReportedIP_Hive_Form_Adapters {
 			if ( empty( GFFormDisplay::$submission[ $form_id ]['form_level_error'] ) ) {
 				GFFormDisplay::$submission[ $form_id ]['form_level_error'] = $message;
 			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Give the answer back when Gravity Forms turns the submission down.
+	 *
+	 * Gravity Forms validates its own fields (a required field, its
+	 * reCAPTCHA) before this filter chain, so a form the sender has to fix
+	 * reaches the proof check already invalid. The answer is spent there,
+	 * the form comes back with the error, and on some paths (the reCAPTCHA
+	 * field among them) the browser sends the same answer again. Runs last,
+	 * after every other validator, and only for a submission that writes
+	 * no entry.
+	 *
+	 * @param mixed $result Validation result with `is_valid`.
+	 * @return mixed
+	 * @since  2.1.73
+	 */
+	public function gravity_release( $result ) {
+		if ( is_array( $result ) && empty( $result['is_valid'] ) && class_exists( 'ReportedIP_Hive_Form_Challenge' ) ) {
+			ReportedIP_Hive_Form_Challenge::release();
 		}
 
 		return $result;

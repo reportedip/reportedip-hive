@@ -86,6 +86,14 @@ final class ReportedIP_Hive_Form_Challenge {
 	const REPLAY_PREFIX = 'rip_fc_';
 
 	/**
+	 * Replay key of the answer this request spent, so {@see release()} can
+	 * hand it back.
+	 *
+	 * @var string
+	 */
+	private static $spent = '';
+
+	/**
 	 * Transient prefix of the per-network mint counter.
 	 */
 	const MINT_PREFIX = 'rip_fc_mint_';
@@ -185,6 +193,8 @@ final class ReportedIP_Hive_Form_Challenge {
 	 * @since  2.1.64
 	 */
 	public static function verify( $token, $nonce, $now = null ) {
+		self::$spent = '';
+
 		try {
 			$now   = null === $now ? time() : (int) $now;
 			$token = (string) $token;
@@ -228,10 +238,29 @@ final class ReportedIP_Hive_Form_Challenge {
 			}
 
 			set_transient( $key, 1, max( 1, (int) $claims['e'] - $now ) );
+			self::$spent = $key;
 
 			return 'ok';
 		} catch ( \Throwable $e ) {
 			return 'ok';
+		}
+	}
+
+	/**
+	 * Hand back the answer this request spent.
+	 *
+	 * For a submission the form plugin itself turned down (a missing
+	 * required field, an unticked captcha): no entry was written, and the
+	 * sender sends the very same answer again once the mistake is fixed.
+	 * Without this the second try reads as a replay and is refused.
+	 *
+	 * @return void
+	 * @since  2.1.73
+	 */
+	public static function release() {
+		if ( '' !== self::$spent ) {
+			delete_transient( self::$spent );
+			self::$spent = '';
 		}
 	}
 

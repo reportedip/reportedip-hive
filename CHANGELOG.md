@@ -2,6 +2,18 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixes
+
+- **A Gravity Forms submission the form itself turned down no longer
+  spends the form check.** Gravity Forms validates its own fields before
+  the proof check, so a form sent with an empty required field or an
+  unticked reCAPTCHA reached the check already invalid and used up its
+  single-use answer. The corrected second send of the same answer was then
+  refused as a replay. The answer is now handed back whenever Gravity Forms
+  writes no entry, and stays single-use for a submission that does.
+
 ## [2.1.72] (2026-10-09)
 
 ### New

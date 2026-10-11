@@ -78,6 +78,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 16, strlen( $minted['seed'] ) );
 		}
 
+		public function test_a_released_answer_can_be_sent_again(): void {
+			$minted = \ReportedIP_Hive_Form_Challenge::mint( 0, self::NOW );
+			$nonce  = $this->solve( $minted );
+
+			$this->assertSame( 'ok', \ReportedIP_Hive_Form_Challenge::verify( $minted['token'], $nonce, self::NOW + 5 ) );
+			$this->assertSame( 'replay', \ReportedIP_Hive_Form_Challenge::verify( $minted['token'], $nonce, self::NOW + 6 ) );
+
+			\ReportedIP_Hive_Form_Challenge::verify( $minted['token'] . 'x', $nonce, self::NOW + 6 );
+			\ReportedIP_Hive_Form_Challenge::release();
+			$this->assertSame( 'replay', \ReportedIP_Hive_Form_Challenge::verify( $minted['token'], $nonce, self::NOW + 7 ), 'a failed check releases nothing' );
+
+			$other = \ReportedIP_Hive_Form_Challenge::mint( 0, self::NOW );
+			$this->assertSame( 'ok', \ReportedIP_Hive_Form_Challenge::verify( $other['token'], $this->solve( $other ), self::NOW + 8 ) );
+			\ReportedIP_Hive_Form_Challenge::release();
+			$this->assertSame( 'ok', \ReportedIP_Hive_Form_Challenge::verify( $other['token'], $this->solve( $other ), self::NOW + 9 ), 'the released answer passes again once' );
+			$this->assertSame( 'replay', \ReportedIP_Hive_Form_Challenge::verify( $other['token'], $this->solve( $other ), self::NOW + 10 ) );
+		}
+
 		public function test_expired_token_is_refused(): void {
 			$minted = \ReportedIP_Hive_Form_Challenge::mint( 0, self::NOW );
 

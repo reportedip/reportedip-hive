@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import type { APIRequestContext } from '@playwright/test';
 import { test, expect } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
@@ -1149,6 +1150,74 @@ test.describe('form adapters', () => {
 
 			expect(body).not.toContain('gform_submission_error');
 			expect(gravityEntryCount()).toBe(1);
+		});
+
+		/**
+		 * Gravity Forms validates its own fields first. A submission it turns
+		 * down (here an empty required field, on tollwood.de an unticked
+		 * reCAPTCHA) reached the proof check already invalid and spent the
+		 * answer, so the corrected second send of the same answer was refused
+		 * as a replay. The answer is handed back for a submission that writes
+		 * no entry, and stays single-use for one that does.
+		 */
+		test('the same answer passes again after Gravity Forms turned the submission down', async ({
+			request,
+		}) => {
+			clearGravityEntries();
+			php(`
+				ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow', 1);
+				ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_since', time() - 172800);
+				ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_version', REPORTEDIP_HIVE_VERSION);
+			`);
+
+			try {
+				const minted = await request.post('/wp-json/reportedip-hive/v1/form/challenge', {
+					failOnStatusCode: false,
+				});
+				expect(minted.status()).toBe(200);
+				const task = (await minted.json()) as { token: string; seed: string; bits: number };
+
+				let answer = `${task.token}.0`;
+				for (let nonce = 0; task.bits > 0; nonce++) {
+					const hex = nonce.toString(16);
+					const digest = createHash('sha256').update(task.seed + hex).digest();
+					let bits = 0;
+					for (const byte of digest) {
+						if (byte === 0) {
+							bits += 8;
+							continue;
+						}
+						let part = byte;
+						while (part < 128) {
+							bits++;
+							part <<= 1;
+						}
+						break;
+					}
+					if (bits >= task.bits) {
+						answer = `${task.token}.${hex}`;
+						break;
+					}
+				}
+
+				const field = proofField();
+
+				const first = await postGravity(request, { [ANCHOR]: '', [field]: answer, input_1: '' });
+				expect(gravityEntryCount(), 'the empty required field stops the first send').toBe(0);
+				expect(first).toContain('gfield_error');
+
+				const second = await postGravity(request, { [ANCHOR]: '', [field]: answer });
+				expect(second, 'the corrected send with the same answer is not a replay').not.toContain(
+					'gform_submission_error'
+				);
+				expect(gravityEntryCount()).toBe(1);
+
+				await postGravity(request, { [ANCHOR]: '', [field]: answer });
+				expect(gravityEntryCount(), 'an answer that wrote an entry stays spent').toBe(1);
+			} finally {
+				php("ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow', 0);");
+				clearGravityEntries();
+			}
 		});
 
 		/**
