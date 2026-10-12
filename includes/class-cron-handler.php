@@ -269,6 +269,26 @@ class ReportedIP_Hive_Cron_Handler {
 	}
 
 	/**
+	 * Whether a queue run did anything worth a log row.
+	 *
+	 * The queue runs every 15 minutes, and on most sites most runs find
+	 * nothing. Logging each of them wrote 96 identical rows a day into the
+	 * event log of every install and buried the rows that matter.
+	 *
+	 * @param array<string,mixed> $result Result of `process_report_queue()`.
+	 * @return bool
+	 * @since  2.1.74
+	 */
+	public static function queue_run_did_work( array $result ) {
+		$recovered = isset( $result['recovered'] ) && is_array( $result['recovered'] ) ? $result['recovered'] : array();
+
+		return (int) ( $result['processed'] ?? 0 ) > 0
+			|| (int) ( $result['errors'] ?? 0 ) > 0
+			|| (int) ( $recovered['reset'] ?? 0 ) > 0
+			|| (int) ( $recovered['failed'] ?? 0 ) > 0;
+	}
+
+	/**
 	 * Cron job: Process API report queue (runs every 15 minutes).
 	 *
 	 * Acquires a 5-minute transient lock to prevent two workers (e.g. WP-Cron
@@ -297,7 +317,7 @@ class ReportedIP_Hive_Cron_Handler {
 					'system',
 					array()
 				);
-			} elseif ( $queue_result && ! isset( $queue_result['skipped'] ) ) {
+			} elseif ( $queue_result && ! isset( $queue_result['skipped'] ) && self::queue_run_did_work( $queue_result ) ) {
 				$this->logger->info(
 					'Queue processed (15min cron)',
 					'system',
