@@ -1074,6 +1074,10 @@ class ReportedIP_Hive_WAF {
 				if ( isset( $rule['matched'] ) ) {
 					$details['matched'] = ReportedIP_Hive_Logger::truncate( (string) $rule['matched'], 160 );
 				}
+				$ajax_action = self::ajax_action();
+				if ( '' !== $ajax_action ) {
+					$details['ajax_action'] = $ajax_action;
+				}
 				$details = array_merge( $details, ReportedIP_Hive_Logger::request_snapshot() );
 
 				$logger->log_security_event(
@@ -1092,6 +1096,28 @@ class ReportedIP_Hive_WAF {
 		$this->escalate( $ip, $group, $rule_id, 1, $severity );
 
 		ReportedIP_Hive::serve_blocked_page( $reason );
+	}
+
+	/**
+	 * The `action` of an admin-ajax request, for the block log.
+	 *
+	 * Every plugin posts to the same `/wp-admin/admin-ajax.php`, so without
+	 * the action a false positive there names no culprit. The WP Rocket
+	 * performance beacon posting an SVG placeholder took an hour to find
+	 * for exactly that reason.
+	 *
+	 * @return string Sanitised action, or '' outside admin-ajax.
+	 * @since  2.1.74
+	 */
+	public static function ajax_action() {
+		if ( ! function_exists( 'wp_doing_ajax' ) || ! wp_doing_ajax() ) {
+			return '';
+		}
+		$action = isset( $_REQUEST['action'] ) && is_string( $_REQUEST['action'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Logged as an identifier only; the real handler verifies its own nonce.
+			? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- See above.
+			: '';
+
+		return substr( $action, 0, 64 );
 	}
 
 	/**

@@ -98,5 +98,34 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 1, $summary['block_cause']['waf_block | 5 min'] );
 			$this->assertSame( 2, $summary['networks']['form_proof_failed | 2a09:bac2:2961::/48'] );
 		}
+
+		public function test_waf_paths_name_the_ajax_action(): void {
+			$recent = array(
+				array(
+					'type'    => 'waf_block',
+					'ip'      => '109.40.178.0/24',
+					'details' => array(
+						'rule'        => 'waf_xss_svg_iframe',
+						'path'        => '/wp-admin/admin-ajax.php',
+						'ajax_action' => 'rocket_beacon',
+					),
+				),
+				array(
+					'type'    => 'waf_block',
+					'ip'      => '62.60.130.0/24',
+					'details' => array(
+						'rule' => 'waf_file_probe',
+						'path' => '/.env',
+					),
+				),
+			);
+
+			$summary = \ReportedIP_Hive_Support_Bundle::summarize( $recent );
+
+			$this->assertSame( 1, $summary['waf_paths']['/wp-admin/admin-ajax.php | rocket_beacon'] );
+			$this->assertSame( 1, $summary['waf_paths']['/.env'] );
+			$this->assertContains( 'ajax_action', \ReportedIP_Hive_Support_Bundle::DETAIL_KEYS );
+			$this->assertContains( 'matched', \ReportedIP_Hive_Support_Bundle::DETAIL_KEYS );
+		}
 	}
 }

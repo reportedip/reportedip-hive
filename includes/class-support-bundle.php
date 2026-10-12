@@ -91,6 +91,9 @@ final class ReportedIP_Hive_Support_Bundle {
 		'rule',
 		'group',
 		'target',
+		'matched',
+		'matched_target',
+		'ajax_action',
 		'source',
 		'paranoia',
 		'method',
@@ -588,7 +591,9 @@ final class ReportedIP_Hive_Support_Bundle {
 			'waf_paths'   => $count(
 				$waf,
 				static function ( $r ) {
-					return $r['details']['path'] ?? '';
+					$path = $r['details']['path'] ?? '';
+
+					return isset( $r['details']['ajax_action'] ) ? $path . ' | ' . $r['details']['ajax_action'] : $path;
 				}
 			),
 			'block_cause' => $count(

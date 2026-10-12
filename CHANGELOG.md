@@ -15,6 +15,10 @@ All changes to ReportedIP Hive are documented here.
 - **A report the network refused as whitelisted was sent again.** The
   `ip_whitelisted` answer is now cached as infrastructure, so the next
   detection spares the address instead of reporting it once more.
+- **A firewall hit on admin-ajax names the action.** Every plugin posts to
+  the same `/wp-admin/admin-ajax.php`, so a false positive there named no
+  culprit. The block log now carries `ajax_action`, and the support bundle
+  passes it on together with the matched fragment and its target.
 
 ## [2.1.73] (2026-10-11)
 
