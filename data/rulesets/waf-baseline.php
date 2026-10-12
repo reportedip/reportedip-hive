@@ -157,7 +157,7 @@ return array(
 		array(
 			'id'       => 'waf_ua_quoted',
 			'group'    => 'scanner_ua',
-			'pattern'  => '^\s*["\x27]',
+			'pattern'  => '^\s*["\x27](?!DuckDuckBot)',
 			'paranoia' => 1,
 			'severity' => 'medium',
 			'target'   => 'ua',

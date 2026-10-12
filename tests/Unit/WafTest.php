@@ -187,6 +187,52 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * DuckDuckGo's crawler sends its user-agent wrapped in a single quote
+		 * from its official ranges. The quoted-UA rule turned every page it
+		 * fetched into a 403, which took the sites out of DuckDuckGo.
+		 *
+		 * @dataProvider provide_quoted_user_agents
+		 */
+		public function test_baseline_quoted_ua_rule_spares_duckduckbot( string $ua, bool $expect_hit ): void {
+			$baseline = include dirname( __DIR__, 2 ) . '/data/rulesets/waf-baseline.php';
+			$rules    = array();
+			foreach ( $baseline['rules'] as $rule ) {
+				if ( 'waf_ua_quoted' === $rule['id'] ) {
+					$rules[] = $rule;
+				}
+			}
+			$this->assertCount( 1, $rules );
+
+			$hit = $this->waf()->evaluate(
+				$rules,
+				array(
+					'REQUEST_URI'     => '/',
+					'HTTP_USER_AGENT' => $ua,
+				),
+				array(),
+				null
+			);
+
+			if ( $expect_hit ) {
+				$this->assertIsArray( $hit, "$ua must trip the quoted-UA rule" );
+			} else {
+				$this->assertNull( $hit, "$ua must pass" );
+			}
+		}
+
+		/**
+		 * @return array<string, array{0:string, 1:bool}>
+		 */
+		public static function provide_quoted_user_agents(): array {
+			return array(
+				'duckduckbot quoted'  => array( "'DuckDuckBot-Https/1.1; (+https://duckduckgo.com/duckduckbot)'", false ),
+				'scraper single'      => array( "'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", true ),
+				'scraper double'      => array( '"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', true ),
+				'ordinary browser'    => array( 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', false ),
+			);
+		}
+
+		/**
 		 * @return array<string, array{0:string, 1:bool}>
 		 */
 		public static function provide_traversal_encodings(): array {
