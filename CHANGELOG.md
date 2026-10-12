@@ -20,6 +20,10 @@ All changes to ReportedIP Hive are documented here.
   the service did not answer each new visitor on a login or form waited the
   full five seconds. One timeout now pauses live lookups for two minutes,
   and the site fails open meanwhile, as it did after each timeout before.
+- **DuckDuckGo can crawl again.** Its crawler sends the user-agent wrapped
+  in a single quote from its official ranges, and the quoted-user-agent
+  rule answered every page it fetched with a 403. The rule now spares
+  DuckDuckBot; any other quoted user-agent is still refused.
 - **An empty queue run no longer writes a log row.** The report queue runs
   every 15 minutes and logged each run, 96 identical rows a day on every
   site. A run is logged when it sent, failed or recovered a report.
