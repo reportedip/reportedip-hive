@@ -5,7 +5,7 @@ Tags: security, firewall, brute-force, two-factor, multisite
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.73
+Stable tag: 2.1.74
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Update URI: https://github.com/reportedip/reportedip-hive
@@ -265,6 +265,9 @@ ReportedIP Hive plays nicely with the major page-cache plugins (WP Rocket, W3 To
 == Changelog ==
 
 The full structured changelog lives in [CHANGELOG.md](https://github.com/reportedip/reportedip-hive/blob/main/CHANGELOG.md). Highlights:
+
+= 2.1.74 =
+Fixed: sensor counters run on their configured window again, so an uptime monitor is no longer blocked as a burst; a report the network refuses as whitelisted spares the address from then on; a slow community service pauses live lookups for two minutes instead of slowing every login; DuckDuckBot is no longer refused for its quoted user-agent; empty queue runs no longer write log rows. Firewall hits on admin-ajax name the action.
 
 = 2.1.73 =
 New: a support bundle on System Status, as one JSON file with settings, health, queue, the events of a chosen period and the active blocks, also through WP-CLI and MainWP. Fixed: a Gravity Forms submission the form itself turned down no longer spends the form check; blocked addresses no longer write firewall rows; automatic blocks are lifted when the network vouches for the address; Local Shield no longer asks for the relay quota; CSV exports quote correctly; dates follow the site language.
