@@ -15,6 +15,11 @@ All changes to ReportedIP Hive are documented here.
 - **A report the network refused as whitelisted was sent again.** The
   `ip_whitelisted` answer is now cached as infrastructure, so the next
   detection spares the address instead of reporting it once more.
+- **A slow community service no longer slows every login.** A reputation
+  lookup that timed out was remembered for that one address only, so while
+  the service did not answer each new visitor on a login or form waited the
+  full five seconds. One timeout now pauses live lookups for two minutes,
+  and the site fails open meanwhile, as it did after each timeout before.
 - **A firewall hit on admin-ajax names the action.** Every plugin posts to
   the same `/wp-admin/admin-ajax.php`, so a false positive there named no
   culprit. The block log now carries `ajax_action`, and the support bundle

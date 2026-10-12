@@ -254,6 +254,10 @@ class ReportedIP_Hive_API {
 			return isset( $cached_result['data'] ) ? $cached_result['data'] : $cached_result;
 		}
 
+		if ( self::reputation_lookups_paused() ) {
+			return false;
+		}
+
 		if ( $this->is_rate_limited( 'reputation' ) ) {
 			$this->track_api_call( false, 0, 'rate_limited', 'reputation' );
 			$this->logger->log_security_event(
@@ -297,6 +301,7 @@ class ReportedIP_Hive_API {
 			error_log( 'ReportedIP Hive: IP check failed - ' . $error_message );
 
 			$this->cache->set_reputation( $ip_address, false, true );
+			self::pause_reputation_lookups();
 			return false;
 		}
 
@@ -1848,6 +1853,48 @@ class ReportedIP_Hive_API {
 	 * @since 2.1.30
 	 */
 	private const RECENT_HEALTH_FRESH_HOURS = 3;
+
+	/**
+	 * Site transient that pauses live reputation lookups after a transport error.
+	 *
+	 * @since 2.1.74
+	 */
+	const REPUTATION_PAUSE_KEY = 'reportedip_hive_reputation_pause';
+
+	/**
+	 * Seconds a transport error pauses live reputation lookups.
+	 *
+	 * @since 2.1.74
+	 */
+	const REPUTATION_PAUSE_SECONDS = 120;
+
+	/**
+	 * Pause live reputation lookups after a transport error.
+	 *
+	 * A failed lookup used to be remembered for that one address only, so
+	 * while the service did not answer every new visitor on a login or form
+	 * waited out the full timeout (five seconds) before being let through.
+	 * After one timeout the whole site now skips the lookup for two minutes
+	 * and fails open, the same answer the timeout would have produced.
+	 *
+	 * @return void
+	 * @since  2.1.74
+	 */
+	public static function pause_reputation_lookups() {
+		set_site_transient( self::REPUTATION_PAUSE_KEY, time() + self::REPUTATION_PAUSE_SECONDS, self::REPUTATION_PAUSE_SECONDS );
+	}
+
+	/**
+	 * Whether live reputation lookups are paused after a transport error.
+	 *
+	 * @return bool
+	 * @since  2.1.74
+	 */
+	public static function reputation_lookups_paused() {
+		$until = get_site_transient( self::REPUTATION_PAUSE_KEY );
+
+		return is_numeric( $until ) && (int) $until > time();
+	}
 
 	/**
 	 * Check if we're currently rate limited.
