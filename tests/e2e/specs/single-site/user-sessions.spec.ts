@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { test, expect, loginAsAdmin, ADMIN_USER } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
 import { FORGET_CACHED_TIER_CLI } from '../../fixtures/tier';
+import { workspaceRoot } from '../../fixtures/workspace';
 
 /**
  * Account blocking and the session manager (Business, since 2.1.51).
@@ -27,13 +28,9 @@ const TEST_PASS = 'RipE2eBlock-2151';
 const BLOCK_MESSAGE = 'Offboarded during the E2E run.';
 const DEFAULT_BLOCK_TEXT = 'This account has been blocked.';
 
-function resolveWorkspaceRoot(): string {
-	return new URL('../../../../../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
-}
-
 function wp(args: string): string {
 	return execSync(`docker compose exec -T wordpress wp --allow-root ${args}`, {
-		cwd: resolveWorkspaceRoot(),
+		cwd: workspaceRoot(),
 		encoding: 'utf8',
 	})
 		.toString()

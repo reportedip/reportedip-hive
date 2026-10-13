@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
+import { workspaceRoot } from '../../fixtures/workspace';
 
 /**
  * Adaptive 2FA policies on a network (Professional, since 2.1.51): the matrix
@@ -19,10 +20,6 @@ const MS_COMPOSE = 'docker-compose.multisite.yml';
 const MS_SERVICE = 'wordpress-ms';
 const POLICY_KEY = 'reportedip_hive_2fa_policy_new_ip';
 
-function resolveWorkspaceRoot(): string {
-	return new URL('../../../../../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
-}
-
 /**
  * Run WP-CLI in the multisite container. Arguments travel as argv, never
  * through a shell: a JSON value like `["editor"]` keeps its quotes on both
@@ -32,7 +29,7 @@ function wp(...args: string[]): string {
 	return execFileSync(
 		'docker',
 		['compose', '-f', MS_COMPOSE, 'exec', '-T', MS_SERVICE, 'wp', '--allow-root', ...args],
-		{ cwd: resolveWorkspaceRoot(), encoding: 'utf8' }
+		{ cwd: workspaceRoot(), encoding: 'utf8' }
 	)
 		.toString()
 		.trim();

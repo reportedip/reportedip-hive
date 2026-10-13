@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import type { CDPSession, Page } from '@playwright/test';
+import { workspaceRoot } from './workspace';
 
 /**
  * Helpers for the WebAuthn / security-key E2E specs.
@@ -27,13 +28,9 @@ export const WEBAUTHN_PASS = 'E2eWebauthnPass!42';
 function execInWordpress(composeFile: string, service: string, cmd: string): string {
     const fullCmd = `docker compose -f ${composeFile} exec -T ${service} ${cmd}`;
     return execSync(fullCmd, {
-        cwd: resolveWorkspaceRoot(),
+        cwd: workspaceRoot(),
         encoding: 'utf8',
     }).toString();
-}
-
-function resolveWorkspaceRoot(): string {
-    return new URL('../../../../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 }
 
 /**

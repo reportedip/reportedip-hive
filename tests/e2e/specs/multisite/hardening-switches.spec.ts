@@ -1,6 +1,7 @@
 import { execSync, execFileSync } from 'node:child_process';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
+import { workspaceRoot } from '../../fixtures/workspace';
 
 /**
  * The attack-surface switches are network state: one network option closes
@@ -13,14 +14,10 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
 const MS_COMPOSE = 'docker-compose.multisite.yml';
 const MS_SERVICE = 'wordpress-ms';
 
-function resolveWorkspaceRoot(): string {
-	return new URL('../../../../../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
-}
-
 function wp(args: string): string {
 	return execSync(
 		`docker compose -f ${MS_COMPOSE} exec -T ${MS_SERVICE} wp --allow-root ${args}`,
-		{ cwd: resolveWorkspaceRoot(), encoding: 'utf8' }
+		{ cwd: workspaceRoot(), encoding: 'utf8' }
 	)
 		.toString()
 		.trim();
@@ -36,7 +33,7 @@ function wpEval(php: string): string {
 	return execFileSync(
 		'docker',
 		['compose', '-f', MS_COMPOSE, 'exec', '-T', MS_SERVICE, 'wp', '--allow-root', 'eval', php],
-		{ cwd: resolveWorkspaceRoot(), encoding: 'utf8' }
+		{ cwd: workspaceRoot(), encoding: 'utf8' }
 	)
 		.toString()
 		.trim();

@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process';
+import { workspaceRoot } from './workspace';
 
 /**
  * Helpers for the password-reset 2FA E2E spec.
@@ -69,18 +70,9 @@ const WP_SERVICE   = process.env.RIP_E2E_WP_SERVICE ?? 'wordpress';
 function execInWordpress(cmd: string): string {
     const fullCmd = `docker compose -f ${COMPOSE_FILE} exec -T ${WP_SERVICE} ${cmd}`;
     return execSync(fullCmd, {
-        cwd: resolveWorkspaceRoot(),
+        cwd: workspaceRoot(),
         encoding: 'utf8',
     }).toString();
-}
-
-/**
- * Walk up from this file (which lives inside `dev/`) to the workspace
- * root that owns `docker-compose.yml`. Avoids hard-coding paths so the
- * suite can run from arbitrary working directories.
- */
-function resolveWorkspaceRoot(): string {
-    return new URL('../../../../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 }
 
 /**

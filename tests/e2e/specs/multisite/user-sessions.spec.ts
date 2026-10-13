@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 import { FORGET_CACHED_TIER_CLI } from '../../fixtures/tier';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
+import { workspaceRoot } from '../../fixtures/workspace';
 
 /**
  * Account blocking and the session manager on a network (Business, 2.1.51).
@@ -31,13 +32,9 @@ const SUBSITE_PATH = '/site-a/';
 const BLOCK_MESSAGE = 'Offboarded during the network E2E run.';
 const DEFAULT_BLOCK_TEXT = 'This account has been blocked.';
 
-function resolveWorkspaceRoot(): string {
-	return new URL('../../../../../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
-}
-
 function wp(args: string): string {
 	return execSync(`docker compose -f ${MS_COMPOSE} exec -T ${MS_SERVICE} wp --allow-root ${args}`, {
-		cwd: resolveWorkspaceRoot(),
+		cwd: workspaceRoot(),
 		encoding: 'utf8',
 	})
 		.toString()
