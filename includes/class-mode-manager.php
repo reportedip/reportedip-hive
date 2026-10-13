@@ -343,6 +343,30 @@ class ReportedIP_Hive_Mode_Manager {
 				'requires_tier' => 'professional',
 			),
 		);
+
+		/**
+		 * Extend the feature matrix.
+		 *
+		 * The free plugin lists only features it ships. An add-on appends its
+		 * own rows, each with `local`, `community` and optionally
+		 * `requires_tier`; a key nobody registered stays `unknown`.
+		 *
+		 * @param array<string, array<string, mixed>> $matrix Feature key to gating row.
+		 * @since 3.0.0
+		 */
+		$this->feature_matrix = apply_filters( 'reportedip_hive_feature_matrix', $this->feature_matrix );
+	}
+
+	/**
+	 * Forget the memoised matrix and texts, so a filter added later in the
+	 * request (tests, late-loading add-ons) is honoured.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public function flush_feature_matrix() {
+		$this->feature_matrix      = array();
+		$this->feature_texts_cache = null;
 	}
 
 	/**
@@ -397,6 +421,15 @@ class ReportedIP_Hive_Mode_Manager {
 			'user_management'              => array( __( 'User Account Control', 'reportedip-hive' ), __( 'Block user accounts with a message and an admin note, end their sessions and password resets, and review or terminate active sessions.', 'reportedip-hive' ) ),
 			'2fa_policies'                 => array( __( 'Configurable 2FA Policies per Role', 'reportedip-hive' ), __( 'Per-role step-up rules that ask for the second factor again on a new device, IP address, network or country, every N days or sign-ins, or above a concurrent-session limit, even on a trusted device.', 'reportedip-hive' ) ),
 		);
+
+		/**
+		 * Extend the feature texts with label and description pairs for rows
+		 * an add-on registered through `reportedip_hive_feature_matrix`.
+		 *
+		 * @param array<string, array{0:string,1:string}> $texts Feature key to [label, description].
+		 * @since 3.0.0
+		 */
+		$this->feature_texts_cache = apply_filters( 'reportedip_hive_feature_texts', $this->feature_texts_cache );
 
 		return $this->feature_texts_cache;
 	}
