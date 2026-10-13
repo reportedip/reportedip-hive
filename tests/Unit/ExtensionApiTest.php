@@ -352,6 +352,34 @@ class ExtensionApiTest extends TestCase {
 	 * @runInSeparateProcess
 	 * @preserveGlobalState disabled
 	 */
+	public function test_reset_gate_uses_send_mask_wait_and_health_of_a_registered_method() {
+		$this->register_dummy_2fa_method();
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-reset-gate.php';
+		$gate   = new \ReportedIP_Hive_Two_Factor_Reset_Gate();
+		$invoke = static function ( $name, ...$args ) use ( $gate ) {
+			return ( new \ReflectionMethod( $gate, $name ) )->invoke( $gate, ...$args );
+		};
+
+		$this->assertTrue( $invoke( 'dispatch_initial_code', 4, 'dummy' ) );
+		$this->assertSame( 'We have sent a verification code to +49 ****42.', $invoke( 'code_sent_notice', 4, 'dummy' ) );
+		$this->assertSame( 45, $invoke( 'get_resend_wait_seconds', 4, 'dummy' ) );
+		$this->assertSame( 'Dummy code', $invoke( 'method_label', 'dummy' ) );
+		$this->assertSame( 'Enter the dummy code', $invoke( 'method_prompt', 'dummy' ) );
+		$this->assertStringContainsString( 'resend_dummy=1', $invoke( 'build_resend_url', 'jane', 'key', 'dummy' ) );
+		$this->assertSame(
+			array(
+				'ok'     => array( 'recovery' ),
+				'broken' => array( 'dummy' => 'Dummy gateway is down' ),
+			),
+			$invoke( 'assess_methods_health', 4, array( 'dummy', 'recovery' ) )
+		);
+		$this->assertSame( array( 'send', 'mask', 'resend_wait', 'health' ), array_column( $GLOBALS['rip_test_dummy_calls'], 0 ) );
+	}
+
+	/**
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
 	public function test_resend_ajax_uses_send_wait_and_mask_of_a_registered_method() {
 		$this->register_dummy_2fa_method();
 		$this->set_mocked_option( 'reportedip_hive_2fa_allowed_methods', '["totp","dummy"]' );

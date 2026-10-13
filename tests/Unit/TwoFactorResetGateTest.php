@@ -72,7 +72,6 @@ namespace {
 
 			const METHOD_TOTP     = 'totp';
 			const METHOD_EMAIL    = 'email';
-			const METHOD_SMS      = 'sms';
 			const METHOD_WEBAUTHN = 'webauthn';
 			const METHOD_RECOVERY = 'recovery';
 
@@ -91,6 +90,14 @@ namespace {
 
 			public static function get_user_enabled_methods( $user_id ) {
 				return $GLOBALS['rip_test_user_methods'][ $user_id ] ?? array();
+			}
+
+			public static function unavailable_method( $user_id ) {
+				return $GLOBALS['rip_test_user_unavailable'][ $user_id ] ?? '';
+			}
+
+			public static function methods() {
+				return array();
 			}
 		}
 	}
@@ -137,6 +144,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['rip_test_user_meta']    = array();
 			$GLOBALS['rip_test_user_methods'] = array();
 			$GLOBALS['rip_test_user_recovery'] = array();
+			$GLOBALS['rip_test_user_unavailable'] = array();
 		}
 
 		private function source(): string {
@@ -302,6 +310,25 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_an_account_whose_only_method_is_unavailable_stays_gated(): void {
+			$GLOBALS['rip_test_user_methods'][7]     = array();
+			$GLOBALS['rip_test_user_unavailable'][7] = 'sms';
+			$GLOBALS['rip_test_user_recovery'][7]    = 3;
+
+			$this->assertTrue(
+				\ReportedIP_Hive_Two_Factor_Reset_Gate::should_gate_user( 7 ),
+				'A factor the site cannot verify right now must not turn the reset into an email-only one.'
+			);
+			$this->assertSame( array( 'recovery' ), \ReportedIP_Hive_Two_Factor_Reset_Gate::get_eligible_methods( 7 ) );
+
+			$GLOBALS['rip_test_user_recovery'][7] = 0;
+			$this->assertSame(
+				array(),
+				\ReportedIP_Hive_Two_Factor_Reset_Gate::get_eligible_methods( 7 ),
+				'Without recovery codes nothing is eligible: on_validate_reset() refuses the reset and notifies the administrators.'
+			);
+		}
+
 		public function test_should_gate_user_returns_true_for_totp_enrolled(): void {
 			$GLOBALS['rip_test_user_methods'][7]  = array( 'totp' );
 			$GLOBALS['rip_test_user_recovery'][7] = 0;
@@ -441,14 +468,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_url_resend_path_exists(): void {
 			$source = $this->source();
 			$this->assertStringContainsString(
-				"isset( \$_GET['resend_sms'] )",
+				"isset( \$_GET[ 'resend_' . \$candidate ] )",
 				$source,
-				'A server-side ?resend_sms=1 path must exist so users without JS can still re-trigger the SMS code from the challenge page.'
+				'A server-side ?resend_{method}=1 path must exist for every method that sends its code, so users without JS can still re-trigger it from the challenge page.'
 			);
 			$this->assertStringContainsString(
-				"isset( \$_GET['resend_email'] )",
+				"\$args[ 'resend_' . \$method ] = '1';",
 				$source,
-				'A server-side ?resend_email=1 path must exist so users without JS can still re-trigger the email code from the challenge page.'
+				'The resend link must carry the same per-method trigger the handler reads.'
 			);
 		}
 
