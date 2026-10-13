@@ -25,18 +25,23 @@ class ExtensionApiTest extends TestCase {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-defaults.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mode-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-registry.php';
-		global $wp_filters;
+		global $wp_filters, $wp_actions;
 		$wp_filters               = array();
+		$wp_actions               = array();
 		$GLOBALS['wp_options']    = array();
 		$GLOBALS['wp_transients'] = array();
 		\ReportedIP_Hive_Mode_Manager::get_instance()->flush_cached_tier();
 	}
 
 	protected function tear_down() {
-		global $wp_filters;
+		global $wp_filters, $wp_actions;
 		$wp_filters = array();
+		$wp_actions = array();
 		\ReportedIP_Hive_Mode_Manager::get_instance()->flush_feature_matrix();
 		\ReportedIP_Hive_Settings_Registry::flush_spec_cache();
+		if ( class_exists( 'ReportedIP_Hive_Event_Taxonomy', false ) ) {
+			\ReportedIP_Hive_Event_Taxonomy::flush_registry();
+		}
 		parent::tear_down();
 	}
 
@@ -142,5 +147,38 @@ class ExtensionApiTest extends TestCase {
 
 		$this->assertArrayHasKey( 'reportedip_hive_demo_switch', \ReportedIP_Hive_Defaults::recommended( 'professional', 'community' ) );
 		$this->assertArrayNotHasKey( 'reportedip_hive_demo_switch', \ReportedIP_Hive_Defaults::recommended( 'free', 'community' ) );
+	}
+
+	public function test_event_taxonomy_accepts_injected_rows() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-event-taxonomy.php';
+		add_filter(
+			'reportedip_hive_event_taxonomy',
+			static function ( array $rows ) {
+				$rows['demo_event'] = array(
+					'label'  => 'Demo',
+					'group'  => 'login',
+					'family' => 'login',
+					'writes' => 'direct',
+				);
+				return $rows;
+			}
+		);
+		\ReportedIP_Hive_Event_Taxonomy::flush_registry();
+
+		$this->assertArrayHasKey( 'demo_event', \ReportedIP_Hive_Event_Taxonomy::registry() );
+	}
+
+	public function test_settings_effects_forward_an_unknown_token() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-effects.php';
+		$ran = array();
+		add_action(
+			'reportedip_hive_settings_effect_demo',
+			static function () use ( &$ran ) {
+				$ran[] = 'demo';
+			}
+		);
+		\ReportedIP_Hive_Settings_Effects::queue( 'demo' );
+		\ReportedIP_Hive_Settings_Effects::run_queued();
+		$this->assertSame( array( 'demo' ), $ran );
 	}
 }

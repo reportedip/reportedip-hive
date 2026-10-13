@@ -87,7 +87,7 @@ class ReportedIP_Hive_Event_Taxonomy {
 			return self::$registry;
 		}
 
-		self::$registry = array(
+		$rows = array(
 
 			'failed_login'                      => array(
 				'label'  => __( 'Failed Login', 'reportedip-hive' ),
@@ -648,7 +648,29 @@ class ReportedIP_Hive_Event_Taxonomy {
 			),
 		);
 
+		/**
+		 * Extend the event registry.
+		 *
+		 * Every slug written to the logs table needs a row; an add-on adds
+		 * the rows of the events it writes. Rows carry label, group, optional
+		 * family and writes (`direct`, `threshold`, `both`).
+		 *
+		 * @param array<string, array<string, string>> $rows Event slug to row.
+		 * @since 3.0.0
+		 */
+		self::$registry = apply_filters( 'reportedip_hive_event_taxonomy', $rows );
+
 		return self::$registry;
+	}
+
+	/**
+	 * Forget the memoised registry.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function flush_registry() {
+		self::$registry = null;
 	}
 
 	/**
