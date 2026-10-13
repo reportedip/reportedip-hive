@@ -78,7 +78,7 @@ final class ReportedIP_Hive_Catalog {
 				'label'       => __( 'Hardening mode during attack waves', 'reportedip-hive' ),
 				'description' => __( 'Tightens the sign-in and reputation thresholds for an hour when a coordinated attack is detected.', 'reportedip-hive' ),
 				'tier'        => 'professional',
-				'section'     => 'hardening_mode',
+				'section'     => 'detection',
 				'docs_url'    => self::PRODUCT_URL . '#hive-response',
 			),
 			'form_proof_pow'               => array(
