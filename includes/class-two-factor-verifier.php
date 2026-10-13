@@ -4,7 +4,8 @@
  *
  * Both the login challenge (`ReportedIP_Hive_Two_Factor`) and the password-
  * reset challenge (`ReportedIP_Hive_Two_Factor_Reset_Gate`) need to verify
- * the same code shapes (TOTP / SMS / Email / WebAuthn / Recovery). Before
+ * the same code shapes (TOTP / Email / WebAuthn / Recovery, plus every
+ * method an add-on registers through `reportedip_hive_2fa_methods`). Before
  * this class was extracted the two callers carried bit-for-bit identical
  * switch statements, so a fix in one would silently miss the other.
  *
@@ -39,10 +40,10 @@ final class ReportedIP_Hive_Two_Factor_Verifier {
 	 * stored credentials for `$method` on `$user_id`.
 	 *
 	 * Returns false for any of:
-	 *   - method-specific provider class is missing (SMS / WebAuthn)
+	 *   - method-specific provider class is missing (Email / WebAuthn)
 	 *   - credential material is missing or unreadable (TOTP)
 	 *   - the submitted code does not verify
-	 *   - the method id is unknown
+	 *   - the method id is neither a core method nor registered
 	 *
 	 * The caller is expected to translate `false` into a generic "Invalid
 	 * verification code" message; we do NOT differentiate user-facing
@@ -50,8 +51,9 @@ final class ReportedIP_Hive_Two_Factor_Verifier {
 	 * unauthenticated callers.
 	 *
 	 * @param int           $user_id           User to verify against.
-	 * @param string        $method            Method identifier (totp / sms /
-	 *                                         webauthn / recovery / email).
+	 * @param string        $method            Method identifier (totp / email /
+	 *                                         webauthn / recovery or the slug
+	 *                                         of a registered method).
 	 * @param string        $code              Submitted code or WebAuthn
 	 *                                         assertion payload.
 	 * @param callable|null $on_internal_error Optional callback invoked when
@@ -74,13 +76,6 @@ final class ReportedIP_Hive_Two_Factor_Verifier {
 				}
 				return (bool) ReportedIP_Hive_Two_Factor_Email::verify_code( $user_id, $code );
 
-			case ReportedIP_Hive_Two_Factor::METHOD_SMS:
-				if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-					self::report_internal( $on_internal_error, 'class_missing', $method );
-					return false;
-				}
-				return (bool) ReportedIP_Hive_Two_Factor_SMS::verify_code( $user_id, $code );
-
 			case ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN:
 				if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_WebAuthn' ) ) {
 					self::report_internal( $on_internal_error, 'class_missing', $method );
@@ -92,8 +87,12 @@ final class ReportedIP_Hive_Two_Factor_Verifier {
 				return (bool) ReportedIP_Hive_Two_Factor_Recovery::verify_code( $user_id, $code );
 
 			default:
-				self::report_internal( $on_internal_error, 'unknown_method', $method );
-				return false;
+				$definition = ReportedIP_Hive_Two_Factor::methods()[ $method ] ?? array();
+				if ( empty( $definition['verify'] ) || ! is_callable( $definition['verify'] ) ) {
+					self::report_internal( $on_internal_error, 'unknown_method', $method );
+					return false;
+				}
+				return (bool) call_user_func( $definition['verify'], $user_id, $code );
 		}
 	}
 
@@ -105,6 +104,9 @@ final class ReportedIP_Hive_Two_Factor_Verifier {
 	 * The `reportedip_2fa_totp_window` filter clamps to [0, 3], anything
 	 * larger would erode brute-force resistance.
 	 *
+	 * Public so the method registry can name it as the `verify` callable of
+	 * the TOTP entry.
+	 *
 	 * @param int           $user_id           User to verify against.
 	 * @param string        $code              Submitted 6-digit code.
 	 * @param callable|null $on_internal_error Optional callback for
@@ -112,7 +114,7 @@ final class ReportedIP_Hive_Two_Factor_Verifier {
 	 *                                         situations.
 	 * @return bool
 	 */
-	private static function verify_totp( int $user_id, string $code, $on_internal_error ): bool {
+	public static function verify_totp( int $user_id, string $code, $on_internal_error = null ): bool {
 		$encrypted = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_TOTP_SECRET, true );
 		if ( empty( $encrypted ) ) {
 			self::report_internal( $on_internal_error, 'missing_secret', ReportedIP_Hive_Two_Factor::METHOD_TOTP );

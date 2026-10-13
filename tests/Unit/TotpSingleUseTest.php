@@ -124,7 +124,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_verifier_persists_and_honours_the_consumed_step() {
 			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-two-factor-verifier.php' );
-			$start  = strpos( $source, 'private static function verify_totp(' );
+			$start  = strpos( $source, 'public static function verify_totp(' );
 			$this->assertNotFalse( $start );
 			$body = substr( $source, $start );
 

@@ -12,8 +12,9 @@
  *   3. The internal-error callback contract so callers' surface-specific
  *      logging keeps working.
  *
- * The crypto / TOTP / SMS / WebAuthn provider classes themselves are not
- * exercised here, they have their own dedicated test suites.
+ * The crypto / TOTP / WebAuthn provider classes themselves are not
+ * exercised here, they have their own dedicated test suites. The path for
+ * registered methods is covered in ExtensionApiTest.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -44,12 +45,20 @@ namespace {
 		class ReportedIP_Hive_Two_Factor_Stub_For_Verifier {
 			const METHOD_TOTP     = 'totp';
 			const METHOD_EMAIL    = 'email';
-			const METHOD_SMS      = 'sms';
 			const METHOD_WEBAUTHN = 'webauthn';
 			const METHOD_RECOVERY = 'recovery';
 
 			const META_TOTP_SECRET    = 'reportedip_hive_2fa_totp_secret';
 			const META_TOTP_LAST_STEP = 'reportedip_hive_2fa_totp_last_step';
+
+			/**
+			 * No method beyond the core ones is registered.
+			 *
+			 * @return array<string, array<string, mixed>>
+			 */
+			public static function methods() {
+				return array();
+			}
 		}
 	}
 
@@ -100,9 +109,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$source = $this->source();
 			$this->assertStringContainsString( 'METHOD_TOTP', $source );
 			$this->assertStringContainsString( 'METHOD_EMAIL', $source );
-			$this->assertStringContainsString( 'METHOD_SMS', $source );
 			$this->assertStringContainsString( 'METHOD_WEBAUTHN', $source );
 			$this->assertStringContainsString( 'METHOD_RECOVERY', $source );
+			$this->assertStringNotContainsString( 'METHOD_SMS', $source, 'Further methods come through the registry, not through a case of their own.' );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Two_Factor::methods()', $source, 'The default branch must ask the method registry.' );
 		}
 
 		public function test_totp_path_clamps_window_filter(): void {

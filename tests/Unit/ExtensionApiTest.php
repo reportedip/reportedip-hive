@@ -333,6 +333,25 @@ class ExtensionApiTest extends TestCase {
 	 * @runInSeparateProcess
 	 * @preserveGlobalState disabled
 	 */
+	public function test_verifier_calls_the_verify_of_a_registered_method() {
+		$this->register_dummy_2fa_method();
+		$reasons = array();
+		$report  = static function ( $reason, $method ) use ( &$reasons ) {
+			$reasons[] = array( $reason, $method );
+		};
+
+		$this->assertTrue( \ReportedIP_Hive_Two_Factor_Verifier::verify_method( 9, 'dummy', '424242', $report ) );
+		$this->assertFalse( \ReportedIP_Hive_Two_Factor_Verifier::verify_method( 9, 'dummy', '000000', $report ) );
+		$this->assertSame( array( array( 9, '424242' ), array( 9, '000000' ) ), array_column( $GLOBALS['rip_test_dummy_calls'], 1 ) );
+
+		$this->assertFalse( \ReportedIP_Hive_Two_Factor_Verifier::verify_method( 9, 'sms', '424242', $report ), 'A method nobody registered never verifies.' );
+		$this->assertSame( array( array( 'unknown_method', 'sms' ) ), $reasons );
+	}
+
+	/**
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
 	public function test_resend_ajax_uses_send_wait_and_mask_of_a_registered_method() {
 		$this->register_dummy_2fa_method();
 		$this->set_mocked_option( 'reportedip_hive_2fa_allowed_methods', '["totp","dummy"]' );
