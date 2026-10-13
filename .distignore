@@ -1,20 +1,24 @@
-# WordPress.org distribution exclusions
-# Mirrors what release.yml stages and what `./run.sh build` excludes.
-# Used by `wp dist-archive` and any external CI runner that respects this file.
+# Consumed by tools/stage.py, which stages the git-tracked files of this plugin minus these patterns: an anchored literal path with a leading slash, or an unanchored fnmatch pattern matched against any single path segment or the whole relative path (no negation, no **, no anchored glob).
 
 /.git
 /.github
 /.gitignore
+/.gitattributes
 /.distignore
 /.editorconfig
 /.phpcs.cache
 /.phpunit.result.cache
 /tests
+/bin
+/coverage
+/docs
 /phpunit.xml
+/phpunit-multisite.xml
 /phpcs.xml
 /phpstan.neon
 /phpstan-bootstrap.php
 /grumphp.yml
-/composer.lock
 /README.md
+/CHANGELOG.md
 /node_modules
+/vendor
