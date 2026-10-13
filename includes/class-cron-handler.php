@@ -90,10 +90,10 @@ class ReportedIP_Hive_Cron_Handler {
 	}
 
 	/**
-	 * Plugin cron jobs: hook → recurrence slug. Single source of truth for
-	 * schedule, unschedule and self-heal. Custom intervals
-	 * (`fifteen_minutes`, `six_hours`) are registered via
-	 * {@see add_cron_intervals()}.
+	 * The free plugin's own cron jobs: hook → recurrence slug. Schedule,
+	 * unschedule and self-heal read {@see jobs()}, which adds the jobs of
+	 * add-ons to this list. Custom intervals (`fifteen_minutes`, `six_hours`)
+	 * are registered via {@see add_cron_intervals()}.
 	 *
 	 * @var array<string,string>
 	 */
@@ -108,6 +108,13 @@ class ReportedIP_Hive_Cron_Handler {
 
 	/**
 	 * The scheduled jobs, hook name to recurrence, after the add-on filter.
+	 *
+	 * `wp_schedule_event()` refuses a recurrence slug it does not know, and the
+	 * free plugin registers only `fifteen_minutes` and `six_hours` on
+	 * `cron_schedules`, so an add-on registers its own interval there. The
+	 * `admin_init` self-heal schedules missing jobs but never re-applies a
+	 * changed recurrence: an add-on that changes an interval clears and
+	 * reschedules its job itself.
 	 *
 	 * @return array<string,string>
 	 * @since  3.0.0
@@ -168,7 +175,8 @@ class ReportedIP_Hive_Cron_Handler {
 	}
 
 	/**
-	 * Returns the list of registered cron hook names. Used by tests.
+	 * Returns the list of registered cron hook names, add-on jobs included.
+	 * Used by `ReportedIP_Hive_Readiness`, `ReportedIP_Hive_Admin_Settings` and tests.
 	 *
 	 * @return string[]
 	 */
@@ -221,6 +229,8 @@ class ReportedIP_Hive_Cron_Handler {
 
 			/**
 			 * Fires after the daily retention cleanup of the free tables.
+			 *
+			 * Listeners must catch their own exceptions; a throwing listener aborts the rest of this run.
 			 *
 			 * @param int $retention_days Retention the cleanup used.
 			 * @since 3.0.0
@@ -297,6 +307,8 @@ class ReportedIP_Hive_Cron_Handler {
 				/**
 				 * Fires with the coordinated attacks the hourly scan found, after the
 				 * free plugin logged them.
+				 *
+				 * Listeners must catch their own exceptions; a throwing listener aborts the rest of this run.
 				 *
 				 * @param array $attacks Rows from Security_Monitor::check_coordinated_attacks().
 				 * @since 3.0.0
@@ -428,6 +440,8 @@ class ReportedIP_Hive_Cron_Handler {
 
 		/**
 		 * Fires after the six-hourly API quota refresh.
+		 *
+		 * Listeners must catch their own exceptions; a throwing listener aborts the rest of this run.
 		 *
 		 * @param array $quota The quota snapshot the API returned, or an empty array.
 		 * @since 3.0.0

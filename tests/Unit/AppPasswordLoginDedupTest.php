@@ -36,49 +36,6 @@ namespace {
 		define( 'REPORTEDIP_USER_AGENT_MAX_LENGTH', 50 );
 	}
 
-	if ( ! class_exists( 'Test_APD_Hardening_Stand_In' ) ) {
-		/**
-		 * Inert hardening-mode stand-in: threshold/timeframe pass through
-		 * unchanged and the realtime coordinated probe short-circuits on
-		 * `is_available()`, keeping the exercised login path free of database
-		 * access the unit harness cannot provide. Aliased to
-		 * `ReportedIP_Hive_Hardening_Mode` at runtime (never at file load.
-		 * HardeningModeTest loads the real class during discovery in the same
-		 * parent process, and a load-time declaration here would collide).
-		 */
-		class Test_APD_Hardening_Stand_In {
-
-			/**
-			 * Pass the configured threshold through unchanged.
-			 *
-			 * @param int $value Configured threshold.
-			 * @return int
-			 */
-			public static function effective_failed_login_threshold( $value ) {
-				return (int) $value;
-			}
-
-			/**
-			 * Pass the configured timeframe through unchanged.
-			 *
-			 * @param int $value Configured timeframe.
-			 * @return int
-			 */
-			public static function effective_failed_login_timeframe( $value ) {
-				return (int) $value;
-			}
-
-			/**
-			 * Hardening never available in the unit harness.
-			 *
-			 * @return bool
-			 */
-			public static function is_available() {
-				return false;
-			}
-		}
-	}
-
 	if ( ! class_exists( 'Test_APD_Logger_Stub' ) ) {
 		/**
 		 * Recording logger double.
@@ -175,10 +132,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @return \ReportedIP_Hive_Security_Monitor
 		 */
 		private function monitor( \Test_APD_Database_Stub $database, \Test_APD_Logger_Stub $logger ): \ReportedIP_Hive_Security_Monitor {
-			if ( ! class_exists( 'ReportedIP_Hive_Hardening_Mode' ) ) {
-				class_alias( 'Test_APD_Hardening_Stand_In', 'ReportedIP_Hive_Hardening_Mode' );
-			}
-
 			require_once dirname( __DIR__, 2 ) . '/includes/class-security-monitor.php';
 
 			$monitor = ( new \ReflectionClass( \ReportedIP_Hive_Security_Monitor::class ) )->newInstanceWithoutConstructor();

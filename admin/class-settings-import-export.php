@@ -100,7 +100,7 @@ class ReportedIP_Hive_Settings_Import_Export {
 		if ( class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
 			$grouped = array();
 			foreach ( ReportedIP_Hive_Settings_Registry::remote_spec() as $key => $entry ) {
-				$grouped[ (string) $entry['section'] ][] = $key;
+				$grouped[ (string) ( $entry['section'] ?? '' ) ][] = $key;
 			}
 
 			foreach ( ReportedIP_Hive_Settings_Registry::sections() as $slug => $section ) {

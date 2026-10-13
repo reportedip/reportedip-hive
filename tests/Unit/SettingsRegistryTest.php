@@ -369,11 +369,16 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 25, \ReportedIP_Hive_Defaults::MIN_BLOCK_THRESHOLD );
 		}
 
+		/**
+		 * The test runs against the unfiltered free spec; add-on tokens are executed
+		 * through the `reportedip_hive_settings_effect_{token}` action and need their
+		 * own parity test in the add-on.
+		 */
 		public function test_every_side_effect_token_is_known_to_the_dispatcher() {
 			$known = \ReportedIP_Hive_Settings_Effects::known_tokens();
 			foreach ( \ReportedIP_Hive_Settings_Effects::watched() as $key => $tokens ) {
 				foreach ( $tokens as $token ) {
-					$this->assertContains( $token, $known, "Option {$key} declares unexecutable side effect {$token}." );
+					$this->assertContains( $token, $known, "Side effect {$token} of option {$key} is not a free token (typo?)." );
 				}
 			}
 		}

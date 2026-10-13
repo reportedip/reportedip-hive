@@ -104,7 +104,15 @@ class ReportedIP_Hive_Security_Monitor {
 	 * class directly, so a tightened value during an attack wave is one filter
 	 * away and the sensors never learn who tightened it.
 	 *
-	 * @param string $key   Option suffix without prefix, e.g. `failed_login_threshold`.
+	 * The result is never below 1, so a listener that returns 0 can neither turn
+	 * every failed login into a block nor switch a window off; the floor of the
+	 * block threshold stays in `ReportedIP_Hive_Reputation_Gate::threshold()`.
+	 *
+	 * @param string $key   Threshold kind, not an option suffix: `failed_login_threshold`,
+	 *                      `failed_login_timeframe` or `block_threshold`. The first two also
+	 *                      cover the application-password threshold and window: the
+	 *                      app-password sensor reads those from the `app_password_*`
+	 *                      options and passes these keys.
 	 * @param int    $value The configured value.
 	 * @return int
 	 * @since  3.0.0
@@ -114,10 +122,12 @@ class ReportedIP_Hive_Security_Monitor {
 		 * Filter a configured threshold before a sensor applies it.
 		 *
 		 * @param int    $value Configured value.
-		 * @param string $key   Option suffix: `failed_login_threshold`, `failed_login_timeframe` or `block_threshold`.
+		 * @param string $key   Threshold kind, not an option suffix: `failed_login_threshold`,
+		 *                      `failed_login_timeframe` or `block_threshold`. The first two also
+		 *                      cover the application-password threshold and window.
 		 * @since 3.0.0
 		 */
-		return (int) apply_filters( 'reportedip_hive_effective_threshold', (int) $value, (string) $key );
+		return max( 1, (int) apply_filters( 'reportedip_hive_effective_threshold', (int) $value, (string) $key ) );
 	}
 
 	/**

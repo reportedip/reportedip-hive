@@ -53,6 +53,10 @@ class TestCase extends PolyfillTestCase {
 	protected function tear_down() {
 		parent::tear_down();
 
+		foreach ( array_keys( self::$mocked_options ) as $option ) {
+			unset( $GLOBALS['wp_options'][ $option ] );
+		}
+
 		self::$mocked_options    = array();
 		self::$mocked_transients = array();
 	}

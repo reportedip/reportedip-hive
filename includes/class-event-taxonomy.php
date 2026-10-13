@@ -655,6 +655,12 @@ class ReportedIP_Hive_Event_Taxonomy {
 		 * the rows of the events it writes. Rows carry label, group, optional
 		 * family and writes (`direct`, `threshold`, `both`).
 		 *
+		 * A row's `group` must be a key of {@see ReportedIP_Hive_Event_Taxonomy::group_labels()},
+		 * its `family` a key of {@see ReportedIP_Hive_Event_Taxonomy::labels()} or absent,
+		 * and `writes` one of `direct`, `threshold` or `both`. Both label maps are not
+		 * filterable, and an unknown group or family raises undefined-index warnings in
+		 * the activity filter and the charts.
+		 *
 		 * @param array<string, array<string, string>> $rows Event slug to row.
 		 * @since 3.0.0
 		 */

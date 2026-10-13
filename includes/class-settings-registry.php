@@ -1780,6 +1780,10 @@ final class ReportedIP_Hive_Settings_Registry {
 		 * remote, side_effects). Default values go through
 		 * `reportedip_hive_option_defaults`.
 		 *
+		 * The spec is memoised at the first read (`init` priority 0), so an
+		 * add-on registers this filter on `reportedip_hive_loaded`; a later
+		 * registration must call {@see ReportedIP_Hive_Settings_Registry::flush_spec_cache()}.
+		 *
 		 * @param array<string, array<string, mixed>> $spec Option key to spec entry.
 		 * @since 3.0.0
 		 */
@@ -2139,7 +2143,7 @@ final class ReportedIP_Hive_Settings_Registry {
 		}
 
 		foreach ( self::remote_spec() as $key => $entry ) {
-			$section = (string) $entry['section'];
+			$section = (string) ( $entry['section'] ?? '' );
 			if ( isset( $sections[ $section ] ) ) {
 				$sections[ $section ]['keys'][] = $key;
 			}

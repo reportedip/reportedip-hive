@@ -114,6 +114,13 @@ final class ReportedIP_Hive_Settings_Effects {
 	/**
 	 * Execute every queued effect once and reset the queue.
 	 *
+	 * Tokens run in the order they were first queued; a token queued again keeps
+	 * its first position. Nothing guarantees that add-on tokens run after the
+	 * free ones. The queue is emptied before the first token runs, so a listener
+	 * that writes a watched option during the run queues a token that does not
+	 * run in this request; the queue lives in memory only, so that token is gone
+	 * with the request.
+	 *
 	 * @return void
 	 */
 	public static function run_queued() {

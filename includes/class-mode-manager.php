@@ -62,11 +62,11 @@ class ReportedIP_Hive_Mode_Manager {
 	private $cached_tier = null;
 
 	/**
-	 * Feature definitions for each mode
+	 * Feature definitions for each mode, `null` until the first read builds them.
 	 *
-	 * @var array
+	 * @var array|null
 	 */
-	private $feature_matrix = array();
+	private $feature_matrix = null;
 
 	/**
 	 * Lazily-built map of translated feature texts (see {@see feature_texts()}).
@@ -186,7 +186,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @return void
 	 */
 	private function ensure_feature_matrix_loaded() {
-		if ( ! empty( $this->feature_matrix ) ) {
+		if ( null !== $this->feature_matrix ) {
 			return;
 		}
 
@@ -365,7 +365,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * @since  3.0.0
 	 */
 	public function flush_feature_matrix() {
-		$this->feature_matrix      = array();
+		$this->feature_matrix      = null;
 		$this->feature_texts_cache = null;
 	}
 
