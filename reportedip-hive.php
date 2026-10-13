@@ -223,7 +223,6 @@ class ReportedIP_Hive {
 			new ReportedIP_Hive_Ajax_Handler( $this );
 		}
 
-		ReportedIP_Hive_Admin_Bar::get_instance()->register_hooks();
 		ReportedIP_Hive_Admin_Notice::register_hooks();
 		ReportedIP_Hive_Decoy_Path_Block::get_instance()->register_hooks();
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->register_hooks();
@@ -374,7 +373,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-promo-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-api-client.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-bar.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-notice.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-whats-new.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
