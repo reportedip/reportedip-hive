@@ -78,6 +78,27 @@ class ExtensionApiTest extends TestCase {
 		$this->assertSame( 'unknown', $status['reason'] );
 	}
 
+	public function test_matrix_filter_runs_once_even_when_it_returns_an_empty_array() {
+		$runs = 0;
+		add_filter(
+			'reportedip_hive_feature_matrix',
+			static function () use ( &$runs ) {
+				++$runs;
+				return array();
+			}
+		);
+		$manager = \ReportedIP_Hive_Mode_Manager::get_instance();
+		$manager->flush_feature_matrix();
+
+		$manager->feature_status( 'x' );
+		$manager->feature_status( 'x' );
+		$this->assertSame( 1, $runs );
+
+		$manager->flush_feature_matrix();
+		$manager->feature_status( 'x' );
+		$this->assertSame( 2, $runs );
+	}
+
 	public function test_settings_spec_accepts_injected_entries() {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-registry.php';
 		add_filter(
@@ -209,6 +230,19 @@ class ExtensionApiTest extends TestCase {
 
 		$this->assertSame( 2, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'failed_login_threshold', 5 ) );
 		$this->assertSame( 15, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'failed_login_timeframe', 15 ) );
+	}
+
+	public function test_effective_threshold_never_returns_less_than_one() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
+		add_filter(
+			'reportedip_hive_effective_threshold',
+			static function () {
+				return 0;
+			}
+		);
+
+		$this->assertSame( 1, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'failed_login_threshold', 5 ) );
+		$this->assertSame( 1, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'failed_login_timeframe', 15 ) );
 	}
 
 	public function test_distributed_threshold_helpers_live_in_free() {
