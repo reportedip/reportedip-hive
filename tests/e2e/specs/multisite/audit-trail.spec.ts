@@ -24,7 +24,8 @@ const MS_COMPOSE = 'docker-compose.multisite.yml';
 const MS_SERVICE = 'wordpress-ms';
 const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER_MS ?? 'rip-hive-ms-wp';
 const AUDIT_URL = '/wp-admin/network/admin.php?page=reportedip-hive-security&tab=activity&sub=audit';
-const SITE_A = 'localhost:9090/site-a/';
+const MS_HOST = (process.env.RIP_E2E_BASE_URL_MS ?? 'http://localhost:8090').replace(/^https?:\/\//, '');
+const SITE_A = `${MS_HOST}/site-a/`;
 const SITE_A_TITLE = 'Site A audit';
 const SITE_ADMIN = 'ripe2esiteaudit';
 const SITE_ADMIN_PASS = 'RipE2eSiteAudit-2162';
@@ -84,14 +85,14 @@ test.describe('Audit trail on multisite', () => {
 		wpTolerant('plugin', 'activate', 'akismet', '--network');
 		wp('plugin', 'deactivate', 'akismet', '--network');
 		wp(`--url=${SITE_A}`, '--user=admin', 'eval', `update_option('blogname', '${SITE_A_TITLE}');`);
-		wp('--url=localhost:9090/site-b/', '--user=admin', 'eval', "update_option('blogname', 'Site B audit');");
+		wp(`--url=${MS_HOST}/site-b/`, '--user=admin', 'eval', "update_option('blogname', 'Site B audit');");
 		wp('--user=admin', 'eval', `update_option('blogname', '${MAIN_TITLE}');`);
 	});
 
 	test.afterAll(() => {
 		wpTolerant('plugin', 'deactivate', 'akismet', '--network');
 		wp(`--url=${SITE_A}`, '--user=admin', 'eval', "update_option('blogname', 'Site A');");
-		wp('--url=localhost:9090/site-b/', '--user=admin', 'eval', "update_option('blogname', 'Site B');");
+		wp(`--url=${MS_HOST}/site-b/`, '--user=admin', 'eval', "update_option('blogname', 'Site B');");
 		wp('--user=admin', 'eval', "update_option('blogname', 'ReportedIP Hive Test Network');");
 		wpTolerant('user', 'delete', SITE_ADMIN, '--network', '--yes');
 		php(FORCE_FREE_PHP);
