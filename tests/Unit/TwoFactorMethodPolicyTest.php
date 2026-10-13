@@ -100,24 +100,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertStringContainsString( 'private function require_allowed_method(', $admin );
 
-			foreach ( array( 'METHOD_TOTP', 'METHOD_EMAIL', 'METHOD_SMS' ) as $method ) {
+			foreach ( array( 'METHOD_TOTP', 'METHOD_EMAIL' ) as $method ) {
 				$this->assertStringContainsString(
 					"require_allowed_method( ReportedIP_Hive_Two_Factor::$method )",
 					$admin,
 					"The $method setup endpoint must refuse a disallowed enrolment before doing any work"
 				);
-			}
-		}
-
-		public function test_sms_enrolment_is_gated_before_a_code_is_sent() {
-			$body = $this->method_body( 'admin/class-two-factor-admin.php', 'public function ajax_setup_sms()', 2600 );
-
-			$guard_pos = strpos( $body, 'require_allowed_method' );
-			$this->assertNotFalse( $guard_pos, 'ajax_setup_sms() must check the policy' );
-
-			$send_pos = strpos( $body, 'send_code' );
-			if ( false !== $send_pos ) {
-				$this->assertLessThan( $send_pos, $guard_pos, 'A disallowed method must not consume managed relay quota' );
 			}
 		}
 

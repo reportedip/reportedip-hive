@@ -34,7 +34,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		add_action( 'wp_ajax_reportedip_hive_2fa_setup_totp', array( $this, 'ajax_setup_totp' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_confirm_totp', array( $this, 'ajax_confirm_totp' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_setup_email', array( $this, 'ajax_setup_email' ) );
-		add_action( 'wp_ajax_reportedip_hive_2fa_setup_sms', array( $this, 'ajax_setup_sms' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_disable', array( $this, 'ajax_disable' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_disable_method', array( $this, 'ajax_disable_method' ) );
 		add_action( 'wp_ajax_reportedip_hive_2fa_set_primary_method', array( $this, 'ajax_set_primary_method' ) );
@@ -53,6 +52,10 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	/**
 	 * Add a "Reset 2FA" row action on the Users screen.
 	 *
+	 * Also offered for an account whose method no active plugin provides
+	 * ({@see ReportedIP_Hive_Two_Factor::unavailable_method()}): its challenge
+	 * page sends the user to an administrator for exactly this reset.
+	 *
 	 * @param array   $actions Existing actions.
 	 * @param WP_User $user    Row user.
 	 * @return array
@@ -64,7 +67,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return $actions;
 		}
-		if ( ! ReportedIP_Hive_Two_Factor::is_user_enabled( $user->ID ) ) {
+		if ( ! ReportedIP_Hive_Two_Factor::is_user_enabled( $user->ID ) && '' === ReportedIP_Hive_Two_Factor::unavailable_method( $user->ID ) ) {
 			return $actions;
 		}
 
@@ -558,8 +561,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					'recoveryShownOnce'   => __( 'These codes are shown only once!', 'reportedip-hive' ),
 					'recoveryOneUse'      => __( 'Each code can be used only once.', 'reportedip-hive' ),
 					'codesSaved'          => __( 'I have saved my codes', 'reportedip-hive' ),
-					'phoneRequired'       => __( 'Please enter your mobile number in international format (for example +49 151 23456789).', 'reportedip-hive' ),
-					'consentRequired'     => __( 'Please confirm the processing of your phone number first.', 'reportedip-hive' ),
 					'working'             => __( 'Please wait', 'reportedip-hive' ),
 				),
 			)
@@ -616,17 +617,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		<?php
 		$enabled_methods = ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user->ID );
 
-		$sms_allowed = in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $allowed_methods, true ) && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' );
-		$sms_ready   = $sms_allowed && ReportedIP_Hive_Two_Factor_SMS::is_ready();
-		$sms_lock    = null;
-		if ( $sms_allowed && ! $sms_ready && class_exists( 'ReportedIP_Hive_Mode_Manager' ) && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
-			$sms_lock = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
-		}
-		$sms_masked = '';
-		if ( $sms_allowed && in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $enabled_methods, true ) ) {
-			$sms_masked = ReportedIP_Hive_Two_Factor_SMS::mask_phone( ReportedIP_Hive_Two_Factor_SMS::get_user_phone( $user->ID ) );
-		}
-
 		$method_rows = array();
 		if ( in_array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, $allowed_methods, true ) ) {
 			$method_rows[ ReportedIP_Hive_Two_Factor::METHOD_TOTP ] = array(
@@ -654,15 +644,23 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				'setup'       => true,
 			);
 		}
-		if ( $sms_allowed ) {
-			$method_rows[ ReportedIP_Hive_Two_Factor::METHOD_SMS ] = array(
-				'label'       => __( 'Text message (SMS)', 'reportedip-hive' ),
-				'description' => __( 'We send a 6-digit code as a text message to your mobile phone every time you sign in.', 'reportedip-hive' ),
-				'setup'       => $sms_ready,
-				'lock'        => $sms_lock,
-				'meta'        => $sms_masked,
-			);
-		}
+
+		/**
+		 * Extend the sign-in method cards of the profile section.
+		 *
+		 * A row: `label`, `description`, `setup` (bool, the method can be set
+		 * up right now), optional `lock` (feature status shown instead of the
+		 * setup button), `meta` (a line under the description), `again` (label
+		 * of a button that restarts the setup of an active method), `manager`
+		 * and `icon` (inner SVG markup). The setup flow of an added row is
+		 * rendered by the action `reportedip_hive_2fa_method_flow_{slug}`.
+		 *
+		 * @param array<string, array<string, mixed>> $method_rows     Method slug to row.
+		 * @param WP_User                             $user            The profile user.
+		 * @param string[]                            $allowed_methods The site policy.
+		 * @since 3.0.0
+		 */
+		$method_rows = (array) apply_filters( 'reportedip_hive_2fa_method_rows', $method_rows, $user, $allowed_methods );
 		?>
 		<h2 id="reportedip-hive-2fa"><?php esc_html_e( 'Two-Factor Authentication', 'reportedip-hive' ); ?></h2>
 
@@ -829,20 +827,22 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 * Render one sign-in method row on the profile page.
 	 *
 	 * @param WP_User $user The user being edited.
-	 * @param string  $slug Method identifier (totp, email, webauthn, sms).
+	 * @param string  $slug Method identifier, a registered method slug.
 	 * @param array   $args Row context: label, description, setup (bool),
 	 *                      active (bool), default (bool), can_edit (bool),
 	 *                      lock (feature status array|null), meta (string),
-	 *                      manager (bool).
+	 *                      again (string), manager (bool), icon (string).
 	 * @since 2.1.36
 	 */
 	private function render_profile_method_row( $user, $slug, $args ) {
 		$icons = array(
 			ReportedIP_Hive_Two_Factor::METHOD_TOTP     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>',
 			ReportedIP_Hive_Two_Factor::METHOD_EMAIL    => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
-			ReportedIP_Hive_Two_Factor::METHOD_SMS      => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
 			ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true"><path d="M12 11c1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3 1.3 3 3 3z"/><path d="M6 21v-2c0-2.2 1.8-4 4-4h4c2.2 0 4 1.8 4 4v2"/></svg>',
 		);
+		$icon  = $icons[ $slug ] ?? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true">'
+			. (string) ( $args['icon'] ?? '<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>' )
+			. '</svg>';
 
 		$active     = ! empty( $args['active'] );
 		$is_default = ! empty( $args['default'] );
@@ -852,7 +852,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		?>
 		<li class="rip-2fa-method" data-method="<?php echo esc_attr( $slug ); ?>" data-active="<?php echo $active ? '1' : '0'; ?>">
 			<div class="rip-2fa-method__main">
-				<div class="rip-2fa-method__icon"><?php echo $icons[ $slug ]; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static inline SVG from the map above. ?></div>
+				<div class="rip-2fa-method__icon"><?php echo $icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static inline SVG from the map above or from the row a plugin registered. ?></div>
 				<div class="rip-2fa-method__body">
 					<div class="rip-2fa-method__head">
 						<span class="rip-2fa-method__name"><?php echo esc_html( $args['label'] ); ?></span>
@@ -867,15 +867,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 					</div>
 					<p class="rip-2fa-method__desc"><?php echo esc_html( $args['description'] ); ?></p>
 					<?php if ( ! empty( $args['meta'] ) ) : ?>
-						<p class="rip-2fa-method__meta">
-							<?php
-							printf(
-								/* translators: %s: masked phone number */
-								esc_html__( 'Current number: %s', 'reportedip-hive' ),
-								esc_html( $args['meta'] )
-							);
-							?>
-						</p>
+						<p class="rip-2fa-method__meta"><?php echo esc_html( (string) $args['meta'] ); ?></p>
 					<?php endif; ?>
 				</div>
 				<?php if ( $can_edit ) : ?>
@@ -886,8 +878,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 							<?php endif; ?>
 							<?php if ( ReportedIP_Hive_Two_Factor::METHOD_TOTP === $slug ) : ?>
 								<button type="button" class="rip-button rip-button--ghost rip-button--sm" data-action="setup" data-replace="1"><?php esc_html_e( 'Set up again', 'reportedip-hive' ); ?></button>
-							<?php elseif ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $slug && $has_setup ) : ?>
-								<button type="button" class="rip-button rip-button--ghost rip-button--sm" data-action="setup"><?php esc_html_e( 'Change number', 'reportedip-hive' ); ?></button>
+							<?php elseif ( ! empty( $args['again'] ) && $has_setup ) : ?>
+								<button type="button" class="rip-button rip-button--ghost rip-button--sm" data-action="setup"><?php echo esc_html( (string) $args['again'] ); ?></button>
 							<?php endif; ?>
 							<?php if ( ! $is_manager ) : ?>
 								<button type="button" class="rip-button rip-button--danger rip-button--sm" data-action="remove"><?php esc_html_e( 'Remove', 'reportedip-hive' ); ?></button>
@@ -901,7 +893,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				<?php endif; ?>
 			</div>
 			<?php if ( $can_edit && ! $is_manager ) : ?>
-				<?php $this->render_profile_method_flow( $slug ); ?>
+				<?php $this->render_profile_method_flow( $user, $slug ); ?>
 			<?php endif; ?>
 			<?php if ( $can_edit && $is_manager ) : ?>
 				<div class="rip-2fa-method__manager">
@@ -920,12 +912,15 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 *
 	 * All user-facing text is server-rendered here so it flows through the
 	 * normal i18n pipeline; assets/js/two-factor-admin.js only toggles the
-	 * markup and drives the AJAX steps.
+	 * markup and drives the AJAX steps. A method a plugin registers renders
+	 * its flow through `reportedip_hive_2fa_method_flow_{slug}`; its script
+	 * starts the flow from `window.reportedip2faAdminFlows[ slug ]`.
 	 *
-	 * @param string $slug Method identifier (totp, email, sms).
+	 * @param WP_User $user The user being edited.
+	 * @param string  $slug Method identifier.
 	 * @since 2.1.36
 	 */
-	private function render_profile_method_flow( $slug ) {
+	private function render_profile_method_flow( $user, $slug ) {
 		if ( ReportedIP_Hive_Two_Factor::METHOD_TOTP === $slug ) :
 			?>
 			<div class="rip-2fa-method__flow" data-flow="totp" hidden>
@@ -963,32 +958,17 @@ class ReportedIP_Hive_Two_Factor_Admin {
 				<p class="description rip-2fa-method__flow-status" data-status role="status" aria-live="polite"></p>
 			</div>
 			<?php
-		elseif ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $slug ) :
-			?>
-			<div class="rip-2fa-method__flow" data-flow="sms" hidden>
-				<div data-sms-step="phone">
-					<label class="rip-form-label" for="rip-2fa-sms-phone"><?php esc_html_e( 'Mobile number', 'reportedip-hive' ); ?></label>
-					<input type="tel" id="rip-2fa-sms-phone" class="rip-input" data-phone placeholder="+49 151 23456789" autocomplete="tel" />
-					<label class="rip-2fa-method__consent">
-						<input type="checkbox" data-consent />
-						<span><?php esc_html_e( 'I agree that my phone number is stored encrypted and processed by the managed ReportedIP SMS service to deliver sign-in codes.', 'reportedip-hive' ); ?></span>
-					</label>
-					<div class="rip-2fa-method__flow-controls">
-						<button type="button" class="rip-button rip-button--primary" data-step="send-sms"><?php esc_html_e( 'Send code', 'reportedip-hive' ); ?></button>
-						<button type="button" class="rip-button rip-button--ghost" data-step="cancel"><?php esc_html_e( 'Cancel', 'reportedip-hive' ); ?></button>
-					</div>
-				</div>
-				<div data-sms-step="code" hidden>
-					<p class="rip-2fa-method__flow-intro" data-sms-sent-note></p>
-					<div class="rip-2fa-method__flow-controls">
-						<input type="text" class="rip-input rip-2fa-method__code" data-code inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-label="<?php esc_attr_e( 'Verification code', 'reportedip-hive' ); ?>" />
-						<button type="button" class="rip-button rip-button--primary" data-step="confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
-						<button type="button" class="rip-button rip-button--ghost" data-step="cancel"><?php esc_html_e( 'Cancel', 'reportedip-hive' ); ?></button>
-					</div>
-				</div>
-				<p class="description rip-2fa-method__flow-status" data-status role="status" aria-live="polite"></p>
-			</div>
-			<?php
+		else :
+			/**
+			 * Render the hidden inline setup flow of a registered method: a
+			 * `div.rip-2fa-method__flow` with `data-flow="{slug}"` and the
+			 * `data-step` / `data-code` / `data-status` hooks the shared
+			 * flow helpers of two-factor-admin.js work with.
+			 *
+			 * @param WP_User $user The user being edited.
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_2fa_method_flow_' . $slug, $user );
 		endif;
 	}
 
@@ -1015,7 +995,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 *
 	 * The profile UI hides the card for a disallowed method, but the endpoint
 	 * behind it stays reachable. Checked before any work happens so a
-	 * disallowed SMS or email enrolment cannot burn managed relay quota on the
+	 * disallowed enrolment cannot send a code (and burn relay quota) on the
 	 * way to being rejected.
 	 *
 	 * @param string $method Method identifier.
@@ -1188,105 +1168,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		wp_send_json_error(
 			array(
 				'message' => __( 'Invalid setup step. Email 2FA requires code verification.', 'reportedip-hive' ),
-			)
-		);
-	}
-
-	/**
-	 * AJAX: SMS-2FA setup (register number → send test → verify).
-	 *
-	 * Steps:
-	 *   register , stores encrypted phone number + user consent, dispatches first code
-	 *   verify   , checks the submitted code and activates SMS-2FA
-	 */
-	public function ajax_setup_sms() {
-		$user_id = $this->validate_ajax_user();
-		$this->require_allowed_method( ReportedIP_Hive_Two_Factor::METHOD_SMS );
-
-		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-			wp_send_json_error( array( 'message' => __( 'SMS module is not loaded.', 'reportedip-hive' ) ) );
-		}
-		if ( ! ReportedIP_Hive_Two_Factor_SMS::is_ready() ) {
-			wp_send_json_error( array( 'message' => __( 'SMS sending is not configured. Please contact an administrator.', 'reportedip-hive' ) ) );
-		}
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_user() above.
-		$step = isset( $_POST['step'] ) ? sanitize_key( wp_unslash( $_POST['step'] ) ) : '';
-
-		if ( 'register' === $step ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_user() above.
-			$consent = ! empty( $_POST['consent'] );
-			if ( ! $consent ) {
-				wp_send_json_error( array( 'message' => __( 'Please confirm processing of your phone number by the managed SMS relay.', 'reportedip-hive' ) ) );
-			}
-
-			// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified in validate_ajax_user() above; raw value is normalized/validated by ReportedIP_Hive_Two_Factor_SMS::normalise_phone() (E.164 strict regex) on the next line.
-			$phone_raw = isset( $_POST['phone'] ) ? wp_unslash( $_POST['phone'] ) : '';
-			$phone     = ReportedIP_Hive_Two_Factor_SMS::normalise_phone( $phone_raw );
-			if ( is_wp_error( $phone ) ) {
-				wp_send_json_error( array( 'message' => $phone->get_error_message() ) );
-			}
-
-			$sms_active = in_array(
-				ReportedIP_Hive_Two_Factor::METHOD_SMS,
-				ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user_id ),
-				true
-			);
-
-			if ( $sms_active ) {
-				$encrypted_pending = ReportedIP_Hive_Two_Factor_Crypto::encrypt( $phone );
-				if ( false === $encrypted_pending ) {
-					wp_send_json_error( array( 'message' => __( 'Could not store phone number securely.', 'reportedip-hive' ) ) );
-				}
-				update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER_PENDING, $encrypted_pending );
-
-				$result = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id, $phone );
-			} else {
-				if ( ! ReportedIP_Hive_Two_Factor_SMS::set_user_phone( $user_id, $phone ) ) {
-					wp_send_json_error( array( 'message' => __( 'Could not store phone number securely.', 'reportedip-hive' ) ) );
-				}
-
-				$result = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id );
-			}
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( array( 'message' => $result->get_error_message() ) );
-			}
-
-			wp_send_json_success(
-				array(
-					'message' => __( 'SMS sent. Please enter the code.', 'reportedip-hive' ),
-					'masked'  => ReportedIP_Hive_Two_Factor_SMS::mask_phone( $phone ),
-				)
-			);
-		}
-
-		if ( 'verify' === $step ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in validate_ajax_user() above.
-			$code = isset( $_POST['code'] ) ? sanitize_text_field( wp_unslash( $_POST['code'] ) ) : '';
-			if ( ! ReportedIP_Hive_Two_Factor_SMS::verify_code( $user_id, $code ) ) {
-				wp_send_json_error( array( 'message' => __( 'Invalid or expired code.', 'reportedip-hive' ) ) );
-			}
-
-			$pending = get_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER_PENDING, true );
-			if ( ! empty( $pending ) ) {
-				update_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER, $pending );
-				delete_user_meta( $user_id, ReportedIP_Hive_Two_Factor::META_SMS_NUMBER_PENDING );
-			}
-
-			$recovery_codes = ReportedIP_Hive_Two_Factor::activate_method( $user_id, ReportedIP_Hive_Two_Factor::METHOD_SMS );
-
-			wp_send_json_success(
-				array(
-					'message'        => __( 'SMS 2FA enabled!', 'reportedip-hive' ),
-					'recovery_codes' => is_array( $recovery_codes ) ? $recovery_codes : null,
-				)
-			);
-		}
-
-		wp_send_json_error(
-			array(
-				'message' => __( 'Invalid setup step.', 'reportedip-hive' ),
 			)
 		);
 	}
@@ -1501,7 +1382,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 			);
 		}
 
-		$was_enabled = ReportedIP_Hive_Two_Factor::is_user_enabled( $user->ID );
+		$was_enabled = ReportedIP_Hive_Two_Factor::is_user_enabled( $user->ID )
+			|| '' !== ReportedIP_Hive_Two_Factor::unavailable_method( $user->ID );
 
 		if ( $was_enabled ) {
 			ReportedIP_Hive_Two_Factor::disable_for_user( $user->ID );

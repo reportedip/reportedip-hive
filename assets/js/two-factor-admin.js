@@ -2,7 +2,8 @@
  * ReportedIP Hive, Two-Factor Admin Script.
  *
  * Drives the sign-in method rows on the profile page: inline setup flows
- * (TOTP, email, SMS), default-method selection, single-method removal,
+ * (TOTP, email, and the methods an add-on registers through
+ * window.reportedip2faAdminFlows), default-method selection, single-method removal,
  * recovery codes and trusted device management. All flow markup and
  * user-facing descriptions are server-rendered; this script only toggles
  * the markup and runs the AJAX steps.
@@ -48,6 +49,20 @@
 	function str( key, fallback ) {
 		return ( config.strings && config.strings[ key ] ) || fallback;
 	}
+
+	/**
+	 * The flow helpers a method an add-on registers gets handed: its starter
+	 * in window.reportedip2faAdminFlows[ slug ] receives ( $row, flowApi ).
+	 */
+	var flowApi = {
+		config: config,
+		str: str,
+		responseMessage: responseMessage,
+		openFlow: function ( $row ) { return openFlow( $row ); },
+		flowStatus: function ( $flow, message ) { flowStatus( $flow, message ); },
+		bindConfirm: function ( $flow, verify ) { bindConfirm( $flow, verify ); },
+		finishSetup: function ( data ) { finishSetup( data ); },
+	};
 
 	$( document ).ready( function () {
 		initMethodRows();
@@ -258,8 +273,8 @@
 				startTotpFlow( $row, replace );
 			} else if ( 'email' === slug ) {
 				startEmailFlow( $row );
-			} else if ( 'sms' === slug ) {
-				startSmsFlow( $row );
+			} else if ( window.reportedip2faAdminFlows && 'function' === typeof window.reportedip2faAdminFlows[ slug ] ) {
+				window.reportedip2faAdminFlows[ slug ]( $row, flowApi );
 			}
 		} );
 
@@ -313,16 +328,10 @@
 			}
 		} );
 
-		$list.on( 'keydown', '[data-code], [data-phone]', function ( event ) {
+		$list.on( 'keydown', '[data-code]', function ( event ) {
 			if ( 'Enter' === event.key ) {
 				event.preventDefault();
-				var $flow = $( this ).closest( '.rip-2fa-method__flow' );
-				var $send = $flow.find( '[data-step="send-sms"]:visible' );
-				if ( $send.length && $( this ).is( '[data-phone]' ) ) {
-					$send.trigger( 'click' );
-				} else {
-					$flow.find( '[data-step="confirm"]' ).first().trigger( 'click' );
-				}
+				$( this ).closest( '.rip-2fa-method__flow' ).find( '[data-step="confirm"]' ).first().trigger( 'click' );
 			}
 		} );
 	}
@@ -417,68 +426,6 @@
 		bindConfirm( $flow, function ( code, done ) {
 			$.post( config.ajaxUrl, {
 				action: 'reportedip_hive_2fa_setup_email',
-				nonce: config.nonce,
-				user_id: config.userId,
-				step: 'verify',
-				code: code,
-			}, function ( response ) {
-				if ( response.success ) {
-					finishSetup( response.data );
-				} else {
-					done( responseMessage( response ) );
-				}
-			} );
-		} );
-	}
-
-	/**
-	 * SMS flow: register number with consent, then verify the code.
-	 *
-	 * @param {jQuery} $row Method row.
-	 */
-	function startSmsFlow( $row ) {
-		var $flow = openFlow( $row );
-		$flow.find( '[data-sms-step="phone"]' ).prop( 'hidden', false );
-		$flow.find( '[data-sms-step="code"]' ).prop( 'hidden', true );
-		$flow.find( '[data-phone]' ).trigger( 'focus' );
-
-		$flow.off( 'click.ripSmsSend' ).on( 'click.ripSmsSend', '[data-step="send-sms"]', function () {
-			var phone = String( $flow.find( '[data-phone]' ).val() || '' ).trim();
-			if ( '' === phone || '+' !== phone.charAt( 0 ) ) {
-				flowStatus( $flow, str( 'phoneRequired', 'Please enter your mobile number in international format.' ) );
-				return;
-			}
-			if ( ! $flow.find( '[data-consent]' ).is( ':checked' ) ) {
-				flowStatus( $flow, str( 'consentRequired', 'Please confirm the processing of your phone number first.' ) );
-				return;
-			}
-
-			flowStatus( $flow, str( 'working', 'Please wait' ) );
-			$.post( config.ajaxUrl, {
-				action: 'reportedip_hive_2fa_setup_sms',
-				nonce: config.nonce,
-				user_id: config.userId,
-				step: 'register',
-				phone: phone,
-				consent: 1,
-			}, function ( response ) {
-				if ( ! response.success ) {
-					flowStatus( $flow, responseMessage( response ) );
-					return;
-				}
-				flowStatus( $flow, '' );
-				$flow.find( '[data-sms-step="phone"]' ).prop( 'hidden', true );
-				$flow.find( '[data-sms-step="code"]' ).prop( 'hidden', false );
-				$flow.find( '[data-sms-sent-note]' ).text(
-					responseMessage( response ) + ' (' + ( response.data.masked || '' ) + ')'
-				);
-				$flow.find( '[data-code]' ).trigger( 'focus' );
-			} );
-		} );
-
-		bindConfirm( $flow, function ( code, done ) {
-			$.post( config.ajaxUrl, {
-				action: 'reportedip_hive_2fa_setup_sms',
 				nonce: config.nonce,
 				user_id: config.userId,
 				step: 'verify',

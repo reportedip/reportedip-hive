@@ -215,9 +215,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$webauthn = $this->source( 'includes/class-two-factor-webauthn.php' );
 
 			$this->assertSame(
-				3,
+				2,
 				substr_count( $admin, '::activate_method(' ),
-				'TOTP, email and SMS enrolment must all use the shared activation path.'
+				'TOTP and email enrolment must use the shared activation path; a method an add-on registers brings its own endpoint.'
 			);
 			$this->assertSame( 1, substr_count( $webauthn, '::activate_method(' ) );
 			$this->assertStringNotContainsString(
@@ -252,6 +252,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'A confirmed authenticator connection must not be overwritten without the explicit replace flag.'
 			);
 			$this->assertStringContainsString( "\$_POST['replace']", $body );
+		}
+
+		public function test_profile_takes_rows_and_flows_of_registered_methods(): void {
+			$admin = $this->source( 'admin/class-two-factor-admin.php' );
+
+			$this->assertStringContainsString( "apply_filters( 'reportedip_hive_2fa_method_rows', \$method_rows, \$user, \$allowed_methods )", $admin );
+			$this->assertStringContainsString( "do_action( 'reportedip_hive_2fa_method_flow_' . \$slug, \$user )", $admin );
+			$this->assertStringContainsString(
+				"'' === ReportedIP_Hive_Two_Factor::unavailable_method( \$user->ID )",
+				$this->method_body( $admin, 'add_reset_row_action' ),
+				'An account stuck on a method no plugin provides must stay resettable from the users list.'
+			);
 		}
 
 		public function test_profile_management_endpoints_are_wired(): void {
