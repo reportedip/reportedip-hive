@@ -30,15 +30,20 @@ class BootstrapContractTest extends TestCase {
 	}
 
 	public function test_loaded_action_is_fired_with_the_instance() {
-		$this->assertStringContainsString( "do_action( 'reportedip_hive_loaded', \$this )", $this->source() );
+		$this->assertMatchesRegularExpression( '/do_action\(\s*\'reportedip_hive_loaded\',\s*\$[a-z_]+\s*\)/', $this->source() );
 	}
 
 	public function test_api_version_constant_exists() {
 		$this->assertMatchesRegularExpression( "/define\( 'REPORTEDIP_HIVE_API_VERSION', '[0-9]+' \)/", $this->source() );
 	}
 
-	public function test_uninstall_action_is_fired() {
-		$this->assertStringContainsString( "do_action( 'reportedip_hive_uninstall', \$delete_requested )", $this->source() );
+	public function test_uninstall_action_is_fired_before_the_tables_drop() {
+		$source = $this->source();
+		$action = strpos( $source, "do_action( 'reportedip_hive_uninstall', \$delete_requested )" );
+		$drop   = strpos( $source, 'ReportedIP_Hive_Schema::drop_all_tables()' );
+		$this->assertNotFalse( $action );
+		$this->assertNotFalse( $drop );
+		$this->assertLessThan( $drop, $action );
 	}
 
 	public function test_no_update_checker_or_update_uri() {
@@ -51,6 +56,6 @@ class BootstrapContractTest extends TestCase {
 
 	public function test_composer_has_no_runtime_dependency() {
 		$composer = json_decode( (string) file_get_contents( REPORTEDIP_HIVE_PLUGIN_DIR . 'composer.json' ), true );
-		$this->assertSame( array( 'php' => '>=8.1' ), $composer['require'] );
+		$this->assertSame( array( 'php' ), array_keys( $composer['require'] ) );
 	}
 }

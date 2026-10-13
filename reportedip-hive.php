@@ -139,6 +139,7 @@ class ReportedIP_Hive {
 	 * Constructor
 	 */
 	private function __construct() {
+		self::$instance = $this;
 		$this->load_dependencies();
 		$this->init_hooks();
 	}
@@ -564,11 +565,15 @@ class ReportedIP_Hive {
 		}
 
 		/**
-		 * Fires once every free class is loaded and wired, before `init`.
+		 * Fires once every free class is loaded, before `init_hooks()` and before `init`.
 		 *
-		 * The add-on hangs its listener in at include time and loads its own
-		 * classes here, so every filter below is registered before the
-		 * sensors, the registry and the cron scheduler read their data.
+		 * The add-on attaches its listener at include time and loads its own
+		 * classes here. The sensors are already constructed, but none of them
+		 * evaluates a feature gate or a data filter in its constructor: the
+		 * feature matrix is built on the first `feature_status()` call, the
+		 * registry, the taxonomy and the cron schedule are read on `init` or
+		 * later, so a filter registered here sees every read. The main class's
+		 * own hooks (`init_hooks()`) are not registered yet.
 		 *
 		 * @param ReportedIP_Hive $plugin The plugin instance.
 		 * @since 3.0.0
@@ -759,7 +764,9 @@ class ReportedIP_Hive {
 
 		/**
 		 * Fires during uninstall so an add-on can remove its own data under
-		 * the same opt-in.
+		 * the same opt-in. Attach the listener at include time: the free
+		 * plugin is inactive while it is uninstalled, so
+		 * `reportedip_hive_loaded` does not fire in that request.
 		 *
 		 * @param bool $delete_requested Whether the site owner asked for data removal.
 		 * @since 3.0.0
