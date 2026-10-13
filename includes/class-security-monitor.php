@@ -1860,9 +1860,11 @@ class ReportedIP_Hive_Security_Monitor {
 	/**
 	 * Pick the strongest reason out of `check_coordinated_attacks()` rows.
 	 *
-	 * Used by both the realtime hook and the cron sweep so the same
-	 * Hardening_Mode::activate() call site can hand over the row with the
-	 * highest unique-IP / total-attempts count.
+	 * check_coordinated_attacks() logs the row this picks, and the add-on reads
+	 * it through its `reportedip_hive_coordinated_attacks_found` listener and
+	 * the realtime `reportedip_hive_failed_login_tracked` probe, so every
+	 * consumer acts on the row with the highest unique-IP / total-attempts
+	 * count.
 	 *
 	 * @param array $rows Result of {@see check_coordinated_attacks()}.
 	 * @return array|null `{unique_ips, total_attempts, time_window}` or null.
