@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-13T16:14:03+00:00\n"
+"POT-Creation-Date: 2026-10-13T16:40:54+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -3937,7 +3937,7 @@ msgstr ""
 
 #: admin/class-blocked-ips-table.php:116
 #: admin/class-blocked-ips-table.php:295
-#: includes/class-event-taxonomy.php:693
+#: includes/class-event-taxonomy.php:715
 msgid "Community Reputation"
 msgstr ""
 
@@ -7019,128 +7019,117 @@ msgstr ""
 msgid "%1$s to %2$s"
 msgstr ""
 
-#: includes/class-catalog.php:44
+#: includes/class-catalog.php:48
 msgid "Mail relay via reportedip.com"
 msgstr ""
 
-#: includes/class-catalog.php:45
+#: includes/class-catalog.php:49
 msgid "Sends 2FA mails and alerts through a managed EU relay with its own sender reputation."
 msgstr ""
 
-#: includes/class-catalog.php:51
+#: includes/class-catalog.php:56
 msgid "SMS codes via the managed relay"
 msgstr ""
 
-#: includes/class-catalog.php:52
+#: includes/class-catalog.php:57
 msgid "A second factor by text message, delivered through the EU gateway, no SMS provider account needed."
 msgstr ""
 
-#: includes/class-catalog.php:58
+#: includes/class-catalog.php:64
 msgid "Storefront 2FA for WooCommerce"
 msgstr ""
 
-#: includes/class-catalog.php:59
+#: includes/class-catalog.php:65
 msgid "The second factor on My Account, checkout and the WooCommerce blocks, inside the theme instead of wp-login.php."
 msgstr ""
 
-#: includes/class-catalog.php:65
+#: includes/class-catalog.php:71
 msgid "Adaptive 2FA policies per role"
 msgstr ""
 
-#: includes/class-catalog.php:66
+#: includes/class-catalog.php:72
 msgid "Ask for the second factor again on a new device, address, network or country, every N days or sign-ins."
 msgstr ""
 
-#: includes/class-catalog.php:72
+#: includes/class-catalog.php:78
 msgid "Hardening mode during attack waves"
 msgstr ""
 
-#: includes/class-catalog.php:73
+#: includes/class-catalog.php:79
 msgid "Tightens the sign-in and reputation thresholds for an hour when a coordinated attack is detected."
 msgstr ""
 
-#: includes/class-catalog.php:79
+#: includes/class-catalog.php:85
 #: includes/class-settings-registry.php:785
 msgid "Computation check on forms"
 msgstr ""
 
-#: includes/class-catalog.php:80
+#: includes/class-catalog.php:86
 msgid "A small sum the browser works out in the background, so a script that copies the hidden field no longer passes."
 msgstr ""
 
-#: includes/class-catalog.php:86
+#: includes/class-catalog.php:92
 msgid "Tor exit node blocking"
 msgstr ""
 
-#: includes/class-catalog.php:87
+#: includes/class-catalog.php:93
 msgid "Refuses sign-in attempts from known Tor exit nodes using a signed list refreshed twice a day."
 msgstr ""
 
-#: includes/class-catalog.php:93
+#: includes/class-catalog.php:100
 msgid "Advanced security headers"
 msgstr ""
 
-#: includes/class-catalog.php:94
+#: includes/class-catalog.php:101
 msgid "HSTS with preload, a Content-Security-Policy builder, Permissions-Policy and the cross-origin trio."
 msgstr ""
 
-#: includes/class-catalog.php:100
+#: includes/class-catalog.php:107
 msgid "Unlimited registration rules"
 msgstr ""
 
-#: includes/class-catalog.php:101
-msgid "Unlimited username and e-mail rules, regular expressions and registration restricted to allowlisted addresses."
-msgstr ""
-
-#: includes/class-catalog.php:107
-msgid "Advanced security keys"
-msgstr ""
-
 #: includes/class-catalog.php:108
-msgid "Several keys per account with a backup key, model detection and key lifecycle mails."
+msgid "Unlimited username and e-mail rules, regular expressions and registration restricted to allowlisted IP addresses."
 msgstr ""
 
 #: includes/class-catalog.php:114
-msgid "Advanced form protection"
+msgid "Advanced security keys"
 msgstr ""
 
 #: includes/class-catalog.php:115
-msgid "The execution proof on WPForms, Gravity Forms, Forminator, Formidable, Elementor Forms and Ultimate Member."
+msgid "Several keys per account with a backup key, model detection and key lifecycle mails."
 msgstr ""
 
 #: includes/class-catalog.php:121
-msgid "Audit event trail"
+msgid "Advanced form protection"
 msgstr ""
 
 #: includes/class-catalog.php:122
-msgid "Who changed what: settings with old and new value, plugins, themes, pages, menus, files and accounts."
+msgid "The execution proof on WPForms, Gravity Forms, Forminator, Formidable, Elementor Forms and Ultimate Member."
 msgstr ""
 
 #: includes/class-catalog.php:128
-msgid "Cloud fleet management"
+msgid "Audit event trail"
 msgstr ""
 
 #: includes/class-catalog.php:129
-msgid "Manage this site from the reportedip.com dashboard: policies, per-site overrides and drift detection."
+msgid "Who changed what: settings with old and new value, plugins, themes, pages, menus, files and accounts."
 msgstr ""
 
 #: includes/class-catalog.php:135
-msgid "User account control"
+msgid "Cloud fleet management"
 msgstr ""
 
 #: includes/class-catalog.php:136
+msgid "Manage this site from the reportedip.com dashboard: policies, per-site overrides and drift detection."
+msgstr ""
+
+#: includes/class-catalog.php:143
+msgid "User account control"
+msgstr ""
+
+#: includes/class-catalog.php:144
 msgid "Block accounts with a message, end their sessions and password resets, review active sessions."
-msgstr ""
-
-#: includes/class-catalog.php:166
-#: includes/class-mode-manager.php:832
-#: includes/class-mode-manager.php:833
-msgid "Business"
-msgstr ""
-
-#: includes/class-catalog.php:166
-#: includes/class-mode-manager.php:823
-msgid "Professional"
 msgstr ""
 
 #: includes/class-cloud-management-rest.php:199
@@ -7701,91 +7690,91 @@ msgstr ""
 msgid "Logging Test (critical)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:662
+#: includes/class-event-taxonomy.php:684
 msgid "Login & Credential"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:663
+#: includes/class-event-taxonomy.php:685
 msgid "Firewall (WAF)"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:664
+#: includes/class-event-taxonomy.php:686
 msgid "Scanners & Probes"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:665
+#: includes/class-event-taxonomy.php:687
 msgid "Fake Bots"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:666
-#: includes/class-event-taxonomy.php:692
+#: includes/class-event-taxonomy.php:688
+#: includes/class-event-taxonomy.php:714
 msgid "Recon & Enumeration"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:667
+#: includes/class-event-taxonomy.php:689
 msgid "Spam & Flooding"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:668
+#: includes/class-event-taxonomy.php:690
 msgid "Anomalies"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:669
+#: includes/class-event-taxonomy.php:691
 msgid "Other"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:687
+#: includes/class-event-taxonomy.php:709
 msgid "Login & Accounts"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:688
+#: includes/class-event-taxonomy.php:710
 msgid "Registration"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:689
+#: includes/class-event-taxonomy.php:711
 msgid "Forms & Comments"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:690
+#: includes/class-event-taxonomy.php:712
 msgid "Firewall"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:691
+#: includes/class-event-taxonomy.php:713
 msgid "Bots"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:694
+#: includes/class-event-taxonomy.php:716
 msgid "Two-Factor"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:695
+#: includes/class-event-taxonomy.php:717
 msgid "Anomalies & Hardening"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:696
+#: includes/class-event-taxonomy.php:718
 msgid "Report-only Mode"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:697
+#: includes/class-event-taxonomy.php:719
 msgid "Operations: Blocks & Whitelist"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:698
+#: includes/class-event-taxonomy.php:720
 msgid "Operations: API & Queue"
 msgstr ""
 
-#: includes/class-event-taxonomy.php:699
+#: includes/class-event-taxonomy.php:721
 msgid "Operations: System"
 msgstr ""
 
 #. translators: %s: filter group label, for example "Firewall".
-#: includes/class-event-taxonomy.php:864
+#: includes/class-event-taxonomy.php:886
 #, php-format
 msgid "All %s events"
 msgstr ""
 
 #. translators: %s: event type label.
-#: includes/class-event-taxonomy.php:894
+#: includes/class-event-taxonomy.php:916
 #, php-format
 msgid "%s (threshold reached)"
 msgstr ""
@@ -8271,12 +8260,21 @@ msgstr ""
 msgid "Honeypot operator, community contributor."
 msgstr ""
 
+#: includes/class-mode-manager.php:823
+msgid "Professional"
+msgstr ""
+
 #: includes/class-mode-manager.php:824
 msgid "PRO"
 msgstr ""
 
 #: includes/class-mode-manager.php:825
 msgid "Up to 3 domains, managed mail and SMS relay, priority sync."
+msgstr ""
+
+#: includes/class-mode-manager.php:832
+#: includes/class-mode-manager.php:833
+msgid "Business"
 msgstr ""
 
 #: includes/class-mode-manager.php:834

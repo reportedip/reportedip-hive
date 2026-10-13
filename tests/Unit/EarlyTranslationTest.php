@@ -62,13 +62,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/**
 		 * Nothing in the constructor path may read the registry directly.
 		 * Every `spec()` consumer that runs at load time inherits the same
-		 * fault.
+		 * fault. The pro catalog translates every label and description when
+		 * `features()` runs, so it is held to the same rule.
 		 */
 		public function test_the_constructor_path_never_reads_the_registry(): void {
 			$body = $this->init_hooks_body();
 
 			$this->assertStringNotContainsString( 'Settings_Registry::spec()', $body );
 			$this->assertStringNotContainsString( 'Settings_Registry::remote_spec()', $body );
+			$this->assertStringNotContainsString( 'ReportedIP_Hive_Catalog::', $body );
 		}
 	}
 }

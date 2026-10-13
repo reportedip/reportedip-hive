@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-10-13T16:14:06+00:00\n"
+"PO-Revision-Date: 2026-10-13T16:40:56+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
@@ -3940,7 +3940,7 @@ msgstr "Manuell gesperrt"
 
 #: admin/class-blocked-ips-table.php:116
 #: admin/class-blocked-ips-table.php:295
-#: includes/class-event-taxonomy.php:693
+#: includes/class-event-taxonomy.php:715
 msgid "Community Reputation"
 msgstr "Community-Reputation"
 
@@ -7022,129 +7022,118 @@ msgstr "Rechte von %s"
 msgid "%1$s to %2$s"
 msgstr "%1$s zu %2$s"
 
-#: includes/class-catalog.php:44
+#: includes/class-catalog.php:48
 msgid "Mail relay via reportedip.com"
 msgstr "E-Mail-Relay über reportedip.com"
 
-#: includes/class-catalog.php:45
+#: includes/class-catalog.php:49
 msgid "Sends 2FA mails and alerts through a managed EU relay with its own sender reputation."
 msgstr "Versendet 2FA-Mails und Warnungen über ein verwaltetes EU-Relay mit eigener Absender-Reputation."
 
-#: includes/class-catalog.php:51
+#: includes/class-catalog.php:56
 msgid "SMS codes via the managed relay"
 msgstr "SMS-Codes über das verwaltete Relay"
 
-#: includes/class-catalog.php:52
+#: includes/class-catalog.php:57
 msgid "A second factor by text message, delivered through the EU gateway, no SMS provider account needed."
 msgstr "Ein zweiter Faktor per SMS, zugestellt über das EU-Gateway. Ein eigenes Konto bei einem SMS-Anbieter ist nicht nötig."
 
-#: includes/class-catalog.php:58
+#: includes/class-catalog.php:64
 msgid "Storefront 2FA for WooCommerce"
 msgstr "Shop-2FA für WooCommerce"
 
-#: includes/class-catalog.php:59
+#: includes/class-catalog.php:65
 msgid "The second factor on My Account, checkout and the WooCommerce blocks, inside the theme instead of wp-login.php."
 msgstr "Der zweite Faktor bei „Mein Konto“, im Checkout und in den WooCommerce-Blöcken. Er erscheint direkt im Theme statt auf wp-login.php."
 
-#: includes/class-catalog.php:65
+#: includes/class-catalog.php:71
 msgid "Adaptive 2FA policies per role"
 msgstr "Adaptive 2FA-Richtlinien je Rolle"
 
-#: includes/class-catalog.php:66
+#: includes/class-catalog.php:72
 msgid "Ask for the second factor again on a new device, address, network or country, every N days or sign-ins."
 msgstr "Fragen Sie den zweiten Faktor erneut ab, sobald ein neues Gerät, eine neue Adresse, ein neues Netz oder ein neues Land auftaucht, außerdem alle N Tage oder nach N Anmeldungen."
 
-#: includes/class-catalog.php:72
+#: includes/class-catalog.php:78
 msgid "Hardening mode during attack waves"
 msgstr "Härtungsmodus bei Angriffswellen"
 
-#: includes/class-catalog.php:73
+#: includes/class-catalog.php:79
 msgid "Tightens the sign-in and reputation thresholds for an hour when a coordinated attack is detected."
 msgstr "Verschärft für eine Stunde die Schwellen für Anmeldung und Reputation, sobald ein koordinierter Angriff erkannt wird."
 
-#: includes/class-catalog.php:79
+#: includes/class-catalog.php:85
 #: includes/class-settings-registry.php:785
 msgid "Computation check on forms"
 msgstr "Rechenprüfung auf Formularen"
 
-#: includes/class-catalog.php:80
+#: includes/class-catalog.php:86
 msgid "A small sum the browser works out in the background, so a script that copies the hidden field no longer passes."
 msgstr "Eine kleine Rechenaufgabe, die der Browser im Hintergrund löst. Ein Skript, das nur das versteckte Feld kopiert, kommt damit nicht mehr durch."
 
-#: includes/class-catalog.php:86
+#: includes/class-catalog.php:92
 msgid "Tor exit node blocking"
 msgstr "Tor-Exit-Node-Sperrung"
 
-#: includes/class-catalog.php:87
+#: includes/class-catalog.php:93
 msgid "Refuses sign-in attempts from known Tor exit nodes using a signed list refreshed twice a day."
 msgstr "Weist Anmeldeversuche von bekannten Tor-Exit-Nodes anhand einer signierten Liste ab, die zweimal täglich aktualisiert wird."
 
-#: includes/class-catalog.php:93
+#: includes/class-catalog.php:100
 msgid "Advanced security headers"
 msgstr "Erweiterte Security-Header"
 
-#: includes/class-catalog.php:94
+#: includes/class-catalog.php:101
 msgid "HSTS with preload, a Content-Security-Policy builder, Permissions-Policy and the cross-origin trio."
-msgstr "HSTS mit Preload, ein Builder für die Content-Security-Policy, Permissions-Policy und die drei Cross-Origin-Header."
+msgstr "HSTS mit Preload, ein CSP-Builder, die Permissions-Policy und die drei Cross-Origin-Header."
 
-#: includes/class-catalog.php:100
+#: includes/class-catalog.php:107
 msgid "Unlimited registration rules"
 msgstr "Unbegrenzte Registrierungsregeln"
 
-#: includes/class-catalog.php:101
-msgid "Unlimited username and e-mail rules, regular expressions and registration restricted to allowlisted addresses."
-msgstr "Beliebig viele Regeln für Benutzernamen und E-Mail-Adressen, reguläre Ausdrücke und Registrierung nur von erlaubten Adressen."
+#: includes/class-catalog.php:108
+msgid "Unlimited username and e-mail rules, regular expressions and registration restricted to allowlisted IP addresses."
+msgstr "Beliebig viele Regeln für Benutzernamen und E-Mail-Adressen, reguläre Ausdrücke und Registrierung nur von erlaubten IP-Adressen."
 
-#: includes/class-catalog.php:107
+#: includes/class-catalog.php:114
 msgid "Advanced security keys"
 msgstr "Erweiterte Sicherheitsschlüssel"
 
-#: includes/class-catalog.php:108
+#: includes/class-catalog.php:115
 msgid "Several keys per account with a backup key, model detection and key lifecycle mails."
 msgstr "Mehrere Schlüssel pro Konto mit Ersatzschlüssel, Modellerkennung und E-Mails zum Lebenszyklus der Schlüssel."
 
-#: includes/class-catalog.php:114
+#: includes/class-catalog.php:121
 msgid "Advanced form protection"
 msgstr "Erweiterter Formularschutz"
 
-#: includes/class-catalog.php:115
+#: includes/class-catalog.php:122
 msgid "The execution proof on WPForms, Gravity Forms, Forminator, Formidable, Elementor Forms and Ultimate Member."
 msgstr "Der Ausführungsnachweis auf WPForms, Gravity Forms, Forminator, Formidable, Elementor Forms und Ultimate Member."
 
-#: includes/class-catalog.php:121
+#: includes/class-catalog.php:128
 msgid "Audit event trail"
 msgstr "Audit-Trail"
 
-#: includes/class-catalog.php:122
+#: includes/class-catalog.php:129
 msgid "Who changed what: settings with old and new value, plugins, themes, pages, menus, files and accounts."
 msgstr "Wer hat was geändert: Einstellungen mit altem und neuem Wert, Plugins, Themes, Seiten, Menüs, Dateien und Konten."
 
-#: includes/class-catalog.php:128
+#: includes/class-catalog.php:135
 msgid "Cloud fleet management"
 msgstr "Cloud-Flottenverwaltung"
 
-#: includes/class-catalog.php:129
+#: includes/class-catalog.php:136
 msgid "Manage this site from the reportedip.com dashboard: policies, per-site overrides and drift detection."
 msgstr "Verwalten Sie diese Website über das reportedip.com-Dashboard: Richtlinien, Overrides je Website und Abweichungserkennung."
 
-#: includes/class-catalog.php:135
+#: includes/class-catalog.php:143
 msgid "User account control"
 msgstr "Kontrolle über Benutzerkonten"
 
-#: includes/class-catalog.php:136
+#: includes/class-catalog.php:144
 msgid "Block accounts with a message, end their sessions and password resets, review active sessions."
-msgstr "Sperren Sie Konten mit einer Meldung, beenden Sie ihre Sitzungen und Passwort-Zurücksetzungen und prüfen Sie aktive Sitzungen."
-
-#: includes/class-catalog.php:166
-#: includes/class-mode-manager.php:832
-#: includes/class-mode-manager.php:833
-msgid "Business"
-msgstr "Business"
-
-#: includes/class-catalog.php:166
-#: includes/class-mode-manager.php:823
-msgid "Professional"
-msgstr "Professional"
+msgstr "Sperren Sie Konten mit einer Meldung, beenden Sie deren Sitzungen, unterbinden Sie Passwort-Zurücksetzungen und prüfen Sie aktive Sitzungen."
 
 #: includes/class-cloud-management-rest.php:199
 #: includes/class-two-factor-rest.php:192
@@ -7704,91 +7693,91 @@ msgstr "Protokolltest (hoch)"
 msgid "Logging Test (critical)"
 msgstr "Protokolltest (kritisch)"
 
-#: includes/class-event-taxonomy.php:662
+#: includes/class-event-taxonomy.php:684
 msgid "Login & Credential"
 msgstr "Login & Zugangsdaten"
 
-#: includes/class-event-taxonomy.php:663
+#: includes/class-event-taxonomy.php:685
 msgid "Firewall (WAF)"
 msgstr "Firewall (WAF)"
 
-#: includes/class-event-taxonomy.php:664
+#: includes/class-event-taxonomy.php:686
 msgid "Scanners & Probes"
 msgstr "Scanner & Sondierungen"
 
-#: includes/class-event-taxonomy.php:665
+#: includes/class-event-taxonomy.php:687
 msgid "Fake Bots"
 msgstr "Gefälschte Bots"
 
-#: includes/class-event-taxonomy.php:666
-#: includes/class-event-taxonomy.php:692
+#: includes/class-event-taxonomy.php:688
+#: includes/class-event-taxonomy.php:714
 msgid "Recon & Enumeration"
 msgstr "Aufklärung & Enumeration"
 
-#: includes/class-event-taxonomy.php:667
+#: includes/class-event-taxonomy.php:689
 msgid "Spam & Flooding"
 msgstr "Spam & Fluten"
 
-#: includes/class-event-taxonomy.php:668
+#: includes/class-event-taxonomy.php:690
 msgid "Anomalies"
 msgstr "Anomalien"
 
-#: includes/class-event-taxonomy.php:669
+#: includes/class-event-taxonomy.php:691
 msgid "Other"
 msgstr "Sonstige"
 
-#: includes/class-event-taxonomy.php:687
+#: includes/class-event-taxonomy.php:709
 msgid "Login & Accounts"
 msgstr "Anmeldung und Konten"
 
-#: includes/class-event-taxonomy.php:688
+#: includes/class-event-taxonomy.php:710
 msgid "Registration"
 msgstr "Registrierung"
 
-#: includes/class-event-taxonomy.php:689
+#: includes/class-event-taxonomy.php:711
 msgid "Forms & Comments"
 msgstr "Formulare und Kommentare"
 
-#: includes/class-event-taxonomy.php:690
+#: includes/class-event-taxonomy.php:712
 msgid "Firewall"
 msgstr "Firewall"
 
-#: includes/class-event-taxonomy.php:691
+#: includes/class-event-taxonomy.php:713
 msgid "Bots"
 msgstr "Bots"
 
-#: includes/class-event-taxonomy.php:694
+#: includes/class-event-taxonomy.php:716
 msgid "Two-Factor"
 msgstr "Zwei-Faktor"
 
-#: includes/class-event-taxonomy.php:695
+#: includes/class-event-taxonomy.php:717
 msgid "Anomalies & Hardening"
 msgstr "Anomalien und Hardening"
 
-#: includes/class-event-taxonomy.php:696
+#: includes/class-event-taxonomy.php:718
 msgid "Report-only Mode"
 msgstr "Nur-Melden-Modus"
 
-#: includes/class-event-taxonomy.php:697
+#: includes/class-event-taxonomy.php:719
 msgid "Operations: Blocks & Whitelist"
 msgstr "Betrieb: Sperren und Freigabeliste"
 
-#: includes/class-event-taxonomy.php:698
+#: includes/class-event-taxonomy.php:720
 msgid "Operations: API & Queue"
 msgstr "Betrieb: API und Warteschlange"
 
-#: includes/class-event-taxonomy.php:699
+#: includes/class-event-taxonomy.php:721
 msgid "Operations: System"
 msgstr "Betrieb: System"
 
 #. translators: %s: filter group label, for example "Firewall".
-#: includes/class-event-taxonomy.php:864
+#: includes/class-event-taxonomy.php:886
 #, php-format
 msgid "All %s events"
 msgstr "Alle Ereignisse aus %s"
 
 #. translators: %s: event type label.
-#: includes/class-event-taxonomy.php:894
+#: includes/class-event-taxonomy.php:916
 #, php-format
 msgid "%s (threshold reached)"
 msgstr "%s (Schwelle erreicht)"
@@ -8274,6 +8263,10 @@ msgstr "Contrib."
 msgid "Honeypot operator, community contributor."
 msgstr "Honeypot-Betreiber, Community-Beitragender."
 
+#: includes/class-mode-manager.php:823
+msgid "Professional"
+msgstr "Professional"
+
 #: includes/class-mode-manager.php:824
 msgid "PRO"
 msgstr "PRO"
@@ -8281,6 +8274,11 @@ msgstr "PRO"
 #: includes/class-mode-manager.php:825
 msgid "Up to 3 domains, managed mail and SMS relay, priority sync."
 msgstr "Bis zu 3 Domains, verwaltetes Mail- und SMS-Relay, priorisierte Synchronisierung."
+
+#: includes/class-mode-manager.php:832
+#: includes/class-mode-manager.php:833
+msgid "Business"
+msgstr "Business"
 
 #: includes/class-mode-manager.php:834
 msgid "Agency-grade: 15 domains per licence (bookable x2, x20), whitelabel, WooCommerce, full WP-CLI."

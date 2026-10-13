@@ -22,27 +22,19 @@ class CatalogTest extends TestCase {
 
 	protected function set_up() {
 		parent::set_up();
-		if ( ! function_exists( '__' ) ) {
-			/**
-			 * Translation stub, the unit stubs do not define it on every path.
-			 *
-			 * @param string $text   Text.
-			 * @param string $domain Domain.
-			 * @return string
-			 */
-			function __( $text, $domain = 'default' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
-				return $text;
-			}
-		}
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-registry.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-catalog.php';
 	}
 
 	public function test_every_row_is_complete() {
+		$sections = array_keys( \ReportedIP_Hive_Settings_Registry::sections() );
 		foreach ( \ReportedIP_Hive_Catalog::features() as $key => $row ) {
 			foreach ( array( 'label', 'description', 'tier', 'section', 'docs_url' ) as $field ) {
 				$this->assertNotEmpty( $row[ $field ], "{$key}.{$field}" );
 			}
 			$this->assertContains( $row['tier'], array( 'professional', 'business' ), $key );
+			$this->assertContains( $row['section'], $sections, $key );
+			$this->assertStringStartsWith( \ReportedIP_Hive_Catalog::PRODUCT_URL . '#hive-', $row['docs_url'], $key );
 		}
 	}
 
@@ -50,9 +42,5 @@ class CatalogTest extends TestCase {
 		$by_section = \ReportedIP_Hive_Catalog::by_section();
 		$this->assertArrayHasKey( 'account_security', $by_section );
 		$this->assertContains( 'frontend_2fa', array_keys( $by_section['account_security'] ) );
-	}
-
-	public function test_fourteen_features() {
-		$this->assertCount( 14, \ReportedIP_Hive_Catalog::features() );
 	}
 }
