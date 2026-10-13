@@ -54,7 +54,7 @@ final class ReportedIP_Hive_Settings_Registry {
 	 * @return array<string, array{label:string, description:string}>
 	 */
 	public static function sections() {
-		return array(
+		$sections = array(
 			'detection'        => array(
 				'label'       => __( 'Detection & Thresholds', 'reportedip-hive' ),
 				'description' => __( 'The sensors that watch for an attack and the counts at which each one reacts. Also holds the proxy settings, because every sensor depends on resolving the visitor address correctly.', 'reportedip-hive' ),
@@ -116,7 +116,22 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Lookup caching, the report queue and the public protection badge. These change how much work the site does per request, not how it decides what to block.', 'reportedip-hive' ),
 			),
 		);
+
+		/**
+		 * Extend the settings sections.
+		 *
+		 * @param array<string, array{label:string, description:string}> $sections Ordered sections.
+		 * @since 3.0.0
+		 */
+		return apply_filters( 'reportedip_hive_settings_sections', $sections );
 	}
+
+	/**
+	 * Memoised, filtered specification.
+	 *
+	 * @var array<string, array<string, mixed>>|null
+	 */
+	private static $spec_cache = null;
 
 	/**
 	 * The full option specification map.
@@ -124,7 +139,11 @@ final class ReportedIP_Hive_Settings_Registry {
 	 * @return array<string, array<string, mixed>>
 	 */
 	public static function spec() {
-		return array(
+		if ( null !== self::$spec_cache ) {
+			return self::$spec_cache;
+		}
+
+		$spec = array(
 			'reportedip_hive_trusted_ip_header'            => array(
 				'section'     => 'detection',
 				'kind'        => 'enum',
@@ -1752,6 +1771,31 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'One factual mail per upgrade or downgrade with what becomes available or pauses.', 'reportedip-hive' ),
 			),
 		);
+
+		/**
+		 * Extend the option specification.
+		 *
+		 * An add-on registers every option it owns here, with the same fields
+		 * the free entries use (section, kind, range, label, description,
+		 * remote, effects). Default values go through
+		 * `reportedip_hive_option_defaults`.
+		 *
+		 * @param array<string, array<string, mixed>> $spec Option key to spec entry.
+		 * @since 3.0.0
+		 */
+		self::$spec_cache = apply_filters( 'reportedip_hive_settings_spec', $spec );
+
+		return self::$spec_cache;
+	}
+
+	/**
+	 * Forget the memoised specification.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function flush_spec_cache() {
+		self::$spec_cache = null;
 	}
 
 	/**
