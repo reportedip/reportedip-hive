@@ -172,7 +172,7 @@ class ReportedIP_Hive_Schema_Multisite_Test extends WP_UnitTestCase {
 			static function ( $suffixes ) {
 				return array_merge(
 					$suffixes,
-					array( 'reportedip_hive_zz_addon', 'reportedip_hive_zz_addon', "reportedip_hive_zz_nl\n", 'Bad-Name', 'x; DROP TABLE y', 42, null )
+					array( 'reportedip_hive_zz_addon', 'reportedip_hive_zz_addon', "reportedip_hive_zz_nl\n", 'Bad-Name', 'x; DROP TABLE y', 'users', 'options', 42, null )
 				);
 			}
 		);

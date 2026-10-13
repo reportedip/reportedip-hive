@@ -2,7 +2,7 @@
 /**
  * Schema service: owns the central plugin tables.
  *
- * All seven plugin tables live under `$wpdb->base_prefix`, i.e. they are
+ * All plugin tables live under `$wpdb->base_prefix`, i.e. they are
  * shared across the entire WordPress Multisite network. On single-site
  * installs `base_prefix === prefix`, so the storage is unchanged from v1.x.
  *
@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter -- Database layer: table names are composed from $wpdb->base_prefix with hardcoded suffixes and cannot be parameterised.
+// phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter -- Database layer: table names are composed from $wpdb->base_prefix with hardcoded suffixes or from the sanitised `tables()` list and cannot be parameterised.
 
 /**
  * Owns the plugin's central database schema.
@@ -77,10 +77,12 @@ final class ReportedIP_Hive_Schema {
 	 * per-site cleanup.
 	 *
 	 * Read by `drop_all_tables()`, `truncate_all_tables()` and
-	 * `cleanup_blog_data()`. The names end up in DROP, TRUNCATE and DELETE
-	 * statements, so the filter result is sanitised: a non-array falls back
-	 * to the core list, entries that are not strings of lowercase letters,
-	 * digits and underscores are dropped, duplicates collapse.
+	 * `cleanup_blog_data()`. `table()` only prepends the network prefix, so
+	 * the names reach DROP, TRUNCATE and DELETE statements unchanged. A bare
+	 * `users` or `options` would hit a WordPress core table, which is why the
+	 * filter result is sanitised: a non-array falls back to the plugin's own
+	 * list, and only strings of the form `reportedip_hive_*` (lowercase
+	 * letters, digits, underscores) are accepted. Duplicates collapse.
 	 *
 	 * @return string[]
 	 * @since  3.0.0
@@ -93,7 +95,8 @@ final class ReportedIP_Hive_Schema {
 		 * here so `drop_all_tables()`, `truncate_all_tables()` and
 		 * `cleanup_blog_data()` include them while the add-on is active.
 		 * `cleanup_blog_data()` deletes from a registered table only when it
-		 * has a `blog_id` column.
+		 * has a `blog_id` column. Suffixes outside the `reportedip_hive_`
+		 * namespace are ignored.
 		 *
 		 * @param string[] $suffixes Table suffixes without prefix.
 		 * @since 3.0.0
@@ -107,7 +110,7 @@ final class ReportedIP_Hive_Schema {
 				array_filter(
 					array_filter( $suffixes, 'is_string' ),
 					static function ( $suffix ) {
-						return 1 === preg_match( '/^[a-z0-9_]+$/D', $suffix );
+						return 1 === preg_match( '/^reportedip_hive_[a-z0-9_]+$/D', $suffix );
 					}
 				)
 			)
