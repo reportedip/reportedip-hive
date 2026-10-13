@@ -160,6 +160,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_exported_schema_is_renderable_by_dashboards() {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor.php';
 			$schema = \ReportedIP_Hive_Settings_Registry::export_schema();
 
 			$this->assertNotEmpty( $schema['sections'] );

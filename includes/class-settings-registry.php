@@ -1963,7 +1963,9 @@ final class ReportedIP_Hive_Settings_Registry {
 	 * The values a `json_list` key with a `choices` source may hold, as
 	 * value => label. The one list behind the Protection page checkbox groups
 	 * and the `allowed` list of the remote schema, so a dashboard offers the
-	 * same choices the site itself does (since 2.1.70).
+	 * same choices the site itself does (since 2.1.70). `methods` lists the
+	 * method registry ({@see ReportedIP_Hive_Two_Factor::methods()}), so a
+	 * method an add-on registers is offered while the add-on is active.
 	 *
 	 * @param string $source `roles`, `methods` or `audit_groups`.
 	 * @return array<string,string>
@@ -1971,12 +1973,9 @@ final class ReportedIP_Hive_Settings_Registry {
 	public static function choice_values( $source ) {
 		$map = array();
 		if ( 'methods' === $source ) {
-			$map = array(
-				'totp'     => __( 'Authenticator app (TOTP)', 'reportedip-hive' ),
-				'email'    => __( 'E-mail code', 'reportedip-hive' ),
-				'sms'      => __( 'SMS code', 'reportedip-hive' ),
-				'webauthn' => __( 'Security key / passkey', 'reportedip-hive' ),
-			);
+			foreach ( ReportedIP_Hive_Two_Factor::methods() as $slug => $definition ) {
+				$map[ (string) $slug ] = (string) $definition['label'];
+			}
 		} elseif ( 'roles' === $source ) {
 			$map = array_map( 'strval', wp_roles()->get_names() );
 		} elseif ( 'audit_groups' === $source ) {

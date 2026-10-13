@@ -402,6 +402,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_export_schema_covers_every_remote_key_exactly_once() {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor.php';
 			$schema = \ReportedIP_Hive_Settings_Registry::export_schema();
 			$this->assertSame( \ReportedIP_Hive_Settings_Registry::SCHEMA_VERSION, $schema['schema_version'] );
 
@@ -429,6 +430,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * instead of a raw JSON field.
 		 */
 		public function test_export_schema_lists_the_choices_of_every_json_list(): void {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor.php';
 			$schema = \ReportedIP_Hive_Settings_Registry::export_schema();
 			foreach ( \ReportedIP_Hive_Settings_Registry::remote_spec() as $key => $entry ) {
 				if ( empty( $entry['choices'] ) ) {
@@ -441,7 +443,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				);
 				$this->assertNotEmpty( $schema['fields'][ $key ]['allowed'], $key );
 			}
-			$this->assertSame( array( 'totp', 'email', 'sms', 'webauthn' ), $schema['fields']['reportedip_hive_2fa_allowed_methods']['allowed'] );
+			$this->assertSame( array( 'totp', 'email', 'webauthn' ), $schema['fields']['reportedip_hive_2fa_allowed_methods']['allowed'], 'The free plugin offers its own methods; an add-on adds its method through the registry.' );
 		}
 
 		/**

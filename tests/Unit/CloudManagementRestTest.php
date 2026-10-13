@@ -261,6 +261,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_valid_schema_request_returns_schema_envelope() {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor.php';
 			$rest    = new \ReportedIP_Hive_Cloud_Management_REST();
 			$request = $this->signed_request( 'schema' );
 
