@@ -5,10 +5,11 @@
  * Hardening Mode tightens the failed-login threshold and timeframe network-wide
  * for the duration of a coordinated attack. That promise only holds if *every*
  * surface that authenticates credentials reads its threshold through
- * {@see ReportedIP_Hive_Hardening_Mode::effective_failed_login_threshold()} /
- * `effective_failed_login_timeframe()`. A sensor that reads the raw option keeps
- * running on the relaxed value while the rest of the site is hardened, the hole
- * the WooCommerce login monitor carried from 2.0.8 until this test landed.
+ * {@see ReportedIP_Hive_Security_Monitor::effective_threshold()} with the
+ * matching key, the one filter the clamp hangs on since 3.0.0. A sensor that
+ * reads the raw option keeps running on the relaxed value while the rest of the
+ * site is hardened, the hole the WooCommerce login monitor carried from 2.0.8
+ * until this test landed.
  *
  * The check is a source scan rather than a behavioural test on purpose: it costs
  * nothing, is deterministic, and it also catches sensors that do not exist yet.
@@ -34,15 +35,15 @@ use PHPUnit\Framework\TestCase;
 class HardeningParityTest extends TestCase {
 
 	/**
-	 * Option key => the clamp wrapper the read has to be wrapped in.
+	 * Option key => the `effective_threshold()` key the read has to be wrapped in.
 	 *
 	 * @var array<string, string>
 	 */
 	private const CLAMPED_KEYS = array(
-		'reportedip_hive_failed_login_threshold' => 'effective_failed_login_threshold',
-		'reportedip_hive_failed_login_timeframe' => 'effective_failed_login_timeframe',
-		'reportedip_hive_app_password_threshold' => 'effective_failed_login_threshold',
-		'reportedip_hive_app_password_timeframe' => 'effective_failed_login_timeframe',
+		'reportedip_hive_failed_login_threshold' => 'failed_login_threshold',
+		'reportedip_hive_failed_login_timeframe' => 'failed_login_timeframe',
+		'reportedip_hive_app_password_threshold' => 'failed_login_threshold',
+		'reportedip_hive_app_password_timeframe' => 'failed_login_timeframe',
 	);
 
 	/**
@@ -58,7 +59,7 @@ class HardeningParityTest extends TestCase {
 		foreach ( (array) $files as $file ) {
 			$source = (string) file_get_contents( $file );
 
-			foreach ( self::CLAMPED_KEYS as $key => $wrapper ) {
+			foreach ( self::CLAMPED_KEYS as $key => $clamp ) {
 				$reads = preg_match_all(
 					'/Option_Routing::get\(\s*\'' . preg_quote( $key, '/' ) . '\'/',
 					$source
@@ -68,14 +69,17 @@ class HardeningParityTest extends TestCase {
 				}
 
 				++$scanned;
-				$clamps = substr_count( $source, $wrapper . '(' );
+				$clamps = preg_match_all(
+					'/effective_threshold\(\s*\'' . preg_quote( $clamp, '/' ) . '\'/',
+					$source
+				);
 				if ( $clamps < $reads ) {
 					$offences[] = sprintf(
-						'%s reads %s %d time(s) but calls %s() only %d time(s)',
+						'%s reads %s %d time(s) but calls effective_threshold( \'%s\' ) only %d time(s)',
 						basename( $file ),
 						$key,
 						$reads,
-						$wrapper,
+						$clamp,
 						$clamps
 					);
 				}

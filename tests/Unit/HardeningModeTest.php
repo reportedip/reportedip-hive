@@ -90,6 +90,7 @@ namespace {
 
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-hardening-mode.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-security-monitor.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -225,6 +226,19 @@ namespace ReportedIP\Hive\Tests\Unit {
 				\ReportedIP_Hive_Hardening_Mode::effective_block_threshold( 75 ),
 				'a stored sub-floor hardening threshold must clamp up to the false-positive floor'
 			);
+		}
+
+		public function test_filter_threshold_clamps_each_key_through_the_free_filter() {
+			$GLOBALS['wp_transients']['reportedip_hive_hardening_until'] = array(
+				'value'   => time() + 600,
+				'expires' => time() + 600,
+			);
+			add_filter( 'reportedip_hive_effective_threshold', array( 'ReportedIP_Hive_Hardening_Mode', 'filter_threshold' ), 10, 2 );
+
+			$this->assertSame( 2, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'failed_login_threshold', 5 ) );
+			$this->assertSame( 5, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'failed_login_timeframe', 15 ) );
+			$this->assertSame( 60, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'block_threshold', 75 ) );
+			$this->assertSame( 7, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'unknown_key', 7 ), 'an unknown key passes through unclamped' );
 		}
 
 		public function test_activate_returns_false_when_tier_below_professional() {

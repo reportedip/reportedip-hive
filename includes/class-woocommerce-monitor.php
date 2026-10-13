@@ -106,10 +106,12 @@ class ReportedIP_Hive_WooCommerce_Monitor {
 			return;
 		}
 
-		$threshold = ReportedIP_Hive_Hardening_Mode::effective_failed_login_threshold(
+		$threshold = ReportedIP_Hive_Security_Monitor::effective_threshold(
+			'failed_login_threshold',
 			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', 5 )
 		);
-		$timeframe = ReportedIP_Hive_Hardening_Mode::effective_failed_login_timeframe(
+		$timeframe = ReportedIP_Hive_Security_Monitor::effective_threshold(
+			'failed_login_timeframe',
 			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_timeframe', 15 )
 		);
 

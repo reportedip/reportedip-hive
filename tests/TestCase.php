@@ -65,6 +65,7 @@ class TestCase extends PolyfillTestCase {
 	 */
 	protected function set_mocked_option( $option, $value ) {
 		self::$mocked_options[ $option ] = $value;
+		$GLOBALS['wp_options'][ $option ] = $value;
 	}
 
 	/**

@@ -195,4 +195,28 @@ class ExtensionApiTest extends TestCase {
 		$this->assertContains( 'reportedip_hive_demo_job', \ReportedIP_Hive_Cron_Handler::get_hook_names() );
 		$this->assertContains( 'reportedip_hive_cleanup', \ReportedIP_Hive_Cron_Handler::get_hook_names() );
 	}
+
+	public function test_effective_threshold_is_filterable_per_key() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
+		add_filter(
+			'reportedip_hive_effective_threshold',
+			static function ( $value, $key ) {
+				return 'failed_login_threshold' === $key ? 2 : $value;
+			},
+			10,
+			2
+		);
+
+		$this->assertSame( 2, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'failed_login_threshold', 5 ) );
+		$this->assertSame( 15, \ReportedIP_Hive_Security_Monitor::effective_threshold( 'failed_login_timeframe', 15 ) );
+	}
+
+	public function test_distributed_threshold_helpers_live_in_free() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
+		$this->set_mocked_option( 'reportedip_hive_hardening_detect_min_ips', 3 );
+		$this->set_mocked_option( 'reportedip_hive_hardening_detect_min_attempts', 20 );
+
+		$this->assertTrue( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 3, 20 ) );
+		$this->assertFalse( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 2, 20 ) );
+	}
 }

@@ -106,7 +106,8 @@ class ReportedIP_Hive_Reputation_Gate {
 
 		return max(
 			$floor,
-			ReportedIP_Hive_Hardening_Mode::effective_block_threshold(
+			ReportedIP_Hive_Security_Monitor::effective_threshold(
+				'block_threshold',
 				(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_threshold', 75 )
 			)
 		);

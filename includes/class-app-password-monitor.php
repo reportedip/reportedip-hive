@@ -140,10 +140,12 @@ class ReportedIP_Hive_App_Password_Monitor {
 
 		++self::$pending_wire_failures;
 
-		$threshold = ReportedIP_Hive_Hardening_Mode::effective_failed_login_threshold(
+		$threshold = ReportedIP_Hive_Security_Monitor::effective_threshold(
+			'failed_login_threshold',
 			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_threshold', 5 )
 		);
-		$timeframe = ReportedIP_Hive_Hardening_Mode::effective_failed_login_timeframe(
+		$timeframe = ReportedIP_Hive_Security_Monitor::effective_threshold(
+			'failed_login_timeframe',
 			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_app_password_timeframe', 15 )
 		);
 

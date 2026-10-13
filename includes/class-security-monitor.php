@@ -60,6 +60,22 @@ class ReportedIP_Hive_Security_Monitor {
 		'decoy_pathblock_hit' => array( 21, 15 ),
 	);
 
+	/**
+	 * Options and defaults of the distributed-attack detector.
+	 *
+	 * The option keys keep their `hardening_` prefix because they are stored
+	 * settings.
+	 *
+	 * @since 3.0.0
+	 */
+	const OPT_DETECT_WINDOW_MINUTES = 'reportedip_hive_hardening_detect_window_minutes';
+	const OPT_DETECT_MIN_IPS        = 'reportedip_hive_hardening_detect_min_ips';
+	const OPT_DETECT_MIN_ATTEMPTS   = 'reportedip_hive_hardening_detect_min_attempts';
+
+	const DEFAULT_DETECT_WINDOW_MINUTES = 10;
+	const DEFAULT_DETECT_MIN_IPS        = 10;
+	const DEFAULT_DETECT_MIN_ATTEMPTS   = 50;
+
 	private $database;
 	private $api_client;
 	private $logger;
@@ -79,6 +95,29 @@ class ReportedIP_Hive_Security_Monitor {
 		$this->logger       = ReportedIP_Hive_Logger::get_instance();
 		$this->mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$this->cache        = ReportedIP_Hive_Cache::get_instance();
+	}
+
+	/**
+	 * A configured threshold after every add-on had its say.
+	 *
+	 * The free plugin reads its thresholds here instead of asking a hardening
+	 * class directly, so a tightened value during an attack wave is one filter
+	 * away and the sensors never learn who tightened it.
+	 *
+	 * @param string $key   Option suffix without prefix, e.g. `failed_login_threshold`.
+	 * @param int    $value The configured value.
+	 * @return int
+	 * @since  3.0.0
+	 */
+	public static function effective_threshold( $key, $value ) {
+		/**
+		 * Filter a configured threshold before a sensor applies it.
+		 *
+		 * @param int    $value Configured value.
+		 * @param string $key   Option suffix: `failed_login_threshold`, `failed_login_timeframe` or `block_threshold`.
+		 * @since 3.0.0
+		 */
+		return (int) apply_filters( 'reportedip_hive_effective_threshold', (int) $value, (string) $key );
 	}
 
 	/**
@@ -104,7 +143,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 * @param bool   $count_attempt False when the application-password sensor
 	 *                              already logged and counted this wire attempt
 	 *                              in the `app_password` bucket: spray-username
-	 *                              recording, the realtime coordinated probe and
+	 *                              recording, the failed_login_tracked action and
 	 *                              the spray threshold still run, but the
 	 *                              `login` bucket and the failed-login threshold
 	 *                              branch are skipped so one attempt is never
@@ -112,10 +151,12 @@ class ReportedIP_Hive_Security_Monitor {
 	 * @return bool True when a threshold fired (or the IP is already blocked).
 	 */
 	public function check_failed_login_threshold( $ip_address, $username = '', $count_attempt = true ) {
-		$threshold = ReportedIP_Hive_Hardening_Mode::effective_failed_login_threshold(
+		$threshold = self::effective_threshold(
+			'failed_login_threshold',
 			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_threshold', 5 )
 		);
-		$timeframe = ReportedIP_Hive_Hardening_Mode::effective_failed_login_timeframe(
+		$timeframe = self::effective_threshold(
+			'failed_login_timeframe',
 			(int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_failed_login_timeframe', 15 )
 		);
 
@@ -137,7 +178,14 @@ class ReportedIP_Hive_Security_Monitor {
 			$this->database->track_attempt( $ip_address, 'login', $track_username, $track_user_agent );
 		}
 
-		$this->maybe_check_coordinated_realtime();
+		/**
+		 * Fires after a failed sign-in was counted against its address.
+		 *
+		 * @param string                           $ip_address Client IP.
+		 * @param ReportedIP_Hive_Security_Monitor $monitor    The monitor, for check_coordinated_attacks().
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_failed_login_tracked', $ip_address, $this );
 
 		if ( $this->check_password_spray_threshold( $ip_address ) ) {
 			return true;
@@ -1636,7 +1684,7 @@ class ReportedIP_Hive_Security_Monitor {
 	 *
 	 *  1. Burst, ≥ 8 distinct IPs AND ≥ 30 attempts inside a single calendar
 	 *     minute. Catches sharp simultaneous floods.
-	 *  2. Distributed, ≥ {@see ReportedIP_Hive_Hardening_Mode::detect_min_ips()}
+	 *  2. Distributed, ≥ {@see detect_min_ips()}
 	 *     distinct IPs AND ≥ detect_min_attempts() across the rolling
 	 *     detect_window_minutes() window. Catches botnets that rotate IPs over
 	 *     several minutes and would otherwise slip under the per-minute burst
@@ -1743,11 +1791,7 @@ class ReportedIP_Hive_Security_Monitor {
 	private function detect_distributed_attack_window() {
 		global $wpdb;
 
-		if ( ! class_exists( 'ReportedIP_Hive_Hardening_Mode' ) ) {
-			return null;
-		}
-
-		$window     = ReportedIP_Hive_Hardening_Mode::detect_window_minutes();
+		$window     = self::detect_window_minutes();
 		$table_name = $wpdb->base_prefix . 'reportedip_hive_logs';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from $wpdb->base_prefix and a hardcoded suffix; interval is a prepared integer.
@@ -1769,7 +1813,7 @@ class ReportedIP_Hive_Security_Monitor {
 		$unique_ips     = (int) $row->unique_ips;
 		$total_attempts = (int) $row->total_attempts;
 
-		if ( ! ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( $unique_ips, $total_attempts ) ) {
+		if ( ! self::breaches_distributed_thresholds( $unique_ips, $total_attempts ) ) {
 			return null;
 		}
 
@@ -1793,7 +1837,7 @@ class ReportedIP_Hive_Security_Monitor {
 		$now = null === $now ? time() : (int) $now;
 
 		$row                 = new stdClass();
-		$row->time_window    = ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( $window_minutes, $now );
+		$row->time_window    = self::rolling_window_bucket_label( $window_minutes, $now );
 		$row->unique_ips     = (int) $unique_ips;
 		$row->total_attempts = (int) $total_attempts;
 
@@ -1832,44 +1876,70 @@ class ReportedIP_Hive_Security_Monitor {
 	}
 
 	/**
-	 * Realtime coordinated-attack probe.
+	 * Sliding-window length (minutes) for the distributed-attack detector.
 	 *
-	 * Called from `check_failed_login_threshold()` after every `track_attempt()`.
-	 * Debounced via a 60-second site-transient so we run the (cheap) aggregate
-	 * query at most once per minute regardless of incoming login volume.
+	 * Unlike the legacy same-minute burst rule, the distributed detector
+	 * aggregates failed logins across this rolling window so a botnet that
+	 * rotates IPs every couple of minutes is still caught.
 	 *
-	 * Short-circuits when the hardening feature is unavailable (Free tier or
-	 * master toggle off), the realtime detection toggle is off, or hardening
-	 * is already active.
-	 *
-	 * @return void
-	 * @since 2.0.8
+	 * @return int Clamped to 1–120.
+	 * @since  3.0.0
 	 */
-	private function maybe_check_coordinated_realtime() {
-		if ( ! ReportedIP_Hive_Hardening_Mode::is_available() ) {
-			return;
-		}
-		if ( ! ReportedIP_Hive_Hardening_Mode::is_realtime_detection_enabled() ) {
-			return;
-		}
-		if ( ReportedIP_Hive_Hardening_Mode::is_active() ) {
-			return;
-		}
-		if ( get_site_transient( ReportedIP_Hive_Hardening_Mode::TRANSIENT_DEBOUNCE ) ) {
-			return;
-		}
-		set_site_transient(
-			ReportedIP_Hive_Hardening_Mode::TRANSIENT_DEBOUNCE,
-			1,
-			ReportedIP_Hive_Hardening_Mode::DEBOUNCE_SECONDS
-		);
+	public static function detect_window_minutes() {
+		$value = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_DETECT_WINDOW_MINUTES, self::DEFAULT_DETECT_WINDOW_MINUTES );
+		return max( 1, min( 120, $value > 0 ? $value : self::DEFAULT_DETECT_WINDOW_MINUTES ) );
+	}
 
-		$attacks = $this->check_coordinated_attacks();
-		$reason  = $this->strongest_coordinated_reason( $attacks );
-		if ( null === $reason ) {
-			return;
-		}
+	/**
+	 * Minimum distinct attacking IPs within the window to flag a distributed attack.
+	 *
+	 * @return int Clamped to 2–100.
+	 * @since  3.0.0
+	 */
+	public static function detect_min_ips() {
+		$value = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_DETECT_MIN_IPS, self::DEFAULT_DETECT_MIN_IPS );
+		return max( 2, min( 100, $value > 0 ? $value : self::DEFAULT_DETECT_MIN_IPS ) );
+	}
 
-		ReportedIP_Hive_Hardening_Mode::activate( $reason, 'realtime' );
+	/**
+	 * Minimum total failed-login attempts within the window to flag a distributed attack.
+	 *
+	 * @return int Clamped to 3–1000.
+	 * @since  3.0.0
+	 */
+	public static function detect_min_attempts() {
+		$value = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_DETECT_MIN_ATTEMPTS, self::DEFAULT_DETECT_MIN_ATTEMPTS );
+		return max( 3, min( 1000, $value > 0 ? $value : self::DEFAULT_DETECT_MIN_ATTEMPTS ) );
+	}
+
+	/**
+	 * Whether a window aggregate breaches the configured distributed thresholds.
+	 *
+	 * @param int $unique_ips     Distinct IPs seen in the window.
+	 * @param int $total_attempts Summed failed-login attempts in the window.
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function breaches_distributed_thresholds( $unique_ips, $total_attempts ) {
+		return (int) $unique_ips >= self::detect_min_ips() && (int) $total_attempts >= self::detect_min_attempts();
+	}
+
+	/**
+	 * Stable `time_window` label for a rolling-window detection.
+	 *
+	 * Buckets `$now` into fixed slices of the window length so the suppression
+	 * markers keyed on the label stay stable for the duration of one window
+	 * instead of changing every second. The label is intentionally distinct
+	 * from the `%Y-%m-%d %H:%i` burst labels.
+	 *
+	 * @param int $window_minutes Window length in minutes.
+	 * @param int $now            Unix timestamp.
+	 * @return string e.g. `rolling-10m-2876421`.
+	 * @since  3.0.0
+	 */
+	public static function rolling_window_bucket_label( $window_minutes, $now ) {
+		$window = max( 1, (int) $window_minutes );
+		$bucket = (int) floor( (int) $now / ( $window * MINUTE_IN_SECONDS ) );
+		return 'rolling-' . $window . 'm-' . $bucket;
 	}
 }
