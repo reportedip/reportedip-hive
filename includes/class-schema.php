@@ -73,20 +73,14 @@ final class ReportedIP_Hive_Schema {
 	);
 
 	/**
-	 * Tables that carry a `blog_id` column. Used by `cleanup_blog_data()`.
-	 *
-	 * @var string[]
-	 */
-	private const BLOG_SCOPED_SUFFIXES = array(
-		self::TABLE_LOGS,
-		self::TABLE_API_QUEUE,
-		self::TABLE_STATS,
-		self::TABLE_AUDIT_LOG,
-	);
-
-	/**
 	 * Table suffixes this plugin and its add-ons own, for teardown and
 	 * per-site cleanup.
+	 *
+	 * Read by `drop_all_tables()`, `truncate_all_tables()` and
+	 * `cleanup_blog_data()`. The names end up in DROP, TRUNCATE and DELETE
+	 * statements, so the filter result is sanitised: a non-array falls back
+	 * to the core list, entries that are not strings of lowercase letters,
+	 * digits and underscores are dropped, duplicates collapse.
 	 *
 	 * @return string[]
 	 * @since  3.0.0
@@ -98,11 +92,26 @@ final class ReportedIP_Hive_Schema {
 		 * An add-on creates its own tables itself; it only registers them
 		 * here so `drop_all_tables()`, `truncate_all_tables()` and
 		 * `cleanup_blog_data()` include them while the add-on is active.
+		 * `cleanup_blog_data()` deletes from a registered table only when it
+		 * has a `blog_id` column.
 		 *
 		 * @param string[] $suffixes Table suffixes without prefix.
 		 * @since 3.0.0
 		 */
-		return apply_filters( 'reportedip_hive_schema_tables', self::TABLE_SUFFIXES );
+		$suffixes = apply_filters( 'reportedip_hive_schema_tables', self::TABLE_SUFFIXES );
+		if ( ! is_array( $suffixes ) ) {
+			return self::TABLE_SUFFIXES;
+		}
+		return array_values(
+			array_unique(
+				array_filter(
+					array_filter( $suffixes, 'is_string' ),
+					static function ( $suffix ) {
+						return 1 === preg_match( '/^[a-z0-9_]+$/D', $suffix );
+					}
+				)
+			)
+		);
 	}
 
 	/**
@@ -444,10 +453,12 @@ final class ReportedIP_Hive_Schema {
 	/**
 	 * Remove all data belonging to a specific blog from `blog_id`-scoped tables.
 	 *
-	 * Hooked from `wp_delete_site`. Network-wide tables (whitelist, blocked,
-	 * attempts, trusted_devices) are intentionally NOT touched, they live
-	 * above the site boundary and a deleted site does not invalidate the
-	 * threat data accumulated against an attacker's IP.
+	 * Hooked from `wp_delete_site`. Walks `tables()` (core and add-on tables)
+	 * and deletes from every table that has a `blog_id` column. Network-wide
+	 * tables (whitelist, blocked, attempts, trusted_devices) have none and are
+	 * therefore intentionally NOT touched, they live above the site boundary
+	 * and a deleted site does not invalidate the threat data accumulated
+	 * against an attacker's IP.
 	 *
 	 * @param int $blog_id Site ID being deleted.
 	 * @return void
@@ -460,7 +471,10 @@ final class ReportedIP_Hive_Schema {
 			return;
 		}
 
-		foreach ( self::BLOG_SCOPED_SUFFIXES as $suffix ) {
+		foreach ( self::tables() as $suffix ) {
+			if ( ! self::column_exists( $suffix, 'blog_id' ) ) {
+				continue;
+			}
 			$table = self::table( $suffix );
 			$wpdb->query(
 				$wpdb->prepare(
