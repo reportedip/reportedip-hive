@@ -324,18 +324,18 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 	}
 
 	/**
-	 * Method filter values and labels.
+	 * Method filter values and labels: the methods of the 2FA registry plus
+	 * `none`.
 	 *
 	 * @return array<string,string>
 	 */
 	public static function method_options() {
-		return array(
-			'totp'     => __( 'Authenticator app', 'reportedip-hive' ),
-			'email'    => __( 'Email code', 'reportedip-hive' ),
-			'sms'      => __( 'SMS code', 'reportedip-hive' ),
-			'webauthn' => __( 'Passkey / security key', 'reportedip-hive' ),
-			'none'     => __( 'No method', 'reportedip-hive' ),
-		);
+		$options = array();
+		foreach ( ReportedIP_Hive_Two_Factor::methods() as $slug => $definition ) {
+			$options[ (string) $slug ] = (string) $definition['label'];
+		}
+		$options['none'] = __( 'No method', 'reportedip-hive' );
+		return $options;
 	}
 
 	/**
