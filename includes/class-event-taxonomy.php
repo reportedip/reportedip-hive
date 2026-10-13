@@ -372,20 +372,6 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'group'  => 'hardening',
 				'family' => 'anomaly',
 			),
-			'hardening_mode_activated'          => array(
-				'label'  => __( 'Hardening Mode Activated', 'reportedip-hive' ),
-				'group'  => 'hardening',
-				'family' => 'anomaly',
-			),
-			'hardening_mode_extended'           => array(
-				'label'  => __( 'Hardening Mode Extended', 'reportedip-hive' ),
-				'group'  => 'hardening',
-				'family' => 'anomaly',
-			),
-			'hardening_mode_deactivated'        => array(
-				'label' => __( 'Hardening Mode Deactivated', 'reportedip-hive' ),
-				'group' => 'hardening',
-			),
 			'own_server_ip_block_averted'       => array(
 				'label' => __( 'Own Server IP Spared', 'reportedip-hive' ),
 				'group' => 'hardening',

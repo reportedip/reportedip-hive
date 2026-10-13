@@ -98,7 +98,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'api_report_queued',
 				'local_event_detected',
 				'categories_cached',
-				'hardening_mode_deactivated',
 				'2fa_reset_challenge_sent',
 				'2fa_stepup_required',
 				'2fa_stepup_skipped_no_method',

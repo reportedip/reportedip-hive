@@ -366,7 +366,13 @@ final class ReportedIP_Hive_Form_Challenge {
 	 * @since  2.1.64
 	 */
 	public static function issue( $count = 1 ) {
-		$hardening = class_exists( 'ReportedIP_Hive_Hardening_Mode' ) && ReportedIP_Hive_Hardening_Mode::is_active();
+		/**
+		 * Whether a hardening window is active, which makes the task harder.
+		 *
+		 * @param bool $active False unless an add-on reports an active window.
+		 * @since 3.0.0
+		 */
+		$hardening = (bool) apply_filters( 'reportedip_hive_hardening_active', false );
 		$bits      = ReportedIP_Hive_Form_Proof::connection_is_secure() ? self::bits_for( $count, $hardening ) : 0;
 
 		return self::mint( $bits );

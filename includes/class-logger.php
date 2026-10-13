@@ -124,13 +124,14 @@ class ReportedIP_Hive_Logger {
 
 		$log_details = array_merge( $log_details, $details );
 
-		if ( class_exists( 'ReportedIP_Hive_Hardening_Mode' )
-			&& ! isset( $log_details['hardening_active'] )
-			&& ReportedIP_Hive_Hardening_Mode::is_active()
-		) {
-			$log_details['hardening_active']     = true;
-			$log_details['hardening_expires_at'] = ReportedIP_Hive_Hardening_Mode::expires_at();
-		}
+		/**
+		 * Filter the detail payload of a security event before it is stored.
+		 *
+		 * @param array  $details    Detail payload, the plugin's own keys merged with the caller's.
+		 * @param string $event_type Event type key.
+		 * @since 3.0.0
+		 */
+		$log_details = (array) apply_filters( 'reportedip_hive_log_context', $log_details, $event_type );
 
 		$result = $this->database->log_security_event( $event_type, $ip_address, $log_details, $severity, $occurred_at );
 

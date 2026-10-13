@@ -372,10 +372,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mode-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-catalog.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-promo-manager.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-hardening-mode.php';
-		add_filter( 'reportedip_hive_effective_threshold', array( 'ReportedIP_Hive_Hardening_Mode', 'filter_threshold' ), 10, 2 );
-		add_action( 'reportedip_hive_failed_login_tracked', array( 'ReportedIP_Hive_Hardening_Mode', 'on_failed_login_tracked' ), 10, 2 );
-		add_action( 'reportedip_hive_coordinated_attacks_found', array( 'ReportedIP_Hive_Hardening_Mode', 'on_coordinated_attacks_found' ) );
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-api-client.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-bar.php';
