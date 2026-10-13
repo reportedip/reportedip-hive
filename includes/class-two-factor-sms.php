@@ -384,11 +384,4 @@ class ReportedIP_Hive_Two_Factor_SMS {
 
 		set_transient( $key, $data, self::RATE_WINDOW );
 	}
-
-	/**
-	 * Load the relay provider adapter class.
-	 */
-	public static function load_providers() {
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/sms-providers/class-sms-provider-relay.php';
-	}
 }

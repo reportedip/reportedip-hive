@@ -935,6 +935,17 @@ if ( ! function_exists( 'wp_strip_all_tags' ) ) {
 	}
 }
 
+if ( ! function_exists( 'get_locale' ) ) {
+	/**
+	 * Site locale. The mail template reads it for the lang attribute.
+	 *
+	 * @return string
+	 */
+	function get_locale() {
+		return 'en_US';
+	}
+}
+
 if ( ! function_exists( 'get_bloginfo' ) ) {
 	function get_bloginfo( $show = '' ) { // phpcs:ignore
 		return 'Example Site';
