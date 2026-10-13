@@ -1479,7 +1479,7 @@ body.login .rip-2fa-login-attribution a:focus {
 
 /* ==========================================================================
    Onboarding 1.5.3:site context, numbered substeps, privacy notice,
-   phone-input validity affordance, centred recovery acknowledgement.
+   input validity affordance, centred recovery acknowledgement.
    ========================================================================== */
 
 body.rip-2fa-onboarding .rip-wizard__site-context {
@@ -1656,13 +1656,6 @@ body.rip-2fa-onboarding .rip-2fa-recovery-ack .rip-button {
 
 body.rip-2fa-onboarding .rip-wizard__actions--secondary {
 	margin-top: var(--rip-space-4, 1rem);
-}
-
-body.rip-2fa-onboarding #rip-2fa-sms-delivery-timer {
-	margin-top: var(--rip-space-2, 0.5rem);
-	font-size: var(--rip-text-sm, 0.875rem);
-	color: var(--rip-gray-600, #4B5563);
-	font-variant-numeric: tabular-nums;
 }
 
 /* ------------------------------------------------------------------
@@ -1918,24 +1911,6 @@ body.rip-2fa-onboarding #rip-2fa-sms-delivery-timer {
 	text-align: center;
 	font-family: var(--rip-font-mono, monospace);
 	letter-spacing: 0.2em;
-}
-
-.rip-2fa-method__flow .rip-input[data-phone] {
-	max-width: 260px;
-}
-
-.rip-2fa-method__consent {
-	display: flex;
-	align-items: flex-start;
-	gap: var(--rip-space-2, 0.5rem);
-	font-size: var(--rip-text-xs, 0.75rem);
-	color: var(--rip-gray-500, #6B7280);
-	margin-top: var(--rip-space-3, 0.75rem);
-	max-width: 560px;
-}
-
-.rip-2fa-method__consent input {
-	margin-top: 2px;
 }
 
 .rip-2fa-method__flow-status {
