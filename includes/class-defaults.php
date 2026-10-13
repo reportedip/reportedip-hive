@@ -201,11 +201,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_block_ladder_reset_days'         => 30,
 		'reportedip_hive_blocked_page_contact_url'        => '',
 
-		'reportedip_hive_hardening_duration_minutes'      => 60,
-		'reportedip_hive_hardening_login_threshold'       => 2,
-		'reportedip_hive_hardening_login_timeframe'       => 5,
-		'reportedip_hive_hardening_block_threshold'       => 60,
-		'reportedip_hive_hardening_realtime_detection'    => true,
 		'reportedip_hive_hardening_detect_window_minutes' => 10,
 		'reportedip_hive_hardening_detect_min_ips'        => 10,
 		'reportedip_hive_hardening_detect_min_attempts'   => 50,

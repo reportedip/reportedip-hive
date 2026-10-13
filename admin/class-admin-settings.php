@@ -3735,60 +3735,6 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 
 		register_setting(
-			'reportedip_hive_hardening_master',
-			'reportedip_hive_hardening_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => array( $this, 'sanitize_boolean' ),
-				'default'           => false,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_realtime_detection',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_realtime_detection' ),
-				'default'           => true,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_duration_minutes',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_duration_minutes' ),
-				'default'           => 60,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_login_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_login_threshold' ),
-				'default'           => 2,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_login_timeframe',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_login_timeframe' ),
-				'default'           => 5,
-			)
-		);
-		register_setting(
-			'reportedip_hive_hardening_mode',
-			'reportedip_hive_hardening_block_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_hardening_block_threshold' ),
-				'default'           => 60,
-			)
-		);
-		register_setting(
 			'reportedip_hive_hardening_mode',
 			'reportedip_hive_hardening_detect_window_minutes',
 			array(

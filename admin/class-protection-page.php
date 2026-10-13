@@ -149,11 +149,14 @@ class ReportedIP_Hive_Protection_Page {
 	 * nothing outside this class ever needs to know which tab holds which
 	 * section: every link into the page still points at a section id.
 	 *
+	 * A registry section no tab names (one an add-on adds through
+	 * `reportedip_hive_settings_sections`) lands on the Advanced tab.
+	 *
 	 * @return array<string, array{label:string,icon:string,sections:string[],advice:string}>
 	 * @since  2.1.69
 	 */
 	public static function tabs() {
-		return array(
+		$tabs = array(
 			'basics'     => array(
 				'label'    => __( 'Core protection', 'reportedip-hive' ),
 				'icon'     => 'shield',
@@ -175,7 +178,7 @@ class ReportedIP_Hive_Protection_Page {
 			'advanced'   => array(
 				'label'    => __( 'Advanced', 'reportedip-hive' ),
 				'icon'     => 'settings',
-				'sections' => array( 'hardening_mode', 'twofa_policies' ),
+				'sections' => array( 'twofa_policies' ),
 				'advice'   => __( 'These settings only matter during a coordinated attack or for a second factor asked again. The recommendation covers both.', 'reportedip-hive' ),
 			),
 			'operations' => array(
@@ -185,6 +188,14 @@ class ReportedIP_Hive_Protection_Page {
 				'advice'   => __( 'Logs, mails and the footprint per request. None of it decides what is blocked.', 'reportedip-hive' ),
 			),
 		);
+
+		$claimed = array_merge( ...array_column( $tabs, 'sections' ) );
+		foreach ( array_keys( ReportedIP_Hive_Settings_Registry::sections() ) as $section ) {
+			if ( ! in_array( $section, $claimed, true ) ) {
+				$tabs['advanced']['sections'][] = $section;
+			}
+		}
+		return $tabs;
 	}
 
 	/**

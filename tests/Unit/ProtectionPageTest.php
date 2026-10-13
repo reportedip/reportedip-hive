@@ -521,23 +521,23 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reason'    => 'tier',
 				'min_tier'  => 'professional',
 			);
-			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $this->statuses_for( 'hardening_mode', $locked ) ) );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $this->statuses_for( 'twofa_policies', $locked ) ) );
 
-			$partly = $this->statuses_for( 'hardening_mode', $locked );
-			$partly['reportedip_hive_hardening_duration_minutes'] = array( 'available' => true );
-			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $partly ), 'one open key opens the section' );
+			$partly = $this->statuses_for( 'twofa_policies', $locked );
+			$partly['reportedip_hive_2fa_policy_days'] = array( 'available' => true );
+			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $partly ), 'one open key opens the section' );
 
-			$partial = $this->statuses_for( 'hardening_mode', $locked + array( 'partial' => true ) );
-			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $partial ), 'a switch left on after a downgrade is editable, but the feature is still not in the plan' );
+			$partial = $this->statuses_for( 'twofa_policies', $locked + array( 'partial' => true ) );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $partial ), 'a switch left on after a downgrade is editable, but the feature is still not in the plan' );
 
-			$runtime = $this->statuses_for( 'hardening_mode', array( 'available' => false, 'reason' => 'runtime' ) );
-			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $runtime ), 'a runtime lock is not a plan lock' );
+			$runtime = $this->statuses_for( 'twofa_policies', array( 'available' => false, 'reason' => 'runtime' ) );
+			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $runtime ), 'a runtime lock is not a plan lock' );
 
-			$mode = $this->statuses_for( 'hardening_mode', array( 'available' => false, 'reason' => 'mode', 'min_tier' => 'professional' ) );
-			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'hardening_mode', $mode ), 'a mode lock closes the section too' );
+			$mode = $this->statuses_for( 'twofa_policies', array( 'available' => false, 'reason' => 'mode', 'min_tier' => 'professional' ) );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $mode ), 'a mode lock closes the section too' );
 			$this->assertSame(
 				array( 'text' => '', 'tone' => 'neutral', 'plan' => '' ),
-				ReportedIP_Hive_Protection_Page::tab_state( 'advanced', array(), $mode + $this->statuses_for( 'twofa_policies', $mode ) ),
+				ReportedIP_Hive_Protection_Page::tab_state( 'advanced', array(), $mode ),
 				'a mode lock names no plan'
 			);
 
@@ -578,10 +578,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reason'    => 'tier',
 				'min_tier'  => 'professional',
 			);
-			$statuses = $this->statuses_for( 'hardening_mode', $locked ) + $this->statuses_for( 'twofa_policies', $locked );
+			$statuses = $this->statuses_for( 'waf', $locked ) + $this->statuses_for( 'lockdown', $locked ) + $this->statuses_for( 'headers', $locked );
 			$this->assertSame(
 				array( 'text' => '', 'tone' => 'neutral', 'plan' => 'professional' ),
-				ReportedIP_Hive_Protection_Page::tab_state( 'advanced', array(), $statuses )
+				ReportedIP_Hive_Protection_Page::tab_state( 'firewall', array(), $statuses )
 			);
 
 			$this->assertSame(
@@ -590,10 +590,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'an unknown tab counts nothing and shows no pill'
 			);
 
-			$paid = $this->statuses_for( 'twofa_policies', $locked );
+			$paid = $this->statuses_for( 'headers', $locked );
 			$this->assertSame(
 				array( 'text' => 'Active', 'tone' => 'success', 'plan' => '' ),
-				ReportedIP_Hive_Protection_Page::tab_state( 'advanced', array( 'reportedip_hive_hardening_realtime_detection' => 1 ), $paid ),
+				ReportedIP_Hive_Protection_Page::tab_state( 'firewall', array( 'reportedip_hive_waf_enabled' => 1, 'reportedip_hive_rest_access_mode' => 'open' ), $paid ),
 				'one open section decides, a locked one is left out'
 			);
 		}
