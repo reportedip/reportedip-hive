@@ -81,13 +81,13 @@ class ReportedIP_Hive_Two_Factor_CLI {
 	 * : Target user ID (positional).
 	 *
 	 * --method=<method>
-	 * : One of: totp, email, webauthn, sms.
+	 * : A registered method: totp, email, webauthn, or one an add-on registers.
 	 *
 	 * [--secret=<secret>]
 	 * : Optional TOTP secret to import (Base32). When omitted for totp and the
 	 *   user has no secret yet, a fresh one is generated and printed together
 	 *   with the otpauth:// URI so it can be imported into the user's
-	 *   authenticator app. Email/sms setups need no secret; CLI only flags them.
+	 *   authenticator app. Other methods need no secret; CLI only flags them.
 	 *
 	 * [--force]
 	 * : Required to flag webauthn without a registered credential. Without a
