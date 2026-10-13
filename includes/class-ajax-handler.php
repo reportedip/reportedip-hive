@@ -130,7 +130,6 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_rule_sync_now', array( $this, 'ajax_rule_sync_now' ) );
 		add_action( 'wp_ajax_reportedip_hive_waf_dropin_toggle', array( $this, 'ajax_waf_dropin_toggle' ) );
 		add_action( 'wp_ajax_reportedip_hive_registry_save', array( $this, 'ajax_registry_save' ) );
-		add_action( 'wp_ajax_reportedip_hive_hardening_deactivate', array( $this, 'ajax_hardening_deactivate' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 		add_action( 'wp_ajax_reportedip_hive_form_proof_selftest', array( $this, 'ajax_form_proof_selftest' ) );
 	}
@@ -1797,32 +1796,6 @@ class ReportedIP_Hive_Ajax_Handler {
 					? __( 'Queue lock cleared.', 'reportedip-hive' )
 					: __( 'No queue lock was held.', 'reportedip-hive' ),
 				'was_locked' => $held,
-			)
-		);
-	}
-
-	/**
-	 * AJAX: manually clear the active Hardening Mode window.
-	 *
-	 * Linked from the Settings-tab banner and the admin-bar dropdown.
-	 *
-	 * @return void
-	 * @since  2.0.8
-	 */
-	public function ajax_hardening_deactivate() {
-		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
-
-		$this->require_admin_capability();
-
-		$was_active = ReportedIP_Hive_Hardening_Mode::is_active();
-		ReportedIP_Hive_Hardening_Mode::deactivate( 'admin' );
-
-		wp_send_json_success(
-			array(
-				'was_active' => $was_active,
-				'message'    => $was_active
-					? __( 'Hardening Mode deactivated.', 'reportedip-hive' )
-					: __( 'Hardening Mode was not active.', 'reportedip-hive' ),
 			)
 		);
 	}
