@@ -272,8 +272,9 @@ class ReportedIP_Hive_MainWP_Integration {
 	/**
 	 * Count users with two-factor authentication enabled.
 	 *
-	 * Mirrors ReportedIP_Hive_Two_Factor::is_user_enabled(): a user counts if any
-	 * per-method flag (TOTP/E-Mail/WebAuthn/SMS) is set, or the legacy enabled flag.
+	 * Mirrors ReportedIP_Hive_Two_Factor::is_user_enabled(): a user counts if the
+	 * flag of any registered method is set, or the enabled flag (which also
+	 * covers an account whose method is not registered right now).
 	 *
 	 * @return int
 	 * @since  2.1.0
@@ -281,13 +282,8 @@ class ReportedIP_Hive_MainWP_Integration {
 	protected static function count_2fa_users() {
 		global $wpdb;
 
-		$keys = array(
-			'reportedip_hive_2fa_totp_enabled',
-			'reportedip_hive_2fa_email_enabled',
-			'reportedip_hive_2fa_webauthn_enabled',
-			'reportedip_hive_2fa_sms_enabled',
-			'reportedip_hive_2fa_enabled',
-		);
+		$keys   = array_values( array_unique( array_column( ReportedIP_Hive_Two_Factor::methods(), 'meta_key' ) ) );
+		$keys[] = ReportedIP_Hive_Two_Factor::META_ENABLED;
 
 		$placeholders = implode( ', ', array_fill( 0, count( $keys ), '%s' ) );
 
