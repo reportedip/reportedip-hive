@@ -27,7 +27,11 @@
  * @var int     $resend_wait     Seconds until email can be resent (0 = now).
  * @var int     $recovery_count  Remaining recovery codes.
  * @var bool    $email_code_sent True if an email OTP transient is pending.
- * @var bool    $sms_code_sent   True if an SMS OTP transient is pending.
+ *
+ * A method an add-on registers ({@see ReportedIP_Hive_Two_Factor::methods()})
+ * gets a tab from its registry entry and renders its panel through the
+ * action `reportedip_hive_2fa_challenge_panel_{slug}`. Without any usable
+ * method the page offers the recovery codes and says why.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -45,17 +49,22 @@ login_header(
 $has_totp     = in_array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, $allowed_methods, true );
 $has_webauthn = in_array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN, $allowed_methods, true );
 $has_email    = in_array( ReportedIP_Hive_Two_Factor::METHOD_EMAIL, $allowed_methods, true );
-$has_sms      = in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $allowed_methods, true );
 $has_recovery = $recovery_count > 0;
 
-$tab_count   = (int) $has_totp + (int) $has_webauthn + (int) $has_email + (int) $has_sms + (int) $has_recovery;
-$show_tabs   = $tab_count > 1;
-$masked_mail = ReportedIP_Hive_Two_Factor::mask_email( $user->user_email );
-$sms_masked  = '';
-if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-	$sms_phone  = ReportedIP_Hive_Two_Factor_SMS::get_user_phone( $user->ID );
-	$sms_masked = $sms_phone ? ReportedIP_Hive_Two_Factor_SMS::mask_phone( $sms_phone ) : '';
+$extra_methods = array();
+foreach ( ReportedIP_Hive_Two_Factor::methods() as $rip_slug => $rip_definition ) {
+	if ( in_array( $rip_slug, array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, ReportedIP_Hive_Two_Factor::METHOD_EMAIL, ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN ), true )
+		|| ! in_array( $rip_slug, $allowed_methods, true )
+		|| ! has_action( 'reportedip_hive_2fa_challenge_panel_' . $rip_slug ) ) {
+		continue;
+	}
+	$extra_methods[ $rip_slug ] = $rip_definition;
 }
+
+$tab_count   = (int) $has_totp + (int) $has_webauthn + (int) $has_email + count( $extra_methods ) + (int) $has_recovery;
+$show_tabs   = $tab_count > 1;
+$no_method   = empty( $allowed_methods );
+$masked_mail = ReportedIP_Hive_Two_Factor::mask_email( $user->user_email );
 ?>
 
 <main class="rip-2fa-challenge<?php echo $show_tabs ? ' rip-2fa-challenge--multi' : ''; ?>" role="main" aria-labelledby="rip-2fa-title">
@@ -80,6 +89,22 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 			?>
 		</p>
 	</header>
+
+	<?php if ( $no_method ) : ?>
+		<div class="rip-alert rip-alert--warning" role="alert">
+			<div class="rip-alert__content">
+				<p class="rip-alert__message">
+					<?php
+					if ( $has_recovery ) {
+						esc_html_e( 'The sign-in method set up for your account is not available on this site right now. Enter one of your recovery codes to continue.', 'reportedip-hive' );
+					} else {
+						esc_html_e( 'The sign-in method set up for your account is not available on this site right now, and no recovery codes are left. Please ask an administrator to reset two-factor authentication for your account.', 'reportedip-hive' );
+					}
+					?>
+				</p>
+			</div>
+		</div>
+	<?php endif; ?>
 
 	<?php if ( $show_tabs ) : ?>
 		<div class="rip-2fa-challenge__methods" role="tablist" aria-label="<?php esc_attr_e( 'Choose verification method', 'reportedip-hive' ); ?>">
@@ -109,12 +134,12 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 					'icon'     => '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
 				);
 			}
-			if ( $has_sms ) {
+			foreach ( $extra_methods as $rip_slug => $rip_definition ) {
 				$tab_definitions[] = array(
-					'method'   => ReportedIP_Hive_Two_Factor::METHOD_SMS,
-					'label'    => __( 'SMS', 'reportedip-hive' ),
-					'aria_tip' => __( 'One-time code by SMS', 'reportedip-hive' ),
-					'icon'     => '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+					'method'   => $rip_slug,
+					'label'    => (string) ( $rip_definition['label'] ?? $rip_slug ),
+					'aria_tip' => (string) ( $rip_definition['prompt'] ?? '' ),
+					'icon'     => (string) ( $rip_definition['icon'] ?? '<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>' ),
 				);
 			}
 			if ( $has_recovery ) {
@@ -261,86 +286,31 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 			</section>
 		<?php endif; ?>
 
-		<?php /* -------- SMS panel ------------------------------------------ */ ?>
+		<?php /* -------- Panels of registered methods ------------------------ */ ?>
 		<?php
-		if ( $has_sms ) :
-			$is_active = ( ReportedIP_Hive_Two_Factor::METHOD_SMS === $method );
-			?>
-			<section class="rip-2fa-challenge__panel<?php echo $is_active ? ' rip-2fa-challenge__panel--active' : ''; ?>"
-				role="tabpanel"
-				id="rip-2fa-panel-sms"
-				aria-labelledby="rip-2fa-tab-sms"
-				data-panel="sms"
-				data-code-sent="<?php echo $sms_code_sent ? '1' : '0'; ?>"
-				tabindex="0"
-				<?php echo $is_active ? '' : 'hidden'; ?>>
-
-				<?php if ( ! $sms_masked ) : ?>
-					<p class="rip-2fa-challenge__instruction">
-						<?php esc_html_e( 'No phone number is stored for this user.', 'reportedip-hive' ); ?>
-					</p>
-				<?php else : ?>
-					<div class="rip-2fa-challenge__phase rip-2fa-challenge__phase--request" data-phase="request"<?php echo $sms_code_sent ? ' hidden' : ''; ?>>
-						<p class="rip-2fa-challenge__instruction">
-							<?php
-							printf(
-								/* translators: %s: masked phone */
-								esc_html__( 'We will send a one-time code by SMS to %s.', 'reportedip-hive' ),
-								'<strong>' . esc_html( $sms_masked ) . '</strong>'
-							);
-							?>
-						</p>
-						<button type="button"
-							class="rip-button rip-button--primary rip-2fa-challenge__resend-btn"
-							data-resend-method="sms"
-							data-fallback-url="<?php echo esc_url( wp_login_url() . '?action=reportedip_2fa&resend_sms=1' ); ?>">
-							<?php esc_html_e( 'Send code by SMS', 'reportedip-hive' ); ?>
-						</button>
-					</div>
-
-					<div class="rip-2fa-challenge__phase rip-2fa-challenge__phase--code" data-phase="code"<?php echo $sms_code_sent ? '' : ' hidden'; ?>>
-						<p class="rip-2fa-challenge__instruction">
-							<?php
-							printf(
-								/* translators: %s: masked phone */
-								esc_html__( 'We sent a 6-digit SMS code to %s.', 'reportedip-hive' ),
-								'<strong class="rip-2fa-challenge__destination" data-destination-sms>' . esc_html( $sms_masked ) . '</strong>'
-							);
-							?>
-						</p>
-						<div class="rip-2fa-challenge__input-wrapper">
-							<label class="screen-reader-text" for="rip-2fa-code-sms"><?php esc_html_e( 'SMS code', 'reportedip-hive' ); ?></label>
-							<input type="text"
-								name="reportedip_2fa_code"
-								class="rip-2fa-challenge__input"
-								id="rip-2fa-code-sms"
-								inputmode="numeric"
-								pattern="[0-9]{6}"
-								maxlength="6"
-								autocomplete="one-time-code"
-								<?php
-								if ( $is_active && $sms_code_sent ) {
-									echo 'autofocus';
-								} elseif ( ! $is_active ) {
-									echo 'disabled';
-								}
-								?>
-								placeholder="000000" />
-						</div>
-						<p class="rip-2fa-challenge__resend">
-							<?php esc_html_e( 'Didn\'t get the SMS?', 'reportedip-hive' ); ?>
-							<button type="button"
-								class="rip-2fa-challenge__resend-link"
-								data-resend-method="sms"
-								data-fallback-url="<?php echo esc_url( wp_login_url() . '?action=reportedip_2fa&resend_sms=1' ); ?>">
-								<?php esc_html_e( 'Resend SMS', 'reportedip-hive' ); ?>
-							</button>
-							<span class="rip-2fa-challenge__timer" aria-hidden="true"></span>
-						</p>
-					</div>
-				<?php endif; ?>
-			</section>
-		<?php endif; ?>
+		foreach ( array_keys( $extra_methods ) as $rip_slug ) {
+			/**
+			 * Render the challenge panel of a registered method: a
+			 * `section.rip-2fa-challenge__panel` with `data-panel="{slug}"`,
+			 * the same phases and data attributes as the email panel.
+			 *
+			 * @param WP_User $user The challenged user.
+			 * @param array   $view `context` (wp_login or theme_frame), `active`
+			 *                      (the method's tab is the selected one) and
+			 *                      `resend_url` (the no-JavaScript resend link).
+			 * @since 3.0.0
+			 */
+			do_action(
+				'reportedip_hive_2fa_challenge_panel_' . $rip_slug,
+				$user,
+				array(
+					'context'    => 'wp_login',
+					'active'     => $rip_slug === $method,
+					'resend_url' => wp_login_url() . '?action=reportedip_2fa&resend_' . rawurlencode( $rip_slug ) . '=1',
+				)
+			);
+		}
+		?>
 
 		<?php /* -------- Passkey / security-key panel ------------------------- */ ?>
 		<?php
@@ -354,14 +324,17 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 		?>
 
 		<?php /* -------- Recovery panel -------------------------------------- */ ?>
-		<?php if ( $has_recovery ) : ?>
-			<section class="rip-2fa-challenge__panel"
+		<?php
+		if ( $has_recovery ) :
+			$is_active = ( ReportedIP_Hive_Two_Factor::METHOD_RECOVERY === $method );
+			?>
+			<section class="rip-2fa-challenge__panel<?php echo $is_active ? ' rip-2fa-challenge__panel--active' : ''; ?>"
 				role="tabpanel"
 				id="rip-2fa-panel-recovery"
 				aria-labelledby="rip-2fa-tab-recovery"
 				data-panel="recovery"
 				tabindex="0"
-				hidden>
+				<?php echo $is_active ? '' : 'hidden'; ?>>
 				<p class="rip-2fa-challenge__instruction">
 					<?php
 					printf(
@@ -380,7 +353,7 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 						maxlength="9"
 						autocomplete="off"
 						placeholder="xxxx-xxxx"
-						disabled />
+						<?php echo $is_active ? 'autofocus' : 'disabled'; ?> />
 				</div>
 				<p class="rip-2fa-challenge__hint">
 					<?php esc_html_e( 'Each recovery code can be used only once.', 'reportedip-hive' ); ?>
@@ -390,7 +363,7 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 
 		<p class="rip-2fa-challenge__live" id="rip-2fa-live" role="status" aria-live="polite"></p>
 
-		<?php if ( $trust_enabled ) : ?>
+		<?php if ( $trust_enabled && ( ! $no_method || $has_recovery ) ) : ?>
 			<div class="rip-2fa-challenge__trust">
 				<label class="rip-2fa-challenge__trust-label">
 					<?php // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Display-only restore of the checkbox state after a failed attempt; the value is only acted upon once verify_form_nonce() passes. ?>
@@ -409,11 +382,13 @@ if ( $has_sms && class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
 			</div>
 		<?php endif; ?>
 
-		<div class="rip-2fa-challenge__actions">
-			<button type="submit" class="rip-button rip-button--primary rip-button--full-width rip-2fa-challenge__submit">
-				<?php esc_html_e( 'Verify', 'reportedip-hive' ); ?>
-			</button>
-		</div>
+		<?php if ( ! $no_method || $has_recovery ) : ?>
+			<div class="rip-2fa-challenge__actions">
+				<button type="submit" class="rip-button rip-button--primary rip-button--full-width rip-2fa-challenge__submit">
+					<?php esc_html_e( 'Verify', 'reportedip-hive' ); ?>
+				</button>
+			</div>
+		<?php endif; ?>
 
 		<p class="rip-2fa-challenge__back">
 			<a href="<?php echo esc_url( wp_login_url() ); ?>">

@@ -92,8 +92,9 @@
 					return;
 				}
 			} else {
-				// Email/SMS panels start on a "request" phase without a code
-				// input. Submitting there means "send me the code", not
+				// Panels of methods that send their code (email, or a method
+				// an add-on registers) start on a "request" phase without a
+				// code input. Submitting there means "send me the code", not
 				// "verify", trigger the send button instead of scolding the
 				// user about a field that is not even visible yet.
 				var activePanel  = document.querySelector( '.rip-2fa-challenge__panel--active' );
@@ -274,7 +275,7 @@
 	 * "Invalid code" errors before the user could sanity-check them).
 	 * ------------------------------------------------------------------ */
 	function initAutoSubmit() {
-		var inputs = document.querySelectorAll( '#rip-2fa-code-totp, #rip-2fa-code-email, #rip-2fa-code-sms' );
+		var inputs = document.querySelectorAll( '.rip-2fa-challenge__panel input[name="reportedip_2fa_code"][inputmode="numeric"]' );
 		var form   = document.getElementById( 'rip-2fa-form' );
 		if ( ! form || ! inputs.length ) { return; }
 
@@ -413,7 +414,7 @@
 				window.requestAnimationFrame( function () { input.focus(); } );
 			}
 			if ( destination ) {
-				var el = code.querySelector( method === 'email' ? '[data-destination-email]' : '[data-destination-sms]' );
+				var el = code.querySelector( '[data-destination-' + method + ']' );
 				if ( el ) { el.textContent = destination; }
 			}
 		}

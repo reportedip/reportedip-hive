@@ -152,6 +152,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'sms', $meta['reportedip_hive_2fa_method'] );
 		}
 
+		public function test_the_challenge_page_explains_the_missing_method(): void {
+			$template = (string) file_get_contents( dirname( __DIR__, 2 ) . '/templates/two-factor-challenge.php' );
+
+			$this->assertStringContainsString( '$no_method   = empty( $allowed_methods );', $template );
+			$this->assertStringContainsString( 'Enter one of your recovery codes to continue.', $template, 'With codes left the page says what to do.' );
+			$this->assertStringContainsString( 'Please ask an administrator to reset two-factor authentication for your account.', $template, 'Without codes the page names the way out instead of an empty form.' );
+			$this->assertStringContainsString( "\$is_active = ( ReportedIP_Hive_Two_Factor::METHOD_RECOVERY === \$method );", $template, 'The recovery panel must open by itself when it is the only way in.' );
+		}
+
 		public function test_the_challenge_falls_back_to_the_recovery_tab(): void {
 			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-two-factor.php' );
 
