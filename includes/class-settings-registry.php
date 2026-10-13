@@ -1777,7 +1777,7 @@ final class ReportedIP_Hive_Settings_Registry {
 		 *
 		 * An add-on registers every option it owns here, with the same fields
 		 * the free entries use (section, kind, range, label, description,
-		 * remote, effects). Default values go through
+		 * remote, side_effects). Default values go through
 		 * `reportedip_hive_option_defaults`.
 		 *
 		 * @param array<string, array<string, mixed>> $spec Option key to spec entry.
