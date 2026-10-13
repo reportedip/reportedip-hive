@@ -33,6 +33,15 @@ class BootstrapContractTest extends TestCase {
 		$this->assertMatchesRegularExpression( '/do_action\(\s*\'reportedip_hive_loaded\',\s*\$[a-z_]+\s*\)/', $this->source() );
 	}
 
+	public function test_instance_is_assigned_before_dependencies_load() {
+		$source = $this->source();
+		$assign = strpos( $source, 'self::$instance = $this;' );
+		$load   = strpos( $source, '$this->load_dependencies();' );
+		$this->assertNotFalse( $assign );
+		$this->assertNotFalse( $load );
+		$this->assertLessThan( $load, $assign );
+	}
+
 	public function test_api_version_constant_exists() {
 		$this->assertMatchesRegularExpression( "/define\( 'REPORTEDIP_HIVE_API_VERSION', '[0-9]+' \)/", $this->source() );
 	}
