@@ -303,12 +303,12 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		if ( $is_hard_role && $threshold > 0 ) {
 			$body = sprintf(
 				/* translators: 1: current reminder count, 2: hard-block threshold */
-				__( 'A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks. Reminder %1$d of %2$d, after that you will need to set 2FA up before continuing.', 'reportedip-hive' ),
+				__( 'A second factor (authenticator app, email or passkey) keeps your login safe even if your password leaks. Reminder %1$d of %2$d, after that you will need to set 2FA up before continuing.', 'reportedip-hive' ),
 				(int) $count,
 				(int) $threshold
 			);
 		} else {
-			$body = __( 'A second factor (authenticator app, email or SMS) keeps your login safe even if your password leaks.', 'reportedip-hive' );
+			$body = __( 'A second factor (authenticator app, email or passkey) keeps your login safe even if your password leaks.', 'reportedip-hive' );
 		}
 
 		ReportedIP_Hive_Admin_Notice::render(
