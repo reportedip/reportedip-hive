@@ -111,7 +111,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'METHOD_EMAIL', $source );
 			$this->assertStringContainsString( 'METHOD_WEBAUTHN', $source );
 			$this->assertStringContainsString( 'METHOD_RECOVERY', $source );
-			$this->assertStringNotContainsString( 'METHOD_SMS', $source, 'Further methods come through the registry, not through a case of their own.' );
+			$this->assertSame( 4, substr_count( $source, 'case ReportedIP_Hive_Two_Factor::METHOD_' ), 'Only the core methods and recovery have a case; further methods come through the registry.' );
 			$this->assertStringContainsString( 'ReportedIP_Hive_Two_Factor::methods()', $source, 'The default branch must ask the method registry.' );
 		}
 

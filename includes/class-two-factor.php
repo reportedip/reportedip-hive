@@ -134,11 +134,8 @@ class ReportedIP_Hive_Two_Factor {
 	const META_TOTP_ENABLED     = 'reportedip_hive_2fa_totp_enabled';
 	const META_EMAIL_ENABLED    = 'reportedip_hive_2fa_email_enabled';
 	const META_WEBAUTHN_ENABLED = 'reportedip_hive_2fa_webauthn_enabled';
-	const META_SMS_ENABLED      = 'reportedip_hive_2fa_sms_enabled';
 
 	const META_WEBAUTHN_CREDENTIALS = 'reportedip_hive_2fa_webauthn_credentials';
-	const META_SMS_NUMBER           = 'reportedip_hive_2fa_sms_number';
-	const META_SMS_NUMBER_PENDING   = 'reportedip_hive_2fa_sms_number_pending';
 
 	const META_SKIP_COUNT    = 'reportedip_hive_2fa_skip_count';
 	const META_KNOWN_DEVICES = 'reportedip_hive_2fa_known_devices';
@@ -159,7 +156,6 @@ class ReportedIP_Hive_Two_Factor {
 	const METHOD_TOTP     = 'totp';
 	const METHOD_EMAIL    = 'email';
 	const METHOD_WEBAUTHN = 'webauthn';
-	const METHOD_SMS      = 'sms';
 	const METHOD_RECOVERY = 'recovery';
 
 	/**
@@ -2530,10 +2526,6 @@ class ReportedIP_Hive_Two_Factor {
 			case self::METHOD_WEBAUTHN:
 				delete_user_meta( $user_id, self::META_WEBAUTHN_CREDENTIALS );
 				break;
-			case self::METHOD_SMS:
-				delete_user_meta( $user_id, self::META_SMS_NUMBER );
-				delete_user_meta( $user_id, self::META_SMS_NUMBER_PENDING );
-				break;
 			default:
 				foreach ( (array) ( self::methods()[ $method ]['data_keys'] ?? array() ) as $data_key ) {
 					delete_user_meta( $user_id, (string) $data_key );
@@ -2578,9 +2570,6 @@ class ReportedIP_Hive_Two_Factor {
 			self::META_EMAIL_ENABLED,
 			self::META_WEBAUTHN_ENABLED,
 			self::META_WEBAUTHN_CREDENTIALS,
-			self::META_SMS_ENABLED,
-			self::META_SMS_NUMBER,
-			self::META_SMS_NUMBER_PENDING,
 			self::META_FAILED_ATTEMPTS,
 			self::META_SETUP_DATE,
 			self::META_ENFORCEMENT_START,
@@ -2641,9 +2630,6 @@ class ReportedIP_Hive_Two_Factor {
 			self::META_EMAIL_ENABLED,
 			self::META_WEBAUTHN_ENABLED,
 			self::META_WEBAUTHN_CREDENTIALS,
-			self::META_SMS_ENABLED,
-			self::META_SMS_NUMBER,
-			self::META_SMS_NUMBER_PENDING,
 			self::META_FAILED_ATTEMPTS,
 			self::META_SETUP_DATE,
 			self::META_ENFORCEMENT_START,
