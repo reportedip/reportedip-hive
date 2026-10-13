@@ -370,6 +370,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-logger.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cache.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mode-manager.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-catalog.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-promo-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-hardening-mode.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-api-client.php';
