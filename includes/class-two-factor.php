@@ -1397,9 +1397,6 @@ class ReportedIP_Hive_Two_Factor {
 			'email_code_sent' => in_array( self::METHOD_EMAIL, $allowed_methods, true )
 				? (bool) get_transient( 'reportedip_2fa_email_' . $user_id )
 				: false,
-			'sms_code_sent'   => in_array( self::METHOD_SMS, $allowed_methods, true )
-				? (bool) get_transient( 'reportedip_2fa_sms_' . $user_id )
-				: false,
 		);
 
 		if ( 'theme_frame' === $context ) {
