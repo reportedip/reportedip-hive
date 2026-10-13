@@ -85,6 +85,27 @@ final class ReportedIP_Hive_Schema {
 	);
 
 	/**
+	 * Table suffixes this plugin and its add-ons own, for teardown and
+	 * per-site cleanup.
+	 *
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function tables() {
+		/**
+		 * Extend the table list for teardown and per-site cleanup.
+		 *
+		 * An add-on creates its own tables itself; it only registers them
+		 * here so `drop_all_tables()`, `truncate_all_tables()` and
+		 * `cleanup_blog_data()` include them while the add-on is active.
+		 *
+		 * @param string[] $suffixes Table suffixes without prefix.
+		 * @since 3.0.0
+		 */
+		return apply_filters( 'reportedip_hive_schema_tables', self::TABLE_SUFFIXES );
+	}
+
+	/**
 	 * Returns the fully-qualified table name (with `base_prefix`) for a suffix.
 	 *
 	 * @param string $suffix Plugin-internal suffix, e.g. `reportedip_hive_logs`.
@@ -393,7 +414,7 @@ final class ReportedIP_Hive_Schema {
 	 */
 	public static function drop_all_tables() {
 		global $wpdb;
-		foreach ( array_reverse( self::TABLE_SUFFIXES ) as $suffix ) {
+		foreach ( array_reverse( self::tables() ) as $suffix ) {
 			$table = self::table( $suffix );
 			$wpdb->query( "DROP TABLE IF EXISTS $table" );
 		}
@@ -409,13 +430,13 @@ final class ReportedIP_Hive_Schema {
 	 */
 	public static function truncate_all_tables() {
 		global $wpdb;
-		foreach ( self::TABLE_SUFFIXES as $suffix ) {
+		foreach ( self::tables() as $suffix ) {
 			$table = self::table( $suffix );
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Existence probe before truncation; table name from a hardcoded suffix list.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Existence probe before truncation; table name from the schema suffix list (core constant plus add-on suffixes via the filter).
 			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
 				continue;
 			}
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from a hardcoded suffix list; truncation for the reset action.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from the schema suffix list (core constant plus add-on suffixes via the filter); truncation for the reset action.
 			$wpdb->query( "TRUNCATE TABLE $table" );
 		}
 	}
