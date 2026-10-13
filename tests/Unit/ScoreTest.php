@@ -80,8 +80,41 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 100, array_sum( \ReportedIP_Hive_Score::DETECTION_WEIGHTS ) );
 		}
 
-		public function test_hardening_weights_sum_to_100(): void {
-			$this->assertSame( 100, array_sum( \ReportedIP_Hive_Score::HARDENING_WEIGHTS ) );
+		/**
+		 * The free hardening set no longer sums to 100: the add-on brings its
+		 * own items. compute() normalises, so everything on is still 100.
+		 */
+		public function test_free_hardening_items_all_on_score_100(): void {
+			$items = array();
+			foreach ( \ReportedIP_Hive_Score::HARDENING_WEIGHTS as $weight ) {
+				$items[] = $this->item( $weight, true, true, true );
+			}
+			$out = \ReportedIP_Hive_Score::compute( $items );
+			$this->assertSame( 100, $out['score'] );
+			$this->assertSame( array_sum( \ReportedIP_Hive_Score::HARDENING_WEIGHTS ), $out['max'] );
+		}
+
+		public function test_score_items_filter_extends_one_group(): void {
+			add_filter(
+				'reportedip_hive_score_items',
+				static function ( $items, $group ) {
+					if ( 'hardening' === $group ) {
+						$items[] = array( 'key' => 'extra', 'weight' => 6, 'present' => true, 'available' => true, 'enabled' => true );
+					}
+					return $items;
+				},
+				10,
+				2
+			);
+			try {
+				$hardening = array_column( \ReportedIP_Hive_Score::hardening_items(), 'key' );
+				$detection = array_column( \ReportedIP_Hive_Score::detection_items(), 'key' );
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_score_items'] );
+			}
+			$this->assertContains( 'extra', $hardening );
+			$this->assertNotContains( 'extra', $detection );
+			$this->assertNotContains( 'hardening_mode', $hardening, 'the hardening-mode item belongs to the add-on' );
 		}
 
 		public function test_hardening_weights_cover_the_attack_surface_switches(): void {
