@@ -211,9 +211,9 @@ test.describe('protection page', () => {
 
 	test('a section link opens its tab', async ({ page }) => {
 		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection#hardening_mode');
-		await expect(page.locator('.rip-protection__panel[data-tab="advanced"]')).toBeVisible();
-		await expect(page.locator('#hardening_mode')).toBeVisible();
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection#privacy_logs');
+		await expect(page.locator('.rip-protection__panel[data-tab="operations"]')).toBeVisible();
+		await expect(page.locator('#privacy_logs')).toBeVisible();
 	});
 
 	test('restore defaults writes the recommendation of the tab and leaves the rest alone', async ({ page }) => {

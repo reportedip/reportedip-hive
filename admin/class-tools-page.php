@@ -63,7 +63,6 @@ class ReportedIP_Hive_Tools_Page {
 			case 'rules':
 				$firewall->render_rule_sync_tab();
 				$firewall->render_waf_exceptions_box();
-				ReportedIP_Hive_Admin_Settings::render_hardening_mode_tab();
 				break;
 			case 'data':
 				ReportedIP_Hive_Settings_Import_Export::get_instance()->render_panel();
@@ -79,6 +78,12 @@ class ReportedIP_Hive_Tools_Page {
 				$firewall->render_waf_dropin_box();
 				$firewall->render_server_tab();
 		}
+		/**
+		 * Fires at the end of a Tools tab, after its free panels.
+		 *
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_tools_tab_' . $active . '_after' );
 		echo '</div>';
 		ReportedIP_Hive_Admin_Settings::render_page_footer();
 	}

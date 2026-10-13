@@ -1351,22 +1351,6 @@
     // Export to global scope for external access
     window.ReportedIPAdmin = ReportedIPAdmin;
 
-    // Hardening-Mode: gray out sub-fields when the master toggle is off
-    jQuery(function ($) {
-        var $master = $('#rip-hardening-master');
-        var $fields = $('#rip-hardening-sub-fields');
-        if (!$master.length || !$fields.length) {
-            return;
-        }
-        function sync() {
-            var on = $master.is(':checked') && !$master.is(':disabled');
-            $fields.prop('disabled', !on);
-            $fields.css('opacity', on ? '1' : '0.55');
-        }
-        $master.on('change', sync);
-        sync();
-    });
-
     /**
      * Unified "Retry all failed" handler.
      *
