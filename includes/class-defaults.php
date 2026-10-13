@@ -450,7 +450,17 @@ final class ReportedIP_Hive_Defaults {
 	 * @since  2.0.2
 	 */
 	public static function all_option_defaults(): array {
-		return self::SAFE_OPTIONS;
+		/**
+		 * Extend the option defaults.
+		 *
+		 * Every key an add-on registers through `reportedip_hive_settings_spec`
+		 * needs its default here, the activation seed, the reset and the JSON
+		 * export read this map.
+		 *
+		 * @param array<string, scalar> $defaults Option key to default.
+		 * @since 3.0.0
+		 */
+		return apply_filters( 'reportedip_hive_option_defaults', self::SAFE_OPTIONS );
 	}
 
 	/**
@@ -460,7 +470,7 @@ final class ReportedIP_Hive_Defaults {
 	 * @since  1.4.0
 	 */
 	public static function safe_options(): array {
-		return self::SAFE_OPTIONS;
+		return self::all_option_defaults();
 	}
 
 	/**
@@ -477,7 +487,7 @@ final class ReportedIP_Hive_Defaults {
 		$sentinel = '__rip_hive_default_unset__';
 		$seeded   = array();
 
-		foreach ( self::SAFE_OPTIONS as $option_key => $default_value ) {
+		foreach ( self::all_option_defaults() as $option_key => $default_value ) {
 			if ( $sentinel !== ReportedIP_Hive_Option_Routing::get( $option_key, $sentinel ) ) {
 				continue;
 			}
@@ -641,6 +651,14 @@ final class ReportedIP_Hive_Defaults {
 			$values['reportedip_hive_form_proof_um']         = 1;
 		}
 
-		return $values;
+		/**
+		 * Extend the recommendation map.
+		 *
+		 * @param array<string, mixed> $values Option key to recommended value.
+		 * @param string               $tier   Tier slug the recommendation is for.
+		 * @param string               $mode   `community` or `local`.
+		 * @since 3.0.0
+		 */
+		return apply_filters( 'reportedip_hive_recommended_values', $values, $tier, $mode );
 	}
 }

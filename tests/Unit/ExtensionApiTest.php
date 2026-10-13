@@ -111,4 +111,36 @@ class ExtensionApiTest extends TestCase {
 
 		$this->assertArrayHasKey( 'demo', \ReportedIP_Hive_Settings_Registry::sections() );
 	}
+
+	public function test_option_defaults_accept_injected_keys() {
+		add_filter(
+			'reportedip_hive_option_defaults',
+			static function ( array $defaults ) {
+				$defaults['reportedip_hive_demo_switch'] = false;
+				return $defaults;
+			}
+		);
+
+		$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
+
+		$this->assertArrayHasKey( 'reportedip_hive_demo_switch', $defaults );
+		$this->assertArrayHasKey( 'reportedip_hive_failed_login_threshold', $defaults );
+	}
+
+	public function test_recommended_values_accept_injected_keys() {
+		add_filter(
+			'reportedip_hive_recommended_values',
+			static function ( array $values, $tier, $mode ) {
+				if ( 'professional' === $tier ) {
+					$values['reportedip_hive_demo_switch'] = 1;
+				}
+				return $values;
+			},
+			10,
+			3
+		);
+
+		$this->assertArrayHasKey( 'reportedip_hive_demo_switch', \ReportedIP_Hive_Defaults::recommended( 'professional', 'community' ) );
+		$this->assertArrayNotHasKey( 'reportedip_hive_demo_switch', \ReportedIP_Hive_Defaults::recommended( 'free', 'community' ) );
+	}
 }
