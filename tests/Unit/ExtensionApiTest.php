@@ -253,4 +253,110 @@ class ExtensionApiTest extends TestCase {
 		$this->assertTrue( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 3, 20 ) );
 		$this->assertFalse( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 2, 20 ) );
 	}
+
+	/**
+	 * Load the real two-factor classes with their runtime doubles and
+	 * register a dummy method that records every call.
+	 *
+	 * @return void
+	 */
+	private function register_dummy_2fa_method() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'tests/stubs/two-factor-runtime-stubs.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-verifier.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor.php';
+		$GLOBALS['rip_test_dummy_calls'] = array();
+		add_filter(
+			'reportedip_hive_2fa_methods',
+			static function ( array $methods ) {
+				$record                 = static function ( $name ) {
+					return static function ( ...$args ) use ( $name ) {
+						$GLOBALS['rip_test_dummy_calls'][] = array( $name, $args );
+						switch ( $name ) {
+							case 'verify':
+								return '424242' === $args[1];
+							case 'resend_wait':
+								return 45;
+							case 'mask':
+								return '+49 ****42';
+							case 'health':
+								return 'Dummy gateway is down';
+							default:
+								return true;
+						}
+					};
+				};
+				$methods['dummy']       = array(
+					'meta_key'    => 'reportedip_hive_2fa_dummy_enabled',
+					'label'       => 'Dummy code',
+					'prompt'      => 'Enter the dummy code',
+					'verify'      => $record( 'verify' ),
+					'send'        => $record( 'send' ),
+					'resend_wait' => $record( 'resend_wait' ),
+					'mask'        => $record( 'mask' ),
+					'health'      => $record( 'health' ),
+					'data_keys'   => array( 'reportedip_hive_2fa_dummy_secret' ),
+				);
+				$methods['totp']        = array(
+					'meta_key' => 'hijacked',
+					'verify'   => '__return_true',
+				);
+				$methods['no_verifier'] = array( 'meta_key' => 'reportedip_hive_2fa_no_verifier_enabled' );
+				return $methods;
+			}
+		);
+		\ReportedIP_Hive_Two_Factor::flush_methods();
+	}
+
+	/**
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_2fa_method_registry_accepts_an_injected_method() {
+		$this->register_dummy_2fa_method();
+
+		$this->assertSame( array( 'totp', 'email', 'webauthn', 'dummy' ), \ReportedIP_Hive_Two_Factor::valid_methods() );
+		$this->assertSame( 'reportedip_hive_2fa_dummy_enabled', \ReportedIP_Hive_Two_Factor::get_method_meta_key( 'dummy' ) );
+		$this->assertSame( 'reportedip_hive_2fa_totp_enabled', \ReportedIP_Hive_Two_Factor::get_method_meta_key( 'totp' ), 'A core method cannot be replaced.' );
+		$this->assertNull( \ReportedIP_Hive_Two_Factor::get_method_meta_key( 'no_verifier' ), 'A method without a verifier is not registered.' );
+
+		update_user_meta( 3, 'reportedip_hive_2fa_dummy_enabled', '1' );
+		update_user_meta( 3, 'reportedip_hive_2fa_dummy_secret', 'x' );
+		$this->assertSame( array( 'dummy' ), \ReportedIP_Hive_Two_Factor::configured_method_flags( 3 ) );
+		$this->assertContains( 'reportedip_hive_2fa_dummy_secret', \ReportedIP_Hive_Two_Factor::get_all_meta_keys() );
+
+		\ReportedIP_Hive_Two_Factor::disable_for_user( 3 );
+		$this->assertSame( '', get_user_meta( 3, 'reportedip_hive_2fa_dummy_enabled', true ), 'A full reset clears a registered method.' );
+		$this->assertSame( '', get_user_meta( 3, 'reportedip_hive_2fa_dummy_secret', true ), 'A full reset clears the data a registered method owns.' );
+	}
+
+	/**
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_resend_ajax_uses_send_wait_and_mask_of_a_registered_method() {
+		$this->register_dummy_2fa_method();
+		$this->set_mocked_option( 'reportedip_hive_2fa_allowed_methods', '["totp","dummy"]' );
+		update_user_meta( 5, 'reportedip_hive_2fa_dummy_enabled', '1' );
+		$_COOKIE[ \ReportedIP_Hive_Two_Factor::NONCE_COOKIE ] = 'challenge-token';
+		set_transient(
+			\ReportedIP_Hive_Two_Factor::NONCE_PREFIX . hash( 'sha256', 'challenge-token' ),
+			array(
+				'user_id' => 5,
+				'ip'      => \ReportedIP_Hive::get_client_ip(),
+			),
+			600
+		);
+		$_POST['method'] = 'dummy';
+
+		try {
+			( new \ReportedIP_Hive_Two_Factor() )->ajax_resend_code();
+			$this->fail( 'The handler must answer with JSON.' );
+		} catch ( \ReportedIP_Hive_Test_Json_Response $response ) {
+			$this->assertTrue( $response->success );
+			$this->assertSame( '+49 ****42', $response->data['destination'] );
+			$this->assertSame( 45, $response->data['cooldown'] );
+		}
+		$this->assertSame( array( 'send', 'resend_wait', 'mask' ), array_column( $GLOBALS['rip_test_dummy_calls'], 0 ) );
+		$this->assertSame( array( 5 ), $GLOBALS['rip_test_dummy_calls'][0][1], 'send() receives the challenged user.' );
+	}
 }

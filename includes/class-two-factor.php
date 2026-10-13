@@ -243,7 +243,9 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
-	 * AJAX handler: resend an email / SMS OTP during the 2FA challenge.
+	 * AJAX handler: resend the one-time code of a method that sends one
+	 * (email, or a method an add-on registers with a `send` callable)
+	 * during the 2FA challenge.
 	 *
 	 * Authenticates via the short-lived nonce cookie set when the challenge
 	 * started. Returns JSON with the resend cooldown so the UI can run a
@@ -262,7 +264,8 @@ class ReportedIP_Hive_Two_Factor {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Identity verified via signed cookie + transient by validate_login_nonce() above; user is not yet logged in (no WP nonce available).
 		$method = isset( $_POST['method'] ) ? sanitize_key( wp_unslash( $_POST['method'] ) ) : '';
 
-		if ( ! in_array( $method, array( self::METHOD_EMAIL, self::METHOD_SMS ), true ) ) {
+		$definition = self::methods()[ $method ] ?? array();
+		if ( empty( $definition['send'] ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'This method does not support resending.', 'reportedip-hive' ) ),
 				400
@@ -279,19 +282,9 @@ class ReportedIP_Hive_Two_Factor {
 
 		$this->refresh_login_nonce( $nonce_data );
 
-		if ( self::METHOD_EMAIL === $method ) {
-			$result      = ReportedIP_Hive_Two_Factor_Email::send_code( $user_id );
-			$cooldown    = ReportedIP_Hive_Two_Factor_Email::get_resend_wait_seconds( $user_id );
-			$destination = self::mask_email( get_userdata( $user_id )->user_email );
-		} else {
-			if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-				wp_send_json_error( array( 'message' => __( 'SMS is not available.', 'reportedip-hive' ) ), 400 );
-			}
-			$result      = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id );
-			$cooldown    = ReportedIP_Hive_Two_Factor_SMS::get_resend_wait_seconds( $user_id );
-			$phone       = ReportedIP_Hive_Two_Factor_SMS::get_user_phone( $user_id );
-			$destination = $phone ? ReportedIP_Hive_Two_Factor_SMS::mask_phone( $phone ) : '';
-		}
+		$result      = call_user_func( $definition['send'], $user_id );
+		$cooldown    = empty( $definition['resend_wait'] ) ? 0 : (int) call_user_func( $definition['resend_wait'], $user_id );
+		$destination = empty( $definition['mask'] ) ? '' : (string) call_user_func( $definition['mask'], $user_id );
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error(
@@ -307,7 +300,7 @@ class ReportedIP_Hive_Two_Factor {
 			array(
 				'message'     => self::METHOD_EMAIL === $method
 					? __( 'We have sent you a new code by email.', 'reportedip-hive' )
-					: __( 'We have sent you a new code by SMS.', 'reportedip-hive' ),
+					: __( 'New code sent.', 'reportedip-hive' ),
 				'destination' => $destination,
 				'cooldown'    => (int) $cooldown,
 				'phase'       => 'code_sent',
@@ -412,6 +405,13 @@ class ReportedIP_Hive_Two_Factor {
 	 * @var array<int, string[]>
 	 */
 	private static $methods_cache = array();
+
+	/**
+	 * Memoised method registry, see {@see self::methods()}.
+	 *
+	 * @var array<string, array<string, mixed>>|null
+	 */
+	private static $registry_cache = null;
 
 	/**
 	 * Check if a user has 2FA enabled.
@@ -567,22 +567,19 @@ class ReportedIP_Hive_Two_Factor {
 	 * Includes the legacy single-method meta, so accounts that predate the
 	 * per-method flags are not treated as never having configured anything.
 	 *
+	 * Only registered methods count ({@see self::methods()}); the flag of a
+	 * method whose add-on is inactive is left alone and shows up through
+	 * {@see self::unavailable_method()} instead.
+	 *
 	 * @param int $user_id WordPress user ID.
 	 * @return string[] Method identifiers.
 	 * @since  2.1.44
 	 */
 	public static function configured_method_flags( $user_id ) {
-		$flags = array(
-			self::METHOD_TOTP     => self::META_TOTP_ENABLED,
-			self::METHOD_EMAIL    => self::META_EMAIL_ENABLED,
-			self::METHOD_WEBAUTHN => self::META_WEBAUTHN_ENABLED,
-			self::METHOD_SMS      => self::META_SMS_ENABLED,
-		);
-
 		$configured = array();
-		foreach ( $flags as $method => $meta_key ) {
-			if ( get_user_meta( $user_id, $meta_key, true ) ) {
-				$configured[] = $method;
+		foreach ( self::methods() as $method => $definition ) {
+			if ( get_user_meta( $user_id, (string) $definition['meta_key'], true ) ) {
+				$configured[] = (string) $method;
 			}
 		}
 
@@ -597,13 +594,36 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
+	 * The default method of an account whose second factor this site cannot
+	 * verify right now.
+	 *
+	 * That is an account with 2FA turned on whose stored default names a
+	 * method that is not registered (the add-on that provided it is
+	 * inactive), while no registered method is configured. Such an account
+	 * is challenged with its recovery codes instead of signing in with the
+	 * password alone, and the data of the missing method stays untouched, so
+	 * the method works again once its add-on returns.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return string Slug of the unavailable method, '' when the account is not affected.
+	 * @since  3.0.0
+	 */
+	public static function unavailable_method( $user_id ) {
+		if ( ! get_user_meta( $user_id, self::META_ENABLED, true ) || array() !== self::configured_method_flags( $user_id ) ) {
+			return '';
+		}
+		$stored = (string) get_user_meta( $user_id, self::META_METHOD, true );
+		return ( '' !== $stored && ! isset( self::methods()[ $stored ] ) ) ? $stored : '';
+	}
+
+	/**
 	 * Return the list of 2FA methods the user has actively configured.
 	 *
 	 * Supports parallel activation (e.g. TOTP + E-Mail + Passkey at once).
 	 * Falls back to legacy single-method meta for backward compatibility.
 	 *
 	 * @param int $user_id WordPress user ID.
-	 * @return string[] Method identifiers (totp, email, webauthn, sms).
+	 * @return string[] Method identifiers (slugs of registered methods).
 	 */
 	public static function get_user_enabled_methods( $user_id ) {
 		if ( isset( self::$methods_cache[ $user_id ] ) ) {
@@ -629,7 +649,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return string[] Method identifiers.
 	 */
 	public static function get_allowed_methods() {
-		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email","webauthn","sms"]' );
+		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email","webauthn"]' );
 		$decoded = json_decode( $raw, true );
 		if ( ! is_array( $decoded ) || empty( $decoded ) ) {
 			return array( self::METHOD_TOTP, self::METHOD_EMAIL );
@@ -645,11 +665,114 @@ class ReportedIP_Hive_Two_Factor {
 	 * against this list. METHOD_RECOVERY is intentionally excluded, recovery
 	 * codes are an automatic fallback, not a method an admin opts into.
 	 *
-	 * @return string[] Method identifiers.
+	 * @return string[] Method identifiers, the slugs of {@see self::methods()}.
 	 * @since  2.0.28
 	 */
 	public static function valid_methods() {
-		return array( self::METHOD_TOTP, self::METHOD_EMAIL, self::METHOD_WEBAUTHN, self::METHOD_SMS );
+		return array_keys( self::methods() );
+	}
+
+	/**
+	 * The verification methods this site knows, core ones first.
+	 *
+	 * Each entry carries `meta_key` (the user's enabled flag), `label`,
+	 * `prompt` and the callable `verify( $user_id, $code )`, plus the
+	 * optional callables `send( $user_id )`, `resend_wait( $user_id )`,
+	 * `mask( $user_id )` and `health( $user_id )` (returns '' while the
+	 * method is usable, otherwise a short reason shown to administrators),
+	 * the optional `icon` (inner SVG markup of its challenge tab) and the
+	 * optional `data_keys` (further user meta the method owns, removed
+	 * together with it). The core methods render their panels in the
+	 * templates; a method an add-on registers renders its own through the
+	 * actions `reportedip_hive_2fa_challenge_panel_{slug}`,
+	 * `reportedip_hive_2fa_onboarding_panel_{slug}` and
+	 * `reportedip_hive_2fa_method_flow_{slug}`.
+	 *
+	 * @return array<string, array<string, mixed>> Method slug to definition.
+	 * @since  3.0.0
+	 */
+	public static function methods() {
+		if ( null !== self::$registry_cache ) {
+			return self::$registry_cache;
+		}
+		$core = array(
+			self::METHOD_TOTP     => array(
+				'meta_key' => self::META_TOTP_ENABLED,
+				'label'    => __( 'Authenticator app', 'reportedip-hive' ),
+				'prompt'   => __( 'Enter the 6-digit code from your authenticator app', 'reportedip-hive' ),
+				'verify'   => array( 'ReportedIP_Hive_Two_Factor_Verifier', 'verify_totp' ),
+			),
+			self::METHOD_EMAIL    => array(
+				'meta_key'    => self::META_EMAIL_ENABLED,
+				'label'       => __( 'Email code', 'reportedip-hive' ),
+				'prompt'      => __( 'Enter the 6-digit code from the email', 'reportedip-hive' ),
+				'verify'      => array( 'ReportedIP_Hive_Two_Factor_Email', 'verify_code' ),
+				'send'        => array( 'ReportedIP_Hive_Two_Factor_Email', 'send_code' ),
+				'resend_wait' => array( 'ReportedIP_Hive_Two_Factor_Email', 'get_resend_wait_seconds' ),
+				'mask'        => static function ( $user_id ) {
+					$user = get_userdata( (int) $user_id );
+					return $user ? self::mask_email( (string) $user->user_email ) : '';
+				},
+			),
+			self::METHOD_WEBAUTHN => array(
+				'meta_key' => self::META_WEBAUTHN_ENABLED,
+				'label'    => __( 'Passkey / security key', 'reportedip-hive' ),
+				'prompt'   => __( 'Confirm your passkey or security key when prompted', 'reportedip-hive' ),
+				'verify'   => array( 'ReportedIP_Hive_Two_Factor_WebAuthn', 'verify' ),
+			),
+		);
+
+		/**
+		 * Register further verification methods.
+		 *
+		 * A core slug cannot be replaced (the core entries are merged back
+		 * over the result), and an entry without `meta_key` or `verify`
+		 * is dropped.
+		 *
+		 * @param array<string, array<string, mixed>> $methods Method slug to definition, see methods().
+		 * @since 3.0.0
+		 */
+		$methods = (array) apply_filters( 'reportedip_hive_2fa_methods', $core );
+		foreach ( $methods as $slug => $definition ) {
+			if ( ! is_string( $slug ) || ! is_array( $definition ) || empty( $definition['meta_key'] ) || empty( $definition['verify'] ) || self::METHOD_RECOVERY === $slug ) {
+				unset( $methods[ $slug ] );
+			}
+		}
+		self::$registry_cache = array_merge( $core, $methods, $core );
+		return self::$registry_cache;
+	}
+
+	/**
+	 * Forget the memoised method registry and the per-user method lists
+	 * built from it, so a method registered after the first read (or a
+	 * test) is picked up.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function flush_methods() {
+		self::$registry_cache = null;
+		self::$methods_cache  = array();
+	}
+
+	/**
+	 * Every user meta key the registered methods own: each enabled flag plus
+	 * the method's `data_keys`. A reset or an uninstall clears the data of an
+	 * add-on method this way while the add-on is active; while it is
+	 * inactive that data stays untouched.
+	 *
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	private static function method_meta_keys() {
+		$keys = array();
+		foreach ( self::methods() as $definition ) {
+			$keys[] = (string) $definition['meta_key'];
+			foreach ( (array) ( $definition['data_keys'] ?? array() ) as $key ) {
+				$keys[] = (string) $key;
+			}
+		}
+		return $keys;
 	}
 
 	/**
@@ -684,13 +807,8 @@ class ReportedIP_Hive_Two_Factor {
 	 * @return string|null Meta key or null for unknown methods.
 	 */
 	public static function get_method_meta_key( $method ) {
-		$map = array(
-			self::METHOD_TOTP     => self::META_TOTP_ENABLED,
-			self::METHOD_EMAIL    => self::META_EMAIL_ENABLED,
-			self::METHOD_WEBAUTHN => self::META_WEBAUTHN_ENABLED,
-			self::METHOD_SMS      => self::META_SMS_ENABLED,
-		);
-		return $map[ $method ] ?? null;
+		$methods = self::methods();
+		return isset( $methods[ $method ] ) ? (string) $methods[ $method ]['meta_key'] : null;
 	}
 
 	/**
@@ -809,10 +927,11 @@ class ReportedIP_Hive_Two_Factor {
 
 		$enabled_methods = self::get_user_enabled_methods( $user->ID );
 		$has_any_method  = ! empty( $enabled_methods );
+		$unavailable     = $has_any_method ? '' : self::unavailable_method( $user->ID );
 		$is_enforced     = self::is_enforced_for_user( $user );
 		$stepup          = ReportedIP_Hive_Two_Factor_Policies::evaluate( $user, $has_any_method, $is_enforced );
 
-		if ( ! $has_any_method && ! $is_enforced ) {
+		if ( ! $has_any_method && ! $is_enforced && '' === $unavailable ) {
 			/*
 			 * The enabled list is intersected with the site's allowed methods,
 			 * so removing a method from that policy silently drops the second
@@ -867,7 +986,7 @@ class ReportedIP_Hive_Two_Factor {
 			return $user;
 		}
 
-		if ( ! $has_any_method ) {
+		if ( ! $has_any_method && '' === $unavailable ) {
 			if ( 'lockout' === self::resolve_no_method_action( $user ) ) {
 				return new \WP_Error(
 					'reportedip_2fa_setup_required',
@@ -876,6 +995,24 @@ class ReportedIP_Hive_Two_Factor {
 			}
 
 			return $user;
+		}
+
+		if ( '' !== $unavailable ) {
+			/*
+			 * The account turned 2FA on with a method no active plugin
+			 * provides any more. Signing in with the password alone would
+			 * drop the second factor without anyone asking for it, so the
+			 * challenge runs with the recovery codes, and the entry tells
+			 * an administrator why the user cannot use their usual method.
+			 */
+			ReportedIP_Hive_Logger::get_instance()->warning(
+				'2FA method unavailable: the user\'s only configured method is not provided by any active plugin, recovery code required',
+				ReportedIP_Hive::get_client_ip(),
+				array(
+					'user_id' => $user->ID,
+					'method'  => $unavailable,
+				)
+			);
 		}
 
 		$should_challenge = (bool) apply_filters(
@@ -1190,8 +1327,6 @@ class ReportedIP_Hive_Two_Factor {
 
 						if ( self::METHOD_EMAIL === $submitted_method && ! get_transient( 'reportedip_2fa_email_' . $user_id ) ) {
 							$error = __( 'No valid code is active, you likely used an older code. Please click "Resend code" and use only the most recent code from your inbox.', 'reportedip-hive' );
-						} elseif ( self::METHOD_SMS === $submitted_method && ! get_transient( 'reportedip_2fa_sms_' . $user_id ) ) {
-							$error = __( 'No valid SMS code is active. Please request a new code and use only the most recent SMS.', 'reportedip-hive' );
 						} else {
 							$error = __( 'Invalid verification code. Please make sure you are using the most recent code.', 'reportedip-hive' );
 						}
@@ -1219,38 +1354,35 @@ class ReportedIP_Hive_Two_Factor {
 			}
 		}
 
-		$user_methods = self::get_user_enabled_methods( $user_id );
+		$allowed_methods = self::get_user_enabled_methods( $user_id );
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['resend_email'] ) && '1' === $_GET['resend_email']
-			&& in_array( self::METHOD_EMAIL, $user_methods, true ) ) {
-			$result = ReportedIP_Hive_Two_Factor_Email::send_code( $user_id );
+		/*
+		 * Server-side resend for clients without JavaScript: `?resend_{slug}=1`
+		 * sends a fresh code for any enabled method that can send one.
+		 */
+		foreach ( $allowed_methods as $slug ) {
+			$send = self::methods()[ $slug ]['send'] ?? null;
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only trigger; the user is identified by the signed challenge cookie, and the send is rate-limited per method.
+			if ( ! is_callable( $send ) || ! isset( $_GET[ 'resend_' . $slug ] ) || '1' !== $_GET[ 'resend_' . $slug ] ) {
+				continue;
+			}
+			$result = call_user_func( $send, $user_id );
 			if ( is_wp_error( $result ) ) {
 				$error = $result->get_error_message();
 			}
-			$method = self::METHOD_EMAIL;
-		}
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['resend_sms'] ) && '1' === $_GET['resend_sms']
-			&& in_array( self::METHOD_SMS, $user_methods, true )
-			&& class_exists( 'ReportedIP_Hive_Two_Factor_SMS' ) ) {
-			$result = ReportedIP_Hive_Two_Factor_SMS::send_code( $user_id );
-			if ( is_wp_error( $result ) ) {
-				$error = $result->get_error_message();
-			}
-			$method = self::METHOD_SMS;
+			$method = $slug;
 		}
 
 		$form_nonce = $this->create_form_nonce( $user_id );
 
-		$allowed_methods = self::get_user_enabled_methods( $user_id );
-		if ( empty( $allowed_methods ) ) {
-			$allowed_methods = array( self::METHOD_TOTP, self::METHOD_EMAIL );
-		}
-
+		/*
+		 * No usable method left (the one the account uses is not provided by
+		 * any active plugin, see unavailable_method()): the page offers the
+		 * recovery codes and says why, instead of tabs for methods the user
+		 * never set up.
+		 */
 		if ( ! in_array( $method, $allowed_methods, true ) ) {
-			$method = $allowed_methods[0];
+			$method = empty( $allowed_methods ) ? self::METHOD_RECOVERY : $allowed_methods[0];
 		}
 
 		$template_data = array(
@@ -2258,7 +2390,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * Enable 2FA for a user (activates one method; other methods stay untouched).
 	 *
 	 * @param int    $user_id WordPress user ID.
-	 * @param string $method  2FA method (totp, email, webauthn, sms).
+	 * @param string $method  2FA method, a registered method slug.
 	 */
 	public static function enable_for_user( $user_id, $method = 'totp' ) {
 		update_user_meta( $user_id, self::META_ENABLED, '1' );
@@ -2294,7 +2426,7 @@ class ReportedIP_Hive_Two_Factor {
 		 *
 		 * @since 1.6.1
 		 * @param int    $user_id The user whose method became active.
-		 * @param string $method  Method id: totp | email | sms | webauthn.
+		 * @param string $method  Method id, a registered method slug.
 		 */
 		do_action( 'reportedip_hive_2fa_method_enabled', (int) $user_id, (string) $method );
 	}
@@ -2317,7 +2449,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * moment an administrator re-enables it.
 	 *
 	 * @param int    $user_id WordPress user ID.
-	 * @param string $method  Method identifier (totp, email, webauthn, sms).
+	 * @param string $method  Method identifier, a registered method slug.
 	 * @return array|null|false Freshly generated recovery codes when the user
 	 *                          had none (show them once!), null when existing
 	 *                          codes survived, false for an unknown or
@@ -2361,7 +2493,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * can never be persisted.
 	 *
 	 * @param int    $user_id WordPress user ID.
-	 * @param string $method  Method identifier (totp, email, webauthn, sms).
+	 * @param string $method  Method identifier, a registered method slug.
 	 * @return bool True when stored, false when the method is not active.
 	 * @since  2.1.36
 	 */
@@ -2404,6 +2536,11 @@ class ReportedIP_Hive_Two_Factor {
 			case self::METHOD_SMS:
 				delete_user_meta( $user_id, self::META_SMS_NUMBER );
 				delete_user_meta( $user_id, self::META_SMS_NUMBER_PENDING );
+				break;
+			default:
+				foreach ( (array) ( self::methods()[ $method ]['data_keys'] ?? array() ) as $data_key ) {
+					delete_user_meta( $user_id, (string) $data_key );
+				}
 				break;
 		}
 
@@ -2458,7 +2595,7 @@ class ReportedIP_Hive_Two_Factor {
 			'reportedip_hive_2fa_skip_until',
 		);
 
-		foreach ( $meta_keys as $key ) {
+		foreach ( array_unique( array_merge( $meta_keys, self::method_meta_keys() ) ) as $key ) {
 			delete_user_meta( $user_id, $key );
 		}
 
@@ -2491,10 +2628,12 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Get all user meta keys used by 2FA (for data cleanup/export).
 	 *
+	 * Includes the keys of every registered method, see method_meta_keys().
+	 *
 	 * @return array List of meta key strings.
 	 */
 	public static function get_all_meta_keys() {
-		return array(
+		$keys = array(
 			self::META_ENABLED,
 			self::META_METHOD,
 			self::META_TOTP_SECRET,
@@ -2517,5 +2656,7 @@ class ReportedIP_Hive_Two_Factor {
 			ReportedIP_Hive_Two_Factor_Recovery::META_KEY_CODES,
 			ReportedIP_Hive_Two_Factor_Recovery::META_KEY_REMAINING,
 		);
+
+		return array_values( array_unique( array_merge( $keys, self::method_meta_keys() ) ) );
 	}
 }

@@ -73,9 +73,29 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_canonical_valid_methods_is_the_single_source() {
 			$this->assertSame(
-				array( 'totp', 'email', 'webauthn', 'sms' ),
+				array( 'totp', 'email', 'webauthn' ),
 				\ReportedIP_Hive_Two_Factor::valid_methods(),
-				'valid_methods() is the one allow-list every 2FA write validates against; recovery is excluded.'
+				'valid_methods() is the one allow-list every 2FA write validates against; recovery is excluded, further methods come only through the registry.'
+			);
+		}
+
+		public function test_valid_methods_follow_the_registry_filter() {
+			add_filter(
+				'reportedip_hive_2fa_methods',
+				static function ( array $methods ) {
+					$methods['carrier_pigeon'] = array(
+						'meta_key' => 'reportedip_hive_2fa_carrier_pigeon_enabled',
+						'label'    => 'Carrier pigeon',
+						'verify'   => '__return_false',
+					);
+					return $methods;
+				}
+			);
+			\ReportedIP_Hive_Two_Factor::flush_methods();
+
+			$this->assertSame(
+				array( 'carrier_pigeon', 'totp' ),
+				\ReportedIP_Hive_Two_Factor::filter_valid_methods( array( 'carrier_pigeon', 'sms', 'totp' ) )
 			);
 		}
 
