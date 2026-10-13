@@ -84,7 +84,8 @@ final class ReportedIP_Hive_Settings_Effects {
 	}
 
 	/**
-	 * All effect tokens this dispatcher knows how to run.
+	 * The effect tokens the free plugin runs itself. Every other token is
+	 * forwarded to add-ons, see {@see run_queued()}.
 	 *
 	 * @return string[]
 	 */
@@ -94,15 +95,14 @@ final class ReportedIP_Hive_Settings_Effects {
 
 	/**
 	 * Queue one effect token for execution on shutdown. Duplicate tokens
-	 * collapse, so a 60-key batch triggers each effect at most once.
+	 * collapse, so a 60-key batch triggers each effect at most once. A token
+	 * the free plugin does not run is queued all the same, so an add-on can
+	 * answer it on `reportedip_hive_settings_effect_{token}`.
 	 *
 	 * @param string $token Effect token.
 	 * @return void
 	 */
 	public static function queue( $token ) {
-		if ( ! in_array( $token, self::known_tokens(), true ) ) {
-			return;
-		}
 		self::$queued[ $token ] = true;
 
 		if ( ! self::$hooked_shutdown ) {
@@ -150,6 +150,18 @@ final class ReportedIP_Hive_Settings_Effects {
 					if ( class_exists( 'ReportedIP_Hive_Form_Proof' ) ) {
 						ReportedIP_Hive_Form_Proof::purge_on_enable();
 					}
+					break;
+
+				default:
+					/**
+					 * Fires for an effect token the free plugin does not know.
+					 *
+					 * An add-on registers its own tokens in its settings spec
+					 * (`side_effects`) and runs them here.
+					 *
+					 * @since 3.0.0
+					 */
+					do_action( 'reportedip_hive_settings_effect_' . $token );
 					break;
 			}
 		}
