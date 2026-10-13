@@ -15,7 +15,6 @@
  * Tested up to: 7.1
  * Requires PHP: 8.1
  * Network: true
- * Update URI: https://github.com/reportedip/reportedip-hive
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -45,17 +44,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Composer autoloader (loads plugin-update-checker and any other dependencies).
- */
-$reportedip_autoload = __DIR__ . '/vendor/autoload.php';
-if ( file_exists( $reportedip_autoload ) ) {
-	require_once $reportedip_autoload;
-}
-
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
-
 define( 'REPORTEDIP_HIVE_VERSION', '2.1.74' );
+define( 'REPORTEDIP_HIVE_API_VERSION', '1' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_FILE', __FILE__ );
@@ -75,43 +65,6 @@ define( 'REPORTEDIP_HIVE_CONTACT_MAIL', '1@reportedip.com' );
 define( 'REPORTEDIP_HIVE_HONEYPOT_URL', 'https://reportedip.com/docs/integrations/honeypot-server/' );
 define( 'REPORTEDIP_HIVE_FAQ_URL', 'https://reportedip.com/docs/support/faq/' );
 define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.com/register/' );
-
-/**
- * Update checker: reads releases from the public GitHub repository.
- * Trigger: tag `vX.Y.Z` → GitHub Action builds ZIP release asset → PUC pulls it.
- *
- * Built unconditionally. The checker injects its update entry into the
- * `update_plugins` transient at read time (`site_transient_update_plugins`
- * filter), never persistently, so it must exist in every request context
- * that consumes update information. Restricting it to wp-admin, cron and
- * WP-CLI (2.1.32, 2.1.46) made front-end consumers blind: remote-management
- * dashboards (MainWP, ManageWP, InfiniteWP) sync over front-end requests on
- * `init` and could neither see nor install plugin updates.
- */
-if ( class_exists( PucFactory::class ) ) {
-	$reportedip_update_checker = PucFactory::buildUpdateChecker(
-		'https://github.com/reportedip/reportedip-hive/',
-		__FILE__,
-		'reportedip-hive'
-	);
-	$reportedip_update_checker->setBranch( 'main' );
-
-	/**
-	 * Keep the plugin in the update-check request WordPress core sends to
-	 * api.wordpress.org. The checker strips it by default (since 5.5), which
-	 * also removes every full installation from the install count of the
-	 * reportedip-hive slug on wordpress.org. The response for this plugin is
-	 * ignored by core anyway because of the Update URI header.
-	 */
-	$reportedip_update_checker->addFilter( 'remove_from_default_update_checks', '__return_false' );
-
-	$reportedip_vcs_api = $reportedip_update_checker->getVcsApi();
-	if ( $reportedip_vcs_api && method_exists( $reportedip_vcs_api, 'enableReleaseAssets' ) ) {
-		$reportedip_vcs_api->enableReleaseAssets( '/reportedip-hive\.zip$/i' );
-	}
-}
-
-add_filter( 'auto_update_plugin', array( 'ReportedIP_Hive', 'force_auto_update' ), 10, 2 );
 
 /**
  * Main ReportedIP Hive Class
@@ -609,6 +562,18 @@ class ReportedIP_Hive {
 			new ReportedIP_Hive_Two_Factor_Dashboard();
 			new ReportedIP_Hive_User_Admin();
 		}
+
+		/**
+		 * Fires once every free class is loaded and wired, before `init`.
+		 *
+		 * The add-on hangs its listener in at include time and loads its own
+		 * classes here, so every filter below is registered before the
+		 * sensors, the registry and the cron scheduler read their data.
+		 *
+		 * @param ReportedIP_Hive $plugin The plugin instance.
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_loaded', $this );
 	}
 
 	/**
@@ -791,6 +756,16 @@ class ReportedIP_Hive {
 		}
 
 		$delete_requested = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_delete_data_on_uninstall', false );
+
+		/**
+		 * Fires during uninstall so an add-on can remove its own data under
+		 * the same opt-in.
+		 *
+		 * @param bool $delete_requested Whether the site owner asked for data removal.
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_uninstall', $delete_requested );
+
 		if ( ! $delete_requested ) {
 			return;
 		}
@@ -2428,30 +2403,6 @@ class ReportedIP_Hive {
 		set_site_transient( $cache_key, $resolved, 6 * HOUR_IN_SECONDS );
 
 		return $resolved;
-	}
-
-	/**
-	 * Keep WordPress auto-updates switched on for this plugin.
-	 *
-	 * A security plugin that lags behind its own fixes protects nobody, so the
-	 * plugin enforces its own auto-update instead of waiting for an admin to
-	 * opt in. The Plugins screen reflects this as "Auto-updates enabled" via
-	 * core's forced-update detection. Site owners who must pin the version can
-	 * restore manual control with
-	 * `add_filter( 'reportedip_hive_auto_update', '__return_false' )`.
-	 *
-	 * @param bool|null $update Whether to auto-update, as decided so far.
-	 * @param object    $item   Update offer object carrying a `plugin` basename.
-	 * @return bool|null        True for this plugin, the incoming value otherwise.
-	 * @since 2.1.46
-	 */
-	public static function force_auto_update( $update, $item ) {
-		if ( isset( $item->plugin )
-			&& REPORTEDIP_HIVE_PLUGIN_BASENAME === $item->plugin
-			&& apply_filters( 'reportedip_hive_auto_update', true ) ) {
-			return true;
-		}
-		return $update;
 	}
 
 	/**

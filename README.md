@@ -251,7 +251,7 @@ Full feature, security and operations guide: [`docs/cloud-fleet-management.md`](
 
 - **REST API** namespace `reportedip-hive/v1` with `/2fa/challenge`, `/2fa/verify`, `/2fa/methods` for headless flows
 - **WP-CLI** command trees for 2FA, hardening, IP lookup and full IP management, see [WP-CLI](#wp-cli) below
-- **PHP filters**: `reportedip_hive_rest_bypass_routes`, `reportedip_hive_rest_sensitive_routes`, `reportedip_hive_event_category_map`, `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path`, `reportedip_hive_decoy_paths`, `reportedip_hive_bot_allowlist_patterns`, `reportedip_hive_own_server_ips`, `reportedip_hive_webauthn_rp_id`, `reportedip_hive_webauthn_allowed_origins`, `reportedip_hive_auto_update`
+- **PHP filters**: `reportedip_hive_rest_bypass_routes`, `reportedip_hive_rest_sensitive_routes`, `reportedip_hive_event_category_map`, `reportedip_hive_mail_provider`, `reportedip_hive_mail_args`, `reportedip_hive_mail_template_path`, `reportedip_hive_decoy_paths`, `reportedip_hive_bot_allowlist_patterns`, `reportedip_hive_own_server_ips`, `reportedip_hive_webauthn_rp_id`, `reportedip_hive_webauthn_allowed_origins`
 - **Constants**: `REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN` (emergency override from `wp-config.php`)
 - **9 database tables** (auto-migrated, opt-in delete on uninstall)
 - **Internationalisation-ready** (text domain `reportedip-hive`, English source + complete German translation included)
@@ -462,22 +462,7 @@ composer require reportedip/reportedip-hive
 
 ### Updates
 
-Updates ship directly from the publisher via [GitHub Releases](https://github.com/reportedip/reportedip-hive/releases), not via wordpress.org.
-
-How the update mechanism works:
-
-1. We publish a Git tag `vX.Y.Z`.
-2. GitHub Actions builds a production-ready ZIP and attaches it to the release.
-3. The plugin ships [Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker), which polls the GitHub API every 12 hours.
-4. The update notice appears in WP Admin like for any other plugin; one click installs it.
-
-WordPress auto-updates are always on for this plugin: a security plugin that lags behind its own fixes protects nobody, so releases install automatically without the per-plugin opt-in (the Plugins screen shows "Auto-updates enabled"). Sites that must pin the version can restore manual control:
-
-```php
-add_filter( 'reportedip_hive_auto_update', '__return_false' );
-```
-
-For instant updates: WP Admin → *Plugins → Check for updates*.
+Updates arrive through the WordPress plugin directory, like for any other plugin. The plugin makes no update requests of its own.
 
 ---
 
@@ -570,7 +555,7 @@ The tag name **must** start with `v` and match the plugin version (`v2.1.32` ↔
 - **License:** [GPL-2.0-or-later](./LICENSE), same as WordPress.
 - **Copyright:** © 2025–2026 Patrick Schlesinger / ReportedIP.
 - The code is GPL-licensed (distribution + modification permitted under GPL terms). The trademarks **ReportedIP**, **ReportedIP Hive**, and the logo are not covered by the GPL and remain the property of ReportedIP.
-- Third-party software: [Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker) (MIT), [Chart.js](https://www.chartjs.org/) (MIT). WebAuthn/FIDO2 is in-house, no external dependency.
+- Third-party software: [Chart.js](https://www.chartjs.org/) (MIT). WebAuthn/FIDO2 is in-house, no external dependency.
 
 ---
 

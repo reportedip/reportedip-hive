@@ -18,6 +18,8 @@
 /phpstan.neon
 /phpstan-bootstrap.php
 /grumphp.yml
+/composer.json
+/composer.lock
 /README.md
 /CHANGELOG.md
 /node_modules

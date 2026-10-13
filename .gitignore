@@ -6,7 +6,6 @@
 # Dependencies
 # =============================================================================
 # Composer dependencies (installed via composer install)
-# Includes plugin-update-checker — installed as composer require, not vendored.
 /vendor/
 
 # Node.js dependencies (if using for asset compilation)

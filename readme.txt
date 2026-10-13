@@ -8,7 +8,6 @@ Requires PHP: 8.1
 Stable tag: 2.1.74
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Update URI: https://github.com/reportedip/reportedip-hive
 
 Community-powered WordPress security: 16 attack sensors, 4 2FA methods, threat sharing, fully Multisite-aware. GDPR-first. Made in Germany.
 
@@ -72,9 +71,7 @@ Details, bundles and how domains are counted: [reportedip.com](https://reportedi
 
 = Updates =
 
-The plugin ships a built-in update checker that polls the GitHub release feed every 12 hours. Updates appear in the standard *Plugins* list and install with a single click, exactly like a wordpress.org plugin, but served directly from the publisher.
-
-ReportedIP Hive is **not** distributed through wordpress.org. All releases are signed and tagged on GitHub: [github.com/reportedip/reportedip-hive/releases](https://github.com/reportedip/reportedip-hive/releases). For instant updates, hit *Plugins → Check for updates*.
+Updates arrive through the WordPress plugin directory, like for any other plugin. The plugin makes no update requests of its own.
 
 = Configuration =
 
@@ -391,15 +388,6 @@ This plugin connects to external services only when explicitly configured. *Loca
 * Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
 * Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
 
-= GitHub Releases API (Plugin Update Checker) =
-
-* Service URL: `https://api.github.com/repos/reportedip/reportedip-hive/releases` (via the [plugin-update-checker](https://github.com/YahnisElsts/plugin-update-checker) library)
-* Purpose: notifies the WordPress plugin updater about new tagged releases (release ZIP is downloaded from GitHub when the admin clicks "Update")
-* Default: on, runs once every 12 hours via the `wp_update_plugins` cron, the same cadence WordPress core uses for its own update checks
-* Data transmitted: only plugin metadata (current version, slug); no site identifiers, no user data
-* Terms: [GitHub Terms of Service](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service)
-* Privacy: [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement)
-
 = HaveIBeenPwned (HIBP) Range API =
 
 * Service URL: `https://api.pwnedpasswords.com/range/{first-5-sha1-hex-chars}`
@@ -426,7 +414,6 @@ Project home, documentation and the optional managed-relay service: [reportedip.
 == Credits ==
 
 * Developed by [ReportedIP](https://reportedip.com)
-* Plugin Update Checker by [YahnisElsts](https://github.com/YahnisElsts/plugin-update-checker) (MIT)
 * WebAuthn / FIDO2 implementation: in-house, no external dependency
 * Charts: [Chart.js](https://www.chartjs.org/) (MIT)
 * Icons: in-house SVG set
