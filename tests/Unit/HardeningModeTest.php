@@ -533,15 +533,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_log_marker_key_helper_is_distinct_from_state_marker() {
 			$wm = \ReportedIP_Hive_Hardening_Mode::window_marker_key( '2026-05-27 12:44' );
-			$lm = \ReportedIP_Hive_Hardening_Mode::log_marker_key( '2026-05-27 12:44' );
+			$lm = \ReportedIP_Hive_Security_Monitor::log_marker_key( '2026-05-27 12:44' );
 			$this->assertNotSame( $wm, $lm, 'state marker and log-noise marker must live in separate transient namespaces' );
 			$this->assertStringStartsWith( 'reportedip_hive_hardening_logged_window_', $lm );
 		}
 
 		public function test_distributed_detection_defaults_when_options_absent() {
-			$this->assertSame( 10, \ReportedIP_Hive_Hardening_Mode::detect_window_minutes() );
-			$this->assertSame( 10, \ReportedIP_Hive_Hardening_Mode::detect_min_ips() );
-			$this->assertSame( 50, \ReportedIP_Hive_Hardening_Mode::detect_min_attempts() );
+			$this->assertSame( 10, \ReportedIP_Hive_Security_Monitor::detect_window_minutes() );
+			$this->assertSame( 10, \ReportedIP_Hive_Security_Monitor::detect_min_ips() );
+			$this->assertSame( 50, \ReportedIP_Hive_Security_Monitor::detect_min_attempts() );
 		}
 
 		public function test_distributed_getters_clamp_out_of_range_values() {
@@ -549,31 +549,31 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['wp_options']['reportedip_hive_hardening_detect_min_ips']        = 1;
 			$GLOBALS['wp_options']['reportedip_hive_hardening_detect_min_attempts']   = 0;
 
-			$this->assertSame( 120, \ReportedIP_Hive_Hardening_Mode::detect_window_minutes(), 'window clamps to 120 max' );
-			$this->assertSame( 2, \ReportedIP_Hive_Hardening_Mode::detect_min_ips(), 'min IPs clamps to 2 floor' );
-			$this->assertSame( 50, \ReportedIP_Hive_Hardening_Mode::detect_min_attempts(), 'zero falls back to default' );
+			$this->assertSame( 120, \ReportedIP_Hive_Security_Monitor::detect_window_minutes(), 'window clamps to 120 max' );
+			$this->assertSame( 2, \ReportedIP_Hive_Security_Monitor::detect_min_ips(), 'min IPs clamps to 2 floor' );
+			$this->assertSame( 50, \ReportedIP_Hive_Security_Monitor::detect_min_attempts(), 'zero falls back to default' );
 		}
 
 		public function test_breaches_distributed_thresholds_with_defaults() {
-			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 10, 50 ) );
-			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 20, 120 ) );
-			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 9, 50 ), 'too few IPs' );
-			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 10, 49 ), 'too few attempts' );
+			$this->assertTrue( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 10, 50 ) );
+			$this->assertTrue( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 20, 120 ) );
+			$this->assertFalse( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 9, 50 ), 'too few IPs' );
+			$this->assertFalse( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 10, 49 ), 'too few attempts' );
 		}
 
 		public function test_breaches_distributed_thresholds_honours_custom_options() {
 			$GLOBALS['wp_options']['reportedip_hive_hardening_detect_min_ips']      = 3;
 			$GLOBALS['wp_options']['reportedip_hive_hardening_detect_min_attempts'] = 10;
 
-			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 3, 10 ) );
-			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::breaches_distributed_thresholds( 2, 10 ) );
+			$this->assertTrue( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 3, 10 ) );
+			$this->assertFalse( \ReportedIP_Hive_Security_Monitor::breaches_distributed_thresholds( 2, 10 ) );
 		}
 
 		public function test_rolling_window_bucket_label_is_stable_within_a_window() {
 			$base  = 1700000000;
-			$same  = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 10, $base );
-			$later = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 10, $base + 120 );
-			$next  = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 10, $base + 600 );
+			$same  = \ReportedIP_Hive_Security_Monitor::rolling_window_bucket_label( 10, $base );
+			$later = \ReportedIP_Hive_Security_Monitor::rolling_window_bucket_label( 10, $base + 120 );
+			$next  = \ReportedIP_Hive_Security_Monitor::rolling_window_bucket_label( 10, $base + 600 );
 
 			$this->assertSame( $same, $later, 'same 10-min slice yields the same bucket label' );
 			$this->assertNotSame( $same, $next, 'crossing the window boundary yields a new bucket label' );
@@ -581,15 +581,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_is_rolling_window_label_discriminates_burst_from_distributed() {
-			$this->assertTrue( \ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( 'rolling-10m-2833333' ) );
-			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( '2026-05-27 12:44' ) );
-			$this->assertFalse( \ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( '' ) );
+			$this->assertTrue( \ReportedIP_Hive_Security_Monitor::is_rolling_window_label( 'rolling-10m-2833333' ) );
+			$this->assertFalse( \ReportedIP_Hive_Security_Monitor::is_rolling_window_label( '2026-05-27 12:44' ) );
+			$this->assertFalse( \ReportedIP_Hive_Security_Monitor::is_rolling_window_label( '' ) );
 		}
 
 		public function test_parse_rolling_window_label_recovers_the_measured_timespan() {
 			$base   = 1700000000;
-			$label  = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 10, $base );
-			$window = \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( $label );
+			$label  = \ReportedIP_Hive_Security_Monitor::rolling_window_bucket_label( 10, $base );
+			$window = \ReportedIP_Hive_Security_Monitor::parse_rolling_window_label( $label );
 
 			$this->assertIsArray( $window );
 			$this->assertSame( 10, $window['minutes'] );
@@ -599,15 +599,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_parse_rolling_window_label_rejects_non_rolling_input() {
-			$this->assertNull( \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( '2026-05-27 12:44' ) );
-			$this->assertNull( \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( '' ) );
-			$this->assertNull( \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( 'rolling-0m-500' ) );
-			$this->assertNull( \ReportedIP_Hive_Hardening_Mode::parse_rolling_window_label( 'rolling-abc-500' ) );
+			$this->assertNull( \ReportedIP_Hive_Security_Monitor::parse_rolling_window_label( '2026-05-27 12:44' ) );
+			$this->assertNull( \ReportedIP_Hive_Security_Monitor::parse_rolling_window_label( '' ) );
+			$this->assertNull( \ReportedIP_Hive_Security_Monitor::parse_rolling_window_label( 'rolling-0m-500' ) );
+			$this->assertNull( \ReportedIP_Hive_Security_Monitor::parse_rolling_window_label( 'rolling-abc-500' ) );
 		}
 
 		public function test_describe_time_window_renders_a_rolling_label_as_a_timespan() {
-			$label  = \ReportedIP_Hive_Hardening_Mode::rolling_window_bucket_label( 60, 1785312000 );
-			$output = \ReportedIP_Hive_Hardening_Mode::describe_time_window( $label );
+			$label  = \ReportedIP_Hive_Security_Monitor::rolling_window_bucket_label( 60, 1785312000 );
+			$output = \ReportedIP_Hive_Security_Monitor::describe_time_window( $label );
 
 			$this->assertStringNotContainsString( 'rolling-', $output, 'the bucket index must not reach the operator' );
 			$this->assertStringNotContainsString( '1970', $output, 'a bucket index must never render as the Unix epoch' );
@@ -616,8 +616,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_describe_time_window_passes_unparseable_input_through_verbatim() {
-			$this->assertSame( 'not-a-date', \ReportedIP_Hive_Hardening_Mode::describe_time_window( 'not-a-date' ) );
-			$this->assertSame( '', \ReportedIP_Hive_Hardening_Mode::describe_time_window( '' ) );
+			$this->assertSame( 'not-a-date', \ReportedIP_Hive_Security_Monitor::describe_time_window( 'not-a-date' ) );
+			$this->assertSame( '', \ReportedIP_Hive_Security_Monitor::describe_time_window( '' ) );
 		}
 	}
 }

@@ -76,7 +76,7 @@ class ReportedIP_Hive_Hardening_Detection_Multisite_Test extends WP_UnitTestCase
 	 */
 	private function rolling_row( array $rows ) {
 		foreach ( $rows as $row ) {
-			if ( ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( (string) $row->time_window ) ) {
+			if ( ReportedIP_Hive_Security_Monitor::is_rolling_window_label( (string) $row->time_window ) ) {
 				return $row;
 			}
 		}
@@ -105,7 +105,7 @@ class ReportedIP_Hive_Hardening_Detection_Multisite_Test extends WP_UnitTestCase
 		$rows    = $monitor->check_coordinated_attacks();
 
 		foreach ( $rows as $row ) {
-			if ( ! ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( (string) $row->time_window ) ) {
+			if ( ! ReportedIP_Hive_Security_Monitor::is_rolling_window_label( (string) $row->time_window ) ) {
 				$this->fail( 'staggered IPs must not produce a same-minute burst row' );
 			}
 		}

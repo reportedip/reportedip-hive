@@ -58,7 +58,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @return string
 		 */
 		private function render( $key, $value ) {
-			require_once dirname( __DIR__, 2 ) . '/includes/class-hardening-mode.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-security-monitor.php';
 			require_once dirname( __DIR__, 2 ) . '/includes/class-logger.php';
 
 			$method = new ReflectionMethod( 'ReportedIP_Hive_Logger', 'format_detail_value' );

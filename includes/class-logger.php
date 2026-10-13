@@ -165,8 +165,8 @@ class ReportedIP_Hive_Logger {
 			return (string) wp_json_encode( $value );
 		}
 
-		if ( 'time_window' === $key && '' !== (string) $value && class_exists( 'ReportedIP_Hive_Hardening_Mode' ) ) {
-			return ReportedIP_Hive_Hardening_Mode::describe_time_window( (string) $value );
+		if ( 'time_window' === $key && '' !== (string) $value ) {
+			return ReportedIP_Hive_Security_Monitor::describe_time_window( (string) $value );
 		}
 
 		if ( in_array( $key, self::UNIX_TIME_DETAIL_KEYS, true ) && is_numeric( $value ) && (int) $value > 0 ) {

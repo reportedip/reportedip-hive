@@ -76,6 +76,13 @@ class ReportedIP_Hive_Security_Monitor {
 	const DEFAULT_DETECT_MIN_IPS        = 10;
 	const DEFAULT_DETECT_MIN_ATTEMPTS   = 50;
 
+	/**
+	 * Prefix of the per-window log-suppression marker. The name predates the
+	 * move of the helper into this class; keeping it lets a marker written
+	 * before an update keep suppressing after it.
+	 */
+	const LOG_MARKER_PREFIX = 'reportedip_hive_hardening_logged_window_';
+
 	private $database;
 	private $api_client;
 	private $logger;
@@ -1758,11 +1765,9 @@ class ReportedIP_Hive_Security_Monitor {
 		 */
 		$strongest = $this->strongest_coordinated_reason( $coordinated_attacks );
 		if ( is_array( $strongest ) && '' !== (string) $strongest['time_window'] ) {
-			$log_key = class_exists( 'ReportedIP_Hive_Hardening_Mode' )
-				? ReportedIP_Hive_Hardening_Mode::log_marker_key( (string) $strongest['time_window'] )
-				: '';
+			$log_key = self::log_marker_key( (string) $strongest['time_window'] );
 
-			if ( '' === $log_key || ! get_site_transient( $log_key ) ) {
+			if ( ! get_site_transient( $log_key ) ) {
 				$this->logger->log_security_event(
 					'coordinated_attack_detected',
 					'multiple',
@@ -1774,9 +1779,7 @@ class ReportedIP_Hive_Security_Monitor {
 					'critical'
 				);
 
-				if ( '' !== $log_key ) {
-					set_site_transient( $log_key, 1, 2 * HOUR_IN_SECONDS );
-				}
+				set_site_transient( $log_key, 1, 2 * HOUR_IN_SECONDS );
 			}
 		}
 
@@ -1951,5 +1954,104 @@ class ReportedIP_Hive_Security_Monitor {
 		$window = max( 1, (int) $window_minutes );
 		$bucket = (int) floor( (int) $now / ( $window * MINUTE_IN_SECONDS ) );
 		return 'rolling-' . $window . 'm-' . $bucket;
+	}
+
+	/**
+	 * Whether a reason payload originated from the rolling-window detector.
+	 *
+	 * @param string $time_window Reason `time_window` value.
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function is_rolling_window_label( $time_window ) {
+		return 0 === strpos( (string) $time_window, 'rolling-' );
+	}
+
+	/**
+	 * Resolve a rolling-window label back into the timespan it stands for.
+	 *
+	 * The label is a bucket index, not a date, so printing it through a
+	 * datetime formatter yields the Unix epoch. Admin surfaces call this to
+	 * show the window the detector actually measured.
+	 *
+	 * @param string $time_window Reason `time_window` value.
+	 * @return array{minutes:int,start:int,end:int}|null Null when the label is not a rolling one.
+	 * @since  3.0.0
+	 */
+	public static function parse_rolling_window_label( $time_window ) {
+		if ( ! preg_match( '/^rolling-(\d+)m-(\d+)$/', (string) $time_window, $matches ) ) {
+			return null;
+		}
+
+		$minutes = (int) $matches[1];
+		if ( $minutes < 1 ) {
+			return null;
+		}
+
+		$start = (int) $matches[2] * $minutes * MINUTE_IN_SECONDS;
+
+		return array(
+			'minutes' => $minutes,
+			'start'   => $start,
+			'end'     => $start + ( $minutes * MINUTE_IN_SECONDS ),
+		);
+	}
+
+	/**
+	 * Render a `time_window` value for display in the site timezone.
+	 *
+	 * Handles both shapes the detectors produce: the rolling bucket label and
+	 * the `%Y-%m-%d %H:%i` burst label (stored in UTC like every other plugin
+	 * datetime). Anything unrecognised is returned verbatim rather than being
+	 * pushed through a datetime formatter, which is what used to print the
+	 * Unix epoch.
+	 *
+	 * @param string $time_window Reason `time_window` value.
+	 * @return string             Display-ready label.
+	 * @since  3.0.0
+	 */
+	public static function describe_time_window( $time_window ) {
+		$time_window = (string) $time_window;
+		$window      = self::parse_rolling_window_label( $time_window );
+		$format      = get_option( 'date_format', 'Y-m-d' ) . ' ' . get_option( 'time_format', 'H:i:s' );
+
+		if ( null !== $window ) {
+			return sprintf(
+				/* translators: 1: window start datetime, 2: window end time, 3: window length in minutes */
+				__( '%1$s to %2$s (%3$d min rolling window)', 'reportedip-hive' ),
+				wp_date( $format, $window['start'] ),
+				wp_date( get_option( 'time_format', 'H:i:s' ), $window['end'] ),
+				$window['minutes']
+			);
+		}
+
+		if ( class_exists( 'ReportedIP_Hive' ) ) {
+			$local = ReportedIP_Hive::format_local_datetime( $time_window );
+			if ( '' !== $local ) {
+				return $local;
+			}
+		}
+
+		return $time_window;
+	}
+
+	/**
+	 * Build the per-time-window log-suppression transient key.
+	 *
+	 * {@see check_coordinated_attacks()} logs each pattern at most once per
+	 * retention window, so the hourly cron sweep does not re-emit critical
+	 * `coordinated_attack_detected` events for the same bucket every hour
+	 * while the row remains in the 2 h SQL lookback.
+	 *
+	 * @param string $time_window Burst label or rolling-window label.
+	 * @return string Empty string when no usable window, caller must skip the marker write/read.
+	 * @since  3.0.0
+	 */
+	public static function log_marker_key( $time_window ) {
+		$time_window = trim( (string) $time_window );
+		if ( '' === $time_window ) {
+			return '';
+		}
+		return self::LOG_MARKER_PREFIX . md5( $time_window );
 	}
 }

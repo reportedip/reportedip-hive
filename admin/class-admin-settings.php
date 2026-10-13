@@ -7354,7 +7354,7 @@ class ReportedIP_Hive_Admin_Settings {
 						);
 					}
 					if ( is_array( $reason ) && ! empty( $reason['unique_ips'] ) ) {
-						if ( ReportedIP_Hive_Hardening_Mode::is_rolling_window_label( (string) ( $reason['time_window'] ?? '' ) ) ) {
+						if ( ReportedIP_Hive_Security_Monitor::is_rolling_window_label( (string) ( $reason['time_window'] ?? '' ) ) ) {
 							printf(
 								/* translators: 1: number of attacking IPs, 2: total attempts. */
 								' ' . esc_html__( 'Trigger: %1$d IPs, %2$d attempts across the detection window (distributed).', 'reportedip-hive' ),
@@ -7367,7 +7367,7 @@ class ReportedIP_Hive_Admin_Settings {
 								' ' . esc_html__( 'Trigger: %1$d IPs, %2$d attempts in minute %3$s (burst).', 'reportedip-hive' ),
 								(int) $reason['unique_ips'],
 								(int) $reason['total_attempts'],
-								esc_html( ReportedIP_Hive_Hardening_Mode::describe_time_window( $reason['time_window'] ?? '' ) )
+								esc_html( ReportedIP_Hive_Security_Monitor::describe_time_window( $reason['time_window'] ?? '' ) )
 							);
 						}
 					}
