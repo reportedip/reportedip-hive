@@ -167,7 +167,9 @@ test.describe('protection page', () => {
 		await expect(page.locator('#lockdown input[type="hidden"][name="reportedip_hive_rest_allowed_roles[]"][value="administrator"]')).toHaveCount(1);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		await page.locator('#account_security .rip-protection__details > summary').click();
-		await expect(page.locator('#account_security input[name="reportedip_hive_2fa_allowed_methods[]"][value="sms"]')).toBeDisabled();
+		/* The free plugin lists the methods of its 2FA registry; SMS joins only through the add-on. */
+		await expect(page.locator('#account_security input[name="reportedip_hive_2fa_allowed_methods[]"][value="totp"]')).toBeEnabled();
+		await expect(page.locator('#account_security input[name="reportedip_hive_2fa_allowed_methods[]"][value="sms"]')).toHaveCount(0);
 	});
 
 	test('a stored role list renders checked and round-trips through save', async ({ page }) => {

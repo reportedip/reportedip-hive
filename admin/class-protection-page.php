@@ -928,9 +928,9 @@ class ReportedIP_Hive_Protection_Page {
 	 *
 	 * Each entry is `array{label:string,disabled:bool,fixed:bool}`. A fixed
 	 * choice is always checked, disabled and carried in the POST by a hidden
-	 * input. The SMS method is disabled while the managed relay is not part
-	 * of the plan, and the administrator role stays disabled in the adaptive
-	 * policies until an administrator has passed one challenge.
+	 * input. The method list comes from the 2FA method registry, and the
+	 * administrator role stays disabled in the adaptive policies until an
+	 * administrator has passed one challenge.
 	 *
 	 * @param array<string,mixed> $entry Registry entry.
 	 * @param string              $key   Registry key.
@@ -947,14 +947,6 @@ class ReportedIP_Hive_Protection_Page {
 				'disabled' => in_array( (string) $value, $fixed, true ),
 				'fixed'    => in_array( (string) $value, $fixed, true ),
 			);
-		}
-		if ( 'methods' === $source && isset( $choices['sms'] ) ) {
-			$relay = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
-			if ( empty( $relay['available'] ) ) {
-				$choices['sms']['disabled'] = true;
-				/* translators: %s: plan name */
-				$choices['sms']['label'] .= ' ' . sprintf( __( '(%s plan)', 'reportedip-hive' ), ucfirst( (string) ( $relay['min_tier'] ?? 'professional' ) ) );
-			}
 		}
 		if ( 0 === strpos( (string) $key, 'reportedip_hive_2fa_policy_' ) && isset( $choices['administrator'] ) && ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
 			$choices['administrator']['disabled'] = true;
