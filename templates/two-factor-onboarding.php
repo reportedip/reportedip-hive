@@ -4,7 +4,7 @@
  *
  * Variables available (see class-two-factor-onboarding.php):
  *   - $user            WP_User object
- *   - $allowed_methods string[] globally allowed methods (totp|email|webauthn|sms)
+ *   - $allowed_methods string[] globally allowed methods (registered method slugs)
  *   - $skips_left      float   remaining skips (INF during grace)
  *   - $grace_deadline  int     Unix timestamp, 0 if no/expired grace
  *   - $in_grace        bool    true if in grace period
@@ -23,6 +23,10 @@
  * @var int            $grace_deadline  Unix timestamp; 0 if no/expired grace.
  * @var bool           $in_grace        Whether the user is in the grace period.
  * @var string         $dashboard_url   Fallback redirect URL.
+ *
+ * A method an add-on registers renders its choice card (step 2) and its
+ * setup panel (step 3) through the action
+ * `reportedip_hive_2fa_onboarding_panel_{slug}`.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -36,7 +40,12 @@ $last_skip          = ! $unlimited_skip && 1 === (int) $skips_left;
 $method_totp_ok     = in_array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, $allowed_methods, true );
 $method_email_ok    = in_array( ReportedIP_Hive_Two_Factor::METHOD_EMAIL, $allowed_methods, true );
 $method_webauthn_ok = in_array( ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN, $allowed_methods, true );
-$method_sms_ok      = in_array( ReportedIP_Hive_Two_Factor::METHOD_SMS, $allowed_methods, true );
+$extra_methods      = array_values(
+	array_diff(
+		array_intersect( array_keys( ReportedIP_Hive_Two_Factor::methods() ), $allowed_methods ),
+		array( ReportedIP_Hive_Two_Factor::METHOD_TOTP, ReportedIP_Hive_Two_Factor::METHOD_EMAIL, ReportedIP_Hive_Two_Factor::METHOD_WEBAUTHN )
+	)
+);
 
 $grace_deadline_str = '';
 if ( $grace_deadline > 0 ) {
@@ -227,18 +236,22 @@ if ( $grace_deadline > 0 ) {
 					</label>
 				<?php endif; ?>
 
-				<?php if ( $method_sms_ok ) : ?>
-					<label class="rip-mode-card" data-method="sms">
-						<input type="checkbox" class="rip-2fa-method-check" value="sms" hidden>
-						<div class="rip-mode-card__icon" aria-hidden="true">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-						</div>
-						<h3 class="rip-mode-card__title"><?php esc_html_e( 'SMS (worldwide)', 'reportedip-hive' ); ?></h3>
-						<p class="rip-mode-card__description">
-							<?php esc_html_e( 'Code by SMS via a GDPR-compliant provider. Best as a backup, SIM-swapping risk.', 'reportedip-hive' ); ?>
-						</p>
-					</label>
-				<?php endif; ?>
+				<?php
+				foreach ( $extra_methods as $rip_slug ) {
+					/**
+					 * Render an onboarding part of a registered method: `card`
+					 * is its choice in step 2 (a `label.rip-mode-card` with
+					 * `data-method="{slug}"` holding a `.rip-2fa-method-check`
+					 * checkbox), `setup` its setup panel in step 3 (a hidden
+					 * `.rip-2fa-setup-panel` with `data-method-panel="{slug}"`).
+					 *
+					 * @param WP_User $user The user being enrolled.
+					 * @param string  $part `card` or `setup`.
+					 * @since 3.0.0
+					 */
+					do_action( 'reportedip_hive_2fa_onboarding_panel_' . $rip_slug, $user, 'card' );
+				}
+				?>
 			</div>
 
 			<p class="rip-help-text" style="margin-top: var(--rip-space-6); text-align: center;">
@@ -366,62 +379,12 @@ if ( $grace_deadline > 0 ) {
 				</p>
 			</div>
 
-			<!-- SMS-Setup-Panel -->
-			<div class="rip-2fa-setup-panel" data-method-panel="sms" hidden>
-				<h2><?php esc_html_e( 'Set up SMS', 'reportedip-hive' ); ?></h2>
-
-				<div class="rip-privacy-notice" role="note">
-					<svg class="rip-privacy-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-						<rect x="3" y="11" width="18" height="11" rx="2"/>
-						<path d="M7 11V7a5 5 0 0110 0v4"/>
-					</svg>
-					<div>
-						<strong><?php esc_html_e( 'Privacy notice', 'reportedip-hive' ); ?></strong>
-						<p><?php esc_html_e( 'Phone number stored encrypted, delivered worldwide via our managed relay. Use SMS as a backup, SIM-swapping risk.', 'reportedip-hive' ); ?></p>
-					</div>
-				</div>
-
-				<div class="rip-2fa-substep">
-					<span class="rip-2fa-substep__num" aria-hidden="true">1</span>
-					<div class="rip-2fa-substep__body">
-						<h3 class="rip-2fa-substep__title"><?php esc_html_e( 'Enter your mobile number', 'reportedip-hive' ); ?></h3>
-
-						<div class="rip-form-group">
-							<label for="rip-2fa-sms-number" class="rip-label"><?php esc_html_e( 'Mobile number (international, e.g. +49 151 12345678)', 'reportedip-hive' ); ?></label>
-							<div class="rip-input-wrap">
-								<input type="tel" id="rip-2fa-sms-number" class="rip-input" autocomplete="tel" placeholder="+49 151 12345678" aria-describedby="rip-2fa-sms-number-hint" inputmode="tel">
-								<span class="rip-input-validity" aria-hidden="true"></span>
-							</div>
-							<p id="rip-2fa-sms-number-hint" class="rip-help-text">
-								<?php esc_html_e( 'Format: +49 151 12345678 (country code required).', 'reportedip-hive' ); ?>
-							</p>
-						</div>
-
-						<label class="rip-checkbox">
-							<input type="checkbox" id="rip-2fa-sms-consent">
-							<?php esc_html_e( 'I consent to my phone number being shared with the EU SMS provider for authentication.', 'reportedip-hive' ); ?>
-						</label>
-
-						<button type="button" class="rip-button rip-button--primary" id="rip-2fa-sms-send" disabled data-default-label="<?php esc_attr_e( 'Send confirmation code by SMS', 'reportedip-hive' ); ?>">
-							<?php esc_html_e( 'Send confirmation code by SMS', 'reportedip-hive' ); ?>
-						</button>
-						<p class="rip-2fa-inline-status" id="rip-2fa-sms-send-status" role="status"></p>
-						<p class="rip-2fa-challenge__timer" id="rip-2fa-sms-delivery-timer" role="status" hidden></p>
-					</div>
-				</div>
-
-				<div class="rip-2fa-substep">
-					<span class="rip-2fa-substep__num" aria-hidden="true">2</span>
-					<div class="rip-2fa-substep__body">
-						<h3 class="rip-2fa-substep__title"><?php esc_html_e( 'Enter the 6-digit code from the SMS', 'reportedip-hive' ); ?></h3>
-						<div class="rip-2fa-code-confirm">
-							<input type="text" id="rip-2fa-sms-verify" class="rip-input rip-2fa-code-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-label="<?php esc_attr_e( 'SMS code', 'reportedip-hive' ); ?>">
-							<button type="button" class="rip-button rip-button--primary" id="rip-2fa-sms-confirm"><?php esc_html_e( 'Confirm', 'reportedip-hive' ); ?></button>
-						</div>
-						<p class="rip-2fa-inline-status" id="rip-2fa-sms-status" role="status"></p>
-					</div>
-				</div>
-			</div>
+			<?php
+			foreach ( $extra_methods as $rip_slug ) {
+				/** This action is documented in templates/two-factor-onboarding.php */
+				do_action( 'reportedip_hive_2fa_onboarding_panel_' . $rip_slug, $user, 'setup' );
+			}
+			?>
 
 			<div class="rip-wizard__actions">
 				<button type="button" class="rip-button rip-button--ghost" data-goto-step="2">← <?php esc_html_e( 'Back', 'reportedip-hive' ); ?></button>

@@ -423,6 +423,12 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 				'maskedEmail'   => ReportedIP_Hive_Two_Factor::mask_email( $user->user_email ),
 				'skipsLeft'     => is_infinite( $skips_left ) ? -1 : (int) $skips_left,
 				'graceDeadline' => (int) $grace_deadline,
+				'methodLabels'  => array_map(
+					static function ( $definition ) {
+						return (string) $definition['label'];
+					},
+					ReportedIP_Hive_Two_Factor::methods()
+				),
 				'strings'       => array(
 					'sending'          => __( 'Sending...', 'reportedip-hive' ),
 					'sent'             => __( 'Code sent!', 'reportedip-hive' ),
@@ -432,10 +438,6 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 					'copied'           => __( 'Copied!', 'reportedip-hive' ),
 					'passkeyUnsupport' => __( 'Your browser does not support passkeys. Please choose another method.', 'reportedip-hive' ),
 					'networkError'     => __( 'Network error. Please try again.', 'reportedip-hive' ),
-					'methodTotp'       => __( 'Authenticator app', 'reportedip-hive' ),
-					'methodEmail'      => __( 'Email code', 'reportedip-hive' ),
-					'methodWebauthn'   => __( 'Passkey', 'reportedip-hive' ),
-					'methodSms'        => __( 'SMS', 'reportedip-hive' ),
 					'qrLibMissing'     => __( 'QR code library is missing. Please reload the page.', 'reportedip-hive' ),
 					'passkeyCreating'  => __( 'Creating passkey...', 'reportedip-hive' ),
 					'passkeyDuplicate' => __( 'This passkey is already registered on your account. You can continue with the next method.', 'reportedip-hive' ),
@@ -444,9 +446,6 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 					'downloaded'       => __( 'Downloaded', 'reportedip-hive' ),
 					/* translators: %d: seconds remaining */
 					'resendIn'         => __( 'Resend in %d s', 'reportedip-hive' ),
-					/* translators: %d: seconds remaining */
-					'smsDeliveryWait'  => __( 'SMS sent, delivery can take up to 60 s (%d)', 'reportedip-hive' ),
-					'phoneInvalid'     => __( 'Please enter the number with country code, e.g. +49 151 12345678.', 'reportedip-hive' ),
 				),
 			)
 		);
