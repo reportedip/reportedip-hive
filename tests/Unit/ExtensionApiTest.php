@@ -181,4 +181,18 @@ class ExtensionApiTest extends TestCase {
 		\ReportedIP_Hive_Settings_Effects::run_queued();
 		$this->assertSame( array( 'demo' ), $ran );
 	}
+
+	public function test_cron_jobs_accept_injected_job() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cron-handler.php';
+		add_filter(
+			'reportedip_hive_cron_jobs',
+			static function ( array $jobs ) {
+				$jobs['reportedip_hive_demo_job'] = 'hourly';
+				return $jobs;
+			}
+		);
+
+		$this->assertContains( 'reportedip_hive_demo_job', \ReportedIP_Hive_Cron_Handler::get_hook_names() );
+		$this->assertContains( 'reportedip_hive_cleanup', \ReportedIP_Hive_Cron_Handler::get_hook_names() );
+	}
 }

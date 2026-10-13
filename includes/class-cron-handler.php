@@ -107,6 +107,27 @@ class ReportedIP_Hive_Cron_Handler {
 	);
 
 	/**
+	 * The scheduled jobs, hook name to recurrence, after the add-on filter.
+	 *
+	 * @return array<string,string>
+	 * @since  3.0.0
+	 */
+	public static function jobs() {
+		/**
+		 * Extend the cron jobs.
+		 *
+		 * The free scheduler registers every job it returns at activation and
+		 * on the `admin_init` self-heal. An add-on that adds a job must also
+		 * schedule it when it is activated on its own and clear it on its
+		 * deactivation, because the free hooks run only on the free lifecycle.
+		 *
+		 * @param array<string,string> $jobs Hook name to recurrence.
+		 * @since 3.0.0
+		 */
+		return apply_filters( 'reportedip_hive_cron_jobs', self::JOBS );
+	}
+
+	/**
 	 * Schedule cron jobs (static version for activation hook + self-heal).
 	 *
 	 * The Cron_Handler instance is not constructed during activation, so the
@@ -121,7 +142,7 @@ class ReportedIP_Hive_Cron_Handler {
 			return;
 		}
 		add_filter( 'cron_schedules', array( __CLASS__, 'add_cron_intervals' ) );
-		foreach ( self::JOBS as $hook => $recurrence ) {
+		foreach ( self::jobs() as $hook => $recurrence ) {
 			if ( ! wp_next_scheduled( $hook ) ) {
 				wp_schedule_event( time(), $recurrence, $hook );
 			}
@@ -132,7 +153,7 @@ class ReportedIP_Hive_Cron_Handler {
 	 * Clear cron jobs (static version for deactivation hook).
 	 */
 	public static function clear_cron_jobs_static() {
-		foreach ( self::JOBS as $hook => $_ ) {
+		foreach ( self::jobs() as $hook => $_ ) {
 			wp_clear_scheduled_hook( $hook );
 		}
 	}
@@ -152,7 +173,7 @@ class ReportedIP_Hive_Cron_Handler {
 	 * @return string[]
 	 */
 	public static function get_hook_names() {
-		return array_keys( self::JOBS );
+		return array_keys( self::jobs() );
 	}
 
 	/**
@@ -197,6 +218,14 @@ class ReportedIP_Hive_Cron_Handler {
 				$audit_retention = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_retention_days', 90 );
 				$cleaned_audit   = ReportedIP_Hive_Audit_Logger::cleanup( $audit_retention );
 			}
+
+			/**
+			 * Fires after the daily retention cleanup of the free tables.
+			 *
+			 * @param int $retention_days Retention the cleanup used.
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_cron_cleanup_done', (int) $retention_days );
 
 			$this->logger->info(
 				'Daily cleanup completed',
@@ -263,6 +292,15 @@ class ReportedIP_Hive_Cron_Handler {
 					ReportedIP_Hive_Hardening_Mode::activate( $reason, 'cron' );
 				}
 			}
+
+			/**
+			 * Fires with the coordinated attacks the hourly scan found, after the
+			 * free plugin logged them and mailed the administrators.
+			 *
+			 * @param array $attacks Rows from Security_Monitor::check_coordinated_attacks().
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_coordinated_attacks_found', $coordinated_attacks );
 		} catch ( \Throwable $e ) {
 			$this->logger->critical( 'Reputation sync failed: ' . $e->getMessage(), 'system' );
 		}
@@ -352,6 +390,8 @@ class ReportedIP_Hive_Cron_Handler {
 	 * Cron job: Refresh API quota (runs every 6 hours)
 	 */
 	public function cron_refresh_quota() {
+		$quota = array();
+
 		try {
 			$quota = $this->api_client->refresh_api_quota();
 
@@ -383,6 +423,14 @@ class ReportedIP_Hive_Cron_Handler {
 		} catch ( \Throwable $e ) {
 			$this->logger->error( 'Quota refresh failed: ' . $e->getMessage(), 'system' );
 		}
+
+		/**
+		 * Fires after the six-hourly API quota refresh.
+		 *
+		 * @param array $quota The quota snapshot the API returned, or an empty array.
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_api_quota_refreshed', is_array( $quota ) ? $quota : array() );
 
 		try {
 			$relay = $this->api_client->get_relay_quota( true );
