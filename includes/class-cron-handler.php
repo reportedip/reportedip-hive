@@ -293,14 +293,16 @@ class ReportedIP_Hive_Cron_Handler {
 				}
 			}
 
-			/**
-			 * Fires with the coordinated attacks the hourly scan found, after the
-			 * free plugin logged them and mailed the administrators.
-			 *
-			 * @param array $attacks Rows from Security_Monitor::check_coordinated_attacks().
-			 * @since 3.0.0
-			 */
-			do_action( 'reportedip_hive_coordinated_attacks_found', $coordinated_attacks );
+			if ( ! empty( $coordinated_attacks ) ) {
+				/**
+				 * Fires with the coordinated attacks the hourly scan found, after the
+				 * free plugin logged them.
+				 *
+				 * @param array $attacks Rows from Security_Monitor::check_coordinated_attacks().
+				 * @since 3.0.0
+				 */
+				do_action( 'reportedip_hive_coordinated_attacks_found', $coordinated_attacks );
+			}
 		} catch ( \Throwable $e ) {
 			$this->logger->critical( 'Reputation sync failed: ' . $e->getMessage(), 'system' );
 		}
