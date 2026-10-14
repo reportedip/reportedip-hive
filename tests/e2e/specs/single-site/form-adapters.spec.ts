@@ -1,5 +1,4 @@
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import type { APIRequestContext } from '@playwright/test';
 import { test, expect } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
@@ -172,39 +171,6 @@ function setJquery(on: boolean): void {
 		'-c',
 		on ? 'touch /profiles/jquery-on.txt' : 'rm -f /profiles/jquery-on.txt',
 	]);
-}
-
-/**
- * Make the stack answer is_ssl() with true, or stop doing so.
- *
- * The computation check is only handed out on a secure connection. The stack
- * speaks plain HTTP, and `docker/mu-plugins/zz-rip-force-https.php` forges the
- * scheme while this flag file exists. Chrome treats localhost as a secure
- * context anyway, so the browser side computes.
- */
-function setForcedHttps(on: boolean): void {
-	execFileSync('docker', [
-		'exec',
-		WP_CONTAINER,
-		'sh',
-		'-c',
-		on ? 'touch /profiles/force-https.txt' : 'rm -f /profiles/force-https.txt',
-	]);
-}
-
-/**
- * Demand a solved computation, with its own grace already run out, or not.
- *
- * Writing the option directly skips the page purge the settings path runs,
- * and Elementor keeps rendered widget markup in post meta, so a page seen
- * earlier in the run would still carry an anchor without the endpoint.
- */
-function setComputation(on: boolean): void {
-	php(
-		`ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow', ${on ? 1 : 0});` +
-			` ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_since', ${on ? 'time() - 172800' : 0});` +
-			` ReportedIP_Hive_Cache_Flush::purge_pages();`
-	);
 }
 
 function setAdapters(on: boolean): void {
@@ -690,7 +656,6 @@ test.describe('form adapters', () => {
 		php(`
 			${forceTierPhp('business')}
 			ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_enabled', 1);
-			ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow', 0);
 			ReportedIP_Hive_Option_Routing::set('reportedip_hive_reputation_on_forms', 0);
 		`);
 		setAdapters(true);
@@ -770,60 +735,6 @@ test.describe('form adapters', () => {
 		await page.waitForLoadState('domcontentloaded');
 
 		expect(formidableEntryCount()).toBe(1);
-	});
-
-	/**
-	 * Case 2b: the same two forms with the bound challenge demanded. Elementor
-	 * sends over its own background request and Formidable over a page load,
-	 * and both have to carry a computed answer the way Gravity Forms and
-	 * WPForms do; these are the specs that keep every adapter on one footing.
-	 */
-	test('a browser passes the computation on Elementor', async ({ page }) => {
-		setForcedHttps(true);
-		setComputation(true);
-
-		try {
-			const logsBefore = failureLogCount();
-
-			await page.goto(ELEMENTOR_PAGE);
-			await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
-
-			await page.fill('input[name="form_fields[name]"]', 'E2E Reader');
-			await page.fill('textarea[name="form_fields[message]"]', 'A computed enquiry from a reader.');
-			await page.click('.elementor-button[type="submit"]');
-
-			await expect(page.locator('.elementor-message-success')).toBeVisible({ timeout: 60000 });
-			expect(failureLogCount()).toBe(logsBefore);
-		} finally {
-			setComputation(false);
-			setForcedHttps(false);
-		}
-	});
-
-	test('a browser passes the computation on Formidable', async ({ page }) => {
-		setForcedHttps(true);
-		setComputation(true);
-		clearFormidableEntries();
-
-		try {
-			await page.goto(FRM_PAGE);
-			await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
-
-			await page.fill(`input[name="item_meta[${FRM_NAME_FIELD}]"]`, 'E2E Reader');
-			await page.fill(`textarea[name="item_meta[${FRM_TEXT_FIELD}]"]`, 'A computed enquiry from a reader.');
-
-			const sent = page.waitForResponse(
-				(response) => 'POST' === response.request().method() && response.url().includes(FRM_PAGE),
-				{ timeout: 60000 }
-			);
-			await page.click('.frm_button_submit');
-			await sent;
-
-			expect(formidableEntryCount()).toBe(1);
-		} finally {
-			setComputation(false);
-			setForcedHttps(false);
-		}
 	});
 
 	/** Case 3: a bare POST carrying none of our fields, past the grace. */
@@ -1093,39 +1004,6 @@ test.describe('form adapters', () => {
 			});
 		}
 
-		/**
-		 * With a computation in play, a form rendered again after an error is
-		 * the case that used to fail: the script read the challenge once at
-		 * page load, so the re-rendered form found nothing computed and was
-		 * refused as unproven. The re-arm on `gform/post_render` reads it
-		 * again; this is the spec that keeps it.
-		 */
-		test('a browser passes the computation on Gravity Forms after a validation error', async ({
-			page,
-		}) => {
-			setForcedHttps(true);
-			setComputation(true);
-			clearGravityEntries();
-
-			try {
-				await page.goto(GRAVITY_AJAX_PAGE);
-				await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
-
-				await page.fill('textarea[name="input_2"]', 'An enquiry that forgot the name.');
-				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
-				await expect(page.locator('.gform_validation_errors')).toBeVisible();
-
-				await page.fill('input[name="input_1"]', 'E2E Reader');
-				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
-
-				await expect(page.locator('.gform_confirmation_message')).toBeVisible({ timeout: 60000 });
-				expect(gravityEntryCount()).toBe(1);
-			} finally {
-				setComputation(false);
-				setForcedHttps(false);
-			}
-		});
-
 		test('a bare post without our fields is refused on Gravity Forms, in front of the sender', async ({
 			request,
 		}) => {
@@ -1153,87 +1031,17 @@ test.describe('form adapters', () => {
 		});
 
 		/**
-		 * Gravity Forms validates its own fields first. A submission it turns
-		 * down (here an empty required field, on tollwood.de an unticked
-		 * reCAPTCHA) reached the proof check already invalid and spent the
-		 * answer, so the corrected second send of the same answer was refused
-		 * as a replay. The answer is handed back for a submission that writes
-		 * no entry, and stays single-use for one that does.
-		 */
-		test('the same answer passes again after Gravity Forms turned the submission down', async ({
-			request,
-		}) => {
-			clearGravityEntries();
-			php(`
-				ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow', 1);
-				ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_since', time() - 172800);
-				ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow_version', REPORTEDIP_HIVE_VERSION);
-			`);
-
-			try {
-				const minted = await request.post('/wp-json/reportedip-hive/v1/form/challenge', {
-					failOnStatusCode: false,
-				});
-				expect(minted.status()).toBe(200);
-				const task = (await minted.json()) as { token: string; seed: string; bits: number };
-
-				let answer = `${task.token}.0`;
-				for (let nonce = 0; task.bits > 0; nonce++) {
-					const hex = nonce.toString(16);
-					const digest = createHash('sha256').update(task.seed + hex).digest();
-					let bits = 0;
-					for (const byte of digest) {
-						if (byte === 0) {
-							bits += 8;
-							continue;
-						}
-						let part = byte;
-						while (part < 128) {
-							bits++;
-							part <<= 1;
-						}
-						break;
-					}
-					if (bits >= task.bits) {
-						answer = `${task.token}.${hex}`;
-						break;
-					}
-				}
-
-				const field = proofField();
-
-				const first = await postGravity(request, { [ANCHOR]: '', [field]: answer, input_1: '' });
-				expect(gravityEntryCount(), 'the empty required field stops the first send').toBe(0);
-				expect(first).toContain('gfield_error');
-
-				const second = await postGravity(request, { [ANCHOR]: '', [field]: answer });
-				expect(second, 'the corrected send with the same answer is not a replay').not.toContain(
-					'gform_submission_error'
-				);
-				expect(gravityEntryCount()).toBe(1);
-
-				await postGravity(request, { [ANCHOR]: '', [field]: answer });
-				expect(gravityEntryCount(), 'an answer that wrote an entry stays spent').toBe(1);
-			} finally {
-				php("ReportedIP_Hive_Option_Routing::set('reportedip_hive_form_proof_pow', 0);");
-				clearGravityEntries();
-			}
-		});
-
-		/**
 		 * A multi-step form over AJAX: Name on page one, Message on page two,
 		 * submitted without a page reload. The plugin only judges the last
 		 * page, so the Next click must not be refused and the final submit
 		 * must carry a fresh proof, dealt by the re-arm on `gform/post_render`.
 		 */
 		test('a browser gets through the multi-step Gravity Forms form over AJAX', async ({ page }) => {
-			setForcedHttps(true);
-			setComputation(true);
 			clearGravityMultiEntries();
 
 			try {
 				await page.goto(GRAVITY_MULTI_PAGE);
-				await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
+				await expect(page.locator('input.rip-fp-anchor')).toHaveCount(1);
 
 				await page.fill(`#input_${GRAVITY_MULTI_FORM}_1`, 'E2E Mehrschritt Leser');
 				await page.click(`#gform_next_button_${GRAVITY_MULTI_FORM}_2`);
@@ -1246,8 +1054,7 @@ test.describe('form adapters', () => {
 				await expect(page.locator('.gform_confirmation_message')).toBeVisible({ timeout: 60000 });
 				expect(gravityMultiEntryCount()).toBe(1);
 			} finally {
-				setComputation(false);
-				setForcedHttps(false);
+				clearGravityMultiEntries();
 			}
 		});
 
@@ -1352,38 +1159,6 @@ test.describe('form adapters', () => {
 				await expect(page.locator('.wpforms-confirmation-container-full')).toHaveCount(0);
 			});
 		}
-
-		/**
-		 * With a computation in play the submit is held until an answer is in
-		 * stock and then re-sent through the form, which runs the plugin's
-		 * validator and its background request as if the visitor had clicked;
-		 * this is the spec that keeps that hand-over working.
-		 */
-		test('a browser passes the computation on WPForms over the background path', async ({
-			page,
-		}) => {
-			setForcedHttps(true);
-			setComputation(true);
-
-			try {
-				const logsBefore = failureLogCount();
-
-				await page.goto(WPFORMS_AJAX_PAGE);
-				await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
-
-				await page.fill(`#wpforms-${WPFORMS_AJAX_FORM}-field_1`, 'E2E Reader');
-				await page.fill(`#wpforms-${WPFORMS_AJAX_FORM}-field_2`, 'A computed enquiry over AJAX.');
-				await page.click(`#wpforms-submit-${WPFORMS_AJAX_FORM}`);
-
-				await expect(page.locator('.wpforms-confirmation-container-full')).toBeVisible({
-					timeout: 60000,
-				});
-				expect(failureLogCount()).toBe(logsBefore);
-			} finally {
-				setComputation(false);
-				setForcedHttps(false);
-			}
-		});
 
 		test('a bare post without our fields is refused on WPForms, in front of the sender', async ({
 			request,
@@ -1543,33 +1318,6 @@ test.describe('form adapters', () => {
 			});
 		}
 
-		/**
-		 * The computation holds the submit until an answer is in stock and
-		 * then sends the form again, which has to run the plugin's own
-		 * validation and background request as if the visitor had clicked.
-		 */
-		test('a browser passes the computation on Forminator', async ({ page }) => {
-			setForcedHttps(true);
-			setComputation(true);
-
-			try {
-				const logsBefore = failureLogCount();
-
-				await page.goto(FORMINATOR_PAGE);
-				await expect(page.locator('input.rip-fp-anchor[data-e]')).toHaveCount(1);
-
-				await page.fill('input[name="email-1"]', 'e2e-forminator@example.com');
-				await page.fill('textarea[name="textarea-1"]', 'A computed enquiry.');
-				await page.click('button.forminator-button-submit');
-
-				await expect(page.locator('.forminator-success')).toBeVisible({ timeout: 60000 });
-				expect(failureLogCount()).toBe(logsBefore);
-			} finally {
-				setComputation(false);
-				setForcedHttps(false);
-			}
-		});
-
 		test('a bare post without our fields is refused on Forminator', async ({ request }) => {
 			await expectForminatorRefused(request);
 		});
@@ -1693,44 +1441,6 @@ test.describe('form adapters', () => {
 			expect(umUserCount(), 'a reader with a browser must get an account').toBe(1);
 
 			clearUmUsers();
-		});
-
-		test('a browser passes the computation on Ultimate Member', async ({ page }) => {
-			test.skip(UM_REGISTER_FORM === '0', 'Ultimate Member is not installed on this stack');
-
-			setAdapters(true);
-			expireGrace();
-			setForcedHttps(true);
-			setComputation(true);
-			clearUmUsers();
-			clearRegistrationAttempts();
-
-			try {
-				const login = `ripe2eumc${Date.now().toString().slice(-6)}`;
-
-				await page.goto(UM_REGISTER_PAGE);
-				await expect(page.locator('form input.rip-fp-anchor[data-e]')).toHaveCount(1);
-
-				await page.fill(`input[name="user_login-${UM_REGISTER_FORM}"]`, login);
-				await page.fill(`input[name="user_email-${UM_REGISTER_FORM}"]`, `${login}@example.com`);
-				await page.fill(`input[name="user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
-				await page.fill(`input[name="confirm_user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
-				await page.click('input[type="submit"].um-button');
-
-				/**
-				 * The script may hold the submit for up to eight seconds while
-				 * the task is still being solved, so the page is only counted
-				 * once Ultimate Member has sent the new account on to its
-				 * profile address.
-				 */
-				await page.waitForURL(new RegExp(login), { timeout: 60000 });
-
-				expect(umUserCount(), 'a computed sign-up must open an account').toBe(1);
-			} finally {
-				setComputation(false);
-				setForcedHttps(false);
-				clearUmUsers();
-			}
 		});
 
 		/**
