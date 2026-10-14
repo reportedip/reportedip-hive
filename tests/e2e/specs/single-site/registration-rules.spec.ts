@@ -22,8 +22,10 @@ const BLOCKED_LOGIN = 'e2eblockedname';
 const BASELINE_LOGIN = 'administrator';
 const GHOST_LOGIN_ON = 'e2eghostone';
 const GHOST_LOGIN_OFF = 'e2eghosttwo';
-const KEPT_LIST = 'e2ekeepthisentry';
-const REGEX_ENTRY = '/^e2e-re[0-9]+$/';
+const FREE_REGEX_ENTRY = '/^e2eregre[0-9]+$/';
+const ALLOWLIST_KEY = 'reportedip_hive_registration_allowlist';
+/** Documentation range, never the address the stack sees the test client as. */
+const ALLOWLIST = '198.51.100.0/24';
 /** Baked into `Disposable_Email::RELAY_DOMAINS`; never comes from the feed. */
 const THROWAWAY_DOMAIN = 'duck.com';
 
@@ -31,6 +33,7 @@ const USERNAME_DENIED = 'This username is not allowed';
 const EMAIL_DENIED = 'This e-mail address cannot be used for registration';
 const DISPOSABLE_DENIED = 'Please use a permanent e-mail address';
 const LIMIT_DENIED = 'Too many registrations from your network';
+const ALLOWLIST_DENIED = 'Registration is not available from your network';
 const REGISTERED = 'checkemail=registered';
 
 /**
@@ -135,6 +138,7 @@ test.describe('registration rules', () => {
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_disposable_email_action');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_block_email_relays');
 			ReportedIP_Hive_Option_Routing::delete('reportedip_hive_block_user_enumeration');
+			ReportedIP_Hive_Option_Routing::delete('${ALLOWLIST_KEY}');
 			foreach (get_users(array('search' => 'e2ereg*', 'search_columns' => array('user_login'), 'fields' => 'ID')) as $id) { wp_delete_user((int) $id); }
 			$leftover = get_user_by('login', '${BASELINE_LOGIN}');
 			if ($leftover instanceof WP_User) { wp_delete_user($leftover->ID); }
@@ -337,10 +341,19 @@ test.describe('registration rules', () => {
 		expect(stillFree, 'with the option off a failed sign-in must leave the address free').toBe('0');
 	});
 
-	test('the free plan refuses an eleventh entry and keeps the stored list', async ({ page }) => {
+	/**
+	 * Without the add-on the plan lifts nothing, not even on Professional:
+	 * the list is stored as typed (an eleventh entry and a regular expression
+	 * included, so a list the add-on wrote survives a save here), only the
+	 * first ten plain entries refuse, and a stored allowlist refuses nobody.
+	 */
+	test('without the add-on a long list is stored but only ten plain entries apply', async ({ page, request }) => {
 		php(`
-			${FORCE_FREE_PHP}
-			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_USERNAMES, '${KEPT_LIST}');
+			${forceTierPhp('professional')}
+			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_USERNAMES_BASELINE, 0);
+			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_EMAIL_MODE, 'off');
+			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_LIMIT_ENABLED, 0);
+			ReportedIP_Hive_Option_Routing::set('${ALLOWLIST_KEY}', '${ALLOWLIST}');
 			update_user_meta( 1, "reportedip_hive_expert_mode", 1 );
 			echo 'ready';
 		`);
@@ -348,38 +361,29 @@ test.describe('registration rules', () => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=forms');
 		await page.locator('#registration .rip-protection__details').evaluate((el) => { (el as HTMLDetailsElement).open = true; });
+		await expect(page.locator(`#registration [name="${ALLOWLIST_KEY}"]`)).toHaveCount(0);
 
-		const eleven = Array.from({ length: 11 }, (unused, index) => `e2ename${index + 1}`).join('\n');
-		await page.locator('#registration textarea[name="reportedip_hive_prohibited_usernames"]').fill(eleven);
-		await page.locator('.rip-protection__panel[data-tab="forms"] button.rip-button--primary').click();
-		await page.waitForURL(/page=reportedip-hive-protection.*tab=forms/);
-
-		// The refusal is reported at the card and the stored list stays.
-		await expect(page.locator('#registration .rip-protection__error[data-for="reportedip_hive_prohibited_usernames"]')).toContainText(/professional plan/i);
-		expect(wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames')).toBe(KEPT_LIST);
-	});
-
-	test('Professional accepts eleven entries and a regular expression', async ({ page }) => {
-		php(`${forceTierPhp('professional')} update_user_meta( 1, "reportedip_hive_expert_mode", 1 ); echo 'pro';`);
-
-		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=forms');
-		await page.locator('#registration .rip-protection__details').evaluate((el) => { (el as HTMLDetailsElement).open = true; });
-
-		const entries = Array.from({ length: 10 }, (unused, index) => `e2ename${index + 1}`);
-		entries.push(REGEX_ENTRY);
+		const entries = Array.from({ length: 11 }, (unused, index) => `e2eregname${index + 1}`);
+		entries.push(FREE_REGEX_ENTRY);
 		await page.locator('#registration textarea[name="reportedip_hive_prohibited_usernames"]').fill(entries.join('\n'));
 		await page.locator('.rip-protection__panel[data-tab="forms"] button.rip-button--primary').click();
 		await page.waitForURL(/page=reportedip-hive-protection.*tab=forms/);
 
-		const stored = wpTolerant('option', 'get', 'reportedip_hive_prohibited_usernames');
-		expect(
-			stored
-				.split('\n')
-				.map((line) => line.trim())
-				.filter(Boolean)
-		).toHaveLength(11);
-		expect(stored).toContain(REGEX_ENTRY);
+		const [stored, allowlist] = php(`
+			echo str_replace(chr(10), ',', (string) ReportedIP_Hive_Option_Routing::get(ReportedIP_Hive_Registration_Guard::OPT_USERNAMES, '')) . '|' . (string) ReportedIP_Hive_Option_Routing::get('${ALLOWLIST_KEY}', '');
+		`).split('|');
+		expect(stored.split(',')).toEqual(entries);
+		expect(allowlist, 'a save without the add-on must leave its allowlist alone').toBe(ALLOWLIST);
+
+		const tenth = await register(request, 'e2eregname10', 'e2eregname10@example.org');
+		expect(tenth.body).toContain(USERNAME_DENIED);
+
+		for (const login of ['e2eregname11', 'e2eregre5']) {
+			const accepted = await register(request, login, `${login}@example.org`);
+			expect(accepted.body, `${login} is beyond the free cap`).not.toContain(USERNAME_DENIED);
+			expect(accepted.body).not.toContain(ALLOWLIST_DENIED);
+			expect(accepted.url).toContain(REGISTERED);
+		}
 	});
 
 	test('the other registration fields render in expert mode', async ({ page }) => {
@@ -391,7 +395,6 @@ test.describe('registration rules', () => {
 		for (const name of [
 			'reportedip_hive_email_rules',
 			'reportedip_hive_registration_limit_enabled',
-			'reportedip_hive_registration_allowlist',
 			'reportedip_hive_block_unknown_username_login',
 		]) {
 			await expect(page.locator(`#registration [name="${name}"]`)).toBeAttached();
