@@ -5,7 +5,7 @@
  * Collects the operational faults that are already detectable somewhere in
  * the plugin, an unwritable guard queue, a stalled WP-Cron, a client-IP
  * header trusted from any peer, a stuck schema migration, a degraded API
- * window, a relay cap, failing outgoing mail, a missing encryption backend
+ * window, failing outgoing mail, a missing encryption backend
  * and the report-queue backlog, into one persistent list with a severity,
  * a first-seen timestamp and a site-wide seven-day dismissal.
  *
@@ -476,8 +476,20 @@ final class ReportedIP_Hive_Readiness {
 			);
 		}
 
-		$raised[] = self::relay_cap( 'mail', ReportedIP_Hive_Mode_Manager::get_cap_state( 'mail' ) );
-		$raised[] = self::relay_cap( 'sms', ReportedIP_Hive_Mode_Manager::get_cap_state( 'sms' ) );
+		/**
+		 * Add issues of a service the site uses, after the API health and
+		 * before the mail failures. Runs on every site and without the
+		 * quickstart condition. An entry is an issue row (`key`, `severity`
+		 * as one of the `SEV_*` constants, `label`, `message`) or null for
+		 * nothing raised; the deep link comes from
+		 * `reportedip_hive_readiness_links`. A result that is not an array is
+		 * ignored.
+		 *
+		 * @param array<int,array<string,mixed>|null> $raised Issues raised so far.
+		 * @since 3.0.0
+		 */
+		$filtered = apply_filters( 'reportedip_hive_readiness_service_issues', $raised );
+		$raised   = is_array( $filtered ) ? $filtered : $raised;
 		$raised[] = self::mail_failures( self::get_mail_failures() );
 		$raised[] = self::crypto_missing( ReportedIP_Hive_Two_Factor_Crypto::get_active_method() );
 
@@ -885,36 +897,6 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
-	 * A managed relay channel has hit its cap.
-	 *
-	 * @param string                   $channel 'mail' | 'sms'.
-	 * @param array<string,mixed>|null $state   Cap state, or null when the channel is fine.
-	 * @return array<string,string>|null
-	 * @since  2.1.51
-	 */
-	public static function relay_cap( $channel, $state ) {
-		if ( ! is_array( $state ) ) {
-			return null;
-		}
-
-		if ( 'sms' === $channel ) {
-			return self::issue(
-				'relay_cap_sms',
-				self::SEV_WARNING,
-				__( 'SMS relay capacity reached', 'reportedip-hive' ),
-				__( 'SMS-based 2FA codes are paused until the relay accepts again, users can still choose TOTP, Email or Passkey.', 'reportedip-hive' )
-			);
-		}
-
-		return self::issue(
-			'relay_cap_mail',
-			self::SEV_WARNING,
-			__( 'Mail relay capacity reached', 'reportedip-hive' ),
-			__( 'Mails are temporarily routed through your local wp_mail() until the relay accepts again.', 'reportedip-hive' )
-		);
-	}
-
-	/**
 	 * Outgoing mail failed within the last 24 hours.
 	 *
 	 * @param array{count:int,last_error:string,last_at:int}|null $record Rolling failure record.
@@ -1078,8 +1060,6 @@ final class ReportedIP_Hive_Readiness {
 			'trusted_header_open'    => array( 'reportedip-hive-protection', 'detection' ),
 			'schema_outdated'        => array( 'reportedip-hive-debug', '' ),
 			'api_degraded'           => array( 'reportedip-hive-community', 'community' ),
-			'relay_cap_mail'         => array( 'reportedip-hive-community', 'community' ),
-			'relay_cap_sms'          => array( 'reportedip-hive-community', 'community' ),
 			'mail_failures'          => array( 'reportedip-hive-protection', 'notifications' ),
 			'crypto_missing'         => array( 'reportedip-hive-protection', 'account_security' ),
 			'queue_failed'           => array( 'reportedip-hive-security', 'api_queue' ),

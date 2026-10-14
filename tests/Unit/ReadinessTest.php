@@ -156,21 +156,23 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNull( \ReportedIP_Hive_Readiness::api_degraded( false, 42.5, 40 ) );
 		}
 
-		public function test_relay_cap_yields_channel_specific_key(): void {
-			$state = array(
-				'hit_at'      => 1750000000,
-				'retry_after' => 3600,
-			);
+		/**
+		 * The relay cap issues come from the add-on, raised where 2.1.74
+		 * raised them: behind the API health, before the mail failures, on
+		 * every site and before the quickstart is done.
+		 */
+		public function test_service_issues_sit_where_the_relay_cap_was(): void {
+			$this->assertFalse( method_exists( \ReportedIP_Hive_Readiness::class, 'relay_cap' ) );
 
-			$mail = \ReportedIP_Hive_Readiness::relay_cap( 'mail', $state );
-			$sms  = \ReportedIP_Hive_Readiness::relay_cap( 'sms', $state );
-
-			$this->assertSame( 'relay_cap_mail', $mail['key'] );
-			$this->assertSame( 'relay_cap_sms', $sms['key'] );
-			$this->assertSame( \ReportedIP_Hive_Readiness::SEV_WARNING, $mail['severity'] );
-
-			$this->assertNull( \ReportedIP_Hive_Readiness::relay_cap( 'mail', null ) );
-			$this->assertNull( \ReportedIP_Hive_Readiness::relay_cap( 'sms', null ) );
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-readiness.php' );
+			$api    = strpos( $source, '$raised[] = self::api_degraded(' );
+			$filter = strpos( $source, "apply_filters( 'reportedip_hive_readiness_service_issues', \$raised )" );
+			$mail   = strpos( $source, '$raised[] = self::mail_failures(' );
+			$wizard = strpos( $source, 'if ( $mode->is_wizard_completed() ) {' );
+			$this->assertNotFalse( $filter );
+			$this->assertGreaterThan( $api, $filter );
+			$this->assertLessThan( $mail, $filter );
+			$this->assertLessThan( $wizard, $filter );
 		}
 
 		public function test_mail_failures_reads_count_and_last_error(): void {
