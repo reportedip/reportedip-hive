@@ -35,6 +35,41 @@ namespace ReportedIP\Hive\Tests\Unit {
 			return (string) file_get_contents( dirname( __DIR__, 2 ) . '/' . $relative );
 		}
 
+		/**
+		 * The export reads the stored history itself and pads a partial or
+		 * broken row to the full shape.
+		 *
+		 * @runInSeparateProcess
+		 * @preserveGlobalState disabled
+		 */
+		public function test_export_reads_the_stored_history_without_the_add_on(): void {
+			require_once dirname( __DIR__ ) . '/stubs/two-factor-runtime-stubs.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-privacy.php';
+			$read = new \ReflectionMethod( \ReportedIP_Hive_Privacy::class, 'stored_login_context' );
+
+			$GLOBALS['wp_user_meta'][4]['reportedip_hive_login_context'] = (string) wp_json_encode(
+				array(
+					'last'                => array(
+						'ip' => '198.51.100.4',
+						'ts' => 1700000000,
+					),
+					'logins_since_verify' => 3,
+					'nets'                => array( '198.51.100.0/24' ),
+					'uas'                 => 'broken',
+				)
+			);
+			$context = $read->invoke( null, 4 );
+
+			$this->assertSame( '198.51.100.4', $context['last']['ip'] );
+			$this->assertSame( '', $context['last']['country'] );
+			$this->assertSame( 1700000000, $context['last']['ts'] );
+			$this->assertSame( 3, $context['logins_since_verify'] );
+			$this->assertSame( array( '198.51.100.0/24' ), $context['nets'] );
+			$this->assertSame( array(), $context['uas'] );
+			$this->assertSame( 0, $read->invoke( null, 5 )['last']['ts'], 'No row, no history.' );
+		}
+
 		public function test_eraser_clears_the_texts_and_retains_the_block(): void {
 			$source = $this->source( 'includes/class-privacy.php' );
 			$body   = substr( $source, (int) strpos( $source, 'public function erase_personal_data(' ) );
@@ -70,7 +105,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$body   = substr( $body, 0, (int) strpos( $body, 'public function erase_personal_data(' ) );
 
 			$this->assertStringContainsString( "'reportedip-hive-login-context'", $body );
-			$this->assertStringContainsString( 'ReportedIP_Hive_Login_Context::get(', $body );
+			$this->assertStringContainsString( 'self::stored_login_context( $user->ID )', $body );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Two_Factor::META_LOGIN_CONTEXT', $source, 'The history is read from the meta, also while the add-on that records it is inactive.' );
 			foreach ( array( 'nets', 'uas', 'countries' ) as $list ) {
 				$this->assertStringContainsString( "\$login_context['{$list}']", $body );
 			}

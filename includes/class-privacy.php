@@ -279,7 +279,7 @@ class ReportedIP_Hive_Privacy {
 			);
 		}
 
-		$login_context = ReportedIP_Hive_Login_Context::get( $user->ID );
+		$login_context = self::stored_login_context( $user->ID );
 		if ( $login_context['last']['ts'] > 0 || ! empty( $login_context['nets'] ) ) {
 			$items[] = array(
 				'group_id'    => 'reportedip-hive-login-context',
@@ -333,6 +333,40 @@ class ReportedIP_Hive_Privacy {
 		return array(
 			'data' => $items,
 			'done' => true,
+		);
+	}
+
+	/**
+	 * The stored sign-in history of one user, padded to its full shape.
+	 *
+	 * Read straight from the user meta, so the export also covers the
+	 * history an add-on recorded while it was active.
+	 *
+	 * @param int $user_id User id.
+	 * @return array{last:array{ip:string,ua_short:string,country:string,ts:int},verified_at:int,logins_since_verify:int,nets:string[],uas:string[],countries:string[]}
+	 * @since  3.0.0
+	 */
+	private static function stored_login_context( $user_id ) {
+		$raw     = get_user_meta( (int) $user_id, ReportedIP_Hive_Two_Factor::META_LOGIN_CONTEXT, true );
+		$decoded = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+		$decoded = is_array( $decoded ) ? $decoded : array();
+		$last    = isset( $decoded['last'] ) && is_array( $decoded['last'] ) ? $decoded['last'] : array();
+		$list    = static function ( $key ) use ( $decoded ) {
+			return isset( $decoded[ $key ] ) && is_array( $decoded[ $key ] ) ? array_map( 'strval', array_values( $decoded[ $key ] ) ) : array();
+		};
+
+		return array(
+			'last'                => array(
+				'ip'       => (string) ( $last['ip'] ?? '' ),
+				'ua_short' => (string) ( $last['ua_short'] ?? '' ),
+				'country'  => (string) ( $last['country'] ?? '' ),
+				'ts'       => (int) ( $last['ts'] ?? 0 ),
+			),
+			'verified_at'         => (int) ( $decoded['verified_at'] ?? 0 ),
+			'logins_since_verify' => (int) ( $decoded['logins_since_verify'] ?? 0 ),
+			'nets'                => $list( 'nets' ),
+			'uas'                 => $list( 'uas' ),
+			'countries'           => $list( 'countries' ),
 		);
 	}
 
