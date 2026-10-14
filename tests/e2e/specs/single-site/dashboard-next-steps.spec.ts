@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
+import { php } from '../../fixtures/wp';
 
 /**
  * Dashboard after the quickstart: banner, next steps with an inline action,
@@ -71,7 +72,9 @@ test.describe('dashboard next steps', () => {
 		const areas = page.locator('details.rip-areas');
 		await expect(areas).toHaveCount(1);
 		await expect(areas).not.toHaveAttribute('open', '');
-		await expect(page.locator('.rip-areas__row')).toHaveCount(14);
+		const sections = Number(php('echo count( ReportedIP_Hive_Settings_Registry::sections() );'));
+		expect(sections).toBeGreaterThan(10);
+		await expect(page.locator('.rip-areas__row')).toHaveCount(sections);
 		await expect(page.locator('.rip-areas__row a.rip-areas__label[href$="#blocking"]')).toHaveCount(1);
 		await areas.locator('summary').click();
 		await expect(page.locator('.rip-areas__row .rip-areas__desc').first()).toBeVisible();
