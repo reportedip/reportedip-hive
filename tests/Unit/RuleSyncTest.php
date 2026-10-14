@@ -78,6 +78,47 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( array(), $baseline['rules'] );
 		}
 
+		public function test_an_add_on_key_joins_but_never_replaces_the_free_keys(): void {
+			add_filter(
+				'reportedip_hive_ruleset_keys',
+				static function () {
+					return array( 'extra_list', 'Bad-Key', 7, 'waf' );
+				}
+			);
+			$this->assertSame( array_merge( \ReportedIP_Hive_Rule_Store::VALID_KEYS, array( 'extra_list' ) ), \ReportedIP_Hive_Rule_Store::keys() );
+			$this->assertTrue( \ReportedIP_Hive_Rule_Store::is_valid_key( 'extra_list' ) );
+			$this->assertTrue( \ReportedIP_Hive_Rule_Store::is_valid_key( 'scan_paths' ), 'a listener cannot drop a free key' );
+			$this->assertFalse( \ReportedIP_Hive_Rule_Store::is_valid_key( 'Bad-Key' ) );
+		}
+
+		public function test_the_baseline_path_filter_serves_add_on_keys_only(): void {
+			$dir  = sys_get_temp_dir() . '/rip-baseline-' . uniqid();
+			$file = $dir . '/extra.php';
+			mkdir( $dir );
+			file_put_contents( $file, "<?php return array( 'key' => 'extra_list', 'version' => 0, 'rules' => array( 'a' ) );" );
+			add_filter(
+				'reportedip_hive_ruleset_keys',
+				static function ( $keys ) {
+					$keys[] = 'extra_list';
+					return $keys;
+				}
+			);
+			add_filter(
+				'reportedip_hive_ruleset_baseline_path',
+				static function () use ( $file ) {
+					return $file;
+				}
+			);
+			try {
+				$this->assertSame( array( 'a' ), $this->sync()->load_baseline( 'extra_list' )['rules'] );
+				$this->assertSame( 'waf', $this->sync()->load_baseline( 'waf' )['key'], 'a free key always loads the free baseline' );
+			} finally {
+				unlink( $file );
+				rmdir( $dir );
+			}
+		}
+
+
 		public function test_get_ruleset_falls_back_to_baseline(): void {
 			$got = $this->sync()->get_ruleset( 'disposable_domains' );
 			$this->assertNotEmpty( $got['rules'] );

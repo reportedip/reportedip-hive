@@ -656,7 +656,7 @@ class ReportedIP_Hive_Admin_Firewall {
 
 		$meta = self::ruleset_meta();
 		echo '<table class="rip-table"><thead><tr><th>' . esc_html__( 'Ruleset', 'reportedip-hive' ) . '</th><th>' . esc_html__( 'Feeds', 'reportedip-hive' ) . '</th><th>' . esc_html__( 'Rules', 'reportedip-hive' ) . '</th><th>' . esc_html__( 'Version', 'reportedip-hive' ) . '</th><th>' . esc_html__( 'Source', 'reportedip-hive' ) . '</th></tr></thead><tbody>';
-		foreach ( ReportedIP_Hive_Rule_Store::VALID_KEYS as $key ) {
+		foreach ( ReportedIP_Hive_Rule_Store::keys() as $key ) {
 			$ruleset    = $sync->get_ruleset( $key );
 			$version    = isset( $ruleset['version'] ) ? (int) $ruleset['version'] : 0;
 			$rule_count = isset( $ruleset['rules'] ) && is_array( $ruleset['rules'] ) ? count( $ruleset['rules'] ) : 0;

@@ -4626,7 +4626,7 @@ class ReportedIP_Hive_Admin_Settings {
 						$rule_sync_last = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rule_sync_last_run', 0 );
 						$rule_sync_obj  = ReportedIP_Hive_Rule_Sync::get_instance();
 						$ruleset_parts  = array();
-						foreach ( ReportedIP_Hive_Rule_Store::VALID_KEYS as $rule_key ) {
+						foreach ( ReportedIP_Hive_Rule_Store::keys() as $rule_key ) {
 							$rule_row        = $rule_sync_obj->get_ruleset( $rule_key );
 							$rule_version    = isset( $rule_row['version'] ) ? (int) $rule_row['version'] : 0;
 							$ruleset_parts[] = $rule_key . ' v' . $rule_version . ( $rule_version > 0 ? '' : ' (baseline)' );

@@ -107,6 +107,17 @@ final class ReportedIP_Hive_Rule_Sync {
 			return $empty;
 		}
 		$file = REPORTEDIP_HIVE_PLUGIN_DIR . 'data/rulesets/' . str_replace( '_', '-', $key ) . '-baseline.php';
+		if ( ! in_array( $key, ReportedIP_Hive_Rule_Store::VALID_KEYS, true ) ) {
+			/**
+			 * Path of the bundled baseline for a ruleset key an add-on
+			 * registered. A free key always loads the free baseline.
+			 *
+			 * @param string $file Absolute path of the baseline file.
+			 * @param string $key  Ruleset key.
+			 * @since 3.0.0
+			 */
+			$file = (string) apply_filters( 'reportedip_hive_ruleset_baseline_path', $file, $key );
+		}
 		if ( ! file_exists( $file ) ) {
 			return $empty;
 		}
@@ -222,7 +233,7 @@ final class ReportedIP_Hive_Rule_Sync {
 		}
 		set_site_transient( self::SYNC_LOCK_TRANSIENT, 1, 5 * MINUTE_IN_SECONDS );
 		try {
-			foreach ( ReportedIP_Hive_Rule_Store::VALID_KEYS as $key ) {
+			foreach ( ReportedIP_Hive_Rule_Store::keys() as $key ) {
 				$this->sync_ruleset( $key );
 			}
 			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_rule_sync_last_run', time() );

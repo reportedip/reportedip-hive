@@ -33,7 +33,8 @@ final class ReportedIP_Hive_Rule_Store {
 	const OPTION_PREFIX = 'reportedip_hive_ruleset_';
 
 	/**
-	 * The ruleset keys this plugin understands.
+	 * The ruleset keys the free plugin ships a baseline for. An add-on
+	 * registers more through {@see self::keys()}.
 	 *
 	 * @var string[]
 	 */
@@ -54,7 +55,35 @@ final class ReportedIP_Hive_Rule_Store {
 	 * @since  2.1.2
 	 */
 	public static function is_valid_key( $key ) {
-		return is_string( $key ) && in_array( $key, self::VALID_KEYS, true );
+		return is_string( $key ) && in_array( $key, self::keys(), true );
+	}
+
+	/**
+	 * The ruleset keys this site syncs, stores and reads: the free keys
+	 * first, then the keys an add-on registers.
+	 *
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function keys() {
+		/**
+		 * Register additional ruleset keys.
+		 *
+		 * A listener can add keys but never drop a free one: the free keys
+		 * stay in the list whatever the filter returns, and an entry that is
+		 * not a lowercase slug is ignored.
+		 *
+		 * @param string[] $keys Ruleset keys.
+		 * @since 3.0.0
+		 */
+		$filtered = apply_filters( 'reportedip_hive_ruleset_keys', self::VALID_KEYS );
+		$keys     = self::VALID_KEYS;
+		foreach ( is_array( $filtered ) ? $filtered : array() as $key ) {
+			if ( is_string( $key ) && preg_match( '/^[a-z0-9_]{1,64}$/', $key ) && ! in_array( $key, $keys, true ) ) {
+				$keys[] = $key;
+			}
+		}
+		return $keys;
 	}
 
 	/**
