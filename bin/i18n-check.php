@@ -26,11 +26,7 @@ namespace ReportedIP\Hive\Bin;
  */
 final class I18nCheck {
 
-	private const SLUG     = 'reportedip-hive';
-	private const DOMAIN   = 'reportedip-hive';
 	private const LANG_DIR = 'languages';
-	private const POT      = 'languages/reportedip-hive.pot';
-	private const PO_DE    = 'languages/reportedip-hive-de_DE.po';
 
 	/**
 	 * Absolute path to the plugin root (parent of bin/).
@@ -38,6 +34,27 @@ final class I18nCheck {
 	 * @var string
 	 */
 	private string $root;
+
+	/**
+	 * Plugin slug, equal to its text domain.
+	 *
+	 * @var string
+	 */
+	private string $slug;
+
+	/**
+	 * Relative path of the POT.
+	 *
+	 * @var string
+	 */
+	private string $pot;
+
+	/**
+	 * Relative path of the German PO.
+	 *
+	 * @var string
+	 */
+	private string $po_de;
 
 	/**
 	 * Collected failure messages.
@@ -48,9 +65,13 @@ final class I18nCheck {
 
 	/**
 	 * @param string $root Plugin root directory.
+	 * @param string $slug Plugin slug and text domain; the add-on passes its own.
 	 */
-	public function __construct( string $root ) {
-		$this->root = rtrim( $root, '/\\' );
+	public function __construct( string $root, string $slug = 'reportedip-hive' ) {
+		$this->root  = rtrim( $root, '/\\' );
+		$this->slug  = $slug;
+		$this->pot   = self::LANG_DIR . '/' . $slug . '.pot';
+		$this->po_de = self::LANG_DIR . '/' . $slug . '-de_DE.po';
 	}
 
 	/**
@@ -83,9 +104,9 @@ final class I18nCheck {
 	 * @return void
 	 */
 	private function check_pot_freshness(): void {
-		$pot = $this->path( self::POT );
+		$pot = $this->path( $this->pot );
 		if ( ! is_file( $pot ) ) {
-			$this->failures[] = self::POT . ' is missing.';
+			$this->failures[] = $this->pot . ' is missing.';
 			return;
 		}
 
@@ -93,8 +114,8 @@ final class I18nCheck {
 		$cmd = sprintf(
 			'i18n make-pot . %s --slug=%s --domain=%s --exclude=vendor,tests,bin,build,node_modules',
 			escapeshellarg( $tmp ),
-			self::SLUG,
-			self::DOMAIN
+			$this->slug,
+			$this->slug
 		);
 		if ( 0 !== $this->wp( $cmd ) ) {
 			$this->failures[] = 'Failed to regenerate the POT for the freshness comparison.';
@@ -111,7 +132,7 @@ final class I18nCheck {
 		if ( ! empty( $added ) || ! empty( $removed ) ) {
 			$this->failures[] = sprintf(
 				'%s is stale, %d new and %d removed source string(s). Run "composer i18n:pot".',
-				self::POT,
+				$this->pot,
 				count( $added ),
 				count( $removed )
 			);
@@ -124,9 +145,9 @@ final class I18nCheck {
 	 * @return void
 	 */
 	private function check_translation_completeness(): void {
-		$po = $this->path( self::PO_DE );
+		$po = $this->path( $this->po_de );
 		if ( ! is_file( $po ) ) {
-			$this->failures[] = self::PO_DE . ' is missing, German translation not initialised.';
+			$this->failures[] = $this->po_de . ' is missing, German translation not initialised.';
 			return;
 		}
 
@@ -134,7 +155,7 @@ final class I18nCheck {
 		if ( array() !== $mojibake ) {
 			$this->failures[] = sprintf(
 				'%s carries double-encoded UTF-8 on line(s) %s (an umlaut written as two Latin-1 characters). Re-enter those translations.',
-				self::PO_DE,
+				$this->po_de,
 				implode( ', ', $mojibake )
 			);
 		}
@@ -143,7 +164,7 @@ final class I18nCheck {
 		if ( $stats['untranslated'] > 0 || $stats['fuzzy'] > 0 ) {
 			$this->failures[] = sprintf(
 				'%s has %d untranslated and %d fuzzy entries.',
-				self::PO_DE,
+				$this->po_de,
 				$stats['untranslated'],
 				$stats['fuzzy']
 			);
@@ -157,7 +178,7 @@ final class I18nCheck {
 	 * @return void
 	 */
 	private function check_artifact_sync(): void {
-		$po = $this->path( self::PO_DE );
+		$po = $this->path( $this->po_de );
 		if ( ! is_file( $po ) ) {
 			return;
 		}
@@ -165,7 +186,7 @@ final class I18nCheck {
 		$committed = $this->collect_artifacts( $this->path( self::LANG_DIR ) );
 
 		$tmp_dir = $this->temp_dir();
-		copy( $po, $tmp_dir . '/' . basename( self::PO_DE ) );
+		copy( $po, $tmp_dir . '/' . basename( $this->po_de ) );
 		$this->wp( 'i18n make-mo ' . escapeshellarg( $tmp_dir ) . ' ' . escapeshellarg( $tmp_dir ) );
 		$this->wp( 'i18n make-json ' . escapeshellarg( $tmp_dir ) . ' ' . escapeshellarg( $tmp_dir ) );
 		$fresh = $this->collect_artifacts( $tmp_dir );
@@ -427,4 +448,6 @@ final class I18nCheck {
 	}
 }
 
-exit( ( new I18nCheck( dirname( __DIR__ ) ) )->run() );
+$rip_i18n_root = isset( $argv[1] ) ? (string) realpath( $argv[1] ) : dirname( __DIR__ );
+$rip_i18n_slug = isset( $argv[2] ) ? (string) $argv[2] : 'reportedip-hive';
+exit( ( new I18nCheck( $rip_i18n_root, $rip_i18n_slug ) )->run() );
