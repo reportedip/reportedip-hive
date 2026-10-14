@@ -55,6 +55,35 @@ final class ReportedIP_Hive_Defaults {
 	public const MIN_BLOCK_THRESHOLD = 25;
 
 	/**
+	 * Side-effect tokens that stand for the operator's explicit go-ahead.
+	 * Seeding runs on activation, which is no such go-ahead, so a seeded
+	 * default never owes them (wordpress.org rule 13 for `.htaccess`).
+	 *
+	 * @since 3.0.0
+	 * @var string[]
+	 */
+	public const OPERATOR_EFFECTS = array( 'htaccess_consent' );
+
+	/**
+	 * True while {@see seed_missing()} writes defaults, so the option
+	 * watchers of `ReportedIP_Hive_Settings_Effects` can drop the
+	 * {@see OPERATOR_EFFECTS} a seeded write would otherwise queue.
+	 *
+	 * @var bool
+	 */
+	private static $seeding = false;
+
+	/**
+	 * Whether defaults are being seeded in this request right now.
+	 *
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function is_seeding() {
+		return self::$seeding;
+	}
+
+	/**
 	 * Canonical option-key => default map. The single source of truth for
 	 * every `reportedip_hive_*` default: activation seeding, the wizard-skip
 	 * seed, the settings-reset re-seed and `ReportedIP_Hive::get_default_options()`
@@ -475,15 +504,20 @@ final class ReportedIP_Hive_Defaults {
 		$sentinel = '__rip_hive_default_unset__';
 		$seeded   = array();
 
-		foreach ( self::all_option_defaults() as $option_key => $default_value ) {
-			if ( $sentinel !== ReportedIP_Hive_Option_Routing::get( $option_key, $sentinel ) ) {
-				continue;
+		self::$seeding = true;
+		try {
+			foreach ( self::all_option_defaults() as $option_key => $default_value ) {
+				if ( $sentinel !== ReportedIP_Hive_Option_Routing::get( $option_key, $sentinel ) ) {
+					continue;
+				}
+				if ( is_bool( $default_value ) ) {
+					$default_value = $default_value ? 1 : 0;
+				}
+				ReportedIP_Hive_Option_Routing::set( $option_key, $default_value );
+				$seeded[] = $option_key;
 			}
-			if ( is_bool( $default_value ) ) {
-				$default_value = $default_value ? 1 : 0;
-			}
-			ReportedIP_Hive_Option_Routing::set( $option_key, $default_value );
-			$seeded[] = $option_key;
+		} finally {
+			self::$seeding = false;
 		}
 
 		self::run_seed_effects( $seeded );
@@ -521,7 +555,7 @@ final class ReportedIP_Hive_Defaults {
 	 *
 	 * Pure, so the contract can be checked without the effect machinery and
 	 * without WordPress: a seeded setting owes exactly the tokens its registry
-	 * entry declares, each one once.
+	 * entry declares, each one once, minus the {@see OPERATOR_EFFECTS}.
 	 *
 	 * @param string[] $seeded Option keys.
 	 * @return string[]
@@ -537,6 +571,9 @@ final class ReportedIP_Hive_Defaults {
 
 		foreach ( $seeded as $option_key ) {
 			foreach ( (array) ( $spec[ $option_key ]['side_effects'] ?? array() ) as $token ) {
+				if ( in_array( (string) $token, self::OPERATOR_EFFECTS, true ) ) {
+					continue;
+				}
 				$tokens[ (string) $token ] = true;
 			}
 		}

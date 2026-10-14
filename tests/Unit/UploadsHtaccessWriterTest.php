@@ -85,7 +85,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		protected function set_up() {
 			parent::set_up();
-			$GLOBALS['wp_options']               = array();
+			$GLOBALS['wp_options']               = array(
+				'reportedip_hive_htaccess_consent' => 1,
+			);
 			$this->uploads_dir                   = sys_get_temp_dir() . '/rip-uploads-' . uniqid();
 			$GLOBALS['rip_test_uploads_basedir'] = $this->uploads_dir;
 			mkdir( $this->uploads_dir );

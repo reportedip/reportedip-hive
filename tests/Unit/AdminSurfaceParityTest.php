@@ -92,6 +92,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_form_proof_seen'            => 'Runtime state: when an anchor was last rendered. Measured, not configured.',
 			'reportedip_hive_form_adapters_since'        => 'Runtime state: when the first third-party form adapter was switched on, so a page cache filled beforehand keeps working through the grace.',
 			'reportedip_hive_waf_dropin_enabled'         => 'Host-specific. The switch needs a server directive next to it; a fleet push would leave every site at "waiting for server config".',
+			'reportedip_hive_htaccess_consent'           => 'Runtime consent flag for .htaccess edits. Only the operator of the site gives it, through the quickstart or one of the two switches.',
 			'reportedip_hive_hardening_enabled'          => 'Sentinel. "No stored value" is what turns hardening on automatically from Professional upwards, so it has neither a default nor a registry entry.',
 		);
 

@@ -221,6 +221,7 @@ test.describe('attack surface switches', () => {
 			'$w = ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance();',
 			'$f = $w->get_target_path();',
 			'file_put_contents( dirname( $f ) . "/' + UPLOADS_PROBE + '", chr(60) . "?php echo \'RIP-PROBE-OK\';" );',
+			'ReportedIP_Hive_Htaccess_Block_Writer::consent();',
 			'update_option( $k, 0 );',
 			'update_option( $k, 1 );',
 			'echo wp_json_encode( array( "path" => $f, "body" => file_exists( $f ) ? file_get_contents( $f ) : "" ) );',

@@ -711,6 +711,9 @@ class ReportedIP_Hive_Quickstart {
 		$values['reportedip_hive_notify_recipients']   = $notify ? (string) get_option( 'admin_email', '' ) : '';
 
 		$result = ReportedIP_Hive_Settings_Apply::apply( $values, 'quickstart' );
+		ReportedIP_Hive_Htaccess_Block_Writer::consent();
+		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->sync();
+		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->sync();
 		foreach ( $result['results'] as $key => $row ) {
 			if ( in_array( $row['status'], array( ReportedIP_Hive_Settings_Apply::STATUS_INVALID, ReportedIP_Hive_Settings_Apply::STATUS_SKIPPED_TIER ), true ) ) {
 				ReportedIP_Hive_Logger::get_instance()->log(

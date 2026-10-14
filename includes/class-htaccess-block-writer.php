@@ -37,6 +37,33 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 	const HEAL_LOCK_TRANSIENT = '';
 
 	/**
+	 * Option that records the operator's explicit go-ahead for `.htaccess`
+	 * changes: set when the quickstart completes or when one of the two
+	 * switches is saved by hand. Never written by activation.
+	 */
+	const OPTION_CONSENT = 'reportedip_hive_htaccess_consent';
+
+	/**
+	 * Whether the operator has allowed this plugin to edit `.htaccess`.
+	 *
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function consented() {
+		return (bool) ReportedIP_Hive_Option_Routing::get( self::OPTION_CONSENT, false );
+	}
+
+	/**
+	 * Record the go-ahead.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function consent() {
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_CONSENT, 1 );
+	}
+
+	/**
 	 * Option key whose truthiness decides whether the block is written.
 	 *
 	 * @return string
@@ -116,6 +143,9 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 	 * @since  2.1.51
 	 */
 	public function maybe_self_heal() {
+		if ( ! self::consented() ) {
+			return;
+		}
 		if ( get_site_transient( static::HEAL_LOCK_TRANSIENT ) ) {
 			return;
 		}
@@ -133,6 +163,9 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 	 * @since  2.1.51
 	 */
 	public function sync() {
+		if ( ! self::consented() ) {
+			return false;
+		}
 		if ( ! $this->load_wp_admin_helpers() ) {
 			return false;
 		}

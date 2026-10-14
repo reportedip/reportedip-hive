@@ -32,6 +32,7 @@ class ReportedIP_Hive_Attack_Surface_Multisite_Test extends WP_UnitTestCase {
 		'reportedip_hive_rest_allowed_roles',
 		'reportedip_hive_disable_xmlrpc',
 		'reportedip_hive_block_uploads_php',
+		'reportedip_hive_htaccess_consent',
 	);
 
 	/**
@@ -101,6 +102,7 @@ class ReportedIP_Hive_Attack_Surface_Multisite_Test extends WP_UnitTestCase {
 		$existed  = file_exists( $file );
 		$original = $existed ? (string) file_get_contents( $file ) : '';
 
+		ReportedIP_Hive_Htaccess_Block_Writer::consent();
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_block_uploads_php', 1 );
 		$this->assertTrue( $writer->sync() );
 		$this->assertTrue( $writer->is_block_present() );

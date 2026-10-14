@@ -725,11 +725,12 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Whether a comment that trips several spam signals is filed as spam, rejected outright, or left to WordPress.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_decoy_pathblock_enabled'      => array(
-				'section'     => 'waf',
-				'kind'        => 'bool',
-				'remote'      => true,
-				'label'       => __( 'Decoy path blocking', 'reportedip-hive' ),
-				'description' => __( 'Serve bait paths that only a scanner would ask for, and report whoever takes the bait to the community.', 'reportedip-hive' ),
+				'section'      => 'waf',
+				'kind'         => 'bool',
+				'remote'       => true,
+				'side_effects' => array( 'htaccess_consent' ),
+				'label'        => __( 'Decoy path blocking', 'reportedip-hive' ),
+				'description'  => __( 'Serve bait paths that only a scanner would ask for, and report whoever takes the bait to the community.', 'reportedip-hive' ),
 			),
 
 			'reportedip_hive_hide_login_enabled'           => array(
@@ -840,11 +841,12 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Send signed-out visitors away from wp-admin instead of showing them the sign-in form.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_block_uploads_php'            => array(
-				'section'     => 'lockdown',
-				'kind'        => 'bool',
-				'remote'      => true,
-				'label'       => __( 'Block PHP execution in uploads', 'reportedip-hive' ),
-				'description' => __( 'Refuse to run PHP inside the uploads folder, so a file that got in through an upload form cannot be executed. Written into the uploads .htaccess on Apache; other servers get a snippet to paste.', 'reportedip-hive' ),
+				'section'      => 'lockdown',
+				'kind'         => 'bool',
+				'remote'       => true,
+				'side_effects' => array( 'htaccess_consent' ),
+				'label'        => __( 'Block PHP execution in uploads', 'reportedip-hive' ),
+				'description'  => __( 'Refuse to run PHP inside the uploads folder, so a file that got in through an upload form cannot be executed. Written into the uploads .htaccess on Apache; other servers get a snippet to paste.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_hide_software_info'           => array(
 				'section'     => 'lockdown',

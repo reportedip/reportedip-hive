@@ -110,7 +110,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		protected function set_up() {
 			parent::set_up();
-			$GLOBALS['wp_options'] = array();
+			$GLOBALS['wp_options'] = array(
+				'reportedip_hive_htaccess_consent' => 1,
+			);
 			$this->path            = (string) tempnam( sys_get_temp_dir(), 'riphta' );
 			$this->writer          = new \RIP_Test_Block_Writer();
 			$this->writer->path    = $this->path;
@@ -161,6 +163,58 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertFalse( $this->writer->remove() );
 			$this->assertSame( $original, (string) file_get_contents( $this->path ) );
+		}
+
+		public function test_writer_stays_silent_without_consent(): void {
+			$this->set_mocked_option( 'reportedip_hive_htaccess_consent', 0 );
+
+			$this->assertFalse( \ReportedIP_Hive_Htaccess_Block_Writer::consented() );
+		}
+
+		public function test_writer_acts_after_consent(): void {
+			$this->set_mocked_option( 'reportedip_hive_htaccess_consent', 1 );
+
+			$this->assertTrue( \ReportedIP_Hive_Htaccess_Block_Writer::consented() );
+		}
+
+		public function test_sync_without_consent_leaves_the_file_alone(): void {
+			$original = "# BEGIN WordPress
+RewriteEngine On
+# END WordPress
+";
+			file_put_contents( $this->path, $original );
+			unset( $GLOBALS['wp_options']['reportedip_hive_htaccess_consent'] );
+			$GLOBALS['wp_options']['reportedip_hive_test_block_enabled'] = true;
+
+			$this->assertFalse( $this->writer->sync() );
+			$this->assertSame( $original, (string) file_get_contents( $this->path ) );
+		}
+
+		public function test_self_heal_without_consent_leaves_the_file_alone(): void {
+			$original = "# BEGIN WordPress
+RewriteEngine On
+# END WordPress
+";
+			file_put_contents( $this->path, $original );
+			unset( $GLOBALS['wp_options']['reportedip_hive_htaccess_consent'] );
+			$GLOBALS['wp_options']['reportedip_hive_test_block_enabled'] = true;
+
+			$this->writer->maybe_self_heal();
+
+			$this->assertSame( $original, (string) file_get_contents( $this->path ) );
+		}
+
+		public function test_remove_needs_no_consent(): void {
+			$GLOBALS['wp_options']['reportedip_hive_test_block_enabled'] = true;
+			file_put_contents( $this->path, "# BEGIN WordPress
+RewriteEngine On
+# END WordPress
+" );
+			$this->writer->sync();
+			unset( $GLOBALS['wp_options']['reportedip_hive_htaccess_consent'] );
+
+			$this->assertTrue( $this->writer->remove() );
+			$this->assertFalse( $this->writer->is_block_present() );
 		}
 
 		public function test_is_block_present_is_false_for_a_missing_file(): void {

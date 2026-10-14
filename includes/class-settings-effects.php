@@ -90,19 +90,26 @@ final class ReportedIP_Hive_Settings_Effects {
 	 * @return string[]
 	 */
 	public static function known_tokens() {
-		return array( 'flush_rewrite', 'stamp_form_adapters_since', 'purge_pages_for_form_proof' );
+		return array( 'flush_rewrite', 'stamp_form_adapters_since', 'purge_pages_for_form_proof', 'htaccess_consent' );
 	}
 
 	/**
 	 * Queue one effect token for execution on shutdown. Duplicate tokens
 	 * collapse, so a 60-key batch triggers each effect at most once. A token
 	 * the free plugin does not run is queued all the same, so an add-on can
-	 * answer it on `reportedip_hive_settings_effect_{token}`.
+	 * answer it on `reportedip_hive_settings_effect_{token}`. A token that
+	 * stands for the operator's go-ahead is dropped while defaults are
+	 * seeded, because a seed is not an operator action.
 	 *
 	 * @param string $token Effect token.
 	 * @return void
 	 */
 	public static function queue( $token ) {
+		if ( class_exists( 'ReportedIP_Hive_Defaults' )
+			&& ReportedIP_Hive_Defaults::is_seeding()
+			&& in_array( (string) $token, ReportedIP_Hive_Defaults::OPERATOR_EFFECTS, true ) ) {
+			return;
+		}
 		self::$queued[ $token ] = true;
 
 		if ( ! self::$hooked_shutdown ) {
@@ -144,6 +151,14 @@ final class ReportedIP_Hive_Settings_Effects {
 				case 'purge_pages_for_form_proof':
 					if ( class_exists( 'ReportedIP_Hive_Form_Proof' ) ) {
 						ReportedIP_Hive_Form_Proof::purge_on_enable();
+					}
+					break;
+
+				case 'htaccess_consent':
+					if ( class_exists( 'ReportedIP_Hive_Decoy_Htaccess_Writer' ) && class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' ) ) {
+						ReportedIP_Hive_Htaccess_Block_Writer::consent();
+						ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->sync();
+						ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->sync();
 					}
 					break;
 
