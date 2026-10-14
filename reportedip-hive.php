@@ -426,9 +426,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-recommend.php';
 		ReportedIP_Hive_Two_Factor_Recommend::init();
 
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-frontend.php';
-		ReportedIP_Hive_Two_Factor_Frontend::init();
-
 		if ( is_admin() ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-dashboard.php';
 		}

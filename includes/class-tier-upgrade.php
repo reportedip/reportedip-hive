@@ -136,8 +136,8 @@ class ReportedIP_Hive_Tier_Upgrade {
 	/**
 	 * Downgrade path: clear the stale post-upgrade banner state, soft-disable
 	 * the WooCommerce Frontend-2FA toggle (the option is preserved so a future
-	 * re-upgrade is smooth, the gate in {@see ReportedIP_Hive_Two_Factor_Frontend}
-	 * blocks the UI anyway via `feature_status('frontend_2fa')`), and send a
+	 * re-upgrade is smooth, the storefront module's own gate blocks the UI
+	 * anyway via `feature_status('frontend_2fa')`), and send a
 	 * factual goodbye mail.
 	 *
 	 * Local protection (12 sensors, full 2FA suite, blocked-IP enforcement) is
