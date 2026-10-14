@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-10-14T17:51:41+00:00\n"
+"PO-Revision-Date: 2026-10-14T19:03:56+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
@@ -1041,7 +1041,7 @@ msgstr "Wann"
 
 #: admin/class-admin-settings.php:1652
 #: admin/class-admin-settings.php:1719
-#: includes/class-legacy-data.php:240
+#: includes/class-legacy-data.php:241
 #: includes/class-security-monitor.php:1564
 #: reportedip-hive.php:982
 msgid "Event"
@@ -2858,7 +2858,7 @@ msgid "Search"
 msgstr "Suchen"
 
 #: admin/class-api-queue-table.php:431
-#: includes/class-legacy-data.php:248
+#: includes/class-legacy-data.php:249
 #: includes/class-privacy.php:152
 #: includes/class-privacy.php:189
 #: includes/class-privacy.php:240
@@ -3159,7 +3159,7 @@ msgstr "Protokolleinträge"
 #: admin/class-logs-table.php:51
 #: includes/class-ajax-handler.php:315
 #: includes/class-ajax-handler.php:351
-#: includes/class-legacy-data.php:236
+#: includes/class-legacy-data.php:237
 #: includes/class-security-monitor.php:1566
 #: includes/class-two-factor-notifications.php:98
 #: includes/class-two-factor-notifications.php:313
@@ -3173,7 +3173,7 @@ msgid "Event Type"
 msgstr "Ereignistyp"
 
 #: admin/class-logs-table.php:55
-#: includes/class-legacy-data.php:252
+#: includes/class-legacy-data.php:253
 msgid "Details"
 msgstr "Details"
 
@@ -4080,7 +4080,7 @@ msgstr "Ungültige Benutzer-ID."
 #: admin/class-two-factor-admin.php:840
 #: includes/class-two-factor-dashboard.php:44
 #: includes/class-two-factor-dashboard.php:218
-#: includes/class-two-factor-webauthn.php:427
+#: includes/class-two-factor-webauthn.php:431
 msgid "You do not have permission."
 msgstr "Sie haben keine Berechtigung."
 
@@ -4187,12 +4187,12 @@ msgstr "Bitte warten"
 
 #: admin/class-two-factor-admin.php:445
 #: admin/class-two-factor-admin.php:460
-#: includes/class-two-factor-webauthn.php:461
+#: includes/class-two-factor-webauthn.php:465
 msgid "Security key"
 msgstr "Sicherheitsschlüssel"
 
 #: admin/class-two-factor-admin.php:446
-#: includes/class-two-factor-webauthn.php:384
+#: includes/class-two-factor-webauthn.php:388
 #: templates/two-factor-challenge.php:124
 msgid "Passkey"
 msgstr "Passkey"
@@ -6027,11 +6027,11 @@ msgstr "Zeile %1$d: Ungültiges Ablaufdatum \"%2$s\""
 msgid "Line %1$d: Failed to import IP \"%2$s\""
 msgstr "Zeile %1$d: Import der IP \"%2$s\" fehlgeschlagen"
 
-#: includes/class-legacy-data.php:232
+#: includes/class-legacy-data.php:233
 msgid "ReportedIP Hive: audit trail"
 msgstr "ReportedIP Hive: Audit-Trail"
 
-#: includes/class-legacy-data.php:244
+#: includes/class-legacy-data.php:245
 msgid "Action"
 msgstr "Aktion"
 
@@ -7989,30 +7989,20 @@ msgid "How long the same address and event type stays quiet after a mail went ou
 msgstr "Wie lange dieselbe Adresse und Ereignisart still bleibt, nachdem eine Mail rausgegangen ist."
 
 #. translators: %s: comma-separated list of allowed values
-#: includes/class-settings-registry.php:1411
+#: includes/class-settings-registry.php:1423
 #, php-format
 msgid "Value must be one of: %s"
 msgstr "Der Wert muss einer der folgenden sein: %s"
 
-#: includes/class-settings-registry.php:1445
+#: includes/class-settings-registry.php:1457
 msgid "Unknown value kind."
 msgstr "Unbekannter Wertetyp."
 
-#: includes/class-settings-registry.php:1467
+#: includes/class-settings-registry.php:1479
 msgid "Hide Login cannot be enabled without a login slug, set a slug first."
 msgstr "Hide Login kann nicht ohne Login-Slug aktiviert werden, bitte zuerst einen Slug festlegen."
 
-#. translators: %s: minimum plan name required for the feature
-#: includes/class-settings-registry.php:1728
-#, php-format
-msgid "This setting requires the %s plan."
-msgstr "Diese Einstellung erfordert den %s-Tarif."
-
-#: includes/class-settings-registry.php:1731
-msgid "This setting requires a higher plan."
-msgstr "Diese Einstellung erfordert einen höheren Tarif."
-
-#: includes/class-settings-registry.php:1800
+#: includes/class-settings-registry.php:1782
 msgid "Value must be a JSON array of strings."
 msgstr "Der Wert muss ein JSON-Array aus Zeichenketten sein."
 
@@ -8567,139 +8557,139 @@ msgstr "Zu viele Fehlversuche. Versuchen Sie es in %d Sekunden erneut."
 msgid "Invalid credential data."
 msgstr "Ungültige Anmeldedaten."
 
-#: includes/class-two-factor-webauthn.php:329
+#: includes/class-two-factor-webauthn.php:334
 msgid "Challenge expired, please start again."
 msgstr "Challenge abgelaufen, bitte beginnen Sie erneut."
 
-#: includes/class-two-factor-webauthn.php:337
-#: includes/class-two-factor-webauthn.php:890
+#: includes/class-two-factor-webauthn.php:341
+#: includes/class-two-factor-webauthn.php:894
 msgid "Invalid clientDataJSON."
 msgstr "Ungültiges clientDataJSON."
 
-#: includes/class-two-factor-webauthn.php:340
-#: includes/class-two-factor-webauthn.php:893
+#: includes/class-two-factor-webauthn.php:344
+#: includes/class-two-factor-webauthn.php:897
 msgid "clientDataJSON.type is wrong."
 msgstr "clientDataJSON.type ist falsch."
 
-#: includes/class-two-factor-webauthn.php:343
-#: includes/class-two-factor-webauthn.php:903
+#: includes/class-two-factor-webauthn.php:347
+#: includes/class-two-factor-webauthn.php:907
 msgid "Challenge mismatch."
 msgstr "Challenge stimmt nicht überein."
 
-#: includes/class-two-factor-webauthn.php:346
-#: includes/class-two-factor-webauthn.php:906
+#: includes/class-two-factor-webauthn.php:350
+#: includes/class-two-factor-webauthn.php:910
 msgid "Origin mismatch."
 msgstr "Origin stimmt nicht überein."
 
-#: includes/class-two-factor-webauthn.php:362
-#: includes/class-two-factor-webauthn.php:923
+#: includes/class-two-factor-webauthn.php:366
+#: includes/class-two-factor-webauthn.php:927
 msgid "RP-ID hash mismatch."
 msgstr "RP-ID-Hash stimmt nicht überein."
 
-#: includes/class-two-factor-webauthn.php:365
-#: includes/class-two-factor-webauthn.php:926
+#: includes/class-two-factor-webauthn.php:369
+#: includes/class-two-factor-webauthn.php:930
 msgid "The authenticator did not confirm user presence."
 msgstr "Der Authenticator hat die Anwesenheit des Nutzers nicht bestätigt."
 
-#: includes/class-two-factor-webauthn.php:368
-#: includes/class-two-factor-webauthn.php:929
+#: includes/class-two-factor-webauthn.php:372
+#: includes/class-two-factor-webauthn.php:933
 msgid "User verification is required but was not performed."
 msgstr "Nutzerverifizierung ist erforderlich, wurde aber nicht durchgeführt."
 
-#: includes/class-two-factor-webauthn.php:371
+#: includes/class-two-factor-webauthn.php:375
 msgid "Credential data incomplete."
 msgstr "Anmeldedaten unvollständig."
 
-#: includes/class-two-factor-webauthn.php:404
+#: includes/class-two-factor-webauthn.php:408
 msgid "Security key registered."
 msgstr "Sicherheitsschlüssel registriert."
 
-#: includes/class-two-factor-webauthn.php:495
+#: includes/class-two-factor-webauthn.php:499
 msgid "Missing credential ID or name."
 msgstr "Credential-ID oder Name fehlt."
 
-#: includes/class-two-factor-webauthn.php:506
-#: includes/class-two-factor-webauthn.php:536
-#: includes/class-two-factor-webauthn.php:884
+#: includes/class-two-factor-webauthn.php:510
+#: includes/class-two-factor-webauthn.php:540
+#: includes/class-two-factor-webauthn.php:888
 msgid "Unknown security key."
 msgstr "Unbekannter Sicherheitsschlüssel."
 
-#: includes/class-two-factor-webauthn.php:524
-#: includes/class-two-factor-webauthn.php:873
+#: includes/class-two-factor-webauthn.php:528
+#: includes/class-two-factor-webauthn.php:877
 msgid "Missing credential ID."
 msgstr "Fehlende Credential-ID."
 
-#: includes/class-two-factor-webauthn.php:548
+#: includes/class-two-factor-webauthn.php:552
 msgid "This is your only security key and two-factor authentication is required for your account. Set up another method before removing it."
 msgstr "Dies ist Ihr einziger Sicherheitsschlüssel und die Zwei-Faktor-Authentifizierung ist für Ihr Konto vorgeschrieben. Richten Sie zuerst eine weitere Methode ein, bevor Sie ihn entfernen."
 
-#: includes/class-two-factor-webauthn.php:593
-#: includes/class-two-factor-webauthn.php:629
+#: includes/class-two-factor-webauthn.php:597
+#: includes/class-two-factor-webauthn.php:633
 msgid "Invalid challenge token."
 msgstr "Ungültiger Challenge-Token."
 
-#: includes/class-two-factor-webauthn.php:636
+#: includes/class-two-factor-webauthn.php:640
 msgid "Invalid assertion data."
 msgstr "Ungültige Assertion-Daten."
 
-#: includes/class-two-factor-webauthn.php:646
+#: includes/class-two-factor-webauthn.php:650
 msgid "Security key verified."
 msgstr "Sicherheitsschlüssel bestätigt."
 
-#: includes/class-two-factor-webauthn.php:898
+#: includes/class-two-factor-webauthn.php:902
 msgid "Challenge expired."
 msgstr "Challenge abgelaufen."
 
-#: includes/class-two-factor-webauthn.php:912
+#: includes/class-two-factor-webauthn.php:916
 msgid "The credential belongs to a different account."
 msgstr "Dieser Schlüssel gehört zu einem anderen Konto."
 
-#: includes/class-two-factor-webauthn.php:973
+#: includes/class-two-factor-webauthn.php:977
 msgid "Signature counter anomaly."
 msgstr "Anomalie beim Signaturzähler."
 
-#: includes/class-two-factor-webauthn.php:992
+#: includes/class-two-factor-webauthn.php:996
 msgid "Attestation object is missing authData."
 msgstr "Im Attestation-Objekt fehlt authData."
 
-#: includes/class-two-factor-webauthn.php:999
+#: includes/class-two-factor-webauthn.php:1003
 msgid "authenticatorData is too short."
 msgstr "authenticatorData ist zu kurz."
 
-#: includes/class-two-factor-webauthn.php:1023
+#: includes/class-two-factor-webauthn.php:1027
 msgid "Attested credential data is missing."
 msgstr "Attested-Credential-Daten fehlen."
 
-#: includes/class-two-factor-webauthn.php:1110
+#: includes/class-two-factor-webauthn.php:1114
 msgid "COSE key is not parseable."
 msgstr "COSE-Schlüssel kann nicht geparst werden."
 
-#: includes/class-two-factor-webauthn.php:1115
+#: includes/class-two-factor-webauthn.php:1119
 msgid "Ed25519 verification is not available on this server."
 msgstr "Ed25519-Verifizierung ist auf diesem Server nicht verfügbar."
 
-#: includes/class-two-factor-webauthn.php:1120
+#: includes/class-two-factor-webauthn.php:1124
 msgid "Invalid Ed25519 key."
 msgstr "Ungültiger Ed25519-Schlüssel."
 
-#: includes/class-two-factor-webauthn.php:1123
-#: includes/class-two-factor-webauthn.php:1134
+#: includes/class-two-factor-webauthn.php:1127
+#: includes/class-two-factor-webauthn.php:1138
 msgid "Signature could not be verified."
 msgstr "Signatur konnte nicht verifiziert werden."
 
-#: includes/class-two-factor-webauthn.php:1153
+#: includes/class-two-factor-webauthn.php:1157
 msgid "Unsupported EC curve."
 msgstr "Nicht unterstützte EC-Kurve."
 
-#: includes/class-two-factor-webauthn.php:1158
+#: includes/class-two-factor-webauthn.php:1162
 msgid "Invalid EC2 key."
 msgstr "Ungültiger EC2-Schlüssel."
 
-#: includes/class-two-factor-webauthn.php:1167
+#: includes/class-two-factor-webauthn.php:1171
 msgid "Invalid RSA key."
 msgstr "Ungültiger RSA-Schlüssel."
 
-#: includes/class-two-factor-webauthn.php:1172
+#: includes/class-two-factor-webauthn.php:1176
 msgid "Unsupported COSE algorithm."
 msgstr "Nicht unterstützter COSE-Algorithmus."
 
