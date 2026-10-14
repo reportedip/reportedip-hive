@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-13T23:09:49+00:00\n"
+"POT-Creation-Date: 2026-10-14T00:08:38+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -238,8 +238,8 @@ msgstr ""
 #: admin/class-admin-settings.php:7225
 #: admin/class-protection-page.php:432
 #: admin/class-protection-page.php:433
-#: admin/class-protection-page.php:896
-#: admin/class-protection-page.php:1154
+#: admin/class-protection-page.php:898
+#: admin/class-protection-page.php:1171
 #: admin/class-tools-page.php:202
 #: admin/class-tools-page.php:206
 #: admin/class-tools-page.php:228
@@ -253,7 +253,7 @@ msgstr ""
 #: admin/class-admin-settings.php:7223
 #: admin/class-protection-page.php:431
 #: admin/class-protection-page.php:433
-#: admin/class-protection-page.php:1147
+#: admin/class-protection-page.php:1164
 #: admin/class-tools-page.php:287
 #: admin/class-two-factor-admin.php:860
 #: admin/class-two-factor-admin.php:1347
@@ -834,7 +834,7 @@ msgid "IP Address"
 msgstr ""
 
 #: admin/class-admin-settings.php:1109
-#: reportedip-hive.php:1136
+#: reportedip-hive.php:1134
 msgid "Attacks"
 msgstr ""
 
@@ -880,7 +880,7 @@ msgstr ""
 #: admin/class-user-admin.php:385
 #: admin/class-user-admin.php:623
 #: admin/class-user-admin.php:647
-#: reportedip-hive.php:994
+#: reportedip-hive.php:992
 msgid "Blocked"
 msgstr ""
 
@@ -895,7 +895,7 @@ msgid "Unblock"
 msgstr ""
 
 #: admin/class-admin-settings.php:1137
-#: admin/class-protection-page.php:898
+#: admin/class-protection-page.php:900
 msgid "Block"
 msgstr ""
 
@@ -1154,9 +1154,9 @@ msgstr ""
 #: admin/class-admin-settings.php:1930
 #: admin/class-admin-settings.php:4955
 #: admin/class-dashboard-next-steps.php:564
-#: admin/class-protection-page.php:1492
-#: admin/class-protection-page.php:1553
-#: admin/class-protection-page.php:1616
+#: admin/class-protection-page.php:1509
+#: admin/class-protection-page.php:1570
+#: admin/class-protection-page.php:1633
 #: includes/class-readiness.php:640
 #: includes/class-tier-upgrade.php:350
 #: includes/class-two-factor-recommend.php:348
@@ -1263,7 +1263,7 @@ msgid "Activity"
 msgstr ""
 
 #: admin/class-admin-settings.php:2243
-#: admin/class-protection-page.php:1373
+#: admin/class-protection-page.php:1390
 msgid "Protection"
 msgstr ""
 
@@ -1408,7 +1408,7 @@ msgstr ""
 #: admin/class-audit-log-table.php:282
 #: includes/class-privacy.php:222
 #: includes/class-security-monitor.php:1564
-#: reportedip-hive.php:1007
+#: reportedip-hive.php:1005
 msgid "Event"
 msgstr ""
 
@@ -1423,7 +1423,7 @@ msgstr ""
 #: admin/class-admin-settings.php:5383
 #: admin/class-logs-table.php:54
 #: admin/class-logs-table.php:434
-#: reportedip-hive.php:1008
+#: reportedip-hive.php:1006
 msgid "Severity"
 msgstr ""
 
@@ -1556,7 +1556,7 @@ msgid "The Super Admin decides which roles are asked for their second factor aga
 msgstr ""
 
 #: admin/class-admin-settings.php:2846
-#: admin/class-protection-page.php:1181
+#: admin/class-protection-page.php:1198
 msgid "off"
 msgstr ""
 
@@ -1742,7 +1742,7 @@ msgid "Severity Breakdown"
 msgstr ""
 
 #: admin/class-admin-settings.php:4206
-#: reportedip-hive.php:1005
+#: reportedip-hive.php:1003
 msgid "Recent Activity"
 msgstr ""
 
@@ -1757,26 +1757,26 @@ msgstr ""
 #: admin/class-admin-settings.php:4225
 #: admin/class-admin-settings.php:5361
 #: admin/class-logs-table.php:440
-#: admin/class-protection-page.php:921
-#: reportedip-hive.php:1137
+#: admin/class-protection-page.php:923
+#: reportedip-hive.php:1135
 msgid "Critical"
 msgstr ""
 
 #: admin/class-admin-settings.php:4226
 #: admin/class-logs-table.php:439
-#: reportedip-hive.php:1138
+#: reportedip-hive.php:1136
 msgid "High"
 msgstr ""
 
 #: admin/class-admin-settings.php:4227
 #: admin/class-logs-table.php:438
-#: reportedip-hive.php:1139
+#: reportedip-hive.php:1137
 msgid "Medium"
 msgstr ""
 
 #: admin/class-admin-settings.php:4228
 #: admin/class-logs-table.php:437
-#: reportedip-hive.php:1140
+#: reportedip-hive.php:1138
 msgid "Low"
 msgstr ""
 
@@ -1850,7 +1850,7 @@ msgid "Advanced"
 msgstr ""
 
 #: admin/class-admin-settings.php:4588
-#: reportedip-hive.php:1774
+#: reportedip-hive.php:1772
 msgid "Retrying..."
 msgstr ""
 
@@ -1920,7 +1920,7 @@ msgstr ""
 #: admin/class-admin-settings.php:4667
 #: admin/class-logs-table.php:78
 #: admin/class-logs-table.php:145
-#: reportedip-hive.php:1017
+#: reportedip-hive.php:1015
 msgid "Block IP"
 msgstr ""
 
@@ -2329,7 +2329,7 @@ msgid "Download log entries for offline analysis."
 msgstr ""
 
 #: admin/class-admin-settings.php:5362
-#: admin/class-protection-page.php:919
+#: admin/class-protection-page.php:921
 msgid "Warning"
 msgstr ""
 
@@ -2507,7 +2507,7 @@ msgid "Your IP Address"
 msgstr ""
 
 #: admin/class-admin-settings.php:5733
-#: reportedip-hive.php:993
+#: reportedip-hive.php:991
 msgid "Whitelisted"
 msgstr ""
 
@@ -3303,7 +3303,7 @@ msgstr ""
 
 #: admin/class-admin-settings.php:6902
 #: admin/class-admin-settings.php:7114
-#: admin/class-protection-page.php:913
+#: admin/class-protection-page.php:915
 msgid "Left"
 msgstr ""
 
@@ -3314,7 +3314,7 @@ msgstr ""
 
 #: admin/class-admin-settings.php:6904
 #: admin/class-admin-settings.php:7122
-#: admin/class-protection-page.php:915
+#: admin/class-protection-page.php:917
 msgid "Right"
 msgstr ""
 
@@ -3520,7 +3520,7 @@ msgid "Run a honeypot for extra impact"
 msgstr ""
 
 #: admin/class-admin-settings.php:7203
-#: admin/class-protection-page.php:544
+#: admin/class-protection-page.php:546
 msgid "Learn more"
 msgstr ""
 
@@ -3602,11 +3602,11 @@ msgid "Attempts"
 msgstr ""
 
 #: admin/class-api-queue-table.php:56
-#: admin/class-protection-page.php:920
+#: admin/class-protection-page.php:922
 #: admin/class-two-factor-admin.php:557
 #: includes/class-two-factor-onboarding.php:355
-#: includes/class-two-factor.php:2255
-#: reportedip-hive.php:955
+#: includes/class-two-factor.php:2419
+#: reportedip-hive.php:953
 msgid "Error"
 msgstr ""
 
@@ -3766,7 +3766,7 @@ msgstr ""
 #: includes/class-two-factor-notifications.php:152
 #: includes/class-two-factor-notifications.php:367
 #: includes/class-two-factor-notifications.php:381
-#: reportedip-hive.php:1006
+#: reportedip-hive.php:1004
 msgid "Time"
 msgstr ""
 
@@ -4013,7 +4013,7 @@ msgid "Not now"
 msgstr ""
 
 #: admin/class-dashboard-next-steps.php:469
-#: admin/class-protection-page.php:1413
+#: admin/class-protection-page.php:1430
 msgid "Protection areas"
 msgstr ""
 
@@ -4058,7 +4058,7 @@ msgid "Open the referral programme"
 msgstr ""
 
 #: admin/class-dashboard-next-steps.php:585
-#: admin/class-protection-page.php:1586
+#: admin/class-protection-page.php:1603
 msgid "Rejected."
 msgstr ""
 
@@ -4229,7 +4229,7 @@ msgstr ""
 
 #: admin/class-logs-table.php:79
 #: admin/class-logs-table.php:150
-#: reportedip-hive.php:1018
+#: reportedip-hive.php:1016
 msgid "Whitelist IP"
 msgstr ""
 
@@ -4323,143 +4323,149 @@ msgid "Logs, mails and the footprint per request. None of it decides what is blo
 msgstr ""
 
 #. translators: %s: plan name, for example Professional
-#: admin/class-protection-page.php:542
+#: admin/class-protection-page.php:544
 #, php-format
 msgid "%s feature"
 msgstr ""
 
-#: admin/class-protection-page.php:614
+#: admin/class-protection-page.php:616
 msgid "This setting lives in expert mode."
 msgstr ""
 
 #. translators: %s: name of a form plugin, for example Contact Form 7.
-#: admin/class-protection-page.php:621
+#: admin/class-protection-page.php:623
 #, php-format
 msgid "%s is not active on this site. The setting appears here as soon as it is."
 msgstr ""
 
 #. translators: %s: name of a form plugin, for example Gravity Forms.
-#: admin/class-protection-page.php:711
+#: admin/class-protection-page.php:713
 #, php-format
 msgid "%s is not active on this site."
 msgstr ""
 
-#: admin/class-protection-page.php:720
+#: admin/class-protection-page.php:722
 msgid "Two-factor authentication needs libsodium or OpenSSL to store secrets encrypted; neither is available on this server."
 msgstr ""
 
-#: admin/class-protection-page.php:725
+#: admin/class-protection-page.php:727
 msgid "WooCommerce is not installed on this site."
 msgstr ""
 
-#: admin/class-protection-page.php:730
+#: admin/class-protection-page.php:732
 msgid "The constant REPORTEDIP_HIVE_DISABLE_HIDE_LOGIN is defined as true in wp-config.php; Hide Login stays off until you remove it. This is the recovery path when the slug was lost."
 msgstr ""
 
-#: admin/class-protection-page.php:735
+#: admin/class-protection-page.php:737
 msgid "Always on while Hide Login is active; a visible wp-admin would redirect straight to the login URL you just hid."
 msgstr ""
 
-#: admin/class-protection-page.php:895
+#: admin/class-protection-page.php:897
 msgid "None (REMOTE_ADDR)"
 msgstr ""
 
-#: admin/class-protection-page.php:897
+#: admin/class-protection-page.php:899
 msgid "Flag only"
 msgstr ""
 
-#: admin/class-protection-page.php:899
+#: admin/class-protection-page.php:901
 msgid "Monitor"
 msgstr ""
 
-#: admin/class-protection-page.php:900
+#: admin/class-protection-page.php:902
 msgid "Allow list"
 msgstr ""
 
-#: admin/class-protection-page.php:901
+#: admin/class-protection-page.php:903
 msgid "Mark as spam"
 msgstr ""
 
-#: admin/class-protection-page.php:902
+#: admin/class-protection-page.php:904
 msgid "Open"
 msgstr ""
 
-#: admin/class-protection-page.php:903
+#: admin/class-protection-page.php:905
 msgid "Signed-in users only"
 msgstr ""
 
-#: admin/class-protection-page.php:904
+#: admin/class-protection-page.php:906
 msgid "Restricted"
 msgstr ""
 
-#: admin/class-protection-page.php:905
+#: admin/class-protection-page.php:907
 msgid "Block page"
 msgstr ""
 
-#: admin/class-protection-page.php:906
+#: admin/class-protection-page.php:908
 msgid "404"
 msgstr ""
 
-#: admin/class-protection-page.php:907
+#: admin/class-protection-page.php:909
 msgid "Force enrolment"
 msgstr ""
 
-#: admin/class-protection-page.php:908
+#: admin/class-protection-page.php:910
 msgid "Block sign-in"
 msgstr ""
 
-#: admin/class-protection-page.php:909
+#: admin/class-protection-page.php:911
 msgid "Report only"
 msgstr ""
 
-#: admin/class-protection-page.php:910
+#: admin/class-protection-page.php:912
 msgid "Enforce"
 msgstr ""
 
-#: admin/class-protection-page.php:911
+#: admin/class-protection-page.php:913
 msgid "Badge"
 msgstr ""
 
-#: admin/class-protection-page.php:912
+#: admin/class-protection-page.php:914
 msgid "Shield"
 msgstr ""
 
-#: admin/class-protection-page.php:914
+#: admin/class-protection-page.php:916
 msgid "Centre"
 msgstr ""
 
-#: admin/class-protection-page.php:916
+#: admin/class-protection-page.php:918
 msgid "Below"
 msgstr ""
 
-#: admin/class-protection-page.php:917
+#: admin/class-protection-page.php:919
 msgid "Debug"
 msgstr ""
 
-#: admin/class-protection-page.php:918
+#: admin/class-protection-page.php:920
 msgid "Info"
 msgstr ""
 
-#: admin/class-protection-page.php:969
+#. translators: %s: plan name
+#: admin/class-protection-page.php:964
+#, php-format
+msgid "(%s plan)"
+msgstr ""
+
+#: admin/class-protection-page.php:986
 msgid "Triggers for administrators become available once an administrator has completed one second-factor sign-in on this site."
 msgstr ""
 
-#: admin/class-protection-page.php:972
+#: admin/class-protection-page.php:989
 msgid "Country data comes from the Community Network. In Local Shield the country trigger never fires."
 msgstr ""
 
 #. translators: 1: preset name, 2: number of active sensors
-#: admin/class-protection-page.php:1014
+#: admin/class-protection-page.php:1031
 #, php-format
 msgid "%1$s · %2$d sensors"
 msgstr ""
 
-#: admin/class-protection-page.php:1017
+#: admin/class-protection-page.php:1034
 msgid "report only"
 msgstr ""
 
 #. translators: %d: number of roles
-#: admin/class-protection-page.php:1035
+#: admin/class-protection-page.php:1052
 #, php-format
 msgid "%d role enforced"
 msgid_plural "%d roles enforced"
@@ -4467,97 +4473,97 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: days
-#: admin/class-protection-page.php:1038
+#: admin/class-protection-page.php:1055
 #, php-format
 msgid "%d days"
 msgstr ""
 
-#: admin/class-protection-page.php:1044
+#: admin/class-protection-page.php:1061
 msgid "badge on"
 msgstr ""
 
-#: admin/class-protection-page.php:1044
+#: admin/class-protection-page.php:1061
 msgid "badge off"
 msgstr ""
 
 #. translators: %d: number of triggers
-#: admin/class-protection-page.php:1065
+#: admin/class-protection-page.php:1082
 #, php-format
 msgid "%d triggers"
 msgstr ""
 
 #. translators: 1: sections switched on, 2: sections counted
-#: admin/class-protection-page.php:1161
+#: admin/class-protection-page.php:1178
 #, php-format
 msgid "%1$d of %2$d active"
 msgstr ""
 
-#: admin/class-protection-page.php:1177
+#: admin/class-protection-page.php:1194
 msgid "on"
 msgstr ""
 
-#: admin/class-protection-page.php:1207
+#: admin/class-protection-page.php:1224
 msgid "Relaxed"
 msgstr ""
 
-#: admin/class-protection-page.php:1208
+#: admin/class-protection-page.php:1225
 msgid "Balanced"
 msgstr ""
 
-#: admin/class-protection-page.php:1209
+#: admin/class-protection-page.php:1226
 msgid "Strict"
 msgstr ""
 
-#: admin/class-protection-page.php:1210
+#: admin/class-protection-page.php:1227
 msgid "Paranoid"
 msgstr ""
 
-#: admin/class-protection-page.php:1211
-#: admin/class-protection-page.php:1526
-#: admin/class-protection-page.php:1533
+#: admin/class-protection-page.php:1228
+#: admin/class-protection-page.php:1543
+#: admin/class-protection-page.php:1550
 msgid "Custom"
 msgstr ""
 
-#: admin/class-protection-page.php:1252
+#: admin/class-protection-page.php:1269
 msgid "Expert mode"
 msgstr ""
 
-#: admin/class-protection-page.php:1256
+#: admin/class-protection-page.php:1273
 msgid "Expert mode opens the technical details of every area by default and lists the Tools page. Simple mode keeps them folded; what sits in them runs on the recommendation. The switch is stored for your user only."
 msgstr ""
 
-#: admin/class-protection-page.php:1258
+#: admin/class-protection-page.php:1275
 msgid "Apply"
 msgstr ""
 
-#: admin/class-protection-page.php:1332
+#: admin/class-protection-page.php:1349
 msgid "Show technical details"
 msgstr ""
 
-#: admin/class-protection-page.php:1374
+#: admin/class-protection-page.php:1391
 msgid "Every setting, grouped by area; the technical details fold away"
 msgstr ""
 
-#: admin/class-protection-page.php:1380
+#: admin/class-protection-page.php:1397
 msgid "Search settings, e.g. Tor, HSTS, retention"
 msgstr ""
 
-#: admin/class-protection-page.php:1381
+#: admin/class-protection-page.php:1398
 msgid "No setting matches."
 msgstr ""
 
 #. translators: 1: issues that need attention, 2: advisory hints
-#: admin/class-protection-page.php:1388
+#: admin/class-protection-page.php:1405
 #, php-format
 msgid "Check done: %1$d issues need attention, %2$d hints are open."
 msgstr ""
 
-#: admin/class-protection-page.php:1392
+#: admin/class-protection-page.php:1409
 msgid "See the next steps on the dashboard."
 msgstr ""
 
 #. translators: %d: number of rejected settings
-#: admin/class-protection-page.php:1402
+#: admin/class-protection-page.php:1419
 #, php-format
 msgid "%d field was not saved, see the marked field."
 msgid_plural "%d fields were not saved, see the marked fields."
@@ -4565,7 +4571,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of changed settings
-#: admin/class-protection-page.php:1405
+#: admin/class-protection-page.php:1422
 #, php-format
 msgid "%d setting set back to the recommendation."
 msgid_plural "%d settings set back to the recommendation."
@@ -4573,46 +4579,46 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of changed settings
-#: admin/class-protection-page.php:1408
+#: admin/class-protection-page.php:1425
 #, php-format
 msgid "%d setting saved."
 msgid_plural "%d settings saved."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-protection-page.php:1442
+#: admin/class-protection-page.php:1459
 msgid "Set every setting of this tab back to the recommendation for your plan?"
 msgstr ""
 
-#: admin/class-protection-page.php:1442
+#: admin/class-protection-page.php:1459
 msgid "Restore defaults"
 msgstr ""
 
-#: admin/class-protection-page.php:1443
+#: admin/class-protection-page.php:1460
 msgid "Save changes"
 msgstr ""
 
-#: admin/class-protection-page.php:1476
+#: admin/class-protection-page.php:1493
 msgid "Check protection"
 msgstr ""
 
-#: admin/class-protection-page.php:1477
+#: admin/class-protection-page.php:1494
 msgid "Runs the setup check again and reports what still needs attention."
 msgstr ""
 
-#: admin/class-protection-page.php:1522
+#: admin/class-protection-page.php:1539
 msgid "protection level preset relaxed balanced strict paranoid"
 msgstr ""
 
-#: admin/class-protection-page.php:1524
+#: admin/class-protection-page.php:1541
 msgid "Protection level"
 msgstr ""
 
-#: admin/class-protection-page.php:1535
+#: admin/class-protection-page.php:1552
 msgid "Sets the failed-login threshold and window, the block duration and the community protection level in one go. Choose Custom to edit them one by one."
 msgstr ""
 
-#: admin/class-protection-page.php:1560
+#: admin/class-protection-page.php:1577
 msgid "Unknown tab."
 msgstr ""
 
@@ -4975,7 +4981,7 @@ msgid "Preview changes"
 msgstr ""
 
 #: admin/class-settings-import-export.php:446
-#: includes/class-ajax-handler.php:1593
+#: includes/class-ajax-handler.php:1591
 msgid "No file uploaded."
 msgstr ""
 
@@ -5450,7 +5456,7 @@ msgstr ""
 
 #: admin/class-two-factor-admin.php:623
 #: includes/class-two-factor-reset-gate.php:1453
-#: includes/class-two-factor.php:697
+#: includes/class-two-factor.php:791
 msgid "Authenticator app"
 msgstr ""
 
@@ -5467,7 +5473,7 @@ msgid "Confirm your sign-in with your fingerprint, your face, or a hardware secu
 msgstr ""
 
 #: admin/class-two-factor-admin.php:638
-#: includes/class-two-factor.php:703
+#: includes/class-two-factor.php:798
 #: templates/frontend-2fa-challenge.php:248
 #: templates/two-factor-challenge.php:257
 #: templates/two-factor-onboarding.php:226
@@ -6266,99 +6272,99 @@ msgstr ""
 msgid "API statistics have been reset. The page will reload."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1536
+#: includes/class-ajax-handler.php:1534
 msgid "All plugin data has been deleted. The page will reload."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1556
+#: includes/class-ajax-handler.php:1554
 msgid "Invalid notice ID."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1601
+#: includes/class-ajax-handler.php:1599
 msgid "File exceeds upload_max_filesize."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1602
+#: includes/class-ajax-handler.php:1600
 msgid "File exceeds MAX_FILE_SIZE."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1603
+#: includes/class-ajax-handler.php:1601
 msgid "File was only partially uploaded."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1604
+#: includes/class-ajax-handler.php:1602
 msgid "No file was uploaded."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1605
+#: includes/class-ajax-handler.php:1603
 msgid "Missing temporary folder."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1606
+#: includes/class-ajax-handler.php:1604
 msgid "Failed to write file to disk."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1607
+#: includes/class-ajax-handler.php:1605
 msgid "File upload stopped by extension."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1609
+#: includes/class-ajax-handler.php:1607
 msgid "Unknown upload error."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1614
+#: includes/class-ajax-handler.php:1612
 msgid "File too large. Maximum size is 1 MB."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1619
+#: includes/class-ajax-handler.php:1617
 msgid "Invalid file type. Only CSV and TXT files are allowed."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1625
+#: includes/class-ajax-handler.php:1623
 msgid "Failed to read uploaded file."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1655
+#: includes/class-ajax-handler.php:1653
 msgid "Queue processed and quota refreshed. Check Activity log for details."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1677
+#: includes/class-ajax-handler.php:1675
 msgid "Priority Sync requires a Contributor plan."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1682
+#: includes/class-ajax-handler.php:1680
 msgid "Rulesets synced."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1706
+#: includes/class-ajax-handler.php:1704
 msgid "The drop-in manager is unavailable."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1714
+#: includes/class-ajax-handler.php:1712
 msgid "The server configuration target is not writable. Adjust file permissions and try again."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1720
+#: includes/class-ajax-handler.php:1718
 msgid "Extended protection enabled."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1721
+#: includes/class-ajax-handler.php:1719
 msgid "Extended protection disabled."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1723
+#: includes/class-ajax-handler.php:1721
 msgid "Guard file generated. Paste the nginx snippet into your server block and reload nginx."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1760
+#: includes/class-ajax-handler.php:1758
 msgid "Invalid payload."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1796
+#: includes/class-ajax-handler.php:1794
 msgid "Queue lock cleared."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1797
+#: includes/class-ajax-handler.php:1795
 msgid "No queue lock was held."
 msgstr ""
 
@@ -10268,16 +10274,16 @@ msgid "Hide Login cannot be enabled without a login slug, set a slug first."
 msgstr ""
 
 #. translators: %s: minimum plan name required for the feature
-#: includes/class-settings-registry.php:2190
+#: includes/class-settings-registry.php:2191
 #, php-format
 msgid "This setting requires the %s plan."
 msgstr ""
 
-#: includes/class-settings-registry.php:2193
+#: includes/class-settings-registry.php:2194
 msgid "This setting requires a higher plan."
 msgstr ""
 
-#: includes/class-settings-registry.php:2262
+#: includes/class-settings-registry.php:2263
 msgid "Value must be a JSON array of strings."
 msgstr ""
 
@@ -10594,7 +10600,7 @@ msgid "Back to My Account"
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:433
-#: reportedip-hive.php:953
+#: reportedip-hive.php:951
 msgid "Sending..."
 msgstr ""
 
@@ -10619,7 +10625,7 @@ msgid "Your browser does not support passkeys. Please choose another method."
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:440
-#: reportedip-hive.php:958
+#: reportedip-hive.php:956
 msgid "Network error. Please try again."
 msgstr ""
 
@@ -10779,7 +10785,7 @@ msgid "We could not send a verification code. Please try the resend link below o
 msgstr ""
 
 #: includes/class-two-factor-reset-gate.php:498
-#: includes/class-two-factor.php:1256
+#: includes/class-two-factor.php:1358
 msgid "Security check failed. Please try again."
 msgstr ""
 
@@ -10796,7 +10802,7 @@ msgid "Verification failed. Please double-check the code and try again."
 msgstr ""
 
 #: includes/class-two-factor-reset-gate.php:600
-#: includes/class-two-factor.php:1722
+#: includes/class-two-factor.php:1886
 #: templates/two-factor-challenge.php:44
 msgid "Two-Factor Verification"
 msgstr ""
@@ -10923,7 +10929,7 @@ msgid "We have sent a verification code to %s."
 msgstr ""
 
 #: includes/class-two-factor-reset-gate.php:1455
-#: includes/class-two-factor.php:715
+#: includes/class-two-factor.php:816
 #: templates/two-factor-onboarding.php:200
 msgid "Passkey / security key"
 msgstr ""
@@ -10935,12 +10941,12 @@ msgid "Recovery code"
 msgstr ""
 
 #: includes/class-two-factor-reset-gate.php:1472
-#: includes/class-two-factor.php:698
+#: includes/class-two-factor.php:793
 msgid "Enter the 6-digit code from your authenticator app"
 msgstr ""
 
 #: includes/class-two-factor-reset-gate.php:1474
-#: includes/class-two-factor.php:716
+#: includes/class-two-factor.php:818
 msgid "Confirm your passkey or security key when prompted"
 msgstr ""
 
@@ -11143,147 +11149,160 @@ msgstr ""
 msgid "Unsupported COSE algorithm."
 msgstr ""
 
-#: includes/class-two-factor.php:254
-#: includes/class-two-factor.php:1791
-#: includes/class-two-factor.php:2206
+#: includes/class-two-factor.php:275
+#: includes/class-two-factor.php:1955
+#: includes/class-two-factor.php:2370
 msgid "Your session has expired. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:266
+#: includes/class-two-factor.php:287
 msgid "This method does not support resending."
 msgstr ""
 
-#: includes/class-two-factor.php:274
+#: includes/class-two-factor.php:295
 msgid "This method is not active on your account."
 msgstr ""
 
-#: includes/class-two-factor.php:298
-msgid "We have sent you a new code by email."
-msgstr ""
-
-#: includes/class-two-factor.php:299
-#: includes/class-two-factor.php:1789
-#: includes/class-two-factor.php:2204
+#: includes/class-two-factor.php:318
+#: includes/class-two-factor.php:1953
+#: includes/class-two-factor.php:2368
 msgid "New code sent."
 msgstr ""
 
 #. translators: 1: opening link tag, 2: closing link tag
-#: includes/class-two-factor.php:349
+#: includes/class-two-factor.php:368
 #, php-format
 msgid "Secured by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet."
 msgstr ""
 
-#: includes/class-two-factor.php:704
+#: includes/class-two-factor.php:792
+#: templates/two-factor-onboarding.php:213
+msgid "Authenticator app (TOTP)"
+msgstr ""
+
+#: includes/class-two-factor.php:799
+msgid "E-mail code"
+msgstr ""
+
+#: includes/class-two-factor.php:800
 #: templates/two-factor-onboarding.php:342
 msgid "Enter the 6-digit code from the email"
 msgstr ""
 
-#: includes/class-two-factor.php:920
+#: includes/class-two-factor.php:808
+msgid "We have sent you a new code by email."
+msgstr ""
+
+#: includes/class-two-factor.php:809
+msgid "No valid code is active, you likely used an older code. Please click \"Resend code\" and use only the most recent code from your inbox."
+msgstr ""
+
+#: includes/class-two-factor.php:817
+msgid "Security key / passkey"
+msgstr ""
+
+#: includes/class-two-factor.php:1022
 msgid "XMLRPC on this site only allows application passwords. Please create an application password in your profile."
 msgstr ""
 
-#: includes/class-two-factor.php:989
+#: includes/class-two-factor.php:1091
 msgid "<strong>Two-factor authentication required.</strong> Your skip quota is exhausted. Please contact an administrator to reset 2FA."
 msgstr ""
 
-#: includes/class-two-factor.php:1073
+#: includes/class-two-factor.php:1175
 msgid "Two-factor verification required."
 msgstr ""
 
 #. translators: %d: seconds remaining
-#: includes/class-two-factor.php:1265
+#: includes/class-two-factor.php:1367
 #, php-format
 msgid "Too many failed attempts. Please wait %d seconds."
 msgstr ""
 
-#: includes/class-two-factor.php:1325
-msgid "No valid code is active, you likely used an older code. Please click \"Resend code\" and use only the most recent code from your inbox."
-msgstr ""
-
-#: includes/class-two-factor.php:1327
+#: includes/class-two-factor.php:1541
 msgid "Invalid verification code. Please make sure you are using the most recent code."
 msgstr ""
 
-#: includes/class-two-factor.php:1678
+#: includes/class-two-factor.php:1842
 msgid "Your two-factor session has expired. This happens after 15 minutes of inactivity, or when the security cookie is missing, for example when the login form is loaded inside an iframe. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1679
+#: includes/class-two-factor.php:1843
 msgid "The user account from your two-factor session is no longer available. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1707
+#: includes/class-two-factor.php:1871
 msgid "Two-Factor session expired"
 msgstr ""
 
-#: includes/class-two-factor.php:1711
+#: includes/class-two-factor.php:1875
 #: templates/frontend-2fa-challenge.php:357
 msgid "Back to sign in"
 msgstr ""
 
-#: includes/class-two-factor.php:1729
+#: includes/class-two-factor.php:1893
 msgid "Back to login"
 msgstr ""
 
-#: includes/class-two-factor.php:1790
-#: includes/class-two-factor.php:2205
+#: includes/class-two-factor.php:1954
+#: includes/class-two-factor.php:2369
 msgid "Sending failed."
 msgstr ""
 
-#: includes/class-two-factor.php:1792
-#: includes/class-two-factor.php:2207
+#: includes/class-two-factor.php:1956
+#: includes/class-two-factor.php:2371
 msgid "Passkey request in progress..."
 msgstr ""
 
-#: includes/class-two-factor.php:1793
-#: includes/class-two-factor.php:2208
+#: includes/class-two-factor.php:1957
+#: includes/class-two-factor.php:2372
 msgid "Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead."
 msgstr ""
 
-#: includes/class-two-factor.php:1794
-#: includes/class-two-factor.php:2209
+#: includes/class-two-factor.php:1958
+#: includes/class-two-factor.php:2373
 msgid "Please enter the verification code first."
 msgstr ""
 
-#: includes/class-two-factor.php:1795
-#: includes/class-two-factor.php:2210
+#: includes/class-two-factor.php:1959
+#: includes/class-two-factor.php:2374
 msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
 msgstr ""
 
-#: includes/class-two-factor.php:1796
-#: includes/class-two-factor.php:2211
+#: includes/class-two-factor.php:1960
+#: includes/class-two-factor.php:2375
 msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
 msgstr ""
 
-#: includes/class-two-factor.php:1797
-#: includes/class-two-factor.php:2212
+#: includes/class-two-factor.php:1961
+#: includes/class-two-factor.php:2376
 msgid "The domain of this page does not match the key registration."
 msgstr ""
 
-#: includes/class-two-factor.php:1798
-#: includes/class-two-factor.php:2213
+#: includes/class-two-factor.php:1962
+#: includes/class-two-factor.php:2377
 msgid "Failed to fetch passkey options."
 msgstr ""
 
-#: includes/class-two-factor.php:1799
-#: includes/class-two-factor.php:2214
+#: includes/class-two-factor.php:1963
+#: includes/class-two-factor.php:2378
 msgid "Verification failed."
 msgstr ""
 
-#: includes/class-two-factor.php:1800
-#: includes/class-two-factor.php:2215
+#: includes/class-two-factor.php:1964
+#: includes/class-two-factor.php:2379
 msgid "Passkey login cancelled."
 msgstr ""
 
-#: includes/class-two-factor.php:1903
+#: includes/class-two-factor.php:2067
 msgid "Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:1909
+#: includes/class-two-factor.php:2073
 msgid "Your two-factor session expired. Please sign in again."
 msgstr ""
 
-#: includes/class-two-factor.php:2254
+#: includes/class-two-factor.php:2418
 msgid "2FA template not found."
 msgstr ""
 
@@ -11394,395 +11413,395 @@ msgstr ""
 msgid "Read the release notes"
 msgstr ""
 
-#: reportedip-hive.php:932
+#: reportedip-hive.php:930
 msgid "Testing connection..."
 msgstr ""
 
-#: reportedip-hive.php:933
+#: reportedip-hive.php:931
 msgid "Connection successful!"
 msgstr ""
 
-#: reportedip-hive.php:934
+#: reportedip-hive.php:932
 msgid "Connection failed!"
 msgstr ""
 
-#: reportedip-hive.php:935
+#: reportedip-hive.php:933
 msgid "Are you sure you want to unblock this IP?"
 msgstr ""
 
-#: reportedip-hive.php:936
+#: reportedip-hive.php:934
 msgid "Are you sure you want to whitelist this IP?"
 msgstr ""
 
-#: reportedip-hive.php:937
+#: reportedip-hive.php:935
 msgid "Are you sure you want to reset all settings to defaults?"
 msgstr ""
 
-#: reportedip-hive.php:938
+#: reportedip-hive.php:936
 msgid "Reset the API statistics counter? This clears usage history only."
 msgstr ""
 
-#: reportedip-hive.php:939
+#: reportedip-hive.php:937
 msgid "WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!"
 msgstr ""
 
-#: reportedip-hive.php:940
+#: reportedip-hive.php:938
 msgid "Are you absolutely sure?"
 msgstr ""
 
-#: reportedip-hive.php:941
+#: reportedip-hive.php:939
 msgid "Remove this WAF exception?"
 msgstr ""
 
 #. translators: %1$s = WAF rule id, %2$s = request path.
-#: reportedip-hive.php:943
+#: reportedip-hive.php:941
 #, php-format
 msgid "Allow rule \"%1$s\" on path \"%2$s\"? The WAF stays active everywhere else."
 msgstr ""
 
-#: reportedip-hive.php:944
+#: reportedip-hive.php:942
 msgid "Are you sure you want to remove this IP from the whitelist?"
 msgstr ""
 
-#: reportedip-hive.php:945
+#: reportedip-hive.php:943
 msgid "Are you sure you want to clean up old logs? This action cannot be undone."
 msgstr ""
 
-#: reportedip-hive.php:946
+#: reportedip-hive.php:944
 msgid "Are you sure you want to anonymize old data? This will remove personal information from logs."
 msgstr ""
 
-#: reportedip-hive.php:947
+#: reportedip-hive.php:945
 msgid "Enter reason for whitelisting (optional):"
 msgstr ""
 
-#: reportedip-hive.php:948
+#: reportedip-hive.php:946
 msgid "Manually whitelisted from blocked list"
 msgstr ""
 
-#: reportedip-hive.php:949
+#: reportedip-hive.php:947
 msgid "Enter reason for blocking this IP:"
 msgstr ""
 
-#: reportedip-hive.php:950
+#: reportedip-hive.php:948
 msgid "Blocked from security logs"
 msgstr ""
 
-#: reportedip-hive.php:951
+#: reportedip-hive.php:949
 msgid "Export logs from how many days? (default: 30)"
 msgstr ""
 
-#: reportedip-hive.php:952
+#: reportedip-hive.php:950
 msgid "Request failed. Check server logs."
 msgstr ""
 
-#: reportedip-hive.php:954
+#: reportedip-hive.php:952
 msgid "Test email failed."
 msgstr ""
 
-#: reportedip-hive.php:956
+#: reportedip-hive.php:954
 msgid "Request failed."
 msgstr ""
 
-#: reportedip-hive.php:957
+#: reportedip-hive.php:955
 msgid "Network error occurred"
 msgstr ""
 
-#: reportedip-hive.php:959
+#: reportedip-hive.php:957
 msgid "API statistics reset."
 msgstr ""
 
-#: reportedip-hive.php:960
+#: reportedip-hive.php:958
 msgid "Failed to reset API statistics."
 msgstr ""
 
-#: reportedip-hive.php:961
+#: reportedip-hive.php:959
 msgid "Cache cleared."
 msgstr ""
 
-#: reportedip-hive.php:962
+#: reportedip-hive.php:960
 msgid "Failed to clear cache."
 msgstr ""
 
-#: reportedip-hive.php:963
+#: reportedip-hive.php:961
 msgid "Expired entries cleaned."
 msgstr ""
 
-#: reportedip-hive.php:964
+#: reportedip-hive.php:962
 msgid "Failed to clean expired entries."
 msgstr ""
 
-#: reportedip-hive.php:965
+#: reportedip-hive.php:963
 msgid "Mode changed successfully"
 msgstr ""
 
-#: reportedip-hive.php:966
+#: reportedip-hive.php:964
 msgid "Failed to change mode"
 msgstr ""
 
-#: reportedip-hive.php:967
+#: reportedip-hive.php:965
 msgid "IP address added to whitelist successfully"
 msgstr ""
 
-#: reportedip-hive.php:968
+#: reportedip-hive.php:966
 msgid "Failed to add IP to whitelist"
 msgstr ""
 
-#: reportedip-hive.php:969
+#: reportedip-hive.php:967
 msgid "IP address removed from whitelist"
 msgstr ""
 
-#: reportedip-hive.php:970
+#: reportedip-hive.php:968
 msgid "Failed to remove IP from whitelist"
 msgstr ""
 
-#: reportedip-hive.php:971
+#: reportedip-hive.php:969
 msgid "WAF exception saved"
 msgstr ""
 
-#: reportedip-hive.php:972
+#: reportedip-hive.php:970
 msgid "Failed to save the exception"
 msgstr ""
 
-#: reportedip-hive.php:973
+#: reportedip-hive.php:971
 msgid "WAF exception removed"
 msgstr ""
 
-#: reportedip-hive.php:974
+#: reportedip-hive.php:972
 msgid "Failed to remove the exception"
 msgstr ""
 
-#: reportedip-hive.php:975
+#: reportedip-hive.php:973
 msgid "WAF exception added for this rule"
 msgstr ""
 
-#: reportedip-hive.php:976
+#: reportedip-hive.php:974
 msgid "Failed to add the exception"
 msgstr ""
 
-#: reportedip-hive.php:977
+#: reportedip-hive.php:975
 msgid "IP address blocked successfully"
 msgstr ""
 
-#: reportedip-hive.php:978
+#: reportedip-hive.php:976
 msgid "Failed to block IP address"
 msgstr ""
 
-#: reportedip-hive.php:979
+#: reportedip-hive.php:977
 msgid "IP address unblocked successfully"
 msgstr ""
 
-#: reportedip-hive.php:980
+#: reportedip-hive.php:978
 msgid "Failed to unblock IP address"
 msgstr ""
 
-#: reportedip-hive.php:981
+#: reportedip-hive.php:979
 msgid "IP address whitelisted successfully"
 msgstr ""
 
-#: reportedip-hive.php:982
+#: reportedip-hive.php:980
 msgid "Failed to whitelist IP address"
 msgstr ""
 
-#: reportedip-hive.php:983
+#: reportedip-hive.php:981
 msgid "No IP address found"
 msgstr ""
 
-#: reportedip-hive.php:984
+#: reportedip-hive.php:982
 msgid "Failed to copy IP address"
 msgstr ""
 
-#: reportedip-hive.php:985
+#: reportedip-hive.php:983
 msgid "Failed to cleanup logs"
 msgstr ""
 
-#: reportedip-hive.php:986
+#: reportedip-hive.php:984
 msgid "Failed to anonymize data"
 msgstr ""
 
-#: reportedip-hive.php:987
+#: reportedip-hive.php:985
 msgid "Logs exported successfully"
 msgstr ""
 
-#: reportedip-hive.php:988
+#: reportedip-hive.php:986
 msgid "Failed to export logs"
 msgstr ""
 
-#: reportedip-hive.php:989
+#: reportedip-hive.php:987
 msgid "Import completed."
 msgstr ""
 
-#: reportedip-hive.php:990
+#: reportedip-hive.php:988
 msgid "Import failed."
 msgstr ""
 
-#: reportedip-hive.php:991
+#: reportedip-hive.php:989
 msgid "Please enter an IP address"
 msgstr ""
 
-#: reportedip-hive.php:992
+#: reportedip-hive.php:990
 msgid "Failed to lookup IP address"
 msgstr ""
 
-#: reportedip-hive.php:995
+#: reportedip-hive.php:993
 msgid "Clean"
 msgstr ""
 
-#: reportedip-hive.php:996
+#: reportedip-hive.php:994
 msgid "IP Information:"
 msgstr ""
 
-#: reportedip-hive.php:997
+#: reportedip-hive.php:995
 msgid "Valid:"
 msgstr ""
 
-#: reportedip-hive.php:998
+#: reportedip-hive.php:996
 msgid "Private:"
 msgstr ""
 
-#: reportedip-hive.php:999
+#: reportedip-hive.php:997
 msgid "Version:"
 msgstr ""
 
-#: reportedip-hive.php:1000
+#: reportedip-hive.php:998
 msgid "Yes"
 msgstr ""
 
-#: reportedip-hive.php:1001
+#: reportedip-hive.php:999
 msgid "No"
 msgstr ""
 
-#: reportedip-hive.php:1002
+#: reportedip-hive.php:1000
 msgid "Country:"
 msgstr ""
 
-#: reportedip-hive.php:1003
+#: reportedip-hive.php:1001
 msgid "Abuse Confidence:"
 msgstr ""
 
-#: reportedip-hive.php:1004
+#: reportedip-hive.php:1002
 msgid "Total Reports:"
 msgstr ""
 
-#: reportedip-hive.php:1009
+#: reportedip-hive.php:1007
 msgid "ISP:"
 msgstr ""
 
-#: reportedip-hive.php:1010
+#: reportedip-hive.php:1008
 msgid "ASN:"
 msgstr ""
 
-#: reportedip-hive.php:1011
+#: reportedip-hive.php:1009
 msgid "Usage Type:"
 msgstr ""
 
-#: reportedip-hive.php:1012
+#: reportedip-hive.php:1010
 #: templates/two-factor-onboarding.php:106
 msgid "Domain:"
 msgstr ""
 
-#: reportedip-hive.php:1013
+#: reportedip-hive.php:1011
 msgid "Distinct Reporters:"
 msgstr ""
 
-#: reportedip-hive.php:1014
+#: reportedip-hive.php:1012
 msgid "Last Reported:"
 msgstr ""
 
-#: reportedip-hive.php:1015
+#: reportedip-hive.php:1013
 msgid "Tor exit node"
 msgstr ""
 
-#: reportedip-hive.php:1016
+#: reportedip-hive.php:1014
 msgid "Community-verified infrastructure"
 msgstr ""
 
-#: reportedip-hive.php:1019
+#: reportedip-hive.php:1017
 msgid "View community report"
 msgstr ""
 
-#: reportedip-hive.php:1020
+#: reportedip-hive.php:1018
 msgid "This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?"
 msgstr ""
 
-#: reportedip-hive.php:1135
+#: reportedip-hive.php:1133
 msgid "Events"
 msgstr ""
 
-#: reportedip-hive.php:1296
+#: reportedip-hive.php:1294
 msgid "Your IP address has been blocked due to suspicious activity."
 msgstr ""
 
-#: reportedip-hive.php:1351
+#: reportedip-hive.php:1349
 msgid "Access denied due to IP reputation."
 msgstr ""
 
-#: reportedip-hive.php:1387
+#: reportedip-hive.php:1385
 msgid "Access denied: connections from Tor exit nodes are not allowed on this site."
 msgstr ""
 
-#: reportedip-hive.php:1677
-#: reportedip-hive.php:2039
+#: reportedip-hive.php:1675
+#: reportedip-hive.php:2037
 msgid "Access denied. Your IP address has been blocked due to suspicious activity."
 msgstr ""
 
-#: reportedip-hive.php:1746
-#: reportedip-hive.php:1820
-#: reportedip-hive.php:1844
+#: reportedip-hive.php:1744
+#: reportedip-hive.php:1818
+#: reportedip-hive.php:1842
 msgid "ReportedIP Hive:"
 msgstr ""
 
 #. translators: %1$d: number of failed reports, %2$s: link to queue page
-#: reportedip-hive.php:1749
+#: reportedip-hive.php:1747
 #, php-format
 msgid "%1$d API reports failed. %2$s"
 msgstr ""
 
-#: reportedip-hive.php:1751
+#: reportedip-hive.php:1749
 msgid "View queue"
 msgstr ""
 
-#: reportedip-hive.php:1762
-#: reportedip-hive.php:1783
+#: reportedip-hive.php:1760
+#: reportedip-hive.php:1781
 msgid "Retry all"
 msgstr ""
 
-#: reportedip-hive.php:1782
+#: reportedip-hive.php:1780
 msgid "Retry failed."
 msgstr ""
 
-#: reportedip-hive.php:1800
+#: reportedip-hive.php:1798
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr ""
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
-#: reportedip-hive.php:1803
+#: reportedip-hive.php:1801
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
 msgstr ""
 
-#: reportedip-hive.php:1805
-#: reportedip-hive.php:1825
+#: reportedip-hive.php:1803
+#: reportedip-hive.php:1823
 msgid "Upgrade API tier"
 msgstr ""
 
-#: reportedip-hive.php:1806
+#: reportedip-hive.php:1804
 msgid "Manage queue"
 msgstr ""
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page
-#: reportedip-hive.php:1823
+#: reportedip-hive.php:1821
 #, php-format
 msgid "%1$d reports pending processing. %2$s for higher limits."
 msgstr ""
 
 #. translators: %s: link to settings page
-#: reportedip-hive.php:1847
+#: reportedip-hive.php:1845
 #, php-format
 msgid "No API key configured. %s"
 msgstr ""
 
-#: reportedip-hive.php:1848
+#: reportedip-hive.php:1846
 msgid "Configure now"
 msgstr ""
 
@@ -12115,10 +12134,6 @@ msgstr ""
 
 #: templates/two-factor-onboarding.php:202
 msgid "Face ID, Touch ID, Windows Hello or a hardware key like a YubiKey. Phishing-resistant, no app needed."
-msgstr ""
-
-#: templates/two-factor-onboarding.php:213
-msgid "Authenticator app (TOTP)"
 msgstr ""
 
 #: templates/two-factor-onboarding.php:215
