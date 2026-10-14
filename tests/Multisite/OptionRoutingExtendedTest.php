@@ -8,12 +8,10 @@
  *
  *   - per-blog cache isolation in `cache_key()` (so `switch_to_blog()` does
  *     not leak resolved overrides across sub-sites)
- *   - the `resolve_2fa_frontend_setup_slug()` override path
  *   - the new `get_network_enforce_roles()` / `get_site_enforce_roles_extra()`
  *     helpers (used by the Site-2FA UI to mark roles as "enforced by network"
  *     without polluting the site-extra list)
- *   - the `Two_Factor_Frontend::flush_slug_memo()` invalidation hook
- *   - the `update_site_option_*` hook chain that flushes both caches
+ *   - the `update_site_option_*` hook that flushes the resolve cache
  *   - `Mode_Manager::on_mode_site_option_updated()` adapter for the sitemeta
  *     hook signature
  *
@@ -37,40 +35,6 @@ class ReportedIP_Hive_Option_Routing_Extended_Multisite_Test extends WP_UnitTest
 			$this->markTestSkipped( 'Multisite required.' );
 		}
 		ReportedIP_Hive_Option_Routing::flush_resolve_cache();
-		if ( class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' )
-			&& method_exists( 'ReportedIP_Hive_Two_Factor_Frontend', 'flush_slug_memo' ) ) {
-			ReportedIP_Hive_Two_Factor_Frontend::flush_slug_memo();
-		}
-	}
-
-	/**
-	 * `resolve_2fa_frontend_setup_slug()` honours the per-site override the
-	 * same way the challenge-slug helper does.
-	 */
-	public function test_resolve_setup_slug_prefers_site_override() {
-		update_site_option( 'reportedip_hive_2fa_frontend_setup_slug', 'network-setup' );
-
-		$site_id = self::factory()->blog->create();
-		switch_to_blog( $site_id );
-		update_option( 'reportedip_hive_2fa_frontend_setup_slug_site_override', 'shop-setup' );
-		ReportedIP_Hive_Option_Routing::flush_resolve_cache();
-
-		$this->assertSame(
-			'shop-setup',
-			ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_setup_slug()
-		);
-		restore_current_blog();
-	}
-
-	/**
-	 * The frontend-slug default constant is locked to the pre-2.0 value so
-	 * existing installs do not flip to a different URL on upgrade.
-	 */
-	public function test_default_frontend_slug_constant_is_stable() {
-		$this->assertSame(
-			'reportedip-hive-2fa',
-			ReportedIP_Hive_Option_Routing::DEFAULT_FRONTEND_SLUG
-		);
 	}
 
 	/**
@@ -112,42 +76,24 @@ class ReportedIP_Hive_Option_Routing_Extended_Multisite_Test extends WP_UnitTest
 	 * resolved override leaks across `switch_to_blog()` boundaries.
 	 */
 	public function test_resolve_cache_isolated_per_blog() {
-		update_site_option( 'reportedip_hive_2fa_frontend_slug', 'network-2fa' );
+		update_site_option( 'reportedip_hive_2fa_enforce_roles', array( 'administrator' ) );
 
 		$site_a = self::factory()->blog->create();
 		$site_b = self::factory()->blog->create();
 
 		switch_to_blog( $site_a );
-		update_option( 'reportedip_hive_2fa_frontend_slug_site_override', 'site-a-2fa' );
-		$this->assertSame( 'site-a-2fa', ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_slug() );
+		update_option( 'reportedip_hive_2fa_enforce_roles_extra', array( 'shop_manager' ) );
+		ReportedIP_Hive_Option_Routing::flush_resolve_cache();
+		$this->assertSame( array( 'administrator', 'shop_manager' ), ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles() );
 		restore_current_blog();
 
 		switch_to_blog( $site_b );
 		$this->assertSame(
-			'network-2fa',
-			ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_slug(),
+			array( 'administrator' ),
+			ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles(),
 			'Site-B must not see Site-A cached override.'
 		);
 		restore_current_blog();
-	}
-
-	/**
-	 * Updating any of the slug/override keys on sitemeta MUST invalidate the
-	 * resolve cache so a follow-up read returns the fresh value.
-	 */
-	public function test_resolve_cache_invalidated_on_site_option_update() {
-		update_site_option( 'reportedip_hive_2fa_frontend_slug', 'old-network-slug' );
-		$this->assertSame(
-			'old-network-slug',
-			ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_slug()
-		);
-
-		update_site_option( 'reportedip_hive_2fa_frontend_slug', 'new-network-slug' );
-		$this->assertSame(
-			'new-network-slug',
-			ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_slug(),
-			'update_site_option_* hook must trigger flush_resolve_cache.'
-		);
 	}
 
 	/**
@@ -169,44 +115,6 @@ class ReportedIP_Hive_Option_Routing_Extended_Multisite_Test extends WP_UnitTest
 		$this->assertContains( 'editor', $second );
 		$this->assertContains( 'author', $second );
 		$this->assertNotContains( 'administrator', $second );
-	}
-
-	/**
-	 * `Two_Factor_Frontend::resolve_slugs()` reads through Option_Routing now
-	 * - switching the override on a sub-site changes the resolved challenge
-	 * slug as seen by the frontend module.
-	 */
-	public function test_two_factor_frontend_get_challenge_slug_uses_routing() {
-		update_site_option( 'reportedip_hive_2fa_frontend_slug', 'network-2fa' );
-
-		$site_id = self::factory()->blog->create();
-		switch_to_blog( $site_id );
-		update_option( 'reportedip_hive_2fa_frontend_slug_site_override', 'shop-2fa' );
-		ReportedIP_Hive_Two_Factor_Frontend::flush_slug_memo();
-		ReportedIP_Hive_Option_Routing::flush_resolve_cache();
-
-		$this->assertSame( 'shop-2fa', ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug() );
-		restore_current_blog();
-	}
-
-	/**
-	 * The `update_site_option_*` hook for the slug must also flush the
-	 * Two_Factor_Frontend per-request memo, otherwise a save plus a render
-	 * in the same request would echo the stale slug.
-	 */
-	public function test_flush_slug_memo_invalidated_on_slug_update() {
-		update_site_option( 'reportedip_hive_2fa_frontend_slug', 'before-save' );
-		$this->assertSame(
-			'before-save',
-			ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug()
-		);
-
-		update_site_option( 'reportedip_hive_2fa_frontend_slug', 'after-save' );
-		$this->assertSame(
-			'after-save',
-			ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug(),
-			'flush_slug_memo must fire on update_site_option_<slug-key> hook.'
-		);
 	}
 
 	/**

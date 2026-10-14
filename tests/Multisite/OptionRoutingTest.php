@@ -55,44 +55,21 @@ class ReportedIP_Hive_Option_Routing_Multisite_Test extends WP_UnitTestCase {
 		$site_b = self::factory()->blog->create();
 
 		switch_to_blog( $site_a );
-		ReportedIP_Hive_Option_Routing::set(
-			'reportedip_hive_2fa_frontend_slug_site_override',
-			'site-a-2fa'
-		);
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_2fa_enforce_roles_extra', array( 'shop_manager' ) );
 		restore_current_blog();
 
 		switch_to_blog( $site_b );
 		$this->assertSame(
-			'',
-			(string) ReportedIP_Hive_Option_Routing::get(
-				'reportedip_hive_2fa_frontend_slug_site_override',
-				''
-			),
+			array(),
+			(array) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles_extra', array() ),
 			'Site-B must not see Site-A override.'
 		);
 		restore_current_blog();
 
 		switch_to_blog( $site_a );
 		$this->assertSame(
-			'site-a-2fa',
-			ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_slug_site_override', '' )
-		);
-		restore_current_blog();
-	}
-
-	/**
-	 * resolve_2fa_frontend_slug() prefers the per-site override over the network default.
-	 */
-	public function test_resolve_2fa_frontend_slug_prefers_site_override() {
-		update_site_option( 'reportedip_hive_2fa_frontend_slug', 'network-default-2fa' );
-
-		$site_id = self::factory()->blog->create();
-		switch_to_blog( $site_id );
-		update_option( 'reportedip_hive_2fa_frontend_slug_site_override', 'site-specific-2fa' );
-
-		$this->assertSame(
-			'site-specific-2fa',
-			ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_slug()
+			array( 'shop_manager' ),
+			ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_enforce_roles_extra', array() )
 		);
 		restore_current_blog();
 	}

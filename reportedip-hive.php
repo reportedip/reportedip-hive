@@ -186,20 +186,6 @@ class ReportedIP_Hive {
 		add_action( 'init', array( 'ReportedIP_Hive_Settings_Effects', 'init' ), 0 );
 
 		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
-		$flush_frontend_memo = array( 'ReportedIP_Hive_Two_Factor_Frontend', 'flush_slug_memo' );
-		foreach (
-			array(
-				'reportedip_hive_2fa_frontend_slug',
-				'reportedip_hive_2fa_frontend_slug_site_override',
-				'reportedip_hive_2fa_frontend_setup_slug',
-				'reportedip_hive_2fa_frontend_setup_slug_site_override',
-			) as $slug_opt
-		) {
-			add_action( 'update_option_' . $slug_opt, $flush_routing_cache );
-			add_action( 'update_option_' . $slug_opt, $flush_frontend_memo );
-			add_action( 'update_site_option_' . $slug_opt, $flush_routing_cache );
-			add_action( 'update_site_option_' . $slug_opt, $flush_frontend_memo );
-		}
 		add_action( 'update_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
 		add_action( 'update_option_reportedip_hive_2fa_enforce_roles_extra', $flush_routing_cache );
 		add_action( 'update_site_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );
@@ -260,7 +246,6 @@ class ReportedIP_Hive {
 			return;
 		}
 		ReportedIP_Hive_Schema::cleanup_blog_data( $blog_id );
-		delete_blog_option( $blog_id, 'reportedip_hive_2fa_frontend_slug_site_override' );
 		delete_blog_option( $blog_id, 'reportedip_hive_2fa_enforce_roles_extra' );
 	}
 

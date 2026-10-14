@@ -131,13 +131,14 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	private static $available_memo = null;
 
 	/**
-	 * Per-request memo for the resolved slugs. Read on every Hide-Login
-	 * bypass check, so caching them once spares two `get_option()` round-
-	 * trips per request on the frontend hot path.
+	 * Per-request memo for the resolved slugs, keyed by blog id so a
+	 * resolved override does not leak across `switch_to_blog()`. Read on
+	 * every Hide-Login bypass check, so caching them once spares the option
+	 * round-trips per request on the frontend hot path.
 	 *
-	 * @var array{challenge:string,setup:string}|null
+	 * @var array<int, array{challenge:string,setup:string}>
 	 */
-	private static $slug_memo = null;
+	private static $slug_memo = array();
 
 	/**
 	 * Wire the WordPress hooks. Idempotent, calling twice is safe.
@@ -149,6 +150,13 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 		add_filter( 'query_vars', array( __CLASS__, 'register_query_var' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'route_request' ), 5 );
 		add_action( 'reportedip_hive_tier_changed', array( __CLASS__, 'on_tier_changed' ), 30, 2 );
+		foreach ( array( self::OPT_CHALLENGE_SLUG, self::OPT_SETUP_SLUG ) as $slug_option ) {
+			foreach ( array( $slug_option, $slug_option . self::SITE_OVERRIDE_SUFFIX ) as $option ) {
+				add_action( 'update_option_' . $option, array( __CLASS__, 'flush_slug_memo' ) );
+				add_action( 'update_site_option_' . $option, array( __CLASS__, 'flush_slug_memo' ) );
+			}
+		}
+		add_action( 'wp_delete_site', array( __CLASS__, 'on_site_deleted' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'maybe_enqueue_blocks_redirect' ) );
 		add_filter( 'pre_get_document_title', array( __CLASS__, 'filter_document_title' ) );
 		add_filter( 'wp_robots', array( __CLASS__, 'filter_robots' ) );
@@ -278,7 +286,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 */
 	public static function flush_memo() {
 		self::$available_memo = null;
-		self::$slug_memo      = null;
+		self::$slug_memo      = array();
 	}
 
 	/**
@@ -309,14 +317,50 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * @return array{challenge:string,setup:string}
 	 */
 	private static function resolve_slugs() {
-		if ( null !== self::$slug_memo ) {
-			return self::$slug_memo;
+		$blog_id = function_exists( 'get_current_blog_id' ) ? (int) get_current_blog_id() : 0;
+		if ( isset( self::$slug_memo[ $blog_id ] ) ) {
+			return self::$slug_memo[ $blog_id ];
 		}
-		self::$slug_memo = array(
-			'challenge' => self::sanitize_slug( ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_slug(), self::DEFAULT_CHALLENGE_SLUG ),
-			'setup'     => self::sanitize_slug( ReportedIP_Hive_Option_Routing::resolve_2fa_frontend_setup_slug(), self::DEFAULT_SETUP_SLUG ),
+		self::$slug_memo[ $blog_id ] = array(
+			'challenge' => self::sanitize_slug( self::stored_slug( self::OPT_CHALLENGE_SLUG, self::DEFAULT_CHALLENGE_SLUG ), self::DEFAULT_CHALLENGE_SLUG ),
+			'setup'     => self::sanitize_slug( self::stored_slug( self::OPT_SETUP_SLUG, self::DEFAULT_SETUP_SLUG ), self::DEFAULT_SETUP_SLUG ),
 		);
-		return self::$slug_memo;
+		return self::$slug_memo[ $blog_id ];
+	}
+
+	/**
+	 * The stored slug of the current site: a non-empty per-site override
+	 * wins over the network value. On single-site installs both reads hit
+	 * the same storage.
+	 *
+	 * @param string $option   Network option name.
+	 * @param string $fallback Default slug.
+	 * @return string Unsanitised slug.
+	 * @since  2.0.0
+	 */
+	private static function stored_slug( $option, $fallback ) {
+		$override = (string) get_option( $option . self::SITE_OVERRIDE_SUFFIX, '' );
+		if ( '' !== trim( $override ) ) {
+			return $override;
+		}
+		$network = (string) get_site_option( $option, $fallback );
+		return '' !== trim( $network ) ? $network : $fallback;
+	}
+
+	/**
+	 * `wp_delete_site` listener: drop the per-site slug overrides.
+	 *
+	 * @param WP_Site $site Site being deleted.
+	 * @return void
+	 * @since  2.0.0
+	 */
+	public static function on_site_deleted( $site ) {
+		$blog_id = isset( $site->blog_id ) ? (int) $site->blog_id : 0;
+		if ( $blog_id <= 0 ) {
+			return;
+		}
+		delete_blog_option( $blog_id, self::OPT_CHALLENGE_SLUG . self::SITE_OVERRIDE_SUFFIX );
+		delete_blog_option( $blog_id, self::OPT_SETUP_SLUG . self::SITE_OVERRIDE_SUFFIX );
 	}
 
 	/**
@@ -328,7 +372,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 * @since  2.0.0
 	 */
 	public static function flush_slug_memo() {
-		self::$slug_memo = null;
+		self::$slug_memo = array();
 	}
 
 	/**

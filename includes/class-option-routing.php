@@ -5,9 +5,9 @@
  * On Multisite installs the plugin needs to distinguish between
  *   - network-wide options (single source of truth across all sites: API key,
  *     mode, tier, thresholds, sensor toggles, ...)
- *   - site-specific options (currently only two: per-site WooCommerce
- *     Frontend-2FA slug override and per-site additional 2FA enforcement
- *     roles, both of which strictly extend the network defaults).
+ *   - site-specific options (in the free plugin only the per-site
+ *     additional 2FA enforcement roles, which strictly extend the network
+ *     default; an add-on stores its own per-site keys itself).
  *
  * On single-site installs `get_site_option()` falls through to `get_option()`,
  * so the routing is a no-op and behaviour is identical to v1.x.
@@ -42,15 +42,8 @@ final class ReportedIP_Hive_Option_Routing {
 	 * @var array<string, true>
 	 */
 	private const SITE_OPTION_LOOKUP = array(
-		'reportedip_hive_2fa_frontend_slug_site_override' => true,
-		'reportedip_hive_2fa_frontend_setup_slug_site_override' => true,
-		'reportedip_hive_2fa_enforce_roles_extra'         => true,
+		'reportedip_hive_2fa_enforce_roles_extra' => true,
 	);
-
-	/**
-	 * Default for `2fa_frontend_slug` when neither network nor site value is set.
-	 */
-	public const DEFAULT_FRONTEND_SLUG = 'reportedip-hive-2fa';
 
 	/**
 	 * Upper value-size bound for {@see prime_cache()}. Large payloads (the
@@ -241,69 +234,16 @@ final class ReportedIP_Hive_Option_Routing {
 	}
 
 	/**
-	 * Resolve the effective WooCommerce Frontend-2FA slug for the current request.
-	 *
-	 * Per-site override (if non-empty) wins over the network default. On
-	 * single-site installs both calls hit the same storage so behaviour is
-	 * unchanged.
-	 *
-	 * @return string Slug suitable for `sanitize_title()` consumers (3–50 chars).
-	 * @since  2.0.0
-	 */
-	public static function resolve_2fa_frontend_slug() {
-		$key = self::cache_key( 'frontend_slug' );
-		if ( isset( self::$resolve_cache[ $key ] ) ) {
-			return self::$resolve_cache[ $key ];
-		}
-		$override = (string) get_option( 'reportedip_hive_2fa_frontend_slug_site_override', '' );
-		if ( '' !== trim( $override ) ) {
-			self::$resolve_cache[ $key ] = $override;
-			return $override;
-		}
-		$network                     = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', self::DEFAULT_FRONTEND_SLUG );
-		$slug                        = '' !== trim( $network ) ? $network : self::DEFAULT_FRONTEND_SLUG;
-		self::$resolve_cache[ $key ] = $slug;
-		return $slug;
-	}
-
-	/**
 	 * Build a per-blog cache key for the resolve_* helpers so cached
 	 * values do not leak across `switch_to_blog()` boundaries.
 	 *
-	 * @param string $bucket Logical bucket (e.g. 'frontend_slug').
+	 * @param string $bucket Logical bucket (e.g. 'enforce_roles').
 	 * @return string
 	 * @since  2.0.0
 	 */
 	private static function cache_key( $bucket ) {
 		$blog_id = function_exists( 'get_current_blog_id' ) ? (int) get_current_blog_id() : 0;
 		return $bucket . ':' . $blog_id;
-	}
-
-	/**
-	 * Resolve the WooCommerce Frontend-2FA setup (onboarding) slug.
-	 *
-	 * Per-site override wins over the network default. Used by
-	 * {@see ReportedIP_Hive_Two_Factor_Frontend::get_setup_slug()} so the
-	 * customer-self-service onboarding URL can be tuned per sub-site if
-	 * the network default collides with an existing path.
-	 *
-	 * @return string
-	 * @since  2.0.0
-	 */
-	public static function resolve_2fa_frontend_setup_slug() {
-		$key = self::cache_key( 'frontend_setup_slug' );
-		if ( isset( self::$resolve_cache[ $key ] ) ) {
-			return self::$resolve_cache[ $key ];
-		}
-		$override = (string) get_option( 'reportedip_hive_2fa_frontend_setup_slug_site_override', '' );
-		if ( '' !== trim( $override ) ) {
-			self::$resolve_cache[ $key ] = $override;
-			return $override;
-		}
-		$network                     = (string) get_site_option( 'reportedip_hive_2fa_frontend_setup_slug', 'reportedip-hive-2fa-setup' );
-		$slug                        = '' !== trim( $network ) ? $network : 'reportedip-hive-2fa-setup';
-		self::$resolve_cache[ $key ] = $slug;
-		return $slug;
 	}
 
 	/**
