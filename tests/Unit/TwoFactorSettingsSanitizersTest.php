@@ -114,7 +114,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_an_unknown_stored_slug_survives_a_save() {
 			require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 			require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
-			require_once dirname( __DIR__, 2 ) . '/includes/class-login-context.php';
 			require_once dirname( __DIR__, 2 ) . '/admin/class-protection-page.php';
 			$key = 'reportedip_hive_2fa_allowed_methods';
 			$this->set_mocked_option( $key, '["totp","email","sms"]' );

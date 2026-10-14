@@ -557,7 +557,6 @@ class ExtensionApiTest extends TestCase {
 	 * @return array<string, mixed> Registry entry of the allowed-methods key.
 	 */
 	private function allowed_methods_entry() {
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-login-context.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-protection-page.php';
 		return \ReportedIP_Hive_Settings_Registry::spec()['reportedip_hive_2fa_allowed_methods'];
 	}

@@ -18,7 +18,6 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-protection-page.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-form-adapters.php';
-	require_once dirname( __DIR__, 2 ) . '/includes/class-login-context.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-mode-manager.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php';
 }
