@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-14T03:01:38+00:00\n"
+"POT-Creation-Date: 2026-10-14T04:01:32+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -240,10 +240,8 @@ msgstr ""
 #: admin/class-protection-page.php:439
 #: admin/class-protection-page.php:904
 #: admin/class-protection-page.php:1188
-#: admin/class-tools-page.php:202
-#: admin/class-tools-page.php:206
-#: admin/class-tools-page.php:228
-#: admin/class-tools-page.php:232
+#: admin/class-tools-page.php:213
+#: admin/class-tools-page.php:217
 msgid "Off"
 msgstr ""
 
@@ -254,7 +252,7 @@ msgstr ""
 #: admin/class-protection-page.php:437
 #: admin/class-protection-page.php:439
 #: admin/class-protection-page.php:1181
-#: admin/class-tools-page.php:287
+#: admin/class-tools-page.php:264
 #: admin/class-two-factor-admin.php:739
 #: admin/class-two-factor-admin.php:1226
 #: admin/class-user-admin.php:397
@@ -493,8 +491,7 @@ msgid "Fetch rules from the community server"
 msgstr ""
 
 #: admin/class-admin-firewall.php:639
-#: admin/class-tools-page.php:209
-#: admin/class-tools-page.php:243
+#: admin/class-tools-page.php:220
 msgid "On"
 msgstr ""
 
@@ -832,7 +829,7 @@ msgid "IP Address"
 msgstr ""
 
 #: admin/class-admin-settings.php:1109
-#: reportedip-hive.php:1112
+#: reportedip-hive.php:1110
 msgid "Attacks"
 msgstr ""
 
@@ -878,7 +875,7 @@ msgstr ""
 #: admin/class-user-admin.php:385
 #: admin/class-user-admin.php:623
 #: admin/class-user-admin.php:647
-#: reportedip-hive.php:970
+#: reportedip-hive.php:968
 msgid "Blocked"
 msgstr ""
 
@@ -1406,7 +1403,7 @@ msgstr ""
 #: admin/class-audit-log-table.php:282
 #: includes/class-privacy.php:222
 #: includes/class-security-monitor.php:1564
-#: reportedip-hive.php:983
+#: reportedip-hive.php:981
 msgid "Event"
 msgstr ""
 
@@ -1421,7 +1418,7 @@ msgstr ""
 #: admin/class-admin-settings.php:5246
 #: admin/class-logs-table.php:54
 #: admin/class-logs-table.php:434
-#: reportedip-hive.php:984
+#: reportedip-hive.php:982
 msgid "Severity"
 msgstr ""
 
@@ -1671,7 +1668,7 @@ msgid "Severity Breakdown"
 msgstr ""
 
 #: admin/class-admin-settings.php:4069
-#: reportedip-hive.php:981
+#: reportedip-hive.php:979
 msgid "Recent Activity"
 msgstr ""
 
@@ -1687,25 +1684,25 @@ msgstr ""
 #: admin/class-admin-settings.php:5224
 #: admin/class-logs-table.php:440
 #: admin/class-protection-page.php:929
-#: reportedip-hive.php:1113
+#: reportedip-hive.php:1111
 msgid "Critical"
 msgstr ""
 
 #: admin/class-admin-settings.php:4089
 #: admin/class-logs-table.php:439
-#: reportedip-hive.php:1114
+#: reportedip-hive.php:1112
 msgid "High"
 msgstr ""
 
 #: admin/class-admin-settings.php:4090
 #: admin/class-logs-table.php:438
-#: reportedip-hive.php:1115
+#: reportedip-hive.php:1113
 msgid "Medium"
 msgstr ""
 
 #: admin/class-admin-settings.php:4091
 #: admin/class-logs-table.php:437
-#: reportedip-hive.php:1116
+#: reportedip-hive.php:1114
 msgid "Low"
 msgstr ""
 
@@ -1779,7 +1776,7 @@ msgid "Advanced"
 msgstr ""
 
 #: admin/class-admin-settings.php:4451
-#: reportedip-hive.php:1750
+#: reportedip-hive.php:1748
 msgid "Retrying..."
 msgstr ""
 
@@ -1849,7 +1846,7 @@ msgstr ""
 #: admin/class-admin-settings.php:4530
 #: admin/class-logs-table.php:78
 #: admin/class-logs-table.php:145
-#: reportedip-hive.php:993
+#: reportedip-hive.php:991
 msgid "Block IP"
 msgstr ""
 
@@ -1953,7 +1950,7 @@ msgid "Never"
 msgstr ""
 
 #: admin/class-admin-settings.php:4665
-#: admin/class-tools-page.php:534
+#: admin/class-tools-page.php:510
 msgid "Result"
 msgstr ""
 
@@ -2436,7 +2433,7 @@ msgid "Your IP Address"
 msgstr ""
 
 #: admin/class-admin-settings.php:5596
-#: reportedip-hive.php:969
+#: reportedip-hive.php:967
 msgid "Whitelisted"
 msgstr ""
 
@@ -3535,7 +3532,7 @@ msgstr ""
 #: admin/class-two-factor-admin.php:436
 #: includes/class-two-factor-onboarding.php:357
 #: includes/class-two-factor.php:2325
-#: reportedip-hive.php:931
+#: reportedip-hive.php:929
 msgid "Error"
 msgstr ""
 
@@ -3695,7 +3692,7 @@ msgstr ""
 #: includes/class-two-factor-notifications.php:98
 #: includes/class-two-factor-notifications.php:313
 #: includes/class-two-factor-notifications.php:327
-#: reportedip-hive.php:982
+#: reportedip-hive.php:980
 msgid "Time"
 msgstr ""
 
@@ -4158,7 +4155,7 @@ msgstr ""
 
 #: admin/class-logs-table.php:79
 #: admin/class-logs-table.php:150
-#: reportedip-hive.php:994
+#: reportedip-hive.php:992
 msgid "Whitelist IP"
 msgstr ""
 
@@ -4672,7 +4669,7 @@ msgid "Paste key..."
 msgstr ""
 
 #: admin/class-quickstart.php:453
-#: admin/class-tools-page.php:506
+#: admin/class-tools-page.php:482
 msgid "Check"
 msgstr ""
 
@@ -4900,7 +4897,7 @@ msgid "Preview changes"
 msgstr ""
 
 #: admin/class-settings-import-export.php:446
-#: includes/class-ajax-handler.php:1591
+#: includes/class-ajax-handler.php:1617
 msgid "No file uploaded."
 msgstr ""
 
@@ -4940,240 +4937,188 @@ msgstr ""
 msgid "Server setup, rule delivery, data and diagnostics"
 msgstr ""
 
-#: admin/class-tools-page.php:199
+#: admin/class-tools-page.php:210
 msgid "Execution proof"
 msgstr ""
 
-#: admin/class-tools-page.php:202
+#: admin/class-tools-page.php:213
 msgid "The constant REPORTEDIP_HIVE_DISABLE_FORM_PROOF is set in wp-config.php and switches the whole layer off, whatever the settings say."
 msgstr ""
 
-#: admin/class-tools-page.php:206
+#: admin/class-tools-page.php:217
 msgid "The master switch on the Protection page is off, so no form carries an anchor."
 msgstr ""
 
-#: admin/class-tools-page.php:209
+#: admin/class-tools-page.php:220
 msgid "Every protected form carries the hidden anchor."
 msgstr ""
 
-#: admin/class-tools-page.php:221
-msgid "Computation check"
-msgstr ""
-
-#: admin/class-tools-page.php:224
-msgid "Not in your plan"
-msgstr ""
-
-#: admin/class-tools-page.php:224
-msgid "The computation check is part of the Professional plan. Without it the hidden field carries a plain marker, which a script can copy out of the page."
-msgstr ""
-
-#: admin/class-tools-page.php:228
-msgid "The switch on the Protection page is off."
-msgstr ""
-
-#: admin/class-tools-page.php:232
-msgid "The execution proof is off for the whole site, so no task is handed out either."
-msgstr ""
-
-#: admin/class-tools-page.php:236
-msgid "Bound only"
-msgstr ""
-
-#: admin/class-tools-page.php:236
-msgid "This site is not reached over a secure connection, so the task is handed out with zero difficulty: a browser can only work one out in a secure context, and demanding it here would turn every visitor into a suspect. The task is still signed, expires and is good once, which already refuses a script that only copies the field name out of the page."
-msgstr ""
-
-#: admin/class-tools-page.php:240
-msgid "Starting up"
-msgstr ""
-
-#: admin/class-tools-page.php:240
-msgid "A task is handed out already, and the plain marker still passes for the first day, so pages served from a cache filled before the switch are not refused."
-msgstr ""
-
-#: admin/class-tools-page.php:243
-msgid "Every protected form fetches a signed task from this site; each answer is good once, expires in ten minutes and gets harder the faster one network asks."
-msgstr ""
-
 #. translators: %s: name of a form plugin
-#: admin/class-tools-page.php:258
+#: admin/class-tools-page.php:235
 #, php-format
 msgid "Form adapter: %s"
 msgstr ""
 
-#: admin/class-tools-page.php:266
-#: admin/class-tools-page.php:276
-#: admin/class-tools-page.php:280
-#: admin/class-tools-page.php:284
+#: admin/class-tools-page.php:243
+#: admin/class-tools-page.php:253
+#: admin/class-tools-page.php:257
+#: admin/class-tools-page.php:261
 msgid "Inactive"
 msgstr ""
 
 #. translators: %s: name of a form plugin
-#: admin/class-tools-page.php:269
+#: admin/class-tools-page.php:246
 #, php-format
 msgid "%s is not active on this site, so there is nothing to carry the anchor into."
 msgstr ""
 
-#: admin/class-tools-page.php:276
+#: admin/class-tools-page.php:253
 msgid "The form plugin is here, your plan does not cover this adapter."
 msgstr ""
 
-#: admin/class-tools-page.php:280
+#: admin/class-tools-page.php:257
 msgid "The form plugin is here and your plan covers it, the switch on the Protection page is off."
 msgstr ""
 
-#: admin/class-tools-page.php:284
+#: admin/class-tools-page.php:261
 msgid "The switch is on, the execution proof is off for the whole site."
 msgstr ""
 
-#: admin/class-tools-page.php:287
+#: admin/class-tools-page.php:264
 msgid "Submissions through this form plugin are judged like a comment."
 msgstr ""
 
-#: admin/class-tools-page.php:298
+#: admin/class-tools-page.php:275
 msgid "Adapter grace"
 msgstr ""
 
-#: admin/class-tools-page.php:301
+#: admin/class-tools-page.php:278
 msgid "Not running"
 msgstr ""
 
-#: admin/class-tools-page.php:301
+#: admin/class-tools-page.php:278
 msgid "No form adapter has been switched on, so there is no grace to wait out."
 msgstr ""
 
-#: admin/class-tools-page.php:305
+#: admin/class-tools-page.php:282
 msgid "Elapsed"
 msgstr ""
 
-#: admin/class-tools-page.php:305
+#: admin/class-tools-page.php:282
 msgid "A submission that never carried our anchor is refused on the form adapters."
 msgstr ""
 
-#: admin/class-tools-page.php:311
+#: admin/class-tools-page.php:288
 msgid "Running"
 msgstr ""
 
 #. translators: %s: local date and time the grace ends
-#: admin/class-tools-page.php:314
+#: admin/class-tools-page.php:291
 #, php-format
 msgid "Until %s a submission without our anchor still passes on the form adapters, because a page cache filled before the switch cannot carry one."
 msgstr ""
 
-#: admin/class-tools-page.php:413
+#: admin/class-tools-page.php:390
 msgid "Like a visitor"
 msgstr ""
 
-#: admin/class-tools-page.php:414
+#: admin/class-tools-page.php:391
 msgid "Like the same visitor twice"
 msgstr ""
 
-#: admin/class-tools-page.php:415
+#: admin/class-tools-page.php:392
 msgid "Like a bot"
 msgstr ""
 
-#: admin/class-tools-page.php:430
+#: admin/class-tools-page.php:407
 msgid "let through"
 msgstr ""
 
-#: admin/class-tools-page.php:431
+#: admin/class-tools-page.php:408
 msgid "refused"
 msgstr ""
 
-#: admin/class-tools-page.php:432
+#: admin/class-tools-page.php:409
 msgid "refused as a bot"
 msgstr ""
 
-#: admin/class-tools-page.php:433
+#: admin/class-tools-page.php:410
 msgid "not ours to judge"
 msgstr ""
 
-#: admin/class-tools-page.php:452
+#: admin/class-tools-page.php:429
 msgid "A normal submission reached the site. Readers are not caught by the check."
 msgstr ""
 
-#: admin/class-tools-page.php:453
-msgid "A normal submission was refused. Visitors would be turned away on your forms too, so switch the computation check off on the Protection page until this reads correctly."
+#: admin/class-tools-page.php:430
+msgid "A normal submission was refused. Visitors would be turned away on your forms too, so switch the execution proof off on the Protection page until this reads correctly."
 msgstr ""
 
-#: admin/class-tools-page.php:458
+#: admin/class-tools-page.php:435
 msgid "The repeated answer was not judged as expected. A copied answer may still be worth something on this site."
 msgstr ""
 
-#: admin/class-tools-page.php:462
+#: admin/class-tools-page.php:439
 msgid "The same answer was refused the second time, so copying it out of the page buys a script nothing."
 msgstr ""
 
-#: admin/class-tools-page.php:463
-msgid "Without the computation check there is nothing to repeat, so a second submission passes like the first. Switching the check on closes that."
+#: admin/class-tools-page.php:440
+msgid "The plain marker can be sent again, so a second submission passes like the first."
 msgstr ""
 
-#: admin/class-tools-page.php:467
+#: admin/class-tools-page.php:444
 msgid "A filled anchor field was refused, which is what a script that fills every input produces."
 msgstr ""
 
-#: admin/class-tools-page.php:468
+#: admin/class-tools-page.php:445
 msgid "A filled anchor field was let through. That is the oldest part of the check, so it points at a changed installation rather than at a setting."
 msgstr ""
 
-#: admin/class-tools-page.php:480
+#: admin/class-tools-page.php:457
 msgid "All three runs came back as expected. The form protection is in force on this site."
 msgstr ""
 
-#: admin/class-tools-page.php:481
+#: admin/class-tools-page.php:458
 msgid "At least one run came back differently than expected. The lines above say what that means for your forms."
 msgstr ""
 
-#: admin/class-tools-page.php:499
+#: admin/class-tools-page.php:475
 msgid "Form protection self-test"
 msgstr ""
 
-#: admin/class-tools-page.php:501
+#: admin/class-tools-page.php:477
 msgid "The form protection has no visible surface, so this card first shows what is switched on and then proves it. The run touches no real form: no mail goes out, no comment is filed and no entry is stored."
 msgstr ""
 
-#: admin/class-tools-page.php:507
+#: admin/class-tools-page.php:483
 msgid "State"
 msgstr ""
 
-#: admin/class-tools-page.php:508
+#: admin/class-tools-page.php:484
 msgid "Detail"
 msgstr ""
 
-#: admin/class-tools-page.php:524
+#: admin/class-tools-page.php:500
 msgid "Run the self-test"
 msgstr ""
 
-#: admin/class-tools-page.php:532
+#: admin/class-tools-page.php:508
 msgid "Run"
 msgstr ""
 
-#: admin/class-tools-page.php:533
+#: admin/class-tools-page.php:509
 msgid "Expected"
 msgstr ""
 
-#: admin/class-tools-page.php:535
+#: admin/class-tools-page.php:511
 msgid "What it means"
 msgstr ""
 
-#: admin/class-tools-page.php:587
+#: admin/class-tools-page.php:554
 msgid "Running the three passes..."
 msgstr ""
 
-#: admin/class-tools-page.php:588
-msgid "Working out the task the way a visitor browser does..."
-msgstr ""
-
-#: admin/class-tools-page.php:589
-msgid "This browser offers no Web Crypto, which usually means the page was not reached over a secure connection. The task cannot be worked out here."
-msgstr ""
-
-#: admin/class-tools-page.php:590
-msgid "No answer was found within the attempt budget. Lower the difficulty with the reportedip_hive_form_proof_bits filter and try again."
-msgstr ""
-
-#: admin/class-tools-page.php:591
+#: admin/class-tools-page.php:555
 msgid "The self-test could not be completed."
 msgstr ""
 
@@ -5193,7 +5138,7 @@ msgstr ""
 #: admin/class-two-factor-admin.php:866
 #: includes/class-two-factor-dashboard.php:43
 #: includes/class-two-factor-dashboard.php:227
-#: includes/class-two-factor-webauthn.php:405
+#: includes/class-two-factor-webauthn.php:427
 msgid "You do not have permission."
 msgstr ""
 
@@ -5300,12 +5245,12 @@ msgstr ""
 
 #: admin/class-two-factor-admin.php:472
 #: admin/class-two-factor-admin.php:487
-#: includes/class-two-factor-webauthn.php:439
+#: includes/class-two-factor-webauthn.php:461
 msgid "Security key"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:473
-#: includes/class-two-factor-webauthn.php:362
+#: includes/class-two-factor-webauthn.php:384
 #: templates/two-factor-challenge.php:124
 msgid "Passkey"
 msgstr ""
@@ -5471,7 +5416,7 @@ msgid "Generate new recovery codes"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:643
-#: includes/class-settings-registry.php:1147
+#: includes/class-settings-registry.php:1138
 msgid "Trusted devices"
 msgstr ""
 
@@ -5929,7 +5874,7 @@ msgid "User roles"
 msgstr ""
 
 #: includes/class-ajax-handler.php:217
-#: includes/class-settings-registry.php:1658
+#: includes/class-settings-registry.php:1649
 msgid "This option is not part of the settings registry."
 msgstr ""
 
@@ -5994,294 +5939,294 @@ msgstr ""
 msgid "Test email could not be sent. Check the WordPress mail configuration or your active mail provider."
 msgstr ""
 
-#: includes/class-ajax-handler.php:408
+#: includes/class-ajax-handler.php:407
 msgid "Unknown self-test pass."
 msgstr ""
 
-#: includes/class-ajax-handler.php:587
+#: includes/class-ajax-handler.php:613
 #: includes/class-database.php:630
 msgid "Invalid IP address."
 msgstr ""
 
-#: includes/class-ajax-handler.php:611
+#: includes/class-ajax-handler.php:637
 msgid "Invalid IP address or CIDR range."
 msgstr ""
 
-#: includes/class-ajax-handler.php:615
+#: includes/class-ajax-handler.php:641
 msgid "Reason is required."
 msgstr ""
 
-#: includes/class-ajax-handler.php:644
-#: includes/class-ajax-handler.php:679
+#: includes/class-ajax-handler.php:670
+#: includes/class-ajax-handler.php:705
 msgid "IP address is required."
 msgstr ""
 
-#: includes/class-ajax-handler.php:648
+#: includes/class-ajax-handler.php:674
 msgid "Invalid IP address or CIDR format."
 msgstr ""
 
-#: includes/class-ajax-handler.php:652
+#: includes/class-ajax-handler.php:678
 msgid "Invalid expiration date."
 msgstr ""
 
-#: includes/class-ajax-handler.php:728
+#: includes/class-ajax-handler.php:754
 msgid "WAF exception saved."
 msgstr ""
 
-#: includes/class-ajax-handler.php:746
+#: includes/class-ajax-handler.php:772
 msgid "A valid exception id is required."
 msgstr ""
 
-#: includes/class-ajax-handler.php:750
+#: includes/class-ajax-handler.php:776
 msgid "WAF exception removed."
 msgstr ""
 
-#: includes/class-ajax-handler.php:753
+#: includes/class-ajax-handler.php:779
 msgid "Could not remove the exception."
 msgstr ""
 
 #. translators: 1: number of old log entries removed, 2: number of expired IP entries removed
-#: includes/class-ajax-handler.php:773
+#: includes/class-ajax-handler.php:799
 #, php-format
 msgid "Cleanup completed. Removed %1$d old log entries and %2$d expired IP entries."
 msgstr ""
 
 #. translators: 1: number of anonymized entries, 2: minimum age in days
-#: includes/class-ajax-handler.php:802
+#: includes/class-ajax-handler.php:828
 #, php-format
 msgid "Anonymization completed. Anonymized %1$d entries older than %2$d days."
 msgstr ""
 
-#: includes/class-ajax-handler.php:841
+#: includes/class-ajax-handler.php:867
 msgid "Imported from CSV"
 msgstr ""
 
 #. translators: 1: line number in CSV file, 2: invalid IP value found
-#: includes/class-ajax-handler.php:845
+#: includes/class-ajax-handler.php:871
 #, php-format
 msgid "Line %1$d: Invalid IP \"%2$s\""
 msgstr ""
 
 #. translators: 1: line number in CSV file, 2: IP address, 3: error message returned by the blocker
-#: includes/class-ajax-handler.php:859
+#: includes/class-ajax-handler.php:885
 #, php-format
 msgid "Line %1$d: Failed to block \"%2$s\" - %3$s"
 msgstr ""
 
 #. translators: 1: number of imported IPs, 2: number of skipped IPs, 3: number of errors
-#: includes/class-ajax-handler.php:882
+#: includes/class-ajax-handler.php:908
 #, php-format
 msgid "%1$d IPs imported, %2$d skipped (already blocked), %3$d errors."
 msgstr ""
 
 #. translators: 1: number of IPs imported to whitelist, 2: number of errors
-#: includes/class-ajax-handler.php:920
+#: includes/class-ajax-handler.php:946
 #, php-format
 msgid "%1$d IPs imported to whitelist, %2$d errors."
 msgstr ""
 
 #. translators: %s: severity level used in the test event
-#: includes/class-ajax-handler.php:954
+#: includes/class-ajax-handler.php:980
 #, php-format
 msgid "Successfully logged %s severity test event."
 msgstr ""
 
-#: includes/class-ajax-handler.php:959
+#: includes/class-ajax-handler.php:985
 msgid "Failed to log test event. Check database connection."
 msgstr ""
 
-#: includes/class-ajax-handler.php:981
+#: includes/class-ajax-handler.php:1007
 msgid "Basic database connection failed."
 msgstr ""
 
-#: includes/class-ajax-handler.php:989
+#: includes/class-ajax-handler.php:1015
 msgid "Plugin database tables are missing. Try deactivating and reactivating the plugin."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1010
+#: includes/class-ajax-handler.php:1036
 msgid "Database insert test failed: "
 msgstr ""
 
-#: includes/class-ajax-handler.php:1018
+#: includes/class-ajax-handler.php:1044
 msgid "Database connection and functionality test successful."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1055
+#: includes/class-ajax-handler.php:1081
 msgid "Cron jobs triggered successfully. Check logs for results."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1091
+#: includes/class-ajax-handler.php:1117
 msgid "Auto-block function test successful! Test IP was blocked."
 msgstr ""
 
 #. translators: %s: human readable reason why the IP was not blocked
-#: includes/class-ajax-handler.php:1113
+#: includes/class-ajax-handler.php:1139
 #, php-format
 msgid "Auto-block function test completed. IP was not blocked. Reason: %s"
 msgstr ""
 
 #. translators: 1: number of attempts recorded, 2: configured threshold, 3: "Yes" or "No" indicating threshold exceeded
-#: includes/class-ajax-handler.php:1183
+#: includes/class-ajax-handler.php:1209
 #, php-format
 msgid "Failed login threshold simulation completed. %1$d attempts recorded, threshold is %2$d. Threshold exceeded: %3$s"
 msgstr ""
 
 #. translators: 1: number of attempts that were actually recorded, 2: number of attempts that were expected
-#: includes/class-ajax-handler.php:1200
+#: includes/class-ajax-handler.php:1226
 #, php-format
 msgid "Simulation failed. Only %1$d attempts recorded, but %2$d were expected."
 msgstr ""
 
 #. translators: %d: number of cache entries that were removed
-#: includes/class-ajax-handler.php:1227
+#: includes/class-ajax-handler.php:1253
 #, php-format
 msgid "Cache cleared successfully. Removed %d cache entries."
 msgstr ""
 
 #. translators: %d: number of expired cache entries that were removed
-#: includes/class-ajax-handler.php:1255
+#: includes/class-ajax-handler.php:1281
 #, php-format
 msgid "Expired cache entries cleaned up. Removed %d expired entries."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1278
-#: includes/class-ajax-handler.php:1411
+#: includes/class-ajax-handler.php:1304
+#: includes/class-ajax-handler.php:1437
 msgid "Invalid report ID."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1288
+#: includes/class-ajax-handler.php:1314
 msgid "Queue row not found."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1324
+#: includes/class-ajax-handler.php:1350
 msgid "Report sent."
 msgstr ""
 
 #. translators: %s: API error message
-#: includes/class-ajax-handler.php:1332
+#: includes/class-ajax-handler.php:1358
 #, php-format
 msgid "Send failed: %s"
 msgstr ""
 
-#: includes/class-ajax-handler.php:1333
+#: includes/class-ajax-handler.php:1359
 msgid "unknown error"
 msgstr ""
 
 #. translators: 1: reset count, 2: processed count, 3: errors count
-#: includes/class-ajax-handler.php:1377
+#: includes/class-ajax-handler.php:1403
 #, php-format
 msgid "%1$d failed reset · %2$d sent · %3$d errors"
 msgstr ""
 
-#: includes/class-ajax-handler.php:1430
+#: includes/class-ajax-handler.php:1456
 msgid "Queue item deleted."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1435
+#: includes/class-ajax-handler.php:1461
 msgid "Failed to delete queue item."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1475
+#: includes/class-ajax-handler.php:1501
 msgid "All settings have been reset to defaults. The page will reload."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1507
+#: includes/class-ajax-handler.php:1533
 msgid "API statistics have been reset. The page will reload."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1534
+#: includes/class-ajax-handler.php:1560
 msgid "All plugin data has been deleted. The page will reload."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1554
+#: includes/class-ajax-handler.php:1580
 msgid "Invalid notice ID."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1599
+#: includes/class-ajax-handler.php:1625
 msgid "File exceeds upload_max_filesize."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1600
+#: includes/class-ajax-handler.php:1626
 msgid "File exceeds MAX_FILE_SIZE."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1601
+#: includes/class-ajax-handler.php:1627
 msgid "File was only partially uploaded."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1602
+#: includes/class-ajax-handler.php:1628
 msgid "No file was uploaded."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1603
+#: includes/class-ajax-handler.php:1629
 msgid "Missing temporary folder."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1604
+#: includes/class-ajax-handler.php:1630
 msgid "Failed to write file to disk."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1605
+#: includes/class-ajax-handler.php:1631
 msgid "File upload stopped by extension."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1607
+#: includes/class-ajax-handler.php:1633
 msgid "Unknown upload error."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1612
+#: includes/class-ajax-handler.php:1638
 msgid "File too large. Maximum size is 1 MB."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1617
+#: includes/class-ajax-handler.php:1643
 msgid "Invalid file type. Only CSV and TXT files are allowed."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1623
+#: includes/class-ajax-handler.php:1649
 msgid "Failed to read uploaded file."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1653
+#: includes/class-ajax-handler.php:1679
 msgid "Queue processed and quota refreshed. Check Activity log for details."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1675
+#: includes/class-ajax-handler.php:1701
 msgid "Priority Sync requires a Contributor plan."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1680
+#: includes/class-ajax-handler.php:1706
 msgid "Rulesets synced."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1704
+#: includes/class-ajax-handler.php:1730
 msgid "The drop-in manager is unavailable."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1712
+#: includes/class-ajax-handler.php:1738
 msgid "The server configuration target is not writable. Adjust file permissions and try again."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1718
+#: includes/class-ajax-handler.php:1744
 msgid "Extended protection enabled."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1719
+#: includes/class-ajax-handler.php:1745
 msgid "Extended protection disabled."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1721
+#: includes/class-ajax-handler.php:1747
 msgid "Guard file generated. Paste the nginx snippet into your server block and reload nginx."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1758
+#: includes/class-ajax-handler.php:1784
 msgid "Invalid payload."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1794
+#: includes/class-ajax-handler.php:1820
 msgid "Queue lock cleared."
 msgstr ""
 
-#: includes/class-ajax-handler.php:1795
+#: includes/class-ajax-handler.php:1821
 msgid "No queue lock was held."
 msgstr ""
 
@@ -6812,7 +6757,6 @@ msgid "Tightens the sign-in and reputation thresholds for an hour when a coordin
 msgstr ""
 
 #: includes/class-catalog.php:85
-#: includes/class-settings-registry.php:726
 msgid "Computation check on forms"
 msgstr ""
 
@@ -7519,23 +7463,19 @@ msgstr ""
 msgid "%s (threshold reached)"
 msgstr ""
 
-#: includes/class-form-challenge.php:447
-msgid "Too many requests. Please try again in a moment."
-msgstr ""
-
-#: includes/class-form-proof.php:800
+#: includes/class-form-proof.php:627
 msgid "Leave this field empty"
 msgstr ""
 
-#: includes/class-form-proof.php:1225
+#: includes/class-form-proof.php:1070
 msgid "This form needs JavaScript to be submitted. Switch it on and try again."
 msgstr ""
 
-#: includes/class-form-proof.php:1228
+#: includes/class-form-proof.php:1073
 msgid "Your submission was not accepted. Please reload the page and try again."
 msgstr ""
 
-#: includes/class-form-proof.php:1335
+#: includes/class-form-proof.php:1180
 msgid "This form needs JavaScript to be submitted. Switch it on and try again. If you cannot, ask another administrator to reset your password, or use WP-CLI on the server."
 msgstr ""
 
@@ -9248,831 +9188,827 @@ msgstr ""
 msgid "A comment that fails the check is filed for review, a sign-up or password reset that fails is refused. Switch this off to keep the comment protection while leaving both login forms untouched."
 msgstr ""
 
-#: includes/class-settings-registry.php:727
-msgid "Hand the form a small task that the browser fetches from this site and works out in the background. The task is signed, good once, expires in ten minutes and gets harder the faster one network asks for it. A script that only copies the hidden field out of the page can no longer pass for a visitor, and nobody has to read a distorted image. The page stays fully cacheable. Without HTTPS the task carries no arithmetic but keeps its signature and single use."
-msgstr ""
-
-#: includes/class-settings-registry.php:735
+#: includes/class-settings-registry.php:726
 msgid "Protect Contact Form 7 forms"
 msgstr ""
 
-#: includes/class-settings-registry.php:736
+#: includes/class-settings-registry.php:727
 msgid "Put the same check on every Contact Form 7 form: the entry has to come from a browser that rendered the page. Visitors notice nothing, and there is no image to decipher."
 msgstr ""
 
-#: includes/class-settings-registry.php:745
+#: includes/class-settings-registry.php:736
 msgid "Protect Formidable Forms"
 msgstr ""
 
-#: includes/class-settings-registry.php:746
+#: includes/class-settings-registry.php:737
 msgid "The same check on Formidable Forms and Formidable Forms PRO, including multi-step forms. Visitors notice nothing."
 msgstr ""
 
-#: includes/class-settings-registry.php:755
+#: includes/class-settings-registry.php:746
 msgid "Protect Elementor forms"
 msgstr ""
 
-#: includes/class-settings-registry.php:756
+#: includes/class-settings-registry.php:747
 msgid "The same check on Elementor Pro forms, which are sent in the background. Visitors notice nothing."
 msgstr ""
 
-#: includes/class-settings-registry.php:765
+#: includes/class-settings-registry.php:756
 msgid "Protect Ultimate Member forms"
 msgstr ""
 
-#: includes/class-settings-registry.php:766
+#: includes/class-settings-registry.php:757
 msgid "The same check on the Ultimate Member sign-in, sign-up and password forms. Sign-ups also run through the registration rules, so a throwaway address or a reserved name is refused before the account exists."
 msgstr ""
 
-#: includes/class-settings-registry.php:775
+#: includes/class-settings-registry.php:766
 msgid "Protect Gravity Forms forms"
 msgstr ""
 
-#: includes/class-settings-registry.php:776
+#: includes/class-settings-registry.php:767
 msgid "The same check on Gravity Forms, including forms sent in the background and forms with several pages. Visitors notice nothing."
 msgstr ""
 
-#: includes/class-settings-registry.php:785
+#: includes/class-settings-registry.php:776
 msgid "Protect WPForms forms"
 msgstr ""
 
-#: includes/class-settings-registry.php:786
+#: includes/class-settings-registry.php:777
 msgid "The same check on WPForms and WPForms Lite, including forms sent in the background. A refused submission is shown to the sender above the form. Visitors notice nothing."
 msgstr ""
 
-#: includes/class-settings-registry.php:795
+#: includes/class-settings-registry.php:786
 msgid "Protect Forminator forms"
 msgstr ""
 
-#: includes/class-settings-registry.php:796
+#: includes/class-settings-registry.php:787
 msgid "The same check on Forminator forms, whether the form sits in the page or is loaded afterwards. A refused submission is shown to the sender at the form, never dropped into a spam folder. Visitors notice nothing."
 msgstr ""
 
-#: includes/class-settings-registry.php:803
+#: includes/class-settings-registry.php:794
 msgid "Community threat check on forms"
 msgstr ""
 
-#: includes/class-settings-registry.php:804
+#: includes/class-settings-registry.php:795
 msgid "Ask the community network about the visitor address when a comment, sign-up or password reset is submitted, using the same protection level the sign-in page enforces. Needs Community Network mode."
 msgstr ""
 
-#: includes/class-settings-registry.php:811
+#: includes/class-settings-registry.php:802
 msgid "Disposable email domains on forms and comments"
 msgstr ""
 
-#: includes/class-settings-registry.php:812
+#: includes/class-settings-registry.php:803
 msgid "What happens when a comment or a protected contact form carries an address from a throwaway mail provider. A refused sender is asked at the form for a permanent address."
 msgstr ""
 
-#: includes/class-settings-registry.php:819
+#: includes/class-settings-registry.php:810
 msgid "Action on a comment scored as spam"
 msgstr ""
 
-#: includes/class-settings-registry.php:820
+#: includes/class-settings-registry.php:811
 msgid "Whether a comment that trips several spam signals is filed as spam, rejected outright, or left to WordPress."
 msgstr ""
 
-#: includes/class-settings-registry.php:826
+#: includes/class-settings-registry.php:817
 msgid "Decoy path blocking"
 msgstr ""
 
-#: includes/class-settings-registry.php:827
+#: includes/class-settings-registry.php:818
 msgid "Serve bait paths that only a scanner would ask for, and report whoever takes the bait to the community."
 msgstr ""
 
-#: includes/class-settings-registry.php:836
+#: includes/class-settings-registry.php:827
 msgid "Hide login enabled"
 msgstr ""
 
-#: includes/class-settings-registry.php:837
+#: includes/class-settings-registry.php:828
 msgid "Move the sign-in page away from wp-login.php, so the address that every bot tries first leads nowhere."
 msgstr ""
 
-#: includes/class-settings-registry.php:846
+#: includes/class-settings-registry.php:837
 msgid "Login slug"
 msgstr ""
 
-#: includes/class-settings-registry.php:847
+#: includes/class-settings-registry.php:838
 msgid "The path your sign-in page lives at. Note it somewhere before saving, because the old address stops working immediately."
 msgstr ""
 
-#: includes/class-settings-registry.php:854
+#: includes/class-settings-registry.php:845
 msgid "Response on the default login URL"
 msgstr ""
 
-#: includes/class-settings-registry.php:855
+#: includes/class-settings-registry.php:846
 msgid "What a visitor to the old sign-in address sees. A plain 404 gives away less than a block page."
 msgstr ""
 
-#: includes/class-settings-registry.php:861
+#: includes/class-settings-registry.php:852
 msgid "Monitor login probe attempts"
 msgstr ""
 
-#: includes/class-settings-registry.php:862
+#: includes/class-settings-registry.php:853
 msgid "Count who keeps knocking at the old sign-in address. Nobody does that by accident."
 msgstr ""
 
-#: includes/class-settings-registry.php:870
+#: includes/class-settings-registry.php:861
 msgid "Login probe threshold"
 msgstr ""
 
-#: includes/class-settings-registry.php:871
+#: includes/class-settings-registry.php:862
 msgid "How many probes at the old address one visitor may make inside the window below."
 msgstr ""
 
-#: includes/class-settings-registry.php:879
+#: includes/class-settings-registry.php:870
 msgid "Login probe window (minutes)"
 msgstr ""
 
-#: includes/class-settings-registry.php:880
+#: includes/class-settings-registry.php:871
 msgid "The window probes are counted in."
 msgstr ""
 
-#: includes/class-settings-registry.php:886
+#: includes/class-settings-registry.php:877
 msgid "Append the login token to generated URLs"
 msgstr ""
 
-#: includes/class-settings-registry.php:887
+#: includes/class-settings-registry.php:878
 msgid "Append the login token to links WordPress generates. Convenient for password-reset mails, but it also puts the hidden path into anything that logs a URL."
 msgstr ""
 
-#: includes/class-settings-registry.php:895
+#: includes/class-settings-registry.php:886
 msgid "REST API access"
 msgstr ""
 
-#: includes/class-settings-registry.php:896
+#: includes/class-settings-registry.php:887
 msgid "Who may use the REST API. Many plugins and the block editor depend on it, so try a restriction before you rely on it."
 msgstr ""
 
-#: includes/class-settings-registry.php:902
+#: includes/class-settings-registry.php:893
 msgid "REST namespaces always allowed"
 msgstr ""
 
-#: includes/class-settings-registry.php:903
+#: includes/class-settings-registry.php:894
 msgid "Namespaces that stay reachable whatever the mode above says, one per line. This is where a cookie banner or a shop plugin goes."
 msgstr ""
 
-#: includes/class-settings-registry.php:913
+#: includes/class-settings-registry.php:904
 msgid "Roles allowed to use the REST API"
 msgstr ""
 
-#: includes/class-settings-registry.php:914
+#: includes/class-settings-registry.php:905
 msgid "The roles that may use the REST API while access is restricted to roles."
 msgstr ""
 
-#: includes/class-settings-registry.php:920
+#: includes/class-settings-registry.php:911
 msgid "Disable XML-RPC"
 msgstr ""
 
-#: includes/class-settings-registry.php:921
+#: includes/class-settings-registry.php:912
 msgid "Switch off xmlrpc.php and pingbacks completely. Most sites never use it; the Jetpack app and some publishing tools do. If you need XML-RPC, leave this off and use the multicall switch below instead."
 msgstr ""
 
-#: includes/class-settings-registry.php:927
+#: includes/class-settings-registry.php:918
 msgid "Disable RSS and Atom feeds"
 msgstr ""
 
-#: includes/class-settings-registry.php:928
+#: includes/class-settings-registry.php:919
 msgid "Return a 404 for RSS and Atom feeds. Turn this on only if nothing subscribes to your site."
 msgstr ""
 
-#: includes/class-settings-registry.php:934
+#: includes/class-settings-registry.php:925
 msgid "Close wp-admin for visitors"
 msgstr ""
 
-#: includes/class-settings-registry.php:935
+#: includes/class-settings-registry.php:926
 msgid "Send signed-out visitors away from wp-admin instead of showing them the sign-in form."
 msgstr ""
 
-#: includes/class-settings-registry.php:941
+#: includes/class-settings-registry.php:932
 msgid "Block PHP execution in uploads"
 msgstr ""
 
-#: includes/class-settings-registry.php:942
+#: includes/class-settings-registry.php:933
 msgid "Refuse to run PHP inside the uploads folder, so a file that got in through an upload form cannot be executed. Written into the uploads .htaccess on Apache; other servers get a snippet to paste."
 msgstr ""
 
-#: includes/class-settings-registry.php:948
+#: includes/class-settings-registry.php:939
 msgid "Hide software fingerprints"
 msgstr ""
 
-#: includes/class-settings-registry.php:949
+#: includes/class-settings-registry.php:940
 msgid "Remove the version numbers WordPress prints into your pages. It does not fix anything, it just stops handing a scanner the list of what to try."
 msgstr ""
 
-#: includes/class-settings-registry.php:955
+#: includes/class-settings-registry.php:946
 msgid "Send security headers"
 msgstr ""
 
-#: includes/class-settings-registry.php:956
+#: includes/class-settings-registry.php:947
 msgid "Send hardening response headers on every front-end request. A header your server already sets is left alone."
 msgstr ""
 
-#: includes/class-settings-registry.php:962
+#: includes/class-settings-registry.php:953
 msgid "X-Content-Type-Options"
 msgstr ""
 
-#: includes/class-settings-registry.php:963
+#: includes/class-settings-registry.php:954
 msgid "Stop the browser from guessing a file type against what you declared, which is how an uploaded image gets treated as a script."
 msgstr ""
 
-#: includes/class-settings-registry.php:971
+#: includes/class-settings-registry.php:962
 msgid "X-Frame-Options"
 msgstr ""
 
-#: includes/class-settings-registry.php:972
+#: includes/class-settings-registry.php:963
 msgid "Who may put your pages inside a frame. Same-origin is right for almost every site; deny breaks legitimate embeds."
 msgstr ""
 
-#: includes/class-settings-registry.php:979
+#: includes/class-settings-registry.php:970
 msgid "Referrer-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:980
+#: includes/class-settings-registry.php:971
 msgid "How much of the current address is passed on when a visitor follows a link away from your site."
 msgstr ""
 
-#: includes/class-settings-registry.php:987
+#: includes/class-settings-registry.php:978
 msgid "HTTP Strict Transport Security"
 msgstr ""
 
-#: includes/class-settings-registry.php:988
+#: includes/class-settings-registry.php:979
 msgid "Tell the browser to reach this site over HTTPS only, from now on. Never turn this on before HTTPS works everywhere, because it cannot be taken back quickly."
 msgstr ""
 
-#: includes/class-settings-registry.php:997
+#: includes/class-settings-registry.php:988
 msgid "HSTS max-age (seconds)"
 msgstr ""
 
-#: includes/class-settings-registry.php:998
+#: includes/class-settings-registry.php:989
 msgid "How long the browser remembers the HTTPS-only instruction. Start short while you are testing."
 msgstr ""
 
-#: includes/class-settings-registry.php:1005
+#: includes/class-settings-registry.php:996
 msgid "HSTS includeSubDomains"
 msgstr ""
 
-#: includes/class-settings-registry.php:1006
+#: includes/class-settings-registry.php:997
 msgid "Apply the HTTPS-only instruction to every subdomain as well. Check that all of them really have a certificate first."
 msgstr ""
 
-#: includes/class-settings-registry.php:1013
+#: includes/class-settings-registry.php:1004
 msgid "HSTS preload"
 msgstr ""
 
-#: includes/class-settings-registry.php:1014
+#: includes/class-settings-registry.php:1005
 msgid "Ask to be added to the browsers' built-in HTTPS-only list. Getting off that list takes months, so only set it when the setup is final."
 msgstr ""
 
-#: includes/class-settings-registry.php:1022
+#: includes/class-settings-registry.php:1013
 msgid "Permissions-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1023
+#: includes/class-settings-registry.php:1014
 msgid "Which browser features your pages are allowed to use. The default switches off camera, microphone, location and payment, which almost no site needs."
 msgstr ""
 
-#: includes/class-settings-registry.php:1032
+#: includes/class-settings-registry.php:1023
 msgid "Content-Security-Policy mode"
 msgstr ""
 
-#: includes/class-settings-registry.php:1033
+#: includes/class-settings-registry.php:1024
 msgid "Whether the content policy is enforced or only reported. Always run it in report-only first; an enforced policy that is too strict makes a page look broken."
 msgstr ""
 
-#: includes/class-settings-registry.php:1040
+#: includes/class-settings-registry.php:1031
 msgid "Content-Security-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1041
+#: includes/class-settings-registry.php:1032
 msgid "The policy itself. It decides which scripts, styles and frames may load, and it is the one header that will break your theme if it is wrong."
 msgstr ""
 
-#: includes/class-settings-registry.php:1048
+#: includes/class-settings-registry.php:1039
 msgid "CSP report URI"
 msgstr ""
 
-#: includes/class-settings-registry.php:1049
+#: includes/class-settings-registry.php:1040
 msgid "Where the browser sends policy violations while you are tuning the policy."
 msgstr ""
 
-#: includes/class-settings-registry.php:1058
+#: includes/class-settings-registry.php:1049
 msgid "Cross-Origin-Opener-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1059
+#: includes/class-settings-registry.php:1050
 msgid "Separate your pages from windows they opened, so a foreign page cannot reach back into yours."
 msgstr ""
 
-#: includes/class-settings-registry.php:1068
+#: includes/class-settings-registry.php:1059
 msgid "Cross-Origin-Resource-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1069
+#: includes/class-settings-registry.php:1060
 msgid "Who may embed your resources such as images and scripts."
 msgstr ""
 
-#: includes/class-settings-registry.php:1078
+#: includes/class-settings-registry.php:1069
 msgid "Cross-Origin-Embedder-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1079
+#: includes/class-settings-registry.php:1070
 msgid "Require every embedded resource to opt in. Needed for some browser features, and it breaks third-party embeds that have not opted in."
 msgstr ""
 
-#: includes/class-settings-registry.php:1087
+#: includes/class-settings-registry.php:1078
 msgid "Two-factor authentication enabled"
 msgstr ""
 
-#: includes/class-settings-registry.php:1088
+#: includes/class-settings-registry.php:1079
 msgid "Master switch for the second factor. Off, nobody is asked for one, whatever the roles below say."
 msgstr ""
 
-#: includes/class-settings-registry.php:1097
+#: includes/class-settings-registry.php:1088
 msgid "Allowed 2FA methods"
 msgstr ""
 
-#: includes/class-settings-registry.php:1098
+#: includes/class-settings-registry.php:1089
 msgid "The methods users may set up. Leave at least one that works without a phone, or a lost device locks the account out."
 msgstr ""
 
-#: includes/class-settings-registry.php:1104
+#: includes/class-settings-registry.php:1095
 msgid "Subject of the e-mail code"
 msgstr ""
 
-#: includes/class-settings-registry.php:1105
+#: includes/class-settings-registry.php:1096
 msgid "Subject line of the mail that carries the sign-in code. Leave empty for the default; {site_name} is replaced with the site title."
 msgstr ""
 
-#: includes/class-settings-registry.php:1114
+#: includes/class-settings-registry.php:1105
 msgid "Roles required to use 2FA"
 msgstr ""
 
-#: includes/class-settings-registry.php:1115
+#: includes/class-settings-registry.php:1106
 msgid "Roles that must use a second factor. Everyone else may, and is asked to."
 msgstr ""
 
-#: includes/class-settings-registry.php:1123
+#: includes/class-settings-registry.php:1114
 msgid "2FA grace period (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1124
+#: includes/class-settings-registry.php:1115
 msgid "How long a required user may keep signing in before setting the second factor up."
 msgstr ""
 
-#: includes/class-settings-registry.php:1132
+#: includes/class-settings-registry.php:1123
 msgid "Maximum onboarding skips"
 msgstr ""
 
-#: includes/class-settings-registry.php:1133
+#: includes/class-settings-registry.php:1124
 msgid "How often a required user may postpone the setup during the grace period."
 msgstr ""
 
-#: includes/class-settings-registry.php:1140
+#: includes/class-settings-registry.php:1131
 msgid "Action when grace period is exhausted"
 msgstr ""
 
-#: includes/class-settings-registry.php:1141
+#: includes/class-settings-registry.php:1132
 msgid "What happens to a required user who never set the second factor up."
 msgstr ""
 
-#: includes/class-settings-registry.php:1148
+#: includes/class-settings-registry.php:1139
 msgid "Let users mark a device so they are not asked for the code on every sign-in."
 msgstr ""
 
-#: includes/class-settings-registry.php:1154
+#: includes/class-settings-registry.php:1145
 msgid "Enforce 2FA for super admins"
 msgstr ""
 
-#: includes/class-settings-registry.php:1155
+#: includes/class-settings-registry.php:1146
 msgid "Also require the second factor from network super admins. They are the most valuable account on a multisite, and the easiest to forget."
 msgstr ""
 
-#: includes/class-settings-registry.php:1161
+#: includes/class-settings-registry.php:1152
 msgid "Extend the trusted-device window on \"remember me\""
 msgstr ""
 
-#: includes/class-settings-registry.php:1162
+#: includes/class-settings-registry.php:1153
 msgid "Give the trusted-device cookie a longer life when the user ticked \"remember me\". More convenient, and a stolen laptop stays signed in longer."
 msgstr ""
 
-#: includes/class-settings-registry.php:1169
+#: includes/class-settings-registry.php:1160
 msgid "IP addresses exempt from the second factor"
 msgstr ""
 
-#: includes/class-settings-registry.php:1170
+#: includes/class-settings-registry.php:1161
 msgid "Addresses or ranges that skip the second factor, one per line. This is a way past your own 2FA policy, so keep it to networks you control."
 msgstr ""
 
-#: includes/class-settings-registry.php:1176
+#: includes/class-settings-registry.php:1167
 msgid "Brand the login challenge"
 msgstr ""
 
-#: includes/class-settings-registry.php:1177
+#: includes/class-settings-registry.php:1168
 msgid "Show your site name and logo on the challenge page instead of the plain WordPress one."
 msgstr ""
 
-#: includes/class-settings-registry.php:1183
+#: includes/class-settings-registry.php:1174
 msgid "Mail the user when a new device signs in"
 msgstr ""
 
-#: includes/class-settings-registry.php:1184
+#: includes/class-settings-registry.php:1175
 msgid "Mail the user when their account is used from a device it has not seen before."
 msgstr ""
 
-#: includes/class-settings-registry.php:1190
+#: includes/class-settings-registry.php:1181
 msgid "Remind users without a second factor"
 msgstr ""
 
-#: includes/class-settings-registry.php:1191
+#: includes/class-settings-registry.php:1182
 msgid "Show a banner after sign-in to users who have not set up a second factor yet. Roles listed below are locked out once they ignore it too often."
 msgstr ""
 
-#: includes/class-settings-registry.php:1199
+#: includes/class-settings-registry.php:1190
 msgid "Sign-ins before the reminder locks out"
 msgstr ""
 
-#: includes/class-settings-registry.php:1200
+#: includes/class-settings-registry.php:1191
 msgid "How many sign-ins without a second factor a user in one of the roles below gets before the reminder turns into a hard stop."
 msgstr ""
 
-#: includes/class-settings-registry.php:1208
+#: includes/class-settings-registry.php:1199
 msgid "Roles the reminder locks out"
 msgstr ""
 
-#: includes/class-settings-registry.php:1209
+#: includes/class-settings-registry.php:1200
 msgid "Roles that cannot keep signing in without a second factor once the count above is reached. An empty list falls back to administrators, editors and shop managers."
 msgstr ""
 
-#: includes/class-settings-registry.php:1215
+#: includes/class-settings-registry.php:1206
 msgid "XML-RPC accepts application passwords only"
 msgstr ""
 
-#: includes/class-settings-registry.php:1216
+#: includes/class-settings-registry.php:1207
 msgid "Refuse account passwords over XML-RPC and accept application passwords only, so XML-RPC stops being a way around the second factor."
 msgstr ""
 
-#: includes/class-settings-registry.php:1222
+#: includes/class-settings-registry.php:1213
 msgid "Block a password reset when e-mail is the only second factor"
 msgstr ""
 
-#: includes/class-settings-registry.php:1223
+#: includes/class-settings-registry.php:1214
 msgid "Refuse a password reset for users whose only second factor is e-mail. Otherwise a stolen mailbox is enough for both steps."
 msgstr ""
 
-#: includes/class-settings-registry.php:1231
+#: includes/class-settings-registry.php:1222
 msgid "Trusted device lifetime (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1232
+#: includes/class-settings-registry.php:1223
 msgid "How long a trusted device stays trusted before the code is asked for again."
 msgstr ""
 
-#: includes/class-settings-registry.php:1238
+#: includes/class-settings-registry.php:1229
 msgid "Require 2FA on password reset"
 msgstr ""
 
-#: includes/class-settings-registry.php:1239
+#: includes/class-settings-registry.php:1230
 msgid "Ask for the second factor during a password reset, so a hijacked mailbox is not enough on its own."
 msgstr ""
 
-#: includes/class-settings-registry.php:1245
+#: includes/class-settings-registry.php:1236
 msgid "Password policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1246
+#: includes/class-settings-registry.php:1237
 msgid "Check new passwords against the rules below before accepting them."
 msgstr ""
 
-#: includes/class-settings-registry.php:1254
+#: includes/class-settings-registry.php:1245
 msgid "Minimum password length"
 msgstr ""
 
-#: includes/class-settings-registry.php:1255
+#: includes/class-settings-registry.php:1246
 msgid "The shortest password that is accepted. Length helps more than any other single rule."
 msgstr ""
 
-#: includes/class-settings-registry.php:1263
+#: includes/class-settings-registry.php:1254
 msgid "Required character classes"
 msgstr ""
 
-#: includes/class-settings-registry.php:1264
+#: includes/class-settings-registry.php:1255
 msgid "How many of upper case, lower case, digits and symbols a password must mix."
 msgstr ""
 
-#: includes/class-settings-registry.php:1270
+#: includes/class-settings-registry.php:1261
 msgid "Apply the password policy to every role"
 msgstr ""
 
-#: includes/class-settings-registry.php:1271
+#: includes/class-settings-registry.php:1262
 msgid "Apply the rules to every role rather than to the ones that can change the site."
 msgstr ""
 
-#: includes/class-settings-registry.php:1277
+#: includes/class-settings-registry.php:1268
 msgid "Check passwords against known breaches"
 msgstr ""
 
-#: includes/class-settings-registry.php:1278
+#: includes/class-settings-registry.php:1269
 msgid "Reject passwords that appear in known breach lists. Only the first five characters of a hash leave the site, never the password."
 msgstr ""
 
-#: includes/class-settings-registry.php:1286
+#: includes/class-settings-registry.php:1277
 msgid "Log level"
 msgstr ""
 
-#: includes/class-settings-registry.php:1287
+#: includes/class-settings-registry.php:1278
 msgid "How much detail lands in the security log."
 msgstr ""
 
-#: includes/class-settings-registry.php:1294
+#: includes/class-settings-registry.php:1285
 msgid "Minimal logging"
 msgstr ""
 
-#: includes/class-settings-registry.php:1295
+#: includes/class-settings-registry.php:1286
 msgid "Record only what is needed to make a decision, and leave out everything that would identify a person."
 msgstr ""
 
-#: includes/class-settings-registry.php:1301
+#: includes/class-settings-registry.php:1292
 msgid "Log user agents"
 msgstr ""
 
-#: includes/class-settings-registry.php:1302
+#: includes/class-settings-registry.php:1293
 msgid "Record the browser identification with each security event and audit trail entry. Useful for telling a bot from a customer, and it is personal data."
 msgstr ""
 
-#: includes/class-settings-registry.php:1311
+#: includes/class-settings-registry.php:1302
 msgid "Data retention (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1312
+#: includes/class-settings-registry.php:1303
 msgid "How long security events are kept before they are deleted."
 msgstr ""
 
-#: includes/class-settings-registry.php:1320
+#: includes/class-settings-registry.php:1311
 msgid "Auto-anonymize after (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1321
+#: includes/class-settings-registry.php:1312
 msgid "How long before addresses in old events are shortened. Keeps the statistics while dropping the identifying part."
 msgstr ""
 
-#: includes/class-settings-registry.php:1328
+#: includes/class-settings-registry.php:1319
 msgid "Audit trail"
 msgstr ""
 
-#: includes/class-settings-registry.php:1329
+#: includes/class-settings-registry.php:1320
 msgid "Keep a separate, append-only record of who changed what: settings, plugins, pages, menus, files and accounts, each with the acting user."
 msgstr ""
 
-#: includes/class-settings-registry.php:1338
+#: includes/class-settings-registry.php:1329
 msgid "Audit trail triggers"
 msgstr ""
 
-#: includes/class-settings-registry.php:1339
+#: includes/class-settings-registry.php:1330
 msgid "Which kinds of changes the audit trail records. Sign-ins are off by default because they are the loudest rows; the other groups are what a support case needs."
 msgstr ""
 
-#: includes/class-settings-registry.php:1348
+#: includes/class-settings-registry.php:1339
 msgid "Audit retention (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1349
+#: includes/class-settings-registry.php:1340
 msgid "How long audit entries are kept. Compliance requirements usually set this, not convenience."
 msgstr ""
 
-#: includes/class-settings-registry.php:1355
+#: includes/class-settings-registry.php:1346
 msgid "Anonymize IPs in the audit trail"
 msgstr ""
 
-#: includes/class-settings-registry.php:1356
+#: includes/class-settings-registry.php:1347
 msgid "Store only the network part of the address in the audit trail, so the record survives a data-protection review."
 msgstr ""
 
-#: includes/class-settings-registry.php:1363
+#: includes/class-settings-registry.php:1354
 msgid "Mail an alert on a sign-in from a new address"
 msgstr ""
 
-#: includes/class-settings-registry.php:1364
+#: includes/class-settings-registry.php:1355
 msgid "Mail the notification recipients when an account signs in from an address it has never used. Rate-limited per account so a dynamic connection does not flood the inbox."
 msgstr ""
 
-#: includes/class-settings-registry.php:1370
+#: includes/class-settings-registry.php:1361
 msgid "Record request details with each event"
 msgstr ""
 
-#: includes/class-settings-registry.php:1371
+#: includes/class-settings-registry.php:1362
 msgid "Record the request context with each event. Helps when reconstructing an incident, and makes the log bigger."
 msgstr ""
 
-#: includes/class-settings-registry.php:1377
+#: includes/class-settings-registry.php:1368
 msgid "Record the referring domain"
 msgstr ""
 
-#: includes/class-settings-registry.php:1378
+#: includes/class-settings-registry.php:1369
 msgid "Record which site a visitor came from."
 msgstr ""
 
-#: includes/class-settings-registry.php:1384
+#: includes/class-settings-registry.php:1375
 msgid "Cache community lookups"
 msgstr ""
 
-#: includes/class-settings-registry.php:1385
+#: includes/class-settings-registry.php:1376
 msgid "Remember community answers instead of asking again for the same address. This is what keeps the check off your response time."
 msgstr ""
 
-#: includes/class-settings-registry.php:1393
+#: includes/class-settings-registry.php:1384
 msgid "Cache lifetime (hours)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1394
+#: includes/class-settings-registry.php:1385
 msgid "How long a community answer is reused."
 msgstr ""
 
-#: includes/class-settings-registry.php:1402
+#: includes/class-settings-registry.php:1393
 msgid "Clean-result cache lifetime (hours)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1403
+#: includes/class-settings-registry.php:1394
 msgid "How long a clean result is reused. Shorter than the above, because an address can turn bad quickly."
 msgstr ""
 
-#: includes/class-settings-registry.php:1411
+#: includes/class-settings-registry.php:1402
 msgid "Community lookups per hour (0 = no local limit)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1412
+#: includes/class-settings-registry.php:1403
 msgid "A local ceiling on community lookups per hour. Zero means only your plan quota applies."
 msgstr ""
 
-#: includes/class-settings-registry.php:1420
+#: includes/class-settings-registry.php:1411
 msgid "Report cooldown per address (hours)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1421
+#: includes/class-settings-registry.php:1412
 msgid "How long to wait before reporting the same address again, so one persistent attacker does not eat the daily report budget."
 msgstr ""
 
-#: includes/class-settings-registry.php:1429
+#: includes/class-settings-registry.php:1420
 msgid "Discard queued reports after (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1430
+#: includes/class-settings-registry.php:1421
 msgid "How long a report may sit in the queue before it is dropped as stale."
 msgstr ""
 
-#: includes/class-settings-registry.php:1438
+#: includes/class-settings-registry.php:1429
 msgid "Queue warning threshold"
 msgstr ""
 
-#: includes/class-settings-registry.php:1439
+#: includes/class-settings-registry.php:1430
 msgid "The queue length at which the status page starts warning."
 msgstr ""
 
-#: includes/class-settings-registry.php:1447
+#: includes/class-settings-registry.php:1438
 msgid "Queue critical threshold"
 msgstr ""
 
-#: includes/class-settings-registry.php:1448
+#: includes/class-settings-registry.php:1439
 msgid "The queue length at which the status page calls it critical."
 msgstr ""
 
-#: includes/class-settings-registry.php:1456
+#: includes/class-settings-registry.php:1447
 msgid "Recover stuck queue rows after (minutes)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1457
+#: includes/class-settings-registry.php:1448
 msgid "How long a report may stay in processing before it is assumed the worker crashed and the row is picked up again."
 msgstr ""
 
-#: includes/class-settings-registry.php:1464
+#: includes/class-settings-registry.php:1455
 msgid "Show the protection badge in the site footer"
 msgstr ""
 
-#: includes/class-settings-registry.php:1465
+#: includes/class-settings-registry.php:1456
 msgid "Show a small protection badge in your site footer."
 msgstr ""
 
-#: includes/class-settings-registry.php:1473
+#: includes/class-settings-registry.php:1464
 msgid "Footer badge style"
 msgstr ""
 
-#: includes/class-settings-registry.php:1474
+#: includes/class-settings-registry.php:1465
 msgid "Which badge is shown."
 msgstr ""
 
-#: includes/class-settings-registry.php:1481
+#: includes/class-settings-registry.php:1472
 msgid "Footer badge placement"
 msgstr ""
 
-#: includes/class-settings-registry.php:1482
+#: includes/class-settings-registry.php:1473
 msgid "Where the badge sits in the footer."
 msgstr ""
 
-#: includes/class-settings-registry.php:1488
+#: includes/class-settings-registry.php:1479
 msgid "Send notification preferences to the community server"
 msgstr ""
 
-#: includes/class-settings-registry.php:1489
+#: includes/class-settings-registry.php:1480
 msgid "Let the community server know your notification preferences, so it can reach you about your account."
 msgstr ""
 
-#: includes/class-settings-registry.php:1497
+#: includes/class-settings-registry.php:1488
 msgid "Per-event notification cap (minutes)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1498
+#: includes/class-settings-registry.php:1489
 msgid "How long to wait before mailing about the same kind of event again."
 msgstr ""
 
-#: includes/class-settings-registry.php:1506
+#: includes/class-settings-registry.php:1497
 msgid "Admin notifications"
 msgstr ""
 
-#: includes/class-settings-registry.php:1507
+#: includes/class-settings-registry.php:1498
 msgid "Mail the recipients below when something needs a person to look at it."
 msgstr ""
 
-#: includes/class-settings-registry.php:1514
+#: includes/class-settings-registry.php:1505
 msgid "Notification recipients"
 msgstr ""
 
-#: includes/class-settings-registry.php:1515
+#: includes/class-settings-registry.php:1506
 msgid "Who receives those mails. Several addresses can be separated by commas."
 msgstr ""
 
-#: includes/class-settings-registry.php:1521
+#: includes/class-settings-registry.php:1512
 msgid "Sender name"
 msgstr ""
 
-#: includes/class-settings-registry.php:1522
+#: includes/class-settings-registry.php:1513
 msgid "The sender name on mails this plugin sends."
 msgstr ""
 
-#: includes/class-settings-registry.php:1528
+#: includes/class-settings-registry.php:1519
 msgid "Sender address"
 msgstr ""
 
-#: includes/class-settings-registry.php:1529
+#: includes/class-settings-registry.php:1520
 msgid "The sender address. Use one at your own domain, otherwise the mails land in spam."
 msgstr ""
 
-#: includes/class-settings-registry.php:1537
+#: includes/class-settings-registry.php:1528
 msgid "Notification cooldown (minutes)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1538
+#: includes/class-settings-registry.php:1529
 msgid "How long the same address and event type stays quiet after a mail went out."
 msgstr ""
 
-#: includes/class-settings-registry.php:1544
+#: includes/class-settings-registry.php:1535
 msgid "Show upgrade hints in the admin"
 msgstr ""
 
-#: includes/class-settings-registry.php:1545
+#: includes/class-settings-registry.php:1536
 msgid "Off hides every plan promotion in wp-admin: dashboard cards, inline hints and the WooCommerce banner. Security notices are not affected."
 msgstr ""
 
-#: includes/class-settings-registry.php:1551
+#: includes/class-settings-registry.php:1542
 msgid "Mail when the relay quota reaches 80 % or 100 %"
 msgstr ""
 
-#: includes/class-settings-registry.php:1552
+#: includes/class-settings-registry.php:1543
 msgid "One mail per channel and stage per month, sent to the alert recipients."
 msgstr ""
 
-#: includes/class-settings-registry.php:1558
+#: includes/class-settings-registry.php:1549
 msgid "Mail when the plan changes"
 msgstr ""
 
-#: includes/class-settings-registry.php:1559
+#: includes/class-settings-registry.php:1550
 msgid "One factual mail per upgrade or downgrade with what becomes available or pauses."
 msgstr ""
 
 #. translators: %s: comma-separated list of allowed values
-#: includes/class-settings-registry.php:1708
+#: includes/class-settings-registry.php:1699
 #, php-format
 msgid "Value must be one of: %s"
 msgstr ""
 
-#: includes/class-settings-registry.php:1742
+#: includes/class-settings-registry.php:1733
 msgid "Unknown value kind."
 msgstr ""
 
-#: includes/class-settings-registry.php:1764
+#: includes/class-settings-registry.php:1755
 msgid "Hide Login cannot be enabled without a login slug, set a slug first."
 msgstr ""
 
 #. translators: %s: minimum plan name required for the feature
-#: includes/class-settings-registry.php:2020
+#: includes/class-settings-registry.php:2011
 #, php-format
 msgid "This setting requires the %s plan."
 msgstr ""
 
-#: includes/class-settings-registry.php:2023
+#: includes/class-settings-registry.php:2014
 msgid "This setting requires a higher plan."
 msgstr ""
 
-#: includes/class-settings-registry.php:2092
+#: includes/class-settings-registry.php:2083
 msgid "Value must be a JSON array of strings."
 msgstr ""
 
@@ -10318,7 +10254,7 @@ msgid "Go to dashboard"
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:435
-#: reportedip-hive.php:929
+#: reportedip-hive.php:927
 msgid "Sending..."
 msgstr ""
 
@@ -10343,7 +10279,7 @@ msgid "Your browser does not support passkeys. Please choose another method."
 msgstr ""
 
 #: includes/class-two-factor-onboarding.php:442
-#: reportedip-hive.php:934
+#: reportedip-hive.php:932
 msgid "Network error. Please try again."
 msgstr ""
 
@@ -10649,162 +10585,161 @@ msgstr ""
 msgid "Invalid code."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:77
-#: includes/class-two-factor-webauthn.php:302
-msgid "Multiple security keys per account require the Business plan. Your first key stays free."
-msgstr ""
-
 #: includes/class-two-factor-webauthn.php:221
 msgid "Security keys are not available on this site."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:262
+#: includes/class-two-factor-webauthn.php:267
+msgid "This account already has a security key. Remove it before adding another."
+msgstr ""
+
+#: includes/class-two-factor-webauthn.php:284
 msgid "Too many registration attempts. Please wait a few minutes."
 msgstr ""
 
 #. translators: %d: seconds remaining
-#: includes/class-two-factor-webauthn.php:280
+#: includes/class-two-factor-webauthn.php:302
 #, php-format
 msgid "Too many failed attempts. Try again in %d seconds."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:296
+#: includes/class-two-factor-webauthn.php:318
 msgid "Invalid credential data."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:307
+#: includes/class-two-factor-webauthn.php:329
 msgid "Challenge expired, please start again."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:315
-#: includes/class-two-factor-webauthn.php:868
+#: includes/class-two-factor-webauthn.php:337
+#: includes/class-two-factor-webauthn.php:890
 msgid "Invalid clientDataJSON."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:318
-#: includes/class-two-factor-webauthn.php:871
+#: includes/class-two-factor-webauthn.php:340
+#: includes/class-two-factor-webauthn.php:893
 msgid "clientDataJSON.type is wrong."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:321
-#: includes/class-two-factor-webauthn.php:881
+#: includes/class-two-factor-webauthn.php:343
+#: includes/class-two-factor-webauthn.php:903
 msgid "Challenge mismatch."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:324
-#: includes/class-two-factor-webauthn.php:884
+#: includes/class-two-factor-webauthn.php:346
+#: includes/class-two-factor-webauthn.php:906
 msgid "Origin mismatch."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:340
-#: includes/class-two-factor-webauthn.php:901
+#: includes/class-two-factor-webauthn.php:362
+#: includes/class-two-factor-webauthn.php:923
 msgid "RP-ID hash mismatch."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:343
-#: includes/class-two-factor-webauthn.php:904
+#: includes/class-two-factor-webauthn.php:365
+#: includes/class-two-factor-webauthn.php:926
 msgid "The authenticator did not confirm user presence."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:346
-#: includes/class-two-factor-webauthn.php:907
+#: includes/class-two-factor-webauthn.php:368
+#: includes/class-two-factor-webauthn.php:929
 msgid "User verification is required but was not performed."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:349
+#: includes/class-two-factor-webauthn.php:371
 msgid "Credential data incomplete."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:382
+#: includes/class-two-factor-webauthn.php:404
 msgid "Security key registered."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:473
+#: includes/class-two-factor-webauthn.php:495
 msgid "Missing credential ID or name."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:484
-#: includes/class-two-factor-webauthn.php:514
-#: includes/class-two-factor-webauthn.php:862
+#: includes/class-two-factor-webauthn.php:506
+#: includes/class-two-factor-webauthn.php:536
+#: includes/class-two-factor-webauthn.php:884
 msgid "Unknown security key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:502
-#: includes/class-two-factor-webauthn.php:851
+#: includes/class-two-factor-webauthn.php:524
+#: includes/class-two-factor-webauthn.php:873
 msgid "Missing credential ID."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:526
+#: includes/class-two-factor-webauthn.php:548
 msgid "This is your only security key and two-factor authentication is required for your account. Set up another method before removing it."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:571
-#: includes/class-two-factor-webauthn.php:607
+#: includes/class-two-factor-webauthn.php:593
+#: includes/class-two-factor-webauthn.php:629
 msgid "Invalid challenge token."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:614
+#: includes/class-two-factor-webauthn.php:636
 msgid "Invalid assertion data."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:624
+#: includes/class-two-factor-webauthn.php:646
 msgid "Security key verified."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:876
+#: includes/class-two-factor-webauthn.php:898
 msgid "Challenge expired."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:890
+#: includes/class-two-factor-webauthn.php:912
 msgid "The credential belongs to a different account."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:951
+#: includes/class-two-factor-webauthn.php:973
 msgid "Signature counter anomaly."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:970
+#: includes/class-two-factor-webauthn.php:992
 msgid "Attestation object is missing authData."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:977
+#: includes/class-two-factor-webauthn.php:999
 msgid "authenticatorData is too short."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:1001
+#: includes/class-two-factor-webauthn.php:1023
 msgid "Attested credential data is missing."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:1088
+#: includes/class-two-factor-webauthn.php:1110
 msgid "COSE key is not parseable."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:1093
+#: includes/class-two-factor-webauthn.php:1115
 msgid "Ed25519 verification is not available on this server."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:1098
+#: includes/class-two-factor-webauthn.php:1120
 msgid "Invalid Ed25519 key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:1101
-#: includes/class-two-factor-webauthn.php:1112
+#: includes/class-two-factor-webauthn.php:1123
+#: includes/class-two-factor-webauthn.php:1134
 msgid "Signature could not be verified."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:1131
+#: includes/class-two-factor-webauthn.php:1153
 msgid "Unsupported EC curve."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:1136
+#: includes/class-two-factor-webauthn.php:1158
 msgid "Invalid EC2 key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:1145
+#: includes/class-two-factor-webauthn.php:1167
 msgid "Invalid RSA key."
 msgstr ""
 
-#: includes/class-two-factor-webauthn.php:1150
+#: includes/class-two-factor-webauthn.php:1172
 msgid "Unsupported COSE algorithm."
 msgstr ""
 
@@ -11051,395 +10986,395 @@ msgstr ""
 msgid "Read the release notes"
 msgstr ""
 
-#: reportedip-hive.php:908
+#: reportedip-hive.php:906
 msgid "Testing connection..."
 msgstr ""
 
-#: reportedip-hive.php:909
+#: reportedip-hive.php:907
 msgid "Connection successful!"
 msgstr ""
 
-#: reportedip-hive.php:910
+#: reportedip-hive.php:908
 msgid "Connection failed!"
 msgstr ""
 
-#: reportedip-hive.php:911
+#: reportedip-hive.php:909
 msgid "Are you sure you want to unblock this IP?"
 msgstr ""
 
-#: reportedip-hive.php:912
+#: reportedip-hive.php:910
 msgid "Are you sure you want to whitelist this IP?"
 msgstr ""
 
-#: reportedip-hive.php:913
+#: reportedip-hive.php:911
 msgid "Are you sure you want to reset all settings to defaults?"
 msgstr ""
 
-#: reportedip-hive.php:914
+#: reportedip-hive.php:912
 msgid "Reset the API statistics counter? This clears usage history only."
 msgstr ""
 
-#: reportedip-hive.php:915
+#: reportedip-hive.php:913
 msgid "WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!"
 msgstr ""
 
-#: reportedip-hive.php:916
+#: reportedip-hive.php:914
 msgid "Are you absolutely sure?"
 msgstr ""
 
-#: reportedip-hive.php:917
+#: reportedip-hive.php:915
 msgid "Remove this WAF exception?"
 msgstr ""
 
 #. translators: %1$s = WAF rule id, %2$s = request path.
-#: reportedip-hive.php:919
+#: reportedip-hive.php:917
 #, php-format
 msgid "Allow rule \"%1$s\" on path \"%2$s\"? The WAF stays active everywhere else."
 msgstr ""
 
-#: reportedip-hive.php:920
+#: reportedip-hive.php:918
 msgid "Are you sure you want to remove this IP from the whitelist?"
 msgstr ""
 
-#: reportedip-hive.php:921
+#: reportedip-hive.php:919
 msgid "Are you sure you want to clean up old logs? This action cannot be undone."
 msgstr ""
 
-#: reportedip-hive.php:922
+#: reportedip-hive.php:920
 msgid "Are you sure you want to anonymize old data? This will remove personal information from logs."
 msgstr ""
 
-#: reportedip-hive.php:923
+#: reportedip-hive.php:921
 msgid "Enter reason for whitelisting (optional):"
 msgstr ""
 
-#: reportedip-hive.php:924
+#: reportedip-hive.php:922
 msgid "Manually whitelisted from blocked list"
 msgstr ""
 
-#: reportedip-hive.php:925
+#: reportedip-hive.php:923
 msgid "Enter reason for blocking this IP:"
 msgstr ""
 
-#: reportedip-hive.php:926
+#: reportedip-hive.php:924
 msgid "Blocked from security logs"
 msgstr ""
 
-#: reportedip-hive.php:927
+#: reportedip-hive.php:925
 msgid "Export logs from how many days? (default: 30)"
 msgstr ""
 
-#: reportedip-hive.php:928
+#: reportedip-hive.php:926
 msgid "Request failed. Check server logs."
 msgstr ""
 
-#: reportedip-hive.php:930
+#: reportedip-hive.php:928
 msgid "Test email failed."
 msgstr ""
 
-#: reportedip-hive.php:932
+#: reportedip-hive.php:930
 msgid "Request failed."
 msgstr ""
 
-#: reportedip-hive.php:933
+#: reportedip-hive.php:931
 msgid "Network error occurred"
 msgstr ""
 
-#: reportedip-hive.php:935
+#: reportedip-hive.php:933
 msgid "API statistics reset."
 msgstr ""
 
-#: reportedip-hive.php:936
+#: reportedip-hive.php:934
 msgid "Failed to reset API statistics."
 msgstr ""
 
-#: reportedip-hive.php:937
+#: reportedip-hive.php:935
 msgid "Cache cleared."
 msgstr ""
 
-#: reportedip-hive.php:938
+#: reportedip-hive.php:936
 msgid "Failed to clear cache."
 msgstr ""
 
-#: reportedip-hive.php:939
+#: reportedip-hive.php:937
 msgid "Expired entries cleaned."
 msgstr ""
 
-#: reportedip-hive.php:940
+#: reportedip-hive.php:938
 msgid "Failed to clean expired entries."
 msgstr ""
 
-#: reportedip-hive.php:941
+#: reportedip-hive.php:939
 msgid "Mode changed successfully"
 msgstr ""
 
-#: reportedip-hive.php:942
+#: reportedip-hive.php:940
 msgid "Failed to change mode"
 msgstr ""
 
-#: reportedip-hive.php:943
+#: reportedip-hive.php:941
 msgid "IP address added to whitelist successfully"
 msgstr ""
 
-#: reportedip-hive.php:944
+#: reportedip-hive.php:942
 msgid "Failed to add IP to whitelist"
 msgstr ""
 
-#: reportedip-hive.php:945
+#: reportedip-hive.php:943
 msgid "IP address removed from whitelist"
 msgstr ""
 
-#: reportedip-hive.php:946
+#: reportedip-hive.php:944
 msgid "Failed to remove IP from whitelist"
 msgstr ""
 
-#: reportedip-hive.php:947
+#: reportedip-hive.php:945
 msgid "WAF exception saved"
 msgstr ""
 
-#: reportedip-hive.php:948
+#: reportedip-hive.php:946
 msgid "Failed to save the exception"
 msgstr ""
 
-#: reportedip-hive.php:949
+#: reportedip-hive.php:947
 msgid "WAF exception removed"
 msgstr ""
 
-#: reportedip-hive.php:950
+#: reportedip-hive.php:948
 msgid "Failed to remove the exception"
 msgstr ""
 
-#: reportedip-hive.php:951
+#: reportedip-hive.php:949
 msgid "WAF exception added for this rule"
 msgstr ""
 
-#: reportedip-hive.php:952
+#: reportedip-hive.php:950
 msgid "Failed to add the exception"
 msgstr ""
 
-#: reportedip-hive.php:953
+#: reportedip-hive.php:951
 msgid "IP address blocked successfully"
 msgstr ""
 
-#: reportedip-hive.php:954
+#: reportedip-hive.php:952
 msgid "Failed to block IP address"
 msgstr ""
 
-#: reportedip-hive.php:955
+#: reportedip-hive.php:953
 msgid "IP address unblocked successfully"
 msgstr ""
 
-#: reportedip-hive.php:956
+#: reportedip-hive.php:954
 msgid "Failed to unblock IP address"
 msgstr ""
 
-#: reportedip-hive.php:957
+#: reportedip-hive.php:955
 msgid "IP address whitelisted successfully"
 msgstr ""
 
-#: reportedip-hive.php:958
+#: reportedip-hive.php:956
 msgid "Failed to whitelist IP address"
 msgstr ""
 
-#: reportedip-hive.php:959
+#: reportedip-hive.php:957
 msgid "No IP address found"
 msgstr ""
 
-#: reportedip-hive.php:960
+#: reportedip-hive.php:958
 msgid "Failed to copy IP address"
 msgstr ""
 
-#: reportedip-hive.php:961
+#: reportedip-hive.php:959
 msgid "Failed to cleanup logs"
 msgstr ""
 
-#: reportedip-hive.php:962
+#: reportedip-hive.php:960
 msgid "Failed to anonymize data"
 msgstr ""
 
-#: reportedip-hive.php:963
+#: reportedip-hive.php:961
 msgid "Logs exported successfully"
 msgstr ""
 
-#: reportedip-hive.php:964
+#: reportedip-hive.php:962
 msgid "Failed to export logs"
 msgstr ""
 
-#: reportedip-hive.php:965
+#: reportedip-hive.php:963
 msgid "Import completed."
 msgstr ""
 
-#: reportedip-hive.php:966
+#: reportedip-hive.php:964
 msgid "Import failed."
 msgstr ""
 
-#: reportedip-hive.php:967
+#: reportedip-hive.php:965
 msgid "Please enter an IP address"
 msgstr ""
 
-#: reportedip-hive.php:968
+#: reportedip-hive.php:966
 msgid "Failed to lookup IP address"
 msgstr ""
 
-#: reportedip-hive.php:971
+#: reportedip-hive.php:969
 msgid "Clean"
 msgstr ""
 
-#: reportedip-hive.php:972
+#: reportedip-hive.php:970
 msgid "IP Information:"
 msgstr ""
 
-#: reportedip-hive.php:973
+#: reportedip-hive.php:971
 msgid "Valid:"
 msgstr ""
 
-#: reportedip-hive.php:974
+#: reportedip-hive.php:972
 msgid "Private:"
 msgstr ""
 
-#: reportedip-hive.php:975
+#: reportedip-hive.php:973
 msgid "Version:"
 msgstr ""
 
-#: reportedip-hive.php:976
+#: reportedip-hive.php:974
 msgid "Yes"
 msgstr ""
 
-#: reportedip-hive.php:977
+#: reportedip-hive.php:975
 msgid "No"
 msgstr ""
 
-#: reportedip-hive.php:978
+#: reportedip-hive.php:976
 msgid "Country:"
 msgstr ""
 
-#: reportedip-hive.php:979
+#: reportedip-hive.php:977
 msgid "Abuse Confidence:"
 msgstr ""
 
-#: reportedip-hive.php:980
+#: reportedip-hive.php:978
 msgid "Total Reports:"
 msgstr ""
 
-#: reportedip-hive.php:985
+#: reportedip-hive.php:983
 msgid "ISP:"
 msgstr ""
 
-#: reportedip-hive.php:986
+#: reportedip-hive.php:984
 msgid "ASN:"
 msgstr ""
 
-#: reportedip-hive.php:987
+#: reportedip-hive.php:985
 msgid "Usage Type:"
 msgstr ""
 
-#: reportedip-hive.php:988
+#: reportedip-hive.php:986
 #: templates/two-factor-onboarding.php:106
 msgid "Domain:"
 msgstr ""
 
-#: reportedip-hive.php:989
+#: reportedip-hive.php:987
 msgid "Distinct Reporters:"
 msgstr ""
 
-#: reportedip-hive.php:990
+#: reportedip-hive.php:988
 msgid "Last Reported:"
 msgstr ""
 
-#: reportedip-hive.php:991
+#: reportedip-hive.php:989
 msgid "Tor exit node"
 msgstr ""
 
-#: reportedip-hive.php:992
+#: reportedip-hive.php:990
 msgid "Community-verified infrastructure"
 msgstr ""
 
-#: reportedip-hive.php:995
+#: reportedip-hive.php:993
 msgid "View community report"
 msgstr ""
 
-#: reportedip-hive.php:996
+#: reportedip-hive.php:994
 msgid "This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?"
 msgstr ""
 
-#: reportedip-hive.php:1111
+#: reportedip-hive.php:1109
 msgid "Events"
 msgstr ""
 
-#: reportedip-hive.php:1272
+#: reportedip-hive.php:1270
 msgid "Your IP address has been blocked due to suspicious activity."
 msgstr ""
 
-#: reportedip-hive.php:1327
+#: reportedip-hive.php:1325
 msgid "Access denied due to IP reputation."
 msgstr ""
 
-#: reportedip-hive.php:1363
+#: reportedip-hive.php:1361
 msgid "Access denied: connections from Tor exit nodes are not allowed on this site."
 msgstr ""
 
-#: reportedip-hive.php:1653
-#: reportedip-hive.php:2015
+#: reportedip-hive.php:1651
+#: reportedip-hive.php:2013
 msgid "Access denied. Your IP address has been blocked due to suspicious activity."
 msgstr ""
 
-#: reportedip-hive.php:1722
-#: reportedip-hive.php:1796
-#: reportedip-hive.php:1820
+#: reportedip-hive.php:1720
+#: reportedip-hive.php:1794
+#: reportedip-hive.php:1818
 msgid "ReportedIP Hive:"
 msgstr ""
 
 #. translators: %1$d: number of failed reports, %2$s: link to queue page
-#: reportedip-hive.php:1725
+#: reportedip-hive.php:1723
 #, php-format
 msgid "%1$d API reports failed. %2$s"
 msgstr ""
 
-#: reportedip-hive.php:1727
+#: reportedip-hive.php:1725
 msgid "View queue"
 msgstr ""
 
-#: reportedip-hive.php:1738
-#: reportedip-hive.php:1759
+#: reportedip-hive.php:1736
+#: reportedip-hive.php:1757
 msgid "Retry all"
 msgstr ""
 
-#: reportedip-hive.php:1758
+#: reportedip-hive.php:1756
 msgid "Retry failed."
 msgstr ""
 
-#: reportedip-hive.php:1776
+#: reportedip-hive.php:1774
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr ""
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
-#: reportedip-hive.php:1779
+#: reportedip-hive.php:1777
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
 msgstr ""
 
-#: reportedip-hive.php:1781
-#: reportedip-hive.php:1801
+#: reportedip-hive.php:1779
+#: reportedip-hive.php:1799
 msgid "Upgrade API tier"
 msgstr ""
 
-#: reportedip-hive.php:1782
+#: reportedip-hive.php:1780
 msgid "Manage queue"
 msgstr ""
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page
-#: reportedip-hive.php:1799
+#: reportedip-hive.php:1797
 #, php-format
 msgid "%1$d reports pending processing. %2$s for higher limits."
 msgstr ""
 
 #. translators: %s: link to settings page
-#: reportedip-hive.php:1823
+#: reportedip-hive.php:1821
 #, php-format
 msgid "No API key configured. %s"
 msgstr ""
 
-#: reportedip-hive.php:1824
+#: reportedip-hive.php:1822
 msgid "Configure now"
 msgstr ""
 
