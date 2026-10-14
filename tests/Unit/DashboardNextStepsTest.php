@@ -1,7 +1,7 @@
 <?php
 /**
- * Dashboard next steps: recommendation deviation, step values and the
- * upsell chooser.
+ * Dashboard next steps: recommendation deviation and step values; the
+ * upsell chooser lives in the add-on (PlanCardsTest).
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -18,7 +18,6 @@ namespace {
 	if ( ! defined( 'REPORTEDIP_HIVE_SITE_URL' ) ) {
 		define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.com' );
 	}
-	require_once dirname( __DIR__, 2 ) . '/includes/class-promo-manager.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-form-adapters.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-dashboard-next-steps.php';
 }
@@ -54,57 +53,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 						'reportedip_hive_block_tor'           => 1,
 						'reportedip_hive_headers_enabled'     => 1,
 						'reportedip_hive_data_retention_days' => '90',
-					)
-				)
-			);
-		}
-
-		public function test_upsell_chooser_follows_the_spec_table(): void {
-			$none = array(
-				'woocommerce' => false,
-				'multisite'   => false,
-				'users'       => 3,
-			);
-			$shop = array(
-				'woocommerce' => true,
-				'multisite'   => false,
-				'users'       => 3,
-			);
-			$net  = array(
-				'woocommerce' => false,
-				'multisite'   => true,
-				'users'       => 3,
-			);
-			$team = array(
-				'woocommerce' => false,
-				'multisite'   => false,
-				'users'       => 26,
-			);
-			$this->assertSame( 'mail_sms_relay', ReportedIP_Hive_Dashboard_Next_Steps::choose_upsell( 'free', $none ) );
-			$this->assertSame( 'wc_frontend_2fa', ReportedIP_Hive_Dashboard_Next_Steps::choose_upsell( 'contributor', $shop ) );
-			$this->assertNull( ReportedIP_Hive_Dashboard_Next_Steps::choose_upsell( 'professional', $none ) );
-			$this->assertSame( 'business_signal', ReportedIP_Hive_Dashboard_Next_Steps::choose_upsell( 'professional', $net ) );
-			$this->assertSame( 'business_signal', ReportedIP_Hive_Dashboard_Next_Steps::choose_upsell( 'professional', $team ) );
-			$this->assertSame( 'referral', ReportedIP_Hive_Dashboard_Next_Steps::choose_upsell( 'business', $none ) );
-			$this->assertSame( 'referral', ReportedIP_Hive_Dashboard_Next_Steps::choose_upsell( 'enterprise', $none ) );
-		}
-
-		public function test_business_signal_threshold_is_twenty_five_users(): void {
-			$this->assertFalse(
-				ReportedIP_Hive_Dashboard_Next_Steps::business_signal(
-					array(
-						'woocommerce' => false,
-						'multisite'   => false,
-						'users'       => 25,
-					)
-				)
-			);
-			$this->assertTrue(
-				ReportedIP_Hive_Dashboard_Next_Steps::business_signal(
-					array(
-						'woocommerce' => false,
-						'multisite'   => false,
-						'users'       => 26,
 					)
 				)
 			);
@@ -157,6 +105,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertArrayNotHasKey( 'group_available', ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), 'The group step comes with the add-on.' );
 			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'group_available', array() ) );
+		}
+
+		public function test_the_dashboard_names_no_plan_and_no_price(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-dashboard-next-steps.php' );
+			foreach ( array( 'pricing_url', 'See plans', 'Promo_Manager', 'choose_upsell', '4.97' ) as $needle ) {
+				$this->assertStringNotContainsString( $needle, $source, $needle );
+			}
+			$this->assertStringContainsString( "do_action( 'reportedip_hive_dashboard_next_steps_after', \$tier );", $source );
+			$this->assertStringContainsString( "do_action( 'reportedip_hive_status_banner_links', \$tier );", $source );
 		}
 
 		public function test_an_add_on_adds_a_link_step_and_a_broken_result_changes_nothing(): void {

@@ -703,61 +703,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render the "Available with Professional plan" upsell card for the
-	 * Frontend-2FA section. Shared between the network-admin 2FA tab and
-	 * the per-site 2FA settings page so feature copy stays in one place.
-	 *
-	 * Renders nothing when the feature is available or when the gate is not
-	 * a tier gate (e.g. mode mismatch, handled by the inline tier-lock chip).
-	 *
-	 * @param array $status Output of Mode_Manager::feature_status('frontend_2fa').
-	 * @return void
-	 * @since 2.0.0
-	 */
-	public static function render_frontend_2fa_pro_upsell( $status ) {
-		if ( empty( $status ) ) {
-			return;
-		}
-		if ( ! empty( $status['available'] ) ) {
-			return;
-		}
-		if ( 'tier' !== ( $status['reason'] ?? '' ) ) {
-			return;
-		}
-		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' )
-			&& ! ReportedIP_Hive_Promo_Manager::can_show( ReportedIP_Hive_Promo_Manager::KEY_FRONTEND_2FA_INLINE )
-		) {
-			return;
-		}
-
-		$upgrade_url = self::pricing_url();
-		?>
-		<div class="rip-alert rip-alert--info rip-pro-upsell">
-			<p class="rip-pro-upsell__title">
-				<?php esc_html_e( 'Your storefront keeps its own look during 2FA. Professional and higher.', 'reportedip-hive' ); ?>
-			</p>
-			<ul class="rip-pro-upsell__features">
-				<li><?php esc_html_e( 'Themed challenge page on the My Account / Checkout slug', 'reportedip-hive' ); ?></li>
-				<li><?php esc_html_e( 'Themed onboarding wizard for Customer / Subscriber roles', 'reportedip-hive' ); ?></li>
-				<li><?php esc_html_e( 'Cart and checkout state survive the redirect roundtrip', 'reportedip-hive' ); ?></li>
-				<li><?php esc_html_e( 'WC Blocks Cart / Checkout error redirect listener', 'reportedip-hive' ); ?></li>
-				<li><?php esc_html_e( 'Trusted-device cookie shared with the wp-login flow', 'reportedip-hive' ); ?></li>
-				<li><?php esc_html_e( 'Hide-Login bypass + cache-plugin-safe headers', 'reportedip-hive' ); ?></li>
-			</ul>
-			<p class="rip-pro-upsell__cta">
-				<a class="rip-button rip-button--primary" href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer">
-					<?php esc_html_e( 'Compare plans', 'reportedip-hive' ); ?>
-				</a>
-			</p>
-		</div>
-		<?php
-
-		if ( class_exists( 'ReportedIP_Hive_Promo_Manager' ) ) {
-			ReportedIP_Hive_Promo_Manager::mark_shown( ReportedIP_Hive_Promo_Manager::KEY_FRONTEND_2FA_INLINE );
-		}
-	}
-
-	/**
 	 * Render the Local-vs-Community comparison cards.
 	 *
 	 * Reused by the Settings General tab (interactive radio cards) and the
@@ -2537,14 +2482,6 @@ class ReportedIP_Hive_Admin_Settings {
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_recipients' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_promo_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_promo_enabled' ),
 			)
 		);
 		register_setting(

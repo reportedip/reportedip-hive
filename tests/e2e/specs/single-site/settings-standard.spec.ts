@@ -36,8 +36,6 @@ async function setToggle(page: Page, inputSelector: string, desired: boolean): P
 }
 
 const RESTORE = [
-	'reportedip_hive_promo_enabled',
-	'reportedip_hive_tier_change_mail_enabled',
 	'reportedip_hive_2fa_reminder_enabled',
 	'reportedip_hive_2fa_reminder_hard_threshold',
 	'reportedip_hive_2fa_reminder_hard_roles',
@@ -99,29 +97,6 @@ test.describe('settings standard — every option has a working form', () => {
 		} catch {
 			/* already absent */
 		}
-	});
-
-	test('Notifications card: service-notice toggles persist both ways', async ({ page }) => {
-		// The apply service skips a value that equals the stored one, and a
-		// missing row counts as the default (on). Start the mail switch at off
-		// so the round trip to on is an actual write.
-		wp('option update reportedip_hive_tier_change_mail_enabled 0');
-		await loginAsAdmin(page);
-		await openSection(page, 'notifications');
-
-		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_promo_enabled"]', false);
-		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_tier_change_mail_enabled"]', true);
-		await saveSection(page, 'notifications');
-
-		expect(wpOption('reportedip_hive_promo_enabled')).toBe('0');
-		expect(wpOption('reportedip_hive_tier_change_mail_enabled')).toBe('1');
-
-		await expect(page.locator('#notifications input[type="checkbox"][name="reportedip_hive_promo_enabled"]')).not.toBeChecked();
-		await expect(page.locator('#notifications input[type="checkbox"][name="reportedip_hive_tier_change_mail_enabled"]')).toBeChecked();
-
-		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_promo_enabled"]', true);
-		await saveSection(page, 'notifications');
-		expect(wpOption('reportedip_hive_promo_enabled')).toBe('1');
 	});
 
 	test('2FA card: reminder trio and the e-mail subject go through the registry', async ({ page }) => {

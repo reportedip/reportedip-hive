@@ -50,7 +50,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-readiness.php';
-	require_once dirname( __DIR__, 2 ) . '/includes/class-promo-manager.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-dashboard-next-steps.php';
 
 	/**

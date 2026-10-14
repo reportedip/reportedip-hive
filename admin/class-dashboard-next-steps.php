@@ -1,6 +1,6 @@
 <?php
 /**
- * Dashboard: status banner, next steps, area rows and the one upsell card.
+ * Dashboard: status banner, next steps and area rows.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -27,13 +27,6 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 * @var string
 	 */
 	const ACTION_STEP = 'reportedip_hive_next_step';
-
-	/**
-	 * Users above this count are a Business signal.
-	 *
-	 * @var int
-	 */
-	const BUSINESS_USER_THRESHOLD = 25;
 
 	/**
 	 * Transient prefix carrying a step result back to the dashboard.
@@ -143,35 +136,6 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	}
 
 	/**
-	 * Whether the site shows a Business signal.
-	 *
-	 * @param array{woocommerce:bool,multisite:bool,users:int} $signals Signals.
-	 * @return bool
-	 */
-	public static function business_signal( array $signals ) {
-		return ! empty( $signals['woocommerce'] ) || ! empty( $signals['multisite'] ) || (int) ( $signals['users'] ?? 0 ) > self::BUSINESS_USER_THRESHOLD;
-	}
-
-	/**
-	 * The one upsell card for a plan, or null.
-	 *
-	 * @param string                                          $tier    Tier key.
-	 * @param array{woocommerce:bool,multisite:bool,users:int} $signals Signals.
-	 * @return string|null Promo key.
-	 */
-	public static function choose_upsell( $tier, array $signals ) {
-		switch ( (string) $tier ) {
-			case 'free':
-			case 'contributor':
-				return ! empty( $signals['woocommerce'] ) ? ReportedIP_Hive_Promo_Manager::KEY_WC_FRONTEND_2FA : ReportedIP_Hive_Promo_Manager::KEY_MAIL_SMS_RELAY;
-			case 'professional':
-				return self::business_signal( $signals ) ? ReportedIP_Hive_Promo_Manager::KEY_BUSINESS_SIGNAL : null;
-			default:
-				return ReportedIP_Hive_Promo_Manager::KEY_REFERRAL;
-		}
-	}
-
-	/**
 	 * Per-step action definition: button label and whether the step writes.
 	 *
 	 * @return array<string,array{label:string,write:bool,field?:string,url?:string,doc?:string,doc_label?:string}>
@@ -256,20 +220,6 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	}
 
 	/**
-	 * Site signals for the upsell chooser.
-	 *
-	 * @return array{woocommerce:bool,multisite:bool,users:int}
-	 */
-	public static function signals() {
-		$counts = count_users();
-		return array(
-			'woocommerce' => class_exists( 'WooCommerce' ),
-			'multisite'   => is_multisite(),
-			'users'       => (int) ( $counts['total_users'] ?? 0 ),
-		);
-	}
-
-	/**
 	 * The one status line of the dashboard, rendered above the stat cards.
 	 *
 	 * Green while the site runs on its recommendation. In Community Network
@@ -348,16 +298,22 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 					esc_html( sprintf( _n( 'Adjusted (%d setting).', 'Adjusted (%d settings).', count( $diff ), 'reportedip-hive' ), count( $diff ) ) )
 				);
 			}
-			if ( in_array( $tier, array( 'free', 'contributor' ), true ) ) {
-				printf( ' <a href="%1$s">%2$s</a>', esc_url( ReportedIP_Hive_Admin_Settings::pricing_url() ), esc_html__( 'See plans', 'reportedip-hive' ) );
-			}
+
+			/**
+			 * Print further links at the end of the green status line, each
+			 * as ` <a href="...">...</a>` with a leading space.
+			 *
+			 * @param string $tier Tier key of the account.
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_status_banner_links', $tier );
 			?>
 		</div>
 		<?php
 	}
 
 	/**
-	 * Render the step result, next steps, area rows and the upsell card.
+	 * Render the step result, next steps and area rows.
 	 *
 	 * @return void
 	 */
@@ -380,7 +336,15 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 		<?php
 		self::render_next_steps( $current, $user_id );
 		self::render_area_rows( $current, $protection_url );
-		self::render_upsell( $tier );
+
+		/**
+		 * Print a card below the area rows of the dashboard, inside the
+		 * next-steps block.
+		 *
+		 * @param string $tier Tier key of the account.
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_dashboard_next_steps_after', $tier );
 	}
 
 	/**
@@ -499,64 +463,6 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			</ul>
 		</details>
 		<?php
-	}
-
-	/**
-	 * At most one upsell card, gated by the promo manager.
-	 *
-	 * @param string $tier Tier key.
-	 * @return void
-	 */
-	private static function render_upsell( $tier ) {
-		$key = self::choose_upsell( $tier, self::signals() );
-		if ( null === $key || ! ReportedIP_Hive_Promo_Manager::can_show( $key ) ) {
-			return;
-		}
-		$cards = array(
-			ReportedIP_Hive_Promo_Manager::KEY_MAIL_SMS_RELAY => array(
-				'tier'  => 'professional',
-				'title' => __( '2FA codes that arrive', 'reportedip-hive' ),
-				'text'  => __( 'Professional sends the e-mail and SMS codes through the managed relay: 500 mails and 25 SMS a month, no Twilio account, and a sender reputation we maintain. From 4.97 € per domain for three sites.', 'reportedip-hive' ),
-			),
-			ReportedIP_Hive_Promo_Manager::KEY_WC_FRONTEND_2FA => array(
-				'tier'  => 'professional',
-				'title' => __( 'Second factor inside your storefront', 'reportedip-hive' ),
-				'text'  => __( 'Professional puts the 2FA challenge on a themed page in My Account and checkout, so customers never see wp-login.php. Codes travel through the managed relay.', 'reportedip-hive' ),
-			),
-			ReportedIP_Hive_Promo_Manager::KEY_BUSINESS_SIGNAL => array(
-				'tier'  => 'business',
-				'title' => __( 'Built for shops, networks and teams', 'reportedip-hive' ),
-				'text'  => __( 'Business adds the audit trail, account blocking with session control, white-label 2FA pages and mails, and 15 domains under one licence.', 'reportedip-hive' ),
-			),
-			ReportedIP_Hive_Promo_Manager::KEY_REFERRAL => array(
-				'tier'  => '',
-				'title' => __( 'Recommend Hive, get a month back', 'reportedip-hive' ),
-				'text'  => __( 'Every customer you refer credits your account with one monthly fee of your plan. The link is on the Community page.', 'reportedip-hive' ),
-			),
-		);
-		$card  = $cards[ $key ];
-		$href  = ReportedIP_Hive_Promo_Manager::KEY_REFERRAL === $key
-			? ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-community&tab=community' )
-			: add_query_arg(
-				array(
-					'utm_source' => 'hive',
-					'utm_medium' => 'dashboard',
-				),
-				ReportedIP_Hive_Admin_Settings::pricing_url()
-			);
-		?>
-		<div class="rip-card rip-tier-card rip-upsell" data-promo="<?php echo esc_attr( $key ); ?>">
-			<div class="rip-card__body">
-				<?php if ( '' !== $card['tier'] ) : ?>
-					<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( $card['tier'], array( 'small' => true ) ); ?>
-				<?php endif; ?>
-				<h3><?php echo esc_html( $card['title'] ); ?></h3>
-				<p><?php echo esc_html( $card['text'] ); ?></p>
-				<a class="rip-button rip-button--primary rip-button--sm" href="<?php echo esc_url( $href ); ?>" target="_blank" rel="noopener"><?php echo ReportedIP_Hive_Promo_Manager::KEY_REFERRAL === $key ? esc_html__( 'Open the referral programme', 'reportedip-hive' ) : esc_html__( 'See plans', 'reportedip-hive' ); ?></a>
-			</div>
-		</div>
-		<?php
-		ReportedIP_Hive_Promo_Manager::mark_shown( $key );
 	}
 
 	/**

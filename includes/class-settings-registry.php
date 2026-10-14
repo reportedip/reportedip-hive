@@ -1410,13 +1410,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Notification cooldown (minutes)', 'reportedip-hive' ),
 				'description' => __( 'How long the same address and event type stays quiet after a mail went out.', 'reportedip-hive' ),
 			),
-			'reportedip_hive_promo_enabled'                => array(
-				'section'     => 'notifications',
-				'kind'        => 'bool',
-				'remote'      => true,
-				'label'       => __( 'Show upgrade hints in the admin', 'reportedip-hive' ),
-				'description' => __( 'Off hides every plan promotion in wp-admin: dashboard cards, inline hints and the WooCommerce banner. Security notices are not affected.', 'reportedip-hive' ),
-			),
 			'reportedip_hive_tier_change_mail_enabled'     => array(
 				'section'     => 'notifications',
 				'kind'        => 'bool',

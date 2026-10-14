@@ -244,7 +244,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_notify_sync_to_api'              => false,
 		'reportedip_hive_notification_cooldown_minutes'   => 60,
 		'reportedip_hive_notify_event_cap_minutes'        => 15,
-		'reportedip_hive_promo_enabled'                   => true,
 		'reportedip_hive_tier_change_mail_enabled'        => true,
 
 		'reportedip_hive_log_level'                       => 'info',

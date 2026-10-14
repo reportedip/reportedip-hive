@@ -504,7 +504,17 @@ class ReportedIP_Hive_Quickstart {
 				</div>
 			</div>
 
-			<?php $this->render_tier_teaser( $tier ); ?>
+			<?php
+			/**
+			 * Print a card between the switches and the actions of the
+			 * quickstart. The quickstart script removes `#rip-quickstart-teaser`
+			 * once a checked key reports a paid plan.
+			 *
+			 * @param string $tier Tier key of the account.
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_quickstart_teaser', $tier );
+			?>
 
 			<div class="rip-wizard__actions">
 				<button type="button" id="rip-quickstart-activate" class="rip-button rip-button--primary rip-button--large">
@@ -523,58 +533,6 @@ class ReportedIP_Hive_Quickstart {
 					<div id="rip-quickstart-import-status" class="rip-mt-3"></div>
 				</form>
 			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * One tier card at most: Professional for free tiers, Business for
-	 * Professional sites with a signal, nothing above that.
-	 *
-	 * @param string $tier Current tier.
-	 * @return void
-	 */
-	private function render_tier_teaser( $tier ) {
-		$upgrade_url = add_query_arg(
-			array(
-				'utm_source' => 'hive',
-				'utm_medium' => 'quickstart',
-			),
-			REPORTEDIP_HIVE_UPGRADE_URL
-		);
-		if ( in_array( $tier, array( 'free', 'contributor' ), true ) ) {
-			$badge = 'professional';
-			$title = __( '2FA codes that actually arrive', 'reportedip-hive' );
-			$items = array(
-				__( 'SMS 2FA without a Twilio account, 25 a month included', 'reportedip-hive' ),
-				__( '500 2FA mails a month from our EU relay, not your shared host', 'reportedip-hive' ),
-				__( 'Covers 3 sites at 4.97 EUR each per month, 90 days of logs', 'reportedip-hive' ),
-			);
-		} elseif ( 'professional' === $tier && ReportedIP_Hive_Dashboard_Next_Steps::business_signal( ReportedIP_Hive_Dashboard_Next_Steps::signals() ) ) {
-			$badge = 'business';
-			$title = __( 'One licence, every client site', 'reportedip-hive' );
-			$items = array(
-				__( '15 client sites at 2.60 EUR each, white-labelled with your name', 'reportedip-hive' ),
-				__( 'Audit trail, account blocking and session manager', 'reportedip-hive' ),
-				__( 'Mail-2FA: 2,500/month, SMS-2FA: 75/month, one year of logs', 'reportedip-hive' ),
-			);
-		} else {
-			return;
-		}
-		?>
-		<div class="rip-wizard__tier-teaser" id="rip-quickstart-teaser">
-			<article class="rip-tier-card">
-				<header class="rip-tier-card__header">
-					<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( $badge ); ?>
-					<h3 class="rip-tier-card__title"><?php echo esc_html( $title ); ?></h3>
-				</header>
-				<ul class="rip-tier-card__list">
-					<?php foreach ( $items as $item ) : ?>
-						<li><?php echo esc_html( $item ); ?></li>
-					<?php endforeach; ?>
-				</ul>
-				<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="rip-button rip-button--secondary rip-button--sm"><?php esc_html_e( 'See plans', 'reportedip-hive' ); ?> →</a>
-			</article>
 		</div>
 		<?php
 	}
