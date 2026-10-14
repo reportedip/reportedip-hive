@@ -1533,6 +1533,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		self::maybe_render_domain_limit_notice();
 		self::maybe_render_reputation_notice();
+		ReportedIP_Hive_Addon_Notice::render();
 
 		/**
 		 * Print an in-page notice on the plugin pages, after the free

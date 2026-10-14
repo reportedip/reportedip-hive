@@ -350,6 +350,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cache.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mode-manager.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-catalog.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-addon-notice.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-api-client.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-notice.php';
