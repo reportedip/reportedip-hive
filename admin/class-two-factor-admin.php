@@ -50,7 +50,9 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	}
 
 	/**
-	 * Add a "Reset 2FA" row action on the Users screen.
+	 * Add a "Reset 2FA" row action on the Users screen. The first row that
+	 * carries it enqueues the footer script that turns the click into a POST
+	 * to admin-post.php, so the script loads on that screen only.
 	 *
 	 * Also offered for an account whose method no active plugin provides
 	 * ({@see ReportedIP_Hive_Two_Factor::unavailable_method()}): its challenge
@@ -75,46 +77,17 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		$confirm = esc_attr__( 'Really reset 2FA for this user? The user will be able to sign in without 2FA and will be sent back to onboarding on the next login (if their role requires 2FA).', 'reportedip-hive' );
 
 		$actions['reportedip_reset_2fa'] = sprintf(
-			'<a href="#" class="rip-2fa-admin-reset" data-user="%d" data-nonce="%s" data-confirm="%s" style="color:#b32d2e;">%s</a>',
+			'<a href="#" class="rip-2fa-admin-reset" data-user="%d" data-nonce="%s" data-confirm="%s" data-post="%s" style="color:#b32d2e;">%s</a>',
 			(int) $user->ID,
 			esc_attr( $nonce ),
 			$confirm,
+			esc_url( admin_url( 'admin-post.php' ) ),
 			esc_html__( 'Reset 2FA', 'reportedip-hive' )
 		);
 
-		if ( ! did_action( 'admin_print_footer_scripts' ) ) {
-			add_action( 'admin_print_footer_scripts', array( __CLASS__, 'print_reset_row_action_script' ) );
-		}
+		wp_enqueue_script( 'reportedip-hive-two-factor-reset-row', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/two-factor-reset-row.js', array(), REPORTEDIP_HIVE_VERSION, true );
 
 		return $actions;
-	}
-
-	/**
-	 * Tiny footer script that converts the reset link into a POST to
-	 * admin-post.php on click. Keeps the destructive action off the GET surface
-	 * while still working inside WP's row-actions HTML model.
-	 */
-	public static function print_reset_row_action_script() {
-		?>
-		<script>
-		(function(){
-			document.addEventListener('click', function(e){
-				var a = e.target.closest('.rip-2fa-admin-reset');
-				if (!a) return;
-				e.preventDefault();
-				if (!window.confirm(a.getAttribute('data-confirm'))) return;
-				var f = document.createElement('form');
-				f.method = 'post';
-				f.action = <?php echo wp_json_encode( admin_url( 'admin-post.php' ) ); ?>;
-				f.style.display = 'none';
-				['action:reportedip_hive_2fa_admin_reset','user_id:'+a.getAttribute('data-user'),'_wpnonce:'+a.getAttribute('data-nonce')].forEach(function(p){
-					var i = document.createElement('input'); var kv = p.split(':'); i.type='hidden'; i.name=kv[0]; i.value=kv.slice(1).join(':'); f.appendChild(i);
-				});
-				document.body.appendChild(f); f.submit();
-			});
-		})();
-		</script>
-		<?php
 	}
 
 	/**

@@ -266,6 +266,20 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_reset_row_action_enqueues_its_script_instead_of_printing_one(): void {
+			$admin = $this->source( 'admin/class-two-factor-admin.php' );
+			$body  = $this->method_body( $admin, 'add_reset_row_action' );
+
+			$this->assertStringNotContainsString( '<script', $admin );
+			$this->assertStringNotContainsString( 'admin_print_footer_scripts', $admin );
+			$this->assertStringContainsString( "wp_enqueue_script( 'reportedip-hive-two-factor-reset-row', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/two-factor-reset-row.js', array(), REPORTEDIP_HIVE_VERSION, true );", $body );
+			$this->assertStringContainsString( "data-post=\"%s\"", $body );
+
+			$script = $this->source( 'assets/js/two-factor-reset-row.js' );
+			$this->assertStringContainsString( "f.action = a.getAttribute('data-post');", $script );
+			$this->assertStringContainsString( "['action', 'reportedip_hive_2fa_admin_reset']", $script );
+		}
+
 		public function test_profile_management_endpoints_are_wired(): void {
 			$admin = $this->source( 'admin/class-two-factor-admin.php' );
 
