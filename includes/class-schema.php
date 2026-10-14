@@ -73,6 +73,18 @@ final class ReportedIP_Hive_Schema {
 	);
 
 	/**
+	 * Tables a 2.x release created in this plugin that an add-on owns since
+	 * 3.0.0. While no add-on claims one through `reportedip_hive_schema_tables`
+	 * the free plugin still removes it on uninstall, empties it on reset and
+	 * deletes a deleted site's rows from it, as 2.x did; retention, export
+	 * and erasure live in {@see ReportedIP_Hive_Legacy_Data}. It never
+	 * creates or writes such a table.
+	 *
+	 * @var string[]
+	 */
+	public const LEGACY_SUFFIXES = array( 'reportedip_hive_audit_log' );
+
+	/**
 	 * Table suffixes this plugin and its add-ons own, for teardown and
 	 * per-site cleanup.
 	 *
@@ -115,6 +127,27 @@ final class ReportedIP_Hive_Schema {
 				)
 			)
 		);
+	}
+
+	/**
+	 * Legacy tables no add-on claims right now.
+	 *
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function unclaimed_legacy_tables() {
+		return array_values( array_diff( self::LEGACY_SUFFIXES, self::tables() ) );
+	}
+
+	/**
+	 * Every table teardown, reset and per-site cleanup walk: the owned ones
+	 * plus the unclaimed legacy ones.
+	 *
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	private static function managed_tables() {
+		return array_merge( self::tables(), self::unclaimed_legacy_tables() );
 	}
 
 	/**
@@ -421,12 +454,16 @@ final class ReportedIP_Hive_Schema {
 	/**
 	 * Drop all plugin tables. Used by uninstall when data deletion was requested.
 	 *
+	 * The unclaimed legacy tables are included. An active add-on has dropped
+	 * its own tables in its `reportedip_hive_uninstall` listener before this
+	 * runs, so `IF EXISTS` finds nothing left to do there.
+	 *
 	 * @return void
 	 * @since  2.0.0
 	 */
 	public static function drop_all_tables() {
 		global $wpdb;
-		foreach ( array_reverse( self::tables() ) as $suffix ) {
+		foreach ( array_reverse( self::managed_tables() ) as $suffix ) {
 			$table = self::table( $suffix );
 			$wpdb->query( "DROP TABLE IF EXISTS $table" );
 		}
@@ -442,7 +479,7 @@ final class ReportedIP_Hive_Schema {
 	 */
 	public static function truncate_all_tables() {
 		global $wpdb;
-		foreach ( self::tables() as $suffix ) {
+		foreach ( self::managed_tables() as $suffix ) {
 			$table = self::table( $suffix );
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Existence probe before truncation; table name from the schema suffix list (core constant plus add-on suffixes via the filter).
 			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
@@ -474,7 +511,7 @@ final class ReportedIP_Hive_Schema {
 			return;
 		}
 
-		foreach ( self::tables() as $suffix ) {
+		foreach ( self::managed_tables() as $suffix ) {
 			if ( ! self::column_exists( $suffix, 'blog_id' ) ) {
 				continue;
 			}

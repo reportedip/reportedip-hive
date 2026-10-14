@@ -396,6 +396,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-geo-anomaly.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-password-strength.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-privacy.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-legacy-data.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-relay-usage-tracker.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/interface-mail-provider.php';
