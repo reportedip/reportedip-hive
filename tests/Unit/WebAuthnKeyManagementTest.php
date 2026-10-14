@@ -10,7 +10,7 @@
  *   3. Registration parameters: residentKey stays 'discouraged', hints map
  *      to authenticatorAttachment.
  *   4. Wiring guards (source-pattern): rate limiting on the login AJAX
- *      endpoints, the CLI lockout guard, and the notification hooks.
+ *      endpoints, the CLI lockout guard, and the clone warning.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -228,11 +228,17 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_notifications_wire_the_key_lifecycle_hooks(): void {
-			$source = $this->source( 'includes/class-two-factor-notifications.php' );
-			$this->assertStringContainsString( 'reportedip_hive_2fa_webauthn_key_registered', $source );
-			$this->assertStringContainsString( 'reportedip_hive_2fa_webauthn_key_removed', $source );
+		public function test_free_keeps_the_clone_warning_and_sends_no_lifecycle_mail(): void {
+			$source     = $this->source( 'includes/class-two-factor-notifications.php' );
+			$regression = substr( $source, strpos( $source, 'function on_counter_regression' ), 500 );
 			$this->assertStringContainsString( 'reportedip_hive_2fa_webauthn_counter_regression', $source );
+			$this->assertStringNotContainsString( 'reportedip_hive_2fa_webauthn_key_registered', $source, 'The key-lifecycle mails belong to the add-on.' );
+			$this->assertStringNotContainsString( 'reportedip_hive_2fa_webauthn_key_removed', $source, 'The key-lifecycle mails belong to the add-on.' );
+			$this->assertStringNotContainsString(
+				'feature_status',
+				$regression,
+				'The cloned-key warning is protection, not comfort, it must reach every plan.'
+			);
 		}
 
 		public function test_first_key_is_free_and_more_keys_are_gated(): void {
@@ -270,20 +276,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				2,
 				substr_count( $source, 'self::can_add_key( $user_id )' ),
 				'Both register endpoints (options + verify) must enforce the tier key limit, the UI hint alone is not a gate.'
-			);
-		}
-
-		public function test_lifecycle_mails_are_gated_but_clone_warning_is_not(): void {
-			$source = $this->source( 'includes/class-two-factor-notifications.php' );
-			$registered = substr( $source, strpos( $source, 'function on_key_registered' ), 400 );
-			$removed    = substr( $source, strpos( $source, 'function on_key_removed' ), 400 );
-			$regression = substr( $source, strpos( $source, 'function on_counter_regression' ), 500 );
-			$this->assertStringContainsString( 'advanced_available', $registered );
-			$this->assertStringContainsString( 'advanced_available', $removed );
-			$this->assertStringNotContainsString(
-				'advanced_available',
-				$regression,
-				'The cloned-key warning is protection, not comfort, it must reach every tier.'
 			);
 		}
 	}

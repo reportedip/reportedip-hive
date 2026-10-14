@@ -36,64 +36,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	 */
 	public function __construct() {
 		add_action( 'wp_login', array( $this, 'on_login' ), 50, 2 );
-		add_action( 'reportedip_hive_2fa_webauthn_key_registered', array( $this, 'on_key_registered' ), 10, 2 );
-		add_action( 'reportedip_hive_2fa_webauthn_key_removed', array( $this, 'on_key_removed' ), 10, 2 );
 		add_action( 'reportedip_hive_2fa_webauthn_counter_regression', array( $this, 'on_counter_regression' ), 10, 3 );
-	}
-
-	/**
-	 * A new security key / passkey was registered, tell the account owner
-	 * so a hijacked session cannot silently add a persistent second factor.
-	 *
-	 * @param int    $user_id User the key was registered for.
-	 * @param string $name    User-visible key name.
-	 */
-	public function on_key_registered( $user_id, $name ) {
-		if ( ! ReportedIP_Hive_Two_Factor_WebAuthn::advanced_available() ) {
-			return;
-		}
-		$user = get_userdata( (int) $user_id );
-		if ( ! $user ) {
-			return;
-		}
-		$this->send_key_event_email(
-			$user,
-			/* translators: 1: site name */
-			__( '[%1$s] A new security key was added to your account', 'reportedip-hive' ),
-			sprintf(
-				/* translators: %s: key name */
-				__( 'A new security key or passkey named "%s" was just registered for your account. If that was you, no further action is needed. If not, remove the key and change your password immediately.', 'reportedip-hive' ),
-				esc_html( $name )
-			),
-			'webauthn_key_registered'
-		);
-	}
-
-	/**
-	 * A security key / passkey was removed.
-	 *
-	 * @param int    $user_id User the key was removed from.
-	 * @param string $name    User-visible key name.
-	 */
-	public function on_key_removed( $user_id, $name ) {
-		if ( ! ReportedIP_Hive_Two_Factor_WebAuthn::advanced_available() ) {
-			return;
-		}
-		$user = get_userdata( (int) $user_id );
-		if ( ! $user ) {
-			return;
-		}
-		$this->send_key_event_email(
-			$user,
-			/* translators: 1: site name */
-			__( '[%1$s] A security key was removed from your account', 'reportedip-hive' ),
-			sprintf(
-				/* translators: %s: key name */
-				__( 'The security key or passkey named "%s" was just removed from your account. If that was not you, review your security settings and change your password immediately.', 'reportedip-hive' ),
-				esc_html( $name )
-			),
-			'webauthn_key_removed'
-		);
 	}
 
 	/**
@@ -121,7 +64,7 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 		}
 		set_transient( $throttle_key, 1, HOUR_IN_SECONDS );
 
-		$this->send_key_event_email(
+		self::send_key_event_email(
 			$user,
 			/* translators: 1: site name */
 			__( '[%1$s] Suspicious security-key sign-in blocked', 'reportedip-hive' ),
@@ -135,15 +78,18 @@ class ReportedIP_Hive_Two_Factor_Notifications {
 	}
 
 	/**
-	 * Shared sender for the three security-key lifecycle mails, styled like
-	 * the new-device notification.
+	 * Shared sender for the security-key mails, styled like the new-device
+	 * notification. The clone warning uses it here; the add-on sends its
+	 * key-lifecycle mails through it, so every key mail looks the same.
 	 *
 	 * @param WP_User $user             Recipient.
 	 * @param string  $subject_template Subject with a %1$s site-name placeholder.
 	 * @param string  $intro            Intro paragraph (already escaped).
 	 * @param string  $context_type     Mailer context type slug.
+	 * @return void
+	 * @since  3.0.0 Public and static (private instance method before).
 	 */
-	private function send_key_event_email( $user, $subject_template, $intro, $context_type ) {
+	public static function send_key_event_email( $user, $subject_template, $intro, $context_type ) {
 		$site_name = wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES );
 		$ip        = ReportedIP_Hive::get_client_ip();
 		$when      = wp_date( 'd.m.Y H:i', time() );
