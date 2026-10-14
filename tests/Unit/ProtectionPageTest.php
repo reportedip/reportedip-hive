@@ -713,7 +713,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_reset_values_keeps_only_the_recommendation_of_the_tab(): void {
 			$firewall = ReportedIP_Hive_Protection_Page::reset_values( 'firewall', 'professional', 'community' );
 			$this->assertSame( 1, $firewall['reportedip_hive_headers_enabled'] );
-			$this->assertSame( 1, $firewall['reportedip_hive_hsts_enabled'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_hsts_enabled', $firewall, 'HSTS is recommended by the add-on' );
 			$this->assertSame( 'block', $firewall['reportedip_hive_bot_action'] );
 			$this->assertArrayNotHasKey( 'reportedip_hive_block_tor', $firewall, 'a key of another tab is left alone' );
 			$this->assertArrayNotHasKey( 'reportedip_hive_waf_enabled', $firewall, 'a key without a recommendation is left alone' );

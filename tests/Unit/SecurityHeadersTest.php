@@ -3,9 +3,10 @@
  * Unit tests for the site-wide security-header emitter.
  *
  * Locks the planned-header set against the option toggles: the basic trio
- * responds to its switches, the advanced set stays out while the tier gate is
- * unavailable (no Mode_Manager loaded in the unit context), and the Score
- * contract helpers reflect the master switch.
+ * responds to its switches, the advanced set stays out without the add-on,
+ * a listener on `reportedip_hive_planned_headers` can add a header but never
+ * drop or rewrite the trio, and the Score contract helper reflects the
+ * master switch.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -68,16 +69,81 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayNotHasKey( 'X-Content-Type-Options', $h );
 		}
 
-		public function test_advanced_excluded_without_tier(): void {
+		public function test_advanced_excluded_without_the_add_on(): void {
 			update_option( 'reportedip_hive_headers_enabled', true );
 			update_option( 'reportedip_hive_hsts_enabled', true );
 			update_option( 'reportedip_hive_csp_mode', 'enforce' );
 			update_option( 'reportedip_hive_csp_policy', "default-src 'self'" );
 			$h = \ReportedIP_Hive_Security_Headers::planned_headers();
-			$this->assertArrayNotHasKey( 'Strict-Transport-Security', $h );
-			$this->assertArrayNotHasKey( 'Content-Security-Policy', $h );
-			$this->assertFalse( \ReportedIP_Hive_Security_Headers::advanced_available() );
-			$this->assertFalse( \ReportedIP_Hive_Security_Headers::advanced_active() );
+			$this->assertSame( array( 'X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy' ), array_keys( $h ) );
+			$this->assertFalse( method_exists( 'ReportedIP_Hive_Security_Headers', 'advanced_active' ), 'the advanced set belongs to the add-on' );
+		}
+
+		public function test_a_listener_adds_headers_after_the_trio(): void {
+			update_option( 'reportedip_hive_headers_enabled', true );
+			$this->with_filter(
+				static function ( $headers ) {
+					$headers['Permissions-Policy'] = 'camera=()';
+					return $headers;
+				},
+				function () {
+					$h = \ReportedIP_Hive_Security_Headers::planned_headers();
+					$this->assertSame( array( 'X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy', 'Permissions-Policy' ), array_keys( $h ) );
+					$this->assertSame( 'camera=()', $h['Permissions-Policy'] );
+				}
+			);
+		}
+
+		public function test_a_listener_cannot_drop_or_rewrite_the_trio(): void {
+			update_option( 'reportedip_hive_headers_enabled', true );
+			$this->with_filter(
+				static function () {
+					return array(
+						'X-Frame-Options' => 'ALLOWALL',
+						'x-content-type-options' => 'sniff',
+						'X-Evil'          => "a\r\nSet-Cookie: x=1",
+						'Bad Name'        => 'x',
+						'X-Ok'            => 'yes',
+					);
+				},
+				function () {
+					$h = \ReportedIP_Hive_Security_Headers::planned_headers();
+					$this->assertSame( 'nosniff', $h['X-Content-Type-Options'] );
+					$this->assertSame( 'SAMEORIGIN', $h['X-Frame-Options'] );
+					$this->assertSame( 'strict-origin-when-cross-origin', $h['Referrer-Policy'] );
+					$this->assertArrayNotHasKey( 'x-content-type-options', $h, 'a second casing would replace the header on the wire' );
+					$this->assertArrayNotHasKey( 'X-Evil', $h, 'a line break would split the header' );
+					$this->assertArrayNotHasKey( 'Bad Name', $h );
+					$this->assertSame( 'yes', $h['X-Ok'] );
+				}
+			);
+		}
+
+		public function test_the_filter_does_not_run_with_the_master_switch_off(): void {
+			$this->with_filter(
+				static function ( $headers ) {
+					$headers['X-Ok'] = 'yes';
+					return $headers;
+				},
+				function () {
+					$this->assertSame( array(), \ReportedIP_Hive_Security_Headers::planned_headers() );
+				}
+			);
+		}
+
+		/**
+		 * Run a body with one listener on the planned-headers filter.
+		 *
+		 * @param callable $listener Filter callback.
+		 * @param callable $body     Assertions.
+		 */
+		private function with_filter( callable $listener, callable $body ): void {
+			add_filter( 'reportedip_hive_planned_headers', $listener );
+			try {
+				$body();
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_planned_headers'] );
+			}
 		}
 	}
 }

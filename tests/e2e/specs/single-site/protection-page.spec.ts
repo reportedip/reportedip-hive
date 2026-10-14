@@ -123,25 +123,27 @@ test.describe('protection page', () => {
 		await expect(page.locator('#detection .rip-protection__status')).toContainText('Strict');
 	});
 
-	test('a switched-on plan feature stays editable after a downgrade and a locked value survives a save', async ({ page }) => {
+	test('values of the add-on stored without it survive a save of every tab', async ({ page }) => {
+		/* The plan cases of these fields run in the add-on suite (plan-surfaces.spec.ts). */
 		wp('option update reportedip_hive_block_tor 1');
+		wp('option update reportedip_hive_hsts_enabled 1');
 		wp('option update reportedip_hive_permissions_policy "camera=()"');
-		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
-		await page.locator('#blocking .rip-protection__details > summary').click();
-		await expect(page.locator('#blocking input[name="reportedip_hive_block_tor"]')).toBeEnabled();
-		await expect(page.locator('#blocking input[name="reportedip_hive_block_tor"]')).toBeChecked();
-		await page.locator('.rip-protection__panel[data-tab="basics"] button.rip-button--primary').click();
-		await page.waitForURL(/tab=basics/);
-		expect(wp('option get reportedip_hive_block_tor')).toBe('1');
-
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=firewall');
-		await page.locator('#headers .rip-protection__details > summary').click();
-		await expect(page.locator('#headers input[name="reportedip_hive_permissions_policy"]')).toBeDisabled();
-		await page.locator('.rip-protection__panel[data-tab="firewall"] button.rip-button--primary').click();
-		await page.waitForURL(/tab=firewall/);
-		expect(wp('option get reportedip_hive_permissions_policy')).toBe('camera=()');
-		wp('option update reportedip_hive_block_tor 0');
+		try {
+			await loginAsAdmin(page);
+			for (const tab of ['basics', 'firewall']) {
+				await page.goto(`/wp-admin/admin.php?page=reportedip-hive-protection&tab=${tab}`);
+				await expect(page.locator('input[name="reportedip_hive_block_tor"], input[name="reportedip_hive_hsts_enabled"], input[name="reportedip_hive_permissions_policy"]')).toHaveCount(0);
+				await page.locator(`.rip-protection__panel[data-tab="${tab}"] button.rip-button--primary`).click();
+				await page.waitForURL(new RegExp(`tab=${tab}`));
+			}
+			expect(wp('option get reportedip_hive_block_tor')).toBe('1');
+			expect(wp('option get reportedip_hive_hsts_enabled')).toBe('1');
+			expect(wp('option get reportedip_hive_permissions_policy')).toBe('camera=()');
+		} finally {
+			wp('option update reportedip_hive_block_tor 0');
+			wp('option update reportedip_hive_hsts_enabled 0');
+			wp('option delete reportedip_hive_permissions_policy');
+		}
 	});
 
 	test('runtime locks and fixed choices render as the old tabs did', async ({ page }) => {

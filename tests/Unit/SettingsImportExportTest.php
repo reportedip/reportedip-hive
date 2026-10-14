@@ -115,7 +115,7 @@ class SettingsImportExportTest extends TestCase {
 			$this->assertContains( $registration_key, $keys, "Registration key {$registration_key} must be exportable." );
 		}
 		$this->assertContains( 'reportedip_hive_headers_enabled', $keys );
-		$this->assertContains( 'reportedip_hive_csp_policy', $keys );
+		$this->assertNotContains( 'reportedip_hive_csp_policy', $keys, 'The advanced headers come with the add-on.' );
 		$this->assertNotContains( 'reportedip_hive_audit_retention_days', $keys, 'The audit keys come with the add-on.' );
 
 		$this->assertNotContains( 'reportedip_hive_waf_dropin_enabled', $keys, 'Drop-in toggle is host-specific and must stay local.' );
@@ -149,32 +149,25 @@ class SettingsImportExportTest extends TestCase {
 	}
 
 	/**
-	 * An import cannot hand a site a header its plan does not include.
-	 *
-	 * The header options only joined the registry in 2.1.51; before that the
-	 * import wrote them raw, so a payload from a Business site turned on CSP
-	 * on a Free site and the engine then quietly refused to emit it. Now the
-	 * tier gate answers at write time, which is also what MainWP and the
-	 * cloud fleet already do.
+	 * Without the add-on the advanced headers are no settings of this site:
+	 * an export leaves them out and an import neither writes nor clears
+	 * them, so a value stored while the add-on ran survives the round trip.
 	 *
 	 * @return void
 	 */
 	public function test_import_skips_advanced_headers_without_the_plan(): void {
-		$GLOBALS['wp_options']['reportedip_hive_csp_mode'] = 'report_only';
+		$GLOBALS['wp_options']['reportedip_hive_csp_mode']        = 'report_only';
+		$GLOBALS['wp_options']['reportedip_hive_headers_enabled'] = true;
 
 		$payload = ReportedIP_Hive_Settings_Import_Export::get_instance()
 			->build_export_payload( array( 'headers' ), false );
+		$this->assertStringNotContainsString( 'reportedip_hive_csp_mode', (string) wp_json_encode( $payload ) );
 
-		$GLOBALS['wp_options'] = array();
+		$payload_array = json_decode( (string) wp_json_encode( $payload ), true );
+		$payload_array['options']['reportedip_hive_csp_mode'] = 'enforce';
+		ReportedIP_Hive_Settings_Import_Export::get_instance()->apply_payload( $payload_array, array( 'headers' ) );
 
-		ReportedIP_Hive_Settings_Import_Export::get_instance()
-			->apply_payload( json_decode( (string) wp_json_encode( $payload ), true ), array( 'headers' ) );
-
-		$this->assertArrayNotHasKey(
-			'reportedip_hive_csp_mode',
-			$GLOBALS['wp_options'],
-			'advanced hardening is gated, so the Content-Security-Policy must not be written on a plan without it'
-		);
+		$this->assertSame( 'report_only', $GLOBALS['wp_options']['reportedip_hive_csp_mode'], 'a stored add-on value survives an import without the add-on' );
 	}
 
 	/**

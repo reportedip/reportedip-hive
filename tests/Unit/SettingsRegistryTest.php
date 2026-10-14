@@ -52,17 +52,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_header_xcto'                  => 'bool',
 				'reportedip_hive_header_xfo'                   => 'enum',
 				'reportedip_hive_header_referrer'              => 'enum',
-				'reportedip_hive_hsts_enabled'                 => 'bool',
-				'reportedip_hive_hsts_max_age'                 => 'int',
-				'reportedip_hive_hsts_subdomains'              => 'bool',
-				'reportedip_hive_hsts_preload'                 => 'bool',
-				'reportedip_hive_permissions_policy'           => 'text',
-				'reportedip_hive_csp_mode'                     => 'enum',
-				'reportedip_hive_csp_policy'                   => 'textarea',
-				'reportedip_hive_csp_report_uri'               => 'url',
-				'reportedip_hive_coop'                         => 'enum',
-				'reportedip_hive_corp'                         => 'enum',
-				'reportedip_hive_coep'                         => 'enum',
 				'reportedip_hive_monitor_app_passwords' => 'bool',
 				'reportedip_hive_app_password_threshold' => 'int',
 				'reportedip_hive_app_password_timeframe' => 'int',
@@ -505,15 +494,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 					$this->assertTrue( is_callable( $entry['tier_gate'] ?? null ), "{$key} is partial without a value gate" );
 				}
 			}
-			$expected = array(
-				'reportedip_hive_hsts_max_age'         => 'security_headers_advanced',
-				'reportedip_hive_hsts_preload'         => 'security_headers_advanced',
-				'reportedip_hive_csp_policy'           => 'security_headers_advanced',
-				'reportedip_hive_csp_report_uri'       => 'security_headers_advanced',
-			);
-			foreach ( $expected as $key => $feature ) {
-				$this->assertSame( $feature, $spec[ $key ]['ui_lock'] ?? '', $key );
-				$this->assertArrayNotHasKey( 'tier', $spec[ $key ], "{$key} locks the form only; the sanitizer stays open for remote channels" );
+			foreach ( array( 'reportedip_hive_hsts_max_age', 'reportedip_hive_csp_policy' ) as $key ) {
+				$this->assertArrayNotHasKey( $key, $spec, "{$key} comes with the add-on" );
 			}
 			$this->assertSame( array( 'administrator' ), $spec['reportedip_hive_rest_allowed_roles']['choices_fixed'] );
 		}

@@ -122,17 +122,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_header_xcto'                     => true,
 		'reportedip_hive_header_xfo'                      => 'SAMEORIGIN',
 		'reportedip_hive_header_referrer'                 => 'strict-origin-when-cross-origin',
-		'reportedip_hive_hsts_enabled'                    => false,
-		'reportedip_hive_hsts_max_age'                    => 63072000,
-		'reportedip_hive_hsts_subdomains'                 => false,
-		'reportedip_hive_hsts_preload'                    => false,
-		'reportedip_hive_permissions_policy'              => 'geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=()',
-		'reportedip_hive_csp_mode'                        => 'off',
-		'reportedip_hive_csp_policy'                      => '',
-		'reportedip_hive_csp_report_uri'                  => '',
-		'reportedip_hive_coop'                            => 'off',
-		'reportedip_hive_corp'                            => 'off',
-		'reportedip_hive_coep'                            => 'off',
 
 		'reportedip_hive_monitor_failed_logins'           => true,
 		'reportedip_hive_failed_login_threshold'          => 5,
@@ -636,8 +625,6 @@ final class ReportedIP_Hive_Defaults {
 
 		if ( $rank >= 1 ) {
 			$values['reportedip_hive_block_tor']           = 1;
-			$values['reportedip_hive_hsts_enabled']        = 1;
-			$values['reportedip_hive_hsts_preload']        = 0;
 			$values['reportedip_hive_data_retention_days'] = 90;
 		}
 
