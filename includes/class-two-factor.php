@@ -144,7 +144,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * Sign-in history behind the adaptive step-up triggers, as one JSON blob.
 	 *
 	 * Declared here so uninstall and the GDPR paths know the key without
-	 * loading {@see ReportedIP_Hive_Login_Context}.
+	 * loading the class that records it.
 	 *
 	 * @var string
 	 */
@@ -185,6 +185,16 @@ class ReportedIP_Hive_Two_Factor {
 		'reportedip_hive_2fa_reset_failed_attempts',
 		'reportedip_hive_2fa_webauthn_user_handle',
 	);
+
+	/**
+	 * Prefix of a step-up verdict that names a trigger which fired for an
+	 * account without a usable method: the sign-in goes on with the
+	 * password and the skip is logged as `2fa_stepup_skipped_no_method`.
+	 *
+	 * @var string
+	 * @since 3.0.0
+	 */
+	const STEPUP_NO_METHOD_PREFIX = 'no_method:';
 
 	/**
 	 * Cap on the unregistered method slugs the allowed-methods option keeps,
@@ -1085,7 +1095,24 @@ class ReportedIP_Hive_Two_Factor {
 		$has_any_method  = ! empty( $enabled_methods );
 		$unavailable     = $has_any_method ? '' : self::unavailable_method( $user->ID );
 		$is_enforced     = self::is_enforced_for_user( $user );
-		$stepup          = ReportedIP_Hive_Two_Factor_Policies::evaluate( $user, $has_any_method, $is_enforced );
+
+		/**
+		 * Ask for the second factor although the device is trusted.
+		 *
+		 * Return a non-empty trigger name to force the challenge: a hit
+		 * skips the trusted-device bypass, while the `reportedip_2fa_bypass`
+		 * filter and the IP allowlist still win. A name that starts with
+		 * {@see self::STEPUP_NO_METHOD_PREFIX} records that a trigger fired
+		 * for an account without a usable method; that account signs in
+		 * with the password as before.
+		 *
+		 * @param string   $stepup         Trigger name or empty string.
+		 * @param \WP_User $user           The signing-in user.
+		 * @param bool     $has_any_method Whether the user has a usable method.
+		 * @param bool     $is_enforced    Whether the user's role enforces 2FA.
+		 * @since 3.0.0
+		 */
+		$stepup = (string) apply_filters( 'reportedip_hive_2fa_stepup', '', $user, $has_any_method, $is_enforced );
 
 		if ( ! $has_any_method && ! $is_enforced && '' === $unavailable ) {
 			/*
@@ -1108,13 +1135,13 @@ class ReportedIP_Hive_Two_Factor {
 				);
 			}
 
-			if ( 0 === strpos( $stepup, ReportedIP_Hive_Two_Factor_Policies::NO_METHOD_PREFIX ) ) {
+			if ( 0 === strpos( $stepup, self::STEPUP_NO_METHOD_PREFIX ) ) {
 				ReportedIP_Hive_Logger::get_instance()->log_security_event(
 					'2fa_stepup_skipped_no_method',
 					ReportedIP_Hive::get_client_ip(),
 					array(
 						'user_id' => $user->ID,
-						'trigger' => substr( $stepup, strlen( ReportedIP_Hive_Two_Factor_Policies::NO_METHOD_PREFIX ) ),
+						'trigger' => substr( $stepup, strlen( self::STEPUP_NO_METHOD_PREFIX ) ),
 					),
 					'low'
 				);
@@ -1186,13 +1213,20 @@ class ReportedIP_Hive_Two_Factor {
 		}
 
 		if ( '' !== $stepup ) {
+			/**
+			 * Signals of the current sign-in, read for the step-up log row.
+			 *
+			 * @param array{country:string} $signals Signals; `country` is the ISO code or ''.
+			 * @since 3.0.0
+			 */
+			$signals = (array) apply_filters( 'reportedip_hive_2fa_login_signals', array( 'country' => '' ) );
 			ReportedIP_Hive_Logger::get_instance()->log_security_event(
 				'2fa_stepup_required',
 				ReportedIP_Hive::get_client_ip(),
 				array(
 					'user_id' => $user->ID,
 					'trigger' => $stepup,
-					'country' => ReportedIP_Hive_Login_Context::current_signals()['country'],
+					'country' => (string) ( $signals['country'] ?? '' ),
 				),
 				'low'
 			);

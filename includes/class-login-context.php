@@ -252,6 +252,18 @@ final class ReportedIP_Hive_Login_Context {
 	}
 
 	/**
+	 * Listener on `reportedip_hive_2fa_login_signals`: the signals of the
+	 * current request, see {@see self::current_signals()}.
+	 *
+	 * @param array<string, mixed> $signals Signals so far.
+	 * @return array<string, mixed>
+	 * @since  3.0.0
+	 */
+	public static function filter_signals( $signals ) {
+		return array_merge( (array) $signals, self::current_signals() );
+	}
+
+	/**
 	 * Whether an administrator has already completed a second-factor sign-in.
 	 *
 	 * @return bool

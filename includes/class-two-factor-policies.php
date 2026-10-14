@@ -200,6 +200,24 @@ final class ReportedIP_Hive_Two_Factor_Policies {
 	}
 
 	/**
+	 * Listener on `reportedip_hive_2fa_stepup`: an earlier listener's
+	 * verdict stands, otherwise {@see self::evaluate()} decides.
+	 *
+	 * @param string   $stepup         Verdict so far.
+	 * @param \WP_User $user           Authenticated user.
+	 * @param bool     $has_any_method Whether the user has an active second factor.
+	 * @param bool     $is_enforced    Whether the user's role requires 2FA anyway.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	public static function filter_stepup( $stepup, $user, $has_any_method, $is_enforced ) {
+		if ( '' !== (string) $stepup ) {
+			return (string) $stepup;
+		}
+		return self::evaluate( $user, (bool) $has_any_method, (bool) $is_enforced );
+	}
+
+	/**
 	 * Sanitizer for every policy role list.
 	 *
 	 * Strips `administrator` until an administrator has completed one

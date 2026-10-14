@@ -282,22 +282,6 @@ if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_Recovery' ) ) {
 	}
 }
 
-if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_Policies' ) ) {
-	/**
-	 * Step-up double: no trigger fires.
-	 */
-	class ReportedIP_Hive_Two_Factor_Policies {
-
-		const NO_METHOD_PREFIX = 'no_method:';
-
-		/**
-		 * @return string
-		 */
-		public static function evaluate() {
-			return '';
-		}
-	}
-}
 
 if ( ! isset( $GLOBALS['wpdb'] ) ) {
 	/**
