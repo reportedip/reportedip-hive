@@ -87,6 +87,120 @@ final class ReportedIP_Hive_Account_Block {
 	}
 
 	/**
+	 * Register the profile card of a blocked account on the user edit
+	 * screen. Admin requests only.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function register_admin_hooks() {
+		add_action( 'edit_user_profile', array( __CLASS__, 'render_profile_card' ) );
+		add_action( 'edit_user_profile_update', array( __CLASS__, 'save_profile_card' ) );
+	}
+
+	/**
+	 * Whether this plugin draws the profile card for a user. The add-on
+	 * answers false and draws its own, complete card.
+	 *
+	 * @param WP_User $user Edited user.
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	private static function owns_profile_card( $user ) {
+		/**
+		 * Whether the free plugin shows its card for a blocked account
+		 * (state and an unblock button) on the user edit screen.
+		 *
+		 * @param bool    $show Default true.
+		 * @param WP_User $user Edited user.
+		 * @since 3.0.0
+		 */
+		return (bool) apply_filters( 'reportedip_hive_account_block_card', true, $user );
+	}
+
+	/**
+	 * The card of a blocked account on the user edit screen: since when,
+	 * by whom, the message the user sees, and a button that lifts the
+	 * block. Nothing for an account that is not blocked.
+	 *
+	 * @param WP_User $user Edited user.
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function render_profile_card( $user ) {
+		if ( ! ( $user instanceof WP_User ) || ! current_user_can( 'edit_user', $user->ID ) ) {
+			return;
+		}
+		$record = self::get( $user->ID );
+		if ( null === $record || ! self::owns_profile_card( $user ) ) {
+			return;
+		}
+
+		wp_enqueue_style( 'reportedip-hive-design-system', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/design-system.css', array(), REPORTEDIP_HIVE_VERSION );
+		?>
+		<h2 id="reportedip-hive-account-access"><?php esc_html_e( 'Account access', 'reportedip-hive' ); ?></h2>
+		<table class="form-table" role="presentation">
+			<tr>
+				<td colspan="2">
+					<div class="rip-card">
+						<div class="rip-card__body">
+							<p>
+								<span class="rip-badge rip-badge--danger"><?php esc_html_e( 'Blocked', 'reportedip-hive' ); ?></span>
+								<span class="rip-text-muted">
+									<?php
+									printf(
+										/* translators: 1: local date and time, 2: administrator name */
+										esc_html__( 'since %1$s by %2$s', 'reportedip-hive' ),
+										esc_html( ReportedIP_Hive::format_local_datetime( $record['blocked_at'] ) ),
+										esc_html( self::blocked_by_label( $record['blocked_by'] ) )
+									);
+									?>
+								</span>
+							</p>
+							<p class="rip-field-hint"><?php echo esc_html( self::message_for( $user->ID ) ); ?></p>
+							<?php if ( '' !== $record['note'] ) : ?>
+								<p class="rip-field-hint">
+									<?php
+									/* translators: %s: internal administrator note */
+									echo esc_html( sprintf( __( 'Administrator note: %s', 'reportedip-hive' ), $record['note'] ) );
+									?>
+								</p>
+							<?php endif; ?>
+							<p>
+								<button type="submit" class="rip-button rip-button--secondary" name="rip_account_unblock" value="1"><?php esc_html_e( 'Unblock this account', 'reportedip-hive' ); ?></button>
+							</p>
+							<p class="rip-field-hint"><?php esc_html_e( 'The account can sign in again right away. Its password and its content were never touched.', 'reportedip-hive' ); ?></p>
+						</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Lift the block when the unblock button of the card was pressed. The
+	 * user edit form carries the nonce WordPress checks for every profile
+	 * save; it is checked here again before anything changes.
+	 *
+	 * @param int $user_id Edited user.
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function save_profile_card( $user_id ) {
+		$user_id = (int) $user_id;
+		if ( empty( $_POST['rip_account_unblock'] ) || ! current_user_can( 'edit_user', $user_id ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Presence check only; the nonce is verified on the next line before anything changes.
+			return;
+		}
+		check_admin_referer( 'update-user_' . $user_id );
+		$user = get_userdata( $user_id );
+		if ( ! $user || ! self::owns_profile_card( $user ) ) {
+			return;
+		}
+		self::unblock( $user_id );
+	}
+
+	/**
 	 * Whether an account is currently blocked.
 	 *
 	 * @param int $user_id User id.

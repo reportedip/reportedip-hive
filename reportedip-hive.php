@@ -205,6 +205,7 @@ class ReportedIP_Hive {
 
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Ajax_Handler( $this );
+			ReportedIP_Hive_Account_Block::register_admin_hooks();
 		}
 
 		ReportedIP_Hive_Admin_Notice::register_hooks();

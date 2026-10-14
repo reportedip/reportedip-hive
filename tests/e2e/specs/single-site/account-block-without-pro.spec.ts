@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import type { Page } from '@playwright/test';
-import { test, expect } from '../../fixtures/admin';
+import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 
 /**
  * Account block without the add-on: a block record written by a 2.x release
@@ -88,6 +88,29 @@ test.describe('account block without the add-on', () => {
 		const page = await context.newPage();
 		await submitLogin(page);
 		await page.waitForURL((url) => url.pathname.includes('/wp-admin/'));
+		await context.close();
+	});
+
+	test('the profile card shows the block and lifts it without the add-on', async ({ page, browser }) => {
+		const id = Number(wp('user', 'get', BLOCKED, '--field=ID'));
+		wp(
+			'eval',
+			`update_user_meta( ${id}, '_reportedip_hive_blocked', array( 'blocked_at' => gmdate( 'Y-m-d H:i:s' ), 'blocked_by' => 0, 'message' => '${OPERATOR_TEXT}', 'note' => '' ) );`
+		);
+
+		await loginAsAdmin(page);
+		await page.goto(`/wp-admin/user-edit.php?user_id=${id}`);
+		const card = page.locator('#reportedip-hive-account-access + table');
+		await expect(card).toContainText('Blocked');
+		await expect(card).toContainText(OPERATOR_TEXT);
+		await expect(card).not.toContainText(/Business|unlock/i);
+		await Promise.all([page.waitForURL(/updated=1/), card.locator('button[name="rip_account_unblock"]').click()]);
+		await expect(page.locator('#reportedip-hive-account-access')).toHaveCount(0);
+
+		const context = await browser.newContext();
+		const visitor = await context.newPage();
+		await submitLogin(visitor);
+		await visitor.waitForURL((url) => url.pathname.includes('/wp-admin/'));
 		await context.close();
 	});
 });

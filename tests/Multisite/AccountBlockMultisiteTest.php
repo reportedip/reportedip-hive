@@ -141,6 +141,62 @@ class ReportedIP_Hive_Account_Block_Multisite_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * On the user edit screen the free plugin shows a blocked account with
+	 * its state and an unblock button; the button lifts the block behind
+	 * the profile nonce. The add-on takes the card over through the filter.
+	 */
+	public function test_the_profile_card_shows_the_block_and_lifts_it() {
+		grant_super_admin( $this->actor );
+		$user = get_userdata( $this->target );
+
+		ob_start();
+		ReportedIP_Hive_Account_Block::render_profile_card( $user );
+		$html = (string) ob_get_clean();
+		$this->assertStringContainsString( 'name="rip_account_unblock"', $html );
+		$this->assertStringContainsString( 'Offboarded.', $html );
+		$this->assertStringContainsString( 'HR ticket', $html );
+		$this->assertStringNotContainsString( 'Business', $html, 'no plan named on the card' );
+		$this->assertStringNotContainsString( 'nlock', str_replace( array( 'Unblock', 'unblock' ), '', $html ) );
+
+		add_filter( 'reportedip_hive_account_block_card', '__return_false' );
+		ob_start();
+		ReportedIP_Hive_Account_Block::render_profile_card( $user );
+		$this->assertSame( '', (string) ob_get_clean(), 'the add-on draws its own card' );
+		remove_filter( 'reportedip_hive_account_block_card', '__return_false' );
+
+		$_POST['rip_account_unblock'] = '1';
+		$_REQUEST['_wpnonce']         = wp_create_nonce( 'update-user_' . $this->target );
+		try {
+			ReportedIP_Hive_Account_Block::save_profile_card( $this->target );
+		} finally {
+			unset( $_POST['rip_account_unblock'], $_REQUEST['_wpnonce'] );
+			revoke_super_admin( $this->actor );
+		}
+		$this->assertFalse( ReportedIP_Hive_Account_Block::is_blocked( $this->target ) );
+	}
+
+	/**
+	 * No card for an account without a block, and no unblock for a caller
+	 * who may not edit the account.
+	 */
+	public function test_the_profile_card_needs_a_block_and_the_right_to_edit() {
+		$other = self::factory()->user->create( array( 'role' => 'subscriber' ) );
+		grant_super_admin( $this->actor );
+		ob_start();
+		ReportedIP_Hive_Account_Block::render_profile_card( get_userdata( $other ) );
+		$this->assertSame( '', (string) ob_get_clean() );
+		revoke_super_admin( $this->actor );
+
+		$_POST['rip_account_unblock'] = '1';
+		try {
+			ReportedIP_Hive_Account_Block::save_profile_card( $this->target );
+		} finally {
+			unset( $_POST['rip_account_unblock'] );
+		}
+		$this->assertTrue( ReportedIP_Hive_Account_Block::is_blocked( $this->target ), 'a plain site administrator may not edit a network account' );
+	}
+
+	/**
 	 * The session manager never cuts the branch it is sitting on.
 	 */
 	public function test_terminate_refuses_the_callers_own_current_session() {
