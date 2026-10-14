@@ -446,56 +446,6 @@ class ReportedIP_Hive_Cron_Handler {
 		 * @since 3.0.0
 		 */
 		do_action( 'reportedip_hive_api_quota_refreshed', is_array( $quota ) ? $quota : array() );
-
-		try {
-			$relay = $this->api_client->get_relay_quota( true );
-			if ( empty( $relay['error'] ) ) {
-				$this->logger->info(
-					'Relay quota refreshed',
-					'system',
-					array(
-						'tier'                => $relay['tier'] ?? null,
-						'mail_used'           => $relay['mail']['queued_total'] ?? $relay['mail']['used'] ?? null,
-						'mail_limit'          => $relay['mail']['limit'] ?? null,
-						'mail_bundle_balance' => $relay['mail']['bundle_balance'] ?? $relay['mail_bundle_balance'] ?? null,
-						'sms_used'            => $relay['sms']['queued_total'] ?? $relay['sms']['used'] ?? null,
-						'sms_limit'           => $relay['sms']['limit'] ?? null,
-						'sms_bundle_balance'  => $relay['sms']['bundle_balance'] ?? $relay['sms_bundle_balance'] ?? null,
-					)
-				);
-
-				if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-					$snapshot = ReportedIP_Hive_Mode_Manager::get_instance()->get_relay_quota_snapshot();
-
-					/**
-					 * Fires after a successful /relay-quota response was cached.
-					 *
-					 * Consumers: {@see ReportedIP_Hive_Quota_Notifier::evaluate()} dispatches
-					 * 80 % / 100 % stage mails to the admin recipient list.
-					 *
-					 * @param array $snapshot Normalised quota snapshot.
-					 * @since 2.0.16
-					 */
-					do_action( 'reportedip_hive_relay_quota_refreshed', $snapshot );
-
-					foreach ( array( 'mail', 'sms' ) as $channel ) {
-						$used  = (int) ( $snapshot[ $channel ]['used'] ?? 0 );
-						$limit = $snapshot[ $channel ]['limit'] ?? null;
-						if ( null !== $limit && (int) $limit > 0 && $used < (int) $limit ) {
-							ReportedIP_Hive_Mode_Manager::clear_cap_state( $channel );
-						}
-					}
-				}
-			} elseif ( 'not_configured' !== (string) $relay['error'] ) {
-				$this->logger->warning(
-					'Relay quota refresh failed',
-					'system',
-					array( 'error' => (string) $relay['error'] )
-				);
-			}
-		} catch ( \Throwable $e ) {
-			$this->logger->error( 'Relay quota refresh failed: ' . $e->getMessage(), 'system' );
-		}
 	}
 
 	/**

@@ -313,9 +313,7 @@ class ReportedIP_Hive {
 		if ( ! class_exists( 'ReportedIP_Hive_API' ) ) {
 			return;
 		}
-		$api = ReportedIP_Hive_API::get_instance();
-		$api->refresh_api_quota();
-		$api->get_relay_quota( true );
+		ReportedIP_Hive_API::get_instance()->refresh_api_quota();
 	}
 
 	/**

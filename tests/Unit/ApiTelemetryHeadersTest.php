@@ -148,23 +148,44 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_relay_request_sends_site_header_and_keeps_body_site_url() {
-			$method = new \ReflectionMethod( \ReportedIP_Hive_API::class, 'relay_request' );
-			$method->invoke(
-				$this->api(),
-				'relay-mail',
-				array(
-					'recipient' => 'user@example.org',
-					'site_url'  => 'https://example.org',
-				)
+		/**
+		 * The transport an add-on uses sends a string body as JSON with the
+		 * same key, identity and User-Agent; it counts toward a bucket only
+		 * when one is named.
+		 */
+		public function test_request_sends_a_json_body_with_the_free_identity() {
+			$GLOBALS['rip_telemetry_http_next'] = array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '{}',
+				'headers'  => array(),
 			);
+
+			$this->api()->request( 'POST', 'relay-mail', array(), '{"site_url":"https://example.org"}' );
 
 			$request = $this->last_request();
 			$headers = $request['args']['headers'];
-
+			$this->assertSame( 'https://example.test/v2/relay-mail', $request['url'] );
+			$this->assertSame( 'test-key', $headers['X-Key'] );
+			$this->assertSame( 'application/json', $headers['Content-Type'] );
 			$this->assertSame( 'https://example.org', $headers['X-Rip-Site'] );
 			$this->assertSame( \ReportedIP_Hive_API::api_user_agent(), $headers['User-Agent'] );
-			$this->assertStringContainsString( '"site_url":"https:\/\/example.org"', (string) $request['args']['body'] );
+			$this->assertSame( '{"site_url":"https://example.org"}', $request['args']['body'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_api_stats', $GLOBALS['wp_options'], 'A call without a bucket is not counted.' );
+
+			$this->api()->request( 'GET', 'relay-quota', array(), null, null, 'meta' );
+			$this->assertSame( 1, $GLOBALS['wp_options']['reportedip_hive_api_stats']['total_calls'] ?? null );
+		}
+
+		public function test_identity_headers_are_filterable() {
+			add_filter(
+				'reportedip_hive_api_identity_headers',
+				static function ( $headers ) {
+					$headers['X-Rip-Extra'] = '1';
+					return $headers;
+				}
+			);
+			$this->assertSame( '1', \ReportedIP_Hive_API::identity_headers()['X-Rip-Extra'] ?? null );
+			$this->assertSame( 'https://example.org', \ReportedIP_Hive_API::identity_headers()['X-Rip-Site'] );
 		}
 
 		public function test_hibp_check_never_carries_the_site_identity() {

@@ -126,7 +126,16 @@ class ReportedIP_Hive_API {
 			}
 		}
 
-		return array_merge( $headers, $settings_headers );
+		$headers = array_merge( $headers, $settings_headers );
+		/**
+		 * Headers announced on every request to the reportedip.com API.
+		 * A result that is not an array leaves the free headers.
+		 *
+		 * @param array<string, string> $headers Header map.
+		 * @since 3.0.0
+		 */
+		$filtered = apply_filters( 'reportedip_hive_api_identity_headers', $headers );
+		return is_array( $filtered ) ? $filtered : $headers;
 	}
 
 	/**
@@ -790,53 +799,6 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Send a 2FA mail via the reportedip.com relay endpoint.
-	 *
-	 * @param array $args {
-	 *     Required: recipient. Optional: subject, body_text, body_html, headers, site_url.
-	 * }
-	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, retryable?: bool, soft_failure?: bool, remaining_quota?: array<string,mixed>|null}
-	 */
-	public function relay_mail( array $args ) {
-		$payload = array(
-			'recipient' => (string) ( $args['recipient'] ?? '' ),
-			'subject'   => (string) ( $args['subject'] ?? '' ),
-			'body_text' => (string) ( $args['body_text'] ?? '' ),
-			'body_html' => (string) ( $args['body_html'] ?? '' ),
-			'headers'   => isset( $args['headers'] ) ? (array) $args['headers'] : array(),
-			'site_url'  => (string) ( $args['site_url'] ?? home_url() ),
-		);
-		if ( ! empty( $args['reply_to'] ) && is_string( $args['reply_to'] ) ) {
-			$payload['reply_to'] = $args['reply_to'];
-		}
-		return $this->relay_request( 'relay-mail', $payload );
-	}
-
-	/**
-	 * Send a 2FA SMS via the reportedip.com relay endpoint.
-	 *
-	 * @param array $args {
-	 *     Required: recipient_phone (E.164), message. Optional: site_url.
-	 * }
-	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, retryable?: bool, soft_failure?: bool, remaining_quota?: array<string,mixed>|null}
-	 */
-	public function relay_sms( array $args ) {
-		$payload = array(
-			'recipient_phone' => (string) ( $args['recipient_phone'] ?? '' ),
-			'site_url'        => (string) ( $args['site_url'] ?? home_url() ),
-		);
-		// Prefer client-only code transport (template + vars) so the actual verification
-		// code never sits in a freshly-rendered string on the customer side.
-		if ( ! empty( $args['template_code'] ) ) {
-			$payload['template_code'] = (string) $args['template_code'];
-			$payload['template_vars'] = isset( $args['template_vars'] ) ? (array) $args['template_vars'] : array();
-		} else {
-			$payload['message'] = (string) ( $args['message'] ?? '' );
-		}
-		return $this->relay_request( 'relay-sms', $payload );
-	}
-
-	/**
 	 * Mirror the local notification-contact configuration to reportedip.com.
 	 *
 	 * Pushes the recipient list, From-name and From-email so the relay/account
@@ -931,274 +893,6 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Fetch the current monthly relay-usage and limits from the service.
-	 *
-	 * @param bool $force_refresh If true, bypass the 1-hour transient cache.
-	 * @return array{tier?: string, role?: string, mail?: array<string,mixed>, sms?: array<string,mixed>, mail_bundle_balance?: int, sms_bundle_balance?: int, fetched_at?: int, error?: string, status_code?: int, response_raw?: array<string,mixed>|null}
-	 */
-	public function get_relay_quota( $force_refresh = false ) {
-		$cache_key    = 'reportedip_hive_relay_quota';
-		$cooldown_key = 'reportedip_hive_relay_quota_cooldown';
-
-		/*
-		 * Local Shield sends nothing to reportedip.com, and a site without an
-		 * access key has nobody to ask. Both used to call the endpoint every
-		 * six hours anyway and logged a 401 each time.
-		 */
-		if ( ! $this->can_use_api() ) {
-			return array(
-				'error'       => 'not_configured',
-				'status_code' => 0,
-			);
-		}
-
-		if ( ! $force_refresh ) {
-			$cached = get_transient( $cache_key );
-			if ( is_array( $cached ) ) {
-				return $cached;
-			}
-		}
-
-		$cooldown = get_transient( $cooldown_key );
-		if ( is_array( $cooldown ) && isset( $cooldown['until'] ) && (int) $cooldown['until'] > time() ) {
-			return array(
-				'error'       => 'client_backoff',
-				'status_code' => (int) ( $cooldown['code'] ?? 0 ),
-				'retry_after' => max( 1, (int) $cooldown['until'] - time() ),
-			);
-		}
-
-		if ( $this->is_rate_limited( 'meta' ) ) {
-			return array(
-				'error'       => 'rate_limited',
-				'status_code' => 429,
-			);
-		}
-
-		$start_time    = microtime( true );
-		$response      = $this->make_request( 'GET', 'relay-quota', array(), null, $this->timeout );
-		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
-
-		if ( is_wp_error( $response ) ) {
-			$this->track_api_call( false, $response_time, 'wp_error', 'meta' );
-			$this->set_relay_quota_cooldown( 0, 0 );
-			return array( 'error' => $response->get_error_message() );
-		}
-
-		$code = (int) wp_remote_retrieve_response_code( $response );
-		$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-
-		$this->track_api_call( $code >= 200 && $code < 300, $response_time, ( $code >= 200 && $code < 300 ) ? null : 'http_' . $code, 'meta' );
-
-		if ( $code >= 200 && $code < 300 && is_array( $body ) ) {
-			delete_transient( $cooldown_key );
-			$body['fetched_at'] = time();
-			/*
-			 * TTL must be longer than the refresh-quota cron interval (6 h);
-			 * otherwise the dashboard renders an empty snapshot for 5 of every
-			 * 6 hours. 12 h gives the cron one extra window before staleness.
-			 */
-			set_transient( $cache_key, $body, 12 * HOUR_IN_SECONDS );
-			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
-			return $body;
-		}
-
-		$retry_after = $this->parse_retry_after( wp_remote_retrieve_header( $response, 'retry-after' ) );
-		if ( 429 === $code && $retry_after > 0 ) {
-			$this->set_rate_limited( time() + $retry_after, 'meta' );
-		}
-		$this->set_relay_quota_cooldown( $code, $retry_after );
-
-		return array(
-			'error'        => 'http_' . $code,
-			'status_code'  => $code,
-			'response_raw' => is_array( $body ) ? $body : null,
-		);
-	}
-
-	/**
-	 * Remember a failed `/relay-quota` response so the next lookup short-circuits
-	 * without another outbound HTTP call.
-	 *
-	 * Without this negative cache a tier lookup on a cold or error-returning
-	 * install re-polls the service on every request, the runaway that motivated
-	 * the change. Mirrors the per-endpoint backoff in {@see relay_request()}:
-	 * honour an explicit `Retry-After`, otherwise back off 15 minutes, clamped
-	 * to the [60 s, 1 day] window.
-	 *
-	 * @param int $code        HTTP status code that triggered the backoff (0 for a transport error).
-	 * @param int $retry_after Server-supplied delta-seconds, or 0 when absent.
-	 * @return void
-	 * @since 2.1.16
-	 */
-	private function set_relay_quota_cooldown( $code, $retry_after ) {
-		$seconds = $retry_after > 0 ? $retry_after : 15 * MINUTE_IN_SECONDS;
-		$seconds = max( 60, min( DAY_IN_SECONDS, $seconds ) );
-		set_transient(
-			'reportedip_hive_relay_quota_cooldown',
-			array(
-				'until' => time() + $seconds,
-				'code'  => (int) $code,
-			),
-			$seconds + MINUTE_IN_SECONDS
-		);
-	}
-
-	/**
-	 * Internal helper for the two relay endpoints, POSTs JSON, parses the response,
-	 * and translates HTTP 402/429 into structured results so callers can fall back gracefully.
-	 *
-	 * @param string $endpoint Slug under reportedip/v2/.
-	 * @param array  $payload  Body to send.
-	 * @return array{ok: bool, queue_id?: int, status_code?: int, error?: string, retry_after?: int, retryable?: bool, soft_failure?: bool, remaining_quota?: array<string,mixed>|null}
-	 */
-	private function relay_request( $endpoint, array $payload ) {
-		$cooldown_key = $this->relay_backoff_key( $endpoint, $payload );
-
-		if ( '' !== $cooldown_key ) {
-			$cached         = get_site_transient( $cooldown_key );
-			$cooldown_until = 0;
-			$cooldown_code  = 429;
-			if ( is_array( $cached ) ) {
-				$cooldown_until = isset( $cached['until'] ) ? (int) $cached['until'] : 0;
-				$cooldown_code  = isset( $cached['code'] ) ? (int) $cached['code'] : 429;
-			} else {
-				$cooldown_until = (int) $cached;
-			}
-			if ( $cooldown_until > time() ) {
-				return array(
-					'ok'           => false,
-					'status_code'  => $cooldown_code,
-					'error'        => 'client_backoff',
-					'retry_after'  => max( 1, $cooldown_until - time() ),
-					'retryable'    => true,
-					'soft_failure' => true,
-				);
-			}
-		}
-
-		$url = rtrim( $this->api_endpoint, '/' ) . '/' . ltrim( $endpoint, '/' );
-
-		$args = array(
-			'method'    => 'POST',
-			'headers'   => array_merge(
-				array(
-					'X-Key'        => $this->api_key,
-					'Content-Type' => 'application/json',
-					'Accept'       => 'application/json',
-					'User-Agent'   => self::api_user_agent(),
-				),
-				self::identity_headers()
-			),
-			'timeout'   => $this->timeout,
-			'body'      => wp_json_encode( $payload ),
-			'sslverify' => true,
-		);
-
-		$response = wp_remote_request( $url, $args );
-		if ( is_wp_error( $response ) ) {
-			return array(
-				'ok'        => false,
-				'error'     => 'network: ' . $response->get_error_message(),
-				'retryable' => true,
-			);
-		}
-
-		$code        = (int) wp_remote_retrieve_response_code( $response );
-		$json        = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-		$retry_after = $this->parse_retry_after( wp_remote_retrieve_header( $response, 'retry-after' ) );
-
-		if ( $code >= 200 && $code < 300 ) {
-			if ( '' !== $cooldown_key ) {
-				delete_site_transient( $cooldown_key );
-			}
-			$remaining_quota = is_array( $json ) && isset( $json['remaining_quota'] ) && is_array( $json['remaining_quota'] )
-				? $json['remaining_quota']
-				: null;
-			$this->patch_relay_quota_cache( $endpoint, $remaining_quota );
-			ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
-			return array(
-				'ok'              => true,
-				'status_code'     => $code,
-				'queue_id'        => is_array( $json ) ? (int) ( $json['queue_id'] ?? 0 ) : 0,
-				'remaining_quota' => $remaining_quota,
-			);
-		}
-
-		if ( 402 === $code || 429 === $code ) {
-			if ( $retry_after <= 0 && is_array( $json ) && isset( $json['data']['retry_after'] ) ) {
-				$retry_after = (int) $json['data']['retry_after'];
-			}
-
-			if ( '' !== $cooldown_key ) {
-				$cooldown_seconds = $retry_after > 0 ? $retry_after : 5 * MINUTE_IN_SECONDS;
-				$cooldown_seconds = max( 60, min( DAY_IN_SECONDS, $cooldown_seconds ) );
-				set_site_transient(
-					$cooldown_key,
-					array(
-						'until' => time() + $cooldown_seconds,
-						'code'  => $code,
-					),
-					$cooldown_seconds + MINUTE_IN_SECONDS
-				);
-			}
-
-			return array(
-				'ok'           => false,
-				'status_code'  => $code,
-				'error'        => is_array( $json ) ? (string) ( $json['code'] ?? 'cap_or_backoff' ) : 'cap_or_backoff',
-				'retry_after'  => $retry_after,
-				'retryable'    => true,
-				'soft_failure' => true,
-			);
-		}
-
-		return array(
-			'ok'          => false,
-			'status_code' => $code,
-			'error'       => is_array( $json ) ? (string) ( $json['code'] ?? 'http_' . $code ) : 'http_' . $code,
-			'retryable'   => $code >= 500,
-		);
-	}
-
-	/**
-	 * Update the cached /relay-quota payload in place after a successful relay send.
-	 *
-	 * Every send moves the counters, so the cache must not survive unchanged, but
-	 * deleting it outright left the dashboard without data until the next six-hour
-	 * quota cron, which on sites with steady relay traffic rendered the quota cards
-	 * permanently stale ("Awaiting fresh quota data"). The relay endpoints return
-	 * the affected channel's fresh counters in `remaining_quota` (same shape as one
-	 * channel of GET /relay-quota), so the cached channel entry is replaced and the
-	 * fetch timestamp renewed. Without a usable payload or an existing cache the
-	 * entry is deleted as before and the next cron run repopulates it.
-	 *
-	 * @param string     $endpoint        Relay slug ('relay-mail' or 'relay-sms').
-	 * @param array|null $remaining_quota `remaining_quota` member of the send response.
-	 * @return void
-	 * @since 2.1.27
-	 */
-	private function patch_relay_quota_cache( $endpoint, $remaining_quota ) {
-		$cache_key = 'reportedip_hive_relay_quota';
-		$cached    = get_transient( $cache_key );
-
-		if ( ! is_array( $remaining_quota ) || ! is_array( $cached ) ) {
-			delete_transient( $cache_key );
-			return;
-		}
-
-		$channel = ( 'relay-sms' === $endpoint ) ? 'sms' : 'mail';
-
-		$cached[ $channel ]   = $remaining_quota;
-		$cached['fetched_at'] = time();
-		if ( array_key_exists( 'bundle_balance', $remaining_quota ) ) {
-			$cached[ $channel . '_bundle_balance' ] = (int) $remaining_quota['bundle_balance'];
-		}
-
-		set_transient( $cache_key, $cached, 12 * HOUR_IN_SECONDS );
-	}
-
-	/**
 	 * Parse an HTTP Retry-After header into delta-seconds.
 	 *
 	 * RFC 7231 §7.1.3 allows either a non-negative integer (delta-seconds) or
@@ -1210,7 +904,7 @@ class ReportedIP_Hive_API {
 	 * @return int Delta-seconds (0 when the header is missing/unparseable).
 	 * @since 2.0.16
 	 */
-	private function parse_retry_after( $header ) {
+	public function parse_retry_after( $header ) {
 		if ( is_array( $header ) ) {
 			$header = reset( $header );
 		}
@@ -1227,68 +921,6 @@ class ReportedIP_Hive_API {
 		}
 		$delta = $timestamp - time();
 		return $delta > 0 ? $delta : 0;
-	}
-
-	/**
-	 * Whether the per-(endpoint, recipient) backoff transient is currently hot.
-	 *
-	 * Used by the admin "Send test mail" UI so that a fallback dispatch via
-	 * `wp_mail()` does not silently masquerade as a successful relay send.
-	 *
-	 * @param string $endpoint Relay slug (e.g. 'relay-mail' / 'relay-sms').
-	 * @param array  $payload  Same payload shape the production call would use
-	 *                         (`recipient` for mail, `recipient_phone` for SMS).
-	 * @return bool
-	 * @since 2.0.16
-	 */
-	public function is_relay_in_backoff( $endpoint, array $payload ) {
-		$key = $this->relay_backoff_key( $endpoint, $payload );
-		if ( '' === $key ) {
-			return false;
-		}
-		$cached = get_site_transient( $key );
-		$until  = is_array( $cached ) ? (int) ( $cached['until'] ?? 0 ) : (int) $cached;
-		return $until > time();
-	}
-
-	/**
-	 * Build a per-(endpoint, recipient) transient key used to remember a recent
-	 * 402/429 backoff response and skip the next outbound call until it expires.
-	 *
-	 * The server-side relay applies a progressive backoff per (site, recipient),
-	 * so the client cache key follows the same shape. Falls back to a global
-	 * per-endpoint key when no recipient information is in the payload.
-	 *
-	 * @param string $endpoint Relay slug (e.g. 'relay-mail' / 'relay-sms').
-	 * @param array  $payload  Outgoing payload, inspected for recipient identifiers.
-	 * @return string Transient key, or empty string to skip caching.
-	 * @since 2.0.16
-	 */
-	private function relay_backoff_key( $endpoint, array $payload ) {
-		$endpoint = trim( (string) $endpoint, '/ ' );
-		if ( '' === $endpoint ) {
-			return '';
-		}
-
-		$recipient = '';
-		if ( isset( $payload['recipient'] ) && is_string( $payload['recipient'] ) ) {
-			$raw = trim( $payload['recipient'] );
-			if ( preg_match( '/<([^>]+)>/', $raw, $m ) ) {
-				$raw = $m[1];
-			}
-			$recipient = strtolower( $raw );
-		} elseif ( isset( $payload['recipient_phone'] ) && is_string( $payload['recipient_phone'] ) ) {
-			$normalized = preg_replace( '/[^0-9+]/', '', $payload['recipient_phone'] );
-			$recipient  = (string) $normalized;
-			if ( '' !== $recipient && '0' === substr( $recipient, 0, 2 ) ) {
-				$recipient = '+' . ltrim( $recipient, '0' );
-			}
-		}
-
-		$slug = (string) preg_replace( '/[^a-z0-9_-]+/i', '_', $endpoint );
-		$hash = '' !== $recipient ? md5( $recipient ) : 'global';
-
-		return 'reportedip_hive_relay_bo_' . strtolower( $slug ) . '_' . $hash;
 	}
 
 	/**
@@ -1343,7 +975,46 @@ class ReportedIP_Hive_API {
 	}
 
 	/**
-	 * Make HTTP request to API
+	 * Perform a request against the community API on behalf of an add-on.
+	 *
+	 * Same transport as every free call: the key, the identity headers and
+	 * the User-Agent go along. A string body is sent as JSON. With a bucket
+	 * the call counts toward the hourly limit and the health statistics of
+	 * that bucket, as the free calls do; without one it is not counted.
+	 *
+	 * @param string     $method   HTTP method.
+	 * @param string     $endpoint Endpoint path relative to the API base.
+	 * @param array      $params   Query parameters.
+	 * @param mixed      $body     Form fields (array), a JSON string or null.
+	 * @param int|null   $timeout  Timeout in seconds, null for the default.
+	 * @param string     $bucket   `reputation`, `submission`, `meta` or '' for none.
+	 * @return array|WP_Error Raw response or error.
+	 * @since  3.0.0
+	 */
+	public function request( $method, $endpoint, $params = array(), $body = null, $timeout = null, $bucket = '' ) {
+		if ( '' === (string) $bucket ) {
+			return $this->make_request( $method, $endpoint, $params, $body, $timeout );
+		}
+
+		$start_time    = microtime( true );
+		$response      = $this->make_request( $method, $endpoint, $params, $body, $timeout );
+		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
+
+		if ( is_wp_error( $response ) ) {
+			$this->track_api_call( false, $response_time, 'wp_error', $bucket );
+			return $response;
+		}
+
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		$ok   = $code >= 200 && $code < 300;
+		$this->track_api_call( $ok, $response_time, $ok ? null : 'http_' . $code, $bucket );
+		return $response;
+	}
+
+	/**
+	 * Make HTTP request to API. An array body is sent as form fields, a
+	 * string body as JSON. Only form fields reach the debug log: the JSON
+	 * bodies of add-on calls carry 2FA codes.
 	 */
 	private function make_request( $method, $endpoint, $params = array(), $body = null, $timeout = null ) {
 		$url = rtrim( $this->api_endpoint, '/' ) . '/' . ltrim( $endpoint, '/' );
@@ -1379,10 +1050,10 @@ class ReportedIP_Hive_API {
 		if ( $body !== null ) {
 			if ( is_array( $body ) ) {
 				$headers['Content-Type'] = 'application/x-www-form-urlencoded';
-				$args['body']            = $body;
 			} else {
-				$args['body'] = $body;
+				$headers['Content-Type'] = 'application/json';
 			}
+			$args['body']    = $body;
 			$args['headers'] = $headers;
 		}
 
@@ -1390,8 +1061,8 @@ class ReportedIP_Hive_API {
 			$safe_url = preg_replace( '/([?&])(key|api_key|apikey)=[^&]+/', '$1$2=***REDACTED***', $url );
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Plugin diagnostic logging gated behind REPORTEDIP_DEBUG; debug.log only.
 			error_log( "ReportedIP Hive API Request: $method $safe_url" );
-			if ( $body ) {
-				$safe_body = is_string( $body ) ? $body : wp_json_encode( $body );
+			if ( is_array( $body ) && $body ) {
+				$safe_body = wp_json_encode( $body );
 				$safe_body = preg_replace( '/"(key|api_key|apikey)"\s*:\s*"[^"]*"/', '"$1":"***REDACTED***"', $safe_body );
 				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Plugin diagnostic logging gated behind REPORTEDIP_DEBUG; debug.log only.
 				error_log( 'ReportedIP Hive API Body: ' . $safe_body );
@@ -1589,7 +1260,6 @@ class ReportedIP_Hive_API {
 
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_known_tier', $new_tier );
 		delete_transient( 'reportedip_hive_relay_quota' );
-		ReportedIP_Hive_Mode_Manager::get_instance()->invalidate_relay_quota_snapshot();
 		do_action( 'reportedip_hive_tier_changed', $known_tier, $new_tier );
 	}
 

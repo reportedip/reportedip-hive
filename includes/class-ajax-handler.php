@@ -316,16 +316,16 @@ class ReportedIP_Hive_Ajax_Handler {
 		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html( $timestamp ) . '</td></tr>';
 		$main_html .= '</table>';
 
-		$relay_in_backoff = false;
-		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) && class_exists( 'ReportedIP_Hive_API' ) ) {
-			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'mail' ) ) {
-				$relay_in_backoff = ReportedIP_Hive_API::get_instance()->is_relay_in_backoff(
-					'relay-mail',
-					array( 'recipient' => $to )
-				);
-			}
-		}
+		/**
+		 * Whether the test mail goes out through the local fallback because
+		 * the delivery service backs off for this recipient right now. True
+		 * adds a note to the answer.
+		 *
+		 * @param bool   $in_backoff Default false.
+		 * @param string $to         Recipient.
+		 * @since 3.0.0
+		 */
+		$relay_in_backoff = (bool) apply_filters( 'reportedip_hive_test_mail_backoff', false, $to );
 
 		$result = ReportedIP_Hive_Mailer::get_instance()->send(
 			array(
