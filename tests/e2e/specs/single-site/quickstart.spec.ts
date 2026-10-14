@@ -17,7 +17,7 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
  * Serial: mutates global plugin options on the shared stack.
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 const PRO_KEY = 'e2eprofessionalkey0123456789abcdef012345';
 
 function wp(args: string): string {

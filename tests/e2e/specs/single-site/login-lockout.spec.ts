@@ -18,7 +18,7 @@ import { test, expect } from '../../fixtures/admin';
  * @since 2.1.65
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 const ATTACKER = '203.0.113.88';
 const THRESHOLD = 3;
 

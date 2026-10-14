@@ -19,7 +19,7 @@ import { forceTierPhp, FORCE_FREE_PHP } from '../../fixtures/tier';
 const AUDIT_URL = '/wp-admin/admin.php?page=reportedip-hive-security&tab=activity&sub=audit';
 const PAGE_TITLE = 'Audit E2E Page';
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 /**
  * Run WP-CLI inside the stack's WordPress container. Arguments are passed as

@@ -11,7 +11,7 @@
 
 import { execFileSync } from 'node:child_process';
 
-export const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+export const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 /**
  * Run a WP-CLI command inside the container. Uses an argument vector so PHP

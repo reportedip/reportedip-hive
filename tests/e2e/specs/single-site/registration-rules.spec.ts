@@ -17,7 +17,7 @@ import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
  * Serial: the spec mutates shared plugin state on the long-lived stack.
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 const BLOCKED_LOGIN = 'e2eblockedname';
 const BASELINE_LOGIN = 'administrator';
 const GHOST_LOGIN_ON = 'e2eghostone';

@@ -6,7 +6,7 @@ import { test, expect, loginAsAdmin } from '../../fixtures/admin';
  * group list and why each entry is or is not blocked on this site. Seeded
  * locally, no request to reportedip.com.
  */
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 function wpEval(php: string): string {
 	return execFileSync('docker', ['exec', WP_CONTAINER, 'wp', '--allow-root', 'eval', php], { encoding: 'utf8' }).toString().trim();

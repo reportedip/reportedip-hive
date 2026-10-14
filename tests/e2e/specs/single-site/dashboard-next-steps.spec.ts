@@ -6,7 +6,7 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
  * Dashboard after the quickstart: banner, next steps with an inline action,
  * area rows, expert toggle in the page header.
  */
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 function wp(args: string): string {
 	return execSync(`docker exec ${WP_CONTAINER} wp --allow-root ${args}`, { encoding: 'utf8' }).toString().trim();

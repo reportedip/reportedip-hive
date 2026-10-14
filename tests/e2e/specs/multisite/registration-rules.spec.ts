@@ -15,7 +15,7 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
  * Serial: the spec mutates network options on the long-lived stack.
  */
 
-const MS_CONTAINER = process.env.RIP_E2E_WP_CONTAINER_MS ?? 'rip-hive-ms-wp';
+const MS_CONTAINER = process.env.RIP_E2E_WP_CONTAINER_MS ?? 'rip-hive-suite-ms-wp';
 const BLOCKED_LOGIN = 'e2eblockedname';
 const USERNAME_DENIED = 'This username is not allowed';
 

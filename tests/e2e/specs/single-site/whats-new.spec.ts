@@ -13,7 +13,7 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
  * mutates shared plugin state on the long-lived stack.
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 /**
  * Run a WP-CLI command inside the single-site WordPress container. Uses

@@ -13,7 +13,7 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
  * Serial: the specs share one seeded block row on the long-lived stack.
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 const TEST_IP = '203.0.113.99';
 
 /**

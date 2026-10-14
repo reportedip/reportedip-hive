@@ -22,7 +22,7 @@ import { forceTierPhp, FORCE_FREE_PHP } from '../../fixtures/tier';
 
 const MS_COMPOSE = 'docker-compose.multisite.yml';
 const MS_SERVICE = 'wordpress-ms';
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER_MS ?? 'rip-hive-ms-wp';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER_MS ?? 'rip-hive-suite-ms-wp';
 const AUDIT_URL = '/wp-admin/network/admin.php?page=reportedip-hive-security&tab=activity&sub=audit';
 const MS_HOST = (process.env.RIP_E2E_BASE_URL_MS ?? 'http://localhost:8090').replace(/^https?:\/\//, '');
 const SITE_A = `${MS_HOST}/site-a/`;

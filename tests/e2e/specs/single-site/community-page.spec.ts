@@ -5,7 +5,7 @@ import { test, expect, loginAsAdmin } from '../../fixtures/admin';
  * Community page: three tabs, settings first, the badges tab with a working
  * footer-badge preview and the template-driven banner builder.
  */
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 const PAGE = '/wp-admin/admin.php?page=reportedip-hive-community';
 
 function wp(args: string): string {

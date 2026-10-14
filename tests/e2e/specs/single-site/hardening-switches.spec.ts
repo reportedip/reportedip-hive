@@ -11,7 +11,7 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
  * Serial: the spec mutates shared plugin state on the long-lived stack.
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 function wp(...args: string[]): string {
 	return execFileSync('docker', ['exec', WP_CONTAINER, 'wp', '--allow-root', ...args], {

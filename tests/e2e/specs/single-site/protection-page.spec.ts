@@ -7,7 +7,7 @@ import { FORGET_CACHED_TIER_CLI } from '../../fixtures/tier';
  * Protection page: one card per registry section, simple/expert depth,
  * search, legacy aliases, tools page reachability.
  */
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 function wp(args: string): string {
 	return execSync(`docker exec ${WP_CONTAINER} wp --allow-root ${args}`, { encoding: 'utf8' }).toString().trim();

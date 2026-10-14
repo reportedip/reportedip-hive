@@ -14,7 +14,7 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
  * Serial: the specs mutate shared plugin state on the long-lived stack.
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 const ANCHOR = 'reportedip_hive_hp';
 
 /** The proof field name this installation randomised at activation. */

@@ -14,7 +14,7 @@ import { test, expect, loginAsAdmin } from '../../fixtures/admin';
  * stack, and the Firewall card save is an AJAX write that lands immediately.
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 function wp(args: string): string {
 	return execSync(`docker exec ${WP_CONTAINER} wp --allow-root ${args}`, { encoding: 'utf8' }).toString().trim();

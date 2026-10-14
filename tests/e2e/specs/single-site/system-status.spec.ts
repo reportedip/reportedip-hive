@@ -14,7 +14,7 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
  * readiness state option, both of which are global.
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 const TRUSTED_HEADER_LABEL = 'Client-IP header trusted from any source';
 const DISMISS_LABEL = 'Dismiss for 7 days';
 

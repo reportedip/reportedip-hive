@@ -43,7 +43,7 @@ async function mailCount(): Promise<number> {
  * Serial: the specs mutate shared plugin state on the long-lived stack.
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-wordpress-1';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 /** The anchor field name on every surface this plugin does not own. */
 const ANCHOR = '_reportedip_hive_hp';

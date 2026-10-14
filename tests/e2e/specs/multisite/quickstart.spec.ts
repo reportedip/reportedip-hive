@@ -12,7 +12,7 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
  * network admin, so core answers with its 403 page).
  */
 
-const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER_MS ?? 'rip-hive-ms-wp';
+const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER_MS ?? 'rip-hive-suite-ms-wp';
 
 function wp(args: string): string {
 	return execSync(`docker exec ${WP_CONTAINER} wp --allow-root ${args}`, { encoding: 'utf8' }).toString().trim();
