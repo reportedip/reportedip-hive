@@ -135,15 +135,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( array(), \ReportedIP_Hive_Defaults::seed_effect_tokens( array( 'reportedip_hive_headers_enabled' ) ) );
 			$this->assertSame( array(), \ReportedIP_Hive_Defaults::seed_effect_tokens( array() ) );
 
-			$adapters = \ReportedIP_Hive_Defaults::seed_effect_tokens(
+			$adapters = \ReportedIP_Hive_Defaults::seed_effect_tokens( array( 'reportedip_hive_form_proof_cf7' ) );
+
+			$this->assertSame( array( 'stamp_form_adapters_since' ), $adapters );
+
+			$hide_login = \ReportedIP_Hive_Defaults::seed_effect_tokens(
 				array(
-					'reportedip_hive_form_proof_cf7',
-					'reportedip_hive_form_proof_formidable',
-					'reportedip_hive_form_proof_elementor',
+					'reportedip_hive_hide_login_enabled',
+					'reportedip_hive_hide_login_slug',
 				)
 			);
 
-			$this->assertSame( array( 'stamp_form_adapters_since' ), $adapters );
+			$this->assertSame( array( 'flush_rewrite' ), $hide_login );
 		}
 
 		/**

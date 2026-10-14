@@ -161,13 +161,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_comment_honeypot_enabled'      => 'bool',
 				'reportedip_hive_form_proof_enabled'            => 'bool',
 				'reportedip_hive_form_proof_login_forms'        => 'bool',
-				'reportedip_hive_form_proof_um'                 => 'bool',
 				'reportedip_hive_form_proof_cf7'                => 'bool',
-				'reportedip_hive_form_proof_formidable'         => 'bool',
-				'reportedip_hive_form_proof_elementor'          => 'bool',
-				'reportedip_hive_form_proof_gravity'            => 'bool',
-				'reportedip_hive_form_proof_wpforms'            => 'bool',
-				'reportedip_hive_form_proof_forminator'         => 'bool',
 				'reportedip_hive_reputation_on_forms'           => 'bool',
 				'reportedip_hive_comment_spam_action'           => 'enum',
 				'reportedip_hive_prohibited_usernames'          => 'textarea',
@@ -264,14 +258,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 					'reportedip_hive_comment_spam_action',
 					'reportedip_hive_disposable_email_forms',
 					'reportedip_hive_form_proof_cf7',
-					'reportedip_hive_form_proof_elementor',
 					'reportedip_hive_form_proof_enabled',
-					'reportedip_hive_form_proof_formidable',
-					'reportedip_hive_form_proof_forminator',
-					'reportedip_hive_form_proof_gravity',
 					'reportedip_hive_form_proof_login_forms',
-					'reportedip_hive_form_proof_um',
-					'reportedip_hive_form_proof_wpforms',
 					'reportedip_hive_reputation_on_forms',
 				),
 				$by_section['forms']
@@ -455,13 +443,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_data_retention_days',
 				'reportedip_hive_disposable_email_action',
 				'reportedip_hive_form_proof_cf7',
-				'reportedip_hive_form_proof_elementor',
 				'reportedip_hive_form_proof_enabled',
-				'reportedip_hive_form_proof_formidable',
-				'reportedip_hive_form_proof_forminator',
-				'reportedip_hive_form_proof_gravity',
-				'reportedip_hive_form_proof_um',
-				'reportedip_hive_form_proof_wpforms',
 				'reportedip_hive_hide_login_enabled',
 				'reportedip_hive_hide_login_slug',
 				'reportedip_hive_minimal_logging',
@@ -507,7 +489,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				if ( empty( $entry['simple_form'] ) ) {
 					continue;
 				}
-				$this->assertArrayHasKey( (string) $entry['simple_form'], \ReportedIP_Hive_Form_Adapters::ADAPTERS, "{$key} names an unknown form adapter." );
+				$this->assertArrayHasKey( (string) $entry['simple_form'], \ReportedIP_Hive_Form_Adapters::adapters(), "{$key} names an unknown form adapter." );
 			}
 		}
 

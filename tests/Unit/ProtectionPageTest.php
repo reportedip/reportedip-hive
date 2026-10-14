@@ -842,7 +842,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$forms = ReportedIP_Hive_Protection_Page::section_markup( 'forms', $current, $statuses, false, array( 'cf7' ), array(), $choices );
 			$this->assertLessThan( strpos( $forms, '<details' ), strpos( $forms, 'name="reportedip_hive_form_proof_cf7"' ), 'a detected form plugin makes its switch a main row' );
-			$this->assertStringContainsString( 'Gravity Forms is not active on this site.', $forms, 'a missing form plugin is named in the details' );
+			$missing = ReportedIP_Hive_Protection_Page::section_markup( 'forms', $current, $statuses, false, array(), array(), $choices );
+			$this->assertStringContainsString( 'Contact Form 7 is not active on this site.', $missing, 'a missing form plugin is named in the details' );
 		}
 
 		public function test_section_markup_renders_every_key_of_the_section(): void {

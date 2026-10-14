@@ -308,7 +308,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		public function test_the_surface_tables_do_not_overlap(): void {
 			$own      = \ReportedIP_Hive_Form_Proof::SURFACES;
-			$adapters = array_keys( \ReportedIP_Hive_Form_Adapters::ADAPTERS );
+			$adapters = array_keys( \ReportedIP_Hive_Form_Adapters::adapters() );
 
 			$this->assertSame(
 				array(),
@@ -434,7 +434,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public static function provide_adapters(): array {
 			$cases = array();
 
-			foreach ( \ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+			foreach ( \ReportedIP_Hive_Form_Adapters::adapters() as $slug => $adapter ) {
 				$cases[ $slug ] = array( $slug, $adapter['option'], $adapter['feature'] );
 			}
 

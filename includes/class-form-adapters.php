@@ -2,15 +2,15 @@
 /**
  * Execution-proof adapters for third-party form plugins.
  *
- * Contact Form 7, Formidable Forms, Elementor Forms and Ultimate Member each
- * render their own markup and run their own validation, so the shared anchor
- * from {@see ReportedIP_Hive_Form_Proof} has to be planted and read back on
- * their hooks. Everything plugin-specific lives here; the verdict, the grace
- * and the field names stay where they were.
- *
- * Ultimate Member is the one adapter that guards more than a message: its
- * registration form opens an account, so it also runs the pipeline that
- * {@see ReportedIP_Hive_Registration_Guard} owns.
+ * A third-party form plugin renders its own markup and runs its own
+ * validation, so the shared anchor from {@see ReportedIP_Hive_Form_Proof} has
+ * to be planted and read back on its hooks. This class owns the adapter
+ * table, the rule that arms an adapter, the surface filters, the script and
+ * the pipeline that decides a submission, and it ships the Contact Form 7
+ * adapter. An add-on registers further adapters through the
+ * `reportedip_hive_form_adapters` filter and hangs its own render and
+ * validation hooks onto {@see refuse()}; the verdict, the grace and the field
+ * names stay where they were.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -32,60 +32,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class ReportedIP_Hive_Form_Adapters {
 
 	/**
-	 * Every adapter, keyed by surface identifier. One table decides which
-	 * option arms it, which plan covers it and which class proves the plugin
-	 * is there, so another form plugin is one entry plus its own hooks.
+	 * The bundled adapters, keyed by surface identifier. One table decides
+	 * which option arms it, which plan covers it and which class proves the
+	 * plugin is there, so another form plugin is one entry plus its own hooks.
+	 * Read through {@see adapters()}, which adds what an add-on registers.
 	 *
 	 * @var array<string, array<string, string>>
 	 */
 	const ADAPTERS = array(
-		'cf7'             => array(
+		'cf7' => array(
 			'option'  => 'reportedip_hive_form_proof_cf7',
 			'feature' => 'form_adapters',
 			'detect'  => 'WPCF7_Submission',
 		),
-		'formidable'      => array(
-			'option'  => 'reportedip_hive_form_proof_formidable',
-			'feature' => 'form_adapters_advanced',
-			'detect'  => 'FrmAppHelper',
-		),
-		'elementor'       => array(
-			'option'  => 'reportedip_hive_form_proof_elementor',
-			'feature' => 'form_adapters_advanced',
-			'detect'  => 'ElementorPro\\Modules\\Forms\\Module',
-		),
-		'ultimate_member' => array(
-			'option'  => 'reportedip_hive_form_proof_um',
-			'feature' => 'form_adapters_advanced',
-			'detect'  => 'UM_Functions',
-		),
-		'gravity_forms'   => array(
-			'option'  => 'reportedip_hive_form_proof_gravity',
-			'feature' => 'form_adapters_advanced',
-			'detect'  => 'GFCommon',
-		),
-		'wpforms'         => array(
-			'option'  => 'reportedip_hive_form_proof_wpforms',
-			'feature' => 'form_adapters_advanced',
-			'detect'  => 'WPForms\\WPForms',
-		),
-		'forminator'      => array(
-			'option'  => 'reportedip_hive_form_proof_forminator',
-			'feature' => 'form_adapters_advanced',
-			'detect'  => 'Forminator_API',
-		),
 	);
-
-	/**
-	 * Ultimate Member form modes this adapter takes part in.
-	 *
-	 * The profile and account forms run on the same render hook and stay out
-	 * on purpose: their sender is signed in, so there is nothing to prove
-	 * about them.
-	 *
-	 * @var string[]
-	 */
-	const UM_MODES = array( 'login', 'register', 'password' );
 
 	/**
 	 * Display names of the supported form plugins, keyed by adapter slug.
@@ -101,15 +61,30 @@ final class ReportedIP_Hive_Form_Adapters {
 	 * @since  2.1.61
 	 */
 	public static function names() {
-		return array(
-			'cf7'             => 'Contact Form 7',
-			'formidable'      => 'Formidable Forms',
-			'elementor'       => 'Elementor Forms',
-			'ultimate_member' => 'Ultimate Member',
-			'gravity_forms'   => 'Gravity Forms',
-			'wpforms'         => 'WPForms',
-			'forminator'      => 'Forminator',
-		);
+		/**
+		 * Display names of the registered form plugins, keyed by adapter slug.
+		 *
+		 * @param array<string, string> $names Slug to product name.
+		 * @since 3.0.0
+		 */
+		return (array) apply_filters( 'reportedip_hive_form_adapter_names', array( 'cf7' => 'Contact Form 7' ) );
+	}
+
+	/**
+	 * The adapters this site knows: the bundled Contact Form 7 adapter plus
+	 * whatever an add-on registers.
+	 *
+	 * @return array<string, array<string, string>>
+	 * @since  3.0.0
+	 */
+	public static function adapters() {
+		/**
+		 * Register further form adapters (option, feature, detect class).
+		 *
+		 * @param array<string, array<string, string>> $adapters Slug to definition.
+		 * @since 3.0.0
+		 */
+		return (array) apply_filters( 'reportedip_hive_form_adapters', self::ADAPTERS );
 	}
 
 	/**
@@ -157,10 +132,10 @@ final class ReportedIP_Hive_Form_Adapters {
 	 * Register every hook unconditionally and decide inside the callback.
 	 *
 	 * A plan, an option or a plugin can all change after this class is built,
-	 * and Elementor renders widgets long after `init`, so asking "is this
-	 * adapter on" at registration time would answer a question nobody asked
-	 * yet. The price is one string comparison per rendered Elementor widget,
-	 * and that comparison runs before anything else.
+	 * and an adapter an add-on registers renders long after `init`, so asking
+	 * "is this adapter on" at registration time would answer a question
+	 * nobody asked yet. {@see active()} is memoised per request and runs
+	 * before anything else in every callback.
 	 *
 	 * @since 2.1.58
 	 */
@@ -172,26 +147,6 @@ final class ReportedIP_Hive_Form_Adapters {
 		add_filter( 'wpcf7_form_elements', array( $this, 'cf7_anchor' ) );
 		add_filter( 'wpcf7_spam', array( $this, 'cf7_spam' ), 10, 2 );
 		add_action( 'wpcf7_before_send_mail', array( $this, 'cf7_before_send_mail' ), 10, 3 );
-
-		add_action( 'frm_entry_form', array( $this, 'formidable_anchor' ) );
-		add_filter( 'frm_validate_entry', array( $this, 'formidable_validate' ), 10, 2 );
-
-		add_filter( 'elementor/widget/render_content', array( $this, 'elementor_anchor' ), 10, 2 );
-		add_action( 'elementor_pro/forms/validation', array( $this, 'elementor_validate' ), 10, 2 );
-
-		add_action( 'um_after_form_fields', array( $this, 'um_anchor' ) );
-		add_action( 'um_submit_form_errors_hook', array( $this, 'um_validate' ), 20, 2 );
-		add_action( 'um_reset_password_errors_hook', array( $this, 'um_reset_validate' ), 20 );
-
-		add_filter( 'gform_form_tag', array( $this, 'gravity_anchor' ), 10, 2 );
-		add_filter( 'gform_validation', array( $this, 'gravity_validate' ), 10, 2 );
-		add_filter( 'gform_validation', array( $this, 'gravity_release' ), 999 );
-
-		add_action( 'wpforms_display_submit_before', array( $this, 'wpforms_anchor' ) );
-		add_action( 'wpforms_process', array( $this, 'wpforms_validate' ), 10, 3 );
-
-		add_filter( 'forminator_render_form_submit_markup', array( $this, 'forminator_anchor' ) );
-		add_filter( 'forminator_custom_form_submit_errors', array( $this, 'forminator_validate' ), 10, 3 );
 	}
 
 	/**
@@ -208,11 +163,13 @@ final class ReportedIP_Hive_Form_Adapters {
 	public function detected( $slug ) {
 		$slug = (string) $slug;
 
-		if ( ! isset( self::ADAPTERS[ $slug ] ) ) {
+		$adapters = self::adapters();
+
+		if ( ! isset( $adapters[ $slug ]['detect'] ) ) {
 			return false;
 		}
 
-		return class_exists( self::ADAPTERS[ $slug ]['detect'] );
+		return class_exists( $adapters[ $slug ]['detect'] );
 	}
 
 	/**
@@ -246,7 +203,9 @@ final class ReportedIP_Hive_Form_Adapters {
 			return false;
 		}
 
-		if ( ! ReportedIP_Hive_Option_Routing::get( self::ADAPTERS[ $slug ]['option'], false ) ) {
+		$adapter = self::adapters()[ $slug ];
+
+		if ( ! isset( $adapter['option'], $adapter['feature'] ) || ! ReportedIP_Hive_Option_Routing::get( $adapter['option'], false ) ) {
 			return false;
 		}
 
@@ -258,7 +217,7 @@ final class ReportedIP_Hive_Form_Adapters {
 			return false;
 		}
 
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( self::ADAPTERS[ $slug ]['feature'] );
+		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( $adapter['feature'] );
 
 		return ! empty( $status['available'] );
 	}
@@ -278,7 +237,7 @@ final class ReportedIP_Hive_Form_Adapters {
 	public function add_surfaces( $surfaces ) {
 		$surfaces = array_values( (array) $surfaces );
 
-		foreach ( array_keys( self::ADAPTERS ) as $slug ) {
+		foreach ( array_keys( self::adapters() ) as $slug ) {
 			if ( $this->active( $slug ) && ! in_array( $slug, $surfaces, true ) ) {
 				$surfaces[] = $slug;
 			}
@@ -305,7 +264,7 @@ final class ReportedIP_Hive_Form_Adapters {
 			return;
 		}
 
-		foreach ( array_keys( self::ADAPTERS ) as $slug ) {
+		foreach ( array_keys( self::adapters() ) as $slug ) {
 			if ( ! $this->active( $slug ) ) {
 				continue;
 			}
@@ -405,661 +364,19 @@ final class ReportedIP_Hive_Form_Adapters {
 	}
 
 	/**
-	 * Plant the anchor inside a Formidable Forms entry form.
-	 *
-	 * Deliberately not `frm_before_submit_btn`: that hook is skipped entirely
-	 * when a form uses the newer submit field instead of the classic button,
-	 * which would leave those forms without an anchor and read every genuine
-	 * visitor as a direct post.
-	 *
-	 * @return void
-	 * @since  2.1.58
-	 */
-	public function formidable_anchor() {
-		ReportedIP_Hive_Form_Proof::field( 'formidable' );
-	}
-
-	/**
-	 * Judge a Formidable Forms entry. The return value must stay an array;
-	 * Formidable treats a non-array as "no errors at all".
-	 *
-	 * @param mixed $errors Existing validation errors.
-	 * @param mixed $values Submitted entry values.
-	 * @return array<string, string>
-	 * @since  2.1.58
-	 */
-	public function formidable_validate( $errors, $values ) {
-		unset( $values );
-
-		$errors  = is_array( $errors ) ? $errors : array();
-		$message = $this->refuse( 'formidable' );
-
-		if ( '' !== $message ) {
-			$errors['rip_form_proof'] = $message;
-		}
-
-		return $errors;
-	}
-
-	/**
-	 * Plant the anchor inside a rendered Elementor form widget.
-	 *
-	 * The anchor goes before the last closing form tag rather than into the
-	 * field wrapper: a multi-step form moves the nodes inside
-	 * `.elementor-form-fields-wrapper` around between steps, and a field that
-	 * travels with them can end up on a step that is never submitted.
-	 *
-	 * @param mixed $content Rendered widget markup.
-	 * @param mixed $widget  Widget instance.
-	 * @return string
-	 * @since  2.1.58
-	 */
-	public function elementor_anchor( $content, $widget ) {
-		$content = (string) $content;
-
-		if ( ! is_object( $widget ) || ! method_exists( $widget, 'get_name' ) || 'form' !== $widget->get_name() ) {
-			return $content;
-		}
-
-		if ( ! $this->active( 'elementor' ) ) {
-			return $content;
-		}
-
-		$position = strrpos( $content, '</form>' );
-
-		if ( false === $position ) {
-			return $content;
-		}
-
-		$anchor = ReportedIP_Hive_Form_Proof::get_instance()->anchor_html( 'elementor' );
-
-		if ( '' === $anchor ) {
-			return $content;
-		}
-
-		return substr( $content, 0, $position ) . $anchor . substr( $content, $position );
-	}
-
-	/**
-	 * Judge an Elementor Pro form submission.
-	 *
-	 * The record's values are deliberately not consulted: `Form_Record::set_fields()`
-	 * only knows the fields defined in the editor, so our anchor is invisible
-	 * to it. {@see ReportedIP_Hive_Form_Proof::check()} reads the request.
-	 *
-	 * A refusal has to land in the handler's field errors, not only in its
-	 * message list. `Form_Record::validate()` returns whether the field
-	 * errors are empty, and the handler runs every submit action, the mail
-	 * included, as long as they are: a message alone marks the response as
-	 * failed after the mail has already left. The message is kept as well,
-	 * because it is the text the sender reads.
-	 *
-	 * @param mixed $record       Submitted form record.
-	 * @param mixed $ajax_handler Elementor ajax handler.
-	 * @return void
-	 * @since  2.1.58
-	 */
-	public function elementor_validate( $record, $ajax_handler ) {
-		$message = $this->refuse( 'elementor' );
-
-		if ( '' === $message || ! is_object( $ajax_handler ) ) {
-			return;
-		}
-
-		if ( method_exists( $ajax_handler, 'add_error' ) ) {
-			$ajax_handler->add_error( self::elementor_first_field( $record ), $message );
-		}
-
-		if ( method_exists( $ajax_handler, 'add_error_message' ) ) {
-			$ajax_handler->add_error_message( $message );
-		}
-	}
-
-	/**
-	 * The id of the first field on an Elementor form, where a form-wide
-	 * refusal is shown; a fixed key when the record carries none.
-	 *
-	 * @param mixed $record Submitted form record.
-	 * @return string
-	 * @since  2.1.65
-	 */
-	public static function elementor_first_field( $record ) {
-		if ( is_object( $record ) && method_exists( $record, 'get' ) ) {
-			$fields = $record->get( 'fields' );
-
-			if ( is_array( $fields ) && ! empty( $fields ) ) {
-				return (string) array_key_first( $fields );
-			}
-		}
-
-		return 'reportedip_hive';
-	}
-
-	/**
-	 * Plant the anchor in an Ultimate Member form.
-	 *
-	 * `um_after_form_fields` is the one hook that sits inside the form element
-	 * of the login, registration and password-reset templates, so all three are
-	 * covered without knowing anything about the fields the operator put on
-	 * them.
-	 *
-	 * @param mixed $args Shortcode arguments of the rendered form.
-	 * @return void
-	 * @since  2.1.61
-	 */
-	public function um_anchor( $args ) {
-		if ( ! $this->active( 'ultimate_member' ) ) {
-			return;
-		}
-
-		if ( ! in_array( self::um_mode( $args ), self::UM_MODES, true ) ) {
-			return;
-		}
-
-		ReportedIP_Hive_Form_Proof::field( 'ultimate_member' );
-	}
-
-	/**
-	 * Judge an Ultimate Member login or registration.
-	 *
-	 * Priority 20 puts this behind the plugin's own validation, the same place
-	 * its reCAPTCHA extension hooks into. An error on any field is enough to
-	 * stop the submission: both handlers return early once the form carries
-	 * one.
-	 *
-	 * @param mixed $submitted_data Sanitised submission.
-	 * @param mixed $form_data      Form row of the submitted form.
-	 * @return void
-	 * @since  2.1.61
-	 */
-	public function um_validate( $submitted_data, $form_data = array() ) {
-		if ( ! $this->active( 'ultimate_member' ) ) {
-			return;
-		}
-
-		$mode = self::um_mode( $form_data );
-
-		if ( 'login' === $mode ) {
-			$this->um_add_error( $submitted_data, $this->refuse( 'ultimate_member' ) );
-			return;
-		}
-
-		if ( 'register' === $mode ) {
-			$this->um_register( $submitted_data );
-		}
-	}
-
-	/**
-	 * Judge an Ultimate Member password-reset request.
-	 *
-	 * A missing anchor never refuses here. The page carrying the reset form is
-	 * the one an operator reaches for when they are already locked out, and a
-	 * copy of it served from a cache filled before this adapter was switched on
-	 * would otherwise close the last door behind them.
-	 *
-	 * @param mixed $args Sanitised submission.
-	 * @return void
-	 * @since  2.1.61
-	 */
-	public function um_reset_validate( $args ) {
-		unset( $args );
-
-		if ( ! $this->active( 'ultimate_member' ) || ! function_exists( 'UM' ) ) {
-			return;
-		}
-
-		$message = $this->judge( 'ultimate_member', false );
-
-		if ( '' === $message ) {
-			return;
-		}
-
-		UM()->form()->add_error( 'username_b', $message );
-	}
-
-	/**
-	 * Judge an Ultimate Member registration.
-	 *
-	 * Ultimate Member never fires `registration_errors`; it calls
-	 * `wp_insert_user()` itself, so without this the registration pipeline
-	 * would only catch the sign-up in the `wp_pre_insert_user_data` safety net,
-	 * after every one of the plugin's own checks and with nothing but the core
-	 * `empty_data` wording to show the visitor. Running it here refuses the
-	 * account before it exists and says why.
-	 *
-	 * The execution proof goes first because it costs nothing, and the
-	 * pipeline owns the community lookup for this surface, so the address is
-	 * looked up once.
-	 *
-	 * @param mixed $submitted_data Sanitised submission.
-	 * @return void
-	 * @since  2.1.61
-	 */
-	private function um_register( $submitted_data ) {
-		$proof = $this->proof_refusal( 'ultimate_member' );
-
-		if ( '' !== $proof ) {
-			$this->um_add_error( $submitted_data, $proof );
-			return;
-		}
-
-		if ( ! class_exists( 'ReportedIP_Hive_Registration_Guard' ) ) {
-			return;
-		}
-
-		$data   = is_array( $submitted_data ) ? $submitted_data : array();
-		$errors = new WP_Error();
-
-		ReportedIP_Hive_Registration_Guard::get_instance()->validate(
-			self::um_value( $data, array( 'user_login', 'username' ) ),
-			self::um_value( $data, array( 'user_email' ) ),
-			$errors,
-			'ultimate_member'
-		);
-
-		foreach ( $errors->get_error_codes() as $code ) {
-			$this->um_add_error(
-				$data,
-				$errors->get_error_message( $code ),
-				self::um_field( $data, ReportedIP_Hive_Registration_Guard::error_target( $code ) )
-			);
-		}
-	}
-
-	/**
-	 * Hang a refusal on an Ultimate Member form.
-	 *
-	 * @param mixed  $submitted_data Sanitised submission.
-	 * @param string $message        Refusal text.
-	 * @param string $field          Field key, empty to pick one.
-	 * @return void
-	 * @since  2.1.61
-	 */
-	private function um_add_error( $submitted_data, $message, $field = '' ) {
-		if ( '' === (string) $message || ! function_exists( 'UM' ) ) {
-			return;
-		}
-
-		if ( '' === (string) $field ) {
-			$field = self::um_field( $submitted_data, 'generic' );
-		}
-
-		UM()->form()->add_error( $field, $message );
-	}
-
-	/**
-	 * The mode of an Ultimate Member form.
-	 *
-	 * The shortcode arguments carry it on render and the form row carries it on
-	 * submit. The live field set is the fallback, because a form rendered
-	 * without the mode in its arguments would otherwise silently skip the
-	 * anchor and then be judged for not carrying one.
-	 *
-	 * @param mixed $args Shortcode arguments or form row.
-	 * @return string
-	 * @since  2.1.61
-	 */
-	private static function um_mode( $args ) {
-		if ( is_array( $args ) && isset( $args['mode'] ) ) {
-			return (string) $args['mode'];
-		}
-
-		if ( function_exists( 'UM' ) && isset( UM()->fields()->set_mode ) ) {
-			return (string) UM()->fields()->set_mode;
-		}
-
-		return '';
-	}
-
-	/**
-	 * First submitted value out of a list of keys.
-	 *
-	 * @param array<string,mixed> $data Sanitised submission.
-	 * @param string[]            $keys Keys to try, in order.
-	 * @return string
-	 * @since  2.1.61
-	 */
-	private static function um_value( array $data, array $keys ) {
-		foreach ( $keys as $key ) {
-			if ( isset( $data[ $key ] ) && is_scalar( $data[ $key ] ) ) {
-				return (string) $data[ $key ];
-			}
-		}
-
-		return '';
-	}
-
-	/**
-	 * The field a refusal is rendered next to.
-	 *
-	 * Ultimate Member prints an error beside a field that exists on the form,
-	 * so the message goes to the submitted key it is about. The order matters
-	 * more than the exact hit: a form set up to sign people in by e-mail has no
-	 * `user_login` at all.
-	 *
-	 * @param mixed  $submitted_data Sanitised submission.
-	 * @param string $target         Target from the registration guard.
-	 * @return string
-	 * @since  2.1.61
-	 */
-	public static function um_field( $submitted_data, $target ) {
-		$data  = is_array( $submitted_data ) ? $submitted_data : array();
-		$order = 'email' === (string) $target
-			? array( 'user_email', 'username', 'user_login' )
-			: array( 'user_login', 'username', 'user_email' );
-
-		foreach ( $order as $key ) {
-			if ( array_key_exists( $key, $data ) ) {
-				return $key;
-			}
-		}
-
-		return 'user_login';
-	}
-
-	/**
-	 * Plant the anchor in a Gravity Forms form.
-	 *
-	 * `gform_form_tag` hands over the opening form tag itself, so appending to
-	 * it puts the anchor inside the form without searching the markup for a
-	 * closing tag. `gform_form_after_open` would be the obvious-looking hook and
-	 * is the wrong one twice over: it fires before the form element exists and
-	 * again on the confirmation page.
-	 *
-	 * @param mixed $tag  Opening form tag.
-	 * @param mixed $form Form object.
-	 * @return string
-	 * @since  2.1.63
-	 */
-	public function gravity_anchor( $tag, $form ) {
-		unset( $form );
-
-		$tag = (string) $tag;
-
-		if ( ! $this->active( 'gravity_forms' ) ) {
-			return $tag;
-		}
-
-		return $tag . ReportedIP_Hive_Form_Proof::get_instance()->anchor_html( 'gravity_forms' );
-	}
-
-	/**
-	 * Judge a Gravity Forms submission on its validation hook.
-	 *
-	 * A refusal is a form-level validation error, the same mechanism the plugin
-	 * uses for its own "at least one field must be filled out". The sender sees
-	 * the message above the form, whether the form was sent in the background
-	 * or with a page load, and no entry is written. The spam folder was the
-	 * other option and lost: an entry filed there is a message the sender was
-	 * thanked for and the operator never reads, and this plugin never loses a
-	 * message without at least telling the sender so.
-	 *
-	 * Only the final page of a form is judged, because only that step is a
-	 * submission; each earlier page is a request of its own and would spend a
-	 * computed answer and a community lookup for nothing.
-	 *
-	 * @param mixed       $result  Validation result with `is_valid` and `form`.
-	 * @param string|null $context Submission context, `form-submit` for a browser.
-	 * @return array
-	 * @since  2.1.63
-	 */
-	public function gravity_validate( $result, $context = null ) {
-		if ( ! is_array( $result ) || empty( $result['form']['id'] ) ) {
-			return $result;
-		}
-
-		if ( ! self::gravity_is_browser_submission( $context ) ) {
-			return $result;
-		}
-
-		$form_id = absint( $result['form']['id'] );
-
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reads which page is being submitted, Gravity Forms verifies its own nonce.
-		if ( isset( $_POST[ 'gform_target_page_number_' . $form_id ] ) && absint( wp_unslash( $_POST[ 'gform_target_page_number_' . $form_id ] ) ) > 0 ) {
-			return $result;
-		}
-
-		$message = $this->refuse( 'gravity_forms' );
-
-		if ( '' === $message ) {
-			return $result;
-		}
-
-		$result['is_valid'] = false;
-
-		if ( class_exists( 'GFFormDisplay' ) ) {
-			if ( ! isset( GFFormDisplay::$submission[ $form_id ] ) || ! is_array( GFFormDisplay::$submission[ $form_id ] ) ) {
-				GFFormDisplay::$submission[ $form_id ] = array();
-			}
-
-			if ( empty( GFFormDisplay::$submission[ $form_id ]['form_level_error'] ) ) {
-				GFFormDisplay::$submission[ $form_id ]['form_level_error'] = $message;
-			}
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Give the answer back when Gravity Forms turns the submission down.
-	 *
-	 * Gravity Forms validates its own fields (a required field, its
-	 * reCAPTCHA) before this filter chain, so a form the sender has to fix
-	 * reaches the proof check already invalid. The answer is spent there,
-	 * the form comes back with the error, and on some paths (the reCAPTCHA
-	 * field among them) the browser sends the same answer again. Runs last,
-	 * after every other validator, and only for a submission that writes
-	 * no entry.
-	 *
-	 * @param mixed $result Validation result with `is_valid`.
-	 * @return mixed
-	 * @since  2.1.73
-	 */
-	public function gravity_release( $result ) {
-		if ( is_array( $result ) && empty( $result['is_valid'] ) && class_exists( 'ReportedIP_Hive_Form_Challenge' ) ) {
-			ReportedIP_Hive_Form_Challenge::release();
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Whether a Gravity Forms submission came from a browser.
-	 *
-	 * `GFAPI::submit_form()` carries no anchor and no proof field, so without
-	 * this every import, Zapier feed and REST submission would read as a client
-	 * that failed the check. The validation hook says so itself since 2.6.4;
-	 * an older plugin is asked the way its own honeypot asks.
-	 *
-	 * @param string|null $context Submission context handed to the hook.
-	 * @return bool
-	 * @since  2.1.63
-	 */
-	private static function gravity_is_browser_submission( $context ) {
-		if ( null !== $context ) {
-			return 'form-submit' === (string) $context;
-		}
-
-		if ( ! class_exists( 'GFFormDisplay' ) ) {
-			return true;
-		}
-
-		return GFFormDisplay::SUBMISSION_INITIATED_BY_API !== GFFormDisplay::$submission_initiated_by;
-	}
-
-	/**
-	 * Plant the anchor in a WPForms form.
-	 *
-	 * `wpforms_display_submit_before` runs inside the form element right in
-	 * front of the submit button, on the page-load path and the background
-	 * path alike, and only when the plugin renders a form of its own. The
-	 * confirmation message is rendered elsewhere, so the anchor never lands
-	 * next to a thank-you text.
-	 *
-	 * @param mixed $form_data Form data and settings.
-	 * @return void
-	 * @since  2.1.65
-	 */
-	public function wpforms_anchor( $form_data ) {
-		unset( $form_data );
-
-		if ( ! $this->active( 'wpforms' ) ) {
-			return;
-		}
-
-		echo ReportedIP_Hive_Form_Proof::get_instance()->anchor_html( 'wpforms' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Plugin-built hidden inputs, escaped where they are assembled.
-	}
-
-	/**
-	 * Judge a WPForms submission on its processing hook.
-	 *
-	 * The hook fires after the plugin validated every field and before it
-	 * writes an entry or sends a mail; a refusal placed in the processor's
-	 * error list at that point stops both. The plugin renders that list above
-	 * the form as its own header error, on the page-load path and in the
-	 * background response alike, so the sender always reads why nothing was
-	 * sent. Field errors come first by construction: the hook is not reached
-	 * while any field is invalid, so an incomplete form costs no lookup.
-	 *
-	 * @param mixed $fields    Sanitised field values.
-	 * @param mixed $entry     Raw submission.
-	 * @param mixed $form_data Form data and settings.
-	 * @return void
-	 * @since  2.1.65
-	 */
-	public function wpforms_validate( $fields, $entry, $form_data ) {
-		unset( $fields, $entry );
-
-		if ( ! is_array( $form_data ) || empty( $form_data['id'] ) || ! function_exists( 'wpforms' ) ) {
-			return;
-		}
-
-		$message = $this->refuse( 'wpforms' );
-
-		if ( '' === $message ) {
-			return;
-		}
-
-		$process = method_exists( wpforms(), 'obj' ) ? wpforms()->obj( 'process' ) : wpforms()->process;
-
-		if ( ! is_object( $process ) || ! property_exists( $process, 'errors' ) ) {
-			return;
-		}
-
-		$form_id = absint( $form_data['id'] );
-
-		if ( ! isset( $process->errors[ $form_id ] ) || ! is_array( $process->errors[ $form_id ] ) ) {
-			$process->errors[ $form_id ] = array();
-		}
-
-		if ( empty( $process->errors[ $form_id ]['header'] ) ) {
-			$process->errors[ $form_id ]['header'] = $message;
-		}
-	}
-
-	/**
-	 * Plant the anchor in a Forminator form.
-	 *
-	 * `forminator_render_form_submit_markup` is the block that carries the
-	 * nonce and the submit button, and it is always written inside the form
-	 * element, on the page-load path and on the AJAX render alike. Forminator
-	 * hangs its own honeypot there for the same reason. The wider
-	 * `forminator_render_form_markup` would be wrong: its markup reaches past
-	 * the closing form tag, so an appended field would land outside.
-	 *
-	 * @param mixed $html Submit-area markup.
-	 * @return mixed
-	 * @since  2.1.66
-	 */
-	public function forminator_anchor( $html ) {
-		if ( ! is_string( $html ) || ! $this->active( 'forminator' ) ) {
-			return $html;
-		}
-
-		return $html . ReportedIP_Hive_Form_Proof::get_instance()->anchor_html( 'forminator' );
-	}
-
-	/**
-	 * Judge a Forminator submission on its validation hook.
-	 *
-	 * The hook is the second step of the submission handler, before the entry
-	 * object is built, before it is saved and long before the mail is sent. A
-	 * non-empty error list there throws, and the plugin answers with the error
-	 * list the sender reads above the form. Nothing is stored, nothing is
-	 * sent, no add-on runs.
-	 *
-	 * The plugin's own spam filter is deliberately not used: depending on a
-	 * per-form setting it drops the submission into the spam folder and shows
-	 * the sender a success message, which is the one outcome this layer is not
-	 * allowed to produce.
-	 *
-	 * The errors are a list of single-entry arrays keyed by field id, and the
-	 * hook fires a second time while attachments are handled, so a refusal
-	 * that is already in the list is never added twice.
-	 *
-	 * @param mixed $errors  Collected submission errors.
-	 * @param mixed $form_id Form the submission belongs to.
-	 * @param mixed $fields  Field data of the submission.
-	 * @return mixed
-	 * @since  2.1.66
-	 */
-	public function forminator_validate( $errors, $form_id, $fields = array() ) {
-		unset( $form_id );
-
-		if ( ! is_array( $errors ) ) {
-			return $errors;
-		}
-
-		$message = $this->refuse( 'forminator' );
-
-		if ( '' === $message ) {
-			return $errors;
-		}
-
-		foreach ( $errors as $entry ) {
-			if ( is_array( $entry ) && in_array( $message, $entry, true ) ) {
-				return $errors;
-			}
-		}
-
-		$errors[] = array( self::forminator_first_field( $fields ) => $message );
-
-		return $errors;
-	}
-
-	/**
-	 * The field a Forminator refusal is shown at.
-	 *
-	 * Forminator keys every error by a field id and renders the message next
-	 * to that field, so the refusal is attached to the first field of the
-	 * submission rather than to a name the form does not know.
-	 *
-	 * @param mixed $fields Field data of the submission.
-	 * @return string
-	 * @since  2.1.66
-	 */
-	public static function forminator_first_field( $fields ) {
-		if ( is_array( $fields ) ) {
-			foreach ( $fields as $field ) {
-				if ( is_array( $field ) && ! empty( $field['name'] ) ) {
-					return (string) $field['name'];
-				}
-			}
-		}
-
-		return 'reportedip_hive';
-	}
-
-	/**
 	 * Decide one submission and produce its refusal, or an empty string when it
 	 * may proceed. Same order as every other surface: plan and switch, then the
 	 * community reputation of the address, then the execution proof.
+	 *
+	 * Public since 3.0.0, so an adapter an add-on registers decides through
+	 * the same memoised pipeline. Contact Form 7 is judged on two hooks, and
+	 * the memo keeps the second one from counting the submission again.
 	 *
 	 * @param string $slug Surface identifier.
 	 * @return string Refusal message, or an empty string to proceed.
 	 * @since  2.1.58
 	 */
-	private function refuse( $slug ) {
+	public function refuse( $slug ) {
 		$slug = (string) $slug;
 
 		if ( ! isset( $this->refusals[ $slug ] ) ) {
@@ -1078,7 +395,7 @@ final class ReportedIP_Hive_Form_Adapters {
 	 * @return string Refusal message, or an empty string to proceed.
 	 * @since  2.1.58
 	 */
-	private function judge( $slug, $strict = null ) {
+	public function judge( $slug, $strict = null ) {
 		if ( ! $this->active( $slug ) ) {
 			return '';
 		}
@@ -1115,7 +432,7 @@ final class ReportedIP_Hive_Form_Adapters {
 	 * @return string Refusal message, or an empty string to proceed.
 	 * @since  2.1.61
 	 */
-	private function proof_refusal( $slug, $strict = null ) {
+	public function proof_refusal( $slug, $strict = null ) {
 		if ( ! $this->active( $slug ) ) {
 			return '';
 		}

@@ -116,19 +116,14 @@ class ReportedIP_Hive_Form_Proof {
 	const ATTEMPT_TYPE = 'form_spam';
 
 	/**
-	 * The adapter switches. One list, read by the grace stamp and by
-	 * anything else that needs to know whether a third-party form takes part.
+	 * The bundled adapter switches. One list, read by the grace stamp and by
+	 * anything else that needs to know whether a third-party form takes part;
+	 * an add-on adds its own through {@see adapter_options()}.
 	 *
 	 * @var string[]
 	 */
 	const ADAPTER_OPTIONS = array(
 		'reportedip_hive_form_proof_cf7',
-		'reportedip_hive_form_proof_formidable',
-		'reportedip_hive_form_proof_elementor',
-		'reportedip_hive_form_proof_um',
-		'reportedip_hive_form_proof_gravity',
-		'reportedip_hive_form_proof_wpforms',
-		'reportedip_hive_form_proof_forminator',
 	);
 
 	/**
