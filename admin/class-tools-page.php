@@ -143,27 +143,32 @@ class ReportedIP_Hive_Tools_Page {
 		$since = (int) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Form_Proof::OPT_ADAPTERS_SINCE, 0 );
 		$until = $since > 0 ? $since + max( 0, min( ReportedIP_Hive_Form_Proof::ADAPTER_GRACE_MAX, $grace ) ) : 0;
 
-		return array(
+		$state = array(
 			'enabled'         => $proof->is_enabled(),
 			'killswitch'      => defined( 'REPORTEDIP_HIVE_DISABLE_FORM_PROOF' ) && REPORTEDIP_HIVE_DISABLE_FORM_PROOF,
-			'pow_covered'     => $proof->pow_available(),
-			'pow_option'      => (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Form_Proof::OPT_POW, false ),
-			'secure'          => ReportedIP_Hive_Form_Proof::connection_is_secure(),
-			'pow_grace'       => $proof->pow_enabled() && ! $proof->pow_required(),
 			'adapters'        => $rows,
 			'adapters_strict' => $proof->adapters_strict(),
 			'adapters_until'  => $until,
 			'until_text'      => $until > 0 ? ReportedIP_Hive::format_local_datetime( gmdate( 'Y-m-d H:i:s', $until ) ) : '',
 		);
+
+		/**
+		 * Extend the state the self-test inventory is built from.
+		 *
+		 * @param array<string, mixed> $state State of the form protection.
+		 * @since 3.0.0
+		 */
+		return (array) apply_filters( 'reportedip_hive_selftest_state', $state );
 	}
 
 	/**
 	 * Turn the state of the form protection into one row per surface.
 	 *
-	 * Pure, because the interesting part of a stock take is the combinations:
-	 * an adapter can be inactive because the plugin is missing, because the
-	 * plan does not cover it, because its own switch is off, or because the
-	 * whole layer is off, and each of those needs a different sentence.
+	 * The interesting part of a stock take is the combinations: an adapter
+	 * can be inactive because the plugin is missing, because the plan does not
+	 * cover it, because its own switch is off, or because the whole layer is
+	 * off, and each of those needs a different sentence. Apart from the filter
+	 * at the end the mapping is pure.
 	 *
 	 * @param array<string, mixed> $state State from {@see selftest_state()}.
 	 * @return array<int, array<string, string>>
@@ -173,7 +178,6 @@ class ReportedIP_Hive_Tools_Page {
 		$enabled = ! empty( $state['enabled'] );
 		$rows    = array(
 			self::selftest_layer_row( $enabled, ! empty( $state['killswitch'] ) ),
-			self::selftest_pow_row( $state, $enabled ),
 		);
 
 		$adapters = isset( $state['adapters'] ) ? (array) $state['adapters'] : array();
@@ -184,7 +188,14 @@ class ReportedIP_Hive_Tools_Page {
 
 		$rows[] = self::selftest_grace_row( $state );
 
-		return $rows;
+		/**
+		 * Extend the rows of the self-test inventory.
+		 *
+		 * @param array<int, array<string, string>> $rows  Rows with label, badge, status and note.
+		 * @param array<string, mixed>              $state State from selftest_state().
+		 * @since 3.0.0
+		 */
+		return (array) apply_filters( 'reportedip_hive_selftest_inventory', $rows, $state );
 	}
 
 	/**
@@ -207,40 +218,6 @@ class ReportedIP_Hive_Tools_Page {
 		}
 
 		return self::selftest_row( $label, 'success', __( 'On', 'reportedip-hive' ), __( 'Every protected form carries the hidden anchor.', 'reportedip-hive' ) );
-	}
-
-	/**
-	 * Row for the computation check.
-	 *
-	 * @param array<string, mixed> $state   State from {@see selftest_state()}.
-	 * @param bool                 $enabled Whether the layer is on.
-	 * @return array<string, string>
-	 * @since  2.1.58
-	 */
-	private static function selftest_pow_row( array $state, $enabled ) {
-		$label = __( 'Computation check', 'reportedip-hive' );
-
-		if ( empty( $state['pow_covered'] ) ) {
-			return self::selftest_row( $label, 'info', __( 'Not in your plan', 'reportedip-hive' ), __( 'The computation check is part of the Professional plan. Without it the hidden field carries a plain marker, which a script can copy out of the page.', 'reportedip-hive' ) );
-		}
-
-		if ( empty( $state['pow_option'] ) ) {
-			return self::selftest_row( $label, 'warning', __( 'Off', 'reportedip-hive' ), __( 'The switch on the Protection page is off.', 'reportedip-hive' ) );
-		}
-
-		if ( ! $enabled ) {
-			return self::selftest_row( $label, 'warning', __( 'Off', 'reportedip-hive' ), __( 'The execution proof is off for the whole site, so no task is handed out either.', 'reportedip-hive' ) );
-		}
-
-		if ( empty( $state['secure'] ) ) {
-			return self::selftest_row( $label, 'info', __( 'Bound only', 'reportedip-hive' ), __( 'This site is not reached over a secure connection, so the task is handed out with zero difficulty: a browser can only work one out in a secure context, and demanding it here would turn every visitor into a suspect. The task is still signed, expires and is good once, which already refuses a script that only copies the field name out of the page.', 'reportedip-hive' ) );
-		}
-
-		if ( ! empty( $state['pow_grace'] ) ) {
-			return self::selftest_row( $label, 'info', __( 'Starting up', 'reportedip-hive' ), __( 'A task is handed out already, and the plain marker still passes for the first day, so pages served from a cache filled before the switch are not refused.', 'reportedip-hive' ) );
-		}
-
-		return self::selftest_row( $label, 'success', __( 'On', 'reportedip-hive' ), __( 'Every protected form fetches a signed task from this site; each answer is good once, expires in ten minutes and gets harder the faster one network asks.', 'reportedip-hive' ) );
 	}
 
 	/**
@@ -339,12 +316,12 @@ class ReportedIP_Hive_Tools_Page {
 	/**
 	 * What a run has to come back with.
 	 *
-	 * Without the computation check there is nothing to repeat, so a second
-	 * submission passes like the first. Expecting a refusal there would be a
-	 * test that lies about the site it runs on.
+	 * While a proof value can be sent again there is nothing to repeat, so a
+	 * second submission passes like the first. Expecting a refusal there would
+	 * be a test that lies about the site it runs on.
 	 *
 	 * @param string $run      Run identifier.
-	 * @param bool   $required Whether a solved computation is demanded.
+	 * @param bool   $required Whether a proof value is good only once.
 	 * @return string One of the four verdict constants.
 	 * @since  2.1.58
 	 */
@@ -364,7 +341,7 @@ class ReportedIP_Hive_Tools_Page {
 	 * Fold the collected run results into one verdict. Pure.
 	 *
 	 * @param array<string, string> $actual   Verdict per run identifier.
-	 * @param bool                  $required Whether a solved computation is demanded.
+	 * @param bool                  $required Whether a proof value is good only once.
 	 * @return array<string, mixed>
 	 * @since  2.1.58
 	 */
@@ -442,7 +419,7 @@ class ReportedIP_Hive_Tools_Page {
 	 *
 	 * @param string $run      Run identifier.
 	 * @param bool   $ok       Whether the verdict matched.
-	 * @param bool   $required Whether a solved computation is demanded.
+	 * @param bool   $required Whether a proof value is good only once.
 	 * @return string
 	 * @since  2.1.58
 	 */
@@ -450,7 +427,7 @@ class ReportedIP_Hive_Tools_Page {
 		if ( 'visitor' === $run ) {
 			return $ok
 				? __( 'A normal submission reached the site. Readers are not caught by the check.', 'reportedip-hive' )
-				: __( 'A normal submission was refused. Visitors would be turned away on your forms too, so switch the computation check off on the Protection page until this reads correctly.', 'reportedip-hive' );
+				: __( 'A normal submission was refused. Visitors would be turned away on your forms too, so switch the execution proof off on the Protection page until this reads correctly.', 'reportedip-hive' );
 		}
 
 		if ( 'replay' === $run ) {
@@ -460,7 +437,7 @@ class ReportedIP_Hive_Tools_Page {
 
 			return $required
 				? __( 'The same answer was refused the second time, so copying it out of the page buys a script nothing.', 'reportedip-hive' )
-				: __( 'Without the computation check there is nothing to repeat, so a second submission passes like the first. Switching the check on closes that.', 'reportedip-hive' );
+				: __( 'The plain marker can be sent again, so a second submission passes like the first.', 'reportedip-hive' );
 		}
 
 		return $ok
@@ -488,10 +465,9 @@ class ReportedIP_Hive_Tools_Page {
 	 * @since  2.1.58
 	 */
 	public static function render_selftest_panel() {
-		$proof = ReportedIP_Hive_Form_Proof::get_instance();
-		$rows  = self::selftest_inventory( self::selftest_state() );
+		$rows = self::selftest_inventory( self::selftest_state() );
 
-		self::enqueue_selftest_script( $proof );
+		self::enqueue_selftest_script();
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
@@ -543,55 +519,52 @@ class ReportedIP_Hive_Tools_Page {
 	}
 
 	/**
-	 * Register the self-test script and hand it the current challenge.
+	 * Register the self-test script and hand it what it needs.
 	 *
-	 * The Tools page is never cached, so a value that depends on this request
-	 * is safe here in a way it would not be inside a rendered form.
+	 * The Tools page is never cached, so a value an add-on adds that depends
+	 * on this request is safe here in a way it would not be inside a rendered
+	 * form.
 	 *
-	 * @param ReportedIP_Hive_Form_Proof $proof Execution-proof layer.
 	 * @return void
 	 * @since  2.1.58
 	 */
-	private static function enqueue_selftest_script( $proof ) {
+	private static function enqueue_selftest_script() {
+		/**
+		 * Swap the self-test script, e.g. for one that works out a task first.
+		 *
+		 * @param string $src Script URL.
+		 * @since 3.0.0
+		 */
+		$src = (string) apply_filters( 'reportedip_hive_form_proof_selftest_script_src', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/form-proof-selftest.js' );
+
 		wp_register_script(
 			'reportedip-hive-form-proof-selftest',
-			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/form-proof-selftest.js',
+			$src,
 			array(),
 			REPORTEDIP_HIVE_VERSION,
 			true
 		);
 
-		$token = '';
-		$seed  = '';
-		$bits  = 0;
-
-		if ( $proof->pow_enabled() ) {
-			$minted = ReportedIP_Hive_Form_Challenge::issue( 1 );
-			$token  = $minted['token'];
-			$seed   = $minted['seed'];
-			$bits   = $minted['bits'];
-		}
-
-		wp_localize_script(
-			'reportedip-hive-form-proof-selftest',
-			'reportedipHiveSelfTest',
-			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'action'  => 'reportedip_hive_form_proof_selftest',
-				'nonce'   => wp_create_nonce( 'reportedip_hive_form_selftest' ),
-				'runs'    => self::SELFTEST_RUNS,
-				'token'   => $token,
-				'seed'    => $seed,
-				'bits'    => $bits,
-				'strings' => array(
-					'running'  => __( 'Running the three passes...', 'reportedip-hive' ),
-					'solving'  => __( 'Working out the task the way a visitor browser does...', 'reportedip-hive' ),
-					'insecure' => __( 'This browser offers no Web Crypto, which usually means the page was not reached over a secure connection. The task cannot be worked out here.', 'reportedip-hive' ),
-					'unsolved' => __( 'No answer was found within the attempt budget. Lower the difficulty with the reportedip_hive_form_proof_bits filter and try again.', 'reportedip-hive' ),
-					'failed'   => __( 'The self-test could not be completed.', 'reportedip-hive' ),
-				),
-			)
+		$localize = array(
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'action'  => 'reportedip_hive_form_proof_selftest',
+			'nonce'   => wp_create_nonce( 'reportedip_hive_form_selftest' ),
+			'runs'    => self::SELFTEST_RUNS,
+			'strings' => array(
+				'running' => __( 'Running the three passes...', 'reportedip-hive' ),
+				'failed'  => __( 'The self-test could not be completed.', 'reportedip-hive' ),
+			),
 		);
+
+		/**
+		 * Extend the data the self-test script receives.
+		 *
+		 * @param array<string, mixed> $localize Script data.
+		 * @since 3.0.0
+		 */
+		$localize = (array) apply_filters( 'reportedip_hive_selftest_localize', $localize );
+
+		wp_localize_script( 'reportedip-hive-form-proof-selftest', 'reportedipHiveSelfTest', $localize );
 
 		wp_enqueue_script( 'reportedip-hive-form-proof-selftest' );
 	}

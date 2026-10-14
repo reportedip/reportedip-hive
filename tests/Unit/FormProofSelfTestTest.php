@@ -6,7 +6,7 @@
  * adapter is inactive, because "off" reads the same whether the form plugin is
  * missing, the plan does not cover it or the switch is simply off, and only one
  * of those three is something the operator can act on. The outcome has to agree
- * with the site it runs on: without the computation check a repeated answer
+ * with the site it runs on: while a proof value can be sent again a repeated answer
  * passes, and a test that called that a failure would send operators looking
  * for a fault that is a setting.
  *
@@ -48,10 +48,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				array(
 					'enabled'         => true,
 					'killswitch'      => false,
-					'pow_covered'     => true,
-					'pow_option'      => true,
-					'secure'          => true,
-					'pow_grace'       => false,
 					'adapters'        => array(),
 					'adapters_strict' => false,
 					'adapters_until'  => 0,
@@ -87,7 +83,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		private function adapter_row( array $state ): array {
 			$rows = ReportedIP_Hive_Tools_Page::selftest_inventory( $state );
 
-			return $rows[2];
+			return $rows[1];
 		}
 
 		public function test_the_kill_switch_outranks_the_option(): void {
@@ -102,43 +98,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertSame( 'danger', $rows[0]['badge'] );
 			$this->assertStringContainsString( 'REPORTEDIP_HIVE_DISABLE_FORM_PROOF', $rows[0]['note'] );
-		}
-
-		public function test_a_plain_connection_says_the_task_is_bound_only(): void {
-			$rows = ReportedIP_Hive_Tools_Page::selftest_inventory( $this->state( array( 'secure' => false ) ) );
-
-			$this->assertSame( 'info', $rows[1]['badge'] );
-			$this->assertStringContainsString( 'secure connection', $rows[1]['note'] );
-			$this->assertStringContainsString( 'good once', $rows[1]['note'] );
-		}
-
-		public function test_the_plan_is_named_before_the_switch(): void {
-			$rows = ReportedIP_Hive_Tools_Page::selftest_inventory(
-				$this->state(
-					array(
-						'pow_covered' => false,
-						'pow_option'  => false,
-						'secure'      => false,
-					)
-				)
-			);
-
-			$this->assertSame( 'info', $rows[1]['badge'] );
-			$this->assertStringContainsString( 'Professional', $rows[1]['note'] );
-		}
-
-		public function test_the_grace_shows_as_starting_up(): void {
-			$rows = ReportedIP_Hive_Tools_Page::selftest_inventory( $this->state( array( 'pow_grace' => true ) ) );
-
-			$this->assertSame( 'info', $rows[1]['badge'] );
-			$this->assertStringContainsString( 'first day', $rows[1]['note'] );
-		}
-
-		public function test_the_computation_row_follows_the_master_switch(): void {
-			$rows = ReportedIP_Hive_Tools_Page::selftest_inventory( $this->state( array( 'enabled' => false ) ) );
-
-			$this->assertSame( 'warning', $rows[1]['badge'] );
-			$this->assertStringContainsString( 'whole site', $rows[1]['note'] );
 		}
 
 		public function test_a_missing_form_plugin_is_not_a_switch_someone_forgot(): void {
@@ -281,7 +240,48 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_the_replay_meaning_tells_the_two_readings_apart(): void {
 			$this->assertStringContainsString( 'refused the second time', ReportedIP_Hive_Tools_Page::selftest_meaning( 'replay', true, true ) );
-			$this->assertStringContainsString( 'nothing to repeat', ReportedIP_Hive_Tools_Page::selftest_meaning( 'replay', true, false ) );
+			$this->assertStringContainsString( 'can be sent again', ReportedIP_Hive_Tools_Page::selftest_meaning( 'replay', true, false ) );
+		}
+
+		/**
+		 * The free plugin describes only what it ships: no row and no sentence
+		 * names a check it does not carry.
+		 */
+		public function test_the_free_inventory_and_meanings_name_no_computation(): void {
+			$GLOBALS['wp_filters'] = array();
+			$rows                  = ReportedIP_Hive_Tools_Page::selftest_inventory( $this->state() );
+
+			$this->assertCount( 2, $rows, 'layer and grace, no adapter' );
+			foreach ( $rows as $row ) {
+				$this->assertStringNotContainsStringIgnoringCase( 'computation', $row['label'] . ' ' . $row['note'] );
+			}
+			foreach ( array( 'visitor', 'replay', 'bot' ) as $run ) {
+				foreach ( array( true, false ) as $ok ) {
+					$this->assertStringNotContainsStringIgnoringCase( 'computation', ReportedIP_Hive_Tools_Page::selftest_meaning( $run, $ok, false ) );
+				}
+			}
+		}
+
+		public function test_a_listener_extends_the_inventory(): void {
+			$GLOBALS['wp_filters'] = array();
+			add_filter(
+				'reportedip_hive_selftest_inventory',
+				static function ( $rows, $state ) {
+					array_splice( $rows, 1, 0, array( array( 'label' => 'add-on row ' . count( $state['adapters'] ) ) ) );
+					return $rows;
+				},
+				10,
+				2
+			);
+
+			try {
+				$rows = ReportedIP_Hive_Tools_Page::selftest_inventory( $this->state() );
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+			}
+
+			$this->assertSame( 'add-on row 0', $rows[1]['label'] );
+			$this->assertCount( 3, $rows );
 		}
 	}
 }
