@@ -286,6 +286,10 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		if ( ! $user_id || ! self::should_show_soft( $user_id ) ) {
 			return;
 		}
+		$notice_id = 'twofa_recommend_' . gmdate( 'Y-m-d' );
+		if ( get_user_meta( $user_id, 'reportedip_dismissed_' . $notice_id, true ) ) {
+			return;
+		}
 
 		$user         = get_userdata( $user_id );
 		$count        = (int) get_user_meta( $user_id, self::META_COUNT, true );
@@ -314,6 +318,8 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		ReportedIP_Hive_Admin_Notice::render(
 			array(
 				'variant'           => 'warning',
+				'dismissible'       => true,
+				'data_notice_id'    => $notice_id,
 				'extra_classes'     => 'rip-2fa-recommend',
 				'title'             => __( 'Two-factor authentication is recommended for your account', 'reportedip-hive' ),
 				'body'              => $body,

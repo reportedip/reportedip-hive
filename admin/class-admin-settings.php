@@ -1381,8 +1381,9 @@ class ReportedIP_Hive_Admin_Settings {
 	 * in-page banner reaches the operator.
 	 */
 	public static function render_inline_notices() {
-		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
-		if ( $mode_manager->is_community_layer_degraded() ) {
+		$mode_manager  = ReportedIP_Hive_Mode_Manager::get_instance();
+		$rate_limit_id = 'rate_limited_' . gmdate( 'Y-m-d-H' );
+		if ( $mode_manager->is_community_layer_degraded() && ! get_user_meta( get_current_user_id(), 'reportedip_dismissed_' . $rate_limit_id, true ) ) {
 			$body = sprintf(
 				'<strong>%1$s</strong> %2$s <a href="%3$s" target="_blank" rel="noopener noreferrer">%4$s</a>',
 				esc_html__( 'Community threat-check rate-limited.', 'reportedip-hive' ),
@@ -1392,8 +1393,10 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 			ReportedIP_Hive_Admin_Notice::render(
 				array(
-					'variant' => 'warning',
-					'body'    => $body,
+					'variant'        => 'warning',
+					'dismissible'    => true,
+					'data_notice_id' => $rate_limit_id,
+					'body'           => $body,
 				)
 			);
 		}
@@ -1434,8 +1437,10 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$has_critical = false;
 		$lines        = array();
+		$keys         = array();
 		foreach ( $issues as $issue ) {
 			$has_critical = $has_critical || ReportedIP_Hive_Readiness::SEV_CRITICAL === (string) $issue['severity'];
+			$keys[]       = (string) $issue['key'];
 			$lines[]      = sprintf(
 				'<strong>%1$s</strong> %2$s',
 				esc_html( $issue['label'] ),
@@ -1443,9 +1448,16 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 		}
 
+		$readiness_id = 'readiness_' . md5( implode( ',', $keys ) );
+		if ( ! $has_critical && get_user_meta( get_current_user_id(), 'reportedip_dismissed_' . $readiness_id, true ) ) {
+			return;
+		}
+
 		ReportedIP_Hive_Admin_Notice::render(
 			array(
 				'variant'        => $has_critical ? 'error' : 'warning',
+				'dismissible'    => ! $has_critical,
+				'data_notice_id' => $has_critical ? '' : $readiness_id,
 				'extra_classes'  => 'rip-readiness-notice',
 				'title'          => sprintf(
 					/* translators: %d: number of open readiness issues. */

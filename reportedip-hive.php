@@ -1770,8 +1770,10 @@ class ReportedIP_Hive {
 			}
 		}
 
-		$api_key = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
-		if ( empty( $api_key ) && ReportedIP_Hive_Mode_Manager::get_instance()->is_community_mode() ) {
+		$api_key    = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
+		$no_key_id  = 'no_api_key_' . gmdate( 'Y-m-d' );
+		$no_key_off = (bool) get_user_meta( $user_id, 'reportedip_dismissed_' . $no_key_id, true );
+		if ( empty( $api_key ) && ! $no_key_off && ReportedIP_Hive_Mode_Manager::get_instance()->is_community_mode() ) {
 			$settings_url = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive' );
 			$body         = sprintf(
 				'<strong>%1$s</strong> %2$s',
@@ -1784,9 +1786,10 @@ class ReportedIP_Hive {
 			);
 			ReportedIP_Hive_Admin_Notice::render(
 				array(
-					'variant'     => 'warning',
-					'dismissible' => true,
-					'body'        => $body,
+					'variant'        => 'warning',
+					'dismissible'    => true,
+					'data_notice_id' => $no_key_id,
+					'body'           => $body,
 				)
 			);
 		}
