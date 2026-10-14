@@ -1374,9 +1374,21 @@ final class ReportedIP_Hive_Settings_Registry {
 			}
 		}
 
-		$gate_error = self::check_tier_gate( $entry, $result );
-		if ( is_wp_error( $gate_error ) ) {
-			return $gate_error;
+		/**
+		 * Filters whether a sanitized value may be stored. The free plugin
+		 * accepts every value that passed the kind check; an extension
+		 * answers `WP_Error` to refuse it, and the code `tier_locked` makes
+		 * Settings_Apply report the key as `skipped_tier`.
+		 *
+		 * @param true|WP_Error        $verdict True to accept.
+		 * @param string               $key     Option key.
+		 * @param array<string, mixed> $entry   Spec entry.
+		 * @param mixed                $value   Sanitized value.
+		 * @since 3.0.0
+		 */
+		$verdict = apply_filters( 'reportedip_hive_settings_value_gate', true, $key, $entry, $result );
+		if ( is_wp_error( $verdict ) ) {
+			return $verdict;
 		}
 
 		return $result;
@@ -1634,7 +1646,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'kind'    => (string) $entry['kind'],
 				'label'   => isset( $entry['label'] ) ? (string) $entry['label'] : $key,
 				'default' => array_key_exists( $key, $defaults ) ? $defaults[ $key ] : '',
-				'tier'    => isset( $entry['tier'] ) ? (string) $entry['tier'] : null,
+				'tier'    => null,
 			);
 			if ( isset( $entry['description'] ) && '' !== (string) $entry['description'] ) {
 				$field['description'] = (string) $entry['description'];
@@ -1650,10 +1662,17 @@ final class ReportedIP_Hive_Settings_Registry {
 			} elseif ( isset( $entry['choices'] ) ) {
 				$field['allowed'] = array_keys( self::choice_values( (string) $entry['choices'] ) );
 			}
-			if ( isset( $entry['ui_lock'] ) ) {
-				$field['ui_lock'] = (string) $entry['ui_lock'];
-			}
-			$fields[ $key ] = $field;
+			/**
+			 * Filters one field of the remote schema. The free plugin
+			 * exports `tier` as null; an extension that gates the value
+			 * fills `tier` and `ui_lock`.
+			 *
+			 * @param array<string, mixed> $field Exported field.
+			 * @param string               $key   Option key.
+			 * @param array<string, mixed> $entry Spec entry.
+			 * @since 3.0.0
+			 */
+			$fields[ $key ] = (array) apply_filters( 'reportedip_hive_settings_schema_field', $field, $key, $entry );
 		}
 
 		return array(
@@ -1693,43 +1712,6 @@ final class ReportedIP_Hive_Settings_Registry {
 
 			return $result;
 		};
-	}
-
-	/**
-	 * Apply the spec's tier gate to a sanitized target value.
-	 *
-	 * @param array<string, mixed> $entry Spec entry.
-	 * @param mixed                $value Sanitized value.
-	 * @return true|WP_Error True when allowed, WP_Error `tier_locked` otherwise.
-	 */
-	private static function check_tier_gate( array $entry, $value ) {
-		if ( empty( $entry['tier'] ) || ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			return true;
-		}
-
-		$applies = isset( $entry['tier_gate'] ) && is_callable( $entry['tier_gate'] )
-			? (bool) call_user_func( $entry['tier_gate'], $value )
-			: (bool) $value;
-		if ( ! $applies ) {
-			return true;
-		}
-
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( (string) $entry['tier'] );
-		if ( ! empty( $status['available'] ) ) {
-			return true;
-		}
-
-		$min_tier = isset( $status['min_tier'] ) ? (string) $status['min_tier'] : '';
-		return new WP_Error(
-			'tier_locked',
-			'' !== $min_tier
-				? sprintf(
-					/* translators: %s: minimum plan name required for the feature */
-					__( 'This setting requires the %s plan.', 'reportedip-hive' ),
-					$min_tier
-				)
-				: __( 'This setting requires a higher plan.', 'reportedip-hive' )
-		);
 	}
 
 	/**

@@ -285,6 +285,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 					return $spec;
 				}
 			);
+			add_filter(
+				'reportedip_hive_settings_value_gate',
+				static function ( $verdict, $key, $entry, $value ) {
+					unset( $entry );
+					if ( 'reportedip_hive_block_tor' === $key && $value ) {
+						return new \WP_Error( 'tier_locked', 'This setting requires the professional plan.' );
+					}
+					return $verdict;
+				},
+				10,
+				4
+			);
 			\ReportedIP_Hive_Settings_Registry::flush_spec_cache();
 		}
 
