@@ -3866,7 +3866,7 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 		if ( is_array( $tabs ) && isset( $tabs['parents'], $tabs['subs'] ) && is_array( $tabs['parents'] ) && is_array( $tabs['subs'] ) ) {
 			$parents = $tabs['parents'];
-			$subs    = $tabs['subs'] + $subs;
+			$subs    = array_filter( $tabs['subs'], 'is_array' ) + $subs;
 		}
 
 		if ( isset( $parents[ $tab ] ) ) {

@@ -94,5 +94,27 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString( 'audit', strtolower( substr( $source, (int) strpos( $source, 'public function render(' ) ) ) );
 			$this->assertLessThan( strpos( $source, "do_action( 'reportedip_hive_2fa_dashboard_actions' );" ), strpos( $source, 'User status CSV' ), 'The slot follows the user status button.' );
 		}
+
+		/**
+		 * Without the add-on an export type other than the user status is
+		 * refused with a 403 after the capability and nonce checks, as 2.x
+		 * refused the audit export on a plan without it; the user status
+		 * stays the default.
+		 */
+		public function test_an_unknown_export_type_is_refused_before_any_output(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-two-factor-dashboard.php' );
+			$body   = substr( $source, (int) strpos( $source, 'public function export_csv()' ) );
+			$body   = substr( $body, 0, (int) strpos( $body, "\n\t}" ) );
+
+			$nonce  = strpos( $body, "check_admin_referer( 'reportedip_hive_2fa_export' );" );
+			$refuse = strpos( $body, "if ( 'users' !== \$type ) {" );
+			$open   = strpos( $body, "self::open_csv( 'users' )" );
+			$this->assertNotFalse( $nonce );
+			$this->assertNotFalse( $refuse );
+			$this->assertLessThan( $refuse, $nonce );
+			$this->assertLessThan( $open, $refuse, 'Refused before a header or a byte is sent.' );
+			$this->assertStringContainsString( "sanitize_key( wp_unslash( \$_GET['type'] ) ) : 'users';", $body );
+			$this->assertStringContainsString( "array( 'response' => 403 )", $body );
+		}
 	}
 }

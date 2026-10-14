@@ -105,6 +105,19 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertSame( array( 'Extra', 'Text' ), ReportedIP_Hive_Admin_Settings::tab_intro( 'extra' ) );
 
 				$GLOBALS['wp_filters']['reportedip_hive_activity_tabs'] = array();
+				add_filter(
+					'reportedip_hive_activity_tabs',
+					static function ( $tabs ) {
+						$tabs['subs']['activity'] = 'logs';
+						$tabs['subs']['broken']   = null;
+						$tabs['parents']['x']     = 'broken';
+						return $tabs;
+					}
+				);
+				$this->assertSame( array( 'activity', 'lookup' ), ReportedIP_Hive_Admin_Settings::security_tab( 'activity', 'lookup' ), 'A sub-tab list that is no array keeps the free one.' );
+				$this->assertSame( array( 'activity', 'logs' ), ReportedIP_Hive_Admin_Settings::security_tab( 'x', '' ), 'A parent without a sub-tab list falls back.' );
+
+				$GLOBALS['wp_filters']['reportedip_hive_activity_tabs'] = array();
 				add_filter( 'reportedip_hive_activity_tabs', static fn() => null );
 				$this->assertSame( array( 'activity', 'lookup' ), ReportedIP_Hive_Admin_Settings::security_tab( 'activity', 'lookup' ) );
 				$this->assertSame( array( 'activity', 'logs' ), ReportedIP_Hive_Admin_Settings::security_tab( 'activity', 'extra' ) );

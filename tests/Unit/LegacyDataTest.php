@@ -22,6 +22,7 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-database.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-ip-manager.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-legacy-data.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-cron-handler.php';
 
 	if ( ! function_exists( 'wp_clear_scheduled_hook' ) ) {
 		/**
@@ -65,6 +66,50 @@ namespace {
 				'success' => true,
 				'message' => '',
 			);
+		}
+
+		public function get_blocked_ips( $active_only = true ) {
+			return array();
+		}
+
+		public function cleanup_expired_entries() {
+			return 0;
+		}
+	}
+
+	/**
+	 * Logger double for the daily cleanup: keeps the context of every
+	 * info line and every critical message.
+	 */
+	class Test_Legacy_Data_Logger {
+
+		/** @var array<string,array> */
+		public $info = array();
+
+		/** @var string[] */
+		public $critical = array();
+
+		public function info( $message, $ip = '', $context = array() ) {
+			$this->info[ (string) $message ] = (array) $context;
+		}
+
+		public function critical( $message, $ip = '' ) {
+			$this->critical[] = (string) $message;
+		}
+	}
+
+	/**
+	 * Database double for the daily cleanup: the free tables hold nothing
+	 * to anonymise or expire.
+	 */
+	class Test_Legacy_Data_Database {
+
+		public function anonymize_old_data( $days ) {
+			return 0;
+		}
+
+		public function cleanup_old_data( $days ) {
+			return 0;
 		}
 	}
 
@@ -332,6 +377,49 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$cron = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-cron-handler.php' );
 			$this->assertStringContainsString( "add_action( 'reportedip_hive_sync_group', array( 'ReportedIP_Hive_Legacy_Data', 'on_group_sync_event' ) );", $cron );
+		}
+
+		/**
+		 * Run the daily cleanup of the cron handler against the doubles.
+		 *
+		 * @return \Test_Legacy_Data_Logger
+		 */
+		private function run_daily_cleanup(): \Test_Legacy_Data_Logger {
+			$logger  = new \Test_Legacy_Data_Logger();
+			$handler = ( new \ReflectionClass( \ReportedIP_Hive_Cron_Handler::class ) )->newInstanceWithoutConstructor();
+			foreach ( array(
+				'logger'     => $logger,
+				'database'   => new \Test_Legacy_Data_Database(),
+				'ip_manager' => $this->ip_manager,
+			) as $name => $value ) {
+				( new \ReflectionProperty( \ReportedIP_Hive_Cron_Handler::class, $name ) )->setValue( $handler, $value );
+			}
+			$handler->cron_cleanup();
+			$this->assertSame( array(), $logger->critical );
+			return $logger;
+		}
+
+		public function test_the_daily_cleanup_runs_the_legacy_duties_and_logs_their_counts(): void {
+			$this->claim( false );
+			$this->seed_group_state();
+
+			$context = $this->run_daily_cleanup()->info['Daily cleanup completed'];
+
+			$this->assertSame( 2, $context['cleaned_audit'], 'The 2.x audit rows expire by their retention.' );
+			$this->assertSame( 3, $context['released_group'], 'The 2.x group rows go without the add-on.' );
+			$this->assertContains( 'DELETE FROM wp_reportedip_hive_audit_log WHERE created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 90 DAY) LIMIT 5000', $this->db->queries );
+			$this->assertSame( array( '198.51.100.10', '198.51.100.11' ), $this->ip_manager->unblocked );
+		}
+
+		public function test_with_the_add_on_the_daily_cleanup_leaves_both_tables_alone(): void {
+			$this->claim( true );
+			$this->seed_group_state();
+
+			$context = $this->run_daily_cleanup()->info['Daily cleanup completed'];
+
+			$this->assertSame( 0, $context['cleaned_audit'] );
+			$this->assertSame( 0, $context['released_group'] );
+			$this->assertSame( array(), $this->ip_manager->unblocked );
 		}
 
 		public function test_a_claimed_table_is_left_to_the_add_on(): void {

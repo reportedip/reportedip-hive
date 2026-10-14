@@ -219,6 +219,16 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 		}
 		check_admin_referer( 'reportedip_hive_2fa_export' );
 
+		/*
+		 * The free plugin exports the user status only. Any other type is
+		 * answered by an add-on before this handler runs, or refused here
+		 * with a 403, as 2.x refused an export the plan did not include.
+		 */
+		$type = isset( $_GET['type'] ) ? sanitize_key( wp_unslash( $_GET['type'] ) ) : 'users';
+		if ( 'users' !== $type ) {
+			wp_die( esc_html__( 'This export is not available.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
+		}
+
 		$out = self::open_csv( 'users' );
 		fputcsv( $out, array( 'id', 'login', 'email', 'roles', 'methods', 'recovery', 'enabled', 'enforced', 'skips', 'setup_date' ), ',', '"', '' );
 		foreach ( self::filter_rows( self::list_users( 10000 ), self::filters() ) as $row ) {
