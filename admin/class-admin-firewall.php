@@ -648,10 +648,37 @@ class ReportedIP_Hive_Admin_Firewall {
 		self::render_card_save_button();
 		echo '</div></div>';
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Active rulesets', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		$texts = array(
+			'active'   => __( 'Priority Sync is active for your account, the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download.', 'reportedip-hive' ),
+			'baseline' => __( 'The bundled baseline rulesets stay active on every installation. Priority Sync is delivered through your reportedip.com account: deeper coverage and regular updates, starting with a free Contributor account.', 'reportedip-hive' ),
+		);
+
+		/**
+		 * Texts of the Active rulesets card: `active` is the notice while
+		 * Priority Sync runs, `baseline` the line below the table otherwise.
+		 *
+		 * @param array<string,string> $texts    Texts by key.
+		 * @param array<string,mixed>  $priority `feature_status( 'rule_sync_priority' )`.
+		 * @since 3.0.0
+		 */
+		$texts = array_merge( $texts, (array) apply_filters( 'reportedip_hive_rule_sync_texts', $texts, $priority ) );
+
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Active rulesets', 'reportedip-hive' ) . '</h2>';
+
+		/**
+		 * Print into a slot of the Active rulesets card: `header` right after
+		 * the card title, `baseline` at the end of the baseline line (only
+		 * while Priority Sync is not running).
+		 *
+		 * @param string              $slot     `header` or `baseline`.
+		 * @param array<string,mixed> $priority `feature_status( 'rule_sync_priority' )`.
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_active_rulesets_slot', 'header', $priority );
+		echo '</div><div class="rip-card__body">';
 
 		if ( $has_priority ) {
-			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Priority Sync is active for your account, the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--success">' . esc_html( (string) $texts['active'] ) . '</div>';
 		} elseif ( $mode_manager->is_local_mode() ) {
 			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets.', 'reportedip-hive' ) . '</div>';
 		}
@@ -688,7 +715,10 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '<p class="rip-help-text">' . esc_html__( 'Sync:', 'reportedip-hive' ) . ' ' . ( $enabled ? esc_html__( 'enabled', 'reportedip-hive' ) : esc_html__( 'disabled', 'reportedip-hive' ) ) . ' &middot; ' . esc_html__( 'Last sync:', 'reportedip-hive' ) . ' ' . ( $last_run ? esc_html( wp_date( 'Y-m-d H:i:s', $last_run ) ) : esc_html__( 'never (baseline only)', 'reportedip-hive' ) ) . '</p>';
 
 		if ( ! $has_priority ) {
-			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active on every installation. Priority Sync is delivered through your reportedip.com account: deeper coverage and regular updates, starting with a free Contributor account.', 'reportedip-hive' ) . '</p>';
+			echo '<p class="rip-help-text">' . esc_html( (string) $texts['baseline'] );
+			/** This action is documented above, at the card title. */
+			do_action( 'reportedip_hive_active_rulesets_slot', 'baseline', $priority );
+			echo '</p>';
 		} else {
 			echo '<button type="button" class="rip-button rip-button--primary" id="rip-rule-sync-now" data-rip-action="reportedip_hive_rule_sync_now">' . esc_html__( 'Sync now', 'reportedip-hive' ) . '</button>';
 		}

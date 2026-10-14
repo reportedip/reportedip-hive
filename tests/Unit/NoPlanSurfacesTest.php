@@ -57,6 +57,15 @@ class NoPlanSurfacesTest extends TestCase {
 		}
 	}
 
+	public function test_the_active_rulesets_card_offers_a_slot_and_neutral_texts(): void {
+		$source = $this->source( 'admin/class-admin-firewall.php' );
+		$this->assertStringContainsString( "do_action( 'reportedip_hive_active_rulesets_slot', 'header', \$priority );", $source );
+		$this->assertStringContainsString( "do_action( 'reportedip_hive_active_rulesets_slot', 'baseline', \$priority );", $source );
+		$this->assertStringContainsString( "apply_filters( 'reportedip_hive_rule_sync_texts', \$texts, \$priority )", $source );
+		$this->assertStringNotContainsString( 'on your plan', $source );
+		$this->assertStringNotContainsString( 'Included from Contributor', $source );
+	}
+
 	public function test_the_header_badge_links_only_through_the_filter(): void {
 		$source = $this->source( 'admin/class-admin-settings.php' );
 		$this->assertStringContainsString( "\$tier_opts = apply_filters( 'reportedip_hive_header_badge', array(), \$tier_key );", $source );
