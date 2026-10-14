@@ -3,8 +3,9 @@
  * Admin 2FA Status Dashboard.
  *
  * Adds an admin submenu page that gives operators a single-pane view over
- * the 2FA state of every user: stat cards + filterable user list + audit
- * log excerpts. CSV export for compliance reviewers.
+ * the 2FA state of every user: stat cards + filterable user list. CSV
+ * export for compliance reviewers; an add-on can place further exports next
+ * to it.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -46,7 +47,6 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 		$stats            = self::compute_stats();
 		$filters          = self::filters();
 		$users            = self::filter_rows( self::list_users( 200 ), $filters );
-		$audit_status     = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
 		$post_url         = admin_url( 'admin-post.php' );
 		$export_users_url = wp_nonce_url(
 			add_query_arg(
@@ -56,16 +56,6 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 						'type'   => 'users',
 					),
 					array_filter( $filters )
-				),
-				$post_url
-			),
-			'reportedip_hive_2fa_export'
-		);
-		$export_audit_url = wp_nonce_url(
-			add_query_arg(
-				array(
-					'action' => 'reportedip_hive_2fa_export',
-					'type'   => 'audit',
 				),
 				$post_url
 			),
@@ -114,19 +104,20 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
 								<?php esc_html_e( 'User status CSV', 'reportedip-hive' ); ?>
 							</a>
-							<?php if ( ! empty( $audit_status['available'] ) ) : ?>
-							<a href="<?php echo esc_url( $export_audit_url ); ?>" class="rip-button rip-button--secondary rip-button--sm">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-								<?php esc_html_e( 'Audit log CSV', 'reportedip-hive' ); ?>
-							</a>
-							<?php else : ?>
-								<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $audit_status, array( 'label' => __( 'Audit log CSV: Business', 'reportedip-hive' ) ) ); ?>
-							<?php endif; ?>
+							<?php
+							/**
+							 * Print further export buttons next to the user status CSV,
+							 * as `a.rip-button.rip-button--secondary.rip-button--sm`.
+							 *
+							 * @since 3.0.0
+							 */
+							do_action( 'reportedip_hive_2fa_dashboard_actions' );
+							?>
 						</div>
 					</div>
 					<div class="rip-card__body">
 						<p class="rip-help-text rip-mb-4">
-							<?php esc_html_e( 'The user status CSV lists every user with roles, methods, recovery codes and enforcement state, filtered like the table below. The audit log CSV holds the 2FA-related security events (challenges, brute force, step-up decisions) and is part of the Business plan.', 'reportedip-hive' ); ?>
+							<?php esc_html_e( 'The user status CSV lists every user with roles, methods, recovery codes and enforcement state, filtered like the table below.', 'reportedip-hive' ); ?>
 						</p>
 						<form method="get" class="rip-form-inline rip-mb-4">
 							<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
@@ -228,44 +219,27 @@ class ReportedIP_Hive_Two_Factor_Dashboard {
 		}
 		check_admin_referer( 'reportedip_hive_2fa_export' );
 
-		$type = isset( $_GET['type'] ) ? sanitize_key( wp_unslash( $_GET['type'] ) ) : 'users';
-
-		if ( 'audit' === $type ) {
-			$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'audit_log' );
-			if ( empty( $status['available'] ) ) {
-				wp_die( esc_html__( 'The audit log is not available on your plan.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
-			}
-			$out = self::open_csv( $type );
-			fputcsv( $out, array( 'id', 'when', 'event', 'ip', 'severity', 'details' ), ',', '"', '' );
-			global $wpdb;
-			$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
-			$rows  = $wpdb->get_results( "SELECT id, created_at, event_type, ip_address, severity, details FROM $table WHERE event_type LIKE '%2fa%' OR details LIKE '%2fa%' ORDER BY id DESC LIMIT 500" ); // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Safe: table name from Schema::table(); literal hardcoded LIKE patterns.
-			foreach ( (array) $rows as $row ) {
-				fputcsv( $out, array( $row->id, $row->created_at, $row->event_type, $row->ip_address, $row->severity, $row->details ), ',', '"', '' );
-			}
-		} else {
-			$out = self::open_csv( $type );
-			fputcsv( $out, array( 'id', 'login', 'email', 'roles', 'methods', 'recovery', 'enabled', 'enforced', 'skips', 'setup_date' ), ',', '"', '' );
-			foreach ( self::filter_rows( self::list_users( 10000 ), self::filters() ) as $row ) {
-				fputcsv(
-					$out,
-					array(
-						$row['id'],
-						$row['login'],
-						$row['email'],
-						implode( '|', $row['roles'] ),
-						$row['methods'],
-						$row['recovery'],
-						$row['enabled'] ? '1' : '0',
-						$row['enforced'] ? '1' : '0',
-						$row['skips'],
-						$row['setup'],
-					),
-					',',
-					'"',
-					''
-				);
-			}
+		$out = self::open_csv( 'users' );
+		fputcsv( $out, array( 'id', 'login', 'email', 'roles', 'methods', 'recovery', 'enabled', 'enforced', 'skips', 'setup_date' ), ',', '"', '' );
+		foreach ( self::filter_rows( self::list_users( 10000 ), self::filters() ) as $row ) {
+			fputcsv(
+				$out,
+				array(
+					$row['id'],
+					$row['login'],
+					$row['email'],
+					implode( '|', $row['roles'] ),
+					$row['methods'],
+					$row['recovery'],
+					$row['enabled'] ? '1' : '0',
+					$row['enforced'] ? '1' : '0',
+					$row['skips'],
+					$row['setup'],
+				),
+				',',
+				'"',
+				''
+			);
 		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Closing the php://output stream; WP_Filesystem is for file paths.
 		fclose( $out );

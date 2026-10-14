@@ -82,5 +82,17 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( array( 4 ), $this->ids( array( 'status' => 'active', 'role' => 'editor' ) ) );
 			$this->assertSame( array(), $this->ids( array( 'status' => 'required', 'method' => 'totp' ) ) );
 		}
+
+		/**
+		 * Without the add-on the page offers the user status export only;
+		 * further exports hang into the action slot and answer their own
+		 * export type.
+		 */
+		public function test_further_exports_come_through_the_slot(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-two-factor-dashboard.php' );
+			$this->assertStringContainsString( "do_action( 'reportedip_hive_2fa_dashboard_actions' );", $source );
+			$this->assertStringNotContainsString( 'audit', strtolower( substr( $source, (int) strpos( $source, 'public function render(' ) ) ) );
+			$this->assertLessThan( strpos( $source, "do_action( 'reportedip_hive_2fa_dashboard_actions' );" ), strpos( $source, 'User status CSV' ), 'The slot follows the user status button.' );
+		}
 	}
 }
