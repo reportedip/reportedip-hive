@@ -24,69 +24,7 @@ defined( 'COOKIE_DOMAIN' ) || define( 'COOKIE_DOMAIN', '' );
 defined( 'DAY_IN_SECONDS' ) || define( 'DAY_IN_SECONDS', 86400 );
 defined( 'YEAR_IN_SECONDS' ) || define( 'YEAR_IN_SECONDS', 31536000 );
 
-if ( ! class_exists( 'ReportedIP_Hive_Test_Json_Response' ) ) {
-	/**
-	 * Thrown by the wp_send_json_* doubles, so a handler stops where
-	 * WordPress would exit and the test can read the payload.
-	 */
-	class ReportedIP_Hive_Test_Json_Response extends RuntimeException {
-
-		/**
-		 * Whether the success variant was sent.
-		 *
-		 * @var bool
-		 */
-		public $success;
-
-		/**
-		 * Response payload.
-		 *
-		 * @var mixed
-		 */
-		public $data;
-
-		/**
-		 * HTTP status passed by the handler.
-		 *
-		 * @var int|null
-		 */
-		public $status;
-
-		/**
-		 * @param bool     $success Success flag.
-		 * @param mixed    $data    Payload.
-		 * @param int|null $status  HTTP status.
-		 */
-		public function __construct( $success, $data, $status = null ) {
-			parent::__construct( $success ? 'json success' : 'json error' );
-			$this->success = (bool) $success;
-			$this->data    = $data;
-			$this->status  = $status;
-		}
-	}
-}
-
-if ( ! function_exists( 'wp_send_json_success' ) ) {
-	/**
-	 * @param mixed    $data   Payload.
-	 * @param int|null $status HTTP status.
-	 * @throws ReportedIP_Hive_Test_Json_Response Always.
-	 */
-	function wp_send_json_success( $data = null, $status = null ) {
-		throw new ReportedIP_Hive_Test_Json_Response( true, $data, $status );
-	}
-}
-
-if ( ! function_exists( 'wp_send_json_error' ) ) {
-	/**
-	 * @param mixed    $data   Payload.
-	 * @param int|null $status HTTP status.
-	 * @throws ReportedIP_Hive_Test_Json_Response Always.
-	 */
-	function wp_send_json_error( $data = null, $status = null ) {
-		throw new ReportedIP_Hive_Test_Json_Response( false, $data, $status );
-	}
-}
+require_once __DIR__ . '/json-response-stubs.php';
 
 if ( ! function_exists( 'is_ssl' ) ) {
 	/**
