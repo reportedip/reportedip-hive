@@ -119,7 +119,7 @@ class ReportedIP_Hive_Legacy_Audit_Multisite_Test extends ReportedIP_Hive_Legacy
 
 	public function test_the_free_plugin_does_not_claim_the_table() {
 		$this->assertNotContains( 'reportedip_hive_audit_log', ReportedIP_Hive_Schema::tables() );
-		$this->assertSame( array( 'reportedip_hive_audit_log' ), ReportedIP_Hive_Schema::unclaimed_legacy_tables() );
+		$this->assertSame( array( 'reportedip_hive_audit_log', 'reportedip_hive_group_entries' ), ReportedIP_Hive_Schema::unclaimed_legacy_tables() );
 		$this->assertTrue( ReportedIP_Hive_Legacy_Data::orphaned( 'reportedip_hive_audit_log' ) );
 	}
 

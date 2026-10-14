@@ -574,15 +574,16 @@ final class ReportedIP_Hive_Migration_Manager {
 	}
 
 	/**
-	 * Migrate to v21: `group_entries` keeps the group list as the service sent
-	 * it, so the Group tab can show every entry with its reporter, categories
-	 * and window, and why this site did or did not block it.
+	 * Created `group_entries`, the group list as the service sent it (2.1.67).
+	 *
+	 * Moved to the add-on in 3.0.0, kept so the counter stays linear: the
+	 * group table belongs to the add-on, whose own schema creates it or
+	 * adopts the one a 2.x release left.
 	 *
 	 * @return void
 	 * @since  2.1.67
 	 */
 	private static function migrate_to_v21() {
-		ReportedIP_Hive_Schema::ensure_tables();
 	}
 
 	/**

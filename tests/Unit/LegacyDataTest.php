@@ -1,7 +1,8 @@
 <?php
 /**
  * Audit rows a 2.x release left behind keep their retention, export and
- * erasure while no add-on claims the table, and only then.
+ * erasure while no add-on claims the table, and only then; the group list
+ * of 2.x goes with the data on uninstall.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -133,16 +134,16 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * Let an add-on claim the audit table, or take it out of the list.
+		 * Let an add-on claim the legacy tables, or take them out of the list.
 		 *
-		 * @param bool $claimed Whether the table is claimed.
+		 * @param bool $claimed Whether the tables are claimed.
 		 */
 		private function claim( bool $claimed ): void {
 			add_filter(
 				'reportedip_hive_schema_tables',
 				static function ( $suffixes ) use ( $claimed ) {
-					$suffixes = array_diff( $suffixes, array( 'reportedip_hive_audit_log' ) );
-					return $claimed ? array_merge( $suffixes, array( 'reportedip_hive_audit_log' ) ) : array_values( $suffixes );
+					$suffixes = array_diff( $suffixes, \ReportedIP_Hive_Schema::LEGACY_SUFFIXES );
+					return $claimed ? array_merge( $suffixes, \ReportedIP_Hive_Schema::LEGACY_SUFFIXES ) : array_values( $suffixes );
 				}
 			);
 		}
@@ -161,13 +162,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( array(), \ReportedIP_Hive_Schema::unclaimed_legacy_tables() );
 			$GLOBALS['wp_filters']['reportedip_hive_schema_tables'] = array();
 			$this->claim( false );
-			$this->assertSame( array( 'reportedip_hive_audit_log' ), \ReportedIP_Hive_Schema::unclaimed_legacy_tables() );
+			$this->assertSame( array( 'reportedip_hive_audit_log', 'reportedip_hive_group_entries' ), \ReportedIP_Hive_Schema::unclaimed_legacy_tables() );
 		}
 
 		public function test_uninstall_drops_an_unclaimed_legacy_table_once(): void {
 			$this->claim( false );
 			\ReportedIP_Hive_Schema::drop_all_tables();
 			$this->assertSame( 1, count( array_keys( $this->db->queries, 'DROP TABLE IF EXISTS wp_reportedip_hive_audit_log', true ) ) );
+			$this->assertSame( 1, count( array_keys( $this->db->queries, 'DROP TABLE IF EXISTS wp_reportedip_hive_group_entries', true ) ), 'The group list of 2.x goes with the data, as in 2.1.74.' );
 
 			$this->db->queries                                     = array();
 			$GLOBALS['wp_filters']['reportedip_hive_schema_tables'] = array();
