@@ -285,7 +285,7 @@ class ReportedIP_Hive_Quickstart {
 		$adapters = ReportedIP_Hive_Form_Adapters::get_instance();
 		$mode     = ReportedIP_Hive_Mode_Manager::get_instance();
 		$names    = array();
-		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+		foreach ( ReportedIP_Hive_Form_Adapters::adapters() as $slug => $adapter ) {
 			$status = $mode->feature_status( $adapter['feature'] );
 			$plan   = isset( $status['min_tier'] ) ? (string) $status['min_tier'] : 'free';
 
