@@ -60,7 +60,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'registration_limit'              => 'spam',
 				'geo_anomaly_detected'            => 'anomaly',
 				'blocked_by_reputation'           => 'anomaly',
-				'blocked_by_tor_exit'             => 'anomaly',
 				'2fa_webauthn_counter_regression' => 'anomaly',
 			);
 			foreach ( $expected as $event => $family ) {

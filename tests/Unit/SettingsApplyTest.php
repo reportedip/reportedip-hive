@@ -266,7 +266,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		/**
+		 * Register a plan-gated switch the way the add-on registers its own
+		 * (the Tor switch, `tier` => `tor_blocking`); the free spec carries
+		 * no plan-gated key, the apply path still has to honour the gate.
+		 */
+		private function register_gated_switch(): void {
+			add_filter(
+				'reportedip_hive_settings_spec',
+				static function ( $spec ) {
+					$spec['reportedip_hive_block_tor'] = array(
+						'section' => 'blocking',
+						'kind'    => 'bool',
+						'tier'    => 'tor_blocking',
+						'remote'  => true,
+						'label'   => 'Block Tor exit nodes',
+					);
+					return $spec;
+				}
+			);
+			\ReportedIP_Hive_Settings_Registry::flush_spec_cache();
+		}
+
 		public function test_atomic_batch_writes_nothing_when_one_key_is_rejected() {
+			$this->register_gated_switch();
 			$result = \ReportedIP_Hive_Settings_Apply::apply(
 				array(
 					'reportedip_hive_auto_block' => 0,
@@ -317,6 +340,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_tier_gated_enable_is_skipped_without_write() {
+			$this->register_gated_switch();
 			$result = \ReportedIP_Hive_Settings_Apply::apply(
 				array( 'reportedip_hive_block_tor' => 1 ),
 				'test'
@@ -328,6 +352,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_tier_gated_disable_is_always_allowed() {
+			$this->register_gated_switch();
 			$GLOBALS['wp_options']['reportedip_hive_block_tor'] = 1;
 
 			$result = \ReportedIP_Hive_Settings_Apply::apply(
@@ -339,6 +364,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_tier_gated_value_already_stored_is_unchanged_not_skipped() {
+			$this->register_gated_switch();
 			$GLOBALS['wp_options']['reportedip_hive_block_tor'] = 1;
 
 			$result = \ReportedIP_Hive_Settings_Apply::apply(

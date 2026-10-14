@@ -189,20 +189,6 @@ test.describe('protection page', () => {
 		}
 	});
 
-	test('search finds Tor across tabs, opens the details and marks the label', async ({ page }) => {
-		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection&tab=operations');
-		await page.fill('#rip-protection-search', 'tor');
-		await expect(page.locator('.rip-protection__panel[data-tab="basics"]')).toBeVisible();
-		await expect(page.locator('#blocking .rip-protection__details')).toHaveAttribute('open', '');
-		await expect(page.locator('#blocking mark').first()).toContainText(/tor/i);
-		await expect(page.locator('#notifications')).toHaveClass(/rip-hidden/);
-		await expect(page.locator('#rip-protection-no-results')).toHaveClass(/rip-hidden/);
-		await page.fill('#rip-protection-search', '');
-		await expect(page.locator('.rip-protection__panel[data-tab="operations"]')).toBeVisible();
-		await expect(page.locator('.rip-protection__panel[data-tab="basics"]')).toBeHidden();
-	});
-
 	test('a section link opens its tab', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection#privacy_logs');

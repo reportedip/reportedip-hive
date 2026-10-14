@@ -288,11 +288,6 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'group'  => 'reputation',
 				'family' => 'anomaly',
 			),
-			'blocked_by_tor_exit'               => array(
-				'label'  => __( 'Blocked Tor Exit Node', 'reportedip-hive' ),
-				'group'  => 'reputation',
-				'family' => 'anomaly',
-			),
 			'reputation_infrastructure_spared'  => array(
 				'label'  => __( 'Infrastructure Spared (forms)', 'reportedip-hive' ),
 				'group'  => 'reputation',
@@ -387,10 +382,6 @@ class ReportedIP_Hive_Event_Taxonomy {
 			),
 			'would_block_by_reputation'         => array(
 				'label' => __( 'Would Block by Reputation', 'reportedip-hive' ),
-				'group' => 'reportonly',
-			),
-			'would_block_by_tor_exit'           => array(
-				'label' => __( 'Would Block Tor Exit Node', 'reportedip-hive' ),
 				'group' => 'reportonly',
 			),
 			'would_send_notification'           => array(

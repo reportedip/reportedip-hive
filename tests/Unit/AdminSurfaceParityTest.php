@@ -90,7 +90,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'reportedip_hive_ruleset_bot_signatures'     => 'Runtime state: synced ruleset payload.',
 			'reportedip_hive_ruleset_disposable_domains' => 'Runtime state: synced ruleset payload.',
 			'reportedip_hive_ruleset_scan_paths'         => 'Runtime state: synced ruleset payload.',
-			'reportedip_hive_ruleset_tor_exits'          => 'Runtime state: synced ruleset payload.',
 			'reportedip_hive_form_proof_field'           => 'Runtime state: the per-site proof field name. A fleet-wide push of one name would defeat the point of it being per-site.',
 			'reportedip_hive_form_proof_seen'            => 'Runtime state: when an anchor was last rendered. Measured, not configured.',
 			'reportedip_hive_form_adapters_since'        => 'Runtime state: when the first third-party form adapter was switched on, so a page cache filled beforehand keeps working through the grace.',

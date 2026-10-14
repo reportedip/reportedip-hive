@@ -118,6 +118,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
+		public function test_without_an_add_on_no_tor_list_is_known(): void {
+			$this->assertNotContains( 'tor_exits', \ReportedIP_Hive_Rule_Store::keys(), 'the exit-node list is synced only with the add-on' );
+			$this->assertFalse( \ReportedIP_Hive_Rule_Store::is_valid_key( 'tor_exits' ) );
+		}
 
 		public function test_get_ruleset_falls_back_to_baseline(): void {
 			$got = $this->sync()->get_ruleset( 'disposable_domains' );

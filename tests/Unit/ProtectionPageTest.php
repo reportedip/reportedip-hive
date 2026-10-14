@@ -35,15 +35,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_collect_values_turns_the_post_of_one_section_into_registry_values(): void {
 			$post   = array(
 				'reportedip_hive_block_duration'       => '48',
-				'reportedip_hive_block_tor'            => '1',
+				'reportedip_hive_report_only_mode'     => '1',
 				'reportedip_hive_block_ladder_minutes' => '5, 15, 30',
 			);
 			$values = ReportedIP_Hive_Protection_Page::collect_values( $post, 'blocking' );
 
 			$this->assertSame( '48', $values['reportedip_hive_block_duration'] );
-			$this->assertSame( '1', $values['reportedip_hive_block_tor'] );
+			$this->assertSame( '1', $values['reportedip_hive_report_only_mode'] );
 			$this->assertSame( '0', $values['reportedip_hive_auto_block'], 'an unticked switch of the section is posted as 0' );
-			$this->assertSame( '0', $values['reportedip_hive_report_only_mode'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_block_tor', $values, 'the Tor switch comes with the add-on' );
 			$this->assertArrayNotHasKey( 'reportedip_hive_waf_enabled', $values, 'keys of other sections are never touched' );
 		}
 

@@ -517,14 +517,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Report-only mode', 'reportedip-hive' ),
 				'description' => __( 'Record every decision without acting on any of it. Use this to see what the settings would do before letting them do it.', 'reportedip-hive' ),
 			),
-			'reportedip_hive_block_tor'                    => array(
-				'section'     => 'blocking',
-				'kind'        => 'bool',
-				'tier'        => 'tor_blocking',
-				'remote'      => true,
-				'label'       => __( 'Block Tor exit nodes', 'reportedip-hive' ),
-				'description' => __( 'Refuse addresses on the signed Tor exit-node list. Anonymity is not an attack in itself, so this is off unless your site has a reason.', 'reportedip-hive' ),
-			),
 			'reportedip_hive_blocked_page_contact_url'     => array(
 				'section'     => 'blocking',
 				'kind'        => 'url',

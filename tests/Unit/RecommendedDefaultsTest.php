@@ -67,7 +67,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_professional_unlocks_tor_hsts_and_retention(): void {
 			$pro = \ReportedIP_Hive_Defaults::recommended( 'professional' );
-			$this->assertSame( 1, $pro['reportedip_hive_block_tor'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_block_tor', $pro, 'Tor blocking is recommended by the add-on.' );
 			$this->assertArrayNotHasKey( 'reportedip_hive_hsts_enabled', $pro, 'HSTS is recommended by the add-on.' );
 			$this->assertSame( 90, $pro['reportedip_hive_data_retention_days'] );
 			$this->assertArrayNotHasKey( 'reportedip_hive_2fa_frontend_enabled', $pro, 'The storefront switch is recommended by the add-on.' );

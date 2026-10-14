@@ -1191,15 +1191,15 @@ class ReportedIP_Hive {
 		}
 
 		$is_infrastructure = is_array( $reputation ) && ! empty( $reputation['isWhitelisted'] );
-		$tor_candidate     = ! $is_infrastructure && $this->should_block_tor_exit( $ip_address, $reputation );
+		$extra_block       = $is_infrastructure ? null : $this->extra_block_reason( $ip_address, $reputation );
 
 		if ( $report_only ) {
-			if ( $tor_candidate ) {
+			if ( $extra_block ) {
 				$this->logger->log_security_event(
-					'would_block_by_tor_exit',
+					$extra_block['report_only_event'],
 					$ip_address,
 					array(
-						'reason'           => 'Known Tor exit node (blocking enabled, report-only mode active)',
+						'reason'           => $extra_block['report_only_reason'],
 						'report_only_mode' => true,
 					),
 					'high'
@@ -1308,121 +1308,94 @@ class ReportedIP_Hive {
 			return new WP_Error( 'ip_reputation_block', __( 'Access denied due to IP reputation.', 'reportedip-hive' ) );
 		}
 
-		if ( $tor_candidate && ! $this->ip_manager->is_whitelisted( $ip_address ) && ! self::is_own_server_ip( $ip_address ) ) {
+		if ( $extra_block && ! $this->ip_manager->is_whitelisted( $ip_address ) && ! self::is_own_server_ip( $ip_address ) ) {
 			/**
-			 * Filters how long a Tor exit node stays blocked locally.
+			 * Filters how long a block for an add-on reason stays in place.
 			 *
-			 * Exit nodes rotate quickly, so the block is temporary: after the
-			 * window expires the next login attempt re-evaluates the address
-			 * against the refreshed exit-node list.
+			 * The block is temporary: after the window expires the next login
+			 * attempt asks the add-on again. At least one hour.
 			 *
-			 * @param int $hours Block duration in hours (default 24).
-			 * @since 2.1.41
+			 * @param int    $hours Block duration in hours (default 24).
+			 * @param string $event Event type of the block.
+			 * @since 3.0.0
 			 */
-			$tor_block_hours = max( 1, (int) apply_filters( 'reportedip_hive_tor_block_hours', 24 ) );
+			$block_hours = max( 1, (int) apply_filters( 'reportedip_hive_extra_block_hours', 24, $extra_block['event'] ) );
 
 			$database = ReportedIP_Hive_Database::get_instance();
 			$database->block_ip(
 				$ip_address,
-				'Tor exit node',
+				$extra_block['block_reason'],
 				'reputation',
-				$tor_block_hours
+				$block_hours
 			);
 			$database->update_daily_stats( 'reputation_blocks' );
 			$this->mark_ip_blocked( $ip_address );
 
 			$this->logger->log_security_event(
-				'blocked_by_tor_exit',
+				$extra_block['event'],
 				$ip_address,
 				array(
-					'reason'      => 'Known Tor exit node (Tor blocking enabled)',
-					'block_hours' => $tor_block_hours,
+					'reason'      => $extra_block['log_reason'],
+					'block_hours' => $block_hours,
 				),
 				'high'
 			);
 
-			return new WP_Error( 'ip_tor_block', __( 'Access denied: connections from Tor exit nodes are not allowed on this site.', 'reportedip-hive' ) );
+			return new WP_Error( $extra_block['error_code'], $extra_block['message'] );
 		}
 
 		return $user;
 	}
 
 	/**
-	 * Whether the current request should be treated as a blockable Tor exit
-	 * node: the feature must be tier-available (Professional+), the operator
-	 * must have enabled the toggle, and the address must match the synced
-	 * exit-node ruleset or carry the community isTor flag.
+	 * Ask the add-ons whether a sign-in should be refused for a reason the
+	 * free plugin does not know, and normalise the answer.
 	 *
-	 * Running an exit node is not abuse evidence, so Tor blocks never produce
-	 * a community report, the block row is the only consequence, and it
-	 * reaches the pre-WordPress guard through the regular blocklist bridge.
-	 *
-	 * @param string     $ip_address Client IP.
-	 * @param array|bool $reputation Reputation payload from the check response, or false.
-	 * @return bool
-	 * @since  2.1.41
-	 */
-	private function should_block_tor_exit( $ip_address, $reputation ) {
-		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_block_tor', false ) ) {
-			return false;
-		}
-
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'tor_blocking' );
-		if ( empty( $status['available'] ) ) {
-			return false;
-		}
-
-		return self::is_tor_exit( $ip_address, $reputation );
-	}
-
-	/**
-	 * Check an address against the synced `tor_exits` ruleset, falling back
-	 * to the community isTor flag for addresses the (possibly stale) list
-	 * does not carry yet.
-	 *
-	 * The feed delivers flat CIDR strings (`x.x.x.x/32`, IPv6 `/128`), so
-	 * host entries are reduced to a per-request hash set for O(1) lookups;
-	 * genuine ranges (rare) fall back to the CIDR matcher.
+	 * Runs after the IP block and the reputation check and only for an
+	 * address the service does not mark as infrastructure. The caller keeps
+	 * the consequences: report-only logs instead of blocking, a whitelisted
+	 * address and the server's own address are never blocked, and no
+	 * community report is sent for such a block.
 	 *
 	 * @param string     $ip_address Client IP.
-	 * @param array|bool $reputation Reputation payload from the check response, or false.
-	 * @return bool
-	 * @since  2.1.41
+	 * @param array|bool $reputation Reputation payload or false.
+	 * @return array{event:string,report_only_event:string,block_reason:string,log_reason:string,report_only_reason:string,error_code:string,message:string}|null
+	 * @since  3.0.0
 	 */
-	public static function is_tor_exit( $ip_address, $reputation = false ) {
-		static $exact  = null;
-		static $ranges = null;
-
-		if ( null === $exact ) {
-			$exact  = array();
-			$ranges = array();
-
-			$ruleset = ReportedIP_Hive_Rule_Sync::get_instance()->get_ruleset( 'tor_exits' );
-			foreach ( (array) $ruleset['rules'] as $entry ) {
-				if ( ! is_string( $entry ) || '' === $entry ) {
-					continue;
-				}
-				if ( substr( $entry, -3 ) === '/32' || substr( $entry, -4 ) === '/128' ) {
-					$exact[ substr( $entry, 0, (int) strrpos( $entry, '/' ) ) ] = true;
-				} elseif ( false === strpos( $entry, '/' ) ) {
-					$exact[ $entry ] = true;
-				} else {
-					$ranges[] = $entry;
-				}
-			}
+	private function extra_block_reason( $ip_address, $reputation ) {
+		/**
+		 * Refuse a sign-in attempt for a reason the free plugin does not know.
+		 *
+		 * Return a non-empty event slug, or an array with `event` and any of
+		 * `report_only_event`, `block_reason` (row of the blocked table),
+		 * `log_reason`, `report_only_reason`, `error_code` and `message` (the
+		 * sign-in error). Anything else blocks nothing.
+		 *
+		 * @param string     $reason     Empty string.
+		 * @param string     $ip_address Client IP.
+		 * @param array|bool $reputation Reputation payload or false.
+		 * @since 3.0.0
+		 */
+		$raw = apply_filters( 'reportedip_hive_pre_auth_block_reason', '', $ip_address, is_array( $reputation ) ? $reputation : false );
+		if ( is_string( $raw ) ) {
+			$raw = array( 'event' => $raw );
 		}
-
-		if ( isset( $exact[ $ip_address ] ) ) {
-			return true;
+		if ( ! is_array( $raw ) || ! isset( $raw['event'] ) || ! is_string( $raw['event'] ) || '' === $raw['event'] || sanitize_key( $raw['event'] ) !== $raw['event'] ) {
+			return null;
 		}
+		$text = static function ( $key, $fallback ) use ( $raw ) {
+			return isset( $raw[ $key ] ) && is_string( $raw[ $key ] ) && '' !== $raw[ $key ] ? $raw[ $key ] : $fallback;
+		};
 
-		foreach ( $ranges as $range ) {
-			if ( ReportedIP_Hive_Database::ip_in_cidr( $ip_address, $range ) ) {
-				return true;
-			}
-		}
-
-		return is_array( $reputation ) && ! empty( $reputation['isTor'] );
+		return array(
+			'event'              => $raw['event'],
+			'report_only_event'  => sanitize_key( $text( 'report_only_event', 'would_block_access' ) ),
+			'block_reason'       => $text( 'block_reason', $raw['event'] ),
+			'log_reason'         => $text( 'log_reason', '' ),
+			'report_only_reason' => $text( 'report_only_reason', '' ),
+			'error_code'         => sanitize_key( $text( 'error_code', 'ip_blocked' ) ),
+			'message'            => $text( 'message', __( 'Your IP address has been blocked due to suspicious activity.', 'reportedip-hive' ) ),
+		);
 	}
 
 	/**

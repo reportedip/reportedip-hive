@@ -84,8 +84,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_ruleset_bot_signatures'          => '',
 		'reportedip_hive_ruleset_disposable_domains'      => '',
 		'reportedip_hive_ruleset_scan_paths'              => '',
-		'reportedip_hive_ruleset_tor_exits'               => '',
-		'reportedip_hive_block_tor'                       => false,
 
 		'reportedip_hive_waf_enabled'                     => true,
 		'reportedip_hive_waf_report_only'                 => false,
@@ -624,7 +622,6 @@ final class ReportedIP_Hive_Defaults {
 		$values['reportedip_hive_form_proof_cf7'] = 1;
 
 		if ( $rank >= 1 ) {
-			$values['reportedip_hive_block_tor']           = 1;
 			$values['reportedip_hive_data_retention_days'] = 90;
 		}
 

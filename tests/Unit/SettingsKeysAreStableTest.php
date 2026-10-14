@@ -72,7 +72,6 @@ class SettingsKeysAreStableTest extends TestCase {
 			'reportedip_hive_auto_footer_variant',
 			'reportedip_hive_block_duration',
 			'reportedip_hive_block_threshold',
-			'reportedip_hive_block_tor',
 			'reportedip_hive_block_escalation_enabled',
 			'reportedip_hive_block_ladder_minutes',
 			'reportedip_hive_block_ladder_reset_days',

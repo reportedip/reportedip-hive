@@ -2746,15 +2746,6 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 		register_setting(
 			'reportedip_hive_protection_blocking',
-			'reportedip_hive_block_tor',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_block_tor' ),
-			)
-		);
-
-		register_setting(
-			'reportedip_hive_protection_blocking',
 			'reportedip_hive_blocked_page_contact_url',
 			array(
 				'type'              => 'string',

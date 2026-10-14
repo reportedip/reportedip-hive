@@ -130,7 +130,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_block_ladder_minutes'          => 'csv_int_list',
 				'reportedip_hive_block_ladder_reset_days'       => 'int',
 				'reportedip_hive_report_only_mode'              => 'bool',
-				'reportedip_hive_block_tor'                     => 'bool',
 				'reportedip_hive_blocked_page_contact_url'      => 'url',
 				'reportedip_hive_waf_enabled'                   => 'bool',
 				'reportedip_hive_waf_report_only'               => 'bool',
