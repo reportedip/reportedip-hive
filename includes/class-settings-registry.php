@@ -717,15 +717,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Apply the proof to sign-up and password reset', 'reportedip-hive' ),
 				'description' => __( 'A comment that fails the check is filed for review, a sign-up or password reset that fails is refused. Switch this off to keep the comment protection while leaving both login forms untouched.', 'reportedip-hive' ),
 			),
-			'reportedip_hive_form_proof_pow'               => array(
-				'section'      => 'forms',
-				'kind'         => 'bool',
-				'remote'       => true,
-				'tier'         => 'form_proof_pow',
-				'side_effects' => array( 'stamp_form_proof_pow' ),
-				'label'        => __( 'Computation check on forms', 'reportedip-hive' ),
-				'description'  => __( 'Hand the form a small task that the browser fetches from this site and works out in the background. The task is signed, good once, expires in ten minutes and gets harder the faster one network asks for it. A script that only copies the hidden field out of the page can no longer pass for a visitor, and nobody has to read a distorted image. The page stays fully cacheable. Without HTTPS the task carries no arithmetic but keeps its signature and single use.', 'reportedip-hive' ),
-			),
 			'reportedip_hive_form_proof_cf7'               => array(
 				'simple_form'  => 'cf7',
 				'section'      => 'forms',

@@ -114,32 +114,17 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * The computation check ships on.
+		 * Seeding owes a setting the side effects its registry entry declares.
 		 *
-		 * It is gated to Professional, so on a lower plan the switch is inert;
-		 * the point of the default is that a site which never touched the
-		 * setting still gets the check the moment its plan covers it.
+		 * A side effect only ran when a channel wrote the setting. A default
+		 * that nobody writes left a clock such as the adapter grace at zero,
+		 * which reads as "never enforce": the work of a protection without its
+		 * effect.
 		 */
-		public function test_the_computation_check_is_on_by_default() {
-			$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
+		public function test_seeding_owes_a_setting_its_declared_effect() {
+			$tokens = \ReportedIP_Hive_Defaults::seed_effect_tokens( array( 'reportedip_hive_form_proof_cf7' ) );
 
-			$this->assertTrue( $defaults['reportedip_hive_form_proof_pow'] );
-		}
-
-		/**
-		 * Seeding owes the computation check its grace-clock stamp.
-		 *
-		 * The clock is written by the `stamp_form_proof_pow` side effect, and a
-		 * side effect only ran when a channel wrote the setting. A default that
-		 * nobody writes left the clock at zero, and `pow_required()` reads a
-		 * zero as "never enforce". The check would be planted on every form and
-		 * demanded on none, which is the worst of both: the work of a
-		 * protection without its effect.
-		 */
-		public function test_seeding_owes_the_computation_check_its_stamp() {
-			$tokens = \ReportedIP_Hive_Defaults::seed_effect_tokens( array( 'reportedip_hive_form_proof_pow' ) );
-
-			$this->assertContains( 'stamp_form_proof_pow', $tokens );
+			$this->assertContains( 'stamp_form_adapters_since', $tokens );
 		}
 
 		/**
