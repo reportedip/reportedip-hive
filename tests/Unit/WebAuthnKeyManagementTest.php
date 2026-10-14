@@ -400,7 +400,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$verify = $this->ajax( 'ajax_register_verify', array( 'credential' => '{}' ) );
 			$this->assertFalse( $verify->success );
 			$this->assertSame( $options->data['message'], $verify->data['message'], 'A crafted request straight to the verify endpoint meets the same limit.' );
+			$this->assertSame( 'This account already has a security key. Remove it before adding another.', $options->data['message'] );
+			$this->assertStringNotContainsString( 'plan', $options->data['message'], 'The free plugin names no plan in an AJAX answer.' );
 			$this->assertCount( 1, ReportedIP_Hive_Two_Factor_WebAuthn::get_user_credentials( self::USER_ID ) );
+		}
+
+		public function test_the_key_limit_refusal_is_filterable(): void {
+			$this->store_keys( array( 'first' ) );
+			add_filter(
+				'reportedip_hive_webauthn_key_limit_message',
+				static function ( $message, $user_id ) {
+					return 'add-on sentence for ' . $user_id;
+				},
+				10,
+				2
+			);
+
+			$options = $this->ajax( 'ajax_register_options', array() );
+			$this->assertSame( 'add-on sentence for ' . self::USER_ID, $options->data['message'] );
 		}
 
 		public function test_an_account_with_several_keys_can_remove_them_but_not_add_one(): void {

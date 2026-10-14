@@ -74,7 +74,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		self::throttle_registration( $user_id );
 		self::require_method_allowed();
 		if ( ! self::can_add_key( $user_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Multiple security keys per account require the Business plan. Your first key stays free.', 'reportedip-hive' ) ) );
+			wp_send_json_error( array( 'message' => self::key_limit_message( $user_id ) ) );
 		}
 
 		$user = get_userdata( $user_id );
@@ -248,6 +248,28 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	/**
+	 * The refusal an account meets when it may not register one more key.
+	 *
+	 * @param int $user_id User id.
+	 * @return string
+	 * @since 3.0.0
+	 */
+	private static function key_limit_message( $user_id ) {
+		/**
+		 * Word the refusal of one more security key.
+		 *
+		 * @param string $message Default sentence.
+		 * @param int    $user_id User id.
+		 * @since 3.0.0
+		 */
+		return (string) apply_filters(
+			'reportedip_hive_webauthn_key_limit_message',
+			__( 'This account already has a security key. Remove it before adding another.', 'reportedip-hive' ),
+			(int) $user_id
+		);
+	}
+
+	/**
 	 * Light per-user throttle for the registration options endpoint so a
 	 * scripted caller cannot churn challenge transients (max 10 per 10
 	 * minutes; the endpoint is priv + capability-checked already).
@@ -299,7 +321,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		self::require_method_allowed();
 
 		if ( ! self::can_add_key( $user_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Multiple security keys per account require the Business plan. Your first key stays free.', 'reportedip-hive' ) ) );
+			wp_send_json_error( array( 'message' => self::key_limit_message( $user_id ) ) );
 		}
 
 		$stored_challenge_b64 = get_transient( self::TRANSIENT_PREFIX . 'register_' . $user_id );
