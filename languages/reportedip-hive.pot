@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-14T16:51:50+00:00\n"
+"POT-Creation-Date: 2026-10-14T17:51:40+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -45,7 +45,7 @@ msgstr ""
 #: admin/class-admin-firewall.php:113
 #: admin/class-admin-settings.php:3904
 #: admin/class-admin-settings.php:5617
-#: admin/class-two-factor-admin.php:477
+#: admin/class-two-factor-admin.php:450
 msgid "Save"
 msgstr ""
 
@@ -252,8 +252,8 @@ msgstr ""
 #: admin/class-protection-page.php:458
 #: admin/class-protection-page.php:1219
 #: admin/class-tools-page.php:264
-#: admin/class-two-factor-admin.php:740
-#: admin/class-two-factor-admin.php:1227
+#: admin/class-two-factor-admin.php:713
+#: admin/class-two-factor-admin.php:1200
 #: includes/class-two-factor-dashboard.php:304
 msgid "Active"
 msgstr ""
@@ -296,7 +296,7 @@ msgstr ""
 
 #. translators: %s: absolute path of the queue directory.
 #: admin/class-admin-firewall.php:382
-#: includes/class-readiness.php:726
+#: includes/class-readiness.php:738
 #, php-format
 msgid "The guard cannot write to %s, so blocked requests are stopped but never reach the log, the counters or the escalation ladder. Give the web-server user write access to that directory."
 msgstr ""
@@ -492,78 +492,78 @@ msgstr ""
 msgid "On"
 msgstr ""
 
-#: admin/class-admin-firewall.php:651
-msgid "Active rulesets"
-msgstr ""
-
-#: admin/class-admin-firewall.php:654
+#: admin/class-admin-firewall.php:652
 msgid "Priority Sync is active for your account, the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download."
 msgstr ""
 
-#: admin/class-admin-firewall.php:656
+#: admin/class-admin-firewall.php:653
+msgid "The bundled baseline rulesets stay active on every installation. Priority Sync is delivered through your reportedip.com account: deeper coverage and regular updates, starting with a free Contributor account."
+msgstr ""
+
+#: admin/class-admin-firewall.php:666
+msgid "Active rulesets"
+msgstr ""
+
+#: admin/class-admin-firewall.php:683
 msgid "Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets."
 msgstr ""
 
-#: admin/class-admin-firewall.php:660
+#: admin/class-admin-firewall.php:687
 msgid "Ruleset"
 msgstr ""
 
-#: admin/class-admin-firewall.php:660
+#: admin/class-admin-firewall.php:687
 msgid "Feeds"
 msgstr ""
 
-#: admin/class-admin-firewall.php:660
+#: admin/class-admin-firewall.php:687
 #: admin/class-tools-page.php:42
 msgid "Rules"
 msgstr ""
 
-#: admin/class-admin-firewall.php:660
+#: admin/class-admin-firewall.php:687
 msgid "Version"
 msgstr ""
 
-#: admin/class-admin-firewall.php:660
+#: admin/class-admin-firewall.php:687
 #: admin/class-waf-exceptions-table.php:74
 msgid "Source"
 msgstr ""
 
-#: admin/class-admin-firewall.php:668
+#: admin/class-admin-firewall.php:695
 msgid "reportedip.com Rule API"
 msgstr ""
 
-#: admin/class-admin-firewall.php:669
+#: admin/class-admin-firewall.php:696
 msgid "Bundled baseline"
 msgstr ""
 
-#: admin/class-admin-firewall.php:681
+#: admin/class-admin-firewall.php:708
 msgid "bundled"
 msgstr ""
 
-#: admin/class-admin-firewall.php:688
+#: admin/class-admin-firewall.php:715
 msgid "Sync:"
 msgstr ""
 
-#: admin/class-admin-firewall.php:688
+#: admin/class-admin-firewall.php:715
 msgid "enabled"
 msgstr ""
 
-#: admin/class-admin-firewall.php:688
+#: admin/class-admin-firewall.php:715
 msgid "disabled"
 msgstr ""
 
-#: admin/class-admin-firewall.php:688
+#: admin/class-admin-firewall.php:715
 msgid "Last sync:"
 msgstr ""
 
-#: admin/class-admin-firewall.php:688
+#: admin/class-admin-firewall.php:715
 #: admin/class-admin-settings.php:4373
 msgid "never (baseline only)"
 msgstr ""
 
-#: admin/class-admin-firewall.php:691
-msgid "The bundled baseline rulesets stay active on every installation. Priority Sync is delivered through your reportedip.com account: deeper coverage and regular updates, starting with a free Contributor account."
-msgstr ""
-
-#: admin/class-admin-firewall.php:693
+#: admin/class-admin-firewall.php:723
 msgid "Sync now"
 msgstr ""
 
@@ -868,7 +868,7 @@ msgstr ""
 #: admin/class-protection-page.php:1585
 #: admin/class-protection-page.php:1646
 #: admin/class-protection-page.php:1709
-#: includes/class-readiness.php:613
+#: includes/class-readiness.php:625
 #: includes/class-two-factor-recommend.php:348
 #: includes/class-two-factor-recommend.php:375
 msgid "Permission denied."
@@ -2420,7 +2420,7 @@ msgid "Active community member"
 msgstr ""
 
 #: admin/class-admin-settings.php:5322
-#: admin/class-two-factor-admin.php:433
+#: admin/class-two-factor-admin.php:406
 #: includes/class-two-factor-onboarding.php:440
 msgid "Copied!"
 msgstr ""
@@ -2577,7 +2577,7 @@ msgid "Your shortcode"
 msgstr ""
 
 #: admin/class-admin-settings.php:5442
-#: admin/class-two-factor-admin.php:438
+#: admin/class-two-factor-admin.php:411
 #: templates/two-factor-onboarding.php:304
 #: templates/two-factor-onboarding.php:423
 msgid "Copy"
@@ -2764,7 +2764,7 @@ msgstr ""
 
 #: admin/class-api-queue-table.php:56
 #: admin/class-protection-page.php:968
-#: admin/class-two-factor-admin.php:436
+#: admin/class-two-factor-admin.php:409
 #: includes/class-two-factor-onboarding.php:357
 #: includes/class-two-factor.php:2325
 #: reportedip-hive.php:930
@@ -2795,7 +2795,7 @@ msgid "Delete All Failed"
 msgstr ""
 
 #: admin/class-api-queue-table.php:144
-#: admin/class-two-factor-admin.php:474
+#: admin/class-two-factor-admin.php:447
 #: admin/class-whitelist-table.php:145
 msgid "Never"
 msgstr ""
@@ -3683,7 +3683,7 @@ msgid "Paste key..."
 msgstr ""
 
 #: admin/class-quickstart.php:453
-#: admin/class-tools-page.php:482
+#: admin/class-tools-page.php:503
 msgid "Check"
 msgstr ""
 
@@ -3908,11 +3908,11 @@ msgid "%s is not active on this site, so there is nothing to carry the anchor in
 msgstr ""
 
 #: admin/class-tools-page.php:253
-msgid "The form plugin is here, your plan does not cover this adapter."
+msgid "The form plugin is here, this adapter is not available on this site."
 msgstr ""
 
 #: admin/class-tools-page.php:257
-msgid "The form plugin is here and your plan covers it, the switch on the Protection page is off."
+msgid "The form plugin is here, the switch on the Protection page is off."
 msgstr ""
 
 #: admin/class-tools-page.php:261
@@ -3923,177 +3923,177 @@ msgstr ""
 msgid "Submissions through this form plugin are judged like a comment."
 msgstr ""
 
-#: admin/class-tools-page.php:275
+#: admin/class-tools-page.php:296
 msgid "Adapter grace"
 msgstr ""
 
-#: admin/class-tools-page.php:278
+#: admin/class-tools-page.php:299
 msgid "Not running"
 msgstr ""
 
-#: admin/class-tools-page.php:278
+#: admin/class-tools-page.php:299
 msgid "No form adapter has been switched on, so there is no grace to wait out."
 msgstr ""
 
-#: admin/class-tools-page.php:282
+#: admin/class-tools-page.php:303
 msgid "Elapsed"
 msgstr ""
 
-#: admin/class-tools-page.php:282
+#: admin/class-tools-page.php:303
 msgid "A submission that never carried our anchor is refused on the form adapters."
 msgstr ""
 
-#: admin/class-tools-page.php:288
+#: admin/class-tools-page.php:309
 msgid "Running"
 msgstr ""
 
 #. translators: %s: local date and time the grace ends
-#: admin/class-tools-page.php:291
+#: admin/class-tools-page.php:312
 #, php-format
 msgid "Until %s a submission without our anchor still passes on the form adapters, because a page cache filled before the switch cannot carry one."
 msgstr ""
 
-#: admin/class-tools-page.php:390
+#: admin/class-tools-page.php:411
 msgid "Like a visitor"
 msgstr ""
 
-#: admin/class-tools-page.php:391
+#: admin/class-tools-page.php:412
 msgid "Like the same visitor twice"
 msgstr ""
 
-#: admin/class-tools-page.php:392
+#: admin/class-tools-page.php:413
 msgid "Like a bot"
 msgstr ""
 
-#: admin/class-tools-page.php:407
+#: admin/class-tools-page.php:428
 msgid "let through"
 msgstr ""
 
-#: admin/class-tools-page.php:408
+#: admin/class-tools-page.php:429
 msgid "refused"
 msgstr ""
 
-#: admin/class-tools-page.php:409
+#: admin/class-tools-page.php:430
 msgid "refused as a bot"
 msgstr ""
 
-#: admin/class-tools-page.php:410
+#: admin/class-tools-page.php:431
 msgid "not ours to judge"
 msgstr ""
 
-#: admin/class-tools-page.php:429
+#: admin/class-tools-page.php:450
 msgid "A normal submission reached the site. Readers are not caught by the check."
 msgstr ""
 
-#: admin/class-tools-page.php:430
+#: admin/class-tools-page.php:451
 msgid "A normal submission was refused. Visitors would be turned away on your forms too, so switch the execution proof off on the Protection page until this reads correctly."
 msgstr ""
 
-#: admin/class-tools-page.php:435
+#: admin/class-tools-page.php:456
 msgid "The repeated answer was not judged as expected. A copied answer may still be worth something on this site."
 msgstr ""
 
-#: admin/class-tools-page.php:439
+#: admin/class-tools-page.php:460
 msgid "The same answer was refused the second time, so copying it out of the page buys a script nothing."
 msgstr ""
 
-#: admin/class-tools-page.php:440
+#: admin/class-tools-page.php:461
 msgid "The plain marker can be sent again, so a second submission passes like the first."
 msgstr ""
 
-#: admin/class-tools-page.php:444
+#: admin/class-tools-page.php:465
 msgid "A filled anchor field was refused, which is what a script that fills every input produces."
 msgstr ""
 
-#: admin/class-tools-page.php:445
+#: admin/class-tools-page.php:466
 msgid "A filled anchor field was let through. That is the oldest part of the check, so it points at a changed installation rather than at a setting."
 msgstr ""
 
-#: admin/class-tools-page.php:457
+#: admin/class-tools-page.php:478
 msgid "All three runs came back as expected. The form protection is in force on this site."
 msgstr ""
 
-#: admin/class-tools-page.php:458
+#: admin/class-tools-page.php:479
 msgid "At least one run came back differently than expected. The lines above say what that means for your forms."
 msgstr ""
 
-#: admin/class-tools-page.php:475
+#: admin/class-tools-page.php:496
 msgid "Form protection self-test"
 msgstr ""
 
-#: admin/class-tools-page.php:477
+#: admin/class-tools-page.php:498
 msgid "The form protection has no visible surface, so this card first shows what is switched on and then proves it. The run touches no real form: no mail goes out, no comment is filed and no entry is stored."
 msgstr ""
 
-#: admin/class-tools-page.php:483
+#: admin/class-tools-page.php:504
 msgid "State"
 msgstr ""
 
-#: admin/class-tools-page.php:484
+#: admin/class-tools-page.php:505
 msgid "Detail"
 msgstr ""
 
-#: admin/class-tools-page.php:500
+#: admin/class-tools-page.php:521
 msgid "Run the self-test"
 msgstr ""
 
-#: admin/class-tools-page.php:508
+#: admin/class-tools-page.php:529
 msgid "Run"
 msgstr ""
 
-#: admin/class-tools-page.php:509
+#: admin/class-tools-page.php:530
 msgid "Expected"
 msgstr ""
 
-#: admin/class-tools-page.php:510
+#: admin/class-tools-page.php:531
 msgid "Result"
 msgstr ""
 
-#: admin/class-tools-page.php:511
+#: admin/class-tools-page.php:532
 msgid "What it means"
 msgstr ""
 
-#: admin/class-tools-page.php:557
+#: admin/class-tools-page.php:578
 msgid "Running the three passes..."
 msgstr ""
 
-#: admin/class-tools-page.php:558
+#: admin/class-tools-page.php:579
 msgid "The self-test could not be completed."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:75
+#: admin/class-two-factor-admin.php:77
 msgid "Really reset 2FA for this user? The user will be able to sign in without 2FA and will be sent back to onboarding on the next login (if their role requires 2FA)."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:82
+#: admin/class-two-factor-admin.php:85
 msgid "Reset 2FA"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:126
+#: admin/class-two-factor-admin.php:99
 msgid "Invalid user ID."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:131
-#: admin/class-two-factor-admin.php:867
+#: admin/class-two-factor-admin.php:104
+#: admin/class-two-factor-admin.php:840
 #: includes/class-two-factor-dashboard.php:44
 #: includes/class-two-factor-dashboard.php:218
 #: includes/class-two-factor-webauthn.php:427
 msgid "You do not have permission."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:136
+#: admin/class-two-factor-admin.php:109
 msgid "User not found."
 msgstr ""
 
 #. translators: %s: site name
-#: admin/class-two-factor-admin.php:159
+#: admin/class-two-factor-admin.php:132
 #, php-format
 msgid "[%s] Your two-factor authentication was reset"
 msgstr ""
 
 #. translators: %s: user display name
 #. translators: %s: admin display name
-#: admin/class-two-factor-admin.php:164
+#: admin/class-two-factor-admin.php:137
 #: includes/class-ajax-handler.php:340
 #: includes/class-two-factor-email.php:136
 #: includes/class-two-factor-notifications.php:120
@@ -4103,103 +4103,103 @@ msgstr ""
 msgid "Hello %s,"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:167
+#: admin/class-two-factor-admin.php:140
 msgid "An administrator has reset two-factor authentication on your account. You can sign in without 2FA for now."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:169
-#: admin/class-two-factor-admin.php:171
+#: admin/class-two-factor-admin.php:142
+#: admin/class-two-factor-admin.php:144
 msgid "When you are ready, please set up 2FA again to keep your account protected. It only takes a couple of minutes."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:173
+#: admin/class-two-factor-admin.php:146
 msgid "Set up 2FA again"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:180
+#: admin/class-two-factor-admin.php:153
 msgid "If you did not request this reset, please reach out to your administrator."
 msgstr ""
 
 #. translators: %s: user display name
-#: admin/class-two-factor-admin.php:210
+#: admin/class-two-factor-admin.php:183
 #, php-format
 msgid "2FA for %s has been reset. The user has been notified by email."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:427
+#: admin/class-two-factor-admin.php:400
 msgid "Turn off two-factor authentication completely? Afterwards your account is protected by your password alone."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:428
+#: admin/class-two-factor-admin.php:401
 msgid "Your existing recovery codes will stop working and you will receive a new set. Continue?"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:429
+#: admin/class-two-factor-admin.php:402
 msgid "Sign out all trusted devices? Every device will be asked for a code on the next sign-in again."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:430
+#: admin/class-two-factor-admin.php:403
 msgid "Remove this sign-in method? You will no longer be able to use it to confirm your sign-in."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:431
+#: admin/class-two-factor-admin.php:404
 msgid "This is your last active method. Removing it turns off two-factor authentication for this account completely. Continue?"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:432
+#: admin/class-two-factor-admin.php:405
 msgid "Set up the authenticator app again? The existing app connection stops working as soon as you finish the new setup."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:434
+#: admin/class-two-factor-admin.php:407
 msgid "2FA has been set up successfully!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:435
+#: admin/class-two-factor-admin.php:408
 msgid "Save these recovery codes in a secure place:"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:437
+#: admin/class-two-factor-admin.php:410
 msgid "QR code library not loaded."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:439
+#: admin/class-two-factor-admin.php:412
 msgid "Download"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:440
+#: admin/class-two-factor-admin.php:413
 msgid "These codes are shown only once!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:441
+#: admin/class-two-factor-admin.php:414
 msgid "Each code can be used only once."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:442
+#: admin/class-two-factor-admin.php:415
 msgid "I have saved my codes"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:443
+#: admin/class-two-factor-admin.php:416
 msgid "Please wait"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:472
-#: admin/class-two-factor-admin.php:487
+#: admin/class-two-factor-admin.php:445
+#: admin/class-two-factor-admin.php:460
 #: includes/class-two-factor-webauthn.php:461
 msgid "Security key"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:473
+#: admin/class-two-factor-admin.php:446
 #: includes/class-two-factor-webauthn.php:384
 #: templates/two-factor-challenge.php:124
 msgid "Passkey"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:475
+#: admin/class-two-factor-admin.php:448
 msgid "Rename"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:476
-#: admin/class-two-factor-admin.php:765
+#: admin/class-two-factor-admin.php:449
+#: admin/class-two-factor-admin.php:738
 #: admin/class-waf-exceptions-table.php:88
 #: admin/class-waf-exceptions-table.php:154
 #: admin/class-whitelist-table.php:78
@@ -4207,74 +4207,74 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:478
+#: admin/class-two-factor-admin.php:451
 msgid "Key renamed."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:479
+#: admin/class-two-factor-admin.php:452
 msgid "Key removed."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:480
+#: admin/class-two-factor-admin.php:453
 msgid "Last key removed. The passkey method is now disabled for this account."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:481
+#: admin/class-two-factor-admin.php:454
 msgid "Remove this security key? You will no longer be able to sign in with it."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:482
+#: admin/class-two-factor-admin.php:455
 msgid "This browser does not support security keys."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:483
+#: admin/class-two-factor-admin.php:456
 msgid "Waiting for your security key. Insert and touch it now."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:484
+#: admin/class-two-factor-admin.php:457
 msgid "This key is already registered on this account."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:485
+#: admin/class-two-factor-admin.php:458
 msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold it against the back for NFC)."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:486
+#: admin/class-two-factor-admin.php:459
 #: includes/class-two-factor-onboarding.php:447
 msgid "That long string was your YubiKey typing its one-time password. That happens when the key is touched while no browser dialog is waiting for it. The field was cleared; click the register button first and touch the key only when the browser asks."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:488
+#: admin/class-two-factor-admin.php:461
 msgid "This device"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:489
+#: admin/class-two-factor-admin.php:462
 msgid "Something went wrong."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:490
+#: admin/class-two-factor-admin.php:463
 msgid "Network error."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:502
+#: admin/class-two-factor-admin.php:475
 #: includes/class-two-factor-reset-gate.php:1453
 #: includes/class-two-factor.php:859
 msgid "Authenticator app"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:503
+#: admin/class-two-factor-admin.php:476
 msgid "An app on your phone, such as Google Authenticator or Microsoft Authenticator, shows a new 6-digit code every 30 seconds. Works even without mobile signal."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:509
+#: admin/class-two-factor-admin.php:482
 msgid "Passkey or security key"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:510
+#: admin/class-two-factor-admin.php:483
 msgid "Confirm your sign-in with your fingerprint, your face, or a hardware security key such as a YubiKey. This is the most secure option, because it only works on the real sign-in page."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:517
+#: admin/class-two-factor-admin.php:490
 #: includes/class-two-factor.php:866
 #: templates/two-factor-challenge.php:257
 #: templates/two-factor-onboarding.php:226
@@ -4283,298 +4283,298 @@ msgid "Email code"
 msgstr ""
 
 #. translators: %s: masked email address
-#: admin/class-two-factor-admin.php:520
+#: admin/class-two-factor-admin.php:493
 #, php-format
 msgid "We send a 6-digit code to %s every time you sign in."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:545
+#: admin/class-two-factor-admin.php:518
 #: includes/class-settings-registry.php:91
 #: templates/two-factor-onboarding.php:73
 msgid "Two-Factor Authentication"
 msgstr ""
 
 #. translators: %d: method count
-#: admin/class-two-factor-admin.php:559
+#: admin/class-two-factor-admin.php:532
 #, php-format
 msgid "Active (%d method)"
 msgid_plural "Active (%d methods)"
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-two-factor-admin.php:566
-#: admin/class-two-factor-admin.php:745
+#: admin/class-two-factor-admin.php:539
+#: admin/class-two-factor-admin.php:718
 msgid "Not set up"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:571
+#: admin/class-two-factor-admin.php:544
 msgid "Two-factor authentication adds a second check when you sign in. Even if someone finds out your password, they still cannot get into your account without this second step."
 msgstr ""
 
 #. translators: 1: opening link tag, 2: closing link tag
-#: admin/class-two-factor-admin.php:578
+#: admin/class-two-factor-admin.php:551
 #, php-format
 msgid "Prefer a step-by-step walkthrough? %1$sSet up 2FA in the guided wizard%2$s."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:588
+#: admin/class-two-factor-admin.php:561
 msgid "Your sign-in methods"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:590
+#: admin/class-two-factor-admin.php:563
 msgid "You can set up more than one method. Your default method is asked for first when you sign in; every other active method stays available as an alternative on the sign-in screen."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:607
+#: admin/class-two-factor-admin.php:580
 #: templates/two-factor-onboarding.php:416
 msgid "Recovery codes"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:609
+#: admin/class-two-factor-admin.php:582
 msgid "Recovery codes are one-time emergency codes for the case that your phone or security key is lost. Store them in a safe place, for example a password manager. Each code works exactly once."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:613
+#: admin/class-two-factor-admin.php:586
 msgid "All codes used. Generate new codes now."
 msgstr ""
 
 #. translators: %d: remaining codes
-#: admin/class-two-factor-admin.php:619
+#: admin/class-two-factor-admin.php:592
 #, php-format
 msgid "%d left. Generate new codes soon."
 msgstr ""
 
 #. translators: %d: remaining codes
-#: admin/class-two-factor-admin.php:629
+#: admin/class-two-factor-admin.php:602
 #, php-format
 msgid "%d available"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:637
+#: admin/class-two-factor-admin.php:610
 msgid "Generate new recovery codes"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:644
+#: admin/class-two-factor-admin.php:617
 #: includes/class-settings-registry.php:953
 msgid "Trusted devices"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:646
+#: admin/class-two-factor-admin.php:619
 msgid "On these devices you chose to skip the second check for a while. Remove a device here if you no longer use it or do not recognise it."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:652
+#: admin/class-two-factor-admin.php:625
 msgid "Unknown device"
 msgstr ""
 
 #. translators: %s: date
-#: admin/class-two-factor-admin.php:658
+#: admin/class-two-factor-admin.php:631
 #, php-format
 msgid "Added: %s"
 msgstr ""
 
 #. translators: %s: date
-#: admin/class-two-factor-admin.php:667
+#: admin/class-two-factor-admin.php:640
 #, php-format
 msgid "Last used: %s"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:675
+#: admin/class-two-factor-admin.php:648
 msgid "Revoke"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:681
+#: admin/class-two-factor-admin.php:654
 msgid "Revoke all devices"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:687
+#: admin/class-two-factor-admin.php:660
 msgid "Turn off two-factor authentication"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:689
+#: admin/class-two-factor-admin.php:662
 msgid "This removes all your sign-in methods, recovery codes and trusted devices. Your account is then protected by your password alone. If your role requires 2FA, you will be asked to set it up again on your next sign-in."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:692
+#: admin/class-two-factor-admin.php:665
 msgid "Disable 2FA"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:742
+#: admin/class-two-factor-admin.php:715
 msgid "This method is asked for first when you sign in."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:742
+#: admin/class-two-factor-admin.php:715
 msgid "Default"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:757
+#: admin/class-two-factor-admin.php:730
 msgid "Make default"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:760
+#: admin/class-two-factor-admin.php:733
 msgid "Set up again"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:768
+#: admin/class-two-factor-admin.php:741
 #: includes/class-two-factor-dashboard.php:165
 msgid "Set up"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:807
+#: admin/class-two-factor-admin.php:780
 msgid "Scan this QR code with your authenticator app, then enter the 6-digit code the app shows to finish the setup. If you cannot scan, type the key below the code into the app instead."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:810
+#: admin/class-two-factor-admin.php:783
 msgid "Manual entry key"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:813
-#: admin/class-two-factor-admin.php:833
+#: admin/class-two-factor-admin.php:786
+#: admin/class-two-factor-admin.php:806
 msgid "Verification code"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:814
-#: admin/class-two-factor-admin.php:834
+#: admin/class-two-factor-admin.php:787
+#: admin/class-two-factor-admin.php:807
 #: templates/two-factor-onboarding.php:312
 #: templates/two-factor-onboarding.php:345
 msgid "Confirm"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:815
-#: admin/class-two-factor-admin.php:827
-#: admin/class-two-factor-admin.php:835
+#: admin/class-two-factor-admin.php:788
+#: admin/class-two-factor-admin.php:800
+#: admin/class-two-factor-admin.php:808
 msgid "Cancel"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:824
+#: admin/class-two-factor-admin.php:797
 msgid "We will send a 6-digit code to your email address. Click the button, then check your inbox."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:826
+#: admin/class-two-factor-admin.php:799
 msgid "Send code"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:892
+#: admin/class-two-factor-admin.php:865
 msgid "This verification method is not available on this site."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:907
+#: admin/class-two-factor-admin.php:880
 #: includes/class-two-factor-email.php:90
 #: includes/class-two-factor-webauthn.php:82
 msgid "Invalid user."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:921
+#: admin/class-two-factor-admin.php:894
 msgid "An authenticator app is already connected. Starting a new setup replaces that connection, and codes from the previous app will stop working."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:932
+#: admin/class-two-factor-admin.php:905
 msgid "Encryption failed."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:971
+#: admin/class-two-factor-admin.php:944
 msgid "No TOTP setup found. Please start again."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:976
+#: admin/class-two-factor-admin.php:949
 msgid "Decryption failed."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:980
+#: admin/class-two-factor-admin.php:953
 msgid "Invalid code. Please check your device clock."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:994
+#: admin/class-two-factor-admin.php:967
 msgid "2FA with authenticator app enabled!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1012
+#: admin/class-two-factor-admin.php:985
 msgid "User has no email address."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1025
+#: admin/class-two-factor-admin.php:998
 msgid "Code sent. Please check your inbox."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1035
+#: admin/class-two-factor-admin.php:1008
 msgid "Invalid or expired code."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1042
+#: admin/class-two-factor-admin.php:1015
 msgid "Email code enabled!"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1050
+#: admin/class-two-factor-admin.php:1023
 msgid "Invalid setup step. Email 2FA requires code verification."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1064
+#: admin/class-two-factor-admin.php:1037
 msgid "Invalid method."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1067
+#: admin/class-two-factor-admin.php:1040
 msgid "Could not disable method."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1072
+#: admin/class-two-factor-admin.php:1045
 msgid "Method disabled."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1095
+#: admin/class-two-factor-admin.php:1068
 msgid "Only a method you have set up can be your default."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1100
+#: admin/class-two-factor-admin.php:1073
 msgid "Default sign-in method updated."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1116
+#: admin/class-two-factor-admin.php:1089
 msgid "2FA has been disabled."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1131
+#: admin/class-two-factor-admin.php:1104
 msgid "New recovery codes generated."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1148
+#: admin/class-two-factor-admin.php:1121
 msgid "Device revoked."
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1150
+#: admin/class-two-factor-admin.php:1123
 msgid "Device not found."
 msgstr ""
 
 #. translators: %d: number of revoked devices
-#: admin/class-two-factor-admin.php:1166
+#: admin/class-two-factor-admin.php:1139
 #, php-format
 msgid "%d device revoked."
 msgid_plural "%d devices revoked."
 msgstr[0] ""
 msgstr[1] ""
 
-#: admin/class-two-factor-admin.php:1181
-#: admin/class-two-factor-admin.php:1195
+#: admin/class-two-factor-admin.php:1154
+#: admin/class-two-factor-admin.php:1168
 msgid "ReportedIP Hive 2FA-Daten"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1222
+#: admin/class-two-factor-admin.php:1195
 msgid "ReportedIP 2FA"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1226
+#: admin/class-two-factor-admin.php:1199
 #: includes/class-two-factor-dashboard.php:34
 #: includes/class-two-factor-dashboard.php:35
 #: includes/class-two-factor-dashboard.php:76
 msgid "2FA Status"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1230
+#: admin/class-two-factor-admin.php:1203
 #: includes/class-two-factor-dashboard.php:134
 #: templates/two-factor-onboarding.php:136
 msgid "Method"
 msgstr ""
 
-#: admin/class-two-factor-admin.php:1234
+#: admin/class-two-factor-admin.php:1207
 msgid "Recovery codes remaining"
 msgstr ""
 
@@ -5159,131 +5159,131 @@ msgstr ""
 msgid "XML-RPC is switched off under Firewall → Hardening, so this setting has no effect right now."
 msgstr ""
 
-#: includes/class-catalog.php:51
+#: includes/class-catalog.php:58
 msgid "Mail relay via reportedip.com"
 msgstr ""
 
-#: includes/class-catalog.php:52
+#: includes/class-catalog.php:59
 msgid "Sends 2FA mails and alerts through a managed EU relay with its own sender reputation."
 msgstr ""
 
-#: includes/class-catalog.php:59
+#: includes/class-catalog.php:66
 msgid "SMS codes via the managed relay"
 msgstr ""
 
-#: includes/class-catalog.php:60
+#: includes/class-catalog.php:67
 msgid "A second factor by text message, delivered through the EU gateway, no SMS provider account needed."
 msgstr ""
 
-#: includes/class-catalog.php:67
+#: includes/class-catalog.php:74
 msgid "Storefront 2FA for WooCommerce"
 msgstr ""
 
-#: includes/class-catalog.php:68
+#: includes/class-catalog.php:75
 msgid "The second factor on My Account, checkout and the WooCommerce blocks, inside the theme instead of wp-login.php."
 msgstr ""
 
-#: includes/class-catalog.php:74
+#: includes/class-catalog.php:81
 msgid "Adaptive 2FA policies per role"
 msgstr ""
 
-#: includes/class-catalog.php:75
+#: includes/class-catalog.php:82
 msgid "Ask for the second factor again on a new device, address, network or country, every N days or sign-ins."
 msgstr ""
 
-#: includes/class-catalog.php:81
+#: includes/class-catalog.php:88
 msgid "Hardening mode during attack waves"
 msgstr ""
 
-#: includes/class-catalog.php:82
+#: includes/class-catalog.php:89
 msgid "Tightens the sign-in and reputation thresholds for an hour when a coordinated attack is detected."
 msgstr ""
 
-#: includes/class-catalog.php:88
+#: includes/class-catalog.php:95
 msgid "Computation check on forms"
 msgstr ""
 
-#: includes/class-catalog.php:89
+#: includes/class-catalog.php:96
 msgid "A small sum the browser works out in the background, so a script that copies the hidden field no longer passes."
 msgstr ""
 
-#: includes/class-catalog.php:95
+#: includes/class-catalog.php:102
 msgid "Tor exit node blocking"
 msgstr ""
 
-#: includes/class-catalog.php:96
+#: includes/class-catalog.php:103
 msgid "Refuses sign-in attempts from known Tor exit nodes using a signed list refreshed twice a day."
 msgstr ""
 
-#: includes/class-catalog.php:103
+#: includes/class-catalog.php:110
 msgid "Advanced security headers"
 msgstr ""
 
-#: includes/class-catalog.php:104
+#: includes/class-catalog.php:111
 msgid "HSTS with preload, a Content-Security-Policy builder, Permissions-Policy and the cross-origin trio."
 msgstr ""
 
-#: includes/class-catalog.php:110
+#: includes/class-catalog.php:117
 msgid "Unlimited registration rules"
 msgstr ""
 
-#: includes/class-catalog.php:111
+#: includes/class-catalog.php:118
 msgid "Unlimited username and e-mail rules, regular expressions and registration restricted to allowlisted IP addresses."
 msgstr ""
 
-#: includes/class-catalog.php:117
+#: includes/class-catalog.php:124
 msgid "Advanced security keys"
 msgstr ""
 
-#: includes/class-catalog.php:118
+#: includes/class-catalog.php:125
 msgid "Several keys per account with a backup key, model detection and key lifecycle mails."
 msgstr ""
 
-#: includes/class-catalog.php:124
+#: includes/class-catalog.php:131
 msgid "Advanced form protection"
 msgstr ""
 
-#: includes/class-catalog.php:125
+#: includes/class-catalog.php:132
 msgid "The execution proof on WPForms, Gravity Forms, Forminator, Formidable, Elementor Forms and Ultimate Member."
 msgstr ""
 
-#: includes/class-catalog.php:131
+#: includes/class-catalog.php:138
 msgid "Audit event trail"
 msgstr ""
 
-#: includes/class-catalog.php:132
+#: includes/class-catalog.php:139
 msgid "Who changed what: settings with old and new value, plugins, themes, pages, menus, files and accounts."
 msgstr ""
 
-#: includes/class-catalog.php:138
+#: includes/class-catalog.php:145
 msgid "Cloud fleet management"
 msgstr ""
 
-#: includes/class-catalog.php:139
+#: includes/class-catalog.php:146
 msgid "Manage this site from the reportedip.com dashboard: policies, per-site overrides and drift detection."
 msgstr ""
 
-#: includes/class-catalog.php:146
+#: includes/class-catalog.php:153
 msgid "User account control"
 msgstr ""
 
-#: includes/class-catalog.php:147
+#: includes/class-catalog.php:154
 msgid "Block accounts with a message, end their sessions and password resets, review active sessions."
 msgstr ""
 
-#: includes/class-catalog.php:167
+#: includes/class-catalog.php:174
 msgid "Attack Response"
 msgstr ""
 
-#: includes/class-catalog.php:168
+#: includes/class-catalog.php:175
 msgid "What changes while a coordinated attack is running."
 msgstr ""
 
-#: includes/class-catalog.php:172
+#: includes/class-catalog.php:179
 msgid "Adaptive Step-Up"
 msgstr ""
 
-#: includes/class-catalog.php:173
+#: includes/class-catalog.php:180
 msgid "When a user who already passed the second factor is asked for it again."
 msgstr ""
 
@@ -6415,148 +6415,148 @@ msgid "Bots look for wp-login.php first. A custom slug takes the page off that l
 msgstr ""
 
 #. translators: %s: name of the form plugin, for example Contact Form 7.
-#: includes/class-readiness.php:255
+#: includes/class-readiness.php:253
+#, php-format
+msgid "%s is active here and Hive can check it, but the switch is still off. A visitor sees nothing new once it runs, no image to read and no extra step."
+msgstr ""
+
+#. translators: %s: name of the form plugin, for example Contact Form 7.
+#: includes/class-readiness.php:271
 #, php-format
 msgid "%s is not covered yet"
 msgstr ""
 
-#. translators: %s: name of the form plugin, for example Contact Form 7.
-#: includes/class-readiness.php:258
-#, php-format
-msgid "%s is active here and your plan includes the check for it, but the switch is still off. A visitor sees nothing new once it runs, no image to read and no extra step."
-msgstr ""
-
-#: includes/class-readiness.php:278
+#: includes/class-readiness.php:290
 msgid "Show the protection badge"
 msgstr ""
 
-#: includes/class-readiness.php:279
+#: includes/class-readiness.php:291
 msgid "A small footer badge tells visitors the site is protected and links to the community network. It is a text line, no tracking."
 msgstr ""
 
-#: includes/class-readiness.php:302
+#: includes/class-readiness.php:314
 msgid "Switch on Extended Protection"
 msgstr ""
 
-#: includes/class-readiness.php:303
+#: includes/class-readiness.php:315
 msgid "The guard rejects known-bad requests before WordPress loads. Your server supports it; one click writes the directive."
 msgstr ""
 
-#: includes/class-readiness.php:321
+#: includes/class-readiness.php:333
 msgid "Join the community network"
 msgstr ""
 
-#: includes/class-readiness.php:322
+#: includes/class-readiness.php:334
 msgid "Local Shield blocks what it sees itself. With a free Community Access Key the site also refuses addresses the network already knows."
 msgstr ""
 
-#: includes/class-readiness.php:343
+#: includes/class-readiness.php:355
 msgid "Set up your own second factor"
 msgstr ""
 
-#: includes/class-readiness.php:344
+#: includes/class-readiness.php:356
 msgid "Two-factor authentication is on for this site, but your account has no method yet. An authenticator app takes two minutes."
 msgstr ""
 
-#: includes/class-readiness.php:723
+#: includes/class-readiness.php:735
 msgid "Extended protection cannot record hits"
 msgstr ""
 
-#: includes/class-readiness.php:757
+#: includes/class-readiness.php:769
 msgid "WP-Cron is not running"
 msgstr ""
 
-#: includes/class-readiness.php:758
+#: includes/class-readiness.php:770
 msgid "WP-Cron has not fired any ReportedIP Hive hook in the last 24 h."
 msgstr ""
 
-#: includes/class-readiness.php:760
+#: includes/class-readiness.php:772
 msgid "Likely causes: the site cannot call its own wp-cron.php (a failing loopback request, listed under Tools, Site Health), or another plugin's cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below."
 msgstr ""
 
-#: includes/class-readiness.php:794
+#: includes/class-readiness.php:806
 msgid "WP-Cron is disabled and overdue"
 msgstr ""
 
-#: includes/class-readiness.php:795
+#: includes/class-readiness.php:807
 msgid "DISABLE_WP_CRON is set, ALTERNATE_WP_CRON is off and the next scheduled run is more than an hour late. Without a server cron calling wp-cron.php the report queue, the quota refresh and the ruleset sync stop running."
 msgstr ""
 
-#: includes/class-readiness.php:815
+#: includes/class-readiness.php:827
 msgid "Client-IP header trusted from any source"
 msgstr ""
 
-#: includes/class-readiness.php:816
+#: includes/class-readiness.php:828
 msgid "The client-IP header is currently accepted from any source. Anyone able to reach this site directly can forge their IP address. Add the CIDR ranges of your proxy or CDN under Trusted proxy sources."
 msgstr ""
 
-#: includes/class-readiness.php:836
+#: includes/class-readiness.php:848
 msgid "Database schema is out of date"
 msgstr ""
 
 #. translators: 1: stored schema version, 2: schema version this build expects.
-#: includes/class-readiness.php:839
+#: includes/class-readiness.php:851
 #, php-format
 msgid "The plugin tables are at schema version %1$d but this build expects %2$d. Sensors that rely on the newer columns or indexes can behave incorrectly. Open the System Status page to let the migration run again."
 msgstr ""
 
-#: includes/class-readiness.php:863
+#: includes/class-readiness.php:875
 msgid "Community threat checks are failing"
 msgstr ""
 
 #. translators: 1: success rate in percent, 2: number of calls in the rolling window.
-#: includes/class-readiness.php:866
+#: includes/class-readiness.php:878
 #, php-format
 msgid "Only %1$s%% of the last %2$d calls to the community network succeeded. Local protection is unaffected; reputation lookups and report submissions are unreliable until the connection recovers."
 msgstr ""
 
-#: includes/class-readiness.php:888
+#: includes/class-readiness.php:900
 msgid "Outgoing mail is failing"
 msgstr ""
 
 #. translators: 1: number of failed mails, 2: last error message reported by wp_mail().
-#: includes/class-readiness.php:891
+#: includes/class-readiness.php:903
 #, php-format
 msgid "%1$d outgoing mails failed in the last 24 hours. Two-factor codes, lockout alerts and quota warnings may not arrive. Last error: %2$s"
 msgstr ""
 
-#: includes/class-readiness.php:913
+#: includes/class-readiness.php:925
 msgid "No encryption backend available"
 msgstr ""
 
-#: includes/class-readiness.php:914
+#: includes/class-readiness.php:926
 msgid "Neither libsodium nor OpenSSL is available on this server, so two-factor secrets and phone numbers cannot be encrypted at rest. Ask your host to enable one of the two PHP extensions."
 msgstr ""
 
-#: includes/class-readiness.php:938
+#: includes/class-readiness.php:950
 msgid "Reports failed to reach the community"
 msgstr ""
 
 #. translators: %d: number of failed queue entries.
-#: includes/class-readiness.php:941
+#: includes/class-readiness.php:953
 #, php-format
 msgid "%d queued reports could not be submitted. Retry or clear them on the API queue tab."
 msgstr ""
 
-#: includes/class-readiness.php:966
+#: includes/class-readiness.php:978
 msgid "Report queue backlog"
 msgstr ""
 
 #. translators: %d: number of pending queue entries.
-#: includes/class-readiness.php:969
+#: includes/class-readiness.php:981
 #, php-format
 msgid "%d reports are waiting to be submitted. The queue drains faster on a higher tier, or you can process it manually from the API queue tab."
 msgstr ""
 
-#: includes/class-registration-guard.php:622
+#: includes/class-registration-guard.php:623
 msgid "Too many registrations from your network. Please try again later."
 msgstr ""
 
-#: includes/class-registration-guard.php:660
+#: includes/class-registration-guard.php:661
 msgid "This username is not allowed. Please choose another one."
 msgstr ""
 
-#: includes/class-registration-guard.php:712
+#: includes/class-registration-guard.php:713
 msgid "This e-mail address cannot be used for registration."
 msgstr ""
 
@@ -7306,7 +7306,7 @@ msgid "Prohibited usernames"
 msgstr ""
 
 #: includes/class-settings-registry.php:613
-msgid "Names that may not be registered, one per line. An entry matches literally, or as a wildcard when it contains an asterisk. Only the first ten such entries are checked; an entry written between slashes is kept but not checked."
+msgid "Names that may not be registered, one per line, up to ten. An entry matches literally, or as a wildcard when it contains an asterisk. An entry written between slashes is stored but not checked."
 msgstr ""
 
 #: includes/class-settings-registry.php:619
@@ -7330,7 +7330,7 @@ msgid "E-mail rules"
 msgstr ""
 
 #: includes/class-settings-registry.php:636
-msgid "Address patterns, one per line. A bare host name is read as every address at that host. Only the first ten entries are checked, an entry written between slashes is kept but not checked. In the allow mode an address that only matches a later entry is turned away, and a list without a checked entry lets every address through."
+msgid "Address patterns, one per line, up to ten. A bare host name is read as every address at that host. An entry written between slashes is stored but not checked. In the allow mode only an address that matches a checked entry gets through, and a list without a checked entry lets every address through."
 msgstr ""
 
 #: includes/class-settings-registry.php:642
