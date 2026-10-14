@@ -1235,75 +1235,6 @@ body.rip-wizard-page select.rip-select option {
     cursor: not-allowed;
 }
 
-/* Tier teaser on the Welcome step, two PRO/Business cards side by side. */
-.rip-wizard__tier-teaser {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--rip-space-4, 1rem);
-    margin: var(--rip-space-6, 1.75rem) 0;
-}
-
-.rip-tier-card {
-    background: #fff;
-    border: 1px solid var(--rip-gray-200, #E5E7EB);
-    border-radius: var(--rip-radius-lg, 0.75rem);
-    padding: var(--rip-space-5, 1.5rem);
-    box-shadow: var(--rip-shadow-sm);
-    display: flex;
-    flex-direction: column;
-    gap: var(--rip-space-3, 0.75rem);
-}
-
-.rip-tier-card__header {
-    display: flex;
-    align-items: center;
-    gap: var(--rip-space-2, 0.5rem);
-    flex-wrap: wrap;
-}
-
-.rip-tier-card__title {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--rip-gray-900, #111827);
-}
-
-.rip-tier-card__list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: 0.9rem;
-    color: var(--rip-gray-700, #374151);
-    line-height: 1.5;
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-}
-
-.rip-tier-card__list li {
-    position: relative;
-    padding-left: 1.65rem;
-}
-
-.rip-tier-card__list li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.15rem;
-    width: 1.15rem;
-    height: 1.15rem;
-    border-radius: 999px;
-    background-color: var(--rip-success-soft, rgba(16, 185, 129, 0.12));
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2310B981'><path fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'/></svg>");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 0.85rem 0.85rem;
-}
-
-.rip-tier-card .rip-button {
-    align-self: flex-start;
-}
-
 /*
  * Notifications step: the recipient textarea wraps multi-line lists. Keep
  * the size predictable; resize is allowed vertically only.
@@ -1366,4 +1297,9 @@ body.rip-wizard-page select.rip-select option {
     .rip-quickstart__features {
         columns: 1;
     }
+}
+
+/* Features of the Pro add-on in the quickstart list: no check mark, they are not switched on here. */
+.rip-quickstart__feature--addon {
+    color: var(--rip-gray-600, #4B5563);
 }

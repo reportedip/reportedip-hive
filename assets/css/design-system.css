@@ -418,19 +418,6 @@ button.rip-tier-lock:hover {
     height: 0.75rem;
 }
 
-.rip-tier-lock--business {
-    background: rgba(124, 58, 237, 0.1);
-    color: #6D28D9;
-    border-color: rgba(124, 58, 237, 0.3);
-}
-
-a.rip-tier-lock--business:hover,
-button.rip-tier-lock--business:hover {
-    background: rgba(124, 58, 237, 0.18);
-    color: #5B21B6;
-    border-color: rgba(124, 58, 237, 0.5);
-}
-
 .rip-tier-lock--mode {
     background: rgba(16, 185, 129, 0.1);
     color: #047857;
@@ -1525,30 +1512,6 @@ button.rip-tier-lock--mode:hover {
     margin-top: var(--rip-space-4);
 }
 
-/* Audit trail: secondary lines under the user and event cells, the sample note. */
-.rip-audit-ip {
-    margin-top: var(--rip-space-1);
-}
-
-.rip-audit-group {
-    margin-top: var(--rip-space-1);
-    font-size: var(--rip-text-xs);
-    color: var(--rip-gray-500);
-}
-
-.rip-audit-upsell {
-    margin-bottom: var(--rip-space-4);
-}
-
-.rip-audit-upsell .rip-card__body p {
-    margin-top: 0;
-}
-
-.rip-audit-sample-note {
-    margin: 0 0 var(--rip-space-2);
-    font-size: var(--rip-text-sm);
-}
-
 @media (max-width: 782px) {
     .rip-filter-bar__field,
     .rip-filter-bar__toggle,
@@ -1786,13 +1749,6 @@ button.rip-tier-lock--mode:hover {
         justify-content: flex-start;
         margin-top: var(--rip-space-2);
     }
-}
-.rip-tier-included {
-    background: var(--rip-gray-100);
-    color: var(--rip-gray-600);
-    font-weight: 500;
-    text-transform: none;
-    letter-spacing: 0;
 }
 .rip-protection__presets {
     display: flex;
@@ -2461,14 +2417,6 @@ button.rip-tier-lock--mode:hover {
     width: 48px;
     height: 48px;
     color: var(--rip-primary);
-}
-
-.rip-promo-card .rip-promo-card__benefits {
-    margin: var(--rip-space-2) 0 0 1.25em;
-    padding: 0;
-    color: var(--rip-gray-700);
-    font-size: 0.9rem;
-    line-height: 1.6;
 }
 
 /* Info Grid */

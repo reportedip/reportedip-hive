@@ -576,11 +576,6 @@
     color: #4f46e5;
 }
 
-.block-type-badge.group {
-    background: rgba(13, 148, 136, 0.1);
-    color: #0d9488;
-}
-
 /* Dashicon heading styles */
 h3 .dashicons {
     vertical-align: middle;
@@ -964,38 +959,6 @@ code.ip-address {
     word-break: break-all;
 }
 
-/* ==========================================================================
-   Relay-highlight cards (Settings → Community plans)
-   Flat cards with a subtle tinted background, no left-accent bar.
-   ========================================================================== */
-
-.rip-relay-highlight {
-    padding: var(--rip-space-4);
-}
-
-.rip-relay-highlight--mail {
-    background: var(--rip-primary-soft, #EEF2FF);
-}
-
-.rip-relay-highlight--sms {
-    background: var(--rip-success-soft, #ECFDF5);
-}
-
-/* Frontend-2FA settings: locked-state, slug input + Pro-feature card. */
-.rip-settings-section--locked .rip-fieldset,
-.rip-fieldset--locked {
-    opacity: 0.55;
-}
-
-.rip-settings-section--locked .rip-fieldset .rip-toggle,
-.rip-settings-section--locked .rip-fieldset .rip-input,
-.rip-settings-section--locked .rip-fieldset .rip-input-prefix,
-.rip-fieldset--locked .rip-toggle,
-.rip-fieldset--locked .rip-input,
-.rip-fieldset--locked .rip-input-prefix {
-    cursor: not-allowed;
-}
-
 .rip-fieldset {
     border: none;
     padding: 0;
@@ -1055,26 +1018,6 @@ code.ip-address {
 .rip-input-prefix__prefix {
     border-left: none;
     border-right: 1px solid var(--rip-gray-200, #e5e7eb);
-}
-
-.rip-pro-upsell__title {
-    margin: 0 0 var(--rip-space-2, 0.5rem);
-    font-weight: 600;
-}
-
-.rip-pro-upsell__features {
-    list-style: disc;
-    margin: 0 0 var(--rip-space-3, 0.75rem);
-    padding-left: 1.25em;
-}
-
-.rip-pro-upsell__features li {
-    margin: 0.25rem 0;
-    color: var(--rip-gray-800, #1f2937);
-}
-
-.rip-pro-upsell__cta {
-    margin: 0;
 }
 
 .rip-code-snippet {
