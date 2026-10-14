@@ -418,6 +418,7 @@ class ReportedIP_Hive_Quickstart {
 				'site'       => wp_parse_url( home_url(), PHP_URL_HOST ),
 				'utm_source' => 'hive',
 				'utm_medium' => 'quickstart',
+				'rc'         => 'hive-plugin',
 			),
 			REPORTEDIP_HIVE_REGISTER_URL
 		);

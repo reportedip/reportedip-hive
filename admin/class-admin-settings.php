@@ -1181,7 +1181,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<p class="rip-secured-by__links">
 					<a href="<?php echo esc_url( REPORTEDIP_HIVE_SITE_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'About the community network', 'reportedip-hive' ); ?></a>
 					<span aria-hidden="true">&middot;</span>
-					<a href="<?php echo esc_url( REPORTEDIP_HIVE_FAQ_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'FAQ', 'reportedip-hive' ); ?></a>
+					<a href="<?php echo esc_url( REPORTEDIP_HIVE_FAQ_URL . '?rc=hive-plugin' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'FAQ', 'reportedip-hive' ); ?></a>
 					<span aria-hidden="true">&middot;</span>
 					<a href="mailto:<?php echo esc_attr( REPORTEDIP_HIVE_CONTACT_MAIL ); ?>"><?php esc_html_e( 'Contact', 'reportedip-hive' ); ?></a>
 				</p>
@@ -2860,7 +2860,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php if ( '' !== $host ) : ?>
 			<div class="rip-score-verify">
 				<span class="rip-score-verify__label"><?php esc_html_e( 'Check from outside:', 'reportedip-hive' ); ?></span>
-				<a class="rip-button rip-button--secondary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( (string) apply_filters( 'reportedip_hive_external_url', REPORTEDIP_HIVE_SITE_URL . '/security-headers/?url=' . rawurlencode( home_url( '/' ) ), 'security_headers' ) ); ?>">
+				<a class="rip-button rip-button--secondary" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( (string) apply_filters( 'reportedip_hive_external_url', REPORTEDIP_HIVE_SITE_URL . '/security-headers/?rc=hive-plugin&url=' . rawurlencode( home_url( '/' ) ), 'security_headers' ) ); ?>">
 					<?php esc_html_e( 'Security header check', 'reportedip-hive' ); ?>
 				</a>
 			</div>
@@ -4789,6 +4789,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'utm_source'   => 'plugin',
 				'utm_medium'   => 'community-page',
 				'utm_campaign' => 'honeypot',
+				'rc'           => 'hive-plugin',
 			),
 			$this->get_external_url( 'honeypot', REPORTEDIP_HIVE_HONEYPOT_URL )
 		);
@@ -4869,7 +4870,7 @@ class ReportedIP_Hive_Admin_Settings {
 								<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&tab=settings' ) ); ?>" class="rip-button rip-button--primary">
 									<?php esc_html_e( 'Add API key', 'reportedip-hive' ); ?>
 								</a>
-								<a href="<?php echo esc_url( REPORTEDIP_HIVE_REGISTER_URL ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--secondary">
+								<a href="<?php echo esc_url( REPORTEDIP_HIVE_REGISTER_URL . '?rc=hive-plugin' ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--secondary">
 									<?php esc_html_e( 'Create account', 'reportedip-hive' ); ?>
 								</a>
 							</div>

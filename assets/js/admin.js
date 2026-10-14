@@ -1027,7 +1027,7 @@
             `;
 
             if (reportedip_hive_ajax.ip_detail_base) {
-                const detailUrl = reportedip_hive_ajax.ip_detail_base + encodeURIComponent(data.ip_address) + '/';
+                const detailUrl = reportedip_hive_ajax.ip_detail_base + encodeURIComponent(data.ip_address) + '/?rc=hive-plugin';
                 html += `<a class="button" href="${escapeHtml(detailUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(ripT('action_view_report', 'View community report'))}</a>`;
             }
 

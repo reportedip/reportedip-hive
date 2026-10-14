@@ -1080,7 +1080,7 @@ final class ReportedIP_Hive_Readiness {
 	 * @since  2.1.51
 	 */
 	private static function doc_url( $key ) {
-		return REPORTEDIP_HIVE_SITE_URL . '/docs/integrations/wordpress-hive/#readiness-' . $key;
+		return REPORTEDIP_HIVE_SITE_URL . '/docs/integrations/wordpress-hive/?rc=hive-plugin#readiness-' . $key;
 	}
 
 	/**

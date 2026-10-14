@@ -35,7 +35,7 @@ final class ReportedIP_Hive_IP_Cell {
 	public static function external_url( $ip ) {
 		return apply_filters(
 			'reportedip_hive_external_url',
-			REPORTEDIP_HIVE_SITE_URL . '/ip/' . rawurlencode( $ip ) . '/',
+			REPORTEDIP_HIVE_SITE_URL . '/ip/' . rawurlencode( $ip ) . '/?rc=hive-plugin',
 			'ip_detail'
 		);
 	}
