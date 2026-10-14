@@ -529,7 +529,8 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		 *
 		 * A row: `label`, `description`, `setup` (bool, the method can be set
 		 * up right now), optional `lock` (feature status shown instead of the
-		 * setup button), `meta` (a line under the description), `again` (label
+		 * setup button, drawn by `render_tier_lock()`) with `lock_label` (its
+		 * text), `meta` (a line under the description), `again` (label
 		 * of a button that restarts the setup of an active method), `manager`
 		 * and `icon` (inner SVG markup). The setup flow of an added row is
 		 * rendered by the action `reportedip_hive_2fa_method_flow_{slug}`.
@@ -766,7 +767,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 						<?php elseif ( $has_setup ) : ?>
 							<button type="button" class="rip-button rip-button--secondary rip-button--sm" data-action="setup"><?php esc_html_e( 'Set up', 'reportedip-hive' ); ?></button>
 						<?php elseif ( ! empty( $args['lock'] ) && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) : ?>
-							<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $args['lock'], array( 'label' => __( 'Included in Professional', 'reportedip-hive' ) ) ); ?>
+							<?php ReportedIP_Hive_Admin_Settings::render_tier_lock( $args['lock'], empty( $args['lock_label'] ) ? array() : array( 'label' => (string) $args['lock_label'] ) ); ?>
 						<?php endif; ?>
 					</div>
 				<?php endif; ?>

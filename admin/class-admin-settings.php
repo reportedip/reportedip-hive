@@ -444,122 +444,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render the canonical tier marker for a tier-gated feature.
-	 *
-	 * Single entry point that keeps the tier story visible in both directions:
-	 *
-	 *  - feature locked by tier , compact tier badge with a lock glyph,
-	 *    linked to the pricing page so the upgrade path is one click away
-	 *  - feature locked by mode , delegates to the mode tier-lock chip
-	 *  - feature available      , the same compact tier badge without the
-	 *    lock, so paying customers keep seeing what their plan includes
-	 *  - feature has no tier gate, renders nothing
-	 *
-	 * @param array $status Output of Mode_Manager::feature_status().
-	 * @param array $opts {
-	 *     Optional. Render flags.
-	 *     @type bool   $link Whether the locked badge links out (default true);
-	 *                        set false when the marker sits inside another link.
-	 *     @type string $href Override the locked-badge link target.
-	 * }
-	 * @return void
-	 * @since 2.1.7
-	 */
-	public static function render_tier_marker( $status, $opts = array() ) {
-		if ( empty( $status ) || ! is_array( $status ) || empty( $status['min_tier'] ) ) {
-			return;
-		}
-
-		$opts = wp_parse_args(
-			$opts,
-			array(
-				'link' => true,
-				'href' => '',
-			)
-		);
-
-		$min_tier = (string) $status['min_tier'];
-
-		if ( ! empty( $status['available'] ) ) {
-			self::render_tier_badge(
-				$min_tier,
-				array(
-					'small' => true,
-					'title' => __( 'Included in your plan', 'reportedip-hive' ),
-				)
-			);
-			return;
-		}
-
-		$reason = $status['reason'] ?? '';
-
-		if ( 'mode' === $reason ) {
-			self::render_tier_lock( $status, '' !== $opts['href'] ? array( 'href' => $opts['href'] ) : array() );
-			return;
-		}
-
-		if ( 'tier' !== $reason ) {
-			return;
-		}
-
-		$tier_label = ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info( $min_tier )['label'];
-		$href       = '';
-		if ( ! empty( $opts['link'] ) ) {
-			$href = '' !== $opts['href'] ? $opts['href'] : self::pricing_url();
-		}
-
-		self::render_tier_badge(
-			$min_tier,
-			array(
-				'small'  => true,
-				'locked' => true,
-				'href'   => $href,
-				/* translators: %s = plan name (e.g. "Professional") */
-				'title'  => sprintf( __( 'Available with the %s plan and higher. Compare plans', 'reportedip-hive' ), $tier_label ),
-			)
-		);
-	}
-
-	/**
-	 * Render the quiet counterpart of the locked tier marker: a field whose
-	 * feature the current plan already includes.
-	 *
-	 * It names the plan the feature belongs to and nothing else, so it reads
-	 * as a note rather than as an offer or a restriction. The locked marker
-	 * stays a coloured tier badge with a lock glyph and a link to the pricing
-	 * page, so the two can never be mistaken for one another.
-	 *
-	 * @param array $status Output of Mode_Manager::feature_status().
-	 * @return void
-	 * @since 2.1.59
-	 */
-	public static function render_tier_included( $status ) {
-		if ( empty( $status ) || ! is_array( $status ) || empty( $status['min_tier'] ) ) {
-			return;
-		}
-
-		$tier_label = ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info( (string) $status['min_tier'] )['label'];
-
-		printf(
-			'<span class="rip-badge rip-badge--neutral rip-tier-included" title="%1$s">%2$s</span>',
-			esc_attr__( 'This feature is part of your plan.', 'reportedip-hive' ),
-			/* translators: %s = plan name (e.g. "Professional") */
-			esc_html( sprintf( __( 'Included in %s', 'reportedip-hive' ), $tier_label ) )
-		);
-	}
-
-	/**
-	 * Canonical target for upgrade affordances (locked tier markers, header
-	 * badge): the public pricing page where plans can be compared and booked.
-	 *
-	 * @return string
-	 * @since 2.1.7
-	 */
-	public static function pricing_url() {
-		return 'https://reportedip.com/pricing/';
-	}
-
-	/**
 	 * Sanitize inline SVG markup against a permissive allowlist suitable for
 	 * decorative icons. Returns escaped HTML, safe to echo directly.
 	 *
@@ -646,7 +530,11 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render an upgrade-affordance chip for tier-gated controls.
+	 * The lock chip of a feature that is not available here.
+	 *
+	 * The free plugin draws one reason itself: a feature that needs the
+	 * Community Network links to the Community page. Every other reason
+	 * goes to `reportedip_hive_feature_lock`, so an add-on can draw it.
 	 *
 	 * @param array $status Output of Mode_Manager::feature_status().
 	 * @param array $opts   Optional: 'href' (override URL), 'label' (override text).
@@ -654,56 +542,35 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @since 1.5.3
 	 */
 	public static function render_tier_lock( $status, $opts = array() ) {
-		if ( empty( $status ) ) {
-			return;
-		}
-		if ( ! empty( $status['available'] ) ) {
+		if ( empty( $status ) || ! empty( $status['available'] ) ) {
 			return;
 		}
 
-		$reason = $status['reason'] ?? 'unknown';
-
-		if ( 'mode' === $reason ) {
-			$mode_required = (string) ( $status['mode_required'] ?? '' );
-			$label_default = ( 'community' === $mode_required )
-				? __( 'Community only', 'reportedip-hive' )
-				: __( 'Mode required', 'reportedip-hive' );
-			$label         = $opts['label'] ?? $label_default;
-			$href          = $opts['href'] ?? self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
-			?>
-			<a href="<?php echo esc_url( $href ); ?>" class="rip-tier-lock rip-tier-lock--mode">
-				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h.5A1.5 1.5 0 0117 10.5v6A1.5 1.5 0 0115.5 18h-11A1.5 1.5 0 013 16.5v-6A1.5 1.5 0 014.5 9H5zm2 0V7a3 3 0 116 0v2H7z" clip-rule="evenodd"/></svg>
-				<?php echo esc_html( $label ); ?>
-			</a>
-			<?php
+		if ( 'mode' !== (string) ( $status['reason'] ?? '' ) ) {
+			/**
+			 * Draw the lock chip of a feature held back for a reason the
+			 * free plugin does not describe.
+			 *
+			 * @param array<string,mixed> $status Output of Mode_Manager::feature_status().
+			 * @param array<string,mixed> $opts   'href', 'label'.
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_feature_lock', $status, $opts );
 			return;
 		}
 
-		if ( 'tier' === $reason ) {
-			$min_tier   = (string) ( $status['min_tier'] ?? 'professional' );
-			$mm         = ReportedIP_Hive_Mode_Manager::get_instance();
-			$tier_label = $mm->get_tier_info( $min_tier )['short_label'];
-			$variant    = ( 'business' === $min_tier || 'enterprise' === $min_tier )
-				? 'rip-tier-lock--business'
-				: '';
-			$href       = $opts['href'] ?? self::pricing_url();
-			$label      = $opts['label'] ?? sprintf(
-				/* translators: %s = tier name (e.g. "PRO", "Business") */
-				__( '%s+', 'reportedip-hive' ),
-				$tier_label
-			);
-			?>
-			<a
-				href="<?php echo esc_url( $href ); ?>"
-				class="rip-tier-lock <?php echo esc_attr( $variant ); ?>"
-				target="_blank"
-				rel="noopener noreferrer"
-			>
-				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h.5A1.5 1.5 0 0117 10.5v6A1.5 1.5 0 0115.5 18h-11A1.5 1.5 0 013 16.5v-6A1.5 1.5 0 014.5 9H5zm2 0V7a3 3 0 116 0v2H7z" clip-rule="evenodd"/></svg>
-				<?php echo esc_html( $label ); ?>
-			</a>
-			<?php
-		}
+		$mode_required = (string) ( $status['mode_required'] ?? '' );
+		$label_default = ( 'community' === $mode_required )
+			? __( 'Community only', 'reportedip-hive' )
+			: __( 'Mode required', 'reportedip-hive' );
+		$label         = $opts['label'] ?? $label_default;
+		$href          = $opts['href'] ?? self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
+		?>
+		<a href="<?php echo esc_url( $href ); ?>" class="rip-tier-lock rip-tier-lock--mode">
+			<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h.5A1.5 1.5 0 0117 10.5v6A1.5 1.5 0 0115.5 18h-11A1.5 1.5 0 013 16.5v-6A1.5 1.5 0 014.5 9H5zm2 0V7a3 3 0 116 0v2H7z" clip-rule="evenodd"/></svg>
+			<?php echo esc_html( $label ); ?>
+		</a>
+		<?php
 	}
 
 	/**
@@ -3042,8 +2909,8 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php
 					echo esc_html( $caption );
 					if ( $locked > 0 ) {
-						/* translators: %d: points unlockable through an upgrade or mode switch */
-						echo ' · ' . esc_html( sprintf( __( '+%d unlockable', 'reportedip-hive' ), $locked ) );
+						/* translators: %d: points of features that are not available on this site */
+						echo ' · ' . esc_html( sprintf( __( '%d points not available here', 'reportedip-hive' ), $locked ) );
 					}
 					?>
 				</p>
@@ -3083,7 +2950,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<span class="rip-score-item__state">
 							<?php
 							if ( ! $available && ! empty( $item['status'] ) ) {
-								/* translators: %d: points unlockable by upgrading or switching mode */
+								/* translators: %d: points of a feature that is not available on this site */
 								$lock_label = sprintf( __( '+%d pts', 'reportedip-hive' ), $weight );
 								self::render_tier_lock( $item['status'], array( 'label' => $lock_label ) );
 							} elseif ( $enabled ) {
@@ -3687,55 +3554,6 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php $queue_table->display(); ?>
 		</form>
 
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
-			$(document).on('click', '.retry-report', function(e) {
-				e.preventDefault();
-				var $button = $(this);
-				var reportId = $button.data('id');
-
-				$button.prop('disabled', true).text('<?php esc_html_e( 'Retrying...', 'reportedip-hive' ); ?>');
-
-				$.post(ajaxurl, {
-					action: 'reportedip_hive_retry_report',
-					nonce: reportedip_hive_ajax.nonce,
-					report_id: reportId
-				}, function(response) {
-					if (response.success) {
-						location.reload();
-					} else {
-						alert(response.data || '<?php esc_html_e( 'Error retrying report', 'reportedip-hive' ); ?>');
-						$button.prop('disabled', false).text('<?php esc_html_e( 'Retry', 'reportedip-hive' ); ?>');
-					}
-				});
-			});
-
-			$(document).on('click', '.delete-report', function(e) {
-				e.preventDefault();
-				var $button = $(this);
-				var reportId = $button.data('id');
-
-				if (!confirm('<?php esc_html_e( 'Are you sure you want to delete this queue item?', 'reportedip-hive' ); ?>')) {
-					return;
-				}
-
-				$button.prop('disabled', true).text('<?php esc_html_e( 'Deleting...', 'reportedip-hive' ); ?>');
-
-				$.post(ajaxurl, {
-					action: 'reportedip_hive_delete_report',
-					nonce: reportedip_hive_ajax.nonce,
-					report_id: reportId
-				}, function(response) {
-					if (response.success) {
-						location.reload();
-					} else {
-						alert(response.data || '<?php esc_html_e( 'Error deleting report', 'reportedip-hive' ); ?>');
-						$button.prop('disabled', false).text('<?php esc_html_e( 'Delete', 'reportedip-hive' ); ?>');
-					}
-				});
-			});
-		});
-		</script>
 
 		<?php
 	}
@@ -3879,19 +3697,6 @@ class ReportedIP_Hive_Admin_Settings {
 							?>
 						</span>
 					</div>
-					<script>
-					(function () {
-						var btn = document.getElementById('rip-whitelist-add-mine');
-						if (!btn) { return; }
-						btn.addEventListener('click', function () {
-							var ip = btn.getAttribute('data-ip') || '';
-							var input = document.getElementById(btn.getAttribute('data-target'));
-							if (!input || !ip) { return; }
-							input.value = ip;
-							input.focus();
-						});
-					})();
-					</script>
 				<?php endif; ?>
 			</div>
 		</div>
@@ -4300,7 +4105,6 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$now          = time();
 		$lock_held    = (bool) get_transient( ReportedIP_Hive_Cron_Handler::QUEUE_LOCK_TRANSIENT );
-		$nonce        = wp_create_nonce( 'reportedip_hive_nonce' );
 		$datetime_fmt = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
 		?>
 		<div class="rip-settings-section">
@@ -4384,48 +4188,6 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php $this->render_cron_setup_snippet(); ?>
 		</div>
 
-		<script>
-			jQuery(function ($) {
-				const nonce = <?php echo wp_json_encode( $nonce ); ?>;
-				const $out  = $('#rip-cron-status-result');
-
-				function renderResult(html, kind) {
-					$out.html('<div class="rip-alert rip-alert--' + kind + '">' + html + '</div>');
-				}
-
-				$('#rip-run-queue-now').on('click', function () {
-					const $btn = $(this);
-					$btn.prop('disabled', true);
-					$out.html('<p>' + <?php echo wp_json_encode( __( 'Processing queue...', 'reportedip-hive' ) ); ?> + '</p>');
-					$.post(ajaxurl, { action: 'reportedip_hive_run_queue_now', nonce: nonce })
-						.done(function (resp) {
-							if (resp.success) {
-								renderResult(resp.data.message + ' <strong>(' + resp.data.remaining + ' pending)</strong>', 'success');
-							} else {
-								renderResult((resp.data && resp.data.message) || 'Error', 'error');
-							}
-						})
-						.fail(function () { renderResult('Request failed', 'error'); })
-						.always(function () { $btn.prop('disabled', false); });
-				});
-
-				$('#rip-clear-queue-lock').on('click', function () {
-					const $btn = $(this);
-					$btn.prop('disabled', true);
-					$.post(ajaxurl, { action: 'reportedip_hive_clear_queue_lock', nonce: nonce })
-						.done(function (resp) {
-							if (resp.success) {
-								renderResult(resp.data.message, resp.data.was_locked ? 'success' : 'info');
-								setTimeout(function () { location.reload(); }, 800);
-							} else {
-								renderResult((resp.data && resp.data.message) || 'Error', 'error');
-							}
-						})
-						.fail(function () { renderResult('Request failed', 'error'); })
-						.always(function () { $btn.prop('disabled', false); });
-				});
-			});
-		</script>
 		<?php
 	}
 
@@ -4921,17 +4683,29 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Community & Quota page
 	 */
 	/**
-	 * The three tabs of the Community page, slug to label.
+	 * The tabs of the Community page, slug to label.
 	 *
 	 * @return array<string,string>
 	 * @since  2.1.57
 	 */
 	public static function community_tabs() {
-		return array(
+		$tabs = array(
 			'settings'  => __( 'Settings', 'reportedip-hive' ),
 			'community' => __( 'Community', 'reportedip-hive' ),
 			'badges'    => __( 'Badges', 'reportedip-hive' ),
+			'addon'     => __( 'Add-on', 'reportedip-hive' ),
 		);
+
+		/**
+		 * Tabs of the Community page, slug => label. A tab the free plugin
+		 * does not know renders through `reportedip_hive_community_render_{slug}`.
+		 * A result that is not an array is ignored.
+		 *
+		 * @param array<string,string> $tabs Tabs in display order.
+		 * @since 3.0.0
+		 */
+		$filtered = apply_filters( 'reportedip_hive_community_tabs', $tabs );
+		return is_array( $filtered ) ? $filtered : $tabs;
 	}
 
 	/**
@@ -4942,7 +4716,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 *
 	 * @param mixed $tab    Raw `tab` query value.
 	 * @param mixed $subtab Raw legacy `subtab` query value.
-	 * @return string One of `settings`, `community`, `badges`.
+	 * @return string A slug of {@see community_tabs()}.
 	 * @since  2.1.57
 	 */
 	public static function community_tab( $tab, $subtab = '' ) {
@@ -5313,17 +5087,115 @@ class ReportedIP_Hive_Admin_Settings {
 					);
 					?>
 
-				<?php else : ?>
+				<?php elseif ( 'badges' === $tab ) : ?>
 
 					<?php $this->render_backlink_booster(); ?>
 
 					<?php $this->render_promote_tab(); ?>
+
+				<?php elseif ( 'addon' === $tab ) : ?>
+
+					<?php self::render_addon_tab(); ?>
+
+				<?php else : ?>
+
+					<?php
+					/**
+					 * Render a Community tab an add-on added through
+					 * `reportedip_hive_community_tabs`.
+					 *
+					 * @since 3.0.0
+					 */
+					do_action( 'reportedip_hive_community_render_' . $tab );
+					?>
 
 				<?php endif; ?>
 
 			</div>
 
 		<?php self::render_page_footer(); ?>
+		<?php
+	}
+
+	/**
+	 * The Add-on tab: what the ReportedIP Hive Pro add-on brings, from the
+	 * catalog, and how to get it. No prices. While the add-on runs, the tab
+	 * names its version and says per feature whether this site has it.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function render_addon_tab() {
+		$running = ReportedIP_Hive_Addon_Notice::addon_running();
+		$version = $running && defined( 'REPORTEDIP_HIVE_PRO_VERSION' ) ? (string) constant( 'REPORTEDIP_HIVE_PRO_VERSION' ) : '';
+		$manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		$labels  = array_merge( ReportedIP_Hive_Catalog::sections(), ReportedIP_Hive_Settings_Registry::sections() );
+		?>
+		<div class="rip-card rip-mb-6" id="rip-addon">
+			<div class="rip-card__header">
+				<h3 class="rip-card__title"><?php esc_html_e( 'ReportedIP Hive Pro add-on', 'reportedip-hive' ); ?></h3>
+			</div>
+			<div class="rip-card__body">
+				<?php if ( $running ) : ?>
+					<div class="rip-alert rip-alert--success">
+						<?php
+						echo esc_html(
+							'' !== $version
+								/* translators: %s: version number of the add-on */
+								? sprintf( __( 'The add-on is installed and active, version %s.', 'reportedip-hive' ), $version )
+								: __( 'The add-on is installed and active.', 'reportedip-hive' )
+						);
+						?>
+					</div>
+				<?php else : ?>
+					<p><?php esc_html_e( 'The ReportedIP Hive Pro add-on adds the features below to this plugin. Download it from your account dashboard at reportedip.com and upload it under Plugins, Add New Plugin; it works with the Community Access Key of this site.', 'reportedip-hive' ); ?></p>
+					<p class="rip-flex rip-gap-2">
+						<a class="rip-button rip-button--secondary rip-button--sm" href="<?php echo esc_url( REPORTEDIP_HIVE_SITE_URL . '/dashboard/' ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open your account', 'reportedip-hive' ); ?></a>
+						<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( ReportedIP_Hive_Catalog::PRODUCT_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Learn more', 'reportedip-hive' ); ?></a>
+					</p>
+				<?php endif; ?>
+			</div>
+		</div>
+
+		<?php foreach ( ReportedIP_Hive_Catalog::by_section() as $section => $rows ) : ?>
+			<div class="rip-card rip-mb-4 rip-addon__section" data-section="<?php echo esc_attr( (string) $section ); ?>">
+				<div class="rip-card__header">
+					<h3 class="rip-card__title"><?php echo esc_html( (string) ( $labels[ $section ]['label'] ?? $section ) ); ?></h3>
+					<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( ReportedIP_Hive_Protection_Page::section_url( (string) $section ) ); ?>"><?php esc_html_e( 'Open on the Protection page', 'reportedip-hive' ); ?></a>
+				</div>
+				<div class="rip-card__body">
+					<table class="rip-table">
+						<tbody>
+							<?php foreach ( $rows as $feature => $row ) : ?>
+								<tr data-feature="<?php echo esc_attr( (string) $feature ); ?>">
+									<td>
+										<strong><?php echo esc_html( (string) $row['label'] ); ?></strong><br />
+										<span class="rip-help-text"><?php echo esc_html( (string) $row['description'] ); ?></span>
+									</td>
+									<td><?php self::render_tier_badge( (string) $row['tier'], array( 'small' => true ) ); ?></td>
+									<td>
+										<?php
+										if ( $running ) {
+											$status = $manager->feature_status( (string) $feature );
+											if ( ! empty( $status['available'] ) ) {
+												echo '<span class="rip-badge rip-badge--success">' . esc_html__( 'Available', 'reportedip-hive' ) . '</span>';
+											} elseif ( 'mode' === (string) ( $status['reason'] ?? '' ) ) {
+												echo '<span class="rip-badge rip-badge--warning">' . esc_html__( 'Needs the Community Network', 'reportedip-hive' ) . '</span>';
+											} else {
+												echo '<span class="rip-badge rip-badge--neutral">' . esc_html__( 'Not included in your account', 'reportedip-hive' ) . '</span>';
+											}
+										} elseif ( ! empty( $row['community_only'] ) ) {
+											echo '<span class="rip-badge rip-badge--neutral">' . esc_html__( 'Needs the Community Network', 'reportedip-hive' ) . '</span>';
+										}
+										?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		<?php endforeach; ?>
 		<?php
 	}
 

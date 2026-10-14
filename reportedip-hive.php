@@ -151,6 +151,7 @@ class ReportedIP_Hive {
 	private function init_hooks() {
 		add_action( 'init', array( $this, 'init' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+		add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_disable_xmlrpc_multicall', true ) ) {
 			add_filter( 'xmlrpc_methods', array( $this, 'disable_xmlrpc_multicall' ) );
@@ -796,6 +797,28 @@ class ReportedIP_Hive {
 	}
 
 	/**
+	 * One link in this plugin's row on the Plugins screen: the product page
+	 * of the Pro add-on, while the add-on does not run.
+	 *
+	 * @param string[] $links Row links.
+	 * @param string   $file  Plugin basename of the row.
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function plugin_row_meta( $links, $file ) {
+		if ( REPORTEDIP_HIVE_PLUGIN_BASENAME !== $file || ReportedIP_Hive_Addon_Notice::addon_running() ) {
+			return $links;
+		}
+		$links   = (array) $links;
+		$links[] = sprintf(
+			'<a href="%1$s" target="_blank" rel="noopener">%2$s</a>',
+			esc_url( ReportedIP_Hive_Catalog::PRODUCT_URL ),
+			esc_html__( 'Pro add-on', 'reportedip-hive' )
+		);
+		return $links;
+	}
+
+	/**
 	 * Enqueue admin scripts
 	 */
 	public function admin_enqueue_scripts( $hook ) {
@@ -970,6 +993,13 @@ class ReportedIP_Hive {
 					'action_whitelist_ip'                => __( 'Whitelist IP', 'reportedip-hive' ),
 					'action_view_report'                 => __( 'View community report', 'reportedip-hive' ),
 					'confirm_self_block'                 => __( 'This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?', 'reportedip-hive' ),
+					'confirm_delete_queue_item'          => __( 'Are you sure you want to delete this queue item?', 'reportedip-hive' ),
+					'retrying'                           => __( 'Retrying...', 'reportedip-hive' ),
+					'deleting'                           => __( 'Deleting...', 'reportedip-hive' ),
+					'retry_report_failed'                => __( 'Error retrying report', 'reportedip-hive' ),
+					'delete_report_failed'               => __( 'Error deleting report', 'reportedip-hive' ),
+					'processing_queue'                   => __( 'Processing queue...', 'reportedip-hive' ),
+					'pending'                            => __( 'pending', 'reportedip-hive' ),
 				),
 			)
 		);
@@ -1686,31 +1716,12 @@ class ReportedIP_Hive {
 								'type'    => 'button',
 								'label'   => __( 'Retry all', 'reportedip-hive' ),
 								'id'      => 'retry-failed-reports-notice',
+								'class'   => 'rip-retry-all-failed',
 								'variant' => 'secondary',
 							),
 						),
 					)
 				);
-				echo '<script>
-                jQuery(document).ready(function($) {
-                    $("#retry-failed-reports-notice").on("click", function(e) {
-                        e.preventDefault();
-                        var $btn = $(this);
-                        $btn.prop("disabled", true).text("' . esc_js( __( 'Retrying...', 'reportedip-hive' ) ) . '");
-                        $.post(ajaxurl, {
-                            action: "reportedip_hive_retry_all_failed",
-                            nonce: "' . esc_js( wp_create_nonce( 'reportedip_hive_nonce' ) ) . '"
-                        }, function(response) {
-                            if (response.success) {
-                                location.reload();
-                            } else {
-                                alert(response.data || "' . esc_js( __( 'Retry failed.', 'reportedip-hive' ) ) . '");
-                                $btn.prop("disabled", false).text("' . esc_js( __( 'Retry all', 'reportedip-hive' ) ) . '");
-                            }
-                        });
-                    });
-                });
-                </script>';
 			}
 
 			$warning_threshold  = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_warning_threshold', 50 );

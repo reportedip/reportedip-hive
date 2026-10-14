@@ -1382,6 +1382,79 @@
                 window.alert(strings.request_failed || strings.generic_error || 'Error');
             });
         });
+
+        /**
+         * Retry or delete one row of the API queue table.
+         */
+        $(document).on('click', '.retry-report, .delete-report', function (e) {
+            e.preventDefault();
+            var $button = $(this);
+            var retry = $button.hasClass('retry-report');
+            if (!retry && !window.confirm(strings.confirm_delete_queue_item || 'Are you sure you want to delete this queue item?')) {
+                return;
+            }
+            var label = $button.text();
+            $button.prop('disabled', true).text(retry ? (strings.retrying || 'Retrying...') : (strings.deleting || 'Deleting...'));
+            $.post(reportedip_hive_ajax.ajax_url, {
+                action: retry ? 'reportedip_hive_retry_report' : 'reportedip_hive_delete_report',
+                nonce: reportedip_hive_ajax.nonce,
+                report_id: $button.data('id')
+            }, function (response) {
+                if (response && response.success) {
+                    location.reload();
+                } else {
+                    window.alert((response && response.data) || (retry ? strings.retry_report_failed : strings.delete_report_failed) || 'Error');
+                    $button.prop('disabled', false).text(label);
+                }
+            });
+        });
+
+        /**
+         * Put the detected address of the operator into the whitelist field.
+         */
+        $(document).on('click', '#rip-whitelist-add-mine', function () {
+            var ip = $(this).attr('data-ip') || '';
+            var $input = $('#' + $(this).attr('data-target'));
+            if (!ip || !$input.length) {
+                return;
+            }
+            $input.val(ip).trigger('focus');
+        });
+
+        /**
+         * Cron status card: run the report queue now or clear its lock.
+         */
+        $(document).on('click', '#rip-run-queue-now, #rip-clear-queue-lock', function () {
+            var $btn = $(this);
+            var run = this.id === 'rip-run-queue-now';
+            var $out = $('#rip-cron-status-result');
+            var render = function (html, kind) {
+                $out.html('<div class="rip-alert rip-alert--' + kind + '">' + html + '</div>');
+            };
+            $btn.prop('disabled', true);
+            if (run) {
+                $out.html('<p>' + escapeHtml(strings.processing_queue || 'Processing queue...') + '</p>');
+            }
+            $.post(reportedip_hive_ajax.ajax_url, {
+                action: run ? 'reportedip_hive_run_queue_now' : 'reportedip_hive_clear_queue_lock',
+                nonce: reportedip_hive_ajax.nonce
+            }).done(function (resp) {
+                if (!resp || !resp.success) {
+                    render(escapeHtml((resp && resp.data && resp.data.message) || strings.generic_error || 'Error'), 'error');
+                    return;
+                }
+                if (run) {
+                    render(escapeHtml(resp.data.message) + ' <strong>(' + escapeHtml(resp.data.remaining) + ' ' + escapeHtml(strings.pending || 'pending') + ')</strong>', 'success');
+                } else {
+                    render(escapeHtml(resp.data.message), resp.data.was_locked ? 'success' : 'info');
+                    setTimeout(function () { location.reload(); }, 800);
+                }
+            }).fail(function () {
+                render(escapeHtml(strings.notify_request_failed || 'Request failed.'), 'error');
+            }).always(function () {
+                $btn.prop('disabled', false);
+            });
+        });
     });
 
 })(jQuery);

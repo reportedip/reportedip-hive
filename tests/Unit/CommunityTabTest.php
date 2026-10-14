@@ -48,6 +48,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'settings'                        => array( 'settings', '', 'settings' ),
 				'community'                       => array( 'community', '', 'community' ),
 				'badges'                          => array( 'badges', '', 'badges' ),
+				'add-on'                          => array( 'addon', '', 'addon' ),
 				'legacy promote lands on badges'  => array( '', 'promote', 'badges' ),
 				'legacy main opens the settings'  => array( '', 'main', 'settings' ),
 				'tab wins over legacy subtab'     => array( 'community', 'promote', 'community' ),
@@ -56,8 +57,35 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_settings_is_the_first_of_three_tabs(): void {
-			$this->assertSame( array( 'settings', 'community', 'badges' ), array_keys( ReportedIP_Hive_Admin_Settings::community_tabs() ) );
+		public function test_settings_is_the_first_tab_and_the_add_on_the_last(): void {
+			$this->assertSame( array( 'settings', 'community', 'badges', 'addon' ), array_keys( ReportedIP_Hive_Admin_Settings::community_tabs() ) );
+		}
+
+		public function test_an_added_tab_is_accepted_and_a_broken_filter_is_ignored(): void {
+			add_filter(
+				'reportedip_hive_community_tabs',
+				static function ( array $tabs ) {
+					$tabs['probe'] = 'Probe';
+					return $tabs;
+				}
+			);
+			try {
+				$this->assertSame( 'probe', ReportedIP_Hive_Admin_Settings::community_tab( 'probe' ) );
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_community_tabs'] );
+			}
+
+			add_filter(
+				'reportedip_hive_community_tabs',
+				static function () {
+					return 'broken';
+				}
+			);
+			try {
+				$this->assertCount( 4, ReportedIP_Hive_Admin_Settings::community_tabs() );
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_community_tabs'] );
+			}
 		}
 	}
 }
