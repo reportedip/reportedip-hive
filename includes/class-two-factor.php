@@ -1103,8 +1103,8 @@ class ReportedIP_Hive_Two_Factor {
 		 * skips the trusted-device bypass, while the `reportedip_2fa_bypass`
 		 * filter and the IP allowlist still win. A name that starts with
 		 * {@see self::STEPUP_NO_METHOD_PREFIX} records that a trigger fired
-		 * for an account without a usable method; that account signs in
-		 * with the password as before.
+		 * for an account without a usable method and is no step-up: the
+		 * account signs in as it would without the trigger.
 		 *
 		 * @param string   $stepup         Trigger name or empty string.
 		 * @param \WP_User $user           The signing-in user.
@@ -1113,6 +1113,26 @@ class ReportedIP_Hive_Two_Factor {
 		 * @since 3.0.0
 		 */
 		$stepup = (string) apply_filters( 'reportedip_hive_2fa_stepup', '', $user, $has_any_method, $is_enforced );
+
+		/*
+		 * A `no_method:` verdict only records that a trigger fired for an
+		 * account without a usable method. It is no step-up: the trusted
+		 * device still counts and no `2fa_stepup_required` row is written,
+		 * otherwise an account left with recovery codes only would spend a
+		 * code on every sign-in.
+		 */
+		if ( 0 === strpos( $stepup, self::STEPUP_NO_METHOD_PREFIX ) ) {
+			ReportedIP_Hive_Logger::get_instance()->log_security_event(
+				'2fa_stepup_skipped_no_method',
+				ReportedIP_Hive::get_client_ip(),
+				array(
+					'user_id' => $user->ID,
+					'trigger' => substr( $stepup, strlen( self::STEPUP_NO_METHOD_PREFIX ) ),
+				),
+				'low'
+			);
+			$stepup = '';
+		}
 
 		if ( ! $has_any_method && ! $is_enforced && '' === $unavailable ) {
 			/*
@@ -1132,18 +1152,6 @@ class ReportedIP_Hive_Two_Factor {
 						'allowed_methods'  => self::get_allowed_methods(),
 						'configured_flags' => $configured,
 					)
-				);
-			}
-
-			if ( 0 === strpos( $stepup, self::STEPUP_NO_METHOD_PREFIX ) ) {
-				ReportedIP_Hive_Logger::get_instance()->log_security_event(
-					'2fa_stepup_skipped_no_method',
-					ReportedIP_Hive::get_client_ip(),
-					array(
-						'user_id' => $user->ID,
-						'trigger' => substr( $stepup, strlen( self::STEPUP_NO_METHOD_PREFIX ) ),
-					),
-					'low'
 				);
 			}
 

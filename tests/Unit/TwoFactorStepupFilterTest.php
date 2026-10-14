@@ -212,6 +212,51 @@ class TwoFactorStepupFilterTest extends TestCase {
 		$this->assertSame( 'no_method:', \ReportedIP_Hive_Two_Factor::STEPUP_NO_METHOD_PREFIX, 'The add-on writes the same prefix.' );
 	}
 
+	public function test_a_no_method_verdict_keeps_the_trusted_device_of_a_recovery_only_account(): void {
+		$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods'] = '["totp","email","webauthn","sms"]';
+		$GLOBALS['wp_user_meta'][ self::USER_ID ]                    = array(
+			'reportedip_hive_2fa_enabled'     => '1',
+			'reportedip_hive_2fa_method'      => 'sms',
+			'reportedip_hive_2fa_sms_enabled' => '1',
+		);
+		$this->stepup( \ReportedIP_Hive_Two_Factor::STEPUP_NO_METHOD_PREFIX . 'new_ip' );
+
+		$user = $this->sign_in();
+
+		$this->assertInstanceOf( \WP_User::class, $user, 'The trusted device still spares the recovery code.' );
+		$this->assertSame( array(), $this->events( '2fa_stepup_required' ), 'A no_method verdict is no step-up.' );
+		$rows = $this->events( '2fa_stepup_skipped_no_method' );
+		$this->assertCount( 1, $rows );
+		$this->assertSame( 'new_ip', $rows[0]['args'][2]['trigger'] );
+	}
+
+	public function test_a_no_method_verdict_without_a_trusted_device_runs_the_recovery_challenge_unflagged(): void {
+		unset( $_COOKIE[ \ReportedIP_Hive_Two_Factor::TRUSTED_COOKIE ] );
+		$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods'] = '["totp","email","webauthn","sms"]';
+		$GLOBALS['wp_user_meta'][ self::USER_ID ]                    = array(
+			'reportedip_hive_2fa_enabled'     => '1',
+			'reportedip_hive_2fa_method'      => 'sms',
+			'reportedip_hive_2fa_sms_enabled' => '1',
+		);
+		$this->stepup( \ReportedIP_Hive_Two_Factor::STEPUP_NO_METHOD_PREFIX . 'new_ip' );
+		$context = array();
+		add_filter(
+			'reportedip_2fa_should_challenge',
+			static function ( $challenge, $user, $ctx ) use ( &$context ) {
+				$context = $ctx;
+				return $challenge;
+			},
+			10,
+			3
+		);
+
+		$result = $this->sign_in();
+
+		$this->assertInstanceOf( \WP_Error::class, $result, 'The unavailable method still asks for a recovery code.' );
+		$this->assertSame( '', $context['stepup'] );
+		$this->assertSame( array(), $this->events( '2fa_stepup_required' ) );
+	}
+
 	public function test_the_ip_allowlist_still_wins_over_a_trigger(): void {
 		$GLOBALS['wp_options']['reportedip_hive_2fa_ip_allowlist'] = '203.0.113.10';
 		$this->stepup( 'new_ip' );
