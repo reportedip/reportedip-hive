@@ -1066,7 +1066,7 @@ final class ReportedIP_Hive_Readiness {
 		$names = ReportedIP_Hive_Form_Adapters::names();
 		$rows  = array();
 
-		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+		foreach ( ReportedIP_Hive_Form_Adapters::adapters() as $slug => $adapter ) {
 			$rows[ $slug ] = array(
 				'label'   => isset( $names[ $slug ] ) ? $names[ $slug ] : $slug,
 				'feature' => $adapter['feature'],
