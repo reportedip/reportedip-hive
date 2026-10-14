@@ -7,7 +7,7 @@ classes, so behaviour is identical no matter who is asking:
 | Transport | Status | Entry point |
 |---|---|---|
 | MainWP (`mainwp_child_extra_execution` / `mainwp_site_sync_others_data`) | live | `includes/class-mainwp-integration.php` |
-| reportedip.com management API (`reportedip-hive/v1/remote/settings/*`) | live | `includes/class-cloud-management-rest.php` |
+| reportedip.com management API (`reportedip-hive/v1/remote/settings/*`) | live, with the ReportedIP Hive Pro add-on | add-on `includes/class-cloud-management-rest.php` |
 
 Core classes (all loaded unconditionally, in every request context):
 
@@ -151,7 +151,7 @@ Every `reportedip_hive_sync` response additionally carries:
 - `settings_schema_version`, presence signals protocol support.
 - `settings_hash`, current fingerprint (see below).
 
-The cloud transport has the equivalent passive channel: when cloud
+The cloud transport has the equivalent passive channel: while the add-on runs and cloud
 management is enabled, every outbound request to the reportedip.com API
 carries the request headers `X-Rip-Settings-Schema` (schema version) and
 `X-Rip-Settings-Hash` (current fingerprint). Header presence signals both
@@ -162,7 +162,7 @@ as "do not push".
 
 The MainWP transport inherits its authentication from the MainWP Child
 layer. The cloud transport authenticates every request itself. Routes
-(registered by `ReportedIP_Hive_Cloud_Management_REST`):
+(registered by the add-on, `ReportedIP_Hive_Cloud_Management_REST`; without it the routes do not exist):
 
 ```
 POST /wp-json/reportedip-hive/v1/remote/settings/schema

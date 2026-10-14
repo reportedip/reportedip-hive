@@ -506,9 +506,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mainwp-integration.php';
 		ReportedIP_Hive_MainWP_Integration::init();
 
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-cloud-management-rest.php';
-		new ReportedIP_Hive_Cloud_Management_REST();
-
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Two_Factor_Admin();
 			new ReportedIP_Hive_Two_Factor_Dashboard();

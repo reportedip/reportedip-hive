@@ -78,7 +78,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private const NOT_REMOTE = array(
 			'reportedip_hive_api_key'                    => 'Credential. A dashboard may provision it, never read or push it as a setting.',
-			'reportedip_hive_cloud_management'           => 'The opt-in gate for remote management itself, so a fleet cannot grant itself access.',
 			'reportedip_hive_delete_data_on_uninstall'   => 'Destructive. Nobody flips this from a remote form.',
 			'reportedip_hive_operation_mode'             => 'Switching mode remotely can cut the site off from the transport carrying the change.',
 			'reportedip_hive_api_endpoint'               => 'Pointing a site at another endpoint is a connection change, not a setting.',

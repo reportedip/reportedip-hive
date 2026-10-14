@@ -4,7 +4,9 @@ Manage the security settings of every ReportedIP Hive installation you own
 from one place, either a self-hosted [MainWP](https://mainwp.com/) dashboard
 or the reportedip.com fleet dashboard (Business plan). Both speak the same
 [remote settings protocol](remote-settings-protocol.md), so a policy behaves
-identically no matter which dashboard applied it.
+identically no matter which dashboard applied it. The reportedip.com
+transport, its opt-in switch and its routes come with the ReportedIP Hive
+Pro add-on; the MainWP transport is part of the free plugin.
 
 This document describes the feature end to end: what it does, how it is
 secured, how to enable it, and how to operate it. For the exact wire format

@@ -98,35 +98,14 @@ class ReportedIP_Hive_API {
 	/**
 	 * Identity headers announced on every request to the reportedip.com API.
 	 *
-	 * Always carries the site identity (`X-Rip-Site`). When the site owner
-	 * has enabled cloud management, the current settings schema version and
-	 * fingerprint ride along too, their presence is the opt-in and
-	 * capability signal for the fleet dashboard, and the hash is its passive
-	 * drift channel (no extra request needed). The hash is memoised per
-	 * request; it only covers registry options, which cannot change between
-	 * two outbound API calls of the same request.
+	 * Always carries the site identity (`X-Rip-Site`). An add-on announces
+	 * more through `reportedip_hive_api_identity_headers`.
 	 *
 	 * @return array<string, string> Header map.
 	 * @since  2.1.48
 	 */
 	public static function identity_headers() {
-		static $settings_headers = null;
-
 		$headers = array( 'X-Rip-Site' => self::api_site_url() );
-
-		if ( null === $settings_headers ) {
-			$settings_headers = array();
-			if ( class_exists( 'ReportedIP_Hive_Cloud_Management_REST' )
-				&& class_exists( 'ReportedIP_Hive_Settings_Registry' )
-				&& ReportedIP_Hive_Cloud_Management_REST::is_enabled() ) {
-				$settings_headers = array(
-					'X-Rip-Settings-Schema' => (string) ReportedIP_Hive_Settings_Registry::SCHEMA_VERSION,
-					'X-Rip-Settings-Hash'   => ReportedIP_Hive_Settings_Registry::settings_hash(),
-				);
-			}
-		}
-
-		$headers = array_merge( $headers, $settings_headers );
 		/**
 		 * Headers announced on every request to the reportedip.com API.
 		 * A result that is not an array leaves the free headers.

@@ -188,6 +188,16 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'https://example.org', \ReportedIP_Hive_API::identity_headers()['X-Rip-Site'] );
 		}
 
+		/**
+		 * The settings schema and hash are the add-on's opt-in signal; a
+		 * stored 2.x opt-in alone announces nothing more than the site.
+		 */
+		public function test_a_stored_cloud_opt_in_adds_no_header_without_the_add_on() {
+			$GLOBALS['wp_options']['reportedip_hive_cloud_management'] = 1;
+
+			$this->assertSame( array( 'X-Rip-Site' => 'https://example.org' ), \ReportedIP_Hive_API::identity_headers() );
+		}
+
 		public function test_hibp_check_never_carries_the_site_identity() {
 			$GLOBALS['rip_telemetry_http_next'] = array(
 				'response' => array( 'code' => 200 ),

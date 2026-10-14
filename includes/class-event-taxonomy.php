@@ -506,10 +506,6 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'label' => __( 'Report Categories Cached', 'reportedip-hive' ),
 				'group' => 'ops_api',
 			),
-			'cloud_management_auth_fail'        => array(
-				'label' => __( 'Cloud Management Auth Failed', 'reportedip-hive' ),
-				'group' => 'ops_api',
-			),
 
 			'mode_changed'                      => array(
 				'label' => __( 'Operation Mode Changed', 'reportedip-hive' ),
