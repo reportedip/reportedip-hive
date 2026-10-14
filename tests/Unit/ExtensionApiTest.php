@@ -706,4 +706,119 @@ class ExtensionApiTest extends TestCase {
 		$this->assertStringContainsString( "public function render_page( \$context = 'admin', array \$surface = array() ) {", $source );
 		$this->assertStringContainsString( "add_action( 'template_redirect', array( \$this, 'maybe_frontend_redirect' ) );", $source, 'Flagged users are still sent to the wizard from the frontend without the add-on.' );
 	}
+
+	/**
+	 * Load the WebAuthn class on the real two-factor engine.
+	 *
+	 * @return void
+	 */
+	private function load_webauthn() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'tests/stubs/two-factor-runtime-stubs.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-verifier.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-webauthn.php';
+		$GLOBALS['wp_user_meta'] = array();
+	}
+
+	/**
+	 * Store a number of credentials for a user.
+	 *
+	 * @param int $user_id User id.
+	 * @param int $count   Credentials.
+	 * @return void
+	 */
+	private function store_webauthn_keys( $user_id, $count ) {
+		$creds = array();
+		for ( $i = 0; $i < $count; $i++ ) {
+			$creds[] = array(
+				'id'     => 'cred' . $i,
+				'aaguid' => '2fc0579f-8113-47ea-b116-bb5a8db9202a',
+			);
+		}
+		\ReportedIP_Hive_Two_Factor_WebAuthn::save_user_credentials( $user_id, $creds );
+	}
+
+	/**
+	 * Without a listener an account may hold exactly one key; the filter
+	 * sees user and count and may allow more.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_can_add_key_without_filter_only_at_zero_keys() {
+		$this->load_webauthn();
+
+		$this->assertTrue( \ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( 4 ) );
+		$this->store_webauthn_keys( 4, 1 );
+		$this->assertFalse( \ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( 4 ) );
+		$this->store_webauthn_keys( 4, 3 );
+		$this->assertFalse( \ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( 4 ), 'An account above one key keeps its keys but cannot add another.' );
+
+		$seen = array();
+		add_filter(
+			'reportedip_hive_webauthn_can_add_key',
+			static function ( $allowed, $user_id, $count ) use ( &$seen ) {
+				$seen = array( $allowed, $user_id, $count );
+				return true;
+			},
+			10,
+			3
+		);
+		$this->assertTrue( \ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( 4 ) );
+		$this->assertSame( array( false, 4, 3 ), $seen );
+	}
+
+	/**
+	 * The registration asks for no attestation unless a listener asks for a
+	 * valid other preference.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_attestation_preference_is_filterable_and_validated() {
+		$this->load_webauthn();
+		$preference = new \ReflectionMethod( \ReportedIP_Hive_Two_Factor_WebAuthn::class, 'attestation_preference' );
+
+		$this->assertSame( 'none', $preference->invoke( null ) );
+
+		$GLOBALS['rip_test_attestation'] = 'direct';
+		add_filter(
+			'reportedip_hive_webauthn_attestation',
+			static function () {
+				return $GLOBALS['rip_test_attestation'];
+			}
+		);
+		$this->assertSame( 'direct', $preference->invoke( null ) );
+
+		$GLOBALS['rip_test_attestation'] = 'everything';
+		$this->assertSame( 'none', $preference->invoke( null ), 'A value outside the WebAuthn list falls back to none.' );
+	}
+
+	/**
+	 * The key list names no model unless a listener fills the row; the
+	 * listener sees the stored record.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_key_rows_name_no_model_without_filter() {
+		$this->load_webauthn();
+		$this->store_webauthn_keys( 4, 1 );
+
+		$rows = \ReportedIP_Hive_Two_Factor_WebAuthn::keys_for_display( 4 );
+		$this->assertSame( '', $rows[0]['model'] );
+		$this->assertSame( '', $rows[0]['icon'] );
+
+		add_filter(
+			'reportedip_hive_webauthn_key_row',
+			static function ( $row, $credential ) {
+				$row['model'] = 'Model of ' . $credential['aaguid'];
+				return $row;
+			},
+			10,
+			2
+		);
+		$rows = \ReportedIP_Hive_Two_Factor_WebAuthn::keys_for_display( 4 );
+		$this->assertSame( 'Model of 2fc0579f-8113-47ea-b116-bb5a8db9202a', $rows[0]['model'] );
+	}
 }

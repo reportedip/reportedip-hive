@@ -120,7 +120,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 					'authenticatorSelection' => self::authenticator_selection( $hint ),
 					'hints'                  => '' !== $hint ? array( $hint ) : array(),
 					'timeout'                => self::CEREMONY_TIMEOUT_MS,
-					'attestation'            => self::advanced_available() ? 'direct' : 'none',
+					'attestation'            => self::attestation_preference(),
 					'excludeCredentials'     => $exclude,
 				),
 			)
@@ -178,20 +178,22 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	/**
-	 * Whether the Business-tier advanced security-key features are active:
-	 * multiple keys per account, attestation-based model detection and the
-	 * key-lifecycle mails. One key per account is free, the base 2FA
-	 * protection is never gated.
+	 * Attestation conveyance asked for at registration. The free plugin asks
+	 * for none, the authenticator then sends no model information; any value
+	 * outside the WebAuthn list falls back to none.
 	 *
-	 * @return bool
-	 * @since 2.1.36
+	 * @return string
+	 * @since  3.0.0
 	 */
-	public static function advanced_available() {
-		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			return false;
-		}
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'webauthn_advanced' );
-		return ! empty( $status['available'] );
+	private static function attestation_preference() {
+		/**
+		 * Attestation conveyance preference of the registration ceremony.
+		 *
+		 * @param string $preference `none`, `indirect`, `direct` or `enterprise`.
+		 * @since 3.0.0
+		 */
+		$preference = (string) apply_filters( 'reportedip_hive_webauthn_attestation', 'none' );
+		return in_array( $preference, array( 'none', 'indirect', 'direct', 'enterprise' ), true ) ? $preference : 'none';
 	}
 
 	/**
@@ -223,18 +225,26 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	}
 
 	/**
-	 * Whether the user may register one more credential: always for the
-	 * first key, Business+ beyond that.
+	 * Whether the user may register one more credential. The free plugin
+	 * allows exactly one key per account; an account that already holds
+	 * more keys keeps signing in with each of them and can remove them.
 	 *
 	 * @param int $user_id User id.
 	 * @return bool
 	 * @since 2.1.36
 	 */
 	public static function can_add_key( $user_id ) {
-		if ( empty( self::get_user_credentials( $user_id ) ) ) {
-			return true;
-		}
-		return self::advanced_available();
+		$count = count( self::get_user_credentials( $user_id ) );
+
+		/**
+		 * Whether the account may register one more credential.
+		 *
+		 * @param bool $allowed Default: no key yet.
+		 * @param int  $user_id User id.
+		 * @param int  $count   Registered credentials.
+		 * @since 3.0.0
+		 */
+		return (bool) apply_filters( 'reportedip_hive_webauthn_can_add_key', 0 === $count, (int) $user_id, $count );
 	}
 
 	/**
@@ -371,6 +381,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			array(
 				'message' => __( 'Security key registered.', 'reportedip-hive' ),
 				'keys'    => self::keys_for_display( $user_id ),
+				'can_add' => self::can_add_key( (int) $user_id ),
 			)
 		);
 	}
@@ -404,7 +415,12 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 */
 	public function ajax_list_keys() {
 		$user_id = self::key_management_user();
-		wp_send_json_success( array( 'keys' => self::keys_for_display( $user_id ) ) );
+		wp_send_json_success(
+			array(
+				'keys'    => self::keys_for_display( $user_id ),
+				'can_add' => self::can_add_key( (int) $user_id ),
+			)
+		);
 	}
 
 	/**
@@ -415,28 +431,29 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * @since 2.1.34
 	 */
 	public static function keys_for_display( $user_id ) {
-		$format   = (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' );
-		$advanced = self::advanced_available();
-		$keys     = array();
+		$format = (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' );
+		$keys   = array();
 		foreach ( self::get_user_credentials( $user_id ) as $cred ) {
-			$model = '';
-			$icon  = '';
-			if ( $advanced && ! empty( $cred['aaguid'] ) && class_exists( 'ReportedIP_Hive_WebAuthn_Aaguid_Registry' ) ) {
-				$info = ReportedIP_Hive_WebAuthn_Aaguid_Registry::lookup( (string) $cred['aaguid'] );
-				if ( null !== $info ) {
-					$model = $info['label'];
-					$icon  = $info['icon'];
-				}
-			}
-			$keys[] = array(
+			$row = array(
 				'id'         => (string) ( $cred['id'] ?? '' ),
 				'name'       => (string) ( $cred['name'] ?? __( 'Security key', 'reportedip-hive' ) ),
-				'model'      => $model,
-				'icon'       => $icon,
+				'model'      => '',
+				'icon'       => '',
 				'transports' => is_array( $cred['transports'] ?? null ) ? $cred['transports'] : array(),
 				'created_at' => ! empty( $cred['created_at'] ) ? wp_date( $format, (int) $cred['created_at'] ) : '',
 				'last_used'  => ! empty( $cred['last_used'] ) ? wp_date( $format, (int) $cred['last_used'] ) : '',
 			);
+
+			/**
+			 * One row of the key manager. `model` and `icon` (`key` or
+			 * `device`) are empty in the free plugin. The row goes to the
+			 * browser: never add the public key or the sign counter.
+			 *
+			 * @param array<string, mixed> $row        Display row.
+			 * @param array<string, mixed> $credential Stored credential record.
+			 * @since 3.0.0
+			 */
+			$keys[] = (array) apply_filters( 'reportedip_hive_webauthn_key_row', $row, $cred );
 		}
 		return $keys;
 	}
@@ -534,6 +551,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		wp_send_json_success(
 			array(
 				'keys'            => self::keys_for_display( $user_id ),
+				'can_add'         => self::can_add_key( (int) $user_id ),
 				'method_disabled' => empty( $creds ),
 			)
 		);

@@ -47,6 +47,35 @@ namespace {
 			const META_WEBAUTHN_CREDENTIALS = 'reportedip_hive_2fa_webauthn_credentials';
 			const NONCE_COOKIE              = 'reportedip_2fa_token';
 			const NONCE_PREFIX              = 'reportedip_2fa_nonce_';
+
+			/**
+			 * Every method is allowed in these tests.
+			 *
+			 * @return bool
+			 */
+			public static function is_method_allowed() {
+				return true;
+			}
+		}
+	}
+	if ( ! function_exists( 'check_ajax_referer' ) ) {
+		/**
+		 * Nonce double: always valid.
+		 *
+		 * @return bool
+		 */
+		function check_ajax_referer() {
+			return true;
+		}
+	}
+	if ( ! function_exists( 'current_user_can' ) ) {
+		/**
+		 * Capability double: granted.
+		 *
+		 * @return bool
+		 */
+		function current_user_can() {
+			return true;
 		}
 	}
 	if ( ! class_exists( 'ReportedIP_Hive_Two_Factor', false ) ) {
@@ -71,6 +100,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		protected function set_up() {
 			parent::set_up();
+			require_once dirname( __DIR__ ) . '/stubs/two-factor-runtime-stubs.php';
 			$GLOBALS['wp_transients'] = array();
 			$GLOBALS['wp_user_meta']  = array();
 			$GLOBALS['wp_filters']    = array();
@@ -268,7 +298,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertFalse(
 				ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( self::USER_ID ),
-				'Without the Business webauthn_advanced feature a second key must be refused (fail-closed when Mode_Manager is absent).'
+				'The free plugin allows exactly one key per account.'
 			);
 		}
 
@@ -321,6 +351,128 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertStringContainsString( 'data-can-add="0"', $render() );
 			$this->assertSame( array( self::USER_ID, self::USER_ID ), $seen );
+		}
+	
+		/**
+		 * Store the given credential ids for the test user.
+		 *
+		 * @param string[] $ids Credential ids.
+		 * @return void
+		 */
+		private function store_keys( array $ids ): void {
+			$creds = array();
+			foreach ( $ids as $id ) {
+				$creds[] = array(
+					'id'   => $id,
+					'name' => 'Key ' . $id,
+				);
+			}
+			ReportedIP_Hive_Two_Factor_WebAuthn::save_user_credentials( self::USER_ID, $creds );
+		}
+
+		/**
+		 * Call an AJAX endpoint and return the JSON response.
+		 *
+		 * @param string               $method Endpoint method.
+		 * @param array<string, mixed> $post   Request fields.
+		 * @return \ReportedIP_Hive_Test_Json_Response
+		 */
+		private function ajax( string $method, array $post ) {
+			$_POST = array_merge( array( 'user_id' => self::USER_ID ), $post );
+			try {
+				( new ReportedIP_Hive_Two_Factor_WebAuthn() )->$method();
+			} catch ( \ReportedIP_Hive_Test_Json_Response $response ) {
+				return $response;
+			} finally {
+				$_POST = array();
+			}
+			$this->fail( $method . ' must answer with JSON.' );
+		}
+
+		public function test_both_register_endpoints_refuse_a_second_key(): void {
+			$this->store_keys( array( 'first' ) );
+
+			$options = $this->ajax( 'ajax_register_options', array() );
+			$this->assertFalse( $options->success );
+			$this->assertFalse( get_transient( 'reportedip_2fa_webauthn_register_' . self::USER_ID ), 'No challenge is issued for a refused key.' );
+
+			set_transient( 'reportedip_2fa_webauthn_register_' . self::USER_ID, base64_encode( 'challenge' ), 300 );
+			$verify = $this->ajax( 'ajax_register_verify', array( 'credential' => '{}' ) );
+			$this->assertFalse( $verify->success );
+			$this->assertSame( $options->data['message'], $verify->data['message'], 'A crafted request straight to the verify endpoint meets the same limit.' );
+			$this->assertCount( 1, ReportedIP_Hive_Two_Factor_WebAuthn::get_user_credentials( self::USER_ID ) );
+		}
+
+		public function test_an_account_with_several_keys_can_remove_them_but_not_add_one(): void {
+			$this->store_keys( array( 'first', 'second', 'third' ) );
+
+			$listed = $this->ajax( 'ajax_list_keys', array() );
+			$this->assertTrue( $listed->success );
+			$this->assertCount( 3, $listed->data['keys'] );
+			$this->assertFalse( $listed->data['can_add'] );
+
+			$removed = $this->ajax( 'ajax_delete_key', array( 'credential_id' => 'second' ) );
+			$this->assertTrue( $removed->success );
+			$this->assertSame( array( 'first', 'third' ), array_column( $removed->data['keys'], 'id' ) );
+			$this->assertFalse( $removed->data['can_add'], 'Two keys are still above the free limit.' );
+			$this->assertFalse( $removed->data['method_disabled'] );
+		}
+
+		public function test_the_list_reports_that_the_first_key_can_be_added(): void {
+			$listed = $this->ajax( 'ajax_list_keys', array() );
+			$this->assertSame( array(), $listed->data['keys'] );
+			$this->assertTrue( $listed->data['can_add'] );
+		}
+
+		public function test_every_key_of_a_multi_key_account_still_signs_in(): void {
+			if ( ! function_exists( 'sodium_crypto_sign_keypair' ) ) {
+				$this->markTestSkipped( 'libsodium is unavailable.' );
+			}
+			$creds = array();
+			$keys  = array();
+			foreach ( array( 'primary', 'backup' ) as $label ) {
+				$pair             = sodium_crypto_sign_keypair();
+				$id               = ReportedIP_Hive_Two_Factor_WebAuthn::b64url_encode( random_bytes( 16 ) );
+				$keys[ $label ]   = array( $id, sodium_crypto_sign_secretkey( $pair ) );
+				$creds[]          = array(
+					'id'         => $id,
+					'public_key' => base64_encode( "\xa4\x01\x01\x03\x27\x20\x06\x21\x58\x20" . sodium_crypto_sign_publickey( $pair ) ),
+					'sign_count' => 0,
+					'name'       => $label,
+				);
+			}
+			ReportedIP_Hive_Two_Factor_WebAuthn::save_user_credentials( self::USER_ID, $creds );
+			$this->assertFalse( ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( self::USER_ID ) );
+
+			$method = new \ReflectionMethod( ReportedIP_Hive_Two_Factor_WebAuthn::class, 'verify_assertion' );
+			foreach ( $keys as $label => list( $id, $secret ) ) {
+				$challenge = random_bytes( 32 );
+				set_transient( 'reportedip_2fa_webauthn_login_' . self::USER_ID, base64_encode( $challenge ), 300 );
+				$client = (string) wp_json_encode(
+					array(
+						'type'      => 'webauthn.get',
+						'challenge' => ReportedIP_Hive_Two_Factor_WebAuthn::b64url_encode( $challenge ),
+						'origin'    => 'https://example.org',
+					)
+				);
+				$auth   = hash( 'sha256', 'example.org', true ) . chr( 0x01 ) . pack( 'N', 5 );
+				$this->assertTrue(
+					$method->invoke(
+						null,
+						self::USER_ID,
+						array(
+							'id'       => $id,
+							'type'     => 'public-key',
+							'response' => array(
+								'clientDataJSON'    => ReportedIP_Hive_Two_Factor_WebAuthn::b64url_encode( $client ),
+								'authenticatorData' => ReportedIP_Hive_Two_Factor_WebAuthn::b64url_encode( $auth ),
+								'signature'         => ReportedIP_Hive_Two_Factor_WebAuthn::b64url_encode( sodium_crypto_sign_detached( $auth . hash( 'sha256', $client, true ), $secret ) ),
+							),
+						)
+					),
+					$label . ' key must keep signing in.'
+				);
+			}
 		}
 	}
 }
