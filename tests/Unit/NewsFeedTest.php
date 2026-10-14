@@ -21,6 +21,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 	/**
 	 * @covers \ReportedIP_Hive_News_Feed::url_for_locale
+ * @covers \ReportedIP_Hive_News_Feed::items
 	 */
 	class NewsFeedTest extends TestCase {
 
@@ -37,6 +38,16 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'https://reportedip.com/de/feed/?post_type=news', \ReportedIP_Hive_News_Feed::url_for_locale( 'de_AT' ) );
 			$this->assertSame( 'https://reportedip.com/es/feed/?post_type=news', \ReportedIP_Hive_News_Feed::url_for_locale( 'es_ES' ) );
 			$this->assertSame( 'https://reportedip.com/fr/feed/?post_type=news', \ReportedIP_Hive_News_Feed::url_for_locale( 'fr_FR' ) );
+		}
+
+		public function test_items_are_empty_outside_community_mode(): void {
+			$this->set_mocked_option( 'reportedip_hive_operation_mode', 'local' );
+			$mode = new \ReflectionProperty( \ReportedIP_Hive_Mode_Manager::class, 'cached_mode' );
+			$mode->setValue( \ReportedIP_Hive_Mode_Manager::get_instance(), null );
+
+			$this->assertSame( array(), \ReportedIP_Hive_News_Feed::items() );
+
+			$mode->setValue( \ReportedIP_Hive_Mode_Manager::get_instance(), null );
 		}
 	}
 }

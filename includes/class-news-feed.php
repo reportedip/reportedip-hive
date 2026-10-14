@@ -55,13 +55,17 @@ class ReportedIP_Hive_News_Feed {
 	}
 
 	/**
-	 * The newest items, oldest last.
+	 * The newest items, oldest last. Empty outside Community Network mode,
+	 * so Local Shield never contacts reportedip.com for the feed.
 	 *
 	 * @param int $limit Maximum number of items.
 	 * @return array<int, array{title:string, link:string, timestamp:int, summary:string, category:string}>
 	 * @since  2.1.54
 	 */
 	public static function items( $limit = 3 ) {
+		if ( ! ReportedIP_Hive_Mode_Manager::get_instance()->is_community_mode() ) {
+			return array();
+		}
 		if ( get_site_transient( self::ERROR_TRANSIENT ) ) {
 			return array();
 		}
