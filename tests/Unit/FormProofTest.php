@@ -417,6 +417,106 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 5, $proof->last_seconds() );
 		}
 
+		/**
+		 * A listener can never turn a refusing verdict into a pass. A filled
+		 * decoy stays `tripped` even against a listener that answers `proved`,
+		 * and the listener is not even asked.
+		 */
+		public function test_a_listener_cannot_wave_a_filled_decoy_through(): void {
+			$GLOBALS['wp_filters'] = array();
+			$proof                 = \ReportedIP_Hive_Form_Proof::get_instance();
+			$_POST                 = array(
+				$proof->decoy_name( 'comment' ) => 'http://spam.example',
+				$proof->proof_name( 'comment' ) => '1',
+			);
+			$asked                 = false;
+			add_filter(
+				'reportedip_hive_form_proof_verdict',
+				static function () use ( &$asked ) {
+					$asked = true;
+					return \ReportedIP_Hive_Form_Proof::PROVED;
+				},
+				10,
+				4
+			);
+
+			try {
+				$this->assertSame( \ReportedIP_Hive_Form_Proof::TRIPPED, $proof->verdict_for_request( 'comment' ) );
+			} finally {
+				$_POST                 = array();
+				$GLOBALS['wp_filters'] = array();
+			}
+
+			$this->assertFalse( $asked );
+		}
+
+		/**
+		 * A listener that forgets to return hands back null or an empty
+		 * string. That must change nothing, and no reason is recorded.
+		 *
+		 * @dataProvider provide_empty_answers
+		 *
+		 * @param mixed $answer What the listener returns.
+		 */
+		public function test_a_listener_without_an_answer_changes_nothing( $answer ): void {
+			$GLOBALS['wp_filters'] = array();
+			$proof                 = \ReportedIP_Hive_Form_Proof::get_instance();
+			$_POST                 = array(
+				$proof->decoy_name( 'comment' ) => '',
+				$proof->proof_name( 'comment' ) => '1',
+			);
+			add_filter(
+				'reportedip_hive_form_proof_verdict',
+				static function () use ( $answer ) {
+					return $answer;
+				},
+				10,
+				4
+			);
+			add_filter(
+				'reportedip_hive_form_proof_verdict_reason',
+				static function () {
+					return 'should not be read';
+				}
+			);
+
+			try {
+				$this->assertSame( \ReportedIP_Hive_Form_Proof::PROVED, $proof->verdict_for_request( 'comment' ) );
+			} finally {
+				$_POST                 = array();
+				$GLOBALS['wp_filters'] = array();
+			}
+
+			$reason = new \ReflectionProperty( \ReportedIP_Hive_Form_Proof::class, 'reason' );
+			$this->assertNull( $reason->getValue( $proof ) );
+		}
+
+		/**
+		 * @return array<string, array{0:mixed}>
+		 */
+		public static function provide_empty_answers(): array {
+			return array(
+				'null'         => array( null ),
+				'empty string' => array( '' ),
+				'absent'       => array( \ReportedIP_Hive_Form_Proof::ABSENT ),
+				'tripped'      => array( \ReportedIP_Hive_Form_Proof::TRIPPED ),
+			);
+		}
+
+		/**
+		 * The clamp on its own: only `proved` to `failed` moves.
+		 */
+		public function test_the_clamp_moves_only_proved_to_failed(): void {
+			$c = '\ReportedIP_Hive_Form_Proof';
+			$this->assertSame( $c::FAILED, $c::clamp_revision( $c::PROVED, $c::FAILED ) );
+			$this->assertSame( $c::PROVED, $c::clamp_revision( $c::PROVED, null ) );
+			$this->assertSame( $c::PROVED, $c::clamp_revision( $c::PROVED, 'anything' ) );
+			foreach ( array( $c::TRIPPED, $c::FAILED, $c::ABSENT ) as $verdict ) {
+				$this->assertSame( $verdict, $c::clamp_revision( $verdict, $c::PROVED ), $verdict );
+				$this->assertSame( $verdict, $c::clamp_revision( $verdict, '' ), $verdict );
+			}
+		}
+
 		public function test_without_a_listener_the_marker_proves(): void {
 			$GLOBALS['wp_filters'] = array();
 			$proof                 = \ReportedIP_Hive_Form_Proof::get_instance();

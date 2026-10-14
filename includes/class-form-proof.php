@@ -914,22 +914,28 @@ class ReportedIP_Hive_Form_Proof {
 
 		$verdict = self::evaluate( $post, $field, $this->decoy_name( $surface ) );
 
+		if ( self::PROVED !== $verdict ) {
+			return $verdict;
+		}
+
 		/**
-		 * Revise a structural verdict, e.g. by judging a computation.
+		 * Revise a `proved` verdict, e.g. by judging a computation.
 		 *
-		 * Only `proved` should ever be revoked, see {@see resolve()}.
+		 * Runs for `proved` only, and only `failed` is taken back; any other
+		 * answer keeps `proved` (see {@see clamp_revision()}). A filled decoy
+		 * or a missing proof can never be turned into a pass.
 		 *
-		 * @param string               $verdict Structural verdict (tripped, proved, failed, absent).
+		 * @param string               $verdict Structural verdict, always `proved`.
 		 * @param string               $surface Form surface.
 		 * @param array<string, mixed> $post    Submitted fields, the measured duration split off.
 		 * @param string               $field   Proof field name.
 		 * @since 3.0.0
 		 */
-		$revised = (string) apply_filters( 'reportedip_hive_form_proof_verdict', $verdict, $surface, $post, $field );
+		$revised = self::clamp_revision( $verdict, apply_filters( 'reportedip_hive_form_proof_verdict', $verdict, $surface, $post, $field ) );
 
-		if ( $revised !== $verdict ) {
+		if ( self::FAILED === $revised ) {
 			/**
-			 * Name why a verdict was revised, for the log row.
+			 * Name why a verdict was revoked, for the log row.
 			 *
 			 * @param string $reason  Reason word, empty for none.
 			 * @param string $surface Form surface.
@@ -940,6 +946,26 @@ class ReportedIP_Hive_Form_Proof {
 		}
 
 		return $revised;
+	}
+
+	/**
+	 * Clamp what a verdict listener answered to the one revision 2.1.74
+	 * allowed: `proved` may become `failed`, nothing else moves. A listener
+	 * that turns `tripped` into `proved`, or forgets to return and hands back
+	 * null, would otherwise let a filled decoy through without a log row,
+	 * an escalation or a report.
+	 *
+	 * @param string $verdict Structural verdict.
+	 * @param mixed  $revised What the listener returned.
+	 * @return string One of the four verdict constants.
+	 * @since  3.0.0
+	 */
+	public static function clamp_revision( $verdict, $revised ) {
+		if ( self::PROVED !== $verdict ) {
+			return (string) $verdict;
+		}
+
+		return self::FAILED === $revised ? self::FAILED : self::PROVED;
 	}
 
 	/**
