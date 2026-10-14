@@ -2478,6 +2478,7 @@ class ReportedIP_Hive {
 		if ( REPORTEDIP_HIVE_VERSION === $stored ) {
 			return;
 		}
+		ReportedIP_Hive_Defaults::note_first_seeded_version( $stored );
 		ReportedIP_Hive_Defaults::seed_missing();
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_seeded_version', REPORTEDIP_HIVE_VERSION );
 	}

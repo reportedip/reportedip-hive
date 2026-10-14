@@ -1387,7 +1387,9 @@ class ReportedIP_Hive_Two_Factor_Admin {
 
 		if ( $was_enabled ) {
 			ReportedIP_Hive_Two_Factor::disable_for_user( $user->ID );
-			delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_REMINDER_OPTOUT );
+			foreach ( ReportedIP_Hive_Two_Factor::META_KEEP_ON_RESET as $kept ) {
+				delete_user_meta( $user->ID, $kept );
+			}
 		}
 
 		return array(

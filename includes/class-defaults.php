@@ -469,6 +469,51 @@ final class ReportedIP_Hive_Defaults {
 	}
 
 	/**
+	 * Runtime marker: the plugin version this install was first seeded
+	 * under by {@see ReportedIP_Hive::maybe_seed_on_upgrade()}. Not a
+	 * setting, never exported.
+	 *
+	 * @since 3.0.0
+	 */
+	public const OPTION_FIRST_SEEDED = 'reportedip_hive_first_seeded_version';
+
+	/**
+	 * Record where this install started, once.
+	 *
+	 * Called by the upgrade seed with the version it seeded before (empty on
+	 * a fresh install). An install updated from an earlier release keeps
+	 * that release, a fresh one the running version. Sites from before
+	 * 2.1.2, which knew no seed marker, count as fresh.
+	 *
+	 * @param string $previous Version of the previous seed, '' when none.
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function note_first_seeded_version( $previous ) {
+		if ( '' !== (string) ReportedIP_Hive_Option_Routing::get( self::OPTION_FIRST_SEEDED, '' ) ) {
+			return;
+		}
+		$version = '' !== (string) $previous ? (string) $previous : REPORTEDIP_HIVE_VERSION;
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_FIRST_SEEDED, $version );
+	}
+
+	/**
+	 * The version this install was first seeded under, '' while the
+	 * install has not run a seed yet (a fresh install).
+	 *
+	 * Before the marker is written the previous seed version answers, so
+	 * an add-on that reads this ahead of the upgrade seed in the same
+	 * request still sees the release the site came from.
+	 *
+	 * @return string
+	 * @since  3.0.0
+	 */
+	public static function first_seeded_version() {
+		$first = (string) ReportedIP_Hive_Option_Routing::get( self::OPTION_FIRST_SEEDED, '' );
+		return '' !== $first ? $first : (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_seeded_version', '' );
+	}
+
+	/**
 	 * Seed every default that is not yet present, routed through
 	 * `ReportedIP_Hive_Option_Routing` so network-wide keys land in sitemeta on
 	 * Multisite instead of a single blog's options table. Existing values are

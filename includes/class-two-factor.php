@@ -162,14 +162,38 @@ class ReportedIP_Hive_Two_Factor {
 	const META_PREFIX = 'reportedip_hive_2fa_';
 
 	/**
-	 * The user's choice to stop the 2FA reminder banner. It carries the
-	 * prefix but is a preference, not 2FA data: a full reset keeps it, as
-	 * 2.1.x did, while the GDPR eraser and the uninstall remove it.
+	 * The user's choice to stop the 2FA reminder banner.
 	 *
 	 * @var string
 	 * @since 3.0.0
 	 */
 	const META_REMINDER_OPTOUT = 'reportedip_hive_2fa_reminder_optout';
+
+	/**
+	 * Prefixed user meta a full reset keeps, exactly the keys 2.1.x left in
+	 * place: the reminder opt-out (a preference), the failed password-reset
+	 * challenge counter (a lockout must not be reset by turning 2FA off) and
+	 * the WebAuthn user handle (stable per account, so a key registered
+	 * later still maps to the same user). The GDPR eraser, the uninstall
+	 * and the full data reset remove them like every other prefixed key.
+	 *
+	 * @var string[]
+	 * @since 3.0.0
+	 */
+	const META_KEEP_ON_RESET = array(
+		self::META_REMINDER_OPTOUT,
+		'reportedip_hive_2fa_reset_failed_attempts',
+		'reportedip_hive_2fa_webauthn_user_handle',
+	);
+
+	/**
+	 * Cap on the unregistered method slugs the allowed-methods option keeps,
+	 * so slugs from a crafted form post, import or push cannot pile up.
+	 *
+	 * @var int
+	 * @since 3.0.0
+	 */
+	const MAX_UNREGISTERED_ALLOWED = 16;
 
 	/**
 	 * Shape of a method slug. A stored slug of this shape that no active
@@ -631,6 +655,10 @@ class ReportedIP_Hive_Two_Factor {
 	 * password alone, and the data of the missing method stays untouched, so
 	 * the method works again once its add-on returns.
 	 *
+	 * Only a slug the stored allowed-methods option still names counts: a
+	 * method the site policy dropped would not have been asked for in
+	 * 2.1.x either, the account signs in with the policy warning instead.
+	 *
 	 * @param int $user_id WordPress user ID.
 	 * @return string Slug of the unavailable method, '' when the account is not affected.
 	 * @since  3.0.0
@@ -639,12 +667,23 @@ class ReportedIP_Hive_Two_Factor {
 		if ( ! get_user_meta( $user_id, self::META_ENABLED, true ) || array() !== self::get_user_enabled_methods( $user_id ) ) {
 			return '';
 		}
+		$policy = self::stored_allowed_slugs();
 		$stored = (string) get_user_meta( $user_id, self::META_METHOD, true );
-		if ( '' !== $stored && ! isset( self::methods()[ $stored ] ) ) {
+		if ( '' !== $stored && ! isset( self::methods()[ $stored ] ) && in_array( $stored, $policy, true ) ) {
 			return $stored;
 		}
-		$unregistered = self::unregistered_method_flags( $user_id );
+		$unregistered = array_values( array_intersect( self::unregistered_method_flags( $user_id ), $policy ) );
 		return empty( $unregistered ) ? '' : $unregistered[0];
+	}
+
+	/**
+	 * The raw allowed-methods option, unregistered slugs included.
+	 *
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	private static function stored_allowed_slugs() {
+		return array_map( 'strval', ReportedIP_Hive_Option_Routing::to_array( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email","webauthn"]' ) ) );
 	}
 
 	/**
@@ -720,28 +759,37 @@ class ReportedIP_Hive_Two_Factor {
 	 * The settings form can only post the methods it shows, so without the
 	 * stored slugs a save on a site whose add-on is inactive would drop the
 	 * add-on's method from the policy for good. The kept slugs have no
-	 * effect while nobody registers them, see get_allowed_methods().
+	 * effect while nobody registers them, see get_allowed_methods(). At most
+	 * {@see self::MAX_UNREGISTERED_ALLOWED} of them are kept, the excess is
+	 * dropped.
 	 *
 	 * @param array<int, mixed> $methods Candidate method slugs.
 	 * @return string[]
 	 * @since  3.0.0
 	 */
 	public static function sanitize_allowed_methods( array $methods ) {
-		$known  = self::valid_methods();
-		$stored = array_filter(
+		$known   = self::valid_methods();
+		$stored  = array_filter(
 			ReportedIP_Hive_Option_Routing::to_array( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '[]' ) ),
 			static function ( $slug ) use ( $known ) {
 				return ! in_array( $slug, $known, true );
 			}
 		);
-		$result = array();
+		$result  = array();
+		$unknown = 0;
 		foreach ( array_merge( $methods, $stored ) as $slug ) {
 			if ( ! is_scalar( $slug ) ) {
 				continue;
 			}
 			$slug = (string) $slug;
-			if ( ( in_array( $slug, $known, true ) || 1 === preg_match( self::METHOD_SLUG_PATTERN, $slug ) ) && ! in_array( $slug, $result, true ) ) {
+			if ( in_array( $slug, $result, true ) ) {
+				continue;
+			}
+			if ( in_array( $slug, $known, true ) ) {
 				$result[] = $slug;
+			} elseif ( 1 === preg_match( self::METHOD_SLUG_PATTERN, $slug ) && $unknown < self::MAX_UNREGISTERED_ALLOWED ) {
+				$result[] = $slug;
+				++$unknown;
 			}
 		}
 		return $result;
@@ -2712,9 +2760,20 @@ class ReportedIP_Hive_Two_Factor {
 		/*
 		 * The method just removed never counts as remaining: with no flag
 		 * left, the legacy single-method fallback of configured_method_flags()
-		 * would report it again and keep 2FA on without its secret.
+		 * would report it again and keep 2FA on without its secret. A method
+		 * no active plugin registers counts while the stored policy names it,
+		 * as it did in 2.1.x when its plugin was active, so its data and the
+		 * account's 2FA survive the removal of the last visible method.
 		 */
-		$remaining = array_values( array_diff( self::get_user_enabled_methods( $user_id ), array( $method ) ) );
+		$remaining = array_values(
+			array_diff(
+				array_merge(
+					self::get_user_enabled_methods( $user_id ),
+					array_intersect( self::unregistered_method_flags( $user_id ), self::stored_allowed_slugs() )
+				),
+				array( $method )
+			)
+		);
 		if ( empty( $remaining ) ) {
 			self::disable_for_user( $user_id );
 			return true;
@@ -2724,6 +2783,7 @@ class ReportedIP_Hive_Two_Factor {
 		if ( $primary === $method ) {
 			update_user_meta( $user_id, self::META_METHOD, $remaining[0] );
 		}
+		unset( self::$methods_cache[ $user_id ] );
 
 		return true;
 	}
@@ -2734,7 +2794,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * Also resets the reminder counter and the onboarding skip snooze
 	 * (literal keys, the Recommend/Onboarding classes are not loaded in
 	 * every context this runs in), so a support reset really starts fresh.
-	 * The reminder opt-out ({@see self::META_REMINDER_OPTOUT}) stays.
+	 * The keys of {@see self::META_KEEP_ON_RESET} stay.
 	 *
 	 * @param int $user_id WordPress user ID.
 	 */
@@ -2761,7 +2821,7 @@ class ReportedIP_Hive_Two_Factor {
 			'reportedip_hive_2fa_skip_until',
 		);
 
-		$keys = array_diff( array_merge( $meta_keys, self::method_meta_keys(), self::stored_meta_keys( $user_id ) ), array( self::META_REMINDER_OPTOUT ) );
+		$keys = array_diff( array_merge( $meta_keys, self::method_meta_keys(), self::stored_meta_keys( $user_id ) ), self::META_KEEP_ON_RESET );
 		foreach ( array_unique( $keys ) as $key ) {
 			delete_user_meta( $user_id, $key );
 		}

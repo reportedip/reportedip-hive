@@ -229,6 +229,59 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * TOTP plus SMS, policy without either, SMS without its add-on:
+		 * 2.1.74 let this account through with the policy warning, because
+		 * the policy dropped SMS as well. The missing method only counts
+		 * while the stored policy still names it.
+		 */
+		public function test_a_missing_method_the_policy_dropped_does_not_count(): void {
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_totp_enabled'] = '1';
+			$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods']                 = '["email","webauthn"]';
+			\ReportedIP_Hive_Two_Factor::flush_methods();
+
+			$this->assertSame( '', \ReportedIP_Hive_Two_Factor::unavailable_method( self::USER_ID ) );
+
+			$user = new \WP_User( self::USER_ID );
+			$this->assertSame( $user, ( new \ReportedIP_Hive_Two_Factor() )->filter_authenticate( $user, 'jane', 'secret' ), 'The policy decision stands, as in 2.1.74.' );
+			$warnings = array_filter(
+				$GLOBALS['rip_test_logs'],
+				static function ( $entry ) {
+					return 'warning' === $entry['level'];
+				}
+			);
+			$this->assertCount( 1, $warnings, 'The policy warning is logged.' );
+		}
+
+		/**
+		 * The stored default only counts as well while the policy names it.
+		 */
+		public function test_a_stored_default_the_policy_dropped_does_not_count(): void {
+			unset( $GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_sms_enabled'] );
+			$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods'] = '["totp","email","webauthn"]';
+			$this->assertSame( '', \ReportedIP_Hive_Two_Factor::unavailable_method( self::USER_ID ) );
+
+			$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods'] = '["totp","email","webauthn","sms"]';
+			$this->assertSame( 'sms', \ReportedIP_Hive_Two_Factor::unavailable_method( self::USER_ID ) );
+		}
+
+		/**
+		 * The lossless policy keeps at most sixteen unregistered slugs.
+		 */
+		public function test_the_policy_keeps_at_most_sixteen_unregistered_slugs(): void {
+			$junk = array();
+			for ( $i = 0; $i < 40; $i++ ) {
+				$junk[] = 'junk' . $i;
+			}
+			$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods'] = '["sms"]';
+
+			$result = \ReportedIP_Hive_Two_Factor::sanitize_allowed_methods( array_merge( array( 'totp', 'email' ), $junk ) );
+
+			$this->assertSame( array( 'totp', 'email' ), array_slice( $result, 0, 2 ), 'Registered methods are never capped.' );
+			$this->assertCount( 2 + \ReportedIP_Hive_Two_Factor::MAX_UNREGISTERED_ALLOWED, $result );
+			$this->assertNotContains( 'junk39', $result );
+		}
+
+		/**
 		 * A full reset removes every 2FA key of the user, the ones of a
 		 * method no active plugin registers included.
 		 */
@@ -242,25 +295,31 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * The reminder opt-out is a preference, not 2FA data: a full reset
-		 * keeps it, as 2.1.x did, so the user is not nagged again.
+		 * A full reset keeps exactly the keys 2.1.x kept: the reminder
+		 * opt-out, the reset-challenge counter and the WebAuthn user handle.
 		 */
-		public function test_a_full_reset_keeps_the_reminder_opt_out(): void {
-			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_reminder_optout'] = 1;
+		public function test_a_full_reset_keeps_the_keep_list(): void {
+			$kept = array(
+				'reportedip_hive_2fa_reminder_optout'       => 1,
+				'reportedip_hive_2fa_reset_failed_attempts' => 2,
+				'reportedip_hive_2fa_webauthn_user_handle'  => 'handle',
+			);
+			$GLOBALS['wp_user_meta'][ self::USER_ID ] = $kept + $GLOBALS['wp_user_meta'][ self::USER_ID ];
 
 			\ReportedIP_Hive_Two_Factor::disable_for_user( self::USER_ID );
 
-			$this->assertSame( array( 'reportedip_hive_2fa_reminder_optout' => 1 ), $GLOBALS['wp_user_meta'][ self::USER_ID ] );
+			$this->assertSame( $kept, $GLOBALS['wp_user_meta'][ self::USER_ID ] );
 		}
 
 		/**
-		 * The GDPR eraser removes the reminder opt-out together with the
-		 * 2FA data.
+		 * The GDPR eraser removes the kept keys together with the 2FA data.
 		 */
-		public function test_the_eraser_removes_the_reminder_opt_out(): void {
+		public function test_the_eraser_removes_the_keep_list(): void {
 			require_once dirname( __DIR__, 2 ) . '/admin/class-two-factor-admin.php';
 			$GLOBALS['wp_user_meta'][1] = array(
-				'reportedip_hive_2fa_reminder_optout' => 1,
+				'reportedip_hive_2fa_reminder_optout'       => 1,
+				'reportedip_hive_2fa_reset_failed_attempts' => 2,
+				'reportedip_hive_2fa_webauthn_user_handle'  => 'handle',
 			);
 
 			$admin  = ( new \ReflectionClass( \ReportedIP_Hive_Two_Factor_Admin::class ) )->newInstanceWithoutConstructor();
@@ -271,12 +330,33 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * Turning the last visible method off turns 2FA off completely, and
-		 * that takes the data of the missing method along.
+		 * Turning the last visible method off keeps 2FA on while the stored
+		 * policy still names the missing method, and its data stays
+		 * untouched, as in 2.1.74 where SMS stayed the remaining method.
 		 */
-		public function test_turning_off_the_last_method_removes_the_data_of_the_missing_method(): void {
+		public function test_turning_off_the_last_visible_method_keeps_the_missing_method(): void {
 			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_method']       = 'totp';
 			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_totp_enabled'] = '1';
+			\ReportedIP_Hive_Two_Factor::flush_methods();
+
+			$this->assertTrue( \ReportedIP_Hive_Two_Factor::disable_method( self::USER_ID, 'totp' ) );
+
+			$meta = $GLOBALS['wp_user_meta'][ self::USER_ID ];
+			$this->assertSame( '1', $meta['reportedip_hive_2fa_enabled'], '2FA stays on.' );
+			$this->assertSame( '1', $meta['reportedip_hive_2fa_sms_enabled'] );
+			$this->assertSame( 'encrypted-number', $meta['reportedip_hive_2fa_sms_number'] );
+			$this->assertSame( 'sms', $meta['reportedip_hive_2fa_method'], 'The remaining method becomes the default.' );
+			$this->assertSame( 'sms', \ReportedIP_Hive_Two_Factor::unavailable_method( self::USER_ID ) );
+		}
+
+		/**
+		 * With the missing method dropped from the stored policy, removing
+		 * the last visible method turns 2FA off completely, as 2.1.74 did.
+		 */
+		public function test_turning_off_the_last_method_turns_2fa_off_when_the_policy_dropped_the_missing_one(): void {
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_method']       = 'totp';
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_totp_enabled'] = '1';
+			$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods']                 = '["totp","email","webauthn"]';
 			\ReportedIP_Hive_Two_Factor::flush_methods();
 
 			$this->assertTrue( \ReportedIP_Hive_Two_Factor::disable_method( self::USER_ID, 'totp' ) );

@@ -463,15 +463,15 @@ class ReportedIP_Hive_Protection_Page {
 					$choice_def = is_array( $choice_def ) ? $choice_def : array( 'label' => (string) $choice_def );
 					$fixed      = ! empty( $choice_def['fixed'] );
 					$checked    = $fixed || in_array( (string) $choice, $current, true );
-					$carried    = $fixed || ( $checked && ! $locked && ! empty( $choice_def['disabled'] ) );
+					$closed     = $fixed || ( ! $checked && ! empty( $choice_def['disabled'] ) );
 					$boxes     .= sprintf(
 						'<label class="rip-checkbox"><input type="checkbox" name="%1$s[]" value="%2$s" %3$s%4$s /> %5$s</label>%6$s',
 						esc_attr( $key ),
 						esc_attr( (string) $choice ),
 						$checked ? 'checked' : '',
-						( $locked || ! empty( $choice_def['disabled'] ) ) ? ' disabled' : '',
+						( $locked || $closed ) ? ' disabled' : '',
 						esc_html( (string) ( $choice_def['label'] ?? $choice ) ),
-						$carried ? sprintf( '<input type="hidden" name="%1$s[]" value="%2$s" />', esc_attr( $key ), esc_attr( (string) $choice ) ) : ''
+						$fixed ? sprintf( '<input type="hidden" name="%1$s[]" value="%2$s" />', esc_attr( $key ), esc_attr( (string) $choice ) ) : ''
 					);
 				}
 				$control = '<div class="rip-checkbox-group" id="' . esc_attr( $id ) . '">' . $boxes . '</div>';
@@ -934,7 +934,9 @@ class ReportedIP_Hive_Protection_Page {
 	 * whose `choice_lock` names a plan is disabled and marked with it. The
 	 * administrator role stays disabled in the adaptive policies until an
 	 * administrator has passed one challenge. A disabled choice that is
-	 * stored stays stored, see field_markup().
+	 * stored renders checked and enabled, so it can be removed (a feature
+	 * the plan no longer includes can still be switched off); it only
+	 * cannot be selected anew, see field_markup().
 	 *
 	 * @param array<string,mixed> $entry Registry entry.
 	 * @param string              $key   Registry key.

@@ -564,13 +564,13 @@ class ExtensionApiTest extends TestCase {
 
 	/**
 	 * A method that needs a higher plan is listed disabled with that plan,
-	 * under its `choice_label`, and a stored choice of it rides along in
-	 * the POST so a save keeps it.
+	 * under its `choice_label`; a stored choice of it stays an enabled,
+	 * checked box, so it can be removed but not newly added.
 	 *
 	 * @runInSeparateProcess
 	 * @preserveGlobalState disabled
 	 */
-	public function test_choice_lock_disables_the_choice_and_keeps_it_stored() {
+	public function test_choice_lock_disables_the_choice_and_keeps_it_removable() {
 		$this->register_dummy_2fa_method();
 		$entry = $this->allowed_methods_entry();
 		$key   = 'reportedip_hive_2fa_allowed_methods';
@@ -587,8 +587,10 @@ class ExtensionApiTest extends TestCase {
 
 		$status = array( 'available' => true );
 		$hidden = '<input type="hidden" name="' . $key . '[]" value="dummy" />';
-		$this->assertStringContainsString( $hidden, \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp","dummy"]', $status, $locked ), 'A stored locked choice stays in the POST.' );
-		$this->assertStringNotContainsString( $hidden, \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp"]', $status, $locked ), 'A locked choice that is not stored is not added.' );
+		$stored = \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp","dummy"]', $status, $locked );
+		$this->assertStringContainsString( 'value="dummy" checked />', $stored, 'A stored locked choice can be unchecked.' );
+		$this->assertStringNotContainsString( $hidden, $stored, 'Unchecking it drops it on save.' );
+		$this->assertStringContainsString( 'value="dummy"  disabled', \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp"]', $status, $locked ), 'A locked choice that is not stored cannot be added.' );
 		$this->assertStringNotContainsString( $hidden, \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp","dummy"]', $status, $open ), 'A selectable choice travels as its checkbox.' );
 	}
 }

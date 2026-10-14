@@ -177,5 +177,20 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
+		public function test_first_seeded_version_records_the_origin_once() {
+			$this->assertSame( '', \ReportedIP_Hive_Defaults::first_seeded_version(), 'A fresh install has no origin yet.' );
+
+			$GLOBALS['wp_options']['reportedip_hive_seeded_version'] = '2.1.74';
+			$this->assertSame( '2.1.74', \ReportedIP_Hive_Defaults::first_seeded_version(), 'Before the marker the previous seed answers.' );
+
+			\ReportedIP_Hive_Defaults::note_first_seeded_version( '2.1.74' );
+			\ReportedIP_Hive_Defaults::note_first_seeded_version( '3.0.0' );
+			$GLOBALS['wp_options']['reportedip_hive_seeded_version'] = '3.0.0';
+			$this->assertSame( '2.1.74', \ReportedIP_Hive_Defaults::first_seeded_version(), 'The origin is written once.' );
+
+			$GLOBALS['wp_options'] = array();
+			\ReportedIP_Hive_Defaults::note_first_seeded_version( '' );
+			$this->assertSame( REPORTEDIP_HIVE_VERSION, \ReportedIP_Hive_Defaults::first_seeded_version(), 'A fresh install records the running version.' );
+		}
 	}
 }

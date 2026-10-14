@@ -433,6 +433,36 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString( 'value="editor" checked', $html );
 		}
 
+		public function test_a_stored_locked_choice_can_be_removed_but_not_added(): void {
+			$choices = array(
+				'sms'   => array(
+					'label'    => 'SMS code (Professional plan)',
+					'disabled' => true,
+					'fixed'    => false,
+				),
+				'relay' => array(
+					'label'    => 'Relay (Professional plan)',
+					'disabled' => true,
+					'fixed'    => false,
+				),
+			);
+			$html    = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_2fa_allowed_methods',
+				array(
+					'kind'        => 'json_list',
+					'choices'     => 'methods',
+					'label'       => 'Methods',
+					'description' => '',
+				),
+				'["sms"]',
+				array( 'available' => true ),
+				$choices
+			);
+			$this->assertStringContainsString( 'value="sms" checked />', $html, 'A stored choice the plan no longer includes stays uncheckable.' );
+			$this->assertStringNotContainsString( 'type="hidden"', $html, 'Nothing carries it past an uncheck.' );
+			$this->assertStringContainsString( 'value="relay"  disabled', $html, 'A locked choice that is not stored cannot be selected.' );
+		}
+
 		public function test_section_state_tints_on_green_off_red_and_everything_else_neutral(): void {
 			$this->assertSame(
 				array(
