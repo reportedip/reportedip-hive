@@ -286,15 +286,24 @@ class ExtensionApiTest extends TestCase {
 					};
 				};
 				$methods['dummy']       = array(
-					'meta_key'    => 'reportedip_hive_2fa_dummy_enabled',
-					'label'       => 'Dummy code',
-					'prompt'      => 'Enter the dummy code',
-					'verify'      => $record( 'verify' ),
-					'send'        => $record( 'send' ),
-					'resend_wait' => $record( 'resend_wait' ),
-					'mask'        => $record( 'mask' ),
-					'health'      => $record( 'health' ),
-					'data_keys'   => array( 'reportedip_hive_2fa_dummy_secret' ),
+					'meta_key'        => 'reportedip_hive_2fa_dummy_enabled',
+					'label'           => 'Dummy code',
+					'choice_label'    => 'Dummy choice',
+					'prompt'          => 'Enter the dummy code',
+					'verify'          => $record( 'verify' ),
+					'send'            => $record( 'send' ),
+					'resend_wait'     => $record( 'resend_wait' ),
+					'mask'            => $record( 'mask' ),
+					'health'          => $record( 'health' ),
+					'data_keys'       => array( 'reportedip_hive_2fa_dummy_secret' ),
+					'resent_message'  => 'A new dummy code is on its way.',
+					'expired_message' => 'No dummy code is active.',
+					'code_active'     => static function () {
+						return ! empty( $GLOBALS['rip_test_dummy_active'] );
+					},
+					'choice_lock'     => static function () {
+						return (string) ( $GLOBALS['rip_test_dummy_plan'] ?? '' );
+					},
 				);
 				$methods['totp']        = array(
 					'meta_key' => 'hijacked',
@@ -402,8 +411,184 @@ class ExtensionApiTest extends TestCase {
 			$this->assertTrue( $response->success );
 			$this->assertSame( '+49 ****42', $response->data['destination'] );
 			$this->assertSame( 45, $response->data['cooldown'] );
+			$this->assertSame( 'A new dummy code is on its way.', $response->data['message'], 'The method supplies its own confirmation.' );
 		}
 		$this->assertSame( array( 'send', 'resend_wait', 'mask' ), array_column( $GLOBALS['rip_test_dummy_calls'], 0 ) );
 		$this->assertSame( array( 5 ), $GLOBALS['rip_test_dummy_calls'][0][1], 'send() receives the challenged user.' );
+	}
+
+	/**
+	 * Start a challenge for user 5 and ask the resend endpoint for a method.
+	 *
+	 * @param string $method Method slug posted by the client.
+	 * @return \ReportedIP_Hive_Test_Json_Response
+	 */
+	private function resend_for_user_5( $method ) {
+		$_COOKIE[ \ReportedIP_Hive_Two_Factor::NONCE_COOKIE ] = 'challenge-token';
+		set_transient(
+			\ReportedIP_Hive_Two_Factor::NONCE_PREFIX . hash( 'sha256', 'challenge-token' ),
+			array(
+				'user_id' => 5,
+				'ip'      => \ReportedIP_Hive::get_client_ip(),
+			),
+			600
+		);
+		$_POST['method'] = $method;
+
+		try {
+			( new \ReportedIP_Hive_Two_Factor() )->ajax_resend_code();
+		} catch ( \ReportedIP_Hive_Test_Json_Response $response ) {
+			return $response;
+		}
+		$this->fail( 'The handler must answer with JSON.' );
+	}
+
+	/**
+	 * A method the account never set up must not send, even though the
+	 * site allows it and it can send.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_resend_ajax_refuses_a_method_the_user_has_not_enabled() {
+		$this->register_dummy_2fa_method();
+		$this->set_mocked_option( 'reportedip_hive_2fa_allowed_methods', '["totp","dummy"]' );
+		update_user_meta( 5, 'reportedip_hive_2fa_totp_enabled', '1' );
+
+		$response = $this->resend_for_user_5( 'dummy' );
+
+		$this->assertFalse( $response->success );
+		$this->assertSame( 400, $response->status );
+		$this->assertSame( array(), $GLOBALS['rip_test_dummy_calls'], 'Nothing is sent for a method the user has not enabled.' );
+	}
+
+	/**
+	 * A method without a callable `send` answers with an error instead of a
+	 * fatal call.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_resend_ajax_refuses_a_method_whose_send_is_not_callable() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'tests/stubs/two-factor-runtime-stubs.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-verifier.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor.php';
+		add_filter(
+			'reportedip_hive_2fa_methods',
+			static function ( array $methods ) {
+				$methods['broken'] = array(
+					'meta_key' => 'reportedip_hive_2fa_broken_enabled',
+					'verify'   => '__return_false',
+					'send'     => 'no_such_function_anywhere',
+				);
+				return $methods;
+			}
+		);
+		\ReportedIP_Hive_Two_Factor::flush_methods();
+		$this->set_mocked_option( 'reportedip_hive_2fa_allowed_methods', '["totp","broken"]' );
+		update_user_meta( 5, 'reportedip_hive_2fa_broken_enabled', '1' );
+
+		$response = $this->resend_for_user_5( 'broken' );
+
+		$this->assertFalse( $response->success );
+		$this->assertSame( 400, $response->status );
+	}
+
+	/**
+	 * The `?resend_{slug}=1` link of the challenge page only sends for the
+	 * methods the user has enabled, never for the whole registry.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_resend_link_sends_only_for_an_enabled_method() {
+		$this->register_dummy_2fa_method();
+		$send          = new \ReflectionMethod( \ReportedIP_Hive_Two_Factor::class, 'send_requested_codes' );
+		$_GET['resend_dummy'] = '1';
+
+		$this->assertSame(
+			array(
+				'method' => '',
+				'error'  => '',
+			),
+			$send->invoke( null, 5, array( 'totp' ) )
+		);
+		$this->assertSame( array(), $GLOBALS['rip_test_dummy_calls'], 'A registered method the user has not enabled never sends.' );
+
+		$this->assertSame(
+			array(
+				'method' => 'dummy',
+				'error'  => '',
+			),
+			$send->invoke( null, 5, array( 'totp', 'dummy' ) )
+		);
+		$this->assertSame( array( array( 'send', array( 5 ) ) ), $GLOBALS['rip_test_dummy_calls'] );
+
+		$source = (string) file_get_contents( REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor.php' );
+		$this->assertMatchesRegularExpression(
+			'/\$allowed_methods = self::get_user_enabled_methods\( \$user_id \);\s+\$resent\s+= self::send_requested_codes\( \(int\) \$user_id, \$allowed_methods \);/',
+			$source,
+			'The challenge page hands the user\'s enabled methods to the resend, not the registry.'
+		);
+	}
+
+	/**
+	 * A wrong code reads the method's expiry sentence while it reports no
+	 * active code, the generic sentence otherwise.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_wrong_code_message_uses_the_expired_message_of_the_method() {
+		$this->register_dummy_2fa_method();
+		$message = new \ReflectionMethod( \ReportedIP_Hive_Two_Factor::class, 'wrong_code_message' );
+		$generic = 'Invalid verification code. Please make sure you are using the most recent code.';
+
+		$this->assertSame( 'No dummy code is active.', $message->invoke( null, 5, 'dummy' ) );
+		$GLOBALS['rip_test_dummy_active'] = true;
+		$this->assertSame( $generic, $message->invoke( null, 5, 'dummy' ) );
+		$this->assertSame( $generic, $message->invoke( null, 5, 'totp' ), 'A method without an expiry sentence keeps the generic one.' );
+		$this->assertStringStartsWith( 'No valid code is active', $message->invoke( null, 5, 'email' ), 'The email expiry sentence comes from the registry now.' );
+	}
+
+	/**
+	 * Load the protection page renderer next to the dummy method.
+	 *
+	 * @return array<string, mixed> Registry entry of the allowed-methods key.
+	 */
+	private function allowed_methods_entry() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-login-context.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-protection-page.php';
+		return \ReportedIP_Hive_Settings_Registry::spec()['reportedip_hive_2fa_allowed_methods'];
+	}
+
+	/**
+	 * A method that needs a higher plan is listed disabled with that plan,
+	 * under its `choice_label`, and a stored choice of it rides along in
+	 * the POST so a save keeps it.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_choice_lock_disables_the_choice_and_keeps_it_stored() {
+		$this->register_dummy_2fa_method();
+		$entry = $this->allowed_methods_entry();
+		$key   = 'reportedip_hive_2fa_allowed_methods';
+
+		$open = \ReportedIP_Hive_Protection_Page::choices_for( $entry, $key );
+		$this->assertFalse( $open['dummy']['disabled'] );
+		$this->assertSame( 'Dummy choice', $open['dummy']['label'] );
+
+		$GLOBALS['rip_test_dummy_plan'] = 'Professional';
+		$locked                         = \ReportedIP_Hive_Protection_Page::choices_for( $entry, $key );
+		$this->assertTrue( $locked['dummy']['disabled'] );
+		$this->assertSame( 'Dummy choice (Professional plan)', $locked['dummy']['label'] );
+		$this->assertFalse( $locked['totp']['disabled'] );
+
+		$status = array( 'available' => true );
+		$hidden = '<input type="hidden" name="' . $key . '[]" value="dummy" />';
+		$this->assertStringContainsString( $hidden, \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp","dummy"]', $status, $locked ), 'A stored locked choice stays in the POST.' );
+		$this->assertStringNotContainsString( $hidden, \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp"]', $status, $locked ), 'A locked choice that is not stored is not added.' );
+		$this->assertStringNotContainsString( $hidden, \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp","dummy"]', $status, $open ), 'A selectable choice travels as its checkbox.' );
 	}
 }

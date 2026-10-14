@@ -106,6 +106,67 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		/**
+		 * Saving the settings on a site whose add-on is inactive must not
+		 * drop the add-on's method from the stored policy: the form only
+		 * posts the methods it shows.
+		 */
+		public function test_an_unknown_stored_slug_survives_a_save() {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-login-context.php';
+			require_once dirname( __DIR__, 2 ) . '/admin/class-protection-page.php';
+			$key = 'reportedip_hive_2fa_allowed_methods';
+			$this->set_mocked_option( $key, '["totp","email","sms"]' );
+
+			$posted = \ReportedIP_Hive_Protection_Page::collect_values( array( $key => array( 'totp', 'webauthn' ) ), 'account_security' );
+			$this->assertSame( '["totp","webauthn","sms"]', \ReportedIP_Hive_Settings_Registry::sanitize( $key, $posted[ $key ] ) );
+
+			$this->assertSame( '["sms"]', \ReportedIP_Hive_Settings_Registry::sanitize( $key, array() ), 'Unticking every shown method keeps the stored slug as well.' );
+			$this->assertSame( array( 'totp', 'email' ), \ReportedIP_Hive_Two_Factor::get_allowed_methods(), 'An unknown slug never counts for the effective policy.' );
+		}
+
+		public function test_sanitize_allowed_methods_keeps_unknown_slugs_of_the_right_shape_only() {
+			$this->assertSame(
+				array( 'totp', 'sms' ),
+				\ReportedIP_Hive_Two_Factor::sanitize_allowed_methods( array( 'totp', 'sms', 'Bad Slug', str_repeat( 'x', 33 ), array( 'nested' ), 'totp' ) )
+			);
+		}
+
+		/**
+		 * A stored slug nobody registers is never offered, allowed, enrolled
+		 * or verified.
+		 */
+		public function test_an_unknown_slug_is_never_offered_or_verified() {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-verifier.php';
+			$this->set_mocked_option( 'reportedip_hive_2fa_allowed_methods', '["totp","sms"]' );
+
+			$this->assertSame( array( 'totp' ), \ReportedIP_Hive_Two_Factor::get_allowed_methods() );
+			$this->assertFalse( \ReportedIP_Hive_Two_Factor::is_method_allowed( 'sms' ) );
+			$this->assertArrayNotHasKey( 'sms', \ReportedIP_Hive_Settings_Registry::choice_values( 'methods' ) );
+			$this->assertFalse( \ReportedIP_Hive_Two_Factor::activate_method( 3, 'sms' ) );
+			$this->assertFalse( \ReportedIP_Hive_Two_Factor_Verifier::verify_method( 3, 'sms', '123456' ) );
+		}
+
+		/**
+		 * The allowed-methods list keeps the wording it had in 2.1.74.
+		 */
+		public function test_choice_labels_keep_their_wording() {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
+
+			$this->assertSame(
+				array(
+					'totp'     => 'Authenticator app (TOTP)',
+					'email'    => 'E-mail code',
+					'webauthn' => 'Security key / passkey',
+				),
+				\ReportedIP_Hive_Settings_Registry::choice_values( 'methods' )
+			);
+		}
+
 		public function test_filter_valid_roles_drops_unknowns_and_dedupes() {
 			$this->assertSame(
 				array( 'administrator', 'editor' ),

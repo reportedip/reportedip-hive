@@ -462,14 +462,16 @@ class ReportedIP_Hive_Protection_Page {
 				foreach ( $choices as $choice => $choice_def ) {
 					$choice_def = is_array( $choice_def ) ? $choice_def : array( 'label' => (string) $choice_def );
 					$fixed      = ! empty( $choice_def['fixed'] );
+					$checked    = $fixed || in_array( (string) $choice, $current, true );
+					$carried    = $fixed || ( $checked && ! $locked && ! empty( $choice_def['disabled'] ) );
 					$boxes     .= sprintf(
 						'<label class="rip-checkbox"><input type="checkbox" name="%1$s[]" value="%2$s" %3$s%4$s /> %5$s</label>%6$s',
 						esc_attr( $key ),
 						esc_attr( (string) $choice ),
-						$fixed || in_array( (string) $choice, $current, true ) ? 'checked' : '',
+						$checked ? 'checked' : '',
 						( $locked || ! empty( $choice_def['disabled'] ) ) ? ' disabled' : '',
 						esc_html( (string) ( $choice_def['label'] ?? $choice ) ),
-						$fixed ? sprintf( '<input type="hidden" name="%1$s[]" value="%2$s" />', esc_attr( $key ), esc_attr( (string) $choice ) ) : ''
+						$carried ? sprintf( '<input type="hidden" name="%1$s[]" value="%2$s" />', esc_attr( $key ), esc_attr( (string) $choice ) ) : ''
 					);
 				}
 				$control = '<div class="rip-checkbox-group" id="' . esc_attr( $id ) . '">' . $boxes . '</div>';
@@ -928,9 +930,11 @@ class ReportedIP_Hive_Protection_Page {
 	 *
 	 * Each entry is `array{label:string,disabled:bool,fixed:bool}`. A fixed
 	 * choice is always checked, disabled and carried in the POST by a hidden
-	 * input. The method list comes from the 2FA method registry, and the
+	 * input. The method list comes from the 2FA method registry; a method
+	 * whose `choice_lock` names a plan is disabled and marked with it. The
 	 * administrator role stays disabled in the adaptive policies until an
-	 * administrator has passed one challenge.
+	 * administrator has passed one challenge. A disabled choice that is
+	 * stored stays stored, see field_markup().
 	 *
 	 * @param array<string,mixed> $entry Registry entry.
 	 * @param string              $key   Registry key.
@@ -947,6 +951,19 @@ class ReportedIP_Hive_Protection_Page {
 				'disabled' => in_array( (string) $value, $fixed, true ),
 				'fixed'    => in_array( (string) $value, $fixed, true ),
 			);
+		}
+		if ( 'methods' === $source ) {
+			foreach ( ReportedIP_Hive_Two_Factor::methods() as $slug => $definition ) {
+				if ( ! isset( $choices[ $slug ], $definition['choice_lock'] ) || ! is_callable( $definition['choice_lock'] ) ) {
+					continue;
+				}
+				$plan = (string) call_user_func( $definition['choice_lock'] );
+				if ( '' !== $plan ) {
+					$choices[ $slug ]['disabled'] = true;
+					/* translators: %s: plan name */
+					$choices[ $slug ]['label'] .= ' ' . sprintf( __( '(%s plan)', 'reportedip-hive' ), $plan );
+				}
+			}
 		}
 		if ( 0 === strpos( (string) $key, 'reportedip_hive_2fa_policy_' ) && isset( $choices['administrator'] ) && ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
 			$choices['administrator']['disabled'] = true;

@@ -163,7 +163,7 @@ $masked_mail = ReportedIP_Hive_Two_Factor::mask_email( $user->user_email );
 					aria-selected="<?php echo $is_active ? 'true' : 'false'; ?>"
 					tabindex="<?php echo $is_active ? '0' : '-1'; ?>"
 					aria-label="<?php echo esc_attr( $rip_tab['label'] . ', ' . $rip_tab['aria_tip'] ); ?>">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><?php echo $rip_tab['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></svg>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><?php echo ReportedIP_Hive_Two_Factor::kses_icon( $rip_tab['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_icon() runs wp_kses() with an SVG shape allow-list. ?></svg>
 					<span class="rip-2fa-challenge__method-tab-label"><?php echo esc_html( $rip_tab['label'] ); ?></span>
 				</button>
 				<?php

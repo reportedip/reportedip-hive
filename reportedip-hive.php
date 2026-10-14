@@ -778,9 +778,7 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-recovery.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor.php';
 		}
-		foreach ( ReportedIP_Hive_Two_Factor::get_all_meta_keys() as $key ) {
-			delete_metadata( 'user', 0, $key, '', true );
-		}
+		ReportedIP_Hive_Two_Factor::delete_all_user_meta();
 
 		delete_metadata( 'user', 0, '_reportedip_hive_known_ips', '', true );
 

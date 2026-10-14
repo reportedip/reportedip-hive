@@ -24,6 +24,27 @@
  * @since      3.0.0
  */
 
+namespace {
+
+	if ( ! function_exists( 'delete_metadata' ) ) {
+		/**
+		 * Records each deleted meta key in $GLOBALS['rip_test_deleted_meta'].
+		 *
+		 * @param string $type       Object type.
+		 * @param int    $object_id  Object id.
+		 * @param string $meta_key   Meta key.
+		 * @param mixed  $meta_value Meta value.
+		 * @param bool   $delete_all Whether all objects are affected.
+		 * @return bool
+		 */
+		function delete_metadata( $type, $object_id, $meta_key, $meta_value = '', $delete_all = false ) {
+			unset( $meta_value );
+			$GLOBALS['rip_test_deleted_meta'][] = array( $type, $object_id, $meta_key, $delete_all );
+			return true;
+		}
+	}
+}
+
 namespace ReportedIP\Hive\Tests\Unit {
 
 	use ReportedIP\Hive\Tests\TestCase;
@@ -169,6 +190,149 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$source,
 				'Without a usable method the challenge must open on the recovery codes, not on tabs for methods the user never set up.'
 			);
+		}
+
+		/**
+		 * TOTP plus SMS, TOTP disallowed by the site policy, SMS without its
+		 * add-on: 2.1.74 challenged this account by SMS. It must reach the
+		 * recovery-code challenge, not sign in with the password alone.
+		 */
+		public function test_an_account_whose_registered_methods_are_all_disallowed_is_challenged(): void {
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_method']       = 'totp';
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_totp_enabled'] = '1';
+			$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods']                 = '["email","webauthn","sms"]';
+			\ReportedIP_Hive_Two_Factor::flush_methods();
+
+			$this->assertSame( array(), \ReportedIP_Hive_Two_Factor::get_user_enabled_methods( self::USER_ID ) );
+			$this->assertSame( 'sms', \ReportedIP_Hive_Two_Factor::unavailable_method( self::USER_ID ), 'The flag of the missing method names it.' );
+
+			$result = ( new \ReportedIP_Hive_Two_Factor() )->filter_authenticate( new \WP_User( self::USER_ID ), 'jane', 'secret' );
+			$this->assertInstanceOf( \WP_Error::class, $result, 'The password alone must not sign this account in.' );
+			$this->assertSame( 'reportedip_2fa_required', $result->get_error_code() );
+		}
+
+		/**
+		 * Without a flag of a missing method the policy decision stands: an
+		 * account whose only method was disallowed signs in with the password
+		 * and the log says why.
+		 */
+		public function test_an_account_with_only_disallowed_registered_methods_keeps_the_policy_decision(): void {
+			$GLOBALS['wp_user_meta'][ self::USER_ID ] = array(
+				'reportedip_hive_2fa_enabled'      => '1',
+				'reportedip_hive_2fa_method'       => 'totp',
+				'reportedip_hive_2fa_totp_enabled' => '1',
+			);
+			$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods'] = '["email","webauthn"]';
+			\ReportedIP_Hive_Two_Factor::flush_methods();
+
+			$this->assertSame( '', \ReportedIP_Hive_Two_Factor::unavailable_method( self::USER_ID ) );
+		}
+
+		/**
+		 * A full reset removes every 2FA key of the user, the ones of a
+		 * method no active plugin registers included.
+		 */
+		public function test_a_full_reset_removes_the_data_of_the_missing_method(): void {
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_sms_number_pending'] = 'encrypted-pending';
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['unrelated_meta']                         = 'stays';
+
+			\ReportedIP_Hive_Two_Factor::disable_for_user( self::USER_ID );
+
+			$this->assertSame( array( 'unrelated_meta' => 'stays' ), $GLOBALS['wp_user_meta'][ self::USER_ID ] );
+		}
+
+		/**
+		 * Turning the last visible method off turns 2FA off completely, and
+		 * that takes the data of the missing method along.
+		 */
+		public function test_turning_off_the_last_method_removes_the_data_of_the_missing_method(): void {
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_method']       = 'totp';
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_totp_enabled'] = '1';
+			\ReportedIP_Hive_Two_Factor::flush_methods();
+
+			$this->assertTrue( \ReportedIP_Hive_Two_Factor::disable_method( self::USER_ID, 'totp' ) );
+
+			$this->assertSame( array(), \ReportedIP_Hive_Two_Factor::stored_meta_keys( self::USER_ID ) );
+		}
+
+		/**
+		 * The GDPR eraser removes the 2FA data of an account even when no
+		 * method of it is active here, for example a stored phone number.
+		 */
+		public function test_the_eraser_removes_the_data_of_the_missing_method(): void {
+			require_once dirname( __DIR__, 2 ) . '/admin/class-two-factor-admin.php';
+			$GLOBALS['wp_user_meta'][1] = array(
+				'reportedip_hive_2fa_sms_number' => 'encrypted-number',
+			);
+
+			$admin  = ( new \ReflectionClass( \ReportedIP_Hive_Two_Factor_Admin::class ) )->newInstanceWithoutConstructor();
+			$result = $admin->erase_personal_data( 'admin@example.org' );
+
+			$this->assertSame( 1, $result['items_removed'] );
+			$this->assertSame( array(), \ReportedIP_Hive_Two_Factor::stored_meta_keys( 1 ) );
+		}
+
+		/**
+		 * Uninstall and the full data reset find the stored 2FA keys by
+		 * prefix, so the keys of a method nobody registers go as well.
+		 */
+		public function test_uninstall_and_data_reset_delete_every_stored_2fa_key(): void {
+			$GLOBALS['rip_test_deleted_meta'] = array();
+			$GLOBALS['wpdb']                  = new class() {
+
+				/**
+				 * User meta table.
+				 *
+				 * @var string
+				 */
+				public $usermeta = 'wp_usermeta';
+
+				/**
+				 * Last prepared LIKE pattern.
+				 *
+				 * @var string
+				 */
+				public $pattern = '';
+
+				/**
+				 * @param string $text Text.
+				 * @return string
+				 */
+				public function esc_like( $text ) {
+					return addcslashes( $text, '_%\\' );
+				}
+
+				/**
+				 * @param string $query Query.
+				 * @param mixed  ...$args Arguments.
+				 * @return string
+				 */
+				public function prepare( $query, ...$args ) {
+					$this->pattern = (string) $args[0];
+					return $query;
+				}
+
+				/**
+				 * @return string[]
+				 */
+				public function get_col() {
+					return array( 'reportedip_hive_2fa_sms_number', 'reportedip_hive_2fa_totp_secret' );
+				}
+			};
+
+			\ReportedIP_Hive_Two_Factor::delete_all_user_meta();
+
+			$deleted = array_column( $GLOBALS['rip_test_deleted_meta'], 2 );
+			$this->assertSame( 'reportedip\_hive\_2fa\_%', $GLOBALS['wpdb']->pattern );
+			$this->assertContains( 'reportedip_hive_2fa_sms_number', $deleted, 'A key nobody registers is found by its prefix.' );
+			$this->assertContains( 'reportedip_hive_2fa_totp_secret', $deleted );
+			$this->assertContains( 'reportedip_hive_login_context', $deleted, 'The known keys outside the prefix stay covered.' );
+			$this->assertSame( count( $deleted ), count( array_unique( $deleted ) ), 'Each key is deleted once.' );
+			$this->assertSame( array( true ), array_values( array_unique( array_column( $GLOBALS['rip_test_deleted_meta'], 3 ) ) ), 'Every user loses the key.' );
+
+			$root = dirname( __DIR__, 2 );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Two_Factor::delete_all_user_meta();', (string) file_get_contents( $root . '/reportedip-hive.php' ), 'Uninstall uses the prefix sweep.' );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Two_Factor::delete_all_user_meta();', (string) file_get_contents( $root . '/includes/class-ajax-handler.php' ), 'The full data reset uses the prefix sweep.' );
 		}
 	}
 }

@@ -852,7 +852,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		?>
 		<li class="rip-2fa-method" data-method="<?php echo esc_attr( $slug ); ?>" data-active="<?php echo $active ? '1' : '0'; ?>">
 			<div class="rip-2fa-method__main">
-				<div class="rip-2fa-method__icon"><?php echo $icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static inline SVG from the map above or from the row a plugin registered. ?></div>
+				<div class="rip-2fa-method__icon"><?php echo ReportedIP_Hive_Two_Factor::kses_icon( $icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_icon() runs wp_kses() with an SVG shape allow-list; the icon may come from the row a plugin registered. ?></div>
 				<div class="rip-2fa-method__body">
 					<div class="rip-2fa-method__head">
 						<span class="rip-2fa-method__name"><?php echo esc_html( $args['label'] ); ?></span>
@@ -1383,7 +1383,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		}
 
 		$was_enabled = ReportedIP_Hive_Two_Factor::is_user_enabled( $user->ID )
-			|| '' !== ReportedIP_Hive_Two_Factor::unavailable_method( $user->ID );
+			|| array() !== ReportedIP_Hive_Two_Factor::stored_meta_keys( $user->ID );
 
 		if ( $was_enabled ) {
 			ReportedIP_Hive_Two_Factor::disable_for_user( $user->ID );

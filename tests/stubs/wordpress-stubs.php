@@ -414,6 +414,8 @@ if ( ! function_exists( 'get_user_meta' ) ) {
 	/**
 	 * Single-value flavour (the third arg defaults to true here for unit-test
 	 * ergonomics, production code in this plugin always calls with `true`).
+	 * Without a key it returns every key of the user, each value wrapped in
+	 * a list as WordPress does.
 	 *
 	 * @param int    $user_id User id.
 	 * @param string $key     Meta key.
@@ -423,6 +425,14 @@ if ( ! function_exists( 'get_user_meta' ) ) {
 	function get_user_meta( $user_id, $key = '', $single = true ) {
 		global $wp_user_meta;
 		$user_id = (int) $user_id;
+		if ( '' === $key ) {
+			return array_map(
+				static function ( $value ) {
+					return array( $value );
+				},
+				(array) ( $wp_user_meta[ $user_id ] ?? array() )
+			);
+		}
 		if ( ! isset( $wp_user_meta[ $user_id ][ $key ] ) ) {
 			return $single ? '' : array();
 		}

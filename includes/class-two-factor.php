@@ -151,6 +151,27 @@ class ReportedIP_Hive_Two_Factor {
 	const META_LOGIN_CONTEXT = 'reportedip_hive_login_context';
 
 	/**
+	 * Prefix of every user meta key that belongs to the second factor, the
+	 * keys of methods an add-on registers included. A full reset, the GDPR
+	 * eraser and the uninstall remove by this prefix, so the data of a
+	 * method whose add-on is inactive does not survive them.
+	 *
+	 * @var string
+	 * @since 3.0.0
+	 */
+	const META_PREFIX = 'reportedip_hive_2fa_';
+
+	/**
+	 * Shape of a method slug. A stored slug of this shape that no active
+	 * plugin registers is kept in the allowed-methods option, see
+	 * {@see self::sanitize_allowed_methods()}.
+	 *
+	 * @var string
+	 * @since 3.0.0
+	 */
+	const METHOD_SLUG_PATTERN = '/^[a-z0-9_]{1,32}$/';
+
+	/**
 	 * 2FA method identifiers.
 	 */
 	const METHOD_TOTP     = 'totp';
@@ -261,7 +282,7 @@ class ReportedIP_Hive_Two_Factor {
 		$method = isset( $_POST['method'] ) ? sanitize_key( wp_unslash( $_POST['method'] ) ) : '';
 
 		$definition = self::methods()[ $method ] ?? array();
-		if ( empty( $definition['send'] ) ) {
+		if ( ! isset( $definition['send'] ) || ! is_callable( $definition['send'] ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'This method does not support resending.', 'reportedip-hive' ) ),
 				400
@@ -279,8 +300,8 @@ class ReportedIP_Hive_Two_Factor {
 		$this->refresh_login_nonce( $nonce_data );
 
 		$result      = call_user_func( $definition['send'], $user_id );
-		$cooldown    = empty( $definition['resend_wait'] ) ? 0 : (int) call_user_func( $definition['resend_wait'], $user_id );
-		$destination = empty( $definition['mask'] ) ? '' : (string) call_user_func( $definition['mask'], $user_id );
+		$cooldown    = isset( $definition['resend_wait'] ) && is_callable( $definition['resend_wait'] ) ? (int) call_user_func( $definition['resend_wait'], $user_id ) : 0;
+		$destination = isset( $definition['mask'] ) && is_callable( $definition['mask'] ) ? (string) call_user_func( $definition['mask'], $user_id ) : '';
 
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error(
@@ -294,9 +315,7 @@ class ReportedIP_Hive_Two_Factor {
 
 		wp_send_json_success(
 			array(
-				'message'     => self::METHOD_EMAIL === $method
-					? __( 'We have sent you a new code by email.', 'reportedip-hive' )
-					: __( 'New code sent.', 'reportedip-hive' ),
+				'message'     => (string) ( $definition['resent_message'] ?? __( 'New code sent.', 'reportedip-hive' ) ),
 				'destination' => $destination,
 				'cooldown'    => (int) $cooldown,
 				'phase'       => 'code_sent',
@@ -593,10 +612,12 @@ class ReportedIP_Hive_Two_Factor {
 	 * The default method of an account whose second factor this site cannot
 	 * verify right now.
 	 *
-	 * That is an account with 2FA turned on whose stored default names a
-	 * method that is not registered (the add-on that provided it is
-	 * inactive), while no registered method is configured. Such an account
-	 * is challenged with its recovery codes instead of signing in with the
+	 * That is an account with 2FA turned on and no usable method (no
+	 * registered method it configured is allowed by the site policy) that
+	 * also set up a method no active plugin registers: its stored default
+	 * names such a method, or it carries the enabled flag
+	 * (`reportedip_hive_2fa_{slug}_enabled`) of one. Such an account is
+	 * challenged with its recovery codes instead of signing in with the
 	 * password alone, and the data of the missing method stays untouched, so
 	 * the method works again once its add-on returns.
 	 *
@@ -605,11 +626,39 @@ class ReportedIP_Hive_Two_Factor {
 	 * @since  3.0.0
 	 */
 	public static function unavailable_method( $user_id ) {
-		if ( ! get_user_meta( $user_id, self::META_ENABLED, true ) || array() !== self::configured_method_flags( $user_id ) ) {
+		if ( ! get_user_meta( $user_id, self::META_ENABLED, true ) || array() !== self::get_user_enabled_methods( $user_id ) ) {
 			return '';
 		}
 		$stored = (string) get_user_meta( $user_id, self::META_METHOD, true );
-		return ( '' !== $stored && ! isset( self::methods()[ $stored ] ) ) ? $stored : '';
+		if ( '' !== $stored && ! isset( self::methods()[ $stored ] ) ) {
+			return $stored;
+		}
+		$unregistered = self::unregistered_method_flags( $user_id );
+		return empty( $unregistered ) ? '' : $unregistered[0];
+	}
+
+	/**
+	 * Slugs of the methods the user turned on that no active plugin
+	 * registers, read from their enabled flags.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	private static function unregistered_method_flags( $user_id ) {
+		$registered = array();
+		foreach ( self::methods() as $definition ) {
+			$registered[] = (string) $definition['meta_key'];
+		}
+		$pattern = '/^' . preg_quote( self::META_PREFIX, '/' ) . '([a-z0-9_]{1,32})_enabled$/';
+		$slugs   = array();
+		foreach ( (array) get_user_meta( $user_id ) as $key => $value ) {
+			$flag = is_array( $value ) ? reset( $value ) : $value;
+			if ( $flag && ! in_array( (string) $key, $registered, true ) && preg_match( $pattern, (string) $key, $match ) ) {
+				$slugs[] = $match[1];
+			}
+		}
+		return $slugs;
 	}
 
 	/**
@@ -640,17 +689,52 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Return the globally allowed 2FA methods from admin settings.
 	 *
-	 * Centralises the JSON-decode so callers don't each repeat it.
+	 * Centralises the JSON-decode so callers don't each repeat it. Only
+	 * registered methods are returned: a stored slug no active plugin
+	 * provides is kept in the option ({@see self::sanitize_allowed_methods()})
+	 * but never offered, enrolled or verified.
 	 *
 	 * @return string[] Method identifiers.
 	 */
 	public static function get_allowed_methods() {
 		$raw     = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '["totp","email","webauthn"]' );
-		$decoded = json_decode( $raw, true );
-		if ( ! is_array( $decoded ) || empty( $decoded ) ) {
-			return array( self::METHOD_TOTP, self::METHOD_EMAIL );
+		$allowed = self::filter_valid_methods( ReportedIP_Hive_Option_Routing::to_array( $raw ) );
+		return empty( $allowed ) ? array( self::METHOD_TOTP, self::METHOD_EMAIL ) : $allowed;
+	}
+
+	/**
+	 * Settings filter of the allowed-methods option: the registered methods
+	 * of the new list, plus every slug of a method no active plugin
+	 * registers, from the new list and from the stored one.
+	 *
+	 * The settings form can only post the methods it shows, so without the
+	 * stored slugs a save on a site whose add-on is inactive would drop the
+	 * add-on's method from the policy for good. The kept slugs have no
+	 * effect while nobody registers them, see get_allowed_methods().
+	 *
+	 * @param array<int, mixed> $methods Candidate method slugs.
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function sanitize_allowed_methods( array $methods ) {
+		$known  = self::valid_methods();
+		$stored = array_filter(
+			ReportedIP_Hive_Option_Routing::to_array( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_allowed_methods', '[]' ) ),
+			static function ( $slug ) use ( $known ) {
+				return ! in_array( $slug, $known, true );
+			}
+		);
+		$result = array();
+		foreach ( array_merge( $methods, $stored ) as $slug ) {
+			if ( ! is_scalar( $slug ) ) {
+				continue;
+			}
+			$slug = (string) $slug;
+			if ( ( in_array( $slug, $known, true ) || 1 === preg_match( self::METHOD_SLUG_PATTERN, $slug ) ) && ! in_array( $slug, $result, true ) ) {
+				$result[] = $slug;
+			}
 		}
-		return array_values( $decoded );
+		return $result;
 	}
 
 	/**
@@ -676,9 +760,19 @@ class ReportedIP_Hive_Two_Factor {
 	 * optional callables `send( $user_id )`, `resend_wait( $user_id )`,
 	 * `mask( $user_id )` and `health( $user_id )` (returns '' while the
 	 * method is usable, otherwise a short reason shown to administrators),
-	 * the optional `icon` (inner SVG markup of its challenge tab) and the
-	 * optional `data_keys` (further user meta the method owns, removed
-	 * together with it). The core methods render their panels in the
+	 * the optional `icon` (inner SVG markup of its challenge tab, passed
+	 * through {@see self::kses_icon()}) and the optional `data_keys`
+	 * (further user meta the method owns, removed together with it).
+	 *
+	 * Further optional keys: `choice_label` (the method's name in the
+	 * allowed-methods list of the settings, `label` when absent),
+	 * `choice_lock` (callable returning '' while an administrator may allow
+	 * the method, otherwise the name of the plan it needs; the choice is
+	 * then shown disabled with that plan, and a stored choice stays stored),
+	 * `resent_message` (the confirmation after a resend), `expired_message`
+	 * (the error after a wrong code while the callable
+	 * `code_active( $user_id )` reports no active code). The core methods
+	 * render their panels in the
 	 * templates; a method an add-on registers renders its own through the
 	 * actions `reportedip_hive_2fa_challenge_panel_{slug}`,
 	 * `reportedip_hive_2fa_onboarding_panel_{slug}` and
@@ -693,28 +787,36 @@ class ReportedIP_Hive_Two_Factor {
 		}
 		$core = array(
 			self::METHOD_TOTP     => array(
-				'meta_key' => self::META_TOTP_ENABLED,
-				'label'    => __( 'Authenticator app', 'reportedip-hive' ),
-				'prompt'   => __( 'Enter the 6-digit code from your authenticator app', 'reportedip-hive' ),
-				'verify'   => array( 'ReportedIP_Hive_Two_Factor_Verifier', 'verify_totp' ),
+				'meta_key'     => self::META_TOTP_ENABLED,
+				'label'        => __( 'Authenticator app', 'reportedip-hive' ),
+				'choice_label' => __( 'Authenticator app (TOTP)', 'reportedip-hive' ),
+				'prompt'       => __( 'Enter the 6-digit code from your authenticator app', 'reportedip-hive' ),
+				'verify'       => array( 'ReportedIP_Hive_Two_Factor_Verifier', 'verify_totp' ),
 			),
 			self::METHOD_EMAIL    => array(
-				'meta_key'    => self::META_EMAIL_ENABLED,
-				'label'       => __( 'Email code', 'reportedip-hive' ),
-				'prompt'      => __( 'Enter the 6-digit code from the email', 'reportedip-hive' ),
-				'verify'      => array( 'ReportedIP_Hive_Two_Factor_Email', 'verify_code' ),
-				'send'        => array( 'ReportedIP_Hive_Two_Factor_Email', 'send_code' ),
-				'resend_wait' => array( 'ReportedIP_Hive_Two_Factor_Email', 'get_resend_wait_seconds' ),
-				'mask'        => static function ( $user_id ) {
+				'meta_key'        => self::META_EMAIL_ENABLED,
+				'label'           => __( 'Email code', 'reportedip-hive' ),
+				'choice_label'    => __( 'E-mail code', 'reportedip-hive' ),
+				'prompt'          => __( 'Enter the 6-digit code from the email', 'reportedip-hive' ),
+				'verify'          => array( 'ReportedIP_Hive_Two_Factor_Email', 'verify_code' ),
+				'send'            => array( 'ReportedIP_Hive_Two_Factor_Email', 'send_code' ),
+				'resend_wait'     => array( 'ReportedIP_Hive_Two_Factor_Email', 'get_resend_wait_seconds' ),
+				'mask'            => static function ( $user_id ) {
 					$user = get_userdata( (int) $user_id );
 					return $user ? self::mask_email( (string) $user->user_email ) : '';
 				},
+				'resent_message'  => __( 'We have sent you a new code by email.', 'reportedip-hive' ),
+				'expired_message' => __( 'No valid code is active, you likely used an older code. Please click "Resend code" and use only the most recent code from your inbox.', 'reportedip-hive' ),
+				'code_active'     => static function ( $user_id ) {
+					return (bool) get_transient( 'reportedip_2fa_email_' . (int) $user_id );
+				},
 			),
 			self::METHOD_WEBAUTHN => array(
-				'meta_key' => self::META_WEBAUTHN_ENABLED,
-				'label'    => __( 'Passkey / security key', 'reportedip-hive' ),
-				'prompt'   => __( 'Confirm your passkey or security key when prompted', 'reportedip-hive' ),
-				'verify'   => array( 'ReportedIP_Hive_Two_Factor_WebAuthn', 'verify' ),
+				'meta_key'     => self::META_WEBAUTHN_ENABLED,
+				'label'        => __( 'Passkey / security key', 'reportedip-hive' ),
+				'choice_label' => __( 'Security key / passkey', 'reportedip-hive' ),
+				'prompt'       => __( 'Confirm your passkey or security key when prompted', 'reportedip-hive' ),
+				'verify'       => array( 'ReportedIP_Hive_Two_Factor_WebAuthn', 'verify' ),
 			),
 		);
 
@@ -1321,11 +1423,7 @@ class ReportedIP_Hive_Two_Factor {
 						$failed = $this->increment_failed_attempts( $user_id );
 						self::record_ip_failure( ReportedIP_Hive::get_client_ip() );
 
-						if ( self::METHOD_EMAIL === $submitted_method && ! get_transient( 'reportedip_2fa_email_' . $user_id ) ) {
-							$error = __( 'No valid code is active, you likely used an older code. Please click "Resend code" and use only the most recent code from your inbox.', 'reportedip-hive' );
-						} else {
-							$error = __( 'Invalid verification code. Please make sure you are using the most recent code.', 'reportedip-hive' );
-						}
+						$error = self::wrong_code_message( (int) $user_id, (string) $submitted_method );
 						if ( $failed >= self::SESSION_INVALIDATION_THRESHOLD ) {
 							$this->cleanup_login_nonce();
 
@@ -1352,21 +1450,12 @@ class ReportedIP_Hive_Two_Factor {
 
 		$allowed_methods = self::get_user_enabled_methods( $user_id );
 
-		/*
-		 * Server-side resend for clients without JavaScript: `?resend_{slug}=1`
-		 * sends a fresh code for any enabled method that can send one.
-		 */
-		foreach ( $allowed_methods as $slug ) {
-			$send = self::methods()[ $slug ]['send'] ?? null;
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only trigger; the user is identified by the signed challenge cookie, and the send is rate-limited per method.
-			if ( ! is_callable( $send ) || ! isset( $_GET[ 'resend_' . $slug ] ) || '1' !== $_GET[ 'resend_' . $slug ] ) {
-				continue;
-			}
-			$result = call_user_func( $send, $user_id );
-			if ( is_wp_error( $result ) ) {
-				$error = $result->get_error_message();
-			}
-			$method = $slug;
+		$resent = self::send_requested_codes( (int) $user_id, $allowed_methods );
+		if ( '' !== $resent['method'] ) {
+			$method = $resent['method'];
+		}
+		if ( '' !== $resent['error'] ) {
+			$error = $resent['error'];
 		}
 
 		$form_nonce = $this->create_form_nonce( $user_id );
@@ -1401,6 +1490,81 @@ class ReportedIP_Hive_Two_Factor {
 			$this->render_challenge_page( $template_data );
 		}
 		exit;
+	}
+
+	/**
+	 * Server-side resend for clients without JavaScript: `?resend_{slug}=1`
+	 * sends a fresh code for each method of the user that can send one.
+	 *
+	 * Only the methods passed in are considered, the ones the user has
+	 * enabled; a method the account never set up never sends.
+	 *
+	 * @param int      $user_id The challenged user.
+	 * @param string[] $enabled The user's enabled methods.
+	 * @return array{method:string,error:string} Last method that was asked to send ('' for none) and the send error ('' for none).
+	 * @since  3.0.0
+	 */
+	private static function send_requested_codes( $user_id, array $enabled ) {
+		$outcome = array(
+			'method' => '',
+			'error'  => '',
+		);
+		foreach ( $enabled as $slug ) {
+			$send = self::methods()[ $slug ]['send'] ?? null;
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only trigger; the user is identified by the signed challenge cookie, and the send is rate-limited per method.
+			if ( ! is_callable( $send ) || ! isset( $_GET[ 'resend_' . $slug ] ) || '1' !== $_GET[ 'resend_' . $slug ] ) {
+				continue;
+			}
+			$result = call_user_func( $send, $user_id );
+			if ( is_wp_error( $result ) ) {
+				$outcome['error'] = $result->get_error_message();
+			}
+			$outcome['method'] = (string) $slug;
+		}
+		return $outcome;
+	}
+
+	/**
+	 * The error after a wrong code: the method's `expired_message` while it
+	 * reports no active code, the generic sentence otherwise.
+	 *
+	 * @param int    $user_id The challenged user.
+	 * @param string $method  The submitted method.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	private static function wrong_code_message( $user_id, $method ) {
+		$definition = self::methods()[ $method ] ?? array();
+		if ( isset( $definition['expired_message'], $definition['code_active'] ) && is_callable( $definition['code_active'] ) && ! call_user_func( $definition['code_active'], $user_id ) ) {
+			return (string) $definition['expired_message'];
+		}
+		return __( 'Invalid verification code. Please make sure you are using the most recent code.', 'reportedip-hive' );
+	}
+
+	/**
+	 * Escape the SVG markup of a method icon: the `svg` element and the
+	 * shapes `path`, `rect`, `polyline`, `polygon`, `circle` and `line`
+	 * with their geometry and stroke attributes, nothing else. An icon may
+	 * come from an add-on's registry entry.
+	 *
+	 * @param string $markup Icon markup.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	public static function kses_icon( $markup ) {
+		$shape = array_fill_keys( array( 'd', 'points', 'x', 'y', 'x1', 'x2', 'y1', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin' ), true );
+		return wp_kses(
+			(string) $markup,
+			array(
+				'svg'      => array_fill_keys( array( 'viewbox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'width', 'height', 'aria-hidden', 'xmlns' ), true ),
+				'path'     => $shape,
+				'rect'     => $shape,
+				'polyline' => $shape,
+				'polygon'  => $shape,
+				'circle'   => $shape,
+				'line'     => $shape,
+			)
+		);
 	}
 
 	/**
@@ -2535,7 +2699,12 @@ class ReportedIP_Hive_Two_Factor {
 
 		unset( self::$methods_cache[ $user_id ] );
 
-		$remaining = self::get_user_enabled_methods( $user_id );
+		/*
+		 * The method just removed never counts as remaining: with no flag
+		 * left, the legacy single-method fallback of configured_method_flags()
+		 * would report it again and keep 2FA on without its secret.
+		 */
+		$remaining = array_values( array_diff( self::get_user_enabled_methods( $user_id ), array( $method ) ) );
 		if ( empty( $remaining ) ) {
 			self::disable_for_user( $user_id );
 			return true;
@@ -2581,7 +2750,7 @@ class ReportedIP_Hive_Two_Factor {
 			'reportedip_hive_2fa_skip_until',
 		);
 
-		foreach ( array_unique( array_merge( $meta_keys, self::method_meta_keys() ) ) as $key ) {
+		foreach ( array_unique( array_merge( $meta_keys, self::method_meta_keys(), self::stored_meta_keys( $user_id ) ) ) as $key ) {
 			delete_user_meta( $user_id, $key );
 		}
 
@@ -2591,6 +2760,42 @@ class ReportedIP_Hive_Two_Factor {
 		self::revoke_all_trusted_devices( $user_id );
 		if ( class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) {
 			delete_transient( ReportedIP_Hive_Two_Factor_Onboarding::TRANSIENT_PREFIX . $user_id );
+		}
+	}
+
+	/**
+	 * The user's meta keys that start with {@see self::META_PREFIX}, the
+	 * ones of methods no active plugin registers included.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function stored_meta_keys( $user_id ) {
+		$keys = array();
+		foreach ( array_keys( (array) get_user_meta( (int) $user_id ) ) as $key ) {
+			if ( 0 === strpos( (string) $key, self::META_PREFIX ) ) {
+				$keys[] = (string) $key;
+			}
+		}
+		return $keys;
+	}
+
+	/**
+	 * Delete the 2FA user meta of every user: the keys of
+	 * {@see self::get_all_meta_keys()} plus every stored key that starts
+	 * with {@see self::META_PREFIX}, so the data of a method whose add-on is
+	 * inactive goes as well. Used by the uninstall and the full data reset.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function delete_all_user_meta() {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One-off key discovery during uninstall or a full data reset; the deletion itself goes through delete_metadata().
+		$stored = (array) $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT meta_key FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", $wpdb->esc_like( self::META_PREFIX ) . '%' ) );
+		foreach ( array_unique( array_merge( self::get_all_meta_keys(), array_map( 'strval', $stored ) ) ) as $key ) {
+			delete_metadata( 'user', 0, $key, '', true );
 		}
 	}
 

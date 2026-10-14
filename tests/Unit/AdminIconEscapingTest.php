@@ -85,5 +85,27 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( "self::kses_inline_svg( \$item['icon'] )", $source );
 			$this->assertStringContainsString( 'self::kses_inline_svg( $pill_icons[ $status_class ] )', $source );
 		}
+
+		/**
+		 * A 2FA method icon can come from an add-on's registry entry, so the
+		 * challenge tab and the profile card escape it with the SVG shape
+		 * allow-list.
+		 */
+		public function test_method_icons_pass_through_the_svg_allow_list(): void {
+			$root = dirname( __DIR__, 2 );
+
+			$this->assertStringContainsString( "ReportedIP_Hive_Two_Factor::kses_icon( \$rip_tab['icon'] )", (string) file_get_contents( $root . '/templates/two-factor-challenge.php' ) );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Two_Factor::kses_icon( $icon )', (string) file_get_contents( $root . '/admin/class-two-factor-admin.php' ) );
+
+			$source = (string) file_get_contents( $root . '/includes/class-two-factor.php' );
+			$body   = substr( $source, (int) strpos( $source, 'public static function kses_icon(' ) );
+			$body   = substr( $body, 0, (int) strpos( $body, "\n\t}\n" ) );
+			$this->assertStringContainsString( 'return wp_kses(', $body );
+			foreach ( array( 'svg', 'path', 'rect', 'polyline', 'polygon', 'circle', 'line' ) as $tag ) {
+				$this->assertMatchesRegularExpression( "/'" . $tag . "'\s+=>/", $body, $tag . ' is allowed' );
+			}
+			$this->assertStringNotContainsString( "'script'", $body );
+			$this->assertStringNotContainsString( 'onload', $body );
+		}
 	}
 }

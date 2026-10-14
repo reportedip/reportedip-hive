@@ -1095,7 +1095,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'choices'       => 'methods',
 				'section'       => 'account_security',
 				'kind'          => 'json_list',
-				'json_filter'   => array( 'ReportedIP_Hive_Two_Factor', 'filter_valid_methods' ),
+				'json_filter'   => array( 'ReportedIP_Hive_Two_Factor', 'sanitize_allowed_methods' ),
 				'json_fallback' => array( 'totp', 'email' ),
 				'remote'        => true,
 				'label'         => __( 'Allowed 2FA methods', 'reportedip-hive' ),
@@ -1964,8 +1964,9 @@ final class ReportedIP_Hive_Settings_Registry {
 	 * value => label. The one list behind the Protection page checkbox groups
 	 * and the `allowed` list of the remote schema, so a dashboard offers the
 	 * same choices the site itself does (since 2.1.70). `methods` lists the
-	 * method registry ({@see ReportedIP_Hive_Two_Factor::methods()}), so a
-	 * method an add-on registers is offered while the add-on is active.
+	 * method registry ({@see ReportedIP_Hive_Two_Factor::methods()}) under
+	 * each entry's `choice_label`, so a method an add-on registers is
+	 * offered while the add-on is active.
 	 *
 	 * @param string $source `roles`, `methods` or `audit_groups`.
 	 * @return array<string,string>
@@ -1974,7 +1975,7 @@ final class ReportedIP_Hive_Settings_Registry {
 		$map = array();
 		if ( 'methods' === $source ) {
 			foreach ( ReportedIP_Hive_Two_Factor::methods() as $slug => $definition ) {
-				$map[ (string) $slug ] = (string) $definition['label'];
+				$map[ (string) $slug ] = (string) ( $definition['choice_label'] ?? $definition['label'] ?? $slug );
 			}
 		} elseif ( 'roles' === $source ) {
 			$map = array_map( 'strval', wp_roles()->get_names() );

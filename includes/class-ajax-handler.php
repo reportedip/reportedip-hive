@@ -1528,9 +1528,7 @@ class ReportedIP_Hive_Ajax_Handler {
 
 			ReportedIP_Hive_Option_Routing::delete_all_plugin_options();
 
-			foreach ( ReportedIP_Hive_Two_Factor::get_all_meta_keys() as $meta_key ) {
-				delete_metadata( 'user', 0, $meta_key, '', true );
-			}
+			ReportedIP_Hive_Two_Factor::delete_all_user_meta();
 			delete_metadata( 'user', 0, '_reportedip_hive_known_ips', '', true );
 
 			wp_send_json_success( __( 'All plugin data has been deleted. The page will reload.', 'reportedip-hive' ) );
