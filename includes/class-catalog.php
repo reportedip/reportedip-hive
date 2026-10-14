@@ -39,6 +39,9 @@ final class ReportedIP_Hive_Catalog {
 	 * `community_only` is set on a feature that needs the Community Network
 	 * (its matrix row has `local => false`), so a Local Shield site can say so.
 	 *
+	 * `section` is the registry section the feature belongs to, or one of
+	 * {@see sections()} when the add-on brings the whole section.
+	 *
 	 * @return array<string, array{label:string, description:string, tier:string, section:string, docs_url:string, community_only?:bool}>
 	 * @since  3.0.0
 	 */
@@ -71,14 +74,14 @@ final class ReportedIP_Hive_Catalog {
 				'label'       => __( 'Adaptive 2FA policies per role', 'reportedip-hive' ),
 				'description' => __( 'Ask for the second factor again on a new device, address, network or country, every N days or sign-ins.', 'reportedip-hive' ),
 				'tier'        => 'professional',
-				'section'     => 'account_security',
+				'section'     => 'twofa_policies',
 				'docs_url'    => self::PRODUCT_URL . '#hive-identity',
 			),
 			'hardening_mode'               => array(
 				'label'       => __( 'Hardening mode during attack waves', 'reportedip-hive' ),
 				'description' => __( 'Tightens the sign-in and reputation thresholds for an hour when a coordinated attack is detected.', 'reportedip-hive' ),
 				'tier'        => 'professional',
-				'section'     => 'detection',
+				'section'     => 'hardening_mode',
 				'docs_url'    => self::PRODUCT_URL . '#hive-response',
 			),
 			'form_proof_pow'               => array(
@@ -145,6 +148,30 @@ final class ReportedIP_Hive_Catalog {
 				'tier'        => 'business',
 				'section'     => 'account_security',
 				'docs_url'    => self::PRODUCT_URL . '#hive-identity',
+			),
+		);
+	}
+
+	/**
+	 * Sections that only the add-on fills, with the label and description
+	 * the add-on gives them and the Protection-page tab they sit on. Without
+	 * the add-on the Protection page shows them with their catalog rows, so
+	 * the section and its anchor exist in both installations.
+	 *
+	 * @return array<string, array{label:string, description:string, tab:string}>
+	 * @since  3.0.0
+	 */
+	public static function sections() {
+		return array(
+			'hardening_mode' => array(
+				'label'       => __( 'Attack Response', 'reportedip-hive' ),
+				'description' => __( 'What changes while a coordinated attack is running.', 'reportedip-hive' ),
+				'tab'         => 'advanced',
+			),
+			'twofa_policies' => array(
+				'label'       => __( 'Adaptive Step-Up', 'reportedip-hive' ),
+				'description' => __( 'When a user who already passed the second factor is asked for it again.', 'reportedip-hive' ),
+				'tab'         => 'advanced',
 			),
 		);
 	}

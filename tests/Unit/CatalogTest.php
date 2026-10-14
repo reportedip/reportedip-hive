@@ -27,7 +27,7 @@ class CatalogTest extends TestCase {
 	}
 
 	public function test_every_row_is_complete() {
-		$sections = array_keys( \ReportedIP_Hive_Settings_Registry::sections() );
+		$sections = array_merge( array_keys( \ReportedIP_Hive_Settings_Registry::sections() ), array_keys( \ReportedIP_Hive_Catalog::sections() ) );
 		foreach ( \ReportedIP_Hive_Catalog::features() as $key => $row ) {
 			foreach ( array( 'label', 'description', 'tier', 'section', 'docs_url' ) as $field ) {
 				$this->assertNotEmpty( $row[ $field ], "{$key}.{$field}" );
@@ -42,5 +42,20 @@ class CatalogTest extends TestCase {
 		$by_section = \ReportedIP_Hive_Catalog::by_section();
 		$this->assertArrayHasKey( 'account_security', $by_section );
 		$this->assertContains( 'frontend_2fa', array_keys( $by_section['account_security'] ) );
+	}
+
+	public function test_add_on_sections_sit_where_the_features_lived_in_2_1_74() {
+		$by_section = \ReportedIP_Hive_Catalog::by_section();
+		$this->assertSame( array( 'hardening_mode' ), array_keys( $by_section['hardening_mode'] ) );
+		$this->assertSame( array( '2fa_policies' ), array_keys( $by_section['twofa_policies'] ) );
+	}
+
+	public function test_add_on_sections_are_not_free_registry_sections() {
+		$free = array_keys( \ReportedIP_Hive_Settings_Registry::sections() );
+		foreach ( \ReportedIP_Hive_Catalog::sections() as $id => $section ) {
+			$this->assertNotContains( $id, $free, $id );
+			$this->assertNotEmpty( $section['label'], $id );
+			$this->assertSame( 'advanced', $section['tab'], $id );
+		}
 	}
 }
