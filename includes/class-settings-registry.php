@@ -89,7 +89,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 			'account_security' => array(
 				'label'       => __( 'Two-Factor Authentication', 'reportedip-hive' ),
-				'description' => __( 'Which methods exist, who has to use one, and how long a device stays trusted. The storefront variant for WooCommerce lives here too.', 'reportedip-hive' ),
+				'description' => __( 'Which methods exist, who has to use one, and how long a device stays trusted.', 'reportedip-hive' ),
 			),
 			'account_password' => array(
 				'label'       => __( 'Password Policy', 'reportedip-hive' ),
@@ -97,7 +97,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			),
 			'privacy_logs'     => array(
 				'label'       => __( 'Privacy & Logs', 'reportedip-hive' ),
-				'description' => __( 'Logging depth, retention and the audit trail.', 'reportedip-hive' ),
+				'description' => __( 'Logging depth and retention.', 'reportedip-hive' ),
 			),
 			'notifications'    => array(
 				'label'       => __( 'Notifications', 'reportedip-hive' ),
@@ -610,14 +610,14 @@ final class ReportedIP_Hive_Settings_Registry {
 				'sanitize'    => array( 'ReportedIP_Hive_Registration_Guard', 'sanitize_username_list' ),
 				'remote'      => true,
 				'label'       => __( 'Prohibited usernames', 'reportedip-hive' ),
-				'description' => __( 'Names that may not be registered, one per line. An entry matches literally, as a wildcard when it contains an asterisk, or as a regular expression when written between slashes.', 'reportedip-hive' ),
+				'description' => __( 'Names that may not be registered, one per line. An entry matches literally, or as a wildcard when it contains an asterisk. Only the first ten such entries are checked; an entry written between slashes is kept but not checked.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_prohibited_usernames_baseline' => array(
 				'section'     => 'registration',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Built-in prohibited usernames', 'reportedip-hive' ),
-				'description' => __( 'Also reject the built-in list of role names such as admin, administrator and root. It does not count towards the free entry allowance.', 'reportedip-hive' ),
+				'description' => __( 'Also reject the built-in list of role names such as admin, administrator and root. It does not count towards the ten entries of the list above.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_email_rule_mode'              => array(
 				'section'     => 'registration',
@@ -633,7 +633,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'sanitize'    => array( 'ReportedIP_Hive_Registration_Guard', 'sanitize_email_rule_list' ),
 				'remote'      => true,
 				'label'       => __( 'E-mail rules', 'reportedip-hive' ),
-				'description' => __( 'Address patterns, one per line. A bare host name is read as every address at that host.', 'reportedip-hive' ),
+				'description' => __( 'Address patterns, one per line. A bare host name is read as every address at that host. Only the first ten entries are checked, an entry written between slashes is kept but not checked. In the allow mode an address that only matches a later entry is turned away, and a list without a checked entry lets every address through.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_registration_limit_enabled'   => array(
 				'section'     => 'registration',
