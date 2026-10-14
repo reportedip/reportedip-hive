@@ -5915,7 +5915,23 @@ class ReportedIP_Hive_Admin_Settings {
 					</div>
 					<?php endif; ?>
 				</div>
-
+				<?php
+				/**
+				 * Fires inside the contribution panel of the Community page,
+				 * under the 30-day figures and inside the card.
+				 *
+				 * @param array{tier_slug:string,total_events:int,total_api_reports:int} $context Figures of the panel.
+				 * @since 3.0.0
+				 */
+				do_action(
+					'reportedip_hive_contribution_panel_after_stats',
+					array(
+						'tier_slug'         => (string) ReportedIP_Hive_Mode_Manager::get_instance()->get_current_tier(),
+						'total_events'      => $total_events,
+						'total_api_reports' => $total_api_reports,
+					)
+				);
+				?>
 			</div>
 		</div>
 		<?php
