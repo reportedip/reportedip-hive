@@ -211,7 +211,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			),
 		);
 
-		foreach ( array_keys( ReportedIP_Hive_Form_Adapters::ADAPTERS ) as $slug ) {
+		foreach ( array_keys( ReportedIP_Hive_Form_Adapters::adapters() ) as $slug ) {
 			$actions[ 'form_adapter_' . $slug ] = array(
 				'label' => __( 'Switch on', 'reportedip-hive' ),
 				'write' => true,
@@ -241,7 +241,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 				);
 		}
 
-		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+		foreach ( ReportedIP_Hive_Form_Adapters::adapters() as $slug => $adapter ) {
 			if ( 'form_adapter_' . $slug === (string) $step ) {
 				return array( $adapter['option'] => 1 );
 			}
