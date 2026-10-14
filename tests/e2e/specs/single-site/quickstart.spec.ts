@@ -136,7 +136,6 @@ test.describe('quickstart', () => {
 		expect(wpOption('reportedip_hive_known_tier')).toBe('professional');
 		expect(wpOption('reportedip_hive_block_tor')).toBe('1');
 		expect(wpOption('reportedip_hive_data_retention_days')).toBe('90');
-		expect(wpOption('reportedip_hive_2fa_frontend_enabled')).toBe('1');
 		expect(wpOption('reportedip_hive_bot_action')).toBe('block');
 		expect(wpOption('reportedip_hive_2fa_enabled_global')).toBe('1');
 		expect(wpOption('reportedip_hive_2fa_enforce_roles')).toContain('administrator');

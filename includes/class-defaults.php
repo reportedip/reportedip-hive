@@ -253,13 +253,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_password_reset_excluded_methods' => '["email"]',
 		'reportedip_hive_2fa_password_reset_block_email_only' => true,
 
-		'reportedip_hive_2fa_frontend_enabled'            => false,
-		'reportedip_hive_2fa_frontend_onboarding'         => true,
-		'reportedip_hive_2fa_frontend_slug'               => 'reportedip-hive-2fa',
-		'reportedip_hive_2fa_frontend_setup_slug'         => 'reportedip-hive-2fa-setup',
-		'reportedip_hive_2fa_frontend_customer_optional'  => true,
-		'reportedip_hive_2fa_frontend_soft_disabled'      => 0,
-
 		'reportedip_hive_notify_admin'                    => true,
 		'reportedip_hive_notify_recipients'               => '',
 		'reportedip_hive_notify_from_name'                => '',
@@ -661,12 +654,11 @@ final class ReportedIP_Hive_Defaults {
 		$values['reportedip_hive_form_proof_cf7'] = 1;
 
 		if ( $rank >= 1 ) {
-			$values['reportedip_hive_block_tor']            = 1;
-			$values['reportedip_hive_hsts_enabled']         = 1;
-			$values['reportedip_hive_hsts_preload']         = 0;
-			$values['reportedip_hive_data_retention_days']  = 90;
-			$values['reportedip_hive_2fa_frontend_enabled'] = 1;
-			$values['reportedip_hive_form_proof_pow']       = 1;
+			$values['reportedip_hive_block_tor']           = 1;
+			$values['reportedip_hive_hsts_enabled']        = 1;
+			$values['reportedip_hive_hsts_preload']        = 0;
+			$values['reportedip_hive_data_retention_days'] = 90;
+			$values['reportedip_hive_form_proof_pow']      = 1;
 		}
 
 		if ( $rank >= 2 ) {

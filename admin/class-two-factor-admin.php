@@ -290,46 +290,6 @@ class ReportedIP_Hive_Two_Factor_Admin {
 		);
 		register_setting(
 			'reportedip_hive_2fa_settings',
-			'reportedip_hive_2fa_frontend_onboarding',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_onboarding' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_2fa_settings',
-			'reportedip_hive_2fa_frontend_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_enabled' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_2fa_settings',
-			'reportedip_hive_2fa_frontend_customer_optional',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_customer_optional' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_2fa_settings',
-			'reportedip_hive_2fa_frontend_slug',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_slug' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_2fa_settings',
-			'reportedip_hive_2fa_frontend_setup_slug',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_2fa_frontend_setup_slug' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_2fa_settings',
 			'reportedip_hive_2fa_xmlrpc_app_password_only',
 			array(
 				'type'              => 'boolean',

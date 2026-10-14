@@ -99,11 +99,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_2fa_reminder_hard_threshold' => 'int',
 				'reportedip_hive_2fa_reminder_hard_roles' => 'json_list',
 				'reportedip_hive_2fa_password_reset_block_email_only' => 'bool',
-				'reportedip_hive_2fa_frontend_enabled' => 'bool',
-				'reportedip_hive_2fa_frontend_onboarding' => 'bool',
-				'reportedip_hive_2fa_frontend_slug' => 'text',
-				'reportedip_hive_2fa_frontend_setup_slug' => 'text',
-				'reportedip_hive_2fa_frontend_customer_optional' => 'bool',
 				'reportedip_hive_detailed_logging' => 'bool',
 				'reportedip_hive_log_referer_domains' => 'bool',
 				'reportedip_hive_enable_caching' => 'bool',
@@ -455,7 +450,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$expected = array(
 				'reportedip_hive_2fa_enabled_global',
 				'reportedip_hive_2fa_enforce_roles',
-				'reportedip_hive_2fa_frontend_enabled',
 				'reportedip_hive_auto_block',
 				'reportedip_hive_auto_footer_enabled',
 				'reportedip_hive_auto_footer_variant',
@@ -543,16 +537,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 				}
 			}
 			$expected = array(
-				'reportedip_hive_2fa_frontend_onboarding'        => 'frontend_2fa',
-				'reportedip_hive_2fa_frontend_slug'              => 'frontend_2fa',
-				'reportedip_hive_2fa_frontend_setup_slug'        => 'frontend_2fa',
-				'reportedip_hive_2fa_frontend_customer_optional' => 'frontend_2fa',
-				'reportedip_hive_hsts_max_age'                   => 'security_headers_advanced',
-				'reportedip_hive_hsts_preload'                   => 'security_headers_advanced',
-				'reportedip_hive_csp_policy'                     => 'security_headers_advanced',
-				'reportedip_hive_csp_report_uri'                 => 'security_headers_advanced',
-				'reportedip_hive_audit_triggers'                 => 'audit_log',
-				'reportedip_hive_audit_retention_days'           => 'audit_log',
+				'reportedip_hive_hsts_max_age'         => 'security_headers_advanced',
+				'reportedip_hive_hsts_preload'         => 'security_headers_advanced',
+				'reportedip_hive_csp_policy'           => 'security_headers_advanced',
+				'reportedip_hive_csp_report_uri'       => 'security_headers_advanced',
+				'reportedip_hive_audit_triggers'       => 'audit_log',
+				'reportedip_hive_audit_retention_days' => 'audit_log',
 			);
 			foreach ( $expected as $key => $feature ) {
 				$this->assertSame( $feature, $spec[ $key ]['ui_lock'] ?? '', $key );
