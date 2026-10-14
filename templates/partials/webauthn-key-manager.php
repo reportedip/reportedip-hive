@@ -27,12 +27,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 
-$rip_wa_mgr_user     = isset( $rip_webauthn_manager['user_id'] ) ? (int) $rip_webauthn_manager['user_id'] : get_current_user_id();
-$rip_wa_mgr_advanced = ReportedIP_Hive_Two_Factor_WebAuthn::advanced_available();
+$rip_wa_mgr_user = isset( $rip_webauthn_manager['user_id'] ) ? (int) $rip_webauthn_manager['user_id'] : get_current_user_id();
 ?>
 <div class="rip-webauthn-keys" id="rip-webauthn-key-manager"
 	data-user-id="<?php echo esc_attr( (string) $rip_wa_mgr_user ); ?>"
-	data-advanced="<?php echo $rip_wa_mgr_advanced ? '1' : '0'; ?>">
+	data-can-add="<?php echo ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( $rip_wa_mgr_user ) ? '1' : '0'; ?>">
 	<div class="rip-webauthn-keys__header">
 		<h3 class="rip-webauthn-keys__title"><?php esc_html_e( 'Security keys & passkeys', 'reportedip-hive' ); ?></h3>
 		<button type="button" class="rip-button rip-button--secondary" id="rip-webauthn-add-toggle">
@@ -41,20 +40,17 @@ $rip_wa_mgr_advanced = ReportedIP_Hive_Two_Factor_WebAuthn::advanced_available()
 		</button>
 	</div>
 
-	<?php if ( $rip_wa_mgr_advanced ) : ?>
-		<p class="description"><?php esc_html_e( 'Register more than one key so a lost or broken key never locks you out. Keep a backup key in a safe place.', 'reportedip-hive' ); ?></p>
-	<?php endif; ?>
-
-	<div class="rip-alert rip-alert--info" id="rip-webauthn-upgrade-note" hidden>
-		<?php
-		printf(
-			/* translators: 1: opening link tag, 2: closing link tag */
-			esc_html__( 'One security key per account is free. Backup keys, automatic model detection and key alerts are part of the %1$sBusiness plan%2$s.', 'reportedip-hive' ),
-			'<a href="' . esc_url( REPORTEDIP_HIVE_UPGRADE_URL ) . '" target="_blank" rel="noopener">',
-			'</a>'
-		);
-		?>
-	</div>
+	<?php
+	/**
+	 * Notes between the header and the add form of the key manager. An
+	 * element with the id `rip-webauthn-upgrade-note` is shown while the
+	 * account may not add another key and hidden while it may.
+	 *
+	 * @param int $user_id User whose keys are managed.
+	 * @since 3.0.0
+	 */
+	do_action( 'reportedip_hive_webauthn_key_manager_notes', $rip_wa_mgr_user );
+	?>
 
 	<div class="rip-webauthn-keys__add" id="rip-webauthn-add-form" hidden>
 		<div class="rip-form-group">

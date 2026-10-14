@@ -62,7 +62,7 @@
 		var addStatus   = document.getElementById( 'rip-webauthn-add-status' );
 		var nameInput   = document.getElementById( 'rip-webauthn-key-name' );
 		var upgradeNote = document.getElementById( 'rip-webauthn-upgrade-note' );
-		var advanced    = root.getAttribute( 'data-advanced' ) === '1';
+		var canAdd      = root.getAttribute( 'data-can-add' ) === '1';
 
 		if ( ! tbody ) { return; }
 
@@ -72,14 +72,13 @@
 			el.className = 'rip-2fa-inline-status' + ( tone ? ' rip-2fa-inline-status--' + tone : '' );
 		}
 
-		function render( keys ) {
+		function render( keys, data ) {
 			tbody.innerHTML = '';
 			var hasKeys = keys && keys.length > 0;
 			if ( table ) { table.hidden = ! hasKeys; }
 			if ( empty ) { empty.hidden = hasKeys; }
 
-			// Free tier: the first key is included, more keys are Business.
-			var canAdd = advanced || ! hasKeys;
+			if ( data && typeof data.can_add === 'boolean' ) { canAdd = data.can_add; }
 			if ( addToggle ) { addToggle.hidden = ! canAdd; }
 			if ( ! canAdd && addForm ) { addForm.hidden = true; }
 			if ( upgradeNote ) { upgradeNote.hidden = canAdd; }
@@ -179,7 +178,7 @@
 				post( 'reportedip_hive_2fa_webauthn_rename_key', { credential_id: key.id, name: name } )
 					.then( function ( res ) {
 						if ( res && res.success ) {
-							render( res.data.keys || [] );
+							render( res.data.keys || [], res.data );
 							setStatus( status, str( 'renamed', 'Key renamed.' ), 'success' );
 						} else {
 							setStatus( status, ( res && res.data && res.data.message ) || str( 'error', 'Something went wrong.' ), 'error' );
@@ -206,7 +205,7 @@
 			post( 'reportedip_hive_2fa_webauthn_delete_key', { credential_id: key.id } )
 				.then( function ( res ) {
 					if ( res && res.success ) {
-						render( res.data.keys || [] );
+						render( res.data.keys || [], res.data );
 						setStatus(
 							status,
 							res.data.method_disabled
@@ -224,7 +223,7 @@
 		function load() {
 			post( 'reportedip_hive_2fa_webauthn_list_keys', {} )
 				.then( function ( res ) {
-					if ( res && res.success ) { render( res.data.keys || [] ); }
+					if ( res && res.success ) { render( res.data.keys || [], res.data ); }
 				} )
 				.catch( function () { setStatus( status, str( 'networkError', 'Network error.' ), 'error' ); } );
 		}
@@ -306,7 +305,7 @@
 						if ( nameInput ) { nameInput.value = ''; }
 						if ( addForm ) { addForm.hidden = true; }
 						if ( res.data && res.data.keys ) {
-							render( res.data.keys );
+							render( res.data.keys, res.data );
 						} else {
 							load();
 						}

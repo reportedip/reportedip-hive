@@ -23,6 +23,20 @@
 
 namespace {
 
+	if ( ! function_exists( 'esc_attr_e' ) ) {
+		/**
+		 * Translation-echo double for the key-manager partial.
+		 *
+		 * @param string $text   Text.
+		 * @param string $domain Text domain.
+		 * @return void
+		 */
+		function esc_attr_e( $text, $domain = 'default' ) {
+			unset( $domain );
+			echo htmlspecialchars( (string) $text, ENT_QUOTES );
+		}
+	}
+
 	if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_Stub_For_WebAuthn_Mgmt' ) ) {
 		/**
 		 * Constants-only Two_Factor stub for loading the WebAuthn class.
@@ -277,6 +291,36 @@ namespace ReportedIP\Hive\Tests\Unit {
 				substr_count( $source, 'self::can_add_key( $user_id )' ),
 				'Both register endpoints (options + verify) must enforce the tier key limit, the UI hint alone is not a gate.'
 			);
+		}
+	
+		public function test_key_manager_flags_whether_a_key_can_be_added_and_offers_the_notes_slot(): void {
+			$seen = array();
+			add_action(
+				'reportedip_hive_webauthn_key_manager_notes',
+				static function ( $user_id ) use ( &$seen ) {
+					$seen[] = $user_id;
+				}
+			);
+
+			$render = function (): string {
+				$rip_webauthn_manager = array( 'user_id' => self::USER_ID );
+				ob_start();
+				include dirname( __DIR__, 2 ) . '/templates/partials/webauthn-key-manager.php';
+				return (string) ob_get_clean();
+			};
+
+			$empty = $render();
+			$this->assertStringContainsString( 'data-can-add="1"', $empty );
+			$this->assertStringNotContainsString( 'data-advanced', $empty );
+			$this->assertStringNotContainsString( 'rip-webauthn-upgrade-note', $empty, 'The free plugin renders no plan note.' );
+
+			update_user_meta(
+				self::USER_ID,
+				\ReportedIP_Hive_Two_Factor::META_WEBAUTHN_CREDENTIALS,
+				wp_json_encode( array( array( 'id' => 'abc' ) ) )
+			);
+			$this->assertStringContainsString( 'data-can-add="0"', $render() );
+			$this->assertSame( array( self::USER_ID, self::USER_ID ), $seen );
 		}
 	}
 }
