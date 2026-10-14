@@ -127,7 +127,7 @@ class ReportedIP_Hive_Tools_Page {
 		$mode     = ReportedIP_Hive_Mode_Manager::get_instance();
 		$rows     = array();
 
-		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $spec ) {
+		foreach ( ReportedIP_Hive_Form_Adapters::adapters() as $slug => $spec ) {
 			$status = $mode->feature_status( $spec['feature'] );
 
 			$rows[ $slug ] = array(
