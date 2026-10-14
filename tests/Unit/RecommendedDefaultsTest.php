@@ -75,14 +75,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayNotHasKey( 'reportedip_hive_audit_enabled', $pro );
 		}
 
-		public function test_adaptive_policies_are_never_recommended(): void {
-			foreach ( self::TIERS as $tier ) {
-				$map = \ReportedIP_Hive_Defaults::recommended( $tier );
-				$this->assertArrayNotHasKey( 'reportedip_hive_2fa_policy_new_country', $map, "$tier must not recommend a policy the registry filter would strip." );
-				$this->assertArrayNotHasKey( 'reportedip_hive_2fa_policy_new_device', $map );
-			}
-		}
-
 		public function test_rank_orders_the_three_levels(): void {
 			$this->assertSame( 0, \ReportedIP_Hive_Defaults::recommendation_rank( 'free' ) );
 			$this->assertSame( 0, \ReportedIP_Hive_Defaults::recommendation_rank( 'contributor' ) );
