@@ -92,26 +92,41 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_regex_entry_matches_and_reports_the_rule(): void {
-			$this->assertSame(
-				'/^admin\d+$/',
-				\ReportedIP_Hive_Registration_Guard::matches_any( 'admin42', array( '/^admin\d+$/' ) )
+		/**
+		 * The free plugin stores an entry between slashes but never runs it:
+		 * without a listener it matches nothing, a listener decides.
+		 */
+		public function test_slash_entry_is_not_evaluated_without_a_listener(): void {
+			$GLOBALS['wp_filters'] = array();
+			$this->assertNull( \ReportedIP_Hive_Registration_Guard::matches_any( 'admin42', array( '/^admin\d+$/' ) ) );
+			$this->assertNull( \ReportedIP_Hive_Registration_Guard::entry_pattern( '/^admin\d+$/' ) );
+
+			add_filter(
+				'reportedip_hive_registration_entry_matches',
+				static function ( $matched, $entry, $subject ) {
+					return '/^admin\d+$/' === $entry && 'admin42' === $subject;
+				},
+				10,
+				3
 			);
-			$this->assertNull( \ReportedIP_Hive_Registration_Guard::matches_any( 'admin', array( '/^admin\d+$/' ) ) );
+			try {
+				$this->assertSame( '/^admin\d+$/', \ReportedIP_Hive_Registration_Guard::matches_any( 'admin42', array( '/^admin\d+$/' ) ) );
+				$this->assertNull( \ReportedIP_Hive_Registration_Guard::matches_any( 'admin', array( '/^admin\d+$/' ) ) );
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+			}
 		}
 
-		public function test_regex_entries_are_case_insensitive(): void {
-			$this->assertSame(
-				'/^admin$/',
-				\ReportedIP_Hive_Registration_Guard::matches_any( 'ADMIN', array( '/^admin$/' ) )
-			);
-		}
+		/**
+		 * The guard carries no code that compiles or runs an operator pattern.
+		 */
+		public function test_guard_has_no_regular_expression_path(): void {
+			$source = $this->guard_source();
 
-		public function test_broken_regex_fails_open(): void {
-			$this->assertNull(
-				\ReportedIP_Hive_Registration_Guard::matches_any( 'anything', array( '/[/' ) ),
-				'an uncompilable rule must be inert, never fatal'
-			);
+			$this->assertStringNotContainsString( 'substr( $entry, 1, -1 )', $source );
+			$this->assertStringNotContainsString( 'compile_pattern(', str_replace( 'WAF::compile_pattern()', '', $source ) );
+			$this->assertStringNotContainsString( 'pattern_compiles', $source );
+			$this->assertSame( 1, substr_count( $source, 'ReportedIP_Hive_WAF::match_fragment(' ), 'only the wildcard branch runs a pattern' );
 		}
 
 		public function test_free_plan_keeps_the_first_ten_plain_entries(): void {
@@ -140,10 +155,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( "john doe\nadmin\nroot", $clean, 'WordPress logins may contain spaces' );
 		}
 
-		public function test_username_list_drops_uncompilable_regex_and_keeps_regex_case(): void {
-			$clean = \ReportedIP_Hive_Registration_Guard::sanitize_username_list( "/^AdMin\\d+$/\n/[/\nSupport" );
+		public function test_username_list_keeps_slash_entries_as_written(): void {
+			$GLOBALS['wp_filters'] = array();
+			$clean                 = \ReportedIP_Hive_Registration_Guard::sanitize_username_list( "/^AdMin\\d+$/\n/[/\nSupport" );
 
-			$this->assertSame( "/^AdMin\\d+$/\nsupport", $clean );
+			$this->assertSame( "/^AdMin\\d+$/\n/[/\nsupport", $clean, 'the free plugin stores the entry, validating it is up to a listener' );
 		}
 
 		public function test_email_list_normalises_bare_hosts_dedupes_and_lowercases(): void {

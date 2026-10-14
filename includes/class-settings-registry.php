@@ -610,7 +610,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'sanitize'    => array( 'ReportedIP_Hive_Registration_Guard', 'sanitize_username_list' ),
 				'remote'      => true,
 				'label'       => __( 'Prohibited usernames', 'reportedip-hive' ),
-				'description' => __( 'Names that may not be registered, one per line. An entry matches literally, or as a wildcard when it contains an asterisk. Only the first ten such entries are checked; an entry written between slashes is kept but not checked.', 'reportedip-hive' ),
+				'description' => __( 'Names that may not be registered, one per line, up to ten. An entry matches literally, or as a wildcard when it contains an asterisk. An entry written between slashes is stored but not checked.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_prohibited_usernames_baseline' => array(
 				'section'     => 'registration',
@@ -633,7 +633,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'sanitize'    => array( 'ReportedIP_Hive_Registration_Guard', 'sanitize_email_rule_list' ),
 				'remote'      => true,
 				'label'       => __( 'E-mail rules', 'reportedip-hive' ),
-				'description' => __( 'Address patterns, one per line. A bare host name is read as every address at that host. Only the first ten entries are checked, an entry written between slashes is kept but not checked. In the allow mode an address that only matches a later entry is turned away, and a list without a checked entry lets every address through.', 'reportedip-hive' ),
+				'description' => __( 'Address patterns, one per line, up to ten. A bare host name is read as every address at that host. An entry written between slashes is stored but not checked. In the allow mode only an address that matches a checked entry gets through, and a list without a checked entry lets every address through.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_registration_limit_enabled'   => array(
 				'section'     => 'registration',

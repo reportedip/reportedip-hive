@@ -2,9 +2,10 @@
 /**
  * Registration protection: prohibited usernames, e-mail allow/block rules, a
  * registration rate limit and the opt-in instant block for logins with a
- * non-existent username. An add-on adds its own checks (allowlist-only
- * registration) through `reportedip_hive_registration_validate` and lifts the
- * entry cap through `reportedip_hive_registration_rules_unlimited`.
+ * non-existent username. An add-on adds its own checks through
+ * `reportedip_hive_registration_validate`, can lift the entry cap through
+ * `reportedip_hive_registration_rules_unlimited` and decides how an entry
+ * between slashes matches through `reportedip_hive_registration_entry_matches`.
  *
  * This class owns every registration-time hook. The disposable-mail classifier
  * {@see ReportedIP_Hive_Disposable_Email} used to hook the same two surfaces
@@ -815,16 +816,16 @@ final class ReportedIP_Hive_Registration_Guard {
 	}
 
 	/**
-	 * Whether the rules run without the entry cap and with regular
-	 * expressions. Without a listener the first {@see FREE_MAX_ENTRIES} plain
-	 * entries of each list apply.
+	 * Whether the rules run without the entry cap. Without a listener the
+	 * first {@see FREE_MAX_ENTRIES} plain entries of each list apply.
 	 *
 	 * @return bool
 	 * @since  2.1.51
 	 */
 	private static function unlimited() {
 		/**
-		 * Lift the ten-entry cap and evaluate regular-expression entries.
+		 * Lift the ten-entry cap. Entries between slashes then reach
+		 * `reportedip_hive_registration_entry_matches` as well.
 		 *
 		 * @param bool $unlimited Default false.
 		 * @since 3.0.0
@@ -908,8 +909,8 @@ final class ReportedIP_Hive_Registration_Guard {
 	/**
 	 * The entries that are actually enforced: everything while the cap is
 	 * lifted, the first {@see FREE_MAX_ENTRIES} plain entries otherwise.
-	 * Regular expressions are dropped rather than treated as literals so a
-	 * downgrade cannot turn a pattern into a rule that matches nothing.
+	 * Entries between slashes are skipped rather than treated as literals,
+	 * they are stored as written and only an extension evaluates them.
 	 *
 	 * @param string $raw       Stored option value.
 	 * @param bool   $unlimited Whether the cap is lifted.
@@ -956,23 +957,19 @@ final class ReportedIP_Hive_Registration_Guard {
 	}
 
 	/**
-	 * The PCRE body an entry executes as, or null for a literal entry.
-	 * Case-insensitivity travels inline so the pattern keeps its meaning
-	 * through {@see ReportedIP_Hive_WAF::compile_pattern()}, which owns the
-	 * delimiter.
+	 * The PCRE body a wildcard entry executes as, or null for every other
+	 * entry. Case-insensitivity travels inline so the pattern keeps its
+	 * meaning through {@see ReportedIP_Hive_WAF::compile_pattern()}, which
+	 * owns the delimiter.
 	 *
 	 * @param string $entry List entry.
-	 * @return string|null PCRE body, or null when the entry is compared literally.
+	 * @return string|null PCRE body, or null when the entry is not a wildcard.
 	 * @since  2.1.51
 	 */
 	public static function entry_pattern( $entry ) {
 		$entry = (string) $entry;
-		$kind  = self::entry_kind( $entry );
 
-		if ( 'regex' === $kind ) {
-			return '(?i)' . substr( $entry, 1, -1 );
-		}
-		if ( 'wildcard' === $kind ) {
+		if ( 'wildcard' === self::entry_kind( $entry ) ) {
 			return '(?i)^' . str_replace( '\*', '.*', preg_quote( strtolower( $entry ) ) ) . '$'; // phpcs:ignore WordPress.PHP.PregQuoteDelimiter.Missing -- The delimiter is added by WAF::compile_pattern(), which escapes it itself; quoting it here too would double-escape.
 		}
 
@@ -996,18 +993,31 @@ final class ReportedIP_Hive_Registration_Guard {
 
 		foreach ( $entries as $entry ) {
 			$entry = (string) $entry;
-			if ( 'exact' === self::entry_kind( $entry ) ) {
+			$kind  = self::entry_kind( $entry );
+			if ( 'exact' === $kind ) {
 				if ( strtolower( $entry ) === $lowered ) {
 					return $entry;
 				}
 				continue;
 			}
 
-			$pattern = self::entry_pattern( $entry );
-			if ( null === $pattern ) {
+			if ( 'wildcard' === $kind ) {
+				if ( null !== ReportedIP_Hive_WAF::match_fragment( (string) self::entry_pattern( $entry ), $subject ) ) {
+					return $entry;
+				}
 				continue;
 			}
-			if ( null !== ReportedIP_Hive_WAF::match_fragment( $pattern, $subject ) ) {
+
+			/**
+			 * Decide whether an entry between slashes matches. The plugin
+			 * stores such an entry but does not evaluate it itself.
+			 *
+			 * @param bool|null $matched Null when no listener decided.
+			 * @param string    $entry   The entry as stored.
+			 * @param string    $subject Username or e-mail address.
+			 * @since 3.0.0
+			 */
+			if ( true === apply_filters( 'reportedip_hive_registration_entry_matches', null, $entry, $subject ) ) {
 				return $entry;
 			}
 		}
@@ -1057,10 +1067,10 @@ final class ReportedIP_Hive_Registration_Guard {
 	/**
 	 * Shared list sanitizer.
 	 *
-	 * Regular-expression entries bypass `sanitize_text_field()`: it strips
-	 * percent-encoded octets and angle brackets, which silently rewrites a
-	 * pattern before it is ever compiled. They are checked for valid UTF-8,
-	 * stripped of control characters and dropped when they do not compile.
+	 * Entries between slashes bypass `sanitize_text_field()`: it strips
+	 * percent-encoded octets and angle brackets, which silently rewrites the
+	 * entry. They are checked for valid UTF-8, stripped of control
+	 * characters and otherwise kept as written.
 	 *
 	 * @param mixed  $value           Raw textarea value.
 	 * @param string $separator       PCRE splitting entries inside one line.
@@ -1086,7 +1096,7 @@ final class ReportedIP_Hive_Registration_Guard {
 				}
 
 				if ( 'regex' === self::entry_kind( $part ) ) {
-					$part = self::sanitize_regex_entry( $part );
+					$part = self::sanitize_slash_entry( $part );
 				} else {
 					$part = strtolower( sanitize_text_field( $part ) );
 					if ( $normalise_hosts && '' !== $part && false === strpos( $part, '@' ) && false === strpos( $part, '*' ) ) {
@@ -1105,35 +1115,26 @@ final class ReportedIP_Hive_Registration_Guard {
 	}
 
 	/**
-	 * Validate one regular-expression entry, or drop it.
+	 * Clean one entry between slashes, or drop it.
 	 *
 	 * @param string $entry Raw `/.../` entry.
 	 * @return string The entry, or an empty string when it is unusable.
 	 * @since  2.1.51
 	 */
-	private static function sanitize_regex_entry( $entry ) {
+	private static function sanitize_slash_entry( $entry ) {
 		$entry = function_exists( 'wp_check_invalid_utf8' ) ? (string) wp_check_invalid_utf8( $entry ) : (string) $entry;
 		$entry = (string) preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $entry );
 		if ( 'regex' !== self::entry_kind( $entry ) ) {
 			return '';
 		}
 
-		return self::pattern_compiles( (string) self::entry_pattern( $entry ) ) ? $entry : '';
-	}
-
-	/**
-	 * Whether a PCRE body compiles. Uses the firewall's delimiter so the
-	 * check and the later execution agree on what the pattern is.
-	 *
-	 * @param string $pattern PCRE body.
-	 * @return bool
-	 * @since  2.1.51
-	 */
-	private static function pattern_compiles( $pattern ) {
-		if ( '' === $pattern ) {
-			return false;
-		}
-
-		return false !== @preg_match( ReportedIP_Hive_WAF::compile_pattern( $pattern ), '' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- An operator typo must be reported as a rejected entry, not as a PHP warning in the admin response.
+		/**
+		 * Validate an entry between slashes before it is stored. Return an
+		 * empty string to drop it.
+		 *
+		 * @param string $entry The cleaned entry.
+		 * @since 3.0.0
+		 */
+		return (string) apply_filters( 'reportedip_hive_registration_entry_sanitize', $entry );
 	}
 }
