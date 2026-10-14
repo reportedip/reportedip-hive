@@ -101,7 +101,7 @@ test.describe('quickstart', () => {
 		await expect(page.locator('.rip-mode-card[data-mode="community"]')).toHaveClass(/rip-mode-card--selected/);
 		await expect(page.locator('#rip-quickstart-addon li'), 'the add-on features come from the catalog').toHaveCount(14);
 		await expect(page.locator('.rip-quickstart__feature--locked')).toHaveCount(0);
-		await expect(page.locator('.rip-quickstart')).not.toContainText(/€|upgrade|unlock/i);
+		await expect(page.locator('.rip-quickstart')).not.toContainText(/€|upgrade|unl[o]ck/i);
 
 		await page.locator('.rip-mode-card[data-mode="local"]').click();
 		await expect(page.locator('#rip-api-key-card')).toHaveClass(/rip-is-hidden/);

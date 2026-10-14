@@ -62,7 +62,7 @@
     <!-- WordPress Configuration -->
     <!-- ============================================ -->
 
-    <config name="minimum_wp_version" value="5.0"/>
+    <config name="minimum_wp_version" value="5.9"/>
 
     <!-- Text domain for i18n -->
     <rule ref="WordPress.WP.I18n">

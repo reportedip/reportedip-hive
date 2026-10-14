@@ -3816,7 +3816,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<label class="rip-label" for="reportedip_hive_api_key"><?php esc_html_e( 'API Key', 'reportedip-hive' ); ?></label>
 					<input type="password" id="reportedip_hive_api_key" name="reportedip_hive_api_key" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ); ?>" class="rip-input" />
 					<p class="rip-help-text">
-						<?php esc_html_e( 'Your ReportedIP.de API key.', 'reportedip-hive' ); ?>
+						<?php esc_html_e( 'Your ReportedIP API key.', 'reportedip-hive' ); ?>
 						<a href="https://reportedip.com/dashboard/api-keys/?rc=hive-plugin" target="_blank"><?php esc_html_e( 'Get API Key', 'reportedip-hive' ); ?></a>
 					</p>
 				</div>
@@ -4777,8 +4777,8 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$tier = $this->get_tier_info( $user_role, $is_honeypot );
 
-		$daily_limit_display = $daily_limit < 0 ? __( 'Unbegrenzt', 'reportedip-hive' ) : number_format_i18n( $daily_limit );
-		$remaining_display   = $daily_limit < 0 ? __( 'Unbegrenzt', 'reportedip-hive' ) : number_format_i18n( $remaining_reports );
+		$daily_limit_display = $daily_limit < 0 ? __( 'Unlimited', 'reportedip-hive' ) : number_format_i18n( $daily_limit );
+		$remaining_display   = $daily_limit < 0 ? __( 'Unlimited', 'reportedip-hive' ) : number_format_i18n( $remaining_reports );
 
 		$queue_size    = (int) ( $queue_summary['total_pending'] ?? 0 );
 		$days_to_clear = $daily_limit > 0 ? (int) ceil( $queue_size / $daily_limit ) : null;

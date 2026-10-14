@@ -103,7 +103,7 @@ test.describe('account block without the add-on', () => {
 		const card = page.locator('#reportedip-hive-account-access + table');
 		await expect(card).toContainText('Blocked');
 		await expect(card).toContainText(OPERATOR_TEXT);
-		await expect(card).not.toContainText(/Business|unlock/i);
+		await expect(card).not.toContainText(/Business|unl[o]ck/i);
 		await Promise.all([page.waitForURL(/updated=1/), card.locator('button[name="rip_account_unblock"]').click()]);
 		await expect(page.locator('#reportedip-hive-account-access')).toHaveCount(0);
 

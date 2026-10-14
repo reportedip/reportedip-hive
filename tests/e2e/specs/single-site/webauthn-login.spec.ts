@@ -15,7 +15,7 @@ import { clearMailbox, getLatestResetLink } from '../../fixtures/reset-flow';
  *
  *   1. Enrolment through the onboarding wizard followed by the wp-login
  *      2FA interstitial assertion ceremony.
- *   2. The password-reset gate ceremony — the surface that shipped as a
+ *   2. The password-reset gate ceremony: the surface that shipped as a
  *      dead text input before 2.1.33 and locked passkey-only users out.
  *
  * Each spec is self-contained: the virtual authenticator lives inside the

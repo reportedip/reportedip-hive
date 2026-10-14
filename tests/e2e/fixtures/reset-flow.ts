@@ -16,7 +16,7 @@ import { workspaceRoot } from './workspace';
  *      from a previous run.
  *
  *   3. A way to read the freshly-arrived reset mail back out and pull the
- *      reset link. Mailpit's HTTP API is enough — no IMAP / SMTP plumbing.
+ *      reset link. Mailpit's HTTP API is enough, no IMAP / SMTP plumbing.
  *
  * All Docker calls assume the workspace's docker-compose project name
  * (`reportedip-hive` for single-site). When that changes, this file is
@@ -77,7 +77,7 @@ function execInWordpress(cmd: string): string {
 
 /**
  * Provision the deterministic 2FA + recovery-code baseline on the admin
- * user. Idempotent — call once per spec or once per beforeAll.
+ * user. Idempotent: call once per spec or once per beforeAll.
  *
  * Throws if the `wp eval-file` call fails for any reason; the spec then
  * fails fast with the underlying WP_CLI error message instead of running
@@ -132,7 +132,7 @@ export async function clearMailbox(): Promise<void> {
  *
  * @param expectedLogin User login the mail must be for (validates the
  *                       URL's `login=` query arg).
- * @param timeoutMs     Max wait in ms. Default 10s — generous for a
+ * @param timeoutMs     Max wait in ms. Default 10s, generous for a
  *                       local stack but short enough to fail fast.
  */
 export async function getLatestResetLink(

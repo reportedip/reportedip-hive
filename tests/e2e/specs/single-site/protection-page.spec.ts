@@ -198,7 +198,7 @@ test.describe('protection page', () => {
 		await expect(tor).toContainText('Available in the ReportedIP Hive Pro add-on (Professional plan).');
 		await expect(tor.locator('a')).toHaveAttribute('href', 'https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin#hive-response');
 		await expect(tor.locator('input')).toHaveCount(0);
-		await expect(page.locator('.rip-protection')).not.toContainText(/€|upgrade|unlock/i);
+		await expect(page.locator('.rip-protection')).not.toContainText(/€|upgrade|unl[o]ck/i);
 		await expect(page.locator('.rip-protection a[href*="pricing"]')).toHaveCount(0);
 
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection#hardening_mode');

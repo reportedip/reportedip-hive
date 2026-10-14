@@ -97,7 +97,7 @@ async function register(
  * `window.location.reload()` the moment the save answers, and the reload drops
  * the network resource before `response.json()` can fetch the body ("No
  * resource with given identifier found"). The verdict is therefore read where
- * it survives — the stored option, and the alert the page raises on refusal.
+ * it survives: the stored option, and the alert the page raises on refusal.
  */
 function registrySave(page: Page): Promise<Response> {
 	return page.waitForResponse(

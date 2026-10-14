@@ -76,7 +76,7 @@ async function saveSection(page: Page, id: string): Promise<void> {
 	await page.waitForURL(new RegExp(`page=reportedip-hive-protection.*tab=${TAB[id]}`));
 }
 
-test.describe('settings standard — every option has a working form', () => {
+test.describe('settings standard: every option has a working form', () => {
 	test.beforeAll(() => {
 		wp('user meta update admin reportedip_hive_expert_mode 1');
 		try {

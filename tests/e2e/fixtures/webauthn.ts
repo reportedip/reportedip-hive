@@ -7,8 +7,8 @@ import { workspaceRoot } from './workspace';
  *
  * The specs drive the real registration + assertion ceremonies through the
  * Chromium DevTools virtual authenticator (CDP `WebAuthn` domain), which
- * behaves like a CTAP2 USB security key with automatic presence simulation
- * — the closest an automated test can get to a YubiKey tap.
+ * behaves like a CTAP2 USB security key with automatic presence simulation:
+ * the closest an automated test can get to a YubiKey tap.
  *
  * The PHP baseline lives in `webauthn-setup.php` / `webauthn-teardown.php`
  * and is executed inside the WordPress container via `wp eval-file`, same
@@ -22,7 +22,7 @@ export const WEBAUTHN_PASS = 'E2eWebauthnPass!42';
  * Run a `docker compose exec` command against a stack's WordPress
  * container. The compose file and its service name are parameters (not
  * env vars) because the single-site and multisite specs live in one
- * Playwright run directory but target different stacks — single-site
+ * Playwright run directory but target different stacks. Single-site
  * names the service `wordpress`, multisite names it `wordpress-ms`.
  */
 function execInWordpress(composeFile: string, service: string, cmd: string): string {
@@ -76,7 +76,7 @@ export function teardownWebauthnBaseline(composeFile = 'docker-compose.yml', ser
  * as if the user touched the key immediately.
  *
  * Returns the session plus the authenticator id so callers can remove or
- * swap authenticators mid-test (e.g. simulate a second, separate key —
+ * swap authenticators mid-test (e.g. simulate a second, separate key;
  * two authenticators attached at once race on excludeCredentials).
  */
 export async function attachVirtualAuthenticator(
@@ -101,7 +101,7 @@ export async function attachVirtualAuthenticator(
 /**
  * Log in as the webauthn test user via wp-login.php. Ends on either
  * wp-admin (no 2FA yet) or the 2FA challenge interstitial (once a
- * credential is enrolled) — the caller asserts which.
+ * credential is enrolled); the caller asserts which.
  */
 export async function submitLoginForm(page: Page): Promise<void> {
     await page.goto('/wp-login.php');

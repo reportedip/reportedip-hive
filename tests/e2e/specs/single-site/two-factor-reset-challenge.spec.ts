@@ -20,7 +20,7 @@ import {
  * them.
  *
  * Each spec runs in series (test.describe.serial) because they share the
- * Mailpit inbox and the reset-key-bound transient on the user record —
+ * Mailpit inbox and the reset-key-bound transient on the user record;
  * fully parallel execution would let two reset attempts race for the
  * same key.
  */
@@ -37,7 +37,7 @@ test.describe.serial('password-reset 2FA challenge', () => {
     /**
      * Walks from the lostpassword form through to the challenge page,
      * returns the page sitting on the challenge with a fresh reset link
-     * already loaded. Used by every spec below — extracted so a single
+     * already loaded. Used by every spec below, extracted so a single
      * change to the routing keeps all specs in sync.
      */
     async function navigateToChallenge(page: import('@playwright/test').Page): Promise<void> {

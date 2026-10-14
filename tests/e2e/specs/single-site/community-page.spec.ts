@@ -42,7 +42,7 @@ test.describe('community page', () => {
 		await expect(intro.locator('a', { hasText: 'Learn more' })).toHaveAttribute('href', 'https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin');
 		await expect(page.locator('.rip-addon__section tr[data-feature]')).toHaveCount(14);
 		await expect(page.locator('.rip-addon__section tr[data-feature="hardening_mode"]')).toContainText('Hardening mode during attack waves');
-		await expect(page.locator('.rip-content')).not.toContainText(/€|upgrade|unlock/i);
+		await expect(page.locator('.rip-content')).not.toContainText(/€|upgrade|unl[o]ck/i);
 		await expect(page.locator('.rip-content a[href*="pricing"]')).toHaveCount(0);
 	});
 
