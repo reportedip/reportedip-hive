@@ -7,10 +7,11 @@
  * persisting after each successful step. Re-entry is safe, every step
  * checks for already-applied state before touching the schema.
  *
- * Concurrency: `acquire_lock()` uses `add_site_option()` which is atomic on
- * Multisite (sitemeta `meta_key` is UNIQUE) and on single-site
- * (`wp_options.option_name` is UNIQUE). Stale locks expire after `LOCK_TTL`
- * seconds.
+ * Concurrency: `acquire_lock()` takes a row in the main site's options
+ * table with `INSERT IGNORE` ({@see take_lock()}); `option_name` is UNIQUE
+ * there, so exactly one request wins. `add_site_option()` is not atomic on
+ * Multisite (sitemeta has no unique key). Stale locks expire after
+ * `LOCK_TTL` seconds.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -95,24 +96,11 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Atomically acquire the migration lock.
 	 *
-	 * Uses `add_site_option()` which fails (returns false) when the option
-	 * already exists. A stale lock older than LOCK_TTL is force-released
-	 * before the second attempt so a crashed migration does not block
-	 * future updates indefinitely.
-	 *
 	 * @return bool True if the lock was acquired, false otherwise.
 	 * @since  2.0.0
 	 */
 	private static function acquire_lock() {
-		$existing = get_site_option( self::LOCK_OPTION, 0 );
-		if ( $existing ) {
-			$age = time() - (int) $existing;
-			if ( $age < self::LOCK_TTL ) {
-				return false;
-			}
-			delete_site_option( self::LOCK_OPTION );
-		}
-		return (bool) add_site_option( self::LOCK_OPTION, time() );
+		return self::take_lock( self::LOCK_OPTION, self::LOCK_TTL );
 	}
 
 	/**
@@ -122,7 +110,62 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * @since  2.0.0
 	 */
 	private static function release_lock() {
-		delete_site_option( self::LOCK_OPTION );
+		self::drop_lock( self::LOCK_OPTION );
+	}
+
+	/**
+	 * Take a network-wide mutex, or report that another request holds it.
+	 *
+	 * The lock is a row in the main site's options table, inserted with
+	 * `INSERT IGNORE`: `option_name` is UNIQUE, so of two parallel requests
+	 * exactly one inserts it. A lock older than `$ttl` seconds is taken
+	 * over, so a crashed holder does not block forever. Without a real
+	 * database handle (unit test doubles) the option API stands in.
+	 *
+	 * @param string $name Lock name, an option name.
+	 * @param int    $ttl  Seconds after which a held lock counts as stale.
+	 * @return bool True when this request holds the lock now.
+	 * @since  3.0.0
+	 */
+	public static function take_lock( $name, $ttl ) {
+		global $wpdb;
+		if ( ! ( $wpdb instanceof wpdb ) ) {
+			$held = (int) get_site_option( $name, 0 );
+			if ( $held > 0 ) {
+				if ( time() - $held < $ttl ) {
+					return false;
+				}
+				delete_site_option( $name );
+			}
+			return (bool) add_site_option( $name, time() );
+		}
+
+		$table = $wpdb->base_prefix . 'options';
+		$held  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$table} WHERE option_name = %s", $name ) );
+		if ( $held > 0 ) {
+			if ( time() - $held < (int) $ttl ) {
+				return false;
+			}
+			$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE option_name = %s AND option_value = %s", $name, (string) $held ) );
+		}
+		return 1 === (int) $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$table} (option_name, option_value, autoload) VALUES (%s, %s, 'no')", $name, (string) time() ) );
+	}
+
+	/**
+	 * Release a mutex taken with {@see take_lock()}.
+	 *
+	 * @param string $name Lock name.
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function drop_lock( $name ) {
+		global $wpdb;
+		if ( ! ( $wpdb instanceof wpdb ) ) {
+			delete_site_option( $name );
+			return;
+		}
+		$table = $wpdb->base_prefix . 'options';
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE option_name = %s", $name ) );
 	}
 
 	/**
