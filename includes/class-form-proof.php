@@ -149,38 +149,6 @@ class ReportedIP_Hive_Form_Proof {
 	const ADAPTER_GRACE_MAX = 2592000;
 
 	/**
-	 * Whether the proof field must carry a solved computation.
-	 */
-	const OPT_POW = 'reportedip_hive_form_proof_pow';
-
-	/**
-	 * Unix time the computation was switched on, 0 while it is off.
-	 */
-	const OPT_POW_SINCE = 'reportedip_hive_form_proof_pow_since';
-
-	/**
-	 * Plugin version the computation was last armed for. A version change
-	 * restarts the grace, because a page cache filled by the previous version
-	 * still carries the previous markup and its readers must not be refused.
-	 */
-	const OPT_POW_VERSION = 'reportedip_hive_form_proof_pow_version';
-
-	/**
-	 * First version whose markup and script speak the current challenge
-	 * protocol. Only an update across this line restarts the grace: a page
-	 * cached by 2.1.64 or later loads today's script and fetches a task like
-	 * any fresh page, so a grace on every release would only reopen the plain
-	 * marker for a day each time.
-	 */
-	const CHALLENGE_PROTOCOL = '2.1.64';
-
-	/**
-	 * Grace after switching the computation on, during which a page served
-	 * from a cache filled beforehand still passes on the plain marker.
-	 */
-	const POW_GRACE = 86400;
-
-	/**
 	 * Seconds a form has to be on screen before the submission stops reading
 	 * as automatic.
 	 *
@@ -286,55 +254,7 @@ class ReportedIP_Hive_Form_Proof {
 			}
 		);
 		add_action( 'lostpassword_post', array( $this, 'check_lostpassword' ), 10, 1 );
-		add_action( 'init', array( $this, 'restamp_after_update' ), 5 );
 		add_filter( 'script_loader_tag', array( __CLASS__, 'script_tag' ), 10, 2 );
-	}
-
-	/**
-	 * Restart the grace when an update crosses the challenge protocol while
-	 * the computation is on.
-	 *
-	 * A page cache filled before the protocol still carries markup the current
-	 * script cannot answer, and a browser reading it must not be refused for
-	 * the lifetime of that cache. The marker keeps passing for a day, the
-	 * cache is purged, and no visitor loses a message over an update. Any
-	 * other update only records the version.
-	 *
-	 * @since 2.1.64
-	 */
-	public function restamp_after_update() {
-		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_POW, false ) ) {
-			return;
-		}
-
-		$seen = (string) ReportedIP_Hive_Option_Routing::get( self::OPT_POW_VERSION, '' );
-
-		if ( REPORTEDIP_HIVE_VERSION === $seen ) {
-			return;
-		}
-
-		ReportedIP_Hive_Option_Routing::set( self::OPT_POW_VERSION, REPORTEDIP_HIVE_VERSION );
-
-		if ( ! self::restamp_needed( $seen ) ) {
-			return;
-		}
-
-		ReportedIP_Hive_Option_Routing::set( self::OPT_POW_SINCE, time() );
-		self::purge_pages();
-	}
-
-	/**
-	 * Whether an update from a recorded version needs a fresh grace. Pure.
-	 *
-	 * @param string $seen Version the computation was last armed for, empty
-	 *                     when none was recorded.
-	 * @return bool
-	 * @since  2.1.69
-	 */
-	public static function restamp_needed( $seen ) {
-		$seen = (string) $seen;
-
-		return '' === $seen || version_compare( $seen, self::CHALLENGE_PROTOCOL, '<' );
 	}
 
 	/**
@@ -444,99 +364,6 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
-	 * Whether the plan covers the computation. It is pure local arithmetic and
-	 * makes no request, so it is available in Local Shield too.
-	 *
-	 * @return bool
-	 * @since  2.1.58
-	 */
-	public function pow_available() {
-		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			return false;
-		}
-
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'form_proof_pow' );
-
-		return ! empty( $status['available'] );
-	}
-
-	/**
-	 * Whether a challenge is handed out. A site reached over plain HTTP is left
-	 * alone: `crypto.subtle` only exists in a secure context, so the browser
-	 * could not answer and every visitor would look like a script.
-	 *
-	 * @return bool
-	 * @since  2.1.58
-	 */
-	public function pow_enabled() {
-		return $this->is_enabled()
-			&& (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_POW, false )
-			&& $this->pow_available();
-	}
-
-	/**
-	 * Whether the visitor reaches this site over a secure connection.
-	 *
-	 * `is_ssl()` describes the connection that reached PHP, which is plain HTTP
-	 * on every site whose TLS ends at a proxy or CDN. Reading it alone would
-	 * switch the check off on a large share of perfectly secure sites without
-	 * saying so, and a protection that quietly does nothing is worse than one
-	 * that is plainly off. The configured home address is the operator's own
-	 * statement about how visitors arrive and survives any number of proxies.
-	 *
-	 * @return bool
-	 * @since  2.1.58
-	 */
-	public static function connection_is_secure() {
-		return is_ssl() || 0 === strpos( (string) home_url(), 'https://' );
-	}
-
-	/**
-	 * Whether a solution is demanded rather than merely offered.
-	 *
-	 * During the grace after switching on, a challenge is already planted but
-	 * the plain marker still passes, so a page cache filled before the switch
-	 * cannot turn every reader into a suspect.
-	 *
-	 * @return bool
-	 * @since  2.1.58
-	 */
-	public function pow_required() {
-		if ( ! $this->pow_enabled() ) {
-			return false;
-		}
-
-		$since = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_POW_SINCE, 0 );
-
-		return $since > 0 && ( time() - $since ) >= self::POW_GRACE;
-	}
-
-	/**
-	 * Start or clear the grace, called from the option side-effect dispatcher
-	 * whenever {@see OPT_POW} is written by any channel.
-	 *
-	 * @return void
-	 * @since  2.1.58
-	 */
-	public static function stamp_pow_since() {
-		$on    = (bool) ReportedIP_Hive_Option_Routing::get( self::OPT_POW, false );
-		$since = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_POW_SINCE, 0 );
-
-		if ( ! $on ) {
-			if ( 0 !== $since ) {
-				ReportedIP_Hive_Option_Routing::set( self::OPT_POW_SINCE, 0 );
-			}
-
-			return;
-		}
-
-		if ( 0 === $since ) {
-			ReportedIP_Hive_Option_Routing::set( self::OPT_POW_SINCE, time() );
-			self::purge_pages();
-		}
-	}
-
-	/**
 	 * Purge the page caches when the whole layer is switched on, called from the
 	 * option side-effect dispatcher whenever {@see OPT_ENABLED} is written.
 	 *
@@ -566,8 +393,25 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
+	 * The adapter switches the grace stamp watches: the bundled ones plus
+	 * whatever an add-on registers.
+	 *
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function adapter_options() {
+		/**
+		 * Filters the option names of the form adapter switches.
+		 *
+		 * @param string[] $options Option names.
+		 * @since 3.0.0
+		 */
+		return (array) apply_filters( 'reportedip_hive_form_proof_adapter_options', self::ADAPTER_OPTIONS );
+	}
+
+	/**
 	 * Start or clear the adapter grace, called from the option side-effect
-	 * dispatcher whenever one of {@see ADAPTER_OPTIONS} is written.
+	 * dispatcher whenever one of {@see adapter_options()} is written.
 	 *
 	 * @return void
 	 * @since  2.1.58
@@ -575,7 +419,7 @@ class ReportedIP_Hive_Form_Proof {
 	public static function stamp_adapters_since() {
 		$on = false;
 
-		foreach ( self::ADAPTER_OPTIONS as $option ) {
+		foreach ( self::adapter_options() as $option ) {
 			if ( ReportedIP_Hive_Option_Routing::get( $option, false ) ) {
 				$on = true;
 				break;
@@ -686,37 +530,6 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
-	 * How many leading zero bits a raw digest carries.
-	 *
-	 * @param string $digest Raw binary digest.
-	 * @return int
-	 * @since  2.1.58
-	 */
-	public static function leading_zero_bits( $digest ) {
-		$digest = (string) $digest;
-		$length = strlen( $digest );
-		$bits   = 0;
-
-		for ( $i = 0; $i < $length; $i++ ) {
-			$byte = ord( $digest[ $i ] );
-
-			if ( 0 === $byte ) {
-				$bits += 8;
-				continue;
-			}
-
-			while ( $byte < 128 ) {
-				++$bits;
-				$byte <<= 1;
-			}
-
-			break;
-		}
-
-		return $bits;
-	}
-
-	/**
 	 * The per-install proof field name, generating and persisting one on first
 	 * use.
 	 *
@@ -752,9 +565,17 @@ class ReportedIP_Hive_Form_Proof {
 			return;
 		}
 
+		/**
+		 * Swap the proof script, e.g. for one that works out a task.
+		 *
+		 * @param string $src Script URL.
+		 * @since 3.0.0
+		 */
+		$src = (string) apply_filters( 'reportedip_hive_form_proof_script_src', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/form-proof.js' );
+
 		wp_register_script(
 			'reportedip-hive-form-proof',
-			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/form-proof.js',
+			$src,
 			array(),
 			REPORTEDIP_HIVE_VERSION,
 			true
@@ -788,17 +609,23 @@ class ReportedIP_Hive_Form_Proof {
 			$this->note_render();
 		}
 
-		$endpoint = '';
-
-		if ( $this->pow_enabled() && class_exists( 'ReportedIP_Hive_Form_Challenge' ) ) {
-			$endpoint = rest_url( ReportedIP_Hive_Form_Challenge::NAMESPACE_STR . ReportedIP_Hive_Form_Challenge::ROUTE );
-		}
+		/**
+		 * Extend the anchor attributes, e.g. with a task endpoint.
+		 *
+		 * Nothing request-specific may go in here: the markup lands in page
+		 * caches and is served to every visitor.
+		 *
+		 * @param array<string, string> $attributes Attribute name (`data-` prefixed) to value.
+		 * @param string                $surface    Form surface.
+		 * @since 3.0.0
+		 */
+		$attributes = (array) apply_filters( 'reportedip_hive_form_proof_anchor_attributes', array(), $surface );
 
 		return self::anchor_markup(
 			$this->decoy_name( $surface ),
 			$this->proof_name( $surface ),
 			esc_html__( 'Leave this field empty', 'reportedip-hive' ),
-			$endpoint
+			$attributes
 		);
 	}
 
@@ -816,31 +643,36 @@ class ReportedIP_Hive_Form_Proof {
 	 * identifier would fix the markup and break the cache, so the association
 	 * runs through the nesting instead.
 	 *
-	 * With the computation on, `data-e` names the endpoint the script fetches
-	 * its task from. The address is the same for every visitor, so the markup
-	 * stays byte-identical and a page cache keeps working; the visitor's own
-	 * task never touches the page. Without one the output is unchanged.
+	 * Further `data-` attributes follow `data-n`, in the order given. An add-on
+	 * names a task endpoint this way. Every visitor gets the same value, so the
+	 * markup stays byte-identical and a page cache keeps working. A name that
+	 * is not a `data-` attribute is dropped. Without any the output is
+	 * unchanged.
 	 *
-	 * @param string $decoy    Anchor field name.
-	 * @param string $proof    Proof field name.
-	 * @param string $label    Visually hidden label text.
-	 * @param string $endpoint Challenge endpoint URL, empty for none.
+	 * @param string                $decoy      Anchor field name.
+	 * @param string                $proof      Proof field name.
+	 * @param string                $label      Visually hidden label text.
+	 * @param array<string, string> $attributes Further attributes, name to value.
 	 * @return string
 	 * @since  2.1.53
 	 */
-	public static function anchor_markup( $decoy, $proof, $label, $endpoint = '' ) {
-		$decoy     = esc_attr( (string) $decoy );
-		$challenge = '';
+	public static function anchor_markup( $decoy, $proof, $label, $attributes = array() ) {
+		$decoy = esc_attr( (string) $decoy );
+		$extra = '';
 
-		if ( '' !== (string) $endpoint ) {
-			$challenge = ' data-e="' . esc_url( (string) $endpoint ) . '"';
+		foreach ( (array) $attributes as $name => $value ) {
+			if ( ! preg_match( '/^data-[a-z][a-z0-9-]*$/', (string) $name ) || ! is_scalar( $value ) ) {
+				continue;
+			}
+
+			$extra .= ' ' . $name . '="' . esc_attr( (string) $value ) . '"';
 		}
 
 		return '<div class="rip-hp-field" aria-hidden="true">'
 			. '<label>' . esc_html( (string) $label )
 			. '<input type="text" name="' . $decoy . '" value=""'
 			. ' class="rip-fp-anchor" data-n="' . esc_attr( (string) $proof ) . '"'
-			. $challenge
+			. $extra
 			. ' tabindex="-1" autocomplete="off" /></label></div>';
 	}
 
@@ -874,7 +706,7 @@ class ReportedIP_Hive_Form_Proof {
 				'value'        => true,
 				'class'        => true,
 				'data-n'       => true,
-				'data-e'       => true,
+				'data-*'       => true,
 				'tabindex'     => true,
 				'autocomplete' => true,
 			),
@@ -1003,11 +835,10 @@ class ReportedIP_Hive_Form_Proof {
 	/**
 	 * Verdict for the current request on a surface we own.
 	 *
-	 * This is the one place the computation is checked, so every surface
-	 * inherits the same reading and, through {@see consequence()}, the same
-	 * consequence. A field filled with anything other than a solved challenge
-	 * reads as `failed`, which is what closes the copy-the-field-name
-	 * shortcut.
+	 * This is the one place a verdict is reached, so every surface inherits
+	 * the same reading and, through {@see consequence()}, the same
+	 * consequence. An add-on that demands more of the proof field revises the
+	 * verdict here, for every surface at once.
 	 *
 	 * @param string $surface Surface identifier.
 	 * @return string One of the four verdict constants.
@@ -1069,24 +900,38 @@ class ReportedIP_Hive_Form_Proof {
 
 		$verdict = self::evaluate( $post, $field, $this->decoy_name( $surface ) );
 
-		if ( self::PROVED !== $verdict || ! $this->pow_required() ) {
-			return $verdict;
+		/**
+		 * Revise a structural verdict, e.g. by judging a computation.
+		 *
+		 * Only `proved` should ever be revoked, see {@see resolve()}.
+		 *
+		 * @param string               $verdict Structural verdict (tripped, proved, failed, absent).
+		 * @param string               $surface Form surface.
+		 * @param array<string, mixed> $post    Submitted fields, the measured duration split off.
+		 * @param string               $field   Proof field name.
+		 * @since 3.0.0
+		 */
+		$revised = (string) apply_filters( 'reportedip_hive_form_proof_verdict', $verdict, $surface, $post, $field );
+
+		if ( $revised !== $verdict ) {
+			/**
+			 * Name why a verdict was revised, for the log row.
+			 *
+			 * @param string $reason  Reason word, empty for none.
+			 * @param string $surface Form surface.
+			 * @since 3.0.0
+			 */
+			$reason       = (string) apply_filters( 'reportedip_hive_form_proof_verdict_reason', '', $surface );
+			$this->reason = '' === $reason ? null : $reason;
 		}
 
-		$result = ReportedIP_Hive_Form_Challenge::judge( (string) $post[ $field ] );
-
-		if ( 'ok' === $result ) {
-			return self::PROVED;
-		}
-
-		$this->reason = $result;
-
-		return self::FAILED;
+		return $revised;
 	}
 
 	/**
-	 * Fold the computation result into a structural verdict. Pure, because this
-	 * is the whole rule and it is worth pinning down on its own.
+	 * Fold the result of a computation into a structural verdict. Pure,
+	 * because this is the whole rule an add-on that revises a verdict has to
+	 * keep, and it is worth pinning down on its own.
 	 *
 	 * Only `proved` can be revoked. A filled decoy stays `tripped` no matter how
 	 * well the sender computed, and a submission that never carried our anchor

@@ -17,6 +17,42 @@
  */
 
 namespace {
+	if ( ! function_exists( 'wp_register_script' ) ) {
+		function wp_register_script( ...$args ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'wp_register_style' ) ) {
+		function wp_register_style( ...$args ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'wp_add_inline_style' ) ) {
+		function wp_add_inline_style( ...$args ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'wp_enqueue_script' ) ) {
+		function wp_enqueue_script( ...$args ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'wp_enqueue_style' ) ) {
+		function wp_enqueue_style( ...$args ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'wp_script_is' ) ) {
+		function wp_script_is( $handle, $status = 'enqueued' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+			return false;
+		}
+	}
+
 	if ( ! function_exists( 'wp_salt' ) ) {
 		function wp_salt( $scheme = 'auth' ) {
 			return 'unit-test-salt-' . $scheme;
@@ -35,6 +71,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 	use ReportedIP\Hive\Tests\TestCase;
 
 	require_once dirname( __DIR__, 2 ) . '/includes/class-form-proof.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-comment-honeypot.php';
 
 	/**
 	 * @covers \ReportedIP_Hive_Form_Proof
@@ -268,32 +305,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 		/**
-		 * @dataProvider leading_zero_bit_cases
-		 *
-		 * @param string $hex      Digest as hex.
-		 * @param int    $expected Expected leading zero bits.
-		 */
-		public function test_leading_zero_bits_counts_the_digest( string $hex, int $expected ): void {
-			$this->assertSame( $expected, \ReportedIP_Hive_Form_Proof::leading_zero_bits( hex2bin( $hex ) ) );
-		}
-
-		/**
-		 * @return array<string, array{0:string, 1:int}>
-		 */
-		public static function leading_zero_bit_cases(): array {
-			return array(
-				'first bit set'    => array( 'ff', 0 ),
-				'one zero bit'     => array( '7f', 1 ),
-				'four zero bits'   => array( '0f', 4 ),
-				'seven zero bits'  => array( '01', 7 ),
-				'one empty byte'   => array( '00ff', 8 ),
-				'twelve zero bits' => array( '000f', 12 ),
-				'two empty bytes'  => array( '0000ff', 16 ),
-				'all zero'         => array( '0000', 16 ),
-			);
-		}
-
-		/**
 		 * The shortcut this whole feature exists to close: the proof field name
 		 * is readable in the page, so a script can post it back and look like a
 		 * browser. With the computation demanded, a value that solves nothing is
@@ -346,11 +357,120 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_the_challenge_endpoint_reaches_the_markup(): void {
-			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'x', 'https://example.test/wp-json/reportedip-hive/v1/form/challenge' );
+		public function test_further_data_attributes_follow_the_proof_name(): void {
+			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup(
+				self::DECOY,
+				self::PROOF,
+				'x',
+				array(
+					'data-e'  => 'https://example.test/wp-json/x?a=1&b="2"',
+					'onclick' => 'alert(1)',
+					'data-X'  => 'upper case is no data attribute',
+				)
+			);
 
-			$this->assertStringContainsString( 'data-e="https://example.test/wp-json/reportedip-hive/v1/form/challenge"', $markup );
-			$this->assertStringNotContainsString( 'data-s', $markup );
+			$this->assertStringContainsString( 'data-n="' . self::PROOF . '" data-e="https://example.test/wp-json/x?a=1&amp;b=&quot;2&quot;" tabindex', $markup );
+			$this->assertStringNotContainsString( 'onclick', $markup );
+			$this->assertStringNotContainsString( 'data-X', $markup );
+		}
+
+		/**
+		 * The verdict filter can revoke a `proved` verdict, and the reason a
+		 * listener names reaches the log row.
+		 */
+		public function test_a_listener_can_revise_the_verdict_and_name_why(): void {
+			$GLOBALS['wp_filters'] = array();
+			$proof                 = \ReportedIP_Hive_Form_Proof::get_instance();
+			$field                 = $proof->proof_name( 'comment' );
+			$_POST                 = array(
+				$proof->decoy_name( 'comment' ) => '',
+				$field                          => '1~5',
+			);
+			$seen = array();
+			add_filter(
+				'reportedip_hive_form_proof_verdict',
+				static function ( $verdict, $surface, $post, $name ) use ( &$seen ) {
+					$seen = array( $verdict, $surface, $post[ $name ] );
+					return \ReportedIP_Hive_Form_Proof::FAILED;
+				},
+				10,
+				4
+			);
+			add_filter(
+				'reportedip_hive_form_proof_verdict_reason',
+				static function () {
+					return 'marker';
+				}
+			);
+
+			try {
+				$this->assertSame( \ReportedIP_Hive_Form_Proof::FAILED, $proof->verdict_for_request( 'comment' ) );
+			} finally {
+				$_POST                 = array();
+				$GLOBALS['wp_filters'] = array();
+			}
+
+			$this->assertSame( array( \ReportedIP_Hive_Form_Proof::PROVED, 'comment', '1' ), $seen, 'the listener sees the proof without the measured seconds' );
+			$reason = new \ReflectionProperty( \ReportedIP_Hive_Form_Proof::class, 'reason' );
+			$this->assertSame( 'marker', $reason->getValue( $proof ) );
+			$this->assertSame( 5, $proof->last_seconds() );
+		}
+
+		public function test_without_a_listener_the_marker_proves(): void {
+			$GLOBALS['wp_filters'] = array();
+			$proof                 = \ReportedIP_Hive_Form_Proof::get_instance();
+			$_POST                 = array(
+				$proof->decoy_name( 'comment' ) => '',
+				$proof->proof_name( 'comment' ) => '1',
+			);
+
+			try {
+				$this->assertSame( \ReportedIP_Hive_Form_Proof::PROVED, $proof->verdict_for_request( 'comment' ) );
+			} finally {
+				$_POST = array();
+			}
+		}
+
+		public function test_anchor_attributes_from_a_listener_reach_the_rendered_anchor(): void {
+			$GLOBALS['wp_filters'] = array();
+			$proof                 = \ReportedIP_Hive_Form_Proof::get_instance();
+
+			$this->assertStringNotContainsString( 'data-e', $proof->anchor_html( 'register' ) );
+
+			add_filter(
+				'reportedip_hive_form_proof_anchor_attributes',
+				static function ( $attributes, $surface ) {
+					$attributes['data-e'] = 'https://example.test/task/' . $surface;
+					return $attributes;
+				},
+				10,
+				2
+			);
+
+			try {
+				$this->assertStringContainsString( 'data-e="https://example.test/task/register"', $proof->anchor_html( 'register' ) );
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+			}
+		}
+
+		public function test_adapter_options_take_registered_switches(): void {
+			$GLOBALS['wp_filters'] = array();
+			$this->assertSame( \ReportedIP_Hive_Form_Proof::ADAPTER_OPTIONS, \ReportedIP_Hive_Form_Proof::adapter_options() );
+
+			add_filter(
+				'reportedip_hive_form_proof_adapter_options',
+				static function ( $options ) {
+					$options[] = 'reportedip_hive_form_proof_demo';
+					return $options;
+				}
+			);
+
+			try {
+				$this->assertContains( 'reportedip_hive_form_proof_demo', \ReportedIP_Hive_Form_Proof::adapter_options() );
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+			}
 		}
 
 		/**
@@ -364,14 +484,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * A forgotten allowlist entry would strip the challenge back out again
-		 * in `print_anchor()`, leaving a feature that silently does nothing.
+		 * A forgotten allowlist entry would strip a listener's attributes back
+		 * out again in `print_anchor()`, leaving a feature that silently does
+		 * nothing.
 		 */
-		public function test_the_allowlist_admits_the_challenge_attributes(): void {
+		public function test_the_allowlist_admits_data_attributes(): void {
 			$allowed = \ReportedIP_Hive_Form_Proof::anchor_kses();
 
-			$this->assertArrayHasKey( 'data-e', $allowed['input'] );
-			$this->assertArrayNotHasKey( 'data-s', $allowed['input'] );
+			$this->assertArrayHasKey( 'data-n', $allowed['input'] );
+			$this->assertArrayHasKey( 'data-*', $allowed['input'] );
 		}
 
 		/**
@@ -570,14 +691,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( \ReportedIP_Hive_Form_Proof::forged_agent( 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like "Gecko")' ) );
 			$this->assertFalse( \ReportedIP_Hive_Form_Proof::forged_agent( '' ) );
 			$this->assertFalse( \ReportedIP_Hive_Form_Proof::forged_agent( array( '"x' ) ) );
-		}
-
-		/** Every release reopened the plain marker for a day; only the protocol change may. */
-		public function test_only_an_update_across_the_protocol_restarts_the_grace(): void {
-			$this->assertTrue( \ReportedIP_Hive_Form_Proof::restamp_needed( '' ) );
-			$this->assertTrue( \ReportedIP_Hive_Form_Proof::restamp_needed( '2.1.63' ) );
-			$this->assertFalse( \ReportedIP_Hive_Form_Proof::restamp_needed( \ReportedIP_Hive_Form_Proof::CHALLENGE_PROTOCOL ) );
-			$this->assertFalse( \ReportedIP_Hive_Form_Proof::restamp_needed( '2.1.67' ) );
 		}
 	}
 }
