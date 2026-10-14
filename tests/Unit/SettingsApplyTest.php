@@ -376,7 +376,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 0, $result['applied'] );
 		}
 
-		public function test_paranoia_level_one_passes_gate_but_two_is_skipped() {
+		public function test_every_paranoia_level_is_writable_on_the_free_plan() {
 			$GLOBALS['wp_options']['reportedip_hive_waf_paranoia'] = 2;
 
 			$result = \ReportedIP_Hive_Settings_Apply::apply(
@@ -389,7 +389,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 				array( 'reportedip_hive_waf_paranoia' => 3 ),
 				'test'
 			);
-			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_waf_paranoia']['status'] );
+			$this->assertSame( 'applied', $result['results']['reportedip_hive_waf_paranoia']['status'], 'level 3 needs no plan' );
+			$this->assertSame( 3, (int) \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_paranoia', 0 ) );
 		}
 
 		public function test_free_plan_keeps_ten_plain_entries() {

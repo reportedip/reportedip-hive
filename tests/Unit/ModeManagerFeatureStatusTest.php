@@ -234,10 +234,10 @@ class ModeManagerFeatureStatusTest extends TestCase {
 	}
 
 	/**
-	 * PRICING-PLAN 2a: Contributor gets Priority Sync with Paranoia Level 2,
-	 * Level 3 stays Professional, Free stays on the Level 1 baseline.
+	 * The paranoia level is the operator's choice on every plan and in both
+	 * modes; the plan decides which rules the server delivers, not the level.
 	 */
-	public function test_paranoia_cap_follows_the_plan() {
+	public function test_paranoia_cap_is_the_chosen_level_on_every_plan() {
 		require_once dirname( __DIR__, 2 ) . '/includes/class-rule-store.php';
 		require_once dirname( __DIR__, 2 ) . '/includes/class-rule-sync.php';
 		require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
@@ -246,22 +246,16 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$GLOBALS['wp_options']['reportedip_hive_waf_paranoia'] = 3;
 		$waf = \ReportedIP_Hive_WAF::get_instance();
 
-		$expected = array(
-			'free'         => 1,
-			'contributor'  => 2,
-			'honeypot'     => 2,
-			'professional' => 3,
-			'business'     => 3,
-		);
-		foreach ( $expected as $tier => $cap ) {
+		foreach ( array( 'free', 'contributor', 'honeypot', 'professional', 'business' ) as $tier ) {
 			$this->pretend_tier( $tier );
-			$this->assertSame( $cap, $waf->paranoia_cap(), "Paranoia cap for {$tier}" );
+			$this->assertSame( 3, $waf->paranoia_cap(), "Paranoia cap for {$tier}" );
 		}
 
 		$this->pretend_tier( 'contributor' );
 		$this->assertTrue( \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' )['available'] );
 
 		$this->pretend_mode( 'local' );
-		$this->assertSame( 1, $waf->paranoia_cap(), 'Local Shield runs on the bundled baseline' );
+		$this->pretend_tier( 'free' );
+		$this->assertSame( 3, $waf->paranoia_cap(), 'Local Shield runs the chosen level on the bundled baseline' );
 	}
 }

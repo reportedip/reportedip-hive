@@ -696,28 +696,19 @@ class ReportedIP_Hive_WAF {
 	}
 
 	/**
-	 * The effective Paranoia-Level ceiling for the current tier.
+	 * The effective Paranoia-Level ceiling: the operator-chosen level, 1 to 3.
 	 *
-	 * Free is pinned to Level 1. Contributor runs up to Level 2 and Professional
-	 * up to Level 3, each capped by the operator-chosen level. The server only
-	 * delivers the rules a tier may run, the clamp here keeps a stale synced
-	 * copy from outliving a downgrade.
+	 * The plan decides which rules the server delivers for the site's key,
+	 * not which level the site may run. A level above what the synced or
+	 * bundled rules carry simply matches no further rules. The pre-WordPress
+	 * guard bakes the same list, so both layers follow the stored level.
 	 *
 	 * @return int 1, 2 or 3.
 	 * @since  2.1.2
 	 */
 	public function paranoia_cap() {
-		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			return 1;
-		}
-		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
-		$status       = $mode_manager->feature_status( 'rule_sync_priority' );
-		if ( empty( $status['available'] ) ) {
-			return 1;
-		}
-		$ceiling = $mode_manager->tier_at_least( 'professional' ) ? 3 : 2;
-		$chosen  = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_PARANOIA, 1 );
-		return max( 1, min( $ceiling, $chosen ) );
+		$chosen = (int) ReportedIP_Hive_Option_Routing::get( self::OPT_PARANOIA, 1 );
+		return max( 1, min( 3, $chosen ) );
 	}
 
 	/**

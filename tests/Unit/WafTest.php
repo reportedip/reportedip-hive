@@ -598,8 +598,13 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayHasKey( 'matched_target', $seen );
 		}
 
-		public function test_paranoia_cap_is_one_without_priority(): void {
-			$this->assertSame( 1, $this->waf()->paranoia_cap() );
+		public function test_paranoia_cap_is_the_chosen_level_without_a_plan(): void {
+			$this->assertSame( 1, $this->waf()->paranoia_cap(), 'nothing stored is level 1' );
+			foreach ( array( 2 => 2, 3 => 3, 7 => 3, 0 => 1 ) as $stored => $cap ) {
+				$GLOBALS['wp_options']['reportedip_hive_waf_paranoia'] = $stored;
+				$this->assertSame( $cap, $this->waf()->paranoia_cap(), "stored {$stored}" );
+			}
+			unset( $GLOBALS['wp_options']['reportedip_hive_waf_paranoia'] );
 		}
 
 		public function test_active_rules_drop_levels_above_cap(): void {

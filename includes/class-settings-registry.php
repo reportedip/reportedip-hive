@@ -541,16 +541,13 @@ final class ReportedIP_Hive_Settings_Registry {
 				'description' => __( 'Record what the firewall would have blocked without blocking anything. The right way to try a new rule set on a live site.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_waf_paranoia'                 => array(
-				'partial'     => true,
 				'section'     => 'waf',
 				'kind'        => 'int',
 				'min'         => 1,
 				'max'         => 3,
-				'tier'        => 'rule_sync_priority',
-				'tier_gate'   => array( __CLASS__, 'paranoia_needs_tier' ),
 				'remote'      => true,
 				'label'       => __( 'Firewall paranoia level', 'reportedip-hive' ),
-				'description' => __( 'How aggressively the rules are read. Level 1 is the false-positive-poor baseline; higher levels catch obfuscated attacks and need a report-only run first. Level 2 runs from Contributor, Level 3 from Professional.', 'reportedip-hive' ),
+				'description' => __( 'How aggressively the rules are read. Level 1 is the false-positive-poor baseline; higher levels catch obfuscated attacks and need a report-only run first.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_waf_block_threshold'          => array(
 				'section'     => 'waf',
@@ -1347,17 +1344,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				return ! empty( $entry['remote'] );
 			}
 		);
-	}
-
-	/**
-	 * Whether the paranoia tier gate applies for a given target value.
-	 * level 1 is free, levels 2 and 3 require the Professional ruleset.
-	 *
-	 * @param mixed $value Sanitized target value.
-	 * @return bool
-	 */
-	public static function paranoia_needs_tier( $value ) {
-		return (int) $value >= 2;
 	}
 
 	/**
