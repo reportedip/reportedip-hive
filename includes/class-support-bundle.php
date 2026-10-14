@@ -307,7 +307,7 @@ final class ReportedIP_Hive_Support_Bundle {
 
 		if ( class_exists( 'ReportedIP_Hive_Form_Adapters' ) ) {
 			$adapters = ReportedIP_Hive_Form_Adapters::get_instance();
-			foreach ( array_keys( ReportedIP_Hive_Form_Adapters::ADAPTERS ) as $slug ) {
+			foreach ( array_keys( ReportedIP_Hive_Form_Adapters::adapters() ) as $slug ) {
 				if ( $adapters->detected( $slug ) ) {
 					$detected[] = $slug;
 				}
