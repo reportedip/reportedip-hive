@@ -209,7 +209,7 @@ class ReportedIP_Hive_API {
 				);
 
 				if ( ! $has_report_permission ) {
-					$response['warning']      = __( 'Your API key currently has no report permission. Security events will be logged locally but not reported to the service. Upgrade to Contributor or higher to enable full reporting.', 'reportedip-hive' );
+					$response['warning']      = __( 'Your API key currently has no report permission. Security events will be logged locally but not reported to the service. Report permission comes with a Contributor account; see your account on reportedip.com.', 'reportedip-hive' );
 					$response['warning_code'] = 'no_report_permission';
 				}
 
@@ -1430,7 +1430,7 @@ class ReportedIP_Hive_API {
 				'remaining'  => 0,
 				'limit'      => 0,
 				'user_role'  => $quota['user_role'] ?? 'free',
-				'message'    => __( 'Your API key currently has no report permission. Please check your account status or upgrade to Contributor.', 'reportedip-hive' ),
+				'message'    => __( 'Your API key currently has no report permission. Report permission comes with a Contributor account; see your account on reportedip.com.', 'reportedip-hive' ),
 			);
 		}
 

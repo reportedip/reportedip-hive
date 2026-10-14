@@ -5098,7 +5098,7 @@ class ReportedIP_Hive_Admin_Settings {
 						<div class="rip-alert__content rip-alert__content--row">
 							<div>
 								<div class="rip-alert__title"><?php esc_html_e( 'Local Shield mode active', 'reportedip-hive' ); ?></div>
-								<div class="rip-alert__message"><?php esc_html_e( 'Running locally, shared reports, quota and tier upgrades are off. Join the Community Network for shared threat intelligence.', 'reportedip-hive' ); ?></div>
+								<div class="rip-alert__message"><?php esc_html_e( 'Running locally, shared reports and the account quota are off. Join the Community Network for shared threat intelligence.', 'reportedip-hive' ); ?></div>
 							</div>
 							<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&tab=settings' ) ); ?>" class="rip-button rip-button--primary rip-button--sm">
 								<?php esc_html_e( 'Switch to Community', 'reportedip-hive' ); ?>
