@@ -1,30 +1,14 @@
 /**
  * Form execution proof: adds the proof field to every form carrying an anchor.
  *
- * With a challenge in play the field carries a signed task fetched from this
- * site and the solution worked out for it, so the value cannot be copied out
- * of the page. Without one the behaviour is unchanged: a plain marker.
+ * The field carries a plain marker. It proves that a browser rendered the page
+ * and ran this script, which a client posting straight at the form address
+ * never does. The page carries nothing about the visitor, so a full-page cache
+ * and a CDN may serve it unchanged to everyone.
  *
- * The page carries nothing about the visitor, only the address of the
- * endpoint, so a full-page cache and a CDN may serve it unchanged to everyone.
- * The visitor's own task comes from a POST the caches never store, one per
- * form on the page, because every answer spends a task of its own.
- *
- * Every form gets its own answer out of a small stock that is topped up in
- * the background. An answer is single-use on the server, so handing the same
- * one to two forms, or to one form twice, would have the second submission
- * refused as a replay. Answers are dealt out as soon as the first one is
- * ready, so the first submission is served even on a slow device; only a form
- * that has already been submitted draws again. When nothing is ready the
- * field is emptied rather than filled with a spent answer: a submission
- * nobody could answer for is honestly unproven, and the form tells the sender
- * so; a reload fetches a fresh task.
- *
- * An answer is only good for the lifetime of its task (ten minutes by
- * default). A visitor who takes longer over a form would otherwise send a
- * spent answer and be refused as `expired`, so an answer that is about to run
- * out is replaced: once a minute, when the tab comes back into view and at
- * the moment of sending.
+ * An anchor that names a task endpoint (`data-e`) is answered with the marker
+ * as well. Such a page comes from a cache filled while a release or an add-on
+ * handed out tasks, and the marker is what this plugin reads on its own.
  *
  * The field also carries how many seconds the form was on screen, appended
  * after a tilde. The clock starts in the browser and never in the markup, so a
@@ -40,13 +24,6 @@
 ( function () {
 	'use strict';
 
-	var CHUNK = 256;
-	var LIMIT = 1 << 24;
-
-	var stock = [];
-	var MARGIN = 90 * 1000;
-	var mining = false;
-	var pausedUntil = 0;
 	var bound = false;
 	var jqueryBound = false;
 
@@ -190,85 +167,11 @@
 	}
 
 	/**
-	 * Hand one form an answer of its own, then ask for the stock to be topped
-	 * up. An empty stock writes an empty field, which reads as unproven.
-	 *
-	 * @since 2.1.58
-	 */
-	function give( form, anchor ) {
-		while ( stock.length && stale( stock[ 0 ] ) ) {
-			stock.shift();
-		}
-
-		var answer = stock.shift();
-
-		field( form, anchor.dataset.n ).value = answer ? answer.value : '';
-		anchor.dataset.u = 'ready';
-		anchor.dataset.x = answer ? answer.until : '';
-		refill();
-	}
-
-	/**
-	 * Whether an answer runs out before a submission could reach the server.
-	 *
-	 * @since 2.1.72
-	 */
-	function stale( answer ) {
-		return ! answer || Date.now() > answer.until;
-	}
-
-	/**
-	 * Take back every dealt answer that is about to run out and deal fresh
-	 * ones. An answer already sent is left alone, it has been spent anyway.
-	 *
-	 * @since 2.1.72
-	 */
-	function renew() {
-		var anchors = document.querySelectorAll( 'input.rip-fp-anchor[data-e][data-n]' );
-		var expired = false;
-
-		for ( var i = 0; i < anchors.length; i++ ) {
-			var anchor = anchors[ i ];
-
-			if ( 'ready' === anchor.dataset.u && anchor.form && Date.now() > parseFloat( anchor.dataset.x || 0 ) ) {
-				field( anchor.form, anchor.dataset.n ).value = '';
-				delete anchor.dataset.u;
-				delete anchor.dataset.w;
-				expired = true;
-			}
-		}
-
-		stock = stock.filter( function ( answer ) {
-			return ! stale( answer );
-		} );
-
-		if ( expired || stock.length < wanted() ) {
-			refill();
-		}
-	}
-
-	/**
-	 * Give every form that is still without one an answer. Called as soon as
-	 * the first answer exists, so a visitor who submits straight away is served.
-	 *
-	 * @since 2.1.58
-	 */
-	function deal() {
-		var anchors = document.querySelectorAll( 'input.rip-fp-anchor[data-e][data-n]' );
-
-		for ( var i = 0; i < anchors.length; i++ ) {
-			if ( stock.length && anchors[ i ].form && ! anchors[ i ].dataset.u ) {
-				give( anchors[ i ].form, anchors[ i ] );
-			}
-		}
-	}
-
-	/**
-	 * Plain markers do not depend on any computation, so they are written as
-	 * soon as the page is there.
+	 * The marker does not depend on anything, so it is written as soon as the
+	 * page is there.
 	 */
 	function markers() {
-		var anchors = document.querySelectorAll( 'input.rip-fp-anchor[data-n]:not([data-e])' );
+		var anchors = document.querySelectorAll( 'input.rip-fp-anchor[data-n]' );
 
 		for ( var i = 0; i < anchors.length; i++ ) {
 			if ( anchors[ i ].form ) {
@@ -278,8 +181,7 @@
 	}
 
 	/**
-	 * A form that already holds an unused answer sends it. One that was
-	 * submitted before, or never got one, draws now.
+	 * Write the marker afresh and append the measured duration.
 	 *
 	 * @since 2.1.58
 	 */
@@ -290,214 +192,9 @@
 			return;
 		}
 
-		if ( ! anchor.dataset.e ) {
-			field( form, anchor.dataset.n ).value = '1';
-		} else {
-			if ( 'ready' !== anchor.dataset.u ) {
-				give( form, anchor );
-			}
-
-			anchor.dataset.u = 'used';
-			refill();
-		}
-
+		field( form, anchor.dataset.n ).value = '1';
 		anchor.dataset.s = now();
 		stamp( form, anchor );
-	}
-
-	function leadingZeroBits( bytes ) {
-		var bits = 0;
-
-		for ( var i = 0; i < bytes.length; i++ ) {
-			var part = bytes[ i ];
-
-			if ( part === 0 ) {
-				bits += 8;
-				continue;
-			}
-
-			while ( part < 128 ) {
-				bits++;
-				part <<= 1;
-			}
-
-			break;
-		}
-
-		return bits;
-	}
-
-	/**
-	 * Start the counter somewhere random, so two tabs working on the same
-	 * task do not find the same first solution.
-	 */
-	function randomStart() {
-		var slot = new Uint32Array( 1 );
-		window.crypto.getRandomValues( slot );
-
-		return slot[ 0 ];
-	}
-
-	/**
-	 * The endpoint the first challenged anchor on the page names, on the
-	 * scheme the page itself was loaded with. A site behind a proxy that
-	 * terminates TLS (Cloudflare Flexible SSL, an unconfigured trusted-header
-	 * setting) prints http addresses into an https page, and a fetch across
-	 * schemes is blocked as mixed content before it ever leaves the browser.
-	 */
-	function endpoint() {
-		var anchor = document.querySelector( 'input.rip-fp-anchor[data-e]' );
-
-		if ( ! anchor ) {
-			return '';
-		}
-
-		try {
-			var url = new URL( anchor.dataset.e, window.location.href );
-
-			if ( url.host === window.location.host ) {
-				url.protocol = window.location.protocol;
-			}
-
-			return url.toString();
-		} catch ( error ) {
-			return anchor.dataset.e;
-		}
-	}
-
-	/**
-	 * Fetch a task from this site. Resolves to null when none can be had; the
-	 * field then stays empty and the form tells the sender to try again.
-	 *
-	 * A 429 pauses further requests for the time the server names, so a
-	 * throttled network does not hammer the endpoint.
-	 *
-	 * @since 2.1.64
-	 */
-	function task() {
-		var url = endpoint();
-
-		if ( ! url || ! window.fetch || Date.now() < pausedUntil ) {
-			return Promise.resolve( null );
-		}
-
-		return window.fetch( url, {
-			method: 'POST',
-			credentials: 'same-origin',
-			cache: 'no-store',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: ''
-		} ).then( function ( response ) {
-			if ( 429 === response.status ) {
-				var wait = parseInt( response.headers.get( 'Retry-After' ), 10 );
-				pausedUntil = Date.now() + ( isNaN( wait ) ? 30 : wait ) * 1000;
-
-				return null;
-			}
-
-			if ( ! response.ok ) {
-				return null;
-			}
-
-			return response.json();
-		} ).then( function ( got ) {
-			return got && got.token ? got : null;
-		} ).catch( function () {
-			return null;
-		} );
-	}
-
-	/**
-	 * Work out one answer for a task. A task of zero difficulty needs no
-	 * arithmetic and no secure context, only the token itself.
-	 */
-	async function solve( current ) {
-		if ( ! current.bits ) {
-			return current.token + '.0';
-		}
-
-		if ( ! window.crypto || ! window.crypto.subtle || 'undefined' === typeof TextEncoder ) {
-			return null;
-		}
-
-		var encoder = new TextEncoder();
-		var nonce = randomStart();
-		var spent = 0;
-
-		try {
-			while ( spent < LIMIT ) {
-				var pending = [];
-				var nonces = [];
-
-				for ( var i = 0; i < CHUNK; i++ ) {
-					var hex = ( nonce++ ).toString( 16 );
-					nonces.push( hex );
-					pending.push( window.crypto.subtle.digest( 'SHA-256', encoder.encode( current.seed + hex ) ) );
-				}
-
-				spent += CHUNK;
-
-				var digests = await Promise.all( pending );
-
-				for ( var j = 0; j < digests.length; j++ ) {
-					if ( leadingZeroBits( new Uint8Array( digests[ j ] ) ) >= current.bits ) {
-						return current.token + '.' + nonces[ j ];
-					}
-				}
-			}
-		} catch ( error ) {
-			return null;
-		}
-
-		return null;
-	}
-
-	/**
-	 * How many answers to keep ready. One per challenged form on the page,
-	 * because each answer spends its own single-use task.
-	 *
-	 * @since 2.1.58
-	 */
-	function wanted() {
-		return Math.max( 1, document.querySelectorAll( 'input.rip-fp-anchor[data-e]' ).length );
-	}
-
-	/**
-	 * Top the stock up. Every answer needs a task of its own, so each round
-	 * fetches, solves and deals.
-	 */
-	async function refill() {
-		if ( mining || ! endpoint() ) {
-			return;
-		}
-
-		mining = true;
-
-		try {
-			while ( stock.length < wanted() ) {
-				var current = await task();
-
-				if ( ! current ) {
-					return;
-				}
-
-				var fetched = Date.now();
-				var life = Math.max( 60, parseInt( current.ttl, 10 ) || 600 ) * 1000;
-				var answer = await solve( current );
-
-				if ( ! answer ) {
-					return;
-				}
-
-				stock.push( {
-					value: answer,
-					until: fetched + life - Math.min( MARGIN, life / 4 )
-				} );
-				deal();
-			}
-		} finally {
-			mining = false;
-		}
 	}
 
 	/**
@@ -519,7 +216,6 @@
 
 		window.gform.utils.addFilter( 'gform/submission/pre_submission', function ( data ) {
 			if ( data && data.form && ! data.abort ) {
-				renew();
 				onSubmit( data.form );
 			}
 
@@ -538,11 +234,9 @@
 	 * and is left to the listener so no submission is counted twice.
 	 *
 	 * Gravity Forms triggers the very same jQuery submit right after its own
-	 * `pre_submission` filter has already had the form answered, and a second
-	 * answer would spend the stock and leave the field empty. A submission
+	 * `pre_submission` filter has already stamped the form. A submission
 	 * prepared within the last second is therefore the same submission and
-	 * is sent as it is; a real second send of an AJAX form takes longer than
-	 * that, because the sender has to see the first one answered.
+	 * is sent as it is.
 	 *
 	 * @since 2.1.65
 	 */
@@ -558,29 +252,13 @@
 				return;
 			}
 
-			var form = this;
-			var anchor = anchorOf( form );
+			var anchor = anchorOf( this );
 
 			if ( ! anchor || ( anchor.dataset.s && now() - parseFloat( anchor.dataset.s ) < 1000 ) ) {
 				return;
 			}
 
-			renew();
-
-			if ( anchor.dataset.e && 'ready' !== anchor.dataset.u && ! stock.length && ! anchor.dataset.w && endpoint() ) {
-				event.preventDefault();
-				event.stopImmediatePropagation();
-
-				anchor.dataset.w = 'held';
-
-				untilReady( anchor, HOLD ).then( function () {
-					resubmit( form, null );
-				} );
-
-				return;
-			}
-
-			onSubmit( form );
+			onSubmit( this );
 		} );
 	}
 
@@ -588,7 +266,7 @@
 	 * Take in a form that reached the page after the first pass.
 	 *
 	 * A form rendered again after a failed validation, or loaded into a popup,
-	 * arrives without a clock and without an answer of its own. The start time
+	 * arrives without a clock and without a marker of its own. The start time
 	 * is remembered per form, so the clock picks up where it left off rather
 	 * than starting over.
 	 *
@@ -596,55 +274,10 @@
 	 */
 	function rearm() {
 		watch();
-		refill();
 		markers();
 		gravity();
 		jquery();
 	}
-
-	/**
-	 * Wait until an answer is in stock, or until the hold runs out.
-	 *
-	 * @since 2.1.64
-	 */
-	function untilReady( anchor, limit ) {
-		var deadline = Date.now() + limit;
-
-		refill();
-
-		return new Promise( function ( resolve ) {
-			( function poll() {
-				if ( stock.length || 'ready' === anchor.dataset.u || Date.now() > deadline ) {
-					resolve();
-					return;
-				}
-
-				window.setTimeout( poll, 50 );
-			}() );
-		} );
-	}
-
-	/**
-	 * Send a form on, the way the visitor asked for it.
-	 */
-	function resubmit( form, submitter ) {
-		if ( form.requestSubmit ) {
-			form.requestSubmit( submitter );
-		} else {
-			form.submit();
-		}
-	}
-
-	/**
-	 * A visitor who submits before the task has come back is not a bot, and
-	 * an empty field would refuse them. The submit is held until an answer is
-	 * in stock, at most HOLD milliseconds, and then sent on as the visitor
-	 * sent it. A form that already holds an answer, or has been held once, is
-	 * never held again.
-	 *
-	 * @since 2.1.64
-	 */
-	var HOLD = 8000;
 
 	document.addEventListener(
 		'submit',
@@ -655,39 +288,12 @@
 				return;
 			}
 
-			var anchor = anchorOf( form );
-
-			renew();
-
-			if ( anchor && anchor.dataset.e && 'ready' !== anchor.dataset.u && ! stock.length && ! anchor.dataset.w && endpoint() ) {
-				event.preventDefault();
-				event.stopImmediatePropagation();
-
-				anchor.dataset.w = 'held';
-
-				var submitter = event.submitter || null;
-
-				untilReady( anchor, HOLD ).then( function () {
-					resubmit( form, submitter );
-				} );
-
-				return;
-			}
-
 			onSubmit( form );
 		},
 		true
 	);
 
 	document.addEventListener( 'gform/post_render', rearm );
-
-	window.setInterval( renew, 60 * 1000 );
-
-	document.addEventListener( 'visibilitychange', function () {
-		if ( 'visible' === document.visibilityState ) {
-			renew();
-		}
-	} );
 
 	if ( 'loading' === document.readyState ) {
 		document.addEventListener( 'DOMContentLoaded', rearm );
