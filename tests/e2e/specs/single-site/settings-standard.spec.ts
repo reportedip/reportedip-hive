@@ -37,7 +37,6 @@ async function setToggle(page: Page, inputSelector: string, desired: boolean): P
 
 const RESTORE = [
 	'reportedip_hive_promo_enabled',
-	'reportedip_hive_quota_notif_enabled',
 	'reportedip_hive_tier_change_mail_enabled',
 	'reportedip_hive_2fa_reminder_enabled',
 	'reportedip_hive_2fa_reminder_hard_threshold',
@@ -111,12 +110,10 @@ test.describe('settings standard — every option has a working form', () => {
 		await openSection(page, 'notifications');
 
 		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_promo_enabled"]', false);
-		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_quota_notif_enabled"]', false);
 		await setToggle(page, 'input[type="checkbox"][name="reportedip_hive_tier_change_mail_enabled"]', true);
 		await saveSection(page, 'notifications');
 
 		expect(wpOption('reportedip_hive_promo_enabled')).toBe('0');
-		expect(wpOption('reportedip_hive_quota_notif_enabled')).toBe('0');
 		expect(wpOption('reportedip_hive_tier_change_mail_enabled')).toBe('1');
 
 		await expect(page.locator('#notifications input[type="checkbox"][name="reportedip_hive_promo_enabled"]')).not.toBeChecked();
