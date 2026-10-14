@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-10-14T02:02:08+00:00\n"
+"PO-Revision-Date: 2026-10-14T03:01:40+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
@@ -832,7 +832,7 @@ msgid "IP Address"
 msgstr "IP-Adresse"
 
 #: admin/class-admin-settings.php:1109
-#: reportedip-hive.php:1113
+#: reportedip-hive.php:1112
 msgid "Attacks"
 msgstr "Angriffe"
 
@@ -859,7 +859,7 @@ msgstr "Status"
 #: admin/class-sessions-table.php:92
 #: admin/class-waf-exceptions-table.php:76
 #: admin/class-whitelist-table.php:57
-#: templates/partials/webauthn-key-manager.php:82
+#: templates/partials/webauthn-key-manager.php:78
 msgid "Actions"
 msgstr "Aktionen"
 
@@ -878,7 +878,7 @@ msgstr "vor %s"
 #: admin/class-user-admin.php:385
 #: admin/class-user-admin.php:623
 #: admin/class-user-admin.php:647
-#: reportedip-hive.php:971
+#: reportedip-hive.php:970
 msgid "Blocked"
 msgstr "Gesperrt"
 
@@ -1406,7 +1406,7 @@ msgstr "Wann"
 #: admin/class-audit-log-table.php:282
 #: includes/class-privacy.php:222
 #: includes/class-security-monitor.php:1564
-#: reportedip-hive.php:984
+#: reportedip-hive.php:983
 msgid "Event"
 msgstr "Ereignis"
 
@@ -1421,7 +1421,7 @@ msgstr "IP"
 #: admin/class-admin-settings.php:5246
 #: admin/class-logs-table.php:54
 #: admin/class-logs-table.php:434
-#: reportedip-hive.php:985
+#: reportedip-hive.php:984
 msgid "Severity"
 msgstr "Schweregrad"
 
@@ -1671,7 +1671,7 @@ msgid "Severity Breakdown"
 msgstr "Schweregrad-Verteilung"
 
 #: admin/class-admin-settings.php:4069
-#: reportedip-hive.php:982
+#: reportedip-hive.php:981
 msgid "Recent Activity"
 msgstr "Letzte Aktivität"
 
@@ -1687,25 +1687,25 @@ msgstr "Keine kritischen Ereignisse in den letzten 24 Stunden. Ihre Website ist 
 #: admin/class-admin-settings.php:5224
 #: admin/class-logs-table.php:440
 #: admin/class-protection-page.php:929
-#: reportedip-hive.php:1114
+#: reportedip-hive.php:1113
 msgid "Critical"
 msgstr "Kritisch"
 
 #: admin/class-admin-settings.php:4089
 #: admin/class-logs-table.php:439
-#: reportedip-hive.php:1115
+#: reportedip-hive.php:1114
 msgid "High"
 msgstr "Hoch"
 
 #: admin/class-admin-settings.php:4090
 #: admin/class-logs-table.php:438
-#: reportedip-hive.php:1116
+#: reportedip-hive.php:1115
 msgid "Medium"
 msgstr "Mittel"
 
 #: admin/class-admin-settings.php:4091
 #: admin/class-logs-table.php:437
-#: reportedip-hive.php:1117
+#: reportedip-hive.php:1116
 msgid "Low"
 msgstr "Niedrig"
 
@@ -1779,7 +1779,7 @@ msgid "Advanced"
 msgstr "Erweitert"
 
 #: admin/class-admin-settings.php:4451
-#: reportedip-hive.php:1751
+#: reportedip-hive.php:1750
 msgid "Retrying..."
 msgstr "Wird wiederholt..."
 
@@ -1849,7 +1849,7 @@ msgstr "Dauerhaft"
 #: admin/class-admin-settings.php:4530
 #: admin/class-logs-table.php:78
 #: admin/class-logs-table.php:145
-#: reportedip-hive.php:994
+#: reportedip-hive.php:993
 msgid "Block IP"
 msgstr "IP sperren"
 
@@ -2439,7 +2439,7 @@ msgid "Your IP Address"
 msgstr "Ihre IP-Adresse"
 
 #: admin/class-admin-settings.php:5596
-#: reportedip-hive.php:970
+#: reportedip-hive.php:969
 msgid "Whitelisted"
 msgstr "Auf der Whitelist"
 
@@ -3537,8 +3537,8 @@ msgstr "Versuche"
 #: admin/class-protection-page.php:928
 #: admin/class-two-factor-admin.php:436
 #: includes/class-two-factor-onboarding.php:357
-#: includes/class-two-factor.php:2319
-#: reportedip-hive.php:932
+#: includes/class-two-factor.php:2325
+#: reportedip-hive.php:931
 msgid "Error"
 msgstr "Fehler"
 
@@ -3619,9 +3619,9 @@ msgstr "Suchen"
 #: includes/class-privacy.php:230
 #: includes/class-privacy.php:271
 #: includes/class-security-monitor.php:1565
-#: includes/class-two-factor-notifications.php:153
-#: includes/class-two-factor-notifications.php:368
-#: includes/class-two-factor-notifications.php:382
+#: includes/class-two-factor-notifications.php:99
+#: includes/class-two-factor-notifications.php:314
+#: includes/class-two-factor-notifications.php:328
 msgid "IP address"
 msgstr "IP-Adresse"
 
@@ -3695,10 +3695,10 @@ msgstr "Audit-Einträge"
 #: includes/class-ajax-handler.php:351
 #: includes/class-privacy.php:218
 #: includes/class-security-monitor.php:1566
-#: includes/class-two-factor-notifications.php:152
-#: includes/class-two-factor-notifications.php:367
-#: includes/class-two-factor-notifications.php:381
-#: reportedip-hive.php:983
+#: includes/class-two-factor-notifications.php:98
+#: includes/class-two-factor-notifications.php:313
+#: includes/class-two-factor-notifications.php:327
+#: reportedip-hive.php:982
 msgid "Time"
 msgstr "Zeit"
 
@@ -4161,7 +4161,7 @@ msgstr "Ereignistyp"
 
 #: admin/class-logs-table.php:79
 #: admin/class-logs-table.php:150
-#: reportedip-hive.php:995
+#: reportedip-hive.php:994
 msgid "Whitelist IP"
 msgstr "IP auf die Whitelist setzen"
 
@@ -5196,7 +5196,7 @@ msgstr "Ungültige Benutzer-ID."
 #: admin/class-two-factor-admin.php:866
 #: includes/class-two-factor-dashboard.php:43
 #: includes/class-two-factor-dashboard.php:227
-#: includes/class-two-factor-webauthn.php:394
+#: includes/class-two-factor-webauthn.php:405
 msgid "You do not have permission."
 msgstr "Sie haben keine Berechtigung."
 
@@ -5215,8 +5215,8 @@ msgstr "[%s] Ihre Zwei-Faktor-Authentifizierung wurde zurückgesetzt"
 #: admin/class-two-factor-admin.php:164
 #: includes/class-ajax-handler.php:340
 #: includes/class-two-factor-email.php:136
-#: includes/class-two-factor-notifications.php:174
-#: includes/class-two-factor-notifications.php:391
+#: includes/class-two-factor-notifications.php:120
+#: includes/class-two-factor-notifications.php:337
 #: includes/class-two-factor-reset-gate.php:1234
 #, php-format
 msgid "Hello %s,"
@@ -5303,12 +5303,12 @@ msgstr "Bitte warten"
 
 #: admin/class-two-factor-admin.php:472
 #: admin/class-two-factor-admin.php:487
-#: includes/class-two-factor-webauthn.php:433
+#: includes/class-two-factor-webauthn.php:439
 msgid "Security key"
 msgstr "Sicherheitsschlüssel"
 
 #: admin/class-two-factor-admin.php:473
-#: includes/class-two-factor-webauthn.php:352
+#: includes/class-two-factor-webauthn.php:362
 #: templates/two-factor-challenge.php:124
 msgid "Passkey"
 msgstr "Passkey"
@@ -5837,7 +5837,7 @@ msgstr "Pfad"
 #: admin/class-waf-exceptions-table.php:75
 #: admin/class-whitelist-table.php:55
 #: includes/class-privacy.php:193
-#: templates/partials/webauthn-key-manager.php:80
+#: templates/partials/webauthn-key-manager.php:76
 msgid "Added"
 msgstr "Hinzugefügt"
 
@@ -5873,7 +5873,7 @@ msgstr "IPs auf der Whitelist"
 
 #: admin/class-whitelist-table.php:52
 #: includes/class-privacy.php:156
-#: templates/partials/webauthn-key-manager.php:79
+#: templates/partials/webauthn-key-manager.php:75
 msgid "Type"
 msgstr "Typ"
 
@@ -8103,7 +8103,7 @@ msgid "Device name"
 msgstr "Gerätename"
 
 #: includes/class-privacy.php:201
-#: templates/partials/webauthn-key-manager.php:81
+#: templates/partials/webauthn-key-manager.php:77
 msgid "Last used"
 msgstr "Zuletzt verwendet"
 
@@ -10264,69 +10264,45 @@ msgid "Valid for %d minutes"
 msgstr "Gültig für %d Minuten"
 
 #. translators: 1: site name
-#: includes/class-two-factor-notifications.php:62
-#, php-format
-msgid "[%1$s] A new security key was added to your account"
-msgstr "[%1$s] Ein neuer Sicherheitsschlüssel wurde Ihrem Konto hinzugefügt"
-
-#. translators: %s: key name
-#: includes/class-two-factor-notifications.php:65
-#, php-format
-msgid "A new security key or passkey named \"%s\" was just registered for your account. If that was you, no further action is needed. If not, remove the key and change your password immediately."
-msgstr "Ein neuer Sicherheitsschlüssel oder Passkey mit dem Namen \"%s\" wurde soeben für Ihr Konto registriert. Wenn Sie das waren, ist nichts weiter zu tun. Falls nicht, entfernen Sie den Schlüssel und ändern Sie sofort Ihr Passwort."
-
-#. translators: 1: site name
-#: includes/class-two-factor-notifications.php:89
-#, php-format
-msgid "[%1$s] A security key was removed from your account"
-msgstr "[%1$s] Ein Sicherheitsschlüssel wurde aus Ihrem Konto entfernt"
-
-#. translators: %s: key name
-#: includes/class-two-factor-notifications.php:92
-#, php-format
-msgid "The security key or passkey named \"%s\" was just removed from your account. If that was not you, review your security settings and change your password immediately."
-msgstr "Der Sicherheitsschlüssel oder Passkey mit dem Namen \"%s\" wurde soeben aus Ihrem Konto entfernt. Wenn Sie das nicht waren, prüfen Sie Ihre Sicherheitseinstellungen und ändern Sie sofort Ihr Passwort."
-
-#. translators: 1: site name
-#: includes/class-two-factor-notifications.php:127
+#: includes/class-two-factor-notifications.php:70
 #, php-format
 msgid "[%1$s] Suspicious security-key sign-in blocked"
 msgstr "[%1$s] Verdächtige Anmeldung mit Sicherheitsschlüssel blockiert"
 
 #. translators: %s: key name
-#: includes/class-two-factor-notifications.php:130
+#: includes/class-two-factor-notifications.php:73
 #, php-format
 msgid "A sign-in attempt with the security key \"%s\" was blocked because its usage counter did not advance, which can indicate a cloned key. If your key was recently reset this may be a false alarm; otherwise treat the key as compromised, remove it and enrol a new one."
 msgstr "Ein Anmeldeversuch mit dem Sicherheitsschlüssel \"%s\" wurde blockiert, weil sein Nutzungszähler nicht weitergezählt hat, was auf einen geklonten Schlüssel hindeuten kann. Wurde Ihr Schlüssel kürzlich zurückgesetzt, kann es ein Fehlalarm sein; andernfalls behandeln Sie den Schlüssel als kompromittiert, entfernen Sie ihn und registrieren Sie einen neuen."
 
-#: includes/class-two-factor-notifications.php:154
-#: includes/class-two-factor-notifications.php:369
-#: includes/class-two-factor-notifications.php:383
+#: includes/class-two-factor-notifications.php:100
+#: includes/class-two-factor-notifications.php:315
+#: includes/class-two-factor-notifications.php:329
 msgid "Device / Browser"
 msgstr "Gerät / Browser"
 
-#: includes/class-two-factor-notifications.php:181
-#: includes/class-two-factor-notifications.php:398
+#: includes/class-two-factor-notifications.php:127
+#: includes/class-two-factor-notifications.php:344
 msgid "Review your security settings"
 msgstr "Überprüfen Sie Ihre Sicherheitseinstellungen"
 
-#: includes/class-two-factor-notifications.php:188
+#: includes/class-two-factor-notifications.php:134
 msgid "You are receiving this from the ReportedIP Hive security monitor because a security-key change touched your account."
 msgstr "Sie erhalten diese Nachricht vom ReportedIP-Hive-Sicherheitsmonitor, weil eine Änderung an einem Sicherheitsschlüssel Ihr Konto betroffen hat."
 
 #. translators: 1: site name
-#: includes/class-two-factor-notifications.php:356
+#: includes/class-two-factor-notifications.php:302
 #, php-format
 msgid "[%1$s] Sign-in from a new device"
 msgstr "[%1$s] Anmeldung von einem neuen Gerät"
 
 #. translators: %s: site name
-#: includes/class-two-factor-notifications.php:362
+#: includes/class-two-factor-notifications.php:308
 #, php-format
 msgid "Just letting you know, your account at %s was just accessed from a device that hasn't signed in here before. If that was you, no further action is needed."
 msgstr "Nur zur Information, auf Ihr Konto bei %s wurde soeben von einem Gerät zugegriffen, das sich hier zuvor noch nicht angemeldet hat. Wenn Sie das waren, ist keine weitere Aktion erforderlich."
 
-#: includes/class-two-factor-notifications.php:405
+#: includes/class-two-factor-notifications.php:351
 msgid "You are receiving this from the ReportedIP Hive security monitor. You can adjust new-device alerts in the plugin settings at any time."
 msgstr "Sie erhalten diese Nachricht vom Sicherheitsmonitor von ReportedIP Hive. Sie können Benachrichtigungen über neue Geräte jederzeit in den Plugin-Einstellungen anpassen."
 
@@ -10345,7 +10321,7 @@ msgid "Go to dashboard"
 msgstr "Zum Dashboard"
 
 #: includes/class-two-factor-onboarding.php:435
-#: reportedip-hive.php:930
+#: reportedip-hive.php:929
 msgid "Sending..."
 msgstr "Wird gesendet..."
 
@@ -10370,7 +10346,7 @@ msgid "Your browser does not support passkeys. Please choose another method."
 msgstr "Ihr Browser unterstützt keine Passkeys. Bitte wählen Sie eine andere Methode."
 
 #: includes/class-two-factor-onboarding.php:442
-#: reportedip-hive.php:935
+#: reportedip-hive.php:934
 msgid "Network error. Please try again."
 msgstr "Netzwerkfehler. Bitte versuchen Sie es erneut."
 
@@ -10474,7 +10450,7 @@ msgid "We could not send a verification code. Please try the resend link below o
 msgstr "Wir konnten keinen Bestätigungscode senden. Bitte verwenden Sie den Link zum erneuten Senden unten oder wählen Sie eine andere Methode."
 
 #: includes/class-two-factor-reset-gate.php:498
-#: includes/class-two-factor.php:1430
+#: includes/class-two-factor.php:1436
 msgid "Security check failed. Please try again."
 msgstr "Sicherheitsprüfung fehlgeschlagen. Bitte versuchen Sie es erneut."
 
@@ -10491,7 +10467,7 @@ msgid "Verification failed. Please double-check the code and try again."
 msgstr "Verifizierung fehlgeschlagen. Bitte überprüfen Sie den Code und versuchen Sie es erneut."
 
 #: includes/class-two-factor-reset-gate.php:600
-#: includes/class-two-factor.php:1921
+#: includes/class-two-factor.php:1927
 #: templates/two-factor-challenge.php:44
 msgid "Two-Factor Verification"
 msgstr "Zwei-Faktor-Verifizierung"
@@ -10677,166 +10653,166 @@ msgid "Invalid code."
 msgstr "Ungültiger Code."
 
 #: includes/class-two-factor-webauthn.php:77
-#: includes/class-two-factor-webauthn.php:292
+#: includes/class-two-factor-webauthn.php:302
 msgid "Multiple security keys per account require the Business plan. Your first key stays free."
 msgstr "Mehrere Sicherheitsschlüssel pro Konto erfordern den Business-Tarif. Ihr erster Schlüssel bleibt kostenlos."
 
-#: includes/class-two-factor-webauthn.php:219
+#: includes/class-two-factor-webauthn.php:221
 msgid "Security keys are not available on this site."
 msgstr "Sicherheitsschlüssel sind auf dieser Website nicht verfügbar."
 
-#: includes/class-two-factor-webauthn.php:252
+#: includes/class-two-factor-webauthn.php:262
 msgid "Too many registration attempts. Please wait a few minutes."
 msgstr "Zu viele Registrierungsversuche. Bitte warten Sie einige Minuten."
 
 #. translators: %d: seconds remaining
-#: includes/class-two-factor-webauthn.php:270
+#: includes/class-two-factor-webauthn.php:280
 #, php-format
 msgid "Too many failed attempts. Try again in %d seconds."
 msgstr "Zu viele Fehlversuche. Versuchen Sie es in %d Sekunden erneut."
 
-#: includes/class-two-factor-webauthn.php:286
+#: includes/class-two-factor-webauthn.php:296
 msgid "Invalid credential data."
 msgstr "Ungültige Anmeldedaten."
 
-#: includes/class-two-factor-webauthn.php:297
+#: includes/class-two-factor-webauthn.php:307
 msgid "Challenge expired, please start again."
 msgstr "Challenge abgelaufen, bitte beginnen Sie erneut."
 
-#: includes/class-two-factor-webauthn.php:305
-#: includes/class-two-factor-webauthn.php:850
+#: includes/class-two-factor-webauthn.php:315
+#: includes/class-two-factor-webauthn.php:868
 msgid "Invalid clientDataJSON."
 msgstr "Ungültiges clientDataJSON."
 
-#: includes/class-two-factor-webauthn.php:308
-#: includes/class-two-factor-webauthn.php:853
+#: includes/class-two-factor-webauthn.php:318
+#: includes/class-two-factor-webauthn.php:871
 msgid "clientDataJSON.type is wrong."
 msgstr "clientDataJSON.type ist falsch."
 
-#: includes/class-two-factor-webauthn.php:311
-#: includes/class-two-factor-webauthn.php:863
+#: includes/class-two-factor-webauthn.php:321
+#: includes/class-two-factor-webauthn.php:881
 msgid "Challenge mismatch."
 msgstr "Challenge stimmt nicht überein."
 
-#: includes/class-two-factor-webauthn.php:314
-#: includes/class-two-factor-webauthn.php:866
+#: includes/class-two-factor-webauthn.php:324
+#: includes/class-two-factor-webauthn.php:884
 msgid "Origin mismatch."
 msgstr "Origin stimmt nicht überein."
 
-#: includes/class-two-factor-webauthn.php:330
-#: includes/class-two-factor-webauthn.php:883
+#: includes/class-two-factor-webauthn.php:340
+#: includes/class-two-factor-webauthn.php:901
 msgid "RP-ID hash mismatch."
 msgstr "RP-ID-Hash stimmt nicht überein."
 
-#: includes/class-two-factor-webauthn.php:333
-#: includes/class-two-factor-webauthn.php:886
+#: includes/class-two-factor-webauthn.php:343
+#: includes/class-two-factor-webauthn.php:904
 msgid "The authenticator did not confirm user presence."
 msgstr "Der Authenticator hat die Anwesenheit des Nutzers nicht bestätigt."
 
-#: includes/class-two-factor-webauthn.php:336
-#: includes/class-two-factor-webauthn.php:889
+#: includes/class-two-factor-webauthn.php:346
+#: includes/class-two-factor-webauthn.php:907
 msgid "User verification is required but was not performed."
 msgstr "Nutzerverifizierung ist erforderlich, wurde aber nicht durchgeführt."
 
-#: includes/class-two-factor-webauthn.php:339
+#: includes/class-two-factor-webauthn.php:349
 msgid "Credential data incomplete."
 msgstr "Anmeldedaten unvollständig."
 
-#: includes/class-two-factor-webauthn.php:372
+#: includes/class-two-factor-webauthn.php:382
 msgid "Security key registered."
 msgstr "Sicherheitsschlüssel registriert."
 
-#: includes/class-two-factor-webauthn.php:456
+#: includes/class-two-factor-webauthn.php:473
 msgid "Missing credential ID or name."
 msgstr "Credential-ID oder Name fehlt."
 
-#: includes/class-two-factor-webauthn.php:467
-#: includes/class-two-factor-webauthn.php:497
-#: includes/class-two-factor-webauthn.php:844
+#: includes/class-two-factor-webauthn.php:484
+#: includes/class-two-factor-webauthn.php:514
+#: includes/class-two-factor-webauthn.php:862
 msgid "Unknown security key."
 msgstr "Unbekannter Sicherheitsschlüssel."
 
-#: includes/class-two-factor-webauthn.php:485
-#: includes/class-two-factor-webauthn.php:833
+#: includes/class-two-factor-webauthn.php:502
+#: includes/class-two-factor-webauthn.php:851
 msgid "Missing credential ID."
 msgstr "Fehlende Credential-ID."
 
-#: includes/class-two-factor-webauthn.php:509
+#: includes/class-two-factor-webauthn.php:526
 msgid "This is your only security key and two-factor authentication is required for your account. Set up another method before removing it."
 msgstr "Dies ist Ihr einziger Sicherheitsschlüssel und die Zwei-Faktor-Authentifizierung ist für Ihr Konto vorgeschrieben. Richten Sie zuerst eine weitere Methode ein, bevor Sie ihn entfernen."
 
-#: includes/class-two-factor-webauthn.php:553
-#: includes/class-two-factor-webauthn.php:589
+#: includes/class-two-factor-webauthn.php:571
+#: includes/class-two-factor-webauthn.php:607
 msgid "Invalid challenge token."
 msgstr "Ungültiger Challenge-Token."
 
-#: includes/class-two-factor-webauthn.php:596
+#: includes/class-two-factor-webauthn.php:614
 msgid "Invalid assertion data."
 msgstr "Ungültige Assertion-Daten."
 
-#: includes/class-two-factor-webauthn.php:606
+#: includes/class-two-factor-webauthn.php:624
 msgid "Security key verified."
 msgstr "Sicherheitsschlüssel bestätigt."
 
-#: includes/class-two-factor-webauthn.php:858
+#: includes/class-two-factor-webauthn.php:876
 msgid "Challenge expired."
 msgstr "Challenge abgelaufen."
 
-#: includes/class-two-factor-webauthn.php:872
+#: includes/class-two-factor-webauthn.php:890
 msgid "The credential belongs to a different account."
 msgstr "Dieser Schlüssel gehört zu einem anderen Konto."
 
-#: includes/class-two-factor-webauthn.php:933
+#: includes/class-two-factor-webauthn.php:951
 msgid "Signature counter anomaly."
 msgstr "Anomalie beim Signaturzähler."
 
-#: includes/class-two-factor-webauthn.php:952
+#: includes/class-two-factor-webauthn.php:970
 msgid "Attestation object is missing authData."
 msgstr "Im Attestation-Objekt fehlt authData."
 
-#: includes/class-two-factor-webauthn.php:959
+#: includes/class-two-factor-webauthn.php:977
 msgid "authenticatorData is too short."
 msgstr "authenticatorData ist zu kurz."
 
-#: includes/class-two-factor-webauthn.php:983
+#: includes/class-two-factor-webauthn.php:1001
 msgid "Attested credential data is missing."
 msgstr "Attested-Credential-Daten fehlen."
 
-#: includes/class-two-factor-webauthn.php:1070
+#: includes/class-two-factor-webauthn.php:1088
 msgid "COSE key is not parseable."
 msgstr "COSE-Schlüssel kann nicht geparst werden."
 
-#: includes/class-two-factor-webauthn.php:1075
+#: includes/class-two-factor-webauthn.php:1093
 msgid "Ed25519 verification is not available on this server."
 msgstr "Ed25519-Verifizierung ist auf diesem Server nicht verfügbar."
 
-#: includes/class-two-factor-webauthn.php:1080
+#: includes/class-two-factor-webauthn.php:1098
 msgid "Invalid Ed25519 key."
 msgstr "Ungültiger Ed25519-Schlüssel."
 
-#: includes/class-two-factor-webauthn.php:1083
-#: includes/class-two-factor-webauthn.php:1094
+#: includes/class-two-factor-webauthn.php:1101
+#: includes/class-two-factor-webauthn.php:1112
 msgid "Signature could not be verified."
 msgstr "Signatur konnte nicht verifiziert werden."
 
-#: includes/class-two-factor-webauthn.php:1113
+#: includes/class-two-factor-webauthn.php:1131
 msgid "Unsupported EC curve."
 msgstr "Nicht unterstützte EC-Kurve."
 
-#: includes/class-two-factor-webauthn.php:1118
+#: includes/class-two-factor-webauthn.php:1136
 msgid "Invalid EC2 key."
 msgstr "Ungültiger EC2-Schlüssel."
 
-#: includes/class-two-factor-webauthn.php:1127
+#: includes/class-two-factor-webauthn.php:1145
 msgid "Invalid RSA key."
 msgstr "Ungültiger RSA-Schlüssel."
 
-#: includes/class-two-factor-webauthn.php:1132
+#: includes/class-two-factor-webauthn.php:1150
 msgid "Unsupported COSE algorithm."
 msgstr "Nicht unterstützter COSE-Algorithmus."
 
 #: includes/class-two-factor.php:319
-#: includes/class-two-factor.php:2270
+#: includes/class-two-factor.php:2276
 msgid "Your session has expired. Please sign in again."
 msgstr "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 
@@ -10849,7 +10825,7 @@ msgid "This method is not active on your account."
 msgstr "Diese Methode ist in Ihrem Konto nicht aktiv."
 
 #: includes/class-two-factor.php:362
-#: includes/class-two-factor.php:2268
+#: includes/class-two-factor.php:2274
 msgid "New code sent."
 msgstr "Neuer Code gesendet."
 
@@ -10898,76 +10874,76 @@ msgid "Two-factor verification required."
 msgstr "Zwei-Faktor-Verifizierung erforderlich."
 
 #. translators: %d: seconds remaining
-#: includes/class-two-factor.php:1439
+#: includes/class-two-factor.php:1445
 #, php-format
 msgid "Too many failed attempts. Please wait %d seconds."
 msgstr "Zu viele fehlgeschlagene Versuche. Bitte warten Sie %d Sekunden."
 
-#: includes/class-two-factor.php:1618
+#: includes/class-two-factor.php:1624
 msgid "Invalid verification code. Please make sure you are using the most recent code."
 msgstr "Ungültiger Verifizierungscode. Bitte stellen Sie sicher, dass Sie den neuesten Code verwenden."
 
-#: includes/class-two-factor.php:1887
+#: includes/class-two-factor.php:1893
 msgid "Your two-factor session has expired. This happens after 15 minutes of inactivity, or when the security cookie is missing, for example when the login form is loaded inside an iframe. Please sign in again."
 msgstr "Ihre Zwei-Faktor-Sitzung ist abgelaufen. Dies geschieht nach 15 Minuten Inaktivität oder wenn das Sicherheits-Cookie fehlt, zum Beispiel, wenn das Anmeldeformular in einem iframe geladen wird. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1888
+#: includes/class-two-factor.php:1894
 msgid "The user account from your two-factor session is no longer available. Please sign in again."
 msgstr "Das Benutzerkonto aus Ihrer Zwei-Faktor-Sitzung ist nicht mehr verfügbar. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1928
+#: includes/class-two-factor.php:1934
 msgid "Back to login"
 msgstr "Zurück zur Anmeldung"
 
-#: includes/class-two-factor.php:1967
+#: includes/class-two-factor.php:1973
 msgid "Too many failed verification attempts. Your two-factor session was invalidated for security. Please sign in again."
 msgstr "Zu viele fehlgeschlagene Verifizierungsversuche. Ihre Zwei-Faktor-Sitzung wurde aus Sicherheitsgründen ungültig gemacht. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:1973
+#: includes/class-two-factor.php:1979
 msgid "Your two-factor session expired. Please sign in again."
 msgstr "Ihre Zwei-Faktor-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 
-#: includes/class-two-factor.php:2269
+#: includes/class-two-factor.php:2275
 msgid "Sending failed."
 msgstr "Senden fehlgeschlagen."
 
-#: includes/class-two-factor.php:2271
+#: includes/class-two-factor.php:2277
 msgid "Passkey request in progress..."
 msgstr "Passkey-Anfrage läuft..."
 
-#: includes/class-two-factor.php:2272
+#: includes/class-two-factor.php:2278
 msgid "Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead."
 msgstr "Bitte geben Sie zuerst den Bestätigungscode ein. Wenn Sie Ihren Sicherheitsschlüssel berührt haben, wechseln Sie zum Passkey-Tab und nutzen Sie dort den Button."
 
-#: includes/class-two-factor.php:2273
+#: includes/class-two-factor.php:2279
 msgid "Please enter the verification code first."
 msgstr "Bitte geben Sie zuerst den Bestätigungscode ein."
 
-#: includes/class-two-factor.php:2274
+#: includes/class-two-factor.php:2280
 msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
 msgstr "Warte auf Ihren Sicherheitsschlüssel. Jetzt einstecken und berühren oder die Passkey-Abfrage bestätigen."
 
-#: includes/class-two-factor.php:2275
+#: includes/class-two-factor.php:2281
 msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
 msgstr "Die Anfrage ist abgelaufen oder wurde abgebrochen. Stecken Sie den Schlüssel ein und berühren Sie ihn (am Telefon für NFC flach an die Rückseite halten), und versuchen Sie es erneut."
 
-#: includes/class-two-factor.php:2276
+#: includes/class-two-factor.php:2282
 msgid "The domain of this page does not match the key registration."
 msgstr "Die Domain dieser Seite passt nicht zur Registrierung des Schlüssels."
 
-#: includes/class-two-factor.php:2277
+#: includes/class-two-factor.php:2283
 msgid "Failed to fetch passkey options."
 msgstr "Passkey-Optionen konnten nicht abgerufen werden."
 
-#: includes/class-two-factor.php:2278
+#: includes/class-two-factor.php:2284
 msgid "Verification failed."
 msgstr "Verifizierung fehlgeschlagen."
 
-#: includes/class-two-factor.php:2279
+#: includes/class-two-factor.php:2285
 msgid "Passkey login cancelled."
 msgstr "Passkey-Anmeldung abgebrochen."
 
-#: includes/class-two-factor.php:2318
+#: includes/class-two-factor.php:2324
 msgid "2FA template not found."
 msgstr "2FA-Template nicht gefunden."
 
@@ -11078,395 +11054,395 @@ msgstr "Neu in ReportedIP Hive %s"
 msgid "Read the release notes"
 msgstr "Release-Notes lesen"
 
-#: reportedip-hive.php:909
+#: reportedip-hive.php:908
 msgid "Testing connection..."
 msgstr "Verbindung wird getestet..."
 
-#: reportedip-hive.php:910
+#: reportedip-hive.php:909
 msgid "Connection successful!"
 msgstr "Verbindung erfolgreich!"
 
-#: reportedip-hive.php:911
+#: reportedip-hive.php:910
 msgid "Connection failed!"
 msgstr "Verbindung fehlgeschlagen!"
 
-#: reportedip-hive.php:912
+#: reportedip-hive.php:911
 msgid "Are you sure you want to unblock this IP?"
 msgstr "Möchten Sie diese IP wirklich entsperren?"
 
-#: reportedip-hive.php:913
+#: reportedip-hive.php:912
 msgid "Are you sure you want to whitelist this IP?"
 msgstr "Möchten Sie diese IP wirklich auf die Whitelist setzen?"
 
-#: reportedip-hive.php:914
+#: reportedip-hive.php:913
 msgid "Are you sure you want to reset all settings to defaults?"
 msgstr "Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen?"
 
-#: reportedip-hive.php:915
+#: reportedip-hive.php:914
 msgid "Reset the API statistics counter? This clears usage history only."
 msgstr "Den API-Statistikzähler zurücksetzen? Dies löscht nur die Nutzungshistorie."
 
-#: reportedip-hive.php:916
+#: reportedip-hive.php:915
 msgid "WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!"
 msgstr "WARNUNG: Dadurch werden ALLE Plugin-Daten einschließlich Protokolle, gesperrter IPs und Whitelist-Einträge gelöscht. Dies kann nicht rückgängig gemacht werden!"
 
-#: reportedip-hive.php:917
+#: reportedip-hive.php:916
 msgid "Are you absolutely sure?"
 msgstr "Sind Sie absolut sicher?"
 
-#: reportedip-hive.php:918
+#: reportedip-hive.php:917
 msgid "Remove this WAF exception?"
 msgstr "Diese WAF-Ausnahme entfernen?"
 
 #. translators: %1$s = WAF rule id, %2$s = request path.
-#: reportedip-hive.php:920
+#: reportedip-hive.php:919
 #, php-format
 msgid "Allow rule \"%1$s\" on path \"%2$s\"? The WAF stays active everywhere else."
 msgstr "Regel \"%1$s\" auf Pfad \"%2$s\" erlauben? Die WAF bleibt überall sonst aktiv."
 
-#: reportedip-hive.php:921
+#: reportedip-hive.php:920
 msgid "Are you sure you want to remove this IP from the whitelist?"
 msgstr "Möchten Sie diese IP wirklich von der Whitelist entfernen?"
 
-#: reportedip-hive.php:922
+#: reportedip-hive.php:921
 msgid "Are you sure you want to clean up old logs? This action cannot be undone."
 msgstr "Möchten Sie alte Protokolle wirklich bereinigen? Diese Aktion kann nicht rückgängig gemacht werden."
 
-#: reportedip-hive.php:923
+#: reportedip-hive.php:922
 msgid "Are you sure you want to anonymize old data? This will remove personal information from logs."
 msgstr "Möchten Sie alte Daten wirklich anonymisieren? Dabei werden personenbezogene Informationen aus den Protokollen entfernt."
 
-#: reportedip-hive.php:924
+#: reportedip-hive.php:923
 msgid "Enter reason for whitelisting (optional):"
 msgstr "Grund für das Setzen auf die Whitelist eingeben (optional):"
 
-#: reportedip-hive.php:925
+#: reportedip-hive.php:924
 msgid "Manually whitelisted from blocked list"
 msgstr "Manuell aus der Sperrliste auf die Whitelist gesetzt"
 
-#: reportedip-hive.php:926
+#: reportedip-hive.php:925
 msgid "Enter reason for blocking this IP:"
 msgstr "Grund für das Sperren dieser IP eingeben:"
 
-#: reportedip-hive.php:927
+#: reportedip-hive.php:926
 msgid "Blocked from security logs"
 msgstr "Aus den Sicherheitsprotokollen gesperrt"
 
-#: reportedip-hive.php:928
+#: reportedip-hive.php:927
 msgid "Export logs from how many days? (default: 30)"
 msgstr "Protokolle aus wie vielen Tagen exportieren? (Standard: 30)"
 
-#: reportedip-hive.php:929
+#: reportedip-hive.php:928
 msgid "Request failed. Check server logs."
 msgstr "Anfrage fehlgeschlagen. Prüfen Sie die Server-Logs."
 
-#: reportedip-hive.php:931
+#: reportedip-hive.php:930
 msgid "Test email failed."
 msgstr "Test-E-Mail fehlgeschlagen."
 
-#: reportedip-hive.php:933
+#: reportedip-hive.php:932
 msgid "Request failed."
 msgstr "Anfrage fehlgeschlagen."
 
-#: reportedip-hive.php:934
+#: reportedip-hive.php:933
 msgid "Network error occurred"
 msgstr "Netzwerkfehler aufgetreten"
 
-#: reportedip-hive.php:936
+#: reportedip-hive.php:935
 msgid "API statistics reset."
 msgstr "API-Statistiken zurückgesetzt."
 
-#: reportedip-hive.php:937
+#: reportedip-hive.php:936
 msgid "Failed to reset API statistics."
 msgstr "API-Statistiken konnten nicht zurückgesetzt werden."
 
-#: reportedip-hive.php:938
+#: reportedip-hive.php:937
 msgid "Cache cleared."
 msgstr "Cache geleert."
 
-#: reportedip-hive.php:939
+#: reportedip-hive.php:938
 msgid "Failed to clear cache."
 msgstr "Cache konnte nicht geleert werden."
 
-#: reportedip-hive.php:940
+#: reportedip-hive.php:939
 msgid "Expired entries cleaned."
 msgstr "Abgelaufene Einträge bereinigt."
 
-#: reportedip-hive.php:941
+#: reportedip-hive.php:940
 msgid "Failed to clean expired entries."
 msgstr "Abgelaufene Einträge konnten nicht bereinigt werden."
 
-#: reportedip-hive.php:942
+#: reportedip-hive.php:941
 msgid "Mode changed successfully"
 msgstr "Modus erfolgreich geändert"
 
-#: reportedip-hive.php:943
+#: reportedip-hive.php:942
 msgid "Failed to change mode"
 msgstr "Modus konnte nicht geändert werden"
 
-#: reportedip-hive.php:944
+#: reportedip-hive.php:943
 msgid "IP address added to whitelist successfully"
 msgstr "IP-Adresse erfolgreich zur Whitelist hinzugefügt"
 
-#: reportedip-hive.php:945
+#: reportedip-hive.php:944
 msgid "Failed to add IP to whitelist"
 msgstr "IP konnte nicht zur Whitelist hinzugefügt werden"
 
-#: reportedip-hive.php:946
+#: reportedip-hive.php:945
 msgid "IP address removed from whitelist"
 msgstr "IP-Adresse von der Whitelist entfernt"
 
-#: reportedip-hive.php:947
+#: reportedip-hive.php:946
 msgid "Failed to remove IP from whitelist"
 msgstr "IP konnte nicht von der Whitelist entfernt werden"
 
-#: reportedip-hive.php:948
+#: reportedip-hive.php:947
 msgid "WAF exception saved"
 msgstr "WAF-Ausnahme gespeichert"
 
-#: reportedip-hive.php:949
+#: reportedip-hive.php:948
 msgid "Failed to save the exception"
 msgstr "Die Ausnahme konnte nicht gespeichert werden"
 
-#: reportedip-hive.php:950
+#: reportedip-hive.php:949
 msgid "WAF exception removed"
 msgstr "WAF-Ausnahme entfernt"
 
-#: reportedip-hive.php:951
+#: reportedip-hive.php:950
 msgid "Failed to remove the exception"
 msgstr "Die Ausnahme konnte nicht entfernt werden"
 
-#: reportedip-hive.php:952
+#: reportedip-hive.php:951
 msgid "WAF exception added for this rule"
 msgstr "WAF-Ausnahme für diese Regel hinzugefügt"
 
-#: reportedip-hive.php:953
+#: reportedip-hive.php:952
 msgid "Failed to add the exception"
 msgstr "Die Ausnahme konnte nicht hinzugefügt werden"
 
-#: reportedip-hive.php:954
+#: reportedip-hive.php:953
 msgid "IP address blocked successfully"
 msgstr "IP-Adresse erfolgreich gesperrt"
 
-#: reportedip-hive.php:955
+#: reportedip-hive.php:954
 msgid "Failed to block IP address"
 msgstr "Die IP-Adresse konnte nicht gesperrt werden"
 
-#: reportedip-hive.php:956
+#: reportedip-hive.php:955
 msgid "IP address unblocked successfully"
 msgstr "IP-Adresse erfolgreich entsperrt"
 
-#: reportedip-hive.php:957
+#: reportedip-hive.php:956
 msgid "Failed to unblock IP address"
 msgstr "Die Sperre der IP-Adresse konnte nicht aufgehoben werden"
 
-#: reportedip-hive.php:958
+#: reportedip-hive.php:957
 msgid "IP address whitelisted successfully"
 msgstr "IP-Adresse erfolgreich auf die Whitelist gesetzt"
 
-#: reportedip-hive.php:959
+#: reportedip-hive.php:958
 msgid "Failed to whitelist IP address"
 msgstr "Die IP-Adresse konnte nicht auf die Whitelist gesetzt werden"
 
-#: reportedip-hive.php:960
+#: reportedip-hive.php:959
 msgid "No IP address found"
 msgstr "Keine IP-Adresse gefunden"
 
-#: reportedip-hive.php:961
+#: reportedip-hive.php:960
 msgid "Failed to copy IP address"
 msgstr "IP-Adresse konnte nicht kopiert werden"
 
-#: reportedip-hive.php:962
+#: reportedip-hive.php:961
 msgid "Failed to cleanup logs"
 msgstr "Protokolle konnten nicht bereinigt werden"
 
-#: reportedip-hive.php:963
+#: reportedip-hive.php:962
 msgid "Failed to anonymize data"
 msgstr "Daten konnten nicht anonymisiert werden"
 
-#: reportedip-hive.php:964
+#: reportedip-hive.php:963
 msgid "Logs exported successfully"
 msgstr "Protokolle erfolgreich exportiert"
 
-#: reportedip-hive.php:965
+#: reportedip-hive.php:964
 msgid "Failed to export logs"
 msgstr "Protokolle konnten nicht exportiert werden"
 
-#: reportedip-hive.php:966
+#: reportedip-hive.php:965
 msgid "Import completed."
 msgstr "Import abgeschlossen."
 
-#: reportedip-hive.php:967
+#: reportedip-hive.php:966
 msgid "Import failed."
 msgstr "Import fehlgeschlagen."
 
-#: reportedip-hive.php:968
+#: reportedip-hive.php:967
 msgid "Please enter an IP address"
 msgstr "Bitte geben Sie eine IP-Adresse ein"
 
-#: reportedip-hive.php:969
+#: reportedip-hive.php:968
 msgid "Failed to lookup IP address"
 msgstr "IP-Adresse konnte nicht abgefragt werden"
 
-#: reportedip-hive.php:972
+#: reportedip-hive.php:971
 msgid "Clean"
 msgstr "Unauffällig"
 
-#: reportedip-hive.php:973
+#: reportedip-hive.php:972
 msgid "IP Information:"
 msgstr "IP-Informationen:"
 
-#: reportedip-hive.php:974
+#: reportedip-hive.php:973
 msgid "Valid:"
 msgstr "Gültig:"
 
-#: reportedip-hive.php:975
+#: reportedip-hive.php:974
 msgid "Private:"
 msgstr "Privat:"
 
-#: reportedip-hive.php:976
+#: reportedip-hive.php:975
 msgid "Version:"
 msgstr "Version:"
 
-#: reportedip-hive.php:977
+#: reportedip-hive.php:976
 msgid "Yes"
 msgstr "Ja"
 
-#: reportedip-hive.php:978
+#: reportedip-hive.php:977
 msgid "No"
 msgstr "Nein"
 
-#: reportedip-hive.php:979
+#: reportedip-hive.php:978
 msgid "Country:"
 msgstr "Land:"
 
-#: reportedip-hive.php:980
+#: reportedip-hive.php:979
 msgid "Abuse Confidence:"
 msgstr "Missbrauchs-Konfidenz:"
 
-#: reportedip-hive.php:981
+#: reportedip-hive.php:980
 msgid "Total Reports:"
 msgstr "Meldungen gesamt:"
 
-#: reportedip-hive.php:986
+#: reportedip-hive.php:985
 msgid "ISP:"
 msgstr "ISP:"
 
-#: reportedip-hive.php:987
+#: reportedip-hive.php:986
 msgid "ASN:"
 msgstr "ASN:"
 
-#: reportedip-hive.php:988
+#: reportedip-hive.php:987
 msgid "Usage Type:"
 msgstr "Nutzungsart:"
 
-#: reportedip-hive.php:989
+#: reportedip-hive.php:988
 #: templates/two-factor-onboarding.php:106
 msgid "Domain:"
 msgstr "Domain:"
 
-#: reportedip-hive.php:990
+#: reportedip-hive.php:989
 msgid "Distinct Reporters:"
 msgstr "Verschiedene Melder:"
 
-#: reportedip-hive.php:991
+#: reportedip-hive.php:990
 msgid "Last Reported:"
 msgstr "Zuletzt gemeldet:"
 
-#: reportedip-hive.php:992
+#: reportedip-hive.php:991
 msgid "Tor exit node"
 msgstr "Tor-Exit-Node"
 
-#: reportedip-hive.php:993
+#: reportedip-hive.php:992
 msgid "Community-verified infrastructure"
 msgstr "Community-verifizierte Infrastruktur"
 
-#: reportedip-hive.php:996
+#: reportedip-hive.php:995
 msgid "View community report"
 msgstr "Community-Bericht ansehen"
 
-#: reportedip-hive.php:997
+#: reportedip-hive.php:996
 msgid "This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?"
 msgstr "Das ist Ihre eigene aktuelle IP-Adresse. Eine Sperrung kann Sie aus wp-admin aussperren. Fortfahren?"
 
-#: reportedip-hive.php:1112
+#: reportedip-hive.php:1111
 msgid "Events"
 msgstr "Ereignisse"
 
-#: reportedip-hive.php:1273
+#: reportedip-hive.php:1272
 msgid "Your IP address has been blocked due to suspicious activity."
 msgstr "Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1328
+#: reportedip-hive.php:1327
 msgid "Access denied due to IP reputation."
 msgstr "Zugriff aufgrund der IP-Reputation verweigert."
 
-#: reportedip-hive.php:1364
+#: reportedip-hive.php:1363
 msgid "Access denied: connections from Tor exit nodes are not allowed on this site."
 msgstr "Zugriff verweigert: Verbindungen von Tor-Exit-Nodes sind auf dieser Website nicht erlaubt."
 
-#: reportedip-hive.php:1654
-#: reportedip-hive.php:2016
+#: reportedip-hive.php:1653
+#: reportedip-hive.php:2015
 msgid "Access denied. Your IP address has been blocked due to suspicious activity."
 msgstr "Zugriff verweigert. Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1723
-#: reportedip-hive.php:1797
-#: reportedip-hive.php:1821
+#: reportedip-hive.php:1722
+#: reportedip-hive.php:1796
+#: reportedip-hive.php:1820
 msgid "ReportedIP Hive:"
 msgstr "ReportedIP Hive:"
 
 #. translators: %1$d: number of failed reports, %2$s: link to queue page
-#: reportedip-hive.php:1726
+#: reportedip-hive.php:1725
 #, php-format
 msgid "%1$d API reports failed. %2$s"
 msgstr "%1$d API-Meldungen fehlgeschlagen. %2$s"
 
-#: reportedip-hive.php:1728
+#: reportedip-hive.php:1727
 msgid "View queue"
 msgstr "Warteschlange anzeigen"
 
-#: reportedip-hive.php:1739
-#: reportedip-hive.php:1760
+#: reportedip-hive.php:1738
+#: reportedip-hive.php:1759
 msgid "Retry all"
 msgstr "Alle erneut versuchen"
 
-#: reportedip-hive.php:1759
+#: reportedip-hive.php:1758
 msgid "Retry failed."
 msgstr "Erneuter Versuch fehlgeschlagen."
 
-#: reportedip-hive.php:1777
+#: reportedip-hive.php:1776
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr "ReportedIP Hive - Warteschlange kritisch:"
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
-#: reportedip-hive.php:1780
+#: reportedip-hive.php:1779
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
 msgstr "%1$d Meldungen warten auf Verarbeitung. Ihr API-Kontingent ist möglicherweise nicht ausreichend. %2$s oder %3$s."
 
-#: reportedip-hive.php:1782
-#: reportedip-hive.php:1802
+#: reportedip-hive.php:1781
+#: reportedip-hive.php:1801
 msgid "Upgrade API tier"
 msgstr "API-Stufe upgraden"
 
-#: reportedip-hive.php:1783
+#: reportedip-hive.php:1782
 msgid "Manage queue"
 msgstr "Warteschlange verwalten"
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page
-#: reportedip-hive.php:1800
+#: reportedip-hive.php:1799
 #, php-format
 msgid "%1$d reports pending processing. %2$s for higher limits."
 msgstr "%1$d Meldungen warten auf Verarbeitung. %2$s für höhere Limits."
 
 #. translators: %s: link to settings page
-#: reportedip-hive.php:1824
+#: reportedip-hive.php:1823
 #, php-format
 msgid "No API key configured. %s"
 msgstr "Kein API-Schlüssel konfiguriert. %s"
 
-#: reportedip-hive.php:1825
+#: reportedip-hive.php:1824
 msgid "Configure now"
 msgstr "Jetzt konfigurieren"
 
@@ -11561,46 +11537,36 @@ msgstr "Melden Sie sich mit Ihrem Passkey oder Sicherheitsschlüssel an (Face ID
 msgid "Use passkey or security key"
 msgstr "Passkey oder Sicherheitsschlüssel verwenden"
 
-#: templates/partials/webauthn-key-manager.php:37
+#: templates/partials/webauthn-key-manager.php:36
 msgid "Security keys & passkeys"
 msgstr "Sicherheitsschlüssel & Passkeys"
 
-#: templates/partials/webauthn-key-manager.php:40
+#: templates/partials/webauthn-key-manager.php:39
 msgid "Add security key"
 msgstr "Sicherheitsschlüssel hinzufügen"
 
-#: templates/partials/webauthn-key-manager.php:45
-msgid "Register more than one key so a lost or broken key never locks you out. Keep a backup key in a safe place."
-msgstr "Registrieren Sie mehr als einen Schlüssel, damit ein verlorener oder defekter Schlüssel Sie nie aussperrt. Bewahren Sie einen Ersatzschlüssel an einem sicheren Ort auf."
-
-#. translators: 1: opening link tag, 2: closing link tag
-#: templates/partials/webauthn-key-manager.php:52
-#, php-format
-msgid "One security key per account is free. Backup keys, automatic model detection and key alerts are part of the %1$sBusiness plan%2$s."
-msgstr "Ein Sicherheitsschlüssel pro Konto ist kostenlos. Ersatzschlüssel, automatische Modell-Erkennung und Schlüssel-Benachrichtigungen sind Teil des %1$sBusiness-Tarifs%2$s."
-
-#: templates/partials/webauthn-key-manager.php:61
+#: templates/partials/webauthn-key-manager.php:57
 msgid "Key name"
 msgstr "Key-Name"
 
-#: templates/partials/webauthn-key-manager.php:62
+#: templates/partials/webauthn-key-manager.php:58
 #: templates/two-factor-onboarding.php:363
 msgid "e.g. YubiKey office"
 msgstr "z. B. YubiKey Büro"
 
-#: templates/partials/webauthn-key-manager.php:66
+#: templates/partials/webauthn-key-manager.php:62
 msgid "Security key (USB / NFC)"
 msgstr "Sicherheitsschlüssel (USB / NFC)"
 
-#: templates/partials/webauthn-key-manager.php:69
+#: templates/partials/webauthn-key-manager.php:65
 msgid "This device (Face ID / Windows Hello)"
 msgstr "Dieses Gerät (Face ID / Windows Hello)"
 
-#: templates/partials/webauthn-key-manager.php:78
+#: templates/partials/webauthn-key-manager.php:74
 msgid "Name"
 msgstr "Name"
 
-#: templates/partials/webauthn-key-manager.php:89
+#: templates/partials/webauthn-key-manager.php:85
 msgid "No security key registered yet. Add a hardware key (e.g. YubiKey) or a passkey on this device."
 msgstr "Noch kein Sicherheitsschlüssel registriert. Fügen Sie einen Hardware-Schlüssel (z. B. YubiKey) oder einen Passkey auf diesem Gerät hinzu."
 
