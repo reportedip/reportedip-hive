@@ -30,8 +30,6 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( 'ReportedIP_Hive_Two_Factor_Admin', 'register_settings' ) );
 		add_action( 'admin_notices', array( $this, 'render_tier_upgrade_banner' ) );
-		add_action( 'admin_notices', array( $this, 'render_cap_status_notice' ), 5 );
-		add_action( 'admin_post_reportedip_hive_cap_notice_dismiss', array( $this, 'handle_cap_notice_dismiss' ) );
 		add_action( 'admin_post_reportedip_hive_support_bundle', array( $this, 'handle_support_bundle' ) );
 		add_action( 'updated_option', array( $this, 'maybe_sync_notifications_to_api' ), 10, 1 );
 		add_action( 'network_admin_edit_reportedip_hive_save_settings', array( $this, 'handle_network_admin_save' ) );
@@ -845,17 +843,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render the dashboard "Relay Quota" section for PRO+ Community sites.
-	 *
-	 * Shows mail and SMS monthly usage, optional bundle balance for Business+,
-	 * and a stale-data hint when the snapshot is older than 24h.
-	 *
-	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Singleton.
-	 * @return void
-	 * @since 1.5.3
-	 */
-
-	/**
 	 * Render the API call usage card on the dashboard. Renders nothing
 	 * when the plugin has never made an API call.
 	 *
@@ -1155,46 +1142,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 
-	private function render_relay_quota_section( $mode_manager ) {
-		$snapshot = $mode_manager->get_relay_quota_snapshot();
-		$tier     = $mode_manager->get_tier_info( $snapshot['tier'] );
-
-		$mail_used   = (int) $snapshot['mail']['used'];
-		$mail_limit  = $snapshot['mail']['limit'];
-		$mail_bundle = (int) $snapshot['mail_bundle_balance'];
-		$sms_used    = (int) $snapshot['sms']['used'];
-		$sms_limit   = $snapshot['sms']['limit'];
-		$sms_bundle  = (int) $snapshot['sms_bundle_balance'];
-		$reset_label = $snapshot['period_end']
-			? date_i18n( get_option( 'date_format' ), (int) $snapshot['period_end'] )
-			: __( 'next billing cycle', 'reportedip-hive' );
-		?>
-		<div class="rip-settings-section rip-relay-quota">
-			<h2 class="rip-settings-section__title">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/></svg>
-				<?php esc_html_e( 'Relay Quota', 'reportedip-hive' ); ?>
-				<?php self::render_tier_badge( $snapshot['tier'] ); ?>
-			</h2>
-			<p class="rip-settings-section__desc">
-				<?php
-				printf(
-					/* translators: 1: tier short label (e.g. PRO), 2: human-readable reset date */
-					esc_html__( 'Your %1$s plan includes managed mail and SMS delivery via reportedip.com. Counters reset on %2$s.', 'reportedip-hive' ),
-					esc_html( $tier['short_label'] ),
-					esc_html( $reset_label )
-				);
-				?>
-			</p>
-
-			<div class="rip-stat-cards">
-				<?php $this->render_quota_card( 'mail', $mail_used, $mail_limit, $reset_label, $snapshot['is_stale'], $mail_bundle ); ?>
-				<?php $this->render_quota_card( 'sms', $sms_used, $sms_limit, $reset_label, $snapshot['is_stale'], $sms_bundle ); ?>
-				<?php $this->render_domains_card( $mode_manager ); ?>
-			</div>
-		</div>
-		<?php
-	}
-
 	/**
 	 * Reputation of the site's own address on the Community page.
 	 *
@@ -1329,7 +1276,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @return void
 	 * @since 2.1.45
 	 */
-	private function render_domains_card( $mode_manager ) {
+	public static function render_domains_card( $mode_manager ) {
 		$snapshot = $mode_manager->get_domains_snapshot();
 		if ( null === $snapshot ) {
 			return;
@@ -1380,119 +1327,6 @@ class ReportedIP_Hive_Admin_Settings {
 				<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 					<?php esc_html_e( 'More domains in use than your plan includes, manage them in your reportedip.com dashboard.', 'reportedip-hive' ); ?>
-				</div>
-			<?php endif; ?>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Render a single relay quota stat card with progress bar.
-	 *
-	 * @param string   $type        'mail' or 'sms'.
-	 * @param int      $used        Number consumed in current period.
-	 * @param int|null $limit       Period limit (null = unlimited).
-	 * @param string   $reset_label Human-readable reset date.
-	 * @param bool     $is_stale    Whether the snapshot is older than 24h.
-	 * @param int      $bundle      Prepaid bundle balance for this type. Signed: a
-	 *                              negative value means a Stripe refund clawed credits
-	 *                              back below zero, sending stays blocked until a new
-	 *                              bundle is purchased (PRICING-PLAN.md §3d).
-	 * @return void
-	 * @since 1.5.3
-	 */
-	private function render_quota_card( $type, $used, $limit, $reset_label, $is_stale, $bundle = 0 ) {
-		$is_mail   = ( 'mail' === $type );
-		$label     = $is_mail ? __( 'Mail relay', 'reportedip-hive' ) : __( 'SMS relay', 'reportedip-hive' );
-		$icon      = $is_mail
-			? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>'
-			: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
-		$icon_kind = $is_mail ? 'rip-stat-card__icon--info' : 'rip-stat-card__icon--primary';
-
-		$pct = 0;
-		if ( null !== $limit && $limit > 0 ) {
-			$pct = (int) min( 100, round( $used / $limit * 100 ) );
-		}
-
-		$progress_class = '';
-		if ( $pct >= 90 ) {
-			$progress_class = 'rip-stat-card__progress--crit';
-		} elseif ( $pct >= 70 ) {
-			$progress_class = 'rip-stat-card__progress--warn';
-		}
-
-		$value_text = (string) $used;
-		$limit_text = ( null === $limit )
-			? __( 'unlimited', 'reportedip-hive' )
-			: sprintf( '/ %s', number_format_i18n( (int) $limit ) );
-
-		$bundle_unit_singular = $is_mail
-			? __( 'Mail credit', 'reportedip-hive' )
-			: __( 'SMS credit', 'reportedip-hive' );
-		$bundle_unit_plural   = $is_mail
-			? __( 'Mail credits', 'reportedip-hive' )
-			: __( 'SMS credits', 'reportedip-hive' );
-		$bundle_unit          = ( 1 === abs( (int) $bundle ) ) ? $bundle_unit_singular : $bundle_unit_plural;
-		?>
-		<div class="rip-stat-card rip-stat-card--quota">
-			<div class="rip-stat-card__head">
-				<div class="rip-stat-card__icon <?php echo esc_attr( $icon_kind ); ?>">
-					<?php echo self::kses_inline_svg( $icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally; the SVG is whitelisted by the helper. ?>
-				</div>
-				<div class="rip-stat-card__content">
-					<div class="rip-stat-card__value">
-						<?php echo esc_html( $value_text ); ?>
-						<span class="rip-stat-card__value-limit"><?php echo esc_html( $limit_text ); ?></span>
-					</div>
-					<div class="rip-stat-card__label"><?php echo esc_html( $label ); ?></div>
-				</div>
-			</div>
-
-			<?php if ( null !== $limit && $limit > 0 ) : ?>
-				<div class="rip-stat-card__progress <?php echo esc_attr( $progress_class ); ?>" style="--quota-pct: <?php echo (int) $pct; ?>;">
-					<div class="rip-stat-card__progress-bar"></div>
-				</div>
-			<?php endif; ?>
-
-			<?php if ( $bundle > 0 ) : ?>
-				<div class="rip-stat-card__hint rip-stat-card__hint--bundle">
-					<?php
-					printf(
-						/* translators: 1: bundle balance count, 2: unit (Mail credits / SMS credits) */
-						esc_html__( '+ %1$s %2$s in your bundle balance', 'reportedip-hive' ),
-						esc_html( number_format_i18n( (int) $bundle ) ),
-						esc_html( $bundle_unit )
-					);
-					?>
-				</div>
-			<?php elseif ( $bundle < 0 ) : ?>
-				<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-					<?php
-					printf(
-						/* translators: 1: negative balance (already includes the minus sign), 2: unit (Mail credits / SMS credits) */
-						esc_html__( 'Bundle balance is %1$s %2$s after refund, purchase a new bundle to resume sending once the inclusive quota is exhausted.', 'reportedip-hive' ),
-						esc_html( number_format_i18n( (int) $bundle ) ),
-						esc_html( $bundle_unit )
-					);
-					?>
-				</div>
-			<?php endif; ?>
-
-			<div class="rip-stat-card__hint">
-				<?php
-				printf(
-					/* translators: %s = next reset date */
-					esc_html__( 'Resets on %s', 'reportedip-hive' ),
-					esc_html( $reset_label )
-				);
-				?>
-			</div>
-
-			<?php if ( $is_stale ) : ?>
-				<div class="rip-stat-card__hint rip-stat-card__hint--stale">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-					<?php esc_html_e( 'Awaiting fresh quota data, refreshes every 6 hours.', 'reportedip-hive' ); ?>
 				</div>
 			<?php endif; ?>
 		</div>
@@ -1639,158 +1473,6 @@ class ReportedIP_Hive_Admin_Settings {
 				),
 			)
 		);
-	}
-
-	/**
-	 * Render a status notice when the Mail or SMS relay has hit its cap and
-	 * is silently in fallback (mail → wp_mail) or paused (SMS → other 2FA
-	 * method).
-	 *
-	 * This is operational information, not a promo, it does NOT participate
-	 * in {@see ReportedIP_Hive_Promo_Manager}'s frequency cap. The notice
-	 * stays visible until either the underlying transient expires (relay
-	 * accepts again) or the operator dismisses it for the configured cooldown.
-	 *
-	 * Hook: `admin_notices` priority 5 so it sits at the top of the page,
-	 * above the standard-priority Hive banners.
-	 *
-	 * @return void
-	 * @since  2.0.16
-	 */
-	public function render_cap_status_notice() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			return;
-		}
-
-		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		if ( ! $screen ) {
-			return;
-		}
-		$screen_id = (string) $screen->id;
-		if ( false === strpos( $screen_id, 'reportedip-hive' ) && 'dashboard' !== $screen_id ) {
-			return;
-		}
-
-		$mail_state = ReportedIP_Hive_Mode_Manager::get_cap_state( 'mail' );
-		$sms_state  = ReportedIP_Hive_Mode_Manager::get_cap_state( 'sms' );
-		if ( ! $mail_state && ! $sms_state ) {
-			return;
-		}
-
-		$user_id         = (int) get_current_user_id();
-		$dismissed_until = (int) get_user_meta( $user_id, 'reportedip_hive_cap_notice_dismissed_until', true );
-		if ( $dismissed_until > 0 && $dismissed_until > time() ) {
-			return;
-		}
-
-		$lines = array();
-		if ( $mail_state ) {
-			$lines[] = self::format_cap_state_line(
-				__( 'Mail relay', 'reportedip-hive' ),
-				$mail_state,
-				__( 'Mails are temporarily routed through your local wp_mail() until the relay accepts again.', 'reportedip-hive' )
-			);
-		}
-		if ( $sms_state ) {
-			$lines[] = self::format_cap_state_line(
-				__( 'SMS relay', 'reportedip-hive' ),
-				$sms_state,
-				__( 'SMS-based 2FA codes are paused until the relay accepts again, users can still choose TOTP, Email or Passkey.', 'reportedip-hive' )
-			);
-		}
-
-		$dashboard_url   = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
-		$cap_dismiss_url = wp_nonce_url(
-			self::get_admin_page_url( 'admin-post.php?action=reportedip_hive_cap_notice_dismiss' ),
-			'reportedip_hive_cap_notice_dismiss'
-		);
-		ReportedIP_Hive_Admin_Notice::render(
-			array(
-				'variant'           => 'warning',
-				'extra_classes'     => 'rip-cap-status-notice',
-				'title'             => __( 'Managed relay capacity reached', 'reportedip-hive' ),
-				'list_items'        => $lines,
-				'primary_action'    => array(
-					'label'   => __( 'View quota details', 'reportedip-hive' ),
-					'url'     => $dashboard_url,
-					'variant' => 'secondary',
-				),
-				'secondary_actions' => array(
-					array(
-						'type'  => 'link',
-						'label' => __( 'Hide for 24 hours', 'reportedip-hive' ),
-						'url'   => $cap_dismiss_url,
-					),
-				),
-			)
-		);
-	}
-
-	/**
-	 * Format one line of the cap-status notice for a single channel.
-	 *
-	 * @param string $channel_label Localised channel label.
-	 * @param array  $state         Output of {@see ReportedIP_Hive_Mode_Manager::get_cap_state()}.
-	 * @param string $fallback_hint Localised hint about the fallback behaviour.
-	 * @return string Sentence ready for {@see wp_kses_post()}.
-	 */
-	private static function format_cap_state_line( $channel_label, array $state, $fallback_hint ) {
-		$hit_at  = (int) ( $state['hit_at'] ?? 0 );
-		$retry   = (int) ( $state['retry_after'] ?? 0 );
-		$resumes = $retry > 0 ? ( $hit_at > 0 ? $hit_at + $retry : time() + $retry ) : 0;
-
-		$when = '';
-		if ( $resumes > 0 ) {
-			$when = ' ' . sprintf(
-				/* translators: %s = human-readable time difference (e.g. "in 4 hours"). */
-				esc_html__( 'Relay accepts again %s.', 'reportedip-hive' ),
-				esc_html( human_time_diff( time(), $resumes ) )
-			);
-		}
-
-		return sprintf(
-			'<strong>%s:</strong> %s%s',
-			esc_html( $channel_label ),
-			esc_html( $fallback_hint ),
-			$when
-		);
-	}
-
-	/**
-	 * `admin-post.php?action=reportedip_hive_cap_notice_dismiss` handler.
-	 *
-	 * Hides the cap-status notice for 24 hours on the current user. The
-	 * underlying transient is untouched, when it expires naturally the
-	 * notice can return, which is intentional (it is operational information
-	 * that the relay is still in fallback).
-	 *
-	 * @return void
-	 * @since  2.0.16
-	 */
-	public function handle_cap_notice_dismiss() {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
-		}
-		check_admin_referer( 'reportedip_hive_cap_notice_dismiss' );
-
-		$user_id = (int) get_current_user_id();
-		if ( $user_id > 0 ) {
-			update_user_meta(
-				$user_id,
-				'reportedip_hive_cap_notice_dismissed_until',
-				time() + DAY_IN_SECONDS
-			);
-		}
-
-		$redirect = wp_get_referer();
-		if ( ! $redirect ) {
-			$redirect = self::get_admin_page_url( '' );
-		}
-		wp_safe_redirect( $redirect );
-		exit;
 	}
 
 	/**
@@ -3664,9 +3346,13 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php ReportedIP_Hive_Dashboard_Next_Steps::render(); ?>
 
 				<?php
-				if ( $mode_manager->is_community_mode() && $mode_manager->tier_at_least( 'professional' ) ) {
-					$this->render_relay_quota_section( $mode_manager );
-				}
+				/**
+				 * Print a section on the dashboard below the next steps,
+				 * above the charts, as `div.rip-settings-section`.
+				 *
+				 * @since 3.0.0
+				 */
+				do_action( 'reportedip_hive_dashboard_after_next_steps' );
 				?>
 
 
