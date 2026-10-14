@@ -321,7 +321,7 @@ final class ReportedIP_Hive_Support_Bundle {
 
 		return array(
 			'enabled'         => (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_form_proof_enabled', true ),
-			'pow'             => (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_form_proof_pow', true ),
+			'pow'             => class_exists( 'ReportedIP_Hive_Form_Proof' ) && ReportedIP_Hive_Form_Proof::computation_owned() && (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_form_proof_pow', true ),
 			'detected'        => $detected,
 			'active'          => $active,
 			'adapters_since'  => $since > 0 ? gmdate( 'c', $since ) : '',

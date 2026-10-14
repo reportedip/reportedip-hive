@@ -15,6 +15,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 	use ReportedIP\Hive\Tests\TestCase;
 
+	require_once dirname( __DIR__, 2 ) . '/includes/class-form-proof.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-support-bundle.php';
 
 	/**
@@ -126,6 +127,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 1, $summary['waf_paths']['/.env'] );
 			$this->assertContains( 'ajax_action', \ReportedIP_Hive_Support_Bundle::DETAIL_KEYS );
 			$this->assertContains( 'matched', \ReportedIP_Hive_Support_Bundle::DETAIL_KEYS );
+		}
+
+		/**
+		 * The computation check lives in the add-on. Without it the bundle
+		 * reports it off, even on a fresh install that never stored the
+		 * option; with it the stored switch counts, default on.
+		 */
+		public function test_the_computation_is_reported_only_while_something_judges_it(): void {
+			$GLOBALS['wp_filters'] = array();
+			$GLOBALS['wp_options'] = array();
+			$read                  = new \ReflectionMethod( \ReportedIP_Hive_Support_Bundle::class, 'form_proof' );
+
+			$this->assertFalse( $read->invoke( null )['pow'] );
+
+			add_filter( 'reportedip_hive_form_proof_verdict', 'strval', 10, 4 );
+
+			try {
+				$this->assertTrue( $read->invoke( null )['pow'] );
+				$GLOBALS['wp_options']['reportedip_hive_form_proof_pow'] = 0;
+				$this->assertFalse( $read->invoke( null )['pow'] );
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+				$GLOBALS['wp_options'] = array();
+			}
 		}
 	}
 }
