@@ -233,27 +233,6 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
-	 * Advisory: storefront 2FA is included in the plan but switched off.
-	 *
-	 * @param bool $woocommerce WooCommerce active.
-	 * @param bool $available   `feature_status('frontend_2fa')['available']`.
-	 * @param bool $enabled     Option state.
-	 * @return array<string,mixed>|null
-	 * @since  2.1.57
-	 */
-	public static function frontend_2fa_available( $woocommerce, $available, $enabled ) {
-		if ( ! $woocommerce || ! $available || $enabled ) {
-			return null;
-		}
-		return self::issue(
-			'frontend_2fa_available',
-			self::SEV_ADVISORY,
-			__( 'Storefront 2FA is included in your plan', 'reportedip-hive' ),
-			__( 'Customers and staff who sign in through My Account get the second factor inside your theme. Nothing changes for visitors who never sign in.', 'reportedip-hive' )
-		);
-	}
-
-	/**
 	 * Advisory: a third-party form plugin is active, the plan covers the
 	 * execution proof for it and the switch is still off.
 	 *
@@ -507,11 +486,6 @@ final class ReportedIP_Hive_Readiness {
 
 		if ( $mode->is_wizard_completed() ) {
 			$raised[] = self::hide_login_off( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false ) );
-			$raised[] = self::frontend_2fa_available(
-				class_exists( 'WooCommerce' ),
-				! empty( $mode->feature_status( 'frontend_2fa' )['available'] ),
-				(bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_enabled', false )
-			);
 			$raised[] = self::badge_off( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false ) );
 			if ( $main_site && 'cli' !== PHP_SAPI ) {
 				$guard    = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
@@ -1065,7 +1039,6 @@ final class ReportedIP_Hive_Readiness {
 			'queue_failed'           => array( 'reportedip-hive-security', 'api_queue' ),
 			'queue_backlog'          => array( 'reportedip-hive-security', 'api_queue' ),
 			'hide_login_off'         => array( 'reportedip-hive-protection', 'hide_login' ),
-			'frontend_2fa_available' => array( 'reportedip-hive-protection', 'account_security' ),
 			'badge_off'              => array( 'reportedip-hive-community', 'badges' ),
 			'dropin_not_running'     => array( 'reportedip-hive-tools', 'server' ),
 			'community_pending'      => array( 'reportedip-hive-community', 'community' ),

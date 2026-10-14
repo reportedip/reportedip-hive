@@ -34,13 +34,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNull( ReportedIP_Hive_Readiness::hide_login_off( true ) );
 		}
 
-		public function test_frontend_2fa_available_needs_woocommerce_and_the_plan_and_an_off_switch(): void {
-			$this->assertNotNull( ReportedIP_Hive_Readiness::frontend_2fa_available( true, true, false ) );
-			$this->assertNull( ReportedIP_Hive_Readiness::frontend_2fa_available( false, true, false ), 'no WooCommerce' );
-			$this->assertNull( ReportedIP_Hive_Readiness::frontend_2fa_available( true, false, false ), 'not on the plan: that is the upsell card' );
-			$this->assertNull( ReportedIP_Hive_Readiness::frontend_2fa_available( true, true, true ), 'already on' );
-		}
-
 		public function test_badge_off_and_community_pending(): void {
 			$this->assertSame( 'badge_off', ReportedIP_Hive_Readiness::badge_off( false )['key'] );
 			$this->assertNull( ReportedIP_Hive_Readiness::badge_off( true ) );

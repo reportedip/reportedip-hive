@@ -142,28 +142,24 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 */
 	public static function step_actions() {
 		$actions = array(
-			'hide_login_off'         => array(
+			'hide_login_off'     => array(
 				'label' => __( 'Switch on', 'reportedip-hive' ),
 				'write' => true,
 				'field' => 'slug',
 			),
-			'frontend_2fa_available' => array(
-				'label' => __( 'Switch on', 'reportedip-hive' ),
-				'write' => true,
-			),
-			'badge_off'              => array(
+			'badge_off'          => array(
 				'label' => __( 'Show badge', 'reportedip-hive' ),
 				'write' => true,
 			),
-			'dropin_not_running'     => array(
+			'dropin_not_running' => array(
 				'label' => __( 'Open server setup', 'reportedip-hive' ),
 				'write' => false,
 			),
-			'community_pending'      => array(
+			'community_pending'  => array(
 				'label' => __( 'Enter a key', 'reportedip-hive' ),
 				'write' => false,
 			),
-			'own_2fa_missing'        => array(
+			'own_2fa_missing'    => array(
 				'label' => __( 'Set up now', 'reportedip-hive' ),
 				'write' => false,
 			),
@@ -201,8 +197,6 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 		switch ( (string) $step ) {
 			case 'badge_off':
 				return array( 'reportedip_hive_auto_footer_enabled' => 1 );
-			case 'frontend_2fa_available':
-				return array( 'reportedip_hive_2fa_frontend_enabled' => 1 );
 			case 'hide_login_off':
 				return array(
 					'reportedip_hive_hide_login_slug'    => (string) ( $input['slug'] ?? '' ),
@@ -216,7 +210,19 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			}
 		}
 
-		return array();
+		/**
+		 * Registry values a writing step of an add-on stores, for a step
+		 * whose action in `reportedip_hive_next_step_actions` has `write`
+		 * true. The values go through `Settings_Apply::apply()` like the
+		 * free steps. A result that is not an array writes nothing.
+		 *
+		 * @param array<string,mixed> $values Values, empty for an unknown step.
+		 * @param string              $step   Issue key.
+		 * @param array<string,mixed> $input  Posted fields (`slug`).
+		 * @since 3.0.0
+		 */
+		$values = apply_filters( 'reportedip_hive_next_step_values', array(), (string) $step, $input );
+		return is_array( $values ) ? $values : array();
 	}
 
 	/**

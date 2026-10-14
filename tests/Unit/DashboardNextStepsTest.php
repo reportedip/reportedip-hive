@@ -89,11 +89,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_step_actions_map_every_advisory_key(): void {
-			foreach ( array( 'hide_login_off', 'frontend_2fa_available', 'badge_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing' ) as $key ) {
+			foreach ( array( 'hide_login_off', 'badge_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing' ) as $key ) {
 				$this->assertArrayHasKey( $key, ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), $key );
 			}
 			$this->assertSame( array( 'reportedip_hive_auto_footer_enabled' => 1 ), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'badge_off', array() ) );
-			$this->assertSame( array( 'reportedip_hive_2fa_frontend_enabled' => 1 ), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'frontend_2fa_available', array() ) );
+			$this->assertArrayNotHasKey( 'frontend_2fa_available', ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), 'The storefront step comes with the add-on.' );
+			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'frontend_2fa_available', array() ) );
 			$this->assertSame(
 				array(
 					'reportedip_hive_hide_login_slug'    => 'secret-door',
@@ -105,6 +106,28 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertArrayNotHasKey( 'group_available', ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), 'The group step comes with the add-on.' );
 			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'group_available', array() ) );
+		}
+
+		public function test_an_add_on_step_writes_through_the_values_filter(): void {
+			$filters_before = $GLOBALS['wp_filters'] ?? array();
+			try {
+				add_filter(
+					'reportedip_hive_next_step_values',
+					static function ( $values, $step, $input ) {
+						return 'extra_issue' === $step ? array( 'reportedip_hive_extra' => (string) ( $input['slug'] ?? '' ) ) : $values;
+					},
+					10,
+					3
+				);
+				$this->assertSame( array( 'reportedip_hive_extra' => 'x' ), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'extra_issue', array( 'slug' => 'x' ) ) );
+				$this->assertSame( array( 'reportedip_hive_auto_footer_enabled' => 1 ), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'badge_off', array() ), 'A free step never reaches the filter.' );
+
+				$GLOBALS['wp_filters']['reportedip_hive_next_step_values'] = array();
+				add_filter( 'reportedip_hive_next_step_values', static fn() => 'broken' );
+				$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'extra_issue', array() ) );
+			} finally {
+				$GLOBALS['wp_filters'] = $filters_before;
+			}
 		}
 
 		public function test_the_dashboard_names_no_plan_and_no_price(): void {
