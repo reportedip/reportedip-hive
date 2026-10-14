@@ -50,7 +50,26 @@ class ReportedIP_Hive_User_Block_Multisite_Test extends WP_UnitTestCase {
 		$this->actor  = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $this->actor );
 
+		add_filter( 'reportedip_hive_feature_matrix', array( $this, 'user_management_row' ) );
+		ReportedIP_Hive_Mode_Manager::get_instance()->flush_feature_matrix();
 		$this->pretend_tier( 'business' );
+	}
+
+	/**
+	 * The plan row of account control. Since 3.0.0 the free matrix carries
+	 * no plan-gated row; the add-on registers this one, and until the class
+	 * moves into the add-on the test registers it the same way.
+	 *
+	 * @param array $matrix Feature matrix.
+	 * @return array
+	 */
+	public function user_management_row( $matrix ) {
+		$matrix['user_management'] = array(
+			'local'         => true,
+			'community'     => true,
+			'requires_tier' => 'business',
+		);
+		return $matrix;
 	}
 
 	/**
@@ -61,6 +80,8 @@ class ReportedIP_Hive_User_Block_Multisite_Test extends WP_UnitTestCase {
 		ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_known_tier' );
 		ReportedIP_Hive_Mode_Manager::get_instance()->flush_cached_tier();
 		ReportedIP_Hive_User_Block::flush_count_memo();
+		remove_filter( 'reportedip_hive_feature_matrix', array( $this, 'user_management_row' ) );
+		ReportedIP_Hive_Mode_Manager::get_instance()->flush_feature_matrix();
 		wp_set_current_user( 0 );
 		parent::tear_down();
 	}
