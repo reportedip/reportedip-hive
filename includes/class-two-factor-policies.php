@@ -239,6 +239,63 @@ final class ReportedIP_Hive_Two_Factor_Policies {
 	}
 
 	/**
+	 * Role choices the settings form cannot offer right now: the
+	 * administrator role until an administrator has passed one challenge
+	 * (the same rule {@see self::filter_policy_roles()} enforces on write).
+	 *
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function locked_choices() {
+		return ReportedIP_Hive_Login_Context::admin_latch_open() ? array() : array( 'administrator' );
+	}
+
+	/**
+	 * Note under a policy role list on the settings form.
+	 *
+	 * @param string $key Registry key.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	public static function choices_note( $key ) {
+		$notes = array();
+		if ( ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
+			$notes[] = __( 'Triggers for administrators become available once an administrator has completed one second-factor sign-in on this site.', 'reportedip-hive' );
+		}
+		if ( self::option_key( 'new_country' ) === (string) $key && empty( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'api_reputation_check' )['available'] ) ) {
+			$notes[] = __( 'Country data comes from the Community Network. In Local Shield the country trigger never fires.', 'reportedip-hive' );
+		}
+		return implode( ' ', $notes );
+	}
+
+	/**
+	 * Listener on `reportedip_hive_section_state`: the number of armed
+	 * triggers in the head of the policy section.
+	 *
+	 * @param array{text:string,tone:string} $state   State so far.
+	 * @param string                         $section Section id.
+	 * @param array<string,mixed>            $current Current values.
+	 * @return array{text:string,tone:string}
+	 * @since  3.0.0
+	 */
+	public static function section_state( $state, $section, $current ) {
+		if ( 'twofa_policies' !== $section ) {
+			return $state;
+		}
+		$active = 0;
+		foreach ( (array) $current as $key => $value ) {
+			if ( 0 === strpos( (string) $key, self::OPTION_PREFIX ) && is_array( $value ) && array() !== $value ) {
+				++$active;
+			}
+		}
+		return array(
+			/* translators: %d: number of triggers */
+			'text' => sprintf( __( '%d triggers', 'reportedip-hive' ), $active ),
+			'tone' => 'neutral',
+		);
+	}
+
+	/**
 	 * Trigger labels and one-line descriptions for the settings matrix.
 	 *
 	 * @return array<string, array{label:string, description:string}>

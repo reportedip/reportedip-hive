@@ -931,9 +931,9 @@ class ReportedIP_Hive_Protection_Page {
 	 * Each entry is `array{label:string,disabled:bool,fixed:bool}`. A fixed
 	 * choice is always checked, disabled and carried in the POST by a hidden
 	 * input. The method list comes from the 2FA method registry; a method
-	 * whose `choice_lock` names a plan is disabled and marked with it. The
-	 * administrator role stays disabled in the adaptive policies until an
-	 * administrator has passed one challenge. A disabled choice that is
+	 * whose `choice_lock` names a plan is disabled and marked with it. A
+	 * registry entry with `choice_locks` (callable returning the values that
+	 * cannot be selected right now) disables those values. A disabled choice that is
 	 * stored renders checked and enabled, so it can be removed (a feature
 	 * the plan no longer includes can still be switched off); it only
 	 * cannot be selected anew, see field_markup().
@@ -967,30 +967,32 @@ class ReportedIP_Hive_Protection_Page {
 				}
 			}
 		}
-		if ( 0 === strpos( (string) $key, 'reportedip_hive_2fa_policy_' ) && isset( $choices['administrator'] ) && ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
-			$choices['administrator']['disabled'] = true;
+		if ( isset( $entry['choice_locks'] ) && is_callable( $entry['choice_locks'] ) ) {
+			foreach ( (array) call_user_func( $entry['choice_locks'], (string) $key ) as $value ) {
+				if ( isset( $choices[ (string) $value ] ) ) {
+					$choices[ (string) $value ]['disabled'] = true;
+				}
+			}
 		}
 		return $choices;
 	}
 
 	/**
-	 * Note shown under a checkbox group.
+	 * Note shown under a checkbox group, from the registry entry's
+	 * `choices_note` (callable receiving the key, returning the note or '').
 	 *
-	 * @param string $key Registry key.
+	 * @param string              $key   Registry key.
+	 * @param array<string,mixed> $entry Registry entry; read from the registry when empty.
 	 * @return string
 	 */
-	public static function choices_note( $key ) {
-		if ( 0 !== strpos( (string) $key, 'reportedip_hive_2fa_policy_' ) ) {
+	public static function choices_note( $key, array $entry = array() ) {
+		if ( array() === $entry ) {
+			$entry = ReportedIP_Hive_Settings_Registry::spec()[ (string) $key ] ?? array();
+		}
+		if ( ! isset( $entry['choices_note'] ) || ! is_callable( $entry['choices_note'] ) ) {
 			return '';
 		}
-		$notes = array();
-		if ( ! ReportedIP_Hive_Login_Context::admin_latch_open() ) {
-			$notes[] = __( 'Triggers for administrators become available once an administrator has completed one second-factor sign-in on this site.', 'reportedip-hive' );
-		}
-		if ( 'reportedip_hive_2fa_policy_new_country' === $key && empty( ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'api_reputation_check' )['available'] ) ) {
-			$notes[] = __( 'Country data comes from the Community Network. In Local Shield the country trigger never fires.', 'reportedip-hive' );
-		}
-		return implode( ' ', $notes );
+		return (string) call_user_func( $entry['choices_note'], (string) $key );
 	}
 
 	/**
@@ -1073,17 +1075,24 @@ class ReportedIP_Hive_Protection_Page {
 				return self::switch_state( ! empty( $current['reportedip_hive_password_policy_enabled'] ) );
 			case 'hardening_mode':
 				return self::switch_state( ! empty( $current['reportedip_hive_hardening_realtime_detection'] ) );
-			case 'twofa_policies':
-				$active = 0;
-				foreach ( $current as $key => $value ) {
-					if ( 0 === strpos( (string) $key, 'reportedip_hive_2fa_policy_' ) && is_array( $value ) && array() !== $value ) {
-						++$active;
-					}
-				}
-				/* translators: %d: number of triggers */
-				return self::neutral_state( sprintf( __( '%d triggers', 'reportedip-hive' ), $active ) );
 		}
-		return self::neutral_state( '' );
+
+		/**
+		 * Short status of a section the free plugin does not describe, as
+		 * `array{text:string,tone:string}` with `tone` `success`, `danger`
+		 * or `neutral`.
+		 *
+		 * @param array{text:string,tone:string} $state   Default: empty and neutral.
+		 * @param string                         $section Section id.
+		 * @param array<string,mixed>            $current Current values.
+		 * @since 3.0.0
+		 */
+		$state = (array) apply_filters( 'reportedip_hive_section_state', self::neutral_state( '' ), (string) $section, $current );
+		$tone  = (string) ( $state['tone'] ?? 'neutral' );
+		return array(
+			'text' => (string) ( $state['text'] ?? '' ),
+			'tone' => in_array( $tone, array( 'success', 'danger', 'neutral' ), true ) ? $tone : 'neutral',
+		);
 	}
 
 	/**
@@ -1313,7 +1322,7 @@ class ReportedIP_Hive_Protection_Page {
 			foreach ( $keys as $key ) {
 				$entry  = $spec[ $key ];
 				$status = $statuses[ $key ] ?? array( 'available' => true );
-				$note   = 'json_list' === $entry['kind'] ? self::choices_note( $key ) : '';
+				$note   = 'json_list' === $entry['kind'] ? self::choices_note( $key, $entry ) : '';
 				$missed = self::missing_form_plugin( $entry, $detected );
 				if ( '' !== $missed && empty( $status['note'] ) ) {
 					$note = trim( $note . ' ' . self::hint_reason( $missed ) );

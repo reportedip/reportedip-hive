@@ -437,6 +437,45 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_administrator_choice_is_locked_until_the_latch_opens(): void {
+			$this->assertSame( array( 'administrator' ), \ReportedIP_Hive_Two_Factor_Policies::locked_choices() );
+			$this->assertStringContainsString( 'Triggers for administrators become available', \ReportedIP_Hive_Two_Factor_Policies::choices_note( 'reportedip_hive_2fa_policy_new_ip' ) );
+
+			$GLOBALS['wp_options'][ \ReportedIP_Hive_Login_Context::OPT_ADMIN_VERIFIED ] = time();
+
+			$this->assertSame( array(), \ReportedIP_Hive_Two_Factor_Policies::locked_choices() );
+			$this->assertSame( '', \ReportedIP_Hive_Two_Factor_Policies::choices_note( 'reportedip_hive_2fa_policy_new_ip' ) );
+		}
+
+		public function test_country_note_appears_without_the_community_network(): void {
+			$GLOBALS['wp_options'][ \ReportedIP_Hive_Login_Context::OPT_ADMIN_VERIFIED ] = time();
+			\ReportedIP_Hive_Mode_Manager::$available                                    = false;
+
+			$this->assertStringContainsString( 'Country data comes from the Community Network', \ReportedIP_Hive_Two_Factor_Policies::choices_note( 'reportedip_hive_2fa_policy_new_country' ) );
+			$this->assertSame( '', \ReportedIP_Hive_Two_Factor_Policies::choices_note( 'reportedip_hive_2fa_policy_new_ip' ) );
+		}
+
+		public function test_section_state_counts_armed_triggers_only_for_its_section(): void {
+			$current = array(
+				'reportedip_hive_2fa_policy_new_ip'     => array( 'editor' ),
+				'reportedip_hive_2fa_policy_new_device' => array(),
+				'reportedip_hive_2fa_policy_days'       => 30,
+			);
+			$default = array(
+				'text' => '',
+				'tone' => 'neutral',
+			);
+
+			$this->assertSame(
+				array(
+					'text' => '1 triggers',
+					'tone' => 'neutral',
+				),
+				\ReportedIP_Hive_Two_Factor_Policies::section_state( $default, 'twofa_policies', $current )
+			);
+			$this->assertSame( $default, \ReportedIP_Hive_Two_Factor_Policies::section_state( $default, 'waf', $current ) );
+		}
+
 		public function test_roles_for_drops_unknown_slugs(): void {
 			$this->configure( 'new_ip', array( 'editor', 'ghost' ) );
 

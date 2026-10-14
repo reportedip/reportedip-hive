@@ -463,6 +463,64 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'value="relay"  disabled', $html, 'A locked choice that is not stored cannot be selected.' );
 		}
 
+		public function test_choice_locks_and_note_come_from_the_registry_entry(): void {
+			$entry = array(
+				'kind'         => 'json_list',
+				'choices'      => 'roles',
+				'choice_locks' => static function ( $key ) {
+					return 'probe_key' === $key ? array( 'administrator', 'ghost' ) : array();
+				},
+				'choices_note' => static function ( $key ) {
+					return 'Note for ' . $key;
+				},
+			);
+			$choices = ReportedIP_Hive_Protection_Page::choices_for( $entry, 'probe_key' );
+			foreach ( $choices as $value => $choice ) {
+				$this->assertSame( 'administrator' === $value, $choice['disabled'], (string) $value );
+			}
+			$this->assertArrayNotHasKey( 'ghost', $choices, 'A lock never adds a choice.' );
+			$this->assertSame( 'Note for probe_key', ReportedIP_Hive_Protection_Page::choices_note( 'probe_key', $entry ) );
+			$this->assertSame( '', ReportedIP_Hive_Protection_Page::choices_note( 'probe_key', array( 'kind' => 'json_list' ) ) );
+		}
+
+		public function test_an_unknown_section_takes_its_state_from_the_filter(): void {
+			$this->assertSame(
+				array(
+					'text' => '',
+					'tone' => 'neutral',
+				),
+				ReportedIP_Hive_Protection_Page::section_state( 'addon_section', array() )
+			);
+
+			add_filter(
+				'reportedip_hive_section_state',
+				static function ( $state, $section, $current ) {
+					if ( 'addon_section' !== $section ) {
+						return $state;
+					}
+					return array(
+						'text' => 'armed ' . count( $current ),
+						'tone' => 'glowing',
+					);
+				},
+				10,
+				3
+			);
+			try {
+				$this->assertSame(
+					array(
+						'text' => 'armed 1',
+						'tone' => 'neutral',
+					),
+					ReportedIP_Hive_Protection_Page::section_state( 'addon_section', array( 'k' => 1 ) ),
+					'An unknown tone is shown neutral.'
+				);
+				$this->assertSame( 'on', ReportedIP_Hive_Protection_Page::section_status( 'waf', array( 'reportedip_hive_waf_enabled' => 1 ) ), 'A free section never asks the filter.' );
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_section_state'] );
+			}
+		}
+
 		public function test_section_state_tints_on_green_off_red_and_everything_else_neutral(): void {
 			$this->assertSame(
 				array(
