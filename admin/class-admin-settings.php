@@ -847,7 +847,7 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( empty( $items ) ) {
 			return;
 		}
-		$all_url = (string) apply_filters( 'reportedip_hive_external_url', 'https://reportedip.com/news/', 'news' );
+		$all_url = (string) apply_filters( 'reportedip_hive_external_url', 'https://reportedip.com/news/?rc=hive-plugin', 'news' );
 		?>
 		<div class="rip-dashboard__section rip-news">
 			<div class="rip-dashboard__section-title">
@@ -1043,7 +1043,7 @@ class ReportedIP_Hive_Admin_Settings {
 					esc_html( (string) (int) ( $reputation['confidence'] ?? 0 ) )
 				);
 				?>
-				<a href="<?php echo esc_url( 'https://reportedip.com/tools/' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Open Tools', 'reportedip-hive' ); ?></a>
+				<a href="<?php echo esc_url( 'https://reportedip.com/tools/?rc=hive-plugin' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Open Tools', 'reportedip-hive' ); ?></a>
 			</div>
 			<?php else : ?>
 			<div class="rip-stat-card__hint"><?php esc_html_e( 'No community member has reported this address.', 'reportedip-hive' ); ?></div>
@@ -1311,7 +1311,7 @@ class ReportedIP_Hive_Admin_Settings {
 				esc_html( number_format_i18n( (int) ( $reputation['reports'] ?? 0 ) ) ),
 				esc_html( (string) (int) ( $reputation['confidence'] ?? 0 ) )
 			),
-			esc_url( 'https://reportedip.com/tools/' ),
+			esc_url( 'https://reportedip.com/tools/?rc=hive-plugin' ),
 			esc_html__( 'Check the address', 'reportedip-hive' )
 		);
 		ReportedIP_Hive_Admin_Notice::render(
@@ -1360,7 +1360,7 @@ class ReportedIP_Hive_Admin_Settings {
 				esc_html__( 'Your Community Access Key is used on %1$d domains, but your account includes %2$d. See your account in the %3$s.', 'reportedip-hive' ),
 				(int) $domains['used'],
 				max( 0, (int) $domains['limit'] ),
-				'<a href="' . esc_url( REPORTEDIP_HIVE_SITE_URL . '/dashboard/domains/' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'reportedip.com dashboard', 'reportedip-hive' ) . '</a>'
+				'<a href="' . esc_url( REPORTEDIP_HIVE_SITE_URL . '/dashboard/domains/?rc=hive-plugin' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'reportedip.com dashboard', 'reportedip-hive' ) . '</a>'
 			)
 		);
 		ReportedIP_Hive_Admin_Notice::render(
@@ -1387,7 +1387,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'<strong>%1$s</strong> %2$s <a href="%3$s" target="_blank" rel="noopener noreferrer">%4$s</a>',
 				esc_html__( 'Community threat-check rate-limited.', 'reportedip-hive' ),
 				esc_html__( 'The local firewall (sensors, blocks, logs, queue) remains fully active. Reputation lookups for new IPs and outgoing report submissions are paused until the hourly counter resets.', 'reportedip-hive' ),
-				esc_url( REPORTEDIP_HIVE_SITE_URL . '/dashboard/' ),
+				esc_url( ReportedIP_Hive_Catalog::ACCOUNT_URL ),
 				esc_html__( 'The limits of your account are listed on reportedip.com.', 'reportedip-hive' )
 			);
 			ReportedIP_Hive_Admin_Notice::render(
@@ -3805,7 +3805,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<input type="password" id="reportedip_hive_api_key" name="reportedip_hive_api_key" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ); ?>" class="rip-input" />
 					<p class="rip-help-text">
 						<?php esc_html_e( 'Your ReportedIP.de API key.', 'reportedip-hive' ); ?>
-						<a href="https://reportedip.com/dashboard/api-keys" target="_blank"><?php esc_html_e( 'Get API Key', 'reportedip-hive' ); ?></a>
+						<a href="https://reportedip.com/dashboard/api-keys/?rc=hive-plugin" target="_blank"><?php esc_html_e( 'Get API Key', 'reportedip-hive' ); ?></a>
 					</p>
 				</div>
 
