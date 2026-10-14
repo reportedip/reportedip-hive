@@ -162,6 +162,16 @@ class ReportedIP_Hive_Two_Factor {
 	const META_PREFIX = 'reportedip_hive_2fa_';
 
 	/**
+	 * The user's choice to stop the 2FA reminder banner. It carries the
+	 * prefix but is a preference, not 2FA data: a full reset keeps it, as
+	 * 2.1.x did, while the GDPR eraser and the uninstall remove it.
+	 *
+	 * @var string
+	 * @since 3.0.0
+	 */
+	const META_REMINDER_OPTOUT = 'reportedip_hive_2fa_reminder_optout';
+
+	/**
 	 * Shape of a method slug. A stored slug of this shape that no active
 	 * plugin registers is kept in the allowed-methods option, see
 	 * {@see self::sanitize_allowed_methods()}.
@@ -2724,6 +2734,7 @@ class ReportedIP_Hive_Two_Factor {
 	 * Also resets the reminder counter and the onboarding skip snooze
 	 * (literal keys, the Recommend/Onboarding classes are not loaded in
 	 * every context this runs in), so a support reset really starts fresh.
+	 * The reminder opt-out ({@see self::META_REMINDER_OPTOUT}) stays.
 	 *
 	 * @param int $user_id WordPress user ID.
 	 */
@@ -2750,7 +2761,8 @@ class ReportedIP_Hive_Two_Factor {
 			'reportedip_hive_2fa_skip_until',
 		);
 
-		foreach ( array_unique( array_merge( $meta_keys, self::method_meta_keys(), self::stored_meta_keys( $user_id ) ) ) as $key ) {
+		$keys = array_diff( array_merge( $meta_keys, self::method_meta_keys(), self::stored_meta_keys( $user_id ) ), array( self::META_REMINDER_OPTOUT ) );
+		foreach ( array_unique( $keys ) as $key ) {
 			delete_user_meta( $user_id, $key );
 		}
 

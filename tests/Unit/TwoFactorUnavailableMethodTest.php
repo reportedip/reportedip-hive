@@ -242,6 +242,35 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * The reminder opt-out is a preference, not 2FA data: a full reset
+		 * keeps it, as 2.1.x did, so the user is not nagged again.
+		 */
+		public function test_a_full_reset_keeps_the_reminder_opt_out(): void {
+			$GLOBALS['wp_user_meta'][ self::USER_ID ]['reportedip_hive_2fa_reminder_optout'] = 1;
+
+			\ReportedIP_Hive_Two_Factor::disable_for_user( self::USER_ID );
+
+			$this->assertSame( array( 'reportedip_hive_2fa_reminder_optout' => 1 ), $GLOBALS['wp_user_meta'][ self::USER_ID ] );
+		}
+
+		/**
+		 * The GDPR eraser removes the reminder opt-out together with the
+		 * 2FA data.
+		 */
+		public function test_the_eraser_removes_the_reminder_opt_out(): void {
+			require_once dirname( __DIR__, 2 ) . '/admin/class-two-factor-admin.php';
+			$GLOBALS['wp_user_meta'][1] = array(
+				'reportedip_hive_2fa_reminder_optout' => 1,
+			);
+
+			$admin  = ( new \ReflectionClass( \ReportedIP_Hive_Two_Factor_Admin::class ) )->newInstanceWithoutConstructor();
+			$result = $admin->erase_personal_data( 'admin@example.org' );
+
+			$this->assertSame( 1, $result['items_removed'] );
+			$this->assertSame( array(), \ReportedIP_Hive_Two_Factor::stored_meta_keys( 1 ) );
+		}
+
+		/**
 		 * Turning the last visible method off turns 2FA off completely, and
 		 * that takes the data of the missing method along.
 		 */
