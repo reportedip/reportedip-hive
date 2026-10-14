@@ -322,6 +322,33 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertLessThan( strpos( $body, 'parse_attestation(' ), strpos( $body, 'delete_transient(' ) );
 		}
 
+		public function test_the_login_challenge_is_consumed_before_the_assertion_is_checked(): void {
+			$source = $this->source( 'includes/class-two-factor-webauthn.php' );
+			$body   = substr( $source, (int) strpos( $source, 'private static function verify_assertion(' ) );
+			$this->assertStringContainsString(
+				"|| ! delete_transient( self::TRANSIENT_PREFIX . 'login_' . \$user_id ) )",
+				$body,
+				'Only the request whose delete removed the login challenge may verify an assertion.'
+			);
+			$this->assertLessThan( strpos( $body, 'hash_equals( $stored_challenge' ), strpos( $body, 'delete_transient(' ) );
+		}
+
+		public function test_the_verified_flag_signs_in_exactly_once(): void {
+			$GLOBALS['wp_transients'] = array();
+			set_transient( \ReportedIP_Hive_Two_Factor_WebAuthn::TRANSIENT_PREFIX . 'verified_' . self::USER_ID, 1, 120 );
+
+			$this->assertFalse( \ReportedIP_Hive_Two_Factor_WebAuthn::verify( self::USER_ID, 'wrong' ), 'Only the opaque marker counts.' );
+			$this->assertTrue( \ReportedIP_Hive_Two_Factor_WebAuthn::verify( self::USER_ID, 'webauthn-ok' ) );
+			$this->assertFalse( \ReportedIP_Hive_Two_Factor_WebAuthn::verify( self::USER_ID, 'webauthn-ok' ), 'A second submission finds the flag consumed.' );
+
+			$source = $this->source( 'includes/class-two-factor-webauthn.php' );
+			$this->assertStringContainsString(
+				"return \$flag && delete_transient( self::TRANSIENT_PREFIX . 'verified_' . \$user_id );",
+				$source,
+				'The flag only passes for the request whose delete removed it.'
+			);
+		}
+
 		public function test_first_key_is_free_and_more_keys_are_gated(): void {
 			$this->assertTrue(
 				ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( self::USER_ID ),

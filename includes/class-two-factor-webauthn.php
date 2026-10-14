@@ -656,7 +656,9 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 	 * @param int    $user_id
 	 * @param string $opaque_code The browser submits a literal "webauthn-ok" once
 	 *                            ajax_login_verify succeeded, this handler then
-	 *                            checks the short-lived transient.
+	 *                            consumes the short-lived transient. Only the
+	 *                            request whose delete removed it passes, so two
+	 *                            parallel submissions cannot both sign in.
 	 * @return bool
 	 */
 	public static function verify( $user_id, $opaque_code ) {
@@ -664,11 +666,7 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			return false;
 		}
 		$flag = get_transient( self::TRANSIENT_PREFIX . 'verified_' . $user_id );
-		if ( ! $flag ) {
-			return false;
-		}
-		delete_transient( self::TRANSIENT_PREFIX . 'verified_' . $user_id );
-		return true;
+		return $flag && delete_transient( self::TRANSIENT_PREFIX . 'verified_' . $user_id );
 	}
 
 	/* ------------------------------------------------------------------
@@ -898,10 +896,9 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 		}
 
 		$stored_challenge_b64 = get_transient( self::TRANSIENT_PREFIX . 'login_' . $user_id );
-		if ( empty( $stored_challenge_b64 ) ) {
+		if ( empty( $stored_challenge_b64 ) || ! delete_transient( self::TRANSIENT_PREFIX . 'login_' . $user_id ) ) {
 			return new WP_Error( 'webauthn_expired', __( 'Challenge expired.', 'reportedip-hive' ) );
 		}
-		delete_transient( self::TRANSIENT_PREFIX . 'login_' . $user_id );
 		$stored_challenge = base64_decode( $stored_challenge_b64 );
 		if ( ! hash_equals( $stored_challenge, self::b64url_decode( $client_data['challenge'] ?? '' ) ) ) {
 			return new WP_Error( 'webauthn_challenge', __( 'Challenge mismatch.', 'reportedip-hive' ) );
